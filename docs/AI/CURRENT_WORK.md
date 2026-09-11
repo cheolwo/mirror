@@ -1,5 +1,10 @@
 # Mirror(거울) Current Work
 
+## 운영 지역 장면 Unity 읽기 Client 보완 (2026-09-11)
+
+- 인증된 운영 지역 장면 API에 기존 창고 이행 기능 판본 관문을 명시하고, Unity가 `cursor` 기반 GET 응답을 메모리에서 해석하는 `OperationalWorldSceneClient`와 `JsonUtility` decoder를 추가했다. 원문 JSON·해석 결과의 로컬 저장과 운영 Command 전송은 계속 허용하지 않는다.
+- .NET 계약 시험 4/4와 `Ssalddel.v3.5.slnx` 전체 build 오류0을 확인했다. 기존 AndroidX·nullable 분석 경고 60개는 남아 있다. Unity 프로젝트 import·Editor·Play Mode·Game View와 실제 인증 HTTP 연결은 실행하지 않았다. 관련 코드는 로컬 커밋으로 저장했으며 원격 push는 하지 않았다.
+
 ## 창고 출고 완료 → 화물운송 OS 인계 보완 (2026-09-11)
 
 - 기존 `출고운송인계완료UseCase`가 출고 완료와 이미 생성된 화물 운송 의뢰를 `WarehouseCommerceFulfillmentOS → DomesticCargoTransportOS` 인계 원장에 결속하고, 도착 OS의 명시적 수락까지 같은 업무 흐름에서 기록하도록 보완했다. 새 운송 의뢰나 배차를 만들지 않으며 결정적 요청 ID로 재시도를 멱등 처리한다.
