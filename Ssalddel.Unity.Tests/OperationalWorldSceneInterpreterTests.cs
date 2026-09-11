@@ -1,4 +1,5 @@
 using Ssalddel.Unity.Data.WorldProjection;
+using Ssalddel.Unity.WorldProjection;
 using Ssalddel.WorkflowRules.Contracts;
 
 namespace Ssalddel.Unity.Tests;
@@ -10,6 +11,24 @@ namespace Ssalddel.Unity.Tests;
 public sealed class OperationalWorldSceneInterpreterTests
 {
     private static readonly DateTime Now = new(2026, 9, 11, 10, 0, 0, DateTimeKind.Utc);
+
+    [Fact]
+    public async Task Client는_인증GET전용경계로_cursor를보내고_응답을즉시해석한다()
+    {
+        var transport = new RecordingTransport();
+        var client = new OperationalWorldSceneClient(
+            transport,
+            new StaticDecoder(Response(Item("actor:1", 1, Now.AddMinutes(5)), cursor: 8)),
+            new OperationalWorldSceneInterpreter());
+
+        var result = await client.RefreshAsync("region:kr:bjd:1126010100", 7, Now);
+
+        Assert.True(result.Accepted);
+        Assert.Equal(8, result.Cursor);
+        Assert.Contains("cursor=7", transport.Route);
+        Assert.True(transport.RequiresAuthentication);
+        Assert.False(transport.AllowNotFound);
+    }
 
     [Fact]
     public void 최신판본만적용하고_만료된객체는제거한다()
@@ -88,4 +107,28 @@ public sealed class OperationalWorldSceneInterpreterTests
             PublishedAtUtc = Now.AddSeconds(revision),
             ExpiresAtUtc = expiresAt
         };
+
+    private sealed class RecordingTransport : IOperationalWorldProjectionTransport
+    {
+        public string Route { get; private set; } = string.Empty;
+        public bool AllowNotFound { get; private set; }
+        public bool RequiresAuthentication { get; private set; }
+
+        public Task<string?> GetAsync(
+            string relativeRoute,
+            bool allowNotFound,
+            bool requiresAuthentication,
+            CancellationToken cancellationToken = default)
+        {
+            Route = relativeRoute;
+            AllowNotFound = allowNotFound;
+            RequiresAuthentication = requiresAuthentication;
+            return Task.FromResult<string?>("{}");
+        }
+    }
+
+    private sealed class StaticDecoder(OperationalWorldSceneResponse response) : IOperationalWorldSceneDecoder
+    {
+        public OperationalWorldSceneResponse Decode(string json) => response;
+    }
 }

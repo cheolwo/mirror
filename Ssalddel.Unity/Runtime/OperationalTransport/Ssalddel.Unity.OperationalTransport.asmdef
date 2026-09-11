@@ -2,7 +2,8 @@
   "name": "Ssalddel.Unity.OperationalTransport",
   "rootNamespace": "Ssalddel.Unity.OperationalTransport",
   "references": [
-    "Ssalddel.Unity.Data"
+    "Ssalddel.Unity.Data",
+    "Ssalddel.WorkflowRules.Contracts"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
