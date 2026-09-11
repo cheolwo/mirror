@@ -3,6 +3,7 @@
 ## 운영 지역 장면 Unity 읽기 Client 보완 (2026-09-11)
 
 - 인증된 운영 지역 장면 API에 기존 창고 이행 기능 판본 관문을 명시하고, Unity가 `cursor` 기반 GET 응답을 메모리에서 해석하는 `OperationalWorldSceneClient`와 `JsonUtility` decoder를 추가했다. 원문 JSON·해석 결과의 로컬 저장과 운영 Command 전송은 계속 허용하지 않는다.
+- 운영 지역 장면 관찰 API는 창고 이행 기능과 분리된 `OperationalWorldObservationWorkflow` 기능 관문을 사용하며 기본값은 비활성이다. 다른 음식·창고 기능만 활성화해도 관찰 API가 열리지 않는 집중 시험 9/9를 확인했다.
 - .NET 계약 시험 4/4와 `Ssalddel.v3.5.slnx` 전체 build 오류0을 확인했다. 기존 AndroidX·nullable 분석 경고 60개는 남아 있다. Unity 프로젝트 import·Editor·Play Mode·Game View와 실제 인증 HTTP 연결은 실행하지 않았다. 관련 코드는 로컬 커밋으로 저장했으며 원격 push는 하지 않았다.
 
 ## 창고 출고 완료 → 화물운송 OS 인계 보완 (2026-09-11)
