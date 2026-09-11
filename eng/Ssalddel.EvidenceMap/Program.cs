@@ -9,7 +9,7 @@ using Ssalddel.Simulation.Contracts;
 using Ssalddel.Simulation.Domain;
 using Ssalddel.Simulation.Infrastructure;
 using Ssalddel.Simulation.Persistence;
-using Ssalddel.Simulation.Server.Controllers;
+using Ssalddel.Simulation.Hosting.Controllers;
 using Ssalddel.Simulation.Tests;
 using Ssalddel.Unity.Application;
 using Ssalddel.Unity.Tests;

@@ -363,7 +363,7 @@ public sealed class SimulationLhWorldTests
         };
 
     private static WebApplicationFactory<Program> CreateFactory()
-        => new WebApplicationFactory<Program>()
+        => new SimulationWebApplicationFactory()
             .WithWebHostBuilder(builder =>
             {
                 builder.UseEnvironment("Testing");
@@ -371,8 +371,8 @@ public sealed class SimulationLhWorldTests
                 {
                     configuration.AddInMemoryCollection(new Dictionary<string, string?>
                     {
-                        ["SsalddelExecution:Mode"] = "Simulation",
-                        ["SimulationServer:Enabled"] = "true",
+                        ["SsalddelExecution:Mode"] = "Operational",
+                        ["SsalddelSimulation:AllowUnauthenticatedTesting"] = "true",
                         ["SimulationSharedPublicData:Enabled"] = "false",
                     });
                 });

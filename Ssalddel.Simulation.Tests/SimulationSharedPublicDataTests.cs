@@ -12,7 +12,7 @@ using Ssalddel.Domain.AgriculturalFisheries;
 using Ssalddel.Infrastructure.Persistence.AgriculturalFisheries;
 using Ssalddel.Simulation.Contracts;
 using Ssalddel.Simulation.Persistence;
-using Ssalddel.Simulation.Server;
+using Ssalddel.Simulation.Hosting;
 
 namespace Ssalddel.Simulation.Tests;
 
@@ -140,10 +140,10 @@ public sealed class SimulationSharedPublicDataTests
         var services = new ServiceCollection();
 
         var error = Assert.Throws<InvalidOperationException>(
-            () => services.AddSimulationServerServices(configuration));
+            () => services.AddSsalddelSimulationModule(configuration));
 
         Assert.Equal(
-            SimulationServerServiceCollectionExtensions.ConnectionStringMissingErrorCode,
+            SsalddelSimulationHostingServiceCollectionExtensions.ConnectionStringMissingErrorCode,
             error.Message);
     }
 
@@ -160,7 +160,7 @@ public sealed class SimulationSharedPublicDataTests
         });
         var services = new ServiceCollection();
 
-        services.AddSimulationServerServices(configuration);
+        services.AddSsalddelSimulationModule(configuration);
 
         Assert.Contains(services, descriptor =>
             descriptor.ServiceType == typeof(ISimulation공유공공데이터조회Port)
@@ -176,7 +176,7 @@ public sealed class SimulationSharedPublicDataTests
             ["SimulationSharedPublicData:MaxItems"] = "0",
         });
         var services = new ServiceCollection();
-        services.AddSimulationServerServices(configuration);
+        services.AddSsalddelSimulationModule(configuration);
         using var provider = services.BuildServiceProvider();
 
         Assert.Throws<OptionsValidationException>(() => provider
@@ -187,7 +187,7 @@ public sealed class SimulationSharedPublicDataTests
     private static WebApplicationFactory<Program> CreateFactory(
         bool sharedPublicDataEnabled,
         ISimulation공유공공데이터조회Port? reader = null)
-        => new WebApplicationFactory<Program>()
+        => new SimulationWebApplicationFactory()
             .WithWebHostBuilder(builder =>
             {
                 builder.UseEnvironment("Testing");
@@ -196,8 +196,8 @@ public sealed class SimulationSharedPublicDataTests
                     configuration.AddInMemoryCollection(
                         new Dictionary<string, string?>
                         {
-                            ["SsalddelExecution:Mode"] = "Simulation",
-                            ["SimulationServer:Enabled"] = "true",
+                            ["SsalddelExecution:Mode"] = "Operational",
+                            ["SsalddelSimulation:AllowUnauthenticatedTesting"] = "true",
                             ["SimulationSharedPublicData:Enabled"] =
                                 sharedPublicDataEnabled.ToString(),
                         });

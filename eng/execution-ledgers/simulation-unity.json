@@ -161,7 +161,7 @@
       "priority": 1,
       "dependsOn": ["ART-TILE-01"],
       "sourceReferences": [
-        "Ssalddel.Simulation.Server/README.md",
+        "Ssalddel.Simulation.Hosting/README.md",
         "docs/Architecture/SpatialTileAreaSetLandscapePipeline.md"
       ],
       "evidence": [

@@ -308,7 +308,7 @@ public sealed class SimulationNatureSurvivalTests
     [Fact]
     public async Task 같은자리자원재생은_LocalProcess와_RemoteHost에서_같은SaveReplay를만든다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var savesRoot = Path.Combine(Path.GetTempPath(),
             "ssalddel-resource-regeneration-host-parity-" +
@@ -1406,7 +1406,7 @@ public sealed class SimulationNatureSurvivalTests
     [Fact]
     public async Task 도끼확보WI는_LocalProcess와_HostedHTTP에서_같은ReplayHash를만든다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var savesRoot = Path.Combine(Path.GetTempPath(),
             "ssalddel-wi-nature-05-host-parity-" + Guid.NewGuid().ToString("N"));
@@ -1517,7 +1517,7 @@ public sealed class SimulationNatureSurvivalTests
     [Fact]
     public async Task 벌목통나무줍기WI는_LocalProcess와_RemoteHost에서_v28ReplayHash가같다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var savesRoot = Path.Combine(Path.GetTempPath(),
             "ssalddel-wi-nature-18-host-parity-" + Guid.NewGuid().ToString("N"));
@@ -1698,7 +1698,7 @@ public sealed class SimulationNatureSurvivalTests
     [Fact]
     public async Task 황혼관찰WI는_LocalProcess와_RemoteHost에서_같은Revision과ReplayHash를만든다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var savesRoot = Path.Combine(Path.GetTempPath(),
             "ssalddel-wi-nature-01-host-parity-"
@@ -1912,7 +1912,7 @@ public sealed class SimulationNatureSurvivalTests
     public async Task 황혼대응WI는_참여방식별로_LocalProcess와_RemoteHost가_같은결과와ReplayHash를만든다(
         string controlModeCode)
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var suffix = controlModeCode == SimulationLocalCombatCodes.DirectAction
             ? "direct" : "observer";
@@ -2297,7 +2297,7 @@ public sealed class SimulationNatureSurvivalTests
     [Fact]
     public async Task HTTP는_Nature상태검토확정실시간경계를_노출한다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var request = CreateRequest();
         request.ClientRequestId = Guid.NewGuid();

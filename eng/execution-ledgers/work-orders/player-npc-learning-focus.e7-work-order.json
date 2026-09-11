@@ -62,7 +62,7 @@
       ],
       "upwardValidation": [
         { "code": "E1", "status": "Passed", "evidenceRefs": ["docs/AI/절기전략턴-타로카드-기획-2026-09-02.md"] },
-        { "code": "E2", "status": "Passed", "evidenceRefs": ["Ssalddel.Simulation.Contracts/UnityPackage/Runtime/SimulationPlayerLearningFocusContracts.cs", "Ssalddel.Simulation.Server/Controllers/SimulationPlayerLearningFocusController.cs"] },
+        { "code": "E2", "status": "Passed", "evidenceRefs": ["Ssalddel.Simulation.Contracts/UnityPackage/Runtime/SimulationPlayerLearningFocusContracts.cs", "Ssalddel.Simulation.Hosting/Controllers/SimulationPlayerLearningFocusController.cs"] },
         { "code": "E3", "status": "Passed", "evidenceRefs": ["Ssalddel.Simulation.Tests/SimulationPlayerLearningFocusTests.cs", "test:SimulationPlayerLearningFocusTests:13/13"] },
         { "code": "E4", "status": "Blocked", "evidenceRefs": [] },
         { "code": "E5", "status": "Blocked", "evidenceRefs": [] },

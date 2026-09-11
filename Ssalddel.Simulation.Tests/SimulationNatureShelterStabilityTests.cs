@@ -77,7 +77,7 @@ public sealed class SimulationNatureShelterStabilityTests
     private static async Task<StabilitySnapshot> RunRemoteAsync()
     {
         var traceSink = new InMemorySimulationPlayableLoopEngineTraceSink();
-        using var factory = new WebApplicationFactory<Program>()
+        using var factory = new SimulationWebApplicationFactory()
             .WithWebHostBuilder(builder => builder.ConfigureServices(services =>
             {
                 services.RemoveAll<I세계상호작용실행Pipeline>();

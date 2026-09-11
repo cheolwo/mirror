@@ -46,7 +46,7 @@ public sealed class SimulationNaturePlayFlowCycleTests
     public async System.Threading.Tasks.Task
         NatureNpc루틴조회는_Http에서도원자료나운영상태없이동일계약을노출한다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         using var createResponse = await client.PostAsJsonAsync(
             "/api/simulation/v1/sessions", CreateRequest());

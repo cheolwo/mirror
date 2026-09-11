@@ -260,7 +260,7 @@
       "evidence:nature-night-day2-session-logic-e5-20260901",
       "Ssalddel.Simulation.Domain/UnityPackage/Runtime/SimulationNatureSurvival.cs",
       "Ssalddel.Simulation.Application/RuntimeCore/LocalSimulationRuntime.cs",
-      "Ssalddel.Simulation.Server/Controllers/SimulationNatureSurvivalController.cs",
+      "Ssalddel.Simulation.Hosting/Controllers/SimulationNatureSurvivalController.cs",
       "Ssalddel.Simulation.Tests/SimulationNature생활거점동등성Tests.cs",
       "artifacts/local/validation/20260901-nature-e5-session-integration-full-r2/Ssalddel.Simulation.Tests-r2.trx"
     ],

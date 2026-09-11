@@ -14,10 +14,12 @@
     "eng/work-areas/responsibility-workstreams.json"
   ],
   "sourceRoots": [
+    "Ssalddel.BusinessWorkflow",
     "Ssalddel.CodeMetadata",
     "Ssalddel.Interior.Contracts",
     "Ssalddel.WorkflowRules.Contracts",
     "Ssalddel.WorkflowRules",
+    "Ssalddel.Simulation.BusinessWorkflow",
     "Ssalddel.Simulation.Contracts",
     "Ssalddel.Unity",
     "Ssalddel.UnityReview.Api",

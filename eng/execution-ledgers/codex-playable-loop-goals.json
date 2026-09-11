@@ -611,7 +611,7 @@
         "Ssalddel.Simulation.Contracts/UnityPackage/Runtime/SimulationNature표현관측Contracts.cs",
         "Ssalddel.Simulation.Domain/UnityPackage/Runtime/SimulationNatureSurvival.cs",
         "Ssalddel.Simulation.Application/RuntimeCore/SimulationNatureSurvivalService.cs",
-        "Ssalddel.Simulation.Server/Controllers/SimulationNatureSurvivalController.cs",
+        "Ssalddel.Simulation.Hosting/Controllers/SimulationNatureSurvivalController.cs",
         "Ssalddel.Simulation.Tests/LocalSimulationRuntimeTests.cs",
         "Ssalddel.Simulation.Tests/SimulationNature생활거점동등성Tests.cs"
       ],
@@ -695,8 +695,8 @@
         "Ssalddel.Simulation.Application/RuntimeCore/LocalSimulationRuntime.cs",
         "Ssalddel.Simulation.Application/RuntimeCore/Simulation방문자체류Runtime.cs",
         "Ssalddel.Simulation.Application/RuntimeCore/Simulation방문자체류Runtime.cs.meta",
-        "Ssalddel.Simulation.Server/SimulationServerServiceCollectionExtensions.cs",
-        "Ssalddel.Simulation.Server/Controllers/Simulation방문자체류Controller.cs",
+        "Ssalddel.Simulation.Hosting/SsalddelSimulationHostingServiceCollectionExtensions.cs",
+        "Ssalddel.Simulation.Hosting/Controllers/Simulation방문자체류Controller.cs",
         "Ssalddel.Simulation.Tests/Simulation방문자체류RuntimeTests.cs",
         "docs/Reports/방문자체류-Runtime연결-2026-08-30.md"
       ],

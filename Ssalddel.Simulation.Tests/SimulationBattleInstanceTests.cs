@@ -718,14 +718,14 @@ public sealed class SimulationBattleInstanceTests
     };
 
     private static WebApplicationFactory<Program> CreateFactory()
-        => new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        => new SimulationWebApplicationFactory().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
             builder.ConfigureAppConfiguration((_, configuration) =>
                 configuration.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["SsalddelExecution:Mode"] = "Simulation",
-                    ["SimulationServer:Enabled"] = "true",
+                    ["SsalddelExecution:Mode"] = "Operational",
+                    ["SsalddelSimulation:AllowUnauthenticatedTesting"] = "true",
                     ["SimulationSharedPublicData:Enabled"] = "false",
                 }));
         });

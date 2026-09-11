@@ -437,7 +437,7 @@
       "exclusions": ["Save/Replay와 자동 저장", "Logic E5 이상", "Presentation E2 이상", "Unity Scene·자산·배치·애니메이션", "Play Mode·Game View", "약초 채집·달이기·섭취·약효·질병 단계"],
       "artifactReferences": [
         { "locationKind": "RepositoryPath", "locator": "Ssalddel.Simulation.Application/RuntimeCore/LocalSimulationRuntime.cs", "sha256": "", "retentionCode": "Tracked" },
-        { "locationKind": "RepositoryPath", "locator": "Ssalddel.Simulation.Server/Controllers/SimulationPlayerKnowledgeController.cs", "sha256": "", "retentionCode": "Tracked" },
+        { "locationKind": "RepositoryPath", "locator": "Ssalddel.Simulation.Hosting/Controllers/SimulationPlayerKnowledgeController.cs", "sha256": "", "retentionCode": "Tracked" },
         { "locationKind": "RepositoryPath", "locator": "Ssalddel.Simulation.Tests/SimulationPlayerKnowledgeTests.cs", "sha256": "", "retentionCode": "Tracked" },
         { "locationKind": "LocalArtifact", "locator": "artifacts/local/validation/20260828-player-knowledge-e4/player-knowledge-e4.trx", "sha256": "9ec2611ec644de563ee418bf161c16b55da6114a29d6f96aa075591c601f12b1", "retentionCode": "LocalOnly" },
         { "locationKind": "LocalArtifact", "locator": "artifacts/local/validation/20260828-player-knowledge-e4/player-knowledge-e4-regression.trx", "sha256": "7fa920ad95c82e2c3bafaf79612da9862d85176d4af82b63d418f193c32ff897", "retentionCode": "LocalOnly" },
@@ -2157,7 +2157,7 @@
         { "locationKind": "RepositoryPath", "locator": "Ssalddel.Simulation.Domain/UnityPackage/Runtime/SimulationNatureSurvival.cs", "sha256": "01c9b2dfd0f9532c8a1bfffd16e9ee2fd918edee7a6503a23c877459cdcacf9e", "retentionCode": "Tracked" },
         { "locationKind": "RepositoryPath", "locator": "Ssalddel.Simulation.Application/RuntimeCore/SimulationNatureSurvivalService.cs", "sha256": "e7c3cdee974f4830818367264aad25b4422b3309b35272a95f9be312bfb2b647", "retentionCode": "Tracked" },
         { "locationKind": "RepositoryPath", "locator": "Ssalddel.Simulation.Application/RuntimeCore/LocalSimulationRuntime.cs", "sha256": "38716eb59dae06b7d4f198055c718892f3ef187e5bf779d0d82e3ca70fdd8156", "retentionCode": "Tracked" },
-        { "locationKind": "RepositoryPath", "locator": "Ssalddel.Simulation.Server/Controllers/SimulationNatureSurvivalController.cs", "sha256": "435f1ea035300f2df90445b2d888a14e75338af7090b375db640407644066250", "retentionCode": "Tracked" },
+        { "locationKind": "RepositoryPath", "locator": "Ssalddel.Simulation.Hosting/Controllers/SimulationNatureSurvivalController.cs", "sha256": "435f1ea035300f2df90445b2d888a14e75338af7090b375db640407644066250", "retentionCode": "Tracked" },
         { "locationKind": "RepositoryPath", "locator": "Ssalddel.Simulation.Tests/SimulationNature생활거점동등성Tests.cs", "sha256": "89b346b0625e079c68d3a7fb1d990293b6840fef924ccc23aecbda6b69a5f748", "retentionCode": "Tracked" },
         { "locationKind": "LocalArtifact", "locator": "artifacts/local/validation/20260901-nature-e5-session-integration/nature-e5-session-integrated-lineage.trx", "sha256": "e9652e6cfa9c3819ea7a2bc0758d806c9816c137cbfdcb82f96527644f0ce65f", "retentionCode": "LocalOnly" },
         { "locationKind": "LocalArtifact", "locator": "artifacts/local/validation/20260901-nature-e5-save-replay-local-http/nature-night-day2-save-replay-local-http-parity.trx", "sha256": "343b5e82ab5361388a0efdb37fa74982b2a1fefdcf3fae3250bfa19926357540", "retentionCode": "LocalOnly" },

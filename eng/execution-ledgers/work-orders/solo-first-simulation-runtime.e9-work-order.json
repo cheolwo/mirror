@@ -39,7 +39,7 @@
       "Ssalddel.Simulation.Contracts/UnityPackage/Runtime",
       "Ssalddel.Simulation.Application/RuntimeCore",
       "Ssalddel.Simulation.Infrastructure",
-      "Ssalddel.Simulation.Server",
+      "Ssalddel.Simulation.Hosting",
       "Ssalddel.Simulation.Tests",
       "eng/execution-ledgers",
       "docs/Architecture",

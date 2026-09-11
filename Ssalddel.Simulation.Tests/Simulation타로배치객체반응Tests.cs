@@ -325,7 +325,7 @@ public sealed class Simulation타로배치객체반응Tests
         };
 
     private static WebApplicationFactory<Program> CreateFactory()
-        => new WebApplicationFactory<Program>()
+        => new SimulationWebApplicationFactory()
             .WithWebHostBuilder(builder =>
             {
                 builder.UseEnvironment("Testing");
@@ -334,8 +334,8 @@ public sealed class Simulation타로배치객체반응Tests
                     configuration.AddInMemoryCollection(
                         new Dictionary<string, string?>
                         {
-                            ["SsalddelExecution:Mode"] = "Simulation",
-                            ["SimulationServer:Enabled"] = "true",
+                            ["SsalddelExecution:Mode"] = "Operational",
+                            ["SsalddelSimulation:AllowUnauthenticatedTesting"] = "true",
                             ["SimulationSharedPublicData:Enabled"] = "false",
                         });
                 });

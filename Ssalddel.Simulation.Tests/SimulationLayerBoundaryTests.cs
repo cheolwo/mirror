@@ -19,7 +19,7 @@ public sealed class SimulationLayerBoundaryTests
 
         Assert.DoesNotContain("Ssalddel.Simulation.Application", references);
         Assert.DoesNotContain("Ssalddel.Simulation.Infrastructure", references);
-        Assert.DoesNotContain("Ssalddel.Simulation.Server", references);
+        Assert.DoesNotContain("Ssalddel.Simulation.Hosting", references);
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public sealed class SimulationLayerBoundaryTests
 
         Assert.Contains("Ssalddel.Simulation.Domain", references);
         Assert.DoesNotContain("Ssalddel.Simulation.Infrastructure", references);
-        Assert.DoesNotContain("Ssalddel.Simulation.Server", references);
+        Assert.DoesNotContain("Ssalddel.Simulation.Hosting", references);
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public sealed class SimulationLayerBoundaryTests
 
         Assert.Contains("Ssalddel.Simulation.Application", references);
         Assert.Contains("Ssalddel.Infrastructure", references);
-        Assert.DoesNotContain("Ssalddel.Simulation.Server", references);
+        Assert.DoesNotContain("Ssalddel.Simulation.Hosting", references);
         Assert.True(typeof(ISimulation공유공공데이터조회Port)
             .IsAssignableFrom(typeof(Simulation공유공공데이터Reader)));
     }
@@ -60,7 +60,7 @@ public sealed class SimulationLayerBoundaryTests
 
         Assert.Contains("Ssalddel.Simulation.Application", references);
         Assert.Contains("Ssalddel.Simulation.Domain", references);
-        Assert.DoesNotContain("Ssalddel.Simulation.Server", references);
+        Assert.DoesNotContain("Ssalddel.Simulation.Hosting", references);
         Assert.True(typeof(ISimulationWorld파생원장Store)
             .IsAssignableFrom(typeof(SimulationWorld파생원장Store)));
     }

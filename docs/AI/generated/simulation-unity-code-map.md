@@ -275,12 +275,12 @@ Simulation·Unity
   - 읽기/쓰기: `None → None`
   - 부수효과: `None`
   - 경계: 요청 준비만 하며 Runtime 호출·권위 Tick 진행·앱 종료 시간 따라잡기를 하지 않는다.
-- **020 api.session-lifecycle** — [경영SimulationSessionsController](../../../Ssalddel.Simulation.Server/Controllers/경영SimulationSessionsController.cs) · 세션 생성·조회·Tick HTTP 경계를 제공한다.
+- **020 api.session-lifecycle** — [경영SimulationSessionsController](../../../Ssalddel.Simulation.Hosting/Controllers/경영SimulationSessionsController.cs) · 세션 생성·조회·Tick HTTP 경계를 제공한다.
   - 계층/단계: `Api / Confirm`
   - 읽기/쓰기: `SimulationState → SimulationState`
   - 부수효과: `StateMutation`
   - 경계: Simulation 실행 모드에서만 조립되며 오류 계약과 기존 route를 보존한다.
-- **020 api.world-gameplay** — [경영SimulationWorldGameplayController](../../../Ssalddel.Simulation.Server/Controllers/경영SimulationWorldGameplayController.cs) · 플레이어 심리·AreaSet 이동·호스팅·협동 건설의 세계 게임플레이 HTTP 경계를 제공한다.
+- **020 api.world-gameplay** — [경영SimulationWorldGameplayController](../../../Ssalddel.Simulation.Hosting/Controllers/경영SimulationWorldGameplayController.cs) · 플레이어 심리·AreaSet 이동·호스팅·협동 건설의 세계 게임플레이 HTTP 경계를 제공한다.
   - 계층/단계: `Api / Confirm`
   - 읽기/쓰기: `SimulationState → SimulationState`
   - 부수효과: `StateMutation`
@@ -290,7 +290,7 @@ Simulation·Unity
   - 읽기/쓰기: `SimulationState → SimulationState`
   - 부수효과: `StateMutation`
   - 경계: Provider를 호출하거나 운영 DB를 쓰지 않고 사람 승인 Publication만 Simulation 파생 원장에 보관한다.
-- **021 api.online-world** — [SimulationOnlineWorldsController](../../../Ssalddel.Simulation.Server/Controllers/SimulationOnlineWorldsController.cs) · 인증된 플레이어의 공식 지속 세계와 비공개 협동 방 경계를 제공한다.
+- **021 api.online-world** — [SimulationOnlineWorldsController](../../../Ssalddel.Simulation.Hosting/Controllers/SimulationOnlineWorldsController.cs) · 인증된 플레이어의 공식 지속 세계와 비공개 협동 방 경계를 제공한다.
   - 계층/단계: `Api / Confirm`
   - 읽기/쓰기: `SimulationState → SimulationState`
   - 부수효과: `StateMutation`
@@ -365,7 +365,7 @@ Simulation·Unity
   - 읽기/쓰기: `None → None`
   - 부수효과: `None`
   - 경계: 클라이언트는 CardCopyStableId와 예상 전투 개정만 보내며 회복·피해·후퇴 결과를 계산하지 않는다.
-- **020 api.battle** — [SimulationBattlesController](../../../Ssalddel.Simulation.Server/Controllers/SimulationBattlesController.cs) · 병렬 전투 조회·Preview·Confirm·진행 HTTP 경계를 제공한다.
+- **020 api.battle** — [SimulationBattlesController](../../../Ssalddel.Simulation.Hosting/Controllers/SimulationBattlesController.cs) · 병렬 전투 조회·Preview·Confirm·진행 HTTP 경계를 제공한다.
   - 계층/단계: `Api / Confirm`
   - 읽기/쓰기: `SimulationState → SimulationState`
   - 부수효과: `StateMutation`
@@ -400,7 +400,7 @@ Simulation·Unity
   - 읽기/쓰기: `None → None`
   - 부수효과: `None`
   - 경계: Unity는 안정 식별자·예상 개정·행동·반응 경과 시간만 제출한다.
-- **020 api.farm-combat** — [SimulationFarmSurvivalController](../../../Ssalddel.Simulation.Server/Controllers/SimulationFarmSurvivalController.cs) · 전투 시점·박자 시작·반응 확정 HTTP 경계를 제공한다.
+- **020 api.farm-combat** — [SimulationFarmSurvivalController](../../../Ssalddel.Simulation.Hosting/Controllers/SimulationFarmSurvivalController.cs) · 전투 시점·박자 시작·반응 확정 HTTP 경계를 제공한다.
   - 계층/단계: `Api / Confirm`
   - 읽기/쓰기: `SimulationState → SimulationState`
   - 부수효과: `StateMutation`
@@ -430,7 +430,7 @@ Simulation·Unity
   - 읽기/쓰기: `None → None`
   - 부수효과: `None`
   - 경계: 저장 자료는 Simulation 상태만 포함하며 운영 원장과 공공데이터 원본을 복제하지 않는다.
-- **020 api.save-replay** — [경영SimulationSessionsController](../../../Ssalddel.Simulation.Server/Controllers/경영SimulationSessionsController.cs) · 세션 저장·복원 HTTP 경계를 제공한다.
+- **020 api.save-replay** — [경영SimulationSessionsController](../../../Ssalddel.Simulation.Hosting/Controllers/경영SimulationSessionsController.cs) · 세션 저장·복원 HTTP 경계를 제공한다.
   - 계층/단계: `Api / Persistence`
   - 읽기/쓰기: `SimulationState → SimulationState`
   - 부수효과: `PersistentRead | PersistentWrite`
@@ -883,12 +883,12 @@ Simulation·Unity
   - 읽기/쓰기: `DerivedWorld → None`
   - 부수효과: `None`
   - 경계: 수명주기 Revision은 표현 준비 상태이며 Simulation WorldRevision이나 배치 내용을 변경하지 않는다.
-- **020 api.world-stream** — [SimulationWorldStreamingController](../../../Ssalddel.Simulation.Server/Controllers/SimulationWorldStreamingController.cs) · 타일 Recipe·Manifest·Layer·객체 Projection 조회 경계를 제공한다.
+- **020 api.world-stream** — [SimulationWorldStreamingController](../../../Ssalddel.Simulation.Hosting/Controllers/SimulationWorldStreamingController.cs) · 타일 Recipe·Manifest·Layer·객체 Projection 조회 경계를 제공한다.
   - 계층/단계: `Api / Query`
   - 읽기/쓰기: `SimulationState | DerivedWorld → None`
   - 부수효과: `None`
   - 경계: 조회와 eligibility Preview는 타일이나 업무 상태를 생성·확정하지 않는다.
-- **025 api.world-region-summary** — [SimulationWorldRegionSummaryController](../../../Ssalddel.Simulation.Server/Controllers/SimulationWorldRegionSummaryController.cs) · 지역·타일별 대표 정보와 가까운 공개 객체의 제한된 상세정보를 제공한다.
+- **025 api.world-region-summary** — [SimulationWorldRegionSummaryController](../../../Ssalddel.Simulation.Hosting/Controllers/SimulationWorldRegionSummaryController.cs) · 지역·타일별 대표 정보와 가까운 공개 객체의 제한된 상세정보를 제공한다.
   - 계층/단계: `Api / Query`
   - 읽기/쓰기: `DerivedWorld → None`
   - 부수효과: `None`
@@ -918,7 +918,7 @@ Simulation·Unity
   - 읽기/쓰기: `SimulationState | DerivedWorld → None`
   - 부수효과: `None`
   - 경계: Preview는 공간 권위·운영 원장·자원 원장을 변경하지 않는다. 시나리오 셀 내용 공급자는 실제 E5·E6 근거로 자동 승격되지 않는다.
-- **032 api.lh-world-preview** — [SimulationLhWorldController](../../../Ssalddel.Simulation.Server/Controllers/SimulationLhWorldController.cs) · 플레이어 L3 위치에 필요한 LH Cell 후보를 서버 Simulation 시각으로 Preview한다.
+- **032 api.lh-world-preview** — [SimulationLhWorldController](../../../Ssalddel.Simulation.Hosting/Controllers/SimulationLhWorldController.cs) · 플레이어 L3 위치에 필요한 LH Cell 후보를 서버 Simulation 시각으로 Preview한다.
   - 계층/단계: `Api / Preview`
   - 읽기/쓰기: `SimulationState | DerivedWorld → None`
   - 부수효과: `None`
@@ -958,7 +958,7 @@ Simulation·Unity
   - 읽기/쓰기: `None → None`
   - 부수효과: `None`
   - 경계: 원 단위와 관계 상태를 보존하며 가격 차이·수익·사건·공간 배치를 계산하지 않는다.
-- **020 api.farm-reality-evidence** — [SimulationFarmRealityEvidenceController](../../../Ssalddel.Simulation.Server/Controllers/SimulationFarmRealityEvidenceController.cs) · 감자 Farm 현실근거의 명시적 동기화와 읽기 전용 조회 경계를 제공한다.
+- **020 api.farm-reality-evidence** — [SimulationFarmRealityEvidenceController](../../../Ssalddel.Simulation.Hosting/Controllers/SimulationFarmRealityEvidenceController.cs) · 감자 Farm 현실근거의 명시적 동기화와 읽기 전용 조회 경계를 제공한다.
   - 계층/단계: `Api / Persistence`
   - 읽기/쓰기: `SharedPublicData | DerivedWorld → DerivedWorld`
   - 부수효과: `PersistentRead | PersistentWrite`
@@ -1002,5 +1002,5 @@ Simulation·Unity
 ## 진단 요약
 
 - 오류: 0
-- 경고: 6
+- 경고: 8
 - 일반 공개 타입의 미표기는 경고이며, 필수 단계·권위 위반·오래된 생성 파일만 검증을 차단한다.

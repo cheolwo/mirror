@@ -14,7 +14,7 @@
     <ProjectReference Include="..\..\Ssalddel.Simulation.Domain\Ssalddel.Simulation.Domain.csproj" />
     <ProjectReference Include="..\..\Ssalddel.Simulation.Infrastructure\Ssalddel.Simulation.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Ssalddel.Simulation.Persistence\Ssalddel.Simulation.Persistence.csproj" />
-    <ProjectReference Include="..\..\Ssalddel.Simulation.Server\Ssalddel.Simulation.Server.csproj" />
+    <ProjectReference Include="..\..\Ssalddel.Simulation.Hosting\Ssalddel.Simulation.Hosting.csproj" />
     <ProjectReference Include="..\..\Ssalddel.Simulation.Tests\Ssalddel.Simulation.Tests.csproj" />
     <ProjectReference Include="..\..\Ssalddel.Unity\Ssalddel.Unity.csproj" />
     <ProjectReference Include="..\..\Ssalddel.Unity.Tests\Ssalddel.Unity.Tests.csproj" />

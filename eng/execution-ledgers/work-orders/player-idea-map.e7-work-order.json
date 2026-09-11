@@ -62,7 +62,7 @@
       ],
       "upwardValidation": [
         { "code": "E1", "status": "Passed", "evidenceRefs": ["docs/AI/Planning/스토리/PLAN-STORY-IDEA-MAP-LEARNING-001/README.md"] },
-        { "code": "E2", "status": "Passed", "evidenceRefs": ["Ssalddel.Simulation.Server/Controllers/SimulationPlayerIdeaMapController.cs"] },
+        { "code": "E2", "status": "Passed", "evidenceRefs": ["Ssalddel.Simulation.Hosting/Controllers/SimulationPlayerIdeaMapController.cs"] },
         { "code": "E3", "status": "Passed", "evidenceRefs": ["Ssalddel.Simulation.Tests/SimulationPlayerLearningFocusTests.cs", "test:SimulationPlayerLearningFocusTests:19/19"] },
         { "code": "E4", "status": "Blocked", "evidenceRefs": [] },
         { "code": "E5", "status": "Blocked", "evidenceRefs": [] },

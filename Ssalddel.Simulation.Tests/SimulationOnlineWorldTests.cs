@@ -16,9 +16,10 @@ using Ssalddel.Simulation.Application;
 using Ssalddel.Simulation.Contracts;
 using Ssalddel.Simulation.Domain;
 using Ssalddel.Simulation.Infrastructure;
-using Ssalddel.Simulation.Server;
+using Ssalddel.Simulation.Hosting;
 using Ssalddel.Simulation.Persistence;
 using Ssalddel.WorkflowRules;
+using Ssalddel.Security;
 
 namespace Ssalddel.Simulation.Tests;
 
@@ -858,27 +859,26 @@ public sealed class SimulationOnlineWorldTests
     public async Task 온라인세계Http는_익명요청을거부하고_Jwt주체로방소유자를확정한다()
     {
         const string secret =
-            "simulation-online-world-test-secret-1234567890";
-        using var factory = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder => builder.ConfigureAppConfiguration(
-                (_, configuration) => configuration.AddInMemoryCollection(
-                    new Dictionary<string, string?>
-                    {
-                        ["SsalddelExecution:Mode"] = "Simulation",
-                        ["SimulationServer:Enabled"] = "true",
-                        ["SimulationSharedPublicData:Enabled"] = "false",
-                        ["SimulationWorldDerivationDatabase:Enabled"] = "false",
-                        ["SimulationSessionDatabase:Enabled"] = "false",
-                        ["SimulationIdentity:Enabled"] = "true",
-                        ["SimulationIdentity:Issuer"] = "simulation-tests",
-                        ["SimulationIdentity:Audience"] = "unity-tests",
-                        ["SimulationIdentity:SecretKey"] = secret,
-                    })));
+            "ssalddel-unified-host-test-secret-key-2026";
+        using var factory = new SimulationWebApplicationFactory()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.UseEnvironment("TestingAuthenticated");
+                builder.ConfigureAppConfiguration(
+                    (_, configuration) => configuration.AddInMemoryCollection(
+                        new Dictionary<string, string?>
+                        {
+                            ["SsalddelExecution:Mode"] = "Operational",
+                            ["SsalddelSimulation:AllowUnauthenticatedTesting"] = "false",
+                            ["SimulationSharedPublicData:Enabled"] = "false",
+                            ["SimulationWorldDerivationDatabase:Enabled"] = "false",
+                            ["SimulationSessionDatabase:Enabled"] = "false",
+                        }));
+            });
         using var anonymous = factory.CreateClient();
         var configuredIdentity = factory.Services.GetRequiredService<
-            IOptions<SimulationIdentityOptions>>().Value;
-        Assert.True(configuredIdentity.Enabled);
-        Assert.Equal("simulation-tests", configuredIdentity.Issuer);
+            IOptions<JwtOptions>>().Value;
+        Assert.Equal("Ssalddel.Tests", configuredIdentity.Issuer);
         var bearer = factory.Services.GetRequiredService<
             IOptionsMonitor<JwtBearerOptions>>().Get(
                 JwtBearerDefaults.AuthenticationScheme);
@@ -1242,8 +1242,8 @@ public sealed class SimulationOnlineWorldTests
     private static string Token(string secret, string player)
     {
         var token = new JwtSecurityToken(
-            issuer: "simulation-tests",
-            audience: "unity-tests",
+            issuer: "Ssalddel.Tests",
+            audience: "Ssalddel.Client.Tests",
             claims:
             [
                 new Claim(ClaimTypes.NameIdentifier, player),

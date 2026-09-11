@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Ssalddel.Simulation.Contracts;
 using Ssalddel.Simulation.Domain;
-using Ssalddel.Simulation.Server.Controllers;
+using Ssalddel.Simulation.Hosting.Controllers;
 
 namespace Ssalddel.Simulation.Tests;
 

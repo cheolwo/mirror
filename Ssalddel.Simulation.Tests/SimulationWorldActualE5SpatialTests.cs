@@ -190,7 +190,7 @@ public sealed class SimulationWorldActualE5SpatialTests
     [Fact]
     public async Task WorldStream_API에서_Network와예순개WI준비도를조회한다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var escaped = Uri.EscapeDataString(PyeongchangAreaSetStableIds.ActualNetwork);
 
@@ -216,7 +216,7 @@ public sealed class SimulationWorldActualE5SpatialTests
     [Fact]
     public async Task 실제E5세션_API는_FarmH5배치와공간폐루프를고정하고_E6를요구하지않는다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         const string layoutId = "world-layout:sim:pyeongchang:nature-farm-hub-town.v1";
         var layout = await client.GetFromJsonAsync<SimulationWorldLayoutDefinitionResponse>(
@@ -256,7 +256,7 @@ public sealed class SimulationWorldActualE5SpatialTests
     [Fact]
     public async Task 실제E5세션_API는_낡은H5해시와_클라이언트공간주입을거부한다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         const string layoutId = "world-layout:sim:pyeongchang:nature-farm-hub-town.v1";
         var request = new SimulationActualE5SessionCreateRequest
@@ -330,7 +330,7 @@ public sealed class SimulationWorldActualE5SpatialTests
     [Fact]
     public async Task Farm_E7시작_API는_Current_E6관문을요구하지만_E7완료를주장하지않는다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         const string layoutId = "world-layout:sim:pyeongchang:nature-farm-hub-town.v1";
         var layout = await client.GetFromJsonAsync<SimulationWorldLayoutDefinitionResponse>(

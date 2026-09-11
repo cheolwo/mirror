@@ -9,7 +9,7 @@ using Ssalddel.Simulation.Application;
 using Ssalddel.Simulation.Contracts;
 using Ssalddel.Simulation.Domain;
 using Ssalddel.Simulation.Persistence;
-using Ssalddel.Simulation.Server;
+using Ssalddel.Simulation.Hosting;
 
 namespace Ssalddel.Simulation.Tests;
 
@@ -364,10 +364,10 @@ public sealed class SimulationWorldDerivationPersistenceTests
         });
 
         var error = Assert.Throws<InvalidOperationException>(() =>
-            new ServiceCollection().AddSimulationServerServices(configuration));
+            new ServiceCollection().AddSsalddelSimulationModule(configuration));
 
         Assert.Equal(
-            SimulationServerServiceCollectionExtensions.WorldDerivationConnectionStringMissingErrorCode,
+            SsalddelSimulationHostingServiceCollectionExtensions.WorldDerivationConnectionStringMissingErrorCode,
             error.Message);
     }
 
@@ -384,7 +384,7 @@ public sealed class SimulationWorldDerivationPersistenceTests
         });
         var services = new ServiceCollection();
 
-        services.AddSimulationServerServices(configuration);
+        services.AddSsalddelSimulationModule(configuration);
 
         Assert.Contains(services, descriptor =>
             descriptor.ServiceType == typeof(ISimulationWorld파생원장Store)

@@ -11,7 +11,7 @@ using Ssalddel.Simulation.Contracts;
 using Ssalddel.Simulation.Domain;
 using Ssalddel.Simulation.Infrastructure;
 using Ssalddel.Simulation.Persistence;
-using Ssalddel.Simulation.Server.Controllers;
+using Ssalddel.Simulation.Hosting.Controllers;
 using Ssalddel.Unity.Application;
 
 var repositoryRoot = FindRepositoryRoot();

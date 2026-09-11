@@ -31,7 +31,7 @@
       "Ssalddel.Simulation.Contracts/UnityPackage/Runtime",
       "Ssalddel.Simulation.Domain/UnityPackage/Runtime",
       "Ssalddel.Simulation.Application",
-      "Ssalddel.Simulation.Server/Controllers",
+      "Ssalddel.Simulation.Hosting/Controllers",
       "Ssalddel.Simulation.Tests",
       "eng/execution-ledgers",
       "eng/world-seedbeds",

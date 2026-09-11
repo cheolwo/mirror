@@ -296,7 +296,7 @@ public sealed class SimulationAreaBuildingProgressionTests
     [Fact]
     public async System.Threading.Tasks.Task HTTP통합조회는_세션에동결된_영역건물대장만반환한다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var request = CreateR3Request(
             SimulationNatureSurvivalCodes.ProfileRevisionR4);

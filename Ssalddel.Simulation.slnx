@@ -4,6 +4,7 @@
   </Folder>
   <Folder Name="/Simulation/">
     <Project Path="Ssalddel.BusinessWorkflow/Ssalddel.BusinessWorkflow.csproj" />
+    <Project Path="Ssalddel.Simulation.BusinessWorkflow/Ssalddel.Simulation.BusinessWorkflow.csproj" />
     <Project Path="Ssalddel.Interior.Contracts/Ssalddel.Interior.Contracts.csproj" />
     <Project Path="Ssalddel.Interior.Domain/Ssalddel.Interior.Domain.csproj" />
     <Project Path="Ssalddel.Simulation.Application/Ssalddel.Simulation.Application.csproj" />
@@ -11,7 +12,7 @@
     <Project Path="Ssalddel.Simulation.Domain/Ssalddel.Simulation.Domain.csproj" />
     <Project Path="Ssalddel.Simulation.Infrastructure/Ssalddel.Simulation.Infrastructure.csproj" />
     <Project Path="Ssalddel.Simulation.Persistence/Ssalddel.Simulation.Persistence.csproj" />
-    <Project Path="Ssalddel.Simulation.Server/Ssalddel.Simulation.Server.csproj" />
+    <Project Path="Ssalddel.Simulation.Hosting/Ssalddel.Simulation.Hosting.csproj" />
   </Folder>
   <Folder Name="/Workflow Rules/">
     <Project Path="Ssalddel.WorkflowRules.Contracts/Ssalddel.WorkflowRules.Contracts.csproj" />
@@ -22,5 +23,6 @@
   </Folder>
   <Folder Name="/Tools/">
     <Project Path="eng/Ssalddel.EvidenceMap/Ssalddel.EvidenceMap.csproj" />
+    <Project Path="eng/Ssalddel.Simulation.Tools/Ssalddel.Simulation.Tools.csproj" />
   </Folder>
 </Solution>

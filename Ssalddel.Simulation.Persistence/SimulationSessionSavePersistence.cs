@@ -31,12 +31,51 @@ public sealed class SimulationSessionDbContext(
         Set<SimulationSession저장자료Entity>();
     public DbSet<SimulationOnlineWorld상태사본Entity> OnlineWorldCheckpoints =>
         Set<SimulationOnlineWorld상태사본Entity>();
+    public DbSet<SimulationSession접근원장Entity> SessionAccessLedgers =>
+        Set<SimulationSession접근원장Entity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new SimulationSession저장자료Configuration());
         modelBuilder.ApplyConfiguration(
             new SimulationOnlineWorld상태사본Configuration());
+        modelBuilder.ApplyConfiguration(
+            new SimulationSession접근원장Configuration());
+    }
+}
+
+public sealed class SimulationSession접근원장Entity
+{
+    public string SessionStableId { get; set; } = string.Empty;
+    public string SubjectId { get; set; } = string.Empty;
+    public string AccessRoleCode { get; set; } = "Owner";
+    public long Revision { get; set; }
+    public DateTimeOffset CreatedAtUtc { get; set; }
+    public DateTimeOffset UpdatedAtUtc { get; set; }
+}
+
+internal sealed class SimulationSession접근원장Configuration
+    : IEntityTypeConfiguration<SimulationSession접근원장Entity>
+{
+    public void Configure(
+        EntityTypeBuilder<SimulationSession접근원장Entity> builder)
+    {
+        builder.ToTable("시뮬레이션세션_접근원장");
+        builder.HasKey(value => value.SessionStableId);
+        builder.HasIndex(value => new { value.SubjectId, value.SessionStableId })
+            .IsUnique();
+        builder.Property(value => value.SessionStableId)
+            .HasColumnName("세션고유식별자").HasMaxLength(200).IsRequired();
+        builder.Property(value => value.SubjectId)
+            .HasColumnName("로그인주체식별자").HasMaxLength(450).IsRequired();
+        builder.Property(value => value.AccessRoleCode)
+            .HasColumnName("접근역할코드").HasMaxLength(30).IsRequired();
+        builder.Property(value => value.Revision)
+            .HasColumnName("개정번호");
+        builder.Property(value => value.CreatedAtUtc)
+            .HasColumnName("생성시각UTC").IsRequired();
+        builder.Property(value => value.UpdatedAtUtc)
+            .HasColumnName("수정시각UTC").IsRequired();
     }
 }
 

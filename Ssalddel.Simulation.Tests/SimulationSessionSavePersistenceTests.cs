@@ -8,7 +8,7 @@ using Ssalddel.Simulation.Contracts;
 using Ssalddel.Simulation.Domain;
 using Ssalddel.Simulation.Infrastructure;
 using Ssalddel.Simulation.Persistence;
-using Ssalddel.Simulation.Server;
+using Ssalddel.Simulation.Hosting;
 
 namespace Ssalddel.Simulation.Tests;
 
@@ -229,7 +229,7 @@ public sealed class SimulationSessionSavePersistenceTests
                 "SimulationSession",
         });
         var error = Assert.Throws<InvalidOperationException>(() =>
-            new ServiceCollection().AddSimulationServerServices(missing));
+            new ServiceCollection().AddSsalddelSimulationModule(missing));
 
         var configured = Configuration(new Dictionary<string, string?>
         {
@@ -241,10 +241,10 @@ public sealed class SimulationSessionSavePersistenceTests
                 "Server=localhost;Database=simulation_session;User=test;Password=test;",
         });
         var services = new ServiceCollection();
-        services.AddSimulationServerServices(configured);
+        services.AddSsalddelSimulationModule(configured);
 
         Assert.Equal(
-            SimulationServerServiceCollectionExtensions
+            SsalddelSimulationHostingServiceCollectionExtensions
                 .SessionConnectionStringMissingErrorCode,
             error.Message);
         Assert.Contains(services, descriptor =>

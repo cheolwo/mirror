@@ -2,7 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ssalddel.Simulation.Application;
 using Ssalddel.Simulation.Contracts;
-using Ssalddel.Simulation.Server;
+using Ssalddel.Simulation.Hosting;
 using Ssalddel.WorkflowRules.Contracts;
 
 namespace Ssalddel.Simulation.Tests;
@@ -221,10 +221,10 @@ public sealed class SimulationRuntimeRenderingPipelineTests
     public void Server조립은_렌더링의도와Urp표현Pipeline을등록한다()
     {
         var services = new ServiceCollection();
-        services.AddSimulationServerServices(new ConfigurationBuilder()
+        services.AddSsalddelSimulationModule(new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["SimulationServer:Enabled"] = "false",
+                ["SsalddelSimulation:AllowUnauthenticatedTesting"] = "false",
                 ["SimulationSharedPublicData:Enabled"] = "false",
                 ["SimulationWorldDerivationDatabase:Enabled"] = "false",
             })

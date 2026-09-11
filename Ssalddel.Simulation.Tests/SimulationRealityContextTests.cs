@@ -133,7 +133,7 @@ public sealed class SimulationRealityContextTests
     [Fact]
     public async Task 실제E5세션은_프로필만받고_기본조회에서는출처상세를숨긴다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         const string layoutId = "world-layout:sim:pyeongchang:nature-farm-hub-town.v1";
         var layout = await client.GetFromJsonAsync<SimulationWorldLayoutDefinitionResponse>(

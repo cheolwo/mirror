@@ -16,18 +16,20 @@
     "docs/ProjectOverview/GptProjectContext.md",
     "docs/AI/DECISIONS.md",
     "docs/AI/CURRENT_WORK.md",
-    "Ssalddel.Simulation.Server/README.md",
+    "Ssalddel.Simulation.Hosting/README.md",
     "docs/Architecture/SsalddelCodeMetadata.md"
   ],
   "sourceRoots": [
+    "Ssalddel.BusinessWorkflow",
     "Ssalddel.Interior.Contracts",
     "Ssalddel.Interior.Domain",
+    "Ssalddel.Simulation.BusinessWorkflow",
     "Ssalddel.Simulation.Contracts",
     "Ssalddel.Simulation.Domain",
     "Ssalddel.Simulation.Application",
     "Ssalddel.Simulation.Infrastructure",
     "Ssalddel.Simulation.Persistence",
-    "Ssalddel.Simulation.Server",
+    "Ssalddel.Simulation.Hosting",
     "Ssalddel.Unity"
   ],
   "excludedRoots": [

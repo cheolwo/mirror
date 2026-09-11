@@ -95,7 +95,7 @@
     "Ssalddel.Simulation.Tests/SimulationWorldAssetPlacementTests.cs",
     "Ssalddel.Simulation.Tests/SimulationLhWorldTests.cs",
     "Ssalddel.Simulation.Application/RuntimeCore/SimulationNatureWorldCellAssemblyEngine.cs",
-    "Ssalddel.Simulation.Server/Controllers/SimulationLhWorldController.cs",
+    "Ssalddel.Simulation.Hosting/Controllers/SimulationLhWorldController.cs",
     "Ssalddel.Simulation.Application/SimulationSeparatedWorldAssetPlacement.cs",
     "docs/Architecture/지도구성과세계자산배치분리.md"
   ]

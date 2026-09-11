@@ -335,9 +335,9 @@
           ],
           "executionStage": "Confirm",
           "layer": "Api",
-          "componentType": "Ssalddel.Simulation.Server.Controllers.\uACBD\uC601SimulationSessionsController",
-          "assembly": "Ssalddel.Simulation.Server",
-          "sourcePath": "Ssalddel.Simulation.Server/Controllers/\uACBD\uC601SimulationSessionsController.cs",
+          "componentType": "Ssalddel.Simulation.Hosting.Controllers.\uACBD\uC601SimulationSessionsController",
+          "assembly": "Ssalddel.Simulation.Hosting",
+          "sourcePath": "Ssalddel.Simulation.Hosting/Controllers/\uACBD\uC601SimulationSessionsController.cs",
           "responsibility": "\uC138\uC158 \uC0DD\uC131\u00B7\uC870\uD68C\u00B7Tick HTTP \uACBD\uACC4\uB97C \uC81C\uACF5\uD55C\uB2E4.",
           "effects": [
             "StateMutation"
@@ -358,9 +358,9 @@
           ],
           "executionStage": "Confirm",
           "layer": "Api",
-          "componentType": "Ssalddel.Simulation.Server.Controllers.\uACBD\uC601SimulationWorldGameplayController",
-          "assembly": "Ssalddel.Simulation.Server",
-          "sourcePath": "Ssalddel.Simulation.Server/Controllers/\uACBD\uC601SimulationWorldGameplayController.cs",
+          "componentType": "Ssalddel.Simulation.Hosting.Controllers.\uACBD\uC601SimulationWorldGameplayController",
+          "assembly": "Ssalddel.Simulation.Hosting",
+          "sourcePath": "Ssalddel.Simulation.Hosting/Controllers/\uACBD\uC601SimulationWorldGameplayController.cs",
           "responsibility": "\uD50C\uB808\uC774\uC5B4 \uC2EC\uB9AC\u00B7AreaSet \uC774\uB3D9\u00B7\uD638\uC2A4\uD305\u00B7\uD611\uB3D9 \uAC74\uC124\uC758 \uC138\uACC4 \uAC8C\uC784\uD50C\uB808\uC774 HTTP \uACBD\uACC4\uB97C \uC81C\uACF5\uD55C\uB2E4.",
           "effects": [
             "StateMutation"
@@ -404,9 +404,9 @@
           ],
           "executionStage": "Confirm",
           "layer": "Api",
-          "componentType": "Ssalddel.Simulation.Server.Controllers.SimulationOnlineWorldsController",
-          "assembly": "Ssalddel.Simulation.Server",
-          "sourcePath": "Ssalddel.Simulation.Server/Controllers/SimulationOnlineWorldsController.cs",
+          "componentType": "Ssalddel.Simulation.Hosting.Controllers.SimulationOnlineWorldsController",
+          "assembly": "Ssalddel.Simulation.Hosting",
+          "sourcePath": "Ssalddel.Simulation.Hosting/Controllers/SimulationOnlineWorldsController.cs",
           "responsibility": "\uC778\uC99D\uB41C \uD50C\uB808\uC774\uC5B4\uC758 \uACF5\uC2DD \uC9C0\uC18D \uC138\uACC4\uC640 \uBE44\uACF5\uAC1C \uD611\uB3D9 \uBC29 \uACBD\uACC4\uB97C \uC81C\uACF5\uD55C\uB2E4.",
           "effects": [
             "StateMutation"
@@ -706,9 +706,9 @@
           ],
           "executionStage": "Confirm",
           "layer": "Api",
-          "componentType": "Ssalddel.Simulation.Server.Controllers.SimulationBattlesController",
-          "assembly": "Ssalddel.Simulation.Server",
-          "sourcePath": "Ssalddel.Simulation.Server/Controllers/SimulationBattlesController.cs",
+          "componentType": "Ssalddel.Simulation.Hosting.Controllers.SimulationBattlesController",
+          "assembly": "Ssalddel.Simulation.Hosting",
+          "sourcePath": "Ssalddel.Simulation.Hosting/Controllers/SimulationBattlesController.cs",
           "responsibility": "\uBCD1\uB82C \uC804\uD22C \uC870\uD68C\u00B7Preview\u00B7Confirm\u00B7\uC9C4\uD589 HTTP \uACBD\uACC4\uB97C \uC81C\uACF5\uD55C\uB2E4.",
           "effects": [
             "StateMutation"
@@ -841,9 +841,9 @@
           ],
           "executionStage": "Confirm",
           "layer": "Api",
-          "componentType": "Ssalddel.Simulation.Server.Controllers.SimulationFarmSurvivalController",
-          "assembly": "Ssalddel.Simulation.Server",
-          "sourcePath": "Ssalddel.Simulation.Server/Controllers/SimulationFarmSurvivalController.cs",
+          "componentType": "Ssalddel.Simulation.Hosting.Controllers.SimulationFarmSurvivalController",
+          "assembly": "Ssalddel.Simulation.Hosting",
+          "sourcePath": "Ssalddel.Simulation.Hosting/Controllers/SimulationFarmSurvivalController.cs",
           "responsibility": "\uC804\uD22C \uC2DC\uC810\u00B7\uBC15\uC790 \uC2DC\uC791\u00B7\uBC18\uC751 \uD655\uC815 HTTP \uACBD\uACC4\uB97C \uC81C\uACF5\uD55C\uB2E4.",
           "effects": [
             "StateMutation"
@@ -958,9 +958,9 @@
           ],
           "executionStage": "Persistence",
           "layer": "Api",
-          "componentType": "Ssalddel.Simulation.Server.Controllers.\uACBD\uC601SimulationSessionsController",
-          "assembly": "Ssalddel.Simulation.Server",
-          "sourcePath": "Ssalddel.Simulation.Server/Controllers/\uACBD\uC601SimulationSessionsController.cs",
+          "componentType": "Ssalddel.Simulation.Hosting.Controllers.\uACBD\uC601SimulationSessionsController",
+          "assembly": "Ssalddel.Simulation.Hosting",
+          "sourcePath": "Ssalddel.Simulation.Hosting/Controllers/\uACBD\uC601SimulationSessionsController.cs",
           "responsibility": "\uC138\uC158 \uC800\uC7A5\u00B7\uBCF5\uC6D0 HTTP \uACBD\uACC4\uB97C \uC81C\uACF5\uD55C\uB2E4.",
           "effects": [
             "PersistentRead",
@@ -2651,9 +2651,9 @@
           ],
           "executionStage": "Query",
           "layer": "Api",
-          "componentType": "Ssalddel.Simulation.Server.Controllers.SimulationWorldStreamingController",
-          "assembly": "Ssalddel.Simulation.Server",
-          "sourcePath": "Ssalddel.Simulation.Server/Controllers/SimulationWorldStreamingController.cs",
+          "componentType": "Ssalddel.Simulation.Hosting.Controllers.SimulationWorldStreamingController",
+          "assembly": "Ssalddel.Simulation.Hosting",
+          "sourcePath": "Ssalddel.Simulation.Hosting/Controllers/SimulationWorldStreamingController.cs",
           "responsibility": "\uD0C0\uC77C Recipe\u00B7Manifest\u00B7Layer\u00B7\uAC1D\uCCB4 Projection \uC870\uD68C \uACBD\uACC4\uB97C \uC81C\uACF5\uD55C\uB2E4.",
           "effects": [],
           "readsFrom": [
@@ -2671,9 +2671,9 @@
           ],
           "executionStage": "Query",
           "layer": "Api",
-          "componentType": "Ssalddel.Simulation.Server.Controllers.SimulationWorldRegionSummaryController",
-          "assembly": "Ssalddel.Simulation.Server",
-          "sourcePath": "Ssalddel.Simulation.Server/Controllers/SimulationWorldRegionSummaryController.cs",
+          "componentType": "Ssalddel.Simulation.Hosting.Controllers.SimulationWorldRegionSummaryController",
+          "assembly": "Ssalddel.Simulation.Hosting",
+          "sourcePath": "Ssalddel.Simulation.Hosting/Controllers/SimulationWorldRegionSummaryController.cs",
           "responsibility": "\uC9C0\uC5ED\u00B7\uD0C0\uC77C\uBCC4 \uB300\uD45C \uC815\uBCF4\uC640 \uAC00\uAE4C\uC6B4 \uACF5\uAC1C \uAC1D\uCCB4\uC758 \uC81C\uD55C\uB41C \uC0C1\uC138\uC815\uBCF4\uB97C \uC81C\uACF5\uD55C\uB2E4.",
           "effects": [],
           "readsFrom": [
@@ -2783,9 +2783,9 @@
           ],
           "executionStage": "Preview",
           "layer": "Api",
-          "componentType": "Ssalddel.Simulation.Server.Controllers.SimulationLhWorldController",
-          "assembly": "Ssalddel.Simulation.Server",
-          "sourcePath": "Ssalddel.Simulation.Server/Controllers/SimulationLhWorldController.cs",
+          "componentType": "Ssalddel.Simulation.Hosting.Controllers.SimulationLhWorldController",
+          "assembly": "Ssalddel.Simulation.Hosting",
+          "sourcePath": "Ssalddel.Simulation.Hosting/Controllers/SimulationLhWorldController.cs",
           "responsibility": "\uD50C\uB808\uC774\uC5B4 L3 \uC704\uCE58\uC5D0 \uD544\uC694\uD55C LH Cell \uD6C4\uBCF4\uB97C \uC11C\uBC84 Simulation \uC2DC\uAC01\uC73C\uB85C Preview\uD55C\uB2E4.",
           "effects": [],
           "readsFrom": [
@@ -2940,9 +2940,9 @@
           ],
           "executionStage": "Persistence",
           "layer": "Api",
-          "componentType": "Ssalddel.Simulation.Server.Controllers.SimulationFarmRealityEvidenceController",
-          "assembly": "Ssalddel.Simulation.Server",
-          "sourcePath": "Ssalddel.Simulation.Server/Controllers/SimulationFarmRealityEvidenceController.cs",
+          "componentType": "Ssalddel.Simulation.Hosting.Controllers.SimulationFarmRealityEvidenceController",
+          "assembly": "Ssalddel.Simulation.Hosting",
+          "sourcePath": "Ssalddel.Simulation.Hosting/Controllers/SimulationFarmRealityEvidenceController.cs",
           "responsibility": "\uAC10\uC790 Farm \uD604\uC2E4\uADFC\uAC70\uC758 \uBA85\uC2DC\uC801 \uB3D9\uAE30\uD654\uC640 \uC77D\uAE30 \uC804\uC6A9 \uC870\uD68C \uACBD\uACC4\uB97C \uC81C\uACF5\uD55C\uB2E4.",
           "effects": [
             "PersistentRead",
@@ -3113,6 +3113,13 @@
       "severity": "Warning",
       "code": "CODEMAP100",
       "featureKey": "simulation-unity",
+      "stepKey": "Ssalddel.BusinessWorkflow",
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 7\uAC1C: BusinessWorkflowRuntime, IBusinessWorkflowRuntime, I\uBC30\uC1A1\uC5C5\uBB34Runtime, I\uBC30\uCC28\uC5C5\uBB34Runtime, I\uC74C\uC2DD\uC810\uC5C5\uBB34Runtime, I\uC8FC\uBB38\uC5C5\uBB34Runtime, I\uCC3D\uACE0\uC5C5\uBB34Runtime"
+    },
+    {
+      "severity": "Warning",
+      "code": "CODEMAP100",
+      "featureKey": "simulation-unity",
       "stepKey": "Ssalddel.Simulation.Application",
       "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 115\uAC1C: DisabledSimulationWorldAreaSetGraphStore, DisabledSimulationWorldLandscapeCompositionStore, DisabledSimulationWorld\uC0C1\uD638\uC791\uC6A9GraphReadinessStore, ISimulationActorEquipmentRuntime, ISimulationBattleInstanceStore, ISimulationBattleRuntime, ISimulationBattlefieldDerivationService, ISimulationFarmChoiceRuntime, ..."
     },
@@ -3120,8 +3127,22 @@
       "severity": "Warning",
       "code": "CODEMAP100",
       "featureKey": "simulation-unity",
+      "stepKey": "Ssalddel.Simulation.BusinessWorkflow",
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 7\uAC1C: BusinessWorkflowRuntime, IBusinessWorkflowRuntime, I\uBC30\uC1A1\uC5C5\uBB34Runtime, I\uBC30\uCC28\uC5C5\uBB34Runtime, I\uC74C\uC2DD\uC810\uC5C5\uBB34Runtime, I\uC8FC\uBB38\uC5C5\uBB34Runtime, I\uCC3D\uACE0\uC5C5\uBB34Runtime"
+    },
+    {
+      "severity": "Warning",
+      "code": "CODEMAP100",
+      "featureKey": "simulation-unity",
       "stepKey": "Ssalddel.Simulation.Contracts",
       "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 3\uAC1C: ISimulationFoodOrderRuntime, ISimulationLogisticsRuntime, ISimulationNpcPolicyRuntime"
+    },
+    {
+      "severity": "Warning",
+      "code": "CODEMAP100",
+      "featureKey": "simulation-unity",
+      "stepKey": "Ssalddel.Simulation.Hosting",
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 29\uAC1C: DisabledSimulationFarmRealityEvidenceStore, SimulationActorEquipmentController, SimulationActualE5SessionsController, SimulationAreaSetImmersionController, SimulationCollectibleCardRewardsController, SimulationFarmConstructionPlacementController, SimulationHexagramCampaignController, SimulationIntegratedWorldController, ..."
     },
     {
       "severity": "Warning",
@@ -3136,13 +3157,6 @@
       "featureKey": "simulation-unity",
       "stepKey": "Ssalddel.Simulation.Persistence",
       "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 7\uAC1C: SimulationOnlineWorldCheckpointStore, SimulationWorldAreaSetGraphStore, SimulationWorldLandscapeCompositionStore, SimulationWorldUI\uAE30\uD68DStore, SimulationWorld\uAC1D\uCCB4\uD45C\uD604\uADDC\uCE59Store, SimulationWorld\uC0C1\uD638\uC791\uC6A9GraphReadinessStore, SimulationWorld\uC5C5\uBB34\uADDC\uCE59\uC9D1\uACB0Store"
-    },
-    {
-      "severity": "Warning",
-      "code": "CODEMAP100",
-      "featureKey": "simulation-unity",
-      "stepKey": "Ssalddel.Simulation.Server",
-      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 29\uAC1C: DisabledSimulationFarmRealityEvidenceStore, SimulationActorEquipmentController, SimulationActualE5SessionsController, SimulationAreaSetImmersionController, SimulationCollectibleCardRewardsController, SimulationFarmConstructionPlacementController, SimulationHexagramCampaignController, SimulationIntegratedWorldController, ..."
     },
     {
       "severity": "Warning",

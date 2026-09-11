@@ -5,7 +5,7 @@ using Ssalddel.Simulation.Application;
 using Ssalddel.Simulation.Contracts;
 using Ssalddel.Simulation.Domain;
 using Ssalddel.Simulation.Infrastructure;
-using Ssalddel.Simulation.Server.Controllers;
+using Ssalddel.Simulation.Hosting.Controllers;
 using Xunit;
 
 namespace Ssalddel.Simulation.Tests;

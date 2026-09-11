@@ -15,6 +15,7 @@
     <ProjectReference Include="..\Ssalddel.Contracts\Ssalddel.Contracts.csproj" />
     <ProjectReference Include="..\Ssalddel.Domain\Ssalddel.Domain.csproj" />
     <ProjectReference Include="..\Ssalddel.Infrastructure\Ssalddel.Infrastructure.csproj" />
+    <ProjectReference Include="..\Ssalddel.Simulation.Hosting\Ssalddel.Simulation.Hosting.csproj" />
     <ProjectReference Include="..\Ssalddel.WorkflowRules.Contracts\Ssalddel.WorkflowRules.Contracts.csproj" />
     <ProjectReference Include="..\Ssalddel.WorkflowRules\Ssalddel.WorkflowRules.csproj" />
     <PackageReference Include="FluentValidation" />

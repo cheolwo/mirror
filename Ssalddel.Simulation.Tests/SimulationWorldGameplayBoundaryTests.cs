@@ -1,6 +1,6 @@
 using System.Reflection;
 using Ssalddel.Simulation.Application;
-using Ssalddel.Simulation.Server.Controllers;
+using Ssalddel.Simulation.Hosting.Controllers;
 
 namespace Ssalddel.Simulation.Tests;
 

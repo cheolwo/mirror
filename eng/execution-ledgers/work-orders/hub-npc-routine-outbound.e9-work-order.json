@@ -30,7 +30,7 @@
       "Ssalddel.Simulation.Contracts/UnityPackage/Runtime",
       "Ssalddel.Simulation.Domain/UnityPackage/Runtime",
       "Ssalddel.Simulation.Application",
-      "Ssalddel.Simulation.Server/Controllers",
+      "Ssalddel.Simulation.Hosting/Controllers",
       "Ssalddel.Simulation.Tests",
       "eng/execution-ledgers",
       "eng/world-seedbeds",
@@ -183,7 +183,7 @@
   ],
   "upwardValidation": [
     { "code": "E1", "status": "Passed", "evidence": ["docs/Architecture/NPC루틴WI통제정책.md", "eng/execution-ledgers/world-interactions.json"], "nextAction": "유래·통제·실행 발생원 분리를 유지한다." },
-    { "code": "E2", "status": "Passed", "evidence": ["Ssalddel.Simulation.Contracts/UnityPackage/Runtime/SimulationNpcRoutineControlContracts.cs", "Ssalddel.Simulation.Domain/UnityPackage/Runtime/SimulationNpcRoutineWork.cs", "Ssalddel.Simulation.Application/RuntimeCore/LocalSimulationRuntime.cs", "Ssalddel.Simulation.Server/Controllers/경영Simulation물류창고Controller.cs"], "nextAction": "공개 계약 호환을 유지한다." },
+    { "code": "E2", "status": "Passed", "evidence": ["Ssalddel.Simulation.Contracts/UnityPackage/Runtime/SimulationNpcRoutineControlContracts.cs", "Ssalddel.Simulation.Domain/UnityPackage/Runtime/SimulationNpcRoutineWork.cs", "Ssalddel.Simulation.Application/RuntimeCore/LocalSimulationRuntime.cs", "Ssalddel.Simulation.Hosting/Controllers/경영Simulation물류창고Controller.cs"], "nextAction": "공개 계약 호환을 유지한다." },
     { "code": "E3", "status": "Passed", "evidence": ["Ssalddel.Simulation.Tests/SimulationWorldInteractionFarmSupplyTests.cs", "Ssalddel.Simulation.Tests/InteriorLayoutEngineTests.cs", "artifacts/local/validation/hub-warehouse-task.trx"], "nextAction": "결정성·SaveReplay·LocalHosted 회귀를 유지한다." },
     { "code": "E4", "status": "Passed", "evidence": ["Ssalddel.Simulation.Domain/UnityPackage/Runtime/PyeongchangSimulationNpcWorkforceFixture.cs", "eng/world-seedbeds/wi-spatial-seedbeds/definitions/hub-outbound-staging.v1.json", "C:/Users/user/ssalddel/Assets/Ssalddel/Scenes/SimulationWorldShell.unity"], "nextAction": "Runtime 통행과 상태 전환을 검증한다." },
     { "code": "E5", "status": "Blocked", "evidence": ["artifacts/local/validation/hub-warehouse-unity-editmode.xml"], "nextAction": "Play Mode에서 NPC 경로·충돌·WI 발현을 검증한다." },

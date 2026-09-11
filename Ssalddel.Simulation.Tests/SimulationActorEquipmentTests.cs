@@ -231,7 +231,7 @@ public sealed class SimulationActorEquipmentTests
             SlotCode = SimulationActorEquipmentCodes.MainHand,
         });
 
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var createdResponse = await client.PostAsJsonAsync(
             "/api/simulation/v1/sessions", request);

@@ -30,7 +30,7 @@ public sealed class SimulationPlayerKnowledgeTests
             new 사용하지않는LocalSaveSlotStore(),
             playerKnowledgeService: localService);
 
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         var remoteLedgerId = "player-knowledge-ledger:parity:remote:" +
             Guid.NewGuid().ToString("N");
         factory.Services.GetRequiredService<Simulation플레이어지식Service>()
@@ -112,7 +112,7 @@ public sealed class SimulationPlayerKnowledgeTests
             new 사용하지않는LocalSaveSlotStore(),
             playerKnowledgeService: localService);
 
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         var remoteLedgerId = "player-knowledge-ledger:reject:remote:" +
             Guid.NewGuid().ToString("N");
         factory.Services.GetRequiredService<Simulation플레이어지식Service>()

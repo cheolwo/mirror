@@ -223,7 +223,7 @@ public sealed class SimulationWorldAtmosphereTests
             ExpectedRevision = local.Revision,
         });
 
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var createResponse = await client.PostAsJsonAsync(
             "/api/simulation/v1/sessions", CreateRequest());

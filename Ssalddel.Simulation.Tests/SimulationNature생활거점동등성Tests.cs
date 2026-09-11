@@ -19,7 +19,7 @@ public sealed class SimulationNature생활거점동등성Tests
     [Fact]
     public async Task 취소재수확오두막저장복원은_LocalProcess와_RemoteHost에서_같은ReplayHash를만든다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var savesRoot = Path.Combine(Path.GetTempPath(),
             "ssalddel-nature-shelter-parity-" + Guid.NewGuid().ToString("N"));
@@ -109,7 +109,7 @@ public sealed class SimulationNature생활거점동등성Tests
     [Fact]
     public async Task 거점보관WI는_LocalProcess와_RemoteHost에서_같은Transfer와ReplayHash를만든다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var savesRoot = Path.Combine(Path.GetTempPath(),
             "ssalddel-nature-storage-parity-" + Guid.NewGuid().ToString("N"));
@@ -180,7 +180,7 @@ public sealed class SimulationNature생활거점동등성Tests
     [Fact]
     public async Task 수면WI는_LocalProcess와_RemoteHost에서_같은새벽과ReplayHash를만든다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var savesRoot = Path.Combine(Path.GetTempPath(),
             "ssalddel-nature-sleep-parity-" + Guid.NewGuid().ToString("N"));
@@ -249,7 +249,7 @@ public sealed class SimulationNature생활거점동등성Tests
     [Fact]
     public async Task Day2계획WI는_LocalProcess와_RemoteHost에서_같은선택과ReplayHash를만든다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var savesRoot = Path.Combine(Path.GetTempPath(),
             "ssalddel-nature-day2-parity-" + Guid.NewGuid().ToString("N"));
@@ -318,7 +318,7 @@ public sealed class SimulationNature생활거점동등성Tests
     [Fact]
     public async Task 보관수면Day2자원재생은_한Session계보로조회되고_중복과경합을거부한다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var savesRoot = Path.Combine(Path.GetTempPath(),
             "ssalddel-nature-day2-regrowth-" + Guid.NewGuid().ToString("N"));
@@ -491,7 +491,7 @@ public sealed class SimulationNature생활거점동등성Tests
     [Fact]
     public async Task 작업대건설취소재시도는_LocalProcess와_RemoteHost에서_같은운영상태와ReplayHash를만든다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var savesRoot = Path.Combine(Path.GetTempPath(),
             "ssalddel-nature-workbench-parity-" + Guid.NewGuid().ToString("N"));

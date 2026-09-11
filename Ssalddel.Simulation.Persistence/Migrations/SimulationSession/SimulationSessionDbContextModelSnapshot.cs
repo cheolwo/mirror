@@ -128,6 +128,45 @@ namespace Ssalddel.Simulation.Persistence.Migrations.SimulationSession
 
                     b.ToTable("시뮬레이션세션_저장자료", (string)null);
                 });
+
+            modelBuilder.Entity("Ssalddel.Simulation.Persistence.SimulationSession접근원장Entity", b =>
+                {
+                    b.Property<string>("SessionStableId")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("세션고유식별자");
+
+                    b.Property<string>("AccessRoleCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("접근역할코드");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("생성시각UTC");
+
+                    b.Property<long>("Revision")
+                        .HasColumnType("bigint")
+                        .HasColumnName("개정번호");
+
+                    b.Property<string>("SubjectId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("varchar(450)")
+                        .HasColumnName("로그인주체식별자");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("수정시각UTC");
+
+                    b.HasKey("SessionStableId");
+
+                    b.HasIndex("SubjectId", "SessionStableId")
+                        .IsUnique();
+
+                    b.ToTable("시뮬레이션세션_접근원장", (string)null);
+                });
 #pragma warning restore 612, 618
         }
     }

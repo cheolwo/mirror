@@ -59,15 +59,19 @@ using Ssalddel.Services.FoodCulture;
 using Ssalddel.Startup;
 using 살뜰.Services.External.PublicData;
 using 살뜰.Services.External.PublicData.Korea;
+using Ssalddel.Simulation.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 const string CustomsWebCorsPolicy = "SsalddelWebCustoms";
+var isTestingEnvironment = builder.Environment.EnvironmentName.StartsWith(
+    "Testing",
+    StringComparison.Ordinal);
 var isRunningInContainer = string.Equals(
     Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"),
     "true",
     StringComparison.OrdinalIgnoreCase);
 
-if (!isRunningInContainer)
+if (!isRunningInContainer && !isTestingEnvironment)
 {
     builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 }
@@ -209,7 +213,8 @@ builder.Services
                     (path.StartsWithSegments("/hubs/dispatch-recommendations") ||
                      path.StartsWithSegments("/hubs/restaurant-orders") ||
                      path.StartsWithSegments(TransportRequestLedgerRealtime.HubPath) ||
-                     path.StartsWithSegments(DiagramCollaborationHub.HubPath)))
+                     path.StartsWithSegments(DiagramCollaborationHub.HubPath) ||
+                     path.StartsWithSegments(SimulationOnlineWorldHub.HubPath)))
                 {
                     context.Token = accessToken;
                 }
@@ -230,6 +235,9 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("음식점운영자전용", policy => policy.RequireRole(역할명.음식점));
     options.AddPolicy("운영사용자전용", policy => policy.RequireRole(역할명.화주, 역할명.판매자, 역할명.창고관리자, 역할명.서버관리자));
 });
+builder.Services.AddSsalddelSimulationModule(
+    builder.Configuration,
+    builder.Environment);
 
 builder.Services.AddAgriculturalFisheriesInformationModule();
 builder.Services.AddHongikAcademyContentMapModule();
@@ -246,6 +254,10 @@ var developmentReadOnly = builder.Environment.IsDevelopment()
                           && executionOptions.Mode == SsalddelExecutionMode.Simulation
                           && executionOptions.DevelopmentReadOnly;
 if (developmentReadOnly)
+{
+    builder.Services.RemoveAll<IHostedService>();
+}
+if (isTestingEnvironment)
 {
     builder.Services.RemoveAll<IHostedService>();
 }
@@ -2022,6 +2034,7 @@ app.MapHub<DispatchRecommendationHub>(
 app.MapHub<RestaurantOrderHub>("/hubs/restaurant-orders");
 app.MapHub<TransportRequestLedgerHub>(TransportRequestLedgerRealtime.HubPath);
 app.MapHub<DiagramCollaborationHub>(DiagramCollaborationHub.HubPath);
+app.MapHub<SimulationOnlineWorldHub>(SimulationOnlineWorldHub.HubPath);
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
     Predicate = registration => registration.Tags.Contains("live")

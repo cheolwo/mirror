@@ -34,7 +34,7 @@
       "Ssalddel.Simulation.Contracts/UnityPackage/Runtime",
       "Ssalddel.Simulation.Domain/UnityPackage/Runtime",
       "Ssalddel.Simulation.Application",
-      "Ssalddel.Simulation.Server",
+      "Ssalddel.Simulation.Hosting",
       "Ssalddel.Simulation.Tests",
       "Ssalddel.Unity/Runtime",
       "Ssalddel.Unity.Tests",

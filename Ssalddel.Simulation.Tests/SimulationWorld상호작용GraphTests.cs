@@ -142,7 +142,7 @@ public sealed class SimulationWorld상호작용GraphTests
     {
         var store = new CapturingGraphStore();
         await CreateJob(store).BuildAsync();
-        using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        using var factory = new SimulationWebApplicationFactory().WithWebHostBuilder(builder =>
             builder.ConfigureTestServices(services =>
             {
                 services.AddSingleton<ISimulationWorldAreaSetGraphStore>(store);

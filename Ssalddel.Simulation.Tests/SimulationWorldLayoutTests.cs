@@ -153,7 +153,7 @@ public sealed class SimulationWorldLayoutTests
     [Fact]
     public async Task WorldStream_API가_H5정의와_E6결속_준비도를분리해제공한다()
     {
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new SimulationWebApplicationFactory();
         using var client = factory.CreateClient();
         var escaped = Uri.EscapeDataString(LayoutId);
 

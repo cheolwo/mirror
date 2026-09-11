@@ -45,10 +45,11 @@
       <Build Solution="Debug|*" Project="false" />
     </Project>
     <Project Path="Ssalddel/Ssalddel.csproj" />
-    <Project Path="Ssalddel.Simulation.Server/Ssalddel.Simulation.Server.csproj" />
+    <Project Path="Ssalddel.Simulation.Hosting/Ssalddel.Simulation.Hosting.csproj" />
   </Folder>
   <Folder Name="/Simulation/">
     <Project Path="Ssalddel.BusinessWorkflow/Ssalddel.BusinessWorkflow.csproj" />
+    <Project Path="Ssalddel.Simulation.BusinessWorkflow/Ssalddel.Simulation.BusinessWorkflow.csproj" />
     <Project Path="Ssalddel.Interior.Contracts/Ssalddel.Interior.Contracts.csproj" />
     <Project Path="Ssalddel.Interior.Domain/Ssalddel.Interior.Domain.csproj" />
     <Project Path="Ssalddel.Simulation.Application/Ssalddel.Simulation.Application.csproj" />
@@ -74,6 +75,9 @@
     <Project Path="Ssalddel.Ui.Common/Ssalddel.Ui.Common.csproj">
       <Build Solution="Debug|*" Project="false" />
     </Project>
+  </Folder>
+  <Folder Name="/Tools/">
+    <Project Path="eng/Ssalddel.Simulation.Tools/Ssalddel.Simulation.Tools.csproj" />
   </Folder>
   <Project Path="Ssalddel.WebApp/Ssalddel.WebApp.csproj" />
 </Solution>

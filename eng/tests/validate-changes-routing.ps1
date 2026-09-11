@@ -62,7 +62,7 @@ if (-not $unity.CodeMapCheck) { throw "Unity 변경은 코드 지도 검증을 �
 
 $mixed = Get-ValidationPlan -Level Task -Paths @(
     "Ssalddel/Program.cs",
-    "Ssalddel.Simulation.Server/Program.cs",
+    "Ssalddel.Simulation.Hosting/SsalddelSimulationHostingServiceCollectionExtensions.cs",
     "Ssalddel.Unity/Runtime/Application/WorldReadRuntime.cs"
 )
 Assert-ContainsExactly "Mixed build" $mixed.BuildTargets @(

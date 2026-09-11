@@ -39,7 +39,7 @@
       "Ssalddel.Simulation.Contracts/UnityPackage/Runtime",
       "Ssalddel.Simulation.Domain/UnityPackage/Runtime",
       "Ssalddel.Simulation.Application/RuntimeCore",
-      "Ssalddel.Simulation.Server/Controllers",
+      "Ssalddel.Simulation.Hosting/Controllers",
       "Ssalddel.Simulation.Tests",
       "eng/execution-ledgers",
       "docs/Architecture",
@@ -212,7 +212,7 @@
   ],
   "upwardValidation": [
     { "code": "E1", "status": "Passed", "evidence": ["Ssalddel.Simulation.Contracts/UnityPackage/Runtime/SimulationArcanaTownLifeContracts.cs", "docs/Architecture/게임기획통합기준.md"], "nextAction": "활성화·방향·상속 불변 계약을 유지한다." },
-    { "code": "E2", "status": "Passed", "evidence": ["Ssalddel.Simulation.Domain/UnityPackage/Runtime/SimulationArcanaTownLife.cs", "Ssalddel.Simulation.Application/경영SimulationWorldGameplayService.cs", "Ssalddel.Simulation.Server/Controllers/경영SimulationWorldGameplayController.cs"], "nextAction": "같은 Core의 RemoteHost 소비 경계를 추가한다." },
+    { "code": "E2", "status": "Passed", "evidence": ["Ssalddel.Simulation.Domain/UnityPackage/Runtime/SimulationArcanaTownLife.cs", "Ssalddel.Simulation.Application/경영SimulationWorldGameplayService.cs", "Ssalddel.Simulation.Hosting/Controllers/경영SimulationWorldGameplayController.cs"], "nextAction": "같은 Core의 RemoteHost 소비 경계를 추가한다." },
     { "code": "E3", "status": "Passed", "evidence": ["Ssalddel.Simulation.Tests/SimulationArcanaTownNpcLifeTests.cs", "artifacts/local/validation/arcana-town-npc-life/arcana-town-npc-life.trx", "artifacts/local/validation/arcana-town-regression/arcana-town-regression.trx", "artifacts/local/validation/arcana-town-full-simulation/arcana-town-full-simulation.trx", "artifacts/local/validation/20260824-220105/Ssalddel.Simulation.Tests.trx"], "nextAction": "Unity 소비자 컴파일과 Hosted 동등성 결과를 추가한다." },
     { "code": "E4", "status": "Passed", "evidence": ["Ssalddel.Simulation.Contracts/UnityPackage/Runtime/SimulationWorldInteractionMaturityContracts.cs", "Ssalddel.Simulation.Domain/UnityPackage/Runtime/SimulationArcanaTownLife.cs"], "nextAction": "ORDER WI의 기존 Invocation·Manifestation 결속을 구현한다." },
     { "code": "E5", "status": "InProgress", "evidence": ["Ssalddel.Simulation.Tests/SimulationArcanaTownNpcLifeTests.cs"], "nextAction": "Town 실제 WI Manifestation과 H 공간 발현을 검증한다." },

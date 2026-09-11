@@ -19,20 +19,8 @@ services:
       mysql:
         condition: service_healthy
 
-  simulation:
-    profiles: ["simulation"]
-    build:
-      context: .
-      dockerfile: Ssalddel.Simulation.Server/Dockerfile
-    restart: unless-stopped
-    ports:
-      - "${SSALDDEL_SIMULATION_BIND_ADDRESS:-127.0.0.1}:${SSALDDEL_SIMULATION_PORT:-5204}:8080"
+  app:
     environment:
-      ASPNETCORE_ENVIRONMENT: Container
-      ASPNETCORE_URLS: http://+:8080
-      DOTNET_RUNNING_IN_CONTAINER: "true"
-      SsalddelExecution__Mode: Simulation
-      SimulationServer__Enabled: "${SSALDDEL_SIMULATION_SERVER_ENABLED:-true}"
       SimulationSharedPublicData__Enabled: "${SSALDDEL_SIMULATION_SHARED_PUBLIC_DATA_ENABLED:-true}"
       SimulationSharedPublicData__ConnectionStringName: SharedPublicData
       SimulationSharedPublicData__FallbackConnectionStringName: ""
@@ -44,19 +32,6 @@ services:
       ConnectionStrings__SharedPublicData: "server=mysql;port=3306;database=${SSALDDEL_SIMULATION_PUBLIC_DATA_DATABASE:-ssalddel_dev};user=${SSALDDEL_SIMULATION_PUBLIC_DATA_USER:-ssalddel_simulation_reader};password=${SSALDDEL_SIMULATION_PUBLIC_DATA_PASSWORD:-YOUR_LOCAL_SIMULATION_READER_PASSWORD};"
       ConnectionStrings__SimulationWorldDerived: "server=mysql;port=3306;database=ssalddel_simulation_world;user=${SSALDDEL_SIMULATION_WORLD_USER:-ssalddel_simulation_world};password=${SSALDDEL_SIMULATION_WORLD_PASSWORD:-YOUR_LOCAL_SIMULATION_WORLD_PASSWORD};"
       ConnectionStrings__SimulationSession: "server=mysql;port=3306;database=ssalddel_simulation_session;user=${SSALDDEL_SIMULATION_SESSION_USER:-ssalddel_simulation_session};password=${SSALDDEL_SIMULATION_SESSION_PASSWORD:-YOUR_LOCAL_SIMULATION_SESSION_PASSWORD};"
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:8080/health/ready"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
     depends_on:
-      mysql:
-        condition: service_healthy
       simulation-db-init:
         condition: service_completed_successfully
-    volumes:
-      - simulation_logs:/app/logs
-
-volumes:
-  simulation_logs:

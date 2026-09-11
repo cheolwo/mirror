@@ -8,7 +8,7 @@ using Ssalddel.Simulation.Application;
 using Ssalddel.Simulation.Contracts;
 using Ssalddel.Simulation.Domain;
 using Ssalddel.Simulation.Infrastructure;
-using Ssalddel.Simulation.Server.Controllers;
+using Ssalddel.Simulation.Hosting.Controllers;
 
 namespace Ssalddel.Simulation.Tests;
 
@@ -380,7 +380,7 @@ public sealed class Simulation타로화물운송조립Tests
     }
 
     private static WebApplicationFactory<Program> CreateFactory()
-        => new WebApplicationFactory<Program>()
+        => new SimulationWebApplicationFactory()
             .WithWebHostBuilder(builder =>
             {
                 builder.UseEnvironment("Testing");
@@ -389,8 +389,8 @@ public sealed class Simulation타로화물운송조립Tests
                     configuration.AddInMemoryCollection(
                         new Dictionary<string, string?>
                         {
-                            ["SsalddelExecution:Mode"] = "Simulation",
-                            ["SimulationServer:Enabled"] = "true",
+                            ["SsalddelExecution:Mode"] = "Operational",
+                            ["SsalddelSimulation:AllowUnauthenticatedTesting"] = "true",
                             ["SimulationSharedPublicData:Enabled"] = "false",
                         });
                 });

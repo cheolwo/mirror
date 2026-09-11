@@ -131,7 +131,7 @@ public sealed class Simulation방문자체류RuntimeTests
 
     private sealed class Context : IDisposable
     {
-        private readonly WebApplicationFactory<Program> factory = new();
+        private readonly WebApplicationFactory<Program> factory = new SimulationWebApplicationFactory();
         public string Id { get; } = "visitor-ledger:" + Guid.NewGuid().ToString("N");
         public string Url => "/api/simulation/v1/community-visitor-stay-ledgers/" + Uri.EscapeDataString(Id);
         public HttpClient Client { get; }

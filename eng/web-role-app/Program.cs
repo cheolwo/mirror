@@ -19,12 +19,13 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 var hostBaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
 var originBaseAddress = new Uri(hostBaseAddress.GetLeftPart(UriPartial.Authority) + "/");
-var apiBaseAddress = SsalddelApiEndpoint.ResolveBaseAddress(
-    builder.Configuration[SsalddelApiEndpoint.ConfigurationKey],
+var apiBaseAddress = SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+    builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
+    builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey],
     originBaseAddress);
 
 builder.Services.AddSingleton(RoleWebAppDescriptor.FromAssembly(typeof(App).Assembly.GetName().Name));
-builder.Services.AddSsalddelApiHttpClient(apiBaseAddress);
+builder.Services.AddSsalddelOperationalApiHttpClient(apiBaseAddress);
 builder.Services.Configure<ClientDataModeOptions>(builder.Configuration.GetSection(ClientDataModeOptions.SectionName));
 builder.Services.AddScoped<ITransportRequestLedgerObserver, TransportRequestLedgerObserver>();
 builder.Services.AddSingleton<IPlatformCommunityNodeNavigationResolver, WebPlatformCommunityNodeNavigationResolver>();
