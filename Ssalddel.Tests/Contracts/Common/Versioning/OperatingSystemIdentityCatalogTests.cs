@@ -89,18 +89,24 @@ public sealed class OperatingSystemIdentityCatalogTests
     }
 
     [Fact]
-    public void CargoAndFoodOperatingSystems_OwnSeparateOrderedLifecycles()
+    public void CargoFoodAndMartOperatingSystems_OwnSeparateOrderedLifecycles()
     {
         var cargo = OperatingSystemLifecycleCatalog.Get(OperatingSystemIds.DomesticCargoTransport);
         var food = OperatingSystemLifecycleCatalog.Get(OperatingSystemIds.FoodDelivery);
+        var mart = OperatingSystemLifecycleCatalog.Get(OperatingSystemIds.SsalddelMartUrbanLogistics);
 
         Assert.Equal(8, cargo.Stages.Count);
         Assert.Equal(8, food.Stages.Count);
+        Assert.Equal(8, mart.Stages.Count);
         Assert.Equal(cargo.Stages.OrderBy(stage => stage.Sequence), cargo.Stages);
         Assert.Equal(food.Stages.OrderBy(stage => stage.Sequence), food.Stages);
+        Assert.Equal(mart.Stages.OrderBy(stage => stage.Sequence), mart.Stages);
         Assert.Contains(cargo.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.CargoTermsAgreement);
         Assert.Contains(food.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.FoodCancellationCompensation);
+        Assert.Contains(mart.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.MartSupplyAgreement);
+        Assert.Contains(mart.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.MartLastMileHandoff);
         Assert.Empty(cargo.Stages.Select(stage => stage.StageId).Intersect(food.Stages.Select(stage => stage.StageId)));
+        Assert.Empty(mart.Stages.Select(stage => stage.StageId).Intersect(food.Stages.Select(stage => stage.StageId)));
     }
 
     [Fact]

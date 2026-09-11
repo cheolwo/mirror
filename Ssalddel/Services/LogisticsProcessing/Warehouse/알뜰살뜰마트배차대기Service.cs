@@ -1,13 +1,14 @@
 using Ssalddel.Contracts.Common.Community;
 using Ssalddel.Contracts.Common.Warehouse;
 using Ssalddel.Services.Community;
+using Ssalddel.Services.Operations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using 살뜰.Data;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.창고;
+using 살뜰.도메인.운영;
 using 살뜰.Services.Dispatch.Engine;
-using 살뜰.Services.Dispatch.Queue;
 
 namespace Ssalddel.Services.LogisticsProcessing.Warehouse;
 
@@ -27,23 +28,26 @@ public interface I알뜰살뜰마트배차대기Service
 public sealed class 알뜰살뜰마트배차대기Service : I알뜰살뜰마트배차대기Service
 {
     private readonly SsalddelContext _db;
-    private readonly I운송의뢰배차대기Service _dispatchQueueService;
+    private readonly I살뜰마트라스트마일배차인계Service _lastMileHandoffService;
     private readonly I운송원장Mongo동기화Service _transportLedgerSync;
     private readonly I음식마트원장동기화OutboxService _foodMartLedgerOutbox;
     private readonly ILogger<알뜰살뜰마트배차대기Service> _logger;
+    private readonly TimeProvider _timeProvider;
 
     public 알뜰살뜰마트배차대기Service(
         SsalddelContext db,
-        I운송의뢰배차대기Service dispatchQueueService,
+        I살뜰마트라스트마일배차인계Service lastMileHandoffService,
         I운송원장Mongo동기화Service transportLedgerSync,
         I음식마트원장동기화OutboxService foodMartLedgerOutbox,
-        ILogger<알뜰살뜰마트배차대기Service> logger)
+        ILogger<알뜰살뜰마트배차대기Service> logger,
+        TimeProvider timeProvider)
     {
         _db = db;
-        _dispatchQueueService = dispatchQueueService;
+        _lastMileHandoffService = lastMileHandoffService;
         _transportLedgerSync = transportLedgerSync;
         _foodMartLedgerOutbox = foodMartLedgerOutbox;
         _logger = logger;
+        _timeProvider = timeProvider;
     }
 
     public async Task<IReadOnlyList<알뜰살뜰마트배차대기생성결과>> 입고상품포장완료반영Async(
@@ -51,7 +55,7 @@ public sealed class 알뜰살뜰마트배차대기Service : I알뜰살뜰마트�
         string updatedBy,
         CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
         var 포장작업목록 = await _db.피킹포장작업
             .Where(x => x.입고상품Id == 입고상품Id && x.작업유형 == 피킹포장작업유형.포장)
             .ToListAsync(cancellationToken);
@@ -118,7 +122,8 @@ public sealed class 알뜰살뜰마트배차대기Service : I알뜰살뜰마트�
                 "마트 주문에 연결된 출고예정이 없어 배차대기를 만들지 않았습니다.");
         }
 
-        if (!await 포장완료여부Async(orderRef, 출고목록, cancellationToken))
+        var 포장준비상태 = await 포장준비상태조회Async(orderRef, 출고목록, cancellationToken);
+        if (!포장준비상태.완료)
         {
             return 알뜰살뜰마트배차대기생성결과.보류(
                 orderRef,
@@ -137,20 +142,68 @@ public sealed class 알뜰살뜰마트배차대기Service : I알뜰살뜰마트�
         }
 
         var target = targetResult.Target;
-        var queue = await _dispatchQueueService.생성또는조회Async(
-            target,
-            new 운송의뢰배차대기생성옵션
-            {
-                의뢰Id = orderRef,
-                화주Id = target.판매자UserId,
-                배차업무유형 = 상태값.배차업무유형.음식배달,
-                원본의뢰유형 = 운송의뢰배차원천유형.살뜰마트포장완료주문,
-                원본의뢰Id = orderRef,
-                상태 = 상태값.배차대기상태.대기
-            },
-            cancellationToken);
+        var existingQueue = await _db.운송원장
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.배차업무유형 == 상태값.배차업무유형.음식배달
+                     && x.원본의뢰Id == orderRef,
+                cancellationToken);
+        if (!string.IsNullOrWhiteSpace(existingQueue?.확정기사Id))
+        {
+            return 알뜰살뜰마트배차대기생성결과.생성됨(
+                orderRef,
+                existingQueue.Id,
+                existingQueue.의뢰Id,
+                "이미 기사가 수락한 마트 라스트마일 배차를 유지했습니다.",
+                전략Code: 살뜰마트라스트마일배차전략Codes.수락배정유지);
+        }
 
-        var now = DateTime.UtcNow;
+        var pendingOrderCount = await _db.운송원장
+            .AsNoTracking()
+            .CountAsync(
+                x => x.배차업무유형 == 상태값.배차업무유형.음식배달
+                     && x.확정기사Id == null,
+                cancellationToken);
+        var samePickupReadyCount = await _db.운송원장
+            .AsNoTracking()
+            .CountAsync(
+                x => x.배차업무유형 == 상태값.배차업무유형.음식배달
+                     && x.확정기사Id == null
+                     && x.픽업_도로명주소 == target.상차주소,
+                cancellationToken);
+        var orderConfirmedAtUtc = 출고목록.Min(x => AsUtc(x.CreatedAt));
+        var readyAtUtc = 포장준비상태.완료시각Utc ?? orderConfirmedAtUtc;
+        var evaluatedAtUtc = _timeProvider.GetUtcNow().UtcDateTime;
+        var handoffResult = await _lastMileHandoffService.인계Async(
+            new 살뜰마트라스트마일배차인계요청(
+                orderRef,
+                orderConfirmedAtUtc.Ticks,
+                출고목록.Count,
+                출고목록.Sum(x => x.수량),
+                target,
+                new 살뜰마트라스트마일배차입력(
+                    orderConfirmedAtUtc,
+                    evaluatedAtUtc,
+                    살뜰마트라스트마일준비단계Codes.픽업준비완료,
+                    readyAtUtc,
+                    pendingOrderCount,
+                    배차가능기사수: null,
+                    함께묶을준비주문수: samePickupReadyCount + 1,
+                    수락된기사배정있음: false)),
+            cancellationToken);
+        var queue = handoffResult.배차대기;
+        if (queue is null)
+        {
+            return 알뜰살뜰마트배차대기생성결과.보류(
+                orderRef,
+                알뜰살뜰마트배차대기결과코드.기사제안대기,
+                "라스트마일 인계 후보는 등록했지만 현재 전략은 기사 제안을 기다립니다.",
+                포장완료: true,
+                전략Code: handoffResult.정책판정.전략Code,
+                인계StableId: handoffResult.인계.인계StableId);
+        }
+
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
         foreach (var 출고 in 출고목록)
         {
             출고.운송의뢰Id = queue.의뢰Id;
@@ -187,10 +240,12 @@ public sealed class 알뜰살뜰마트배차대기Service : I알뜰살뜰마트�
             orderRef,
             queue.Id,
             queue.의뢰Id,
-            "포장 완료 뒤 SsalddelMartPackedOrder 배차대기를 생성하거나 갱신했습니다.");
+            "포장 완료 뒤 마트 라스트마일 자식 업무를 음식배달 OS에 인계하고 배차대기를 생성하거나 조회했습니다.",
+            handoffResult.정책판정.전략Code,
+            handoffResult.인계.인계StableId);
     }
 
-    private async Task<bool> 포장완료여부Async(
+    private async Task<마트포장준비상태> 포장준비상태조회Async(
         string 주문참조번호,
         IReadOnlyList<출고예정> 출고목록,
         CancellationToken cancellationToken)
@@ -202,7 +257,12 @@ public sealed class 알뜰살뜰마트배차대기Service : I알뜰살뜰마트�
 
         if (포장작업목록.Count > 0)
         {
-            return 포장작업목록.All(x => x.상태 == 피킹포장작업상태.완료);
+            var completed = 포장작업목록.All(x => x.상태 == 피킹포장작업상태.완료);
+            return new 마트포장준비상태(
+                completed,
+                completed
+                    ? 포장작업목록.Max(x => AsUtc(x.완료일시Utc ?? x.UpdatedAt))
+                    : null);
         }
 
         var 출고묶음목록 = await _db.출고묶음
@@ -212,7 +272,12 @@ public sealed class 알뜰살뜰마트배차대기Service : I알뜰살뜰마트�
 
         if (출고묶음목록.Count > 0)
         {
-            return 출고묶음목록.All(x => x.포장완료일시.HasValue || x.상태 == 출고상태.출고완료);
+            var completed = 출고묶음목록.All(x => x.포장완료일시.HasValue || x.상태 == 출고상태.출고완료);
+            return new 마트포장준비상태(
+                completed,
+                completed
+                    ? 출고묶음목록.Max(x => AsUtc(x.포장완료일시 ?? x.UpdatedAt))
+                    : null);
         }
 
         var 입고상품Ids = 출고목록
@@ -229,10 +294,16 @@ public sealed class 알뜰살뜰마트배차대기Service : I알뜰살뜰마트�
                 .Where(x => 입고상품Ids.Contains(x.Id) && x.상태.StartsWith("포장완료"))
                 .CountAsync(cancellationToken);
 
-            return 포장된입고상품수 == 입고상품Ids.Length;
+            var completed = 포장된입고상품수 == 입고상품Ids.Length;
+            return new 마트포장준비상태(
+                completed,
+                completed ? 출고목록.Max(x => AsUtc(x.CreatedAt)) : null);
         }
 
-        return 출고목록.All(x => x.상태 == 출고상태.출고완료);
+        var outboundsCompleted = 출고목록.All(x => x.상태 == 출고상태.출고완료);
+        return new 마트포장준비상태(
+            outboundsCompleted,
+            outboundsCompleted ? 출고목록.Max(x => AsUtc(x.CreatedAt)) : null);
     }
 
     private async Task<마트배차대상생성결과> BuildDispatchTargetAsync(
@@ -355,6 +426,9 @@ public sealed class 알뜰살뜰마트배차대기Service : I알뜰살뜰마트�
 
     private static string? Clean(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static DateTime AsUtc(DateTime value)
+        => value.Kind == DateTimeKind.Utc ? value : DateTime.SpecifyKind(value, DateTimeKind.Utc);
 }
 
 public sealed record 알뜰살뜰마트배차대기생성결과(
@@ -364,9 +438,17 @@ public sealed record 알뜰살뜰마트배차대기생성결과(
     string 메시지,
     string 주문참조번호,
     long? 배차대기Id = null,
-    string? 의뢰Id = null)
+    string? 의뢰Id = null,
+    string 전략Code = "",
+    string 인계StableId = "")
 {
-    public static 알뜰살뜰마트배차대기생성결과 생성됨(string 주문참조번호, long 배차대기Id, string 의뢰Id, string 메시지)
+    public static 알뜰살뜰마트배차대기생성결과 생성됨(
+        string 주문참조번호,
+        long 배차대기Id,
+        string 의뢰Id,
+        string 메시지,
+        string 전략Code = "",
+        string 인계StableId = "")
         => new(
             true,
             true,
@@ -374,14 +456,18 @@ public sealed record 알뜰살뜰마트배차대기생성결과(
             메시지,
             주문참조번호,
             배차대기Id,
-            의뢰Id);
+            의뢰Id,
+            전략Code,
+            인계StableId);
 
     public static 알뜰살뜰마트배차대기생성결과 보류(
         string 주문참조번호,
         string 결과코드,
         string 메시지,
-        bool 포장완료 = false)
-        => new(false, 포장완료, 결과코드, 메시지, 주문참조번호);
+        bool 포장완료 = false,
+        string 전략Code = "",
+        string 인계StableId = "")
+        => new(false, 포장완료, 결과코드, 메시지, 주문참조번호, 전략Code: 전략Code, 인계StableId: 인계StableId);
 }
 
 public static class 알뜰살뜰마트배차대기결과코드
@@ -390,9 +476,12 @@ public static class 알뜰살뜰마트배차대기결과코드
     public const string 주문참조번호없음 = "주문참조번호없음";
     public const string 출고예정없음 = "출고예정없음";
     public const string 포장대기 = "포장대기";
+    public const string 기사제안대기 = "기사제안대기";
     public const string 상차주소없음 = "상차주소없음";
     public const string 배송목적지없음 = "배송목적지없음";
 }
+
+internal sealed record 마트포장준비상태(bool 완료, DateTime? 완료시각Utc);
 
 internal sealed record 마트배차대상생성결과(
     출고예정운송대상? Target,

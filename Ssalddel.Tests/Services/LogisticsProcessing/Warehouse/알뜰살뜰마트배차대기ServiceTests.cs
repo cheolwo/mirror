@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Ssalddel.Contracts.Common.Community;
+using Ssalddel.Contracts.Common.Operations;
 using Ssalddel.Contracts.Common.Warehouse;
 using Ssalddel.Services.Community;
 using Ssalddel.Services.LogisticsProcessing.Warehouse;
+using Ssalddel.Services.Operations;
 using 살뜰.Data;
 using 살뜰.Infrastructure.Security;
 using 살뜰.Services.Dispatch.Engine;
@@ -11,6 +13,7 @@ using 살뜰.Services.Dispatch.Queue;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.사용자;
 using 살뜰.도메인.운송;
+using 살뜰.도메인.운영;
 using 살뜰.도메인.화주;
 using 살뜰.도메인.창고;
 
@@ -63,10 +66,11 @@ public sealed class 알뜰살뜰마트배차대기ServiceTests
         RecordingDispatchQueue queue)
         => new(
             db,
-            queue,
+            new RecordingLastMileHandoff(queue),
             new NoOpTransportLedgerSync(),
             new NoOpFoodMartLedgerSyncOutbox(),
-            NullLogger<알뜰살뜰마트배차대기Service>.Instance);
+            NullLogger<알뜰살뜰마트배차대기Service>.Instance,
+            new FixedTimeProvider(new DateTimeOffset(2026, 7, 28, 1, 5, 0, TimeSpan.Zero)));
 
     private static SsalddelContext CreateContext()
         => new(
@@ -138,6 +142,37 @@ public sealed class 알뜰살뜰마트배차대기ServiceTests
         }
     }
 
+    private sealed class RecordingLastMileHandoff(RecordingDispatchQueue queue)
+        : I살뜰마트라스트마일배차인계Service
+    {
+        public async Task<살뜰마트라스트마일배차인계결과> 인계Async(
+            살뜰마트라스트마일배차인계요청 요청,
+            CancellationToken cancellationToken = default)
+        {
+            var dispatch = await queue.생성또는조회Async(
+                요청.배차대상,
+                new 운송의뢰배차대기생성옵션
+                {
+                    의뢰Id = 요청.주문참조번호,
+                    화주Id = 요청.배차대상.판매자UserId,
+                    배차업무유형 = 상태값.배차업무유형.음식배달,
+                    원본의뢰유형 = 운송의뢰배차원천유형.살뜰마트포장완료주문,
+                    원본의뢰Id = 요청.주문참조번호,
+                    상태 = 상태값.배차대기상태.대기
+                },
+                cancellationToken);
+            var policy = new 살뜰마트라스트마일배차Policy().Evaluate(요청.정책입력);
+            return new 살뜰마트라스트마일배차인계결과(
+                new 운영체제업무인계Dto
+                {
+                    인계StableId = "os-handoff:test",
+                    상태Code = 운영체제업무인계상태Codes.수락됨
+                },
+                dispatch,
+                policy);
+        }
+    }
+
     private sealed class NoOpTransportLedgerSync : I운송원장Mongo동기화Service
     {
         public Task<커뮤니티원장Dto?> 화주운송의뢰동기화Async(
@@ -187,5 +222,10 @@ public sealed class 알뜰살뜰마트배차대기ServiceTests
     {
         public string? Protect(string? value) => value;
         public string? Unprotect(string? value) => value;
+    }
+
+    private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => utcNow;
     }
 }

@@ -125,6 +125,15 @@ public static class OperatingSystemLifecycleStageIds
     public const string FoodDelivery = "food.delivery";
     public const string FoodCancellationCompensation = "food.cancellation-compensation";
     public const string FoodInterruptionRecovery = "food.interruption-recovery";
+
+    public const string MartSupplyAgreement = "mart.supply-agreement";
+    public const string MartReplenishmentOrder = "mart.replenishment-order";
+    public const string MartInboundReceiving = "mart.inbound-receiving";
+    public const string MartPutawayInventory = "mart.putaway-inventory";
+    public const string MartCustomerOrderAllocation = "mart.customer-order-allocation";
+    public const string MartPickingPacking = "mart.picking-packing";
+    public const string MartLastMileHandoff = "mart.last-mile-handoff";
+    public const string MartCompletionRecovery = "mart.completion-recovery";
 }
 
 public sealed record OperatingSystemLifecycleStageDefinition(
@@ -168,6 +177,19 @@ public static class OperatingSystemLifecycleCatalog
                     new(OperatingSystemLifecycleStageIds.FoodDelivery, 60, "전달", "고객 전달과 수령 완료를 관리합니다."),
                     new(OperatingSystemLifecycleStageIds.FoodCancellationCompensation, 70, "취소·보상", "취소·환불·음식점 보상과 사고 손실 대응을 관리합니다."),
                     new(OperatingSystemLifecycleStageIds.FoodInterruptionRecovery, 80, "중단·회복", "조리 지연·사고·재조리·재배차와 운영자 검토를 조율합니다.")
+                ]),
+            [OperatingSystemIds.SsalddelMartUrbanLogistics] = new(
+                OperatingSystemIds.SsalddelMartUrbanLogistics,
+                "살뜰마트 도심물류 OS",
+                [
+                    new(OperatingSystemLifecycleStageIds.MartSupplyAgreement, 10, "공급계약 이용", "플랫폼 공급계약 중 각 마트가 이용할 계약과 품목 범위를 등록합니다."),
+                    new(OperatingSystemLifecycleStageIds.MartReplenishmentOrder, 20, "점포별 입고 발주", "마트별 필요 수량과 납기 요청을 기록하며 공급자의 수락 수량을 보존합니다."),
+                    new(OperatingSystemLifecycleStageIds.MartInboundReceiving, 30, "입고·검수", "도착 수량과 상태를 검수하고 확인된 재고 후보를 만듭니다."),
+                    new(OperatingSystemLifecycleStageIds.MartPutawayInventory, 40, "적재·재고", "검수된 상품을 적재 위치와 가용 재고에 결속합니다."),
+                    new(OperatingSystemLifecycleStageIds.MartCustomerOrderAllocation, 50, "고객 주문·할당", "확정된 고객 주문을 점포 재고와 출고 작업에 결속합니다."),
+                    new(OperatingSystemLifecycleStageIds.MartPickingPacking, 60, "피킹·포장", "적재 위치에 근거한 피킹과 포장, 픽업 준비 시각을 관리합니다."),
+                    new(OperatingSystemLifecycleStageIds.MartLastMileHandoff, 70, "라스트마일 인계", "마트 주문과 분리된 배송 자식 업무를 음식배달 OS에 명시적으로 인계합니다."),
+                    new(OperatingSystemLifecycleStageIds.MartCompletionRecovery, 80, "완료·회복", "배송 증거를 주문에 반영하고 품절·지연·재배차·취소 복구를 관리합니다.")
                 ])
         };
 

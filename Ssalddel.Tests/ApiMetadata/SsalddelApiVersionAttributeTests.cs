@@ -333,6 +333,15 @@ public sealed class SsalddelApiVersionAttributeTests
             operatingSystem.SchedulingPolicies.Any(policy => policy.PolicyKindCode == nameof(SsalddelSchedulingPolicyKind.Sjf)) &&
             operatingSystem.SchedulingPolicies.Any(policy => policy.PolicyKindCode == nameof(SsalddelSchedulingPolicyKind.Affinity)));
         Assert.Contains(response.OperatingSystems, operatingSystem =>
+            operatingSystem.OperatingSystemCode == nameof(SsalddelOperatingSystem.SsalddelMartUrbanLogistics) &&
+            operatingSystem.CanonicalOperatingSystemId == OperatingSystemIds.SsalddelMartUrbanLogistics &&
+            operatingSystem.LifecycleStages.Any(stage =>
+                stage.StageId == OperatingSystemLifecycleStageIds.MartSupplyAgreement && stage.Sequence == 10) &&
+            operatingSystem.LifecycleStages.Any(stage =>
+                stage.StageId == OperatingSystemLifecycleStageIds.MartLastMileHandoff && stage.Sequence == 70) &&
+            operatingSystem.LifecycleStages.Any(stage =>
+                stage.StageId == OperatingSystemLifecycleStageIds.MartCompletionRecovery && stage.Sequence == 80));
+        Assert.Contains(response.OperatingSystems, operatingSystem =>
             operatingSystem.OperatingSystemCode == nameof(SsalddelOperatingSystem.GroupPurchaseDemand) &&
             operatingSystem.CanonicalOperatingSystemId == OperatingSystemIds.GroupPurchaseDemand &&
             operatingSystem.FeatureKey == VersionFeatureFlagKeys.GroupPurchaseDemandWorkflow &&
