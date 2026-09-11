@@ -934,6 +934,8 @@ public sealed class DeliveryTicketPreview : ObservableObject
         DriverWorkStopDto dropoff,
         double distanceKm,
         decimal driverPayout,
+        decimal weatherSurcharge,
+        bool weatherSurchargeApplied,
         string recommendationReason,
         DateTime? expiresAtUtc,
         운송실행프로필Dto executionProfile)
@@ -945,6 +947,8 @@ public sealed class DeliveryTicketPreview : ObservableObject
         Dropoff = dropoff;
         DistanceKm = distanceKm;
         DriverPayout = driverPayout;
+        WeatherSurcharge = weatherSurcharge;
+        IsWeatherSurchargeApplied = weatherSurchargeApplied;
         RecommendationReason = recommendationReason;
         ExpiresAtUtc = expiresAtUtc;
         ExecutionProfile = executionProfile;
@@ -958,6 +962,8 @@ public sealed class DeliveryTicketPreview : ObservableObject
     public DriverWorkStopDto Dropoff { get; }
     public double DistanceKm { get; }
     public decimal DriverPayout { get; }
+    public decimal WeatherSurcharge { get; }
+    public bool IsWeatherSurchargeApplied { get; }
     public string RecommendationReason { get; }
     public DateTime? ExpiresAtUtc { get; }
     public 운송실행프로필Dto ExecutionProfile { get; }
@@ -967,6 +973,7 @@ public sealed class DeliveryTicketPreview : ObservableObject
     public string CompletionActionLabel => ActionLabel(ExecutionProfile.완료행동명, "고객 전달");
     public string DistanceText => $"{DistanceKm.ToString("0.0", CultureInfo.CurrentCulture)}km";
     public string DriverPayoutText => $"{DriverPayout.ToString("N0", CultureInfo.CurrentCulture)}원";
+    public string WeatherSurchargeText => $"기상 할증 +{WeatherSurcharge.ToString("N0", CultureInfo.CurrentCulture)}원";
     public string RemainingText
     {
         get => _remainingText;
@@ -1011,6 +1018,8 @@ public sealed class DeliveryTicketPreview : ObservableObject
             ToStop(item.Dropoff),
             (double)(item.DistanceKm ?? 0m),
             item.DriverPayout,
+            item.WeatherSurcharge,
+            item.WeatherSurchargeApplied,
             item.RecommendationReason,
             item.ExpiresAtUtc,
             item.ExecutionProfile);
@@ -1028,7 +1037,9 @@ public sealed class DeliveryTicketPreview : ObservableObject
             DriverPayout,
             DistanceKm,
             RecommendationReason,
-            ExecutionProfile: ExecutionProfile);
+            ExecutionProfile: ExecutionProfile,
+            WeatherSurcharge: WeatherSurcharge,
+            WeatherSurchargeApplied: IsWeatherSurchargeApplied);
 
     internal static string ActionLabel(string? value, string fallback)
         => string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
@@ -1052,6 +1063,8 @@ public sealed record ActiveDeliveryPreview(
     DriverWorkStopDto Pickup,
     DriverWorkStopDto Dropoff,
     decimal DriverPayout,
+    decimal WeatherSurcharge,
+    bool WeatherSurchargeApplied,
     string TransportStatus,
     string WorkStatus,
     운송실행프로필Dto ExecutionProfile,
@@ -1059,6 +1072,8 @@ public sealed record ActiveDeliveryPreview(
 {
     public string PickupActionLabel => DeliveryTicketPreview.ActionLabel(ExecutionProfile.픽업행동명, "음식점 픽업");
     public string CompletionActionLabel => DeliveryTicketPreview.ActionLabel(ExecutionProfile.완료행동명, "고객 전달");
+    public bool IsWeatherSurchargeApplied => WeatherSurchargeApplied;
+    public string WeatherSurchargeText => $"기상 할증 +{WeatherSurcharge.ToString("N0", CultureInfo.CurrentCulture)}원";
     public bool HasRecipient => !string.IsNullOrWhiteSpace(Recipient.DisplayName)
                                 || !string.IsNullOrWhiteSpace(Recipient.ContactPhone)
                                 || !string.IsNullOrWhiteSpace(Recipient.DeliveryInstructions);
@@ -1084,6 +1099,8 @@ public sealed record ActiveDeliveryPreview(
             DeliveryTicketPreview.ToStop(item.Pickup),
             DeliveryTicketPreview.ToStop(item.Dropoff),
             item.DriverPayout,
+            item.WeatherSurcharge,
+            item.WeatherSurchargeApplied,
             item.TransportStatus,
             item.WorkStatus,
             item.ExecutionProfile,
@@ -1108,7 +1125,9 @@ public sealed record ActiveDeliveryPreview(
                 Recipient.DisplayName,
                 Recipient.ContactPhone,
                 Recipient.DeliveryInstructions,
-                Recipient.OrdererIsRecipient));
+                Recipient.OrdererIsRecipient),
+            WeatherSurcharge: WeatherSurcharge,
+            WeatherSurchargeApplied: WeatherSurchargeApplied);
 }
 
 public sealed record FoodDeliveryBundlePreview(

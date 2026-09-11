@@ -51,7 +51,11 @@ public sealed record DriverWorkOfferDto(
     [property: JsonPropertyName("expiresAtUtc")] DateTimeOffset? ExpiresAtUtc = null,
     [property: JsonPropertyName("orderIds")] IReadOnlyList<string>? OrderIds = null,
     [property: JsonPropertyName("executionProfile")] 운송실행프로필Dto? ExecutionProfile = null,
-    [property: JsonPropertyName("recipient")] DriverWorkRecipientDto? Recipient = null);
+    [property: JsonPropertyName("recipient")] DriverWorkRecipientDto? Recipient = null,
+    [property: JsonPropertyName("weatherSurcharge")] decimal WeatherSurcharge = 0m,
+    [property: JsonPropertyName("weatherSurchargeApplied")] bool WeatherSurchargeApplied = false,
+    [property: JsonPropertyName("pricingPolicyRevision")] string? PricingPolicyRevision = null,
+    [property: JsonPropertyName("weatherObservedAtUtc")] DateTimeOffset? WeatherObservedAtUtc = null);
 
 public sealed class FoodDeliveryDriverActionResponse
 {

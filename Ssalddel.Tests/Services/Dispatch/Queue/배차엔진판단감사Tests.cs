@@ -11,9 +11,12 @@ using 살뜰.Services.Dispatch.Coordination;
 using 살뜰.Services.Dispatch.Common;
 using 살뜰.Services.Dispatch.Notification;
 using 살뜰.Services.Dispatch.Queue;
+using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.Services.Storage.Local;
+using 살뜰.Services.Weather;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.배차;
+using 살뜰.도메인.음식;
 using 살뜰.도메인.운송;
 
 namespace Ssalddel.Tests.Services.Dispatch.Queue;
@@ -221,6 +224,51 @@ public sealed class 배차엔진판단감사Tests
     }
 
     [Fact]
+    public async Task 음식배달_근처기사가_선정되면_알림전_픽업지기상과_지급액을_원장에_동결한다()
+    {
+        await using var db = new CapturingSsalddelContext(CreateOptions());
+        var queue = CreateQueue();
+        queue.배차업무유형 = 상태값.배차업무유형.음식배달;
+        queue.원본의뢰유형 = 살뜰.Services.Dispatch.Engine.운송의뢰배차원천유형.음식점주문;
+        queue.배차큐단계 = 상태값.배차큐단계.배차추천;
+        queue.배차노출상태 = 상태값.배차노출상태.추천대기;
+        db.Attach(queue);
+        var selection = 배차추천후보선정결과.선정됨(
+            new 배차추천후보("FOOD-DRIVER", 95m, "반경 내 기사")) with
+        {
+            감사Context = new 배차엔진판단감사Context(
+                "correlation-food-pricing",
+                Ssalddel.Contracts.Common.Versioning.OperatingSystemIds.FoodDelivery,
+                Ssalddel.Contracts.Common.Versioning.EngineFamilyIds.TransportRequestDispatch,
+                Ssalddel.Contracts.Common.Versioning.EngineImplementationIds.FoodDeliveryDispatch)
+        };
+        var pricing = new StubFoodPricingService();
+        var service = new 배차대기원장전환Service(
+            db,
+            Options.Create(new 배차큐정책Options { 추천유지시간초 = 30 }),
+            new StubCandidateSelectionService(selection),
+            new NoOpRecommendationNotificationService(),
+            new NoOpDriverStateService(),
+            null!,
+            pricing);
+
+        var method = typeof(배차대기원장전환Service).GetMethod(
+            "추천거절후다음후보로진행Async",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        var task = Assert.IsAssignableFrom<Task<배차대기원장전환결과>>(
+            method!.Invoke(service, [queue, null, CancellationToken.None]));
+
+        await task;
+
+        Assert.Equal(1, pricing.CallCount);
+        Assert.Equal(3500m, queue.기사지급예정액);
+        Assert.Equal(1000m, queue.기사기상할증액);
+        Assert.True(queue.기사기상할증적용여부);
+        Assert.Equal("Available", queue.픽업지기상자료상태);
+        Assert.Equal("food-pricing-test.r1", queue.기사제안요금정책판본);
+    }
+
+    [Fact]
     public async Task 기사거절은_선택한사유와_유효제안책임을_활동원장에남긴다()
     {
         await using var db = new SsalddelContext(
@@ -417,6 +465,31 @@ public sealed class 배차엔진판단감사Tests
             int take = 100,
             CancellationToken cancellationToken = default)
             => Task.FromResult(0);
+    }
+
+    private sealed class StubFoodPricingService : I음식배달기사제안요금Service
+    {
+        public int CallCount { get; private set; }
+
+        public Task<음식배달기사제안요금산정결과> 산정Async(
+            운송원장 queue,
+            CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            return Task.FromResult(new 음식배달기사제안요금산정결과(
+                new 음식배달기사제안요금판정(2500m, 1000m, 3500m, true),
+                new 픽업지기상관측결과(
+                    true,
+                    true,
+                    픽업지기상자료상태Code.Available,
+                    "1",
+                    "1.0",
+                    new DateTime(2026, 9, 11, 3, 0, 0, DateTimeKind.Utc),
+                    픽업지기상관측결과.공식자료출처,
+                    new string('a', 64)),
+                "food-pricing-test.r1",
+                new DateTime(2026, 9, 11, 3, 1, 0, DateTimeKind.Utc)));
+        }
     }
 
     private sealed class NoOpDriverStateService : I국내화물운송기사상태Service

@@ -1240,7 +1240,7 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
                 (double)(dropoffLatitude ?? 0m),
                 (double)(dropoffLongitude ?? 0m),
                 ToOffset(order.조리예상완료시각Utc?.AddMinutes(42))),
-            CalculateDriverPayout(deliveryDistance),
+            queue.기사지급예정액 ?? CalculateDriverPayout(deliveryDistance),
             deliveryDistance.HasValue ? (double)deliveryDistance.Value : null,
             reason,
             status,
@@ -1253,7 +1253,11 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
                     order.수령인명,
                     order.수령인연락처,
                     order.수령요청사항,
-                    order.주문자본인수령여부));
+                    order.주문자본인수령여부),
+            queue.기사기상할증액 ?? 0m,
+            queue.기사기상할증적용여부,
+            queue.기사제안요금정책판본,
+            ToOffset(queue.픽업지기상기준시각Utc));
     }
 
     private static void ApplyFoodOrderState(

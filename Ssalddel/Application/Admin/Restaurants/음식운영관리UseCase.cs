@@ -125,6 +125,9 @@ public sealed class 음식운영관리UseCase(SsalddelContext db) : I음식운�
         policy.기사기본지급액 = request.DriverBasePayout;
         policy.기사거리단위지급액 = request.DriverDistanceUnitPayout;
         policy.기사최소지급액 = request.DriverMinimumPayout;
+        policy.기사기상할증활성화여부 = request.DriverWeatherSurchargeEnabled;
+        policy.기사기상할증액 = request.DriverWeatherSurcharge;
+        policy.기사기상할증정책판본 = request.DriverWeatherSurchargePolicyRevision.Trim();
         ApplyAudit(policy, 수정자UserId);
         await db.SaveChangesAsync(cancellationToken);
         return Result.Ok(ToPricingPolicy(policy));
@@ -170,6 +173,9 @@ public sealed class 음식운영관리UseCase(SsalddelContext db) : I음식운�
             DriverBasePayout = policy.기사기본지급액,
             DriverDistanceUnitPayout = policy.기사거리단위지급액,
             DriverMinimumPayout = policy.기사최소지급액,
+            DriverWeatherSurchargeEnabled = policy.기사기상할증활성화여부,
+            DriverWeatherSurcharge = policy.기사기상할증액,
+            DriverWeatherSurchargePolicyRevision = policy.기사기상할증정책판본,
             UpdatedAtUtc = policy.UpdatedAtUtc,
             UpdatedByUserId = policy.수정자UserId
         };
@@ -181,12 +187,19 @@ public sealed class 음식운영관리UseCase(SsalddelContext db) : I음식운�
             return "포함 거리는 0 이상이고 거리 계산 단위는 1m 이상이어야 합니다.";
         }
 
+        if (string.IsNullOrWhiteSpace(request.DriverWeatherSurchargePolicyRevision)
+            || request.DriverWeatherSurchargePolicyRevision.Trim().Length > 100)
+        {
+            return "기상 할증 정책 판본은 1~100자로 입력해야 합니다.";
+        }
+
         return request.BaseFee < 0
                || request.DistanceUnitFee < 0
                || request.MinimumFee < 0
                || request.DriverBasePayout < 0
                || request.DriverDistanceUnitPayout < 0
                || request.DriverMinimumPayout < 0
+               || request.DriverWeatherSurcharge < 0
             ? "요금과 기사 지급액은 0 이상이어야 합니다."
             : null;
     }

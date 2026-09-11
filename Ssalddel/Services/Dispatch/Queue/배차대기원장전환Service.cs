@@ -10,6 +10,7 @@ using 살뜰.도메인.공통;
 using 살뜰.도메인.배차;
 using 살뜰.Services.Dispatch.Engine;
 using 살뜰.Services.Dispatch.Notification;
+using 살뜰.Services.Dispatch.Recommendation;
 
 namespace 살뜰.Services.Dispatch.Queue
 {
@@ -21,6 +22,7 @@ namespace 살뜰.Services.Dispatch.Queue
         private readonly I배차추천알림Service _recommendationNotificationService;
         private readonly I국내화물운송기사상태Service _국내화물운송기사상태Service;
         private readonly I음식배달배차흐름Resolver _음식배달배차흐름Resolver;
+        private readonly I음식배달기사제안요금Service? _음식배달기사제안요금Service;
 
         public 배차대기원장전환Service(
             SsalddelContext db,
@@ -28,7 +30,8 @@ namespace 살뜰.Services.Dispatch.Queue
             I배차추천후보선정Service candidateSelectionService,
             I배차추천알림Service recommendationNotificationService,
             I국내화물운송기사상태Service 국내화물운송기사상태Service,
-            I음식배달배차흐름Resolver 음식배달배차흐름Resolver)
+            I음식배달배차흐름Resolver 음식배달배차흐름Resolver,
+            I음식배달기사제안요금Service? 음식배달기사제안요금Service = null)
         {
             _db = db;
             _options = options.Value;
@@ -36,6 +39,7 @@ namespace 살뜰.Services.Dispatch.Queue
             _recommendationNotificationService = recommendationNotificationService;
             _국내화물운송기사상태Service = 국내화물운송기사상태Service;
             _음식배달배차흐름Resolver = 음식배달배차흐름Resolver;
+            _음식배달기사제안요금Service = 음식배달기사제안요금Service;
         }
 
         public async Task<배차대기원장전환결과> 계획배차에서추천으로전환Async(string requestId, CancellationToken cancellationToken = default)

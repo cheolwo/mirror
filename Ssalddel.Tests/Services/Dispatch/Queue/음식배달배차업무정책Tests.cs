@@ -94,6 +94,34 @@ public sealed class 음식배달배차업무정책Tests
     }
 
     [Fact]
+    public async Task 첫_판정에_반경내_기사가_없어도_기사가_진입한_뒤_다시_실행하면_재판정한다()
+    {
+        var now = DateTime.UtcNow;
+        var store = new FakeDriverStateStore(
+        [
+            Snapshot("entering-driver", 기사앱식별자.FoodDeliveryDriverApp, 37.56m, 127m, now, 0m)
+        ]);
+        var foodSpaceStore = await CreateFoodSpaceStoreAsync(("entering-driver", 37.56m, 127m));
+        var policy = CreatePolicy(store, new FakeRejectedRequestStore(), foodSpaceStore);
+
+        var beforeEntry = await policy.다음후보선정Async(Queue());
+        store.Replace(
+        [
+            Snapshot("entering-driver", 기사앱식별자.FoodDeliveryDriverApp, 37.501m, 127m, now, 0m)
+        ]);
+        var pickupSpaceKey = 음식배달권정책.판정(new 배차경로좌표(37.5m, 127m), null).배달권키;
+        await foodSpaceStore.Upsert기사Async(
+            pickupSpaceKey,
+            "entering-driver",
+            음식배달권정책.인접배달권키조회(pickupSpaceKey));
+
+        var afterEntry = await policy.다음후보선정Async(Queue());
+
+        Assert.Null(beforeEntry);
+        Assert.Equal("entering-driver", afterEntry!.DriverId);
+    }
+
+    [Fact]
     public async Task 음식배달은_더_가까운_미등록기사보다_동일_음식배달공간의_기사를_먼저_검토한다()
     {
         var now = DateTime.UtcNow;
@@ -288,15 +316,20 @@ public sealed class 음식배달배차업무정책Tests
             AppKey: appKey);
 
     private sealed class FakeDriverStateStore(
-        IReadOnlyList<국내화물운송기사상태Snapshot> snapshots) : I국내화물운송기사상태Store
+        IReadOnlyList<국내화물운송기사상태Snapshot> initialSnapshots) : I국내화물운송기사상태Store
     {
+        private IReadOnlyList<국내화물운송기사상태Snapshot> _snapshots = initialSnapshots;
+
         public bool 위치반경조회호출됨 { get; private set; }
+
+        public void Replace(IReadOnlyList<국내화물운송기사상태Snapshot> snapshots)
+            => _snapshots = snapshots;
 
         public Task UpsertAsync(국내화물운송기사상태Snapshot snapshot, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
 
         public Task<국내화물운송기사상태Snapshot?> GetAsync(string driverId, CancellationToken cancellationToken = default)
-            => Task.FromResult(snapshots.FirstOrDefault(x => x.DriverId == driverId));
+            => Task.FromResult(_snapshots.FirstOrDefault(x => x.DriverId == driverId));
 
         public Task<IReadOnlyList<국내화물운송기사상태Snapshot>> 위치반경조회Async(
             decimal latitude,
@@ -306,13 +339,13 @@ public sealed class 음식배달배차업무정책Tests
             CancellationToken cancellationToken = default)
         {
             위치반경조회호출됨 = true;
-            return Task.FromResult<IReadOnlyList<국내화물운송기사상태Snapshot>>(snapshots.Take(take).ToArray());
+            return Task.FromResult<IReadOnlyList<국내화물운송기사상태Snapshot>>(_snapshots.Take(take).ToArray());
         }
 
         public Task<IReadOnlyList<국내화물운송기사상태Snapshot>> 활성기사조회Async(
             int take,
             CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<국내화물운송기사상태Snapshot>>(snapshots.Take(take).ToArray());
+            => Task.FromResult<IReadOnlyList<국내화물운송기사상태Snapshot>>(_snapshots.Take(take).ToArray());
 
         public Task RemoveAsync(string driverId, CancellationToken cancellationToken = default)
             => Task.CompletedTask;

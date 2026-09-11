@@ -37,6 +37,16 @@ public sealed class 음식운영정책
     [Column("기사최소지급액", TypeName = "decimal(18,2)")]
     public decimal 기사최소지급액 { get; set; } = 2500m;
 
+    [Column("기사기상할증활성화여부")]
+    public bool 기사기상할증활성화여부 { get; set; } = true;
+
+    [Column("기사기상할증액", TypeName = "decimal(18,2)")]
+    public decimal 기사기상할증액 { get; set; } = 1000m;
+
+    [Column("기사기상할증정책판본")]
+    [MaxLength(100)]
+    public string 기사기상할증정책판본 { get; set; } = "food-weather-surcharge.r1";
+
     [Column("수정자_user_id")]
     [MaxLength(450)]
     public string 수정자UserId { get; set; } = string.Empty;

@@ -13,6 +13,7 @@ using 살뜰.Services.Dispatch.Continuity;
 using 살뜰.Services.Dispatch.Engine;
 using 살뜰.Services.Dispatch.Notification;
 using 살뜰.Services.Dispatch.Queue;
+using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.Services.DeliveryZones;
 using 살뜰.Services.Documents;
 using 살뜰.Services.HIOPSAI;
@@ -50,6 +51,7 @@ public static partial class ServiceCollectionExtensions
         services.AddSingleton<IDispatchRecommendationLogStore, DispatchRecommendationLogStore>();
         services.AddSingleton<IDispatchAcceptanceLogStore, DispatchAcceptanceLogStore>();
         services.AddScoped<I배차대기원장전환Service, 배차대기원장전환Service>();
+        services.AddScoped<I음식배달기사제안요금Service, 음식배달기사제안요금Service>();
         services.AddScoped<I배차실행인덱스예열Service, 배차실행인덱스예열Service>();
         services.AddScoped<I피킹포장작업투영Service, 피킹포장작업투영Service>();
         services.AddSingleton<살뜰.도메인.운영.살뜰마트라스트마일배차Policy>();

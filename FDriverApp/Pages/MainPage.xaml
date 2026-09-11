@@ -365,6 +365,12 @@
                                                 <VerticalStackLayout Grid.Column="1" Spacing="5" HorizontalOptions="End">
                                                     <Label Text="{Binding DistanceText}" FontSize="12" HorizontalTextAlignment="End" />
                                                     <Label Text="{Binding DriverPayoutText}" FontSize="14" FontAttributes="Bold" HorizontalTextAlignment="End" />
+                                                    <Label Text="{Binding WeatherSurchargeText}"
+                                                           IsVisible="{Binding IsWeatherSurchargeApplied}"
+                                                           FontSize="11"
+                                                           FontAttributes="Bold"
+                                                           TextColor="#0369A1"
+                                                           HorizontalTextAlignment="End" />
                                                     <Button Text="선택"
                                                             Padding="12,6"
                                                             Command="{Binding x:DataType='pageModels:MainPageModel', Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, Path=SelectTicketCommand}"

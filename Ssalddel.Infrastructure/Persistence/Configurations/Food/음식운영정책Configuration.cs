@@ -9,5 +9,6 @@ public sealed class 음식운영정책Configuration : IEntityTypeConfiguration<�
     public void Configure(EntityTypeBuilder<음식운영정책> builder)
     {
         builder.Property(item => item.Id).ValueGeneratedNever();
+        builder.Property(item => item.기사기상할증정책판본).HasMaxLength(100);
     }
 }

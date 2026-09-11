@@ -89,6 +89,28 @@ namespace 살뜰.도메인.운송
 
         public decimal? 운임 { get; set; }
 
+        public decimal? 기사기본거리지급액 { get; set; }
+
+        public decimal? 기사기상할증액 { get; set; }
+
+        public decimal? 기사지급예정액 { get; set; }
+
+        public bool 기사기상할증적용여부 { get; set; }
+
+        public string? 픽업지기상자료상태 { get; set; }
+
+        public string? 픽업지기상코드 { get; set; }
+
+        public DateTime? 픽업지기상기준시각Utc { get; set; }
+
+        public string? 픽업지기상자료출처 { get; set; }
+
+        public string? 픽업지기상자료Hash { get; set; }
+
+        public string? 기사제안요금정책판본 { get; set; }
+
+        public DateTime? 기사제안요금판정시각Utc { get; set; }
+
         public string 첨부_json { get; set; } = "[]";
 
         public string 메모 { get; set; } = string.Empty;

@@ -53,6 +53,17 @@ public sealed class 운송원장Configuration : IEntityTypeConfiguration<운송�
         builder.Property(x => x.출발지).HasColumnName("출발지").IsRequired();
         builder.Property(x => x.도착지).HasColumnName("도착지").IsRequired();
         builder.Property(x => x.운임).HasColumnName("운임");
+        builder.Property(x => x.기사기본거리지급액).HasColumnName("driver_base_distance_payout").HasPrecision(18, 2);
+        builder.Property(x => x.기사기상할증액).HasColumnName("driver_weather_surcharge").HasPrecision(18, 2);
+        builder.Property(x => x.기사지급예정액).HasColumnName("driver_expected_payout").HasPrecision(18, 2);
+        builder.Property(x => x.기사기상할증적용여부).HasColumnName("driver_weather_surcharge_applied");
+        builder.Property(x => x.픽업지기상자료상태).HasColumnName("pickup_weather_evidence_status").HasMaxLength(80);
+        builder.Property(x => x.픽업지기상코드).HasColumnName("pickup_weather_code").HasMaxLength(40);
+        builder.Property(x => x.픽업지기상기준시각Utc).HasColumnName("pickup_weather_observed_at_utc");
+        builder.Property(x => x.픽업지기상자료출처).HasColumnName("pickup_weather_source").HasMaxLength(300);
+        builder.Property(x => x.픽업지기상자료Hash).HasColumnName("pickup_weather_payload_hash").HasMaxLength(64);
+        builder.Property(x => x.기사제안요금정책판본).HasColumnName("driver_offer_pricing_revision").HasMaxLength(180);
+        builder.Property(x => x.기사제안요금판정시각Utc).HasColumnName("driver_offer_priced_at_utc");
         builder.Property(x => x.첨부_json).HasColumnName("첨부_json").IsRequired();
         builder.Property(x => x.메모).HasColumnName("메모").IsRequired();
         builder.Property(x => x.RowVersion)

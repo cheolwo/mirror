@@ -62,6 +62,8 @@ public sealed class PublicDataOptions
 
     public KmaAsosOptions KmaAsos { get; set; } = new();
 
+    public KmaUltraShortNowcastOptions KmaUltraShortNowcast { get; set; } = new();
+
     public MaffRegionalCuisineOptions MaffRegionalCuisine { get; set; } = new();
 
     public JapanRegionalDataOptions Japan { get; set; } = new();
@@ -351,6 +353,20 @@ public sealed class KmaAsosOptions
 
     public string DailyPath { get; set; }
         = "/1360000/AsosDalyInfoService/getWthrDataList";
+}
+
+public sealed class KmaUltraShortNowcastOptions
+{
+    public string BaseUrl { get; set; } = "https://apis.data.go.kr";
+
+    public string ObservationPath { get; set; }
+        = "/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst";
+
+    public int BaseTimeSafetyDelayMinutes { get; set; } = 50;
+
+    public int ObservationCacheMinutes { get; set; } = 70;
+
+    public int FailureCacheSeconds { get; set; } = 60;
 }
 
 public sealed class MaffRegionalCuisineOptions

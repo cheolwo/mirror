@@ -57,6 +57,9 @@ public sealed class 음식배달요금정책응답
     public decimal DriverBasePayout { get; set; } = 2500m;
     public decimal DriverDistanceUnitPayout { get; set; } = 90m;
     public decimal DriverMinimumPayout { get; set; } = 2500m;
+    public bool DriverWeatherSurchargeEnabled { get; set; } = true;
+    public decimal DriverWeatherSurcharge { get; set; } = 1000m;
+    public string DriverWeatherSurchargePolicyRevision { get; set; } = "food-weather-surcharge.r1";
     public DateTime UpdatedAtUtc { get; set; }
     public string UpdatedByUserId { get; set; } = string.Empty;
 }

@@ -79,6 +79,7 @@ internal static class DatabaseCompatibilityInitializer
         await EnsureHrEmploymentContractCompatibilityAsync(db, logger);
         await EnsurePlatformProfitReturnCompatibilityAsync(db, logger);
         await EnsureFoodMartLedgerSyncOutboxCompatibilityAsync(db, logger);
+        await EnsureFoodDeliveryWeatherPricingCompatibilityAsync(db, logger);
 
         try
         {
@@ -184,6 +185,60 @@ ON `음식마트원장동기화_Outbox` (`status`, `updated_at_utc`);";
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Food/mart ledger sync Outbox schema compatibility check failed.");
+        }
+        finally
+        {
+            await db.Database.CloseConnectionAsync();
+        }
+    }
+
+    private static async Task EnsureFoodDeliveryWeatherPricingCompatibilityAsync(
+        SsalddelContext db,
+        ILogger logger)
+    {
+        var connection = db.Database.GetDbConnection();
+
+        try
+        {
+            await db.Database.OpenConnectionAsync();
+            var columns = new (string Table, string Column, string Definition)[]
+            {
+                ("음식운영정책", "기사기상할증활성화여부", "tinyint(1) NOT NULL DEFAULT 1"),
+                ("음식운영정책", "기사기상할증액", "decimal(18,2) NOT NULL DEFAULT 1000.00"),
+                ("음식운영정책", "기사기상할증정책판본", "varchar(100) NOT NULL DEFAULT 'food-weather-surcharge.r1'"),
+                ("운송실행투영", "driver_base_distance_payout", "decimal(18,2) NULL"),
+                ("운송실행투영", "driver_weather_surcharge", "decimal(18,2) NULL"),
+                ("운송실행투영", "driver_expected_payout", "decimal(18,2) NULL"),
+                ("운송실행투영", "driver_weather_surcharge_applied", "tinyint(1) NOT NULL DEFAULT 0"),
+                ("운송실행투영", "pickup_weather_evidence_status", "varchar(80) NULL"),
+                ("운송실행투영", "pickup_weather_code", "varchar(40) NULL"),
+                ("운송실행투영", "pickup_weather_observed_at_utc", "datetime(6) NULL"),
+                ("운송실행투영", "pickup_weather_source", "varchar(300) NULL"),
+                ("운송실행투영", "pickup_weather_payload_hash", "char(64) NULL"),
+                ("운송실행투영", "driver_offer_pricing_revision", "varchar(180) NULL"),
+                ("운송실행투영", "driver_offer_priced_at_utc", "datetime(6) NULL")
+            };
+
+            foreach (var column in columns)
+            {
+                if (!await TableExistsAsync(connection, column.Table)
+                    || await ColumnExistsAsync(connection, column.Table, column.Column))
+                {
+                    continue;
+                }
+
+                await using var command = connection.CreateCommand();
+                command.CommandText = $"ALTER TABLE `{column.Table}` ADD COLUMN `{column.Column}` {column.Definition};";
+                await command.ExecuteNonQueryAsync();
+                logger.LogWarning(
+                    "Added missing food-delivery weather pricing column {Table}.{Column}.",
+                    column.Table,
+                    column.Column);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Food-delivery weather pricing schema compatibility check failed.");
         }
         finally
         {

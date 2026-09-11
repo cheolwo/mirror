@@ -32,6 +32,10 @@ public sealed class FoodDeliveryDriverOfferDto
     public FoodDeliveryDriverStopDto Pickup { get; set; } = new();
     public FoodDeliveryDriverStopDto Dropoff { get; set; } = new();
     public decimal DriverPayout { get; set; }
+    public decimal WeatherSurcharge { get; set; }
+    public bool WeatherSurchargeApplied { get; set; }
+    public string PricingPolicyRevision { get; set; } = string.Empty;
+    public DateTime? WeatherObservedAtUtc { get; set; }
     public decimal? DistanceKm { get; set; }
     public string RecommendationReason { get; set; } = string.Empty;
     public DateTime? ExpiresAtUtc { get; set; }
@@ -47,6 +51,10 @@ public sealed class FoodDeliveryDriverActiveDeliveryDto
     public FoodDeliveryDriverStopDto Pickup { get; set; } = new();
     public FoodDeliveryDriverStopDto Dropoff { get; set; } = new();
     public decimal DriverPayout { get; set; }
+    public decimal WeatherSurcharge { get; set; }
+    public bool WeatherSurchargeApplied { get; set; }
+    public string PricingPolicyRevision { get; set; } = string.Empty;
+    public DateTime? WeatherObservedAtUtc { get; set; }
     public string TransportStatus { get; set; } = string.Empty;
     public string WorkStatus { get; set; } = string.Empty;
     public string DeliveryAttemptId { get; set; } = string.Empty;

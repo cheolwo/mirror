@@ -14,6 +14,7 @@ using Ssalddel.Services.External.Typecast;
 using Ssalddel.Services.External.YouTube;
 using Ssalddel.Services.External.HongikHakdang;
 using Ssalddel.Services.External.Naver;
+using 살뜰.Services.Weather;
 
 namespace Ssalddel.Extensions;
 
@@ -21,6 +22,12 @@ public static partial class ServiceCollectionExtensions
 {
     public static IServiceCollection AddSsalddelHttpClients(this IServiceCollection services)
     {
+        services.AddHttpClient<I픽업지기상관측Client, 기상청초단기실황Client>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<PublicDataOptions>>().Value;
+            client.BaseAddress = new Uri(options.KmaUltraShortNowcast.BaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(Math.Max(5, options.TimeoutSeconds));
+        });
         services.AddScoped<ICommunityNearbyRestaurantDirectory, MainServerCommunityNearbyRestaurantDirectory>();
         services.AddHttpClient<I교육기관제출전송Service, 교육기관제출전송Service>();
         services.AddHttpClient<ICommunityTextTranslationProvider, AzureCommunityTextTranslationProvider>((sp, client) =>
