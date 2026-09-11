@@ -6,6 +6,7 @@ using Ssalddel.Application.Warehouse.Events;
 using Ssalddel.Contracts.Common.Inventory;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Services.Community;
+using Ssalddel.Services.Operations;
 using 살뜰.Data;
 using 살뜰.Infrastructure.Security;
 using 살뜰.Services.Audit;
@@ -101,6 +102,12 @@ public sealed class 출고운송인계완료UseCaseTests
         Assert.IsType<창고출고운송인계완료됨Event>(Assert.Single(publisher.Notifications));
         Assert.Equal(2, outbox.Calls.Count);
         Assert.All(outbox.Calls, call => Assert.Equal("warehouse-transport-handoff:31", call.IdempotencyKey));
+        var osHandoff = await db.운영체제업무인계.SingleAsync();
+        Assert.Equal("WarehouseCommerceFulfillmentOS", osHandoff.출발운영체제Id);
+        Assert.Equal("DomesticCargoTransportOS", osHandoff.도착운영체제Id);
+        Assert.Equal("Accepted", osHandoff.상태Code);
+        Assert.Equal("cargo-request:warehouse-outbound-31", osHandoff.도착업무StableId);
+        Assert.Equal(2, await db.운영체제업무인계Outbox.CountAsync());
     }
 
     private static 출고운송인계완료요청 Request()
@@ -122,6 +129,8 @@ public sealed class 출고운송인계완료UseCaseTests
             new FakeCurrentUserAccessor("worker-a", 역할명.창고관리자),
             logs ?? new RecordingLog(),
             outbox ?? new RecordingOutbox(),
+            new 출고화물운송운영체제인계Service(
+                new 살뜰.Services.Operations.운영체제업무인계Coordinator(db, TimeProvider.System)),
             publisher ?? new RecordingPublisher());
 
     private static 창고작업요청Context RequestContext()

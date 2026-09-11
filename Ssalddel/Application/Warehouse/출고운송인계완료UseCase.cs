@@ -8,6 +8,7 @@ using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Warehouse.Events;
 using Ssalddel.Contracts.Common.Inventory;
 using Ssalddel.Services.Community;
+using Ssalddel.Services.Operations;
 using 살뜰.Data;
 using 살뜰.Services.Audit;
 using 살뜰.도메인.공통;
@@ -32,6 +33,7 @@ public sealed class 출고운송인계완료UseCase(
     ICurrentUserAccessor currentUserAccessor,
     I사용자행위로그Service activityLogService,
     I음식마트원장동기화OutboxService ledgerSyncOutbox,
+    I출고화물운송운영체제인계Service operatingSystemHandoff,
     IPublisher publisher) : I출고운송인계완료UseCase
 {
     public async Task<Result<출고운송인계완료응답>> 완료Async(
@@ -71,6 +73,7 @@ public sealed class 출고운송인계완료UseCase(
         var assignment = await ResolveAssignmentAsync(plan, cancellationToken);
         if (plan.상태 == 출고상태.출고완료)
         {
+            await operatingSystemHandoff.인계Async(plan, cancellationToken);
             await SyncLedgerAsync(plan, userId, cancellationToken);
             return Result.Ok(ToResult(plan, assignment.DriverId, assignment.Vehicle, true));
         }
@@ -238,14 +241,16 @@ public sealed class 출고운송인계완료UseCase(
         });
 
         await db.SaveChangesAsync(cancellationToken);
-        if (transaction is not null)
-        {
-            await transaction.CommitAsync(cancellationToken);
-        }
 
         plan.상태 = 출고상태.출고완료;
         plan.출고처리일시 = now;
         plan.UpdatedAt = now;
+        await operatingSystemHandoff.인계Async(plan, cancellationToken);
+
+        if (transaction is not null)
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
 
         await activityLogService.기록Async(new 사용자행위로그기록
         {

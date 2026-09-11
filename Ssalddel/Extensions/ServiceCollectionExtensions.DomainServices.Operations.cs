@@ -6,6 +6,7 @@ using Ssalddel.Application.Admin.Settlement;
 using Ssalddel.Services.LogisticsProcessing.VehicleLoading;
 using Ssalddel.Services.LogisticsProcessing.Warehouse;
 using Ssalddel.Services.Content;
+using Ssalddel.Services.Operations;
 using Ssalddel.Services.Storage.Azure;
 using 살뜰.Services.Dispatch.Coordination;
 using 살뜰.Services.Dispatch.Continuity;
@@ -87,6 +88,7 @@ public static partial class ServiceCollectionExtensions
         services.AddSingleton<살뜰.도메인.운송.화물연속배차Policy>();
         services.AddScoped<I화물연속배차UseCase, 화물연속배차UseCase>();
         services.AddScoped<I운영체제업무인계Coordinator, 운영체제업무인계Coordinator>();
+        services.AddScoped<I출고화물운송운영체제인계Service, 출고화물운송운영체제인계Service>();
         services.AddScoped<I픽업하차경로최적화Service, 픽업하차경로최적화Service>();
         services.AddScoped<I음식멀티배차조합AIService, 규칙기반음식멀티배차조합AIService>();
         services.AddScoped<I음식멀티배차조합Service, 음식멀티배차조합Service>();

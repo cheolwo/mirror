@@ -17,6 +17,65 @@ namespace Ssalddel.Tests.Application.Food;
 public sealed class 음식배달완료WorldProjectionTests
 {
     [Fact]
+    public async Task 구성된경우_MySql재시작경계에서도_멱등성과만료정리를유지한다()
+    {
+        var connectionString = Environment.GetEnvironmentVariable("SSALDDEL_MYSQL_PROJECTION_TEST_CONNECTION");
+        if (string.IsNullOrWhiteSpace(connectionString)) return;
+
+        var orderNo = "FOOD-MYSQL-" + Guid.NewGuid().ToString("N");
+        var options = new DbContextOptionsBuilder<SsalddelContext>()
+            .UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+            .Options;
+        await using (var first = new SsalddelContext(options, new PassThroughEncryptionService()))
+        {
+            await first.Database.MigrateAsync();
+            var order = CompletedOrder(orderNo, includeAllStages: true);
+            first.음식주문.Add(order);
+            first.운송원장.Add(Transport(orderNo, "mysql-driver-private"));
+            first.음식마트원장동기화Outbox.Add(ProjectionRequest(orderNo, order.상태이력.Count));
+            await first.SaveChangesAsync();
+            var service = new 음식배달완료WorldProjectionService(
+                first,
+                new 음식배달완료WorldAreaResolver(),
+                NullLogger<음식배달완료WorldProjectionService>.Instance);
+            Assert.Equal(1, await service.대기항목처리Async());
+        }
+
+        await using (var restarted = new SsalddelContext(options, new PassThroughEncryptionService()))
+        {
+            var service = new 음식배달완료WorldProjectionService(
+                restarted,
+                new 음식배달완료WorldAreaResolver(),
+                NullLogger<음식배달완료WorldProjectionService>.Instance);
+            Assert.Equal(0, await service.대기항목처리Async());
+            var sourceOutboxId = await restarted.음식마트원장동기화Outbox
+                .Where(row => row.원천Id == orderNo)
+                .Select(row => row.Id)
+                .SingleAsync();
+            Assert.Equal(1, await restarted.음식배달완료WorldSnapshot.CountAsync(row =>
+                row.원천OutboxId == sourceOutboxId));
+
+            restarted.음식배달완료WorldSnapshot.Add(new 살뜰.도메인.음식.음식배달완료WorldSnapshot
+            {
+                원천OutboxId = sourceOutboxId,
+                SnapshotStableId = "food-delivery-completed:expired:" + Guid.NewGuid().ToString("N"),
+                AreaStableId = 음식배달완료WorldAreaStableIds.Myeonmok,
+                LifecycleRevision = 1,
+                OutcomeCode = "ExpiredTest",
+                CompletedAtUtc = DateTime.UtcNow.AddHours(-2),
+                PublishedAtUtc = DateTime.UtcNow.AddHours(-2),
+                ExpiresAtUtc = DateTime.UtcNow.AddMinutes(-1),
+                OrdererActorStableId = "actor:synthetic:expired:orderer",
+                RestaurantActorStableId = "actor:synthetic:expired:restaurant",
+                DriverActorStableId = "actor:synthetic:expired:driver"
+            });
+            await restarted.SaveChangesAsync();
+            await service.대기항목처리Async();
+            Assert.False(await restarted.음식배달완료WorldSnapshot.AnyAsync(row => row.OutcomeCode == "ExpiredTest"));
+        }
+    }
+
+    [Fact]
     public async Task 정상완료주기는_익명온라인사본으로_한번만발행된다()
     {
         await using var db = CreateContext();
