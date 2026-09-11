@@ -24,7 +24,7 @@
       "managementSystem": "G1",
       "koreanName": "\uD68C\uADC0 \uC99D\uAC70",
       "technicalName": "E3\uD68C\uADC0\uC99D\uAC70Module",
-      "primaryCount": 273,
+      "primaryCount": 275,
       "secondaryCount": 1
     },
     {
@@ -13572,6 +13572,25 @@
       "stepKeys": []
     },
     {
+      "componentId": "Ssalddel.Unity.Tests:Ssalddel.Unity.Tests.OperationalWorldSceneInterpreterTests",
+      "isCoverageCandidate": true,
+      "assemblyName": "Ssalddel.Unity.Tests",
+      "componentName": "Ssalddel.Unity.Tests.OperationalWorldSceneInterpreterTests",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Unity.Tests/OperationalWorldSceneInterpreterTests.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E3",
+      "responsibility": "\uC6B4\uC601 \uC9C0\uC5ED \uC7A5\uBA74\uC758 \uD310\uBCF8, \uB9CC\uB8CC, \uBD80\uBD84 \uC2E4\uD328 \uACA9\uB9AC\uB97C \uC21C\uC218 \uD574\uC11D\uAE30\uC5D0\uC11C \uAC80\uC99D\uD55C\uB2E4.",
+      "boundary": "Unity \uBA54\uBAA8\uB9AC \uD574\uC11D \uC2DC\uD5D8\uC774\uBA70 \uC2E4\uC81C Scene \uBC30\uCE58, Play Mode, Game View \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+      "primarySubmoduleKey": "",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
+      "workOrderIds": [],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
       "componentId": "Ssalddel.Unity.Tests:Ssalddel.Unity.Tests.PlayerActivityViewPolicyTests",
       "isCoverageCandidate": true,
       "assemblyName": "Ssalddel.Unity.Tests",
@@ -18749,6 +18768,25 @@
       "stepKeys": []
     },
     {
+      "componentId": "Ssalddel.Unity:Ssalddel.Unity.WorldProjection.OperationalWorldSceneClient",
+      "isCoverageCandidate": true,
+      "assemblyName": "Ssalddel.Unity",
+      "componentName": "Ssalddel.Unity.WorldProjection.OperationalWorldSceneClient",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Unity/Runtime/WorldProjection/OperationalWorldSceneClient.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E3",
+      "responsibility": "\uC778\uC99D GET \uC751\uB2F5\uC744 Unity \uBA54\uBAA8\uB9AC \uD574\uC11D\uAE30\uC5D0 \uC804\uB2EC\uD558\uB294 \uACC4\uC57D \uACBD\uACC4\uB97C \uC81C\uACF5\uD55C\uB2E4.",
+      "boundary": "\uC2E4\uC81C Unity Scene, Play Mode, Game View \uB610\uB294 \uC6B4\uC601 Command \uC2E4\uD589 \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+      "primarySubmoduleKey": "",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
+      "workOrderIds": [],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
       "componentId": "Ssalddel.Unity:Ssalddel.Unity.WorldProjection.SimulationLhAssetPlanPresentationReconciler",
       "isCoverageCandidate": true,
       "assemblyName": "Ssalddel.Unity",
@@ -18792,8 +18830,8 @@
     }
   ],
   "coverage": {
-    "candidateTypeCount": 834,
-    "annotatedTypeCount": 823,
+    "candidateTypeCount": 836,
+    "annotatedTypeCount": 825,
     "excludedTypeCount": 3,
     "uncoveredTypeCount": 8,
     "annotatedMethodCount": 17

@@ -134,6 +134,29 @@ namespace Ssalddel.Unity.Tests
             }
         }
 
+        [Fact]
+        public void 지역장면UnityDecoder와공통계약의_package결속이존재한다()
+        {
+            var repositoryRoot = FindRepositoryRoot();
+            var packageRoot = Path.Combine(repositoryRoot, "Ssalddel.Unity");
+            var decoderSource = File.ReadAllText(Path.Combine(
+                packageRoot,
+                "Runtime",
+                "OperationalTransport",
+                "UnityJsonOperationalWorldSceneDecoder.cs"));
+            var assemblyDefinition = File.ReadAllText(Path.Combine(
+                packageRoot,
+                "Runtime",
+                "OperationalTransport",
+                "Ssalddel.Unity.OperationalTransport.asmdef"));
+            var packageManifest = File.ReadAllText(Path.Combine(packageRoot, "package.json"));
+
+            Assert.Contains("UnityJsonOperationalWorldSceneDecoder", decoderSource, StringComparison.Ordinal);
+            Assert.Contains("JsonUtility.FromJson<SceneResponseWire>", decoderSource, StringComparison.Ordinal);
+            Assert.Contains("Ssalddel.WorkflowRules.Contracts", assemblyDefinition, StringComparison.Ordinal);
+            Assert.Contains("com.ssalddel.workflow-rules.contracts", packageManifest, StringComparison.Ordinal);
+        }
+
         private static string FindRepositoryRoot()
         {
             var candidates = new[]

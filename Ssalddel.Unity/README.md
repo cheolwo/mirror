@@ -107,6 +107,8 @@ NPC 이동은 서버의 업무 상태를 Unity 좌표로 직접 전달하지 않
 
 운영 관찰 API client는 실제 API base URL과 runtime session token을 사용한다. token provider는 로그인 결과를 메모리에만 전달하며 Scene·Prefab·config에 serialize하지 않는다. 404는 명시적으로 선택 가능한 조회에서만 상태 사본 없음으로 처리하고, 인증 오류·timeout·잘못된 JSON은 Simulation fallback 없이 오류로 전달한다. `IOperationalWorldProjectionTransport`는 GET 외 메서드를 제공하지 않으며 운영 Command는 기존 Web·MAUI의 인증된 API 경계가 담당한다.
 
+여러 완료 자료원을 한 장면으로 읽을 때는 `OperationalWorldSceneClient`가 `GET api/v1/world/areas/{areaStableId}/scene-snapshots?cursor={cursor}`를 호출한다. Unity에서는 `UnityJsonOperationalWorldSceneDecoder`가 wire JSON을 공통 계약으로 바꾸고 `OperationalWorldSceneInterpreter`가 최신 revision, 전체 사본 누락, tombstone, TTL과 자료원별 실패를 순수 메모리 상태로 반영한다. 실패한 자료원의 마지막 정상 객체는 유지하며 지원하지 않는 schema는 현재 장면을 보존한다. 원문 JSON·해석 결과·실제 위치는 로컬 파일이나 Save/Replay에 저장하지 않는다. 서버의 `OperationalWorldObservationWorkflow` 기능은 기본 비활성이므로 배포 환경에서 별도 승인해 켜야 한다.
+
 Presentation sample은 VContainer 1.18.0을 composition root로 사용한다. Git dependency는 package 내 `package.json`이 아니라 실제 Unity project의 `Packages/manifest.json`에 추가한다.
 
 ```json
@@ -124,4 +126,4 @@ dotnet test Ssalddel.Unity.Tests/Ssalddel.Unity.Tests.csproj
 
 golden fixture는 `Ssalddel.Unity.Tests/Fixtures/potato-basic-kr-001.v1.json`에 있다. 이 값은 KAMIS나 기상청의 실제 관측값이 아니라 실제 contract 형태를 검증하는 교육용 `Fixture`다.
 
-현재 저장소에는 실제 Unity project가 없다. `Samples~` 아래 항목은 local package에서 import하는 presentation sample이다. 과거 임시 Unity 6 project에서 확인한 샘플 조립 증거는 유지되지만, 이번 공통 전송 리팩토링은 .NET 계약·정적 샘플 검사까지만 검증했다. canonical `SimulationWorldShell` Scene·Controller 실체도 현행 체크아웃에 없으므로 실제 Shell 결속, Unity Editor import·script compile, Play Mode·Game View와 운영 서버 HTTP 실접속은 별도 검증이 필요하다. 운영 API 실패를 Simulation으로 대체하지 않는 경계는 공통 전송 계약과 회귀 시험으로 고정한다.
+현재 저장소에는 실제 Unity project가 없다. `Samples~` 아래 항목은 local package에서 import하는 presentation sample이다. 과거 임시 Unity 6 project에서 확인한 샘플 조립 증거는 유지되지만, 이번 지역 장면 Client·해석기는 .NET 계약·단위 시험까지만 검증했다. 서버 쪽은 일회용 MySQL과 실제 인증 HTTP 연결까지 확인했지만, canonical `SimulationWorldShell` Scene·Controller 실체가 현행 체크아웃에 없으므로 Unity Editor import·script compile, 실제 Scene 결속, Play Mode·Game View는 별도 검증이 필요하다. 운영 API 실패를 Simulation으로 대체하지 않는 경계는 공통 전송 계약과 회귀 시험으로 고정한다.

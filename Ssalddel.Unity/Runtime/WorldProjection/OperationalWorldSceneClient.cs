@@ -14,6 +14,10 @@ namespace Ssalddel.Unity.WorldProjection
     /// 인증된 운영 지역 장면을 읽어 메모리 해석기에 적용합니다. 원문 JSON 또는 해석 결과를
     /// 파일·PlayerPrefs·Save에 쓰지 않으며, Command 전송 기능을 포함하지 않습니다.
     /// </summary>
+    [Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceResponsibility(
+        Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceStage.E3,
+        "인증 GET 응답을 Unity 메모리 해석기에 전달하는 계약 경계를 제공한다.",
+        Boundary = "실제 Unity Scene, Play Mode, Game View 또는 운영 Command 실행 증거가 아니다.")]
     public sealed class OperationalWorldSceneClient
     {
         private readonly IOperationalWorldProjectionTransport transport;
