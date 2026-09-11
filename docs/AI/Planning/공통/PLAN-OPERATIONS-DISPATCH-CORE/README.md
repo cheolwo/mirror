@@ -2,13 +2,13 @@
 
 - 기획 ID: `PLAN-OPERATIONS-DISPATCH-CORE`
 - 기획 분야: 공통 / 운영 배차
-- 기획 판본: `dispatch-core.r35`
-- 상태: `Draft / StakeholderPolicyConfirmedInPart / TwoOperationalOsRelated / FreightPostAcceptanceReconsentConfirmed / FreightCommitmentGraphConfirmed / FreightRiskVisibilityConfirmed / FreightInfeasibleReservationReleaseConfirmed / ShipperMaterialChangeOnlyNotificationConfirmed / ShipperRecoveryNotificationConfirmed / FreightContinuityBackendFoundationImplementedDisabled / FreightGraphEffectsDeferred / BackendBatch5InterruptionRecoveryImplemented / FrontendPartial / OperationalActivationDeferred`
+- 기획 판본: `dispatch-core.r41`
+- 상태: `Draft / StakeholderPolicyConfirmedInPart / TwoOperationalOsRelated / FoodWeatherThreePointPolicyApproved / FoodWeatherPickupNowcastFoundationImplemented / FoodWeatherServerCacheImplemented / FoodWeatherThreePointImplementationPending / FreightPostAcceptanceReconsentConfirmed / FreightCommitmentGraphConfirmed / FreightRiskVisibilityConfirmed / FreightInfeasibleReservationReleaseConfirmed / ShipperMaterialChangeOnlyNotificationConfirmed / ShipperRecoveryNotificationConfirmed / FreightContinuityBackendFoundationImplementedDisabled / FreightGraphEffectsDeferred / BackendBatch5InterruptionRecoveryImplemented / FrontendPartial / OperationalActivationDeferred`
 - 상위 기획: `PLAN-OPERATIONS-LOGISTICS-OS`. 지역·Scene과 독립된 운영 업무 공통 정책
 - 관련 기획: `PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001`, `PLAN-SYSTEM-OBSERVER-WORLD`
 - 관련 WI·PlayableLoop: 미등록. 이번 1차 공통 코어는 운영 비활성 계약·순수 계산·포트 경계이며 Unity PlayableLoop 구현이 아님
 - Graph Map 영향: `NoImpact` — 아래 운송 약속 그래프는 서버 판정용 파생 그래프이며 게임·Unity 공간 Graph Map의 노드·배치를 변경하지 않음
-- 개발 인계 상태: 2026-09-11 사용자가 현 스레드 구현을 명시적으로 요청해 `AcceptedInCurrentThread / BackendBatch5InterruptionRecoveryImplemented`
+- 개발 인계 상태: 2026-09-11 기존 픽업지 기상 조회·서버 캐시는 `AcceptedInCurrentThread / FoodWeatherServerCacheImplemented`. 같은 날 확정한 세 지점 판정은 `PolicyApproved / ImplementationPending`
 - 계보: 첫 공통 코어 초안과 후속 정책 문답을 이 정본에 통합
 - 구현 준비 점검: [운영 배차 공통 코어 구현 준비 점검 r1](implementation-readiness-audit.r1.md)
 
@@ -63,7 +63,7 @@
 - 기존 Redis 기사 상태의 위치·Aging·후보 없음 자료는 입력 후보지만 영속 통계 원장으로 승격하지 않는다.
 - `RedisDriverRejectedRequestStore`의 요청 ID 집합은 재추천 방지 자료이지 날짜·사유·유효성·책임을 가진 비율 원장이 아니다.
 - `음식배달기사활성업무Policy.MaxActiveDeliveries=3`은 동시 책임 상한이며 시간당 소프트 균형 목표로 대체하지 않는다.
-- 첫 구현 후보에서도 기존 공개 DTO·FDriver 화면·실제 추천 점수·Controller·운영 DB·Unity를 자동 변경하지 않는다.
+- 이번 음식 배달 수직 조각은 기존 추천 점수와 Controller·Unity를 바꾸지 않고, 서버가 확정하는 제안 요금 원장·공유 DTO·FDriver 상세 표시·기존 DB 시작 호환 열만 좁게 연결한다.
 - 2026-09-11 화물 연속 배차의 계약·기사 의사 원장·다음 콜 단일 예약·시간 약속·현재 위치 기반 위험 조회·UseCase·Controller·Memory/Redis 투영과 DriverApp reservation/revision 연결을 구현했다. 기능은 `FreightContinuity:Enabled=false`, `ShadowMode=true`, 운임 정책 비활성으로 시작하며 실제 추천 순위나 운영 배차를 자동 변경하지 않는다. 조건 변경 재동의·보전 원장, 여러 화물의 완전한 약속 그래프 순회와 화주 결과/회복 알림은 후속 수직 구현이다.
 
 ## 공통 코어 1차 구현과 후속 범위
@@ -142,6 +142,20 @@
 
 플랫폼은 주문 상품·수량·시간대·현재 관찰된 대기 정보를 이용해 `이 시간대에는 보통 약 몇 분 걸렸습니다`라는 평균 조리시간 참고 알림을 음식점에 제공한다. 이 값은 미리 선택되는 기본값이나 확정 권고가 아니며 음식점이 현재 조리 중인 주문과 곧 들어올 업무를 보고 최종 예상시간을 직접 선택한다. 주문 수락 화면에는 `20분·30분` 같은 간단한 시간 버튼을 두고, 음식점이 시간을 선택한 뒤 `수락`을 누르면 그 값이 해당 주문의 조리 완료 예정 시각 기준이 된다. 별도 확인 단계를 하나 더 요구하지 않고 복잡한 상품별 합산이나 긴 숫자 입력도 요구하지 않는다. 플랫폼은 참고 평균·음식점 선택값·수락 시각을 함께 보존한다.
 
+음식 배달의 새 배차 배너는 신규 제안 도착만 알리고 거리·금액을 직접 싣지 않는다. 기사가 배너를 누르면 기존 FDriver 지도 업무 화면에서 음식점 픽업지·전달지와 예상 경로를 확인한다. 기상 할증 때문에 새 배너·상세 화면·경로 체계를 만들지 않는다.
+
+기상 할증은 배차 제안을 만들 때 운영 서버가 판정하는 건당 고정액으로 한다. 플랫폼이 부담하며 기존 기본·거리 지급액에 더해 기사 예상 지급액에 포함한다. 첫 검증 기준 금액은 건당 `1,000원`으로 확정하되 코드 상수가 아니라 판본 있는 서버 정책 값으로 관리해 운영 배포 전 조정할 수 있게 한다. 기사 화면은 서버가 확정해 내려 준 총 예상 지급액과 `기상 할증 +1,000원` 표시를 상세에서 보여 주고 클라이언트가 날씨나 금액을 다시 판정하지 않는다.
+
+판정 위치는 2026-09-11 사용자 확정에 따라 배차 제안을 받을 `기사의 유효한 현재 위치`, `음식점·마트 픽업지`, `주문 전달지` 세 곳으로 확장한다. 세 곳 중 한 곳이라도 [기상청 단기예보 조회서비스의 초단기실황](https://www.data.go.kr/data/15084084/openapi.do) `PTY`에서 알려진 강수 코드가 `0`이 아니면 해당 기사 후보의 제안에 건당 고정 기상 할증을 한 번 적용한다. 두 곳이나 세 곳에 동시에 비가 와도 중복 가산하지 않는다. 기사마다 현재 위치가 다르므로 판정과 제안 원장은 후보 기사별로 만들며, 제안 뒤에는 이동이나 후속 관측 때문에 이미 제시한 금액을 바꾸지 않는다.
+
+유효한 강수 관측이 한 곳이라도 있으면 다른 지점의 자료가 일부 누락되어도 할증한다. 확인된 모든 지점이 무강수이면 할증하지 않는다. 강수로 확인된 지점은 없지만 좌표·관측·외부 응답이 일부 또는 전부 누락된 경우에는 무강수로 꾸미지 않고 `자료 불완전` 상태를 원장에 남기며 자동 할증은 적용하지 않는다. 같은 제안은 세 지점별 격자·관측 기준 시각·강수 코드·자료 상태·원본 hash·출처와 정책 판본·기본 지급액·할증액·총 예상 지급액을 한 번만 동결한다.
+
+배달권의 주 식별자를 행정동으로 교체하지 않는다. 좌표 기반 음식배달권을 배차 실행 기준으로 유지하고, 법정동 코드는 주소·건물·공간 공공데이터 결속에, 행정동 코드는 행정·통계와 행정구역 기반 외부 자료 연결에, 기상청 `nx/ny`는 실제 기상 판정에 각각 사용한다. 법정동과 행정동의 관계는 [공식 관할 자료](https://www.data.go.kr/data/15101142/fileData.do?recommendDataYn=Y)의 판본 있는 관계로 보존하고 이름이나 코드 앞자리로 추측하지 않는다.
+
+기사 후보나 판정 지점마다 공공데이터 API를 다시 호출하지 않는다. 운영 서버는 한 배차 라운드의 기사·픽업·전달지 좌표를 `기상청 5km 격자`로 바꾸고 중복 격자를 제거한 뒤, `격자 + 관측 기준 시각` 캐시를 조회해 같은 관측 결과를 후보와 주문 사이에 공유한다. 정상·판독 가능한 응답은 기본 70분, 원격 실패·자료 없음은 기본 60초를 보존하고, 같은 서버 프로세스에서 동시에 발생한 캐시 미스는 단일 외부 요청으로 합친다. 배차 엔진은 이 서버 조회 결과만 사용하며 FDriver·Unity가 공공데이터 API를 직접 호출하거나 기상 상태를 재판정하지 않는다.
+
+현재 코드로 검증된 범위는 픽업지 한 곳의 관측과 격자·관측시각별 서버 캐시까지다. 기사 현재 위치와 전달지까지 일반화한 세 지점 판정, 후보별 동결, 법정동·행정동·기상 격자 결속은 승인된 후속 구현 범위이며 아직 구현 완료로 보지 않는다.
+
 배달기사는 배차 수락 뒤 음식점에 실제로 도착하면 `가게 도착`을 누르고, 서버는 현재 배차·주문 상태를 확인해 서버 수신 시각을 도착 사건으로 기록한다. 이후 `픽업 완료` 사건까지의 시간을 `현장 조리 대기시간`으로 계산해 음식점·상품·시간대 분석에 사용한다. 이 구간은 주문 접수부터의 전체 조리시간이 아니라 기사가 현장에서 기다린 부분이므로 실제 조리시간과 동일시하지 않으며, 단일 측정값만으로 음식점이나 기사를 자동 제재하지 않는다.
 
 주문자가 반복 조리 지연 때문에 취소하면 주문자에게 환불하고 원인을 음식점 조리 지연 책임으로 기록한다. 음식점이 재료를 이미 투입했거나 조리를 상당 부분 마쳤더라도 플랫폼은 해당 취소에 대한 음식점 보상이나 재조리 비용을 지급하지 않는다. 이 사건은 기사 책임과 음식점의 주문 거절률에는 섞지 않고 별도의 조리 지연·주문 취소 사건으로 남긴다.
@@ -185,7 +199,9 @@
 - 운송 약속 그래프의 같은 단계 재알림 기준과 기사 음성 알림의 최소 반복 간격
 - 그래프 판정이 정상과 주의를 짧게 오갈 때 회복으로 확정할 안정화 기준
 - 이행 불가능 예약 조기 해제를 확정하는 위험 단계·보수 시간 여유와 일시적인 근거 부족 상태의 처리 기준
+- 화물의 권위 상태 회복은 즉시 알리고 교통 ETA 회복은 연속 판정 뒤 알릴지에 대한 안정화 기준
+- 기상 자료 결손 제안에 대해 후속 수동 보호 할증을 적용할지와 이의 제기 절차
 
 ## 다음 질문 하나
 
-새 기사가 실제로 배정된 것처럼 영속 업무 상태가 회복되면 즉시 회복 알림을 보내되, 교통 ETA만 좋아진 경우에는 운송 약속 그래프가 연속 두 번 정상으로 판정한 뒤 회복으로 확정할까? 추천은 권위 상태 변화는 즉시 알리고 흔들리는 예측값은 잠시 안정화해 알림 번복을 줄이는 방식이다. 대가는 주기 간격만큼 회복 안내가 늦어질 수 있다는 점이다.
+기사 현재 위치가 기존 배차 적격 판정의 신선도 기준을 넘긴 경우에는 그 지점을 기상 판정에서 제외하고 픽업지·전달지만으로 판정할까? 추천은 오래된 기사 좌표로 비를 추정하지 않고 기존 위치 신선도 기준을 그대로 재사용하는 것이다.
