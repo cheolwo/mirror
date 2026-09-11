@@ -55,20 +55,10 @@ public sealed class 음식배달완료WorldProjectionTests
             Assert.Equal(1, await restarted.음식배달완료WorldSnapshot.CountAsync(row =>
                 row.원천OutboxId == sourceOutboxId));
 
-            restarted.음식배달완료WorldSnapshot.Add(new 살뜰.도메인.음식.음식배달완료WorldSnapshot
-            {
-                원천OutboxId = sourceOutboxId,
-                SnapshotStableId = "food-delivery-completed:expired:" + Guid.NewGuid().ToString("N"),
-                AreaStableId = 음식배달완료WorldAreaStableIds.Myeonmok,
-                LifecycleRevision = 1,
-                OutcomeCode = "ExpiredTest",
-                CompletedAtUtc = DateTime.UtcNow.AddHours(-2),
-                PublishedAtUtc = DateTime.UtcNow.AddHours(-2),
-                ExpiresAtUtc = DateTime.UtcNow.AddMinutes(-1),
-                OrdererActorStableId = "actor:synthetic:expired:orderer",
-                RestaurantActorStableId = "actor:synthetic:expired:restaurant",
-                DriverActorStableId = "actor:synthetic:expired:driver"
-            });
+            var expiring = await restarted.음식배달완료WorldSnapshot.SingleAsync(row =>
+                row.원천OutboxId == sourceOutboxId);
+            expiring.OutcomeCode = "ExpiredTest";
+            expiring.ExpiresAtUtc = DateTime.UtcNow.AddMinutes(-1);
             await restarted.SaveChangesAsync();
             await service.대기항목처리Async();
             Assert.False(await restarted.음식배달완료WorldSnapshot.AnyAsync(row => row.OutcomeCode == "ExpiredTest"));
