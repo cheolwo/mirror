@@ -5,8 +5,8 @@
 
 - 기획 ID: `PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001`
 - 기획 분야: 시스템·운영 기능 이관
-- 기획 판본: `operations-unity-transfer.r7`
-- 상태: `ApprovedForHandoff / AppObservationProfilesSeparated / OperationalRoleObjectCatalogImplemented / GameObjectInstantiationDeferred / OperationalSimulationWorkflowInterfacesSeparated / SharedPureCoreConfirmed / SimulationWorkflowBoundaryImplemented / UnifiedSsalddelHostImplemented / OperationalClientBoundaryImplemented / UnityReadOnlyTransportCentralized / FoodDeliveryCompletedLifecycleProjectionImplemented / ProjectionDatabaseMigrationPreparedNotApplied / SimulationWorldShellBindingDeferred / LegacyFacadeRetained / UnityImportDeferred`
+- 기획 판본: `operations-unity-transfer.r8`
+- 상태: `ApprovedForHandoff / AppObservationProfilesSeparated / OperationalRoleObjectCatalogImplemented / GameObjectInstantiationDeferred / OperationalSimulationWorkflowInterfacesSeparated / SharedPureCoreConfirmed / SimulationWorkflowBoundaryImplemented / UnifiedSsalddelHostImplemented / OperationalClientBoundaryImplemented / UnityReadOnlyTransportCentralized / RegionalSceneAggregationImplemented / DisposableMySqlAndHttpValidated / SimulationWorldShellBindingDeferred / LegacyFacadeRetained / UnityImportDeferred`
 - 상위 기획: `PLAN-GAME-COMMON-PURPOSE-001`
 - 관련 하위 기획: `PLAN-GRAPH-HUB-LOGISTICS-CIRCULATION-001`, `PLAN-PRESENTATION-E4-POOL-001`
 - 관련 결정: 운영·Simulation·Unity 권위 분리, Farm·Hub·City 독립 영역 우선
@@ -92,7 +92,11 @@ Hosted HTTP는 별도 `Ssalddel.Simulation.Server` 실행 파일·포트·컨테
 
 Web·MAUI의 1차 앱 조립은 `AddSsalddelOperationalApiHttpClient`로 통일했다. 공통 클라이언트는 `Ssalddel.Operational.Api` 이름을 사용하고, 기존 bare `HttpClient` 소비자는 같은 운영 주소를 받는 호환 등록으로 유지한다. 기능·판본 확인용 `GET api/v1/version-feature-flags`도 공통 route 계약과 읽기 전용 capability client로 연결했다.
 
-Unity에는 `IOperationalWorldProjectionTransport` GET 전용 계약과 별도 `Ssalddel.Unity.OperationalTransport` assembly를 추가했다. 운영 관찰 샘플은 이 전송 구현을 공유하며 인증 토큰은 실행 중 메모리에서만 제공한다. `WorldProjectionSourceSelection`은 `OperationalSnapshot`과 `SimulationSession`을 화면 모듈별로 명시하고 두 자료원 사이 자동 fallback을 금지한다. 현행 체크아웃에는 canonical 이름 외에 `SimulationWorldShell` Scene·Controller 실체가 없어 실제 Shell 결속은 보류했으며, 새 공식 Scene이나 임의 Manager를 만들지 않았다. 실제 Unity 프로젝트 import·Editor 컴파일·Play Mode·Game View와 운영 서버 HTTP 실접속은 아직 검증하지 않았다.
+Unity에는 `IOperationalWorldProjectionTransport` GET 전용 계약과 별도 `Ssalddel.Unity.OperationalTransport` assembly를 추가했다. `GET api/v1/world/areas/{areaStableId}/scene-snapshots`는 완료가 증명된 음식 배달·권한 있는 창고·당사자 화물 인수 사본을 한 지역 장면으로 조합하며 실제 사용자·주문·기사 식별자, 주소와 GPS를 전달하지 않는다. 한 자료원이 실패해도 다른 자료원은 갱신하고 실패한 자료원의 마지막 정상 표현은 유지한다.
+
+`OperationalWorldSceneClient`는 실행 중 인증 토큰과 cursor로 이 조회만 호출하고, `UnityJsonOperationalWorldSceneDecoder`와 `OperationalWorldSceneInterpreter`가 응답을 메모리에서만 해석한다. 전체 사본의 누락, 명시적 tombstone과 TTL 만료만 해당 객체를 제거하며 지원하지 않는 계약 판본은 기존 장면을 보존한다. 원문 JSON과 해석 결과를 로컬 저장·Save·Replay에 넣지 않는다. 관찰 API는 다른 음식·창고 기능과 분리된 `OperationalWorldObservationWorkflow` 관문을 사용하며 기본 비활성이다. `WorldProjectionSourceSelection`은 `OperationalSnapshot`과 `SimulationSession` 사이 자동 fallback을 금지한다.
+
+일회용 로컬 MySQL에 전체 주 DB migration을 적용하고 `Ssalddel`을 실제 기동해 미인증 `401`, 인증된 지역 장면·음식 완료 조회 `200`과 자료원 실패 `0`을 확인했다. 검증 DB는 삭제했으며 공유 개발·운영 DB에는 migration을 적용하지 않았다. 현행 체크아웃에는 제품 Unity 프로젝트와 canonical `SimulationWorldShell` Scene·Controller 실체가 없어 실제 Shell 결속, Unity import·Editor 컴파일·Play Mode·Game View는 보류했고 새 공식 Scene이나 임의 Manager를 만들지 않았다.
 
 세부 범위와 검증 절차는 [같은 장면 자율 음식 생활 관찰 r1](../PLAN-SYSTEM-MYEONMOK-OBSERVER/same-scene-food-life-observation.r1.md)에 결속한다.
 
@@ -230,6 +234,8 @@ H1 하나를 건물 하나나 Prefab 하나와 동일시하지 않는다. 작업
 - `Candidate`와 실제 상태 사본·Prefab·Scene 생성을 분리하고, 관리자·고용·통관·외부 거래 역할은 명시적으로 생성 제외
 - Web·MAUI는 운영 서버 주소와 운영 API Client를 명시적으로 사용하고 원격 Simulation 조립을 암묵적으로 등록하지 않음
 - Unity 운영 관찰은 공통 GET 전송 계층만 사용하며 `OperationalSnapshot`과 `SimulationSession` 사이 자동 fallback을 허용하지 않음
+- 완료가 증명된 운영 자료원만 비식별 지역 장면으로 조합하고, Unity는 cursor·TTL·tombstone을 메모리에서만 해석함
+- 운영 지역 관찰 기능은 다른 업무 기능과 독립된 전용 기능 관문으로 기본 비활성화함
 
 ### 미정 또는 후속 검증
 

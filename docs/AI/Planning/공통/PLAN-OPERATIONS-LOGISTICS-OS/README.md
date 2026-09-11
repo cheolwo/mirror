@@ -2,8 +2,8 @@
 
 - 기획 ID: `PLAN-OPERATIONS-LOGISTICS-OS`
 - 기획 분야: 공통 / 운영 업무 구조
-- 기획 판본: `operations-logistics-os.r5`
-- 상태: `Draft / TwoOperationalOsConfirmed / EndToEndLifecycleOwnershipConfirmed / InternalResponsibilitySplitConfirmed / SharedDispatchCoreRelated / ExplicitCrossOsHandoffConfirmed / PerOsEngineCatalogConfirmed / BackendFoundationImplemented / DatabaseMigrationPreparedNotApplied / WarehouseOutboundToCargoHandoffImplemented / OtherConcreteWorkflowAdoptionPending / FallbackActivationPending / OperationalActivationDeferred`
+- 기획 판본: `operations-logistics-os.r6`
+- 상태: `Draft / TwoOperationalOsConfirmed / EndToEndLifecycleOwnershipConfirmed / InternalResponsibilitySplitConfirmed / SharedDispatchCoreRelated / ExplicitCrossOsHandoffConfirmed / PerOsEngineCatalogConfirmed / BackendFoundationImplemented / DisposableMySqlValidated / WarehouseOutboundToCargoHandoffImplemented / CompletionProjectionCoreImplemented / OtherConcreteWorkflowAdoptionPending / FallbackActivationPending / OperationalActivationDeferred`
 - 상위 기획: 없음. 운영 물류 업무의 상위 경계
 - 하위·관련 기획: `PLAN-OPERATIONS-DISPATCH-CORE`, `PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001`
 - 관련 WI·PlayableLoop: 없음. 운영 서버 구조 기획이며 Unity 실행 기획이 아님
@@ -122,19 +122,21 @@ OS 자체가 DB를 직접 수정하거나 모든 기능을 가진 하나의 serv
 
 기존 식별자와 구현 엔진은 삭제하거나 이름을 한꺼번에 바꾸지 않았다. 배차 후보 선정은 업무 유형을 먼저 소유 OS로 해석하고 그 OS의 활성 `Primary`만 고른다. 화물 OS가 음식배달 구현을, 음식배달 OS가 화물 구현을 자동 대체품으로 사용하는 과거의 family 전체 노출은 제거했다. 화물 배차 엔진이 직접 하던 운송 의뢰 DB 조회도 후보 선정 Application Service로 옮겨, 엔진에는 필요한 운송 방식만 불변 입력 맥락으로 전달한다.
 
-인계 기반은 출발·도착 OS, 출발 업무 revision, 최소 JSON 상태 사본, 계약 판본, 만료시각과 공개 범위를 MySQL 원장에 보존한다. 도착 OS만 `수락·거절·보류`할 수 있고, 수락 때만 현재 책임 OS가 도착 OS로 바뀐다. 생성과 결정 요청은 클라이언트 요청 ID·revision·고유 인덱스·동시성 토큰으로 멱등 처리하며 각 변화는 같은 저장 단위의 Outbox에 남긴다. `20260911062517_AddOperatingSystemHandoffLedger` 마이그레이션은 생성했지만 실제 DB에는 적용하지 않았다.
+인계 기반은 출발·도착 OS, 출발 업무 revision, 최소 JSON 상태 사본, 계약 판본, 만료시각과 공개 범위를 MySQL 원장에 보존한다. 도착 OS만 `수락·거절·보류`할 수 있고, 수락 때만 현재 책임 OS가 도착 OS로 바뀐다. 생성과 결정 요청은 클라이언트 요청 ID·revision·고유 인덱스·동시성 토큰으로 멱등 처리하며 각 변화는 같은 저장 단위의 Outbox에 남긴다. `20260911062517_AddOperatingSystemHandoffLedger`와 `20260911093054_AddFoodDeliveryCompletedWorldProjection`은 일회용 로컬 MySQL DB에서 처음부터 적용해 검증한 뒤 DB를 삭제했다. 공유 개발 DB와 운영 DB에는 적용하지 않았다.
 
 버전 업무 조회는 화물·음식 OS의 순서 있는 생명주기와 각 OS에 실제로 등록된 Engine Catalog 항목을 제공한다. 아직 구현이 없는 논리 엔진은 `Declared`로 유지하고 다른 OS 구현을 끌어와 `Active`로 보이지 않는다.
 
-이번 판본은 서버·계약·영속 기반에 더해 기존 창고 출고 완료 흐름이 이미 생성된 화물 운송 의뢰를 화물운송 OS에 인계하고 명시적으로 수락하는 첫 수직 연결까지 포함한다. 새 운송 의뢰나 배차를 생성하지 않으며, 마트·음식 주문 등 다른 ProcessManager 연결과 Outbox 소비자가 상대 OS UseCase를 호출하는 비동기 수직 연결, 운영 API 권한, 자동 fallback, 운영 활성화, 모바일·Web·Unity 표현은 포함하지 않는다.
+이번 판본은 서버·계약·영속 기반에 더해 기존 창고 출고 완료 흐름이 이미 생성된 화물 운송 의뢰를 화물운송 OS에 인계하고 명시적으로 수락하는 첫 수직 연결까지 포함한다. 업무별 완료는 공통 `운영업무완료증명`으로 순서·필수 단계·결과를 확인하고, 음식 배달 완료·창고 작업·화물 인수 완료를 개인정보가 제거된 지역 장면 조회로 조합한다. 새 운송 의뢰나 배차를 생성하지 않으며, 마트·음식 주문 등 다른 ProcessManager 연결과 Outbox 소비자가 상대 OS UseCase를 호출하는 비동기 수직 연결, 자동 fallback, 모바일·Web 화면과 운영 활성화는 포함하지 않는다.
 
 ## 구현 검증
 
-- OS 생명주기·Engine Catalog·버전 업무 조회·배차 선택·엔진 DB 경계·인계 상태 전이 집중 회귀: `37/37` 통과
+- 이번 최종 범위의 지역 장면·기능 관문·창고 인계·음식 완료 집중 회귀: `14/14` 통과
 - `Ssalddel/Ssalddel.csproj` build: 오류 `0`, 기존 nullable 경고 `2`
 - EF migration/model 대조: `No changes have been made to the model since the last migration.`
+- 일회용 로컬 MySQL: 전체 주 DB migration 적용, 음식 완료 투영의 재시작 경계·멱등·만료 정리 시험 통과, 검증 뒤 DB 삭제
+- 실제 인증 HTTP: 전용 관찰 기능을 켠 `Ssalddel`에서 미인증 지역 장면 `401`, 인증된 지역 장면·음식 완료 조회 `200`, 자료원 실패 `0`
 - 범위 Fast·Task: 공백 검사와 Simulation·Unity 코드 지도는 통과했다. 이후 이번 경로 밖의 기존 `EVIDENCE001` 8건에서 중단되어 전체 성공은 아니다.
-- 미실행: 실제 MySQL migration 적용, Outbox 전달, 운영 서버·Redis, 모바일·Web·Unity 실행, commit, push
+- 미실행: 공유 개발·운영 MySQL migration 적용, 실제 Outbox worker 연속 운전, Redis 연동, 모바일·Web·Unity 제품 실행과 운영 활성화
 
 ## 미정
 
