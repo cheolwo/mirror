@@ -2,9 +2,9 @@
 
 - 기획 ID: `PLAN-OPERATIONS-DISPATCH-CORE`
 - 기획 분야: 공통 / 운영 배차
-- 기획 판본: `dispatch-core.r33`
-- 상태: `Draft / StakeholderPolicyConfirmedInPart / FreightPostAcceptanceReconsentConfirmed / FreightCommitmentGraphConfirmed / FreightRiskVisibilityConfirmed / ShipperMaterialChangeOnlyNotificationConfirmed / ShipperRecoveryNotificationConfirmed / FreightContinuityBackendFoundationImplementedDisabled / FreightGraphEffectsDeferred / BackendBatch5InterruptionRecoveryImplemented / FrontendPartial / OperationalActivationDeferred`
-- 상위 기획: 없음. 지역·Scene과 독립된 운영 업무 공통 정책
+- 기획 판본: `dispatch-core.r35`
+- 상태: `Draft / StakeholderPolicyConfirmedInPart / TwoOperationalOsRelated / FreightPostAcceptanceReconsentConfirmed / FreightCommitmentGraphConfirmed / FreightRiskVisibilityConfirmed / FreightInfeasibleReservationReleaseConfirmed / ShipperMaterialChangeOnlyNotificationConfirmed / ShipperRecoveryNotificationConfirmed / FreightContinuityBackendFoundationImplementedDisabled / FreightGraphEffectsDeferred / BackendBatch5InterruptionRecoveryImplemented / FrontendPartial / OperationalActivationDeferred`
+- 상위 기획: `PLAN-OPERATIONS-LOGISTICS-OS`. 지역·Scene과 독립된 운영 업무 공통 정책
 - 관련 기획: `PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001`, `PLAN-SYSTEM-OBSERVER-WORLD`
 - 관련 WI·PlayableLoop: 미등록. 이번 1차 공통 코어는 운영 비활성 계약·순수 계산·포트 경계이며 Unity PlayableLoop 구현이 아님
 - Graph Map 영향: `NoImpact` — 아래 운송 약속 그래프는 서버 판정용 파생 그래프이며 게임·Unity 공간 Graph Map의 노드·배치를 변경하지 않음
@@ -14,7 +14,7 @@
 
 ## 이 기획이 소유하는 범위
 
-이 기획은 특정 동네나 Unity 장면이 아니라 주문자·음식점·기사·플랫폼이 함께 사용하는 운영 배차 의미를 소유한다. 음식 배달을 첫 사례로 삼되 다른 배차 업무에서 재사용할 수 있는 계약과 판정 경계를 검토한다.
+이 기획은 특정 동네나 Unity 장면이 아니라 주문자·음식점·기사·플랫폼이 함께 사용하는 운영 배차 의미를 소유한다. `화물운송 OS`와 `음식배달 OS`의 전체 생명주기를 소유하는 상위 실행자가 아니라, 두 OS가 같은 의미로 사용하는 좁은 계약과 판정 기반이다.
 
 - 기사 신규 배차 수신 의사와 서버의 실제 배차 가능 상태
 - 역할별 유효 제안과 수락·거절·무응답
@@ -48,6 +48,8 @@
 플랫폼은 기사에게 휴식·주유·식사·개인 용무 사유를 입력받거나 위치 정지 패턴만으로 이를 추측하지 않는다. 대신 서버가 기사가 현재 책임지는 화물과 한 건의 보유 제안을 `운송 약속 그래프`로 파생한다. 노드는 현재 수행 지점·상차·하차·보유 제안이고, 간선은 순서가 있는 이동 구간이며, 잠긴 목표·최종 도착 한계, 예상·보수 소요시간, 상하차 서비스 시간, 적재량·혼적·차량 제약을 함께 평가한다. 마지막으로 확인된 위치·교통·운송 상태의 관측 시각과 품질을 근거로 남기며 근거가 없거나 오래됐으면 위험을 확정하지 않고 `근거 부족`으로 판정한다.
 
 서버는 이 파생 그래프를 주기적으로 다시 만들고 순회해 모든 수락 화물이 최종 도착 한계 안에 남는지 확인한다. 판정 엔진은 `정상·주의·위험·근거 부족`과 근거만 반환하고 상태를 직접 변경하지 않는다. 권한 있는 UseCase가 최신 원장과 판정 revision을 다시 확인한 뒤 알림·추가 제안 중단·미픽업 보유 제안 반환 같은 효과를 적용한다. 기사의 휴식 여부나 정차 사유 자체는 문제 판정과 불이익의 근거가 아니며, 같은 운송 약속을 지킬 수 있는지가 기준이다.
+
+다음 콜은 기사에게 수락 판단 시간을 주기 위한 임시 배타 예약이며 현재 설정은 도착 임박 2분, 일반 3분, 이동 중 5분이다. 이 유효기간은 이행 불가능한 약속을 끝까지 보장하는 시간이 아니다. 현재 운송 지연이나 경로·시간창 충돌로 다음 콜의 약속 이행이 불가능하다고 최신 운송 약속 그래프와 원장이 판정하면, 권한 있는 UseCase가 남은 예약 시간과 관계없이 아직 수락하지 않은 보유 예약을 조기 해제하고 다른 유효 후보에게 반환한다. 이미 수락한 운송은 이 규칙으로 자동 취소하거나 변경하지 않으며 기존 운송 조건 변경·재동의 원칙을 따른다. 기사에게는 예약 해제 사실과 `현재 운송 지연으로 다음 약속을 지키기 어려움` 같은 최소 이유를 한 번만 알리고 거절률·수락 후 완료율·기사 책임 중단에 산입하지 않는다.
 
 운송 약속 그래프의 `주의·위험·근거 부족` 판정과 기사에게 보내는 경로 조정 안내는 화주에게 공개하지 않는다. 기사에게는 운행 중 조작을 줄이는 음성 중심 알림을 사용하고 운영자에게는 근거와 판정 revision을 내부 관측으로 남긴다. 화주 화면이나 메시지에는 기사 정차·내부 경로·위험 점수·그래프 순회 결과를 표시하지 않는다.
 
@@ -182,6 +184,7 @@
 - 수락 뒤 핵심 조건 변경으로 이미 발생한 빈차 이동·현장 대기를 보전할 산정 기준과 지급 주체
 - 운송 약속 그래프의 같은 단계 재알림 기준과 기사 음성 알림의 최소 반복 간격
 - 그래프 판정이 정상과 주의를 짧게 오갈 때 회복으로 확정할 안정화 기준
+- 이행 불가능 예약 조기 해제를 확정하는 위험 단계·보수 시간 여유와 일시적인 근거 부족 상태의 처리 기준
 
 ## 다음 질문 하나
 

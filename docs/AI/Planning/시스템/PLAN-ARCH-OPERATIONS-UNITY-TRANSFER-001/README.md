@@ -1,11 +1,12 @@
 # 운영 서버 0.0~3.5에서 Mirror Unity로의 이관
 
 - 음식점 후속 승인: [NPC 자동 수락·조리 대기열·도로 거리 배차 r3](restaurant-npc-operation.r3.md). 기획 승인 완료, WI·개발 작업 명세 결속 미완료.
+- 음식 배달 첫 완료 투영: [정상 완료 상태 사본 수직 조각 r1](food-delivery-completed-world-projection.r1.md). 서버·DB·조회·Unity 계약 구현, 실제 Runtime·Scene 검증 미완료.
 
 - 기획 ID: `PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001`
 - 기획 분야: 시스템·운영 기능 이관
-- 기획 판본: `operations-unity-transfer.r3`
-- 상태: `ApprovedForHandoff / AppObservationProfilesSeparated`
+- 기획 판본: `operations-unity-transfer.r7`
+- 상태: `ApprovedForHandoff / AppObservationProfilesSeparated / OperationalRoleObjectCatalogImplemented / GameObjectInstantiationDeferred / OperationalSimulationWorkflowInterfacesSeparated / SharedPureCoreConfirmed / SimulationWorkflowBoundaryImplemented / UnifiedSsalddelHostImplemented / OperationalClientBoundaryImplemented / UnityReadOnlyTransportCentralized / FoodDeliveryCompletedLifecycleProjectionImplemented / ProjectionDatabaseMigrationPreparedNotApplied / SimulationWorldShellBindingDeferred / LegacyFacadeRetained / UnityImportDeferred`
 - 상위 기획: `PLAN-GAME-COMMON-PURPOSE-001`
 - 관련 하위 기획: `PLAN-GRAPH-HUB-LOGISTICS-CIRCULATION-001`, `PLAN-PRESENTATION-E4-POOL-001`
 - 관련 결정: 운영·Simulation·Unity 권위 분리, Farm·Hub·City 독립 영역 우선
@@ -56,6 +57,42 @@
 | `FoodDeliveryDriverApp` (`FDriverApp`) | `SimulationAnalog` | 가상 배달 기사의 배정·이동·픽업·전달·복귀 |
 
 `SimulationAnalog`는 운영 앱·계정·주문·기사 위치를 Unity에 연결한다는 뜻이 아니다. 첫 프로필은 `allowsOperationalActions=false`, `observationPresentationOnly=true`이며 실제 주문, 실제 배차, 운영 DB 변경, 정산 효과를 만들지 않는다. 기존 Hub 입고 첫 표본과 전수 이관 등급은 그대로 유지한다.
+
+### 운영 역할 기반 객체 원형 대장
+
+운영 서버의 역할과 Unity `GameObject`를 직접 1:1로 연결하지 않는다. 현재 서버의 `SsalddelActor` 17개는 모두 객체 원형 대장에서 `Candidate` 또는 `NoUnityRepresentation`으로 명시한다. 이와 별도로 관찰에 필요한 시설 3개, 차량 2개, 업무 객체 3개를 두어 총 25개 원형을 관리한다. 음식점처럼 하나의 서버 역할이 음식점 주인 Actor와 음식점 Facility의 근거가 될 수 있고, 하나의 업무 객체가 여러 역할을 참조할 수도 있다.
+
+| 종류 | 원형 | 현재 판정 |
+| --- | --- | --- |
+| Actor | 화주, 화물 기사, 수령자, 주문자, 음식점 주인, 음식 배달 기사, 창고 관리자·작업자, 살뜰 마트 운영자, 화주·판매자, 주문자 집단 대표, 판매자, 커뮤니티 참여자 | `Candidate` |
+| Actor | 관세사, 해외 판매자·배송대행지, 고용·운영 주체, 플랫폼 운영자 | `NoUnityRepresentation` |
+| Facility | 음식점, 창고, 살뜰 마트 | `Candidate` |
+| Vehicle | 화물 운송 차량, 음식 배달 수단 | `Candidate` |
+| WorkObject | 운송 화물, 음식 주문 묶음, 창고 취급 단위 | `Candidate` |
+
+세 단계를 분리한다.
+
+1. **객체 원형 후보:** 어떤 역할·시설·차량·업무 객체를 어떤 `VisualKey`와 상태 코드로 표현할 수 있는지 정의한다.
+2. **상태 사본 인스턴스:** 서버가 공개 범위에 맞게 만든 비식별 안정 ID·revision의 읽기 전용 Projection 또는 Simulation 가상 상태다.
+3. **실제 GameObject:** 승인된 Prefab과 canonical `SimulationWorldShell` 배치 증거가 함께 있을 때만 생성한다.
+
+`Candidate`는 첫 단계만 통과했다는 뜻이다. 실제 생성은 `prefabReady=true`와 `sceneReady=true`가 모두 필요하며 현재 25개 원형은 전부 `false`다. 따라서 이번 판본은 Scene·Prefab을 만들거나 Play Mode 실행을 승인하지 않는다. 실제 사용자 ID·성명·전화번호·주소·계좌·평점·수락률·정밀 위치는 이 대장과 Unity 상태 사본에 넣지 않는다. `PlatformOperator` 등 권한·개인정보·전문가 위임을 다루는 역할은 명시적으로 `NotSpawnable`이다.
+
+기계 원본은 `eng/execution-ledgers/operational-unity-transfer-policy.json`의 `roleObjectCandidates`가 소유하고, 생성 대장은 `docs/AI/generated/operational-unity-transfer-catalog.json`에 둔다. Unity 공통 계약은 `OperationalUnityTransferObjectCatalog`가 JSON을 읽을 수 있는 구조만 제공하며, `운영역할GameObjectCatalogPolicy`는 안전성과 준비 관문만 판정한다. 어느 코드도 GameObject 생성이나 운영 상태 변경을 수행하지 않는다.
+
+### 공통 코어와 실행 환경의 코드 경계
+
+운영 서버와 Simulation은 상태 코드·값 객체·안정 ID·revision 의미·순수 판정 규칙만 공통 코어에서 공유한다. 실제 업무 흐름 인터페이스는 분리한다. 운영 workflow는 실제 사용자 권한, 영속 원장, DB·Redis·Event·Outbox와 주문·배차·정산 효과를 소유하고, Simulation workflow는 가상 세션, 가상 시간, Tick, Save·Replay와 게임 전용 결과를 소유한다. 어느 쪽도 다른 쪽의 workflow 인터페이스를 구현하거나 실행 권위로 사용하지 않는다.
+
+Web·모바일·Hosted Unity는 `SsalddelEndpoints:ServerBaseAddress` 하나와 `Ssalddel` 로그인 JWT를 사용한다. 운영 API와 Simulation API는 한 ASP.NET Core 호스트에 조립하지만, Unity는 Simulation 계약 또는 승인된 읽기 전용 운영 상태 사본을 별도 Mapper로 해석한다. MAUI·Blazor·`HttpClient`·UnityEngine·EF Core·Redis 같은 환경 의존성은 공통 코어에 넣지 않는다. 여러 화면에서 재사용한다는 사실만으로 공통 코어로 올리지 않고, 같은 업무 의미·상태 전이·권위 규칙을 가질 때만 공유한다.
+
+정식 Simulation facade는 `Ssalddel.Simulation.BusinessWorkflow` assembly·namespace로 분리했다. 기존 `Ssalddel.BusinessWorkflow`는 같은 계약을 상속·위임하는 호환 facade와 Unity package로 남기고 생산 조립 코드·Simulation Application·Infrastructure·Client Infrastructure·Unity 데이터 코어는 새 정식 assembly만 참조한다. 정식 assembly는 기존 호환 assembly를 역참조하지 않는다. 원격 Simulation은 `SsalddelEndpoints:ServerBaseAddress`와 이름 있는 `Ssalddel.Simulation.Api` 논리 클라이언트를 명시적으로 등록하고 같은 로그인 토큰을 요청마다 전달한다. 운영 API용 기본 `HttpClient`를 암묵적으로 재사용하거나 운영 실패를 Simulation으로 대체하지 않는다.
+
+Hosted HTTP는 별도 `Ssalddel.Simulation.Server` 실행 파일·포트·컨테이너를 두지 않는다. 비실행 `Ssalddel.Simulation.Hosting` 모듈을 장기 실행 `Ssalddel`에 조립하고 기존 `/api/simulation/v1/*`와 Hub 경로를 보존한다. 개인 Simulation Session은 로그인 주체별 접근 원장으로 격리하며, 운영 `SsalddelContext`와 Simulation Session·World 파생 DB의 상태 권위는 물리 호스트 통합 뒤에도 분리한다. migration과 공간 파생은 `eng/Ssalddel.Simulation.Tools` 단발성 CLI가 맡는다.
+
+Web·MAUI의 1차 앱 조립은 `AddSsalddelOperationalApiHttpClient`로 통일했다. 공통 클라이언트는 `Ssalddel.Operational.Api` 이름을 사용하고, 기존 bare `HttpClient` 소비자는 같은 운영 주소를 받는 호환 등록으로 유지한다. 기능·판본 확인용 `GET api/v1/version-feature-flags`도 공통 route 계약과 읽기 전용 capability client로 연결했다.
+
+Unity에는 `IOperationalWorldProjectionTransport` GET 전용 계약과 별도 `Ssalddel.Unity.OperationalTransport` assembly를 추가했다. 운영 관찰 샘플은 이 전송 구현을 공유하며 인증 토큰은 실행 중 메모리에서만 제공한다. `WorldProjectionSourceSelection`은 `OperationalSnapshot`과 `SimulationSession`을 화면 모듈별로 명시하고 두 자료원 사이 자동 fallback을 금지한다. 현행 체크아웃에는 canonical 이름 외에 `SimulationWorldShell` Scene·Controller 실체가 없어 실제 Shell 결속은 보류했으며, 새 공식 Scene이나 임의 Manager를 만들지 않았다. 실제 Unity 프로젝트 import·Editor 컴파일·Play Mode·Game View와 운영 서버 HTTP 실접속은 아직 검증하지 않았다.
 
 세부 범위와 검증 절차는 [같은 장면 자율 음식 생활 관찰 r1](../PLAN-SYSTEM-MYEONMOK-OBSERVER/same-scene-food-life-observation.r1.md)에 결속한다.
 
@@ -188,6 +225,11 @@ H1 하나를 건물 하나나 Prefab 하나와 동일시하지 않는다. 작업
 - 다음 독립 표본 후보는 도심 창고 출고·오토바이 배송·인수/실패·복귀
 - H1은 과업 공간, H2는 독립 업무 블록
 - Unity는 운영 상태를 직접 쓰지 않음
+- 운영 workflow와 Simulation workflow 인터페이스를 분리하고 순수 업무 의미·판정만 공통 코어에서 공유
+- 서버의 모든 `SsalddelActor`를 객체 원형 대장에서 명시적으로 분류하고 누락을 회귀 검사
+- `Candidate`와 실제 상태 사본·Prefab·Scene 생성을 분리하고, 관리자·고용·통관·외부 거래 역할은 명시적으로 생성 제외
+- Web·MAUI는 운영 서버 주소와 운영 API Client를 명시적으로 사용하고 원격 Simulation 조립을 암묵적으로 등록하지 않음
+- Unity 운영 관찰은 공통 GET 전송 계층만 사용하며 `OperationalSnapshot`과 `SimulationSession` 사이 자동 fallback을 허용하지 않음
 
 ### 미정 또는 후속 검증
 
@@ -196,6 +238,10 @@ H1 하나를 건물 하나나 Prefab 하나와 동일시하지 않는다. 작업
 - Hub H2 연결구·동선·자산과 실제 E5 판본
 - 도심 배송 표본의 정확 WI·H1/H2·경로·오토바이 및 Actor 표현 후보
 - 운영 Command를 게임 내에서 허용할 개별 WI와 권한
+- 기존 `Ssalddel.BusinessWorkflow` 호환 assembly·Unity package를 제거할 소비자 이관 완료 기준과 지원 기간
+- `Ssalddel.Ui.Common`의 공통 운영 API Client를 장기적으로 별도 transport project로 옮길지 여부
+- 객체 원형별 실제 `VisualKey` 자산 후보, 상태 사본 Mapper, Prefab·배치·상호작용 결속
+- canonical `SimulationWorldShell` 실체가 있는 Unity 작업 사본에서 자료원 선택·공통 전송을 각 관찰 모듈에 결속하고 Editor·Play Mode로 검증할 작업
 
 ## 11. 구현된 관리 도구
 
@@ -208,6 +254,10 @@ H1 하나를 건물 하나나 Prefab 하나와 동일시하지 않는다. 작업
 - 기계 대장: `docs/AI/generated/operational-unity-transfer-catalog.json`
 - 사람이 읽는 대장: `docs/AI/generated/operational-unity-transfer-catalog.md`
 - 구조 회귀: `eng/tests/operational-unity-transfer-catalog.ps1`
+- Unity 계약·생성 관문: `Ssalddel.Simulation.Contracts/UnityPackage/Runtime/OperationalRoleGameObjectCatalogContracts.cs`, `Ssalddel.Unity/Runtime/WorldProjection/운영역할GameObjectCatalogPolicy.cs`
+- 운영 클라이언트 조립: `Ssalddel.Ui.Common/Areas/App/Services/SsalddelUiCommonServiceCollectionExtensions.cs`, `Ssalddel.Client.Infrastructure/Simulation/BusinessWorkflowRuntimeServiceCollectionExtensions.cs`
+- Unity 읽기 전용 전송: `Ssalddel.Unity/Runtime/WorldProjection/OperationalWorldProjectionTransportContracts.cs`, `Ssalddel.Unity/Runtime/OperationalTransport/UnityWebRequestOperationalWorldProjectionTransport.cs`
+- 역할 전수·개인정보 회귀: `Ssalddel.Tests/Architecture/OperationalRoleGameObjectCatalogTests.cs`, `Ssalddel.Unity.Tests/운영역할GameObjectCatalogPolicyTests.cs`
 - 첫 표본 상세 기획: `docs/Architecture/PlayableLoops/Hub입고검수적치.md`
 
 대장은 현재 코드에서 페이지 기능, EF Core `DbSet`, MongoDB `GetCollection` 사용 지점과 Unity 대표 경로를 다시 읽는다. H 대응은 검토 후보이며 중앙 H 대장의 선언 수와 실제 안정 ID 수가 다르면 수정하지 않고 진단으로 반환한다.
