@@ -7,6 +7,24 @@ namespace Ssalddel.Tests.Services.Versioning;
 public sealed class VersionFeatureFlagServiceTests
 {
     [Fact]
+    public void 운영지역장면은_다른업무Flag와분리된_명시적관찰Flag로만연다()
+    {
+        var closed = CreateService(new VersionFeatureFlagsOptions
+        {
+            FoodDeliveryWorkflow = true,
+            WarehouseFulfillmentWorkflow = true
+        });
+        var opened = CreateService(new VersionFeatureFlagsOptions
+        {
+            OperationalWorldObservationWorkflow = true
+        });
+
+        Assert.False(closed.IsEnabled(VersionFeatureFlagKeys.OperationalWorldObservationWorkflow));
+        Assert.True(opened.IsEnabled(VersionFeatureFlagKeys.OperationalWorldObservationWorkflow));
+        Assert.True(opened.GetAll()[VersionFeatureFlagKeys.OperationalWorldObservationWorkflow]);
+    }
+
+    [Fact]
     public void CommunityFoundation_CanRunWithoutDomesticTransport()
     {
         var service = CreateService(new VersionFeatureFlagsOptions

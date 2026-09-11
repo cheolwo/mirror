@@ -36,6 +36,8 @@ public sealed class VersionFeatureFlagsOptions
 
     public bool FoodDeliveryWorkflow { get; set; }
 
+    public bool OperationalWorldObservationWorkflow { get; set; }
+
     public bool SsalddelMartV35 { get; set; }
 
     public bool SsalddelMartWorkflow { get; set; }

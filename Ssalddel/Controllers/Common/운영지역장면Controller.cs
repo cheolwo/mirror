@@ -12,9 +12,9 @@ namespace Ssalddel.Controllers.Common;
 [Authorize]
 [SsalddelApiVersion(
     SsalddelProductVersion.V2_5,
-    FeatureKey = VersionFeatureFlagKeys.WarehouseFulfillmentWorkflow,
-    WorkflowKey = VersionFeatureFlagKeys.WarehouseFulfillmentWorkflow)]
-[RequireVersionFeature(VersionFeatureFlagKeys.WarehouseFulfillmentWorkflow)]
+    FeatureKey = VersionFeatureFlagKeys.OperationalWorldObservationWorkflow,
+    WorkflowKey = VersionFeatureFlagKeys.OperationalWorldObservationWorkflow)]
+[RequireVersionFeature(VersionFeatureFlagKeys.OperationalWorldObservationWorkflow)]
 [SsalddelApiWorkflow(SsalddelWorkflow.WarehouseFulfillment)]
 [Route(OperationalWorldSceneRoutes.AreaSnapshot)]
 public sealed class 운영지역장면Controller(I운영지역장면조회UseCase useCase) : ControllerBase
