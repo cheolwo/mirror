@@ -1,7 +1,7 @@
 {
-  "name": "Ssalddel.BusinessWorkflow",
-  "rootNamespace": "Ssalddel.BusinessWorkflow",
-  "references": ["Ssalddel.Simulation.BusinessWorkflow", "Ssalddel.Simulation.Contracts", "Ssalddel.WorkflowRules.Contracts"],
+  "name": "Ssalddel.Simulation.BusinessWorkflow",
+  "rootNamespace": "Ssalddel.Simulation.BusinessWorkflow",
+  "references": ["Ssalddel.Simulation.Contracts", "Ssalddel.WorkflowRules.Contracts"],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

@@ -1,0 +1,11 @@
+{
+  "name": "com.ssalddel.simulation.business-workflow",
+  "version": "0.1.0",
+  "displayName": "Ssalddel Simulation Business Workflow",
+  "description": "Local 또는 원격 Simulation 세션의 주문·배차·배송·창고 업무 흐름 facade입니다.",
+  "unity": "6000.0",
+  "dependencies": {
+    "com.ssalddel.simulation.contracts": "0.1.0",
+    "com.ssalddel.workflow-rules.contracts": "0.1.0"
+  }
+}

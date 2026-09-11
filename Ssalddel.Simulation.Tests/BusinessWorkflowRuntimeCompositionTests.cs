@@ -1,9 +1,10 @@
 using System.Net;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
-using Ssalddel.BusinessWorkflow;
 using Ssalddel.Client.Infrastructure.Simulation;
+using Ssalddel.Simulation.BusinessWorkflow;
 using Ssalddel.Simulation.Contracts;
+using LegacyBusinessWorkflow = Ssalddel.BusinessWorkflow;
 
 namespace Ssalddel.Simulation.Tests;
 
@@ -30,6 +31,37 @@ public sealed class BusinessWorkflowRuntimeCompositionTests
             name => name.StartsWith("UnityEngine", StringComparison.Ordinal));
         Assert.DoesNotContain(references,
             name => name.StartsWith("MongoDB", StringComparison.Ordinal));
+        Assert.DoesNotContain("Ssalddel.BusinessWorkflow", references);
+    }
+
+    [Fact]
+    public void 기존NamespaceFacade는_Simulation전용정식계약을호환한다()
+    {
+        var legacy = new LegacyBusinessWorkflow.BusinessWorkflowRuntime(
+            new RecordingFoodRuntime(),
+            new RecordingLogisticsRuntime(),
+            WorkflowRules.BusinessWorkflowRuleEngine.기본,
+            new LegacyBusinessWorkflow.BusinessWorkflowRuntimeDescriptor
+            {
+                RuntimeStableId = "business-workflow-runtime:legacy",
+                ModeCode = LegacyBusinessWorkflow.BusinessWorkflowRuntimeModeCodes.LocalProcess,
+                RequiresNetwork = false,
+                AuthorityScopeCode = LegacyBusinessWorkflow.BusinessWorkflowAuthorityScopeCodes.SimulationSession,
+                ExperienceRoleCode = LegacyBusinessWorkflow.BusinessWorkflowExperienceRoleCodes.AutonomousNpcWorld,
+                AllowsOperationalDriverActions = false,
+                ObservationPresentationOnly = true,
+                ContractRevision = Application.LocalBusinessWorkflowRuntimeFactory.ContractRevision,
+            });
+
+        LegacyBusinessWorkflow.IBusinessWorkflowRuntime legacyContract = legacy;
+        Assert.IsAssignableFrom<IBusinessWorkflowRuntime>(legacy);
+        Assert.Contains("Ssalddel.Simulation.BusinessWorkflow",
+            typeof(LegacyBusinessWorkflow.IBusinessWorkflowRuntime).Assembly
+                .GetReferencedAssemblies()
+                .Select(reference => reference.Name ?? string.Empty));
+        Assert.Same(legacy, legacyContract.Orders);
+        Assert.Equal(BusinessWorkflowAuthorityScopeCodes.SimulationSession,
+            legacyContract.Descriptor.AuthorityScopeCode);
     }
 
     [Fact]
@@ -118,11 +150,12 @@ public sealed class BusinessWorkflowRuntimeCompositionTests
     public void Web과MobileDi는_한Scope에서같은Facade를역할별로해석한다()
     {
         var services = new ServiceCollection();
-        services.AddSingleton(new HttpClient(new RecordingHandler())
+        var simulationClient = new HttpClient(new RecordingHandler())
         {
             BaseAddress = new Uri("https://simulation.invalid/"),
-        });
-        services.AddRemoteBusinessWorkflowRuntime();
+        };
+        services.AddRemoteSimulationBusinessWorkflowRuntime(
+            _ => simulationClient);
 
         using var provider = services.BuildServiceProvider();
         using var scope = provider.CreateScope();
@@ -169,13 +202,78 @@ public sealed class BusinessWorkflowRuntimeCompositionTests
     public void Local과Remote를같이등록하면_조용히혼합하지않고거부한다()
     {
         var services = new ServiceCollection();
-        services.AddRemoteBusinessWorkflowRuntime();
+        services.AddRemoteSimulationBusinessWorkflowRuntime(
+            _ => new HttpClient(new RecordingHandler())
+            {
+                BaseAddress = new Uri("https://simulation.invalid/"),
+            });
 
         var error = Assert.Throws<InvalidOperationException>(() =>
             services.AddLocalBusinessWorkflowRuntime(_ =>
                 throw new InvalidOperationException("FactoryMustNotRun")));
 
         Assert.Contains("이미 등록", error.Message);
+    }
+
+    [Fact]
+    public void 운영HttpClient만등록된경우_RemoteSimulation으로암묵사용하지않는다()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(new HttpClient
+        {
+            BaseAddress = new Uri("https://operational.invalid/"),
+        });
+
+        var error = Assert.Throws<InvalidOperationException>(() =>
+            services.AddRemoteSimulationBusinessWorkflowRuntime());
+
+        Assert.Contains("Simulation 주소를 먼저 등록", error.Message);
+    }
+
+    [Fact]
+    public void RemoteSimulation주소는_이름있는전용Client로정규화된다()
+    {
+        var services = new ServiceCollection();
+        services.AddRemoteSimulationBusinessWorkflowRuntime(
+            new Uri("https://simulation.invalid/api"));
+
+        using var provider = services.BuildServiceProvider();
+        var factory = provider.GetRequiredService<IHttpClientFactory>();
+        var simulationClient = factory.CreateClient(
+            BusinessWorkflowRuntimeServiceCollectionExtensions
+                .RemoteSimulationHttpClientName);
+
+        Assert.Equal(
+            new Uri("https://simulation.invalid/api/"),
+            simulationClient.BaseAddress);
+        Assert.Null(provider.GetRequiredService<HttpClient>().BaseAddress);
+    }
+
+    [Fact]
+    public async Task RemoteSimulation은_단일서버로그인토큰을_요청마다전달한다()
+    {
+        var handler = new RecordingHandler();
+        var services = new ServiceCollection();
+        services.AddScoped(_ => new TestAccessToken("main-login-token"));
+        services.AddRemoteSimulationBusinessWorkflowRuntime(
+            new Uri("https://ssalddel.invalid/"),
+            provider => provider.GetRequiredService<TestAccessToken>().Value);
+        services.AddHttpClient(
+                BusinessWorkflowRuntimeServiceCollectionExtensions
+                    .RemoteSimulationHttpClientName)
+            .ConfigurePrimaryHttpMessageHandler(() => handler);
+
+        await using var provider = services.BuildServiceProvider();
+        await using var scope = provider.CreateAsyncScope();
+        var runtime = scope.ServiceProvider
+            .GetRequiredService<IBusinessWorkflowRuntime>();
+
+        await runtime.Orders.PreviewFoodDeliveryAsync(
+            "session:authenticated",
+            new Simulation음식배달PreviewRequest());
+
+        Assert.Equal("Bearer", handler.AuthorizationScheme);
+        Assert.Equal("main-login-token", handler.AuthorizationParameter);
     }
 
     [Fact]
@@ -350,6 +448,8 @@ public sealed class BusinessWorkflowRuntimeCompositionTests
             => this.statusCode = statusCode;
 
         public List<string> Requests { get; } = new();
+        public string? AuthorizationScheme { get; private set; }
+        public string? AuthorizationParameter { get; private set; }
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
@@ -357,12 +457,16 @@ public sealed class BusinessWorkflowRuntimeCompositionTests
         {
             Requests.Add(request.Method.Method + " "
                 + request.RequestUri!.PathAndQuery.TrimStart('/'));
+            AuthorizationScheme = request.Headers.Authorization?.Scheme;
+            AuthorizationParameter = request.Headers.Authorization?.Parameter;
             return Task.FromResult(new HttpResponseMessage(statusCode)
             {
                 Content = new StringContent("{}", Encoding.UTF8, "application/json"),
             });
         }
     }
+
+    private sealed record TestAccessToken(string Value);
 
     private sealed class 사용하지않는LocalSaveSlotStore
         : ISimulationLocalSaveSlotStore

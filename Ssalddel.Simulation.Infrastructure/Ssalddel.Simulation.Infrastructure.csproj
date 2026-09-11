@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ssalddel.BusinessWorkflow\Ssalddel.BusinessWorkflow.csproj" />
+    <ProjectReference Include="..\Ssalddel.Simulation.BusinessWorkflow\Ssalddel.Simulation.BusinessWorkflow.csproj" />
     <ProjectReference Include="..\Ssalddel.Simulation.Application\Ssalddel.Simulation.Application.csproj" />
     <ProjectReference Include="..\Ssalddel.Simulation.Contracts\Ssalddel.Simulation.Contracts.csproj" />
     <ProjectReference Include="..\Ssalddel.Simulation.Domain\Ssalddel.Simulation.Domain.csproj" />

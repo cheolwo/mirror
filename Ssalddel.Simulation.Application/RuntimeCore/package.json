@@ -5,7 +5,7 @@
   "description": "Solo Local과 Hosted가 함께 사용하는 Session, Nature, WorldTick, Save/Replay 실행 경계입니다.",
   "unity": "6000.0",
   "dependencies": {
-    "com.ssalddel.business-workflow": "0.1.0",
+    "com.ssalddel.simulation.business-workflow": "0.1.0",
     "com.ssalddel.code-metadata": "0.1.0",
     "com.ssalddel.simulation.contracts": "0.1.0",
     "com.ssalddel.simulation.domain": "0.1.0"

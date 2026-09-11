@@ -1,7 +1,7 @@
 {
   "name": "Ssalddel.Simulation.RuntimeCore",
   "rootNamespace": "Ssalddel.Simulation.Application",
-  "references": ["Ssalddel.BusinessWorkflow", "Ssalddel.CodeMetadata", "Ssalddel.Simulation.Contracts", "Ssalddel.Simulation.Domain", "Ssalddel.WorkflowRules.Contracts"],
+  "references": ["Ssalddel.Simulation.BusinessWorkflow", "Ssalddel.CodeMetadata", "Ssalddel.Simulation.Contracts", "Ssalddel.Simulation.Domain", "Ssalddel.WorkflowRules.Contracts"],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

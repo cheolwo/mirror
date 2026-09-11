@@ -2,9 +2,10 @@
   "name": "com.ssalddel.business-workflow",
   "version": "0.1.0",
   "displayName": "Ssalddel Business Workflow",
-  "description": "웹·모바일·Unity가 함께 사용하는 업무 흐름 Runtime 계약과 facade입니다.",
+  "description": "기존 Ssalddel.BusinessWorkflow namespace 소비자를 위한 호환 facade입니다.",
   "unity": "6000.0",
   "dependencies": {
+    "com.ssalddel.simulation.business-workflow": "0.1.0",
     "com.ssalddel.simulation.contracts": "0.1.0",
     "com.ssalddel.workflow-rules.contracts": "0.1.0"
   }
