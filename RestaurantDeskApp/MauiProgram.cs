@@ -9,7 +9,6 @@ using RestaurantDeskApp.Services;
 using RestaurantDeskApp.Services.Security;
 using RestaurantDeskApp.ViewModels;
 using Ssalddel.Client.Infrastructure.Security;
-using Ssalddel.Client.Infrastructure.Simulation;
 
 namespace RestaurantDeskApp;
 
@@ -25,7 +24,18 @@ public static class MauiProgram
             Path.Combine(AppContext.BaseDirectory, "appsettings.json"),
             optional: true,
             reloadOnChange: false);
+        var restaurantLegacyBaseAddress =
+            builder.Configuration[RestaurantDeskOptions.SectionName + ":ServerBaseUrl"];
+        var operationalApiBaseAddress =
+            SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+                builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
+                builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey],
+                SsalddelServerEndpoint.ResolveBaseAddress(
+                    restaurantLegacyBaseAddress,
+                    SsalddelServerEndpoint.CreateDefaultBaseAddress()));
         builder.Services.Configure<RestaurantDeskOptions>(builder.Configuration.GetSection(RestaurantDeskOptions.SectionName));
+        builder.Services.PostConfigure<RestaurantDeskOptions>(options =>
+            options.ServerBaseUrl = operationalApiBaseAddress.AbsoluteUri);
         builder.Services.Configure<RestaurantOrderAlertOptions>(builder.Configuration.GetSection(RestaurantOrderAlertOptions.SectionName));
         builder.Services.AddSingleton<IClientSecureTokenStore, RestaurantMauiSecureTokenStore>();
         builder.Services.AddSingleton<IClientSessionGuard, ClientSessionGuard>();
@@ -33,8 +43,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<RestaurantAccessTokenProvider>();
         builder.Services.AddHttpClient<RestaurantAuthService>((sp, client) =>
         {
-            var options = sp.GetRequiredService<IOptions<RestaurantDeskOptions>>().Value;
-            client.BaseAddress = options.GetServerBaseAddress();
+            client.BaseAddress = operationalApiBaseAddress;
         });
         builder.Services.AddSingleton<RestaurantDeskSampleService>();
         builder.Services.AddSingleton<I음식점식재료공급요청Service, RestaurantIngredientSupplySampleService>();
@@ -55,18 +64,13 @@ public static class MauiProgram
         builder.Services.AddSsalddelDocumentOutputServices();
         builder.Services.AddHttpClient<I음식주문ApiClient, Ssalddel음식주문Client>((sp, client) =>
         {
-            var options = sp.GetRequiredService<IOptions<RestaurantDeskOptions>>().Value;
-            client.BaseAddress = options.GetServerBaseAddress();
+            client.BaseAddress = operationalApiBaseAddress;
         });
         builder.Services.AddSingleton<음식점전표DraftFactory>();
         builder.Services.AddSingleton<I음식점주문DeskService, 음식점주문DeskService>();
         builder.Services.AddScoped<배차주소ApiService>();
-        builder.Services.AddSsalddelApiHttpClient(sp =>
-        {
-            var options = sp.GetRequiredService<IOptions<RestaurantDeskOptions>>().Value;
-            return options.GetServerBaseAddress();
-        });
-        builder.Services.AddRemoteBusinessWorkflowRuntime();
+        builder.Services.AddSsalddelOperationalApiHttpClient(
+            operationalApiBaseAddress);
         builder.Services.AddMudServices();
         builder.Services.AddMauiBlazorWebView();
 

@@ -3,6 +3,9 @@
     <Project Path="Ssalddel.BusinessWorkflow/Ssalddel.BusinessWorkflow.csproj" />
     <Project Path="Ssalddel.CodeMetadata/Ssalddel.CodeMetadata.csproj" />
   </Folder>
+  <Folder Name="/Simulation Workflow/">
+    <Project Path="Ssalddel.Simulation.BusinessWorkflow/Ssalddel.Simulation.BusinessWorkflow.csproj" />
+  </Folder>
   <Folder Name="/Simulation Contracts/">
     <Project Path="Ssalddel.Simulation.Contracts/Ssalddel.Simulation.Contracts.csproj" />
   </Folder>

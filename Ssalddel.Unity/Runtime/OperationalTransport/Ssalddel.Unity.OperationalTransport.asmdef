@@ -1,0 +1,16 @@
+{
+  "name": "Ssalddel.Unity.OperationalTransport",
+  "rootNamespace": "Ssalddel.Unity.OperationalTransport",
+  "references": [
+    "Ssalddel.Unity.Data"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

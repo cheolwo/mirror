@@ -23,8 +23,10 @@ public static class MauiProgram
         builder.Services.AddSsalddelUiCommonAppServices<AdminAuthSession>();
         builder.Services.AddTransient<관리자Controller기능모음ViewModel>();
         builder.Services.AddTransient<관리자전체Api기능모음ViewModel>();
-        builder.Services.AddSsalddelApiHttpClient(SsalddelApiEndpoint.ResolveBaseAddress(
-            builder.Configuration[SsalddelApiEndpoint.ConfigurationKey]));
+        builder.Services.AddSsalddelOperationalApiHttpClient(
+            SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+                builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
+                builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey]));
         builder.Services.AddScoped<AdminAuthService>();
         builder.Services.AddSingleton(provider =>
         {

@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Ssalddel.Client.Infrastructure;
 using Ssalddel.Client.Infrastructure.Security;
-using Ssalddel.Client.Infrastructure.Simulation;
 using Ssalddel.Client.Infrastructure.Transport;
 using Ssalddel.Contracts.Driver.Recommendation;
 using Ssalddel.WebApp;
@@ -17,11 +16,11 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-var apiBaseAddress = SsalddelApiEndpoint.ResolveBaseAddress(
-    builder.Configuration[SsalddelApiEndpoint.ConfigurationKey],
+var apiBaseAddress = SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+    builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
+    builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey],
     new Uri(builder.HostEnvironment.BaseAddress));
-builder.Services.AddSsalddelApiHttpClient(apiBaseAddress);
-builder.Services.AddRemoteBusinessWorkflowRuntime();
+builder.Services.AddSsalddelOperationalApiHttpClient(apiBaseAddress);
 builder.Services.Configure<ClientDataModeOptions>(builder.Configuration.GetSection(ClientDataModeOptions.SectionName));
 builder.Services.AddScoped<ITransportRequestLedgerObserver, TransportRequestLedgerObserver>();
 builder.Services.AddSingleton<IPlatformCommunityNodeNavigationResolver, WebPlatformCommunityNodeNavigationResolver>();

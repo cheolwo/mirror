@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
 using SsalddelApp.Options;
@@ -7,7 +7,6 @@ using SsalddelApp.Services;
 using SsalddelApp.Services.Localization;
 using SsalddelApp.Services.Samples;
 using Ssalddel.Ui.Common.Areas.App.Services;
-using Ssalddel.Client.Infrastructure.Simulation;
 
 namespace SsalddelApp;
 
@@ -23,10 +22,11 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
 			});
 
-		builder.Services.AddSsalddelApiHttpClient(SsalddelApiEndpoint.ResolveBaseAddress(
-			builder.Configuration[SsalddelApiEndpoint.ConfigurationKey],
-			new Uri(SsalddelApiEndpoint.LocalDevelopmentBaseAddress)));
-		builder.Services.AddRemoteBusinessWorkflowRuntime();
+		builder.Services.AddSsalddelOperationalApiHttpClient(
+			SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+				builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
+				builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey],
+				new Uri(SsalddelServerEndpoint.LocalDevelopmentBaseAddress)));
 		builder.Services.AddSsalddelAppServices(builder.Configuration);
 		builder.Services.AddSingleton<IPlatformCommunityNodeNavigationResolver, SsalddelAppPlatformCommunityNodeNavigationResolver>();
 		builder.Services.AddSingleton<IPlatformHomeWorkspaceNavigationResolver, SsalddelAppPlatformHomeWorkspaceNavigationResolver>();

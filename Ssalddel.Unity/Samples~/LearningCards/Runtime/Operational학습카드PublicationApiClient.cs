@@ -3,8 +3,9 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Ssalddel.Unity.Learning;
+using Ssalddel.Unity.OperationalTransport;
+using Ssalddel.Unity.WorldProjection;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace Ssalddel.Unity.Samples.LearningCards
 {
@@ -19,57 +20,40 @@ namespace Ssalddel.Unity.Samples.LearningCards
     {
         public const string CatalogRoute = "api/integration/v1/unity-learning-cards";
 
-        private readonly 학습카드ApiOptions options;
+        private readonly IOperationalWorldProjectionTransport transport;
 
         public Operational학습카드PublicationApiClient(학습카드ApiOptions apiOptions)
-            => options = apiOptions ?? throw new ArgumentNullException(nameof(apiOptions));
+        {
+            if (apiOptions == null) throw new ArgumentNullException(nameof(apiOptions));
+            transport = new UnityWebRequestOperationalWorldProjectionTransport(
+                new OperationalWorldProjectionEndpoint(
+                    apiOptions.BaseUrl,
+                    Math.Max(1, apiOptions.TimeoutSeconds)));
+        }
 
         public async Task<학습카드PublicationCatalogApiModel> GetCatalogAsync(
             CancellationToken cancellationToken)
         {
-            var normalizedBaseUrl = (options.BaseUrl ?? string.Empty).TrimEnd('/') + "/";
-            if (!Uri.TryCreate(normalizedBaseUrl, UriKind.Absolute, out var baseUri)
-                || baseUri.Scheme != Uri.UriSchemeHttp
-                    && baseUri.Scheme != Uri.UriSchemeHttps)
-                throw new InvalidOperationException("LearningCardCatalogApiBaseUrlInvalid");
+            var json = await transport.GetAsync(
+                CatalogRoute,
+                false,
+                false,
+                cancellationToken);
 
-            using (var request = UnityWebRequest.Get(new Uri(baseUri, CatalogRoute)))
-            using (cancellationToken.Register(request.Abort))
+            학습카드PublicationCatalogWire wire;
+            try
             {
-                request.timeout = Math.Max(1, options.TimeoutSeconds);
-                request.SetRequestHeader("Accept", "application/json");
-                var operation = request.SendWebRequest();
-                while (!operation.isDone)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    await Task.Yield();
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
-                if (request.result != UnityWebRequest.Result.Success)
-                {
-                    var code = request.responseCode <= 0
-                        ? "LearningCardCatalogNetworkFailed"
-                        : "LearningCardCatalogHttpFailed:" + request.responseCode;
-                    throw new InvalidOperationException(code);
-                }
-
-                학습카드PublicationCatalogWire wire;
-                try
-                {
-                    wire = JsonUtility.FromJson<학습카드PublicationCatalogWire>(
-                        request.downloadHandler.text);
-                }
-                catch (Exception exception)
-                {
-                    throw new InvalidOperationException(
-                        "LearningCardCatalogJsonInvalid",
-                        exception);
-                }
-
-                return wire?.ToApiModel()
-                    ?? throw new InvalidOperationException("LearningCardCatalogJsonInvalid");
+                wire = JsonUtility.FromJson<학습카드PublicationCatalogWire>(json);
             }
+            catch (Exception exception)
+            {
+                throw new InvalidOperationException(
+                    "LearningCardCatalogJsonInvalid",
+                    exception);
+            }
+
+            return wire?.ToApiModel()
+                ?? throw new InvalidOperationException("LearningCardCatalogJsonInvalid");
         }
     }
 

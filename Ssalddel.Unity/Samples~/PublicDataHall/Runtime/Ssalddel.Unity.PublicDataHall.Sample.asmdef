@@ -3,6 +3,7 @@
   "rootNamespace": "Ssalddel.Unity.Samples.PublicDataHall",
   "references": [
     "Ssalddel.Unity.Data",
+    "Ssalddel.Unity.OperationalTransport",
     "VContainer",
     "VContainer.Unity"
   ],

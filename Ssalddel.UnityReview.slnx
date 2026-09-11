@@ -8,5 +8,6 @@
     <Project Path="Ssalddel.BusinessWorkflow/Ssalddel.BusinessWorkflow.csproj" />
     <Project Path="Ssalddel.Client.Infrastructure/Ssalddel.Client.Infrastructure.csproj" />
     <Project Path="Ssalddel.Contracts/Ssalddel.Contracts.csproj" />
+    <Project Path="Ssalddel.Simulation.BusinessWorkflow/Ssalddel.Simulation.BusinessWorkflow.csproj" />
   </Folder>
 </Solution>

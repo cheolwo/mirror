@@ -18,8 +18,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<IClientSecureTokenStore, MauiSecureTokenStore>();
         builder.Services.AddSingleton<SellerAuthSession>();
         builder.Services.AddSingleton<SellerMarketProfileService>();
-        builder.Services.AddSsalddelApiHttpClient(SsalddelApiEndpoint.ResolveBaseAddress(
-            builder.Configuration[SsalddelApiEndpoint.ConfigurationKey]));
+        builder.Services.AddSsalddelOperationalApiHttpClient(
+            SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+                builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
+                builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey]));
         builder.Services.AddSsalddelUiCommonAppServices<SellerAuthSession>();
         builder.Services.AddScoped<SellerAuthService>();
         builder.Services.AddScoped<SellerExportLedgerService>();

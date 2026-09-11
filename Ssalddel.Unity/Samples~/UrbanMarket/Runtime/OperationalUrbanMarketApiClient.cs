@@ -2,9 +2,10 @@ using System;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
+using Ssalddel.Unity.OperationalTransport;
 using Ssalddel.Unity.UrbanMarket;
+using Ssalddel.Unity.WorldProjection;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace Ssalddel.Unity.Samples.UrbanMarket
 {
@@ -16,40 +17,26 @@ namespace Ssalddel.Unity.Samples.UrbanMarket
 
     public sealed class OperationalUrbanMarketApiClient : I도심마트ApiClient
     {
-        private readonly UrbanMarketApiOptions options;
+        private readonly IOperationalWorldProjectionTransport transport;
 
         public OperationalUrbanMarketApiClient(UrbanMarketApiOptions apiOptions)
         {
-            options = apiOptions;
+            if (apiOptions == null) throw new ArgumentNullException(nameof(apiOptions));
+            transport = new UnityWebRequestOperationalWorldProjectionTransport(
+                new OperationalWorldProjectionEndpoint(
+                    apiOptions.BaseUrl,
+                    Math.Max(1, apiOptions.TimeoutSeconds)));
         }
 
         public async Task<도심마트목록ApiModel> GetAsync(
             CancellationToken cancellationToken = default)
         {
-            if (!Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out var baseUri))
-            {
-                throw new InvalidOperationException("UrbanMarketApiBaseUrlInvalid");
-            }
-
-            var endpoint = new Uri(baseUri, 도심마트ApiRoutes.PublicProducts);
-            using var request = UnityWebRequest.Get(endpoint.AbsoluteUri);
-            request.timeout = Math.Max(1, options.TimeoutSeconds);
-            var operation = request.SendWebRequest();
-            using var registration = cancellationToken.Register(request.Abort);
-            while (!operation.isDone)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                await Task.Yield();
-            }
-
-            cancellationToken.ThrowIfCancellationRequested();
-            if (request.result != UnityWebRequest.Result.Success)
-            {
-                throw new InvalidOperationException(
-                    "UrbanMarketApiRequestFailed:" + request.responseCode + ":" + request.error);
-            }
-
-            var wire = JsonUtility.FromJson<UrbanMarketListWireModel>(request.downloadHandler.text);
+            var json = await transport.GetAsync(
+                도심마트ApiRoutes.PublicProducts,
+                false,
+                false,
+                cancellationToken);
+            var wire = JsonUtility.FromJson<UrbanMarketListWireModel>(json);
             return wire?.ToApiModel()
                 ?? throw new InvalidOperationException("UrbanMarketApiJsonInvalid");
         }

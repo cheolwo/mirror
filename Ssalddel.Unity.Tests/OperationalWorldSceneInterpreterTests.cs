@@ -1,0 +1,91 @@
+using Ssalddel.Unity.Data.WorldProjection;
+using Ssalddel.WorkflowRules.Contracts;
+
+namespace Ssalddel.Unity.Tests;
+
+[Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceResponsibility(
+    Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceStage.E3,
+    "운영 지역 장면의 판본, 만료, 부분 실패 격리를 순수 해석기에서 검증한다.",
+    Boundary = "Unity 메모리 해석 시험이며 실제 Scene 배치, Play Mode, Game View 증거가 아니다.")]
+public sealed class OperationalWorldSceneInterpreterTests
+{
+    private static readonly DateTime Now = new(2026, 9, 11, 10, 0, 0, DateTimeKind.Utc);
+
+    [Fact]
+    public void 최신판본만적용하고_만료된객체는제거한다()
+    {
+        var interpreter = new OperationalWorldSceneInterpreter();
+        var first = interpreter.Apply(Response(Item("actor:1", 2, Now.AddMinutes(1))), Now);
+        var stale = interpreter.Apply(Response(Item("actor:1", 1, Now.AddMinutes(2)), full: false, cursor: 2), Now);
+        var expired = interpreter.Expire(Now.AddMinutes(3));
+
+        Assert.True(first.Accepted);
+        Assert.Equal(1, first.AddedCount);
+        Assert.Equal(2, Assert.Single(stale.CurrentItems).Revision);
+        Assert.Equal(1, expired.RemovedCount);
+        Assert.Empty(expired.CurrentItems);
+    }
+
+    [Fact]
+    public void 전체사본에서누락되어도_실패한자료원의기존객체는유지한다()
+    {
+        var interpreter = new OperationalWorldSceneInterpreter();
+        interpreter.Apply(Response(Item("food:1", 1, Now.AddMinutes(5), "FoodDeliveryOS")), Now);
+
+        var response = Response(full: true, cursor: 2);
+        response.SourceFailures =
+        [
+            new OperationalWorldSceneSourceFailure { SourceCode = "FoodDeliveryOS", ErrorCode = "SourceReadFailed" }
+        ];
+        var result = interpreter.Apply(response, Now.AddSeconds(30));
+
+        Assert.True(result.Accepted);
+        Assert.Single(result.CurrentItems);
+        Assert.Equal(0, result.RemovedCount);
+    }
+
+    [Fact]
+    public void 알수없는Schema는_현재장면을바꾸지않는다()
+    {
+        var interpreter = new OperationalWorldSceneInterpreter();
+        interpreter.Apply(Response(Item("actor:1", 1, Now.AddMinutes(5))), Now);
+        var incompatible = Response(full: true, cursor: 9);
+        incompatible.SchemaVersion = "operational-world-scene.v99";
+
+        var result = interpreter.Apply(incompatible, Now);
+
+        Assert.False(result.Accepted);
+        Assert.Equal("SchemaVersionUnsupported", result.ErrorCode);
+        Assert.Single(result.CurrentItems);
+        Assert.Equal(1, result.Cursor);
+    }
+
+    private static OperationalWorldSceneResponse Response(
+        OperationalWorldSceneItem? item = null,
+        bool full = true,
+        long cursor = 1)
+        => new()
+        {
+            AreaStableId = "region:kr:bjd:1126010100",
+            Cursor = cursor,
+            IsFullSnapshot = full,
+            AsOfUtc = Now,
+            Items = item is null ? [] : [item]
+        };
+
+    private static OperationalWorldSceneItem Item(
+        string id,
+        long revision,
+        DateTime expiresAt,
+        string operatingSystemId = "WarehouseCommerceFulfillmentOS")
+        => new()
+        {
+            SnapshotStableId = id,
+            AreaStableId = "region:kr:bjd:1126010100",
+            OperatingSystemId = operatingSystemId,
+            ItemKind = OperationalWorldSceneItemKinds.WarehouseActor,
+            Revision = revision,
+            PublishedAtUtc = Now.AddSeconds(revision),
+            ExpiresAtUtc = expiresAt
+        };
+}

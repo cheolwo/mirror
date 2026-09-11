@@ -4,8 +4,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ssalddel.Unity.Farm;
 using Ssalddel.Unity.Npcs;
+using Ssalddel.Unity.OperationalTransport;
+using Ssalddel.Unity.WorldProjection;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace Ssalddel.Unity.Samples.Farm
 {
@@ -112,54 +113,32 @@ namespace Ssalddel.Unity.Samples.Farm
 
     public sealed class OperationalFarmProducerApiClient : IFarmProducerPerspectiveApiClient
     {
-        private readonly FarmApiOptions options;
-        private readonly FarmSessionTokenProvider tokenProvider;
+        private readonly IOperationalWorldProjectionTransport transport;
 
         public OperationalFarmProducerApiClient(
             FarmApiOptions apiOptions,
             FarmSessionTokenProvider sessionProvider)
         {
-            options = apiOptions;
-            tokenProvider = sessionProvider;
+            if (apiOptions == null) throw new ArgumentNullException(nameof(apiOptions));
+            if (sessionProvider == null) throw new ArgumentNullException(nameof(sessionProvider));
+            transport = new UnityWebRequestOperationalWorldProjectionTransport(
+                new OperationalWorldProjectionEndpoint(
+                    apiOptions.BaseUrl,
+                    Math.Max(1, apiOptions.TimeoutSeconds)),
+                sessionProvider);
         }
 
         public async Task<FarmProducerPerspectiveApiModel> GetAsync(
             CancellationToken cancellationToken = default)
         {
-            if (!Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out var baseUri))
-            {
-                throw new InvalidOperationException("FarmApiBaseUrlInvalid");
-            }
-
-            var token = tokenProvider.GetAccessToken();
-            if (string.IsNullOrWhiteSpace(token))
-            {
-                throw new InvalidOperationException("FarmAccessTokenMissing");
-            }
-
-            using (var request = UnityWebRequest.Get(new Uri(baseUri, FarmProducerApiRoutes.Producer)))
-            using (cancellationToken.Register(request.Abort))
-            {
-                request.timeout = Math.Max(1, options.TimeoutSeconds);
-                request.SetRequestHeader("Accept", "application/json");
-                request.SetRequestHeader("Authorization", "Bearer " + token.Trim());
-                var operation = request.SendWebRequest();
-                while (!operation.isDone)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    await Task.Yield();
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
-                if (request.result != UnityWebRequest.Result.Success)
-                {
-                    throw new InvalidOperationException("FarmApiRequestFailed:" + request.responseCode);
-                }
-
-                var wire = JsonUtility.FromJson<FarmPerspectiveWireModel>(request.downloadHandler.text);
-                return wire?.ToApiModel()
-                    ?? throw new InvalidOperationException("FarmApiJsonInvalid");
-            }
+            var json = await transport.GetAsync(
+                FarmProducerApiRoutes.Producer,
+                false,
+                true,
+                cancellationToken);
+            var wire = JsonUtility.FromJson<FarmPerspectiveWireModel>(json);
+            return wire?.ToApiModel()
+                ?? throw new InvalidOperationException("FarmApiJsonInvalid");
         }
     }
 

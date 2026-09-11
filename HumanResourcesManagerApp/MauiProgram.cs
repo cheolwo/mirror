@@ -16,9 +16,11 @@ public static class MauiProgram
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddHumanResourcesManagerApplication();
         builder.Services.AddSsalddelUiCommonAppServices<HumanResourcesAccessTokenProvider>();
-        builder.Services.AddSsalddelApiHttpClient(SsalddelApiEndpoint.ResolveBaseAddress(
-            builder.Configuration[SsalddelApiEndpoint.ConfigurationKey],
-            new Uri(SsalddelApiEndpoint.LocalDevelopmentBaseAddress)));
+        builder.Services.AddSsalddelOperationalApiHttpClient(
+            SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+                builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
+                builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey],
+                new Uri(SsalddelServerEndpoint.LocalDevelopmentBaseAddress)));
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();

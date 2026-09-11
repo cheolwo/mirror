@@ -3,6 +3,7 @@
   "rootNamespace": "Ssalddel.Unity.Samples.UrbanLogisticsCenter",
   "references": [
     "Ssalddel.Unity.Data",
+    "Ssalddel.Unity.OperationalTransport",
     "Ssalddel.Unity.NpcMovement.Sample",
     "VContainer",
     "VContainer.Unity"

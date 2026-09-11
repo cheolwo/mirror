@@ -5,7 +5,7 @@ param(
     [string] $PolicyPath = 'eng/execution-ledgers/operational-unity-transfer-policy.json',
     [string] $MachineOutputPath = 'docs/AI/generated/operational-unity-transfer-catalog.json',
     [string] $OutputPath = 'docs/AI/generated/operational-unity-transfer-catalog.md',
-    [ValidateSet('Version', 'Workflow', 'Classification', 'H1', 'H2', 'Area', 'PageKey')]
+    [ValidateSet('Version', 'Workflow', 'Classification', 'H1', 'H2', 'Area', 'PageKey', 'RoleObject')]
     [string] $QueryKind = 'PageKey',
     [string] $QueryValue = ''
 )

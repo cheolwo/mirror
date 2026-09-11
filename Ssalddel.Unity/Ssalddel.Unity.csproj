@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ssalddel.BusinessWorkflow\Ssalddel.BusinessWorkflow.csproj" />
+    <ProjectReference Include="..\Ssalddel.Simulation.BusinessWorkflow\Ssalddel.Simulation.BusinessWorkflow.csproj" />
     <ProjectReference Include="..\Ssalddel.Interior.Contracts\Ssalddel.Interior.Contracts.csproj" />
     <ProjectReference Include="..\Ssalddel.CodeMetadata\Ssalddel.CodeMetadata.csproj" />
     <ProjectReference Include="..\Ssalddel.Simulation.Contracts\Ssalddel.Simulation.Contracts.csproj" />

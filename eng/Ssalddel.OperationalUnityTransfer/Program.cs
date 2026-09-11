@@ -98,6 +98,9 @@ internal static class OperationalUnityTransferProgram
             .OrderBy(item => item.AppCode, StringComparer.Ordinal)
             .ThenBy(item => item.ObservationProfileRef, StringComparer.Ordinal)
             .ToArray();
+        var roleObjectCandidates = (policy.RoleObjectCandidates ?? Array.Empty<OperationalRoleObjectCandidateDefinition>())
+            .OrderBy(item => item.ObjectArchetypeId, StringComparer.Ordinal)
+            .ToArray();
 
         var planningPath = ResolvePath(root, policy.Planning.DocumentRef);
         var actualPlanHash = Sha256(planningPath);
@@ -172,8 +175,12 @@ internal static class OperationalUnityTransferProgram
             "Ssalddel.Unity/Runtime/WorldProjection/PageWorldProjectionCatalog.cs",
             "eng/world-seedbeds/synty-bottom-up-inventory/catalog.v3.json",
             "eng/execution-ledgers/playable-loops.json",
-            "eng/execution-ledgers/world-interactions.json"
+            "eng/execution-ledgers/world-interactions.json",
+            "Ssalddel/ApiMetadata/SsalddelApiVersionAttribute.cs",
+            "Ssalddel.Simulation.Contracts/UnityPackage/Runtime/OperationalRoleGameObjectCatalogContracts.cs",
+            "Ssalddel.Unity/Runtime/WorldProjection/운영역할GameObjectCatalogPolicy.cs"
         }.Concat(observationProfiles.SelectMany(item => item.UnityImplementationRefs))
+        .Concat(roleObjectCandidates.SelectMany(item => item.UnityImplementationRefs))
         .Concat(Directory.EnumerateFiles(
                 ResolvePath(root, "Ssalddel.Contracts/Common/Versioning"),
                 "*PageCapabilityCatalog*.cs",
@@ -199,7 +206,7 @@ internal static class OperationalUnityTransferProgram
             .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
 
         return new TransferCatalog(
-            "operational-unity-transfer-catalog.v2",
+            "operational-unity-transfer-catalog.v3",
             policy.Revision,
             new PlanningBinding(
                 policy.Planning.PlanningId,
@@ -211,6 +218,7 @@ internal static class OperationalUnityTransferProgram
                 persistence.DbSets.Length,
                 persistence.MongoCollections.Length,
                 routeCatalog.Length,
+                roleObjectCandidates.Length,
                 hCatalog.H1Ids.Count,
                 hCatalog.H2Ids.Count,
                 hCatalog.H3Ids.Count,
@@ -223,6 +231,7 @@ internal static class OperationalUnityTransferProgram
             routeCatalog,
             observationProfiles,
             appObservationBindings,
+            roleObjectCandidates,
             policy.FirstLivingSceneProfileRef ?? string.Empty,
             policy.FirstSlice,
             sourceFingerprints,
@@ -469,13 +478,15 @@ internal static class OperationalUnityTransferProgram
     private static void ValidatePolicy(string root, TransferPolicy policy)
     {
         if (!string.Equals(policy.SchemaVersion, "operational-unity-transfer-policy.v1", StringComparison.Ordinal)
-            && !string.Equals(policy.SchemaVersion, "operational-unity-transfer-policy.v2", StringComparison.Ordinal))
+            && !string.Equals(policy.SchemaVersion, "operational-unity-transfer-policy.v2", StringComparison.Ordinal)
+            && !string.Equals(policy.SchemaVersion, "operational-unity-transfer-policy.v3", StringComparison.Ordinal))
         {
             throw new CatalogValidationException($"UnsupportedPolicySchema:{policy.SchemaVersion}");
         }
 
         var observationProfiles = policy.ObservationProfiles ?? Array.Empty<ObservationProfileDefinition>();
         var appObservationBindings = policy.AppObservationBindings ?? Array.Empty<AppObservationBindingDefinition>();
+        var roleObjectCandidates = policy.RoleObjectCandidates ?? Array.Empty<OperationalRoleObjectCandidateDefinition>();
 
         var duplicateRules = policy.MappingRules.GroupBy(rule => rule.MappingId, StringComparer.Ordinal).Where(group => group.Count() > 1).Select(group => group.Key).ToArray();
         if (duplicateRules.Length > 0)
@@ -484,7 +495,8 @@ internal static class OperationalUnityTransferProgram
         }
 
         foreach (var path in policy.MappingRules.SelectMany(rule => rule.UnityImplementationRefs)
-            .Concat(observationProfiles.SelectMany(profile => profile.UnityImplementationRefs)).Concat(new[]
+            .Concat(observationProfiles.SelectMany(profile => profile.UnityImplementationRefs))
+            .Concat(roleObjectCandidates.SelectMany(candidate => candidate.UnityImplementationRefs)).Concat(new[]
         {
             policy.FirstSlice.ServerContractRef,
             policy.FirstSlice.ServerUseCaseRef,
@@ -579,6 +591,8 @@ internal static class OperationalUnityTransferProgram
             }
         }
 
+        ValidateRoleObjectCandidates(roleObjectCandidates, profileIds);
+
         foreach (var pattern in policy.ServerOnly.PageKeyPatterns
             .Concat(policy.ServerOnly.RoutePatterns)
             .Concat(policy.CanonicalGroups.SelectMany(group => group.PageKeyPatterns))
@@ -591,6 +605,109 @@ internal static class OperationalUnityTransferProgram
             catch (ArgumentException)
             {
                 throw new CatalogValidationException($"InvalidRegex:{pattern}");
+            }
+        }
+    }
+
+    private static void ValidateRoleObjectCandidates(
+        IReadOnlyList<OperationalRoleObjectCandidateDefinition> candidates,
+        ISet<string> observationProfileIds)
+    {
+        var duplicateIds = candidates
+            .GroupBy(candidate => candidate.ObjectArchetypeId, StringComparer.Ordinal)
+            .Where(group => group.Count() > 1)
+            .Select(group => group.Key)
+            .ToArray();
+        if (duplicateIds.Length > 0)
+        {
+            throw new CatalogValidationException($"DuplicateRoleObjectCandidate:{string.Join(',', duplicateIds)}");
+        }
+
+        var objectKinds = new HashSet<string>(new[] { "Actor", "Facility", "Vehicle", "WorkObject" }, StringComparer.Ordinal);
+        var decisions = new HashSet<string>(new[] { "Candidate", "NoUnityRepresentation" }, StringComparer.Ordinal);
+        var spawnModes = new HashSet<string>(new[] { "SnapshotProjection", "SimulationAnalog", "NotSpawnable" }, StringComparer.Ordinal);
+        var identityPolicies = new HashSet<string>(new[] { "PseudonymousStableId", "AggregateStableId", "NoIdentity" }, StringComparer.Ordinal);
+
+        foreach (var candidate in candidates)
+        {
+            if (string.IsNullOrWhiteSpace(candidate.ObjectArchetypeId)
+                || string.IsNullOrWhiteSpace(candidate.DisplayNameKo)
+                || !objectKinds.Contains(candidate.ObjectKindCode)
+                || !decisions.Contains(candidate.RepresentationDecisionCode)
+                || !spawnModes.Contains(candidate.SpawnModeCode)
+                || !identityPolicies.Contains(candidate.IdentityPolicyCode))
+            {
+                throw new CatalogValidationException($"RoleObjectCandidateShapeInvalid:{candidate.ObjectArchetypeId}");
+            }
+
+            if (candidate.IsExecutionAuthority || candidate.ContainsPrivateData)
+            {
+                throw new CatalogValidationException($"RoleObjectCandidateAuthorityOrPrivacyLeak:{candidate.ObjectArchetypeId}");
+            }
+
+            var unknownOperatingSystems = candidate.OperatingSystemIds
+                .Where(value => !OperatingSystemIds.TryNormalize(value, out _))
+                .ToArray();
+            if (unknownOperatingSystems.Length > 0)
+            {
+                throw new CatalogValidationException(
+                    $"RoleObjectCandidateOperatingSystemMissing:{candidate.ObjectArchetypeId}:{string.Join(',', unknownOperatingSystems)}");
+            }
+
+            var missingProfiles = candidate.ObservationProfileRefs
+                .Where(reference => !observationProfileIds.Contains(reference))
+                .ToArray();
+            if (missingProfiles.Length > 0)
+            {
+                throw new CatalogValidationException(
+                    $"RoleObjectCandidateObservationProfileMissing:{candidate.ObjectArchetypeId}:{string.Join(',', missingProfiles)}");
+            }
+
+            if (candidate.SourceActorCodes.Count == 0
+                || candidate.OperatingSystemIds.Count == 0
+                || candidate.WorkflowCodes.Count == 0)
+            {
+                throw new CatalogValidationException($"RoleObjectCandidateSourceOrOwnerMissing:{candidate.ObjectArchetypeId}");
+            }
+
+            if (candidate.RepresentationDecisionCode == "Candidate")
+            {
+                if (candidate.SpawnModeCode == "NotSpawnable"
+                    || candidate.IdentityPolicyCode == "NoIdentity"
+                    || string.IsNullOrWhiteSpace(candidate.VisualKey))
+                {
+                    throw new CatalogValidationException($"RoleObjectCandidateSpawnContractInvalid:{candidate.ObjectArchetypeId}");
+                }
+                if (candidate.VisualKey.Contains('/', StringComparison.Ordinal)
+                    || candidate.VisualKey.Contains("Assets", StringComparison.OrdinalIgnoreCase)
+                    || candidate.VisualKey.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new CatalogValidationException($"RoleObjectCandidateVisualKeyIsAssetPath:{candidate.ObjectArchetypeId}");
+                }
+            }
+            else if (candidate.SpawnModeCode != "NotSpawnable"
+                     || candidate.IdentityPolicyCode != "NoIdentity"
+                     || !string.IsNullOrWhiteSpace(candidate.VisualKey)
+                     || candidate.PresentationStateCodes.Count > 0
+                     || candidate.SceneReady
+                     || candidate.PrefabReady)
+            {
+                throw new CatalogValidationException($"RoleObjectCandidateExcludedButSpawnable:{candidate.ObjectArchetypeId}");
+            }
+
+            if (candidate.SceneReady && !candidate.PrefabReady)
+            {
+                throw new CatalogValidationException($"RoleObjectCandidateSceneReadyWithoutPrefab:{candidate.ObjectArchetypeId}");
+            }
+
+            if (candidate.SourceActorCodes.Count != candidate.SourceActorCodes.Distinct(StringComparer.Ordinal).Count()
+                || candidate.OperatingSystemIds.Count != candidate.OperatingSystemIds.Distinct(StringComparer.Ordinal).Count()
+                || candidate.WorkflowCodes.Count != candidate.WorkflowCodes.Distinct(StringComparer.Ordinal).Count()
+                || candidate.PresentationStateCodes.Count != candidate.PresentationStateCodes.Distinct(StringComparer.Ordinal).Count()
+                || candidate.ObservationProfileRefs.Count != candidate.ObservationProfileRefs.Distinct(StringComparer.Ordinal).Count()
+                || candidate.UnityImplementationRefs.Count != candidate.UnityImplementationRefs.Distinct(StringComparer.Ordinal).Count())
+            {
+                throw new CatalogValidationException($"RoleObjectCandidateDuplicateValue:{candidate.ObjectArchetypeId}");
             }
         }
     }
@@ -636,8 +753,21 @@ internal static class OperationalUnityTransferProgram
         => JsonSerializer.Deserialize<TransferPolicy>(File.ReadAllText(path, Encoding.UTF8), JsonOptions)
             ?? throw new CatalogValidationException("PolicyDeserializationFailed");
 
-    private static IReadOnlyList<PageTransferEntry> Query(TransferCatalog catalog, string kind, string value)
+    private static object Query(TransferCatalog catalog, string kind, string value)
     {
+        if (string.Equals(kind, "roleobject", StringComparison.OrdinalIgnoreCase))
+        {
+            return catalog.RoleObjectCandidates.Where(candidate =>
+                    string.Equals(candidate.ObjectArchetypeId, value, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(candidate.DisplayNameKo, value, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(candidate.ObjectKindCode, value, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(candidate.ObservationRoleCode, value, StringComparison.OrdinalIgnoreCase)
+                    || candidate.SourceActorCodes.Contains(value, StringComparer.OrdinalIgnoreCase)
+                    || candidate.OperatingSystemIds.Contains(value, StringComparer.OrdinalIgnoreCase)
+                    || candidate.WorkflowCodes.Contains(value, StringComparer.OrdinalIgnoreCase))
+                .ToArray();
+        }
+
         Func<PageTransferEntry, bool> predicate = kind.ToLowerInvariant() switch
         {
             "version" => entry => string.Equals(entry.IntroducedVersion, value, StringComparison.OrdinalIgnoreCase),
@@ -664,6 +794,7 @@ internal static class OperationalUnityTransferProgram
         builder.AppendLine($"- EF Core DbSet: {catalog.Summary.DbSetCount}개");
         builder.AppendLine($"- MongoDB collection 호출: {catalog.Summary.MongoCollectionCount}개");
         builder.AppendLine($"- 기존 Unity 대표 경로: {catalog.Summary.UnityRepresentativeRouteCount}개");
+        builder.AppendLine($"- 운영 역할 기반 객체 원형 후보: {catalog.Summary.RoleObjectCandidateCount}개");
         builder.AppendLine($"- 참조 가능한 H: H1 {catalog.Summary.H1Count} / H2 {catalog.Summary.H2Count} / H3 {catalog.Summary.H3Count} / H4 {catalog.Summary.H4Count}");
         builder.AppendLine();
         builder.AppendLine("이 대장은 자동 생성물이다. 페이지·저장 개체는 조사 모수이며 H1로 자동 승격되지 않는다. `MappedCandidate`도 실제 배치나 E5 증거가 아니다.");
@@ -700,6 +831,19 @@ internal static class OperationalUnityTransferProgram
             builder.AppendLine($"| `{Escape(binding.AppCode)}` | `{Escape(binding.RelationCode)}` | `{Escape(binding.ObservationProfileRef)}` |");
         }
         if (catalog.AppObservationBindings.Count == 0) builder.AppendLine("| - | - | - |");
+        builder.AppendLine();
+        builder.AppendLine("## 운영 역할 기반 객체 원형 후보");
+        builder.AppendLine();
+        builder.AppendLine("운영 계정이나 DB 행을 그대로 GameObject로 만들지 않는다. 이 목록은 비식별 상태 사본 또는 가상 Simulation에서 표현을 준비할 수 있는 원형이며, `sceneReady=false`인 항목은 실제 Scene 생성 승인이 아니다.");
+        builder.AppendLine();
+        builder.AppendLine("| 객체 원형 | 종류 | 운영 역할 | 소유 OS·업무 | 생성 방식 | 식별자 | 현재 준비 | 시각 키 |");
+        builder.AppendLine("| --- | --- | --- | --- | --- | --- | --- | --- |");
+        foreach (var candidate in catalog.RoleObjectCandidates)
+        {
+            var owner = candidate.OperatingSystemIds.Concat(candidate.WorkflowCodes).Select(Escape);
+            builder.AppendLine($"| `{Escape(candidate.ObjectArchetypeId)}`<br>{Escape(candidate.DisplayNameKo)} | `{Escape(candidate.ObjectKindCode)}` | {Escape(string.Join(", ", candidate.SourceActorCodes))} | {Escape(string.Join("<br>", owner))} | `{Escape(candidate.RepresentationDecisionCode)}` / `{Escape(candidate.SpawnModeCode)}` | `{Escape(candidate.IdentityPolicyCode)}` | Prefab `{candidate.PrefabReady}` / Scene `{candidate.SceneReady}` | {(string.IsNullOrWhiteSpace(candidate.VisualKey) ? "-" : $"`{Escape(candidate.VisualKey)}`")} |");
+        }
+        if (catalog.RoleObjectCandidates.Count == 0) builder.AppendLine("| - | - | - | - | - | - | - | - |");
         builder.AppendLine();
         builder.AppendLine("## 첫 독립 표본");
         builder.AppendLine();
@@ -871,6 +1015,7 @@ internal sealed record TransferPolicy(
     FirstSliceDefinition FirstSlice,
     IReadOnlyList<ObservationProfileDefinition>? ObservationProfiles = null,
     IReadOnlyList<AppObservationBindingDefinition>? AppObservationBindings = null,
+    IReadOnlyList<OperationalRoleObjectCandidateDefinition>? RoleObjectCandidates = null,
     string? FirstLivingSceneProfileRef = null);
 
 internal sealed record PlanningPolicy(string PlanningId, string DocumentRef, string Revision, string DocumentSha256);
@@ -927,6 +1072,27 @@ internal sealed record AppObservationBindingDefinition(
     string ObservationProfileRef,
     string RelationCode);
 
+internal sealed record OperationalRoleObjectCandidateDefinition(
+    string ObjectArchetypeId,
+    string DisplayNameKo,
+    string ObjectKindCode,
+    IReadOnlyList<string> SourceActorCodes,
+    IReadOnlyList<string> OperatingSystemIds,
+    IReadOnlyList<string> WorkflowCodes,
+    string ObservationRoleCode,
+    string VisualKey,
+    string RepresentationDecisionCode,
+    string SpawnModeCode,
+    string IdentityPolicyCode,
+    IReadOnlyList<string> PresentationStateCodes,
+    IReadOnlyList<string> ObservationProfileRefs,
+    IReadOnlyList<string> UnityImplementationRefs,
+    bool IsExecutionAuthority,
+    bool ContainsPrivateData,
+    bool PrefabReady,
+    bool SceneReady,
+    string Boundary);
+
 internal sealed record TransferCatalog(
     string SchemaVersion,
     string Revision,
@@ -938,6 +1104,7 @@ internal sealed record TransferCatalog(
     IReadOnlyList<UnityRouteEntry> UnityRepresentativeRoutes,
     IReadOnlyList<ObservationProfileDefinition> ObservationProfiles,
     IReadOnlyList<AppObservationBindingDefinition> AppObservationBindings,
+    IReadOnlyList<OperationalRoleObjectCandidateDefinition> RoleObjectCandidates,
     string FirstLivingSceneProfileRef,
     FirstSliceDefinition FirstSlice,
     IReadOnlyList<SourceFingerprint> SourceFingerprints,
@@ -949,6 +1116,7 @@ internal sealed record CatalogSummary(
     int DbSetCount,
     int MongoCollectionCount,
     int UnityRepresentativeRouteCount,
+    int RoleObjectCandidateCount,
     int H1Count,
     int H2Count,
     int H3Count,

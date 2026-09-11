@@ -9,7 +9,7 @@ public sealed class SellerAppCompositionTests
         var project = Read("SellerApp", "SellerApp.csproj");
 
         Assert.Contains("AddSsalddelUiCommonAppServices<SellerAuthSession>()", startup);
-        Assert.Contains("AddSsalddelApiHttpClient", startup);
+        Assert.Contains("AddSsalddelOperationalApiHttpClient", startup);
         Assert.DoesNotContain("ShipperSalesService", startup);
         Assert.DoesNotContain("InMemoryShipperStore", startup);
         Assert.Contains("Ssalddel.Ui.Common.csproj", project);

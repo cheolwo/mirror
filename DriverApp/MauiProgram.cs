@@ -6,7 +6,6 @@ using DriverApp.Handlers;
 using Ssalddel.Ui.Common.Areas.App.Services;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
-using Ssalddel.Client.Infrastructure.Simulation;
 
 namespace DriverApp;
 
@@ -29,10 +28,12 @@ public static class MauiProgram
 
 		builder.Services.AddDriverAppServices(builder.Configuration);
 		builder.Services.AddSsalddelUiCommonAppServices<IAuthSession>();
-		builder.Services.AddSsalddelApiHttpClient(
-			SsalddelApiEndpoint.CreateDefaultBaseAddress(),
+		builder.Services.AddSsalddelOperationalApiHttpClient(
+			SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+				builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
+				builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey],
+				SsalddelServerEndpoint.CreateDefaultBaseAddress()),
 			ServiceLifetime.Singleton);
-		builder.Services.AddRemoteBusinessWorkflowRuntime();
 		builder.Services.AddSsalddelDocumentOutputServices();
 		builder.Services.AddTransient<MainPage>();
 		builder.Services.AddTransient<NativeDriverHomePage>();

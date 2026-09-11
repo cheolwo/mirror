@@ -1,17 +1,18 @@
 {
-  "schemaVersion": "operational-unity-transfer-catalog.v2",
-  "revision": "operations-unity-transfer.r2",
+  "schemaVersion": "operational-unity-transfer-catalog.v3",
+  "revision": "operations-unity-transfer.r3",
   "planning": {
     "planningId": "PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001",
     "documentRef": "docs/AI/Planning/\uC2DC\uC2A4\uD15C/PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001/README.md",
-    "revision": "operations-unity-transfer.r3",
-    "documentSha256": "7c41c708a70eae5a113d62a03d9318112c2dd9a2bc07362f158a821c7072bc80"
+    "revision": "operations-unity-transfer.r5",
+    "documentSha256": "4e8367d01672dac8fdea50e33a98bf9bbfa6ad3a41c627a15719fa70ce8ab6b3"
   },
   "summary": {
     "pageCapabilityCount": 241,
-    "dbSetCount": 277,
+    "dbSetCount": 279,
     "mongoCollectionCount": 33,
     "unityRepresentativeRouteCount": 18,
+    "roleObjectCandidateCount": 25,
     "h1Count": 86,
     "h2Count": 40,
     "h3Count": 21,
@@ -15913,6 +15914,18 @@
     },
     {
       "contextName": "SsalddelContext",
+      "propertyName": "\uC6B4\uC601\uCCB4\uC81C\uC5C5\uBB34\uC778\uACC4",
+      "entityType": "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC6B4\uC601.\uC6B4\uC601\uCCB4\uC81C\uC5C5\uBB34\uC778\uACC4",
+      "sourcePath": "Ssalddel.Infrastructure/Persistence/SsalddelContext.cs"
+    },
+    {
+      "contextName": "SsalddelContext",
+      "propertyName": "\uC6B4\uC601\uCCB4\uC81C\uC5C5\uBB34\uC778\uACC4Outbox",
+      "entityType": "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC6B4\uC601.\uC6B4\uC601\uCCB4\uC81C\uC5C5\uBB34\uC778\uACC4Outbox",
+      "sourcePath": "Ssalddel.Infrastructure/Persistence/SsalddelContext.cs"
+    },
+    {
+      "contextName": "SsalddelContext",
       "propertyName": "\uC6B4\uC784\uAD6C\uC131",
       "entityType": "\uC6B4\uC784\uAD6C\uC131",
       "sourcePath": "Ssalddel.Infrastructure/Persistence/SsalddelContext.cs"
@@ -16879,6 +16892,902 @@
       "relationCode": "SimulationAnalog"
     }
   ],
+  "roleObjectCandidates": [
+    {
+      "objectArchetypeId": "operational-object:actor:cargo-driver.v1",
+      "displayNameKo": "\uD654\uBB3C \uAE30\uC0AC",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "Driver"
+      ],
+      "operatingSystemIds": [
+        "DomesticCargoTransportOS"
+      ],
+      "workflowCodes": [
+        "DomesticTransport"
+      ],
+      "observationRoleCode": "CargoDriver",
+      "visualKey": "visual:actor:cargo-driver",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SnapshotProjection",
+      "identityPolicyCode": "PseudonymousStableId",
+      "presentationStateCodes": [
+        "Available",
+        "Reserved",
+        "Accepted",
+        "AtPickup",
+        "Transporting",
+        "AtDropoff",
+        "Interrupted",
+        "Completed"
+      ],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Transport"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC2E4\uC81C \uAE30\uC0AC \uACC4\uC815\u00B7\uD604\uC7AC \uC704\uCE58\uB97C \uC9C1\uC811 \uBCF5\uC81C\uD558\uC9C0 \uC54A\uACE0 \uACF5\uAC1C\uAC00 \uC2B9\uC778\uB41C \uC5ED\uD560 \uC0C1\uD0DC\uC640 \uBE44\uC2DD\uBCC4 \uC548\uC815 ID\uB9CC \uC0AC\uC6A9\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:actor:community-member.v1",
+      "displayNameKo": "\uCEE4\uBBA4\uB2C8\uD2F0 \uCC38\uC5EC\uC790",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "CommunityMember"
+      ],
+      "operatingSystemIds": [
+        "CommunityTrustOS"
+      ],
+      "workflowCodes": [
+        "CommunityTrust"
+      ],
+      "observationRoleCode": "CommunityMember",
+      "visualKey": "visual:actor:community-member",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SimulationAnalog",
+      "identityPolicyCode": "PseudonymousStableId",
+      "presentationStateCodes": [
+        "Observing",
+        "Discussing",
+        "Participating",
+        "Waiting",
+        "Completed"
+      ],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Community"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC2E4\uC81C \uD68C\uC6D0 \uACC4\uC815\u00B7\uAD00\uACC4\u00B7\uC5F0\uB77D\uCC98\uB97C \uC0DD\uC131\uD558\uC9C0 \uC54A\uACE0 \uB3D9\uC758\uB41C \uACF5\uAC1C \uD65C\uB3D9 \uB610\uB294 \uAC00\uC0C1 \uCC38\uC5EC \uC5ED\uD560\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:actor:customs-broker.v1",
+      "displayNameKo": "\uAD00\uC138\uC0AC",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "CustomsBroker"
+      ],
+      "operatingSystemIds": [
+        "GroupPurchaseImportOS"
+      ],
+      "workflowCodes": [
+        "CustomsAndTradeData"
+      ],
+      "observationRoleCode": "CustomsBroker",
+      "visualKey": "",
+      "representationDecisionCode": "NoUnityRepresentation",
+      "spawnModeCode": "NotSpawnable",
+      "identityPolicyCode": "NoIdentity",
+      "presentationStateCodes": [],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC804\uBB38\uAC00 \uC790\uACA9\u00B7\uD1B5\uAD00 \uC704\uC784\u00B7\uC2E0\uC6D0 \uC815\uBCF4\uB294 \uAD8C\uD55C \uC788\uB294 \uC6B4\uC601 \uD654\uBA74\uC5D0 \uB0A8\uAE30\uACE0 \uC5ED\uD560 GameObject\uB97C \uC0DD\uC131\uD558\uC9C0 \uC54A\uB294\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:actor:employer-or-operating-entity.v1",
+      "displayNameKo": "\uACE0\uC6A9\u00B7\uC6B4\uC601 \uC8FC\uCCB4",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "EmployerOrOperatingEntity"
+      ],
+      "operatingSystemIds": [
+        "PlatformOperationsOS"
+      ],
+      "workflowCodes": [
+        "HrParticipation"
+      ],
+      "observationRoleCode": "EmployerOrOperatingEntity",
+      "visualKey": "",
+      "representationDecisionCode": "NoUnityRepresentation",
+      "spawnModeCode": "NotSpawnable",
+      "identityPolicyCode": "NoIdentity",
+      "presentationStateCodes": [],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uACE0\uC6A9 \uAD00\uACC4\u00B7\uAE09\uC5EC\u00B7\uC778\uC0AC \uAD8C\uD55C\uC740 ServerOnly\uC774\uBA70 \uC5ED\uD560 GameObject\uB97C \uC0DD\uC131\uD558\uC9C0 \uC54A\uB294\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:actor:food-courier.v1",
+      "displayNameKo": "\uC74C\uC2DD \uBC30\uB2EC \uAE30\uC0AC",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "FoodDeliveryDriver"
+      ],
+      "operatingSystemIds": [
+        "FoodDeliveryOS"
+      ],
+      "workflowCodes": [
+        "FoodDelivery"
+      ],
+      "observationRoleCode": "FoodCourier",
+      "visualKey": "visual:actor:food-courier",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SimulationAnalog",
+      "identityPolicyCode": "PseudonymousStableId",
+      "presentationStateCodes": [
+        "Available",
+        "Assigned",
+        "ToRestaurant",
+        "WaitingForPickup",
+        "Delivering",
+        "Interrupted",
+        "Returning"
+      ],
+      "observationProfileRefs": [
+        "observation-profile:synthetic-neighborhood-food-life.v1"
+      ],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Observation/\uB3D9\uB124\uAD00\uCC30Presenter.cs"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC2E4\uC81C \uAE30\uC0AC \uC704\uCE58\u00B7\uD3C9\uAC00\u00B7\uC218\uB77D\uB960\uC744 \uBCF5\uC81C\uD558\uC9C0 \uC54A\uACE0 \uAC00\uC0C1 \uC0DD\uD65C \uB610\uB294 \uC2B9\uC778\uB41C \uCD5C\uC18C \uC0C1\uD0DC\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:actor:mart-operator.v1",
+      "displayNameKo": "\uC0B4\uB730 \uB9C8\uD2B8 \uC6B4\uC601\uC790",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "MartOperator"
+      ],
+      "operatingSystemIds": [
+        "SsalddelMartUrbanLogisticsOS"
+      ],
+      "workflowCodes": [
+        "SsalddelMart"
+      ],
+      "observationRoleCode": "MartOperator",
+      "visualKey": "visual:actor:mart-operator",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SimulationAnalog",
+      "identityPolicyCode": "PseudonymousStableId",
+      "presentationStateCodes": [
+        "Monitoring",
+        "ReviewingOrder",
+        "Picking",
+        "Packing",
+        "Handoff",
+        "Exception"
+      ],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/UrbanMarket"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC2E4\uC81C \uC810\uC8FC\u00B7\uC9C1\uC6D0 \uACC4\uC815\uACFC \uC815\uC0B0 \uC815\uBCF4 \uC5C6\uC774 \uAC00\uC0C1 \uC6B4\uC601 \uC5ED\uD560\uACFC \uC5C5\uBB34 \uB2E8\uACC4\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:actor:orderer-group-leader.v1",
+      "displayNameKo": "\uC8FC\uBB38\uC790 \uC9D1\uB2E8 \uB300\uD45C",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "OrdererGroupLeader"
+      ],
+      "operatingSystemIds": [
+        "GroupPurchaseDemandOS",
+        "GroupPurchaseImportOS"
+      ],
+      "workflowCodes": [
+        "GroupPurchaseDemand",
+        "GroupPurchaseImport"
+      ],
+      "observationRoleCode": "OrdererGroupLeader",
+      "visualKey": "visual:actor:orderer-group-leader",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SimulationAnalog",
+      "identityPolicyCode": "PseudonymousStableId",
+      "presentationStateCodes": [
+        "GatheringDemand",
+        "Reviewing",
+        "Coordinating",
+        "Handoff",
+        "Completed"
+      ],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Community"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC2E4\uC81C \uB300\uD45C\uC790 \uC2E0\uC6D0\uC774\uB098 \uB3D9\uC758 \uAD8C\uD55C\uC744 Unity\uC5D0 \uC62E\uAE30\uC9C0 \uC54A\uACE0 \uAC00\uC0C1 \uD611\uC758 \uC5ED\uD560\uACFC \uACF5\uAC1C \uAC00\uB2A5\uD55C \uC9C4\uD589\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:actor:orderer.v1",
+      "displayNameKo": "\uC8FC\uBB38\uC790",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "Orderer"
+      ],
+      "operatingSystemIds": [
+        "FoodDeliveryOS",
+        "SsalddelMartUrbanLogisticsOS"
+      ],
+      "workflowCodes": [
+        "FoodDelivery",
+        "SsalddelMart"
+      ],
+      "observationRoleCode": "Orderer",
+      "visualKey": "visual:actor:orderer",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SimulationAnalog",
+      "identityPolicyCode": "PseudonymousStableId",
+      "presentationStateCodes": [
+        "Choosing",
+        "Ordered",
+        "Waiting",
+        "Receiving",
+        "Received"
+      ],
+      "observationProfileRefs": [
+        "observation-profile:synthetic-neighborhood-food-life.v1"
+      ],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Observation/\uB3D9\uB124\uAD00\uCC30Presenter.cs"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC6B4\uC601 \uC8FC\uBB38\uC790\uB97C \uC5F0\uACB0\uD558\uC9C0 \uC54A\uACE0 \uAC00\uC0C1 \uC8FC\uBBFC \uB610\uB294 \uBE44\uC2DD\uBCC4 \uC77D\uAE30 \uC804\uC6A9 \uC0AC\uBCF8\uC73C\uB85C\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:actor:overseas-seller-or-forwarder.v1",
+      "displayNameKo": "\uD574\uC678 \uD310\uB9E4\uC790\u00B7\uBC30\uC1A1\uB300\uD589\uC9C0",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "OverseasSellerOrForwarder"
+      ],
+      "operatingSystemIds": [
+        "GroupPurchaseImportOS"
+      ],
+      "workflowCodes": [
+        "GroupPurchaseImport"
+      ],
+      "observationRoleCode": "OverseasSellerOrForwarder",
+      "visualKey": "",
+      "representationDecisionCode": "NoUnityRepresentation",
+      "spawnModeCode": "NotSpawnable",
+      "identityPolicyCode": "NoIdentity",
+      "presentationStateCodes": [],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC678\uBD80 \uD310\uB9E4\uC790 \uACC4\uC815\u00B7\uC8FC\uC18C\u00B7\uACC4\uC57D \uAD00\uACC4\uB294 \uC6B4\uC601 \uBC0F Web \uC778\uACC4\uC5D0 \uB0A8\uAE30\uACE0 \uC5ED\uD560 GameObject\uB97C \uC0DD\uC131\uD558\uC9C0 \uC54A\uB294\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:actor:platform-operator.v1",
+      "displayNameKo": "\uD50C\uB7AB\uD3FC \uC6B4\uC601\uC790",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "PlatformOperator"
+      ],
+      "operatingSystemIds": [
+        "PlatformOperationsOS"
+      ],
+      "workflowCodes": [
+        "HrParticipation"
+      ],
+      "observationRoleCode": "PlatformOperator",
+      "visualKey": "",
+      "representationDecisionCode": "NoUnityRepresentation",
+      "spawnModeCode": "NotSpawnable",
+      "identityPolicyCode": "NoIdentity",
+      "presentationStateCodes": [],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uAD00\uB9AC\uC790 \uAD8C\uD55C\u00B7\uC608\uC678 \uCC98\uB9AC\u00B7\uAC1C\uC778\uC815\uBCF4 \uAC80\uD1A0\uB294 ServerOnly\uC774\uBA70 GameObject\uB85C \uC0DD\uC131\uD558\uC9C0 \uC54A\uB294\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:actor:recipient.v1",
+      "displayNameKo": "\uC218\uB839\uC790",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "Recipient"
+      ],
+      "operatingSystemIds": [
+        "DomesticCargoTransportOS",
+        "FoodDeliveryOS"
+      ],
+      "workflowCodes": [
+        "DomesticTransport",
+        "FoodDelivery"
+      ],
+      "observationRoleCode": "Recipient",
+      "visualKey": "visual:actor:recipient",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SnapshotProjection",
+      "identityPolicyCode": "PseudonymousStableId",
+      "presentationStateCodes": [
+        "Waiting",
+        "Receiving",
+        "Received",
+        "Exception"
+      ],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Transport"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC218\uB839\uC790\uC758 \uC131\uBA85\u00B7\uC8FC\uC18C\u00B7\uC5F0\uB77D\uCC98\uB294 \uC81C\uC678\uD558\uACE0 \uC778\uC218 \uAC00\uB2A5 \uC5EC\uBD80\uC640 \uACB0\uACFC\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:actor:restaurant-owner.v1",
+      "displayNameKo": "\uC74C\uC2DD\uC810 \uC8FC\uC778",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "Restaurant"
+      ],
+      "operatingSystemIds": [
+        "FoodDeliveryOS"
+      ],
+      "workflowCodes": [
+        "FoodDelivery"
+      ],
+      "observationRoleCode": "RestaurantOwner",
+      "visualKey": "visual:actor:restaurant-owner",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SimulationAnalog",
+      "identityPolicyCode": "PseudonymousStableId",
+      "presentationStateCodes": [
+        "Idle",
+        "ReviewingOrder",
+        "Cooking",
+        "PickupReady",
+        "Delayed",
+        "Recovery"
+      ],
+      "observationProfileRefs": [
+        "observation-profile:synthetic-neighborhood-food-life.v1"
+      ],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Observation/\uB3D9\uB124\uAD00\uCC30Presenter.cs"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC11C\uBC84\uC758 Restaurant \uC5ED\uD560\uC744 \uAC00\uC0C1 \uC74C\uC2DD\uC810 \uC8FC\uC778 \uC5ED\uD560\uB85C \uBC88\uC5ED\uD558\uBA70 \uC2E4\uC81C \uC0AC\uC5C5\uC790\u00B7\uB2F4\uB2F9\uC790 \uC2E0\uC6D0\uC740 \uD3EC\uD568\uD558\uC9C0 \uC54A\uB294\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:actor:seller.v1",
+      "displayNameKo": "\uD310\uB9E4\uC790",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "Seller"
+      ],
+      "operatingSystemIds": [
+        "SsalddelMartUrbanLogisticsOS",
+        "GroupPurchaseDemandOS"
+      ],
+      "workflowCodes": [
+        "SalesChannelFulfillment",
+        "GroupPurchaseDemand"
+      ],
+      "observationRoleCode": "Seller",
+      "visualKey": "visual:actor:seller",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SimulationAnalog",
+      "identityPolicyCode": "PseudonymousStableId",
+      "presentationStateCodes": [
+        "Displaying",
+        "ReviewingOrder",
+        "Preparing",
+        "Handoff",
+        "Completed"
+      ],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/UrbanMarket"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC2E4\uC81C \uD310\uB9E4\uC790 \uACC4\uC815\u00B7\uC815\uC0B0\u00B7\uC5F0\uB77D\uCC98\uB97C \uC81C\uC678\uD558\uACE0 \uAC00\uC0C1 \uC2DC\uC7A5 \uC5ED\uD560 \uB610\uB294 \uACF5\uAC1C \uC0C1\uD0DC \uC0AC\uBCF8\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:actor:shipper-or-seller.v1",
+      "displayNameKo": "\uD654\uC8FC\u00B7\uD310\uB9E4\uC790",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "ShipperOrSeller"
+      ],
+      "operatingSystemIds": [
+        "DomesticCargoTransportOS",
+        "WarehouseCommerceFulfillmentOS"
+      ],
+      "workflowCodes": [
+        "DomesticTransport",
+        "WarehouseFulfillment"
+      ],
+      "observationRoleCode": "ShipperOrSeller",
+      "visualKey": "visual:actor:shipper-or-seller",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SnapshotProjection",
+      "identityPolicyCode": "PseudonymousStableId",
+      "presentationStateCodes": [
+        "Preparing",
+        "Requesting",
+        "Handoff",
+        "Completed",
+        "Exception"
+      ],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Transport"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uD654\uC8FC \uB610\uB294 \uD310\uB9E4\uC790\uC758 \uC2E4\uC81C \uACC4\uC815\u00B7\uC0AC\uC5C5\uC790 \uC815\uBCF4\uB97C \uBCF5\uC81C\uD558\uC9C0 \uC54A\uACE0 \uC778\uACC4 \uC5ED\uD560\uACFC \uACF5\uAC1C \uAC00\uB2A5\uD55C \uC9C4\uD589 \uC0C1\uD0DC\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:actor:shipper.v1",
+      "displayNameKo": "\uD654\uC8FC",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "Shipper"
+      ],
+      "operatingSystemIds": [
+        "DomesticCargoTransportOS"
+      ],
+      "workflowCodes": [
+        "DomesticTransport"
+      ],
+      "observationRoleCode": "Shipper",
+      "visualKey": "visual:actor:shipper",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SnapshotProjection",
+      "identityPolicyCode": "PseudonymousStableId",
+      "presentationStateCodes": [
+        "Requesting",
+        "Waiting",
+        "Transporting",
+        "Completed",
+        "Exception"
+      ],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Transport"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC2E4\uC81C \uD654\uC8FC \uACC4\uC815\u00B7\uC5F0\uB77D\uCC98\u00B7\uC8FC\uC18C\uB97C \uC0DD\uC131\uD558\uC9C0 \uC54A\uACE0 \uC2B9\uC778\uB41C \uC6B4\uC1A1 \uC0C1\uD0DC \uC0AC\uBCF8\uC758 \uC5ED\uD560\uACFC \uC9C4\uD589\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:actor:warehouse-manager.v1",
+      "displayNameKo": "\uCC3D\uACE0 \uAD00\uB9AC\uC790",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "WarehouseManager"
+      ],
+      "operatingSystemIds": [
+        "WarehouseCommerceFulfillmentOS"
+      ],
+      "workflowCodes": [
+        "WarehouseFulfillment"
+      ],
+      "observationRoleCode": "WarehouseManager",
+      "visualKey": "visual:actor:warehouse-manager",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SnapshotProjection",
+      "identityPolicyCode": "PseudonymousStableId",
+      "presentationStateCodes": [
+        "Monitoring",
+        "Inspecting",
+        "PlanningPutAway",
+        "PlanningOutbound",
+        "Exception"
+      ],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Warehouse/WarehouseWorldModels.cs"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uAD8C\uD55C \uC788\uB294 \uAD00\uB9AC\uC790 \uD654\uBA74\uC744 Unity\uB85C \uC62E\uAE30\uC9C0 \uC54A\uACE0 \uC791\uC5C5 \uC0C1\uD0DC\uB97C \uC870\uC728\uD558\uB294 \uBE44\uC2DD\uBCC4 \uC5ED\uD560\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:actor:warehouse-worker.v1",
+      "displayNameKo": "\uCC3D\uACE0 \uC791\uC5C5\uC790",
+      "objectKindCode": "Actor",
+      "sourceActorCodes": [
+        "Worker"
+      ],
+      "operatingSystemIds": [
+        "WarehouseCommerceFulfillmentOS",
+        "SsalddelMartUrbanLogisticsOS"
+      ],
+      "workflowCodes": [
+        "WarehouseFulfillment",
+        "SsalddelMart"
+      ],
+      "observationRoleCode": "WarehouseWorker",
+      "visualKey": "visual:actor:warehouse-worker",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SimulationAnalog",
+      "identityPolicyCode": "PseudonymousStableId",
+      "presentationStateCodes": [
+        "Idle",
+        "Inspecting",
+        "PuttingAway",
+        "Picking",
+        "Packing",
+        "Loading",
+        "Resting"
+      ],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Warehouse/WarehouseWorldModels.cs"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC2E4\uC81C \uADFC\uB85C\uC790 \uC778\uC0AC\u00B7\uC131\uACFC \uC790\uB8CC \uC5C6\uC774 Simulation \uC791\uC5C5 \uBC30\uC815 \uB610\uB294 \uC9D1\uACC4\uB41C \uC0C1\uD0DC \uC0AC\uBCF8\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:facility:restaurant.v1",
+      "displayNameKo": "\uC74C\uC2DD\uC810",
+      "objectKindCode": "Facility",
+      "sourceActorCodes": [
+        "Restaurant"
+      ],
+      "operatingSystemIds": [
+        "FoodDeliveryOS"
+      ],
+      "workflowCodes": [
+        "FoodDelivery"
+      ],
+      "observationRoleCode": "RestaurantFacility",
+      "visualKey": "visual:facility:restaurant",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SimulationAnalog",
+      "identityPolicyCode": "AggregateStableId",
+      "presentationStateCodes": [
+        "Open",
+        "ReviewingOrder",
+        "Cooking",
+        "PickupReady",
+        "Delayed",
+        "Closed"
+      ],
+      "observationProfileRefs": [
+        "observation-profile:synthetic-neighborhood-food-life.v1"
+      ],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Observation/\uB3D9\uB124\uAD00\uCC30Presenter.cs"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC2E4\uC81C \uC0C1\uD638\u00B7\uC8FC\uC18C \uB300\uC2E0 \uC7A5\uBA74\uC758 \uC548\uC815 \uC2DC\uC124 ID\uC640 \uC5C5\uBB34 \uC0C1\uD0DC\uB9CC \uC0AC\uC6A9\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:facility:ssalddel-mart.v1",
+      "displayNameKo": "\uC0B4\uB730 \uB9C8\uD2B8",
+      "objectKindCode": "Facility",
+      "sourceActorCodes": [
+        "MartOperator"
+      ],
+      "operatingSystemIds": [
+        "SsalddelMartUrbanLogisticsOS"
+      ],
+      "workflowCodes": [
+        "SsalddelMart"
+      ],
+      "observationRoleCode": "MartFacility",
+      "visualKey": "visual:facility:ssalddel-mart",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SimulationAnalog",
+      "identityPolicyCode": "AggregateStableId",
+      "presentationStateCodes": [
+        "Open",
+        "OrderWaiting",
+        "Picking",
+        "Packing",
+        "DeliveryHandoff",
+        "Closed"
+      ],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/UrbanMarket"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC2E4\uC81C \uC810\uD3EC \uC6D0\uC7A5\u00B7\uC7AC\uACE0\uB97C Unity\uAC00 \uC18C\uC720\uD558\uC9C0 \uC54A\uACE0 \uC2B9\uC778\uB41C \uC9D1\uACC4 \uB610\uB294 Simulation \uC0C1\uD0DC\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:facility:warehouse.v1",
+      "displayNameKo": "\uCC3D\uACE0",
+      "objectKindCode": "Facility",
+      "sourceActorCodes": [
+        "WarehouseManager"
+      ],
+      "operatingSystemIds": [
+        "WarehouseCommerceFulfillmentOS"
+      ],
+      "workflowCodes": [
+        "WarehouseFulfillment"
+      ],
+      "observationRoleCode": "WarehouseFacility",
+      "visualKey": "visual:facility:warehouse",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SnapshotProjection",
+      "identityPolicyCode": "AggregateStableId",
+      "presentationStateCodes": [
+        "Receiving",
+        "Inspecting",
+        "Storing",
+        "Picking",
+        "Packing",
+        "Outbound"
+      ],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Warehouse/WarehouseWorldModels.cs"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uCC3D\uACE0 Entity\uB97C \uBCF5\uC81C\uD558\uC9C0 \uC54A\uACE0 \uAD8C\uD55C\uC5D0 \uB9DE\uAC8C \uC870\uD569\uB41C Zone \uC0C1\uD0DC \uC0AC\uBCF8\uC744 \uD55C \uC2DC\uC124 \uD45C\uD604\uC73C\uB85C \uD574\uC11D\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:vehicle:cargo.v1",
+      "displayNameKo": "\uD654\uBB3C \uC6B4\uC1A1 \uCC28\uB7C9",
+      "objectKindCode": "Vehicle",
+      "sourceActorCodes": [
+        "Driver"
+      ],
+      "operatingSystemIds": [
+        "DomesticCargoTransportOS"
+      ],
+      "workflowCodes": [
+        "DomesticTransport"
+      ],
+      "observationRoleCode": "CargoVehicle",
+      "visualKey": "visual:vehicle:cargo",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SnapshotProjection",
+      "identityPolicyCode": "PseudonymousStableId",
+      "presentationStateCodes": [
+        "Parked",
+        "ToPickup",
+        "Loading",
+        "Transporting",
+        "Unloading",
+        "Interrupted",
+        "Returning"
+      ],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Transport"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uCC28\uB7C9 \uBC88\uD638\u00B7\uC18C\uC720\uC790\u00B7\uC815\uBC00 \uC704\uCE58\uB97C \uC81C\uC678\uD55C \uBE44\uC2DD\uBCC4 \uCC28\uB7C9 \uC5ED\uD560\uACFC \uC9C4\uD589 \uC0C1\uD0DC\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:vehicle:food-delivery.v1",
+      "displayNameKo": "\uC74C\uC2DD \uBC30\uB2EC \uC218\uB2E8",
+      "objectKindCode": "Vehicle",
+      "sourceActorCodes": [
+        "FoodDeliveryDriver"
+      ],
+      "operatingSystemIds": [
+        "FoodDeliveryOS"
+      ],
+      "workflowCodes": [
+        "FoodDelivery"
+      ],
+      "observationRoleCode": "FoodDeliveryVehicle",
+      "visualKey": "visual:vehicle:food-delivery",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SimulationAnalog",
+      "identityPolicyCode": "PseudonymousStableId",
+      "presentationStateCodes": [
+        "Parked",
+        "ToRestaurant",
+        "Waiting",
+        "Delivering",
+        "Interrupted",
+        "Returning"
+      ],
+      "observationProfileRefs": [
+        "observation-profile:synthetic-neighborhood-food-life.v1"
+      ],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Observation/\uB3D9\uB124\uAD00\uCC30Presenter.cs"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC2E4\uC81C \uCC28\uB7C9 \uB4F1\uB85D\uC815\uBCF4 \uC5C6\uC774 \uAC00\uC0C1 \uC774\uB3D9 \uC218\uB2E8 \uB610\uB294 \uBE44\uC2DD\uBCC4 \uC0C1\uD0DC \uC0AC\uBCF8\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:work:cargo-load.v1",
+      "displayNameKo": "\uC6B4\uC1A1 \uD654\uBB3C",
+      "objectKindCode": "WorkObject",
+      "sourceActorCodes": [
+        "Shipper",
+        "Driver"
+      ],
+      "operatingSystemIds": [
+        "DomesticCargoTransportOS"
+      ],
+      "workflowCodes": [
+        "DomesticTransport"
+      ],
+      "observationRoleCode": "CargoLoad",
+      "visualKey": "visual:work:cargo-load",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SnapshotProjection",
+      "identityPolicyCode": "AggregateStableId",
+      "presentationStateCodes": [
+        "WaitingForDispatch",
+        "AtPickup",
+        "Loaded",
+        "Transporting",
+        "AtDropoff",
+        "Delivered",
+        "Exception"
+      ],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Transport"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uD488\uBAA9 \uC0C1\uC138\u00B7\uD654\uC8FC \uC815\uBCF4 \uB300\uC2E0 \uD3EC\uC7A5 \uB2E8\uC704\uC640 \uC6B4\uC1A1 \uB2E8\uACC4\uC758 \uC2B9\uC778\uB41C \uCD5C\uC18C \uC0AC\uBCF8\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:work:food-order.v1",
+      "displayNameKo": "\uC74C\uC2DD \uC8FC\uBB38 \uBB36\uC74C",
+      "objectKindCode": "WorkObject",
+      "sourceActorCodes": [
+        "Orderer",
+        "Restaurant",
+        "FoodDeliveryDriver"
+      ],
+      "operatingSystemIds": [
+        "FoodDeliveryOS"
+      ],
+      "workflowCodes": [
+        "FoodDelivery"
+      ],
+      "observationRoleCode": "FoodOrderBundle",
+      "visualKey": "visual:work:food-order",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SimulationAnalog",
+      "identityPolicyCode": "AggregateStableId",
+      "presentationStateCodes": [
+        "Ordered",
+        "Accepted",
+        "Cooking",
+        "PickupReady",
+        "PickedUp",
+        "Delivering",
+        "Received",
+        "Cancelled"
+      ],
+      "observationProfileRefs": [
+        "observation-profile:synthetic-neighborhood-food-life.v1"
+      ],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Observation/\uB3D9\uB124\uAD00\uCC30Presenter.cs"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC2E4\uC81C \uBA54\uB274\u00B7\uC8FC\uC18C\u00B7\uACB0\uC81C\uB0B4\uC5ED\uC744 \uBCF5\uC81C\uD558\uC9C0 \uC54A\uACE0 \uC8FC\uBB38 \uB2E8\uACC4\uC640 \uAC00\uC0C1 \uC6B4\uBC18 \uB300\uC0C1\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    },
+    {
+      "objectArchetypeId": "operational-object:work:warehouse-handling-unit.v1",
+      "displayNameKo": "\uCC3D\uACE0 \uCDE8\uAE09 \uB2E8\uC704",
+      "objectKindCode": "WorkObject",
+      "sourceActorCodes": [
+        "WarehouseManager",
+        "Worker"
+      ],
+      "operatingSystemIds": [
+        "WarehouseCommerceFulfillmentOS",
+        "SsalddelMartUrbanLogisticsOS"
+      ],
+      "workflowCodes": [
+        "WarehouseFulfillment",
+        "SsalddelMart"
+      ],
+      "observationRoleCode": "WarehouseHandlingUnit",
+      "visualKey": "visual:work:warehouse-handling-unit",
+      "representationDecisionCode": "Candidate",
+      "spawnModeCode": "SnapshotProjection",
+      "identityPolicyCode": "AggregateStableId",
+      "presentationStateCodes": [
+        "Inbound",
+        "Inspecting",
+        "Stored",
+        "Picking",
+        "Packing",
+        "Staged",
+        "Loaded"
+      ],
+      "observationProfileRefs": [],
+      "unityImplementationRefs": [
+        "Ssalddel.Unity/Runtime/Warehouse/WarehouseWorldModels.cs"
+      ],
+      "isExecutionAuthority": false,
+      "containsPrivateData": false,
+      "prefabReady": false,
+      "sceneReady": false,
+      "boundary": "\uC7AC\uACE0 \uC6D0\uC7A5 \uD589\uC774 \uC544\uB2C8\uB77C \uAD8C\uD55C\uC5D0 \uB9DE\uAC8C \uC9D1\uACC4\uD55C \uD314\uB808\uD2B8\u00B7\uC0C1\uC790\u00B7\uD53C\uD0B9 \uBB36\uC74C\uC758 \uC0C1\uD0DC\uB9CC \uD45C\uD604\uD55C\uB2E4."
+    }
+  ],
   "firstLivingSceneProfileRef": "observation-profile:synthetic-neighborhood-food-life.v1",
   "firstSlice": {
     "sliceId": "operational-unity-slice:hub-inbound-putaway.v1",
@@ -16914,6 +17823,10 @@
       "sha256": "2d7937115c9c8ee3f6a64ef08a9f5382b65f9f5ca55064483a52a54e09911b72"
     },
     {
+      "path": "Ssalddel.Simulation.Contracts/UnityPackage/Runtime/OperationalRoleGameObjectCatalogContracts.cs",
+      "sha256": "e6a044ab678771ca17c6e12d67813596ecd53682ede3c2016255e0e37f175a49"
+    },
+    {
       "path": "Ssalddel.Unity/Runtime/Observation/\uB3D9\uB124\uAD00\uCC30Presenter.cs",
       "sha256": "6d25ed1c9cc1a4511f81fef872aed460e436a52d082343d6ff3e4939484537f2"
     },
@@ -16922,16 +17835,28 @@
       "sha256": "ac59f72f55cc7da25ecc66ff922406477b0d44055729952b0c383421e5b2b62f"
     },
     {
+      "path": "Ssalddel.Unity/Runtime/Warehouse/WarehouseWorldModels.cs",
+      "sha256": "6e63f85d007eac198939ea9b514eca98fb7012c5acce716c0df6189dc1be8cc3"
+    },
+    {
       "path": "Ssalddel.Unity/Runtime/WorldProjection/PageWorldProjectionCatalog.cs",
       "sha256": "a86ea3da8f6fe9dc890055a856ab036eda88bbd0dcac612aba77befeb086b925"
     },
     {
+      "path": "Ssalddel.Unity/Runtime/WorldProjection/\uC6B4\uC601\uC5ED\uD560GameObjectCatalogPolicy.cs",
+      "sha256": "82ea38c6a55a32342bafe95638db83da2caa651bdd5f4afbe2236ca60ad2a52d"
+    },
+    {
+      "path": "Ssalddel/ApiMetadata/SsalddelApiVersionAttribute.cs",
+      "sha256": "b9351977761188583ac24e9b47f9a08e02c39b00942ab38f996ee2a11f55fc63"
+    },
+    {
       "path": "docs/AI/Planning/\uC2DC\uC2A4\uD15C/PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001/README.md",
-      "sha256": "7c41c708a70eae5a113d62a03d9318112c2dd9a2bc07362f158a821c7072bc80"
+      "sha256": "4e8367d01672dac8fdea50e33a98bf9bbfa6ad3a41c627a15719fa70ce8ab6b3"
     },
     {
       "path": "eng/Ssalddel.OperationalUnityTransfer/Program.cs",
-      "sha256": "68ea00ca2a0906db8593683d84cf0697c5c1166ab3ea09a5af5c1b94660de4ff"
+      "sha256": "2d8eca60f1f3f2803d25cf65bd3dcbcaa392cf28ca7d205d8ca93f0527f7ba61"
     },
     {
       "path": "eng/Ssalddel.OperationalUnityTransfer/Ssalddel.OperationalUnityTransfer.csproj",
@@ -16939,7 +17864,7 @@
     },
     {
       "path": "eng/execution-ledgers/operational-unity-transfer-policy.json",
-      "sha256": "5e3a1a2d8cb6da8aa8d79a0070ddae72ad01cff68cadd9ca58b50c903d0de33e"
+      "sha256": "dfbd16c6953f6a9f86dc4fb4999196bf4ab42a58840a4c818d46277d498b5fca"
     },
     {
       "path": "eng/execution-ledgers/playable-loops.json",

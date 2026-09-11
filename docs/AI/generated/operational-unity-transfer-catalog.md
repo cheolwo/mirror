@@ -1,12 +1,13 @@
 # 운영 서버에서 Mirror Unity로의 선별 이관 대장
 
-- 판본: `operations-unity-transfer.r2`
+- 판본: `operations-unity-transfer.r3`
 - 기획: [PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001](../Planning/시스템/PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001/README.md)
-- 기획 SHA-256: `7c41c708a70eae5a113d62a03d9318112c2dd9a2bc07362f158a821c7072bc80`
+- 기획 SHA-256: `4e8367d01672dac8fdea50e33a98bf9bbfa6ad3a41c627a15719fa70ce8ab6b3`
 - 페이지 기능: 241개
-- EF Core DbSet: 277개
+- EF Core DbSet: 279개
 - MongoDB collection 호출: 33개
 - 기존 Unity 대표 경로: 18개
+- 운영 역할 기반 객체 원형 후보: 25개
 - 참조 가능한 H: H1 86 / H2 40 / H3 21 / H4 6
 
 이 대장은 자동 생성물이다. 페이지·저장 개체는 조사 모수이며 H1로 자동 승격되지 않는다. `MappedCandidate`도 실제 배치나 E5 증거가 아니다.
@@ -37,6 +38,38 @@
 | `FoodDeliveryDriverApp` | `SimulationAnalog` | `observation-profile:synthetic-neighborhood-food-life.v1` |
 | `OrdererApp` | `SimulationAnalog` | `observation-profile:synthetic-neighborhood-food-life.v1` |
 | `RestaurantDeskApp` | `SimulationAnalog` | `observation-profile:synthetic-neighborhood-food-life.v1` |
+
+## 운영 역할 기반 객체 원형 후보
+
+운영 계정이나 DB 행을 그대로 GameObject로 만들지 않는다. 이 목록은 비식별 상태 사본 또는 가상 Simulation에서 표현을 준비할 수 있는 원형이며, `sceneReady=false`인 항목은 실제 Scene 생성 승인이 아니다.
+
+| 객체 원형 | 종류 | 운영 역할 | 소유 OS·업무 | 생성 방식 | 식별자 | 현재 준비 | 시각 키 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `operational-object:actor:cargo-driver.v1`<br>화물 기사 | `Actor` | Driver | DomesticCargoTransportOS<br>DomesticTransport | `Candidate` / `SnapshotProjection` | `PseudonymousStableId` | Prefab `False` / Scene `False` | `visual:actor:cargo-driver` |
+| `operational-object:actor:community-member.v1`<br>커뮤니티 참여자 | `Actor` | CommunityMember | CommunityTrustOS<br>CommunityTrust | `Candidate` / `SimulationAnalog` | `PseudonymousStableId` | Prefab `False` / Scene `False` | `visual:actor:community-member` |
+| `operational-object:actor:customs-broker.v1`<br>관세사 | `Actor` | CustomsBroker | GroupPurchaseImportOS<br>CustomsAndTradeData | `NoUnityRepresentation` / `NotSpawnable` | `NoIdentity` | Prefab `False` / Scene `False` | - |
+| `operational-object:actor:employer-or-operating-entity.v1`<br>고용·운영 주체 | `Actor` | EmployerOrOperatingEntity | PlatformOperationsOS<br>HrParticipation | `NoUnityRepresentation` / `NotSpawnable` | `NoIdentity` | Prefab `False` / Scene `False` | - |
+| `operational-object:actor:food-courier.v1`<br>음식 배달 기사 | `Actor` | FoodDeliveryDriver | FoodDeliveryOS<br>FoodDelivery | `Candidate` / `SimulationAnalog` | `PseudonymousStableId` | Prefab `False` / Scene `False` | `visual:actor:food-courier` |
+| `operational-object:actor:mart-operator.v1`<br>살뜰 마트 운영자 | `Actor` | MartOperator | SsalddelMartUrbanLogisticsOS<br>SsalddelMart | `Candidate` / `SimulationAnalog` | `PseudonymousStableId` | Prefab `False` / Scene `False` | `visual:actor:mart-operator` |
+| `operational-object:actor:orderer-group-leader.v1`<br>주문자 집단 대표 | `Actor` | OrdererGroupLeader | GroupPurchaseDemandOS<br>GroupPurchaseImportOS<br>GroupPurchaseDemand<br>GroupPurchaseImport | `Candidate` / `SimulationAnalog` | `PseudonymousStableId` | Prefab `False` / Scene `False` | `visual:actor:orderer-group-leader` |
+| `operational-object:actor:orderer.v1`<br>주문자 | `Actor` | Orderer | FoodDeliveryOS<br>SsalddelMartUrbanLogisticsOS<br>FoodDelivery<br>SsalddelMart | `Candidate` / `SimulationAnalog` | `PseudonymousStableId` | Prefab `False` / Scene `False` | `visual:actor:orderer` |
+| `operational-object:actor:overseas-seller-or-forwarder.v1`<br>해외 판매자·배송대행지 | `Actor` | OverseasSellerOrForwarder | GroupPurchaseImportOS<br>GroupPurchaseImport | `NoUnityRepresentation` / `NotSpawnable` | `NoIdentity` | Prefab `False` / Scene `False` | - |
+| `operational-object:actor:platform-operator.v1`<br>플랫폼 운영자 | `Actor` | PlatformOperator | PlatformOperationsOS<br>HrParticipation | `NoUnityRepresentation` / `NotSpawnable` | `NoIdentity` | Prefab `False` / Scene `False` | - |
+| `operational-object:actor:recipient.v1`<br>수령자 | `Actor` | Recipient | DomesticCargoTransportOS<br>FoodDeliveryOS<br>DomesticTransport<br>FoodDelivery | `Candidate` / `SnapshotProjection` | `PseudonymousStableId` | Prefab `False` / Scene `False` | `visual:actor:recipient` |
+| `operational-object:actor:restaurant-owner.v1`<br>음식점 주인 | `Actor` | Restaurant | FoodDeliveryOS<br>FoodDelivery | `Candidate` / `SimulationAnalog` | `PseudonymousStableId` | Prefab `False` / Scene `False` | `visual:actor:restaurant-owner` |
+| `operational-object:actor:seller.v1`<br>판매자 | `Actor` | Seller | SsalddelMartUrbanLogisticsOS<br>GroupPurchaseDemandOS<br>SalesChannelFulfillment<br>GroupPurchaseDemand | `Candidate` / `SimulationAnalog` | `PseudonymousStableId` | Prefab `False` / Scene `False` | `visual:actor:seller` |
+| `operational-object:actor:shipper-or-seller.v1`<br>화주·판매자 | `Actor` | ShipperOrSeller | DomesticCargoTransportOS<br>WarehouseCommerceFulfillmentOS<br>DomesticTransport<br>WarehouseFulfillment | `Candidate` / `SnapshotProjection` | `PseudonymousStableId` | Prefab `False` / Scene `False` | `visual:actor:shipper-or-seller` |
+| `operational-object:actor:shipper.v1`<br>화주 | `Actor` | Shipper | DomesticCargoTransportOS<br>DomesticTransport | `Candidate` / `SnapshotProjection` | `PseudonymousStableId` | Prefab `False` / Scene `False` | `visual:actor:shipper` |
+| `operational-object:actor:warehouse-manager.v1`<br>창고 관리자 | `Actor` | WarehouseManager | WarehouseCommerceFulfillmentOS<br>WarehouseFulfillment | `Candidate` / `SnapshotProjection` | `PseudonymousStableId` | Prefab `False` / Scene `False` | `visual:actor:warehouse-manager` |
+| `operational-object:actor:warehouse-worker.v1`<br>창고 작업자 | `Actor` | Worker | WarehouseCommerceFulfillmentOS<br>SsalddelMartUrbanLogisticsOS<br>WarehouseFulfillment<br>SsalddelMart | `Candidate` / `SimulationAnalog` | `PseudonymousStableId` | Prefab `False` / Scene `False` | `visual:actor:warehouse-worker` |
+| `operational-object:facility:restaurant.v1`<br>음식점 | `Facility` | Restaurant | FoodDeliveryOS<br>FoodDelivery | `Candidate` / `SimulationAnalog` | `AggregateStableId` | Prefab `False` / Scene `False` | `visual:facility:restaurant` |
+| `operational-object:facility:ssalddel-mart.v1`<br>살뜰 마트 | `Facility` | MartOperator | SsalddelMartUrbanLogisticsOS<br>SsalddelMart | `Candidate` / `SimulationAnalog` | `AggregateStableId` | Prefab `False` / Scene `False` | `visual:facility:ssalddel-mart` |
+| `operational-object:facility:warehouse.v1`<br>창고 | `Facility` | WarehouseManager | WarehouseCommerceFulfillmentOS<br>WarehouseFulfillment | `Candidate` / `SnapshotProjection` | `AggregateStableId` | Prefab `False` / Scene `False` | `visual:facility:warehouse` |
+| `operational-object:vehicle:cargo.v1`<br>화물 운송 차량 | `Vehicle` | Driver | DomesticCargoTransportOS<br>DomesticTransport | `Candidate` / `SnapshotProjection` | `PseudonymousStableId` | Prefab `False` / Scene `False` | `visual:vehicle:cargo` |
+| `operational-object:vehicle:food-delivery.v1`<br>음식 배달 수단 | `Vehicle` | FoodDeliveryDriver | FoodDeliveryOS<br>FoodDelivery | `Candidate` / `SimulationAnalog` | `PseudonymousStableId` | Prefab `False` / Scene `False` | `visual:vehicle:food-delivery` |
+| `operational-object:work:cargo-load.v1`<br>운송 화물 | `WorkObject` | Shipper, Driver | DomesticCargoTransportOS<br>DomesticTransport | `Candidate` / `SnapshotProjection` | `AggregateStableId` | Prefab `False` / Scene `False` | `visual:work:cargo-load` |
+| `operational-object:work:food-order.v1`<br>음식 주문 묶음 | `WorkObject` | Orderer, Restaurant, FoodDeliveryDriver | FoodDeliveryOS<br>FoodDelivery | `Candidate` / `SimulationAnalog` | `AggregateStableId` | Prefab `False` / Scene `False` | `visual:work:food-order` |
+| `operational-object:work:warehouse-handling-unit.v1`<br>창고 취급 단위 | `WorkObject` | WarehouseManager, Worker | WarehouseCommerceFulfillmentOS<br>SsalddelMartUrbanLogisticsOS<br>WarehouseFulfillment<br>SsalddelMart | `Candidate` / `SnapshotProjection` | `AggregateStableId` | Prefab `False` / Scene `False` | `visual:work:warehouse-handling-unit` |
 
 ## 첫 독립 표본
 

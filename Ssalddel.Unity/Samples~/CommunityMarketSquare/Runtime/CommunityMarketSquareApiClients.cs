@@ -3,8 +3,9 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Ssalddel.Unity.Community;
+using Ssalddel.Unity.OperationalTransport;
+using Ssalddel.Unity.WorldProjection;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace Ssalddel.Unity.Samples.CommunityMarketSquare
 {
@@ -47,26 +48,26 @@ namespace Ssalddel.Unity.Samples.CommunityMarketSquare
 
     public sealed class OperationalCommunityMarketSquareApiClient : ICommunityMarketSquareApiClient
     {
-        private readonly CommunityMarketSquareApiOptions options;
-        public OperationalCommunityMarketSquareApiClient(CommunityMarketSquareApiOptions options) => this.options = options;
+        private readonly IOperationalWorldProjectionTransport transport;
+        public OperationalCommunityMarketSquareApiClient(CommunityMarketSquareApiOptions options)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            transport = new UnityWebRequestOperationalWorldProjectionTransport(
+                new OperationalWorldProjectionEndpoint(
+                    options.BaseUrl,
+                    Math.Max(1, options.TimeoutSeconds)));
+        }
 
         public async Task<CommunityMarketSquareSnapshotApiModel> GetPublicSnapshotAsync(CancellationToken cancellationToken = default)
         {
-            if (!Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out var baseUri))
-                throw new InvalidOperationException("CommunitySquareApiBaseUrlInvalid");
-            using (var request = UnityWebRequest.Get(new Uri(baseUri, CommunityMarketSquareApiRoutes.PublicSnapshot)))
-            using (cancellationToken.Register(request.Abort))
-            {
-                request.timeout = Math.Max(1, options.TimeoutSeconds);
-                request.SetRequestHeader("Accept", "application/json");
-                var operation = request.SendWebRequest();
-                while (!operation.isDone) { cancellationToken.ThrowIfCancellationRequested(); await Task.Yield(); }
-                cancellationToken.ThrowIfCancellationRequested();
-                if (request.result != UnityWebRequest.Result.Success)
-                    throw new InvalidOperationException("CommunitySquareApiRequestFailed:" + request.responseCode);
-                var wire = JsonUtility.FromJson<CommunityMarketSquareSnapshotWire>(request.downloadHandler.text);
-                return wire?.ToApiModel() ?? throw new InvalidOperationException("CommunitySquareJsonInvalid");
-            }
+            var json = await transport.GetAsync(
+                CommunityMarketSquareApiRoutes.PublicSnapshot,
+                false,
+                false,
+                cancellationToken);
+            var wire = JsonUtility.FromJson<CommunityMarketSquareSnapshotWire>(json);
+            return wire?.ToApiModel()
+                ?? throw new InvalidOperationException("CommunitySquareJsonInvalid");
         }
     }
 

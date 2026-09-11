@@ -4,16 +4,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ssalddel.Unity.Warehouse;
 using Ssalddel.Unity.Npcs;
+using Ssalddel.Unity.OperationalTransport;
+using Ssalddel.Unity.WorldProjection;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace Ssalddel.Unity.Samples.WarehouseWorld
 {
     public sealed class WarehouseWorldApiOptions { public string BaseUrl { get; set; } = string.Empty; public int TimeoutSeconds { get; set; } = 15; }
-    public sealed class WarehouseRuntimeSessionTokenProvider : MonoBehaviour
+    public sealed class WarehouseRuntimeSessionTokenProvider
+        : MonoBehaviour, IOperationalRuntimeAccessTokenProvider
     {
         private static string accessToken = string.Empty;
         public static void SetAccessToken(string token) => accessToken = token?.Trim() ?? string.Empty;
+        public string GetAccessToken() => accessToken;
         public string GetRequiredToken() => string.IsNullOrWhiteSpace(accessToken) ? throw new InvalidOperationException("WarehouseWorldAccessTokenMissing") : accessToken;
         private void OnDestroy() => accessToken = string.Empty;
     }
@@ -63,23 +66,24 @@ namespace Ssalddel.Unity.Samples.WarehouseWorld
 
     public sealed class OperationalWarehouseWorldApiClient : IWarehouseWorldApiClient
     {
-        private readonly WarehouseWorldApiOptions options; private readonly WarehouseRuntimeSessionTokenProvider tokenProvider;
-        public OperationalWarehouseWorldApiClient(WarehouseWorldApiOptions options, WarehouseRuntimeSessionTokenProvider tokenProvider) { this.options = options; this.tokenProvider = tokenProvider; }
+        private readonly IOperationalWorldProjectionTransport transport;
+        public OperationalWarehouseWorldApiClient(WarehouseWorldApiOptions options, WarehouseRuntimeSessionTokenProvider tokenProvider)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            if (tokenProvider == null) throw new ArgumentNullException(nameof(tokenProvider));
+            transport = new UnityWebRequestOperationalWorldProjectionTransport(
+                new OperationalWorldProjectionEndpoint(
+                    options.BaseUrl,
+                    Math.Max(1, options.TimeoutSeconds)),
+                tokenProvider);
+        }
         public async Task<WarehouseWorldSnapshotApiModel> GetAsync(long warehouseId, CancellationToken cancellationToken = default)
         {
-            if (!Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out var baseUri)) throw new InvalidOperationException("WarehouseWorldApiBaseUrlInvalid");
             var route = WarehouseWorldApiRoutes.AuthorizedSnapshot + "?warehouseId=" + warehouseId.ToString(CultureInfo.InvariantCulture);
-            using (var request = UnityWebRequest.Get(new Uri(baseUri, route)))
-            using (cancellationToken.Register(request.Abort))
-            {
-                request.timeout = Math.Max(1, options.TimeoutSeconds); request.SetRequestHeader("Accept", "application/json");
-                request.SetRequestHeader("Authorization", "Bearer " + tokenProvider.GetRequiredToken());
-                var operation = request.SendWebRequest(); while (!operation.isDone) { cancellationToken.ThrowIfCancellationRequested(); await Task.Yield(); }
-                cancellationToken.ThrowIfCancellationRequested();
-                if (request.result != UnityWebRequest.Result.Success) throw new InvalidOperationException("WarehouseWorldApiRequestFailed:" + request.responseCode);
-                var wire = JsonUtility.FromJson<WarehouseWorldSnapshotWire>(request.downloadHandler.text);
-                return wire?.ToApiModel() ?? throw new InvalidOperationException("WarehouseWorldJsonInvalid");
-            }
+            var json = await transport.GetAsync(route, false, true, cancellationToken);
+            var wire = JsonUtility.FromJson<WarehouseWorldSnapshotWire>(json);
+            return wire?.ToApiModel()
+                ?? throw new InvalidOperationException("WarehouseWorldJsonInvalid");
         }
     }
 

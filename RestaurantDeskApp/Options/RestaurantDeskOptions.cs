@@ -22,10 +22,11 @@ public sealed class RestaurantDeskOptions
 
     public Dictionary<string, int> 상품별기본조리분 { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
-    public string ServerBaseUrl { get; set; } = SsalddelApiEndpoint.LocalDevelopmentBaseAddress;
+    public string ServerBaseUrl { get; set; } =
+        SsalddelServerEndpoint.LocalDevelopmentBaseAddress;
 
     public Uri GetServerBaseAddress()
-        => SsalddelApiEndpoint.ResolveBaseAddress(
+        => SsalddelServerEndpoint.ResolveBaseAddress(
             ServerBaseUrl,
-            new Uri(SsalddelApiEndpoint.LocalDevelopmentBaseAddress));
+            new Uri(SsalddelServerEndpoint.LocalDevelopmentBaseAddress));
 }

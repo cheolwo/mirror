@@ -3,9 +3,10 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Ssalddel.Unity.Npcs;
+using Ssalddel.Unity.OperationalTransport;
 using Ssalddel.Unity.Perspectives;
+using Ssalddel.Unity.WorldProjection;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace Ssalddel.Unity.Samples.UrbanLogisticsCenter
 {
@@ -17,8 +18,8 @@ namespace Ssalddel.Unity.Samples.UrbanLogisticsCenter
     }
 
     public interface IRuntimeAccessTokenProvider
+        : IOperationalRuntimeAccessTokenProvider
     {
-        string GetAccessToken();
     }
 
     public sealed class OperationalWorldApiException : Exception
@@ -31,15 +32,19 @@ namespace Ssalddel.Unity.Samples.UrbanLogisticsCenter
 
     public sealed class UnityWebRequestWorldGetClient
     {
-        private readonly OperationalWorldApiOptions options;
-        private readonly IRuntimeAccessTokenProvider tokenProvider;
+        private readonly IOperationalWorldProjectionTransport transport;
 
         public UnityWebRequestWorldGetClient(
             OperationalWorldApiOptions options,
             IRuntimeAccessTokenProvider tokenProvider)
         {
-            this.options = options ?? throw new ArgumentNullException(nameof(options));
-            this.tokenProvider = tokenProvider ?? throw new ArgumentNullException(nameof(tokenProvider));
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            if (tokenProvider == null) throw new ArgumentNullException(nameof(tokenProvider));
+            transport = new UnityWebRequestOperationalWorldProjectionTransport(
+                new OperationalWorldProjectionEndpoint(
+                    options.BaseUrl,
+                    Math.Max(1, options.TimeoutSeconds)),
+                tokenProvider);
         }
 
         public async Task<string?> GetAsync(
@@ -47,52 +52,11 @@ namespace Ssalddel.Unity.Samples.UrbanLogisticsCenter
             bool allowNotFound,
             CancellationToken cancellationToken)
         {
-            if (!Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out var baseUri))
-            {
-                throw new OperationalWorldApiException("OperationalApiBaseUrlInvalid");
-            }
-
-            var token = tokenProvider.GetAccessToken();
-            if (string.IsNullOrWhiteSpace(token))
-            {
-                throw new OperationalWorldApiException("OperationalAccessTokenMissing");
-            }
-
-            var requestUri = new Uri(baseUri, relativeRoute.TrimStart('/'));
-            using (var request = UnityWebRequest.Get(requestUri))
-            using (cancellationToken.Register(request.Abort))
-            {
-                request.timeout = Math.Max(1, options.TimeoutSeconds);
-                request.SetRequestHeader("Accept", "application/json");
-                request.SetRequestHeader("Authorization", "Bearer " + token.Trim());
-
-                var operation = request.SendWebRequest();
-                while (!operation.isDone)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    await Task.Yield();
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
-                if (allowNotFound && request.responseCode == 404)
-                {
-                    return null;
-                }
-
-                if (request.result != UnityWebRequest.Result.Success)
-                {
-                    throw new OperationalWorldApiException(
-                        "OperationalApiRequestFailed:" + request.responseCode + ":" + relativeRoute);
-                }
-
-                var json = request.downloadHandler.text;
-                if (string.IsNullOrWhiteSpace(json))
-                {
-                    throw new OperationalWorldApiException("OperationalApiResponseEmpty:" + relativeRoute);
-                }
-
-                return json;
-            }
+            return await transport.GetAsync(
+                relativeRoute,
+                allowNotFound,
+                true,
+                cancellationToken);
         }
     }
 

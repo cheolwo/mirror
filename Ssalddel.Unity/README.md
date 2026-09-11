@@ -8,6 +8,8 @@
 - API model을 game model로 바꾸는 명시적 Mapper
 - stable ID, schema, 단위, provenance, 품목 mapping과 package hash 검증
 - `Live`, `Cached`, `Fixture`, `Invalid`, `Failed`를 구분하는 `DataManager`
+- 승인된 운영 World Projection만 GET으로 읽는 공통 `IOperationalWorldProjectionTransport`와 UnityWebRequest 구현
+- 화면 모듈별 `OperationalSnapshot`·`SimulationSession` 자료원 명시와 자동 fallback 금지
 - source별 `DataRevisionSet`, interpretation rule lineage와 presentation revision을 분리하는 공통 데이터 흐름 계약
 - 같은 scenario package와 Command로 같은 결과를 만드는 농업 simulation engine
 - 성장, 수분, 생산비, 수확과 일반판매·공동판매 비교
@@ -56,6 +58,7 @@ Runtime/
   Data/         catalog, provenance, validation, DataManager
   Simulation/   Command, Event, state와 결정적 계산
   WorldProjection/ page-to-world catalog, world snapshot과 stable-ID reconcile
+  OperationalTransport/ UnityEngine 기반 운영 서버 GET 전송 구현
   Evidence/     연구 근거, 제품 해석, 시각 번역과 한계
   Sensors/      센서 상태와 외부 장비 projection
   Interactions/ preview·확인·서버 Command·canonical 재조회 계약
@@ -96,13 +99,13 @@ Samples~/WarehouseWorld/
 
 `Perspectives`는 역할별 Scene을 만들지 않는다. 서버가 인증 session과 실제 역할 할당을 검증해 반환한 `RolePerspectiveApiModel`을 Unity snapshot으로 변환하고, Zone이 등록한 stable-ID 대상의 Role View socket만 갱신한다. World View는 그대로 유지되며 `AllowedInteractions`에 없는 행동을 클라이언트가 생성하지 않는다.
 
-첫 operational endpoint는 `GET api/v1/driver/world/zones/urban-logistics-center/perspective`다. 인증된 기사의 현재 배정 운송만 `Transporter` 관점으로 반환하며 주소·연락처·운임은 포함하지 않는다. 같은 기준의 `/npc-movement` endpoint가 운송 상태를 semantic 물류센터 route로 반환한다. Unity에는 Repository·UseCase, Zone Controller와 Role/NPC View socket까지 구현되어 있고 실제 `UnityWebRequest` adapter는 다음 단계다.
+첫 operational endpoint는 `GET api/v1/driver/world/zones/urban-logistics-center/perspective`다. 인증된 기사의 현재 배정 운송만 `Transporter` 관점으로 반환하며 주소·연락처·운임은 포함하지 않는다. 같은 기준의 `/npc-movement` endpoint가 운송 상태를 semantic 물류센터 route로 반환한다. Unity에는 Repository·UseCase, Zone Controller와 Role/NPC View socket이 있고, 각 샘플 API client는 공통 `UnityWebRequestOperationalWorldProjectionTransport`에 GET을 위임한다.
 
 NPC 이동은 서버의 업무 상태를 Unity 좌표로 직접 전달하지 않는다. `RouteCode`, `CurrentWaypointKey`, `DestinationWaypointKey`를 Zone layout의 Transform에 매핑한다. 운영 snapshot에는 `CanonicalTaskStableId`가 필수이고 simulation snapshot은 canonical task를 주장할 수 없다. NavMesh 도착은 animation만 실행하며 서버 업무 완료를 만들지 않는다.
 
 창고 화물 인계 endpoint는 `GET api/v1/driver/world/workflows/warehouse-handoff`다. 현재 기사 운송번호와 `입고요청.운송의뢰Id`가 연결된 경우에만 운송 NPC와 창고 입고작업자 NPC movement를 반환한다. `운송중`에는 거점 간 route, `하차지도착`에는 두 NPC의 입고 Dock 집결, `입고완료`에는 운송자 퇴장과 창고 작업자의 보관 구역 이동을 표현한다. 실제 하차와 입고 완료는 기존 server Command가 수행한다.
 
-`OperationalWorldApiClients`는 실제 API base URL과 runtime session token을 사용한다. token은 `RuntimeSessionAccessTokenProvider.SetAccessToken`으로 로그인 결과를 메모리에만 전달하며 Scene·Prefab·config에 serialize하지 않는다. 404는 선택적 NPC/인계 snapshot 없음으로 처리하고, 인증 오류·timeout·잘못된 JSON은 simulation fallback 없이 오류로 전달한다.
+운영 관찰 API client는 실제 API base URL과 runtime session token을 사용한다. token provider는 로그인 결과를 메모리에만 전달하며 Scene·Prefab·config에 serialize하지 않는다. 404는 명시적으로 선택 가능한 조회에서만 상태 사본 없음으로 처리하고, 인증 오류·timeout·잘못된 JSON은 Simulation fallback 없이 오류로 전달한다. `IOperationalWorldProjectionTransport`는 GET 외 메서드를 제공하지 않으며 운영 Command는 기존 Web·MAUI의 인증된 API 경계가 담당한다.
 
 Presentation sample은 VContainer 1.18.0을 composition root로 사용한다. Git dependency는 package 내 `package.json`이 아니라 실제 Unity project의 `Packages/manifest.json`에 추가한다.
 
@@ -121,4 +124,4 @@ dotnet test Ssalddel.Unity.Tests/Ssalddel.Unity.Tests.csproj
 
 golden fixture는 `Ssalddel.Unity.Tests/Fixtures/potato-basic-kr-001.v1.json`에 있다. 이 값은 KAMIS나 기상청의 실제 관측값이 아니라 실제 contract 형태를 검증하는 교육용 `Fixture`다.
 
-현재 저장소에는 실제 Unity project가 없다. `Samples~` 아래 항목은 local package에서 import하는 presentation sample이다. Urban Market, Traditional Market Hub, Urban Logistics Center, Residential Pickup, Farm, Public Data Hall, Community Market Square와 Warehouse World sample은 임시 Unity 6 project에서 script compile, primitive scene 생성과 scene reload 후 wiring 검사를 확인했다. 화물 인계 World router, View socket과 operational HTTP adapter도 Unity 6 script compile을 확인했다. Urban Logistics Center에는 기존 화물 인계 snapshot의 `InTransit` 상태를 물류센터→창고 TruckView 이동으로 투영하는 transport corridor가 포함된다. Warehouse W2는 같은 handoff를 `inbound-task` canonical relation으로 받아 Approach·Dock·Storage·VehicleExit의 차량·화물·NPC 점유로 표현한다. Urban Market은 기존 공개 상품 aggregate를 operational ApiModel·Mapper·Repository·UseCase로 연결하며 API 실패를 simulation으로 대체하지 않는다. Residential Pickup은 같은 공동수령 object를 서버가 승인한 주문자 또는 운송자 관점으로 표시하며 주소·연락처·사용자 ID·주문번호를 계약에서 제외한다. Farm은 소유자 필터된 운영 재배·센서 판정과 canonical 농장작업 기반 생산자 NPC를 표현한다. core headless test는 101/101 통과했고 Warehouse VContainer 조립 EditMode test는 2/2 통과했다. NavMesh bake·Animator Controller, 활성 운영 handoff의 Game View 확인과 PlayMode 검증은 수행 범위에서 제외했다.
+현재 저장소에는 실제 Unity project가 없다. `Samples~` 아래 항목은 local package에서 import하는 presentation sample이다. 과거 임시 Unity 6 project에서 확인한 샘플 조립 증거는 유지되지만, 이번 공통 전송 리팩토링은 .NET 계약·정적 샘플 검사까지만 검증했다. canonical `SimulationWorldShell` Scene·Controller 실체도 현행 체크아웃에 없으므로 실제 Shell 결속, Unity Editor import·script compile, Play Mode·Game View와 운영 서버 HTTP 실접속은 별도 검증이 필요하다. 운영 API 실패를 Simulation으로 대체하지 않는 경계는 공통 전송 계약과 회귀 시험으로 고정한다.

@@ -2,9 +2,10 @@ using System;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
+using Ssalddel.Unity.OperationalTransport;
 using Ssalddel.Unity.PublicData;
+using Ssalddel.Unity.WorldProjection;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace Ssalddel.Unity.Samples.PublicDataHall
 {
@@ -76,47 +77,31 @@ namespace Ssalddel.Unity.Samples.PublicDataHall
 
     public sealed class OperationalPublicWorldMapApiClient : IPublicWorldMapApiClient
     {
-        private readonly PublicDataHallApiOptions options;
+        private readonly IOperationalWorldProjectionTransport transport;
 
         public OperationalPublicWorldMapApiClient(PublicDataHallApiOptions options)
         {
-            this.options = options;
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            transport = new UnityWebRequestOperationalWorldProjectionTransport(
+                new OperationalWorldProjectionEndpoint(
+                    options.BaseUrl,
+                    Math.Max(1, options.TimeoutSeconds)));
         }
 
         public async Task<PublicWorldMapSnapshotApiModel> GetAsync(
             PublicWorldMapQuery query,
             CancellationToken cancellationToken = default)
         {
-            if (!Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out var baseUri))
-            {
-                throw new InvalidOperationException("PublicWorldMapApiBaseUrlInvalid");
-            }
-
             var route = PublicWorldMapApiRoutes.Observations
-                + "?dataset=" + UnityWebRequest.EscapeURL(query.DatasetCode);
-            using (var request = UnityWebRequest.Get(new Uri(baseUri, route)))
-            using (cancellationToken.Register(request.Abort))
-            {
-                request.timeout = Math.Max(1, options.TimeoutSeconds);
-                request.SetRequestHeader("Accept", "application/json");
-                var operation = request.SendWebRequest();
-                while (!operation.isDone)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    await Task.Yield();
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
-                if (request.result != UnityWebRequest.Result.Success)
-                {
-                    throw new InvalidOperationException(
-                        "PublicWorldMapApiRequestFailed:" + request.responseCode);
-                }
-
-                var wire = JsonUtility.FromJson<PublicWorldMapSnapshotWire>(request.downloadHandler.text);
-                return wire?.ToApiModel()
-                    ?? throw new InvalidOperationException("PublicWorldMapJsonInvalid");
-            }
+                + "?dataset=" + Uri.EscapeDataString(query.DatasetCode);
+            var json = await transport.GetAsync(
+                route,
+                false,
+                false,
+                cancellationToken);
+            var wire = JsonUtility.FromJson<PublicWorldMapSnapshotWire>(json);
+            return wire?.ToApiModel()
+                ?? throw new InvalidOperationException("PublicWorldMapJsonInvalid");
         }
     }
 

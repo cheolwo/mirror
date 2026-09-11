@@ -64,8 +64,11 @@ namespace FDriverApp
             builder.Services.AddSingleton<FDriverAppProfile>();
             builder.Services.AddSingleton<IClientSessionGuard, ClientSessionGuard>();
             builder.Services.AddSingleton<IFDriverAuthSession, FDriverAuthSession>();
-            builder.Services.AddSsalddelApiHttpClient(
-                SsalddelApiEndpoint.CreateDefaultBaseAddress(),
+            builder.Services.AddSsalddelOperationalApiHttpClient(
+                SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+                    builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
+                    builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey],
+                    SsalddelServerEndpoint.CreateDefaultBaseAddress()),
                 ServiceLifetime.Singleton,
                 TimeSpan.FromSeconds(20));
             builder.Services.AddSingleton<FDriverAuthApiService>();

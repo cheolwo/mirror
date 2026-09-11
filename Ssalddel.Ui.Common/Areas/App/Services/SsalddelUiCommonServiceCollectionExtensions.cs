@@ -44,9 +44,32 @@ public static class SsalddelUiCommonServiceCollectionExtensions
         Uri baseAddress,
         ServiceLifetime lifetime = ServiceLifetime.Scoped,
         TimeSpan? timeout = null)
-        => services.AddSsalddelApiHttpClient(_ => baseAddress, lifetime, timeout);
+        => services.AddSsalddelOperationalApiHttpClient(
+            _ => baseAddress,
+            lifetime,
+            timeout);
 
     public static IServiceCollection AddSsalddelApiHttpClient(
+        this IServiceCollection services,
+        Func<IServiceProvider, Uri> baseAddressFactory,
+        ServiceLifetime lifetime = ServiceLifetime.Scoped,
+        TimeSpan? timeout = null)
+        => services.AddSsalddelOperationalApiHttpClient(
+            baseAddressFactory,
+            lifetime,
+            timeout);
+
+    public static IServiceCollection AddSsalddelOperationalApiHttpClient(
+        this IServiceCollection services,
+        Uri baseAddress,
+        ServiceLifetime lifetime = ServiceLifetime.Scoped,
+        TimeSpan? timeout = null)
+        => services.AddSsalddelOperationalApiHttpClient(
+            _ => baseAddress,
+            lifetime,
+            timeout);
+
+    public static IServiceCollection AddSsalddelOperationalApiHttpClient(
         this IServiceCollection services,
         Func<IServiceProvider, Uri> baseAddressFactory,
         ServiceLifetime lifetime = ServiceLifetime.Scoped,
@@ -62,10 +85,34 @@ public static class SsalddelUiCommonServiceCollectionExtensions
             throw new ArgumentOutOfRangeException(nameof(timeout));
         }
 
-        services.TryAdd(new ServiceDescriptor(
-            typeof(HttpClient),
-            provider => CreateHttpClient(baseAddressFactory(provider), timeout),
-            lifetime));
+        var hasExistingBareHttpClient = services.Any(descriptor =>
+            descriptor.ServiceType == typeof(HttpClient));
+
+        services.AddHttpClient(
+            SsalddelHttpClientNames.OperationalApi,
+            (provider, client) => ConfigureHttpClient(
+                client,
+                baseAddressFactory(provider),
+                timeout));
+
+        // 기존 ViewModel과 역할별 API Client가 단계적으로 이름 있는 Client로
+        // 이관되는 동안 bare HttpClient는 운영 API만 가리키는 호환 조립으로 둔다.
+        if (!hasExistingBareHttpClient)
+        {
+            // AddHttpClient가 추가하는 이름 없는 기본 HttpClient를 제거하고,
+            // 기존 소비자가 운영 주소만 받도록 호환 등록을 명시한다.
+            services.RemoveAll<HttpClient>();
+            services.Add(new ServiceDescriptor(
+                typeof(HttpClient),
+                provider => provider
+                    .GetRequiredService<IHttpClientFactory>()
+                    .CreateClient(SsalddelHttpClientNames.OperationalApi),
+                lifetime));
+        }
+
+        services.TryAddScoped<
+            ISsalddelOperationalServerCapabilityClient,
+            SsalddelOperationalServerCapabilityClient>();
 
         return services;
     }
@@ -87,18 +134,17 @@ public static class SsalddelUiCommonServiceCollectionExtensions
         return services;
     }
 
-    private static HttpClient CreateHttpClient(Uri baseAddress, TimeSpan? timeout)
+    private static void ConfigureHttpClient(
+        HttpClient client,
+        Uri baseAddress,
+        TimeSpan? timeout)
     {
-        var client = new HttpClient
-        {
-            BaseAddress = SsalddelApiEndpoint.NormalizeBaseAddress(baseAddress)
-        };
+        client.BaseAddress =
+            SsalddelServerEndpoint.NormalizeBaseAddress(baseAddress);
 
         if (timeout is { } value)
         {
             client.Timeout = value;
         }
-
-        return client;
     }
 }

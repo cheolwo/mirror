@@ -690,7 +690,8 @@ public sealed class SsalddelUiCommonServiceCollectionExtensionsTests
         services.AddSingleton(tokenProvider);
         services.AddSingleton<IJSRuntime, TestJsRuntime>();
         services.AddSsalddelUiCommonAppServices<TestAccessTokenProvider>();
-        services.AddSsalddelApiHttpClient(new Uri("https://api.ssalddel.test/"));
+        services.AddSsalddelOperationalApiHttpClient(
+            new Uri("https://api.ssalddel.test/"));
 
         await using var provider = services.BuildServiceProvider();
         await using var scope = provider.CreateAsyncScope();
@@ -767,11 +768,11 @@ public sealed class SsalddelUiCommonServiceCollectionExtensionsTests
     }
 
     [Fact]
-    public void AddSsalddelApiHttpClient_NormalizesAddressAndPreservesOptions()
+    public void AddSsalddelOperationalApiHttpClient_NormalizesAddressAndPreservesOptions()
     {
         var services = new ServiceCollection();
 
-        services.AddSsalddelApiHttpClient(
+        services.AddSsalddelOperationalApiHttpClient(
             new Uri("https://api.ssalddel.test/v1"),
             ServiceLifetime.Singleton,
             TimeSpan.FromSeconds(20));
@@ -785,10 +786,16 @@ public sealed class SsalddelUiCommonServiceCollectionExtensionsTests
         var client = provider.GetRequiredService<HttpClient>();
         Assert.Equal(new Uri("https://api.ssalddel.test/v1/"), client.BaseAddress);
         Assert.Equal(TimeSpan.FromSeconds(20), client.Timeout);
+        var namedClient = provider.GetRequiredService<IHttpClientFactory>()
+            .CreateClient(SsalddelHttpClientNames.OperationalApi);
+        Assert.Equal(client.BaseAddress, namedClient.BaseAddress);
+        Assert.Equal(client.Timeout, namedClient.Timeout);
+        Assert.IsType<SsalddelOperationalServerCapabilityClient>(
+            provider.GetRequiredService<ISsalddelOperationalServerCapabilityClient>());
     }
 
     [Fact]
-    public void AddSsalddelApiHttpClient_PreservesExistingRegistration()
+    public void AddSsalddelOperationalApiHttpClient_PreservesExistingRegistration()
     {
         var existingClient = new HttpClient
         {
@@ -797,7 +804,8 @@ public sealed class SsalddelUiCommonServiceCollectionExtensionsTests
         var services = new ServiceCollection();
         services.AddSingleton(existingClient);
 
-        services.AddSsalddelApiHttpClient(new Uri("https://replacement.ssalddel.test/"));
+        services.AddSsalddelOperationalApiHttpClient(
+            new Uri("https://replacement.ssalddel.test/"));
 
         var descriptor = Assert.Single(
             services,
@@ -813,7 +821,7 @@ public sealed class SsalddelUiCommonServiceCollectionExtensionsTests
     [InlineData("http://localhost:5104/", "http://localhost:5104/")]
     public void ResolveBaseAddress_NormalizesValidAddress(string value, string expected)
     {
-        var result = SsalddelApiEndpoint.ResolveBaseAddress(value);
+        var result = SsalddelServerEndpoint.ResolveBaseAddress(value);
 
         Assert.Equal(new Uri(expected), result);
     }
@@ -822,7 +830,36 @@ public sealed class SsalddelUiCommonServiceCollectionExtensionsTests
     public void ResolveBaseAddress_RejectsNonHttpAddress()
     {
         Assert.Throws<ArgumentException>(
-            () => SsalddelApiEndpoint.ResolveBaseAddress("file:///tmp/ssalddel"));
+            () => SsalddelServerEndpoint.ResolveBaseAddress(
+                "file:///tmp/ssalddel"));
+    }
+
+    [Fact]
+    public void ResolveConfiguredBaseAddress_새운영주소가Legacy주소보다우선한다()
+    {
+        var result = SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+            "https://operational.ssalddel.test/",
+            "https://legacy.ssalddel.test/");
+
+        Assert.Equal(new Uri("https://operational.ssalddel.test/"), result);
+    }
+
+    [Fact]
+    public void ResolveBrowserBaseAddress_SameOrigin은현재Host의Origin으로제한한다()
+    {
+        var result = SsalddelServerEndpoint.ResolveBrowserBaseAddress(
+            "same-origin",
+            null,
+            new Uri("https://mirror.example/app/"));
+
+        Assert.Equal(new Uri("https://mirror.example/"), result);
+    }
+
+    [Fact]
+    public void Simulation주소누락은_운영주소로대체하지않는다()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            SsalddelSimulationApiEndpoint.ResolveRequiredBaseAddress(null));
     }
 
     private sealed class TestAccessTokenProvider : ISsalddelAccessTokenProvider

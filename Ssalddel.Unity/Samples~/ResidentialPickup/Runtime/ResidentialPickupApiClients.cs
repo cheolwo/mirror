@@ -2,9 +2,10 @@ using System;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
+using Ssalddel.Unity.OperationalTransport;
 using Ssalddel.Unity.ResidentialPickup;
+using Ssalddel.Unity.WorldProjection;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace Ssalddel.Unity.Samples.ResidentialPickup
 {
@@ -61,26 +62,25 @@ namespace Ssalddel.Unity.Samples.ResidentialPickup
     public sealed class OperationalResidentialPickupApiClient
         : IResidentialPickupPerspectiveApiClient
     {
-        private readonly ResidentialPickupApiOptions options;
-        private readonly ResidentialPickupSessionTokenProvider tokenProvider;
+        private readonly IOperationalWorldProjectionTransport transport;
 
         public OperationalResidentialPickupApiClient(
             ResidentialPickupApiOptions apiOptions,
             ResidentialPickupSessionTokenProvider sessionTokenProvider)
         {
-            options = apiOptions;
-            tokenProvider = sessionTokenProvider;
+            if (apiOptions == null) throw new ArgumentNullException(nameof(apiOptions));
+            if (sessionTokenProvider == null) throw new ArgumentNullException(nameof(sessionTokenProvider));
+            transport = new UnityWebRequestOperationalWorldProjectionTransport(
+                new OperationalWorldProjectionEndpoint(
+                    apiOptions.BaseUrl,
+                    Math.Max(1, apiOptions.TimeoutSeconds)),
+                sessionTokenProvider);
         }
 
         public async Task<ResidentialPickupPerspectiveApiModel> GetAsync(
             string requestedRoleCode,
             CancellationToken cancellationToken = default)
         {
-            if (!Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out var baseUri))
-            {
-                throw new InvalidOperationException("ResidentialPickupApiBaseUrlInvalid");
-            }
-
             var route = string.Equals(
                 requestedRoleCode,
                 ResidentialPickupRoleCodes.Orderer,
@@ -92,37 +92,14 @@ namespace Ssalddel.Unity.Samples.ResidentialPickup
                     StringComparison.Ordinal)
                     ? ResidentialPickupApiRoutes.Transporter
                     : throw new InvalidOperationException("ResidentialPickupRoleUnsupported");
-            var token = tokenProvider.GetAccessToken();
-            if (string.IsNullOrWhiteSpace(token))
-            {
-                throw new InvalidOperationException("ResidentialPickupAccessTokenMissing");
-            }
-
-            using (var request = UnityWebRequest.Get(new Uri(baseUri, route)))
-            using (cancellationToken.Register(request.Abort))
-            {
-                request.timeout = Math.Max(1, options.TimeoutSeconds);
-                request.SetRequestHeader("Accept", "application/json");
-                request.SetRequestHeader("Authorization", "Bearer " + token.Trim());
-                var operation = request.SendWebRequest();
-                while (!operation.isDone)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    await Task.Yield();
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
-                if (request.result != UnityWebRequest.Result.Success)
-                {
-                    throw new InvalidOperationException(
-                        "ResidentialPickupApiRequestFailed:" + request.responseCode);
-                }
-
-                var wire = JsonUtility.FromJson<ResidentialPickupPerspectiveWireModel>(
-                    request.downloadHandler.text);
-                return wire?.ToApiModel()
-                    ?? throw new InvalidOperationException("ResidentialPickupApiJsonInvalid");
-            }
+            var json = await transport.GetAsync(
+                route,
+                false,
+                true,
+                cancellationToken);
+            var wire = JsonUtility.FromJson<ResidentialPickupPerspectiveWireModel>(json);
+            return wire?.ToApiModel()
+                ?? throw new InvalidOperationException("ResidentialPickupApiJsonInvalid");
         }
     }
 

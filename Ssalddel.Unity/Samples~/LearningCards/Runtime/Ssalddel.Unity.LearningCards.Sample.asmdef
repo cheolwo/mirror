@@ -2,7 +2,8 @@
   "name": "Ssalddel.Unity.LearningCards.Sample",
   "rootNamespace": "Ssalddel.Unity.Samples.LearningCards",
   "references": [
-    "Ssalddel.Unity.Data"
+    "Ssalddel.Unity.Data",
+    "Ssalddel.Unity.OperationalTransport"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

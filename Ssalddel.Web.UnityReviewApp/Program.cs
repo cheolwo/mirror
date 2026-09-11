@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Ssalddel.Client.Infrastructure.Security;
+using Ssalddel.Ui.Common.Areas.App.Services;
 using Ssalddel.Web.UnityReviewApp;
 using Ssalddel.Web.UnityReviewApp.Services;
 
@@ -8,24 +9,12 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-const string apiBaseAddressKey = "SsalddelApiBaseAddress";
-var configuredBaseAddress = builder.Configuration[apiBaseAddressKey]
-                            ?? "https://localhost:7117/";
-Uri apiBaseAddress;
-if (string.Equals(configuredBaseAddress, "same-origin", StringComparison.OrdinalIgnoreCase))
-{
-    var applicationBaseAddress = new Uri(builder.HostEnvironment.BaseAddress, UriKind.Absolute);
-    apiBaseAddress = new Uri(applicationBaseAddress.GetLeftPart(UriPartial.Authority) + "/");
-}
-else if (!Uri.TryCreate(configuredBaseAddress, UriKind.Absolute, out apiBaseAddress!)
-         || !(string.Equals(apiBaseAddress.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
-              || string.Equals(apiBaseAddress.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)))
-{
-    throw new InvalidOperationException(
-        $"{apiBaseAddressKey}는 'same-origin' 또는 절대 HTTP(S) 주소여야 합니다.");
-}
+var apiBaseAddress = SsalddelServerEndpoint.ResolveBrowserBaseAddress(
+    builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
+    builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey],
+    new Uri(builder.HostEnvironment.BaseAddress, UriKind.Absolute));
 
-builder.Services.AddScoped(_ => new HttpClient { BaseAddress = apiBaseAddress });
+builder.Services.AddSsalddelOperationalApiHttpClient(apiBaseAddress);
 builder.Services.AddSingleton<IClientSessionGuard, ClientSessionGuard>();
 builder.Services.AddScoped<UnityReviewAuthSessionService>();
 builder.Services.AddScoped<Synty공간조립오프라인검토Store>();

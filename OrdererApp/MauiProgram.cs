@@ -5,7 +5,6 @@ using Ssalddel.Ui.Common.Areas.App.ViewModels;
 using MudBlazor.Services;
 using OrdererApp.Services;
 using OrdererApp.ViewModels;
-using Ssalddel.Client.Infrastructure.Simulation;
 
 namespace OrdererApp;
 
@@ -32,12 +31,12 @@ public static class MauiProgram
         builder.Services.AddTransient<주문자재료후보PageViewModel>();
         builder.Services.AddTransient<주문자의향등록PageViewModel>();
         builder.Services.AddTransient<주문자Api기능모음ViewModel>();
-        builder.Services.AddSsalddelApiHttpClient(
-            SsalddelApiEndpoint.ResolveBaseAddress(
-                builder.Configuration[SsalddelApiEndpoint.ConfigurationKey],
-                new Uri(SsalddelApiEndpoint.LocalDevelopmentBaseAddress)),
+        builder.Services.AddSsalddelOperationalApiHttpClient(
+            SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+                builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
+                builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey],
+                new Uri(SsalddelServerEndpoint.LocalDevelopmentBaseAddress)),
             ServiceLifetime.Singleton);
-        builder.Services.AddRemoteBusinessWorkflowRuntime();
         builder.Services.AddScoped<IGroupPurchaseShipmentTrackingService, HttpGroupPurchaseShipmentTrackingService>();
 
 #if DEBUG

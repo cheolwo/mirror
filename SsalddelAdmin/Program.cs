@@ -25,23 +25,25 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddMudServices();
+var operationalApiBaseAddress =
+    SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+        builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
+        builder.Configuration[관리자ApiOptions.SectionName + ":BaseUrl"],
+        SsalddelServerEndpoint.CreateDefaultBaseAddress());
+var useMemoryData = builder.Configuration.GetValue("AdminData:UseMemory", false);
 builder.Services.Configure<관리자ApiOptions>(builder.Configuration.GetSection(관리자ApiOptions.SectionName));
+builder.Services.PostConfigure<관리자ApiOptions>(options =>
+    options.BaseUrl = operationalApiBaseAddress.AbsoluteUri);
 builder.Services.AddScoped<ITransportRequestLedgerObserver, TransportRequestLedgerObserver>();
 builder.Services.AddSsalddelUiCommonAppServices<관리자인증세션Service>();
 builder.Services.AddTransient<관리자Controller기능모음ViewModel>();
 builder.Services.AddTransient<관리자전체Api기능모음ViewModel>();
 builder.Services.AddScoped<I같이수입준비관리Client, 같이수입준비관리Client>();
 builder.Services.AddTransient<같이수입준비관리ViewModel>();
-builder.Services.AddScoped(sp =>
-{
-    var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<관리자ApiOptions>>().Value;
-    var useMemory = sp.GetRequiredService<IConfiguration>().GetValue("AdminData:UseMemory", false);
-    return new HttpClient
-    {
-        BaseAddress = new Uri(options.BaseUrl),
-        Timeout = useMemory ? TimeSpan.FromSeconds(2) : TimeSpan.FromSeconds(100)
-    };
-});
+builder.Services.AddSsalddelOperationalApiHttpClient(
+    operationalApiBaseAddress,
+    ServiceLifetime.Scoped,
+    useMemoryData ? TimeSpan.FromSeconds(2) : TimeSpan.FromSeconds(100));
 builder.Services.AddScoped<관리자인증세션Service>();
 builder.Services.AddHttpClient<공간자료CatalogAdminService>((sp, client) =>
 {
@@ -56,20 +58,17 @@ builder.Services.AddHttpClient<ViewPolicyService>((sp, client) =>
 builder.Services.AddScoped<ActivityLogService>();
 builder.Services.AddHttpClient<PlatformCommunityService>((sp, client) =>
     {
-        var configuration = sp.GetRequiredService<IConfiguration>();
-        var baseUrl = configuration["AdminApi:BaseUrl"] ?? "https://localhost:7117/";
-        client.BaseAddress = new Uri(baseUrl);
-        if (configuration.GetValue("AdminData:UseMemory", false))
+        client.BaseAddress = operationalApiBaseAddress;
+        if (useMemoryData)
         {
             client.Timeout = TimeSpan.FromSeconds(2);
         }
     })
     .ConfigurePrimaryHttpMessageHandler(sp =>
     {
-        var useMemory = sp.GetRequiredService<IConfiguration>().GetValue("AdminData:UseMemory", false);
         return new SocketsHttpHandler
         {
-            ConnectTimeout = useMemory ? TimeSpan.FromMilliseconds(500) : TimeSpan.FromSeconds(10)
+            ConnectTimeout = useMemoryData ? TimeSpan.FromMilliseconds(500) : TimeSpan.FromSeconds(10)
         };
     });
 builder.Services.AddHttpClient<CommunityManagementService>((sp, client) =>

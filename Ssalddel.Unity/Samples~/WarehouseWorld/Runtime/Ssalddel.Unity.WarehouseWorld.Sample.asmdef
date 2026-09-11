@@ -1,7 +1,7 @@
 {
   "name": "Ssalddel.Unity.WarehouseWorld.Sample",
   "rootNamespace": "Ssalddel.Unity.Samples.WarehouseWorld",
-  "references": ["Ssalddel.Unity.Data", "VContainer", "VContainer.Unity"],
+  "references": ["Ssalddel.Unity.Data", "Ssalddel.Unity.OperationalTransport", "VContainer", "VContainer.Unity"],
   "includePlatforms": [], "excludePlatforms": [], "allowUnsafeCode": false,
   "overrideReferences": false, "precompiledReferences": [], "autoReferenced": true,
   "defineConstraints": [], "versionDefines": [], "noEngineReferences": false
