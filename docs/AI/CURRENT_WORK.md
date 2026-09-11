@@ -1,11 +1,60 @@
 # Mirror(거울) Current Work
 
+## 창고 출고 완료 → 화물운송 OS 인계 보완 (2026-09-11)
+
+- 기존 `출고운송인계완료UseCase`가 출고 완료와 이미 생성된 화물 운송 의뢰를 `WarehouseCommerceFulfillmentOS → DomesticCargoTransportOS` 인계 원장에 결속하고, 도착 OS의 명시적 수락까지 같은 업무 흐름에서 기록하도록 보완했다. 새 운송 의뢰나 배차를 만들지 않으며 결정적 요청 ID로 재시도를 멱등 처리한다.
+- 운영 지역 장면 조회가 음식 배달 완료·창고 작업·화물 완료 상태 사본을 한 응답으로 조합하되 실제 주문·운송·기사·화주 식별자와 위치 좌표를 노출하지 않는 회귀 시험을 추가했다. 음식 완료 상태 사본의 MySQL 재시작·만료 시험은 존재하지 않는 탐색 속성 대신 실제 외래 키를 조회하도록 바로잡았다.
+- 음식 완료 투영·창고 출고 인계·지역 장면 조회 집중 시험 9/9가 통과했다. 실제 MySQL·운영 서버·Outbox 소비·Unity Editor/Play Mode/Game View는 실행하지 않았다. 관련 코드는 로컬 커밋으로 저장했으며 원격 push는 하지 않았다.
+
+## FoodDeliveryOS 정상 완료 World 상태 사본 수직 조각 (2026-09-11)
+
+- [음식 배달 정상 완료 상태 사본 r1](Planning/시스템/PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001/food-delivery-completed-world-projection.r1.md)에 따라 주문자 `수령확인` 저장과 같은 DB 저장 단위에서 기존 Outbox에 발행 요청을 남긴다. 비동기 작업은 `주문대기 → 조리중 → 픽업대기 → 기사배정 → 픽업완료 → 전달완료 → 수령확인` 순서와 확정 기사를 다시 검증하며, 한 항목 실패가 다른 상태 사본 처리를 막지 않고 최대 5회 재시도한다.
+- 발행 상태 사본은 실제 주문번호·사용자·음식점·기사 식별자·주소·GPS를 제외하고 사본별 합성 역할 ID와 단계별 경과 초만 보존한다. 면목동·중화동 법정동명이 명시된 주소만 기존 지역 고유 식별자로 분류하고 나머지는 미분류로 남긴다. 한 시간 뒤 조회에서 제외·정리하며 계약은 로컬 저장과 재생을 금지한다.
+- 인증된 지역 장면용 `GET api/v1/food-delivery/world/areas/{areaStableId}/completed-lifecycles` 조회와 30초 갱신 Unity 공유 계약을 추가했다. `20260911093054_AddFoodDeliveryCompletedWorldProjection` migration을 만들고 EF 모델 변경 누락 없음까지 확인했으나 실제 DB에는 적용하지 않았다.
+- 서버 집중 시험 11/11, Unity 계약 시험 2/2와 서버 build 오류0, EF 모델 변경 누락 없음, 공백·Simulation/Unity 코드 지도 정합성을 확인했다. E 책임 지도는 이번 Unity 계약 시험을 E3로 반영해 현행화했으며 범위 Fast는 이번 변경이 아닌 기존 미분류 8건의 strict 관문에서 중단됐다(`artifacts/local/validation/20260911-183358/evidence-map-check.log`). 실제 서버·MySQL·Quartz·인증 HTTP 연결, Unity 프로젝트 import·Editor·Play Mode·Game View는 실행하지 않았고 Scene·Prefab·모바일·Web 화면은 변경하지 않았다. 관련 코드는 로컬 커밋으로 저장했으며 원격 push는 하지 않았다.
+
+## 단일 Ssalddel 서버로 Hosted Simulation 통합 (2026-09-11)
+
+- [D-557](DECISIONS.md#d-557-ssalddel-하나가-운영-api와-hosted-simulation-api를-함께-호스팅한다)에 따라 장기 실행 호스트를 `Ssalddel` 하나로 통합했다. 기존 `/api/simulation/v1/*`와 Simulation SignalR Hub 계약은 유지하고, 별도 실행 프로젝트 `Ssalddel.Simulation.Server`와 전용 Compose 서비스는 제거했다. Controller·Hub·조립은 비실행 `Ssalddel.Simulation.Hosting` 모듈로 옮겼고 migration·공간 파생 명령은 `eng/Ssalddel.Simulation.Tools` 단발성 CLI로 분리했다.
+- Web·MAUI·Hosted Unity의 운영 API와 원격 Simulation 논리 Client는 모두 `SsalddelEndpoints:ServerBaseAddress`와 주 서버 로그인 JWT를 사용한다. 논리 Client·계약·오류 경계는 분리하며 운영 실패·Simulation 실패·Local Runtime 사이 자동 fallback은 없다.
+- 물리 호스트만 통합했다. 운영 주문·계약·결제·재고와 Simulation Session·WorldTick·save/replay의 권위는 계속 분리하고 `SimulationSession`·`SimulationWorldDerived` DB도 별도 유지한다. 개인 Simulation 세션은 로그인 주체와 세션 고유 식별자를 새 접근 원장에 결속하며 다른 사용자의 세션은 404로 숨긴다. 정확한 `Testing` 환경의 명시적 계약 시험 우회 외에는 미등록 세션 선점이 허용되지 않는다.
+- `20260911085933_SimulationSession접근원장추가` migration을 만들고 EF 모델 차이 없음까지 확인했으나 실제 DB에는 적용하지 않았다. 통합 Compose overlay 구문, Simulation 솔루션과 `Ssalddel.v3.5.slnx` build, 유지보수 CLI, 변경 routing을 확인했고 Simulation 전체 1,900/1,900, 서버 통합 경계·공통 UI 40/40, 원격 업무 흐름 Runtime 16/16 시험이 통과했다. 3.5 build는 오류 0, 기존 DriverApp AndroidX·nullable·xUnit 분석 경고 63개다. E 책임 지도를 재생성했으며 이번에 추가한 시험 호스트는 E3 계약 회귀로 분류되어 기존 미분류 8건만 남는다. 범위 Fast는 공백 검사와 Simulation·Unity 코드 지도를 통과한 뒤 이 기존 8건의 strict 관문에서 중단됐다(`artifacts/local/validation/20260911-182605/evidence-map-check.log`).
+- 실제 Ssalddel 서버·MySQL·MongoDB·Redis 연결이나 컨테이너 기동은 하지 않았다. Unity 프로젝트 import·Editor 컴파일·Play Mode·Game View도 실행하지 않았고 Scene·Prefab은 변경하지 않았다. 관련 코드는 로컬 커밋으로 저장했으며 원격 push는 하지 않았다.
+
+## 운영 서버 클라이언트 경계 일원화 (2026-09-11)
+
+- [운영 기능 Unity 이관 r6](Planning/시스템/PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001/README.md)에 따라 Web·MAUI 1차 앱 조립을 `SsalddelEndpoints:ServerBaseAddress`와 `AddSsalddelOperationalApiHttpClient`로 통일했다. 기존 bare `HttpClient` 소비자는 같은 운영 주소의 호환 등록으로 유지하고, 기능·판본 확인용 `GET api/v1/version-feature-flags` route와 읽기 전용 capability client를 공통화했다. 운영 앱 시작 코드에서 Simulation 업무 흐름 Runtime의 암묵적 등록은 제거했다.
+- 원격 Simulation은 `SsalddelEndpoints:ServerBaseAddress`, 이름 있는 `Ssalddel.Simulation.Api`, `AddRemoteSimulationBusinessWorkflowRuntime`를 명시적으로 사용한다. 운영용 일반 `HttpClient`를 Simulation adapter가 소비하지 못하게 조립 관문을 추가했고 운영·Simulation·Local 사이 자동 fallback은 허용하지 않는다.
+- Unity는 `IOperationalWorldProjectionTransport` GET 전용 계약과 별도 UnityEngine 전송 assembly를 추가하고 CommunityMarketSquare·Farm·LearningCards·PublicDataHall·ResidentialPickup·UrbanLogisticsCenter·UrbanMarket·WarehouseWorld 샘플의 중복 `UnityWebRequest`를 공통 구현으로 모았다. 자료원 선택 계약은 `OperationalSnapshot`과 `SimulationSession`을 명시적으로 구분하며 자동 fallback과 운영 Command 메서드를 제공하지 않는다.
+- 집중 회귀는 운영 클라이언트 구성 44/44, Simulation 조립 15/15, Unity 운영 전송 계약·샘플 중앙화 9/9를 통과했다. 서버, WebApp, UnityReviewApp, Admin, Orderer Windows, RestaurantDesk Windows, HumanResourcesManager Windows와 6개 Android 앱 빌드는 오류0이다. `DriverApp` Android에는 기존 AndroidX 제약 경고 27개, 서버에는 기존 nullable 경고 2개와 병렬 검증 중 파일 점유 재시도 경고가 남았다.
+- E 책임 코드는 이번 신규 전송 회귀 시험을 E3로 분류하고 생성 지도를 현행화했다. 범위 Fast는 공백 검사와 Simulation·Unity 코드 지도를 통과한 뒤 이번 경계 작업이 아닌 기존 미분류 8건의 strict 관문에서 중단됐다(`artifacts/local/validation/20260911-171439/evidence-map-check.log`).
+- 현행 체크아웃에는 canonical 이름 외에 `SimulationWorldShell` Scene·Controller 실체가 없어 새 Scene을 만들지 않고 실제 Shell 결속을 보류했다. 실제 운영 서버 HTTP·인증·DB 연결, Unity 프로젝트 import·Editor 컴파일·Play Mode·Game View는 실행하지 않았다. 관련 코드는 로컬 커밋으로 저장했으며 원격 push는 하지 않았다.
+
+## 운영 역할 기반 Unity 객체 원형 대장 구현 (2026-09-11)
+
+- [운영 기능 Unity 이관 r5](Planning/시스템/PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001/README.md)에 서버 `SsalddelActor` 17개 전부와 시설 3개·차량 2개·업무 객체 3개를 합친 객체 원형 25개를 결속했다. 각 원형은 소유 OS·업무·표현 상태·비식별 ID 정책·`VisualKey`와 `Candidate`/`NoUnityRepresentation`을 명시한다. 플랫폼 운영자·고용 주체·관세사·해외 판매자/배송대행지는 명시적으로 생성 제외다.
+- 정책 원본과 자동 생성 JSON/Markdown 대장을 v3로 확장하고 `RoleObject` 조회를 추가했다. 서버 역할 전수 대응, 중복 ID, 알려지지 않은 OS·관찰 프로필, 운영 권위·개인정보 유입, 자산 경로 직접 결속을 회귀 검사한다.
+- 공통 Simulation 계약은 JSON 구조만 소유하고 Unity 정책은 표현 준비와 실제 Scene 생성 허용을 분리한다. 실제 생성은 `prefabReady`와 `sceneReady`가 모두 필요하지만 현재 모든 원형은 둘 다 `false`다. 따라서 이번 범위는 문서·계약·정적 관문이며 실제 Prefab·Scene·Play Mode·Game View나 운영 서버 연결을 수행하지 않았다.
+- 검증은 이관 대장 회귀 50/50, 서버 역할 전수·개인정보 경계 3/3, Unity 생성 관문 4/4와 생성기 build 오류0을 통과했다. 생성 대장 Check와 `RoleObject` OS 조회도 통과했으며 코드 지도·E 책임 지도를 재생성했다. 범위 Fast·Task는 공백 검사와 Simulation·Unity 코드 지도까지 통과한 뒤 이번 변경이 아닌 기존 E 책임 미분류 8건의 strict 관문에서 중단됐다(`artifacts/local/validation/20260911-155647/evidence-map-check.log`, `artifacts/local/validation/20260911-155701/evidence-map-check.log`). 공간 대장 선언 수와 실제 H2/H3/H4 수 차이 경고도 기존대로 남아 있다.
+
+## 화물운송 OS·음식배달 OS 백엔드 기반 구현 (2026-09-11)
+
+- [화물운송 OS와 음식배달 OS r5](Planning/공통/PLAN-OPERATIONS-LOGISTICS-OS/README.md)에 따라 `DomesticCargoTransportOS`와 `FoodDeliveryOS`의 순서 있는 전 생명주기 대장을 계약 계층에 추가했다. 버전 업무 조회는 이 단계와 OS별 Engine Catalog 항목·입출력/정책 판본·역할·활성 상태를 함께 반환한다.
+- 배차 후보 선택은 공통 Engine family의 모든 구현을 섞지 않고 `배차업무유형 → 소유 OS → 그 OS의 Active Primary` 순서로 해석한다. 화물은 `CargoYongdalDispatchEngine`, 음식은 `FoodDeliveryDispatchEngine`만 선택하며 승인된 fallback·shadow 항목은 아직 등록하지 않았다. 기존 출고·피킹·공동구매 집단화 엔진도 해당 OS Catalog에 명시적으로 결속했고, 구현이 없는 논리 엔진은 `Declared`로 남긴다. 화물 엔진의 직접 DB 조회를 제거하고 후보 선정 Application Service가 읽은 최소 운송 방식만 엔진 입력 맥락으로 넘긴다.
+- 두 OS 사이 인계 계약, MySQL 원장·EF 구성, Coordinator와 Outbox를 추가했다. 도착 OS만 `수락·거절·보류`할 수 있고 수락 전·거절·보류·만료에는 출발 OS가 책임을 유지한다. 생성/결정 요청 ID, 업무 revision, 동시성 토큰, 고유 인덱스로 순차·경쟁 재시도를 멱등 처리하며 Outbox에는 최소 결과만 기록한다.
+- `20260911062517_AddOperatingSystemHandoffLedger` 마이그레이션을 생성하고 EF 모델 차이 없음까지 확인했으나 실제 DB에는 적용하지 않았다. 집중 회귀 37/37 통과, 서버 build 오류0·기존 nullable 경고2다. 범위 Fast·Task는 공백 검사와 Simulation·Unity 코드 지도를 통과한 뒤 이번 범위 밖의 기존 E 책임 미분류 8건에서 중단됐다(`artifacts/local/validation/20260911-153333/evidence-map-check.log`, `artifacts/local/validation/20260911-153358/evidence-map-check.log`). 창고 출고 완료→기존 화물 의뢰 인계 생성·수락은 후속 수직 조각에서 연결했다. 마트·음식 주문 등 나머지 ProcessManager 연결, Outbox 발송 worker, 승인된 fallback, 운영 API·모바일·Web·Unity 표현과 운영 활성화는 후속이다. 실제 서버·DB·Redis·Unity 실행은 하지 않았고 관련 코드는 로컬 커밋으로 저장했으며 원격 push는 하지 않았다.
+
+## 공통 코어와 운영·Simulation·Unity·모바일·Web 경계 확정 (2026-09-11)
+
+- [운영 기능 Unity 이관 r4](Planning/시스템/PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001/README.md)에서 운영 workflow와 Simulation workflow 인터페이스를 분리하고, 상태 코드·값 객체·안정 ID·revision 의미·순수 판정 규칙만 공통 코어에서 공유하기로 확정했다. Web·모바일은 운영 API와 Client Adapter, Unity는 Simulation 계약 또는 승인된 읽기 전용 운영 상태 사본을 사용하며 UI·통신·영속·UnityEngine 의존성을 공통 코어에 넣지 않는다.
+- 정식 Simulation facade를 새 `Ssalddel.Simulation.BusinessWorkflow` assembly·namespace와 Unity package로 분리하고 Simulation Application·Infrastructure·Client Infrastructure·Unity 데이터 코어의 생산 참조를 전환했다. 기존 `Ssalddel.BusinessWorkflow`는 기존 namespace·Unity package 소비자를 위한 상속·위임 호환 facade로 남기며 정식 assembly는 이를 역참조하지 않는다. `Ssalddel.Ui.Common`의 API Client 혼재는 후속 분리 감사 대상으로 남겼다. 정식·호환 project 단독 build 오류0, 계약·조립 집중 시험 13/13, Simulation 전체 1,896/1,896, Unity .NET 전체 746/746, `Ssalddel.v3.5.slnx` 전체 build 오류0(기존 경고61)을 확인했다. 범위 Fast는 코드 지도와 공백 검사를 통과한 뒤 기존 E 책임 미분류 8건에서 중단됐으며 로그는 `artifacts/local/validation/20260911-144618/evidence-map-check.log`다. 실제 Unity 프로젝트 import·Editor 컴파일·Play Mode·Game View와 운영 서버·DB·Redis 연결은 수행하지 않았다.
+
 ## 운영 배차 공통 코어 백엔드 5차 중단·회복 및 화물 연속배차 기반 (2026-09-11)
 
-- 후속 화물 문답을 [운영 배차 공통 코어 r33](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/README.md)에 반영했다. 플랫폼은 기사 휴식·주유·식사 사유를 수집하거나 추측하지 않고 서버 내부 `운송 약속 그래프`를 주기적으로 순회한다. 그래프 판정과 경로 안내는 화주에게 공개하지 않으며, 화주에게는 실제 업무 결과가 달라졌을 때만 최소 결과를 알리고 이후 정상 범위로 회복되면 같은 상태 revision에 한 번만 회복 결과를 알린다. 이는 Unity Graph Map 변경이 아니다.
+- 후속 화물 문답을 [운영 배차 공통 코어 r35](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/README.md)에 반영했다. 플랫폼은 기사 휴식·주유·식사 사유를 수집하거나 추측하지 않고 서버 내부 `운송 약속 그래프`를 주기적으로 순회한다. 다음 콜은 도착 임박 2분·일반 3분·이동 중 5분의 임시 배타 예약으로 유지하되 현재 운송 지연으로 약속 이행이 불가능하면 남은 시간과 관계없이 수락 전 예약만 조기 해제한다. 이 해제는 기사 지표에 넣지 않고 이미 수락한 운송에는 적용하지 않는다. 조기 해제 효과는 아직 구현하지 않았다. 그래프 판정과 경로 안내는 화주에게 공개하지 않으며, 화주에게는 실제 업무 결과가 달라졌을 때만 최소 결과를 알리고 이후 정상 범위로 회복되면 같은 상태 revision에 한 번만 회복 결과를 알린다. 이는 Unity Graph Map 변경이 아니다.
 - 화물 연속 배차는 기본 비활성·Shadow 경계에서 계약, 기사 의사 상태, 다음 콜 단일 보유 예약, 수락 reservation/revision 검증, 운송 시간 약속, 현재 위치 기반 위험 조회, Memory/Redis 재구성 투영과 조회 API까지 백엔드 기반을 정리했다. 한 기사당 활성 예약은 nullable 고유 키로 1건만 허용하고, 보유 만료는 기존 추천 만료를 넘지 않는다. 자동 추천·최소지급 정책은 명시 설정 전 켜지지 않는다.
 - 기사 수락 뒤 핵심 운송 조건 변경은 기사 재동의를 필수로 하고, 재동의 거절을 기사 불이익에 넣지 않으며 이미 발생한 이동·대기는 보전 대상으로 분리하는 원칙을 확정했다. 다만 조건 변경 요청·재동의·보전 원장은 아직 실제 흐름이 없어 선행 빈 테이블로 만들지 않았고 후속 수직 구현으로 남겼다.
-- [운영 배차 공통 코어 r33](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/README.md)은 특정 지역·Unity 장면과 독립된 정본이다. 이번 묶음은 `상품 × 시간대` 조리 설정과 주문별 조리 결정, 기사 배달 시도, 가게 도착·현장 대기, 픽업 전후 중단·재조리·재배차, 운영자 책임 검토를 서버·계약·MySQL 원장에 결속했다.
+- [운영 배차 공통 코어 r35](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/README.md)은 특정 지역·Unity 장면과 독립된 정본이다. 이번 묶음은 `상품 × 시간대` 조리 설정과 주문별 조리 결정, 기사 배달 시도, 가게 도착·현장 대기, 픽업 전후 중단·재조리·재배차, 운영자 책임 검토를 서버·계약·MySQL 원장에 결속했다.
 - 조리 참고값은 최근 28일 같은 음식점·해당 시간 구간의 픽업 준비 완료 표본이 3건 이상이면 산술평균, 부족하면 음식점의 현행 설정, 둘 다 없으면 20분이다. 음식점 명시 선택값은 참고값보다 우선하며 참고·선택·적용값과 결정 출처를 주문에 보존한다. 기사 배정 뒤 조리시간을 바꿔도 기존 배정을 취소하지 않는다.
 - 기사 수락마다 `음식배달시도` revision 원장을 만든다. `restaurant-arrival`은 서버 수신 시각을 권위로 기록하고 위치는 차단하지 않는 감사 자료로만 남긴다. 픽업 때 현장 대기 초를 계산하며 조리 지연 재배차 기사는 수락 시각+10분과 최신 예정 시각 중 늦은 값을 표시 기준으로 받는다.
 - 중단은 기사 신규 배차 ON/OFF를 바꾸지 않는다. 픽업 전에는 주문을 조리중/픽업대기로 되살리고 같은 영속 배차 원장을 즉시 재추천하며, 픽업 후에는 모든 중단 사유에서 재조리 ID와 새 예정 시각을 만든 뒤 재추천한다. 사고·배터리 부족·배달 수단 고장·위험 기상·하루 첫 개인 긴급은 보호, 조리 지연은 음식점 책임, 나머지는 미확정으로 시작한다.
@@ -36,7 +85,7 @@
 
 ## 업무 흐름 Runtime의 웹·모바일·Unity 공통 조립 (2026-09-10)
 
-- [기준 문서](../Architecture/업무흐름Runtime.md)와 [구현·검증 보고](../Reports/업무흐름Runtime-공통조립-2026-09-10.md): `Ssalddel.BusinessWorkflow` 공통 프로젝트와 `IBusinessWorkflowRuntime` facade로 주문·음식점·배차·배송·창고 포트를 조립했다. 역할별 포트는 같은 하위 원장을 사용하며 상태를 복제하지 않는다.
+- [기준 문서](../Architecture/업무흐름Runtime.md)와 [구현·검증 보고](../Reports/업무흐름Runtime-공통조립-2026-09-10.md): 최초에는 `Ssalddel.BusinessWorkflow`로 주문·음식점·배차·배송·창고 포트를 조립했고, 현재 정식 책임은 `Ssalddel.Simulation.BusinessWorkflow`로 이전했다. 역할별 포트는 같은 하위 Simulation 원장을 사용하며 상태를 복제하지 않고 기존 assembly는 호환 facade로 유지한다.
 - 실행 API와 파일 이름은 `BusinessWorkflow`, `WorkflowRule`, `BusinessObjectInteraction`으로 정리했다. 오행·괘상은 선택적 `WorkflowClassificationMetadata`로만 보존하며 `IsExecutionAuthority=false`이고 실행 판정에 사용하지 않는다.
 - 웹·모바일은 명시적 `RemoteHost`, Unity Solo는 기존 `LocalSimulationRuntime`을 공유하는 `LocalProcess` 조립을 사용한다. 실패 시 실행 위치 자동 전환은 없다.
 - 공통 Runtime 집중 시험 8/8, 규칙·객체 결속 집중 시험 14/14, `Ssalddel.v3.5.slnx`와 `Ssalddel.Unity.slnx`, 공공데이터 importer build 오류 0을 확인했다. 범위 Fast에서 이번 신규 타입의 E 책임 누락은 보완됐고, 병행 작업의 기존 미분류 타입 8개가 남아 전체 Fast는 미통과다. Unity package와 소스 연결은 반영했지만 Editor import·Play Mode·Game View·실제 서버 연결은 미검증이다.
