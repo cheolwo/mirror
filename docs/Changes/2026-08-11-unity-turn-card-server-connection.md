@@ -2,7 +2,7 @@
 
 ## 변경 결과
 
-실제 Unity `SimulationWorldShell`의 턴 마감 권위를 로컬 Fixture에서 `Ssalddel.Simulation.Server` HTTP 경계로 교체했다. Scene 조립부에서 서버 모드와 Fixture 모드를 명시적으로 구분하며, 서버 모드는 다음 순서로 동작한다.
+실제 Unity `SimulationWorldShell`의 턴 마감 권위를 로컬 Fixture에서 당시 `Ssalddel.Simulation.Server` HTTP 경계로 교체했다. 현재 이 경로는 단일 `Ssalddel` 호스트의 `Ssalddel.Simulation.Hosting` 모듈로 이동했으며 route 계약은 유지한다. Scene 조립부에서 서버 모드와 Fixture 모드를 명시적으로 구분하며, 서버 모드는 다음 순서로 동작한다.
 
 1. Development Simulation session 확보
 2. 현재 턴 context 조회

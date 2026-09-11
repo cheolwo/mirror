@@ -35,7 +35,7 @@
     "Ssalddel.Simulation.Application",
     "Ssalddel.Simulation.Infrastructure",
     "Ssalddel.Simulation.Persistence",
-    "Ssalddel.Simulation.Server",
+    "Ssalddel.Simulation.Hosting",
     "Ssalddel.Unity",
     "bin",
     "obj",

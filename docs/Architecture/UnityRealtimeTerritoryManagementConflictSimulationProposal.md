@@ -127,7 +127,7 @@ Shell과 첫 정착지 blockout은 같은 Simulation snapshot을 여러 관찰 �
 
 ### 3.1 기존 운영 제품을 전쟁 게임으로 바꾸지 않는다
 
-Ssalddel 운영 서버와 0.0 커뮤니티·공공데이터 제품은 계속 현실 사용자, 동의, 계약, 발주, 재고, 결제와 공개 정보의 권위다. 영지·군단·침공은 `Ssalddel.Simulation.Server`가 소유하는 별도 게임 세계다.
+Ssalddel 운영 원장과 0.0 커뮤니티·공공데이터 제품은 계속 현실 사용자, 동의, 계약, 발주, 재고, 결제와 공개 정보의 권위다. 영지·군단·침공은 같은 `Ssalddel` 호스트 안의 Simulation Core가 소유하는 별도 게임 세계다.
 
 ```text
 Operational World
@@ -214,7 +214,7 @@ Ssalddel.Simulation.Contracts
 Ssalddel.Simulation.Domain
   deterministic Tick·경제·물류·군량·분쟁 규칙
         ↓
-Ssalddel.Simulation.Server
+Ssalddel.Simulation.Hosting
   session·revision·command idempotency·snapshot·replay 권위
         ↓ API Snapshot / Delta
 Ssalddel.Unity
@@ -712,7 +712,7 @@ Contract는 기술 역할은 영어, 업무 의미는 한국어 명명 원칙을
 
 Engine은 후보·결과를 계산하고 aggregate가 expected revision과 authority를 검증한 뒤 적용한다.
 
-### 15.3 `Ssalddel.Simulation.Server`
+### 15.3 `Ssalddel.Simulation.Hosting`
 
 - world snapshot query
 - decision preview/confirm endpoint
@@ -720,7 +720,7 @@ Engine은 후보·결과를 계산하고 aggregate가 expected revision과 autho
 - task/effect query
 - snapshot/replay store port
 
-서버는 기본 비활성과 `SsalddelExecution:Mode=Simulation` 경계를 유지한다.
+Hosting 모듈은 주 서버의 JWT와 HTTP pipeline을 사용한다. Simulation 상태 권위와 저장 DB는 운영 원장과 분리한다.
 
 ### 15.4 `Ssalddel.Unity`
 

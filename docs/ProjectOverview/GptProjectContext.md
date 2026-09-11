@@ -6,7 +6,7 @@
 
 ## 1. AI가 먼저 기억할 한 문장
 
-Ssalddel은 출처가 있는 정보와 커뮤니티 대화가 명시적 동의를 거쳐 공동 원장과 역할 협업으로 이어지는 서버 중심 플랫폼이다. Unity는 운영 서버 상태를 탑다운 공간·센서·업무 오브젝트로 체험하게 하는 연구 근거 기반 **World Projection Client**이며, 게임 Simulation은 Solo에서 Unity 내부 공통 Local Runtime, Hosted에서 Simulation 서버가 같은 Core를 실행한다.
+Ssalddel은 출처가 있는 정보와 커뮤니티 대화가 명시적 동의를 거쳐 공동 원장과 역할 협업으로 이어지는 서버 중심 플랫폼이다. Unity는 운영 서버 상태를 탑다운 공간·센서·업무 오브젝트로 체험하게 하는 연구 근거 기반 **World Projection Client**이며, 게임 Simulation은 Solo에서 Unity 내부 공통 Local Runtime, Hosted에서 단일 `Ssalddel` 호스트의 Simulation Hosting 모듈이 같은 Core를 실행한다.
 
 Unity는 독립 농장 게임도 아니고 기존 Web 페이지를 3D로 복제한 클라이언트도 아니다.
 
@@ -26,7 +26,7 @@ Unity의 첫 목표는 전체 로드맵을 한 번에 구현하는 것이 아니
 | 영역 | 책임 | 포함하지 않는 것 |
 | --- | --- | --- |
 | 운영 서버 | 실제 사용자·조직의 권한, 공개 범위, 검증, 계약·발주·입고·재고·결제 원장, revision, Command, Event·Outbox | 게임 session, 가상 시간, save·replay, Prefab·Scene |
-| Simulation Core | 가상 scenario·seed·session·Tick·save·replay와 게임 전용 결과. Solo는 Local Runtime, Hosted는 Simulation 서버 Host에서 실행 | 실제 계약·발주·결제·입고 효과, 운영 DB·entity 공유 |
+| Simulation Core | 가상 scenario·seed·session·Tick·save·replay와 게임 전용 결과. Solo는 Local Runtime, Hosted는 단일 `Ssalddel` 호스트 내부 모듈에서 실행 | 실제 계약·발주·결제·입고 효과, 운영 DB·entity 공유 |
 | Web | 긴 입력, 표, 검색, 관리자 기능, 주소·계좌·결제·증빙 등 민감하거나 정밀한 업무 | 공간 체험을 위한 3D 표현 |
 | Unity | 공간 탐색, 실제 상태의 시각화, 관계와 흐름 표현, preview와 확인, 서버 확정 상태 재표시 | 독자적인 운영 원장과 GameObject만으로 확정한 업무 성공 |
 
@@ -274,7 +274,7 @@ GPT Chat에서는 이 문서와 `CURRENT_WORK.md`를 첨부하고 다음 문구�
 첨부한 `Ssalddel AI 공용 프로젝트 컨텍스트`와 `CURRENT_WORK`를 이번 대화의 기준으로 사용해줘.
 기준 문서와 실제 코드가 다르면 실제 route, contract, test와 실행 설정을 먼저 확인하고 차이를 알려줘.
 구현됨, 테스트로 검증됨, runtime에서 검증됨, 사용자 보고, 설계·미구현을 구분해줘.
-서버는 운영 상태의 최종 권위이고 Unity는 World Projection Client라는 경계를 유지해줘. 게임 Simulation은 Solo의 Unity 내부 Local Runtime과 Hosted의 Simulation 서버 Host가 같은 Core를 실행한다는 별도 축으로 판단해줘.
+서버는 운영 상태의 최종 권위이고 Unity는 World Projection Client라는 경계를 유지해줘. 게임 Simulation은 Solo의 Unity 내부 Local Runtime과 Hosted의 단일 `Ssalddel` 호스트 내부 Simulation 모듈이 같은 Core를 실행한다는 별도 축으로 판단해줘. 물리 호스트·주소·JWT를 하나로 써도 운영 원장과 Simulation Session·가상 시간·save/replay의 상태 권위와 DB는 합치지 않는다.
 현재 요청: [여기에 작업을 작성]
 ```
 

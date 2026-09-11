@@ -318,6 +318,8 @@ SoilGrids 같은 raster source는 전 세계 cell을 일반 DB row로 펼치지 
 - 상태: Accepted
 - 결정일: 2026-08-09
 
+> 물리 호스트·주소·컨테이너 분리는 D-557이 대체한다. 운영과 Simulation의 상태 권위·DB·계약 경계를 분리하는 내용은 계속 유효하다.
+
 P6-B 첫 live source는 credential이 없는 World Bank WDI `AG.LND.ARBL.HA`로 고정한다. 대한민국 `KOR`의 전 연도 시계열 대신 `mrv=1` 최신 비결측 관측 한 건만 bounded collection하고, source의 기본 collection 상태는 계속 비활성으로 둔다.
 
 live 검증은 전용 opt-in 명령에서만 수행하며 실제 응답을 private raw object와 관계형 테스트 DB의 `Run → RawSnapshot → NormalizedRecord` 계보까지 통과시킨다. 이 로컬 검증을 운영 DB migration 적용, 운영 object storage 저장, 정기 scheduler 또는 Unity API 완료로 확대 해석하지 않는다.
@@ -1084,6 +1086,8 @@ Unity 모판은 서버 공개 상품 API가 반환하는 품목을 개수 제한
 - 결정일: 2026-08-12
 - 관계: D-027의 물리 분리와 D-092의 Unity Client 인증 경계를 유지하면서 상시 서버 운영 구성을 두 서버로 단순화함
 
+> 두 상시 서버라는 배포 형태는 D-557이 대체한다. 실제 운영 전 가상 업무 규칙을 반복 검증하되 운영 원장으로 자동 승격하지 않는 목적은 계속 유효하다.
+
 `Ssalddel.Simulation.Server`는 게임 세계의 scenario·seed·session·가상 시간·save·replay 권위를 유지하면서 생산·소비·운송·창고·시장 업무 규칙을 실제 운영 전에 반복 검증하는 예행연습 서버 역할을 함께 맡는다. 별도의 세 번째 상시 예행연습용 운영 서버를 기본 구조로 두지 않는다. `Ssalddel`은 WebApp·MAUI와 Unity 운영 기능이 사용하는 실제 운영 서버다.
 
 Unity는 두 서버 주소와 Client 타입을 분리한다. 공개 상품·공공데이터·실제 사용자 의향처럼 운영 API를 읽거나 쓰는 Client는 운영 서버만 사용하고, WorldTick·가상 자원·Simulation Confirm은 예행연습·게임 세계 서버만 사용한다. Simulation 결과와 가상 식별자는 운영 원장으로 자동 승격하지 않으며, 두 서버가 공통 의미를 가져야 할 때는 명시적 계약·고유 식별자·데이터 계보와 호환성 테스트를 사용한다.
@@ -1294,6 +1298,8 @@ Runtime 표현 상태 사본은 공간 실행과 Synty 시각 실행의 ID·출�
 - 상태: `Accepted`
 - 결정일: 2026-08-13
 - 관계: D-105의 공유 공공데이터 DB와 Simulation World 파생 DB 경계를 배포 구성으로 구체화함
+
+> 별도 Simulation 컨테이너·포트·실행 모드는 D-557이 대체한다. DB 계정·상태 권위·migration 실행을 분리하는 내용은 계속 유효하다.
 
 Simulation 서버는 운영 `Ssalddel` 서버와 같은 .NET 10 다단계 이미지, 비루트 실행, `Section__Key` 환경 변수 주입, `live`와 `ready` 상태 확인 관례를 사용한다. 실행 모드는 항상 `SsalddelExecution:Mode=Simulation`이어야 하며 기본 포트와 컨테이너 이름은 운영 API와 분리한다.
 
@@ -5403,3 +5409,15 @@ Unity는 로컬 플레이어 입력과 관찰 카메라를 분리한다. 관찰 
 - 화면 열람·Preview·취소·중복 Confirm·Save 재조회는 기여 원인이 아니며, 한 사람의 회복이나 한 사물의 수리를 모든 개인·공동체에 중복 합산하지 않는다.
 - 개인 광복기와 공동체 광복기는 기존처럼 독립 판정한다. 사물·시설·환경 자체를 심리적 광복기에 넣지 않으며, 이들의 회복 결과가 실제 공동체 문제 완화로 이어진 경우에만 참여자·대상·범위가 있는 공동체 회복 기여 후보가 된다.
 - 현재 구현은 플레이어별 `NatureMind`와 개인 기간 전이, 일부 사건의 전체 구성 플레이어 효과 배분까지다. 이것을 사람·사물·환경 전반의 공통 회복 기여나 공동체 집계 구현으로 간주하지 않는다. 정확 대상별 기여 Profile·수치·상한·감쇠·반복 판정·UI/Audio·Graph Map·WI·Save/Replay·코드·Unity는 후속 설계다. 이번 결정은 새 공통 회복 수치·자동 광복기·E 승격·개발 착수·commit/push를 승인하지 않는다.
+
+## D-557 Ssalddel 하나가 운영 API와 Hosted Simulation API를 함께 호스팅한다
+
+- 상태: `Accepted`
+- 결정일: 2026-09-11
+- 관계: D-027·D-093·D-110의 물리 호스트 분리를 대체하고, D-094·D-105·D-221의 상태 권위·DB·공공데이터 읽기 경계는 유지한다.
+
+장기 실행 서버는 `Ssalddel` 하나만 둔다. Web·모바일·Hosted Unity는 한 기본 주소와 `Ssalddel` 로그인 JWT를 사용한다. 기존 `/api/simulation/v1/*`와 Simulation SignalR Hub 경로는 유지하되, 별도 실행 가능한 `Ssalddel.Simulation.Server`, 전용 포트와 전용 API 컨테이너는 제거한다. Simulation HTTP 조립은 비실행 `Ssalddel.Simulation.Hosting` 모듈이 담당하며 migration·공간 파생 명령은 `eng/Ssalddel.Simulation.Tools` 단발성 CLI로 분리한다.
+
+물리 호스트 통합은 상태 권위 통합이 아니다. 실제 사용자·조직·주문·계약·결제·운영 재고는 기존 운영 원장이 최종 권위를 유지하고, scenario·seed·Simulation Session·가상 시간·WorldTick·save/replay는 Simulation Core와 전용 저장 원장이 소유한다. `SimulationSession`과 `SimulationWorldDerived` DB, 공유 공공데이터 읽기 전용 계정, 명시적 migration과 데이터 계보를 계속 분리한다. 한 프로세스 안에서도 Simulation Command가 운영 효과를 만들거나 양쪽 entity를 같은 원장으로 저장하지 않는다.
+
+모든 Hosted Simulation API는 기본적으로 주 서버 인증을 요구한다. 개인 세션은 로그인 주체와 세션 고유 식별자를 별도 접근 원장에 결속하고 다른 사용자의 세션은 존재 여부를 노출하지 않는다. 온라인 세계의 공유 방은 방 소유자·멤버십 규칙이 별도로 접근을 판정한다. 원격 Simulation 논리 클라이언트는 운영 API와 같은 주소·토큰을 사용하되 이름 있는 별도 Client와 계약을 유지하며, 운영 실패·Simulation 실패·Local Runtime 사이 자동 fallback을 허용하지 않는다.

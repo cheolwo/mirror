@@ -594,7 +594,7 @@ Simulation 상태 사본
 
 - `docs/AI/DECISIONS.md` D-003~D-016, D-046 이후 Simulation 결정, D-116~D-146
 - `docs/AI/CURRENT_WORK.md`
-- `Ssalddel.Simulation.Server/README.md`
+- `Ssalddel.Simulation.Hosting/README.md`
 - `docs/Architecture/SimulationWorldBusinessRuleTree.md`
 - `docs/Architecture/SimulationNpcWorkforceAndActionRules.md`
 - `docs/Architecture/PublicDataSyntyFarmSurvivalGamePlan.md`
@@ -612,6 +612,7 @@ Simulation 상태 사본
 - `Ssalddel.Simulation.Application/`: 조회·미리보기·확정·저장·복원 조율
 - `Ssalddel.Simulation.Infrastructure/`: 메모리 저장소
 - `Ssalddel.Simulation.Persistence/`: 공공데이터 읽기·공간 파생 DB·Session 저장 DB
-- `Ssalddel.Simulation.Server/`: HTTP·실행 설정·의존성 조립
+- `Ssalddel.Simulation.Hosting/`: 단일 `Ssalddel` 호스트의 HTTP·인증·의존성 조립
+- `eng/Ssalddel.Simulation.Tools/`: migration·공간 파생 단발성 명령
 - `Ssalddel.Unity/`: 엔진 비의존 표현 모델과 Unity 연결 계약
 - `Ssalddel.Simulation.Tests/`, `Ssalddel.Unity.Tests/`: 규칙과 표현 경계 시험

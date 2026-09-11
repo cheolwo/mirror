@@ -2,7 +2,7 @@
 
 이 문서는 살뜰에서 사용자 화면, 원함, 업무 건, 정책, 장기 실행 조율, 판단 도구, 상태 변경과 저장 책임을 구분하는 기준이다.
 
-과거 문서에서 사용한 `HIOPS`와 `하위 OS`는 현재의 기술 역할 이름이 아니다. 기존 Route, 설정 section, Event code, 저장 식별자의 호환값으로는 남을 수 있지만, 새 class·interface·field·parameter·파일 이름은 실제 책임을 나타내는 일반적인 기술 용어를 사용한다.
+과거 문서에서 사용한 `HIOPS`와 `하위 OS`는 현재의 기술 역할 이름이 아니다. 기존 Route, 설정 section, Event code, 저장 식별자의 호환값으로는 남을 수 있지만, 새 class·interface·field·parameter·파일 이름은 실제 책임을 나타내는 일반적인 기술 용어를 사용한다. 다만 `화물운송 OS`와 `음식배달 OS`처럼 업무의 전 생명주기를 묶어 사람이 이해하는 제품·운영 경계에는 OS라는 표현을 사용할 수 있다. 이 OS는 단일 실행 class가 아니라 안정 식별자 아래 Process Manager·Coordinator·Engine·UseCase·Store를 조립한 독립 업무 체계다.
 
 관계형 모델의 `DbContext` 소유권과 aggregate별 ERD는 [데이터 모델과 ERD 기준](DataModel/README.md), 코드 접미사와 언어 기준은 [코드 탐색 메타데이터](SsalddelCodeMetadata.md)를 따른다.
 
@@ -61,6 +61,7 @@ flowchart TD
 | HIOPS | 업무 실행 책임 모델 | 설계 이력이나 호환 식별자 외 신규 이름 사용 금지 |
 | 하위 OS | `ProcessManager`, `WorkflowCoordinator`, `Scheduler` 등 | 실제 책임에 따라 하나를 선택 |
 | OS code/config | 호환 Workflow 식별자·설정 key | 외부 계약이므로 별도 migration 없이 변경 금지 |
+| 화물운송 OS·음식배달 OS | 전 생명주기를 소유하는 운영 업무 체계 | 제품·기획·모듈 대장에서는 사용하되 단일 기술 역할명으로 사용하지 않음 |
 | 엔진 | `Engine` 또는 더 구체적인 판단 역할 | 순수 계산일 때만 Engine 허용 |
 
 코드 주석과 제품 설명은 `원장(Business Case)`, `원장 블록(Case Section)`처럼 한글 의미를 먼저 남긴다. 한글은 업무 의미를 설명하고 영어는 기술 책임과 코드 탐색을 돕는다.
@@ -190,4 +191,4 @@ sequenceDiagram
 5. Engine은 순수 계산에만 사용하고 결과를 후보·점수·사유와 함께 반환한다.
 6. 실제 변경은 API·UseCase·Command·ApplicationService가 권한과 현재 상태를 검증한 뒤 수행한다.
 7. 성공 뒤 같은 Business Case를 다시 조회하고 Event·Outbox·Projection의 멱등성을 검증한다.
-8. 새 코드에는 HIOPS나 OS를 기술 역할명으로 추가하지 않는다. 기존 식별자 변경은 별도 migration과 호환 기간을 둔다.
+8. 새 코드에는 HIOPS나 모호한 하위 OS를 기술 역할명으로 추가하지 않는다. 업무 전체의 소속은 기존 OS 안정 식별자로 표시하고 실제 type은 ProcessManager·Coordinator·Engine·UseCase·Store 중 책임에 맞게 이름 짓는다. 기존 식별자 변경은 별도 migration과 호환 기간을 둔다.

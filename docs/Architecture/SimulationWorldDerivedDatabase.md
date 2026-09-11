@@ -286,11 +286,11 @@ Area node
 로컬·승인된 Simulation 환경에서는 다음 명령 진입점을 사용한다. 연결 문자열은 source가 아니라 환경 변수 또는 서버 측 secret으로 공급한다.
 
 ```powershell
-dotnet run --project Ssalddel.Simulation.Server -- `
+dotnet run --project eng/Ssalddel.Simulation.Tools -- `
   --build-pyeongchang-world-derived `
   --tile-manifest=<private-pyeongchang-tile-manifest-json-path>
 
-dotnet run --project Ssalddel.Simulation.Server -- `
+dotnet run --project eng/Ssalddel.Simulation.Tools -- `
   --build-pyeongchang-synty-landscape `
   --spatial-build=<앞 명령이 반환한 공간 실행 고유 식별자>
 ```
