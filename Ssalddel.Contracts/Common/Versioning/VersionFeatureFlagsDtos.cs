@@ -1,5 +1,10 @@
 namespace Ssalddel.Contracts.Common.Versioning;
 
+public static class VersionFeatureFlagsRoutes
+{
+    public const string Metadata = "api/v1/version-feature-flags";
+}
+
 public sealed class VersionFeatureFlagsResponse
 {
     public IReadOnlyDictionary<string, bool> Flags { get; init; } = new Dictionary<string, bool>();
@@ -204,6 +209,8 @@ public sealed class OperatingSystemDto
 
     public bool IsEnabled { get; init; }
 
+    public IReadOnlyList<OperatingSystemLifecycleStageDto> LifecycleStages { get; init; } = [];
+
     public IReadOnlyList<OperatingSystemWorkflowDto> Workflows { get; init; } = [];
 
     public IReadOnlyList<OperatingSystemEngineDto> Engines { get; init; } = [];
@@ -226,11 +233,43 @@ public sealed class OperatingSystemEngineDto
 
     public IReadOnlyList<string> ImplementationIds { get; init; } = [];
 
+    public IReadOnlyList<OperatingSystemEngineCatalogEntryDto> CatalogEntries { get; init; } = [];
+
     public string RuntimeStatus { get; init; } = RuntimeCapabilityStatuses.Declared;
 
     public string EngineName { get; init; } = string.Empty;
 
     public string AdjustmentPolicy { get; init; } = string.Empty;
+}
+
+public sealed class OperatingSystemLifecycleStageDto
+{
+    public string StageId { get; init; } = string.Empty;
+
+    public int Sequence { get; init; }
+
+    public string Name { get; init; } = string.Empty;
+
+    public string Responsibility { get; init; } = string.Empty;
+}
+
+public sealed class OperatingSystemEngineCatalogEntryDto
+{
+    public string CatalogRevision { get; init; } = string.Empty;
+
+    public string ImplementationId { get; init; } = string.Empty;
+
+    public string Role { get; init; } = string.Empty;
+
+    public string ActivationStatus { get; init; } = string.Empty;
+
+    public string InputContractRevision { get; init; } = string.Empty;
+
+    public string ResultContractRevision { get; init; } = string.Empty;
+
+    public string PolicyRevision { get; init; } = string.Empty;
+
+    public string FallbackForImplementationId { get; init; } = string.Empty;
 }
 
 public sealed class OperatingSystemSchedulingPolicyDto

@@ -1,7 +1,9 @@
+using System.Text.Json;
 using Ssalddel.Contracts.Common.Participants;
 using Ssalddel.Contracts.Food;
 using Microsoft.EntityFrameworkCore;
 using 살뜰.Data;
+using 살뜰.도메인.설정;
 using 살뜰.도메인.음식;
 
 namespace Ssalddel.Services.Food;
@@ -295,6 +297,19 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
             다음상태 = 음식주문상태코드.수령확인,
             사유 = BuildReceiptConfirmationReason(request.확인메모),
             전이시각Utc = now
+        });
+
+        var completedRevision = order.상태이력.Count;
+        _db.음식마트원장동기화Outbox.Add(new 음식마트원장동기화Outbox
+        {
+            멱등키 = $"food-delivery-completed-world:{cleanOrderNo}:{completedRevision}",
+            동기화유형 = 음식마트원장동기화유형코드.음식배달완료WorldProjection,
+            원천Id = cleanOrderNo,
+            변경자 = "FoodDeliveryOS",
+            PayloadJson = JsonSerializer.Serialize(new { orderRevision = completedRevision }),
+            처리상태 = Ssalddel.Services.Outbox.OutboxProcessingStatuses.Pending,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now
         });
 
         return SaveIdempotentChange(

@@ -7,7 +7,7 @@ namespace Ssalddel.Controllers.Platform;
 
 [SsalddelApiVersion(SsalddelProductVersion.V0_0)]
 [ApiController]
-[Route("api/v1/version-feature-flags")]
+[Route(VersionFeatureFlagsRoutes.Metadata)]
 public sealed class VersionFeatureFlagsController : ControllerBase
 {
     private readonly I버전워크플로우UseCase _useCase;

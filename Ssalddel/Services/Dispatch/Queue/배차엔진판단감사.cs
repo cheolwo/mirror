@@ -23,8 +23,13 @@ public sealed record 배차엔진판단감사Context(
     {
         ArgumentNullException.ThrowIfNull(queue);
         ArgumentNullException.ThrowIfNull(engine);
-
-        return 생성(queue, engine.논리엔진코드, engine.엔진코드, sensitiveDriverId);
+        var traceId = Activity.Current?.TraceId.ToString();
+        return new 배차엔진판단감사Context(
+            string.IsNullOrWhiteSpace(traceId) ? Guid.NewGuid().ToString("N") : traceId,
+            OperatingSystemIds.Normalize(engine.운영체제Id),
+            engine.논리엔진코드,
+            engine.엔진코드,
+            sensitiveDriverId);
     }
 
     public static 배차엔진판단감사Context 생성(

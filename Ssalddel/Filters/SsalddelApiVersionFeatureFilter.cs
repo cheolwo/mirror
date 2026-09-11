@@ -25,6 +25,18 @@ public class SsalddelApiFeatureBoundaryFilter : IAsyncActionFilter, IOrderedFilt
 
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
+        if (context.ActionDescriptor is ControllerActionDescriptor simulationAction
+            && string.Equals(
+                simulationAction.ControllerTypeInfo.Assembly.GetName().Name,
+                "Ssalddel.Simulation.Hosting",
+                StringComparison.Ordinal))
+        {
+            // Simulation API는 제품 판본 Feature가 아니라 로그인·세션 소유권
+            // 관문으로 통제되는 단일 서버 내부 모듈이다.
+            await next();
+            return;
+        }
+
         var featureKey = ResolveFeatureKey(context.ActionDescriptor);
         if (string.IsNullOrWhiteSpace(featureKey))
         {

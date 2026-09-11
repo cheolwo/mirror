@@ -31,6 +31,8 @@ public abstract class 정책기반배차엔진 : I운송의뢰배차엔진
 
     public virtual string 논리엔진코드 => EngineFamilyIds.TransportRequestDispatch;
 
+    public abstract string 운영체제Id { get; }
+
     public abstract string 엔진코드 { get; }
 
     public abstract string 표시명 { get; }
@@ -39,6 +41,7 @@ public abstract class 정책기반배차엔진 : I운송의뢰배차엔진
 
     public virtual async Task<배차추천후보선정결과> 다음후보선정Async(
         운송원장 queue,
+        운송의뢰배차Engine입력Context? context = null,
         string? 제외기사Id = null,
         CancellationToken cancellationToken = default)
     {

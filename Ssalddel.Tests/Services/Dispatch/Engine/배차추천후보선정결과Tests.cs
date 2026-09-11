@@ -108,14 +108,42 @@ public sealed class 배차추천후보선정결과Tests
     }
 
     [Fact]
-    public void 같은_업무유형의_엔진이_중복되면_후보선정서비스생성을_거부한다()
+    public void 같은_구현Id의_엔진이_중복되면_OS엔진Catalog생성을_거부한다()
     {
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            new 배차추천후보선정Service(
-                null!,
+            new 운영체제배차EngineCatalog(
                 [new StubDispatchEngine(100), new StubDispatchEngine(100)]));
 
         Assert.Contains("중복 등록", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(상태값.배차업무유형.용달운송, OperatingSystemIds.DomesticCargoTransport, EngineImplementationIds.CargoYongdalDispatch)]
+    [InlineData(상태값.배차업무유형.음식배달, OperatingSystemIds.FoodDelivery, EngineImplementationIds.FoodDeliveryDispatch)]
+    public void OS엔진Catalog는_업무유형별_소유OS의_Primary만_선정한다(
+        int dispatchType,
+        string expectedOperatingSystemId,
+        string expectedImplementationId)
+    {
+        var catalog = new 운영체제배차EngineCatalog(
+        [
+            new StubDispatchEngine(
+                상태값.배차업무유형.용달운송,
+                EngineImplementationIds.CargoYongdalDispatch,
+                OperatingSystemIds.DomesticCargoTransport),
+            new StubDispatchEngine(
+                상태값.배차업무유형.음식배달,
+                EngineImplementationIds.FoodDeliveryDispatch,
+                OperatingSystemIds.FoodDelivery)
+        ]);
+
+        var resolved = catalog.TryResolve(CreateQueue(dispatchType), out var plan, out var reason);
+
+        Assert.True(resolved, reason);
+        Assert.Equal(expectedOperatingSystemId, plan.운영체제Id);
+        Assert.Equal(expectedImplementationId, plan.PrimaryEngine.엔진코드);
+        Assert.Empty(plan.FallbackEngines);
+        Assert.Empty(plan.ShadowEngines);
     }
 
     [Fact]
@@ -149,6 +177,18 @@ public sealed class 배차추천후보선정결과Tests
         Assert.Equal(EngineImplementationIds.FoodDeliveryDispatch, engine.엔진코드);
         Assert.True(EngineImplementationCatalog.TryGetFamilyId(engine.엔진코드, out var familyId));
         Assert.Equal(engine.논리엔진코드, familyId);
+    }
+
+    [Fact]
+    public void 화물배차엔진은_DBContext를_직접_의존하지_않는다()
+    {
+        var constructorParameters = typeof(화물용달배차엔진)
+            .GetConstructors()
+            .SelectMany(constructor => constructor.GetParameters())
+            .Select(parameter => parameter.ParameterType)
+            .ToArray();
+
+        Assert.DoesNotContain(typeof(살뜰.Data.SsalddelContext), constructorParameters);
     }
 
     private static 운송원장 CreateQueue(int dispatchType = 100)
@@ -193,6 +233,8 @@ public sealed class 배차추천후보선정결과Tests
 
     private sealed class TestDispatchEngine(IEnumerable<I배차업무정책> policies) : 정책기반배차엔진(policies)
     {
+        public override string 운영체제Id => OperatingSystemIds.DomesticCargoTransport;
+
         public override string 엔진코드 => "TestDispatchEngine";
 
         public override string 표시명 => "테스트 배차 엔진";
@@ -211,11 +253,16 @@ public sealed class 배차추천후보선정결과Tests
             => Task.FromResult(candidate);
     }
 
-    private sealed class StubDispatchEngine(int dispatchType) : I운송의뢰배차엔진
+    private sealed class StubDispatchEngine(
+        int dispatchType,
+        string? engineCode = null,
+        string? operatingSystemId = null) : I운송의뢰배차엔진
     {
+        public string 운영체제Id { get; } = operatingSystemId ?? OperatingSystemIds.DomesticCargoTransport;
+
         public string 논리엔진코드 => EngineFamilyIds.TransportRequestDispatch;
 
-        public string 엔진코드 => $"Stub-{dispatchType}";
+        public string 엔진코드 { get; } = engineCode ?? $"Stub-{dispatchType}";
 
         public string 표시명 => "테스트 엔진";
 
@@ -223,6 +270,7 @@ public sealed class 배차추천후보선정결과Tests
 
         public Task<배차추천후보선정결과> 다음후보선정Async(
             운송원장 queue,
+            운송의뢰배차Engine입력Context? context = null,
             string? 제외기사Id = null,
             CancellationToken cancellationToken = default)
             => Task.FromResult(배차추천후보선정결과.적격후보없음("후보 없음"));

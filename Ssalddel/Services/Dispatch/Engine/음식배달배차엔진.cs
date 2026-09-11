@@ -25,12 +25,15 @@ public sealed class 음식배달배차엔진 : 정책기반배차엔진
 
     public override string 엔진코드 => EngineImplementationIds.FoodDeliveryDispatch;
 
+    public override string 운영체제Id => OperatingSystemIds.FoodDelivery;
+
     public override string 표시명 => "음식 배달 배차 엔진";
 
     public override int 배차업무유형 => 상태값.배차업무유형.음식배달;
 
     public override Task<배차추천후보선정결과> 다음후보선정Async(
         운송원장 queue,
+        운송의뢰배차Engine입력Context? context = null,
         string? 제외기사Id = null,
         CancellationToken cancellationToken = default)
     {
@@ -55,6 +58,6 @@ public sealed class 음식배달배차엔진 : 정책기반배차엔진
             return Task.FromResult(배차추천후보선정결과.준비안됨(flow.배차시작조건));
         }
 
-        return base.다음후보선정Async(queue, 제외기사Id, cancellationToken);
+        return base.다음후보선정Async(queue, context, 제외기사Id, cancellationToken);
     }
 }

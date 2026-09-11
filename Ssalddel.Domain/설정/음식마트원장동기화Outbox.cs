@@ -55,4 +55,5 @@ public static class 음식마트원장동기화유형코드
     public const string 음식주문 = "FoodOrder";
     public const string 창고출고 = "WarehouseOutbound";
     public const string 음식배차요청 = "FoodDispatchRequest";
+    public const string 음식배달완료WorldProjection = "FoodDeliveryCompletedWorldProjection";
 }

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using FluentResults;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Contracts.Driver.Transport;
@@ -85,6 +86,31 @@ public sealed class 기사운송상태변경CommandExecutor : I기사운송상�
 
         request.상태변경전처리?.Invoke(entity, now);
         await 화주원장상태반영Async(entity, now, cancellationToken);
+
+        var requestId = !string.IsNullOrWhiteSpace(entity.의뢰Id)
+            ? entity.의뢰Id
+            : entity.운송번호;
+        if (!string.IsNullOrWhiteSpace(requestId)
+            && !string.Equals(이전상태, entity.상태, StringComparison.Ordinal))
+        {
+            _db.운송이벤트.Add(new 운송이벤트
+            {
+                의뢰Id = requestId,
+                이벤트타입 = 운송이벤트유형.기사운송상태변경,
+                이벤트시각 = now,
+                메타데이터 = JsonSerializer.Serialize(new
+                {
+                    previousState = 이전상태,
+                    targetState = entity.상태,
+                    completionProjectionToken = string.Equals(
+                        entity.상태,
+                        기사운송상태코드.인수완료,
+                        StringComparison.Ordinal)
+                        ? Guid.NewGuid().ToString("N")
+                        : string.Empty
+                })
+            });
+        }
 
         await _db.SaveChangesAsync(cancellationToken);
         await PublishAfterCommitAsync(request, entity, 이전상태, now, cancellationToken);

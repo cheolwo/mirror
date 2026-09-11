@@ -106,6 +106,13 @@ public static partial class ServiceCollectionExtensions
                 .WithIdentity("FoodMartLedgerSyncOutboxProcess-trigger")
                 .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromSeconds(Math.Max(30, jobOptions.음식마트원장동기화주기초))).RepeatForever()));
 
+            var foodDeliveryWorldProjectionJobKey = new JobKey("FoodDeliveryCompletedWorldProjectionProcess");
+            q.AddJob<음식배달완료WorldProjection처리Job>(opts => opts.WithIdentity(foodDeliveryWorldProjectionJobKey));
+            q.AddTrigger(opts => opts
+                .ForJob(foodDeliveryWorldProjectionJobKey)
+                .WithIdentity("FoodDeliveryCompletedWorldProjectionProcess-trigger")
+                .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromSeconds(Math.Max(30, jobOptions.음식마트원장동기화주기초))).RepeatForever()));
+
             var customsSyncJobKey = new JobKey("CustomsStatusSync");
             q.AddJob<통관상태동기화Job>(opts => opts.WithIdentity(customsSyncJobKey));
             q.AddTrigger(opts => opts

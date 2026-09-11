@@ -18,6 +18,7 @@ using 살뜰.Services.HIOPSAI;
 using 살뜰.Services.Images;
 using 살뜰.Services.Payments;
 using 살뜰.Services.Sales;
+using 살뜰.Services.Operations;
 
 namespace Ssalddel.Extensions;
 
@@ -85,6 +86,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I화물배차수락적격성Service, 화물배차수락적격성Service>();
         services.AddSingleton<살뜰.도메인.운송.화물연속배차Policy>();
         services.AddScoped<I화물연속배차UseCase, 화물연속배차UseCase>();
+        services.AddScoped<I운영체제업무인계Coordinator, 운영체제업무인계Coordinator>();
         services.AddScoped<I픽업하차경로최적화Service, 픽업하차경로최적화Service>();
         services.AddScoped<I음식멀티배차조합AIService, 규칙기반음식멀티배차조합AIService>();
         services.AddScoped<I음식멀티배차조합Service, 음식멀티배차조합Service>();
@@ -119,6 +121,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<음식배달배차엔진>();
         services.AddScoped<I운송의뢰배차엔진>(sp => sp.GetRequiredService<화물용달배차엔진>());
         services.AddScoped<I운송의뢰배차엔진>(sp => sp.GetRequiredService<음식배달배차엔진>());
+        services.AddScoped<I운영체제배차EngineCatalog, 운영체제배차EngineCatalog>();
         services.AddScoped<I배차추천후보선정Service, 배차추천후보선정Service>();
         services.AddScoped<I공개배차Service, 공개배차Service>();
         services.AddSingleton<차량적재추천Engine>();

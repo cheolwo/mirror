@@ -87,4 +87,40 @@ public sealed class OperatingSystemIdentityCatalogTests
         Assert.Equal(EngineFamilyIds.PickingBatch, pickingFamily);
         Assert.Equal(EngineFamilyIds.GroupPurchaseClustering, groupPurchaseFamily);
     }
+
+    [Fact]
+    public void CargoAndFoodOperatingSystems_OwnSeparateOrderedLifecycles()
+    {
+        var cargo = OperatingSystemLifecycleCatalog.Get(OperatingSystemIds.DomesticCargoTransport);
+        var food = OperatingSystemLifecycleCatalog.Get(OperatingSystemIds.FoodDelivery);
+
+        Assert.Equal(8, cargo.Stages.Count);
+        Assert.Equal(8, food.Stages.Count);
+        Assert.Equal(cargo.Stages.OrderBy(stage => stage.Sequence), cargo.Stages);
+        Assert.Equal(food.Stages.OrderBy(stage => stage.Sequence), food.Stages);
+        Assert.Contains(cargo.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.CargoTermsAgreement);
+        Assert.Contains(food.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.FoodCancellationCompensation);
+        Assert.Empty(cargo.Stages.Select(stage => stage.StageId).Intersect(food.Stages.Select(stage => stage.StageId)));
+    }
+
+    [Fact]
+    public void DispatchEngineCatalog_IsolatesImplementationsByOwningOperatingSystem()
+    {
+        var cargo = OperatingSystemEngineCatalog.GetByOperatingSystem(OperatingSystemIds.DomesticCargoTransport);
+        var food = OperatingSystemEngineCatalog.GetByOperatingSystem(OperatingSystemIds.FoodDelivery);
+
+        var cargoPrimary = Assert.Single(cargo, entry =>
+            entry.Role == OperatingSystemEngineRoles.Primary &&
+            entry.ActivationStatus == OperatingSystemEngineActivationStatuses.Active);
+        var foodPrimary = Assert.Single(food, entry =>
+            entry.Role == OperatingSystemEngineRoles.Primary &&
+            entry.ActivationStatus == OperatingSystemEngineActivationStatuses.Active);
+
+        Assert.Equal(EngineImplementationIds.CargoYongdalDispatch, cargoPrimary.ImplementationId);
+        Assert.Equal(EngineImplementationIds.FoodDeliveryDispatch, foodPrimary.ImplementationId);
+        Assert.DoesNotContain(cargo, entry => entry.ImplementationId == EngineImplementationIds.FoodDeliveryDispatch);
+        Assert.DoesNotContain(food, entry => entry.ImplementationId == EngineImplementationIds.CargoYongdalDispatch);
+        Assert.DoesNotContain(OperatingSystemEngineCatalog.GetAll(), entry =>
+            entry.Role is OperatingSystemEngineRoles.ApprovedSafeFallback or OperatingSystemEngineRoles.Shadow);
+    }
 }

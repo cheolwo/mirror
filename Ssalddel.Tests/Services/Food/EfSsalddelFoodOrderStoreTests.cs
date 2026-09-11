@@ -4,6 +4,7 @@ using Ssalddel.Contracts.Food;
 using Ssalddel.Services.Food;
 using 살뜰.Data;
 using 살뜰.Infrastructure.Security;
+using 살뜰.도메인.설정;
 
 namespace Ssalddel.Tests.Services.Food;
 
@@ -149,6 +150,12 @@ public sealed class EfSsalddelFoodOrderStoreTests
         Assert.Equal(음식주문상태코드.전달완료, history.이전상태);
         Assert.Equal(음식주문상태코드.수령확인, history.다음상태);
         Assert.Contains("정상 수령", history.사유);
+        var projectionRequest = Assert.Single(
+            await db.음식마트원장동기화Outbox
+                .Where(item => item.동기화유형 == 음식마트원장동기화유형코드.음식배달완료WorldProjection)
+                .ToListAsync());
+        Assert.Equal(order.주문번호, projectionRequest.원천Id);
+        Assert.Contains("orderRevision", projectionRequest.PayloadJson);
     }
 
     [Fact]

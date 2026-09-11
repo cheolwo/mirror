@@ -299,10 +299,33 @@ public sealed class SsalddelApiVersionAttributeTests
                 engine.EngineFamilyId == EngineFamilyIds.TransportRequestDispatch &&
                 engine.RuntimeStatus == RuntimeCapabilityStatuses.Active &&
                 engine.ImplementationIds.Contains(EngineImplementationIds.CargoYongdalDispatch) &&
-                engine.ImplementationIds.Contains(EngineImplementationIds.FoodDeliveryDispatch)) &&
+                !engine.ImplementationIds.Contains(EngineImplementationIds.FoodDeliveryDispatch) &&
+                engine.CatalogEntries.Any(entry =>
+                    entry.ImplementationId == EngineImplementationIds.CargoYongdalDispatch &&
+                    entry.Role == OperatingSystemEngineRoles.Primary &&
+                    entry.ActivationStatus == OperatingSystemEngineActivationStatuses.Active)) &&
+            operatingSystem.LifecycleStages.Any(stage =>
+                stage.StageId == OperatingSystemLifecycleStageIds.CargoRequest && stage.Sequence == 10) &&
+            operatingSystem.LifecycleStages.Any(stage =>
+                stage.StageId == OperatingSystemLifecycleStageIds.CargoInterruptionRecovery && stage.Sequence == 80) &&
             operatingSystem.SchedulingPolicies.Any(policy => policy.PolicyKindCode == nameof(SsalddelSchedulingPolicyKind.Mlfq)) &&
             operatingSystem.SchedulingPolicies.Any(policy => policy.PolicyKindCode == nameof(SsalddelSchedulingPolicyKind.Aging)) &&
             operatingSystem.SchedulingPolicies.All(policy => policy.RuntimeStatus == RuntimeCapabilityStatuses.Declared));
+        Assert.Contains(response.OperatingSystems, operatingSystem =>
+            operatingSystem.OperatingSystemCode == nameof(SsalddelOperatingSystem.FoodDelivery) &&
+            operatingSystem.CanonicalOperatingSystemId == OperatingSystemIds.FoodDelivery &&
+            operatingSystem.Engines.Any(engine =>
+                engine.EngineCode == EngineFamilyIds.TransportRequestDispatch &&
+                engine.ImplementationIds.Contains(EngineImplementationIds.FoodDeliveryDispatch) &&
+                !engine.ImplementationIds.Contains(EngineImplementationIds.CargoYongdalDispatch) &&
+                engine.CatalogEntries.Any(entry =>
+                    entry.ImplementationId == EngineImplementationIds.FoodDeliveryDispatch &&
+                    entry.Role == OperatingSystemEngineRoles.Primary &&
+                    entry.ActivationStatus == OperatingSystemEngineActivationStatuses.Active)) &&
+            operatingSystem.LifecycleStages.Any(stage =>
+                stage.StageId == OperatingSystemLifecycleStageIds.FoodOrder && stage.Sequence == 10) &&
+            operatingSystem.LifecycleStages.Any(stage =>
+                stage.StageId == OperatingSystemLifecycleStageIds.FoodInterruptionRecovery && stage.Sequence == 80));
         Assert.Contains(response.OperatingSystems, operatingSystem =>
             operatingSystem.OperatingSystemCode == nameof(SsalddelOperatingSystem.WarehouseCommerceFulfillment) &&
             operatingSystem.CanonicalOperatingSystemId == OperatingSystemIds.WarehouseCommerceFulfillment &&

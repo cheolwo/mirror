@@ -411,8 +411,13 @@ public sealed class 버전워크플로우UseCase : I버전워크플로우UseCase
             Purpose = operatingSystem.Purpose,
             FeatureKey = featureKey ?? string.Empty,
             IsEnabled = featureKey is null || flags.TryGetValue(featureKey, out var enabled) && enabled,
+            LifecycleStages = OperatingSystemLifecycleCatalog.TryGet(canonicalId, out var lifecycle)
+                ? lifecycle.Stages.Select(ToOperatingSystemLifecycleStageDto).ToArray()
+                : [],
             Workflows = operatingSystem.Workflows.Select(ToOperatingSystemWorkflowDto).ToArray(),
-            Engines = operatingSystem.Engines.Select(ToOperatingSystemEngineDto).ToArray(),
+            Engines = operatingSystem.Engines
+                .Select(engine => ToOperatingSystemEngineDto(canonicalId, engine))
+                .ToArray(),
             SchedulingPolicies = operatingSystem.SchedulingPolicies.Select(ToOperatingSystemSchedulingPolicyDto).ToArray()
         };
     }
@@ -440,10 +445,23 @@ public sealed class 버전워크플로우UseCase : I버전워크플로우UseCase
         };
     }
 
-    private static OperatingSystemEngineDto ToOperatingSystemEngineDto(SsalddelOperatingSystemEngine engine)
+    private static OperatingSystemLifecycleStageDto ToOperatingSystemLifecycleStageDto(
+        OperatingSystemLifecycleStageDefinition stage)
+        => new()
+        {
+            StageId = stage.StageId,
+            Sequence = stage.Sequence,
+            Name = stage.Name,
+            Responsibility = stage.Responsibility
+        };
+
+    private static OperatingSystemEngineDto ToOperatingSystemEngineDto(
+        string operatingSystemId,
+        SsalddelOperatingSystemEngine engine)
     {
-        var implementationIds = EngineImplementationCatalog.GetAll()
-            .Where(binding => string.Equals(binding.EngineFamilyId, engine.EngineCode, StringComparison.Ordinal))
+        var catalogEntries = OperatingSystemEngineCatalog
+            .GetByOperatingSystemAndFamily(operatingSystemId, engine.EngineCode);
+        var implementationIds = catalogEntries
             .Select(binding => binding.ImplementationId)
             .ToArray();
 
@@ -452,13 +470,29 @@ public sealed class 버전워크플로우UseCase : I버전워크플로우UseCase
             EngineCode = engine.EngineCode,
             EngineFamilyId = engine.EngineCode,
             ImplementationIds = implementationIds,
-            RuntimeStatus = implementationIds.Length > 0
+            CatalogEntries = catalogEntries.Select(ToOperatingSystemEngineCatalogEntryDto).ToArray(),
+            RuntimeStatus = catalogEntries.Any(entry =>
+                entry.ActivationStatus == OperatingSystemEngineActivationStatuses.Active)
                 ? RuntimeCapabilityStatuses.Active
                 : RuntimeCapabilityStatuses.Declared,
             EngineName = engine.EngineName,
             AdjustmentPolicy = engine.AdjustmentPolicy
         };
     }
+
+    private static OperatingSystemEngineCatalogEntryDto ToOperatingSystemEngineCatalogEntryDto(
+        OperatingSystemEngineCatalogEntry entry)
+        => new()
+        {
+            CatalogRevision = OperatingSystemEngineCatalog.CatalogRevision,
+            ImplementationId = entry.ImplementationId,
+            Role = entry.Role,
+            ActivationStatus = entry.ActivationStatus,
+            InputContractRevision = entry.InputContractRevision,
+            ResultContractRevision = entry.ResultContractRevision,
+            PolicyRevision = entry.PolicyRevision,
+            FallbackForImplementationId = entry.FallbackForImplementationId ?? string.Empty
+        };
 
     private static OperatingSystemSchedulingPolicyDto ToOperatingSystemSchedulingPolicyDto(SsalddelSchedulingPolicy policy)
     {

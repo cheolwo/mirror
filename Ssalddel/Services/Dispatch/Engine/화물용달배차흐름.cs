@@ -1,5 +1,4 @@
 using 살뜰.도메인.배차;
-using 살뜰.도메인.화주;
 
 namespace 살뜰.Services.Dispatch.Engine;
 
@@ -25,15 +24,15 @@ public sealed record 화물용달배차흐름(
 
 public interface I화물용달배차흐름Resolver
 {
-    화물용달배차흐름 Resolve(운송원장 queue, 화주운송의뢰? request = null);
+    화물용달배차흐름 Resolve(운송원장 queue, string? 화물운송방식 = null);
 }
 
 public sealed class 화물용달배차흐름Resolver : I화물용달배차흐름Resolver
 {
-    public 화물용달배차흐름 Resolve(운송원장 queue, 화주운송의뢰? request = null)
+    public 화물용달배차흐름 Resolve(운송원장 queue, string? 화물운송방식 = null)
     {
         if (string.Equals(queue.원본의뢰유형, 화물용달배차원본유형.Fcl연계운송, StringComparison.OrdinalIgnoreCase)
-            || ContainsAny(request?.운송방식, "FCL", "컨테이너", "독차"))
+            || ContainsAny(화물운송방식, "FCL", "컨테이너", "독차"))
         {
             return new 화물용달배차흐름(
                 화물용달배차원본유형.Fcl연계운송,
@@ -44,7 +43,7 @@ public sealed class 화물용달배차흐름Resolver : I화물용달배차흐름
         }
 
         if (string.Equals(queue.원본의뢰유형, 화물용달배차원본유형.Lcl연계운송, StringComparison.OrdinalIgnoreCase)
-            || ContainsAny(request?.운송방식, "LCL", "혼적", "합짐"))
+            || ContainsAny(화물운송방식, "LCL", "혼적", "합짐"))
         {
             return new 화물용달배차흐름(
                 화물용달배차원본유형.Lcl연계운송,

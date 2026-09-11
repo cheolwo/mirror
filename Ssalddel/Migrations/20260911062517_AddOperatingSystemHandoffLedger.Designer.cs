@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using 살뜰.Data;
 
@@ -11,9 +12,11 @@ using 살뜰.Data;
 namespace Ssalddel.Migrations
 {
     [DbContext(typeof(SsalddelContext))]
-    partial class SsalddelContextModelSnapshot : ModelSnapshot
+    [Migration("20260911062517_AddOperatingSystemHandoffLedger")]
+    partial class AddOperatingSystemHandoffLedger
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -10570,89 +10573,6 @@ namespace Ssalddel.Migrations
                     b.HasIndex("기사Id", "상태Code", "수락시각Utc");
 
                     b.ToTable("음식배달시도");
-                });
-
-            modelBuilder.Entity("살뜰.도메인.음식.음식배달완료WorldSnapshot", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("id");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("AreaStableId")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("varchar(120)")
-                        .HasColumnName("area_stable_id");
-
-                    b.Property<DateTime>("CompletedAtUtc")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("completed_at_utc");
-
-                    b.Property<string>("DriverActorStableId")
-                        .IsRequired()
-                        .HasMaxLength(160)
-                        .HasColumnType("varchar(160)")
-                        .HasColumnName("driver_actor_stable_id");
-
-                    b.Property<DateTime>("ExpiresAtUtc")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("expires_at_utc");
-
-                    b.Property<long>("LifecycleRevision")
-                        .HasColumnType("bigint")
-                        .HasColumnName("lifecycle_revision");
-
-                    b.Property<string>("MilestonesJson")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("milestones_json");
-
-                    b.Property<string>("OrdererActorStableId")
-                        .IsRequired()
-                        .HasMaxLength(160)
-                        .HasColumnType("varchar(160)")
-                        .HasColumnName("orderer_actor_stable_id");
-
-                    b.Property<string>("OutcomeCode")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("varchar(40)")
-                        .HasColumnName("outcome_code");
-
-                    b.Property<DateTime>("PublishedAtUtc")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("published_at_utc");
-
-                    b.Property<string>("RestaurantActorStableId")
-                        .IsRequired()
-                        .HasMaxLength(160)
-                        .HasColumnType("varchar(160)")
-                        .HasColumnName("restaurant_actor_stable_id");
-
-                    b.Property<string>("SnapshotStableId")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("varchar(120)")
-                        .HasColumnName("snapshot_stable_id");
-
-                    b.Property<long>("원천OutboxId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("source_outbox_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SnapshotStableId")
-                        .IsUnique();
-
-                    b.HasIndex("원천OutboxId")
-                        .IsUnique();
-
-                    b.HasIndex("AreaStableId", "ExpiresAtUtc", "PublishedAtUtc");
-
-                    b.ToTable("음식배달완료_WorldSnapshot");
                 });
 
             modelBuilder.Entity("살뜰.도메인.음식.음식운영정책", b =>

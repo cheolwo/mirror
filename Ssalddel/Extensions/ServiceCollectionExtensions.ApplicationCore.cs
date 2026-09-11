@@ -31,6 +31,7 @@ using Ssalddel.Application.Operations;
 using Ssalddel.Services.HumanResources;
 using Ssalddel.Services.Community;
 using Ssalddel.Services.Privacy;
+using Ssalddel.Services.Food;
 using Ssalddel.Services.FoodCulture;
 using Ssalddel.Services.Content;
 using Ssalddel.Services.WorldProjection;
@@ -125,6 +126,13 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I음식점탐색조회UseCase, 음식점탐색조회UseCase>();
         services.AddScoped<I음식점메뉴관리UseCase, 음식점메뉴관리UseCase>();
         services.AddScoped<I음식배달수명주기조회UseCase, 음식배달수명주기조회UseCase>();
+        services.AddScoped<I음식배달완료WorldSnapshot조회UseCase, 음식배달완료WorldSnapshot조회UseCase>();
+        services.AddScoped<음식배달완료WorldAreaResolver>();
+        services.AddScoped<I음식배달완료WorldAreaResolver>(provider =>
+            provider.GetRequiredService<음식배달완료WorldAreaResolver>());
+        services.AddScoped<I운영WorldAreaResolver>(provider =>
+            provider.GetRequiredService<음식배달완료WorldAreaResolver>());
+        services.AddScoped<I음식배달완료WorldProjectionService, 음식배달완료WorldProjectionService>();
         services.AddScoped<I음식점리뷰UseCase, 음식점리뷰UseCase>();
         services.AddScoped<I음식운영관리UseCase, 음식운영관리UseCase>();
         services.AddScoped<I마트공개상품조회UseCase, 마트공개상품조회UseCase>();
@@ -185,6 +193,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I피킹작업UseCase, 피킹작업UseCase>();
         services.AddScoped<I재고현황UseCase, 재고현황UseCase>();
         services.AddScoped<I창고WorldSnapshot조회UseCase, 창고WorldSnapshot조회UseCase>();
+        services.AddScoped<I운영지역장면조회UseCase, 운영지역장면조회UseCase>();
         services.AddScoped<I창고입고화물인계조회UseCase, 창고입고화물인계조회UseCase>();
         services.AddScoped<I적재작업UseCase, 적재작업UseCase>();
         services.AddScoped<I포장작업UseCase, 포장작업UseCase>();

@@ -21,6 +21,7 @@ public static class SsalddelCodeFeatureKeys
     public const string IntegratedSeedbedExhibition = "integrated-seedbed-exhibition";
     public const string PlatformDeliveryZoneLedger = "platform-delivery-zone-ledger";
     public const string OperationalDispatchCore = "operational-dispatch-core";
+    public const string OperationalLogisticsOs = "operational-logistics-os";
     public const string PlatformSupplyBrokerage = "platform-supply-brokerage";
     public const string PotatoProductionDistributionWorld = "potato-production-distribution-world";
     public const string RegionalCultureImagePrompt = "regional-culture-image-prompt";
