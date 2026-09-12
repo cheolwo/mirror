@@ -269,6 +269,7 @@ builder.Services.AddSingleton<Ssalddel.Services.Orderer.IRestaurantSearchPolicyS
 builder.Services.AddSingleton<I기사개발스냅샷Provider, InMemory기사개발스냅샷Provider>();
 
 Ssalddel.Services.Development.FoodObserver.음식배달관찰검증Hosting.Add음식배달관찰검증(builder);
+Ssalddel.Services.Development.ObservableOperations.관찰운영검증Hosting.Add관찰운영검증(builder);
 var app = builder.Build();
 app.Logger.LogInformation("Ssalddel execution mode: {ExecutionMode}", executionOptions.Mode);
 if (developmentReadOnly)

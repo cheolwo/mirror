@@ -1,0 +1,96 @@
+name: ssalddel-observable-operations
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: Ssalddel/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      DOTNET_RUNNING_IN_CONTAINER: "true"
+      SsalddelExecution__Mode: Simulation
+      DatabaseInitialization__RunAtStartup: "false"
+      ConnectionStrings__DefaultConnection: "server=mysql;database=ssalddel_observable_operations;user=observer;password=${OBSERVABLE_OPERATIONS_DB_PASSWORD:?run prepare};"
+      MongoDb__ConnectionString: mongodb://mongo:27017
+      MongoDb__Database: ssalddel_observable_operations
+      TransientState__Provider: Redis
+      Redis__ConnectionString: redis:6379,abortConnect=false
+      VersionFeatureFlags__OperationalWorldObservationWorkflow: "true"
+      ObservableOperationsVerification__Enabled: "true"
+      ObservableOperationsVerification__AccessKey: ${OBSERVABLE_OPERATIONS_ACCESS_KEY:?run prepare}
+      ObservableOperationsVerification__DurationSeconds: "600"
+      ObservableOperationsVerification__PollIntervalMilliseconds: "1000"
+      Jwt__Issuer: ObservableOperations.Local
+      Jwt__Audience: ObservableOperations.Local
+      Jwt__SecretKey: ${OBSERVABLE_OPERATIONS_JWT_KEY:?run prepare}
+      IsmsPProtectedData__Aes256GcmKeyBase64: ${OBSERVABLE_OPERATIONS_AES_KEY:?run prepare}
+      IsmsPProtectedData__HashSalt: ${OBSERVABLE_OPERATIONS_HASH_SALT:?run prepare}
+      IsmsPProtectedData__FailWhenKeyMissing: "true"
+      PersonalDataProtection__KeyRingPath: /app/App_Data/DataProtection-Keys
+      TossPayments__SecretKey: ""
+      AgriculturalFisheriesBatch__Enabled: "false"
+      CommunityPostEmailNotifications__Enabled: "false"
+      CommunityPostTranslation__Enabled: "false"
+      Logging__LogLevel__Default: Warning
+      Serilog__MinimumLevel__Default: Warning
+    depends_on:
+      mysql: {condition: service_healthy}
+      mongo: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    volumes: ["observable_operations_app:/app/App_Data"]
+    networks: [isolated]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/verification/observable-operations/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 8
+      start_period: 90s
+  gateway:
+    image: caddy:2.10-alpine
+    command: ["caddy", "reverse-proxy", "--from", "http://:8080", "--to", "http://app:8080"]
+    ports: ["127.0.0.1:53216:8080"]
+    networks: [access, isolated]
+    depends_on: [app]
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ssalddel_observable_operations
+      MYSQL_USER: observer
+      MYSQL_PASSWORD: ${OBSERVABLE_OPERATIONS_DB_PASSWORD:?run prepare}
+      MYSQL_ROOT_PASSWORD: ${OBSERVABLE_OPERATIONS_ROOT_PASSWORD:?run prepare}
+    volumes: ["observable_operations_mysql:/var/lib/mysql"]
+    networks: [isolated]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  mongo:
+    image: mongo:8.0
+    volumes: ["observable_operations_mongo:/data/db"]
+    networks: [isolated]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping:1}).ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    networks: [isolated]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+networks:
+  access:
+  isolated:
+    internal: true
+volumes:
+  observable_operations_app:
+    name: ${OBSERVABLE_OPERATIONS_APP_VOLUME:-ssalddel-observable-operations_app}
+  observable_operations_mysql:
+    name: ${OBSERVABLE_OPERATIONS_MYSQL_VOLUME:-ssalddel-observable-operations_mysql}
+  observable_operations_mongo:
+    name: ${OBSERVABLE_OPERATIONS_MONGO_VOLUME:-ssalddel-observable-operations_mongo}
