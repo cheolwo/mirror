@@ -34,6 +34,8 @@ public sealed class VersionFeatureFlagService : IVersionFeatureFlagService
             VersionFeatureFlagKeys.FoodDeliveryV30 => IsFoodDeliveryEnabled(flags),
             VersionFeatureFlagKeys.FoodDeliveryWorkflow => IsFoodDeliveryEnabled(flags),
             VersionFeatureFlagKeys.OperationalWorldObservationWorkflow => flags.OperationalWorldObservationWorkflow,
+            VersionFeatureFlagKeys.AdministrativeDongDioramaObservation => flags.AdministrativeDongDioramaObservation,
+            VersionFeatureFlagKeys.LocalDioramaSponsorship => flags.AdministrativeDongDioramaObservation && flags.LocalDioramaSponsorship,
             VersionFeatureFlagKeys.SsalddelMartV35 => IsSsalddelMartEnabled(flags),
             VersionFeatureFlagKeys.SsalddelMartWorkflow => IsSsalddelMartEnabled(flags),
             _ => false
@@ -56,6 +58,8 @@ public sealed class VersionFeatureFlagService : IVersionFeatureFlagService
             [VersionFeatureFlagKeys.HrParticipationWorkflow] = IsHrParticipationEnabled(flags),
             [VersionFeatureFlagKeys.FoodDeliveryWorkflow] = IsFoodDeliveryEnabled(flags),
             [VersionFeatureFlagKeys.OperationalWorldObservationWorkflow] = flags.OperationalWorldObservationWorkflow,
+            [VersionFeatureFlagKeys.AdministrativeDongDioramaObservation] = flags.AdministrativeDongDioramaObservation,
+            [VersionFeatureFlagKeys.LocalDioramaSponsorship] = flags.AdministrativeDongDioramaObservation && flags.LocalDioramaSponsorship,
             [VersionFeatureFlagKeys.SsalddelMartWorkflow] = IsSsalddelMartEnabled(flags),
             [VersionFeatureFlagKeys.CargoYongdalV1] = IsDomesticTransportEnabled(flags),
             [VersionFeatureFlagKeys.WarehouseV15] = IsWarehouseFulfillmentEnabled(flags),
@@ -136,6 +140,10 @@ public static class VersionFeatureFlagKeys
     public const string FoodDeliveryWorkflow = nameof(FoodDeliveryWorkflow);
 
     public const string OperationalWorldObservationWorkflow = nameof(OperationalWorldObservationWorkflow);
+
+    public const string AdministrativeDongDioramaObservation = nameof(AdministrativeDongDioramaObservation);
+
+    public const string LocalDioramaSponsorship = nameof(LocalDioramaSponsorship);
 
     public const string FoodDeliveryV30 = nameof(FoodDeliveryV30);
 

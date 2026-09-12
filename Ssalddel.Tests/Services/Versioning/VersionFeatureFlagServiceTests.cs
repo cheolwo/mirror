@@ -25,6 +25,24 @@ public sealed class VersionFeatureFlagServiceTests
     }
 
     [Fact]
+    public void 행정동후원표시는_행정동관찰과후원Flag가_모두켜져야연다()
+    {
+        var sponsorshipOnly = CreateService(new VersionFeatureFlagsOptions
+        {
+            LocalDioramaSponsorship = true
+        });
+        var both = CreateService(new VersionFeatureFlagsOptions
+        {
+            AdministrativeDongDioramaObservation = true,
+            LocalDioramaSponsorship = true
+        });
+
+        Assert.False(sponsorshipOnly.IsEnabled(VersionFeatureFlagKeys.LocalDioramaSponsorship));
+        Assert.True(both.IsEnabled(VersionFeatureFlagKeys.AdministrativeDongDioramaObservation));
+        Assert.True(both.IsEnabled(VersionFeatureFlagKeys.LocalDioramaSponsorship));
+    }
+
+    [Fact]
     public void CommunityFoundation_CanRunWithoutDomesticTransport()
     {
         var service = CreateService(new VersionFeatureFlagsOptions

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Ssalddel.Infrastructure.Persistence.PublicData;
 
@@ -11,9 +12,11 @@ using Ssalddel.Infrastructure.Persistence.PublicData;
 namespace Ssalddel.Infrastructure.Persistence.PublicData.Migrations
 {
     [DbContext(typeof(PublicDataIngestionDbContext))]
-    partial class PublicDataIngestionDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260912104457_AddAdministrativeDongDioramaDisplayLedgers")]
+    partial class AddAdministrativeDongDioramaDisplayLedgers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

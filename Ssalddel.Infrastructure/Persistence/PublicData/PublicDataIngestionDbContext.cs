@@ -25,6 +25,8 @@ public sealed class PublicDataIngestionDbContext : DbContext
     public DbSet<공개인허가사업장Record> 공개인허가사업장Records => Set<공개인허가사업장Record>();
     public DbSet<공개사업장건축물Assignment> 공개사업장건축물Assignments => Set<공개사업장건축물Assignment>();
     public DbSet<건축물공개사업장Aggregate> 건축물공개사업장Aggregates => Set<건축물공개사업장Aggregate>();
+    public DbSet<지역사업장표시Claim> 지역사업장표시Claims => Set<지역사업장표시Claim>();
+    public DbSet<지역디오라마후원Campaign> 지역디오라마후원Campaigns => Set<지역디오라마후원Campaign>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -42,5 +44,7 @@ public sealed class PublicDataIngestionDbContext : DbContext
         modelBuilder.ApplyConfiguration(new 공개인허가사업장RecordConfiguration());
         modelBuilder.ApplyConfiguration(new 공개사업장건축물AssignmentConfiguration());
         modelBuilder.ApplyConfiguration(new 건축물공개사업장AggregateConfiguration());
+        modelBuilder.ApplyConfiguration(new 지역사업장표시ClaimConfiguration());
+        modelBuilder.ApplyConfiguration(new 지역디오라마후원CampaignConfiguration());
     }
 }
