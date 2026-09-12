@@ -1,5 +1,14 @@
 # Mirror(거울) Current Work
 
+## 행정동별 서버 기반 디오라마 실제 자료 관문 r2 (2026-09-12)
+
+- [행정동별 서버 기반 디오라마 r2](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md)에 따라 면목동 실제 자료 완결을 기능 생활권 구현의 필수 선행 관문으로 확정하고 `ActualAdministrativeDongDataGate=Closed`로 검증했다. 첫 Unity 제공 범위는 면목제3·8동(`region:kr:hjd:1126057500`)이며 기존 면목동 법정동 공간 패키지는 그대로 둔다.
+- 서버에 결정적 manifest/tile/overlay 생성기, 도로 경계 자르기, Mongo hash별 불변 사본과 현재 판본 포인터, 인증 GET 3개와 ETag를 추가했다. 기능 플래그 `AdministrativeDongDioramaObservation`과 `LocalDioramaSponsorship`은 기본 비활성이며 후원은 관찰 기능과 함께 켜져야 한다.
+- 공개 사업장과 후원 표시를 분리했다. 공개 인허가 사업장에 결속한 표시 Claim과 후원 캠페인 RDB 원장·운영자 검토 Service·migration을 추가했고, 검증된 Claim·승인된 기간·`광고`/`후원` 고지를 모두 충족한 항목만 표시한다. 건물 크기·NPC·주문·배차·퀘스트·평판·순위·오행 분류를 바꾸는 계약과 결제 기능은 만들지 않았다.
+- Unity 데이터 계층에는 인증 GET 전용 Client·JSON decoder·판본 해석기를 추가했다. manifest에 명시된 의미 장소만 운영 상태와 결합하며 법정동 단위 상태를 모든 행정동에 복제하지 않고 미해결 수로 남긴다. 상태는 메모리에서만 유지하고 `Clear`로 비운다.
+- 행정동·후원·기능 플래그 집중 시험 22/22, 서버·API metadata 포함 74/74와 Unity 읽기 경계 4/4가 통과했고 서버·Unity 데이터 project build 오류 0, EF 미반영 모델 차이 0이다. 추가한 EPSG:5181 변환·전수 귀속을 포함한 행정동 디오라마 집중 시험 12/12와 Unity 집중 시험 4/4도 통과했고, 이번 실자료 변경 경로 12개를 지정한 최종 Fast도 통과했다(`artifacts/local/validation/20260912-195806`). 서울시 공식 경계 ZIP(SHA-256 `969F7033BD3609A5FD586790F5B2CFEDC638D7647EF45C78F9C75E1DABF79F68`)과 사가정 지도에서 6개 행정동, 원본 건물 602·도로 2,397, 건물 귀속 602·미해결 0·중복 0을 확인했고 면목제3·8동에 건물 250·잘린 도로 722·500m 타일 3을 생성했다. 공개 상권 관측 5,411개는 좌표만 판정하고 표시 승인은 0개로 유지했다. 로컬 Mongo `ssalddel_dev`에 투영 hash `d1357bea67e649bd7a930cdac2de51f4a716f423181d917da3aafadba9780f2a`와 귀속 감사 hash `BA174BE2E7713D5BBE65F5C1B41DEF8FA6629B285F443FF2FEE9CCF2734110F0`를 실제 저장한 뒤 같은 입력 재적용과 별도 연결 재조회를 통과했다. MySQL 쓰기, 운영 HTTP, RDB migration 적용, Claim/후원 HTTP API, Unity Scene/Prefab·Play Mode·Game View는 미실행이다. 기존 작업트리 변경은 보존했으며 commit·push는 수행하지 않았다.
+- 범위 Task는 `Ssalddel.v0.0.slnx` build를 통과하고 서버 전체 시험 5,190개 중 5,183개가 통과했으나, 이번 행정동 변경 밖의 기존 역할별 API 분류 4건·Web capability 1건·공식 재료 UI 1건·아키텍처 문구 1건 때문에 전체 성공에는 이르지 못했다(`artifacts/local/validation/20260912-195911`).
+
 ## 사가정역 생활 디오라마 r3 (2026-09-12)
 
 - [승인 기획 r3](Planning/시스템/PLAN-SYSTEM-OBSERVABLE-OPERATIONS-DIORAMA-001/diorama.r3.md)와 [구현·검증 기록](Planning/시스템/PLAN-SYSTEM-OBSERVABLE-OPERATIONS-DIORAMA-001/implementation.r3.md)에 따라 사가정 1km 동결 지도를 기존 배달 Controller에서 분리하고, 공식 `SimulationWorldShell/OperationalOsWorldRoot`의 여섯 가상 완료 업무에 지도 판본·해시가 결속된 위치를 연결했다. 생성 콘셉트는 구도·색감 기준이며 실제 지리와 영업 근거로 사용하지 않았다.

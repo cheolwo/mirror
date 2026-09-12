@@ -24,7 +24,7 @@
       "managementSystem": "G1",
       "koreanName": "\uD68C\uADC0 \uC99D\uAC70",
       "technicalName": "E3\uD68C\uADC0\uC99D\uAC70Module",
-      "primaryCount": 291,
+      "primaryCount": 293,
       "secondaryCount": 1
     },
     {
@@ -13229,6 +13229,25 @@
       "stepKeys": []
     },
     {
+      "componentId": "Ssalddel.Unity.Tests:Ssalddel.Unity.Tests.AdministrativeDongDioramaInterpreterTests",
+      "isCoverageCandidate": true,
+      "assemblyName": "Ssalddel.Unity.Tests",
+      "componentName": "Ssalddel.Unity.Tests.AdministrativeDongDioramaInterpreterTests",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Unity.Tests/AdministrativeDongDioramaInterpreterTests.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E3",
+      "responsibility": "\uD589\uC815\uB3D9 \uB514\uC624\uB77C\uB9C8 \uD310\uBCF8\uACFC \uBE44\uAD8C\uC704 \uC6B4\uC601 \uC0C1\uD0DC \uACB0\uD569\uC744 \uC21C\uC218 \uB370\uC774\uD130 \uACC4\uCE35\uC5D0\uC11C \uAC80\uC99D\uD55C\uB2E4.",
+      "boundary": "Unity Scene, Play Mode, Game View \uB610\uB294 \uC2E4\uC81C Mongo \uAC8C\uC2DC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+      "primarySubmoduleKey": "",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
+      "workOrderIds": [],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
       "componentId": "Ssalddel.Unity.Tests:Ssalddel.Unity.Tests.AreaBuildingProgressionPresentationTests",
       "isCoverageCandidate": true,
       "assemblyName": "Ssalddel.Unity.Tests",
@@ -18952,6 +18971,25 @@
       "stepKeys": []
     },
     {
+      "componentId": "Ssalddel.Unity:Ssalddel.Unity.WorldProjection.AdministrativeDongDioramaClient",
+      "isCoverageCandidate": true,
+      "assemblyName": "Ssalddel.Unity",
+      "componentName": "Ssalddel.Unity.WorldProjection.AdministrativeDongDioramaClient",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Unity/Runtime/WorldProjection/AdministrativeDongDioramaClient.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E3",
+      "responsibility": "\uD589\uC815\uB3D9 \uB514\uC624\uB77C\uB9C8 manifest, tile, \uD45C\uC2DC \uC624\uBC84\uB808\uC774\uB97C \uC778\uC99D GET\uC73C\uB85C \uBA54\uBAA8\uB9AC \uD574\uC11D\uAE30\uC5D0 \uC804\uB2EC\uD55C\uB2E4.",
+      "boundary": "\uC2E4\uC81C \uD589\uC815\uB3D9 \uC790\uB8CC \uAC8C\uC2DC, Unity Scene \uBC30\uCE58, Play Mode \uB610\uB294 Game View \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+      "primarySubmoduleKey": "",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
+      "workOrderIds": [],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
       "componentId": "Ssalddel.Unity:Ssalddel.Unity.WorldProjection.OperationalWorldSceneClient",
       "isCoverageCandidate": true,
       "assemblyName": "Ssalddel.Unity",
@@ -19014,8 +19052,8 @@
     }
   ],
   "coverage": {
-    "candidateTypeCount": 842,
-    "annotatedTypeCount": 839,
+    "candidateTypeCount": 844,
+    "annotatedTypeCount": 841,
     "excludedTypeCount": 3,
     "uncoveredTypeCount": 0,
     "annotatedMethodCount": 17
