@@ -1,17 +1,18 @@
 using Ssalddel.Contracts.Shipper.Request;
-using Ssalddel.Application.CommandProcessing;
 
 namespace Ssalddel.Application.Shipper.Request;
 
 public sealed class 의뢰단건조회QueryHandler : IRequestHandler<의뢰단건조회Query, 화주운송의뢰응답?>
 {
     private readonly SsalddelContext _db;
-    private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly I화주운송업무담당자UseCase _operatorUseCase;
 
-    public 의뢰단건조회QueryHandler(SsalddelContext db, ICurrentUserAccessor currentUserAccessor)
+    public 의뢰단건조회QueryHandler(
+        SsalddelContext db,
+        I화주운송업무담당자UseCase operatorUseCase)
     {
         _db = db;
-        _currentUserAccessor = currentUserAccessor;
+        _operatorUseCase = operatorUseCase;
     }
 
     public async Task<화주운송의뢰응답?> Handle(의뢰단건조회Query request, CancellationToken cancellationToken)
@@ -25,8 +26,10 @@ public sealed class 의뢰단건조회QueryHandler : IRequestHandler<의뢰단�
             return null;
         }
 
-        if (!주문자권한검사.IsServerAdmin(_currentUserAccessor)
-            && !주문자권한검사.IsOwner(entity, _currentUserAccessor.UserId))
+        if (!await _operatorUseCase.권한보유Async(
+                entity,
+                Ssalddel.Contracts.Common.Operations.운송업무권한Codes.진행조회,
+                cancellationToken))
         {
             return null;
         }
@@ -41,6 +44,9 @@ public sealed class 의뢰단건조회QueryHandler : IRequestHandler<의뢰단�
             entity,
             execution?.운송원장,
             execution?.기사,
-            execution?.최근위치);
+            execution?.최근위치,
+            execution?.운영체제인계,
+            execution?.운송완료화주인계,
+            execution?.비정상운송사건목록);
     }
 }

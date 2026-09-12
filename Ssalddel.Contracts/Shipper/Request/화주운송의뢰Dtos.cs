@@ -1,4 +1,5 @@
 using Ssalddel.Contracts.Common.Privacy;
+using Ssalddel.Contracts.Common.Operations;
 
 namespace Ssalddel.Contracts.Shipper.Request;
 
@@ -48,6 +49,7 @@ public enum 운임정산상태
     청구대기,
     입금대기,
     입금확인완료,
+    비정상운송검토보류,
     정산완료,
     정산취소,
     미수발생
@@ -311,6 +313,10 @@ public sealed class 화주운송의뢰응답
     public string 정산상태 { get; set; } = string.Empty;
     public string 배차상태 { get; set; } = string.Empty;
     public string 운송상태 { get; set; } = string.Empty;
+    public 운영체제업무인계Dto? 운영체제인계 { get; set; }
+    public 운영체제업무인계Dto? 운송완료화주인계 { get; set; }
+    public bool 비정상운송검토보류중 { get; set; }
+    public IReadOnlyList<비정상운송사건Dto> 비정상운송사건목록 { get; set; } = Array.Empty<비정상운송사건Dto>();
     public DateTime? 운송원장갱신일시Utc { get; set; }
     public string? 확정기사Id { get; set; }
     public string? 확정기사명 { get; set; }
@@ -380,4 +386,29 @@ public sealed class 공개화물요약응답
     public string 의뢰상태 { get; set; } = string.Empty;
     public string 배차상태 { get; set; } = string.Empty;
     public DateTime 생성일시 { get; set; }
+}
+
+public sealed class 비정상운송사건Dto
+{
+    public string 사건StableId { get; set; } = string.Empty;
+    public string 사건유형Code { get; set; } = string.Empty;
+    public string 사건유형표시명 { get; set; } = string.Empty;
+    public string 원본예외Code { get; set; } = string.Empty;
+    public string 단계Code { get; set; } = string.Empty;
+    public string 상태Code { get; set; } = string.Empty;
+    public string 현재담당Code { get; set; } = string.Empty;
+    public bool 정산보류적용여부 { get; set; }
+    public int? 전체수량 { get; set; }
+    public int? 정상확인수량 { get; set; }
+    public int? 영향수량 { get; set; }
+    public string 업무통제상태Code { get; set; } = string.Empty;
+    public string 보류범위Code { get; set; } = string.Empty;
+    public bool 현장진행불가 { get; set; }
+    public string 보험검토상태Code { get; set; } = string.Empty;
+    public string 해결결과Code { get; set; } = string.Empty;
+    public bool 증빙참조있음 { get; set; }
+    public DateTime 최초신고시각Utc { get; set; }
+    public DateTime 최근신고시각Utc { get; set; }
+    public DateTime? 최근검토시각Utc { get; set; }
+    public long Revision { get; set; }
 }

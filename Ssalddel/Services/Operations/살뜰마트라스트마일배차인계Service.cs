@@ -69,8 +69,8 @@ public sealed class 살뜰마트라스트마일배차인계Service(
                 출발업무유형Code = "MartLastMileDeliveryRequest",
                 출발업무StableId = $"mart-last-mile:{orderRef}",
                 출발업무Revision = 요청.출발업무Revision,
-                인계계약Code = "SsalddelMartLastMileToFoodDelivery",
-                인계계약Revision = "ssalddel-mart-last-mile-handoff.v1",
+                인계계약Code = OperatingSystemInteractionContractCodes.SsalddelMartLastMileToFoodDelivery,
+                인계계약Revision = OperatingSystemInteractionContractRevisions.SsalddelMartLastMileToFoodDelivery,
                 최소상태사본Json = JsonSerializer.Serialize(new
                 {
                     martOrderStableId = $"mart-order:{orderRef}",
@@ -142,8 +142,8 @@ public sealed class 살뜰마트라스트마일배차인계Service(
             || handoff.출발업무유형Code != "MartLastMileDeliveryRequest"
             || handoff.출발업무StableId != $"mart-last-mile:{orderRef}"
             || handoff.출발업무Revision != sourceRevision
-            || handoff.인계계약Code != "SsalddelMartLastMileToFoodDelivery"
-            || handoff.인계계약Revision != "ssalddel-mart-last-mile-handoff.v1")
+            || handoff.인계계약Code != OperatingSystemInteractionContractCodes.SsalddelMartLastMileToFoodDelivery
+            || handoff.인계계약Revision != OperatingSystemInteractionContractRevisions.SsalddelMartLastMileToFoodDelivery)
         {
             throw new InvalidOperationException("기존 마트 라스트마일 인계가 현재 주문·revision·계약과 일치하지 않습니다.");
         }

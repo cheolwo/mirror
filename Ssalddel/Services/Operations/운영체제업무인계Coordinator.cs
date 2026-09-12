@@ -353,7 +353,7 @@ public sealed class 운영체제업무인계Coordinator(
             UpdatedAt = now
         };
 
-    private static 운영체제업무인계Dto ToDto(운영체제업무인계 entity)
+    internal static 운영체제업무인계Dto ToDto(운영체제업무인계 entity)
         => new()
         {
             인계StableId = entity.인계StableId,

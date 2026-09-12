@@ -40,7 +40,16 @@ public sealed class 용달운송의뢰결제승인완료EventHandler : INotifica
         }
 
         shipperRequest.결제상태 = 상태값.결제상태.결제완료;
-        shipperRequest.정산상태 = 운임정산상태.결제완료.ToString();
+        var hasOpenAbnormalTransportIncident = await _db.비정상운송사건
+            .AsNoTracking()
+            .AnyAsync(
+                x => x.운송의뢰Id == shipperRequest.의뢰Id
+                     && (x.정산보류적용여부
+                         || x.상태Code == 비정상운송사건상태Codes.운영검토대기),
+                cancellationToken);
+        shipperRequest.정산상태 = hasOpenAbnormalTransportIncident
+            ? 운임정산상태.비정상운송검토보류.ToString()
+            : 운임정산상태.결제완료.ToString();
         shipperRequest.UpdatedAt = DateTime.UtcNow;
 
         var createDispatchQueue = TryParseSettlementTime(shipperRequest.정산시점) == 정산시점.선결제;

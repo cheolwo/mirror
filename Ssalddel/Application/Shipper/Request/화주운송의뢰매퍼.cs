@@ -1,4 +1,5 @@
 using ShipRequest = Ssalddel.Contracts.Shipper.Request;
+using Ssalddel.Contracts.Common.Operations;
 using 살뜰.도메인.기사;
 using 살뜰.도메인.운송;
 
@@ -10,7 +11,10 @@ internal static class 화주운송의뢰매퍼
         화주운송의뢰 entity,
         운송원장? transportLedger = null,
         용달기사? driver = null,
-        기사위치기록? driverLocation = null)
+        기사위치기록? driverLocation = null,
+        운영체제업무인계Dto? operatingSystemHandoff = null,
+        운영체제업무인계Dto? completionHandoff = null,
+        IReadOnlyList<ShipRequest.비정상운송사건Dto>? abnormalTransportIncidents = null)
     {
         ShipRequest.정산시점? settlementTime = Enum.TryParse<ShipRequest.정산시점>(entity.정산시점, ignoreCase: false, out var parsedSettlementTime)
             ? parsedSettlementTime
@@ -32,6 +36,15 @@ internal static class 화주운송의뢰매퍼
             정산상태 = entity.정산상태,
             배차상태 = entity.배차상태,
             운송상태 = transportLedger?.상태 ?? string.Empty,
+            운영체제인계 = operatingSystemHandoff,
+            운송완료화주인계 = completionHandoff,
+            비정상운송검토보류중 = abnormalTransportIncidents?.Any(
+                x => x.정산보류적용여부
+                     || string.Equals(
+                         x.상태Code,
+                         비정상운송사건상태Codes.운영검토대기,
+                         StringComparison.Ordinal)) == true,
+            비정상운송사건목록 = abnormalTransportIncidents ?? Array.Empty<ShipRequest.비정상운송사건Dto>(),
             운송원장갱신일시Utc = transportLedger?.UpdatedAt,
             확정기사Id = transportLedger?.확정기사Id,
             확정기사명 = driver?.기사명,

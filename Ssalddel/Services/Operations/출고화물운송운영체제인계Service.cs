@@ -43,8 +43,8 @@ public sealed class 출고화물운송운영체제인계Service(
             출발업무유형Code = "WarehouseOutboundPlan",
             출발업무StableId = $"warehouse-outbound:{plan.Id}",
             출발업무Revision = handoffAt.Ticks,
-            인계계약Code = "WarehouseOutboundToCargoTransport",
-            인계계약Revision = "warehouse-outbound-cargo-handoff.v1",
+            인계계약Code = OperatingSystemInteractionContractCodes.WarehouseOutboundToCargoTransport,
+            인계계약Revision = OperatingSystemInteractionContractRevisions.WarehouseOutboundToCargoTransport,
             최소상태사본Json = JsonSerializer.Serialize(new
             {
                 outboundPlanStableId = $"warehouse-outbound:{plan.Id}",

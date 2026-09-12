@@ -1,6 +1,7 @@
 using FluentResults;
 using Ssalddel.ApiMetadata;
 using Ssalddel.Contracts.Admin.Transport;
+using Ssalddel.Contracts.Common.Operations;
 using Ssalddel.Contracts.Shipper.Request;
 
 namespace Ssalddel.Application.Shipper.Request;
@@ -34,6 +35,19 @@ public interface I화주운송의뢰UseCase
         CancellationToken cancellationToken = default);
 
     Task<화주운송의뢰응답?> 의뢰단건조회Async(
+        string requestId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<운송업무담당자배정응답>> 업무담당자조회Async(
+        string requestId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<운송업무담당자배정응답>> 업무담당자변경Async(
+        string requestId,
+        운송업무담당자배정변경요청 request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<OrderWorkNetworkProjection>> 업무망조회Async(
         string requestId,
         CancellationToken cancellationToken = default);
 
@@ -88,6 +102,16 @@ public interface I화주운송의뢰UseCase
 [SsalddelUseCaseActor(SsalddelActor.Recipient, SsalddelUseCaseActorRole.Supporting)]
 [SsalddelUseCaseRelation(
     SsalddelUseCaseRelationKind.Extend,
+    "화주운송의뢰화물운송인계Service",
+    Condition = "화주가 운송 조건과 운임을 확인해 의뢰를 확정한 경우",
+    Summary = "저장된 화주 운송의뢰의 실행 책임만 국내 화물 운송 OS에 인계하며 배차나 기사 상태는 직접 변경하지 않습니다.")]
+[SsalddelUseCaseRelation(
+    SsalddelUseCaseRelationKind.Extend,
+    "화물운송완료화주인수인계Service",
+    Condition = "하차 증빙과 운송 인수 완료가 기록되고 화주가 인수증을 등록하는 경우",
+    Summary = "화물운송 완료 결과를 화주 인수·검수 단계로 반환하고 수락하되 정산 완료나 재위탁은 자동 확정하지 않습니다.")]
+[SsalddelUseCaseRelation(
+    SsalddelUseCaseRelationKind.Extend,
     "창고작업UseCase",
     Condition = "화주 의뢰 화물이 창고 재고 또는 출고 예정 상품처럼 관리되는 경우",
     Summary = "화주 화면에서는 운송 의뢰로 보이지만 서버 내부에서는 출고 예정 운송 대상으로 정규화해 창고 출고·배차 파이프라인으로 연결합니다.")]
@@ -108,19 +132,25 @@ public sealed class 화주운송의뢰UseCase : I화주운송의뢰UseCase
     private readonly I차량추천Service _vehicleRecommendationService;
     private readonly I화주운송기준운임Service _fareEstimateService;
     private readonly I화주운송요금정책검토Service _farePolicyReviewService;
+    private readonly I화주운송업무담당자UseCase _transportOperatorUseCase;
+    private readonly I화주운송업무망조회UseCase _workNetworkUseCase;
 
     public 화주운송의뢰UseCase(
         ISender sender,
         I화주운송의뢰일괄등록파서Service bulkParser,
         I차량추천Service vehicleRecommendationService,
         I화주운송기준운임Service fareEstimateService,
-        I화주운송요금정책검토Service farePolicyReviewService)
+        I화주운송요금정책검토Service farePolicyReviewService,
+        I화주운송업무담당자UseCase transportOperatorUseCase,
+        I화주운송업무망조회UseCase workNetworkUseCase)
     {
         _sender = sender;
         _bulkParser = bulkParser;
         _vehicleRecommendationService = vehicleRecommendationService;
         _fareEstimateService = fareEstimateService;
         _farePolicyReviewService = farePolicyReviewService;
+        _transportOperatorUseCase = transportOperatorUseCase;
+        _workNetworkUseCase = workNetworkUseCase;
     }
 
     public async Task<IReadOnlyList<화주운송의뢰응답>> 의뢰목록조회Async(
@@ -180,6 +210,22 @@ public sealed class 화주운송의뢰UseCase : I화주운송의뢰UseCase
         string requestId,
         CancellationToken cancellationToken = default)
         => await _sender.Send(new 의뢰단건조회Query(requestId), cancellationToken);
+
+    public Task<Result<운송업무담당자배정응답>> 업무담당자조회Async(
+        string requestId,
+        CancellationToken cancellationToken = default)
+        => _transportOperatorUseCase.조회Async(requestId, cancellationToken);
+
+    public Task<Result<운송업무담당자배정응답>> 업무담당자변경Async(
+        string requestId,
+        운송업무담당자배정변경요청 request,
+        CancellationToken cancellationToken = default)
+        => _transportOperatorUseCase.변경Async(requestId, request, cancellationToken);
+
+    public Task<Result<OrderWorkNetworkProjection>> 업무망조회Async(
+        string requestId,
+        CancellationToken cancellationToken = default)
+        => _workNetworkUseCase.조회Async(requestId, cancellationToken);
 
     public async Task<Result<화주운송의뢰응답>> 의뢰수정Async(
         string requestId,

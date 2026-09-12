@@ -17,19 +17,22 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
     private readonly IGeocodingService _geocodingService;
     private readonly I운송원장Mongo동기화Service _원장동기화Service;
     private readonly IOperatingMarketFreightWorkflowPolicy _freightWorkflowPolicy;
+    private readonly I화주운송의뢰화물운송인계Service _operatingSystemHandoffService;
 
     public 의뢰생성CommandHandler(
         SsalddelContext db,
         IGeocodingService geocodingService,
         ICurrentUserAccessor currentUserAccessor,
         I운송원장Mongo동기화Service 원장동기화Service,
-        IOperatingMarketFreightWorkflowPolicy freightWorkflowPolicy)
+        IOperatingMarketFreightWorkflowPolicy freightWorkflowPolicy,
+        I화주운송의뢰화물운송인계Service operatingSystemHandoffService)
     {
         _db = db;
         _geocodingService = geocodingService;
         _currentUserAccessor = currentUserAccessor;
         _원장동기화Service = 원장동기화Service;
         _freightWorkflowPolicy = freightWorkflowPolicy;
+        _operatingSystemHandoffService = operatingSystemHandoffService;
     }
 
     public async Task<Result<화주운송의뢰응답>> Handle(의뢰생성Command request, CancellationToken cancellationToken)
@@ -215,7 +218,10 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        return Result.Ok(화주운송의뢰매퍼.To응답(entity));
+        var handoff = await _operatingSystemHandoffService.인계Async(entity.의뢰Id, cancellationToken);
+        return Result.Ok(화주운송의뢰매퍼.To응답(
+            entity,
+            operatingSystemHandoff: handoff));
     }
 
     private static bool ShouldCreateFareComposition(의뢰생성Command request)

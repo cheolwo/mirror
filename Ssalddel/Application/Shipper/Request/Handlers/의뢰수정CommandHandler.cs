@@ -1,5 +1,5 @@
 using FluentResults;
-using Ssalddel.Application.CommandProcessing;
+using Ssalddel.Contracts.Common.Operations;
 using Ssalddel.Contracts.Shipper.Request;
 
 namespace Ssalddel.Application.Shipper.Request;
@@ -7,12 +7,14 @@ namespace Ssalddel.Application.Shipper.Request;
 public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Command, Result<화주운송의뢰응답>>
 {
     private readonly SsalddelContext _db;
-    private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly I화주운송업무담당자UseCase _operatorUseCase;
 
-    public 의뢰수정CommandHandler(SsalddelContext db, ICurrentUserAccessor currentUserAccessor)
+    public 의뢰수정CommandHandler(
+        SsalddelContext db,
+        I화주운송업무담당자UseCase operatorUseCase)
     {
         _db = db;
-        _currentUserAccessor = currentUserAccessor;
+        _operatorUseCase = operatorUseCase;
     }
 
     public async Task<Result<화주운송의뢰응답>> Handle(의뢰수정Command request, CancellationToken cancellationToken)
@@ -23,15 +25,25 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
             return Result.Fail<화주운송의뢰응답>("의뢰를 찾을 수 없습니다.");
         }
 
-        if (!주문자권한검사.IsServerAdmin(_currentUserAccessor)
-            && !주문자권한검사.IsOwner(entity, _currentUserAccessor.UserId))
+        var cargoChanged = HasChanges(request.화물정보);
+        var pickupChanged = HasChanges(request.픽업지);
+        var dropoffChanged = HasChanges(request.하차지);
+        var transportChanged = HasChanges(request.운송조건) || request.요청조건.요청사항 is not null;
+        var settlementChanged = request.정산조건 is not null;
+        var requiredPermissions = new List<string>(4);
+        if (cargoChanged) requiredPermissions.Add(운송업무권한Codes.화물조건수정);
+        if (pickupChanged || dropoffChanged) requiredPermissions.Add(운송업무권한Codes.주소시간연락처수정);
+        if (transportChanged) requiredPermissions.Add(운송업무권한Codes.배차조건수정);
+        if (settlementChanged) requiredPermissions.Add(운송업무권한Codes.운임정산조건수정);
+
+        if (!await _operatorUseCase.모든권한보유Async(entity, requiredPermissions, cancellationToken))
         {
             return Result.Fail<화주운송의뢰응답>("의뢰를 찾을 수 없습니다.");
         }
 
         var updated = false;
 
-        if (request.화물정보 != null)
+        if (cargoChanged)
         {
             if (request.화물정보.화물종류 != null) entity.화물종류 = request.화물정보.화물종류;
             if (request.화물정보.화물설명 != null) entity.화물설명 = request.화물정보.화물설명;
@@ -43,7 +55,7 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
             updated = true;
         }
 
-        if (request.픽업지 != null)
+        if (pickupChanged)
         {
             if (request.픽업지.도로명주소 != null) entity.픽업_도로명주소 = request.픽업지.도로명주소;
             if (request.픽업지.상세주소 != null) entity.픽업_상세주소 = request.픽업지.상세주소;
@@ -65,7 +77,7 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
             updated = true;
         }
 
-        if (request.하차지 != null)
+        if (dropoffChanged)
         {
             if (request.하차지.도로명주소 != null) entity.하차_도로명주소 = request.하차지.도로명주소;
             if (request.하차지.상세주소 != null) entity.하차_상세주소 = request.하차지.상세주소;
@@ -87,30 +99,45 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
             updated = true;
         }
 
-        if (request.운송조건 != null)
+        if (transportChanged)
         {
             if (request.운송조건.운송방식 != null) entity.운송방식 = request.운송조건.운송방식;
             if (request.운송조건.차량종류 != null) entity.차량종류 = request.운송조건.차량종류;
             if (request.운송조건.서비스레벨 != null) entity.서비스레벨 = request.운송조건.서비스레벨;
+            if (request.요청조건.요청사항 != null) entity.요청사항 = request.요청조건.요청사항;
             updated = true;
         }
 
-        if (request.정산조건 != null)
+        if (settlementChanged)
         {
-            if (!string.IsNullOrWhiteSpace(request.정산조건.결제수단))
+            var settlementInput = request.정산조건!;
+            var hasOpenAbnormalTransportIncident = await _db.비정상운송사건
+                .AsNoTracking()
+                .AnyAsync(
+                    x => x.운송의뢰Id == entity.의뢰Id
+                         && (x.정산보류적용여부
+                             || x.상태Code == 비정상운송사건상태Codes.운영검토대기),
+                    cancellationToken);
+            if (hasOpenAbnormalTransportIncident)
             {
-                entity.결제수단 = request.정산조건.결제수단;
+                return Result.Fail<화주운송의뢰응답>(
+                    "비정상 운송 사건의 운영 검토 중에는 정산 조건을 변경할 수 없습니다.");
             }
 
-            if (request.정산조건.정산조건 != null)
+            if (!string.IsNullOrWhiteSpace(settlementInput.결제수단))
             {
-                entity.정산시점 = request.정산조건.정산조건.정산시점.ToString();
-                entity.증빙방식 = request.정산조건.정산조건.증빙방식.ToString();
-                entity.수납주체 = request.정산조건.정산조건.수납주체.ToString();
-                entity.정산메모 = request.정산조건.정산조건.정산메모 ?? string.Empty;
-                entity.세금계산서필요 = request.정산조건.정산조건.세금계산서필요;
-                entity.현금영수증필요 = request.정산조건.정산조건.현금영수증필요;
-                entity.정산상태 = GetSettlementStatus(request.정산조건.정산조건.정산시점, request.정산조건.정산조건.증빙방식);
+                entity.결제수단 = settlementInput.결제수단;
+            }
+
+            if (settlementInput.정산조건 != null)
+            {
+                entity.정산시점 = settlementInput.정산조건.정산시점.ToString();
+                entity.증빙방식 = settlementInput.정산조건.증빙방식.ToString();
+                entity.수납주체 = settlementInput.정산조건.수납주체.ToString();
+                entity.정산메모 = settlementInput.정산조건.정산메모 ?? string.Empty;
+                entity.세금계산서필요 = settlementInput.정산조건.세금계산서필요;
+                entity.현금영수증필요 = settlementInput.정산조건.현금영수증필요;
+                entity.정산상태 = GetSettlementStatus(settlementInput.정산조건.정산시점, settlementInput.정산조건.증빙방식);
             }
 
             updated = true;
@@ -139,4 +166,28 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
             _ => 운임정산상태.결제대기.ToString()
         };
     }
+
+    private static bool HasChanges(화물정보입력값 value)
+        => value.화물종류 is not null
+           || value.화물설명 is not null
+           || value.화물수량.HasValue
+           || value.화물중량Kg.HasValue
+           || value.화물부피Cbm.HasValue
+           || value.화물파손주의여부.HasValue
+           || value.화물온도조건 is not null;
+
+    private static bool HasChanges(위치정보입력값 value)
+        => value.도로명주소 is not null
+           || value.상세주소 is not null
+           || value.위도.HasValue
+           || value.경도.HasValue
+           || value.연락처이름 is not null
+           || value.연락처전화번호 is not null
+           || value.시간창시작일시.HasValue
+           || value.시간창종료일시.HasValue;
+
+    private static bool HasChanges(운송조건입력값 value)
+        => value.운송방식 is not null
+           || value.차량종류 is not null
+           || value.서비스레벨 is not null;
 }

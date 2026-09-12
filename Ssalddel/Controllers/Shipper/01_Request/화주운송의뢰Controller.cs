@@ -9,6 +9,7 @@ using Ssalddel.ApiMetadata;
 using 살뜰.Services.Versioning;
 using System.Security.Claims;
 using Ssalddel.Contracts.Common.Privacy;
+using Ssalddel.Contracts.Common.Operations;
 using Ssalddel.Services.Privacy;
 
 namespace Ssalddel.Controllers.Shipper.Request01
@@ -107,6 +108,34 @@ namespace Ssalddel.Controllers.Shipper.Request01
         {
             var item = await _useCase.의뢰단건조회Async(requestId);
             return item == null ? this.ToNotFoundProblem("운송의뢰 데이터를 찾을 수 없습니다.") : Ok(item);
+        }
+
+        [HttpGet("{requestId}/operators")]
+        public async Task<IActionResult> 업무담당자조회(
+            string requestId,
+            CancellationToken cancellationToken)
+        {
+            var result = await _useCase.업무담당자조회Async(requestId, cancellationToken);
+            return this.ToActionResult(result);
+        }
+
+        [HttpPut("{requestId}/operators")]
+        public async Task<IActionResult> 업무담당자변경(
+            string requestId,
+            [FromBody] 운송업무담당자배정변경요청 request,
+            CancellationToken cancellationToken)
+        {
+            var result = await _useCase.업무담당자변경Async(requestId, request, cancellationToken);
+            return this.ToActionResult(result);
+        }
+
+        [HttpGet("{requestId}/work-network")]
+        public async Task<IActionResult> 업무망조회(
+            string requestId,
+            CancellationToken cancellationToken)
+        {
+            var result = await _useCase.업무망조회Async(requestId, cancellationToken);
+            return this.ToActionResult(result);
         }
 
         [HttpPut("{requestId}")]
