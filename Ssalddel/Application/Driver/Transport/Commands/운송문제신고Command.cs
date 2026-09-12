@@ -20,7 +20,10 @@ public sealed record 운송문제신고Command : 살뜰CommandBase, IRequest<Res
         string? 메모,
         string? 증빙ObjectName,
         string? 증빙Url,
-        bool 관리자확인요청)
+        bool 관리자확인요청,
+        int? 정상확인수량 = null,
+        int? 영향수량 = null,
+        bool 현장진행불가 = false)
     {
         기사Id = string.IsNullOrWhiteSpace(driverId) ? string.Empty : driverId;
         Id = id;
@@ -31,6 +34,9 @@ public sealed record 운송문제신고Command : 살뜰CommandBase, IRequest<Res
         this.증빙ObjectName = 증빙ObjectName;
         this.증빙Url = 증빙Url;
         this.관리자확인요청 = 관리자확인요청;
+        this.정상확인수량 = 정상확인수량;
+        this.영향수량 = 영향수량;
+        this.현장진행불가 = 현장진행불가;
         참여자Id = 기사Id;
         실행역할 = 살뜰역할유형.기사;
     }
@@ -44,4 +50,7 @@ public sealed record 운송문제신고Command : 살뜰CommandBase, IRequest<Res
     public string? 증빙ObjectName { get; init; }
     public string? 증빙Url { get; init; }
     public bool 관리자확인요청 { get; init; }
+    public int? 정상확인수량 { get; init; }
+    public int? 영향수량 { get; init; }
+    public bool 현장진행불가 { get; init; }
 }

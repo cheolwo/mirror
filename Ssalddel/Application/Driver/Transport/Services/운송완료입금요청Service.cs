@@ -65,6 +65,24 @@ public sealed partial class 운송완료입금요청Service : I운송완료입�
 
         request.배차상태 = context.배차상태;
 
+        var hasOpenAbnormalTransportIncident = await _db.비정상운송사건
+            .AsNoTracking()
+            .AnyAsync(
+                x => x.운송의뢰Id == request.의뢰Id
+                     && (x.정산보류적용여부
+                         || x.상태Code == 비정상운송사건상태Codes.운영검토대기),
+                cancellationToken);
+        if (hasOpenAbnormalTransportIncident)
+        {
+            request.정산상태 = 운임정산상태.비정상운송검토보류.ToString();
+            request.UpdatedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync(cancellationToken);
+            return new 운송완료입금요청결과(
+                false,
+                "비정상 운송 사건의 운영 검토가 끝날 때까지 입금 요청을 보류합니다.",
+                request.의뢰Id);
+        }
+
         var 입금요청판정 = 운송완료입금요청정책.입금요청가능여부(request, context.입금요청종류);
         if (!입금요청판정.가능)
         {

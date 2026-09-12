@@ -97,6 +97,16 @@ public sealed class 기사지급준비UseCase : I기사지급준비UseCase
                 x => x.OrderByDescending(item => item.UpdatedAt).First(),
                 StringComparer.Ordinal);
 
+        var openAbnormalIncidentRequestIds = (await _db.비정상운송사건
+                .AsNoTracking()
+                .Where(x => requestKeyList.Contains(x.운송의뢰Id)
+                            && (x.정산보류적용여부
+                                || x.상태Code == 비정상운송사건상태Codes.운영검토대기))
+                .Select(x => x.운송의뢰Id)
+                .Distinct()
+                .ToListAsync(cancellationToken))
+            .ToHashSet(StringComparer.Ordinal);
+
         var settlementAccount = await _db.Set<기사정산계좌>()
             .AsNoTracking()
             .SingleOrDefaultAsync(x => x.기사Id == 기사Id, cancellationToken);
@@ -110,7 +120,14 @@ public sealed class 기사지급준비UseCase : I기사지급준비UseCase
             {
                 var request = 요청찾기(transport, requestsById);
                 faresByRequestId.TryGetValue(request?.의뢰Id ?? transport.의뢰Id, out var fare);
-                return 항목생성(transport, request, fare, settlementAccount is not null, accountVerified);
+                var requestId = request?.의뢰Id ?? transport.의뢰Id;
+                return 항목생성(
+                    transport,
+                    request,
+                    fare,
+                    settlementAccount is not null,
+                    accountVerified,
+                    openAbnormalIncidentRequestIds.Contains(requestId));
             })
             .ToArray();
 
@@ -153,13 +170,15 @@ public sealed class 기사지급준비UseCase : I기사지급준비UseCase
         화주운송의뢰? request,
         운임구성? fare,
         bool hasSettlementAccount,
-        bool settlementAccountVerified)
+        bool settlementAccountVerified,
+        bool hasOpenAbnormalTransportIncident)
     {
         var readiness = 준비상태판정(
             request,
             fare?.기사지급예정운임,
             hasSettlementAccount,
-            settlementAccountVerified);
+            settlementAccountVerified,
+            hasOpenAbnormalTransportIncident);
 
         return new 기사지급준비항목응답
         {
@@ -185,13 +204,22 @@ public sealed class 기사지급준비UseCase : I기사지급준비UseCase
         화주운송의뢰? request,
         decimal? expectedPayoutAmount,
         bool hasSettlementAccount,
-        bool settlementAccountVerified)
+        bool settlementAccountVerified,
+        bool hasOpenAbnormalTransportIncident = false)
     {
         if (request is null)
         {
             return new(
                 기사지급준비상태코드.원천의뢰없음,
                 "운송 원천 의뢰를 확인할 수 없어 지급 준비를 진행할 수 없습니다.",
+                false);
+        }
+
+        if (hasOpenAbnormalTransportIncident)
+        {
+            return new(
+                기사지급준비상태코드.비정상운송검토보류,
+                "비정상 운송 사건의 운영 검토가 끝날 때까지 기사 지급 준비를 보류합니다.",
                 false);
         }
 

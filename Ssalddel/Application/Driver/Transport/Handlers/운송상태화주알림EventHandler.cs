@@ -139,7 +139,13 @@ public sealed class 운송상태화주알림EventHandler :
                 notification.메모,
                 notification.증빙ObjectName,
                 notification.증빙Url,
-                notification.관리자확인필요
+                notification.관리자확인필요,
+                notification.전체수량,
+                notification.정상확인수량,
+                notification.영향수량,
+                notification.현장진행불가,
+                notification.업무통제상태Code,
+                notification.보류범위Code
             },
             원장상태변경여부: false),
             cancellationToken);

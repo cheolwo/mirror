@@ -72,6 +72,36 @@ public sealed class 기사지급승인UseCaseTests
         Assert.Empty(db.기사지급Outbox);
     }
 
+    [Fact]
+    public async Task 열린비정상운송사건이있으면_관리자도_기사지급을승인할수없다()
+    {
+        await using var db = CreateContext();
+        var transport = await SeedReadyAsync(db);
+        db.비정상운송사건.Add(new 비정상운송사건
+        {
+            사건StableId = $"abnormal-transport:{transport.Id}:CargoDamage",
+            운송Id = transport.Id,
+            운송의뢰Id = "request-a",
+            사건유형Code = 비정상운송사건유형Codes.화물훼손,
+            원본예외Code = "화물훼손",
+            단계Code = "운행중",
+            상태Code = 비정상운송사건상태Codes.운영검토대기,
+            최초신고시각Utc = DateTime.UtcNow,
+            최근신고시각Utc = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+        var useCase = CreateUseCase(db);
+
+        var result = await useCase.승인Async(CreateRequest(transport.Id));
+
+        Assert.True(result.IsFailed);
+        Assert.Contains("비정상 운송", result.Errors.Single().Message, StringComparison.Ordinal);
+        Assert.Empty(db.기사운송대금지급요청);
+        Assert.Empty(db.기사지급Outbox);
+    }
+
     private static 기사지급승인UseCase CreateUseCase(SsalddelContext db)
         => new(
             db,

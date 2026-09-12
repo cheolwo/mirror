@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Driver.Transport;
+using Ssalddel.Contracts.Shipper.Request;
+using Ssalddel.Services.Operations;
 using 살뜰.Data;
 using 살뜰.Infrastructure.Security;
 using 살뜰.도메인.공통;
@@ -14,6 +16,61 @@ namespace Ssalddel.Tests.Application.Driver.Transport;
 
 public sealed class 기사운송원장상호작용Tests
 {
+    [Fact]
+    public async Task 수량불일치신고는_기존운송메모와함께_비정상사건과정산보류를저장한다()
+    {
+        await using var db = CreateContext();
+        var transport = new 운송원장
+        {
+            운송번호 = "request-abnormal",
+            의뢰Id = "request-abnormal",
+            화주Id = "shipper-1",
+            기사_운송자 = "driver-1",
+            확정기사Id = "driver-1",
+            상태 = 상태값.배차상태.운송중
+        };
+        db.운송원장.Add(transport);
+        db.화주운송의뢰.Add(new 화주운송의뢰
+        {
+            의뢰Id = "request-abnormal",
+            화주Id = "shipper-1",
+            주문자UserId = "shipper-1",
+            정산상태 = 운임정산상태.입금확인완료.ToString()
+        });
+        await db.SaveChangesAsync();
+        var handler = new 운송문제신고CommandHandler(
+            db,
+            new ThrowingPublisher(),
+            new TestCurrentUserAccessor("driver-1", 역할명.기사),
+            new 참여자실행권한검사(),
+            new 운송증빙첨부JsonWriter(),
+            new 비정상운송사건Service(db),
+            NullLogger<운송문제신고CommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new 운송문제신고Command(
+                "driver-1",
+                transport.Id,
+                "상차",
+                "수량불일치",
+                "수량이 다릅니다.",
+                "운영자 확인 필요",
+                "evidence/photo-1.jpg",
+                "https://private.example/evidence/photo-1.jpg",
+                true),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Contains("[운송예외][상차][수량불일치]", transport.메모, StringComparison.Ordinal);
+        var incident = await db.비정상운송사건.SingleAsync();
+        Assert.Equal(비정상운송사건유형Codes.수량불일치, incident.사건유형Code);
+        Assert.True(incident.증빙참조있음);
+        Assert.Equal(
+            운임정산상태.비정상운송검토보류.ToString(),
+            (await db.화주운송의뢰.SingleAsync()).정산상태);
+        Assert.DoesNotContain("private.example", incident.사건StableId, StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task 현재운송조회는_배정기사에게_실제수령자정보를반환한다()
     {

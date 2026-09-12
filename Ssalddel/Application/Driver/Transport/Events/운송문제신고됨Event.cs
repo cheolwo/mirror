@@ -14,5 +14,12 @@ public sealed record 운송문제신고됨Event(
     string? 증빙Url,
     bool 관리자확인필요,
     DateTime 발생시각Utc,
-    string TraceId) : INotification;
-
+    string TraceId) : INotification
+{
+    public int? 전체수량 { get; init; }
+    public int? 정상확인수량 { get; init; }
+    public int? 영향수량 { get; init; }
+    public bool 현장진행불가 { get; init; }
+    public string 업무통제상태Code { get; init; } = string.Empty;
+    public string 보류범위Code { get; init; } = string.Empty;
+}

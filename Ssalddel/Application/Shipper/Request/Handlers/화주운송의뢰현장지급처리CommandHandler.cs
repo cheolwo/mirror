@@ -1,5 +1,6 @@
 using FluentResults;
 using Ssalddel.Application.CommandProcessing;
+using Ssalddel.Contracts.Common.Operations;
 using Ssalddel.Services.Community;
 using 살뜰.Services.Dispatch.Queue;
 using ShipRequest = Ssalddel.Contracts.Shipper.Request;
@@ -12,17 +13,20 @@ public sealed class 화주운송의뢰현장지급처리CommandHandler : IReques
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly I운송의뢰배차대기Service _dispatchQueueService;
     private readonly I운송원장Mongo동기화Service _transportLedgerSync;
+    private readonly I화주운송업무담당자UseCase _operatorUseCase;
 
     public 화주운송의뢰현장지급처리CommandHandler(
         SsalddelContext db,
         ICurrentUserAccessor currentUserAccessor,
         I운송의뢰배차대기Service dispatchQueueService,
-        I운송원장Mongo동기화Service transportLedgerSync)
+        I운송원장Mongo동기화Service transportLedgerSync,
+        I화주운송업무담당자UseCase operatorUseCase)
     {
         _db = db;
         _currentUserAccessor = currentUserAccessor;
         _dispatchQueueService = dispatchQueueService;
         _transportLedgerSync = transportLedgerSync;
+        _operatorUseCase = operatorUseCase;
     }
 
     public async Task<Result<ShipRequest.화주운송의뢰응답>> Handle(화주운송의뢰현장지급처리Command request, CancellationToken cancellationToken)
@@ -38,10 +42,18 @@ public sealed class 화주운송의뢰현장지급처리CommandHandler : IReques
             return Result.Fail<ShipRequest.화주운송의뢰응답>("의뢰를 찾을 수 없습니다.");
         }
 
-        if (!주문자권한검사.IsServerAdmin(_currentUserAccessor)
-            && !주문자권한검사.IsOwner(entity, _currentUserAccessor.UserId))
+        if (!await _operatorUseCase.권한보유Async(
+                entity,
+                운송업무권한Codes.정산확인,
+                cancellationToken))
         {
             return Result.Fail<ShipRequest.화주운송의뢰응답>("의뢰를 찾을 수 없습니다.");
+        }
+
+        if (await 열린비정상운송사건존재Async(entity.의뢰Id, cancellationToken))
+        {
+            return Result.Fail<ShipRequest.화주운송의뢰응답>(
+                "비정상 운송 사건의 운영 검토 중에는 현장 지급 상태로 변경할 수 없습니다.");
         }
 
         entity.정산시점 = ShipRequest.정산시점.현장지급.ToString();
@@ -79,4 +91,11 @@ public sealed class 화주운송의뢰현장지급처리CommandHandler : IReques
 
         return $"{origin.Trim()} | {memo.Trim()}";
     }
+
+    private Task<bool> 열린비정상운송사건존재Async(string requestId, CancellationToken cancellationToken)
+        => _db.비정상운송사건.AsNoTracking().AnyAsync(
+            x => x.운송의뢰Id == requestId
+                 && (x.정산보류적용여부
+                     || x.상태Code == 비정상운송사건상태Codes.운영검토대기),
+            cancellationToken);
 }

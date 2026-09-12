@@ -147,6 +147,13 @@ public sealed class 기사지급승인UseCase : I기사지급승인UseCase
         var account = await _db.Set<기사정산계좌>()
             .AsNoTracking()
             .SingleOrDefaultAsync(x => x.기사Id == driverId, cancellationToken);
+        var hasOpenAbnormalTransportIncident = await _db.비정상운송사건
+            .AsNoTracking()
+            .AnyAsync(
+                x => x.운송의뢰Id == requestId
+                     && (x.정산보류적용여부
+                         || x.상태Code == 비정상운송사건상태Codes.운영검토대기),
+                cancellationToken);
         var readiness = 기사지급준비UseCase.준비상태판정(
             sourceRequest,
             fare?.기사지급예정운임,
@@ -154,7 +161,8 @@ public sealed class 기사지급승인UseCase : I기사지급승인UseCase
             string.Equals(
                 account?.확인상태,
                 기사정산계좌확인상태.확인완료,
-                StringComparison.Ordinal));
+                StringComparison.Ordinal),
+            hasOpenAbnormalTransportIncident);
         if (!readiness.IsReady)
         {
             return 상태실패<기사지급승인응답>(

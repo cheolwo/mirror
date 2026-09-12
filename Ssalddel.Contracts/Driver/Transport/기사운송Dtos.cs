@@ -100,4 +100,7 @@ public sealed class 기사운송문제신고요청
     public string? 증빙ObjectName { get; set; }
     public string? 증빙Url { get; set; }
     public bool 관리자확인요청 { get; set; }
+    public int? 정상확인수량 { get; set; }
+    public int? 영향수량 { get; set; }
+    public bool 현장진행불가 { get; set; }
 }

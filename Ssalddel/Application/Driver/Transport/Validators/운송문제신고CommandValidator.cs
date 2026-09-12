@@ -47,5 +47,19 @@ public sealed class 운송문제신고CommandValidator : AbstractValidator<운�
             .MaximumLength(2000)
             .WithMessage("증빙 URL은 2000자 이하여야 합니다.")
             .When(x => !string.IsNullOrWhiteSpace(x.증빙Url));
+
+        RuleFor(x => x.정상확인수량)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage("정상 확인 수량은 0 이상이어야 합니다.")
+            .When(x => x.정상확인수량.HasValue);
+
+        RuleFor(x => x.영향수량)
+            .GreaterThan(0)
+            .WithMessage("영향 수량은 1 이상이어야 합니다.")
+            .When(x => x.영향수량.HasValue);
+
+        RuleFor(x => x)
+            .Must(x => x.정상확인수량.HasValue == x.영향수량.HasValue)
+            .WithMessage("부분 처리 수량은 정상 확인 수량과 영향 수량을 함께 입력해야 합니다.");
     }
 }

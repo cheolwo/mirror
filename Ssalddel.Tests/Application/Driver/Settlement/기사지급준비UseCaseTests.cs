@@ -50,6 +50,104 @@ public sealed class 기사지급준비UseCaseTests
     }
 
     [Fact]
+    public async Task 열린비정상운송사건이있으면_수납과계좌가완료되어도_지급준비를보류한다()
+    {
+        await using var db = CreateContext();
+        await SeedDriverAsync(db, "driver-a");
+        await SeedCompletedTransportAsync(
+            db,
+            "driver-a",
+            "request-held",
+            new DateTime(2026, 7, 20, 8, 30, 0, DateTimeKind.Utc),
+            expectedPayout: 42000m,
+            paymentStatus: 상태값.결제상태.결제완료);
+        db.Set<기사정산계좌>().Add(new 기사정산계좌
+        {
+            기사Id = "driver-a",
+            국가코드 = "KR",
+            은행명 = "국민은행",
+            예금주명 = "기사 A",
+            계좌번호 = "1234567890",
+            확인상태 = 기사정산계좌확인상태.확인완료
+        });
+        db.비정상운송사건.Add(new 비정상운송사건
+        {
+            사건StableId = "abnormal-transport:1:QuantityMismatch",
+            운송Id = 1,
+            운송의뢰Id = "request-held",
+            사건유형Code = 비정상운송사건유형Codes.수량불일치,
+            원본예외Code = "수량불일치",
+            단계Code = "상차",
+            상태Code = 비정상운송사건상태Codes.운영검토대기,
+            최초신고시각Utc = DateTime.UtcNow,
+            최근신고시각Utc = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+        var useCase = new 기사지급준비UseCase(db);
+
+        var result = await useCase.월별조회Async("driver-a", 2026, 7);
+
+        var item = Assert.Single(result.Value.Items);
+        Assert.Equal(기사지급준비상태코드.비정상운송검토보류, item.ReadinessCode);
+        Assert.False(item.IsReadyForPayoutPreparation);
+        Assert.Equal(0m, result.Value.ReadyForPayoutPreparationTotal);
+    }
+
+    [Fact]
+    public async Task 정상분인수와_영향분보류가결정되면_기사운임지급준비를막지않는다()
+    {
+        await using var db = CreateContext();
+        await SeedDriverAsync(db, "driver-a");
+        await SeedCompletedTransportAsync(
+            db,
+            "driver-a",
+            "request-partial",
+            new DateTime(2026, 7, 20, 8, 30, 0, DateTimeKind.Utc),
+            expectedPayout: 42000m,
+            paymentStatus: 상태값.결제상태.결제완료);
+        db.Set<기사정산계좌>().Add(new 기사정산계좌
+        {
+            기사Id = "driver-a",
+            국가코드 = "KR",
+            은행명 = "국민은행",
+            예금주명 = "기사 A",
+            계좌번호 = "1234567890",
+            확인상태 = 기사정산계좌확인상태.확인완료
+        });
+        db.비정상운송사건.Add(new 비정상운송사건
+        {
+            사건StableId = "abnormal-transport:1:CargoDamage",
+            운송Id = 1,
+            운송의뢰Id = "request-partial",
+            사건유형Code = 비정상운송사건유형Codes.화물훼손,
+            원본예외Code = "화물훼손",
+            단계Code = "하차",
+            상태Code = 비정상운송사건상태Codes.조치결정,
+            업무통제상태Code = 비정상운송업무통제상태Codes.일부보류,
+            보류범위Code = 비정상운송보류범위Codes.영향수량,
+            전체수량 = 10,
+            정상확인수량 = 8,
+            영향수량 = 2,
+            정산보류적용여부 = false,
+            최초신고시각Utc = DateTime.UtcNow,
+            최근신고시각Utc = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+        var useCase = new 기사지급준비UseCase(db);
+
+        var result = await useCase.월별조회Async("driver-a", 2026, 7);
+
+        var item = Assert.Single(result.Value.Items);
+        Assert.Equal(기사지급준비상태코드.지급준비가능, item.ReadinessCode);
+        Assert.True(item.IsReadyForPayoutPreparation);
+        Assert.Equal(42000m, result.Value.ReadyForPayoutPreparationTotal);
+    }
+
+    [Fact]
     public async Task 화주수납완료는_기사정산계좌_미확인과_기사지급완료를_대신하지_않는다()
     {
         await using var db = CreateContext();

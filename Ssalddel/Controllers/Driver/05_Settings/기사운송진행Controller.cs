@@ -130,7 +130,10 @@ namespace Ssalddel.Controllers.Driver.Progress05
                 request.메모,
                 request.증빙ObjectName,
                 request.증빙Url,
-                request.관리자확인요청));
+                request.관리자확인요청,
+                request.정상확인수량,
+                request.영향수량,
+                request.현장진행불가));
 
             return this.ToActionResult(result);
         }

@@ -57,6 +57,7 @@ public static class 기사지급준비상태코드
     public const string 현장수금대기 = "OnSiteCollectionPending";
     public const string 현장수금확인 = "OnSiteCollectionConfirmed";
     public const string 화주수납대기 = "ShipperCollectionPending";
+    public const string 비정상운송검토보류 = "AbnormalTransportReviewHeld";
     public const string 정산계좌없음 = "SettlementAccountMissing";
     public const string 정산계좌미확인 = "SettlementAccountUnverified";
     public const string 지급준비가능 = "ReadyForPayoutPreparation";
