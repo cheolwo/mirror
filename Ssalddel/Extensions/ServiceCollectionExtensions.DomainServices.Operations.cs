@@ -92,7 +92,11 @@ public static partial class ServiceCollectionExtensions
         services.AddSingleton<살뜰.도메인.운송.화물연속배차Policy>();
         services.AddScoped<I화물연속배차UseCase, 화물연속배차UseCase>();
         services.AddScoped<I운영체제업무인계Coordinator, 운영체제업무인계Coordinator>();
+        services.AddScoped<I화주운송의뢰화물운송인계Service, 화주운송의뢰화물운송인계Service>();
+        services.AddScoped<I화물운송완료화주인수인계Service, 화물운송완료화주인수인계Service>();
+        services.AddScoped<I비정상운송사건Service, 비정상운송사건Service>();
         services.AddScoped<I출고화물운송운영체제인계Service, 출고화물운송운영체제인계Service>();
+        services.AddScoped<I생활권물류거점Service, 생활권물류거점Service>();
         services.AddScoped<I픽업하차경로최적화Service, 픽업하차경로최적화Service>();
         services.AddScoped<I음식멀티배차조합AIService, 규칙기반음식멀티배차조합AIService>();
         services.AddScoped<I음식멀티배차조합Service, 음식멀티배차조합Service>();
@@ -140,6 +144,8 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<Ssalddel.Application.Shipper.Request.I화주운송의뢰일괄등록파서Service, Ssalddel.Application.Shipper.Request.화주운송의뢰일괄등록파서Service>();
         services.AddScoped<Ssalddel.Application.Shipper.Request.I화주운송기준운임Service, Ssalddel.Application.Shipper.Request.화주운송기준운임Service>();
         services.AddScoped<Ssalddel.Application.Shipper.Request.I화주운송요금정책검토Service, Ssalddel.Application.Shipper.Request.화주운송요금정책검토Service>();
+        services.AddScoped<Ssalddel.Application.Shipper.Request.I화주운송업무담당자UseCase, Ssalddel.Application.Shipper.Request.화주운송업무담당자UseCase>();
+        services.AddScoped<Ssalddel.Application.Shipper.Request.I화주운송업무망조회UseCase, Ssalddel.Application.Shipper.Request.화주운송업무망조회UseCase>();
         services.AddScoped<Ssalddel.Application.Shipper.Request.I화주운송의뢰UseCase, Ssalddel.Application.Shipper.Request.화주운송의뢰UseCase>();
         services.AddScoped<I판매상품샘플시드Service, 판매상품샘플시드Service>();
         services.AddScoped<I배차추천Service, 화물배차추천Service>();
