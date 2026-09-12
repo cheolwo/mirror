@@ -4,6 +4,10 @@ using Ssalddel.Simulation.Contracts;
 
 namespace Ssalddel.Simulation.Tests;
 
+[Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceResponsibility(
+    Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceStage.E3,
+    "Simulation 음식주문 Local·Remote 포트의 계약 호환을 검증한다.",
+    Boundary = "자동 시험이며 실제 Hosted 연결이나 Unity 화면 증거가 아니다.")]
 public sealed class SimulationFoodOrderRuntimeAdapterTests
 {
     [Fact]

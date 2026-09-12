@@ -4,6 +4,10 @@ using Ssalddel.WorkflowRules.Contracts;
 
 namespace Ssalddel.Unity.Tests;
 
+[Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceResponsibility(
+    Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceStage.E3,
+    "음식배달 상태 사본과 Unity 표시 단계의 계약 호환을 검증한다.",
+    Boundary = "표현 모델 자동 시험이며 실제 Scene·Game View 증거가 아니다.")]
 public sealed class 음식배달수명주기표현Tests
 {
     [Fact]

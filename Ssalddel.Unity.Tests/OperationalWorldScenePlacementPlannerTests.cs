@@ -4,6 +4,10 @@ using Ssalddel.WorkflowRules.Contracts;
 
 namespace Ssalddel.Unity.Tests;
 
+[Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceResponsibility(
+    Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceStage.E3,
+    "운영 상태 사본의 개인정보 없는 Unity 배치 준비 계약을 검증한다.",
+    Boundary = "순수 C# 자동 시험이며 실제 Scene·GameObject·Game View 증거가 아니다.")]
 public sealed class OperationalWorldScenePlacementPlannerTests
 {
     private static readonly DateTime Now = new(2026, 9, 12, 9, 0, 0, DateTimeKind.Utc);

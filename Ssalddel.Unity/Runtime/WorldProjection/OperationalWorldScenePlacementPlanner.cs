@@ -45,6 +45,10 @@ namespace Ssalddel.Unity.Data.WorldProjection
     /// 해석을 마친 운영 상태 사본을 SimulationWorldShell 배치 준비 명령으로 좁힙니다.
     /// 좌표·개인정보·표현 JSON을 복사하지 않으며 Scene 또는 GameObject를 직접 생성하지 않습니다.
     /// </summary>
+    [Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceResponsibility(
+        Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceStage.E3,
+        "운영 상태 사본을 개인정보 없는 Unity 배치 준비 명령으로 변환한다.",
+        Boundary = "순수 C# 계획이며 실제 Scene·GameObject 배치나 운영 상태 변경 증거가 아니다.")]
     public sealed class OperationalWorldScenePlacementPlanner
     {
         private static readonly IReadOnlyDictionary<string, string> AnchorByOperatingSystem =

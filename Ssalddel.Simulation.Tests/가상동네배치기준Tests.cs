@@ -2,6 +2,10 @@ using Ssalddel.Simulation.Contracts;
 
 namespace Ssalddel.Simulation.Tests;
 
+[Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceResponsibility(
+    Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceStage.E3,
+    "가상 동네의 합성 기준점과 경로 계약을 검증한다.",
+    Boundary = "합성 좌표 시험이며 실제 위치나 Unity Scene 배치 증거가 아니다.")]
 public sealed class 가상동네배치기준Tests
 {
     [Fact]

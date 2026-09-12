@@ -6,6 +6,10 @@ using Ssalddel.Unity.Warehouse;
 
 namespace Ssalddel.Simulation.Tests;
 
+[Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceResponsibility(
+    Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceStage.E3,
+    "로컬 생활 시작 자료의 봉인·결정성·저장 복원을 검증한다.",
+    Boundary = "자동 시험이며 실제 운영 원장이나 Unity 실행 증거가 아니다.")]
 public sealed class 로컬생활시작자료Tests
 {
     public static 로컬생활시작묶음 Bundle(int couriers=3,string prefix="")

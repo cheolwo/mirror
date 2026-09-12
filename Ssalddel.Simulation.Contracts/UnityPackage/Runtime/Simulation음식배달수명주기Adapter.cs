@@ -4,6 +4,10 @@ using Ssalddel.WorkflowRules.Contracts;
 
 namespace Ssalddel.Simulation.Contracts
 {
+    [Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceResponsibility(
+        Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceStage.E3,
+        "Simulation 음식배달 상태를 공통 수명주기 상태 사본으로 변환한다.",
+        Boundary = "계약 변환만 수행하며 운영 원장이나 Unity 표현을 변경하지 않는다.")]
     public static class Simulation음식배달수명주기Adapter
     {
         public static 음식배달수명주기Snapshot ToLifecycleSnapshot(

@@ -6,6 +6,10 @@ using Ssalddel.WorkflowRules.Contracts;
 
 namespace Ssalddel.Simulation.Tests;
 
+[Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceResponsibility(
+    Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceStage.E3,
+    "가상 음식배달 생활의 업무 순서와 저장 복원을 검증한다.",
+    Boundary = "Simulation 자동 시험이며 실제 배차나 Unity 화면 증거가 아니다.")]
 public sealed class 오행음식배달생활관찰Tests
 {
     [Fact]

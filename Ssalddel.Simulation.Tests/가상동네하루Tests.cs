@@ -5,6 +5,10 @@ using Ssalddel.Unity.Observation;
 
 namespace Ssalddel.Simulation.Tests;
 
+[Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceResponsibility(
+    Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceStage.E3,
+    "가상 동네 하루의 업무·휴식·귀환 결정성과 재고 보존을 검증한다.",
+    Boundary = "Simulation 자동 시험이며 실제 운영과 Unity Game View 증거가 아니다.")]
 public sealed class 가상동네하루Tests
 {
     [Fact]

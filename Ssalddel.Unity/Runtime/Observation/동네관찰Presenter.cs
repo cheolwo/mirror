@@ -9,6 +9,10 @@ namespace Ssalddel.Unity.Observation
     public enum 동네휴대폰App { 홈, 운영지도, 동네, 주문, NPC, 창고, 정책 }
 
     /// <summary>실제 E5 AreaSet 관찰 준비 상태만 표시하며 Simulation 상태를 소유하지 않는다.</summary>
+    [SsalddelEvidenceResponsibility(
+        SsalddelEvidenceStage.E3,
+        "운영 지도 Area 상태를 Unity 관찰 화면용 읽기 모델로 표현한다.",
+        Boundary = "표현용 모델이며 실제 위치·운영 상태·Scene 배치를 소유하지 않는다.")]
     public sealed class 운영지도AreaViewModel
     {
         public string StableId { get; set; } = "";
