@@ -1,5 +1,13 @@
 # Mirror(거울) Current Work
 
+## 관찰 가능한 운영 디오라마 10분 수직 조각 (2026-09-12)
+
+- [관찰 가능한 운영 디오라마 r2](Planning/시스템/PLAN-SYSTEM-OBSERVABLE-OPERATIONS-DIORAMA-001/README.md)에 따라 음식 배달·화물 운송·창고/마트의 정상 완료와 회복 완료 합성 표본 6건을 구현했다. 검증 호스트는 `Development + Simulation + 전용 컨테이너 + 전용 MySQL/MongoDB/Redis + 600초` 조건에서만 켜지고 결제·메시지·외부 HTTP를 실행하지 않는다. 상태·명시 시작·일시정지·재개·실패 Outbox 재시도는 전용 loopback API와 명령줄에만 두었다.
+- 기존 운영 지역 장면 GET은 매개변수 생략 시 v1 wire 모양을 유지하고, opt-in `operational-world-scene.v2`에는 업무 ID·생명주기·주의 상태·객체 종류·의미 위치·관계·출처와 합성 실행 ID를 추가한다. 미지원 판본은 400 Problem Details로 거절한다. v2 해석기는 잘못되거나 낮은 revision 한 건만 마지막 정상 상태에서 동결하고 다른 객체는 계속 갱신하며, 더 높은 정상 revision으로 해당 객체만 회복한다. 이름·전화번호·정확 주소·GPS·토큰과 Unity 로컬 저장·Replay는 금지했다.
+- 전용 Docker 이미지는 서버의 현행 Simulation project graph를 선복사하도록 보완했고, Windows 예약 포트 범위를 피한 `127.0.0.1:53216`에서만 검증 API를 노출한다. 실제 600초 실행 `observable-operations-run:30a3baef85b74a59bb260209f8f48dff`은 6/6 발행, Outbox 대기 0·실패 0으로 완료했다. MongoDB에는 같은 실행의 장면 사본 6건, Redis에는 `Completed/600/6/0/0` 상태가 확인됐고 v2 재조회는 네 OS·6건·자료원 실패 0·로컬 저장/Replay 허용 0을 반환했다.
+- Unity canonical `SimulationWorldShell`에 `OperationalOsWorldRoot`를 실제 저장하고 30초 읽기 전용 Controller와 안정 ID primitive View를 결속했다. 실제 Editor 컴파일과 EditMode 3/3, 공유 Unity Data 장면 해석 시험 10/10이 통과했다. 실제 Play Mode에서 Controller `Success`, 네 OS 그룹과 객체 6건을 확인하고 Game View를 캡처했다. 공식 Scene의 다른 기존 CompositionRoot에서는 별도 서버 세션 부재, 오래된 Replay hash, missing script 오류가 함께 관찰됐으므로 Console 전체 무오류나 다른 플레이 기능 정상은 선언하지 않는다.
+- 서버 운영 지역 장면 집중 시험 7/7과 Unity Data 장면 해석 10/10, 서버·Unity Data build를 통과했다. 범위 Fast는 코드 지도·E 책임 지도·세 솔루션 build와 선택 회귀를 모두 통과했다(`artifacts/local/validation/20260912-174444`). 범위 Task는 Simulation·Unity 전체 시험을 통과한 뒤 이번 변경 밖의 기존 API 분류 4건·공식 재료 CSS 1건·아키텍처 문구 1건·Web capability 1건 때문에 서버 전체 `5,175`개 중 `5,168`개 통과에서 중단됐다(`artifacts/local/validation/20260912-174727`). 실제 운영 활성화·실사용자/GPS·모바일/Web 화면·결제·메시지·Windows Player build는 수행하지 않았다. Docker 검증 컨테이너와 격리 볼륨은 결과 재조회용으로 유지했으며 원격 push는 하지 않았다.
+
 ## 운영 후속 처리 복구 작업대·Unity 배치 준비 첫 절편 (2026-09-12)
 
 - 완료된 원 업무를 되돌리지 않고 실패한 후속 처리만 별도로 관리하도록, 기존 `음식마트원장동기화Outbox`와 `운영체제업무인계Outbox`를 개인정보 없는 공통 복구 조회 결과로 조합했다. 새 중복 원장이나 migration은 만들지 않았으며 현재 책임 OS, 자동 재시도·처리 중·운영자 확인 상태, 다음 처리 시각과 안전 요약만 관리자 API에 제공한다. 원천 ID, 사용자·기사 ID, 주소·연락처, payload와 오류 원문은 반환하지 않는다.

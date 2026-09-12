@@ -73,17 +73,23 @@ OS 업무 인스턴스
 | 단계 | 현재 위치 | 상태 |
 | --- | --- | --- |
 | 운영 지역 상태 사본 조합 | `운영지역장면조회UseCase` | 음식 완료·창고 작업/Actor·화물 상태 자료원 조합 구현 |
-| 공통 상태 사본 계약 | `OperationalWorldSceneContracts.cs` | OS ID·업무 종류·revision·TTL·tombstone 계약 구현 |
+| 공통 상태 사본 계약 | `OperationalWorldSceneContracts.cs` | 기본 v1 호환과 opt-in v2의 업무·생명주기·주의 상태·의미 위치·표본 출처 계약 구현 |
 | Unity GET 경계 | `OperationalWorldProjectionTransportContracts.cs` | 인증 GET 전용, Command 없음 |
 | Unity 전송 구현 | `UnityWebRequestOperationalWorldProjectionTransport.cs` | 구현됨 |
 | JSON 해독 | `UnityJsonOperationalWorldSceneDecoder.cs` | 구현됨 |
-| 메모리 정합성 | `OperationalWorldSceneInterpreter.cs` | cursor·revision·TTL·tombstone·부분 자료원 실패 처리 구현 |
+| 메모리 정합성 | `OperationalWorldSceneInterpreter.cs` | cursor·revision·TTL·tombstone·부분 자료원 실패와 v2 객체별 동결·회복 처리 구현 |
 | 일반 객체 변경 계산 | `WorldProjectionReconciler.cs` | 안정 ID 기반 추가·갱신·제거 구현 |
 | 역할·객체 원형 후보 | `OperationalUnityTransferObjectCatalog`, `운영역할GameObjectCatalogPolicy` | 후보·생성 금지 경계 구현 |
-| OS 단계·인계·보류 공통 Adapter | Unity OS 관찰 모듈 기획 | 미구현 |
-| 실제 GameObject 결속 | `SimulationWorldShell` | 미구현·실행 미검증 |
+| OS 단계·인계·보류 공통 Adapter | `OperationalOsObservationRouter`, `OperationalWorldScenePlacementPlanner` | OS·업무 단계·주의 상태를 안전한 배치 지시로 변환 |
+| 실제 GameObject 결속 | `SimulationWorldShell/OperationalOsWorldRoot` | primitive 안정 ID 객체 조정과 30초 읽기 전용 갱신 구현 |
 
-구현됨은 코드·계약 또는 해당 범위 시험이 존재한다는 뜻이다. 실제 `SimulationWorldShell` 결속, Unity import, Play Mode와 Game View 증거를 뜻하지 않는다.
+구현됨은 코드·계약 또는 해당 범위 시험이 존재한다는 뜻이다. 실제 서버 연결, Play Mode와 Game View 증거는 실행할 때마다 별도로 기록하며 코드 존재만으로 이를 대신하지 않는다.
+
+## 합성 운영 검증 수직 조각
+
+[관찰 가능한 운영 디오라마 r2](../AI/Planning/시스템/PLAN-SYSTEM-OBSERVABLE-OPERATIONS-DIORAMA-001/README.md)는 실제 영업 효과 없이 위 파이프라인을 실행하기 위한 opt-in 검증 경계다. `Development + Simulation + 전용 컨테이너 + 전용 MySQL/MongoDB/Redis + 600초` 조건을 모두 만족해야 켜지고, 로컬 loopback 읽기와 상태·일시정지·재개·실패 Outbox 재시도만 제공한다.
+
+표본은 음식 배달·화물 운송·창고/마트의 정상 완료와 회복 완료 각 한 건이다. `sourceKindCode=VerificationSample`과 `scenarioRunStableId`로 실제 운영 투영과 구분하며, 이름·전화번호·정확 주소·GPS·토큰과 로컬 저장·Replay는 허용하지 않는다. 이 검증 성공을 개별 OS의 실제 업무 API·권한·현장 운영 완료 증거로 해석하지 않는다.
 
 ## 문서별 역할
 
@@ -127,7 +133,7 @@ OS 업무 인스턴스
 8. Unity import·Play Mode·Game View 검증
 9. 검증된 primitive를 Prefab·애니메이션으로 교체·고도화
 
-첫 표본은 이미 정상 완료 이력과 완료 사본이 있는 `FoodDeliveryOS`를 사용한다. 음식 배달의 정상 수직 경로를 서버부터 Unity 메모리까지 먼저 닫고, 거절·취소·재배차·재조리는 다음 회복 표본으로 분리한다. 화물운송 비정상 사건은 그 다음 OS 수직 표본으로 둔다.
+실제 운영 생명주기의 첫 기준 표본은 이미 정상 완료 이력과 완료 사본이 있는 `FoodDeliveryOS`다. 합성 검증 호스트의 여섯 표본은 여러 OS의 투영·인계·표현 파이프만 함께 확인하며, 각 OS의 실제 업무 API·권한 시험을 대신하지 않는다.
 
 ## 후속 변경 경계
 
