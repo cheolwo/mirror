@@ -82,3 +82,15 @@ Unity의 기존 사가정 조립 경로가 이 파일을 Editor에서만 읽어 
 - 비공개 색인은 주소·관측 이름·원천 계보를 유지하지만 Unity 표현 투영은 이름·상세 주소·건물관리번호·원천 관측 ID를 제거하고 업종 범주·연결 상태·운영 근거 상태만 전달한다. `distributionApproved=false`, `gameStateConnected=false`, `privateReviewOnly=true`가 모두 고정 관문이다.
 - Graph Map/Placement Map의 `jungnang-myeonmok-reference.v2`가 이 투영을 `PrivacyProjectionOf` 관계로 연결한다. 주소/건물/필지/도로/활동은 별도 계층이며, 공식 건물 연결 0건과 표본의 단일14·복수8·미연결8을 그대로 보존한다.
 - `diorama-verify`는 동결 입력과 생성 파일의 hash·형상·개인정보 제거를 재검증한다. Unity 쪽 기본 화면은 범주와 근거만 보여주며, 이름·주소는 로컬 상세 검토 토글을 명시적으로 켠 경우에만 기존 비공개 자료에서 읽는다.
+
+### 행정동 실자료 완결 관문 r1
+
+- `admin-dong-diorama-preview|apply|verify`는 서울시 `OA-22160` 경계 ZIP과 사가정 지도 고정 hash, MySQL의 행정안전부 코드·면목동 상권 관측을 함께 대조한다. 면목동 6개 행정동으로 건물 후보 602개를 `PointOnSurface` 전수 귀속하고 면목제3·8동 도로를 경계에서 자른다.
+- `apply`는 면목제3·8동 manifest/tile/빈 overlay와 6개 동 귀속 감사자료를 로컬 `ssalddel_dev`에 hash별 불변 사본으로 저장한다. 같은 입력을 즉시 재적용해 멱등성을 확인하고, 새 Mongo 연결로 manifest·모든 tile·감사자료·현재 포인터를 재조회한다. `verify`는 쓰지 않고 같은 재조회를 반복한다.
+- OSM 건물은 공식 건축물대장으로 승격하지 않으며 MySQL에 쓰지 않는다. 좌표가 있는 상권 관측도 행정동 분석까지만 수행하고 Claim·표시 승인을 만들지 않으므로 공개 표식은 0건이다. 기능 생활권·운영 HTTP·Unity Scene·Game View를 자동 실행하지 않는다.
+
+```powershell
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-diorama-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-diorama-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-diorama-verify C:/Users/user/source/repos/Hongdal
+```

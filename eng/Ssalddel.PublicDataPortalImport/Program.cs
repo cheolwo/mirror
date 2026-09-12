@@ -9,6 +9,12 @@ using 살뜰.Services.External.PublicData.Korea;
 var result = new Dictionary<string, object?> { ["databaseWriteAttempted"]=false, ["committed"]=false };
 try
 {
+    if (args.Length == 2 && args[0].StartsWith("admin-dong-diorama-", StringComparison.Ordinal))
+    {
+        await 행정동실자료완결.RunAsync(args[0][19..], Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])), result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
     if (args.Length >= 2 && args[0].StartsWith("local-life-", StringComparison.Ordinal))
     {
         await 로컬생활자료Import.RunAsync(args[0][11..], Path.GetFullPath(args[1]), args.Skip(2).ToArray(), result);
