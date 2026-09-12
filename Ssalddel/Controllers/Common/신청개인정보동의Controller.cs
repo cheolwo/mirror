@@ -9,6 +9,7 @@ namespace Ssalddel.Controllers.Common;
 
 [ApiController]
 [Authorize]
+[SsalddelApiVersion(SsalddelProductVersion.V0_0)]
 [Route("api/v1/common/application-privacy-consents")]
 [SsalddelApiContractName("ApplicationPrivacyConsentsController")]
 [SsalddelApiWorkflow(SsalddelWorkflow.CommunityTrust)]

@@ -35,6 +35,12 @@ public sealed class 버전워크플로우UseCase : I버전워크플로우UseCase
             Workflows = BuildWorkflowStates(flags),
             WorkflowRelations = SsalddelWorkflowRelations.GetAll().Select(ToDto).ToArray(),
             OperatingSystems = SsalddelOperatingSystems.GetAll().Select(item => ToDto(item, flags)).ToArray(),
+            OperatingSystemCurrentStructures = OperatingSystemInteractionCatalog.GetCurrentStructure()
+                .Select(ToOperatingSystemCurrentStructureDto)
+                .ToArray(),
+            OperatingSystemInteractions = OperatingSystemInteractionCatalog.GetAll()
+                .Select(ToOperatingSystemInteractionDto)
+                .ToArray(),
             ApiEndpoints = BuildApiEndpoints(flags),
             PageCapabilities = BuildPageCapabilities(flags)
         };
@@ -433,6 +439,7 @@ public sealed class 버전워크플로우UseCase : I버전워크플로우UseCase
             SsalddelOperatingSystem.SsalddelMartUrbanLogistics => VersionFeatureFlagKeys.SsalddelMartWorkflow,
             SsalddelOperatingSystem.CommunityTrust => VersionFeatureFlagKeys.CommunityTrustWorkflow,
             SsalddelOperatingSystem.PlatformOperations => null,
+            SsalddelOperatingSystem.ShipperTransportManagement => VersionFeatureFlagKeys.DomesticTransportWorkflow,
             _ => throw new ArgumentOutOfRangeException(nameof(operatingSystem), operatingSystem, "Unknown Ssalddel operating system.")
         };
 
@@ -453,6 +460,37 @@ public sealed class 버전워크플로우UseCase : I버전워크플로우UseCase
             Sequence = stage.Sequence,
             Name = stage.Name,
             Responsibility = stage.Responsibility
+        };
+
+    private static OperatingSystemCurrentStructureDto ToOperatingSystemCurrentStructureDto(
+        OperatingSystemCurrentStructureDefinition definition)
+        => new()
+        {
+            CatalogRevision = OperatingSystemInteractionCatalog.CatalogRevision,
+            OperatingSystemId = definition.OperatingSystemId,
+            HasLifecycle = definition.HasLifecycle,
+            DefinedStageCount = definition.DefinedStageCount,
+            OrderSegments = definition.OrderSegments,
+            Status = definition.Status
+        };
+
+    private static OperatingSystemInteractionDto ToOperatingSystemInteractionDto(
+        OperatingSystemInteractionDefinition definition)
+        => new()
+        {
+            CatalogRevision = OperatingSystemInteractionCatalog.CatalogRevision,
+            InteractionId = definition.InteractionId,
+            ContractCode = definition.ContractCode,
+            ContractRevision = definition.ContractRevision,
+            SourceOperatingSystemId = definition.SourceOperatingSystemId,
+            SourceLifecycleStageId = definition.SourceLifecycleStageId ?? string.Empty,
+            TargetOperatingSystemId = definition.TargetOperatingSystemId,
+            TargetLifecycleStageId = definition.TargetLifecycleStageId ?? string.Empty,
+            Mode = definition.Mode,
+            Cardinality = definition.Cardinality,
+            LifecycleBindingStatus = definition.LifecycleBindingStatus,
+            ReturnInteractionId = definition.ReturnInteractionId ?? string.Empty,
+            Responsibility = definition.Responsibility
         };
 
     private static OperatingSystemEngineDto ToOperatingSystemEngineDto(

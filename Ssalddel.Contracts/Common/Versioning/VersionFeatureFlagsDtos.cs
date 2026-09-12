@@ -15,6 +15,10 @@ public sealed class VersionFeatureFlagsResponse
 
     public IReadOnlyList<OperatingSystemDto> OperatingSystems { get; init; } = [];
 
+    public IReadOnlyList<OperatingSystemCurrentStructureDto> OperatingSystemCurrentStructures { get; init; } = [];
+
+    public IReadOnlyList<OperatingSystemInteractionDto> OperatingSystemInteractions { get; init; } = [];
+
     public IReadOnlyList<WorkflowApiEndpointDto> ApiEndpoints { get; init; } = [];
 
     public IReadOnlyList<PageCapabilityDto> PageCapabilities { get; init; } = [];
@@ -216,6 +220,50 @@ public sealed class OperatingSystemDto
     public IReadOnlyList<OperatingSystemEngineDto> Engines { get; init; } = [];
 
     public IReadOnlyList<OperatingSystemSchedulingPolicyDto> SchedulingPolicies { get; init; } = [];
+}
+
+public sealed class OperatingSystemCurrentStructureDto
+{
+    public string CatalogRevision { get; init; } = string.Empty;
+
+    public string OperatingSystemId { get; init; } = string.Empty;
+
+    public bool HasLifecycle { get; init; }
+
+    public int DefinedStageCount { get; init; }
+
+    public IReadOnlyList<string> OrderSegments { get; init; } = [];
+
+    public string Status { get; init; } = string.Empty;
+}
+
+public sealed class OperatingSystemInteractionDto
+{
+    public string CatalogRevision { get; init; } = string.Empty;
+
+    public string InteractionId { get; init; } = string.Empty;
+
+    public string ContractCode { get; init; } = string.Empty;
+
+    public string ContractRevision { get; init; } = string.Empty;
+
+    public string SourceOperatingSystemId { get; init; } = string.Empty;
+
+    public string SourceLifecycleStageId { get; init; } = string.Empty;
+
+    public string TargetOperatingSystemId { get; init; } = string.Empty;
+
+    public string TargetLifecycleStageId { get; init; } = string.Empty;
+
+    public string Mode { get; init; } = string.Empty;
+
+    public string Cardinality { get; init; } = string.Empty;
+
+    public string LifecycleBindingStatus { get; init; } = string.Empty;
+
+    public string ReturnInteractionId { get; init; } = string.Empty;
+
+    public string Responsibility { get; init; } = string.Empty;
 }
 
 public sealed class OperatingSystemWorkflowDto

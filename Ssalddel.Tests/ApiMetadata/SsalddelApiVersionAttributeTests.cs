@@ -364,6 +364,23 @@ public sealed class SsalddelApiVersionAttributeTests
             operatingSystem.FeatureKey == string.Empty &&
             operatingSystem.IsEnabled &&
             operatingSystem.Engines.All(engine => engine.RuntimeStatus == RuntimeCapabilityStatuses.Declared));
+        Assert.Equal(OperatingSystemIds.All.Count, response.OperatingSystemCurrentStructures.Count);
+        Assert.Contains(response.OperatingSystemCurrentStructures, structure =>
+            structure.OperatingSystemId == OperatingSystemIds.ShipperTransportManagement &&
+            structure.HasLifecycle &&
+            structure.OrderSegments.Contains(OperatingSystemOrderSegments.OrderCommitment) &&
+            structure.Status == OperatingSystemCurrentStructureStatuses.VerifiedFromLifecycle);
+        Assert.Contains(response.OperatingSystemCurrentStructures, structure =>
+            structure.OperatingSystemId == OperatingSystemIds.WarehouseCommerceFulfillment &&
+            !structure.HasLifecycle &&
+            structure.OrderSegments.Count == 0 &&
+            structure.Status == OperatingSystemCurrentStructureStatuses.LifecyclePending);
+        Assert.Contains(response.OperatingSystemInteractions, interaction =>
+            interaction.InteractionId == OperatingSystemInteractionIds.ShipperRequestToCargo &&
+            interaction.ContractCode == OperatingSystemInteractionContractCodes.ShipperTransportRequestToDomesticCargo &&
+            interaction.SourceLifecycleStageId == OperatingSystemLifecycleStageIds.ShipperTransportHandoff &&
+            interaction.TargetLifecycleStageId == OperatingSystemLifecycleStageIds.CargoRequest &&
+            interaction.ReturnInteractionId == OperatingSystemInteractionIds.CargoCompletionToShipperAcceptance);
         Assert.Contains(response.PageCapabilities, capability =>
             capability.PageKey == "community-home" &&
             capability.AppCode == SsalddelPageAppCodes.IntegratedWeb &&

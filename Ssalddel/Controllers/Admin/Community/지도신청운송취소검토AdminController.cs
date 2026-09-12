@@ -9,6 +9,7 @@ namespace Ssalddel.Controllers.Admin.Community;
 
 [ApiController]
 [Authorize(Policy = "서버관리자전용")]
+[SsalddelApiVersion(SsalddelProductVersion.V0_0)]
 [Route("api/v1/admin/community/map-transport-cancellation-reviews")]
 [SsalddelApiContractName("CommunityMapTransportCancellationReviewsAdminController")]
 [SsalddelApiWorkflow(SsalddelWorkflow.CommunityTrust)]

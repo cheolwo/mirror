@@ -6,6 +6,7 @@ namespace Ssalddel.Contracts.Common.Versioning;
 /// </summary>
 public static class OperatingSystemIds
 {
+    public const string ShipperTransportManagement = "ShipperTransportManagementOS";
     public const string DomesticCargoTransport = "DomesticCargoTransportOS";
     public const string WarehouseCommerceFulfillment = "WarehouseCommerceFulfillmentOS";
     public const string GroupPurchaseDemand = "GroupPurchaseDemandOS";
@@ -18,6 +19,7 @@ public static class OperatingSystemIds
 
     public static IReadOnlyList<string> All { get; } =
     [
+        ShipperTransportManagement,
         DomesticCargoTransport,
         WarehouseCommerceFulfillment,
         GroupPurchaseDemand,
@@ -32,6 +34,8 @@ public static class OperatingSystemIds
     private static readonly IReadOnlyDictionary<string, string> CanonicalByAlias =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
+            [ShipperTransportManagement] = ShipperTransportManagement,
+            ["ShipperTransportManagement"] = ShipperTransportManagement,
             [DomesticCargoTransport] = DomesticCargoTransport,
             ["DomesticCargoTransport"] = DomesticCargoTransport,
             [WarehouseCommerceFulfillment] = WarehouseCommerceFulfillment,
@@ -108,6 +112,15 @@ public static class RuntimeCapabilityStatuses
 
 public static class OperatingSystemLifecycleStageIds
 {
+    public const string ShipperPartyContext = "shipper.party-context";
+    public const string ShipperCargoDefinition = "shipper.cargo-definition";
+    public const string ShipperTermsQuote = "shipper.terms-quote";
+    public const string ShipperRequestCommitment = "shipper.request-commitment";
+    public const string ShipperTransportHandoff = "shipper.transport-handoff";
+    public const string ShipperProgressChange = "shipper.progress-change";
+    public const string ShipperDeliveryAcceptance = "shipper.delivery-acceptance";
+    public const string ShipperSettlementRecovery = "shipper.settlement-recovery";
+
     public const string CargoRequest = "cargo.request";
     public const string CargoTermsAgreement = "cargo.terms-agreement";
     public const string CargoDispatch = "cargo.dispatch";
@@ -152,6 +165,19 @@ public static class OperatingSystemLifecycleCatalog
     private static readonly IReadOnlyDictionary<string, OperatingSystemLifecycleDefinition> Items =
         new Dictionary<string, OperatingSystemLifecycleDefinition>(StringComparer.Ordinal)
         {
+            [OperatingSystemIds.ShipperTransportManagement] = new(
+                OperatingSystemIds.ShipperTransportManagement,
+                "화주 운송관리 OS",
+                [
+                    new(OperatingSystemLifecycleStageIds.ShipperPartyContext, 10, "화주 당사자 확정", "이번 운송에서 물건을 맡기고 비용을 부담할 당사자와 권한을 확인합니다."),
+                    new(OperatingSystemLifecycleStageIds.ShipperCargoDefinition, 20, "화물 정의", "품목·수량·중량·부피·포장·온도와 차량 요구 조건을 기록합니다."),
+                    new(OperatingSystemLifecycleStageIds.ShipperTermsQuote, 30, "운송 조건·운임 검토", "상하차 위치·시간창·기준운임·추가 비용과 지급 조건을 검토합니다."),
+                    new(OperatingSystemLifecycleStageIds.ShipperRequestCommitment, 40, "운송의뢰 확정", "검증된 운송 조건과 정산 조건을 판본화하여 화주 의뢰로 확정합니다."),
+                    new(OperatingSystemLifecycleStageIds.ShipperTransportHandoff, 50, "화물운송 인계", "확정된 의뢰의 실행 책임을 화물운송 OS에 명시적으로 인계합니다."),
+                    new(OperatingSystemLifecycleStageIds.ShipperProgressChange, 60, "진행·조건 변경", "운송 진행을 조회하고 핵심 조건 변경은 새 판본과 재동의 대상으로 분리합니다."),
+                    new(OperatingSystemLifecycleStageIds.ShipperDeliveryAcceptance, 70, "인수·검수", "인수증·수량 부족·파손과 반품·재위탁 여부를 확인합니다."),
+                    new(OperatingSystemLifecycleStageIds.ShipperSettlementRecovery, 80, "정산·비정상 운송 처리·업무 회복", "운임 지급·정산과 수량 부족·파손·인수 보류 같은 비정상 운송의 검토·해결·재처리를 관리합니다.")
+                ]),
             [OperatingSystemIds.DomesticCargoTransport] = new(
                 OperatingSystemIds.DomesticCargoTransport,
                 "화물운송 OS",
@@ -163,7 +189,7 @@ public static class OperatingSystemLifecycleCatalog
                     new(OperatingSystemLifecycleStageIds.CargoTransport, 50, "운송", "경유와 운송 약속, 다음 콜 연속성을 관리합니다."),
                     new(OperatingSystemLifecycleStageIds.CargoDropoff, 60, "하차", "도착·하차·인수 결과를 관리합니다."),
                     new(OperatingSystemLifecycleStageIds.CargoEvidenceSettlement, 70, "증빙·정산", "완료 증빙과 이동·대기 보전, 정산 후보를 관리합니다."),
-                    new(OperatingSystemLifecycleStageIds.CargoInterruptionRecovery, 80, "중단·회복", "사고·고장·지연·재배차와 이의 제기를 조율합니다.")
+                    new(OperatingSystemLifecycleStageIds.CargoInterruptionRecovery, 80, "비정상 운송 처리·업무 회복", "사고·고장·지연·수량 부족·파손의 검토와 안전한 재개·재배차·종료를 조율합니다.")
                 ]),
             [OperatingSystemIds.FoodDelivery] = new(
                 OperatingSystemIds.FoodDelivery,

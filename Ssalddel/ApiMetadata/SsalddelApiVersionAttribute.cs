@@ -139,7 +139,8 @@ public enum SsalddelOperatingSystem
     SsalddelMartUrbanLogistics = 500,
     CommunityTrust = 600,
     PlatformOperations = 700,
-    GroupPurchaseDemand = 800
+    GroupPurchaseDemand = 800,
+    ShipperTransportManagement = 900
 }
 
 public enum SsalddelSchedulingPolicyKind
@@ -290,6 +291,7 @@ public static class SsalddelOperatingSystemLabels
             SsalddelOperatingSystem.SsalddelMartUrbanLogistics => "알뜰살뜰 마트 도심 물류 OS",
             SsalddelOperatingSystem.CommunityTrust => "커뮤니티 신뢰 OS",
             SsalddelOperatingSystem.PlatformOperations => "플랫폼 운영 OS",
+            SsalddelOperatingSystem.ShipperTransportManagement => "화주 운송관리 OS",
             _ => throw new ArgumentOutOfRangeException(nameof(operatingSystem), operatingSystem, "Unknown Ssalddel operating system.")
         };
     }
@@ -341,6 +343,13 @@ public static class SsalddelOperatingSystems
 {
     private static readonly IReadOnlyList<SsalddelOperatingSystemDefinition> Items =
     [
+        new(
+            SsalddelOperatingSystem.ShipperTransportManagement,
+            SsalddelOperatingSystemLabels.GetLabel(SsalddelOperatingSystem.ShipperTransportManagement),
+            "화주가 화물·상하차·운임·정산 조건을 확정하고 실제 운송 실행 책임을 국내 화물 운송 OS에 명시적으로 인계한 뒤 인수와 정산 결과를 확인합니다.",
+            [SsalddelWorkflow.DomesticTransport, SsalddelWorkflow.WarehouseFulfillment, SsalddelWorkflow.SalesChannelFulfillment],
+            [],
+            []),
         new(
             SsalddelOperatingSystem.DomesticCargoTransport,
             SsalddelOperatingSystemLabels.GetLabel(SsalddelOperatingSystem.DomesticCargoTransport),
@@ -471,6 +480,7 @@ public static class SsalddelOperatingSystems
             SsalddelOperatingSystem.SsalddelMartUrbanLogistics => OperatingSystemIds.SsalddelMartUrbanLogistics,
             SsalddelOperatingSystem.CommunityTrust => OperatingSystemIds.CommunityTrust,
             SsalddelOperatingSystem.PlatformOperations => OperatingSystemIds.PlatformOperations,
+            SsalddelOperatingSystem.ShipperTransportManagement => OperatingSystemIds.ShipperTransportManagement,
             _ => throw new ArgumentOutOfRangeException(nameof(operatingSystem), operatingSystem, "Unknown Ssalddel operating system.")
         };
 }

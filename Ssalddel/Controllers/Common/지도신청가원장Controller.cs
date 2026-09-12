@@ -9,6 +9,7 @@ namespace Ssalddel.Controllers.Common;
 
 [ApiController]
 [Authorize]
+[SsalddelApiVersion(SsalddelProductVersion.V0_0)]
 [Route("api/v1/community/map-applications/provisional-ledger")]
 [SsalddelApiContractName("CommunityMapApplicationProvisionalLedgerController")]
 [SsalddelApiWorkflow(SsalddelWorkflow.CommunityTrust)]

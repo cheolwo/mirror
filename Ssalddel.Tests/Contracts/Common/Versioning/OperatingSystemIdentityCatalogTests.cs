@@ -14,6 +14,8 @@ public sealed class OperatingSystemIdentityCatalogTests
     [InlineData("GroupPurchaseDemandOS", OperatingSystemIds.GroupPurchaseDemand)]
     [InlineData("fooddelivery", OperatingSystemIds.FoodDelivery)]
     [InlineData("FoodDeliveryOS", OperatingSystemIds.FoodDelivery)]
+    [InlineData("ShipperTransportManagement", OperatingSystemIds.ShipperTransportManagement)]
+    [InlineData("ShipperTransportManagementOS", OperatingSystemIds.ShipperTransportManagement)]
     public void LegacyAndPersistentAliases_NormalizeToCanonicalId(string value, string expected)
     {
         Assert.Equal(expected, OperatingSystemIds.Normalize(value));
@@ -89,22 +91,34 @@ public sealed class OperatingSystemIdentityCatalogTests
     }
 
     [Fact]
-    public void CargoFoodAndMartOperatingSystems_OwnSeparateOrderedLifecycles()
+    public void ShipperCargoFoodAndMartOperatingSystems_OwnSeparateOrderedLifecycles()
     {
+        var shipper = OperatingSystemLifecycleCatalog.Get(OperatingSystemIds.ShipperTransportManagement);
         var cargo = OperatingSystemLifecycleCatalog.Get(OperatingSystemIds.DomesticCargoTransport);
         var food = OperatingSystemLifecycleCatalog.Get(OperatingSystemIds.FoodDelivery);
         var mart = OperatingSystemLifecycleCatalog.Get(OperatingSystemIds.SsalddelMartUrbanLogistics);
 
+        Assert.Equal(8, shipper.Stages.Count);
         Assert.Equal(8, cargo.Stages.Count);
         Assert.Equal(8, food.Stages.Count);
         Assert.Equal(8, mart.Stages.Count);
+        Assert.Equal(shipper.Stages.OrderBy(stage => stage.Sequence), shipper.Stages);
         Assert.Equal(cargo.Stages.OrderBy(stage => stage.Sequence), cargo.Stages);
         Assert.Equal(food.Stages.OrderBy(stage => stage.Sequence), food.Stages);
         Assert.Equal(mart.Stages.OrderBy(stage => stage.Sequence), mart.Stages);
+        Assert.Contains(shipper.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.ShipperRequestCommitment);
+        Assert.Contains(shipper.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.ShipperTransportHandoff);
+        Assert.Contains(shipper.Stages, stage =>
+            stage.StageId == OperatingSystemLifecycleStageIds.ShipperSettlementRecovery
+            && stage.Name == "정산·비정상 운송 처리·업무 회복");
         Assert.Contains(cargo.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.CargoTermsAgreement);
+        Assert.Contains(cargo.Stages, stage =>
+            stage.StageId == OperatingSystemLifecycleStageIds.CargoInterruptionRecovery
+            && stage.Name == "비정상 운송 처리·업무 회복");
         Assert.Contains(food.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.FoodCancellationCompensation);
         Assert.Contains(mart.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.MartSupplyAgreement);
         Assert.Contains(mart.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.MartLastMileHandoff);
+        Assert.Empty(shipper.Stages.Select(stage => stage.StageId).Intersect(cargo.Stages.Select(stage => stage.StageId)));
         Assert.Empty(cargo.Stages.Select(stage => stage.StageId).Intersect(food.Stages.Select(stage => stage.StageId)));
         Assert.Empty(mart.Stages.Select(stage => stage.StageId).Intersect(food.Stages.Select(stage => stage.StageId)));
     }
