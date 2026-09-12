@@ -151,6 +151,41 @@ public sealed class OperationalWorldSceneInterpreterTests
         Assert.Empty(result.Diagnostics);
     }
 
+    [Fact]
+    public async Task 취소뒤늦게도착한응답은_비운메모리를다시채우지않는다()
+    {
+        var transport = new DelayedTransport();
+        var client = new OperationalWorldSceneClient(transport,
+            new StaticDecoder(Response(Item("actor:1", 1, Now.AddMinutes(5)))),
+            new OperationalWorldSceneInterpreter());
+        using var cancellation = new CancellationTokenSource();
+        var pending = client.RefreshAsync("region:kr:bjd:1126010100", 0, Now, cancellation.Token);
+        cancellation.Cancel();
+        client.Clear();
+        transport.Completion.SetResult("{}");
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending);
+        Assert.Empty(client.Expire(Now).CurrentItems);
+    }
+
+    [Fact]
+    public async Task 추가조회없이도_메모리만료를처리한다()
+    {
+        var client = new OperationalWorldSceneClient(new RecordingTransport(),
+            new StaticDecoder(Response(Item("actor:1", 1, Now.AddSeconds(10)))),
+            new OperationalWorldSceneInterpreter());
+        await client.RefreshAsync("region:kr:bjd:1126010100", 0, Now);
+        Assert.Empty(client.Expire(Now.AddSeconds(11)).CurrentItems);
+        client.Clear();
+        Assert.Equal(0, client.Expire(Now.AddSeconds(12)).Cursor);
+    }
+
+    private sealed class DelayedTransport : IOperationalWorldProjectionTransport
+    {
+        public TaskCompletionSource<string?> Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Task<string?> GetAsync(string relativeRoute, bool allowNotFound, bool requiresAuthentication,
+            CancellationToken cancellationToken = default) => Completion.Task;
+    }
+
     private static OperationalWorldSceneResponse Response(
         OperationalWorldSceneItem? item = null,
         bool full = true,

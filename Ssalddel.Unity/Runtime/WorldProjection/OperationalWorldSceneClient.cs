@@ -24,6 +24,7 @@ namespace Ssalddel.Unity.WorldProjection
         private readonly IOperationalWorldSceneDecoder decoder;
         private readonly Data.WorldProjection.OperationalWorldSceneInterpreter interpreter;
         private readonly string schemaVersion;
+        private readonly object memoryGate = new object();
 
         public OperationalWorldSceneClient(
             IOperationalWorldProjectionTransport transport,
@@ -63,12 +64,19 @@ namespace Ssalddel.Unity.WorldProjection
                 cancellationToken).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(json))
                 throw new OperationalWorldProjectionException("OperationalApiResponseEmpty", route);
-            return interpreter.Apply(decoder.Decode(json), utcNow);
+            var response = decoder.Decode(json);
+            lock (memoryGate)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return interpreter.Apply(response, utcNow);
+            }
         }
 
         public Data.WorldProjection.OperationalWorldSceneApplyResult Expire(DateTime utcNow)
-            => interpreter.Expire(utcNow);
+        {
+            lock (memoryGate) return interpreter.Expire(utcNow);
+        }
 
-        public void Clear() => interpreter.Clear();
+        public void Clear() { lock (memoryGate) interpreter.Clear(); }
     }
 }
