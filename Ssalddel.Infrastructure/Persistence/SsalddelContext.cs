@@ -67,6 +67,8 @@ namespace 살뜰.Data
         public DbSet<화물요구조건> 화물요구조건 { get; set; } = null!;
         public DbSet<운송원장> 운송원장 { get; set; } = null!;
         public DbSet<운송이벤트> 운송이벤트 { get; set; } = null!;
+        public DbSet<비정상운송사건> 비정상운송사건 { get; set; } = null!;
+        public DbSet<운송업무담당자배정> 운송업무담당자배정 { get; set; } = null!;
         public DbSet<운송의뢰상품연결> 운송의뢰상품연결 { get; set; } = null!;
         public DbSet<화물연속배차상태> 화물연속배차상태 { get; set; } = null!;
         public DbSet<화물운송시간약속> 화물운송시간약속 { get; set; } = null!;
@@ -104,6 +106,9 @@ namespace 살뜰.Data
 
         public DbSet<창고> 창고 { get; set; } = null!;
         public DbSet<창고사용자> 창고사용자 { get; set; } = null!;
+        public DbSet<생활권물류거점> 생활권물류거점 { get; set; } = null!;
+        public DbSet<생활권물류거점용량예약> 생활권물류거점용량예약 { get; set; } = null!;
+        public DbSet<생활권물류거점보상기록> 생활권물류거점보상기록 { get; set; } = null!;
         public DbSet<입고요청> 입고요청 { get; set; } = null!;
         public DbSet<입고상품> 입고상품 { get; set; } = null!;
         public DbSet<재고이력> 재고이력 { get; set; } = null!;
