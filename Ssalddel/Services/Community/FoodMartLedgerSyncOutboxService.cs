@@ -28,13 +28,22 @@ public interface I음식마트원장동기화OutboxService
     Task<int> 대기항목처리Async(
         int take = 100,
         CancellationToken cancellationToken = default);
+
+}
+
+public interface I음식마트원장동기화복구Service
+{
+    Task<bool> 실패항목재시도예약Async(
+        long outboxId,
+        int expectedAttemptCount,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed class 음식마트원장동기화OutboxService(
     SsalddelContext db,
     I음식마트원장Mongo동기화Service ledgerSync,
     ILogger<음식마트원장동기화OutboxService> logger)
-    : I음식마트원장동기화OutboxService
+    : I음식마트원장동기화OutboxService, I음식마트원장동기화복구Service
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -94,6 +103,39 @@ public sealed class 음식마트원장동기화OutboxService(
         int take = 100,
         CancellationToken cancellationToken = default)
         => ProcessItemsAsync(null, take, cancellationToken);
+
+    public async Task<bool> 실패항목재시도예약Async(
+        long outboxId,
+        int expectedAttemptCount,
+        CancellationToken cancellationToken = default)
+    {
+        if (outboxId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(outboxId));
+        }
+
+        var item = await db.음식마트원장동기화Outbox
+            .SingleOrDefaultAsync(x => x.Id == outboxId, cancellationToken);
+        if (item is null)
+        {
+            return false;
+        }
+
+        if (item.시도횟수 != expectedAttemptCount)
+        {
+            throw new DbUpdateConcurrencyException("후속 처리 상태가 이미 변경되었습니다. 목록을 새로 조회해 주세요.");
+        }
+
+        if (item.처리상태 != OutboxProcessingStatuses.Failed)
+        {
+            throw new InvalidOperationException("실패가 확정되어 운영자 확인이 필요한 항목만 재시도할 수 있습니다.");
+        }
+
+        item.처리상태 = OutboxProcessingStatuses.Pending;
+        item.UpdatedAtUtc = DateTime.UtcNow - OutboxProcessingPolicy.RetryDelay;
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
+    }
 
     private async Task<음식마트원장동기화Outbox> EnqueueAsync(
         string syncType,
