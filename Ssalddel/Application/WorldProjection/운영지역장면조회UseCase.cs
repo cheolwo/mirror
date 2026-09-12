@@ -21,6 +21,29 @@ public interface I운영지역장면조회UseCase
         string areaStableId,
         long cursor,
         CancellationToken cancellationToken);
+
+    Task<OperationalWorldSceneResponse> 조회Async(
+        string areaStableId,
+        long cursor,
+        string schemaVersion,
+        CancellationToken cancellationToken);
+}
+
+public interface I관찰운영검증ProjectionReader
+{
+    Task<OperationalWorldSceneItem[]> 지역목록Async(
+        string areaStableId,
+        DateTime utcNow,
+        CancellationToken cancellationToken);
+}
+
+public sealed class Empty관찰운영검증ProjectionReader : I관찰운영검증ProjectionReader
+{
+    public Task<OperationalWorldSceneItem[]> 지역목록Async(
+        string areaStableId,
+        DateTime utcNow,
+        CancellationToken cancellationToken)
+        => Task.FromResult(Array.Empty<OperationalWorldSceneItem>());
 }
 
 /// <summary>
@@ -33,6 +56,7 @@ public sealed class 운영지역장면조회UseCase(
     I음식배달완료WorldSnapshot조회UseCase foodReader,
     I창고WorldSnapshot조회UseCase warehouseReader,
     I운영WorldAreaResolver areaResolver,
+    I관찰운영검증ProjectionReader verificationReader,
     ILogger<운영지역장면조회UseCase> logger) : I운영지역장면조회UseCase
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -43,10 +67,23 @@ public sealed class 운영지역장면조회UseCase(
         string areaStableId,
         long cursor,
         CancellationToken cancellationToken)
+        => await 조회Async(
+            areaStableId,
+            cursor,
+            OperationalWorldScenePolicy.SchemaVersionV1,
+            cancellationToken);
+
+    public async Task<OperationalWorldSceneResponse> 조회Async(
+        string areaStableId,
+        long cursor,
+        string schemaVersion,
+        CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(areaStableId))
             throw new ArgumentException("지역 고유 식별자가 필요합니다.", nameof(areaStableId));
         if (cursor < 0) throw new ArgumentOutOfRangeException(nameof(cursor));
+        if (!OperationalWorldScenePolicy.IsSupported(schemaVersion))
+            throw new ArgumentException("OperationalWorldSceneSchemaVersionUnsupported", nameof(schemaVersion));
 
         var area = areaStableId.Trim();
         var now = DateTime.UtcNow;
@@ -57,6 +94,11 @@ public sealed class 운영지역장면조회UseCase(
         await ReadWarehousesAsync(area, now, items, failures, cancellationToken);
         await ReadNeighborhoodHubsAsync(area, now, items, failures, cancellationToken);
         await ReadCargoAsync(area, now, items, failures, cancellationToken);
+        if (string.Equals(schemaVersion, OperationalWorldScenePolicy.SchemaVersionV2, StringComparison.Ordinal))
+            await ReadVerificationSamplesAsync(area, now, items, failures, cancellationToken);
+
+        foreach (var item in items)
+            ApplyV2Defaults(item);
 
         var visibleItems = items
             .Where(item => item.ExpiresAtUtc > now)
@@ -70,6 +112,7 @@ public sealed class 운영지역장면조회UseCase(
 
         return new OperationalWorldSceneResponse
         {
+            SchemaVersion = schemaVersion,
             AreaStableId = area,
             Cursor = nextCursor,
             IsFullSnapshot = cursor == 0,
@@ -77,6 +120,53 @@ public sealed class 운영지역장면조회UseCase(
             Items = visibleItems,
             SourceFailures = failures.ToArray()
         };
+    }
+
+    private async Task ReadVerificationSamplesAsync(
+        string area,
+        DateTime now,
+        ICollection<OperationalWorldSceneItem> items,
+        ICollection<OperationalWorldSceneSourceFailure> failures,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            foreach (var item in await verificationReader.지역목록Async(area, now, cancellationToken))
+                items.Add(item);
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            RecordFailure("ObservableOperationsVerification", "VerificationProjectionReadFailed", ex, failures);
+        }
+    }
+
+    private static void ApplyV2Defaults(OperationalWorldSceneItem item)
+    {
+        if (string.IsNullOrWhiteSpace(item.WorkStableId))
+            item.WorkStableId = item.SnapshotStableId;
+        if (string.IsNullOrWhiteSpace(item.LifecycleStageCode))
+            item.LifecycleStageCode = item.ActivityCode;
+        if (string.IsNullOrWhiteSpace(item.AttentionStateCode))
+            item.AttentionStateCode = string.Equals(
+                item.ItemKind,
+                OperationalWorldSceneItemKinds.CompletedLifecycle,
+                StringComparison.Ordinal)
+                ? OperationalWorldAttentionStateCodes.Completed
+                : OperationalWorldAttentionStateCodes.Active;
+        if (string.IsNullOrWhiteSpace(item.ObjectKindCode))
+            item.ObjectKindCode = item.ItemKind;
+        if (string.IsNullOrWhiteSpace(item.SemanticPlaceStableId))
+            item.SemanticPlaceStableId = item.OperatingSystemId switch
+            {
+                OperationalWorldOperatingSystemIds.FoodDelivery => "semantic-place:area:food-delivery",
+                OperationalWorldOperatingSystemIds.DomesticCargoTransport => "semantic-place:area:cargo",
+                OperationalWorldOperatingSystemIds.WarehouseCommerceFulfillment => "semantic-place:area:warehouse",
+                OperationalWorldOperatingSystemIds.SsalddelMartUrbanLogistics => "semantic-place:area:mart",
+                _ => "semantic-place:area:operations"
+            };
+        item.RelationStableIds ??= Array.Empty<string>();
+        if (string.IsNullOrWhiteSpace(item.SourceKindCode))
+            item.SourceKindCode = OperationalWorldSceneSourceKinds.OperationalProjection;
     }
 
     private async Task ReadNeighborhoodHubsAsync(

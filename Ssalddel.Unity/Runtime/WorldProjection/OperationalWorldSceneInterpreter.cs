@@ -14,6 +14,28 @@ namespace Ssalddel.Unity.Data.WorldProjection
         public int RemovedCount { get; set; }
         public long Cursor { get; set; }
         public OperationalWorldSceneItem[] CurrentItems { get; set; } = Array.Empty<OperationalWorldSceneItem>();
+        public OperationalWorldSceneApplyDiagnostic[] Diagnostics { get; set; } =
+            Array.Empty<OperationalWorldSceneApplyDiagnostic>();
+    }
+
+    public sealed class OperationalWorldSceneApplyDiagnostic
+    {
+        public string SnapshotStableId { get; set; } = string.Empty;
+        public string ErrorCode { get; set; } = string.Empty;
+        public bool ExistingObjectFrozen { get; set; }
+    }
+
+    public static class OperationalWorldSceneApplyDiagnosticCodes
+    {
+        public const string SnapshotStableIdRequired = "SnapshotStableIdRequired";
+        public const string AreaMismatch = "AreaMismatch";
+        public const string DuplicateSnapshotStableId = "DuplicateSnapshotStableId";
+        public const string LowerRevision = "LowerRevision";
+        public const string V2FieldRequired = "V2FieldRequired";
+        public const string SourceKindUnsupported = "SourceKindUnsupported";
+        public const string ScenarioRunStableIdRequired = "ScenarioRunStableIdRequired";
+        public const string LocalPersistenceForbidden = "LocalPersistenceForbidden";
+        public const string SensitiveFieldForbidden = "SensitiveFieldForbidden";
     }
 
     /// <summary>
@@ -30,7 +52,7 @@ namespace Ssalddel.Unity.Data.WorldProjection
         public OperationalWorldSceneApplyResult Apply(OperationalWorldSceneResponse response, DateTime utcNow)
         {
             if (response == null) throw new ArgumentNullException(nameof(response));
-            if (!string.Equals(response.SchemaVersion, OperationalWorldScenePolicy.SchemaVersion, StringComparison.Ordinal))
+            if (!OperationalWorldScenePolicy.IsSupported(response.SchemaVersion))
                 return Rejected("SchemaVersionUnsupported");
             if (string.IsNullOrWhiteSpace(response.AreaStableId)) return Rejected("AreaStableIdRequired");
             if (!string.IsNullOrWhiteSpace(areaStableId)
@@ -42,6 +64,13 @@ namespace Ssalddel.Unity.Data.WorldProjection
             var updated = 0;
             var removed = RemoveExpired(utcNow);
             var incomingIds = new HashSet<string>(StringComparer.Ordinal);
+            var diagnostics = new List<OperationalWorldSceneApplyDiagnostic>();
+            var duplicateIds = (response.Items ?? Array.Empty<OperationalWorldSceneItem>())
+                .Where(item => !string.IsNullOrWhiteSpace(item.SnapshotStableId))
+                .GroupBy(item => item.SnapshotStableId, StringComparer.Ordinal)
+                .Where(group => group.Count() > 1)
+                .Select(group => group.Key)
+                .ToHashSet(StringComparer.Ordinal);
             var failedSources = new HashSet<string>(
                 (response.SourceFailures ?? Array.Empty<OperationalWorldSceneSourceFailure>())
                     .Select(failure => failure.SourceCode),
@@ -49,28 +78,48 @@ namespace Ssalddel.Unity.Data.WorldProjection
 
             foreach (var incoming in response.Items ?? Array.Empty<OperationalWorldSceneItem>())
             {
-                if (string.IsNullOrWhiteSpace(incoming.SnapshotStableId)
-                    || !string.Equals(incoming.AreaStableId, areaStableId, StringComparison.Ordinal))
-                    continue;
-
-                incomingIds.Add(incoming.SnapshotStableId);
-                if (incoming.IsTombstone || incoming.ExpiresAtUtc <= utcNow)
+                var validationError = ValidateItem(incoming, response.SchemaVersion, duplicateIds);
+                if (!string.IsNullOrEmpty(validationError))
                 {
-                    if (items.Remove(incoming.SnapshotStableId)) removed++;
+                    var id = incoming.SnapshotStableId ?? string.Empty;
+                    if (!string.IsNullOrWhiteSpace(id)) incomingIds.Add(id);
+                    diagnostics.Add(new OperationalWorldSceneApplyDiagnostic
+                    {
+                        SnapshotStableId = id,
+                        ErrorCode = validationError,
+                        ExistingObjectFrozen = !string.IsNullOrWhiteSpace(id) && items.ContainsKey(id)
+                    });
                     continue;
                 }
 
-                if (!items.TryGetValue(incoming.SnapshotStableId, out var current))
+                var snapshotId = incoming.SnapshotStableId!;
+                incomingIds.Add(snapshotId);
+                if (incoming.IsTombstone || incoming.ExpiresAtUtc <= utcNow)
                 {
-                    items.Add(incoming.SnapshotStableId, incoming);
+                    if (items.Remove(snapshotId)) removed++;
+                    continue;
+                }
+
+                if (!items.TryGetValue(snapshotId, out var current))
+                {
+                    items.Add(snapshotId, incoming);
                     added++;
                     continue;
                 }
 
-                if (incoming.Revision < current.Revision) continue;
+                if (incoming.Revision < current.Revision)
+                {
+                    diagnostics.Add(new OperationalWorldSceneApplyDiagnostic
+                    {
+                        SnapshotStableId = snapshotId,
+                        ErrorCode = OperationalWorldSceneApplyDiagnosticCodes.LowerRevision,
+                        ExistingObjectFrozen = true
+                    });
+                    continue;
+                }
                 if (incoming.Revision == current.Revision
                     && incoming.PublishedAtUtc <= current.PublishedAtUtc) continue;
-                items[incoming.SnapshotStableId] = incoming;
+                items[snapshotId] = incoming;
                 updated++;
             }
 
@@ -95,7 +144,8 @@ namespace Ssalddel.Unity.Data.WorldProjection
                 UpdatedCount = updated,
                 RemovedCount = removed,
                 Cursor = cursor,
-                CurrentItems = Snapshot()
+                CurrentItems = Snapshot(),
+                Diagnostics = diagnostics.ToArray()
             };
         }
 
@@ -136,6 +186,50 @@ namespace Ssalddel.Unity.Data.WorldProjection
                 Cursor = cursor,
                 CurrentItems = Snapshot()
             };
+
+        private string ValidateItem(
+            OperationalWorldSceneItem item,
+            string schemaVersion,
+            ISet<string> duplicateIds)
+        {
+            if (string.IsNullOrWhiteSpace(item.SnapshotStableId))
+                return OperationalWorldSceneApplyDiagnosticCodes.SnapshotStableIdRequired;
+            if (!string.Equals(item.AreaStableId, areaStableId, StringComparison.Ordinal))
+                return OperationalWorldSceneApplyDiagnosticCodes.AreaMismatch;
+            if (duplicateIds.Contains(item.SnapshotStableId))
+                return OperationalWorldSceneApplyDiagnosticCodes.DuplicateSnapshotStableId;
+            if (item.LocalStorageAllowed || item.ReplayAllowed
+                || !string.Equals(item.DataPolicyCode, OperationalWorldScenePolicy.OnlineEphemeral, StringComparison.Ordinal))
+                return OperationalWorldSceneApplyDiagnosticCodes.LocalPersistenceForbidden;
+            if (!string.Equals(schemaVersion, OperationalWorldScenePolicy.SchemaVersionV2, StringComparison.Ordinal))
+                return string.Empty;
+            if (ContainsSensitiveFieldName(item.RepresentationDataJson))
+                return OperationalWorldSceneApplyDiagnosticCodes.SensitiveFieldForbidden;
+            if (string.IsNullOrWhiteSpace(item.WorkStableId)
+                || string.IsNullOrWhiteSpace(item.LifecycleStageCode)
+                || string.IsNullOrWhiteSpace(item.AttentionStateCode)
+                || string.IsNullOrWhiteSpace(item.ObjectKindCode)
+                || string.IsNullOrWhiteSpace(item.SemanticPlaceStableId))
+                return OperationalWorldSceneApplyDiagnosticCodes.V2FieldRequired;
+            if (!string.Equals(item.SourceKindCode, OperationalWorldSceneSourceKinds.VerificationSample, StringComparison.Ordinal)
+                && !string.Equals(item.SourceKindCode, OperationalWorldSceneSourceKinds.OperationalProjection, StringComparison.Ordinal))
+                return OperationalWorldSceneApplyDiagnosticCodes.SourceKindUnsupported;
+            if (string.Equals(item.SourceKindCode, OperationalWorldSceneSourceKinds.VerificationSample, StringComparison.Ordinal)
+                && string.IsNullOrWhiteSpace(item.ScenarioRunStableId))
+                return OperationalWorldSceneApplyDiagnosticCodes.ScenarioRunStableIdRequired;
+            return string.Empty;
+        }
+
+        private static bool ContainsSensitiveFieldName(string json)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return false;
+            var forbidden = new[]
+            {
+                "\"phone\"", "\"telephone\"", "\"address\"", "\"latitude\"", "\"longitude\"",
+                "\"gps\"", "\"authToken\"", "\"accessToken\""
+            };
+            return forbidden.Any(value => json.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0);
+        }
 
         private OperationalWorldSceneItem[] Snapshot()
             => items.Values

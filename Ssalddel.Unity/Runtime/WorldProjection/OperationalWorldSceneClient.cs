@@ -23,15 +23,20 @@ namespace Ssalddel.Unity.WorldProjection
         private readonly IOperationalWorldProjectionTransport transport;
         private readonly IOperationalWorldSceneDecoder decoder;
         private readonly Data.WorldProjection.OperationalWorldSceneInterpreter interpreter;
+        private readonly string schemaVersion;
 
         public OperationalWorldSceneClient(
             IOperationalWorldProjectionTransport transport,
             IOperationalWorldSceneDecoder decoder,
-            Data.WorldProjection.OperationalWorldSceneInterpreter interpreter)
+            Data.WorldProjection.OperationalWorldSceneInterpreter interpreter,
+            string schemaVersion = OperationalWorldScenePolicy.SchemaVersionV1)
         {
             this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
             this.decoder = decoder ?? throw new ArgumentNullException(nameof(decoder));
             this.interpreter = interpreter ?? throw new ArgumentNullException(nameof(interpreter));
+            if (!OperationalWorldScenePolicy.IsSupported(schemaVersion))
+                throw new ArgumentException("OperationalWorldSceneSchemaVersionUnsupported", nameof(schemaVersion));
+            this.schemaVersion = schemaVersion;
         }
 
         public async Task<Data.WorldProjection.OperationalWorldSceneApplyResult> RefreshAsync(
@@ -47,7 +52,10 @@ namespace Ssalddel.Unity.WorldProjection
             var route = "api/v1/world/areas/"
                         + Uri.EscapeDataString(areaStableId.Trim())
                         + "/scene-snapshots?cursor="
-                        + cursor;
+                        + cursor
+                        + (string.Equals(schemaVersion, OperationalWorldScenePolicy.SchemaVersionV2, StringComparison.Ordinal)
+                            ? "&schemaVersion=" + Uri.EscapeDataString(schemaVersion)
+                            : string.Empty);
             var json = await transport.GetAsync(
                 route,
                 allowNotFound: false,

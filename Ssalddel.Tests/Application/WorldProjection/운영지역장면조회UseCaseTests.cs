@@ -88,6 +88,7 @@ public sealed class 운영지역장면조회UseCaseTests
             new FoodReader(),
             new WarehouseReader(),
             new 음식배달완료WorldAreaResolver(),
+            new Empty관찰운영검증ProjectionReader(),
             NullLogger<운영지역장면조회UseCase>.Instance);
 
         var response = await useCase.조회Async(Area, 0, CancellationToken.None);
@@ -119,11 +120,64 @@ public sealed class 운영지역장면조회UseCaseTests
             new ThrowingFoodReader(),
             new WarehouseReader(),
             new 음식배달완료WorldAreaResolver(),
+            new Empty관찰운영검증ProjectionReader(),
             NullLogger<운영지역장면조회UseCase>.Instance);
 
         var response = await useCase.조회Async(Area, 0, CancellationToken.None);
 
         Assert.Contains(response.SourceFailures, failure => failure.SourceCode == "FoodDeliveryOS");
+    }
+
+    [Fact]
+    public async Task v2는_검증표본과_운영투영을_출처와의미위치로구분한다()
+    {
+        await using var db = CreateContext();
+        var useCase = new 운영지역장면조회UseCase(
+            db,
+            new AdminCurrentUser(),
+            new FoodReader(),
+            new WarehouseReader(),
+            new 음식배달완료WorldAreaResolver(),
+            new VerificationReader(),
+            NullLogger<운영지역장면조회UseCase>.Instance);
+
+        var response = await useCase.조회Async(
+            Area,
+            0,
+            OperationalWorldScenePolicy.SchemaVersionV2,
+            CancellationToken.None);
+
+        Assert.Equal(OperationalWorldScenePolicy.SchemaVersionV2, response.SchemaVersion);
+        var operational = Assert.Single(response.Items, item => item.SnapshotStableId == "food-completed:public");
+        Assert.Equal(OperationalWorldSceneSourceKinds.OperationalProjection, operational.SourceKindCode);
+        Assert.NotEmpty(operational.WorkStableId);
+        Assert.StartsWith("semantic-place:", operational.SemanticPlaceStableId);
+        var sample = Assert.Single(response.Items, item => item.SourceKindCode == OperationalWorldSceneSourceKinds.VerificationSample);
+        Assert.Equal("observable-operations-run:test", sample.ScenarioRunStableId);
+        Assert.Equal("synthetic-place:food-route-a", sample.SemanticPlaceStableId);
+        Assert.False(sample.LocalStorageAllowed);
+        Assert.False(sample.ReplayAllowed);
+    }
+
+    [Fact]
+    public async Task 지원하지않는_v2판본은_조회단에서거절한다()
+    {
+        await using var db = CreateContext();
+        var useCase = new 운영지역장면조회UseCase(
+            db,
+            new AdminCurrentUser(),
+            new FoodReader(),
+            new WarehouseReader(),
+            new 음식배달완료WorldAreaResolver(),
+            new Empty관찰운영검증ProjectionReader(),
+            NullLogger<운영지역장면조회UseCase>.Instance);
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => useCase.조회Async(
+            Area,
+            0,
+            "operational-world-scene.v999",
+            CancellationToken.None));
+        Assert.Contains("Unsupported", exception.Message, StringComparison.Ordinal);
     }
 
     private static SsalddelContext CreateContext()
@@ -186,6 +240,37 @@ public sealed class 운영지역장면조회UseCaseTests
                     }
                 ]
             }));
+    }
+
+    private sealed class VerificationReader : I관찰운영검증ProjectionReader
+    {
+        public Task<OperationalWorldSceneItem[]> 지역목록Async(
+            string areaStableId,
+            DateTime utcNow,
+            CancellationToken cancellationToken)
+            => Task.FromResult(new[]
+            {
+                new OperationalWorldSceneItem
+                {
+                    SnapshotStableId = "sample-observation:test:food-normal",
+                    AreaStableId = areaStableId,
+                    OperatingSystemId = OperationalWorldOperatingSystemIds.FoodDelivery,
+                    ItemKind = OperationalWorldSceneItemKinds.CompletedLifecycle,
+                    RoleCode = "FoodDeliveryTeam",
+                    ActivityCode = "ReceiptConfirmed",
+                    Revision = 1,
+                    OccurredAtUtc = utcNow,
+                    PublishedAtUtc = utcNow,
+                    ExpiresAtUtc = utcNow.AddMinutes(30),
+                    WorkStableId = "sample-work:test:food-normal",
+                    LifecycleStageCode = "ReceiptConfirmed",
+                    AttentionStateCode = OperationalWorldAttentionStateCodes.Completed,
+                    ObjectKindCode = "FoodDelivery",
+                    SemanticPlaceStableId = "synthetic-place:food-route-a",
+                    SourceKindCode = OperationalWorldSceneSourceKinds.VerificationSample,
+                    ScenarioRunStableId = "observable-operations-run:test"
+                }
+            });
     }
 
     private sealed class DummyEncryption : IPersonalDataEncryptionService

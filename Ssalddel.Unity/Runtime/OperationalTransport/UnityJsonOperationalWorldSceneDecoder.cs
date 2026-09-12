@@ -74,6 +74,14 @@ namespace Ssalddel.Unity.OperationalTransport
         public bool localStorageAllowed;
         public bool replayAllowed;
         public string representationDataJson = "{}";
+        public string workStableId = string.Empty;
+        public string lifecycleStageCode = string.Empty;
+        public string attentionStateCode = string.Empty;
+        public string objectKindCode = string.Empty;
+        public string semanticPlaceStableId = string.Empty;
+        public string[] relationStableIds = Array.Empty<string>();
+        public string sourceKindCode = string.Empty;
+        public string scenarioRunStableId = string.Empty;
 
         public OperationalWorldSceneItem ToContract()
             => new OperationalWorldSceneItem
@@ -92,7 +100,15 @@ namespace Ssalddel.Unity.OperationalTransport
                 DataPolicyCode = dataPolicyCode,
                 LocalStorageAllowed = localStorageAllowed,
                 ReplayAllowed = replayAllowed,
-                RepresentationDataJson = representationDataJson
+                RepresentationDataJson = representationDataJson,
+                WorkStableId = workStableId,
+                LifecycleStageCode = lifecycleStageCode,
+                AttentionStateCode = attentionStateCode,
+                ObjectKindCode = objectKindCode,
+                SemanticPlaceStableId = semanticPlaceStableId,
+                RelationStableIds = relationStableIds ?? Array.Empty<string>(),
+                SourceKindCode = sourceKindCode,
+                ScenarioRunStableId = scenarioRunStableId
             };
     }
 

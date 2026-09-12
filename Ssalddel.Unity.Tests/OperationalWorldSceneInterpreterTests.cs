@@ -31,6 +31,24 @@ public sealed class OperationalWorldSceneInterpreterTests
     }
 
     [Fact]
+    public async Task v2Client는_명시적_schemaVersion만추가한다()
+    {
+        var transport = new RecordingTransport();
+        var response = Response(V2Item("actor:1", 1, Now.AddMinutes(5)), cursor: 8);
+        response.SchemaVersion = OperationalWorldScenePolicy.SchemaVersionV2;
+        var client = new OperationalWorldSceneClient(
+            transport,
+            new StaticDecoder(response),
+            new OperationalWorldSceneInterpreter(),
+            OperationalWorldScenePolicy.SchemaVersionV2);
+
+        var result = await client.RefreshAsync("region:kr:bjd:1126010100", 7, Now);
+
+        Assert.True(result.Accepted);
+        Assert.Contains("schemaVersion=operational-world-scene.v2", transport.Route);
+    }
+
+    [Fact]
     public void 최신판본만적용하고_만료된객체는제거한다()
     {
         var interpreter = new OperationalWorldSceneInterpreter();
@@ -79,6 +97,60 @@ public sealed class OperationalWorldSceneInterpreterTests
         Assert.Equal(1, result.Cursor);
     }
 
+    [Fact]
+    public void v2의_낮은revision은_그객체만동결하고_다른객체는갱신한다()
+    {
+        var interpreter = new OperationalWorldSceneInterpreter();
+        var first = Response(full: true, cursor: 1);
+        first.SchemaVersion = OperationalWorldScenePolicy.SchemaVersionV2;
+        first.Items =
+        [
+            V2Item("actor:freeze", 2, Now.AddMinutes(5)),
+            V2Item("actor:continue", 2, Now.AddMinutes(5))
+        ];
+        interpreter.Apply(first, Now);
+
+        var second = Response(full: false, cursor: 2);
+        second.SchemaVersion = OperationalWorldScenePolicy.SchemaVersionV2;
+        second.Items =
+        [
+            V2Item("actor:freeze", 1, Now.AddMinutes(5)),
+            V2Item("actor:continue", 3, Now.AddMinutes(5))
+        ];
+        var result = interpreter.Apply(second, Now.AddSeconds(1));
+
+        Assert.True(result.Accepted);
+        Assert.Equal(2, result.CurrentItems.Single(x => x.SnapshotStableId == "actor:freeze").Revision);
+        Assert.Equal(3, result.CurrentItems.Single(x => x.SnapshotStableId == "actor:continue").Revision);
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal(OperationalWorldSceneApplyDiagnosticCodes.LowerRevision, diagnostic.ErrorCode);
+        Assert.True(diagnostic.ExistingObjectFrozen);
+    }
+
+    [Fact]
+    public void v2의_민감필드오류뒤_더높은정상revision으로_그객체만회복한다()
+    {
+        var interpreter = new OperationalWorldSceneInterpreter();
+        var first = Response(V2Item("actor:1", 1, Now.AddMinutes(5)));
+        first.SchemaVersion = OperationalWorldScenePolicy.SchemaVersionV2;
+        interpreter.Apply(first, Now);
+
+        var invalid = Response(V2Item("actor:1", 2, Now.AddMinutes(5)), full: false, cursor: 2);
+        invalid.SchemaVersion = OperationalWorldScenePolicy.SchemaVersionV2;
+        invalid.Items[0].RepresentationDataJson = "{\"address\":\"private\"}";
+        var frozen = interpreter.Apply(invalid, Now.AddSeconds(1));
+        Assert.Equal(1, Assert.Single(frozen.CurrentItems).Revision);
+        Assert.Equal(OperationalWorldSceneApplyDiagnosticCodes.SensitiveFieldForbidden,
+            Assert.Single(frozen.Diagnostics).ErrorCode);
+
+        var recovered = Response(V2Item("actor:1", 3, Now.AddMinutes(5)), full: false, cursor: 3);
+        recovered.SchemaVersion = OperationalWorldScenePolicy.SchemaVersionV2;
+        var result = interpreter.Apply(recovered, Now.AddSeconds(2));
+
+        Assert.Equal(3, Assert.Single(result.CurrentItems).Revision);
+        Assert.Empty(result.Diagnostics);
+    }
+
     private static OperationalWorldSceneResponse Response(
         OperationalWorldSceneItem? item = null,
         bool full = true,
@@ -107,6 +179,22 @@ public sealed class OperationalWorldSceneInterpreterTests
             PublishedAtUtc = Now.AddSeconds(revision),
             ExpiresAtUtc = expiresAt
         };
+
+    private static OperationalWorldSceneItem V2Item(
+        string id,
+        long revision,
+        DateTime expiresAt)
+    {
+        var item = Item(id, revision, expiresAt);
+        item.WorkStableId = "work:" + id;
+        item.LifecycleStageCode = "Completed";
+        item.AttentionStateCode = OperationalWorldAttentionStateCodes.Completed;
+        item.ObjectKindCode = "WarehouseOperation";
+        item.SemanticPlaceStableId = "synthetic-place:warehouse-a";
+        item.SourceKindCode = OperationalWorldSceneSourceKinds.VerificationSample;
+        item.ScenarioRunStableId = "observable-operations-run:test";
+        return item;
+    }
 
     private sealed class RecordingTransport : IOperationalWorldProjectionTransport
     {

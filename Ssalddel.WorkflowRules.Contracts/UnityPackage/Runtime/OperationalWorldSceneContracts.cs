@@ -84,9 +84,29 @@ namespace Ssalddel.WorkflowRules.Contracts
 
     public static class OperationalWorldScenePolicy
     {
-        public const string SchemaVersion = "operational-world-scene.v1";
+        public const string SchemaVersionV1 = "operational-world-scene.v1";
+        public const string SchemaVersionV2 = "operational-world-scene.v2";
+        public const string SchemaVersion = SchemaVersionV1;
         public const string OnlineEphemeral = "OnlineEphemeral";
         public const int RefreshAfterSeconds = 30;
+
+        public static bool IsSupported(string schemaVersion)
+            => string.Equals(schemaVersion, SchemaVersionV1, StringComparison.Ordinal)
+               || string.Equals(schemaVersion, SchemaVersionV2, StringComparison.Ordinal);
+    }
+
+    public static class OperationalWorldSceneSourceKinds
+    {
+        public const string VerificationSample = "VerificationSample";
+        public const string OperationalProjection = "OperationalProjection";
+    }
+
+    public static class OperationalWorldAttentionStateCodes
+    {
+        public const string Active = "Active";
+        public const string Completed = "Completed";
+        public const string RecoveryPending = "RecoveryPending";
+        public const string Recovered = "Recovered";
     }
 
     public static class OperationalWorldSceneRoutes
@@ -131,6 +151,16 @@ namespace Ssalddel.WorkflowRules.Contracts
         public bool LocalStorageAllowed { get; set; }
         public bool ReplayAllowed { get; set; }
         public string RepresentationDataJson { get; set; } = "{}";
+
+        // v2 opt-in fields. The v1 HTTP shape is explicitly projected by the server controller.
+        public string WorkStableId { get; set; } = string.Empty;
+        public string LifecycleStageCode { get; set; } = string.Empty;
+        public string AttentionStateCode { get; set; } = string.Empty;
+        public string ObjectKindCode { get; set; } = string.Empty;
+        public string SemanticPlaceStableId { get; set; } = string.Empty;
+        public string[] RelationStableIds { get; set; } = Array.Empty<string>();
+        public string SourceKindCode { get; set; } = string.Empty;
+        public string ScenarioRunStableId { get; set; } = string.Empty;
     }
 
     public sealed class OperationalWorldSceneSourceFailure

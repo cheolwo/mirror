@@ -92,11 +92,14 @@ namespace Ssalddel.Unity.Data.WorldProjection
             return new OperationalOsObservationState
             {
                 OperatingSystemId = OperatingSystemId,
-                WorkStableId = item.SnapshotStableId,
+                WorkStableId = string.IsNullOrWhiteSpace(item.WorkStableId)
+                    ? item.SnapshotStableId : item.WorkStableId,
                 AreaStableId = item.AreaStableId,
                 Revision = item.Revision,
-                LifecycleStageId = item.ActivityCode,
-                AttentionStateCode = OperationalOsAttentionStateCodes.Completed,
+                LifecycleStageId = string.IsNullOrWhiteSpace(item.LifecycleStageCode)
+                    ? item.ActivityCode : item.LifecycleStageCode,
+                AttentionStateCode = string.IsNullOrWhiteSpace(item.AttentionStateCode)
+                    ? OperationalOsAttentionStateCodes.Completed : item.AttentionStateCode,
                 RoleCode = item.RoleCode,
                 OccurredAtUtc = item.OccurredAtUtc,
                 ExpiresAtUtc = item.ExpiresAtUtc,

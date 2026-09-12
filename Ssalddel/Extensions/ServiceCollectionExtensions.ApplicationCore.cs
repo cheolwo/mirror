@@ -198,6 +198,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I재고현황UseCase, 재고현황UseCase>();
         services.AddScoped<I창고WorldSnapshot조회UseCase, 창고WorldSnapshot조회UseCase>();
         services.AddScoped<I운영지역장면조회UseCase, 운영지역장면조회UseCase>();
+        services.AddSingleton<I관찰운영검증ProjectionReader, Empty관찰운영검증ProjectionReader>();
         services.AddScoped<I창고입고화물인계조회UseCase, 창고입고화물인계조회UseCase>();
         services.AddScoped<I적재작업UseCase, 적재작업UseCase>();
         services.AddScoped<I포장작업UseCase, 포장작업UseCase>();

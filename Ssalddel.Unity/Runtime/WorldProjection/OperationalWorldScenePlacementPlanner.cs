@@ -22,6 +22,13 @@ namespace Ssalddel.Unity.Data.WorldProjection
         public string AnchorKey { get; set; } = string.Empty;
         public string VisualKey { get; set; } = string.Empty;
         public string ActivityCode { get; set; } = string.Empty;
+        public string WorkStableId { get; set; } = string.Empty;
+        public string LifecycleStageCode { get; set; } = string.Empty;
+        public string AttentionStateCode { get; set; } = string.Empty;
+        public string ObjectKindCode { get; set; } = string.Empty;
+        public string SemanticPlaceStableId { get; set; } = string.Empty;
+        public string SourceKindCode { get; set; } = string.Empty;
+        public string ScenarioRunStableId { get; set; } = string.Empty;
         public long Revision { get; set; }
         public DateTime ExpiresAtUtc { get; set; }
     }
@@ -110,6 +117,16 @@ namespace Ssalddel.Unity.Data.WorldProjection
                     AnchorKey = AnchorByOperatingSystem[item.OperatingSystemId],
                     VisualKey = VisualByItemKind[item.ItemKind],
                     ActivityCode = item.ActivityCode,
+                    WorkStableId = string.IsNullOrWhiteSpace(item.WorkStableId)
+                        ? item.SnapshotStableId : item.WorkStableId,
+                    LifecycleStageCode = string.IsNullOrWhiteSpace(item.LifecycleStageCode)
+                        ? item.ActivityCode : item.LifecycleStageCode,
+                    AttentionStateCode = item.AttentionStateCode,
+                    ObjectKindCode = string.IsNullOrWhiteSpace(item.ObjectKindCode)
+                        ? item.ItemKind : item.ObjectKindCode,
+                    SemanticPlaceStableId = item.SemanticPlaceStableId,
+                    SourceKindCode = item.SourceKindCode,
+                    ScenarioRunStableId = item.ScenarioRunStableId,
                     Revision = item.Revision,
                     ExpiresAtUtc = item.ExpiresAtUtc
                 });
