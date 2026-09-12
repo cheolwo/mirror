@@ -1,0 +1,143 @@
+@page "/operations/follow-up-recovery"
+@using Ssalddel.Contracts.Admin.Operations
+@using Ssalddel.Ui.Common.Areas.BackOffice.Components.Operations
+@inject FollowUpRecoveryAdminService RecoveryService
+@inject IWebHostEnvironment HostEnvironment
+
+<PageTitle>후속 처리 복구 작업대</PageTitle>
+
+<MudStack Spacing="3">
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Style="flex-wrap: wrap;">
+        <MudStack Spacing="0">
+            <MudText Typo="Typo.h4">후속 처리 복구 작업대</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">완료된 업무를 되돌리지 않고 후속 처리만 복구합니다.</MudText>
+        </MudStack>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@loading" OnClick="LoadAsync">새로고침</MudButton>
+    </MudStack>
+
+    @if (samplePreview)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+            개발 환경의 화면 검증용 샘플 데이터입니다. 운영 API 실패를 대신하는 자료가 아닙니다.
+        </MudAlert>
+    }
+
+    <운영후속처리복구작업대 Value="@value" Loading="@loading" ErrorMessage="@errorMessage" RetryingStableId="@retryingStableId" RetryRequested="RetryAsync" />
+</MudStack>
+
+@code {
+    private 운영후속처리복구목록Dto? value;
+    private bool loading;
+    private string? errorMessage;
+    private string? retryingStableId;
+    private bool samplePreview;
+
+    [SupplyParameterFromQuery(Name = "sample")]
+    public bool Sample { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        samplePreview = Sample && HostEnvironment.IsDevelopment();
+        if (samplePreview)
+        {
+            value = CreateSample();
+            return Task.CompletedTask;
+        }
+
+        return LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        if (samplePreview)
+        {
+            value = CreateSample();
+            return;
+        }
+
+        loading = true;
+        errorMessage = null;
+        try { value = await RecoveryService.목록조회Async(); }
+        catch (Exception ex) { errorMessage = $"후속 처리 상태를 불러오지 못했습니다: {ex.Message}"; }
+        finally { loading = false; }
+    }
+
+    private async Task RetryAsync(운영후속처리복구항목Dto item)
+    {
+        if (samplePreview)
+        {
+            errorMessage = "샘플 미리보기에서는 서버 상태를 변경하지 않습니다.";
+            return;
+        }
+
+        retryingStableId = item.복구StableId;
+        errorMessage = null;
+        try
+        {
+            await RecoveryService.재시도예약Async(item);
+            await LoadAsync();
+        }
+        catch (Exception ex) { errorMessage = $"재시도를 예약하지 못했습니다: {ex.Message}"; }
+        finally { retryingStableId = null; }
+    }
+
+    private static 운영후속처리복구목록Dto CreateSample()
+    {
+        var now = DateTime.UtcNow;
+        return new 운영후속처리복구목록Dto
+        {
+            조회시각Utc = now,
+            전체항목수 = 3,
+            자동재시도대기수 = 1,
+            처리중수 = 1,
+            운영자확인필요수 = 1,
+            항목 =
+            [
+                new 운영후속처리복구항목Dto
+                {
+                    복구StableId = "follow-up-recovery:FoodMartLedgerSync:102",
+                    원천Code = 운영후속처리복구원천Codes.음식마트원장동기화,
+                    원천항목Id = 102,
+                    업무유형Code = "FoodOrder",
+                    상태Code = 운영후속처리복구상태Codes.운영자확인필요,
+                    현재책임운영체제Id = "FoodDeliveryOS",
+                    처리시도수 = 5,
+                    최대자동시도수 = 5,
+                    CreatedAtUtc = now.AddMinutes(-20),
+                    UpdatedAtUtc = now.AddMinutes(-2),
+                    운영자확인필요 = true,
+                    재시도예약가능 = true,
+                    안전요약 = "완료된 음식 주문을 공동 원장에 반영하는 후속 처리입니다."
+                },
+                new 운영후속처리복구항목Dto
+                {
+                    복구StableId = "follow-up-recovery:FoodMartLedgerSync:103",
+                    원천Code = 운영후속처리복구원천Codes.음식마트원장동기화,
+                    원천항목Id = 103,
+                    업무유형Code = "WarehouseOutbound",
+                    상태Code = 운영후속처리복구상태Codes.자동재시도대기,
+                    현재책임운영체제Id = "WarehouseCommerceFulfillmentOS",
+                    처리시도수 = 2,
+                    최대자동시도수 = 5,
+                    CreatedAtUtc = now.AddMinutes(-8),
+                    UpdatedAtUtc = now.AddSeconds(-10),
+                    다음처리예정시각Utc = now.AddSeconds(20),
+                    안전요약 = "완료된 창고 출고를 공동 원장에 반영하는 후속 처리입니다."
+                },
+                new 운영후속처리복구항목Dto
+                {
+                    복구StableId = "follow-up-recovery:OperatingSystemHandoff:104",
+                    원천Code = 운영후속처리복구원천Codes.운영체제업무인계,
+                    원천항목Id = 104,
+                    업무유형Code = "OperatingSystemHandoffRequested",
+                    상태Code = 운영후속처리복구상태Codes.처리중,
+                    현재책임운영체제Id = "SsalddelMartUrbanLogisticsOS",
+                    처리시도수 = 1,
+                    CreatedAtUtc = now.AddMinutes(-3),
+                    UpdatedAtUtc = now.AddSeconds(-25),
+                    안전요약 = "운영체제 사이 업무 인계 후속 처리를 확인해야 합니다."
+                }
+            ]
+        };
+    }
+}

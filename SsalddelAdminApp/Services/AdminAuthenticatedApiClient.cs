@@ -30,10 +30,21 @@ public sealed class AdminAuthenticatedApiClient
                ?? throw new AdminApiException("서버 응답을 읽을 수 없습니다.", response.StatusCode);
     }
 
+    public async Task<TResponse> PutAsync<TRequest, TResponse>(
+        string path,
+        TRequest body,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await SendWithRefreshAsync(HttpMethod.Put, path, cancellationToken, body);
+        return await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken)
+               ?? throw new AdminApiException("서버 응답을 읽을 수 없습니다.", response.StatusCode);
+    }
+
     private async Task<HttpResponseMessage> SendWithRefreshAsync(
         HttpMethod method,
         string path,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        object? body = null)
     {
         var authenticationError = await authService.EnsureAccessTokenAsync(
             cancellationToken: cancellationToken);
@@ -42,7 +53,7 @@ public sealed class AdminAuthenticatedApiClient
             throw new AdminApiException(authenticationError, HttpStatusCode.Unauthorized);
         }
 
-        var response = await SendOnceAsync(method, path, cancellationToken);
+        var response = await SendOnceAsync(method, path, cancellationToken, body);
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
             response.Dispose();
@@ -54,7 +65,7 @@ public sealed class AdminAuthenticatedApiClient
                 throw new AdminApiException(authenticationError, HttpStatusCode.Unauthorized);
             }
 
-            response = await SendOnceAsync(method, path, cancellationToken);
+            response = await SendOnceAsync(method, path, cancellationToken, body);
         }
 
         if (!response.IsSuccessStatusCode)
@@ -68,9 +79,14 @@ public sealed class AdminAuthenticatedApiClient
     private async Task<HttpResponseMessage> SendOnceAsync(
         HttpMethod method,
         string path,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        object? body = null)
     {
         using var request = new HttpRequestMessage(method, path);
+        if (body is not null)
+        {
+            request.Content = JsonContent.Create(body);
+        }
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", session.AccessToken);
         try
         {

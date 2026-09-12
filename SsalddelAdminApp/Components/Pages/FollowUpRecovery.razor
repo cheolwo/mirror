@@ -1,0 +1,70 @@
+@page "/operations/follow-up-recovery"
+@using Ssalddel.Contracts.Admin.Operations
+@using Ssalddel.Ui.Common.Areas.BackOffice.Components.Operations
+@inject FollowUpRecoveryMobileService RecoveryService
+@inject AdminAuthSession Session
+@inject AdminAuthService AuthService
+
+<PageTitle>후속 처리 복구</PageTitle>
+
+<MudStack Spacing="3">
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Style="flex-wrap: wrap;">
+        <MudStack Spacing="0">
+            <MudText Typo="Typo.h5">후속 처리 복구</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">모바일에서도 원 업무를 유지한 채 안전한 후속 처리만 다시 예약합니다.</MudText>
+        </MudStack>
+        <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Primary" Disabled="@loading" OnClick="LoadAsync" aria-label="후속 처리 새로고침" />
+    </MudStack>
+
+    @if (!Session.IsServerAdmin)
+    {
+        <MudAlert Severity="Severity.Warning">서버 관리자 로그인이 필요합니다.</MudAlert>
+    }
+    else
+    {
+        <운영후속처리복구작업대 Value="@value" Loading="@loading" ErrorMessage="@errorMessage" RetryingStableId="@retryingStableId" RetryRequested="RetryAsync" />
+    }
+</MudStack>
+
+@code {
+    private 운영후속처리복구목록Dto? value;
+    private bool loading;
+    private string? errorMessage;
+    private string? retryingStableId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Session.RestoreAsync();
+        if (!string.IsNullOrWhiteSpace(Session.RefreshToken))
+        {
+            errorMessage = await AuthService.EnsureAccessTokenAsync();
+        }
+
+        if (Session.IsServerAdmin)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        errorMessage = null;
+        try { value = await RecoveryService.목록조회Async(); }
+        catch (AdminApiException ex) { errorMessage = ex.Message; }
+        finally { loading = false; }
+    }
+
+    private async Task RetryAsync(운영후속처리복구항목Dto item)
+    {
+        retryingStableId = item.복구StableId;
+        errorMessage = null;
+        try
+        {
+            await RecoveryService.재시도예약Async(item);
+            await LoadAsync();
+        }
+        catch (AdminApiException ex) { errorMessage = ex.Message; }
+        finally { retryingStableId = null; }
+    }
+}

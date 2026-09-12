@@ -1,0 +1,156 @@
+@using Ssalddel.Contracts.Admin.Operations
+
+<MudStack Spacing="3">
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+        원 업무의 완료 상태는 유지합니다. 이 작업대는 실패한 후속 처리만 분리해 보여주며 원천 식별자, 주소, 연락처와 오류 원문은 표시하지 않습니다.
+    </MudAlert>
+
+    @if (Loading)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <MudAlert Severity="Severity.Error">@ErrorMessage</MudAlert>
+    }
+    else if (Value is null)
+    {
+        <MudAlert Severity="Severity.Warning">후속 처리 상태를 아직 조회하지 않았습니다.</MudAlert>
+    }
+    else
+    {
+        <MudGrid Spacing="2">
+            <MudItem xs="6" md="3">
+                <MudPaper Outlined="true" Class="pa-3">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">열린 항목</MudText>
+                    <MudText Typo="Typo.h5">@Value.전체항목수</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudPaper Outlined="true" Class="pa-3">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">자동 재시도</MudText>
+                    <MudText Typo="Typo.h5" Color="Color.Warning">@Value.자동재시도대기수</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudPaper Outlined="true" Class="pa-3">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">처리 중</MudText>
+                    <MudText Typo="Typo.h5" Color="Color.Info">@Value.처리중수</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudPaper Outlined="true" Class="pa-3">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">운영자 확인</MudText>
+                    <MudText Typo="Typo.h5" Color="Color.Error">@Value.운영자확인필요수</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        @if (Value.항목.Count == 0)
+        {
+            <MudAlert Severity="Severity.Success">현재 확인할 후속 처리 항목이 없습니다.</MudAlert>
+        }
+        else
+        {
+            <MudGrid Spacing="2">
+                @foreach (var item in Value.항목)
+                {
+                    <MudItem xs="12" md="6" xl="4">
+                        <MudPaper Outlined="true" Class="pa-4" Style="height: 100%;">
+                            <MudStack Spacing="2">
+                                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Spacing="2">
+                                    <MudStack Spacing="0" Style="min-width: 0; flex: 1;">
+                                        <MudText Typo="Typo.subtitle1">@ResolveWorkLabel(item.업무유형Code)</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="overflow-wrap: anywhere;">@item.복구StableId</MudText>
+                                    </MudStack>
+                                    <MudChip T="string" Size="Size.Small" Color="@ResolveColor(item.상태Code)" Variant="Variant.Filled" Style="flex-shrink: 0;">
+                                        @ResolveStatusLabel(item.상태Code)
+                                    </MudChip>
+                                </MudStack>
+
+                                <MudText Typo="Typo.body2">@item.안전요약</MudText>
+                                <MudDivider />
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">현재 책임 운영체제</MudText>
+                                <MudText Typo="Typo.body2">@ResolveOperatingSystemLabel(item.현재책임운영체제Id)</MudText>
+                                <MudStack Row="true" Justify="Justify.SpaceBetween" Style="flex-wrap: wrap;">
+                                    <MudText Typo="Typo.caption">처리 시도 @item.처리시도수@(item.최대자동시도수.HasValue ? $" / {item.최대자동시도수}" : string.Empty)</MudText>
+                                    <MudText Typo="Typo.caption">갱신 @FormatDate(item.UpdatedAtUtc)</MudText>
+                                </MudStack>
+                                @if (item.다음처리예정시각Utc.HasValue)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        다음 처리 예정 @FormatDate(item.다음처리예정시각Utc.Value)
+                                    </MudText>
+                                }
+
+                                @if (item.재시도예약가능)
+                                {
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="Color.Primary"
+                                               FullWidth="true"
+                                               StartIcon="@Icons.Material.Filled.Refresh"
+                                               Disabled="@(RetryingStableId == item.복구StableId)"
+                                               OnClick="@(() => RetryRequested.InvokeAsync(item))">
+                                        @(RetryingStableId == item.복구StableId ? "예약 중" : "안전 재시도 예약")
+                                    </MudButton>
+                                }
+                                else if (item.운영자확인필요)
+                                {
+                                    <MudAlert Severity="Severity.Warning" Dense="true">
+                                        자동 재처리기가 연결되지 않아 원천 업무를 직접 변경하지 않고 담당 운영체제에서 확인해야 합니다.
+                                    </MudAlert>
+                                }
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    }
+</MudStack>
+
+@code {
+    [Parameter] public 운영후속처리복구목록Dto? Value { get; set; }
+    [Parameter] public bool Loading { get; set; }
+    [Parameter] public string? ErrorMessage { get; set; }
+    [Parameter] public string? RetryingStableId { get; set; }
+    [Parameter] public EventCallback<운영후속처리복구항목Dto> RetryRequested { get; set; }
+
+    private static Color ResolveColor(string statusCode) => statusCode switch
+    {
+        운영후속처리복구상태Codes.정상완료 => Color.Success,
+        운영후속처리복구상태Codes.처리중 => Color.Info,
+        운영후속처리복구상태Codes.자동재시도대기 => Color.Warning,
+        _ => Color.Error
+    };
+
+    private static string ResolveStatusLabel(string statusCode) => statusCode switch
+    {
+        운영후속처리복구상태Codes.정상완료 => "완료",
+        운영후속처리복구상태Codes.처리중 => "처리 중",
+        운영후속처리복구상태Codes.자동재시도대기 => "자동 재시도",
+        _ => "확인 필요"
+    };
+
+    private static string ResolveWorkLabel(string workTypeCode) => workTypeCode switch
+    {
+        "FoodOrder" => "음식 주문 원장 반영",
+        "WarehouseOutbound" => "창고 출고 원장 반영",
+        "FoodDispatchRequest" => "음식 배차 요청 반영",
+        "FoodDeliveryCompletedWorldProjection" => "음식 배달 관찰 사본 반영",
+        _ => workTypeCode
+    };
+
+    private static string ResolveOperatingSystemLabel(string operatingSystemId) => operatingSystemId switch
+    {
+        "FoodDeliveryOS" => "음식배달 OS",
+        "WarehouseCommerceFulfillmentOS" => "창고·상거래 이행 OS",
+        "SsalddelMartUrbanLogisticsOS" => "살뜰마트 도심물류 OS",
+        "DomesticCargoTransportOS" => "화물운송 OS",
+        "PlatformOperationsOS" => "플랫폼 운영 OS",
+        _ => operatingSystemId
+    };
+
+    private static string FormatDate(DateTime value)
+        => value.ToLocalTime().ToString("MM-dd HH:mm:ss");
+}

@@ -41,6 +41,7 @@ public static class MauiProgram
         builder.Services.AddScoped<AdminAuthenticatedApiClient>();
         builder.Services.AddScoped<AdminDashboardService>();
         builder.Services.AddScoped<AdminOperationsService>();
+        builder.Services.AddScoped<FollowUpRecoveryMobileService>();
         builder.Services.AddScoped<CommunityManagementAdminService>();
         builder.Services.AddScoped<HongikHakdangAdminService>();
         builder.Services.AddScoped<CommunityInformationAdminService>();

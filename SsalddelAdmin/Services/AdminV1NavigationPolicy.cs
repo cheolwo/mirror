@@ -16,6 +16,7 @@ public static class AdminV1NavigationPolicy
         new("공통 콘텐츠 관리", "/common-contents", "description"),
         new("공간자료 보관함", "/spatial-catalog", "public"),
         new("운영 감사 기록", "/activity-logs", "fact_check"),
+        new("후속 처리 복구", "/operations/follow-up-recovery", "healing"),
         new("공개 범위 정책", "/view-policies", "settings")
     ];
 
@@ -33,6 +34,7 @@ public static class AdminV1NavigationPolicy
         "/customs/hs-codes",
         "/dispatch/wait",
         "/food/order-trace",
+        "/operations/follow-up-recovery",
         "/admin/food-delivery",
         "/admin/food-delivery/operations",
         "/admin/food-delivery/order-trace",
