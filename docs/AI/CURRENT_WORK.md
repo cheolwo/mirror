@@ -1,5 +1,13 @@
 # Mirror(거울) Current Work
 
+## 사가정역 생활 디오라마 r3 (2026-09-12)
+
+- [승인 기획 r3](Planning/시스템/PLAN-SYSTEM-OBSERVABLE-OPERATIONS-DIORAMA-001/diorama.r3.md)와 [구현·검증 기록](Planning/시스템/PLAN-SYSTEM-OBSERVABLE-OPERATIONS-DIORAMA-001/implementation.r3.md)에 따라 사가정 1km 동결 지도를 기존 배달 Controller에서 분리하고, 공식 `SimulationWorldShell/OperationalOsWorldRoot`의 여섯 가상 완료 업무에 지도 판본·해시가 결속된 위치를 연결했다. 생성 콘셉트는 구도·색감 기준이며 실제 지리와 영업 근거로 사용하지 않았다.
+- 지역 지리 Mesh·표현용 그림자·전용 관찰 카메라·전체/선택/귀환과 확대·이동, 휘발성 상태의 만료·비활성화 삭제·재접속을 구현했다. 미등록 위치는 임의 배치를 하지 않는다. 공통 Client는 취소된 늦은 응답과 메모리 만료/삭제의 동시 접근을 보호한다. 운영 API·DB schema·실GPS·움직임·모바일/Web은 변경하지 않았다.
+- 실제 첫 검증에서 이전 표본 TTL 만료에 따른 0건, Camera.main 오캡처, 미등록 환경을 숨기는 기존 표시 정책을 각각 구분했다. 지도 Root를 기존 `TryRegisterRuntimeEnvironment`에 등록/반납하도록 고쳤으며 전역 표시 정책을 우회하지 않았다.
+- Unity 컴파일 오류 0, 새 지도/배치/라벨 7/7·기존 관찰/재활성화 4/4·지도 비공개 회귀 4/4·표시 정책 26/26을 확인했다. 범위 Fast와 Task가 통과했으며 Task는 해당 실행 시점 Unity solution build 및 공통 시험 779/779다. 상세는 `artifacts/local/validation/20260912-185508`, `20260912-185646`, `sagajeong-diorama-r3`다. 이후 다른 스레드의 행정동 디오라마 변경은 이번 검증에 포함하지 않는다.
+- 기존 검증 DB 볼륨을 보존한 새 실행 `observable-operations-run:6dc1f458e32a4d38a1369ea4d17f0bdc`은 600초 Completed, 6/6 발행, Outbox 대기 0·실패 0으로 종료했다. 수정 후 실제 Play Mode의 전체/선택/귀환 및 OnGUI 포함 화면에서 6개 업무·지도 Renderer 5개 유지를 확인했고 안내창·라벨 겹침도 해소했다([실제 화면](../Changes/2026-09-12-sagajeong-diorama.md)). 전환은 검증 메뉴로 확인했으며 실제 클릭·휠·드래그 입력, 상세 자산 시각 마감·이동·실운영은 미검증/범위 밖이다. Unity는 저장 없이 검증을 종료했다. commit·push·운영 활성화는 하지 않았다.
+
 ## 관찰 가능한 운영 디오라마 10분 수직 조각 (2026-09-12)
 
 - [관찰 가능한 운영 디오라마 r2](Planning/시스템/PLAN-SYSTEM-OBSERVABLE-OPERATIONS-DIORAMA-001/README.md)에 따라 음식 배달·화물 운송·창고/마트의 정상 완료와 회복 완료 합성 표본 6건을 구현했다. 검증 호스트는 `Development + Simulation + 전용 컨테이너 + 전용 MySQL/MongoDB/Redis + 600초` 조건에서만 켜지고 결제·메시지·외부 HTTP를 실행하지 않는다. 상태·명시 시작·일시정지·재개·실패 Outbox 재시도는 전용 loopback API와 명령줄에만 두었다.

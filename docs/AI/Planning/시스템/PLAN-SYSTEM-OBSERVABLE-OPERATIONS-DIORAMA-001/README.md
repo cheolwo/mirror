@@ -1,5 +1,7 @@
 # 관찰 가능한 운영 디오라마 r2
 
+> 현행 표현 확장: [사가정역 생활 디오라마 r3](diorama.r3.md). 아래 r2는 서버·상태 사본 호환 기준으로 보존한다.
+
 - 기획 ID: `PLAN-SYSTEM-OBSERVABLE-OPERATIONS-DIORAMA-001`
 - 분야·판본: 시스템 / `observable-operations-diorama.r2`
 - 상태: `Approved / ImplementationAuthorized / SampleOperationsOnly / OperationalEffectsDisabled`
