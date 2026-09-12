@@ -2,10 +2,10 @@
 
 > 이 문서는 C# E 책임 Attribute와 현재 E 책임 모듈 대장에서 자동 생성된다. 직접 수정하지 않는다.
 
-- 후보 타입: `836`
-- 책임 지정: `825`
+- 후보 타입: `842`
+- 책임 지정: `839`
 - 사유 있는 제외: `3`
-- 미분류: `8`
+- 미분류: `0`
 - 메서드 책임: `17`
 
 ## E 단계별 책임
@@ -14,7 +14,7 @@
 | --- | --- | --- | ---: | ---: |
 | `E1` | `G1` | `E1핵심계약Module` 핵심 계약 | 128 | 0 |
 | `E2` | `G1` | `E2실행경계Module` 실행 경계 | 271 | 0 |
-| `E3` | `G1` | `E3회귀증거Module` 회귀 증거 | 275 | 1 |
+| `E3` | `G1` | `E3회귀증거Module` 회귀 증거 | 291 | 1 |
 | `E4` | `G1` | `E4실행문맥결속Module` 실행 문맥 결속 | 51 | 0 |
 | `E5` | `G1` | `E5세계발현Module` 세계 발현 | 7 | 0 |
 | `E6` | `G1` | `E6세계정제Module` 세계 정제 | 21 | 0 |
@@ -50,20 +50,11 @@
 
 - `E1`: `71`개
 - `E2`: `186`개
-- `E3`: `207`개
+- `E3`: `223`개
 
 ## 미분류 후보
 
-| 구성 요소 | 소스 |
-| --- | --- |
-| `Ssalddel.Simulation.Contracts.Simulation음식배달수명주기Adapter` | `Ssalddel.Simulation.Contracts/UnityPackage/Runtime/Simulation음식배달수명주기Adapter.cs` |
-| `Ssalddel.Simulation.Tests.SimulationFoodOrderRuntimeAdapterTests` | `Ssalddel.Simulation.Tests/SimulationFoodOrderRuntimeAdapterTests.cs` |
-| `Ssalddel.Simulation.Tests.가상동네배치기준Tests` | `Ssalddel.Simulation.Tests/가상동네배치기준Tests.cs` |
-| `Ssalddel.Simulation.Tests.가상동네하루Tests` | `Ssalddel.Simulation.Tests/가상동네하루Tests.cs` |
-| `Ssalddel.Simulation.Tests.로컬생활시작자료Tests` | `Ssalddel.Simulation.Tests/로컬생활시작자료Tests.cs` |
-| `Ssalddel.Simulation.Tests.오행음식배달생활관찰Tests` | `Ssalddel.Simulation.Tests/오행음식배달생활관찰Tests.cs` |
-| `Ssalddel.Unity.Tests.음식배달수명주기표현Tests` | `Ssalddel.Unity.Tests/음식배달수명주기표현Tests.cs` |
-| `Ssalddel.Unity.Observation.운영지도AreaViewModel` | `Ssalddel.Unity/Runtime/Observation/동네관찰Presenter.cs` |
+미분류 후보가 없다.
 
 ## 분류된 구성 요소
 
@@ -347,6 +338,7 @@
 | `Ssalddel.Simulation.Contracts.Simulation암흑기정신차림접근CandidateSnapshot` | `E1` | `E1.WorldInteractionContract` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Contracts.Simulation열원InitialState` | `E1` | `` | `` | `WI-HEAT-SOURCE-STATE-CHANGE` | `Annotated` |
 | `Ssalddel.Simulation.Contracts.Simulation용기내용물Snapshot` | `E1` | `` | `` | `WI-ACTOR-CONSUME,WI-CRAFT-BREW` | `Annotated` |
+| `Ssalddel.Simulation.Contracts.Simulation음식배달수명주기Adapter` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Contracts.Simulation작업참여PolicyCatalogSnapshot` | `E1` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Contracts.Simulation첫벌목성찰SeedSnapshot` | `E1` | `E1.WorldInteractionContract` | `` | `WI-NATURE-06` | `Annotated` |
 | `Ssalddel.Simulation.Contracts.Simulation파티공명잔향CandidateSnapshot` | `E1` | `E1.WorldInteractionContract` | `` | `` | `Annotated` |
@@ -532,6 +524,7 @@
 | `Ssalddel.Simulation.Tests.SimulationFarmSurvivalTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.SimulationFarm경관고정배치Tests` | `E3` | `E3.DeterminismRegression` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.SimulationFocusMeditationTests` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Tests.SimulationFoodOrderRuntimeAdapterTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.SimulationFreightTransportTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.SimulationGwangbokResonanceEntryCapCandidateTests` | `E3` | `E3.ContractRegression` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.SimulationGwangbokResonanceMaintenanceCandidateTests` | `E3` | `E3.ContractRegression` | `` | `` | `Annotated` |
@@ -645,8 +638,10 @@
 | `Ssalddel.Simulation.Tests.Simulation타로화물운송조립Tests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.Simulation행동체력자연회복Tests` | `E3` | `` | `` | `WI-FARM-01,WI-FARM-02,WI-FARM-03,WI-FARM-04` | `Annotated` |
 | `Ssalddel.Simulation.Tests.WorldInteractionDownwardModuleSkeletonTests` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Tests.가상동네배치기준Tests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.가상동네생활Tests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.가상동네이동Tests` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Tests.가상동네하루Tests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.가상마트배송Tests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.가상배달관찰연결관문Tests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.가상배달완주Tests` | `E3` | `` | `` | `` | `Annotated` |
@@ -665,8 +660,10 @@
 | `Ssalddel.Simulation.Tests.도심마트주문자집단SimulationWorldGraphTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.도심마트지역수요SimulationTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.동네공간Tests` | `E3` | `E3.DeterminismRegression` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Tests.로컬생활시작자료Tests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.마트도로변대기Tests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.상품특성효과DerivationEngineTests` | `E3` | `E3.DeterminismRegression` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Tests.오행음식배달생활관찰Tests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.운영업무출처MetadataTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.운영엔진공통규칙이관Tests` | `E3` | `E3.ContractRegression` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.음식점관찰표본Tests` | `E3` | `` | `` | `` | `Annotated` |
@@ -718,8 +715,10 @@
 | `Ssalddel.Unity.Tests.LastSuccessfulLoadRuntimeTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.LogisticsFacilityOverviewTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.MarketProductBusinessSeedbedTests` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Tests.OperationalOsObservationRouterTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.OperationalWorldProjectionTransportContractTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.OperationalWorldSceneInterpreterTests` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Tests.OperationalWorldScenePlacementPlannerTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.PlayerActivityViewPolicyTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.PlayerSensoryPresentationTests` | `E3` | `E3.UnityConsumerRegression` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.PotatoCargoJourneyLifecycleTests` | `E3` | `` | `` | `` | `Annotated` |
@@ -759,6 +758,7 @@
 | `Ssalddel.Unity.Tests.수출항만인수학당PreviewAdapterTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.운영역할GameObjectCatalogPolicyTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.음식배달관찰Tests` | `E3` | `E3.UnityConsumerRegression` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Tests.음식배달수명주기표현Tests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.음식배달완료WorldSnapshotContractTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.음식점정책카드Tests` | `E3` | `E3.UnityConsumerRegression` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.저녁학당업무Preview보강Tests` | `E3` | `` | `` | `` | `Annotated` |
@@ -801,6 +801,12 @@
 | `Ssalddel.Unity.Data.Interiors.InteriorPresentationProjection` | `E7` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Data.Interiors.상품근거ItemDetailProjection` | `E7` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Data.WorldDataContextRuntime` | `E7` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Data.WorldProjection.FoodDeliveryOsObservationAdapter` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Data.WorldProjection.IOperationalOsObservationAdapter` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Data.WorldProjection.OperationalOsObservationModule` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Data.WorldProjection.OperationalOsObservationRouter` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Data.WorldProjection.OperationalOsWorldObservationSession` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Data.WorldProjection.OperationalWorldScenePlacementPlanner` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Data.농업ScenarioValidator` | `E7` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Data.시장가격관측Mapper` | `E7` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Evidence.연구근거Validator` | `E6` | `` | `` | `` | `Annotated` |
@@ -864,6 +870,7 @@
 | `Ssalddel.Unity.Npcs.NpcMovementQueryUseCase` | `E8` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Observation.동네관찰Presenter` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Observation.동네관찰SessionController` | `E2` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Observation.운영지도AreaViewModel` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Perspectives.IRolePerspectiveApiClient` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Perspectives.I역할관점Repository` | `E7` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Perspectives.RoleExperienceCoordinator` | `E7` | `` | `` | `` | `Annotated` |

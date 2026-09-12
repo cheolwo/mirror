@@ -1,5 +1,57 @@
 # Mirror(거울) Current Work
 
+## 운영 후속 처리 복구 작업대·Unity 배치 준비 첫 절편 (2026-09-12)
+
+- 완료된 원 업무를 되돌리지 않고 실패한 후속 처리만 별도로 관리하도록, 기존 `음식마트원장동기화Outbox`와 `운영체제업무인계Outbox`를 개인정보 없는 공통 복구 조회 결과로 조합했다. 새 중복 원장이나 migration은 만들지 않았으며 현재 책임 OS, 자동 재시도·처리 중·운영자 확인 상태, 다음 처리 시각과 안전 요약만 관리자 API에 제공한다. 원천 ID, 사용자·기사 ID, 주소·연락처, payload와 오류 원문은 반환하지 않는다.
+- 실제 재처리기가 있는 음식·마트 원장 동기화의 확정 실패만 운영자가 재시도 예약할 수 있다. 예약은 처리 상태만 `Pending`으로 바꾸고 기존 시도 횟수와 마지막 오류를 보존하며, 이미 완료된 주문·출고 상태를 수정하지 않는다. 처리기가 연결되지 않은 운영체제 인계 Outbox는 재시도 버튼을 제공하지 않고 현재 책임 OS의 확인 대상으로 남긴다.
+- 같은 계약을 `Ssalddel.Ui.Common` 카드형 작업대로 만들고 관리자 Web·MAUI 앱에서 재사용했다. Web 개발 환경의 명시적 `?sample=true` 미리보기로 실제 브라우저 데스크톱과 390×844 폭을 확인했으며, 긴 안정 ID 때문에 생긴 가로 넘침을 줄바꿈으로 수정한 뒤 요약·책임·상태·버튼 배치를 재검증했다. 샘플은 운영 API 실패 fallback이 아니며 화면에 검증 자료임을 표시한다.
+- Unity Data에는 기존 `OperationalWorldSceneInterpreter`의 현재 사본을 음식·창고·화물 OS별 안정 앵커·시각 키로 바꾸는 배치 준비 계획기를 추가했다. 좌표·표현 JSON·개인정보를 복사하지 않고 만료 항목, 영속 저장 허용 항목, 미지원 OS를 격리한다. 이는 Scene/GameObject 생성이 아닌 순수 C# 준비 계약이며 실제 Unity Editor·Play Mode·Game View는 실행하지 않았다.
+- 복구 UseCase·기존 Outbox 집중 시험 `7/7`, Unity 해석·배치 준비 시험 `7/7`, `Ssalddel.v3.5.slnx`와 관리자 Web·관리자 MAUI Windows build는 통과했다. v3.5 build에는 기존 MAUI AndroidX 제약·nullable 경고 60개가 남는다. 넓은 API metadata 표본은 이번 Controller가 아닌 기존 역할별 World 관점·농수산 동작명·도입 이력 문제 5건에서 중단됐다. 범위 Fast는 다른 진행 중 변경의 `OperationalOsObservation*` E3 항목과 공용 생성 지도 불일치에서 중단됐고 공용 지도를 덮어쓰지 않았다(`artifacts/local/validation/20260912-153700`). 실제 MySQL/MongoDB, 운영 서버 HTTP, MAUI 런타임, Unity package import·Scene은 실행하지 않았고 commit·push도 수행하지 않았다.
+
+## 생활권 소형 물류거점 Simulation 첫 절편 r1 (2026-09-12)
+
+- [생활권 소형 물류거점 r1](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md)의 첫 수직 슬라이스를 구현했다. 독립 비주거 공간 후보는 기존 Mongo 지도 신청 가원장의 존재·`warehouse-inbound` 종류·신청자 참여 관계를 검증한 뒤 MySQL 거점에 결속한다. 소유자·관리담당자 동의와 플랫폼 현장 확인·승인을 분리하고, Pilot 진입 시 기존 `창고/임시보관소`를 한 번만 연결한다. 용량 예약과 인계 완료는 멱등하며 완료 건당 보상은 `실제지급대상=false`인 모의 기록만 만든다. `Operational` 모드 Pilot은 차단한다.
+- 운영지역 상태 사본에는 Pilot·Active 거점을 `WarehouseActor / NeighborhoodMicroHub`로 추가했지만 생활권 키·대략 위치·수용량만 포함한다. 정확 위치 보호 참조, 신청 원장, 사용자 ID는 공개 API와 Unity 투영에 포함하지 않는다. 관련 Domain·Service·API 권한·운영지역 조회 시험 13개와 서버 build, 마이그레이션 목록·모델 정합성은 통과했다. 실제 MySQL/MongoDB 적용, 서버 실행, Unity Play Mode·Game View, Web·모바일 UI는 실행하지 않았으며 commit·push도 수행하지 않았다.
+
+## 비정상 운송 정상 8개·파손 2개 부분 처리 구현 r5 (2026-09-12)
+
+- [비정상 업무 처리·회복 r5](Planning/공통/PLAN-OPERATIONS-ABNORMAL-WORK-RECOVERY/README.md)에 따라 기사 문제 신고에 정상 확인 수량·영향 수량·현장 진행 불가를 선택적으로 추가했다. 서버는 화주 의뢰의 전체 화물 수량과 합이 일치하는지 확인하고 사건 원장에 업무 통제 상태·보류 범위를 운송 상태와 별도로 저장한다.
+- 플랫폼이 적용 가능한 적재물 관련 보험 체계를 마련하고 사고 접수·심사·지급 결과를 비정상 업무 생명주기에 연결하는 방향을 확정했다. 보험 신고만으로 귀책·배상액·지급을 확정하지 않으며 실제 가입 주체·피보험자·수익자·한도·자기부담금·면책·청구 절차는 법률·보험사·운영 검토 전까지 미정이다.
+- 특수한 긴급 위험 화면을 별도 체계로 만들지 않고 기존 운송 원장에 `문제 사건 원장`을 결속하는 일반 경로를 확정했다. 배송·운송 지연, 상품 파손, 교통사고, 수량 불일치, 상하차·수령 불가와 기타 문제를 선택하고 설명·증빙을 남기면 플랫폼 운영 담당자와 필요한 관계자에게 알린다. 운송 생명주기 상태·문제 사건 상태·업무 통제 상태를 분리해 정상 진행 맥락을 보존한다.
+- 관리자 운송 진행 API에 비정상 사건 목록 조회와 예상 revision 기반 결정을 추가했다. 정상 8개·파손 2개를 선택하면 운임 정산의 임시 잠금은 해제되고 영향 2개는 적재물 보험 적용 가능성 검토 대기로 남는다. 전체 보류·재개·종료도 명시적 결정으로 제공하지만 실제 보험금·귀책·배상·환불·재배송은 자동 확정하지 않는다.
+- 기존 검토대기 자료는 새 bool이 없어도 정산을 계속 차단하고, 새 부분 인수 결정 뒤에는 기사 운임 지급 준비가 열리도록 호환했다. 새 migration `AddAbnormalTransportIncidentScopeAndDecision`을 생성했지만 개발·운영 DB에는 적용하지 않았다.
+- 서버와 `Ssalddel.v3.5.slnx` build는 오류 0으로 통과했고 관련 집중 회귀는 `35/35` 통과했다. 범위 Fast는 build 통과 후 `178`개 중 `177`개가 통과했으며, 이번 Controller가 아닌 기존 세 Controller의 API 도입 이력 메타데이터 누락 1건 때문에 중단됐다. 로그는 `artifacts/local/validation/20260912-143543`이다.
+- Web·모바일 화면, 실제 MySQL·MongoDB, 보험사 연계, Unity는 실행하지 않았다. commit·push도 수행하지 않았다. 다음 문답은 수령인 부재에서 재연락·짧은 대기 뒤 운영자가 새 시간창·안전 보관·반송을 고르는 경로다.
+
+## Unity 운영 OS 생명주기 우선 수직 관문 (2026-09-12)
+
+- 운영 서버가 실제 업무 상태를 확정하고 Unity는 비식별·판본 있는 상태 사본을 읽어 `SimulationWorldShell`에 표현만 한다는 경계를 [Unity 운영 데이터 읽기 전용 관찰 안내](../Architecture/Unity운영데이터읽기전용관찰안내.md)로 모았다. 이 문서는 새 권위를 만들지 않고 공용 컨텍스트, 책임 분리, 서버→Unity 변환, 현행 이관 기획과 역할별 경계 문서를 읽는 순서로 연결한다.
+- [Unity OS 관찰 모듈 상향식 계획 r4](Planning/시스템/PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001/unity-os-observation-modules.r4.md)는 `FoodDeliveryServerVerticalSliceTested / OperatingSystemCenteredShellConfirmed`로 갱신했다. OS 하나의 운영 서버 생명주기·완료 사본·인증 HTTP·Unity 메모리 인계를 먼저 닫고, 그런 뒤에만 공간·primitive·Prefab을 검토하는 OS별 수직 관문을 확정했다. 첫 표본은 `FoodDeliveryOS` 정상 완료다.
+- `음식배달정상수직생명주기Tests`를 추가해 실제 주문 등록→음식점 수락→픽업 준비→기사 수락→픽업→전달→주문자 수령 확인→완료 World 상태 사본 조회를 한 SQLite 서버 시험으로 관통했다. 일곱 단계 순서, 수령 확인·완료 Outbox 멱등성, 완료 revision 일치와 주문·주문자·기사·상세 주소 비공개를 확인했으며 집중 시험 `1/1`과 범위 Fast가 통과했다. Task의 `Ssalddel.v0.0.slnx` build도 통과했지만 전체 시험은 기존 분류·문구·UI 기준선 8건 때문에 `5,148`개 중 `5,140`개 통과에서 중단됐고 로그는 `artifacts/local/validation/20260912-132158`이다.
+- 배차 후보 탐색·점수 계산은 기존 배차 엔진 독립 시험의 범위이며 새 서버 시험은 추천된 운송 원장을 입력 경계로 삼는다. Unity에는 `OperationalWorldOperatingSystemIds`, OS별 메모리 모듈 대장·Router, `FoodDeliveryOsObservationAdapter`, 인증 GET→Interpreter→Router를 잇는 `OperationalOsWorldObservationSession`을 추가했다. 완료·온라인 일회성·저장/재생 금지 조건만 받아들이고 미지원 OS와 안전하지 않은 항목을 진단으로 남기며, TTL 제거와 거부된 갱신의 기존 상태 보존을 집중 시험 `5/5`, 관련 운영 World 회귀 `19/19`, Unity Data build 오류 0으로 확인했다. E 책임 지도는 새 E3 책임을 반영해 재생성했으나 범위 Fast는 이번 모듈 밖의 기존 `EVIDENCE001` 8건에서 중단됐고 로그는 `artifacts/local/validation/20260912-133812`이다.
+- 실제 GameObject·`SimulationWorldShell` 공간 결속은 아직 수행하지 않았다. 실제 MySQL·서버 HTTP·Unity package import·Play Mode·Game View는 이번 변경에서 실행하지 않았고 commit·push도 수행하지 않았다.
+
+## 주문 중심 운영체제 업무망 우선순위 1~5 구현 (2026-09-12)
+
+- [주문 중심 운영체제 업무망 r6](Planning/공통/PLAN-OPERATIONS-ORDER-CENTERED-WORK-NETWORK/README.md)에서 주문을 다른 OS의 권위가 아니라 인과축·읽기 관점으로 유지한 채 구현 우선순위를 갱신했다. 안정 OS 10개의 생명주기 정의·주문 구간·미정 상태와 실제 구현된 네 OS 인계 계약을 정적 대장으로 제공하고 버전 메타데이터 조회에 포함했다.
+- 운송 건마다 주 담당자 1명과 보조 담당자 여러 명을 append-only revision으로 저장한다. 배정이 없으면 화주 본인이 암묵적 주 담당자이며, 보조 담당자의 기본 권한은 진행 조회·현장 증빙 등록·연락 기록이다. 화주만 지정·변경·철회할 수 있고 담당자는 재위임하거나 화주·원천 주문·비용 귀속을 바꿀 수 없다.
+- 기존 의뢰 목록·단건·수정·현장 지급·후불 승인·인수증 등록은 현재 담당자 revision의 세부 권한을 검사한다. `GET/PUT api/v1/shipper/requests/{requestId}/operators`로 배정 상태를 조회·갱신하며 EF migration `AddTransportWorkOperatorAssignments`를 생성했다. migration은 공유 개발·운영 DB에 적용하지 않았다.
+- 공통 읽기 계약 `OrderWorkNetworkProjection`과 `GET api/v1/shipper/requests/{requestId}/work-network`를 추가했다. 실제 화주→화물 인계, 화물 운송 원장, 화물 완료→화주 인수 인계를 같은 비식별 `CorrelationStableId`로 조합하되 원본 원장을 합치거나 전진시키지 않는다. 주소·연락처·좌표·사용자/기사 식별자는 반환하지 않고 없는 단계는 `PendingCodes`로 남긴다.
+- 개인 화주 기본값, 주·보조 담당자 배정·철회·세부 권한, 비권한 은닉, 화주→화물→화주 왕복과 개인정보 제외 집중 시험은 `21/21` 통과했다. 서버와 `Ssalddel.v3.5.slnx` build는 오류 0이고 기존 nullable 경고 2개만 남았으며 EF 모델은 마지막 migration과 일치한다.
+- 범위 Fast는 build 통과 뒤 전체 메타데이터 표본 `170`개 중 기존 API 분류·판본 이력 5개가 실패했고, Task는 전체 `5,147`개 중 `5,139`개 통과 뒤 직전 기준선과 같은 아키텍처 문구·역할별 API 메타데이터·재료 UI·WebApp capability 분류 8개에서 중단됐다. 로그는 `artifacts/local/validation/20260912-110016`, `artifacts/local/validation/20260912-110213`이고 집중 시험 결과는 `artifacts/local/validation/order-network-priority-1-5-final`이다.
+- 6순위는 일부만 완료했다. 생성 뒤 운송 건 위임은 동작하지만 공동주문 대표·각 개인 주문·비용 분담·운송 생성 전 위임을 결속하는 권위 계약은 없다. 근거 없이 Mongo의 `대표UserId`를 화주로 복제하지 않았으며, 이 결정을 마친 뒤 마트·음식 업무망으로 확장한다.
+- 실제 Ssalddel 서버, MySQL/MongoDB, Web·모바일 UI, Unity, 운영 외부 효과는 실행하지 않았다. commit·push도 수행하지 않았다.
+
+## 화주 운송관리 OS ↔ 화물운송 OS 왕복 인계와 비정상 운송 보류 (2026-09-12)
+
+- [화주 운송관리 OS r4](Planning/공통/PLAN-OPERATIONS-SHIPPER-TRANSPORT-MANAGEMENT/README.md)에 따라 기존 화주 운송의뢰·기준운임·인수증·정산 기능을 여덟 단계 생명주기로 정렬하고 안정 식별자 `ShipperTransportManagementOS`를 운영체제·버전 조회 대장에 추가했다. 추상적인 `회복 경로`는 `비정상 운송 처리·업무 회복`으로 바꾸고, 사건 보존·정산 보류·당사자 검토·명시적 해결 뒤 안정 상태에 도달하는 절차로 정의했다.
+- 기존 `POST api/v1/shipper/requests`의 서버 운임 계산·요금 검토·Mongo 원장/RDB 투영을 그대로 확정 경계로 재사용한다. 저장된 의뢰만 `ShipperTransportManagementOS → DomesticCargoTransportOS` 인계 원장에 결속하고, 화물운송 OS가 동일 의뢰의 실행 업무를 확인한 뒤 명시적으로 수락한다. 인계는 배차나 기사 상태를 변경하지 않으며 기존 결제·후불 승인 조건을 유지한다.
+- 기사 앱의 기존 하차 사진 필수 `운송인수완료Command`와 저장 후 이벤트를 재사용해 `DomesticCargoTransportOS → ShipperTransportManagementOS` 완료 결과 인계를 요청한다. 화주의 기존 인수증 등록이 이 인계를 수락하지만 정산 완료·지급·파손 판정·반품·재위탁은 자동 확정하지 않는다. 단건·목록 재조회는 정방향 책임 인계와 역방향 완료 결과 인계를 구분해 반환한다.
+- 정방향 최소 사본은 화물·차량·시간창·운임·정산 조건만, 역방향 최소 사본은 완료 상태·시각·증빙 존재와 생명주기 단계만 포함한다. 두 사본 모두 사용자·기사 식별자, 주소·전화번호·GPS와 사진 객체명·URL을 복제하지 않는다.
+- 기존 기사 문제 신고 가운데 `수량불일치`, `화물훼손`, `하차지부재`는 같은 저장 단위에서 결정적 `비정상운송사건` 원장을 생성하거나 revision을 전진시킨다. 사건 원장에는 원문 메모·사진 URL·상세 주소·좌표를 복제하지 않는다. 열린 사건은 화주 정산을 `비정상운송검토보류`로 표시하고 운송 완료 입금 요청, 기사 지급 준비·관리자 승인, 화주의 정산 조건·현장 지급·후불 승인 변경을 차단한다. 보류는 기사 과실·평가·환불·재배송·재위탁을 자동 확정하지 않는다.
+- EF migration `SyncTransportWeatherSurchargeAndAbnormalIncident`는 새 사건 원장과, 현재 코드 모델에는 있었지만 이전 스냅샷에 빠져 있던 기사 기상 할증 열을 함께 동기화한다. 개발·운영 DB에는 적용하지 않았다.
+- 비정상 사건·입금·지급 준비·지급 승인·화주 조회 집중 시험은 `24/24`, 이번 비정상 운송 32개 경로로 한정한 Fast, `Ssalddel.v3.5.slnx` 전체 build와 EF 모델 변경 누락 검사는 통과했다. 범위 로그는 `artifacts/local/validation/20260912-093625`다. 전체 작업 트리 Fast는 build 뒤 기존 API 판본 이력 메타데이터 시험 1건에서, Task는 전체 `5,132`개 중 `5,124`개 통과 뒤 직전 기준선과 같은 아키텍처 문구·역할별 API 메타데이터·재료 UI·WebApp capability 분류 시험 8개에서 중단됐다. 로그는 `artifacts/local/validation/20260912-093354`, `artifacts/local/validation/20260912-093514`다. 실제 서버·MongoDB·MySQL·결제·배차·화주 Web/모바일 화면은 실행하지 않았다. commit·push는 수행하지 않았다.
+
 ## 음식 배달 반경 재판정·픽업지 기상 할증 기반 구현·세 지점 정책 확정 (2026-09-11)
 
 - 기존 `음식배달배차업무정책`의 전역·인접·확장 음식배달권 후보, 기본 5km와 기사별 허용 반경, 위치 10분 신선도, 거절 이력 판정을 그대로 재사용했다. 적격 기사가 없으면 기존 30초 주기 스캔이 같은 엔진을 다시 실행하고, 기사가 반경 안으로 진입한 뒤 선정되는 회귀를 추가했다.

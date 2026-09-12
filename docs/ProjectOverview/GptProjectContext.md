@@ -257,14 +257,15 @@ Urban Market sample source와 Editor builder는 구현됐지만 실제 제품 Un
 
 1. [확정 결정](../AI/DECISIONS.md)
 2. [현재 작업](../AI/CURRENT_WORK.md)
-3. [Unity package 구조와 현재 상태](../../Ssalddel.Unity/PROJECT_STRUCTURE.md)
-4. [서버 상태에서 Unity World Projection으로의 설계](../Architecture/UnityServerStateToWorldProjectionDesign.md)
-5. [Unity 클라이언트 계층 구조 설계](../Architecture/UnityClientLayeredArchitecture.md)
-6. [Unity 농업·유통 simulation 제안](../Architecture/UnityAgricultureDistributionSimulationProposal.md)
-7. [Unity 원장 World Projection 제안](../Architecture/UnityWorldLedgerProjectionArchitectureProposal.md)
-8. [0.0 집중 로드맵](../Versions/v0.0/focus-roadmap.md)
-9. [커뮤니티 0.0 기반 제품 원칙](../Architecture/CommunityFoundationV0Policy.md)
-10. [업무 실행 책임 모델](../Architecture/BusinessWorkflowResponsibilityModel.md)
+3. [Unity 운영 데이터 읽기 전용 관찰 안내](../Architecture/Unity운영데이터읽기전용관찰안내.md)
+4. [Unity package 구조와 현재 상태](../../Ssalddel.Unity/PROJECT_STRUCTURE.md)
+5. [서버 상태에서 Unity World Projection으로의 설계](../Architecture/UnityServerStateToWorldProjectionDesign.md)
+6. [Unity 클라이언트 계층 구조 설계](../Architecture/UnityClientLayeredArchitecture.md)
+7. [Unity 농업·유통 simulation 제안](../Architecture/UnityAgricultureDistributionSimulationProposal.md)
+8. [Unity 원장 World Projection 제안](../Architecture/UnityWorldLedgerProjectionArchitectureProposal.md)
+9. [0.0 집중 로드맵](../Versions/v0.0/focus-roadmap.md)
+10. [커뮤니티 0.0 기반 제품 원칙](../Architecture/CommunityFoundationV0Policy.md)
+11. [업무 실행 책임 모델](../Architecture/BusinessWorkflowResponsibilityModel.md)
 
 ## 13. 새 AI 작업 시작용 문구
 

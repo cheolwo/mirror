@@ -2,10 +2,10 @@
 
 - 기획 ID: `PLAN-OPERATIONS-LOGISTICS-OS`
 - 기획 분야: 공통 / 운영 업무 구조
-- 기획 판본: `operations-logistics-os.r6`
-- 상태: `Draft / TwoOperationalOsConfirmed / EndToEndLifecycleOwnershipConfirmed / InternalResponsibilitySplitConfirmed / SharedDispatchCoreRelated / ExplicitCrossOsHandoffConfirmed / PerOsEngineCatalogConfirmed / BackendFoundationImplemented / DisposableMySqlValidated / WarehouseOutboundToCargoHandoffImplemented / CompletionProjectionCoreImplemented / OtherConcreteWorkflowAdoptionPending / FallbackActivationPending / OperationalActivationDeferred`
+- 기획 판본: `operations-logistics-os.r10`
+- 상태: `Draft / TwoOperationalOsConfirmed / EndToEndLifecycleOwnershipConfirmed / InternalResponsibilitySplitConfirmed / SharedDispatchCoreRelated / ExplicitCrossOsHandoffConfirmed / PerOsEngineCatalogConfirmed / BackendFoundationImplemented / DisposableMySqlValidated / ShipperToCargoHandoffImplemented / CargoCompletionToShipperAcceptanceImplemented / AbnormalTransportIncidentHoldImplemented / WarehouseOutboundToCargoHandoffImplemented / CompletionProjectionCoreImplemented / OtherConcreteWorkflowAdoptionPending / FallbackActivationPending / OperationalActivationDeferred`
 - 상위 기획: 없음. 운영 물류 업무의 상위 경계
-- 하위·관련 기획: `PLAN-OPERATIONS-DISPATCH-CORE`, `PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001`
+- 하위·관련 기획: `PLAN-OPERATIONS-SHIPPER-TRANSPORT-MANAGEMENT`, `PLAN-OPERATIONS-DISPATCH-CORE`, `PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001`
 - 관련 WI·PlayableLoop: 없음. 운영 서버 구조 기획이며 Unity 실행 기획이 아님
 - Graph Map 영향: `NoImpact` — OS는 운영 업무 경계이며 Unity 공간 Graph Map이 아님
 - 개발 인계 상태: `AcceptedInCurrentThread / BackendFoundationImplemented / FrontendAndUnityExcluded`
@@ -20,16 +20,16 @@
 
 ### 화물운송 OS
 
-화물운송 OS는 다음 생명주기를 처음부터 끝까지 소유한다.
+화물운송 OS는 화주 운송관리 OS 또는 다른 출발 OS가 확정해 인계한 실행 업무를 다음 생명주기로 소유한다. 기존 `cargo.request` 단계와 저장 계약은 호환을 위해 유지한다.
 
-1. 화주의 운송 의뢰와 운송 조건 제시
+1. 확정·인계된 운송 의뢰와 조건의 접수
 2. 기사 후보 탐색과 조건 확인
 3. 배차 제안·수락·거절과 예약
 4. 수락 뒤 핵심 조건 변경과 기사 재동의
 5. 상차·운송·경유·하차
 6. 운송 약속 그래프와 다음 콜 연속 배차
 7. 사고·고장·지연·중단과 재배차
-8. 완료 증빙·대기 및 이동 보전·정산 후보·이의 제기
+8. 완료 증빙·정산·비정상 운송 처리·업무 회복
 
 현재 `CargoYongdalDispatchEngine`은 이 OS 아래의 배차 판단 엔진으로 분류한다. 차량·화물 적합성, 일정 삽입 가능성, 운송 약속 위험, 운임·대기료 계산은 각각 좁은 Engine·Evaluator·Calculator로 둘 수 있지만 OS 전체를 대신하지 않는다.
 
@@ -109,7 +109,7 @@ OS 자체가 DB를 직접 수정하거나 모든 기능을 가진 하나의 serv
 
 ## 현재 코드와의 대응
 
-- 안정 OS 식별자: `OperatingSystemIds.DomesticCargoTransport`, `OperatingSystemIds.FoodDelivery`
+- 안정 OS 식별자: `OperatingSystemIds.ShipperTransportManagement`, `OperatingSystemIds.DomesticCargoTransport`, `OperatingSystemIds.FoodDelivery`
 - OS별 전 생명주기 단계 대장: `OperatingSystemLifecycleCatalog`
 - 공통 배차 엔진 계열: `EngineFamilyIds.TransportRequestDispatch`
 - 화물 구현 엔진: `EngineImplementationIds.CargoYongdalDispatch`
@@ -126,7 +126,7 @@ OS 자체가 DB를 직접 수정하거나 모든 기능을 가진 하나의 serv
 
 버전 업무 조회는 화물·음식 OS의 순서 있는 생명주기와 각 OS에 실제로 등록된 Engine Catalog 항목을 제공한다. 아직 구현이 없는 논리 엔진은 `Declared`로 유지하고 다른 OS 구현을 끌어와 `Active`로 보이지 않는다.
 
-이번 판본은 서버·계약·영속 기반에 더해 기존 창고 출고 완료 흐름이 이미 생성된 화물 운송 의뢰를 화물운송 OS에 인계하고 명시적으로 수락하는 첫 수직 연결까지 포함한다. 업무별 완료는 공통 `운영업무완료증명`으로 순서·필수 단계·결과를 확인하고, 음식 배달 완료·창고 작업·화물 인수 완료를 개인정보가 제거된 지역 장면 조회로 조합한다. 새 운송 의뢰나 배차를 생성하지 않으며, 마트·음식 주문 등 다른 ProcessManager 연결과 Outbox 소비자가 상대 OS UseCase를 호출하는 비동기 수직 연결, 자동 fallback, 모바일·Web 화면과 운영 활성화는 포함하지 않는다.
+이번 판본은 화주 운송의뢰 확정 뒤 `ShipperTransportManagementOS → DomesticCargoTransportOS` 책임 인계를 기록하고, 하차 증빙과 운송 원장 완료 뒤에는 `DomesticCargoTransportOS → ShipperTransportManagementOS` 결과 인계를 요청한다. 역방향 인계는 화주의 기존 인수증 등록 때만 수락하며 정산 완료·지급·재위탁을 자동 확정하지 않는다. 같은 화주 의뢰 재조회에서는 정방향 책임 인계와 역방향 완료 결과 인계를 구분해 표시한다. 기존 창고 출고 완료 흐름의 화물운송 인계도 유지한다. 업무별 완료는 공통 `운영업무완료증명`으로 순서·필수 단계·결과를 확인하고, 음식 배달 완료·창고 작업·화물 인수 완료를 개인정보가 제거된 지역 장면 조회로 조합한다. 마트·음식 주문 등 다른 ProcessManager 연결, 인수 이상 분기, 자동 fallback, 모바일·Web 화면과 운영 활성화는 포함하지 않는다.
 
 ## 구현 검증
 
@@ -140,7 +140,7 @@ OS 자체가 DB를 직접 수정하거나 모든 기능을 가진 하나의 serv
 
 ## 미정
 
-- 마트·창고·복합 배송별로 어느 OS가 첫 책임과 고객 최종 결과 통지를 맡을지
+- 마트·창고·복합 배송별로 화주 OS를 경유할지 배송 OS에 직접 인계할지와 고객 최종 결과 통지 책임
 - OS별 ProcessManager와 WorkflowCoordinator의 정확한 경계 및 기존 UseCase 재사용표
 - 주 엔진 오류·시간 초과·근거 부족에서 승인된 안전 fallback을 자동 실행할 정확한 조건
 - Engine Catalog의 승인 역할, 단계적 활성화 비율과 이전 판본 복귀 기준
