@@ -1,0 +1,328 @@
+{
+  "schemaVersion": "simulation-e7-vertical-work-order.v2",
+  "protocolRevision": "simulation-e7-vertical-implementation-protocol.r7",
+  "evidenceModelRevision": "horizontal-dual-cycle-evidence.r3",
+  "workOrderId": "E7-WO-STATION-DEFENSE-ASSIGN",
+  "title": "사가정 방어 준비와 옥상 배치",
+  "activeWorldInteractionId": "WI-CITY-STATION-DEFENSE-ASSIGN",
+  "targetEvidenceStage": "E7",
+  "currentEvidenceStage": "E0",
+  "promotionEligible": false,
+  "iterationState": {
+    "currentPass": "ImpactReassessment",
+    "nextReopenCondition": "지도 hash·슬롯·선택/비용·저장 정책 변경 시 Logic E1 또는 Presentation E4 재검토"
+  },
+  "changeImpactReviewRef": "",
+  "presentationE4Preparation": {
+    "applicabilityCode": "Required",
+    "notApplicableReason": "",
+    "playerReadableMoment": "후보 자리/선택 미리보기/확정 인원/다른 자리 비점유를 구별한다.",
+    "requiredHCapabilities": [],
+    "visualKeys": [
+      "visual:station-defense:roof-slot.r1",
+      "visual:station-defense:unit.r1"
+    ],
+    "primaryAssetCandidateRefs": [
+      "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World/사가정운영디오라마View.cs"
+    ],
+    "alternativeAssetCandidateRefs": [],
+    "fallbackPresentationRefs": [],
+    "placementIntent": "같은 지도에 모판 옥상 두 자리와 가상 인원 기호. 실제 건물 출입 아님.",
+    "interactionAnchorIntent": "고정 후보 버튼과 명시적 배치 확인. 이동 NavMesh 없음.",
+    "candidateRevisionOrFingerprint": "station-defense-preparation.r1",
+    "e5ReadinessCode": "Blocked",
+    "openGapRefs": [
+      "공간 연구 r2 수용·기호 배치 시험 통과. 실제 화면 및 모듈 결속 검증은 결과 기록 참조."
+    ]
+  },
+  "presentationModuleBindings": [
+    {
+      "moduleCode": "presentation-requirement-contract",
+      "statusCode": "Unverified",
+      "reason": "해당 모듈 구현·시험·후보·증거 연결 필요. 문서 생성으로 통과하지 않는다.",
+      "candidateRevisionOrFingerprint": "",
+      "implementationRefs": [],
+      "testRefs": [],
+      "evidenceRefs": []
+    },
+    {
+      "moduleCode": "presentation-projection-lifecycle",
+      "statusCode": "Unverified",
+      "reason": "해당 모듈 구현·시험·후보·증거 연결 필요. 문서 생성으로 통과하지 않는다.",
+      "candidateRevisionOrFingerprint": "",
+      "implementationRefs": [],
+      "testRefs": [],
+      "evidenceRefs": []
+    },
+    {
+      "moduleCode": "presentation-automated-regression",
+      "statusCode": "Unverified",
+      "reason": "해당 모듈 구현·시험·후보·증거 연결 필요. 문서 생성으로 통과하지 않는다.",
+      "candidateRevisionOrFingerprint": "",
+      "implementationRefs": [],
+      "testRefs": [],
+      "evidenceRefs": []
+    },
+    {
+      "moduleCode": "presentation-binding",
+      "statusCode": "Unverified",
+      "reason": "해당 모듈 구현·시험·후보·증거 연결 필요. 문서 생성으로 통과하지 않는다.",
+      "candidateRevisionOrFingerprint": "",
+      "implementationRefs": [],
+      "testRefs": [],
+      "evidenceRefs": []
+    },
+    {
+      "moduleCode": "visual-source-bounds",
+      "statusCode": "Unverified",
+      "reason": "해당 모듈 구현·시험·후보·증거 연결 필요. 문서 생성으로 통과하지 않는다.",
+      "candidateRevisionOrFingerprint": "",
+      "implementationRefs": [],
+      "testRefs": [],
+      "evidenceRefs": []
+    },
+    {
+      "moduleCode": "player-scale-spacing",
+      "statusCode": "Unverified",
+      "reason": "해당 모듈 구현·시험·후보·증거 연결 필요. 문서 생성으로 통과하지 않는다.",
+      "candidateRevisionOrFingerprint": "",
+      "implementationRefs": [],
+      "testRefs": [],
+      "evidenceRefs": []
+    },
+    {
+      "moduleCode": "state-difference-readability",
+      "statusCode": "Unverified",
+      "reason": "해당 모듈 구현·시험·후보·증거 연결 필요. 문서 생성으로 통과하지 않는다.",
+      "candidateRevisionOrFingerprint": "",
+      "implementationRefs": [],
+      "testRefs": [],
+      "evidenceRefs": []
+    },
+    {
+      "moduleCode": "actual-camera-input-result-return",
+      "statusCode": "Unverified",
+      "reason": "해당 모듈 구현·시험·후보·증거 연결 필요. 문서 생성으로 통과하지 않는다.",
+      "candidateRevisionOrFingerprint": "",
+      "implementationRefs": [],
+      "testRefs": [],
+      "evidenceRefs": []
+    }
+  ],
+  "trackPlans": {
+    "logic": {
+      "trackCode": "Logic",
+      "currentEvidenceStage": "E0",
+      "downwardPlan": [
+        {
+          "code": "E7",
+          "disposition": "Affected",
+          "summary": "실제 준비/선택/확인/전체 귀환 입력과 화면"
+        },
+        {
+          "code": "E6",
+          "disposition": "Affected",
+          "summary": "잘못된 입력·재배치·취소·귀환"
+        },
+        {
+          "code": "E5",
+          "disposition": "Affected",
+          "summary": "명령 뒤 같은 revision 인원 위치·행위 기록"
+        },
+        {
+          "code": "E4",
+          "disposition": "Affected",
+          "summary": "동결 지도와 모판 공간 연구·후보 판독"
+        },
+        {
+          "code": "E3",
+          "disposition": "Affected",
+          "summary": "중복·충돌·재생 결정성·소비자 시험"
+        },
+        {
+          "code": "E2",
+          "disposition": "Affected",
+          "summary": "공통 Core와 Local Adapter·읽기 사본"
+        },
+        {
+          "code": "E1",
+          "disposition": "Affected",
+          "summary": "준비 주체·명령·메모리 경계"
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "E1",
+          "status": "NotStarted",
+          "evidenceRefs": []
+        },
+        {
+          "code": "E2",
+          "status": "NotStarted",
+          "evidenceRefs": []
+        },
+        {
+          "code": "E3",
+          "status": "NotStarted",
+          "evidenceRefs": []
+        },
+        {
+          "code": "E4",
+          "status": "NotStarted",
+          "evidenceRefs": []
+        },
+        {
+          "code": "E5",
+          "status": "NotStarted",
+          "evidenceRefs": []
+        },
+        {
+          "code": "E6",
+          "status": "NotStarted",
+          "evidenceRefs": []
+        },
+        {
+          "code": "E7",
+          "status": "NotStarted",
+          "evidenceRefs": []
+        }
+      ]
+    },
+    "presentation": {
+      "trackCode": "Presentation",
+      "currentEvidenceStage": "E0",
+      "downwardPlan": [
+        {
+          "code": "E7",
+          "disposition": "Affected",
+          "summary": "실제 준비/선택/확인/전체 귀환 입력과 화면"
+        },
+        {
+          "code": "E6",
+          "disposition": "Affected",
+          "summary": "잘못된 입력·재배치·취소·귀환"
+        },
+        {
+          "code": "E5",
+          "disposition": "Affected",
+          "summary": "명령 뒤 같은 revision 인원 위치·행위 기록"
+        },
+        {
+          "code": "E4",
+          "disposition": "Affected",
+          "summary": "동결 지도와 모판 공간 연구·후보 판독"
+        },
+        {
+          "code": "E3",
+          "disposition": "Affected",
+          "summary": "중복·충돌·재생 결정성·소비자 시험"
+        },
+        {
+          "code": "E2",
+          "disposition": "Affected",
+          "summary": "공통 Core와 Local Adapter·읽기 사본"
+        },
+        {
+          "code": "E1",
+          "disposition": "Affected",
+          "summary": "준비 주체·명령·메모리 경계"
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "E1",
+          "status": "NotStarted",
+          "evidenceRefs": []
+        },
+        {
+          "code": "E2",
+          "status": "NotStarted",
+          "evidenceRefs": []
+        },
+        {
+          "code": "E3",
+          "status": "NotStarted",
+          "evidenceRefs": []
+        },
+        {
+          "code": "E4",
+          "status": "NotStarted",
+          "evidenceRefs": []
+        },
+        {
+          "code": "E5",
+          "status": "NotStarted",
+          "evidenceRefs": []
+        },
+        {
+          "code": "E6",
+          "status": "NotStarted",
+          "evidenceRefs": []
+        },
+        {
+          "code": "E7",
+          "status": "NotStarted",
+          "evidenceRefs": []
+        }
+      ]
+    }
+  },
+  "integratedGate": {
+    "currentEvidenceStage": "E0",
+    "status": "Blocked",
+    "candidateRevision": "",
+    "evidenceRefs": [],
+    "openFeedbackRefs": [
+      "준비 화면 실제 입력·Runtime·원자료 무변경 검증 필요."
+    ]
+  },
+  "planningGate": {
+    "topicStableId": "topic:station-defense-preparation.v1",
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md",
+    "designRevision": "station-defense-preparation.r1",
+    "designHashSha256": "DD3975C0C7D901B0AAEBE89D4271ECE8F8E5B6E6274B93D3728231640222388F",
+    "statusCode": "Approved",
+    "approvalEvidenceRef": "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+  },
+  "workOrderStableId": "work-order:station-defense-assign.v1",
+  "worldInteractionId": "WI-CITY-STATION-DEFENSE-ASSIGN",
+  "subjectBindingRefs": [
+    "subject:player-controlled-actor.v1",
+    "subject:authoritative-interaction-target.v1",
+    "subject:station-defense-commander.v1",
+    "subject:station-defense-unit.v1",
+    "subject:station-defense-roof-slot.v1"
+  ],
+  "subjectResolution": "독립 준비 세션의 고정 가상 인원 ID와 동결 지도에 결속된 허용 옥상 자리 ID를 해석한다. 실제 주민과 업무 원장은 참조하지 않는다.",
+  "designDocumentRef": "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md",
+  "designRevision": "station-defense-preparation.r1",
+  "designHashSha256": "DD3975C0C7D901B0AAEBE89D4271ECE8F8E5B6E6274B93D3728231640222388F",
+  "approvalEvidenceRef": "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md",
+  "statusCode": "Approved",
+  "deliveryCap": "E7",
+  "implementationScopeRef": "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md",
+  "runtimeBoundary": "LocalProcess 메모리 세션으로 같은 Simulation Core를 실행. RemoteHost 실제 연결은 제외.",
+  "requiredResearch": [
+    "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/placement-study.r2.md"
+  ],
+  "researchBoundary": "옥상 모판 위치는 Required 연구 수용 뒤 적용. 이동·사격은 제외.",
+  "writePaths": [
+    "Ssalddel.Simulation.Contracts/UnityPackage/Runtime/역방어준비Contracts.cs",
+    "Ssalddel.Simulation.Domain/UnityPackage/Runtime/역방어준비Session.cs",
+    "Ssalddel.Simulation.Application/RuntimeCore/역방어준비RuntimeFactory.cs",
+    "Ssalddel.Simulation.Tests/역방어준비Tests.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Bootstrap",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Runtime/World/역방어배치자료.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Resources/StationDefensePlacement.json",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Editor/SimulationWorldShellBuilder.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Scenes/SimulationWorldShell.unity",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Tests/EditMode"
+  ],
+  "openFeedbackItems": [
+    "연구 r2 수용. 코드/화면 검증은 implementation.r1.md에 기록하며 자동 E 승격하지 않는다.",
+    "전역 Graph Map 영향 전수 판정 누락은 별도 정리 필요. 이번 고정 준비 모판을 전역 공간 완결로 확대하지 않는다."
+  ],
+  "reopenCondition": "지도 hash·슬롯·선택/비용·저장 정책 변경 시 Logic E1 또는 Presentation E4 재검토",
+  "interactionGoalStableId": "interaction-goal:station-defense-assign.v1"
+}

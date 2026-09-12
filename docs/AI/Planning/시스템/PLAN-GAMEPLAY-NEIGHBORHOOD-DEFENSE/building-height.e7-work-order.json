@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "simulation-e7-vertical-work-order.v2",
+  "workOrderId": "E7-WO-STATION-DEFENSE-HEIGHT-PRESENTATION",
+  "worldInteractionId": "WI-CITY-STATION-DEFENSE-ASSIGN",
+  "interactionGoalStableId": "interaction-goal:station-defense-assign.v1",
+  "parentWorkOrderRef": "preparation.e7-work-order.json",
+  "subjectBindingRefs": ["subject:station-defense-commander.v1", "subject:station-defense-unit.v1", "subject:station-defense-roof-slot.v1"],
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/building-presentation.r14.md",
+    "designRevision": "sagajeong-building-height-presentation.r1",
+    "designHashSha256": "C8D3FD48FC7220D9DF42F98EDC70C992A1E6B33F569ACCD38B1B66618D7813EC",
+    "statusCode": "Approved",
+    "approvalEvidenceRef": "building-presentation.r14.md"
+  },
+  "requiredResearch": [{"ref": "placement-study.r2.md", "statusCode": "Accepted", "impact": "NoImpact: frozen map and both roof slots remain unchanged; overlay targets neither slot"}],
+  "trackPlans": {
+    "logic": {
+      "downwardPlan": [
+        {"code":"E7","disposition":"NoImpact","summary":"same commander assignment result and return"},
+        {"code":"E6","disposition":"NoImpact","summary":"same commands and recovery"},
+        {"code":"E5","disposition":"NoImpact","summary":"same authoritative revision"},
+        {"code":"E4","disposition":"NoImpact","summary":"same frozen roof slots"},
+        {"code":"E3","disposition":"NoImpact","summary":"existing defense regression"},
+        {"code":"E2","disposition":"NoImpact","summary":"no Core/adapter contract changes"},
+        {"code":"E1","disposition":"NoImpact","summary":"no subject/state/save changes"}
+      ],
+      "upwardValidation": [{"code":"E1-E7","status":"PendingRegression","summary":"existing defense and placement tests; no maturity promotion"}]
+    },
+    "presentation": {
+      "downwardPlan": [
+        {"code":"E7","disposition":"Deferred","summary":"manual input and Game View outside this code-only slice"},
+        {"code":"E6","disposition":"Affected","summary":"invalid overlay rejected with visible diagnosis"},
+        {"code":"E5","disposition":"Affected","summary":"read-only mesh wall/roof/shadow heights; no Scene write"},
+        {"code":"E4","disposition":"Affected","summary":"two address/parcel candidates; not official identity or field measurement"},
+        {"code":"E3","disposition":"Affected","summary":"deterministic mesh and unchanged base/consumers"},
+        {"code":"E2","disposition":"Affected","summary":"frozen resource and validated immutable height lookup"},
+        {"code":"E1","disposition":"Affected","summary":"presentation-only height override contract"}
+      ],
+      "upwardValidation": [
+        {"code":"E1","status":"Pending","summary":"contract invalid input tests"},
+        {"code":"E2","status":"Pending","summary":"hash and ID/address/source binding tests"},
+        {"code":"E3","status":"Pending","summary":"map immutable and old consumers valid"},
+        {"code":"E4","status":"Reviewed","summary":"r14 source and footprint review; candidate identity retained"},
+        {"code":"E5","status":"Pending","summary":"generated mesh and view EditMode; not actual World evidence"},
+        {"code":"E6","status":"Pending","summary":"rejection and lifecycle regression"},
+        {"code":"E7","status":"NotExecuted","summary":"Play Mode/Game View not requested"}
+      ]
+    }
+  },
+  "runtimeBoundary": "read-only Unity presentation; LocalProcess/RemoteHost authoritative Core unchanged; no API call or DB write",
+  "writePaths": [
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Runtime/World/건물높이보완자료.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Resources/SagajeongBuildingHeightOverlay.json",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World/사가정지리MeshBuilder.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World/사가정운영디오라마View.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Tests/EditMode/건물높이보완Tests.cs"
+  ],
+  "integratedGate": {"status":"NotPromoted","evidenceRefs":["building-height.implementation.r14.md"],"openFeedbackRefs":["actual Game View and official building identity not verified"]},
+  "promotionEligible": false,
+  "reopenCondition": "base map hash, target identity, source values, roof slot or gameplay changes require new review"
+}

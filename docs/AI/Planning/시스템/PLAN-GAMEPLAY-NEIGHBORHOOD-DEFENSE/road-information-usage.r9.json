@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "road-information-usage.r1",
+  "planningId": "PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE",
+  "revision": "r9",
+  "reviewDate": "2026-09-12",
+  "executable": false,
+  "runtimeApplied": false,
+  "newDatabaseRowsThisTurn": 160,
+  "totalReviewRecordsIncludingPreviousSources": 168,
+  "sourceReport": "road-space.r9.md",
+  "tree": {
+    "id": "sagajeong-road-information",
+    "label": "사가정역 도로 자료",
+    "children": [
+      {
+        "id": "existing-osm-backdrop",
+        "label": "기존 OSM 도로 좌표·건물 외곽",
+        "status": "ExistingBackdropOnly",
+        "children": [{"id":"backdrop-use","label":"배치 형태·건물 간격 검토의 바탕","status":"NoTraversalAuthority"}]
+      },
+      {
+        "id": "sidewalk-observations",
+        "label": "보도 포장 폭 4건",
+        "status": "StoredPendingHumanReview",
+        "verifiedRows": 4,
+        "children": [{"id":"sidewalk-use","label":"보행 공간 참고","status":"SegmentMatchRequired;NotCarriagewayWidth"}]
+      },
+      {
+        "id": "road-classification",
+        "label": "서울시 도로 규모 분류 4건",
+        "status": "StoredPendingHumanReview",
+        "verifiedRows": 4,
+        "children": [{"id":"classification-use","label":"도로 규모 교차 검토","status":"ClassificationConflictAndSegmentMatchUnresolved"}]
+      },
+      {
+        "id": "its-standard-directed-links",
+        "label": "공식 배포본에서 추출한 방향별 구간 160건",
+        "status": "StoredPendingHumanReview",
+        "verifiedRows": 160,
+        "sourceUrl": "https://www.data.go.kr/data/15025526/fileData.do",
+        "archiveSha256": "5bbf5a01d677b6dcb941cc5954fcc256d6ded60d96f95336a23fc2b53b39d4e4",
+        "subsetSha256": "02e8794a9cd8bdbf2193da1471b989a67a63c13901b73bd388c7cb57c11a8db7",
+        "localSubset": "artifacts/local/public-data/sagajeong-nodelink-20260912-r1/sagajeong-links.json",
+        "rawSnapshotIds": [40,41],
+        "releaseLabel": "2026-08-12",
+        "sourceUpdatedDateOfSelectedRecords": "20250512",
+        "children": [
+          {"id":"segment-location-use","label":"좌표·구간 ID → 기존 도로와 위치 대응 후보 검토","status":"NotJoinedToOsm"},
+          {"id":"direction-use","label":"시작·종료 노드 → 구간 연결·방향 검토","status":"NotMovementPermission"},
+          {"id":"lanes-use","label":"차로 수·도로명·등급 → 구간 규모 교차 검토","status":"NotMeasuredWidthOrTwoWaySum"},
+          {"id":"provenance-use","label":"원본 hash·판본·갱신일 → 근거 추적과 노후화 확인","status":"ObservationDateUnknown"}
+        ]
+      },
+      {
+        "id": "its-map-service-not-used",
+        "label": "r8 지도 조회 응답 54개는 사용하지 않음",
+        "status": "NotArchivedRightsUnverified",
+        "verifiedRows": 0,
+        "children": [{"id":"service-separation","label":"공식 배포본의 권리를 별도 지도 서비스에 확대하지 않음","status":"Excluded"}]
+      },
+      {
+        "id": "game-transformation",
+        "label": "게임용 변환 계층",
+        "status": "PlannedNotImplementedInThisTask",
+        "children": [{"id":"game-width","label":"검토·승인 뒤 폭 조정·건물 간섭 검사 → Unity 표현","status":"NoWidthPolicyOrSceneChange"}]
+      }
+    ]
+  }
+}

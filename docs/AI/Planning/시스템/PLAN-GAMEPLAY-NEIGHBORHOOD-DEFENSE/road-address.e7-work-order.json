@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "simulation-e7-vertical-work-order.v2",
+  "workOrderId": "E7-WO-STATION-DEFENSE-ROAD-ADDRESS-PRESENTATION",
+  "worldInteractionId": "WI-CITY-STATION-DEFENSE-ASSIGN",
+  "interactionGoalStableId": "interaction-goal:station-defense-assign.v1",
+  "parentWorkOrderRef": "preparation.e7-work-order.json",
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/road-address-presentation.r15.md",
+    "designRevision": "sagajeong-road-address-presentation.r1",
+    "designHashSha256": "FAECDFFE6942E4837D63D2063B396D21C8D808D75BD66FEF03B3E34BBC8D90F7",
+    "statusCode": "Approved",
+    "approvalEvidenceRef": "road-address-presentation.r15.md"
+  },
+  "requiredResearch": [
+    {"ref":"placement-study.r2.md","statusCode":"Accepted","impact":"NoImpact: roof slots and map geometry remain frozen"}
+  ],
+  "trackPlans": {
+    "logic": {
+      "downwardPlan": [
+        {"code":"E7-E1","disposition":"NoImpact","summary":"same defense command, subjects, state, recovery and return"}
+      ],
+      "upwardValidation": [{"code":"E1-E7","status":"PendingRegression","summary":"existing defense tests; no maturity promotion"}]
+    },
+    "presentation": {
+      "downwardPlan": [
+        {"code":"E7","disposition":"Affected","summary":"user requested actual Game View follow-up; verify address paging, transformed focus, return and defense UI separation without maturity promotion"},
+        {"code":"E6","disposition":"Affected","summary":"invalid overlay rejection and normal map fallback"},
+        {"code":"E5","disposition":"Affected","summary":"current diorama labels, street choice and building-address focus"},
+        {"code":"E4","disposition":"Affected","summary":"public OSM street/name provenance and label-density intent"},
+        {"code":"E3","disposition":"Affected","summary":"deterministic projection and consumer regression"},
+        {"code":"E2","disposition":"Affected","summary":"frozen overlay and validated read-only lookup"},
+        {"code":"E1","disposition":"Affected","summary":"road-name and building-address presentation contract"}
+      ],
+      "upwardValidation": [
+        {"code":"E1-E6","status":"VerifiedScoped","summary":"generator replay hash unchanged; 72 focused EditMode tests passed including paging and transformed address focus"},
+        {"code":"E7","status":"VerifiedScoped","summary":"1399x628 Play Mode Game View and queued GUI input for road/address/page/zoom/pan/return/defense boundary; height candidates via selection API and runtime mesh. No E promotion; no fresh operational sample run"}
+      ]
+    }
+  },
+  "runtimeBoundary": "public-data read-only Unity presentation; no API call, DB write, simulation or operational authority",
+  "writePaths": [
+    "eng/neighborhood/build-sagajeong-road-name-overlay.ps1",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Runtime/World/도로명주소표현자료.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Resources/SagajeongRoadNameOverlay.json",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World/사가정운영디오라마View.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Tests/EditMode/도로명주소표현Tests.cs"
+  ],
+  "integratedGate": {"status":"NotPromoted","evidenceRefs":["road-address.implementation.r15.md","docs/Changes/2026-09-12-sagajeong-address-gameview.md"],"openFeedbackRefs":["small-screen and physical mouse/touch not verified","unrelated scene bootstrap server/session and replay errors remain","no fresh six-object operational sample run; current read returns zero objects"]},
+  "promotionEligible": false,
+  "reopenCondition": "map/raw hash, label density, address meaning, roof slots or gameplay changes require reassessment"
+}

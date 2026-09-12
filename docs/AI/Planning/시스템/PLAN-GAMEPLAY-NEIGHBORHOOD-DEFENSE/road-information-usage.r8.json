@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "road-information-usage.r1",
+  "planningId": "PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE",
+  "revision": "r8",
+  "reviewDate": "2026-09-12",
+  "purpose": "사가정역 도로 정보의 확보 상태와 향후 활용 관계 설명",
+  "executable": false,
+  "newDatabaseRowsThisTurn": 0,
+  "runtimeApplied": false,
+  "tree": {
+    "id": "sagajeong-road-information",
+    "label": "사가정역 도로 자료",
+    "children": [
+      {
+        "id": "existing-osm-backdrop",
+        "label": "기존 OSM 도로 좌표·건물 외곽",
+        "status": "ExistingReferenceVerified",
+        "reference": "Unity/Assets/Ssalddel/Resources/SagajeongReference.json",
+        "referencePathKind": "LogicalSiblingUnityProjectPath",
+        "roadSegmentCount": 2397,
+        "buildingCount": 602,
+        "children": [
+          { "id": "backdrop-use", "label": "배치 형태와 건물 간격 검토의 바탕", "status": "BackdropOnly", "prohibitions": ["NoTraversalAuthority", "NoMeasuredWidthInference"] }
+        ]
+      },
+      {
+        "id": "sidewalk-observations",
+        "label": "중랑구 보도 포장 폭",
+        "status": "StoredPendingHumanReview",
+        "verifiedRows": 4,
+        "sourceUrl": "https://www.data.go.kr/data/15114354/fileData.do",
+        "children": [
+          { "id": "sidewalk-use", "label": "보행 공간의 폭 참고", "status": "SegmentMatchRequired", "prohibitions": ["NotCarriagewayWidth", "NotWholeRoadWidth", "NotVerifiedEffectiveWalkWidth"] }
+        ]
+      },
+      {
+        "id": "road-classification",
+        "label": "서울시 도로 규모·폭 구분",
+        "status": "StoredPendingHumanReview",
+        "verifiedRows": 4,
+        "sourceUrl": "https://data.seoul.go.kr/dataList/OA-22650/S/1/datasetView.do",
+        "children": [
+          { "id": "classification-use", "label": "도로 규모 교차 검토", "status": "ConflictingClassificationNeedsReview", "prohibitions": ["NoNameOnlyJoin", "NoWidthBandToScalarConversion"] }
+        ]
+      },
+      {
+        "id": "its-map-segments",
+        "label": "ITS 지도 구간 좌표·식별자·도로명",
+        "status": "InspectedNotArchivedRightsUnverified",
+        "returnedObjects": 54,
+        "newStoredRows": 0,
+        "layer": "ntic:vi_mg_etc_lv08",
+        "queryBboxLongitudeLatitude": [127.0825, 37.5762, 127.0942, 37.5854],
+        "fields": ["link_id", "road_rank", "road_name", "geom", "inner_stroke_width", "outer_stroke_width"],
+        "rightsReference": "https://www.its.go.kr/common/infoPolicyPage?service=copyrightPolicy",
+        "children": [
+          { "id": "segment-use", "label": "위치와 식별자를 이용한 구간 대응 검토", "status": "BlockedPendingRightsOrAlternativeSource", "prohibitions": ["NoPublication", "NoRuntime", "StyleWidthIsNotMeters", "NoSourceVersionEquivalenceToDownloadZip"] }
+        ]
+      },
+      {
+        "id": "lane-count",
+        "label": "구간별 차로 수",
+        "status": "NotAcquired",
+        "sourceFailure": "PublicOriginalLinkQueryHttp500SupplierDatabaseConnectionError",
+        "downloadCandidate": {
+          "sourceUrl": "https://www.data.go.kr/data/15025526/fileData.do",
+          "catalogUrl": "https://www.its.go.kr/nodelink/nodelinkRef",
+          "catalogFileName": "[2026-08-12]NODELINKDATA.zip",
+          "catalogSizeMB": 257.12,
+          "scope": "NationalArchive",
+          "downloaded": false,
+          "schemaVerified": false,
+          "scopeApproved": false
+        },
+        "children": [
+          { "id": "lanes-use", "label": "확보 후 큰길·좁은길 규모 교차 검증", "status": "FutureReview", "prohibitions": ["LaneCountIsNotMeasuredRoadWidth", "VerifyDirectionAndSegmentVersionFirst"] }
+        ]
+      },
+      {
+        "id": "game-transformation",
+        "label": "게임용 도로 변환 계층",
+        "status": "PlannedNotImplementedInThisTask",
+        "children": [
+          { "id": "game-width", "label": "검토·승인 뒤 게임 폭 조정과 건물 간섭 검사", "status": "ParametersUndecided", "prohibitions": ["NoSourceOverwrite", "NoOperationalBackPropagation", "NoSceneChange"] }
+        ]
+      }
+    ]
+  }
+}

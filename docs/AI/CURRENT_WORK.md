@@ -1,5 +1,36 @@
 # Mirror(거울) Current Work
 
+## 사가정역 Synty 혼합 디오라마 첫 구현 (2026-09-13)
+
+- [사가정 공간감 목표와 첫 구현 r16](Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/spatial-depth-visual-target.r16.md)에 따라 별도 Unity 저장소의 canonical `SimulationWorldShell`을 고도화했다. `sagajeong-synty-visual.r1` 대장이 전체 후보120동을 결정적으로 골라 실제 `PolygonCity` Prefab 크기와 0.8~1.25 균일 배율·높이 오차10%를 검사한다. 90동은 단일 `Synty VisualRoot · 표현 전용` 아래에 표시하고 맞지 않는30동은 원문 외곽 Mesh로 유지한다. 역세권150m 표본은13/13이 조건을 통과했다.
+- 큰길·생활도로·보행로와 보도·연석, 저·중·고층 fallback 재질, 원문 외곽 기단, 접지 그림자와 사선 광원을 분리했다. 동결 지도602개 건물·도로2,397선분의 좌표/hash, 운영·주소·통행·방어 권위는 바꾸지 않았고 Synty Collider도 제거했다.
+- Unity 6000.5.6f1 Play Mode에서 사가정역 확대와 전체1km Game View를 직접 확인했다. 10초 3,898표본은 평균237.4fps·95백분위5.41ms였다. 도로명주소21/21, 건물 높이19/19, 역사 방어8/8, 운영 관찰5/5, 사가정 디오라마7/7, 최종 Synty 필터7/7이 통과했다. 실제 화면·한계는 Unity 저장소 `Documentation/Changes/2026-09-13-sagajeong-synty-diorama/`에 있다.
+- canonical Scene의 다른 모듈이 로컬 서버 세션 없이 시작하며 내는 기존 연결 오류9건은 남아 있다. 따라서 이번 결과는 사가정 표현의 실제 Play Mode·Game View와 PC Editor 30fps 검증 완료이며, 전체 Scene Console0·서버 연결·실제 입력 완주·방어 폐루프 E 승격은 아니다.
+
+- 최신 실제 [Game View 재검증](../Changes/2026-09-12-sagajeong-address-gameview.md)을 완료했다. 도로명/건물번호 페이지/선택/휠/드래그/전체귀환과 방어 준비 전환을 합성 GUI 입력으로 확인했고, 후보 높이8.3m/19.1m 및 결손4m 유지도 실행 Mesh와 화면에서 대조했다. 첫6개 주소 제한은 페이지 탐색으로, 방어 버튼 겹침은 창 이동으로 보완했으며 부모 Transform을 선택 좌표에 반영했다. 수정은 Unity View·도로명주소 시험2파일과 검증 문서/PNG에 한정된다.
+- 최종 컴파일 오류0·집중72/72, 지도/Scene hash 불변, Editor stopped/Scene clean. 이번 도로명 Game View 미검증 상태는 해소했지만 관찰 Controller Success/업무0건으로 여섯 업무 새 실행은 하지 않았다. 기존 다른 영역의 서버 연결/세션 부재·Replay hash 오류는 별도이며 Console 전체 정상·실운영·작은 화면·E승격·Scene 저장·commit/push는 선언하지 않는다. 상세 결과/초기시험실패/Console은 `artifacts/local/validation/sagajeong-gameview-r15/`에 있다.
+
+- 최신 [도로명주소 표현층 r15](Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/road-address-presentation.r15.md)는 동결 OSM 원자료와 지도 r3를 대조해 도로명78개·명명 구간1,109개·연결 건물568개를 별도 Unity 표현 자산으로 생성했다. 전체 보기 큰길4개 우선, 확대 시 가까운 생활도로, 도로명 선택 시 공개 건물번호와 관찰 좌표를 제공한다. 사업체·입주·영업 정보와 비공개 주소 대장은 넣지 않았고, 지도 hash·업무 표식·높이·방어 자리·Scene·서버/DB는 변경하지 않았다.
+- 최초 자동 검증은 총70/70이며 `artifacts/local/validation/sagajeong-road-address-r15/summary.json`에 기록했다. 후속 실제 Game View와 최종72/72 결과는 위 최신 검증 및 [구현 결과](Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/road-address.implementation.r15.md)를 따른다.
+- 연속 필터 실행 중 Pipeline 시험 수집기의 중복 완료/상태 파일 공유 진단이 발생했으나 각 완료 결과는 통과였고 대기 세션 정리·Console 초기화 후 새 오류가 없었다. 제품 코드 오류와 구분해 구현 결과에 남겼다.
+
+- 최신 [건물 높이 보완층 r14](Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/building-presentation.r14.md)는 사용자 다음 단계 승인으로 두 주소·필지 후보의 대장 높이8.3m/19.1m를 Unity 읽기 전용 표현층에 연결했다. `건물높이보완자료.cs`, `SagajeongBuildingHeightOverlay.json`, `사가정지리MeshBuilder.cs`, `사가정운영디오라마View.cs`, 전용 EditMode 시험을 추가/수정했다. 원본602개 지도 hash·좌표·임시 높이·운영/주소/방어 배치 계약은 보존하고, 5층/높이결손 건물은4m를 유지한다. 공식 건물 동일성 확정이나 DB 검토 상태 승격이 아니다.
+- 새 시험19/19·기존 지도7/7·방어8/8·운영 표시5/5 통과. 생성 Mesh/뷰 조립은 EditMode에서 검증했으며 실제 Play Mode/Game View·Scene 저장·E 승격·commit/push는 하지 않았다. 초기 EditMode 초기화·메시지 호출 시험 오류와 보완 이력을 `artifacts/local/validation/sagajeong-building-height-r14/`에 보존한다. [구현 결과](Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/building-height.implementation.r14.md)에서 최종 범위와 제한을 확인한다.
+- 선행 [재수집 r13](Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/building-evidence.r13.md)의 같은3필지/3건(원본44~46·정규화90738~90740) 저장·재처리 신규0/독립 재조회3은 유지된다. 이번에는 외부 API 재호출·DB 쓰기 없이 동결 응답 hash와 두 높이를 독립 대조했다. r13의 Fast/Task·도구 build·새8/기존19+19 검증 기록은 `artifacts/local/validation/20260912-220551`이다.
+
+- 최신 [건물 자료 연결 대장 r12](Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/building-evidence.r12.md)는 기존 지도602개 건물에서 주소 후보244개·GIS 필지 후보226개(기존 ZIP의 고유행264개)를 찾아 비공개 검토 대장으로 연결했다. C# 대장 도구·기존 명령 진입·독립 PowerShell 검사만 추가하고 기존 원본/건물 ID·지도 hash를 유지했다. 현재 로컬 `hongdal-mysql-1 / hongdal_dev`에 대장 참조602건(ID90136~90737, 원본참조43)을 저장했으며 재처리 신규0/기존602, 독립 재조회602를 확인했다. 자체19·기존 주소17/공간19 시험과 도구 build, GIS 재추출/대장 재생·독립602개 대조가 통과했다. 추가 건축물대장 조회는 첫 HTTP403으로 중단되어 나머지2필지를 요청하지 않았고 신규 건물 속성 수신은0건이다. API 접근·GIS 이용조건 및 건물 윤곽 대응·추정 산식 확인이 남아 Unity 높이 변경은0건이며 Scene·실행 검증·새 개발 인계·commit/push는 하지 않았다.
+- r12 범위 Fast/Task와 로컬 문서 링크 검사는 통과했다(`artifacts/local/validation/20260912-215956`). 공용 검사가 eng 코드를 문서류로 분류해 build/test를 생략하므로 별도 도구 검증과 구분한다. 기존 건축물 표제부 DB는 다른 시군구 자료뿐으로 사가정 높이 보완에 사용하지 않았다.
+
+- 최신 [구간 좌표·차로 수 축적 r9](Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/road-space.r9.md)는 전국 배포본 한 건 다운로드 승인을 받아 사가정 방향별 링크 160개를 추출하고 기존 로컬 DB에 검토보류로 저장했다(ID89976~90135, 원본/표본 계보40/41). 최초 신규160·재처리 신규0/기존160·독립 재조회160을 확인했고 기존8건과 검토 기록168건이다. 원본 바이너리 별도 검사·추출 결정성 통과, 좌표/차로/출처 활용 트리 r9 갱신. 모든 선택 구간 원문 갱신일은20250512로 최신 현장 관측으로 오인하지 않는다. 수집/추출/검증 도구와 기존 명령 진입만 변경했으며 운영 API·공유 계약·Unity·게임 폭 정책·commit/push는 변경/수행하지 않았다. r8 지도 조회 응답은 저장하지 않고 별도 허락이 안내된 배포본만 사용했다.
+
+- 후속 [공식 도로 자료 축적 r7](Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/road-space.r7.md)는 사가정로·면목로·용마산로·면목천로의 두 공식 공급원 관측 8건을 기존 로컬 `hongdal-mysql-1 / hongdal_dev`에 비공개 검토보류로 저장했다. CSV 19행과 도로명 필터 243행에서 각 4행만 선택했으며 독립 재조회 8건·재처리 신규 0건을 확인했다. 보도 폭과 폭 구간 분류는 다른 의미이고 세 큰길의 소로 분류/일부 보도 면적 산술 차이/구간 대응 미확인을 기록했다. 수집 전용 `사가정도로자료.cs`와 명령 진입만 추가했고 도구 build·자체 시험 8개·독립 CSV 점검은 통과했다. 일반 Fast는 eng 경로 build/test를 생략하므로 별도 검증과 구분한다. 수치 확대율·차로 수는 미정, 게임·Scene·운영 API·새 개발 인계·commit/push는 변경/수행하지 않았으며 기존 r1 승인 hash·명세를 유지한다.
+
+- [승인 기획](Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md)과 [구현·검증 기록](Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/implementation.r1.md)의 범위로 진행한다. 기존 행정동 변경 43파일을 계약/서버/실자료/문서 네 커밋(`f231fdf8`, `b7fcd3cd`, `abdabab8`, `e1987725`)으로 먼저 분리했다. push하지 않았으며 이후 다른 스레드의 생활인구 작업은 별도다.
+- 공통 Core에 독립 메모리 준비 세션, 미리보기·명령 멱등성·예상 판본·단일 인원 점유·재배치를 구현했다. Unity는 기존 지도/카메라에 준비 UI와 옥상 A/B 확대 기호를 추가하고 운영 표식만 숨긴다. 실제 업무 사본의 갱신과 만료는 계속된다. 공식 Scene 하나에 연결했으며 새 Scene·운영 API·실제 인물 연결은 없다.
+- 공간 연구 r1의 닫힘 변 거리 오류를 초기 시험에서 발견하고 실패 이력을 보존했다. 공간 담당이 재검산한 r2(기호 반경 6m+외곽 추가 여유 2m)를 수용했다. 실제 옥상 접근·안전·사격 승인이 아니다.
+- Core 집중 12/12, Unity 준비 8/8·운영 표시 5/5·사가정 지도 7/7, 컴파일 오류 0, 주체 검사 도구 회귀 통과. 새 WI 등록 관련 생성 목록/참조 판본 누락을 보완해 최종 범위 Task의 Simulation build·전체 시험이 통과했다(`artifacts/local/validation/20260912-202849`). 실제 준비/A배치/B재배치/모드복귀 후 보존 화면도 확인했다([최종 화면](../Changes/2026-09-12-station-defense-preparation.md)). 전환은 API 직접 호출이며 자동 마우스 입력은 성공하지 않아 실제 클릭 미검증이다. 최종 Editor stopped/clean, Scene/배치자료 hash 불변. 기존 Scene 정책 분류 1건·시작 Console 진단·전역 Graph Map 전수 기획 영향 누락은 별도 문제로 남긴다.
+- 새 방어 구현은 미커밋이며 다른 스레드 변경을 포함하지 않는다. 전투·몬스터·이동·사격·바리케이드·주민 피해·보급 경제·영속 저장·Hosted·행정동 타일 이식은 범위 밖이다. 형식상 E 승격을 선언하지 않고 코드/시험/실제 화면 결과를 분리한다.
+
 ## 면목동 6개 행정동 생활인구 수집·결손 분석 r1 (2026-09-12)
 
 - [행정동별 서버 기반 디오라마 r3](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md)와 [수집·분석 보고](../Reports/면목동-행정동별-생활인구-수집분석-2026-09-12.md)에 따라 서울시 `OA-14991` 2026년 7월 완결본을 수집했다. 원본은 45,045,885바이트, SHA-256 `c2dbc97bb2d1018d27cede7d47a7b49eedd3a8f6abdd268616fffecbeae3f7bc`이며 공공누리 제1유형이다.
