@@ -34,6 +34,23 @@ public sealed class 운영지역장면조회UseCaseTests
             주소 = "서울특별시 중랑구 면목동 1",
             IsActive = true
         });
+        db.생활권물류거점.Add(new 생활권물류거점
+        {
+            StableId = "neighborhood-logistics-hub:public",
+            신청가원장Id = "private-application-ledger",
+            신청자UserId = "private-space-owner",
+            관리담당자UserId = "private-site-manager",
+            공간StableId = "building:public",
+            생활권Key = Area,
+            대략위치Label = "면목 생활권",
+            정확위치보호참조 = "protected-place:private",
+            상태Code = 생활권물류거점상태Codes.Pilot,
+            기사인계가능 = true,
+            주문자수령가능 = true,
+            최대동시보관건수 = 3,
+            현재예약건수 = 1,
+            UpdatedAtUtc = DateTime.UtcNow
+        });
         db.운송원장.Add(new 운송원장
         {
             Id = 9,
@@ -77,12 +94,17 @@ public sealed class 운영지역장면조회UseCaseTests
 
         Assert.Contains(response.Items, item => item.OperatingSystemId == "FoodDeliveryOS");
         Assert.Contains(response.Items, item => item.ItemKind == OperationalWorldSceneItemKinds.WarehouseTask);
+        Assert.Contains(response.Items, item => item.RoleCode == "NeighborhoodMicroHub");
         Assert.Contains(response.Items, item => item.SnapshotStableId == "cargo-completed:publictoken");
         var json = JsonSerializer.Serialize(response);
         Assert.DoesNotContain("private-request-id", json);
         Assert.DoesNotContain("private-transport-number", json);
         Assert.DoesNotContain("private-driver-id", json);
         Assert.DoesNotContain("private-shipper-id", json);
+        Assert.DoesNotContain("private-application-ledger", json);
+        Assert.DoesNotContain("private-space-owner", json);
+        Assert.DoesNotContain("private-site-manager", json);
+        Assert.DoesNotContain("protected-place:private", json);
         Assert.DoesNotContain("latitude", json, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("longitude", json, StringComparison.OrdinalIgnoreCase);
     }

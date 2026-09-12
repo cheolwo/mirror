@@ -55,6 +55,7 @@ public sealed class 운영지역장면조회UseCase(
 
         await ReadFoodAsync(area, items, failures, cancellationToken);
         await ReadWarehousesAsync(area, now, items, failures, cancellationToken);
+        await ReadNeighborhoodHubsAsync(area, now, items, failures, cancellationToken);
         await ReadCargoAsync(area, now, items, failures, cancellationToken);
 
         var visibleItems = items
@@ -76,6 +77,69 @@ public sealed class 운영지역장면조회UseCase(
             Items = visibleItems,
             SourceFailures = failures.ToArray()
         };
+    }
+
+    private async Task ReadNeighborhoodHubsAsync(
+        string area,
+        DateTime now,
+        ICollection<OperationalWorldSceneItem> items,
+        ICollection<OperationalWorldSceneSourceFailure> failures,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var hubs = await db.생활권물류거점.AsNoTracking()
+                .Where(hub => hub.생활권Key == area
+                              && (hub.상태Code == 살뜰.도메인.창고.생활권물류거점상태Codes.Pilot
+                                  || hub.상태Code == 살뜰.도메인.창고.생활권물류거점상태Codes.Active))
+                .OrderBy(hub => hub.StableId)
+                .Take(100)
+                .Select(hub => new
+                {
+                    hub.StableId,
+                    hub.상태Code,
+                    hub.대략위치Label,
+                    hub.기사인계가능,
+                    hub.주문자수령가능,
+                    hub.현재예약건수,
+                    hub.최대동시보관건수,
+                    hub.Revision,
+                    hub.UpdatedAtUtc
+                })
+                .ToArrayAsync(cancellationToken);
+
+            foreach (var hub in hubs)
+            {
+                items.Add(new OperationalWorldSceneItem
+                {
+                    SnapshotStableId = "world-observation:" + hub.StableId,
+                    AreaStableId = area,
+                    OperatingSystemId = OperatingSystemIds.SsalddelMartUrbanLogistics,
+                    ItemKind = OperationalWorldSceneItemKinds.WarehouseActor,
+                    RoleCode = "NeighborhoodMicroHub",
+                    ActivityCode = hub.현재예약건수 >= hub.최대동시보관건수 ? "CapacityFull" : hub.상태Code,
+                    Revision = hub.Revision,
+                    OccurredAtUtc = hub.UpdatedAtUtc,
+                    PublishedAtUtc = now,
+                    ExpiresAtUtc = now.Add(WarehouseSnapshotLifetime),
+                    RepresentationDataJson = JsonSerializer.Serialize(new
+                    {
+                        hub.StableId,
+                        hub.대략위치Label,
+                        hub.기사인계가능,
+                        hub.주문자수령가능,
+                        hub.현재예약건수,
+                        hub.최대동시보관건수,
+                        exactAddressIncluded = false,
+                        observationPresentationOnly = true
+                    }, JsonOptions)
+                });
+            }
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            RecordFailure(OperatingSystemIds.SsalddelMartUrbanLogistics, "NeighborhoodHubSourceReadFailed", ex, failures);
+        }
     }
 
     private async Task ReadFoodAsync(

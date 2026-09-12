@@ -102,6 +102,18 @@ namespace Ssalddel.WorkflowRules.Contracts
         public const string CargoHandoff = "CargoHandoff";
     }
 
+    /// <summary>
+    /// 운영 지역 장면에서 Unity 관찰 모듈을 선택할 때 사용하는 안정 운영체제 식별자입니다.
+    /// 서버 상태 권위를 부여하지 않으며 wire 값의 오탈자를 막는 공유 계약입니다.
+    /// </summary>
+    public static class OperationalWorldOperatingSystemIds
+    {
+        public const string FoodDelivery = "FoodDeliveryOS";
+        public const string WarehouseCommerceFulfillment = "WarehouseCommerceFulfillmentOS";
+        public const string DomesticCargoTransport = "DomesticCargoTransportOS";
+        public const string SsalddelMartUrbanLogistics = "SsalddelMartUrbanLogisticsOS";
+    }
+
     public sealed class OperationalWorldSceneItem
     {
         public string SnapshotStableId { get; set; } = string.Empty;
