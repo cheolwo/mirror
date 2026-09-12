@@ -182,14 +182,19 @@ internal static class 행정동실자료완결
         result["assignedBuildings"] = assignments.AssignedCount;
         result["unresolvedBuildings"] = assignments.UnresolvedCount;
         result["ambiguousBoundaryBuildings"] = assignments.AmbiguousBoundaryCount;
-        result["buildingCountsByAdministrativeArea"] = assignments.Assignments.Where(item => item.AdministrativeAreaStableId is not null)
-            .GroupBy(item => item.AdministrativeAreaStableId!).OrderBy(group => group.Key, StringComparer.Ordinal)
-            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
+        result["buildingCountsByAdministrativeArea"] = AdministrativeAreas.ToDictionary(
+            area => area,
+            area => assignments.Assignments.Count(item => item.AdministrativeAreaStableId == area),
+            StringComparer.Ordinal);
         result["sourceRoadSegments"] = roads.Length;
         result["targetClippedRoadSegments"] = preview.Tiles.Sum(tile => tile.Roads.Length);
         result["publicBusinessObservations"] = publicBusinesses.Length;
         result["businessCoordinatesAssigned"] = businessAssignments.Count(item => item.Area is not null);
         result["businessCoordinatesUnresolved"] = businessAssignments.Count(item => item.Area is null);
+        result["businessCountsByAdministrativeArea"] = AdministrativeAreas.ToDictionary(
+            area => area,
+            area => businessAssignments.Count(item => item.Area == area),
+            StringComparer.Ordinal);
         result["businessPresentationMarkers"] = 0;
         result["targetProjectionHash"] = preview.Manifest.ProjectionHashSha256;
         result["targetTiles"] = preview.Tiles.Length;
