@@ -53,7 +53,7 @@ namespace Ssalddel.Simulation.Application
             var nodes = snapshot.Nodes.ToDictionary(x => x.StableId, StringComparer.Ordinal);
             if (string.IsNullOrWhiteSpace(fromNodeId) || string.IsNullOrWhiteSpace(toNodeId)
                 || !nodes.ContainsKey(fromNodeId) || !nodes.ContainsKey(toNodeId)) return 실패("NeighborhoodNodeNotFound");
-            if (mode == 동네이동수단.Vehicle
+            if ((mode == 동네이동수단.Vehicle || mode == 동네이동수단.Motorcycle)
                 && (nodes[fromNodeId].Role == 동네노드역할.Entrance || nodes[toNodeId].Role == 동네노드역할.Entrance))
                 return 실패("NeighborhoodVehicleEntranceForbidden");
             if (fromNodeId == toNodeId)

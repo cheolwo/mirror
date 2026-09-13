@@ -5,7 +5,7 @@ using Ssalddel.Contracts.Common.Metadata;
 
 namespace Ssalddel.Simulation.Application
 {
-    public enum 동네이동수단 { Vehicle, Pedestrian }
+    public enum 동네이동수단 { Vehicle = 0, Pedestrian = 1, Motorcycle = 2 }
     public enum 동네통행검토 { Unknown, Reviewed, Blocked }
     public enum 동네도로방향 { Unknown, Forward, Both }
     public enum 동네노드역할 { Junction, VehicleStop, Entrance }

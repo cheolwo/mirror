@@ -98,7 +98,7 @@ namespace Ssalddel.Simulation.Application
                     요구(points.Count >= 2, "NeighborhoodRoadTooShort");
                     pointCount += points.Count;
                     var modesElement = properties.GetProperty("modes");
-                    요구(modesElement.ValueKind == JsonValueKind.Array && modesElement.GetArrayLength() is >= 1 and <= 2,
+                    요구(modesElement.ValueKind == JsonValueKind.Array && modesElement.GetArrayLength() is >= 1 and <= 3,
                         "NeighborhoodTravelModesInvalid");
                     var modes = modesElement.EnumerateArray().Select(열거<동네이동수단>).ToArray();
                     요구(modes.Distinct().Count() == modes.Length, "NeighborhoodTravelModesInvalid");
@@ -140,7 +140,8 @@ namespace Ssalddel.Simulation.Application
                 // 오차를 숨기는 자동 snap은 하지 않는다. 전처리에서 같은 접점 좌표를 공유해야 한다.
                 요구(from.Position.Equals(road.Points[0]) && to.Position.Equals(road.Points[road.Points.Count - 1]),
                     "NeighborhoodRoadEndpointMismatch");
-                요구(!road.Modes.Contains(동네이동수단.Vehicle)
+                요구(!(road.Modes.Contains(동네이동수단.Vehicle)
+                        || road.Modes.Contains(동네이동수단.Motorcycle))
                     || (from.Role != 동네노드역할.Entrance && to.Role != 동네노드역할.Entrance),
                     "NeighborhoodVehicleEntranceForbidden");
             }

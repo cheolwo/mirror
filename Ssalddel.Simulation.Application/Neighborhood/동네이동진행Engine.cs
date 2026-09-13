@@ -36,7 +36,7 @@ namespace Ssalddel.Simulation.Application
         ExecutionStage = SsalddelCodeExecutionStage.Preview, ReadsFrom = SsalddelCodeDataScope.DerivedWorld,
         Effects = SsalddelCodeEffect.None, Boundary = "기존 Actor/주문/Session 상태를 변경하지 않는 후보 계산이다.")]
     [SsalddelEvidenceResponsibility(SsalddelEvidenceStage.E2,
-        "차량·도보의 거리 진행과 차단·동일 경로 복원 후보를 계산한다.",
+        "차량·오토바이·도보의 거리 진행과 차단·동일 경로 복원 후보를 계산한다.",
         Boundary = "독립 순수 지원 모듈이며 Runtime 연결·실제 통행·배송 결과를 확정하지 않는다.")]
     public sealed class 동네이동진행Engine
     {
@@ -64,7 +64,7 @@ namespace Ssalddel.Simulation.Application
             }
             if (current.Tick == int.MaxValue || nextTick != current.Tick + 1)
                 throw new InvalidDataException("NeighborhoodMovementTickSequenceInvalid");
-            var speed = route.Mode == 동네이동수단.Vehicle ? VehicleMetersPerTick : PedestrianMetersPerTick;
+            var speed = 차량계열(route.Mode) ? VehicleMetersPerTick : PedestrianMetersPerTick;
             var distance = blocked ? current.DistanceMeters : Math.Min(route.LengthMeters, current.DistanceMeters + speed);
             return 결과(route, fingerprint, nextTick, distance, blocked);
         }
@@ -75,7 +75,7 @@ namespace Ssalddel.Simulation.Application
             var fingerprint = 지문(route);
             if (!string.Equals(fingerprint, expectedFingerprint, StringComparison.Ordinal))
                 throw new InvalidDataException("NeighborhoodMovementRouteMismatch");
-            var speed = route.Mode == 동네이동수단.Vehicle ? VehicleMetersPerTick : PedestrianMetersPerTick;
+            var speed = 차량계열(route.Mode) ? VehicleMetersPerTick : PedestrianMetersPerTick;
             if (tick < 0 || double.IsNaN(distanceMeters) || double.IsInfinity(distanceMeters)
                 || distanceMeters < 0 || distanceMeters > route.LengthMeters
                 || distanceMeters > (double)tick * speed || (tick == 0 && blocked)
@@ -128,5 +128,8 @@ namespace Ssalddel.Simulation.Application
             using var hash = SHA256.Create();
             return BitConverter.ToString(hash.ComputeHash(stream.ToArray())).Replace("-", string.Empty);
         }
+
+        private static bool 차량계열(동네이동수단 mode)
+            => mode == 동네이동수단.Vehicle || mode == 동네이동수단.Motorcycle;
     }
 }
