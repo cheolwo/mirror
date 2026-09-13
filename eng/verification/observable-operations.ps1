@@ -10,9 +10,19 @@ $artifactRoot = Join-Path $repoRoot 'artifacts/local/verification/observable-ope
 $envFile = Join-Path $artifactRoot '.env'
 $connectionFile = Join-Path $artifactRoot 'connection.json'
 $composeFile = Join-Path $PSScriptRoot 'docker-compose.observable-operations.yml'
+$restaurantDirectoryPath = Join-Path $repoRoot 'artifacts/local/public-data/sagajeong-restaurant-directory-20260913-r1/restaurant-directory.v1.json'
 
 if ($Action -eq 'Prepare') {
     New-Item -ItemType Directory -Path $artifactRoot -Force | Out-Null
+    if (-not (Test-Path -LiteralPath $restaurantDirectoryPath -PathType Leaf)) {
+        throw 'Sagajeong restaurant directory input is missing; prepare the LocalPrivateReview artifact before running this verification.'
+    }
+    $restaurantDirectory = Get-Content -LiteralPath $restaurantDirectoryPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    $restaurantDirectoryRevision = [string]$restaurantDirectory.dataRevision
+    if ([string]::IsNullOrWhiteSpace($restaurantDirectoryRevision)) {
+        throw 'Sagajeong restaurant directory revision is missing.'
+    }
+    $restaurantDirectoryHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $restaurantDirectoryPath).Hash.ToLowerInvariant()
     if (-not (Test-Path -LiteralPath $envFile)) {
         function New-LocalSecret { [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)) }
         $values = [ordered]@{
@@ -25,6 +35,13 @@ if ($Action -eq 'Prepare') {
         }
         [IO.File]::WriteAllLines($envFile, @($values.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }), [Text.UTF8Encoding]::new($false))
     }
+    $environmentLines = @(Get-Content -LiteralPath $envFile -Encoding UTF8 |
+        Where-Object { $_ -notmatch '^OBSERVABLE_OPERATIONS_RESTAURANT_DIRECTORY_(PATH|SHA256|REVISION)=' })
+    $dockerRestaurantDirectoryPath = $restaurantDirectoryPath.Replace('\', '/')
+    $environmentLines += "OBSERVABLE_OPERATIONS_RESTAURANT_DIRECTORY_PATH=$dockerRestaurantDirectoryPath"
+    $environmentLines += "OBSERVABLE_OPERATIONS_RESTAURANT_DIRECTORY_SHA256=$restaurantDirectoryHash"
+    $environmentLines += "OBSERVABLE_OPERATIONS_RESTAURANT_DIRECTORY_REVISION=$restaurantDirectoryRevision"
+    [IO.File]::WriteAllLines($envFile, $environmentLines, [Text.UTF8Encoding]::new($false))
     $preparedValues = @{}
     foreach ($line in Get-Content -LiteralPath $envFile -Encoding UTF8) {
         $pair = $line -split '=', 2
@@ -85,4 +102,4 @@ $snapshot = Invoke-RestMethod @invoke
 if ($Action -eq 'Result') {
     [IO.File]::WriteAllText((Join-Path $artifactRoot 'result.json'), ($snapshot | ConvertTo-Json -Depth 20), [Text.UTF8Encoding]::new($false))
 }
-$snapshot | Select-Object runStableId,statusCode,areaStableId,elapsedSeconds,durationSeconds,publishedCaseCount,pendingOutboxCount,failedOutboxCount | ConvertTo-Json
+$snapshot | Select-Object runStableId,statusCode,areaStableId,elapsedSeconds,durationSeconds,publishedCaseCount,publishedStepCount,totalStepCount,pendingOutboxCount,failedOutboxCount,fixtureStatusCode,fixturePackStableId | ConvertTo-Json

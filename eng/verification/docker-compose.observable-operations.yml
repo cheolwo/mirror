@@ -20,6 +20,9 @@ services:
       ObservableOperationsVerification__AccessKey: ${OBSERVABLE_OPERATIONS_ACCESS_KEY:?run prepare}
       ObservableOperationsVerification__DurationSeconds: "600"
       ObservableOperationsVerification__PollIntervalMilliseconds: "1000"
+      ObservableOperationsVerification__RestaurantDirectoryPath: /verification-input/restaurant-directory.v1.json
+      ObservableOperationsVerification__RestaurantDirectorySha256: ${OBSERVABLE_OPERATIONS_RESTAURANT_DIRECTORY_SHA256:?run prepare}
+      ObservableOperationsVerification__RestaurantDirectoryRevision: ${OBSERVABLE_OPERATIONS_RESTAURANT_DIRECTORY_REVISION:?run prepare}
       Jwt__Issuer: ObservableOperations.Local
       Jwt__Audience: ObservableOperations.Local
       Jwt__SecretKey: ${OBSERVABLE_OPERATIONS_JWT_KEY:?run prepare}
@@ -37,7 +40,12 @@ services:
       mysql: {condition: service_healthy}
       mongo: {condition: service_healthy}
       redis: {condition: service_healthy}
-    volumes: ["observable_operations_app:/app/App_Data"]
+    volumes:
+      - observable_operations_app:/app/App_Data
+      - type: bind
+        source: ${OBSERVABLE_OPERATIONS_RESTAURANT_DIRECTORY_PATH:?run prepare}
+        target: /verification-input/restaurant-directory.v1.json
+        read_only: true
     networks: [isolated]
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/verification/observable-operations/health"]
