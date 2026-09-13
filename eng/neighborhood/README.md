@@ -40,7 +40,7 @@ dotnet run --project eng/Ssalddel.NeighborhoodPreflight -- $지도입력 $검토
 
 ```powershell
 $배달지도 = 'eng/neighborhood/fixtures/synthetic-delivery-block.v1.json'
-$고정해시 = '085252202EA010D7C40469A549AF1DB794664521E3CE27DE817C3DE6886BB8CE'
+$고정해시 = '56EA63D55FC720B2348B7A310B0FF4DBBE96F41C392EDA6E270CD87B9BFEAECF'
 dotnet run --project eng/Ssalddel.NeighborhoodPreflight -- $배달지도 $고정해시 restaurant-stop residence-a-stop Vehicle
 dotnet run --project eng/Ssalddel.NeighborhoodPreflight -- $배달지도 $고정해시 residence-a-stop residence-a-door Pedestrian
 dotnet run --project eng/Ssalddel.NeighborhoodPreflight -- $배달지도 $고정해시 residence-a-stop depot Vehicle
@@ -57,7 +57,7 @@ GeoJSON의 도형 표기와 닮았지만 **RFC 7946 GeoJSON이 아닌 전처리 
 - `coordinates`: `unit=m`, `axisOrder=EastingNorthing`, 투영 좌표의 `origin=[E,N]`, `bounds=[minE,minN,maxE,maxN]`. 지역 좌표는 `X=E-originE`, `Z=N-originN`. 높이는 만들지 않는다. 범위 밖 점은 자르거나 옮기지 않고 거부한다. 이미 잘린 면적과 연결은 전처리/공간 검토의 책임이다.
 - `features`: 전체에서 고유한 `id`, `kind`, `geometry`, `properties`. 노드는 `Point`, 도로는 `LineString`, 건물은 단일 외곽 고리 `Polygon`이다. 내곽/복합 도형은 현재 거부한다. 내곽을 채우거나 건물을 연결하는 자동 단순화는 금지한다.
 - 노드 역할은 `Junction`, `VehicleStop`, `Entrance`. `Entrance`만 실제 포함된 건물 ID를 명시한다. 이것은 논리 연결이며 실제 접근 가능성을 입증하지 않는다.
-- 도로는 `fromNodeId/toNodeId`, `direction=Unknown|Forward|Both`, `modes=[Vehicle|Pedestrian]`, `accessReview=Unknown|Reviewed|Blocked`, 검토 근거를 담는다. Reviewed만 근거가 필수다. 방향 Unknown 또는 검토 Unknown/Blocked는 탐색에서 제외한다. 차량은 Entrance에 연결할 수 없다.
+- 도로는 `fromNodeId/toNodeId`, `direction=Unknown|Forward|Both`, `modes=[Vehicle|Pedestrian|Motorcycle]`, `accessReview=Unknown|Reviewed|Blocked`, 검토 근거를 담는다. Reviewed만 근거가 필수다. 방향 Unknown 또는 검토 Unknown/Blocked는 탐색에서 제외한다. 차량과 오토바이는 Entrance에 연결할 수 없다.
 - 도로 양끝과 노드 좌표는 정확히 같아야 한다. 교차하거나 가까운 선을 자동 연결하지 않는다. 알려지지 않은 건물 높이·도로 폭은 `null`로 유지한다.
 - 입력 4MiB, 최대 5,000 도형·100,000 점·도형당 512점, 범위 가로/세로 각각 최대 1,000m. 대량/전국 데이터 수집기가 아니다.
 
@@ -66,6 +66,23 @@ GeoJSON의 도형 표기와 닮았지만 **RFC 7946 GeoJSON이 아닌 전처리 
 ## 다음 연결
 
 원본/권리 확인 → 비공개 원장 저장·재조회 → 실제 CRS 재투영/경계 자르기 → 도형 입력 검사 → 출입구/정차/도로 방향·지형 연구 승인 → 단일 WI별 Core 도달/픽업/수령/귀환 상태·Save/Replay → 기존 Unity 경로 표현. 후보 길찾기는 2D 길이 기반이며 경사·차폭·실제 교통·안전 통행을 인증하지 않는다. 개별 Graph Map 원본·기존 H·Scene은 변경하지 않는다.
+
+## 사가정 1km 정적 이동망 검토 후보
+
+동결 OSM 원본을 기존 사가정 디오라마 좌표계에 맞춘 500m `2×2` 타일로 전처리한다. 결과는 Git 제외 `artifacts/local/sagajeong-mobility-graph/`에만 만들며, 서버의 개발 환경·관리자 전용 비공개 미리보기가 이 파일을 엄격히 재검증해 읽는다.
+
+```powershell
+pwsh -NoProfile -File eng/neighborhood/manage-sagajeong-mobility-graph.ps1 -Mode Build
+pwsh -NoProfile -File eng/neighborhood/manage-sagajeong-mobility-graph.ps1 -Mode Audit
+pwsh -NoProfile -File eng/neighborhood/manage-sagajeong-mobility-graph.ps1 -Mode SelfTest
+```
+
+- 계약은 `region-mobility-graph-manifest.v1`과 `region-mobility-graph-tile.v1`이다. 지역 범위는 단일 행정동이 아니라 `world-region:kr:seoul:jungnang:sagajeong.r1` 1km 창이고 행정동 ID는 분석 참조일 뿐이다.
+- 현재 동결 입력 결과는 4타일·노드 2,807개·간선 2,574개이고 projection hash는 `59DD155C0D49BEB0612062DF6E1571A751FE0EC1E9DA4AD4AF41A879EB4FE6F7`이다.
+- OSM의 명시적 `oneway`만 방향으로 인정하고 나머지 2,430개 간선은 방향 미확정으로 보존한다. 타일 사이 stitch와 1km 외곽 portal을 구분하며 가까운 선·건물·출입구를 자동 연결하지 않는다.
+- 음식점 후보 2곳의 도로 접근 거리는 검토 자료일 뿐이고 생성 connector는 0개다. `PendingHumanReview`, `distributionApproved=false`, `traversalReady=false`, `runtimeAuthorized=false`이므로 실제 주문·배차·Unity 이동 권위에 사용할 수 없다.
+
+[사가정 가상 배달 이동 기획](../../docs/AI/Planning/공간/PLAN-SPATIAL-SAGAJEONG-DELIVERY-MOBILITY/README.md)은 이 정적 후보와 별도의 합성 7구간 여정 상태 사본을 연결한다. 결손 시 건물 중심이나 직선으로 건너뛰지 않으며 실제 접근점 검토와 별도 권위 WI 전에는 읽기 전용 관찰 표현으로만 사용한다.
 
 ## 비공개 원본 등록
 
@@ -83,3 +100,56 @@ dotnet run --project eng/Ssalddel.NeighborhoodSourceImport -- verify $저장소�
 - 파일 잠금·크기·SHA-256·컨테이너 소속·포트·DB 이름을 대조한다. 지정 컨테이너의 비-root 연결값은 메모리에서만 사용하고 출력하지 않는다. 새 DB·migration·기본 서버 설정 변경은 하지 않는다.
 - 원본 바이트는 Git 제외 로컬 폴더, 계보는 DB에 저장한다. `Partial / NeighborhoodSourceReviewPending`을 유지하며 정규화·건축물 원장 연결이 생겼으면 검증을 실패시킨다. 이 도구는 SHP/DBF 변환기나 건물 마스터 적재기가 아니다.
 - 종료 코드 0은 해당 모드 검사 성공, 1은 차단/실패, 64는 명령 형식 오류다. 실패 JSON의 `committed`를 확인한다. 저장 후 독립 조회에서 실패했다면 `committed=true`일 수 있으므로 미저장으로 단정하지 않는다. `runtimeAuthorized`는 항상 `false`다.
+
+## 사가정 공간 표현 오버레이
+
+`manage-sagajeong-spatial-presentation.ps1`은 동결된 `AL_D010_11_20260809.zip`과 `map.osm`을 읽어 1km 정사각형 안의 **표현 후보**를 만든다. GIS 건물은 `.prj`의 EPSG:5186 선언을 확인한 뒤 `EPSG:5186 → WGS84 → WGS84-ECEF-ENU-at-zero-altitude` 순서로 기존 `SagajeongReference.json` r3 좌표계에 맞추고 경계를 실제로 자른다. OSM 토지표현 다각형도 같은 경계로 자른다. SHP·DBF 원본 행, 주소, 로컬 경로는 결과에 복제하지 않는다.
+
+```powershell
+$env:SSALDDEL_UNITY_ROOT = 'C:\path\to\ssalddel'
+pwsh -NoProfile -File eng/neighborhood/manage-sagajeong-spatial-presentation.ps1 -Mode PrivateReview
+pwsh -NoProfile -File eng/neighborhood/audit-sagajeong-spatial-presentation.ps1
+pwsh -NoProfile -File eng/tests/sagajeong-spatial-presentation.ps1
+```
+
+`SSALDDEL_UNITY_ROOT` 대신 `-BaseMapPath`를 명시해도 된다. 저장소에 특정 사용자 Unity 절대 경로를 고정하지 않는다.
+
+기본 결과는 Git 제외 경로다.
+
+- `artifacts/local/sagajeong-spatial-presentation/private-review.json`
+- `artifacts/local/sagajeong-spatial-presentation/coverage-audit.json`
+- `artifacts/local/sagajeong-spatial-presentation/coverage-audit.html`
+
+오버레이 계약은 `ssalddel.spatial-presentation-overlay.v1`, 판본은 `sagajeong-spatial-presentation.private-review.r2`, 상태는 `LocalPrivateReview`다. `contentHash`를 빈 문자열로 바꾼 객체를 키 정렬·공백 없음·UTF-8 JSON으로 직렬화한 SHA-256 대문자 값을 `contentHash`로 기록한다. 좌표는 소수 셋째 자리까지 고정하고 건물·표현면·고유 식별자를 정렬하므로 같은 동결 입력은 같은 JSON과 hash를 만든다.
+
+건물 높이는 A16의 양수만 `ObservedSourceHeight`로 사용한다. 0·누락·비수치는 층수로 환산하지 않고 `SymbolicFallback4m`로 유지하며, A16과 A26 관측값·높이 정책 판본을 별도 필드로 남긴다. 기존 OSM 건물과의 footprint 겹침은 `legacyOsmIds`/`legacyMatch` 후보일 뿐 공식 동일 건물 확정이 아니다. `IoU >= 0.20`, 작은/큰 footprint 면적비 `>= 0.25`, 작은 footprint coverage `>= 0.30`, 정규화 중심거리 관문을 모두 통과해야 단일 별칭 후보가 된다. 약한 후보는 `WeakFootprintCandidateExcluded`, 중복 후보는 기존 ambiguity method로 기록하고 둘 다 별칭을 비운다.
+
+감사는 생성기 결과를 다시 만들거나 그대로 신뢰하지 않는다. ZIP 안 SHP/DBF와 OSM XML을 별도로 재파싱·재투영해 `sourceFeatureId`, A8/A9/A16/A26, 정규 다각형 hash, OSM 별칭 존재, 실제 footprint overlap 수치를 전수 대조한다. 자체 hash를 다시 계산한 변조 파일도 원본 대조에서 거부한다.
+
+coverage audit v2는 1km를 100m `10×10`으로 나누고 각 셀의 `buildingCoverageRatio`, 건물 영역을 제외한 `openCoverageRatio`, 나머지 `unknownCoverageRatio`를 기록한다. 건물 면적이 20% 이상일 때만 `ConfirmedBuilt`, 완전한 표면 근거에서 열린 면적이 20% 이상일 때만 `ConfirmedOpen`이다. 불완전 OSM 표면이 닿으면 건물 20% 미만 셀을 `IncompleteSurfaceEvidence`, 그 밖을 `MissingCoverage`로 둔다. `osm:relation:14428122`처럼 bbox 원본에서 member가 빠진 feature, 빠진 member ID와 영향 셀을 감사 JSON에 영속한다. 이 분류는 표현 자료 coverage이며 실제 건물·공터·통행·배치 허가 판정이 아니다. `evidenceMix`와 `boundaryClipped`는 별도 지표로 보존한다. 독립 대조가 통과했지만 누락 표면이 영향 범위에 있으면 감사 상태는 `PassedWithIncompleteSurfaceEvidence`, 없으면 `Passed`다. 대조 실패 시 감사 파일을 게시하지 않는다.
+
+`-Mode Promote`는 기본 결과를 덮지 않고 `public.json`을 사용한다. 별도 권리 영수증이 다음을 모두 만족하기 전에 **출력 생성 전 실패**한다.
+
+```json
+{
+  "datasetId": "data-go-kr-15083092",
+  "rawHash": "674C5A9583996DD6B8946525EDAD8197BE79A634F1DB00D39E2B3133D0D2A755",
+  "status": "RightsReconciled",
+  "licenseCode": "KOGL-Type1",
+  "sourceIdentityVerified": true,
+  "acquisitionReceipt": {
+    "provider": "국토교통부",
+    "datasetId": "data-go-kr-15083092",
+    "datasetDate": "2026-08-09",
+    "fetchedAtUtc": "2026-09-06T14:42:52.765Z",
+    "rawHash": "674C5A9583996DD6B8946525EDAD8197BE79A634F1DB00D39E2B3133D0D2A755",
+    "rawLength": 135675376,
+    "originalCrs": "EPSG:5186"
+  },
+  "reviewer": "<검토자 고유 식별자>",
+  "reviewedAtUtc": "<UTC ISO-8601 시각>",
+  "evidenceHash": "<evidenceHash만 빈 문자열로 둔 전체 객체의 canonical SHA-256>"
+}
+```
+
+승격은 manager만 수행한다. builder는 같은 디렉터리에 `PromotionPendingAudit` 임시 후보만 만들고, 독립 원본 감사가 성공하면 auditor가 승인 임시 파일을 만든다. manager가 감사 JSON/HTML을 먼저 교체하고 승인 임시 파일을 같은 디렉터리의 최종 경로로 원자 이동한 때만 `sagajeong-spatial-presentation.public.r1`, `PublicOpenData`, `distributionApproved=true`가 성립한다. 실패 시 임시 파일을 제거하고 기존 최종 파일은 바꾸지 않는다. 어느 모드도 Unity 후보명 `SagajeongSpatialPresentationOverlay.json`으로 자동 복사하지 않으며 Scene·Prefab·서버·DB·게임 상태를 변경하지 않는다.
