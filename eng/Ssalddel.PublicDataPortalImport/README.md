@@ -99,3 +99,48 @@ dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-data-prev
 dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-data-apply C:/Users/user/source/repos/Hongdal
 dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-data-verify C:/Users/user/source/repos/Hongdal
 ```
+
+### 중랑구 7호선 역 기준자료 r1
+
+- `station-reference-acquire`는 공공데이터포털의 국가철도공단 도시광역철도 역사정보 metadata와 연결 XLSX를 제한 크기·시간 안에서 로컬 비공개 폴더에 수집하고 원본 SHA-256을 기록한다.
+- `station-reference-self-test`는 전국 1,099행의 고정 schema에서 면목·사가정·용마산(용마폭포공원) 3행만 선택하고, `노선번호 + 선행 0을 보존한 역번호` 기반 `station:kr:kric:*` 식별자와 전화번호 미투영을 검사한다.
+- `station-reference-preview|apply|verify`는 기존 MySQL 공공자료 수집 원장을 재사용한다. 첫 적용은 원본 사본 1건과 검토보류 3행만 저장하고, 재적용은 신규 0·기존 3이어야 하며 `verify`는 별도 연결에서 같은 3행을 재조회한다.
+- 포털 metadata에 표시된 이용허락 범위와 현재 연결 파일 판본의 정확한 결속은 사람 검토 대상으로 유지한다. 이 자료는 출처가 보고한 WGS84 역 기준점일 뿐 출구·역세권 면적·건물·도로 coverage, 공개 배포, 운영 권위 또는 Unity 적용을 승인하지 않는다.
+
+```powershell
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- station-reference-acquire C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- station-reference-self-test C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- station-reference-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- station-reference-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- station-reference-verify C:/Users/user/source/repos/Hongdal
+```
+
+### 사가정 공공 사진 비공개 검토 r2
+
+- `sagajeong-photo-acquire`는 Wikimedia Commons의 사가정역 분류 metadata와 정확 사가정시장 검색 결과를 제한 조회하고, 고정 후보 5건만 로컬 비공개 폴더에 수집한다. 응답은 30초, metadata 2MiB, 사진당 8MiB로 제한하며 파일 host는 `upload.wikimedia.org`만 허용한다. 출력 폴더가 있으면 재수집하지 않는다.
+- 공공영역 역 내부·표지 3건과 `CC BY-SA 4.0` 출입구 2건을 서로 구분한다. 모든 사진은 내용 검토 전 `modelDerivationAllowed=false`, `gameDistributionAllowed=false`다. 공공누리 제4유형 중랑구 후보 3건은 metadata만 기록하고 사진 파일은 받지 않는다.
+- `sagajeong-photo-self-test`는 원본 hash, 파일 크기, 라이선스, 시장 검색 0건과 Blender·Unity 차단을 확인한다. `preview|apply|verify`는 기존 로컬 Docker MySQL 공공자료 원장을 재사용해 사진 후보 5·시장 결손 1·권리 제외 3건을 저장·재조회한다.
+- 실제 결과는 [수집 보고](../../docs/Reports/사가정-공공사진-첫수집-2026-09-13.md)와 [기계 대장](../world-seedbeds/station-landmarks/sagajeong-public-photo.collection.r2.json)을 따른다. 비공개 사진 원본을 Git·Unity 자원·빌드로 복사하지 않는다.
+
+```powershell
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-photo-acquire C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-photo-self-test C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-photo-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-photo-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-photo-verify C:/Users/user/source/repos/Hongdal
+```
+
+### 사가정 공공데이터포털 사진 자료 조사 r1
+
+- `sagajeong-data-go-photo-acquire`는 한국관광공사 관광사진·국문 관광정보·여행기사 자료와 관광사진 API 안내서를 제한 수집한다. 공급자 미리보기 사진은 로컬 비공개 조사 자료로만 보존한다.
+- 관광사진 API는 기존 사용자 비밀 키로 접근 여부만 검사한다. 키와 오류 원문은 저장하지 않으며 HTTP 403을 사진 검색 성공이나 권리 확인으로 대체하지 않는다.
+- `self-test`는 영수증·원문·사진 hash와 Blender·Unity 비승인을 확인한다. `preview|apply|verify`는 로컬 MySQL 공공자료 원장에 사진 3·자료군 1·API 접근 1·검색 결손 1을 저장·재조회한다.
+- 실제 결과는 [조사 보고](../../docs/Reports/사가정-공공데이터포털-사진자료조사-2026-09-13.md)와 [기계 대장](../world-seedbeds/station-landmarks/sagajeong-data-go-kr-photo-research.collection.r1.json)을 따른다.
+
+```powershell
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-data-go-photo-acquire C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-data-go-photo-self-test C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-data-go-photo-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-data-go-photo-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-data-go-photo-verify C:/Users/user/source/repos/Hongdal
+```

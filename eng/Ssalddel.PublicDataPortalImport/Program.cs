@@ -9,6 +9,70 @@ using 살뜰.Services.External.PublicData.Korea;
 var result = new Dictionary<string, object?> { ["databaseWriteAttempted"]=false, ["committed"]=false };
 try
 {
+    const string sagajeongDataGoPhotoPrefix = "sagajeong-data-go-photo-";
+    if (args.Length == 2 && args[0].StartsWith(sagajeongDataGoPhotoPrefix, StringComparison.Ordinal))
+    {
+        await 사가정공공데이터포털사진자료.RunAsync(
+            args[0][sagajeongDataGoPhotoPrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    const string sagajeongPhotoPrefix = "sagajeong-photo-";
+    if (args.Length == 2 && args[0].StartsWith(sagajeongPhotoPrefix, StringComparison.Ordinal))
+    {
+        await 사가정공공사진자료.RunAsync(
+            args[0][sagajeongPhotoPrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    const string myeonmokStationSpatialPrefix = "myeonmok-station-spatial-";
+    if (args.Length == 2 && args[0].StartsWith(myeonmokStationSpatialPrefix, StringComparison.Ordinal))
+    {
+        await 면목역공간자료.RunAsync(
+            args[0][myeonmokStationSpatialPrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    const string yongmasanStationSpatialPrefix = "yongmasan-station-spatial-";
+    if (args.Length == 2 && args[0].StartsWith(yongmasanStationSpatialPrefix, StringComparison.Ordinal))
+    {
+        await 용마산역공간자료.RunAsync(
+            args[0][yongmasanStationSpatialPrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    if (args.Length == 2 && args[0].StartsWith("station-reference-", StringComparison.Ordinal))
+    {
+        await 철도역기준자료.RunAsync(args[0][18..], Path.GetFullPath(args[1]), result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    if (args.Length == 2 && args[0].StartsWith("sagajeong-building-", StringComparison.Ordinal))
+    {
+        await 사가정건물자료대장.RunAsync(args[0][19..], Path.GetFullPath(args[1]), result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    if (args.Length == 2 && args[0].StartsWith("sagajeong-link-", StringComparison.Ordinal))
+    {
+        await 사가정표준링크자료.RunAsync(args[0][15..], Path.GetFullPath(args[1]), result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    if (args.Length == 2 && args[0].StartsWith("sagajeong-road-", StringComparison.Ordinal))
+    {
+        await 사가정도로자료.RunAsync(args[0][15..], Path.GetFullPath(args[1]), result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
     if (args.Length == 2 && args[0].StartsWith("admin-dong-data-", StringComparison.Ordinal))
     {
         await 면목동행정동생활인구.RunAsync(args[0][16..], Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])), result);
