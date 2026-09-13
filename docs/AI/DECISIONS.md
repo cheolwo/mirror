@@ -5421,3 +5421,15 @@ Unity는 로컬 플레이어 입력과 관찰 카메라를 분리한다. 관찰 
 물리 호스트 통합은 상태 권위 통합이 아니다. 실제 사용자·조직·주문·계약·결제·운영 재고는 기존 운영 원장이 최종 권위를 유지하고, scenario·seed·Simulation Session·가상 시간·WorldTick·save/replay는 Simulation Core와 전용 저장 원장이 소유한다. `SimulationSession`과 `SimulationWorldDerived` DB, 공유 공공데이터 읽기 전용 계정, 명시적 migration과 데이터 계보를 계속 분리한다. 한 프로세스 안에서도 Simulation Command가 운영 효과를 만들거나 양쪽 entity를 같은 원장으로 저장하지 않는다.
 
 모든 Hosted Simulation API는 기본적으로 주 서버 인증을 요구한다. 개인 세션은 로그인 주체와 세션 고유 식별자를 별도 접근 원장에 결속하고 다른 사용자의 세션은 존재 여부를 노출하지 않는다. 온라인 세계의 공유 방은 방 소유자·멤버십 규칙이 별도로 접근을 판정한다. 원격 Simulation 논리 클라이언트는 운영 API와 같은 주소·토큰을 사용하되 이름 있는 별도 Client와 계약을 유지하며, 운영 실패·Simulation 실패·Local Runtime 사이 자동 fallback을 허용하지 않는다.
+
+## D-558 Steam 무료 본편은 지역 Experience Package를 선택적으로 발견하고 갱신한다
+
+- 상태: `Accepted`
+- 결정일: 2026-09-13
+- 기준 기획: `PLAN-SYSTEM-REGION-EXPERIENCE-PACKAGES`
+
+Mirror는 지역마다 별도 게임을 복제하지 않고 하나의 무료 Steam 본편에서 판본화된 지역 Experience Package를 선택·갱신한다. `world-region:*` 출시 식별자는 행정동·법정동·운영 지역의 정본 식별자를 대체하지 않으며, 한 패키지가 필요한 지역과 기존 공간 대장을 참조한다.
+
+지역 Catalog와 Experience Manifest는 기존 지리·생활·시나리오·gameplay·상업 표시·운영 상태 API의 발견·판본·로딩 정책만 묶는다. 각 API의 권한·기능 플래그·저장 원장·상태 권위는 유지하고, 비활성 또는 미구현 레이어의 endpoint는 노출하지 않는다. 광고·후원·실서비스는 선택 레이어이며 지역 패키지 등록이나 무료 배포가 이를 자동 활성화하지 않는다.
+
+첫 패키지는 사가정이며 비공개 검토 상태로 시작한다. Steamworks·CDN·다운로드 파일·Unity 스트리밍·공개 출시는 각각 별도 구현과 검증을 요구한다.

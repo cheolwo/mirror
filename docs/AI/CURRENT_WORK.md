@@ -1,5 +1,11 @@
 # Mirror(거울) Current Work
 
+## 지역 Experience Package 서버 첫 절편 (2026-09-13)
+
+- [지역 Experience Package r1](Planning/시스템/PLAN-SYSTEM-REGION-EXPERIENCE-PACKAGES/README.md)에 따라 무료 Steam 본편이 지역별 콘텐츠를 발견·갱신할 Catalog/Manifest 공용 계약과 인증 GET 2개를 추가했다. 첫 `world-region:kr:seoul:jungnang:sagajeong.r1`은 기존 법정동 공간 패키지 대장, 면목제3·8동 지리 API, 표시 overlay와 운영 장면 v2를 참조한다.
+- 기존 세부 API와 권위는 합치지 않았다. 기능 플래그가 꺼진 구현 레이어는 endpoint 없는 `Disabled`, 생활밀도·복구 시나리오·gameplay는 `Planned`이며 광고·운영·배포·gameplay 준비 값은 모두 false다. 새 `RegionExperiencePackages` 플래그도 기본 비활성이다.
+- 공유 계약·UseCase·Controller·기능 플래그와 기존 행정동/운영 장면 회귀 집중 시험 21/21, 변경 경로 한정 Fast가 통과했다(`artifacts/local/validation/20260913-092935`). Task의 두 solution build 오류·경고 0과 Simulation 전체 1,913/1,913도 통과했다. 서버 전체는 5,197건 중 5,190건 통과·기존 작업트리 관련 7건 실패로 완료 관문이 닫히지 않았다(`artifacts/local/validation/20260913-093030`): 주거공동체/농장 World 관점 metadata 3, 기존 농수산 액션 명명 1, 아키텍처 문구 1, WebApp capability 1, 재료 화면 CSS 1이며 이번 지역 패키지 경로 실패는 없다. RDB/MongoDB 쓰기, Simulation·Unity·Scene, Steamworks/CDN, 실제 다운로드·광고·서비스·공개 출시는 수행하지 않았다. 기존 사가정 공간·방어 작업과 다른 작업트리 변경은 보존했다.
+
 ## 사가정역 Synty 혼합 디오라마 첫 구현 (2026-09-13)
 
 - [사가정 공간감 목표와 첫 구현 r16](Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/spatial-depth-visual-target.r16.md)에 따라 별도 Unity 저장소의 canonical `SimulationWorldShell`을 고도화했다. `sagajeong-synty-visual.r1` 대장이 전체 후보120동을 결정적으로 골라 실제 `PolygonCity` Prefab 크기와 0.8~1.25 균일 배율·높이 오차10%를 검사한다. 90동은 단일 `Synty VisualRoot · 표현 전용` 아래에 표시하고 맞지 않는30동은 원문 외곽 Mesh로 유지한다. 역세권150m 표본은13/13이 조건을 통과했다.

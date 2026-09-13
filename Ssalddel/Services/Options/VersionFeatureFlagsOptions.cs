@@ -38,6 +38,8 @@ public sealed class VersionFeatureFlagsOptions
 
     public bool OperationalWorldObservationWorkflow { get; set; }
 
+    public bool RegionExperiencePackages { get; set; }
+
     public bool AdministrativeDongDioramaObservation { get; set; }
 
     public bool LocalDioramaSponsorship { get; set; }

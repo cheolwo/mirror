@@ -199,6 +199,8 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I재고현황UseCase, 재고현황UseCase>();
         services.AddScoped<I창고WorldSnapshot조회UseCase, 창고WorldSnapshot조회UseCase>();
         services.AddScoped<I운영지역장면조회UseCase, 운영지역장면조회UseCase>();
+        services.AddSingleton<I지역ExperiencePackageCatalog, 지역ExperiencePackageCatalog>();
+        services.AddScoped<I지역ExperiencePackage조회UseCase, 지역ExperiencePackage조회UseCase>();
         services.AddSingleton<I행정동디오라마ProjectionStore, Mongo행정동디오라마ProjectionStore>();
         services.AddScoped<지역디오라마표시LedgerService>();
         services.AddScoped<I지역디오라마표시LedgerService>(provider => provider.GetRequiredService<지역디오라마표시LedgerService>());

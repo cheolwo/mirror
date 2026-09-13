@@ -7,6 +7,24 @@ namespace Ssalddel.Tests.Services.Versioning;
 public sealed class VersionFeatureFlagServiceTests
 {
     [Fact]
+    public void 지역ExperiencePackage는_기존디오라마나운영관찰과분리된명시적Flag로만연다()
+    {
+        var existingLayersOnly = CreateService(new VersionFeatureFlagsOptions
+        {
+            AdministrativeDongDioramaObservation = true,
+            OperationalWorldObservationWorkflow = true
+        });
+        var opened = CreateService(new VersionFeatureFlagsOptions
+        {
+            RegionExperiencePackages = true
+        });
+
+        Assert.False(existingLayersOnly.IsEnabled(VersionFeatureFlagKeys.RegionExperiencePackages));
+        Assert.True(opened.IsEnabled(VersionFeatureFlagKeys.RegionExperiencePackages));
+        Assert.True(opened.GetAll()[VersionFeatureFlagKeys.RegionExperiencePackages]);
+    }
+
+    [Fact]
     public void 운영지역장면은_다른업무Flag와분리된_명시적관찰Flag로만연다()
     {
         var closed = CreateService(new VersionFeatureFlagsOptions

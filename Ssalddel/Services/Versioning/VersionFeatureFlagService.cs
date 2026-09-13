@@ -34,6 +34,7 @@ public sealed class VersionFeatureFlagService : IVersionFeatureFlagService
             VersionFeatureFlagKeys.FoodDeliveryV30 => IsFoodDeliveryEnabled(flags),
             VersionFeatureFlagKeys.FoodDeliveryWorkflow => IsFoodDeliveryEnabled(flags),
             VersionFeatureFlagKeys.OperationalWorldObservationWorkflow => flags.OperationalWorldObservationWorkflow,
+            VersionFeatureFlagKeys.RegionExperiencePackages => flags.RegionExperiencePackages,
             VersionFeatureFlagKeys.AdministrativeDongDioramaObservation => flags.AdministrativeDongDioramaObservation,
             VersionFeatureFlagKeys.LocalDioramaSponsorship => flags.AdministrativeDongDioramaObservation && flags.LocalDioramaSponsorship,
             VersionFeatureFlagKeys.SsalddelMartV35 => IsSsalddelMartEnabled(flags),
@@ -58,6 +59,7 @@ public sealed class VersionFeatureFlagService : IVersionFeatureFlagService
             [VersionFeatureFlagKeys.HrParticipationWorkflow] = IsHrParticipationEnabled(flags),
             [VersionFeatureFlagKeys.FoodDeliveryWorkflow] = IsFoodDeliveryEnabled(flags),
             [VersionFeatureFlagKeys.OperationalWorldObservationWorkflow] = flags.OperationalWorldObservationWorkflow,
+            [VersionFeatureFlagKeys.RegionExperiencePackages] = flags.RegionExperiencePackages,
             [VersionFeatureFlagKeys.AdministrativeDongDioramaObservation] = flags.AdministrativeDongDioramaObservation,
             [VersionFeatureFlagKeys.LocalDioramaSponsorship] = flags.AdministrativeDongDioramaObservation && flags.LocalDioramaSponsorship,
             [VersionFeatureFlagKeys.SsalddelMartWorkflow] = IsSsalddelMartEnabled(flags),
@@ -140,6 +142,8 @@ public static class VersionFeatureFlagKeys
     public const string FoodDeliveryWorkflow = nameof(FoodDeliveryWorkflow);
 
     public const string OperationalWorldObservationWorkflow = nameof(OperationalWorldObservationWorkflow);
+
+    public const string RegionExperiencePackages = nameof(RegionExperiencePackages);
 
     public const string AdministrativeDongDioramaObservation = nameof(AdministrativeDongDioramaObservation);
 
