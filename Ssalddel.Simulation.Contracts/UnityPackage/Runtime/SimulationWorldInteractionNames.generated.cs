@@ -82,6 +82,7 @@ namespace Ssalddel.Simulation.Contracts
             new Simulation세계상호작용이름Definition("WI-CITY-SYNTHETIC-FREIGHT-LOAD", "CITY", "도심 운영", 25, "화물차 상차", "ActorIntent", "Loaded", "Atomic", "Contextual", "ExecutionContext", false),
             new Simulation세계상호작용이름Definition("WI-CITY-SYNTHETIC-FREIGHT-UNLOAD", "CITY", "도심 운영", 26, "마트 화물 하차", "ActorIntent", "Unloaded", "Atomic", "Contextual", "ExecutionContext", false),
             new Simulation세계상호작용이름Definition("WI-CITY-SYNTHETIC-MART-INBOUND", "CITY", "도심 운영", 27, "마트 검수 입고", "ActorIntent", "Received", "Atomic", "Contextual", "ExecutionContext", false),
+            new Simulation세계상호작용이름Definition("WI-CITY-STATION-DEFENSE-ASSIGN", "CITY", "도심 운영", 28, "역 방어 준비 인원 배치", "ActorIntent", "DefenseUnitAssigned", "Atomic", "Contextual", "ExecutionContext", false),
             new Simulation세계상호작용이름Definition("WI-COMMUNITY-VISITOR-STAY", "COMMUNITY", "공동체 방문·관계", 1, "방문자 임시 체류 결정", "ActorIntent", "CommunityVisitorStayDecisionRecorded", "AtomicBundle", "Yin", "Fixed", false),
             new Simulation세계상호작용이름Definition("WI-COMMUNITY-COOPERATION-PROPOSE", "COMMUNITY", "공동체 방문·관계", 2, "공동체 협력 제안", "ActorIntent", "CooperationProposed", "Atomic", "Contextual", "ExecutionContext", false),
             new Simulation세계상호작용이름Definition("WI-COMMUNITY-ENTRANCE-POLICY-SET", "COMMUNITY", "공동체 방문·관계", 3, "공동체 출입 정책 설정", "ActorIntent", "EntrancePolicySet", "Atomic", "Contextual", "ExecutionContext", false),

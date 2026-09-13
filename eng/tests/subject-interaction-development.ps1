@@ -96,7 +96,7 @@ if ($positiveSecond.ExitCode -ne 0 -or $firstJson -cne $secondJson -or $firstMar
 }
 
 $blockedSubjects = $baseSubjects | ConvertTo-Json -Depth 40 | ConvertFrom-Json
-$blockedSubjects.items[0].statusCode = 'Blocked'
+@($blockedSubjects.items | Where-Object subjectStableId -eq $positiveBinding.subjectStableId)[0].statusCode = 'Blocked'
 $blockedSubjectsPath = Join-Path $fixtureRoot 'blocked-subjects.json'
 Write-Json $blockedSubjectsPath $blockedSubjects
 $blockedPolicy = $basePolicy | ConvertTo-Json -Depth 40 | ConvertFrom-Json

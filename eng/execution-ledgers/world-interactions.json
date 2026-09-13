@@ -1,7 +1,7 @@
 {
   "catalogKey": "simulation-world-interactions",
   "schemaVersion": "5",
-  "revision": "simulation-world-interactions.r48",
+  "revision": "simulation-world-interactions.r49",
   "lastVerifiedDate": "2026-09-07",
   "defaultImplementationTargetStage": "E3",
   "defaultIntegrationTargetStage": "E7",
@@ -31,6 +31,76 @@
     "COMMUNITY": "공동체 방문·관계"
   },
   "items": [
+    {
+      "id": "WI-CITY-STATION-DEFENSE-ASSIGN",
+      "groupCode": "CITY",
+      "sequence": 28,
+      "title": "역 방어 준비 인원 배치",
+      "kind": "Command",
+      "originCode": "SimulationNative",
+      "controlPolicyCode": "PlayerDirect",
+      "worldAction": "가상 방어 인원을 허용된 옥상 자리 한 곳에 배치한다.",
+      "startStateCodes": [
+        "DefensePreparing"
+      ],
+      "completionStateCodes": [
+        "DefenseUnitAssigned"
+      ],
+      "actorRequirements": [
+        "가상 지휘자"
+      ],
+      "spatialRequirements": [
+        "동결 지도와 결속된 모판 옥상 자리"
+      ],
+      "resourceRequirements": [
+        "가상 인원 하나"
+      ],
+      "reservationKinds": [],
+      "previewRule": "세션·판본·허용 자리를 검사하되 상태는 바꾸지 않는다.",
+      "confirmRule": "CommandId와 ExpectedRevision 검증 후 인원 하나의 자리와 행위 기록을 한 번 갱신한다.",
+      "taskRule": "준비 단계 즉시 배치. 이동·사격·전투는 제외.",
+      "effectCodes": [
+        "DefenseUnitAssigned"
+      ],
+      "cancellationPolicy": "미리보기 취소는 무변경. 다른 자리 확정 시 기존 자리 해제.",
+      "blockReasonCodes": [
+        "DefenseSlotUnknown",
+        "DefenseRevisionConflict",
+        "DefenseCommandConflict",
+        "DefenseSessionMismatch"
+      ],
+      "predecessorWiIds": [],
+      "successorWiIds": [],
+      "actionCode": "StationDefenseAssign",
+      "ruleRevision": "station-defense-preparation.r1",
+      "saveReplayPayloadCodes": [
+        "PreparationAssign"
+      ],
+      "httpContracts": [
+        "Pending:RemoteHostBinding"
+      ],
+      "existingImplementationReferences": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "implementation": {
+        "status": "InProgress",
+        "currentStage": "E0",
+        "targetStage": "E3",
+        "evidence": ["docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/implementation.r1.md"]
+      },
+      "integration": {
+        "status": "InProgress",
+        "currentStage": "E0",
+        "targetStage": "E7",
+        "evidence": ["docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/implementation.r1.md"]
+      },
+      "sourceReferences": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "notes": [
+        "메모리 전용 준비 모판. 실제 건물 출입·전투·경제 권위 없음."
+      ]
+    },
     {
       "id": "WI-CITY-SYNTHETIC-LIFE-SHIFT",
       "groupCode": "CITY",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "world-interaction-polarity-quadrants.v1",
-  "revision": "world-interaction-polarity-quadrants.r15",
+  "revision": "world-interaction-polarity-quadrants.r16",
   "lastVerifiedDate": "2026-09-05",
   "worldInteractionCatalogPath": "eng/execution-ledgers/world-interactions.json",
   "playableLoopCatalogPath": "eng/execution-ledgers/playable-loops.json",
@@ -127,6 +127,7 @@
     "WI-REFLECT-HANS-FARM-CRISIS-DEBRIEF"
   ],
   "contextualWorldInteractionIds": [
+    "WI-CITY-STATION-DEFENSE-ASSIGN",
     "WI-CITY-SYNTHETIC-LIFE-SHIFT",
     "WI-CITY-SYNTHETIC-LIFE-REST",
     "WI-CITY-SYNTHETIC-DEPOT-INSPECT",

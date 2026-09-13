@@ -1,6 +1,6 @@
 {
   "schemaVersion": "simulation-world-interaction-responsibilities.v1",
-  "revision": "simulation-world-interaction-responsibilities.r16",
+  "revision": "simulation-world-interaction-responsibilities.r17",
   "lastVerifiedDate": "2026-09-05",
   "principles": {
     "oneIntentPerWorldInteraction": true,
@@ -28,6 +28,7 @@
     "ActorResponsibilityMigrationRequired"
   ],
   "primaryOutcomeCodes": {
+    "WI-CITY-STATION-DEFENSE-ASSIGN": "DefenseUnitAssigned",
     "WI-CITY-SYNTHETIC-LIFE-SHIFT": "Working",
     "WI-CITY-SYNTHETIC-LIFE-REST": "Resting",
     "WI-CITY-SYNTHETIC-DEPOT-INSPECT": "Inspected",

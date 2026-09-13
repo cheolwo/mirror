@@ -1,9 +1,9 @@
 {
   "schemaVersion": "mirror-subject-interaction-development-output.v1",
-  "sourceRevision": "mirror-subject-interaction-development.r3",
-  "subjectCatalogRevision": "mirror-gameplay-subject-catalog.r2",
-  "worldInteractionCatalogRevision": "simulation-world-interactions.r48",
-  "legacyGoalLedgerRevision": "codex-playable-loop-goals.r143",
+  "sourceRevision": "mirror-subject-interaction-development.r4",
+  "subjectCatalogRevision": "mirror-gameplay-subject-catalog.r3",
+  "worldInteractionCatalogRevision": "simulation-world-interactions.r49",
+  "legacyGoalLedgerRevision": "codex-playable-loop-goals.r144",
   "optionalPlayableLoopCatalogRevision": "playable-loops.r44",
   "developmentOrder": [
     "SubjectFoundation",
@@ -13,14 +13,89 @@
     "OptionalPlayableLoopValidation"
   ],
   "counts": {
-    "readySubjects": 18,
-    "worldInteractions": 133,
-    "interactionGoals": 60,
-    "nativeLooplessGoals": 37,
+    "readySubjects": 21,
+    "worldInteractions": 134,
+    "interactionGoals": 61,
+    "nativeLooplessGoals": 38,
     "legacyProjectedGoals": 22,
     "optionalLoopBindings": 23
   },
   "subjects": [
+    {
+      "subjectStableId": "subject:station-defense-commander.v1",
+      "title": "가상 역 방어 지휘자",
+      "subjectKindCode": "PlayerActor",
+      "roleCodes": [
+        "Commander"
+      ],
+      "authorityStateOwnerCode": "StationDefensePreparationSession",
+      "initialStateResolutionCode": "ExplicitPreparationFixture",
+      "persistenceBoundaryRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "runtimeResolutionRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "saveReplayIdentityRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "sourceRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "statusCode": "Ready",
+      "openGapRefs": [],
+      "boundary": "메모리 전용 가상 준비 세션. 주체 계약 Ready는 실제 World 배치 증거 아님."
+    },
+    {
+      "subjectStableId": "subject:station-defense-unit.v1",
+      "title": "가상 역 방어 인원",
+      "subjectKindCode": "NpcActor",
+      "roleCodes": [
+        "Defender"
+      ],
+      "authorityStateOwnerCode": "StationDefensePreparationSession",
+      "initialStateResolutionCode": "ExplicitPreparationFixture",
+      "persistenceBoundaryRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "runtimeResolutionRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "saveReplayIdentityRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "sourceRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "statusCode": "Ready",
+      "openGapRefs": [],
+      "boundary": "메모리 전용 가상 준비 세션. 주체 계약 Ready는 실제 World 배치 증거 아님."
+    },
+    {
+      "subjectStableId": "subject:station-defense-roof-slot.v1",
+      "title": "모판 옥상 배치 자리",
+      "subjectKindCode": "Facility",
+      "roleCodes": [
+        "PlacementSlot"
+      ],
+      "authorityStateOwnerCode": "StationDefensePreparationSession",
+      "initialStateResolutionCode": "ExplicitPreparationFixture",
+      "persistenceBoundaryRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "runtimeResolutionRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "saveReplayIdentityRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "sourceRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "statusCode": "Ready",
+      "openGapRefs": [],
+      "boundary": "메모리 전용 가상 준비 세션. 주체 계약 Ready는 실제 World 배치 증거 아님."
+    },
     {
       "subjectStableId": "subject:synthetic-neighborhood-workforce.v1",
       "title": "합성 도심 생활 주체·화물 작업자",
@@ -493,6 +568,30 @@
     }
   ],
   "worldInteractions": [
+    {
+      "worldInteractionId": "WI-CITY-STATION-DEFENSE-ASSIGN",
+      "title": "역 방어 준비 인원 배치",
+      "controlPolicyCode": "PlayerDirect",
+      "subjectStableId": "subject:player-controlled-actor.v1",
+      "subjectKindCode": "PlayerActor",
+      "subjectBindings": [
+        {
+          "roleCode": "Actor",
+          "subjectStableId": "subject:player-controlled-actor.v1"
+        },
+        {
+          "roleCode": "DirectTarget",
+          "subjectStableId": "subject:authoritative-interaction-target.v1"
+        }
+      ],
+      "directCompletionStateCodes": [
+        "DefenseUnitAssigned"
+      ],
+      "directEffectCodes": [
+        "DefenseUnitAssigned"
+      ],
+      "subjectFoundationStatusCode": "Ready"
+    },
     {
       "worldInteractionId": "WI-CITY-SYNTHETIC-LIFE-SHIFT",
       "title": "근무 복귀",
@@ -4218,6 +4317,33 @@
         "idempotencyRefs": [],
         "saveReplayRefs": [],
         "notApplicableReason": "기존 Goal은 현행 WI의 completionStateCodes와 effectCodes를 직접 결과로 보존하며 별도 1-hop 파생 작용을 자동 생성하지 않는다."
+      }
+    },
+    {
+      "goalStableId": "interaction-goal:station-defense-assign.v1",
+      "goalStateCode": "Active",
+      "worldInteractionId": "WI-CITY-STATION-DEFENSE-ASSIGN",
+      "subjectBindingRefs": [
+        "subject:player-controlled-actor.v1",
+        "subject:authoritative-interaction-target.v1",
+        "subject:station-defense-commander.v1",
+        "subject:station-defense-unit.v1",
+        "subject:station-defense-roof-slot.v1"
+      ],
+      "optionalPlayableLoopValidationRef": "",
+      "planningGate": {
+        "topicStableId": "topic:station-defense-preparation.v1",
+        "designDocumentRef": "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md",
+        "designRevision": "station-defense-preparation.r1",
+        "designHashSha256": "DD3975C0C7D901B0AAEBE89D4271ECE8F8E5B6E6274B93D3728231640222388F",
+        "statusCode": "Approved",
+        "approvalEvidenceRef": "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      },
+      "compatibilitySourceCode": "NativeInteractionGoal",
+      "derivedEffectBinding": {
+        "applicabilityCode": "NotApplicable",
+        "statusCode": "NotApplicable",
+        "notApplicableReason": "준비 인원 배치 직접 결과만 구현. 전투·피해·성장·보상은 범위 밖."
       }
     },
     {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "mirror-gameplay-subject-catalog.v1",
-  "revision": "mirror-gameplay-subject-catalog.r2",
+  "revision": "mirror-gameplay-subject-catalog.r3",
   "principles": {
     "subjectDefinitionPrecedesInteractionGoal": true,
     "subjectDefinitionIsNotRuntimeInstanceEvidence": true,
@@ -36,6 +36,81 @@
     "sourceRefs"
   ],
   "items": [
+    {
+      "subjectStableId": "subject:station-defense-commander.v1",
+      "title": "가상 역 방어 지휘자",
+      "subjectKindCode": "PlayerActor",
+      "roleCodes": [
+        "Commander"
+      ],
+      "authorityStateOwnerCode": "StationDefensePreparationSession",
+      "initialStateResolutionCode": "ExplicitPreparationFixture",
+      "persistenceBoundaryRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "runtimeResolutionRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "saveReplayIdentityRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "sourceRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "statusCode": "Ready",
+      "openGapRefs": [],
+      "boundary": "메모리 전용 가상 준비 세션. 주체 계약 Ready는 실제 World 배치 증거 아님."
+    },
+    {
+      "subjectStableId": "subject:station-defense-unit.v1",
+      "title": "가상 역 방어 인원",
+      "subjectKindCode": "NpcActor",
+      "roleCodes": [
+        "Defender"
+      ],
+      "authorityStateOwnerCode": "StationDefensePreparationSession",
+      "initialStateResolutionCode": "ExplicitPreparationFixture",
+      "persistenceBoundaryRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "runtimeResolutionRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "saveReplayIdentityRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "sourceRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "statusCode": "Ready",
+      "openGapRefs": [],
+      "boundary": "메모리 전용 가상 준비 세션. 주체 계약 Ready는 실제 World 배치 증거 아님."
+    },
+    {
+      "subjectStableId": "subject:station-defense-roof-slot.v1",
+      "title": "모판 옥상 배치 자리",
+      "subjectKindCode": "Facility",
+      "roleCodes": [
+        "PlacementSlot"
+      ],
+      "authorityStateOwnerCode": "StationDefensePreparationSession",
+      "initialStateResolutionCode": "ExplicitPreparationFixture",
+      "persistenceBoundaryRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "runtimeResolutionRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "saveReplayIdentityRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "sourceRefs": [
+        "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      ],
+      "statusCode": "Ready",
+      "openGapRefs": [],
+      "boundary": "메모리 전용 가상 준비 세션. 주체 계약 Ready는 실제 World 배치 증거 아님."
+    },
     {
       "subjectStableId": "subject:synthetic-neighborhood-workforce.v1",
       "title": "합성 도심 생활 주체·화물 작업자",

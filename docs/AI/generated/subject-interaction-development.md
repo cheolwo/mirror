@@ -1,11 +1,11 @@
 # 주체·상호작용 중심 개발 상태
 
-- 기준 판본: `mirror-subject-interaction-development.r3`
-- 준비된 주체: `18`
-- 주체가 결속된 WI: `133`
-- 상호작용 Goal: `60`
+- 기준 판본: `mirror-subject-interaction-development.r4`
+- 준비된 주체: `21`
+- 주체가 결속된 WI: `134`
+- 상호작용 Goal: `61`
 - 기존 Goal 호환 투영: `22`
-- Loop 없는 신규 Goal: `37`
+- Loop 없는 신규 Goal: `38`
 
 개발 순서: `SubjectFoundation → InteractionCore → DirectResult → DerivedEffects → OptionalPlayableLoopValidation`
 
@@ -33,6 +33,7 @@
 | `interaction-goal:farm-player-placement.wi-world-03.v1` | `WI-WORLD-03` | subject:player-controlled-actor.v1<br>subject:authoritative-interaction-target.v1 | `playable-loop:farm-player-placement.v1` | NotApplicable | Queued |
 | `interaction-goal:nature-hans-farm-fence-restoration.wi-nature-19.v1` | `WI-NATURE-19` | subject:player-controlled-actor.v1<br>subject:authoritative-interaction-target.v1 | `playable-loop:nature-hans-farm-fence-restoration.v1` | NotApplicable | Queued |
 | `interaction-goal:town-arcana-context.wi-card-01.v1` | `WI-CARD-01` | subject:player-controlled-actor.v1<br>subject:authoritative-interaction-target.v1 | `playable-loop:town-arcana-context.v1` | NotApplicable | Queued |
+| `interaction-goal:station-defense-assign.v1` | `WI-CITY-STATION-DEFENSE-ASSIGN` | subject:player-controlled-actor.v1<br>subject:authoritative-interaction-target.v1<br>subject:station-defense-commander.v1<br>subject:station-defense-unit.v1<br>subject:station-defense-roof-slot.v1 | 없음 | NotApplicable | Active |
 | `interaction-goal:neighborhood-life-life-shift.v1` | `WI-CITY-SYNTHETIC-LIFE-SHIFT` | subject:synthetic-neighborhood-workforce.v1<br>subject:npc-routine-actor.v1<br>subject:authoritative-interaction-target.v1 | 없음 | NotApplicable | Active |
 | `interaction-goal:neighborhood-life-life-rest.v1` | `WI-CITY-SYNTHETIC-LIFE-REST` | subject:synthetic-neighborhood-workforce.v1<br>subject:npc-routine-actor.v1<br>subject:authoritative-interaction-target.v1 | 없음 | NotApplicable | Active |
 | `interaction-goal:neighborhood-life-depot-inspect.v1` | `WI-CITY-SYNTHETIC-DEPOT-INSPECT` | subject:synthetic-neighborhood-workforce.v1<br>subject:npc-routine-actor.v1<br>subject:authoritative-interaction-target.v1 | 없음 | NotApplicable | Active |

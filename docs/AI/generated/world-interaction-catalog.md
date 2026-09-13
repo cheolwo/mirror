@@ -2,16 +2,16 @@
 
 > 이 문서는 `eng/execution-ledgers/world-interactions.json`와 참조된 단일 책임·조립 흐름·음양 사분면 대장에서 자동 생성된다. 직접 수정하지 않는다.
 
-- 대장 개정: `simulation-world-interactions.r48`
+- 대장 개정: `simulation-world-interactions.r49`
 - 증거 단계 개정: `simulation-evidence-stages.r14`
 - WI 발생원 개정: `world-interaction-trigger-sources.r11`
-- WI 단일 책임 개정: `simulation-world-interaction-responsibilities.r16`
+- WI 단일 책임 개정: `simulation-world-interaction-responsibilities.r17`
 - WI 조립 흐름 개정: `simulation-world-interaction-flows.r4`
-- WI 음양·수행주체 사분면 개정: `world-interaction-polarity-quadrants.r15`
+- WI 음양·수행주체 사분면 개정: `world-interaction-polarity-quadrants.r16`
 - 마지막 확인일: `2026-09-07`
 - 기본 구현 완료선: `E3 자동 시험 통과`
 - 실제 공간·공공데이터·Unity 통합 목표선: `E7 실제 플레이 폐루프`
-- 전체 항목: `133`
+- 전체 항목: `134`
 
 ## 읽는 법
 
@@ -25,7 +25,7 @@ WI는 한 행위자의 한 의도와 하나의 주요 권위 결과를 관통하
 
 | 분류 | 수 |
 | --- | ---: |
-| 명시적 명령 | 120 |
+| 명시적 명령 | 121 |
 | 자동 상태 전이 | 12 |
 | 공유 정책 | 1 |
 
@@ -76,6 +76,7 @@ WI는 한 행위자의 한 의도와 하나의 주요 권위 결과를 관통하
 | 화물차 상차 · `WI-CITY-SYNTHETIC-FREIGHT-LOAD` | 25 | 행위자 의도 | 단일 책임 | 실행 문맥 판정 | `Loaded` | NpcRoutine | PlayerDriven, NpcDriven | SyntheticProfilePreconditions → Loaded | 미착수 · `E0→E3` | 미선정 · `E0→E7` |
 | 마트 화물 하차 · `WI-CITY-SYNTHETIC-FREIGHT-UNLOAD` | 26 | 행위자 의도 | 단일 책임 | 실행 문맥 판정 | `Unloaded` | NpcRoutine | PlayerDriven, NpcDriven | SyntheticProfilePreconditions → Unloaded | 미착수 · `E0→E3` | 미선정 · `E0→E7` |
 | 마트 검수 입고 · `WI-CITY-SYNTHETIC-MART-INBOUND` | 27 | 행위자 의도 | 단일 책임 | 실행 문맥 판정 | `Received` | NpcRoutine | PlayerDriven, NpcDriven | SyntheticProfilePreconditions → Received | 미착수 · `E0→E3` | 미선정 · `E0→E7` |
+| 역 방어 준비 인원 배치 · `WI-CITY-STATION-DEFENSE-ASSIGN` | 28 | 행위자 의도 | 단일 책임 | 실행 문맥 판정 | `DefenseUnitAssigned` | PlayerDirect | PlayerDriven, NpcDriven | DefensePreparing → DefenseUnitAssigned | 진행 중 · `E0→E3` | 진행 중 · `E0→E7` |
 
 ## 공동체 방문·관계 작업군 (`COMMUNITY`)
 

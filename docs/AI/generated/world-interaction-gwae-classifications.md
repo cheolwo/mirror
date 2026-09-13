@@ -1,9 +1,9 @@
 # WI 괘성 분류 목록
 
 - 분류 입력 판본: `mirror-world-interaction-gwae-classifications.r10`
-- WI 대장 판본: `simulation-world-interactions.r48`
-- 전체: 133, 개별 의미 명시 검토: 81, 검토된 영역 의미 규칙 적용: 52
-- E5 역할 객체·행위 정의 필수: 133, 역할 객체 표본 프로필: 2
+- WI 대장 판본: `simulation-world-interactions.r49`
+- 전체: 134, 개별 의미 명시 검토: 81, 검토된 영역 의미 규칙 적용: 53
+- E5 역할 객체·행위 정의 필수: 134, 역할 객체 표본 프로필: 2
 - 업무 의미 대표 괘 프로필: 5 (코드 계보: `food-workflow-lineage`)
 - 오행 업무 엔진 조립 프로필: 1, 주축 토(간괘), 보조 수(감괘)
 - 권위 상태 변화를 소유하거나 일으키는 모든 세계 객체의 역할·행위 정의는 E5 진입 필수 조건이다. 이 목록만으로 E5를 자동 승격하지 않는다.
@@ -30,6 +30,7 @@
 
 | WI | 제목 | E5 역할 객체 | 권위 행위·전환 | 행위괘 | 작용괘 | 대상괘 | 보조괘 | 오행 관계 | 상태 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `WI-CITY-STATION-DEFENSE-ASSIGN` | 역 방어 준비 인원 배치 | `Required/PlayerActor` | `StationDefenseAssign`<br>DefensePreparing → DefenseUnitAssigned<br>효과: DefenseUnitAssigned | 수(감괘) | - | 수(감괘) | - | - | `ReviewedByMeaningRule` |
 | `WI-CITY-SYNTHETIC-LIFE-SHIFT` | 근무 복귀 | `Required/NpcActor` | `SyntheticLIFESHIFT`<br>SyntheticProfilePreconditions → Working<br>효과: Working | 수(감괘) | - | 수(감괘) | - | - | `ReviewedByMeaningRule` |
 | `WI-CITY-SYNTHETIC-LIFE-REST` | 인계 후 휴식 | `Required/NpcActor` | `SyntheticLIFEREST`<br>SyntheticProfilePreconditions → Resting<br>효과: Resting | 수(감괘) | - | 수(감괘) | - | - | `ReviewedByMeaningRule` |
 | `WI-CITY-SYNTHETIC-DEPOT-INSPECT` | 보충창고 입고 검수 | `Required/NpcActor` | `SyntheticDEPOTINSPECT`<br>SyntheticProfilePreconditions → Inspected<br>효과: Inspected | 수(감괘) | - | 수(감괘) | - | - | `ReviewedByMeaningRule` |

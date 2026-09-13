@@ -1,6 +1,6 @@
 {
   "schemaVersion": "mirror-subject-interaction-development.v1",
-  "revision": "mirror-subject-interaction-development.r3",
+  "revision": "mirror-subject-interaction-development.r4",
   "subjectCatalogPath": "eng/execution-ledgers/gameplay-subjects.json",
   "worldInteractionCatalogPath": "eng/execution-ledgers/world-interactions.json",
   "roleObjectClassificationPath": "docs/AI/generated/world-interaction-gwae-classifications.json",
@@ -71,6 +71,34 @@
     "derivedEffectReason": "기존 Goal은 현행 WI의 completionStateCodes와 effectCodes를 직접 결과로 보존하며 별도 1-hop 파생 작용을 자동 생성하지 않는다."
   },
   "nativeInteractionGoals": [
+    {
+      "goalStableId": "interaction-goal:station-defense-assign.v1",
+      "worldInteractionId": "WI-CITY-STATION-DEFENSE-ASSIGN",
+      "goalStateCode": "Active",
+      "subjectBindingRefs": [
+        "subject:player-controlled-actor.v1",
+        "subject:authoritative-interaction-target.v1",
+        "subject:station-defense-commander.v1",
+        "subject:station-defense-unit.v1",
+        "subject:station-defense-roof-slot.v1"
+      ],
+      "optionalPlayableLoopValidationRef": "",
+      "workOrderRef": "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/preparation.e7-work-order.json",
+      "deliveryCap": "E7",
+      "planningGate": {
+        "topicStableId": "topic:station-defense-preparation.v1",
+        "designDocumentRef": "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md",
+        "designRevision": "station-defense-preparation.r1",
+        "designHashSha256": "DD3975C0C7D901B0AAEBE89D4271ECE8F8E5B6E6274B93D3728231640222388F",
+        "statusCode": "Approved",
+        "approvalEvidenceRef": "docs/AI/Planning/시스템/PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/README.md"
+      },
+      "derivedEffectBinding": {
+        "applicabilityCode": "NotApplicable",
+        "statusCode": "NotApplicable",
+        "notApplicableReason": "준비 인원 배치 직접 결과만 구현. 전투·피해·성장·보상은 범위 밖."
+      }
+    },
     {
       "goalStableId": "interaction-goal:neighborhood-life-life-shift.v1",
       "worldInteractionId": "WI-CITY-SYNTHETIC-LIFE-SHIFT",

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "mirror-world-interaction-gwae-classification-output.v3",
   "sourceRevision": "mirror-world-interaction-gwae-classifications.r10",
-  "worldInteractionCatalogRevision": "simulation-world-interactions.r48",
+  "worldInteractionCatalogRevision": "simulation-world-interactions.r49",
   "workflowLineagePath": "eng/work-areas/simulation-unity.json",
   "workflowLineageFeatureKey": "food-workflow-lineage",
   "classificationMeaning": "업무 의미 대표 괘와 원자 WI의 역할·행위·대상·전환을 서로 다른 층으로 추적하는 비권위 괘성 메타데이터다. 대표 괘는 원자 WI 분류를 덮어쓰지 않으며 괘성은 WI 권위, 보상, 실행 순서 또는 E5 실제 증거를 대신하지 않는다.",
@@ -118,10 +118,10 @@
     "isExecutionAuthority": false
   },
   "counts": {
-    "total": 133,
+    "total": 134,
     "reviewedExplicit": 81,
-    "reviewedByMeaningRule": 52,
-    "e5RoleObjectActionRequired": 133,
+    "reviewedByMeaningRule": 53,
+    "e5RoleObjectActionRequired": 134,
     "roleObjectActionProfiles": 2,
     "workflowMeaningProfiles": 5,
     "engineCompositionProfiles": 1
@@ -188,6 +188,45 @@
     }
   ],
   "items": [
+    {
+      "wiId": "WI-CITY-STATION-DEFENSE-ASSIGN",
+      "groupCode": "CITY",
+      "title": "역 방어 준비 인원 배치",
+      "subjectKind": "Player",
+      "actionGwae": "GAM",
+      "operationMode": "None",
+      "operationGwae": null,
+      "operationGwaeByActionCode": null,
+      "targetMode": "Fixed",
+      "targetGwae": "GAM",
+      "additionalTargetGwae": null,
+      "supportMode": "None",
+      "supportGwae": null,
+      "elementRelations": [],
+      "e5RoleObjectActionGate": {
+        "applicabilityCode": "Required",
+        "worldObjectScopeCode": "AllWorldObjects",
+        "roleObjectKindCode": "PlayerActor",
+        "roleObjectBindingModeCode": "ResolveFromAuthorityExecutionContext",
+        "actionCode": "StationDefenseAssign",
+        "startStateCodes": [
+          "DefensePreparing"
+        ],
+        "completionStateCodes": [
+          "DefenseUnitAssigned"
+        ],
+        "effectCodes": [
+          "DefenseUnitAssigned"
+        ],
+        "actorRequirementRefs": [
+          "가상 지휘자"
+        ],
+        "notApplicableReason": ""
+      },
+      "classificationStatus": "ReviewedByMeaningRule",
+      "reviewRule": "city-service-information-flow",
+      "reason": "검토된 영역 의미 규칙 'city-service-information-flow'을 적용했다."
+    },
     {
       "wiId": "WI-CITY-SYNTHETIC-LIFE-SHIFT",
       "groupCode": "CITY",

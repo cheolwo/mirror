@@ -73,7 +73,7 @@ $loops = Get-Content -LiteralPath (Resolve-RepoPath ([string] $policy.optionalPl
 
 Require ([string] $subjects.schemaVersion -eq "mirror-gameplay-subject-catalog.v1") "SubjectCatalogSchemaInvalid"
 Require ([string] $worldInteractions.schemaVersion -eq "5") "WorldInteractionCatalogSchemaInvalid"
-Require ([string] $classifications.schemaVersion -eq "mirror-world-interaction-gwae-classification-output.v2") "ClassificationSchemaInvalid"
+Require (@("mirror-world-interaction-gwae-classification-output.v2", "mirror-world-interaction-gwae-classification-output.v3") -contains [string] $classifications.schemaVersion) "ClassificationSchemaInvalid"
 Require ([string] $classifications.worldInteractionCatalogRevision -eq [string] $worldInteractions.revision) "ClassificationWorldInteractionRevisionStale"
 Require ([string] $loops.schemaVersion -eq "ssalddel-playable-loop-catalog.v6") "OptionalLoopCatalogSchemaInvalid"
 
