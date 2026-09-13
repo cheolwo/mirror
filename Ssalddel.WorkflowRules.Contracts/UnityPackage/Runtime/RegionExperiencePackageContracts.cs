@@ -6,6 +6,8 @@ namespace Ssalddel.WorkflowRules.Contracts
     {
         public const string SchemaVersion = "region-experience-package.v1";
         public const string CatalogSchemaVersion = "region-experience-package-catalog.v1";
+        public const string MyeonmokStationRegionStableId =
+            "world-region:kr:seoul:jungnang:myeonmok-station.r1";
         public const string SagajeongRegionStableId = "world-region:kr:seoul:jungnang:sagajeong.r1";
 
         public static bool IsRegionStableId(string value)
@@ -34,6 +36,7 @@ namespace Ssalddel.WorkflowRules.Contracts
     public static class RegionExperienceLayerKinds
     {
         public const string Geography = "Geography";
+        public const string Mobility = "Mobility";
         public const string LifeContext = "LifeContext";
         public const string RecoveryScenario = "RecoveryScenario";
         public const string Gameplay = "Gameplay";

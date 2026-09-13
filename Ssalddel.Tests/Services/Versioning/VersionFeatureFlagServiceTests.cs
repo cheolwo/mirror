@@ -61,6 +61,24 @@ public sealed class VersionFeatureFlagServiceTests
     }
 
     [Fact]
+    public void 행정동이동망은_디오라마관찰과이동망Flag가_모두켜져야연다()
+    {
+        var mobilityOnly = CreateService(new VersionFeatureFlagsOptions
+        {
+            RegionMobilityObservation = true
+        });
+        var both = CreateService(new VersionFeatureFlagsOptions
+        {
+            AdministrativeDongDioramaObservation = true,
+            RegionMobilityObservation = true
+        });
+
+        Assert.False(mobilityOnly.IsEnabled(VersionFeatureFlagKeys.RegionMobilityObservation));
+        Assert.True(both.IsEnabled(VersionFeatureFlagKeys.RegionMobilityObservation));
+        Assert.True(both.GetAll()[VersionFeatureFlagKeys.RegionMobilityObservation]);
+    }
+
+    [Fact]
     public void CommunityFoundation_CanRunWithoutDomesticTransport()
     {
         var service = CreateService(new VersionFeatureFlagsOptions

@@ -49,10 +49,62 @@ public sealed class 지역ExperiencePackageCatalog : I지역ExperiencePackageCat
     public IReadOnlyList<지역ExperiencePackageDefinition> All { get; } =
     [
         new(
+            RegionExperiencePackagePolicy.MyeonmokStationRegionStableId,
+            "면목역 1km 관찰 디오라마",
+            "면목역 중심 1km × 1km 창에 실제 근거를 사본으로 조립하고 자료 결손을 그대로 드러내는 비공개 관찰 패키지",
+            "myeonmok-station-region-experience.r1",
+            "station-area-package-registry:seoul-east.v1",
+            "seoul-east-station-area-packages.r1",
+            ["station-spatial-package:station:kr:kric:s1107:0721.private-review.r1"],
+            [
+                "region:kr:hjd:1126052000",
+                "region:kr:hjd:1126055000",
+                "region:kr:hjd:1126056500",
+                "region:kr:hjd:1126057500",
+                "region:kr:hjd:1126059000",
+                "region:kr:hjd:1126066000"
+            ],
+            ["region:kr:bjd:1126010100", "region:kr:bjd:1126010200"],
+            [
+                new(
+                    "region-layer:myeonmok-station:geography.r1",
+                    RegionExperienceLayerKinds.Geography,
+                    "면목역 1km 행정동 경계·건물·도로",
+                    "ssalddel.station-spatial-snapshot.v1",
+                    RegionExperienceLayerLoadModes.NotLoadable,
+                    RegionExperienceLayerCacheModes.None,
+                    string.Empty,
+                    true,
+                    false,
+                    []),
+                new(
+                    "region-layer:myeonmok-station:life-context.r1",
+                    RegionExperienceLayerKinds.LifeContext,
+                    "면목역 생활 맥락",
+                    "station-life-context.v1",
+                    RegionExperienceLayerLoadModes.NotLoadable,
+                    RegionExperienceLayerCacheModes.None,
+                    string.Empty,
+                    false,
+                    false,
+                    []),
+                new(
+                    "region-layer:myeonmok-station:gameplay.r1",
+                    RegionExperienceLayerKinds.Gameplay,
+                    "면목역 방어 gameplay",
+                    "region-gameplay-module.v1",
+                    RegionExperienceLayerLoadModes.NotLoadable,
+                    RegionExperienceLayerCacheModes.None,
+                    string.Empty,
+                    false,
+                    false,
+                    [])
+            ]),
+        new(
             RegionExperiencePackagePolicy.SagajeongRegionStableId,
             "사가정 생활 복구 디오라마",
             "사가정역 1km의 실제 공간 근거 위에 생활 밀도와 초기 복구 정착기 시나리오를 층별로 조립하는 첫 지역 패키지",
-            "sagajeong-region-experience.r1",
+            "sagajeong-region-experience.r2",
             "neighborhood-package-registry:seoul-east.v2",
             "seoul-east-neighborhood-packages.r2",
             ["neighborhood-spatial-package:region:kr:bjd:1126010100.v2"],
@@ -72,6 +124,20 @@ public sealed class 지역ExperiencePackageCatalog : I지역ExperiencePackageCat
                     [
                         Endpoint("Manifest", AdministrativeDongDioramaRoutes.Manifest),
                         Endpoint("Tile", AdministrativeDongDioramaRoutes.Tile)
+                    ]),
+                new(
+                    "region-layer:sagajeong:mobility.r1",
+                    RegionExperienceLayerKinds.Mobility,
+                    "사가정 1km 정적 이동망 검토 후보",
+                    RegionMobilityGraphPolicy.ManifestSchemaVersion,
+                    RegionExperienceLayerLoadModes.OnDemand,
+                    RegionExperienceLayerCacheModes.ImmutableByHash,
+                    VersionFeatureFlagKeys.RegionMobilityObservation,
+                    false,
+                    true,
+                    [
+                        Endpoint("Manifest", RegionMobilityGraphRoutes.Manifest),
+                        Endpoint("Tile", RegionMobilityGraphRoutes.Tile)
                     ]),
                 new(
                     "region-layer:sagajeong:life-context.r1",

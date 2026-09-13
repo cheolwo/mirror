@@ -99,6 +99,7 @@ public static partial class ServiceCollectionExtensions
             configuration.GetSection(CommunityActivityBoardContentOptions.SectionName));
         services.Configure<CommunityContextDiscoveryOptions>(configuration.GetSection(CommunityContextDiscoveryOptions.SectionName));
         services.Configure<VersionFeatureFlagsOptions>(configuration.GetSection(VersionFeatureFlagsOptions.SectionName));
+        services.Configure<RegionMobilityGraphOptions>(configuration.GetSection(RegionMobilityGraphOptions.SectionName));
         services.Configure<SsalddelExecutionOptions>(configuration.GetSection(SsalddelExecutionOptions.SectionName));
         services.Configure<RoleAdvertisingOptions>(configuration.GetSection(RoleAdvertisingOptions.SectionName));
         services.Configure<SalesChannelOrderSyncOptions>(configuration.GetSection(SalesChannelOrderSyncOptions.SectionName));

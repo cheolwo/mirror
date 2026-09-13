@@ -42,6 +42,8 @@ public sealed class VersionFeatureFlagsOptions
 
     public bool AdministrativeDongDioramaObservation { get; set; }
 
+    public bool RegionMobilityObservation { get; set; }
+
     public bool LocalDioramaSponsorship { get; set; }
 
     public bool SsalddelMartV35 { get; set; }

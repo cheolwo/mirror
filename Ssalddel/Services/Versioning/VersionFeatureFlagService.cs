@@ -36,6 +36,7 @@ public sealed class VersionFeatureFlagService : IVersionFeatureFlagService
             VersionFeatureFlagKeys.OperationalWorldObservationWorkflow => flags.OperationalWorldObservationWorkflow,
             VersionFeatureFlagKeys.RegionExperiencePackages => flags.RegionExperiencePackages,
             VersionFeatureFlagKeys.AdministrativeDongDioramaObservation => flags.AdministrativeDongDioramaObservation,
+            VersionFeatureFlagKeys.RegionMobilityObservation => flags.AdministrativeDongDioramaObservation && flags.RegionMobilityObservation,
             VersionFeatureFlagKeys.LocalDioramaSponsorship => flags.AdministrativeDongDioramaObservation && flags.LocalDioramaSponsorship,
             VersionFeatureFlagKeys.SsalddelMartV35 => IsSsalddelMartEnabled(flags),
             VersionFeatureFlagKeys.SsalddelMartWorkflow => IsSsalddelMartEnabled(flags),
@@ -61,6 +62,7 @@ public sealed class VersionFeatureFlagService : IVersionFeatureFlagService
             [VersionFeatureFlagKeys.OperationalWorldObservationWorkflow] = flags.OperationalWorldObservationWorkflow,
             [VersionFeatureFlagKeys.RegionExperiencePackages] = flags.RegionExperiencePackages,
             [VersionFeatureFlagKeys.AdministrativeDongDioramaObservation] = flags.AdministrativeDongDioramaObservation,
+            [VersionFeatureFlagKeys.RegionMobilityObservation] = flags.AdministrativeDongDioramaObservation && flags.RegionMobilityObservation,
             [VersionFeatureFlagKeys.LocalDioramaSponsorship] = flags.AdministrativeDongDioramaObservation && flags.LocalDioramaSponsorship,
             [VersionFeatureFlagKeys.SsalddelMartWorkflow] = IsSsalddelMartEnabled(flags),
             [VersionFeatureFlagKeys.CargoYongdalV1] = IsDomesticTransportEnabled(flags),
@@ -146,6 +148,8 @@ public static class VersionFeatureFlagKeys
     public const string RegionExperiencePackages = nameof(RegionExperiencePackages);
 
     public const string AdministrativeDongDioramaObservation = nameof(AdministrativeDongDioramaObservation);
+
+    public const string RegionMobilityObservation = nameof(RegionMobilityObservation);
 
     public const string LocalDioramaSponsorship = nameof(LocalDioramaSponsorship);
 
