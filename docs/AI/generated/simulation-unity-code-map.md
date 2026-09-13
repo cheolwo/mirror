@@ -132,7 +132,8 @@ Simulation·Unity
 │  ├─ 044 application.landscape-graph-job · Application · Projection
 │  ├─ 100 application.neighborhood-import · Application · Projection
 │  ├─ 110 application.neighborhood-route · Application · Preview
-│  └─ 120 application.neighborhood-movement-candidate · Application · Preview
+│  ├─ 120 application.neighborhood-movement-candidate · Application · Preview
+│  └─ 130 application.synthetic-food-delivery-journey-projection · Application · Projection
 ├─ 독립 Synty 경관 처리 [simulation-synty-landscape]
 │  ├─ 010 domain.synty-ledger · Domain · Definition
 │  ├─ 030 application.synty-job · Application · Projection
@@ -843,6 +844,11 @@ Simulation·Unity
   - 읽기/쓰기: `DerivedWorld → None`
   - 부수효과: `None`
   - 경계: 기존 Actor/주문/Session 상태를 변경하지 않는 후보 계산이다.
+- **130 application.synthetic-food-delivery-journey-projection** — [음식배달여정SnapshotFactory](../../../Ssalddel.Simulation.Application/Neighborhood/음식배달여정Projection.cs) · 합성 음식 배달 상태와 판본화된 이동망을 Unity 읽기 전용 여정으로 투영한다.
+  - 계층/단계: `Application / Projection`
+  - 읽기/쓰기: `DerivedWorld → None`
+  - 부수효과: `None`
+  - 경계: SyntheticFixture 전용 읽기 사본이며 도착·보간으로 주문·픽업·전달 상태를 변경하지 않는다.
 
 ## 독립 Synty 경관 처리 (`simulation-synty-landscape`)
 

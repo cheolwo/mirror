@@ -2510,6 +2510,26 @@
           ],
           "writesTo": [],
           "boundary": "\uAE30\uC874 Actor/\uC8FC\uBB38/Session \uC0C1\uD0DC\uB97C \uBCC0\uACBD\uD558\uC9C0 \uC54A\uB294 \uD6C4\uBCF4 \uACC4\uC0B0\uC774\uB2E4."
+        },
+        {
+          "flowOrder": 130,
+          "stepKey": "application.synthetic-food-delivery-journey-projection",
+          "dependsOnStepKeys": [
+            "application.neighborhood-movement-candidate",
+            "application.neighborhood-route"
+          ],
+          "executionStage": "Projection",
+          "layer": "Application",
+          "componentType": "Ssalddel.Simulation.Application.\uC74C\uC2DD\uBC30\uB2EC\uC5EC\uC815SnapshotFactory",
+          "assembly": "Ssalddel.Simulation.Application",
+          "sourcePath": "Ssalddel.Simulation.Application/Neighborhood/\uC74C\uC2DD\uBC30\uB2EC\uC5EC\uC815Projection.cs",
+          "responsibility": "\uD569\uC131 \uC74C\uC2DD \uBC30\uB2EC \uC0C1\uD0DC\uC640 \uD310\uBCF8\uD654\uB41C \uC774\uB3D9\uB9DD\uC744 Unity \uC77D\uAE30 \uC804\uC6A9 \uC5EC\uC815\uC73C\uB85C \uD22C\uC601\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [
+            "DerivedWorld"
+          ],
+          "writesTo": [],
+          "boundary": "SyntheticFixture \uC804\uC6A9 \uC77D\uAE30 \uC0AC\uBCF8\uC774\uBA70 \uB3C4\uCC29\u00B7\uBCF4\uAC04\uC73C\uB85C \uC8FC\uBB38\u00B7\uD53D\uC5C5\u00B7\uC804\uB2EC \uC0C1\uD0DC\uB97C \uBCC0\uACBD\uD558\uC9C0 \uC54A\uB294\uB2E4."
         }
       ]
     },
@@ -3135,7 +3155,7 @@
       "code": "CODEMAP100",
       "featureKey": "simulation-unity",
       "stepKey": "Ssalddel.Simulation.Contracts",
-      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 3\uAC1C: ISimulationFoodOrderRuntime, ISimulationLogisticsRuntime, ISimulationNpcPolicyRuntime"
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 4\uAC1C: ISimulationFoodOrderRuntime, ISimulationLogisticsRuntime, ISimulationNpcPolicyRuntime, I\uC5ED\uBC29\uC5B4\uC900\uBE44Runtime"
     },
     {
       "severity": "Warning",
