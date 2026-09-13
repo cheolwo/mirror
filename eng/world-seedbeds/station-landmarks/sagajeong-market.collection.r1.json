@@ -1,0 +1,133 @@
+{
+  "schemaVersion": "ssalddel.station-landmark-source-collection.v1",
+  "revision": "sagajeong-market-landmark-collection.r1",
+  "planRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-market-landmark-collection.r6.md",
+  "status": "CollectionSpecificationApproved",
+  "candidate": {
+    "candidateStableId": "landmark-candidate:kr:seoul:jungnang:sagajeong-market.r1",
+    "displayName": "사가정시장",
+    "landmarkKind": "LinearTraditionalMarket",
+    "identityStatus": "PendingHumanReview",
+    "canonicalLandmarkStableId": null,
+    "relations": [
+      {
+        "relationCode": "CandidateLandmarkFor",
+        "targetStableId": "station:kr:kric:s1107:0722"
+      },
+      {
+        "relationCode": "LocatedInCandidate",
+        "targetStableId": "world-region:kr:seoul:jungnang:sagajeong.r1"
+      }
+    ]
+  },
+  "existingEvidence": {
+    "marketObservation": {
+      "sourceStableId": "market:semas:derived:8b4805453786e26b5d8b7df20cf0a8eb490af2bd48e6152983a59035e9f50d26",
+      "sourceId": "semas-traditional-market-status",
+      "datasetId": "data-go-kr-15012894-standard",
+      "referenceDate": "2025-11-10",
+      "rawSnapshotId": 12,
+      "rawSha256": "13ffd04a946ec7eec28222c8c3762f2e77aab919cd250888cdaaf7f51cce303b",
+      "recordSha256": "4a67972edd070cfa886e12d5575ad469d2e42aa2c6ecbff0ec6423390b466a07",
+      "quality": "PendingHumanReview"
+    },
+    "referencePoint": {
+      "coordinateMethod": "WGS84-ECEF-ENU-at-zero-altitude",
+      "originLatitude": 37.5806971,
+      "originLongitude": 127.0884106,
+      "offsetX": 550,
+      "offsetZ": 8,
+      "metersPerUnit": 1,
+      "x": 635.556,
+      "z": 50.628,
+      "geometryStatus": "ReferencePointNotEntranceOrFootprint"
+    },
+    "addressBuildingCandidate": {
+      "buildingStableId": "osm:way:1256772552",
+      "status": "UniqueAddressCandidateNotVerifiedOccupancy",
+      "provesMarketFootprint": false,
+      "provesEntrance": false,
+      "provesCurrentOperation": false
+    }
+  },
+  "collectionScope": {
+    "modules": [
+      "MarketEntranceThreshold",
+      "RepresentativeMarketAlley"
+    ],
+    "identityRequirements": [
+      "CurrentOfficialDatasetRow",
+      "SourceReferenceDateAndHash",
+      "DisplayNameAndMarketType",
+      "ExistingObservationIdentityReconciliation"
+    ],
+    "geometryRequirements": [
+      "VerifiedEntrancePointsAndFacing",
+      "ApproachRoadRelations",
+      "MarketOperatingExtentOrCenterline",
+      "RepresentativeAlleyWidthRange",
+      "CanopyBottomAndTopHeightEvidence",
+      "MajorBranchesAndTerminations",
+      "ExistingRoadAndBuildingStableIdCandidates"
+    ],
+    "requiredCaptureAngles": [
+      "ApproachRoadToEntranceFront",
+      "StationToMarketApproachSequence",
+      "EntranceToAlleyAxis",
+      "AlleyCrossSection",
+      "BranchIntersectionAndTermination",
+      "RooflineCanopyAndAdjacentBuildingSilhouette"
+    ]
+  },
+  "rightsPolicy": {
+    "datasetLicenseDoesNotGrantImageRights": true,
+    "perImageCommercialUseMustBeVerified": true,
+    "perImageModificationMustBeVerified": true,
+    "selfCapturedOrExplicitlyPermittedPreferred": true,
+    "facesVehiclePlatesContactsAndIndoorPersonalDataExcluded": true,
+    "shopNamesLogosAndProductsRequireSeparateReview": true,
+    "imageAcquisitionStatus": "NotStarted"
+  },
+  "handoffGates": {
+    "source": "Pending",
+    "identity": "Pending",
+    "geometry": "Pending",
+    "visualRights": "Pending",
+    "blender": "Blocked",
+    "unity": "Blocked"
+  },
+  "blenderBrief": {
+    "targetStyle": "LowPolyIsometricDiorama",
+    "assemblyUnits": [
+      "EntranceThreshold",
+      "RepeatableAlleySegment",
+      "BranchOrTerminationVariant",
+      "DistantSilhouette"
+    ],
+    "proposedSourceRoot": "ArtSource/Blender/source/station-landmarks/sagajeong-market",
+    "proposedExportRoot": "ArtSource/Blender/exports/station-landmarks/sagajeong-market",
+    "workAuthorized": false
+  },
+  "placementBoundary": {
+    "graphMapRelationshipReady": false,
+    "placementMapGeometryReady": false,
+    "referencePointMayBeUsedAsApprovedEntrance": false,
+    "addressBuildingMayBeUsedAsApprovedFootprint": false,
+    "observationPresentationOnly": true,
+    "traversalReady": false,
+    "gameplayReady": false,
+    "distributionApproved": false,
+    "sceneReady": false
+  },
+  "sponsorshipBoundary": {
+    "mayChangeLandmarkSelection": false,
+    "mayChangeGeometryOrPlacement": false,
+    "mayChangePresentationScale": false,
+    "requiresSeparateDisclosureOverlay": true
+  },
+  "privacyBoundary": {
+    "containsPrivateResidentData": false,
+    "containsPersonalContactData": false,
+    "containsPreciseActorLocation": false
+  }
+}

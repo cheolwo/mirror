@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "ssalddel.data-go-kr-photo-research-collection.v1",
+  "revision": "sagajeong-data-go-kr-photo-research.r1",
+  "planRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/data-go-kr-photo-research-result.r12.md",
+  "acquisition": {
+    "privateReceiptPath": "artifacts/local/public-data/sagajeong-data-go-kr-photo-research-20260913-r3/acquisition.json",
+    "receiptSha256": "5c5ec10bd13a46d0d874607d5c64bb68a5b8a08612d2d6fcc58728842213afc5",
+    "collectedAtUtc": "2026-09-13T04:26:36.914874Z",
+    "privateResearchOnly": true
+  },
+  "officialSources": [
+    {
+      "datasetId": "15101914",
+      "title": "한국관광공사_관광사진 정보_GW",
+      "sourcePage": "https://www.data.go.kr/data/15101914/openapi.do",
+      "catalogSha256": "ce2255bb49efbfc848cb9cfc0481543c80fbe537cec0e9ee4191a29c48e81c2d",
+      "guideSha256": "b03d824599d37bb4aef367dd8af46845dab4df07ef30d461d34d20fa16ada095",
+      "accessState": "BlockedHttp403",
+      "itemSearchCompleted": false
+    },
+    {
+      "datasetId": "15101578",
+      "title": "한국관광공사_국문 관광정보 서비스_GW",
+      "sourcePage": "https://www.data.go.kr/data/15101578/openapi.do",
+      "catalogSha256": "233ed9a3e996ab46be56e0874fdd69e30e6da52ac9df94da45adbd8cbc41381a",
+      "rightsBoundary": "ItemMayBeKOGLType1OrType3"
+    },
+    {
+      "datasetId": "15121757",
+      "title": "한국관광공사_여행기사 목록",
+      "sourcePage": "https://www.data.go.kr/data/15121757/fileData.do",
+      "catalogSha256": "74149042b0a0232c971747dba55db5575df5870b2cc510d73cdeae59e9277b61",
+      "csvSha256": "1d649fd3beb294c8d6911329bc5891a976443364946c2d86f42dd997d2357e58",
+      "rowCount": 1332,
+      "exactScopeRowCount": 0,
+      "licenseCode": "KOGL-Type4"
+    }
+  ],
+  "providerPreviewCandidates": [
+    {
+      "evidenceStableId": "visual-evidence:data-go-provider:sagajeong-park",
+      "title": "사가정공원",
+      "sourcePage": "https://korean.visitkorea.or.kr/detail/ms_detail.do?cotid=166bc660-41c4-4f01-8ff4-c702ada99d1b",
+      "fileName": "sagajeong-park-provider-preview.jpg",
+      "sha256": "1b70fd516b270b2c34f74bb3a92a2d1d08136c82548c4ebe83b4e0c862388881",
+      "byteLength": 204138,
+      "subjectScope": "ExactNamedPlaceWithinMyeonmokContext",
+      "rightsState": "PendingItemRightsVerification",
+      "visualReview": "ParkPathStoneSignTreesAndBuilding;KoreaTourismWatermarkVisible",
+      "modelDerivationAllowed": false,
+      "gameDistributionAllowed": false
+    },
+    {
+      "evidenceStableId": "visual-evidence:data-go-provider:yongma-land",
+      "title": "용마랜드",
+      "sourcePage": "https://korean.visitkorea.or.kr/detail/ms_detail.do?cotid=732175f5-762e-4a46-846c-d0fdb390435b",
+      "fileName": "yongma-land-provider-preview.jpg",
+      "sha256": "324ff5b8efb8ca0fcb8fdc7552865a5fc20ac2f4cc959339429823ed5269e2c1",
+      "byteLength": 156939,
+      "subjectScope": "JungnangDistrictReferenceOutsideConfirmedOneKilometerScope",
+      "rightsState": "RejectedVisibleThirdPartyCopyrightWatermark",
+      "visualReview": "CarouselAndBlueStatue;ThirdPartyAuthorWatermarkVisible",
+      "modelDerivationAllowed": false,
+      "gameDistributionAllowed": false
+    },
+    {
+      "evidenceStableId": "visual-evidence:data-go-provider:yongmasan-night-article",
+      "title": "서울 노을 야경 명소 용마산",
+      "sourcePage": "https://korean.visitkorea.or.kr/detail/rem_detail.do?cotid=08f9290a-1c4b-4b07-bdcf-9a86c4c3d3a3",
+      "fileName": "yongmasan-night-article-preview.jpg",
+      "sha256": "253e6b9a90259ae42fd9f2d66fc3bbd35d57f838a184f7856975b7541cf64273",
+      "byteLength": 182173,
+      "subjectScope": "YongmasanRegionalLandscapeReference",
+      "rightsState": "RejectedKOGLType4ArticleContext",
+      "visualReview": "TraditionalPavilionAndMountainStairs",
+      "modelDerivationAllowed": false,
+      "gameDistributionAllowed": false
+    }
+  ],
+  "persistenceEvidence": {
+    "database": "hongdal-mysql-1/hongdal_dev",
+    "normalizedRecordCount": 6,
+    "firstApplyInserted": 6,
+    "secondApplyInserted": 0,
+    "secondApplyExisting": 6,
+    "independentVerifyCount": 6
+  },
+  "handoffGates": {
+    "downloadedPreviewImageCount": 3,
+    "modelingApprovedImageCount": 0,
+    "tourismPhotoApi": "BlockedHttp403",
+    "blender": "Blocked",
+    "unity": "Blocked",
+    "distributionApproved": false,
+    "sceneReady": false,
+    "isExecutionAuthority": false
+  }
+}

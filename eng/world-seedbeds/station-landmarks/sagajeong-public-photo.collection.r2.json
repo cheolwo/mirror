@@ -1,0 +1,168 @@
+{
+  "schemaVersion": "ssalddel.station-public-photo-collection.v1",
+  "revision": "sagajeong-public-photo-collection.r2",
+  "planRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/public-photo-collection-result.r11.md",
+  "acquisition": {
+    "privateReceiptPath": "artifacts/local/public-data/sagajeong-public-photos-20260913-r2/acquisition.json",
+    "receiptSha256": "f8480edafd0fa96ed0b5d603197f061cfcdb76fec644af89d681b440f58ce59a",
+    "collectedAtUtc": "2026-09-13T04:06:33.666101Z",
+    "sourceMetadataSha256": "26cc38307d2c823107aa442823b9861c4741c833afd552efe2d52fa10065b4bb",
+    "marketSearchSha256": "1305e234ab2d066a09f271b0c839282cbd12850420424d9514ccf91ea582a9fd",
+    "privateReviewOnly": true
+  },
+  "scope": {
+    "stationStableId": "station:kr:kric:s1107:0722",
+    "marketCandidateStableId": "landmark-candidate:kr:seoul:jungnang:sagajeong-market.r1",
+    "downloadedImageCount": 5,
+    "exactMarketImageCount": 0,
+    "koglMetadataOnlyCount": 3
+  },
+  "imageCandidates": [
+    {
+      "evidenceStableId": "visual-evidence:commons:sagajeong-station:Sgjs01.jpg",
+      "fileName": "Sgjs01.jpg",
+      "subjectCode": "StationIdentitySign",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Sgjs01.jpg",
+      "author": "Marcopolis",
+      "photoDate": "2007-12-06",
+      "licenseCode": "PublicDomain",
+      "sha256": "7f472433cf42528c40d2d3ce752bc83f6ee2f80f00dac2be7669da63c2e49483",
+      "byteLength": 48448,
+      "evidenceClass": "BuildingSpecificVisualEvidence",
+      "visualFinding": "ExactStationIdentitySignOnly",
+      "licenseProfileAccepted": true,
+      "modelDerivationAllowed": false,
+      "gameDistributionAllowed": false
+    },
+    {
+      "evidenceStableId": "visual-evidence:commons:sagajeong-station:Sgjs02.jpg",
+      "fileName": "Sgjs02.jpg",
+      "subjectCode": "StationInteriorPlatform",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Sgjs02.jpg",
+      "author": "Marcopolis",
+      "photoDate": "2007-12-11",
+      "licenseCode": "PublicDomain",
+      "sha256": "6249fb4ff4b28913f5e72e6c8a8358f74b5da7969bc6f0c2595443877298c1f6",
+      "byteLength": 101992,
+      "evidenceClass": "BuildingSpecificVisualEvidence",
+      "visualFinding": "ExactStationInteriorNotExteriorBuildingReplacement",
+      "licenseProfileAccepted": true,
+      "modelDerivationAllowed": false,
+      "gameDistributionAllowed": false
+    },
+    {
+      "evidenceStableId": "visual-evidence:commons:sagajeong-station:Sgjs03.jpg",
+      "fileName": "Sgjs03.jpg",
+      "subjectCode": "StationInteriorPlatform",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Sgjs03.jpg",
+      "author": "Marcopolis",
+      "photoDate": "2007-12-11",
+      "licenseCode": "PublicDomain",
+      "sha256": "990ca0871fe425823e745e2cc110ed14ca5f79faf1836b91a4abde7b98db3ca0",
+      "byteLength": 106537,
+      "evidenceClass": "BuildingSpecificVisualEvidence",
+      "visualFinding": "ExactStationInteriorPeopleVisibleReviewRequired",
+      "licenseProfileAccepted": true,
+      "modelDerivationAllowed": false,
+      "gameDistributionAllowed": false
+    },
+    {
+      "evidenceStableId": "visual-evidence:commons:sagajeong-station:Seoul-metro-722-Sagajeong-station-entrance-1-20181123-092938.jpg",
+      "fileName": "Seoul-metro-722-Sagajeong-station-entrance-1-20181123-092938.jpg",
+      "subjectCode": "StationEntrance1",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Seoul-metro-722-Sagajeong-station-entrance-1-20181123-092938.jpg",
+      "author": "LERK",
+      "photoDate": "2018-11-23",
+      "licenseCode": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "sha256": "62c2bddb08e4338e0f0ed0f5d96f8c9efb735c69de2fbce6313e69629cc9a0a9",
+      "byteLength": 2916151,
+      "evidenceClass": "BuildingSpecificVisualEvidence",
+      "visualFinding": "ExactEntranceStructurePeopleAndStorefrontSignsVisible",
+      "licenseProfileAccepted": false,
+      "modelDerivationAllowed": false,
+      "gameDistributionAllowed": false
+    },
+    {
+      "evidenceStableId": "visual-evidence:commons:sagajeong-station:Seoul-metro-722-Sagajeong-station-entrance-2-20181123-093122.jpg",
+      "fileName": "Seoul-metro-722-Sagajeong-station-entrance-2-20181123-093122.jpg",
+      "subjectCode": "StationEntrance2",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Seoul-metro-722-Sagajeong-station-entrance-2-20181123-093122.jpg",
+      "author": "LERK",
+      "photoDate": "2018-11-23",
+      "licenseCode": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "sha256": "95b9cce21b34f837d5a3e2e060d7f044e3c7b3d4b5fb72358b98e7951d93a30b",
+      "byteLength": 2634833,
+      "evidenceClass": "BuildingSpecificVisualEvidence",
+      "visualFinding": "ExactEntranceStructurePeopleAndStorefrontSignsVisible",
+      "licenseProfileAccepted": false,
+      "modelDerivationAllowed": false,
+      "gameDistributionAllowed": false
+    }
+  ],
+  "exactMarketSearch": {
+    "queries": [
+      "사가정시장",
+      "Sagajeong Market",
+      "면목로44길 사가정시장",
+      "면목동 시장"
+    ],
+    "commonsExactHits": 0,
+    "koglType0Or1ExactHitsObserved": 0,
+    "officialPublicationReference": {
+      "title": "중랑구소식지 2016년 9월호",
+      "sourceUrl": "https://ecatalog.jungnang.go.kr/src/viewer/download.php?host=main&no=1&site=20160825_091645",
+      "mentionsAndMayDepictSagajeongMarket": true,
+      "itemLevelModificationAndDistributionRightsVerified": false,
+      "decision": "ReferenceOnlyNotDownloaded"
+    },
+    "resultCode": "MissingVisualEvidence",
+    "fallbackGenerated": false
+  },
+  "koglRightsBlockedCandidates": [
+    {
+      "stableId": "kogl:recommend:139170",
+      "title": "중랑구 전경",
+      "provider": "서울특별시 중랑구",
+      "sourcePage": "https://www.kogl.or.kr/recommend/recommendDivView.do?atcUrl=personal&division=img&recommendIdx=139170",
+      "licenseCode": "KOGL-Type4",
+      "fileDownloaded": false
+    },
+    {
+      "stableId": "kogl:recommend:178072",
+      "title": "서울시 중랑구 전경",
+      "provider": "서울특별시 중랑구",
+      "capturedYear": 2026,
+      "sourcePage": "https://www.kogl.or.kr/recommend/recommendDivView.do?atcUrl=personal&division=img&recommendIdx=178072",
+      "licenseCode": "KOGL-Type4",
+      "fileDownloaded": false
+    },
+    {
+      "stableId": "kogl:recommend:177646",
+      "title": "중랑구 옹기문화마당",
+      "provider": "서울특별시 중랑구",
+      "capturedYear": 2026,
+      "sourcePage": "https://www.kogl.or.kr/recommend/recommendDivView.do?atcUrl=personal&division=img&recommendIdx=177646",
+      "licenseCode": "KOGL-Type4",
+      "fileDownloaded": false
+    }
+  ],
+  "persistenceEvidence": {
+    "database": "hongdal-mysql-1/hongdal_dev",
+    "normalizedRecordCount": 9,
+    "firstApplyInserted": 9,
+    "secondApplyInserted": 0,
+    "secondApplyExisting": 9,
+    "independentVerifyCount": 9
+  },
+  "handoffGates": {
+    "marketVisualEvidence": "BlockedMissingExactEligiblePhoto",
+    "stationEntranceVisualEvidence": "PendingCCBYSAProjectProfileAndContentReview",
+    "blender": "Blocked",
+    "unity": "Blocked",
+    "distributionApproved": false,
+    "sceneReady": false,
+    "isExecutionAuthority": false
+  }
+}
