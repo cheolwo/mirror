@@ -83,7 +83,7 @@ internal static class 면목동공간원천
                     var pageItems=body["items"] is JsonObject obj?obj["item"]:null;
                     var batch=pageItems is JsonArray array?array.Select(x=>x!).ToArray():pageItems is JsonObject?[pageItems]:[];
                     // 소유자 개인정보는 요청하지 않으며 표제부의 선택한 공개 속성만 보존한다.
-                    foreach(var raw in batch){var selected=new JsonObject();foreach(var name in new[]{"mgmBldrgstPk","regstrGbCd","regstrKindCd","platPlc","newPlatPlc","sigunguCd","bjdongCd","platGbCd","bun","ji","bldNm","dongNm","mainPurpsCd","mainPurpsCdNm","etcPurps","strctCd","strctCdNm","archArea","totArea","platArea","grndFlrCnt","ugrndFlrCnt","useAprDay","hhldCnt","fmlyCnt","hoCnt","crtnDay","naRoadCd","naMainBun","naSubBun","naUgrndCd"})selected[name]=raw[name]?.DeepClone();items.Add(selected);}
+                    foreach(var raw in batch){var selected=new JsonObject();foreach(var name in new[]{"mgmBldrgstPk","regstrGbCd","regstrKindCd","platPlc","newPlatPlc","sigunguCd","bjdongCd","platGbCd","bun","ji","bldNm","dongNm","mainPurpsCd","mainPurpsCdNm","etcPurps","strctCd","strctCdNm","archArea","totArea","platArea","heit","grndFlrCnt","ugrndFlrCnt","useAprDay","hhldCnt","fmlyCnt","hoCnt","crtnDay","naRoadCd","naMainBun","naSubBun","naUgrndCd"})selected[name]=raw[name]?.DeepClone();items.Add(selected);}
                     if(items.Count==count)break;Require(batch.Length>0,"BuildingEmptyPage");
                 }
                 Require(items.Count==totalCount,"BuildingIncompletePagination");Require(items.Select(x=>S(x,"mgmBldrgstPk")).Distinct().Count()==items.Count,"BuildingDuplicatePk");
