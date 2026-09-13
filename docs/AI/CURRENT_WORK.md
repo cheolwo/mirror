@@ -1,5 +1,13 @@
 # Mirror(거울) Current Work
 
+## 사가정 다중 OS 샘플 생명주기 재생 구현·검증 r4 (2026-09-13)
+
+- [승인 방향 r4](Planning/시스템/PLAN-SYSTEM-OBSERVABLE-OPERATIONS-DIORAMA-001/multi-os-lifecycle-playback.r4.md)와 [E7 작업 명세](Planning/시스템/PLAN-SYSTEM-OBSERVABLE-OPERATIONS-DIORAMA-001/implementation.r4.md)에 따라 음식배달·국내화물·창고·마트 네 공간형 OS의 정상·회복 8개 사례와 77단계를 구현했다. 나머지 6개 OS는 생명주기가 정의될 때까지 진단 목록에만 두고 단계나 객체를 만들지 않는다.
+- 격리 검증 MySQL에 단계 원장과 Fixture 묶음·결속을 추가하고 같은 `WorkStableId`의 증가 revision을 Outbox로 MongoDB에 투영한다. Fixture는 기존 `음식점공개프로필`·`음식점메뉴`에 비공개 샘플 12곳·메뉴 30개를 저장하고 42개 결속을 `NoBusinessAffiliation / LocationPresentationAnchorOnly / ActualOrderAllowed=false / DistributionApproved=false`로 고정한다. 전체 결속 사전 검사, run별 묶음 계보, 단계·투영 내용 hash, 최신 유효 run 단일 조회와 최종 revision 게시 완료 관문을 보강했다.
+- 실제 `observable-operations-run:r4-hardened-20260913225629`를 600초 실행했다. 일시정지·재개 뒤 553초에 MongoDB를 중단했으며 600초에도 마지막 Outbox 실패 1건 때문에 `Running`을 유지했다. MongoDB 복구와 명시적 Retry 뒤에만 `Completed / 8사례 / 77단계 / Pending 0 / Failed 0`이 됐다. 독립 재조회에서 MySQL 단계·Outbox 77건, MongoDB 최종 사본 8건, Redis 완료 상태와 HTTP v2 최신 run 8건이 같은 계보로 확인됐다. 실제 상호·주소·연락처·정확 좌표는 Unity 계약에 포함되지 않았다.
+- Unity는 canonical `SimulationWorldShell`을 저장하지 않고 `FrozenPresentationTimeline` 기반 runtime-only 계층으로 네 OS와 음식점 아이콘 12개를 합성했다. EditMode 10/10과 실제 Play Mode Game View 3장을 확인했으며, 네 OS 표식이 1.2초 동안 일반화 단계 기준점 사이를 이동한 실제 프레임 표본을 manifest에 남겼다. 이는 `routeAuthority=false / liveHttpEndToEnd=false`인 표현 검증으로 실제 도로·차선·신호·길찾기 또는 운영 업무 실행 증거가 아니다.
+- 서버 집중 시험은 최종 31/31, 변경 경로 한정 Fast는 build·targeted test·diff 검사를 모두 통과했다(`artifacts/local/validation/20260913-231412`). 최신 Task는 전체 solution build를 통과했고 서버 전체 5,235건 중 5,228건이 통과했다(`artifacts/local/validation/20260913-231857`). 남은 7건은 앞선 기준선과 같은 역할별 API metadata 4건, 공식 재료 화면 1건, 아키텍처 용어 1건, WebApp capability 1건이며 이번 집중 범위 시험 실패는 없다. Scene 저장·실제 Unity HTTP 연결·실제 네 OS Controller/UseCase/Command 실행·운영 DB·외부 효과·Evidence 자동 승격은 수행하지 않았다. 기존 Unity Scene의 누락 Prefab·Unknown script 등 기준선 경고도 별도 문제로 남으며, commit·push는 수행하지 않았다.
+
 ## 2026-09-13 맥락별 로컬 커밋 정리
 
 - Hongdal 기능·자료 변경은 역 방어 준비, 사가정 공간 표현 도구, 도로·건물 검토 원장, 역세권 시각 근거, 면목·용마산 공간 사본, 공공자료 명령, 이동망 후보, 역세권·이동망 조회, 합성 음식 배달 여정, 자동 생성 코드 지도의 10개 로컬 커밋으로 분리하고 기획·검증 문서는 2개 커밋으로 따로 묶었다. Unity 변경은 관찰 레이어, 사가정 오버레이, 역세권 공통 표현, 사가정 절차 모형, 음식 배달 재생, Game View 증거, 공간 모판 동기화의 7개 로컬 커밋으로 분리했다.
