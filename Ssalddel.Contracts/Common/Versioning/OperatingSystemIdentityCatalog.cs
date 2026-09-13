@@ -139,6 +139,16 @@ public static class OperatingSystemLifecycleStageIds
     public const string FoodCancellationCompensation = "food.cancellation-compensation";
     public const string FoodInterruptionRecovery = "food.interruption-recovery";
 
+    public const string WarehouseInboundPlan = "warehouse.inbound-plan";
+    public const string WarehouseReceiving = "warehouse.receiving";
+    public const string WarehouseInspection = "warehouse.inspection";
+    public const string WarehousePutAwayInventory = "warehouse.put-away-inventory";
+    public const string WarehouseOutboundAllocation = "warehouse.outbound-allocation";
+    public const string WarehousePicking = "warehouse.picking";
+    public const string WarehousePacking = "warehouse.packing";
+    public const string WarehouseOutboundHandoff = "warehouse.outbound-handoff";
+    public const string WarehouseExceptionRecovery = "warehouse.exception-recovery";
+
     public const string MartSupplyAgreement = "mart.supply-agreement";
     public const string MartReplenishmentOrder = "mart.replenishment-order";
     public const string MartInboundReceiving = "mart.inbound-receiving";
@@ -204,6 +214,20 @@ public static class OperatingSystemLifecycleCatalog
                     new(OperatingSystemLifecycleStageIds.FoodCancellationCompensation, 70, "취소·보상", "취소·환불·음식점 보상과 사고 손실 대응을 관리합니다."),
                     new(OperatingSystemLifecycleStageIds.FoodInterruptionRecovery, 80, "중단·회복", "조리 지연·사고·재조리·재배차와 운영자 검토를 조율합니다.")
                 ]),
+            [OperatingSystemIds.WarehouseCommerceFulfillment] = new(
+                OperatingSystemIds.WarehouseCommerceFulfillment,
+                "창고·커머스 이행 OS",
+                [
+                    new(OperatingSystemLifecycleStageIds.WarehouseInboundPlan, 10, "입고 예정", "확정된 입고 요청과 운송 인계 근거를 기록하며 실제 도착이나 재고 반영을 뜻하지 않습니다."),
+                    new(OperatingSystemLifecycleStageIds.WarehouseReceiving, 20, "도착·수령", "입고 바코드와 도착·수령을 기록하고 검수 대기 재고 후보를 만듭니다."),
+                    new(OperatingSystemLifecycleStageIds.WarehouseInspection, 30, "검수", "예정·수령 수량과 상태를 대조하고 가용·불량 수량을 명시적으로 판정합니다."),
+                    new(OperatingSystemLifecycleStageIds.WarehousePutAwayInventory, 40, "적재·재고", "검수된 상품에 보관 위치를 배정하고 가용·예약 재고에 결속합니다."),
+                    new(OperatingSystemLifecycleStageIds.WarehouseOutboundAllocation, 50, "출고 할당", "확정된 주문 수량을 재고·출고 예정·피킹 작업에 결속하며 미할당 수량을 숨기지 않습니다."),
+                    new(OperatingSystemLifecycleStageIds.WarehousePicking, 60, "피킹", "대기·진행중·완료 상태에서 위치·상품·수량 확인을 거쳐 출고 대상을 집품합니다."),
+                    new(OperatingSystemLifecycleStageIds.WarehousePacking, 70, "포장", "확인된 재고나 피킹 결과를 포장하고 출고 묶음과 준비 상태를 기록합니다."),
+                    new(OperatingSystemLifecycleStageIds.WarehouseOutboundHandoff, 80, "출고·운송 인계 준비", "출고 결과와 기존 운송 의뢰 참조를 결속합니다. 실제 화물 OS 책임 인계나 배차 완료를 자동 확정하지 않습니다."),
+                    new(OperatingSystemLifecycleStageIds.WarehouseExceptionRecovery, 90, "수량 이상 보류·재검수 회복", "수량 불일치 단위를 보호 보류하고 재검수·재계수 뒤 승인된 수량으로 검수 단계에 재진입시킵니다.")
+                ]),
             [OperatingSystemIds.SsalddelMartUrbanLogistics] = new(
                 OperatingSystemIds.SsalddelMartUrbanLogistics,
                 "살뜰마트 도심물류 OS",
@@ -235,6 +259,151 @@ public static class OperatingSystemLifecycleCatalog
             : throw new ArgumentException(
                 $"Lifecycle is not defined for operating system: {operatingSystemId}",
                 nameof(operatingSystemId));
+}
+
+public static class WarehouseLifecycleValidationCaseCodes
+{
+    public const string Normal = "warehouse-normal";
+    public const string QuantityMismatchRecovery = "warehouse-quantity-mismatch-recovery";
+}
+
+/// <summary>
+/// 창고 공통 생명주기를 결정적 표본으로 검증할 때 사용하는 읽기 전용 경로입니다.
+/// 운영 상태를 전이하거나 OS 간 인계를 완료하는 권위를 갖지 않습니다.
+/// </summary>
+public sealed record WarehouseLifecycleValidationCaseDefinition(
+    string CaseCode,
+    string OperatingSystemId,
+    IReadOnlyList<string> StageIds,
+    string DirectResultStageId,
+    string? FailureDetectedAtStageId,
+    string? RecoveryStageId,
+    string? ResumeAtStageId);
+
+public static class WarehouseLifecycleValidationCatalog
+{
+    private static readonly IReadOnlyDictionary<string, WarehouseLifecycleValidationCaseDefinition> Items =
+        new Dictionary<string, WarehouseLifecycleValidationCaseDefinition>(StringComparer.Ordinal)
+        {
+            [WarehouseLifecycleValidationCaseCodes.Normal] = new(
+                WarehouseLifecycleValidationCaseCodes.Normal,
+                OperatingSystemIds.WarehouseCommerceFulfillment,
+                [
+                    OperatingSystemLifecycleStageIds.WarehouseInboundPlan,
+                    OperatingSystemLifecycleStageIds.WarehouseReceiving,
+                    OperatingSystemLifecycleStageIds.WarehouseInspection,
+                    OperatingSystemLifecycleStageIds.WarehousePutAwayInventory,
+                    OperatingSystemLifecycleStageIds.WarehouseOutboundAllocation,
+                    OperatingSystemLifecycleStageIds.WarehousePicking,
+                    OperatingSystemLifecycleStageIds.WarehousePacking,
+                    OperatingSystemLifecycleStageIds.WarehouseOutboundHandoff
+                ],
+                OperatingSystemLifecycleStageIds.WarehouseOutboundHandoff,
+                null,
+                null,
+                null),
+            [WarehouseLifecycleValidationCaseCodes.QuantityMismatchRecovery] = new(
+                WarehouseLifecycleValidationCaseCodes.QuantityMismatchRecovery,
+                OperatingSystemIds.WarehouseCommerceFulfillment,
+                [
+                    OperatingSystemLifecycleStageIds.WarehouseInboundPlan,
+                    OperatingSystemLifecycleStageIds.WarehouseReceiving,
+                    OperatingSystemLifecycleStageIds.WarehouseInspection,
+                    OperatingSystemLifecycleStageIds.WarehouseExceptionRecovery,
+                    OperatingSystemLifecycleStageIds.WarehouseInspection,
+                    OperatingSystemLifecycleStageIds.WarehousePutAwayInventory,
+                    OperatingSystemLifecycleStageIds.WarehouseOutboundAllocation,
+                    OperatingSystemLifecycleStageIds.WarehousePicking,
+                    OperatingSystemLifecycleStageIds.WarehousePacking,
+                    OperatingSystemLifecycleStageIds.WarehouseOutboundHandoff
+                ],
+                OperatingSystemLifecycleStageIds.WarehouseOutboundHandoff,
+                OperatingSystemLifecycleStageIds.WarehouseInspection,
+                OperatingSystemLifecycleStageIds.WarehouseExceptionRecovery,
+                OperatingSystemLifecycleStageIds.WarehouseInspection)
+        };
+
+    static WarehouseLifecycleValidationCatalog()
+    {
+        var lifecycle = OperatingSystemLifecycleCatalog.Get(OperatingSystemIds.WarehouseCommerceFulfillment);
+        var knownStageIds = lifecycle.Stages
+            .Select(stage => stage.StageId)
+            .ToHashSet(StringComparer.Ordinal);
+
+        foreach (var item in Items.Values)
+        {
+            if (!string.Equals(
+                    item.OperatingSystemId,
+                    OperatingSystemIds.WarehouseCommerceFulfillment,
+                    StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"Warehouse validation case references another OS: {item.CaseCode}");
+            }
+
+            if (item.StageIds.Count == 0 || item.StageIds.Any(stageId => !knownStageIds.Contains(stageId)))
+            {
+                throw new InvalidOperationException($"Warehouse validation case references an unknown lifecycle stage: {item.CaseCode}");
+            }
+
+            if (!string.Equals(item.StageIds[^1], item.DirectResultStageId, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"Warehouse validation case must end at its direct result: {item.CaseCode}");
+            }
+
+            ValidateRecoveryContract(item);
+        }
+    }
+
+    public static IReadOnlyList<WarehouseLifecycleValidationCaseDefinition> GetAll()
+        => Items.Values.OrderBy(item => item.CaseCode, StringComparer.Ordinal).ToArray();
+
+    public static WarehouseLifecycleValidationCaseDefinition Get(string caseCode)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(caseCode);
+        return Items.TryGetValue(caseCode.Trim(), out var definition)
+            ? definition
+            : throw new ArgumentException($"Unknown warehouse lifecycle validation case: {caseCode}", nameof(caseCode));
+    }
+
+    private static void ValidateRecoveryContract(WarehouseLifecycleValidationCaseDefinition item)
+    {
+        var recoveryFields = new[]
+        {
+            item.FailureDetectedAtStageId,
+            item.RecoveryStageId,
+            item.ResumeAtStageId
+        };
+        if (recoveryFields.All(string.IsNullOrWhiteSpace))
+        {
+            return;
+        }
+
+        if (recoveryFields.Any(string.IsNullOrWhiteSpace))
+        {
+            throw new InvalidOperationException($"Warehouse recovery contract is incomplete: {item.CaseCode}");
+        }
+
+        var failureIndex = IndexOf(item.StageIds, item.FailureDetectedAtStageId!);
+        var recoveryIndex = IndexOf(item.StageIds, item.RecoveryStageId!, failureIndex + 1);
+        var resumeIndex = IndexOf(item.StageIds, item.ResumeAtStageId!, recoveryIndex + 1);
+        if (failureIndex < 0 || recoveryIndex < 0 || resumeIndex < 0)
+        {
+            throw new InvalidOperationException($"Warehouse recovery contract does not re-enter after its recovery stage: {item.CaseCode}");
+        }
+    }
+
+    private static int IndexOf(IReadOnlyList<string> values, string expected, int startIndex = 0)
+    {
+        for (var index = Math.Max(0, startIndex); index < values.Count; index++)
+        {
+            if (string.Equals(values[index], expected, StringComparison.Ordinal))
+            {
+                return index;
+            }
+        }
+
+        return -1;
+    }
 }
 
 public static class OperatingSystemEngineRoles

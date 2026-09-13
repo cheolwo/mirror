@@ -62,12 +62,15 @@ public sealed class OperatingSystemInteractionCatalogTests
         var coverage = OperatingSystemInteractionCatalog.GetLifecycleCoverage();
 
         Assert.Equal(OperatingSystemIds.All.Count, coverage.Count);
-        Assert.Equal(4, coverage.Count(item => item.HasLifecycle));
-        Assert.All(coverage.Where(item => item.HasLifecycle), item => Assert.Equal(8, item.DefinedStageCount));
+        Assert.Equal(5, coverage.Count(item => item.HasLifecycle));
+        Assert.All(
+            coverage.Where(item => item.HasLifecycle
+                                   && item.OperatingSystemId != OperatingSystemIds.WarehouseCommerceFulfillment),
+            item => Assert.Equal(8, item.DefinedStageCount));
         Assert.Contains(coverage, item =>
             item.OperatingSystemId == OperatingSystemIds.WarehouseCommerceFulfillment
-            && !item.HasLifecycle
-            && item.DefinedStageCount == 0);
+            && item.HasLifecycle
+            && item.DefinedStageCount == 9);
     }
 
     [Fact]
@@ -80,7 +83,8 @@ public sealed class OperatingSystemInteractionCatalogTests
             OperatingSystemIds.All.OrderBy(x => x),
             structures.Select(x => x.OperatingSystemId).OrderBy(x => x));
         Assert.All(
-            structures.Where(x => x.HasLifecycle),
+            structures.Where(x => x.HasLifecycle
+                                  && x.OperatingSystemId != OperatingSystemIds.WarehouseCommerceFulfillment),
             item =>
             {
                 Assert.Equal(OperatingSystemCurrentStructureStatuses.VerifiedFromLifecycle, item.Status);
@@ -95,6 +99,12 @@ public sealed class OperatingSystemInteractionCatalogTests
                 Assert.Empty(item.OrderSegments);
                 Assert.Equal(0, item.DefinedStageCount);
             });
+        Assert.Contains(structures, item =>
+            item.OperatingSystemId == OperatingSystemIds.WarehouseCommerceFulfillment
+            && item.HasLifecycle
+            && item.DefinedStageCount == 9
+            && item.Status == OperatingSystemCurrentStructureStatuses.VerifiedFromLifecycle
+            && item.OrderSegments.Count == 0);
     }
 
     [Fact]
