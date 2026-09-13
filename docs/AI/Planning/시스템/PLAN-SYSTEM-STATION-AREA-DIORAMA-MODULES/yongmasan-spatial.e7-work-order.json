@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "simulation-e7-vertical-work-order.v2",
+  "workOrderId": "E7-WO-YONGMASAN-STATION-SPATIAL-PRESENTATION",
+  "worldInteractionId": "WI-CITY-STATION-DEFENSE-ASSIGN",
+  "interactionGoalStableId": "interaction-goal:station-defense-assign.v1",
+  "parentWorkOrderRef": "../PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/preparation.e7-work-order.json",
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/yongmasan-spatial-presentation.r1.md",
+    "designRevision": "yongmasan-station-spatial-presentation.r1",
+    "designHashSha256": "2568B2E28D89D272997AAE540CF5E9DF280CBF124765EE58DFDC7F7CE5B91EBD",
+    "statusCode": "Approved",
+    "approvalEvidenceRef": "yongmasan-spatial-presentation.r1.md"
+  },
+  "requiredResearch": [
+    {
+      "ref": "../../../../Reports/중랑구-7호선-역-기준자료-수집-2026-09-13.md",
+      "statusCode": "Accepted",
+      "impact": "공식 원천명·역번호·기준점과 사용자 확인 표시명을 분리해 사용한다."
+    },
+    {
+      "ref": "myeonmok-spatial-presentation.r5.md",
+      "statusCode": "AcceptedComparisonImplementation",
+      "impact": "공통 수집·결정성·결손·Unity 표현 경계를 재사용하되 면목 도형과 fingerprint는 재사용하지 않는다."
+    },
+    {
+      "ref": "../../../../Reports/용마산역-1km-디오라마-구현-2026-09-13.md",
+      "statusCode": "ImplementedEvidence",
+      "impact": "동결 사본·MySQL 재조회·서버 비적재 후보·Unity 조립과 실제 Game View 및 남은 검증 상한을 기록한다."
+    }
+  ],
+  "trackPlans": {
+    "logic": {
+      "downwardPlan": [
+        {
+          "code": "E7-E1",
+          "disposition": "NoImpact",
+          "summary": "방어 배치의 명령·권위·비용·실패·회복은 바꾸지 않고 공간 표현 입력만 확장한다."
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "E1-E7",
+          "status": "RegressionPassedWithoutPromotion",
+          "summary": "역세권 UseCase 13/13과 Controller 관련 17/17을 확인했으며 공간 표현 작업은 방어 Logic 성숙도를 승격하지 않는다."
+        }
+      ]
+    },
+    "presentation": {
+      "downwardPlan": [
+        { "code": "E7", "disposition": "Affected", "summary": "실제 Play Mode·Game View에서 용마산역 1km 전체 보기의 판독을 확인한다." },
+        { "code": "E6", "disposition": "Affected", "summary": "카메라 framing, 높이·도로·표면·결손 표현과 자원 회수를 확인한다." },
+        { "code": "E5", "disposition": "Affected", "summary": "동결 용마산 산출물을 canonical SimulationWorldShell의 임시 실제 View에 결속한다." },
+        { "code": "E4", "disposition": "Affected", "summary": "원천·hash·권리·coverage와 시각 후보를 기록한다." },
+        { "code": "E3", "disposition": "Affected", "summary": "결정성, 변조·교차 역 자료 거부, loader·조립·해제 회귀를 시험한다." },
+        { "code": "E2", "disposition": "Affected", "summary": "용마산 descriptor를 공통 역세권 loader와 조립기에 등록한다." },
+        { "code": "E1", "disposition": "Affected", "summary": "역 식별자·1km 창·자료 판본·hash·coverage·비권위 계약을 고정한다." }
+      ],
+      "upwardValidation": [
+        { "code": "E1-E3", "status": "PartiallyPassed", "summary": "동결 자료 결정성·변조 및 교차 역 거부·서버 집중 시험·Unity compiled fixture 4/4와 생성 project build를 확인했다. 정식 Unity Test Runner는 시험 원본 23 case를 확인했으나 새 완료 결과가 없어 미확정이다." },
+        { "code": "E4", "status": "PassedForLocalPrivateReview", "summary": "용마산 bbox 원천·hash·권리 보류·결손 6종과 coverage 100셀을 실제 1km 사본에 결속했다." },
+        { "code": "E5-E6", "status": "PassedForTemporaryPlayModeView", "summary": "실제 7MB 사본을 16 chunk·renderer와 88,589 vertex·47,213 triangle로 조립하고 여러 frame의 renderer 유지와 카메라 표시를 확인했다. canonical Scene 영속 결속은 하지 않았다." },
+        { "code": "E7", "status": "GameViewVerifiedWithoutPromotion", "summary": "canonical SimulationWorldShell Play Mode의 임시 View를 실제 Game View로 캡처했다. 이는 읽기 전용 관찰 표현 증거이며 방어 gameplay 입력이나 E 승격이 아니다." }
+      ]
+    }
+  },
+  "runtimeBoundary": "공공·검토 자료의 읽기 전용 Unity 표현. 운영 DB 상태·Simulation 권위·통행·gameplay를 만들지 않는다.",
+  "writePaths": [
+    "eng/neighborhood",
+    "eng/Ssalddel.PublicDataPortalImport",
+    "Ssalddel.WorkflowRules.Contracts/UnityPackage/Runtime/StationDioramaContracts.cs",
+    "Ssalddel/Application/WorldProjection/역세권디오라마조회UseCase.cs",
+    "Ssalddel.Tests/Application/WorldProjection/역세권디오라마조회UseCaseTests.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Runtime/World",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Tests/EditMode"
+  ],
+  "integratedGate": {
+    "status": "NotPromoted",
+    "evidenceRefs": [
+      "docs/Reports/용마산역-1km-디오라마-구현-2026-09-13.md",
+      "artifacts/local/validation/yongmasan-station-gameview-r1/yongmasan-station-playmode-gameview-final.png"
+    ],
+    "openFeedbackRefs": [
+      "건물 원천 이용조건 충돌은 공개 승격을 차단한다.",
+      "station-scoped payload 저장·조회 계약 전에는 서버 payload를 제공하지 않는다.",
+      "정식 Unity Test Runner의 새 완료 결과와 canonical Scene 영속 결속은 미확정이다.",
+      "기존 서버 미연결·replay·missing script Error/Warning은 별도 범위에서 해소한다."
+    ]
+  },
+  "promotionEligible": false,
+  "reopenCondition": "1km 창·역 기준점·원천 hash·coverage 의미·카메라·통행 또는 gameplay 범위가 바뀌면 Presentation E1 또는 E4를 다시 연다."
+}

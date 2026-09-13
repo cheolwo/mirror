@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "simulation-e7-vertical-work-order.v2",
+  "workOrderId": "E7-WO-MYEONMOK-STATION-SPATIAL-PRESENTATION",
+  "worldInteractionId": "WI-CITY-STATION-DEFENSE-ASSIGN",
+  "interactionGoalStableId": "interaction-goal:station-defense-assign.v1",
+  "parentWorkOrderRef": "../PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/preparation.e7-work-order.json",
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/myeonmok-spatial-presentation.r5.md",
+    "designRevision": "myeonmok-station-spatial-presentation.r1",
+    "designHashSha256": "B824349CDD40F8A817F5798B5BE37688A1991239A445499E1F2CE00F3E9D547D",
+    "statusCode": "Approved",
+    "approvalEvidenceRef": "myeonmok-spatial-presentation.r5.md"
+  },
+  "requiredResearch": [
+    {
+      "ref": "../PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/spatial-density-presentation.r18.md",
+      "statusCode": "Accepted",
+      "impact": "사가정은 표현·검증 비교 기준이며 면목 도형·판본·Region ID로 재사용하지 않는다."
+    },
+    {
+      "ref": "../../../../Reports/면목역-1km-공간자료-사전점검-2026-09-13.md",
+      "statusCode": "Accepted",
+      "impact": "면목 전용 1km clip, 행정동 교차, 자료 결손과 권리 보류를 입력으로 사용한다."
+    },
+    {
+      "ref": "../../../../Reports/면목역-1km-디오라마-구현-2026-09-13.md",
+      "statusCode": "ImplementedEvidence",
+      "impact": "동결 사본·MySQL 재조회·서버 후보·Unity parser와 Mesh 교차 실행 및 남은 검증 상한을 기록한다."
+    }
+  ],
+  "trackPlans": {
+    "logic": {
+      "downwardPlan": [
+        {
+          "code": "E7-E1",
+          "disposition": "NoImpact",
+          "summary": "방어 배치의 명령·권위·비용·실패·회복은 바꾸지 않고 공간 표현 입력만 확장한다."
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "E1-E7",
+          "status": "RegressionPassedWithoutPromotion",
+          "summary": "지역 패키지·역세권 UseCase·Controller 25/25를 확인했으며 방어 Logic 성숙도는 승격하지 않는다."
+        }
+      ]
+    },
+    "presentation": {
+      "downwardPlan": [
+        {
+          "code": "E7",
+          "disposition": "Affected",
+          "summary": "가능할 때 실제 Play Mode·Game View에서 면목역 1km 전체 보기와 역 주변 확대를 판독한다."
+        },
+        {
+          "code": "E6",
+          "disposition": "Affected",
+          "summary": "카메라 framing, 밀도·높이·도로 위계·결손 표현과 모듈 전환 자원 회수를 확인한다."
+        },
+        {
+          "code": "E5",
+          "disposition": "Affected",
+          "summary": "동결 면목 산출물을 canonical SimulationWorldShell의 실제 역 모듈에 결속한다."
+        },
+        {
+          "code": "E4",
+          "disposition": "Affected",
+          "summary": "건물·NodeLink·행정동·OSM 원천, 권리, hash, MissingCoverage와 시각 후보를 기록한다."
+        },
+        {
+          "code": "E3",
+          "disposition": "Affected",
+          "summary": "동일 입력 결정성, 변조·교차 역 자료 거부, loader·조립·해제 회귀를 자동시험한다."
+        },
+        {
+          "code": "E2",
+          "disposition": "Affected",
+          "summary": "역 descriptor/profile과 서버·로컬 읽기 Adapter를 사가정 상수에서 분리한다."
+        },
+        {
+          "code": "E1",
+          "disposition": "Affected",
+          "summary": "역 식별자·1km 창·자료 판본·hash·coverage·비권위 표현 계약을 고정한다."
+        }
+      ],
+      "upwardValidation": [
+        { "code": "E1-E3", "status": "PartiallyPassed", "summary": "동결 자료 결정성·변조 거부·서버 25/25, 실제 Unity parser와 최종 생성 project build는 통과했다. Unity focused runner는 경합으로 정식 완료 결과가 없다." },
+        { "code": "E4", "status": "PassedForLocalPrivateReview", "summary": "원천·hash·권리 보류·결손 5종·표현 후보를 실제 1km 사본에 결속했다." },
+        { "code": "E5-E6", "status": "PartiallyPassed", "summary": "실제 10MB 사본의 parser와 16-chunk Mesh 교차 실행은 통과했다. focused EditMode·Play Mode는 미완료다." },
+        { "code": "E7", "status": "NotStarted", "summary": "Play Mode·Game View 증거 없음" }
+      ]
+    }
+  },
+  "runtimeBoundary": "공공·검토 자료의 읽기 전용 Unity 표현. 운영 DB 상태·Simulation 권위·통행·gameplay를 만들지 않는다.",
+  "writePaths": [
+    "eng/neighborhood",
+    "eng/Ssalddel.PublicDataPortalImport",
+    "Ssalddel.WorkflowRules.Contracts/UnityPackage/Runtime/StationDioramaContracts.cs",
+    "Ssalddel/Application/WorldProjection/역세권디오라마조회UseCase.cs",
+    "Ssalddel/Application/WorldProjection/지역ExperiencePackage조회UseCase.cs",
+    "Ssalddel.Tests/Application/WorldProjection/역세권디오라마조회UseCaseTests.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Resources",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Runtime/World",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Tests/EditMode"
+  ],
+  "integratedGate": {
+    "status": "NotPromoted",
+    "evidenceRefs": [
+      "docs/Reports/면목역-1km-디오라마-구현-2026-09-13.md",
+      "C:/Users/user/ssalddel/artifacts/local/validation/myeonmok-station-spatial-unity/summary.json"
+    ],
+    "openFeedbackRefs": [
+      "건물 원천 이용조건 충돌은 공개 승격을 차단한다.",
+      "기존 행정동 current projection을 덮어쓰지 않는 station-scoped 저장·조회 계약이 필요하다.",
+      "Unity focused EditMode runner 완료와 Play Mode·Game View 증거 전에는 실제 화면 완료를 선언하지 않는다."
+    ]
+  },
+  "promotionEligible": false,
+  "reopenCondition": "1km 창·역 기준점·원천 hash·coverage 의미·카메라·통행 또는 gameplay 범위가 바뀌면 Presentation E1 또는 E4를 다시 연다."
+}
