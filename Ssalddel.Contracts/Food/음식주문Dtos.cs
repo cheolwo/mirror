@@ -1,4 +1,5 @@
 using Ssalddel.Contracts.Common.Participants;
+using Ssalddel.Contracts.Common.Workflow;
 
 namespace Ssalddel.Contracts.Food;
 
@@ -194,6 +195,7 @@ public sealed class 음식주문응답
     public DateTime CreatedAt { get; set; }
     public DateTime? 최근변경시각Utc { get; set; }
     public long Revision { get; set; }
+    public IReadOnlyList<업무가능행동Dto> AvailableActions { get; set; } = [];
     public IReadOnlyList<음식주문상태전이기록Dto> 상태이력 { get; set; } = [];
 }
 
@@ -262,6 +264,7 @@ public sealed class 주문자음식주문상세응답
     public DateTime? 음식점수락시각Utc { get; set; }
     public DateTime? 배차요청시각Utc { get; set; }
     public string? 수락메모 { get; set; }
+    public IReadOnlyList<업무가능행동Dto> AvailableActions { get; set; } = [];
     public IReadOnlyList<음식주문상태전이기록Dto> 상태이력 { get; set; } = [];
 }
 

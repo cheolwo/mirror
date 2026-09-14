@@ -7,6 +7,8 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Ssalddel.Contracts.Common;
+using Ssalddel.Contracts.Common.Workflow;
+using Ssalddel.Contracts.Driver.Food;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Services.Food;
 using 살뜰.Data;
@@ -265,6 +267,7 @@ public sealed class 음식배달관찰검증Runner(
             상품목록 = [new 음식주문상품Dto { 메뉴Id = _menuId, 수량 = 1 }],
             수령인정보 = new() { 수령인명 = "합성 주문자", 연락처 = "000-0000-0000", 주소 = 검증표본좌표Service.CustomerAddress, 주문자본인수령여부 = true } };
         var order = await PostAsync<음식주문응답>("customer", "api/v1/food-orders", register, ct);
+        RequireAction(order.AvailableActions, 음식배달가능행동Ids.주문취소, "주문자 주문대기");
         lock (_gate) _orderNo = order.주문번호;
         var duplicate = await PostAsync<음식주문응답>("customer", "api/v1/food-orders", register, ct);
         Require(duplicate.주문번호 == _orderNo, "중복 등록이 다른 주문을 만들었습니다.");
@@ -276,7 +279,9 @@ public sealed class 음식배달관찰검증Runner(
         var acceptance = new 음식점주문수락요청 { 클라이언트요청Id = Guid.NewGuid(), 음식점명 = "관찰 검증 음식점",
             음식점주소 = 검증표본좌표Service.RestaurantAddress, 음식점위도 = 37.588m, 음식점경도 = 127.085m, 조리예상분 = 1 };
         await ExpectDeniedAsync("customer", $"api/v1/food-orders/{_orderNo}/restaurant-acceptance", acceptance, ct);
-        await PostAsync<음식주문응답>("restaurant", $"api/v1/food-orders/{_orderNo}/restaurant-acceptance", acceptance, ct);
+        var accepted = await PostAsync<음식주문응답>("restaurant", $"api/v1/food-orders/{_orderNo}/restaurant-acceptance", acceptance, ct);
+        RequireAction(accepted.AvailableActions, 음식배달가능행동Ids.음식점조리시간변경, "음식점 조리중");
+        RequireAction(accepted.AvailableActions, 음식배달가능행동Ids.음식점픽업준비완료, "음식점 조리중");
         await PostAsync<음식주문응답>("restaurant", $"api/v1/food-orders/{_orderNo}/restaurant-acceptance", acceptance, ct);
         var readyAt = DateTime.UtcNow.AddMinutes(1);
         Record("restaurant", "수락·조리 시작", "수락 중복 요청 / 동일 배차대기 확인");
@@ -293,6 +298,13 @@ public sealed class 음식배달관찰검증Runner(
             await Task.Delay(1000, ct);
         }
         var offers = await GetAsync<JsonElement>("driver-near", "api/v1/driver/food-deliveries/offers", ct);
+        var offeredWorkspace = await GetAsync<FoodDeliveryDriverWorkspaceDto>(
+            "driver-near",
+            "api/v1/driver/food-deliveries/workspace",
+            ct);
+        var offered = offeredWorkspace.Recommendations.Single(x => x.OfferId == _orderNo);
+        RequireAction(offered.AvailableActions, 음식배달가능행동Ids.기사제안수락, "기사 추천");
+        RequireAction(offered.AvailableActions, 음식배달가능행동Ids.기사제안거절, "기사 추천");
         // 정상 제안 조회 결과와 DB의 추천 대상을 함께 확인. 기사 ID를 임의로 확정하지 않는다.
         using (var scope = scopes.CreateScope())
         {
@@ -324,6 +336,14 @@ public sealed class 음식배달관찰검증Runner(
         Record("restaurant", "픽업 준비", "조리 대기 후 준비 완료 API / 기사배정 보존");
         Actor("restaurant", "인계 준비", "기사 픽업 확인", "");
         await PostAsync<JsonElement>("driver-near", offerPath + "/pickup-complete", null, ct);
+        var pickupWorkspace = await GetAsync<FoodDeliveryDriverWorkspaceDto>(
+            "driver-near",
+            "api/v1/driver/food-deliveries/workspace",
+            ct);
+        RequireAction(
+            pickupWorkspace.ActiveDeliveries.Single(x => x.OfferId == _orderNo).AvailableActions,
+            음식배달가능행동Ids.기사전달완료,
+            "기사 픽업완료");
         Record("driver-near", "음식 픽업", "서버 픽업 완료 재조회");
         Actor("driver-near", "주문자 이동", "전달 완료", "주택 도착 대기");
         for (var step = 1; step <= 16; step++)
@@ -335,10 +355,14 @@ public sealed class 음식배달관찰검증Runner(
         }
         await PostAsync<JsonElement>("driver-near", offerPath + "/delivery-complete", null, ct);
         Record("driver-near", "고객 전달", "서버 전달 완료");
+        var delivered = await GetAsync<주문자음식주문상세응답>("customer", $"api/v1/food-orders/{_orderNo}", ct);
+        RequireAction(delivered.AvailableActions, 음식배달가능행동Ids.주문수령확인, "주문자 전달완료");
         await PostAsync<음식주문응답>("customer", $"api/v1/food-orders/{_orderNo}/receipt-confirmation",
             new 주문자음식주문수령확인요청 { 클라이언트요청Id = Guid.NewGuid(), 확인메모 = "격리 합성 표본 수령" }, ct);
         await RequeryAsync(ct);
         Require(Read().OrderStatus == 음식주문상태코드.수령확인, "서버 수령 확인 상태가 아닙니다.");
+        var completed = await GetAsync<주문자음식주문상세응답>("customer", $"api/v1/food-orders/{_orderNo}", ct);
+        Require(completed.AvailableActions.Count == 0, "수령확인 완료 뒤 주문자 행동 목록이 비어 있지 않습니다.");
         Record("customer", "수령 확인", "정상 역할 API와 독립 DB 재조회 일치");
         Actor("customer", "수령 확인", "관찰", "");
         Actor("restaurant", "처리 완료", "새 주문 대기", "검증은 주문 1건만 생성");
@@ -364,6 +388,13 @@ public sealed class 음식배달관찰검증Runner(
     private Task<JsonElement> LocationAsync(string id, decimal longitude, CancellationToken ct) =>
         PostAsync<JsonElement>(id, "api/v1/driver/food-deliveries/work/location",
             new { AppKey = "FoodDeliveryDriverApp", 위도 = 37.588m, 경도 = longitude, 정확도_m = 1, 상차접근허용반경Km = 5, 운행상태 = "운행중", 기록시각 = DateTime.UtcNow }, ct);
+    private static void RequireAction(
+        IReadOnlyList<업무가능행동Dto> actions,
+        string actionId,
+        string stateLabel)
+        => Require(
+            업무가능행동목록.포함(actions, actionId),
+            $"{stateLabel} 상태 사본에 필요한 행동이 없습니다: {actionId}");
     private async Task<T> GetAsync<T>(string role, string path, CancellationToken ct)
     {
         using var response = await _roles[role].GetAsync(path, ct);

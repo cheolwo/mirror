@@ -1,5 +1,6 @@
 using Ssalddel.Contracts.Common.Metadata;
 using Ssalddel.Simulation.Contracts;
+using Ssalddel.Simulation.Domain;
 using Ssalddel.Unity.Warehouse;
 
 namespace Ssalddel.Simulation.Tests;
@@ -9,6 +10,145 @@ namespace Ssalddel.Simulation.Tests;
     Boundary = ".NET 시험이며 실제 Unity Scene·입력·Game View 증거가 아니다.")]
 public sealed class 음식점관찰표본Tests
 {
+    [Fact]
+    public void 사가정첫주문폐루프는_실제사업장과분리된_세가상음식점을고정한다()
+    {
+        var profiles = 사가정가상음식점Catalog.목록();
+
+        Assert.Equal(new[]
+        {
+            "가상 사가정 큰길식당",
+            "가상 면목 생활길분식",
+            "가상 골목안 도시락",
+        }, profiles.Select(value => value.DisplayName));
+        Assert.Equal(3, profiles.Select(value => value.ProfileStableId).Distinct().Count());
+        Assert.Equal(3, profiles.Select(value => value.FacilityStableId).Distinct().Count());
+        Assert.Equal(3, profiles.Select(value => value.DisplayRouteStableId).Distinct().Count());
+        Assert.All(profiles, value =>
+        {
+            Assert.Equal(사가정가상음식점Policy.SourceKindCode, value.SourceKindCode);
+            Assert.Empty(value.PublicBusinessObservationStableId);
+            Assert.Empty(value.ClaimStableId);
+            Assert.False(value.DistributionApproved);
+            Assert.False(value.RouteApplied);
+            Assert.False(value.TraversalReady);
+        });
+    }
+
+    [Fact]
+    public void 사가정세가상음식점은_주문부터수령과복귀까지닫히고_저장재생결정성을보존한다()
+    {
+        var session = new 경영SimulationSessionAggregate(
+            가상배달관찰표본.CreateSagajeongRestaurantOrderFlow(
+                Guid.Parse("0f907217-d4b7-41ca-85fc-28c8df4ac975")));
+
+        while (session.CurrentTick < session.DurationTicks)
+        {
+            session.Advance(new 경영SimulationTick진행Request
+            {
+                CommandId = "command:sagajeong-three-restaurants:tick:" + session.CurrentTick,
+                ExpectedRevision = session.Revision,
+                TickCount = 1,
+            });
+        }
+
+        var completed = session.Snapshot();
+        var profiles = 사가정가상음식점Catalog.목록();
+        Assert.True(completed.IsCompleted);
+        Assert.NotEmpty(completed.FoodDeliveries);
+        Assert.Equal(profiles.Select(value => value.FacilityStableId).OrderBy(value => value),
+            completed.FoodDeliveries.Select(value => value.RestaurantFacilityStableId)
+                .Distinct().OrderBy(value => value));
+        Assert.All(completed.FoodDeliveries, order =>
+        {
+            var profile = profiles.Single(value =>
+                value.FacilityStableId == order.RestaurantFacilityStableId);
+            Assert.Equal("수령확인", order.StateCode);
+            Assert.StartsWith("food-order:synthetic:sagajeong:r1:", order.FoodOrderStableId);
+            Assert.NotNull(order.ReceivedTick);
+            Assert.Contains(profile.ProfileStableId, order.SourceStableIds);
+            Assert.Contains(profile.DisplayRouteStableId, order.SourceStableIds);
+            Assert.DoesNotContain(order.SourceStableIds, value =>
+                value.Contains("public-business", StringComparison.OrdinalIgnoreCase)
+                || value.Contains("claim", StringComparison.OrdinalIgnoreCase));
+            Assert.Equal(new[] { "조리중", "픽업대기", "기사배정", "픽업완료", "전달완료", "수령확인" },
+                order.StateHistory.Select(value => value.ToStateCode));
+        });
+        Assert.NotNull(completed.WaitingFleet);
+        Assert.Null(completed.WaitingFleet!.Mart);
+        Assert.All(completed.WaitingFleet!.Drivers,
+            driver => Assert.Equal("Idle", driver.Courier.Stage));
+
+        var saved = session.CreateSavePackage(new SimulationSessionSaveRequest
+        {
+            SaveStableId = "save:synthetic:sagajeong-three-restaurants:r1",
+            ExpectedRevision = session.Revision,
+        });
+        var restored = SimulationSessionReplay.Restore(saved);
+        var replayed = restored.CreateSavePackage(new SimulationSessionSaveRequest
+        {
+            SaveStableId = saved.SaveStableId,
+            ExpectedRevision = restored.Revision,
+        });
+
+        Assert.Equal(saved.ReplayHash, replayed.ReplayHash);
+        Assert.Equal(completed.FoodDeliveries.Select(value =>
+                (value.FoodOrderStableId, value.RestaurantFacilityStableId, value.StateCode)),
+            restored.Snapshot().FoodDeliveries.Select(value =>
+                (value.FoodOrderStableId, value.RestaurantFacilityStableId, value.StateCode)));
+    }
+
+    [Fact]
+    public void 사가정세음식점은_이동중간저장뒤에도_무중단실행과같은결과로끝난다()
+    {
+        var request = 가상배달관찰표본.CreateSagajeongRestaurantOrderFlow(
+            Guid.Parse("55cb7e1b-e0de-41d5-858b-489f6c2eb69d"));
+        var uninterrupted = new 경영SimulationSessionAggregate(request);
+        while (uninterrupted.CurrentTick < 100
+               && !uninterrupted.Snapshot().WaitingFleet!.Drivers.Any(driver =>
+                   driver.Courier.Stage is "DriveRestaurant" or "WaitFood"
+                   || driver.PendingOrderId.Length > 0))
+        {
+            Advance(uninterrupted);
+        }
+
+        Assert.Contains(uninterrupted.Snapshot().WaitingFleet!.Drivers, driver =>
+            driver.Courier.Stage is "DriveRestaurant" or "WaitFood"
+            || driver.PendingOrderId.Length > 0);
+        var midSave = uninterrupted.CreateSavePackage(new SimulationSessionSaveRequest
+        {
+            SaveStableId = "save:synthetic:sagajeong-three-restaurants:mid-route",
+            ExpectedRevision = uninterrupted.Revision,
+        });
+        var restored = SimulationSessionReplay.Restore(midSave);
+
+        while (uninterrupted.CurrentTick < uninterrupted.DurationTicks)
+        {
+            Advance(uninterrupted);
+            Advance(restored);
+        }
+
+        var sourceFinal = uninterrupted.CreateSavePackage(new SimulationSessionSaveRequest
+        {
+            SaveStableId = "save:synthetic:sagajeong-three-restaurants:final",
+            ExpectedRevision = uninterrupted.Revision,
+        });
+        var restoredFinal = restored.CreateSavePackage(new SimulationSessionSaveRequest
+        {
+            SaveStableId = sourceFinal.SaveStableId,
+            ExpectedRevision = restored.Revision,
+        });
+        Assert.Equal(sourceFinal.ReplayHash, restoredFinal.ReplayHash);
+
+        static void Advance(경영SimulationSessionAggregate aggregate)
+            => aggregate.Advance(new 경영SimulationTick진행Request
+            {
+                CommandId = "command:sagajeong-three-restaurants:continuation:" + aggregate.CurrentTick,
+                ExpectedRevision = aggregate.Revision,
+                TickCount = 1,
+            });
+    }
+
     [Fact]
     public async Task 명시주문과수동Tick만_접수조리상태를바꾸고_저장뒤자동진행하지않는다()
     {

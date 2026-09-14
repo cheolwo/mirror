@@ -389,7 +389,8 @@
                                                              BorderWidth="1"
                                                              TextColor="#991B1B"
                                                              Command="{Binding x:DataType='pageModels:MainPageModel', Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, Path=RejectTicketCommand}"
-                                                             CommandParameter="{Binding .}" />
+                                                             CommandParameter="{Binding .}"
+                                                             IsEnabled="{Binding CanReject}" />
                                                  </VerticalStackLayout>
                                             </Grid>
                                         </Border>

@@ -116,6 +116,7 @@ namespace Ssalddel.WorkflowRules.Contracts
 
     public static class OperationalWorldSceneItemKinds
     {
+        public const string ActiveLifecycle = "ActiveLifecycle";
         public const string CompletedLifecycle = "CompletedLifecycle";
         public const string WarehouseTask = "WarehouseTask";
         public const string WarehouseActor = "WarehouseActor";

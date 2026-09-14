@@ -7,7 +7,7 @@ namespace Ssalddel.Simulation.Domain
 {
     public sealed partial class 경영SimulationSessionAggregate
     {
-        private bool MartEnabled => 주문흐름사용 || (ScenarioStableId == "scenario:synthetic-delivery.r3"
+        private bool MartEnabled => 기존마트주문흐름사용 || (ScenarioStableId == "scenario:synthetic-delivery.r3"
             && ScenarioDataRevision == "synthetic-delivery.r3");
 
         private void CreateMartOrder(int batch)

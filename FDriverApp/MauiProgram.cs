@@ -5,6 +5,7 @@ using FDriverApp.Pages;
 using Ssalddel.Ui.Common.Areas.App.Services;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
 using Syncfusion.Maui.Toolkit.Hosting;
@@ -49,6 +50,11 @@ namespace FDriverApp
     				});
 #endif
                 });
+
+            builder.Configuration.AddJsonFile(
+                Path.Combine(AppContext.BaseDirectory, "appsettings.Local.json"),
+                optional: true,
+                reloadOnChange: false);
 
 #if DEBUG
     		builder.Logging.AddDebug();

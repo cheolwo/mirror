@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Ssalddel.Contracts.Food;
+using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Ui.Common.Areas.App.Models.Auth;
 using Ssalddel.Ui.Common.Areas.App.Services;
 
@@ -100,7 +101,9 @@ public sealed partial class 주문자음식주문상세ViewModel(
     [ObservableProperty]
     public partial string 수령확인메모 { get; set; } = string.Empty;
 
-    public bool 수령확인가능 => 상세?.배달진행.수령확인가능 == true;
+    public bool 수령확인가능 => 업무가능행동목록.포함(
+        상세?.AvailableActions,
+        음식배달가능행동Ids.주문수령확인);
 
     public Task<bool> 조회Async(string orderNo, CancellationToken cancellationToken = default)
     {

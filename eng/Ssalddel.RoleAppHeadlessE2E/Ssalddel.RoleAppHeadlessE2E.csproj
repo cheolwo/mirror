@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Ssalddel.Contracts\Ssalddel.Contracts.csproj" />
+    <ProjectReference Include="..\..\Ssalddel.Client.Infrastructure\Ssalddel.Client.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Ssalddel.Ui.Common\Ssalddel.Ui.Common.csproj" />
+    <ProjectReference Include="..\..\Ssalddel.WorkflowRules.Contracts\Ssalddel.WorkflowRules.Contracts.csproj" />
+    <ProjectReference Include="..\..\Ssalddel.Unity\Ssalddel.Unity.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\OrdererApp\Services\OrdererAuthApiService.cs" Link="RoleClients\OrdererAuthApiService.cs" />
+    <Compile Include="..\..\OrdererApp\Services\OrdererSessionService.cs" Link="RoleClients\OrdererSessionService.cs" />
+    <Compile Include="..\..\RestaurantDeskApp\Services\I음식주문ApiClient.cs" Link="RoleClients\I음식주문ApiClient.cs" />
+    <Compile Include="..\..\RestaurantDeskApp\Services\RestaurantAuthService.cs" Link="RoleClients\RestaurantAuthService.cs" />
+    <Compile Include="..\..\RestaurantDeskApp\Services\Ssalddel음식주문Client.cs" Link="RoleClients\Ssalddel음식주문Client.cs" />
+    <Compile Include="..\..\FDriverApp\Services\FDriverAuthApiService.cs" Link="RoleClients\FDriverAuthApiService.cs" />
+    <Compile Include="..\..\FDriverApp\Services\FoodDeliveryDriverApiService.cs" Link="RoleClients\FoodDeliveryDriverApiService.cs" />
+  </ItemGroup>
+</Project>

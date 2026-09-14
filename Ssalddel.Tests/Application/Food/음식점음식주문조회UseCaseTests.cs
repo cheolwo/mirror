@@ -1,5 +1,6 @@
 using Ssalddel.Application.Food;
 using Ssalddel.Contracts.Common.Participants;
+using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Services.Food;
 
@@ -19,6 +20,9 @@ public sealed class 음식점음식주문조회UseCaseTests
         Assert.All(orders.Items, order => Assert.Equal(101, order.음식점Id));
         var own = useCase.상세(orders.Items[0].주문번호, 101);
         Assert.NotNull(own);
+        Assert.True(업무가능행동목록.포함(
+            own.AvailableActions,
+            음식배달가능행동Ids.음식점주문수락));
 
         var otherRestaurantOrder = useCase.목록(new 음식점주문수신함조회요청(), 102).Items.First();
         Assert.Null(useCase.상세(otherRestaurantOrder.주문번호, 101));

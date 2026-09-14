@@ -1,5 +1,6 @@
 using Ssalddel.Contracts.Common.Drivers;
 using Ssalddel.Contracts.Driver.Food;
+using Ssalddel.Application.Food;
 using Microsoft.EntityFrameworkCore;
 using 살뜰.Data;
 using 살뜰.Services.Dispatch.Recommendation;
@@ -141,6 +142,7 @@ public sealed class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDriverWork
             DistanceKm = offer.DistanceKm.HasValue ? (decimal)offer.DistanceKm.Value : null,
             RecommendationReason = offer.RecommendationReason,
             ExpiresAtUtc = offer.ExpiresAtUtc?.UtcDateTime,
+            AvailableActions = 음식배달가능행동Projector.기사제안용(offer.ExpiresAtUtc?.UtcDateTime),
             ExecutionProfile = offer.ExecutionProfile
                                ?? 운송실행프로필Factory.Create(
                                    살뜰.Services.Dispatch.Engine.운송의뢰배차원천유형.음식점주문,
@@ -174,6 +176,10 @@ public sealed class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDriverWork
             IsPreparationDelayRedispatch = attempt?.조리지연재배차여부 ?? false,
             ExecutionProfile = offer.ExecutionProfile ?? 운송실행프로필Factory.Create(transport),
             Recipient = ToRecipient(offer.Recipient),
+            AvailableActions = 음식배달가능행동Projector.기사배달용(
+                offer.Status,
+                attempt?.Revision ?? 0,
+                attempt?.가게도착시각Utc),
             UpdatedAtUtc = transport.UpdatedAt
         };
 

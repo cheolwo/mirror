@@ -54,6 +54,7 @@ public sealed class 운영지역장면조회UseCase(
     SsalddelContext db,
     ICurrentUserAccessor currentUser,
     I음식배달완료WorldSnapshot조회UseCase foodReader,
+    I진행중음식배달WorldProjectionReader activeFoodReader,
     I창고WorldSnapshot조회UseCase warehouseReader,
     I운영WorldAreaResolver areaResolver,
     I관찰운영검증ProjectionReader verificationReader,
@@ -91,6 +92,8 @@ public sealed class 운영지역장면조회UseCase(
         var failures = new List<OperationalWorldSceneSourceFailure>();
 
         await ReadFoodAsync(area, items, failures, cancellationToken);
+        if (string.Equals(schemaVersion, OperationalWorldScenePolicy.SchemaVersionV2, StringComparison.Ordinal))
+            await ReadActiveFoodAsync(area, now, items, failures, cancellationToken);
         await ReadWarehousesAsync(area, now, items, failures, cancellationToken);
         await ReadNeighborhoodHubsAsync(area, now, items, failures, cancellationToken);
         await ReadCargoAsync(area, now, items, failures, cancellationToken);
@@ -137,6 +140,24 @@ public sealed class 운영지역장면조회UseCase(
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
             RecordFailure("ObservableOperationsVerification", "VerificationProjectionReadFailed", ex, failures);
+        }
+    }
+
+    private async Task ReadActiveFoodAsync(
+        string area,
+        DateTime now,
+        ICollection<OperationalWorldSceneItem> items,
+        ICollection<OperationalWorldSceneSourceFailure> failures,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            foreach (var item in await activeFoodReader.지역목록Async(area, now, cancellationToken))
+                items.Add(item);
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            RecordFailure("FoodDeliveryOS.Active", "ActiveProjectionReadFailed", ex, failures);
         }
     }
 

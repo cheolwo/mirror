@@ -226,6 +226,7 @@ public sealed class 주문자음식주문조회UseCase(
             음식점수락시각Utc = order.음식점수락시각Utc,
             배차요청시각Utc = order.배차요청시각Utc,
             수락메모 = order.수락메모,
+            AvailableActions = 음식배달가능행동Projector.주문자용(order.상태, order.상태이력.Count),
             상태이력 = order.상태이력
                 .OrderBy(item => item.전이시각Utc)
                 .ThenBy(item => item.Id)

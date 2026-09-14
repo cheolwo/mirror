@@ -380,6 +380,7 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService
         item.주문금액 = detail.총주문금액;
         item.배차상태 = detail.배차상태;
         item.배차요청시각Utc = detail.배차요청시각Utc;
+        item.AvailableActions = detail.AvailableActions;
         item.상세주문 = detail;
     }
 
@@ -433,6 +434,7 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService
             new 음식점주문진행변경요청
             {
                 클라이언트요청Id = GetOperationRequestId(주문번호, 작업),
+                예상Revision = GetExpectedRevision(주문번호, 작업),
                 작업 = 작업,
                 조리예상분 = 조리예상분,
                 사유 = 사유
@@ -447,6 +449,30 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService
         return UpsertServerOrder(
             detail,
             음식점주문복구출처.서버재조회);
+    }
+
+    private long? GetExpectedRevision(string orderNo, string operation)
+    {
+        var actionId = operation switch
+        {
+            음식점주문진행작업코드.거절 => 음식배달가능행동Ids.음식점주문거절,
+            음식점주문진행작업코드.조리시간변경 => 음식배달가능행동Ids.음식점조리시간변경,
+            음식점주문진행작업코드.픽업준비 => 음식배달가능행동Ids.음식점픽업준비완료,
+            _ => null
+        };
+        if (actionId is null)
+        {
+            return null;
+        }
+
+        lock (_gate)
+        {
+            return _orders
+                .FirstOrDefault(order => string.Equals(order.주문번호, orderNo, StringComparison.OrdinalIgnoreCase))?
+                .AvailableActions
+                .FirstOrDefault(action => string.Equals(action.ActionId, actionId, StringComparison.Ordinal))?
+                .ExpectedRevision;
+        }
     }
 
     private Guid GetOperationRequestId(string orderNo, string operation)

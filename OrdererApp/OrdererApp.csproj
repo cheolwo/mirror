@@ -25,6 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="appsettings.Local.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Maui.Controls" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" />

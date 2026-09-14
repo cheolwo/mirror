@@ -146,6 +146,10 @@ public static class FoodOrderSampleData
             커뮤니티원장동기화시각Utc = source.커뮤니티원장동기화시각Utc,
             CreatedAt = source.CreatedAt,
             최근변경시각Utc = source.최근변경시각Utc,
+            Revision = source.Revision > 0 ? source.Revision : source.상태이력.Count,
+            AvailableActions = source.AvailableActions
+                .Select(Ssalddel.Contracts.Common.Workflow.업무가능행동목록.Clone)
+                .ToArray(),
             상태이력 = source.상태이력.Select(x => new 음식주문상태전이기록Dto
             {
                 클라이언트요청Id = x.클라이언트요청Id,

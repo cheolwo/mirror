@@ -1,4 +1,5 @@
 using Ssalddel.Contracts.Food;
+using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Ui.Common.Areas.App.Models.Auth;
 using Ssalddel.Ui.Common.Areas.App.Services;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
@@ -82,7 +83,11 @@ public sealed class 음식주문페이지ViewModelTests
                 {
                     기사전달완료 = true,
                     수령확인가능 = true
-                }
+                },
+                AvailableActions =
+                [
+                    new 업무가능행동Dto { ActionId = 음식배달가능행동Ids.주문수령확인 }
+                ]
             },
             DetailAfterReceipt = new 주문자음식주문상세응답
             {

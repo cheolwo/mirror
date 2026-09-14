@@ -7,7 +7,9 @@ namespace Ssalddel.Unity.Data.WorldProjection
 {
     public static class OperationalOsAttentionStateCodes
     {
+        public const string Active = "Active";
         public const string Completed = "Completed";
+        public const string RecoveryPending = "RecoveryPending";
     }
 
     public static class OperationalOsObservationDiagnosticCodes
@@ -69,23 +71,51 @@ namespace Ssalddel.Unity.Data.WorldProjection
 
     [Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceResponsibility(
         Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceStage.E3,
-        "FoodDeliveryOS 정상 완료 사본의 안전 조건을 검사해 메모리 관찰 상태로 변환한다.",
-        Boundary = "완료를 재판정하거나 운영 Command, Scene, GameObject를 생성하지 않는다.")]
+        "FoodDeliveryOS 진행·완료 사본의 안전 조건을 검사해 메모리 관찰 상태로 변환한다.",
+        Boundary = "진행·완료를 재판정하거나 운영 Command, Scene, GameObject를 생성하지 않는다.")]
     public sealed class FoodDeliveryOsObservationAdapter : IOperationalOsObservationAdapter
     {
+        private static readonly HashSet<string> ActiveStageCodes = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "주문대기",
+            "조리중",
+            "픽업대기",
+            "기사배정",
+            "픽업완료",
+            "전달완료"
+        };
+
         public string OperatingSystemId => OperationalWorldOperatingSystemIds.FoodDelivery;
 
         public OperationalOsObservationState? Adapt(
             OperationalWorldSceneItem item,
             out string diagnosticCode)
         {
-            if (!string.Equals(item.ItemKind, OperationalWorldSceneItemKinds.CompletedLifecycle, StringComparison.Ordinal))
+            var completed = string.Equals(
+                item.ItemKind,
+                OperationalWorldSceneItemKinds.CompletedLifecycle,
+                StringComparison.Ordinal);
+            var active = string.Equals(
+                item.ItemKind,
+                OperationalWorldSceneItemKinds.ActiveLifecycle,
+                StringComparison.Ordinal);
+            if (!completed && !active)
                 return Rejected(OperationalOsObservationDiagnosticCodes.ItemKindUnsupported, out diagnosticCode);
             if (!string.Equals(item.DataPolicyCode, OperationalWorldScenePolicy.OnlineEphemeral, StringComparison.Ordinal))
                 return Rejected(OperationalOsObservationDiagnosticCodes.DataPolicyUnsupported, out diagnosticCode);
             if (item.LocalStorageAllowed || item.ReplayAllowed)
                 return Rejected(OperationalOsObservationDiagnosticCodes.LocalPersistenceForbidden, out diagnosticCode);
-            if (!string.Equals(item.ActivityCode, 음식배달완료WorldSnapshot정책.OutcomeReceiptConfirmed, StringComparison.Ordinal))
+            if (completed
+                && !string.Equals(
+                    item.ActivityCode,
+                    음식배달완료WorldSnapshot정책.OutcomeReceiptConfirmed,
+                    StringComparison.Ordinal))
+                return Rejected(OperationalOsObservationDiagnosticCodes.ActivityUnsupported, out diagnosticCode);
+            if (active
+                && (!ActiveStageCodes.Contains(item.ActivityCode)
+                    || !string.Equals(item.ActivityCode, item.LifecycleStageCode, StringComparison.Ordinal)
+                    || (!string.Equals(item.AttentionStateCode, OperationalOsAttentionStateCodes.Active, StringComparison.Ordinal)
+                        && !string.Equals(item.AttentionStateCode, OperationalOsAttentionStateCodes.RecoveryPending, StringComparison.Ordinal))))
                 return Rejected(OperationalOsObservationDiagnosticCodes.ActivityUnsupported, out diagnosticCode);
 
             diagnosticCode = string.Empty;

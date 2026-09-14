@@ -6,6 +6,8 @@ using CommunityToolkit.Mvvm.Input;
 using FDriverApp.Services;
 using Ssalddel.Contracts.Common.Drivers;
 using Ssalddel.Contracts.Common.Transport;
+using Ssalddel.Contracts.Common.Workflow;
+using Ssalddel.Contracts.Food;
 using Ssalddel.Contracts.Driver.Food;
 using Ssalddel.Contracts.Driver.Work;
 
@@ -115,10 +117,10 @@ public sealed partial class MainPageModel : ObservableObject
         ? "정산 예정 없음"
         : $"{ActiveDeliveryItems.Sum(x => x.DriverPayout).ToString("N0", CultureInfo.CurrentCulture)}원";
     public bool HasActiveWork => ActiveDelivery is not null;
-    public bool CanConfirmPickup => !IsBusy && ActiveDelivery?.WorkStatus == DriverWorkOfferStatus.MovingToPickup;
-    public bool CanCompleteDelivery => !IsBusy && ActiveDelivery?.WorkStatus == DriverWorkOfferStatus.MovingToDropoff;
+    public bool CanConfirmPickup => !IsBusy && ActiveDelivery?.Can(음식배달가능행동Ids.기사픽업확인) == true;
+    public bool CanCompleteDelivery => !IsBusy && ActiveDelivery?.Can(음식배달가능행동Ids.기사전달완료) == true;
     public bool CanAcceptSelectedTicket => !IsBusy
-                                           && SelectedTicket is { IsExpired: false }
+                                           && SelectedTicket?.CanAccept == true
                                            && MaxActiveDeliveries > 0
                                            && ActiveDeliveryItems.Count < MaxActiveDeliveries;
     public bool HasBundleCandidates => BundleCandidateItems.Count > 0;
@@ -359,9 +361,9 @@ public sealed partial class MainPageModel : ObservableObject
     [RelayCommand]
     private async Task AcceptTicket(DeliveryTicketPreview ticket)
     {
-        if (ticket.IsExpired)
+        if (!ticket.CanAccept)
         {
-            StatusMessage = "응답 시간이 지난 배달권입니다. 새 추천을 확인해 주세요.";
+            StatusMessage = "현재 상태에서는 이 배달권을 수락할 수 없습니다. 새 추천을 확인해 주세요.";
             return;
         }
 
@@ -372,6 +374,12 @@ public sealed partial class MainPageModel : ObservableObject
     [RelayCommand]
     private async Task RejectTicket(DeliveryTicketPreview ticket)
     {
+        if (!ticket.CanReject)
+        {
+            StatusMessage = "현재 상태에서는 이 배달권을 거절할 수 없습니다. 새 추천을 확인해 주세요.";
+            return;
+        }
+
         await RunApiAsync(async () =>
         {
             var result = await _api.RejectAsync(ticket.TicketId);
@@ -938,7 +946,8 @@ public sealed class DeliveryTicketPreview : ObservableObject
         bool weatherSurchargeApplied,
         string recommendationReason,
         DateTime? expiresAtUtc,
-        운송실행프로필Dto executionProfile)
+        운송실행프로필Dto executionProfile,
+        IReadOnlyList<업무가능행동Dto> availableActions)
     {
         TicketId = ticketId;
         OrderSummary = orderSummary;
@@ -952,6 +961,7 @@ public sealed class DeliveryTicketPreview : ObservableObject
         RecommendationReason = recommendationReason;
         ExpiresAtUtc = expiresAtUtc;
         ExecutionProfile = executionProfile;
+        AvailableActions = availableActions;
         UpdateCountdown(DateTime.UtcNow);
     }
 
@@ -967,6 +977,7 @@ public sealed class DeliveryTicketPreview : ObservableObject
     public string RecommendationReason { get; }
     public DateTime? ExpiresAtUtc { get; }
     public 운송실행프로필Dto ExecutionProfile { get; }
+    public IReadOnlyList<업무가능행동Dto> AvailableActions { get; }
     public string RestaurantAddress => Pickup.Address;
     public string DropoffAddress => Dropoff.Address;
     public string PickupActionLabel => ActionLabel(ExecutionProfile.픽업행동명, "음식점 픽업");
@@ -987,10 +998,14 @@ public sealed class DeliveryTicketPreview : ObservableObject
             if (SetProperty(ref _isExpired, value))
             {
                 OnPropertyChanged(nameof(CanAccept));
+                OnPropertyChanged(nameof(CanReject));
             }
         }
     }
-    public bool CanAccept => !IsExpired;
+    public bool CanAccept => !IsExpired
+                             && 업무가능행동목록.포함(AvailableActions, 음식배달가능행동Ids.기사제안수락);
+    public bool CanReject => !IsExpired
+                             && 업무가능행동목록.포함(AvailableActions, 음식배달가능행동Ids.기사제안거절);
 
     public void UpdateCountdown(DateTime utcNow)
     {
@@ -1022,7 +1037,8 @@ public sealed class DeliveryTicketPreview : ObservableObject
             item.WeatherSurchargeApplied,
             item.RecommendationReason,
             item.ExpiresAtUtc,
-            item.ExecutionProfile);
+            item.ExecutionProfile,
+            item.AvailableActions);
 
     public DriverWorkOfferDto ToDriverWorkOffer(FDriverAppProfile profile)
         => new(
@@ -1068,7 +1084,8 @@ public sealed record ActiveDeliveryPreview(
     string TransportStatus,
     string WorkStatus,
     운송실행프로필Dto ExecutionProfile,
-    FoodDeliveryDriverRecipientDto Recipient)
+    FoodDeliveryDriverRecipientDto Recipient,
+    IReadOnlyList<업무가능행동Dto> AvailableActions)
 {
     public string PickupActionLabel => DeliveryTicketPreview.ActionLabel(ExecutionProfile.픽업행동명, "음식점 픽업");
     public string CompletionActionLabel => DeliveryTicketPreview.ActionLabel(ExecutionProfile.완료행동명, "고객 전달");
@@ -1089,6 +1106,7 @@ public sealed record ActiveDeliveryPreview(
     public string RecipientRelationshipText => Recipient.OrdererIsRecipient
         ? "주문자 본인 수령"
         : "지정 수령자";
+    public bool Can(string actionId) => 업무가능행동목록.포함(AvailableActions, actionId);
 
     public static ActiveDeliveryPreview From(FoodDeliveryDriverActiveDeliveryDto item)
         => new(
@@ -1104,7 +1122,8 @@ public sealed record ActiveDeliveryPreview(
             item.TransportStatus,
             item.WorkStatus,
             item.ExecutionProfile,
-            item.Recipient);
+            item.Recipient,
+            item.AvailableActions);
 
     public DriverWorkOfferDto ToDriverWorkOffer(FDriverAppProfile profile)
         => new(

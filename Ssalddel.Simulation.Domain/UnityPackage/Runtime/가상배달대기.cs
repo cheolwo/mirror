@@ -22,7 +22,7 @@ namespace Ssalddel.Simulation.Domain
     public sealed partial class 경영SimulationSessionAggregate
     {
         private 가상배달대기Snapshot? waitingFleet;
-        private bool WaitingFleetEnabled => MartEnabled || (ScenarioStableId == "scenario:synthetic-delivery.r2"
+        private bool WaitingFleetEnabled => 주문흐름사용 || MartEnabled || (ScenarioStableId == "scenario:synthetic-delivery.r2"
             && ScenarioDataRevision == "synthetic-delivery.r2");
         private static readonly (double x, double z)[] WaitingSlots = 가상동네배치기준.대기점();
 
@@ -170,14 +170,23 @@ namespace Ssalddel.Simulation.Domain
         {
             foreach (var residence in residences ?? new[] { "a", "b" })
             {
+                var restaurant = 사가정가상음식점Policy.Matches(ScenarioStableId, ScenarioDataRevision)
+                    ? 사가정가상음식점Catalog.주문순서(batch, residence)
+                    : null;
+                var orderKey = restaurant == null
+                    ? batch + ":" + residence
+                    : "sagajeong:r1:" + batch + ":" + residence;
                 var request = new Simulation음식배달PreviewRequest {
-                    FoodOrderStableId = "food-order:synthetic:" + batch + ":" + residence,
-                    MenuItemStableId = "menu-item:sim.potato-stew-1", RestaurantFacilityStableId = LocalFacilityId("facility:sim.restaurant-1"),
+                    FoodOrderStableId = "food-order:synthetic:" + orderKey,
+                    MenuItemStableId = restaurant?.MenuItemStableId ?? "menu-item:sim.potato-stew-1",
+                    RestaurantFacilityStableId = restaurant?.FacilityStableId ?? LocalFacilityId("facility:sim.restaurant-1"),
                     DestinationFacilityStableId = ResidenceId(residence), OrdererStableId = ResidentId(residence),
                     ActorStableId = ResidentId(residence), DeliveryScopeStableId = "delivery-scope:synthetic",
                     Quantity = 1, UnitCode = "serving", RestaurantPreparationOnly = true, AwaitRestaurantResponse = true,
-                    NpcAutoAccept = true, PreparationDurationTicks = 2, DeliveryDurationTicks = 2,
-                    SourceStableIds = new[] { "source:" + ScenarioDataRevision } };
+                    NpcAutoAccept = true, PreparationDurationTicks = restaurant?.PreparationDurationTicks ?? 2, DeliveryDurationTicks = 2,
+                    SourceStableIds = restaurant == null
+                        ? new[] { "source:" + ScenarioDataRevision }
+                        : new[] { "source:" + ScenarioDataRevision, restaurant.ProfileStableId, restaurant.DisplayRouteStableId } };
                 ConfirmDecisionCore(new SimulationDecisionConfirmRequest { CommandId = "command:auto:" + request.FoodOrderStableId,
                     ExpectedRevision = Revision, Preview = CreateFoodDeliveryDecisionRequest(request, CreateFoodDeliveryPreview(request)) }, false, _ => { });
             }

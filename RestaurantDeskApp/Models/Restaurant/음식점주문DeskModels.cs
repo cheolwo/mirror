@@ -1,4 +1,5 @@
 using Ssalddel.Contracts.Common.Documents;
+using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Contracts.Food;
 
 namespace RestaurantDeskApp.Models.Restaurant;
@@ -105,9 +106,17 @@ public sealed class 음식점주문DeskItem
 
     public 음식주문응답? 상세주문 { get; set; }
 
-    public bool 수락가능 => 상태 is 음식점주문Desk상태코드.주문대기 or 음식점주문Desk상태코드.상세조회실패;
+    public IReadOnlyList<업무가능행동Dto> AvailableActions { get; set; } = [];
 
-    public bool 조리변경가능 => 상태 == 음식점주문Desk상태코드.조리중;
+    public bool 수락가능 => Can(음식배달가능행동Ids.음식점주문수락);
+
+    public bool 거절가능 => Can(음식배달가능행동Ids.음식점주문거절);
+
+    public bool 조리변경가능 => Can(음식배달가능행동Ids.음식점조리시간변경);
+
+    public bool 픽업준비가능 => Can(음식배달가능행동Ids.음식점픽업준비완료);
+
+    private bool Can(string actionId) => 업무가능행동목록.포함(AvailableActions, actionId);
 }
 
 public sealed record 음식점주문상품조리기준(

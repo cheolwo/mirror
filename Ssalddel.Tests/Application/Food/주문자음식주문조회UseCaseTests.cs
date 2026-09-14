@@ -163,6 +163,9 @@ public sealed class 주문자음식주문조회UseCaseTests
         Assert.True(delivered.IsSuccess);
         Assert.True(delivered.Value.배달진행.기사전달완료);
         Assert.True(delivered.Value.배달진행.수령확인가능);
+        Assert.Contains(
+            delivered.Value.AvailableActions,
+            action => action.ActionId == 음식배달가능행동Ids.주문수령확인);
         Assert.False(delivered.Value.배달진행.주문자수령확인됨);
         Assert.Contains("실제 수령 상태", delivered.Value.배달진행.안내);
 
@@ -184,6 +187,7 @@ public sealed class 주문자음식주문조회UseCaseTests
         Assert.True(confirmed.Value.배달진행.기사전달완료);
         Assert.True(confirmed.Value.배달진행.주문자수령확인됨);
         Assert.False(confirmed.Value.배달진행.수령확인가능);
+        Assert.Empty(confirmed.Value.AvailableActions);
         Assert.Equal(confirmedAt, confirmed.Value.배달진행.수령확인시각Utc);
         Assert.Contains("모두 완료", confirmed.Value.배달진행.안내);
     }

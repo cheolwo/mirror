@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Ssalddel.Contracts.Common.Metadata;
 using Ssalddel.Simulation.Contracts;
+using Ssalddel.Simulation.Domain;
 
 namespace Ssalddel.Simulation.Tests;
 
@@ -50,6 +51,8 @@ public sealed class 음식배달여정ProjectionTests
         Assert.Equal(graph.Source.SourceVersion, first.GraphRevision);
         Assert.Equal(graph.Revision, first.GraphHash);
         Assert.Equal(64, first.RouteFingerprint.Length);
+        Assert.Equal(사가정저밀도교통검증Fixture.CourierRouteFingerprint,
+            first.RouteFingerprint);
         Assert.Equal(first.RouteFingerprint, second.RouteFingerprint);
         Assert.Equal(JsonSerializer.Serialize(first), JsonSerializer.Serialize(second));
         Assert.False(first.DistributionApproved);

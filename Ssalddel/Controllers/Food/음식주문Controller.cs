@@ -42,7 +42,8 @@ public sealed class 음식주문Controller(
     {
         request.주문자UserId = 현재사용자Id()
             ?? throw new InvalidOperationException("로그인 사용자 식별자를 확인할 수 없습니다.");
-        return Ok(await commandUseCase.등록Async(request, cancellationToken));
+        return Ok(음식배달가능행동Projector.주문자용(
+            await commandUseCase.등록Async(request, cancellationToken)));
     }
 
     [HttpPost("{orderNo}/receipt-confirmation")]
@@ -65,7 +66,7 @@ public sealed class 음식주문Controller(
                 request,
                 ordererUserId,
                 cancellationToken);
-            return order is null ? NotFound() : Ok(order);
+            return order is null ? NotFound() : Ok(음식배달가능행동Projector.주문자용(order));
         }
         catch (InvalidOperationException ex)
         {
@@ -101,7 +102,7 @@ public sealed class 음식주문Controller(
                 request,
                 ordererUserId,
                 cancellationToken);
-            return order is null ? NotFound() : Ok(order);
+            return order is null ? NotFound() : Ok(음식배달가능행동Projector.주문자용(order));
         }
         catch (InvalidOperationException ex)
         {
@@ -213,7 +214,7 @@ public sealed class 음식주문Controller(
                 request,
                 actorUserId,
                 cancellationToken);
-            return order is null ? NotFound() : Ok(order);
+            return order is null ? NotFound() : Ok(음식배달가능행동Projector.음식점용(order));
         }
         catch (InvalidOperationException ex)
         {
@@ -255,7 +256,7 @@ public sealed class 음식주문Controller(
                 request,
                 actorUserId,
                 cancellationToken);
-            return order is null ? NotFound() : Ok(order);
+            return order is null ? NotFound() : Ok(음식배달가능행동Projector.음식점용(order));
         }
         catch (InvalidOperationException ex)
         {

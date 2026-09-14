@@ -58,6 +58,8 @@ public sealed class 음식점음식주문조회UseCase(
             Items = ordered
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Select(FoodOrderSampleData.Clone)
+                .Select(음식배달가능행동Projector.음식점용)
                 .ToArray(),
             TotalCount = ordered.Length,
             Page = page,
@@ -75,7 +77,9 @@ public sealed class 음식점음식주문조회UseCase(
         }
 
         var order = orderStore.GetOrder(주문번호.Trim());
-        return order?.음식점Id == 음식점Id ? order : null;
+        return order?.음식점Id == 음식점Id
+            ? 음식배달가능행동Projector.음식점용(FoodOrderSampleData.Clone(order))
+            : null;
     }
 
     private static DateTime 최근변경시각(음식주문응답 order)

@@ -10,6 +10,9 @@ namespace Ssalddel.Unity.Presentation
     public sealed class 음식배달수명주기표현
     {
         public string OrderStableId { get; }
+        public string RestaurantStableId { get; }
+        public string SourceCode { get; }
+        public string SourceRevision { get; }
         public long Revision { get; }
         public string StateCode { get; }
         public string Label { get; }
@@ -22,6 +25,9 @@ namespace Ssalddel.Unity.Presentation
             if (string.IsNullOrWhiteSpace(source.OrderStableId) || source.OrderRevision < 0)
                 throw new ArgumentException("FoodDeliveryLifecycleIdentityInvalid", nameof(source));
             OrderStableId = source.OrderStableId;
+            RestaurantStableId = source.RestaurantStableId ?? string.Empty;
+            SourceCode = source.SourceCode ?? string.Empty;
+            SourceRevision = source.SourceRevision ?? string.Empty;
             Revision = source.OrderRevision;
             StateCode = source.OrderStateCode;
             (StepIndex, Label, IsTerminal) = source.OrderStateCode switch

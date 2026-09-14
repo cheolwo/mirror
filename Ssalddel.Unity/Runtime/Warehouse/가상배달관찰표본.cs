@@ -14,7 +14,83 @@ namespace Ssalddel.Unity.Warehouse
         public const string WaitingSlotId = "synthetic-delivery-r2-primary";
         public const string MartSlotId = "synthetic-delivery-r3-primary";
         public const string OrderFlowSlotId = "synthetic-delivery-r4-primary";
+        public const string SagajeongRestaurantOrderFlowSlotId = "synthetic-sagajeong-food-delivery-r1-primary";
         public const string NeighborhoodLifeSlotId = "synthetic-neighborhood-life-r1-primary";
+
+        /// <summary>
+        /// 실제 상호·주소·Claim과 결합하지 않은 세 음식점의 주문 폐루프 입력입니다.
+        /// 기존 음식 주문 상태 기계와 합성 기사 흐름만 재사용합니다.
+        /// </summary>
+        public static 경영SimulationSession생성Request CreateSagajeongRestaurantOrderFlow(Guid id)
+        {
+            var request = CreateOrderFlow(id);
+            request.ScenarioStableId = 사가정가상음식점Policy.ScenarioStableId;
+            request.ScenarioDataRevision = 사가정가상음식점Policy.Revision;
+            request.ScenarioSeed = 20260913;
+            var profiles = 사가정가상음식점Catalog.목록();
+            request.NpcWorkforce = new SimulationNpcWorkforceInitialStateRequest
+            {
+                Policies = profiles.Select(profile => new SimulationNpcWorkPolicyInitialRequest
+                {
+                    PolicyStableId = profile.PolicyStableId,
+                    OrganizationStableId = profile.OrganizationStableId,
+                    FacilityStableId = profile.FacilityStableId,
+                    ActionCode = SimulationNpcActionCodes.RestaurantCooking,
+                    RequiredCapabilityCode = SimulationNpcCapabilityCodes.RestaurantCooking,
+                    CookingSlots = 1,
+                    WorkDurationTicks = profile.PreparationDurationTicks,
+                    AutomationEnabled = true,
+                    InteractionPointKey = "interaction:" + profile.FacilityStableId + ":cooking",
+                    ActionVisualKey = "visual:synthetic:sagajeong:restaurant:cooking",
+                    SourceStableIds = Sources(profile),
+                }).ToArray(),
+                Organizations = profiles.Select(profile => new SimulationNpcOrganizationInitialRequest
+                {
+                    OrganizationStableId = profile.OrganizationStableId,
+                    DisplayName = profile.DisplayName,
+                    FacilityStableIds = new[] { profile.FacilityStableId },
+                    AllowedCapabilityCodes = new[] { SimulationNpcCapabilityCodes.RestaurantCooking },
+                    SourceStableIds = Sources(profile),
+                }).ToArray(),
+                Actors = profiles.Select(profile => new SimulationNpcActorInitialRequest
+                {
+                    ActorStableId = profile.ActorStableId,
+                    OrganizationStableId = profile.OrganizationStableId,
+                    DisplayName = profile.DisplayName + " 조리 담당",
+                    HomeFacilityStableId = profile.FacilityStableId,
+                    ReferenceRoleCode = "RestaurantOperator",
+                    MaximumConcurrentTasks = 1,
+                    AssignableCapabilityCodes = new[] { SimulationNpcCapabilityCodes.RestaurantCooking },
+                    SourceStableIds = Sources(profile),
+                }).ToArray(),
+                CapabilityGrants = profiles.Select(profile => new SimulationNpcCapabilityGrantInitialRequest
+                {
+                    GrantStableId = profile.GrantStableId,
+                    OrganizationStableId = profile.OrganizationStableId,
+                    ActorStableId = profile.ActorStableId,
+                    FacilityStableId = profile.FacilityStableId,
+                    CapabilityCode = SimulationNpcCapabilityCodes.RestaurantCooking,
+                    GrantedByActorStableId = profile.ActorStableId,
+                    SourceStableIds = Sources(profile),
+                }).ToArray(),
+            };
+            request.WorldContext = new SimulationWorldContext생성Request
+            {
+                FactionStableId = "faction:synthetic:sagajeong-residents",
+                TerritoryStableId = "territory:synthetic:sagajeong",
+                SettlementStableId = "settlement:synthetic:sagajeong",
+                GameDateStartsOn = new DateTimeOffset(2026, 9, 13, 0, 0, 0, TimeSpan.Zero),
+            };
+            return request;
+        }
+
+        private static string[] Sources(사가정가상음식점Profile profile)
+            => new[]
+            {
+                "source:" + 사가정가상음식점Policy.Revision,
+                profile.ProfileStableId,
+                profile.DisplayRouteStableId,
+            };
         public static 경영SimulationSession생성Request CreateNeighborhoodLife(Guid id, bool dayEnabled = false)
         {
             var request = CreateOrderFlow(id);

@@ -48,6 +48,27 @@ public sealed class OperationalOsObservationRouterTests
     }
 
     [Fact]
+    public void FoodDeliveryOS진행사본을_같은업무의최신단계로교체하고_누락되면제거한다()
+    {
+        var module = new OperationalOsObservationModule(new FoodDeliveryOsObservationAdapter());
+        var router = new OperationalOsObservationRouter(new OperationalOsModuleRegistry([module]));
+        var waiting = ActiveFoodItem("주문대기", 1);
+        var delivering = ActiveFoodItem("픽업완료", 5);
+
+        var first = router.Route(Accepted(waiting));
+        var second = router.Route(Accepted(delivering));
+        var removed = router.Route(Accepted());
+
+        Assert.Equal("주문대기", Assert.Single(first.CurrentStates).LifecycleStageId);
+        var current = Assert.Single(second.CurrentStates);
+        Assert.Equal(waiting.WorkStableId, current.WorkStableId);
+        Assert.Equal("픽업완료", current.LifecycleStageId);
+        Assert.Equal(5, current.Revision);
+        Assert.Equal(OperationalOsAttentionStateCodes.Active, current.AttentionStateCode);
+        Assert.Empty(removed.CurrentStates);
+    }
+
+    [Fact]
     public void 미지원OS와_로컬저장을허용한항목은_추측하지않고진단으로보존한다()
     {
         var module = new OperationalOsObservationModule(new FoodDeliveryOsObservationAdapter());
@@ -147,6 +168,31 @@ public sealed class OperationalOsObservationRouterTests
             LocalStorageAllowed = false,
             ReplayAllowed = false,
             RepresentationDataJson = "{\"actors\":{},\"milestones\":[]}"
+        };
+
+    private static OperationalWorldSceneItem ActiveFoodItem(string stage, long revision)
+        => new()
+        {
+            SnapshotStableId = "food-delivery-active:pseudonym",
+            WorkStableId = "food-delivery-work:pseudonym",
+            AreaStableId = "region:kr:bjd:1126010100",
+            OperatingSystemId = OperationalWorldOperatingSystemIds.FoodDelivery,
+            ItemKind = OperationalWorldSceneItemKinds.ActiveLifecycle,
+            RoleCode = "DeliveryDriver",
+            ActivityCode = stage,
+            LifecycleStageCode = stage,
+            AttentionStateCode = OperationalOsAttentionStateCodes.Active,
+            ObjectKindCode = "FoodDeliveryWork",
+            SemanticPlaceStableId = "semantic-place:area:food-delivery-route",
+            SourceKindCode = OperationalWorldSceneSourceKinds.OperationalProjection,
+            Revision = revision,
+            OccurredAtUtc = Now.AddSeconds(revision),
+            PublishedAtUtc = Now.AddSeconds(revision),
+            ExpiresAtUtc = Now.AddMinutes(2),
+            DataPolicyCode = OperationalWorldScenePolicy.OnlineEphemeral,
+            LocalStorageAllowed = false,
+            ReplayAllowed = false,
+            RepresentationDataJson = "{\"personalDataIncluded\":false}"
         };
 
     private sealed class RecordingTransport : IOperationalWorldProjectionTransport

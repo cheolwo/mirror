@@ -1,4 +1,5 @@
 using Ssalddel.Contracts.Common.Transport;
+using Ssalddel.Contracts.Common.Workflow;
 
 namespace Ssalddel.Contracts.Driver.Food;
 
@@ -40,6 +41,7 @@ public sealed class FoodDeliveryDriverOfferDto
     public string RecommendationReason { get; set; } = string.Empty;
     public DateTime? ExpiresAtUtc { get; set; }
     public 운송실행프로필Dto ExecutionProfile { get; set; } = new();
+    public IReadOnlyList<업무가능행동Dto> AvailableActions { get; set; } = [];
 }
 
 public sealed class FoodDeliveryDriverActiveDeliveryDto
@@ -65,6 +67,7 @@ public sealed class FoodDeliveryDriverActiveDeliveryDto
     public bool IsPreparationDelayRedispatch { get; set; }
     public 운송실행프로필Dto ExecutionProfile { get; set; } = new();
     public FoodDeliveryDriverRecipientDto Recipient { get; set; } = new();
+    public IReadOnlyList<업무가능행동Dto> AvailableActions { get; set; } = [];
     public DateTime UpdatedAtUtc { get; set; }
 }
 

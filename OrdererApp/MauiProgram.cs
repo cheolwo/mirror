@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Ssalddel.Ui.Common.Areas.App.Services;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
 using MudBlazor.Services;
@@ -14,6 +15,11 @@ public static class MauiProgram
     {
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>();
+
+        builder.Configuration.AddJsonFile(
+            Path.Combine(AppContext.BaseDirectory, "appsettings.Local.json"),
+            optional: true,
+            reloadOnChange: false);
 
         builder.Services.AddMudServices();
         builder.Services.AddMauiBlazorWebView();

@@ -331,7 +331,14 @@ public sealed class SsalddelApiVersionAttributeTests
             operatingSystem.CanonicalOperatingSystemId == OperatingSystemIds.WarehouseCommerceFulfillment &&
             !operatingSystem.IsEnabled &&
             operatingSystem.SchedulingPolicies.Any(policy => policy.PolicyKindCode == nameof(SsalddelSchedulingPolicyKind.Sjf)) &&
-            operatingSystem.SchedulingPolicies.Any(policy => policy.PolicyKindCode == nameof(SsalddelSchedulingPolicyKind.Affinity)));
+            operatingSystem.SchedulingPolicies.Any(policy => policy.PolicyKindCode == nameof(SsalddelSchedulingPolicyKind.Affinity)) &&
+            operatingSystem.LifecycleStages.Count == 9 &&
+            operatingSystem.LifecycleStages.Any(stage =>
+                stage.StageId == OperatingSystemLifecycleStageIds.WarehouseInboundPlan && stage.Sequence == 10) &&
+            operatingSystem.LifecycleStages.Any(stage =>
+                stage.StageId == OperatingSystemLifecycleStageIds.WarehouseOutboundHandoff && stage.Sequence == 80) &&
+            operatingSystem.LifecycleStages.Any(stage =>
+                stage.StageId == OperatingSystemLifecycleStageIds.WarehouseExceptionRecovery && stage.Sequence == 90));
         Assert.Contains(response.OperatingSystems, operatingSystem =>
             operatingSystem.OperatingSystemCode == nameof(SsalddelOperatingSystem.SsalddelMartUrbanLogistics) &&
             operatingSystem.CanonicalOperatingSystemId == OperatingSystemIds.SsalddelMartUrbanLogistics &&
@@ -372,9 +379,10 @@ public sealed class SsalddelApiVersionAttributeTests
             structure.Status == OperatingSystemCurrentStructureStatuses.VerifiedFromLifecycle);
         Assert.Contains(response.OperatingSystemCurrentStructures, structure =>
             structure.OperatingSystemId == OperatingSystemIds.WarehouseCommerceFulfillment &&
-            !structure.HasLifecycle &&
+            structure.HasLifecycle &&
+            structure.DefinedStageCount == 9 &&
             structure.OrderSegments.Count == 0 &&
-            structure.Status == OperatingSystemCurrentStructureStatuses.LifecyclePending);
+            structure.Status == OperatingSystemCurrentStructureStatuses.VerifiedFromLifecycle);
         Assert.Contains(response.OperatingSystemInteractions, interaction =>
             interaction.InteractionId == OperatingSystemInteractionIds.ShipperRequestToCargo &&
             interaction.ContractCode == OperatingSystemInteractionContractCodes.ShipperTransportRequestToDomesticCargo &&

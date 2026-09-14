@@ -24,6 +24,10 @@ public static class MauiProgram
             Path.Combine(AppContext.BaseDirectory, "appsettings.json"),
             optional: true,
             reloadOnChange: false);
+        builder.Configuration.AddJsonFile(
+            Path.Combine(AppContext.BaseDirectory, "appsettings.Local.json"),
+            optional: true,
+            reloadOnChange: false);
         var restaurantLegacyBaseAddress =
             builder.Configuration[RestaurantDeskOptions.SectionName + ":ServerBaseUrl"];
         var operationalApiBaseAddress =

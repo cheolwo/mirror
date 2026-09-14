@@ -86,6 +86,7 @@ public sealed class 운영지역장면조회UseCaseTests
             db,
             new AdminCurrentUser(),
             new FoodReader(),
+            new EmptyActiveFoodReader(),
             new WarehouseReader(),
             new 음식배달완료WorldAreaResolver(),
             new Empty관찰운영검증ProjectionReader(),
@@ -118,6 +119,7 @@ public sealed class 운영지역장면조회UseCaseTests
             db,
             new AdminCurrentUser(),
             new ThrowingFoodReader(),
+            new EmptyActiveFoodReader(),
             new WarehouseReader(),
             new 음식배달완료WorldAreaResolver(),
             new Empty관찰운영검증ProjectionReader(),
@@ -136,6 +138,7 @@ public sealed class 운영지역장면조회UseCaseTests
             db,
             new AdminCurrentUser(),
             new FoodReader(),
+            new EmptyActiveFoodReader(),
             new WarehouseReader(),
             new 음식배달완료WorldAreaResolver(),
             new VerificationReader(),
@@ -160,6 +163,32 @@ public sealed class 운영지역장면조회UseCaseTests
     }
 
     [Fact]
+    public async Task 진행중음식배달은_v2에만_비식별지역투영으로합성한다()
+    {
+        await using var db = CreateContext();
+        var useCase = new 운영지역장면조회UseCase(
+            db,
+            new AdminCurrentUser(),
+            new FoodReader(),
+            new ActiveFoodReader(),
+            new WarehouseReader(),
+            new 음식배달완료WorldAreaResolver(),
+            new Empty관찰운영검증ProjectionReader(),
+            NullLogger<운영지역장면조회UseCase>.Instance);
+
+        var v1 = await useCase.조회Async(Area, 0, OperationalWorldScenePolicy.SchemaVersionV1, default);
+        var v2 = await useCase.조회Async(Area, 0, OperationalWorldScenePolicy.SchemaVersionV2, default);
+
+        Assert.DoesNotContain(v1.Items, item => item.ItemKind == OperationalWorldSceneItemKinds.ActiveLifecycle);
+        var active = Assert.Single(v2.Items, item => item.ItemKind == OperationalWorldSceneItemKinds.ActiveLifecycle);
+        Assert.Equal(OperationalWorldOperatingSystemIds.FoodDelivery, active.OperatingSystemId);
+        Assert.Equal(OperationalWorldSceneSourceKinds.OperationalProjection, active.SourceKindCode);
+        Assert.Equal("semantic-place:area:food-delivery-route", active.SemanticPlaceStableId);
+        Assert.False(active.LocalStorageAllowed);
+        Assert.False(active.ReplayAllowed);
+    }
+
+    [Fact]
     public async Task 지원하지않는_v2판본은_조회단에서거절한다()
     {
         await using var db = CreateContext();
@@ -167,6 +196,7 @@ public sealed class 운영지역장면조회UseCaseTests
             db,
             new AdminCurrentUser(),
             new FoodReader(),
+            new EmptyActiveFoodReader(),
             new WarehouseReader(),
             new 음식배달완료WorldAreaResolver(),
             new Empty관찰운영검증ProjectionReader(),
@@ -218,6 +248,43 @@ public sealed class 운영지역장면조회UseCaseTests
     {
         public Task<음식배달완료WorldSnapshot목록응답> 지역목록Async(string areaStableId, int take, CancellationToken cancellationToken)
             => throw new InvalidOperationException("temporary");
+    }
+
+    private sealed class EmptyActiveFoodReader : I진행중음식배달WorldProjectionReader
+    {
+        public Task<OperationalWorldSceneItem[]> 지역목록Async(
+            string areaStableId,
+            DateTime utcNow,
+            CancellationToken cancellationToken)
+            => Task.FromResult(Array.Empty<OperationalWorldSceneItem>());
+    }
+
+    private sealed class ActiveFoodReader : I진행중음식배달WorldProjectionReader
+    {
+        public Task<OperationalWorldSceneItem[]> 지역목록Async(
+            string areaStableId,
+            DateTime utcNow,
+            CancellationToken cancellationToken)
+            => Task.FromResult(new[]
+            {
+                new OperationalWorldSceneItem
+                {
+                    SnapshotStableId = "food-delivery-active:pseudonym",
+                    WorkStableId = "food-delivery-work:pseudonym",
+                    AreaStableId = areaStableId,
+                    OperatingSystemId = OperationalWorldOperatingSystemIds.FoodDelivery,
+                    ItemKind = OperationalWorldSceneItemKinds.ActiveLifecycle,
+                    RoleCode = "DeliveryDriver",
+                    ActivityCode = "픽업완료",
+                    LifecycleStageCode = "픽업완료",
+                    Revision = 5,
+                    OccurredAtUtc = utcNow.AddSeconds(-1),
+                    PublishedAtUtc = utcNow,
+                    ExpiresAtUtc = utcNow.AddMinutes(2),
+                    SemanticPlaceStableId = "semantic-place:area:food-delivery-route",
+                    SourceKindCode = OperationalWorldSceneSourceKinds.OperationalProjection
+                }
+            });
     }
 
     private sealed class WarehouseReader : I창고WorldSnapshot조회UseCase

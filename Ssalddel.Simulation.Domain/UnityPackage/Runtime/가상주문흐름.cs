@@ -7,8 +7,11 @@ namespace Ssalddel.Simulation.Domain
 {
     public sealed partial class 경영SimulationSessionAggregate
     {
-        private bool 주문흐름사용 => NeighborhoodLifeEnabled || (ScenarioStableId == "scenario:synthetic-delivery.r4"
-            && ScenarioDataRevision == "synthetic-delivery.r4");
+        private bool 기존마트주문흐름사용 => NeighborhoodLifeEnabled
+            || (ScenarioStableId == "scenario:synthetic-delivery.r4"
+                && ScenarioDataRevision == "synthetic-delivery.r4");
+        private bool 주문흐름사용 => 기존마트주문흐름사용
+            || 사가정가상음식점Policy.Matches(ScenarioStableId, ScenarioDataRevision);
 
         [Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceResponsibility(Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceStage.E2,
             "주문자별 미완료 제한과 결정적 주문 생성", Boundary = "기존 주문 명령을 로컬 Tick에서 재사용한다")]
@@ -16,7 +19,7 @@ namespace Ssalddel.Simulation.Domain
         {
             if(NeighborhoodLifeEnabled) { GenerateLifeOrders(); return; }
             var flow = waitingFleet!.OrderFlow!;
-            if (waitingFleet.Batch == 0) CreateMartOrder(++waitingFleet.Batch);
+            if (MartEnabled && waitingFleet.Batch == 0) CreateMartOrder(++waitingFleet.Batch);
             foreach (var person in flow.Orderers)
             {
                 if (CurrentTick < person.NextTick) continue;

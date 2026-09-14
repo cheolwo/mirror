@@ -75,6 +75,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Update="appsettings.Local.json" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" />
 		<PackageReference Include="CommunityToolkit.Maui" />
 		<PackageReference Include="Microsoft.Data.Sqlite.Core" />

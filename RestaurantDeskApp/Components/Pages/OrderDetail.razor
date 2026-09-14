@@ -143,21 +143,24 @@
                                    OnClick="AcceptAndPrintAsync">
                             @(isBusy ? "수락 처리 중" : $"조리 {preparationMinutes}분으로 수락·조리 시작")
                         </MudButton>
-                        <MudDivider />
-                        <MudTextField @bind-Value="rejectionReason"
-                                      Label="거절 사유"
-                                      HelperText="품절, 영업 종료 등 주문자에게 설명할 수 있는 구체적인 사유를 입력합니다."
-                                      Lines="2"
-                                      Variant="Variant.Outlined" />
-                        <MudButton Variant="Variant.Outlined"
-                                   Color="Color.Error"
-                                   StartIcon="@Icons.Material.Filled.Block"
-                                   Disabled="@(isBusy || string.IsNullOrWhiteSpace(rejectionReason))"
-                                   OnClick="RejectAsync">
-                            주문 거절
-                        </MudButton>
+                        @if (order.거절가능)
+                        {
+                            <MudDivider />
+                            <MudTextField @bind-Value="rejectionReason"
+                                          Label="거절 사유"
+                                          HelperText="품절, 영업 종료 등 주문자에게 설명할 수 있는 구체적인 사유를 입력합니다."
+                                          Lines="2"
+                                          Variant="Variant.Outlined" />
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.Block"
+                                       Disabled="@(isBusy || string.IsNullOrWhiteSpace(rejectionReason))"
+                                       OnClick="RejectAsync">
+                                주문 거절
+                            </MudButton>
+                        }
                     }
-                    else if (order.조리변경가능)
+                    else if (order.조리변경가능 || order.픽업준비가능)
                     {
                         <MudText Typo="Typo.h6">조리 진행</MudText>
                         <MudText Typo="Typo.body2" Color="Color.Secondary">
@@ -166,19 +169,25 @@
                         </MudText>
                         @PreparationControls()
                         <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
-                            <MudButton Variant="Variant.Outlined"
-                                       Color="Color.Info"
-                                       Disabled="@isBusy"
-                                       OnClick="UpdateCookingTimeAsync">
-                                조리 예상시간 변경
-                            </MudButton>
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Success"
-                                       StartIcon="@Icons.Material.Filled.TakeoutDining"
-                                       Disabled="@isBusy"
-                                       OnClick="MarkPickupReadyAsync">
-                                픽업 준비 완료
-                            </MudButton>
+                            @if (order.조리변경가능)
+                            {
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Info"
+                                           Disabled="@isBusy"
+                                           OnClick="UpdateCookingTimeAsync">
+                                    조리 예상시간 변경
+                                </MudButton>
+                            }
+                            @if (order.픽업준비가능)
+                            {
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Success"
+                                           StartIcon="@Icons.Material.Filled.TakeoutDining"
+                                           Disabled="@isBusy"
+                                           OnClick="MarkPickupReadyAsync">
+                                    픽업 준비 완료
+                                </MudButton>
+                            }
                         </MudStack>
                     }
                     else
