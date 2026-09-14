@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "simulation-e7-vertical-work-order.v2",
+  "protocolRevision": "simulation-e7-vertical-implementation-protocol.r7",
+  "evidenceModelRevision": "horizontal-dual-cycle-evidence.r3",
+  "workOrderId": "E7-WO-SAGAJEONG-SYNTHETIC-COURIER-OBSERVATION",
+  "title": "사가정 합성 배달 기사 읽기 전용 관찰 카드",
+  "interactionGoalStableId": "interaction-goal:sagajeong-synthetic-courier-observation.v1",
+  "playableUnitStableId": "",
+  "activeWorldInteractionId": "WI-CITY-SYNTHETIC-MOVE",
+  "subjectBindingRefs": [
+    "subject:synthetic-delivery-courier.v1",
+    "subject:synthetic-delivery-order.v1",
+    "subject:synthetic-delivery-vehicle.v1",
+    "subject:synthetic-delivery-recipient.v1",
+    "subject:npc-routine-actor.v1",
+    "subject:authoritative-interaction-target.v1"
+  ],
+  "targetEvidenceStage": "E7",
+  "currentEvidenceStage": "E0",
+  "promotionEligible": false,
+  "planningGate": {
+    "statusCode": "Approved",
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-synthetic-courier-observation.implementation.r20.md",
+    "designRevision": "sagajeong-synthetic-courier-observation.r20",
+    "designHashSha256": "1CCC9C212830464238AC2586C1BED72EEEB8E55EFEA2674FCB450C30509B07AC",
+    "approvalEvidenceRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-synthetic-courier-observation.implementation.r20.md"
+  },
+  "deliveryCap": {
+    "currentDispatchTargetStage": "E3",
+    "promotionBeyondStageAllowed": false,
+    "reason": "이번 범위는 합성 기사 관찰 projection·메모리 적용·로컬 표시 토글·runtime-only Play Mode 검증까지다. canonical Scene 저장 배선과 E 승격은 승인하지 않는다."
+  },
+  "iterationState": {
+    "currentPass": "DownwardImpactReview",
+    "nextReopenCondition": "runtime-only Play Mode 검증은 완료했다. 실제 Mouse 입력·production LifeSimulation Host/Scene 배선 또는 정산 규칙·경계 포털·공공 밀도를 열 때 관련 궤적의 가장 이른 E부터 다시 검토한다."
+  },
+  "presentationE4Preparation": {
+    "applicabilityCode": "Required",
+    "notApplicableReason": "",
+    "playerReadableMoment": "합성 배달 기사 표시를 선택해 현재 행동·업무 단계·진행도·완료 건수와 정산 규칙 미승인을 읽고, 표시를 끌 수 있다.",
+    "requiredHCapabilities": [],
+    "visualKeys": [
+      "visual:synthetic-delivery:basic-shapes.r1"
+    ],
+    "primaryAssetCandidateRefs": [
+      "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World/사가정합성Actor관찰Layer.cs"
+    ],
+    "alternativeAssetCandidateRefs": [],
+    "fallbackPresentationRefs": [
+      "읽기 전용 IMGUI 카드"
+    ],
+    "placementIntent": "저장하지 않는 사가정 runtime 검증 Root에 기존 합성 기사 관찰 표시 하나를 두고 건물·도로·카메라·조명을 변경하지 않는다.",
+    "interactionAnchorIntent": "새 Collider 없이 화면에 투영된 기사 중 가장 가까운 표시를 선택하며 이 입력은 WI나 Simulation Command를 실행하지 않는다.",
+    "candidateRevisionOrFingerprint": "sagajeong-synthetic-courier-observation.r20",
+    "e5ReadinessCode": "Blocked",
+    "openGapRefs": [
+      "Logic E5 미도달",
+      "canonical SimulationWorldShell 저장 배선 미검증",
+      "실제 MouseUp과 공유 uGUI 입력 경합 미검증",
+      "모의 정산 계산식 미승인"
+    ]
+  },
+  "trackPlans": {
+    "logic": {
+      "trackCode": "Logic",
+      "currentEvidenceStage": "E0",
+      "downwardPlan": [
+        { "code": "E7", "disposition": "Blocked", "summary": "Hosted·실제 입력·운영 연결은 승인되지 않았다." },
+        { "code": "E6", "disposition": "Blocked", "summary": "정산 규칙과 다중 기사 원장은 미정이다." },
+        { "code": "E5", "disposition": "Blocked", "summary": "기존 WI 성공·회복·귀환을 이 카드가 새로 성립시키지 않는다." },
+        { "code": "E4", "disposition": "Blocked", "summary": "Graph Map·H·배치 계약은 변경하지 않는다." },
+        { "code": "E3", "disposition": "ReusedWithVerification", "summary": "기존 합성 배달 Session의 결정성과 revision을 재사용하고 관찰 projection 불변을 시험한다." },
+        { "code": "E2", "disposition": "ReusedWithVerification", "summary": "SimulationSession이 소유한 기존 주문·기사 사본에서 읽기 사본만 파생한다." },
+        { "code": "E1", "disposition": "ReusedWithVerification", "summary": "WI-CITY-SYNTHETIC-MOVE와 기존 준비된 주체를 재사용한다." }
+      ],
+      "upwardValidation": [
+        { "code": "E1", "status": "NotStarted", "evidenceRefs": [] },
+        { "code": "E2", "status": "NotStarted", "evidenceRefs": [] },
+        { "code": "E3", "status": "NotStarted", "evidenceRefs": [] },
+        { "code": "E4", "status": "Blocked", "evidenceRefs": [] },
+        { "code": "E5", "status": "Blocked", "evidenceRefs": [] },
+        { "code": "E6", "status": "Blocked", "evidenceRefs": [] },
+        { "code": "E7", "status": "Blocked", "evidenceRefs": [] }
+      ]
+    },
+    "presentation": {
+      "trackCode": "Presentation",
+      "currentEvidenceStage": "E0",
+      "downwardPlan": [
+        { "code": "E7", "disposition": "Blocked", "summary": "실제 사용자 입력·저장 Scene·Hosted 실행은 이번 범위가 아니다." },
+        { "code": "E6", "disposition": "Blocked", "summary": "실제 Actor 자산·애니메이션·추적 전환은 후속이다." },
+        { "code": "E5", "disposition": "Blocked", "summary": "canonical World 배선과 사람의 판독 평가 전에는 승격하지 않는다." },
+        { "code": "E4", "disposition": "Defined", "summary": "합성 기사 표시·선택 카드·토글의 판독 순간과 fallback을 정의한다." },
+        { "code": "E3", "disposition": "Affected", "summary": "낮은 revision·hash 충돌·숨김 중 최신 사본·정리를 시험한다." },
+        { "code": "E2", "disposition": "Affected", "summary": "검증된 읽기 사본을 runtime-only Layer에 적용한다." },
+        { "code": "E1", "disposition": "Affected", "summary": "한 Actor의 표시·선택·카드·토글 계약을 정의한다." }
+      ],
+      "upwardValidation": [
+        { "code": "E1", "status": "NotStarted", "evidenceRefs": [] },
+        { "code": "E2", "status": "NotStarted", "evidenceRefs": [] },
+        { "code": "E3", "status": "NotStarted", "evidenceRefs": [] },
+        { "code": "E4", "status": "Blocked", "evidenceRefs": [] },
+        { "code": "E5", "status": "Blocked", "evidenceRefs": [] },
+        { "code": "E6", "status": "Blocked", "evidenceRefs": [] },
+        { "code": "E7", "status": "Blocked", "evidenceRefs": [] }
+      ]
+    }
+  },
+  "integratedGate": {
+    "currentEvidenceStage": "E0",
+    "status": "NotStarted",
+    "evidenceRefs": [],
+    "openFeedbackRefs": [
+      "모의 정산 계산식 미승인",
+      "실제 사용자 Mouse 입력·uGUI 경합 미검증",
+      "production LifeSimulation Host와 canonical Scene 배선·Hosted·Save/Replay·E 승격 미승인"
+    ]
+  }
+}

@@ -104,7 +104,7 @@ public sealed class 지역ExperiencePackageCatalog : I지역ExperiencePackageCat
             RegionExperiencePackagePolicy.SagajeongRegionStableId,
             "사가정 생활 복구 디오라마",
             "사가정역 1km의 실제 공간 근거 위에 생활 밀도와 초기 복구 정착기 시나리오를 층별로 조립하는 첫 지역 패키지",
-            "sagajeong-region-experience.r2",
+            "sagajeong-region-experience.r3",
             "neighborhood-package-registry:seoul-east.v2",
             "seoul-east-neighborhood-packages.r2",
             ["neighborhood-spatial-package:region:kr:bjd:1126010100.v2"],
@@ -184,7 +184,7 @@ public sealed class 지역ExperiencePackageCatalog : I지역ExperiencePackageCat
                     true,
                     [Endpoint("DisplayOverlays", AdministrativeDongDioramaRoutes.DisplayOverlays)]),
                 new(
-                    "region-layer:sagajeong:operational-snapshot.r1",
+                    "region-layer:sagajeong:operational-snapshot.r2",
                     RegionExperienceLayerKinds.OperationalSnapshot,
                     "선택형 운영 상태 사본",
                     OperationalWorldScenePolicy.SchemaVersionV2,
