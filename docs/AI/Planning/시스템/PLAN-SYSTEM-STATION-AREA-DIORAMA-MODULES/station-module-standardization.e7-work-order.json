@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "simulation-e7-vertical-work-order.v2",
+  "workOrderId": "E7-WO-SAGAJEONG-STATION-DIORAMA-MODULE-STANDARDIZATION",
+  "worldInteractionId": "WI-CITY-SYNTHETIC-MOVE",
+  "interactionGoalStableId": "interaction-goal:synthetic-delivery-move.v1",
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/station-module-standardization.implementation.r17.md",
+    "designRevision": "station-diorama-module:sagajeong-reference.r1",
+    "designHashSha256": "DDCB309B0808AE690C062801559556A1BEC101635D796E1D4ECFBDAF0FB85802",
+    "statusCode": "Approved",
+    "approvalEvidenceRef": "2026-09-14 user request to standardize the evolved Sagajeong module without implementing another station"
+  },
+  "requiredResearch": [],
+  "trackPlans": {
+    "logic": {
+      "downwardPlan": [
+        {
+          "code": "E7-E1",
+          "disposition": "NoImpact",
+          "summary": "The host and planner only assemble read-only Unity presentation adapters and cannot change WI, order, dispatch, inventory, advertising or WorldRevision authority."
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "E1-E7",
+          "status": "PassedNoAuthorityMutation",
+          "summary": "The module profile hard-codes ObservationPresentationOnly=true and operational, traversal, gameplay and distribution readiness false; no server or Simulation write path was changed."
+        }
+      ]
+    },
+    "presentation": {
+      "downwardPlan": [
+        {
+          "code": "E7",
+          "disposition": "NoVisualOutputChange",
+          "summary": "No new station, Scene, Prefab, input or camera result is introduced."
+        },
+        {
+          "code": "E6",
+          "disposition": "Affected",
+          "summary": "Active host activation, missing required module rejection and unregistered station rejection are standardized."
+        },
+        {
+          "code": "E5",
+          "disposition": "Affected",
+          "summary": "The existing Sagajeong View becomes the first compatibility adapter without changing its generated world objects."
+        },
+        {
+          "code": "E4",
+          "disposition": "Affected",
+          "summary": "Eight shared module roles and their dependency order are frozen as a reusable profile."
+        },
+        {
+          "code": "E3",
+          "disposition": "Affected",
+          "summary": "Module state ordering, dependency blocking and assembly hash are deterministic."
+        },
+        {
+          "code": "E2",
+          "disposition": "Affected",
+          "summary": "PrivateReview, Ready, Blocked, NotProvided and BlockedByDependency remain explicit."
+        },
+        {
+          "code": "E1",
+          "disposition": "Affected",
+          "summary": "A station profile owns ordered required and optional layer modules, while adapters only report their read-only runtime contribution."
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "E1-E6",
+          "status": "Passed84Of84",
+          "summary": "Byte-identical main sources passed 9 module, 54 spatial overlay, 10 H selection, 4 model and 7 operations-view EditMode tests in the isolated Unity project."
+        },
+        {
+          "code": "E7",
+          "status": "NotRunNotRequiredForUnchangedVisualOutput",
+          "summary": "Scene, Prefab, MeshBuilder, camera constants and data assets were unchanged; Play Mode and Game View are deferred until a second active adapter or switching UI is implemented."
+        }
+      ]
+    }
+  },
+  "runtimeBoundary": "Unity read-only station-diorama module discovery and visibility composition; server and Simulation remain authoritative",
+  "writePaths": [
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Runtime/World/역세권디오라마ModuleModels.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World/ActiveStationDioramaHost.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World/사가정운영디오라마View.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Tests/EditMode/역세권디오라마Module표준Tests.cs",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/README.md",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/station-module-standardization.implementation.r17.md",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/station-module-standardization.e7-work-order.json",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md"
+  ],
+  "integratedGate": {
+    "status": "ImplementedAutomatedTestsPassedNotPromoted",
+    "evidenceRefs": [
+      "C:/Users/user/ssalddel-building-h-validation/artifacts/local/validation/station-diorama-module-r17/focused-final.xml",
+      "C:/Users/user/ssalddel-building-h-validation/artifacts/local/validation/station-diorama-module-r17/spatial-overlay.xml",
+      "C:/Users/user/ssalddel-building-h-validation/artifacts/local/validation/station-diorama-module-r17/h-selection.xml",
+      "C:/Users/user/ssalddel-building-h-validation/artifacts/local/validation/station-diorama-module-r17/model-presentation.xml",
+      "C:/Users/user/ssalddel-building-h-validation/artifacts/local/validation/station-diorama-module-r17/operations-view.xml"
+    ],
+    "openFeedbackRefs": [
+      "mobility, life simulation, business overlay and environment presentation do not yet register as host adapters",
+      "only Sagajeong is registered in the active module profile catalog",
+      "main Unity Editor Pipeline is unreachable while the project remains open",
+      "Play Mode, Game View and physical station switching input were not run"
+    ]
+  },
+  "promotionEligible": false,
+  "reopenCondition": "module role contract, station profile, adapter contribution, visual output, operational authority or a second active station adapter changes"
+}

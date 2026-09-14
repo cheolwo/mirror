@@ -3,9 +3,9 @@
 - 기준 판본: `mirror-subject-interaction-development.r4`
 - 준비된 주체: `21`
 - 주체가 결속된 WI: `134`
-- 상호작용 Goal: `61`
+- 상호작용 Goal: `62`
 - 기존 Goal 호환 투영: `22`
-- Loop 없는 신규 Goal: `38`
+- Loop 없는 신규 Goal: `39`
 
 개발 순서: `SubjectFoundation → InteractionCore → DirectResult → DerivedEffects → OptionalPlayableLoopValidation`
 
@@ -65,6 +65,7 @@
 | `interaction-goal:synthetic-mart-stage.v1` | `WI-CITY-SYNTHETIC-MART-STAGE` | subject:synthetic-mart-worker.v1<br>subject:synthetic-mart-stock.v1<br>subject:synthetic-mart-order.v1<br>subject:npc-routine-actor.v1<br>subject:authoritative-interaction-target.v1 | 없음 | NotApplicable | Active |
 | `interaction-goal:synthetic-delivery-assign.v1` | `WI-CITY-SYNTHETIC-ASSIGN` | subject:synthetic-delivery-courier.v1<br>subject:synthetic-delivery-order.v1<br>subject:synthetic-delivery-vehicle.v1<br>subject:synthetic-delivery-recipient.v1<br>subject:npc-routine-actor.v1<br>subject:authoritative-interaction-target.v1 | 없음 | NotApplicable | Active |
 | `interaction-goal:synthetic-delivery-move.v1` | `WI-CITY-SYNTHETIC-MOVE` | subject:synthetic-delivery-courier.v1<br>subject:synthetic-delivery-order.v1<br>subject:synthetic-delivery-vehicle.v1<br>subject:synthetic-delivery-recipient.v1<br>subject:npc-routine-actor.v1<br>subject:authoritative-interaction-target.v1 | 없음 | NotApplicable | Active |
+| `interaction-goal:sagajeong-synthetic-courier-observation.v1` | `WI-CITY-SYNTHETIC-MOVE` | subject:synthetic-delivery-courier.v1<br>subject:synthetic-delivery-order.v1<br>subject:synthetic-delivery-vehicle.v1<br>subject:synthetic-delivery-recipient.v1<br>subject:npc-routine-actor.v1<br>subject:authoritative-interaction-target.v1 | 없음 | NotApplicable | Active |
 | `interaction-goal:synthetic-delivery-pickup.v1` | `WI-CITY-SYNTHETIC-PICKUP` | subject:synthetic-delivery-courier.v1<br>subject:synthetic-delivery-order.v1<br>subject:synthetic-delivery-vehicle.v1<br>subject:synthetic-delivery-recipient.v1<br>subject:npc-routine-actor.v1<br>subject:authoritative-interaction-target.v1 | 없음 | NotApplicable | Active |
 | `interaction-goal:synthetic-delivery-deliver.v1` | `WI-CITY-SYNTHETIC-DELIVER` | subject:synthetic-delivery-courier.v1<br>subject:synthetic-delivery-order.v1<br>subject:synthetic-delivery-vehicle.v1<br>subject:synthetic-delivery-recipient.v1<br>subject:npc-routine-actor.v1<br>subject:authoritative-interaction-target.v1 | 없음 | NotApplicable | Active |
 | `interaction-goal:synthetic-delivery-receive.v1` | `WI-CITY-SYNTHETIC-RECEIVE` | subject:synthetic-delivery-courier.v1<br>subject:synthetic-delivery-order.v1<br>subject:synthetic-delivery-vehicle.v1<br>subject:synthetic-delivery-recipient.v1<br>subject:npc-routine-actor.v1<br>subject:authoritative-interaction-target.v1 | 없음 | NotApplicable | Active |

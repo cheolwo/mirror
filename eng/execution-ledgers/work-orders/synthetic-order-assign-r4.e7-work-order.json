@@ -13,7 +13,9 @@
     ],
     "readRefs": [
       "docs/AI/Planning/시스템/PLAN-SYSTEM-MYEONMOK-OBSERVER/order-ledger.r4.md",
-      "docs/AI/Planning/시스템/PLAN-SYSTEM-MYEONMOK-OBSERVER/mart-center.r3.md"
+      "docs/AI/Planning/시스템/PLAN-SYSTEM-MYEONMOK-OBSERVER/mart-center.r3.md",
+      "docs/AI/Planning/공간/PLAN-SPATIAL-SAGAJEONG-DELIVERY-MOBILITY/business-order-binding-proposal.r2.md",
+      "docs/AI/Planning/공간/PLAN-SPATIAL-SAGAJEONG-DELIVERY-MOBILITY/implementation.md"
     ],
     "firstTask": "주체·기획·연구·공유 파일 확인 후 순차 구현",
     "completionCriteria": "Assigned 결정성·저장 재진입 검사. 실제 화면 별도",
@@ -29,7 +31,7 @@
   "promotionEligible": false,
   "iterationState": {
     "currentPass": "ImpactReassessment",
-    "nextReopenCondition": "P0 코드·회귀 검증 뒤 실제 카드 화면 결속은 Presentation E2부터 진행한다. 시간·저장 변경 시 Logic E3를 다시 검증한다."
+    "nextReopenCondition": "r2 세 합성 음식점 계약·상태·표현 결속은 Logic·Presentation E1~E3를 재검증한다. E4 이상, 저장 Scene·실제 Game View·실제 상호 주문 참여는 별도 승인 전 차단한다."
   },
   "changeImpactReviewRef": "",
   "presentationE4Preparation": {
@@ -50,7 +52,8 @@
     "candidateRevisionOrFingerprint": "synthetic-order-flow.r4",
     "e5ReadinessCode": "Blocked",
     "openGapRefs": [
-      "실제 Unity 결속·검증 필요"
+      "실제 Unity 결속·검증 필요",
+      "r2 세 합성 음식점 표현은 E1~E3 재검증 범위이며 E4 이상·저장 Scene·실제 상호 주문 참여를 승인하지 않는다."
     ]
   },
   "presentationModuleBindings": [
@@ -331,12 +334,15 @@
   ],
   "researchBoundary": "기존 r3 공간과 역할색을 유지하고 상태 판독만 추가한다.",
   "writePaths": [
-    "Ssalddel.Simulation.Domain/UnityPackage/Runtime/가상주문흐름.cs",
     "Ssalddel.Simulation.Domain/UnityPackage/Runtime/가상배달대기.cs",
-    "Ssalddel.Simulation.Tests/가상주문흐름Tests.cs"
+    "Ssalddel.Simulation.Domain/UnityPackage/Runtime/가상마트작업.cs",
+    "Ssalddel.Unity/Runtime/Warehouse/가상배달관찰표본.cs",
+    "Ssalddel.Simulation.Tests/가상주문흐름Tests.cs",
+    "Ssalddel.Simulation.Tests/음식점관찰표본Tests.cs"
   ],
   "openFeedbackItems": [
-    "r4 전용 분기. 기존 r1~r3 회귀, 실제 화면·Hosted는 별도. 기존 동일 파일 작업과 현 담당이 순차 통합."
+    "r4 전용 분기. 기존 r1~r3 회귀, 실제 화면·Hosted는 별도. 기존 동일 파일 작업과 현 담당이 순차 통합.",
+    "r2 세 합성 음식점 배차 결속은 Logic·Presentation E1~E3 재검증 대상이다. E4 이상, 저장 Scene·실제 Game View, 실제 상호 주문 참여는 차단한다."
   ],
   "reopenCondition": "저장·도착·인계 조건 변경시 Logic 재검토",
   "detailedWorkOrderRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-MYEONMOK-OBSERVER/order-ledger.r4.md",

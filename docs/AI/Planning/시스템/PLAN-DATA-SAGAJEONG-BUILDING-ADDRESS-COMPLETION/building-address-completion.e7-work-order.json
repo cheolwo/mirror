@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "simulation-e7-vertical-work-order.v2",
+  "workOrderId": "E7-WO-SAGAJEONG-BUILDING-ADDRESS-COMPLETION",
+  "worldInteractionId": "WI-CITY-STATION-DEFENSE-ASSIGN",
+  "interactionGoalStableId": "interaction-goal:sagajeong-building-address-foundation.v1",
+  "parentWorkOrderRef": "../PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/road-address.e7-work-order.json",
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/README.md",
+    "designRevision": "sagajeong-building-address-completion.r2",
+    "designHashSha256": "B6C170FD1B73A0F1C2B3923DCEFDC3335BB4D576F3C1F08C15095D6EA2191545",
+    "statusCode": "Approved",
+    "approvalEvidenceRef": "2026-09-14 user selected shared-address option A and requested implementation"
+  },
+  "requiredResearch": [
+    {
+      "ref": "https://business.juso.go.kr/jst/jstAddressDownload?menu=7",
+      "statusCode": "Accepted",
+      "impact": "2026-08-31 building DB full snapshot and MS949 31-column guide are the frozen official source"
+    }
+  ],
+  "trackPlans": {
+    "logic": {
+      "downwardPlan": [
+        {"code":"E7-E4","disposition":"Blocked","summary":"no operational delivery, route, pricing or public API authority"},
+        {"code":"E3","disposition":"Affected","summary":"deterministic 602-building assignment, source hash and idempotent local RDB readback"},
+        {"code":"E2","disposition":"Affected","summary":"official address composite-key and shared-address relationship projection"},
+        {"code":"E1","disposition":"Affected","summary":"address resolution states and unresolved reasons"}
+      ],
+      "upwardValidation": [
+        {"code":"E1-E3","status":"VerifiedScoped","summary":"14 self-tests, deterministic replay, 602-row apply, no-write reapply and fresh-context readback passed"},
+        {"code":"E4-E7","status":"Blocked","summary":"not part of this approved implementation"}
+      ]
+    },
+    "presentation": {
+      "downwardPlan": [
+        {"code":"E7-E2","disposition":"NoImpact","summary":"existing Sagajeong geometry, roof slots, camera and Game View remain unchanged"},
+        {"code":"E1","disposition":"Affected","summary":"private read projection only; no Unity consumer change"}
+      ],
+      "upwardValidation": [
+        {"code":"E1","status":"VerifiedPrivateProjection","summary":"602 rows exclude detailed addresses and keep distribution, delivery, price and Unity permissions false"},
+        {"code":"E2-E7","status":"Blocked","summary":"no Scene, Prefab, Play Mode or Game View work"}
+      ]
+    }
+  },
+  "runtimeBoundary": "official public-data acquisition and private local RDB projection; no operational write, public distribution, Unity apply, route authority or price authority",
+  "writePaths": [
+    "eng/Ssalddel.PublicDataPortalImport/Program.cs",
+    "eng/Ssalddel.PublicDataPortalImport/사가정건물도로명주소자료.cs",
+    "eng/Ssalddel.PublicDataPortalImport/README.md",
+    "docs/AI/Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md"
+  ],
+  "integratedGate": {
+    "status": "ImplementedLocalDataFoundationNotPromoted",
+    "evidenceRefs": [
+      "docs/AI/Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/implementation.r3.md",
+      "artifacts/local/public-data/sagajeong-building-address-20260914-r1/manifest.json"
+    ],
+    "openFeedbackRefs": [
+      "28 road-address candidates and 15 unresolved buildings remain blocked",
+      "daily-change synchronization and entrance anchors remain out of scope"
+    ]
+  },
+  "standaloneSupportWorkOrder": true,
+  "validationToolApplicability": "NotRegisteredAsNewWorldInteraction; existing road-address WI remains authoritative",
+  "promotionEligible": false,
+  "reopenCondition": "source month, map/raw hash, shared-address policy, detailed-address handling, operational API or Unity consumption changes require reassessment"
+}

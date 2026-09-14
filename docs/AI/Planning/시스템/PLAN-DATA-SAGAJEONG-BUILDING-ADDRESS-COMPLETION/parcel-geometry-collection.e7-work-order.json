@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "simulation-e7-vertical-work-order.v2",
+  "workOrderId": "E7-WO-SAGAJEONG-PARCEL-GEOMETRY-COLLECTION",
+  "worldInteractionId": "WI-CITY-STATION-DEFENSE-ASSIGN",
+  "interactionGoalStableId": "interaction-goal:sagajeong-parcel-geometry-collection.v1",
+  "parentWorkOrderRef": "presentation-building-evidence.e7-work-order.json",
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/README.md",
+    "designRevision": "sagajeong-building-address-completion.r7",
+    "designHashSha256": "62047B99974D35ADE449CC831916D7C2760173CBA165623B904FA373571B4896",
+    "statusCode": "Approved",
+    "approvalEvidenceRef": "2026-09-14 user approved collecting actual parcel boundary geometry first"
+  },
+  "requiredResearch": [
+    {
+      "ref": "https://www.vworld.kr/dtmk/dtmk_ntads_s002.do?svcCde=NA&dsId=23",
+      "statusCode": "AcceptedSourceBlockedExternalAccess",
+      "impact": "Official Seoul AL_D002 SHP, EPSG:5186 and A1 PNU contract confirmed; download requires login and the archive is not acquired."
+    },
+    {
+      "ref": "https://www.data.go.kr/data/15045882/fileData.do",
+      "statusCode": "AcceptedMetadata",
+      "impact": "Provider, reference-only geometry description, SHP format and portal licence metadata confirmed."
+    }
+  ],
+  "trackPlans": {
+    "logic": {
+      "downwardPlan": [
+        { "code": "E7-E4", "disposition": "Blocked", "summary": "No parcel archive, DB geometry ledger, public projection, traversal or gameplay authority." },
+        { "code": "E3", "disposition": "Prepared", "summary": "Deterministic target selection, SHP contract validation, geometry hash and coverage audit tool." },
+        { "code": "E2", "disposition": "Prepared", "summary": "Local-only Python builder and PowerShell manager." },
+        { "code": "E1", "disposition": "Validated", "summary": "4,062 presentation buildings, 3,774 PNU and explicit 0 geometry blocker state." }
+      ],
+      "upwardValidation": [
+        { "code": "E1-E3", "status": "ToolingValidatedSourceBlocked", "summary": "Synthetic SHP exercises parser and geometry audit, but is not source evidence." },
+        { "code": "E4-E7", "status": "Blocked", "summary": "Official archive and consumer approval are absent." }
+      ]
+    },
+    "presentation": {
+      "downwardPlan": [
+        { "code": "E1-E7", "disposition": "NoImpact", "summary": "No Unity, Scene, Prefab or player-facing change." }
+      ],
+      "upwardValidation": [
+        { "code": "E1-E7", "status": "Blocked", "summary": "No presentation evidence is claimed." }
+      ]
+    }
+  },
+  "runtimeBoundary": "Local private acquisition readiness only. Metadata and synthetic fixtures never substitute for official parcel geometry.",
+  "writePaths": [
+    "eng/neighborhood/build-sagajeong-parcel-geometry-evidence.py",
+    "eng/neighborhood/manage-sagajeong-parcel-geometry-evidence.ps1",
+    "eng/tests/sagajeong-parcel-geometry-evidence.ps1",
+    "eng/execution-ledgers/station-diorama-evidence-rules.json",
+    "docs/Architecture/역세권디오라마증거진화체계.md",
+    "docs/AI/Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION"
+  ],
+  "integratedGate": {
+    "status": "BlockedExternalAccess",
+    "evidenceRefs": [
+      "docs/AI/Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/parcel-geometry-collection.implementation.r7.md",
+      "eng/tests/sagajeong-parcel-geometry-evidence.ps1"
+    ],
+    "openFeedbackRefs": [
+      "Official Seoul AL_D002 archive is not acquired because VWorld download requires login.",
+      "ParcelGeometry remains 0/3774 and NotCollected/Missing.",
+      "DB, MongoDB, public, Unity, delivery, price, business, traversal and gameplay use remain blocked."
+    ]
+  },
+  "standaloneSupportWorkOrder": true,
+  "promotionEligible": false,
+  "reopenCondition": "Provide the official Seoul AL_D002 archive with a verified source revision and SHA-256."
+}

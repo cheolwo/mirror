@@ -133,7 +133,9 @@ Simulation·Unity
 │  ├─ 100 application.neighborhood-import · Application · Projection
 │  ├─ 110 application.neighborhood-route · Application · Preview
 │  ├─ 120 application.neighborhood-movement-candidate · Application · Preview
-│  └─ 130 application.synthetic-food-delivery-journey-projection · Application · Projection
+│  ├─ 130 application.synthetic-food-delivery-journey-projection · Application · Projection
+│  ├─ 138 contract.sagajeong-synthetic-courier-observation · Contract · Definition
+│  └─ 139 application.sagajeong-synthetic-courier-observation-projection · Application · Projection
 ├─ 독립 Synty 경관 처리 [simulation-synty-landscape]
 │  ├─ 010 domain.synty-ledger · Domain · Definition
 │  ├─ 030 application.synty-job · Application · Projection
@@ -849,6 +851,16 @@ Simulation·Unity
   - 읽기/쓰기: `DerivedWorld → None`
   - 부수효과: `None`
   - 경계: SyntheticFixture 전용 읽기 사본이며 도착·보간으로 주문·픽업·전달 상태를 변경하지 않는다.
+- **138 contract.sagajeong-synthetic-courier-observation** — [사가정합성기사관찰Snapshot](../../../Ssalddel.Simulation.Contracts/UnityPackage/Runtime/사가정합성기사관찰Contracts.cs) · 사가정 synthetic-delivery.r1 단일 기사의 선택 카드용 읽기 사본을 정의한다.
+  - 계층/단계: `Contract / Definition`
+  - 읽기/쓰기: `DerivedWorld → None`
+  - 부수효과: `None`
+  - 경계: 합성 Simulation 관찰 전용이며 실제 사람·운영 배차·실제 정산·권위 상태 변경을 허용하지 않는다.
+- **139 application.sagajeong-synthetic-courier-observation-projection** — [사가정합성기사관찰SnapshotFactory](../../../Ssalddel.Simulation.Application/RuntimeCore/사가정합성기사관찰Projection.cs) · synthetic-delivery.r1 단일 기사 상태를 사가정 선택 카드용 사본으로 투영한다.
+  - 계층/단계: `Application / Projection`
+  - 읽기/쓰기: `DerivedWorld → None`
+  - 부수효과: `None`
+  - 경계: Simulation 세션 사본만 읽으며 공공 통계·운영 주문·실제 기사·실제 정산·Unity 상태를 변경하지 않는다.
 
 ## 독립 Synty 경관 처리 (`simulation-synty-landscape`)
 

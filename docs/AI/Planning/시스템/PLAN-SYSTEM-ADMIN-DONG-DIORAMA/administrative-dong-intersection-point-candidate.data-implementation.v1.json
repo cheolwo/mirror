@@ -1,0 +1,136 @@
+{
+  "schemaVersion": "public-data-candidate-implementation.v1",
+  "implementationStableId": "data-implementation:administrative-dong-intersection-point:g3b:r1",
+  "revision": "northeast-seoul-admin-dong-intersection-point-candidate.g3b.r1",
+  "workKindCode": "FrozenPublicDataCandidateGeneration",
+  "playableLoopWorkOrder": false,
+  "evidenceStageClaimed": null,
+  "statusCode": "ApprovedForLocalPrivateCandidateGeneration",
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-intersection-point-candidate.implementation.r10.md",
+    "designRevision": "administrative-dong-diorama:intersection-point-candidate.g3b.r1",
+    "designHashSha256": "1FE3EE996A68FDC03C6E4552D51F4DF923276EE95CCCDACEBD75DE6B28888FFD"
+  },
+  "implementationFiles": {
+    "scopeDefinitionRef": "eng/world-seedbeds/administrative-dong-dioramas/northeast-seoul-rider-intersection.g3b.r1.json",
+    "generatorRef": "eng/neighborhood/administrative_dong_intersection_candidate.py"
+  },
+  "inputContract": {
+    "primaryDatasetId": "OA-15534",
+    "primarySourceRevision": "file-modified:20250814:retrieved:20260913",
+    "primarySourceCoordinateReference": "EPSG:5186",
+    "historicalBoundaryDatasetId": "OA-22160",
+    "historicalBoundarySourceRevision": "file-modified:20231031:retrieved:20260912",
+    "historicalBoundarySourceCoordinateReference": "EPSG:5181",
+    "administrativeAreaCount": 30,
+    "crosswalkDiagnosticRevision": "northeast-seoul-admin-dong-crosswalk-candidate.g3a.r2",
+    "crosswalkDiagnosticCandidateSetHashSha256": "78312E5F0DDB89BFFA9AD1881379CBF7E8037A6C6454D4F0ABDF2A3E4D22D30A"
+  },
+  "pipeline": [
+    {
+      "order": 1,
+      "stepCode": "VerifyFrozenLineage",
+      "writesAuthority": false
+    },
+    {
+      "order": 2,
+      "stepCode": "ReadOwnSourcePointGeometry",
+      "writesAuthority": false
+    },
+    {
+      "order": 3,
+      "stepCode": "AssignByUniqueHistoricalBoundaryCover",
+      "writesAuthority": false
+    },
+    {
+      "order": 4,
+      "stepCode": "AttachCrosswalkIdentityDiagnosticsAfterAssignment",
+      "writesAuthority": false
+    },
+    {
+      "order": 5,
+      "stepCode": "WriteContentAddressedPrivateGeneration",
+      "writesAuthority": false
+    }
+  ],
+  "candidateSchema": {
+    "schemaVersion": "administrative-dong-intersection-point-candidate.v1",
+    "identityBasisCode": "Sha256LengthPrefixedDatasetRevisionAndSourceManagementNumber",
+    "assignmentBasisCode": "OwnSourcePointHistoricalBoundaryCover",
+    "coordinateGeometryField": "sourceGeometryPointEpsg5186",
+    "dbfCoordinateAttributesAreAuthoritative": false,
+    "crosswalkLinkCanAssignAdministrativeArea": false,
+    "qualityCodes": [
+      "CrosswalkLinkObservedOtherHistoricalHjd",
+      "HistoricalBoundaryBootstrapOnly",
+      "NoInScopeCrosswalkLinkObserved",
+      "PendingHumanReview",
+      "SourceCoordinateAttributeMissing",
+      "SourceDistrictSpatialAssignmentConflict"
+    ]
+  },
+  "expectedCounts": {
+    "sourceRows": 8097,
+    "sourcePointGeometryRows": 8097,
+    "sourceCoordinateAttributePresentRows": 7796,
+    "sourceCoordinateAttributeMissingRows": 301,
+    "uniquelyAssignedRows": 554,
+    "outsideScopeRows": 7543,
+    "unresolvedMultipleBoundaryRows": 0,
+    "candidateRows": 554,
+    "administrativeAreasWithCandidates": 30,
+    "sourceDistrictSpatialAssignmentNormalRows": 553,
+    "sourceDistrictSpatialAssignmentConflictRows": 1,
+    "crosswalkLinkedCandidateRows": 524,
+    "crosswalkUnlinkedCandidateRows": 30,
+    "linkedCrosswalkRelations": 1491,
+    "linkedCrosswalkSameHistoricalHjdRelations": 1271,
+    "linkedCrosswalkOtherHistoricalHjdRelations": 220
+  },
+  "outputContract": {
+    "repositoryRelativeDirectory": "artifacts/local/public-data/admin-dong-intersection-northeast-seoul-20260915-g3b-r1",
+    "generationDirectoryName": "generations",
+    "fileNames": [
+      "audit.json",
+      "candidates.ndjson",
+      "complete.json",
+      "generator-source.py",
+      "manifest.json"
+    ],
+    "candidateSetHashAlgorithmCode": "Sha256UnsignedBigEndianUInt32LengthPrefixedUtf8Fields",
+    "canonicalJsonCode": "Utf8SortedKeysCompactNoNaN",
+    "atomicPublishRequired": true,
+    "generatorSourceSnapshotRequired": true,
+    "currentPointerAllowed": false
+  },
+  "verificationContract": {
+    "selfTestRequired": true,
+    "twoRunDeterminismRequired": true,
+    "secondRunExpectedChangedFiles": 0,
+    "verifyRequired": true,
+    "independentCanonicalHashRecalculationRequired": true,
+    "databaseVerificationRequired": false,
+    "unityVerificationRequired": false
+  },
+  "authorityFlags": {
+    "privateReviewOnly": true,
+    "historicalBoundaryBootstrapOnly": true,
+    "observationCandidateOnly": true,
+    "sourceDeclaredCoordinateReference": true,
+    "currentAdministrativeBoundaryEstablished": false,
+    "currentIntersectionTopologyEstablished": false,
+    "approachDirectionEstablished": false,
+    "controllerBindingEstablished": false,
+    "laneBindingEstablished": false,
+    "signalBindingEstablished": false,
+    "crosswalkAssignmentInherited": false,
+    "distributionApproved": false,
+    "publicDisplayAllowed": false,
+    "databasePersistenceCompleted": false,
+    "runtimeAuthorized": false,
+    "traversalReady": false,
+    "gameplayReady": false,
+    "unityApplyAllowed": false
+  },
+  "completionCode": "LocalPrivateHistoricalIntersectionPointCandidateGenerated"
+}

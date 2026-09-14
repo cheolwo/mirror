@@ -18,7 +18,9 @@
       "docs/Architecture/UnityClientLayeredArchitecture.md",
       "docs/AI/Planning/시스템/PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001/restaurant-processing.md",
       "Ssalddel.Simulation.Application/RuntimeCore/LocalSimulationRuntime.cs",
-      "unity:Assets/Ssalddel/Bootstrap/음식점관찰SceneController.cs"
+      "unity:Assets/Ssalddel/Bootstrap/음식점관찰SceneController.cs",
+      "docs/AI/Planning/공간/PLAN-SPATIAL-SAGAJEONG-DELIVERY-MOBILITY/business-order-binding-proposal.r2.md",
+      "docs/AI/Planning/공간/PLAN-SPATIAL-SAGAJEONG-DELIVERY-MOBILITY/implementation.md"
     ],
     "firstTask": "인계 Check 결과와 restaurant-processing.md의 실제 검증 수준을 읽는다. OwnerMissing 또는 WriteOwnershipConflict가 있으면 담당과 파일 소유 범위를 먼저 조율하며 게임 코드를 수정하지 않는다.",
     "completionCriteria": "이 표본의 완료는 목적·모듈 연결·수정 범위·차단·기준 파일을 다른 담당이 찾을 수 있는 인계 생성까지다. 게임 완료는 승인된 원래 작업 명세의 조건을 별도로 충족해야 한다.",
@@ -35,7 +37,7 @@
   "promotionEligible": false,
   "iterationState": {
     "currentPass": "ImpactReassessment",
-    "nextReopenCondition": "P0 코드·회귀 검증 뒤 실제 카드 화면 결속은 Presentation E2부터 진행한다. 시간·저장 변경 시 Logic E3를 다시 검증한다."
+    "nextReopenCondition": "r2 세 합성 음식점 계약·상태·표현 결속은 Logic·Presentation E1~E3를 재검증한다. E4 이상, 저장 Scene·실제 Game View·실제 상호 주문 참여는 별도 승인 전 차단한다."
   },
   "changeImpactReviewRef": "",
   "presentationE4Preparation": {
@@ -52,7 +54,8 @@
     "candidateRevisionOrFingerprint": "restaurant-observer-ui.r1",
     "e5ReadinessCode": "Blocked",
     "openGapRefs": [
-      "UI 코드·자동 시험과 실제 Play Mode·Game View 완주는 별도 증거다. E0·승격 비활성 유지."
+      "UI 코드·자동 시험과 실제 Play Mode·Game View 완주는 별도 증거다. E0·승격 비활성 유지.",
+      "r2 세 합성 음식점 표현은 E1~E3 재검증 범위이며 E4 이상·저장 Scene·실제 상호 주문 참여를 승인하지 않는다."
     ]
   },
   "presentationModuleBindings": [
@@ -323,8 +326,10 @@
   "writePaths": [
     "Ssalddel.Unity/Runtime/Warehouse/음식점정책카드Presenter.cs",
     "Ssalddel.Unity/Runtime/Warehouse/음식점관찰표본.cs",
+    "Ssalddel.Unity/Presentation/음식배달수명주기표현.cs",
+    "Ssalddel.Unity/Presentation/사가정가상음식점선택Presenter.cs",
     "Ssalddel.Unity.Tests/음식점정책카드Tests.cs",
-    "Ssalddel.Simulation.Tests/음식점관찰표본Tests.cs",
+    "Ssalddel.Unity.Tests/음식배달수명주기표현Tests.cs",
     "C:/Users/user/ssalddel/Assets/Ssalddel/Bootstrap/음식점관찰SceneController.cs",
     "C:/Users/user/ssalddel/Assets/Ssalddel/Bootstrap/음식점관찰AutoBootstrap.cs",
     "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World/음식점관찰View.cs",
@@ -345,7 +350,8 @@
     "Ssalddel.Simulation.Tests/음식점조리인계Tests.cs"
   ],
   "openFeedbackItems": [
-    "기사 배정·실제 UI 후속"
+    "기사 배정·실제 UI 후속",
+    "r2 세 합성 음식점 표시 결속은 Logic·Presentation E1~E3 재검증 대상이다. E4 이상, 저장 Scene·실제 Game View, 실제 상호 주문 참여는 차단한다."
   ],
   "reopenCondition": "권한·수락·조리 분리 변경 시 Logic E1 재개",
   "detailedWorkOrderRef": "docs/AI/Planning/시스템/PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001/restaurant-cooking-work.md",

@@ -1,0 +1,108 @@
+{
+  "schemaVersion": "simulation-e7-vertical-work-order.v2",
+  "workOrderId": "E7-WO-SAGAJEONG-BUILDING-ROLE-CARDS",
+  "worldInteractionId": "WI-CITY-SYNTHETIC-MOVE",
+  "interactionGoalStableId": "interaction-goal:synthetic-delivery-move.v1",
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/building-role-cards.implementation.r16.md",
+    "designRevision": "sagajeong-building-role-cards.r16",
+    "designHashSha256": "45A620D9A4A5135BE1142BB0D2992AB9EEA87C35AD99F30763EAF3F0FD45097A",
+    "statusCode": "Approved",
+    "approvalEvidenceRef": "2026-09-14 user confirmation"
+  },
+  "requiredResearch": [],
+  "trackPlans": {
+    "logic": {
+      "downwardPlan": [
+        {
+          "code": "E7-E1",
+          "disposition": "NoImpact",
+          "summary": "Building role cards read existing synthetic presentation data and never execute an operational command or change a world revision."
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "E1-E7",
+          "status": "PassedNoAuthorityMutation",
+          "summary": "Exact main Unity sources passed the scoped 75-test EditMode regression; follow-up results are read-only and authority-changing commands are absent."
+        }
+      ]
+    },
+    "presentation": {
+      "downwardPlan": [
+        {
+          "code": "E7",
+          "disposition": "Affected",
+          "summary": "Building selection exposes role tabs and an optional read-only food route selection without Scene persistence."
+        },
+        {
+          "code": "E6",
+          "disposition": "Affected",
+          "summary": "Role switching, missing route snapshot, close and whole-view cleanup are validated."
+        },
+        {
+          "code": "E5",
+          "disposition": "Affected",
+          "summary": "Three explicit synthetic semantic places bind to frozen building geometry; remaining buildings stay unbound."
+        },
+        {
+          "code": "E4",
+          "disposition": "Affected",
+          "summary": "Restaurant, warehouse, residential-delivery and general-unbound cards preserve the existing diorama visual baseline."
+        },
+        {
+          "code": "E3",
+          "disposition": "Affected",
+          "summary": "Role profile ordering and lifecycle summaries are deterministic."
+        },
+        {
+          "code": "E2",
+          "disposition": "Affected",
+          "summary": "SyntheticFixture and SourceGeometryOnly evidence statuses remain distinct from public business facts."
+        },
+        {
+          "code": "E1",
+          "disposition": "Affected",
+          "summary": "A building owns an ordered list of role profiles and each role owns zero or more H1 action references."
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "E1-E6",
+          "status": "Passed75Of75",
+          "summary": "Role binding and follow-up tests plus existing Sagajeong selection, model, operations and spatial presentation regressions passed 75/75 in the isolated Unity project using byte-identical main source files."
+        },
+        {
+          "code": "E7",
+          "status": "NotRun",
+          "summary": "Fresh Game View evidence is optional for this turn and cannot reuse the r15 card capture as r16 proof."
+        }
+      ]
+    }
+  },
+  "runtimeBoundary": "Unity read-only presentation; server and Simulation remain authoritative; no actual business, resident, inventory, route or order mutation",
+  "writePaths": [
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World/사가정건물역할Card.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World/사가정H공간선택Layer.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World/사가정운영디오라마View.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Tests/EditMode/사가정H공간선택Tests.cs",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/README.md",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/building-role-cards.implementation.r16.md",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/building-role-cards.e7-work-order.json",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md"
+  ],
+  "integratedGate": {
+    "status": "ImplementedAutomatedTestsPassedNotPromoted",
+    "evidenceRefs": [
+      "C:/Users/user/ssalddel-building-h-validation/artifacts/local/validation/sagajeong-building-role-r16/editmode-exact-main-r2.xml"
+    ],
+    "openFeedbackRefs": [
+      "actual public business and tenant bindings remain unavailable",
+      "warehouse card has lifecycle preview only and no route playback",
+      "fresh r16 Game View and physical mouse input are not yet verified"
+    ]
+  },
+  "promotionEligible": false,
+  "reopenCondition": "role taxonomy, actual business evidence, workflow authority, building geometry, H hierarchy or public distribution status changes"
+}

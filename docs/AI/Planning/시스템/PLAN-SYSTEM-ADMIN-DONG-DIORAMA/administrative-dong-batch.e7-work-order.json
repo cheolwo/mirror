@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "simulation-e7-vertical-work-order.v2",
+  "workOrderId": "E7-WO-NORTHEAST-SEOUL-ADMIN-DONG-DIORAMA-BATCH",
+  "worldInteractionId": "WI-CITY-SYNTHETIC-MOVE",
+  "interactionGoalStableId": "interaction-goal:synthetic-delivery-move.v1",
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-batch.implementation.r4.md",
+    "designRevision": "administrative-dong-diorama:northeast-seoul-historical-boundary-batch.r2",
+    "designHashSha256": "2FB75AD68DE98FAD41F1131F071EBC37779E4E946E2EF9CBD22BF21A6EAD0BA8",
+    "statusCode": "Approved",
+    "approvalEvidenceRef": "2026-09-14 user request to research official boundaries and build one reusable diorama module per administrative dong"
+  },
+  "requiredResearch": [
+    {
+      "researchId": "RESEARCH-ADMINISTRATIVE-DONG-CURRENT-BOUNDARY",
+      "statusCode": "AcceptedWithBlockingLimitation",
+      "summary": "OA-22160 contains all target 30 geometries but its actual file is a 2023 historical snapshot; current JUSO TL_SCCO_GEMD requires approved acquisition before current publication."
+    }
+  ],
+  "trackPlans": {
+    "logic": {
+      "downwardPlan": [
+        {
+          "code": "E7-E1",
+          "disposition": "NoAuthorityMutation",
+          "summary": "The batch only prepares read-only spatial candidates and cannot create orders, assign riders, alter delivery territories, or change Simulation state."
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "E1-E7",
+          "status": "ValidatedNoAuthorityMutation",
+          "summary": "Candidate collections were independently reread, repeated apply inserted zero documents, and the existing API current-pointer snapshot hash remained unchanged."
+        }
+      ]
+    },
+    "presentation": {
+      "downwardPlan": [
+        {
+          "code": "E7",
+          "disposition": "NotAuthorized",
+          "summary": "No Unity Editor, Play Mode, Game View, Scene, Prefab, camera, input or GameObject change is included."
+        },
+        {
+          "code": "E6-E5",
+          "disposition": "BlockedByCurrentBoundary",
+          "summary": "Historical candidates cannot be connected to the current Unity observation composition until a current authoritative boundary is acquired and approved."
+        },
+        {
+          "code": "E4",
+          "disposition": "Affected",
+          "summary": "Official source candidates, geometry limitations, common ENU frame, building ownership and road clipping evidence are frozen."
+        },
+        {
+          "code": "E3-E2",
+          "disposition": "Affected",
+          "summary": "Thirty deterministic administrative-dong module inputs and their immutable candidate projections are assembled and independently reread."
+        },
+        {
+          "code": "E1",
+          "disposition": "Affected",
+          "summary": "A data-driven scope catalog owns the exact 30 administrative dong and 12 legal-dong bindings."
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "E1-E4",
+          "status": "ValidatedHistoricalCandidate",
+          "summary": "Source and toolchain hashes, exact 30-area coverage, unique assignment, deterministic regeneration, 297 tiles, candidate persistence and scoped contract regressions passed for the historical-boundary candidate."
+        },
+        {
+          "code": "E5-E7",
+          "status": "BlockedByCurrentAdministrativeBoundary",
+          "summary": "A current JUSO boundary snapshot, explicit publication approval and separate Unity placement work are required."
+        }
+      ]
+    }
+  },
+  "runtimeBoundary": "Historical official-boundary spatial candidate generation and local Mongo candidate storage only; server current projections, delivery authority, Simulation and Unity remain unchanged",
+  "writePaths": [
+    "eng/world-seedbeds/administrative-dong-dioramas/northeast-seoul-rider.r2.json",
+    "eng/neighborhood/administrative_dong_diorama_batch.py",
+    "eng/Ssalddel.PublicDataPortalImport/Program.cs",
+    "eng/Ssalddel.PublicDataPortalImport/README.md",
+    "eng/Ssalddel.PublicDataPortalImport/행정동디오라마Batch.cs",
+    "eng/Ssalddel.PublicDataPortalImport/행정동실자료완결.cs",
+    "Ssalddel/Services/WorldProjection/AdministrativeDongDiorama/행정동디오라마ProjectionBuilder.cs",
+    "Ssalddel/Services/WorldProjection/AdministrativeDongDiorama/행정동경계JusoShapefileZipReader.cs",
+    "Ssalddel.Tests/Services/WorldProjection/행정동디오라마ProjectionBuilderTests.cs",
+    "Ssalddel.Tests/Services/WorldProjection/행정동경계JusoShapefileZipReaderTests.cs",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-batch.implementation.r4.md",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-batch.e7-work-order.json",
+    "docs/Reports/동북서울-30개-행정동-디오라마-역사경계-후보-2026-09-14.md",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md"
+  ],
+  "integratedGate": {
+    "status": "HistoricalBoundaryCandidateBatchStoredAndVerified",
+    "evidenceRefs": [
+      "docs/Reports/동북서울-30개-행정동-디오라마-역사경계-후보-2026-09-14.md",
+      "artifacts/local/public-data/admin-dong-diorama-northeast-seoul-20260914-r2/scope-manifest.json",
+      "artifacts/local/public-data/admin-dong-diorama-northeast-seoul-20260914-r2/audit.json",
+      "artifacts/local/validation/20260914-224141",
+      "candidate-batch:ff8689fb8cee013e4ccf88bca2bf4acd9986f418f1f561fa5b50c0f06b1c2b1f"
+    ],
+    "openFeedbackRefs": [
+      "current authoritative JUSO TL_SCCO_GEMD snapshot is not acquired",
+      "OA-22160 historical boundary cannot update API current pointers",
+      "AL_D010 distribution-rights reconciliation remains unresolved",
+      "the earlier r1 local and Mongo candidates are preserved but not promoted",
+      "current projection hashing and duplicate verification must cover the full canonical contract body before publication",
+      "batch fault-injection tests for BSON overflow, partial-write recovery, future-current drift and orphan collision remain follow-up coverage",
+      "Unity Scene, Play Mode and Game View are outside this slice"
+    ]
+  },
+  "promotionEligible": false,
+  "reopenCondition": "a current official boundary snapshot is acquired, the 30-area scope changes, geometry contracts change, current publication is authorized, or Unity placement is requested"
+}

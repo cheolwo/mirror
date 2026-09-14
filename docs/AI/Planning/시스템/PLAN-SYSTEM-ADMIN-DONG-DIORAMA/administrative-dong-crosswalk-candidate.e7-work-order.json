@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "public-data-candidate-implementation-work-order.v1",
+  "workOrderId": "DATA-WO-NORTHEAST-SEOUL-ADMIN-DONG-CROSSWALK-CANDIDATE",
+  "workOrderKind": "FrozenPublicDataCandidateLedger",
+  "compatibilityFileNameStatus": "LegacyE7FileNameButNotAPlayableLoopE7WorkOrder",
+  "runtimeApplicationStatusCode": "NotApplicableInThisSlice",
+  "futurePlayableLoopGate": "A separately registered native E7 work order is required before any Unity, traversal, Simulation or gameplay consumption.",
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-crosswalk-candidate.implementation.r8.md",
+    "designRevision": "administrative-dong-diorama:crosswalk-candidate.g3a.r2",
+    "designHashSha256": "005DBDF1C5B501362FF0445C72F3BED91FAE2CC99A21372C6FD0AA3F09C18466",
+    "statusCode": "Approved",
+    "approvalEvidenceRef": "2026-09-15 user request to continue collecting road, alley, signal and life evidence and progress all 30 administrative-dong modules toward the Sagajeong review depth"
+  },
+  "requiredResearch": [
+    {
+      "researchId": "RESEARCH-ADMINISTRATIVE-DONG-G3A-OA23081",
+      "statusCode": "AcceptedWithBlockingLimitations",
+      "summary": "The frozen OA-23081 file is the 2026-08-24 official whole-Seoul crosswalk and pedestrian-signal-presence observation, but its page and sheet do not declare a CRS. EPSG:5186 is independently supported by an official-station 8.0946m Sagajeong anchor check while alternative candidate CRS interpretations miss by at least 83.7km; all joins remain PendingHumanReview and historical-boundary-only. The corrected r2 also preserves 21 source-district versus historical-spatial-district conflicts as explicit diagnostics."
+    }
+  ],
+  "evidenceReviewTracks": {
+    "logic": {
+      "downwardPlan": [
+        {
+          "code": "DATA-SOURCE-TO-LEDGER",
+          "disposition": "AffectedPrivateReviewLedgerOnly",
+          "summary": "Build a deterministic local candidate generation and RDB ledger for OA-23081 points uniquely covered by the exact 30 historical administrative boundaries without changing Mongo current, orders, dispatch, settlement, traversal or gameplay."
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "DATA-LEDGER-VERIFY",
+          "status": "VerifiedScopedHistoricalCandidate",
+          "summary": "Require exact input and actual-scope hashes, deterministic generation, source-district conflict diagnostics, coordinate-evidence re-derivation, repository and reparse-path rejection, idempotent MySQL apply and independent exact-set readback."
+        }
+      ]
+    },
+    "presentation": {
+      "downwardPlan": [
+        {
+          "code": "PRESENTATION-NO-APPLICATION",
+          "disposition": "NoVisualApplication",
+          "summary": "Do not expose crosswalk candidates to Unity or create a life-view capture in this slice."
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "PRESENTATION-FUTURE-NATIVE-E7-REQUIRED",
+          "status": "NotApplicableUntilMobilityGraphReview",
+          "summary": "Presentation stays blocked until current boundaries, crosswalk geometry, sidewalks, stop lines, lanes and signal scenario separation are bound and reviewed."
+        }
+      ]
+    }
+  },
+  "runtimeBoundary": "Local artifacts and local MySQL PendingHumanReview candidate ledger only; no public projection, Mongo current, Unity display, traversal, gameplay, signal-phase or operational authority",
+  "writePaths": [
+    "eng/world-seedbeds/administrative-dong-dioramas/northeast-seoul-rider-crosswalk.g3a.r2.json",
+    "eng/neighborhood/administrative_dong_crosswalk_candidate.py",
+    "eng/Ssalddel.PublicDataPortalImport/Program.cs",
+    "eng/Ssalddel.PublicDataPortalImport/행정동횡단보도후보.cs",
+    "eng/Ssalddel.PublicDataPortalImport/README.md",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-crosswalk-candidate.implementation.r8.md",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-crosswalk-candidate.e7-work-order.json",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/Reports/동북서울-30개-행정동-디오라마-깊이-기준선-및-주소후보-2026-09-14.md"
+  ],
+  "completionGate": {
+    "status": "ImplementedLocalG3aCandidateNotPromoted",
+    "evidenceRefs": [
+      "artifacts/local/public-data/sagajeong-static-traffic-20260913-r2-crosswalk/acquisition.json",
+      "artifacts/local/public-data/admin-dong-diorama-northeast-seoul-20260914-r2/scope-manifest.json",
+      "artifacts/local/public-data/station-reference-20260913-r1/selected.json",
+      "artifacts/local/public-data/admin-dong-crosswalk-northeast-seoul-20260915-g3a-r2/generations/78312e5f0ddb89bffa9ad1881379cbf7e8037a6c6454d4f0abdf2a3e4d22d30a/manifest.json",
+      "artifacts/local/public-data/admin-dong-crosswalk-northeast-seoul-20260915-g3a-r2/generations/78312e5f0ddb89bffa9ad1881379cbf7e8037a6c6454d4f0abdf2a3e4d22d30a/candidates.ndjson",
+      "artifacts/local/public-data/admin-dong-crosswalk-northeast-seoul-20260915-g3a-r2/generations/78312e5f0ddb89bffa9ad1881379cbf7e8037a6c6454d4f0abdf2a3e4d22d30a/audit.json",
+      "artifacts/local/public-data/admin-dong-crosswalk-northeast-seoul-20260915-g3a-r2/generations/78312e5f0ddb89bffa9ad1881379cbf7e8037a6c6454d4f0abdf2a3e4d22d30a/complete.json"
+    ],
+    "openFeedbackRefs": [
+      "current administrative boundary is unavailable",
+      "OA-23081 does not source-declare its coordinate reference system",
+      "sourcePointEpsg5186 and epsg5186-point legacy labels mean an interpreted candidate only; downstream consumption is blocked unless coordinateReferenceStatus and sourceDeclaredCoordinateReference are checked together, and the next schema revision must rename them to interpreted-candidate terms",
+      "g3a.r1 is preserved as RejectedAfterIndependentAudit and must not be promoted",
+      "g3a.r1 preserves 11 database snapshot metadata rows and four generation outputs, but its recorded generator path now contains r2 bytes; the r1 generator bytes are unavailable and full r1 reproducibility must not be claimed",
+      "crosswalk polygon, stop line, sidewalk connection and signal phase timing are not present",
+      "Unity and traversal application are deliberately excluded"
+    ]
+  },
+  "promotionEligible": false,
+  "reopenCondition": "source file or hash, coordinate interpretation, anchor evidence, historical boundary, exact 30-area scope, candidate assignment rule, persistence schema or authority flags change"
+}

@@ -4,13 +4,33 @@
   "evidenceModelRevision": "horizontal-dual-cycle-evidence.r3",
   "workOrderId": "E7-WO-SYNTHETIC-ORDER-ACCEPT-R4",
   "title": "음식점 수락 기록",
+  "handoffNotes": {
+    "purpose": "사가정 가상 음식점 3곳의 합성 프로필 계약과 주문 수락 상태 전이를 기존 음식점 수락 WI에 결속한다.",
+    "excludedScope": "E4 이상, 저장 Scene·실제 Game View, 실제 상호 주문 참여와 운영 주문 활성화는 제외한다.",
+    "moduleRelations": [
+      "사가정가상음식점Contracts → 가상주문흐름 → 권위 상태 사본 → 후속 배차·Unity 표현"
+    ],
+    "readRefs": [
+      "docs/AI/Planning/시스템/PLAN-SYSTEM-MYEONMOK-OBSERVER/order-ledger.r4.md",
+      "docs/AI/Planning/시스템/PLAN-SYSTEM-MYEONMOK-OBSERVER/mart-center.r3.md",
+      "docs/AI/Planning/공간/PLAN-SPATIAL-SAGAJEONG-DELIVERY-MOBILITY/business-order-binding-proposal.r2.md",
+      "docs/AI/Planning/공간/PLAN-SPATIAL-SAGAJEONG-DELIVERY-MOBILITY/implementation.md"
+    ],
+    "firstTask": "기존 primary 기획 관문을 유지한 채 r2 합성 프로필 계약과 가상주문흐름의 E1~E3 영향을 재검증한다.",
+    "completionCriteria": "세 합성 음식점 계약·주문 수락 상태의 E1~E3 결정성과 회귀를 검증하고 E4 이상은 차단 상태로 남긴다.",
+    "validationCommands": [
+      "pwsh -NoProfile -File eng/execution-ledgers/manage-e7-vertical-work-order.ps1 -InputPath eng/execution-ledgers/work-orders/synthetic-order-accept-r4.e7-work-order.json"
+    ],
+    "decisionBoundary": "보충 r2 결속은 기존 planningGate·revision·hash를 대체하거나 Evidence를 승격하지 않는다.",
+    "returnInstructions": "개발 통합에 E1~E3 재검증 결과와 E4 이상·Scene·Game View·실제 상호 주문 차단을 분리해 반환한다."
+  },
   "activeWorldInteractionId": "WI-CITY-RESTAURANT-ACCEPT",
   "targetEvidenceStage": "E7",
   "currentEvidenceStage": "E0",
   "promotionEligible": false,
   "iterationState": {
     "currentPass": "ImpactReassessment",
-    "nextReopenCondition": "P0 코드·회귀 검증 뒤 실제 카드 화면 결속은 Presentation E2부터 진행한다. 시간·저장 변경 시 Logic E3를 다시 검증한다."
+    "nextReopenCondition": "r2 세 합성 음식점 계약·상태·표현 결속은 Logic·Presentation E1~E3를 재검증한다. E4 이상, 저장 Scene·실제 Game View·실제 상호 주문 참여는 별도 승인 전 차단한다."
   },
   "changeImpactReviewRef": "",
   "presentationE4Preparation": {
@@ -31,7 +51,8 @@
     "candidateRevisionOrFingerprint": "synthetic-order-flow.r4",
     "e5ReadinessCode": "Blocked",
     "openGapRefs": [
-      "UI 코드·자동 시험과 실제 Play Mode·Game View 완주는 별도 증거다. E0·승격 비활성 유지."
+      "UI 코드·자동 시험과 실제 Play Mode·Game View 완주는 별도 증거다. E0·승격 비활성 유지.",
+      "r2 세 합성 음식점 표현은 E1~E3 재검증 범위이며 E4 이상·저장 Scene·실제 상호 주문 참여를 승인하지 않는다."
     ]
   },
   "presentationModuleBindings": [
@@ -308,12 +329,14 @@
   ],
   "researchBoundary": "기존 r3 공간과 역할색을 유지하고 상태 판독만 추가한다.",
   "writePaths": [
+    "Ssalddel.Simulation.Contracts/UnityPackage/Runtime/사가정가상음식점Contracts.cs",
     "Ssalddel.Simulation.Domain/UnityPackage/Runtime/가상주문흐름.cs",
     "Ssalddel.Simulation.Domain/UnityPackage/Runtime/Simulation음식점응답.cs",
     "Ssalddel.Simulation.Tests/가상주문흐름Tests.cs"
   ],
   "openFeedbackItems": [
-    "r4 전용 분기. 기존 r1~r3 회귀, 실제 화면·Hosted는 별도. 기존 동일 파일 작업과 현 담당이 순차 통합."
+    "r4 전용 분기. 기존 r1~r3 회귀, 실제 화면·Hosted는 별도. 기존 동일 파일 작업과 현 담당이 순차 통합.",
+    "r2 세 합성 음식점 계약·수락 결속은 Logic·Presentation E1~E3 재검증 대상이다. E4 이상, 저장 Scene·실제 Game View, 실제 상호 주문 참여는 차단한다."
   ],
   "reopenCondition": "권한·수락·조리 분리 변경 시 Logic E1 재개",
   "interactionGoalStableId": "interaction-goal:synthetic-order-accept-r4.v1",

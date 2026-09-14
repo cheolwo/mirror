@@ -1,6 +1,6 @@
 # 사가정 가상 배달 이동 E1~E7 작업 명세
 
-- 승인 기획: [r1](README.md)
+- 승인 기획: [r1](README.md), [사업장·음식점 주문 결속 r2](business-order-binding-proposal.r2.md)
 - 대표 WI: `가상 주문 한 건을 사가정 이동망에서 픽업·전달·복귀하는 관찰`
 - 준비된 주체: 가상 주문자·가상 음식점·가상 기사·가상 오토바이
 - 수정 경계: 이동망 전처리·검증, Simulation 읽기 전용 여정 상태 사본, Unity 이동 해석·표현, 집중 시험과 현행 문서
@@ -29,6 +29,27 @@
 ## 권위 승격 재개점
 
 사가정 후보 경로의 연결성, Motorcycle/Pedestrian 통행, 음식점·배송지의 Entrance/CurbStop, graph/projection hash가 같은 판본으로 검토된 뒤 기존 음식배달 Goal의 가장 이른 Logic E1을 다시 연다. 그 WI에서 경로 진행을 Session Save/Replay에 넣고 도착을 픽업·전달 상태 전이의 필수 입력으로 결속한다. Unity 표현 성공만으로 이 승격을 수행하지 않는다.
+
+## r2 비공개 음식점 자료·세 가상 음식점 폐루프 작업 명세
+
+| E | Logic | Presentation |
+| --- | --- | --- |
+| E1 | 599개 실제 음식 관측의 원문 상호·부모 원장·입력 hash·공간/인허가 후보·비공개 상태와 세 합성 profile 계약을 고정한다. | 세 합성 이름과 음식점 고유 식별자를 기존 음식배달 수명주기 표시 모델이 보존한다. |
+| E2 | 기존 `public_data_normalized_records` 부모 행을 재사용한 파생 directory와 기존 음식 주문 상태 기계를 결속한다. | Unity 패키지는 profile 목록과 주문 상태 사본을 읽되 Command·공개 상호 위치를 추정하지 않는다. |
+| E3 | 599행 결정성·독립 재조회·재적용 멱등성, 세 profile의 주문→조리→배정→픽업→전달→수령→기사 귀환과 Save/Replay를 자동 시험한다. | 음식점 ID·합성 이름·상태 단계의 교차 오염이 없음을 .NET/Unity 패키지 시험으로 확인한다. |
+| E4~E7 | 실제 상호 Claim, Entrance/CurbStop, 검토 통행, Hosted 전송, 저장 Scene과 실제 입력을 각각 다시 승인한다. | 이번 구현으로 새 Game View나 실제 Scene 결속을 주장하지 않는다. |
+
+쓰기 범위는 `eng/Ssalddel.PublicDataPortalImport/`의 파생 directory 도구, Simulation 계약·합성 profile/기존 주문 흐름의 최소 확장, Unity 패키지의 읽기 전용 표시 모델, 집중 시험과 이 기획 snapshot이다. 실제 상호는 부모 SEMAS 원장의 `RawSnapshotId`·`SourceId`·`DatasetId`를 유지하며 새 외부 원천처럼 중복 등록하지 않는다.
+
+새 WI나 Goal을 만들지 않고 기존 `restaurant-auto-accept`, `restaurant-cooking`, `synthetic-order-accept-r4`, `synthetic-order-assign-r4`, `synthetic-delivery-assign/pickup/move/deliver/receive/return` E7 v2 작업 명세를 재사용한다. 새 profile 계약과 주문 생성은 `synthetic-order-accept-r4`, 세 음식점 배정·합성 실행 입력은 `synthetic-order-assign-r4`, Unity 읽기 표시 결속은 `restaurant-cooking` 명세가 소유한다. 나머지 작업 명세의 직접 결과와 primary 기획 관문은 바꾸지 않으며 이번 통합 시험에서 같은 상태 전이 순서만 재검증한다.
+
+## r2 구현·검증 결과
+
+- 결정적 directory manifest는 음식 관측 599행·원문 상호 587종·단일 건물 후보 180행·인허가 일치 관측 334행이며 SHA-256은 `d89369ecf0fa85093522aef2a7a2dc9f413154c59d175f58391e3de3b8bb64cd`다. 로컬 MySQL에 599행을 저장하고 별도 문맥에서 전부 재조회했으며 두 번째 적용은 쓰기 없이 `existing=599`로 끝났다.
+- 현재 로컬 DB에는 인허가 전용 테이블이 없어 후보 ID·원천 hash는 동결 입력 기준으로 보존했다. migration이나 추정 테이블은 만들지 않았고, 이 상태를 `SkippedTableUnavailable`로 명시한다.
+- 실제 사업장과 무관한 가상 음식점 세 profile 및 전용 주문 ID 공간을 추가했다. 사가정 시나리오에는 기존 r4 마트 주문을 만들지 않으며 5개 음식 주문이 세 음식점을 순환해 수령 확인·기사 복귀까지 끝난다. 종료 시점과 이동 중간 시점 Save/Replay가 모두 결정적이다.
+- `DisplayRouteKind`는 대로·생활길·골목을 후속 결속하기 위한 표시 후보다. `RouteApplied=false`, `TraversalReady=false`이며 이번 주문 폐루프의 기사는 기존 공통 합성 경로를 사용한다.
+- Simulation 집중 시험 49/49, Unity 패키지 집중 시험 26/26이 통과했다. 범위 Fast는 Simulation 227/227·Unity 28/28, Task는 Simulation 전체 1,957/1,957·Unity 전체 785/785와 두 solution build·생성 지도를 통과했다. 세 기존 E7 v2 작업 명세 검사도 통과했으나 formal Evidence 단계는 계속 `E0`이고 새 Game View·Scene·Hosted 증거는 만들지 않았다.
 
 ## r1 구현·검증 결과
 

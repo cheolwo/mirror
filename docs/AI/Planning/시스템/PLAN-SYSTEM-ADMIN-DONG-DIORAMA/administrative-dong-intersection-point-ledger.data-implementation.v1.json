@@ -1,0 +1,182 @@
+{
+  "schemaVersion": "public-data-candidate-ledger-implementation.v1",
+  "implementationStableId": "data-implementation:administrative-dong-intersection-point-ledger:g3b:r1",
+  "revision": "northeast-seoul-admin-dong-intersection-point-candidate-ledger.g3b.r1",
+  "workKindCode": "LocalPrivatePublicDataCandidateLedger",
+  "playableLoopWorkOrder": false,
+  "evidenceStageClaimed": null,
+  "statusCode": "ApprovedForLocalPrivateRdbLedger",
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-intersection-point-ledger.implementation.r11.md",
+    "designRevision": "administrative-dong-diorama:intersection-point-candidate-ledger.g3b.r1",
+    "designHashSha256": "5B1C34AE5AE45C89A5E0FAC16B3EAA93064113F0ECF732E250E877FAAB0A68B2"
+  },
+  "consumedGeneration": {
+    "candidateGenerationRevision": "northeast-seoul-admin-dong-intersection-point-candidate.g3b.r1",
+    "candidateSetHashSha256": "DB83F1CC82EB65F864188DD790A003EDF570DBB459D56D4C07CE690988F2837B",
+    "repositoryRelativeDirectory": "artifacts/local/public-data/admin-dong-intersection-northeast-seoul-20260915-g3b-r1/generations/db83f1cc82eb65f864188dd790a003edf570dbb459d56d4c07ce690988f2837b",
+    "completeContentHashSha256": "BBA981A5A90E7CFD55F177D0F90513C3B8A6D2E8E61A9491500D11767F9143EF",
+    "files": [
+      {
+        "name": "audit.json",
+        "sha256": "C9028FC8861C8EE310823C4F5301930EE236F2B551497A438D5B03B6E7AF7694",
+        "bytes": 18952
+      },
+      {
+        "name": "candidates.ndjson",
+        "sha256": "2D72DEF4E530E84D6D3DC4A344B688A8694129C0DC8F95D3568F6468C5506ABD",
+        "bytes": 1562936
+      },
+      {
+        "name": "complete.json",
+        "sha256": "FC6D0A9410FA16D243E666DE9A3B4EB8BCCDAAF32FBCCF8FBBD3A2A8EF27603F",
+        "bytes": 2271
+      },
+      {
+        "name": "generator-source.py",
+        "sha256": "7CA125BFAE2B18E1AABCE489AECC803B3A668DE6BEA142492EB94A1455BA6107",
+        "bytes": 82458
+      },
+      {
+        "name": "manifest.json",
+        "sha256": "17DBA105F6C9F4FA70235B0ACA62CDF61B17E6B585B05CABFAE0D608CC2C3BDC",
+        "bytes": 22428
+      }
+    ],
+    "generationMutationAllowed": false,
+    "currentPointerAllowed": false
+  },
+  "rdbLedger": {
+    "sourceId": "seoul-open-data-admin-dong-intersection-private-review",
+    "datasetId": "northeast-seoul-admin-dong-intersection-point-candidate-g3b-r1",
+    "metricCode": "administrative-dong-intersection-point-candidate",
+    "schemaVersion": "administrative-dong-intersection-point-candidate.v1",
+    "dataRevision": "northeast-seoul-admin-dong-intersection-point-candidate.g3b.r1",
+    "evidenceAsOfUtc": "2025-08-14T00:00:00Z",
+    "derivedAtUtc": "2026-09-15T00:00:00Z",
+    "qualityCode": "PendingHumanReview",
+    "namedLock": "mirror:public-data:admin-dong-intersection-g3b-r1",
+    "maximumChunkRows": 500,
+    "transactionRequired": true,
+    "exactBodyPreflightRequired": true,
+    "existingRowUpdateAllowed": false,
+    "newConnectionReadbackRequired": true,
+    "repeatApplyExpectedInsertedRows": 0,
+    "repeatApplyExpectedUpdatedRows": 0,
+    "repeatApplyExpectedInsertedSnapshots": 0
+  },
+  "identityContract": {
+    "candidateIdentitySha256": "UPPERHEX(SHA256(UTF8(candidateStableId)))",
+    "stableId": "administrative-dong-intersection-point-candidate:sha256:{lowerhex(candidateIdentitySha256)}",
+    "dimensionKey": "intersection-point-candidate|sha256|{candidateIdentitySha256}",
+    "rawSourceManagementNumberAllowedInStableId": false,
+    "rawSourceManagementNumberAllowedInDimensionKey": false,
+    "allIdentityValuesMustBeUnique": true
+  },
+  "rawSnapshotContract": {
+    "expectedSnapshotRegistrations": 19,
+    "distinctArtifactDatasetIdRequired": true,
+    "liveAndGeneratedGeneratorBytesBothRequired": true,
+    "items": [
+      "artifacts/local/public-data/sagajeong-static-traffic-20260913-r1/A008_P_20250814.zip",
+      "artifacts/local/public-data/sagajeong-static-traffic-20260913-r1/acquisition.json",
+      "artifacts/local/public-data/admin-dong/20260912-seoul-oa22160/seoul-administrative-dong-boundary.zip",
+      "eng/world-seedbeds/administrative-dong-dioramas/northeast-seoul-rider.r2.json",
+      "artifacts/local/public-data/admin-dong-diorama-northeast-seoul-20260914-r2/scope-manifest.json",
+      "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-intersection-point-candidate.implementation.r10.md",
+      "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-intersection-point-candidate.data-implementation.v1.json",
+      "eng/world-seedbeds/administrative-dong-dioramas/northeast-seoul-rider-intersection.g3b.r1.json",
+      "eng/neighborhood/administrative_dong_intersection_candidate.py",
+      "artifacts/local/public-data/admin-dong-intersection-northeast-seoul-20260915-g3b-r1/generations/db83f1cc82eb65f864188dd790a003edf570dbb459d56d4c07ce690988f2837b/manifest.json",
+      "artifacts/local/public-data/admin-dong-intersection-northeast-seoul-20260915-g3b-r1/generations/db83f1cc82eb65f864188dd790a003edf570dbb459d56d4c07ce690988f2837b/candidates.ndjson",
+      "artifacts/local/public-data/admin-dong-intersection-northeast-seoul-20260915-g3b-r1/generations/db83f1cc82eb65f864188dd790a003edf570dbb459d56d4c07ce690988f2837b/audit.json",
+      "artifacts/local/public-data/admin-dong-intersection-northeast-seoul-20260915-g3b-r1/generations/db83f1cc82eb65f864188dd790a003edf570dbb459d56d4c07ce690988f2837b/generator-source.py",
+      "artifacts/local/public-data/admin-dong-intersection-northeast-seoul-20260915-g3b-r1/generations/db83f1cc82eb65f864188dd790a003edf570dbb459d56d4c07ce690988f2837b/complete.json",
+      "eng/world-seedbeds/administrative-dong-dioramas/northeast-seoul-rider-crosswalk.g3a.r2.json",
+      "artifacts/local/public-data/admin-dong-crosswalk-northeast-seoul-20260915-g3a-r2/generations/78312e5f0ddb89bffa9ad1881379cbf7e8037a6c6454d4f0abdf2a3e4d22d30a/manifest.json",
+      "artifacts/local/public-data/admin-dong-crosswalk-northeast-seoul-20260915-g3a-r2/generations/78312e5f0ddb89bffa9ad1881379cbf7e8037a6c6454d4f0abdf2a3e4d22d30a/candidates.ndjson",
+      "artifacts/local/public-data/admin-dong-crosswalk-northeast-seoul-20260915-g3a-r2/generations/78312e5f0ddb89bffa9ad1881379cbf7e8037a6c6454d4f0abdf2a3e4d22d30a/audit.json",
+      "artifacts/local/public-data/admin-dong-crosswalk-northeast-seoul-20260915-g3a-r2/generations/78312e5f0ddb89bffa9ad1881379cbf7e8037a6c6454d4f0abdf2a3e4d22d30a/complete.json"
+    ]
+  },
+  "expectedCounts": {
+    "sourceRows": 8097,
+    "candidateRows": 554,
+    "outsideScopeRows": 7543,
+    "unresolvedMultipleBoundaryRows": 0,
+    "administrativeAreasWithCandidates": 30,
+    "sourceDistrictSpatialAssignmentNormalRows": 553,
+    "sourceDistrictSpatialAssignmentConflictRows": 1,
+    "crosswalkLinkedCandidateRows": 524,
+    "crosswalkUnlinkedCandidateRows": 30,
+    "linkedCrosswalkRelations": 1491,
+    "linkedCrosswalkSameHistoricalHjdRelations": 1271,
+    "linkedCrosswalkOtherHistoricalHjdRelations": 220,
+    "crosswalkAssignmentInheritedTrueRows": 0
+  },
+  "preservationContract": {
+    "stateDigestAlgorithmCode": "Sha256UnsignedBigEndianUInt32LengthPrefixedUtf8PersistedFields",
+    "compareBeforeAndAfterApplyUsingNewConnection": true,
+    "ledgers": [
+      {
+        "ledgerCode": "G3aCrosswalkR2",
+        "normalizedRows": 1533,
+        "rawSnapshots": 13,
+        "writesAllowed": false
+      },
+      {
+        "ledgerCode": "G4aBusinessR1",
+        "normalizedRows": 29721,
+        "rawSnapshots": 19,
+        "writesAllowed": false
+      },
+      {
+        "ledgerCode": "LegacyMyeonmokBusiness",
+        "shopRows": 5411,
+        "factoryRows": 126,
+        "writesAllowed": false
+      }
+    ]
+  },
+  "verificationContract": {
+    "selfTestRequired": true,
+    "previewRequired": true,
+    "firstApplyRequired": true,
+    "verifyRequired": true,
+    "repeatApplyRequired": true,
+    "independentCandidateSetHashRecalculationRequired": true,
+    "independentCountAndAdministrativeAreaDistributionRecalculationRequired": true,
+    "generatorSourceByteEqualityRequired": true,
+    "scopedFastValidationRequired": true,
+    "stdoutAggregateOnly": true,
+    "databaseVerificationRequired": true,
+    "mongoVerificationRequired": false,
+    "apiVerificationRequired": false,
+    "unityVerificationRequired": false,
+    "traversalVerificationRequired": false,
+    "gameplayVerificationRequired": false
+  },
+  "authorityFlags": {
+    "ledgerPersistenceAuthorized": true,
+    "ledgerPersistenceCompletedClaimed": false,
+    "privateReviewOnly": true,
+    "historicalBoundaryBootstrapOnly": true,
+    "observationCandidateOnly": true,
+    "sourceDeclaredCoordinateReference": true,
+    "consumedCandidateDatabasePersistenceCompleted": false,
+    "currentAdministrativeBoundaryEstablished": false,
+    "currentIntersectionTopologyEstablished": false,
+    "approachDirectionEstablished": false,
+    "controllerBindingEstablished": false,
+    "laneBindingEstablished": false,
+    "signalBindingEstablished": false,
+    "crosswalkAssignmentInherited": false,
+    "distributionApproved": false,
+    "publicDisplayAllowed": false,
+    "runtimeAuthorized": false,
+    "traversalReady": false,
+    "gameplayReady": false,
+    "unityApplyAllowed": false
+  },
+  "completionCode": "LocalPrivateHistoricalIntersectionPointCandidateLedgerStoredAndVerified"
+}

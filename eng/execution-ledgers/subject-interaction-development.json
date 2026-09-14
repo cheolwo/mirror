@@ -922,6 +922,35 @@
       }
     },
     {
+      "goalStableId": "interaction-goal:sagajeong-synthetic-courier-observation.v1",
+      "worldInteractionId": "WI-CITY-SYNTHETIC-MOVE",
+      "goalStateCode": "Active",
+      "subjectBindingRefs": [
+        "subject:synthetic-delivery-courier.v1",
+        "subject:synthetic-delivery-order.v1",
+        "subject:synthetic-delivery-vehicle.v1",
+        "subject:synthetic-delivery-recipient.v1",
+        "subject:npc-routine-actor.v1",
+        "subject:authoritative-interaction-target.v1"
+      ],
+      "optionalPlayableLoopValidationRef": "",
+      "workOrderRef": "eng/execution-ledgers/work-orders/sagajeong-synthetic-courier-observation.e7-work-order.json",
+      "deliveryCap": "E3",
+      "planningGate": {
+        "topicStableId": "topic:sagajeong-synthetic-courier-observation.v1",
+        "statusCode": "Approved",
+        "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-synthetic-courier-observation.implementation.r20.md",
+        "designRevision": "sagajeong-synthetic-courier-observation.r20",
+        "designHashSha256": "1CCC9C212830464238AC2586C1BED72EEEB8E55EFEA2674FCB450C30509B07AC",
+        "approvalEvidenceRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-synthetic-courier-observation.implementation.r20.md"
+      },
+      "derivedEffectBinding": {
+        "applicabilityCode": "NotApplicable",
+        "statusCode": "NotApplicable",
+        "notApplicableReason": "선택 카드와 표시 토글은 기존 PositionAdvanced 결과를 읽기만 하며 권위 파생 효과를 만들지 않음"
+      }
+    },
+    {
       "goalStableId": "interaction-goal:synthetic-delivery-pickup.v1",
       "worldInteractionId": "WI-CITY-SYNTHETIC-PICKUP",
       "goalStateCode": "Active",

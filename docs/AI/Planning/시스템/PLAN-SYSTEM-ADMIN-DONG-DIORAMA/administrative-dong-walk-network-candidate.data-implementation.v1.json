@@ -1,0 +1,179 @@
+{
+  "schemaVersion": "public-data-candidate-ledger-implementation.v1",
+  "implementationStableId": "data-implementation:administrative-dong-walk-network:g3c:r1",
+  "revision": "northeast-seoul-admin-dong-walk-network-candidate.g3c.r1",
+  "workKindCode": "LocalPrivateHistoricalWalkNetworkCandidateLedger",
+  "playableLoopWorkOrder": false,
+  "evidenceStageClaimed": null,
+  "statusCode": "ApprovedForLocalPrivateCandidateGenerationAndLedger",
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-walk-network-candidate.implementation.r13.md",
+    "designRevision": "administrative-dong-diorama:walk-network-candidate.g3c.r1",
+    "designHashSha256": "3FACFF9E4671C907C5AD4DB44A76BD134E5D12FCE74B939265F64361044851B3"
+  },
+  "sourcePolicy": {
+    "officialDatasetId": "OA-21208",
+    "officialPageUrl": "https://data.seoul.go.kr/dataList/OA-21208/A/1/datasetView.do",
+    "sourceReferenceVintage": "2020",
+    "sourceCoordinateReference": "WGS84",
+    "licenseCode": "KOGL-Type1-Attribution",
+    "boroughFilters": ["광진구", "동대문구", "중랑구"],
+    "sourceDistrictFilterBoundaryHaloComplete": false
+  },
+  "persistence": {
+    "sourceId": "seoul-open-data-admin-dong-walk-network-private-review",
+    "datasetId": "northeast-seoul-admin-dong-walk-network-candidate-g3c-r1",
+    "dataRevision": "northeast-seoul-admin-dong-walk-network-candidate.g3c.r1",
+    "qualityCode": "PendingHumanReview",
+    "namedLock": "mirror:public-data:admin-dong-walk-network-g3c-r1",
+    "newMigrationAllowed": false,
+    "currentPointerAllowed": false
+  },
+  "expectedCounts": {
+    "sourceRows": 59724,
+    "sourceNodeRows": 25680,
+    "sourceLinkRows": 34044,
+    "outsideScopeRows": 19770,
+    "candidateRows": 40739,
+    "candidateNodes": 17267,
+    "candidateLinkFragments": 23472,
+    "administrativeAreasWithCandidates": 30,
+    "sourceDistrictConflictCandidates": 48,
+    "sourceLinksSpanningAdministrativeAreas": 728,
+    "physicalFragmentGroups": 23472,
+    "boundaryCoincidentSharedPhysicalFragmentGroups": 0,
+    "boundaryCoincidentSharedCandidateAssignments": 0,
+    "duplicateNodeIdDifferentBodyGroups": 0,
+    "duplicateLinkIdDifferentBodyGroups": 0,
+    "exactDuplicateSourceRowOccurrenceGroups": 0,
+    "exactDuplicateSourceRowExtraOccurrences": 0,
+    "registeredRawSnapshots": 17
+  },
+  "candidateHashContract": {
+    "algorithm": "SHA-256",
+    "encoding": "UTF-8",
+    "framing": "UnsignedBigEndianUInt32ByteLengthThenUtf8",
+    "candidateOrdering": ["administrativeAreaStableId", "candidateKindCode", "candidateStableId"],
+    "headerFields": [
+      "candidateSchemaVersion",
+      "revision",
+      "scopeDefinitionHashSha256",
+      "designHashSha256",
+      "dataImplementationHashSha256",
+      "generatorHashSha256",
+      "sourceHashesCanonicalJson",
+      "authorityFlagsCanonicalJson",
+      "candidateCountCanonicalJson"
+    ],
+    "candidateFields": [
+      "candidateStableId",
+      "candidateKindCode",
+      "administrativeAreaStableId",
+      "assignmentStateCode",
+      "sourceFeatureIdSha256",
+      "sourceSemanticBodySha256",
+      "sourceCompleteBodySha256",
+      "sourceFileHashSha256",
+      "sourceOccurrenceKey",
+      "sourceBoroughCode",
+      "sourceBoroughName",
+      "sourceLegalDongCode",
+      "sourceLegalDongName",
+      "sourceTypeCode",
+      "geometryCanonicalJson",
+      "sourceReportedActorCodesCanonicalJson",
+      "sourceBeginNodeIdSha256",
+      "sourceEndNodeIdSha256",
+      "sourceReportedLengthMetersCanonicalJson",
+      "fragmentOrdinalCanonicalJson",
+      "physicalFragmentHashSha256",
+      "sharedAdministrativeAreaIdsCanonicalJson",
+      "qualityDiagnosticCodesCanonicalJson",
+      "authorityFlagsCanonicalJson"
+    ]
+  },
+  "sourceOccurrenceContract": {
+    "sourceRonumColumnPresent": false,
+    "methodCode": "FrozenBoroughCsvRolePlusOneBasedCsvDataRowNumber",
+    "nodeAndLinkIdentityIncludesOccurrence": true,
+    "completeDuplicateRowsRemainDistinctOccurrences": true
+  },
+  "geometryPreservationContract": {
+    "assignmentMethodCode": "Epsg5186HistoricalBoundaryIntersection",
+    "millimeterSerialization": true,
+    "serializedBoundaryBufferToleranceMeters": 0.002,
+    "serializedOutsideLengthToleranceMeters": 0.001,
+    "sourceLinkTargetLengthToleranceMeters": 0.002,
+    "boundaryCoincidentPhysicalFragmentAssignedToEveryCoveringAdministrativeArea": true,
+    "uniquePhysicalUnionAndAssignedDuplicateLengthsReportedSeparately": true
+  },
+  "snapshotContract": {
+    "exactSnapshotCount": 17,
+    "canonicalNormalizedSource": "candidates.ndjson",
+    "sourceInputs": 8,
+    "designAndToolInputs": 4,
+    "generationArtifacts": 5,
+    "extraSnapshotOrMissingSnapshotRejected": true
+  },
+  "preservationContract": [
+    {
+      "revisionCode": "G3a-r2",
+      "sourceId": "seoul-open-data-admin-dong-crosswalk-private-review",
+      "datasetId": "northeast-seoul-admin-dong-crosswalk-candidate-g3a-r2",
+      "expectedNormalizedRows": 1533,
+      "expectedRawSnapshots": 13
+    },
+    {
+      "revisionCode": "G3b-r1-ledger",
+      "sourceId": "seoul-open-data-admin-dong-intersection-private-review",
+      "datasetId": "northeast-seoul-admin-dong-intersection-point-candidate-g3b-r1",
+      "expectedNormalizedRows": 554,
+      "expectedRawSnapshots": 19
+    },
+    {
+      "revisionCode": "G4a-r2",
+      "sourceId": "semas-admin-dong-business-private-review",
+      "datasetId": "northeast-seoul-admin-dong-business-candidate-g4a-r2",
+      "expectedNormalizedRows": 29721,
+      "expectedRawSnapshots": 19
+    },
+    {
+      "revisionCode": "Sagajeong-r27-OA-21208",
+      "sourceId": "seoul-open-data-sagajeong-spatial-supplement",
+      "datasetId": "oa-21208-pedestrian-network",
+      "expectedNormalizedRows": 2902,
+      "expectedRawSnapshots": 1
+    }
+  ],
+  "verificationContract": {
+    "previewWrites": 0,
+    "firstApplyInsertedRows": 40739,
+    "repeatApplyInsertedRows": 0,
+    "repeatApplyUpdatedRows": 0,
+    "independentFreshContextReadback": true,
+    "independentCandidateSetHashRecalculation": true,
+    "exactRecordKeySetRequired": true,
+    "preservationDigestBeforeInsideAfterRequired": true
+  },
+  "authorityFlags": {
+    "privateReviewOnly": true,
+    "historicalBoundaryBootstrapOnly": true,
+    "observationCandidateOnly": true,
+    "sourceDeclaredCoordinateReference": true,
+    "currentAdministrativeBoundaryEstablished": false,
+    "currentPassabilityEstablished": false,
+    "sidewalkWidthEstablished": false,
+    "curbEstablished": false,
+    "entranceBindingEstablished": false,
+    "motorcycleAccessEstablished": false,
+    "vehicleLaneEstablished": false,
+    "signalBindingEstablished": false,
+    "distributionApproved": false,
+    "publicDisplayAllowed": false,
+    "runtimeAuthorized": false,
+    "traversalReady": false,
+    "gameplayReady": false,
+    "unityApplyAllowed": false
+  },
+  "completionCode": "LocalPrivateHistoricalWalkNetworkCandidateStoredAndVerified"
+}

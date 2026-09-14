@@ -2530,6 +2530,42 @@
           ],
           "writesTo": [],
           "boundary": "SyntheticFixture \uC804\uC6A9 \uC77D\uAE30 \uC0AC\uBCF8\uC774\uBA70 \uB3C4\uCC29\u00B7\uBCF4\uAC04\uC73C\uB85C \uC8FC\uBB38\u00B7\uD53D\uC5C5\u00B7\uC804\uB2EC \uC0C1\uD0DC\uB97C \uBCC0\uACBD\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 138,
+          "stepKey": "contract.sagajeong-synthetic-courier-observation",
+          "dependsOnStepKeys": [],
+          "executionStage": "Definition",
+          "layer": "Contract",
+          "componentType": "Ssalddel.Simulation.Contracts.\uC0AC\uAC00\uC815\uD569\uC131\uAE30\uC0AC\uAD00\uCC30Snapshot",
+          "assembly": "Ssalddel.Simulation.Contracts",
+          "sourcePath": "Ssalddel.Simulation.Contracts/UnityPackage/Runtime/\uC0AC\uAC00\uC815\uD569\uC131\uAE30\uC0AC\uAD00\uCC30Contracts.cs",
+          "responsibility": "\uC0AC\uAC00\uC815 synthetic-delivery.r1 \uB2E8\uC77C \uAE30\uC0AC\uC758 \uC120\uD0DD \uCE74\uB4DC\uC6A9 \uC77D\uAE30 \uC0AC\uBCF8\uC744 \uC815\uC758\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [
+            "DerivedWorld"
+          ],
+          "writesTo": [],
+          "boundary": "\uD569\uC131 Simulation \uAD00\uCC30 \uC804\uC6A9\uC774\uBA70 \uC2E4\uC81C \uC0AC\uB78C\u00B7\uC6B4\uC601 \uBC30\uCC28\u00B7\uC2E4\uC81C \uC815\uC0B0\u00B7\uAD8C\uC704 \uC0C1\uD0DC \uBCC0\uACBD\uC744 \uD5C8\uC6A9\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 139,
+          "stepKey": "application.sagajeong-synthetic-courier-observation-projection",
+          "dependsOnStepKeys": [
+            "contract.sagajeong-synthetic-courier-observation"
+          ],
+          "executionStage": "Projection",
+          "layer": "Application",
+          "componentType": "Ssalddel.Simulation.Application.\uC0AC\uAC00\uC815\uD569\uC131\uAE30\uC0AC\uAD00\uCC30SnapshotFactory",
+          "assembly": "Ssalddel.Simulation.Application",
+          "sourcePath": "Ssalddel.Simulation.Application/RuntimeCore/\uC0AC\uAC00\uC815\uD569\uC131\uAE30\uC0AC\uAD00\uCC30Projection.cs",
+          "responsibility": "synthetic-delivery.r1 \uB2E8\uC77C \uAE30\uC0AC \uC0C1\uD0DC\uB97C \uC0AC\uAC00\uC815 \uC120\uD0DD \uCE74\uB4DC\uC6A9 \uC0AC\uBCF8\uC73C\uB85C \uD22C\uC601\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [
+            "DerivedWorld"
+          ],
+          "writesTo": [],
+          "boundary": "Simulation \uC138\uC158 \uC0AC\uBCF8\uB9CC \uC77D\uC73C\uBA70 \uACF5\uACF5 \uD1B5\uACC4\u00B7\uC6B4\uC601 \uC8FC\uBB38\u00B7\uC2E4\uC81C \uAE30\uC0AC\u00B7\uC2E4\uC81C \uC815\uC0B0\u00B7Unity \uC0C1\uD0DC\uB97C \uBCC0\uACBD\uD558\uC9C0 \uC54A\uB294\uB2E4."
         }
       ]
     },

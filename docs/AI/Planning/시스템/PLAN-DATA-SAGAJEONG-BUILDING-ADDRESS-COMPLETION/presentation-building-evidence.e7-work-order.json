@@ -1,0 +1,104 @@
+{
+  "schemaVersion": "simulation-e7-vertical-work-order.v2",
+  "workOrderId": "E7-WO-SAGAJEONG-PRESENTATION-BUILDING-EVIDENCE",
+  "worldInteractionId": "WI-CITY-STATION-DEFENSE-ASSIGN",
+  "interactionGoalStableId": "interaction-goal:sagajeong-presentation-building-evidence.v1",
+  "parentWorkOrderRef": "building-address-completion.e7-work-order.json",
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/README.md",
+    "designRevision": "sagajeong-building-address-completion.r6",
+    "designHashSha256": "B38EC5F737C120DE611D36AF78E891DCBEC87072795CD1EBCCD422CBEC089A90",
+    "statusCode": "Approved",
+    "approvalEvidenceRef": "2026-09-14 user confirmed the two-ledger first slice and required address and parcel collection checks in the station diorama evidence system"
+  },
+  "graphMapAssessment": {
+    "impactCode": "UpdateExistingLevel3Only",
+    "targetGraphMapStableId": "graph-map:jungnang-myeonmok-reference.v2",
+    "reusedElementRefs": [
+      "layer:myeonmok:osm-buildings",
+      "layer:myeonmok:address-links",
+      "layer:myeonmok:address-spatial-index",
+      "layer:myeonmok:diorama-presentation"
+    ],
+    "handoffStatusCode": "BlockedByStationGraphSchemaCompatibility",
+    "blocker": "The current Graph Map handoff manager accepts mirror-graph-map-plan.v3 while the station reference graph is simulation-world-graph-map.v1. No Integrated or ReadyForDevelopment claim is made.",
+    "implementationBoundary": "This standalone non-gameplay data and evidence slice does not add a play relation, placement rule, geometry, traversal or Unity binding."
+  },
+  "requiredResearch": [
+    {
+      "ref": "https://www.data.go.kr/data/15050424/fileData.do",
+      "statusCode": "Accepted",
+      "impact": "The 2026-08-31 road-address building database and related-parcel component are frozen candidate sources."
+    },
+    {
+      "ref": "https://www.data.go.kr/data/15083092/fileData.do",
+      "statusCode": "AcceptedForPrivateReview",
+      "impact": "The frozen AL_D010 source supplies presentation building identifiers, PNU, legal-dong code and jibun; its rights conflict keeps public and Unity use blocked."
+    },
+    {
+      "ref": "https://www.data.go.kr/data/15056910/openapi.do",
+      "statusCode": "MetadataOnly",
+      "impact": "Continuous parcel metadata does not prove that parcel geometry was collected."
+    }
+  ],
+  "trackPlans": {
+    "logic": {
+      "downwardPlan": [
+        { "code": "E7-E4", "disposition": "Blocked", "summary": "No entrance, traversal, operational delivery, pricing, public distribution or Unity authority." },
+        { "code": "E3", "disposition": "Affected", "summary": "Deterministic independent ledger hashes, tamper rejection, idempotent local RDB storage and fresh-context readback." },
+        { "code": "E2", "disposition": "Affected", "summary": "Private generator, importer, server read use case and admin Development adapter." },
+        { "code": "E1", "disposition": "Affected", "summary": "Two independent ledgers, three evidence kinds, stable IDs, revisions, counts and all consumer-authority flags false." }
+      ],
+      "upwardValidation": [
+        { "code": "E1-E3", "status": "ValidatedPrivateOnly", "summary": "Deterministic generator, two independent RDB datasets, exact fresh-context readback and Development admin API were focused-tested without granting a consumer authority." },
+        { "code": "E4-E7", "status": "Blocked", "summary": "Explicitly outside this first slice." }
+      ]
+    },
+    "presentation": {
+      "downwardPlan": [
+        { "code": "E7-E2", "disposition": "NoImpact", "summary": "Existing station geometry, height, camera, movement, Simulation and Unity contracts remain unchanged." },
+        { "code": "E1", "disposition": "Affected", "summary": "Admin Development JSON read model only; no player or Unity presentation." }
+      ],
+      "upwardValidation": [
+        { "code": "E1", "status": "ValidatedPrivateProjection", "summary": "The protected Development response retains distribution, delivery, price, business and Unity permissions as false and rejects missing or tampered lineage." },
+        { "code": "E2-E7", "status": "Blocked", "summary": "No Scene, Prefab, Play Mode or Game View work." }
+      ]
+    }
+  },
+  "runtimeBoundary": "Private local public-data preparation, MySQL read model and Development-only admin GET. No operational write, public response, Unity apply, route authority or price authority.",
+  "writePaths": [
+    "eng/neighborhood/build-sagajeong-presentation-building-evidence.py",
+    "eng/neighborhood/manage-sagajeong-presentation-building-evidence.ps1",
+    "eng/tests/sagajeong-presentation-building-evidence.ps1",
+    "eng/Ssalddel.PublicDataPortalImport",
+    "Ssalddel.Contracts/Common/WorldProjection/역세권디오라마건물증거Dtos.cs",
+    "Ssalddel/Application/WorldProjection/역세권디오라마건물증거조회UseCase.cs",
+    "Ssalddel/Controllers/Admin/역세권디오라마건물증거Controller.cs",
+    "Ssalddel.Tests",
+    "eng/execution-ledgers/station-diorama-evidence-rules.json",
+    "eng/execution-ledgers/manage-station-diorama-evidence-rules.ps1",
+    "eng/tests/station-diorama-evidence-rules.ps1",
+    "docs/Architecture/역세권디오라마증거진화체계.md"
+  ],
+  "integratedGate": {
+    "status": "LogicE3ValidatedPrivateOnly",
+    "evidenceRefs": [
+      "docs/AI/Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/implementation.r6.md",
+      "artifacts/local/validation/sagajeong-presentation-building-evidence-tests",
+      "artifacts/local/validation/sagajeong-presentation-building-evidence-import-20260914-r1/README.md",
+      "artifacts/local/validation/presentation-evidence-api-probe",
+      "artifacts/local/validation/20260914-172712",
+      "artifacts/local/validation/20260914-165846",
+      "eng/tests/station-diorama-evidence-rules.ps1"
+    ],
+    "openFeedbackRefs": [
+      "Official building-group and detailed-address-dong geometries are not acquired.",
+      "Continuous parcel geometry is not collected.",
+      "Graph Map station-schema and native Goal handoff compatibility remain separate governance work."
+    ]
+  },
+  "standaloneSupportWorkOrder": true,
+  "validationToolApplicability": "NotRegisteredAsNewWorldInteraction; existing station-address foundation WI remains authoritative and no gameplay maturity is promoted.",
+  "promotionEligible": false,
+  "reopenCondition": "Source vintage or hashes, presentation overlay population, shared-address policy, official geometry, public or Unity consumption, or Graph Map compatibility changes require reassessment."
+}

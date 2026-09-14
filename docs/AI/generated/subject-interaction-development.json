@@ -15,8 +15,8 @@
   "counts": {
     "readySubjects": 21,
     "worldInteractions": 134,
-    "interactionGoals": 61,
-    "nativeLooplessGoals": 38,
+    "interactionGoals": 62,
+    "nativeLooplessGoals": 39,
     "legacyProjectedGoals": 22,
     "optionalLoopBindings": 23
   },
@@ -5135,6 +5135,34 @@
         "applicabilityCode": "NotApplicable",
         "statusCode": "NotApplicable",
         "notApplicableReason": "파생효과 없이 직접 결과만 구현"
+      }
+    },
+    {
+      "goalStableId": "interaction-goal:sagajeong-synthetic-courier-observation.v1",
+      "goalStateCode": "Active",
+      "worldInteractionId": "WI-CITY-SYNTHETIC-MOVE",
+      "subjectBindingRefs": [
+        "subject:synthetic-delivery-courier.v1",
+        "subject:synthetic-delivery-order.v1",
+        "subject:synthetic-delivery-vehicle.v1",
+        "subject:synthetic-delivery-recipient.v1",
+        "subject:npc-routine-actor.v1",
+        "subject:authoritative-interaction-target.v1"
+      ],
+      "optionalPlayableLoopValidationRef": "",
+      "planningGate": {
+        "topicStableId": "topic:sagajeong-synthetic-courier-observation.v1",
+        "statusCode": "Approved",
+        "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-synthetic-courier-observation.implementation.r20.md",
+        "designRevision": "sagajeong-synthetic-courier-observation.r20",
+        "designHashSha256": "1CCC9C212830464238AC2586C1BED72EEEB8E55EFEA2674FCB450C30509B07AC",
+        "approvalEvidenceRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-synthetic-courier-observation.implementation.r20.md"
+      },
+      "compatibilitySourceCode": "NativeInteractionGoal",
+      "derivedEffectBinding": {
+        "applicabilityCode": "NotApplicable",
+        "statusCode": "NotApplicable",
+        "notApplicableReason": "선택 카드와 표시 토글은 기존 PositionAdvanced 결과를 읽기만 하며 권위 파생 효과를 만들지 않음"
       }
     },
     {

@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "public-data-candidate-implementation-work-order.v1",
+  "workOrderId": "DATA-WO-NORTHEAST-SEOUL-ADMIN-DONG-BUSINESS-CANDIDATE",
+  "workOrderKind": "FrozenPublicDataCandidateLedger",
+  "compatibilityFileNameStatus": "LegacyE7FileNameButNotAPlayableLoopE7WorkOrder",
+  "runtimeApplicationStatusCode": "NotApplicableInThisSlice",
+  "futurePlayableLoopGate": "A separately registered native E7 work order is required before any Unity, operational, Simulation or gameplay consumption.",
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-business-candidate.implementation.r9.md",
+    "designRevision": "administrative-dong-diorama:business-candidate.g4a.r1",
+    "designHashSha256": "2BCF94EB746DC22EE6B19B82F297F418A803CCE9574BC0E5728F97E3A2C86821",
+    "statusCode": "Approved",
+    "approvalEvidenceRef": "2026-09-15 user request to collect enough public data for all 30 administrative-dong modules to progress toward the Sagajeong life-diorama review depth"
+  },
+  "requiredResearch": [
+    {
+      "researchId": "RESEARCH-ADMINISTRATIVE-DONG-G4A-SEMAS-20260630",
+      "statusCode": "AcceptedWithBlockingLimitations",
+      "summary": "The frozen 2026-06-30 SEMAS file contains 29,721 uniquely identified businesses in the exact 30 source administrative-dong codes, including 8,246 food-category observations. Exact names and addresses may be retained only in the Git-ignored local-private candidate artifact and protected local RDB; source coordinate datum, current operation, exact building binding, merchant claim and display approval remain unverified."
+    }
+  ],
+  "evidenceReviewTracks": {
+    "logic": {
+      "downwardPlan": [
+        {
+          "code": "DATA-SOURCE-TO-LEDGER",
+          "disposition": "AffectedPrivateReviewLedgerOnly",
+          "summary": "Create a deterministic, isolated 30-HJD business candidate bundle and local protected RDB ledger without changing the existing Myeonmok ledger or operational order, dispatch, settlement and public display state."
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "DATA-LEDGER-VERIFY",
+          "status": "RejectedAfterIndependentPrivacyAuditPreservedNotPromoted",
+          "summary": "The ledger counts and readback passed, but a tracked generator test fixture contained one selected source identity. Preserve this revision without update or promotion and use the corrected r2 dataset only."
+        }
+      ]
+    },
+    "presentation": {
+      "downwardPlan": [
+        {
+          "code": "PRESENTATION-NO-APPLICATION",
+          "disposition": "NoVisualApplication",
+          "summary": "Do not expose exact business names, addresses or candidates to Unity, Mongo current or a public API in this slice."
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "PRESENTATION-FUTURE-NATIVE-E7-REQUIRED",
+          "status": "NotApplicableUntilBusinessSpatialBindingAndApproval",
+          "summary": "Presentation remains blocked until current boundaries, exact building and entrance binding, current-operation review, merchant claim and distribution approval are frozen together."
+        }
+      ]
+    }
+  },
+  "runtimeBoundary": "Git-ignored local deterministic artifacts and local MySQL protected PendingHumanReview ledger only; no public projection, Mongo current, Unity display, actual operation, order eligibility, NPC purpose, gameplay or advertising authority",
+  "writePaths": [
+    "eng/world-seedbeds/administrative-dong-dioramas/northeast-seoul-rider-business.g4a.r1.json",
+    "eng/neighborhood/administrative_dong_business_candidate.py",
+    "eng/Ssalddel.PublicDataPortalImport/Program.cs",
+    "eng/Ssalddel.PublicDataPortalImport/행정동사업장후보.cs",
+    "eng/Ssalddel.PublicDataPortalImport/README.md",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-business-candidate.implementation.r9.md",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-business-candidate.e7-work-order.json",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/Reports/동북서울-30개-행정동-디오라마-깊이-기준선-및-주소후보-2026-09-14.md"
+  ],
+  "completionGate": {
+    "status": "RejectedAfterIndependentPrivacyAuditPreservedNotPromoted",
+    "evidenceRefs": [
+      "artifacts/local/public-data/myeonmok-business-20260908-r1/shops-national.zip",
+      "artifacts/local/public-data/myeonmok-business-20260908-r1/receipt.json",
+      "artifacts/local/public-data/myeonmok-business-20260908-r1/shop-download-metadata.json",
+      "artifacts/local/public-data/myeonmok-business-20260908-r1/shop-metadata.json",
+      "artifacts/local/public-spatial/administrative-codes/20260301/jscode20260301.zip",
+      "artifacts/local/public-data/admin-dong/20260912-seoul-oa22160/seoul-administrative-dong-boundary.zip",
+      "eng/world-seedbeds/administrative-dong-dioramas/northeast-seoul-rider.r2.json",
+      "artifacts/local/public-data/admin-dong-diorama-northeast-seoul-20260914-r2/scope-manifest.json",
+      "artifacts/local/public-data/admin-dong-business-northeast-seoul-20260915-g4a-r1/generations/56e36af4b839e18cbc480752f03f674e56b809bc1e558344abac1bb77138bb27/manifest.json",
+      "artifacts/local/public-data/admin-dong-business-northeast-seoul-20260915-g4a-r1/generations/56e36af4b839e18cbc480752f03f674e56b809bc1e558344abac1bb77138bb27/complete.json",
+      "eng/Ssalddel.PublicDataPortalImport/행정동사업장후보.cs"
+    ],
+    "openFeedbackRefs": [
+      "one selected source identity appeared in the tracked generator test fixture; the value is deliberately not repeated and this r1 revision is rejected",
+      "current administrative boundary and source coordinate datum are unavailable",
+      "35 source-HJD versus historical-boundary diagnostics must not cause reassignment",
+      "67 building-management-number gaps and 236 same-name-address groups remain explicit",
+      "exact building and entrance binding, current operation, merchant claim and display approval are absent",
+      "Unity and operational application are deliberately excluded"
+    ]
+  },
+  "promotionEligible": false,
+  "reopenCondition": "SEMAS source, HJD code vintage, exact 30-area scope, coordinate interpretation, boundary diagnostic, identity handling, persistence schema, protected-field boundary or authority flags change"
+}

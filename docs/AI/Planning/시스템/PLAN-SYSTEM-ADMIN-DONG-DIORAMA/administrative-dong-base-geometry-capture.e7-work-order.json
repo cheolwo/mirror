@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "simulation-e7-vertical-work-order.v2",
+  "workOrderId": "E7-WO-NORTHEAST-SEOUL-ADMIN-DONG-BASE-GEOMETRY-CAPTURE",
+  "worldInteractionId": "WI-CITY-SYNTHETIC-MOVE",
+  "interactionGoalStableId": "interaction-goal:synthetic-delivery-move.v1",
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-depth-parity.implementation.r5.md",
+    "designRevision": "administrative-dong-diorama:depth-parity-and-base-capture.r1",
+    "designHashSha256": "D4D76AD8DA59D24E5CE1B8056743CD2D0BE74B2E8EE7F265E02DACD6AE3B3446",
+    "statusCode": "Approved",
+    "approvalEvidenceRef": "2026-09-14 user request to retain captures for all 30 administrative-dong modules and progressively reach the Sagajeong evidence depth without hiding missing data"
+  },
+  "requiredResearch": [
+    {
+      "researchId": "RESEARCH-ADMINISTRATIVE-DONG-SAGAJEONG-PARITY",
+      "statusCode": "AcceptedWithBlockingLimitations",
+      "summary": "Sagajeong depth is a composite of separate private-review slices; the 30-area r2 batch currently supports historical boundary, building and road-centerline geometry only."
+    }
+  ],
+  "trackPlans": {
+    "logic": {
+      "downwardPlan": [
+        {
+          "code": "E7-E1",
+          "disposition": "NoAuthorityMutation",
+          "summary": "Local candidate export and Unity rendering cannot publish current data, mutate delivery territory, create orders, dispatch riders or change Simulation state."
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "E1-E7",
+          "status": "ValidatedNoAuthorityMutation",
+          "summary": "Current-pointer non-use, candidate envelope flags and canonical Scene hash invariance were verified."
+        }
+      ]
+    },
+    "presentation": {
+      "downwardPlan": [
+        {
+          "code": "E7",
+          "disposition": "Affected",
+          "summary": "Capture all 30 geometry-only modules and Myeonmok 3/8-dong overview and close view in actual Play Mode Game View without saving the Scene."
+        },
+        {
+          "code": "E6-E5",
+          "disposition": "AffectedPrivateReviewOnly",
+          "summary": "Bind one active candidate manifest and its exact tiles to runtime-only combined meshes in canonical SimulationWorldShell."
+        },
+        {
+          "code": "E4",
+          "disposition": "Affected",
+          "summary": "Freeze honest visual labels, dynamic bounds and missing-layer diagnostics; no address, lane, signal, business or life inference is allowed."
+        },
+        {
+          "code": "E3-E2",
+          "disposition": "Affected",
+          "summary": "Add deterministic local candidate bundle export, envelope validation, mesh assembly, transition cleanup and tests."
+        },
+        {
+          "code": "E1",
+          "disposition": "Affected",
+          "summary": "Define the G0-G7 internal parity checklist for the exact 30-area scope."
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "E1-E4",
+          "status": "PassedForLocalPrivateReview",
+          "summary": "Exact scope, source and bundle hashes, authority flags, visible missing-layer diagnostics, dynamic bounds, combined-mesh inputs and transition cleanup passed 9 EditMode tests."
+        },
+        {
+          "code": "E5-E7",
+          "status": "GameViewVerifiedWithoutPromotion",
+          "summary": "An isolated graphics Unity run captured 30 administrative-dong overviews and one Myeonmok 3/8-dong detail from canonical SimulationWorldShell while preserving the Scene hash and dirty state."
+        }
+      ]
+    }
+  },
+  "runtimeBoundary": "Historical-boundary candidate geometry-only local review; no server current publication, traversal, gameplay, live operations or public distribution",
+  "writePaths": [
+    "eng/Ssalddel.PublicDataPortalImport/행정동디오라마Batch.cs",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-depth-parity.implementation.r5.md",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-base-geometry-capture.e7-work-order.json",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Runtime/World/행정동디오라마검토Models.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World/행정동디오라마검토MeshBuilder.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World/행정동디오라마검토View.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Editor/행정동디오라마검토GameView검증.cs",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Editor/Ssalddel.Unity.Editor.asmdef",
+    "C:/Users/user/ssalddel/Assets/Ssalddel/Tests/EditMode/행정동디오라마검토Tests.cs",
+    "C:/Users/user/ssalddel/Documentation/Changes/2026-09-14-administrative-dong-base-geometry/"
+  ],
+  "integratedGate": {
+    "status": "NotPromoted",
+    "evidenceRefs": [
+      "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-depth-parity.implementation.r5.md",
+      "docs/Reports/동북서울-30개-행정동-디오라마-깊이-기준선-및-주소후보-2026-09-14.md",
+      "artifacts/local/public-data/admin-dong-diorama-northeast-seoul-20260914-r2/scope-manifest.json",
+      "artifacts/local/validation/admin-dong-diorama-base-review/r1/input/generations/c6cd2501cd2fc876bff671fb25c36c139afdaf14f78ec2fd3f7503e31a1153ac/complete.json",
+      "C:/Users/user/ssalddel/Documentation/Changes/2026-09-14-administrative-dong-base-geometry/capture-manifest.json",
+      "C:/Users/user/ssalddel/Documentation/Changes/2026-09-14-administrative-dong-base-geometry/README.md"
+    ],
+    "openFeedbackRefs": [
+      "current JUSO administrative boundary is not acquired",
+      "road address, parcel geometry, entrance, sidewalk, alley, lane, signal, business and life layers are not integrated for the 30-area scope",
+      "geometry-only capture cannot prove traversal, gameplay or operational lifecycle"
+    ]
+  },
+  "promotionEligible": false,
+  "reopenCondition": "candidate envelope or rendering contract changes, a current boundary is acquired, a missing evidence layer is integrated, or life-simulation capture is requested"
+}
