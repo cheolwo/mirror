@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using 살뜰.Data;
 
@@ -11,9 +12,11 @@ using 살뜰.Data;
 namespace Ssalddel.Migrations
 {
     [DbContext(typeof(SsalddelContext))]
-    partial class SsalddelContextModelSnapshot : ModelSnapshot
+    [Migration("20260914111533_AddAdministrativeDongDeliveryOperatingTerritories")]
+    partial class AddAdministrativeDongDeliveryOperatingTerritories
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -8009,12 +8012,6 @@ namespace Ssalddel.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("ActorUserStableId")
-                        .IsRequired()
-                        .HasMaxLength(160)
-                        .HasColumnType("varchar(160)")
-                        .HasColumnName("actor_user_stable_id");
-
                     b.Property<string>("ClientRequestId")
                         .IsRequired()
                         .HasMaxLength(120)
@@ -8036,11 +8033,6 @@ namespace Ssalddel.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("varchar(64)")
                         .HasColumnName("request_hash_sha256");
-
-                    b.Property<string>("ResultJson")
-                        .IsRequired()
-                        .HasColumnType("json")
-                        .HasColumnName("result_json");
 
                     b.Property<long>("ResultRevision")
                         .HasColumnType("bigint")
@@ -8069,12 +8061,6 @@ namespace Ssalddel.Migrations
                         .HasColumnName("id");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("ActorUserStableId")
-                        .IsRequired()
-                        .HasMaxLength(160)
-                        .HasColumnType("varchar(160)")
-                        .HasColumnName("actor_user_stable_id");
 
                     b.Property<long>("AggregateRevision")
                         .HasColumnType("bigint")

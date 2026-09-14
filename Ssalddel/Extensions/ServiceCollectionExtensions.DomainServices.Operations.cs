@@ -104,6 +104,8 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I배차추천평가Service, 배차추천평가Service>();
         services.AddScoped<I원장배달권투영Service, 원장배달권투영Service>();
         services.AddScoped<I운송원장배달권연결Service, 운송원장배달권연결Service>();
+        services.AddScoped<I행정동배달운영권역Source, Official행정동배달운영권역Source>();
+        services.AddScoped<I배달운영권역관리Service, 배달운영권역관리Service>();
         services.AddSingleton<I음식배달권실행공간Store, InMemory음식배달권실행공간Store>();
         services.AddSingleton<I국내화물배달권실행공간Store, InMemory국내화물배달권실행공간Store>();
         services.AddScoped<I배달권기반배차조율계획Service, 배달권기반배차조율계획Service>();

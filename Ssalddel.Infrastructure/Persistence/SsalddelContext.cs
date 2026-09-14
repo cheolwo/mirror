@@ -62,6 +62,10 @@ namespace 살뜰.Data
         public DbSet<운영배차활동사건> 운영배차활동사건 { get; set; } = null!;
         public DbSet<플랫폼배달권> 플랫폼배달권 { get; set; } = null!;
         public DbSet<원장배달권투영> 원장배달권투영 { get; set; } = null!;
+        public DbSet<배달운영권역> 배달운영권역 { get; set; } = null!;
+        public DbSet<배달운영권역행정동Membership> 배달운영권역행정동Memberships { get; set; } = null!;
+        public DbSet<배달운영권역CommandReceipt> 배달운영권역CommandReceipts { get; set; } = null!;
+        public DbSet<배달운영권역변경Outbox> 배달운영권역변경Outbox { get; set; } = null!;
 
         public DbSet<화주운송의뢰> 화주운송의뢰 { get; set; } = null!;
         public DbSet<화물요구조건> 화물요구조건 { get; set; } = null!;

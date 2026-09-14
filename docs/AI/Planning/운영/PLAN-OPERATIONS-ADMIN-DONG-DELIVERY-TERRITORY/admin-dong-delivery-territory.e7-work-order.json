@@ -1,0 +1,118 @@
+{
+  "schemaVersion": "simulation-e7-vertical-work-order.v2",
+  "workOrderId": "E7-WO-ADMIN-DONG-DELIVERY-TERRITORY",
+  "worldInteractionId": "NotApplicable:OperationalDeliveryTerritoryManagement",
+  "interactionGoalStableId": "operational-goal:admin-dong-delivery-territory-management.v1",
+  "planningGate": {
+    "designDocumentRef": "docs/AI/Planning/운영/PLAN-OPERATIONS-ADMIN-DONG-DELIVERY-TERRITORY/README.md",
+    "designRevision": "admin-dong-delivery-territory.r1",
+    "designHashSha256": "3B0BDC4DD3F9006675A0557CBCDB01CF1165ED1ABAAE7DCE283B0935BE84D7BD",
+    "statusCode": "Approved",
+    "approvalEvidenceRef": "2026-09-14 user prioritized implementing administrator-managed administrative-dong delivery territories before other work"
+  },
+  "requiredResearch": [
+    {
+      "ref": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md",
+      "statusCode": "Accepted",
+      "impact": "행정동 코드 관할과 불변 디오라마 투영을 재사용하고 역세권 1km 화면을 권위 경계로 쓰지 않는다."
+    },
+    {
+      "ref": "docs/Architecture/KoreaAdministrativeBuildingDataLedger.md",
+      "statusCode": "Accepted",
+      "impact": "행정안전부 코드 원본·판본·hash와 법정동-행정동 다대다 관할의 정본을 결속한다."
+    }
+  ],
+  "trackPlans": {
+    "logic": {
+      "downwardPlan": [
+        {
+          "code": "E7-E4",
+          "disposition": "Blocked",
+          "summary": "운영 활성, 주문 노출, 배차, 협력권역과 Unity 적용은 이번 작업에 포함하지 않는다."
+        },
+        {
+          "code": "E3",
+          "disposition": "Affected",
+          "summary": "낙관적 revision, 멱등 수신증, 현행 행정동 유일성, Outbox와 독립 재조회를 검증한다."
+        },
+        {
+          "code": "E2",
+          "disposition": "Affected",
+          "summary": "공식 12개 법정동에서 30개 행정동 후보를 해소하고 Mongo 디오라마 준비 상태를 합성한다."
+        },
+        {
+          "code": "E1",
+          "disposition": "Affected",
+          "summary": "배달운영권역 Draft와 Included/Excluded membership 계약을 고정한다."
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "E1-E3",
+          "status": "VerifiedScoped",
+          "summary": "고정 공식 판본의 12개 법정동·30개 행정동, Draft 생성·지연 멱등 재응답·교체·중복·revision·관리자 감사·Outbox와 격리 로컬 MySQL 저장·독립 재조회를 검증했다."
+        },
+        {
+          "code": "E4-E7",
+          "status": "Blocked",
+          "summary": "운영 효과와 게임 표현은 승인 범위 밖이다."
+        }
+      ]
+    },
+    "presentation": {
+      "downwardPlan": [
+        {
+          "code": "E7-E1",
+          "disposition": "NoImpact",
+          "summary": "Unity 계약·Client·Scene·Prefab·Game View를 변경하지 않는다."
+        }
+      ],
+      "upwardValidation": [
+        {
+          "code": "E1-E7",
+          "status": "NoImpact",
+          "summary": "서버 관리자 원장 slice이며 기존 행정동 manifest는 읽기만 한다."
+        }
+      ]
+    }
+  },
+  "runtimeBoundary": "server-authoritative RDB Draft management and read-only public-data/Mongo readiness composition; no dispatch, order, settlement or Unity authority",
+  "writePaths": [
+    "Ssalddel.Domain/배달권",
+    "Ssalddel.Contracts/Common/DeliveryZones",
+    "Ssalddel.Infrastructure/Persistence/Configurations/DeliveryZones",
+    "Ssalddel.Infrastructure/Persistence/SsalddelContext.cs",
+    "Ssalddel/Migrations",
+    "Ssalddel/Services/DeliveryZones",
+    "Ssalddel/Controllers/Admin/DeliveryZones",
+    "Ssalddel/Extensions/ServiceCollectionExtensions.DomainServices.Operations.cs",
+    "Ssalddel.Tests/Services/DeliveryZones",
+    "Ssalddel.Tests/Infrastructure/Persistence/DeliveryOperatingTerritoryModelTests.cs",
+    "Ssalddel.Tests/Controllers/Admin/DeliveryZones",
+    "docs/AI/Planning/운영/PLAN-OPERATIONS-ADMIN-DONG-DELIVERY-TERRITORY",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md"
+  ],
+  "integratedGate": {
+    "status": "ImplementedDraftManagementNotOperational",
+    "evidenceRefs": [
+      "migration:20260914111533_AddAdministrativeDongDeliveryOperatingTerritories",
+      "migration:20260914113315_AddDeliveryOperatingTerritoryAuditAndIdempotentResult",
+      "test:DeliveryZones+DeliveryOperatingTerritoryModel+ApiVersion:80/80",
+      "test:isolated-local-mysql-migrations-and-fresh-context-readback:1/1",
+      "readback:local-mongo-hongdal_dev:current0-manifest0-tile0",
+      "validation:artifacts/local/validation/20260914-204500:FastPassed",
+      "validation:artifacts/local/validation/20260914-204639:TaskBuildPassedFullTests5268Of5275UnrelatedFailures7"
+    ],
+    "openFeedbackRefs": [
+      "first active territory grouping is not yet chosen",
+      "cooperation territories and straight-line 6km food-order policy remain separate follow-up slices",
+      "existing hongdal_dev migration chain is blocked before this slice by 20260911050534 schema drift",
+      "administrative-dong spatial projections remain unavailable except where a separately validated Mongo manifest exists"
+    ]
+  },
+  "standaloneSupportWorkOrder": true,
+  "validationToolApplicability": "OperationalSupportSlice; not registered as a new WorldInteraction and does not promote gameplay evidence",
+  "promotionEligible": false,
+  "reopenCondition": "official jurisdiction vintage, scope BJD codes, active membership uniqueness, dispatch integration or Unity consumption changes require reassessment"
+}
