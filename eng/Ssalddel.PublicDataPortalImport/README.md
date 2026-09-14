@@ -100,6 +100,103 @@ dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-data-appl
 dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-data-verify C:/Users/user/source/repos/Hongdal
 ```
 
+### 동북서울 30개 행정동 디오라마 역사 경계 후보 r4
+
+- 대상은 `northeast-seoul-rider.r2`에 고정한 광진구 4개·동대문구 10개·중랑구 16개 행정동이다. 생성기는 서울시 `OA-22160` 역사 경계, 서울 `AL_D010` 건물, 국가표준 NodeLink를 각각 한 번 읽어 30개 모듈로 나눈다.
+- 건물은 원본 도형의 명시적 `assignmentPoint`로 한 행정동에만 귀속하고 방법·신뢰 수준·경계 판본을 함께 기록한다. 최종 61,897개가 귀속됐고 미해결 27개는 경계 밖 13개·원본 무효 11개·1mm 반올림 후 무효 3개다. 복수 귀속은 0개이며 임의 형상 보정은 하지 않는다.
+- 방향 NodeLink 4,209개를 행정동 경계에서 잘라 100m 이하 두 점 선분 11,769개로 만든다. 게시 경계 밖 1µm 초과는 0개지만 도로 폭·차로·보도·신호·통행 권위는 아니다.
+- C# 단계는 로컬 MySQL의 행정안전부 동결 원장을 독립 재조회하고 원본·도구·모듈 hash와 `OA-22160` 독립 경계 변환을 다시 확인한 뒤 기존 투영 Builder로 500m tile 297개를 만든다. MongoDB 쓰기는 `administrative_dong_diorama_candidate_*` 네 collection에만 하며 `administrative_dong_diorama_current`를 갱신하지 않는다.
+- 실제 저장 결과는 batch 1·manifest 30·tile 297·overlay 30, 합계 358개다. 반복 적용은 신규 0·기존 일치 358이고 독립 재조회가 통과했다. 과거 r1 후보는 `PreservedNotPromoted`로 남긴다.
+- 실제 내려받은 `OA-22160` ZIP 내부 자료가 2023년이므로 결과는 `WaitingForAdministrativeBoundary`, 비공개·비통행·비게임 후보다. 최신 JUSO `TL_SCCO_GEMD`를 승인 반입하기 전에는 current API나 Unity에 게시하지 않는다.
+
+```powershell
+C:/Users/user/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe -B eng/neighborhood/administrative_dong_diorama_batch.py build --root .
+C:/Users/user/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe -B eng/neighborhood/administrative_dong_diorama_batch.py verify --root .
+C:/Users/user/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe -B eng/neighborhood/administrative_dong_diorama_batch.py self-test --root .
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-diorama-batch-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-diorama-batch-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-diorama-batch-verify C:/Users/user/source/repos/Hongdal
+```
+
+### 30개 Unity 검토 내보내기·주소 후보 r5-r6
+
+- `admin-dong-diorama-batch-export-unity-review`는 역사 경계 후보 30개를 `current`나 DB에 쓰지 않고 hash별 완성 세대에 내보낸다. 각 세대는 index·bundle 30개·`complete.json`을 같은 staging에서 전부 검증한 뒤 원자 이동하며, exporter 소스 hash와 판본을 결속한다.
+- `admin-dong-building-address-candidate-*`는 같은 61,897개 건물의 `AL_D010` PNU와 동결 2026-08 JUSO 건물DB를 결합해 `ParcelAddressCandidate`, `MultipleParcelAddressCandidates`, `NoCandidateInFrozenJusoVintage`만 기록한다. 주소 문자열·출입구·필지 도형·배달 목적지·Unity 권위는 만들지 않는다.
+- `apply`는 로컬 MySQL의 범용 공공자료 원장에 `PendingHumanReview`로 멱등 저장하고, `verify`는 새 연결에서 exact set·상태 분포·투영 hash를 재조회한다.
+
+```powershell
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-diorama-batch-export-unity-review C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-building-address-candidate-self-test C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-building-address-candidate-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-building-address-candidate-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-building-address-candidate-verify C:/Users/user/source/repos/Hongdal
+```
+
+### 30개 행정동 횡단보도 점 후보 G3a r2
+
+- 서울 열린데이터광장 `OA-23081` 동결 XLSX 21,776행을 r2 역사 행정동 경계에 점 포함 방식으로 결속한 비공개 후보 원장이다. 좌표가 있는 21,775행 중 30개 동 안의 단일 귀속 1,533행만 보존하고, 경계 밖 20,242행과 좌표 결손 1행은 집계·감사 자료에만 남긴다. 복수 경계 귀속은 0행이며 보행자 신호등 표기는 `유` 933행·`무` 600행이다.
+- 원본 자치구와 역사 경계 귀속 자치구가 다른 21행은 삭제하거나 다른 동에 복제하지 않는다. 역사 경계 소유를 유지하면서 `SourceDistrictSpatialAssignmentConflict`, 원본·귀속 자치구, 경계 거리와 동별·자치구쌍 집계를 명시해 일반 후보와 구별한다.
+- Python 생성기는 후보·manifest·audit·`complete.json`을 hash 세대 폴더에 원자 게시한다. C# CLI는 완성 표식부터 읽고 정확한 최종 세대와 파일 집합, r8 설계·작업 명세·실제 scope·생성기·모든 원천, 좌표·대안 CRS·역사 경계 변환·feasibility hash, 파일별 SHA-256/길이·내용 hash와 모든 권위 차단 플래그를 다시 검증한다. 후보 집합 hash도 Python과 독립된 길이 접두 SHA-256 구현으로 재계산한다.
+- `apply`는 기존 범용 공공자료 원장에서 r2 DatasetId별 snapshot의 hash·길이·형식·원본명·판본·비공개 저장 위치를 쓰기 전에 검사한 뒤 advisory lock과 단일 transaction에서 원천·설계·생성 산출물 snapshot 13건 및 후보 1,533행을 `PendingHumanReview`로 저장한다. 동일 입력 재실행은 쓰기 없이 기존 1,533행을 확인하고, `verify`는 새 DB 문맥에서 정확한 집합·30개 동별 분포·충돌 21행·후보 집합 hash를 독립 재조회한다.
+- 독립 감사 전에 저장된 `g3a.r1` 후보 1,533행과 snapshot 11건은 `RejectedAfterIndependentAudit / PreservedNotPromoted` 이력으로 삭제·갱신하지 않는다. r2는 별도 DatasetId와 revision으로 병존하며 CLI가 실행 전후 r1 정규화 행·snapshot의 모든 지속 필드를 길이 접두 SHA-256으로 비교한다.
+- 좌표계는 원천 선언이 아니라 별도 실증 검증 후보이고 행정동 경계는 역사 bootstrap이다. 이 자료는 횡단보도 점 관측 후보일 뿐 현재 행정동 경계, 횡단보도 면 형상, 정지선, 신호 주기·현시, 보도 연결, 공개 표시, Runtime·통행·게임·Unity 적용 권위가 아니다.
+
+```powershell
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-crosswalk-candidate-self-test C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-crosswalk-candidate-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-crosswalk-candidate-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-crosswalk-candidate-verify C:/Users/user/source/repos/Hongdal
+```
+
+### 30개 행정동 교차로 점 후보 G3b r1
+
+- 서울 열린데이터광장 `OA-15534` 2025-08-14 동결 ZIP의 원천 선언 `EPSG:5186` 점 8,097개를 2023 역사 행정동 경계와 대조한 DB83 완결 세대만 읽는다. 정확히 하나의 대상 동에 귀속된 554개를 비공개 후보 원장에 보존하고, 범위 밖 7,543개·복수 귀속 0개는 집계로만 검증한다. 원본 자치구 일치는 553개, 역사 경계 소유와의 충돌 진단은 1개다.
+- G3a r2 횡단보도 후보와의 연결은 교차로 번호 진단일 뿐 귀속을 복사하지 않는다. 교차로 524개에 횡단보도 관계 1,491개가 연결되며, 같은 역사 행정동 1,271개와 다른 동 220개를 따로 재계산한다. 모든 후보는 `crosswalkAssignmentInherited=false`다.
+- `apply`는 원천·scope·r10 설계·생성기·G3a 연결 계보와 생성 세대의 `generator-source.py` bytes를 포함한 snapshot 19건을 별도 DatasetId로 등록한다. 원천 관리번호는 표준 출력·`StableId`·`DimensionKey`에 넣지 않고 `candidateStableId` SHA-256 식별자와 후보 본문·연결 집합 hash만 정규화 payload에 둔다.
+- 기존 본문의 불일치를 update로 숨기지 않고 쓰기 전에 전체를 거절한다. 고정 순서 named lock, 단일 transaction, 500행 이하 묶음, 새 DB 연결 exact-set 재조회를 사용하며 반복 `apply`는 신규·갱신·snapshot 신규가 모두 0이어야 한다. 실행 전후 G3a r2 1,533행/13 snapshot, G4a r1 29,721행/19 snapshot, 기존 면목 사업장 5,411행·공장 126행의 전체 지속 상태 hash를 비교한다.
+- 이 자료는 교차로 **점** 후보일 뿐 현행 교차로 위상, 진입 방향, 제어기, 차로, 신호를 제공하지 않는다. `OA-15537`은 차선 **표시 선형**이지 주행 가능 차로가 아니며 소비하지 않았고, `OA-21208` 2020 보행 네트워크도 현행 자료로 간주하지 않고 제외했다. Mongo/current/API/Unity/통행/gameplay 권위는 없다.
+
+```powershell
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-intersection-candidate-self-test C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-intersection-candidate-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-intersection-candidate-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-intersection-candidate-verify C:/Users/user/source/repos/Hongdal
+```
+
+### 30개 행정동 도보 네트워크 후보 G3c r1
+
+- 서울 열린데이터광장 `OA-21208`의 2020년 기준 WGS84 도보망을 공식 Sheet 자치구 필터로 동결한 광진구·동대문구·중랑구 CSV 59,724행과 링크·노드 유형 코드북만 소비한다. 모든 행의 자치구 코드·명, exact raw file set과 코드북 LINK 16개·NODE 4개 의미를 DB 연결 전에 검사한다.
+- 2023 역사 행정동 경계에 NODE를 귀속하고 LINK를 절단한 완결 세대는 NODE 17,267·LINK fragment 23,472, 합계 40,739개다. 후보 집합 hash는 `43248F7F563DCDFE059650F3EC000085CD0D7CFB65FC5300EFDFCBDD685990AA`다.
+- 원본에는 `RONUM`이 없으므로 동결 CSV 역할과 1부터 시작하는 data-row 번호를 source occurrence로 사용한다. 1mm 직렬화 경계 재포함, 경계 일치 물리 조각의 양쪽 귀속, 원선 대상 교차 길이 보존과 중복 진단을 audit에서 확인한다.
+- RDB payload는 후보 digest·행정동·종류·길이·품질·권위 요약만 2,000자 이하로 저장하고 98,781,674-byte 전체 geometry는 비공개 `candidates.ndjson` snapshot에만 둔다. C#은 Python helper를 호출하지 않고 명시된 4-byte big-endian 길이 framing으로 전체 후보 hash를 독립 재계산해야 한다.
+- 적용은 정확 17개 계보 snapshot, 500행 이하 묶음, 기존 본문 update 금지, 새 연결 exact-set 재조회와 반복 무쓰기를 요구한다. G3a r2 1,533/13, G3b r1 554/19, G4a r2 29,721/19, 사가정 r27 `OA-21208` 2,902/1의 전체 지속 상태 digest가 전후 같아야 한다.
+- Python 자체 시험 17/17과 local-private generation·verify, C# build 경고 0·오류 0과 자체 시험 16/16을 통과했다. 로컬 MySQL 첫 적용은 후보 40,739행·계보 사본 17건이고, 새 연결 exact set·후보 hash 재조회와 반복 적용 신규·갱신·사본 0을 확인했다. 기존 보호 상태 71,501행·사본 84건·실행 84건의 digest는 전후 같았다. Mongo/current/API/Unity/현재 통행·오토바이·차로·신호·traversal/gameplay 권위는 없다.
+
+```powershell
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-walk-network-candidate-self-test C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-walk-network-candidate-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-walk-network-candidate-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-walk-network-candidate-verify C:/Users/user/source/repos/Hongdal
+```
+
+### 30개 행정동 사업장 후보 G4a 정정 r2
+
+- 소상공인시장진흥공단 2026-06-30 동결 상가 자료에서 정확한 30개 행정동 코드에 속한 29,721행을 별도 비공개 후보 원장으로 보존한다. 음식 대분류 `I2`는 8,246행이고 건물관리번호 결손 67행, 원본 행정동과 2023 역사 경계 진단 불일치 35행, 동일 원문 상호·도로명주소 후보는 236그룹·490행이다. 불일치 행을 역사 경계로 재귀속하거나 동일업체로 자동 병합하지 않는다.
+- 첫 `g4a.r1`은 독립 개인정보 감사에서 선택된 원천 식별자 하나가 추적 생성기의 시험 fixture에 들어간 사실을 확인해 `RejectedAfterIndependentPrivacyAudit / PreservedNotPromoted`로 보존한다. 해당 값은 출력하지 않고 r1 후보 29,721행·snapshot 19건·ingestion run 19건의 전체 지속 상태 digest를 r2 실행 전후 비교한다. 현재 명령은 새 DatasetId와 revision의 정정 r2만 대상으로 한다.
+- raw 공급자 ID는 trim 후 SHA-256 digest를 사용해 `StableId`·`DimensionKey`·`RecordKey`를 만든다. 정확 상호명·지점명·도로명/지번주소·공급자 ID·건물관리번호/건물명/동/층/호·원 경위도 문자열 14개는 candidate hash의 실제 `hashValues`를 compact JSON으로 저장해 보호 RDB에서 정확 재조회하며, digest로 대체하지 않는다. 이 값은 Git에서 제외된 `candidates.ndjson`과 보호 로컬 RDB payload에만 남기고 manifest·audit·CLI 출력에는 포함하지 않는다.
+- 생성기 self-test fixture는 실제 원천 집합에 없는 명시적 합성 값을 사용한다. 선택된 29,721개 원천 식별자가 추적 생성기나 manifest·audit·complete 같은 집계 산출물에 하나라도 나타나면 DB 연결 전에 거절한다.
+- `preview`와 `apply`의 쓰기 전 검사는 DB 발급 `RawSnapshotId`를 제외한 기존 행 본문을 모두 비교한다. `apply`는 advisory lock과 단일 transaction에서 500행 이하 묶음으로만 저장하고 기존 행을 갱신하지 않는다. `verify`는 새 연결에서 정확한 29,721개 key, 30개 동 분포, 음식 8,246, 진단 35, 결손 67과 후보 집합 hash를 독립 재조회한다.
+- ZIP 자체와 검증한 서울 CSV entry를 구분해 원본 계보를 남긴다. C#은 entry의 301,889,640 bytes·CRC32·SHA-256과 CP949 raw 이름을 ZIP에서 다시 확인하고, 추출본을 만들지 않은 archive-entry snapshot을 포함한 계보 snapshot 19건을 보호 RDB에 둔다.
+- 기존 면목동 SEMAS 5,411행과 공장 126행은 별도 원장으로 보존한다. 실행 전후 전체 지속 상태 digest와 새 원장의 provider ID overlap 5,411·신규 ID 24,310을 확인하지만 두 원장을 참조·병합·덮어쓰지 않는다.
+- 모든 행은 `PendingHumanReview / PrivateReviewOnly`다. 현행 행정동 경계, 좌표 기준, 정확 건물·출입구 결속, 현재 영업, Claim, 공개 표시, 주문 가능, 광고, Runtime·Simulation·게임·Unity 권위는 만들지 않는다.
+
+```powershell
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-business-candidate-self-test C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-business-candidate-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-business-candidate-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- admin-dong-business-candidate-verify C:/Users/user/source/repos/Hongdal
+```
+
 ### 중랑구 7호선 역 기준자료 r1
 
 - `station-reference-acquire`는 공공데이터포털의 국가철도공단 도시광역철도 역사정보 metadata와 연결 XLSX를 제한 크기·시간 안에서 로컬 비공개 폴더에 수집하고 원본 SHA-256을 기록한다.
@@ -143,4 +240,109 @@ dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-data-go-ph
 dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-data-go-photo-preview C:/Users/user/source/repos/Hongdal
 dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-data-go-photo-apply C:/Users/user/source/repos/Hongdal
 dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-data-go-photo-verify C:/Users/user/source/repos/Hongdal
+```
+
+### 사가정 1km 음식점 비공개 검토 디렉터리 r1
+
+- 기존 소상공인시장진흥공단 면목동 상가 원장 5,411행과 동결된 주소·건물·인허가 검토 자료를 같은 Unity XZ 1km 창으로 다시 투영한다. 음식 업종 599행과 원문 상호 587종을 `public_data_normalized_records`에 파생 자료로 저장하며 부모 `SourceId`·`DatasetId`·`RawSnapshotId`를 그대로 보존한다.
+- 각 행은 원문 상호·업종·공개 도로명주소·좌표, 부모 행 식별자와 hash, 단일 건물 후보 또는 미해소 사유, 인허가 후보 ID를 보존한다. 전체가 `PendingHumanReview`, `distributionApproved=false`, `orderScenarioEligible=false`이므로 공개 상호 표시·업체 참여·주문·광고 권한이 아니다.
+- 현재 로컬 DB에 인허가 전용 테이블이 없으면 동결 입력의 인허가 후보와 hash만 보존하고 `SkippedTableUnavailable`을 보고한다. migration을 자동 실행하거나 테이블을 추정 생성하지 않는다.
+- `prepare`는 결정적 manifest를 로컬 산출물 폴더에 한 번만 만들고, `apply`는 누락된 파생 행만 transaction으로 저장한다. 같은 입력 재실행은 599행을 재조회하되 DB 쓰기를 하지 않아야 한다.
+
+```powershell
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-restaurant-directory-self-test C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-restaurant-directory-prepare C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-restaurant-directory-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-restaurant-directory-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-restaurant-directory-verify C:/Users/user/source/repos/Hongdal
+```
+
+### 사가정 1km 건물 도로명주소 결속 r1
+
+- `sagajeong-building-address-acquire`는 행정안전부 주소기반산업지원서비스에서 현재 내려받을 수 있는 2026-08-31 기준 건물DB 월 전체 ZIP과 서울 MS949 31열 자료, 활용 가이드를 `artifacts/local` 비공개 원본으로 동결한다. 공공데이터포털 metadata의 행정안전부 공급자·`이용허락범위 제한 없음`을 같이 검사한다.
+- `prepare|preview|replay`는 동결 지도 602개를 `OfficialIndividualAddress / OfficialSharedComplexAddress / RoadAddressCandidate / NoIndependentRoadAddress / Unresolved`로 전수 분류한다. 건물 주소 태그, 윤곽 안의 주소 지점, 유일한 공식 건물명 순으로만 대조하고 가까운 주소를 복사하지 않는다.
+- `apply|verify`는 602건의 결속 상태를 기존 `public_data_normalized_records`에 저장하고 새 `DbContext`로 재조회한다. 공유 주소는 건물 ID를 합치지 않고 같은 주소 및 복수 건물관리번호 후보를 참조한다. 모든 행은 `distributionApproved=false`, `deliveryEligible=false`, `priceObservationEligible=false`, `unityApplyAllowed=false`다.
+
+```powershell
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-building-address-acquire C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-building-address-self-test C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-building-address-prepare C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-building-address-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-building-address-replay C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-building-address-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-building-address-verify C:/Users/user/source/repos/Hongdal
+```
+
+### 사가정 화면 건물 결속·주소 증거 원장 r1
+
+- `sagajeong-presentation-building-evidence-*`는 이미 생성한 화면 건물 4,062개 결속 원장과 주소 후보 원장을 다시 생성하거나 형상을 바꾸지 않고, 기존 `public_data_normalized_records`에 비공개 검토 자료로 보존한다. 입력 파일·내용·원천 영수증 hash와 결속·주소 상태 계수를 모두 고정 검증한다.
+- 결속 원장은 manifest 1·출처 영수증 2·화면 건물 4,062·기준 건물 602·일대일 결속 544, 합계 5,211행이다. 주소 원장은 manifest 1·출처 영수증 5·건물별 배정 4,062·중복 제거한 도로명주소 후보 3,514, 합계 7,582행이다. 건물별 배정에는 후보 ID와 그 건물에서의 근거 방법만 두고, 주소·공식 합성키·건물관리번호는 후보 카탈로그 행에 한 번만 저장해 모든 `TextValue`를 2,000자 이하로 유지한다.
+- `apply`는 advisory lock과 단일 transaction에서 두 생성 원본 snapshot과 누락 정규화 행만 저장한다. 쓰기 전 충돌 검사, 새 연결의 독립 재조회, 동일 입력 재실행의 쓰기 0건을 강제한다. 모든 행은 `PendingHumanReview`이며 필지 형상·공식 건물 승격·공개 API·Unity·배달·가격·사업장·통행·게임 권위가 없다.
+- `self-test`는 DB 없이 전수 원장·행 길이·분리 계수·권위 차단을 검사한다. `preview`는 DB와 충돌 여부만 비교하고, `verify`와 `replay`는 저장된 12,793행 및 두 원본 계보를 새 읽기 문맥에서 확인하며 쓰지 않는다.
+
+```powershell
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-presentation-building-evidence-self-test C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-presentation-building-evidence-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-presentation-building-evidence-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-presentation-building-evidence-verify C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-presentation-building-evidence-replay C:/Users/user/source/repos/Hongdal
+```
+
+### 사가정 정적 차선·신호 관측 r1
+
+- `sagajeong-traffic-acquire`는 서울 열린데이터광장의 차선 `OA-15537`, 방향표시 `OA-15536`, 교차로 `OA-15534`, 교통신호제어기 `OA-15538`, 신호등 부착대 `OA-15546` 공식 전체 파일을 내려받는다. 파일명·코드에 동결한 기준일·SHA-256·길이·포털 좌표계 선언·공공누리 제1유형 확인을 하나의 비공개 영수증에 보존하며, 원본은 `artifacts/local` 밖으로 복사하지 않는다. 기준일은 원천 관측일이 아니며 포털 HTML 자체는 원본 snapshot으로 저장하지 않는다.
+- 기존 명목상 사가정 1km 표현 창은 EPSG:5186 envelope로 약 `1,034.423m × 1,022.067m`다. 차선은 실제 선분 절단이 아닌 bbox 교차 후보이고, 1,039행은 관리번호 1,036개와 이력 중복 3개를 포함한다. 다른 점 자료는 좌표 포함 후보지만, 신호등 125행은 포털 EPSG:5186 표기와 내장 geometry SRID 2093이 충돌하므로 실제 사가정 지역 ID가 아닌 `area:kr:seoul:traffic-signal-crs-unresolved-review` 검토 버킷에 `crs-conflict-numeric-envelope-candidate`로 저장한다.
+- `self-test|preview|apply|verify`는 전체 556,346행 중 CRS가 해소된 거친 후보 1,398행과 CRS 미해결 숫자 envelope 후보 125행, 합계 1,523행을 검사·비교·저장·독립 재조회한다. 모든 행은 `PendingHumanReview`이고 공개·Runtime·통행·게임 권위가 없다. `apply` 재실행은 신규 원본·행 0건이어야 하며 같은 원본의 새 수집 시각은 중복이나 충돌을 만들지 않는다.
+- 횡단보도 `OA-23081`은 r1에 포함하지 않았다. 별도 XLSX schema와 더 최신 판본을 교차로·정지선에 결속하려면 r2 영수증으로 다시 열어야 하며, 이것이 정지선·보행 신호 관계의 가장 이른 후속 지점이다.
+
+```powershell
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-traffic-acquire C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-traffic-self-test C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-traffic-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-traffic-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-traffic-verify C:/Users/user/source/repos/Hongdal
+```
+
+### 사가정 횡단보도·보행등 관계 관측 r2
+
+- `sagajeong-crosswalk-acquire`는 서울 열린데이터광장 `OA-23081` 전체 XLSX의 원본 hash·길이·판본·EPSG:5186·공공누리 제1유형 조건을 확인하고 비공개 동결 영수증을 만든다. 원본 XLSX는 `artifacts/local/public-data/sagajeong-static-traffic-20260913-r2-crosswalk/`에 미리 받아 두어야 하며, 수집기는 원본을 수정·복사하지 않는다.
+- `self-test|preview|apply|verify`는 21,776행을 읽고 좌표가 모두 빈 1행은 추정 보정 없이 제외한 뒤, 기존 EPSG:5186 사가정 명목상 1km 선택 창 내 84행만 정규화한다. 이 범위에서 보행등 `유` 40건·`무` 44건, 교차로 27개고, 사가정역 교차로 `3205`는 7건(`유` 4·`무` 3)이다.
+- 보행등 유무는 공식 관측 사실이지만 신호 주기·현시·정지선·통행 규칙이 아니다. 전체 행은 `PendingHumanReview`이고 공개·Runtime·통행·게임 권위가 없다. `apply` 재실행은 원본·정규화 신규 0건으로 멱등해야 한다.
+
+```powershell
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-crosswalk-acquire C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-crosswalk-self-test C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-crosswalk-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-crosswalk-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-crosswalk-verify C:/Users/user/source/repos/Hongdal
+```
+
+### 중랑구 전통시장 시각·정체성 비공개 검토 r1
+
+- `jungnang-market-visual-acquire`는 중랑구소식지 2016년 9월호 PDF를 공식 URL과 고정 hash로 확인하고, 우림·동부·면목·동원·사가정의 설명과 사진이 함께 남는 시장별 검토 이미지 5장을 `artifacts/local`에 만든다.
+- 2025-11-10 전국전통시장표준데이터의 현재 후보 7행을 함께 보존한다. `면목시장/면목골목시장`, `동원시장/동원전통종합시장`, 과거 동부시장 주소 차이는 자동 병합하지 않는다.
+- 소식지의 개별 사진 이용권을 확인하지 못했으므로 전부 `PrivateReviewOnly`다. 사진·crop을 Git 또는 Unity에 넣거나 Blender 형상·텍스처 근거로 사용하지 않는다.
+- `apply|verify`는 시각 참고 5건, 정체성 검토 5건, 권리 경계 1건을 로컬 Docker MySQL에 저장하고 독립 재조회한다. 같은 입력 재적용은 신규 0건이어야 한다.
+
+```powershell
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- jungnang-market-visual-acquire C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- jungnang-market-visual-self-test C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- jungnang-market-visual-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- jungnang-market-visual-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- jungnang-market-visual-verify C:/Users/user/source/repos/Hongdal
+```
+
+### 사가정역 1km 공간 보충 자료 r1
+
+- 서울 열린데이터광장 공식 자료에서 보행망 `OA-21208`, 역 엘리베이터 `OA-21212`, 생활권계획 공원 `OA-15529`, 버스 정류소 `OA-15067`, 가로수 `OA-1325`를 수집한다. 원본과 영수증은 `artifacts/local/public-data/sagajeong-spatial-supplement-20260914-r1/`에만 둔다.
+- 기존 사가정 WGS84 창을 사용해 보행망 2,902·엘리베이터 1·공원 정체성 1·버스 정류소 30·가로수 292건을 `PendingHumanReview`로 정규화한다. WGS84 자료의 ENU 중심 좌표는 읽기 후보이며 통행·Runtime·gameplay 권위가 아니다.
+- 공원 SHP의 EPSG:5174 경계 변환은 보류다. 국토지리정보원 수치지도 V2·수치표고모형은 로그인·전용 전송 절차가 필요한 `BlockedExternalAccess`이고 fallback하지 않는다.
+- `apply`는 200행 단위로 저장하고 같은 입력의 재적용은 신규 0·기존 3,226이어야 한다. `verify`는 새 DB 문맥으로 정규화 행과 원본 사본을 독립 재조회한다.
+
+```powershell
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-spatial-supplement-acquire C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-spatial-supplement-self-test C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-spatial-supplement-preview C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-spatial-supplement-apply C:/Users/user/source/repos/Hongdal
+dotnet run --project eng/Ssalddel.PublicDataPortalImport -- sagajeong-spatial-supplement-verify C:/Users/user/source/repos/Hongdal
 ```

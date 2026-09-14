@@ -9,6 +9,16 @@ using 살뜰.Services.External.PublicData.Korea;
 var result = new Dictionary<string, object?> { ["databaseWriteAttempted"]=false, ["committed"]=false };
 try
 {
+    const string jungnangMarketVisualPrefix = "jungnang-market-visual-";
+    if (args.Length == 2 && args[0].StartsWith(jungnangMarketVisualPrefix, StringComparison.Ordinal))
+    {
+        await 중랑구전통시장시각자료.RunAsync(
+            args[0][jungnangMarketVisualPrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
     const string sagajeongDataGoPhotoPrefix = "sagajeong-data-go-photo-";
     if (args.Length == 2 && args[0].StartsWith(sagajeongDataGoPhotoPrefix, StringComparison.Ordinal))
     {
@@ -55,6 +65,26 @@ try
         Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
         return 0;
     }
+    const string sagajeongPresentationBuildingEvidencePrefix = "sagajeong-presentation-building-evidence-";
+    if (args.Length == 2 && args[0].StartsWith(sagajeongPresentationBuildingEvidencePrefix, StringComparison.Ordinal))
+    {
+        await 사가정화면건물결속주소자료.RunAsync(
+            args[0][sagajeongPresentationBuildingEvidencePrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    const string sagajeongBuildingAddressPrefix = "sagajeong-building-address-";
+    if (args.Length == 2 && args[0].StartsWith(sagajeongBuildingAddressPrefix, StringComparison.Ordinal))
+    {
+        await 사가정건물도로명주소자료.RunAsync(
+            args[0][sagajeongBuildingAddressPrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
     if (args.Length == 2 && args[0].StartsWith("sagajeong-building-", StringComparison.Ordinal))
     {
         await 사가정건물자료대장.RunAsync(args[0][19..], Path.GetFullPath(args[1]), result);
@@ -73,9 +103,103 @@ try
         Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
         return 0;
     }
+    const string sagajeongRestaurantDirectoryPrefix = "sagajeong-restaurant-directory-";
+    if (args.Length == 2 && args[0].StartsWith(sagajeongRestaurantDirectoryPrefix, StringComparison.Ordinal))
+    {
+        await 사가정음식점Directory자료.RunAsync(
+            args[0][sagajeongRestaurantDirectoryPrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    const string sagajeongTrafficPrefix = "sagajeong-traffic-";
+    if (args.Length == 2 && args[0].StartsWith(sagajeongTrafficPrefix, StringComparison.Ordinal))
+    {
+        await 사가정차선신호자료.RunAsync(args[0][sagajeongTrafficPrefix.Length..], Path.GetFullPath(args[1]), result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    const string sagajeongCrosswalkPrefix = "sagajeong-crosswalk-";
+    if (args.Length == 2 && args[0].StartsWith(sagajeongCrosswalkPrefix, StringComparison.Ordinal))
+    {
+        await 사가정횡단보도자료.RunAsync(args[0][sagajeongCrosswalkPrefix.Length..], Path.GetFullPath(args[1]), result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    const string sagajeongSpatialSupplementPrefix = "sagajeong-spatial-supplement-";
+    if (args.Length == 2 && args[0].StartsWith(sagajeongSpatialSupplementPrefix, StringComparison.Ordinal))
+    {
+        await 사가정공간보충자료.RunAsync(
+            args[0][sagajeongSpatialSupplementPrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
     if (args.Length == 2 && args[0].StartsWith("admin-dong-data-", StringComparison.Ordinal))
     {
         await 면목동행정동생활인구.RunAsync(args[0][16..], Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])), result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    const string administrativeDongCrosswalkCandidatePrefix = "admin-dong-crosswalk-candidate-";
+    if (args.Length == 2 && args[0].StartsWith(administrativeDongCrosswalkCandidatePrefix, StringComparison.Ordinal))
+    {
+        await 행정동횡단보도후보.RunAsync(
+            args[0][administrativeDongCrosswalkCandidatePrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    const string administrativeDongIntersectionCandidatePrefix = "admin-dong-intersection-candidate-";
+    if (args.Length == 2 && args[0].StartsWith(administrativeDongIntersectionCandidatePrefix, StringComparison.Ordinal))
+    {
+        await 행정동교차로점후보.RunAsync(
+            args[0][administrativeDongIntersectionCandidatePrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    const string administrativeDongWalkNetworkCandidatePrefix = "admin-dong-walk-network-candidate-";
+    if (args.Length == 2 && args[0].StartsWith(administrativeDongWalkNetworkCandidatePrefix, StringComparison.Ordinal))
+    {
+        await 행정동보행망후보.RunAsync(
+            args[0][administrativeDongWalkNetworkCandidatePrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    const string administrativeDongBusinessCandidatePrefix = "admin-dong-business-candidate-";
+    if (args.Length == 2 && args[0].StartsWith(administrativeDongBusinessCandidatePrefix, StringComparison.Ordinal))
+    {
+        await 행정동사업장후보.RunAsync(
+            args[0][administrativeDongBusinessCandidatePrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    const string administrativeDongBuildingAddressCandidatePrefix = "admin-dong-building-address-candidate-";
+    if (args.Length == 2 && args[0].StartsWith(administrativeDongBuildingAddressCandidatePrefix, StringComparison.Ordinal))
+    {
+        await 행정동건물주소후보.RunAsync(
+            args[0][administrativeDongBuildingAddressCandidatePrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
+        return 0;
+    }
+    const string administrativeDongDioramaBatchPrefix = "admin-dong-diorama-batch-";
+    if (args.Length == 2 && args[0].StartsWith(administrativeDongDioramaBatchPrefix, StringComparison.Ordinal))
+    {
+        await 행정동디오라마Batch.RunAsync(
+            args[0][administrativeDongDioramaBatchPrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
         Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented=true }));
         return 0;
     }
@@ -244,6 +368,13 @@ try
 catch(Exception ex)
 {
     result["errorCode"]=ex is InvalidDataException ? ex.Message : ex.GetType().Name;
+    var databaseError = ex.InnerException;
+    while (databaseError?.InnerException is not null) databaseError = databaseError.InnerException;
+    if (databaseError is MySqlConnector.MySqlException mysqlException)
+    {
+        result["databaseErrorNumber"] = mysqlException.Number;
+        result["databaseSqlState"] = mysqlException.SqlState;
+    }
     Console.WriteLine(JsonSerializer.Serialize(result)); return 1; // 연결문자열/원예외/비밀값을 출력하지 않는다.
 }
 static void Require(bool ok,string code) { if(!ok) throw new InvalidDataException(code); }

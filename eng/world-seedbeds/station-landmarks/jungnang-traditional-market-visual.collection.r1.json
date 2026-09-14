@@ -1,0 +1,206 @@
+{
+  "schemaVersion": "ssalddel.station-landmark-visual-collection.v1",
+  "revision": "jungnang-traditional-market-visual-collection.r1",
+  "planRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/jungnang-traditional-market-visual-collection.implementation.r24.md",
+  "status": "PrivateReviewCollectedIdentityAndRightsPending",
+  "acquisition": {
+    "privateFolder": "artifacts/local/public-data/jungnang-traditional-market-visuals-20260914-r1",
+    "privateReceiptPath": "artifacts/local/public-data/jungnang-traditional-market-visuals-20260914-r1/acquisition.json",
+    "receiptSha256": "5cff086303232496ea599961f8aaddbe198035d947a9364111252afd7bd076c2",
+    "collectedAtUtc": "2026-09-14T04:04:28.93078Z",
+    "rawFilesTrackedByGit": false,
+    "rawFilesCopiedToUnity": false
+  },
+  "sourceDocument": {
+    "title": "중랑구소식지 2016년 9월호",
+    "publisher": "서울특별시 중랑구",
+    "sourceUrl": "https://ecatalog.jungnang.go.kr/src/viewer/download.php?host=main&no=1&site=20160825_091645",
+    "publicationDate": "2016-08-25",
+    "privateFileName": "jungnang-news-2016-09.pdf",
+    "sha256": "8f5ede7e2a31068f421fa2cf977dce9da78b250ac3b903c115cd4df8cc05e0a4",
+    "byteLength": 23907272,
+    "rightsStatus": "ItemLevelRightsUnverified",
+    "contentAgeStatus": "Historical2016"
+  },
+  "officialMarketSource": {
+    "sourceId": "semas-traditional-market-status",
+    "datasetId": "data-go-kr-15012894-standard",
+    "sourcePage": "https://www.data.go.kr/data/15012894/standard.do",
+    "referenceDate": "2025-11-10",
+    "privateRelativePath": "artifacts/local/public-data/eight-life-domains/market-20260908-r1/markets.json",
+    "sha256": "13ffd04a946ec7eec28222c8c3762f2e77aab919cd250888cdaaf7f51cce303b",
+    "selectedRowCount": 7,
+    "identityAuthority": "CandidateRowsOnly"
+  },
+  "marketPackets": [
+    {
+      "marketPacketStableId": "market-visual-packet:kr:seoul:jungnang:woorim.r1",
+      "historicalDisplayName": "우림시장",
+      "historicalAddress": "서울특별시 중랑구 망우로62길 52-4",
+      "panel": {
+        "privateRelativePath": "artifacts/local/public-data/jungnang-traditional-market-visuals-20260914-r1/market-panels/woorim-market-02.png",
+        "sourcePage": 2,
+        "sha256": "1145d2d31358e29b31b3b677bdef74413932208b2c7fb4c490c42f02d118ca1a",
+        "byteLength": 326090
+      },
+      "currentOfficialRowCandidates": [
+        {
+          "marketName": "우림골목시장",
+          "roadAddress": "서울특별시 중랑구 망우로62길 52-4",
+          "latitude": 37.59677029,
+          "longitude": 127.0982661,
+          "storeCount": 123
+        }
+      ],
+      "identityReviewCode": "OneCurrentAliasAndAddressMatchPendingCanonicalReview",
+      "privateReviewObservations": ["StreetSpanningEntranceArch", "ArcadeRoofRhythm", "MixedVehiclePedestrianApproach", "LowRiseStorefrontEdge"],
+      "missingModelEvidence": ["AllEntranceCoordinates", "MarketCenterlineAndWidth", "CanopyHeight", "SideAndRearMass", "CurrentCondition"]
+    },
+    {
+      "marketPacketStableId": "market-visual-packet:kr:seoul:jungnang:dongbu.r1",
+      "historicalDisplayName": "동부시장",
+      "historicalAddress": "서울특별시 중랑구 중랑천로10길 61",
+      "panel": {
+        "privateRelativePath": "artifacts/local/public-data/jungnang-traditional-market-visuals-20260914-r1/market-panels/dongbu-market-02.png",
+        "sourcePage": 2,
+        "sha256": "fdae0ed2af4468a7567920af09bd81f6b2e62905fb2d6fcce9ee65f5733c5408",
+        "byteLength": 309796
+      },
+      "currentOfficialRowCandidates": [
+        {
+          "marketName": "중랑동부시장(동부골목시장)",
+          "roadAddress": "서울특별시 중랑구 동일로109길 31-5",
+          "latitude": 37.59150529,
+          "longitude": 127.0784896,
+          "storeCount": 105
+        }
+      ],
+      "identityReviewCode": "OneCurrentAliasButAddressChangedPendingIdentityReview",
+      "privateReviewObservations": ["StreetFacingMultiStoreyEntrance", "RedVerticalMarketSign", "OpenStreetFront", "AdjacentLowRiseCommercialMass"],
+      "missingModelEvidence": ["AddressChangeHistory", "ArcadeInterior", "MarketCenterlineAndWidth", "CanopyHeight", "CurrentCondition"]
+    },
+    {
+      "marketPacketStableId": "market-visual-packet:kr:seoul:jungnang:myeonmok.r1",
+      "historicalDisplayName": "면목시장",
+      "historicalAddress": "서울특별시 중랑구 사가정로50길 84",
+      "panel": {
+        "privateRelativePath": "artifacts/local/public-data/jungnang-traditional-market-visuals-20260914-r1/market-panels/myeonmok-market-03.png",
+        "sourcePage": 3,
+        "sha256": "9a81802a1a1991210e8e6ed8e390355e5d28b3c626ad14db23e8e9e8002b72f9",
+        "byteLength": 292246
+      },
+      "currentOfficialRowCandidates": [
+        {
+          "marketName": "면목골목시장",
+          "roadAddress": "서울특별시 중랑구 사가정로50길 84",
+          "latitude": 37.57749074,
+          "longitude": 127.0844409,
+          "storeCount": 96
+        },
+        {
+          "marketName": "면목시장",
+          "roadAddress": "서울특별시 중랑구 면목로39길 11",
+          "latitude": 37.57954367,
+          "longitude": 127.0862998,
+          "storeCount": 33
+        }
+      ],
+      "identityReviewCode": "HistoricalNameMatchesOneRowButAddressMatchesOtherRowPendingIdentityReview",
+      "privateReviewObservations": ["AlleyEntranceBanner", "ContinuousBarrelVaultArcade", "DenseTwoSidedStalls", "NarrowPedestrianShoppingAxis"],
+      "missingModelEvidence": ["CanonicalMarketIdentity", "AllEntranceCoordinates", "MarketCenterlineAndWidth", "CanopyHeight", "CurrentCondition"]
+    },
+    {
+      "marketPacketStableId": "market-visual-packet:kr:seoul:jungnang:dongwon.r1",
+      "historicalDisplayName": "동원시장",
+      "historicalAddress": "서울특별시 중랑구 상봉로11길 37",
+      "panel": {
+        "privateRelativePath": "artifacts/local/public-data/jungnang-traditional-market-visuals-20260914-r1/market-panels/dongwon-market-03.png",
+        "sourcePage": 3,
+        "sha256": "5a7b3626e006866071f74badd57075bb422870f5cb5fdc0ba8b0e15fef2668cf",
+        "byteLength": 323096
+      },
+      "currentOfficialRowCandidates": [
+        {
+          "marketName": "동원시장",
+          "roadAddress": "서울특별시 중랑구 면목로74길 45",
+          "latitude": 37.58983934,
+          "longitude": 127.0898896,
+          "storeCount": 14
+        },
+        {
+          "marketName": "동원전통종합시장",
+          "roadAddress": "서울특별시 중랑구 상봉로11길 27-3",
+          "latitude": 37.58982861,
+          "longitude": 127.0921089,
+          "storeCount": 114
+        }
+      ],
+      "identityReviewCode": "TwoCurrentRowsAndHistoricalAddressDifferencePendingIdentityReview",
+      "privateReviewObservations": ["StationAdjacentStreetFacade", "DenseSignageBand", "MixedOpenAndArcadedCharacter", "MultiStoreyCommercialMass"],
+      "missingModelEvidence": ["CanonicalMarketIdentity", "ExactEntranceThreshold", "ArcadeExtent", "MarketCenterlineAndWidth", "CurrentCondition"]
+    },
+    {
+      "marketPacketStableId": "market-visual-packet:kr:seoul:jungnang:sagajeong.r1",
+      "historicalDisplayName": "사가정시장",
+      "historicalAddress": "서울특별시 중랑구 면목로44길 16",
+      "panel": {
+        "privateRelativePath": "artifacts/local/public-data/jungnang-traditional-market-visuals-20260914-r1/market-panels/sagajeong-market-03.png",
+        "sourcePage": 3,
+        "sha256": "a9becd85dc9396a846a4be31bebcc0b12a4d789e60d1c40dee1e3347735d0af7",
+        "byteLength": 292174
+      },
+      "currentOfficialRowCandidates": [
+        {
+          "marketName": "사가정시장",
+          "roadAddress": "서울특별시 중랑구 면목로44길 16",
+          "latitude": 37.58108117,
+          "longitude": 127.0893792,
+          "storeCount": 137
+        }
+      ],
+      "identityReviewCode": "OneCurrentExactNameAndAddressMatchPendingCanonicalReview",
+      "privateReviewObservations": ["OpenAlleyEntrance", "VerticalMarketSign", "NoContinuousArcadeVisibleAtEntrance", "DenseLowRiseStorefrontWalls"],
+      "missingModelEvidence": ["AllEntranceCoordinates", "MarketCenterlineAndWidth", "RepresentativeAlleyCrossSection", "CanopyHeight", "CurrentCondition"]
+    }
+  ],
+  "rightsBoundary": {
+    "officialPublication": true,
+    "itemLevelCommercialUseVerified": false,
+    "itemLevelModificationVerified": false,
+    "facesAndThirdPartyMarksMayBePresent": true,
+    "privateReviewOnly": true,
+    "blenderWorkAuthorized": false,
+    "unityRuntimeAuthorized": false,
+    "distributionApproved": false,
+    "nextRequiredAction": "ObtainItemLevelPermissionOrCollectSelfCapturedPermittedReferences"
+  },
+  "persistenceEvidence": {
+    "database": "hongdal-mysql-1/hongdal_dev",
+    "normalizedRecordCount": 11,
+    "visualReferenceCount": 5,
+    "identityReviewCount": 5,
+    "rightsBoundaryCount": 1,
+    "firstApplyInserted": 11,
+    "secondApplyInserted": 0,
+    "secondApplyExisting": 11,
+    "independentVerifyCount": 11
+  },
+  "handoffGates": {
+    "source": "CollectedPrivateReview",
+    "identity": "PendingHumanReview",
+    "geometry": "MissingRequiredAnglesAndMeasurements",
+    "visualRights": "ItemLevelRightsUnverified",
+    "blender": "Blocked",
+    "unity": "Blocked",
+    "sceneReady": false,
+    "gameplayReady": false
+  },
+  "ruleAssessment": {
+    "supportsExistingRules": [
+      "diorama-rule:source-simulation-presentation-separated.v1",
+      "diorama-rule:preserve-procedural-mass-until-visual-evidence-ready.v1"
+    ],
+    "newCandidateRule": "diorama-rule:historical-landmark-identity-is-versioned-candidate.v1",
+    "candidateApplicationAuthorized": false
+  }
+}

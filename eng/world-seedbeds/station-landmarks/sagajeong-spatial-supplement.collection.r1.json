@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "ssalddel.station-spatial-supplement-collection.v1",
+  "revision": "sagajeong-spatial-supplement-20260914.r1",
+  "planRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-spatial-supplement.implementation.r27.md",
+  "stationStableId": "station:kr:kric:s1107:0722",
+  "regionStableId": "area:kr:seoul:jungnang:sagajeong-station-0722-one-kilometer",
+  "boundsWgs84": {
+    "minLongitude": 127.0825,
+    "minLatitude": 37.5762,
+    "maxLongitude": 127.0942,
+    "maxLatitude": 37.5854
+  },
+  "acquisition": {
+    "privateReceiptPath": "artifacts/local/public-data/sagajeong-spatial-supplement-20260914-r1/acquisition.json",
+    "receiptSha256": "fbb9be687ef1c057606886978e5f40ec58bb3bc92f338c62cb17eed6d9b0126c",
+    "coverageTreePath": "artifacts/local/public-data/sagajeong-spatial-supplement-20260914-r1/coverage-tree.json",
+    "coverageTreeSha256": "d4f3987305f2f6b5b20f47b3a048c06a867928c04d62305e5a756f8101294ab7",
+    "collectedAtUtc": "2026-09-14T06:03:15.955Z",
+    "privateRawOnly": true,
+    "reviewStatus": "PendingHumanReview"
+  },
+  "officialSources": [
+    {
+      "layer": "PedestrianAccess",
+      "infId": "OA-21208",
+      "datasetId": "oa-21208-pedestrian-network",
+      "sourcePage": "https://data.seoul.go.kr/dataList/OA-21208/A/1/datasetView.do",
+      "referenceDate": "2020-12-31",
+      "licenseCode": "KOGL-Type1-Attribution",
+      "rawSha256": "8c8ef3f0b35c0523dc327e25cb9b61d8bc1706980d4ac672e4424869340543d5",
+      "totalRows": 8913,
+      "selectedRows": 2902,
+      "limitations": ["과거 공간 참고이며 현재 통행 가능성·보도 폭·연석 권위가 아니다."]
+    },
+    {
+      "layer": "Accessibility",
+      "infId": "OA-21212",
+      "datasetId": "oa-21212-subway-elevator",
+      "sourcePage": "https://data.seoul.go.kr/dataList/OA-21212/S/1/datasetView.do",
+      "referenceDate": "2020-12-31",
+      "licenseCode": "KOGL-Type1-Attribution",
+      "rawSha256": "2b7e3130e957c1cf8a3282f3a074cbf0ea9b452ba6a1ae021bae384500fbe444",
+      "totalRows": 1,
+      "selectedRows": 1,
+      "limitations": ["출구 번호·현재 운행 상태·실제 출입 방향을 증명하지 않는다."]
+    },
+    {
+      "layer": "GreenSpace",
+      "infId": "OA-15529",
+      "datasetId": "oa-15529-living-zone-park",
+      "sourcePage": "https://data.seoul.go.kr/dataList/OA-15529/F/1/datasetView.do",
+      "referenceDate": "2018-12-21",
+      "licenseCode": "KOGL-Type1-Attribution",
+      "rawSha256": "6530ac26df19acf44a16314df7d6291946414f5dedd5f2cca314e9bf186f084b",
+      "totalRows": 1,
+      "selectedRows": 1,
+      "limitations": ["공원 정체성만 정규화했다. EPSG:5174 경계 좌표 변환과 현행 경계·입구 검토는 보류다."]
+    },
+    {
+      "layer": "TransitFurniture",
+      "infId": "OA-15067",
+      "datasetId": "oa-15067-bus-stop-location",
+      "sourcePage": "https://data.seoul.go.kr/dataList/OA-15067/F/1/datasetView.do",
+      "referenceDate": "2026-09-02",
+      "licenseCode": "KOGL-Type1-Attribution",
+      "rawSha256": "73eb0a5f4fd0f6128237b5e23fa361fd1c6d8a31a83bcee2884e6a48481852bb",
+      "totalRows": 11236,
+      "selectedRows": 30,
+      "limitations": ["정적 정류소 위치 후보이며 노선·실시간 도착·보행 연결 권위가 아니다."]
+    },
+    {
+      "layer": "Vegetation",
+      "infId": "OA-1325",
+      "datasetId": "oa-1325-roadside-tree-wgs84",
+      "sourcePage": "https://data.seoul.go.kr/dataList/OA-1325/A/1/datasetView.do",
+      "referenceDate": "2022-10-14",
+      "licenseCode": "KOGL-Type1-Attribution",
+      "rawSha256": "5165be3cff0ad6d3fded023d928ca27845724138da6733d8e2ae1f35a1796f77",
+      "totalRows": 7113,
+      "selectedRows": 292,
+      "limitations": ["과거 식재 위치 후보이며 현재 존치·수관·Collider·가림 권위가 아니다."]
+    }
+  ],
+  "blockedSources": [
+    {
+      "datasetId": "data-go-kr-15059719",
+      "title": "국토지리정보원 수치지도 V2",
+      "sourcePage": "https://www.data.go.kr/data/15059719/fileData.do",
+      "status": "BlockedExternalAccess",
+      "reason": "국토정보플랫폼 로그인과 전용 전송 절차가 필요하며 대체 자료로 성공 처리하지 않는다."
+    },
+    {
+      "datasetId": "data-go-kr-15059920",
+      "title": "국토지리정보원 수치표고모형",
+      "sourcePage": "https://www.data.go.kr/data/15059920/fileData.do",
+      "status": "BlockedExternalAccess",
+      "reason": "국토정보플랫폼 다운로드 도구가 필요하며 평지 합성으로 결손을 숨기지 않는다."
+    }
+  ],
+  "persistenceEvidence": {
+    "database": "hongdal-mysql-1/hongdal_dev",
+    "normalizedRecordCount": 3226,
+    "firstApplyInserted": 3226,
+    "secondApplyInserted": 0,
+    "secondApplyExisting": 3226,
+    "independentVerifyCount": 3226,
+    "rawSnapshotCount": 5
+  },
+  "handoffGates": {
+    "distributionApproved": false,
+    "runtimeAuthorized": false,
+    "traversalAuthorized": false,
+    "gameplayAuthorized": false,
+    "unitySceneChanged": false,
+    "unityPrefabChanged": false,
+    "parkGeometryNormalization": "Deferred",
+    "newVisualOriginalCount": 0
+  }
+}

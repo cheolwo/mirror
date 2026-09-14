@@ -133,6 +133,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I음식점메뉴관리UseCase, 음식점메뉴관리UseCase>();
         services.AddScoped<I음식배달수명주기조회UseCase, 음식배달수명주기조회UseCase>();
         services.AddScoped<I음식배달완료WorldSnapshot조회UseCase, 음식배달완료WorldSnapshot조회UseCase>();
+        services.AddScoped<I진행중음식배달WorldProjectionReader, 진행중음식배달WorldProjectionReader>();
         services.AddScoped<음식배달완료WorldAreaResolver>();
         services.AddScoped<I음식배달완료WorldAreaResolver>(provider =>
             provider.GetRequiredService<음식배달완료WorldAreaResolver>());
@@ -211,6 +212,8 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I행정동디오라마DisplayOverlaySource>(provider => provider.GetRequiredService<지역디오라마표시LedgerService>());
         services.AddScoped<I행정동디오라마조회UseCase, 행정동디오라마조회UseCase>();
         services.AddScoped<I역세권디오라마조회UseCase, 역세권디오라마조회UseCase>();
+        services.AddScoped<I역세권디오라마건물증거RecordReader, Ef역세권디오라마건물증거RecordReader>();
+        services.AddScoped<I역세권디오라마건물증거조회UseCase, 역세권디오라마건물증거조회UseCase>();
         services.AddScoped<행정동디오라마PublicationService>();
         services.AddSingleton<I관찰운영검증ProjectionReader, Empty관찰운영검증ProjectionReader>();
         services.AddScoped<I창고입고화물인계조회UseCase, 창고입고화물인계조회UseCase>();

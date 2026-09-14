@@ -1,0 +1,231 @@
+{
+  "schemaVersion": "administrative-dong-crosswalk-generation-scope.v1",
+  "scopeStableId": "scope:administrative-dong-crosswalk:northeast-seoul-rider:g3a:r1",
+  "revision": "northeast-seoul-admin-dong-crosswalk-candidate.g3a.r1",
+  "generatedAtUtc": "2026-09-15T00:00:00Z",
+  "sourceVintage": "oa23081-file-20260824+oa22160-file-20231031+northeast-seoul-rider-r2+crosswalk-g3a-r1",
+  "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-crosswalk-candidate.implementation.r7.md",
+  "designHashSha256": "860A8A78C6205FB2E8588D13A05DF50AD215F86C9F92DB69C74BF2C39A95220F",
+  "reviewStatus": "PendingHumanReview",
+  "coordinateReferenceStatus": "EmpiricallyValidatedCandidateNotSourceDeclared",
+  "authorityBoundary": "OA-23081 점과 OA-22160 역사 경계의 비공개 검토 결속일 뿐 현행 경계, 횡단보도 면, 보도 연결, 신호 현시, 통행 또는 Unity 권위가 아니다.",
+  "coordinateFrame": {
+    "method": "WGS84-ECEF-ENU-at-zero-altitude",
+    "originLatitude": 37.580912,
+    "originLongitude": 127.088502,
+    "worldOffsetX": 0.0,
+    "worldOffsetZ": 0.0,
+    "metersPerUnit": 1.0
+  },
+  "coordinateValidation": {
+    "statusCode": "EmpiricallyValidatedCandidateNotSourceDeclared",
+    "sourceDeclared": false,
+    "methodCode": "OfficialStationWgs84AnchorDistanceAndAlternativeCrsWholeFileMinimum",
+    "sagajeongStationWgs84": {
+      "longitude": 127.088502,
+      "latitude": 37.580912
+    },
+    "anchorEpsg5186": {
+      "x": 207817.3774,
+      "y": 553488.0505
+    },
+    "crosswalkManagementNumber": "06-0000016264",
+    "sourceSheetRow": 21271,
+    "distanceMeters": 8.0946,
+    "alternativeInterpretationMinimumDistanceEvidence": [
+      {
+        "coordinateReference": "EPSG:5181",
+        "thresholdCode": "GreaterThan83Kilometers"
+      },
+      {
+        "coordinateReference": "EPSG:5174",
+        "thresholdCode": "GreaterThan83Kilometers"
+      },
+      {
+        "coordinateReference": "EPSG:2097",
+        "thresholdCode": "GreaterThan83Kilometers"
+      },
+      {
+        "coordinateReference": "EPSG:5179",
+        "thresholdCode": "GreaterThan1580Kilometers"
+      }
+    ],
+    "receiptCoordinateMetadataDispositionCode": "PriorInferenceNotSourceDeclaration",
+    "contentHashSha256": "064E94EAB1DE41B02D0EDEA3A0CFA24806EF5E2201AAC0D68838FA363CE4C4D3"
+  },
+  "historicalBoundaryConversion": {
+    "sourceCoordinateReference": "EPSG:5181",
+    "assignmentCoordinateReferenceCandidate": "EPSG:5186",
+    "xOffsetMeters": 0.0,
+    "yOffsetMeters": 100000.0,
+    "methodCode": "SameKgd2002CentralBeltFalseNorthingOffsetOnly",
+    "rotationApplied": false,
+    "scaleApplied": false,
+    "inferredTranslationApplied": false
+  },
+  "expectedCounts": {
+    "sourceRows": 21776,
+    "coordinatePresentRows": 21775,
+    "coordinateMissingRows": 1,
+    "uniquelyAssignedRows": 1533,
+    "unresolvedMultipleBoundaryRows": 0,
+    "outsideScopeRows": 20242,
+    "candidateRows": 1533
+  },
+  "expectedDistribution": {
+    "1121574000": 36,
+    "1121575000": 31,
+    "1121576000": 37,
+    "1121577000": 37,
+    "1123056000": 75,
+    "1123057000": 21,
+    "1123060000": 75,
+    "1123061000": 48,
+    "1123065000": 61,
+    "1123066000": 81,
+    "1123072000": 33,
+    "1123073000": 46,
+    "1123074000": 47,
+    "1123075000": 40,
+    "1126052000": 50,
+    "1126054000": 41,
+    "1126055000": 34,
+    "1126056500": 54,
+    "1126057000": 47,
+    "1126057500": 50,
+    "1126058000": 19,
+    "1126059000": 45,
+    "1126060000": 21,
+    "1126061000": 59,
+    "1126062000": 78,
+    "1126063000": 57,
+    "1126065500": 133,
+    "1126066000": 26,
+    "1126068000": 108,
+    "1126069000": 43
+  },
+  "expectedFeasibilityDigestSha256": "DC34A66F2390281AA5BF4D70F77ABE87AEEBCFEC97328B5AE5C6D5D7FA62DDC3",
+  "authorityFlags": {
+    "privateReviewOnly": true,
+    "historicalBoundaryBootstrapOnly": true,
+    "observationCandidateOnly": true,
+    "currentAdministrativeBoundaryEstablished": false,
+    "sourceDeclaredCoordinateReference": false,
+    "crosswalkGeometryEstablished": false,
+    "stopLineEstablished": false,
+    "signalPhaseTimingEstablished": false,
+    "sidewalkConnectionEstablished": false,
+    "distributionApproved": false,
+    "publicDisplayAllowed": false,
+    "runtimeAuthorized": false,
+    "traversalReady": false,
+    "gameplayReady": false,
+    "unityApplyAllowed": false
+  },
+  "output": {
+    "repositoryRelativeDirectory": "artifacts/local/public-data/admin-dong-crosswalk-northeast-seoul-20260915-g3a-r1",
+    "generationDirectoryName": "generations",
+    "candidateSchemaVersion": "administrative-dong-crosswalk-candidate.v1",
+    "toolchain": {
+      "generatorRelativePath": "eng/neighborhood/administrative_dong_crosswalk_candidate.py",
+      "generatorSha256": "640D5D2AB79E60408816960211DB46568C4A69D197E09D22A9A0F78EF779299B",
+      "pythonVersion": "3.12.14",
+      "pyshpVersion": "2.3.1",
+      "pyprojVersion": "3.7.2",
+      "shapelyVersion": "2.1.2",
+      "geosVersion": "3.13.1",
+      "projVersion": "9.5.1",
+      "epsgDatabaseVersion": "v11.022",
+      "candidateCoordinatePrecisionMeters": 0.001,
+      "boundaryNorthingOffsetMeters": 100000.0
+    }
+  },
+  "sources": [
+    {
+      "role": "oa23081Xlsx",
+      "sourceId": "source:seoul-open-data",
+      "datasetId": "OA-23081",
+      "sourceRevision": "file-modified:20260824:retrieved:20260913",
+      "repositoryRelativePath": "artifacts/local/public-data/sagajeong-static-traffic-20260913-r2-crosswalk/서울시 교차로 및 횡단보도 시설·위치정보_20260824.xlsx",
+      "contentHashSha256": "1A5DB9EA7A1CD58E2D7F2B4246BAF099A3E4D5278F2867A1B87F3D50D21541BE",
+      "byteLength": 1735662,
+      "recordCount": 21776,
+      "coordinateReferenceStatus": "EmpiricallyValidatedCandidateNotSourceDeclared",
+      "licenseCode": "KOGL-Type1-Attribution",
+      "limitationCode": "CrosswalkPointAndPedestrianSignalPresenceOnly;NoSourceDeclaredCrs;NoStopLineGeometry;NoSignalPhaseOrTiming"
+    },
+    {
+      "role": "oa23081AcquisitionReceipt",
+      "sourceId": "supporting-receipt:sagajeong-crosswalk-acquisition.r2",
+      "datasetId": "OA-23081-receipt",
+      "sourceRevision": "sagajeong-crosswalk-acquisition.r2",
+      "repositoryRelativePath": "artifacts/local/public-data/sagajeong-static-traffic-20260913-r2-crosswalk/acquisition.json",
+      "contentHashSha256": "AD9BD163328B66A0B700EE100249DCA60193226EF156D3D1D5FB02CF6642889C",
+      "byteLength": 1870,
+      "coordinateMetadataDispositionCode": "PriorInferenceNotSourceDeclaration"
+    },
+    {
+      "role": "oa22160BoundaryArchive",
+      "sourceId": "source:seoul-open-data",
+      "datasetId": "OA-22160",
+      "sourceRevision": "file-modified:20231031:retrieved:20260912",
+      "repositoryRelativePath": "artifacts/local/public-data/admin-dong/20260912-seoul-oa22160/seoul-administrative-dong-boundary.zip",
+      "contentHashSha256": "969F7033BD3609A5FD586790F5B2CFEDC638D7647EF45C78F9C75E1DABF79F68",
+      "byteLength": 1676539,
+      "recordCount": 425,
+      "sourceCoordinateReference": "EPSG:5181",
+      "licenseCode": "KOGL-Type1",
+      "limitationCode": "HistoricalBootstrapBoundary;CurrentAuthoritativeBoundaryUnavailable;DistributionNotApproved"
+    },
+    {
+      "role": "r2ScopeDefinition",
+      "sourceId": "local-frozen-scope",
+      "datasetId": "northeast-seoul-rider-r2-scope",
+      "sourceRevision": "northeast-seoul-administrative-dong-dioramas.r2",
+      "repositoryRelativePath": "eng/world-seedbeds/administrative-dong-dioramas/northeast-seoul-rider.r2.json",
+      "contentHashSha256": "CAAFC2BC60AE4EBF3A0B8C1D2AD6B0143141FF706637BECC9B6743924AF9E58B",
+      "byteLength": 11323
+    },
+    {
+      "role": "r2ScopeManifest",
+      "sourceId": "local-frozen-scope-manifest",
+      "datasetId": "northeast-seoul-rider-r2-scope-manifest",
+      "sourceRevision": "northeast-seoul-administrative-dong-dioramas.r2",
+      "repositoryRelativePath": "artifacts/local/public-data/admin-dong-diorama-northeast-seoul-20260914-r2/scope-manifest.json",
+      "contentHashSha256": "5F651C5460173A5C2EFD68F0E04DB06880B8F8F4CAE74A38AD0BDE11637D5113",
+      "byteLength": 18800
+    }
+  ],
+  "administrativeAreas": [
+    { "administrativeAreaStableId": "region:kr:hjd:1121574000", "displayName": "서울특별시 광진구 중곡제1동", "legalAreaStableId": "region:kr:bjd:1121510100" },
+    { "administrativeAreaStableId": "region:kr:hjd:1121575000", "displayName": "서울특별시 광진구 중곡제2동", "legalAreaStableId": "region:kr:bjd:1121510100" },
+    { "administrativeAreaStableId": "region:kr:hjd:1121576000", "displayName": "서울특별시 광진구 중곡제3동", "legalAreaStableId": "region:kr:bjd:1121510100" },
+    { "administrativeAreaStableId": "region:kr:hjd:1121577000", "displayName": "서울특별시 광진구 중곡제4동", "legalAreaStableId": "region:kr:bjd:1121510100" },
+    { "administrativeAreaStableId": "region:kr:hjd:1123056000", "displayName": "서울특별시 동대문구 전농제1동", "legalAreaStableId": "region:kr:bjd:1123010400" },
+    { "administrativeAreaStableId": "region:kr:hjd:1123057000", "displayName": "서울특별시 동대문구 전농제2동", "legalAreaStableId": "region:kr:bjd:1123010400" },
+    { "administrativeAreaStableId": "region:kr:hjd:1123060000", "displayName": "서울특별시 동대문구 답십리제1동", "legalAreaStableId": "region:kr:bjd:1123010500" },
+    { "administrativeAreaStableId": "region:kr:hjd:1123061000", "displayName": "서울특별시 동대문구 답십리제2동", "legalAreaStableId": "region:kr:bjd:1123010500" },
+    { "administrativeAreaStableId": "region:kr:hjd:1123065000", "displayName": "서울특별시 동대문구 장안제1동", "legalAreaStableId": "region:kr:bjd:1123010600" },
+    { "administrativeAreaStableId": "region:kr:hjd:1123066000", "displayName": "서울특별시 동대문구 장안제2동", "legalAreaStableId": "region:kr:bjd:1123010600" },
+    { "administrativeAreaStableId": "region:kr:hjd:1123072000", "displayName": "서울특별시 동대문구 휘경제1동", "legalAreaStableId": "region:kr:bjd:1123010900" },
+    { "administrativeAreaStableId": "region:kr:hjd:1123073000", "displayName": "서울특별시 동대문구 휘경제2동", "legalAreaStableId": "region:kr:bjd:1123010900" },
+    { "administrativeAreaStableId": "region:kr:hjd:1123074000", "displayName": "서울특별시 동대문구 이문제1동", "legalAreaStableId": "region:kr:bjd:1123011000" },
+    { "administrativeAreaStableId": "region:kr:hjd:1123075000", "displayName": "서울특별시 동대문구 이문제2동", "legalAreaStableId": "region:kr:bjd:1123011000" },
+    { "administrativeAreaStableId": "region:kr:hjd:1126052000", "displayName": "서울특별시 중랑구 면목제2동", "legalAreaStableId": "region:kr:bjd:1126010100" },
+    { "administrativeAreaStableId": "region:kr:hjd:1126054000", "displayName": "서울특별시 중랑구 면목제4동", "legalAreaStableId": "region:kr:bjd:1126010100" },
+    { "administrativeAreaStableId": "region:kr:hjd:1126055000", "displayName": "서울특별시 중랑구 면목제5동", "legalAreaStableId": "region:kr:bjd:1126010100" },
+    { "administrativeAreaStableId": "region:kr:hjd:1126056500", "displayName": "서울특별시 중랑구 면목본동", "legalAreaStableId": "region:kr:bjd:1126010100" },
+    { "administrativeAreaStableId": "region:kr:hjd:1126057000", "displayName": "서울특별시 중랑구 면목제7동", "legalAreaStableId": "region:kr:bjd:1126010100" },
+    { "administrativeAreaStableId": "region:kr:hjd:1126057500", "displayName": "서울특별시 중랑구 면목제3.8동", "legalAreaStableId": "region:kr:bjd:1126010100" },
+    { "administrativeAreaStableId": "region:kr:hjd:1126058000", "displayName": "서울특별시 중랑구 상봉제1동", "legalAreaStableId": "region:kr:bjd:1126010200" },
+    { "administrativeAreaStableId": "region:kr:hjd:1126059000", "displayName": "서울특별시 중랑구 상봉제2동", "legalAreaStableId": "region:kr:bjd:1126010200" },
+    { "administrativeAreaStableId": "region:kr:hjd:1126060000", "displayName": "서울특별시 중랑구 중화제1동", "legalAreaStableId": "region:kr:bjd:1126010300" },
+    { "administrativeAreaStableId": "region:kr:hjd:1126061000", "displayName": "서울특별시 중랑구 중화제2동", "legalAreaStableId": "region:kr:bjd:1126010300" },
+    { "administrativeAreaStableId": "region:kr:hjd:1126062000", "displayName": "서울특별시 중랑구 묵제1동", "legalAreaStableId": "region:kr:bjd:1126010400" },
+    { "administrativeAreaStableId": "region:kr:hjd:1126063000", "displayName": "서울특별시 중랑구 묵제2동", "legalAreaStableId": "region:kr:bjd:1126010400" },
+    { "administrativeAreaStableId": "region:kr:hjd:1126065500", "displayName": "서울특별시 중랑구 망우본동", "legalAreaStableId": "region:kr:bjd:1126010500" },
+    { "administrativeAreaStableId": "region:kr:hjd:1126066000", "displayName": "서울특별시 중랑구 망우제3동", "legalAreaStableId": "region:kr:bjd:1126010500" },
+    { "administrativeAreaStableId": "region:kr:hjd:1126068000", "displayName": "서울특별시 중랑구 신내1동", "legalAreaStableId": "region:kr:bjd:1126010600" },
+    { "administrativeAreaStableId": "region:kr:hjd:1126069000", "displayName": "서울특별시 중랑구 신내2동", "legalAreaStableId": "region:kr:bjd:1126010600" }
+  ]
+}

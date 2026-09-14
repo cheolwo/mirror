@@ -1,0 +1,137 @@
+{
+  "schemaVersion": "administrative-dong-walk-network-generation-scope.v1",
+  "scopeStableId": "scope:administrative-dong-walk-network:northeast-seoul-rider:g3c:r1",
+  "revision": "northeast-seoul-admin-dong-walk-network-candidate.g3c.r1",
+  "generatedAtUtc": "2026-09-15T00:00:00Z",
+  "sourceVintage": "oa21208-year2020-portal-update-20260914+oa22160-file-20231031+northeast-seoul-rider-r2+g3c-r1",
+  "reviewStatus": "PendingHumanReview",
+  "sourceReferenceVintage": "2020",
+  "sourceReferenceDateExact": null,
+  "portalDataUpdateDate": "2026-09-14",
+  "sourceCoordinateReference": "WGS84",
+  "assignmentCoordinateReference": "EPSG:5186",
+  "licenseCode": "KOGL-Type1-Attribution",
+  "sourceFilterMethodCode": "OfficialSheetUiSggNmCsvDownload",
+  "sourceDistrictFilterBoundaryHaloComplete": false,
+  "expectedSourceCounts": {
+    "seoulSheetRowsAtAcquisition": 491082,
+    "gwangjinRows": 16288,
+    "dongdaemunRows": 21988,
+    "jungnangRows": 21448,
+    "threeBoroughRows": 59724,
+    "historicalAdministrativeAreas": 30
+  },
+  "historicalBoundaryConversion": {
+    "sourceCoordinateReference": "EPSG:5181",
+    "assignmentCoordinateReference": "EPSG:5186",
+    "xOffsetMeters": 0.0,
+    "yOffsetMeters": 100000.0,
+    "methodCode": "SameKgd2002CentralBeltFalseNorthingOffsetOnly",
+    "rotationApplied": false,
+    "scaleApplied": false,
+    "inferredTranslationApplied": false
+  },
+  "planningGate": {
+    "statusCode": "ApprovedForLocalPrivateCandidateGenerationAndLedger",
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-walk-network-candidate.implementation.r13.md",
+    "designRevision": "administrative-dong-diorama:walk-network-candidate.g3c.r1",
+    "designHashSha256": "3FACFF9E4671C907C5AD4DB44A76BD134E5D12FCE74B939265F64361044851B3",
+    "dataImplementationRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-walk-network-candidate.data-implementation.v1.json",
+    "dataImplementationHashSha256": "D8B274862268B773C33AD8D43FAAE95DFE79761AF6784ADAC5DA3D2718E60252"
+  },
+  "authorityFlags": {
+    "privateReviewOnly": true,
+    "historicalBoundaryBootstrapOnly": true,
+    "observationCandidateOnly": true,
+    "sourceDeclaredCoordinateReference": true,
+    "currentAdministrativeBoundaryEstablished": false,
+    "currentPassabilityEstablished": false,
+    "sidewalkWidthEstablished": false,
+    "curbEstablished": false,
+    "entranceBindingEstablished": false,
+    "motorcycleAccessEstablished": false,
+    "vehicleLaneEstablished": false,
+    "signalBindingEstablished": false,
+    "distributionApproved": false,
+    "publicDisplayAllowed": false,
+    "runtimeAuthorized": false,
+    "traversalReady": false,
+    "gameplayReady": false,
+    "unityApplyAllowed": false
+  },
+  "sources": [
+    {
+      "role": "receipt",
+      "repositoryRelativePath": "artifacts/local/public-data/admin-dong-walk-network-northeast-seoul-20260915-g3c-r1/raw/receipt.json",
+      "contentHashSha256": "5280F1BB76CB49B875642F5D4A65B43EEA0A555F686A2C18A32A04CF969B960E",
+      "byteLength": 2481,
+      "sourceRevision": "oa21208-acquired-20260915-g3c-r1"
+    },
+    {
+      "role": "codebook",
+      "repositoryRelativePath": "artifacts/local/public-data/admin-dong-walk-network-northeast-seoul-20260915-g3c-r1/raw/link-node-type-codes.xlsx",
+      "contentHashSha256": "C718A21352D91B2A9BE50E8C52ED886D92A495ADB14070995B487B0CA5AB4E4F",
+      "byteLength": 12510,
+      "sourceRevision": "official-file-modified-20240705"
+    },
+    {
+      "role": "gwangjinCsv",
+      "repositoryRelativePath": "artifacts/local/public-data/admin-dong-walk-network-northeast-seoul-20260915-g3c-r1/raw/gwangjin.csv",
+      "contentHashSha256": "193806EE9ADE7E294A92E1BDAF9CA3312D2691CCE453C5E68DAE0F05E76F2D02",
+      "byteLength": 3647541,
+      "sourceRevision": "oa21208-year2020-portal-update-20260914-gwangjin"
+    },
+    {
+      "role": "dongdaemunCsv",
+      "repositoryRelativePath": "artifacts/local/public-data/admin-dong-walk-network-northeast-seoul-20260915-g3c-r1/raw/dongdaemun.csv",
+      "contentHashSha256": "2E30FDD65C327FCD3C132D35D2E9C6CE43CE94A21A47EE70321762F1A023D7B9",
+      "byteLength": 5066359,
+      "sourceRevision": "oa21208-year2020-portal-update-20260914-dongdaemun"
+    },
+    {
+      "role": "jungnangCsv",
+      "repositoryRelativePath": "artifacts/local/public-data/admin-dong-walk-network-northeast-seoul-20260915-g3c-r1/raw/jungnang.csv",
+      "contentHashSha256": "08B904A586A7BFD7EF9FDAB4DA92BCEBC4B5D4B61FD41F09F33C2A35F5AFF773",
+      "byteLength": 4771869,
+      "sourceRevision": "oa21208-year2020-portal-update-20260914-jungnang"
+    },
+    {
+      "role": "oa22160BoundaryArchive",
+      "repositoryRelativePath": "artifacts/local/public-data/admin-dong/20260912-seoul-oa22160/seoul-administrative-dong-boundary.zip",
+      "contentHashSha256": "969F7033BD3609A5FD586790F5B2CFEDC638D7647EF45C78F9C75E1DABF79F68",
+      "byteLength": 1676539,
+      "sourceRevision": "file-modified-20231031-retrieved-20260912"
+    },
+    {
+      "role": "r2ScopeDefinition",
+      "repositoryRelativePath": "eng/world-seedbeds/administrative-dong-dioramas/northeast-seoul-rider.r2.json",
+      "contentHashSha256": "CAAFC2BC60AE4EBF3A0B8C1D2AD6B0143141FF706637BECC9B6743924AF9E58B",
+      "byteLength": 11323,
+      "sourceRevision": "northeast-seoul-rider.r2"
+    },
+    {
+      "role": "r2ScopeManifest",
+      "repositoryRelativePath": "artifacts/local/public-data/admin-dong-diorama-northeast-seoul-20260914-r2/scope-manifest.json",
+      "contentHashSha256": "5F651C5460173A5C2EFD68F0E04DB06880B8F8F4CAE74A38AD0BDE11637D5113",
+      "byteLength": 18800,
+      "sourceRevision": "northeast-seoul-rider.r2-scope-manifest"
+    }
+  ],
+  "output": {
+    "repositoryRelativeDirectory": "artifacts/local/public-data/admin-dong-walk-network-northeast-seoul-20260915-g3c-r1",
+    "generationDirectoryName": "generations",
+    "candidateSchemaVersion": "administrative-dong-walk-network-candidate.v1",
+    "currentPointerAllowed": false,
+    "generatorRelativePath": "eng/neighborhood/administrative_dong_walk_network_candidate.py",
+    "generatorSha256": "E132CB0EAA961A0ED421A3EB2175078C3E81D6B7C9C2FF08638D88FE9092A208",
+    "toolchain": {
+      "python": "3.12.14",
+      "pyshp": "2.3.1",
+      "pyproj": "3.7.2",
+      "shapely": "2.1.2",
+      "geos": "3.13.1",
+      "proj": "9.5.1",
+      "epsgDatabase": "v11.022"
+    }
+  }
+}

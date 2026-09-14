@@ -38,6 +38,27 @@ public sealed class 행정동디오라마ProjectionBuilderTests
                 From = Point(-100, 250),
                 To = Point(1_100, 250),
                 EvidenceKindCode = "PublicOpenData"
+            },
+            new 행정동디오라마RoadInput
+            {
+                RoadStableId = "road:outside",
+                From = Point(1_100, 100),
+                To = Point(1_200, 100),
+                EvidenceKindCode = "PublicOpenData"
+            },
+            new 행정동디오라마RoadInput
+            {
+                RoadStableId = "road:degenerate",
+                From = Point(300, 300),
+                To = Point(300, 300),
+                EvidenceKindCode = "PublicOpenData"
+            },
+            new 행정동디오라마RoadInput
+            {
+                RoadStableId = "road:not-finite",
+                From = Point(double.NaN, 300),
+                To = Point(350, 300),
+                EvidenceKindCode = "PublicOpenData"
             }
         ];
         input.PublicBusinesses =
@@ -91,6 +112,60 @@ public sealed class 행정동디오라마ProjectionBuilderTests
 
         Assert.Equal(a.Manifest.ProjectionHashSha256, b.Manifest.ProjectionHashSha256);
         Assert.Equal(a.Tiles.Select(tile => tile.TileHashSha256), b.Tiles.Select(tile => tile.TileHashSha256));
+    }
+
+    [Fact]
+    public void 원본도형귀속점이명시되면_표현외곽의재계산점으로행정동을바꾸지않는다()
+    {
+        var input = Input(Square(0, 0, 1_000));
+        var building = Building("building:cross-boundary", Square(950, 100, 300));
+        building.AssignmentPoint = Point(975, 125);
+        building.AssignmentMethodCode = "SourceGeometryPointOnSurfaceWithinUniqueAdministrativeBoundary";
+        building.AssignmentConfidenceCode = "UniqueHistoricalBoundaryMatch";
+        building.AssignmentBoundarySourceRevision = "boundary:2026-09";
+        input.Buildings = [building];
+
+        var result = 행정동디오라마ProjectionBuilder.Build(input);
+
+        Assert.Equal("building:cross-boundary",
+            Assert.Single(result.Tiles.SelectMany(tile => tile.Buildings)).BuildingStableId);
+    }
+
+    [Fact]
+    public void 명시귀속점이표현외곽밖이면_임의배치하지않고거절한다()
+    {
+        var input = Input(Square(0, 0, 1_000));
+        var building = Building("building:invalid-assignment", Square(100, 100, 30));
+        building.AssignmentPoint = Point(500, 500);
+        building.AssignmentMethodCode = "SourceGeometryPointOnSurfaceWithinUniqueAdministrativeBoundary";
+        building.AssignmentConfidenceCode = "UniqueHistoricalBoundaryMatch";
+        building.AssignmentBoundarySourceRevision = "boundary:2026-09";
+        input.Buildings = [building];
+
+        var error = Assert.Throws<InvalidDataException>(() => 행정동디오라마ProjectionBuilder.Build(input));
+
+        Assert.Equal("AdministrativeDongBuildingAssignmentPointOutsideFootprint:building:invalid-assignment", error.Message);
+    }
+
+    [Fact]
+    public void 자기교차하는건물외곽은_표현후보로투영하지않고거절한다()
+    {
+        var input = Input(Square(0, 0, 1_000));
+        input.Buildings =
+        [
+            Building("building:self-intersecting",
+            [
+                Point(100, 100),
+                Point(200, 200),
+                Point(100, 200),
+                Point(200, 100),
+                Point(150, 80)
+            ])
+        ];
+
+        var error = Assert.Throws<InvalidDataException>(() => 행정동디오라마ProjectionBuilder.Build(input));
+
+        Assert.Equal("AdministrativeDongBuildingFootprintInvalid:building:self-intersecting", error.Message);
     }
 
     [Fact]

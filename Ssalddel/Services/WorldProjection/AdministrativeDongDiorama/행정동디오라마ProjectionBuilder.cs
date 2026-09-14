@@ -15,6 +15,15 @@ public sealed class 행정동디오라마BuildingInput
     public double BuildingAreaSquareMeters { get; set; }
     public double TotalFloorAreaSquareMeters { get; set; }
     public AdministrativeDongDioramaPoint[] Footprint { get; set; } = [];
+    /// <summary>
+    /// 원본 건물 도형에서 계산해 행정동 귀속에 사용한 기준점입니다. 화면 계약용으로
+    /// 단순화한 외곽선에서 기준점을 다시 계산하면 경계를 가로지르는 건물의 귀속이
+    /// 달라질 수 있으므로, 자료 반입기가 근거와 함께 제공한 경우 이 값을 우선합니다.
+    /// </summary>
+    public AdministrativeDongDioramaPoint? AssignmentPoint { get; set; }
+    public string AssignmentMethodCode { get; set; } = string.Empty;
+    public string AssignmentConfidenceCode { get; set; } = string.Empty;
+    public string AssignmentBoundarySourceRevision { get; set; } = string.Empty;
 }
 
 public sealed class 행정동디오라마RoadInput
@@ -88,7 +97,7 @@ public static class 행정동디오라마ProjectionBuilder
 
         var acceptedBuildings = (input.Buildings ?? [])
             .Where(building => building.Footprint is { Length: >= 3 })
-            .Select(building => (Building: building, Point: PointOnSurface(building.Footprint)))
+            .Select(building => (Building: building, Point: ResolveBuildingAssignmentPoint(building)))
             .Where(item => PointInPolygon(item.Point, boundary))
             .OrderBy(item => item.Building.BuildingStableId, StringComparer.Ordinal)
             .ToArray();
@@ -239,6 +248,9 @@ public static class 행정동디오라마ProjectionBuilder
         행정동디오라마RoadInput road,
         IReadOnlyList<AdministrativeDongDioramaPoint> boundary)
     {
+        if (!IsFinite(road.From) || !IsFinite(road.To) || SquaredDistance(road.From, road.To) <= Epsilon * Epsilon)
+            yield break;
+
         var parameters = new List<double> { 0d, 1d };
         for (var index = 0; index < boundary.Count; index++)
         {
@@ -260,11 +272,14 @@ public static class 행정동디오라마ProjectionBuilder
             var end = ordered[index + 1];
             if (end - start <= Epsilon) continue;
             if (!PointInPolygon(PointAt(road.From, road.To, (start + end) / 2d), boundary)) continue;
+            var from = PointAt(road.From, road.To, start);
+            var to = PointAt(road.From, road.To, end);
+            if (!IsFinite(from) || !IsFinite(to) || SquaredDistance(from, to) <= Epsilon * Epsilon) continue;
             yield return new AdministrativeDongDioramaRoadSegment
             {
                 RoadStableId = road.RoadStableId + ":part:" + part++,
-                From = PointAt(road.From, road.To, start),
-                To = PointAt(road.From, road.To, end),
+                From = from,
+                To = to,
                 EvidenceKindCode = road.EvidenceKindCode
             };
         }
@@ -370,6 +385,93 @@ public static class 행정동디오라마ProjectionBuilder
         return best ?? new AdministrativeDongDioramaPoint { X = polygon[0].X, Z = polygon[0].Z };
     }
 
+    private static AdministrativeDongDioramaPoint ResolveBuildingAssignmentPoint(
+        행정동디오라마BuildingInput building)
+    {
+        var footprint = ValidateSimpleBuildingFootprint(building);
+        if (building.AssignmentPoint is null)
+            return PointOnSurface(footprint);
+
+        var point = building.AssignmentPoint;
+        if (!double.IsFinite(point.X) || !double.IsFinite(point.Z))
+            throw new InvalidDataException("AdministrativeDongBuildingAssignmentPointInvalid:" + building.BuildingStableId);
+        if (string.IsNullOrWhiteSpace(building.AssignmentMethodCode)
+            || string.IsNullOrWhiteSpace(building.AssignmentConfidenceCode)
+            || string.IsNullOrWhiteSpace(building.AssignmentBoundarySourceRevision))
+            throw new InvalidDataException("AdministrativeDongBuildingAssignmentEvidenceMissing:" + building.BuildingStableId);
+
+        if (!PointInPolygon(point, footprint))
+            throw new InvalidDataException("AdministrativeDongBuildingAssignmentPointOutsideFootprint:" + building.BuildingStableId);
+        return new AdministrativeDongDioramaPoint { X = point.X, Z = point.Z };
+    }
+
+    private static AdministrativeDongDioramaPoint[] ValidateSimpleBuildingFootprint(
+        행정동디오라마BuildingInput building)
+    {
+        var footprint = NormalizePolygon(building.Footprint ?? []);
+        if (footprint.Length is < 3 or > 4_096
+            || footprint.Any(point => !IsFinite(point))
+            || footprint.DistinctBy(point => (point.X, point.Z)).Count() < 3
+            || Math.Abs(SignedDoubleArea(footprint)) <= Epsilon
+            || HasSelfIntersection(footprint))
+            throw new InvalidDataException(
+                "AdministrativeDongBuildingFootprintInvalid:" + building.BuildingStableId);
+        return footprint;
+    }
+
+    private static bool HasSelfIntersection(IReadOnlyList<AdministrativeDongDioramaPoint> polygon)
+    {
+        for (var first = 0; first < polygon.Count; first++)
+        {
+            var firstNext = (first + 1) % polygon.Count;
+            for (var second = first + 1; second < polygon.Count; second++)
+            {
+                var secondNext = (second + 1) % polygon.Count;
+                if (first == second || firstNext == second || secondNext == first) continue;
+                if (SegmentsIntersect(polygon[first], polygon[firstNext], polygon[second], polygon[secondNext]))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool SegmentsIntersect(
+        AdministrativeDongDioramaPoint a,
+        AdministrativeDongDioramaPoint b,
+        AdministrativeDongDioramaPoint c,
+        AdministrativeDongDioramaPoint d)
+    {
+        var abC = Orientation(a, b, c);
+        var abD = Orientation(a, b, d);
+        var cdA = Orientation(c, d, a);
+        var cdB = Orientation(c, d, b);
+        if (abC != abD && cdA != cdB) return true;
+        return abC == 0 && PointOnSegment(c, a, b)
+               || abD == 0 && PointOnSegment(d, a, b)
+               || cdA == 0 && PointOnSegment(a, c, d)
+               || cdB == 0 && PointOnSegment(b, c, d);
+    }
+
+    private static int Orientation(
+        AdministrativeDongDioramaPoint a,
+        AdministrativeDongDioramaPoint b,
+        AdministrativeDongDioramaPoint c)
+    {
+        var cross = (b.X - a.X) * (c.Z - a.Z) - (b.Z - a.Z) * (c.X - a.X);
+        return Math.Abs(cross) <= Epsilon ? 0 : cross > 0d ? 1 : -1;
+    }
+
+    private static double SignedDoubleArea(IReadOnlyList<AdministrativeDongDioramaPoint> polygon)
+    {
+        var area = 0d;
+        for (var index = 0; index < polygon.Count; index++)
+        {
+            var next = (index + 1) % polygon.Count;
+            area += polygon[index].X * polygon[next].Z - polygon[next].X * polygon[index].Z;
+        }
+        return area;
+    }
+
     private static AdministrativeDongDioramaPoint[] NormalizePolygon(AdministrativeDongDioramaPoint[] points)
     {
         if (points.Length > 1 && Same(points[0], points[^1])) points = points[..^1];
@@ -411,6 +513,14 @@ public static class 행정동디오라마ProjectionBuilder
         { X = a.X + (b.X - a.X) * t, Z = a.Z + (b.Z - a.Z) * t };
     private static AdministrativeDongDioramaPoint Copy(AdministrativeDongDioramaPoint value)
         => new() { X = value.X, Z = value.Z };
+    private static bool IsFinite(AdministrativeDongDioramaPoint point)
+        => double.IsFinite(point.X) && double.IsFinite(point.Z);
+    private static double SquaredDistance(AdministrativeDongDioramaPoint a, AdministrativeDongDioramaPoint b)
+    {
+        var x = a.X - b.X;
+        var z = a.Z - b.Z;
+        return x * x + z * z;
+    }
     private static AdministrativeDongDioramaCoordinateFrame Copy(AdministrativeDongDioramaCoordinateFrame value)
         => new()
         {

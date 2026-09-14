@@ -1,0 +1,320 @@
+{
+  "schemaVersion": "administrative-dong-business-generation-scope.v1",
+  "scopeStableId": "scope:administrative-dong-business:northeast-seoul-rider:g4a:r1",
+  "revision": "northeast-seoul-admin-dong-business-candidate.g4a.r1",
+  "generatedAtUtc": "2026-09-15T00:00:00Z",
+  "sourceVintage": "semas-20260630+mois-jscode-20260301+oa22160-20231031+northeast-seoul-rider-r2+business-g4a-r1",
+  "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-business-candidate.implementation.r9.md",
+  "designHashSha256": "2BCF94EB746DC22EE6B19B82F297F418A803CCE9574BC0E5728F97E3A2C86821",
+  "reviewStatus": "PendingHumanReview",
+  "sourceCoordinateDatumStatusCode": "SourceCoordinateDatumUnconfirmed",
+  "authorityBoundary": "SEMAS 원문 행정동 소유와 OA-22160 역사 경계 진단을 함께 보존하는 비공개 검토 후보다. 현행 경계, 현재 영업, 실제 입점 건물, 공개 표시, 주문, Simulation, Unity 또는 게임 권위를 부여하지 않는다.",
+  "coordinateFrame": {
+    "method": "WGS84-ECEF-ENU-at-zero-altitude-candidate-interpretation",
+    "originLatitude": 37.580912,
+    "originLongitude": 127.088502,
+    "worldOffsetX": 0.0,
+    "worldOffsetZ": 0.0,
+    "metersPerUnit": 1.0
+  },
+  "expectedCounts": {
+    "nationalCsvEntries": 16,
+    "nationalRows": 2772484,
+    "seoulRows": 554092,
+    "candidateRows": 29721,
+    "foodRows": 8246,
+    "missingProviderShopIdRows": 0,
+    "duplicateProviderShopIdRows": 0,
+    "missingCoordinateRows": 0,
+    "missingRoadAddressRows": 0,
+    "missingLandAddressRows": 0,
+    "missingBuildingManagementNumberRows": 67,
+    "foodMissingBuildingManagementNumberRows": 15,
+    "uniqueBuildingManagementNumbers": 11931,
+    "historicalBoundaryMatchedRows": 29686,
+    "historicalBoundaryConflictRows": 29,
+    "historicalBoundaryOutsideRows": 6,
+    "historicalBoundaryMultipleRows": 0,
+    "historicalBoundaryDiagnosticRows": 35,
+    "historicalBoundaryDiagnosticGroups": 13,
+    "identityCandidateGroups": 236,
+    "identityCandidateRows": 490,
+    "legacyMyeonmokShopRows": 5411,
+    "legacyFactoryRows": 126,
+    "legacyProviderOverlapRows": 5411,
+    "newProviderRows": 24310,
+    "sourceAdministrativeNameDifferenceAreas": 26
+  },
+  "expectedDistribution": {
+    "1121574000": { "candidateRows": 1196, "foodRows": 316 },
+    "1121575000": { "candidateRows": 1190, "foodRows": 251 },
+    "1121576000": { "candidateRows": 785, "foodRows": 225 },
+    "1121577000": { "candidateRows": 921, "foodRows": 241 },
+    "1123056000": { "candidateRows": 1706, "foodRows": 462 },
+    "1123057000": { "candidateRows": 517, "foodRows": 138 },
+    "1123060000": { "candidateRows": 929, "foodRows": 207 },
+    "1123061000": { "candidateRows": 1012, "foodRows": 211 },
+    "1123065000": { "candidateRows": 2153, "foodRows": 626 },
+    "1123066000": { "candidateRows": 1688, "foodRows": 517 },
+    "1123072000": { "candidateRows": 625, "foodRows": 170 },
+    "1123073000": { "candidateRows": 544, "foodRows": 155 },
+    "1123074000": { "candidateRows": 995, "foodRows": 349 },
+    "1123075000": { "candidateRows": 408, "foodRows": 96 },
+    "1126052000": { "candidateRows": 971, "foodRows": 287 },
+    "1126054000": { "candidateRows": 526, "foodRows": 123 },
+    "1126055000": { "candidateRows": 362, "foodRows": 92 },
+    "1126056500": { "candidateRows": 1440, "foodRows": 408 },
+    "1126057000": { "candidateRows": 866, "foodRows": 218 },
+    "1126057500": { "candidateRows": 1246, "foodRows": 406 },
+    "1126058000": { "candidateRows": 648, "foodRows": 176 },
+    "1126059000": { "candidateRows": 1578, "foodRows": 586 },
+    "1126060000": { "candidateRows": 517, "foodRows": 91 },
+    "1126061000": { "candidateRows": 1155, "foodRows": 347 },
+    "1126062000": { "candidateRows": 929, "foodRows": 258 },
+    "1126063000": { "candidateRows": 923, "foodRows": 253 },
+    "1126065500": { "candidateRows": 1755, "foodRows": 538 },
+    "1126066000": { "candidateRows": 507, "foodRows": 107 },
+    "1126068000": { "candidateRows": 1039, "foodRows": 279 },
+    "1126069000": { "candidateRows": 590, "foodRows": 113 }
+  },
+  "expectedConflictPairs": {
+    "1123056000>1123060000": 1,
+    "1123057000>1123066000": 2,
+    "1123060000>1123061000": 1,
+    "1123073000>1123057000": 2,
+    "1126060000>1126061000": 11,
+    "1126066000>1126065500": 7,
+    "1126068000>1126065500": 1,
+    "1126068000>1126069000": 1,
+    "1126069000>1126068000": 3
+  },
+  "expectedOutsideDistribution": {
+    "1123056000": 1,
+    "1123065000": 4,
+    "1123074000": 1
+  },
+  "expectedDiagnosticGroupDigestSha256": "1C1D42F594FAC11370269C11B936B55B8F12A57A7BAC3EE419FCDC03AF1AC983",
+  "sourceRowHeaders": [
+    "상가업소번호", "상호명", "지점명", "상권업종대분류코드", "상권업종대분류명", "상권업종중분류코드", "상권업종중분류명", "상권업종소분류코드", "상권업종소분류명", "표준산업분류코드", "표준산업분류명", "시도코드", "시도명", "시군구코드", "시군구명", "행정동코드", "행정동명", "법정동코드", "법정동명", "지번코드", "대지구분코드", "대지구분명", "지번본번지", "지번부번지", "지번주소", "도로명코드", "도로명", "건물본번지", "건물부번지", "건물관리번호", "건물명", "도로명주소", "구우편번호", "신우편번호", "동정보", "층정보", "호정보", "경도", "위도"
+  ],
+  "contracts": {
+    "mapping": {
+      "methodCode": "ExplicitSemas8ToActiveMois10AndLegalDongMap",
+      "entryCount": 30,
+      "mappingEntriesRelativeJsonPath": "$.administrativeAreas",
+      "nameBasedBindingAllowed": false,
+      "stringSuffixInferenceAllowed": false,
+      "unknownCodeDispositionCode": "RejectGeneration",
+      "hjdToBjdMismatchDispositionCode": "RejectGeneration"
+    },
+    "sourceRow": {
+      "domainSeparator": "semas-business-source-row.v1",
+      "algorithm": "SHA-256",
+      "headerOrderRelativeJsonPath": "$.sourceRowHeaders",
+      "columnCount": 39,
+      "framing": "presence-byte-then-uint32-big-endian-utf8-byte-length-then-utf8-bytes",
+      "cellNormalization": "None",
+      "emptyCellEncoding": "present-zero-length"
+    },
+    "historicalBoundary": {
+      "sourceDatasetId": "OA-22160",
+      "sourceCoordinateReference": "EPSG:5181",
+      "candidateComparisonCoordinateReference": "EPSG:5186",
+      "xOffsetMeters": 0.0,
+      "yOffsetMeters": 100000.0,
+      "rotationApplied": false,
+      "scaleApplied": false,
+      "inferredTranslationApplied": false,
+      "pointPredicate": "covers",
+      "ownershipBasisCode": "SourceAdministrativeDongOwnershipPreserved",
+      "currentBoundaryAuthority": false
+    },
+    "coordinate": {
+      "sourceCoordinateDatumStatusCode": "SourceCoordinateDatumUnconfirmed",
+      "sourceLongitudeLatitudeCandidateInterpretation": "EPSG:4326",
+      "boundaryDiagnosticTarget": "EPSG:5186",
+      "commonFrameMethod": "WGS84-ECEF-ENU-at-zero-altitude-candidate-interpretation",
+      "commonCoordinateUnit": "millimeter-integer",
+      "authorityAllowed": false
+    },
+    "identity": {
+      "providerShopIdCanonical": "Trim(raw-provider-shop-id)",
+      "providerBusinessIdSha256": "UPPERHEX(SHA256(UTF8(providerShopIdCanonical)))",
+      "sourceFeatureKey": "source-feature:semas:business:sha256:{lowerhex}",
+      "stableId": "administrative-dong-business-candidate:semas:sha256:{lowerhex}",
+      "dimensionKey": "business-candidate|semas|sha256|{UPPERHEX}",
+      "duplicateDispositionCode": "RejectGeneration",
+      "hashCollisionDispositionCode": "RejectGeneration",
+      "sameNameRoadAddressDispositionCode": "NotMerged"
+    },
+    "expectedCounts": {
+      "countsRelativeJsonPath": "$.expectedCounts",
+      "distributionRelativeJsonPath": "$.expectedDistribution",
+      "conflictPairsRelativeJsonPath": "$.expectedConflictPairs",
+      "outsideDistributionRelativeJsonPath": "$.expectedOutsideDistribution",
+      "diagnosticGroupDigestRelativeJsonPath": "$.expectedDiagnosticGroupDigestSha256"
+    }
+  },
+  "authorityFlags": {
+    "privateReviewOnly": true,
+    "currentAdministrativeBoundaryEstablished": false,
+    "sourceCoordinateDatumEstablished": false,
+    "exactBuildingBindingEstablished": false,
+    "currentOperationVerified": false,
+    "merchantClaimVerified": false,
+    "distributionApproved": false,
+    "publicDisplayAllowed": false,
+    "orderScenarioEligible": false,
+    "runtimeAuthorized": false,
+    "gameplayReady": false,
+    "unityApplyAllowed": false
+  },
+  "output": {
+    "repositoryRelativeDirectory": "artifacts/local/public-data/admin-dong-business-northeast-seoul-20260915-g4a-r1",
+    "generationDirectoryName": "generations",
+    "candidateSchemaVersion": "administrative-dong-business-candidate.v1",
+    "persistenceDatasetId": "northeast-seoul-admin-dong-business-candidate-g4a-r1",
+    "fileNames": ["manifest.json", "candidates.ndjson", "audit.json", "generator-source.py", "complete.json"],
+    "toolchain": {
+      "generatorRelativePath": "eng/neighborhood/administrative_dong_business_candidate.py",
+      "generatorSha256": "49BD2ED82051D7917E964E1662F6C7D7F582ED698ED1345423078054077DB40B",
+      "pythonVersion": "3.12.14",
+      "pyshpVersion": "2.3.1",
+      "pyprojVersion": "3.7.2",
+      "shapelyVersion": "2.1.2",
+      "geosVersion": "3.13.1",
+      "projVersion": "9.5.1",
+      "epsgDatabaseVersion": "v11.022"
+    }
+  },
+  "sources": [
+    {
+      "role": "semasNationalArchive",
+      "sourceId": "source:data-go-kr",
+      "datasetId": "data-go-kr-15083033",
+      "sourceRevision": "SEMAS:20260630:retrieved:20260908",
+      "repositoryRelativePath": "artifacts/local/public-data/myeonmok-business-20260908-r1/shops-national.zip",
+      "contentHashSha256": "57AA361544108FF4FC73334F87D2CED61E41FE8638DD70BCD842930F865D2386",
+      "byteLength": 352699739,
+      "recordCount": 2772484,
+      "licenseCode": "UseScopeUnrestricted",
+      "seoulEntry": {
+        "logicalName": "소상공인시장진흥공단_상가(상권)정보_서울_202606.csv",
+        "logicalNameUtf8HashSha256": "C348217E1FE0276DDBB5FBE568E2AC29104040FCAE79F1FB86C5C7A7F11CD6E4",
+        "rawNameEncoding": "cp949",
+        "rawNameByteLength": 51,
+        "rawNameBase64": "vNK787D4wM69w8DlwfjI77D4tNxfu/OwoSi787HHKcGkurhfvK2/718yMDI2MDYuY3N2",
+        "rawNameHashSha256": "2C3149340CC8F500C21E47FB1D217D861F053A88B85AADFDBB638DAD8D929639",
+        "byteLength": 301889640,
+        "crc32": "CC980DEE",
+        "contentHashSha256": "08D3FD08B37840256CCCD4F09BAD6FC33133B647CBFF05F22F26FC962CF84152",
+        "recordCount": 554092
+      }
+    },
+    {
+      "role": "semasAcquisitionReceipt",
+      "repositoryRelativePath": "artifacts/local/public-data/myeonmok-business-20260908-r1/receipt.json",
+      "contentHashSha256": "A15B270AB8AC12018F11471BF5F1C39B0E56D989639D91C6B1ADC9958EE373C8",
+      "byteLength": 2567
+    },
+    {
+      "role": "semasDownloadMetadata",
+      "repositoryRelativePath": "artifacts/local/public-data/myeonmok-business-20260908-r1/shop-download-metadata.json",
+      "contentHashSha256": "364E3468D1A4F908503AF83C373EADAD1546E564D7191BB03C57146673122775",
+      "byteLength": 10637
+    },
+    {
+      "role": "semasDatasetMetadata",
+      "repositoryRelativePath": "artifacts/local/public-data/myeonmok-business-20260908-r1/shop-metadata.json",
+      "contentHashSha256": "C2D61FB768B0C7EBBCA290FB580B9464AF20EC3EBC7975651EB520DA60F63BB2",
+      "byteLength": 1593
+    },
+    {
+      "role": "moisAdministrativeCodes",
+      "repositoryRelativePath": "artifacts/local/public-spatial/administrative-codes/20260301/jscode20260301.zip",
+      "contentHashSha256": "8AF8C1F122D67D43518F58B37AEA6EEA7986F2809062F24E2E03465F21AE7A08",
+      "byteLength": 2129571,
+      "entries": {
+        "administrative": {
+          "name": "jscode20260301/KIKcd_H.20260301",
+          "contentHashSha256": "A45A60618D9974B79F9D22B4A3DB3972FCA20AE0577D2C9284EF31527CE7E044",
+          "byteLength": 1180823,
+          "crc32": "62570AA6"
+        },
+        "administrativeLegal": {
+          "name": "jscode20260301/KIKmix.20260301",
+          "contentHashSha256": "74F3EDC5C02F3F242129949725B7301C0EA26D8303F03138FC440F6EBBDF0405",
+          "byteLength": 3599970,
+          "crc32": "AD0F8066"
+        }
+      }
+    },
+    {
+      "role": "r2ScopeDefinition",
+      "repositoryRelativePath": "eng/world-seedbeds/administrative-dong-dioramas/northeast-seoul-rider.r2.json",
+      "contentHashSha256": "CAAFC2BC60AE4EBF3A0B8C1D2AD6B0143141FF706637BECC9B6743924AF9E58B",
+      "byteLength": 11323
+    },
+    {
+      "role": "r2ScopeManifest",
+      "repositoryRelativePath": "artifacts/local/public-data/admin-dong-diorama-northeast-seoul-20260914-r2/scope-manifest.json",
+      "contentHashSha256": "5F651C5460173A5C2EFD68F0E04DB06880B8F8F4CAE74A38AD0BDE11637D5113",
+      "documentContentHashSha256": "CF2D4057F49BEA4542A641D6F9741A6FF66AA263EB6DB686E38AD03F24BC62D8",
+      "byteLength": 18800
+    },
+    {
+      "role": "oa22160BoundaryArchive",
+      "repositoryRelativePath": "artifacts/local/public-data/admin-dong/20260912-seoul-oa22160/seoul-administrative-dong-boundary.zip",
+      "contentHashSha256": "969F7033BD3609A5FD586790F5B2CFEDC638D7647EF45C78F9C75E1DABF79F68",
+      "byteLength": 1676539,
+      "recordCount": 425,
+      "sourceCoordinateReference": "EPSG:5181"
+    },
+    {
+      "role": "legacyMyeonmokSelected",
+      "repositoryRelativePath": "artifacts/local/public-data/myeonmok-business-20260908-r1/selected.json",
+      "contentHashSha256": "A1F9D1BCF1F04BD20C1285F9D2F0CF21A93B4151B27AE92D86852F343A1DC053",
+      "byteLength": 9743897,
+      "recordCount": 5537
+    },
+    {
+      "role": "legacyFactoryCsv",
+      "repositoryRelativePath": "artifacts/local/public-data/myeonmok-business-20260908-r1/factory.csv",
+      "contentHashSha256": "053819D3C5F9059E27BAEFC0691F7374911CBED5FDA60C90DD8FE3AAF30944D7",
+      "byteLength": 66569,
+      "recordCount": 384
+    }
+  ],
+  "administrativeAreas": [
+    { "sourceAdministrativeDongCode": "11215740", "mappedAdministrativeDongCode": "1121574000", "administrativeAreaStableId": "region:kr:hjd:1121574000", "displayName": "서울특별시 광진구 중곡제1동", "boroughName": "광진구", "legalAreaStableId": "region:kr:bjd:1121510100", "officialLegalDongName": "중곡동", "expectedCandidateRows": 1196, "expectedFoodRows": 316 },
+    { "sourceAdministrativeDongCode": "11215750", "mappedAdministrativeDongCode": "1121575000", "administrativeAreaStableId": "region:kr:hjd:1121575000", "displayName": "서울특별시 광진구 중곡제2동", "boroughName": "광진구", "legalAreaStableId": "region:kr:bjd:1121510100", "officialLegalDongName": "중곡동", "expectedCandidateRows": 1190, "expectedFoodRows": 251 },
+    { "sourceAdministrativeDongCode": "11215760", "mappedAdministrativeDongCode": "1121576000", "administrativeAreaStableId": "region:kr:hjd:1121576000", "displayName": "서울특별시 광진구 중곡제3동", "boroughName": "광진구", "legalAreaStableId": "region:kr:bjd:1121510100", "officialLegalDongName": "중곡동", "expectedCandidateRows": 785, "expectedFoodRows": 225 },
+    { "sourceAdministrativeDongCode": "11215770", "mappedAdministrativeDongCode": "1121577000", "administrativeAreaStableId": "region:kr:hjd:1121577000", "displayName": "서울특별시 광진구 중곡제4동", "boroughName": "광진구", "legalAreaStableId": "region:kr:bjd:1121510100", "officialLegalDongName": "중곡동", "expectedCandidateRows": 921, "expectedFoodRows": 241 },
+    { "sourceAdministrativeDongCode": "11230560", "mappedAdministrativeDongCode": "1123056000", "administrativeAreaStableId": "region:kr:hjd:1123056000", "displayName": "서울특별시 동대문구 전농제1동", "boroughName": "동대문구", "legalAreaStableId": "region:kr:bjd:1123010400", "officialLegalDongName": "전농동", "expectedCandidateRows": 1706, "expectedFoodRows": 462 },
+    { "sourceAdministrativeDongCode": "11230570", "mappedAdministrativeDongCode": "1123057000", "administrativeAreaStableId": "region:kr:hjd:1123057000", "displayName": "서울특별시 동대문구 전농제2동", "boroughName": "동대문구", "legalAreaStableId": "region:kr:bjd:1123010400", "officialLegalDongName": "전농동", "expectedCandidateRows": 517, "expectedFoodRows": 138 },
+    { "sourceAdministrativeDongCode": "11230600", "mappedAdministrativeDongCode": "1123060000", "administrativeAreaStableId": "region:kr:hjd:1123060000", "displayName": "서울특별시 동대문구 답십리제1동", "boroughName": "동대문구", "legalAreaStableId": "region:kr:bjd:1123010500", "officialLegalDongName": "답십리동", "expectedCandidateRows": 929, "expectedFoodRows": 207 },
+    { "sourceAdministrativeDongCode": "11230610", "mappedAdministrativeDongCode": "1123061000", "administrativeAreaStableId": "region:kr:hjd:1123061000", "displayName": "서울특별시 동대문구 답십리제2동", "boroughName": "동대문구", "legalAreaStableId": "region:kr:bjd:1123010500", "officialLegalDongName": "답십리동", "expectedCandidateRows": 1012, "expectedFoodRows": 211 },
+    { "sourceAdministrativeDongCode": "11230650", "mappedAdministrativeDongCode": "1123065000", "administrativeAreaStableId": "region:kr:hjd:1123065000", "displayName": "서울특별시 동대문구 장안제1동", "boroughName": "동대문구", "legalAreaStableId": "region:kr:bjd:1123010600", "officialLegalDongName": "장안동", "expectedCandidateRows": 2153, "expectedFoodRows": 626 },
+    { "sourceAdministrativeDongCode": "11230660", "mappedAdministrativeDongCode": "1123066000", "administrativeAreaStableId": "region:kr:hjd:1123066000", "displayName": "서울특별시 동대문구 장안제2동", "boroughName": "동대문구", "legalAreaStableId": "region:kr:bjd:1123010600", "officialLegalDongName": "장안동", "expectedCandidateRows": 1688, "expectedFoodRows": 517 },
+    { "sourceAdministrativeDongCode": "11230720", "mappedAdministrativeDongCode": "1123072000", "administrativeAreaStableId": "region:kr:hjd:1123072000", "displayName": "서울특별시 동대문구 휘경제1동", "boroughName": "동대문구", "legalAreaStableId": "region:kr:bjd:1123010900", "officialLegalDongName": "휘경동", "expectedCandidateRows": 625, "expectedFoodRows": 170 },
+    { "sourceAdministrativeDongCode": "11230730", "mappedAdministrativeDongCode": "1123073000", "administrativeAreaStableId": "region:kr:hjd:1123073000", "displayName": "서울특별시 동대문구 휘경제2동", "boroughName": "동대문구", "legalAreaStableId": "region:kr:bjd:1123010900", "officialLegalDongName": "휘경동", "expectedCandidateRows": 544, "expectedFoodRows": 155 },
+    { "sourceAdministrativeDongCode": "11230740", "mappedAdministrativeDongCode": "1123074000", "administrativeAreaStableId": "region:kr:hjd:1123074000", "displayName": "서울특별시 동대문구 이문제1동", "boroughName": "동대문구", "legalAreaStableId": "region:kr:bjd:1123011000", "officialLegalDongName": "이문동", "expectedCandidateRows": 995, "expectedFoodRows": 349 },
+    { "sourceAdministrativeDongCode": "11230750", "mappedAdministrativeDongCode": "1123075000", "administrativeAreaStableId": "region:kr:hjd:1123075000", "displayName": "서울특별시 동대문구 이문제2동", "boroughName": "동대문구", "legalAreaStableId": "region:kr:bjd:1123011000", "officialLegalDongName": "이문동", "expectedCandidateRows": 408, "expectedFoodRows": 96 },
+    { "sourceAdministrativeDongCode": "11260520", "mappedAdministrativeDongCode": "1126052000", "administrativeAreaStableId": "region:kr:hjd:1126052000", "displayName": "서울특별시 중랑구 면목제2동", "boroughName": "중랑구", "legalAreaStableId": "region:kr:bjd:1126010100", "officialLegalDongName": "면목동", "expectedCandidateRows": 971, "expectedFoodRows": 287 },
+    { "sourceAdministrativeDongCode": "11260540", "mappedAdministrativeDongCode": "1126054000", "administrativeAreaStableId": "region:kr:hjd:1126054000", "displayName": "서울특별시 중랑구 면목제4동", "boroughName": "중랑구", "legalAreaStableId": "region:kr:bjd:1126010100", "officialLegalDongName": "면목동", "expectedCandidateRows": 526, "expectedFoodRows": 123 },
+    { "sourceAdministrativeDongCode": "11260550", "mappedAdministrativeDongCode": "1126055000", "administrativeAreaStableId": "region:kr:hjd:1126055000", "displayName": "서울특별시 중랑구 면목제5동", "boroughName": "중랑구", "legalAreaStableId": "region:kr:bjd:1126010100", "officialLegalDongName": "면목동", "expectedCandidateRows": 362, "expectedFoodRows": 92 },
+    { "sourceAdministrativeDongCode": "11260565", "mappedAdministrativeDongCode": "1126056500", "administrativeAreaStableId": "region:kr:hjd:1126056500", "displayName": "서울특별시 중랑구 면목본동", "boroughName": "중랑구", "legalAreaStableId": "region:kr:bjd:1126010100", "officialLegalDongName": "면목동", "expectedCandidateRows": 1440, "expectedFoodRows": 408 },
+    { "sourceAdministrativeDongCode": "11260570", "mappedAdministrativeDongCode": "1126057000", "administrativeAreaStableId": "region:kr:hjd:1126057000", "displayName": "서울특별시 중랑구 면목제7동", "boroughName": "중랑구", "legalAreaStableId": "region:kr:bjd:1126010100", "officialLegalDongName": "면목동", "expectedCandidateRows": 866, "expectedFoodRows": 218 },
+    { "sourceAdministrativeDongCode": "11260575", "mappedAdministrativeDongCode": "1126057500", "administrativeAreaStableId": "region:kr:hjd:1126057500", "displayName": "서울특별시 중랑구 면목제3.8동", "boroughName": "중랑구", "legalAreaStableId": "region:kr:bjd:1126010100", "officialLegalDongName": "면목동", "expectedCandidateRows": 1246, "expectedFoodRows": 406 },
+    { "sourceAdministrativeDongCode": "11260580", "mappedAdministrativeDongCode": "1126058000", "administrativeAreaStableId": "region:kr:hjd:1126058000", "displayName": "서울특별시 중랑구 상봉제1동", "boroughName": "중랑구", "legalAreaStableId": "region:kr:bjd:1126010200", "officialLegalDongName": "상봉동", "expectedCandidateRows": 648, "expectedFoodRows": 176 },
+    { "sourceAdministrativeDongCode": "11260590", "mappedAdministrativeDongCode": "1126059000", "administrativeAreaStableId": "region:kr:hjd:1126059000", "displayName": "서울특별시 중랑구 상봉제2동", "boroughName": "중랑구", "legalAreaStableId": "region:kr:bjd:1126010200", "officialLegalDongName": "상봉동", "expectedCandidateRows": 1578, "expectedFoodRows": 586 },
+    { "sourceAdministrativeDongCode": "11260600", "mappedAdministrativeDongCode": "1126060000", "administrativeAreaStableId": "region:kr:hjd:1126060000", "displayName": "서울특별시 중랑구 중화제1동", "boroughName": "중랑구", "legalAreaStableId": "region:kr:bjd:1126010300", "officialLegalDongName": "중화동", "expectedCandidateRows": 517, "expectedFoodRows": 91 },
+    { "sourceAdministrativeDongCode": "11260610", "mappedAdministrativeDongCode": "1126061000", "administrativeAreaStableId": "region:kr:hjd:1126061000", "displayName": "서울특별시 중랑구 중화제2동", "boroughName": "중랑구", "legalAreaStableId": "region:kr:bjd:1126010300", "officialLegalDongName": "중화동", "expectedCandidateRows": 1155, "expectedFoodRows": 347 },
+    { "sourceAdministrativeDongCode": "11260620", "mappedAdministrativeDongCode": "1126062000", "administrativeAreaStableId": "region:kr:hjd:1126062000", "displayName": "서울특별시 중랑구 묵제1동", "boroughName": "중랑구", "legalAreaStableId": "region:kr:bjd:1126010400", "officialLegalDongName": "묵동", "expectedCandidateRows": 929, "expectedFoodRows": 258 },
+    { "sourceAdministrativeDongCode": "11260630", "mappedAdministrativeDongCode": "1126063000", "administrativeAreaStableId": "region:kr:hjd:1126063000", "displayName": "서울특별시 중랑구 묵제2동", "boroughName": "중랑구", "legalAreaStableId": "region:kr:bjd:1126010400", "officialLegalDongName": "묵동", "expectedCandidateRows": 923, "expectedFoodRows": 253 },
+    { "sourceAdministrativeDongCode": "11260655", "mappedAdministrativeDongCode": "1126065500", "administrativeAreaStableId": "region:kr:hjd:1126065500", "displayName": "서울특별시 중랑구 망우본동", "boroughName": "중랑구", "legalAreaStableId": "region:kr:bjd:1126010500", "officialLegalDongName": "망우동", "expectedCandidateRows": 1755, "expectedFoodRows": 538 },
+    { "sourceAdministrativeDongCode": "11260660", "mappedAdministrativeDongCode": "1126066000", "administrativeAreaStableId": "region:kr:hjd:1126066000", "displayName": "서울특별시 중랑구 망우제3동", "boroughName": "중랑구", "legalAreaStableId": "region:kr:bjd:1126010500", "officialLegalDongName": "망우동", "expectedCandidateRows": 507, "expectedFoodRows": 107 },
+    { "sourceAdministrativeDongCode": "11260680", "mappedAdministrativeDongCode": "1126068000", "administrativeAreaStableId": "region:kr:hjd:1126068000", "displayName": "서울특별시 중랑구 신내1동", "boroughName": "중랑구", "legalAreaStableId": "region:kr:bjd:1126010600", "officialLegalDongName": "신내동", "expectedCandidateRows": 1039, "expectedFoodRows": 279 },
+    { "sourceAdministrativeDongCode": "11260690", "mappedAdministrativeDongCode": "1126069000", "administrativeAreaStableId": "region:kr:hjd:1126069000", "displayName": "서울특별시 중랑구 신내2동", "boroughName": "중랑구", "legalAreaStableId": "region:kr:bjd:1126010600", "officialLegalDongName": "신내동", "expectedCandidateRows": 590, "expectedFoodRows": 113 }
+  ]
+}

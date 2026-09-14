@@ -31,6 +31,13 @@ internal static class 행정동실자료완결
 
     internal static async Task RunAsync(string mode, string root, Dictionary<string, object?> result)
     {
+        const string batchPrefix = "batch-";
+        if (mode.StartsWith(batchPrefix, StringComparison.Ordinal))
+        {
+            await 행정동디오라마Batch.RunAsync(mode[batchPrefix.Length..], root, result);
+            return;
+        }
+
         result["stage"] = "ValidateArguments";
         Require(mode is "preview" or "apply" or "verify", "AdministrativeDongDioramaModeInvalid");
         var boundaryPath = Path.Combine(root, BoundaryRelative);
