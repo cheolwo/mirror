@@ -45,6 +45,7 @@ Unity 개발 순서는 제품 릴리스 버전 순서와 별개다. Unity는 전
 | 여러 project를 통과하는 기능 | `SsalddelCodeMetadataAttribute`, `SsalddelCodeFeatureKeys` 검색 | `StepKey`, `FlowOrder`, `Layer`, `ExecutionStage`, `ReadsFrom/WritesTo`, `Effects`, `Boundary` |
 | 운영·Simulation·Unity 책임 분류 | `docs/Architecture/OperationsSimulationUnity작업흐름분리.md`, `eng/work-areas/responsibility-workstreams.json` | 주 상태 소유자를 먼저 고르고 `operations/*`, `simulation/*`, `unity/*`로 짧게 진행하며 계약·Adapter만 `integration/*`로 분리 |
 | Simulation·Unity 탐색 | `eng/work-areas/simulation-unity.json`, `docs/AI/generated/simulation-unity-code-map.md` | 생성 트리에서 기능 키와 핵심 단계를 고른 뒤 소스로 이동하고, 생성 문서를 직접 수정하지 않음 |
+| 역세권 디오라마 자료·조립·표현 | `docs/Architecture/역세권디오라마증거진화체계.md`, `eng/execution-ledgers/station-diorama-evidence-rules.json` | 출처와 반례를 연결하고 작업 종료 시 규칙 후보를 판정한다. `Candidate`까지 기록할 수 있지만 공통 적용·승격은 사람 승인을 요구하며 E 단계는 자동 승격하지 않음 |
 | 커뮤니티 0.0 | `[SsalddelCommunityV0Module]` 검색 | module catalog와 `0.0-A~E` |
 | 기능 slice 작업 | `docs/Architecture/FunctionalWorkAreaPartitioning.md`, `eng/work-areas/<slice>.json` | manifest의 `readFirst`, `sourceRoots`, `excludedRoots`만 먼저 읽고 범위를 넓힐 때 이유를 남김 |
 | 지역문화·공공데이터 | `eng/work-areas/regional-culture-public-data.json` | 문화 이미지·지역 key·공식 근거·가격 관측 |
@@ -61,6 +62,7 @@ Unity 개발 순서는 제품 릴리스 버전 순서와 별개다. Unity는 전
 - 검색은 `rg`를 우선하고 `bin`, `obj`, `.vs`, `vendor`, `artifacts`, 생성 산출물과 중첩 worktree를 제외한다.
 - 한국어 파일은 UTF-8로 읽고 쓴다.
 - 종료할 때 완료한 일, 변경 파일, 실행한 검증, 남은 위험을 짧게 남긴다. 하지 않은 commit·push·배포를 했다고 표현하지 않는다.
+- 역세권 디오라마 자료·조립·표현 작업은 종료할 때 출처 기록과 기존 규칙의 지지·반례·무효화 여부, 새 `Observed`·`Candidate`를 `station-diorama-evidence-rules.json` 형식으로 점검한다. 후보가 없으면 `새 디오라마 규칙 후보 없음`을 보고한다. 후보 기록은 구현 범위를 넓히거나 `ProvisionalSharedRule`·`AcceptedSharedRule`·E 증거를 자동 승격하지 않는다.
 
 ## 제품과 운영 경계
 

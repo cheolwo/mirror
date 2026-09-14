@@ -1,5 +1,188 @@
 # Mirror(거울) Current Work
 
+## 동북서울 30개 행정동 디오라마 자료 기준선 r13 (2026-09-15)
+
+- 사용자는 30개 행정동 모듈을 사가정역 검토 깊이로 계속 발전시키고, 현재 가능한 화면을 보존하되 부족한 주소·필지·도로·신호·생활 자료를 추가 수집하도록 요청했다. [기획 r13](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md), [깊이 기준·캡처 r5](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-depth-parity.implementation.r5.md), [주소 후보 r6](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-address-parcel-candidate.implementation.r6.md), [횡단보도 r8](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-crosswalk-candidate.implementation.r8.md), [사업장 첫 판 r9](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-business-candidate.implementation.r9.md), [사업장 개인정보 정정 r12](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-business-candidate.implementation.r12.md), [교차로 r10·r11](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-intersection-point-ledger.implementation.r11.md), [도보망 r13](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-walk-network-candidate.implementation.r13.md), [G3c 원장 검증 결과](../Reports/동북서울-30개-행정동-도보네트워크-G3c-후보-2026-09-15.md)에 단계별 결손과 검증 상한을 고정했다.
+- 역사 경계 후보의 건물 61,897개·도로 선분 11,769개·tile 297개를 hash별 완성 세대로 내보냈다. 같은 입력의 재내보내기 두 번은 모두 변경 0이고 index·bundle·`complete.json` 독립 검증이 통과했다. 격리 Unity에서 canonical `SimulationWorldShell`에 한 번에 한 동만 결합 Mesh 4개·Collider 0개로 조립했으며 EditMode 9/9와 실제 Play Mode Game View 전체 조망 30장·면목제3·8동 근접 1장을 남겼다. 원본 PNG 31개는 hash 불일치가 없고 Scene은 저장하지 않았다.
+- 30개 연락판의 넓은 공백과 분리된 건물 군집은 실제 공터나 완성 표현이 아니라 역사 경계·현재 건물/도로 기준일 불일치와 이동·생활 layer 결손을 드러내는 `MissingCoverage`다. 화면은 `G6 UnityBaseView / PrivateReviewOnly`이며 사가정 생활상 동등성, 실제 통행, gameplay 또는 공개 배포 증거가 아니다.
+- 동결 `AL_D010` PNU와 행정안전부 2026-08 건물DB를 결합해 61,897개 건물의 주소 후보 상태를 로컬 MySQL에 저장했다. 단일 후보 49,876·복수 1,351·동결 판본 내 후보 없음 10,670, 후보 보유율 82.76%이며 별도 연결 exact set·분포·투영 hash `4ceff3d6582a267aca57f972dd05a16e0c9b223229dea733fe9e7fb232be5a6b` 일치를 확인했다.
+- `OA-23081` 횡단보도 점은 정정 r2 후보 1,533개·보행등 설치 933·역사 경계 자치구 충돌 21을 로컬 MySQL에 저장했다. 후보 hash는 `78312E5F0DDB89BFFA9AD1881379CBF7E8037A6C6454D4F0ABDF2A3E4D22D30A`이며 반복 적용 신규·갱신 0과 독립 재조회가 통과했다. 첫 r1은 `RejectedAfterIndependentAudit / PreservedNotPromoted`다.
+- `OA-15534` 교차로 원천 점 8,097개 중 30개 동에 단일 귀속한 554개를 별도 G3b 세대로 생성하고 로컬 MySQL 보호 원장에 후보 554행·계보 사본 19건을 저장했다. 횡단보도와 연결된 교차로 524·미연결 30, 관계 1,491개 중 다른 역사 행정동 연결 220개를 별도 진단으로 유지하며 후보 hash는 `DB83F1CC82EB65F864188DD790A003EDF570DBB459D56D4C07CE690988F2837B`다. Python 15/15·C# 16/16, 별도 연결 exact set·30개 동·hash 재조회, 반복 적용 신규·갱신·사본 0이 통과했다. G3a r2, G4a r1, 기존 면목 원장의 적용 전후 digest는 같으며 이후 별도 생성한 G4a r2는 이 r11 보존 계약 밖이어서 후속 G3b 판본에서 명시적으로 결속해야 한다.
+- G3b r1의 기존 동반 자료 계약은 실행 전 상태인 `ledgerPersistenceCompletedClaimed=false`와 `consumedCandidateDatabasePersistenceCompleted=false`를 유지하지만 이후 실제 DB 저장·재조회 결과는 완료로 보고되어 있다. 이는 데이터 손실이 아니라 기계 계약과 사후 실행 상태의 알려진 flag 정합성 결손이며, 기존 판본을 조용히 수정하지 않고 후속 호환 판본에서 정리해야 한다.
+- `OA-21208` 2020년 WGS84 도보망은 세 자치구 공식 CSV 59,724행과 유형 코드북을 동결하고 2023 역사 경계에 결속해 NODE 17,267·LINK fragment 23,472, 합계 40,739개 G3c 후보를 생성했다. 후보 hash는 `43248F7F563DCDFE059650F3EC000085CD0D7CFB65FC5300EFDFCBDD685990AA`이며 Python 자체 시험 17/17, 1mm 직렬화 경계 재포함, 원선 대상 교차 길이 882,519.308089m 보존, 최종 세대 verify가 통과했다. C# importer도 전체 98,781,674-byte 후보의 framed hash를 독립 재계산한 뒤 로컬 MySQL에 40,739행·30개 동·계보 사본 17건을 저장했다. build 경고 0·오류 0, 자체 시험 16/16, 새 연결의 exact set·hash 재조회가 통과했고 반복 적용은 신규·갱신·사본 0이다. 기존 보호 상태 71,501행·사본 84건·실행 84건의 digest는 전후 같았으며 최종 독립 정적 감사는 High·Medium·Low 0이다.
+- 소상공인시장진흥공단 2026-06-30 전국 상가 2,772,484행을 전수 대조해 30개 동 사업장 후보 29,721개·음식 업종 8,246개를 G4a 보호 원장으로 만들었다. 첫 r1은 독립 개인정보 감사에서 선택된 원천 식별자 하나가 추적 생성기의 시험 fixture에 들어간 사실을 확인해 `RejectedAfterIndependentPrivacyAudit / PreservedNotPromoted`로 낮췄고 값은 반복하지 않는다. 정정 r2는 실제 원천에 없는 합성 fixture와 새 dataset/revision을 사용하며 후보 hash는 `5F9C61BD71112C69EE3988CFB3B8542AE22BF60AB95D542C702D2355B8A3774C`다. Python 25/25·C# 59,482/59,482, 최초 MySQL 후보 29,721·사본 19 저장, 반복 신규·갱신·사본 0, 별도 연결 exact set·30개 동·음식 8,246·진단 35·결손 67·보호 필드 14 재조회를 통과했다. r1 29,721행·사본 19·실행 19의 상태 digest와 기존 면목 5,411·공장 126행은 적용 전후 같았다. 독립 재감사는 tracked 10,757개·untracked 134개와 r2 집계 산출물에서 선택 원천 식별자 교집합 0, High 0·Medium 0을 확인했다.
+- 주소는 `G2a`, 횡단보도는 `G3a`, 교차로는 `G3b`, 도보망은 `G3c`, 사업장은 `G4a`로 분리한다. G3c는 local-private 후보 생성과 보호 RDB 원장 검증까지만 닫혔다. 현행 행정동 경계, 실제 필지 도형·출입구, 실폭도로·골목·보도·차로·정지선·신호 현시의 현재 graph, 확정 사업장 건물 결속·현재 영업·Claim, G5 NPC·차량·OS 결속과 G7 생활상 Game View는 남아 있다.
+- 서버 도구 build, 기존 절편의 Python/C# 자체 시험과 MySQL 독립 재조회, Unity 검토 묶음 무변경 재생성, Unity EditMode·실제 Game View를 분리 검증했다. G3c는 Python 생성·verify와 C# 보호 RDB 첫 저장·독립 재조회·반복 무쓰기를 통과했다. Unity 실행에는 기존 Editor SearchDatabase 예외 1건과 종료 시 JobTempAlloc 경고 2건이 있어 전체 Console 무오류로 보고하지 않는다. 운영 DB·Mongo current·실제 주문/배차/NPC 이동·E 승격·commit·push·배포는 수행하지 않았다.
+
+## 동북서울 30개 행정동 디오라마 역사 경계 후보 r4 (2026-09-14)
+
+- 사용자가 앞서 확정한 배달운영권역 범위의 행정동을 사가정역과 같은 공용 디오라마 입력 모듈로 만들도록 요청했다. [기획 r4](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md), [구현 명세](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-batch.implementation.r4.md), [결과 보고](../Reports/동북서울-30개-행정동-디오라마-역사경계-후보-2026-09-14.md)에 광진 4·동대문 10·중랑 16, 합계 30개 행정동과 12개 법정동의 범위·출처·검증 상한을 고정했다.
+- 서울시 `OA-22160` 페이지 갱신일과 실제 파일 판본을 다시 조사한 결과 ZIP 내부 자료는 2023-10-20, 파일 수정일은 2023-10-31, 425행이었다. 이를 현행 정본이 아닌 `HistoricalOfficialBoundaryBootstrap`으로 낮췄고, 최신 주소정보누리집 `TL_SCCO_GEMD` 서울 전체분을 승인 반입하기 전에는 `WaitingForAdministrativeBoundary / CurrentPublicationBlocked`를 유지한다.
+- 결정 생성기는 공통 사가정 ENU에서 30개 경계를 처리해 건물 61,897개를 단일 귀속하고 도로 선분 11,769개를 경계에서 절단했다. 미해결 27개는 경계 밖 13·원본 무효 11·1mm 반올림 뒤 무효 3이며 복수 귀속은 0이다. 반복 생성 `changedFiles=0`, 1µm 경계 허용오차 초과 도로 0, C# 독립 경계 변환 2mm 이내, 투영 입력 거절 0을 확인했다.
+- 기존 투영 Builder로 500m tile 297개를 조립하고 로컬 MongoDB candidate collection에 batch 1·manifest 30·tile 297·overlay 30, 합계 358개를 저장했다. 반복 적용은 신규 0·기존 일치 358이고 새 연결 재조회가 통과했다. `administrative_dong_diorama_current` snapshot hash는 적용 전후 같으며 과거 r1 후보는 `PreservedNotPromoted`로 남겼다.
+- 최신 JUSO ZIP을 위한 `EPSG:5179` 전용 reader는 파일 구성·코드 유일성·branch 중첩·도형 위상·multipart/hole·삭제 행을 엄격히 검사한다. 이 r4 당시 결과는 서버 비공개 역사 후보이며 주소·필지·업체·광고, 도로 폭·골목·보도·차로·신호·통행, Unity Scene·Prefab·Play Mode·Game View를 구현하거나 검증하지 않았다. 후속 r5·r6의 기초 Game View와 주소 후보 원장은 위 최신 snapshot에 별도로 기록한다. current 게시·E 승격·commit·push도 수행하지 않았다.
+- 최종 감사에서 공용 current 투영 hash가 manifest의 시간·좌표 프레임·범위·권위 플래그와 overlay 기준 시각을 전부 포함하지 않고 중복 시 전체 BSON을 대조하지 않는 기존 결손을 확인했다. r2 candidate는 전체 투영 집합 hash와 exact BSON 검증을 사용해 영향을 받지 않지만, 최신 경계 반입과 함께 공용 current 저장 검증을 보강하기 전에는 게시를 열지 않는다.
+- Python `verify`·`self-test`, C# preview·standalone Mongo verify, 서버 집중 회귀 34/34, Unity 읽기 계약 4/4가 통과했다. 16개 관련 파일로 제한한 Fast의 diff·두 project build·표적 시험도 통과했고 기록은 `artifacts/local/validation/20260914-224141`이다. 증거 대장 검사는 기존 출처/Simulation/표현 분리와 결손 보존 후보 규칙을 지지했으며 새 디오라마 규칙 후보는 없다.
+
+## 행정동 기반 배달운영권역 Draft 관리 첫 절편 r1 (2026-09-14)
+
+- 사용자가 행정동들을 관리자가 묶어 배달권으로 관리하는 서버 리팩터링을 다른 역 디오라마 확장보다 우선했다. [승인 기획 r1](Planning/운영/PLAN-OPERATIONS-ADMIN-DONG-DELIVERY-TERRITORY/README.md)과 E7 작업 명세에 법정동·행정동·배달운영권역·협력권역·역세권 관찰 창을 서로 다른 축으로 고정했다. 발화의 `중국동`은 후속 `중곡1동` 언급과 공식 코드를 대조해 광진구 법정동 `중곡동`으로 정규화했다.
+- 행정안전부 동결 파일 `jscode20260301.zip`, SourceVersion `mois-jscode:20260301:retrieved:2026-08-12`, SHA-256 `8AF8C1F122D67D43518F58B37AEA6EEA7986F2809062F24E2E03465F21AE7A08`, 자료 revision `mois-hjd-bjd-20260301-8af8c1f122d67d43518f`을 `delivery-territory-source-scope:northeast-seoul-rider.r1`에 고정했다. 중곡·전농·답십리·장안·휘경·이문·면목·상봉·중화·묵·망우·신내 12개 법정동에서 활성 행정동 30개를 정확히 해소하며 이후 최신 판본으로 조용히 바뀌지 않는다.
+- RDB에 Draft aggregate, 현행 행정동 단일 권역 membership, 관리자 행위자와 당시 결과 사본을 가진 멱등 수신증, revision별 전체 행정동 집합과 행위자를 가진 변경 Outbox를 추가했다. 관리자 API는 후보 모듈·목록·상세·Draft 생성·행정동 전체 교체를 제공하고 `ClientRequestId`, `ExpectedRevision`, 중복 권역 귀속, 고정 자료 범위를 검증한다. Mongo manifest 결손은 `WaitingForSpatialProjection`으로만 표시하며 경계나 타일을 추정하지 않는다. 현재 로컬 `hongdal_dev` MongoDB를 독립 확인한 결과 행정동 디오라마 current·manifest·tile은 모두 0건이므로, 이 환경의 30개 후보는 전부 공간 투영 대기 상태다. 과거 별도 검증 기록의 면목제3·8동 게시 사본을 현재 DB 사실로 오인하지 않는다.
+- 서버·계약·EF·관리자 API 및 API 판본 회귀 80/80이 통과했다. 같은 요청의 지연 재시도가 최초 응답 revision을 반환하는지, 반복 제외·재편입의 revision별 Outbox 집합, 관리자 감사 ID, DB 예외 상세 비노출도 포함한다. 로컬 Docker MySQL의 기존 `hongdal_dev`에서 실제 공식 30개를 읽고, 전용 임시 schema에 새 migration 2개·테이블 4개를 적용해 Draft 저장과 새 DbContext 독립 재조회 1/1을 통과한 뒤 transaction과 임시 schema를 제거했다. 범위 지정 Fast는 빌드·표적 시험·코드 지도 검사를 통과했다(`artifacts/local/validation/20260914-204500`). Task의 v3.5 build는 통과했고 전체 시험은 5,268/5,275건 통과했으나 이번 범위 밖 기존 문서·CSS·역할 API metadata·Web route 7건이 실패했다(`artifacts/local/validation/20260914-204639`).
+- 기존 `hongdal_dev`의 정상 migration chain 적용은 이번 migration보다 앞선 `20260911050534_SyncPublicDataHrAndFreightContinuity`가 이미 없는 HR index 삭제를 시도해 중단됐다. 따라서 새 배달운영권역 테이블을 기존 개발 schema에 적용했다고 주장하지 않으며 이 선행 schema drift는 별도 복구가 필요하다. 현 EF assembly scan에는 전용 공공자료의 지역 업체·후원 구성이 섞이는 기존 pending-model drift도 남아 있어 새 두 migration은 해당 표를 포함하지 않도록 격리 생성했다.
+- 이번 절편은 `Draft` 관리만 구현했다. `Active`, 담당자 배정, 협력권역, 직선 6km 주문 정책, 기존 `플랫폼배달권`·`food-cell:v1`·주문·배차·정산 연결, Unity 계약·Scene·Prefab·Play Mode·Game View는 변경하거나 검증하지 않았다. 기존 “역 중심 창은 권위가 아니다” 규칙을 지지하지만 새 역 자료 관측은 아니므로 새 디오라마 규칙 후보 없음이다. commit·push는 수행하지 않았다.
+
+## 사가정 필지 경계 도형 수집 준비 r7 (2026-09-14)
+
+- 사용자가 실제 필지 경계 도형을 주소 결속의 다음 선행 관문으로 확정했으나 브이월드에 로그인할 수 없다고 알려, 실자료 확보를 `BlockedExternalAccess`로 유지한 채 다음 단계인 검증 가능한 반입 파이프라인을 구현했다. 임의 경계나 합성 fixture를 실자료로 승격하지 않는다.
+- 공식 `연속지적도형정보`의 서울 `AL_D002`, PNU 필드 `A1`, EPSG:5186, 기준일 2026-09-08 계약을 확인했다. 공개 컬럼 정의서 224,115바이트를 로컬 비추적 원본 폴더에 보존했고 SHA-256은 `46DD29C6AB681C1E34CF00D91F8F2FE68B7E1868A853315EAA292838238ECB0F`다. 브이월드와 공공데이터포털의 이용조건 표기가 달라 소비 승인은 계속 차단한다.
+- [수집 준비 구현 기록 r7](Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/parcel-geometry-collection.implementation.r7.md)과 E7 작업 명세를 추가했다. 도구는 기존 화면 건물 주소 원장의 파일·내용 hash, 화면 건물 4,062개와 고유 PNU 3,774개를 먼저 확인하고, 공식 ZIP의 CRC·SHP 구성·CRS·필드·도형 유효성·coverage·결정적 hash를 검사한다.
+- 현재 readiness는 `PresentationBuilding=4062 / TargetParcel=3774 / GeometryParcel=0`, `VWorldLoginRequiredAndNoOfficialArchiveAvailable`이다. 따라서 실제 필지 도형 저장, Mongo 투영, 서버 소비 API, Unity 결속, 배달·가격·업체·통행·게임 권위는 구현하거나 열지 않았다.
+- 합성 `AL_D002` SHP는 파서·좌표계·중복 union·누락·결정성 자체 시험에만 사용하며 출처 증거가 아니다. 필지 전용 시험과 증거 대장 시험이 통과했고 자체 시험은 10/10이다. 역세권 디오라마 증거 대장은 r3으로 갱신했지만 `ParcelGeometry=NotCollected/Missing`, 공통 규칙 후보 12개와 승인·적용 0개를 유지한다. 범위 지정 Fast의 `git diff --check` 기록은 `artifacts/local/validation/20260914-191042`이며 제품 build/test는 대상 밖이라 생략됐다.
+- 실제 재개점은 공식 서울 `AL_D002` ZIP, 확인한 SHA-256, 출처 판본을 `artifacts/local` 아래에 제공하는 순간이다. commit·push는 수행하지 않았다.
+
+## 사가정 화면 건물 주소·필지 증거 첫 절편 r6 (2026-09-14)
+
+- 사용자는 [건물 주소 완결 기획 r6](Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/README.md)의 두 원장 첫 절편과, 역세권 디오라마 증거 체계에서 도로명주소·필지 식별자·실제 필지 경계 도형의 수집 여부를 각각 확인하는 관문을 확정했다. [구현 기록 r6](Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/implementation.r6.md)에 현재 결과와 상한을 분리 기록했다.
+- 결정 생성기는 화면–기준 건물 결속을 `Bound 544 / BackdropOnly 3,423 / AmbiguousGlobal 88 / AmbiguousMultiple 2 / WeakCandidate 5`, 기준 건물을 `Bound 544 / Unresolved 58`로 분류했다. 화면 건물 주소 상태는 `ParcelAddressCandidate 3,278 / ReferenceBindingCandidate 516 / MultipleAddressCandidates 47 / CrossSourceConflict 18 / Unresolved 203`으로 4,062/4,062를 닫았으며 공식 승격·최근접 복사는 0이다.
+- 로컬 Docker MySQL `hongdal_dev`에 결속 dataset 5,211행과 주소 dataset 7,582행, 합계 12,793행을 저장했다. 전체 scoped dataset의 정확 key 집합·수·원본 snapshot 111·112 연결·hash를 새 문맥에서 재조회하고, 같은 입력의 재적용·재생에서 신규 쓰기 0을 확인했다. 반입기 자체 검사는 rogue extra·누락·도로명주소 stable ID 공식 변조를 포함해 30건 통과했다.
+- 서버에는 `api/v1/admin/world/stations/{transitStationStableId}/diorama-building-evidence/*` 아래 manifest·결속·주소 읽기를 추가했다. 서버 관리자 정책과 Development 환경을 함께 요구하고, ETag·비공개 cache·사가정 범위·정규화 행 수·단위·시각·원본 snapshot·파일 hash/길이와 도로명주소 stable ID 공식을 검증하며 결손·변조는 503으로 닫는다. 집중 시험 15/15, API 판본 회귀 56/56, 실제 DB fresh-reader probe가 통과했다.
+- 디오라마 증거 대장 r2에서 사가정은 `RoadAddress Collected 4,062/4,062`, `ParcelIdentifier Collected 4,062/4,062·고유 PNU 3,774`, `ParcelGeometry NotCollected 0/3,774`다. 면목·용마산은 세 항목 모두 `NotAssessed`다. 각 검사에는 `applicationAuthorized=false`가 필수이며 주소·PNU·건물 도형으로 실제 필지 경계를 대신하지 않는다.
+- 체크리스트는 필수 정책으로 확정했지만 기존 디오라마 보편 규칙 12개는 계속 `Candidate`다. `ProvisionalSharedRule`·`AcceptedSharedRule`·E 단계 승격은 하지 않았고, 역 Graph Map schema와 현행 인계 도구의 호환 차단도 남아 있다.
+- 문서까지 포함한 최종 범위 지정 Fast는 `artifacts/local/validation/20260914-172712`에서 통과했다. Task의 solution build는 통과했고 전체 시험은 5,250/5,257건 통과·이번 범위 밖 기존 dirty 작업 7건 실패로 기록됐다(`artifacts/local/validation/20260914-165846`). 이번 절편은 비공개 자료 준비·RDB·Development 관리자 API까지이며 Unity·Scene·Prefab·Play Mode·Game View, 실제 필지 도형, 배달·가격·업체·통행·공개 권위는 변경하거나 검증하지 않았다. commit·push도 수행하지 않았다.
+
+## 사가정역 1km 공간 보충 자료 수집·원장화 r27 (2026-09-14)
+
+- [구현 기록 r27](Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-spatial-supplement.implementation.r27.md)에 따라 기존 사가정 1km 창과 건물·도로 자료를 보존하면서 서울 열린데이터광장의 보행망 `OA-21208`, 역 엘리베이터 `OA-21212`, 공원 `OA-15529`, 버스 정류소 `OA-15067`, 가로수 `OA-1325`를 공식 링크·기준일·hash와 함께 비공개 동결했다.
+- 기존 WGS84 창에서 보행망 2,902·엘리베이터 1·공원 정체성 1·버스 정류소 30·가로수 292, 합계 3,226건을 `PendingHumanReview`로 정규화했다. WGS84 자료에는 기존 사가정 ECEF→ENU 중심 좌표를 붙였지만 Runtime·통행·Collider·NavMesh·gameplay 권위는 주지 않았다.
+- 로컬 MySQL에 첫 적용 신규 행 3,226·원본 5를 저장했고, 재적용 신규 0·기존 3,226·원본 신규 0과 독립 재조회 행 3,226·원본 5를 확인했다. importer build 경고·오류 0, 자체 검사 14/14가 통과했다.
+- 공원 SHP는 EPSG:5174 원본·정체성까지만 저장해 경계 변환을 보류했다. NGII 수치지도 V2·수치표고모형은 로그인·전용 전송 도구가 필요한 `BlockedExternalAccess`로 남겼으며 fallback하지 않았다. 새 시각 원본, Unity Adapter·Scene·Prefab·Play Mode·Game View, E 증거 승격, commit·push는 수행하지 않았다.
+- 디오라마 증거 대장에 출처 기록 1건과 “보충 공간층은 원천별 기준일·좌표계·권위를 보존한다” `Candidate` 1건을 추가했다. `applicationAuthorized=false`이며 공통 적용 승인은 하지 않았다.
+
+## 사가정역 출구 방향 기준점 첫 구현 r26 (2026-09-14)
+
+- 사용자는 역세권 전체 건물의 외관을 사진처럼 복원하는 것을 완료 조건으로 두지 않고, 실제 자료에서 확인한 배치·높이를 우선 보존하기로 확정했다. 일반 건물은 건물별 외곽·높이·도로 관계와 일관된 동네 외관 문법을 유지하며 확인하지 않은 실제 외관을 주장하지 않는다.
+- 첫 세부 표본은 사용자가 확정한 사가정역 1~4번 출구다. 기존 동결 OSM 사본의 node/version·좌표를 `sagajeong-reference.r3`과 같은 WGS84 ECEF→ENU로 투영한 별도 `SagajeongStationOrientationAnchors.json`을 만들었다. 기존 지도 hash와 출구 자료를 서로 결속하고 다른 역·임의 좌표 fallback을 금지했다.
+- 별도 Unity 저장소에는 출구당 일반화 저상 구조·차양·7호선 색상 번호 표식과 충돌 회피 화면 라벨을 추가했다. 사진 외형을 복제하지 않았고 `TraversalReady=false`, `InteractionReady=false`, `OperationalAuthority=false`, Collider 0을 검사한다. 자료 오류 시 지도는 유지하고 출구 표식만 보류한다.
+- 생성기 재실행 resource SHA-256 `D1A6874F86512A67F40B96F8D054C61F51F8E6226010150F781E694223309BAB` 일치, 격리 Unity 신규 시험 4/4와 기존 사가정 View·모형·H 선택 회귀 21/21을 통과했다. 원본 Unity Pipeline은 연결 불가여서 canonical `SimulationWorldShell` Play Mode·Game View·Console은 새로 검증하지 않았다. Scene·Prefab·운영 API·Simulation·Graph Map·E 승격·commit·push는 수행하지 않았다.
+- 디오라마 증거 대장의 기존 OSM·역별 Profile·교차 역 fallback 금지·절차적 표현 규칙을 지지하고, “번호별 역 출구는 역 Profile의 방향 기준점”을 사가정 단일 표본의 새 `Candidate`로 등록했다. 공통 적용은 승인하지 않았으며 대장 검사는 `Sources=6 / Rules=11 / Candidates=11 / Provisional=0 / Accepted=0 / Stations=3`으로 통과했다.
+
+## 중랑구 전통시장 시각·모델링 자료 첫 수집 r24 (2026-09-14)
+
+- [수집·구현 기록 r24](Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/jungnang-traditional-market-visual-collection.implementation.r24.md)에 따라 중랑구 공식 소식지 2016년 9월호 PDF를 비공개로 동결하고 우림·동부·면목·동원·사가정의 설명·당시 주소·사진이 함께 남는 시장별 패널 5장을 만들었다. 원본 PDF SHA-256은 `8f5ede7e2a31068f421fa2cf977dce9da78b250ac3b903c115cd4df8cc05e0a4`, 수집 영수증 SHA-256은 `5cff086303232496ea599961f8aaddbe198035d947a9364111252afd7bd076c2`다. 원본과 패널은 `artifacts/local/public-data/jungnang-traditional-market-visuals-20260914-r1/`에만 보관한다.
+- 기존 2025-11-10 전국전통시장표준데이터 SHA-256 `13ffd04a946ec7eec28222c8c3762f2e77aab919cd250888cdaaf7f51cce303b`에서 현행 후보 7행을 연결했다. 2016년 면목시장 이름은 현재 면목시장 행과 같지만 주소는 면목골목시장 행과 같고, 동원은 현행 행이 두 개이며, 동부도 현행 주소가 달라 모두 자동 병합하지 않았다. 우림·사가정의 이름/주소 일치도 정본이 아닌 사람 검토 후보로 유지한다.
+- `중랑구전통시장시각자료` 수집·검증 경로와 `jungnang-market-visual-*` 명령을 추가했다. 로컬 Docker MySQL `hongdal_dev`에 시각 참고 5건, 정체성 검토 5건, 권리 경계 1건을 저장했고 첫 적용 신규 11, 같은 입력 재적용 신규 0·기존 11, 독립 재조회 11을 확인했다. 자체 검사 17건과 도구 build 경고 0·오류 0도 통과했다.
+- 기계 판독 대장 `eng/world-seedbeds/station-landmarks/jungnang-traditional-market-visual.collection.r1.json`과 [수집 보고](../Reports/중랑구-전통시장-시각자료-첫수집-2026-09-14.md)를 추가했다. 디오라마 증거 대장은 새 출처 1건과 `옛 랜드마크 명칭·주소와 현행 행을 자동 병합하지 않는다` 후보 1건을 추가해 `Sources=6 / Rules=10 / Candidates=10 / Provisional=0 / Accepted=0 / Stations=3` 검증을 통과했다. 후보의 공통 적용은 승인하지 않았다.
+- 범위 지정 Fast는 `git diff --check`를 통과했으며 기록은 `artifacts/local/validation/20260914-131534`다. 공용 검사기가 `eng` C#을 guidance-only로 분류해 build/test를 생략했으므로, 별도 수행한 도구 build·자체 검사·원장 재조회와 구분한다.
+- 공식 발행물이라는 사실만 확인됐고 개별 사진의 상업 이용·변형 허락은 확인되지 않았다. 모든 사진은 `PrivateReviewOnly / ItemLevelRightsUnverified`이며 Blender 파생 모델·Unity 자원·Scene·Game View·배포는 수행하거나 승인하지 않았다. 현행 출입구·시장 외곽·중심선·골목 폭·차양 높이와 사람·차량·상표 검토도 남아 있다. commit·push는 수행하지 않았다.
+
+## 지역 운영 생명주기 E2E·전국 확장 뼈대 제안 r6 (2026-09-14)
+
+- 사용자는 사가정역을 첫 깊은 표본으로 유지하면서 합성 운영 자료로 주문자·음식점·음식 배달 기사 역할 앱을 단계적으로 E2E 검증하고, 같은 진행을 Unity 디오라마에서 읽되 후속 전국 지역 확장을 막지 않는 뼈대를 제안서로 먼저 정리해 달라고 요청했다. [제안서 r6](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md)의 전국 확장 뼈대는 아직 `Proposed / ReadyForReview`이고, 역할별 작은 `AvailableActions`, 격리 서버/API, 역할 앱 Client headless, 진행 중 비식별 지역 투영과 Unity Client·Interpreter 메모리 소비까지 별도 승인·구현·검증했다.
+- 현행 `FoodDeliveryOS`, 실제 역할 API·Outbox·완료 투영, 격리 `FoodObserver`, 앱별 Client/ViewModel, 8사례·77단계 관찰 timeline, 앱–관찰 대장, 지역 Experience Package와 사가정 r20을 대조했다. 역할 앱 Client→서버→진행 중 비식별 HTTP projection은 한 실행으로 결속됐지만, 네이티브 앱 UI와 Unity live 소비는 아직 같은 증거로 묶이지 않았다.
+- 제안은 신규 정본을 `지역생명주기E2eProfile`, `지역검증FixturePack`, `E2e실행EvidenceManifest` 세 개로 제한한다. 앱 능력은 기존 API metadata·앱 대장에서 생성하고 공간 해석은 기존 `OsLifecycleSpatialBinding`을 versioned reference로 재사용한다. 역은 표현 Anchor로만 두고 주문 `WorkStableId`와 운영 원장은 전국 공통으로 유지하며, 기존 자율 생활의 `SimulationAnalog`와 격리 운영 결과의 `ReadOnlyProjection`을 합치지 않는다.
+- 기존 앱–관찰 대장의 `SimulationAnalog`는 보존하고 별도 운영 검증 Profile과 세 앱의 `ReadOnlyProjection` 결속을 추가하는 후보로 정리했다. 기존 EF/RDB 음식배달 완료 투영과 후속 진행 투영을 안정 정본으로 두고 Mongo는 Region Experience용 재생성 가능 feed/cache로만 사용해 이중 정본을 피한다.
+- 첫 구현 후보는 사가정 정상 음식배달 한 건이다. 완료 수준은 `SkeletonProof → SagajeongVerticalProof → DeviceUiProof`로 나눠 공통 Client/ViewModel, 실제 플랫폼 UI, 운영 서버·DB·Event/Outbox, 진행 중 비식별 projection과 Unity 관찰을 별도 증거로 결속하고 두 번째 합성 지역 Profile로 하드코딩 부재를 검사한다. 이번 첫 절편은 주문자·음식점·기사 상태 응답에 `ActionId`·revision 종류·예상 revision·만료·환경 요구사항만 싣고 세 앱의 기존 버튼을 이 목록에 결속했다. 실제 Command의 역할·상태·revision 재검증은 유지했고 Unity·Graph Map·Scene·DB schema·전국 Profile은 변경하지 않았다.
+- 역할별 투영·조회·주문자 ViewModel 집중 시험 25건과 범위 지정 Fast 검증은 통과했고 Fast 기록은 `artifacts/local/validation/20260914-133558`이다. 이후 `FoodObserver` Runner에 단계별 `AvailableActions` 단언을 추가했고 관련 집중 시험 20/20과 서버 build가 통과했다. `OrdererApp`, `RestaurantDeskApp`, `FDriverApp` 빌드도 오류 0으로 통과했다. Task의 solution build는 통과했지만 전체 시험은 이번 범위 밖 기존 작업의 Web route capability 1건, 역할 API metadata 4건, 재료 화면 CSS 1건, 아키텍처 문구 1건 등 7건 때문에 실패했으며 기록은 `artifacts/local/validation/20260914-133300`이다.
+- Windows 예약 포트 `5141–5240`과 겹친 기존 `5215` 때문에 첫 기동이 차단된 사실을 확인했다. 검증 도구의 loopback 기본 포트를 `5321`로 바꾸고 명시 포트 선택을 지원하되 `127.0.0.1` 이외 주소는 계속 거절하도록 보완했다. 기존 결과와 DB 볼륨은 삭제하지 않았다.
+- 최신 서버 이미지와 새 전용 MySQL·MongoDB·App 볼륨 `12777908f7c74bd283fbe8e5d136b8f0`에서 실제 300초 정상 역할 API 폐루프를 실행했다. 실행 `84ed7de3ee3c48908866fb2439fa4f6d`는 합성 역할 4명·사건 15건으로 주문 `FOOD-20260914044839651`을 `수령확인 / 배달완료`까지 진행하고 299.7초에 `Completed`로 끝났다. 단계별 예상 `AvailableActions`와 완료 뒤 빈 목록 단언도 같은 실행에 포함됐으며 결과는 `artifacts/local/verification/food-observer/result.json`에 저장했다. 이는 실제 영업 증거가 아니고 검증 컨테이너는 종료했다.
+- 이 300초 실행까지의 증거 상한은 `IsolatedServerApiProofPassed`였다. 첫 장치 순서는 Windows 주문자·음식점·기사 3앱으로 확정했지만, 이 실행 자체는 앱 UI·진행 중 지역 projection·Unity를 포함하지 않았다.
+- Windows `OrdererApp` 프로세스와 `살뜰 주문` 창 제목까지 확인했지만 현재 UI 제어 연결에는 네이티브 앱 상태·입력 API가 없어 내부 로그인·클릭·화면 판독을 수행하지 못했다. 이를 UI 성공으로 올리지 않고 프로세스를 종료했다.
+- UI 직전 G3 검증을 위해 [역할 앱 Client headless 실행기](../../eng/Ssalddel.RoleAppHeadlessE2E/README.md)를 추가했다. 주문자 공용 Client와 `OrdererApp` 인증 Client, `RestaurantDeskApp` 주문·인증 Client, `FDriverApp` 업무·인증 Client 소스를 직접 링크해 빌드하며 장치 보안 저장소만 메모리 구현으로 대체한다. 도구 build는 경고 0·오류 0이다.
+- 첫 headless 표본 `4199fa401d7f4480acf509cf5632bd19`은 기사 수락 뒤 음식점이 이전 revision으로 픽업 준비를 요청해 서버가 `409 Conflict`로 거절했다. 실패 DB 볼륨은 보존했다. 실행기는 서버 검증을 약화하지 않고 음식점 상세를 다시 조회해 최신 `Revision`을 사용하는 방식으로 보완했다.
+- 두 번째 표본 `a21d3ec8f51b412b8a164e28beadca04`에서 세 앱 Client 정상 폐루프가 `Completed`로 끝났다. 주문 `FOOD-20260914050829785`는 주문자 등록·음식점 수신함 재조회·수락·기사 추천 재조회·수락·음식점 최신 상태 재조회·픽업 준비·기사 픽업·전달·주문자 수령 확인을 통과했다. MySQL 독립 재조회는 주문 1건, 최종 `수령확인 / 배달완료`, 상태 이력 7건이며 결과는 `artifacts/local/validation/role-app-headless-e2e-20260914-r1/result.json`이다.
+- G4는 기존 완료 Outbox·사본을 보존하고 최근 2시간의 진행 음식 주문을 `operational-world-scene.v2` `ActiveLifecycle`로만 생성한다. 상세 주소·주문번호·사용자·기사 식별자는 제외하고, 서버 설정 키의 HMAC-SHA256 가명·단계 revision·일반화 의미 위치·projection hash를 싣는다. 조회 TTL은 2분, 거절·취소 tombstone은 15분이고 수령 확인은 진행 투영에서 제외해 기존 완료 사본에 맡긴다. 키가 없으면 해당 자료원만 실패로 격리한다.
+- 새 격리 볼륨 `bb9873ada44e4fe6b101982ea4acba77`의 주문 `FOOD-20260914052915772`에서 세 역할 앱 Client와 인증 v2 HTTP를 함께 실행했다. 동일 가명 업무가 `주문대기 → 조리중 → 기사배정 → 픽업완료 → 전달완료`로 갱신되고 수령 확인 뒤 제거됐다. MySQL 독립 재조회는 주문 1건, 최종 `수령확인 / 배달완료`, 상태 이력 7건이며 결과는 `artifacts/local/validation/role-app-headless-e2e-20260914-g4/result.json`이다.
+- G5에서 `FoodDeliveryOsObservationAdapter`를 v2 `ActiveLifecycle`로 확장하고 실제 Unity `OperationalWorldSceneClient`·Decoder·Interpreter·OS Router·Session을 headless 역할 앱 실행기에 결속했다. 새 격리 표본 주문 `FOOD-20260914054522350`의 같은 가명 업무가 `주문대기 → 조리중 → 기사배정 → 픽업완료 → 전달완료`로 갱신되고 수령 확인 뒤 Unity 메모리에서 제거됐다. MySQL 독립 재조회는 주문 1건, 최종 `수령확인 / 배달완료`, 상태 이력 7건이며 결과는 `artifacts/local/validation/role-app-headless-e2e-20260914-g5/result.json`이다.
+- Unity 진행·완료 Adapter 집중 시험은 15/15가 통과했고 headless 도구와 세 Windows 앱 빌드는 경고 0·오류 0으로 통과했다. 세 앱은 출력 폴더의 Git 비추적 `appsettings.Local.json`을 통해 격리 서버 주소를 덮어쓸 수 있게 맞췄다.
+- G6 실제 Windows UI는 현재 실행 Host가 네이티브 앱 표면을 제공하지 않아 차단됐다. UI 상태는 앱 목록을 빈 배열로 반환했고 문서상 앱 선택 호출은 `getApp is not a function`이었으며, 직접 시작한 `OrdererApp`도 표면으로 등록되지 않았다. 따라서 실제 로그인·버튼·화면 판독은 수행하지 않았고 빌드나 headless 결과를 `DeviceUiProof`로 승격하지 않았다.
+- 현재 증거 상한은 `UnityClientInterpreterLiveHttpProofPassed`다. Unity Editor·Play Mode·Game View, 네이티브 장치 UI, Mongo feed/cache, 전국 Profile은 아직 검증하거나 구현하지 않았다. 생성된 E 책임 지도를 생성기로 갱신한 뒤 범위 지정 Fast의 두 solution build·대상 Unity/서버 시험·지도 검사·diff 검사가 모두 통과했으며 기록은 `artifacts/local/validation/20260914-145354`다. 격리 컨테이너는 종료했다. 실제 Scene·Prefab·Graph Map·E 승격·commit·push는 수행하지 않았다.
+
+## 사가정 기준 디오라마 증거 진화 최소 구현 r23 (2026-09-14)
+
+- [기획·구현 기록 r23](Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/diorama-evidence-evolution.implementation.r23.md)과 [역세권 디오라마 증거 진화 체계](../Architecture/역세권디오라마증거진화체계.md)를 추가했다. 사가정에서 발견한 규칙을 출처 기록 → 후보 → 교차 역 검토 → 사람 승인 → 공통 적용 순으로 발전시키되 기존 E1~E10을 새 단계나 자동 점수로 바꾸지 않는다.
+- 기계 대장 `eng/execution-ledgers/station-diorama-evidence-rules.json`에 비밀값 없는 공식 링크와 저장소 근거를 가진 사가정 출처 기록 5건, 최초 규칙 후보 9건, 사가정·면목·용마산 역별 검토 Profile 3건을 결속했다. 모든 최초 규칙은 `Candidate`, `applicationAuthorized=false`, 승인 공통 규칙 0건이다.
+- 개발 에이전트는 역세권 디오라마 작업 종료 시 새 후보와 기존 규칙의 지지·반례·무효화를 확인하고 후보가 없으면 `새 디오라마 규칙 후보 없음`을 보고한다. `ProvisionalSharedRule` 이상과 실제 공통 적용은 명시적인 사람 승인을 요구한다.
+- 독립 관리 도구와 시험은 schema·고유 식별자·공식 HTTPS 링크·비밀 URL 금지·SHA-256·저장소 참조·승격 및 자동 적용 금지를 확인했다. 결과는 `Sources=5 / Rules=9 / Candidates=9 / Provisional=0 / Accepted=0 / Stations=3`과 집중 시험 PASS다. 범위 지정 Fast는 문서·지침 경로의 `git diff --check`를 통과했고 build/test는 guidance-only로 생략했다.
+- 외부 링크의 현재 응답, 원본 재수집·로컬 DB 재조회, 서버·Simulation·Unity 코드, Scene·Prefab·Play Mode·Game View는 이번에 변경하거나 검증하지 않았다. commit·push도 수행하지 않았다.
+
+## 사가정 합성 배달 기사 읽기 전용 관찰 r20 (2026-09-14)
+
+- 사용자가 r19의 추천안인 “공공 통계는 밀도 근거로만 쓰고 개별 별칭·직업·이동·건수·모의 지급은 합성 Simulation이 소유”를 확정하고 구현을 요청했다. [승인 구현 r20](Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-synthetic-courier-observation.implementation.r20.md), 새 Goal과 [E7 수직 작업 명세](../../eng/execution-ledgers/work-orders/sagajeong-synthetic-courier-observation.e7-work-order.json)에 첫 단일 기사 절편을 결속했다. 기획 SHA-256은 `1CCC9C212830464238AC2586C1BED72EEEB8E55EFEA2674FCB450C30509B07AC`이며 Graph Map 영향은 `NoImpact`, 증거 승격은 승인하지 않아 E0을 유지한다.
+- `Ssalddel.Simulation.Contracts`와 `Ssalddel.Simulation.Application`에 `station:kr:kric:s1107:0722`·`scenario:synthetic-delivery.r1`·`actor:synthetic-courier:1` 전용 관찰 계약, 결정적 fingerprint, factory·validator·최신 사본 projector를 추가했다. 수령 확인과 `ReceivedTick`이 모두 있는 주문만 완료로 집계하고 전달만 끝난 주문은 제외한다. 실패·회복은 `NotTracked`, 모의 지급은 금액·통화 없이 `PolicyPending / SimulationSettlementRulePending`이다.
+- Unity는 역·revision·Tick·단계·행동·경로 길이·합성 주문·fingerprint를 서버와 같은 경계로 검사한다. Camera·좌표가 결속되기 전에는 관찰 준비나 선택을 허용하지 않고, 오류 사본 뒤에는 표시를 숨겼다가 더 높은 정상 revision에서 복구한다.
+- 별도 Unity 저장소에 Collider 없는 runtime 기사 표시, 화면 좌표 선택, 읽기 전용 카드와 `업무 Actor` 로컬 토글을 추가하고 `LifeSimulation` 모듈 Adapter로 분리했다. Host 표시와 사용자 토글을 별도로 보존하며, 공통 단일층 Adapter의 기존 해제 기본값은 유지하고 사가정 생활 Adapter만 명시 해제 뒤 숨김을 선택한다. 기존 건물·도로 Mesh·카메라·조명·Scene·Prefab은 수정하지 않았다.
+- Hongdal 범위 Task는 Simulation solution build와 전체 시험 1,965/1,965를 통과했다(`artifacts/local/validation/20260914-115000`). 격리 Unity에서는 대상 소스 SHA-256 24/24 일치 상태로 합성 Actor 9건, 공통 모듈 11건, Mobility 10건, 사가정 운영 View 7건, 합계 37/37을 통과했다(`C:/Users/user/ssalddel/artifacts/local/validation/sagajeong-synthetic-courier-observation-r20/editmode-20260914-120938/`).
+- 실제 canonical `SimulationWorldShell` 그래픽 Play Mode에서 전체 조망과 기사 선택 카드를 새로 캡처했다. Tick `14→15`, 숨김 중 Actor X `10→15`의 5m 변화, 상위 revision 수용, 재표시 최신 사본, 선택·표현 전후 권위 hash 불변, runtime 표시 1개와 Collider 0을 확인했다. Scene SHA-256은 실행 전후 `36D81A6986598F08D1EA1EA94E83F7FC7BD2D67B166FE6ABA4ED2A1395A34C55`로 같고 `sceneDirtyAfterPlay=false`다. 대표 화면은 Unity `Documentation/Changes/2026-09-14-sagajeong-synthetic-courier-observation/`, 원본 manifest·로그는 `C:/Users/user/ssalddel/artifacts/local/validation/sagajeong-synthetic-courier-observation-r20/gameview-20260914-121047/`에 있다.
+- 화면 선택은 검증 조립부의 프로그램식 좌표 호출이며 정지 PNG는 실제 도로·차로·신호 주행 증거가 아니다. production Host/Scene 배선, 실제 Mouse 입력·uGUI 경합, live 서버, 실제 주문·배차·기사·위치·정산, 일반 주민·경계 포털·신규 공공자료·DB·E 승격은 미구현이다. canonical Scene의 기존 누락 Prefab·replay hash·localhost·JobTempAlloc 경고도 남는다. Scene/Prefab 저장, commit, push, 배포는 수행하지 않았다.
+
+## 사가정 공공데이터·생활 관찰 심화 제안 r19 (2026-09-14)
+
+- [제안서 r19](Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-public-data-life-observation.proposal.r19.md)에 사가정 기존 디오라마를 보존하면서 공공자료 표시 그룹, 1km 경계 포털, 합성 주민·기사·차량, 읽기 전용 Actor 카드로 생활상을 심화하는 방향을 기록했다.
+- 기존 생활 여덟 영역 자료 분류, 여덟 Unity 실행 모듈, 사용자가 켜고 끄는 표시 그룹을 서로 다른 축으로 분리했다. 표시를 꺼도 Simulation Tick·업무 생명주기·가상 정산은 계속되며 다시 켜면 최신 상태를 보여 주는 원칙이다.
+- 현행 기준선은 기준 건물 602·도로 2,397, 화면 건물 4,062, 공식 주소 559, 차선 후보 1,039, 횡단보도 후보 84, 면목 상가 관측 5,411, 사가정 창 음식 관측 599, 생활인구 시간 관측 4,464다. 화면 건물과 의미 건물 결속, 신호 CRS, 보행망·출입구, 통계의 합성 밀도 변환은 선행 관문으로 남겼다.
+- 전수 조사는 현실의 모든 개인·업체를 확보했다는 뜻이 아니라 선언한 공식 카탈로그 안의 관련 후보를 출처·판본·hash·CRS·이용조건·coverage·상태와 제외 사유까지 판정하는 것으로 정의했다.
+- 이 판본은 기획만 갱신했다. 신규 자료 수집·DB 쓰기·API/Simulation/Unity 코드·Scene/Prefab·Play Mode·Game View·E7 작업 명세·commit·push는 수행하거나 승인하지 않았다.
+
+## 사가정 Mobility Adapter 보존형 리팩터링 r18 (2026-09-14)
+
+- [구현 명세 r18](Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/mobility-module-adapter-refactor.implementation.r18.md)에 따라 r17 Host 뒤에 단일 모듈 상태 factory와 등록·해제·원래 `Behaviour.enabled` 복원을 맡는 공통 `StationDioramaSingleLayerAdapter`를 추가했다. 서버·Simulation·WI·WorldRevision 권위는 바꾸지 않았다.
+- `사가정MobilityModuleAdapter`는 기존 저밀도 교통 또는 음식배달 Journey 가운데 조립부가 고른 하나만 `Mobility` contribution으로 보고한다. 둘을 동시에 지정하면 동일 배달 기사·경로 중복 표시를 막기 위해 거부한다. 교통 source 판본은 매 Tick이 아닌 기존 이동 그래프·차로·신호·교통 프로필·배달 표시 경로 판본 조합으로 고정하고 상태 사본 적용 뒤 `RefreshModuleState()`로 Host 준비도를 갱신한다.
+- `ActiveStationDioramaHost`는 새 Adapter를 숨긴 상태에서 전체 contribution을 사전 검증하고, 중복 layer 등록 실패 때 목록·활성 plan·hash를 보존한다. 해제한 Adapter는 즉시 숨기고 남은 contribution으로 다시 조립한다. source 판본 결손은 예외 전파 대신 `Blocked` 진단으로 격리한다.
+- 비활성 저밀도 Playback에 상태 사본을 적용해도 새 정적 차로·신호와 동적 배우 Root가 먼저 노출되지 않도록 표시 수명만 보강했다. 기존 경로·차로·신호·보간·pool 계산과 `사가정운영디오라마View`의 Mesh·카메라·선택 카드는 수정하지 않았다.
+- 메인 쓰기 파일과 SHA-256이 같은 격리 Unity 사본에서 Adapter 10/10, 공통 Host 11/11, 저밀도 교통 16/16, 음식배달 Journey 27/27, 기존 공간·H·모형·운영 View 75/75, 합계 139/139를 통과했다. 결과는 `C:/Users/user/ssalddel-building-h-validation/artifacts/local/validation/station-diorama-module-r18/`에 있다.
+- 새 Adapter는 production 조립부와 canonical `SimulationWorldShell` 저장 Scene에 아직 결속하지 않았다. Scene·Prefab·Mesh·카메라·화면 출력은 변경하지 않았고 Play Mode·Game View도 재실행하지 않았다. 따라서 이번 결과는 공통 이음부와 EditMode 수명 검증이며 실제 World 작동 증거가 아니다. commit·push는 수행하지 않았다.
+
+## 사가정 참조형 역세권 디오라마 공통 모듈 표준화 r17 (2026-09-14)
+
+- [구현 명세 r17](Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/station-module-standardization.implementation.r17.md)에 따라 Unity Runtime에 엔진 비의존 공통 Profile·Planner를 추가했다. 자료 근거, 중립 공간 표현, H 의미, 이동, 상호작용, 생활, 업체 표시, 환경의 여덟 모듈을 순서·필수 여부·의존성으로 정의하고 `Ready / PrivateReview / Blocked / NotProvided / BlockedByDependency`와 결정적 조립 hash를 만든다.
+- Presentation에는 `ActiveStationDioramaHost`와 호환 Adapter 계약을 추가했다. 필수 자료·표현 모듈이 준비된 역 하나만 표시하며 등록되지 않은 역, 필수 모듈 결손과 교차 역 대체를 거부한다. 서버·Simulation 권위, 업무 상태, WI·WorldRevision은 변경하지 않는다.
+- 기존 `사가정운영디오라마View`를 첫 Adapter로 연결했다. 기존 MeshBuilder·4×4 chunk·카메라·색·건물 602개 선택·역할 카드는 그대로 두고 자료 근거·중립 공간 표현·H 의미·읽기 전용 상호작용 네 모듈만 보고한다. 이동·생활·업체·환경은 이번 Host 결속에서 `WaitingForModuleAdapter`로 남긴다.
+- 활성 모듈 Catalog에는 사가정만 등록했다. 기존 면목·용마산 비공개 자료와 공통 공간 View는 삭제하지 않았지만 새 활성 Profile·View·Scene은 만들지 않았다.
+- 메인 Unity 쓰기 파일과 SHA-256이 같은 격리 사본에서 공통 모듈 9/9, 사가정 공간 Overlay 54/54, H 선택 10/10, 모형 4/4, 운영 View 7/7, 합계 84/84를 통과했다. 위치 독립 factory가 후속 역 자료·View·Catalog 등록 없이 같은 8모듈 구조를 만드는 범위도 포함한다. 넓은 `사가정*` 실행의 기존 Synty 대장 5건은 격리 사본에 외부 공급사 `Assets/Synty` 팩이 없어 카탈로그의 Prefab GUID 4개를 해소하지 못한 `LegalDongScenicCatalogInvalid`이며, 메인 자산 트리에서는 네 GUID를 모두 확인했다. 따라서 이번 표준화 쓰기 경로와 분리했다.
+- Scene·Prefab·자료 asset·서버 API schema·Hosted·Save/Replay·Play Mode·Game View는 변경하거나 실행하지 않았다. 메인 Unity Editor는 열려 있으나 Pipeline이 응답하지 않아 강제 종료하지 않았고 격리 사본 Test Runner로 검증했다. commit·push는 수행하지 않았다.
+
+## 사가정역 1km 건물 도로명주소 결속 r3 (2026-09-14)
+
+- 사용자가 확정한 공유 주소 A안을 [승인 기획 r2](Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/README.md)와 [구현 결과 r3](Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/implementation.r3.md)에 결속했다. 각 건물 ID는 유지하고 같은 공식 주소를 `OfficialSharedComplexAddress`로 참조한다.
+- 행정안전부 주소기반산업지원서비스에서 현재 가능한 2026-08-31 건물DB 월 전체분 149,263,413바이트를 비공개 동결했다. 원본 SHA-256은 `4aa70c569aaf14f550313b5836346a1ba438491fb4cec61877e615c9e602afa7`이고, 서울 MS949 31열 파일·활용 가이드·공공데이터포털 `이용허락범위 제한 없음` metadata를 같이 검사했다.
+- 602/602개에 중복 없이 주소 상태를 부여했다. 공식 개별 480개, 공식 공유 79개(41그룹), 공식 월 원본과 불일치하는 OSM 후보 28개, 미해결 15개다. 기존 건물 주소 외에 윤곽 안 주소 지점 6개와 유일 공식 건물명 1개를 회수했으며 가까운 주소 복사는 0건이다.
+- 투영 SHA-256 `86d318afdc34bd3af0e6470ccd49f29692a3f71b888fa0252c0b4aaac84c80bf`를 재생했고, 로컬 `hongdal-mysql-1 / hongdal_dev`에 원본 사본 ID 72와 정규화 602행(ID 92965~93566)을 저장했다. 첫 적용은 신규 602, 즉시 재적용은 신규 0·기존 602·`databaseWriteAttempted=false`, 새 `DbContext` 독립 재조회는 602건이다. 자체 시험 14/14, 도구 build 경고0·오류0을 확인했다. 범위 지정 Fast·Task는 `git diff --check`를 통과했지만 공용 검사기가 `eng` C#를 문서로 분류해 build·test를 생략했으므로 이 별도 검증과 구분한다.
+- 모든 행은 `distributionApproved=false`, `deliveryEligible=false`, `priceObservationEligible=false`, `unityApplyAllowed=false`다. 28개 후보·15개 미해결은 주소 확정 필수 기능에서 계속 차단하며, 일변동·출입구·가격·API·Unity·Scene·Game View는 별도 후속이다. commit·push는 수행하지 않았다.
+
+## 사가정역 주거 가격 관찰층 제안 r2 (2026-09-14)
+
+- [제안서 r2](Planning/시스템/PLAN-DATA-SAGAJEONG-HOUSING-MARKET-OBSERVATION/README.md)은 매매·전세·월세 실거래와 선택적 공시가격을 H 역할이 아닌 별도 주소·건물 관찰층으로 분리한다. H1은 선택 건물, H2는 블록, H3는 생활 회랑의 조회 범위로만 사용한다.
+- 국토교통부 실거래가 공개시스템·공공데이터포털, 도로명주소 건물 식별 안내와 표준주택가격 자료를 공식 근거로 검토했다. 반복 수집은 공개 화면 자동화가 아니라 공공데이터포털 API를 사용하고, 실거래 정정·해제와 주소 판본을 revision으로 보존하도록 제안했다.
+- 기존 사가정 602개 건물 중 주소 문자열은 580개지만 기존 수집 주소 후보 결속은 244개, 단일 후보는 204개뿐이다. 따라서 전 건물 가격을 채우지 않고 `ConfirmedBuilding / AddressLevelOnly / AmbiguousBuilding / AreaAggregateOnly / Unresolved`를 구분한다.
+- 기본 디오라마에는 가격을 표시하지 않고 사용자가 `주거 관찰` 탭을 열 때 배포 승인된 집계만 보여 준다. 소유자·임차인·상세 호수·연락처는 제외하며 가격은 OS·NPC·광고·게임 경제에 영향을 주지 않는다.
+- 사가정 602개 건물 주소 상태 대장 완결을 필수 선행 관문으로 추가했다. 실제 자료 수집·DB·API·Unity·Scene·시험·commit·push는 수행하지 않았으며, 첫 카드의 실거래·공시가격 범위 문답은 주소 공유 정책 뒤로 보류했다.
+
+## OS 생명주기 Core·환경별 Adapter 분리 제안 r4 (2026-09-14)
+
+- [제안서 r5](Planning/시스템/PLAN-SYSTEM-OS-LIFECYCLE-ENVIRONMENT-ADAPTERS/README.md)은 음식배달·화물·창고·마트의 안정 단계 의미를 Core에 두고 운영 서버, Simulation Local/Hosted, Web·모바일 경험, Unity 상태 사본·H 공간 표현을 환경별 Adapter로 분리한다.
+- Web·모바일은 별도 상태 권위가 아니라 같은 운영 서버 Command와 canonical 재조회를 사용하는 클라이언트로 정의한다. Unity는 운영 상태 관찰과 게임 Simulation 표현을 구분하며 NPC 도착·Animation만으로 업무 완료를 확정하지 않는다.
+- H 결속은 Core에 넣지 않고 `OperatingSystemId + LifecycleStageId + SemanticPlaceStableId`를 역할·H1·H2·H3·입출구·귀환 위치에 연결하는 별도 Integration 계약 후보로 둔다. 현재 네 OS는 단계·의미 위치 표현까지 준비됐지만 H 교차 결속은 부분 상태다.
+- 사용자 선택에 따라 Core가 단계 ID·순서·설명뿐 아니라 허용 전이, 실패·회복·귀환과 환경 비의존 순수 guard까지 소유하도록 확정했다. 인증·실제 DB·외부 API·기기·시계·Unity 공간 도착은 환경 검사로 남긴다.
+- 사용자 선택에 따라 Core 판정을 `AllowedByCore / BlockedByCore / RequiresEnvironmentValidation` 세 상태로 나누고, 정의 판본·현재 단계·요청 전이·다음 단계 후보·안정 이유·환경 요구사항 코드를 반환하도록 확정했다. 이는 상태 변경 완료 판정이 아니며 권위 UseCase는 환경 검사와 revision을 다시 확인한다.
+- 호출자별 작은 `AvailableActions`를 같은 역할 상태 사본에 포함하는 방향은 확정됐다. 음식배달 첫 절편에서 서버가 주문자·음식점·기사별 행동을 투영하고 OrdererApp·RestaurantDeskApp·FDriverApp이 기존 버튼을 이 목록으로 통제하며, 음식점 revision 지원 명령은 해당 행동의 `ExpectedRevision`을 보낸다. 전체 OS Core·환경 Adapter 리팩터링과 실제 장치 UI·Unity 실행은 아직 수행하지 않았다.
+
+## 사가정 건물 복수 역할 카드·읽기 전용 후속 보기 r16 (2026-09-14)
+
+- [구현 명세 r16](Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/building-role-cards.implementation.r16.md)에 따라 건물과 역할을 분리하고 `건물 → 역할 Profile 여러 개 → 역할별 H1 여러 개`의 읽기 전용 계약을 구현했다. 역할 코드는 음식점·창고·주거 전달·미결속 일반이며, 역할 Profile은 배열이라 한 건물의 복수 역할을 지원한다.
+- 합성 의미 위치가 r3 윤곽 하나에만 포함되는 세 건물만 명시 결속했다. `osm:way:1256772531`은 음식점, `osm:way:1256772606`은 주거 전달, `osm:way:470492219`는 창고 역할이다. 나머지 599개는 실제 입점·거주를 추정하지 않고 `GeneralUnbound / WaitingForGraphMapBinding`으로 남긴다.
+- 건물 선택 카드에 역할 탭, 역할별 H1·생명주기 요약과 후속 보기 상태를 추가했다. 준비된 음식배달 경로가 있을 때만 기존 `음식배달JourneyPlaybackLayer`의 경로를 선택하며, 없으면 `WaitingForReadOnlyRouteSnapshot`을 표시한다. 창고는 합성 생명주기 미리보기만 제공한다. 모든 후속 결과는 읽기 전용이며 주문·배차·결제·재고·WorldRevision을 바꾸지 않는다.
+- 실제 작업 파일과 SHA-256이 모두 같은 격리 Unity 사본에서 역할 시험과 기존 사가정 선택·모형·운영·공간 회귀 75/75가 통과했다. r16 Play Mode·Game View와 실제 MouseUp은 새로 확인하지 않았고, 기존 r15 캡처를 r16 증거로 재사용하지 않는다. Scene·Prefab·서버·Graph Map·H 생성 대장은 수정하지 않았으며 commit·push도 수행하지 않았다.
+
+## 사가정 디오라마 보존형 건물 H 계층 선택 r6 (2026-09-14)
+
+- 사용자 확정에 따라 사가정 A+를 H3 생활 회랑 두 개와 부분 AreaSet 구성 후보로 관리하되, 기존 사가정의 현실 공간 표현을 우선 보존하는 [시스템 기획 r15](Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/README.md)와 [공간 기획·구현 명세 r6](Planning/공간/PLAN-SPATIAL-SAGAJEONG-LANE-SIGNAL-TRAFFIC/building-hierarchy-selection.implementation.r6.md)를 열었다.
+- 첫 절편은 r3 원본 건물 602개를 CPU 외곽으로 선택하고 원본 건물 정보와 읽기 전용 H 후보 카드를 보여 주도록 구현했다. 높이·공간 보완이 대체한 r3 건물은 MeshBuilder가 실제로 그린 높이·외곽으로 판정한다. 개별 GameObject·Collider·Renderer를 추가하지 않았고, 기존 역 방어 IMGUI·하단 통합 시점 uGUI가 입력을 점유하면 건물 선택을 막는다.
+- H 후보는 합성 의미 위치가 윤곽 안에 확인된 `osm:way:1256772531` 음식점·픽업과 `osm:way:1256772606` 주거·전달 두 건물만 명시적으로 결속한다. 나머지는 주소·종류·근접 거리로 추론하지 않고 `WaitingForGraphMapBinding`으로 남긴다. 부분 AreaSet은 `ActualE5=false / TraversalReady=false / GameplayReady=false / ServerProjectionReady=false`다.
+- 격리 Unity EditMode에서 선택 8건과 기존 사가정 모형·운영·공간 회귀 65건, 총 73/73이 통과했다. canonical `SimulationWorldShell` 그래픽 Play Mode에서 1399×628 Game View 3장을 새로 캡처했고, 선택 전후 Renderer 39·Material 5·MeshFilter 39·Collider 0과 Scene SHA-256 `36D81A6986598F08D1EA1EA94E83F7FC7BD2D67B166FE6ABA4ED2A1395A34C55`·dirty=false를 유지했다.
+- 화면 좌표→ray 선택은 통과했지만 사용자 MouseUp 입력 주입은 수행하지 않았다. 캡처는 `LocalPrivateReview / publicReleaseEvidence=false`이며, 기존 Scene의 누락 Prefab GUID 56개·Unknown script 10건·replay hash·localhost 연결·JobTempAlloc 경고는 별도 문제로 재현됐다. 새 WI·Goal·ActionRecord·WorldRevision·실제 H/Graph Map 등록·서버 HTTP·Scene 저장·Evidence 승격은 수행하지 않았다. commit·push도 수행하지 않았다.
+
 ## 사가정 다중 OS 샘플 생명주기 재생 구현·검증 r4 (2026-09-13)
 
 - [승인 방향 r4](Planning/시스템/PLAN-SYSTEM-OBSERVABLE-OPERATIONS-DIORAMA-001/multi-os-lifecycle-playback.r4.md)와 [E7 작업 명세](Planning/시스템/PLAN-SYSTEM-OBSERVABLE-OPERATIONS-DIORAMA-001/implementation.r4.md)에 따라 음식배달·국내화물·창고·마트 네 공간형 OS의 정상·회복 8개 사례와 77단계를 구현했다. 나머지 6개 OS는 생명주기가 정의될 때까지 진단 목록에만 두고 단계나 객체를 만들지 않는다.
@@ -7,6 +190,19 @@
 - 실제 `observable-operations-run:r4-hardened-20260913225629`를 600초 실행했다. 일시정지·재개 뒤 553초에 MongoDB를 중단했으며 600초에도 마지막 Outbox 실패 1건 때문에 `Running`을 유지했다. MongoDB 복구와 명시적 Retry 뒤에만 `Completed / 8사례 / 77단계 / Pending 0 / Failed 0`이 됐다. 독립 재조회에서 MySQL 단계·Outbox 77건, MongoDB 최종 사본 8건, Redis 완료 상태와 HTTP v2 최신 run 8건이 같은 계보로 확인됐다. 실제 상호·주소·연락처·정확 좌표는 Unity 계약에 포함되지 않았다.
 - Unity는 canonical `SimulationWorldShell`을 저장하지 않고 `FrozenPresentationTimeline` 기반 runtime-only 계층으로 네 OS와 음식점 아이콘 12개를 합성했다. EditMode 10/10과 실제 Play Mode Game View 3장을 확인했으며, 네 OS 표식이 1.2초 동안 일반화 단계 기준점 사이를 이동한 실제 프레임 표본을 manifest에 남겼다. 이는 `routeAuthority=false / liveHttpEndToEnd=false`인 표현 검증으로 실제 도로·차선·신호·길찾기 또는 운영 업무 실행 증거가 아니다.
 - 서버 집중 시험은 최종 31/31, 변경 경로 한정 Fast는 build·targeted test·diff 검사를 모두 통과했다(`artifacts/local/validation/20260913-231412`). 최신 Task는 전체 solution build를 통과했고 서버 전체 5,235건 중 5,228건이 통과했다(`artifacts/local/validation/20260913-231857`). 남은 7건은 앞선 기준선과 같은 역할별 API metadata 4건, 공식 재료 화면 1건, 아키텍처 용어 1건, WebApp capability 1건이며 이번 집중 범위 시험 실패는 없다. Scene 저장·실제 Unity HTTP 연결·실제 네 OS Controller/UseCase/Command 실행·운영 DB·외부 효과·Evidence 자동 승격은 수행하지 않았다. 기존 Unity Scene의 누락 Prefab·Unknown script 등 기준선 경고도 별도 문제로 남으며, commit·push는 수행하지 않았다.
+
+## 사가정 음식점 아이콘·운영 생명주기 검증 제안 r3 (2026-09-13)
+
+- [조사 제안 r3](Planning/공간/PLAN-SPATIAL-SAGAJEONG-DELIVERY-MOBILITY/restaurant-icons-operational-lifecycle-validation-proposal.r3.md)는 실제 음식점 관측 아이콘, 검증된 상인 Claim/운영 메뉴, 광고·후원, 진행 중 음식배달 상태 사본을 서로 다른 권위·표현 계층으로 관리한다. 기존 공공 사업장·건물 Assignment·Claim·Campaign과 `음식점공개프로필`·`음식점메뉴`를 재사용하고, 합법적인 외부 메뉴 원천이 생긴 경우에만 별도 메뉴 관측 원장을 추가하는 방향을 제안했다.
+- NAVER 지역검색은 메뉴 필드가 없고 현행 약관상 지역정보 별도 DB화·광고 영업 이용·API 결과와 광고 동시 노출이 허용되지 않아 원천 후보에서 제외했다. 배달의민족은 조사 범위에서 제3자용 공개 메뉴 조회 API를 확인하지 못해 화면 수집을 채택하지 않았다. 공공 인허가·중랑구 모범음식점의 `주된음식`, 상인 직접 제출, 합성 fixture 순으로 권위를 제안했다.
+- 서버 음식배달에는 정상·거절·취소·중단·회복 전이가 있으나 지역 장면 API와 Unity Adapter는 현재 수령확인 완료 결과만 표현한다. 첫 후속 절편은 실제 후보 12곳의 개발자 전용 `LocalPrivateReview` 정적 카테고리 아이콘과 세 가상 음식점 중 한 주문의 비식별 진행 생명주기, 건물 anchor, 전체·음식점 근접·이동 근접 Game View 검증이다. 실제 상호는 선택 시에만 `검토용·비배포·주문 불가`와 함께 보이는 안을 추천했다. 이번 작업은 조사·문서만 수행했으며 외부 자료 수집·DB migration/쓰기·API/Unity 구현·Play Mode/Game View·Scene 저장·commit·push는 수행하지 않았다.
+
+## 사가정 1km 음식점 비공개 원장·세 가상 음식점 폐루프 r2 (2026-09-13)
+
+- [승인된 사업장·음식점 주문 결속 r2](Planning/공간/PLAN-SPATIAL-SAGAJEONG-DELIVERY-MOBILITY/business-order-binding-proposal.r2.md)에 따라 기존 동결 자료를 사가정역 기준 `(550,8)`·반경 500m 정사각형으로 결정 재투영했다. 음식 관측 599행·원문 상호 587종, 단일 건물 후보 180행, 중랑구 음식점 인허가 후보와 일치한 관측 334행을 manifest SHA-256 `d89369ecf0fa85093522aef2a7a2dc9f413154c59d175f58391e3de3b8bb64cd`로 동결했다.
+- 로컬 MySQL `hongdal-mysql-1 / hongdal_dev`의 기존 `public_data_normalized_records`에 파생 자료 599행을 저장하고 별도 `DbContext`에서 599행을 독립 재조회했다. 같은 입력을 다시 적용했을 때 `inserted=0 / updated=0 / existing=599 / databaseWriteAttempted=false`였다. 부모 `SourceId`·`DatasetId`·`RawSnapshotId`를 재사용하며 모든 행은 `PendingHumanReview`, `distributionApproved=false`, `orderScenarioEligible=false`다. 현재 DB에 인허가 전용 테이블이 없어 후보 334건은 동결 입력·hash까지만 검증했고 migration이나 추정 테이블 생성은 하지 않았다.
+- 첫 주문 폐루프에는 실제 상호 대신 `가상 사가정 큰길식당`, `가상 면목 생활길분식`, `가상 골목안 도시락` 세 `SyntheticFixture` profile을 추가했다. 기존 주문 상태 기계와 NPC 조리·배차·기사 이동을 재사용해 5개 자동 주문이 세 음식점을 순환하고 `조리중 → 픽업대기 → 기사배정 → 픽업완료 → 전달완료 → 수령확인 → 기사 복귀`까지 닫히며 Save/Replay hash가 일치함을 확인했다. 세 `DisplayRouteKind`는 후속 공간 결속용 표시 profile이며 이번 단계에서 대로·생활길·골목의 서로 다른 실제 이동 경로를 뜻하지 않는다. 표시 Presenter는 음식점 ID·합성 이름·상태만 결속하고 Command를 실행하지 않으며 Simulation 원천·정확 판본·profile/route 출처가 모두 맞는 사본만 받는다.
+- 집중 회귀는 Simulation 49/49, Unity 패키지 26/26이 통과했다. 이동 중간 저장 뒤 복원·계속 진행한 결과도 무중단 실행과 같은 최종 Replay hash로 닫혔다. 범위 Fast는 두 solution build·생성 지도와 Simulation 227/227·Unity 28/28을 통과했고(`artifacts/local/validation/20260913-200111`), Task는 같은 build·지도와 Simulation 전체 1,957/1,957·Unity 전체 785/785를 통과했다(`artifacts/local/validation/20260913-200256`). 세 재사용 E7 v2 명세 검사도 통과했지만 현재 Evidence 단계 `E0`은 자동 승격하지 않았다. 이번 r2에서는 실제 상호 공개·주문 참여·Claim/광고 결속, Entrance/CurbStop·검토 통행, Hosted HTTP, canonical Scene 저장, Play Mode·Game View를 수행하지 않았다. 기존 이동 r1의 Game View 증거를 이번 세 음식점 화면 증거로 재해석하지 않으며 commit·push도 수행하지 않았다.
 
 ## 2026-09-13 맥락별 로컬 커밋 정리
 
@@ -32,9 +228,24 @@
 - Unity Runtime/Presentation 단독 build는 각각 오류 0이다. 새 이동 계층 EditMode 27/27·기존 사가정 운영 디오라마 7/7을 확인했고, 최종 검증용 Editor 코드도 재컴파일 오류 0이다. Unity `6000.5.6f1`의 canonical `SimulationWorldShell` Play Mode에서는 저장하지 않는 임시 검증 Root로 `SyntheticFixture` 7구간·총 116m 자동 이동을 실제 표시했다. 전체 보기·Motorcycle 확대·Pedestrian 인계 확대 Game View PNG 3장을 남겼으며, 시간 경과 관찰에서 revision 14→377, 적용 사본 10→373, 누적 위치 변화 0.269m→11.920m와 Motorcycle→Pedestrian 전환을 확인했다. 이번 여정 관련 Console Error/Exception은 0건이었다.
 - 이 화면 증거는 합성 상태 사본의 읽기 전용 이동 표현 검증이다. 세 PNG는 연속 프레임이 아니라 판독 지점 3개의 고정 사본이며, 저장 Scene 영속 결속, 실제 입력 폐루프, Hosted HTTP/live server, 실제 OSM 간선 길찾기·통행 승인, 운영 주문 상태 전이와 Save/Replay는 검증하지 않았다. canonical Scene의 기존 bootstrap/replay/server 연결 Error/Exception 8건은 별도 잔존한다. 실행 전후 Scene SHA-256 동일·종료 뒤 Scene clean·임시 Root 0개를 확인했다. DB 쓰기·Steam 공개는 수행하지 않았다. 관련 구현·화면 증거는 로컬 커밋으로 정리했고 원격 push는 하지 않았다.
 
-## 역세권 디오라마 모듈·공공 사진 우선 방향 (2026-09-13)
+## 사가정 저밀도 차로·신호·A+ 생활 회랑 r5 (2026-09-14)
 
-- [역세권 디오라마 모듈 표준 r13](Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/README.md)는 사가정 r18을 복사 대상이 아닌 첫 적합성 기준으로 유지하면서, 일반역은 역 중심 1km × 1km이고 대형 환승역만 사유와 치수를 가진 가변 profile을 쓰도록 정했다. 면목역과 용마산역은 서로의 도형·Region ID를 복사하지 않은 독립 `LocalPrivateReview` 사본으로 구현했다.
+- [사가정 차로·신호·A+ 생활 회랑 r5](Planning/공간/PLAN-SPATIAL-SAGAJEONG-LANE-SIGNAL-TRAFFIC/README.md)에 따라 서울시 공식 전체 파일 5종 47,430,933 bytes와 전체 556,346행을 동결했다. 기존 명목상 1km 창의 거친 후보는 차선 1,039·방향표시 318·교차로 25·제어기 16·신호등 숫자 envelope 125, 합계 1,523행이다. 원천 CRS가 해소된 1,398행만 사가정 지역 ID에 두고 신호 125행은 별도 CRS 미해결 검토 버킷에 보존했다.
+- 원본 5건과 후보 1,523행을 로컬 MySQL 비공개 검토 원장에 저장하고 별도 프로세스 재조회와 재적용 신규 0건을 확인했다. 횡단보도 `OA-23081` r2 원본 1건·정규화 84건도 저장·독립 재조회했으며 사가정역 `CSS_NUM=3205`에는 7행, 보행등 `유` 4행이 후보로 결속된다. 모두 `PendingHumanReview`이고 공개·통행·gameplay 권위는 false다.
+- `station-synthetic-traffic-snapshot.v2` 계약과 결정적 Engine은 오토바이 1대·주변 승용차 최대 3대, 0.25초 Tick, 28초 합성 신호, 우측 차로·정지선·최소 간격을 유지하면서 `사가정로 접근 → 면목로44길·면목로44가길 생활도로 → OSM way 1256772587 골목 → 후보 종점`의 3-leg 표시 경로를 연결했다. 이동망 판본·projection/content hash, 원천 edge 15개와 역순 표시 3개, 원천/표시 거리와 별도 경로 지문을 상태 사본에 보존한다. 실제 OSM 방향·access는 각각 `Unknown / PendingHumanReview`이고 모든 통행·gameplay·주문 변경 권위는 false다.
+- 서버 저밀도 집중 시험 26/26와 배달 관련 결합 회귀 65/65를 통과했고 개별 TRX는 `artifacts/local/validation/20260913-sagajeong-continuous-route-evidence`에 남겼다. 최종 범위 Task는 Simulation solution build와 전체 시험 1,954/1,954를 통과했다(`artifacts/local/validation/20260913-185444`). 첫 실제 Play에서 정지선까지 일부 이동한 Tick의 `WaitingAtSignal`에 이동 평균 속도가 남는 불일치를 발견해, 위치·진행량은 보존하고 대기 상태의 현재 속도만 0으로 고쳤다. 서버와 Unity 양쪽의 Tick 0~400 전 구간 회귀로 재발을 막았다.
+- 별도 Unity 저장소에는 v2 엄격 Interpreter, 차선·횡단보도·신호기·저밀도 배우 Playback과 전체·생활도로·골목 후보 종점 검증 View를 추가했다. Unity EditMode 15/15가 통과했다. 격리된 Unity `6000.5.6f1` canonical `SimulationWorldShell` Play Mode에서 자동 상태 사본 287개·최종 Tick 286을 적용해 적색 정지·녹색 재출발, 세 구간 진입과 후보 종점 정차를 확인했다. 경로 진행은 277.277/277.277m, 실제 Transform 관찰은 대로 106.590m·생활도로 147.209m·골목 23.335m다.
+- 전체 대로 접근·생활도로·골목 후보 종점 Game View PNG 3장을 `artifacts/local/validation/20260913-sagajeong-continuous-unity/gameview/20260913-185020-153`에 남겼고 지붕 가림 구간에는 실제 기사 Transform의 화면 투영점을 투시 표식으로 명시했다. 화면은 Engine 상태 사본을 Unity Interpreter에 직접 적용한 증거이며 Hosted HTTP·JSON Client, 실제 OSM 통행 승인·길찾기, 운영 주문 상태 전이, Save/Replay, 실제 입력과 저장 Scene 결속은 미검증이다. 실행 전후 저장 Scene SHA-256은 `36D81A6986598F08D1EA1EA94E83F7FC7BD2D67B166FE6ABA4ED2A1395A34C55`로 같고 Git 변경은 0이며 메인 편집기의 미저장 Scene을 보존했다. 기존 canonical Scene의 bootstrap·replay·server 연결과 누락 자산 오류는 별도 잔존한다. 이번 r3 변경과 캡처는 아직 commit·push하지 않았다.
+- 사용자는 A안을 선택하면서 단일 교차로 주변보다 충분한 거리에서 통근·장보기·산책·배달과 골목 양보가 이어지는 생활상을 요청했다. 전체 1km는 정적 배경으로 유지하고, 약 390m × 350m 안의 역세권 순환 339.808m와 동측 이면도로·골목 순환 302.557m를 연결부 왕복으로 묶은 약 753.060m 8자형 활성 생활 회랑과 보행자 우선 공유 골목 충돌 구역 2곳을 r4 후보로 기록했다.
+- r4 배우 후보는 기존 합성 생활 배우 9명과 주변 보행자 6명이며, 차량 방향 그래프·보행 그래프·횡단 충돌 구역·공유 골목 면을 분리한다. 원본 건물·주소 결속·도로 좌표는 보존하고 폭·여백·배우 offset은 `PresentationGeometry / SyntheticDisplayOnly`로만 과장할 수 있다. 정확한 활성 범위와 첫 시간대는 질문 상태이므로 r4 코드·작업 명세·Graph Map·Unity 실행은 시작하지 않았고 commit·push도 하지 않았다.
+- 사용자는 A+ 생활상을 기존 H1~H4·AreaSet, WI와 Sky Engine에 조화시키고 모듈식으로 관리하는 리팩터링 방향을 요청했다. 1km 공간 근거는 H 밖에 유지하고 의미 있는 행동 지점만 H1, 역 교차로·생활 상권·주거·공유 골목을 H2, 339.808m 역세권 순환과 302.557m 이면도로·골목 순환을 H3 후보로 둔다. 현행 Town 구성의 일부 역할만 충족하므로 H4/AreaSet은 부분 구성 후보이고 H5는 단일 역 첫 범위에서 만들지 않는다.
+- 기존 음식점 `ACCEPT/COOK`, 생활 `LIFE-SHIFT/REST`, 배달 `ASSIGN/MOVE/PICKUP/DELIVER/RECEIVE/RETURN` WI를 재사용한다. 신호·횡단 대기와 골목 양보는 새 WI가 아니라 `MOVE` 하위 Task·guard·점유 규칙이다. 조사 중 생활 코드가 `Working/Resting` 밖의 상태까지 생활 WI ActionRecord로 기록하는 불일치와 `MOVE` 작업 명세의 `Arrived`가 WI 정본 `PositionAdvanced`와 다른 문제를 확인했으며, 별도 구현 승인 전에는 수정하지 않았다.
+- Sky Engine은 H/AreaSet 자식이 아닌 세계 공통 표현 계층으로 유지한다. 현행 사가정 전용 카메라·layer·고정 오후 광원은 Nature에 직접 결속된 Sky를 소비하지 않으므로, Shell 수준 상태 공급원과 다중 표현 대상 Adapter로 분리한 뒤 사가정 배경·안개·전용 광원·구름·강수만 같은 상태 사본에서 투영하는 안을 제안했다. 첫 날씨는 표현 전용이며 WI·NPC 일정·이동 결과를 바꾸지 않는다.
+- 읽기 전용 재검증에서 AreaSet 구성 패턴은 `Baseline=4 / Variants=4 / H3=32 / Closed=True`로 통과했다. 공간 계층은 `GeneratedDocumentOutOfDate`, 게임 기획 주도 H 재고는 `DemandH2TargetMismatch`로 실패했다. 관련 생성물은 갱신하지 않았고 r5 작업 명세·Graph Map·코드·Scene·Unity 실행·E 승격·commit·push는 수행하지 않았다.
+
+## 역세권 디오라마 모듈·공공 사진·H/WI/Sky 방향 (2026-09-14)
+
+- [역세권 디오라마 모듈 표준 r14](Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/README.md)는 사가정 r18을 복사 대상이 아닌 첫 적합성 기준으로 유지하면서, 일반역은 역 중심 1km × 1km이고 대형 환승역만 사유와 치수를 가진 가변 profile을 쓰도록 정했다. 면목역과 용마산역은 서로의 도형·Region ID를 복사하지 않은 독립 `LocalPrivateReview` 사본으로 구현했다. r14는 `SimulationWorldShell` 안의 단일 활성 역세권 Host 아래 공간 근거, H/부분 AreaSet, Mobility, WI/NPC, 업체 Overlay와 Presentation을 분리하고 Sky는 World 공통 형제로 유지하는 제안까지 추가했다.
 - 국가철도공단 연결 XLSX 1,099행에서 면목 `0721`, 사가정 `0722`, 용마산(용마폭포공원) `0723`을 선택했다. 원본 SHA-256·수집 시각·원천 기준일을 보존하고 기존 로컬 MySQL 비공개 검토 원장에 원본 1건과 정규화 3건을 저장했다. 첫 적용 신규 3, 재적용 신규 0·기존 3, 별도 연결 재조회 3을 확인했으며 전화번호는 정규화 투영에서 제외했다. 자료·판본 불일치와 제한은 [수집 보고](../Reports/중랑구-7호선-역-기준자료-수집-2026-09-13.md)에 남겼다.
 - 공용 역 manifest에 면목 사본의 revision·파일/content hash·수량·결손 5종을 결속했지만 `ServerLoadable=false`, `WaitingForSpatialCoverage`를 유지했다. 기존 Mongo의 행정동별 current projection을 역 중심 좌표계로 덮어쓰지 않으며 station-scoped 저장·조회 계약 전에는 서버 payload로 게시하지 않는다. 기존 행정동 tile 참조는 summary뿐 아니라 실제 payload의 schema·ID·hash·격자·수량·도형 교차까지 검사한다. 지역 Package·역세권 UseCase·Controller 회귀 25/25는 통과했다.
 - [면목역 1km 구현 기록](../Reports/면목역-1km-디오라마-구현-2026-09-13.md)에 따라 동결 원천과 면목역 bbox OSM 1회 수집을 조합해 건물 4,165개·방향성 도로 link 124개·표면 48개·행정동 6개·500m tile 4개를 만들었다. 100m cell 100개 중 98개는 건물 근거를 확인했고 `x1:z0`, `x1:z3` 두 곳은 결손으로 남겼다. content hash는 `48FED5BFA9B06075B27D7DCF22EFDF3AE3F98222D337D0298C01C098A62B913A`다. 로컬 MySQL 비공개 원본 ID 48~51은 재적용 신규 0과 별도 `verify` 재조회를 통과했으며 공유 운영 DB에는 쓰지 않았다.

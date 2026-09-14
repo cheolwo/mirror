@@ -1,0 +1,727 @@
+{
+  "schemaVersion": "ssalddel.station-diorama-evidence-rule-catalog.v2",
+  "revision": "station-diorama-evidence-rules.r3",
+  "policyRef": "docs/Architecture/역세권디오라마증거진화체계.md",
+  "planRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/diorama-evidence-evolution.implementation.r23.md",
+  "evidenceStageCatalogRef": "eng/execution-ledgers/evidence-stages.json",
+  "reviewPolicy": {
+    "agentTaskClosureReviewRequired": true,
+    "candidateRegistrationWithoutApprovalAllowed": true,
+    "candidateApplicationAuthorized": false,
+    "provisionalAndAcceptedRequireExplicitHumanApproval": true,
+    "evidenceStageAutomaticPromotionAllowed": false,
+    "noCandidateReportRequiredWhenNoneFound": true,
+    "provisionalMinimumDistinctStations": 2,
+    "acceptedMinimumDistinctStations": 3,
+    "acceptedRequiresMissingCoverageOrCounterexampleReview": true,
+    "spatialFoundationEvidenceRequired": true,
+    "collectionStateDoesNotAuthorizeUsage": true,
+    "requiredSpatialEvidenceKinds": ["RoadAddress", "ParcelIdentifier", "ParcelGeometry"],
+    "allowedCollectionStates": ["Collected", "NotCollected", "NotAssessed"],
+    "allowedCoverageStates": ["Complete", "Missing", "Unassessed"],
+    "allowedUsageStates": ["PrivateReviewOnly", "Blocked", "Unassessed"]
+  },
+  "sourceReceipts": [
+    {
+      "sourceReceiptStableId": "source-receipt:station-diorama:sagajeong:kric-station-reference.r1",
+      "subjectStationStableIds": ["station:kr:kric:s1107:0722"],
+      "provider": "공공데이터포털·국가철도공단 철도 데이터 포털",
+      "datasetId": "data-go-kr-15093755",
+      "referenceDate": "2024-12-31",
+      "collectionDate": "2026-09-13",
+      "collectedAtUtc": null,
+      "officialLinks": [
+        "https://www.data.go.kr/data/15093755/fileData.do",
+        "https://data.kric.go.kr/rips/M_01_01/detail.do?id=32"
+      ],
+      "rawSha256": "CDF1D84A7E5C898B2AACD622783BA8BA9AF35C40BEE0561DC97D55CE8E063F94",
+      "rightsStatus": "PendingHumanReview",
+      "repositoryEvidenceRefs": [
+        "docs/Reports/중랑구-7호선-역-기준자료-수집-2026-09-13.md"
+      ],
+      "limitations": [
+        "공식 역 식별·명칭·노선·보고 좌표 근거이며 출구 중심점·현장 실측·주변 coverage를 증명하지 않는다.",
+        "수집 보고에는 날짜만 있어 확인하지 않은 UTC 시각을 만들지 않는다.",
+        "포털 metadata와 연결 파일 판본의 권리 결속은 사람 검토 대상이다."
+      ]
+    },
+    {
+      "sourceReceiptStableId": "source-receipt:station-diorama:sagajeong:osm-spatial-reference.r3",
+      "subjectStationStableIds": ["station:kr:kric:s1107:0722"],
+      "provider": "OpenStreetMap contributors",
+      "datasetId": "osm-map-bbox-sagajeong-r2",
+      "referenceDate": null,
+      "collectedAtUtc": null,
+      "officialLinks": [
+        "https://api.openstreetmap.org/api/0.6/map?bbox=127.0825,37.5762,127.0942,37.5854",
+        "https://www.openstreetmap.org/copyright"
+      ],
+      "rawSha256": "3BDF9E9D36360FB32CB65C7C216215DCE60C762F7918FB7556D6695288A2D0A3",
+      "rightsStatus": "ReferenceOnly",
+      "repositoryEvidenceRefs": [
+        "eng/neighborhood/build-sagajeong-reference.ps1",
+        "eng/neighborhood/build-sagajeong-station-orientation-anchors.ps1",
+        "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-station-exit-orientation-anchors.implementation.r26.md",
+        "docs/Changes/2026-09-12-sagajeong-diorama.md"
+      ],
+      "limitations": [
+        "수집 시각과 원자료 기준일이 추적 스크립트에 없으므로 재수집 없이 최신성을 주장하지 않는다.",
+        "도로 폭·통행·미상 높이·지형의 권위가 아니며 경계 밖 또는 불완전 객체가 생략될 수 있다.",
+        "출구 node는 번호와 위치 후보이며 실제 출입 방향·보행 가능성·현장 구조의 실측 근거가 아니다."
+      ]
+    },
+    {
+      "sourceReceiptStableId": "source-receipt:station-diorama:sagajeong:public-photo-collection.r2",
+      "subjectStationStableIds": ["station:kr:kric:s1107:0722"],
+      "provider": "Wikimedia Commons·공공누리·서울특별시 중랑구",
+      "datasetId": "sagajeong-public-photo-collection.r2",
+      "referenceDate": null,
+      "collectedAtUtc": "2026-09-13T04:06:33.666101Z",
+      "officialLinks": [
+        "https://commons.wikimedia.org/wiki/File:Sgjs01.jpg",
+        "https://commons.wikimedia.org/wiki/File:Sgjs02.jpg",
+        "https://commons.wikimedia.org/wiki/File:Sgjs03.jpg",
+        "https://commons.wikimedia.org/wiki/File:Seoul-metro-722-Sagajeong-station-entrance-1-20181123-092938.jpg",
+        "https://commons.wikimedia.org/wiki/File:Seoul-metro-722-Sagajeong-station-entrance-2-20181123-093122.jpg",
+        "https://creativecommons.org/licenses/by-sa/4.0"
+      ],
+      "rawSha256": null,
+      "receiptSha256": "F8480EDAFD0FA96ED0B5D603197F061CFCDB76FEC644AF89D681B440F58CE59A",
+      "rightsStatus": "MixedPendingHumanReview",
+      "repositoryEvidenceRefs": [
+        "eng/world-seedbeds/station-landmarks/sagajeong-public-photo.collection.r2.json",
+        "docs/Reports/사가정-공공사진-첫수집-2026-09-13.md"
+      ],
+      "limitations": [
+        "receiptSha256은 수집 영수증 hash이며 개별 사진 원본 hash와 권리 판정은 연결된 원천 대장이 소유한다.",
+        "사가정시장 정확 사진은 없고 출입구 사진의 ShareAlike·사람·간판 검토가 남아 있다.",
+        "현재 모델 파생과 게임 배포는 승인되지 않았다."
+      ]
+    },
+    {
+      "sourceReceiptStableId": "source-receipt:station-diorama:sagajeong:data-go-photo-research.r1",
+      "subjectStationStableIds": ["station:kr:kric:s1107:0722"],
+      "provider": "공공데이터포털·한국관광공사",
+      "datasetId": "sagajeong-data-go-kr-photo-research.r1",
+      "referenceDate": null,
+      "collectedAtUtc": "2026-09-13T04:26:36.914874Z",
+      "officialLinks": [
+        "https://www.data.go.kr/data/15101914/openapi.do",
+        "https://www.data.go.kr/data/15101578/openapi.do",
+        "https://www.data.go.kr/data/15121757/fileData.do"
+      ],
+      "rawSha256": null,
+      "receiptSha256": "5C5EC10BD13A46D0D874607D5C64BB68A5B8A08612D2D6FCC58728842213AFC5",
+      "rightsStatus": "Blocked",
+      "repositoryEvidenceRefs": [
+        "eng/world-seedbeds/station-landmarks/sagajeong-data-go-kr-photo-research.collection.r1.json",
+        "docs/Reports/사가정-공공데이터포털-사진자료조사-2026-09-13.md"
+      ],
+      "limitations": [
+        "관광사진 API는 수집 당시 HTTP 403이었으며 원인을 추정하지 않는다.",
+        "개별 항목 권리와 정확 범위가 확인되지 않아 모델링·Unity·배포에 사용할 수 없다."
+      ]
+    },
+    {
+      "sourceReceiptStableId": "source-receipt:station-diorama:sagajeong:traditional-market-observation.r1",
+      "subjectStationStableIds": ["station:kr:kric:s1107:0722"],
+      "provider": "공공데이터포털·전국전통시장표준데이터",
+      "datasetId": "data-go-kr-15012894-standard",
+      "referenceDate": "2025-11-10",
+      "collectionDate": "2026-09-08",
+      "collectedAtUtc": null,
+      "officialLinks": [
+        "https://www.data.go.kr/data/15012894/standard.do",
+        "https://www.data.go.kr/biz/dcat/metadata/15012894.do"
+      ],
+      "rawSha256": "13FFD04A946EC7EEC28222C8C3762F2E77AAB919CD250888CDAAF7F51CCE303B",
+      "rightsStatus": "PendingHumanReview",
+      "repositoryEvidenceRefs": [
+        "eng/world-seedbeds/station-landmarks/sagajeong-market.collection.r1.json",
+        "docs/Reports/생활영역-공공데이터-첫수집-2026-09-08.md"
+      ],
+      "limitations": [
+        "시장 점 관측과 주소 건물 후보는 현재 영업·시장 경계·입구·사진 이용권을 증명하지 않는다.",
+        "자료 이용조건은 개별 이미지 이용권을 포함하지 않는다."
+      ]
+    },
+    {
+      "sourceReceiptStableId": "source-receipt:station-diorama:jungnang:traditional-market-visuals.r1",
+      "subjectStationStableIds": ["station:kr:kric:s1107:0722", "station:kr:kric:s1107:0721"],
+      "provider": "서울특별시 중랑구·공공데이터포털·소상공인시장진흥공단",
+      "datasetId": "jungnang-traditional-market-visual-collection.r1",
+      "referenceDate": "2016-08-25",
+      "collectionDate": "2026-09-14",
+      "collectedAtUtc": "2026-09-14T04:04:28.93078Z",
+      "officialLinks": [
+        "https://ecatalog.jungnang.go.kr/src/viewer/download.php?host=main&no=1&site=20160825_091645",
+        "https://www.data.go.kr/data/15012894/standard.do"
+      ],
+      "rawSha256": "8F5EDE7E2A31068F421FA2CF977DCE9DA78B250AC3B903C115CD4DF8CC05E0A4",
+      "receiptSha256": "5CFF086303232496EA599961F8AADDBE198035D947A9364111252AFD7BD076C2",
+      "rightsStatus": "PendingHumanReview",
+      "repositoryEvidenceRefs": [
+        "eng/world-seedbeds/station-landmarks/jungnang-traditional-market-visual.collection.r1.json",
+        "docs/Reports/중랑구-전통시장-시각자료-첫수집-2026-09-14.md"
+      ],
+      "limitations": [
+        "2016년 소식지 사진은 항목별 변형·상업 이용권이 확인되지 않아 Blender·Unity·배포에 사용할 수 없다.",
+        "면목·동원·동부의 과거 명칭·주소와 2025년 공식 행 차이는 정체성 후보이며 자동 병합하지 않는다.",
+        "시각 패널은 입구 유형 참고일 뿐 현행 시장 외곽·중심선·폭·높이를 증명하지 않는다."
+      ]
+    },
+    {
+      "sourceReceiptStableId": "source-receipt:station-diorama:sagajeong:spatial-supplement.r1",
+      "subjectStationStableIds": ["station:kr:kric:s1107:0722"],
+      "provider": "서울 열린데이터광장",
+      "datasetId": "sagajeong-spatial-supplement-20260914.r1",
+      "referenceDate": null,
+      "collectedAtUtc": "2026-09-14T06:03:15.955Z",
+      "officialLinks": [
+        "https://data.seoul.go.kr/dataList/OA-21208/A/1/datasetView.do",
+        "https://data.seoul.go.kr/dataList/OA-21212/S/1/datasetView.do",
+        "https://data.seoul.go.kr/dataList/OA-15529/F/1/datasetView.do",
+        "https://data.seoul.go.kr/dataList/OA-15067/F/1/datasetView.do",
+        "https://data.seoul.go.kr/dataList/OA-1325/A/1/datasetView.do"
+      ],
+      "rawSha256": null,
+      "receiptSha256": "FBB9BE687EF1C057606886978E5F40EC58BB3BC92F338C62CB17EED6D9B0126C",
+      "rightsStatus": "PendingHumanReview",
+      "repositoryEvidenceRefs": [
+        "eng/world-seedbeds/station-landmarks/sagajeong-spatial-supplement.collection.r1.json",
+        "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-spatial-supplement.implementation.r27.md"
+      ],
+      "limitations": [
+        "보행망·엘리베이터·공원·버스 정류소·가로수는 서로 다른 기준일과 좌표 정밀도를 가진 검토 후보이며 하나의 현행 실측으로 합치지 않는다.",
+        "공원 EPSG:5174 경계 변환은 보류했고 NGII 수치지도·표고는 외부 접근 차단 상태다.",
+        "정규화 3,226건은 공개·Runtime·통행·Collider·NavMesh·gameplay 권위를 갖지 않는다."
+      ]
+    },
+    {
+      "sourceReceiptStableId": "source-receipt:station-diorama:sagajeong:mois-road-address-building-db.202608",
+      "subjectStationStableIds": ["station:kr:kric:s1107:0722"],
+      "provider": "행정안전부 주소기반산업지원서비스",
+      "datasetId": "data-go-kr-15050424",
+      "referenceDate": "2026-08-31",
+      "collectionDate": "2026-09-14",
+      "collectedAtUtc": null,
+      "officialLinks": [
+        "https://www.data.go.kr/data/15050424/fileData.do",
+        "https://business.juso.go.kr/jst/jstAddressDownload?menu=7"
+      ],
+      "rawSha256": "4AA70C569AAF14F550313B5836346A1BA438491FB4CEC61877E615C9E602AFA7",
+      "rightsStatus": "PendingHumanReview",
+      "repositoryEvidenceRefs": [
+        "docs/AI/Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/implementation.r3.md",
+        "eng/Ssalddel.PublicDataPortalImport/사가정건물도로명주소자료.cs"
+      ],
+      "limitations": [
+        "도로명주소와 관련지번 후보를 제공하지만 화면 건물 도형과 공식 주소 건물의 동일성을 전수 확정하지 않는다.",
+        "수집 완료와 배달·가격·업체·Unity 사용 승인은 별도 상태다.",
+        "상세 동·층·호와 개인정보는 디오라마 공개 계약에 포함하지 않는다."
+      ]
+    },
+    {
+      "sourceReceiptStableId": "source-receipt:station-diorama:sagajeong:vworld-gis-building-al-d010.20260809",
+      "subjectStationStableIds": ["station:kr:kric:s1107:0722"],
+      "provider": "국토교통부·브이월드",
+      "datasetId": "vworld-na-dataset-18-al-d010",
+      "referenceDate": "2026-08-09",
+      "collectionDate": "2026-09-08",
+      "collectedAtUtc": null,
+      "officialLinks": [
+        "https://www.vworld.kr/dtmk/dtmk_ntads_s002.do?svcCde=NA&dsId=18"
+      ],
+      "rawSha256": "674C5A9583996DD6B8946525EDAD8197BE79A634F1DB00D39E2B3133D0D2A755",
+      "rightsStatus": "PendingHumanReview",
+      "repositoryEvidenceRefs": [
+        "docs/AI/Planning/시스템/PLAN-SYSTEM-MYEONMOK-OBSERVER/source-acquisition.md",
+        "docs/AI/Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/README.md"
+      ],
+      "limitations": [
+        "A2의 19자리 PNU는 필지 식별자 근거이며 필지 경계 도형의 수집을 뜻하지 않는다.",
+        "4,062개 화면 건물의 PNU·법정동·지번 coverage는 사가정 Profile의 동결 창에만 해당한다.",
+        "건물 도형과 PNU 보유만으로 도로명주소·출입구·통행·배달 권위를 만들지 않는다."
+      ]
+    },
+    {
+      "sourceReceiptStableId": "source-receipt:station-diorama:sagajeong:continuous-parcel-metadata.r1",
+      "subjectStationStableIds": ["station:kr:kric:s1107:0722"],
+      "provider": "국토교통부·공공데이터포털·브이월드",
+      "datasetId": "data-go-kr-15045882-vworld-na-23-al-d002",
+      "referenceDate": "2026-09-08",
+      "collectionDate": "2026-09-14",
+      "collectedAtUtc": null,
+      "officialLinks": [
+        "https://www.data.go.kr/data/15056910/openapi.do",
+        "https://www.data.go.kr/data/15045882/fileData.do",
+        "https://www.vworld.kr/dtmk/dtmk_ntads_s002.do?svcCde=NA&dsId=23"
+      ],
+      "rawSha256": null,
+      "rightsStatus": "Blocked",
+      "repositoryEvidenceRefs": [
+        "docs/Reports/면목동-집길터전-공식자료와표본결속-2026-09-08.md",
+        "docs/AI/Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/parcel-geometry-collection.implementation.r7.md"
+      ],
+      "limitations": [
+        "브이월드 서울 전체자료 2026-09-08, AL_D002, A1 PNU, EPSG:5186 계약과 공개 컬럼 정의서는 확인했지만 로그인 필수로 실제 SHP 원본은 수집하지 못했다.",
+        "공개 컬럼 정의서 SHA-256 46DD29C6AB681C1E34CF00D91F8F2FE68B7E1868A853315EAA292838238ECB0F는 field 계약 근거일 뿐 필지 도형 원본 hash가 아니다.",
+        "원본 도형 hash와 coverage가 없으므로 필지 포함 관계, 법적 경계, 측량, 소유, DB, Unity 또는 통행 증거로 사용할 수 없다."
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "ruleStableId": "diorama-rule:station-window-is-view-not-authority.v1",
+      "revision": "r1",
+      "status": "Candidate",
+      "discoveryKind": "ImplementedObservation",
+      "title": "역 중심 창은 표현 단위다",
+      "statement": "역 중심 1km 창은 자료 조회와 Unity 표현 범위이며 행정 경계·통행·운영 권위를 만들지 않는다.",
+      "observedStationStableIds": ["station:kr:kric:s1107:0722", "station:kr:kric:s1107:0721", "station:kr:kric:s1107:0723"],
+      "sourceReceiptRefs": ["source-receipt:station-diorama:sagajeong:kric-station-reference.r1", "source-receipt:station-diorama:sagajeong:osm-spatial-reference.r3"],
+      "repositoryEvidenceRefs": ["docs/Reports/면목역-1km-디오라마-구현-2026-09-13.md", "docs/Reports/용마산역-1km-디오라마-구현-2026-09-13.md"],
+      "evidenceStageImpacts": ["E1", "E3", "E4"],
+      "counterexamplesOrExceptions": ["대형 환승역은 사유와 실제 치수를 가진 가변 Profile 후보지만 권위 경계는 동일하다."],
+      "invalidationTriggers": ["표현 창을 행정동 전체 coverage 또는 실제 통행 가능성으로 해석하는 변경"],
+      "applicationAuthorized": false,
+      "humanApproval": null
+    },
+    {
+      "ruleStableId": "diorama-rule:missing-coverage-remains-explicit.v1",
+      "revision": "r1",
+      "status": "Candidate",
+      "discoveryKind": "CrossStationObservation",
+      "title": "자료 결손은 실제 공터가 아니다",
+      "statement": "수집 뒤에도 없는 공간·높이·표면·관계는 MissingCoverage 또는 구체 결손으로 보존하고 0값이나 실제 공터로 합성하지 않는다.",
+      "observedStationStableIds": ["station:kr:kric:s1107:0722", "station:kr:kric:s1107:0721", "station:kr:kric:s1107:0723"],
+      "sourceReceiptRefs": ["source-receipt:station-diorama:sagajeong:osm-spatial-reference.r3"],
+      "repositoryEvidenceRefs": ["docs/Reports/면목역-1km-디오라마-구현-2026-09-13.md", "docs/Reports/용마산역-1km-디오라마-구현-2026-09-13.md"],
+      "evidenceStageImpacts": ["E1", "E3", "E5", "E6"],
+      "counterexamplesOrExceptions": ["디자인상 의도된 공원·광장은 별도 표면 근거가 있을 때만 실제 열린 공간으로 표시할 수 있다."],
+      "invalidationTriggers": ["MissingCoverage 셀을 근거 없이 지형·건물·통행 공간으로 채우는 변경"],
+      "applicationAuthorized": false,
+      "humanApproval": null
+    },
+    {
+      "ruleStableId": "diorama-rule:source-simulation-presentation-separated.v1",
+      "revision": "r1",
+      "status": "Candidate",
+      "discoveryKind": "EvidenceBoundary",
+      "title": "원천·Simulation·Unity 표현을 분리한다",
+      "statement": "공공자료 원본, 서버 또는 Simulation 상태 사본, Unity 표현 결과는 독립 판본과 증거로 관리한다.",
+      "observedStationStableIds": ["station:kr:kric:s1107:0722"],
+      "sourceReceiptRefs": ["source-receipt:station-diorama:sagajeong:kric-station-reference.r1", "source-receipt:station-diorama:sagajeong:osm-spatial-reference.r3"],
+      "repositoryEvidenceRefs": ["docs/Architecture/E1-E7수직폐루프와E8-E10수평증거체계.md"],
+      "evidenceStageImpacts": ["E1", "E2", "E5", "E7"],
+      "counterexamplesOrExceptions": [],
+      "invalidationTriggers": ["Unity GameObject나 캡처만으로 운영 또는 Simulation 상태 성공을 확정하는 변경"],
+      "applicationAuthorized": false,
+      "humanApproval": null
+    },
+    {
+      "ruleStableId": "diorama-rule:station-profile-owns-specific-values.v1",
+      "revision": "r1",
+      "status": "Candidate",
+      "discoveryKind": "CrossStationObservation",
+      "title": "역별 수치는 Profile이 소유한다",
+      "statement": "역별 중심점·범위·건물 수·자료 hash·결손·성능 예산은 역 Profile이 소유하고 공통 조립기는 알고리즘과 검증 경계만 소유한다.",
+      "observedStationStableIds": ["station:kr:kric:s1107:0722", "station:kr:kric:s1107:0721", "station:kr:kric:s1107:0723"],
+      "sourceReceiptRefs": ["source-receipt:station-diorama:sagajeong:kric-station-reference.r1"],
+      "repositoryEvidenceRefs": ["docs/Reports/면목역-1km-디오라마-구현-2026-09-13.md", "docs/Reports/용마산역-1km-디오라마-구현-2026-09-13.md"],
+      "evidenceStageImpacts": ["E1", "E2", "E3"],
+      "counterexamplesOrExceptions": ["공통 기본 성능 예산은 비교 기준일 수 있지만 실제 허용값은 역 Profile과 Game View 결과로 다시 판정한다."],
+      "invalidationTriggers": ["사가정 건물 수·hash·좌표를 다른 역의 고정 기대값으로 사용하는 변경"],
+      "applicationAuthorized": false,
+      "humanApproval": null
+    },
+    {
+      "ruleStableId": "diorama-rule:cross-station-fallback-forbidden.v1",
+      "revision": "r1",
+      "status": "Candidate",
+      "discoveryKind": "CrossStationObservation",
+      "title": "교차 역 fallback을 금지한다",
+      "statement": "한 역의 자료가 없거나 잘못됐을 때 다른 역의 도형·원본·Profile을 암묵적으로 대신 사용하지 않는다.",
+      "observedStationStableIds": ["station:kr:kric:s1107:0722", "station:kr:kric:s1107:0721", "station:kr:kric:s1107:0723"],
+      "sourceReceiptRefs": ["source-receipt:station-diorama:sagajeong:osm-spatial-reference.r3"],
+      "repositoryEvidenceRefs": ["docs/Reports/면목역-1km-디오라마-구현-2026-09-13.md", "docs/Reports/용마산역-1km-디오라마-구현-2026-09-13.md"],
+      "evidenceStageImpacts": ["E2", "E3", "E5"],
+      "counterexamplesOrExceptions": ["공통 절차적 fallback 자산은 출처 역의 실제 도형으로 가장하지 않는 경우에만 허용할 수 있다."],
+      "invalidationTriggers": ["역 자료 오류가 다른 역의 성공 사본으로 숨겨지는 변경"],
+      "applicationAuthorized": false,
+      "humanApproval": null
+    },
+    {
+      "ruleStableId": "diorama-rule:presentation-toggle-does-not-mutate-authority.v1",
+      "revision": "r1",
+      "status": "Candidate",
+      "discoveryKind": "PlanningConstraint",
+      "title": "표시 선택은 권위 상태를 바꾸지 않는다",
+      "statement": "디오라마 표시 그룹과 Actor 관찰 토글은 Simulation Tick·업무 원장·정산·배차·생활 상태를 변경하지 않는다.",
+      "observedStationStableIds": ["station:kr:kric:s1107:0722"],
+      "sourceReceiptRefs": [],
+      "repositoryEvidenceRefs": ["docs/ProjectOverview/GptProjectContext.md"],
+      "evidenceStageImpacts": ["E1", "E2", "E3", "E7"],
+      "counterexamplesOrExceptions": ["향후 명시적으로 승인된 gameplay Command는 표시 토글과 별도 입력·권위 경계를 가져야 한다."],
+      "invalidationTriggers": ["Renderer나 표시 상태 변경이 Simulation 또는 운영 Command를 호출하는 변경"],
+      "applicationAuthorized": false,
+      "humanApproval": null
+    },
+    {
+      "ruleStableId": "diorama-rule:public-data-does-not-identify-real-actors.v1",
+      "revision": "r1",
+      "status": "Candidate",
+      "discoveryKind": "PlanningConstraint",
+      "title": "공공 통계로 실제 개인을 만들지 않는다",
+      "statement": "공공 통계는 시간대·공간별 비식별 합성 밀도의 근거로만 사용할 수 있으며 실제 개인의 신원·정확 위치·인성·성실성을 추론하지 않는다.",
+      "observedStationStableIds": ["station:kr:kric:s1107:0722"],
+      "sourceReceiptRefs": [],
+      "repositoryEvidenceRefs": ["docs/ProjectOverview/GptProjectContext.md"],
+      "evidenceStageImpacts": ["E1", "E4", "E6"],
+      "counterexamplesOrExceptions": ["별도 동의된 개인 표현도 최소 정보·철회·휘발성 정책과 운영 권한 검토를 다시 요구한다."],
+      "invalidationTriggers": ["집계 자료에서 클릭 가능한 실제 주민·기사 프로필을 합성하거나 신뢰·우선순위를 추론하는 변경"],
+      "applicationAuthorized": false,
+      "humanApproval": null
+    },
+    {
+      "ruleStableId": "diorama-rule:game-view-is-presentation-evidence-only.v1",
+      "revision": "r1",
+      "status": "Candidate",
+      "discoveryKind": "EvidenceBoundary",
+      "title": "Game View는 표현 증거다",
+      "statement": "디오라마 Game View 이미지와 시각 비교는 표현 결과의 증거이며 운영 완료·Collider·NavMesh·통행·입력·게임플레이 권위를 대신하지 않는다.",
+      "observedStationStableIds": ["station:kr:kric:s1107:0722", "station:kr:kric:s1107:0721", "station:kr:kric:s1107:0723"],
+      "sourceReceiptRefs": [],
+      "repositoryEvidenceRefs": ["docs/Changes/2026-09-12-sagajeong-diorama.md", "docs/Reports/면목역-1km-디오라마-구현-2026-09-13.md", "docs/Reports/용마산역-1km-디오라마-구현-2026-09-13.md"],
+      "evidenceStageImpacts": ["E5", "E6", "E7"],
+      "counterexamplesOrExceptions": ["실제 입력·Console·Scene·경로 검증이 같은 EvidencePackage에 별도로 결속되면 해당 범위만 추가로 입증할 수 있다."],
+      "invalidationTriggers": ["PNG 존재만으로 E7 또는 운영 연동 완료를 선언하는 변경"],
+      "applicationAuthorized": false,
+      "humanApproval": null
+    },
+    {
+      "ruleStableId": "diorama-rule:preserve-procedural-mass-until-visual-evidence-ready.v1",
+      "revision": "r1",
+      "status": "Candidate",
+      "discoveryKind": "SagajeongObservation",
+      "title": "외관 근거가 준비될 때까지 절차적 매스를 유지한다",
+      "statement": "건물 외관 후보의 권리·원본 hash·파생 자산 hash·Bounds와 배치 검증이 끝나기 전에는 기존 절차적 매스를 숨기거나 제거하지 않는다.",
+      "observedStationStableIds": ["station:kr:kric:s1107:0722"],
+      "sourceReceiptRefs": ["source-receipt:station-diorama:sagajeong:public-photo-collection.r2", "source-receipt:station-diorama:sagajeong:data-go-photo-research.r1", "source-receipt:station-diorama:sagajeong:traditional-market-observation.r1"],
+      "repositoryEvidenceRefs": ["eng/world-seedbeds/station-landmarks/sagajeong-public-photo.collection.r2.json", "eng/world-seedbeds/station-landmarks/sagajeong-data-go-kr-photo-research.collection.r1.json"],
+      "evidenceStageImpacts": ["E4", "E5", "E6"],
+      "counterexamplesOrExceptions": ["권리가 확인된 자체 제작 또는 명시 허용 자산도 실제 Prefab·Bounds·배치 검증 전에는 기존 매스를 대체하지 않는다."],
+      "invalidationTriggers": ["권리 미확인 사진이나 검증 전 Prefab 때문에 기존 공간 표현이 제거되는 변경"],
+      "applicationAuthorized": false,
+      "humanApproval": null
+    },
+    {
+      "ruleStableId": "diorama-rule:historical-landmark-identity-is-versioned-candidate.v1",
+      "revision": "r1",
+      "status": "Candidate",
+      "discoveryKind": "ImplementedObservation",
+      "title": "옛 랜드마크 명칭·주소와 현행 행을 자동 병합하지 않는다",
+      "statement": "과거 발행물의 랜드마크 명칭·주소와 현행 공식 행은 판본이 있는 정체성 후보 관계로 연결하고 이름 또는 주소 하나만으로 같은 객체로 병합하지 않는다.",
+      "observedStationStableIds": ["station:kr:kric:s1107:0722", "station:kr:kric:s1107:0721"],
+      "sourceReceiptRefs": ["source-receipt:station-diorama:sagajeong:traditional-market-observation.r1", "source-receipt:station-diorama:jungnang:traditional-market-visuals.r1"],
+      "repositoryEvidenceRefs": ["eng/world-seedbeds/station-landmarks/jungnang-traditional-market-visual.collection.r1.json", "docs/Reports/중랑구-전통시장-시각자료-첫수집-2026-09-14.md"],
+      "evidenceStageImpacts": ["E1", "E3", "E4", "E5"],
+      "counterexamplesOrExceptions": ["공식 변경 이력이나 관리 주체의 명시적 동일 객체 매핑을 사람 검토로 승인하면 판본 관계를 보존한 채 정본에 연결할 수 있다."],
+      "invalidationTriggers": ["과거 사진의 표시명 또는 주소 하나만으로 현행 시장·건물·입구 고유 식별자를 덮어쓰는 변경"],
+      "applicationAuthorized": false,
+      "humanApproval": null
+    },
+    {
+      "ruleStableId": "diorama-rule:numbered-station-exits-are-profile-owned-orientation-anchors.v1",
+      "revision": "r1",
+      "status": "Candidate",
+      "discoveryKind": "ImplementedObservation",
+      "title": "번호별 역 출구는 역 Profile의 방향 기준점이다",
+      "statement": "번호별 지하철 출구는 원천 node·판본·좌표와 역 지도 hash를 함께 가진 방향 기준점으로 관리하고, 실제 외형 근거가 준비되지 않으면 통행·상호작용 권위가 없는 일반화 절차적 표식을 사용한다.",
+      "observedStationStableIds": ["station:kr:kric:s1107:0722"],
+      "sourceReceiptRefs": ["source-receipt:station-diorama:sagajeong:osm-spatial-reference.r3"],
+      "repositoryEvidenceRefs": ["eng/neighborhood/build-sagajeong-station-orientation-anchors.ps1", "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-station-exit-orientation-anchors.implementation.r26.md"],
+      "evidenceStageImpacts": ["E1", "E2", "E3", "E4", "E5"],
+      "counterexamplesOrExceptions": ["출구가 넓게 분산된 환승역은 역 기준점 하나가 아니라 출구 군집별 Profile과 화면 예산이 필요할 수 있다."],
+      "invalidationTriggers": ["출구 node 위치를 실제 출입 방향·NavMesh·통행 가능성으로 승격하거나 다른 역 출구를 fallback으로 사용하는 변경"],
+      "applicationAuthorized": false,
+      "humanApproval": null
+    },
+    {
+      "ruleStableId": "diorama-rule:mixed-spatial-layers-preserve-source-time-crs-and-authority.v1",
+      "revision": "r1",
+      "status": "Candidate",
+      "discoveryKind": "ImplementedObservation",
+      "title": "보충 공간층은 원천별 시각·좌표계·권위를 보존한다",
+      "statement": "역세권의 보행·접근성·녹지·교통 시설·식생 자료를 조합할 때 각 원천의 기준일·hash·좌표계·결손을 별도로 보존하고 정규화 좌표만으로 현재 통행·Runtime·gameplay 권위를 만들지 않는다.",
+      "observedStationStableIds": ["station:kr:kric:s1107:0722"],
+      "sourceReceiptRefs": ["source-receipt:station-diorama:sagajeong:spatial-supplement.r1"],
+      "repositoryEvidenceRefs": ["eng/world-seedbeds/station-landmarks/sagajeong-spatial-supplement.collection.r1.json", "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-spatial-supplement.implementation.r27.md"],
+      "evidenceStageImpacts": ["E1", "E2", "E3", "E4", "E5"],
+      "counterexamplesOrExceptions": ["사람이 검토한 같은 판본의 파생 자료도 원천별 계보와 미해소 결손을 제거하지 않는다."],
+      "invalidationTriggers": ["서로 다른 기준일 또는 좌표계의 후보를 하나의 현행 통행망으로 자동 병합하거나 미변환 공원 도형을 Unity 경계로 사용하는 변경"],
+      "applicationAuthorized": false,
+      "humanApproval": null
+    }
+  ],
+  "stationEvidenceProfiles": [
+    {
+      "stationStableId": "station:kr:kric:s1107:0722",
+      "displayName": "사가정역",
+      "role": "ReferenceStation",
+      "sourceReceiptRefs": [
+        "source-receipt:station-diorama:sagajeong:kric-station-reference.r1",
+        "source-receipt:station-diorama:sagajeong:osm-spatial-reference.r3",
+        "source-receipt:station-diorama:sagajeong:public-photo-collection.r2",
+        "source-receipt:station-diorama:sagajeong:data-go-photo-research.r1",
+        "source-receipt:station-diorama:sagajeong:traditional-market-observation.r1",
+        "source-receipt:station-diorama:jungnang:traditional-market-visuals.r1",
+        "source-receipt:station-diorama:sagajeong:spatial-supplement.r1",
+        "source-receipt:station-diorama:sagajeong:mois-road-address-building-db.202608",
+        "source-receipt:station-diorama:sagajeong:vworld-gis-building-al-d010.20260809",
+        "source-receipt:station-diorama:sagajeong:continuous-parcel-metadata.r1"
+      ],
+      "observedRuleRefs": [
+        "diorama-rule:station-window-is-view-not-authority.v1",
+        "diorama-rule:missing-coverage-remains-explicit.v1",
+        "diorama-rule:source-simulation-presentation-separated.v1",
+        "diorama-rule:station-profile-owns-specific-values.v1",
+        "diorama-rule:cross-station-fallback-forbidden.v1",
+        "diorama-rule:presentation-toggle-does-not-mutate-authority.v1",
+        "diorama-rule:public-data-does-not-identify-real-actors.v1",
+        "diorama-rule:game-view-is-presentation-evidence-only.v1",
+        "diorama-rule:preserve-procedural-mass-until-visual-evidence-ready.v1",
+        "diorama-rule:historical-landmark-identity-is-versioned-candidate.v1",
+        "diorama-rule:numbered-station-exits-are-profile-owned-orientation-anchors.v1",
+        "diorama-rule:mixed-spatial-layers-preserve-source-time-crs-and-authority.v1"
+      ],
+      "acceptedRuleRefs": [],
+      "repositoryEvidenceRefs": ["docs/Changes/2026-09-12-sagajeong-diorama.md"],
+      "spatialFoundationEvidenceChecks": [
+        {
+          "evidenceKind": "RoadAddress",
+          "collectionState": "Collected",
+          "coverageState": "Complete",
+          "usageState": "PrivateReviewOnly",
+          "applicationAuthorized": false,
+          "subjectKind": "PresentationBuilding",
+          "subjectCount": 4062,
+          "statusLedgerCount": 4062,
+          "evidenceValueSubjectCount": 3856,
+          "missingEvidenceSubjectCount": 206,
+          "distinctEvidenceValueCount": null,
+          "statusBreakdown": {
+            "SingleRawParcelAddressCandidate": 3796,
+            "MultipleRawParcelAddressCandidates": 60,
+            "NoRawParcelAddressCandidate": 206
+          },
+          "sourceReceiptRefs": [
+            "source-receipt:station-diorama:sagajeong:mois-road-address-building-db.202608",
+            "source-receipt:station-diorama:sagajeong:vworld-gis-building-al-d010.20260809"
+          ],
+          "repositoryEvidenceRefs": [
+            "docs/AI/Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/README.md"
+          ],
+          "limitations": [
+            "Complete는 4,062개 모두가 후보·복수·미해결 중 하나의 상태를 가진다는 뜻이며 공식 주소가 전수 확정됐다는 뜻이 아니다.",
+            "후보 주소는 배달·가격·업체·Unity 소비에 사용할 수 없다."
+          ]
+        },
+        {
+          "evidenceKind": "ParcelIdentifier",
+          "collectionState": "Collected",
+          "coverageState": "Complete",
+          "usageState": "PrivateReviewOnly",
+          "applicationAuthorized": false,
+          "subjectKind": "PresentationBuilding",
+          "subjectCount": 4062,
+          "statusLedgerCount": 4062,
+          "evidenceValueSubjectCount": 4062,
+          "missingEvidenceSubjectCount": 0,
+          "distinctEvidenceValueCount": 3774,
+          "statusBreakdown": {
+            "PnuPresent": 4062
+          },
+          "sourceReceiptRefs": [
+            "source-receipt:station-diorama:sagajeong:vworld-gis-building-al-d010.20260809"
+          ],
+          "repositoryEvidenceRefs": [
+            "docs/AI/Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/README.md"
+          ],
+          "limitations": [
+            "4,062개 건물이 3,774개 PNU를 공유할 수 있으며 PNU가 같다는 사실만으로 건물 또는 주소를 병합하지 않는다.",
+            "PNU coverage는 필지 경계 도형 coverage가 아니다."
+          ]
+        },
+        {
+          "evidenceKind": "ParcelGeometry",
+          "collectionState": "NotCollected",
+          "coverageState": "Missing",
+          "usageState": "Blocked",
+          "applicationAuthorized": false,
+          "subjectKind": "ParcelIdentifier",
+          "subjectCount": 3774,
+          "statusLedgerCount": 3774,
+          "evidenceValueSubjectCount": 0,
+          "missingEvidenceSubjectCount": 3774,
+          "distinctEvidenceValueCount": 0,
+          "statusBreakdown": {
+            "MissingGeometry": 3774
+          },
+          "sourceReceiptRefs": [
+            "source-receipt:station-diorama:sagajeong:continuous-parcel-metadata.r1"
+          ],
+          "repositoryEvidenceRefs": [
+            "docs/Reports/면목동-집길터전-공식자료와표본결속-2026-09-08.md",
+            "docs/AI/Planning/시스템/PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/parcel-geometry-collection.implementation.r7.md"
+          ],
+          "limitations": [
+            "추출·검증 도구는 준비됐지만 3,774개 PNU의 실제 필지 경계 도형 원본·판본·hash는 수집되지 않았다.",
+            "브이월드 로그인 제약은 BlockedExternalAccess이며 metadata·컬럼 정의서·synthetic 시험을 수집 완료로 승격하지 않는다.",
+            "건물 도형이나 PNU 문자열을 필지 경계로 대체하지 않는다."
+          ]
+        }
+      ],
+      "limitations": ["최초 후보의 기준 역이며 승인 공통 규칙은 아직 없다."]
+    },
+    {
+      "stationStableId": "station:kr:kric:s1107:0721",
+      "displayName": "면목역",
+      "role": "CrossStationReviewSample",
+      "sourceReceiptRefs": ["source-receipt:station-diorama:jungnang:traditional-market-visuals.r1"],
+      "observedRuleRefs": [
+        "diorama-rule:station-window-is-view-not-authority.v1",
+        "diorama-rule:missing-coverage-remains-explicit.v1",
+        "diorama-rule:station-profile-owns-specific-values.v1",
+        "diorama-rule:cross-station-fallback-forbidden.v1",
+        "diorama-rule:game-view-is-presentation-evidence-only.v1",
+        "diorama-rule:historical-landmark-identity-is-versioned-candidate.v1"
+      ],
+      "acceptedRuleRefs": [],
+      "repositoryEvidenceRefs": ["docs/Reports/면목역-1km-디오라마-구현-2026-09-13.md"],
+      "spatialFoundationEvidenceChecks": [
+        {
+          "evidenceKind": "RoadAddress",
+          "collectionState": "NotAssessed",
+          "coverageState": "Unassessed",
+          "usageState": "Unassessed",
+          "applicationAuthorized": false,
+          "subjectKind": "PresentationBuilding",
+          "subjectCount": null,
+          "statusLedgerCount": null,
+          "evidenceValueSubjectCount": null,
+          "missingEvidenceSubjectCount": null,
+          "distinctEvidenceValueCount": null,
+          "statusBreakdown": {},
+          "sourceReceiptRefs": [],
+          "repositoryEvidenceRefs": ["docs/Reports/면목역-1km-디오라마-구현-2026-09-13.md"],
+          "limitations": ["면목역 화면 건물의 도로명주소 상태 전수 평가는 수행하지 않았다."]
+        },
+        {
+          "evidenceKind": "ParcelIdentifier",
+          "collectionState": "NotAssessed",
+          "coverageState": "Unassessed",
+          "usageState": "Unassessed",
+          "applicationAuthorized": false,
+          "subjectKind": "PresentationBuilding",
+          "subjectCount": null,
+          "statusLedgerCount": null,
+          "evidenceValueSubjectCount": null,
+          "missingEvidenceSubjectCount": null,
+          "distinctEvidenceValueCount": null,
+          "statusBreakdown": {},
+          "sourceReceiptRefs": [],
+          "repositoryEvidenceRefs": ["docs/Reports/면목역-1km-디오라마-구현-2026-09-13.md"],
+          "limitations": ["면목역 화면 건물의 PNU coverage를 이 대장에서 전수 평가하지 않았다."]
+        },
+        {
+          "evidenceKind": "ParcelGeometry",
+          "collectionState": "NotAssessed",
+          "coverageState": "Unassessed",
+          "usageState": "Unassessed",
+          "applicationAuthorized": false,
+          "subjectKind": "ParcelIdentifier",
+          "subjectCount": null,
+          "statusLedgerCount": null,
+          "evidenceValueSubjectCount": null,
+          "missingEvidenceSubjectCount": null,
+          "distinctEvidenceValueCount": null,
+          "statusBreakdown": {},
+          "sourceReceiptRefs": [],
+          "repositoryEvidenceRefs": ["docs/Reports/면목역-1km-디오라마-구현-2026-09-13.md"],
+          "limitations": ["면목역 필지 경계 도형 coverage를 이 대장에서 평가하지 않았다."]
+        }
+      ],
+      "limitations": ["사가정 규칙의 교차 검토 표본이며 이번 대장에서 승격 승인을 뜻하지 않는다."]
+    },
+    {
+      "stationStableId": "station:kr:kric:s1107:0723",
+      "displayName": "용마산역",
+      "role": "CrossStationReviewSample",
+      "sourceReceiptRefs": [],
+      "observedRuleRefs": [
+        "diorama-rule:station-window-is-view-not-authority.v1",
+        "diorama-rule:missing-coverage-remains-explicit.v1",
+        "diorama-rule:station-profile-owns-specific-values.v1",
+        "diorama-rule:cross-station-fallback-forbidden.v1",
+        "diorama-rule:game-view-is-presentation-evidence-only.v1"
+      ],
+      "acceptedRuleRefs": [],
+      "repositoryEvidenceRefs": ["docs/Reports/용마산역-1km-디오라마-구현-2026-09-13.md"],
+      "spatialFoundationEvidenceChecks": [
+        {
+          "evidenceKind": "RoadAddress",
+          "collectionState": "NotAssessed",
+          "coverageState": "Unassessed",
+          "usageState": "Unassessed",
+          "applicationAuthorized": false,
+          "subjectKind": "PresentationBuilding",
+          "subjectCount": null,
+          "statusLedgerCount": null,
+          "evidenceValueSubjectCount": null,
+          "missingEvidenceSubjectCount": null,
+          "distinctEvidenceValueCount": null,
+          "statusBreakdown": {},
+          "sourceReceiptRefs": [],
+          "repositoryEvidenceRefs": ["docs/Reports/용마산역-1km-디오라마-구현-2026-09-13.md"],
+          "limitations": ["용마산역 화면 건물의 도로명주소 상태 전수 평가는 수행하지 않았다."]
+        },
+        {
+          "evidenceKind": "ParcelIdentifier",
+          "collectionState": "NotAssessed",
+          "coverageState": "Unassessed",
+          "usageState": "Unassessed",
+          "applicationAuthorized": false,
+          "subjectKind": "PresentationBuilding",
+          "subjectCount": null,
+          "statusLedgerCount": null,
+          "evidenceValueSubjectCount": null,
+          "missingEvidenceSubjectCount": null,
+          "distinctEvidenceValueCount": null,
+          "statusBreakdown": {},
+          "sourceReceiptRefs": [],
+          "repositoryEvidenceRefs": ["docs/Reports/용마산역-1km-디오라마-구현-2026-09-13.md"],
+          "limitations": ["용마산역 화면 건물의 PNU coverage를 이 대장에서 전수 평가하지 않았다."]
+        },
+        {
+          "evidenceKind": "ParcelGeometry",
+          "collectionState": "NotAssessed",
+          "coverageState": "Unassessed",
+          "usageState": "Unassessed",
+          "applicationAuthorized": false,
+          "subjectKind": "ParcelIdentifier",
+          "subjectCount": null,
+          "statusLedgerCount": null,
+          "evidenceValueSubjectCount": null,
+          "missingEvidenceSubjectCount": null,
+          "distinctEvidenceValueCount": null,
+          "statusBreakdown": {},
+          "sourceReceiptRefs": [],
+          "repositoryEvidenceRefs": ["docs/Reports/용마산역-1km-디오라마-구현-2026-09-13.md"],
+          "limitations": ["용마산역 필지 경계 도형 coverage를 이 대장에서 평가하지 않았다."]
+        }
+      ],
+      "limitations": ["MissingCoverage가 큰 교차 검토 표본이며 이번 대장에서 승격 승인을 뜻하지 않는다."]
+    }
+  ]
+}
