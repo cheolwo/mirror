@@ -1,5 +1,17 @@
 # Mirror(거울) Current Work
 
+## GitHub 기반 기획·개발 작업실 교대 기준선 (2026-09-15)
+
+- 두 Codex 계정·두 로컬 데스크톱을 계정명이 아니라 `기획 작업실`과 `개발 작업실` 역할로 구분했다. [GitHub 기반 교대 운영 체계](../Architecture/GitHub기반기획개발교대운영체계.md)는 기존 PLAN·문답·Goal·E7 작업지시서·책임별 branch 체계를 유지하면서 `저장소 / remote / branch / 정확한 commit / PLAN revision·hash / 상태 / readRefs / writePaths / 검증 / 반환 경로`를 한 인계 묶음으로 고정한다.
+- 기획 작업실은 기존 기록 검색, P0 질문 하나, canonical PLAN·`PLANNING.md`·`CURRENT_WORK.md` 갱신과 승인된 인계의 commit/push를 소유한다. 개발 작업실은 `Approved + ReadyToDispatch`와 기준 hash가 모두 일치할 때만 책임 branch에서 구현하고, 구현 commit·검증·미통합·기획 피드백을 저장소로 반환한다. 계정별 대화 기록과 로컬 `artifacts/`만으로 교대하지 않는다.
+- 현재 운영 기획 큐는 P0 중랑동북권 읽기 전용 현금흐름 관제 경계, P1 운영자·대리 운영자와 활성 상태 전이, P2 블랙박스 영상·GPS 현장 증거 기획 seed, P3 권역 분할·협력권역 순이다. P0 현금흐름은 `Draft / NotReady`이므로 이번 변경은 제품 코드·API·운영 효과를 구현하거나 승인하지 않는다.
+
+## 중랑동북권 단일 배달운영권역·현금흐름 관제 문답 r2 (2026-09-15)
+
+- 사용자는 첫 공식 후보 범위인 법정동 12곳·행정동 30개 전체를 초기에는 나누지 않고 `중랑동북권` 하나로 묶도록 확정했다. [기획 r2](Planning/운영/PLAN-OPERATIONS-ADMIN-DONG-DELIVERY-TERRITORY/README.md)는 이 표시명을 공식 행정구역명이 아닌 운영명으로 보존하고, 광진·동대문·중랑의 행정동 안정 식별자와 세부 통계 단위는 유지한다. 앞선 면목제3·8동 중심 소권역 시작안은 미승인 추천이었으며 이번 답변으로 대체됐다.
+- 기존 결제 원장, 기사 월정산·지급 승인, 운임 구성, 플랫폼 수익·환원 기능을 대조했다. 각각 개별 금액 상태는 갖지만 배달운영권역 귀속, 권역별 받을 돈·받은 돈·지급 예정·지급 완료·보류·환불·운영비·예상/실현 마진을 합성하는 관리자 현금흐름 API는 없다.
+- 다음 단일 질문은 첫 절편을 기존 금액 원장을 변경하지 않는 권역별 읽기 전용 현금흐름 관제 API로 시작할지 여부다. 실제 수납·예치·환불·송금은 PG·에스크로·정산사와 기존 지시 흐름에 남기며, 운영자 직접 금액 수정·실제 자금 이동·`Active` 전환·주문/배차 결속·Unity 변경은 승인하거나 구현하지 않았다.
+
 ## 동북서울 30개 행정동 디오라마 자료 기준선 r13 (2026-09-15)
 
 - 사용자는 30개 행정동 모듈을 사가정역 검토 깊이로 계속 발전시키고, 현재 가능한 화면을 보존하되 부족한 주소·필지·도로·신호·생활 자료를 추가 수집하도록 요청했다. [기획 r13](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md), [깊이 기준·캡처 r5](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-depth-parity.implementation.r5.md), [주소 후보 r6](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-address-parcel-candidate.implementation.r6.md), [횡단보도 r8](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-crosswalk-candidate.implementation.r8.md), [사업장 첫 판 r9](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-business-candidate.implementation.r9.md), [사업장 개인정보 정정 r12](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-business-candidate.implementation.r12.md), [교차로 r10·r11](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-intersection-point-ledger.implementation.r11.md), [도보망 r13](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-walk-network-candidate.implementation.r13.md), [G3c 원장 검증 결과](../Reports/동북서울-30개-행정동-도보네트워크-G3c-후보-2026-09-15.md)에 단계별 결손과 검증 상한을 고정했다.
@@ -26,7 +38,7 @@
 
 ## 행정동 기반 배달운영권역 Draft 관리 첫 절편 r1 (2026-09-14)
 
-- 사용자가 행정동들을 관리자가 묶어 배달권으로 관리하는 서버 리팩터링을 다른 역 디오라마 확장보다 우선했다. [승인 기획 r1](Planning/운영/PLAN-OPERATIONS-ADMIN-DONG-DELIVERY-TERRITORY/README.md)과 E7 작업 명세에 법정동·행정동·배달운영권역·협력권역·역세권 관찰 창을 서로 다른 축으로 고정했다. 발화의 `중국동`은 후속 `중곡1동` 언급과 공식 코드를 대조해 광진구 법정동 `중곡동`으로 정규화했다.
+- 사용자가 행정동들을 관리자가 묶어 배달권으로 관리하는 서버 리팩터링을 다른 역 디오라마 확장보다 우선했다. 현재 [canonical 기획](Planning/운영/PLAN-OPERATIONS-ADMIN-DONG-DELIVERY-TERRITORY/README.md)의 r1 승인 기준선과 당시 E7 작업 명세에 법정동·행정동·배달운영권역·협력권역·역세권 관찰 창을 서로 다른 축으로 고정했다. 발화의 `중국동`은 후속 `중곡1동` 언급과 공식 코드를 대조해 광진구 법정동 `중곡동`으로 정규화했다.
 - 행정안전부 동결 파일 `jscode20260301.zip`, SourceVersion `mois-jscode:20260301:retrieved:2026-08-12`, SHA-256 `8AF8C1F122D67D43518F58B37AEA6EEA7986F2809062F24E2E03465F21AE7A08`, 자료 revision `mois-hjd-bjd-20260301-8af8c1f122d67d43518f`을 `delivery-territory-source-scope:northeast-seoul-rider.r1`에 고정했다. 중곡·전농·답십리·장안·휘경·이문·면목·상봉·중화·묵·망우·신내 12개 법정동에서 활성 행정동 30개를 정확히 해소하며 이후 최신 판본으로 조용히 바뀌지 않는다.
 - RDB에 Draft aggregate, 현행 행정동 단일 권역 membership, 관리자 행위자와 당시 결과 사본을 가진 멱등 수신증, revision별 전체 행정동 집합과 행위자를 가진 변경 Outbox를 추가했다. 관리자 API는 후보 모듈·목록·상세·Draft 생성·행정동 전체 교체를 제공하고 `ClientRequestId`, `ExpectedRevision`, 중복 권역 귀속, 고정 자료 범위를 검증한다. Mongo manifest 결손은 `WaitingForSpatialProjection`으로만 표시하며 경계나 타일을 추정하지 않는다. 현재 로컬 `hongdal_dev` MongoDB를 독립 확인한 결과 행정동 디오라마 current·manifest·tile은 모두 0건이므로, 이 환경의 30개 후보는 전부 공간 투영 대기 상태다. 과거 별도 검증 기록의 면목제3·8동 게시 사본을 현재 DB 사실로 오인하지 않는다.
 - 서버·계약·EF·관리자 API 및 API 판본 회귀 80/80이 통과했다. 같은 요청의 지연 재시도가 최초 응답 revision을 반환하는지, 반복 제외·재편입의 revision별 Outbox 집합, 관리자 감사 ID, DB 예외 상세 비노출도 포함한다. 로컬 Docker MySQL의 기존 `hongdal_dev`에서 실제 공식 30개를 읽고, 전용 임시 schema에 새 migration 2개·테이블 4개를 적용해 Draft 저장과 새 DbContext 독립 재조회 1/1을 통과한 뒤 transaction과 임시 schema를 제거했다. 범위 지정 Fast는 빌드·표적 시험·코드 지도 검사를 통과했다(`artifacts/local/validation/20260914-204500`). Task의 v3.5 build는 통과했고 전체 시험은 5,268/5,275건 통과했으나 이번 범위 밖 기존 문서·CSS·역할 API metadata·Web route 7건이 실패했다(`artifacts/local/validation/20260914-204639`).

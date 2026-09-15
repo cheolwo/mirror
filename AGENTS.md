@@ -14,7 +14,9 @@ GPT Chat과 Codex는 대화 기록이 아니라 저장소 문서를 공용 기�
 6. 활성 PlayableLoop의 `planningGate.designDocumentRef` 기획서, 그 기획서가 `Required`로 연결한 `Accepted` 전문 심화 연구, E7 작업 명세
 7. 작업 경로에 가까운 `AGENTS.md`와 관련 Architecture 문서
 
-설계실·제작실 사이에서 작업을 인계할 때는 [역할별 인계 진입](docs/Architecture/CodexPlayableLoopGoal운영체계.md#설계실제작실-인계)을 따른다. 설계실은 기존 승인 기획·명세를 준비하고, 제작실은 생성된 요약과 현재 기준선 점검 후 명시적으로 수용한 범위만 진행한다. 인계 점검 통과는 실행 승인이나 Goal 자동 활성화가 아니다.
+설계실·제작실 사이에서 작업을 인계할 때는 [역할별 인계 진입](docs/Architecture/CodexPlayableLoopGoal운영체계.md#설계실제작실-인계)을 따른다. 서로 다른 계정·데스크톱이 GitHub를 사이에 두고 교대하면 [GitHub 기반 기획·개발 작업실 교대 운영 체계](docs/Architecture/GitHub기반기획개발교대운영체계.md)도 함께 따른다. 설계실은 기존 승인 기획·명세를 준비하고, 제작실은 push된 정확한 commit과 현재 기준선을 점검한 뒤 명시적으로 수용한 범위만 진행한다. 인계 점검 통과는 실행 승인이나 Goal 자동 활성화가 아니다.
+
+현재 계정·모델·장치 이름만으로 작업 역할을 추정하지 않는다. 현재 요청이 기획 작업실이면 제품 코드를 바꾸지 않고 canonical PLAN·`PLANNING.md`·`CURRENT_WORK.md`와 필요한 승인 인계만 갱신한다. 개발 작업실이면 `Approved` 기획과 `ReadyToDispatch` 인계, revision/hash, 작업지시서, 허용 `writePaths`가 일치할 때만 구현한다. 두 작업실의 공용 기억은 push된 저장소 문서와 정확한 Git commit이며 대화 요약이나 로컬 `artifacts/`만으로 개발을 승인하지 않는다.
 
 Unity 개발 순서는 제품 릴리스 버전 순서와 별개다. Unity는 전체 Ssalddel 도메인을 `World`, `Data`, `Object`, `Interaction`, `Simulation` 관점에서 다루되, 실제 구현은 검증 가능한 좁은 vertical slice로 진행한다. 영역 개발에서는 Farm·Hub·City 각각의 독립 완결 slice를 먼저 만들고, 영역 간 운송 경로를 기본 slice로 삼지 않는다. 서버는 운영 상태의 최종 권위이며 Unity의 simulation과 operational data를 명확히 구분한다.
 
@@ -44,6 +46,7 @@ Unity 개발 순서는 제품 릴리스 버전 순서와 별개다. Unity는 전
 | `docs/` 문서·변경 기록 | `docs/AGENTS.md` | 기준 문서 단일화, link·diff 검증 |
 | 여러 project를 통과하는 기능 | `SsalddelCodeMetadataAttribute`, `SsalddelCodeFeatureKeys` 검색 | `StepKey`, `FlowOrder`, `Layer`, `ExecutionStage`, `ReadsFrom/WritesTo`, `Effects`, `Boundary` |
 | 운영·Simulation·Unity 책임 분류 | `docs/Architecture/OperationsSimulationUnity작업흐름분리.md`, `eng/work-areas/responsibility-workstreams.json` | 주 상태 소유자를 먼저 고르고 `operations/*`, `simulation/*`, `unity/*`로 짧게 진행하며 계약·Adapter만 `integration/*`로 분리 |
+| 서로 다른 계정·데스크톱의 기획→개발 Git 교대 | `docs/Architecture/GitHub기반기획개발교대운영체계.md` | 역할을 작업별로 선언하고, 기획 우선순위와 개발 준비 상태를 분리하며, push된 정확한 branch·commit·PLAN revision/hash·작업지시서로만 교대 |
 | Simulation·Unity 탐색 | `eng/work-areas/simulation-unity.json`, `docs/AI/generated/simulation-unity-code-map.md` | 생성 트리에서 기능 키와 핵심 단계를 고른 뒤 소스로 이동하고, 생성 문서를 직접 수정하지 않음 |
 | 역세권 디오라마 자료·조립·표현 | `docs/Architecture/역세권디오라마증거진화체계.md`, `eng/execution-ledgers/station-diorama-evidence-rules.json` | 출처와 반례를 연결하고 작업 종료 시 규칙 후보를 판정한다. `Candidate`까지 기록할 수 있지만 공통 적용·승격은 사람 승인을 요구하며 E 단계는 자동 승격하지 않음 |
 | 커뮤니티 0.0 | `[SsalddelCommunityV0Module]` 검색 | module catalog와 `0.0-A~E` |
