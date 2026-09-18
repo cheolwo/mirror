@@ -26,6 +26,746 @@
 - 주소는 `G2a`, 횡단보도는 `G3a`, 교차로는 `G3b`, 도보망은 `G3c`, 사업장은 `G4a`로 분리한다. G3c는 local-private 후보 생성과 보호 RDB 원장 검증까지만 닫혔다. 현행 행정동 경계, 실제 필지 도형·출입구, 실폭도로·골목·보도·차로·정지선·신호 현시의 현재 graph, 확정 사업장 건물 결속·현재 영업·Claim, G5 NPC·차량·OS 결속과 G7 생활상 Game View는 남아 있다.
 - 서버 도구 build, 기존 절편의 Python/C# 자체 시험과 MySQL 독립 재조회, Unity 검토 묶음 무변경 재생성, Unity EditMode·실제 Game View를 분리 검증했다. G3c는 Python 생성·verify와 C# 보호 RDB 첫 저장·독립 재조회·반복 무쓰기를 통과했다. Unity 실행에는 기존 Editor SearchDatabase 예외 1건과 종료 시 JobTempAlloc 경고 2건이 있어 전체 Console 무오류로 보고하지 않는다. 운영 DB·Mongo current·실제 주문/배차/NPC 이동·E 승격·commit·push·배포는 수행하지 않았다.
 
+## 예외 상세의 서버 정본 재조회 관문 확정 (2026-09-18)
+
+- 예외 상세의 첫 행동을 서버 정본 새로고침으로 고정했다. 최신 상태·revision·`AvailableActions` 재조회가 성공한 뒤에만 연락·안전 재시도·OS별 후속 행동을 활성화한다.
+- 재조회 실패 시 마지막 정상 자료만 읽기 전용으로 남기고, 자동 복구 중이면 중복 재시도를 만들지 않는다.
+- 기획 판본을 운영자 모바일 r10, 역할별 작업공간 r26, 지역 운영 뼈대 r44로 갱신했다. 제품 코드·이미지·API·commit·push는 변경하거나 수행하지 않았다.
+
+## 배차·기사 수급 예외 이중 정렬 확정 (2026-09-18)
+
+- 운영자 확인 필요 목록을 안전 위험 → 업무중단·회복 실패 → 판단자료 부족 → 장기 대기 순으로 분류한다. 같은 단계에서는 대기시간이 긴 건, 그래도 같으면 마지막 상태 변경이 오래된 건을 먼저 보여 준다.
+- 제안 만료나 기사 무응답 추정, 단순 금액 크기는 상위 정렬 근거로 쓰지 않는다. 정렬은 표시 우선순위일 뿐 배차 점수·기사 기회·지급·귀책·원장 상태를 바꾸지 않는다.
+- 기획 판본을 운영자 모바일 r9, 역할별 작업공간 r25, 지역 운영 뼈대 r43으로 갱신했다. 제품 코드·이미지·API·commit·push는 변경하거나 수행하지 않았다.
+
+## 배차·기사 수급 통계 기본 시간 범위 확정 (2026-09-18)
+
+- 배차·기사 수급 화면은 최근 60분의 실제 관측 추세와 운영시장 기준 오늘 누적 요약을 기본으로 함께 보여 준다.
+- 어제·최근 7일·사용자 지정 기간은 기본 화면에서 숨기고 별도 통계 상세에서 선택한다. 조회 기준 시각과 마지막 정상 갱신 시각을 함께 표시한다.
+- 기획 판본을 운영자 모바일 r8, 역할별 작업공간 r24, 지역 운영 뼈대 r42로 갱신했다. 제품 코드·이미지·API·통계 Projection·commit·push는 변경하거나 수행하지 않았다.
+
+## 현재 관측 정보 중심 배차·기사 수급 시안 (2026-09-18)
+
+- 미래 주문량·기사 수급·성공률·추가 지급액 예측을 제외하고 현재 서버 정본과 누적 관측 통계를 정리하는 방향을 확정했다.
+- [배차·기사 수급 시안](../assets/planning/food-delivery-os-dispatch-supply-r1.png)은 실시간 개요, 관측 통계, 예외 상세의 세 화면으로 구성했다. 정상 건은 집계로 접고 예외만 실제 timeline과 동결 지급 구성까지 내려간다.
+- 기획 판본을 운영자 모바일 r7, 역할별 작업공간 r23, 지역 운영 뼈대 r41로 갱신했다. 숫자는 합성 표본이며 제품 앱 렌더·API·통계 Projection·운영 DB·실제 장치·운영 권한 증거가 아니다.
+- commit·push·배포는 수행하지 않았다.
+
+## 배차 대기·기사 수급의 정상 집계·예외 상세 기획 (2026-09-18)
+
+- 현행 코드의 `배차대기`는 기사 개인이 기다리는 상태가 아니라 추천·수락 전 주문·운송 원장임을 확인했다. 대기·제안 가능 기사 수급은 별도 자료로 유지한다.
+- 음식 배달 OS 운영자는 정상 주문과 기사를 개별 감시하지 않고 배차 대기시간·제안 가능 기사·수락률·재탐색·지급 영향을 통계로 본다. 장기 무배차·자료 불완전·지급 조건 이상·회복 실패만 건별 상세로 연다.
+- 기획 판본을 운영자 모바일 r6, 역할별 작업공간 r22, 지역 운영 뼈대 r40으로 갱신했다. 화면 목차 이미지·제품 UI·API·통계 Projection·재무 원장·배차 엔진·commit·push는 변경하거나 수행하지 않았다.
+
+## 운영자 역할 색상과 화면 목차 현행화 (2026-09-18)
+
+- 각 OS 관리자·운영자는 자주색, 여러 OS를 조율하는 총괄 관리자는 `황극` 의미의 황색으로 구분했다. 황색은 역할색이며 주의·지연·위험은 계속 주황·빨강으로 표시한다.
+- 음식 배달 OS의 `01 운영 홈`부터 `09 회복 업무`까지 다음 기획 대상을 고를 수 있는 화면 목차 시안을 `docs/assets/planning/os-operator-screen-catalog-r1.png`로 추가했다.
+- 기획 판본을 운영자 모바일 r5, 역할별 작업공간 r21, 지역 운영 뼈대 r39로 갱신했다. 이미지와 색상 결정은 기획 기준이며 앱 theme·navigation·권한·서버 계약·실제 장치 렌더는 변경하거나 검증하지 않았다.
+- commit·push·배포는 수행하지 않았다.
+
+## 기존 Figma 참고형 음식 배달 OS 운영자 시안 r1 (2026-09-18)
+
+- 저장소의 Figma `09 Admin Mobile` 캡처, 음식 주문 역할 상태 화면, 현행 음식 판매·기사 모바일 기획 이미지를 확인했다. 라이브 Figma node를 이번 작업에서 편집하거나 최신 상태로 재검증하지는 않았다.
+- [음식 배달 OS 운영자 1차 시안](../assets/planning/food-delivery-os-operator-workspace-r1.png)을 생성해 운영 홈·주문 흐름 상세·현장 참여 세 화면을 한 이미지에 배치했다. 정상 단계 집계와 `운영자 확인 필요` 예외를 분리하고, 주문 상세의 재배차는 배차 엔진 책임으로 남겼다.
+- 현장 참여 화면은 기사 역할·위치 동의·실제 배차를 분리하고 합성 주문 훈련을 첫 후보로 표현했다. `코드 일부 존재`와 `기획만 존재` 표시로 실제 구현 상태를 구분했다.
+- [OS별 운영자 모바일·현장 참여 r4](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/operator-mobile-field-participation.r1.md), [역할별 작업공간 r20](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/README.md), [지역 운영 E2E r38](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md), `PLANNING.md`에 이미지를 결속했다.
+- 생성 이미지는 기획 시안이다. 제품 코드·실제 Figma node·앱 렌더·API 결속·장치 실행·commit·push는 수행하지 않았다.
+
+## 총괄 중심에서 OS별 운영자 작업공간으로 전환 r1 (2026-09-18)
+
+- 사용자의 판단에 따라 일상 모바일의 중심을 `총괄 관리자`에서 음식배달·화물·마트·창고 등 `각 OS 운영자`로 옮겼다. 정상 자동화가 동작할수록 총괄 조작이 적은 것을 정상으로 본다.
+- 한 사람이 OS 하나만 맡으면 해당 작업공간으로 바로 진입하고, 여러 OS를 맡으면 한 앱의 `내 운영 업무`에서 명시적으로 전환한다. 각 작업공간은 자기 생명주기·대기·예외·`AvailableActions`를 유지한다.
+- `PlatformOperationsOS`는 없애지 않고 정책·권한·재무·감사·보험·법률·OS 간 최종 충돌을 다루는 후순위 교차 관리층으로 낮췄다. 운영자의 현장 참여도 총괄 홈이 아니라 관련 OS 작업공간에서 시작한다.
+- 다음 이미지 기반 상세 후보는 `음식 배달 OS 운영자`다. 주문·조리·배차·픽업·전달 코드와 역할별 기획이 가장 깊어 공통 작업공간 골격을 검증하기 좋다.
+- [OS별 운영자 모바일·현장 참여 r3](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/operator-mobile-field-participation.r1.md), [역할별 작업공간 r19](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/README.md), [지역 운영 E2E r37](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md), `PLANNING.md`를 갱신했다. 제품 코드·새 이미지·실제 장치·commit·push는 수행하지 않았다.
+
+## 실제 휴대폰 검토 보류·모바일 이미지 문답 우선 r1 (2026-09-18)
+
+- 사용자의 현재 휴대폰 파손으로 `SsalddelAdminApp` 실제 Android 설치·터치·백그라운드 복귀 검증을 장치가 준비될 때까지 후순위로 미뤘다. 기존 Android Debug 빌드 증거는 유지하지만 `PhysicalDeviceUiProof`로 승격하지 않는다.
+- 그동안 모바일 기획 시안을 `기본 → 상세 → 허용 행동·영향 미리보기 → 서버 정본 재조회 결과` 네 상태로 비교한다. 각 버튼은 기존 route·계약·권한과 대조해 `코드 존재 / 부분 존재 / 기획만 존재`를 함께 기록한다.
+- 다음 이미지 후보는 `총괄 운영 홈 → 현장 참여 진입 → 자격 상태 확인`이며, 다음 문답은 현장 참여를 홈의 작은 독립 카드로 보일지 `내 정보` 안에 둘지다.
+- [운영자 모바일·현장 참여 r2](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/operator-mobile-field-participation.r1.md), [역할별 작업공간 r18](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/README.md), [지역 운영 E2E r36](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md), `PLANNING.md`를 갱신했다. 제품 코드·실제 앱 렌더·새 이미지·장치 실행·commit·push는 수행하지 않았다.
+
+## 운영자 모바일 관제·현장 참여 현행 대조 r1 (2026-09-18)
+
+- [운영자 모바일·현장 참여 r1](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/operator-mobile-field-participation.r1.md)을 추가했다. `SsalddelAdminApp`에는 이동 중 빠른 확인 목적, 관리자 확인·운송 예외·배차대기 집계, 운송·기사 현황과 30초 보완 조회가 있어 모바일 관제 뼈대는 부분 구현돼 있다.
+- 관리자 앱의 Android Debug 빌드 증거는 있으나 실제 휴대폰 설치·로그인·터치·390px 판독·백그라운드 복귀는 검증되지 않았다. 음식배달·화물·마트·창고를 같은 총괄 어휘로 비교하는 전체 셸도 아직 제안 수준이다.
+- 실제 음식 배달 수행은 `FDriverApp`에 존재하지만 관리자 앱에서 기사 자격·계약 확인 뒤 명시적으로 역할을 전환하고 다시 복귀하는 계약·화면·세션은 없다. 저장소의 `EducationFieldExperienceOS`는 학생 교육 현장체험이므로 이 목적에 전용하지 않는다.
+- 권장 순서는 `실제 Android 관리자 앱 도그푸딩 → 총괄 OS 집계 확장 → 역할 전환 계약 → 합성 주문 현장 참여 → 같은 기사 조건의 실제 참여 → 비식별 개선 환류`다. 다음 문답은 첫 참여를 합성 주문 훈련으로 시작할지 실제 배차로 시작할지다.
+- [역할별 작업공간 r17](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/README.md), [지역 운영 E2E r35](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md), `PLANNING.md`를 같은 경계로 갱신했다. 제품 코드·DB·API·UI·실제 장치·commit·push는 변경하거나 수행하지 않았다.
+
+## `PlatformOperationsOS` 기반 총괄 재무 화면 제안 r2 (2026-09-18)
+
+- 재무 영향 화면을 개별 `음식배달 OS` 아래에 고정하지 않고, 기존 안정 식별자 `PlatformOperationsOS`를 재사용한 총괄 운영 셸에서 여는 방향으로 바로잡았다.
+- 총괄 셸은 전체·음식배달·화물운송·마트·창고의 읽기 전용 재무 사본 집계, 정책 Preview와 예외 연결을 제공한다. 각 업무 상태·지급·정산 원장은 원래 책임 OS가 계속 소유하고, 공통 생명주기가 없는 `PlatformOperationsOS`에 단계를 새로 만들지 않는다.
+- 직전 이미지의 `음식배달 OS` 상단 표기는 현행 후보에서 제외한다. 다음 시안 후보는 `총괄 운영`을 큰 제목으로, `플랫폼 운영 OS`를 보조 표기로 두고 개별 OS를 범위 필터로 표현한다.
+- [역할별 OS 작업공간 r16](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/README.md), [UI 조사 r2](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/ui-coverage-audit.r1.md), [지역 운영 E2E r34](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md)와 `PLANNING.md`를 갱신했다. 제품 코드·DB·API·UI·새 이미지·commit·push는 변경하거나 수행하지 않았다.
+
+## 기사 지급 화면 마무리·운영 UI 존재 여부 조사 r1 (2026-09-18)
+
+- [기사 지급 구성 상세 r5](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL/README.md)와 [기사 지도·내 정보 r10](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-MAP-HOME/README.md)은 플랫폼 부담 보험료를 기본 지급 화면에서 숨기고, `보험료 납부 내역`에서만 `플랫폼 부담 · 기사 실지급액에서 차감하지 않음`으로 표시하는 것으로 현재 화면 문답을 닫았다.
+- [운영 기획·코드·UI 존재 여부 조사 r1](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/ui-coverage-audit.r1.md)은 완성도를 평가하지 않고 기획·제품 코드·제품 UI 존재만 대조했다. 총괄 운영 복구, 음식 판매, 살뜰마트, 일반 창고, 화주, 화물 기사에는 대표 제품 UI가 존재한다.
+- 코드가 있으나 전용 제품 UI가 없는 우선 공백은 `운영경제성·재무 영향`, `생활권 소형 물류거점`이다. 기사 지급 상세와 음식점-기사 관계는 기획이 있으나 전용 계약·Projection과 UI가 함께 비어 있고, 주문자 진행 주문·기사 위치 추적은 기존 화면이 있으나 주문 결속 위치 화면이 부분 공백이다.
+- 기존 `WarehouseManagerApp/Components/Pages/MartHome.razor`, `MartWorkBoard.razor`, `MartPickingPacking.razor`를 확인했으므로 `마트 첫 화면`을 새 UI 공백으로 보지 않고 기존 화면의 데이터 결속 검증 대상으로 돌렸다.
+- 다음 문답은 운영경제성·재무 영향 상세를 `현재 원장 → 시뮬레이션 Preview` 두 탭으로 분리할지다. 제품 코드·DB·API·UI·장치 실행·commit·push는 이번 조사에서 변경하거나 수행하지 않았다.
+
+## 기사 지급 법정 공제·실지급 구조 r4 (2026-09-18)
+
+- [기사 지급 구성 상세 r4](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL/README.md)에 따라 지급 구성은 기본 펼침·선택 접힘으로 확정하고, `공제 전 기사 지급액 → 기사 부담 법정 공제 → 실지급 예정액`을 분리했다.
+- 사업소득세·개인지방소득세·고용보험·산재보험을 앱에서 일률적으로 차감하지 않는다. 서버가 소득 분류·노무제공자 자격·월 보수 신고와 공식 정산 결과로 적용 여부와 금액을 판정하며 플랫폼 부담 보험료는 기사 실지급액에서 빼지 않는다.
+- 현재 `기사운송대금지급요청`은 공제 전 `지급예정금액` 중심이고 `기사월정산`은 기사 소득 정산이 아니라 플랫폼 이용료 월정산이다. 항목별 법정 공제·실지급·공제 증빙 계약은 코드에서 확인되지 않아 신규 원장·Projection이 필요하다고 판정했다.
+- 기존 지도·내 정보 화면을 참고한 [지급 상세 1차 후보](../assets/planning/food-driver-payout-detail-r1-candidate.png)는 공제 구조 확정 전 후보로 보존하고, [법정 공제 포함 2차 후보](../assets/planning/food-driver-payout-detail-r2-candidate.png)는 기본 펼침·선택 접힘과 월 정산 확정 대기를 시각화했다. 둘 다 검토 후보이며 확정 앱 화면 증거가 아니다. 기사 화면 r9, 역할별 작업공간 r14, 지역 운영 E2E r32와 `PLANNING.md`를 갱신했다.
+- 근거는 2026-09-18 기준 국가법령정보센터와 국세청 공식 안내로 확인했다. 운영 활성화 전 시행 법령·고시·근로복지공단 판정과 노무·세무 전문가 검토가 필요하다. 제품 코드·DB·API·앱 화면·실제 공제·송금·commit·push는 변경하거나 수행하지 않았다.
+
+## 기사 지급 보류 단순 표시 r3 (2026-09-18)
+
+- [기사 지급 구성 상세 r3](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL/README.md)에 따라 기사 화면은 내부 보류 사유를 세분하지 않고 `지급 보류` 한 줄만 표시한다.
+- 자세한 확인은 `고객센터 문의` 전화 진입점과 문의용 배달 번호로 연결한다. 귀책 추정·내부 검토 코드·오류 원문은 기사에게 노출하지 않고 운영자와 고객센터의 권한 있는 작업공간에 둔다.
+- 기사 화면 r8, 역할별 작업공간 r13, 지역 운영 E2E r31과 `PLANNING.md`를 같은 의미로 갱신했다. 이는 기획 공개 범위 결정이며 제품 코드·DB·API·앱 화면·실제 전화 연결·commit·push는 변경하거나 수행하지 않았다.
+
+## 기사 지급 상세 표준 행 상시 표시 r2 (2026-09-18)
+
+- [기사 지급 구성 상세 r2](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL/README.md)에 따라 기사 기본 지급액·거리 추가 지급액·기상 할증·한시 수요 할증·기타 확정 조정의 표준 행을 적용 여부와 관계없이 항상 표시한다.
+- 정책상 적용되지 않은 항목은 `0원 · 미적용`, 해당 판본에 세부 항목 근거가 없는 과거 자료는 `세부 근거 없음`, 일시적 조회 실패는 `확인할 수 없음 · 다시 조회`로 표시하며 세 상태를 모두 0원으로 합치지 않는다.
+- 기사 화면 r7, 역할별 작업공간 r12, 지역 운영 E2E r30과 `PLANNING.md`를 같은 의미로 갱신했다. 제품 코드·DB·API·앱 화면·실제 장치·commit·push는 변경하거나 수행하지 않았다.
+
+## 음식 배달 완료 내역의 기사 지급 구성 상세 r1 (2026-09-18)
+
+- [기사 지급 구성 상세 r1](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL/README.md)을 새 정본으로 만들고 최근 배달 한 건의 상세를 `기사 기본 지급액 + 거리 추가 지급액 + 기상 할증 + 한시 수요·피크 할증 + 기타 확정 조정 = 기사 지급 예정액`으로 읽게 했다. 지급 예정과 승인·송금·지급 완료·보류 상태는 분리한다.
+- 모든 금액은 제안 시점에 원장에 동결된 항목과 정책 판본을 읽으며 현재 정책으로 과거 금액을 재계산하지 않는다. 과거 자료에 세부 항목이 없으면 총액은 유지하고 `세부 근거 없음`으로 표시한다.
+- 현재 코드에는 총 지급예정액, 기상 할증, 한시 수요 할증, 적용 여부, 기상 근거와 정책 판본·판정 시각이 존재한다. 그러나 정책의 기본 지급액과 거리 추가 지급액은 `기사기본거리지급액` 하나로 합쳐 저장되므로 과거 상세에서 둘을 정확히 분리할 수 없다. 새 완료 이력 조회와 앞으로의 분리 동결 계약이 필요하다.
+- 관계 상세에는 기사 개인 지급 구성을 음식점에 공개하지 않는다. 기사 화면 r6, 역할별 작업공간 r11, 지역 운영 E2E r29와 `PLANNING.md`를 갱신했다. 제품 코드·DB·API·앱 화면·이미지·실제 장치·commit·push는 변경하거나 수행하지 않았다.
+
+## 음식점-기사 관계 상세·상호 공개 설정 r3 (2026-09-18)
+
+- [음식점과 배달 기사가 함께한 배달 관계 r3](Planning/공통/PLAN-OPERATIONS-FOOD-RESTAURANT-RIDER-RELATIONSHIP/README.md)에 따라 `함께 완료한 배달 N회` 배지를 누르면 두 주체가 함께 완료한 배달 목록으로 이동한다.
+- 기사와 음식점은 각각 상대 화면에 관계 횟수를 보여 줄지 정한다. 신규 기본값은 ON이지만 언제든 끌 수 있으며, 기사 OFF는 음식점 화면을, 음식점 OFF는 기사 화면을 숨긴다. 상대 화면에서는 `0회`나 비공개 표지를 대신 보여 주지 않고 배지 자체를 생략한다.
+- 공개 설정 철회는 완료 업무·정산·감사 원장을 삭제하지 않으며 이후 상대 노출에 즉시 적용한다. 설정 조회 실패나 판본 확인 실패 시에는 ON으로 추측하지 않고 배지·상세 진입을 숨긴다.
+- 기사 화면 r5, 음식 판매 화면 r5, 역할별 작업공간 r10, 지역 운영 E2E r28과 `PLANNING.md`를 같은 의미로 갱신했다. 제품 코드·DB·API·앱 화면·이미지·실제 장치·commit·push는 변경하거나 수행하지 않았다.
+
+## 음식점-기사 관계 완료 횟수 단일 표시 r2 (2026-09-18)
+
+- [음식점과 배달 기사가 함께한 배달 관계 r2](Planning/공통/PLAN-OPERATIONS-FOOD-RESTAURANT-RIDER-RELATIONSHIP/README.md)에 따라 첫 버전은 양쪽 화면에 `함께 완료한 배달 N회` 하나만 표시한다. 픽업 인계 횟수는 업무 원장·감사·복구에 필요하면 보존하되 관계 배지에 별도 숫자로 노출하지 않는다.
+- 진행 건은 `N+1번째 후보/예정`으로만 표시하고 수령 확인까지 닫힌 뒤 완료 횟수를 올린다. 배차·지급·평점·친구 관계에 영향을 주지 않는 기존 경계를 유지한다.
+- 기사 화면 r4, 음식 판매 화면 r4, 역할별 작업공간 r9, 지역 운영 E2E r27과 `PLANNING.md`를 같은 판본 의미로 갱신했다. 기획 문서만 변경했으며 제품 코드·DB·API·앱 화면·실제 장치·commit·push는 변경하거나 수행하지 않았다.
+
+## 음식점-배달 기사 함께한 업무 관계 r1 (2026-09-18)
+
+- [음식점과 배달 기사가 함께한 배달 관계 r1](Planning/공통/PLAN-OPERATIONS-FOOD-RESTAURANT-RIDER-RELATIONSHIP/README.md)을 새 정본으로 만들었다. 음식점 영업점과 배달 기사 쌍이 같은 완료 Event에서 계산한 `함께 완료한 배달 N회`를 각자의 배차 제안·배달 인계 화면에서 확인하는 방향이다.
+- 현재 진행 건은 완료 횟수에 미리 더하지 않고 `N+1번째 후보/예정`으로 표시한다. 첫 안전 기준은 수령 확인까지 닫힌 정상 완료만 증가시키며 취소·제안 만료·거절·재배차 전 원기사는 제외한다.
+- 관계 횟수는 공개 평점·신뢰 등급·배차 점수·지급액·할증·기사 고정에 사용하지 않는다. 음식점 직원 개인과 기사의 관계로 자동 해석하지 않고, 친구 요청·수락·연락처 공개도 기존 명시적 선택과 별도 동의를 유지한다.
+- 기존 `WorkRelationshipSnapshots`와 업무 관계 기반 친구 요청 API는 재사용 기반으로 확인했다. 그러나 현재 자동 기록 예시는 화물 기사-화주 배차 수락 중심이며 음식점-음식 배달 기사 완료 횟수 Projection과 양쪽 화면 배지는 코드에서 확인되지 않았다.
+- [음식 배달 기사 화면 r3](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-MAP-HOME/README.md), [음식 판매 화면 r3](Planning/공통/PLAN-OPERATIONS-FOOD-SALES-ORDER-DESK/README.md), [역할별 작업공간 r8](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/README.md), [지역 운영 E2E r26](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md)에 같은 경계를 결속했다. 제품 코드·DB·API·앱 화면·이미지·실제 장치·commit·push는 변경하거나 수행하지 않았다.
+
+## 음식 배달 기사 내 정보·배달 내역 r2 (2026-09-18)
+
+- [음식 배달 기사 지도 중심 첫 화면·내 정보 r2](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-MAP-HOME/README.md)에 [지도 첫 화면](../assets/planning/food-driver-map-home-r1.png)과 [내 정보·배달 내역 화면](../assets/planning/food-driver-profile-history-r1.png)을 결속했다. 첫 화면은 카드형 홈이 아니라 지도이며, 왼쪽 상단에 `신규 배차 받기` ON/OFF 토글, 하단에 큰 `운행 시작` 버튼, 오른쪽 상단에 `내 정보` 사람 아이콘을 둔다.
+- `신규 배차 받기`는 기사의 수신 의사이고 `운행 시작`은 운행 세션·위치 갱신 Command 진입점이므로 서로 다른 상태로 분리한다. OFF는 새 제안만 멈추며 이미 수락한 배달을 취소하거나 숨기지 않는다.
+- `내 정보`는 별도 화면으로 이동하고 `배달 내역`을 기본 탭으로 하며 `정산`, `운행 정보`, `설정`을 보조 진입점으로 둔다. 최근 배달은 시간·거친 지역·상태·근거 거리만 보여 주고 완료 뒤 상세 주소·연락처·원시 GPS 이동 이력은 표시하지 않는다.
+- 현행 `FDriverApp`의 `내 정보`는 같은 지도 화면의 요약 구역으로 스크롤하고 상태 문구만 바꾼다. 화물 `DriverApp`에는 메뉴·배달 내역·운송 거리 UI가 있고 음식 배달 월 정산에는 배차건수·이용료·결제완료 계약이 있으나, 음식 배달 완료 이력과 월 누적 운행거리 전용 Projection은 확인되지 않았다.
+- [역할별 OS 작업공간 r7](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/README.md)과 [지역 운영 생명주기 E2E r25](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md)에 같은 결정을 반영했다.
+- 생성 이미지는 정보 계층을 판단하기 위한 기획 시안이며 실제 앱 렌더·Android 지도·GPS·서버 연결 증거가 아니다. 제품 코드·API·DB·실제 앱 화면·Android 지도 실행·commit·push는 변경하거나 수행하지 않았다.
+
+## 역할별 앱 진입점·초기 화면 기준 r5 (2026-09-18)
+
+- [하나의 운영 원장과 역할별 OS 작업공간 r5](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/README.md)에 공통 진입 골격을 추가했다. `세션 복원 → 현재 역할 → 이어서 할 업무 1건/중요 대기열 → OS 작업공간 → 보조 진입점 → 상세 AvailableActions` 순서다.
+- 실제 코드를 대조해 `SsalddelAdminApp`, `OrdererApp`, `RestaurantDeskApp`, `FDriverApp`, `SellerApp`, `WarehouseManagerApp`, `SsalddelApp`, `DriverApp`의 홈·역할 분기 경로가 존재함을 확인했다. 주문자·음식점은 기획 이미지가 있으나 음식 배달 기사·마트·창고·화주·화물 기사는 같은 기준의 첫 모바일 시안이 아직 미정이다.
+- 다음 화면 기획 순서를 `음식 배달 기사 → 마트 관리자 → 창고 관리자·작업자 → 화주·담당자 → 화물 기사`로 두었다. 새 앱을 먼저 만들지 않고 각 역할의 기존 홈과 원장·Command 경계를 재사용한다.
+- 주문자 `10km` 안내는 확정 UI가 아니라 가능한 내용 후보로 낮추고, 정확한 확인창·노출 빈도·다른 음식 유형 확장은 보류했다. [주문자 홈 r4](Planning/공통/PLAN-OPERATIONS-ORDERER-ACTIVE-ORDER-HOME/README.md)와 [지역 운영 생명주기 E2E r23](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md)에 같은 상태를 반영했다.
+- 제품 코드·API·DB·실제 앱 화면·장치 실행·commit·push는 변경하거나 수행하지 않았다.
+
+## 주문자 `10km` 장거리 탐색 사전 안내 기획 r3 (2026-09-18)
+
+- [주문자 진행 주문 우선 홈·거리 제한 탐색 r3](Planning/공통/PLAN-OPERATIONS-ORDERER-ACTIVE-ORDER-HOME/README.md)에 `10km` 선택 전 확인창을 추가했다. 문구는 기사 배정이 늦어지거나 성사되지 않을 가능성과 배달 시간이 길어질 때 온도 민감 음식의 맛·식감이 달라질 가능성을 함께 알린다.
+- 안전한 기본 행동은 `7km로 보기`, 선택 행동은 `위 내용을 확인하고 10km 보기`로 두었다. 확인해도 주문 가능·기사 배정·도착 시간을 보장하지 않으며 기사가 장거리 배차를 자발적으로 수락·거절하는 경계를 유지한다.
+- 탐색 단계에서는 아직 메뉴가 정해지지 않았으므로 일반 위험만 안내한다. 주문 확인 단계에서는 서버가 제공한 온도 민감도·품질 주의 근거가 있을 때만 따뜻한 음식·냉장·냉동·식감 민감 안내를 구체화하며, 앱이 메뉴명만 보고 추측하지 않는다.
+- 현행 `OrdererRestaurantSearchPanel`의 빠른 반경 버튼은 값을 바로 적용하므로 확인창은 아직 제품 코드에 없다. [역할별 OS 작업공간 r4](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/README.md)와 [지역 운영 생명주기 E2E r22](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md)에 같은 경계를 반영했다. 코드·API·DB·앱 UI·실제 장치·commit·push는 변경하거나 수행하지 않았다.
+
+## 주문 상세·기사 최근 위치 지도 기획 r2 (2026-09-18)
+
+- [주문자 진행 주문 우선 홈·배달 위치 추적 r2](Planning/공통/PLAN-OPERATIONS-ORDERER-ACTIVE-ORDER-HOME/README.md)에 [주문 상세 모바일 기획 시안](../assets/planning/orderer-delivery-tracking-detail-r1.png)을 결속했다. `주문 상세`를 누르면 음식점·기사 최근 위치·도착지·현재 경로와 마지막 위치 갱신 시각을 확인하는 방향이다.
+- 기사 앱의 기존 `POST work/location`과 위도·경도·정확도·기록 시각 계약은 재사용 후보로 확인했다. 주문자 상세 응답에는 기사 위치가 아직 없으므로, 기사 API나 원시 GPS 저장소를 직접 읽지 않고 주문 소유권·현재 배차·업무 단계·자료 신선도를 검증한 주문 결속 최소 위치 사본을 별도로 제공해야 한다.
+- 주문자에게는 기사 실명·전화번호·차량번호·숫자 좌표·전체 이동 이력을 노출하지 않는다. 현재 배달 주문의 최근 위치 표식, 정확도 범위, 갱신 시각과 위치 상태만 표시하고 완료·취소·배차 해제·위치 공유 중지 시 닫는다. 오래된 위치는 사실처럼 보간하지 않는다.
+- 네이버 지도는 표현 공급자 후보로만 두며 주문·배차·위치 권위를 갖지 않는다. 지도 장애 시에도 주문 단계와 예상 안내는 계속 보여 주고, 비밀 인증정보는 서버 경계 밖으로 내보내지 않는다.
+- [역할별 OS 작업공간 r3](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/README.md)과 [지역 운영 생명주기 E2E r21](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md)에 같은 경계를 반영했다. 제품 코드·API·DB·앱 UI·실제 장치·commit·push는 변경하거나 수행하지 않았다.
+
+## 주문자 진행 주문 우선 홈·거리 제한 상점 탐색 r1 (2026-09-18)
+
+- [주문자 진행 주문 우선 홈 r1](Planning/공통/PLAN-OPERATIONS-ORDERER-ACTIVE-ORDER-HOME/README.md)을 새 정본으로 만들고 [모바일 기획 시안](../assets/planning/orderer-active-order-home-r1.png)을 결속했다. 진행 주문이 있으면 현재 단계·예상 도착·주문 상세를 상점 탐색보다 먼저 보여 주며, 주문이 없어야 상점 탐색이 첫 내용이 된다.
+- 상점 탐색은 기존 `RestaurantSearchPolicyDto`의 기본 `7km`, 허용 `1~10km`, 빠른 선택 `3 / 5 / 7 / 10km`를 사용한다. 목록은 `배달권키 / 반경Km / 주문가능만`을 서버에 보내며 탐색 반경과 실제 주문 가능 판정을 분리한다.
+- 기사 후보 검색 반경, 행정동 배달운영권역, 역세권 1km Unity 관찰 범위는 음식점 탐색 반경으로 사용하지 않는다. 생성 이미지는 기획 시안이며 `OrdererApp` 제품 렌더·실제 장치·서버 결속 증거가 아니다.
+- 코드·API·DB·앱 UI는 변경하지 않았고 commit·push도 수행하지 않았다.
+
+## 역할별 OS 작업공간 기획 r2 (2026-09-18)
+
+- [하나의 운영 원장과 역할별 OS 작업공간 r2](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/README.md)에 주문자 진행 주문 우선 홈과 거리 제한 상점 탐색을 결속했다. 서버의 운영 도메인 OS, 참여자별 역할 작업공간, 실제 앱 Host를 분리하고 역할 수만큼 원장·상태기를 복제하지 않는 경계를 유지한다.
+- 총괄 운영은 기존 `SsalddelAdminApp` 한 앱에서 OS별 집계·대기열·예외·권한 있는 조치를 본다. 주문자·음식점·기사·마트·창고·화주·화물 기사는 같은 원장을 자기 관점의 조회 결과와 `AvailableActions`로 본다.
+- 현재 `OperatingSystemIdentityCatalog`, 역할 관점 ViewModel, 주문자·음식점·기사·창고·관리자 앱 프로젝트를 대조했다. 관련 기반 코드는 존재하지만 모든 역할을 포괄하는 통일된 작업공간 카탈로그와 물리 앱 분리 기준은 아직 기획 상태다.
+- [지역 운영 생명주기 E2E r19](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md)와 [음식 판매 OS 주문 처리 화면 r2](Planning/공통/PLAN-OPERATIONS-FOOD-SALES-ORDER-DESK/README.md)를 같은 경계에 결속했다. 코드·API·DB·앱 UI·실제 장치·commit·push는 변경하거나 수행하지 않았다.
+
+## 음식 판매 OS 주문 처리 화면 기획 r2 (2026-09-18)
+
+- [음식 판매 OS 주문 처리 화면 r2](Planning/공통/PLAN-OPERATIONS-FOOD-SALES-ORDER-DESK/README.md)을 역할별 OS 작업공간 정본에 결속하고, 글로 존재하던 `신규 주문 수신 → 상세 확인 → 조리시간 선택 → 수락/거절 → 조리 → 픽업 준비 → 배달 인계`를 첫 모바일 화면 시안과 연결했다.
+- 빠른 조리시간 선택은 `5 / 10 / 15 / 20분`으로 확정했다. 더 긴 시간은 직접 입력으로 남기고, 서버 적용값이 20분을 넘으면 앱 내부 알림 원장과 주문 진행 알림을 허용한 주문자의 모바일 푸시로 한 번 안내한다.
+- 현행 `RestaurantDeskApp`의 수신함·SignalR·서버 재조회·수락/거절·조리시간·전표·픽업 준비·배달 인계 코드를 대조했다. 앱은 Windows 전용이므로 생성한 모바일 이미지는 제품 코드나 실제 장치 증거가 아니다.
+- `음식 판매 OS`는 당장 새 서버 안정 ID나 중복 원장을 만들지 않고 기존 `FoodDeliveryOS`의 음식 주문·음식점 응답·조리·픽업 준비 단계에 대한 역할 화면으로 결속했다. 코드·API·DB·실제 앱·commit·push는 변경하거나 수행하지 않았다.
+
+## 음식배달 조리시간·주문자 안내 기획 r17/r42 (2026-09-18)
+
+- [지역 운영 생명주기 E2E·전국 확장 뼈대 r17](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md)과 [운영 배차 공통 코어 r42](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/README.md)에 따라 `기사 무응답`을 음식배달 OS 첫 화면의 주요 주의 대기열에서 제외했다. 제안 만료는 내부 배차 신호로 유지하고 운영 화면에서는 주문 기준의 `배차 대기 장기화`를 본다.
+- 음식점 주문 수락 화면은 `10 / 15 / 20분` 조리시간을 먼저 제시하고 기존 `30 / 45분`·직접 입력은 더 보기로 보존한다. 서버가 동결한 적용 조리시간이 20분을 넘으면 주문자 예상 준비시간 안내를 한 번 생성하며 자동 취소·환불·귀책 판정은 하지 않는다.
+- 현재 코드에는 조리시간 결정·동결 계약, 음식점 화면의 `10 / 15 / 20 / 30 / 45분` 선택과 직접 입력이 존재한다. 우선 표시 재배치, 20분 초과 주문자 알림과 음식배달 OS 집계 화면 변경은 아직 기획이며 제품 코드·장치 실행·commit·push는 수행하지 않았다.
+
+## 전체 홈·음식배달 OS·대기열 정보 계층 r16 (2026-09-18)
+
+- [지역 운영 생명주기 E2E·전국 확장 뼈대 r16](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md)에 따라 전체 운영 홈은 OS별 정상·주의·긴급 집계까지만 표시하고, 개인 주문·기사·픽업 지원 건을 직접 노출하지 않도록 정리했다.
+- 새 음식배달 OS 중점 화면 시안은 진행 주문, 배차 대기, 제안 가능 기사, 평균 예상 시간, 단계별 건수와 `픽업 지연 / 기사 무응답 / 음식점 준비 지연 / 수령 확인 대기` 집계만 보여 준다. 집계 행을 눌러 대기열로 들어가 한 건을 고른 뒤에만 기존 픽업 지연 상세 시안을 연다.
+- 정보 계층을 `전체 홈 → OS 중점 → 업무 대기열 → 개별 상세 → 행동 미리보기·확정 → 정본 재조회`로 고정했다. `비용·정산`은 OS 화면에서도 접힌 진입점으로 유지한다.
+- 생성 이미지는 기획 시안이다. 집계 API·대기열 route·권한·앱 코드·실제 장치 실행은 검증하지 않았고 commit·push도 수행하지 않았다.
+
+## 픽업 지연 상세 시안·회계 재무 점진 공개 r15 (2026-09-18)
+
+- [지역 운영 생명주기 E2E·전국 확장 뼈대 r15](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md)에 따라 홈의 `음식배달 · 픽업 지연 · 상세 보기` 화면 시안을 생성했다. 현재 진행 단계, 음식점 준비, 기사 응답·위치 갱신, 추가 대기, 상태 새로고침·연락하기를 먼저 표시하고 재배차는 최종 미픽업 판정 뒤 배차 엔진이 처리하는 안내로 뒀다.
+- 회계·재무 숫자는 홈이나 긴급 판단 화면에 전면 노출하지 않는다. 업무 상세 하단의 접힌 `비용·정산 상세`를 눌렀을 때만 해당 업무의 지급·할증·보류·계산 근거를 검토하며 회사 전체 손익과 관리계정은 별도 권한 화면으로 분리한다.
+- 생성 이미지는 대화 내 기획 시안이다. 앱·서버 코드, 실제 API 결속, 장치 실행, commit·push는 변경하거나 수행하지 않았다.
+
+## 운영자 앱 이미지 기반 화면 문답 r14 (2026-09-18)
+
+- [지역 운영 생명주기 E2E·전국 확장 뼈대 r14](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md)에 따라 긴급·예외·복구 중심 홈 화면을 기본 방향으로 확정했다. 이후에는 버튼 하나마다 `요약 → 상세 → 허용 행동·영향 미리보기 → 확정 뒤 서버 정본 재조회` 화면을 이미지로 비교한다.
+- 화면마다 총괄 운영자, OS별 관리자, 기사·음식점·화주·창고 담당자, 주문자·수령인, 감사·후속 경영자의 관점을 대조한다. 운영 편의를 이유로 기사 자율성·업무 권한·개인정보·판단 근거를 침범하지 않는다.
+- 생성 이미지는 기획 시안이며 API·Command·제품 코드·실제 장치 동작 증거가 아니다. 첫 추천 문답은 `음식배달 · 픽업 지연 · 상세 보기`이고, 이번 변경은 기획 문서만 갱신했으며 앱·서버 코드·commit·push는 변경하거나 수행하지 않았다.
+
+## 운영자 앱·운영 데이터 최우선 전환 (2026-09-17)
+
+- [지역 운영 생명주기 E2E·전국 확장 뼈대 r13](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md)에 따라 전체 제품 우선순위를 `운영 서버 원장·생명주기 + SsalddelAdminApp 모바일 운영 폐루프 → 격리 Simulation 규칙 → Unity 읽기 전용 3D 표현`으로 재정렬했다.
+- Unity 안에서는 행정동·역세권 디오라마가 첫 공간 작업이지만 전체 프로젝트의 운영자 앱보다 앞서지 않는다. 기존 30개 행정동 디오라마 뼈대는 현재 후속 표현 기반으로 충분하며, 운영자 앱에서 새 상태·관계·공간 요구가 발견되기 전에는 추가 Unity 확장을 자동 선택하지 않는다.
+- 첫 모바일 운영 후보는 `전체 상태 요약 → 긴급·예외·복구 대기 → 업무 상세 → 허용 행동·영향 미리보기 → 확정 → 서버 정본 재조회`다. 이번 변경은 기획 문서만 갱신했고 앱·서버·Simulation·Unity 코드, 실제 장치 실행, commit·push는 수행하지 않았다.
+
+## 디오라마 우선·행정동 묶음 배달권 분류 마감 (2026-09-17)
+
+- [현실 기반 디오라마의 네 환경 유형 r3](월드맵-4업무영역-자연경계와자산선정제안-2026-08-31.md)과 [행정동 기반 배달운영권역 r2](Planning/운영/PLAN-OPERATIONS-ADMIN-DONG-DELIVERY-TERRITORY/README.md)에 따라 행정동·역세권 디오라마를 Unity 공간 개발 최우선으로 고정했다.
+- 혼합 지역은 City·Town·Hub·Farm 중 `주 유형 1개 + 보조 유형 여러 개`로 분류한다. 서버 배달운영권역은 Unity 화면이나 역세권 1km 범위가 아니라 공식 행정동 안정 ID 여러 개를 묶는 원장으로 유지한다.
+- 이 기획 분류 작업은 r6에서 마감했다. 기존 영역별 게임플레이는 후순위로 보존하며 제품 코드·Graph Map·Unity Scene·Prefab·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## City·Town·Hub·Farm 디오라마 환경 유형 전환 (2026-09-17)
+
+- [현실 기반 디오라마의 네 환경 유형 r2](월드맵-4업무영역-자연경계와자산선정제안-2026-08-31.md)에 따라 City·Town·Hub·Farm을 먼저 완성할 네 게임 월드가 아니라 현실 기반 디오라마의 공간 성격 분류로 전환했다. 서울 행정동·역세권은 `City`, 읍내·소도시는 `Town`, 물류센터·물류단지는 `Hub`, 농장·농업 생산 구역은 `Farm`의 대표 사례다.
+- 실제 행정동·법정동·역세권·주소·좌표가 지역 정체성을 계속 소유한다. 디오라마 유형은 자산 밀도·랜드마크·배치·카메라·LOD의 표현 기본값만 돕고 업무 권위·게임 완료·새 Scene·AreaSet을 자동 생성하지 않는다.
+- 기존 City·Town·Hub·Farm 게임플레이와 스토리는 후순위로 보존한다. 혼합 지역을 `주 유형 1개 + 보조 유형 여러 개`로 기록할지는 다음 문답으로 남겼다. 이번 변경은 기획 문서만 갱신했고 제품 코드·Unity Scene·Prefab·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## Unity 디오라마 우선 개발선 분류 (2026-09-17)
+
+- [기획-코드 존재·Unity 개발선 추적 r4](Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/README.md)에 코드 존재 여부와 현재 개발 순서를 분리했다. Unity의 현행 공간 작업은 행정동·역세권 디오라마 `P0` → 읽기 전용 운영 관찰 `P1` → 근거가 동결된 시각 자산 정제 `P2` 순서로 분류한다.
+- 기존 City·Town·Hub·Farm과 Nature·전투·성장·발견 이야기 기획 및 코드는 삭제하지 않는다. 이들은 디오라마 기반선 뒤의 `Hold 독립 게임 영역`으로 보존하며, 공간 표현 일부를 재사용하더라도 해당 게임 폐루프 전체를 현행 우선순위로 올리지 않는다.
+- 이번 변경은 기획 문서와 목차 분류만 갱신했다. 제품 코드·Graph Map·Unity Scene·Prefab·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 재무 영향 특성·원장 투영 첫 절편 (2026-09-17)
+
+- [재무 영향 특성·원장 투영 구현 r2](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/financial-impact-ledger.implementation.r2.md)에 따라 결제·환불·기사 지급·수기 수익 Command/API에 설명·검사용 Profile Stable ID를 결속했다. Profile은 관리계정 후보, 금액 근거, 인식 시점, 매핑 revision을 드러내지만 실제 전표·지급 권한은 갖지 않는다.
+- 기존 결제 승인 Outbox가 발행한 Event를 `결제승인재무원장ProjectorEventHandler`가 `재무사건 / 관리계정전기 / 증빙 / 대사 예외`로 멱등 투영한다. 첫 결제 승인은 `PG 미수 / 고객 결제 정산대기`로만 기록하며 현금 입금이나 플랫폼 매출로 확정하지 않는다. 관리자 조회 API와 서버 원장 기반 운영경제성 평가를 추가했고 수기 수익 입력은 Simulation 전용으로 제한했다.
+- 집중 시험 `20/20`, 재무 영향 생성 지도 일치, `Ssalddel.v3.5.slnx` build와 `git diff --check`가 통과했다. Fast 자동 선택 시험은 기존 비재무 API 분류·명명 실패 4건 때문에 `116/120`, Task 전체 시험은 기존 7건 때문에 `5,330/5,337`에서 중단됐다. 실제 MySQL migration 적용, PG·은행 대사, 관리자 앱 화면, 실제 전표·송금·세무는 수행하지 않았고 commit·push도 수행하지 않았다.
+
+## 플랫폼 운영경제성 표준 첫 절편 (2026-09-17)
+
+- [플랫폼 운영경제성 표준 첫 구현 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/operating-economics-standard.implementation.r1.md)에 따라 총거래액, 주문·반복 수익 후보, 통과자금, 변동·고정비, 현금 유입·유출을 서로 다른 금액 분류로 정의했다. 국가·관할·통화별 요청을 순수 `Calculator`가 평가하고, 관리자 전용 `POST api/v1/admin/operations/economics/evaluate`가 기여금·영업이익 후보·손익분기·기말 가용현금과 결정적 hash를 반환한다.
+- KRW·USD 등 서로 다른 통화는 하나의 손익으로 자동 환산·합산하지 않는다. 본인·대리인 Code는 비교용 가정을 보존할 뿐 현금과 영업이익 후보를 바꾸지 않는다. 결과는 `ManagementSimulationOnly`로 고정했고 DB·Event·Outbox·결제·정산·회계 전표·환율 외부호출을 추가하지 않았다.
+- 신규 집중 시험 `8/8`, Fast 범위 검증의 build·코드맵·targeted test `13/13`이 통과했다(`artifacts/local/validation/20260917-185242`). Task에서 Simulation `1,979/1,979`, Unity `802/802`와 세 solution build는 통과했지만 전체 서버 시험은 이번 변경과 무관한 기존 API 분류·명명·공식 재료 화면 7건 때문에 `5,322/5,329`에서 중단됐다(`artifacts/local/validation/20260917-185447`). 실제 운영 원장 Adapter, 운영자 앱 화면, 환율, 13주 전망, 회계·세무 승인, Unity 표현은 수행하지 않았다. commit·push도 수행하지 않았다.
+
+## 운영자 앱 한시 수요 할증 첫 절편 (2026-09-17)
+
+- `SsalddelAdminApp` 운영 화면에 음식 배달 한시 수요 할증 카드(`15 / 30 / 60분`, `+500 / +1,000 / +1,500원`)를 추가했다. 이는 프리랜서 기사를 호출하거나 지시하는 기능이 아니라, 새 배차 제안의 지급 조건을 일정 시간 높이고 기사에게 수락·거절 선택을 유지하는 기능이다.
+- 서버는 관리자 권한, 허용 카드·시간, 멱등 요청 ID와 예상 revision을 검증한다. 첫 범위는 `전체 음식 배달 / 제안 가능 기사 부족`으로 고정했고 `Development + Simulation`에서만 변경할 수 있다. Operational에서는 Command를 거절하고 저장값을 실제 제안 요금에 합산하지 않는다.
+- 유효한 한시 할증은 새 음식 배달 제안 생성 시에만 기본 지급액·기상 할증과 함께 운송 원장에 동결되고 기사 계약에 분리해 전달된다. 기존 제안·완료 건은 소급 변경하지 않는다.
+- 집중 시험 `30/30`과 관리자 앱 Windows·Android 빌드가 경고 0개·오류 0개로 통과했다. 범위 Fast 검증도 통과했다(`artifacts/local/validation/20260917-174522`). Task 빌드는 통과했지만 전체 서버 시험은 이번 변경과 무관한 기존 API 분류·명명·공식 재료 화면 7건 때문에 `5,313/5,320`에서 중단됐다(`artifacts/local/validation/20260917-174249`). 실제 휴대폰 설치·화면 캡처·터치, 격리 MySQL 만료 경과, 기사 앱의 실제 표시, 결제·정산 지급은 수행하지 않았다. 현재 화면의 운행 기사 수와 별개인 `제안 가능 기사` 서버 집계도 아직 구현하지 않았다. commit·push는 수행하지 않았다.
+
+## 음식배달 OS 실패·복구 첫 세로 절편 (2026-09-17)
+
+- 음식점 진행 변경의 판본 충돌 응답에 실패 분류·책임 역할·정본 재조회 필요·현재 revision·허용 복구 행동을 추가했다. 공통 Client가 이를 보존하고 음식점 데스크는 충돌 시 해당 주문 정본을 다시 읽어 로컬 상태를 교체한다.
+- 일시 통신 장애는 기존 `클라이언트요청Id`와 같은 요청 DTO를 사용해 한 번만 재시도한다. 최종 음식배달 후속 처리 실패는 관리자 확인 대장에서 안전 재시도 예약 행동만 제공하며 원 업무 취소·보상·폐기·반환·강제 완료는 열지 않았다.
+- 집중 자동시험 `41/41`, `RestaurantDeskApp` Windows 빌드, `SsalddelAdminApp` Windows 빌드가 경고 0개·오류 0개로 통과했다. 범위 Fast 검증도 통과했다(`artifacts/local/validation/20260917-170652`). Task 빌드는 통과했지만 전체 서버 시험은 이번 변경과 무관한 기존 API 분류·명명·공식 재료 화면 7건 때문에 `5,305/5,312`에서 중단됐다(`artifacts/local/validation/20260917-170806`). 실제 서버 E2E, 네이티브 앱 클릭, Android 장치, Unity·Game View는 실행하지 않았고 commit·push도 수행하지 않았다.
+
+## Android 운영자 검증·생명주기 실패 복구 기획 r10 (2026-09-17)
+
+- [지역 운영 생명주기 E2E·전국 확장 뼈대 r10](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md)에 따라 다음 모바일 도그푸딩 대상은 기존 `SsalddelAdminApp` Android 운영자 판, 첫 장치는 실제 Android 휴대폰으로 유지한다. 현재 장치를 연결할 수 없어 설치만 보류하고 [OS 생명주기 Core와 환경별 Adapter r7](Planning/시스템/PLAN-SYSTEM-OS-LIFECYCLE-ENVIRONMENT-ADAPTERS/README.md)의 실패 분류·복구 행동·운영자 인계 계약을 먼저 닫는다.
+- 직접 사용 결과는 `유지 / 불편 / 누락 / 상태 불일치 / 복구 실패 / 역할 오류`로 함께 기록하고, 개인정보·원시 GPS·실제 결제·실제 주문·외부 푸시는 첫 검증에서 제외한다.
+- Android·MAUI 워크로드와 SDK의 `adb`를 확인하고 `SsalddelAdminApp`의 `net10.0-android` Debug 빌드를 실행해 경고 0개·오류 0개와 로컬 서명 APK 생성을 확인했다. 그러나 `adb devices -l`에 장치가 없어 설치·실행·로그인·캡처는 수행하지 못했다. 현재 코드에는 인증 갱신, 통신 실패 문구, 낮은 revision 뒤 재조회, 두 후속 원장의 자동 재시도·최종 실패 재예약이 있지만 모든 OS가 같은 실패 코드·책임·복구 행동을 반환하지는 않는다. 최종 실패의 관리자 공통 조작은 안전 재시도 예약 하나로 확정했고 취소·보상·폐기·반환·강제 완료는 제외했다. 이번 변경은 기획 문서뿐이며 앱·서버 코드, 실제 휴대폰용 주소 결속, commit·push는 변경하거나 수행하지 않았다.
+
+## 운영 OS 인계·창고 피킹/포장 연결 (2026-09-17)
+
+- [화물운송 OS와 음식배달 OS r11](Planning/공통/PLAN-OPERATIONS-LOGISTICS-OS/README.md)에 따라 `운영체제업무인계_Outbox`의 실제 처리기와 운영 모드 worker를 결속했다. 원 이벤트 revision·책임 OS·멱등 키를 그대로 발행하고 `Pending → Processing → Completed`, 일시 실패 `RetryPending`, 최대 시도 뒤 `Failed`를 구분한다. 관리자는 최종 실패만 재예약할 수 있으며 인계 업무 상태 자체는 이 처리기가 변경하지 않는다. 자동 worker는 `OperatingSystemHandoffOutbox:Enabled=true`와 운영 모드를 함께 만족해야 하며 기본값은 비활성이다.
+- 창고의 `출고예정`을 재처리 가능한 대기 원장으로 사용해 `피킹배치Engine → 피킹포장작업투영Service`를 실제 운영 경로에 연결했다. `출고` 담당자 한 명은 피킹·포장 통합, 서로 다른 `피킹`·`포장` 담당자는 분리 작업으로 배정한다. 담당자 부재·바코드 불일치·불완전 배치는 작업을 저장하지 않고 다음 주기에 다시 판정하며, 생성 작업은 `출고예정Id`에 명시적으로 결속된다. 자동 worker는 `WarehouseOutboundPickingPacking:Enabled=true`와 운영 모드를 함께 만족해야 하며 기본값은 비활성이다.
+- Warehouse→Cargo 생명주기 계약은 실제 구현 단계인 `WarehouseOutboundHandoff`로 맞추고 대장 판본을 `operating-system-interaction-catalog.v2`로 올렸다. 집중 회귀 `42/42`와 관계형 SQLite 작업 생성·재조회, 범위 Fast build·targeted test가 통과했다(`artifacts/local/validation/20260917-162001`). Task build도 통과했지만 전체 서버 시험은 이번 범위 밖의 기존 라우트 capability·API metadata·공식 재료 CSS·업무 책임 문구 7건 때문에 `5,299/5,306`에서 중단됐다(`artifacts/local/validation/20260917-162048`). 실제 MySQL worker 연속 운전, 다중 서버 경쟁 처리, API/앱/Unity 실행은 수행하지 않았고 commit·push도 하지 않았다.
+
+## 절기 운영 Campaign 구현 현황 재검증 (2026-09-17)
+
+- 승인 기준선 `seasonal-campaign-refactoring-plan.r66`과 `WI-OPS-SEASONAL-CAMPAIGN-ADVANCE`를 현재 작업트리 코드에 다시 대조했다. 공유 계약, 서버 권위 상태 전이, Preview·Confirm·멱등성, Save/Restore/Replay, LocalProcess·RemoteHost 동등 계약, Unity 읽기 전용 Interpreter·Coordinator·원천별 마지막 정상 상태까지 실제 소스와 자동시험이 존재한다.
+- 집중 시험은 Simulation 10/10, Unity Campaign 16/16이 통과했다. 이어 `eng/validate-changes.ps1 -Level Task -Paths <절기 Campaign 범위>`를 실행해 Simulation·Unity 솔루션 빌드와 전체 Simulation 1,979/1,979, Unity 802/802 회귀시험을 통과했다. 상세 기록은 `artifacts/local/validation/20260917-145600/`에 있다.
+- 현행 통합 증거 상한은 E4로 유지한다. canonical `SimulationWorldShell` Scene 저장, 실제 RemoteHost·token 연결, Play Mode 입력, Game View 판독은 이번 재검증에서 수행하지 않았으므로 E5~E7은 계속 차단한다. `r100` 괘상 의미 코드 제안은 승인 전 초안이므로 이번 구현 기준선에 섞지 않았다.
+- 이번 점검에서는 기존 구현 결함이 재현되지 않아 새 업무 규칙이나 Runtime 코드를 임의로 추가하지 않았다. commit·push는 수행하지 않았다.
+
+## 지천태·천지비 이화 전환축 r106 (2026-09-17)
+
+- [지천태·천지비 이화 전환축 r106](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/tai-pi-li-transition-axis.r106.md)에 따라 제11괘·제12괘를 9·10괘의 숨어 있는 이화와 13·14괘의 드러난 이화 사이에서 음양 두 집단의 소통·불통을 시험하는 전환축으로 확정했다.
+- 지천태는 조정 장치 없이도 잠시 통하는 가능성, 천지비는 같은 결손이 조건 악화 뒤 실제 불통으로 드러나는 상태로 유지한다. 이를 통해 공통 업무 계약·운영체제·관리자 역할·소통 도구의 필요를 발견한다.
+- 이번 판본은 의미 기획만 갱신했다. 관리자 NPC·업무 계약·Campaign·코드·Graph Map·Unity·E 단계·commit·push는 추가하거나 수행하지 않았다.
+
+## 9~16괘 핵심효 중심 국소 삼효상 r105 (2026-09-17)
+
+- [9~16괘 핵심효 중심 국소 삼효상 r105](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hex09-16-minority-line-local-trigram.r105.md)에 따라 다섯 양효 속 유일한 음효와 인접 효를 묶어 9·10·13·14괘에서 `양·음·양` 이괘가 나타나는 보조 관점을 기록했다.
+- 같은 기준을 반대로 적용하면 15·16괘의 유일한 양효 주변에서 `음·양·음` 감괘가 나타난다. 11·12괘는 양효 셋과 음효 셋의 두 덩어리이므로 같은 방식으로 축약하지 않고 소통·불통의 전환축 후보로 보존했다.
+- 이는 정식 상괘·하괘나 호괘를 대체하지 않는 프로젝트 고유의 `핵심효 중심 국소 삼효상`이다. 이번 판본은 의미 기획만 갱신했고 스토리·Campaign·코드·Unity·E 단계·commit·push는 수행하지 않았다.
+
+## 1~8괘 물·지혜 오행 작용 검토 r104 (2026-09-17)
+
+- [1~8괘 물·지혜 오행 작용 검토 r104](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hex01-08-water-wisdom-five-elements.r104.md)에 따라 1~2괘는 감수가 나타나기 전 금의 원칙과 토의 그릇, 3~8괘는 모든 괘에 감수가 들어가 수생목·금생수·토극수의 작용을 겪는 지혜 형성 구간으로 검토했다.
+- 3괘는 경험이 의지를 기르는 수생목, 4괘는 질문·교사·규율로 물길을 잡는 토극수, 5~6괘는 준비가 지혜를 낳고 그 힘이 논쟁으로 갈라질 수 있는 금생수, 7~8괘는 내부 규율과 외부 신뢰로 위치가 전환되는 토·수 관계로 제안했다.
+- 1~8괘에는 이화가 없으므로 수극화를 상·하괘의 직접 관계로 기록하지 않았다. 이번 판본은 괘상 의미 기획만 갱신했고 스토리·Campaign·코드·Unity·E 단계·commit·push는 수행하지 않았다.
+
+## 화뢰서합·산화비 목생화·화생토 해석 r103 (2026-09-17)
+
+- [화뢰서합·산화비 목생화·화생토 해석 r103](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/shi-he-bi-wood-fire-earth.r103.md)에 따라 제21괘의 진목→이화를 계획이 실행력과 확인 가능한 첫 성과로 점화되는 목생화, 제22괘의 이화→간토를 그 성과가 기반·질서·보이는 형태로 굳는 화생토로 해석하는 후보를 기록했다.
+- 화뢰서합의 장애 해소는 계획을 성과로 전환하며 막힌 것을 뚫는 방식으로, 산화비의 문채·형식은 내용 없는 장식이 아니라 성과를 보존하고 다른 사람이 알아볼 수 있게 만드는 방식으로 포함했다.
+- 이번 판본은 괘상 의미 기획만 갱신했다. 스토리·Campaign·수치 효과·코드·DB·API·Graph Map·Unity·Scene·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 괘상 의미 우선 순서 r102 (2026-09-17)
+
+- [괘상 의미 우선 순서 r102](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/meaning-first-planning-order.r102.md)에 따라 운영 스토리·Campaign·코드 구현보다 64괘 각각의 괘상·상괘·하괘·전체 의미 정립을 먼저 진행하기로 확정했다.
+- r100 코드 구현 제안과 r101 첫 시즌 이야기 종합안은 삭제하지 않고 `DeferredReference`로 보존한다. 의미 확정 전에는 두 문서를 현행 구현·스토리 기준선으로 사용하지 않는다.
+- 현재 문답 위치는 제21괘 화뢰서합·제22괘 산화비의 최종 의미 확정 전이다. 이를 닫은 뒤 제23괘 산지박·제24괘 지뢰복으로 진행한다. 코드·DB·API·Graph Map·Unity·Scene·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 첫 시즌 이야기 종합안 r101 (2026-09-17)
+
+- [첫 시즌 이야기 종합안 r101](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/first-season-story-synthesis.r101.md)에 따라 1~22괘의 운영 의미를 `결핍 속 출발 → 역할별 배움 → 내부 운영 질서 → 지역과 첫 관계 → 연쇄 장애의 공정한 해결 → 투명한 표현과 작은 정착`으로 이어지는 사가정 운영 게임 첫 시즌 후보로 묶었다.
+- 제21괘 중심 사건은 조리 지연·보호 배차 해제·우선 재배차·위치 갱신 중단·수령자 연락·기사 수행대금과 정산 확인이 이어지는 합성 연쇄 장애로 제안했다. 제22괘는 같은 revision의 사실을 역할별 앱과 Unity 디오라마에서 판독 가능하게 보여 주는 마감으로 제안했다.
+- 이번 판본은 운영 스토리 기획 문서만 갱신했다. 기존 이안·한스 메인 스토리, 효 이야기, 코드·DB·API·Graph Map·Unity·Scene·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 괘상 운영 캠페인 코드 구현 제안 r100 (2026-09-17)
+
+- [괘상 운영 캠페인 코드 구현 제안 r100](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hexagram-operational-campaign-code-implementation-proposal.r100.md)에 따라 괘상 의미를 주문·배차·정산을 직접 바꾸는 규칙이 아니라 `Simulation절기운영Campaign` 정의가 참조하는 판본화된 의미 메타데이터로 두는 구조를 제안했다.
+- 기존 이야기용 `SimulationHexagramCampaign`은 유지하고, 운영 Campaign은 효별 단계 없이 괘 전체 참조와 실제 업무 phase·condition·source를 분리한다. 첫 코드 slice 후보는 선택형 괘상 참조 계약, 의미 대장 검사기, 기존 수뢰둔 점심 피크 Profile 결속, Save/Replay·Local/Remote 회귀다.
+- 이번 판본은 실제 작업 트리의 Campaign 계약·Domain·API·Unity Coordinator를 읽어 작성한 기획 문서다. 코드·DB·API·Unity·Scene·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 화뢰서합·산화비 괘상 검토 r99 (2026-09-17)
+
+- [화뢰서합·산화비 괘상 검토 r99](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/shi-he-bi-pair-review.r99.md)에 따라 우레의 실행과 불의 분별로 사이의 장애를 깨무는 화뢰서합, 산 아래 불이 실질의 형태를 밝히는 산화비의 괘상·상괘·하괘를 정리했다.
+- `정착 실행을 막는 장애를 증거·규칙·절차로 해소 → 정리된 실질을 앱·Unity 디오라마에서 이해 가능하게 표현`은 운영 의미 후보이며 아직 확정하지 않았다. 표현은 실제 판정 권위를 갖지 않는다.
+- 이번 판본은 기획·원문 검토 문서만 갱신했다. 처벌 정책·분쟁 판정·UI·디오라마·Unity·Scene·Game View·Campaign 상태 전이·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 개인 개발 여정 비유 r98 (2026-09-17)
+
+- [개인 개발 여정 비유 r98](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/personal-development-journey-analogy.r98.md)에 따라 1~16괘를 Unity Simulation과 표본 자료로 현실 적용 전 내부 질서·사람·돈·도구를 준비하는 개발 과정, 17괘부터를 외부 앱 시험을 통해 실제 사람과 생활 환경의 반응을 만나는 과정으로 비유했다.
+- 이 비유는 개인적 개발 여정을 이해하는 비구속적 성찰이며 운명·출시 시점·사업 성공을 예측하지 않는다. Play Store 게시, 외부 시험, 실제 주문·배차·결제·정산 운영도 서로 다른 관문으로 분리했다.
+- 이번 판본은 기획 문서만 갱신했다. 앱 게시·배포·실제 운영 활성·코드·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 수행하지 않았다.
+
+## 지택림 뿌리 정착과 풍지관 정착 계획 r97 (2026-09-17)
+
+- [지택림 뿌리 정착과 풍지관 정착 계획 r97](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/lin-rooting-guan-settlement-planning.r97.md)에 따라 19괘는 목극토의 창작 이미지를 빌려 새싹의 뿌리가 흙을 움켜쥐고 지역 관계·운영 기반을 확보하는 단계로 확정했다.
+- 20괘는 뿌리내린 자리에서 지역 환경·사람·운영 역량·외부 반응을 전반적으로 돌아보고 정착 방법·방향·계획·목표를 세우는 단계로 확정했다.
+- 이번 판본은 기획 문서만 갱신했다. 실제 토지·지역 독점·주민 편입·목표 수치·Campaign 상태 전이·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 결정하거나 수행하지 않았다.
+
+## 산풍고 종료와 지택림·풍지관 괘상 검토 r96 (2026-09-17)
+
+- [산풍고 종료와 지택림·풍지관 괘상 검토 r96](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/gu-closure-lin-guan-review.r96.md)에 따라 18괘는 새싹이 성장할 순환을 얻었지만 위험·묵은 결손·수리를 계속 품는 단계로 확정했다.
+- 19괘 지택림은 사람과 현장 가까이 다가가 듣고 돌보는 형상, 20괘 풍지관은 운영자가 지역을 관찰하는 동시에 사람들도 플랫폼 행동을 지켜보는 형상으로 검토했다. 운영 의미는 아직 문답 대기다.
+- 이번 판본은 기획·원문 검토 문서만 갱신했다. 실제 영업·모집·평판 점수·Campaign 상태 전이·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 결정하거나 수행하지 않았다.
+
+## 택뢰수 플랫폼 성립과 산풍고 생장 환경 r95 (2026-09-17)
+
+- [택뢰수 플랫폼 성립과 산풍고 생장 환경 r95](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/sui-platform-formed-gu-growth-environment.r95.md)에 따라 수뢰둔과 같은 하괘 진의 의지가 1~16괘에서 형성한 질서와 상괘 태의 외부 호응을 만나 Simulation 안의 첫 플랫폼 형태를 이루는 것으로 제17괘 의미를 확정했다.
+- 제18괘는 산수몽의 물과 배움에 손괘 바람의 순환이 더해져 새싹의 생장을 돕는 환경이라는 후보로 바꿨다. 산풍고의 전통적 묵은 결손·수리 의미는 순환이 막힐 때의 보조 위험으로 남길지 문답 중이다.
+- 이번 판본은 기획 문서만 갱신했다. 실제 플랫폼 활성·식생 수치·Campaign 상태 전이·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 택뢰수·산풍고 괘상 검토 r94 (2026-09-17)
+
+- [택뢰수·산풍고 괘상 검토 r94](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/sui-gu-pair-review.r94.md)에 따라 못 속의 우레처럼 외부의 때와 사람에 호응하는 택뢰수와, 산 아래 갇힌 바람처럼 오래 방치된 결손을 고쳐야 하는 산풍고의 괘상·상괘·하괘를 정리했다.
+- `내부 기준을 지키며 세상과 첫 관계를 맺음 → 관계 속에서 오래된 문제를 발견하고 책임 범위 안에서 수리`는 운영 의미 후보이며 아직 확정하지 않았다.
+- 이번 판본은 기획·원문 검토 문서만 갱신했다. 외부 주체·사건·Campaign 상태 전이·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 결정하거나 수행하지 않았다.
+
+## 1~16괘 마음 형성과 17괘 외부 관계 r93 (2026-09-17)
+
+- [1~16괘 마음 형성과 17괘 외부 관계 r93](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hex01-16-inner-mind-hex17-outward-relation.r93.md)에 따라 1~16괘를 여러 운영 경험을 통해 세상과 사람을 대할 마음과 태도를 내부에 형성하는 단계로 확정했다.
+- 기존 배움·업무 정돈·관리자 NPC·자동화·위임·균형·숨은 발아 결정은 유지하며, 이를 마음이 관념이 아니라 경험과 선택으로 형성되는 재료로 재해석했다. 제17괘부터는 그 내면이 세상 사람들과의 관계 속 행동과 결과로 드러난다.
+- 이번 판본은 최상위 이야기 기획만 갱신했다. 실제 사람의 심리 추정·성향 점수·Campaign 상태 전이·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 추가하거나 수행하지 않았다.
+
+## 1~16괘 내부 균형과 17괘 세상 진입 r92 (2026-09-17)
+
+- [1~16괘 내부 균형과 17괘 세상 진입 r92](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hex01-16-internal-balance-hex17-outward-start.r92.md)에 따라 1~16괘 전체를 배우고 익힌 뒤 내부 업무·역할·정보·자원의 질서와 균형을 갖추는 첫 대구간으로 확정했다.
+- 15~16괘의 숨은 발아는 유지하지만, 17~24괘 전체를 흙속 성장으로 보던 r91 후보는 대체했다. 제17괘부터 내부 생명과 질서가 세상 밖을 향해 외부 관계를 시작한다.
+- 이번 판본은 상위 이야기 기획만 갱신했다. 첫 외부 대상·사건·Campaign 상태 전이·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 결정하거나 수행하지 않았다.
+
+## 지산겸·뇌지예 숨은 발아 r91 (2026-09-17)
+
+- [지산겸·뇌지예 숨은 발아 r91](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/qian-yu-hidden-germination.r91.md)에 따라 15괘는 13~14괘에서 작동하기 시작한 내부 질서가 씨앗 안의 생명력으로 맺히는 단계, 16괘는 그 생명이 씨앗 껍질을 뚫었지만 아직 흙 아래에 있어 외부에서는 보이지 않는 단계로 확정했다.
+- 1~16괘 첫 구간은 외부 확장이나 조직 동원 완성이 아니라 `숨은 발아 성공`에서 닫는다. 17~24괘는 발아한 싹이 주변 환경을 통과하며 자라는 다음 상위 이야기 구간으로 둔다.
+- 이번 판본은 창작적 상위 이야기 기획만 갱신했다. 생장 수치·Campaign 상태 전이·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 지산겸·뇌지예 괘상 검토 r90 (2026-09-17)
+
+- [지산겸·뇌지예 괘상 검토 r90](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/qian-yu-pair-review.r90.md)에 따라 땅속에 산을 낮춰 과잉과 부족을 조정하는 지산겸과, 땅 위로 우레가 솟아 호응하는 움직임을 일으키는 뇌지예의 괘상·상괘·하괘를 정리했다.
+- `확보한 권한·자원을 겸손하게 재배분 → 정돈된 기반 위에서 관리자·NPC·자동화를 함께 동원`은 운영 의미 후보이며 아직 확정하지 않았다.
+- 이번 판본은 기획·원문 검토 문서만 갱신했다. 재배분 수치·동원 Command·Campaign 상태 전이·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 생성하거나 수행하지 않았다.
+
+## 천화동인·화천대유 자동화와 위임 통제 r89 (2026-09-17)
+
+- [천화동인·화천대유 자동화와 위임 통제 r89](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/tong-ren-da-you-delegated-control.r89.md)에 따라 13~14괘는 7~8괘에서 알아차렸지만 처리 용량이 부족해 남겨 둔 문제를 운영 체제·자동화·관리자 위임으로 실제 보완하는 시기로 확정했다.
+- 천화동인은 문제를 역할별 공동 업무와 자동화·위임 대상으로 전환하고, 화천대유는 그 결과 운영자가 직접 모든 일을 하지 않아도 흐름을 관찰하고 예외에 개입하며 결과를 검토할 수 있는 질서와 운영 통제력을 얻는 단계다.
+- 이번 판본은 기획 문서만 갱신했다. 자동화 대상·관리자 권한·Fixture·Campaign 상태 전이·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 지천태·천지비 종료와 천화동인·화천대유 검토 r88 (2026-09-17)
+
+- [r88](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/tai-pi-closure-and-tong-ren-da-you-review.r88.md)에 따라 11~12괘는 운영 체제를 정밀화하고 상위·하위 양쪽의 소통을 도울 관리자·NPC 인력과 도구를 보강하는 것으로 닫았다.
+- 13괘 천화동인은 역할 차이를 분별하면서 폭넓게 뜻을 같이하는 형상, 14괘 화천대유는 결합된 사람·역량·신뢰·정보·물자가 큰 자원으로 드러나는 형상으로 먼저 검토했다. 운영 의미는 아직 문답 대기다.
+- 이번 판본은 기획·원문 검토 문서만 갱신했다. 인력 Fixture·채용 시스템·Campaign 상태 전이·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 지천태·천지비 조정 관리자 필요 r87 (2026-09-17)
+
+- [지천태·천지비 조정 관리자 필요 r87](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/tai-pi-coordination-gap.r87.md)에 따라 지천태와 천지비 모두 위아래·역할 사이를 지속적으로 연결할 관리 기능이 아직 없다는 공통 결손을 드러내는 단계로 확정했다.
+- 지천태는 자발적 협력 덕분에 관리자가 없어도 잠시 통하는 흐름이고, 천지비는 누적된 인계·우선순위·책임 공백이 조건 악화 뒤 실제 불통으로 나타난 모습이다.
+- 이번 판본은 기획 문서만 갱신했다. 관리자 권한·Fixture·Campaign 상태 전이·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 지천태·천지비 괘상 검토 r86 (2026-09-17)
+
+- [지천태·천지비 괘상 검토 r86](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/tai-pi-pair-review.r86.md)에 따라 하늘과 땅의 기운이 서로 오가며 통하는 지천태와 서로 멀어져 막히는 천지비의 괘상·상괘·하괘를 정리했다.
+- `처음 만든 질서의 소통과 순환 → 형식은 남았지만 정보·역할·자원이 단절된 막힘`은 운영 의미 후보이며 아직 확정하지 않았다.
+- 이번 판본은 기획·원문 검토 문서만 갱신했다. Campaign Fixture·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 생성하거나 수행하지 않았다.
+
+## 풍천소축·천택리 실천과 정돈 r85 (2026-09-17)
+
+- [풍천소축·천택리 실천과 정돈 r85](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/xiao-xu-lu-practice-and-order.r85.md)에 따라 9~10괘를 1~8괘에서 배운 것을 실제로 행하면서 미처 정리하지 못한 사람·자원·역할·절차·기록의 결손이 드러나고 정돈되는 시기로 확정했다.
+- 풍천소축은 작은 실천과 정돈 재료의 수집, 천택리는 역할·권한·책임에 맞춘 배치와 첫 반복 가능 질서의 형성에 무게를 둔다. 아직 완성된 제도나 안정 운영은 아니다.
+- 이번 판본은 기획 문서만 갱신했다. 구체 업무 Fixture·Campaign 상태 전이·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 배움에서 초기 경영으로 넘어가는 1~16괘 구간 r84 (2026-09-17)
+
+- [1~16괘 상위 이야기 구간 r84](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hexagram-learning-to-early-management-arcs.r84.md)에 따라 1~8괘는 `발동 → 현실 접촉 → 배움 → 내실 → 신뢰 형성`, 9~16괘는 `소규모 축적 → 경계 있는 실행 → 순환과 막힘의 학습 → 협력과 자원 관리 → 절제된 동원`의 구간으로 확정했다.
+- 9~16괘는 완성된 경영이 아니라 통제 기준과 역할을 만들며 점차 질서의 형상을 갖추는 초기 경영 단계다. `간괘`라는 표현은 전통의 간(艮)과 혼동하지 않도록 현행 문서에서는 `초기 경영·질서 형성 구간`으로 적었다.
+- 이번 판본은 상위 이야기 기획만 갱신했다. 개별 괘 사건·Campaign 상태 전이·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 풍천소축·천택리 괘상 검토 r83 (2026-09-17)
+
+- [풍천소축·천택리 괘상 검토 r83](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/xiao-xu-lu-pair-review.r83.md)에 따라 바람이 하늘의 큰 힘을 조금씩 거두고 다듬는 풍천소축과, 하늘과 못의 자리를 분별하며 신중히 실천하는 천택리의 괘상·상괘·하괘를 정리했다.
+- `작은 자원·신뢰·절차 축적 → 역할·권한·책임 경계 안의 신중한 실행`은 운영 의미 후보이며 아직 확정하지 않았다. 상하 구분은 사람의 가치 서열이 아니라 업무 책임 경계로만 해석한다.
+- 이번 판본은 기획·원문 검토 문서만 갱신했다. Campaign Fixture·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 생성하거나 수행하지 않았다.
+
+## 지수사·수지비 내실과 신뢰 r82 (2026-09-17)
+
+- [지수사·수지비 내실과 신뢰 r82](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/shi-bi-inner-substance-recognition.r82.md)에 따라 지수사는 외부 과시보다 내부의 지혜·규율·운영 실력을 닦고 사람을 책임 있게 품을 능력을 만드는 캠페인으로 확정했다.
+- 수지비는 그 내실을 다른 주체가 기록과 행동으로 자연스럽게 알아보고 자발적인 신뢰·협력 관계를 형성하는 캠페인이다. 특정 양효를 절대 권위나 자동 복종으로 환산하지 않는다.
+- 이번 판본은 기획 문서만 갱신했다. 신뢰 Fixture·Campaign Core·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 생성하거나 수행하지 않았다.
+
+## 지수사·수지비 괘상 검토 r81 (2026-09-17)
+
+- [지수사·수지비 괘상 검토 r81](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/shi-bi-pair-review.r81.md)에 따라 땅속의 물처럼 다수를 품고 조직·보호하는 지수사와 땅 위의 물처럼 서로 가까이하는 수지비의 괘상·상괘·하괘를 먼저 정리했다.
+- `책임 있는 운영 조직 형성 → 명령을 넘어선 신뢰·협력 관계 형성`은 운영 의미 후보이며 아직 확정하지 않았다.
+- 이번 판본은 기획·원문 검토 문서만 갱신했다. Campaign Fixture·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 생성하거나 수행하지 않았다.
+
+## 수천수·천수송 성장과 겸손 r80 (2026-09-17)
+
+- [수천수·천수송 성장과 겸손 r80](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/xu-song-growth-humility-conflict.r80.md)에 따라 수천수는 배움으로 힘과 의지가 생겼지만 위험 속에서 더 배우고 실천하며 준비하는 캠페인으로 확정했다.
+- 천수송은 자원과 참여자가 늘며 드러난 이해관계·계약·책임 갈등을 운영자의 힘으로 누르지 않고 겸손하게 역할별 처지를 듣고 조정하는 캠페인이다. 질서와 체계는 아직 완성되지 않은 상태로 유지한다.
+- 이번 판본은 기획 문서만 갱신했다. 대표 갈등 Fixture·Campaign Core·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 생성하거나 수행하지 않았다.
+
+## 절기 Campaign 카드·NPC 원천 결속 r79 (2026-09-17)
+
+- [카드·NPC 원천 결속 r79](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/seasonal-campaign-card-npc-source-binding.r79.md)에 따라 기존 카드 Family별 revision과 동네 NPC 관찰 revision을 Campaign 조합기의 독립 원천 진단으로 연결했다. 원천 판본이 없으면 최신으로 추정하지 않는다.
+- 제품 Unity의 기존 카드 서랍·동네 관찰 Presenter가 정상 화면 사본을 적용할 때 읽기 전용 사건을 내고, Campaign World Controller가 늦게 생성된 Presenter도 재발견해 구독한다. 카드·NPC 실행 권위나 업무 상태는 변경하지 않는다.
+- Hongdal 집중 시험 13/13, 제품 Unity 실제 import·compile 및 결속 시험 3/3, 전체 Task 기준 Simulation 1,979/1,979·Unity 802/802가 통과했다.
+- **미완료:** canonical Scene 저장, 실제 RemoteHost·token 연결, Play Mode·Game View. 통합 증거는 E4이며 commit·push·배포는 수행하지 않았다.
+
+## 유연한 괘 짝 설명 r78 (2026-09-17)
+
+- [유연한 괘 짝 설명 r78](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/flexible-hexagram-pair-explanation.r78.md)에 따라 전통 배열에서 짝을 이루는 괘는 문제·움직임과 반대 관점·성찰의 관계로 함께 설명한다.
+- 모든 홀수 괘를 양, 짝수 괘를 음으로 고정하지 않으며 짝 관계는 캠페인 기획을 돕는 리듬일 뿐 상태 전이·수치·공간 생성 권위가 아니다.
+- 다음 설명 후보는 제5괘 수천수와 제6괘 천수송이다. 이번 판본은 기획 문서만 갱신했고 Campaign·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 산수몽 학습·역지사지·안정 r77 (2026-09-17)
+
+- [산수몽 학습·역지사지·안정 r77](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/meng-learning-stabilization.r77.md)에 따라 수뢰둔 뒤 실제 업무를 배우고 주문자·음식점·기사·지원 담당의 처지를 비교하며 작은 사람·물자·돈·정보를 모아 최소 안정을 갖추는 캠페인으로 확정했다.
+- 3·4, 5·6처럼 전통 배열의 짝 관계는 인지하되 모든 홀수 괘를 양, 짝수 괘를 음으로 고정하는 역사적 사실로 취급하지 않는다. 발동과 성찰의 유연한 창작 리듬으로 사용할지는 다음 문답이다.
+- 이번 판본은 기획 문서만 갱신했다. 산수몽 운영 Fixture·64개 캠페인 목록·Campaign Core·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 생성하거나 수행하지 않았다.
+
+## 수뢰둔 최소 시작 현금 r76 (2026-09-17)
+
+- [수뢰둔 최소 시작 현금 r76](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/zhun-minimum-cash.r76.md)에 따라 첫 주문과 최소 운영은 가능하지만 몇 번의 잘못된 판단을 버티기 어려운 최소 현금으로 시작한다.
+- 정확 원화 금액은 기사·음식점·주문·지급 주기·비용 Fixture가 확정된 뒤 계산하며, 현금 부족을 기사·음식점 대금 감액이나 지급 지연으로 전가하지 않는다.
+- 이번 판본은 기획 문서만 갱신했다. 금액 Fixture·가상 원장·Campaign Core·Unity·Scene·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 수뢰둔 결핍의 시작 r75 (2026-09-17)
+
+- [수뢰둔 결핍의 시작 r75](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/zhun-scarcity-start.r75.md)에 따라 수뢰둔은 플랫폼을 시작하려는 뜻과 움직임은 생겼지만 사람·물자·돈·정보가 부족하고 장애물이 많은 출발 상태로 확정했다.
+- 기존 점심 피크 안정화는 수뢰둔의 출발 의미가 아니라 결핍이 처음 드러나는 사건이자 작은 운영 질서를 형성하는 후속 결과로 내렸다. 정확한 시작 현금·인원·장비 수치는 아직 확정하지 않았다.
+- 이번 판본은 기획 문서만 갱신했다. 가상 원장 수치·Campaign Core·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 절기 운영 Campaign World 결속 소스 r74 (2026-09-17)
+
+- [World 결속 소스 r74](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/seasonal-campaign-world-binding-source.r74.md)에 따라 현재 국면의 `RequiredSourceCodes`를 Unity 원천 진단과 결속했다. 필수 원천이 지연되면 마지막 정상 국면은 유지하고 Campaign 조작만 막으며, 알 수 없는 원천을 최신으로 추정하지 않는다.
+- 제품 Unity 저장소에 휘발성 token 공급자, 인증 GET Adapter, `절기운영CampaignWorldView`, `절기운영CampaignWorldController`와 기존 `OperationalOsWorldRoot` Builder 결속을 추가했다. 운영 장면 Controller는 정상 읽기 결과의 revision만 이벤트로 전달한다.
+- Hongdal 집중 시험 14/14, Task 기준 Simulation 1,979/1,979·Unity 800/800, 실제 Unity package import·컴파일, 제품 Unity 새 결속 2/2·기존 Shell 12/12·운영 관찰 5/5가 통과했다.
+- **미완료:** canonical Scene 저장, 실제 RemoteHost·token 연결, Play Mode·Game View. 통합 증거는 E4이며 commit·push·배포는 수행하지 않았다.
+
+## 괘 단위 운영 캠페인 r73 (2026-09-17)
+
+- [괘 단위 운영 캠페인 r73](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/whole-hexagram-operator-campaign.r73.md)에 따라 배달 플랫폼 운영 기획에서는 효사 여섯 개를 각각 운영 단계로 대응하지 않고, 괘 하나의 전체 의미를 캠페인 하나의 주제·압박·선택·대가·회복 방향으로 사용한다.
+- r71의 육효 운영 국면 표는 검토 이력으로 남지만 현행 진행 구조가 아니다. 실제 단계 수와 상태 전이는 음식배달 OS와 Campaign Core의 업무 사건이 소유한다.
+- 이번 판본은 기획 문서만 갱신했다. 64개 캠페인 목록·코드·Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 생성하거나 수행하지 않았다.
+
+## 수뢰둔·절기 캠페인 독립 운영 r72 (2026-09-17)
+
+- [수뢰둔·절기 캠페인 독립 운영 r72](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/independent-hexagram-seasonal-campaigns.r72.md)에 따라 수뢰둔 육효 운영과 절기 초·중·후반 운영을 서로 다른 상태·revision·명령 기록·완료 조건으로 유지한다.
+- 두 캠페인은 같은 Simulation 시간·행정동 디오라마·검증된 공공자료를 읽기 전용 문맥으로 관찰할 수 있지만 한쪽 진행이나 카드 선택이 다른 쪽을 자동 성공·실패·진행시키지 않는다.
+- 이번 판본은 기획 문서만 갱신했다. 캠페인 Core·저장·Unity 화면 모델·디오라마·Scene·Game View·E 단계·commit·push는 변경하거나 수행하지 않았다.
+
+## 수뢰둔 점심 피크 캠페인 결속 r71 (2026-09-17)
+
+- [수뢰둔 점심 피크 결속 r71](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/zhun-lunch-peak-campaign-binding.r71.md)에 따라 사가정·면목제3·8동의 `예상보다 빠른 점심 주문 증가 + 가용 기사 부족`을 수뢰둔에서 영감을 얻는 첫 운영 캠페인으로 확정했다.
+- 기존 한스 농장 수뢰둔의 인물·H·WI·공간을 복사하지 않고, 작은 기반과 관계·제한 권한·운영 질서를 세운 뒤 회복 가능한 손실을 결산한다는 의미만 별도 운영 Campaign에 결속한다.
+- 육효에 대응하는 여섯 운영 국면은 문답 후보이며, 절기 시간 구조와의 관계는 아직 미정이다. 이번 판본은 기획 문서만 갱신했고 Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 수행하지 않았다.
+
+## 64괘 운영 기획·디오라마 축적 결속 r70 (2026-09-17)
+
+- [64괘 운영 기획·디오라마 축적 결속 r70](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hexagram-64-operator-diorama-accumulation.r70.md)에 따라 기존 64괘 정본을 배달 플랫폼 운영 상황의 영감·저작 틀로 재사용하고, 괘 이름만으로 업무 상태나 Unity 공간을 자동 생성하지 않도록 경계를 고정했다.
+- 승인된 운영 국면에서 필요한 장소·경로·상태 표현만 `공간 보완 묶음`으로 추출해 기존 사가정·면목제3·8동 디오라마에 누적한다. 현실 자료·Simulation 해석·Unity 표현 권위는 계속 분리한다.
+- 첫 점심 피크를 수뢰둔에 결속하는 안은 다음 문답이며 아직 확정하지 않았다. 이번 판본은 기획 문서만 갱신했고 Graph Map·디오라마·Unity·Scene·Game View·E 단계·commit·push는 수행하지 않았다.
+
+## 운영자 예외 우선 복귀 r67 (2026-09-17)
+
+- [운영자 예외 우선 복귀 r67](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/operator-exception-first-return.r67.md)에 따라 관리자는 정상 주문을 계속 감시하지 않고 자동 처리 뒤에도 판단이 필요한 예외를 우선해서 본다.
+- 복귀 카드는 현재 위험·원인·이미 수행된 자동 조치·비용 및 현금 영향·다음 결정을 같은 사건과 원천 revision으로 묶고, 정상 흐름과 전체 기록은 상세 조회로 내린다.
+- 이번 판본은 기획만 갱신했다. 카드의 직접 조작 수는 미정이며 코드·Unity·Scene·Game View·E 단계·commit·push는 수행하지 않았다.
+
+## 절기 운영 Campaign 관찰 수신·조합 기반 r69 (2026-09-17)
+
+- [Core·저장·RemoteHost 구현 r68](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/seasonal-campaign-core-remote-implementation.r68.md)에 이어 [Unity 관찰 수신·조합 기반 r69](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/seasonal-campaign-unity-observation-foundation.r69.md)를 구현했다.
+- `simulation-save.v32`가 독립 `SeasonalOperationsCampaign` 상태와 멱등 명령 로그를 보존한다. Replay는 외부 API를 재호출하지 않고 상태를 재구성하며 변조된 저장 상태를 거절한다. 기존 Hexagram Campaign 계약과 저장 payload는 유지했다.
+- RemoteHost는 조회·구간 Preview·Confirm 세 경로만 제공하고 Campaign 시작은 승인된 시나리오 조립 책임으로 남겼다. Controller는 Application Service에 위임하며 실제 주문·배차·정산을 변경하지 않는다.
+- Unity에는 인증 GET Client, schema·Session·지역·revision 검증 Interpreter, 원천별 마지막 정상 revision 조합 Coordinator, ScreenModel과 최소 Presenter를 추가했다. 한 원천 실패는 해당 영역만 지연시키며 Session·지역 전환은 이전 진단과 선택을 비운다.
+- Core·저장·RemoteHost 관련 회귀 73/73, 기존 행정동·운영 장면 회귀를 포함한 Unity 관련 시험 37/37이 통과했다. 작업 명세는 Logic E4, Presentation E4, 통합 E4이며 E5 자동 승격 대상은 아니다.
+- **미완료:** 제품 Unity의 기존 `SimulationWorldShell` View Socket 결속, 카드·NPC revision Adapter, 조작별 필요 원천 계약, Unity Decoder 실제 컴파일, Scene/Prefab, 실제 외부 서버 접속, Play Mode·Game View. 기존 서버 nullable 경고 2건과 공통 검사기의 기존 구문 오류는 별도이며 commit·push는 수행하지 않았다.
+
+## Unity 원천별 마지막 정상 상태 유지 계획 r65 (2026-09-17)
+
+- [원천별 마지막 정상 상태 유지 r65](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/unity-source-failure-retention-policy.r65.md)에 따라 Campaign 구성 원천 하나의 갱신 실패 시 해당 원천의 마지막 정상 상태를 유지하고 해당 영역에만 `갱신 지연`을 표시하도록 확정했다.
+- 디오라마·운영 상태·Campaign·카드·NPC 원천을 독립 판정하며 실패를 실제 객체 삭제·업무 종료·phase 전환으로 해석하지 않는다.
+- 최신 상태가 필요한 조작은 제한하되 무관한 관찰·선택·카메라 이동은 계속 허용한다. 지역 전환 때 이전 지역 stale 상태는 비운다.
+- 계획 문서만 갱신했으며 코드·API·Unity·Scene·Game View·Goal/WI·E 단계·commit·push는 수행하지 않았다.
+
+## Unity 절기 캠페인 관찰 Coordinator 계획 r64 (2026-09-17)
+
+- [절기 캠페인 관찰 Coordinator r64](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/unity-seasonal-campaign-observation-coordinator.r64.md)에 따라 `SeasonalCampaignObservationCoordinator`가 기존 행정동 디오라마·운영 상태·카드·NPC 읽기 결과를 하나의 운영자 화면 모델로 조합하도록 계획했다.
+- `AdministrativeDongDioramaClient/Interpreter`, `OperationalWorldSceneClient/Interpreter`, `StableIdReconciler`, `LastSuccessfulLoadRuntime`, `SelectionStateStore`, `CardWorkspaceCoordinator`, NPC·동네 관찰 Presenter를 우선 재사용한다.
+- Unity는 Contracts만 소비하고 Simulation Domain·Application을 직접 참조하지 않는다. 새 공식 Scene 없이 기존 `SimulationWorldShell` View Socket에 후속 결속한다.
+- 계획 문서만 갱신했으며 Campaign Core·API·Unity 코드·Scene·Prefab·Game View·Goal/WI·E 단계·commit·push는 수행하지 않았다.
+
+## 절기 캠페인 Simulation Core 우선 계획 r63 (2026-09-17)
+
+- [절기 캠페인 Core 우선 계획 r63](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/seasonal-campaign-core-first-plan.r63.md)에 따라 공통 캠페인 계약·phase 상태 전이·revision·Preview/Confirm·안전 기본값·Save/Replay를 Unity 표현과 콘텐츠보다 먼저 개발하는 순서를 확정했다.
+- 기존 역경 전용 `SimulationHexagramCampaign` 공개 계약은 변경하지 않고, Session과 결정성 검증 방식만 참고한다.
+- 첫 Fixture 후보는 사가정역·면목제3·8동의 `예상보다 빠른 점심 주문 증가 + 가용 기사 부족`이다. 정확 수치·시간 배율·카드/제철 효과는 미정이다.
+- 계획 문서만 갱신했으며 코드·DB·API·Unity·Goal/WI·E 단계·commit·push는 수행하지 않았다.
+
+## 배달 플랫폼 운영 Simulation 첫 피크 사건 r62 (2026-09-17)
+
+- [첫 피크 중심 사건 r62](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/urgent-lunch-demand-driver-shortage.r62.md)에 따라 사가정역·면목제3·8동 프롤로그의 중심 사건을 `예상보다 빠른 점심 주문 증가 + 가용 기사 부족`으로 확정했다.
+- 화면의 결과 위험은 `미배차·지연 임박 주문`, 원인은 `주문 증가`와 `가용 기사 부족`으로 분리한다. 첫 대응은 기사 가용 의향 알림 Preview이고 부족 지속 시 플랫폼 부담 피크 할증 후보를 연다.
+- 합성 주문·기사 수, 부족 임계값, 시간 배율, 정확 성공 수치는 아직 확정하지 않았다.
+- 기획 문서만 갱신했으며 코드·DB·API·Unity·Play Mode·Game View·commit·push는 수행하지 않았다.
+
+## 배달 플랫폼 운영 Simulation 통합 개발계획 r61 (2026-09-16)
+
+- [통합 개발계획 r61](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/development-handoff.r61.md)은 r33의 음식배달 정상·예외·13주 재무·Unity 관찰 계획에 r48~r60의 공공자료 동기화·운영자 게임·절기 캠페인을 추가했다.
+- 첫 신규 절편은 기존 행정동 디오라마 API와 Unity Decoder·Client·Interpreter를 재사용하는 `DEV-REGIONAL-OPERATOR-09 · 지역 자료 세션·검증 캐시 기반`이다.
+- 후속 순서는 합성 정상 배달 상태 사본, Unity 운영자 프롤로그, 기사 공급 알림·플랫폼 부담 할증, 피크·일·절기·13주 시간층, 아르카나·제철 문맥, r33 예외 심화와 배포 승인 기준선이다.
+- 현행 자료의 `distributionApproved=false`를 보존하며 개발 Fixture와 실제 공개 동봉을 분리했다. 다른 GPT 계정용 첫 작업 지시문·검증·중단·맥락별 커밋 후보를 함께 기록했다.
+- 문서 기획·개발 인계만 갱신했으며 코드·DB·Unity·Play Mode·Game View·commit·push는 수행하지 않았다.
+- 문서 기획만 갱신했으며 Unity·코드·DB·Play Mode·Game View·commit·push는 수행하지 않았다.
+
+## 사가정역 Blender 기존 기획 통합 r46 / 역세권 r30 (2026-09-16)
+
+- 첫 Blender 상세화 묶음을 사가정역 출구 주변으로 확정하고, [역세권 통합 r30](Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-station-blender-integration.r30.md)과 [운영 기획 결속 r46](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/sagajeong-station-blender-binding.r46.md)에 기존 기획의 소유 관계를 통합했다.
+- 새 체계를 만들지 않고 r8 안전 교체·`KeepProceduralMass`, r9 사진/파생 모델 권리 분리, r11 비공개 사진 원장, r26 출구 1~4 위치·번호 기준점을 재사용한다.
+- 출구 1·2의 외부 사진 2건은 `CC BY-SA 4.0`의 출처·변경 고지·동일조건변경허락 범위와 사람·간판·현행성을 검토하기 전까지 Blender로 넘기지 않는다. 출구 3·4는 정확 외관 근거가 없어 일반화 표식을 유지한다.
+- 사가정시장 입구·대표 골목은 두 번째 상세화 묶음 후보로 보존했다. 정확 시장 사진과 공간 근거가 없는 상태를 역 출구 자료로 대체하지 않는다.
+- 기획 문서만 통합했으며 Blender·FBX·Prefab·Scene·Play Mode·Game View·E 승격·commit·push는 수행하지 않았다.
+
+## 면목제3·8동 공공자료 매스·Blender 상세화 r45 (2026-09-16)
+
+- [면목3·8 공공자료 매스·Blender 상세화 r45](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/myeonmok38-public-mass-blender-detail.r45.md)에 따라 면목제3·8동 전수 건물은 사가정과 같은 공공데이터 기반 절차적 매스로 먼저 표현하기로 확정했다.
+- 중요 건물은 정확한 공간 근거·외관 자료·이용조건을 확인한 뒤 Blender 상세 모델로 점진 교체한다. 모든 건물의 실제 외관 확보를 생활상 이동의 선행조건으로 두지 않는다.
+- 상세 모델은 같은 건물 View의 `VisualRoot`만 교체하며 건물 안정 식별자, 주소·PNU·행정동 귀속, 역할·출입 기준점과 업무 revision을 유지한다.
+- 높이 자료가 없는 건물은 일반화 높이임을 명시하고 다른 지역 외관이나 미확인 사진으로 결손을 숨기지 않는다.
+- 문서 기획만 갱신했으며 실제 공공자료 수집·Blender 제작·Unity 교체·Play Mode·Game View·commit·push는 수행하지 않았다.
+
+## 면목제3·8동 건물 우선 이동 r44 (2026-09-16)
+
+- [면목3·8 건물 우선 이동 r44](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/myeonmok38-building-first-movement.r44.md)에 따라 생활상 이동 전에 현행 면목제3·8동 경계 안 대상 건물을 가능한 한 모두 실자료 기반 건물로 준비하기로 확정했다.
+- 모든 대상은 `RenderableBuilding`, `RenderableWithGeneralizedAnchor`, `MissingCoverage` 중 하나로 판정하며 누락된 건물을 성공 수량에서 숨기지 않는다.
+- 검증된 건물·출입 기준점·연결 구간에서만 Actor가 경로를 따라 움직인다. 자료가 없거나 연결이 끊긴 구간은 실제 도로를 추정하지 않고 `이동 중` 상태와 마지막 확인시각으로 표현한다.
+- 기존 면목제3·8동 건물 250개 후보와 사가정 화면 건물 4,062개는 현행 행정동 전수 집합으로 간주하지 않는다. 현행 공식 경계를 결속한 새 판정 집합이 필요하다.
+- 문서 기획만 갱신했으며 실제 건물 원본 수집·DB·Unity Mesh·Scene·Play Mode·Game View·commit·push는 수행하지 않았다.
+
+## 사가정 점심 정상 배달 r43 (2026-09-16)
+
+- [사가정 점심 정상 배달 r43](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/sagajeong-lunch-normal-delivery.r43.md)에 따라 첫 실제 생활상 판독 후보를 합성 음식배달 정상 1건으로 확정했다.
+- 면목제3·8동 귀속이 확인된 음식점 역할 건물 하나, 합성 기사 한 명, 전달지 역할 건물 하나가 같은 `WorkStableId`·revision으로 주문 접수부터 전달 완료까지 정상 7단계를 통과하는 범위다.
+- 실제 상호명·개인·주문·결제·GPS는 사용하지 않으며 Unity는 서버 또는 합성 Simulation의 상태 사본만 읽는다.
+- 검증된 통행 graph가 없는 구간은 실제 도로 주행처럼 표시하지 않는다. 다음 기획 질문은 검증된 구간의 경로 이동과 나머지 비권위 상태 표현을 어떻게 조합할지다.
+- 문서 기획만 갱신했으며 코드·DB·Unity Scene·Play Mode·Game View·commit·push는 수행하지 않았다.
+
+## 사가정역·면목제3·8동 생활상 기준 r42 (2026-09-16)
+
+- [사가정·면목3·8 생활상 기준 r42](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/sagajeong-myeonmok38-living-pilot.r42.md)를 추가했다. 기존 `station:kr:kric:s1107:0722`의 1km × 1km 디오라마를 첫 생활상 관찰 창과 시각 회귀 기준으로 보존한다.
+- `region:kr:hjd:1126057500` 면목제3·8동을 첫 운영·집계 권위로 확정했다. 면목제7동 등 창과 겹치는 행정동은 자기 귀속을 유지한 인접 맥락으로 보이며 면목제3·8동 집계에 복제하지 않는다.
+- 보완 순서는 `현행 화면 동결 → 공식 경계 결속 → 주소·필지·출입구 → 이동 표면·신호 관계 → 사업장·건물 역할 → 생활 업무 → 운영·재무 → 실제 Game View`로 고정했다.
+- 첫 생활 업무는 같은 `WorkStableId`·revision으로 이어지는 합성 음식배달 정상 7단계를 추천한다. 실제 사람·주문·결제·배차, 새 Unity Scene과 E 승격은 승인하지 않았다.
+- Graph Map 영향은 기존 역·행정동·업무 노드를 재사용하는 관계 후보의 검토 준비까지만 기록했다. Graph Map 원본 수정이나 통합 완료는 수행하지 않았다.
+- 문서 기획만 갱신했으며 코드·DB·Unity Scene·Play Mode·Game View·commit·push는 수행하지 않았다.
+
+## 가상 권역 운영자 시뮬레이션·안정 운영 서원과 정책 r41 (2026-09-16)
+
+- [개발계획 r33](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/development-handoff.r33.md)에 다른 GPT 계정용 서버 우선 개발 순서와 현재 코드 재사용 경로를 기록했다. 첫 수용 단위는 기존 수명주기 조회·공통 주문자 UI·Headless E2E를 잇는 `주문자 7단계 타임라인 읽기 모델`이며 Unity·Simulation·취소 쓰기 경로는 이 절편에서 건드리지 않는다.
+- 주문자는 유효한 기사 배차 수락부터 전달 완료·취소·보호 해제·기사 교체 전까지 서버가 수락한 현재 GPS 위치를 실시간으로 볼 수 있게 확정했다. 기사 단말은 서버로만 전송하고 서버가 주문 소유권·유효 수행·최신성을 검증해 주문자에게 중계한다.
+- 위치 갱신이 끊기면 마지막 갱신시각과 stale 상태를 보여 주며 추측 위치를 사실처럼 이동시키지 않는다. 종료 뒤 구독을 즉시 닫고 과거 원시 GPS 궤적 전체는 주문자 API와 Unity 공개 사본에 제공하지 않는다.
+- [회계사 역할·원장 r34](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/accountant-role-and-ledger.r34.md)는 업무 사건의 돈 흐름을 `재무 사건 → 기준중립 관리계정 → 회계 매핑 후보 → 회계사 승인 판본`으로 연결한다. 회사 적용 기준과 본인·대리인 판단이 미확정인 동안 고객 총 결제액을 플랫폼 매출로 자동 기록하지 않는다.
+- 첫 관리계정은 가용현금·제한자금·PG미수·음식점/기사/지사 지급의무·고객 환급의무·조건부 환급 준비금·플랫폼 수익/비용 후보·부가세 clearing·미대사 가계정을 분리한다. 취소수행대금은 기사 지급 계보 안의 별도 분석 하위계정이며 음식점 정산·고객 환급과 상계하지 않는다.
+- 가상 회계사 역할은 13주 현금 최저점, 지급 예정, 주문당 기여금, 정책 민감도, 본인·대리인 표시 차이와 미대사·미매핑 거래를 조언한다. 조언 카드로 실제 전표·지급·환급·세무신고를 확정하지 않는다.
+- [회계 운영관습 r35](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/accounting-operating-conventions.r35.md)는 업무 발생·현금 이동·회계 보고 시간축을 분리하고 `증빙 → 분개 후보 → 보조원장 → 대사 → 시산표 → 마감 → 조정·역분개` 순환을 적용한다.
+- 운영 주기는 실시간 재무 사건, 일마감 대사, 주별 13주 전망, 월 가결산, 분기 경영보고, 반기·연말 외부 검토 후보로 나눈다. 13주 전망은 분기 경계에서 초기화하지 않고 확정 실적을 actual로 치환해 예측오차를 남긴다.
+- 부가가치세 6개월 과세기간과 3개월 예정 구간은 경영 분기와 분리한 `ComplianceCalendarRevision`으로 둔다. 사업자 유형·적용 기준·실제 신고기한은 회계사·세무사 검토 전 운영 정본으로 확정하지 않는다.
+- 정상 거래는 자동 대사·기본 매핑으로 처리하고 미대사·증빙 누락·미승인 계정·현금 부족·마감 후 수정만 회계사 예외 카드로 올린다. 마감은 `Open → SoftClosed → AccountantReview → Closed → ReopenedWithReason`으로 이력을 보존한다.
+- [운영자 통합 회계 r36](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/operator-integrated-accounting.r36.md)은 별도 회계사 앱·화면·상위 메뉴를 만들지 않는 것으로 확정했다. 회계사 역할은 내부 분류·대사·조언·검토 권한으로 남기고 운영자는 기존 통합 화면에서 업무와 재무 영향을 함께 본다.
+- [운영자 회계 요약 r37](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/operator-integrated-accounting-summary.r37.md)에 따라 상단에는 `가용현금`, `향후 7일 지급의무`, `13주 현금 최저점`, `정산 확인 필요`를 항상 표시한다. 운영자 화면에서 `미대사 위험 건수`라는 표현은 사용하지 않는다.
+- 내부 계약·코드는 `ReconciliationException`을 유지하고, `정산 확인 필요`를 선택하면 원인별 건수·영향 금액·경과시간·담당자·가능한 조작을 같은 운영자 화면의 상세 영역에서 연다. 계정과목·차변/대변 후보·증빙 hash·본인/대리인 판단은 권한 있는 상세 조회에만 제공한다.
+- [예외 우선 재무 확인 r38](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/exception-first-financial-review.r38.md)은 정상 주문·정산·지급을 자동 집계·대사하고 운영자가 건별 승인하지 않도록 확정했다. `정산 확인 필요`는 관련 사건만 격리하며 다른 정상 업무를 일괄 중단하지 않는다.
+- 운영자는 예외를 수시 확인하고 정상 경로는 `매주 정산`, `매월 운영 결산`, `13주 종합 점검`에서 요약 검토한다. 13주 이동 전망은 매주 갱신하고, 13주 종합 점검에서는 누적 actual·예측오차·서비스 수준·다음 정책과 현금 방어선을 깊게 검토한다.
+- 시스템의 자동 일마감은 유지하되 기준 안의 정상 일마감을 운영자가 매일 승인하지 않는다. 중복 지급 가능성, 지급 대상·금액 불일치, 증빙 누락, 마감 뒤 재개처럼 사람 판단이 필요한 사건만 즉시 올린다.
+- [주간 정산 요약 r39](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/weekly-settlement-summary.r39.md)은 주간 마감 결과에서 `정산 완료율`을 제거했다. 기본 항목은 `이번 주 정산 총액`, `정산 후 가용현금`, `정산 확인 필요`이며 정상 건별 목록은 필요할 때만 연다.
+- 정산 batch 처리 중에는 완료율 대신 `준비/처리 중/완료/일부 보류/실패` 상태, 시작시각, 예상 다음 확인시각과 중단 사유만 표시한다. 주간 정산 총액은 기사·음식점·지사·고객 환급 하위 합계로 추적하되 플랫폼 수익과 통과 자금을 섞지 않는다.
+- [월간 실적·서원 r40](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/monthly-performance-and-vow.r40.md)은 월간 결산의 기본 수치 비교를 전월 실적으로만 제한했다. `월초 계획`은 사용하지 않고, 운영자가 스스로 세우는 비구속 방향과 약속을 `월초 서원`으로 분리한다.
+- 서원은 예산·계약·성과평가·배차 우선순위·자동 보상/불이익이 아니다. 월말에는 전월 실적 비교와 별도로 `지킴 / 일부 지킴 / 이어서 살핌` 회고를 제공하며 실제 정책 효과는 별도 Preview·확정 revision에서만 발생한다.
+- [안정 운영 서원·정책 r41](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/stable-operations-vow-policy.r41.md)은 별도 선택이 없을 때 `안정 운영 유지`를 기본 서원으로 확정했다. 기본 서원은 지급의무 보호·가용현금 방어선·정상 자동화·예외 격리·서비스 안전선·알림/인센티브 상한·미승인 실험정책 금지의 승인 판본을 참조한다.
+- 서원 자체는 정책을 발동하지 않는다. 유효한 `StableOperationsBaselinePolicyRevision`이 없으면 `정책 기준 미확정`으로 표시하고, 미승인 수치·계약·외부 Adapter는 Simulation 범위값 또는 비활성 상태를 유지한다.
+- 후속 순서는 `수락 후 취소 Preview·확정 → 조리 지연 보호 해제·재배차 → 수령자 부재 보호 종료 → 역할 앱 예외 카드 → 13주 운영·현금 Simulation → Unity 읽기 전용 관찰 → 운영자 정책·카드 확장`이다. 각 절편은 별도 E1~E7 상호작용 수직 검증 명세와 정확 쓰기 경로·회귀 시험을 먼저 결속한다.
+- 취소수행대금 원화 금액, 음식점 보호금액, GPS 전송 주기·정확도·stale 기준, 실제 통화 제공자, 증거 보존기간, 운영 행정동·시간 배율·기사 부족 임계값은 열린 정책 관문이다. 개발자는 운영 기본값을 발명하지 않고 비활성 기본값 또는 Simulation Fixture까지만 준비한다.
+- 현재 변경은 기획·개발 인계 문서뿐이다. 코드·DB·API·앱·Unity·Scene·Game View·Goal/WI 대장·E 단계·commit·push는 구현하거나 변경하지 않았다.
+
+- 사용자는 운영자 기획의 첫 방향을 `A. 가상 권역 운영자 우선`으로, 첫 상황을 `점심 피크 음식배달 균형 운영`으로 확정했다. [기획 r41](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/README.md)는 현실 자료를 읽기 전용 기준선으로 두고 정책 선택이 Simulation에만 영향을 주도록 분리한다.
+- 운영 폐루프 후보는 `현황 관찰 → 정책 Preview → 기본값 유지 또는 선택 → 시간 경과 → 결과·부작용 결산 → 유지·수정·원복`이다. 실제 주문·배차·정산·담당자 배정과 Unity GameObject는 권위를 갖지 않는다.
+- 기사 부족은 예상 주문·미배정 대기·가용 기사·수행 중 기사와 복귀 시각·용량·피로·이동·조리 예상을 함께 보고 판단한다. 가상 기사 모집 알림은 운행 가용 의향만 묻고 특정 주문 배차와 분리하며, 수신·열람·수락·거절·만료·전달 실패를 별도 상태로 기록한다.
+- 실제 FCM·문자·기사 앱 호출은 제외한다. 알림 자동화는 주의 단계에서 Preview만 만들고 심각 단계에서는 사전 승인된 시간대·대상·빈도·예산 상한 안에서만 자동 발송하는 혼합형으로 확정했다.
+- 재무 뼈대는 가용 운영현금, 제한·통과 자금, 확정 미지급 의무, 조건부 준비금과 성장 예산을 분리한다. 정책 적용 전에 모든 시점의 지급 의무와 준비금을 지킬 최소 시작 운영현금을 기준·점심 피크·스트레스·회복 scenario로 계산한다.
+- 기존 20억원은 내부 비교 scenario일 뿐 외부 확정 자본이 아니다. 음식점 구독료·고객 배달료·기사 수행대금·지사 운영보상·음식점 상품대금·PG 지연·환불·고정비를 범위 입력으로 두고 가용현금 최저점·미지급 의무·손익분기·소진 기간을 산출한다. 첫 검증 기간은 `13주 이동 전망`으로 확정했다.
+- 13주 실행은 `SimulationRun → OperatingPeriod → OS별 WorkInstance` 아래에 단계·행위·예외·인계 기록을 두고, 재무 의무·현금 이동·기간 마감은 별도 원장으로 연결한다. API 책임은 현황 조회, 정책 Preview, 확정, 가용 행위 조회, 예외 조회·처리, 정본 재조회로 분리하고 모든 변경에 예상 revision과 멱등 요청 식별자를 요구한다.
+- 예외는 격리 후 가장 이른 책임 단계에서 재시도·대안·원복·상향 판단으로 회복한다. 현행 공통 생명주기가 없는 `PlatformOperationsOS`는 새 단계를 추측해 만들지 않는다.
+- 첫 직렬화 대상은 `FoodDeliveryOS + 기사 가용 의향 알림 + 관련 재무 의무`로 확정됐다. 현행 안정 OS 10개 중 순서 있는 생명주기는 화주 운송관리·국내 화물운송·음식배달·창고·마트 5개에 정의돼 있고, 나머지 5개에는 단계를 추측해 만들지 않는다. 일부 문서의 4개 표기는 현행 코드·시험의 5개와 다른 기준선 드리프트로 남겼다.
+- 음식배달은 개념 대장 8단계, 주문 원장 9상태, 기사 수행 5상태, 역할별 `AvailableActions`, 중단 책임 검토와 정산 후보가 분산돼 있다. 새 만능 상태 기계를 만들지 않고 같은 업무 식별자 아래 revision·직접 결과·사람 판단·재무 의무의 원인을 잇는 생명주기 결속표가 먼저 필요하다.
+- 사람 관점 감사에서 주문자 수령 실패·이의 제기, 음식점 품절·폭주·인계 확인, 기사 휴식·위험 회피·현장 대기 선택, 운영자 사건 담당·기한·상향, PG 미수·음식점 지급·기사 수행대금·지사 보상·환불 의무의 결속이 주요 결손으로 드러났다.
+- 공통 Engine은 반복되는 순수 후보·점수·이유 계산만 맡고 알림 발송, 배차 확정, 책임 판정, 실제 지급은 권위 UseCase에 남긴다. 첫 사람 중심 예외 절편은 `기사 가게 도착 후 조리 지연`으로 확정했다.
+- 조리 지연 절편은 기사 도착, 음식점 준비 사실 갱신, 지연 경고, 기사 선택, 재배차, 운영자 검토, 대기보전·추가비용·환불 후보를 같은 업무 계보로 잇는다. 지연 경고와 기사 선택 대기는 음식 주문의 새 최종 상태가 아니라 기사 수행 시도·예외 사건·재무 의무를 연결하는 보조 상태다.
+- 첫 공통화 후보는 원래·갱신 예정시각, 도착·현재시각, 준비 여부와 정책 revision을 받아 지연 구간·역할별 조작 후보·대기보전/재배차/검토 필요 코드·다음 확인 시각을 반환하는 `현장 지연 대응 Policy`다. 실제 책임·금액·재배차·주문 상태는 확정하지 않는다.
+- 조리 지연 대응은 기사 선택권 보장형으로 확정했다. 음식점이 주문 수락 때 처음 확정한 조리 예정시각을 넘겼고 기사 도착이 기록돼 있으면, 기사는 운영자 승인 없이 `조리 지연 배차 해제`를 선택할 수 있다. 뒤늦은 예정시각 변경은 이미 열린 선택권을 다시 잠그지 못한다.
+- 배차 해제는 주문 취소가 아니다. 기사 수행 시도만 `ProtectedRelease`로 끝내고 기사는 가용 상태로 복귀하며, 주문·조리는 유지한 채 재배차한다. 일반 지연은 자동 회복하고 반복 지연·사실 충돌·재배차 실패만 운영자 검토 후보로 보낸다.
+- 새 조작 후보는 `FoodDelivery.ReleaseAssignmentForPreparationDelay`이며 멱등 요청, 주문·수행 시도 예상 revision과 기준 조리 예정시각을 재검증한다. Unity 이탈 표현은 권위 결과를 확정하지 않는다.
+- 조리 지연 배차 해제는 `기사 가게 도착 기록`과 `음식점이 주문 수락 때 확정한 최초 조리 준비 예정시각 경과`가 모두 성립해야 열린다. 음식점이 이후 예상시각을 바꿔도 최초 기준과 변경 이력을 보존한다.
+- 음식점의 전체 약속 지연은 `현재시각 - 최초 준비 예정시각`, 기사 현장 지연은 `현재시각 - max(기사 도착시각, 최초 준비 예정시각)`으로 분리한다. 조기 도착 대기와 기사 도착 전 음식점 지연을 기사 현장 지연으로 세지 않는다.
+- 조리 지연 보호 해제 주문에는 `PreparationDelayRedispatch` 사유와 재배차 우선순위 상향 후보를 부여한다. 이전 기사는 기본 재추천에서 제외하고 새 기사에게 현재 준비·대기정보를 공개하며, 안전·거리·권역·가용성 검사를 우회하거나 수락을 강제하지 않는다.
+- 조리 지연 보호 해제 주문은 음식배달 OS 배차 대기열의 `PreparationDelayProtected` 상위 우선순위 큐에 등록한다. 대기열은 어떤 주문부터 처리할지 정하고 배차 엔진은 선택된 주문에 제안할 기사 후보를 고른다.
+- 안전은 사고·위험·고장·보호 중단, 거리는 픽업 도달 상한, 권역은 담당 또는 승인된 협력권역, 가용성은 운행 의향·휴식·오프라인·다른 수행 여부를 확인한다. 이는 상위 주문을 뒤로 미루는 감점이 아니라 기사에게 제안할 수 있는 최소 조건이며 가장 가까운 기사를 자동 확정하거나 수락을 강제하지 않는다.
+- 상위 주문에 적격 기사가 없으면 `비차단 우선권 유지`를 사용한다. 보호 등급과 재탐색은 유지하되 다른 처리 가능한 주문의 배차는 계속한다. 이 희소 예외의 빈도를 Simulation에서 인위적으로 높이지 않는다.
+- 배차 Scheduler는 서로 다른 주문을 독립 lease로 병렬 처리할 수 있지만 같은 주문에는 queue revision과 짧은 lease로 하나의 유효한 배차 시도만 허용한다. 늦은 중복 수락은 정본 revision 불일치로 거절한다.
+- 현행의 기사 위치·음식점 거리 계산과 범위 검증을 보호 재배차에도 재사용한다. 주문 Scheduler가 보호 주문을 먼저 고르고, 적격 기사 안에서 거리·예상 도착·현재 업무 부담을 평가해 가까운 적합 기사부터 제안한다. 주문 우선등급과 기사 후보 순위는 섞지 않는다.
+- 조리 지연 회복의 추가 혜택은 해당 주문의 새 배차 건을 `PreparationDelayProtected` 상위 우선순위 큐에 넣는 것으로 제한한다. 새 기사 도착 보전·현장 지연시간 보전·추가 인센티브는 만들지 않고 기존 수행대금·완료 정산도 변경하지 않는다.
+- 기존 기사는 불이익 없이 수행 시도를 종료하고 다른 주문 후보로 복귀한다. 이동·현장 대기 사실은 운영 품질 관측치로 남기되 지급 의무로 만들지 않는다. 주문에는 보호 우선권과 비차단 재탐색을 제공하므로 기사 보호와 주문 혜택을 분리한다.
+- 두 조건·두 시계·기사 보호 해제·주문 유지·보호 우선순위 큐·병렬 재탐색·가까운 기사 후보·별도 금전 보전 없음으로 조리 지연 절편의 기획 기준선을 닫았다. 구현·E·실제 지급·Unity 승인은 아니다.
+- 다음 사람 중심 결손은 `픽업 후 수령자 부재`로 확정했다. 기사는 최대 3회 연락하고 앱·서버가 순번·시각·결과·주문 및 수행 revision을 정본 사건으로 남긴다. 전화 화면 캡처는 번호를 가린 보조 자료일 뿐 정본이 아니며 통화 음성은 기본 녹음하지 않는다.
+- 세 번 모두 실패하면 비대면 전달 허용 근거와 안전 장소를 확인한다. 두 조건이 모두 성립할 때만 문 앞 또는 지정 장소에 놓고 앱 촬영 사진을 업로드한다. 사진의 object key·SHA-256·촬영·수락시각·행위자·접근 기록을 주문 계보에 연결하며, 업로드·서버 수락 전에는 전달 완료로 확정하지 않는다.
+- 원본 사진과 상세 주소·전화번호는 Unity·공개 API에 내보내지 않는다. 얼굴·공동현관 비밀번호·이웃 세대 내부 등 불필요한 개인정보가 찍히지 않게 안내하고, 목적·기본 보존기간·파기·분쟁 또는 법적 보존 조치와 접근 감사를 분리한다. 이 증거 묶음은 분쟁 설명 자료이지 소송 결과나 증거능력을 자동 보장하지 않는다.
+- 현행 화물·기사 앱의 `수령자 부재` 사유와 사진·인수증 계열 증거는 재사용 후보지만 음식배달 수직 절편의 완료 근거는 아니다. 음식 주문·기사 수행·접촉 시도·증거 수락의 명시적 결속이 필요하다.
+- 수령자 부재의 회복 순서는 `안전하고 허용된 문 앞 전달 → 고객센터 판단 → 지시 이행 → 기사 보호 종료`로 확정했다. 문 앞 사진과 서버 수락이 끝나면 기사는 다음 배차로 복귀하고, 문 앞 전달이 불가능할 때만 고객센터 채팅 사건을 연다.
+- 고객센터 담당자는 대체 안전 장소·음식점 반환·현장 폐기·추가 대기 중 하나를 구조화된 처분 명령으로 확정한다. 자유 문장 채팅은 설명일 뿐 상태를 바꾸지 않으며, 기사 개인의 음식 임의 보유·소비·양도는 기본 선택지에서 제외한다.
+- 앱의 전화 버튼은 서버에서 연락 시도 식별자와 가상번호·통화 token을 받은 뒤 통화 중계 Adapter를 호출한다. 버튼 클릭은 연락 의사만 기록하고 실제 발신·호출·연결·종료는 provider callback으로 구분한다. 외부 전화 앱만 쓴 경우는 `UnverifiedExternalDial`이며 기사 입력만으로 연결을 확정하지 않는다.
+- 통화 callback·고객센터 채팅·사진·처분 명령은 주문·기사 수행 revision과 같은 manifest에 결속한다. 전자문서의 작성자·수신자·송수신 시각과 재현 가능성을 보존하되, 이 자료가 소송 결과를 자동 보장한다고 표현하지 않는다.
+- 고객센터 담당자가 응답기한 안에 답하지 않으면 `판본화된 안전 기본표`를 적용하기로 확정했다. 서버가 음식 특성·경과시간·현장 안전·문 앞 전달 허용·음식점 반환 가능성과 정책 revision을 평가해 `DoorDropAtVerifiedSafePlace`, `ReturnToMerchant`, `DisposeOnSite` 중 지금 가능한 조작만 연다.
+- 기사는 열린 `AvailableActions` 안에서 하나를 선택한다. 개인 보유·소비·재판매·제3자 양도는 열리지 않으며 예상 revision·멱등 key로 한 사건의 중복 처분을 차단한다. 당시 열린 전체 조작·선택·이행 증거·서버 수락시각을 함께 보존한다.
+- 이행 증거 수락 뒤 기사 수행을 `RecipientUnavailableResolved`로 보호 종료하고 다음 배차 후보로 복귀시킨다. 재무 후처리는 별도 원장에서 계속하며 기사 가용 복귀를 막지 않는다. 고객센터 사건은 `ResolvedByPolicyFallback`으로 닫고 늦은 담당자 명령은 닫힌 revision을 뒤집지 못한다.
+- 고객센터 응답 제한시간은 기사 현장 부담을 우선해 3분으로 확정했다. 세 번째 연락 실패와 고객센터 사건 개설이 모두 기록된 시점 중 더 늦은 서버 수락시각부터 계산한다. 재시도는 시간을 초기화하지 않고 앱 오프라인 중에도 서버 시간은 흐른다.
+- 3분 경과는 자동 폐기·반환이 아니라 판본화된 안전 정책표가 허용한 `AvailableActions`를 기사에게 여는 조건이다. 이미 기사가 처분을 확정한 뒤 도착한 담당자 응답은 결과를 뒤집지 않는다.
+- 현장 폐기의 최소 이행 증거는 처분 후 사진 1장과 정책·위치·시각 자동 기록으로 확정했다. 사진은 앱 사건 화면에서 직접 촬영하고 주문·기사 수행·고객센터 사건·처분 revision과 object key·SHA-256·촬영·수락시각을 연결한다.
+- 정확 위치는 보호 원장에 두고 Unity·공개 API·일반 운영 카드에는 일반화 위치만 제공한다. 서버가 사진과 metadata를 수락하기 전에는 폐기 완료나 기사 다음 배차 복귀를 확정하지 않는다.
+- 기사 귀책 없는 수령자 부재는 배차 수락 때 확정된 수행대금을 정상 지급하며 감액·미지급·벌점을 만들지 않는다. 기사 수행대금은 음식값 환불·음식점 상품대금·플랫폼 부담과 별도 원장에 둔다.
+- 문 앞 전달이 불가능한 일반 조리 음식은 음식점 반환보다 승인된 현장 폐기를 우선한다. 현장 폐기는 추가 대금을 자동 생성하지 않는다. 법적·계약상 회수가 필요한 예외는 기존 배차의 귀환 가산금이 아니라 기사가 새 금액·조건을 보고 수락하는 별도 `ReturnToMerchantDispatch`로 만든다.
+- 정상 증거 절차로 확인된 주문자 부재는 재무상 수령 완료 상당으로 처리해 주문 청구를 유지하고 음식점 상품대금·기사 수행대금을 정상 지급한다. 단순 부재 버튼이 아니라 도착·3회 연락·고객센터 3분·문 앞 전달 불가·정책 선택·이행 증거가 같은 주문 revision에서 확인돼야 한다.
+- 주소 전달 오류·통화 중계 장애·고객센터 사건 생성 실패·문 앞 요청 누락 등 플랫폼 원인이 함께 확인되면 `Customer/Platform/Merchant/Courier/ExternalResponsibilityShare`로 분리하며 합계는 100%로 한다. 플랫폼 부담분은 환급 또는 고객지원 비용으로 기록하고 기사·음식점 대금과 상계하지 않는다.
+- 주문자 부재 원인 코드는 공개 평판·검색순위·향후 주문 자동 거절에 사용하지 않으며 반복을 곧바로 사기나 고의로 판정하지 않는다. 실제 약관·고지·환급 비율은 법률 검토 대상이다.
+- 부담 비율은 원인 규칙표가 증거·장애 코드·주문자 요청·행위 기록·정책 revision으로 후보와 근거를 만들고, 이의·복합 사건만 담당자가 확정하는 방식으로 정했다. 기계학습 추정·고객 평판·과거 주문 횟수·개인 특성은 비율 근거로 사용하지 않는다.
+- 완전한 증거·명백한 단일 원인·이의 없음이 함께 성립할 때만 자동 확정할 수 있다. 플랫폼 장애·복합 원인·주문자 이의·증거 충돌은 `ResponsibilityReviewCase`로 전환하며 담당자 수정은 사유·증거·revision을 남긴다.
+- 주문자 이의 검토 중에도 원 주문 청구는 유지하고 규칙표의 플랫폼 부담 후보액 또는 담당자가 정한 검토 대상 금액을 `ConditionalCustomerRefundReserve`로 격리해 13주 가용현금에서 제외한다. 플랫폼 부담 확정 때 환급 의무로 전환하고 주문자 부담 확정 때 준비금을 해제한다.
+- 원 주문·PG 수납, 기사 수행대금, 음식점 상품대금, 조건부 환급 준비금, 실제 환급 의무를 서로 다른 원장으로 유지한다. 같은 이의 사건의 재요청은 멱등 처리하며 준비금을 중복 적립하지 않는다.
+- 소비자기본법과 한국소비자원 안내를 조사해 외부 피해구제는 원칙적으로 30일 안의 합의 처리 뒤 미합의 시 분쟁조정으로 넘어가고, 소비자분쟁조정도 30일을 원칙으로 정당한 사유가 있으면 연장할 수 있음을 확인했다. 이는 플랫폼 내부 고객센터 기한과 별개다.
+- 내부 기한은 즉시 사건번호·접수 통지, 24시간 안에 담당자 첫 응답, 통상 3영업일 안에 최종 판단으로 확정했다. 외부 통화·PG·장애 로그가 필요한 예외만 3영업일 전에 사유·자료·새 기한을 알리고 한 번에 한해 7영업일까지 연장한다. 담당자 적체는 자동 연장 사유가 아니다.
+- 수령자 부재 절편은 연락·문 앞 전달·고객센터 3분·정책표 선택·현장 폐기 증거·기사 대금·주문 청구·플랫폼 복합 원인·이의 준비금과 답변 기한까지 기획 기준선을 닫았다. 구현·법률·PG·회계 승인 완료는 아니다.
+- 다음 사람 중심 결손은 음식점 수락 후 주문자 취소로 열었다. 취소 순간 음식점 조리(`미시작/시작/완료`), 기사 수행(`미배정/수락 후 이동/도착/픽업`), 결제와 취소 상태를 같은 revision으로 동결하고 취소 가능 여부·환급·음식점·기사·플랫폼 부담을 Preview한 뒤 주문자가 확정한다.
+- 전자상거래법상 시간이 지나 재판매가 곤란한 재화의 청약철회 제한 가능성, 사전 표시 의무와 사업자의 증명 책임을 기준으로 음식점 수락과 조리 시작을 동일시하지 않는다. 일률적인 원가율·80% 공제를 근거 없이 만들지 않고 플랫폼·음식점 귀책이나 계약 불일치는 단순 변심과 분리한다.
+- 조리 시작 뒤 주문자 변심·실수 취소는 주문자 책임 후보로 둔다. 플랫폼의 선의성 구제는 음식점·기사 보호금액을 깎지 않고 `CustomerCancellationSupportReserve`에서 부담하며 기간·주문별 상한과 13주 가용현금 영향을 기록한다.
+- 음식점 수락 뒤에도 조리 미시작·기사 배차 미수락이면 주문자에게 전액 환불하고 음식점·기사 지급 의무를 만들지 않기로 확정했다. 취소 요청과 조리 시작의 경합은 서버 사건 순서·예상 revision으로 판정하며 조리 시작 소급 입력을 허용하지 않는다.
+- 요기요 공개 약관, 쿠팡이츠 판매자 정산정책, 배민 음식점 운영 안내와 전자상거래법을 비교했다. 공개 자료에서는 업계 공통 고정 환급률을 확인하지 못했고, 조리 시작·재판매 가능성·귀책·사전 고지·증거에 따라 취소 제한과 음식점 보호를 달리하는 공통 방향을 확인했다.
+- 조리 시작 뒤에는 자동 전액 환불이나 임의 원가율 대신 주문자 환급·음식점 보호·기사 보호·플랫폼 고객지원 준비금을 분리해 Preview한다.
+- 기사 배차 수락 뒤 기사 귀책 없이 주문이 취소되면 가게 도착 전이라도 별도 `취소수행대금`을 지급하기로 확정했다. 지급 조건은 유효한 배차 수락·취소 확정 시 수행 활성·기사 비귀책이며, 기사 지급과 최종 부담 주체 판정을 분리한다.
+- 취소수행대금은 음식값 환불·음식점 보호금액·정상 완료 수행대금과 별도 원장에 기록하고 같은 사건의 중복 지급을 막는다.
+- 배차 제안·수락 화면에는 `배달 완료 시 받을 수행대금`만 주 금액으로 표시하기로 했다. 실제 취소가 확정된 건에만 상세보기를 열어 원래 수행대금, 취소 시점 단계, 정책 판본, 산정 요소, 최종 취소수행대금과 지급 상태를 설명한다.
+- 일반적인 취소수행대금 조건과 산정 원칙은 정책 화면에서 상시 열람할 수 있지만, 취소 전 개별 주문의 가상 취소금액은 전면 표시하지 않는다.
+- 취소수행대금은 실시간 거리·시간이 아니라 배차 수락 직후·음식점 이동 중·음식점 도착의 서버 확인 단계별 정액으로 계산하기로 확정했다. GPS 원시 궤적은 단계 확인 자료로 제한하고 미터·초 단위 금액 증감에는 사용하지 않는다.
+- 취소 상세에는 당시 단계·정책 revision·적용 정액을 보존한다.
+- 픽업 전 취소수행대금은 `수락 직후 < 이동 중 < 음식점 도착` 순서로 높이기로 확정했다. 음식점 도착 정액도 픽업·전달 완료 수행대금을 넘지 않으며 정확한 원화 금액은 Simulation 범위와 실제 계약 검토 뒤 정한다.
+- 픽업 후 기사 귀책 없이 주문자가 취소하면 배차 수락 때 확정된 정상 수행대금 전액을 지급하기로 했다. 주문자 환급·음식점 보호·처분 결과와 기사 대금을 연동해 감액하거나 보류하지 않는다.
+- 픽업 후 취소 보호 지급은 재무상 정상 수행대금과 같은 금액이지만 정상 전달 완료율이나 완료 건수에는 포함하지 않는다.
+- 픽업 후 취소된 일반 조리 음식은 `FoodDeliveryOS`에서 전달을 중단하고 안전한 현장 폐기를 기본으로 하며, 증거 수락 뒤 기사를 다음 배차에 복귀시키기로 했다.
+- 법적·계약상 회수·반환·대체 인계 의무는 `CargoDeliveryOS`가 더 강하게 소유한다. 음식배달 주문을 화물배달 건으로 사후 재분류하지 않고, 두 OS는 처분 사건 식별자·revision·증거 hash·감사 기록 같은 기술 봉투만 공통화한다.
+- 정상 제품 흐름은 주문자의 주문·진행 관찰, 음식점의 조리·인계, 기사의 픽업·배달에 집중한다. 취소·회수·폐기·분쟁 정책은 내부 예외 내규로 판본화하고 사건이 발생했을 때만 관련 정책 카드와 허용 조작을 연다.
+- 현행 소비자분쟁해결기준은 2025-12-18 시행 공정거래위원회고시 제2025-14호이며 분쟁의 구체적인 합의·권고 기준이다. 최근 외식업 개정의 예약 취소·노쇼 기준을 배달 주문 취소 고정률로 그대로 옮기지 않는다.
+- 예외 내규는 소비자분쟁해결기준·전자상거래법·약관·실제 손실·귀책·사전 고지를 대조한다. 소비자에게 불리한 제한을 내부 규정이라는 이유로 숨기지 않고, 충돌 가능성이 있으면 자동 적용을 중단해 사람 검토로 보낸다.
+- 주문자의 정상 주문 화면은 `주문 접수 → 음식점 수락 → 조리 중 → 기사 배정 → 픽업 → 배달 중 → 완료`의 핵심 7단계 타임라인으로 확정했다. 예상시각은 범위로 표시하고 서버 권위 사건에서 단계를 파생한다.
+- 지연·취소·재조리·재배차·환급은 실제 발생했을 때만 별도 예외 카드에서 원인·영향·예상 변경·허용 조작·금액 Preview와 문의 경로를 제공한다.
+- 주문자 실시간 기사 위치 공개, 상단 회계 요약 4개 지표, 정상 자동화·예외 우선 확인과 주간/월간/13주 검토 주기, 주간 정산 요약, 월간 전월 비교·서원 분리와 안정 운영 기본정책 참조는 확정했다. 현재 다음 질문은 정책 이탈에서 강한 안전선은 자동 차단하고 운영 편차는 경고·Preview로 둘지다.
+- 이번 작업은 기획 문서·목차·현재 상태만 기록했다. WI·PlayableLoop·Graph Map·코드·DB·API·Unity·Scene·Game View·E 단계·commit·push는 구현하거나 승인하지 않았다.
+
+## E1~E10 결과물 계약·상호작용 수직 검증 명세 정비 r18 (2026-09-16)
+
+- [구현 기록 r18](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/evidence-stage-output-and-name-migration.implementation.r18.md)에 따라 사람이 읽는 공식 이름을 `E1~E7 상호작용 수직 검증 명세`로 정하고 새 접미사를 `.interaction-e1-e7-validation.json`으로 바꿨다. 기존 `.e7-work-order.json`, `E7-WO-*`, script·schema 식별자는 저장소 호환을 위해 유지하며 새 문서의 현재 명칭으로 사용하지 않는다.
+- `simulation-evidence-stages.v8 / r15`에 E1~E10별 필수 결과물 종류·최소 내용·불충분 조건을 추가했다. 모든 결과는 주체·Logic/Presentation 궤적·후보 revision·hash·증거 참조·상태·차단·무효화 조건을 가지며, 상위 단계는 같은 계보의 하위 결과를 소비하고 통합 단계는 낮은 궤적을 따른다.
+- 행정동의 과거 자료·캡처 파일 5종을 자료 구현 기록 또는 관찰 표현 증거로 다시 분류하고 `evidenceStageClaimed=null`을 명시했다. 횡단보도 과거 파일 하나는 생성기 hash에 포함된 동결 입력이라 원문·경로를 읽기 호환용으로 복원했다. Python 생성기 SHA-256은 `FC949D8350EFCA7A80F4D7BC1C7071DA1362C3E4D6D104D584B909A3F9771CC8`, C# 자체 시험은 15/15다.
+- 오행 출력 v3 소비, 누락됐던 `hexagram-campaign-retry` E8 대기 캠페인, 구성원·PlayableUnit 단계 검사를 복구했다. 증거 관리·상호작용 수직 검증·역할 객체 행위·native 명세·post-E7·오행·디오라마 대장 직접 시험은 모두 통과했다.
+- 정본 호환 명세 63개 전수 검사 결과는 61개 통과·2개 차단이다. `nature-logging-focus-meditation`은 명세 E1이 연결 PlayableUnit E7보다 낮고, `nature-trace-investigation`은 지정 WI가 PlayableUnit 범위 밖이다. 증거나 관계를 임의 승격·편입하지 않고 실제 소유자 재판정 대상으로 남겼다.
+- 변경 JSON 12개 파싱, 새·변경 문서 5개의 상대 링크, `git diff --check`가 통과했다. 변경 경로 한정 Fast는 문서 중심으로 분류되어 build·test를 생략하고 diff 검사만 통과했다(`artifacts/local/validation/20260916-110407`). 별도 직접 회귀에서 표현 검증·Synty 조사는 통과했지만 `presentation-local-realization-scope`는 이번 명칭 변경과 무관한 기존 Farm work item 기대값 7 대 현재 8 불일치로 실패했다.
+- 이번 r18은 명칭·결과물 계약·검사기·원장 정합성 정비다. 자료 수집, DB 쓰기, Unity 실행·Game View, 실제 입력, E 승격, commit·push는 수행하지 않았다. 운영자 관점 재해석은 사용자 요청대로 계속 제외했다.
+
+## 디오라마 E1~E10·Codex 사용 적합성 감사 r17 (2026-09-16)
+
+- [감사·제안 r17](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/diorama-e1-e10-codex-audit.proposal.r17.md)에 따라 현행 E 정의, E7 작업 명세 protocol·manager, E8~E10 캠페인, 역세권 디오라마 증거 대장과 행정동 디오라마 과거 작업 명세를 대조했다. 운영자 관점 재해석은 사용자 요청으로 이번 범위에서 제외했다.
+- E1~E7 Logic·Presentation 이중 궤적, 낮은 통합 단계, E8 한 PlayableUnit 안정, E9 둘 이상 Core 조화·사람 승인, E10 제한 운영이라는 상향식 누적 구조는 적절하다. 역세권 디오라마 대장이 출처·수집 관문·규칙 후보·역별 프로필만 관리하고 E를 자동 승격하지 않는 경계도 현행 시험에서 통과했다.
+- 행정동 디오라마의 과거 `.e7-work-order.json` 3개는 모두 `protocolRevision` 부재로 현행 manager가 거절했다. 기존 자료·화면 결과는 보존하지만 현행 E 작업 명세나 E7 근거로 사용하지 않는다.
+- 공통 증거 원장에서도 드리프트를 확인했다. E7 protocol은 오행 출력 v2만 요구하지만 현행 생성기는 v3를 만들기 때문에 E7 공통 회귀가 실패한다. 정본 E7 작업 명세 63개 중 51개 통과·12개 실패이며, `PlayableUnit` 23개에 E8 안정성 캠페인이 22개뿐이라 post-E7 전수성 검사도 실패한다. 누락 대상은 `playable-loop:hexagram-campaign-retry.v1`이다.
+- 이번 작업은 감사·기획 기록만 추가했다. 공통 검사기·원장·행정동 과거 파일 복구, E 승격, 자료 수집, DB, Unity 실행·Game View, commit·push는 수행하지 않았다.
+
+## 동북서울 30개 행정동 디오라마 자료 기준선·첫 수집 관문 r16 (2026-09-16)
+
+- 사용자는 30개 행정동 모듈을 사가정역 검토 깊이로 계속 발전시키고, 현재 가능한 화면을 보존하되 부족한 주소·필지·도로·신호·생활 자료를 추가 수집하도록 요청했다. [기획 r16](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md), [첫 수집 관문 r16](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/current-boundary-building-entrance-collection-gate.decision.r16.md), [사가정 깊이 격차·수집 대기열 r15](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/sagajeong-depth-gap-and-collection-backlog.proposal.r15.md), [깊이 기준·캡처 r5](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-depth-parity.implementation.r5.md), [주소 후보 r6](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-address-parcel-candidate.implementation.r6.md), [횡단보도 r8](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-crosswalk-candidate.implementation.r8.md), [사업장 첫 판 r9](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-business-candidate.implementation.r9.md), [사업장 개인정보 정정 r12](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-business-candidate.implementation.r12.md), [교차로 r10·r11](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-intersection-point-ledger.implementation.r11.md), [도보망 r13](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-walk-network-candidate.implementation.r13.md), [G3c 원장 검증 결과](../Reports/동북서울-30개-행정동-도보네트워크-G3c-후보-2026-09-15.md)에 단계별 결손과 검증 상한을 고정했다.
+- 사용자가 첫 실제 자료 수집 절편을 `TL_SCCO_GEMD 현행 행정동 경계 → 주소 건물·건물군 → 출입구` 순서로 고정하고 디오라마 증거 체계에 포함하도록 승인했다. `station-diorama-evidence-rules.r4`는 정확 30개 scope, `AdministrativeAreaCollectionGate` 1개, 순서가 고정된 요구사항 3개를 검사한다. 세 요구사항은 아직 모두 `NotCollected / Unassessed / Blocked`, 원본 hash null, 적용·current 게시 false다.
+- 증거 체계 판본을 r3로 올리고 대장 schema v3·r4와 관리자·변조 시험을 함께 갱신했다. 검사는 관문 순서 변경, 원본 없는 수집 완료 주장, 적용 승인, 30개 scope 축소를 거절한다. 이는 새 규칙 후보나 E 승격이 아니라 사람이 승인한 자료 수집 순서의 기계 결속이다.
+- 증거 대장 검증은 `Sources=10 / Rules=12 / AdminGates=1 / AdminRequirements=3 / AdminCollected=0`으로 통과했고, 대장 변조 회귀와 사가정 필지 도형 차단 회귀도 통과했다. 범위 Fast는 문서·대장 경로로 분류되어 `git diff --check`만 수행했으므로 별도 직접 검사 결과와 구분한다. 외부 다운로드·원본 hash·DB·Unity는 이번 고정 작업에서 실행하지 않았다.
+- r15 조사 결과, 30개 동은 건물·기초 도로뿐 아니라 주소·PNU 후보, 횡단보도 1,533개, 교차로 554개, 2020 도보망 40,739개, 사업장 29,721개까지 공통 후보 원장을 갖는다. 사가정에만 있는 차선·방향표시·신호 시설, 역 출구, 엘리베이터·공원·정류소·가로수와 양쪽 모두 없는 현행 경계·실제 필지·건물 출입구·보도면·연석·정지선·실제 신호 현시를 분리했다.
+- 수집 우선순위는 `A 공간 정본 → B 이동 표면·신호 관계 → C 지역 생활 장소 → D 시간대별 생활 관측 → E API·Unity 적용`이다. r14 생활인구는 문서·scope만 확인되고 지정 생성기·완결 산출물·RDB 재조회가 없어 `PlannedNotGenerated`로 기록했다. 이번 r15는 조사·기획만 수행했으며 새 원본 수집, DB 저장, API, Unity 실행·Game View, commit·push는 하지 않았다.
+- 역사 경계 후보의 건물 61,897개·도로 선분 11,769개·tile 297개를 hash별 완성 세대로 내보냈다. 같은 입력의 재내보내기 두 번은 모두 변경 0이고 index·bundle·`complete.json` 독립 검증이 통과했다. 격리 Unity에서 canonical `SimulationWorldShell`에 한 번에 한 동만 결합 Mesh 4개·Collider 0개로 조립했으며 EditMode 9/9와 실제 Play Mode Game View 전체 조망 30장·면목제3·8동 근접 1장을 남겼다. 원본 PNG 31개는 hash 불일치가 없고 Scene은 저장하지 않았다.
+- 30개 연락판의 넓은 공백과 분리된 건물 군집은 실제 공터나 완성 표현이 아니라 역사 경계·현재 건물/도로 기준일 불일치와 이동·생활 layer 결손을 드러내는 `MissingCoverage`다. 화면은 `G6 UnityBaseView / PrivateReviewOnly`이며 사가정 생활상 동등성, 실제 통행, gameplay 또는 공개 배포 증거가 아니다.
+- 동결 `AL_D010` PNU와 행정안전부 2026-08 건물DB를 결합해 61,897개 건물의 주소 후보 상태를 로컬 MySQL에 저장했다. 단일 후보 49,876·복수 1,351·동결 판본 내 후보 없음 10,670, 후보 보유율 82.76%이며 별도 연결 exact set·분포·투영 hash `4ceff3d6582a267aca57f972dd05a16e0c9b223229dea733fe9e7fb232be5a6b` 일치를 확인했다.
+- `OA-23081` 횡단보도 점은 정정 r2 후보 1,533개·보행등 설치 933·역사 경계 자치구 충돌 21을 로컬 MySQL에 저장했다. 후보 hash는 `78312E5F0DDB89BFFA9AD1881379CBF7E8037A6C6454D4F0ABDF2A3E4D22D30A`이며 반복 적용 신규·갱신 0과 독립 재조회가 통과했다. 첫 r1은 `RejectedAfterIndependentAudit / PreservedNotPromoted`다.
+- `OA-15534` 교차로 원천 점 8,097개 중 30개 동에 단일 귀속한 554개를 별도 G3b 세대로 생성하고 로컬 MySQL 보호 원장에 후보 554행·계보 사본 19건을 저장했다. 횡단보도와 연결된 교차로 524·미연결 30, 관계 1,491개 중 다른 역사 행정동 연결 220개를 별도 진단으로 유지하며 후보 hash는 `DB83F1CC82EB65F864188DD790A003EDF570DBB459D56D4C07CE690988F2837B`다. Python 15/15·C# 16/16, 별도 연결 exact set·30개 동·hash 재조회, 반복 적용 신규·갱신·사본 0이 통과했다. G3a r2, G4a r1, 기존 면목 원장의 적용 전후 digest는 같으며 이후 별도 생성한 G4a r2는 이 r11 보존 계약 밖이어서 후속 G3b 판본에서 명시적으로 결속해야 한다.
+- G3b r1의 기존 동반 자료 계약은 실행 전 상태인 `ledgerPersistenceCompletedClaimed=false`와 `consumedCandidateDatabasePersistenceCompleted=false`를 유지하지만 이후 실제 DB 저장·재조회 결과는 완료로 보고되어 있다. 이는 데이터 손실이 아니라 기계 계약과 사후 실행 상태의 알려진 flag 정합성 결손이며, 기존 판본을 조용히 수정하지 않고 후속 호환 판본에서 정리해야 한다.
+- `OA-21208` 2020년 WGS84 도보망은 세 자치구 공식 CSV 59,724행과 유형 코드북을 동결하고 2023 역사 경계에 결속해 NODE 17,267·LINK fragment 23,472, 합계 40,739개 G3c 후보를 생성했다. 후보 hash는 `43248F7F563DCDFE059650F3EC000085CD0D7CFB65FC5300EFDFCBDD685990AA`이며 Python 자체 시험 17/17, 1mm 직렬화 경계 재포함, 원선 대상 교차 길이 882,519.308089m 보존, 최종 세대 verify가 통과했다. C# importer도 전체 98,781,674-byte 후보의 framed hash를 독립 재계산한 뒤 로컬 MySQL에 40,739행·30개 동·계보 사본 17건을 저장했다. build 경고 0·오류 0, 자체 시험 16/16, 새 연결의 exact set·hash 재조회가 통과했고 반복 적용은 신규·갱신·사본 0이다. 기존 보호 상태 71,501행·사본 84건·실행 84건의 digest는 전후 같았으며 최종 독립 정적 감사는 High·Medium·Low 0이다.
+- 소상공인시장진흥공단 2026-06-30 전국 상가 2,772,484행을 전수 대조해 30개 동 사업장 후보 29,721개·음식 업종 8,246개를 G4a 보호 원장으로 만들었다. 첫 r1은 독립 개인정보 감사에서 선택된 원천 식별자 하나가 추적 생성기의 시험 fixture에 들어간 사실을 확인해 `RejectedAfterIndependentPrivacyAudit / PreservedNotPromoted`로 낮췄고 값은 반복하지 않는다. 정정 r2는 실제 원천에 없는 합성 fixture와 새 dataset/revision을 사용하며 후보 hash는 `5F9C61BD71112C69EE3988CFB3B8542AE22BF60AB95D542C702D2355B8A3774C`다. Python 25/25·C# 59,482/59,482, 최초 MySQL 후보 29,721·사본 19 저장, 반복 신규·갱신·사본 0, 별도 연결 exact set·30개 동·음식 8,246·진단 35·결손 67·보호 필드 14 재조회를 통과했다. r1 29,721행·사본 19·실행 19의 상태 digest와 기존 면목 5,411·공장 126행은 적용 전후 같았다. 독립 재감사는 tracked 10,757개·untracked 134개와 r2 집계 산출물에서 선택 원천 식별자 교집합 0, High 0·Medium 0을 확인했다.
+- 주소는 `G2a`, 횡단보도는 `G3a`, 교차로는 `G3b`, 도보망은 `G3c`, 사업장은 `G4a`로 분리한다. G3c는 local-private 후보 생성과 보호 RDB 원장 검증까지만 닫혔다. 현행 행정동 경계, 실제 필지 도형·출입구, 실폭도로·골목·보도·차로·정지선·신호 현시의 현재 graph, 확정 사업장 건물 결속·현재 영업·Claim, G5 NPC·차량·OS 결속과 G7 생활상 Game View는 남아 있다.
+- 서버 도구 build, 기존 절편의 Python/C# 자체 시험과 MySQL 독립 재조회, Unity 검토 묶음 무변경 재생성, Unity EditMode·실제 Game View를 분리 검증했다. G3c는 Python 생성·verify와 C# 보호 RDB 첫 저장·독립 재조회·반복 무쓰기를 통과했다. Unity 실행에는 기존 Editor SearchDatabase 예외 1건과 종료 시 JobTempAlloc 경고 2건이 있어 전체 Console 무오류로 보고하지 않는다. 운영 DB·Mongo current·실제 주문/배차/NPC 이동·E 승격·commit·push·배포는 수행하지 않았다.
+
 ## 동북서울 30개 행정동 디오라마 역사 경계 후보 r4 (2026-09-14)
 
 - 사용자가 앞서 확정한 배달운영권역 범위의 행정동을 사가정역과 같은 공용 디오라마 입력 모듈로 만들도록 요청했다. [기획 r4](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md), [구현 명세](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-batch.implementation.r4.md), [결과 보고](../Reports/동북서울-30개-행정동-디오라마-역사경계-후보-2026-09-14.md)에 광진 4·동대문 10·중랑 16, 합계 30개 행정동과 12개 법정동의 범위·출처·검증 상한을 고정했다.
@@ -38,7 +778,7 @@
 
 ## 행정동 기반 배달운영권역 Draft 관리 첫 절편 r1 (2026-09-14)
 
-- 사용자가 행정동들을 관리자가 묶어 배달권으로 관리하는 서버 리팩터링을 다른 역 디오라마 확장보다 우선했다. 현재 [canonical 기획](Planning/운영/PLAN-OPERATIONS-ADMIN-DONG-DELIVERY-TERRITORY/README.md)의 r1 승인 기준선과 당시 E7 작업 명세에 법정동·행정동·배달운영권역·협력권역·역세권 관찰 창을 서로 다른 축으로 고정했다. 발화의 `중국동`은 후속 `중곡1동` 언급과 공식 코드를 대조해 광진구 법정동 `중곡동`으로 정규화했다.
+- 사용자가 행정동들을 관리자가 묶어 배달권으로 관리하는 서버 리팩터링을 다른 역 디오라마 확장보다 우선했다. [승인 기획 r1](Planning/운영/PLAN-OPERATIONS-ADMIN-DONG-DELIVERY-TERRITORY/README.md)과 E7 작업 명세에 법정동·행정동·배달운영권역·협력권역·역세권 관찰 창을 서로 다른 축으로 고정했다. 발화의 `중국동`은 후속 `중곡1동` 언급과 공식 코드를 대조해 광진구 법정동 `중곡동`으로 정규화했다.
 - 행정안전부 동결 파일 `jscode20260301.zip`, SourceVersion `mois-jscode:20260301:retrieved:2026-08-12`, SHA-256 `8AF8C1F122D67D43518F58B37AEA6EEA7986F2809062F24E2E03465F21AE7A08`, 자료 revision `mois-hjd-bjd-20260301-8af8c1f122d67d43518f`을 `delivery-territory-source-scope:northeast-seoul-rider.r1`에 고정했다. 중곡·전농·답십리·장안·휘경·이문·면목·상봉·중화·묵·망우·신내 12개 법정동에서 활성 행정동 30개를 정확히 해소하며 이후 최신 판본으로 조용히 바뀌지 않는다.
 - RDB에 Draft aggregate, 현행 행정동 단일 권역 membership, 관리자 행위자와 당시 결과 사본을 가진 멱등 수신증, revision별 전체 행정동 집합과 행위자를 가진 변경 Outbox를 추가했다. 관리자 API는 후보 모듈·목록·상세·Draft 생성·행정동 전체 교체를 제공하고 `ClientRequestId`, `ExpectedRevision`, 중복 권역 귀속, 고정 자료 범위를 검증한다. Mongo manifest 결손은 `WaitingForSpatialProjection`으로만 표시하며 경계나 타일을 추정하지 않는다. 현재 로컬 `hongdal_dev` MongoDB를 독립 확인한 결과 행정동 디오라마 current·manifest·tile은 모두 0건이므로, 이 환경의 30개 후보는 전부 공간 투영 대기 상태다. 과거 별도 검증 기록의 면목제3·8동 게시 사본을 현재 DB 사실로 오인하지 않는다.
 - 서버·계약·EF·관리자 API 및 API 판본 회귀 80/80이 통과했다. 같은 요청의 지연 재시도가 최초 응답 revision을 반환하는지, 반복 제외·재편입의 revision별 Outbox 집합, 관리자 감사 ID, DB 예외 상세 비노출도 포함한다. 로컬 Docker MySQL의 기존 `hongdal_dev`에서 실제 공식 30개를 읽고, 전용 임시 schema에 새 migration 2개·테이블 4개를 적용해 Draft 저장과 새 DbContext 독립 재조회 1/1을 통과한 뒤 transaction과 임시 schema를 제거했다. 범위 지정 Fast는 빌드·표적 시험·코드 지도 검사를 통과했다(`artifacts/local/validation/20260914-204500`). Task의 v3.5 build는 통과했고 전체 시험은 5,268/5,275건 통과했으나 이번 범위 밖 기존 문서·CSS·역할 API metadata·Web route 7건이 실패했다(`artifacts/local/validation/20260914-204639`).
