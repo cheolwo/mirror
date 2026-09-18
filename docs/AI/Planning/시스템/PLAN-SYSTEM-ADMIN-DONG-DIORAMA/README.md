@@ -1,4 +1,4 @@
-# [기획 · 월드·공간·배치 · PLAN-SYSTEM-ADMIN-DONG-DIORAMA · r13]
+# [기획 · 월드·공간·배치 · PLAN-SYSTEM-ADMIN-DONG-DIORAMA · r18]
 
 ## 목표
 
@@ -37,7 +37,7 @@
 ## r4 구현 slice
 
 - [구현 명세](administrative-dong-batch.implementation.r4.md)
-- [E7 수직 작업 명세](administrative-dong-batch.e7-work-order.json)
+- [역사 경계 후보 자료 구현 명세](administrative-dong-batch.data-implementation.v1.json)
 - 자료 기반 scope catalog와 일괄 생성기는 `OA-22160`, 서울 `AL_D010`, 국가표준 NodeLink를 한 번씩 읽어 30개 모듈로 fan-out한다.
 - 건물 계약 v1은 단일 외곽 ring만 지원하므로 hole이 있는 원본은 가장 넓은 외곽 ring만 표현 후보로 내보내고 생략 수를 감사자료에 기록한다. 원형 완전 보존으로 보고하지 않는다.
 - NodeLink는 방향 링크 중심선이며 최대 100m 이하 두 점 선분으로 결정적으로 나눈다. 도로 폭·골목·보도·신호·통행 가능성은 별도 자료가 필요하다.
@@ -57,14 +57,14 @@
 
 ## r5 기초 화면 기준선
 
-- [깊이 기준·캡처 구현 명세](administrative-dong-depth-parity.implementation.r5.md)와 [E7 수직 작업 명세](administrative-dong-base-geometry-capture.e7-work-order.json)에 따라 역사 경계 후보 30개를 로컬 Unity 검토 묶음으로 결정적 내보냈다.
+- [깊이 기준·캡처 구현 명세](administrative-dong-depth-parity.implementation.r5.md)와 [관찰 표현 증거](administrative-dong-base-geometry-capture.presentation-evidence.v1.json)에 따라 역사 경계 후보 30개를 로컬 Unity 검토 묶음으로 결정적 내보냈다.
 - canonical `SimulationWorldShell`을 저장하지 않고 한 번에 행정동 하나를 결합 Mesh 4개·Collider 0개로 조립했다.
 - 실제 Play Mode Game View에서 전체 조망 30장과 면목제3·8동 건물 선택 근접 1장을 남겼다. 연락판에서 보이는 넓은 공백·분절은 생활상 완결이 아니라 `MissingCoverage`의 시각 증거다.
 - 이 결과는 `G6 UnityBaseView / PrivateReviewOnly`만 충족한다. 현행 경계, 주소, 필지, 출입구, 이동 표면, 생활 자료와 NPC·운영 흐름은 검증하지 않았고 E 단계도 승격하지 않았다.
 
 ## r6 주소·필지 후보 첫 절편
 
-- [주소·필지 후보 구현 명세](administrative-dong-address-parcel-candidate.implementation.r6.md)와 [E7 수직 작업 명세](administrative-dong-address-parcel-candidate.e7-work-order.json)에 따라 61,897개 건물 전부의 PNU·필지 주소 후보 상태를 범용 공공자료 원장에 `PendingHumanReview`로 저장했다.
+- [주소·필지 후보 구현 명세](administrative-dong-address-parcel-candidate.implementation.r6.md)와 [자료 구현 명세](administrative-dong-address-parcel-candidate.data-implementation.v1.json)에 따라 61,897개 건물 전부의 PNU·필지 주소 후보 상태를 범용 공공자료 원장에 `PendingHumanReview`로 저장했다.
 - 단일 후보 49,876개, 복수 후보 1,351개, 동결 판본 내 후보 없음 10,670개이며 후보 보유율은 82.76%다. 동일 입력 재적용 신규·갱신 0, 별도 연결의 exact set·분포·투영 hash 재조회가 통과했다.
 - 이것은 `G2a`만 닫는다. 주소 문자열을 공개·Unity 계약에 내보내지 않으며 확정 건물 주소, 실제 필지 도형, 건물 출입구, 배달 목적지나 가격 권위를 만들지 않는다.
 
@@ -72,7 +72,7 @@
 
 ## r8 횡단보도·보행등 설치 후보 G3a
 
-- [정정 구현 명세 r8](administrative-dong-crosswalk-candidate.implementation.r8.md)과 [자료 구현 동반 명세](administrative-dong-crosswalk-candidate.e7-work-order.json)에 따라 서울시 `OA-23081` 2026-08-24 파일의 횡단보도 점을 30개 역사 경계 후보에 결속했다. 동반 명세는 호환 파일명만 `.e7-work-order`이고 이 비공개 자료 후보를 기존 playable-loop Goal에 허위 결속하지 않는 비-E7 문서다. 후속 Unity·통행·Simulation 소비에는 별도 등록된 정식 E7 명세가 필요하다.
+- [정정 구현 명세 r8](administrative-dong-crosswalk-candidate.implementation.r8.md)과 [자료 구현 동반 명세](administrative-dong-crosswalk-candidate.data-implementation.v1.json)에 따라 서울시 `OA-23081` 2026-08-24 파일의 횡단보도 점을 30개 역사 경계 후보에 결속했다. 이 자료 후보는 `evidenceStageClaimed=null`이며 후속 Unity·통행·Simulation 소비에는 별도 등록된 `E1~E7 상호작용 수직 검증 명세`가 필요하다.
 - 원본 21,776행 가운데 좌표 있음 21,775·결손 1·대상 30개 동 단일 귀속 1,533·범위 밖 20,242·복수 귀속 0이다. 30개 동 모두 후보가 있고 보행등 설치 관측은 있음 933·없음 600이다.
 - 원본 자치구와 역사 경계의 귀속 자치구가 다른 21건은 정상 자료로 숨기지 않고 `SourceDistrictSpatialAssignmentConflict` 진단, 두 자치구와 경계 거리 `0.286~22.076m`를 후보 hash에 포함했다.
 - 공식 사가정역 WGS84 기준점과 횡단보도 점의 `8.0946m` 대조가 EPSG:5186 해석을 지지하지만 원천 페이지·시트가 좌표계를 선언하지 않으므로 `EmpiricallyValidatedCandidateNotSourceDeclared`를 유지한다.
@@ -84,7 +84,7 @@
 ## r9·r12 지역 사업장 후보 G4a와 개인정보 경계 정정
 
 - [첫 구현 명세 r9](administrative-dong-business-candidate.implementation.r9.md)의 `g4a.r1`은 소상공인시장진흥공단 2026-06-30 전국 상가 파일 16개·2,772,484행을 전수 확인하고, 서울 554,092행에서 정확한 30개 원천 행정동 코드의 사업장 29,721곳과 음식 대분류 `I2` 8,246곳을 별도 후보로 만들었다. 그러나 독립 개인정보 감사에서 선택된 원천 식별자 하나가 추적 생성기의 시험 fixture에 들어간 사실을 확인해 `RejectedAfterIndependentPrivacyAudit / PreservedNotPromoted`로 낮췄다. 그 값은 문서·보고에 반복하지 않으며 r1 산출물·DB 29,721행·사본 19건·실행 19건은 삭제하거나 갱신하지 않는다.
-- [정정 명세 r12](administrative-dong-business-candidate.implementation.r12.md)와 [r2 비-E7 자료 구현 명세](administrative-dong-business-candidate.r2.data-implementation.v1.json)는 실제 원천 집합에 없는 명시적 합성 fixture, 생성기·집계 산출물의 선택 식별자 교집합 0 관문, 새 dataset/revision·범위·세대·hash와 r1 불변 digest를 요구한다. 기존 `.e7-work-order` 호환 파일은 r1 거절 이력이며 어느 문서도 Unity·운영·게임 소비를 승인하는 playable-loop E7 명세가 아니다.
+- [정정 명세 r12](administrative-dong-business-candidate.implementation.r12.md)와 [r2 자료 구현 명세](administrative-dong-business-candidate.r2.data-implementation.v1.json)는 실제 원천 집합에 없는 명시적 합성 fixture, 생성기·집계 산출물의 선택 식별자 교집합 0 관문, 새 dataset/revision·범위·세대·hash와 r1 불변 digest를 요구한다. [r1 거절 자료 구현 기록](administrative-dong-business-candidate.r1.data-implementation.v1.json)은 불변 이력이며 어느 문서도 Unity·운영·게임 소비를 승인하는 상호작용 수직 검증 명세가 아니다.
 - 좌표·도로명주소·지번주소 결손은 0, 건물관리번호 결손은 67곳이며 고유 건물관리번호는 11,931개다. 역사 경계와 일치 29,686·다른 동 29·범위 밖 6·복수 경계 0을 재귀속이 아닌 진단으로 보존했다.
 - 상가업소번호는 29,721개 모두 고유하다. 같은 원문 상호명·도로명주소를 가진 서로 다른 ID 236그룹·490행은 자동 병합하지 않는다. 기존 면목동 SEMAS 5,411행과 공장 126행은 그대로 보존하고 새 범위의 추가 ID 24,310개를 별도 Source/Dataset/Revision으로 저장했다.
 - 정정 r2 후보 집합 SHA-256은 `5F9C61BD71112C69EE3988CFB3B8542AE22BF60AB95D542C702D2355B8A3774C`다. Python 자체 시험 25/25·두 번째 생성 변경 0·verify, C# 자체 시험 59,482/59,482를 통과했다. 로컬 MySQL 보호 원장에 r2 후보 29,721행과 원천·계보 사본 19건을 새로 저장했고 반복 적용은 신규·갱신·사본 0이다. 별도 연결에서 exact set·30개 동·음식 8,246·진단 35·결손 67·보호 필드 14개를 재조회했으며 r1 상태 digest와 기존 면목 5,411·공장 126행은 적용 전후 같았다. 독립 재감사는 tracked 10,757개·untracked 134개와 r2 집계 산출물을 선택 원천 식별자 29,721개와 교차 검사해 노출 0, High 0·Medium 0으로 판정했다.
@@ -107,6 +107,37 @@
 - C# importer가 전체 98,781,674-byte 후보 파일을 읽어 framed 후보 hash를 독립 재계산하고 로컬 MySQL에 40,739행과 계보 사본 17건을 저장했다. build 경고 0·오류 0, 자체 시험 16/16, 새 연결의 30개 동 exact set·후보 hash 재조회가 통과했고 반복 적용은 신규·갱신·사본 0이다. G3a r2·G3b r1·G4a r2·사가정 r27 OA-21208을 합한 보호 상태 71,501행·사본 84건·실행 84건의 digest는 적용 전후 같았으며 최종 독립 정적 감사는 High·Medium·Low 0이다.
 - 이 자료는 2020 역사 관측이고 세 자치구 밖 boundary halo가 없으며 보도 폭·연석·출입구·현재 통행·오토바이 허용·차로·방향·신호가 없다. Mongo/current/API/Unity/이동 graph·NPC 경로 권위로 승격하지 않는다.
 
+## r15 사가정 깊이 격차 조사와 수집 대기열
+
+- [사가정 깊이 격차·30개 행정동 수집 대기열 r15](sagajeong-depth-gap-and-collection-backlog.proposal.r15.md)은 사가정역 1km의 실제 검증 조각과 30개 동 공통 원장을 같은 관문으로 다시 대조한다.
+- 30개 동은 이미 건물·기초 도로, 주소·PNU 후보, 횡단보도 점, 교차로 점, 2020 도보망, 비공개 사업장 후보와 Unity 기초 화면을 갖는다. 초기 r5의 `G3/G4 공통 자료 없음` 표는 당시 기준선이며 현행 공통 상태가 아니다.
+- 사가정역에서만 더 확보한 차선·방향표시·신호 시설, 역 출구, 엘리베이터·공원·버스정류소·가로수와 화면 건물 주소 원장을 30개 동 공통 수집 후보로 분리했다.
+- 양쪽 모두 부족한 현행 행정동 경계, 실제 필지 도형, 건물 출입구, 정확 보도면·연석·정지선·신호 현시와 현재 통행 graph는 추측하거나 복사하지 않는다.
+- 다음 수집 순서는 `A 공간 정본 → B 이동 표면·신호 관계 → C 지역 생활 장소 → D 시간대별 생활 관측 → E API·Unity 적용`으로 고정한다. r15는 조사·기획 기록이며 새 원본 수집, DB 저장, API, Unity 실행·캡처 또는 E 승격을 수행하지 않았다.
+- r14 생활인구 후보는 문서와 scope는 있으나 지정 생성기·완결 산출물·RDB 독립 재조회가 확인되지 않아 `PlannedNotGenerated`로 판정한다.
+
+## r16 현행 경계·건물·출입구 첫 수집 관문 고정
+
+- 사용자는 [현행 경계·건물·출입구 수집 관문 r16](current-boundary-building-entrance-collection-gate.decision.r16.md)의 순서를 첫 실제 자료 수집 절편으로 고정하고 디오라마 증거 체계에 포함하도록 승인했다.
+- 관문은 정확 30개 scope에 `TL_SCCO_GEMD 현행 행정동 경계 → 주소 건물·건물군 → 건물·건물군 출입구` 순서를 요구한다. 세 자료가 한 파일이라는 뜻은 아니며 하나의 영수증 묶음 아래 원본별 판본·hash·CRS·이용조건을 보존한다.
+- 증거 대장 `station-diorama-evidence-rules.r4`에 `AdministrativeAreaCollectionGate` 1개와 요구사항 3개를 추가했다. 모두 `NotCollected / Unassessed / Blocked`, `applicationAuthorized=false`, `currentPublicationAllowed=false`다.
+- 이 고정은 수집 순서와 완료 검사의 승인일 뿐 실제 다운로드·DB 저장·current 게시·Unity 적용·통행·gameplay 또는 E 승격이 아니다. 건물군·출입구의 정확한 제품 식별자는 공식 제공 목록을 실제 확인할 때 확정한다.
+
+## r17 디오라마 E1~E10·Codex 사용 적합성 감사
+
+- [E1~E10·Codex 사용 적합성 감사 r17](diorama-e1-e10-codex-audit.proposal.r17.md)은 현행 E 정의·작업 명세 manager·E8 이후 캠페인·디오라마 보조 대장을 실제로 대조했다.
+- E1~E10의 누적·상향식 의미 구조와 디오라마 보조 대장의 비승격 경계는 적절하다. 다만 현행 E7 공통 회귀의 오행 출력 v2/v3 불일치, E8 안정성 캠페인 1개 누락, 정본 E7 작업 명세 63개 중 12개 실패가 확인되어 저장소 전체의 기계 정합성은 미완료다.
+- 행정동 디오라마의 과거 `.e7-work-order.json` 3개는 모두 `protocolRevision` 부재로 현행 manager가 거절한다. 기존 자료·화면 구현 증거는 보존하지만 E 작업 명세나 E7 승격 근거로 사용하지 않는다.
+- Codex는 자료층·관찰 표현·플레이 상호작용을 먼저 구분하고, 현행 manager와 정본 등록을 통과한 `PlayableInteraction`에만 E단계를 계산해야 한다. 이번 r17은 감사·제안이며 검사기·원장·Unity를 수정하지 않았다.
+
+## r18 E1~E10 결과물 계약·명칭 정비
+
+- [결과물 계약·명칭 정비 구현 r18](evidence-stage-output-and-name-migration.implementation.r18.md)에 따라 사람이 읽는 `E7 작업 명세`를 `E1~E7 상호작용 수직 검증 명세`로 바꾸고 새 접미사를 `.interaction-e1-e7-validation.json`으로 정했다. 기존 식별자·script·`.e7-work-order.json`은 호환 경로로만 유지한다.
+- E1~E10 각각에 필수 결과물 종류·최소 내용·그 결과만으로는 충분하지 않은 조건을 `evidence-stage-output-contract.r1`로 기계화했다. 모든 결과물은 주체·궤적·후보 revision·hash·증거·상태·차단·무효화 조건을 갖고 상위 단계는 같은 계보의 하위 결과를 소비한다.
+- 행정동의 과거 자료·캡처 파일 5종은 자료 구현 기록 또는 관찰 표현 증거로 재분류하고 `evidenceStageClaimed=null`을 명시했다. 횡단보도 과거 경로 하나는 생성기 hash를 보존하는 읽기 호환 입력으로 원문 그대로 남기며 E 근거로 사용하지 않는다.
+- 오행 출력 v3, 누락 E8 캠페인, 구성원·PlayableUnit 단계 검사 드리프트를 복구해 정본 63개 중 61개가 현행 manager를 통과한다. 남은 2개는 실제 WI·PlayableUnit 관계 또는 집계 단계가 맞지 않아 임의 수정하지 않고 차단으로 남겼다.
+- r18은 증거 명칭·결과물 계약·검사기·원장 정합성 정비다. 자료 수집·DB 쓰기·Unity 실행·Game View·실제 입력·E 승격은 수행하지 않았다.
+
 ## 이전 r3 증거의 재해석
 
 - 기존 면목제3·8동 current projection의 건물 250·도로 선분 722·타일 3은 사가정 1km 참고 지도 602개 건물을 면목동 6개 역사적 경계에 귀속한 좁은 자료다.
@@ -124,8 +155,8 @@
 
 ## 검증 상한
 
-r13 현재 최대 증거는 `HistoricalBoundaryCandidateBatchStoredAndVerified / G2aAddressParcelCandidateLedgerValidated / G3aCrosswalkPointCandidateLedgerValidated / G3bIntersectionPointCandidateLedgerStoredAndVerified / G3cWalkNetworkCandidateLedgerStoredAndVerified / G4aCorrectedPrivateBusinessCandidateLedgerStoredAndVerified / G6UnityBaseViewGameViewVerified / CurrentPublicationBlocked`다. G3c는 40,739개 local-private 후보와 계보 사본 17건의 보호 원장 저장·독립 재조회·반복 무쓰기까지만 포함한다. 현행 행정동 경계, 확정 주소·필지·출입구, 현재 이동 graph·정지선·신호 현시, 공개 사업장 결속, 실제 통행, 운영 주문·배차와 생활상 Game View는 증명하지 않는다.
+r18의 현재 최대 구현 증거는 여전히 `HistoricalBoundaryCandidateBatchStoredAndVerified / G2aAddressParcelCandidateLedgerValidated / G3aCrosswalkPointCandidateLedgerValidated / G3bIntersectionPointCandidateLedgerStoredAndVerified / G3cWalkNetworkCandidateLedgerStoredAndVerified / G4aCorrectedPrivateBusinessCandidateLedgerStoredAndVerified / G6UnityBaseViewGameViewVerified / CurrentPublicationBlocked`다. r18은 `EvidenceTerminologyMigrated / StageOutputContractMachineValidated / LegacyPathsCompatibilityOnly / CommonEvidenceRegressionsMostlyRestored`를 추가했을 뿐 자료·Unity 구현 증거를 승격하지 않는다. 현행 행정동 경계, 확정 주소·필지·출입구, 현재 이동 graph·정지선·신호 현시, 공개 사업장 결속, 실제 통행, 운영 주문·배차와 생활상 Game View는 증명하지 않는다.
 
 ## 다음 질문 하나
 
-G3c RDB 독립 검증을 마쳤더라도 세 자치구 경계 밖 halo를 추가 확보하지 않은 채 이 후보를 current 이동 graph로 승격하지 않는 원칙을 유지할 것인가? 추천은 `유지`다. 현재 후보는 조사·결손 분석에는 쓸 수 있지만 현행 통행·보도 폭·오토바이 허용·NPC 길찾기 권위가 아니다.
+고정된 1단계 `TL_SCCO_GEMD`에 대해 로그인 없는 공식 다운로드 가능 여부를 확인하고, 가능할 때만 실제 원본 수집으로 진행할 것인가? 추천은 `진행`이다.

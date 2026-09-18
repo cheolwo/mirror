@@ -1,9 +1,9 @@
 {
   "schemaVersion": "simulation-e7-vertical-work-order.v2",
-  "protocolRevision": "simulation-e7-vertical-implementation-protocol.r7",
+  "protocolRevision": "simulation-e7-vertical-implementation-protocol.r8",
   "evidenceModelRevision": "horizontal-dual-cycle-evidence.r3",
   "workOrderId": "E7-WO-TEMPLATE",
-  "title": "새 PlayableUnit 수직 구현 작업",
+  "title": "새 E1~E7 상호작용 수직 검증 명세",
   "playableUnitStableId": "playable-loop:작성-필요.v1",
   "activeWorldInteractionId": "WI-작성-필요",
   "targetEvidenceStage": "E7",

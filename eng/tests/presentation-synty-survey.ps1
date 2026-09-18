@@ -34,7 +34,7 @@ Assert-Survey ($actorActionE6.evidenceStageCode -ceq 'E6' -and
     $actorActionE6.requiredFeatureCodes -contains 'ActorAction') 'ActorActionAnimationOwnedByE6'
 $guidance = 'repo:docs/AI/Presentation단계별Synty자산조사-2026-08-31.md'
 Assert-Survey ($e2.implementationRefs -contains $guidance -and $e4.implementationRefs -contains $guidance) 'GuidanceBound'
-$template = Read-Json 'eng/execution-ledgers/work-orders/e7-vertical-work-order.template.json'
+$template = Read-Json 'eng/execution-ledgers/work-orders/interaction-e1-e7-validation.template.json'
 $farm = Read-Json 'eng/execution-ledgers/work-orders/farm-crop-cycle.e7-work-order.json'
 foreach ($order in @($template,$farm)) {
     Assert-Survey ($null -ne $order.presentationE4Preparation -and -not $order.promotionEligible) 'PreparationNoPromotion'

@@ -2,16 +2,16 @@
 
 > 이 문서는 `eng/execution-ledgers/world-interactions.json`와 참조된 단일 책임·조립 흐름·음양 사분면 대장에서 자동 생성된다. 직접 수정하지 않는다.
 
-- 대장 개정: `simulation-world-interactions.r49`
-- 증거 단계 개정: `simulation-evidence-stages.r14`
+- 대장 개정: `simulation-world-interactions.r50`
+- 증거 단계 개정: `simulation-evidence-stages.r15`
 - WI 발생원 개정: `world-interaction-trigger-sources.r11`
-- WI 단일 책임 개정: `simulation-world-interaction-responsibilities.r17`
+- WI 단일 책임 개정: `simulation-world-interaction-responsibilities.r18`
 - WI 조립 흐름 개정: `simulation-world-interaction-flows.r4`
-- WI 음양·수행주체 사분면 개정: `world-interaction-polarity-quadrants.r16`
-- 마지막 확인일: `2026-09-07`
+- WI 음양·수행주체 사분면 개정: `world-interaction-polarity-quadrants.r17`
+- 마지막 확인일: `2026-09-17`
 - 기본 구현 완료선: `E3 자동 시험 통과`
 - 실제 공간·공공데이터·Unity 통합 목표선: `E7 실제 플레이 폐루프`
-- 전체 항목: `134`
+- 전체 항목: `135`
 
 ## 읽는 법
 
@@ -25,7 +25,7 @@ WI는 한 행위자의 한 의도와 하나의 주요 권위 결과를 관통하
 
 | 분류 | 수 |
 | --- | ---: |
-| 명시적 명령 | 121 |
+| 명시적 명령 | 122 |
 | 자동 상태 전이 | 12 |
 | 공유 정책 | 1 |
 
@@ -187,6 +187,12 @@ WI는 한 행위자의 한 의도와 하나의 주요 권위 결과를 관통하
 | 한스 농장 부러진 손도끼 줍기 · `WI-NATURE-19` | 23 | 행위자 의도 | 단일 책임 | 양(陽) | `HansBrokenAxeCarried` | PlayerDirect | PlayerDriven, NpcDriven | HansBrokenAxeAvailable → HansBrokenAxeCarried, WoodcuttingChoiceAvailable | 완료 · `E3→E3` | 진행 중 · `E4→E7` |
 | 한스 농장 울타리 일괄 수리 · `WI-NATURE-20` | 24 | 행위자 의도 | 원자적 부수 효과 | 음(陰) | `HansFarmFenceRepaired` | PlayerDirect | PlayerDriven, NpcDriven | HansBrokenAxeCarried, HansFarmFenceDamaged, TimberCarried → HansFarmFenceRepaired, HansFarmLifeOrTravelChoiceAvailable | 완료 · `E3→E3` | 진행 중 · `E4→E7` |
 | 한스와 농장 경계 순찰 · `WI-NATURE-HANS-BOUNDARY-PATROL` | 25 | 행위자 의도 | 원자적 부수 효과 | 실행 문맥 판정 | `FarmBoundaryPatrolCompleted` | PlayerOrNpc | PlayerDriven, NpcDriven | HansGuestRightsGranted, FarmBoundaryPatrolAvailable → FarmBoundaryPatrolCompleted, HansAndPlayerReturnedTogether | 미착수 · `E0→E3` | 미선정 · `E0→E7` |
+
+## 운영 캠페인 작업군 (`OPS`)
+
+| 한국어 기능명 · 고유 식별자 | 대장 순번 | 책임 종류 | 단일 책임 판정 | 음양 정의 | 주요 결과 | 조작 정책 | 허용 발생원 | 시작 → 완료 | 구현 | 통합 |
+| --- | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 절기 운영 캠페인 다음 구간 확정 · `WI-OPS-SEASONAL-CAMPAIGN-ADVANCE` | 1 | 행위자 의도 | 단일 책임 | 음(陰) | `SeasonalCampaignPhaseAdvanced` | PlayerDirect | PlayerDriven, NpcDriven | SeasonalCampaignPhaseActive, SeasonalCampaignAdvanceAvailable → SeasonalCampaignPhaseAdvanced | 진행 중 · `E1→E3` | 미선정 · `E0→E7` |
 
 ## 주민 주문·소비 작업군 (`ORDER`)
 

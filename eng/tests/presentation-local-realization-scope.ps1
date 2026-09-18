@@ -34,7 +34,7 @@ Assert-Scope (($farm.presentationModuleScope.worldInteractionIds -join ',') -ceq
 Assert-Scope ($gaps.Contains('해당 소비자/근거만 재검토') -and $gaps.Contains('영향 미확인은 미검증') -and
     $farm.connectionPreflightImplementation.automaticPromotionAllowed -eq $false -and
     $farm.connectionPreflightImplementation.resultCode -ceq 'Conditional') 'ChangedContextRequiresScopedRecheck'
-$template = Read-Json 'eng/execution-ledgers/work-orders/e7-vertical-work-order.template.json'
+$template = Read-Json 'eng/execution-ledgers/work-orders/interaction-e1-e7-validation.template.json'
 $oldA = (Get-FileHash -LiteralPath (Join-Path $root 'eng/execution-ledgers/work-orders/actor-item-equipment.e7-work-order.json')).Hash
 $oldB = (Get-FileHash -LiteralPath (Join-Path $root 'eng/execution-ledgers/work-orders/nature-tactical-self-navigation.e7-work-order.json')).Hash
 Assert-Scope ($template.schemaVersion -ceq $farm.schemaVersion -and

@@ -11,7 +11,7 @@ if ([string] $result -ne
 }
 
 $template = Get-Content -LiteralPath (Join-Path $repositoryRoot `
-    "eng/execution-ledgers/work-orders/e7-vertical-work-order.template.json") `
+    "eng/execution-ledgers/work-orders/interaction-e1-e7-validation.template.json") `
     -Raw -Encoding UTF8 | ConvertFrom-Json
 $template.trackPlans.logic.downwardPlan[0].code = "E6"
 $artifactDirectory = Join-Path $repositoryRoot `
@@ -27,7 +27,7 @@ catch { $rejected = $_.Exception.Message.Contains("DownwardOrderInvalid") }
 if (-not $rejected) { throw "E7VerticalInvalidOrderWasAccepted" }
 
 $invalidGate = Get-Content -LiteralPath (Join-Path $repositoryRoot `
-    "eng/execution-ledgers/work-orders/e7-vertical-work-order.template.json") `
+    "eng/execution-ledgers/work-orders/interaction-e1-e7-validation.template.json") `
     -Raw -Encoding UTF8 | ConvertFrom-Json
 $invalidGate.trackPlans.presentation.currentEvidenceStage = "E5"
 $invalidGate.currentEvidenceStage = "E0"

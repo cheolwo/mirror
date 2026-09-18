@@ -61,7 +61,7 @@ function Assert-Case([bool] $Condition, [string] $Name) {
     if (-not $Condition) { throw "PresentationPositiveFailed:$Name" }
     $script:bindingCases++
 }
-$template = Get-Content -LiteralPath (Join-Path $repositoryRoot 'eng/execution-ledgers/work-orders/e7-vertical-work-order.template.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+$template = Get-Content -LiteralPath (Join-Path $repositoryRoot 'eng/execution-ledgers/work-orders/interaction-e1-e7-validation.template.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 $template.playableUnitStableId = 'playable-loop:presentation-fixture.v1'
 $legacy = Copy-Fixture $template
 $legacy.PSObject.Properties.Remove('presentationModuleBindings')

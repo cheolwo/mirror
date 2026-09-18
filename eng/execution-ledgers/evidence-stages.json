@@ -1,62 +1,211 @@
 {
-  "schemaVersion": "simulation-evidence-stages.v7",
-  "revision": "simulation-evidence-stages.r14",
+  "schemaVersion": "simulation-evidence-stages.v8",
+  "revision": "simulation-evidence-stages.r15",
   "evidenceModelRevision": "horizontal-dual-cycle-evidence.r3",
+  "stageOutputContractRevision": "evidence-stage-output-contract.r1",
+  "stageOutputPolicy": {
+    "everyPromotedStageRequiresRecordedOutputs": true,
+    "higherStageConsumesLowerStageOutputs": true,
+    "outputExistenceAloneNeverPromotesEvidence": true,
+    "dataOrScreenshotAloneNeverBecomesInteractionEvidence": true,
+    "logicAndPresentationOutputsRemainSeparateThroughE9": true,
+    "integratedVerdictUsesLowerTrack": true,
+    "requiredCommonFields": [
+      "subjectStableId",
+      "trackCode",
+      "candidateRevision",
+      "contentHashOrBuildHash",
+      "evidenceRefs",
+      "statusCode",
+      "blockers",
+      "invalidationConditions"
+    ]
+  },
   "stages": [
     {
       "code": "E0",
       "label": "후보",
-      "completionGate": "실행 후보와 목적이 식별되었다."
+      "completionGate": "실행 후보와 목적이 식별되었다.",
+      "requiredOutputs": [
+        {
+          "outputKindCode": "EvidenceCandidateRecord",
+          "label": "증거 후보 기록",
+          "minimumContents": ["후보 주체", "목적", "예상 권위", "다음 검토 단계"],
+          "notSufficientAlone": "아이디어나 파일 이름만으로 E1 계약을 선언할 수 없다."
+        }
+      ]
     },
     {
       "code": "E1",
       "label": "계약·결정 완료",
-      "completionGate": "행위·자료·경계와 완료 조건이 확정되었다."
+      "completionGate": "행위·자료·경계와 완료 조건이 확정되었다.",
+      "requiredOutputs": [
+        {
+          "outputKindCode": "EvidenceContract",
+          "label": "증거 계약",
+          "minimumContents": ["Goal·WI·주체 StableId", "플레이어 약속과 직접 결과", "권위·입력·출력", "완료·실패·회복·귀환 조건", "제외 범위", "기획 revision·hash"],
+          "notSufficientAlone": "기획 문서나 승인 문장만 있고 안정 식별자·권위·완료 조건이 없으면 E1이 아니다."
+        },
+        {
+          "outputKindCode": "TrackImpactAssessment",
+          "label": "Logic·Presentation 영향 판정",
+          "minimumContents": ["Logic 영향", "Presentation 영향", "가장 낮은 미완료 의존성", "NotApplicable 사유"],
+          "notSufficientAlone": "한 궤적의 정의만으로 통합 E1을 선언할 수 없다."
+        }
+      ]
     },
     {
       "code": "E2",
       "label": "코드 준비",
-      "completionGate": "서버·Simulation 또는 도구 코드가 준비되었다."
+      "completionGate": "서버·Simulation 또는 도구 코드가 준비되었다.",
+      "requiredOutputs": [
+        {
+          "outputKindCode": "ImplementationBindingRecord",
+          "label": "구현 결속 기록",
+          "minimumContents": ["계약·Core·Domain·Application 경로", "Local·Remote Adapter", "Unity 또는 다른 소비자", "DI·route·저장 경계", "영향 파일과 판본"],
+          "notSufficientAlone": "파일 생성이나 빌드 성공만으로 E2가 아니며 E1 계약을 실제 구현 경로가 소비해야 한다."
+        },
+        {
+          "outputKindCode": "CompatibilityBoundaryRecord",
+          "label": "호환·Migration 경계 기록",
+          "minimumContents": ["기존 계약 호환", "schema·API·저장 판본", "migration 또는 NotApplicable 사유", "소비자 영향"],
+          "notSufficientAlone": "새 코드가 존재해도 기존 소비자와 저장 호환을 확인하지 않으면 완료 산출물이 아니다."
+        }
+      ]
     },
     {
       "code": "E3",
       "label": "자동 시험 통과",
-      "completionGate": "계약·코드·저장 재생과 관련 자동 시험이 통과했다."
+      "completionGate": "계약·코드·저장 재생과 관련 자동 시험이 통과했다.",
+      "requiredOutputs": [
+        {
+          "outputKindCode": "DeterminismAndReplayReport",
+          "label": "결정성·저장 재생 보고",
+          "minimumContents": ["시험 명령과 범위", "동일 입력 반복 결과", "저장·복원·Replay hash", "멱등성", "실패 시험과 첫 오류"],
+          "notSufficientAlone": "단위 시험 개수나 한 번의 성공만으로 결정성·저장 재생을 대신할 수 없다."
+        },
+        {
+          "outputKindCode": "ConsumerRegressionReport",
+          "label": "소비자 회귀 보고",
+          "minimumContents": ["서버·Simulation 소비자", "Unity·앱 소비자", "계약 호환", "회귀 결과와 미실행 범위"],
+          "notSufficientAlone": "생산자 project 시험만 통과하고 실제 소비자를 확인하지 않으면 E3 통합 결과가 아니다."
+        }
+      ]
     },
     {
       "code": "E4",
       "label": "WI 실행 문맥 결속",
-      "completionGate": "하나 이상의 E3 세계 상호작용에 허용 발생원, 발의·수행 주체, 대상, 자료·자원·예약, 시간 규칙과 공간 적용 여부가 결속되었다. 공간이 필요한 WI만 위치 독립 H 역할·능력·용량·연결구를 요구하며 비공간 WI는 NotApplicable을 명시한다. Presentation에서 실제 물체·공간 표현이 필요한 WI는 플레이어가 읽을 순간, VisualKey, 주·대체·fallback 자산 후보, 배치 의도와 E5 준비 상태를 인계 자료로 남기되 이 조사만으로 E5를 선언하지 않는다."
+      "completionGate": "하나 이상의 E3 세계 상호작용에 허용 발생원, 발의·수행 주체, 대상, 자료·자원·예약, 시간 규칙과 공간 적용 여부가 결속되었다. 공간이 필요한 WI만 위치 독립 H 역할·능력·용량·연결구를 요구하며 비공간 WI는 NotApplicable을 명시한다. Presentation에서 실제 물체·공간 표현이 필요한 WI는 플레이어가 읽을 순간, VisualKey, 주·대체·fallback 자산 후보, 배치 의도와 E5 준비 상태를 인계 자료로 남기되 이 조사만으로 E5를 선언하지 않는다.",
+      "requiredOutputs": [
+        {
+          "outputKindCode": "ExecutionContextBinding",
+          "label": "실행 문맥 결속 기록",
+          "minimumContents": ["발생원", "발의·수행 주체", "직접 대상", "자료·자원·예약", "시간 규칙", "공간 적용 여부", "H·Graph Map·배치 제약 또는 NotApplicable"],
+          "notSufficientAlone": "Actor·대상·시간 중 하나가 비어 있거나 공간 적용 여부를 추측하면 E4가 아니다."
+        },
+        {
+          "outputKindCode": "PresentationPreparationHandoff",
+          "label": "표현 준비 인계",
+          "minimumContents": ["플레이어 판독 순간", "VisualKey", "주·대체·fallback 후보", "배치·InteractionAnchor 의도", "후보 fingerprint", "E5 준비 상태와 열린 결손"],
+          "notSufficientAlone": "자산 목록·사진·모형 후보만으로 실제 World 결속인 E5를 선언할 수 없다."
+        }
+      ]
     },
     {
       "code": "E5",
       "label": "WI 세계 발현",
-      "completionGate": "결정적 Simulation 세계에서 허용 발생원 중 하나가 WI를 만들고 Preview·Confirm 또는 권위 판정, Task·Effect, 결과 상태와 후속·복귀 WI까지 연결되었다. 공간·물체 표현 WI는 E4에서 판본화한 표현 준비 인계의 후보를 실제 Prefab 또는 대체 표현, 배치 객체와 InteractionAnchor에 결속하고 활성 Renderer·Collider·Bounds를 검증한다. Actor 행위는 이 단계에서 시작·진행·결과를 구별하는 최소 정적 자세·진행 표시·상태 교체 같은 판독 가능한 대체 표현을 허용하며 실제 AnimationClip·Rig/Avatar·IK·root motion·전이 완성은 요구하지 않는다. 공간 WI는 H·AreaSet·Graph·통행 조립 증거를 추가로 요구하지만 공간 조립이나 자산 조사만으로 E5를 선언하지 않으며, 비공간 WI는 자료·상태·인과 발현으로 검증한다."
+      "completionGate": "결정적 Simulation 세계에서 허용 발생원 중 하나가 WI를 만들고 Preview·Confirm 또는 권위 판정, Task·Effect, 결과 상태와 후속·복귀 WI까지 연결되었다. 공간·물체 표현 WI는 E4에서 판본화한 표현 준비 인계의 후보를 실제 Prefab 또는 대체 표현, 배치 객체와 InteractionAnchor에 결속하고 활성 Renderer·Collider·Bounds를 검증한다. Actor 행위는 이 단계에서 시작·진행·결과를 구별하는 최소 정적 자세·진행 표시·상태 교체 같은 판독 가능한 대체 표현을 허용하며 실제 AnimationClip·Rig/Avatar·IK·root motion·전이 완성은 요구하지 않는다. 공간 WI는 H·AreaSet·Graph·통행 조립 증거를 추가로 요구하지만 공간 조립이나 자산 조사만으로 E5를 선언하지 않으며, 비공간 WI는 자료·상태·인과 발현으로 검증한다.",
+      "requiredOutputs": [
+        {
+          "outputKindCode": "AuthorityManifestationRecord",
+          "label": "권위 세계 발현 기록",
+          "minimumContents": ["Command·Session·Revision", "Preview·Confirm 또는 권위 판정", "Task·Effect", "전후 상태", "행위 기록", "후속·복귀 WI"],
+          "notSufficientAlone": "UI 반응이나 비권위 trace만 있고 권위 상태·행위 기록이 없으면 Logic E5가 아니다."
+        },
+        {
+          "outputKindCode": "WorldPresentationBindingRecord",
+          "label": "World 표현 결속 기록",
+          "minimumContents": ["같은 Revision 상태 사본", "World 객체·Prefab 또는 대체 표현", "Renderer·Collider·Bounds 적용 여부", "InteractionAnchor", "최소 판독 피드백"],
+          "notSufficientAlone": "Scene 객체나 Game View 한 장만 있고 권위 상태와 같은 계보가 아니면 Presentation E5가 아니다."
+        }
+      ]
     },
     {
       "code": "E6",
       "label": "AreaSet 플레이 전 정제·필요 근거 결속",
-      "completionGate": "E5에서 발현한 WI 또는 WI 폐루프를 E7 실제 플레이에 올리기 전에 의미·인과·결과 표현·권위·최신성 결함을 정제한다. Actor 행위가 필요한 WI는 E4에서 동결한 AnimationRole·ActionCue 후보를 실제 AnimationClip·대상 Rig/Avatar·Controller·입력·전이·중단·귀환·root motion 정책과 결속하고 동작 가독성을 검증한다. AnimationRole이 NotApplicable인 즉시 상태 전환은 사유와 결과 판독성을 검증한다. 공간 WI는 관련 H·AreaSet·통행을 함께 검토하고 필요한 현실 문맥은 출처·판본·hash·한계와 함께 연결한다. GIS 결속은 독립 선택 축이며 DEM·도로를 공통 필수 자료로 간주하지 않는다."
+      "completionGate": "E5에서 발현한 WI 또는 WI 폐루프를 E7 실제 플레이에 올리기 전에 의미·인과·결과 표현·권위·최신성 결함을 정제한다. Actor 행위가 필요한 WI는 E4에서 동결한 AnimationRole·ActionCue 후보를 실제 AnimationClip·대상 Rig/Avatar·Controller·입력·전이·중단·귀환·root motion 정책과 결속하고 동작 가독성을 검증한다. AnimationRole이 NotApplicable인 즉시 상태 전환은 사유와 결과 판독성을 검증한다. 공간 WI는 관련 H·AreaSet·통행을 함께 검토하고 필요한 현실 문맥은 출처·판본·hash·한계와 함께 연결한다. GIS 결속은 독립 선택 축이며 DEM·도로를 공통 필수 자료로 간주하지 않는다.",
+      "requiredOutputs": [
+        {
+          "outputKindCode": "RefinementReviewRecord",
+          "label": "플레이 전 정제 기록",
+          "minimumContents": ["인과 질문표", "성공·실패·중단·회복·귀환", "권위·표현 불일치", "공간·통행·성능", "권리·개인정보", "출처·한계", "발견 사항과 재개 단계"],
+          "notSufficientAlone": "검토 회의나 체크리스트 존재만으로 열린 Blocking·Major 결함을 닫을 수 없다."
+        },
+        {
+          "outputKindCode": "ActorActionBindingRecord",
+          "label": "Actor 행위·애니메이션 결속 기록",
+          "minimumContents": ["AnimationRole·ActionCue", "Clip·Rig/Avatar", "Controller·입력·전이", "중단·귀환", "root motion 정책", "NotApplicable 사유와 결과 판독성"],
+          "notSufficientAlone": "정적 자세나 진행 표시 fallback만으로 적용 가능한 E6 애니메이션 결속을 대신할 수 없다."
+        }
+      ]
     },
     {
       "code": "E7",
       "label": "핵심 플레이 폐루프",
-      "completionGate": "하나의 PlayableUnit에서 Logic과 Presentation이 각각 E7을 통과하고 통합 단계는 두 궤적 중 낮은 값으로 판정된다. 사람이 실제 권위 Runtime과 저장 Scene에서 이동·선택·Preview·Confirm·Tick·재조회·성공·실패 회복·귀환을 수행하고 Play Mode·Game View·Console로 확인해야 한다. AreaSet이 RequiredBeforeE7을 선언하면 Current 상태의 E6 플레이 전 정제 합격을 선행하며 GIS NotApplied 자체는 E7을 차단하지 않는다."
+      "completionGate": "하나의 PlayableUnit에서 Logic과 Presentation이 각각 E7을 통과하고 통합 단계는 두 궤적 중 낮은 값으로 판정된다. 사람이 실제 권위 Runtime과 저장 Scene에서 이동·선택·Preview·Confirm·Tick·재조회·성공·실패 회복·귀환을 수행하고 Play Mode·Game View·Console로 확인해야 한다. AreaSet이 RequiredBeforeE7을 선언하면 Current 상태의 E6 플레이 전 정제 합격을 선행하며 GIS NotApplied 자체는 E7을 차단하지 않는다.",
+      "requiredOutputs": [
+        {
+          "outputKindCode": "ActualInputClosureRecord",
+          "label": "실제 입력 폐루프 완주 기록",
+          "minimumContents": ["사람과 입력 절차", "Runtime·Scene·build", "성공 경로", "실패·회복 경로", "귀환 또는 다음 선택", "Game View·Console·상태 재조회", "권위 Session·Revision"],
+          "notSufficientAlone": "Game View 캡처·Play Mode 진입·자동 시험만으로 실제 입력 폐루프를 증명할 수 없다."
+        },
+        {
+          "outputKindCode": "IntegratedTrackVerdict",
+          "label": "Logic·Presentation 통합 판정",
+          "minimumContents": ["Logic E1~E7 결과", "Presentation E1~E7 결과", "낮은 통합 단계", "열린 blocker", "증거 묶음 revision·hash"],
+          "notSufficientAlone": "한 궤적만 E7이거나 서로 다른 revision의 결과를 합친 경우 통합 E7이 아니다."
+        }
+      ]
     },
     {
       "code": "E8",
       "label": "개별 플레이 폐루프 안정",
-      "completionGate": "E7을 통과한 하나의 PlayableUnit을 같은 후보 revision과 build hash로 반복 검증한다. Logic은 최소 3회의 결정적 실행, Save·Restore·Replay 일치와 LocalProcess·RemoteHost 동등성을 통과하고 Presentation은 최소 2회의 실제 입력 완주, Save 재진입과 차단 Console 오류 0건을 통과해야 한다. 통합 E8은 두 결과 중 낮은 값이며 열린 차단 피드백이 없어야 한다."
+      "completionGate": "E7을 통과한 하나의 PlayableUnit을 같은 후보 revision과 build hash로 반복 검증한다. Logic은 최소 3회의 결정적 실행, Save·Restore·Replay 일치와 LocalProcess·RemoteHost 동등성을 통과하고 Presentation은 최소 2회의 실제 입력 완주, Save 재진입과 차단 Console 오류 0건을 통과해야 한다. 통합 E8은 두 결과 중 낮은 값이며 열린 차단 피드백이 없어야 한다.",
+      "requiredOutputs": [
+        {
+          "outputKindCode": "PlayableUnitStabilityCampaignResult",
+          "label": "개별 폐루프 안정성 캠페인 결과",
+          "minimumContents": ["동결 후보 revision·build hash", "Logic 결정적 실행 3회 이상", "Save·Restore·Replay", "LocalProcess·RemoteHost 동등성", "Presentation 실제 입력 2회 이상", "Save 재진입", "Console 차단 오류", "열린 피드백"],
+          "notSufficientAlone": "서로 다른 build의 반복 결과나 자동 실행만으로 E8을 선언할 수 없다."
+        }
+      ]
     },
     {
       "code": "E9",
       "label": "영역 폐루프 조화·사람 승인",
-      "completionGate": "같은 업무·심리 영역에서 E8을 통과한 둘 이상의 Core PlayableUnit을 하나의 AreaHarmonySet으로 고정한다. Logic의 권위·자원·시간·결과·NPC 연속성과 Presentation의 공간 이동·카메라·입력·상태 피드백을 같은 후보 revision에서 서로 다른 대표 순서로 검증하고, 사람이 인과·선택 결과·진행 귀환·판독·피드백·전환을 평가한다. 재미·몰입·완성도가 모두 5점 만점에 4점 이상이고 Blocking·Major 발견 사항이 없으며 사람이 후보 revision과 build hash를 명시적으로 승인해야 한다."
+      "completionGate": "같은 업무·심리 영역에서 E8을 통과한 둘 이상의 Core PlayableUnit을 하나의 AreaHarmonySet으로 고정한다. Logic의 권위·자원·시간·결과·NPC 연속성과 Presentation의 공간 이동·카메라·입력·상태 피드백을 같은 후보 revision에서 서로 다른 대표 순서로 검증하고, 사람이 인과·선택 결과·진행 귀환·판독·피드백·전환을 평가한다. 재미·몰입·완성도가 모두 5점 만점에 4점 이상이고 Blocking·Major 발견 사항이 없으며 사람이 후보 revision과 build hash를 명시적으로 승인해야 한다.",
+      "requiredOutputs": [
+        {
+          "outputKindCode": "AreaHarmonySetEvaluation",
+          "label": "영역 조화·사람 평가 결과",
+          "minimumContents": ["E8 Core 구성원 둘 이상", "동결 revision·build hash", "대표 실행 순서", "Logic 조화", "Presentation 조화", "사람 평가 점수", "Blocking·Major 발견 사항", "명시적 승인"],
+          "notSufficientAlone": "여러 지역·장면·폐루프가 보이거나 자동 시험이 통과한 사실만으로 E9가 아니다."
+        }
+      ]
     },
     {
       "code": "E10",
       "label": "제한 운영 검증",
-      "completionGate": "E9에서 승인한 불변 후보 빌드를 판본화된 제한 운영 프로필로 관찰하고, 시작·완주·실패 회복·저장·복원·Replay·rollback과 운영 품질 기준을 통과한 뒤 사람이 계속 운영을 명시적으로 승인했다. Provider 호출·운영 DB·결제·계약·일반 공개는 별도 권위 승인 없이는 포함하지 않는다."
+      "completionGate": "E9에서 승인한 불변 후보 빌드를 판본화된 제한 운영 프로필로 관찰하고, 시작·완주·실패 회복·저장·복원·Replay·rollback과 운영 품질 기준을 통과한 뒤 사람이 계속 운영을 명시적으로 승인했다. Provider 호출·운영 DB·결제·계약·일반 공개는 별도 권위 승인 없이는 포함하지 않는다.",
+      "requiredOutputs": [
+        {
+          "outputKindCode": "LimitedOperationObservationReport",
+          "label": "제한 운영 관찰 보고",
+          "minimumContents": ["E9 승인 불변 build", "운영 프로필", "관찰 시작·종료", "시험자·완주·실패 회복", "저장·복원·Replay", "크래시·예외·손상", "rollback 훈련", "사람의 계속·중단 결정", "외부 운영 효과 권위"],
+          "notSufficientAlone": "시간이 경과했거나 내부 실행이 존재한다는 사실만으로 E10을 선언할 수 없다."
+        }
+      ]
     }
   ]
 }

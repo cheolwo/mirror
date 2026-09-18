@@ -158,7 +158,7 @@ foreach ($interaction in @($worldInteractionCatalog.items)) {
 
 $evidenceStagePath = Resolve-RepositoryPath $repositoryRoot ([string] $source.evidenceStageCatalogPath)
 $evidenceStageCatalog = Read-Json $evidenceStagePath
-Require ([string] $evidenceStageCatalog.schemaVersion -eq "simulation-evidence-stages.v7") "EvidenceStageSchema"
+Require ([string] $evidenceStageCatalog.schemaVersion -eq "simulation-evidence-stages.v8") "EvidenceStageSchema"
 $evidenceStageCodes = @($evidenceStageCatalog.stages.code)
 
 $theorySpatialFactoryPath = Resolve-RepositoryPath $repositoryRoot ([string] $source.theorySpatialFactoryOutputPath)

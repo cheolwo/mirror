@@ -1,8 +1,15 @@
 {
   "schemaVersion": "simulation-e7-vertical-implementation-protocol.v2",
-  "revision": "simulation-e7-vertical-implementation-protocol.r7",
+  "revision": "simulation-e7-vertical-implementation-protocol.r8",
   "evidenceModelRevision": "horizontal-dual-cycle-evidence.r3",
   "workOrderSchemaVersion": "simulation-e7-vertical-work-order.v2",
+  "officialKoreanName": "E1~E7 상호작용 수직 검증 명세",
+  "canonicalArtifactSuffix": ".interaction-e1-e7-validation.json",
+  "legacyCompatibilityArtifactSuffix": ".e7-work-order.json",
+  "compatibleWorkOrderProtocolRevisions": [
+    "simulation-e7-vertical-implementation-protocol.r7",
+    "simulation-e7-vertical-implementation-protocol.r8"
+  ],
   "evidenceStageCatalogPath": "eng/execution-ledgers/evidence-stages.json",
   "principles": {
     "playableUnitVerticalMaturityEndsAtE7": true,
@@ -16,6 +23,7 @@
     "logicAndPresentationEachReviewE7ToE1": true,
     "logicAndPresentationEachValidateE1ToE7": true,
     "integratedStageUsesLowerTrack": true,
+    "playableUnitTrackUsesLowestMemberValidationStage": true,
     "presentationPlanningThroughE4MayPrecedeLogicE5": true,
     "presentationEvidenceE5RequiresLogicE5": true,
     "presentationE4PreparesApplicableAssetPlacementHandoff": true,
@@ -79,7 +87,7 @@
     "classificationSourcePath": "eng/execution-ledgers/world-interaction-gwae-classifications.json",
     "classificationOutputPath": "docs/AI/generated/world-interaction-gwae-classifications.json",
     "worldInteractionCatalogPath": "eng/execution-ledgers/world-interactions.json",
-    "outputSchemaVersion": "mirror-world-interaction-gwae-classification-output.v2",
+    "outputSchemaVersion": "mirror-world-interaction-gwae-classification-output.v3",
     "requiredFromEvidenceStageCode": "E5",
     "worldObjectScopeCode": "AllWorldObjects",
     "allowedApplicabilityCodes": ["Required", "NotApplicable"],

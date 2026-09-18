@@ -29,7 +29,7 @@ EvidencePackage = 시험·저장·Runtime·화면·Hosted 증거 묶음
 
 ### 인계 설명과 모듈 관계
 
-기존 E7 작업 명세의 선택적 `handoffNotes`는 `purpose`, `excludedScope`, `moduleRelations`, `readRefs`, `firstTask`, `completionCriteria`, `validationCommands`, `decisionBoundary`, `returnInstructions`를 가진다. 모듈 관계·읽을 파일·검증 명령은 문자열 배열이고 나머지는 짧은 설명이다. 기존 명세 검증은 이 필드 없이도 호환되지만 인계 도구는 설명 누락을 보고한다. 승인·Goal 상태·담당·쓰기 범위·E는 설명에서 읽거나 덮어쓰지 않는다.
+기존 E1~E7 상호작용 수직 검증 명세의 선택적 `handoffNotes`는 `purpose`, `excludedScope`, `moduleRelations`, `readRefs`, `firstTask`, `completionCriteria`, `validationCommands`, `decisionBoundary`, `returnInstructions`를 가진다. 모듈 관계·읽을 파일·검증 명령은 문자열 배열이고 나머지는 짧은 설명이다. 기존 명세 검증은 이 필드 없이도 호환되지만 인계 도구는 설명 누락을 보고한다. 승인·Goal 상태·담당·쓰기 범위·E는 설명에서 읽거나 덮어쓰지 않는다.
 
 모듈 관계는 **입력 → 처리 담당 → 권위 상태 → 조회 결과 → Unity 표시** 순서로 적으며 각 연결의 기존·수정·신규·미연결을 명시한다. 시작 시 주입과 실행 중 호출을 구분한다. 목적·관계·첫 수정 위치를 앞에 두고 E/H 상세는 기존 명세로 연결한다. 음식점 조리 명세의 설명은 인계 도구의 읽기 전용 표본이며 신규 게임 실행을 승인하지 않는다.
 
@@ -104,7 +104,7 @@ UI·저장·네트워크·검증을 처음부터 별도 상설 스레드로 늘�
 
 ### 배분과 변경 소유권
 
-- Graph Map에서 구현 후보를 넘길 때는 [Graph Map 개발 인계 체계](GraphMap개발인계체계.md)를 사용한다. `ReadyForDevelopment`는 Goal의 `workItems`가 아니며 자동 등록·재활성화·실행 권한도 아니다. 개발이 현재 Goal·WI·승인 기획·E7 작업 명세·파일 소유와 검증 상한을 확인한 뒤 기존 작업 재사용 또는 비중첩 작업 추가를 결정하고, 그때부터 실행 원장이 실제 개발 상태를 소유한다.
+- Graph Map에서 구현 후보를 넘길 때는 [Graph Map 개발 인계 체계](GraphMap개발인계체계.md)를 사용한다. `ReadyForDevelopment`는 Goal의 `workItems`가 아니며 자동 등록·재활성화·실행 권한도 아니다. 개발이 현재 Goal·WI·승인 기획·E1~E7 상호작용 수직 검증 명세·파일 소유와 검증 상한을 확인한 뒤 기존 작업 재사용 또는 비중첩 작업 추가를 결정하고, 그때부터 실행 원장이 실제 개발 상태를 소유한다.
 - 실행 구현은 기존 `workItems`에 승인 기획·명세·대상 WI·담당·변경 경로·의존성·E 상한을 연결한다. 공통 연구·미승인 공간 후보는 [전문 연구 절차](PlayableLoop전문심화연구분기재결속체계.md)와 후보 인계로 관리하며, 작업 목록을 채우려고 실행 WI나 E를 만들어내지 않는다.
 - 개발이 공통 계약을 확인한 뒤 각 담당은 동결된 입력 상태 사본으로 독립 구현한다. 미정 계약은 조사·후보까지만 진행하며 구현 승인을 추정하지 않는다.
 - 같은 `.unity`·Prefab·`.meta`·Animator Controller·공유 계약의 쓰기는 담당을 조율한다. 공식 `SimulationWorldShell` 저장·공통 원장·생성기 반영은 개발이 책임지고, 실제 조작을 다른 담당에게 맡길 때 경로와 기간을 명시한다. 같은 Unity Editor의 Scene/Play Mode 변경·시험도 겹치지 않게 사용한다. 전체 개발 WIP 잠금은 아니다.

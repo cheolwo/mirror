@@ -1,8 +1,11 @@
 {
-  "schemaVersion": "simulation-e7-vertical-work-order.v2",
-  "workOrderId": "E7-WO-NORTHEAST-SEOUL-ADMIN-DONG-BASE-GEOMETRY-CAPTURE",
-  "worldInteractionId": "WI-CITY-SYNTHETIC-MOVE",
-  "interactionGoalStableId": "interaction-goal:synthetic-delivery-move.v1",
+  "schemaVersion": "diorama-observation-presentation-evidence.v1",
+  "presentationEvidenceStableId": "presentation-evidence:administrative-dong-base-geometry-capture:r1",
+  "revision": "northeast-seoul-admin-dong-base-geometry-capture.r1",
+  "evidenceKindCode": "ObservationPresentationOnly",
+  "playableLoopWorkOrder": false,
+  "evidenceStageClaimed": null,
+  "playableInteractionBindingStatus": "NotApplicableObservationOnly",
   "planningGate": {
     "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-depth-parity.implementation.r5.md",
     "designRevision": "administrative-dong-diorama:depth-parity-and-base-capture.r1",
@@ -17,18 +20,18 @@
       "summary": "Sagajeong depth is a composite of separate private-review slices; the 30-area r2 batch currently supports historical boundary, building and road-centerline geometry only."
     }
   ],
-  "trackPlans": {
+  "evidenceReviewTracks": {
     "logic": {
       "downwardPlan": [
         {
-          "code": "E7-E1",
+          "code": "LOGIC-NO-AUTHORITY-MUTATION",
           "disposition": "NoAuthorityMutation",
           "summary": "Local candidate export and Unity rendering cannot publish current data, mutate delivery territory, create orders, dispatch riders or change Simulation state."
         }
       ],
       "upwardValidation": [
         {
-          "code": "E1-E7",
+          "code": "LOGIC-AUTHORITY-INVARIANCE-VERIFY",
           "status": "ValidatedNoAuthorityMutation",
           "summary": "Current-pointer non-use, candidate envelope flags and canonical Scene hash invariance were verified."
         }
@@ -37,39 +40,39 @@
     "presentation": {
       "downwardPlan": [
         {
-          "code": "E7",
+          "code": "PRESENTATION-ACTUAL-GAME-VIEW",
           "disposition": "Affected",
           "summary": "Capture all 30 geometry-only modules and Myeonmok 3/8-dong overview and close view in actual Play Mode Game View without saving the Scene."
         },
         {
-          "code": "E6-E5",
+          "code": "PRESENTATION-RUNTIME-WORLD-BINDING",
           "disposition": "AffectedPrivateReviewOnly",
           "summary": "Bind one active candidate manifest and its exact tiles to runtime-only combined meshes in canonical SimulationWorldShell."
         },
         {
-          "code": "E4",
+          "code": "PRESENTATION-CONTEXT-FREEZE",
           "disposition": "Affected",
           "summary": "Freeze honest visual labels, dynamic bounds and missing-layer diagnostics; no address, lane, signal, business or life inference is allowed."
         },
         {
-          "code": "E3-E2",
+          "code": "PRESENTATION-DETERMINISTIC-ASSEMBLY",
           "disposition": "Affected",
           "summary": "Add deterministic local candidate bundle export, envelope validation, mesh assembly, transition cleanup and tests."
         },
         {
-          "code": "E1",
+          "code": "PRESENTATION-SCOPE-CONTRACT",
           "disposition": "Affected",
           "summary": "Define the G0-G7 internal parity checklist for the exact 30-area scope."
         }
       ],
       "upwardValidation": [
         {
-          "code": "E1-E4",
+          "code": "PRESENTATION-PRIVATE-REVIEW-PREPARED",
           "status": "PassedForLocalPrivateReview",
           "summary": "Exact scope, source and bundle hashes, authority flags, visible missing-layer diagnostics, dynamic bounds, combined-mesh inputs and transition cleanup passed 9 EditMode tests."
         },
         {
-          "code": "E5-E7",
+          "code": "PRESENTATION-CAPTURED-NOT-PROMOTED",
           "status": "GameViewVerifiedWithoutPromotion",
           "summary": "An isolated graphics Unity run captured 30 administrative-dong overviews and one Myeonmok 3/8-dong detail from canonical SimulationWorldShell while preserving the Scene hash and dirty state."
         }
@@ -81,7 +84,7 @@
     "eng/Ssalddel.PublicDataPortalImport/행정동디오라마Batch.cs",
     "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md",
     "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-depth-parity.implementation.r5.md",
-    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-base-geometry-capture.e7-work-order.json",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-base-geometry-capture.presentation-evidence.v1.json",
     "docs/AI/PLANNING.md",
     "docs/AI/CURRENT_WORK.md",
     "C:/Users/user/ssalddel/Assets/Ssalddel/Runtime/World/행정동디오라마검토Models.cs",
@@ -92,7 +95,7 @@
     "C:/Users/user/ssalddel/Assets/Ssalddel/Tests/EditMode/행정동디오라마검토Tests.cs",
     "C:/Users/user/ssalddel/Documentation/Changes/2026-09-14-administrative-dong-base-geometry/"
   ],
-  "integratedGate": {
+  "completionGate": {
     "status": "NotPromoted",
     "evidenceRefs": [
       "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-depth-parity.implementation.r5.md",

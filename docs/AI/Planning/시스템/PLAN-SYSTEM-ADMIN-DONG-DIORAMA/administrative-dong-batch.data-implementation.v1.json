@@ -1,8 +1,11 @@
 {
-  "schemaVersion": "simulation-e7-vertical-work-order.v2",
-  "workOrderId": "E7-WO-NORTHEAST-SEOUL-ADMIN-DONG-DIORAMA-BATCH",
-  "worldInteractionId": "WI-CITY-SYNTHETIC-MOVE",
-  "interactionGoalStableId": "interaction-goal:synthetic-delivery-move.v1",
+  "schemaVersion": "public-data-candidate-implementation.v1",
+  "implementationStableId": "data-implementation:administrative-dong-diorama-batch:r2",
+  "revision": "northeast-seoul-admin-dong-diorama-batch.r2",
+  "workKindCode": "HistoricalBoundaryCandidateBatch",
+  "playableLoopWorkOrder": false,
+  "evidenceStageClaimed": null,
+  "playableInteractionBindingStatus": "NotApplicableDataOnly",
   "planningGate": {
     "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-batch.implementation.r4.md",
     "designRevision": "administrative-dong-diorama:northeast-seoul-historical-boundary-batch.r2",
@@ -17,18 +20,18 @@
       "summary": "OA-22160 contains all target 30 geometries but its actual file is a 2023 historical snapshot; current JUSO TL_SCCO_GEMD requires approved acquisition before current publication."
     }
   ],
-  "trackPlans": {
+  "evidenceReviewTracks": {
     "logic": {
       "downwardPlan": [
         {
-          "code": "E7-E1",
+          "code": "DATA-AUTHORITY-BOUNDARY",
           "disposition": "NoAuthorityMutation",
           "summary": "The batch only prepares read-only spatial candidates and cannot create orders, assign riders, alter delivery territories, or change Simulation state."
         }
       ],
       "upwardValidation": [
         {
-          "code": "E1-E7",
+          "code": "DATA-PROJECTION-VERIFY",
           "status": "ValidatedNoAuthorityMutation",
           "summary": "Candidate collections were independently reread, repeated apply inserted zero documents, and the existing API current-pointer snapshot hash remained unchanged."
         }
@@ -37,39 +40,39 @@
     "presentation": {
       "downwardPlan": [
         {
-          "code": "E7",
+          "code": "PRESENTATION-NO-APPLICATION",
           "disposition": "NotAuthorized",
           "summary": "No Unity Editor, Play Mode, Game View, Scene, Prefab, camera, input or GameObject change is included."
         },
         {
-          "code": "E6-E5",
+          "code": "PRESENTATION-CURRENT-BOUNDARY-BLOCK",
           "disposition": "BlockedByCurrentBoundary",
           "summary": "Historical candidates cannot be connected to the current Unity observation composition until a current authoritative boundary is acquired and approved."
         },
         {
-          "code": "E4",
+          "code": "DATA-PROVENANCE-FREEZE",
           "disposition": "Affected",
           "summary": "Official source candidates, geometry limitations, common ENU frame, building ownership and road clipping evidence are frozen."
         },
         {
-          "code": "E3-E2",
+          "code": "DATA-DETERMINISTIC-ASSEMBLY",
           "disposition": "Affected",
           "summary": "Thirty deterministic administrative-dong module inputs and their immutable candidate projections are assembled and independently reread."
         },
         {
-          "code": "E1",
+          "code": "DATA-SCOPE-CONTRACT",
           "disposition": "Affected",
           "summary": "A data-driven scope catalog owns the exact 30 administrative dong and 12 legal-dong bindings."
         }
       ],
       "upwardValidation": [
         {
-          "code": "E1-E4",
+          "code": "DATA-CANDIDATE-VALIDATED",
           "status": "ValidatedHistoricalCandidate",
           "summary": "Source and toolchain hashes, exact 30-area coverage, unique assignment, deterministic regeneration, 297 tiles, candidate persistence and scoped contract regressions passed for the historical-boundary candidate."
         },
         {
-          "code": "E5-E7",
+          "code": "PRESENTATION-APPLICATION-BLOCKED",
           "status": "BlockedByCurrentAdministrativeBoundary",
           "summary": "A current JUSO boundary snapshot, explicit publication approval and separate Unity placement work are required."
         }
@@ -90,12 +93,12 @@
     "Ssalddel.Tests/Services/WorldProjection/행정동경계JusoShapefileZipReaderTests.cs",
     "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md",
     "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-batch.implementation.r4.md",
-    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-batch.e7-work-order.json",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-batch.data-implementation.v1.json",
     "docs/Reports/동북서울-30개-행정동-디오라마-역사경계-후보-2026-09-14.md",
     "docs/AI/PLANNING.md",
     "docs/AI/CURRENT_WORK.md"
   ],
-  "integratedGate": {
+  "completionGate": {
     "status": "HistoricalBoundaryCandidateBatchStoredAndVerified",
     "evidenceRefs": [
       "docs/Reports/동북서울-30개-행정동-디오라마-역사경계-후보-2026-09-14.md",

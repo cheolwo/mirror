@@ -1,8 +1,9 @@
 {
-  "schemaVersion": "ssalddel.station-diorama-evidence-rule-catalog.v2",
-  "revision": "station-diorama-evidence-rules.r3",
+  "schemaVersion": "ssalddel.station-diorama-evidence-rule-catalog.v3",
+  "revision": "station-diorama-evidence-rules.r4",
   "policyRef": "docs/Architecture/역세권디오라마증거진화체계.md",
   "planRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/diorama-evidence-evolution.implementation.r23.md",
+  "administrativeAreaPlanRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/current-boundary-building-entrance-collection-gate.decision.r16.md",
   "evidenceStageCatalogRef": "eng/execution-ledgers/evidence-stages.json",
   "reviewPolicy": {
     "agentTaskClosureReviewRequired": true,
@@ -16,11 +17,113 @@
     "acceptedRequiresMissingCoverageOrCounterexampleReview": true,
     "spatialFoundationEvidenceRequired": true,
     "collectionStateDoesNotAuthorizeUsage": true,
+    "administrativeAreaCollectionGateRequired": true,
+    "administrativeAreaCollectionGateDoesNotAuthorizeUsage": true,
     "requiredSpatialEvidenceKinds": ["RoadAddress", "ParcelIdentifier", "ParcelGeometry"],
     "allowedCollectionStates": ["Collected", "NotCollected", "NotAssessed"],
     "allowedCoverageStates": ["Complete", "Missing", "Unassessed"],
     "allowedUsageStates": ["PrivateReviewOnly", "Blocked", "Unassessed"]
   },
+  "administrativeAreaCollectionGates": [
+    {
+      "gateStableId": "collection-gate:administrative-dong-diorama:current-boundary-building-entrance.r1",
+      "revision": "r1",
+      "status": "FixedPlanningGate",
+      "scopeRef": "eng/world-seedbeds/administrative-dong-dioramas/northeast-seoul-rider.r2.json",
+      "scopeStableId": "scope:administrative-dong-diorama:northeast-seoul-rider:r2",
+      "subjectAdministrativeAreaCount": 30,
+      "fixedSequence": true,
+      "collectionCompleted": false,
+      "applicationAuthorized": false,
+      "currentPublicationAllowed": false,
+      "humanApproval": {
+        "approved": true,
+        "approvedAt": "2026-09-16",
+        "approvalRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/current-boundary-building-entrance-collection-gate.decision.r16.md",
+        "scope": "CollectionSequenceAndEvidenceRequirementsOnly;NoCollectionOrApplicationClaim"
+      },
+      "orderedEvidenceRequirements": [
+        {
+          "order": 1,
+          "evidenceKind": "CurrentAdministrativeBoundary",
+          "provider": "행정안전부 주소정보누리집",
+          "datasetId": "TL_SCCO_GEMD",
+          "officialLinks": ["https://www.juso.go.kr/"],
+          "expectedFileComponents": ["shp", "shx", "dbf", "prj"],
+          "collectionState": "NotCollected",
+          "coverageState": "Unassessed",
+          "usageState": "Blocked",
+          "rawSha256": null,
+          "referenceDate": null,
+          "collectionDate": null,
+          "completionChecks": [
+            "공식 최신 월 서울 전체분의 실제 파일명·기준월·byte 길이·SHA-256·CRS·이용조건을 고정한다.",
+            "scope의 행정동 30개 코드가 정확히 한 번씩 존재하고 도형이 유효한지 검사한다.",
+            "겹침·틈·코드 crosswalk와 2023 역사 경계 차이를 진단한다."
+          ],
+          "limitations": [
+            "웹 페이지나 포털 갱신일은 실제 원본 판본과 hash를 대신하지 않는다.",
+            "행정동 경계는 건물·필지·출입구·통행을 증명하지 않는다."
+          ]
+        },
+        {
+          "order": 2,
+          "evidenceKind": "AddressBuildingAndBuildingGroup",
+          "provider": "행정안전부 주소정보누리집",
+          "datasetId": "TL_SPBD_BULD+ExactBuildingGroupDatasetIdPendingSourceInspection",
+          "officialLinks": ["https://www.juso.go.kr/"],
+          "expectedFileComponents": ["shp", "shx", "dbf", "prj"],
+          "collectionState": "NotCollected",
+          "coverageState": "Unassessed",
+          "usageState": "Blocked",
+          "rawSha256": null,
+          "referenceDate": null,
+          "collectionDate": null,
+          "completionChecks": [
+            "건물과 건물군의 정확한 제품·레이어 식별자를 실제 공식 제공 목록에서 확정한다.",
+            "건물관리번호 등 공식 연결 키와 30개 경계 coverage를 전수 기록한다.",
+            "1단계와 기준월이 다르면 판본 불일치 진단과 사람 검토 없이 결합하지 않는다."
+          ],
+          "limitations": [
+            "TL_SPBD_BULD는 건물 자료 후보이며 건물군의 정확한 레이어 식별자는 아직 확정되지 않았다.",
+            "건물 도형의 공간 교차만으로 주소·건물군·출입구를 확정하지 않는다."
+          ]
+        },
+        {
+          "order": 3,
+          "evidenceKind": "BuildingEntrance",
+          "provider": "행정안전부 주소정보누리집",
+          "datasetId": "ExactEntranceDatasetIdPendingSourceInspection",
+          "officialLinks": ["https://www.juso.go.kr/"],
+          "expectedFileComponents": [],
+          "collectionState": "NotCollected",
+          "coverageState": "Unassessed",
+          "usageState": "Blocked",
+          "rawSha256": null,
+          "referenceDate": null,
+          "collectionDate": null,
+          "completionChecks": [
+            "출입구의 정확한 제품·레이어 식별자, 파일 형식, 기준월, 연결 키를 실제 공식 제공 목록에서 확정한다.",
+            "건물 또는 건물군에 명시적으로 연결된 출입구와 미결속 후보를 분리한다.",
+            "차량·보행·교통약자 출입 의미가 원천에 있을 때만 해당 의미를 보존한다."
+          ],
+          "limitations": [
+            "가까운 점이나 도로 접점으로 출입구를 만들어내지 않는다.",
+            "출입구 위치는 배달 가능성·현재 통행·Unity 배치 승인이 아니다."
+          ]
+        }
+      ],
+      "invalidationTriggers": [
+        "주소정보누리집이 TL_SCCO_GEMD를 종료하고 공식 대체 정본을 지정함",
+        "건물·건물군·출입구 제품의 공식 연결 키나 갱신 주기가 변경됨",
+        "scope:administrative-dong-diorama:northeast-seoul-rider:r2의 30개 행정동 집합이 변경됨"
+      ],
+      "limitations": [
+        "고정은 수집 순서와 검증 요구의 승인이지 원본 수집·DB 저장·게시·Unity 적용 승인이 아니다.",
+        "실제 원본을 확보하면 이 계획 관문을 덮어쓰지 않고 별도 SourceReceipt와 후보 판본을 추가한다."
+      ]
+    }
+  ],
   "sourceReceipts": [
     {
       "sourceReceiptStableId": "source-receipt:station-diorama:sagajeong:kric-station-reference.r1",

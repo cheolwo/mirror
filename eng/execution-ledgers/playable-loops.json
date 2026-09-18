@@ -654,7 +654,7 @@
       "maturityTracks": {
         "logic": {
           "trackCode": "Logic",
-          "currentStage": "E5",
+          "currentStage": "E4",
           "targetStage": "E7",
           "statusCode": "InProgress",
           "evidencePackageRefs": [

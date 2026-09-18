@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string] $InputPath = "eng/execution-ledgers/work-orders/e7-vertical-work-order.template.json",
+    [string] $InputPath = "eng/execution-ledgers/work-orders/interaction-e1-e7-validation.template.json",
     [string] $ProtocolPath = "eng/execution-ledgers/e7-vertical-implementation-protocol.json",
     [string] $PlayableLoopPath = "eng/execution-ledgers/playable-loops.json",
     [string] $GwaeClassificationPath = "docs/AI/generated/world-interaction-gwae-classifications.json",
@@ -36,6 +36,7 @@ foreach ($principleName in @(
     "presentationE4PreparesApplicableAssetPlacementHandoff",
     "assetResearchAloneNeverPromotesE5",
     "nonSpatialOrNonVisualWorkCanDeclareNotApplicable",
+    "playableUnitTrackUsesLowestMemberValidationStage",
     "roleObjectActionClassificationRequiredBeforeE5")) {
     $principle = $protocol.principles.PSObject.Properties[$principleName]
     Require ($null -ne $principle -and [bool] $principle.Value) `
@@ -86,8 +87,8 @@ foreach ($fieldName in @(
 }
 Require ([string] $workOrder.schemaVersion -eq
     [string] $protocol.workOrderSchemaVersion) "WorkOrderSchemaInvalid"
-Require ([string] $workOrder.protocolRevision -eq
-    [string] $protocol.revision) "ProtocolRevisionInvalid"
+Require (@($protocol.compatibleWorkOrderProtocolRevisions) -contains
+    [string] $workOrder.protocolRevision) "ProtocolRevisionInvalid"
 Require ([string] $workOrder.evidenceModelRevision -eq
     [string] $protocol.evidenceModelRevision) "WorkOrderEvidenceModelInvalid"
 Require-Text $workOrder.workOrderId "WorkOrderIdMissing"
@@ -323,12 +324,12 @@ if (-not $isTemplate -and -not $isNativeGoal) {
     Require (@($loop[0].worldInteractionIds) -contains
         [string] $workOrder.activeWorldInteractionId) "WorldInteractionOutsideUnit"
     Require ($null -ne $loop[0].maturityTracks) "PlayableUnitTracksMissing"
-    Require ([string] $loop[0].maturityTracks.logic.currentStage -eq
-        [string] $workOrder.trackPlans.logic.currentEvidenceStage) `
-        "LogicStageDiffersFromPlayableUnit"
-    Require ([string] $loop[0].maturityTracks.presentation.currentStage -eq
-        [string] $workOrder.trackPlans.presentation.currentEvidenceStage) `
-        "PresentationStageDiffersFromPlayableUnit"
+    $loopLogicStageNumber = [int] ([string] $loop[0].maturityTracks.logic.currentStage).Substring(1)
+    $loopPresentationStageNumber = [int] ([string] $loop[0].maturityTracks.presentation.currentStage).Substring(1)
+    Require ($logicStageNumber -ge $loopLogicStageNumber) `
+        "LogicStageBelowPlayableUnit"
+    Require ($presentationStageNumber -ge $loopPresentationStageNumber) `
+        "PresentationStageBelowPlayableUnit"
 }
 
 if ([bool] $workOrder.promotionEligible) {

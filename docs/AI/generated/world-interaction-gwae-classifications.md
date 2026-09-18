@@ -1,9 +1,9 @@
 # WI 괘성 분류 목록
 
-- 분류 입력 판본: `mirror-world-interaction-gwae-classifications.r10`
-- WI 대장 판본: `simulation-world-interactions.r49`
-- 전체: 134, 개별 의미 명시 검토: 81, 검토된 영역 의미 규칙 적용: 53
-- E5 역할 객체·행위 정의 필수: 134, 역할 객체 표본 프로필: 2
+- 분류 입력 판본: `mirror-world-interaction-gwae-classifications.r11`
+- WI 대장 판본: `simulation-world-interactions.r50`
+- 전체: 135, 개별 의미 명시 검토: 82, 검토된 영역 의미 규칙 적용: 53
+- E5 역할 객체·행위 정의 필수: 135, 역할 객체 표본 프로필: 2
 - 업무 의미 대표 괘 프로필: 5 (코드 계보: `food-workflow-lineage`)
 - 오행 업무 엔진 조립 프로필: 1, 주축 토(간괘), 보조 수(감괘)
 - 권위 상태 변화를 소유하거나 일으키는 모든 세계 객체의 역할·행위 정의는 E5 진입 필수 조건이다. 이 목록만으로 E5를 자동 승격하지 않는다.
@@ -163,6 +163,7 @@
 | `WI-NATURE-HANS-BOUNDARY-PATROL` | 한스와 농장 경계 순찰 | `Required/ResolvedExecutionObject` | `PatrolHansFarmBoundary`<br>HansGuestRightsGranted, FarmBoundaryPatrolAvailable → FarmBoundaryPatrolCompleted, HansAndPlayerReturnedTogether<br>효과: FarmBoundaryPatrolCompleted, HansAndPlayerReturnedTogether, PromiseFulfillmentRecorded | 목(진괘) | - | 목(진괘) | - | - | `ReviewedByMeaningRule` |
 | `WI-WORLD-BOUNDED-MANAGEMENT-GRANT` | 제한된 생활 거점 관리권 부여 | `Required/PlayerActor` | `GrantBoundedFarmManagementAuthority`<br>TrustEvidenceAccepted, ManagementGrantAvailable → BoundedManagementAuthorityGranted<br>효과: BoundedManagementAuthorityGranted | 화(리괘) | - | 화(리괘) | - | - | `ReviewedByMeaningRule` |
 | `WI-REFLECT-HANS-FARM-CRISIS-DEBRIEF` | 한스 농장 위기 사후 성찰 | `Required/PlayerActor` | `ReflectHansFarmCrisis`<br>FarmDefenseReturned, FarmRecoveryOutcomeAvailable → HansFarmCrisisDebriefCompleted, LearningNeedRecognized<br>효과: HansFarmCrisisDebriefCompleted, LearningNeedRecognized, Hex04CampaignEntryAvailable | 토(간괘) | 수(감괘) | 토(간괘) | - | - | `ReviewedByMeaningRule` |
+| `WI-OPS-SEASONAL-CAMPAIGN-ADVANCE` | 절기 운영 캠페인 다음 구간 확정 | `Required/PlayerActor` | `AdvanceSeasonalOperationsCampaign`<br>SeasonalCampaignPhaseActive, SeasonalCampaignAdvanceAvailable → SeasonalCampaignPhaseAdvanced<br>효과: SeasonalCampaignPhaseAdvanced | 화(리괘) | 수(감괘) | 화(리괘) | - | - | `ReviewedExplicit` |
 | `WI-REVIEW-01` | NPC 업무 결과 검토 확정 | `Required/PlayerActor` | `NpcWorkReviewConfirm`<br>NpcWorkCompleted, ReviewPending → NpcWorkReviewConfirmed<br>효과: NpcWorkReviewConfirmed, PlayerOperationalProficiencyChanged | 수(감괘) | - | 토(간괘) | 화(리괘) | - | `ReviewedExplicit` |
 
 ## 역할 객체·행위 E5 표본

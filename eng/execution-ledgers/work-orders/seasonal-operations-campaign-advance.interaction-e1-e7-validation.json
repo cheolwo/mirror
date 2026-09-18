@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "simulation-e7-vertical-work-order.v2",
+  "protocolRevision": "simulation-e7-vertical-implementation-protocol.r8",
+  "evidenceModelRevision": "horizontal-dual-cycle-evidence.r3",
+  "workOrderId": "E7-WO-SEASONAL-OPERATIONS-CAMPAIGN-ADVANCE",
+  "title": "절기 운영 캠페인 구간 Preview와 Confirm",
+  "interactionGoalStableId": "interaction-goal:seasonal-operations-campaign-advance.v1",
+  "activeWorldInteractionId": "WI-OPS-SEASONAL-CAMPAIGN-ADVANCE",
+  "subjectBindingRefs": [
+    "subject:player-controlled-actor.v1",
+    "subject:authoritative-interaction-target.v1"
+  ],
+  "planningGate": {
+    "statusCode": "Approved",
+    "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/seasonal-campaign-refactoring-plan.r66.md",
+    "designRevision": "seasonal-campaign-refactoring-plan.r66",
+    "designHashSha256": "2327EAF5E809CA0D4956F2C009EB046BE9746FA7E6FA2C9ADE08313C1D7174D4",
+    "approvalEvidenceRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/seasonal-campaign-refactoring-plan.r66.md"
+  },
+  "targetEvidenceStage": "E7",
+  "currentEvidenceStage": "E4",
+  "promotionEligible": false,
+  "iterationState": {
+    "currentPass": "UpwardAssemblyAndValidation",
+    "nextReopenCondition": "계약·권위·결정성·표현 결함이 발견되면 같은 작업 명세에서 가장 이른 E1~E7을 다시 연다."
+  },
+  "changeImpactReviewRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/seasonal-campaign-refactoring-plan.r66.md",
+  "trackPlans": {
+    "logic": {
+      "trackCode": "Logic",
+      "currentEvidenceStage": "E4",
+      "downwardPlan": [
+        { "code": "E7", "disposition": "Blocked", "summary": "실제 입력과 Local/Remote 완주는 후속 절편이다." },
+        { "code": "E6", "disposition": "Blocked", "summary": "운영자 인과 설명과 회복 판독은 후속 절편이다." },
+        { "code": "E5", "disposition": "Blocked", "summary": "권위 상태 사본의 실제 World 결속은 후속 절편이다." },
+        { "code": "E4", "disposition": "Affected", "summary": "Application·Local Runtime·TestServer HTTP가 같은 Campaign Service와 계약을 사용한다." },
+        { "code": "E3", "disposition": "Affected", "summary": "같은 seed·definition·관측 판본의 결정성과 Preview 불변·Confirm 멱등을 집중 시험한다." },
+        { "code": "E2", "disposition": "Affected", "summary": "Session Aggregate의 독립 절기 캠페인 상태 전이와 기존 주역 캠페인 분리를 구현한다." },
+        { "code": "E1", "disposition": "Affected", "summary": "절기 캠페인 상태·구간·관측 판본·Preview·Confirm 반환 계약을 추가한다." }
+      ],
+      "upwardValidation": [
+        { "code": "E1", "status": "Passed", "evidenceRefs": ["Ssalddel.Simulation.Contracts/UnityPackage/Runtime/Simulation절기운영CampaignContracts.cs", "Ssalddel.Simulation.Contracts/UnityPackage/Runtime/SimulationSaveReplayContracts.cs"] },
+        { "code": "E2", "status": "Passed", "evidenceRefs": ["Ssalddel.Simulation.Domain/UnityPackage/Runtime/Simulation절기운영Campaign.cs", "Ssalddel.Simulation.Application/RuntimeCore/Simulation절기운영CampaignService.cs", "Ssalddel.Simulation.Application/RuntimeCore/LocalSimulationRuntime.cs"] },
+        { "code": "E3", "status": "Passed", "evidenceRefs": ["Ssalddel.Simulation.Tests/Simulation절기운영CampaignTests.cs", "Ssalddel.Simulation.Tests/SimulationSessionSavePersistenceTests.cs", "test:seasonal-save-replay-regression:44/44"] },
+        { "code": "E4", "status": "Passed", "evidenceRefs": ["Ssalddel.Simulation.Hosting/Controllers/Simulation절기운영CampaignController.cs", "test:seasonal-testserver-parity-and-metadata:28/28"] },
+        { "code": "E5", "status": "Blocked", "evidenceRefs": [] },
+        { "code": "E6", "status": "Blocked", "evidenceRefs": [] },
+        { "code": "E7", "status": "Blocked", "evidenceRefs": [] }
+      ]
+    },
+    "presentation": {
+      "trackCode": "Presentation",
+      "currentEvidenceStage": "E4",
+      "downwardPlan": [
+        { "code": "E7", "disposition": "Blocked", "summary": "실제 Game View 입력과 귀환은 이번 계약·Domain 절편에서 제외한다." },
+        { "code": "E6", "disposition": "Blocked", "summary": "화면 배치·카메라·피드백 정제는 후속 절편이다." },
+        { "code": "E5", "disposition": "Blocked", "summary": "실제 SimulationWorldShell 배치는 후속 절편이다." },
+        { "code": "E4", "disposition": "Affected", "summary": "원천별 판본·지연 진단을 조합하는 Coordinator·ScreenModel·Presenter 인계를 구현한다." },
+        { "code": "E3", "disposition": "Affected", "summary": "Unity 수신·판본 거절·원천별 마지막 정상 상태·화면 모델을 순수 자동시험으로 검증한다." },
+        { "code": "E2", "disposition": "Affected", "summary": "인증 GET Client·Decoder 계약·Interpreter와 기존 디오라마·운영 장면 Adapter를 구현한다." },
+        { "code": "E1", "disposition": "Affected", "summary": "향후 Unity가 읽을 phase·available action·source revision 필드를 계약에 포함한다." }
+      ],
+      "upwardValidation": [
+        { "code": "E1", "status": "Passed", "evidenceRefs": ["Ssalddel.Simulation.Contracts/UnityPackage/Runtime/Simulation절기운영CampaignContracts.cs", "test:Simulation절기운영CampaignTests"] },
+        { "code": "E2", "status": "Passed", "evidenceRefs": ["Ssalddel.Unity/Runtime/Campaigns/Simulation절기운영CampaignClient.cs", "Ssalddel.Unity/Runtime/Campaigns/Simulation절기운영CampaignInterpreter.cs", "Ssalddel.Unity/Runtime/OperationalTransport/UnityJsonSimulation절기운영CampaignDecoder.cs"] },
+        { "code": "E3", "status": "Passed", "evidenceRefs": ["Ssalddel.Unity.Tests/Simulation절기운영CampaignInterpreterTests.cs", "test:seasonal-unity-receiver-and-existing-observation-regression:37/37"] },
+        { "code": "E4", "status": "Passed", "evidenceRefs": ["Ssalddel.Unity/Runtime/Campaigns/SeasonalCampaignObservationCoordinator.cs", "Ssalddel.Unity/Runtime/Campaigns/SeasonalCampaignScreenModels.cs", "Ssalddel.Unity/Runtime/Campaigns/SeasonalCampaignPresenter.cs", "Ssalddel.Unity/Runtime/Campaigns/SeasonalCampaignObservationSourceAdapters.cs", "Ssalddel.Unity.Tests/SeasonalCampaignObservationCoordinatorTests.cs", "test:seasonal-card-npc-source-adapters:13/13", "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World/절기운영CampaignWorldView.cs", "C:/Users/user/ssalddel/Assets/Ssalddel/Bootstrap/절기운영CampaignWorldController.cs", "test:actual-unity-editmode-seasonal-world-binding:3/3"] },
+        { "code": "E5", "status": "Blocked", "evidenceRefs": [] },
+        { "code": "E6", "status": "Blocked", "evidenceRefs": [] },
+        { "code": "E7", "status": "Blocked", "evidenceRefs": [] }
+      ]
+    }
+  },
+  "integratedGate": {
+    "currentEvidenceStage": "E4",
+    "status": "Passed",
+    "candidateRevision": "seasonal-operations-campaign.card-npc-source-binding.r4",
+    "evidenceRefs": [
+      "Ssalddel.Simulation.Contracts/UnityPackage/Runtime/Simulation절기운영CampaignContracts.cs",
+      "Ssalddel.Simulation.Tests/Simulation절기운영CampaignTests.cs",
+      "Ssalddel.Unity/Runtime/Campaigns/SeasonalCampaignObservationCoordinator.cs",
+      "Ssalddel.Unity/Runtime/Campaigns/SeasonalCampaignObservationSourceAdapters.cs",
+      "Ssalddel.Unity.Tests/SeasonalCampaignObservationCoordinatorTests.cs",
+      "C:/Users/user/ssalddel/Assets/Ssalddel/Presentation/World/절기운영CampaignWorldView.cs",
+      "C:/Users/user/ssalddel/Assets/Ssalddel/Bootstrap/절기운영CampaignWorldController.cs"
+    ],
+    "openFeedbackRefs": [
+      "View Socket·Controller·Builder 결속 소스는 실제 Unity에서 컴파일했지만 canonical SimulationWorldShell Scene을 저장하지 않아 E5 이상은 차단한다.",
+      "실제 RemoteHost·token·Campaign 세션 연결과 Play Mode·Game View는 검증하지 않았다."
+    ]
+  }
+}

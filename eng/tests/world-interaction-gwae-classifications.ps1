@@ -12,7 +12,7 @@ $output = Get-Content -Raw -Encoding UTF8 (Join-Path $repositoryRoot 'docs/AI/ge
 $markdown = Get-Content -Raw -Encoding UTF8 (Join-Path $repositoryRoot 'docs/AI/generated/world-interaction-gwae-classifications.md')
 
 if ([string] $output.schemaVersion -ne 'mirror-world-interaction-gwae-classification-output.v3') { throw 'WorldInteractionGwaeOutputSchemaInvalid' }
-if ([string] $output.sourceRevision -ne 'mirror-world-interaction-gwae-classifications.r10') { throw 'WorldInteractionGwaeSourceRevisionInvalid' }
+if ([string] $output.sourceRevision -ne 'mirror-world-interaction-gwae-classifications.r11') { throw 'WorldInteractionGwaeSourceRevisionInvalid' }
 $e5Policy = $output.e5RoleObjectActionGatePolicy
 if ([string] $e5Policy.requiredFromEvidenceStageCode -ne 'E5' -or [string] $e5Policy.worldObjectScopeCode -ne 'AllWorldObjects') { throw 'E5RoleObjectActionGatePolicyInvalid' }
 if (@($e5Policy.allowedRoleObjectKindCodes).Count -ne 9 -or -not (@($e5Policy.allowedRoleObjectKindCodes) -contains 'Environment')) { throw 'E5AllWorldObjectKindsMissing' }

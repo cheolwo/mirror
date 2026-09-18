@@ -1,11 +1,11 @@
 # 주체·상호작용 중심 개발 상태
 
-- 기준 판본: `mirror-subject-interaction-development.r4`
+- 기준 판본: `mirror-subject-interaction-development.r5`
 - 준비된 주체: `21`
-- 주체가 결속된 WI: `134`
-- 상호작용 Goal: `62`
+- 주체가 결속된 WI: `135`
+- 상호작용 Goal: `63`
 - 기존 Goal 호환 투영: `22`
-- Loop 없는 신규 Goal: `39`
+- Loop 없는 신규 Goal: `40`
 
 개발 순서: `SubjectFoundation → InteractionCore → DirectResult → DerivedEffects → OptionalPlayableLoopValidation`
 
@@ -70,6 +70,7 @@
 | `interaction-goal:synthetic-delivery-deliver.v1` | `WI-CITY-SYNTHETIC-DELIVER` | subject:synthetic-delivery-courier.v1<br>subject:synthetic-delivery-order.v1<br>subject:synthetic-delivery-vehicle.v1<br>subject:synthetic-delivery-recipient.v1<br>subject:npc-routine-actor.v1<br>subject:authoritative-interaction-target.v1 | 없음 | NotApplicable | Active |
 | `interaction-goal:synthetic-delivery-receive.v1` | `WI-CITY-SYNTHETIC-RECEIVE` | subject:synthetic-delivery-courier.v1<br>subject:synthetic-delivery-order.v1<br>subject:synthetic-delivery-vehicle.v1<br>subject:synthetic-delivery-recipient.v1<br>subject:npc-routine-actor.v1<br>subject:authoritative-interaction-target.v1 | 없음 | NotApplicable | Active |
 | `interaction-goal:synthetic-delivery-return.v1` | `WI-CITY-SYNTHETIC-RETURN` | subject:synthetic-delivery-courier.v1<br>subject:synthetic-delivery-order.v1<br>subject:synthetic-delivery-vehicle.v1<br>subject:synthetic-delivery-recipient.v1<br>subject:npc-routine-actor.v1<br>subject:authoritative-interaction-target.v1 | 없음 | NotApplicable | Active |
+| `interaction-goal:seasonal-operations-campaign-advance.v1` | `WI-OPS-SEASONAL-CAMPAIGN-ADVANCE` | subject:player-controlled-actor.v1<br>subject:authoritative-interaction-target.v1 | 없음 | NotApplicable | Active |
 | `interaction-goal:restaurant-cooking.v1` | `WI-CITY-RESTAURANT-COOK` | subject:npc-routine-actor.v1<br>subject:authoritative-interaction-target.v1 | 없음 | NotApplicable | Active |
 | `interaction-goal:restaurant-auto-accept.v1` | `WI-CITY-RESTAURANT-ACCEPT` | subject:npc-routine-actor.v1<br>subject:authoritative-interaction-target.v1 | 없음 | NotApplicable | Active |
 | `interaction-goal:hans-farm-fence-repair.wi-nature-20.v1` | `WI-NATURE-20` | subject:player-controlled-actor.v1<br>subject:authoritative-interaction-target.v1<br>subject:hans-farm-fence-defense-objective.v1 | `playable-loop:nature-hans-farm-fence-restoration.v1` | NotApplicable | Active |

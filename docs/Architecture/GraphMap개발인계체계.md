@@ -2,7 +2,7 @@
 
 ## 목적
 
-Graph Map에서 정리한 노드·엣지·배치 제약·기존 배치 규칙·코드 결속을 개발 작업이 검증 가능한 작은 구현 단위로 받도록 한다. Graph Map 전체를 한 번에 구현하지 않고, 준비된 주체와 단일 WI Goal·E7 작업 명세에 맞는 slice 하나를 골라 개발에 인계한다. PlayableLoop는 여러 WI의 폐쇄성을 함께 검증할 때만 선택적으로 참조한다.
+Graph Map에서 정리한 노드·엣지·배치 제약·기존 배치 규칙·코드 결속을 개발 작업이 검증 가능한 작은 구현 단위로 받도록 한다. Graph Map 전체를 한 번에 구현하지 않고, 준비된 주체와 단일 WI Goal·E1~E7 상호작용 수직 검증 명세에 맞는 slice 하나를 골라 개발에 인계한다. PlayableLoop는 여러 WI의 폐쇄성을 함께 검증할 때만 선택적으로 참조한다.
 
 Graph Map은 개발 명세나 상태 권위가 아니다. 플레이 관계와 구현 진입점을 함께 찾게 하는 계획 자료이며, 개발은 승인된 기획·작업 명세·현재 코드와 실제 파이프라인 차단을 다시 확인한 뒤 구현한다.
 
@@ -118,7 +118,7 @@ Draft
 - 사람용 상태판: [`graph-map-development-handoffs.md`](../AI/generated/graph-map-development-handoffs.md)
 - 회귀시험: [`graph-map-development-handoffs.ps1`](../../eng/tests/graph-map-development-handoffs.ps1)
 
-원장은 개발 결과의 단일 권위가 아니다. Goal·work item·E7 작업 명세·코드·시험·EvidencePackage가 실제 구현 상태를 소유하고, 이 원장은 Graph Map slice와 그 개발 상태를 연결한다.
+원장은 개발 결과의 단일 권위가 아니다. Goal·work item·E1~E7 상호작용 수직 검증 명세·코드·시험·EvidencePackage가 실제 구현 상태를 소유하고, 이 원장은 Graph Map slice와 그 개발 상태를 연결한다.
 
 ## 반환 형식
 

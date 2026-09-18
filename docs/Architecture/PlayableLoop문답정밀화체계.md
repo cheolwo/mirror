@@ -300,7 +300,7 @@ Q-001부터 Q-339까지 순차 순회
 ```
 
 - `예상 E 준비 범위`는 질문이 충분히 답변됐을 때 **어느 E 구현을 설계할 수 있는지**를 보여 주는 전망이다.
-- `실제 검증된 E`는 `playable-loops.json`, 활성 E7 작업 명세와 EvidencePackage만을 읽어 표시한다.
+- `실제 검증된 E`는 `playable-loops.json`, 활성 E1~E7 상호작용 수직 검증 명세와 EvidencePackage만을 읽어 표시한다.
 - 전망보다 실제 E가 낮으면 구현·시험 공백이 있다는 뜻이고, 실제 E가 더 높으면 기존 구현을 새 기획 revision으로 재검증해야 하는지 확인한다.
 - Logic과 Presentation의 예상 범위 및 실제 E를 따로 기록하고, 통합 E는 기존 원칙대로 두 실제 궤적 중 낮은 값으로만 판정한다.
 - D4 질문이 모두 확인돼도 실제 Prefab과 H 결속이 없다면 Presentation E5가 아니다. D5 질문이 모두 확인돼도 Play Mode·Game View·Save 재진입이 없다면 E7·E8이 아니다.
@@ -378,7 +378,7 @@ Q-001부터 Q-339까지 순차 순회
 - 모든 칸을 같은 깊이로 만드는 것이 목적은 아니다. 해당 폐루프에 필요한 칸은 Runtime까지 닫고, 불필요한 칸은 사유 있는 `NotApplicable`로 닫는다.
 - E/G/H/WI는 그대로 유지한다. 이 대장은 그것들을 대체하는 새 성숙도 축이 아니라 Unity 게임 완성 누락을 찾는 질문·인계용 관점이다.
 - Logic이 높아도 조작·애니메이션·UI·Scene·Game View가 비어 있으면 질문과 완료 판정은 그 공백으로 이동한다.
-- 문답이 합성될 때 이 대장의 `확정후보` 이상 항목을 기획서 절과 E7 작업 명세에 연결하고, 개발 뒤 `구현증거`와 `Runtime증거`는 별도 EvidencePackage가 갱신한다.
+- 문답이 합성될 때 이 대장의 `확정후보` 이상 항목을 기획서 절과 E1~E7 상호작용 수직 검증 명세에 연결하고, 개발 뒤 `구현증거`와 `Runtime증거`는 별도 EvidencePackage가 갱신한다.
 
 건물·공간·배치·애니메이션 질문이 단순 선택을 넘어 조사와 대안 비교를 요구하면 [전문 심화 연구 분기·재결속 체계](PlayableLoop전문심화연구분기재결속체계.md)의 `Required` 연구로 분기한다. 문답에서 전문 답을 추정해 `Accepted`로 처리하지 않는다.
 
@@ -396,7 +396,7 @@ NotReady -> ReadyToDispatch -> Dispatched -> EvidenceReturned
                                  +-> FeedbackRequired <-+
 ```
 
-- `NotReady`: 핵심 미정, 승인 기획서, Accepted 연구, 활성 WI 또는 E7 작업 명세 중 하나 이상이 부족하다.
+- `NotReady`: 핵심 미정, 승인 기획서, Accepted 연구, 활성 WI 또는 E1~E7 상호작용 수직 검증 명세 중 하나 이상이 부족하다.
 - `ReadyToDispatch`: 구현 범위와 제외 범위가 동결됐고 모든 기획 관문을 통과했다.
 - `Dispatched`: 판본화된 인계 묶음을 개발 스레드에 보냈다. 대화 요약만 보낸 상태는 여기에 포함하지 않는다.
 - `FeedbackRequired`: 구현 조사에서 플레이어 약속이나 연구 기준선을 다시 열어야 할 발견이 돌아왔다.

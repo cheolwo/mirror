@@ -34,8 +34,8 @@
 | `playable-loop:farm-player-placement.v1` | E1 | WaitingForE7 | False | PlayableUnit E7이 아직 닫히지 않았다. |
 | `playable-loop:town-arcana-context.v1` | E1 | WaitingForE7 | False | PlayableUnit E7이 아직 닫히지 않았다. |
 | `playable-loop:player-npc-learning-focus.v1` | E3 | WaitingForE7 | False | PlayableUnit E7이 아직 닫히지 않았다. |
-| `playable-loop:player-hexagram-context.v1` | E3 | WaitingForE7 | False | 괘상 학습 맥락 PlayableUnit E7이 아직 닫히지 않았다. |
 | `playable-loop:nature-hans-farm-fence-restoration.v1` | E4 | WaitingForE7 | False | PlayableUnit E7이 아직 닫히지 않았다. 주체와 WI 직접 결과를 먼저 닫고, 반복 안정성은 그 뒤에 별도 검증한다. |
+| `playable-loop:hexagram-campaign-retry.v1` | E1 | WaitingForE7 | False | Logic E3·Presentation E1의 낮은 통합 단계 E1을 반영한다. 실제 E7 폐루프가 닫히기 전 E8 안정성 실행을 시작하지 않는다. |
 
 ## E9 영역 조화와 사람 승인
 

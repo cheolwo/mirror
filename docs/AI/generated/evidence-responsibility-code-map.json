@@ -16,7 +16,7 @@
       "managementSystem": "G1",
       "koreanName": "\uC2E4\uD589 \uACBD\uACC4",
       "technicalName": "E2\uC2E4\uD589\uACBD\uACC4Module",
-      "primaryCount": 280,
+      "primaryCount": 285,
       "secondaryCount": 0
     },
     {
@@ -24,7 +24,7 @@
       "managementSystem": "G1",
       "koreanName": "\uD68C\uADC0 \uC99D\uAC70",
       "technicalName": "E3\uD68C\uADC0\uC99D\uAC70Module",
-      "primaryCount": 298,
+      "primaryCount": 300,
       "secondaryCount": 1
     },
     {
@@ -32,7 +32,7 @@
       "managementSystem": "G1",
       "koreanName": "\uC2E4\uD589 \uBB38\uB9E5 \uACB0\uC18D",
       "technicalName": "E4\uC2E4\uD589\uBB38\uB9E5\uACB0\uC18DModule",
-      "primaryCount": 51,
+      "primaryCount": 54,
       "secondaryCount": 0
     },
     {
@@ -145,7 +145,7 @@
       "koreanName": "\uC6D0\uACA9 Host Adapter",
       "technicalName": "E2\uC6D0\uACA9HostAdapterModule",
       "responsibility": "Hosted Server\uC5D0\uC11C \uAC19\uC740 Core\uB97C HTTP \uACBD\uACC4\uB85C \uB178\uCD9C\uD55C\uB2E4.",
-      "primaryCount": 15,
+      "primaryCount": 16,
       "secondaryCount": 0
     },
     {
@@ -172,7 +172,7 @@
       "koreanName": "Unity \uAD8C\uC704 Client",
       "technicalName": "E2Unity\uAD8C\uC704ClientModule",
       "responsibility": "Unity \uC785\uB825\uC744 Local \uB610\uB294 Remote \uAD8C\uC704 \uD3EC\uD2B8\uC5D0 \uC804\uB2EC\uD55C\uB2E4.",
-      "primaryCount": 3,
+      "primaryCount": 5,
       "secondaryCount": 0
     },
     {
@@ -181,7 +181,7 @@
       "koreanName": "\uC138\uACC4 \uC0C1\uD638\uC791\uC6A9 \uC2E4\uD589",
       "technicalName": "E2\uC138\uACC4\uC0C1\uD638\uC791\uC6A9\uC2E4\uD589Module",
       "responsibility": "Farm\u00B7Nature WI Preview\u00B7Confirm \uC2E4\uD589 \uD3EC\uD2B8\uB97C \uC81C\uACF5\uD55C\uB2E4.",
-      "primaryCount": 49,
+      "primaryCount": 51,
       "secondaryCount": 0
     },
     {
@@ -217,7 +217,7 @@
       "koreanName": "\uC800\uC7A5\u00B7\uC7AC\uC0DD \uAC80\uC99D",
       "technicalName": "E3\uC800\uC7A5\uC7AC\uC0DD\uAC80\uC99DModule",
       "responsibility": "Save schema \uD638\uD658\u00B7\uBCF5\uC6D0\u00B7Replay hash \uD68C\uADC0\uB97C \uAC80\uC99D\uD55C\uB2E4.",
-      "primaryCount": 5,
+      "primaryCount": 6,
       "secondaryCount": 1
     },
     {
@@ -1552,6 +1552,25 @@
       "worldInteractionIds": [
         "WI-HEAT-SOURCE-STATE-CHANGE"
       ],
+      "workOrderIds": [],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
+      "componentId": "Ssalddel.Simulation.Application:Ssalddel.Simulation.Application.ISimulation\uC808\uAE30\uC6B4\uC601CampaignRuntime",
+      "isCoverageCandidate": true,
+      "assemblyName": "Ssalddel.Simulation.Application",
+      "componentName": "Ssalddel.Simulation.Application.ISimulation\uC808\uAE30\uC6B4\uC601CampaignRuntime",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Simulation.Application/RuntimeCore/SimulationRuntime.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E2",
+      "responsibility": "\uC808\uAE30 \uC6B4\uC601 \uCEA0\uD398\uC778\uC758 \uC870\uD68C\u00B7\uC2DC\uC791\u00B7Preview\u00B7Confirm \uACF5\uD1B5 \uC2E4\uD589 \uACBD\uACC4\uB97C \uC81C\uACF5\uD55C\uB2E4.",
+      "boundary": "LocalProcess\uC640 \uD6C4\uC18D RemoteHost\uB294 \uAC19\uC740 \uACC4\uC57D\uC744 \uC0AC\uC6A9\uD558\uBA70 Unity\uB294 \uAD6C\uAC04 \uC804\uC774\uB97C \uD310\uC815\uD558\uC9C0 \uC54A\uB294\uB2E4.",
+      "primarySubmoduleKey": "E2.WorldInteractionExecution",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
       "workOrderIds": [],
       "featureKeys": [],
       "stepKeys": []
@@ -3874,6 +3893,25 @@
       "worldInteractionIds": [
         "WI-HEAT-SOURCE-STATE-CHANGE"
       ],
+      "workOrderIds": [],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
+      "componentId": "Ssalddel.Simulation.Application:Ssalddel.Simulation.Application.Simulation\uC808\uAE30\uC6B4\uC601CampaignService",
+      "isCoverageCandidate": true,
+      "assemblyName": "Ssalddel.Simulation.Application",
+      "componentName": "Ssalddel.Simulation.Application.Simulation\uC808\uAE30\uC6B4\uC601CampaignService",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Simulation.Application/RuntimeCore/Simulation\uC808\uAE30\uC6B4\uC601CampaignService.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E2",
+      "responsibility": "\uC808\uAE30 \uC6B4\uC601 \uCEA0\uD398\uC778\uC758 \uC870\uD68C\u00B7\uC2DC\uC791\u00B7Preview\u00B7Confirm\uC744 \uAD8C\uC704 \uC138\uC158\uC5D0 \uC704\uC784\uD55C\uB2E4.",
+      "boundary": "Application \uC870\uC728\uC774\uBA70 \uADDC\uCE59\uC744 \uBCF5\uC81C\uD558\uAC70\uB098 Unity\uC5D0 \uC0C1\uD0DC \uAD8C\uC704\uB97C \uC8FC\uC9C0 \uC54A\uB294\uB2E4.",
+      "primarySubmoduleKey": "E2.WorldInteractionExecution",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
       "workOrderIds": [],
       "featureKeys": [],
       "stepKeys": []
@@ -8831,6 +8869,25 @@
       "stepKeys": []
     },
     {
+      "componentId": "Ssalddel.Simulation.Hosting:Ssalddel.Simulation.Hosting.Controllers.Simulation\uC808\uAE30\uC6B4\uC601CampaignController",
+      "isCoverageCandidate": true,
+      "assemblyName": "Ssalddel.Simulation.Hosting",
+      "componentName": "Ssalddel.Simulation.Hosting.Controllers.Simulation\uC808\uAE30\uC6B4\uC601CampaignController",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Simulation.Hosting/Controllers/Simulation\uC808\uAE30\uC6B4\uC601CampaignController.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E2",
+      "responsibility": "\uC808\uAE30 \uC6B4\uC601 \uCEA0\uD398\uC778 \uC870\uD68C\u00B7Preview\u00B7Confirm \uC694\uCCAD\uC744 \uAD8C\uC704 Application \uC11C\uBE44\uC2A4\uC5D0 \uC804\uB2EC\uD55C\uB2E4.",
+      "boundary": "HTTP \uC5B4\uB311\uD130\uC774\uBA70 \uCEA0\uD398\uC778 \uC2DC\uC791\u00B7\uAD6C\uAC04 \uD310\uC815\u00B7\uC6B4\uC601 \uC5C5\uBB34 \uBCC0\uACBD\uC744 \uC790\uCCB4 \uC218\uD589\uD558\uC9C0 \uC54A\uB294\uB2E4.",
+      "primarySubmoduleKey": "E2.RemoteHostAdapter",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
+      "workOrderIds": [],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
       "componentId": "Ssalddel.Simulation.Hosting:Ssalddel.Simulation.Hosting.Controllers.Simulation\uD0C0\uB85C\uAC1D\uCCB4\uBC18\uC751Controller",
       "isCoverageCandidate": true,
       "assemblyName": "Ssalddel.Simulation.Hosting",
@@ -12244,6 +12301,25 @@
       "stepKeys": []
     },
     {
+      "componentId": "Ssalddel.Simulation.Tests:Ssalddel.Simulation.Tests.Simulation\uC808\uAE30\uC6B4\uC601CampaignTests",
+      "isCoverageCandidate": true,
+      "assemblyName": "Ssalddel.Simulation.Tests",
+      "componentName": "Ssalddel.Simulation.Tests.Simulation\uC808\uAE30\uC6B4\uC601CampaignTests",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Simulation.Tests/Simulation\uC808\uAE30\uC6B4\uC601CampaignTests.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E3",
+      "responsibility": "\uC808\uAE30 \uC6B4\uC601 \uCEA0\uD398\uC778\uC758 Preview \uBD88\uBCC0\uC131, Confirm \uBA71\uB4F1\uC131\uACFC \uC804\uC774 \uCC28\uB2E8\uC744 \uAC80\uC99D\uD55C\uB2E4.",
+      "boundary": "\uACC4\uC57D\u00B7Domain\u00B7TestServer \uC790\uB3D9 \uC2DC\uD5D8\uC774\uBA70 \uC2E4\uC81C \uC678\uBD80 \uC11C\uBC84 \uC811\uC18D\u00B7Unity \uC2E4\uD589 \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+      "primarySubmoduleKey": "E3.SaveReplayRegression",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
+      "workOrderIds": [],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
       "componentId": "Ssalddel.Simulation.Tests:Ssalddel.Simulation.Tests.Simulation\uCC3D\uACE0\uC790\uC6D0\uD6A8\uACFC\uADDC\uCE59Tests",
       "isCoverageCandidate": true,
       "assemblyName": "Ssalddel.Simulation.Tests",
@@ -14292,6 +14368,25 @@
       "stepKeys": []
     },
     {
+      "componentId": "Ssalddel.Unity.Tests:Ssalddel.Unity.Tests.SeasonalCampaignObservationCoordinatorTests",
+      "isCoverageCandidate": true,
+      "assemblyName": "Ssalddel.Unity.Tests",
+      "componentName": "Ssalddel.Unity.Tests.SeasonalCampaignObservationCoordinatorTests",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Unity.Tests/SeasonalCampaignObservationCoordinatorTests.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E4",
+      "responsibility": "\uC808\uAE30 \uC6B4\uC601 \uD654\uBA74\uC758 \uC6D0\uCC9C\uBCC4 \uB9C8\uC9C0\uB9C9 \uC815\uC0C1 \uD310\uBCF8\u00B7\uC9C0\uC5F0\u00B7\uBB38\uB9E5 \uC804\uD658\uC744 \uAC80\uC99D\uD55C\uB2E4.",
+      "boundary": "\uC21C\uC218 \uD654\uBA74 \uBAA8\uB378 \uC2DC\uD5D8\uC774\uBA70 Presenter\u00B7Scene\u00B7Game View\u00B7\uC2E4\uC81C \uC870\uC791 \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+      "primarySubmoduleKey": "",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
+      "workOrderIds": [],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
       "componentId": "Ssalddel.Unity.Tests:Ssalddel.Unity.Tests.SimulationBattleInstancePresentationTests",
       "isCoverageCandidate": true,
       "assemblyName": "Ssalddel.Unity.Tests",
@@ -14524,6 +14619,25 @@
       "workOrderIds": [
         "E7-WO-NATURE-CAMP-VISITOR-STAY"
       ],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
+      "componentId": "Ssalddel.Unity.Tests:Ssalddel.Unity.Tests.Simulation\uC808\uAE30\uC6B4\uC601CampaignInterpreterTests",
+      "isCoverageCandidate": true,
+      "assemblyName": "Ssalddel.Unity.Tests",
+      "componentName": "Ssalddel.Unity.Tests.Simulation\uC808\uAE30\uC6B4\uC601CampaignInterpreterTests",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Unity.Tests/Simulation\uC808\uAE30\uC6B4\uC601CampaignInterpreterTests.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E3",
+      "responsibility": "\uC808\uAE30 \uC6B4\uC601 Campaign\uC758 Unity \uC77D\uAE30 \uACC4\uC57D, \uD310\uBCF8 \uAC70\uC808\uACFC \uB9C8\uC9C0\uB9C9 \uC815\uC0C1 \uC0AC\uBCF8 \uC720\uC9C0\uB97C \uAC80\uC99D\uD55C\uB2E4.",
+      "boundary": "\uC21C\uC218 \uBA54\uBAA8\uB9AC\u00B7\uAC00\uC9DC \uC804\uC1A1 \uC2DC\uD5D8\uC774\uBA70 Unity Scene, Play Mode, Game View \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+      "primarySubmoduleKey": "",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
+      "workOrderIds": [],
       "featureKeys": [],
       "stepKeys": []
     },
@@ -15129,6 +15243,63 @@
       "stepKeys": []
     },
     {
+      "componentId": "Ssalddel.Unity:Ssalddel.Unity.Campaigns.SeasonalCampaignObservationCoordinator",
+      "isCoverageCandidate": true,
+      "assemblyName": "Ssalddel.Unity",
+      "componentName": "Ssalddel.Unity.Campaigns.SeasonalCampaignObservationCoordinator",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Unity/Runtime/Campaigns/SeasonalCampaignObservationCoordinator.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E4",
+      "responsibility": "\uC808\uAE30 Campaign\uACFC \uB514\uC624\uB77C\uB9C8\u00B7\uC6B4\uC601\u00B7\uCE74\uB4DC\u00B7NPC \uC790\uB8CC\uC6D0\uC758 \uD310\uBCF8\u00B7\uC9C0\uC5F0 \uC0C1\uD0DC\uB97C \uD55C \uD654\uBA74 \uBB38\uB9E5\uC73C\uB85C \uC870\uD569\uD55C\uB2E4.",
+      "boundary": "\uC77D\uAE30 \uC804\uC6A9 \uD654\uBA74 \uBAA8\uB378 \uC870\uD569\uC774\uBA70 \uC6D0\uCC9C payload \uBCC0\uACBD\u00B7\uC5C5\uBB34 \uC644\uB8CC\u00B7Campaign Confirm\uC744 \uC218\uD589\uD558\uC9C0 \uC54A\uB294\uB2E4.",
+      "primarySubmoduleKey": "",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
+      "workOrderIds": [],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
+      "componentId": "Ssalddel.Unity:Ssalddel.Unity.Campaigns.SeasonalCampaignPresenter",
+      "isCoverageCandidate": true,
+      "assemblyName": "Ssalddel.Unity",
+      "componentName": "Ssalddel.Unity.Campaigns.SeasonalCampaignPresenter",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Unity/Runtime/Campaigns/SeasonalCampaignPresenter.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E4",
+      "responsibility": "\uC808\uAE30 \uC6B4\uC601 Campaign \uD654\uBA74 \uBAA8\uB378\uACFC \uC6D0\uCC9C\uBCC4 \uC9C4\uB2E8\uC744 View Socket \uACC4\uC57D\uC5D0 \uC804\uB2EC\uD55C\uB2E4.",
+      "boundary": "\uBC84\uD2BC Command\u00B7GameObject \uC0DD\uC131\u00B7Scene \uBC30\uC120\u00B7\uC5C5\uBB34 \uC644\uB8CC \uD310\uC815\uC744 \uC218\uD589\uD558\uC9C0 \uC54A\uB294\uB2E4.",
+      "primarySubmoduleKey": "",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
+      "workOrderIds": [],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
+      "componentId": "Ssalddel.Unity:Ssalddel.Unity.Campaigns.Simulation\uC808\uAE30\uC6B4\uC601CampaignClient",
+      "isCoverageCandidate": true,
+      "assemblyName": "Ssalddel.Unity",
+      "componentName": "Ssalddel.Unity.Campaigns.Simulation\uC808\uAE30\uC6B4\uC601CampaignClient",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Unity/Runtime/Campaigns/Simulation\uC808\uAE30\uC6B4\uC601CampaignClient.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E2",
+      "responsibility": "\uC808\uAE30 \uC6B4\uC601 Campaign \uC778\uC99D GET \uC751\uB2F5\uC744 Unity \uC77D\uAE30 \uC804\uC6A9 Interpreter\uC5D0 \uC804\uB2EC\uD55C\uB2E4.",
+      "boundary": "Command \uC804\uC1A1\u00B7\uB85C\uCEEC \uC800\uC7A5\u00B7Campaign \uC804\uC774\u00B7\uC790\uB3D9 \uBB38\uB9E5 \uC804\uD658\uC744 \uC81C\uACF5\uD558\uC9C0 \uC54A\uB294\uB2E4.",
+      "primarySubmoduleKey": "E2.UnityAuthorityClient",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
+      "workOrderIds": [],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
       "componentId": "Ssalddel.Unity:Ssalddel.Unity.Cards.CardWorkspaceCoordinator",
       "isCoverageCandidate": true,
       "assemblyName": "Ssalddel.Unity",
@@ -15553,6 +15724,25 @@
       "responsibility": "\uD50C\uB808\uC774\uC5B4 \uC785\uB825\u00B7\uD654\uBA74\u00B7\uD53C\uB4DC\uBC31\uACFC \uD50C\uB808\uC774 \uACBD\uD5D8 \uD45C\uD604\uC744 \uC870\uC728\uD55C\uB2E4.",
       "boundary": "Unity \uD45C\uD604\uC740 \uAD8C\uC704 \uC0C1\uD0DC \uBCC0\uACBD\uC774\uB098 \uC2E4\uC81C \uD50C\uB808\uC774 \uC644\uB8CC\uB97C \uB300\uC2E0\uD558\uC9C0 \uC54A\uB294\uB2E4.",
       "primarySubmoduleKey": "",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
+      "workOrderIds": [],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
+      "componentId": "Ssalddel.Unity:Ssalddel.Unity.Data.Campaigns.Simulation\uC808\uAE30\uC6B4\uC601CampaignInterpreter",
+      "isCoverageCandidate": false,
+      "assemblyName": "Ssalddel.Unity",
+      "componentName": "Ssalddel.Unity.Data.Campaigns.Simulation\uC808\uAE30\uC6B4\uC601CampaignInterpreter",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Unity/Runtime/Campaigns/Simulation\uC808\uAE30\uC6B4\uC601CampaignInterpreter.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E2",
+      "responsibility": "\uC808\uAE30 \uC6B4\uC601 Campaign\uC758 schema\u00B7Session\u00B7\uC9C0\uC5ED\u00B7revision\uC744 \uAC80\uC99D\uD558\uACE0 \uC77D\uAE30 \uC804\uC6A9 \uC0C1\uD0DC \uC0AC\uBCF8\uC744 \uC720\uC9C0\uD55C\uB2E4.",
+      "boundary": "Unity \uD45C\uD604\uC6A9 \uBA54\uBAA8\uB9AC \uC0C1\uD0DC\uC774\uBA70 Campaign \uC804\uC774\u00B7\uC6B4\uC601 \uC5C5\uBB34\u00B7\uC800\uC7A5 \uC7AC\uC0DD \uAD8C\uC704\uB97C \uAC16\uC9C0 \uC54A\uB294\uB2E4.",
+      "primarySubmoduleKey": "E2.UnityAuthorityClient",
       "secondaryEvidenceStages": [],
       "secondarySubmoduleKeys": [],
       "worldInteractionIds": [],
@@ -19442,8 +19632,8 @@
     }
   ],
   "coverage": {
-    "candidateTypeCount": 863,
-    "annotatedTypeCount": 859,
+    "candidateTypeCount": 872,
+    "annotatedTypeCount": 868,
     "excludedTypeCount": 4,
     "uncoveredTypeCount": 0,
     "annotatedMethodCount": 17

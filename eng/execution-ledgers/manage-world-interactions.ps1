@@ -74,7 +74,7 @@ Require-Text $catalog.polarityQuadrantCatalogPath "PolarityQuadrantCatalogPathMi
 Require-Text $catalog.catalogOrderMeaning "CatalogOrderMeaningMissing"
 Require ([string] $catalog.defaultImplementationTargetStage -eq "E3") "DefaultImplementationTargetMustBeE3"
 Require ([string] $catalog.defaultIntegrationTargetStage -eq "E7") "DefaultIntegrationTargetMustBeE7"
-Require ([string] $stageCatalog.schemaVersion -eq "simulation-evidence-stages.v7") "EvidenceStageCatalogSchemaInvalid"
+Require ([string] $stageCatalog.schemaVersion -eq "simulation-evidence-stages.v8") "EvidenceStageCatalogSchemaInvalid"
 Require ($evidenceStages.Count -eq 11) "EvidenceStagesMustHaveElevenEntries"
 Require ((@($evidenceStages.code) -join ",") -eq
     "E0,E1,E2,E3,E4,E5,E6,E7,E8,E9,E10") "EvidenceStageOrderInvalid"
@@ -276,7 +276,7 @@ foreach ($item in @($catalog.items)) {
     $itemsById[$id] = $item
 }
 
-Require (@($catalog.items | Where-Object kind -eq "Command").Count -eq 121) "CommandCountMustBe121"
+Require (@($catalog.items | Where-Object kind -eq "Command").Count -eq 122) "CommandCountMustBe122"
 Require (@($catalog.items | Where-Object kind -eq "AutomaticTransition").Count -eq 12) "AutomaticTransitionCountMustBe12"
 Require (@($catalog.items | Where-Object kind -eq "SharedPolicy").Count -eq 1) "SharedPolicyCountMustBe1"
 
@@ -443,8 +443,8 @@ Add-PolarityAssignments @($polarityCatalog.notApplicableWorldInteractionIds) `
 Require ($polarityByWi.Count -eq $itemsById.Count) "PolarityCoverageMismatch"
 Require (@($polarityCatalog.fixedYangWorldInteractionIds).Count -eq 28) `
     "FixedYangCountMustBe28"
-Require (@($polarityCatalog.fixedYinWorldInteractionIds).Count -eq 31) `
-    "FixedYinCountMustBe31"
+Require (@($polarityCatalog.fixedYinWorldInteractionIds).Count -eq 32) `
+    "FixedYinCountMustBe32"
 Require (@($polarityCatalog.contextualWorldInteractionIds).Count -eq 63) `
     "ContextualPolarityCountMustBe63"
 Require (@($polarityCatalog.notApplicableWorldInteractionIds).Count -eq 12) `

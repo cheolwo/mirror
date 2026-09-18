@@ -47,7 +47,7 @@ Require (Test-Path -LiteralPath $architecturePath -PathType Leaf) 'ArchitectureM
 Require (Test-Path -LiteralPath $planPath -PathType Leaf) 'PlanMissing'
 
 $validation = & $managerPath -Mode Validate
-Require ([string] $validation -ceq 'StationDioramaEvidenceRulesValid:Revision=station-diorama-evidence-rules.r3;Sources=10;Rules=12;Candidates=12;Provisional=0;Accepted=0;Stations=3;SpatialChecks=9;Collected=2;Missing=1;Unassessed=6') 'ValidationSummary'
+Require ([string] $validation -ceq 'StationDioramaEvidenceRulesValid:Revision=station-diorama-evidence-rules.r4;Sources=10;Rules=12;Candidates=12;Provisional=0;Accepted=0;Stations=3;SpatialChecks=9;Collected=2;Missing=1;Unassessed=6;AdminGates=1;AdminRequirements=3;AdminCollected=0') 'ValidationSummary'
 
 Require (@($catalog.rules).Count -eq 12) 'CandidateCount'
 Require (@($catalog.rules | Where-Object status -ne 'Candidate').Count -eq 0) 'PrematureRulePromotion'
@@ -74,6 +74,19 @@ $requiredSpatialKinds = @('RoadAddress', 'ParcelIdentifier', 'ParcelGeometry')
 Require ((@($catalog.reviewPolicy.requiredSpatialEvidenceKinds | Sort-Object) -join ',') -ceq (@($requiredSpatialKinds | Sort-Object) -join ',')) 'SpatialEvidenceKinds'
 Require ([bool] $catalog.reviewPolicy.collectionStateDoesNotAuthorizeUsage) 'CollectionUsageSeparation'
 Require (@($catalog.stationEvidenceProfiles.spatialFoundationEvidenceChecks | Where-Object applicationAuthorized).Count -eq 0) 'SpatialEvidenceApplicationAuthorized'
+
+Require (@($catalog.administrativeAreaCollectionGates).Count -eq 1) 'AdministrativeAreaCollectionGateCount'
+$administrativeAreaGate = @($catalog.administrativeAreaCollectionGates)[0]
+Require ([string] $administrativeAreaGate.gateStableId -ceq 'collection-gate:administrative-dong-diorama:current-boundary-building-entrance.r1') 'AdministrativeAreaCollectionGateStableId'
+Require ([string] $administrativeAreaGate.status -ceq 'FixedPlanningGate') 'AdministrativeAreaCollectionGateStatus'
+Require ([int] $administrativeAreaGate.subjectAdministrativeAreaCount -eq 30) 'AdministrativeAreaCollectionGateSubjectCount'
+Require (-not [bool] $administrativeAreaGate.collectionCompleted) 'AdministrativeAreaCollectionGatePrematureCompletion'
+Require (-not [bool] $administrativeAreaGate.applicationAuthorized) 'AdministrativeAreaCollectionGatePrematureApplication'
+Require (-not [bool] $administrativeAreaGate.currentPublicationAllowed) 'AdministrativeAreaCollectionGatePrematurePublication'
+$administrativeAreaRequirements = @($administrativeAreaGate.orderedEvidenceRequirements)
+Require (($administrativeAreaRequirements.evidenceKind -join ',') -ceq 'CurrentAdministrativeBoundary,AddressBuildingAndBuildingGroup,BuildingEntrance') 'AdministrativeAreaCollectionGateRequirementOrder'
+Require (@($administrativeAreaRequirements | Where-Object collectionState -cne 'NotCollected').Count -eq 0) 'AdministrativeAreaCollectionGateCollectionState'
+Require (@($administrativeAreaRequirements | Where-Object { $null -ne $_.rawSha256 }).Count -eq 0) 'AdministrativeAreaCollectionGateInventedHash'
 
 $requiredSourceIds = @(
     'source-receipt:station-diorama:sagajeong:mois-road-address-building-db.202608',
@@ -151,8 +164,28 @@ Assert-CatalogTamperRejected 'unassessed-count-invented' {
     @($profile.spatialFoundationEvidenceChecks | Where-Object evidenceKind -ceq 'RoadAddress')[0].subjectCount = 1
 } 'SpatialNotAssessedCountUnexpected:station:kr:kric:s1107:0721:RoadAddress:subjectCount'
 
+Assert-CatalogTamperRejected 'administrative-area-gate-reordered' {
+    param($copy)
+    $copy.administrativeAreaCollectionGates[0].orderedEvidenceRequirements[0].order = 2
+} 'AdministrativeAreaCollectionGateRequirementOrder:collection-gate:administrative-dong-diorama:current-boundary-building-entrance.r1:1'
+
+Assert-CatalogTamperRejected 'administrative-area-gate-collected-without-source' {
+    param($copy)
+    $copy.administrativeAreaCollectionGates[0].orderedEvidenceRequirements[0].collectionState = 'Collected'
+} 'AdministrativeAreaCollectionGateCollectionState:collection-gate:administrative-dong-diorama:current-boundary-building-entrance.r1:1'
+
+Assert-CatalogTamperRejected 'administrative-area-gate-authorized' {
+    param($copy)
+    $copy.administrativeAreaCollectionGates[0].applicationAuthorized = $true
+} 'AdministrativeAreaCollectionGateApplicationAuthorized:collection-gate:administrative-dong-diorama:current-boundary-building-entrance.r1'
+
+Assert-CatalogTamperRejected 'administrative-area-gate-scope-count' {
+    param($copy)
+    $copy.administrativeAreaCollectionGates[0].subjectAdministrativeAreaCount = 29
+} 'AdministrativeAreaCollectionGateSubjectCount:collection-gate:administrative-dong-diorama:current-boundary-building-entrance.r1'
+
 $architectureText = Get-Content -LiteralPath $architecturePath -Raw -Encoding UTF8
-foreach ($requiredText in @('Candidate', 'ProvisionalSharedRule', 'AcceptedSharedRule', 'E1', 'E10', 'CrossStationConformance', 'RoadAddress', 'ParcelIdentifier', 'ParcelGeometry', 'NotAssessed')) {
+foreach ($requiredText in @('Candidate', 'ProvisionalSharedRule', 'AcceptedSharedRule', 'E1', 'E10', 'CrossStationConformance', 'RoadAddress', 'ParcelIdentifier', 'ParcelGeometry', 'NotAssessed', 'AdministrativeAreaCollectionGate', 'FixedPlanningGate', 'TL_SCCO_GEMD')) {
     Require ($architectureText.Contains($requiredText)) "ArchitectureBoundaryMissing:$requiredText"
 }
 
@@ -161,4 +194,4 @@ foreach ($requiredText in @('applicationAuthorized=false', 'commit', 'push')) {
     Require ($planText.Contains($requiredText)) "PlanBoundaryMissing:$requiredText"
 }
 
-Write-Output 'PASS station diorama evidence evolution; source links, address and parcel collection/usage separation, missing parcel geometry, tamper rejection, human promotion gate and E-stage non-promotion verified'
+Write-Output 'PASS station and administrative-area diorama evidence evolution; source links, fixed 30-area collection gate, address and parcel collection/usage separation, missing parcel geometry, tamper rejection, human promotion gate and E-stage non-promotion verified'

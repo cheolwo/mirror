@@ -3177,7 +3177,7 @@
       "code": "CODEMAP100",
       "featureKey": "simulation-unity",
       "stepKey": "Ssalddel.Simulation.Application",
-      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 115\uAC1C: DisabledSimulationWorldAreaSetGraphStore, DisabledSimulationWorldLandscapeCompositionStore, DisabledSimulationWorld\uC0C1\uD638\uC791\uC6A9GraphReadinessStore, ISimulationActorEquipmentRuntime, ISimulationBattleInstanceStore, ISimulationBattleRuntime, ISimulationBattlefieldDerivationService, ISimulationFarmChoiceRuntime, ..."
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 117\uAC1C: DisabledSimulationWorldAreaSetGraphStore, DisabledSimulationWorldLandscapeCompositionStore, DisabledSimulationWorld\uC0C1\uD638\uC791\uC6A9GraphReadinessStore, ISimulationActorEquipmentRuntime, ISimulationBattleInstanceStore, ISimulationBattleRuntime, ISimulationBattlefieldDerivationService, ISimulationFarmChoiceRuntime, ..."
     },
     {
       "severity": "Warning",
@@ -3198,7 +3198,7 @@
       "code": "CODEMAP100",
       "featureKey": "simulation-unity",
       "stepKey": "Ssalddel.Simulation.Hosting",
-      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 29\uAC1C: DisabledSimulationFarmRealityEvidenceStore, SimulationActorEquipmentController, SimulationActualE5SessionsController, SimulationAreaSetImmersionController, SimulationCollectibleCardRewardsController, SimulationFarmConstructionPlacementController, SimulationHexagramCampaignController, SimulationIntegratedWorldController, ..."
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 30\uAC1C: DisabledSimulationFarmRealityEvidenceStore, SimulationActorEquipmentController, SimulationActualE5SessionsController, SimulationAreaSetImmersionController, SimulationCollectibleCardRewardsController, SimulationFarmConstructionPlacementController, SimulationHexagramCampaignController, SimulationIntegratedWorldController, ..."
     },
     {
       "severity": "Warning",
@@ -3219,7 +3219,7 @@
       "code": "CODEMAP100",
       "featureKey": "simulation-unity",
       "stepKey": "Ssalddel.Unity",
-      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 49\uAC1C: CardWorkspaceCoordinator, CargoWarehouseHandoffMapper, CommunityMarketSquareMapper, CommunitySquareDataFlowLoadCoordinator, CommunitySquareDataMapper, CropReferenceCategoryMapper, FarmCombatPresentationMapper, FarmProducerPerspectiveMapper, ..."
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 50\uAC1C: CardWorkspaceCoordinator, CargoWarehouseHandoffMapper, CommunityMarketSquareMapper, CommunitySquareDataFlowLoadCoordinator, CommunitySquareDataMapper, CropReferenceCategoryMapper, FarmCombatPresentationMapper, FarmProducerPerspectiveMapper, ..."
     }
   ]
 }

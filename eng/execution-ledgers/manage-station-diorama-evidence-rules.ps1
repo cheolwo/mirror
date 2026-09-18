@@ -50,9 +50,9 @@ $catalogFile = Resolve-RepositoryPath $CatalogPath
 Require (Test-Path -LiteralPath $catalogFile -PathType Leaf) "CatalogMissing:$CatalogPath"
 $catalog = Get-Content -LiteralPath $catalogFile -Raw -Encoding UTF8 | ConvertFrom-Json
 
-Require ([string] $catalog.schemaVersion -ceq 'ssalddel.station-diorama-evidence-rule-catalog.v2') 'SchemaVersion'
-Require ([string] $catalog.revision -ceq 'station-diorama-evidence-rules.r3') 'Revision'
-Require-RepositoryRefs @($catalog.policyRef, $catalog.planRef, $catalog.evidenceStageCatalogRef) 'Catalog'
+Require ([string] $catalog.schemaVersion -ceq 'ssalddel.station-diorama-evidence-rule-catalog.v3') 'SchemaVersion'
+Require ([string] $catalog.revision -ceq 'station-diorama-evidence-rules.r4') 'Revision'
+Require-RepositoryRefs @($catalog.policyRef, $catalog.planRef, $catalog.administrativeAreaPlanRef, $catalog.evidenceStageCatalogRef) 'Catalog'
 
 $policy = $catalog.reviewPolicy
 Require ([bool] $policy.agentTaskClosureReviewRequired) 'TaskClosureReviewRequired'
@@ -66,6 +66,8 @@ Require ([int] $policy.acceptedMinimumDistinctStations -ge 3) 'AcceptedStationMi
 Require ([bool] $policy.acceptedRequiresMissingCoverageOrCounterexampleReview) 'AcceptedCounterexampleReview'
 Require ([bool] $policy.spatialFoundationEvidenceRequired) 'SpatialFoundationEvidenceRequired'
 Require ([bool] $policy.collectionStateDoesNotAuthorizeUsage) 'CollectionUsageSeparationRequired'
+Require ([bool] $policy.administrativeAreaCollectionGateRequired) 'AdministrativeAreaCollectionGateRequired'
+Require ([bool] $policy.administrativeAreaCollectionGateDoesNotAuthorizeUsage) 'AdministrativeAreaCollectionGateUsageBoundary'
 
 $requiredSpatialEvidenceKinds = @('RoadAddress', 'ParcelIdentifier', 'ParcelGeometry')
 $allowedCollectionStates = @('Collected', 'NotCollected', 'NotAssessed')
@@ -83,16 +85,64 @@ Require (($allowedEvidenceStages -join ',') -ceq 'E0,E1,E2,E3,E4,E5,E6,E7,E8,E9,
 $sourceReceipts = @($catalog.sourceReceipts)
 $rules = @($catalog.rules)
 $stationProfiles = @($catalog.stationEvidenceProfiles)
+$administrativeAreaCollectionGates = @($catalog.administrativeAreaCollectionGates)
 Require ($sourceReceipts.Count -gt 0) 'SourceReceiptsEmpty'
 Require ($rules.Count -gt 0) 'RulesEmpty'
 Require ($stationProfiles.Count -gt 0) 'StationProfilesEmpty'
+Require ($administrativeAreaCollectionGates.Count -gt 0) 'AdministrativeAreaCollectionGatesEmpty'
 
 $sourceIds = @($sourceReceipts | ForEach-Object { [string] $_.sourceReceiptStableId })
 $ruleIds = @($rules | ForEach-Object { [string] $_.ruleStableId })
 $stationIds = @($stationProfiles | ForEach-Object { [string] $_.stationStableId })
+$administrativeAreaCollectionGateIds = @($administrativeAreaCollectionGates | ForEach-Object { [string] $_.gateStableId })
 Require-Unique $sourceIds 'SourceReceiptStableId'
 Require-Unique $ruleIds 'RuleStableId'
 Require-Unique $stationIds 'StationStableId'
+Require-Unique $administrativeAreaCollectionGateIds 'AdministrativeAreaCollectionGateStableId'
+
+$requiredAdministrativeAreaEvidenceKinds = @('CurrentAdministrativeBoundary', 'AddressBuildingAndBuildingGroup', 'BuildingEntrance')
+foreach ($gate in $administrativeAreaCollectionGates) {
+    $gateId = [string] $gate.gateStableId
+    Require ([string] $gate.status -ceq 'FixedPlanningGate') "AdministrativeAreaCollectionGateStatus:$gateId"
+    Require ([bool] $gate.fixedSequence) "AdministrativeAreaCollectionGateSequenceNotFixed:$gateId"
+    Require (-not [bool] $gate.collectionCompleted) "AdministrativeAreaCollectionGatePrematureCompletion:$gateId"
+    Require (-not [bool] $gate.applicationAuthorized) "AdministrativeAreaCollectionGateApplicationAuthorized:$gateId"
+    Require (-not [bool] $gate.currentPublicationAllowed) "AdministrativeAreaCollectionGatePublicationAllowed:$gateId"
+    Require ($null -ne $gate.humanApproval -and [bool] $gate.humanApproval.approved) "AdministrativeAreaCollectionGateApprovalMissing:$gateId"
+    Require (-not [string]::IsNullOrWhiteSpace([string] $gate.humanApproval.scope)) "AdministrativeAreaCollectionGateApprovalScopeMissing:$gateId"
+    Require-RepositoryRefs @($gate.humanApproval.approvalRef, $gate.scopeRef) $gateId
+
+    $scopePath = Resolve-RepositoryPath ([string] $gate.scopeRef)
+    $scope = Get-Content -LiteralPath $scopePath -Raw -Encoding UTF8 | ConvertFrom-Json
+    Require ([string] $scope.scopeStableId -ceq [string] $gate.scopeStableId) "AdministrativeAreaCollectionGateScopeStableId:$gateId"
+    $scopeAreas = @($scope.administrativeAreas)
+    $scopeAreaIds = @($scopeAreas | ForEach-Object { [string] $_.administrativeAreaStableId })
+    Require-Unique $scopeAreaIds "AdministrativeAreaCollectionGateScopeArea:$gateId"
+    Require ([int] $scope.expectedAdministrativeAreaCount -eq $scopeAreas.Count) "AdministrativeAreaCollectionGateScopeExpectedCount:$gateId"
+    Require ([int] $gate.subjectAdministrativeAreaCount -eq $scopeAreas.Count) "AdministrativeAreaCollectionGateSubjectCount:$gateId"
+
+    $requirements = @($gate.orderedEvidenceRequirements)
+    Require ($requirements.Count -eq $requiredAdministrativeAreaEvidenceKinds.Count) "AdministrativeAreaCollectionGateRequirementCount:$gateId"
+    for ($index = 0; $index -lt $requirements.Count; $index++) {
+        $requirement = $requirements[$index]
+        $owner = "$gateId`:$($index + 1)"
+        Require ([int] $requirement.order -eq ($index + 1)) "AdministrativeAreaCollectionGateRequirementOrder:$owner"
+        Require ([string] $requirement.evidenceKind -ceq $requiredAdministrativeAreaEvidenceKinds[$index]) "AdministrativeAreaCollectionGateRequirementKind:$owner"
+        Require (-not [string]::IsNullOrWhiteSpace([string] $requirement.provider)) "AdministrativeAreaCollectionGateProviderMissing:$owner"
+        Require (-not [string]::IsNullOrWhiteSpace([string] $requirement.datasetId)) "AdministrativeAreaCollectionGateDatasetMissing:$owner"
+        Require-SafeOfficialLinks @($requirement.officialLinks) $owner
+        Require ([string] $requirement.collectionState -ceq 'NotCollected') "AdministrativeAreaCollectionGateCollectionState:$owner"
+        Require ([string] $requirement.coverageState -ceq 'Unassessed') "AdministrativeAreaCollectionGateCoverageState:$owner"
+        Require ([string] $requirement.usageState -ceq 'Blocked') "AdministrativeAreaCollectionGateUsageState:$owner"
+        Require ($null -eq $requirement.rawSha256) "AdministrativeAreaCollectionGateRawHashUnexpected:$owner"
+        Require ($null -eq $requirement.referenceDate) "AdministrativeAreaCollectionGateReferenceDateUnexpected:$owner"
+        Require ($null -eq $requirement.collectionDate) "AdministrativeAreaCollectionGateCollectionDateUnexpected:$owner"
+        Require (@($requirement.completionChecks).Count -gt 0) "AdministrativeAreaCollectionGateCompletionChecksMissing:$owner"
+        Require (@($requirement.limitations).Count -gt 0) "AdministrativeAreaCollectionGateLimitationsMissing:$owner"
+    }
+    Require (@($gate.invalidationTriggers).Count -gt 0) "AdministrativeAreaCollectionGateInvalidationTriggersMissing:$gateId"
+    Require (@($gate.limitations).Count -gt 0) "AdministrativeAreaCollectionGateLimitationsMissing:$gateId"
+}
 
 $allowedRightsStatuses = @('Accepted', 'ReferenceOnly', 'PendingHumanReview', 'MixedPendingHumanReview', 'Blocked', 'Unavailable')
 foreach ($receipt in $sourceReceipts) {
@@ -251,13 +301,15 @@ $spatialCheckCount = @($stationProfiles | ForEach-Object { @($_.spatialFoundatio
 $spatialCollectedCount = @($stationProfiles.spatialFoundationEvidenceChecks | Where-Object collectionState -ceq 'Collected').Count
 $spatialMissingCount = @($stationProfiles.spatialFoundationEvidenceChecks | Where-Object coverageState -ceq 'Missing').Count
 $spatialUnassessedCount = @($stationProfiles.spatialFoundationEvidenceChecks | Where-Object coverageState -ceq 'Unassessed').Count
+$administrativeAreaRequirementCount = @($administrativeAreaCollectionGates | ForEach-Object { @($_.orderedEvidenceRequirements) }).Count
+$administrativeAreaCollectedRequirementCount = @($administrativeAreaCollectionGates.orderedEvidenceRequirements | Where-Object collectionState -ceq 'Collected').Count
 
 if ($Mode -ceq 'Summary') {
-    Write-Output "StationDioramaEvidenceRulesSummary:Revision=$($catalog.revision);Sources=$($sourceReceipts.Count);Rules=$($rules.Count);Candidates=$candidateCount;Provisional=$provisionalCount;Accepted=$acceptedCount;Stations=$($stationProfiles.Count);SpatialChecks=$spatialCheckCount;Collected=$spatialCollectedCount;Missing=$spatialMissingCount;Unassessed=$spatialUnassessedCount"
+    Write-Output "StationDioramaEvidenceRulesSummary:Revision=$($catalog.revision);Sources=$($sourceReceipts.Count);Rules=$($rules.Count);Candidates=$candidateCount;Provisional=$provisionalCount;Accepted=$acceptedCount;Stations=$($stationProfiles.Count);SpatialChecks=$spatialCheckCount;Collected=$spatialCollectedCount;Missing=$spatialMissingCount;Unassessed=$spatialUnassessedCount;AdminGates=$($administrativeAreaCollectionGates.Count);AdminRequirements=$administrativeAreaRequirementCount;AdminCollected=$administrativeAreaCollectedRequirementCount"
     foreach ($rule in @($rules | Where-Object status -in @('Observed', 'Candidate'))) {
         Write-Output "ReviewPending:$($rule.ruleStableId);Status=$($rule.status);Stations=$(@($rule.observedStationStableIds).Count)"
     }
     return
 }
 
-Write-Output "StationDioramaEvidenceRulesValid:Revision=$($catalog.revision);Sources=$($sourceReceipts.Count);Rules=$($rules.Count);Candidates=$candidateCount;Provisional=$provisionalCount;Accepted=$acceptedCount;Stations=$($stationProfiles.Count);SpatialChecks=$spatialCheckCount;Collected=$spatialCollectedCount;Missing=$spatialMissingCount;Unassessed=$spatialUnassessedCount"
+Write-Output "StationDioramaEvidenceRulesValid:Revision=$($catalog.revision);Sources=$($sourceReceipts.Count);Rules=$($rules.Count);Candidates=$candidateCount;Provisional=$provisionalCount;Accepted=$acceptedCount;Stations=$($stationProfiles.Count);SpatialChecks=$spatialCheckCount;Collected=$spatialCollectedCount;Missing=$spatialMissingCount;Unassessed=$spatialUnassessedCount;AdminGates=$($administrativeAreaCollectionGates.Count);AdminRequirements=$administrativeAreaRequirementCount;AdminCollected=$administrativeAreaCollectedRequirementCount"

@@ -219,7 +219,7 @@ foreach ($transition in @($catalog.stateTransitionVisualPreparations)) {
 Require ($transitionRecords.Count -eq [int] $catalog.normalization.expectedTransitionPreparationCount) "TransitionPreparationCount:$($transitionRecords.Count)"
 
 $workOrderRoot = (Resolve-Path (Join-Path $repositoryRoot ([string] $catalog.normalization.workOrderDirectory))).Path
-$workOrders = @(Get-ChildItem -LiteralPath $workOrderRoot -Filter '*.json' -File | Where-Object Name -ne 'e7-vertical-work-order.template.json')
+$workOrders = @(Get-ChildItem -LiteralPath $workOrderRoot -Filter '*.json' -File | Where-Object Name -ne 'interaction-e1-e7-validation.template.json')
 $existingPreparations = @($workOrders | Where-Object {
     $json = Get-Content $_.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
     $null -ne $json.PSObject.Properties['presentationE4Preparation']

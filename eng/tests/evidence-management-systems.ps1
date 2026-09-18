@@ -16,11 +16,75 @@ $responsibilityMapPath = Join-Path $repositoryRoot `
 if ([string] $management.schemaVersion -ne "simulation-evidence-management-systems.v3") {
     throw "EvidenceManagementSystemSchemaInvalid"
 }
+if ([string] $management.officialVerticalSpecificationName -ne
+        "E1~E7 상호작용 수직 검증 명세" -or
+    [string] $management.canonicalVerticalSpecificationSuffix -ne
+        ".interaction-e1-e7-validation.json" -or
+    [string] $management.legacyVerticalSpecificationSuffix -ne
+        ".e7-work-order.json") {
+    throw "EvidenceManagementVerticalSpecificationTerminologyInvalid"
+}
 if ([string] $management.evidenceModelRevision -ne
     "horizontal-dual-cycle-evidence.r3" -or
     (@($stages.stages.code) -join ",") -ne
     "E0,E1,E2,E3,E4,E5,E6,E7,E8,E9,E10") {
     throw "EvidenceManagementStageOrderInvalid"
+}
+if ([string] $stages.schemaVersion -ne "simulation-evidence-stages.v8" -or
+    [string] $stages.revision -ne "simulation-evidence-stages.r15" -or
+    [string] $stages.stageOutputContractRevision -ne
+    "evidence-stage-output-contract.r1") {
+    throw "EvidenceManagementStageOutputCatalogVersionInvalid"
+}
+$stageOutputPolicy = $stages.stageOutputPolicy
+if (-not [bool] $stageOutputPolicy.everyPromotedStageRequiresRecordedOutputs -or
+    -not [bool] $stageOutputPolicy.higherStageConsumesLowerStageOutputs -or
+    -not [bool] $stageOutputPolicy.outputExistenceAloneNeverPromotesEvidence -or
+    -not [bool] $stageOutputPolicy.dataOrScreenshotAloneNeverBecomesInteractionEvidence -or
+    -not [bool] $stageOutputPolicy.logicAndPresentationOutputsRemainSeparateThroughE9 -or
+    -not [bool] $stageOutputPolicy.integratedVerdictUsesLowerTrack) {
+    throw "EvidenceManagementStageOutputPolicyInvalid"
+}
+$expectedCommonOutputFields = @(
+    "subjectStableId", "trackCode", "candidateRevision",
+    "contentHashOrBuildHash", "evidenceRefs", "statusCode", "blockers",
+    "invalidationConditions")
+if ((@($stageOutputPolicy.requiredCommonFields) -join ",") -ne
+    ($expectedCommonOutputFields -join ",")) {
+    throw "EvidenceManagementStageOutputCommonFieldsInvalid"
+}
+$expectedOutputKindsByStage = @{
+    E0 = @("EvidenceCandidateRecord")
+    E1 = @("EvidenceContract", "TrackImpactAssessment")
+    E2 = @("ImplementationBindingRecord", "CompatibilityBoundaryRecord")
+    E3 = @("DeterminismAndReplayReport", "ConsumerRegressionReport")
+    E4 = @("ExecutionContextBinding", "PresentationPreparationHandoff")
+    E5 = @("AuthorityManifestationRecord", "WorldPresentationBindingRecord")
+    E6 = @("RefinementReviewRecord", "ActorActionBindingRecord")
+    E7 = @("ActualInputClosureRecord", "IntegratedTrackVerdict")
+    E8 = @("PlayableUnitStabilityCampaignResult")
+    E9 = @("AreaHarmonySetEvaluation")
+    E10 = @("LimitedOperationObservationReport")
+}
+$allOutputKindCodes = @()
+foreach ($stage in @($stages.stages)) {
+    $stageCode = [string] $stage.code
+    $outputs = @($stage.requiredOutputs)
+    if ((@($outputs.outputKindCode) -join ",") -ne
+        (@($expectedOutputKindsByStage[$stageCode]) -join ",")) {
+        throw "EvidenceManagementStageOutputKindsInvalid:$stageCode"
+    }
+    foreach ($output in $outputs) {
+        if ([string]::IsNullOrWhiteSpace([string] $output.label) -or
+            @($output.minimumContents).Count -eq 0 -or
+            [string]::IsNullOrWhiteSpace([string] $output.notSufficientAlone)) {
+            throw "EvidenceManagementStageOutputDefinitionIncomplete:${stageCode}:$($output.outputKindCode)"
+        }
+        $allOutputKindCodes += [string] $output.outputKindCode
+    }
+}
+if ($allOutputKindCodes.Count -ne @($allOutputKindCodes | Sort-Object -Unique).Count) {
+    throw "EvidenceManagementStageOutputKindDuplicate"
 }
 if ((@($management.systems.code) -join ",") -ne "G1,G2,G3,G4,G5") {
     throw "EvidenceManagementSystemOrderInvalid"

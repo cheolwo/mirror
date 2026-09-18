@@ -1,12 +1,15 @@
 {
   "schemaVersion": "simulation-evidence-management-systems.v3",
-  "revision": "simulation-evidence-management-systems.r7",
+  "revision": "simulation-evidence-management-systems.r8",
   "evidenceModelRevision": "horizontal-dual-cycle-evidence.r3",
+  "officialVerticalSpecificationName": "E1~E7 상호작용 수직 검증 명세",
+  "canonicalVerticalSpecificationSuffix": ".interaction-e1-e7-validation.json",
+  "legacyVerticalSpecificationSuffix": ".e7-work-order.json",
   "evidenceStageCatalogPath": "eng/execution-ledgers/evidence-stages.json",
   "playableLoopCatalogPath": "eng/execution-ledgers/playable-loops.json",
   "evidencePackageCatalogPath": "eng/execution-ledgers/evidence-packages.json",
   "targetFirstVerticalImplementationProtocolPath": "eng/execution-ledgers/e7-vertical-implementation-protocol.json",
-  "targetFirstWorkOrderTemplatePath": "eng/execution-ledgers/work-orders/e7-vertical-work-order.template.json",
+  "targetFirstWorkOrderTemplatePath": "eng/execution-ledgers/work-orders/interaction-e1-e7-validation.template.json",
   "postE7EvidenceCampaignCatalogPath": "eng/execution-ledgers/post-e7-evidence-campaigns.json",
   "legacyCompatibility": {
     "evidenceStageCatalogPath": "eng/execution-ledgers/compatibility/evidence-stages.legacy-r10.json",

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "simulation-world-interaction-responsibilities.v1",
-  "revision": "simulation-world-interaction-responsibilities.r17",
-  "lastVerifiedDate": "2026-09-05",
+  "revision": "simulation-world-interaction-responsibilities.r18",
+  "lastVerifiedDate": "2026-09-17",
   "principles": {
     "oneIntentPerWorldInteraction": true,
     "onePrimaryAuthorityOutcomePerWorldInteraction": true,
@@ -158,6 +158,7 @@
     "WI-WORLD-06": "TeamRoleCardEquipped",
     "WI-WORLD-07": "TeamActivityStarted",
     "WI-WORLD-08": "TurnClosed",
+    "WI-OPS-SEASONAL-CAMPAIGN-ADVANCE": "SeasonalCampaignPhaseAdvanced",
     "WI-REVIEW-01": "NpcWorkReviewConfirmed",
     "WI-NATURE-HANS-BOUNDARY-PATROL": "FarmBoundaryPatrolCompleted",
     "WI-WORLD-BOUNDED-MANAGEMENT-GRANT": "BoundedManagementAuthorityGranted",

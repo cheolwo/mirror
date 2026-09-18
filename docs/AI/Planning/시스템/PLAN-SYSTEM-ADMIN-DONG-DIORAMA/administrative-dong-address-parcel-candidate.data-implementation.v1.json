@@ -1,8 +1,11 @@
 {
-  "schemaVersion": "simulation-e7-vertical-work-order.v2",
-  "workOrderId": "E7-WO-NORTHEAST-SEOUL-ADMIN-DONG-ADDRESS-PARCEL-CANDIDATE",
-  "worldInteractionId": "WI-CITY-SYNTHETIC-MOVE",
-  "interactionGoalStableId": "interaction-goal:synthetic-delivery-move.v1",
+  "schemaVersion": "public-data-candidate-implementation.v1",
+  "implementationStableId": "data-implementation:administrative-dong-address-parcel-candidate:r1",
+  "revision": "northeast-seoul-admin-dong-address-parcel-candidate.r1",
+  "workKindCode": "FrozenAddressParcelCandidateLedger",
+  "playableLoopWorkOrder": false,
+  "evidenceStageClaimed": null,
+  "playableInteractionBindingStatus": "NotApplicableDataOnly",
   "planningGate": {
     "designDocumentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-address-parcel-candidate.implementation.r6.md",
     "designRevision": "administrative-dong-diorama:address-parcel-candidate.r1",
@@ -17,18 +20,18 @@
       "summary": "Frozen AL_D010 contains PNU for all 61,897 module buildings and frozen JUSO 202608 supplies parcel-level address candidates for 51,227 buildings, but neither source proves building-exact address, entrance or parcel geometry."
     }
   ],
-  "trackPlans": {
+  "evidenceReviewTracks": {
     "logic": {
       "downwardPlan": [
         {
-          "code": "E7-E1",
+          "code": "DATA-AUTHORITY-BOUNDARY",
           "disposition": "AffectedPrivateReviewLedgerOnly",
           "summary": "Create a deterministic RDB candidate ledger for PNU and parcel-address candidate states without changing orders, dispatch, settlement, delivery eligibility, territory membership or Mongo current pointers."
         }
       ],
       "upwardValidation": [
         {
-          "code": "E1-E7",
+          "code": "DATA-LEDGER-VERIFY",
           "status": "VerifiedScoped",
           "summary": "The exact 30-area and 61,897-building sets, frozen source hashes, 51,227 candidate-bearing buildings, idempotent reapply and independent MySQL readback passed with matching projection hash."
         }
@@ -37,14 +40,14 @@
     "presentation": {
       "downwardPlan": [
         {
-          "code": "E7-E1",
+          "code": "PRESENTATION-NO-APPLICATION",
           "disposition": "NoVisualApplication",
           "summary": "Do not expose parcel-address candidate values to Unity or public building cards in this slice."
         }
       ],
       "upwardValidation": [
         {
-          "code": "E1-E7",
+          "code": "PRESENTATION-FUTURE-INTERACTION-VALIDATION-REQUIRED",
           "status": "NotApplicableUntilG2b",
           "summary": "Presentation remains blocked until building identity, parcel geometry and entrance evidence are joined and approved."
         }
@@ -56,10 +59,10 @@
     "eng/Ssalddel.PublicDataPortalImport/Program.cs",
     "eng/Ssalddel.PublicDataPortalImport/행정동건물주소후보.cs",
     "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-address-parcel-candidate.implementation.r6.md",
-    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-address-parcel-candidate.e7-work-order.json",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-address-parcel-candidate.data-implementation.v1.json",
     "docs/Reports/동북서울-30개-행정동-디오라마-깊이-기준선-및-주소후보-2026-09-14.md"
   ],
-  "integratedGate": {
+  "completionGate": {
     "status": "ImplementedLocalDataFoundationNotPromoted",
     "evidenceRefs": [
       "artifacts/local/public-data/admin-dong-diorama-northeast-seoul-20260914-r2/scope-manifest.json",

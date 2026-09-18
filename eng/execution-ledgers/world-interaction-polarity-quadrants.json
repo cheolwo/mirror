@@ -1,7 +1,7 @@
 {
   "schemaVersion": "world-interaction-polarity-quadrants.v1",
-  "revision": "world-interaction-polarity-quadrants.r16",
-  "lastVerifiedDate": "2026-09-05",
+  "revision": "world-interaction-polarity-quadrants.r17",
+  "lastVerifiedDate": "2026-09-17",
   "worldInteractionCatalogPath": "eng/execution-ledgers/world-interactions.json",
   "playableLoopCatalogPath": "eng/execution-ledgers/playable-loops.json",
   "principles": {
@@ -120,6 +120,7 @@
     "WI-WORLD-06",
     "WI-WORLD-07",
     "WI-WORLD-08",
+    "WI-OPS-SEASONAL-CAMPAIGN-ADVANCE",
     "WI-REVIEW-01",
     "WI-SQUAD-ASSIGN",
     "WI-SQUAD-SUPPLY",

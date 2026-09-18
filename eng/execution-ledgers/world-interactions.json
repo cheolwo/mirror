@@ -1,8 +1,8 @@
 {
   "catalogKey": "simulation-world-interactions",
   "schemaVersion": "5",
-  "revision": "simulation-world-interactions.r49",
-  "lastVerifiedDate": "2026-09-07",
+  "revision": "simulation-world-interactions.r50",
+  "lastVerifiedDate": "2026-09-17",
   "defaultImplementationTargetStage": "E3",
   "defaultIntegrationTargetStage": "E7",
   "evidenceStageCatalogPath": "eng/execution-ledgers/evidence-stages.json",
@@ -28,6 +28,7 @@
     "CITY": "도심 운영",
     "WORLD": "공통 세계 운영",
     "REVIEW": "업무 검토",
+    "OPS": "운영 캠페인",
     "COMMUNITY": "공동체 방문·관계"
   },
   "items": [
@@ -4666,6 +4667,34 @@
       "integration": {"status": "NotSelected", "currentStage": "E0", "targetStage": "E7", "evidence": []},
       "sourceReferences": ["docs/AI/Planning/스토리/PLAN-STORY-HEX03-LINE-006/README.md"],
       "notes": ["산수몽으로의 전환 의미만 열며 해당 캠페인을 자동 시작하지 않는다."]
+    },
+    {
+      "id": "WI-OPS-SEASONAL-CAMPAIGN-ADVANCE", "groupCode": "OPS", "sequence": 1, "title": "절기 운영 캠페인 다음 구간 확정", "kind": "Command",
+      "originCode": "SimulationNative", "controlPolicyCode": "PlayerDirect",
+      "worldAction": "운영자가 현재 절기 운영 구간의 조건과 원천 판본을 Preview하고 다음 구간 진입을 확정한다.",
+      "startStateCodes": ["SeasonalCampaignPhaseActive", "SeasonalCampaignAdvanceAvailable"],
+      "completionStateCodes": ["SeasonalCampaignPhaseAdvanced"],
+      "actorRequirements": ["가상 배달 플랫폼 운영자"],
+      "spatialRequirements": [],
+      "resourceRequirements": ["승인된 CampaignDefinition", "동결된 원천 revision 묶음"],
+      "reservationKinds": [],
+      "previewRule": "현재 phase, expected revision, 최소 경과 Tick, 필요한 조건과 원천 revision을 검사하고 결정적 Preview hash를 반환하되 상태를 바꾸지 않는다.",
+      "confirmRule": "CommandId·ExpectedRevision·Preview hash를 재검증하고 다음 phase와 행위 기록을 한 번만 확정한다.",
+      "taskRule": "즉시 phase를 전이하며 업무 Workflow·주문·배차·정산 상태를 직접 변경하지 않는다.",
+      "effectCodes": ["SeasonalCampaignPhaseAdvanced"],
+      "cancellationPolicy": "Confirm 전 Preview는 폐기할 수 있으며 확정된 전이는 과거 상태를 덮어쓰지 않고 후속 보정 명령을 사용한다.",
+      "blockReasonCodes": ["SeasonalCampaignNotActive", "SeasonalCampaignAdvanceBlocked", "SeasonalCampaignPreviewMismatch", "SimulationExpectedRevisionMismatch"],
+      "predecessorWiIds": [], "successorWiIds": [],
+      "returnContractCodes": ["SeasonalCampaignChoiceAvailable"],
+      "actionCode": "AdvanceSeasonalOperationsCampaign",
+      "ruleRevision": "seasonal-operations-campaign.r1",
+      "saveReplayPayloadCodes": ["Pending:SeasonalOperationsCampaignState"],
+      "httpContracts": ["Pending:RemoteHostBinding"],
+      "existingImplementationReferences": ["docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/seasonal-campaign-refactoring-plan.r66.md"],
+      "implementation": {"status": "InProgress", "currentStage": "E1", "targetStage": "E3", "evidence": ["공유 계약·Domain 전이·집중 시험의 첫 구현 묶음이 승인됐다."]},
+      "integration": {"status": "NotSelected", "currentStage": "E0", "targetStage": "E7", "evidence": ["Application·Save/Replay·RemoteHost·Unity·실제 입력은 후속이다."]},
+      "sourceReferences": ["docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/seasonal-campaign-refactoring-plan.r66.md"],
+      "notes": ["기존 SimulationHexagramCampaign과 상태·route·저장을 공유하지 않는다."]
     },
     {
       "id": "WI-REVIEW-01", "groupCode": "REVIEW", "sequence": 1, "title": "NPC 업무 결과 검토 확정", "kind": "Command",
