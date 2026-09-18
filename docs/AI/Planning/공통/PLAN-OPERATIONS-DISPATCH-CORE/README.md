@@ -2,8 +2,8 @@
 
 - 기획 ID: `PLAN-OPERATIONS-DISPATCH-CORE`
 - 기획 분야: 공통 / 운영 배차
-- 기획 판본: `dispatch-core.r41`
-- 상태: `Draft / StakeholderPolicyConfirmedInPart / TwoOperationalOsRelated / FoodWeatherThreePointPolicyApproved / FoodWeatherPickupNowcastFoundationImplemented / FoodWeatherServerCacheImplemented / FoodWeatherThreePointImplementationPending / FreightPostAcceptanceReconsentConfirmed / FreightCommitmentGraphConfirmed / FreightRiskVisibilityConfirmed / FreightInfeasibleReservationReleaseConfirmed / ShipperMaterialChangeOnlyNotificationConfirmed / ShipperRecoveryNotificationConfirmed / FreightContinuityBackendFoundationImplementedDisabled / FreightGraphEffectsDeferred / BackendBatch5InterruptionRecoveryImplemented / FrontendPartial / OperationalActivationDeferred`
+- 기획 판본: `dispatch-core.r43`
+- 상태: `Draft / StakeholderPolicyConfirmedInPart / TwoOperationalOsRelated / FoodPreparationTimeFiveTenFifteenTwentyConfirmed / FoodOver20MinuteInAppAndPushConfirmed / DriverNoResponseDemotedFromOperatorOverview / FoodSalesOrderDecisionVisualLinked / FoodWeatherThreePointPolicyApproved / FoodWeatherPickupNowcastFoundationImplemented / FoodWeatherServerCacheImplemented / FoodWeatherThreePointImplementationPending / FreightPostAcceptanceReconsentConfirmed / FreightCommitmentGraphConfirmed / FreightRiskVisibilityConfirmed / FreightInfeasibleReservationReleaseConfirmed / ShipperMaterialChangeOnlyNotificationConfirmed / ShipperRecoveryNotificationConfirmed / FreightContinuityBackendFoundationImplementedDisabled / FreightGraphEffectsDeferred / BackendBatch5InterruptionRecoveryImplemented / FrontendPartial / OperationalActivationDeferred`
 - 상위 기획: `PLAN-OPERATIONS-LOGISTICS-OS`. 지역·Scene과 독립된 운영 업무 공통 정책
 - 관련 기획: `PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001`, `PLAN-SYSTEM-OBSERVER-WORLD`
 - 관련 WI·PlayableLoop: 미등록. 이번 1차 공통 코어는 운영 비활성 계약·순수 계산·포트 경계이며 Unity PlayableLoop 구현이 아님
@@ -142,6 +142,12 @@
 
 플랫폼은 주문 상품·수량·시간대·현재 관찰된 대기 정보를 이용해 `이 시간대에는 보통 약 몇 분 걸렸습니다`라는 평균 조리시간 참고 알림을 음식점에 제공한다. 이 값은 미리 선택되는 기본값이나 확정 권고가 아니며 음식점이 현재 조리 중인 주문과 곧 들어올 업무를 보고 최종 예상시간을 직접 선택한다. 주문 수락 화면에는 `20분·30분` 같은 간단한 시간 버튼을 두고, 음식점이 시간을 선택한 뒤 `수락`을 누르면 그 값이 해당 주문의 조리 완료 예정 시각 기준이 된다. 별도 확인 단계를 하나 더 요구하지 않고 복잡한 상품별 합산이나 긴 숫자 입력도 요구하지 않는다. 플랫폼은 참고 평균·음식점 선택값·수락 시각을 함께 보존한다.
 
+주문 수락 화면의 첫 빠른 선택은 `5분 / 10분 / 15분 / 20분`으로 단순화한다. `30분 / 45분`과 `1~180분` 직접 입력 기능은 긴 조리 업무를 위해 `더 보기`에 보존하며 플랫폼이 20분 이하를 강제하지 않는다. 서버가 최종 동결한 적용 조리시간이 `20분 초과`이면 주문자에게 예상 준비시간 안내 사건을 한 번 만든다. 이 판정은 음식점 명시 선택뿐 아니라 관측 평균·음식점 설정·시스템 기본에서 나온 적용값에도 동일하게 적용하고, 정확히 20분은 대상에서 제외한다.
+
+20분 초과 안내는 한 주문에서 임계값을 처음 넘은 revision에 대해 멱등하게 한 번만 생성한다. 앱 내부 알림 원장을 정본으로 남기고, 주문 진행 알림을 허용한 주문자에게 같은 사건의 모바일 푸시를 한 번 병행한다. 이후 조리시간 변경은 주문 상세의 예상 준비·도착 시각을 갱신하지만 같은 안내를 반복하지 않는다. 이 안내만으로 자동 취소·환불·보상·귀책 판정을 실행하지 않으며, 실제 반복 지연 뒤의 세 번째 조리 지연 중단 알림과 별도 사건으로 기록한다.
+
+음식점 역할 화면의 구체적인 정보 계층과 첫 시안은 [음식 판매 OS 주문 처리 화면](../PLAN-OPERATIONS-FOOD-SALES-ORDER-DESK/README.md)이 소유한다. 공통 배차 코어는 조리시간 판정·알림 임계값과 배달 인계 계약만 소유하고 화면 배치나 음식점의 전체 작업 보드를 소유하지 않는다.
+
 음식 배달의 새 배차 배너는 신규 제안 도착만 알리고 거리·금액을 직접 싣지 않는다. 기사가 배너를 누르면 기존 FDriver 지도 업무 화면에서 음식점 픽업지·전달지와 예상 경로를 확인한다. 기상 할증 때문에 새 배너·상세 화면·경로 체계를 만들지 않는다.
 
 기상 할증은 배차 제안을 만들 때 운영 서버가 판정하는 건당 고정액으로 한다. 플랫폼이 부담하며 기존 기본·거리 지급액에 더해 기사 예상 지급액에 포함한다. 첫 검증 기준 금액은 건당 `1,000원`으로 확정하되 코드 상수가 아니라 판본 있는 서버 정책 값으로 관리해 운영 배포 전 조정할 수 있게 한다. 기사 화면은 서버가 확정해 내려 준 총 예상 지급액과 `기상 할증 +1,000원` 표시를 상세에서 보여 주고 클라이언트가 날씨나 금액을 다시 판정하지 않는다.
@@ -160,7 +166,7 @@
 
 주문자가 반복 조리 지연 때문에 취소하면 주문자에게 환불하고 원인을 음식점 조리 지연 책임으로 기록한다. 음식점이 재료를 이미 투입했거나 조리를 상당 부분 마쳤더라도 플랫폼은 해당 취소에 대한 음식점 보상이나 재조리 비용을 지급하지 않는다. 이 사건은 기사 책임과 음식점의 주문 거절률에는 섞지 않고 별도의 조리 지연·주문 취소 사건으로 남긴다.
 
-추천 만료를 기사 무응답으로 자동 기록하는 것은 아직 포함하지 않았다. 기사 수신 의사 ON, 서버 실효 상태, 실제 전달 가능성을 같은 시점에 확인하지 않은 채 만료만으로 기사 책임을 만들지 않기 위해서다. 음식점 수락 이후 주문 취소·환불·보상, 세 번째 조리 지연 주문자 알림·취소 선택, 음식점별 분석·권고 메시지, 화물 완료 자동 사건, 실제 배차 점수 적용, 주문자·음식점 화면, 운영 DB 마이그레이션의 실제 환경 적용, 운영 활성화, Simulation·Unity 투영은 후속이다. DriverApp 화물 작업공간과 FDriver 동시 수행 상한은 서버 계약에 연결했지만 실제 모바일 조작은 검증하지 않았다. `Ssalddel.BusinessWorkflow`와 Simulation 공통 Runtime은 Unity가 가상 세션을 관찰·표현하기 위한 Simulation facade로 유지하며 운영 배차 코어의 쓰기 권위로 합치지 않는다.
+추천 만료를 기사 무응답으로 자동 기록하는 것은 아직 포함하지 않았다. 기사 수신 의사 ON, 서버 실효 상태, 실제 전달 가능성을 같은 시점에 확인하지 않은 채 만료만으로 기사 책임을 만들지 않기 위해서다. 운영자 음식배달 OS 첫 화면에도 `기사 무응답`을 주요 주의 항목으로 노출하지 않고 주문 기준의 `배차 대기 장기화`로 집계한다. 음식점 수락 이후 주문 취소·환불·보상, 20분 초과 예상 조리 알림, 세 번째 조리 지연 주문자 알림·취소 선택, 음식점별 분석·권고 메시지, 화물 완료 자동 사건, 실제 배차 점수 적용, 주문자·음식점 화면, 운영 DB 마이그레이션의 실제 환경 적용, 운영 활성화, Simulation·Unity 투영은 후속이다. DriverApp 화물 작업공간과 FDriver 동시 수행 상한은 서버 계약에 연결했지만 실제 모바일 조작은 검증하지 않았다. `Ssalddel.BusinessWorkflow`와 Simulation 공통 Runtime은 Unity가 가상 세션을 관찰·표현하기 위한 Simulation facade로 유지하며 운영 배차 코어의 쓰기 권위로 합치지 않는다.
 
 ## 관련 문서 분류 점검
 
@@ -179,7 +185,7 @@
 - 오늘·어제·그제의 최소 표본·가중치와 감점 상한
 - 기사 배달 중단의 사후 증빙·통지·이의 제기 절차와 운영자 재정정 횟수
 - 음식점이 확정 조리 완료 예정 시각을 여러 번 변경한 경우의 지연 기준
-- 장기 조리 지연에서 주문자 앱 밖의 푸시 알림을 예외적으로 보낼 조건
+- 주문 진행 알림 동의를 주문 생성 시점의 주문별 사본으로 동결할지, 발송 시점의 최신 사용자 설정을 다시 확인할지
 - 음식점별 시간대 집계의 최소 표본·권고 발송 기준과 운영자 조회 보존 기간
 - 음식점이 권고를 수락·수정·유지한 결과와 이후 개선 여부를 확인할 기간
 - 플랫폼이 여러 상품·수량·피크 혼잡을 조리시간 선택 후보로 계산하는 내부 규칙

@@ -1,9 +1,11 @@
-[기획 · 시스템·월드 투영 · PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES · r29]
+[기획 · 시스템·월드 투영 · PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES · r31]
 
 # 역세권 디오라마 모듈 표준
 
 - 상태: `ApprovedScopedImplementation / StandardizationDirectionConfirmed / InitialOneKilometerWindowConfirmed / MajorTransferVariableWindowAllowed / InitialStationSourceStored / ServerFirstSliceImplemented / ReadOnlyBindingSafetyTested / YongmasanUserNameConfirmed / SecondActualSampleMyeonmokConfirmed / MyeonmokLocalPrivateReviewImplemented / YongmasanLocalPrivateReviewImplemented / MissingCoverageRetained / UnityParserMeshCrossCheckPassed / UnityPlayModeGameViewVerified / UnityOfficialRunnerPending / UnitySceneBindingPending / StationScopedProjectionPending / SagajeongMarketLandmarkCollectionSpecificationApproved / BuildingVisualReplacementDirectionConfirmed / FirstReplacementBuildingPending / FreeSteamReleaseIntentRecorded / PhotoUsePolicyApproved / OwnCaptureUnavailable / KOGLType0Or1PriorityConfirmed / FirstPublicPhotoSliceStored / ExactMarketPhotoMissing / CCBYSAProfilePending / HWiAreaSetSkyModularAlignmentRequested / APlusH3PartialAreaSetConfirmed / BuildingHierarchySelectionIntentConfirmed / R15ReadOnlySelectionImplemented / BuildingRoleProfileDirectionConfirmed / R16RoleCardsImplemented / R17SagajeongCommonModuleHostImplemented / R18MobilityAdapterSeamImplemented / R18AutomatedTestsPassed / R18SceneBindingDeferred / R18GameViewNotRequiredForUnchangedOutput / UserMouseUpInjectionDeferred / R19PublicDataLifeObservationProposed / R19ImplementationNotApproved / R20SyntheticCourierObservationApproved / R20ProjectionImplemented / R20UnityRuntimeOnlyImplemented / R20AutomatedTestsPassed / R20PlayModeGameViewVerified / R20SceneBindingDeferred / R20EvidencePromotionNotPerformed / R23DioramaEvidenceEvolutionImplemented / R24JungnangMarketVisualPrivateReviewCollected / R24MarketIdentityPending / R24ItemLevelRightsPending / R24BlenderAndUnityBlocked / R25PlacementAndHeightRealityBaselineConfirmed / R25OrientationLandmarkDetailDirectionConfirmed / R25GenericFacadeExactnessNotRequired / R26SagajeongStationExitAnchorsApproved / R26SourceProjectionImplemented / R26UnityReadOnlyMarkersImplemented / R26AutomatedTestsPassed / R26CanonicalGameViewPending / R26EvidencePromotionNotPerformed / R27SagajeongSpatialSupplementCollected / R27LocalLedgerApplied / R27ParkGeometryDeferred / R27UnityBindingDeferred / R27EvidencePromotionNotPerformed / R28AddressParcelEvidenceChecklistConfirmed / R28SagajeongPrivateAddressLedgerValidated / R28ParcelGeometryMissing / R28EvidencePromotionNotPerformed`
 - r29 추가 상태: `ParcelGeometryCollectionApproved / OfficialAlD002ContractConfirmed / ExtractionPipelineValidated / VWorldArchiveBlockedExternalAccess / ParcelGeometryStillMissing / R29EvidencePromotionNotPerformed`
+- r30 추가 상태: `SagajeongStationFirstConfirmed / ExistingBlenderPlansIntegrated / ExitOneAndTwoRightsReviewPending / BlenderAndUnityStillBlocked`
+- r31 추가 상태: `ExitOrderOneToFourConfirmed / PerExitEvidenceGateRequired / BlenderPlanningPaused / ImplementationNotAuthorized`
 - 기획 근거: 2026-09-13 사용자 제안 “사가정역에서 만든 수준을 표준화하고, 사가정을 더 깊게 만든 결과를 다른 역에도 재사용한다.”와 후속 답변 “사가정·면목·역마산은 역 중심 1km × 1km로 하고 대형 환승역부터 가변 범위를 허용하며, 서버가 역별 정보를 관리·조회하게 한다.”, “역마산역”은 용마산역을 뜻한다는 확인, 두 번째 실제 공간자료 적합성 표본을 면목역부터 진행한다는 확인, 그리고 “사가정역과 유사하게 면목역도 1km × 1km로 표현하고, 자료가 없으면 수집한 뒤에도 없으면 결손을 남긴 채 구현한다”는 범위 승인. 이어서 용마산역도 같은 1km 범위로 자료를 조사하고 Unity 장면에 드러내 달라는 구현 승인을 받았다. 후속으로 역별 랜드마크를 공식·시각·공간 근거로 수집해 Blender 모델과 배치맵에 연결하는 방향, 첫 대상을 사가정시장 입구·대표 골목으로 두고 자료 수집 명세부터 만드는 범위를 확인했다. 도로명주소·건축물대장·외관 사진을 분리 수집하고, 권리가 확인된 대표 건물만 Blender 자원으로 만들어 기존 절차적 모형을 안전하게 교체하는 제안을 추가했다. Steam 기본 게임은 무료 출시 의도를 유지하되 사진·건물·플랫폼 배포 권리를 별도 판정한다. 직접 촬영은 어렵다는 조건과 공공누리 등 변경·배포 조건이 확인되는 공공 사진을 현재 우선 경로로 삼는 방향을 확정함.
 - r15 보완 근거: 2026-09-14 사용자는 사가정 A+를 H3 생활 회랑 2개와 부분 AreaSet 구성 후보로 관리하는 안을 확정했다. 기존 사가정 디오라마의 현실 공간 표현을 훼손하지 않고, 건물을 클릭하면 그 건물의 공간 근거와 H1·H2·H3·부분 AreaSet 결속을 확인하며 이후 준비된 WI 상호작용으로 확장할 수 있는 모듈식 구조를 요청하고 이 범위의 구현을 승인했다.
 - r16 보완 근거: 2026-09-14 사용자는 음식점·창고·주거·일반을 H 단계가 아닌 건물 역할 Profile로 분리하고 한 건물에 여러 역할이 들어갈 수 있게 하는 제안을 승인했다. 역할별 카드와 해당 건물에 명시 결속된 음식배달 주문·기사 흐름의 읽기 전용 후속 보기도 함께 승인했다.
@@ -17,6 +19,8 @@
 - r27 보완 근거: 2026-09-14 사용자는 기존 사가정 자료를 인지한 뒤 필요한 보충 자료를 계획하고 구현하도록 승인했다. [공간 보충 자료 수집·원장화 r27](sagajeong-spatial-supplement.implementation.r27.md)은 보행망·엘리베이터·공원·버스 정류소·가로수 공식 원본을 기존 1km 창과 결속해 3,226건을 비공개 검토 원장에 저장했다. 공원 EPSG:5174 도형 변환, NGII 로그인 자료, Unity 연결은 완료로 간주하지 않는다.
 - r28 보완 근거: 2026-09-14 사용자는 디오라마를 구성할 때 도로명주소·필지 식별자·실제 필지 경계 도형을 수집했는지 각각 확인하는 관문을 증거 체계에 포함하고 확정하도록 요청했다. [사가정 화면 건물 결속·주소 증거 구현 r6](../PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/implementation.r6.md)은 이 세 항목을 서로 대체할 수 없는 필수 검사로 만들고, 사가정의 주소·PNU는 수집됐지만 필지 도형은 미수집이라는 상태를 보존한다.
 - r29 보완 근거: 2026-09-14 사용자는 실제 필지 경계 도형 수집을 먼저 진행하도록 확정했다. 브이월드 로그인이 불가능하다는 후속 조건에 따라 [필지 경계 도형 수집 준비 r7](../PLAN-DATA-SAGAJEONG-BUILDING-ADDRESS-COMPLETION/parcel-geometry-collection.implementation.r7.md)은 공식 `AL_D002`·A1 PNU·EPSG:5186 계약, 3,774개 target, 추출·검증 도구를 준비하되 실제 원본 0건과 `BlockedExternalAccess`를 유지한다.
+- r30 보완 근거: 2026-09-16 사용자는 공공데이터 매스 위의 첫 Blender 상세화 대상으로 사가정역을 정하고, 이전 상세화 기획을 찾아 통합하도록 요청했다. [사가정역 출구 Blender 상세화 기존 기획 통합 r30](sagajeong-station-blender-integration.r30.md)은 r8 안전 교체, r9 권리 정책, r11 사진 원장, r26 출구 기준점을 정본으로 재사용하고 시장 기획 r6은 다음 후보로 보존한다.
+- r31 보완 근거: 2026-09-16 사용자는 사가정역 1~4번 출구를 번호 순서대로 상세화하고 Blender 관련 기획 문답은 일단 닫도록 요청했다. [사가정역 1~4번 출구 Blender 상세화 순서 r31](sagajeong-exit-blender-sequence.r31.md)은 출구별 독립 근거·권리·모델·안전 교체 관문을 유지한다.
 - 상위 묶음: [지역 Experience Package](../PLAN-SYSTEM-REGION-EXPERIENCE-PACKAGES/README.md)
 - 첫 참조 구현: [사가정 공간 밀도 표현 r18](../PLAN-GAMEPLAY-NEIGHBORHOOD-DEFENSE/spatial-density-presentation.r18.md)
 
@@ -37,6 +41,21 @@
 ```
 
 ## 확정
+
+### r30 사가정역 출구 Blender 기존 기획 통합
+
+- 첫 Blender 상세화 묶음은 사가정역 출구 주변이다.
+- 새 자산 권위나 사진 대장을 만들지 않고 r8·r9·r11·r26의 근거·권리·위치·안전 교체 계약을 재사용한다.
+- 출구 1·2의 정확 사진은 CC BY-SA 관문과 내용·현행성 검토 전까지 비공개 참고 상태다. 출구 3·4는 외관 근거가 없어 r26 일반화 표식을 유지한다.
+- 권리·모델 브리프·기술 검증·배포 승인 전 Blender·Unity 교체를 열지 않는다.
+- 시장 입구·대표 골목은 두 번째 묶음 후보로 유지하며 역 출구와 하나의 모델로 합치지 않는다.
+
+### r31 사가정역 출구 1~4 상세화 순서
+
+- 상세화 순서는 `1번 → 2번 → 3번 → 4번`이다.
+- 각 출구의 근거·권리·모델 브리프·기술 검증을 독립적으로 닫고 다음 번호로 넘어간다.
+- 자료가 없는 출구는 앞 번호의 외관을 복사하지 않고 일반화 표식을 유지한다.
+- Blender 기획 문답은 여기서 일단 멈추며 구현 승인으로 확대하지 않는다.
 
 ### r7 면목역 1km 비공개 검토 구현 결과
 
@@ -401,9 +420,9 @@ SimulationWorldShell
 
 ## 다음 질문 하나
 
-공식 서울 `AL_D002` ZIP을 확보할 수 있게 되면 **동일한 2026-09-08 전체판을 재현용으로 받을지**, 아니면 **그 시점의 최신 전체판을 새 판본으로 받을지** 정할까?
+역세권 Blender 문답은 일단 닫았다. 다음 역세권 자료 관문에서는 공식 서울 `AL_D002`를 확보할 때 재현용 2026-09-08 전체판과 최신판을 어떤 순서로 받을지 다시 결정한다.
 
-추천은 **가능하면 2026-09-08 전체판을 먼저 확보하고 최신판을 별도 revision으로 추가한다**다. 기존 2026-08 건물·주소 근거와 시간 차이가 가장 작아 재현 검증에 유리하다. 대가는 과거 파일을 더는 제공하지 않으면 최신판만 받아 기준일 차이를 명시적으로 검토해야 한다는 점이다.
+현재 추천은 가능하면 2026-09-08 전체판을 먼저 확보하고 최신판을 별도 revision으로 추가하는 것이다. 이 질문은 Blender 기획을 다시 여는 질문이 아니다.
 
 ## 현재 검증 상한
 

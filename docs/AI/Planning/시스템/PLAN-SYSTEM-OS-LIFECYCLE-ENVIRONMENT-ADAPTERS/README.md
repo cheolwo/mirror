@@ -1,13 +1,16 @@
-[기획 · 시스템·업무 생명주기 · PLAN-SYSTEM-OS-LIFECYCLE-ENVIRONMENT-ADAPTERS · r5]
+[기획 · 시스템·업무 생명주기 · PLAN-SYSTEM-OS-LIFECYCLE-ENVIRONMENT-ADAPTERS · r8]
 
 # OS 생명주기 Core와 환경별 Adapter 분리 제안
 
-- 상태: `Proposed / CoreTransitionAndPureGuardScopeConfirmed / ThreeStateDecisionContractConfirmed / AvailableActionsInlineConfirmed / FoodDeliveryAvailableActionsFirstSliceImplemented / FullCoreAdapterRefactorNotApproved`
+- 상태: `Proposed / CoreTransitionAndPureGuardScopeConfirmed / ThreeStateDecisionContractConfirmed / AvailableActionsInlineConfirmed / FoodDeliveryAvailableActionsFirstSliceImplemented / LifecycleFailureRecoveryFirstConfirmed / SharedFailureContractFirstSliceImplemented / OperatorSafeRetryOnlyConfirmed / FullCoreAdapterRefactorNotApproved`
 - 제안 근거: 2026-09-14 사용자는 음식배달·화물·창고·마트 등 OS 생명주기를 서버 업무, 모바일·Web 업무 화면, Unity NPC 공간 행동에서 함께 사용하되, 변동이 적은 Core와 환경별 조정 부분을 분리하는 리팩터링 제안서를 요청했다.
 - r2 확정 근거: 2026-09-14 사용자는 OS Core가 단계 ID·순서·설명뿐 아니라 허용 전이와 환경 비의존 순수 guard까지 포함하는 추천안을 선택했다.
 - r3 확정 근거: 2026-09-14 사용자는 Core 전이 판정을 `AllowedByCore / BlockedByCore / RequiresEnvironmentValidation` 세 상태와 안정 이유 코드로 구분하는 추천안을 선택했다.
 - r4 보류 근거: 2026-09-14 사용자는 `AvailableActions` 전달 형태 판단을 보류했다.
 - r5 확정 근거: 2026-09-14 사용자는 현재 상태 사본에 누를 수 있는 작은 행동을 포함해 버튼을 통제하고 오류 가능성을 줄이는 방향과 그 첫 구현을 승인했다.
+- r6 확정 근거: 2026-09-17 사용자는 실제 휴대폰 연결을 기다리는 동안 기능 추가보다 OS 생명주기에서 오류가 발생했을 때의 조치를 명확히 하고 같은 기준으로 앱 검증을 계속하는 방향을 선택했다.
+- r7 확정 근거: 2026-09-17 사용자는 최종 실패에 대한 첫 모바일 관리자 공통 조작을 안전 재시도 예약 하나로 제한하는 추천안을 선택했다.
+- r8 구현 근거: 2026-09-17 사용자는 음식배달 OS의 판본 충돌·일시 통신 장애·최종 후속처리 실패 세 사례를 첫 세로 절편으로 구현하는 1안을 선택했다.
 - 관련 기획: [다중 OS 생명주기 재생 r4](../PLAN-SYSTEM-OBSERVABLE-OPERATIONS-DIORAMA-001/multi-os-lifecycle-playback.r4.md), [역세권 디오라마 모듈 표준 r16](../PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/README.md), [운영 서버에서 Unity로의 이관](../PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001/README.md)
 - 기준 아키텍처: [업무 실행 책임 모델](../../../../Architecture/BusinessWorkflowResponsibilityModel.md), [운영·Simulation·Unity 작업 흐름 분리](../../../../Architecture/OperationsSimulationUnity작업흐름분리.md)
 
@@ -238,6 +241,66 @@ Unity 입력
 
 첫 수직 표본은 기존 증거가 가장 많은 음식배달 하나로 제한한다. 네 OS 계약을 한 번에 이전하지 않고, 음식배달에서 Core→Operations→Web/모바일→Unity Projection의 소비자 호환을 확인한 뒤 같은 패턴을 확장한다.
 
+## 공통 실패·복구 계약 후보
+
+앱이 HTTP 상태와 예외 문구를 각자 해석해 다음 행동을 추측하지 않게 한다. 서버의 역할별 상태 사본 또는 표준 오류 응답은 최소한 다음 의미를 안정 코드로 제공하고, 앱은 그 결과를 화면에 번역한다.
+
+```text
+FailureCode
+FailureClassCode
+ResponsibilityRoleCode
+RequiresStateRefresh
+RetryPolicyCode
+RetryAfterUtc?
+CurrentRevision?
+AvailableRecoveryActions[]
+TraceId
+```
+
+원시 예외, 내부 테이블명, 개인정보는 계약에 싣지 않는다. `TraceId`는 운영자와 개발자가 같은 실패를 찾는 상관관계 키일 뿐 사용자 식별자가 아니다.
+
+| 실패 분류 | 기본 조치 | 앱 표현 | 운영자 개입 |
+| --- | --- | --- | --- |
+| `TransientTechnical` | 같은 멱등 키로 제한 자동 재시도 | 연결 지연·다시 시도 시각 | 최대 시도 뒤에만 |
+| `RevisionConflict` | canonical 상태 전체 재조회 | 최신 상태로 갱신하고 사용자가 다시 선택 | 반복 충돌만 |
+| `AuthenticationExpired` | refresh token 1회, 실패 시 재로그인 | 로그인 만료 | 보안 이상만 |
+| `PermissionDenied` | 자동 재시도 금지 | 현재 역할에서 수행할 수 없음 | 권한 원장 확인 |
+| `BusinessRuleBlocked` | 상태와 `AvailableActions` 재조회 | 안정 이유와 가능한 다음 행동 | 정책 예외만 |
+| `ExternalPending` | 지정 시각까지 기다린 뒤 조회 | 외부 처리 대기 | 기한 초과 뒤 |
+| `TerminalManualReview` | 자동 처리 중단·사건 보존 | 운영자 확인 필요 | 안전 재시도 또는 OS별 판단 |
+| `CompensationRequired` | 원 업무를 강제 완료하지 않고 별도 보상·취소 흐름 | 처리 보류와 책임 주체 | OS별 승인 필요 |
+
+공통 복구 행동은 `RefreshState`, `Reauthenticate`, `RetryIdempotent`, `WaitUntilRetryAt`, `ReturnToSafeStep`, `RequestOperatorReview`까지를 우선 후보로 둔다. `ForceComplete`, 임의 revision 변경, 원장 삭제는 공통 행동으로 열지 않는다. 취소·보상·폐기·반환은 음식배달·화물·창고·마트가 자기 정책과 권한으로 별도 판정한다.
+
+### 앱의 고정 처리 순서
+
+```text
+Command 요청
+→ 성공이면 canonical 상태 재조회
+→ 실패면 표준 실패 계약 해석
+→ RequiresStateRefresh이면 전체 재조회
+→ 서버가 제공한 AvailableRecoveryActions만 표시
+→ 자동 재시도는 멱등성·횟수·시각 조건을 만족할 때만 수행
+→ 최종 실패는 운영자 확인 대장으로 인계
+```
+
+오프라인·시간 초과·앱 종료 중에는 로컬 성공을 만들지 않는다. 보류 중 입력을 저장하더라도 재연결 뒤 서버가 역할·상태·revision을 다시 승인해야 한다.
+
+### 검증 행렬
+
+각 OS는 정상 경로 외에 최소 다음 사례를 같은 판본에서 검증한다.
+
+1. 통신 시간 초과 뒤 멱등 재시도
+2. 낮은 revision 충돌 뒤 전체 재조회
+3. 인증 만료 뒤 갱신 또는 재로그인
+4. 권한 없는 역할의 행동 거절
+5. 업무 규칙 거절 뒤 올바른 `AvailableActions`
+6. 외부 처리 대기와 만료
+7. 최대 재시도 초과 뒤 운영자 확인 인계
+8. 운영자 조치 뒤 원 업무·후속 원장의 독립 재조회
+
+이 행렬은 서버 단위 시험, 역할 Client headless, 관리자 앱 ViewModel, 실제 장치 UI 증거를 서로 분리한다. 앞 단계 성공을 뒤 단계 증거로 대신하지 않는다.
+
 ## 단계적 리팩터링 제안
 
 1. 현행 lifecycle 단계 ID, 실제 상태 전이, 화면별 중복 판정과 변경 주체를 전수 대조한다.
@@ -280,14 +343,28 @@ Unity 입력
 - Core는 단계 ID·순서·설명, 허용 전이, 실패·회복·귀환과 환경 비의존 순수 guard를 소유한다.
 - 인증·실제 DB 존재 여부·외부 API·기기 상태·실제/가상 시계·Unity 공간 도착은 Core guard가 아니다.
 - Core 전이 판정은 `AllowedByCore / BlockedByCore / RequiresEnvironmentValidation` 세 상태와 안정 이유·환경 요구사항 코드를 반환한다.
+- 최종 실패에서 관리자 앱이 공통으로 제공하는 변경 행동은 `RetryIdempotent`에 따른 안전 재시도 예약 하나다. 취소·보상·폐기·반환·강제 완료는 공통 복구 행동이 아니며 각 OS의 별도 정책·권한·승인·증거가 준비돼야 한다.
 
 ## 미정
 
-- 첫 음식배달 표본에서 공통화할 정확한 실패·회복 코드
+- 첫 음식배달 표본의 정확한 `FailureCode` 목록과 기존 API 오류의 호환 mapping
 - 모바일 오프라인 입력의 보관·만료·재승인 규칙
 - `OsLifecycleSpatialBinding`의 서버 저장 위치와 Graph Map 관계
 - 기존 환경별 중복 전이 판정의 실제 목록과 migration 순서
+- 안전 재시도 예약 뒤 다시 실패한 사건의 알림 우선순위와 담당자 배정 방식
 
 ## 확정된 AvailableActions 경계
 
 현재 상태를 조회할 때 호출자별 작은 `AvailableActions`를 같은 역할별 상태 사본에 포함한다. 항목은 `ActionId`, `RevisionKindCode`, `ExpectedRevision?`, `ExpiresAtUtc?`, `EnvironmentRequirementCodes`로 제한하고 큰 입력 schema는 별도 Command 계약에 둔다. 앱은 이 목록으로 버튼을 통제하지만 실제 Command는 역할·상태·revision을 다시 검증한다. Unity 읽기 전용 상태 사본에는 조작 행동을 포함하지 않는다.
+
+## r8 구현: 음식배달 실패·복구 첫 세로 절편
+
+- 공통 계약에 실패 분류, 재시도 정책, 책임 역할, 상태 전체 재조회 필요 여부와 허용 복구 행동을 추가했다. 원시 예외·내부 자료·개인정보는 싣지 않는다.
+- 음식점 진행 변경의 판본 충돌은 `RevisionConflict`, `RefreshState`, 서버의 현재 주문 revision을 응답한다. 음식점 앱은 해당 주문 정본을 즉시 다시 읽어 로컬 상태를 교체하되 실패 자체는 숨기지 않는다.
+- 전송 단계의 일시 통신 장애는 기존 `클라이언트요청Id`와 같은 요청 DTO를 그대로 사용해 한 번만 재시도한다. 서버가 복구 행동을 허용하지 않은 일반 HTTP 실패는 자동 재시도하지 않는다.
+- 후속 처리 최대 실패는 `TerminalManualReview`와 `ScheduleOperatorSafeRetry`만 노출한다. 관리자 UI는 이 허용 행동이 있을 때만 안전 재시도 예약 버튼을 표시하며 원 업무 상태는 변경하지 않는다.
+- 집중 시험 41건, 음식점 데스크 Windows 빌드, 관리자 앱 Windows 빌드가 통과했다. 실제 서버 실행, 네이티브 앱 클릭, Android 장치, Unity·Game View 검증은 수행하지 않았다.
+
+## 다음 질문 하나
+
+같은 실패·복구 계약의 다음 확장 대상을 화물운송 OS로 할지, 창고·상거래 이행 OS로 할지는 아직 확정하지 않았다.

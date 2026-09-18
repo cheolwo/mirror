@@ -2,8 +2,8 @@
 
 - 기획 ID: `PLAN-OPERATIONS-LOGISTICS-OS`
 - 기획 분야: 공통 / 운영 업무 구조
-- 기획 판본: `operations-logistics-os.r10`
-- 상태: `Draft / TwoOperationalOsConfirmed / EndToEndLifecycleOwnershipConfirmed / InternalResponsibilitySplitConfirmed / SharedDispatchCoreRelated / ExplicitCrossOsHandoffConfirmed / PerOsEngineCatalogConfirmed / BackendFoundationImplemented / DisposableMySqlValidated / ShipperToCargoHandoffImplemented / CargoCompletionToShipperAcceptanceImplemented / AbnormalTransportIncidentHoldImplemented / WarehouseOutboundToCargoHandoffImplemented / CompletionProjectionCoreImplemented / OtherConcreteWorkflowAdoptionPending / FallbackActivationPending / OperationalActivationDeferred`
+- 기획 판본: `operations-logistics-os.r12`
+- 상태: `Draft / TwoOperationalOsConfirmed / EndToEndLifecycleOwnershipConfirmed / InternalResponsibilitySplitConfirmed / FoodSalesRoleViewConfirmed / SharedDispatchCoreRelated / ExplicitCrossOsHandoffConfirmed / PerOsEngineCatalogConfirmed / BackendFoundationImplemented / DisposableMySqlValidated / HandoffOutboxProcessorImplemented / ShipperToCargoHandoffImplemented / CargoCompletionToShipperAcceptanceImplemented / AbnormalTransportIncidentHoldImplemented / WarehouseOutboundToPickingPackingImplemented / WarehouseOutboundToCargoHandoffImplemented / CompletionProjectionCoreImplemented / OtherConcreteWorkflowAdoptionPending / FallbackActivationPending / OperationalActivationDeferred`
 - 상위 기획: 없음. 운영 물류 업무의 상위 경계
 - 하위·관련 기획: `PLAN-OPERATIONS-SHIPPER-TRANSPORT-MANAGEMENT`, `PLAN-OPERATIONS-DISPATCH-CORE`, `PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001`
 - 관련 WI·PlayableLoop: 없음. 운영 서버 구조 기획이며 Unity 실행 기획이 아님
@@ -47,6 +47,12 @@
 8. 주문 취소·환불·음식점 보상·사고 손실 대응·운영자 검토
 
 현재 `FoodDeliveryDispatchEngine`은 이 OS 아래의 배차 판단 엔진으로 분류한다. 조리시간 추정, 묶음 배달, 기사 균형, 중단 책임과 보상 계산은 각각 좁은 판단 도구와 조율 책임으로 분리한다.
+
+#### 음식 판매 OS 역할 화면
+
+사용자가 부르는 `음식 판매 OS`는 현재 별도 서버 OS를 새로 만드는 이름이 아니라 음식점 담당자가 위 생명주기의 `음식 주문 → 음식점 응답 → 조리 → 픽업 준비`를 처리하는 역할 화면으로 둔다. 음식 판매 화면은 주문과 조리 준비를 소유하는 원장을 변경할 수 있지만, 기사 후보·배차·픽업·전달 상태는 음식배달 OS의 배달 원장을 조회하고 인계할 뿐 직접 확정하지 않는다.
+
+첫 화면 계약과 현재 코드 대조는 [음식 판매 OS 주문 처리 화면](../PLAN-OPERATIONS-FOOD-SALES-ORDER-DESK/README.md)이 소유한다. 향후 판매 운영체제를 독립 OS로 분리하려면 새 이름만 추가하지 않고 원장·책임 주체·인계 계약·종료 조건과 호환 migration을 별도 승인해야 한다.
 
 ### OS 내부 책임
 
@@ -117,7 +123,8 @@ OS 자체가 DB를 직접 수정하거나 모든 기능을 가진 하나의 serv
 - OS별 구현 선택 대장: `OperatingSystemEngineCatalog`
 - 실행 시 OS별 Primary 해석: `운영체제배차EngineCatalog`
 - 명시적 인계 계약·원장·조율: `운영체제업무인계Contracts`, `운영체제업무인계`, `운영체제업무인계Coordinator`
-- 인계 재처리 기반: `운영체제업무인계_Outbox`
+- 인계 재처리 기반: `운영체제업무인계_Outbox`, `운영체제업무인계OutboxService`, `운영체제업무인계OutboxWorker`
+- 창고 실행 작업 연결: `출고피킹작업생성Service`, `피킹배치Engine`, `피킹포장작업투영Service`
 - 공통 배차 정책 정본: `PLAN-OPERATIONS-DISPATCH-CORE`
 
 기존 식별자와 구현 엔진은 삭제하거나 이름을 한꺼번에 바꾸지 않았다. 배차 후보 선정은 업무 유형을 먼저 소유 OS로 해석하고 그 OS의 활성 `Primary`만 고른다. 화물 OS가 음식배달 구현을, 음식배달 OS가 화물 구현을 자동 대체품으로 사용하는 과거의 family 전체 노출은 제거했다. 화물 배차 엔진이 직접 하던 운송 의뢰 DB 조회도 후보 선정 Application Service로 옮겨, 엔진에는 필요한 운송 방식만 불변 입력 맥락으로 전달한다.
@@ -126,17 +133,19 @@ OS 자체가 DB를 직접 수정하거나 모든 기능을 가진 하나의 serv
 
 버전 업무 조회는 화물·음식 OS의 순서 있는 생명주기와 각 OS에 실제로 등록된 Engine Catalog 항목을 제공한다. 아직 구현이 없는 논리 엔진은 `Declared`로 유지하고 다른 OS 구현을 끌어와 `Active`로 보이지 않는다.
 
-이번 판본은 화주 운송의뢰 확정 뒤 `ShipperTransportManagementOS → DomesticCargoTransportOS` 책임 인계를 기록하고, 하차 증빙과 운송 원장 완료 뒤에는 `DomesticCargoTransportOS → ShipperTransportManagementOS` 결과 인계를 요청한다. 역방향 인계는 화주의 기존 인수증 등록 때만 수락하며 정산 완료·지급·재위탁을 자동 확정하지 않는다. 같은 화주 의뢰 재조회에서는 정방향 책임 인계와 역방향 완료 결과 인계를 구분해 표시한다. 기존 창고 출고 완료 흐름의 화물운송 인계도 유지한다. 업무별 완료는 공통 `운영업무완료증명`으로 순서·필수 단계·결과를 확인하고, 음식 배달 완료·창고 작업·화물 인수 완료를 개인정보가 제거된 지역 장면 조회로 조합한다. 마트·음식 주문 등 다른 ProcessManager 연결, 인수 이상 분기, 자동 fallback, 모바일·Web 화면과 운영 활성화는 포함하지 않는다.
+이번 판본은 화주 운송의뢰 확정 뒤 `ShipperTransportManagementOS → DomesticCargoTransportOS` 책임 인계를 기록하고, 하차 증빙과 운송 원장 완료 뒤에는 `DomesticCargoTransportOS → ShipperTransportManagementOS` 결과 인계를 요청한다. 역방향 인계는 화주의 기존 인수증 등록 때만 수락하며 정산 완료·지급·재위탁을 자동 확정하지 않는다. 인계 Outbox는 원 이벤트 revision과 멱등 키를 보존해 자동 재시도하고, 최대 시도 뒤 실패한 항목만 운영자가 다시 예약할 수 있다. 자동 인계 전달은 `OperatingSystemHandoffOutbox:Enabled=true`와 운영 모드를 함께 만족할 때만 실행한다. 기존 창고 출고 완료 흐름의 화물운송 인계도 유지한다. `출고예정`은 피킹·포장 작업의 재처리 가능한 대기 원장이며, 실제 창고의 `출고`·`피킹`·`포장` 담당자만 배정한다. 작업자가 없거나 배치가 불완전하면 가짜 작업을 저장하지 않고 다음 주기로 보류한다. 자동 작업 생성은 `WarehouseOutboundPickingPacking:Enabled=true`와 운영 모드를 함께 만족할 때만 실행한다. 두 자동 worker 모두 기본값은 비활성이다. 업무별 완료는 공통 `운영업무완료증명`으로 순서·필수 단계·결과를 확인하고, 음식 배달 완료·창고 작업·화물 인수 완료를 개인정보가 제거된 지역 장면 조회로 조합한다. 마트 주문 의도에서 실제 주문을 만드는 연결, 인수 이상 분기, 자동 fallback, 모바일·Web 화면과 운영 활성화는 포함하지 않는다.
 
 ## 구현 검증
 
 - 이번 최종 범위의 지역 장면·기능 관문·창고 인계·음식 완료 집중 회귀: `14/14` 통과
+- OS 인계 Outbox·관리자 복구·창고 피킹/포장 생성·창고→화물 단계 계약 집중 회귀: `42/42` 통과. 이 가운데 두 worker의 기본 비활성 관문과 관계형 SQLite 작업 생성·재조회 `1/1`을 포함한다.
 - `Ssalddel/Ssalddel.csproj` build: 오류 `0`, 기존 nullable 경고 `2`
 - EF migration/model 대조: `No changes have been made to the model since the last migration.`
 - 일회용 로컬 MySQL: 전체 주 DB migration 적용, 음식 완료 투영의 재시작 경계·멱등·만료 정리 시험 통과, 검증 뒤 DB 삭제
 - 실제 인증 HTTP: 전용 관찰 기능을 켠 `Ssalddel`에서 미인증 지역 장면 `401`, 인증된 지역 장면·음식 완료 조회 `200`, 자료원 실패 `0`
 - 범위 Fast·Task: 공백 검사와 Simulation·Unity 코드 지도는 통과했다. 이후 이번 경로 밖의 기존 `EVIDENCE001` 8건에서 중단되어 전체 성공은 아니다.
-- 미실행: 공유 개발·운영 MySQL migration 적용, 실제 Outbox worker 연속 운전, Redis 연동, 모바일·Web·Unity 제품 실행과 운영 활성화
+- r11 범위 Fast는 v3.5 build와 targeted test까지 통과했다(`artifacts/local/validation/20260917-162001`). Task build도 통과했으나 전체 서버 시험은 별도 진행 변경의 라우트 capability·API metadata·공식 재료 CSS·업무 책임 문구 7건으로 `5,299/5,306`에서 중단됐다(`artifacts/local/validation/20260917-162048`).
+- 미실행: 공유 개발·운영 MySQL에서 새 worker 연속 운전, 다중 서버 동시 처리, Redis 연동, 모바일·Web·Unity 제품 실행과 운영 활성화
 
 ## 미정
 
