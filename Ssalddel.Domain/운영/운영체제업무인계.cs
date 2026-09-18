@@ -33,6 +33,7 @@ public static class 운영체제업무인계Outbox상태Codes
     public const string 처리중 = "Processing";
     public const string 완료 = "Completed";
     public const string 재시도대기 = "RetryPending";
+    public const string 실패 = "Failed";
 }
 
 public sealed class 운영체제업무인계Outbox

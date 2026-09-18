@@ -30,8 +30,8 @@ public sealed class OperatingSystemInteractionCatalogTests
             warehouseToCargo =>
             {
                 Assert.Equal(OperatingSystemInteractionIds.WarehouseOutboundToCargo, warehouseToCargo.InteractionId);
-                Assert.Equal(OperatingSystemInteractionLifecycleBindingStatuses.SourceLifecyclePending, warehouseToCargo.LifecycleBindingStatus);
-                Assert.Null(warehouseToCargo.SourceLifecycleStageId);
+                Assert.Equal(OperatingSystemInteractionLifecycleBindingStatuses.Complete, warehouseToCargo.LifecycleBindingStatus);
+                Assert.Equal(OperatingSystemLifecycleStageIds.WarehouseOutboundHandoff, warehouseToCargo.SourceLifecycleStageId);
                 Assert.Equal(OperatingSystemLifecycleStageIds.CargoRequest, warehouseToCargo.TargetLifecycleStageId);
             },
             martToFood =>

@@ -133,6 +133,7 @@ public sealed class 피킹배치Engine : I피킹배치Engine
 
                 pickingTasks.Add(new 피킹작업배정
                 {
+                    출고예정Id = line.출고예정Id,
                     TaskKey = pickTaskKey,
                     WorkerUserId = picker.UserId,
                     WorkerName = picker.DisplayName,
@@ -221,6 +222,7 @@ public sealed class 피킹배치Engine : I피킹배치Engine
         string reason)
         => new()
         {
+            출고예정Id = line.출고예정Id,
             TaskKey = taskKey,
             PickerUserId = picker.UserId,
             PackerUserId = packer.UserId,

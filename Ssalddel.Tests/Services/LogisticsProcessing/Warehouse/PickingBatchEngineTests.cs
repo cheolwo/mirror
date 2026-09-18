@@ -28,6 +28,8 @@ public sealed class PickingBatchEngineTests
         Assert.Equal("worker-1", picking.WorkerUserId);
         Assert.Equal("worker-1", packing.PackerUserId);
         Assert.Equal(packing.TaskKey, picking.포장작업Key);
+        Assert.Equal(910, picking.출고예정Id);
+        Assert.Equal(picking.출고예정Id, packing.출고예정Id);
     }
 
     [Fact]
@@ -262,6 +264,7 @@ public sealed class PickingBatchEngineTests
         string? stockedBarcode = null)
         => new()
         {
+            출고예정Id = 900 + warehouseId,
             출고작업Key = $"OUTBOUND-{lineKey}",
             LineKey = lineKey,
             InboundProductId = 100 + warehouseId,

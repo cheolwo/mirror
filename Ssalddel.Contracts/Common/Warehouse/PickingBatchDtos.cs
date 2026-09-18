@@ -51,6 +51,8 @@ public sealed class 피킹배치창고옵션
 
 public sealed class 피킹배치출고라인
 {
+    public long? 출고예정Id { get; set; }
+
     public string 출고작업Key { get; set; } = string.Empty;
 
     public string LineKey { get; set; } = string.Empty;
@@ -124,6 +126,8 @@ public sealed class 피킹배치계획결과
 
 public sealed class 피킹작업배정
 {
+    public long? 출고예정Id { get; set; }
+
     public string TaskKey { get; set; } = string.Empty;
 
     public string WorkerUserId { get; set; } = string.Empty;
@@ -169,6 +173,8 @@ public sealed class 피킹작업배정
 
 public sealed class 포장작업배정
 {
+    public long? 출고예정Id { get; set; }
+
     public string TaskKey { get; set; } = string.Empty;
 
     public string PickerUserId { get; set; } = string.Empty;

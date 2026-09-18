@@ -1,5 +1,6 @@
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Services.LogisticsProcessing.SalesOrders;
+using Ssalddel.Services.LogisticsProcessing.Warehouse;
 using Ssalddel.Security;
 using Ssalddel.Services.Security;
 using 살뜰.Infrastructure.BackgroundJobs.DispatchQueue;
@@ -9,6 +10,7 @@ using 살뜰.Services.External.Customs;
 using 살뜰.Services.External.PublicData;
 using 살뜰.Services.HIOPSAI;
 using 살뜰.Services.Notifications;
+using 살뜰.Services.Operations;
 using 살뜰.Services.Options;
 using 살뜰.Services.Payments;
 
@@ -101,8 +103,10 @@ public static partial class ServiceCollectionExtensions
         services.Configure<VersionFeatureFlagsOptions>(configuration.GetSection(VersionFeatureFlagsOptions.SectionName));
         services.Configure<RegionMobilityGraphOptions>(configuration.GetSection(RegionMobilityGraphOptions.SectionName));
         services.Configure<SsalddelExecutionOptions>(configuration.GetSection(SsalddelExecutionOptions.SectionName));
+        services.Configure<운영체제업무인계OutboxOptions>(configuration.GetSection(운영체제업무인계OutboxOptions.SectionName));
         services.Configure<RoleAdvertisingOptions>(configuration.GetSection(RoleAdvertisingOptions.SectionName));
         services.Configure<SalesChannelOrderSyncOptions>(configuration.GetSection(SalesChannelOrderSyncOptions.SectionName));
+        services.Configure<출고피킹작업생성Options>(configuration.GetSection(출고피킹작업생성Options.SectionName));
         services.Configure<배차큐정책Options>(configuration.GetSection("DispatchQueue"));
         services.Configure<국내화물배차AI정책Options>(configuration.GetSection(국내화물배차AI정책Options.SectionName));
         services.Configure<화물연속배차Options>(configuration.GetSection(화물연속배차Options.SectionName));

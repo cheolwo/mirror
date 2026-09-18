@@ -54,6 +54,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I음식배달기사제안요금Service, 음식배달기사제안요금Service>();
         services.AddScoped<I배차실행인덱스예열Service, 배차실행인덱스예열Service>();
         services.AddScoped<I피킹포장작업투영Service, 피킹포장작업투영Service>();
+        services.AddScoped<I출고피킹작업생성Service, 출고피킹작업생성Service>();
         services.AddSingleton<살뜰.도메인.운영.살뜰마트라스트마일배차Policy>();
         services.AddScoped<I살뜰마트라스트마일배차인계Service, 살뜰마트라스트마일배차인계Service>();
         services.AddScoped<I알뜰살뜰마트배차대기Service, 알뜰살뜰마트배차대기Service>();
@@ -92,6 +93,8 @@ public static partial class ServiceCollectionExtensions
         services.AddSingleton<살뜰.도메인.운송.화물연속배차Policy>();
         services.AddScoped<I화물연속배차UseCase, 화물연속배차UseCase>();
         services.AddScoped<I운영체제업무인계Coordinator, 운영체제업무인계Coordinator>();
+        services.AddScoped<I운영체제업무인계OutboxPublisher, MediatR운영체제업무인계OutboxPublisher>();
+        services.AddScoped<I운영체제업무인계OutboxService, 운영체제업무인계OutboxService>();
         services.AddScoped<I화주운송의뢰화물운송인계Service, 화주운송의뢰화물운송인계Service>();
         services.AddScoped<I화물운송완료화주인수인계Service, 화물운송완료화주인수인계Service>();
         services.AddScoped<I비정상운송사건Service, 비정상운송사건Service>();
@@ -163,6 +166,8 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IPlatformProfitReturnService, PlatformProfitReturnService>();
         services.AddHostedService<배차실행인덱스예열HostedService>();
         services.AddHostedService<화물연속배차BackgroundService>();
+        services.AddHostedService<운영체제업무인계OutboxWorker>();
+        services.AddHostedService<출고피킹작업생성Worker>();
 
         return services;
     }

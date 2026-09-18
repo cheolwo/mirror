@@ -33,9 +33,9 @@ public sealed class 피킹포장작업투영Service : I피킹포장작업투영S
             .Concat(계획.포장작업목록.Select(x => x.TaskKey))
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
+            .ToList();
 
-        if (작업Keys.Length == 0)
+        if (작업Keys.Count == 0)
         {
             return;
         }
@@ -98,6 +98,7 @@ public sealed class 피킹포장작업투영Service : I피킹포장작업투영S
         entity.작업유형 = 피킹포장작업유형.피킹;
         entity.처리방식 = 작업.처리방식.ToString();
         entity.상태 = ResolveState(entity);
+        entity.출고예정Id = 작업.출고예정Id;
         entity.입고상품Id = 작업.InboundProductId;
         entity.창고Id = 작업.WarehouseId;
         entity.창고명 = 작업.WarehouseName;
@@ -131,6 +132,7 @@ public sealed class 피킹포장작업투영Service : I피킹포장작업투영S
         entity.작업유형 = 피킹포장작업유형.포장;
         entity.처리방식 = 피킹포장처리방식.피킹포장분리.ToString();
         entity.상태 = ResolveState(entity);
+        entity.출고예정Id = 작업.출고예정Id;
         entity.입고상품Id = 작업.InboundProductId;
         entity.창고Id = 작업.WarehouseId;
         entity.창고명 = 작업.WarehouseName;

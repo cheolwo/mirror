@@ -103,7 +103,7 @@ public sealed record OperatingSystemCurrentStructureDefinition(
 /// </summary>
 public static class OperatingSystemInteractionCatalog
 {
-    public const string CatalogRevision = "operating-system-interaction-catalog.v1";
+    public const string CatalogRevision = "operating-system-interaction-catalog.v2";
 
     private static readonly IReadOnlyList<OperatingSystemInteractionDefinition> Items =
     [
@@ -138,12 +138,12 @@ public static class OperatingSystemInteractionCatalog
             OperatingSystemInteractionContractCodes.WarehouseOutboundToCargoTransport,
             OperatingSystemInteractionContractRevisions.WarehouseOutboundToCargoTransport,
             OperatingSystemIds.WarehouseCommerceFulfillment,
-            null,
+            OperatingSystemLifecycleStageIds.WarehouseOutboundHandoff,
             OperatingSystemIds.DomesticCargoTransport,
             OperatingSystemLifecycleStageIds.CargoRequest,
             OperatingSystemInteractionModes.ChildWork,
             OperatingSystemInteractionCardinalities.OneToOne,
-            OperatingSystemInteractionLifecycleBindingStatuses.SourceLifecyclePending,
+            OperatingSystemInteractionLifecycleBindingStatuses.Complete,
             null,
             "완료된 창고 출고를 이미 존재하는 화물 운송의뢰에 결속하며 새 운송 의뢰나 배차를 확정하지 않습니다."),
         new(
