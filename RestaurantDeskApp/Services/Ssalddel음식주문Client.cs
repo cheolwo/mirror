@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Contracts.Food;
+using Ssalddel.Ui.Common.Areas.App.Services;
 
 namespace RestaurantDeskApp.Services;
 
@@ -180,11 +181,25 @@ public sealed class Ssalddel음식주문Client(
             return;
         }
 
-        var detail = await response.Content.ReadAsStringAsync(cancellationToken);
-        throw new HttpRequestException(
-            $"{operation} API 실패: HTTP {(int)response.StatusCode}"
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        var problem = SsalddelApiProblemParser.Parse(body);
+        var statusCode = (int)response.StatusCode;
+        var detail = problem.Message ?? (string.IsNullOrWhiteSpace(body) ? null : body);
+        throw new SsalddelApiException(
+            $"{operation} API 실패: HTTP {statusCode}"
             + (string.IsNullOrWhiteSpace(detail) ? string.Empty : $" · {detail}"),
-            null,
-            response.StatusCode);
+            statusCode,
+            operation,
+            body,
+            problem.TraceId,
+            problem.FieldErrors,
+            problem.FailureClassCode,
+            problem.ResponsibilityRoleCode,
+            problem.RequiresStateRefresh,
+            problem.RetryPolicyCode,
+            problem.AvailableRecoveryActions,
+            problem.CurrentRevision,
+            problem.RetryAfterUtc,
+            problem.ErrorCode);
     }
 }

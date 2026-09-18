@@ -3,8 +3,10 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Ssalddel.ApiMetadata;
 using Ssalddel.Application.Food;
+using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Controllers.Food;
 using Ssalddel.Filters;
@@ -203,6 +205,49 @@ public sealed class 음식주문ControllerTests
         Assert.False(command.AcceptCalled);
     }
 
+    [Fact]
+    public async Task 음식점진행판본충돌은_정본재조회행동과현재Revision을반환한다()
+    {
+        var command = new RecordingCommandUseCase
+        {
+            ProgressException = new DbUpdateConcurrencyException("주문 판본이 변경되었습니다.")
+        };
+        var restaurantRead = new StubRestaurantReadUseCase
+        {
+            Detail = new 음식주문응답
+            {
+                주문번호 = "FOOD-CONFLICT",
+                음식점Id = 101,
+                Revision = 7
+            }
+        };
+        var controller = new 음식주문Controller(command, null!, restaurantRead)
+        {
+            ControllerContext = Context(
+                new Claim(ClaimTypes.NameIdentifier, "restaurant-user"),
+                new Claim(음식점접근ClaimTypes.음식점Id, "101"))
+        };
+
+        var result = await controller.음식점진행변경(
+            "FOOD-CONFLICT",
+            new 음식점주문진행변경요청
+            {
+                클라이언트요청Id = Guid.NewGuid(),
+                예상Revision = 6,
+                작업 = 음식점주문진행작업코드.픽업준비
+            },
+            CancellationToken.None);
+
+        var objectResult = Assert.IsType<ObjectResult>(result.Result);
+        Assert.Equal(StatusCodes.Status409Conflict, objectResult.StatusCode);
+        var problem = Assert.IsType<ProblemDetails>(objectResult.Value);
+        Assert.Equal(업무실패분류Codes.판본충돌, problem.Extensions["failureClassCode"]);
+        Assert.Equal(true, problem.Extensions["requiresStateRefresh"]);
+        Assert.Equal(7L, problem.Extensions["currentRevision"]);
+        var actions = Assert.IsType<string[]>(problem.Extensions["availableRecoveryActions"]);
+        Assert.Contains(업무복구행동Ids.상태전체재조회, actions);
+    }
+
     private static ControllerContext Context(params Claim[] claims)
         => new()
         {
@@ -222,6 +267,7 @@ public sealed class 음식주문ControllerTests
         public string? CancellationOrderNo { get; private set; }
         public string? CancellationOrdererUserId { get; private set; }
         public 주문자음식주문취소요청? CancellationRequest { get; private set; }
+        public Exception? ProgressException { get; init; }
 
         public Task<음식주문응답> 등록Async(
             음식주문등록요청 request,
@@ -255,12 +301,19 @@ public sealed class 음식주문ControllerTests
             음식점주문진행변경요청 request,
             string 처리UserId,
             CancellationToken cancellationToken)
-            => Task.FromResult<음식주문응답?>(new 음식주문응답
+        {
+            if (ProgressException is not null)
+            {
+                throw ProgressException;
+            }
+
+            return Task.FromResult<음식주문응답?>(new 음식주문응답
             {
                 주문번호 = orderNo,
                 음식점Id = 101,
                 상태 = request.작업
             });
+        }
 
         public Task<음식주문응답?> 주문자수령확인Async(
             string orderNo,
@@ -299,8 +352,10 @@ public sealed class 음식주문ControllerTests
 
     private sealed class StubRestaurantReadUseCase : I음식점음식주문조회UseCase
     {
+        public 음식주문응답? Detail { get; init; }
+
         public 음식점주문수신함응답 목록(음식점주문수신함조회요청 request, long 음식점Id) => new();
 
-        public 음식주문응답? 상세(string 주문번호, long 음식점Id) => null;
+        public 음식주문응답? 상세(string 주문번호, long 음식점Id) => Detail;
     }
 }

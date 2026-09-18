@@ -1,6 +1,7 @@
 using Ssalddel.ApiMetadata;
 using Ssalddel.Application.Food;
 using Ssalddel.Contracts.Food;
+using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -260,11 +261,29 @@ public sealed class 음식주문Controller(
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { message = ex.Message });
+            return this.To업무실패Problem(
+                ex.Message,
+                StatusCodes.Status409Conflict,
+                "FoodOrderBusinessRuleBlocked",
+                업무실패분류Codes.업무규칙차단,
+                업무실패책임역할Codes.음식배달운영체제,
+                requiresStateRefresh: true,
+                업무재시도정책Codes.상태재조회후사용자재시도,
+                [업무복구행동Ids.상태전체재조회],
+                restaurantReadUseCase.상세(orderNo, restaurantId.Value)?.Revision);
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            return Conflict(new { message = ex.Message });
+            return this.To업무실패Problem(
+                ex.Message,
+                StatusCodes.Status409Conflict,
+                "FoodOrderRevisionConflict",
+                업무실패분류Codes.판본충돌,
+                업무실패책임역할Codes.음식배달운영체제,
+                requiresStateRefresh: true,
+                업무재시도정책Codes.상태재조회후사용자재시도,
+                [업무복구행동Ids.상태전체재조회],
+                restaurantReadUseCase.상세(orderNo, restaurantId.Value)?.Revision);
         }
         catch (ArgumentException ex)
         {

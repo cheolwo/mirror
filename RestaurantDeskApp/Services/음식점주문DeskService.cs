@@ -1,4 +1,6 @@
 using Ssalddel.Contracts.Food;
+using Ssalddel.Contracts.Common.Workflow;
+using Ssalddel.Ui.Common.Areas.App.Services;
 using Microsoft.Extensions.Options;
 using RestaurantDeskApp.Models.Restaurant;
 using RestaurantDeskApp.Options;
@@ -429,17 +431,29 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(주문번호);
 
-        var detail = await _foodOrderClient.음식점진행변경Async(
-            주문번호,
-            new 음식점주문진행변경요청
-            {
-                클라이언트요청Id = GetOperationRequestId(주문번호, 작업),
-                예상Revision = GetExpectedRevision(주문번호, 작업),
-                작업 = 작업,
-                조리예상분 = 조리예상분,
-                사유 = 사유
-            },
-            cancellationToken);
+        var request = new 음식점주문진행변경요청
+        {
+            클라이언트요청Id = GetOperationRequestId(주문번호, 작업),
+            예상Revision = GetExpectedRevision(주문번호, 작업),
+            작업 = 작업,
+            조리예상분 = 조리예상분,
+            사유 = 사유
+        };
+
+        음식주문응답? detail;
+        try
+        {
+            detail = await 업무멱등재시도실행기.한번Async(
+                token => _foodOrderClient.음식점진행변경Async(주문번호, request, token),
+                cancellationToken);
+        }
+        catch (SsalddelApiException ex) when (
+            ex.RequiresStateRefresh
+            && 업무복구행동목록.포함(ex.AvailableRecoveryActions, 업무복구행동Ids.상태전체재조회))
+        {
+            await TryRefreshCanonicalOrderAsync(주문번호, cancellationToken);
+            throw;
+        }
         if (detail is null)
         {
             return null;
@@ -449,6 +463,28 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService
         return UpsertServerOrder(
             detail,
             음식점주문복구출처.서버재조회);
+    }
+
+    private async Task TryRefreshCanonicalOrderAsync(
+        string orderNo,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var canonical = await _foodOrderClient.주문상세조회Async(orderNo, cancellationToken);
+            if (canonical is not null)
+            {
+                UpsertServerOrder(canonical, 음식점주문복구출처.서버재조회);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            // 원래 명령 실패를 보존한다. 다음 수신함 조회가 다시 정본 상태를 복원한다.
+        }
     }
 
     private long? GetExpectedRevision(string orderNo, string operation)

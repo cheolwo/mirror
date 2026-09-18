@@ -12,7 +12,15 @@ public sealed class SsalddelApiException : InvalidOperationException
         string operationName,
         string responseBody,
         string? traceId,
-        IReadOnlyDictionary<string, string[]>? fieldErrors = null)
+        IReadOnlyDictionary<string, string[]>? fieldErrors = null,
+        string? failureClassCode = null,
+        string? responsibilityRoleCode = null,
+        bool requiresStateRefresh = false,
+        string? retryPolicyCode = null,
+        IReadOnlyList<string>? availableRecoveryActions = null,
+        long? currentRevision = null,
+        DateTime? retryAfterUtc = null,
+        string? errorCode = null)
         : base(message)
     {
         StatusCode = statusCode;
@@ -20,6 +28,14 @@ public sealed class SsalddelApiException : InvalidOperationException
         ResponseBody = responseBody;
         TraceId = traceId;
         FieldErrors = fieldErrors ?? new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+        FailureClassCode = failureClassCode;
+        ResponsibilityRoleCode = responsibilityRoleCode;
+        RequiresStateRefresh = requiresStateRefresh;
+        RetryPolicyCode = retryPolicyCode;
+        AvailableRecoveryActions = availableRecoveryActions ?? [];
+        CurrentRevision = currentRevision;
+        RetryAfterUtc = retryAfterUtc;
+        ErrorCode = errorCode;
     }
 
     public int StatusCode { get; }
@@ -27,6 +43,111 @@ public sealed class SsalddelApiException : InvalidOperationException
     public string ResponseBody { get; }
     public string? TraceId { get; }
     public IReadOnlyDictionary<string, string[]> FieldErrors { get; }
+    public string? FailureClassCode { get; }
+    public string? ResponsibilityRoleCode { get; }
+    public bool RequiresStateRefresh { get; }
+    public string? RetryPolicyCode { get; }
+    public IReadOnlyList<string> AvailableRecoveryActions { get; }
+    public long? CurrentRevision { get; }
+    public DateTime? RetryAfterUtc { get; }
+    public string? ErrorCode { get; }
+}
+
+public sealed record SsalddelApiProblem(
+    string? Message,
+    string? TraceId,
+    string? ErrorCode,
+    IReadOnlyDictionary<string, string[]> FieldErrors,
+    string? FailureClassCode,
+    string? ResponsibilityRoleCode,
+    bool RequiresStateRefresh,
+    string? RetryPolicyCode,
+    IReadOnlyList<string> AvailableRecoveryActions,
+    long? CurrentRevision,
+    DateTime? RetryAfterUtc);
+
+public static class SsalddelApiProblemParser
+{
+    public static SsalddelApiProblem Parse(string body)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return Empty();
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(body);
+            var root = document.RootElement;
+            var errors = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+            if (root.TryGetProperty("errors", out var errorElement)
+                && errorElement.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var property in errorElement.EnumerateObject())
+                {
+                    errors[property.Name] = property.Value.ValueKind == JsonValueKind.Array
+                        ? property.Value.EnumerateArray()
+                            .Where(item => item.ValueKind == JsonValueKind.String)
+                            .Select(item => item.GetString() ?? string.Empty)
+                            .Where(item => !string.IsNullOrWhiteSpace(item))
+                            .ToArray()
+                        : [property.Value.ToString()];
+                }
+            }
+
+            var actions = root.TryGetProperty("availableRecoveryActions", out var actionElement)
+                          && actionElement.ValueKind == JsonValueKind.Array
+                ? actionElement.EnumerateArray()
+                    .Where(item => item.ValueKind == JsonValueKind.String)
+                    .Select(item => item.GetString() ?? string.Empty)
+                    .Where(item => !string.IsNullOrWhiteSpace(item))
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray()
+                : [];
+
+            return new SsalddelApiProblem(
+                ReadString(root, "detail") ?? ReadString(root, "message") ?? ReadString(root, "title"),
+                ReadString(root, "traceId"),
+                ReadString(root, "errorCode"),
+                errors,
+                ReadString(root, "failureClassCode"),
+                ReadString(root, "responsibilityRoleCode"),
+                ReadBoolean(root, "requiresStateRefresh"),
+                ReadString(root, "retryPolicyCode"),
+                actions,
+                ReadInt64(root, "currentRevision"),
+                ReadDateTime(root, "retryAfterUtc"));
+        }
+        catch (JsonException)
+        {
+            return Empty();
+        }
+    }
+
+    private static SsalddelApiProblem Empty()
+        => new(null, null, null, new Dictionary<string, string[]>(), null, null, false, null, [], null, null);
+
+    private static string? ReadString(JsonElement root, string propertyName)
+        => root.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString()
+            : null;
+
+    private static bool ReadBoolean(JsonElement root, string propertyName)
+        => root.TryGetProperty(propertyName, out var value)
+           && value.ValueKind is JsonValueKind.True or JsonValueKind.False
+           && value.GetBoolean();
+
+    private static long? ReadInt64(JsonElement root, string propertyName)
+        => root.TryGetProperty(propertyName, out var value) && value.TryGetInt64(out var parsed)
+            ? parsed
+            : null;
+
+    private static DateTime? ReadDateTime(JsonElement root, string propertyName)
+        => root.TryGetProperty(propertyName, out var value)
+           && value.ValueKind == JsonValueKind.String
+           && value.TryGetDateTime(out var parsed)
+            ? parsed
+            : null;
 }
 
 /// <summary>
@@ -318,7 +439,7 @@ public sealed class SsalddelJsonApiClient : ISsalddelJsonApiClient
         }
 
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        var problem = ParseProblem(body);
+        var problem = SsalddelApiProblemParser.Parse(body);
         var statusCode = (int)response.StatusCode;
         var detail = problem.Message ?? (string.IsNullOrWhiteSpace(body) ? null : body);
         throw new SsalddelApiException(
@@ -327,51 +448,14 @@ public sealed class SsalddelJsonApiClient : ISsalddelJsonApiClient
             operationName,
             body,
             problem.TraceId,
-            problem.FieldErrors);
+            problem.FieldErrors,
+            problem.FailureClassCode,
+            problem.ResponsibilityRoleCode,
+            problem.RequiresStateRefresh,
+            problem.RetryPolicyCode,
+            problem.AvailableRecoveryActions,
+            problem.CurrentRevision,
+            problem.RetryAfterUtc,
+            problem.ErrorCode);
     }
-
-    private static (string? Message, string? TraceId, IReadOnlyDictionary<string, string[]> FieldErrors) ParseProblem(
-        string body)
-    {
-        if (string.IsNullOrWhiteSpace(body))
-        {
-            return (null, null, new Dictionary<string, string[]>());
-        }
-
-        try
-        {
-            using var document = JsonDocument.Parse(body);
-            var root = document.RootElement;
-            var message = ReadString(root, "detail")
-                          ?? ReadString(root, "message")
-                          ?? ReadString(root, "title");
-            var traceId = ReadString(root, "traceId");
-            var errors = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
-            if (root.TryGetProperty("errors", out var errorElement)
-                && errorElement.ValueKind == JsonValueKind.Object)
-            {
-                foreach (var property in errorElement.EnumerateObject())
-                {
-                    errors[property.Name] = property.Value.ValueKind == JsonValueKind.Array
-                        ? property.Value.EnumerateArray()
-                            .Where(item => item.ValueKind == JsonValueKind.String)
-                            .Select(item => item.GetString() ?? string.Empty)
-                            .Where(item => !string.IsNullOrWhiteSpace(item))
-                            .ToArray()
-                        : [property.Value.ToString()];
-                }
-            }
-
-            return (message, traceId, errors);
-        }
-        catch (JsonException)
-        {
-            return (null, null, new Dictionary<string, string[]>());
-        }
-    }
-
-    private static string? ReadString(JsonElement root, string propertyName)
-        => root.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
-            ? value.GetString()
-            : null;
 }

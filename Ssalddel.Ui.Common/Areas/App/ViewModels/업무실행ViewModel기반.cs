@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Ssalddel.Ui.Common.Areas.App.Services;
+using Ssalddel.Contracts.Common.Workflow;
 
 namespace Ssalddel.Ui.Common.Areas.App.ViewModels;
 
@@ -12,7 +13,14 @@ public sealed record Api작업오류(
     string? TraceId = null,
     bool 재시도가능 = false,
     bool 충돌 = false,
-    IReadOnlyDictionary<string, IReadOnlyList<string>>? 필드오류 = null)
+    IReadOnlyDictionary<string, IReadOnlyList<string>>? 필드오류 = null,
+    string? 실패분류Code = null,
+    string? 책임역할Code = null,
+    bool 상태전체재조회필요 = false,
+    string? 재시도정책Code = null,
+    IReadOnlyList<string>? 복구가능행동 = null,
+    long? 현재Revision = null,
+    DateTime? 재시도가능시각Utc = null)
 {
     public static Api작업오류 변환(Exception exception)
     {
@@ -22,7 +30,9 @@ public sealed record Api작업오류(
         {
             var statusCode = apiException.StatusCode;
             return new Api작업오류(
-                statusCode == 409 ? "concurrency-conflict" : $"http-{statusCode}",
+                !string.IsNullOrWhiteSpace(apiException.ErrorCode)
+                    ? apiException.ErrorCode
+                    : statusCode == 409 ? "concurrency-conflict" : $"http-{statusCode}",
                 apiException.Message,
                 statusCode,
                 apiException.TraceId,
@@ -31,13 +41,37 @@ public sealed record Api작업오류(
                 apiException.FieldErrors.ToDictionary(
                     pair => pair.Key,
                     pair => (IReadOnlyList<string>)pair.Value,
-                    StringComparer.OrdinalIgnoreCase));
+                    StringComparer.OrdinalIgnoreCase),
+                apiException.FailureClassCode,
+                apiException.ResponsibilityRoleCode,
+                apiException.RequiresStateRefresh,
+                apiException.RetryPolicyCode,
+                apiException.AvailableRecoveryActions,
+                apiException.CurrentRevision,
+                apiException.RetryAfterUtc);
+        }
+
+        var transportFailure = exception as HttpRequestException
+                               ?? exception.InnerException as HttpRequestException;
+        var timeoutFailure = exception is TimeoutException
+                             || exception is TaskCanceledException
+                             || exception.InnerException is TimeoutException
+                             || exception.InnerException is TaskCanceledException;
+        if (transportFailure is not null || timeoutFailure)
+        {
+            return new Api작업오류(
+                timeoutFailure ? "timeout" : "transport-failure",
+                exception.Message,
+                transportFailure?.StatusCode is { } status ? (int)status : null,
+                재시도가능: true,
+                실패분류Code: 업무실패분류Codes.일시기술장애,
+                재시도정책Code: 업무재시도정책Codes.동일멱등요청1회,
+                복구가능행동: [업무복구행동Ids.동일요청멱등재시도]);
         }
 
         return new Api작업오류(
-            exception is TimeoutException ? "timeout" : "view-model-operation-failed",
-            exception.Message,
-            재시도가능: exception is TimeoutException or HttpRequestException);
+            "view-model-operation-failed",
+            exception.Message);
     }
 }
 

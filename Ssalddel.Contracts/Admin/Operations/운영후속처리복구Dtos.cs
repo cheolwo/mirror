@@ -29,6 +29,10 @@ public sealed record 운영후속처리복구항목Dto
     public DateTime? 다음처리예정시각Utc { get; init; }
     public bool 운영자확인필요 { get; init; }
     public bool 재시도예약가능 { get; init; }
+    public string? 실패분류Code { get; init; }
+    public string? 재시도정책Code { get; init; }
+    public bool 상태전체재조회필요 { get; init; }
+    public IReadOnlyList<string> 복구가능행동 { get; init; } = [];
     public required string 안전요약 { get; init; }
 }
 

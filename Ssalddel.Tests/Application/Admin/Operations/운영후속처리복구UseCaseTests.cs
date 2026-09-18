@@ -4,11 +4,13 @@ using Ssalddel.Application.Admin.Operations;
 using Ssalddel.Contracts.Admin.Operations;
 using Ssalddel.Contracts.Common.Community;
 using Ssalddel.Contracts.Common.Versioning;
+using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Services.Community;
 using Ssalddel.Services.Outbox;
 using 살뜰.Data;
 using 살뜰.Infrastructure.Security;
+using 살뜰.Services.Operations;
 using 살뜰.도메인.설정;
 using 살뜰.도메인.운영;
 using 살뜰.도메인.창고;
@@ -44,6 +46,9 @@ public sealed class 운영후속처리복구UseCaseTests
         Assert.Equal(OperatingSystemIds.FoodDelivery, item.현재책임운영체제Id);
         Assert.Equal(운영후속처리복구상태Codes.운영자확인필요, item.상태Code);
         Assert.True(item.재시도예약가능);
+        Assert.Equal(업무실패분류Codes.최종수동검토, item.실패분류Code);
+        Assert.Equal(업무재시도정책Codes.운영자안전재시도, item.재시도정책Code);
+        Assert.Contains(업무복구행동Ids.운영자안전재시도예약, item.복구가능행동);
         var serialized = System.Text.Json.JsonSerializer.Serialize(result);
         Assert.DoesNotContain("FOOD-PRIVATE-100", serialized, StringComparison.Ordinal);
         Assert.DoesNotContain("private-user-id", serialized, StringComparison.Ordinal);
@@ -52,7 +57,7 @@ public sealed class 운영후속처리복구UseCaseTests
     }
 
     [Fact]
-    public async Task 운영체제인계는_현재책임운영체제를보존하고_처리기없는항목을재시도불가로표시한다()
+    public async Task 운영체제인계는_현재책임운영체제를보존하고_자동처리대기로표시한다()
     {
         await using var db = CreateContext();
         var now = DateTime.UtcNow;
@@ -87,9 +92,42 @@ public sealed class 운영후속처리복구UseCaseTests
 
         var item = Assert.Single(result.항목);
         Assert.Equal(OperatingSystemIds.WarehouseCommerceFulfillment, item.현재책임운영체제Id);
-        Assert.True(item.운영자확인필요);
+        Assert.Equal(운영후속처리복구상태Codes.자동재시도대기, item.상태Code);
+        Assert.False(item.운영자확인필요);
         Assert.False(item.재시도예약가능);
+        Assert.Equal(OutboxProcessingPolicy.MaximumAttempts, item.최대자동시도수);
         Assert.DoesNotContain("private-work-id", System.Text.Json.JsonSerializer.Serialize(result));
+    }
+
+    [Fact]
+    public async Task 운영체제인계반복실패는_운영자가_같은시도이력으로재예약한다()
+    {
+        await using var db = CreateContext();
+        var now = DateTime.UtcNow;
+        db.운영체제업무인계Outbox.Add(new 운영체제업무인계Outbox
+        {
+            멱등Key = "handoff-outbox-failed",
+            인계StableId = "handoff:failed",
+            이벤트Type = "OperatingSystemHandoffAccepted",
+            PayloadJson = "{}",
+            처리상태Code = 운영체제업무인계Outbox상태Codes.실패,
+            처리시도수 = OutboxProcessingPolicy.MaximumAttempts,
+            CreatedAt = now.AddHours(-1),
+            UpdatedAt = now.AddMinutes(-1)
+        });
+        await db.SaveChangesAsync();
+        var item = await db.운영체제업무인계Outbox.SingleAsync();
+        var useCase = CreateUseCase(db);
+
+        var result = await useCase.재시도예약Async(
+            운영후속처리복구원천Codes.운영체제업무인계,
+            item.Id,
+            new 운영후속처리재시도요청Dto { 예상처리시도수 = item.처리시도수 });
+
+        Assert.NotNull(result);
+        Assert.Equal(운영후속처리복구상태Codes.자동재시도대기, result.상태Code);
+        Assert.Equal(OutboxProcessingPolicy.MaximumAttempts, result.처리시도수);
+        Assert.Equal(운영체제업무인계Outbox상태Codes.재시도대기, item.처리상태Code);
     }
 
     [Fact]
@@ -163,7 +201,12 @@ public sealed class 운영후속처리복구UseCaseTests
             db,
             sync,
             NullLogger<음식마트원장동기화OutboxService>.Instance);
-        return new 운영후속처리복구UseCase(db, outbox);
+        var handoffOutbox = new 운영체제업무인계OutboxService(
+            db,
+            new NoopHandoffPublisher(),
+            TimeProvider.System,
+            NullLogger<운영체제업무인계OutboxService>.Instance);
+        return new 운영후속처리복구UseCase(db, outbox, handoffOutbox);
     }
 
     private static SsalddelContext CreateContext()
@@ -195,5 +238,13 @@ public sealed class 운영후속처리복구UseCaseTests
     {
         public string? Protect(string? value) => value;
         public string? Unprotect(string? value) => value;
+    }
+
+    private sealed class NoopHandoffPublisher : I운영체제업무인계OutboxPublisher
+    {
+        public Task 발행Async(
+            운영체제업무인계Outbox전달됨Event notification,
+            CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
     }
 }

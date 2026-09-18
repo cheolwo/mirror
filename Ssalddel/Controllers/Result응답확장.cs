@@ -81,6 +81,49 @@ public static class Result응답확장
         return controller.ToProblemActionResult(message, StatusCodes.Status403Forbidden);
     }
 
+    public static ActionResult To업무실패Problem(
+        this ControllerBase controller,
+        string message,
+        int statusCode,
+        string failureCode,
+        string failureClassCode,
+        string responsibilityRoleCode,
+        bool requiresStateRefresh,
+        string retryPolicyCode,
+        IEnumerable<string>? availableRecoveryActions = null,
+        long? currentRevision = null,
+        DateTime? retryAfterUtc = null)
+    {
+        var failure = 실패분류(message, statusCode);
+        var problem = new ProblemDetails
+        {
+            Title = message,
+            Status = statusCode,
+            Type = failure.Type,
+            Detail = failure.Detail,
+            Instance = controller.HttpContext?.Request?.Path.Value
+        };
+        problem.Extensions["errors"] = new[] { message };
+        problem.Extensions["errorCode"] = failureCode;
+        problem.Extensions["failureClassCode"] = failureClassCode;
+        problem.Extensions["responsibilityRoleCode"] = responsibilityRoleCode;
+        problem.Extensions["requiresStateRefresh"] = requiresStateRefresh;
+        problem.Extensions["retryPolicyCode"] = retryPolicyCode;
+        problem.Extensions["availableRecoveryActions"] = availableRecoveryActions?.Distinct(StringComparer.Ordinal).ToArray() ?? [];
+        problem.Extensions["traceId"] = controller.HttpContext?.TraceIdentifier ?? string.Empty;
+        if (currentRevision.HasValue)
+        {
+            problem.Extensions["currentRevision"] = currentRevision.Value;
+        }
+
+        if (retryAfterUtc.HasValue)
+        {
+            problem.Extensions["retryAfterUtc"] = retryAfterUtc.Value;
+        }
+
+        return controller.StatusCode(statusCode, problem);
+    }
+
     private static IActionResult ToProblemActionResult(
         this ControllerBase controller,
         IEnumerable<string> errors,

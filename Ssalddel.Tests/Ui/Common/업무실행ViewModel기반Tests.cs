@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using Ssalddel.Ui.Common.Areas.App.Components;
 using Ssalddel.Ui.Common.Areas.App.Services;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
+using Ssalddel.Contracts.Common.Workflow;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -56,7 +57,13 @@ public sealed class 업무실행ViewModel기반Tests
             "원장 저장",
             "{}",
             "trace-1",
-            new Dictionary<string, string[]> { ["ExpectedRevision"] = ["최신 상태를 다시 조회하세요."] });
+            new Dictionary<string, string[]> { ["ExpectedRevision"] = ["최신 상태를 다시 조회하세요."] },
+            업무실패분류Codes.판본충돌,
+            업무실패책임역할Codes.음식배달운영체제,
+            requiresStateRefresh: true,
+            업무재시도정책Codes.상태재조회후사용자재시도,
+            [업무복구행동Ids.상태전체재조회],
+            currentRevision: 12);
 
         var error = Api작업오류.변환(exception);
 
@@ -64,6 +71,82 @@ public sealed class 업무실행ViewModel기반Tests
         Assert.Equal(409, error.Http상태코드);
         Assert.Equal("trace-1", error.TraceId);
         Assert.Equal("최신 상태를 다시 조회하세요.", error.필드오류!["ExpectedRevision"].Single());
+        Assert.Equal(업무실패분류Codes.판본충돌, error.실패분류Code);
+        Assert.True(error.상태전체재조회필요);
+        Assert.Equal(12, error.현재Revision);
+        Assert.Contains(업무복구행동Ids.상태전체재조회, error.복구가능행동!);
+    }
+
+    [Fact]
+    public void 통신장애는_동일멱등요청1회복구행동으로정규화한다()
+    {
+        var error = Api작업오류.변환(new HttpRequestException("연결 실패"));
+
+        Assert.True(error.재시도가능);
+        Assert.Equal(업무실패분류Codes.일시기술장애, error.실패분류Code);
+        Assert.Equal(업무재시도정책Codes.동일멱등요청1회, error.재시도정책Code);
+        Assert.Contains(업무복구행동Ids.동일요청멱등재시도, error.복구가능행동!);
+    }
+
+    [Fact]
+    public void ApiProblemParser는_서버복구계약을손실없이읽는다()
+    {
+        const string body = """
+            {
+              "detail": "판본 충돌",
+              "traceId": "trace-2",
+              "failureClassCode": "RevisionConflict",
+              "responsibilityRoleCode": "FoodDeliveryOS",
+              "requiresStateRefresh": true,
+              "retryPolicyCode": "AfterStateRefresh",
+              "availableRecoveryActions": ["RefreshState"],
+              "currentRevision": 9
+            }
+            """;
+
+        var problem = SsalddelApiProblemParser.Parse(body);
+
+        Assert.Equal("판본 충돌", problem.Message);
+        Assert.True(problem.RequiresStateRefresh);
+        Assert.Equal(9, problem.CurrentRevision);
+        Assert.Contains(업무복구행동Ids.상태전체재조회, problem.AvailableRecoveryActions);
+    }
+
+    [Fact]
+    public async Task 멱등재시도실행기는_통신장애에만_같은요청으로한번재시도한다()
+    {
+        var request = new object();
+        var observedRequests = new List<object>();
+
+        var result = await 업무멱등재시도실행기.한번Async<string>(_ =>
+        {
+            observedRequests.Add(request);
+            if (observedRequests.Count == 1)
+            {
+                throw new HttpRequestException("일시 연결 실패");
+            }
+
+            return Task.FromResult("완료");
+        });
+
+        Assert.Equal("완료", result);
+        Assert.Equal(2, observedRequests.Count);
+        Assert.Same(observedRequests[0], observedRequests[1]);
+    }
+
+    [Fact]
+    public async Task 멱등재시도실행기는_업무규칙실패를자동재시도하지않는다()
+    {
+        var attempts = 0;
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            업무멱등재시도실행기.한번Async<string>(_ =>
+            {
+                attempts++;
+                throw new InvalidOperationException("현재 상태에서는 실행할 수 없습니다.");
+            }));
+
+        Assert.Equal(1, attempts);
     }
 
     [Fact]
