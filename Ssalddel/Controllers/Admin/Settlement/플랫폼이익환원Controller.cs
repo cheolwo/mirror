@@ -3,6 +3,7 @@ using Ssalddel.Application.Settlement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Ssalddel.ApiMetadata;
+using Ssalddel.Contracts.Common.Finance;
 
 namespace Ssalddel.Controllers.Admin.Settlement;
 
@@ -22,6 +23,7 @@ public sealed class 플랫폼이익환원Controller : ControllerBase
 
     [HttpPost("revenues")]
     [SsalddelApiContractName("RecordRevenue")]
+    [Ssalddel재무영향Profile(재무영향ProfileIds.수기수익Simulation, ConditionCode = "ManualScenarioInput")]
     public async Task<IActionResult> 수익기록(
         [FromBody] PlatformRevenueEntryRequest request,
         CancellationToken cancellationToken)

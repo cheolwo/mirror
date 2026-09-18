@@ -11,6 +11,7 @@ using Ssalddel.Controllers.Common;
 using Ssalddel.Controllers.Orderer;
 using Ssalddel.Controllers.Platform;
 using Ssalddel.Contracts.Common.Metadata;
+using Ssalddel.Contracts.Common.Finance;
 using Ssalddel.Contracts.Common.Versioning;
 using Ssalddel.Filters;
 using Ssalddel.Services.Community;
@@ -517,6 +518,14 @@ public sealed class SsalddelApiVersionAttributeTests
             endpoint.ControllerName == nameof(Ssalddel.Controllers.Food.음식주문Controller) &&
             endpoint.FeatureKey == VersionFeatureFlagKeys.FoodDeliveryWorkflow &&
             !endpoint.IsEnabled);
+        Assert.Contains(response.ApiEndpoints, endpoint =>
+            endpoint.RoutePattern == "api/v1/payments/confirm" &&
+            endpoint.FinancialImpacts.Any(impact =>
+                impact.ProfileStableId == 재무영향ProfileIds.결제승인 &&
+                impact.MappingRevision == "management-financial-impact.v1" &&
+                !impact.OperationalPostingAllowed &&
+                impact.Accounts.Any(account =>
+                    account.ManagementAccountStableId == 관리계정StableIds.Pg미수)));
     }
 
     [Fact]

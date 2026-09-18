@@ -6,6 +6,7 @@ using Ssalddel.ApiMetadata;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Driver.Settlement;
 using Ssalddel.Contracts.Admin.Settlement;
+using Ssalddel.Contracts.Common.Finance;
 using Ssalddel.Contracts.Shipper.Request;
 using 살뜰.Data;
 using 살뜰.Services.Options;
@@ -35,6 +36,7 @@ public interface I기사지급승인UseCase
     "기사 운송대금 지급 승인",
     Summary = "완료 운송의 기사 지급 조건을 재검증하고 멱등 승인과 지급 Outbox를 기록합니다. 실제 송금 완료는 별도 Provider 결과로만 기록합니다.")]
 [SsalddelUseCaseActor(SsalddelActor.PlatformOperator)]
+[Ssalddel재무영향Profile(재무영향ProfileIds.기사지급승인)]
 public sealed class 기사지급승인UseCase : I기사지급승인UseCase
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);

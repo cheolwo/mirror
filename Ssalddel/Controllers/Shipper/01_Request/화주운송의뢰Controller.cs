@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Ssalddel.ApiMetadata;
+using Ssalddel.Contracts.Common.Finance;
 using 살뜰.Services.Versioning;
 using System.Security.Claims;
 using Ssalddel.Contracts.Common.Privacy;
@@ -147,6 +148,7 @@ namespace Ssalddel.Controllers.Shipper.Request01
 
         [Authorize(Policy = "서버관리자전용")]
         [HttpPost("{requestId}/admin/cancel-refund")]
+        [Ssalddel재무영향Profile(재무영향ProfileIds.고객환불상태기록, ConditionCode = "RefundRequired")]
         public async Task<IActionResult> 관리자취소환불(
             string requestId,
             [FromBody] 관리자운송의뢰취소환불요청 request,

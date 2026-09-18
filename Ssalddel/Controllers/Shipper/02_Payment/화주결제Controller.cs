@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Ssalddel.Controllers;
 using Ssalddel.Application.Shipper.Payment;
 using Ssalddel.Contracts.Common.Payments;
+using Ssalddel.Contracts.Common.Finance;
 using Ssalddel.Contracts.Shipper.Payment;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -46,6 +47,7 @@ namespace Ssalddel.Controllers.Shipper.Payment02
 
         [HttpPost("prepare")]
         [Authorize(Roles = 역할명.화주 + "," + 역할명.판매자 + "," + 역할명.서버관리자)]
+        [Ssalddel재무영향Profile(재무영향ProfileIds.결제준비)]
         public async Task<IActionResult> 공통결제준비([FromBody] 공통결제준비요청 request)
         {
             var result = await _sender.Send(new 공통결제준비Command(
@@ -59,6 +61,7 @@ namespace Ssalddel.Controllers.Shipper.Payment02
 
         [HttpPost("confirm")]
         [Authorize(Roles = 역할명.화주 + "," + 역할명.판매자 + "," + 역할명.서버관리자)]
+        [Ssalddel재무영향Profile(재무영향ProfileIds.결제승인)]
         public async Task<IActionResult> 공통결제승인([FromBody] 공통결제승인요청 request)
         {
             var result = await _sender.Send(new 공통결제승인Command(request.결제제공자, request.PaymentKey, request.OrderId, request.Amount));
@@ -67,6 +70,7 @@ namespace Ssalddel.Controllers.Shipper.Payment02
 
         [HttpPost("fake/confirm")]
         [Authorize(Roles = 역할명.화주 + "," + 역할명.판매자 + "," + 역할명.서버관리자)]
+        [Ssalddel재무영향Profile(재무영향ProfileIds.결제승인, ConditionCode = "SimulationOnly")]
         public async Task<IActionResult> 페이크결제승인([FromBody] 페이크결제승인요청 request)
         {
             var result = await _sender.Send(new 페이크결제승인Command(
@@ -80,6 +84,7 @@ namespace Ssalddel.Controllers.Shipper.Payment02
 
         [HttpPost("toss/prepare")]
         [Authorize(Roles = 역할명.화주 + "," + 역할명.판매자 + "," + 역할명.서버관리자)]
+        [Ssalddel재무영향Profile(재무영향ProfileIds.결제준비)]
         public async Task<IActionResult> 토스결제준비([FromBody] 토스결제준비요청 request)
         {
             var result = await _sender.Send(new 토스결제준비Command(request.의뢰Id, request.Amount));
@@ -88,6 +93,7 @@ namespace Ssalddel.Controllers.Shipper.Payment02
 
         [HttpPost("toss/confirm")]
         [Authorize(Roles = 역할명.화주 + "," + 역할명.판매자 + "," + 역할명.서버관리자)]
+        [Ssalddel재무영향Profile(재무영향ProfileIds.결제승인)]
         public async Task<IActionResult> 토스결제승인([FromBody] 토스결제승인요청 request)
         {
             var result = await _sender.Send(new 토스결제승인Command(request.PaymentKey, request.OrderId, request.Amount));

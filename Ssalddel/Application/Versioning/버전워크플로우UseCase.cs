@@ -1,5 +1,6 @@
 using System.Reflection;
 using Ssalddel.ApiMetadata;
+using Ssalddel.Contracts.Common.Finance;
 using Ssalddel.Contracts.Common.Metadata;
 using Ssalddel.Contracts.Common.Versioning;
 using Microsoft.AspNetCore.Authorization;
@@ -268,6 +269,7 @@ public sealed class 버전워크플로우UseCase : I버전워크플로우UseCase
             var actionOperations = ResolveActionMetadata(
                 action.GetCustomAttributes<SsalddelApiOperationAttribute>(inherit: true),
                 controllerOperations);
+            var financialImpacts = ResolveFinancialImpacts(controllerType, action);
             var actionWorkflows = action.GetCustomAttributes<SsalddelApiWorkflowAttribute>(inherit: true).DefaultIfEmpty().Where(x => x is not null).Cast<SsalddelApiWorkflowAttribute>().ToArray();
             if (actionWorkflows.Length == 0)
             {
@@ -328,7 +330,8 @@ public sealed class 버전워크플로우UseCase : I버전워크플로우UseCase
                         GrowthTrackNames = actionGrowthTracks.Select(attribute => attribute.TrackLabel).Distinct(StringComparer.Ordinal).ToArray(),
                         AuthorizationPolicy = string.Join(", ", authorizeAttributes.Select(x => x.Policy).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal)),
                         AuthorizationRoles = string.Join(", ", authorizeAttributes.Select(x => x.Roles).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal)),
-                        AllowsAnonymous = allowsAnonymous
+                        AllowsAnonymous = allowsAnonymous,
+                        FinancialImpacts = financialImpacts
                     };
                 }
             }
@@ -342,6 +345,58 @@ public sealed class 버전워크플로우UseCase : I버전워크플로우UseCase
     {
         var declared = actionAttributes.ToArray();
         return declared.Length == 0 ? controllerAttributes.ToArray() : declared;
+    }
+
+    private static IReadOnlyList<WorkflowFinancialImpactDto> ResolveFinancialImpacts(
+        Type controllerType,
+        MethodInfo action)
+    {
+        var actionAttributes = action
+            .GetCustomAttributes<Ssalddel재무영향ProfileAttribute>(inherit: true)
+            .ToArray();
+        var attributes = actionAttributes.Length > 0
+            ? actionAttributes
+            : controllerType
+                .GetCustomAttributes<Ssalddel재무영향ProfileAttribute>(inherit: true)
+                .ToArray();
+
+        return attributes
+            .Select(attribute =>
+            {
+                var profile = 재무영향ProfileCatalog.Find(attribute.ProfileStableId)
+                    ?? throw new InvalidOperationException(
+                        $"등록되지 않은 재무 영향 Profile을 API가 참조합니다: {attribute.ProfileStableId}");
+                return new WorkflowFinancialImpactDto
+                {
+                    ProfileStableId = profile.StableId,
+                    FinancialMeaningCode = profile.FinancialMeaningCode,
+                    ImpactKindCode = profile.ImpactKind.ToString(),
+                    RecognitionTimingCode = profile.RecognitionTiming.ToString(),
+                    AmountBasisCode = profile.AmountBasisCode,
+                    MappingRevision = profile.MappingRevision,
+                    ApprovalStatusCode = profile.ApprovalStatusCode,
+                    IsSimulationOnly = profile.IsSimulationOnly,
+                    OperationalPostingAllowed = profile.OperationalPostingAllowed,
+                    ConditionCode = attribute.ConditionCode,
+                    Accounts = profile.Accounts.Select(account =>
+                    {
+                        var definition = 관리계정Catalog.Find(account.ManagementAccountStableId)
+                            ?? throw new InvalidOperationException(
+                                $"등록되지 않은 관리계정을 Profile이 참조합니다: {account.ManagementAccountStableId}");
+                        return new WorkflowFinancialImpactAccountDto
+                        {
+                            ManagementAccountStableId = definition.StableId,
+                            ManagementAccountName = definition.DisplayName,
+                            AccountRoleCode = account.Role.ToString(),
+                            AccountCategoryCode = definition.CategoryCode,
+                            IsActualAccountingAccountApproved = definition.IsActualAccountingAccountApproved
+                        };
+                    }).ToArray()
+                };
+            })
+            .OrderBy(item => item.ProfileStableId, StringComparer.Ordinal)
+            .ThenBy(item => item.ConditionCode, StringComparer.Ordinal)
+            .ToArray();
     }
 
     private static IEnumerable<MethodInfo> GetActionMethods(Type controllerType)

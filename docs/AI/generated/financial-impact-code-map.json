@@ -1,0 +1,305 @@
+{
+  "schemaVersion": "ssalddel-financial-impact-code-map.v1",
+  "boundary": "\uC124\uBA85\u00B7\uAC80\uC99D\uC6A9 \uAD00\uB9AC \uBA54\uD0C0\uB370\uC774\uD130\uC774\uBA70 \uC2E4\uC81C \uC804\uD45C\u00B7\uC9C0\uAE09\u00B7\uC138\uBB34 \uC2E0\uACE0 \uAD8C\uD55C\uC774 \uC544\uB2D9\uB2C8\uB2E4.",
+  "accounts": [
+    {
+      "stableId": "management.cash.available",
+      "displayName": "\uAC00\uC6A9\uD604\uAE08",
+      "categoryCode": "AssetCandidate",
+      "normalBalanceSideCode": "Debit",
+      "meaning": "\uC815\uCC45\u00B7\uACE0\uC815\uBE44\u00B7\uC9C0\uAE09\uC5D0 \uC0AC\uC6A9\uD560 \uC218 \uC788\uB294 \uB0B4\uBD80 \uAD00\uB9AC \uD604\uAE08 \uD6C4\uBCF4",
+      "isActualAccountingAccountApproved": false
+    },
+    {
+      "stableId": "management.clearing.customer-payment",
+      "displayName": "\uACE0\uAC1D \uACB0\uC81C \uC815\uC0B0\uB300\uAE30",
+      "categoryCode": "Clearing",
+      "normalBalanceSideCode": "Credit",
+      "meaning": "\uC774\uD589\u00B7\uACC4\uC57D \uADFC\uAC70\uAC00 \uC0DD\uAE30\uAE30 \uC804 \uACE0\uAC1D \uACB0\uC81C\uC561\uC744 \uC218\uC775\uACFC \uD1B5\uACFC\uC790\uAE08\uC73C\uB85C \uBD84\uB9AC\uD558\uC9C0 \uC54A\uB294 \uC911\uB9BD \uC815\uC0B0\uB300\uAE30 \uACC4\uC815",
+      "isActualAccountingAccountApproved": false
+    },
+    {
+      "stableId": "management.expense.pg-fee",
+      "displayName": "PG \uC218\uC218\uB8CC \uBE44\uC6A9 \uD6C4\uBCF4",
+      "categoryCode": "ExpenseCandidate",
+      "normalBalanceSideCode": "Debit",
+      "meaning": "PG \uC815\uC0B0 \uADFC\uAC70\uAC00 \uC788\uB294 \uACB0\uC81C \uCC98\uB9AC \uBE44\uC6A9 \uD6C4\uBCF4",
+      "isActualAccountingAccountApproved": false
+    },
+    {
+      "stableId": "management.liability.customer-refund",
+      "displayName": "\uACE0\uAC1D \uD658\uBD88 \uC758\uBB34",
+      "categoryCode": "LiabilityCandidate",
+      "normalBalanceSideCode": "Credit",
+      "meaning": "\uD655\uC815\uB41C \uACE0\uAC1D \uD658\uBD88 \uC758\uBB34 \uD6C4\uBCF4",
+      "isActualAccountingAccountApproved": false
+    },
+    {
+      "stableId": "management.payable.branch",
+      "displayName": "\uC9C0\uC0AC \uC6B4\uC601\uBCF4\uC0C1 \uBBF8\uC9C0\uAE09",
+      "categoryCode": "LiabilityCandidate",
+      "normalBalanceSideCode": "Credit",
+      "meaning": "\uC9C0\uC0AC \uC6B4\uC601 \uBCF4\uC0C1 \uC758\uBB34 \uD6C4\uBCF4",
+      "isActualAccountingAccountApproved": false
+    },
+    {
+      "stableId": "management.payable.courier.cancellation",
+      "displayName": "\uAE30\uC0AC \uCDE8\uC18C \uC218\uD589\uB300\uAE08 \uBBF8\uC9C0\uAE09",
+      "categoryCode": "LiabilityCandidate",
+      "normalBalanceSideCode": "Credit",
+      "meaning": "\uBE44\uADC0\uCC45 \uCDE8\uC18C \uC218\uD589\uC5D0 \uB300\uD55C \uAE30\uC0AC \uC9C0\uAE09 \uC758\uBB34 \uD6C4\uBCF4",
+      "isActualAccountingAccountApproved": false
+    },
+    {
+      "stableId": "management.payable.courier.normal",
+      "displayName": "\uAE30\uC0AC \uC815\uC0C1 \uC218\uD589\uB300\uAE08 \uBBF8\uC9C0\uAE09",
+      "categoryCode": "LiabilityCandidate",
+      "normalBalanceSideCode": "Credit",
+      "meaning": "\uC815\uC0C1 \uC644\uB8CC \uC218\uD589\uC5D0 \uB300\uD55C \uAE30\uC0AC \uC9C0\uAE09 \uC758\uBB34 \uD6C4\uBCF4",
+      "isActualAccountingAccountApproved": false
+    },
+    {
+      "stableId": "management.payable.merchant",
+      "displayName": "\uC74C\uC2DD\uC810 \uBBF8\uC9C0\uAE09",
+      "categoryCode": "LiabilityCandidate",
+      "normalBalanceSideCode": "Credit",
+      "meaning": "\uC74C\uC2DD\uC810\uC5D0 \uC9C0\uAE09\uD560 \uC0C1\uD488\uB300\uAE08 \uC758\uBB34 \uD6C4\uBCF4",
+      "isActualAccountingAccountApproved": false
+    },
+    {
+      "stableId": "management.receivable.pg",
+      "displayName": "PG \uBBF8\uC218",
+      "categoryCode": "AssetCandidate",
+      "normalBalanceSideCode": "Debit",
+      "meaning": "PG \uC2B9\uC778 \uD6C4 \uC2E4\uC81C \uC785\uAE08 \uC804\uAE4C\uC9C0\uC758 \uBC1B\uC744 \uAE08\uC561 \uD6C4\uBCF4",
+      "isActualAccountingAccountApproved": false
+    },
+    {
+      "stableId": "management.revenue.delivery-fee",
+      "displayName": "\uBC30\uB2EC\uB8CC \uC218\uC775 \uD6C4\uBCF4",
+      "categoryCode": "RevenueCandidate",
+      "normalBalanceSideCode": "Credit",
+      "meaning": "\uACE0\uAC1D \uBC30\uB2EC\uB8CC \uC911 \uD50C\uB7AB\uD3FC \uBAAB\uC73C\uB85C \uD310\uC815\uB420 \uC218 \uC788\uB294 \uAE08\uC561 \uD6C4\uBCF4",
+      "isActualAccountingAccountApproved": false
+    },
+    {
+      "stableId": "management.revenue.platform-commission",
+      "displayName": "\uD50C\uB7AB\uD3FC \uC218\uC218\uB8CC \uC218\uC775 \uD6C4\uBCF4",
+      "categoryCode": "RevenueCandidate",
+      "normalBalanceSideCode": "Credit",
+      "meaning": "\uC218\uD589\uC758\uBB34\uC640 \uBCF8\uC778\u00B7\uB300\uB9AC\uC778 \uD310\uB2E8 \uC804\uC758 \uC218\uC218\uB8CC \uC218\uC775 \uD6C4\uBCF4",
+      "isActualAccountingAccountApproved": false
+    },
+    {
+      "stableId": "management.suspense.unmatched",
+      "displayName": "\uBBF8\uB300\uC0AC \uAC00\uACC4\uC815",
+      "categoryCode": "Suspense",
+      "normalBalanceSideCode": "Debit",
+      "meaning": "\uC6D0\uC778\u00B7\uC0C1\uB300\uBC29\u00B7\uAE08\uC561\uC744 \uD655\uC815\uD558\uC9C0 \uBABB\uD55C \uB300\uC0AC \uC608\uC678 \uD6C4\uBCF4",
+      "isActualAccountingAccountApproved": false
+    }
+  ],
+  "profiles": [
+    {
+      "stableId": "financial.courier-payout-authorized.v1",
+      "financialMeaningCode": "CourierPayoutAuthorized",
+      "impactKindCode": "AuthorizationOnly",
+      "recognitionTimingCode": "BusinessOccurrence",
+      "amountBasisCode": "ConfirmedExpectedPayoutAmount",
+      "mappingRevision": "management-financial-impact.v1",
+      "approvalStatusCode": "ManagementCandidate",
+      "isSimulationOnly": false,
+      "operationalPostingAllowed": false,
+      "accounts": [
+        {
+          "managementAccountStableId": "management.payable.courier.normal",
+          "roleCode": "RelatedAccount"
+        }
+      ]
+    },
+    {
+      "stableId": "financial.courier-payout-settled.v1",
+      "financialMeaningCode": "CourierPayoutSettled",
+      "impactKindCode": "SettlementCandidate",
+      "recognitionTimingCode": "CashMovement",
+      "amountBasisCode": "PaidPayoutAmount",
+      "mappingRevision": "management-financial-impact.v1",
+      "approvalStatusCode": "ManagementCandidate",
+      "isSimulationOnly": false,
+      "operationalPostingAllowed": false,
+      "accounts": [
+        {
+          "managementAccountStableId": "management.payable.courier.normal",
+          "roleCode": "DebitCandidate"
+        },
+        {
+          "managementAccountStableId": "management.cash.available",
+          "roleCode": "CreditCandidate"
+        }
+      ]
+    },
+    {
+      "stableId": "financial.customer-refund-recorded.v1",
+      "financialMeaningCode": "CustomerRefundRecorded",
+      "impactKindCode": "ReversalCandidate",
+      "recognitionTimingCode": "BusinessOccurrence",
+      "amountBasisCode": "ConfirmedRefundAmount",
+      "mappingRevision": "management-financial-impact.v1",
+      "approvalStatusCode": "ManagementCandidate",
+      "isSimulationOnly": true,
+      "operationalPostingAllowed": false,
+      "accounts": [
+        {
+          "managementAccountStableId": "management.clearing.customer-payment",
+          "roleCode": "RelatedAccount"
+        },
+        {
+          "managementAccountStableId": "management.liability.customer-refund",
+          "roleCode": "RelatedAccount"
+        }
+      ]
+    },
+    {
+      "stableId": "financial.manual-revenue-scenario.v1",
+      "financialMeaningCode": "ManualRevenueScenario",
+      "impactKindCode": "RecognitionCandidate",
+      "recognitionTimingCode": "ReportingAdjustment",
+      "amountBasisCode": "ManualScenarioAmount",
+      "mappingRevision": "management-financial-impact.v1",
+      "approvalStatusCode": "ManagementCandidate",
+      "isSimulationOnly": true,
+      "operationalPostingAllowed": false,
+      "accounts": [
+        {
+          "managementAccountStableId": "management.revenue.platform-commission",
+          "roleCode": "RelatedAccount"
+        }
+      ]
+    },
+    {
+      "stableId": "financial.payment-approved.v1",
+      "financialMeaningCode": "CustomerPaymentApproved",
+      "impactKindCode": "RecognitionCandidate",
+      "recognitionTimingCode": "BusinessOccurrence",
+      "amountBasisCode": "ApprovedPaymentAmount",
+      "mappingRevision": "management-financial-impact.v1",
+      "approvalStatusCode": "ApprovedForSimulation",
+      "isSimulationOnly": false,
+      "operationalPostingAllowed": false,
+      "accounts": [
+        {
+          "managementAccountStableId": "management.receivable.pg",
+          "roleCode": "DebitCandidate"
+        },
+        {
+          "managementAccountStableId": "management.clearing.customer-payment",
+          "roleCode": "CreditCandidate"
+        }
+      ]
+    },
+    {
+      "stableId": "financial.payment-prepared.v1",
+      "financialMeaningCode": "PaymentPrepared",
+      "impactKindCode": "AuthorizationOnly",
+      "recognitionTimingCode": "BusinessOccurrence",
+      "amountBasisCode": "RequestedPaymentAmount",
+      "mappingRevision": "management-financial-impact.v1",
+      "approvalStatusCode": "ManagementCandidate",
+      "isSimulationOnly": false,
+      "operationalPostingAllowed": false,
+      "accounts": []
+    }
+  ],
+  "bindings": [
+    {
+      "componentType": "Ssalddel.Application.Admin.Settlement.\uAE30\uC0AC\uC9C0\uAE09\uC2B9\uC778UseCase",
+      "memberName": "",
+      "profileStableId": "financial.courier-payout-authorized.v1",
+      "conditionCode": ""
+    },
+    {
+      "componentType": "Ssalddel.Application.Shipper.Payment.\uACF5\uD1B5\uACB0\uC81C\uC2B9\uC778Command",
+      "memberName": "",
+      "profileStableId": "financial.payment-approved.v1",
+      "conditionCode": ""
+    },
+    {
+      "componentType": "Ssalddel.Application.Shipper.Payment.\uACF5\uD1B5\uACB0\uC81C\uC900\uBE44Command",
+      "memberName": "",
+      "profileStableId": "financial.payment-prepared.v1",
+      "conditionCode": ""
+    },
+    {
+      "componentType": "Ssalddel.Application.Shipper.Payment.\uD1A0\uC2A4\uACB0\uC81C\uC2B9\uC778Command",
+      "memberName": "",
+      "profileStableId": "financial.payment-approved.v1",
+      "conditionCode": ""
+    },
+    {
+      "componentType": "Ssalddel.Application.Shipper.Payment.\uD1A0\uC2A4\uACB0\uC81C\uC900\uBE44Command",
+      "memberName": "",
+      "profileStableId": "financial.payment-prepared.v1",
+      "conditionCode": ""
+    },
+    {
+      "componentType": "Ssalddel.Application.Shipper.Payment.\uD398\uC774\uD06C\uACB0\uC81C\uC2B9\uC778Command",
+      "memberName": "",
+      "profileStableId": "financial.payment-approved.v1",
+      "conditionCode": "SimulationOnly"
+    },
+    {
+      "componentType": "Ssalddel.Application.Shipper.Request.\uAD00\uB9AC\uC790\uC6B4\uC1A1\uC758\uB8B0\uCDE8\uC18C\uD658\uBD88Command",
+      "memberName": "",
+      "profileStableId": "financial.customer-refund-recorded.v1",
+      "conditionCode": "RefundRequired"
+    },
+    {
+      "componentType": "Ssalddel.Controllers.Admin.Settlement.\uD50C\uB7AB\uD3FC\uC774\uC775\uD658\uC6D0Controller",
+      "memberName": "\uC218\uC775\uAE30\uB85D",
+      "profileStableId": "financial.manual-revenue-scenario.v1",
+      "conditionCode": "ManualScenarioInput"
+    },
+    {
+      "componentType": "Ssalddel.Controllers.Admin.Settlement05.\uAE30\uC0AC\uC9C0\uAE09\uC2B9\uC778Controller",
+      "memberName": "\uC2B9\uC778",
+      "profileStableId": "financial.courier-payout-authorized.v1",
+      "conditionCode": ""
+    },
+    {
+      "componentType": "Ssalddel.Controllers.Shipper.Payment02.\uD654\uC8FC\uACB0\uC81CController",
+      "memberName": "\uACF5\uD1B5\uACB0\uC81C\uC2B9\uC778",
+      "profileStableId": "financial.payment-approved.v1",
+      "conditionCode": ""
+    },
+    {
+      "componentType": "Ssalddel.Controllers.Shipper.Payment02.\uD654\uC8FC\uACB0\uC81CController",
+      "memberName": "\uACF5\uD1B5\uACB0\uC81C\uC900\uBE44",
+      "profileStableId": "financial.payment-prepared.v1",
+      "conditionCode": ""
+    },
+    {
+      "componentType": "Ssalddel.Controllers.Shipper.Payment02.\uD654\uC8FC\uACB0\uC81CController",
+      "memberName": "\uD1A0\uC2A4\uACB0\uC81C\uC2B9\uC778",
+      "profileStableId": "financial.payment-approved.v1",
+      "conditionCode": ""
+    },
+    {
+      "componentType": "Ssalddel.Controllers.Shipper.Payment02.\uD654\uC8FC\uACB0\uC81CController",
+      "memberName": "\uD1A0\uC2A4\uACB0\uC81C\uC900\uBE44",
+      "profileStableId": "financial.payment-prepared.v1",
+      "conditionCode": ""
+    },
+    {
+      "componentType": "Ssalddel.Controllers.Shipper.Payment02.\uD654\uC8FC\uACB0\uC81CController",
+      "memberName": "\uD398\uC774\uD06C\uACB0\uC81C\uC2B9\uC778",
+      "profileStableId": "financial.payment-approved.v1",
+      "conditionCode": "SimulationOnly"
+    },
+    {
+      "componentType": "Ssalddel.Controllers.Shipper.Request01.\uD654\uC8FC\uC6B4\uC1A1\uC758\uB8B0Controller",
+      "memberName": "\uAD00\uB9AC\uC790\uCDE8\uC18C\uD658\uBD88",
+      "profileStableId": "financial.customer-refund-recorded.v1",
+      "conditionCode": "RefundRequired"
+    }
+  ]
+}

@@ -190,6 +190,10 @@ namespace 살뜰.Data
         public DbSet<PlatformRevenueEntryRecord> PlatformRevenueEntries { get; set; } = null!;
         public DbSet<PlatformProfitReturnPolicyRecord> PlatformProfitReturnPolicies { get; set; } = null!;
         public DbSet<PlatformProfitReturnScheduleRecord> PlatformProfitReturnSchedules { get; set; } = null!;
+        public DbSet<재무사건> 재무사건 { get; set; } = null!;
+        public DbSet<관리계정전기> 관리계정전기 { get; set; } = null!;
+        public DbSet<재무사건증빙> 재무사건증빙 { get; set; } = null!;
+        public DbSet<재무대사예외> 재무대사예외 { get; set; } = null!;
         public DbSet<PlatformCommunityPost> PlatformCommunityPosts { get; set; } = null!;
         public DbSet<PlatformCommunityPostTranslation> PlatformCommunityPostTranslations { get; set; } = null!;
         public DbSet<PlatformCommunityBoardRequest> PlatformCommunityBoardRequests { get; set; } = null!;

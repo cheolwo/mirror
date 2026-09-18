@@ -1,6 +1,7 @@
 using FluentResults;
 using Ssalddel.ApiMetadata;
 using Ssalddel.Contracts.Common.PlatformProfit;
+using 살뜰.Services.Options;
 using 살뜰.Services.Settlement;
 
 namespace Ssalddel.Application.Settlement;
@@ -20,16 +21,26 @@ public interface I플랫폼수익환급UseCase
 public sealed class 플랫폼수익환급UseCase : I플랫폼수익환급UseCase
 {
     private readonly IPlatformProfitReturnService _profitReturnService;
+    private readonly ISsalddelExecutionModePolicy _executionMode;
 
-    public 플랫폼수익환급UseCase(IPlatformProfitReturnService profitReturnService)
+    public 플랫폼수익환급UseCase(
+        IPlatformProfitReturnService profitReturnService,
+        ISsalddelExecutionModePolicy executionMode)
     {
         _profitReturnService = profitReturnService;
+        _executionMode = executionMode;
     }
 
     public async Task<Result<PlatformRevenueEntryResponse>> 수익기록Async(
         PlatformRevenueEntryRequest request,
         CancellationToken cancellationToken)
     {
+        if (!_executionMode.IsSimulation)
+        {
+            return Result.Fail<PlatformRevenueEntryResponse>(
+                "수동 플랫폼 수익 입력은 Simulation 실행 모드에서만 허용됩니다.");
+        }
+
         return Result.Ok(await _profitReturnService.RecordRevenueAsync(request, cancellationToken));
     }
 

@@ -178,6 +178,46 @@ public sealed class WorkflowApiEndpointDto
     public string AuthorizationRoles { get; init; } = string.Empty;
 
     public bool AllowsAnonymous { get; init; }
+
+    public IReadOnlyList<WorkflowFinancialImpactDto> FinancialImpacts { get; init; } = [];
+}
+
+public sealed class WorkflowFinancialImpactDto
+{
+    public string ProfileStableId { get; init; } = string.Empty;
+
+    public string FinancialMeaningCode { get; init; } = string.Empty;
+
+    public string ImpactKindCode { get; init; } = string.Empty;
+
+    public string RecognitionTimingCode { get; init; } = string.Empty;
+
+    public string AmountBasisCode { get; init; } = string.Empty;
+
+    public string MappingRevision { get; init; } = string.Empty;
+
+    public string ApprovalStatusCode { get; init; } = string.Empty;
+
+    public bool IsSimulationOnly { get; init; }
+
+    public bool OperationalPostingAllowed { get; init; }
+
+    public string ConditionCode { get; init; } = string.Empty;
+
+    public IReadOnlyList<WorkflowFinancialImpactAccountDto> Accounts { get; init; } = [];
+}
+
+public sealed class WorkflowFinancialImpactAccountDto
+{
+    public string ManagementAccountStableId { get; init; } = string.Empty;
+
+    public string ManagementAccountName { get; init; } = string.Empty;
+
+    public string AccountRoleCode { get; init; } = string.Empty;
+
+    public string AccountCategoryCode { get; init; } = string.Empty;
+
+    public bool IsActualAccountingAccountApproved { get; init; }
 }
 
 public sealed class WorkflowRelationDto

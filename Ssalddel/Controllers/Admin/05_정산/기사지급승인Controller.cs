@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Ssalddel.ApiMetadata;
 using Ssalddel.Application.Admin.Settlement;
 using Ssalddel.Contracts.Admin.Settlement;
+using Ssalddel.Contracts.Common.Finance;
 
 namespace Ssalddel.Controllers.Admin.Settlement05;
 
@@ -26,6 +27,7 @@ public sealed class 기사지급승인Controller(I기사지급승인UseCase useC
 
     [HttpPost("approve")]
     [SsalddelApiOperation(SsalddelOperation.Execute)]
+    [Ssalddel재무영향Profile(재무영향ProfileIds.기사지급승인)]
     public async Task<IActionResult> 승인(
         [FromBody] 기사지급승인요청 request,
         CancellationToken cancellationToken)
