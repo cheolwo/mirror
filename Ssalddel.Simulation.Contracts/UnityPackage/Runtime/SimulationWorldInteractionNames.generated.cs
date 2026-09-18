@@ -158,6 +158,7 @@ namespace Ssalddel.Simulation.Contracts
             new Simulation세계상호작용이름Definition("WI-NATURE-19", "NATURE", "자연 탐사·생활 거점", 23, "한스 농장 부러진 손도끼 줍기", "ActorIntent", "HansBrokenAxeCarried", "Atomic", "Yang", "Fixed", false),
             new Simulation세계상호작용이름Definition("WI-NATURE-20", "NATURE", "자연 탐사·생활 거점", 24, "한스 농장 울타리 일괄 수리", "ActorIntent", "HansFarmFenceRepaired", "AtomicBundle", "Yin", "Fixed", false),
             new Simulation세계상호작용이름Definition("WI-NATURE-HANS-BOUNDARY-PATROL", "NATURE", "자연 탐사·생활 거점", 25, "한스와 농장 경계 순찰", "ActorIntent", "FarmBoundaryPatrolCompleted", "AtomicBundle", "Contextual", "ExecutionContext", false),
+            new Simulation세계상호작용이름Definition("WI-OPS-SEASONAL-CAMPAIGN-ADVANCE", "OPS", "운영 캠페인", 1, "절기 운영 캠페인 다음 구간 확정", "ActorIntent", "SeasonalCampaignPhaseAdvanced", "Atomic", "Yin", "Fixed", false),
             new Simulation세계상호작용이름Definition("WI-ORDER-01", "ORDER", "주민 주문·소비", 1, "주민 주문 확정", "ActorIntent", "OrderConfirmed", "Atomic", "Yin", "Fixed", false),
             new Simulation세계상호작용이름Definition("WI-ORDER-02", "ORDER", "주민 주문·소비", 2, "주문 상품 재고 예약", "AuthorityTransition", "OrderStockReserved", "ProceduralStepMigrationRequired", "NotApplicable", "NotApplicable", false),
             new Simulation세계상호작용이름Definition("WI-ORDER-03", "ORDER", "주민 주문·소비", 3, "주문 상품 피킹", "AuthorityTransition", "OrderStockPicked", "ActorResponsibilityMigrationRequired", "Yang", "Fixed", true),

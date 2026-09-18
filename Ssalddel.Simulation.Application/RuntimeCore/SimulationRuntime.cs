@@ -121,6 +121,35 @@ namespace Ssalddel.Simulation.Application
         ISimulationPlayerLearningFocusRuntime LearningFocus { get; }
         ISimulationPlayerIdeaMapRuntime IdeaMap { get; }
         ISimulationHexagramCampaignRuntime HexagramCampaigns { get; }
+        ISimulation절기운영CampaignRuntime SeasonalOperationsCampaigns { get; }
+    }
+
+    [Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceResponsibility(
+        Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceStage.E2,
+        "절기 운영 캠페인의 조회·시작·Preview·Confirm 공통 실행 경계를 제공한다.",
+        SubmoduleKey = Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceSubmoduleKeys.E2세계상호작용실행,
+        Boundary = "LocalProcess와 후속 RemoteHost는 같은 계약을 사용하며 Unity는 구간 전이를 판정하지 않는다.")]
+    public interface ISimulation절기운영CampaignRuntime
+    {
+        ValueTask<Simulation절기운영CampaignStateSnapshot>
+            GetSeasonalOperationsCampaignAsync(
+                string sessionStableId,
+                CancellationToken cancellationToken = default);
+        ValueTask<Simulation절기운영CampaignStateSnapshot>
+            BeginSeasonalOperationsCampaignAsync(
+                string sessionStableId,
+                Simulation절기운영CampaignStartRequest request,
+                CancellationToken cancellationToken = default);
+        ValueTask<Simulation절기운영CampaignAdvancePreviewSnapshot>
+            PreviewSeasonalOperationsCampaignAdvanceAsync(
+                string sessionStableId,
+                Simulation절기운영CampaignAdvancePreviewRequest request,
+                CancellationToken cancellationToken = default);
+        ValueTask<Simulation절기운영CampaignStateSnapshot>
+            ConfirmSeasonalOperationsCampaignAdvanceAsync(
+                string sessionStableId,
+                Simulation절기운영CampaignAdvanceConfirmRequest request,
+                CancellationToken cancellationToken = default);
     }
 
     [Ssalddel.Contracts.Common.Metadata.SsalddelEvidenceResponsibility(

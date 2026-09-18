@@ -395,6 +395,9 @@ namespace Ssalddel.Simulation.Domain
                 Atmosphere = CreateWorldAtmosphereStateSnapshot(),
                 HexagramCampaign = CloneHexagramCampaignState(
                     hexagramCampaignState),
+                SeasonalOperationsCampaign =
+                    CloneSeasonalOperationsCampaignState(
+                        seasonalOperationsCampaignState),
             };
 
         internal static 경영SimulationSessionSnapshot Clone(경영SimulationSessionSnapshot source)
@@ -516,6 +519,9 @@ namespace Ssalddel.Simulation.Domain
                     ?? new SimulationAtmosphereStateSnapshot()),
                 HexagramCampaign = CloneHexagramCampaignState(
                     source.HexagramCampaign),
+                SeasonalOperationsCampaign =
+                    CloneSeasonalOperationsCampaignState(
+                        source.SeasonalOperationsCampaign),
             };
 
         internal static void ValidateCreate(경영SimulationSession생성Request request)

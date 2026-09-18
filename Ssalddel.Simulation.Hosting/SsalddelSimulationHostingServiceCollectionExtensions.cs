@@ -173,6 +173,7 @@ public static class SsalddelSimulationHostingServiceCollectionExtensions
             InMemorySimulationHexagramCampaignAttemptStore>();
         services.AddSingleton<경영SimulationSession생명주기Service>();
         services.AddSingleton<SimulationHexagramCampaignService>();
+        services.AddSingleton<Simulation절기운영CampaignService>();
         services.AddSingleton<경영SimulationWorldGameplayService>();
         services.AddSingleton<ISimulationRealityContextClock,
             SystemSimulationRealityContextClock>();

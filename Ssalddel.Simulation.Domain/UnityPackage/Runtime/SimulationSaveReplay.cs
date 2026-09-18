@@ -145,6 +145,9 @@ namespace Ssalddel.Simulation.Domain
                         CreateLearningFocusStateSnapshotOrNull()),
                     HexagramCampaign = CloneHexagramCampaignState(
                         hexagramCampaignState),
+                    SeasonalOperationsCampaign =
+                        CloneSeasonalOperationsCampaignState(
+                            seasonalOperationsCampaignState),
                 };
                 if (worldAssetPlacement != null)
                 {
@@ -188,6 +191,12 @@ namespace Ssalddel.Simulation.Domain
                     package.HexagramCampaignBaseSchemaVersion =
                         package.SchemaVersion;
                     package.SchemaVersion = SimulationSaveSchemaVersions.V31;
+                }
+                if (package.SeasonalOperationsCampaign != null)
+                {
+                    package.SeasonalOperationsCampaignBaseSchemaVersion =
+                        package.SchemaVersion;
+                    package.SchemaVersion = SimulationSaveSchemaVersions.V32;
                 }
                 package.ReplayHash = SimulationReplayHasher.Calculate(package);
                 return SimulationSaveReplayCloner.ClonePackage(package);

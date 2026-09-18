@@ -184,10 +184,13 @@ public sealed class WorldInteractionDownwardModuleSkeletonTests
     [InlineData(typeof(InMemorySimulationHexagramCampaignAttemptStore), SsalddelEvidenceStage.E2, SsalddelEvidenceSubmoduleKeys.E2세션실행)]
     [InlineData(typeof(SimulationHexagramCampaignService), SsalddelEvidenceStage.E2, SsalddelEvidenceSubmoduleKeys.E2세계상호작용실행)]
     [InlineData(typeof(ISimulationHexagramCampaignRuntime), SsalddelEvidenceStage.E2, SsalddelEvidenceSubmoduleKeys.E2세계상호작용실행)]
+    [InlineData(typeof(Simulation절기운영CampaignService), SsalddelEvidenceStage.E2, SsalddelEvidenceSubmoduleKeys.E2세계상호작용실행)]
+    [InlineData(typeof(ISimulation절기운영CampaignRuntime), SsalddelEvidenceStage.E2, SsalddelEvidenceSubmoduleKeys.E2세계상호작용실행)]
     [InlineData(typeof(관찰세계진행Policy), SsalddelEvidenceStage.E1, SsalddelEvidenceSubmoduleKeys.E1세션권위계약)]
     [InlineData(typeof(ISimulationFoodOrderRuntime), SsalddelEvidenceStage.E2, SsalddelEvidenceSubmoduleKeys.E2세계상호작용실행)]
     [InlineData(typeof(ISimulationNpcPolicyRuntime), SsalddelEvidenceStage.E2, SsalddelEvidenceSubmoduleKeys.E2세계상호작용실행)]
     [InlineData(typeof(Ssalddel.Simulation.Hosting.Controllers.SimulationHexagramCampaignController), SsalddelEvidenceStage.E2, SsalddelEvidenceSubmoduleKeys.E2원격HostAdapter)]
+    [InlineData(typeof(Ssalddel.Simulation.Hosting.Controllers.Simulation절기운영CampaignController), SsalddelEvidenceStage.E2, SsalddelEvidenceSubmoduleKeys.E2원격HostAdapter)]
     [InlineData(typeof(Ssalddel.Unity.Warehouse.창고정책카드Presenter), SsalddelEvidenceStage.E2, SsalddelEvidenceSubmoduleKeys.E2Unity권위Client)]
     public void 관찰운영과이야기경계는_정확한E책임과_미검증범위를_명시한다(Type type,
         SsalddelEvidenceStage expectedStage, string expectedSubmodule)

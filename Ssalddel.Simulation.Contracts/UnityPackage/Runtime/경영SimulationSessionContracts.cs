@@ -199,6 +199,8 @@ namespace Ssalddel.Simulation.Contracts
             = new SimulationTownNpcLifeStateSnapshot();
         public SimulationHexagramCampaignStateSnapshot? HexagramCampaign
             { get; set; }
+        public Simulation절기운영CampaignStateSnapshot?
+            SeasonalOperationsCampaign { get; set; }
     }
 
     public sealed class SimulationWorldContextSnapshot

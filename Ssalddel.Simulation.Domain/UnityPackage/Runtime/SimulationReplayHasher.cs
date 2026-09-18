@@ -13,6 +13,31 @@ namespace Ssalddel.Simulation.Domain
         public static string Calculate(SimulationSessionSavePackage package)
         {
             if (string.Equals(package.SchemaVersion,
+                    SimulationSaveSchemaVersions.V32,
+                    StringComparison.Ordinal))
+            {
+                var basePackage = SimulationSaveReplayCloner.ClonePackage(package);
+                basePackage.SchemaVersion =
+                    package.SeasonalOperationsCampaignBaseSchemaVersion;
+                basePackage.SeasonalOperationsCampaignBaseSchemaVersion =
+                    string.Empty;
+                basePackage.SeasonalOperationsCampaign = null;
+                basePackage.Snapshot.SeasonalOperationsCampaign = null;
+                basePackage.ReplayHash = string.Empty;
+                var baseReplayHash = Calculate(basePackage);
+                var seasonalCanonical = string.Join("|",
+                    SimulationSaveSchemaVersions.V32,
+                    package.SeasonalOperationsCampaignBaseSchemaVersion,
+                    baseReplayHash,
+                    경영SimulationSessionAggregate
+                        .BuildSeasonalOperationsCampaignStatePayloadKey(
+                            package.SeasonalOperationsCampaign));
+                using var sha = SHA256.Create();
+                return BitConverter.ToString(sha.ComputeHash(
+                        Encoding.UTF8.GetBytes(seasonalCanonical)))
+                    .Replace("-", string.Empty).ToLowerInvariant();
+            }
+            if (string.Equals(package.SchemaVersion,
                     SimulationSaveSchemaVersions.V31,
                     StringComparison.Ordinal))
             {
@@ -546,6 +571,16 @@ namespace Ssalddel.Simulation.Domain
                         string.Join("~", value.EventCode, value.ReasonCode,
                             value.AttemptOrdinal, value.LineOrdinal,
                             value.WorldTick, value.WorldRevision))));
+                }
+                if (entry.SeasonalOperationsCampaignState != null)
+                {
+                    Add(canonical,
+                        entry.SeasonalOperationsCampaignCommandId);
+                    Add(canonical,
+                        entry.SeasonalOperationsCampaignCommandSignature);
+                    Add(canonical, 경영SimulationSessionAggregate
+                        .BuildSeasonalOperationsCampaignStatePayloadKey(
+                            entry.SeasonalOperationsCampaignState));
                 }
                 if (entry.DecisionConfirmRequest != null)
                 {

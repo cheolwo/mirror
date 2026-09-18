@@ -14,6 +14,32 @@ namespace Ssalddel.Simulation.Domain
         {
             if (package == null) throw new ArgumentNullException(nameof(package));
             if (string.Equals(package.SchemaVersion,
+                    SimulationSaveSchemaVersions.V32,
+                    StringComparison.Ordinal))
+            {
+                ValidatePackage(package);
+                var basePackage = SimulationSaveReplayCloner.ClonePackage(package);
+                basePackage.SchemaVersion =
+                    package.SeasonalOperationsCampaignBaseSchemaVersion;
+                basePackage.SeasonalOperationsCampaignBaseSchemaVersion =
+                    string.Empty;
+                basePackage.SeasonalOperationsCampaign = null;
+                basePackage.Snapshot.SeasonalOperationsCampaign = null;
+                basePackage.ReplayHash = SimulationReplayHasher.Calculate(basePackage);
+                var restored = Restore(basePackage);
+                if (!string.Equals(
+                        경영SimulationSessionAggregate
+                            .BuildSeasonalOperationsCampaignStatePayloadKey(
+                                restored.GetSeasonalOperationsCampaignState()),
+                        경영SimulationSessionAggregate
+                            .BuildSeasonalOperationsCampaignStatePayloadKey(
+                                package.SeasonalOperationsCampaign),
+                        StringComparison.Ordinal))
+                    throw new SimulationConflictException(
+                        "SeasonalOperationsCampaignReplayStateMismatch");
+                return restored;
+            }
+            if (string.Equals(package.SchemaVersion,
                     SimulationSaveSchemaVersions.V31,
                     StringComparison.Ordinal))
             {
@@ -467,6 +493,14 @@ namespace Ssalddel.Simulation.Domain
                     aggregate.ReplayHexagramCampaignTransition(
                         entry.HexagramCampaignState!);
                 }
+                else if (entry.CommandTypeCode == SimulationCommandTypeCodes
+                    .SeasonalOperationsCampaignStateTransition)
+                {
+                    aggregate.ReplaySeasonalOperationsCampaignTransition(
+                        entry.SeasonalOperationsCampaignCommandId,
+                        entry.SeasonalOperationsCampaignCommandSignature,
+                        entry.SeasonalOperationsCampaignState!);
+                }
                 else if (entry.CommandTypeCode == SimulationCommandTypeCodes.TickAdvance)
                 {
                     if (entry.TickRequest == null || entry.DecisionConfirmRequest != null
@@ -509,6 +543,21 @@ namespace Ssalddel.Simulation.Domain
                 SaveStableId = package.SaveStableId,
                 ExpectedRevision = aggregate.Revision,
             });
+            if (!string.Equals(package.SchemaVersion,
+                    SimulationSaveSchemaVersions.V32,
+                    StringComparison.Ordinal)
+                && string.Equals(replayed.SchemaVersion,
+                    SimulationSaveSchemaVersions.V32,
+                    StringComparison.Ordinal))
+            {
+                replayed.SchemaVersion =
+                    replayed.SeasonalOperationsCampaignBaseSchemaVersion;
+                replayed.SeasonalOperationsCampaignBaseSchemaVersion =
+                    string.Empty;
+                replayed.SeasonalOperationsCampaign = null;
+                replayed.Snapshot.SeasonalOperationsCampaign = null;
+                replayed.ReplayHash = SimulationReplayHasher.Calculate(replayed);
+            }
             if (!string.Equals(package.SchemaVersion,
                     SimulationSaveSchemaVersions.V31,
                     StringComparison.Ordinal)
@@ -590,6 +639,45 @@ namespace Ssalddel.Simulation.Domain
             if (package == null) throw new ArgumentNullException(nameof(package));
             if (package.TickRuleRevision != string.Empty && package.TickRuleRevision != SimulationTickRuleRevisions.SingleStep)
                 throw new SimulationContractException("SimulationTickRuleRevisionUnsupported");
+            if (string.Equals(package.SchemaVersion,
+                    SimulationSaveSchemaVersions.V32,
+                    StringComparison.Ordinal))
+            {
+                if (string.IsNullOrWhiteSpace(
+                        package.SeasonalOperationsCampaignBaseSchemaVersion)
+                    || string.Equals(
+                        package.SeasonalOperationsCampaignBaseSchemaVersion,
+                        SimulationSaveSchemaVersions.V32,
+                        StringComparison.Ordinal)
+                    || package.SeasonalOperationsCampaign == null
+                    || package.Snapshot.SeasonalOperationsCampaign == null
+                    || !string.Equals(
+                        경영SimulationSessionAggregate
+                            .BuildSeasonalOperationsCampaignStatePayloadKey(
+                                package.SeasonalOperationsCampaign),
+                        경영SimulationSessionAggregate
+                            .BuildSeasonalOperationsCampaignStatePayloadKey(
+                                package.Snapshot.SeasonalOperationsCampaign),
+                        StringComparison.Ordinal))
+                    throw new SimulationContractException(
+                        "SeasonalOperationsCampaignSaveStateInvalid");
+                if (!string.Equals(package.ReplayHash,
+                        SimulationReplayHasher.Calculate(package),
+                        StringComparison.Ordinal))
+                    throw new SimulationConflictException(
+                        "SimulationReplayHashMismatch");
+                var basePackage = SimulationSaveReplayCloner.ClonePackage(package);
+                basePackage.SchemaVersion =
+                    package.SeasonalOperationsCampaignBaseSchemaVersion;
+                basePackage.SeasonalOperationsCampaignBaseSchemaVersion =
+                    string.Empty;
+                basePackage.SeasonalOperationsCampaign = null;
+                basePackage.Snapshot.SeasonalOperationsCampaign = null;
+                basePackage.ReplayHash = SimulationReplayHasher.Calculate(
+                    basePackage);
+                ValidatePackage(basePackage);
+                return;
+            }
             if (string.Equals(package.SchemaVersion,
                     SimulationSaveSchemaVersions.V30,
                     StringComparison.Ordinal))
@@ -805,6 +893,8 @@ namespace Ssalddel.Simulation.Domain
                 && !string.Equals(package.SchemaVersion, SimulationSaveSchemaVersions.V30,
                     StringComparison.Ordinal)
                 && !string.Equals(package.SchemaVersion, SimulationSaveSchemaVersions.V31,
+                    StringComparison.Ordinal)
+                && !string.Equals(package.SchemaVersion, SimulationSaveSchemaVersions.V32,
                     StringComparison.Ordinal))
                 throw new SimulationContractException("SimulationSaveSchemaUnsupported");
             if (string.Equals(package.SchemaVersion, SimulationSaveSchemaVersions.V3,
@@ -1431,6 +1521,17 @@ namespace Ssalddel.Simulation.Domain
                         throw new SimulationConflictException(
                             "SimulationCommandLogPayloadInvalid");
                 }
+                else if (entry.CommandTypeCode == SimulationCommandTypeCodes
+                    .SeasonalOperationsCampaignStateTransition)
+                {
+                    if (entry.SeasonalOperationsCampaignState == null
+                        || string.IsNullOrWhiteSpace(
+                            entry.SeasonalOperationsCampaignCommandId)
+                        || string.IsNullOrWhiteSpace(
+                            entry.SeasonalOperationsCampaignCommandSignature))
+                        throw new SimulationConflictException(
+                            "SimulationCommandLogPayloadInvalid");
+                }
                 else if (entry.CommandTypeCode == SimulationCommandTypeCodes.TickAdvance)
                 {
                     if (entry.TickRequest == null || entry.DecisionConfirmRequest != null
@@ -1555,6 +1656,7 @@ namespace Ssalddel.Simulation.Domain
             if (entry.ActorItemAcquireConfirmRequest != null) payloadCount++;
             if (entry.ActorEquipmentChangeConfirmRequest != null) payloadCount++;
             if (entry.HexagramCampaignState != null) payloadCount++;
+            if (entry.SeasonalOperationsCampaignState != null) payloadCount++;
             if (payloadCount != 1)
                 throw new SimulationConflictException("SimulationCommandLogPayloadInvalid");
         }

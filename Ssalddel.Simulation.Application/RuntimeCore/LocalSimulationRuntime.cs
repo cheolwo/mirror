@@ -23,7 +23,8 @@ namespace Ssalddel.Simulation.Application
         ISimulationBattleRuntime, ISimulationActorEquipmentRuntime,
         ISimulationPlayerKnowledgeRuntime, ISimulation방문자체류Runtime,
         ISimulationPlayerLearningFocusRuntime, ISimulationPlayerIdeaMapRuntime,
-        ISimulationHexagramCampaignRuntime, ISimulationNpcPolicyRuntime, ISimulationFoodOrderRuntime,
+        ISimulationHexagramCampaignRuntime, ISimulation절기운영CampaignRuntime,
+        ISimulationNpcPolicyRuntime, ISimulationFoodOrderRuntime,
         IDisposable
     {
         private readonly SemaphoreSlim commandGate = new SemaphoreSlim(1, 1);
@@ -41,6 +42,8 @@ namespace Ssalddel.Simulation.Application
         private readonly SimulationPlayerLearningFocusService learningFocus;
         private readonly SimulationPlayerIdeaMapService ideaMap;
         private readonly SimulationHexagramCampaignService hexagramCampaigns;
+        private readonly Simulation절기운영CampaignService
+            seasonalOperationsCampaigns;
         private readonly ISimulationPlayableLoopEngineTraceSink engineTraceSink;
 
         public LocalSimulationRuntime(
@@ -81,6 +84,8 @@ namespace Ssalddel.Simulation.Application
                 sessions, saveStore, battleReconciler ?? battles, attempts);
             hexagramCampaigns = new SimulationHexagramCampaignService(
                 sessions, lifecycle, attempts);
+            seasonalOperationsCampaigns =
+                new Simulation절기운영CampaignService(sessions);
             var worldInteractionPipeline = new 세계상호작용실행Pipeline(
                 engineTraceSink);
             nature = new SimulationNatureSurvivalService(sessionStore,
@@ -119,6 +124,37 @@ namespace Ssalddel.Simulation.Application
         public ISimulationPlayerLearningFocusRuntime LearningFocus => this;
         public ISimulationPlayerIdeaMapRuntime IdeaMap => this;
         public ISimulationHexagramCampaignRuntime HexagramCampaigns => this;
+        public ISimulation절기운영CampaignRuntime SeasonalOperationsCampaigns
+            => this;
+
+        public ValueTask<Simulation절기운영CampaignStateSnapshot>
+            GetSeasonalOperationsCampaignAsync(string sessionStableId,
+                CancellationToken cancellationToken = default)
+            => ExecuteAsync(() => seasonalOperationsCampaigns.Get(
+                sessionStableId), cancellationToken);
+
+        public ValueTask<Simulation절기운영CampaignStateSnapshot>
+            BeginSeasonalOperationsCampaignAsync(string sessionStableId,
+                Simulation절기운영CampaignStartRequest request,
+                CancellationToken cancellationToken = default)
+            => ExecuteAsync(() => seasonalOperationsCampaigns.Begin(
+                sessionStableId, request), cancellationToken);
+
+        public ValueTask<Simulation절기운영CampaignAdvancePreviewSnapshot>
+            PreviewSeasonalOperationsCampaignAdvanceAsync(
+                string sessionStableId,
+                Simulation절기운영CampaignAdvancePreviewRequest request,
+                CancellationToken cancellationToken = default)
+            => ExecuteAsync(() => seasonalOperationsCampaigns.PreviewAdvance(
+                sessionStableId, request), cancellationToken);
+
+        public ValueTask<Simulation절기운영CampaignStateSnapshot>
+            ConfirmSeasonalOperationsCampaignAdvanceAsync(
+                string sessionStableId,
+                Simulation절기운영CampaignAdvanceConfirmRequest request,
+                CancellationToken cancellationToken = default)
+            => ExecuteAsync(() => seasonalOperationsCampaigns.ConfirmAdvance(
+                sessionStableId, request), cancellationToken);
 
         public ValueTask<Simulation플레이어이데아맵ProjectionSnapshot>
             GetPlayerIdeaMapAsync(string sessionStableId,

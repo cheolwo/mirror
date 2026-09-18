@@ -80,6 +80,100 @@ public sealed class SimulationSessionSavePersistenceTests
     }
 
     [Fact]
+    public void 절기운영Campaign은_JSON저장소와새Service를거쳐_멱등상태를복원한다()
+    {
+        var factory = CreateFactory();
+        EnsureCreated(factory);
+        var sourceSessions = new InMemory경영SimulationSessionStore();
+        var sourceService = new 경영SimulationSessionService(
+            sourceSessions, new SimulationSessionSaveStore(factory));
+        sourceService.Create(CreateRequest());
+        var source = Assert.IsType<경영SimulationSessionAggregate>(
+            sourceSessions.Find(Session));
+        var started = source.BeginSeasonalOperationsCampaign(new()
+        {
+            CommandId = "campaign:persistence:start",
+            ExpectedRevision = source.Revision,
+            AreaStableId = "region:kr:hjd:1126057500",
+            Definition = new Simulation절기운영CampaignDefinitionSnapshot
+            {
+                CampaignStableId = "campaign:seasonal:persistence",
+                DefinitionRevision = "campaign.definition.r1",
+                Phases =
+                [
+                    new Simulation절기운영CampaignPhaseDefinition
+                    {
+                        PhaseCode = "LunchPeak",
+                    },
+                    new Simulation절기운영CampaignPhaseDefinition
+                    {
+                        PhaseCode = "StableOperations",
+                    },
+                ],
+            },
+            SourceRevisions =
+            [
+                new Simulation절기운영CampaignSourceRevision
+                {
+                    SourceCode = "OperationsScene",
+                    Revision = "scene.r4",
+                },
+            ],
+        });
+        var saved = sourceService.Save(Session,
+            new SimulationSessionSaveRequest
+            {
+                SaveStableId = "save:session-persistence:seasonal-campaign",
+                ExpectedRevision = started.CampaignRevision,
+            });
+
+        var restoredSessions = new InMemory경영SimulationSessionStore();
+        var restoredService = new 경영SimulationSessionService(
+            restoredSessions, new SimulationSessionSaveStore(factory));
+        var restored = restoredService.Restore(new SimulationSessionRestoreRequest
+        {
+            SaveStableId = saved.SaveStableId,
+        });
+        var restoredAggregate = Assert.IsType<경영SimulationSessionAggregate>(
+            restoredSessions.Find(Session));
+        var repeated = restoredAggregate.BeginSeasonalOperationsCampaign(new()
+        {
+            CommandId = "campaign:persistence:start",
+            ExpectedRevision = 0,
+            AreaStableId = "region:kr:hjd:1126057500",
+            Definition = new Simulation절기운영CampaignDefinitionSnapshot
+            {
+                CampaignStableId = "campaign:seasonal:persistence",
+                DefinitionRevision = "campaign.definition.r1",
+                Phases =
+                [
+                    new Simulation절기운영CampaignPhaseDefinition
+                    {
+                        PhaseCode = "LunchPeak",
+                    },
+                    new Simulation절기운영CampaignPhaseDefinition
+                    {
+                        PhaseCode = "StableOperations",
+                    },
+                ],
+            },
+            SourceRevisions =
+            [
+                new Simulation절기운영CampaignSourceRevision
+                {
+                    SourceCode = "OperationsScene",
+                    Revision = "scene.r4",
+                },
+            ],
+        });
+
+        Assert.Equal(SimulationSaveSchemaVersions.V32, saved.SchemaVersion);
+        Assert.Equal(saved.ReplayHash, restored.ReplayHash);
+        Assert.Equal("LunchPeak", repeated.CurrentPhaseCode);
+        Assert.Equal(started.CampaignRevision, repeated.CampaignRevision);
+    }
+
+    [Fact]
     public void 같은저장식별자는_같은Hash면멱등이고_다르면충돌한다()
     {
         var factory = CreateFactory();

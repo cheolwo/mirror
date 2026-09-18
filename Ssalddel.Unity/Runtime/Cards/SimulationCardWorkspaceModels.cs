@@ -102,7 +102,15 @@ namespace Ssalddel.Unity.Cards
         public CardWorkspaceRelation[] Relations { get; set; }
             = Array.Empty<CardWorkspaceRelation>();
         public string[] LoadedFamilyCodes { get; set; } = Array.Empty<string>();
+        public CardWorkspaceFamilyRevision[] SourceRevisions { get; set; }
+            = Array.Empty<CardWorkspaceFamilyRevision>();
         public bool PresentationOnly { get; set; }
+    }
+
+    public sealed class CardWorkspaceFamilyRevision
+    {
+        public string FamilyCode { get; set; } = string.Empty;
+        public long SourceRevision { get; set; }
     }
 
     public interface ICardFamilySource
@@ -172,6 +180,13 @@ namespace Ssalddel.Unity.Cards
                 Items = items,
                 Relations = families.SelectMany(value => value.Relations).ToArray(),
                 LoadedFamilyCodes = families.Select(value => value.FamilyCode).ToArray(),
+                SourceRevisions = families
+                    .OrderBy(value => value.FamilyCode, StringComparer.Ordinal)
+                    .Select(value => new CardWorkspaceFamilyRevision
+                    {
+                        FamilyCode = value.FamilyCode,
+                        SourceRevision = value.SourceRevision,
+                    }).ToArray(),
                 PresentationOnly = true,
             };
         }

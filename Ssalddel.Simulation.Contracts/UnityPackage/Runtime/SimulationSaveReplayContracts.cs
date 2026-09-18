@@ -41,6 +41,7 @@ namespace Ssalddel.Simulation.Contracts
         public const string V29 = "simulation-save.v29";
         public const string V30 = "simulation-save.v30";
         public const string V31 = "simulation-save.v31";
+        public const string V32 = "simulation-save.v32";
     }
 
     public static class SimulationReplayHashAlgorithmCodes
@@ -85,6 +86,8 @@ namespace Ssalddel.Simulation.Contracts
         public const string ActorEquipmentChangeConfirm = "ActorEquipmentChangeConfirm";
         public const string HexagramCampaignStateTransition =
             "HexagramCampaignStateTransition";
+        public const string SeasonalOperationsCampaignStateTransition =
+            "SeasonalOperationsCampaignStateTransition";
     }
 
     [SsalddelCodeMetadata(
@@ -176,6 +179,12 @@ namespace Ssalddel.Simulation.Contracts
             ActorEquipmentChangeConfirmRequest { get; set; }
         public SimulationHexagramCampaignStateSnapshot? HexagramCampaignState
             { get; set; }
+        public string SeasonalOperationsCampaignCommandId { get; set; }
+            = string.Empty;
+        public string SeasonalOperationsCampaignCommandSignature { get; set; }
+            = string.Empty;
+        public Simulation절기운영CampaignStateSnapshot?
+            SeasonalOperationsCampaignState { get; set; }
         public SimulationWorldInteractionInvocationRecord? WorldInteractionInvocation
             { get; set; }
     }
@@ -210,6 +219,8 @@ namespace Ssalddel.Simulation.Contracts
             = string.Empty;
         public string HexagramCampaignBaseSchemaVersion { get; set; }
             = string.Empty;
+        public string SeasonalOperationsCampaignBaseSchemaVersion { get; set; }
+            = string.Empty;
         public 경영SimulationSession생성Request SessionCreateRequest { get; set; }
             = new 경영SimulationSession생성Request();
         public 경영SimulationSessionSnapshot Snapshot { get; set; }
@@ -240,6 +251,8 @@ namespace Ssalddel.Simulation.Contracts
         public Simulation학습중점StateSnapshot? LearningFocus { get; set; }
         public SimulationHexagramCampaignStateSnapshot? HexagramCampaign
             { get; set; }
+        public Simulation절기운영CampaignStateSnapshot?
+            SeasonalOperationsCampaign { get; set; }
     }
 
     public sealed class SimulationSessionRestoreResult

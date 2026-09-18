@@ -35,6 +35,8 @@ namespace Ssalddel.Simulation.Domain
                     source.LearningFocusBaseSchemaVersion,
                 HexagramCampaignBaseSchemaVersion =
                     source.HexagramCampaignBaseSchemaVersion,
+                SeasonalOperationsCampaignBaseSchemaVersion =
+                    source.SeasonalOperationsCampaignBaseSchemaVersion,
                 SessionCreateRequest = CloneCreateRequest(source.SessionCreateRequest),
                 Snapshot = 경영SimulationSessionAggregate.Clone(source.Snapshot),
                 WorldInventory = 경영SimulationSessionAggregate.CloneWorldInventory(
@@ -87,6 +89,9 @@ namespace Ssalddel.Simulation.Domain
                     .CloneLearningFocusStateOrNull(source.LearningFocus),
                 HexagramCampaign = 경영SimulationSessionAggregate
                     .CloneHexagramCampaignState(source.HexagramCampaign),
+                SeasonalOperationsCampaign = 경영SimulationSessionAggregate
+                    .CloneSeasonalOperationsCampaignState(
+                        source.SeasonalOperationsCampaign),
             };
 
         public static Simulation행위기록LedgerSnapshot?
@@ -336,6 +341,14 @@ namespace Ssalddel.Simulation.Domain
                             source.ActorEquipmentChangeConfirmRequest),
                 HexagramCampaignState = 경영SimulationSessionAggregate
                     .CloneHexagramCampaignState(source.HexagramCampaignState),
+                SeasonalOperationsCampaignCommandId =
+                    source.SeasonalOperationsCampaignCommandId,
+                SeasonalOperationsCampaignCommandSignature =
+                    source.SeasonalOperationsCampaignCommandSignature,
+                SeasonalOperationsCampaignState =
+                    경영SimulationSessionAggregate
+                        .CloneSeasonalOperationsCampaignState(
+                            source.SeasonalOperationsCampaignState),
                 WorldInteractionInvocation = source.WorldInteractionInvocation == null
                     ? null
                     : 경영SimulationSessionAggregate.CloneWorldInteractionInvocation(

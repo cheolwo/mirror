@@ -3,6 +3,7 @@
   "rootNamespace": "Ssalddel.Unity.OperationalTransport",
   "references": [
     "Ssalddel.Unity.Data",
+    "Ssalddel.Simulation.Contracts",
     "Ssalddel.WorkflowRules.Contracts"
   ],
   "includePlatforms": [],

@@ -28,6 +28,8 @@ public sealed class SimulationCardWorkspaceTests
             result.Items[0].MetaLayerCode);
         Assert.Contains(result.Items, value => value.HierarchyTierCode == "Meta");
         Assert.Contains(result.Items, value => value.HierarchyTierCode == "Action");
+        Assert.Equal([CardFamilyCodes.Tarot, CardFamilyCodes.TeamRole],
+            result.SourceRevisions.Select(value => value.FamilyCode));
     }
 
     [Fact]
@@ -70,6 +72,7 @@ public sealed class SimulationCardWorkspaceTests
                 },
             },
             Relations = relations,
+            SourceRevision = family == CardFamilyCodes.Tarot ? 3 : 7,
         });
 
     private sealed class FakeSource : ICardFamilySource
