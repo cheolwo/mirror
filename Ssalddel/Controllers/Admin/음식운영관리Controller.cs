@@ -59,6 +59,19 @@ public sealed class 음식배달요금정책Controller(
             CurrentAdminId(),
             cancellationToken));
 
+    [HttpGet("temporary-demand-surcharge")]
+    public async Task<IActionResult> 한시수요할증조회(CancellationToken cancellationToken)
+        => this.ToActionResult(await useCase.한시수요할증조회Async(cancellationToken));
+
+    [HttpPut("temporary-demand-surcharge")]
+    public async Task<IActionResult> 한시수요할증적용(
+        [FromBody] 음식배달한시수요할증적용요청 request,
+        CancellationToken cancellationToken)
+        => this.ToActionResult(await useCase.한시수요할증적용Async(
+            request,
+            CurrentAdminId(),
+            cancellationToken));
+
     private string CurrentAdminId()
         => User.FindFirstValue(ClaimTypes.NameIdentifier)
            ?? User.Identity?.Name

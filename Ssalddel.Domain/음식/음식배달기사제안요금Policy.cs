@@ -3,8 +3,10 @@ namespace 살뜰.도메인.음식;
 public sealed record 음식배달기사제안요금판정(
     decimal 기본거리지급액,
     decimal 기상할증액,
+    decimal 한시수요할증액,
     decimal 기사지급예정액,
-    bool 기상할증적용여부);
+    bool 기상할증적용여부,
+    bool 한시수요할증적용여부);
 
 public static class 음식배달기사제안요금Policy
 {
@@ -14,7 +16,9 @@ public static class 음식배달기사제안요금Policy
         음식운영정책 policy,
         decimal? 픽업지에서전달지까지거리Km,
         bool 유효한강수근거있음,
-        bool 강수중)
+        bool 강수중,
+        DateTimeOffset 판정시각Utc,
+        bool 한시수요할증허용)
     {
         ArgumentNullException.ThrowIfNull(policy);
 
@@ -32,11 +36,27 @@ public static class 음식배달기사제안요금Policy
         var weatherSurcharge = weatherApplied
             ? Math.Max(0m, policy.기사기상할증액)
             : 0m;
+        var decisionTime = 판정시각Utc.UtcDateTime;
+        var demandApplied = 한시수요할증허용
+                            && policy.기사한시수요할증액 > 0m
+                            && policy.기사한시수요할증시작일시Utc.HasValue
+                            && policy.기사한시수요할증종료일시Utc.HasValue
+                            && decisionTime >= DateTime.SpecifyKind(
+                                policy.기사한시수요할증시작일시Utc.Value,
+                                DateTimeKind.Utc)
+                            && decisionTime < DateTime.SpecifyKind(
+                                policy.기사한시수요할증종료일시Utc.Value,
+                                DateTimeKind.Utc);
+        var demandSurcharge = demandApplied
+            ? Math.Max(0m, policy.기사한시수요할증액)
+            : 0m;
 
         return new 음식배달기사제안요금판정(
             basePayout,
             weatherSurcharge,
-            basePayout + weatherSurcharge,
-            weatherApplied);
+            demandSurcharge,
+            basePayout + weatherSurcharge + demandSurcharge,
+            weatherApplied,
+            demandApplied);
     }
 }

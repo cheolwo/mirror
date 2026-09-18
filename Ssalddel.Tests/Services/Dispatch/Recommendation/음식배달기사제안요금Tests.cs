@@ -35,8 +35,8 @@ public sealed class 음식배달기사제안요금Tests
             기사기상할증활성화여부 = true
         };
 
-        var rainy = 음식배달기사제안요금Policy.판정(policy, 1.15m, true, true);
-        var unavailable = 음식배달기사제안요금Policy.판정(policy, 1.15m, false, true);
+        var rainy = 음식배달기사제안요금Policy.판정(policy, 1.15m, true, true, Now, true);
+        var unavailable = 음식배달기사제안요금Policy.판정(policy, 1.15m, false, true, Now, true);
 
         Assert.Equal(2680m, rainy.기본거리지급액);
         Assert.Equal(1000m, rainy.기상할증액);
@@ -44,6 +44,31 @@ public sealed class 음식배달기사제안요금Tests
         Assert.True(rainy.기상할증적용여부);
         Assert.Equal(2680m, unavailable.기사지급예정액);
         Assert.False(unavailable.기상할증적용여부);
+    }
+
+    [Fact]
+    public void 한시수요할증은_시뮬레이션의_유효시간안에서만_지급예정액에더한다()
+    {
+        var policy = new 음식운영정책
+        {
+            기사기본지급액 = 2500m,
+            기사최소지급액 = 2500m,
+            기사한시수요할증액 = 1000m,
+            기사한시수요할증시작일시Utc = Now.UtcDateTime.AddMinutes(-1),
+            기사한시수요할증종료일시Utc = Now.UtcDateTime.AddMinutes(29)
+        };
+
+        var simulation = 음식배달기사제안요금Policy.판정(policy, 0.5m, false, false, Now, true);
+        var operational = 음식배달기사제안요금Policy.판정(policy, 0.5m, false, false, Now, false);
+        var expired = 음식배달기사제안요금Policy.판정(policy, 0.5m, false, false, Now.AddMinutes(30), true);
+
+        Assert.Equal(1000m, simulation.한시수요할증액);
+        Assert.Equal(3500m, simulation.기사지급예정액);
+        Assert.True(simulation.한시수요할증적용여부);
+        Assert.Equal(2500m, operational.기사지급예정액);
+        Assert.False(operational.한시수요할증적용여부);
+        Assert.Equal(2500m, expired.기사지급예정액);
+        Assert.False(expired.한시수요할증적용여부);
     }
 
     [Fact]
@@ -134,7 +159,11 @@ public sealed class 음식배달기사제안요금Tests
             db,
             new FixedDistanceRouteService(1.15m),
             new RainyWeatherClient(),
-            new FixedTimeProvider(Now));
+            new FixedTimeProvider(Now),
+            new SsalddelExecutionModePolicy(Options.Create(new SsalddelExecutionOptions
+            {
+                Mode = SsalddelExecutionMode.Simulation
+            })));
 
         var result = await service.산정Async(new 운송원장
         {

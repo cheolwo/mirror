@@ -261,9 +261,11 @@ public sealed class 배차엔진판단감사Tests
         await task;
 
         Assert.Equal(1, pricing.CallCount);
-        Assert.Equal(3500m, queue.기사지급예정액);
+        Assert.Equal(4000m, queue.기사지급예정액);
         Assert.Equal(1000m, queue.기사기상할증액);
         Assert.True(queue.기사기상할증적용여부);
+        Assert.Equal(500m, queue.기사한시수요할증액);
+        Assert.True(queue.기사한시수요할증적용여부);
         Assert.Equal("Available", queue.픽업지기상자료상태);
         Assert.Equal("food-pricing-test.r1", queue.기사제안요금정책판본);
     }
@@ -477,7 +479,7 @@ public sealed class 배차엔진판단감사Tests
         {
             CallCount++;
             return Task.FromResult(new 음식배달기사제안요금산정결과(
-                new 음식배달기사제안요금판정(2500m, 1000m, 3500m, true),
+                new 음식배달기사제안요금판정(2500m, 1000m, 500m, 4000m, true, true),
                 new 픽업지기상관측결과(
                     true,
                     true,

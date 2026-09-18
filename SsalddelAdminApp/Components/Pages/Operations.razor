@@ -6,6 +6,7 @@
 @inject ITransportRequestLedgerObserver LedgerObserver
 @inject TransportRequestLedgerRealtimeClient RealtimeClient
 @inject NavigationManager Navigation
+@using Ssalddel.Contracts.Admin.Restaurants
 
 <PageTitle>운송·기사 모바일 관제</PageTitle>
 
@@ -15,7 +16,7 @@
             <MudText Typo="Typo.overline" Color="Color.Primary">OPERATIONS</MudText>
             <MudText Typo="Typo.h4">운송·기사 현황</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">
-                실제 운송 원장과 운행 중 기사 상태를 읽기 전용으로 확인합니다. 상태 조정은 안전한 Command가 준비된 뒤 단계적으로 엽니다.
+                실제 운송 원장과 운행 중 기사 상태를 확인합니다. 운영 조정은 서버가 검증하는 안전한 Command만 단계적으로 제공합니다.
             </MudText>
         </MudStack>
         @if (Session.IsServerAdmin)
@@ -86,6 +87,93 @@
                                 AccentColor="Color.Success" />
                 </MudItem>
             </MudGrid>
+
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.subtitle1">한시 수요 할증</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                기사를 호출하거나 지시하지 않고, 새 배차 제안의 지급 조건만 일정 시간 높입니다.
+                            </MudText>
+                        </MudStack>
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Color="@(snapshot.TemporaryDemandSurcharge.IsActive ? Color.Warning : Color.Default)"
+                                 Variant="Variant.Outlined">
+                            @(snapshot.TemporaryDemandSurcharge.IsActive ? "적용 중" : "미적용")
+                        </MudChip>
+                    </MudStack>
+
+                    @if (snapshot.TemporaryDemandSurcharge.IsActive)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                            새 음식 배달 제안에 @snapshot.TemporaryDemandSurcharge.SurchargeAmount.ToString("N0")원 추가 ·
+                            @TemporarySurchargeRemaining(snapshot.TemporaryDemandSurcharge)
+                        </MudAlert>
+                    }
+
+                    @if (!snapshot.TemporaryDemandSurcharge.CanApply)
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+                            현재 @snapshot.TemporaryDemandSurcharge.ExecutionModeCode 모드에서는 변경할 수 없습니다.
+                            첫 직접 사용 검증은 격리된 Simulation 서버에서 진행합니다.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2">1. 적용시간</MudText>
+                        <MudGrid Spacing="1">
+                            @foreach (var duration in snapshot.TemporaryDemandSurcharge.AllowedDurationMinutes)
+                            {
+                                <MudItem xs="4">
+                                    <MudButton Variant="@(selectedDurationMinutes == duration ? Variant.Filled : Variant.Outlined)"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               FullWidth="true"
+                                               Disabled="isBusy"
+                                               OnClick="@(() => selectedDurationMinutes = duration)">
+                                        @duration 분
+                                    </MudButton>
+                                </MudItem>
+                            }
+                        </MudGrid>
+
+                        <MudText Typo="Typo.body2">2. 추가 지급액</MudText>
+                        <MudGrid Spacing="1">
+                            @foreach (var amount in snapshot.TemporaryDemandSurcharge.AllowedAmounts)
+                            {
+                                <MudItem xs="4">
+                                    <MudButton Variant="@(selectedSurchargeAmount == amount ? Variant.Filled : Variant.Outlined)"
+                                               Color="Color.Warning"
+                                               Size="Size.Small"
+                                               FullWidth="true"
+                                               Disabled="isBusy"
+                                               OnClick="@(() => selectedSurchargeAmount = amount)">
+                                        +@amount.ToString("N0")원
+                                    </MudButton>
+                                </MudItem>
+                            }
+                        </MudGrid>
+
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Warning"
+                                   StartIcon="@Icons.Material.Filled.PriceChange"
+                                   Disabled="@(isBusy || !selectedSurchargeAmount.HasValue)"
+                                   OnClick="ApplyTemporaryDemandSurchargeAsync">
+                            선택한 조건 적용
+                        </MudButton>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(successMessage))
+                    {
+                        <MudAlert Severity="Severity.Success" Variant="Variant.Outlined">@successMessage</MudAlert>
+                    }
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        범위: 전체 음식 배달 · 사유: 제안 가능 기사 부족 · 정책 @snapshot.TemporaryDemandSurcharge.PolicyRevision
+                    </MudText>
+                </MudStack>
+            </MudPaper>
 
             <MudPaper Elevation="0" Outlined="true" Class="pa-4">
                 <MudStack Spacing="2">
@@ -190,6 +278,9 @@
     private AdminMobileOperationsSnapshot? snapshot;
     private bool isBusy;
     private string? errorMessage;
+    private string? successMessage;
+    private int selectedDurationMinutes = 30;
+    private decimal? selectedSurchargeAmount;
     private CancellationTokenSource? monitorCancellation;
     private Task? monitorTask;
 
@@ -228,6 +319,7 @@
         if (!silent)
         {
             errorMessage = null;
+            successMessage = null;
         }
 
         try
@@ -243,6 +335,49 @@
                 await Session.LogoutAsync();
                 StopMonitor();
             }
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task ApplyTemporaryDemandSurchargeAsync()
+    {
+        if (snapshot is null
+            || !snapshot.TemporaryDemandSurcharge.CanApply
+            || !selectedSurchargeAmount.HasValue
+            || isBusy)
+        {
+            return;
+        }
+
+        isBusy = true;
+        errorMessage = null;
+        successMessage = null;
+        try
+        {
+            var state = await OperationsService.ApplyTemporaryDemandSurchargeAsync(
+                new 음식배달한시수요할증적용요청
+                {
+                    SurchargeAmount = selectedSurchargeAmount.Value,
+                    DurationMinutes = selectedDurationMinutes,
+                    ReasonCode = 음식배달한시수요할증사유Codes.제안가능기사부족,
+                    ScopeCode = 음식배달한시수요할증범위Codes.전체음식배달,
+                    ExpectedRevision = snapshot.TemporaryDemandSurcharge.Revision,
+                    ClientRequestId = Guid.NewGuid()
+                });
+            snapshot = snapshot with
+            {
+                TemporaryDemandSurcharge = state,
+                UpdatedAtUtc = DateTime.UtcNow
+            };
+            successMessage = $"{state.SurchargeAmount:N0}원 한시 할증을 {state.DurationMinutes}분 동안 적용했습니다.";
+            selectedSurchargeAmount = null;
+        }
+        catch (AdminApiException ex)
+        {
+            errorMessage = ex.Message;
         }
         finally
         {
@@ -322,6 +457,19 @@
 
     private static string ValueOrDash(string? value)
         => string.IsNullOrWhiteSpace(value) ? "-" : value.Trim();
+
+    private static string TemporarySurchargeRemaining(음식배달한시수요할증응답 state)
+    {
+        if (!state.ExpiresAtUtc.HasValue)
+        {
+            return "종료 시각 미정";
+        }
+
+        var remaining = state.ExpiresAtUtc.Value - state.ServerNowUtc;
+        return remaining <= TimeSpan.Zero
+            ? "종료됨"
+            : $"약 {Math.Max(1, (int)Math.Ceiling(remaining.TotalMinutes))}분 남음";
+    }
 
     public ValueTask DisposeAsync()
     {

@@ -54,6 +54,8 @@ public sealed record DriverWorkOfferDto(
     [property: JsonPropertyName("recipient")] DriverWorkRecipientDto? Recipient = null,
     [property: JsonPropertyName("weatherSurcharge")] decimal WeatherSurcharge = 0m,
     [property: JsonPropertyName("weatherSurchargeApplied")] bool WeatherSurchargeApplied = false,
+    [property: JsonPropertyName("temporaryDemandSurcharge")] decimal TemporaryDemandSurcharge = 0m,
+    [property: JsonPropertyName("temporaryDemandSurchargeApplied")] bool TemporaryDemandSurchargeApplied = false,
     [property: JsonPropertyName("pricingPolicyRevision")] string? PricingPolicyRevision = null,
     [property: JsonPropertyName("weatherObservedAtUtc")] DateTimeOffset? WeatherObservedAtUtc = null);
 

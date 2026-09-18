@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using 살뜰.Data;
 using 살뜰.Services.Dispatch.Engine;
+using 살뜰.Services.Options;
 using 살뜰.Services.Weather;
 using 살뜰.도메인.음식;
 using 살뜰.도메인.운송;
@@ -24,7 +25,8 @@ public sealed class 음식배달기사제안요금Service(
     SsalddelContext db,
     I배차추천경로Service routeService,
     I픽업지기상관측Client weatherClient,
-    TimeProvider timeProvider) : I음식배달기사제안요금Service
+    TimeProvider timeProvider,
+    ISsalddelExecutionModePolicy executionMode) : I음식배달기사제안요금Service
 {
     public async Task<음식배달기사제안요금산정결과> 산정Async(
         운송원장 queue,
@@ -44,20 +46,23 @@ public sealed class 음식배달기사제안요금Service(
             queue.픽업_위도,
             queue.픽업_경도,
             cancellationToken);
+        var now = timeProvider.GetUtcNow();
         var price = 음식배달기사제안요금Policy.판정(
             policy,
             distance,
             weather.유효한강수근거있음,
-            weather.강수중);
+            weather.강수중,
+            now,
+            executionMode.IsSimulation);
         var revision = string.Create(
             System.Globalization.CultureInfo.InvariantCulture,
-            $"{음식배달기사제안요금Policy.기본판본}|weather:{policy.기사기상할증정책판본}|policy:{policy.UpdatedAtUtc.ToUniversalTime():O}");
+            $"{음식배달기사제안요금Policy.기본판본}|weather:{policy.기사기상할증정책판본}|demand:food-demand-surcharge.r1:{policy.기사한시수요할증Revision}|policy:{policy.UpdatedAtUtc.ToUniversalTime():O}");
 
         return new 음식배달기사제안요금산정결과(
             price,
             weather,
             revision,
-            timeProvider.GetUtcNow().UtcDateTime);
+            now.UtcDateTime);
     }
 
     private decimal? CalculateDistance(운송원장 queue)

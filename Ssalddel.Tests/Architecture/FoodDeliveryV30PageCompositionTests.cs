@@ -93,6 +93,21 @@ public sealed class FoodDeliveryV30PageCompositionTests
     }
 
     [Fact]
+    public void 음식점진행변경은_같은멱등요청을한번재시도하고_판본충돌시정본을재조회한다()
+    {
+        var client = Read("RestaurantDeskApp", "Services/Ssalddel음식주문Client.cs");
+        var desk = Read("RestaurantDeskApp", "Services/음식점주문DeskService.cs");
+
+        Assert.Contains("SsalddelApiProblemParser.Parse", client);
+        Assert.Contains("var request = new 음식점주문진행변경요청", desk);
+        Assert.Contains("업무멱등재시도실행기.한번Async", desk);
+        Assert.Contains("RetryIdempotent", Read("Ssalddel.Contracts", "Common/Workflow/업무실패복구Dtos.cs"));
+        Assert.Contains("TryRefreshCanonicalOrderAsync", desk);
+        Assert.Contains("_foodOrderClient.주문상세조회Async(orderNo", desk);
+        Assert.Contains("UpsertServerOrder(canonical", desk);
+    }
+
+    [Fact]
     public void 음식점데스크는_모바일크기로시작하고_첫화면을메뉴로가리지않는다()
     {
         var app = Read("RestaurantDeskApp", "App.xaml.cs");

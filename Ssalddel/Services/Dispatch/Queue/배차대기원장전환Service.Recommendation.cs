@@ -105,8 +105,10 @@ namespace 살뜰.Services.Dispatch.Queue
             var decision = await _음식배달기사제안요금Service.산정Async(queue, cancellationToken);
             queue.기사기본거리지급액 = decision.요금.기본거리지급액;
             queue.기사기상할증액 = decision.요금.기상할증액;
+            queue.기사한시수요할증액 = decision.요금.한시수요할증액;
             queue.기사지급예정액 = decision.요금.기사지급예정액;
             queue.기사기상할증적용여부 = decision.요금.기상할증적용여부;
+            queue.기사한시수요할증적용여부 = decision.요금.한시수요할증적용여부;
             queue.픽업지기상자료상태 = decision.기상.자료상태Code;
             queue.픽업지기상코드 = decision.기상.강수형태Code;
             queue.픽업지기상기준시각Utc = decision.기상.관측기준시각Utc;

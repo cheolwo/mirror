@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Ssalddel.Application.Food;
 using Ssalddel.Contracts.Admin.Restaurants;
 using 살뜰.Data;
+using 살뜰.Services.Options;
 using 살뜰.도메인.음식;
 
 namespace Ssalddel.Application.Admin.Restaurants;
@@ -24,10 +25,24 @@ public interface I음식운영관리UseCase
         음식배달요금정책응답 request,
         string 수정자UserId,
         CancellationToken cancellationToken);
+
+    Task<Result<음식배달한시수요할증응답>> 한시수요할증조회Async(
+        CancellationToken cancellationToken);
+
+    Task<Result<음식배달한시수요할증응답>> 한시수요할증적용Async(
+        음식배달한시수요할증적용요청 request,
+        string 수정자UserId,
+        CancellationToken cancellationToken);
 }
 
-public sealed class 음식운영관리UseCase(SsalddelContext db) : I음식운영관리UseCase
+public sealed class 음식운영관리UseCase(
+    SsalddelContext db,
+    TimeProvider timeProvider,
+    ISsalddelExecutionModePolicy executionMode) : I음식운영관리UseCase
 {
+    private static readonly decimal[] AllowedSurchargeAmounts = [500m, 1000m, 1500m];
+    private static readonly int[] AllowedDurationMinutes = [15, 30, 60];
+
     public async Task<Result<음식점리뷰관리목록응답>> 리뷰목록Async(
         CancellationToken cancellationToken)
     {
@@ -92,7 +107,7 @@ public sealed class 음식운영관리UseCase(SsalddelContext db) : I음식운�
 
         var policy = await GetTrackedPolicyAsync(cancellationToken);
         policy.기본저평점게시일수 = request.기본저평점게시일수;
-        ApplyAudit(policy, 수정자UserId);
+        ApplyAudit(policy, 수정자UserId, UtcNow());
         await db.SaveChangesAsync(cancellationToken);
         return Result.Ok(ToReviewPolicy(policy));
     }
@@ -128,9 +143,79 @@ public sealed class 음식운영관리UseCase(SsalddelContext db) : I음식운�
         policy.기사기상할증활성화여부 = request.DriverWeatherSurchargeEnabled;
         policy.기사기상할증액 = request.DriverWeatherSurcharge;
         policy.기사기상할증정책판본 = request.DriverWeatherSurchargePolicyRevision.Trim();
-        ApplyAudit(policy, 수정자UserId);
+        ApplyAudit(policy, 수정자UserId, UtcNow());
         await db.SaveChangesAsync(cancellationToken);
         return Result.Ok(ToPricingPolicy(policy));
+    }
+
+    public async Task<Result<음식배달한시수요할증응답>> 한시수요할증조회Async(
+        CancellationToken cancellationToken)
+    {
+        var policy = await GetPolicyAsync(cancellationToken);
+        return Result.Ok(ToTemporaryDemandSurcharge(policy, UtcNow()));
+    }
+
+    public async Task<Result<음식배달한시수요할증응답>> 한시수요할증적용Async(
+        음식배달한시수요할증적용요청 request,
+        string 수정자UserId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (!executionMode.IsSimulation)
+        {
+            return Forbidden<음식배달한시수요할증응답>(
+                "한시 수요 할증은 현재 격리된 Simulation 운영 검증에서만 적용할 수 있습니다.");
+        }
+
+        var validation = ValidateTemporaryDemandSurcharge(request);
+        if (validation is not null)
+        {
+            return BadRequest<음식배달한시수요할증응답>(validation);
+        }
+
+        var policy = await GetTrackedPolicyAsync(cancellationToken);
+        var requestId = request.ClientRequestId.ToString("D");
+        if (string.Equals(
+                policy.기사한시수요할증ClientRequestId,
+                requestId,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            if (!SameTemporaryDemandSurcharge(policy, request))
+            {
+                return Conflict<음식배달한시수요할증응답>(
+                    "같은 요청 ID에 다른 한시 수요 할증 조건이 있습니다.");
+            }
+
+            return Result.Ok(ToTemporaryDemandSurcharge(policy, UtcNow()));
+        }
+
+        if (policy.기사한시수요할증Revision != request.ExpectedRevision)
+        {
+            return Conflict<음식배달한시수요할증응답>(
+                "한시 수요 할증 상태가 변경되었습니다. 현재 상태를 다시 조회해 주세요.");
+        }
+
+        var now = UtcNow();
+        policy.기사한시수요할증액 = request.SurchargeAmount;
+        policy.기사한시수요할증시작일시Utc = now;
+        policy.기사한시수요할증종료일시Utc = now.AddMinutes(request.DurationMinutes);
+        policy.기사한시수요할증사유Code = request.ReasonCode.Trim();
+        policy.기사한시수요할증범위Code = request.ScopeCode.Trim();
+        policy.기사한시수요할증ClientRequestId = requestId;
+        policy.기사한시수요할증Revision++;
+        ApplyAudit(policy, 수정자UserId, now);
+
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict<음식배달한시수요할증응답>(
+                "다른 운영자가 한시 수요 할증을 먼저 변경했습니다. 현재 상태를 다시 조회해 주세요.");
+        }
+
+        return Result.Ok(ToTemporaryDemandSurcharge(policy, now));
     }
 
     private async Task<음식운영정책> GetPolicyAsync(CancellationToken cancellationToken)
@@ -180,6 +265,45 @@ public sealed class 음식운영관리UseCase(SsalddelContext db) : I음식운�
             UpdatedByUserId = policy.수정자UserId
         };
 
+    private 음식배달한시수요할증응답 ToTemporaryDemandSurcharge(
+        음식운영정책 policy,
+        DateTime serverNowUtc)
+    {
+        var startedAtUtc = AsUtc(policy.기사한시수요할증시작일시Utc);
+        var expiresAtUtc = AsUtc(policy.기사한시수요할증종료일시Utc);
+        var active = executionMode.IsSimulation
+                     && policy.기사한시수요할증액 > 0m
+                     && startedAtUtc.HasValue
+                     && expiresAtUtc.HasValue
+                     && serverNowUtc >= startedAtUtc.Value
+                     && serverNowUtc < expiresAtUtc.Value;
+        var duration = startedAtUtc.HasValue && expiresAtUtc.HasValue
+            ? (int?)Math.Round((expiresAtUtc.Value - startedAtUtc.Value).TotalMinutes)
+            : null;
+
+        return new 음식배달한시수요할증응답
+        {
+            SurchargeAmount = active ? policy.기사한시수요할증액 : 0m,
+            DurationMinutes = duration,
+            StartedAtUtc = startedAtUtc,
+            ExpiresAtUtc = expiresAtUtc,
+            ReasonCode = policy.기사한시수요할증사유Code,
+            ScopeCode = string.IsNullOrWhiteSpace(policy.기사한시수요할증범위Code)
+                ? 음식배달한시수요할증범위Codes.전체음식배달
+                : policy.기사한시수요할증범위Code,
+            PolicyRevision = $"food-demand-surcharge.r1:{policy.기사한시수요할증Revision}",
+            Revision = policy.기사한시수요할증Revision,
+            IsActive = active,
+            CanApply = executionMode.IsSimulation,
+            ExecutionModeCode = executionMode.Mode.ToString(),
+            AllowedAmounts = AllowedSurchargeAmounts,
+            AllowedDurationMinutes = AllowedDurationMinutes,
+            ServerNowUtc = serverNowUtc,
+            UpdatedAtUtc = AsUtc(policy.UpdatedAtUtc) ?? DateTime.UnixEpoch,
+            UpdatedByUserId = policy.수정자UserId
+        };
+    }
+
     private static string? ValidatePricing(음식배달요금정책응답 request)
     {
         if (request.IncludedDistanceMeters < 0 || request.DistanceUnitMeters <= 0)
@@ -204,14 +328,77 @@ public sealed class 음식운영관리UseCase(SsalddelContext db) : I음식운�
             : null;
     }
 
-    private static void ApplyAudit(음식운영정책 policy, string 수정자UserId)
+    private static string? ValidateTemporaryDemandSurcharge(
+        음식배달한시수요할증적용요청 request)
+    {
+        if (!AllowedSurchargeAmounts.Contains(request.SurchargeAmount))
+        {
+            return "한시 수요 할증액은 500원, 1,000원 또는 1,500원이어야 합니다.";
+        }
+
+        if (!AllowedDurationMinutes.Contains(request.DurationMinutes))
+        {
+            return "한시 수요 할증 적용시간은 15분, 30분 또는 60분이어야 합니다.";
+        }
+
+        if (request.ClientRequestId == Guid.Empty)
+        {
+            return "멱등 처리를 위한 요청 ID가 필요합니다.";
+        }
+
+        if (request.ExpectedRevision < 0)
+        {
+            return "예상 revision은 0 이상이어야 합니다.";
+        }
+
+        if (request.ReasonCode != 음식배달한시수요할증사유Codes.제안가능기사부족)
+        {
+            return "첫 구현에서는 제안 가능한 기사 부족 사유만 지원합니다.";
+        }
+
+        return request.ScopeCode != 음식배달한시수요할증범위Codes.전체음식배달
+            ? "첫 구현에서는 전체 음식 배달 범위만 지원합니다."
+            : null;
+    }
+
+    private static bool SameTemporaryDemandSurcharge(
+        음식운영정책 policy,
+        음식배달한시수요할증적용요청 request)
+    {
+        var storedDuration = policy.기사한시수요할증시작일시Utc.HasValue
+                             && policy.기사한시수요할증종료일시Utc.HasValue
+            ? (int)Math.Round((policy.기사한시수요할증종료일시Utc.Value
+                              - policy.기사한시수요할증시작일시Utc.Value).TotalMinutes)
+            : 0;
+        return policy.기사한시수요할증액 == request.SurchargeAmount
+               && storedDuration == request.DurationMinutes
+               && policy.기사한시수요할증사유Code == request.ReasonCode
+               && policy.기사한시수요할증범위Code == request.ScopeCode;
+    }
+
+    private static void ApplyAudit(
+        음식운영정책 policy,
+        string 수정자UserId,
+        DateTime updatedAtUtc)
     {
         policy.수정자UserId = string.IsNullOrWhiteSpace(수정자UserId)
             ? "unknown-admin"
             : 수정자UserId.Trim();
-        policy.UpdatedAtUtc = DateTime.UtcNow;
+        policy.UpdatedAtUtc = updatedAtUtc;
     }
+
+    private DateTime UtcNow()
+        => timeProvider.GetUtcNow().UtcDateTime;
+
+    private static DateTime? AsUtc(DateTime? value)
+        => value.HasValue ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc) : null;
 
     private static Result<T> BadRequest<T>(string message)
         => Result.Fail<T>(new Error(message).WithMetadata("StatusCode", 400));
+
+    private static Result<T> Forbidden<T>(string message)
+        => Result.Fail<T>(new Error(message).WithMetadata("StatusCode", 403));
+
+    private static Result<T> Conflict<T>(string message)
+        => Result.Fail<T>(new Error(message).WithMetadata("StatusCode", 409));
 }

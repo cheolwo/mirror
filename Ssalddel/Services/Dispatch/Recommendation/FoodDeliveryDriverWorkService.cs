@@ -1256,6 +1256,8 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
                     order.주문자본인수령여부),
             queue.기사기상할증액 ?? 0m,
             queue.기사기상할증적용여부,
+            queue.기사한시수요할증액 ?? 0m,
+            queue.기사한시수요할증적용여부,
             queue.기사제안요금정책판본,
             ToOffset(queue.픽업지기상기준시각Utc));
     }

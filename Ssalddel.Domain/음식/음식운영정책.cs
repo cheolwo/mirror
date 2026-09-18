@@ -47,6 +47,30 @@ public sealed class 음식운영정책
     [MaxLength(100)]
     public string 기사기상할증정책판본 { get; set; } = "food-weather-surcharge.r1";
 
+    [Column("기사한시수요할증액", TypeName = "decimal(18,2)")]
+    public decimal 기사한시수요할증액 { get; set; }
+
+    [Column("기사한시수요할증시작일시_utc")]
+    public DateTime? 기사한시수요할증시작일시Utc { get; set; }
+
+    [Column("기사한시수요할증종료일시_utc")]
+    public DateTime? 기사한시수요할증종료일시Utc { get; set; }
+
+    [Column("기사한시수요할증사유_code")]
+    [MaxLength(80)]
+    public string 기사한시수요할증사유Code { get; set; } = string.Empty;
+
+    [Column("기사한시수요할증범위_code")]
+    [MaxLength(80)]
+    public string 기사한시수요할증범위Code { get; set; } = "AllFoodDelivery";
+
+    [Column("기사한시수요할증_revision")]
+    public long 기사한시수요할증Revision { get; set; }
+
+    [Column("기사한시수요할증_client_request_id")]
+    [MaxLength(36)]
+    public string 기사한시수요할증ClientRequestId { get; set; } = string.Empty;
+
     [Column("수정자_user_id")]
     [MaxLength(450)]
     public string 수정자UserId { get; set; } = string.Empty;

@@ -63,3 +63,43 @@ public sealed class 음식배달요금정책응답
     public DateTime UpdatedAtUtc { get; set; }
     public string UpdatedByUserId { get; set; } = string.Empty;
 }
+
+public static class 음식배달한시수요할증사유Codes
+{
+    public const string 제안가능기사부족 = "EligibleDriverShortage";
+}
+
+public static class 음식배달한시수요할증범위Codes
+{
+    public const string 전체음식배달 = "AllFoodDelivery";
+}
+
+public sealed class 음식배달한시수요할증응답
+{
+    public decimal SurchargeAmount { get; set; }
+    public int? DurationMinutes { get; set; }
+    public DateTime? StartedAtUtc { get; set; }
+    public DateTime? ExpiresAtUtc { get; set; }
+    public string ReasonCode { get; set; } = string.Empty;
+    public string ScopeCode { get; set; } = 음식배달한시수요할증범위Codes.전체음식배달;
+    public string PolicyRevision { get; set; } = "food-demand-surcharge.r1:0";
+    public long Revision { get; set; }
+    public bool IsActive { get; set; }
+    public bool CanApply { get; set; }
+    public string ExecutionModeCode { get; set; } = string.Empty;
+    public IReadOnlyList<decimal> AllowedAmounts { get; set; } = [500m, 1000m, 1500m];
+    public IReadOnlyList<int> AllowedDurationMinutes { get; set; } = [15, 30, 60];
+    public DateTime ServerNowUtc { get; set; }
+    public DateTime UpdatedAtUtc { get; set; }
+    public string UpdatedByUserId { get; set; } = string.Empty;
+}
+
+public sealed class 음식배달한시수요할증적용요청
+{
+    public decimal SurchargeAmount { get; set; }
+    public int DurationMinutes { get; set; }
+    public string ReasonCode { get; set; } = 음식배달한시수요할증사유Codes.제안가능기사부족;
+    public string ScopeCode { get; set; } = 음식배달한시수요할증범위Codes.전체음식배달;
+    public long ExpectedRevision { get; set; }
+    public Guid ClientRequestId { get; set; }
+}

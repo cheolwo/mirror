@@ -93,9 +93,13 @@ namespace 살뜰.도메인.운송
 
         public decimal? 기사기상할증액 { get; set; }
 
+        public decimal? 기사한시수요할증액 { get; set; }
+
         public decimal? 기사지급예정액 { get; set; }
 
         public bool 기사기상할증적용여부 { get; set; }
+
+        public bool 기사한시수요할증적용여부 { get; set; }
 
         public string? 픽업지기상자료상태 { get; set; }
 
