@@ -1,30 +1,93 @@
 # Mirror(거울) Current Work
 
-## GitHub 기반 기획·개발 작업실 교대 기준선 (2026-09-15)
+## 음식 배달 업무 지연·자동 회복·기술 이상 분리 (2026-09-19)
 
-- 두 Codex 계정·두 로컬 데스크톱을 계정명이 아니라 `기획 작업실`과 `개발 작업실` 역할로 구분했다. [GitHub 기반 교대 운영 체계](../Architecture/GitHub기반기획개발교대운영체계.md)는 기존 PLAN·문답·Goal·E7 작업지시서·책임별 branch 체계를 유지하면서 `저장소 / remote / branch / 정확한 commit / PLAN revision·hash / 상태 / readRefs / writePaths / 검증 / 반환 경로`를 한 인계 묶음으로 고정한다.
-- 기획 작업실은 기존 기록 검색, P0 질문 하나, canonical PLAN·`PLANNING.md`·`CURRENT_WORK.md` 갱신과 승인된 인계의 commit/push를 소유한다. 개발 작업실은 `Approved + ReadyToDispatch`와 기준 hash가 모두 일치할 때만 책임 branch에서 구현하고, 구현 commit·검증·미통합·기획 피드백을 저장소로 반환한다. 계정별 대화 기록과 로컬 `artifacts/`만으로 교대하지 않는다.
-- 현재 운영 기획 큐는 P0 중랑동북권 읽기 전용 현금흐름 관제 경계, P1 운영자·대리 운영자와 활성 상태 전이, P2 블랙박스 영상·GPS 현장 증거 기획 seed, P3 권역 분할·협력권역 순이다. P0 현금흐름은 `Draft / NotReady`이므로 이번 변경은 제품 코드·API·운영 효과를 구현하거나 승인하지 않는다.
+- 운영 시안에서 의미가 겹치던 `조리 예상 시간 초과`와 `조리 지연`을 하나의 `음식점 준비 지연`으로 정규화하고, 픽업 이후 늦어지는 상태는 별도 `배달 진행 지연`으로 분리했다.
+- 음식점 준비는 예상 완료 시각 초과 5분부터 주의, 10분부터 운영자 확인으로 판정한다. 픽업 준비가 확정되면 과거 예상 시각만으로 현재 준비 지연을 중복 표시하지 않는다.
+- 픽업 이후 배달 진행은 현행 42분 초기 관찰 기준을 넘긴 뒤 5분부터 주의, 10분부터 운영자 확인으로 판정한다. 주문별 동결 전달 약속 시각은 아직 없으므로 후속 계약이 생기면 이를 우선해야 한다.
+- 기사 추천 만료와 최근 배달 시도 중단은 `자동회복Codes`, 원장 연결·Outbox 문제는 `기술이상Codes`, 운영자가 확인할 지연과 기술 이상만 호환 `예외Codes`로 반환하도록 조화 판정을 리팩토링했다. 추천 만료만 있는 주문은 더 이상 `복구필요`로 승격하지 않는다.
+- 관련 집중 시험 29/29와 범위 지정 Fast 검증, `Ssalddel.v3.5.slnx` build가 통과했다. Task 전체 시험은 이번 변경과 무관한 기존 API 분류·아키텍처 용어·Web route·모바일 CSS 7건이 남아 `5355/5362` 통과로 종료됐다. 실제 인증 HTTP·MySQL·관리자 모바일 화면·실기기·Unity는 실행하지 않았고 commit·push·배포도 수행하지 않았다.
 
-## 중랑동북권 단일 배달운영권역·현금흐름 관제 문답 r2 (2026-09-15)
+## 음식 주문·판매·배달 OS 생명주기 조화 판정 구현 (2026-09-19)
 
-- 사용자는 첫 공식 후보 범위인 법정동 12곳·행정동 30개 전체를 초기에는 나누지 않고 `중랑동북권` 하나로 묶도록 확정했다. [기획 r2](Planning/운영/PLAN-OPERATIONS-ADMIN-DONG-DELIVERY-TERRITORY/README.md)는 이 표시명을 공식 행정구역명이 아닌 운영명으로 보존하고, 광진·동대문·중랑의 행정동 안정 식별자와 세부 통계 단위는 유지한다. 앞선 면목제3·8동 중심 소권역 시작안은 미승인 추천이었으며 이번 답변으로 대체됐다.
-- 기존 결제 원장, 기사 월정산·지급 승인, 운임 구성, 플랫폼 수익·환원 기능을 대조했다. 각각 개별 금액 상태는 갖지만 배달운영권역 귀속, 권역별 받을 돈·받은 돈·지급 예정·지급 완료·보류·환불·운영비·예상/실현 마진을 합성하는 관리자 현금흐름 API는 없다.
-- 다음 단일 질문은 첫 절편을 기존 금액 원장을 변경하지 않는 권역별 읽기 전용 현금흐름 관제 API로 시작할지 여부다. 실제 수납·예치·환불·송금은 PG·에스크로·정산사와 기존 지시 흐름에 남기며, 운영자 직접 금액 수정·실제 자금 이동·`Active` 전환·주문/배차 결속·Unity 변경은 승인하거나 구현하지 않았다.
+- 기존 음식 주문 원장, 배차·운송 원장, 음식 배달 시도, 공동 원장·기사 알림 Outbox를 읽어 정상 단계와 현재 책임 역할을 합성하는 `음식배달운영생명주기조화Projector`를 추가하고 관리자 음식 주문 추적 응답에 결속했다.
+- 정상 흐름은 `음식점 응답 → 조리·배차 병행 → 픽업 인계 → 배송 → 주문자 수령 확인 → 종료`로 정렬했다. 주문자·음식점·기사 앱마다 별도 상태기를 복제하지 않고 서버 정본 상태를 역할별로 해석하는 읽기 모델이다.
+- 기사 추천 만료·최근 배달 시도 중단은 배차 Engine의 자동회복 대상으로, 배차 원장 누락·연결 불일치·Outbox 실패는 플랫폼 운영자 확인 대상으로 구분했다. 운영자 조회는 배차나 원장 상태를 직접 바꾸지 않는다.
+- 행정동 배달운영권역 원천이 광진구 4개·동대문구 10개·중랑구 16개로 정확히 30개이며 구리시를 포함하지 않는다는 시험을 추가했다. 기존 권역 Draft는 이 원천에서 일부 행정동만 선택하고 revision으로 확대할 수 있다.
+- 집중 시험 17/17, 범위 지정 Fast 검증, `Ssalddel.v0.0.slnx` build가 통과했다. Task 전체 시험은 이번 변경과 무관한 기존 route 분류·API metadata·문서 문구·모바일 CSS 7건 때문에 완료되지 않았다. 실제 인증 HTTP·MySQL·모바일 장치·세 역할 동시 조작·Unity는 실행하지 않았다. commit·push·배포도 수행하지 않았다.
 
-## 동북서울 30개 행정동 디오라마 자료 기준선 r13 (2026-09-15)
+## 주문자 구독·150건 활동 기사 지정 제안 경제성 기획 r11/r9 (2026-09-19)
 
-- 사용자는 30개 행정동 모듈을 사가정역 검토 깊이로 계속 발전시키고, 현재 가능한 화면을 보존하되 부족한 주소·필지·도로·신호·생활 자료를 추가 수집하도록 요청했다. [기획 r13](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md), [깊이 기준·캡처 r5](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-depth-parity.implementation.r5.md), [주소 후보 r6](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-address-parcel-candidate.implementation.r6.md), [횡단보도 r8](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-crosswalk-candidate.implementation.r8.md), [사업장 첫 판 r9](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-business-candidate.implementation.r9.md), [사업장 개인정보 정정 r12](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-business-candidate.implementation.r12.md), [교차로 r10·r11](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-intersection-point-ledger.implementation.r11.md), [도보망 r13](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/administrative-dong-walk-network-candidate.implementation.r13.md), [G3c 원장 검증 결과](../Reports/동북서울-30개-행정동-도보네트워크-G3c-후보-2026-09-15.md)에 단계별 결손과 검증 상한을 고정했다.
-- 역사 경계 후보의 건물 61,897개·도로 선분 11,769개·tile 297개를 hash별 완성 세대로 내보냈다. 같은 입력의 재내보내기 두 번은 모두 변경 0이고 index·bundle·`complete.json` 독립 검증이 통과했다. 격리 Unity에서 canonical `SimulationWorldShell`에 한 번에 한 동만 결합 Mesh 4개·Collider 0개로 조립했으며 EditMode 9/9와 실제 Play Mode Game View 전체 조망 30장·면목제3·8동 근접 1장을 남겼다. 원본 PNG 31개는 hash 불일치가 없고 Scene은 저장하지 않았다.
-- 30개 연락판의 넓은 공백과 분리된 건물 군집은 실제 공터나 완성 표현이 아니라 역사 경계·현재 건물/도로 기준일 불일치와 이동·생활 layer 결손을 드러내는 `MissingCoverage`다. 화면은 `G6 UnityBaseView / PrivateReviewOnly`이며 사가정 생활상 동등성, 실제 통행, gameplay 또는 공개 배포 증거가 아니다.
-- 동결 `AL_D010` PNU와 행정안전부 2026-08 건물DB를 결합해 61,897개 건물의 주소 후보 상태를 로컬 MySQL에 저장했다. 단일 후보 49,876·복수 1,351·동결 판본 내 후보 없음 10,670, 후보 보유율 82.76%이며 별도 연결 exact set·분포·투영 hash `4ceff3d6582a267aca57f972dd05a16e0c9b223229dea733fe9e7fb232be5a6b` 일치를 확인했다.
-- `OA-23081` 횡단보도 점은 정정 r2 후보 1,533개·보행등 설치 933·역사 경계 자치구 충돌 21을 로컬 MySQL에 저장했다. 후보 hash는 `78312E5F0DDB89BFFA9AD1881379CBF7E8037A6C6454D4F0ABDF2A3E4D22D30A`이며 반복 적용 신규·갱신 0과 독립 재조회가 통과했다. 첫 r1은 `RejectedAfterIndependentAudit / PreservedNotPromoted`다.
-- `OA-15534` 교차로 원천 점 8,097개 중 30개 동에 단일 귀속한 554개를 별도 G3b 세대로 생성하고 로컬 MySQL 보호 원장에 후보 554행·계보 사본 19건을 저장했다. 횡단보도와 연결된 교차로 524·미연결 30, 관계 1,491개 중 다른 역사 행정동 연결 220개를 별도 진단으로 유지하며 후보 hash는 `DB83F1CC82EB65F864188DD790A003EDF570DBB459D56D4C07CE690988F2837B`다. Python 15/15·C# 16/16, 별도 연결 exact set·30개 동·hash 재조회, 반복 적용 신규·갱신·사본 0이 통과했다. G3a r2, G4a r1, 기존 면목 원장의 적용 전후 digest는 같으며 이후 별도 생성한 G4a r2는 이 r11 보존 계약 밖이어서 후속 G3b 판본에서 명시적으로 결속해야 한다.
-- G3b r1의 기존 동반 자료 계약은 실행 전 상태인 `ledgerPersistenceCompletedClaimed=false`와 `consumedCandidateDatabasePersistenceCompleted=false`를 유지하지만 이후 실제 DB 저장·재조회 결과는 완료로 보고되어 있다. 이는 데이터 손실이 아니라 기계 계약과 사후 실행 상태의 알려진 flag 정합성 결손이며, 기존 판본을 조용히 수정하지 않고 후속 호환 판본에서 정리해야 한다.
-- `OA-21208` 2020년 WGS84 도보망은 세 자치구 공식 CSV 59,724행과 유형 코드북을 동결하고 2023 역사 경계에 결속해 NODE 17,267·LINK fragment 23,472, 합계 40,739개 G3c 후보를 생성했다. 후보 hash는 `43248F7F563DCDFE059650F3EC000085CD0D7CFB65FC5300EFDFCBDD685990AA`이며 Python 자체 시험 17/17, 1mm 직렬화 경계 재포함, 원선 대상 교차 길이 882,519.308089m 보존, 최종 세대 verify가 통과했다. C# importer도 전체 98,781,674-byte 후보의 framed hash를 독립 재계산한 뒤 로컬 MySQL에 40,739행·30개 동·계보 사본 17건을 저장했다. build 경고 0·오류 0, 자체 시험 16/16, 새 연결의 exact set·hash 재조회가 통과했고 반복 적용은 신규·갱신·사본 0이다. 기존 보호 상태 71,501행·사본 84건·실행 84건의 digest는 전후 같았으며 최종 독립 정적 감사는 High·Medium·Low 0이다.
-- 소상공인시장진흥공단 2026-06-30 전국 상가 2,772,484행을 전수 대조해 30개 동 사업장 후보 29,721개·음식 업종 8,246개를 G4a 보호 원장으로 만들었다. 첫 r1은 독립 개인정보 감사에서 선택된 원천 식별자 하나가 추적 생성기의 시험 fixture에 들어간 사실을 확인해 `RejectedAfterIndependentPrivacyAudit / PreservedNotPromoted`로 낮췄고 값은 반복하지 않는다. 정정 r2는 실제 원천에 없는 합성 fixture와 새 dataset/revision을 사용하며 후보 hash는 `5F9C61BD71112C69EE3988CFB3B8542AE22BF60AB95D542C702D2355B8A3774C`다. Python 25/25·C# 59,482/59,482, 최초 MySQL 후보 29,721·사본 19 저장, 반복 신규·갱신·사본 0, 별도 연결 exact set·30개 동·음식 8,246·진단 35·결손 67·보호 필드 14 재조회를 통과했다. r1 29,721행·사본 19·실행 19의 상태 digest와 기존 면목 5,411·공장 126행은 적용 전후 같았다. 독립 재감사는 tracked 10,757개·untracked 134개와 r2 집계 산출물에서 선택 원천 식별자 교집합 0, High 0·Medium 0을 확인했다.
-- 주소는 `G2a`, 횡단보도는 `G3a`, 교차로는 `G3b`, 도보망은 `G3c`, 사업장은 `G4a`로 분리한다. G3c는 local-private 후보 생성과 보호 RDB 원장 검증까지만 닫혔다. 현행 행정동 경계, 실제 필지 도형·출입구, 실폭도로·골목·보도·차로·정지선·신호 현시의 현재 graph, 확정 사업장 건물 결속·현재 영업·Claim, G5 NPC·차량·OS 결속과 G7 생활상 Game View는 남아 있다.
-- 서버 도구 build, 기존 절편의 Python/C# 자체 시험과 MySQL 독립 재조회, Unity 검토 묶음 무변경 재생성, Unity EditMode·실제 Game View를 분리 검증했다. G3c는 Python 생성·verify와 C# 보호 RDB 첫 저장·독립 재조회·반복 무쓰기를 통과했다. Unity 실행에는 기존 Editor SearchDatabase 예외 1건과 종료 시 JobTempAlloc 경고 2건이 있어 전체 Console 무오류로 보고하지 않는다. 운영 DB·Mongo current·실제 주문/배차/NPC 이동·E 승격·commit·push·배포는 수행하지 않았다.
+- [주문자 지도 중심 음식점 발견·150건 활동 기사 지정 제안·진행 주문 추적 r11](Planning/공통/PLAN-OPERATIONS-ORDERER-ACTIVE-ORDER-HOME/README.md)에서 유효한 주문자 구독을 기사 지정 제안 필수 조건으로 추가했다. 일반 주문·일반 배차는 구독 없이 유지한다.
+- 진행 주문이 있으면 지도 셸 위에 현재 주문 고정 카드를 두고, 선택 시 배달 추적 상태로 전환한다. 진행 주문과 새 음식점 발견은 같은 화면 안에서 분리해 계속 사용할 수 있다.
+- 음식점은 같은 기본 마커를 사용하며 광고비·구독 등급·플랫폼 수익으로 크기나 기본 노출을 바꾸지 않는다. 겹침은 중립 cluster, 지도 이동 뒤 조회는 `이 지역에서 다시 찾기`, 광고는 별도 표시 layer로 둔다.
+- 주문 전에는 개별 기사 위치·정확한 후보 수를 공개하지 않고 `배차 원활 / 보통 / 어려움 / 산정 불가` 같은 비식별 상태만 표시한다. 다만 과거 완료 관계와 양쪽의 별도 `다시 배달 제안 허용` 동의를 통과한 기사님에게는 주문자가 먼저 제안할 수 있다.
+- 선호 기사 제안은 직접 배정이 아니다. 서버가 위치·거리·일정·배달권·수신 의사를 다시 판정하고 기사님은 이유 없이 거절·무응답할 수 있으며, 이 선택은 일반 배차·수락률·신뢰·지급에 불이익을 주지 않는다.
+- 최근 한 주 정상 완료 150건 이상을 주문자의 별도 `활동 기사 지정 제안` 후보 자격으로 확정했다. 일반 배차 자격이나 기사 등급에는 적용하지 않고, 기사님의 공개·후속 업무 제안 동의를 받은 경우 `지난주 정상 완료 150건+`라는 확인 가능한 활동 사실만 보여 준다.
+- 활동 주차는 업계 운영 주기에 맞춰 `Asia/Seoul` 수요일 00:00 이상~다음 수요일 00:00 미만으로 확정했다. 한 주 150건을 달성하면 바로 다음 수요일~화요일 동안 배지와 지정 제안 후보 자격을 유지한다.
+- 주문자 구독, 기사 150건+ 활동 배지, 기사 공개·후속 업무 제안 동의, 현재 배차 적격이 모두 맞아야 지정 제안을 연다. 구독은 기사 수락·배정이나 위치·연락처 공개를 보장하지 않는다.
+- 150건 미만인 신규·시간제 기사를 신뢰 낮음으로 표시하지 않으며 일반 배차 기회를 줄이지 않는다. 150건 배지를 전업·성실·품질·법적 직업 지위 인증으로 표현하지 않는다.
+- 실제 지정 제안 전에는 기사 동의, 신규 배차 수신, 위치 최신성, 거리·일정·배달권과 안전 제한을 다시 판정하고 기사님은 이유 없이 거절할 수 있다.
+- 선호 제안은 기본 배달료·거리·기상 할증을 깎지 않고 짧은 단독 검토 기회와 별도 기사 혜택을 가져야 한다. 금전 혜택은 기존 지급과 분리한 `선호 제안 보너스` 후보로 두고 금액·부담 주체는 아직 정하지 않았다.
+- [주문자 구독·150건 활동 기사 지정 경제성 r9](Planning/시스템/PLAN-SYSTEM-USAGE-COST-SUBSCRIPTION-METERING/orderer-subscription-preferred-driver-economics.r9.md)에서 지정 주문 1건, 구독자 1명·1개월, 플랫폼 기간 전체의 손익을 분리했다. 구독료에서 결제·기술·지원·환불·공유비·기사 보너스·4% 목표·안전 유보를 차감해 지속 가능한 건당 보너스 상한 후보를 역산한다.
+- 기준·스트레스·보수 시나리오와 손익분기 구독자 수·현금 최저점·유보금 충족 여부를 함께 보며, 첫 단계는 실제 청구 없는 `ShadowMetering`이다.
+- 현행 서버에는 기사 수신 의사, 실제 가용성, 위치 최신성, 음식점까지의 거리, 배차 제안·수락, 업무 관계 상태 사본과 관리용 운영경제성 순수 계산기 기반이 있다. 개인 구독 자격 원장, 주간 완료 활동 Projection, 지정 제안·보너스 원장 Adapter는 미구현이다.
+- 제품 코드·API·DB·앱 UI·이미지·commit·push·배포는 수행하지 않았다. 다음 결정은 주문자 구독에 지정 제안 이용권만 포함하고 기본 배달료를 별도로 유지할지다.
+
+## 면목제3·8동 H 계층형 카드·플레이어 교환 기획 r8 (2026-09-19)
+
+- 현재 기능 metadata, 사용자 행위 로그, 기사 월 이용료, 재무 사건·관리계정 투영, 운영경제성 계산을 조사했다. 공통 사용자·조직 사용량 원장과 비용 귀속 계정은 아직 존재하지 않는다.
+- [H 계층형 역할 카드·플레이어 교환 r8](Planning/시스템/PLAN-SYSTEM-USAGE-COST-SUBSCRIPTION-METERING/README.md)에서 `사용량 사실 → 직접·추정 원가 → 구독 정책 → 청구·재무`를 분리하고 실제 영업보다 Unity 가상 운영 실험을 먼저 수행하는 방향을 유지했다.
+- 내부 메서드 호출이 아니라 설명 가능한 기술·업무 단위를 계량하고, 같은 멱등 키의 업무 재처리를 중복 과금하지 않으며 첫 적용은 자동 청구 없는 `ShadowMetering`으로 제안했다.
+- 조직 업무 비용은 검증된 조직 구독 계정에 귀속하고 개인 사용자는 행위자로만 추적하기로 확정했다. 조직 결속이 없거나 모호하면 개인에게 추정 귀속하지 않고 `AttributionPending`으로 청구 후보에서 제외한다.
+- 첫 외부 상품은 음식점 조직 월 구독으로 확정했다. 플랫폼 보유 매출 대비 영업이익률 약 4%를 운영 목표로 두며 총거래액·음식점 상품대금·기사 수행대금 같은 통과자금은 매출 분모에서 제외한다.
+- 의무 지급·환불·세금·보험·운영비와 운영 안전 유보금 하한을 충족한 뒤 남는 현금만 순환 후보로 본다. 4% 영업이익, 가용현금, 유보금, 순환가능잉여현금은 서로 다른 값이다.
+- 순환가능잉여현금은 서비스 품질 재투자·이용 조직 환원·현장 참여자 지원·추가 유보 네 바구니로 관리하기로 확정했다. 비율은 판본화하며 소급 변경하지 않고 실제 송금은 계속 비활성이다.
+- 현행 `LocalSimulationRuntime`, NPC 정책 변경, revision 재조회, Save/Replay와 창고 정책 카드 Presenter를 재사용 기반으로 확인했다. 실제 `SimulationWorldShell` 카드 UI 결속은 아직 완료 증거가 없다.
+- 첫 카드 묶음 후보는 운영 인력·역할 용량, 음식점 월 구독, 서비스 수준, 자금 안전이다. Unity 가상 Simulation에서는 정책을 바꿀 수 있지만 실제 운영 자료 관찰에서는 계속 읽기 전용이다.
+- 면목제3·8동 디오라마 선택 시 하단 슬롯을 열어 주민·음식점·배달 기사 카드를 가로로 선택하는 방향을 확정했다. 지역·건물·NPC 선택 문맥에 따라 관련 카드를 정렬하고 카메라 초점·상세·전체 보기로 이어진다.
+- 카드 슬롯은 행정동→H3→H2→H1 문맥을 먼저 해석한다. H3는 생활권 집계, H2는 독립 업무 블록, H1은 직접 상호작용 대상 카드로 점차 구체화하며 행정동을 H3로 자동 해석하지 않는다.
+- H2·H3가 미정이어도 승인된 H1 직접 선택을 허용한다. `Candidate`·`WaitingForHBinding`은 확정 공간으로 승격해 표시하지 않는다.
+- 행정동 첫 진입은 H3 요약 카드를 기본으로 하고 `전체 주체` 필터를 제공하기로 확정했다.
+- 주민·음식점·기사·업무 카드는 관찰 참조라 양도하지 않는다. 별도 소유권을 가진 지역 관찰·경험 수집 카드만 플레이어 교환 후보로 두며, 기존 같은 팀 수집 카드 양도 원장과 Save/Replay를 재사용 기반으로 삼는다.
+- 양쪽 제안·수락·최종 확인 뒤 두 카드 소유권을 함께 이전하는 원자적 교환을 제안했다. 공개 시장·현금 거래·희귀도 가격·업무 권한 이전은 제외한다.
+- 기존 사가정 건물 역할 카드 구현은 시설 카드 기반으로 재사용할 수 있다. 기존 `SimulationTeamRoleCard`는 전투·일행 역할 장착 의미이므로 디오라마 생활 주체 카드와 계약·상태를 합치지 않는다.
+- `SsalddelAdminApp 0.1.0` 준비와 운영 서버 원장은 보존하되 실제 외부 영업·채용·청구·배포는 후순위로 이동했다.
+- 제품 코드·DB·API·Unity Scene·migration은 변경하지 않았다. 시험·실제 Unity 실행·commit·push·배포는 수행하지 않았다. 다음 결정은 첫 교환 상대를 같은 Simulation 팀으로 제한할지다.
+
+## `SsalddelAdminApp 0.1.0` 내부 테스트 작업 명세 r2 (2026-09-19)
+
+- [내부 테스트 작업 명세 r2](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/operator-app-release-completion.r2.md)에 출시 업무를 WP0~WP7로 나눴다. 현재 변경 마감, 출시 화면 동결, HTTPS 주소·환경, Android 전송 보안, 판본·전용 서명 AAB, 실제 서버 원장, 실제 장치, Play 내부 테스트 순이다.
+- 첫 출시 후보 화면은 `/login`, `/overview`, `/operations`, `/operations/follow-up-recovery`, `/operations/finance`다. 공동구매·커뮤니티·콘텐츠·페이지 운영 코드는 보존하되 `OperatorPreview`에서 숨기는 안은 사용자 확인 대기다.
+- Release 주소가 없거나 HTTP·localhost이면 닫힌 채 실패하고, upload key·암호·토큰은 저장소 밖에서 주입하는 계약을 제안했다. 실제 제품 코드·manifest·서명 설정은 아직 변경하지 않았다.
+- `Built`, `ServerVerified`, `DeviceVerified`, `InternalReleased`, `DogfoodAccepted`를 별도 상태로 두었다. Play Console 등록·업로드·실제 장치·commit·push는 수행하지 않았다.
+
+## `SsalddelAdminApp` 실제 Android 출시 완수선 r1 (2026-09-18)
+
+- [운영자 앱 출시 완수 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/operator-app-release-completion.r1.md)을 추가해 새 기능 확대보다 기존 관리자 앱의 로그인·운영 개요·예외 관찰·안전 재시도·읽기 전용 현금 흐름을 실제 Android 배포 폐루프로 닫는 것을 현행 최우선으로 정리했다.
+- 현재 `SsalddelAdminApp`은 `net10.0-android`, package ID `com.ssalddel.adminapp`, 목표 API `36.0`으로 평가된다. `dotnet publish -c Release -f net10.0-android -p:AndroidPackageFormats=aab --no-restore`가 성공해 AAB 패키징 가능성은 확인했다.
+- 이는 배포 완료 증거가 아니다. 표시 판본은 아직 `0.0`, version code는 `1`이며 전용 upload keystore 설정, 출시 HTTPS 주소, Release의 평문 HTTP 차단, 실제 Android 설치·로그인·터치·백그라운드 복귀, Play Console 내부 테스트·Privacy policy·Data safety가 남아 있다.
+- 첫 외부 배포 채널은 Google Play 내부 테스트를 권장 상태로 두었다. 사용자가 확정하기 전 Play Console 등록·업로드·배포는 수행하지 않는다.
+- 제품 소스·서버 설정·서명 키는 이번 기획에서 변경하지 않았다. commit·push·배포도 수행하지 않았다.
+
+## 운영 현금 흐름 읽기 수직 단위 구현 (2026-09-18)
+
+- 기존 `재무사건`·`관리계정전기`에서 실제 현금 유입·유출·순변동과 기간 미수·지급의무·환불의무 순변동을 분리하는 `cash-flow-summary` 관리자 조회 API를 추가했다.
+- `SsalddelAdminApp`에 별도 `/operations/finance` 화면을 연결해 오늘·최근 7일을 조회한다. 기초 잔액이 없으므로 현재 가용현금 총액을 추정하지 않고 읽기 전용·운영 전표 쓰기 비활성 경계를 표시한다.
+- 관련 원장·API 메타데이터 집중 시험 64/64, 관리자 앱 Windows 대상 build와 `Ssalddel.v0.0.slnx` build가 통과했다. Task 전체 시험은 이번 변경과 무관한 기존 6건과 테스트 호스트 CLR 오류로 완료되지 않았다. 실제 인증 HTTP·MySQL·Android 장치·송금·전표·은행 대사는 검증하지 않았다.
+- 상세 구현 경계와 증거는 [현금 흐름 요약 구현 r3](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/cash-flow-summary.implementation.r3.md)에 기록했다. commit·push·배포는 수행하지 않았다.
+
+## 후기와 함께 보는 지연 선택 기획 (2026-09-18)
+
+- 주문 집중으로 조리가 늦어질 때 메뉴 관련 공개 후기를 참고해 기다릴지 취소를 요청할지 스스로 판단하는 방향을 정했다.
+- 좋은 후기만 골라 취소를 만류하는 방식은 사용하지 않는다. 현재 지연·환불 조건과 동등한 취소 접근성을 먼저 보장하고, 후기는 공개 동의와 중립 노출 규칙을 통과한 보조 정보로 둔다.
+- [후기와 함께 보는 지연 선택 r108](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/review-supported-delay-choice.r108.md)을 추가하고 지역 운영 Simulation 정본을 r108로 갱신했다. 제품 코드·API·UI·commit·push는 변경하거나 수행하지 않았다.
+
+## 긍정 맥락을 살린 선제 예외 안내 기획 (2026-09-18)
+
+- 주문 집중으로 조리가 늦어지는 상황을 단순 경고로만 표현하지 않고, `주문이 많이 들어와 순서대로 조리 중`이라는 확인된 밝은 맥락과 실제 영향·현재 조치·다음 안내를 함께 보여 주기로 했다.
+- `맛있어서`처럼 데이터가 직접 증명하지 않은 평가는 자동 생성하지 않으며, 긍정 표현으로 지연을 축소하거나 책임을 흐리지 않는다.
+- [긍정 맥락을 살린 선제 안내 r107](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/positive-context-proactive-exception-communication.r107.md)을 추가하고 지역 운영 Simulation 정본을 r107로 갱신했다. 제품 코드·API·UI·commit·push는 변경하거나 수행하지 않았다.
 
 ## 예외 상세의 서버 정본 재조회 관문 확정 (2026-09-18)
 
