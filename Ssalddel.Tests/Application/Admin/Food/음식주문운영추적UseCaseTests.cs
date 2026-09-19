@@ -28,6 +28,10 @@ public sealed class 음식주문운영추적UseCaseTests
 
         Assert.NotNull(result);
         Assert.Equal(음식주문운영추적상태코드.완료, result.전체상태);
+        Assert.Equal(
+            음식배달운영생명주기단계Codes.종료,
+            result.생명주기조화.현재단계Code);
+        Assert.True(result.생명주기조화.정상경로조화여부);
         Assert.Equal("FOOD-TRACE-COMPLETE", result.원본의뢰Id);
         Assert.NotNull(result.배차대기Id);
         Assert.Equal("TR-FOOD-TRACE-COMPLETE", result.운송번호);
@@ -89,14 +93,92 @@ public sealed class 음식주문운영추적UseCaseTests
         Assert.NotNull(result);
         Assert.True(result.추천만료됨);
         Assert.Equal(음식주문운영추적상태코드.복구필요, result.전체상태);
-        Assert.Contains(result.경고목록, x => x.Contains("추천 유효시간", StringComparison.Ordinal));
-        Assert.Contains(result.복구안내목록, x => x.Contains("30초 추천 만료 정리", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.경고목록, x => x.Contains("추천 유효시간", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.복구안내목록, x => x.Contains("추천 만료", StringComparison.Ordinal));
         Assert.Contains(result.Outbox목록, x => x.운영자확인필요);
+        Assert.Equal(
+            음식배달운영주의상태Codes.운영자확인필요,
+            result.생명주기조화.주의상태Code);
+        Assert.Contains(
+            음식배달운영자동회복Codes.기사추천만료,
+            result.생명주기조화.자동회복Codes);
+        Assert.DoesNotContain(
+            음식배달운영자동회복Codes.기사추천만료,
+            result.생명주기조화.예외Codes);
+        Assert.Contains(
+            음식배달운영책임주체Codes.플랫폼운영자,
+            result.생명주기조화.현재책임주체Codes);
 
         var json = JsonSerializer.Serialize(result);
         Assert.DoesNotContain("driver-sensitive", json, StringComparison.Ordinal);
         Assert.DoesNotContain("010-1234-5678", json, StringComparison.Ordinal);
         Assert.DoesNotContain("서울시 중랑구 상세주소", json, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task 추천만료만있으면_자동회복중이며_운영자복구필요가아니다()
+    {
+        await using var db = CreateContext();
+        const string orderNo = "FOOD-TRACE-AUTO-REDISPATCH";
+        var queue = await SeedQueueAsync(
+            db,
+            orderNo,
+            상태값.배차노출상태.추천중,
+            DateTime.UtcNow.AddMinutes(-2));
+        var order = CreateOrder(orderNo, 음식주문상태코드.조리중, queue.Id);
+        order.조리예상완료시각Utc = DateTime.UtcNow.AddMinutes(20);
+        db.음식주문.Add(order);
+        AddSucceededOutboxes(db, queue, orderNo);
+        await db.SaveChangesAsync();
+
+        var result = await new 음식주문운영추적UseCase(db).조회Async(orderNo);
+
+        Assert.NotNull(result);
+        Assert.Equal(음식주문운영추적상태코드.진행중, result.전체상태);
+        Assert.Equal(음식배달운영주의상태Codes.자동회복중, result.생명주기조화.주의상태Code);
+        Assert.True(result.생명주기조화.자동회복대상여부);
+        Assert.False(result.생명주기조화.운영자확인필요여부);
+        Assert.Empty(result.생명주기조화.예외Codes);
+        Assert.Contains(
+            음식배달운영자동회복Codes.기사추천만료,
+            result.생명주기조화.자동회복Codes);
+        Assert.DoesNotContain(result.체크포인트, x =>
+            x.단계Key == "dispatch"
+            && x.상태 == 음식주문운영추적상태코드.복구필요);
+    }
+
+    [Fact]
+    public async Task 조리예상완료10분초과는_음식점준비지연한건으로운영자에게표시한다()
+    {
+        await using var db = CreateContext();
+        const string orderNo = "FOOD-TRACE-PREPARATION-DELAY";
+        var queue = await SeedQueueAsync(
+            db,
+            orderNo,
+            상태값.배차노출상태.추천중,
+            DateTime.UtcNow.AddMinutes(2));
+        var order = CreateOrder(orderNo, 음식주문상태코드.조리중, queue.Id);
+        order.조리예상완료시각Utc = DateTime.UtcNow.AddMinutes(-11);
+        db.음식주문.Add(order);
+        AddSucceededOutboxes(db, queue, orderNo);
+        await db.SaveChangesAsync();
+
+        var result = await new 음식주문운영추적UseCase(db).조회Async(orderNo);
+
+        Assert.NotNull(result);
+        Assert.Equal(음식주문운영추적상태코드.복구필요, result.전체상태);
+        Assert.Equal(
+            음식배달운영지연상태Codes.운영자확인필요,
+            result.생명주기조화.음식점준비지연상태Code);
+        Assert.Equal(
+            [음식배달운영업무지연Codes.음식점준비지연],
+            result.생명주기조화.업무지연Codes);
+        Assert.Equal(
+            [음식배달운영업무지연Codes.음식점준비지연],
+            result.생명주기조화.예외Codes);
+        Assert.Empty(result.생명주기조화.자동회복Codes);
+        Assert.Contains(result.경고목록, x =>
+            x.Contains("음식점 준비", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -147,6 +229,10 @@ public sealed class 음식주문운영추적UseCaseTests
         Assert.Contains(result.체크포인트, x =>
             x.단계Key == "dispatch"
             && x.상태 == 음식주문운영추적상태코드.복구필요);
+        Assert.True(result.생명주기조화.운영자확인필요여부);
+        Assert.Contains(
+            음식배달운영예외Codes.배차원장누락,
+            result.생명주기조화.예외Codes);
     }
 
     private static async Task SeedCompletedAsync(SsalddelContext db, string orderNo)
@@ -204,6 +290,36 @@ public sealed class 음식주문운영추적UseCaseTests
             메타데이터 = """{"correlationId":"safe"}"""
         });
         await db.SaveChangesAsync();
+    }
+
+    private static void AddSucceededOutboxes(
+        SsalddelContext db,
+        운송원장 queue,
+        string orderNo)
+    {
+        db.음식마트원장동기화Outbox.Add(new 음식마트원장동기화Outbox
+        {
+            멱등키 = $"food-trace-succeeded:{orderNo}",
+            동기화유형 = 음식마트원장동기화유형코드.음식주문,
+            원천Id = orderNo,
+            처리상태 = OutboxProcessingStatuses.Succeeded,
+            CreatedAtUtc = DateTime.UtcNow.AddMinutes(-2),
+            UpdatedAtUtc = DateTime.UtcNow.AddMinutes(-1)
+        });
+        db.배차추천알림Outbox.Add(new 배차추천알림Outbox
+        {
+            배차대기Id = queue.Id,
+            의뢰Id = orderNo,
+            기사Id = "driver-succeeded",
+            추천라운드 = 1,
+            제목 = "추천",
+            본문 = "추천",
+            DataJson = "{}",
+            발송상태 = OutboxProcessingStatuses.Succeeded,
+            시도횟수 = 1,
+            CreatedAt = DateTime.UtcNow.AddMinutes(-3),
+            UpdatedAt = DateTime.UtcNow.AddMinutes(-2)
+        });
     }
 
     private static async Task<운송원장> SeedQueueAsync(

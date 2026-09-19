@@ -98,9 +98,20 @@ public sealed class 음식주문운영추적UseCase(SsalddelContext db) : I음�
 
         var now = DateTime.UtcNow;
         var normalizedOrderStatus = 음식주문상태코드.Normalize(order.상태);
+        var latestDeliveryAttempt = deliveryAttempts.FirstOrDefault();
+        var delayEvaluation = 음식배달운영지연판정Policy.판정(
+            new 음식배달운영지연판정입력(
+                normalizedOrderStatus,
+                now,
+                order.조리예상완료시각Utc,
+                FindTransitionAt(order, 음식주문상태코드.픽업대기),
+                latestDeliveryAttempt?.픽업완료시각Utc,
+                latestDeliveryAttempt?.전달완료시각Utc));
         var recommendationExpired = IsRecommendationExpired(queue, now);
-        var dispatchRecoveryRequired = RequiresDispatchRecovery(
+        var dispatchLedgerMissing = IsDispatchLedgerMissing(
             normalizedOrderStatus,
+            queue);
+        var dispatchLinkMismatch = HasDispatchLinkMismatch(
             order.배차대기Id,
             queue);
         var warnings = BuildWarnings(
@@ -109,7 +120,7 @@ public sealed class 음식주문운영추적UseCase(SsalddelContext db) : I음�
             queue,
             ledgerOutboxes,
             recommendationOutboxes,
-            recommendationExpired,
+            delayEvaluation,
             now);
         var recoveryGuides = BuildRecoveryGuides(
             normalizedOrderStatus,
@@ -117,9 +128,26 @@ public sealed class 음식주문운영추적UseCase(SsalddelContext db) : I음�
             queue,
             ledgerOutboxes,
             recommendationOutboxes,
-            recommendationExpired);
+            delayEvaluation);
         var outboxes = BuildOutboxes(ledgerOutboxes, recommendationOutboxes, now);
-        var checkpoints = BuildCheckpoints(order, queue, outboxes, recommendationExpired);
+        var checkpoints = BuildCheckpoints(order, queue, outboxes);
+        var latestDeliveryAttemptInterrupted = latestDeliveryAttempt?.상태Code
+                                              == 음식배달시도상태Code.중단;
+        var lifecycleAlignment = 음식배달운영생명주기조화Projector.판정(
+            new 음식배달운영생명주기조화입력(
+                normalizedOrderStatus,
+                delayEvaluation.음식점준비지연상태Code,
+                delayEvaluation.음식점준비초과분,
+                delayEvaluation.배달진행지연상태Code,
+                delayEvaluation.배달진행초과분,
+                배차원장누락여부: dispatchLedgerMissing,
+                배차연결불일치여부: dispatchLinkMismatch,
+                기사추천만료여부: recommendationExpired,
+                최근배달시도중단여부: latestDeliveryAttemptInterrupted,
+                공동원장동기화확인필요여부: outboxes.Any(x =>
+                    x.종류 == "음식 공동 원장 동기화" && x.운영자확인필요),
+                기사알림확인필요여부: outboxes.Any(x =>
+                    x.종류 == "기사 추천 알림" && x.운영자확인필요)));
 
         return new 음식주문운영추적응답
         {
@@ -130,9 +158,7 @@ public sealed class 음식주문운영추적UseCase(SsalddelContext db) : I음�
             전체상태 = ResolveOverallStatus(
                 normalizedOrderStatus,
                 warnings,
-                recommendationExpired,
-                dispatchRecoveryRequired,
-                outboxes),
+                lifecycleAlignment),
             배차대기Id = queue?.Id ?? order.배차대기Id,
             운송번호 = queue?.운송번호 ?? string.Empty,
             운송상태 = queue?.상태 ?? string.Empty,
@@ -144,6 +170,7 @@ public sealed class 음식주문운영추적UseCase(SsalddelContext db) : I음�
             추천라운드 = queue?.추천라운드 ?? 0,
             추천만료시각Utc = queue?.추천만료시각,
             추천만료됨 = recommendationExpired,
+            생명주기조화 = lifecycleAlignment,
             생성시각Utc = order.CreatedAt,
             최근변경시각Utc = ResolveLastChangedAt(
                 order.UpdatedAt,
@@ -236,7 +263,7 @@ public sealed class 음식주문운영추적UseCase(SsalddelContext db) : I음�
         운송원장? queue,
         IReadOnlyList<음식마트원장동기화Outbox> ledgerOutboxes,
         IReadOnlyList<배차추천알림Outbox> recommendationOutboxes,
-        bool recommendationExpired,
+        음식배달운영지연판정결과 delayEvaluation,
         DateTime now)
     {
         var warnings = new List<string>();
@@ -264,9 +291,14 @@ public sealed class 음식주문운영추적UseCase(SsalddelContext db) : I음�
             warnings.Add("운송 실행 원장의 음식 주문 상관관계가 표준 연결 규칙과 다릅니다.");
         }
 
-        if (recommendationExpired)
+        if (delayEvaluation.음식점준비지연상태Code != 음식배달운영지연상태Codes.없음)
         {
-            warnings.Add("기사 추천 유효시간이 지났지만 추천중 상태가 남아 있습니다.");
+            warnings.Add($"음식점 준비가 예상 완료 시각을 {delayEvaluation.음식점준비초과분}분 초과했습니다.");
+        }
+
+        if (delayEvaluation.배달진행지연상태Code != 음식배달운영지연상태Codes.없음)
+        {
+            warnings.Add($"픽업 이후 배달 진행이 기준 시간을 {delayEvaluation.배달진행초과분}분 초과했습니다.");
         }
 
         if (ledgerOutboxes.Count == 0)
@@ -303,7 +335,7 @@ public sealed class 음식주문운영추적UseCase(SsalddelContext db) : I음�
         운송원장? queue,
         IReadOnlyList<음식마트원장동기화Outbox> ledgerOutboxes,
         IReadOnlyList<배차추천알림Outbox> recommendationOutboxes,
-        bool recommendationExpired)
+        음식배달운영지연판정결과 delayEvaluation)
     {
         var guides = new List<string>();
         var dispatchExpected = orderStatus is not 음식주문상태코드.주문대기
@@ -322,9 +354,16 @@ public sealed class 음식주문운영추적UseCase(SsalddelContext db) : I음�
             guides.Add("원장을 직접 덮어쓰지 말고 음식 주문의 배차 연결 Event를 재처리해 stable ID를 다시 투영합니다.");
         }
 
-        if (recommendationExpired)
+        if (delayEvaluation.음식점준비지연상태Code
+            == 음식배달운영지연상태Codes.운영자확인필요)
         {
-            guides.Add("30초 추천 만료 정리 작업이 재추천 대기 또는 공개배차로 전환하는지 확인합니다.");
+            guides.Add("음식점의 현재 준비 상태와 변경된 준비 예정시각을 확인하고 필요한 경우 주문자에게 지연 사실을 안내합니다.");
+        }
+
+        if (delayEvaluation.배달진행지연상태Code
+            == 음식배달운영지연상태Codes.운영자확인필요)
+        {
+            guides.Add("기사의 마지막 진행 상태와 안전 문제 여부를 확인하고, 필요한 경우 기사 또는 주문자에게 연락합니다.");
         }
 
         if (ledgerOutboxes.Any(x => x.처리상태 == OutboxProcessingStatuses.Failed))
@@ -343,8 +382,7 @@ public sealed class 음식주문운영추적UseCase(SsalddelContext db) : I음�
     private static IReadOnlyList<음식주문운영체크포인트응답> BuildCheckpoints(
         살뜰.도메인.음식.음식주문 order,
         운송원장? queue,
-        IReadOnlyList<음식주문운영Outbox응답> outboxes,
-        bool recommendationExpired)
+        IReadOnlyList<음식주문운영Outbox응답> outboxes)
     {
         var status = 음식주문상태코드.Normalize(order.상태);
         var closed = status is 음식주문상태코드.거절 or 음식주문상태코드.취소;
@@ -386,10 +424,8 @@ public sealed class 음식주문운영추적UseCase(SsalddelContext db) : I음�
                     ? 음식주문운영추적상태코드.해당없음
                     : queue is null && restaurantCompleted
                         ? 음식주문운영추적상태코드.복구필요
-                        : recommendationExpired
-                            ? 음식주문운영추적상태코드.복구필요
-                            : driverAssigned
-                                ? 음식주문운영추적상태코드.완료
+                        : driverAssigned
+                            ? 음식주문운영추적상태코드.완료
                                 : queue is null
                                     ? 음식주문운영추적상태코드.미시작
                                     : 음식주문운영추적상태코드.진행중,
@@ -476,18 +512,14 @@ public sealed class 음식주문운영추적UseCase(SsalddelContext db) : I음�
     private static string ResolveOverallStatus(
         string orderStatus,
         IReadOnlyList<string> warnings,
-        bool recommendationExpired,
-        bool dispatchRecoveryRequired,
-        IReadOnlyList<음식주문운영Outbox응답> outboxes)
+        음식배달운영생명주기조화응답 lifecycleAlignment)
     {
         if (orderStatus is 음식주문상태코드.거절 or 음식주문상태코드.취소)
         {
             return 음식주문운영추적상태코드.종료;
         }
 
-        if (recommendationExpired
-            || dispatchRecoveryRequired
-            || outboxes.Any(x => x.운영자확인필요))
+        if (lifecycleAlignment.운영자확인필요여부)
         {
             return 음식주문운영추적상태코드.복구필요;
         }
@@ -529,29 +561,24 @@ public sealed class 음식주문운영추적UseCase(SsalddelContext db) : I음�
                    && queue.추천만료시각.HasValue
                    && queue.추천만료시각.Value <= now));
 
-    private static bool RequiresDispatchRecovery(
+    private static bool IsDispatchLedgerMissing(
         string orderStatus,
-        long? recordedDispatchWaitingId,
         운송원장? queue)
     {
         var dispatchExpected = orderStatus is not 음식주문상태코드.주문대기
             and not 음식주문상태코드.거절
             and not 음식주문상태코드.취소;
-        if (dispatchExpected && queue is null)
-        {
-            return true;
-        }
+        return dispatchExpected && queue is null;
+    }
 
-        if (queue is null)
-        {
-            return false;
-        }
-
-        return (recordedDispatchWaitingId is > 0
+    private static bool HasDispatchLinkMismatch(
+        long? recordedDispatchWaitingId,
+        운송원장? queue)
+        => queue is not null
+           && ((recordedDispatchWaitingId is > 0
                 && queue.Id != recordedDispatchWaitingId.Value)
                || !string.Equals(queue.의뢰Id, queue.원본의뢰Id, StringComparison.Ordinal)
-               || !운송의뢰배차원천유형.Is음식점주문(queue.원본의뢰유형);
-    }
+               || !운송의뢰배차원천유형.Is음식점주문(queue.원본의뢰유형));
 
     private static bool IsStaleProcessing(string status, DateTime updatedAtUtc, DateTime now)
         => status == OutboxProcessingStatuses.Processing
