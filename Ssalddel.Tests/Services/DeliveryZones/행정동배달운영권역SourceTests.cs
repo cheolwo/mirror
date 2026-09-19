@@ -47,6 +47,16 @@ public sealed class 행정동배달운영권역SourceTests
             "region:kr:bjd:1126010100",
             Assert.Single(myeonmokThreeEight.LegalAreas).LegalAreaStableId);
         Assert.DoesNotContain(result, x => x.DisplayName.Contains("중국동", StringComparison.Ordinal));
+        Assert.Equal(
+            new Dictionary<string, int>(StringComparer.Ordinal)
+            {
+                ["서울특별시 광진구"] = 4,
+                ["서울특별시 동대문구"] = 10,
+                ["서울특별시 중랑구"] = 16
+            },
+            result.GroupBy(x => string.Join(' ', x.DisplayName.Split(' ').Take(2)))
+                .ToDictionary(x => x.Key, x => x.Count(), StringComparer.Ordinal));
+        Assert.DoesNotContain(result, x => x.DisplayName.Contains("구리시", StringComparison.Ordinal));
     }
 
     [Fact]
