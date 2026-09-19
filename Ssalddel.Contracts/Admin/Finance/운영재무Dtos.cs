@@ -87,6 +87,25 @@ public sealed class 운영관리계정잔액Dto
     public string 정상잔액방향Code { get; set; } = string.Empty;
 }
 
+public sealed class 운영현금흐름요약Dto
+{
+    public string 통화Code { get; set; } = string.Empty;
+    public DateOnly 기간시작일 { get; set; }
+    public DateOnly 기간종료일 { get; set; }
+    public decimal 현금유입합계 { get; set; }
+    public decimal 현금유출합계 { get; set; }
+    public decimal 순현금변동 { get; set; }
+    public decimal 기간미수순변동후보 { get; set; }
+    public decimal 기간지급의무순변동후보 { get; set; }
+    public decimal 기간고객환불의무순변동후보 { get; set; }
+    public int 현금이동사건수 { get; set; }
+    public int 기간재무사건수 { get; set; }
+    public bool 가용현금잔액확정가능여부 { get; set; }
+    public string 가용현금잔액제한Code { get; set; } = string.Empty;
+    public string 원장SnapshotHash { get; set; } = string.Empty;
+    public bool 운영전표쓰기허용 { get; set; }
+}
+
 public sealed class 운영재무대사예외Dto
 {
     public string StableId { get; set; } = string.Empty;

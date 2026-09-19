@@ -29,6 +29,12 @@ public interface I운영재무조회UseCase
         DateOnly? to,
         CancellationToken cancellationToken);
 
+    Task<운영현금흐름요약Dto> 현금흐름요약조회Async(
+        string currencyCode,
+        DateOnly from,
+        DateOnly to,
+        CancellationToken cancellationToken);
+
     Task<IReadOnlyList<운영재무대사예외Dto>> 대사예외조회Async(
         string? statusCode,
         CancellationToken cancellationToken);
@@ -187,6 +193,104 @@ public sealed class 운영재무조회UseCase(
             .ToArrayAsync(cancellationToken);
     }
 
+    public async Task<운영현금흐름요약Dto> 현금흐름요약조회Async(
+        string currencyCode,
+        DateOnly from,
+        DateOnly to,
+        CancellationToken cancellationToken)
+    {
+        var currency = currencyCode?.Trim().ToUpperInvariant() ?? string.Empty;
+        if (currency.Length != 3)
+        {
+            throw new ArgumentException("통화 코드는 ISO 4217 세 글자 형식이어야 합니다.", nameof(currencyCode));
+        }
+
+        if (from > to)
+        {
+            throw new ArgumentException("현금 흐름 조회 시작일은 종료일보다 늦을 수 없습니다.", nameof(from));
+        }
+
+        var startUtc = from.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        var endExclusiveUtc = to.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        var events = await db.재무사건
+            .AsNoTracking()
+            .Include(item => item.관리계정전기목록)
+            .Where(item => item.통화Code == currency
+                && ((item.업무발생일시Utc >= startUtc && item.업무발생일시Utc < endExclusiveUtc)
+                    || (item.현금이동일시Utc.HasValue
+                        && item.현금이동일시Utc.Value >= startUtc
+                        && item.현금이동일시Utc.Value < endExclusiveUtc)))
+            .OrderBy(item => item.StableId)
+            .ToArrayAsync(cancellationToken);
+
+        var cashMovementEvents = events
+            .Where(item => item.현금이동일시Utc.HasValue
+                && item.현금이동일시Utc.Value >= startUtc
+                && item.현금이동일시Utc.Value < endExclusiveUtc)
+            .Where(item => item.관리계정전기목록.Any(line =>
+                line.관리계정StableId == 관리계정StableIds.가용현금))
+            .ToArray();
+        var cashLines = cashMovementEvents
+            .SelectMany(item => item.관리계정전기목록)
+            .Where(line => line.관리계정StableId == 관리계정StableIds.가용현금)
+            .ToArray();
+        var occurredEvents = events
+            .Where(item => item.업무발생일시Utc >= startUtc && item.업무발생일시Utc < endExclusiveUtc)
+            .ToArray();
+        var occurredLines = occurredEvents
+            .SelectMany(item => item.관리계정전기목록)
+            .ToArray();
+
+        var cashIn = cashLines
+            .Where(line => line.전기방향Code == "DebitCandidate")
+            .Sum(line => line.금액);
+        var cashOut = cashLines
+            .Where(line => line.전기방향Code == "CreditCandidate")
+            .Sum(line => line.금액);
+        var receivableDelta = SumNormalBalance(
+            occurredLines,
+            definition => definition.CategoryCode == "AssetCandidate"
+                && definition.StableId != 관리계정StableIds.가용현금);
+        var payableDelta = SumNormalBalance(
+            occurredLines,
+            definition => definition.CategoryCode == "LiabilityCandidate");
+        var refundDelta = SumNormalBalance(
+            occurredLines,
+            definition => definition.StableId == 관리계정StableIds.고객환불의무);
+        var snapshotHash = BuildSnapshotHash(events.SelectMany(item =>
+            item.관리계정전기목록
+                .OrderBy(line => line.LineNumber)
+                .Select(line => string.Join("|",
+                    item.StableId,
+                    item.원본Revision.ToString(CultureInfo.InvariantCulture),
+                    item.업무발생일시Utc.ToString("O", CultureInfo.InvariantCulture),
+                    item.현금이동일시Utc?.ToString("O", CultureInfo.InvariantCulture) ?? string.Empty,
+                    line.LineNumber.ToString(CultureInfo.InvariantCulture),
+                    line.관리계정StableId,
+                    line.전기방향Code,
+                    line.금액.ToString(CultureInfo.InvariantCulture),
+                    line.매핑Revision))));
+
+        return new 운영현금흐름요약Dto
+        {
+            통화Code = currency,
+            기간시작일 = from,
+            기간종료일 = to,
+            현금유입합계 = cashIn,
+            현금유출합계 = cashOut,
+            순현금변동 = cashIn - cashOut,
+            기간미수순변동후보 = receivableDelta,
+            기간지급의무순변동후보 = payableDelta,
+            기간고객환불의무순변동후보 = refundDelta,
+            현금이동사건수 = cashMovementEvents.Length,
+            기간재무사건수 = occurredEvents.Length,
+            가용현금잔액확정가능여부 = false,
+            가용현금잔액제한Code = "OpeningBalanceNotIncluded",
+            원장SnapshotHash = snapshotHash,
+            운영전표쓰기허용 = false
+        };
+    }
+
     public async Task<플랫폼운영경제성원장평가응답Dto> 원장기반경제성평가Async(
         플랫폼운영경제성원장평가요청Dto request,
         CancellationToken cancellationToken)
@@ -309,6 +413,33 @@ public sealed class 운영재무조회UseCase(
                     매핑Revision = line.매핑Revision
                 }).ToArray()
         };
+
+    private static decimal SumNormalBalance(
+        IEnumerable<살뜰.도메인.정산.관리계정전기> lines,
+        Func<관리계정Definition, bool> include)
+    {
+        decimal total = 0;
+        foreach (var group in lines.GroupBy(line => line.관리계정StableId, StringComparer.Ordinal))
+        {
+            var definition = 관리계정Catalog.Find(group.Key);
+            if (definition is null || !include(definition))
+            {
+                continue;
+            }
+
+            var debit = group
+                .Where(line => line.전기방향Code == "DebitCandidate")
+                .Sum(line => line.금액);
+            var credit = group
+                .Where(line => line.전기방향Code == "CreditCandidate")
+                .Sum(line => line.금액);
+            total += definition.NormalBalanceSide == 관리계정정상잔액방향.Debit
+                ? debit - credit
+                : credit - debit;
+        }
+
+        return total;
+    }
 
     private static string BuildSnapshotHash(IEnumerable<string> rows)
     {

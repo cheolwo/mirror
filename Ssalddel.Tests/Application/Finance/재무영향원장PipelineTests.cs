@@ -152,6 +152,72 @@ public sealed class 재무영향원장PipelineTests
             useCase.원장기반경제성평가Async(request, CancellationToken.None));
     }
 
+    [Fact]
+    public async Task 현금흐름요약은_현금이동과미수미지급의무를분리하고_기초잔액을추정하지않는다()
+    {
+        await using var db = CreateContext();
+        AddFinancialEvent(
+            db,
+            "cash-in",
+            new DateTime(2026, 9, 18, 1, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 9, 18, 2, 0, 0, DateTimeKind.Utc),
+            (관리계정StableIds.가용현금, "DebitCandidate", 150_000m));
+        AddFinancialEvent(
+            db,
+            "cash-out",
+            new DateTime(2026, 9, 18, 3, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 9, 18, 4, 0, 0, DateTimeKind.Utc),
+            (관리계정StableIds.가용현금, "CreditCandidate", 40_000m));
+        AddFinancialEvent(
+            db,
+            "receivable",
+            new DateTime(2026, 9, 18, 5, 0, 0, DateTimeKind.Utc),
+            null,
+            (관리계정StableIds.Pg미수, "DebitCandidate", 200_000m));
+        AddFinancialEvent(
+            db,
+            "payables",
+            new DateTime(2026, 9, 18, 6, 0, 0, DateTimeKind.Utc),
+            null,
+            (관리계정StableIds.기사정상수행대금미지급, "CreditCandidate", 70_000m),
+            (관리계정StableIds.고객환불의무, "CreditCandidate", 20_000m));
+        await db.SaveChangesAsync();
+        var useCase = new 운영재무조회UseCase(db, new 플랫폼운영경제성Calculator());
+
+        var summary = await useCase.현금흐름요약조회Async(
+            "krw",
+            new DateOnly(2026, 9, 18),
+            new DateOnly(2026, 9, 18),
+            CancellationToken.None);
+
+        Assert.Equal("KRW", summary.통화Code);
+        Assert.Equal(150_000m, summary.현금유입합계);
+        Assert.Equal(40_000m, summary.현금유출합계);
+        Assert.Equal(110_000m, summary.순현금변동);
+        Assert.Equal(200_000m, summary.기간미수순변동후보);
+        Assert.Equal(90_000m, summary.기간지급의무순변동후보);
+        Assert.Equal(20_000m, summary.기간고객환불의무순변동후보);
+        Assert.Equal(2, summary.현금이동사건수);
+        Assert.Equal(4, summary.기간재무사건수);
+        Assert.False(summary.가용현금잔액확정가능여부);
+        Assert.Equal("OpeningBalanceNotIncluded", summary.가용현금잔액제한Code);
+        Assert.False(summary.운영전표쓰기허용);
+        Assert.False(string.IsNullOrWhiteSpace(summary.원장SnapshotHash));
+    }
+
+    [Fact]
+    public async Task 현금흐름요약은_잘못된기간을거절한다()
+    {
+        await using var db = CreateContext();
+        var useCase = new 운영재무조회UseCase(db, new 플랫폼운영경제성Calculator());
+
+        await Assert.ThrowsAsync<ArgumentException>(() => useCase.현금흐름요약조회Async(
+            "KRW",
+            new DateOnly(2026, 9, 19),
+            new DateOnly(2026, 9, 18),
+            CancellationToken.None));
+    }
+
     private static 결제승인완료Event CreatePaymentApprovedEvent()
         => new(
             7001,
@@ -171,6 +237,48 @@ public sealed class 재무영향원장PipelineTests
             금액 = amount,
             근거Revision = "test-r1"
         };
+
+    private static void AddFinancialEvent(
+        SsalddelContext db,
+        string stableId,
+        DateTime occurredAtUtc,
+        DateTime? cashMovedAtUtc,
+        params (string AccountStableId, string SideCode, decimal Amount)[] lines)
+    {
+        var financialEvent = new 재무사건
+        {
+            StableId = stableId,
+            원본Event유형 = "TestEvent",
+            원본StableId = $"source:{stableId}",
+            원본Revision = 1,
+            재무영향ProfileStableId = "test-profile",
+            재무의미Code = "TestMeaning",
+            재무영향유형Code = "TestImpact",
+            금액 = lines.Sum(line => line.Amount),
+            통화Code = "KRW",
+            업무발생일시Utc = occurredAtUtc,
+            현금이동일시Utc = cashMovedAtUtc,
+            증빙Hash = $"hash:{stableId}",
+            CreatedAtUtc = occurredAtUtc,
+            UpdatedAtUtc = occurredAtUtc
+        };
+        var lineNumber = 1;
+        foreach (var line in lines)
+        {
+            financialEvent.관리계정전기목록.Add(new 관리계정전기
+            {
+                LineNumber = lineNumber++,
+                관리계정StableId = line.AccountStableId,
+                전기방향Code = line.SideCode,
+                금액 = line.Amount,
+                통화Code = "KRW",
+                매핑Revision = "test-r1",
+                CreatedAtUtc = occurredAtUtc
+            });
+        }
+
+        db.재무사건.Add(financialEvent);
+    }
 
     private static SsalddelContext CreateContext()
     {

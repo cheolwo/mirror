@@ -48,6 +48,15 @@ public sealed class 운영재무Controller(I운영재무조회UseCase useCase) :
         CancellationToken cancellationToken = default)
         => Ok(await useCase.관리계정잔액조회Async(currencyCode, from, to, cancellationToken));
 
+    [HttpGet("cash-flow-summary")]
+    [SsalddelApiOperation(SsalddelOperation.Browse)]
+    public async Task<IActionResult> 현금흐름요약조회(
+        [FromQuery] string currencyCode,
+        [FromQuery] DateOnly from,
+        [FromQuery] DateOnly to,
+        CancellationToken cancellationToken = default)
+        => Ok(await useCase.현금흐름요약조회Async(currencyCode, from, to, cancellationToken));
+
     [HttpGet("reconciliation-exceptions")]
     [SsalddelApiOperation(SsalddelOperation.Browse)]
     public async Task<IActionResult> 대사예외조회(
