@@ -1,0 +1,204 @@
+@page "/operations/finance"
+@using Ssalddel.Contracts.Admin.Finance
+@inject AdminAuthSession Session
+@inject AdminAuthService AuthService
+@inject AdminFinanceService FinanceService
+@inject NavigationManager Navigation
+
+<PageTitle>운영 현금 흐름</PageTitle>
+
+<MudStack Spacing="3">
+    <div class="admin-page-header">
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.overline" Color="Color.Primary">FINANCE DETAIL</MudText>
+            <MudText Typo="Typo.h4">현금 흐름</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                서버 재무사건 원장에서 실제 현금 이동과 아직 현금이 움직이지 않은 미수·지급 의무를 구분해 봅니다.
+            </MudText>
+        </MudStack>
+        @if (Session.IsServerAdmin)
+        {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       Disabled="isBusy"
+                       OnClick="LoadAsync">
+                새로고침
+            </MudButton>
+        }
+    </div>
+
+    @if (!Session.IsServerAdmin)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+            서버관리자 로그인이 필요합니다.
+            <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="OpenLogin">로그인</MudButton>
+        </MudAlert>
+    }
+    else
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-3">
+            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                <MudButton Variant="@(periodDays == 1 ? Variant.Filled : Variant.Outlined)"
+                           Color="Color.Primary"
+                           Disabled="isBusy"
+                           OnClick="@(() => ChangePeriodAsync(1))">
+                    오늘
+                </MudButton>
+                <MudButton Variant="@(periodDays == 7 ? Variant.Filled : Variant.Outlined)"
+                           Color="Color.Primary"
+                           Disabled="isBusy"
+                           OnClick="@(() => ChangePeriodAsync(7))">
+                    최근 7일
+                </MudButton>
+                <MudSpacer />
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@PeriodLabel</MudText>
+            </MudStack>
+        </MudPaper>
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+                @errorMessage
+                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="LoadAsync">다시 시도</MudButton>
+            </MudAlert>
+        }
+
+        @if (isBusy && summary is null)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+        }
+        else if (summary is not null)
+        {
+            <MudGrid Spacing="2">
+                <MudItem xs="6" md="4">
+                    <MetricCard Title="현금 유입"
+                                Value="@Money(summary.현금유입합계)"
+                                Description="현금 계정 차변 이동"
+                                Icon="@Icons.Material.Filled.SouthWest"
+                                AccentColor="Color.Success" />
+                </MudItem>
+                <MudItem xs="6" md="4">
+                    <MetricCard Title="현금 유출"
+                                Value="@Money(summary.현금유출합계)"
+                                Description="현금 계정 대변 이동"
+                                Icon="@Icons.Material.Filled.NorthEast"
+                                AccentColor="Color.Error" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MetricCard Title="순현금 변동"
+                                Value="@SignedMoney(summary.순현금변동)"
+                                Description="조회 기간 실제 이동 순액"
+                                Icon="@Icons.Material.Filled.AccountBalanceWallet"
+                                AccentColor="@(summary.순현금변동 < 0 ? Color.Warning : Color.Info)" />
+                </MudItem>
+            </MudGrid>
+
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.subtitle1">현금 이동 전 관리 후보</MudText>
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="4">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">기간 미수 순변동</MudText>
+                            <MudText Typo="Typo.h6">@SignedMoney(summary.기간미수순변동후보)</MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">기간 지급의무 순변동</MudText>
+                            <MudText Typo="Typo.h6">@SignedMoney(summary.기간지급의무순변동후보)</MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">고객 환불의무 순변동</MudText>
+                            <MudText Typo="Typo.h6">@SignedMoney(summary.기간고객환불의무순변동후보)</MudText>
+                        </MudItem>
+                    </MudGrid>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        현금 이동 @summary.현금이동사건수.ToString("N0")건 · 기간 재무사건 @summary.기간재무사건수.ToString("N0")건
+                    </MudText>
+                </MudStack>
+            </MudPaper>
+
+            @if (!summary.가용현금잔액확정가능여부)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                    이 화면은 기초 현금 잔액을 포함하지 않아 현재 가용현금 총액을 확정하지 않습니다.
+                    표시된 값은 조회 기간의 원장 기록 순변동입니다.
+                </MudAlert>
+            }
+
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-break">
+                원장 사본 @ShortHash(summary.원장SnapshotHash) · 읽기 전용 · 운영 전표 쓰기 비활성
+            </MudText>
+        }
+    }
+</MudStack>
+
+@code {
+    private 운영현금흐름요약Dto? summary;
+    private bool isBusy;
+    private string? errorMessage;
+    private int periodDays = 1;
+    private DateOnly periodEnd = DateOnly.FromDateTime(DateTime.Now);
+
+    private DateOnly PeriodStart => periodEnd.AddDays(-(periodDays - 1));
+    private string PeriodLabel => $"{PeriodStart:yyyy-MM-dd} ~ {periodEnd:yyyy-MM-dd}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Session.RestoreAsync();
+        if (!string.IsNullOrWhiteSpace(Session.RefreshToken))
+        {
+            errorMessage = await AuthService.EnsureAccessTokenAsync();
+        }
+
+        if (Session.IsServerAdmin)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task ChangePeriodAsync(int days)
+    {
+        periodDays = days;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        if (isBusy)
+        {
+            return;
+        }
+
+        isBusy = true;
+        errorMessage = null;
+        try
+        {
+            summary = await FinanceService.GetCashFlowSummaryAsync("KRW", PeriodStart, periodEnd);
+        }
+        catch (AdminApiException ex)
+        {
+            errorMessage = ex.Message;
+            if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                await Session.LogoutAsync();
+            }
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private void OpenLogin()
+        => Navigation.NavigateTo("/login?returnUrl=%2Foperations%2Ffinance");
+
+    private static string Money(decimal amount) => $"{amount:N0}원";
+
+    private static string SignedMoney(decimal amount)
+        => amount > 0 ? $"+{amount:N0}원" : $"{amount:N0}원";
+
+    private static string ShortHash(string value)
+        => string.IsNullOrWhiteSpace(value)
+            ? "없음"
+            : value.Length <= 12 ? value : value[..12];
+}
