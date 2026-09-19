@@ -34,6 +34,7 @@
 ## 현재 상태와 문서
 
 - [개발 통합 상태판](docs/AI/개발통합상태판.md) · [현재 작업](docs/AI/CURRENT_WORK.md)
+- [AI 협업 방식과 대화 기반 의도 관찰](docs/AI/ai-collaboration/README.md)
 - [전체 문서 안내](docs/README.md) · [화면 카탈로그](docs/ProjectOverview/app-page-catalog.md) · [변경 기록](docs/Changes/README.md)
 - [개발 지침](AGENTS.md) · [운영·Simulation·Unity 책임 구분](docs/Architecture/OperationsSimulationUnity작업흐름분리.md)
 

@@ -1,5 +1,11 @@
 # Mirror(거울) Current Work
 
+## AI 대화 기반 사용자 의도 관찰 기록 (2026-09-19)
+
+- 로컬 Codex 주 작업 세션의 최근 3개월 범위에서 `생각이 존재한다`, `했으면 좋겠다`, `마음이 있다`처럼 반복된 사용자 표현을 조사했다. 관련 세션 62개에서 1차 후보 2,312건을 찾고 정확 중복과 짧은 단순 동의를 제외한 의도 후보 2,188건을 선호·탐색·구현 요청·결정 후보로 분류했다.
+- [AI 협업 기록](ai-collaboration/README.md), [사람이 읽는 관찰 기록](ai-collaboration/user-intent-observation-2026-09-19.md), [기계 판독용 사본](ai-collaboration/user-intent-observation-2026-09-19.json)을 추가하고 루트 README와 공용 프로젝트 컨텍스트에서 연결했다.
+- 원문 채팅·개인정보는 Git에 포함하지 않았다. 자동 분류와 반복 방향은 기획 후보이며 사용자 승인·코드 구현·시험·실행 증거를 대신하지 않는다. 제품 코드·DB·API·UI·Unity는 변경하지 않았다.
+
 ## 모바일 운영 UI 이미지 샘플 경계 명시 (2026-09-19)
 
 - `docs/assets/planning`의 모바일 이미지를 모두 `SampleOnly / NotApprovedVisual / NotImplementationSpec`으로 분류했다. Git 커밋은 생성 이력과 문답 맥락 보존일 뿐 시안 승인·구현 지시·실행 증거가 아니다.

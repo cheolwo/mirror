@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "ai-user-intent-observation.v1",
+  "recordId": "ai-intent-observation-2026-09-19",
+  "generatedAt": "2026-09-19T16:42:10+09:00",
+  "period": {
+    "requestedFrom": "2026-06-19T00:00:00+09:00",
+    "requestedTo": "2026-09-19T23:59:59+09:00",
+    "observedFrom": "2026-07-03T05:17:52+09:00",
+    "observedTo": "2026-09-19T07:28:23+09:00"
+  },
+  "sourceScope": {
+    "kind": "LocalCodexMainSessions",
+    "workspace": "Hongdal/Ssalddel",
+    "chatGptAccountExportIncluded": false,
+    "assistantMessagesIncluded": false,
+    "subagentReplicasIncluded": false,
+    "rawTranscriptTrackedInGit": false
+  },
+  "counts": {
+    "relatedMainSessions": 62,
+    "rawCandidateMessages": 2312,
+    "deduplicatedMeaningfulCandidates": 2188
+  },
+  "intentCandidates": {
+    "PreferenceOrDirection": 1439,
+    "ExplorationOrOpen": 335,
+    "ImplementationOrDocumentationRequest": 310,
+    "DecisionOrPrinciple": 104
+  },
+  "topics": [
+    { "code": "development-documentation-workflow", "candidates": 679, "sessions": 48 },
+    { "code": "game-story-cards", "candidates": 414, "sessions": 31 },
+    { "code": "mobile-ui-app", "candidates": 298, "sessions": 36 },
+    { "code": "operations-server-os-lifecycle", "candidates": 294, "sessions": 41 },
+    { "code": "space-map-public-data", "candidates": 285, "sessions": 33 },
+    { "code": "food-delivery-dispatch-driver", "candidates": 261, "sessions": 24 },
+    { "code": "unity-observation-diorama", "candidates": 239, "sessions": 24 },
+    { "code": "freight-warehouse-market", "candidates": 212, "sessions": 35 },
+    { "code": "community-relationships", "candidates": 205, "sessions": 31 },
+    { "code": "finance-pricing-subscription", "candidates": 122, "sessions": 28 },
+    { "code": "unclassified-or-cross-cutting", "candidates": 536, "sessions": 45 }
+  ],
+  "recurrentDirectionIds": [
+    "AI-INTENT-01",
+    "AI-INTENT-02",
+    "AI-INTENT-03",
+    "AI-INTENT-04",
+    "AI-INTENT-05",
+    "AI-INTENT-06",
+    "AI-INTENT-07",
+    "AI-INTENT-08",
+    "AI-INTENT-09",
+    "AI-INTENT-10",
+    "AI-INTENT-11",
+    "AI-INTENT-12"
+  ],
+  "localEvidence": {
+    "meaningfulCandidatesCsvSha256": "710CD2D44658E7ADF3F7DC28E8D4C4C3C592C2328AF8FD77CFC53C6E6F45D291"
+  },
+  "authorityBoundary": {
+    "autoApproval": false,
+    "autoImplementationAuthorization": false,
+    "autoEvidencePromotion": false,
+    "canonicalDocumentsRemainAuthoritative": true
+  }
+}
