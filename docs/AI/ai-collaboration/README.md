@@ -22,3 +22,4 @@ Mirror는 GPT Chat과 Codex를 기획 문답, 저장소 조사, 구현, 검증�
 
 - [2026-09-19 최근 3개월 사용자 의도 관찰](user-intent-observation-2026-09-19.md)
 - [기계 판독용 관찰 사본](user-intent-observation-2026-09-19.json)
+- [개인정보·비밀값을 제외한 월별 사용자 원문](verbatim/README.md)

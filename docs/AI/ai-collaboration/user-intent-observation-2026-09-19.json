@@ -14,7 +14,8 @@
     "chatGptAccountExportIncluded": false,
     "assistantMessagesIncluded": false,
     "subagentReplicasIncluded": false,
-    "rawTranscriptTrackedInGit": false
+    "rawTranscriptTrackedInGit": false,
+    "sanitizedVerbatimIntentCandidatesTrackedInGit": true
   },
   "counts": {
     "relatedMainSessions": 62,
@@ -56,6 +57,30 @@
   ],
   "localEvidence": {
     "meaningfulCandidatesCsvSha256": "710CD2D44658E7ADF3F7DC28E8D4C4C3C592C2328AF8FD77CFC53C6E6F45D291"
+  },
+  "publicVerbatimArchive": {
+    "publishedCandidates": 2184,
+    "excludedSecretMessages": 1,
+    "excludedDelegationMessages": 3,
+    "preservesOriginalWording": true,
+    "redactsPersonalPathsAndExecutionMetadata": true,
+    "files": [
+      {
+        "path": "verbatim/2026-07.md",
+        "candidates": 736,
+        "sha256": "7A5167197FBF6C827F154E2FC69448F926EE26AA0058C039F00720F91902A874"
+      },
+      {
+        "path": "verbatim/2026-08.md",
+        "candidates": 585,
+        "sha256": "93F064EE0E14755A77874B53539D3AD43787DC6EB22088E79A35653D93CB6AD9"
+      },
+      {
+        "path": "verbatim/2026-09.md",
+        "candidates": 863,
+        "sha256": "305D661F495DC78D83AC94222EB77B5E3125AB81A069A16B24BD9309FF0F70FE"
+      }
+    ]
   },
   "authorityBoundary": {
     "autoApproval": false,
