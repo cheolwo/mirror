@@ -1,17 +1,19 @@
-[기획 · 시스템·운영 통합·지역 확장 · PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD · r44]
+[기획 · 시스템·운영 통합·지역 확장 · PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD · r48]
 
 # 지역 운영 생명주기 E2E·전국 확장 뼈대 제안
 
 - 기획 ID: `PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD`
 - 기획 분야: 시스템·운영 통합·지역 확장
-- 기획 판본: `r44`
-- 상태: `ApprovedPlanningPriority / OperatorAppAndOperationalDataFirst / ExistingAdminAppShellConfirmed / UnifiedPlatformAdminAppConfirmed / OsOperatorDailyWorkspacePrimaryConfirmed / CrossOsGovernanceSecondaryConfirmed / PlatformOperationsOsShellProposed / PlatformOperationsLifecycleNotInvented / CrossOsFinancialProjectionProposed / RolePerspectiveWorkspacesConfirmed / CanonicalLedgersShared / RoleEntryPointBaselineDefined / InitialScreenCoverageAudited / UiCoverageAuditR2Completed / FoodDriverMapFirstConfirmed / FoodDriverMyInfoAndHistoryConfirmed / FoodDriverFrozenPayoutBreakdownConfirmed / PayoutBreakdownDefaultExpandedCollapsible / StandardPayoutRowsAlwaysVisibleConfirmed / GrossDeductionNetSeparated / StatutoryDeductionEligibilityServerOwned / MonthlyInsuranceFinalizationConfirmed / PlatformShareNeverDeductedFromDriver / PlatformContributionSecondaryDisclosureConfirmed / DriverHoldLabelSimplifiedConfirmed / CustomerCenterInquiryConfirmed / InternalHoldReasonOperatorOnly / HistoricalNoRecalculationConfirmed / ExistingPricingLedgerPartiallyMapped / StatutoryDeductionLedgerMissing / PayoutBreakdownContractRequired / FoodRestaurantDriverPairRelationshipConfirmed / CompletedDeliveryCountOnlyConfirmed / RelationshipBadgeDetailConfirmed / BilateralVisibilityControlConfirmed / PreferenceFailureFailClosed / RelationshipNoDispatchInfluenceConfirmed / FoodRelationshipProjectionRequired / RelationshipVisibilityPreferenceRequired / FoodDriverHistoryProjectionRequired / FoodDriverTwoVisualDraftsGenerated / ExistingMartEntryScreenMapped / FinanceDetailUiNext / OrdererActiveOrderFirstConfirmed / RestaurantDistancePolicyBound / TenKmWarningCandidateNoted / WarningExpansionDeferred / FirstMobileVisualDraftGenerated / DeliveryTrackingDetailConfirmed / ExistingDriverLocationWritePathMapped / OrderBoundLocationProjectionRequired / NaverMapsProviderCandidateConfirmed / LocationSharingWindowPending / PhysicalRoleAppSplitDeferred / ExceptionRecoveryHomeDirectionConfirmed / GlobalHomeAggregateOnlyConfirmed / FoodDeliveryOsOverviewVisualDraftGenerated / IndividualCasesBehindQueueConfirmed / DriverNoResponseDemotedFromOverview / PreparationTimeFiveTenFifteenTwentyConfirmed / Over20MinuteOrdererInAppAndPushConfirmed / FoodSalesOrderDecisionVisualDraftGenerated / FoodSalesPlanningLinked / PickupDelayDetailVisualDraftGenerated / FinanceAccountingProgressiveDisclosureConfirmed / ImageDrivenScreenStateReviewConfirmed / MultiStakeholderConflictReviewConfirmed / MobileGlancePartiallyImplemented / AdminAndroidBuildPassed / PhysicalDeviceReviewDeferredByUser / ImageDrivenMobileReviewConfirmed / ExistingFigmaReferencesMapped / FoodDeliveryOperatorVisualDraftGenerated / OperatorFieldParticipationNotImplemented / ExplicitRoleSwitchRequired / FoodDriverWorkflowReusable / ExceptionFirstHomeAsked / FieldParticipationEntryPlacementDeferred / FirstParticipationModePending / AndroidAdminDogfoodFirstConfirmed / PhysicalDeviceConnectionDeferred / LifecycleFailureRecoveryFirstConfirmed / OperatorSafeRetryOnlyConfirmed / OperationalEffectsDisabled / SimulationRulesFollowOperationalContracts / UnityReadOnlyDeferredConsumer / DeviceUiProofBlockedByNativeControlUnavailable`
-- 사용자 요구: 전체 제품에서는 각 OS 운영자의 모바일 작업공간과 서버 운영 데이터·생명주기 관리가 최우선이다. 정상 자동화가 동작할수록 총괄 관리자의 일상 개입은 작아져야 하며, 총괄은 정책·권한·재무·OS 간 최종 충돌의 후순위 관리층으로 둔다. 운영 계약이 안정되면 같은 규칙을 격리 Simulation에 재사용하고 Unity는 읽기 전용 후순위 소비자로 둔다. 기사는 운영자가 호출·지시하는 인력이 아니라 배차 제안을 자발적으로 수락·거절하는 주체로 유지한다.
+- 기획 판본: `r48`
+- 상태: `ApprovedPlanningPriority / OperatorAppAndOperationalDataFirst / ExistingAdminAppShellConfirmed / UnifiedPlatformAdminAppConfirmed / OsOperatorDailyWorkspacePrimaryConfirmed / CrossOsGovernanceSecondaryConfirmed / PlatformOperationsOsShellProposed / PlatformOperationsLifecycleNotInvented / CrossOsFinancialProjectionProposed / RolePerspectiveWorkspacesConfirmed / CanonicalLedgersShared / RoleEntryPointBaselineDefined / InitialScreenCoverageAudited / UiCoverageAuditR2Completed / FoodDriverMapFirstConfirmed / FoodDriverMyInfoAndHistoryConfirmed / FoodDriverFrozenPayoutBreakdownConfirmed / PayoutBreakdownDefaultExpandedCollapsible / StandardPayoutRowsAlwaysVisibleConfirmed / GrossDeductionNetSeparated / StatutoryDeductionEligibilityServerOwned / MonthlyInsuranceFinalizationConfirmed / PlatformShareNeverDeductedFromDriver / PlatformContributionSecondaryDisclosureConfirmed / DriverHoldLabelSimplifiedConfirmed / CustomerCenterInquiryConfirmed / InternalHoldReasonOperatorOnly / HistoricalNoRecalculationConfirmed / ExistingPricingLedgerPartiallyMapped / StatutoryDeductionLedgerMissing / PayoutBreakdownContractRequired / FoodRestaurantDriverPairRelationshipConfirmed / CompletedDeliveryCountOnlyConfirmed / RelationshipBadgeDetailConfirmed / BilateralVisibilityControlConfirmed / PreferenceFailureFailClosed / RelationshipNoDispatchInfluenceConfirmed / FoodRelationshipProjectionRequired / RelationshipVisibilityPreferenceRequired / FoodDriverHistoryProjectionRequired / FoodDriverTwoVisualDraftsGenerated / ExistingMartEntryScreenMapped / FinanceDetailUiNext / OrdererActiveOrderFirstConfirmed / RestaurantDistancePolicyBound / TenKmWarningCandidateNoted / WarningExpansionDeferred / FirstMobileVisualDraftGenerated / DeliveryTrackingDetailConfirmed / ExistingDriverLocationWritePathMapped / OrderBoundLocationProjectionRequired / NaverMapsProviderCandidateConfirmed / LocationSharingWindowPending / PhysicalRoleAppSplitDeferred / ExceptionRecoveryHomeDirectionConfirmed / GlobalHomeAggregateOnlyConfirmed / FoodDeliveryOsOverviewVisualDraftGenerated / IndividualCasesBehindQueueConfirmed / DriverNoResponseDemotedFromOverview / PreparationTimeFiveTenFifteenTwentyConfirmed / Over20MinuteOrdererInAppAndPushConfirmed / FoodSalesOrderDecisionVisualDraftGenerated / FoodSalesPlanningLinked / PickupDelayDetailVisualDraftGenerated / FoodDelayTaxonomyRefactored / PreparationDelayFiveTenThresholdImplemented / DeliveryProgressDelayInitialThresholdImplemented / AutomaticRedispatchRemovedFromOperatorExceptions / FinanceAccountingProgressiveDisclosureConfirmed / ImageDrivenScreenStateReviewConfirmed / MultiStakeholderConflictReviewConfirmed / MobileGlancePartiallyImplemented / AdminAndroidBuildPassed / PhysicalDeviceReviewDeferredByUser / ImageDrivenMobileReviewConfirmed / ExistingFigmaReferencesMapped / FoodDeliveryOperatorVisualDraftGenerated / OperatorFieldParticipationNotImplemented / ExplicitRoleSwitchRequired / FoodDriverWorkflowReusable / ExceptionFirstHomeAsked / FieldParticipationEntryPlacementDeferred / FirstParticipationModePending / AndroidAdminDogfoodFirstConfirmed / PhysicalDeviceConnectionDeferred / LifecycleFailureRecoveryFirstConfirmed / OperatorSafeRetryOnlyConfirmed / OperationalEffectsDisabled / SimulationRulesFollowOperationalContracts / UnityReadOnlyDeferredConsumer / DeviceUiProofBlockedByNativeControlUnavailable`
+- 출시 진행 상태: `ActualMobileReleaseGoalConfirmed / CompletionBeforeFeatureExpansionConfirmed / FirstReleaseTargetSsalddelAdminAppAndroid / GooglePlayInternalTestingRecommended / ReleaseAabPackagingPassed / DedicatedReleaseSigningMissing / ReleaseHttpsEndpointMissing / PhysicalDeviceProofMissing`
+- 사용자 요구: 전체 제품에서는 각 OS 운영자의 모바일 작업공간과 서버 운영 데이터·생명주기 관리가 최우선이다. 이제 새 기능 수를 늘리기보다 실제 Android 앱 하나를 출시 가능한 상태까지 완수한다. 정상 자동화가 동작할수록 총괄 관리자의 일상 개입은 작아져야 하며, 총괄은 정책·권한·재무·OS 간 최종 충돌의 후순위 관리층으로 둔다. 운영 계약이 안정되면 같은 규칙을 격리 Simulation에 재사용하고 Unity는 읽기 전용 후순위 소비자로 둔다. 기사는 운영자가 호출·지시하는 인력이 아니라 배차 제안을 자발적으로 수락·거절하는 주체로 유지한다.
 - 상위 기획: [지역 Experience Package](../PLAN-SYSTEM-REGION-EXPERIENCE-PACKAGES/README.md)
 - 생명주기 의미 선행: [OS 생명주기 Core와 환경별 Adapter](../PLAN-SYSTEM-OS-LIFECYCLE-ENVIRONMENT-ADAPTERS/README.md)
 - 역할별 화면 체계: [하나의 운영 원장과 역할별 OS 작업공간](../PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/README.md)
 - UI 존재 여부 조사: [운영 기획·코드·UI 존재 여부 조사 r2](../PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/ui-coverage-audit.r1.md)
 - 운영자 모바일·현장 참여: [OS별 이동 중 운영 확인과 현장 참여 r10](../PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/operator-mobile-field-participation.r1.md)
+- 첫 모바일 출시 완수선: [`SsalddelAdminApp` Android 출시 방향 r1](operator-app-release-completion.r1.md) · [`0.1.0` 내부 테스트 작업 명세 r2](operator-app-release-completion.r2.md)
 - 음식 배달 OS 운영자 시안: [운영 홈·주문 흐름 상세·현장 참여](../../../../assets/planning/food-delivery-os-operator-workspace-r1.png)
 - OS별 운영자 화면 목차: [자주색 OS 운영자·황색 총괄 관리자](../../../../assets/planning/os-operator-screen-catalog-r1.png)
 - 배차·기사 수급 시안: [현재 관측 통계·예외 상세·동결 지급 구성](../../../../assets/planning/food-delivery-os-dispatch-supply-r1.png)
@@ -25,7 +27,7 @@
 - 공간 정본: [행정동별 서버 기반 디오라마](../PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md)
 - 관련 WI·PlayableLoop: 새 WI 미등록. 운영 `FoodDeliveryOS` E2E와 Unity 읽기 전용 관찰을 연결하는 시스템 검증이며 기존 게임 WI를 자동 활성화하지 않는다.
 - Graph Map 영향: `UpdateExistingCandidate`. 구현 승인 전에는 변경하지 않으며, 승인 뒤에도 기존 사가정 의미 장소에 `ReadOnlyProjection` 결속만 추가하는 후보로 제한한다.
-- 다음 질문: 일반 예외는 앱 내 메시지, 안전 위험·현장 진행 불가는 전화 우선으로 구분할지 정한다.
+- 다음 질문: `0.1.0`에서 핵심 다섯 route만 노출하고 나머지 관리자 메뉴를 출시 프로필에서 숨길지 정한다.
 
 ## 0. r13 전체 제품 우선순위
 
@@ -101,7 +103,7 @@ Unity 안에서 다시 우선순위를 고를 때는 행정동·역세권 디오
 
 생성 이미지는 화면 구조와 관점 충돌을 검토하는 `기획 시안`이다. 이미지에 버튼이 있다고 API·Command·권한·제품 코드가 존재한다고 판정하지 않는다. 실제 앱 반영 전에는 해당 버튼을 기존 route·계약·허용 행동에 대조하고, 없으면 `기획만 존재`로 표시한다.
 
-첫 추천 문답은 전체 홈의 `음식배달`에서 OS 중점 화면으로 진입한 뒤 `픽업 지연` 대기열을 여는 흐름이다. OS 중점 화면은 진행 주문·배차 대기·제안 가능 기사·예상 시간과 단계별 건수, 픽업 지연·기사 무응답·음식점 준비 지연·수령 확인 대기의 집계만 보여 준다. 개인 상세에서는 지연 시간·현재 단계·기사 응답 여부·음식점 준비 상태·재배차 가능 조건을 보되 기사를 직접 선택하지 않는다. 기사가 응답하면 한 번 더 대기할 수 있고, 최종 무응답·미픽업이면 기존 배차 엔진이 우선순위를 높여 다시 후보를 찾는 원칙을 보존한다.
+첫 추천 문답은 전체 홈의 `음식배달`에서 OS 중점 화면으로 진입한 뒤 업무 지연 대기열을 여는 흐름이다. 운영자에게 보이는 음식 배달 업무 지연은 `음식점 준비 지연`과 `배달 진행 지연` 두 종류로 정규화한다. 배차 대기·추천 만료·재추천은 배차 엔진의 정상 또는 자동 회복 상태로, 수령 확인 대기는 주문자의 정상 대기 상태로 먼저 표시한다. 이 상태가 별도 시간 한도나 기술 이상 조건을 넘을 때만 운영자 확인 대상으로 승격한다.
 
 ### 0.4 회계·재무 정보의 점진적 공개
 
@@ -127,7 +129,7 @@ Unity 안에서 다시 우선순위를 고를 때는 행정동·역세권 디오
 | 화면 계층 | 표시 범위 | 표시하지 않는 것 |
 | --- | --- | --- |
 | 전체 운영 홈 | OS별 정상·주의·긴급 건수, 전체 운영 추세 | 개인 이름·주문 번호·기사 카드·연락처·정밀 위치 |
-| 음식배달 OS 중점 | 진행 단계별 집계, 제안 가능 기사 수, 평균 예상 시간, 픽업 지연·준비 지연·장기 배차 대기·수령 확인 대기 | 특정 기사 선택, 개별 주문 조치, 기사 무응답을 개인 문제로 표시, 회사 전체 재무 |
+| 음식배달 OS 중점 | 진행 단계별 집계, 제안 가능 기사 수, 평균 예상 시간, 음식점 준비 지연·배달 진행 지연, 자동 회복·기술 이상의 분리 집계 | 특정 기사 선택, 개별 주문 조치, 추천 만료·재배차 대기를 사람의 예외로 표시, 회사 전체 재무 |
 | 업무 대기열 | 마스킹된 업무 식별자, 지연 시간, 긴급도, 현재 단계, 담당 OS | 불필요한 실명·전화번호·상세 주소·정밀 GPS |
 | 개별 업무 상세 | 현재 원장 상태, 사실관계, 응답 기회, 서버가 허용한 조치 | 앱이 임의로 만든 강제 완료·수동 배차·귀책 확정 |
 
@@ -147,6 +149,14 @@ Unity 안에서 다시 우선순위를 고를 때는 행정동·역세권 디오
 - 한 주문에서 처음 20분 초과로 올라간 시점에 앱 내부 알림을 한 번 만들고, 주문 진행 알림을 허용한 주문자에게 같은 사건의 모바일 푸시를 한 번 병행한다. 이후 값 변경은 주문 상세의 예상 준비·도착 시각을 갱신한다. 반복 알림, 자동 취소, 환불·보상·귀책 판정은 이 안내만으로 실행하지 않는다.
 - 이 예상시간 안내는 기존 `세 번째 조리 지연 중단` 알림과 다른 사건이다. 전자는 수락 시점의 예상 대기 안내이고, 후자는 실제 반복 지연·재배차가 누적된 뒤 주문자 선택을 여는 회복 알림이다.
 - 현재 제품 코드에는 조리시간 결정·동결 계약과 음식점 화면의 `10 / 15 / 20 / 30 / 45분` 빠른 선택 및 직접 입력이 존재한다. `5 / 10 / 15 / 20분 우선 표시`, 20분 초과 주문자 알림·푸시, OS 집계 화면 재분류는 아직 기획이며 제품 구현·실제 장치 검증이 아니다.
+
+### 0.6.1 음식 배달 운영 지연과 자동 회복의 구분
+
+- `조리 예상 시간 초과`와 `조리 지연`을 서로 다른 최상위 예외로 표시하지 않는다. 현재 준비가 늦은 한 사건을 `음식점 준비 지연`으로 표시하고, 예상 완료 시각 초과·기사 현장 대기·기사 지연 신고·조리 지연 재배차는 그 사건의 근거와 시간순 이력으로 둔다.
+- 음식점이 확정한 조리 예상 완료 시각을 5분 넘기고 아직 픽업 준비가 되지 않았으면 `주의`, 10분을 넘기면 `운영자 확인 필요`로 판정한다. 픽업 준비가 확정된 뒤에는 과거 예상 시각만으로 현재 준비 지연을 계속 표시하지 않는다.
+- 픽업 완료 뒤 전달까지의 현재 진행이 초기 42분 관찰 기준을 넘긴 뒤 5분이면 `주의`, 10분이면 `운영자 확인 필요`로 판정한다. 42분은 현행 배차 검토 계약과 맞춘 초기 관찰 기준이며, 주문별 동결 전달 약속 시각이 마련되면 그것을 우선하는 후속 변경이 필요하다.
+- 기사 추천 만료·추천 거절·재추천 대기는 `자동 회복` 신호다. 예외 대기열이나 `복구 필요`로 올리지 않고 배차 엔진의 시간순 사건으로 표시한다. 후보 없음이 장기화되거나 재추천 한도 초과·상태 정체·알림 전달 실패가 생길 때만 별도 운영자 확인 조건을 적용한다.
+- 배차 원장 누락·연결 불일치·공동 원장 또는 기사 알림 Outbox 실패는 고객 업무 지연과 섞지 않고 `기술 이상`으로 분류한다.
 
 ### 0.7 음식 판매 OS 화면 연결
 
@@ -715,6 +725,29 @@ canonical 재조회                   높은 projection revision만 적용
 - 새로고침이 실패하면 마지막 정상 자료를 읽기 전용으로 남기고 연락·재시도·후속 조작을 열지 않는다.
 - 자동 복구 중이면 중복 재시도를 만들지 않고 현재 처리 상태와 다음 조회 시각을 보여 준다.
 - 정본 재조회 자체는 배차·지급·귀책·원장 상태를 변경하지 않는다.
+
+### r45 확정·제안: 실제 Android 출시 완수 우선
+
+- 새 기능 수를 늘리기보다 기존 `SsalddelAdminApp`의 로그인·운영 개요·예외 관찰·안전 재시도·읽기 전용 현금 흐름을 첫 출시 범위로 동결한다.
+- 기능 완료는 화면이나 build 존재가 아니라 실제 Android에서 `서버 정본 조회 → 허용 행동 → Command → 같은 원장 재조회 → 실패·재진입`이 닫힌 상태다.
+- 2026-09-18 현재 Release AAB 패키징과 API 36 평가는 통과했다. 그러나 표시 판본은 `0.0`, 전용 upload keystore·출시 HTTPS 주소·Release 평문 통신 차단·실제 기기·Play Console 자료는 미완료다.
+- 첫 외부 배포는 Google Play 내부 테스트를 권장하며 공개 Production과 실결제·실정산·실배차는 별도 관문으로 유지한다.
+- 상세 범위와 인수 조건은 [운영자 앱 출시 완수 r1](operator-app-release-completion.r1.md)이 소유한다.
+
+### r46 제안: `0.1.0` 작업 묶음과 화면 동결
+
+- [내부 테스트 작업 명세 r2](operator-app-release-completion.r2.md)에 `WP0 기준선 마감 → WP1 출시 화면 동결 → WP2 주소·환경 → WP3 전송 보안 → WP4 서명 AAB → WP5 서버 폐루프 → WP6 실제 장치 → WP7 Play 내부 테스트` 순서를 고정했다.
+- 첫 출시 화면은 로그인·운영 개요·운송·후속 복구·현금 흐름 다섯 route를 추천한다. 공동구매·커뮤니티·콘텐츠·페이지 운영은 코드를 삭제하지 않고 `OperatorPreview` navigation과 직접 route에서 숨기는 제안이다.
+- Release는 명시적 HTTPS 서버 주소가 없거나 localhost·평문 HTTP이면 닫힌 채 실패하고, 전용 upload key의 비밀은 저장소 밖에서 주입한다.
+- `Built`, `ServerVerified`, `DeviceVerified`, `InternalReleased`, `DogfoodAccepted`를 구분해 AAB 생성만으로 출시 완료를 선언하지 않는다.
+
+### r47 구현: 음식 주문·판매·배달 OS 생명주기 조화 판정
+
+- 기존 음식 주문 원장·배차 원장·배달 시도·Outbox를 합쳐 현재 단계와 책임 역할을 읽기 전용으로 판정하는 `음식배달운영생명주기조화Projector`를 관리자 추적 조회에 연결했다.
+- 정상 흐름은 `음식점 응답 → 조리·배차 병행 → 픽업 인계 → 배송 → 주문자 수령 확인 → 종료`로 정렬한다. 각 역할 앱에 별도 상태기를 만들거나 운영자 조회가 주문·배차 상태를 변경하지 않는다.
+- 기사 추천 만료와 최근 배달 시도 중단은 우선 배차 Engine의 자동회복 대상으로 분류한다. 배차 원장 누락·상관관계 불일치·공동 원장 또는 기사 알림 Outbox 확인 필요는 플랫폼 운영자 확인 대상으로 분리한다.
+- 현재 공식 행정동 원천 범위는 광진구 4개·동대문구 10개·중랑구 16개, 총 30개다. 한 배달권은 이 중 필요한 행정동만 선택해 시작하고 같은 revision 원장으로 확장할 수 있다. 구리시는 공식 원천·권역 승인 전까지 포함하지 않는다.
+- 관련 집중 시험 17건과 `Ssalddel.v0.0.slnx` build가 통과했다. Task 전체 시험은 이번 변경과 무관한 기존 route 분류·API metadata·문서 문구·모바일 CSS 7건 때문에 완료되지 않았다. 실제 인증 HTTP·MySQL·모바일 UI·현장 역할별 시뮬레이션은 아직 검증하지 않았다.
 
 ### r2 확정: 역할별 상태 사본의 작은 AvailableActions
 
