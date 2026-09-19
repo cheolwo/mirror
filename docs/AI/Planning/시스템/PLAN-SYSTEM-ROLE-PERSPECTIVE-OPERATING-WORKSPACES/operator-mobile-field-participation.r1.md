@@ -2,6 +2,8 @@
 
 # 이동 중 운영 확인과 운영자 현장 참여
 
+> 화면 이미지 경계: 이 문서에 연결된 모바일 이미지는 모두 `SampleOnly / NotApprovedVisual / NotImplementationSpec`인 탐색용 샘플이다. Git 커밋은 시안 승인이나 구현 지시를 뜻하지 않는다. [샘플 이미지 대장](../../../../assets/planning/README.md)
+
 - 상위 기획: [하나의 운영 원장과 역할별 OS 작업공간 r26](README.md)
 - 조사 기준일: `2026-09-18`
 - 상태: `Draft / OsOperatorDailyWorkspacePrimaryConfirmed / CrossOsGovernanceSecondaryConfirmed / ManagerPurpleConfirmed / OverallManagerYellowHwanggeukConfirmed / OperatorScreenCatalogGenerated / DispatchQueueAndDriverSupplySeparated / NormalAggregateExceptionDetailConfirmed / ObservedStatisticsOnlyConfirmed / ForecastExcluded / FrozenPayoutDetailSecondaryConfirmed / DispatchSupplyVisualDraftGenerated / Recent60MinutesAndTodaySummaryConfirmed / RiskThenWaitExceptionOrderingConfirmed / CanonicalRefreshBeforeActionsConfirmed / MobileGlancePartiallyImplemented / PhysicalDeviceReviewDeferredByUser / ImageDrivenMobileReviewConfirmed / ExistingFigmaReferencesMapped / FoodDeliveryOperatorVisualDraftGenerated / DriverWorkflowReusable / OperatorFieldParticipationNotImplemented / ExplicitRoleSwitchRequired / ContactChannelOrderAsked / FieldParticipationEntryPlacementCandidate / FirstParticipationModePending`

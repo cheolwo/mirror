@@ -2,6 +2,8 @@
 
 # 지역 운영 생명주기 E2E·전국 확장 뼈대 제안
 
+> 화면 이미지 경계: 이 문서에 연결된 모바일 이미지는 모두 `SampleOnly / NotApprovedVisual / NotImplementationSpec`인 탐색용 샘플이다. Git 커밋은 시안 승인이나 구현 지시를 뜻하지 않는다. [샘플 이미지 대장](../../../../assets/planning/README.md)
+
 - 기획 ID: `PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD`
 - 기획 분야: 시스템·운영 통합·지역 확장
 - 기획 판본: `r48`
