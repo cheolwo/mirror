@@ -1,4 +1,4 @@
-# [기획 · 배달 플랫폼 운영 캠페인 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · 문답·개발 인계 r106]
+# [기획 · 배달 플랫폼 운영 캠페인 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · 문답·개발 인계 r108]
 
 - 기획 ID: `PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION`
 - 기획 분야: 운영·시뮬레이션
@@ -10,6 +10,32 @@
 - 관련 결정: 기존 서버·Simulation·Unity 권위 분리 원칙 재사용
 - 관련 WI·PlayableLoop: `WI-OPS-SEASONAL-CAMPAIGN-ADVANCE` / 선택적 PlayableLoop 미등록
 - 플레이 순서: 자유
+
+## 문답 r107 — 긍정 맥락을 살린 선제 예외 안내
+
+[긍정 맥락을 살린 선제 안내 r107](positive-context-proactive-exception-communication.r107.md)은 예외를 부정적 경고로만 보여 주지 않고, 서버에서 확인된 밝은 맥락과 실제 영향·현재 조치·다음 안내를 함께 전달하도록 확정한다.
+
+- 주문 집중으로 조리가 늦어질 때는 `주문이 많이 들어와 순서대로 조리 중`이라는 확인된 사실을 사용할 수 있다.
+- `맛있어서`, `인기가 있어서`처럼 자료가 직접 증명하지 않은 평가는 자동 생성하지 않는다.
+- 밝은 표현으로 지연을 축소하지 않고 예상시각 변화와 다음 안내·선택을 함께 보여 준다.
+- 다음 문답은 기사 부족으로 인한 배차 지연에서도 밝은 맥락과 기사 자율성을 어떻게 함께 설명할지다.
+
+## 문답 r108 — 후기와 함께 보는 지연 선택
+
+[후기와 함께 보는 지연 선택 r108](review-supported-delay-choice.r108.md)은 조리 지연 때 공개 후기를 참고해 기다릴지 판단할 수 있게 하되, 후기를 취소 억제 수단으로 사용하지 않는 경계를 확정한다.
+
+- 현재 상황·예상 지연·환불 조건을 후기보다 먼저 명확히 보여 준다.
+- 기다리기와 취소 요청을 같은 수준에서 식별할 수 있게 유지한다.
+- 현재 메뉴에 직접 연결되고 공개 정책을 통과한 후기만 사용하며 좋은 후기만 임의로 선별하지 않는다.
+- 다음 질문은 후기 카드를 기본 접힘으로 둘지 한 건을 먼저 보여 줄지다.
+
+## 구현 r3 — 운영 현금 흐름 요약
+
+[현금 흐름 요약 구현 r3](cash-flow-summary.implementation.r3.md)는 기존 재무사건 원장에서 실제 현금 유입·유출·순변동과 기간 미수·지급의무 후보를 분리해 관리자 API와 모바일 상세 화면에 연결한다.
+
+- 기초 잔액을 포함하지 않으므로 현재 가용현금 총액은 확정하지 않는다.
+- 송금·환불·정산 실행과 실제 회계 전표 쓰기는 계속 비활성이다.
+- 집중 시험과 Windows 대상 build는 통과했으나 실제 인증 HTTP·MySQL·Android 장치는 아직 검증하지 않았다.
 - Graph Map 영향: `AccumulateOnly / ReadyForGraphMapReview`. 기존 행정동·배달운영권역·사가정 관찰 모듈을 재사용하고 관찰 창·주 행정동·인접 행정동·운영 상태 투영 관계만 후보로 넘긴다. 아직 새 노드·엣지를 확정하지 않는다.
 - 개발 인계: [통합 개발계획 r61](development-handoff.r61.md)이 r33의 서버·예외·재무 계획을 보존하고 r48~r60의 지역 자료 동기화·운영자 게임·절기 캠페인을 추가한다. [개발계획 r33](development-handoff.r33.md)은 호환 이력과 상세 예외 정책으로 유지한다. 첫 신규 수용 단위는 `DEV-REGIONAL-OPERATOR-09 · 지역 자료 세션·검증 캐시 기반`이다.
 - 구현 수용: 사용자가 r66의 우선순위별 연속 구현을 승인했다. [r68](seasonal-campaign-core-remote-implementation.r68.md)의 Core·저장·RemoteHost, [r69](seasonal-campaign-unity-observation-foundation.r69.md)의 Unity 읽기 수신·원천별 지연·화면 모델, [r74](seasonal-campaign-world-binding-source.r74.md)의 필수 원천 조작 제한·제품 Unity View Socket·Builder 결속 소스, [r79](seasonal-campaign-card-npc-source-binding.r79.md)의 카드·NPC 안정 revision Adapter를 닫았다. 다음 수용 단위는 canonical Scene 저장과 실제 RemoteHost 연결이다. 정확 합성 규모·수치는 계속 미정이다.
