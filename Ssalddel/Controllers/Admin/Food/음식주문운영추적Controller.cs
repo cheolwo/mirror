@@ -4,10 +4,18 @@ using Microsoft.EntityFrameworkCore;
 using Ssalddel.ApiMetadata;
 using Ssalddel.Application.Admin.Food;
 using Ssalddel.Contracts.Admin.Food;
+using Ssalddel.Filters;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Admin.Food;
 
-[SsalddelApiVersion(SsalddelProductVersion.V3_0)]
+[SsalddelApiVersion(
+    SsalddelProductVersion.V3_0,
+    FeatureKey = VersionFeatureFlagKeys.FoodDeliveryWorkflow,
+    WorkflowKey = VersionFeatureFlagKeys.FoodDeliveryWorkflow)]
+[SsalddelApiWorkflow(SsalddelWorkflow.FoodDelivery)]
+[SsalddelApiGrowthTrack(SsalddelApiGrowthTrack.FoodDelivery)]
+[RequireVersionFeature(VersionFeatureFlagKeys.FoodDeliveryWorkflow)]
 [ApiController]
 [Authorize(Policy = "서버관리자전용")]
 [Route("api/v1/admin/food-orders")]

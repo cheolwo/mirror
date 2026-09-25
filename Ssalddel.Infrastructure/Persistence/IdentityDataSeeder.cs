@@ -152,6 +152,34 @@ namespace 살뜰.Data
                     await userManager.AddToRoleAsync(restaurantUser, 역할명.음식점);
                 }
 
+                var ordererId = "field-orderer";
+                var ordererEmail = "field-orderer@ssalddel.local";
+                var ordererUser = await userManager.FindByNameAsync(ordererId)
+                    ?? await userManager.FindByEmailAsync(ordererEmail);
+                if (ordererUser == null)
+                {
+                    ordererUser = new ApplicationUser
+                    {
+                        UserName = ordererId,
+                        Email = ordererEmail,
+                        EmailConfirmed = true,
+                        LockoutEnabled = true
+                    };
+
+                    var createResult = await userManager.CreateAsync(
+                        ordererUser,
+                        seedOptions.DevelopmentAccounts.OrdererPassword);
+                    if (!createResult.Succeeded)
+                    {
+                        throw IdentityFailure("현장 검증용 주문자 계정을 만들지 못했습니다.", createResult);
+                    }
+                }
+
+                if (!await userManager.IsInRoleAsync(ordererUser, 역할명.커뮤니티회원))
+                {
+                    await userManager.AddToRoleAsync(ordererUser, 역할명.커뮤니티회원);
+                }
+
                 var restaurantClaims = await userManager.GetClaimsAsync(restaurantUser);
                 var managedRestaurantClaims = restaurantClaims
                     .Where(claim => claim.Type == 음식점접근ClaimTypes.음식점Id)
@@ -244,6 +272,7 @@ namespace 살뜰.Data
                 await EnsureOrdererProfileAsync(db, adminUser, "관리자 주문자", "010-0000-0001");
                 await EnsureOrdererProfileAsync(db, driverUser, "개발용 기사 주문자", "010-0000-0000");
                 await EnsureOrdererProfileAsync(db, shipperUser, "개발용 화주 주문자", "010-0000-0002");
+                await EnsureOrdererProfileAsync(db, ordererUser, "현장 검증 주문자", "010-0000-0003");
 
                 var driverProfile = await db.용달기사.FirstOrDefaultAsync(d => d.기사Id == driverUser.Id);
                 if (driverProfile == null)

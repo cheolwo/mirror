@@ -1,0 +1,25 @@
+services:
+  app:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Staging
+      SsalddelExecution__Mode: Simulation
+      DatabaseInitialization__RunAtStartup: "true"
+      DatabaseInitialization__FailOnError: "true"
+      VersionFeatureFlags__DomesticTransportWorkflow: "true"
+      VersionFeatureFlags__FoodDeliveryWorkflow: "true"
+      VersionFeatureFlags__PlatformOperationsControl: "true"
+      VersionFeatureFlags__SsalddelMartWorkflow: "false"
+      MobileFieldTest__Enabled: "true"
+      IdentitySeed__BootstrapAdmin__Enabled: "false"
+      IdentitySeed__DevelopmentAccounts__Enabled: "true"
+      IdentitySeed__DevelopmentAccounts__AllowInSimulation: "true"
+      IdentitySeed__DevelopmentAccounts__AdminPassword: "${SSALDDEL_FIELD_ADMIN_PASSWORD}"
+      IdentitySeed__DevelopmentAccounts__OrdererPassword: "${SSALDDEL_FIELD_ORDERER_PASSWORD}"
+      IdentitySeed__DevelopmentAccounts__DriverPassword: "${SSALDDEL_FIELD_DRIVER_PASSWORD}"
+      IdentitySeed__DevelopmentAccounts__ShipperPassword: "${SSALDDEL_FIELD_RESTAURANT_PASSWORD}"
+      TossPayments__ClientKey: ""
+      TossPayments__SecretKey: ""
+      AgriculturalFisheriesBatch__Enabled: "false"
+      CommunityEditorialBatch__Enabled: "false"
+      SalesChannelOrderSync__Enabled: "false"
+      WorkRelationshipSnapshots__Enabled: "false"

@@ -16,7 +16,7 @@
             <MudText Typo="Typo.overline" Color="Color.Primary">OPERATIONS</MudText>
             <MudText Typo="Typo.h4">운송·기사 현황</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">
-                실제 운송 원장과 운행 중 기사 상태를 확인합니다. 운영 조정은 서버가 검증하는 안전한 Command만 단계적으로 제공합니다.
+                진행 중인 운송과 운행 기사 현황을 확인하세요.
             </MudText>
         </MudStack>
         @if (Session.IsServerAdmin)
@@ -116,8 +116,7 @@
                     @if (!snapshot.TemporaryDemandSurcharge.CanApply)
                     {
                         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
-                            현재 @snapshot.TemporaryDemandSurcharge.ExecutionModeCode 모드에서는 변경할 수 없습니다.
-                            첫 직접 사용 검증은 격리된 Simulation 서버에서 진행합니다.
+                            현재 환경에서는 한시 수요 할증을 변경할 수 없습니다.
                         </MudAlert>
                     }
                     else

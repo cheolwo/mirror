@@ -26,12 +26,6 @@ public sealed class OrdererPlatformCommunityNodeNavigationResolver
             return Food(OrdererRoutes.Cargo, "화물 주문 화면");
         }
 
-        if (request.IsLedgerTemplate(CommunityLedgerTemplateKeys.GroupPurchase)
-            || request.IsLedgerTemplate(CommunityLedgerTemplateKeys.GroupImport))
-        {
-            return Food(OrdererRoutes.GroupPurchase, "공동구매 참여 화면");
-        }
-
         return null;
     }
 

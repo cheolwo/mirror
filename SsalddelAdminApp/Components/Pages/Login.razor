@@ -5,14 +5,22 @@
 
 <PageTitle>관리자 로그인</PageTitle>
 
-<Ssalddel공통로그인Panel 제목="살뜰 관리자 로그인"
-                     설명="서버관리자 권한으로 플랫폼 운영 현황과 허용된 모바일 관리 기능을 연결합니다."
-                     Style="max-width: 520px; margin: 2rem auto;"
-                     상태메시지="@statusMessage"
-                     상태Severity="@statusSeverity"
-                     IsBusy="@isBusy"
-                     OnPasswordLogin="HandleLoginAsync"
-                     OnSocialLogin="HandleSocialLoginAsync" />
+<section class="admin-login-shell" aria-labelledby="admin-login-title">
+    <div class="admin-login-intro">
+        <span>SSALDDEL OPERATIONS</span>
+        <h1 id="admin-login-title">운영에 필요한 정보를 빠르게 확인하세요.</h1>
+        <p>관리자 계정으로 로그인하면 주문, 배차, 예외 처리 현황을 한 화면에서 볼 수 있습니다.</p>
+    </div>
+
+    <Ssalddel공통로그인Panel 제목="관리자 로그인"
+                         설명="관리자 아이디와 비밀번호를 입력해 주세요."
+                         Class="admin-login-card"
+                         상태메시지="@statusMessage"
+                         상태Severity="@statusSeverity"
+                         IsBusy="@isBusy"
+                         소셜로그인표시="false"
+                         OnPasswordLogin="HandleLoginAsync" />
+</section>
 
 @code {
     [Parameter]
@@ -62,13 +70,6 @@
         {
             isBusy = false;
         }
-    }
-
-    private Task HandleSocialLoginAsync(공통소셜로그인요청 request)
-    {
-        statusSeverity = Severity.Info;
-        statusMessage = $"{request.ProviderDisplayName} 관리자 로그인은 아직 연결하지 않았습니다.";
-        return Task.CompletedTask;
     }
 
     private void NavigateAfterLogin()

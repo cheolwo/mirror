@@ -20,5 +20,6 @@
     <Compile Include="..\..\RestaurantDeskApp\Services\Ssalddel음식주문Client.cs" Link="RoleClients\Ssalddel음식주문Client.cs" />
     <Compile Include="..\..\FDriverApp\Services\FDriverAuthApiService.cs" Link="RoleClients\FDriverAuthApiService.cs" />
     <Compile Include="..\..\FDriverApp\Services\FoodDeliveryDriverApiService.cs" Link="RoleClients\FoodDeliveryDriverApiService.cs" />
+    <Compile Include="..\..\SsalddelAdminApp\Services\AdminAuthenticatedApiClient.cs" Link="RoleClients\AdminAuthenticatedApiClient.cs" />
   </ItemGroup>
 </Project>

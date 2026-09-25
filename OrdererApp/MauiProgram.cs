@@ -37,11 +37,17 @@ public static class MauiProgram
         builder.Services.AddTransient<주문자재료후보PageViewModel>();
         builder.Services.AddTransient<주문자의향등록PageViewModel>();
         builder.Services.AddTransient<주문자Api기능모음ViewModel>();
+#if DEBUG || SSALDDEL_USB_FIELD_TEST
+        const bool allowInsecureDebugEndpoint = true;
+#else
+        const bool allowInsecureDebugEndpoint = false;
+#endif
         builder.Services.AddSsalddelOperationalApiHttpClient(
-            SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+            SsalddelServerEndpoint.ResolveMobileBaseAddress(
+                typeof(MauiProgram).Assembly,
                 builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
                 builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey],
-                new Uri(SsalddelServerEndpoint.LocalDevelopmentBaseAddress)),
+                allowInsecureDebugEndpoint),
             ServiceLifetime.Singleton);
         builder.Services.AddScoped<IGroupPurchaseShipmentTrackingService, HttpGroupPurchaseShipmentTrackingService>();
 

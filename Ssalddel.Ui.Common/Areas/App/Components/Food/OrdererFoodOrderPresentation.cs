@@ -42,6 +42,20 @@ internal static class OrdererFoodOrderPresentation
             ? "기사 배정을 완료하지 못한 상태입니다. 주문 취소나 환불이 자동 확정되는 것은 아니며, 음식점과 운영 확인 후 안내됩니다."
             : "기존 기사 제안이 종료되었습니다. 다른 기사 제안 가능 여부를 다시 확인하며, 주문 취소나 환불은 별도 확인 후 안내됩니다.";
 
+    public static Severity DriverLocationSeverity(주문자음식배달위치추적응답 location)
+        => location.상태 switch
+        {
+            음식배달위치추적상태코드.추적중 => Severity.Info,
+            음식배달위치추적상태코드.갱신지연 => Severity.Warning,
+            음식배달위치추적상태코드.종료 => Severity.Success,
+            _ => Severity.Normal
+        };
+
+    public static string DriverLocationCoordinates(주문자음식배달위치추적응답 location)
+        => location.위도.HasValue && location.경도.HasValue
+            ? $"{location.위도.Value:F6}, {location.경도.Value:F6}"
+            : "—";
+
     public static Color StatusColor(string? status)
         => 음식주문상태코드.Normalize(status) switch
         {

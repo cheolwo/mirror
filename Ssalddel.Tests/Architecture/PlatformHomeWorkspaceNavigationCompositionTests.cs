@@ -90,6 +90,8 @@ public sealed class PlatformHomeWorkspaceNavigationCompositionTests
         Assert.Contains("OrdererRoutes.Food", orderer);
         Assert.Contains("OrdererRoutes.Mart", orderer);
         Assert.Contains("OrdererRoutes.Cargo", orderer);
+        Assert.DoesNotContain("CommunityLedgerTemplateKeys.GroupPurchase", orderer);
+        Assert.DoesNotContain("CommunityLedgerTemplateKeys.GroupImport", orderer);
         Assert.DoesNotContain("/warehouse", orderer);
         Assert.DoesNotContain("/driver/", orderer);
     }

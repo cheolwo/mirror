@@ -30,13 +30,18 @@ public static class MauiProgram
             reloadOnChange: false);
         var restaurantLegacyBaseAddress =
             builder.Configuration[RestaurantDeskOptions.SectionName + ":ServerBaseUrl"];
+#if DEBUG || SSALDDEL_USB_FIELD_TEST
+        const bool allowInsecureDebugEndpoint = true;
+#else
+        const bool allowInsecureDebugEndpoint = false;
+#endif
         var operationalApiBaseAddress =
-            SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+            SsalddelServerEndpoint.ResolveMobileBaseAddress(
+                typeof(MauiProgram).Assembly,
                 builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
-                builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey],
-                SsalddelServerEndpoint.ResolveBaseAddress(
-                    restaurantLegacyBaseAddress,
-                    SsalddelServerEndpoint.CreateDefaultBaseAddress()));
+                builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey]
+                ?? restaurantLegacyBaseAddress,
+                allowInsecureDebugEndpoint);
         builder.Services.Configure<RestaurantDeskOptions>(builder.Configuration.GetSection(RestaurantDeskOptions.SectionName));
         builder.Services.PostConfigure<RestaurantDeskOptions>(options =>
             options.ServerBaseUrl = operationalApiBaseAddress.AbsoluteUri);

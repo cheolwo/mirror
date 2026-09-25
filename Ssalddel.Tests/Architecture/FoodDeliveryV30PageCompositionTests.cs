@@ -34,6 +34,20 @@ public sealed class FoodDeliveryV30PageCompositionTests
     }
 
     [Fact]
+    public void 음식점주문수락은_전표출력실패와_서버상태전이실패를_구분한다()
+    {
+        var detail = Read("RestaurantDeskApp", "Components/Pages/OrderDetail.razor");
+        var staticAsset = Read(
+            "Ssalddel.Ui.Common",
+            "wwwroot/Areas/App/js/ssalddel-document-output.js");
+
+        Assert.Contains("catch (JSException)", detail);
+        Assert.Contains("주문은 수락되어 조리를 시작했습니다", detail);
+        Assert.Contains("window.ssalddelDocumentOutput", staticAsset);
+        Assert.Contains("printHtml", staticAsset);
+    }
+
+    [Fact]
     public void 음식점주문은_상품별기본시간을추천하고_주문별선택시간으로수락한다()
     {
         var settings = Read("RestaurantDeskApp", "appsettings.json");
@@ -51,6 +65,19 @@ public sealed class FoodDeliveryV30PageCompositionTests
         Assert.Contains("음식점조리시간정책.주문추천분", desk);
         Assert.Contains("조리예상분 = 선택조리예상분", desk);
         Assert.Contains("상품목록", notification);
+    }
+
+    [Fact]
+    public void 음식점데스크의_내부시험기본값은_배차인계좌표를포함한다()
+    {
+        var options = Read("RestaurantDeskApp", "Options/RestaurantDeskOptions.cs");
+        var settings = Read("RestaurantDeskApp", "appsettings.json");
+
+        Assert.Contains("검증 표본 음식점", options);
+        Assert.Contains("RestaurantLatitude", options);
+        Assert.Contains("37.588m", options);
+        Assert.Contains("127.085m", options);
+        Assert.Contains("검증 표본 음식점", settings);
     }
 
     [Fact]
@@ -132,6 +159,61 @@ public sealed class FoodDeliveryV30PageCompositionTests
         Assert.DoesNotContain("width: 280px;", styles);
     }
 
+    [Theory]
+    [InlineData("OrdererApp")]
+    [InlineData("RestaurantDeskApp")]
+    [InlineData("SsalddelAdminApp")]
+    public void Android_MAUI화면은_상태표시줄안전영역을_확보한다(string project)
+    {
+        var mainPage = Read(project, "MainPage.xaml");
+
+        Assert.Contains("SafeAreaEdges=\"Container\"", mainPage);
+    }
+
+    [Fact]
+    public void 내부시험배너는_각앱의본문흐름안에서렌더링한다()
+    {
+        var orderer = Read("OrdererApp", "Components/Layout/MainLayout.razor");
+        var restaurant = Read("RestaurantDeskApp", "Components/Layout/MainLayout.razor");
+        var admin = Read("SsalddelAdminApp", "Components/Layout/MainLayout.razor");
+
+        AssertAppearsBetween(
+            orderer,
+            "</header>",
+            "<MobileFieldTestBanner AppVersion=\"0.1.0\" />",
+            "<section class=\"orderer-mobile-shell__content\">");
+        AssertAppearsBetween(
+            restaurant,
+            "<MudMainContent>",
+            "<MobileFieldTestBanner AppVersion=\"0.1.0\" />",
+            "</MudMainContent>");
+        AssertAppearsBetween(
+            admin,
+            "<MudMainContent>",
+            "<MobileFieldTestBanner AppVersion=\"0.1.0\" />",
+            "</MudMainContent>");
+    }
+
+    [Fact]
+    public void 주문자모바일첫동선은_공동주문진입점을노출하지않는다()
+    {
+        var sources = new[]
+        {
+            Read("OrdererApp", "Components/Layout/MainLayout.razor"),
+            Read("OrdererApp", "Components/Layout/NavMenu.razor"),
+            Read("OrdererApp", "Components/Orderer/OrdererMobileHomeScreen.razor"),
+            Read("OrdererApp", "Components/Pages/Home.razor")
+        };
+
+        Assert.All(sources, source =>
+        {
+            Assert.DoesNotContain("OrdererRoutes.GroupPurchaseGroups", source);
+            Assert.DoesNotContain("OrdererRoutes.GroupPurchaseTogetherOrders", source);
+            Assert.DoesNotContain("공동주문", source);
+            Assert.DoesNotContain("같이 주문", source);
+        });
+    }
+
     [Fact]
     public void 기사상태변경은_음식점실시간알림과30초서버재조회로수렴한다()
     {
@@ -201,6 +283,21 @@ public sealed class FoodDeliveryV30PageCompositionTests
 
     private static string Read(string project, string relativePath)
         => File.ReadAllText(Path.Combine(FindRepositoryRoot(), project, relativePath));
+
+    private static void AssertAppearsBetween(
+        string source,
+        string openingMarker,
+        string expected,
+        string closingMarker)
+    {
+        var openingIndex = source.IndexOf(openingMarker, StringComparison.Ordinal);
+        var expectedIndex = source.IndexOf(expected, StringComparison.Ordinal);
+        var closingIndex = source.IndexOf(closingMarker, StringComparison.Ordinal);
+
+        Assert.True(openingIndex >= 0, $"시작 표식을 찾지 못했습니다: {openingMarker}");
+        Assert.True(expectedIndex > openingIndex, $"본문 앞에서 항목을 찾지 못했습니다: {expected}");
+        Assert.True(closingIndex > expectedIndex, $"본문 끝보다 앞에서 항목을 찾지 못했습니다: {expected}");
+    }
 
     private static string FindRepositoryRoot()
     {

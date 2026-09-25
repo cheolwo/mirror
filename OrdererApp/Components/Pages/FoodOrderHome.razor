@@ -2,44 +2,54 @@
 
 <PageTitle>음식 주문</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.False" Class="py-4">
-    <MudStack Spacing="3">
-        <MudStack Spacing="0">
-            <MudText Typo="Typo.h4">음식 주문</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">
-                음식 주문 영역 안에서 일반 음식점 주문과 홈달마트 주문을 구분합니다.
-            </MudText>
-        </MudStack>
+<main class="food-order-home">
+    <header class="food-order-home__hero">
+        <span>FOOD &amp; GROCERY</span>
+        <h1>무엇을 주문할까요?</h1>
+        <p>
+                @(EnforceFieldTestRoutes
+                    ? "음식점을 찾고 주문 내역을 확인하세요."
+                    : "음식점과 살뜰마트에서 원하는 메뉴를 찾아보세요.")
+        </p>
+    </header>
 
-        <MudGrid>
-            <MudItem xs="12" md="6">
-                <MudPaper Class="pa-4 h-100" Elevation="0" Outlined="true">
-                    <MudStack Spacing="2">
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                            <MudIcon Icon="@Icons.Material.Filled.RamenDining" Color="Color.Primary" />
-                            <MudText Typo="Typo.h6">음식점에서 주문</MudText>
-                        </MudStack>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">
-                            가게가 조리하고, 조리 완료 후 배달 기사가 픽업합니다.
-                        </MudText>
-                        <MudButton Href="@OrdererRoutes.Restaurants" Variant="Variant.Filled" Color="Color.Primary">음식점 보기</MudButton>
-                    </MudStack>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="12" md="6">
-                <MudPaper Class="pa-4 h-100" Elevation="0" Outlined="true">
-                    <MudStack Spacing="2">
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                            <MudIcon Icon="@Icons.Material.Filled.Storefront" Color="Color.Success" />
-                            <MudText Typo="Typo.h6">홈달마트에서 주문</MudText>
-                        </MudStack>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">
-                            도심 창고 재고를 피킹하고 포장 완료 후 음식 배달 기사 픽업으로 배송합니다.
-                        </MudText>
-                        <MudButton Href="@OrdererRoutes.Mart" Variant="Variant.Filled" Color="Color.Success">홈달마트 보기</MudButton>
-                    </MudStack>
-                </MudPaper>
-            </MudItem>
-        </MudGrid>
-    </MudStack>
-</MudContainer>
+    <section class="food-order-home__choices" aria-label="주문 유형 선택">
+        <article class="food-order-choice food-order-choice--restaurant">
+            <div class="food-order-choice__icon"><MudIcon Icon="@Icons.Material.Filled.RamenDining" /></div>
+            <span>따뜻한 한 끼</span>
+            <h2>음식점에서 주문</h2>
+            <p>가까운 가게의 메뉴를 둘러보고 바로 주문하세요.</p>
+            <MudButton Href="@OrdererRoutes.Restaurants" Variant="Variant.Filled" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">음식점 보기</MudButton>
+            <MudButton Href="/orders/food" Variant="Variant.Text" Color="Color.Primary">주문 내역</MudButton>
+        </article>
+
+        <article class="food-order-choice food-order-choice--mart">
+            <div class="food-order-choice__icon"><MudIcon Icon="@Icons.Material.Filled.Storefront" /></div>
+            <span>생활에 필요한 것</span>
+            <h2>살뜰마트에서 주문</h2>
+            <p>장보기 상품을 한 번에 담고 편하게 받아보세요.</p>
+                        @if (EnforceFieldTestRoutes)
+                        {
+                <span class="food-order-choice__soon">준비 중</span>
+                        }
+                        else
+                        {
+                <MudButton Href="@OrdererRoutes.Mart" Variant="Variant.Filled" Color="Color.Success" EndIcon="@Icons.Material.Filled.ArrowForward">살뜰마트 보기</MudButton>
+                        }
+        </article>
+    </section>
+</main>
+
+@code {
+    private static bool EnforceFieldTestRoutes
+    {
+        get
+        {
+#if DEBUG
+            return false;
+#else
+            return true;
+#endif
+        }
+    }
+}

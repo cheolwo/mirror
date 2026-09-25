@@ -77,6 +77,9 @@ public sealed class PlatformCommunityNodeNavigationCompositionTests
 
         Assert.Contains("OrdererRoutes.Food", orderer);
         Assert.Contains("OrdererRoutes.Mart", orderer);
+        Assert.Contains("OrdererRoutes.Cargo", orderer);
+        Assert.DoesNotContain("CommunityLedgerTemplateKeys.GroupPurchase", orderer);
+        Assert.DoesNotContain("CommunityLedgerTemplateKeys.GroupImport", orderer);
         Assert.Contains("@page \"/food\"", Read("OrdererApp", "Components/Pages/FoodOrderHome.razor"));
         Assert.Contains("@page \"/food/mart\"", Read("OrdererApp", "Components/Pages/MartOrder.razor"));
     }

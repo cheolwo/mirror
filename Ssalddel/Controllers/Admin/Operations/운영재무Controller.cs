@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Ssalddel.ApiMetadata;
 using Ssalddel.Application.Admin.Finance;
 using Ssalddel.Contracts.Admin.Finance;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Admin.Operations;
 
@@ -10,6 +11,7 @@ namespace Ssalddel.Controllers.Admin.Operations;
 [Authorize(Policy = "서버관리자전용")]
 [Route("api/v1/admin/operations/finance")]
 [SsalddelApiVersion(SsalddelProductVersion.V3_5)]
+[SsalddelApiFeature(VersionFeatureFlagKeys.PlatformOperationsControl)]
 [SsalddelApiGrowthTrack(SsalddelApiGrowthTrack.PlatformOperations)]
 [SsalddelApiCapability(SsalddelCapability.Settlement)]
 [SsalddelApiAudience(SsalddelActor.PlatformOperator)]

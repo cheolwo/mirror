@@ -1,0 +1,24 @@
+@implements IDisposable
+@inject 역할앱생명주기State Lifecycle
+@using Ssalddel.Ui.Common.Areas.App.Services
+
+<div class="role-app-lifecycle"
+     data-state="@Lifecycle.상태Code"
+     role="status"
+     title="@Lifecycle.사용자안내"
+     aria-live="polite"
+     aria-label="@($"{Lifecycle.플랫폼} 앱 상태: {Lifecycle.사용자안내}")">
+    <span class="role-app-lifecycle__dot" aria-hidden="true"></span>
+    <span class="role-app-lifecycle__label">@Lifecycle.사용자안내</span>
+</div>
+
+@code {
+    protected override void OnInitialized()
+        => Lifecycle.Changed += HandleChanged;
+
+    private void HandleChanged()
+        => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+        => Lifecycle.Changed -= HandleChanged;
+}

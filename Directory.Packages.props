@@ -58,6 +58,7 @@
 	<PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
 	<PackageVersion Include="SkiaSharp" Version="4.150.0" />
 	<PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.150.0" />
+	<PackageVersion Include="Square.OkIO.JVM" Version="3.17.0" />
 	<PackageVersion Include="StackExchange.Redis" Version="3.0.0" />
 	<PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
 	<PackageVersion Include="System.Windows.Extensions" Version="10.0.0" />

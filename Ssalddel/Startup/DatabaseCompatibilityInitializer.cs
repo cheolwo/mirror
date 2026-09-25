@@ -4,9 +4,12 @@ using Ssalddel.Infrastructure.Persistence.PublicData;
 using Ssalddel.Infrastructure.Persistence.SeedData.Content;
 using Ssalddel.Infrastructure.Persistence.TraditionalMarkets;
 using Ssalddel.Services.Development;
+using Ssalddel.Services.Development.MobileFieldTest;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using 살뜰.Data;
 using 살뜰.Services.Documents;
+using 살뜰.Services.Options;
 using 살뜰.Services.ViewSettings;
 
 namespace Ssalddel.Startup;
@@ -83,9 +86,27 @@ internal static class DatabaseCompatibilityInitializer
 
         try
         {
+            var identitySeedOptions = services
+                .GetRequiredService<IOptions<IdentitySeedOptions>>()
+                .Value;
+            var executionMode = services.GetRequiredService<ISsalddelExecutionModePolicy>();
+            var includeDevelopmentAccounts = environment.IsDevelopment()
+                                             || (executionMode.IsSimulation
+                                                 && identitySeedOptions.DevelopmentAccounts.AllowInSimulation);
             await IdentityDataSeeder.SeedAsync(
                 services,
-                includeDevelopmentAccounts: environment.IsDevelopment());
+                includeDevelopmentAccounts);
+            var configuration = services.GetRequiredService<IConfiguration>();
+            if (configuration.GetValue<bool>("MobileFieldTest:Enabled"))
+            {
+                if (!executionMode.IsSimulation)
+                {
+                    throw new InvalidOperationException(
+                        "MobileFieldTest data requires SsalddelExecution:Mode=Simulation.");
+                }
+
+                await 모바일현장검증자료Seeder.SeedAsync(db, DateTime.UtcNow);
+            }
             var viewVisibilityService = services.GetRequiredService<IView가시성Service>();
             await viewVisibilityService.SeedPoliciesAsync();
             var documentService = services.GetRequiredService<I문서관리Service>();

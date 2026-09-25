@@ -3,10 +3,15 @@ using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using Ssalddel.Application.Admin.Dashboard;
 using Ssalddel.ApiMetadata;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Admin.Home01;
 
-[SsalddelApiVersion(SsalddelProductVersion.V1_0)]
+[SsalddelApiVersion(
+    SsalddelProductVersion.V1_0,
+    FeatureKey = VersionFeatureFlagKeys.DomesticTransportWorkflow,
+    WorkflowKey = VersionFeatureFlagKeys.DomesticTransportWorkflow)]
+[SsalddelApiWorkflow(SsalddelWorkflow.DomesticTransport)]
 [ApiController]
 [Route("api/v1/admin/dashboard")]
 [Authorize(Policy = "서버관리자전용")]

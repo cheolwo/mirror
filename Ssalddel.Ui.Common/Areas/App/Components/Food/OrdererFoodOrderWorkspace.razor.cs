@@ -1,12 +1,15 @@
 using Microsoft.AspNetCore.Components;
+using Ssalddel.Contracts.Food;
 using Ssalddel.Ui.Common.Areas.App.Models.Auth;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
 
 namespace Ssalddel.Ui.Common.Areas.App.Components.Food;
 
-public partial class OrdererFoodOrderWorkspace
+public partial class OrdererFoodOrderWorkspace : IAsyncDisposable
 {
     private bool _initialized;
+    private readonly CancellationTokenSource _locationRefreshCancellation = new();
+    private Task? _locationRefreshTask;
 
     [Parameter]
     public string? OrderNo { get; set; }
@@ -23,6 +26,7 @@ public partial class OrdererFoodOrderWorkspace
     {
         await InitializeAsync();
         _initialized = true;
+        _locationRefreshTask = RefreshDriverLocationLoopAsync(_locationRefreshCancellation.Token);
     }
 
     protected override Task OnParametersSetAsync()
@@ -68,5 +72,45 @@ public partial class OrdererFoodOrderWorkspace
         {
             await OrderSelected.InvokeAsync(null);
         }
+    }
+
+    private async Task RefreshDriverLocationLoopAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                var locationState = Detail.상세?.기사위치.상태;
+                if (!Authentication.로그인됨
+                    || string.IsNullOrWhiteSpace(Detail.요청OrderNo)
+                    || locationState is not (음식배달위치추적상태코드.추적중 or 음식배달위치추적상태코드.갱신지연))
+                {
+                    continue;
+                }
+
+                await InvokeAsync(() => ViewModel.주문진행새로고침Async(cancellationToken));
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _locationRefreshCancellation.CancelAsync();
+        if (_locationRefreshTask is not null)
+        {
+            try
+            {
+                await _locationRefreshTask;
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+
+        _locationRefreshCancellation.Dispose();
     }
 }

@@ -10,6 +10,7 @@ public sealed class 주문알림Service(
 {
     public async Task 신규주문알림재생Async(CancellationToken cancellationToken = default)
     {
+        _ = logger;
         var settings = Normalize(options.Value);
         if (!settings.Enabled)
         {

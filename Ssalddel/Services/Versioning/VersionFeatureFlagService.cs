@@ -33,6 +33,7 @@ public sealed class VersionFeatureFlagService : IVersionFeatureFlagService
             VersionFeatureFlagKeys.HrParticipationWorkflow => IsHrParticipationEnabled(flags),
             VersionFeatureFlagKeys.FoodDeliveryV30 => IsFoodDeliveryEnabled(flags),
             VersionFeatureFlagKeys.FoodDeliveryWorkflow => IsFoodDeliveryEnabled(flags),
+            VersionFeatureFlagKeys.PlatformOperationsControl => flags.PlatformOperationsControl,
             VersionFeatureFlagKeys.OperationalWorldObservationWorkflow => flags.OperationalWorldObservationWorkflow,
             VersionFeatureFlagKeys.RegionExperiencePackages => flags.RegionExperiencePackages,
             VersionFeatureFlagKeys.AdministrativeDongDioramaObservation => flags.AdministrativeDongDioramaObservation,
@@ -59,6 +60,7 @@ public sealed class VersionFeatureFlagService : IVersionFeatureFlagService
             [VersionFeatureFlagKeys.CommunityTrustWorkflow] = IsCommunityTrustEnabled(flags),
             [VersionFeatureFlagKeys.HrParticipationWorkflow] = IsHrParticipationEnabled(flags),
             [VersionFeatureFlagKeys.FoodDeliveryWorkflow] = IsFoodDeliveryEnabled(flags),
+            [VersionFeatureFlagKeys.PlatformOperationsControl] = flags.PlatformOperationsControl,
             [VersionFeatureFlagKeys.OperationalWorldObservationWorkflow] = flags.OperationalWorldObservationWorkflow,
             [VersionFeatureFlagKeys.RegionExperiencePackages] = flags.RegionExperiencePackages,
             [VersionFeatureFlagKeys.AdministrativeDongDioramaObservation] = flags.AdministrativeDongDioramaObservation,
@@ -142,6 +144,8 @@ public static class VersionFeatureFlagKeys
     public const string HrParticipationWorkflow = nameof(HrParticipationWorkflow);
 
     public const string FoodDeliveryWorkflow = nameof(FoodDeliveryWorkflow);
+
+    public const string PlatformOperationsControl = nameof(PlatformOperationsControl);
 
     public const string OperationalWorldObservationWorkflow = nameof(OperationalWorldObservationWorkflow);
 

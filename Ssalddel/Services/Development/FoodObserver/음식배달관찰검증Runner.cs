@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Ssalddel.Contracts.Admin.Food;
 using Ssalddel.Contracts.Common;
 using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Contracts.Driver.Food;
@@ -169,7 +170,13 @@ public sealed class 음식배달관찰검증Runner(
         _restaurantId = restaurant.Id;
         foreach (var actor in _actors)
         {
-            var role = actor.Role switch { "restaurant" => 역할명.음식점, "driver" => 역할명.기사, _ => 역할명.커뮤니티회원 };
+            var role = actor.Role switch
+            {
+                "restaurant" => 역할명.음식점,
+                "driver" => 역할명.기사,
+                "admin" => 역할명.서버관리자,
+                _ => 역할명.커뮤니티회원
+            };
             if (!await roles.RoleExistsAsync(role)) CheckIdentity(await roles.CreateAsync(new IdentityRole(role)));
             var id = UserId(actor.Id);
             var user = await users.FindByIdAsync(id);
@@ -367,6 +374,7 @@ public sealed class 음식배달관찰검증Runner(
         Actor("customer", "수령 확인", "관찰", "");
         Actor("restaurant", "처리 완료", "새 주문 대기", "검증은 주문 1건만 생성");
         Actor("driver-near", "전달 완료", "근무 종료", "");
+        Actor("admin", "정상 폐루프 확인", "예외 관찰", "정상 경로는 개입하지 않음");
         foreach (var id in new[] { "driver-near", "driver-far" })
             await PostAsync<JsonElement>(id, "api/v1/driver/food-deliveries/work/stop", null, ct);
         lock (_gate) _message = "주문 폐루프 완료 · 남은 5분 관찰 구간에서 같은 주문 재조회 중";
@@ -376,10 +384,20 @@ public sealed class 음식배달관찰검증Runner(
     {
         var customer = await GetAsync<주문자음식주문상세응답>("customer", $"api/v1/food-orders/{_orderNo}", ct);
         var restaurant = await GetAsync<음식주문응답>("restaurant", $"api/v1/food-orders/restaurant/inbox/{_orderNo}", ct);
+        var operations = await GetAsync<음식주문운영추적응답>(
+            "admin",
+            $"api/v1/admin/food-orders/{_orderNo}/operations-trace",
+            ct);
         using var scope = scopes.CreateScope();
         var saved = scope.ServiceProvider.GetRequiredService<ISsalddelFoodOrderStore>().GetOrder(_orderNo);
         Require(saved is not null && saved.주문번호 == customer.주문.주문번호 && saved.상태 == customer.주문.상태
             && saved.상태 == restaurant.상태, "역할별 재조회와 영속 원장 상태가 일치하지 않습니다.");
+        Require(operations.주문번호 == saved!.주문번호
+            && operations.주문상태 == saved.상태,
+            "운영자 추적 사본과 영속 원장 상태가 일치하지 않습니다.");
+        Require(operations.생명주기조화.정상경로조화여부
+            && !operations.생명주기조화.운영자확인필요여부,
+            "정상 표본에서 운영자 확인이 필요한 생명주기 결손이 발견되었습니다.");
         Require(음식자료선택Policy.OrderMatches(_menuSelection!, saved!.상품목록)
             && 음식자료선택Policy.OrderMatches(_menuSelection!, customer.상품목록)
             && 음식자료선택Policy.OrderMatches(_menuSelection!, restaurant.상품목록), "재조회에서 메뉴·수량·가격 결속이 달라졌습니다.");
@@ -444,6 +462,7 @@ public sealed class 음식배달관찰검증Runner(
         new("customer", "주문자", "orderer", "대기", "주문 등록", "검증 시작 대기", "", 16, 0),
         new("restaurant", "음식점 주인", "restaurant", "대기", "수신함 조회", "새 주문 대기", "", 0, 0),
         new("driver-near", "가까운 기사", "driver", "대기", "운행 시작", "검증 시작 대기", "", -8, 0),
-        new("driver-far", "먼 기사", "driver", "대기", "운행 시작", "검증 시작 대기", "", -20, 8)
+        new("driver-far", "먼 기사", "driver", "대기", "운행 시작", "검증 시작 대기", "", -20, 8),
+        new("admin", "플랫폼 운영자", "admin", "대기", "운영 추적 조회", "정상 경로는 개입하지 않음", "", 24, 8)
     ];
 }

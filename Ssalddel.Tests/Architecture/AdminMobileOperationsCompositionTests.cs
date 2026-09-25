@@ -12,6 +12,15 @@ public sealed class AdminMobileOperationsCompositionTests
         var dashboardService = Read(
             "SsalddelAdminApp",
             "Services/AdminDashboardService.cs");
+        var dashboardController = Read(
+            "Ssalddel",
+            "Controllers/Admin/01_안내/관리자대시보드Controller.cs");
+        var dashboardHandler = Read(
+            "Ssalddel",
+            "Application/Admin/Dashboard/Handlers/관리자대시보드요약조회QueryHandler.cs");
+        var fieldTestCompose = Read(
+            "deploy",
+            "azure-vm/compose.food-mobile-field-test.override.yaml");
 
         Assert.Contains("@page \"/\"", home);
         Assert.Contains("@page \"/overview\"", home);
@@ -21,10 +30,30 @@ public sealed class AdminMobileOperationsCompositionTests
         Assert.Contains("운송예외수", home);
         Assert.Contains("배차대기수", home);
         Assert.Contains("Href=\"/operations\"", home);
-        Assert.Contains("Href=\"/community-management\"", home);
-        Assert.Contains("Href=\"/trade-readiness\"", home);
+        Assert.Contains("Href=\"/operations/follow-up-recovery\"", home);
+        Assert.Contains("Href=\"/operations/finance\"", home);
+        Assert.DoesNotContain("Href=\"/community-management\"", home);
+        Assert.DoesNotContain("Href=\"/trade-readiness\"", home);
         Assert.DoesNotContain("@page \"/\"", formerHome);
         Assert.Contains("\"api/v1/admin/dashboard\"", dashboardService);
+        Assert.Contains("FeatureKey = VersionFeatureFlagKeys.DomesticTransportWorkflow", dashboardController);
+        Assert.Contains("WorkflowKey = VersionFeatureFlagKeys.DomesticTransportWorkflow", dashboardController);
+        Assert.Contains("await _db", dashboardHandler);
+        Assert.DoesNotContain("Task.WhenAll(", dashboardHandler);
+        Assert.Contains("VersionFeatureFlags__DomesticTransportWorkflow: \"true\"", fieldTestCompose);
+    }
+
+    [Fact]
+    public void 관리자로그인은_소셜계정선택없이_간단한계정로그인만제공한다()
+    {
+        var login = Read("SsalddelAdminApp", "Components/Pages/Login.razor");
+
+        Assert.Contains("소셜로그인표시=\"false\"", login);
+        Assert.Contains("OnPasswordLogin=\"HandleLoginAsync\"", login);
+        Assert.DoesNotContain("OnSocialLogin", login);
+        Assert.DoesNotContain("카카오", login);
+        Assert.DoesNotContain("구글", login);
+        Assert.DoesNotContain("네이버", login);
     }
 
     [Fact]

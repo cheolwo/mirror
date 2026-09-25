@@ -1,0 +1,68 @@
+:root {
+    color-scheme: light;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+}
+
+body.role-app {
+    min-height: 100dvh;
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body.role-app--orderer {
+    --role-accent: #0f766e;
+    --role-surface: #fcfffd;
+    --role-canvas: #eeece5;
+}
+
+body.role-app--restaurant {
+    --role-accent: #9a4d22;
+    --role-surface: #fffdf9;
+    --role-canvas: #f7f2ea;
+}
+
+body.role-app--admin {
+    --role-accent: #173b57;
+    --role-surface: #fcfffd;
+    --role-canvas: #f3f7f5;
+}
+
+body.role-app button,
+body.role-app a,
+body.role-app input,
+body.role-app select,
+body.role-app textarea {
+    font: inherit;
+}
+
+body.role-app :focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--role-accent) 32%, transparent);
+    outline-offset: 2px;
+}
+
+body.role-app h1:focus-visible {
+    outline: none;
+}
+
+@media (pointer: coarse) {
+    body.role-app button,
+    body.role-app [role="button"],
+    body.role-app .mud-button-root,
+    body.role-app .mud-icon-button {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.role-app *,
+    body.role-app *::before,
+    body.role-app *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+}

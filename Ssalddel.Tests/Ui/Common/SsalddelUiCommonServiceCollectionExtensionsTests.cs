@@ -845,6 +845,60 @@ public sealed class SsalddelUiCommonServiceCollectionExtensionsTests
     }
 
     [Fact]
+    public void ResolveMobileBaseAddress_배포빌드는공개Https주소만허용한다()
+    {
+        var result = SsalddelServerEndpoint.ResolveMobileBaseAddress(
+            "https://field.ssalddel.test/api",
+            null,
+            allowInsecureDebugEndpoint: false);
+
+        Assert.Equal(new Uri("https://field.ssalddel.test/api/"), result);
+        Assert.Throws<InvalidOperationException>(() =>
+            SsalddelServerEndpoint.ResolveMobileBaseAddress(
+                "http://field.ssalddel.test/",
+                null,
+                allowInsecureDebugEndpoint: false));
+        Assert.Throws<InvalidOperationException>(() =>
+            SsalddelServerEndpoint.ResolveMobileBaseAddress(
+                "https://localhost:7117/",
+                null,
+                allowInsecureDebugEndpoint: false));
+        Assert.Throws<InvalidOperationException>(() =>
+            SsalddelServerEndpoint.ResolveMobileBaseAddress(
+                null,
+                null,
+                allowInsecureDebugEndpoint: false));
+    }
+
+    [Fact]
+    public void ResolveMobileBaseAddress_디버그는에뮬레이터Http주소를허용한다()
+    {
+        var result = SsalddelServerEndpoint.ResolveMobileBaseAddress(
+            SsalddelServerEndpoint.AndroidEmulatorDebugBaseAddress,
+            null,
+            allowInsecureDebugEndpoint: true);
+
+        Assert.Equal(new Uri(SsalddelServerEndpoint.AndroidEmulatorDebugBaseAddress), result);
+    }
+
+    [Fact]
+    public void MobileFieldTestRoutePolicy는_허용한RouteTemplate만연다()
+    {
+        Assert.True(MobileFieldTestRoutePolicy.IsAllowed(
+            typeof(FieldTestAllowedPage),
+            enforce: true,
+            ["/orders/{OrderNo}"]));
+        Assert.False(MobileFieldTestRoutePolicy.IsAllowed(
+            typeof(FieldTestAllowedPage),
+            enforce: true,
+            ["/orders"]));
+        Assert.True(MobileFieldTestRoutePolicy.IsAllowed(
+            typeof(FieldTestAllowedPage),
+            enforce: false,
+            []));
+    }
+
+    [Fact]
     public void ResolveBrowserBaseAddress_SameOrigin은현재Host의Origin으로제한한다()
     {
         var result = SsalddelServerEndpoint.ResolveBrowserBaseAddress(
@@ -866,6 +920,9 @@ public sealed class SsalddelUiCommonServiceCollectionExtensionsTests
     {
         public string AccessToken { get; set; } = "test-token";
     }
+
+    [Microsoft.AspNetCore.Components.Route("/orders/{OrderNo}")]
+    private sealed class FieldTestAllowedPage;
 
     private static string CreateToken(
         string? userId,

@@ -5,28 +5,37 @@
 @using Microsoft.AspNetCore.Components.Routing
 
 <MudLayout>
-    <MudAppBar Dense="true" Elevation="1" Color="Color.Primary">
-        <MudButton Variant="Variant.Text" Color="Color.Inherit" Disabled="@(!CanGoBack)" OnClick="GoBack" Class="back-nav-button">← 뒤로가기</MudButton>
+    <MudAppBar Dense="true" Elevation="1" Color="Color.Primary" Class="restaurant-appbar">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                       Color="Color.Inherit"
+                       Disabled="@(!CanGoBack)"
+                       aria-label="뒤로가기"
+                       OnClick="GoBack"
+                       Class="back-nav-button" />
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
-        <MudText Typo="Typo.h6" Class="ml-2">살뜰 식당</MudText>
+        <MudText Typo="Typo.h6" Class="ml-2 restaurant-appbar-title">살뜰 식당</MudText>
         <MudSpacer />
+        <RoleAppLifecycleIndicator />
         @if (AuthService.Session.IsAuthenticated)
         {
-            <MudText Typo="Typo.caption" Class="mr-2">@AuthService.Session.UserName</MudText>
+            <MudText Typo="Typo.caption" Class="mr-2 restaurant-appbar-user">@AuthService.Session.UserName</MudText>
             <MudIconButton Icon="@Icons.Material.Filled.Logout"
                            Color="Color.Inherit"
                            aria-label="로그아웃"
                            OnClick="LogoutAsync" />
         }
-        <MudChip T="string" Color="Color.Success" Variant="Variant.Filled">주문 수신 데스크</MudChip>
+        <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Class="restaurant-appbar-chip">주문 수신 데스크</MudChip>
     </MudAppBar>
 
     <MudDrawer Open="@_drawerOpen" Variant="DrawerVariant.Temporary" Elevation="1" ClipMode="DrawerClipMode.Always" @onclick="CloseDrawer">
         <NavMenu />
     </MudDrawer>
 
-    <MudMainContent Class="pa-4">
-        @Body
+    <MudMainContent>
+        <MobileFieldTestBanner AppVersion="0.1.0" />
+        <div class="pa-4 restaurant-main-content">
+            @Body
+        </div>
     </MudMainContent>
 </MudLayout>
 

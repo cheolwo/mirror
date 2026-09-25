@@ -70,16 +70,21 @@ namespace FDriverApp
             builder.Services.AddSingleton<FDriverAppProfile>();
             builder.Services.AddSingleton<IClientSessionGuard, ClientSessionGuard>();
             builder.Services.AddSingleton<IFDriverAuthSession, FDriverAuthSession>();
+#if DEBUG || SSALDDEL_USB_FIELD_TEST
+            const bool allowInsecureDebugEndpoint = true;
+#else
+            const bool allowInsecureDebugEndpoint = false;
+#endif
             builder.Services.AddSsalddelOperationalApiHttpClient(
-                SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+                SsalddelServerEndpoint.ResolveMobileBaseAddress(
+                    typeof(MauiProgram).Assembly,
                     builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
                     builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey],
-                    SsalddelServerEndpoint.CreateDefaultBaseAddress()),
+                    allowInsecureDebugEndpoint),
                 ServiceLifetime.Singleton,
                 TimeSpan.FromSeconds(20));
             builder.Services.AddSingleton<FDriverAuthApiService>();
             builder.Services.AddSingleton<IFoodDeliveryDriverApiService, FoodDeliveryDriverApiService>();
-            builder.Services.AddSingleton<IFDriverDispatchRealtimeService, FDriverDispatchRealtimeService>();
             builder.Services.AddSingleton<IFDriverLocationService, FDriverLocationService>();
             builder.Services.AddSingleton<IFDriverWorkspaceNavigator, FDriverWorkspaceNavigator>();
             builder.Services.AddSingleton<MainPageModel>();

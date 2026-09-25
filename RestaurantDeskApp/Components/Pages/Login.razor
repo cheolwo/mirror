@@ -4,13 +4,18 @@
 
 <PageTitle>음식점 로그인</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Small" Class="py-8">
-    <MudPaper Elevation="1" Class="pa-6">
+<MudContainer MaxWidth="MaxWidth.Small" Class="restaurant-login-shell">
+    <MudStack Spacing="1" Class="restaurant-login-intro">
+        <MudText Typo="Typo.overline">SSALDDEL RESTAURANT</MudText>
+        <MudText Typo="Typo.h3">새 주문을 놓치지 않도록</MudText>
+        <MudText Typo="Typo.body1">주문 확인부터 조리 준비까지 한곳에서 관리하세요.</MudText>
+    </MudStack>
+    <MudPaper Elevation="0" Class="restaurant-login-card">
         <MudStack Spacing="3">
             <div>
-                <MudText Typo="Typo.h4">살뜰 식당 로그인</MudText>
+                <MudText Typo="Typo.h5">음식점 로그인</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    음식점 권한과 서버에 연결된 음식점 범위가 있는 계정으로 로그인합니다.
+                    음식점 아이디와 비밀번호를 입력해 주세요.
                 </MudText>
             </div>
 
@@ -33,6 +38,8 @@
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        Disabled="@isBusy"
+                       FullWidth="true"
+                       Class="restaurant-login-button"
                        OnClick="LoginAsync">
                 @(isBusy ? "로그인 확인 중" : "로그인")
             </MudButton>
@@ -51,7 +58,7 @@
         var result = await AuthService.EnsureAccessTokenAsync();
         if (result.IsSuccess)
         {
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo("/orders", replace: true);
         }
     }
 
@@ -73,7 +80,7 @@
                 return;
             }
 
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo("/orders", replace: true);
         }
         finally
         {

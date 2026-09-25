@@ -1,149 +1,27 @@
-.orderer-mobile-home {
-    display: grid;
-    gap: 13px;
-    padding: 16px 16px 100px;
-    color: #202735;
-}
-
-.orderer-mobile-home__heading > span {
-    color: #1769e0;
-    font-size: .68rem;
-    font-weight: 850;
-}
-
-.orderer-mobile-home__heading h1 {
-    margin: 3px 0 4px;
-    font-size: 1.65rem;
-    line-height: 1.15;
-    letter-spacing: -.045em;
-}
-
-.orderer-mobile-home__heading p {
-    margin: 0;
-    color: #697286;
-    font-size: .72rem;
-    line-height: 1.5;
-}
-
-.orderer-mobile-home__summary {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    overflow: hidden;
-    border-radius: 4px;
-    background: #eaf2ff;
-}
-
-.orderer-mobile-home__summary a {
-    display: grid;
-    place-items: center;
-    gap: 5px;
-    min-height: 68px;
-    padding: 10px 5px;
-    color: #174f96;
-    text-align: center;
-    text-decoration: none;
-}
-
-.orderer-mobile-home__summary a + a {
-    border-left: 1px solid rgba(23, 105, 224, .16);
-}
-
-.orderer-mobile-home__summary span {
-    font-size: .65rem;
-}
-
-.orderer-mobile-home__summary strong {
-    font-size: .78rem;
-}
-
-.orderer-mobile-home__summary small {
-    grid-column: 1 / -1;
-    padding: 8px 10px;
-    border-top: 1px solid rgba(23, 105, 224, .16);
-    color: #42678f;
-    font-size: .6rem;
-    line-height: 1.45;
-    text-align: center;
-}
-
-.orderer-mobile-home__shortcuts {
-    display: grid;
-    gap: 8px;
-}
-
-.orderer-mobile-home__shortcuts h2 {
-    margin: 0;
-    font-size: .9rem;
-}
-
-.orderer-mobile-home__shortcuts nav {
-    overflow: hidden;
-    border: 1px solid #d1d6e1;
-    border-radius: 4px;
-    background: #fff;
-}
-
-.orderer-mobile-home__shortcut {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 11px;
-    min-height: 68px;
-    padding: 10px 12px;
-    color: #262e3c;
-    text-decoration: none;
-}
-
-.orderer-mobile-home__shortcut + .orderer-mobile-home__shortcut {
-    border-top: 1px solid #d6dbe5;
-}
-
-.orderer-mobile-home__shortcut > span:first-child {
-    display: grid;
-    place-items: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 3px;
-}
-
-.orderer-mobile-home__shortcut--mint > span:first-child {
-    background: #e4f6ed;
-    color: #3c8465;
-}
-
-.orderer-mobile-home__shortcut--blue > span:first-child {
-    background: #eaf2ff;
-    color: #1769e0;
-}
-
-.orderer-mobile-home__shortcut > span:nth-child(2) {
-    display: grid;
-    gap: 3px;
-}
-
-.orderer-mobile-home__shortcut strong {
-    font-size: .78rem;
-}
-
-.orderer-mobile-home__shortcut small {
-    color: #758093;
-    font-size: .62rem;
-}
-
-.orderer-mobile-home__boundary {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: start;
-    gap: 9px;
-    padding: 11px;
-    border-radius: 4px;
-    background: #e4f6ed;
-    color: #35624d;
-    font-size: .66rem;
-    line-height: 1.5;
-}
-
-.orderer-mobile-home__boundary span {
-    display: grid;
-    gap: 2px;
-}
+.orderer-mobile-home { display: grid; gap: 22px; padding: 24px 18px 108px; color: #18302e; }
+.orderer-mobile-home__heading { position: relative; overflow: hidden; padding: 24px 22px; border-radius: 24px; background: radial-gradient(circle at 90% 12%, rgba(255,255,255,.72) 0 12%, transparent 13%), linear-gradient(135deg, #dff3eb, #edf1db); }
+.orderer-mobile-home__heading::after { content: ""; position: absolute; right: -22px; bottom: -42px; width: 128px; height: 128px; border-radius: 50%; background: rgba(15,118,110,.1); }
+.orderer-mobile-home__heading > span { color: #0f766e; font-size: .68rem; font-weight: 850; letter-spacing: .08em; }
+.orderer-mobile-home__heading h1 { max-width: 300px; margin: 9px 0 7px; font-size: 1.75rem; line-height: 1.18; letter-spacing: -.055em; }
+.orderer-mobile-home__heading p { max-width: 300px; margin: 0; color: #526963; font-size: .76rem; line-height: 1.55; }
+.orderer-mobile-home__summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+.orderer-mobile-home__summary a { display: grid; place-items: center; gap: 8px; min-height: 82px; padding: 12px 6px; border: 1px solid #e7e4da; border-radius: 17px; background: rgba(255,255,252,.92); color: #294742; text-align: center; text-decoration: none; box-shadow: 0 8px 24px rgba(40,54,50,.05); transition: transform 150ms ease, box-shadow 150ms ease; }
+.orderer-mobile-home__summary a:hover, .orderer-mobile-home__summary a:focus-visible { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(40,54,50,.1); }
+.orderer-mobile-home__summary ::deep .mud-icon-root { color: #0f766e; }
+.orderer-mobile-home__summary strong { font-size: .69rem; }
+.orderer-mobile-home__shortcuts { display: grid; gap: 11px; }
+.orderer-mobile-home__shortcuts > header { display: flex; align-items: end; justify-content: space-between; }
+.orderer-mobile-home__shortcuts h2 { margin: 0; font-size: 1.05rem; letter-spacing: -.035em; }
+.orderer-mobile-home__shortcuts > header span { color: #8a918c; font-size: .64rem; }
+.orderer-mobile-home__shortcuts nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.orderer-mobile-home__shortcut { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: center; gap: 10px; min-height: 92px; padding: 14px; border: 1px solid #e7e4da; border-radius: 18px; background: rgba(255,255,252,.96); color: #203a36; text-decoration: none; box-shadow: 0 8px 24px rgba(40,54,50,.05); }
+.orderer-mobile-home__shortcut > span:first-child { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; }
+.orderer-mobile-home__shortcut--mint > span:first-child { background: #e3f4ee; color: #0f766e; }
+.orderer-mobile-home__shortcut--blue > span:first-child { background: #eef0f8; color: #58658c; }
+.orderer-mobile-home__shortcut > span:nth-child(2) { display: grid; gap: 4px; }
+.orderer-mobile-home__shortcut strong { font-size: .75rem; }
+.orderer-mobile-home__shortcut small { color: #7a817d; font-size: .6rem; line-height: 1.4; }
+.orderer-mobile-home__shortcut > ::deep .mud-icon-root:last-child { display: none; }
+.orderer-mobile-home__boundary { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: center; gap: 9px; padding: 12px 14px; border-radius: 14px; background: #edf5f1; color: #587069; font-size: .64rem; line-height: 1.5; }
+.orderer-mobile-home__boundary span { display: grid; gap: 2px; }
+@media (max-width: 370px) { .orderer-mobile-home__shortcuts nav { grid-template-columns: minmax(0,1fr); } }

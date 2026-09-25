@@ -256,6 +256,7 @@ public sealed class 주문자음식주문상세응답
 {
     public 주문자음식주문요약응답 주문 { get; set; } = new();
     public 주문자음식배달진행응답 배달진행 { get; set; } = new();
+    public 주문자음식배달위치추적응답 기사위치 { get; set; } = new();
     public string 음식점주소 { get; set; } = string.Empty;
     public string 음식점상세주소 { get; set; } = string.Empty;
     public 음식주문수령인정보Dto 수령인정보 { get; set; } = new();
@@ -266,6 +267,30 @@ public sealed class 주문자음식주문상세응답
     public string? 수락메모 { get; set; }
     public IReadOnlyList<업무가능행동Dto> AvailableActions { get; set; } = [];
     public IReadOnlyList<음식주문상태전이기록Dto> 상태이력 { get; set; } = [];
+}
+
+public static class 음식배달위치추적상태코드
+{
+    public const string 추적전 = "추적전";
+    public const string 추적중 = "추적중";
+    public const string 갱신지연 = "갱신지연";
+    public const string 종료 = "종료";
+}
+
+/// <summary>
+/// 주문 소유자에게만 제공하는 배달 수행 위치 사본입니다.
+/// 기사 식별자와 이동 이력은 포함하지 않으며 완료·취소 뒤에는 좌표를 제거합니다.
+/// </summary>
+public sealed class 주문자음식배달위치추적응답
+{
+    public string SchemaVersion { get; set; } = "food-order-driver-location.v1";
+    public string 상태 { get; set; } = 음식배달위치추적상태코드.추적전;
+    public string 안내 { get; set; } = "기사가 배차를 수락하면 현재 위치를 확인할 수 있습니다.";
+    public decimal? 위도 { get; set; }
+    public decimal? 경도 { get; set; }
+    public decimal? 정확도_m { get; set; }
+    public DateTime? 기록시각Utc { get; set; }
+    public DateTime 조회시각Utc { get; set; }
 }
 
 public sealed class 주문자음식배달진행응답

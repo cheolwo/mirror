@@ -1,4 +1,4 @@
-[기획 · 시스템·운영 통합·지역 확장 · PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD · r48]
+[기획 · 시스템·운영 통합·지역 확장 · PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD · r50]
 
 # 지역 운영 생명주기 E2E·전국 확장 뼈대 제안
 
@@ -6,7 +6,7 @@
 
 - 기획 ID: `PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD`
 - 기획 분야: 시스템·운영 통합·지역 확장
-- 기획 판본: `r48`
+- 기획 판본: `r50`
 - 상태: `ApprovedPlanningPriority / OperatorAppAndOperationalDataFirst / ExistingAdminAppShellConfirmed / UnifiedPlatformAdminAppConfirmed / OsOperatorDailyWorkspacePrimaryConfirmed / CrossOsGovernanceSecondaryConfirmed / PlatformOperationsOsShellProposed / PlatformOperationsLifecycleNotInvented / CrossOsFinancialProjectionProposed / RolePerspectiveWorkspacesConfirmed / CanonicalLedgersShared / RoleEntryPointBaselineDefined / InitialScreenCoverageAudited / UiCoverageAuditR2Completed / FoodDriverMapFirstConfirmed / FoodDriverMyInfoAndHistoryConfirmed / FoodDriverFrozenPayoutBreakdownConfirmed / PayoutBreakdownDefaultExpandedCollapsible / StandardPayoutRowsAlwaysVisibleConfirmed / GrossDeductionNetSeparated / StatutoryDeductionEligibilityServerOwned / MonthlyInsuranceFinalizationConfirmed / PlatformShareNeverDeductedFromDriver / PlatformContributionSecondaryDisclosureConfirmed / DriverHoldLabelSimplifiedConfirmed / CustomerCenterInquiryConfirmed / InternalHoldReasonOperatorOnly / HistoricalNoRecalculationConfirmed / ExistingPricingLedgerPartiallyMapped / StatutoryDeductionLedgerMissing / PayoutBreakdownContractRequired / FoodRestaurantDriverPairRelationshipConfirmed / CompletedDeliveryCountOnlyConfirmed / RelationshipBadgeDetailConfirmed / BilateralVisibilityControlConfirmed / PreferenceFailureFailClosed / RelationshipNoDispatchInfluenceConfirmed / FoodRelationshipProjectionRequired / RelationshipVisibilityPreferenceRequired / FoodDriverHistoryProjectionRequired / FoodDriverTwoVisualDraftsGenerated / ExistingMartEntryScreenMapped / FinanceDetailUiNext / OrdererActiveOrderFirstConfirmed / RestaurantDistancePolicyBound / TenKmWarningCandidateNoted / WarningExpansionDeferred / FirstMobileVisualDraftGenerated / DeliveryTrackingDetailConfirmed / ExistingDriverLocationWritePathMapped / OrderBoundLocationProjectionRequired / NaverMapsProviderCandidateConfirmed / LocationSharingWindowPending / PhysicalRoleAppSplitDeferred / ExceptionRecoveryHomeDirectionConfirmed / GlobalHomeAggregateOnlyConfirmed / FoodDeliveryOsOverviewVisualDraftGenerated / IndividualCasesBehindQueueConfirmed / DriverNoResponseDemotedFromOverview / PreparationTimeFiveTenFifteenTwentyConfirmed / Over20MinuteOrdererInAppAndPushConfirmed / FoodSalesOrderDecisionVisualDraftGenerated / FoodSalesPlanningLinked / PickupDelayDetailVisualDraftGenerated / FoodDelayTaxonomyRefactored / PreparationDelayFiveTenThresholdImplemented / DeliveryProgressDelayInitialThresholdImplemented / AutomaticRedispatchRemovedFromOperatorExceptions / FinanceAccountingProgressiveDisclosureConfirmed / ImageDrivenScreenStateReviewConfirmed / MultiStakeholderConflictReviewConfirmed / MobileGlancePartiallyImplemented / AdminAndroidBuildPassed / PhysicalDeviceReviewDeferredByUser / ImageDrivenMobileReviewConfirmed / ExistingFigmaReferencesMapped / FoodDeliveryOperatorVisualDraftGenerated / OperatorFieldParticipationNotImplemented / ExplicitRoleSwitchRequired / FoodDriverWorkflowReusable / ExceptionFirstHomeAsked / FieldParticipationEntryPlacementDeferred / FirstParticipationModePending / AndroidAdminDogfoodFirstConfirmed / PhysicalDeviceConnectionDeferred / LifecycleFailureRecoveryFirstConfirmed / OperatorSafeRetryOnlyConfirmed / OperationalEffectsDisabled / SimulationRulesFollowOperationalContracts / UnityReadOnlyDeferredConsumer / DeviceUiProofBlockedByNativeControlUnavailable`
 - 출시 진행 상태: `ActualMobileReleaseGoalConfirmed / CompletionBeforeFeatureExpansionConfirmed / FirstReleaseTargetSsalddelAdminAppAndroid / GooglePlayInternalTestingRecommended / ReleaseAabPackagingPassed / DedicatedReleaseSigningMissing / ReleaseHttpsEndpointMissing / PhysicalDeviceProofMissing`
 - 사용자 요구: 전체 제품에서는 각 OS 운영자의 모바일 작업공간과 서버 운영 데이터·생명주기 관리가 최우선이다. 이제 새 기능 수를 늘리기보다 실제 Android 앱 하나를 출시 가능한 상태까지 완수한다. 정상 자동화가 동작할수록 총괄 관리자의 일상 개입은 작아져야 하며, 총괄은 정책·권한·재무·OS 간 최종 충돌의 후순위 관리층으로 둔다. 운영 계약이 안정되면 같은 규칙을 격리 Simulation에 재사용하고 Unity는 읽기 전용 후순위 소비자로 둔다. 기사는 운영자가 호출·지시하는 인력이 아니라 배차 제안을 자발적으로 수락·거절하는 주체로 유지한다.
@@ -840,3 +840,19 @@ canonical 재조회                   높은 projection revision만 적용
 - 유효 시간 안에 새로 생성되는 음식 배달 제안만 추가 지급액을 합산한다. 제안 생성 시 기본 지급액·기상 할증·한시 수요 할증·정책 revision을 운송 원장에 동결하고 기사 응답 계약에 분리해 싣는다. 기존 제안이나 완료 건을 소급 변경하지 않는다.
 - 현재 운영 화면의 기사 수는 운행 상태 집계다. `수신 의사 On ∩ 자격·정지·이미 수행 중 여부를 포함한 제안 가능 상태`의 서버 집계는 아직 구현하지 않았으므로, 이 카드만 보고 할증 필요성을 자동 판정하지 않는다.
 - 집중 자동시험 `30/30`과 `SsalddelAdminApp` Windows·Android 빌드가 경고 0개·오류 0개로 통과했다. 실제 휴대폰 설치·터치·390px 화면 캡처, 격리 MySQL에서의 만료 경과, 실제 기사 앱 표시와 운영 지급은 이번 증거에 포함하지 않는다.
+
+### r49 구현: 음식 주문 네 역할 Android 현장 검증 기반
+
+- [음식 주문 네 역할 Android 현장 검증 기반 r1](four-role-mobile-field-test.r1.md)에 주문자·음식점·음식 배달 기사·운영자 앱과 단일 서버 정본의 첫 현장 검증 범위를 결속했다.
+- 네 앱의 Android 대상·고유 패키지·`0.1.0` 판본·내부 검증 배너를 정리하고, Release에서는 역할별 좁은 route와 명시적 공인 HTTPS 주소만 허용하도록 닫았다.
+- 주문자 자신의 진행 주문에만 배정 기사 최신 위치 사본을 제공한다. 배정 전과 종료 뒤에는 좌표가 없고, 30초를 넘긴 자료는 `갱신지연`으로 표시하며 기사 식별자와 이동 이력은 내보내지 않는다.
+- `Staging + Simulation`에서만 사가정 합성 음식점 3곳·메뉴 9개와 네 역할 개발 계정을 준비하는 멱등 표본을 추가했다. 실제 사업장·실제 메뉴·운영 판매 자료가 아니다.
+- 네 앱 APK·AAB 서명과 SHA-256 목록을 만드는 배포 도구는 저장소 밖 keystore와 환경 변수 비밀번호를 요구한다. 계획 점검만 수행했으며 실제 서명 산출물은 아직 없다.
+- Android 소스 build와 집중 자동시험은 통과했지만 실제 MySQL·공인 HTTPS 서버, 실제 휴대폰 설치·GPS·백그라운드, Google Play 내부 테스트, Unity 실행은 검증하지 않았다. 기사 위치 전송은 현재 전경 앱의 10초 heartbeat다.
+
+### r50 확정·구현: 기사 추천 FCM 우선 경계와 살뜰마트 표시명
+
+- 음식 배달 기사 앱의 신규 추천 통지는 `FCM 알림 → 서버 업무 공간 API 정본 재조회`를 기본 경로로 확정한다. FCM payload는 갱신 힌트이며 추천 수락 가능 여부·revision·지급액의 권위가 아니다.
+- 기사 앱 전용 SignalR client와 패키지 의존을 제거했다. 서버의 기존 SignalR 계약은 다른 client 호환을 위해 보존하며 기사 앱의 필수 경로로 해석하지 않는다.
+- FCM 누락·지연·앱 복귀를 위해 10초 서버 재조회는 복구 경로로 유지한다. 실제 Android FCM 수신 활성화에는 package ID `kr.ssalddel.fdriver`에 맞는 Firebase 설정과 장치 검증이 필요하며 현재는 `WaitingForFDriverFirebaseConfiguration`이다.
+- 주문자 앱의 사용자 표시명 `홈달마트`를 `살뜰마트`로 교정했다. 기존 route·API·고유 식별자는 호환을 위해 변경하지 않았다.

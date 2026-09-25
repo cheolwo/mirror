@@ -10,13 +10,13 @@
 
 <PageTitle>살뜰 모바일 운영 개요</PageTitle>
 
-<MudStack Spacing="3">
-    <div class="admin-page-header">
+<MudStack Spacing="3" Class="admin-overview">
+    <div class="admin-page-header admin-overview-hero">
         <MudStack Spacing="1">
-            <MudText Typo="Typo.overline" Color="Color.Primary">MOBILE CONTROL</MudText>
-            <MudText Typo="Typo.h4">플랫폼 운영 개요</MudText>
+            <MudText Typo="Typo.overline" Color="Color.Primary">오늘의 운영</MudText>
+            <MudText Typo="Typo.h4">지금 확인할 일을 모았습니다</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">
-                이동 중에는 전체 정책을 편집하지 않고, 실제 서버의 조정 필요 항목과 진행 상태를 빠르게 확인합니다.
+                주문, 배차, 예외 상황을 우선순위대로 확인하세요.
             </MudText>
         </MudStack>
         @if (Session.IsServerAdmin)
@@ -133,18 +133,18 @@
                         운송·기사 현황 보기
                     </MudButton>
                     <MudButton Variant="Variant.Outlined"
-                               Color="Color.Secondary"
-                               FullWidth="true"
-                               StartIcon="@Icons.Material.Filled.AdminPanelSettings"
-                               Href="/community-management">
-                        커뮤니티 운영
-                    </MudButton>
-                    <MudButton Variant="Variant.Outlined"
                                Color="Color.Warning"
                                FullWidth="true"
-                               StartIcon="@Icons.Material.Filled.FactCheck"
-                               Href="/trade-readiness">
-                        같이 수입 준비 원장
+                               StartIcon="@Icons.Material.Filled.Healing"
+                               Href="/operations/follow-up-recovery">
+                        후속 처리 복구
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Info"
+                               FullWidth="true"
+                               StartIcon="@Icons.Material.Filled.AccountBalanceWallet"
+                               Href="/operations/finance">
+                        현금 흐름 보기
                     </MudButton>
                 </MudStack>
             </MudPaper>
@@ -156,8 +156,11 @@
     }
 </MudStack>
 
-<AppContextImageWall AppPackId="community-admin-mobile"
-                     Title="현장에서 보는 커뮤니티" />
+@if (!EnforceFieldTestRoutes)
+{
+    <AppContextImageWall AppPackId="community-admin-mobile"
+                         Title="현장에서 보는 커뮤니티" />
+}
 
 @code {
     private static readonly TimeSpan RefreshInterval = TimeSpan.FromSeconds(30);
@@ -167,6 +170,18 @@
     private string syncText = "동기화 대기";
     private CancellationTokenSource? monitorCancellation;
     private Task? monitorTask;
+
+    private static bool EnforceFieldTestRoutes
+    {
+        get
+        {
+#if DEBUG
+            return false;
+#else
+            return true;
+#endif
+        }
+    }
 
     private Severity AttentionSeverity
         => summary is { 관리자확인필요수: > 0 } || summary is { 운송예외수: > 0 }

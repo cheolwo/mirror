@@ -2,4 +2,7 @@
   <PropertyGroup>
     <DefaultItemExcludes>$(DefaultItemExcludes);**/bin/**;**/obj/**;**/.codex-build/**;**/artifacts/**</DefaultItemExcludes>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(SsalddelUsbFieldTest)' == 'true'">
+    <DefineConstants>$(DefineConstants);SSALDDEL_USB_FIELD_TEST</DefineConstants>
+  </PropertyGroup>
 </Project>

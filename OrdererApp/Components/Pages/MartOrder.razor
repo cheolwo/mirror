@@ -1,23 +1,37 @@
 @page "/food/mart"
 @inject NavigationManager Navigation
 @using Ssalddel.Contracts.Common.Mart
+@using Ssalddel.Contracts.Mart
 
 <PageTitle>알뜰살뜰 마트 상품</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.False" Class="py-4">
     <MartProductAccessFrame Context="@Context"
                             CurrentScreen="MartProductScreenKind.List"
-                            Eyebrow="LIST"
-                            Title="알뜰살뜰 마트 공개 상품"
-                            Description="공개된 상품과 마지막 투영 시각 기준 판매 가능 수량을 검색하고 stable-ID 상세로 이동합니다."
+                            SamplePreview="@IsSamplePreview"
+                            CompactCatalog="true"
+                            Eyebrow=""
+                            Title="살뜰마트"
+                            Description="필요한 상품을 골라 주문하세요."
                             HomeHref="@OrdererRoutes.Food">
-        <MartProductListScreen Context="@Context" ContextChanged="OnContextChangedAsync" />
+        <MartProductListScreen Context="@Context"
+                               ContextChanged="OnContextChangedAsync"
+                               SamplePreview="@IsSamplePreview"
+                               PreviewResponse="@(IsSamplePreview ? SampleResponse : null)" />
     </MartProductAccessFrame>
 </MudContainer>
 
 @code {
     [SupplyParameterFromQuery(Name = "productId")]
     public long? LegacyProductId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "preview")]
+    public string? Preview { get; set; }
+
+    private bool IsSamplePreview
+        => string.Equals(Preview, "sample", StringComparison.OrdinalIgnoreCase);
+
+    private 마트공개상품목록응답 SampleResponse { get; } = OrdererMartSamplePreview.Create();
 
     private MartProductNavigationContext Context
         => MartProductNavigationContext.Parse(Navigation.Uri);
@@ -32,7 +46,13 @@
 
     private Task OnContextChangedAsync(MartProductNavigationContext context)
     {
-        Navigation.NavigateTo(context.PathFor(MartProductScreenKind.List), replace: true);
+        var path = context.PathFor(MartProductScreenKind.List);
+        if (IsSamplePreview)
+        {
+            path = path.Contains('?', StringComparison.Ordinal) ? $"{path}&preview=sample" : $"{path}?preview=sample";
+        }
+
+        Navigation.NavigateTo(path, replace: true);
         return Task.CompletedTask;
     }
 }

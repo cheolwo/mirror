@@ -5,6 +5,8 @@ using Ssalddel.ApiMetadata;
 using Ssalddel.Application.Admin.Food;
 using Ssalddel.Contracts.Admin.Food;
 using Ssalddel.Controllers.Admin.Food;
+using Ssalddel.Filters;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Tests.Controllers;
 
@@ -19,6 +21,12 @@ public sealed class 음식주문운영추적ControllerTests
         Assert.Equal("서버관리자전용", type.GetCustomAttribute<AuthorizeAttribute>()?.Policy);
         Assert.Equal("api/v1/admin/food-orders", type.GetCustomAttribute<RouteAttribute>()?.Template);
         Assert.Equal(SsalddelProductVersion.V3_0, type.GetCustomAttribute<SsalddelApiVersionAttribute>()?.Version);
+        Assert.Equal(
+            VersionFeatureFlagKeys.FoodDeliveryWorkflow,
+            type.GetCustomAttribute<SsalddelApiVersionAttribute>()?.FeatureKey);
+        Assert.Contains(
+            VersionFeatureFlagKeys.FoodDeliveryWorkflow,
+            type.GetCustomAttribute<RequireVersionFeatureAttribute>()?.Arguments ?? []);
         Assert.Equal(
             "{orderNo}/operations-trace",
             method?.GetCustomAttribute<HttpGetAttribute>()?.Template);

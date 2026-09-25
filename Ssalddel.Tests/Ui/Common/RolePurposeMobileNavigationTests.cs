@@ -44,7 +44,7 @@ public sealed class RolePurposeMobileNavigationTests
         "OrdererApp/Components/Pages/Home.razor",
         "주문자",
         "시작할 일",
-        "GroupPurchaseProducts",
+        "OrdererRoutes.Restaurants",
         "Orders")]
     [InlineData(
         "SsalddelApp/Components/Shared/ShipperHomeAppShell.razor",

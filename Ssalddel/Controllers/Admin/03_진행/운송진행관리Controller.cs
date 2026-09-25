@@ -5,10 +5,13 @@ using Ssalddel.Application.Admin.Progress;
 using Ssalddel.Contracts.Admin.Progress;
 using Ssalddel.ApiMetadata;
 using Microsoft.EntityFrameworkCore;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Admin.Progress03;
 
 [SsalddelApiVersion(SsalddelProductVersion.V2_0)]
+[SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
+[SsalddelApiWorkflow(SsalddelWorkflow.DomesticTransport)]
 [ApiController]
 [Route("api/v1/admin/transports")]
 [Authorize(Policy = "서버관리자전용")]

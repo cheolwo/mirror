@@ -1,6 +1,6 @@
 namespace Ssalddel.Tests.Architecture;
 
-public sealed class FDriverRealtimeAuthRecipientCompositionTests
+public sealed class FDriverNotificationAuthRecipientCompositionTests
 {
     [Fact]
     public void 음식배달기사앱은_새추천을_지도배너로알리고_바로가기초점을_실제영역으로이동한다()
@@ -13,9 +13,9 @@ public sealed class FDriverRealtimeAuthRecipientCompositionTests
         Assert.Contains("NewRecommendationNotice", model);
         Assert.Contains("OpenNewRecommendations", model);
         Assert.Contains("_knownRecommendedTicketIds", model);
-        Assert.Contains("WorkspaceRefreshInterval = TimeSpan.FromSeconds(30)", model);
+        Assert.Contains("WorkspaceRefreshInterval = TimeSpan.FromSeconds(10)", model);
         Assert.Contains("await ReloadAsync(updateLocation: IsOnDuty)", model);
-        Assert.Contains("다음 자동 갱신 30초 이내", model);
+        Assert.Contains("다음 자동 갱신 10초 이내", model);
         Assert.Contains("OpenNewRecommendationsCommand", page);
         Assert.Contains("눌러서 음식점·전달지와 예상 경로를 확인하세요.", page);
         Assert.Contains("x:Name=\"WorkspaceScroll\"", page);
@@ -27,27 +27,29 @@ public sealed class FDriverRealtimeAuthRecipientCompositionTests
     }
 
     [Fact]
-    public void 음식배달기사앱은_실시간배차를_받되_30초조회를_보조경로로유지한다()
+    public void 음식배달기사앱은_FCM을_갱신힌트로두고_10초서버조회를_복구경로로유지한다()
     {
-        var contract = Read("Ssalddel.Contracts", "Common/Drivers/DriverDispatchRealtimeContract.cs");
-        var server = Read("Ssalddel", "Services/Dispatch/Recommendation/DispatchRecommendationService.cs");
-        var realtime = Read("FDriverApp", "Services/FDriverDispatchRealtimeService.cs");
+        var push = Read("Ssalddel", "Services/Notifications/FcmDriverRecommendationPushService.cs");
+        var controller = Read("Ssalddel", "Controllers/Driver/07_Notification/기사알림Controller.cs");
         var project = Read("FDriverApp", "FDriverApp.csproj");
+        var registrations = Read("FDriverApp", "MauiProgram.cs");
         var model = Read("FDriverApp", "PageModels/MainPageModel.cs");
         var page = Read("FDriverApp", "Pages/MainPage.xaml");
 
-        Assert.Contains("HubPath = \"/hubs/dispatch-recommendations\"", contract);
-        Assert.Contains("RecommendationsEvent = \"ReceiveDispatchRecommendations\"", contract);
-        Assert.Contains("DriverDispatchRealtimeContract.RecommendationsEvent", server);
-        Assert.Contains("new HubConnectionBuilder()", realtime);
-        Assert.Contains("WithAutomaticReconnect", realtime);
-        Assert.Contains("options.AccessTokenProvider", realtime);
-        Assert.Contains("RecommendationsReceived", realtime);
-        Assert.Contains("Microsoft.AspNetCore.SignalR.Client", project);
-        Assert.Contains("WorkspaceRefreshInterval = TimeSpan.FromSeconds(30)", model);
-        Assert.Contains("OnRealtimeRecommendationsReceivedAsync", model);
-        Assert.Contains("실시간 배차 연결 대기 · 30초 자동 조회 보조", model);
-        Assert.Contains("RealtimeConnectionText", page);
+        Assert.Contains("_fcmPushService.SendToTokenAsync", push);
+        Assert.Contains("[Route(\"api/v1/driver/notifications\")]", controller);
+        Assert.Contains("[HttpPut(\"push-token\")]", controller);
+        Assert.DoesNotContain("Microsoft.AspNetCore.SignalR.Client", project);
+        Assert.DoesNotContain("IFDriverDispatchRealtimeService", registrations);
+        Assert.DoesNotContain("IFDriverDispatchRealtimeService", model);
+        Assert.Contains("WorkspaceRefreshInterval = TimeSpan.FromSeconds(10)", model);
+        Assert.Contains("FCM 추천 알림 준비 · 10초 서버 조회 복구", model);
+        Assert.Contains("RecommendationNotificationText", page);
+        Assert.False(File.Exists(Path.Combine(
+            FindRepositoryRoot(),
+            "FDriverApp",
+            "Services",
+            "FDriverDispatchRealtimeService.cs")));
     }
 
     [Fact]

@@ -125,7 +125,8 @@ public sealed class 주문자음식주문조회UseCase(
         }
 
         var transport = await LoadLatestTransportAsync(cleanOrderNo, cancellationToken);
-        return Result.Ok(ToDetail(order, transport));
+        var driverLocation = await LoadDriverLocationAsync(order, transport, cancellationToken);
+        return Result.Ok(ToDetail(order, transport, driverLocation));
     }
 
     private async Task<IReadOnlyDictionary<string, 운송원장>> LoadLatestTransportsAsync(
@@ -173,6 +174,72 @@ public sealed class 주문자음식주문조회UseCase(
             .ThenByDescending(item => item.Id)
             .FirstOrDefaultAsync(cancellationToken);
 
+    private async Task<주문자음식배달위치추적응답> LoadDriverLocationAsync(
+        음식주문 order,
+        운송원장? transport,
+        CancellationToken cancellationToken)
+    {
+        var observedAtUtc = DateTime.UtcNow;
+        var normalizedOrderStatus = 음식주문상태코드.Normalize(order.상태);
+        var terminal = normalizedOrderStatus is
+            음식주문상태코드.전달완료 or
+            음식주문상태코드.수령확인 or
+            음식주문상태코드.거절 or
+            음식주문상태코드.취소
+            || transport?.상태 == 기사운송상태코드.인수완료;
+        if (terminal)
+        {
+            return new 주문자음식배달위치추적응답
+            {
+                상태 = 음식배달위치추적상태코드.종료,
+                안내 = "배달 위치 공유가 종료되었습니다.",
+                조회시각Utc = observedAtUtc
+            };
+        }
+
+        var driverId = Clean(transport?.확정기사Id);
+        if (driverId is null)
+        {
+            return new 주문자음식배달위치추적응답
+            {
+                조회시각Utc = observedAtUtc
+            };
+        }
+
+        var latest = await db.기사위치기록
+            .AsNoTracking()
+            .Where(item => item.기사Id == driverId)
+            .OrderByDescending(item => item.기록시각)
+            .ThenByDescending(item => item.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (latest is null)
+        {
+            return new 주문자음식배달위치추적응답
+            {
+                상태 = 음식배달위치추적상태코드.갱신지연,
+                안내 = "기사 위치가 아직 수신되지 않았습니다. 배달 진행 상태는 계속 확인할 수 있습니다.",
+                조회시각Utc = observedAtUtc
+            };
+        }
+
+        var stale = observedAtUtc - DateTime.SpecifyKind(latest.기록시각, DateTimeKind.Utc)
+            > TimeSpan.FromSeconds(30);
+        return new 주문자음식배달위치추적응답
+        {
+            상태 = stale
+                ? 음식배달위치추적상태코드.갱신지연
+                : 음식배달위치추적상태코드.추적중,
+            안내 = stale
+                ? "마지막 위치 수신 후 30초가 지났습니다. 현재 위치로 단정하지 않습니다."
+                : "기사 앱에서 받은 최근 위치입니다.",
+            위도 = latest.위도,
+            경도 = latest.경도,
+            정확도_m = latest.정확도_m,
+            기록시각Utc = latest.기록시각,
+            조회시각Utc = observedAtUtc
+        };
+    }
+
     private static 주문자음식주문요약응답 ToSummary(
         음식주문 order,
         운송원장? transport = null)
@@ -196,11 +263,13 @@ public sealed class 주문자음식주문조회UseCase(
 
     private static 주문자음식주문상세응답 ToDetail(
         음식주문 order,
-        운송원장? transport)
+        운송원장? transport,
+        주문자음식배달위치추적응답 driverLocation)
         => new()
         {
             주문 = ToSummary(order, transport),
             배달진행 = ToDeliveryProgress(order, transport),
+            기사위치 = driverLocation,
             음식점주소 = order.음식점주소,
             음식점상세주소 = order.음식점상세주소,
             수령인정보 = new 음식주문수령인정보Dto

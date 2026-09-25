@@ -6,6 +6,7 @@ using SsalddelAdminApp.Services;
 using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Client.Infrastructure.Transport;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using MudBlazor.Services;
 
 namespace SsalddelAdminApp;
@@ -17,16 +18,28 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>();
 
+        builder.Configuration.AddJsonFile(
+            Path.Combine(AppContext.BaseDirectory, "appsettings.Local.json"),
+            optional: true,
+            reloadOnChange: false);
+
         builder.Services.AddSingleton<IClientSessionGuard, ClientSessionGuard>();
         builder.Services.AddSingleton<AdminAuthSession>();
         builder.Services.AddSingleton<ITransportRequestLedgerObserver, TransportRequestLedgerObserver>();
         builder.Services.AddSsalddelUiCommonAppServices<AdminAuthSession>();
         builder.Services.AddTransient<관리자Controller기능모음ViewModel>();
         builder.Services.AddTransient<관리자전체Api기능모음ViewModel>();
+#if DEBUG || SSALDDEL_USB_FIELD_TEST
+        const bool allowInsecureDebugEndpoint = true;
+#else
+        const bool allowInsecureDebugEndpoint = false;
+#endif
         builder.Services.AddSsalddelOperationalApiHttpClient(
-            SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+            SsalddelServerEndpoint.ResolveMobileBaseAddress(
+                typeof(MauiProgram).Assembly,
                 builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
-                builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey]));
+                builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey],
+                allowInsecureDebugEndpoint));
         builder.Services.AddScoped<AdminAuthService>();
         builder.Services.AddSingleton(provider =>
         {

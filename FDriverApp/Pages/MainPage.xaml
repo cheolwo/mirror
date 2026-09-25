@@ -7,7 +7,7 @@
              x:Class="FDriverApp.Pages.MainPage"
              x:DataType="pageModels:MainPageModel"
              Title="{Binding AppName}"
-             BackgroundColor="#F8FAFC">
+             BackgroundColor="#F3F7F5">
 
     <Grid>
     <pullToRefresh:SfPullToRefresh
@@ -29,6 +29,31 @@
                                            ShowLocationButton="True"
                                            ShowCurrentLocationOverlay="{Binding HasCurrentLocation}"
                                            MarkerSelected="OnMapMarkerSelected" />
+
+                <Border Grid.Row="0"
+                        BackgroundColor="#F5FFFB"
+                        Stroke="#BFE2D5"
+                        StrokeThickness="1"
+                        Padding="10,7"
+                        Margin="16"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Start">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="18" />
+                    </Border.StrokeShape>
+                    <HorizontalStackLayout Spacing="7">
+                        <BoxView WidthRequest="8"
+                                 HeightRequest="8"
+                                 CornerRadius="4"
+                                 Color="{Binding 앱생명주기.상태색상Hex}"
+                                 VerticalOptions="Center" />
+                        <Label Text="{Binding 앱생명주기.사용자안내}"
+                               FontSize="11"
+                               FontAttributes="Bold"
+                               TextColor="#275E55"
+                               VerticalTextAlignment="Center" />
+                    </HorizontalStackLayout>
+                </Border>
 
                 <HorizontalStackLayout Grid.Row="0"
                                        Spacing="8"
@@ -116,15 +141,15 @@
                 </Border>
 
                 <Border Grid.Row="0"
-                        BackgroundColor="#FFFFFF"
-                        Stroke="#CBD5E1"
+                        BackgroundColor="#FCFFFD"
+                        Stroke="#DCE8E3"
                         StrokeThickness="1"
                         Padding="14"
                         Margin="16"
                         HorizontalOptions="Fill"
                         VerticalOptions="End">
                     <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="8" />
+                        <RoundRectangle CornerRadius="20" />
                     </Border.StrokeShape>
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                         <VerticalStackLayout Spacing="4">
@@ -142,7 +167,8 @@
                 <ScrollView x:Name="WorkspaceScroll"
                             Grid.Row="1"
                             BackgroundColor="#FFFFFF"
-                            HeightRequest="390">
+                            MinimumHeightRequest="280"
+                            MaximumHeightRequest="390">
                     <Grid Padding="16" RowSpacing="14">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -155,12 +181,13 @@
                               ColumnDefinitions="*,Auto"
                               ColumnSpacing="12">
                             <VerticalStackLayout Spacing="3">
-                                <Label Text="{Binding AppName}" FontSize="20" FontAttributes="Bold" TextColor="#0F172A" />
+                            <Label Text="오늘의 배달" FontSize="12" FontAttributes="Bold" TextColor="#0F766E" CharacterSpacing="1.2" />
+                            <Label Text="{Binding AppName}" FontSize="22" FontAttributes="Bold" TextColor="#102A26" />
                                 <Label Text="{Binding CurrentArea}" FontSize="13" TextColor="#475569" />
                                  <Label Text="{Binding StatusMessage}" FontSize="13" TextColor="#334155" />
                                   <Label Text="{Binding DispatchAutomationNotice}" FontSize="12" TextColor="#B45309" />
                                   <Label Text="{Binding WorkspaceSyncText}" FontSize="11" TextColor="#64748B" />
-                                  <Label Text="{Binding RealtimeConnectionText}" FontSize="11" TextColor="#2563EB" />
+                                  <Label Text="{Binding RecommendationNotificationText}" FontSize="11" TextColor="#2563EB" />
                                   <Label Text="{Binding LocationSyncText}" FontSize="11" TextColor="#64748B" />
                                  <Label Text="{Binding RouteStatusText}" FontSize="12" TextColor="#2563EB" />
                                 <Label Text="{Binding SettlementText}" FontSize="12" TextColor="#64748B" />
@@ -404,8 +431,8 @@
         </pullToRefresh:SfPullToRefresh.PullableContent>
     </pullToRefresh:SfPullToRefresh>
         <Border IsVisible="{Binding IsSignedOut}"
-                BackgroundColor="#FFFFFF"
-                Stroke="#CBD5E1"
+                BackgroundColor="#FCFFFD"
+                Stroke="#DCE8E3"
                 StrokeThickness="1"
                 Padding="24"
                 Margin="24"
@@ -413,21 +440,22 @@
                 VerticalOptions="Center"
                 MaximumWidthRequest="420">
             <Border.StrokeShape>
-                <RoundRectangle CornerRadius="16" />
+                <RoundRectangle CornerRadius="24" />
             </Border.StrokeShape>
             <VerticalStackLayout Spacing="14">
-                <Label Text="살뜰 배달" FontSize="24" FontAttributes="Bold" TextColor="#0F172A" />
-                <Label Text="기사 계정으로 로그인하면 실제 배차, 위치, 경로와 월 정산을 불러옵니다."
-                       FontSize="13" TextColor="#475569" />
+                <Label Text="SSALDDEL DRIVER" FontSize="11" FontAttributes="Bold" TextColor="#0F766E" CharacterSpacing="1.6" />
+                <Label Text="오늘의 배달을 시작하세요" FontSize="25" FontAttributes="Bold" TextColor="#102A26" />
+                <Label Text="기사 아이디로 로그인하면 추천 배달과 현재 경로를 바로 확인할 수 있습니다."
+                       FontSize="13" TextColor="#58706A" />
                 <Entry Placeholder="아이디 또는 이메일"
                        Text="{Binding LoginId}"
                        Keyboard="Email" />
                 <Entry Placeholder="비밀번호"
                        Text="{Binding Password}"
                        IsPassword="True" />
-                <Button Text="기사 로그인"
+                <Button Text="로그인"
                         Command="{Binding LoginCommand}"
-                        BackgroundColor="#2563EB"
+                        BackgroundColor="#0F766E"
                         TextColor="#FFFFFF" />
                 <ActivityIndicator IsRunning="{Binding IsBusy}"
                                    IsVisible="{Binding IsBusy}"

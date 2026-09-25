@@ -1,0 +1,28 @@
+@inject IHttpClientFactory HttpClientFactory
+
+<div class="mobile-field-test-banner">
+    <MudAlert Severity="Severity.Warning"
+              Variant="Variant.Filled"
+              Dense="true"
+              Square="true"
+              Class="ma-0">
+        <details>
+            <summary>테스트 환경 · 실제 주문 아님</summary>
+            <small>Simulation · @ServerHost · v@(AppVersion)</small>
+        </details>
+    </MudAlert>
+</div>
+
+@code {
+    [Parameter]
+    public string AppVersion { get; set; } = "0.1.0";
+
+    private string ServerHost
+        => HttpClientFactory
+            .CreateClient(SsalddelHttpClientNames.OperationalApi)
+            .BaseAddress is { } address
+            ? address.IsDefaultPort
+                ? address.Host
+                : $"{address.Host}:{address.Port}"
+            : "서버 미설정";
+}

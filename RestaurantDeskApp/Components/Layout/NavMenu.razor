@@ -1,52 +1,8 @@
-@using Ssalddel.Ui.Common.Areas.App.Services
-@implements IDisposable
-@inject PlatformHomeModeStateService HomeModeState
-
 <MudNavMenu Class="pa-3 restaurant-navmenu">
     <MudText Typo="Typo.h6" Class="px-2 pb-2">살뜰 식당</MudText>
     <MudDivider Class="mb-2" />
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">운영 홈</MudNavLink>
     <MudNavLink Href="orders" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.ReceiptLong">신규 주문 수신함</MudNavLink>
     <MudNavLink Href="settings/preparation-times" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Timer">조리시간 기본값</MudNavLink>
-    <MudNavLink Href="ingredients/supply-request" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Inventory2">식재료 공급 요청</MudNavLink>
-    <MudNavLink Href="dispatch/address-form" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.LocalShipping">상차/하차 주소 입력</MudNavLink>
-    <MudNavLink Href="restaurants/nearby" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Place">가까운 음식점 흐름</MudNavLink>
-    <MudNavLink Href="restaurants/popular" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Star">인기 음식점 흐름</MudNavLink>
-    <MudNavLink Href="reviews/moderation" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">리뷰 운영</MudNavLink>
     <MudNavLink Href="login" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Login">계정 로그인</MudNavLink>
-
-    <MudDivider Class="my-3" />
-    <MudStack Spacing="1" Class="px-2 pb-2">
-        <MudText Typo="Typo.caption" Color="Color.Secondary">모드 전환</MudText>
-        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
-            <MudButton Variant="@CommunityModeVariant" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Forum" OnClick="@(() => SetMode(false))">커뮤니티</MudButton>
-            <MudButton Variant="@WorkModeVariant" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Work" OnClick="@(() => SetMode(true))">업무</MudButton>
-        </MudStack>
-    </MudStack>
 </MudNavMenu>
-
-@code {
-    private Variant CommunityModeVariant => HomeModeState.IsWorkMode ? Variant.Outlined : Variant.Filled;
-
-    private Variant WorkModeVariant => HomeModeState.IsWorkMode ? Variant.Filled : Variant.Outlined;
-
-    protected override void OnInitialized()
-    {
-        HomeModeState.Changed += HandleModeChanged;
-    }
-
-    private void SetMode(bool isWorkMode)
-    {
-        HomeModeState.SetWorkMode(isWorkMode);
-    }
-
-    private void HandleModeChanged()
-    {
-        InvokeAsync(StateHasChanged);
-    }
-
-    public void Dispose()
-    {
-        HomeModeState.Changed -= HandleModeChanged;
-    }
-}

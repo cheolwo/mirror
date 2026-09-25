@@ -1,12 +1,23 @@
-<MudThemeProvider />
-<MudPopoverProvider />
-<MudDialogProvider />
-<MudSnackbarProvider />
+@using Ssalddel.Ui.Common.Areas.App.Theme
+
+<RoleAppProviders Role="역할앱시각역할.관리자" />
 
 <Router AppAssembly="typeof(MauiProgram).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        @if (MobileFieldTestRoutePolicy.IsAllowed(routeData.PageType, EnforceFieldTestRoutes, AllowedRoutes))
+        {
+            <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+            <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        }
+        else
+        {
+            <LayoutView Layout="typeof(Layout.MainLayout)">
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+                    이 화면은 0.1.0 내부 테스트 범위에 포함되지 않습니다. 운영 개요에서 다시 시작해 주세요.
+                </MudAlert>
+                <MudButton Href="/overview" Variant="Variant.Filled" Color="Color.Primary">운영 개요로 이동</MudButton>
+            </LayoutView>
+        }
     </Found>
     <NotFound>
         <LayoutView Layout="typeof(Layout.MainLayout)">
@@ -14,3 +25,23 @@
         </LayoutView>
     </NotFound>
 </Router>
+
+@code {
+    private static readonly string[] AllowedRoutes =
+    [
+        "/", "/overview", "/login", "/operations",
+        "/operations/follow-up-recovery", "/operations/finance"
+    ];
+
+    private static bool EnforceFieldTestRoutes
+    {
+        get
+        {
+#if DEBUG
+            return false;
+#else
+            return true;
+#endif
+        }
+    }
+}

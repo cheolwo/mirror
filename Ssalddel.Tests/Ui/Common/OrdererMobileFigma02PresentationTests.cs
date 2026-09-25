@@ -54,11 +54,13 @@ public sealed class OrdererMobileFigma02PresentationTests
 
         Assert.Contains("orderer-mobile-shell__appbar", source);
         Assert.Contains("orderer-mobile-shell__bottom-nav", source);
-        Assert.Contains("개별 주문 → 같이 주문", source);
+        Assert.Contains("음식 · 마트 · 화물 주문", source);
         Assert.Contains(">홈</span>", source);
-        Assert.Contains(">재료</span>", source);
-        Assert.Contains(">내 주문</span>", source);
+        Assert.Contains(">음식</span>", source);
+        Assert.Contains(">마트</span>", source);
         Assert.Contains(">원장</span>", source);
+        Assert.DoesNotContain("같이 주문 후보", source);
+        Assert.DoesNotContain("배송권의 같이 주문", source);
     }
 
     [Fact]
@@ -73,10 +75,15 @@ public sealed class OrdererMobileFigma02PresentationTests
 
         Assert.Contains("OrdererRoutes.Food", source);
         Assert.Contains("OrdererRoutes.Mart", source);
-        Assert.Contains("OrdererRoutes.ProducePriceComparison", source);
-        Assert.Contains("OrdererRoutes.GroupPurchaseProducts", source);
+        Assert.Contains("OrdererRoutes.Restaurants", source);
+        Assert.Contains("OrdererRoutes.Cargo", source);
         Assert.Contains("OrdererRoutes.Orders", source);
-        Assert.Contains("개별 주문과 같이 주문 실행은 분리됩니다.", source);
+        Assert.Contains("상품을 둘러보는 것만으로 주문되거나 결제되지 않습니다.", source);
+        Assert.DoesNotContain("현장 검증", source);
+        Assert.DoesNotContain("서버가 확정한", source);
+        Assert.Contains("data-orderer-screen=\"@ScreenCode\"", source);
+        Assert.DoesNotContain("OrdererRoutes.GroupPurchaseGroups", source);
+        Assert.DoesNotContain("OrdererRoutes.GroupPurchaseTogetherOrders", source);
     }
 
     [Fact]

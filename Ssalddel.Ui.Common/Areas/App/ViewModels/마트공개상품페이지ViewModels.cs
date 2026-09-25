@@ -84,6 +84,17 @@ public sealed partial class 마트공개상품목록ViewModel(
     public Task<bool> 새로고침Async(CancellationToken cancellationToken = default)
         => 조회CoreAsync(Math.Max(1, 현재페이지), cancellationToken);
 
+    /// <summary>
+    /// 실제 API 결과를 대체하는 fallback이 아니라, 호출자가 명시적으로 연 화면 검토용 자료를 표시합니다.
+    /// </summary>
+    public void 화면검토자료적용(마트공개상품목록응답 previewResponse)
+    {
+        ArgumentNullException.ThrowIfNull(previewResponse);
+        응답 = previewResponse;
+        초기화됨 = true;
+        작업상태초기화();
+    }
+
     private Task<bool> 조회CoreAsync(int page, CancellationToken cancellationToken)
         => 작업실행Async(
             async token =>

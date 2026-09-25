@@ -2,15 +2,15 @@
 @using Ssalddel.Contracts.Common.Mart
 @using Ssalddel.Ui.Common.Areas.App.ViewModels
 
-<section class="mart-product-screen" data-mart-product-screen="@CurrentScreen.ToString().ToLowerInvariant()">
-    @if (ViewModel.처리중 && ViewModel.화면상태 == 마트페이지접근상태.확인전)
+<section class="@(CompactCatalog ? "mart-product-screen mart-product-screen--catalog" : "mart-product-screen")" data-mart-product-screen="@CurrentScreen.ToString().ToLowerInvariant()">
+    @if (!SamplePreview && ViewModel.처리중 && ViewModel.화면상태 == 마트페이지접근상태.확인전)
     {
         <MudPaper Elevation="0" Outlined="true" Class="mart-product-screen__state">
             <MudProgressCircular Indeterminate="true" Color="Color.Success" />
             <MudText Typo="Typo.body1">알뜰살뜰 마트 기능 상태를 확인하고 있습니다.</MudText>
         </MudPaper>
     }
-    else if (ViewModel.화면상태 == 마트페이지접근상태.오류)
+    else if (!SamplePreview && ViewModel.화면상태 == 마트페이지접근상태.오류)
     {
         <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
             <MudText Typo="Typo.subtitle2">마트 상품 화면을 준비하지 못했습니다.</MudText>
@@ -18,18 +18,21 @@
             <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="CheckAccessAsync" Class="mt-3">다시 확인</MudButton>
         </MudAlert>
     }
-    else if (ViewModel.기능비활성)
+    else if (!SamplePreview && ViewModel.기능비활성)
     {
         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
             <MudText Typo="Typo.subtitle2">마트 공개 상품 흐름이 현재 비활성입니다.</MudText>
             <MudText Typo="Typo.body2"><code>SsalddelMartWorkflow</code>가 활성화된 환경에서만 공개 원장을 조회하거나 요청을 저장합니다.</MudText>
         </MudAlert>
     }
-    else if (ViewModel.사용가능)
+    else if (SamplePreview || ViewModel.사용가능)
     {
         <header class="mart-product-screen__header">
             <div class="mart-product-screen__title">
-                <span>PUBLIC MART · @Eyebrow</span>
+                @if (!CompactCatalog && !string.IsNullOrWhiteSpace(Eyebrow))
+                {
+                    <span>PUBLIC MART · @Eyebrow</span>
+                }
                 <h1>@Title</h1>
                 <p>@Description</p>
             </div>
@@ -40,23 +43,46 @@
                            StartIcon="@Icons.Material.Filled.ArrowBack">
                     돌아가기
                 </MudButton>
-                <MudButton Href="@Context.PathFor(MartProductScreenKind.List)"
-                           Variant="Variant.Outlined"
-                           Color="Color.Success"
-                           StartIcon="@Icons.Material.Filled.Storefront">
-                    상품 목록
-                </MudButton>
+                @if (!CompactCatalog)
+                {
+                    <MudButton Href="@Context.PathFor(MartProductScreenKind.List)"
+                               Variant="Variant.Outlined"
+                               Color="Color.Success"
+                               StartIcon="@Icons.Material.Filled.Storefront">
+                        상품 목록
+                    </MudButton>
+                }
             </div>
         </header>
 
-        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mart-product-screen__boundary">
-            공개 상품과 마지막 투영 시각 기준의 판매 가능 수량만 표시합니다. 목록·상세 조회는 상태를 바꾸지 않으며,
-            후기와 비구속 주문 요청은 각각의 별도 route에서만 명시적으로 저장합니다.
-        </MudAlert>
+        @if (SamplePreview)
+        {
+            @if (CompactCatalog)
+            {
+                <div class="mart-product-screen__sample-note">
+                    <MudIcon Icon="@Icons.Material.Filled.Science" Size="Size.Small" />
+                    <span>샘플 미리보기 · 실제 주문과 연결되지 않아요</span>
+                </div>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Dense="true" Class="mart-product-screen__boundary">
+                    화면 검토용 샘플입니다. 표시된 상품·가격·재고는 실제 주문이나 운영 원장에 연결되지 않습니다.
+                </MudAlert>
+            }
+        }
 
-        <MartProductNavigation Context="@Context"
-                               CurrentScreen="@CurrentScreen"
-                               ProductId="@ProductId" />
+        @if (!CompactCatalog)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mart-product-screen__boundary">
+                공개 상품과 마지막 투영 시각 기준의 판매 가능 수량만 표시합니다. 목록·상세 조회는 상태를 바꾸지 않으며,
+                후기와 비구속 주문 요청은 각각의 별도 route에서만 명시적으로 저장합니다.
+            </MudAlert>
+
+            <MartProductNavigation Context="@Context"
+                                   CurrentScreen="@CurrentScreen"
+                                   ProductId="@ProductId" />
+        }
 
         <main class="mart-product-screen__body">
             @ChildContent
@@ -73,8 +99,11 @@
     [Parameter, EditorRequired] public string Description { get; set; } = string.Empty;
     [Parameter, EditorRequired] public string HomeHref { get; set; } = string.Empty;
     [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+    [Parameter] public bool SamplePreview { get; set; }
+    [Parameter] public bool CompactCatalog { get; set; }
 
-    protected override Task OnInitializedAsync() => CheckAccessAsync();
+    protected override Task OnInitializedAsync()
+        => SamplePreview ? Task.CompletedTask : CheckAccessAsync();
 
     private async Task CheckAccessAsync()
         => _ = await ViewModel.확인Async();

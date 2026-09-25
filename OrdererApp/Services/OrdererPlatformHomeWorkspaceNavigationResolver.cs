@@ -16,8 +16,6 @@ public sealed class OrdererPlatformHomeWorkspaceNavigationResolver
             CommunityLedgerTemplateKeys.CargoTransport => OrdererRoutes.Cargo,
             CommunityLedgerTemplateKeys.FoodOrder => OrdererRoutes.Food,
             CommunityLedgerTemplateKeys.LocalSale => OrdererRoutes.Mart,
-            CommunityLedgerTemplateKeys.GroupPurchase => OrdererRoutes.GroupPurchase,
-            CommunityLedgerTemplateKeys.GroupImport => OrdererRoutes.GroupPurchase,
             _ => null
         };
     }

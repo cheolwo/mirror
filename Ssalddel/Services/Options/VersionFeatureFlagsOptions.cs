@@ -36,6 +36,8 @@ public sealed class VersionFeatureFlagsOptions
 
     public bool FoodDeliveryWorkflow { get; set; }
 
+    public bool PlatformOperationsControl { get; set; }
+
     public bool OperationalWorldObservationWorkflow { get; set; }
 
     public bool RegionExperiencePackages { get; set; }

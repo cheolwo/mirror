@@ -10,20 +10,21 @@ using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Contracts.Driver.Food;
 using Ssalddel.Contracts.Driver.Work;
+using Ssalddel.Ui.Common.Areas.App.Services;
 
 namespace FDriverApp.PageModels;
 
 public sealed partial class MainPageModel : ObservableObject
 {
     private const string DrivingStatus = "운행중";
-    private static readonly TimeSpan WorkspaceRefreshInterval = TimeSpan.FromSeconds(30);
-    private static readonly TimeSpan LocationHeartbeatInterval = TimeSpan.FromMinutes(2);
+    private static readonly TimeSpan WorkspaceRefreshInterval = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan LocationHeartbeatInterval = TimeSpan.FromSeconds(10);
     private readonly FDriverAppProfile _profile;
     private readonly IFDriverAuthSession _authSession;
     private readonly FDriverAuthApiService _authApi;
     private readonly IFoodDeliveryDriverApiService _api;
     private readonly IFDriverLocationService _locationService;
-    private readonly IFDriverDispatchRealtimeService _realtimeService;
+    private readonly 역할앱생명주기State _appLifecycle;
     private bool _initialized;
     private bool _monitorRefreshInProgress;
     private CancellationTokenSource? _monitorCancellation;
@@ -49,8 +50,8 @@ public sealed partial class MainPageModel : ObservableObject
     [ObservableProperty] private string _nextActionGuide = "운행을 시작하면 현재 위치 기준 추천을 확인합니다.";
     [ObservableProperty] private string _settlementText = "이번 달 정산 조회 전";
     [ObservableProperty] private string _routeStatusText = "경로 조회 전";
-    [ObservableProperty] private string _workspaceSyncText = "업무 자동 갱신 대기 · 30초 주기";
-    [ObservableProperty] private string _realtimeConnectionText = "실시간 배차 연결 대기 · 30초 자동 조회 보조";
+    [ObservableProperty] private string _workspaceSyncText = "업무 자동 갱신 대기 · 10초 주기";
+    [ObservableProperty] private string _recommendationNotificationText = "FCM 추천 알림 준비 · 10초 서버 조회 복구";
     [ObservableProperty] private string _locationSyncText = "기사 위치 전송 대기";
     [ObservableProperty] private bool _dispatchAutomationEnabled;
     [ObservableProperty] private int _maxActiveDeliveries;
@@ -71,20 +72,19 @@ public sealed partial class MainPageModel : ObservableObject
         FDriverAuthApiService authApi,
         IFoodDeliveryDriverApiService api,
         IFDriverLocationService locationService,
-        IFDriverDispatchRealtimeService realtimeService)
+        역할앱생명주기State appLifecycle)
     {
         _profile = profile;
         _authSession = authSession;
         _authApi = authApi;
         _api = api;
         _locationService = locationService;
-        _realtimeService = realtimeService;
-        _realtimeService.RecommendationsReceived += OnRealtimeRecommendationsReceivedAsync;
-        _realtimeService.StatusChanged += OnRealtimeStatusChanged;
+        _appLifecycle = appLifecycle;
     }
 
     public string AppName => _profile.DisplayName;
     public string DriverRole => _profile.DriverRole;
+    public 역할앱생명주기State 앱생명주기 => _appLifecycle;
     public bool IsSignedOut => !IsAuthenticated;
     public string SignedInUserText => string.IsNullOrWhiteSpace(_authSession.UserName)
         ? DriverRole
@@ -159,11 +159,11 @@ public sealed partial class MainPageModel : ObservableObject
         }
     }
 
-    public async Task StartMonitoringAsync()
+    public Task StartMonitoringAsync()
     {
         if (!IsAuthenticated)
         {
-            return;
+            return Task.CompletedTask;
         }
 
         if (_monitorTask is not { IsCompleted: false })
@@ -173,16 +173,17 @@ public sealed partial class MainPageModel : ObservableObject
             _monitorTask = MonitorWorkspaceAsync(_monitorCancellation.Token);
         }
 
-        await _realtimeService.StartAsync();
+        RecommendationNotificationText = "FCM 추천 알림 준비 · 10초 서버 조회 복구";
+        return Task.CompletedTask;
     }
 
-    public async Task StopMonitoringAsync()
+    public Task StopMonitoringAsync()
     {
         _monitorCancellation?.Cancel();
         _monitorCancellation?.Dispose();
         _monitorCancellation = null;
         _monitorTask = null;
-        await _realtimeService.StopAsync();
+        return Task.CompletedTask;
     }
 
     public void ApplyEntryFocus(string? focus)
@@ -539,7 +540,7 @@ public sealed partial class MainPageModel : ObservableObject
         DispatchAutomationEnabled = workspace.DispatchAutomationEnabled;
         MaxActiveDeliveries = workspace.MaxActiveDeliveries;
         DispatchAutomationNotice = workspace.DispatchAutomationNotice;
-        WorkspaceSyncText = $"업무 동기화 {workspace.UpdatedAtUtc.ToLocalTime():HH:mm:ss} · 다음 자동 갱신 30초 이내";
+        WorkspaceSyncText = $"업무 동기화 {workspace.UpdatedAtUtc.ToLocalTime():HH:mm:ss} · 다음 자동 갱신 10초 이내";
         MapMarkers = RecommendedTicketItems.Select(ToMapMarker)
             .Concat(ActiveDeliveryItems.Select(ToMapMarker))
             .ToArray();
@@ -737,8 +738,8 @@ public sealed partial class MainPageModel : ObservableObject
         RecommendedTickets = 0;
         TodayExpectedPayout = 0m;
         SettlementText = "이번 달 정산 조회 전";
-        WorkspaceSyncText = "업무 자동 갱신 대기 · 30초 주기";
-        RealtimeConnectionText = "실시간 배차 연결 대기 · 30초 자동 조회 보조";
+        WorkspaceSyncText = "업무 자동 갱신 대기 · 10초 주기";
+        RecommendationNotificationText = "FCM 추천 알림 준비 · 10초 서버 조회 복구";
         LocationSyncText = "기사 위치 전송 대기";
         DispatchAutomationEnabled = false;
         DispatchAutomationNotice = "자동 배차 상태 확인 전";
@@ -812,7 +813,7 @@ public sealed partial class MainPageModel : ObservableObject
 
                 networkElapsed = TimeSpan.Zero;
                 await MainThread.InvokeOnMainThreadAsync(
-                    () => RefreshWorkspaceFromBackgroundAsync("30초 자동 갱신"));
+                    () => RefreshWorkspaceFromBackgroundAsync("10초 자동 갱신"));
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -838,10 +839,6 @@ public sealed partial class MainPageModel : ObservableObject
             }
 
             await LoadWorkspaceAsync(refreshRoute: false);
-            if (string.Equals(sourceLabel, "실시간 배차", StringComparison.Ordinal))
-            {
-                RealtimeConnectionText = "실시간 배차 반영됨 · 30초 자동 조회 보조";
-            }
         }
         catch (FDriverApiException ex)
         {
@@ -861,16 +858,6 @@ public sealed partial class MainPageModel : ObservableObject
             _monitorRefreshInProgress = false;
         }
     }
-
-    private Task OnRealtimeRecommendationsReceivedAsync(int _)
-        => MainThread.InvokeOnMainThreadAsync(async () =>
-        {
-            RealtimeConnectionText = "실시간 배차 알림 수신 · 업무 화면 동기화 중";
-            await RefreshWorkspaceFromBackgroundAsync("실시간 배차");
-        });
-
-    private void OnRealtimeStatusChanged(string status)
-        => MainThread.BeginInvokeOnMainThread(() => RealtimeConnectionText = status);
 
     private void UpdateRecommendationCountdowns()
     {

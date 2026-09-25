@@ -24,7 +24,11 @@ public sealed class DevelopmentAccountSeedOptions
 {
     public bool Enabled { get; set; }
 
+    public bool AllowInSimulation { get; set; }
+
     public string AdminPassword { get; set; } = string.Empty;
+
+    public string OrdererPassword { get; set; } = string.Empty;
 
     public string DriverPassword { get; set; } = string.Empty;
 

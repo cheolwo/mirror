@@ -369,8 +369,8 @@ public sealed class SsalddelApiVersionAttributeTests
                 policy.RuntimeStatus == RuntimeCapabilityStatuses.Active));
         Assert.Contains(response.OperatingSystems, operatingSystem =>
             operatingSystem.OperatingSystemCode == nameof(SsalddelOperatingSystem.PlatformOperations) &&
-            operatingSystem.FeatureKey == string.Empty &&
-            operatingSystem.IsEnabled &&
+            operatingSystem.FeatureKey == VersionFeatureFlagKeys.PlatformOperationsControl &&
+            !operatingSystem.IsEnabled &&
             operatingSystem.Engines.All(engine => engine.RuntimeStatus == RuntimeCapabilityStatuses.Declared));
         Assert.Equal(OperatingSystemIds.All.Count, response.OperatingSystemCurrentStructures.Count);
         Assert.Contains(response.OperatingSystemCurrentStructures, structure =>
@@ -872,6 +872,7 @@ public sealed class SsalddelApiVersionAttributeTests
                 [VersionFeatureFlagKeys.CommunityTrustWorkflow] = true,
                 [VersionFeatureFlagKeys.HrParticipationWorkflow] = false,
                 [VersionFeatureFlagKeys.FoodDeliveryWorkflow] = false,
+                [VersionFeatureFlagKeys.PlatformOperationsControl] = false,
                 [VersionFeatureFlagKeys.SsalddelMartWorkflow] = false
             };
         }

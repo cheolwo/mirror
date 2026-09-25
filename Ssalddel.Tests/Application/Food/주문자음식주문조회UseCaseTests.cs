@@ -4,6 +4,7 @@ using Ssalddel.Contracts.Food;
 using System.Text.Json;
 using 살뜰.Data;
 using 살뜰.Infrastructure.Security;
+using 살뜰.도메인.기사;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.음식;
 using 살뜰.도메인.운송;
@@ -105,6 +106,82 @@ public sealed class 주문자음식주문조회UseCaseTests
         Assert.Equal(updatedAt, result.Value.배달진행.최근변경시각Utc);
         Assert.Contains("기사가 주문을 수락", result.Value.배달진행.안내);
         Assert.DoesNotContain("driver-private", JsonSerializer.Serialize(result.Value));
+    }
+
+    [Fact]
+    public async Task 상세는_주문소유자에게만_배정기사의최근위치사본을반환한다()
+    {
+        await using var context = CreateContext();
+        await SeedAsync(context);
+        var recordedAt = DateTime.UtcNow.AddSeconds(-5);
+        context.운송원장.Add(new 운송원장
+        {
+            운송번호 = "FOOD-A-001",
+            의뢰Id = "FOOD-A-001",
+            원본의뢰유형 = "FoodOrder",
+            원본의뢰Id = "FOOD-A-001",
+            배차업무유형 = 상태값.배차업무유형.음식배달,
+            상태 = "운송중",
+            확정기사Id = "driver-private",
+            UpdatedAt = recordedAt
+        });
+        context.기사위치기록.Add(new 기사위치기록
+        {
+            기사Id = "driver-private",
+            위도 = 37.588100m,
+            경도 = 127.084200m,
+            정확도_m = 8m,
+            기록시각 = recordedAt
+        });
+        await context.SaveChangesAsync();
+        var useCase = new 주문자음식주문조회UseCase(context);
+
+        var own = await useCase.상세Async("FOOD-A-001", "user-a", CancellationToken.None);
+        var other = await useCase.상세Async("FOOD-A-001", "user-b", CancellationToken.None);
+
+        Assert.True(own.IsSuccess);
+        Assert.Equal(음식배달위치추적상태코드.추적중, own.Value.기사위치.상태);
+        Assert.Equal(37.588100m, own.Value.기사위치.위도);
+        Assert.Equal(127.084200m, own.Value.기사위치.경도);
+        Assert.Equal(recordedAt, own.Value.기사위치.기록시각Utc);
+        Assert.DoesNotContain("driver-private", JsonSerializer.Serialize(own.Value));
+        Assert.True(other.IsFailed);
+        Assert.Equal(404, other.Errors.Single().Metadata["StatusCode"]);
+    }
+
+    [Fact]
+    public async Task 전달완료뒤에는_기사위치좌표를반환하지않는다()
+    {
+        await using var context = CreateContext();
+        await SeedAsync(context);
+        var order = await context.음식주문.SingleAsync(item => item.주문번호 == "FOOD-A-001");
+        order.상태 = 음식주문상태코드.전달완료;
+        context.운송원장.Add(new 운송원장
+        {
+            운송번호 = "FOOD-A-001",
+            의뢰Id = "FOOD-A-001",
+            원본의뢰유형 = "FoodOrder",
+            원본의뢰Id = "FOOD-A-001",
+            배차업무유형 = 상태값.배차업무유형.음식배달,
+            상태 = "인수완료",
+            확정기사Id = "driver-private"
+        });
+        context.기사위치기록.Add(new 기사위치기록
+        {
+            기사Id = "driver-private",
+            위도 = 37.588100m,
+            경도 = 127.084200m,
+            기록시각 = DateTime.UtcNow
+        });
+        await context.SaveChangesAsync();
+        var useCase = new 주문자음식주문조회UseCase(context);
+
+        var result = await useCase.상세Async("FOOD-A-001", "user-a", CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(음식배달위치추적상태코드.종료, result.Value.기사위치.상태);
+        Assert.Null(result.Value.기사위치.위도);
+        Assert.Null(result.Value.기사위치.경도);
     }
 
     [Fact]

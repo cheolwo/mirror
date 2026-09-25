@@ -1,19 +1,20 @@
 @inherits MvvmComponentBase<마트공개상품목록ViewModel>
 @using Microsoft.AspNetCore.Components.Web
 @using Ssalddel.Contracts.Common.Mart
+@using Ssalddel.Contracts.Mart
 @using Ssalddel.Ui.Common.Areas.App.ViewModels
 
 <div class="mart-product-list" aria-label="마트 공개 상품 목록">
     <MudPaper Elevation="0" Outlined="true" Class="mart-product-list__panel">
         <div class="mart-product-list__heading">
             <div>
-                <MudText Typo="Typo.overline">PUBLIC MART CATALOG</MudText>
-                <MudText Typo="Typo.h6">공개 판매 상품 찾기</MudText>
+                <MudText Typo="Typo.h6">상품 찾기</MudText>
+                <MudText Typo="Typo.body2" Class="mart-product-list__supporting">상품명이나 종류로 빠르게 찾아보세요.</MudText>
             </div>
             @if (ViewModel.초기화됨)
             {
                 <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">
-                    @($"{ViewModel.전체건수:N0}개 공개")
+                    @($"{ViewModel.전체건수:N0}개")
                 </MudChip>
             }
         </div>
@@ -21,21 +22,21 @@
         <div class="mart-product-list__search">
             <MudTextField T="string"
                           @bind-Value="ViewModel.검색어"
-                          Label="상품명·카테고리·설명"
-                          Placeholder="예: 생수, 생활용품"
+                          Label="상품 검색"
+                          Placeholder="예: 감자, 달걀"
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
                           Immediate="true"
                           Adornment="Adornment.Start"
                           AdornmentIcon="@Icons.Material.Filled.Search"
                           OnKeyDown="HandleSearchKeyAsync" />
-            <MudCheckBox T="bool" @bind-Value="ViewModel.판매가능만" Color="Color.Success">판매 가능한 상품만</MudCheckBox>
+            <MudCheckBox T="bool" @bind-Value="ViewModel.판매가능만" Color="Color.Success">구매 가능한 상품만</MudCheckBox>
             <MudButton Variant="Variant.Filled"
                        Color="Color.Success"
                        StartIcon="@Icons.Material.Filled.TravelExplore"
                        Disabled="@ViewModel.처리중"
                        OnClick="SearchAsync">
-                상품 조회
+                검색
             </MudButton>
         </div>
     </MudPaper>
@@ -43,8 +44,11 @@
     <MudPaper Elevation="0" Outlined="true" Class="mart-product-list__panel mart-product-list__results">
         <div class="mart-product-list__heading">
             <div>
-                <MudText Typo="Typo.overline">SERVER RESULTS</MudText>
-                <MudText Typo="Typo.h6">마트 공개 상품</MudText>
+                <MudText Typo="Typo.h6">상품</MudText>
+                @if (ViewModel.초기화됨)
+                {
+                    <MudText Typo="Typo.body2" Class="mart-product-list__supporting">@($"전체 {ViewModel.전체건수:N0}개")</MudText>
+                }
             </div>
             @if (ViewModel.초기화됨)
             {
@@ -60,7 +64,7 @@
         {
             <div class="mart-product-list__state">
                 <MudProgressCircular Indeterminate="true" Color="Color.Success" />
-                <MudText Typo="Typo.body2">영속된 공개 상품 원장을 조회하고 있습니다.</MudText>
+                <MudText Typo="Typo.body2">상품을 불러오고 있습니다.</MudText>
             </div>
         }
         else if (ViewModel.오류발생)
@@ -82,7 +86,6 @@
         }
         else if (ViewModel.초기화됨)
         {
-            <MudText Typo="Typo.caption">@($"전체 {ViewModel.전체건수:N0}개 · {ViewModel.현재페이지}/{ViewModel.총페이지수}페이지")</MudText>
             <div class="mart-product-list__grid">
                 @foreach (var product in ViewModel.상품목록)
                 {
@@ -96,28 +99,52 @@
                             {
                                 <MudIcon Icon="@Icons.Material.Filled.Inventory2" Color="Color.Success" Size="Size.Large" />
                             }
+                            <span>@MartProductPresentation.ValueOrDash(product.카테고리)</span>
                         </div>
-                        <div class="mart-product-card__heading">
-                            <div>
-                                <MudText Typo="Typo.h6">@product.상품명</MudText>
-                                <MudText Typo="Typo.caption">@MartProductPresentation.ValueOrDash(product.카테고리) · @MartProductPresentation.ValueOrDash(product.판매단위)</MudText>
+                        <div class="mart-product-card__content">
+                            <div class="mart-product-card__heading">
+                                <div>
+                                    <MudText Typo="Typo.h6">@product.상품명</MudText>
+                                    <MudText Typo="Typo.caption">@MartProductPresentation.ValueOrDash(product.판매단위)</MudText>
+                                </div>
+                                <MudChip T="string" Size="Size.Small" Color="@(product.판매가능여부 ? Color.Success : Color.Default)" Variant="Variant.Outlined">
+                                    @(product.판매가능여부 ? "구매 가능" : "품절")
+                                </MudChip>
                             </div>
-                            <MudChip T="string" Size="Size.Small" Color="@(product.판매가능여부 ? Color.Success : Color.Default)" Variant="Variant.Outlined">
-                                @(product.판매가능여부 ? "판매 가능" : "품절·준비 중")
-                            </MudChip>
+                            <div class="mart-product-card__price">
+                                <strong>@product.판매가.ToString("N0")원</strong>
+                                <span>@(product.판매가능여부 ? $"재고 {product.판매가능수량:N0}" : "현재 구매할 수 없어요")</span>
+                            </div>
+                            <div class="mart-product-card__actions">
+                                @if (SamplePreview)
+                                {
+                                    <MudButton Variant="Variant.Text" Color="Color.Default" Disabled="true">
+                                        자세히
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               Disabled="true"
+                                               StartIcon="@Icons.Material.Filled.ShoppingBag">
+                                        구매하기
+                                    </MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton Href="@Context.PathFor(MartProductScreenKind.Detail, product.Id)"
+                                               Variant="Variant.Text"
+                                               Color="Color.Default">
+                                        자세히
+                                    </MudButton>
+                                    <MudButton Href="@Context.PathFor(MartProductScreenKind.Order, product.Id)"
+                                               Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               Disabled="@(!product.판매가능여부)"
+                                               StartIcon="@Icons.Material.Filled.ShoppingBag">
+                                        구매하기
+                                    </MudButton>
+                                }
+                            </div>
                         </div>
-                        <MudText Typo="Typo.body2">@MartProductPresentation.ValueOrDash(product.짧은설명)</MudText>
-                        <div class="mart-product-card__meta">
-                            <strong>@product.판매가.ToString("N0")원</strong>
-                            <span>판매 가능 @product.판매가능수량.ToString("N0")</span>
-                            <span>@MartProductPresentation.ProjectionTime(product.재고기준시각Utc)</span>
-                        </div>
-                        <MudButton Href="@Context.PathFor(MartProductScreenKind.Detail, product.Id)"
-                                   Variant="Variant.Outlined"
-                                   Color="Color.Success"
-                                   StartIcon="@Icons.Material.Filled.FindInPage">
-                            공개 상세 보기
-                        </MudButton>
                     </article>
                 }
             </div>
@@ -134,10 +161,6 @@
                 </div>
             }
 
-            @if (!string.IsNullOrWhiteSpace(ViewModel.응답.재고기준안내))
-            {
-                <MudText Typo="Typo.caption" Class="mart-product-list__basis">@ViewModel.응답.재고기준안내</MudText>
-            }
         }
     </MudPaper>
 </div>
@@ -147,6 +170,8 @@
 
     [Parameter, EditorRequired] public MartProductNavigationContext Context { get; set; } = new();
     [Parameter] public EventCallback<MartProductNavigationContext> ContextChanged { get; set; }
+    [Parameter] public 마트공개상품목록응답? PreviewResponse { get; set; }
+    [Parameter] public bool SamplePreview { get; set; }
 
     private string EmptyMessage => ViewModel.검색조건사용중
         ? "검색어나 판매 가능 조건을 바꿔 다시 조회해 주세요."
@@ -156,7 +181,7 @@
 
     private async Task LoadContextAsync()
     {
-        var state = $"{Context.Search}\u001f{Context.AvailableOnly}\u001f{Context.Page}";
+        var state = $"{Context.Search}\u001f{Context.AvailableOnly}\u001f{Context.Page}\u001f{PreviewResponse is not null}";
         if (string.Equals(_loadedState, state, StringComparison.Ordinal))
         {
             return;
@@ -165,6 +190,12 @@
         _loadedState = state;
         ViewModel.검색어 = Context.Search ?? string.Empty;
         ViewModel.판매가능만 = Context.AvailableOnly;
+        if (PreviewResponse is not null)
+        {
+            ApplyPreview(Context.Page);
+            return;
+        }
+
         await ViewModel.페이지조회Async(Context.Page);
     }
 
@@ -177,7 +208,41 @@
     private Task HandleSearchKeyAsync(KeyboardEventArgs args)
         => string.Equals(args.Key, "Enter", StringComparison.Ordinal) ? SearchAsync() : Task.CompletedTask;
 
-    private Task ReloadAsync() => ViewModel.새로고침Async();
+    private Task ReloadAsync()
+    {
+        if (PreviewResponse is not null)
+        {
+            ApplyPreview(Context.Page);
+            return Task.CompletedTask;
+        }
+
+        return ViewModel.새로고침Async();
+    }
+
+    private void ApplyPreview(int requestedPage)
+    {
+        var source = PreviewResponse?.Items ?? [];
+        var search = ViewModel.검색어.Trim();
+        var filtered = source
+            .Where(product => (!ViewModel.판매가능만 || product.판매가능여부)
+                              && (string.IsNullOrWhiteSpace(search)
+                                  || product.상품명.Contains(search, StringComparison.OrdinalIgnoreCase)
+                                  || product.카테고리.Contains(search, StringComparison.OrdinalIgnoreCase)
+                                  || product.짧은설명.Contains(search, StringComparison.OrdinalIgnoreCase)))
+            .ToArray();
+        var pageSize = Math.Max(1, PreviewResponse?.PageSize ?? 12);
+        var maxPage = Math.Max(1, (int)Math.Ceiling(filtered.Length / (double)pageSize));
+        var page = Math.Clamp(requestedPage, 1, maxPage);
+
+        ViewModel.화면검토자료적용(new 마트공개상품목록응답
+        {
+            Items = filtered.Skip((page - 1) * pageSize).Take(pageSize).ToArray(),
+            TotalCount = filtered.Length,
+            Page = page,
+            PageSize = pageSize,
+            재고기준안내 = PreviewResponse?.재고기준안내 ?? string.Empty
+        });
+    }
 
     private async Task NavigateOrLoadAsync(MartProductNavigationContext context)
     {

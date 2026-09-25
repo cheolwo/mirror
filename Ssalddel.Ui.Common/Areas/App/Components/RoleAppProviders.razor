@@ -1,0 +1,16 @@
+@using Ssalddel.Ui.Common.Areas.App.Theme
+
+<MudThemeProvider Theme="@_theme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+@code {
+    [Parameter]
+    public 역할앱시각역할 Role { get; set; } = 역할앱시각역할.주문자;
+
+    private MudTheme _theme = RoleAppTheme.Create(역할앱시각역할.주문자);
+
+    protected override void OnParametersSet()
+        => _theme = RoleAppTheme.Create(Role);
+}

@@ -6,17 +6,17 @@ public sealed class RestaurantDeskOptions
 {
     public const string SectionName = "RestaurantDesk";
 
-    public long RestaurantId { get; set; } = 101;
+    public long RestaurantId { get; set; } = 1;
 
-    public string RestaurantName { get; set; } = "살뜰 식당";
+    public string RestaurantName { get; set; } = "관찰 검증 음식점";
 
-    public string RestaurantAddress { get; set; } = string.Empty;
+    public string RestaurantAddress { get; set; } = "검증 표본 음식점";
 
     public string RestaurantDetailAddress { get; set; } = string.Empty;
 
-    public decimal? RestaurantLatitude { get; set; }
+    public decimal? RestaurantLatitude { get; set; } = 37.588m;
 
-    public decimal? RestaurantLongitude { get; set; }
+    public decimal? RestaurantLongitude { get; set; } = 127.085m;
 
     public int DefaultPreparationMinutes { get; set; } = 20;
 

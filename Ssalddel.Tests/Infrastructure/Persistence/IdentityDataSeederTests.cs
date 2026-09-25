@@ -35,6 +35,7 @@ public sealed class IdentityDataSeederTests
         {
             options.DevelopmentAccounts.Enabled = true;
             options.DevelopmentAccounts.AdminPassword = password;
+            options.DevelopmentAccounts.OrdererPassword = password;
             options.DevelopmentAccounts.DriverPassword = password;
             options.DevelopmentAccounts.ShipperPassword = password;
         });
@@ -51,6 +52,10 @@ public sealed class IdentityDataSeederTests
             claims,
             claim => claim.Type == 음식점접근ClaimTypes.음식점Id
                      && claim.Value == "101");
+        var orderer = Assert.IsType<ApplicationUser>(
+            await fixture.UserManager.FindByNameAsync("field-orderer"));
+        Assert.True(await fixture.UserManager.IsInRoleAsync(orderer, 역할명.커뮤니티회원));
+        Assert.True(await fixture.Db.주문자프로필.AnyAsync(profile => profile.UserId == orderer.Id));
     }
 
     [Fact]

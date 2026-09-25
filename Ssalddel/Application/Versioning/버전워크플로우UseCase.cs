@@ -493,7 +493,7 @@ public sealed class 버전워크플로우UseCase : I버전워크플로우UseCase
             SsalddelOperatingSystem.FoodDelivery => VersionFeatureFlagKeys.FoodDeliveryWorkflow,
             SsalddelOperatingSystem.SsalddelMartUrbanLogistics => VersionFeatureFlagKeys.SsalddelMartWorkflow,
             SsalddelOperatingSystem.CommunityTrust => VersionFeatureFlagKeys.CommunityTrustWorkflow,
-            SsalddelOperatingSystem.PlatformOperations => null,
+            SsalddelOperatingSystem.PlatformOperations => VersionFeatureFlagKeys.PlatformOperationsControl,
             SsalddelOperatingSystem.ShipperTransportManagement => VersionFeatureFlagKeys.DomesticTransportWorkflow,
             _ => throw new ArgumentOutOfRangeException(nameof(operatingSystem), operatingSystem, "Unknown Ssalddel operating system.")
         };

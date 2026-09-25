@@ -1,4 +1,5 @@
 @using Ssalddel.Ui.Common.Areas.App.ViewModels
+@using Ssalddel.Contracts.Food
 
 <MudPaper Elevation="0" Outlined="true" Class="food-order-panel">
     @if (Detail.처리중)
@@ -104,6 +105,17 @@
                 <SsalddelSensitiveInfoRow Label="현재 운송 단계" Value="@OrdererFoodOrderPresentation.DeliveryStatusLabel(detail.배달진행)" />
                 <SsalddelSensitiveInfoRow Label="기사 배정" Value="@(detail.배달진행.기사배정됨 ? "배정됨" : "아직 배정되지 않음")" />
                 <SsalddelSensitiveInfoRow Label="최근 변경" Value="@OrdererFoodOrderPresentation.FormatOptionalDate(detail.배달진행.최근변경시각Utc)" />
+                <MudAlert Severity="@OrdererFoodOrderPresentation.DriverLocationSeverity(detail.기사위치)"
+                          Variant="Variant.Outlined"
+                          Dense="true">
+                    <strong>@detail.기사위치.상태</strong> · @detail.기사위치.안내
+                </MudAlert>
+                @if (detail.기사위치.상태 is 음식배달위치추적상태코드.추적중 or 음식배달위치추적상태코드.갱신지연)
+                {
+                    <SsalddelSensitiveInfoRow Label="최근 기사 위치" Value="@OrdererFoodOrderPresentation.DriverLocationCoordinates(detail.기사위치)" />
+                    <SsalddelSensitiveInfoRow Label="위치 기록 시각" Value="@OrdererFoodOrderPresentation.FormatOptionalDate(detail.기사위치.기록시각Utc)" />
+                    <SsalddelSensitiveInfoRow Label="위치 정확도" Value="@(detail.기사위치.정확도_m.HasValue ? $"약 {detail.기사위치.정확도_m.Value:N0}m" : "—")" />
+                }
                 <div class="food-order-receipt-steps" aria-label="전달과 수령 확인 단계">
                     <div class="food-order-receipt-step @(detail.배달진행.기사전달완료 ? "food-order-receipt-step--done" : string.Empty)">
                         <MudIcon Icon="@(detail.배달진행.기사전달완료 ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.RadioButtonUnchecked)"
@@ -168,7 +180,7 @@
                     진행 상태 새로고침
                 </MudButton>
                 <MudText Typo="Typo.caption" Color="Color.Secondary">
-                    기사 신원과 상세 위치는 노출하지 않고 주문 이행에 필요한 진행 단계만 표시합니다.
+                    기사 신원과 이동 이력은 노출하지 않습니다. 주문 소유자에게 배차 수락부터 전달 완료 전까지만 최근 위치 사본을 표시합니다.
                 </MudText>
             </MudExpansionPanel>
             <MudExpansionPanel Text="상태 이력">

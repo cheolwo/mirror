@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Ssalddel.ApiMetadata;
 using Ssalddel.Application.Admin.Restaurants;
 using Ssalddel.Contracts.Admin.Restaurants;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Admin;
 
@@ -39,6 +40,8 @@ public sealed class 음식점리뷰관리Controller(
 }
 
 [SsalddelApiVersion(SsalddelProductVersion.V3_0)]
+[SsalddelApiFeature(VersionFeatureFlagKeys.FoodDeliveryWorkflow)]
+[SsalddelApiWorkflow(SsalddelWorkflow.FoodDelivery)]
 [ApiController]
 [Authorize(Policy = "서버관리자전용")]
 [Route("api/v1/admin/food-delivery-pricing-policy")]

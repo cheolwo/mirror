@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace Ssalddel.Ui.Common.Areas.App.Services;
 
 /// <summary>
@@ -21,6 +23,7 @@ public static class SsalddelHttpClientNames
 /// </summary>
 public static class SsalddelServerEndpoint
 {
+    public const string AssemblyMetadataKey = "SsalddelServerBaseAddress";
     public const string ConfigurationKey =
         SsalddelEndpointOptions.SectionName + ":ServerBaseAddress";
     public const string LegacyConfigurationKey = "SsalddelApiBaseAddress";
@@ -46,6 +49,65 @@ public static class SsalddelServerEndpoint
         => ResolveBaseAddress(
             FirstConfiguredValue(configuredBaseAddress, legacyConfiguredBaseAddress),
             fallback);
+
+    /// <summary>
+    /// 모바일 현장 검증 앱의 서버 주소를 해소합니다. 디버그만 로컬 HTTP를 허용하고,
+    /// 배포 빌드는 명시적인 공개 HTTPS 주소가 없으면 시작을 중단합니다.
+    /// </summary>
+    public static Uri ResolveMobileBaseAddress(
+        string? configuredBaseAddress,
+        string? legacyConfiguredBaseAddress,
+        bool allowInsecureDebugEndpoint)
+    {
+        var configured = FirstConfiguredValue(
+            configuredBaseAddress,
+            legacyConfiguredBaseAddress);
+        if (string.IsNullOrWhiteSpace(configured))
+        {
+            if (!allowInsecureDebugEndpoint)
+            {
+                throw new InvalidOperationException(
+                    "모바일 배포 빌드에는 SsalddelEndpoints:ServerBaseAddress 공개 HTTPS 주소가 필요합니다.");
+            }
+
+            return CreateDefaultBaseAddress();
+        }
+
+        var resolved = ResolveBaseAddress(configured);
+        if (allowInsecureDebugEndpoint)
+        {
+            return resolved;
+        }
+
+        if (!string.Equals(resolved.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+            || resolved.IsLoopback
+            || string.Equals(resolved.Host, "10.0.2.2", StringComparison.OrdinalIgnoreCase)
+            || !string.IsNullOrEmpty(resolved.UserInfo))
+        {
+            throw new InvalidOperationException(
+                "모바일 배포 빌드의 서버 주소는 자격 정보가 없는 공개 HTTPS 주소여야 합니다.");
+        }
+
+        return resolved;
+    }
+
+    public static Uri ResolveMobileBaseAddress(
+        System.Reflection.Assembly appAssembly,
+        string? configuredBaseAddress,
+        string? legacyConfiguredBaseAddress,
+        bool allowInsecureDebugEndpoint)
+    {
+        ArgumentNullException.ThrowIfNull(appAssembly);
+        var embedded = appAssembly
+            .GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>()
+            .FirstOrDefault(attribute =>
+                string.Equals(attribute.Key, AssemblyMetadataKey, StringComparison.Ordinal))
+            ?.Value;
+        return ResolveMobileBaseAddress(
+            embedded ?? configuredBaseAddress,
+            legacyConfiguredBaseAddress,
+            allowInsecureDebugEndpoint);
+    }
 
     public static Uri ResolveBrowserBaseAddress(
         string? configuredBaseAddress,

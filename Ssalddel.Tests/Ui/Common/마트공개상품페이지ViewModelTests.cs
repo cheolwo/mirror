@@ -36,6 +36,26 @@ public sealed class 마트공개상품페이지ViewModelTests
     }
 
     [Fact]
+    public void 화면검토자료는_서버요청없이명시적으로목록에적용된다()
+    {
+        var service = new FakeMartProductService();
+        var viewModel = new 마트공개상품목록ViewModel(service);
+
+        viewModel.화면검토자료적용(new 마트공개상품목록응답
+        {
+            Items = [new 마트공개상품요약응답 { Id = 91_001, 상품명 = "화면 검토용 감자" }],
+            TotalCount = 1,
+            Page = 1,
+            PageSize = 12,
+            재고기준안내 = "실제 주문 자료가 아닙니다."
+        });
+
+        Assert.True(viewModel.초기화됨);
+        Assert.Equal("화면 검토용 감자", Assert.Single(viewModel.상품목록).상품명);
+        Assert.Null(service.LastRequest);
+    }
+
+    [Fact]
     public async Task 정확한상세가없어도다른상품이나첫상품으로대체하지않는다()
     {
         var viewModel = new 마트공개상품상세ViewModel(

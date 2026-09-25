@@ -1,0 +1,4 @@
+.mobile-field-test-banner ::deep .mud-alert { min-height: 34px; padding-block: 5px; background: #fbf1d7 !important; color: #755b22 !important; box-shadow: none !important; }
+details { width: 100%; }
+summary { cursor: pointer; font-size: .65rem; font-weight: 800; }
+small { display: block; padding: 5px 0 1px 17px; color: #8b7343; font-size: .58rem; }

@@ -1,4 +1,4 @@
-[기획 · 운영·음식 배달 기사 UI/UX · PLAN-OPERATIONS-FOOD-DRIVER-MAP-HOME · r10]
+[기획 · 운영·음식 배달 기사 UI/UX · PLAN-OPERATIONS-FOOD-DRIVER-MAP-HOME · r11]
 
 # 음식 배달 기사 지도 중심 첫 화면
 
@@ -6,8 +6,8 @@
 
 - 기획 ID: `PLAN-OPERATIONS-FOOD-DRIVER-MAP-HOME`
 - 기획 분야: 운영·음식 배달 기사 UI/UX
-- 기획 판본: `r10`
-- 상태: `Draft / MapFirstConfirmed / MyInfoEntryTopRightConfirmed / DeliveryHistoryDefaultConfirmed / HistoryDetailConfirmed / PayoutBreakdownDefaultExpandedCollapsible / FrozenPayoutBreakdownConfirmed / BaseDistanceWeatherDemandSeparated / StandardRowsAlwaysVisibleConfirmed / NotAppliedZeroDistinguishedFromMissingEvidence / GrossDeductionNetSeparated / MonthlyInsuranceFinalizationConfirmed / PlatformShareNeverDeductedFromDriver / PlatformContributionSecondaryDisclosureConfirmed / ExpectedAndSettlementSeparated / DriverHoldLabelSimplifiedConfirmed / CustomerCenterInquiryConfirmed / InternalHoldReasonOperatorOnly / HistoricalNoRecalculationConfirmed / RestaurantRelationshipBadgeConfirmed / DriverVisibilityControlConfirmed / ExistingPricingLedgerPartiallyMapped / StatutoryDeductionLedgerMissing / FoodHistoryProjectionRequired / PayoutBreakdownContractRequired / OperationalLegalReviewRequired / CurrentScreenPlanningClosed / ProductImplementationDeferred`
+- 기획 판본: `r11`
+- 상태: `Draft / MapFirstConfirmed / MyInfoEntryTopRightConfirmed / DeliveryHistoryDefaultConfirmed / HistoryDetailConfirmed / PayoutBreakdownDefaultExpandedCollapsible / FrozenPayoutBreakdownConfirmed / BaseDistanceWeatherDemandSeparated / StandardRowsAlwaysVisibleConfirmed / NotAppliedZeroDistinguishedFromMissingEvidence / GrossDeductionNetSeparated / MonthlyInsuranceFinalizationConfirmed / PlatformShareNeverDeductedFromDriver / PlatformContributionSecondaryDisclosureConfirmed / ExpectedAndSettlementSeparated / DriverHoldLabelSimplifiedConfirmed / CustomerCenterInquiryConfirmed / InternalHoldReasonOperatorOnly / HistoricalNoRecalculationConfirmed / RestaurantRelationshipBadgeConfirmed / DriverVisibilityControlConfirmed / ExistingPricingLedgerPartiallyMapped / StatutoryDeductionLedgerMissing / FoodHistoryProjectionRequired / PayoutBreakdownContractRequired / OperationalLegalReviewRequired / CurrentScreenPlanningClosed / FcmPrimaryConfirmed / SignalRClientRemoved / FirebaseConfigurationWaiting / ProductImplementationPartial`
 - 상위 역할 기획: [하나의 운영 원장과 역할별 OS 작업공간](../../시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/README.md)
 - 배차 의미 정본: [운영 배차 공통 코어](../PLAN-OPERATIONS-DISPATCH-CORE/README.md)
 - 음식점 관계 기준: [음식점과 배달 기사가 함께한 배달 관계](../PLAN-OPERATIONS-FOOD-RESTAURANT-RIDER-RELATIONSHIP/README.md)
@@ -105,7 +105,7 @@
 | --- | --- | --- |
 | 네이티브 지도·교통·현재 위치·마커·경로 | `FDriverApp/Pages/MainPage.xaml`, `FDriverNativeMapView` | `O` |
 | 운행 시작·종료와 위치 갱신 | `MainPageModel.ToggleWorkCommand`, `음식배달기사운행ViewModel` | `O` |
-| 실시간 신규 배차 수신과 30초 조회 보조 | `FDriverDispatchRealtimeService`, `MainPageModel` | `O` |
+| FCM 신규 배차 힌트와 10초 서버 조회 복구 | 서버 `FcmDriverRecommendationPushService`, `기사알림Controller`; 앱 `MainPageModel` | `부분` — 서버 전송·token API와 앱 polling은 존재하나 `kr.ssalddel.fdriver`용 Firebase 설정·Android 수신 adapter·장치 증거가 없음 |
 | 새 배차 배너와 상세 진입 | `MainPage.xaml`, `OpenNewRecommendationsCommand` | `O` |
 | 앱 `/`에서 지도로 바로 진입 | 현재 `/`는 `FDriverHome.razor` 카드형 홈 | `X` |
 | 왼쪽 상단 독립 `신규 배차 받기` 토글 | 현재 운행 시작/추천 대기 종료가 한 버튼에 결합 | `X` |

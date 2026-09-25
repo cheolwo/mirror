@@ -4,8 +4,8 @@
 @inject AdminAuthService AuthService
 @inject NavigationManager Navigation
 
-<MudLayout>
-    <MudAppBar Dense="true" Elevation="0">
+<MudLayout Class="admin-mobile-layout">
+    <MudAppBar Dense="false" Elevation="0" Class="admin-mobile-appbar">
         <MudIconButton Icon="@Icons.Material.Filled.Menu"
                        Color="Color.Inherit"
                        Edge="Edge.Start"
@@ -16,6 +16,7 @@
             <MudText Typo="Typo.caption">플랫폼 모바일 관제</MudText>
         </MudStack>
         <MudSpacer />
+        <RoleAppLifecycleIndicator />
         @if (Session.IsServerAdmin)
         {
             <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">@Session.UserName</MudChip>
@@ -26,20 +27,23 @@
         <MudNavMenu Class="pa-3">
             <MudNavLink Href="/overview" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">운영 개요</MudNavLink>
             <MudNavLink Href="/operations" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.MonitorHeart">운송·기사 현황</MudNavLink>
-            <MudNavLink Href="/operations/finance" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AccountBalanceWallet">현금 흐름</MudNavLink>
             <MudNavLink Href="/operations/follow-up-recovery" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Healing">후속 처리 복구</MudNavLink>
-            <MudNavGroup Title="공동구매 1.5" Icon="@Icons.Material.Filled.PlaylistAddCheckCircle" Expanded="true">
-                <MudNavLink Href="/trade-readiness" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FactCheck">공급·무역 준비</MudNavLink>
-            </MudNavGroup>
-            <MudNavGroup Title="커뮤니티·콘텐츠" Icon="@Icons.Material.Filled.EditNote" Expanded="false">
-                <MudNavLink Href="/community-management" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AdminPanelSettings">커뮤니티 운영</MudNavLink>
-                <MudNavLink Href="/information-review" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.EditNote">글쓰기 작업대</MudNavLink>
-                <MudNavLink Href="/prajna" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AutoStories">외부 콘텐츠 검토</MudNavLink>
-            </MudNavGroup>
-            <MudDivider Class="my-3" />
-            <MudNavGroup Title="보조 관리" Icon="@Icons.Material.Filled.Settings" Expanded="false">
-                <MudNavLink Href="/page-catalog" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.WebAsset">페이지 운영</MudNavLink>
-            </MudNavGroup>
+            <MudNavLink Href="/operations/finance" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AccountBalanceWallet">현금 흐름</MudNavLink>
+            @if (!EnforceFieldTestRoutes)
+            {
+                <MudNavGroup Title="공동구매 1.5" Icon="@Icons.Material.Filled.PlaylistAddCheckCircle" Expanded="true">
+                    <MudNavLink Href="/trade-readiness" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FactCheck">공급·무역 준비</MudNavLink>
+                </MudNavGroup>
+                <MudNavGroup Title="커뮤니티·콘텐츠" Icon="@Icons.Material.Filled.EditNote" Expanded="false">
+                    <MudNavLink Href="/community-management" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AdminPanelSettings">커뮤니티 운영</MudNavLink>
+                    <MudNavLink Href="/information-review" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.EditNote">글쓰기 작업대</MudNavLink>
+                    <MudNavLink Href="/prajna" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AutoStories">외부 콘텐츠 검토</MudNavLink>
+                </MudNavGroup>
+                <MudDivider Class="my-3" />
+                <MudNavGroup Title="보조 관리" Icon="@Icons.Material.Filled.Settings" Expanded="false">
+                    <MudNavLink Href="/page-catalog" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.WebAsset">페이지 운영</MudNavLink>
+                </MudNavGroup>
+            }
             <MudDivider Class="my-3" />
             @if (Session.IsServerAdmin)
             {
@@ -55,6 +59,7 @@
     </MudDrawer>
 
     <MudMainContent>
+        <MobileFieldTestBanner AppVersion="0.1.0" />
         <MudContainer MaxWidth="MaxWidth.False" Class="pa-4 admin-content">
             @Body
         </MudContainer>
@@ -63,6 +68,18 @@
 
 @code {
     private bool drawerOpen;
+
+    private static bool EnforceFieldTestRoutes
+    {
+        get
+        {
+#if DEBUG
+            return false;
+#else
+            return true;
+#endif
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {

@@ -4,12 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using Ssalddel.ApiMetadata;
 using Ssalddel.Application.Admin.Operations;
 using Ssalddel.Contracts.Admin.Operations;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Admin.Operations;
 
 [ApiController]
 [Authorize(Policy = "서버관리자전용")]
 [SsalddelApiVersion(SsalddelProductVersion.V3_5)]
+[SsalddelApiFeature(VersionFeatureFlagKeys.PlatformOperationsControl)]
 [Route("api/v1/admin/operations/follow-up-recoveries")]
 [SsalddelApiContractName("OperationsFollowUpRecoveryController")]
 public sealed class 운영후속처리복구Controller(I운영후속처리복구UseCase useCase) : ControllerBase

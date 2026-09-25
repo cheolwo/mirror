@@ -1,11 +1,38 @@
-<MudThemeProvider />
-<MudPopoverProvider />
-<MudDialogProvider />
-<MudSnackbarProvider />
+@using Ssalddel.Ui.Common.Areas.App.Theme
+
+<RoleAppProviders Role="역할앱시각역할.주문자" />
 
 <Router AppAssembly="typeof(MauiProgram).Assembly" NotFoundPage="typeof(Pages.NotFound)">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        @if (MobileFieldTestRoutePolicy.IsAllowed(routeData.PageType, EnforceFieldTestRoutes, AllowedRoutes))
+        {
+            <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+            <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        }
+        else
+        {
+            <LayoutView Layout="typeof(Layout.MainLayout)">
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+                    이 화면은 주문자 0.1.0 음식 주문 내부 테스트 범위에 포함되지 않습니다.
+                </MudAlert>
+                <MudButton Href="/food" Variant="Variant.Filled" Color="Color.Primary">음식 주문으로 이동</MudButton>
+            </LayoutView>
+        }
     </Found>
 </Router>
+
+@code {
+    private static readonly string[] AllowedRoutes = ["/", "/food", "/food/restaurants", "/orders/food", "/not-found"];
+
+    private static bool EnforceFieldTestRoutes
+    {
+        get
+        {
+#if DEBUG
+            return false;
+#else
+            return true;
+#endif
+        }
+    }
+}

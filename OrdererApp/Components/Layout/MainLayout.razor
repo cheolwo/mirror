@@ -11,11 +11,17 @@
                 @onclick="ToggleDrawer">
             <MudIcon Icon="@Icons.Material.Filled.Menu" />
         </button>
-        <a class="orderer-mobile-shell__brand" href="@OrdererRoutes.Home">살뜰 주문</a>
+        <a class="orderer-mobile-shell__brand" href="@OrdererRoutes.Home">
+            <span class="orderer-mobile-shell__brand-mark">ㅅ</span>
+            <span>살뜰</span>
+        </a>
         <span class="orderer-mobile-shell__spacer"></span>
-        <span class="orderer-mobile-shell__scope">개별 주문 → 같이 주문</span>
+        <span class="orderer-mobile-shell__scope">음식 · 마트 · 화물 주문</span>
+        <RoleAppLifecycleIndicator />
         <span class="orderer-mobile-shell__avatar" aria-label="주문자">O</span>
     </header>
+
+    <MobileFieldTestBanner AppVersion="0.1.0" />
 
     @if (_drawerOpen)
     {
@@ -27,61 +33,59 @@
             <header>
                 <div>
                     <strong>살뜰 주문</strong>
-                    <span>내 주문에서 같이 주문까지</span>
+                    <span>내 주문과 진행 상태</span>
                 </div>
                 <button type="button" aria-label="메뉴 닫기" @onclick="CloseDrawer">
                     <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
                 </button>
             </header>
             <nav>
-                <a href="@OrdererRoutes.Home" @onclick="CloseDrawer">
-                    <MudIcon Icon="@Icons.Material.Filled.Home" />
-                    주문자 홈
-                </a>
-                <a href="@OrdererRoutes.GroupPurchaseProducts" @onclick="CloseDrawer">
-                    <MudIcon Icon="@Icons.Material.Filled.GridView" />
-                    재료 후보
-                </a>
-                <a href="@OrdererRoutes.GroupPurchaseDeliveryScopes" @onclick="CloseDrawer">
-                    <MudIcon Icon="@Icons.Material.Filled.LocationOn" />
-                    내 배송권
-                </a>
-                <a href="@OrdererRoutes.GroupPurchaseTogetherOrders" @onclick="CloseDrawer">
-                    <MudIcon Icon="@Icons.Material.Filled.Groups" />
-                    배송권의 같이 주문
-                </a>
-                <a href="@OrdererRoutes.ProducePriceComparison" @onclick="CloseDrawer">
-                    <MudIcon Icon="@Icons.Material.Filled.CompareArrows" />
-                    과일·채소 가격
-                </a>
-                <a href="@OrdererRoutes.GroupPurchaseWishCreate" @onclick="CloseDrawer">
-                    <MudIcon Icon="@Icons.Material.Filled.AddShoppingCart" />
-                    개별주문 의향 등록
-                </a>
-                <a href="@OrdererRoutes.GroupPurchaseWishes" @onclick="CloseDrawer">
-                    <MudIcon Icon="@Icons.Material.Filled.FavoriteBorder" />
-                    내 개별주문
-                </a>
-                <a href="@OrdererRoutes.GroupPurchaseGroups" @onclick="CloseDrawer">
-                    <MudIcon Icon="@Icons.Material.Filled.GroupWork" />
-                    같이 주문 후보
-                </a>
-                <a href="@OrdererRoutes.Orders" @onclick="CloseDrawer">
-                    <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" />
-                    주문 원장
-                </a>
-                <a href="@OrdererRoutes.IndividualImportLedger" @onclick="CloseDrawer">
-                    <MudIcon Icon="@Icons.Material.Filled.Public" />
-                    개별수입 원장
-                </a>
-                <a href="@OrdererRoutes.GroupExportLedger" @onclick="CloseDrawer">
-                    <MudIcon Icon="@Icons.Material.Filled.Inventory" />
-                    공동수출 원장
-                </a>
+                @if (EnforceFieldTestRoutes)
+                {
+                    <a href="@OrdererRoutes.Food" @onclick="CloseDrawer">
+                        <MudIcon Icon="@Icons.Material.Filled.Restaurant" />
+                        음식 주문
+                    </a>
+                    <a href="@OrdererRoutes.Restaurants" @onclick="CloseDrawer">
+                        <MudIcon Icon="@Icons.Material.Filled.Map" />
+                        음식점 찾기
+                    </a>
+                    <a href="/orders/food" @onclick="CloseDrawer">
+                        <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" />
+                        음식 주문 내역
+                    </a>
+                }
+                else
+                {
+                    <a href="@OrdererRoutes.Home" @onclick="CloseDrawer">
+                        <MudIcon Icon="@Icons.Material.Filled.Home" />
+                        주문자 홈
+                    </a>
+                    <a href="@OrdererRoutes.Food" @onclick="CloseDrawer">
+                        <MudIcon Icon="@Icons.Material.Filled.Restaurant" />
+                        음식 주문
+                    </a>
+                    <a href="@OrdererRoutes.Restaurants" @onclick="CloseDrawer">
+                        <MudIcon Icon="@Icons.Material.Filled.Map" />
+                        음식점 찾기
+                    </a>
+                    <a href="@OrdererRoutes.Mart" @onclick="CloseDrawer">
+                        <MudIcon Icon="@Icons.Material.Filled.Storefront" />
+                        살뜰마트
+                    </a>
+                    <a href="@OrdererRoutes.Cargo" @onclick="CloseDrawer">
+                        <MudIcon Icon="@Icons.Material.Filled.Inventory2" />
+                        화물·공산품 주문
+                    </a>
+                    <a href="@OrdererRoutes.Orders" @onclick="CloseDrawer">
+                        <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" />
+                        주문 원장
+                    </a>
+                }
             </nav>
             <aside>
                 <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />
-                개별 주문 의향과 같이 주문 후보는 비구속 상태이며, 결제·계약·수입 실행과 분리됩니다.
+                화면은 서버가 확정한 주문 상태를 표시하며 결제·계약·수입 실행과 분리됩니다.
             </aside>
         </aside>
     }
@@ -90,6 +94,25 @@
         @Body
     </section>
 
+    @if (EnforceFieldTestRoutes)
+    {
+        <footer class="orderer-mobile-shell__bottom-nav">
+            <a class="orderer-mobile-shell__bottom-link" href="@OrdererRoutes.Food">
+                <MudIcon Icon="@Icons.Material.Filled.Restaurant" Size="Size.Small" />
+                <span>주문</span>
+            </a>
+            <a class="orderer-mobile-shell__bottom-link" href="@OrdererRoutes.Restaurants">
+                <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Small" />
+                <span>음식점</span>
+            </a>
+            <a class="orderer-mobile-shell__bottom-link" href="/orders/food">
+                <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" />
+                <span>내역</span>
+            </a>
+        </footer>
+    }
+    else
+    {
     <footer class="orderer-mobile-shell__bottom-nav">
         <a class="@BuildBottomLinkClass(BottomDestination.Home)"
            href="@OrdererRoutes.Home"
@@ -97,17 +120,17 @@
             <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small" />
             <span>홈</span>
         </a>
-        <a class="@BuildBottomLinkClass(BottomDestination.Ingredients)"
-           href="@OrdererRoutes.GroupPurchaseProducts"
-           aria-current="@(IsBottomDestinationActive(BottomDestination.Ingredients) ? "page" : null)">
-            <MudIcon Icon="@Icons.Material.Filled.GridView" Size="Size.Small" />
-            <span>재료</span>
+        <a class="@BuildBottomLinkClass(BottomDestination.Food)"
+           href="@OrdererRoutes.Food"
+           aria-current="@(IsBottomDestinationActive(BottomDestination.Food) ? "page" : null)">
+            <MudIcon Icon="@Icons.Material.Filled.Restaurant" Size="Size.Small" />
+            <span>음식</span>
         </a>
-        <a class="@BuildBottomLinkClass(BottomDestination.Wishes)"
-           href="@OrdererRoutes.GroupPurchaseWishes"
-           aria-current="@(IsBottomDestinationActive(BottomDestination.Wishes) ? "page" : null)">
-            <MudIcon Icon="@Icons.Material.Filled.FavoriteBorder" Size="Size.Small" />
-            <span>내 주문</span>
+        <a class="@BuildBottomLinkClass(BottomDestination.Mart)"
+           href="@OrdererRoutes.Mart"
+           aria-current="@(IsBottomDestinationActive(BottomDestination.Mart) ? "page" : null)">
+            <MudIcon Icon="@Icons.Material.Filled.Storefront" Size="Size.Small" />
+            <span>마트</span>
         </a>
         <a class="@BuildBottomLinkClass(BottomDestination.Ledgers)"
            href="@OrdererRoutes.Orders"
@@ -116,10 +139,23 @@
             <span>원장</span>
         </a>
     </footer>
+    }
 </div>
 
 @code {
     private bool _drawerOpen;
+
+    private static bool EnforceFieldTestRoutes
+    {
+        get
+        {
+#if DEBUG
+            return false;
+#else
+            return true;
+#endif
+        }
+    }
 
     protected override void OnInitialized()
         => Navigation.LocationChanged += HandleLocationChanged;
@@ -135,28 +171,14 @@
     private bool IsBottomDestinationActive(BottomDestination destination)
         => destination switch
         {
-            BottomDestination.Ingredients =>
-                CurrentPath.StartsWith(OrdererRoutes.ProducePriceComparison, StringComparison.OrdinalIgnoreCase)
-                || CurrentPath.StartsWith(OrdererRoutes.GroupPurchaseProducts, StringComparison.OrdinalIgnoreCase)
-                || CurrentPath.StartsWith(OrdererRoutes.GroupPurchaseRecipeUses, StringComparison.OrdinalIgnoreCase)
-                || CurrentPath.StartsWith(OrdererRoutes.GroupPurchaseOrderModeComparison, StringComparison.OrdinalIgnoreCase)
-                || CurrentPath.StartsWith(OrdererRoutes.GroupPurchaseDeliveryScopes, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(CurrentPath, OrdererRoutes.GroupPurchaseWishCreate, StringComparison.OrdinalIgnoreCase),
-            BottomDestination.Wishes =>
-                (CurrentPath.StartsWith(OrdererRoutes.GroupPurchaseWishes, StringComparison.OrdinalIgnoreCase)
-                 && !string.Equals(CurrentPath, OrdererRoutes.GroupPurchaseWishCreate, StringComparison.OrdinalIgnoreCase))
-                || CurrentPath.StartsWith(OrdererRoutes.GroupPurchaseGroups, StringComparison.OrdinalIgnoreCase)
-                || CurrentPath.StartsWith(OrdererRoutes.GroupPurchaseTogetherOrders, StringComparison.OrdinalIgnoreCase)
-                || CurrentPath.StartsWith(OrdererRoutes.GroupPurchaseSupplierRelationships, StringComparison.OrdinalIgnoreCase)
-                || CurrentPath.StartsWith(OrdererRoutes.GroupPurchaseUrgentHarvestOffers, StringComparison.OrdinalIgnoreCase),
+            BottomDestination.Food =>
+                CurrentPath.StartsWith(OrdererRoutes.Food, StringComparison.OrdinalIgnoreCase),
+            BottomDestination.Mart =>
+                CurrentPath.StartsWith(OrdererRoutes.Mart, StringComparison.OrdinalIgnoreCase),
             BottomDestination.Ledgers =>
                 CurrentPath.StartsWith(OrdererRoutes.Orders, StringComparison.OrdinalIgnoreCase)
-                || CurrentPath.StartsWith("/trade", StringComparison.OrdinalIgnoreCase)
-                || CurrentPath.StartsWith("/group-purchase/import", StringComparison.OrdinalIgnoreCase),
+                || CurrentPath.StartsWith("/trade", StringComparison.OrdinalIgnoreCase),
             _ => string.Equals(CurrentPath, OrdererRoutes.Home, StringComparison.OrdinalIgnoreCase)
-                 || string.Equals(CurrentPath, OrdererRoutes.GroupPurchase, StringComparison.OrdinalIgnoreCase)
-                 || CurrentPath.StartsWith("/food", StringComparison.OrdinalIgnoreCase)
-                 || CurrentPath.StartsWith("/cargo", StringComparison.OrdinalIgnoreCase)
         };
 
     private string BuildBottomLinkClass(BottomDestination destination)
@@ -176,8 +198,8 @@
     private enum BottomDestination
     {
         Home,
-        Ingredients,
-        Wishes,
+        Food,
+        Mart,
         Ledgers
     }
 }

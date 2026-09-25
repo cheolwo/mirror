@@ -121,6 +121,7 @@ public static class SsalddelUiCommonServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
+        services.TryAddSingleton<역할앱생명주기State>();
         services.AddSsalddelUiCoreModule();
         services.AddCommunityPlatformUiModule();
         services.AddGroupPurchaseUiModule();

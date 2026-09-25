@@ -1,9 +1,40 @@
-<BackOfficeProviders />
+@using Ssalddel.Ui.Common.Areas.App.Theme
+
+<RoleAppProviders Role="역할앱시각역할.음식점" />
 
 <Router AppAssembly="typeof(MauiProgram).Assembly"
         NotFoundPage="typeof(Pages.NotFound)">
     <Found Context="routeData">
-        <RestaurantRouteView RouteData="routeData"
-                             DefaultLayout="typeof(Layout.MainLayout)" />
+        @if (MobileFieldTestRoutePolicy.IsAllowed(routeData.PageType, EnforceFieldTestRoutes, AllowedRoutes))
+        {
+            <RestaurantRouteView RouteData="routeData"
+                                 DefaultLayout="typeof(Layout.MainLayout)" />
+        }
+        else
+        {
+            <LayoutView Layout="typeof(Layout.MainLayout)">
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+                    이 화면은 음식점 0.1.0 주문 처리 내부 테스트 범위에 포함되지 않습니다.
+                </MudAlert>
+                <MudButton Href="/orders" Variant="Variant.Filled" Color="Color.Primary">주문 수신함으로 이동</MudButton>
+            </LayoutView>
+        }
     </Found>
 </Router>
+
+@code {
+    private static readonly string[] AllowedRoutes =
+        ["/", "/login", "/orders", "/orders/{OrderNo}", "/settings/preparation-times", "/not-found"];
+
+    private static bool EnforceFieldTestRoutes
+    {
+        get
+        {
+#if DEBUG
+            return false;
+#else
+            return true;
+#endif
+        }
+    }
+}

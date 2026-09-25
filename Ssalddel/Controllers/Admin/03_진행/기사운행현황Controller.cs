@@ -4,10 +4,13 @@ using MediatR;
 using Ssalddel.Application.Admin.Operating;
 using Ssalddel.Contracts.Admin.Progress;
 using Ssalddel.ApiMetadata;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Admin.Progress03
 {
     [SsalddelApiVersion(SsalddelProductVersion.V2_0)]
+    [SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
+    [SsalddelApiWorkflow(SsalddelWorkflow.DomesticTransport)]
     [ApiController]
     [Route("api/v1/admin/drivers/operating")]
     [Authorize(Policy = "서버관리자전용")]

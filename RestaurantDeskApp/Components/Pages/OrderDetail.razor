@@ -7,7 +7,7 @@
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
     <MudStack Spacing="3">
-        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="restaurant-page-header">
             <MudStack Spacing="0">
                 <MudText Typo="Typo.h4">음식점 주문 상세</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">정확한 주문번호 한 건을 서버에서 다시 읽고 수락·조리·픽업 준비를 기록합니다.</MudText>
@@ -305,8 +305,19 @@
             }
 
             var output = DocumentOutputService.CreateOutboundExpectedItems(result.전표Draft);
-            await JS.InvokeVoidAsync("ssalddelDocumentOutput.printHtml", output.Title, output.Html);
-            await OrderDeskService.전표출력완료Async(order.주문번호);
+            try
+            {
+                await JS.InvokeVoidAsync("ssalddelDocumentOutput.printHtml", output.Title, output.Html);
+                await OrderDeskService.전표출력완료Async(order.주문번호);
+            }
+            catch (JSException)
+            {
+                order = await OrderDeskService.주문조회Async(order.주문번호);
+                messageSeverity = Severity.Warning;
+                message = $"{OrderNo} 주문은 수락되어 조리를 시작했습니다. 이 기기에서는 전표 출력 창을 열지 못했습니다.";
+                return;
+            }
+
             order = await OrderDeskService.주문조회Async(order.주문번호);
             messageSeverity = Severity.Success;
             message = $"{OrderNo} 주문을 수락하고 전표 출력 요청을 보냈습니다.";

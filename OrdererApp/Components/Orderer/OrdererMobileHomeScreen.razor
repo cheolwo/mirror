@@ -2,31 +2,53 @@
 
 <main class="orderer-mobile-home" data-orderer-screen="@ScreenCode">
     <header class="orderer-mobile-home__heading">
-        <span>주문자 업무 · @ScreenCode</span>
-        <h1>주문자 홈</h1>
-        <p>커뮤니티에서 시작한 개별 주문과 같이 주문 후보 상태를 같은 원장에서 이어 봅니다.</p>
+        <span>오늘의 살뜰 생활</span>
+        <h1>@(FoodFieldTestOnly ? "어떤 음식을 찾으세요?" : "무엇이 필요하세요?")</h1>
+        <p>@(FoodFieldTestOnly
+            ? "가까운 음식점과 메뉴를 둘러보세요."
+            : "음식과 장보기, 필요한 배송을 한곳에서 시작하세요.")</p>
     </header>
 
     <section class="orderer-mobile-home__summary" aria-label="주문자 상태 바로가기">
-        <a href="@OrdererRoutes.GroupPurchaseWishes">
-            <span>개별 주문</span>
-            <strong>내 목록</strong>
-        </a>
-        <a href="@OrdererRoutes.GroupPurchaseGroups">
-            <span>같이 주문</span>
-            <strong>진행 보기</strong>
-        </a>
-        <a href="@OrdererRoutes.Orders">
-            <span>진행 주문</span>
-            <strong>원장 보기</strong>
-        </a>
-        <small>로그인 뒤 본인 상태가 표시되며 다른 참여자의 식별정보는 노출하지 않습니다.</small>
+        @if (FoodFieldTestOnly)
+        {
+            <a href="@OrdererRoutes.Food">
+                <MudIcon Icon="@Icons.Material.Filled.Restaurant" Size="Size.Small" />
+                <strong>음식 주문</strong>
+            </a>
+            <a href="@OrdererRoutes.Restaurants">
+                <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Small" />
+                <strong>음식점 찾기</strong>
+            </a>
+            <a href="/orders/food">
+                <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" />
+                <strong>주문 내역</strong>
+            </a>
+        }
+        else
+        {
+            <a href="@OrdererRoutes.Food">
+                <MudIcon Icon="@Icons.Material.Filled.Restaurant" Size="Size.Small" />
+                <strong>음식 주문</strong>
+            </a>
+            <a href="@OrdererRoutes.Mart">
+                <MudIcon Icon="@Icons.Material.Filled.Storefront" Size="Size.Small" />
+                <strong>살뜰마트</strong>
+            </a>
+            <a href="@OrdererRoutes.Orders">
+                <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Small" />
+                <strong>진행 주문</strong>
+            </a>
+        }
     </section>
 
     <section class="orderer-mobile-home__shortcuts" aria-labelledby="orderer-shortcut-heading">
-        <h2 id="orderer-shortcut-heading">바로가기</h2>
+        <header>
+            <h2 id="orderer-shortcut-heading">둘러보기</h2>
+            <span>원하는 서비스를 선택하세요</span>
+        </header>
         <nav>
-            @foreach (var shortcut in Shortcuts)
+            @foreach (var shortcut in FoodFieldTestOnly ? FoodFieldTestShortcuts : Shortcuts)
             {
                 <a class="@($"orderer-mobile-home__shortcut orderer-mobile-home__shortcut--{shortcut.Tone}")"
                    href="@shortcut.Href">
@@ -44,8 +66,14 @@
     <aside class="orderer-mobile-home__boundary">
         <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Small" />
         <span>
-            <strong>개별 주문과 같이 주문 실행은 분리됩니다.</strong>
-            같이 주문 조건이 모여도 명시적 참여 동의와 주문·결제 확인 전까지 확정되지 않습니다.
+            @if (FoodFieldTestOnly)
+            {
+                <text>주문 진행 상황은 주문 내역에서 확인하세요.</text>
+            }
+            else
+            {
+                <text>상품을 둘러보는 것만으로 주문되거나 결제되지 않습니다.</text>
+            }
         </span>
     </aside>
 </main>
@@ -54,13 +82,22 @@
     [Parameter]
     public string ScreenCode { get; set; } = "02.01";
 
+    [Parameter]
+    public bool FoodFieldTestOnly { get; set; }
+
+    private static readonly IReadOnlyList<OrdererMobileShortcut> FoodFieldTestShortcuts =
+    [
+        new("음식 주문", "음식점과 주문 내역 보기", OrdererRoutes.Food, Icons.Material.Filled.Restaurant, "mint"),
+        new("음식점과 메뉴", "공개 권역의 음식점 찾기와 주문", OrdererRoutes.Restaurants, Icons.Material.Filled.RamenDining, "mint"),
+        new("음식 주문 내역", "내 주문의 진행 상태 다시 조회", "/orders/food", Icons.Material.Filled.ReceiptLong, "blue")
+    ];
+
     private static readonly IReadOnlyList<OrdererMobileShortcut> Shortcuts =
     [
         new("음식 주문", "가까운 음식점과 메뉴", OrdererRoutes.Food, Icons.Material.Filled.Restaurant, "mint"),
-        new("홈달마트", "도심 창고 재고 상품", OrdererRoutes.Mart, Icons.Material.Filled.Storefront, "mint"),
-        new("과일·채소 가격", "지역·중량·통화별 공식 가격 비교", OrdererRoutes.ProducePriceComparison, Icons.Material.Filled.CompareArrows, "blue"),
-        new("같이 주문 재료", "근거를 보고 25kg 활용부터 확인", OrdererRoutes.GroupPurchaseProducts, Icons.Material.Filled.GridView, "blue"),
-        new("배송권의 같이 주문", "내 생활권에 모인 공개 수량 확인", OrdererRoutes.GroupPurchaseTogetherOrders, Icons.Material.Filled.Groups, "blue"),
+        new("살뜰마트", "도심 창고 재고 상품", OrdererRoutes.Mart, Icons.Material.Filled.Storefront, "mint"),
+        new("음식점 찾기", "음식점과 메뉴 확인", OrdererRoutes.Restaurants, Icons.Material.Filled.RamenDining, "blue"),
+        new("화물·공산품", "화물 주문 시작", OrdererRoutes.Cargo, Icons.Material.Filled.Inventory2, "blue"),
         new("주문 내역", "진행·완료 주문 확인", OrdererRoutes.Orders, Icons.Material.Filled.ReceiptLong, "mint")
     ];
 
