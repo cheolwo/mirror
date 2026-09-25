@@ -1,4 +1,14 @@
-# [기획 · 운영체제·생활권 물류 · PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB · r1]
+# [기획 · 운영체제·생활권 물류 · PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB · r3]
+
+## r3 사물함 픽업 기반 소형 화물·퀵서비스
+
+[r3](locker-small-cargo-quick-service.plan.r3.md): 관리업체의 사물함 위치 등록과 보내는 사람의 운송 의뢰를 분리한다. 음식 주문/조리나 상점 판매를 필수로 하지 않는 소형 화물·퀵서비스 방향이다. 상세 정책·구현은 미정이며 r1 운영 경계는 유지한다.
+
+## r2 전자 사물함 확장 검토
+
+[건물 관리업체·전자 사물함 제안 r2](building-managed-lockers.proposal.r2.md)에 사용자 구상과 역할·인계·장비 사건 분리 후보를 기록했다. 세부 정책은 미승인이고 구현하지 않았다. 아래 r1의 승인·구현 범위와 실운영 비활성을 유지한다.
+
+## r1 기존 승인 범위
 
 - 상태: `Approved / FirstSimulationSliceImplemented / OperationalActivationDeferred`
 - 상위·관련 기획: `PLAN-OPERATIONS-ORDER-CENTERED-WORK-NETWORK`, `PLAN-OPERATIONS-SSALDDEL-MART-SUPPLY-NETWORK`, `PLAN-OPERATIONS-LOGISTICS-OS`, `PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001`
