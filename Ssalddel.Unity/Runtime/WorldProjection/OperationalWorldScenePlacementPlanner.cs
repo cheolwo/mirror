@@ -71,6 +71,7 @@ namespace Ssalddel.Unity.Data.WorldProjection
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 [OperationalWorldSceneItemKinds.CompletedLifecycle] = "operational.completed-lifecycle",
+                [OperationalWorldSceneItemKinds.ActiveLifecycle] = "operational.active-lifecycle",
                 [OperationalWorldSceneItemKinds.WarehouseTask] = "warehouse.task",
                 [OperationalWorldSceneItemKinds.WarehouseActor] = "warehouse.actor",
                 [OperationalWorldSceneItemKinds.CargoHandoff] = "cargo.handoff"

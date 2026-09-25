@@ -105,7 +105,12 @@ public sealed class 운영지역장면조회UseCase(
 
         var visibleItems = items
             .Where(item => item.ExpiresAtUtc > now)
-            .Where(item => cursor == 0 || item.PublishedAtUtc.Ticks > cursor)
+            // 진행 사본은 업무 판본이 같아도 표시 유효기간을 재확인해야 한다.
+            // v1과 완료 사본의 기존 cursor 계약은 유지한다.
+            .Where(item => cursor == 0 || item.PublishedAtUtc.Ticks > cursor
+                || (schemaVersion == OperationalWorldScenePolicy.SchemaVersionV2
+                    && item.ItemKind == OperationalWorldSceneItemKinds.ActiveLifecycle
+                    && item.SourceKindCode == OperationalWorldSceneSourceKinds.OperationalProjection))
             .OrderBy(item => item.PublishedAtUtc)
             .ThenBy(item => item.SnapshotStableId, StringComparer.Ordinal)
             .ToArray();

@@ -179,6 +179,53 @@ public sealed class OperationalWorldSceneInterpreterTests
         Assert.Equal(0, client.Expire(Now.AddSeconds(12)).Cursor);
     }
 
+    [Fact]
+    public void 같은판본_같은업무내용은_유효기간만연장한다()
+    {
+        var interpreter = new OperationalWorldSceneInterpreter();
+        interpreter.Apply(Response(V2Item("food:lease", 2, Now.AddMinutes(2))), Now);
+        var renewed = interpreter.Apply(Response(V2Item("food:lease", 2, Now.AddMinutes(3)), full: false),
+            Now.AddMinutes(1));
+        Assert.Equal(Now.AddMinutes(3), Assert.Single(renewed.CurrentItems).ExpiresAtUtc);
+        Assert.Single(interpreter.Expire(Now.AddMinutes(2.5)).CurrentItems);
+        interpreter.Apply(Response(V2Item("food:lease", 2, Now.AddMinutes(2)), full: false), Now.AddMinutes(2.5));
+        Assert.Single(interpreter.Expire(Now.AddMinutes(2.5)).CurrentItems);
+        Assert.Empty(interpreter.Expire(Now.AddMinutes(3)).CurrentItems);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void 낮은판본의_삭제나만료통지는_최신객체를제거하지않는다(bool tombstone)
+    {
+        var interpreter = new OperationalWorldSceneInterpreter();
+        interpreter.Apply(Response(V2Item("food:new", 3, Now.AddMinutes(5))), Now);
+        var stale = V2Item("food:new", 2, tombstone ? Now.AddMinutes(5) : Now.AddSeconds(-1));
+        stale.IsTombstone = tombstone;
+        var result = interpreter.Apply(Response(stale, full: false), Now);
+        Assert.Equal(3, Assert.Single(result.CurrentItems).Revision);
+        Assert.Equal("LowerRevision", Assert.Single(result.Diagnostics).ErrorCode);
+    }
+
+    [Fact]
+    public void 같은판본의_업무변경은거절하고_후속판본과삭제는수용한다()
+    {
+        var interpreter = new OperationalWorldSceneInterpreter();
+        interpreter.Apply(Response(V2Item("food:conflict", 3, Now.AddMinutes(2))), Now);
+        var conflict = V2Item("food:conflict", 3, Now.AddMinutes(5));
+        conflict.LifecycleStageCode = "DifferentStage";
+        conflict.PublishedAtUtc = Now.AddMinutes(1);
+        var rejected = interpreter.Apply(Response(conflict, full: false), Now.AddSeconds(30));
+        Assert.Equal("Completed", Assert.Single(rejected.CurrentItems).LifecycleStageCode);
+        Assert.Equal(Now.AddMinutes(2), rejected.CurrentItems[0].ExpiresAtUtc);
+        Assert.Equal("RevisionConflict", Assert.Single(rejected.Diagnostics).ErrorCode);
+        conflict.Revision = 4;
+        Assert.Equal("DifferentStage", Assert.Single(interpreter.Apply(Response(conflict), Now).CurrentItems).LifecycleStageCode);
+        var deletion = V2Item("food:conflict", 5, Now.AddMinutes(5));
+        deletion.IsTombstone = true;
+        Assert.Empty(interpreter.Apply(Response(deletion), Now).CurrentItems);
+    }
+
     private sealed class DelayedTransport : IOperationalWorldProjectionTransport
     {
         public TaskCompletionSource<string?> Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);

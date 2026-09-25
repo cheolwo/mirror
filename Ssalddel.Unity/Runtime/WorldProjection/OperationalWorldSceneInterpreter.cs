@@ -31,6 +31,7 @@ namespace Ssalddel.Unity.Data.WorldProjection
         public const string AreaMismatch = "AreaMismatch";
         public const string DuplicateSnapshotStableId = "DuplicateSnapshotStableId";
         public const string LowerRevision = "LowerRevision";
+        public const string RevisionConflict = "RevisionConflict";
         public const string V2FieldRequired = "V2FieldRequired";
         public const string SourceKindUnsupported = "SourceKindUnsupported";
         public const string ScenarioRunStableIdRequired = "ScenarioRunStableIdRequired";
@@ -94,20 +95,9 @@ namespace Ssalddel.Unity.Data.WorldProjection
 
                 var snapshotId = incoming.SnapshotStableId!;
                 incomingIds.Add(snapshotId);
-                if (incoming.IsTombstone || incoming.ExpiresAtUtc <= utcNow)
-                {
-                    if (items.Remove(snapshotId)) removed++;
-                    continue;
-                }
-
-                if (!items.TryGetValue(snapshotId, out var current))
-                {
-                    items.Add(snapshotId, incoming);
-                    added++;
-                    continue;
-                }
-
-                if (incoming.Revision < current.Revision)
+                items.TryGetValue(snapshotId, out var current);
+                // 삭제 통지도 판본 검사보다 먼저 적용하지 않는다.
+                if (current != null && incoming.Revision < current.Revision)
                 {
                     diagnostics.Add(new OperationalWorldSceneApplyDiagnostic
                     {
@@ -117,8 +107,39 @@ namespace Ssalddel.Unity.Data.WorldProjection
                     });
                     continue;
                 }
-                if (incoming.Revision == current.Revision
-                    && incoming.PublishedAtUtc <= current.PublishedAtUtc) continue;
+                if (incoming.IsTombstone)
+                {
+                    if (items.Remove(snapshotId)) removed++;
+                    continue;
+                }
+                // 이미 만료된 응답은 현재의 정상 표시 임대를 취소할 근거가 아니다.
+                if (incoming.ExpiresAtUtc <= utcNow) continue;
+                if (current == null)
+                {
+                    items.Add(snapshotId, incoming);
+                    added++;
+                    continue;
+                }
+                if (incoming.Revision == current.Revision)
+                {
+                    if (!SameContent(current, incoming))
+                    {
+                        diagnostics.Add(new OperationalWorldSceneApplyDiagnostic
+                        {
+                            SnapshotStableId = snapshotId,
+                            ErrorCode = OperationalWorldSceneApplyDiagnosticCodes.RevisionConflict,
+                            ExistingObjectFrozen = true
+                        });
+                        continue;
+                    }
+                    // 재조회는 업무 상태 변경이 아닌 표시 유효기간 갱신이다.
+                    if (incoming.ExpiresAtUtc > current.ExpiresAtUtc)
+                    {
+                        current.ExpiresAtUtc = incoming.ExpiresAtUtc;
+                        updated++;
+                    }
+                    continue;
+                }
                 items[snapshotId] = incoming;
                 updated++;
             }
@@ -230,6 +251,19 @@ namespace Ssalddel.Unity.Data.WorldProjection
             };
             return forbidden.Any(value => json.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0);
         }
+
+        private static bool SameContent(OperationalWorldSceneItem a, OperationalWorldSceneItem b)
+            => a.AreaStableId == b.AreaStableId && a.OperatingSystemId == b.OperatingSystemId
+               && a.ItemKind == b.ItemKind && a.RoleCode == b.RoleCode && a.ActivityCode == b.ActivityCode
+               && a.OccurredAtUtc == b.OccurredAtUtc && a.IsTombstone == b.IsTombstone
+               && a.DataPolicyCode == b.DataPolicyCode && a.LocalStorageAllowed == b.LocalStorageAllowed
+               && a.ReplayAllowed == b.ReplayAllowed && a.RepresentationDataJson == b.RepresentationDataJson
+               && a.WorkStableId == b.WorkStableId && a.LifecycleStageCode == b.LifecycleStageCode
+               && a.AttentionStateCode == b.AttentionStateCode && a.ObjectKindCode == b.ObjectKindCode
+               && a.SemanticPlaceStableId == b.SemanticPlaceStableId && a.SourceKindCode == b.SourceKindCode
+               && a.ScenarioRunStableId == b.ScenarioRunStableId
+               && (a.RelationStableIds ?? Array.Empty<string>())
+                   .SequenceEqual(b.RelationStableIds ?? Array.Empty<string>(), StringComparer.Ordinal);
 
         private OperationalWorldSceneItem[] Snapshot()
             => items.Values

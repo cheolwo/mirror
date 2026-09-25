@@ -84,6 +84,30 @@ public sealed class OperationalWorldScenePlacementPlannerTests
         Assert.Contains(result.Diagnostics, x => x.Code == OperationalWorldPlacementDiagnosticCodes.OperatingSystemUnsupported);
     }
 
+    [Theory]
+    [InlineData("주문대기")]
+    [InlineData("조리중")]
+    [InlineData("픽업대기")]
+    [InlineData("기사배정")]
+    [InlineData("픽업완료")]
+    [InlineData("전달완료")]
+    public void 진행중음식의_서버단계와판본을_배치까지보존한다(string stage)
+    {
+        var item = Item("food:active", OperationalWorldOperatingSystemIds.FoodDelivery,
+            OperationalWorldSceneItemKinds.ActiveLifecycle, Now.AddMinutes(2));
+        item.ActivityCode = item.LifecycleStageCode = stage;
+        item.AttentionStateCode = OperationalWorldAttentionStateCodes.Active;
+        var result = new OperationalWorldScenePlacementPlanner().Create(new OperationalWorldSceneApplyResult
+        {
+            Accepted = true, CurrentItems = [item]
+        });
+        var instruction = Assert.Single(result.Instructions);
+        Assert.Empty(result.Diagnostics);
+        Assert.Equal(stage, instruction.LifecycleStageCode);
+        Assert.Equal(item.Revision, instruction.Revision);
+        Assert.Equal("operational.active-lifecycle", instruction.VisualKey);
+    }
+
     private static OperationalWorldSceneItem Item(
         string id,
         string operatingSystemId,

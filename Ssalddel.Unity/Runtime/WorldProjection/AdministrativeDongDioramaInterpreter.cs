@@ -73,6 +73,13 @@ namespace Ssalddel.Unity.Data.WorldProjection
             };
         }
 
+        /// <summary>해당 행정동에 확인 배정된 방문 데이터만 읽는다. 영상이나 운영 주문을 만들지 않는다.</summary>
+        public RegionalPickupBindingResult BindPickupRecords(RegionalPickupRecord record)
+        {
+            if (manifest == null) throw new InvalidOperationException("AdministrativeDongManifestRequired");
+            return RegionalPickupRecordBinding.Bind(manifest.AdministrativeAreaStableId, false, record);
+        }
+
         public void Clear()
         {
             manifest = null;

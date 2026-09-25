@@ -1,10 +1,33 @@
-# [기획 · 월드·공간·배치 · PLAN-SYSTEM-ADMIN-DONG-DIORAMA · r18]
+# [기획 · 월드·공간·배치 · PLAN-SYSTEM-ADMIN-DONG-DIORAMA · r22]
+
+## r22 진행 음식 관찰 연결 보완
+
+[진행 음식 관찰 연결 보완 r22](active-food-observation-repair.implementation.r22.md)은 사용자가 수용한 r21의 첫 수리 범위다. 진행 사본 배치, TTL 재확인, 낮은 판본 삭제 보호와 음식 단계 표현을 수정했다. 공유 코어 28/28·서버 11/11 및 실제 Unity 소스의 순수 진단을 통과했다. Editor 재컴파일 시간 초과로 EditMode·Play Mode·Game View는 미검증이며 운영 의미 위치의 실제 결속은 후속으로 남는다.
+
+## r21 정상 생명주기 API·Unity 연결 조사
+
+[정상 생명주기·API·Unity 부족 연결 조사 r21](normal-lifecycle-api-unity-gap-audit.proposal.r21.md)은 기존 음식 업무 HTTP 실행과 Unity live 메모리 소비 기반을 확인하여 r20의 우선순위를 좁힌다. 정상 업무를 재구현하지 않고 진행 자료 배치·TTL 갱신·삭제 판본·단계 매핑을 먼저 보완한 뒤 실제 화면으로 검증하는 제안이다. 집중 자동 시험 50/50·54/54·18/18 통과와 별개로 독립 코어 진단에서 연결 결손 3개를 재현했다. 제품 코드 수정·실제 서버 실행·Unity Play Mode는 이번에 수행하지 않았다.
+
+## r20 Unity 중심 참조 모듈·OS 생명주기 제안
+
+[면목제3·8동 참조 모듈과 OS 생명주기 검증 제안 r20](unity-first-reference-and-os-lifecycle.proposal.r20.md)에 현재 코드·기존 실행 증거와 부족한 연결을 정리했다. 사용자 요청의 방향은 Unity 중심의 점진적 개발이며, 세부 작업 순서는 `Proposed`다. 현행 경계·권리 관문은 유지하면서 `참조 공간 연결 → 음식 업무 정상·회복 검증 → 다른 동 한 곳 재사용 → 창고·마트·화물의 독립 검증` 순서를 제안한다. r19는 이전 승인 기준선으로 보존하며 새 실행 승인·Scene 저장·E 승격을 뜻하지 않는다.
 
 ## 목표
 
 서버가 출처·판본·경계 유효성을 검토한 행정동별 공간 사본을 Unity가 읽기 전용으로 받아, 하나의 `SimulationWorldShell`에서 행정동 단위 디오라마를 선택·관찰할 수 있게 한다.
 
 첫 단일 대상이었던 면목제3·8동에서 동북서울 배달운영권역 후보 30개 행정동으로 자료 생성 범위를 넓힌다. 역 중심 1km 디오라마는 상세 관찰 창이고, 행정동 디오라마는 경계와 자료 귀속의 기본 공간 모듈이다. 어느 쪽도 배달권·통행·게임 상태의 권위를 자동으로 갖지 않는다.
+
+## r19 면목제3·8동 아이소메트릭 디오라마 우선순위
+
+- 당분간 제품 우선순위는 모바일 운영 앱의 현실 적용 확대보다 `region:kr:hjd:1126057500` 면목제3·8동 디오라마의 공간·외관·거리 판독성을 정교화하는 데 둔다. 다른 29개 행정동은 같은 계약으로 확장할 수 있는 후보 상태를 유지하되, 면목제3·8동과 같은 깊이를 이미 갖췄다고 보고하지 않는다.
+- Unity의 첫 표현은 하나의 사각 받침 위에서 내려다보는 아이소메트릭 행정동 모듈로 한다. 사각 받침은 카메라·배경·모듈 교체를 위한 표현 프레임일 뿐이며 실제 행정동 경계를 사각형으로 잘라 바꾸거나, 경계 밖 건물·도로를 면목제3·8동 소유로 편입하는 근거가 아니다. 실제 경계 밖은 중립 바탕 또는 인접 맥락으로만 표현한다.
+- 기존 사가정역 1km×1km 디오라마는 폐기하지 않고 면목제3·8동 안의 고정밀 상세 관찰 창으로 재사용한다. 행정동 정본이 전체 귀속과 집계를 맡고, 역세권 창은 출구·교차로·대로변·시장·대표 건물의 세밀한 표현과 현장 비교를 맡는다.
+- 정교화 순서는 `P0 현행 행정동 경계·건물 외곽·필지·도로명주소·출입구 근거 → P1 사각 받침·지형·도로·보도·건물 매스 → P2 현장 사진 근거의 외관·거리 시설 보정 → P3 검증된 대표 건물·출구·시장만 Blender 상세화 → P4 사람·차량·주문·배달·절기·오행·광고 overlay`로 고정한다. P4는 사실 기반 배경을 가리거나 앞 단계의 결손을 숨기지 않는다.
+- 사용자가 배달 중 모은 현장 사진은 자동 위치 정본이나 실제 외관 완성 증거가 아니라 `FieldObservationCandidate`로 수집한다. 촬영 시각·대상·방향·공개 장소의 대략 위치·원본 hash·촬영자 권리·개인정보 검토·적용 대상을 기록하고, 공공자료의 건물·도로·주소 식별자와 검토 결속된 사진만 표현 보정에 사용한다.
+- 촬영은 운행 중이 아니라 안전하게 정차한 뒤 공공장소에서만 한다. 주문 화면·고객 상세 주소·사유지 내부를 촬영하지 않고, 얼굴·차량번호·세대번호·공동현관 정보처럼 불필요한 개인정보는 수집 또는 배포하지 않는다. 안전하거나 권리·위치가 명확하지 않은 사진은 비공개 검토 후보로 남기며 디오라마에 반영하지 않는다.
+- 네 역할 모바일 앱과 운영 화면은 현행 검증 결과를 보존하되 당분간 유지·회귀·현장 자료 확인에 필요한 최소 보완만 한다. 결제·배포·현실 운영 확대는 별도 재승인 전까지 디오라마 우선 작업을 앞서지 않는다.
+- r19는 우선순위와 증거 순환을 확정한 기획 판본이다. 현행 경계 수집, 사진 수집, Blender 제작, Unity Scene·Prefab 저장, Play Mode·Game View, E 승격, commit·push를 수행하거나 승인한 판본이 아니다.
 
 ## 확정
 
@@ -155,8 +178,8 @@
 
 ## 검증 상한
 
-r18의 현재 최대 구현 증거는 여전히 `HistoricalBoundaryCandidateBatchStoredAndVerified / G2aAddressParcelCandidateLedgerValidated / G3aCrosswalkPointCandidateLedgerValidated / G3bIntersectionPointCandidateLedgerStoredAndVerified / G3cWalkNetworkCandidateLedgerStoredAndVerified / G4aCorrectedPrivateBusinessCandidateLedgerStoredAndVerified / G6UnityBaseViewGameViewVerified / CurrentPublicationBlocked`다. r18은 `EvidenceTerminologyMigrated / StageOutputContractMachineValidated / LegacyPathsCompatibilityOnly / CommonEvidenceRegressionsMostlyRestored`를 추가했을 뿐 자료·Unity 구현 증거를 승격하지 않는다. 현행 행정동 경계, 확정 주소·필지·출입구, 현재 이동 graph·정지선·신호 현시, 공개 사업장 결속, 실제 통행, 운영 주문·배차와 생활상 Game View는 증명하지 않는다.
+r19의 현재 최대 구현 증거는 여전히 `HistoricalBoundaryCandidateBatchStoredAndVerified / G2aAddressParcelCandidateLedgerValidated / G3aCrosswalkPointCandidateLedgerValidated / G3bIntersectionPointCandidateLedgerStoredAndVerified / G3cWalkNetworkCandidateLedgerStoredAndVerified / G4aCorrectedPrivateBusinessCandidateLedgerStoredAndVerified / G6UnityBaseViewGameViewVerified / CurrentPublicationBlocked`다. r18의 `EvidenceTerminologyMigrated / StageOutputContractMachineValidated / LegacyPathsCompatibilityOnly / CommonEvidenceRegressionsMostlyRestored`를 보존했고 r19는 우선순위와 현장 관찰 증거 순환만 더했을 뿐 자료·Unity 구현 증거를 승격하지 않는다. 현행 행정동 경계, 확정 주소·필지·출입구, 현재 이동 graph·정지선·신호 현시, 공개 사업장 결속, 실제 통행, 운영 주문·배차와 생활상 Game View는 증명하지 않는다.
 
 ## 다음 질문 하나
 
-고정된 1단계 `TL_SCCO_GEMD`에 대해 로그인 없는 공식 다운로드 가능 여부를 확인하고, 가능할 때만 실제 원본 수집으로 진행할 것인가? 추천은 `진행`이다.
+첫 현장 촬영 묶음은 사가정역 1~4번 출구·주요 교차로·대로변·사가정시장 입구처럼 공개 장소의 방향 기준점을 먼저 모으고, 주거 골목·개별 건물 출입구는 개인정보·안전 기준을 적용한 두 번째 묶음으로 넘길 것인가? 추천은 `공개 장소 방향 기준점부터 진행`이다. 현행 `TL_SCCO_GEMD` 수집 관문은 이 촬영과 별개로 계속 열린 상태를 유지한다.

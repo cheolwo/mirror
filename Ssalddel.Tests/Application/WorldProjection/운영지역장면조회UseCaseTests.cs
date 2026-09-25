@@ -186,6 +186,17 @@ public sealed class 운영지역장면조회UseCaseTests
         Assert.Equal("semantic-place:area:food-delivery-route", active.SemanticPlaceStableId);
         Assert.False(active.LocalStorageAllowed);
         Assert.False(active.ReplayAllowed);
+        // 업무 갱신이 없어도 cursor 뒤 조회에서 표시 유효기간은 재확인한다.
+        var delta = await useCase.조회Async(Area, v2.Cursor,
+            OperationalWorldScenePolicy.SchemaVersionV2, default);
+        var refreshed = Assert.Single(delta.Items, item => item.ItemKind == OperationalWorldSceneItemKinds.ActiveLifecycle);
+        Assert.False(delta.IsFullSnapshot);
+        Assert.Equal(active.Revision, refreshed.Revision);
+        Assert.Equal(active.PublishedAtUtc, refreshed.PublishedAtUtc);
+        Assert.True(refreshed.ExpiresAtUtc >= active.ExpiresAtUtc);
+        var v1Delta = await useCase.조회Async(Area, v2.Cursor,
+            OperationalWorldScenePolicy.SchemaVersionV1, default);
+        Assert.DoesNotContain(v1Delta.Items, item => item.ItemKind == OperationalWorldSceneItemKinds.ActiveLifecycle);
     }
 
     [Fact]
@@ -261,6 +272,7 @@ public sealed class 운영지역장면조회UseCaseTests
 
     private sealed class ActiveFoodReader : I진행중음식배달WorldProjectionReader
     {
+        private readonly DateTime occurredAt = DateTime.UtcNow.AddMinutes(-1);
         public Task<OperationalWorldSceneItem[]> 지역목록Async(
             string areaStableId,
             DateTime utcNow,
@@ -278,8 +290,8 @@ public sealed class 운영지역장면조회UseCaseTests
                     ActivityCode = "픽업완료",
                     LifecycleStageCode = "픽업완료",
                     Revision = 5,
-                    OccurredAtUtc = utcNow.AddSeconds(-1),
-                    PublishedAtUtc = utcNow,
+                    OccurredAtUtc = occurredAt,
+                    PublishedAtUtc = occurredAt,
                     ExpiresAtUtc = utcNow.AddMinutes(2),
                     SemanticPlaceStableId = "semantic-place:area:food-delivery-route",
                     SourceKindCode = OperationalWorldSceneSourceKinds.OperationalProjection
