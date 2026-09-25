@@ -1,6 +1,6 @@
 {
   "schemaVersion": "ssalddel.station-diorama-evidence-rule-catalog.v3",
-  "revision": "station-diorama-evidence-rules.r4",
+  "revision": "station-diorama-evidence-rules.r5",
   "policyRef": "docs/Architecture/역세권디오라마증거진화체계.md",
   "planRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/diorama-evidence-evolution.implementation.r23.md",
   "administrativeAreaPlanRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/current-boundary-building-entrance-collection-gate.decision.r16.md",
@@ -301,6 +301,30 @@
       ]
     },
     {
+      "sourceReceiptStableId": "source-receipt:station-diorama:sagajeong:overture-buildings.20260819.r1",
+      "subjectStationStableIds": ["station:kr:kric:s1107:0722"],
+      "provider": "Overture Maps Foundation",
+      "datasetId": "overture-buildings-2026-08-19.0-sagajeong",
+      "referenceDate": "2026-08-19",
+      "collectionDate": "2026-09-21",
+      "collectedAtUtc": "2026-09-21T01:18:39.804683Z",
+      "officialLinks": [
+        "https://docs.overturemaps.org/getting-data/",
+        "https://docs.overturemaps.org/attribution/"
+      ],
+      "rawSha256": "96DC6451392391A9A31BB34AE17F3CB2501E1967EAF8155ECD74CC0FBAA560F9",
+      "rightsStatus": "ReferenceOnly",
+      "repositoryEvidenceRefs": [
+        "eng/neighborhood/build-sagajeong-overture-building-overlay.py",
+        "eng/neighborhood/README.md"
+      ],
+      "limitations": [
+        "Buildings 테마는 ODbL이며 Overture와 개별 원천의 귀속을 유지한다.",
+        "2,969개 중 기존 r3와 겹치는 602개와 경계 밖·극소 120개를 제외한 2,247개만 로컬 표현 보조 후보로 사용한다.",
+        "높이·용도·주소·출입구·현재 존재·통행·Collider·NavMesh·gameplay 권위를 증명하지 않으며 공개 배포 승인이 아니다."
+      ]
+    },
+    {
       "sourceReceiptStableId": "source-receipt:station-diorama:sagajeong:mois-road-address-building-db.202608",
       "subjectStationStableIds": ["station:kr:kric:s1107:0722"],
       "provider": "행정안전부 주소기반산업지원서비스",
@@ -558,7 +582,7 @@
       "title": "보충 공간층은 원천별 시각·좌표계·권위를 보존한다",
       "statement": "역세권의 보행·접근성·녹지·교통 시설·식생 자료를 조합할 때 각 원천의 기준일·hash·좌표계·결손을 별도로 보존하고 정규화 좌표만으로 현재 통행·Runtime·gameplay 권위를 만들지 않는다.",
       "observedStationStableIds": ["station:kr:kric:s1107:0722"],
-      "sourceReceiptRefs": ["source-receipt:station-diorama:sagajeong:spatial-supplement.r1"],
+      "sourceReceiptRefs": ["source-receipt:station-diorama:sagajeong:spatial-supplement.r1", "source-receipt:station-diorama:sagajeong:overture-buildings.20260819.r1"],
       "repositoryEvidenceRefs": ["eng/world-seedbeds/station-landmarks/sagajeong-spatial-supplement.collection.r1.json", "docs/AI/Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-spatial-supplement.implementation.r27.md"],
       "evidenceStageImpacts": ["E1", "E2", "E3", "E4", "E5"],
       "counterexamplesOrExceptions": ["사람이 검토한 같은 판본의 파생 자료도 원천별 계보와 미해소 결손을 제거하지 않는다."],
@@ -582,7 +606,8 @@
         "source-receipt:station-diorama:sagajeong:spatial-supplement.r1",
         "source-receipt:station-diorama:sagajeong:mois-road-address-building-db.202608",
         "source-receipt:station-diorama:sagajeong:vworld-gis-building-al-d010.20260809",
-        "source-receipt:station-diorama:sagajeong:continuous-parcel-metadata.r1"
+        "source-receipt:station-diorama:sagajeong:continuous-parcel-metadata.r1",
+        "source-receipt:station-diorama:sagajeong:overture-buildings.20260819.r1"
       ],
       "observedRuleRefs": [
         "diorama-rule:station-window-is-view-not-authority.v1",

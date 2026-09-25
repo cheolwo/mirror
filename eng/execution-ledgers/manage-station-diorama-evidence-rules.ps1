@@ -51,7 +51,7 @@ Require (Test-Path -LiteralPath $catalogFile -PathType Leaf) "CatalogMissing:$Ca
 $catalog = Get-Content -LiteralPath $catalogFile -Raw -Encoding UTF8 | ConvertFrom-Json
 
 Require ([string] $catalog.schemaVersion -ceq 'ssalddel.station-diorama-evidence-rule-catalog.v3') 'SchemaVersion'
-Require ([string] $catalog.revision -ceq 'station-diorama-evidence-rules.r4') 'Revision'
+Require ([string] $catalog.revision -ceq 'station-diorama-evidence-rules.r5') 'Revision'
 Require-RepositoryRefs @($catalog.policyRef, $catalog.planRef, $catalog.administrativeAreaPlanRef, $catalog.evidenceStageCatalogRef) 'Catalog'
 
 $policy = $catalog.reviewPolicy

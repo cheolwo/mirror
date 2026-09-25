@@ -114,9 +114,19 @@ pwsh -NoProfile -File eng/tests/sagajeong-spatial-presentation.ps1
 
 `SSALDDEL_UNITY_ROOT` 대신 `-BaseMapPath`를 명시해도 된다. 저장소에 특정 사용자 Unity 절대 경로를 고정하지 않는다.
 
+브이월드 원본이 로컬에 없을 때 빈 공간을 임의 건물로 만들지 않고, Overture Buildings의 동결 공개 윤곽을 **로컬 검토용 보조 레이어**로 만들 수 있다. Overture Buildings 테마의 ODbL 계보와 release·원본 hash를 고정하고, 기존 r3 건물과 의미 있게 겹치는 윤곽은 제외한다. 남은 윤곽은 용도·주소·실측 높이를 만들지 않으며 `SymbolicFallback4m`, `LocalPrivateReview`, `distributionApproved=false`로만 기록한다.
+
+```powershell
+$env:PYTHONPATH = 'artifacts/local/python-packages/overture;eng/neighborhood'
+python eng/neighborhood/build-sagajeong-overture-building-overlay.py
+```
+
+동결 입력 `2026-08-19.0`의 2,969개 중 기존 r3와 겹치는 602개와 경계 밖·극소 120개를 제외해 2,247개를 만든다. 결과 `artifacts/local/sagajeong-spatial-presentation/overture-private-review.json`은 Git 제외 자료이며 Unity Editor 메뉴 `사가정 공개 건물 보조 레이어 연결`을 사람이 명시적으로 실행한 경우에만 `EditorPrefs`로 연결된다. Scene·Prefab·빌드·서버·DB에는 경로가 저장되지 않는다.
+
 기본 결과는 Git 제외 경로다.
 
 - `artifacts/local/sagajeong-spatial-presentation/private-review.json`
+- `artifacts/local/sagajeong-spatial-presentation/overture-private-review.json`
 - `artifacts/local/sagajeong-spatial-presentation/coverage-audit.json`
 - `artifacts/local/sagajeong-spatial-presentation/coverage-audit.html`
 

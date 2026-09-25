@@ -47,7 +47,7 @@ Require (Test-Path -LiteralPath $architecturePath -PathType Leaf) 'ArchitectureM
 Require (Test-Path -LiteralPath $planPath -PathType Leaf) 'PlanMissing'
 
 $validation = & $managerPath -Mode Validate
-Require ([string] $validation -ceq 'StationDioramaEvidenceRulesValid:Revision=station-diorama-evidence-rules.r4;Sources=10;Rules=12;Candidates=12;Provisional=0;Accepted=0;Stations=3;SpatialChecks=9;Collected=2;Missing=1;Unassessed=6;AdminGates=1;AdminRequirements=3;AdminCollected=0') 'ValidationSummary'
+Require ([string] $validation -ceq 'StationDioramaEvidenceRulesValid:Revision=station-diorama-evidence-rules.r5;Sources=11;Rules=12;Candidates=12;Provisional=0;Accepted=0;Stations=3;SpatialChecks=9;Collected=2;Missing=1;Unassessed=6;AdminGates=1;AdminRequirements=3;AdminCollected=0') 'ValidationSummary'
 
 Require (@($catalog.rules).Count -eq 12) 'CandidateCount'
 Require (@($catalog.rules | Where-Object status -ne 'Candidate').Count -eq 0) 'PrematureRulePromotion'
@@ -91,7 +91,8 @@ Require (@($administrativeAreaRequirements | Where-Object { $null -ne $_.rawSha2
 $requiredSourceIds = @(
     'source-receipt:station-diorama:sagajeong:mois-road-address-building-db.202608',
     'source-receipt:station-diorama:sagajeong:vworld-gis-building-al-d010.20260809',
-    'source-receipt:station-diorama:sagajeong:continuous-parcel-metadata.r1'
+    'source-receipt:station-diorama:sagajeong:continuous-parcel-metadata.r1',
+    'source-receipt:station-diorama:sagajeong:overture-buildings.20260819.r1'
 )
 foreach ($sourceId in $requiredSourceIds) {
     Require (@($catalog.sourceReceipts | Where-Object sourceReceiptStableId -ceq $sourceId).Count -eq 1) "SpatialSourceReceipt:$sourceId"
