@@ -4,7 +4,8 @@ using Ssalddel.Domain.PublicData;
 
 namespace Ssalddel.Infrastructure.Persistence.PublicData;
 
-internal sealed class 외부데이터수집RunConfiguration : IEntityTypeConfiguration<외부데이터수집Run>
+internal sealed class 외부데이터수집RunConfiguration
+    : IEntityTypeConfiguration<외부데이터수집Run>, IDedicatedDbContextConfiguration
 {
     public void Configure(EntityTypeBuilder<외부데이터수집Run> builder)
     {
@@ -23,7 +24,8 @@ internal sealed class 외부데이터수집RunConfiguration : IEntityTypeConfigu
     }
 }
 
-internal sealed class 외부데이터RawSnapshotConfiguration : IEntityTypeConfiguration<외부데이터RawSnapshot>
+internal sealed class 외부데이터RawSnapshotConfiguration
+    : IEntityTypeConfiguration<외부데이터RawSnapshot>, IDedicatedDbContextConfiguration
 {
     public void Configure(EntityTypeBuilder<외부데이터RawSnapshot> builder)
     {
@@ -46,7 +48,8 @@ internal sealed class 외부데이터RawSnapshotConfiguration : IEntityTypeConfi
     }
 }
 
-internal sealed class 외부데이터정규화RecordConfiguration : IEntityTypeConfiguration<외부데이터정규화Record>
+internal sealed class 외부데이터정규화RecordConfiguration
+    : IEntityTypeConfiguration<외부데이터정규화Record>, IDedicatedDbContextConfiguration
 {
     public void Configure(EntityTypeBuilder<외부데이터정규화Record> builder)
     {
@@ -82,7 +85,8 @@ internal sealed class 외부데이터정규화RecordConfiguration : IEntityTypeC
     }
 }
 
-internal sealed class 외부지역CodeMappingConfiguration : IEntityTypeConfiguration<외부지역CodeMapping>
+internal sealed class 외부지역CodeMappingConfiguration
+    : IEntityTypeConfiguration<외부지역CodeMapping>, IDedicatedDbContextConfiguration
 {
     public void Configure(EntityTypeBuilder<외부지역CodeMapping> builder)
     {

@@ -10,11 +10,13 @@ flowchart TD
     MySQL["MySQL · 하나의 물리 DB"]
     Main["SsalddelContext<br/>Identity·커뮤니티·업무 실행"]
     Agri["AgriculturalFisheriesDbContext<br/>공공 가격 수집 archive"]
+    Public["PublicDataIngestionDbContext<br/>공공자료 수집·정규화·지역/건축물 근거"]
     Market["TraditionalMarketDbContext<br/>전통시장·생활권 협의"]
     Mongo["MongoDB<br/>공동 원장·다이어그램"]
 
     MySQL --> Main
     MySQL --> Agri
+    MySQL --> Public
     MySQL --> Market
     Main -. "외부 식별자·Event/Outbox" .-> Mongo
 ```
@@ -23,11 +25,18 @@ flowchart TD
 | --- | --- | --- |
 | `SsalddelContext` | Identity, 커뮤니티, 권한·조회·업무 실행과 안정 투영 | `__EFMigrationsHistory` |
 | `AgriculturalFisheriesDbContext` | KAMIS·USDA 수집 실행, 관측값과 HS 매핑 | `__EFMigrationsHistory_AgriculturalFisheries` |
+| `PublicDataIngestionDbContext` | 범용 공공자료 수집·정규화와 지역·건축물 근거 | `__EFMigrationsHistory_PublicDataIngestion` |
 | `TraditionalMarketDbContext` | 전통시장 원본, 거점과 생활권 협의 | `__EFMigrationsHistory_TraditionalMarkets` |
 | MongoDB | 공동 원장, 원장 블록, 다이어그램 배치와 표시 옵션 | EF migration 대상 아님 |
 
-세 EF Context는 같은 MySQL 연결을 사용하지만 모델과 migration history를 독립적으로 소유한다.
+네 EF Context는 같은 MySQL 연결을 사용하지만 모델과 migration history를 독립적으로 소유한다.
 `IDedicatedDbContextConfiguration`이 붙은 구성은 중앙 Context의 assembly scan에서 제외한다.
+
+전체 테이블별 소유 Context와 대응 Entity는
+[관계형 테이블 소유권 대장](../../../eng/execution-ledgers/relational-table-ownership.json)에 기록한다.
+이 대장은 `eng/Ssalddel.DatabaseOwnership`으로 EF Core 런타임 모델에서 다시 생성하며,
+테이블 삭제·병합 후보를 뜻하지 않는다. 서로 다른 Context가 같은 테이블을 소유하면 생성기와
+`SsalddelContextModelIsolationTests` 검사가 실패해야 한다.
 
 ## 0.0 migration baseline
 
@@ -38,6 +47,7 @@ flowchart TD
 | --- | --- |
 | `SsalddelContext` | `20260723113440_AddCommunityPostEmailNotificationOutbox` |
 | `AgriculturalFisheriesDbContext` | `20260724053706_AddChinaImportedFoodManufacturerRegions` |
+| `PublicDataIngestionDbContext` | `20260808131958_AddExternalPublicDataIngestionFoundation` |
 | `TraditionalMarketDbContext` | `20260714151153_AddTraditionalMarketNeighborhoodCouncil` |
 
 기존 DB의 더 오래된 history 행은 삭제할 필요가 없다. EF는 assembly에 남은 baseline ID와 이후 migration만 비교한다.
@@ -85,7 +95,10 @@ dotnet test Ssalddel.Tests/Ssalddel.Tests.csproj --no-restore --filter "FullyQua
 
 dotnet ef migrations has-pending-model-changes --context SsalddelContext --project Ssalddel/Ssalddel.csproj --startup-project Ssalddel/Ssalddel.csproj --no-build
 dotnet ef migrations has-pending-model-changes --context AgriculturalFisheriesDbContext --project Ssalddel.Infrastructure/Ssalddel.Infrastructure.csproj --startup-project Ssalddel/Ssalddel.csproj --no-build
+dotnet ef migrations has-pending-model-changes --context PublicDataIngestionDbContext --project Ssalddel.Infrastructure/Ssalddel.Infrastructure.csproj --startup-project Ssalddel/Ssalddel.csproj --no-build
 dotnet ef migrations has-pending-model-changes --context TraditionalMarketDbContext --project Ssalddel.Infrastructure/Ssalddel.Infrastructure.csproj --startup-project Ssalddel/Ssalddel.csproj --no-build
+
+dotnet run --project eng/Ssalddel.DatabaseOwnership/Ssalddel.DatabaseOwnership.csproj -- --output eng/execution-ledgers/relational-table-ownership.json
 ```
 
 모델 테스트는 전용 Context 구성의 소유권, Context 간 테이블 중복과 대표 aggregate의 FK·삭제 정책을 검사한다.

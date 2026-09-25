@@ -4,7 +4,8 @@ using Ssalddel.Domain.PublicData.Korea;
 
 namespace Ssalddel.Infrastructure.Persistence.PublicData;
 
-internal sealed class 지역사업장표시ClaimConfiguration : IEntityTypeConfiguration<지역사업장표시Claim>
+internal sealed class 지역사업장표시ClaimConfiguration
+    : IEntityTypeConfiguration<지역사업장표시Claim>, IDedicatedDbContextConfiguration
 {
     public void Configure(EntityTypeBuilder<지역사업장표시Claim> builder)
     {
@@ -30,7 +31,8 @@ internal sealed class 지역사업장표시ClaimConfiguration : IEntityTypeConfi
     }
 }
 
-internal sealed class 지역디오라마후원CampaignConfiguration : IEntityTypeConfiguration<지역디오라마후원Campaign>
+internal sealed class 지역디오라마후원CampaignConfiguration
+    : IEntityTypeConfiguration<지역디오라마후원Campaign>, IDedicatedDbContextConfiguration
 {
     public void Configure(EntityTypeBuilder<지역디오라마후원Campaign> builder)
     {

@@ -5,7 +5,7 @@ using Ssalddel.Domain.PublicData.Korea;
 namespace Ssalddel.Infrastructure.Persistence.PublicData;
 
 internal sealed class 건축물용도CategoryDefinitionConfiguration
-    : IEntityTypeConfiguration<건축물용도CategoryDefinition>
+    : IEntityTypeConfiguration<건축물용도CategoryDefinition>, IDedicatedDbContextConfiguration
 {
     public void Configure(EntityTypeBuilder<건축물용도CategoryDefinition> builder)
     {
@@ -55,7 +55,7 @@ internal sealed class 건축물용도CategoryDefinitionConfiguration
 }
 
 internal sealed class 건축물대장표제부RecordConfiguration
-    : IEntityTypeConfiguration<건축물대장표제부Record>
+    : IEntityTypeConfiguration<건축물대장표제부Record>, IDedicatedDbContextConfiguration
 {
     public void Configure(EntityTypeBuilder<건축물대장표제부Record> builder)
     {
@@ -88,7 +88,7 @@ internal sealed class 건축물대장표제부RecordConfiguration
 }
 
 internal sealed class 공개인허가사업장RecordConfiguration
-    : IEntityTypeConfiguration<공개인허가사업장Record>
+    : IEntityTypeConfiguration<공개인허가사업장Record>, IDedicatedDbContextConfiguration
 {
     public void Configure(EntityTypeBuilder<공개인허가사업장Record> builder)
     {
@@ -127,7 +127,7 @@ internal sealed class 공개인허가사업장RecordConfiguration
 }
 
 internal sealed class 공개사업장건축물AssignmentConfiguration
-    : IEntityTypeConfiguration<공개사업장건축물Assignment>
+    : IEntityTypeConfiguration<공개사업장건축물Assignment>, IDedicatedDbContextConfiguration
 {
     public void Configure(EntityTypeBuilder<공개사업장건축물Assignment> builder)
     {
@@ -151,7 +151,7 @@ internal sealed class 공개사업장건축물AssignmentConfiguration
 }
 
 internal sealed class 건축물공개사업장AggregateConfiguration
-    : IEntityTypeConfiguration<건축물공개사업장Aggregate>
+    : IEntityTypeConfiguration<건축물공개사업장Aggregate>, IDedicatedDbContextConfiguration
 {
     public void Configure(EntityTypeBuilder<건축물공개사업장Aggregate> builder)
     {
@@ -175,7 +175,7 @@ internal sealed class 건축물공개사업장AggregateConfiguration
 }
 
 internal sealed class 건축물형태ProfileConfiguration
-    : IEntityTypeConfiguration<건축물형태Profile>
+    : IEntityTypeConfiguration<건축물형태Profile>, IDedicatedDbContextConfiguration
 {
     public void Configure(EntityTypeBuilder<건축물형태Profile> builder)
     {
@@ -210,7 +210,7 @@ internal sealed class 건축물형태ProfileConfiguration
 }
 
 internal sealed class 건축물시각구성계획Configuration
-    : IEntityTypeConfiguration<건축물시각구성계획>
+    : IEntityTypeConfiguration<건축물시각구성계획>, IDedicatedDbContextConfiguration
 {
     public void Configure(EntityTypeBuilder<건축물시각구성계획> builder)
     {
@@ -236,7 +236,7 @@ internal sealed class 건축물시각구성계획Configuration
 }
 
 internal sealed class 건축물행정구역AssignmentConfiguration
-    : IEntityTypeConfiguration<건축물행정구역Assignment>
+    : IEntityTypeConfiguration<건축물행정구역Assignment>, IDedicatedDbContextConfiguration
 {
     public void Configure(EntityTypeBuilder<건축물행정구역Assignment> builder)
     {
@@ -258,7 +258,7 @@ internal sealed class 건축물행정구역AssignmentConfiguration
 }
 
 internal sealed class 건축물용도CategoryAssignmentConfiguration
-    : IEntityTypeConfiguration<건축물용도CategoryAssignment>
+    : IEntityTypeConfiguration<건축물용도CategoryAssignment>, IDedicatedDbContextConfiguration
 {
     public void Configure(EntityTypeBuilder<건축물용도CategoryAssignment> builder)
     {
@@ -284,7 +284,7 @@ internal sealed class 건축물용도CategoryAssignmentConfiguration
 }
 
 internal sealed class 행정동건축물CategoryAggregateConfiguration
-    : IEntityTypeConfiguration<행정동건축물CategoryAggregate>
+    : IEntityTypeConfiguration<행정동건축물CategoryAggregate>, IDedicatedDbContextConfiguration
 {
     public void Configure(EntityTypeBuilder<행정동건축물CategoryAggregate> builder)
     {

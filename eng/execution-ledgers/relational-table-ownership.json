@@ -1,0 +1,1462 @@
+{
+  "schemaVersion": 1,
+  "authority": "EF Core runtime model",
+  "physicalDatabasePolicy": "\uD558\uB098\uC758 MySQL \uB370\uC774\uD130\uBCA0\uC774\uC2A4, Context\uBCC4 \uB3C5\uB9BD migration history",
+  "deletionOrMergeIncluded": false,
+  "contextCount": 4,
+  "modeledTableCount": 236,
+  "migrationHistoryTableCount": 4,
+  "physicalTableCountExpected": 240,
+  "contexts": [
+    {
+      "context": "SsalddelContext",
+      "responsibility": "Identity\u00B7\uCEE4\uBBA4\uB2C8\uD2F0\u00B7\uC5C5\uBB34 \uC2E4\uD589\u00B7\uC548\uC815 \uD22C\uC601",
+      "migrationHistoryTable": "__EFMigrationsHistory",
+      "tableCount": 178,
+      "tables": [
+        {
+          "table": "AspNetRoleClaims",
+          "entityTypes": [
+            "Microsoft.AspNetCore.Identity.IdentityRoleClaim\u00601[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+          ]
+        },
+        {
+          "table": "AspNetRoles",
+          "entityTypes": [
+            "Microsoft.AspNetCore.Identity.IdentityRole"
+          ]
+        },
+        {
+          "table": "AspNetUserClaims",
+          "entityTypes": [
+            "Microsoft.AspNetCore.Identity.IdentityUserClaim\u00601[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+          ]
+        },
+        {
+          "table": "AspNetUserLogins",
+          "entityTypes": [
+            "Microsoft.AspNetCore.Identity.IdentityUserLogin\u00601[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+          ]
+        },
+        {
+          "table": "AspNetUserRoles",
+          "entityTypes": [
+            "Microsoft.AspNetCore.Identity.IdentityUserRole\u00601[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+          ]
+        },
+        {
+          "table": "AspNetUserTokens",
+          "entityTypes": [
+            "Microsoft.AspNetCore.Identity.IdentityUserToken\u00601[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+          ]
+        },
+        {
+          "table": "AspNetUsers",
+          "entityTypes": [
+            "\uC0B4\uB730.Data.ApplicationUser"
+          ]
+        },
+        {
+          "table": "Command_\uC54C\uB9BC_Outbox",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC124\uC815.Command\uC54C\uB9BCOutbox"
+          ]
+        },
+        {
+          "table": "app_context_image_assets",
+          "entityTypes": [
+            "Ssalddel.Domain.Content.\uC571\uBB38\uB9E5\uC774\uBBF8\uC9C0\uC790\uC0B0"
+          ]
+        },
+        {
+          "table": "community_activity_detail_entitlements",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.\uCEE4\uBBA4\uB2C8\uD2F0\uD65C\uB3D9\uC0C1\uC138\uC5F4\uB78C\uAD8C"
+          ]
+        },
+        {
+          "table": "community_activity_detail_purchase_status_history",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.\uCEE4\uBBA4\uB2C8\uD2F0\uD65C\uB3D9\uC0C1\uC138\uAD6C\uB9E4\uC0C1\uD0DC\uC774\uB825"
+          ]
+        },
+        {
+          "table": "community_activity_detail_purchases",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.\uCEE4\uBBA4\uB2C8\uD2F0\uD65C\uB3D9\uC0C1\uC138\uAD6C\uB9E4"
+          ]
+        },
+        {
+          "table": "community_activity_paid_details",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.\uCEE4\uBBA4\uB2C8\uD2F0\uD65C\uB3D9\uC720\uB8CC\uC0C1\uC138"
+          ]
+        },
+        {
+          "table": "community_activity_processing_receipts",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.\uCEE4\uBBA4\uB2C8\uD2F0\uD65C\uB3D9\uCC98\uB9AC\uAE30\uB85D"
+          ]
+        },
+        {
+          "table": "community_activity_public_projections",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.\uCEE4\uBBA4\uB2C8\uD2F0\uD65C\uB3D9\uACF5\uAC1CProjection"
+          ]
+        },
+        {
+          "table": "community_keyword_notification_deliveries",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.CommunityKeywordNotificationDelivery"
+          ]
+        },
+        {
+          "table": "community_keyword_notifications",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.CommunityKeywordNotification"
+          ]
+        },
+        {
+          "table": "community_keyword_subscriptions",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.CommunityKeywordSubscription"
+          ]
+        },
+        {
+          "table": "community_ledger_state_events",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.\uCEE4\uBBA4\uB2C8\uD2F0\uC6D0\uC7A5\uC0C1\uD0DC\uC774\uBCA4\uD2B8"
+          ]
+        },
+        {
+          "table": "community_post_email_notification_outbox",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.CommunityPostEmailNotificationOutbox"
+          ]
+        },
+        {
+          "table": "delivery_operating_territories",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uBC30\uB2EC\uAD8C.\uBC30\uB2EC\uC6B4\uC601\uAD8C\uC5ED"
+          ]
+        },
+        {
+          "table": "delivery_operating_territory_admin_dongs",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uBC30\uB2EC\uAD8C.\uBC30\uB2EC\uC6B4\uC601\uAD8C\uC5ED\uD589\uC815\uB3D9Membership"
+          ]
+        },
+        {
+          "table": "delivery_operating_territory_change_outbox",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uBC30\uB2EC\uAD8C.\uBC30\uB2EC\uC6B4\uC601\uAD8C\uC5ED\uBCC0\uACBDOutbox"
+          ]
+        },
+        {
+          "table": "delivery_operating_territory_command_receipts",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uBC30\uB2EC\uAD8C.\uBC30\uB2EC\uC6B4\uC601\uAD8C\uC5EDCommandReceipt"
+          ]
+        },
+        {
+          "table": "driver_location_history",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uAE30\uC0AC\uC704\uCE58\uAE30\uB85D"
+          ]
+        },
+        {
+          "table": "driver_shifts",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uAE30\uC0AC\uADFC\uBB34"
+          ]
+        },
+        {
+          "table": "education_course_applications",
+          "entityTypes": [
+            "Ssalddel.Domain.Education.\uAD50\uC721\uACFC\uC815\uC2E0\uCCAD"
+          ]
+        },
+        {
+          "table": "education_course_attendances",
+          "entityTypes": [
+            "Ssalddel.Domain.Education.\uAD50\uC721\uACFC\uC815\uCC38\uC11D\uAE30\uB85D"
+          ]
+        },
+        {
+          "table": "education_course_enrollments",
+          "entityTypes": [
+            "Ssalddel.Domain.Education.\uAD50\uC721\uACFC\uC815\uB4F1\uB85D"
+          ]
+        },
+        {
+          "table": "education_course_forms",
+          "entityTypes": [
+            "Ssalddel.Domain.Education.\uAD50\uC721\uACFC\uC815\uC591\uC2DD"
+          ]
+        },
+        {
+          "table": "education_course_subjects",
+          "entityTypes": [
+            "Ssalddel.Domain.Education.\uAD50\uC721\uACFC\uC815\uACFC\uBAA9"
+          ]
+        },
+        {
+          "table": "education_course_submissions",
+          "entityTypes": [
+            "Ssalddel.Domain.Education.\uAD50\uC721\uACFC\uC815\uACFC\uC81C\uC81C\uCD9C"
+          ]
+        },
+        {
+          "table": "education_courses",
+          "entityTypes": [
+            "Ssalddel.Domain.Education.\uAD50\uC721\uACFC\uC815"
+          ]
+        },
+        {
+          "table": "hongik_hakdang_card_collection_items",
+          "entityTypes": [
+            "Ssalddel.Domain.Content.HongikHakdangCardCollectionItem"
+          ]
+        },
+        {
+          "table": "hongik_hakdang_card_collections",
+          "entityTypes": [
+            "Ssalddel.Domain.Content.HongikHakdangCardCollection"
+          ]
+        },
+        {
+          "table": "hongik_hakdang_card_delivery_outbox",
+          "entityTypes": [
+            "Ssalddel.Domain.Content.HongikHakdangCardDeliveryOutbox"
+          ]
+        },
+        {
+          "table": "hongik_hakdang_card_delivery_preferences",
+          "entityTypes": [
+            "Ssalddel.Domain.Content.HongikHakdangCardDeliveryPreference"
+          ]
+        },
+        {
+          "table": "hongik_hakdang_card_image_variants",
+          "entityTypes": [
+            "Ssalddel.Domain.Content.HongikHakdangCardImageVariant"
+          ]
+        },
+        {
+          "table": "hongik_hakdang_cards",
+          "entityTypes": [
+            "Ssalddel.Domain.Content.HongikHakdangCard"
+          ]
+        },
+        {
+          "table": "hongik_hakdang_daily_card_selections",
+          "entityTypes": [
+            "Ssalddel.Domain.Content.HongikHakdangDailyCardSelection"
+          ]
+        },
+        {
+          "table": "hr_employment_contracts",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC0AC\uC6A9\uC790.HrEmploymentContractRecord"
+          ]
+        },
+        {
+          "table": "hr_payroll_schedules",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC0AC\uC6A9\uC790.HrPayrollScheduleRecord"
+          ]
+        },
+        {
+          "table": "hr_role_applications",
+          "entityTypes": [
+            "Ssalddel.Domain.HumanResources.HrRoleApplicationRecord"
+          ]
+        },
+        {
+          "table": "hr_role_assignments",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC0AC\uC6A9\uC790.HrRoleAssignmentRecord"
+          ]
+        },
+        {
+          "table": "hs_code_catalog_versions",
+          "entityTypes": [
+            "Ssalddel.Domain.HsCodes.HsCodeCatalogVersion"
+          ]
+        },
+        {
+          "table": "hs_code_classification_cases",
+          "entityTypes": [
+            "Ssalddel.Domain.HsCodes.HsCodeClassificationCase"
+          ]
+        },
+        {
+          "table": "hs_code_entries",
+          "entityTypes": [
+            "Ssalddel.Domain.HsCodes.HsCodeEntry"
+          ]
+        },
+        {
+          "table": "hs_code_entry_risk_tags",
+          "entityTypes": [
+            "Ssalddel.Domain.HsCodes.HsCodeEntryRiskTag"
+          ]
+        },
+        {
+          "table": "hs_code_platform_agency_experiences",
+          "entityTypes": [
+            "Ssalddel.Domain.HsCodes.HsCodePlatformAgencyExperience"
+          ]
+        },
+        {
+          "table": "platform_community_board_requests",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.PlatformCommunityBoardRequest"
+          ]
+        },
+        {
+          "table": "platform_community_post_attachment_comments",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.PlatformCommunityPostAttachmentComment"
+          ]
+        },
+        {
+          "table": "platform_community_post_attachments",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.PlatformCommunityPostAttachment"
+          ]
+        },
+        {
+          "table": "platform_community_post_audio",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.PlatformCommunityPostAudio"
+          ]
+        },
+        {
+          "table": "platform_community_post_audio_access_logs",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.PlatformCommunityPostAudioAccessLog"
+          ]
+        },
+        {
+          "table": "platform_community_post_audio_segments",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.PlatformCommunityPostAudioSegment"
+          ]
+        },
+        {
+          "table": "platform_community_post_comments",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.PlatformCommunityPostComment"
+          ]
+        },
+        {
+          "table": "platform_community_post_keyword_scans",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.PlatformCommunityPostKeywordScan"
+          ]
+        },
+        {
+          "table": "platform_community_post_recommendations",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.PlatformCommunityPostRecommendation"
+          ]
+        },
+        {
+          "table": "platform_community_post_translations",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.PlatformCommunityPostTranslation"
+          ]
+        },
+        {
+          "table": "platform_community_posts",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.PlatformCommunityPost"
+          ]
+        },
+        {
+          "table": "platform_profit_return_policies",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC815\uC0B0.PlatformProfitReturnPolicyRecord"
+          ]
+        },
+        {
+          "table": "platform_profit_return_schedules",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC815\uC0B0.PlatformProfitReturnScheduleRecord"
+          ]
+        },
+        {
+          "table": "platform_revenue_entries",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC815\uC0B0.PlatformRevenueEntryRecord"
+          ]
+        },
+        {
+          "table": "regional_agricultural_map_region_boundaries",
+          "entityTypes": [
+            "Ssalddel.Domain.Geography.\uC9C0\uC5ED\uB18D\uC218\uC0B0Map\uD589\uC815\uAD6C\uC5EDBoundary"
+          ]
+        },
+        {
+          "table": "regional_agricultural_map_region_codes",
+          "entityTypes": [
+            "Ssalddel.Domain.Geography.\uC9C0\uC5ED\uB18D\uC218\uC0B0Map\uD589\uC815\uAD6C\uC5EDCodeAssignment"
+          ]
+        },
+        {
+          "table": "regional_agricultural_map_region_crosswalks",
+          "entityTypes": [
+            "Ssalddel.Domain.Geography.\uC9C0\uC5ED\uB18D\uC218\uC0B0Map\uC9C0\uC5EDCrosswalk"
+          ]
+        },
+        {
+          "table": "regional_agricultural_map_regions",
+          "entityTypes": [
+            "Ssalddel.Domain.Geography.\uC9C0\uC5ED\uB18D\uC218\uC0B0Map\uD589\uC815\uAD6C\uC5ED"
+          ]
+        },
+        {
+          "table": "regional_culture_image_prompts",
+          "entityTypes": [
+            "Ssalddel.Domain.Content.\uC9C0\uC5ED\uBB38\uD654\uC774\uBBF8\uC9C0Prompt"
+          ]
+        },
+        {
+          "table": "regional_culture_public_institution_sources",
+          "entityTypes": [
+            "Ssalddel.Domain.Content.\uC9C0\uC5ED\uBB38\uD654\uACF5\uACF5\uAE30\uAD00Source"
+          ]
+        },
+        {
+          "table": "shipper_requests",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD654\uC8FC.\uD654\uC8FC\uC6B4\uC1A1\uC758\uB8B0"
+          ]
+        },
+        {
+          "table": "ssalddel_mobile_push_installations",
+          "entityTypes": [
+            "Ssalddel.Domain.Notifications.SsalddelMobilePushInstallation"
+          ]
+        },
+        {
+          "table": "typecast_voice_models",
+          "entityTypes": [
+            "Ssalddel.Domain.Speech.Typecast\uC74C\uC131\uBAA8\uB378"
+          ]
+        },
+        {
+          "table": "typecast_voice_use_cases",
+          "entityTypes": [
+            "Ssalddel.Domain.Speech.Typecast\uC74C\uC131\uC6A9\uB3C4"
+          ]
+        },
+        {
+          "table": "typecast_voices",
+          "entityTypes": [
+            "Ssalddel.Domain.Speech.Typecast\uC74C\uC131"
+          ]
+        },
+        {
+          "table": "work_relationship_snapshots",
+          "entityTypes": [
+            "Ssalddel.Domain.HumanResources.WorkRelationshipSnapshotRecord"
+          ]
+        },
+        {
+          "table": "youtube_channel_videos",
+          "entityTypes": [
+            "Ssalddel.Domain.Content.YouTube\uCC44\uB110\uC601\uC0C1"
+          ]
+        },
+        {
+          "table": "youtube_video_product_candidates",
+          "entityTypes": [
+            "Ssalddel.Domain.Content.YouTube\uC601\uC0C1\uC0C1\uD488\uD6C4\uBCF4"
+          ]
+        },
+        {
+          "table": "youtube_watched_channels",
+          "entityTypes": [
+            "Ssalddel.Domain.Content.YouTube\uAC10\uC2DC\uCC44\uB110"
+          ]
+        },
+        {
+          "table": "\uAC10\uC0AC\uBA54\uC2DC\uC9C0",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD310\uB9E4.\uAC10\uC0AC\uBA54\uC2DC\uC9C0"
+          ]
+        },
+        {
+          "table": "\uACB0\uC81C",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uACB0\uC81C.\uACB0\uC81C"
+          ]
+        },
+        {
+          "table": "\uACB0\uC81C\uC2B9\uC778\uC644\uB8CC_Outbox",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC124\uC815.\uACB0\uC81C\uC2B9\uC778\uC644\uB8CCOutbox"
+          ]
+        },
+        {
+          "table": "\uACF5\uAE09\uACC4\uC57D\uC774\uC6A9\uB4F1\uB85D",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uACF5\uAE09\uC911\uAC1C.\uACF5\uAE09\uACC4\uC57D\uC774\uC6A9\uB4F1\uB85D"
+          ]
+        },
+        {
+          "table": "\uAD00\uB9AC\uACC4\uC815\uC804\uAE30",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC815\uC0B0.\uAD00\uB9AC\uACC4\uC815\uC804\uAE30"
+          ]
+        },
+        {
+          "table": "\uAD00\uC138\uC0AC\uD504\uB85C\uD544",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD1B5\uAD00.\uAD00\uC138\uC0AC\uD504\uB85C\uD544"
+          ]
+        },
+        {
+          "table": "\uAE30\uC0AC\uBC30\uCC28",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uBC30\uCC28.\uAE30\uC0AC\uBC30\uCC28"
+          ]
+        },
+        {
+          "table": "\uAE30\uC0AC\uC6B4\uC1A1\uB300\uAE08\uC9C0\uAE09\uC694\uCCAD",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uAE30\uC0AC\uC6B4\uC1A1\uB300\uAE08\uC9C0\uAE09\uC694\uCCAD"
+          ]
+        },
+        {
+          "table": "\uAE30\uC0AC\uC6D4\uC815\uC0B0",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uAE30\uC0AC\uC6D4\uC815\uC0B0"
+          ]
+        },
+        {
+          "table": "\uAE30\uC0AC\uC815\uC0B0\uACC4\uC88C",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uAE30\uC0AC\uC815\uC0B0\uACC4\uC88C"
+          ]
+        },
+        {
+          "table": "\uAE30\uC0AC\uC9C0\uAE09_Outbox",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC124\uC815.\uAE30\uC0AC\uC9C0\uAE09Outbox"
+          ]
+        },
+        {
+          "table": "\uAE30\uC0AC\uD654\uC8FC\uAD00\uACC4\uC9D1\uACC4",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD0D0\uC0C9\uCEA0\uD398\uC778.\uAE30\uC0AC\uD654\uC8FC\uAD00\uACC4\uC9D1\uACC4"
+          ]
+        },
+        {
+          "table": "\uB18D\uC5C5\uC13C\uC11C",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uB18D\uC5C5.\uB18D\uC5C5\uC13C\uC11C"
+          ]
+        },
+        {
+          "table": "\uB18D\uC5C5\uC13C\uC11C\uAD00\uCE21",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uB18D\uC5C5.\uB18D\uC5C5\uC13C\uC11C\uAD00\uCE21"
+          ]
+        },
+        {
+          "table": "\uB18D\uC7A5",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uB18D\uC5C5.\uB18D\uC7A5"
+          ]
+        },
+        {
+          "table": "\uB18D\uC7A5\uAD6C\uD68D",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uB18D\uC5C5.\uB18D\uC7A5\uAD6C\uD68D"
+          ]
+        },
+        {
+          "table": "\uB18D\uC7A5\uC791\uC5C5",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uB18D\uC5C5.\uB18D\uC7A5\uC791\uC5C5"
+          ]
+        },
+        {
+          "table": "\uB9C8\uD2B8\uACF5\uAC1C\uC0C1\uD488",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uB9C8\uD2B8.\uB9C8\uD2B8\uACF5\uAC1C\uC0C1\uD488"
+          ]
+        },
+        {
+          "table": "\uB9C8\uD2B8\uC8FC\uBB38",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uB9C8\uD2B8.\uB9C8\uD2B8\uC8FC\uBB38"
+          ]
+        },
+        {
+          "table": "\uB9C8\uD2B8\uC8FC\uBB38\uC0C1\uD488",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uB9C8\uD2B8.\uB9C8\uD2B8\uC8FC\uBB38\uC0C1\uD488"
+          ]
+        },
+        {
+          "table": "\uB9C8\uD2B8\uC8FC\uBB38\uC694\uCCAD",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uB9C8\uD2B8.\uB9C8\uD2B8\uC8FC\uBB38\uC694\uCCAD"
+          ]
+        },
+        {
+          "table": "\uBC30\uB2EC\uAE30\uC0AC",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uBC30\uB2EC\uAE30\uC0AC"
+          ]
+        },
+        {
+          "table": "\uBC30\uCC28\uACC4\uD68D\uC2E0\uCCAD",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uBC30\uCC28\uACC4\uD68D\uC2E0\uCCAD"
+          ]
+        },
+        {
+          "table": "\uBC30\uCC28\uCD94\uCC9C_\uC54C\uB9BC_Outbox",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC124\uC815.\uBC30\uCC28\uCD94\uCC9C\uC54C\uB9BCOutbox"
+          ]
+        },
+        {
+          "table": "\uBE44\uC815\uC0C1\uC6B4\uC1A1\uC0AC\uAC74",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC6B4\uC1A1.\uBE44\uC815\uC0C1\uC6B4\uC1A1\uC0AC\uAC74"
+          ]
+        },
+        {
+          "table": "\uC0AC\uC6A9\uC790_Command_\uAE30\uB2A5\uC124\uC815",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC124\uC815.\uC0AC\uC6A9\uC790Command\uAE30\uB2A5\uC124\uC815"
+          ]
+        },
+        {
+          "table": "\uC0AC\uC6A9\uC790_View_\uC124\uC815",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC124\uC815.\uC0AC\uC6A9\uC790View\uC124\uC815"
+          ]
+        },
+        {
+          "table": "\uC0AC\uC6A9\uC790_\uD589\uC704_\uB85C\uADF8",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC124\uC815.\uC0AC\uC6A9\uC790\uD589\uC704\uB85C\uADF8"
+          ]
+        },
+        {
+          "table": "\uC0B4\uB730_\uACF5\uD1B5\uCF58\uD150\uCE20",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uACF5\uD1B5\uCF58\uD150\uCE20.\uC0B4\uB730\uACF5\uD1B5\uCF58\uD150\uCE20"
+          ]
+        },
+        {
+          "table": "\uC0B4\uB730_\uCF58\uD150\uCE20\uBCF4\uC0C1\uC815\uCC45",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uACF5\uD1B5\uCF58\uD150\uCE20.\uC0B4\uB730\uCF58\uD150\uCE20\uBCF4\uC0C1\uC815\uCC45"
+          ]
+        },
+        {
+          "table": "\uC0B4\uB730_\uCF58\uD150\uCE20\uBCF4\uC0C1\uC9C0\uAE09",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uACF5\uD1B5\uCF58\uD150\uCE20.\uC0B4\uB730\uCF58\uD150\uCE20\uBCF4\uC0C1\uC9C0\uAE09"
+          ]
+        },
+        {
+          "table": "\uC0B4\uB730_\uCF58\uD150\uCE20\uC2DC\uCCAD\uC138\uC158",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uACF5\uD1B5\uCF58\uD150\uCE20.\uC0B4\uB730\uCF58\uD150\uCE20\uC2DC\uCCAD\uC138\uC158"
+          ]
+        },
+        {
+          "table": "\uC0B4\uB730\uCC38\uC5EC\uC790",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC0AC\uC6A9\uC790.\uC0B4\uB730\uCC38\uC5EC\uC790"
+          ]
+        },
+        {
+          "table": "\uC0B4\uB730\uCC38\uC5EC\uC790\uC5ED\uD560",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC0AC\uC6A9\uC790.\uC0B4\uB730\uCC38\uC5EC\uC790\uC5ED\uD560"
+          ]
+        },
+        {
+          "table": "\uC0C1\uD488\uBB3C\uB958\uC790\uC0B0",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD310\uB9E4.\uC0C1\uD488\uBB3C\uB958\uC790\uC0B0"
+          ]
+        },
+        {
+          "table": "\uC0C1\uD488\uC0C1\uC138\uC774\uBBF8\uC9C0\uC0DD\uC131\uC791\uC5C5",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD310\uB9E4.\uC0C1\uD488\uC0C1\uC138\uC774\uBBF8\uC9C0\uC0DD\uC131\uC791\uC5C5"
+          ]
+        },
+        {
+          "table": "\uC0C1\uD488\uC2DD\uBCC4\uCF54\uB4DC\uB9F5",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD310\uB9E4.\uC0C1\uD488\uC2DD\uBCC4\uCF54\uB4DC\uB9F5"
+          ]
+        },
+        {
+          "table": "\uC0C1\uD488\uD310\uB9E4\uC774\uBBF8\uC9C0\uCD08\uC548",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD310\uB9E4.\uC0C1\uD488\uD310\uB9E4\uC774\uBBF8\uC9C0\uCD08\uC548"
+          ]
+        },
+        {
+          "table": "\uC0DD\uC131\uC774\uBBF8\uC9C0\uC791\uC5C5",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uACF5\uD1B5.\uC0DD\uC131\uC774\uBBF8\uC9C0\uC791\uC5C5"
+          ]
+        },
+        {
+          "table": "\uC0DD\uD65C\uAD8C\uBB3C\uB958\uAC70\uC810",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uC0DD\uD65C\uAD8C\uBB3C\uB958\uAC70\uC810"
+          ]
+        },
+        {
+          "table": "\uC0DD\uD65C\uAD8C\uBB3C\uB958\uAC70\uC810\uBCF4\uC0C1\uAE30\uB85D",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uC0DD\uD65C\uAD8C\uBB3C\uB958\uAC70\uC810\uBCF4\uC0C1\uAE30\uB85D"
+          ]
+        },
+        {
+          "table": "\uC0DD\uD65C\uAD8C\uBB3C\uB958\uAC70\uC810\uC6A9\uB7C9\uC608\uC57D",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uC0DD\uD65C\uAD8C\uBB3C\uB958\uAC70\uC810\uC6A9\uB7C9\uC608\uC57D"
+          ]
+        },
+        {
+          "table": "\uC5C5\uCCB4",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC5C5\uCCB4.\uC5C5\uCCB4"
+          ]
+        },
+        {
+          "table": "\uC5F0\uB77D\uCC98\uACF5\uAC1C\uB3D9\uC758",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC0AC\uC6A9\uC790.\uC5F0\uB77D\uCC98\uACF5\uAC1C\uB3D9\uC758"
+          ]
+        },
+        {
+          "table": "\uC6A9\uB2EC\uAE30\uC0AC",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uC6A9\uB2EC\uAE30\uC0AC"
+          ]
+        },
+        {
+          "table": "\uC6B4\uC1A1\uC2E4\uD589\uD22C\uC601",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC6B4\uC1A1.\uC6B4\uC1A1\uC6D0\uC7A5"
+          ]
+        },
+        {
+          "table": "\uC6B4\uC1A1\uC5C5\uBB34\uB2F4\uB2F9\uC790\uBC30\uC815",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC6B4\uC1A1.\uC6B4\uC1A1\uC5C5\uBB34\uB2F4\uB2F9\uC790\uBC30\uC815"
+          ]
+        },
+        {
+          "table": "\uC6B4\uC1A1\uC758\uB8B0\uC0C1\uD488\uC5F0\uACB0",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC6B4\uC1A1.\uC6B4\uC1A1\uC758\uB8B0\uC0C1\uD488\uC5F0\uACB0"
+          ]
+        },
+        {
+          "table": "\uC6B4\uC1A1\uC774\uBCA4\uD2B8",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC6B4\uC1A1.\uC6B4\uC1A1\uC774\uBCA4\uD2B8"
+          ]
+        },
+        {
+          "table": "\uC6B4\uC601\uBC30\uCC28\uD65C\uB3D9\uC0AC\uAC74",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uBC30\uCC28.\uC6B4\uC601\uBC30\uCC28\uD65C\uB3D9\uC0AC\uAC74"
+          ]
+        },
+        {
+          "table": "\uC6B4\uC601\uCCB4\uC81C\uC5C5\uBB34\uC778\uACC4",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC6B4\uC601.\uC6B4\uC601\uCCB4\uC81C\uC5C5\uBB34\uC778\uACC4"
+          ]
+        },
+        {
+          "table": "\uC6B4\uC601\uCCB4\uC81C\uC5C5\uBB34\uC778\uACC4_Outbox",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC6B4\uC601.\uC6B4\uC601\uCCB4\uC81C\uC5C5\uBB34\uC778\uACC4Outbox"
+          ]
+        },
+        {
+          "table": "\uC6B4\uC784\uAD6C\uC131",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC6B4\uC1A1.\uC6B4\uC784\uAD6C\uC131"
+          ]
+        },
+        {
+          "table": "\uC6D0\uC7A5\uBC30\uB2EC\uAD8C\uD22C\uC601",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uBC30\uB2EC\uAD8C.\uC6D0\uC7A5\uBC30\uB2EC\uAD8C\uD22C\uC601"
+          ]
+        },
+        {
+          "table": "\uC74C\uC2DD\uB9C8\uD2B8\uC6D0\uC7A5\uB3D9\uAE30\uD654_Outbox",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC124\uC815.\uC74C\uC2DD\uB9C8\uD2B8\uC6D0\uC7A5\uB3D9\uAE30\uD654Outbox"
+          ]
+        },
+        {
+          "table": "\uC74C\uC2DD\uBC30\uB2EC\uC2DC\uB3C4",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uBC30\uB2EC\uC2DC\uB3C4"
+          ]
+        },
+        {
+          "table": "\uC74C\uC2DD\uBC30\uB2EC\uC644\uB8CC_WorldSnapshot",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uBC30\uB2EC\uC644\uB8CCWorldSnapshot"
+          ]
+        },
+        {
+          "table": "\uC74C\uC2DD\uC6B4\uC601\uC815\uCC45",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uC6B4\uC601\uC815\uCC45"
+          ]
+        },
+        {
+          "table": "\uC74C\uC2DD\uC810\uACF5\uAC1C\uD504\uB85C\uD544",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uC810\uACF5\uAC1C\uD504\uB85C\uD544"
+          ]
+        },
+        {
+          "table": "\uC74C\uC2DD\uC810\uB9AC\uBDF0",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uC810\uB9AC\uBDF0"
+          ]
+        },
+        {
+          "table": "\uC74C\uC2DD\uC810\uBA54\uB274",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uC810\uBA54\uB274"
+          ]
+        },
+        {
+          "table": "\uC74C\uC2DD\uC810\uC870\uB9AC\uC2DC\uAC04\uC124\uC815",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uC810\uC870\uB9AC\uC2DC\uAC04\uC124\uC815"
+          ]
+        },
+        {
+          "table": "\uC74C\uC2DD\uC8FC\uBB38",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uC8FC\uBB38"
+          ]
+        },
+        {
+          "table": "\uC74C\uC2DD\uC8FC\uBB38\uC0C1\uD0DC\uC774\uB825",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uC8FC\uBB38\uC0C1\uD0DC\uC774\uB825"
+          ]
+        },
+        {
+          "table": "\uC74C\uC2DD\uC8FC\uBB38\uC0C1\uD488",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uC8FC\uBB38\uC0C1\uD488"
+          ]
+        },
+        {
+          "table": "\uC778\uC5F0\uC5F0\uACB0\uC694\uCCAD",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC0AC\uC6A9\uC790.\uCE5C\uAD6C\uC694\uCCAD"
+          ]
+        },
+        {
+          "table": "\uC785\uACE0\uC0C1\uD488",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uC785\uACE0\uC0C1\uD488"
+          ]
+        },
+        {
+          "table": "\uC785\uACE0\uC694\uCCAD",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uC785\uACE0\uC694\uCCAD"
+          ]
+        },
+        {
+          "table": "\uC7AC\uACE0\uC774\uB3D9",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uC7AC\uACE0\uC774\uB3D9"
+          ]
+        },
+        {
+          "table": "\uC7AC\uACE0\uC774\uB825",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uC7AC\uACE0\uC774\uB825"
+          ]
+        },
+        {
+          "table": "\uC7AC\uBB34\uB300\uC0AC\uC608\uC678",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC815\uC0B0.\uC7AC\uBB34\uB300\uC0AC\uC608\uC678"
+          ]
+        },
+        {
+          "table": "\uC7AC\uBB34\uC0AC\uAC74",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC815\uC0B0.\uC7AC\uBB34\uC0AC\uAC74"
+          ]
+        },
+        {
+          "table": "\uC7AC\uBB34\uC0AC\uAC74\uC99D\uBE59",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC815\uC0B0.\uC7AC\uBB34\uC0AC\uAC74\uC99D\uBE59"
+          ]
+        },
+        {
+          "table": "\uC7AC\uBC30\uC791\uAE30",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uB18D\uC5C5.\uC7AC\uBC30\uC791\uAE30"
+          ]
+        },
+        {
+          "table": "\uC870\uC9C1\uAC1C\uBCC4\uACF5\uAE09\uBC1C\uC8FC",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uACF5\uAE09\uC911\uAC1C.\uC870\uC9C1\uAC1C\uBCC4\uACF5\uAE09\uBC1C\uC8FC"
+          ]
+        },
+        {
+          "table": "\uC8FC\uBB38\uC790\uD504\uB85C\uD544",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC0AC\uC6A9\uC790.\uC8FC\uBB38\uC790\uD504\uB85C\uD544"
+          ]
+        },
+        {
+          "table": "\uCC28\uB7C9\uB2E8\uAC00",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC6B4\uC1A1.\uCC28\uB7C9\uB2E8\uAC00"
+          ]
+        },
+        {
+          "table": "\uCC28\uB7C9\uC81C\uC6D0",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC28\uB7C9.\uCC28\uB7C9\uC81C\uC6D0"
+          ]
+        },
+        {
+          "table": "\uCC3D\uACE0",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uCC3D\uACE0"
+          ]
+        },
+        {
+          "table": "\uCC3D\uACE0\uC0AC\uC6A9\uC790",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uCC3D\uACE0\uC0AC\uC6A9\uC790"
+          ]
+        },
+        {
+          "table": "\uCC44\uB110\uCD9C\uD488",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD310\uB9E4.\uCC44\uB110\uCD9C\uD488"
+          ]
+        },
+        {
+          "table": "\uCD9C\uACE0\uBB36\uC74C",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uCD9C\uACE0\uBB36\uC74C"
+          ]
+        },
+        {
+          "table": "\uCD9C\uACE0\uC608\uC815",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uCD9C\uACE0\uC608\uC815"
+          ]
+        },
+        {
+          "table": "\uD0D0\uC0C9\uCEA0\uD398\uC778",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD0D0\uC0C9\uCEA0\uD398\uC778.\uD0D0\uC0C9\uCEA0\uD398\uC778"
+          ]
+        },
+        {
+          "table": "\uD0D0\uC0C9\uCEA0\uD398\uC778\uB300\uC0C1\uC790",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD0D0\uC0C9\uCEA0\uD398\uC778.\uD0D0\uC0C9\uCEA0\uD398\uC778\uB300\uC0C1\uC790"
+          ]
+        },
+        {
+          "table": "\uD0D0\uC0C9\uCEA0\uD398\uC778\uC751\uB2F5",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD0D0\uC0C9\uCEA0\uD398\uC778.\uD0D0\uC0C9\uCEA0\uD398\uC778\uC751\uB2F5"
+          ]
+        },
+        {
+          "table": "\uD1B5\uAD00\uC218\uC784",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD1B5\uAD00.\uD1B5\uAD00\uC218\uC784"
+          ]
+        },
+        {
+          "table": "\uD1B5\uAD00\uC808\uCC28",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD1B5\uAD00.\uD1B5\uAD00\uC808\uCC28"
+          ]
+        },
+        {
+          "table": "\uD1B5\uAD00\uC870\uD68C\uC5F0\uB3D9",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD1B5\uAD00.\uD1B5\uAD00\uC870\uD68C\uC5F0\uB3D9"
+          ]
+        },
+        {
+          "table": "\uD310\uB9E4\uC0C1\uD488",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD310\uB9E4.\uD310\uB9E4\uC0C1\uD488"
+          ]
+        },
+        {
+          "table": "\uD310\uB9E4\uCC44\uB110\uACC4\uC815",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD310\uB9E4.\uD310\uB9E4\uCC44\uB110\uACC4\uC815"
+          ]
+        },
+        {
+          "table": "\uD50C\uB7AB\uD3FC_View_\uC815\uCC45",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC124\uC815.\uD50C\uB7AB\uD3FCView\uC815\uCC45"
+          ]
+        },
+        {
+          "table": "\uD50C\uB7AB\uD3FC\uACF5\uAE09\uC870\uAC74\uACC4\uC57D",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uACF5\uAE09\uC911\uAC1C.\uD50C\uB7AB\uD3FC\uACF5\uAE09\uC870\uAC74\uACC4\uC57D"
+          ]
+        },
+        {
+          "table": "\uD50C\uB7AB\uD3FC\uACF5\uAE09\uC870\uAC74\uACC4\uC57D\uD488\uBAA9",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uACF5\uAE09\uC911\uAC1C.\uD50C\uB7AB\uD3FC\uACF5\uAE09\uC870\uAC74\uACC4\uC57D\uD488\uBAA9"
+          ]
+        },
+        {
+          "table": "\uD50C\uB7AB\uD3FC\uBC30\uB2EC\uAD8C",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uBC30\uB2EC\uAD8C.\uD50C\uB7AB\uD3FC\uBC30\uB2EC\uAD8C"
+          ]
+        },
+        {
+          "table": "\uD53C\uD0B9\uD3EC\uC7A5\uC791\uC5C5",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uD53C\uD0B9\uD3EC\uC7A5\uC791\uC5C5"
+          ]
+        },
+        {
+          "table": "\uD654\uBB3C\uB2E4\uC74C\uCF5C\uC608\uC57D",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC6B4\uC1A1.\uD654\uBB3C\uB2E4\uC74C\uCF5C\uC608\uC57D"
+          ]
+        },
+        {
+          "table": "\uD654\uBB3C\uC5F0\uC18D\uBC30\uCC28\uC0C1\uD0DC",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC6B4\uC1A1.\uD654\uBB3C\uC5F0\uC18D\uBC30\uCC28\uC0C1\uD0DC"
+          ]
+        },
+        {
+          "table": "\uD654\uBB3C\uC694\uAD6C\uC870\uAC74",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD654\uBB3C.\uD654\uBB3C\uC694\uAD6C\uC870\uAC74"
+          ]
+        },
+        {
+          "table": "\uD654\uBB3C\uC6B4\uC1A1\uC2DC\uAC04\uC57D\uC18D",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC6B4\uC1A1.\uD654\uBB3C\uC6B4\uC1A1\uC2DC\uAC04\uC57D\uC18D"
+          ]
+        }
+      ]
+    },
+    {
+      "context": "AgriculturalFisheriesDbContext",
+      "responsibility": "\uB18D\uC218\uC0B0\u00B7\uC2DD\uD488 \uACF5\uACF5\uC790\uB8CC \uC218\uC9D1 archive",
+      "migrationHistoryTable": "__EFMigrationsHistory_AgriculturalFisheries",
+      "tableCount": 37,
+      "tables": [
+        {
+          "table": "agri_bls_average_retail_price_collection_runs",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.Bls\uD3C9\uADE0\uC18C\uB9E4\uAC00\uACA9\uC218\uC9D1Run"
+          ]
+        },
+        {
+          "table": "agri_bls_average_retail_price_observations",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.Bls\uD3C9\uADE0\uC18C\uB9E4\uAC00\uACA9\uAD00\uCE21"
+          ]
+        },
+        {
+          "table": "agri_common_food_product_code_relation_reviews",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.\uACF5\uD1B5\uC2DD\uD488\uD488\uBAA9Code\uAD00\uACC4\uAC80\uD1A0\uC774\uB825"
+          ]
+        },
+        {
+          "table": "agri_common_food_product_code_relations",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.\uACF5\uD1B5\uC2DD\uD488\uD488\uBAA9Code\uAD00\uACC4"
+          ]
+        },
+        {
+          "table": "agri_common_food_product_identities",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.\uACF5\uD1B5\uC2DD\uD488\uD488\uBAA9Identity"
+          ]
+        },
+        {
+          "table": "agri_domestic_auction_price_collection_runs",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.\uAD6D\uB0B4\uB18D\uC0B0\uBB3C\uACBD\uB77D\uAC00\uACA9\uC218\uC9D1Run"
+          ]
+        },
+        {
+          "table": "agri_domestic_auction_price_observations",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.\uAD6D\uB0B4\uB18D\uC0B0\uBB3C\uACBD\uB77D\uAC00\uACA9\uAD00\uCE21"
+          ]
+        },
+        {
+          "table": "agri_hs_usda_commodity_mappings",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.HsUsdaCommodityMapping"
+          ]
+        },
+        {
+          "table": "agri_international_price_collection_runs",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.\uAD6D\uC81C\uB18D\uC218\uC0B0\uAC00\uACA9\uC218\uC9D1Run"
+          ]
+        },
+        {
+          "table": "agri_international_price_observations",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.\uAD6D\uC81C\uB18D\uC218\uC0B0\uAC00\uACA9\uAD00\uCE21"
+          ]
+        },
+        {
+          "table": "agri_kamis_price_collection_runs",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.KamisPriceCollectionRun"
+          ]
+        },
+        {
+          "table": "agri_kamis_price_observations",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.KamisPriceObservation"
+          ]
+        },
+        {
+          "table": "agri_nongsaro_potato_profiles",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.Nongsaro\uAC10\uC790ProfileArchive"
+          ]
+        },
+        {
+          "table": "agri_packaging_fcl_analysis_snapshots",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.\uB18D\uC218\uC0B0\uBB3C\uD3EC\uC7A5Fcl\uBD84\uC11DSnapshot"
+          ]
+        },
+        {
+          "table": "agri_usda_ams_market_price_collection_runs",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.UsdaAms\uC2DC\uC7A5\uAC00\uACA9\uC218\uC9D1Run"
+          ]
+        },
+        {
+          "table": "agri_usda_ams_market_price_observations",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.UsdaAms\uC2DC\uC7A5\uAC00\uACA9\uAD00\uCE21"
+          ]
+        },
+        {
+          "table": "agri_usda_ams_public_business_collection_runs",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.UsdaAms\uACF5\uAC1C\uC0AC\uC5C5\uCCB4\uC218\uC9D1Run"
+          ]
+        },
+        {
+          "table": "agri_usda_ams_public_business_products",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.UsdaAms\uACF5\uAC1C\uC0AC\uC5C5\uCCB4\uCDE8\uAE09\uD488\uBAA9"
+          ]
+        },
+        {
+          "table": "agri_usda_ams_public_business_profiles",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.UsdaAms\uACF5\uAC1C\uC0AC\uC5C5\uCCB4Profile"
+          ]
+        },
+        {
+          "table": "agri_usda_ams_year_commodity_catalog",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.UsdaAms\uC5F0\uB3C4\uC0C1\uD488Catalog"
+          ]
+        },
+        {
+          "table": "agri_usda_nass_collection_runs",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.UsdaNassPriceCollectionRun"
+          ]
+        },
+        {
+          "table": "agri_usda_nass_price_observations",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.UsdaNassPriceObservation"
+          ]
+        },
+        {
+          "table": "agri_weekly_country_product_comparison_items",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.\uC8FC\uAC04\uAD6D\uAC00\uB18D\uC218\uC0B0\uBB3C\uBE44\uAD50\uD56D\uBAA9"
+          ]
+        },
+        {
+          "table": "agri_weekly_country_product_comparison_snapshots",
+          "entityTypes": [
+            "Ssalddel.Domain.AgriculturalFisheries.\uC8FC\uAC04\uAD6D\uAC00\uB18D\uC218\uC0B0\uBB3C\uBE44\uAD50Snapshot"
+          ]
+        },
+        {
+          "table": "food_ingredient_company_evidence",
+          "entityTypes": [
+            "Ssalddel.Domain.FoodCulture.OfficialFoodIngredientCompanyEvidence"
+          ]
+        },
+        {
+          "table": "food_ingredient_company_profiles",
+          "entityTypes": [
+            "Ssalddel.Domain.FoodCulture.OfficialFoodIngredientCompanyProfile"
+          ]
+        },
+        {
+          "table": "food_ingredient_company_research_runs",
+          "entityTypes": [
+            "Ssalddel.Domain.FoodCulture.OfficialFoodIngredientCompanyResearchRun"
+          ]
+        },
+        {
+          "table": "food_ingredient_company_source_observations",
+          "entityTypes": [
+            "Ssalddel.Domain.FoodCulture.OfficialFoodIngredientCompanySourceObservation"
+          ]
+        },
+        {
+          "table": "food_official_dishes",
+          "entityTypes": [
+            "Ssalddel.Domain.FoodCulture.OfficialFoodDish"
+          ]
+        },
+        {
+          "table": "food_official_ingredient_categories",
+          "entityTypes": [
+            "Ssalddel.Domain.FoodCulture.OfficialFoodIngredientCategory"
+          ]
+        },
+        {
+          "table": "food_official_ingredient_hs_mappings",
+          "entityTypes": [
+            "Ssalddel.Domain.FoodCulture.OfficialFoodIngredientHsMapping"
+          ]
+        },
+        {
+          "table": "food_official_ingredient_price_mappings",
+          "entityTypes": [
+            "Ssalddel.Domain.FoodCulture.OfficialFoodIngredientPriceMapping"
+          ]
+        },
+        {
+          "table": "food_official_ingredients",
+          "entityTypes": [
+            "Ssalddel.Domain.FoodCulture.OfficialFoodIngredient"
+          ]
+        },
+        {
+          "table": "food_official_recipe_collection_runs",
+          "entityTypes": [
+            "Ssalddel.Domain.FoodCulture.OfficialFoodRecipeCollectionRun"
+          ]
+        },
+        {
+          "table": "food_official_recipe_ingredients",
+          "entityTypes": [
+            "Ssalddel.Domain.FoodCulture.OfficialFoodRecipeIngredient"
+          ]
+        },
+        {
+          "table": "food_official_recipe_sources",
+          "entityTypes": [
+            "Ssalddel.Domain.FoodCulture.OfficialFoodRecipeSource"
+          ]
+        },
+        {
+          "table": "food_official_recipe_variants",
+          "entityTypes": [
+            "Ssalddel.Domain.FoodCulture.OfficialFoodRecipeVariant"
+          ]
+        }
+      ]
+    },
+    {
+      "context": "PublicDataIngestionDbContext",
+      "responsibility": "\uBC94\uC6A9 \uACF5\uACF5\uC790\uB8CC \uC218\uC9D1\u00B7\uC815\uADDC\uD654\u00B7\uC9C0\uC5ED/\uAC74\uCD95\uBB3C \uADFC\uAC70",
+      "migrationHistoryTable": "__EFMigrationsHistory_PublicDataIngestion",
+      "tableCount": 16,
+      "tables": [
+        {
+          "table": "public_administrative_building_category_aggregates",
+          "entityTypes": [
+            "Ssalddel.Domain.PublicData.Korea.\uD589\uC815\uB3D9\uAC74\uCD95\uBB3CCategoryAggregate"
+          ]
+        },
+        {
+          "table": "public_building_business_aggregates",
+          "entityTypes": [
+            "Ssalddel.Domain.PublicData.Korea.\uAC74\uCD95\uBB3C\uACF5\uAC1C\uC0AC\uC5C5\uC7A5Aggregate"
+          ]
+        },
+        {
+          "table": "public_building_category_assignments",
+          "entityTypes": [
+            "Ssalddel.Domain.PublicData.Korea.\uAC74\uCD95\uBB3C\uC6A9\uB3C4CategoryAssignment"
+          ]
+        },
+        {
+          "table": "public_building_category_catalog",
+          "entityTypes": [
+            "Ssalddel.Domain.PublicData.Korea.\uAC74\uCD95\uBB3C\uC6A9\uB3C4CategoryDefinition"
+          ]
+        },
+        {
+          "table": "public_building_massing_profiles",
+          "entityTypes": [
+            "Ssalddel.Domain.PublicData.Korea.\uAC74\uCD95\uBB3C\uD615\uD0DCProfile"
+          ]
+        },
+        {
+          "table": "public_building_region_assignments",
+          "entityTypes": [
+            "Ssalddel.Domain.PublicData.Korea.\uAC74\uCD95\uBB3C\uD589\uC815\uAD6C\uC5EDAssignment"
+          ]
+        },
+        {
+          "table": "public_building_register_titles",
+          "entityTypes": [
+            "Ssalddel.Domain.PublicData.Korea.\uAC74\uCD95\uBB3C\uB300\uC7A5\uD45C\uC81C\uBD80Record"
+          ]
+        },
+        {
+          "table": "public_building_visual_composition_plans",
+          "entityTypes": [
+            "Ssalddel.Domain.PublicData.Korea.\uAC74\uCD95\uBB3C\uC2DC\uAC01\uAD6C\uC131\uACC4\uD68D"
+          ]
+        },
+        {
+          "table": "public_business_building_assignments",
+          "entityTypes": [
+            "Ssalddel.Domain.PublicData.Korea.\uACF5\uAC1C\uC0AC\uC5C5\uC7A5\uAC74\uCD95\uBB3CAssignment"
+          ]
+        },
+        {
+          "table": "public_data_ingestion_runs",
+          "entityTypes": [
+            "Ssalddel.Domain.PublicData.\uC678\uBD80\uB370\uC774\uD130\uC218\uC9D1Run"
+          ]
+        },
+        {
+          "table": "public_data_normalized_records",
+          "entityTypes": [
+            "Ssalddel.Domain.PublicData.\uC678\uBD80\uB370\uC774\uD130\uC815\uADDC\uD654Record"
+          ]
+        },
+        {
+          "table": "public_data_raw_snapshots",
+          "entityTypes": [
+            "Ssalddel.Domain.PublicData.\uC678\uBD80\uB370\uC774\uD130RawSnapshot"
+          ]
+        },
+        {
+          "table": "public_data_region_mappings",
+          "entityTypes": [
+            "Ssalddel.Domain.PublicData.\uC678\uBD80\uC9C0\uC5EDCodeMapping"
+          ]
+        },
+        {
+          "table": "public_licensed_business_records",
+          "entityTypes": [
+            "Ssalddel.Domain.PublicData.Korea.\uACF5\uAC1C\uC778\uD5C8\uAC00\uC0AC\uC5C5\uC7A5Record"
+          ]
+        },
+        {
+          "table": "regional_business_display_claims",
+          "entityTypes": [
+            "Ssalddel.Domain.PublicData.Korea.\uC9C0\uC5ED\uC0AC\uC5C5\uC7A5\uD45C\uC2DCClaim"
+          ]
+        },
+        {
+          "table": "regional_diorama_sponsorship_campaigns",
+          "entityTypes": [
+            "Ssalddel.Domain.PublicData.Korea.\uC9C0\uC5ED\uB514\uC624\uB77C\uB9C8\uD6C4\uC6D0Campaign"
+          ]
+        }
+      ]
+    },
+    {
+      "context": "TraditionalMarketDbContext",
+      "responsibility": "\uC804\uD1B5\uC2DC\uC7A5 \uC6D0\uBCF8\u00B7\uC0DD\uD65C\uAD8C \uD611\uC758\u00B7\uAC70\uC810",
+      "migrationHistoryTable": "__EFMigrationsHistory_TraditionalMarkets",
+      "tableCount": 5,
+      "tables": [
+        {
+          "table": "public_data_traditional_market_sync_runs",
+          "entityTypes": [
+            "Ssalddel.Domain.TraditionalMarkets.TraditionalMarketSyncRun"
+          ]
+        },
+        {
+          "table": "public_data_traditional_markets",
+          "entityTypes": [
+            "Ssalddel.Domain.TraditionalMarkets.TraditionalMarket",
+            "Ssalddel.Domain.TraditionalMarkets.TraditionalMarketFacilities"
+          ]
+        },
+        {
+          "table": "traditional_market_logistics_hubs",
+          "entityTypes": [
+            "Ssalddel.Domain.TraditionalMarkets.TraditionalMarketLogisticsHub"
+          ]
+        },
+        {
+          "table": "traditional_market_neighborhood_councils",
+          "entityTypes": [
+            "Ssalddel.Domain.TraditionalMarkets.\uC804\uD1B5\uC2DC\uC7A5\uC0DD\uD65C\uAD8C\uD611\uC758\uCCB4"
+          ]
+        },
+        {
+          "table": "traditional_market_trade_agendas",
+          "entityTypes": [
+            "Ssalddel.Domain.TraditionalMarkets.\uC804\uD1B5\uC2DC\uC7A5\uAD50\uC5ED\uC548\uAC74"
+          ]
+        }
+      ]
+    }
+  ],
+  "duplicateTables": []
+}
