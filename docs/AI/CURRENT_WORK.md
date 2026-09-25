@@ -1,5 +1,982 @@
 # Mirror(거울) Current Work
 
+## 기존 변경 맥락별 커밋 정리 (2026-09-25)
+
+- 사용자 요청으로 기존 작업을 DB 소유권, 네 역할 모바일 현장 검증, 운영 디오라마, 공공자료 수집, 공간 연구, 사물함 기획, 프랜차이즈 기획과 공통 상태 문서로 분리해 로컬 커밋했다. 제품 정책·기획 승인·E 증거 수준을 새로 승격하지 않았다. push·배포·DB 변경은 하지 않았다.
+- 이번 재검증: Fast 통과(세 솔루션 build, 코드 지도·책임 지도, 관련 시험 26+267개). Task에서는 Simulation 1,979/1,979와 Unity 계약 시험 816/816이 통과했고 서버 전체 5,407개 중 5,400개 통과·7개 실패로 완료되지 않았다. 원본 로그는 `artifacts/local/validation/20260925-184635/`, `20260925-185253/`와 `context-commits-20260925/`에 보존한다.
+- 남은 실패: IntegratedBetaCatalogTests 1개, ConventionalArchitectureNamingTests 1개, SsalddelApiClassificationTests 4개, OfficialFoodIngredientJourneyTests 1개. 이번 커밋 정리에서 별도 기능 수정으로 확대하지 않았다. 공공자료 실행기의 메뉴 재료 자체시험 43개도 통과했고 DB 쓰기는 없었다.
+- 별도 Unity 저장소는 시험 프로젝트 컴파일 통과(오류 0), CLI Editor 시험은 180초 시간 초과로 미완료다. 이번 Scene·Prefab 커밋은 기존 저장 상태 보존이며 새 Play Mode·Game View 검증이 아니다. 배달 저장소는 편집·MYBOX 설정과 기록을 별도 커밋했고 기존 Python 시험 43개를 통과했다. 원본 영상·렌더 파일·임시 로그는 로컬 보관한다.
+
+## 재료 공통 기반·프랜차이즈 공급 관계 — 현재 상태 (2026-09-25)
+
+- 현행 기획 [r37](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/franchise-platform-store-circulation.plan.r37.md): 생산자 목·제조업체 화·운영자 토를 유지하며 플랫폼 금(태괘)·가맹 음식점 수(감괘)로 정정 확정했다. 자금은 특정 괘가 아닌 관계 사이의 기운으로 구별한다. r36의 음식점 금/자금 수 제안·질문은 대체·종결했다. 기존 업무 대표 괘·객체 ID·원장은 유지하며 중도매인/식자재 업체 세부 분류는 미정이다.
+- 기반 [r35](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/franchise-supply-to-sales-coordination.plan.r35.md): 가맹본부가 생산자·중도매인·식자재 업체·음식점을 연결해 공급망부터 매장 판매까지 총괄할 수 있음을 명시했다. 물품 흐름과 관리·조율 관계, 소유와 위임 권한을 구분하며 개별 OS 원장은 유지한다.
+- 후속 범위: r33 두 번째 공급 관계 층에서 위 총괄 역할을 함께 다룬다. 실제 공급망·권한 결속과 두 번째 층 구현은 아직 하지 않았다. 아래 r34는 기존 첫 층의 구현 증거이며 이번에 재실행한 결과가 아니다.
+- 이번 소유 변경: r37·r36의 대체 안내·해당 README·PLANNING·CURRENT_WORK 문서5개. 지정 경로 Fast/`git diff --check`·r36/r37 로컬 링크8개·후행 공백 검사 통과. 문서 범위로 build/test를 건너뛰었으며 Runtime 검증은 하지 않았다. 제품 코드·DB·Graph Map 원본·Unity·commit·push 변경 없음.
+
+### 첫 층 r34 구현 기준선 (2026-09-24)
+
+- [r34](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/ingredient-foundation.implementation.r34.md): r33 승인에 따라 `메뉴재료기반Query.cs`·자체 시험과 Program의 좁은 진입 분기 추가. 기존 12개 재료의 ID·규격·HS/KAMIS 후보·출처·결손을 같은 읽기 결과로 반환한다. 실제 거래/원산지를 추정으로 확정하지 않는다.
+- 실제 MySQL 후보12개·HS 후보16개·KAMIS 근거 연결 재료10개. 기존190행은 재료별 참조185개/공통 주의·실패 이력5개로 보존했다. query의 DB 쓰기·외부 공급자 호출은 없고 비공개 로컬 사본만 기록했다.
+- 전체 도구 build 경고0/오류0, 신규 자체43/43·기존 가격 조사27/27. 실제 읽기 전용 독립 조회와 재실행 hash 일치, 기존 원본 검증190/190, 전후 SQL 행수/내용 checksum 일치, 출력 Git 제외·비밀값 검사 통과. write 모드 거절 확인. 상세 hash/경로는 r34에 기록했다.
+- 소유8개 경로 Fast/diff·미추적 포함 공백·로컬 링크7개·승인 r33 hash 확인 통과. Fast의 build/test 생략과 위 실제 별도 실행 증거를 구분한다.
+- 전역 상품/식약처 재료 ID와 재료별 메뉴–레시피 연결은 미확인으로 반환한다. 다음 공급 관계 층·HTTP/UI·Unity·영상·새 수집·DB 변경·commit·push는 하지 않았다. 기존 관련 없는 변경 보존. 새 디오라마 규칙 후보 없음.
+
+## 메뉴·재료·제조·납품 관계 조회 기획 r31 (2026-09-24)
+
+- [r31](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/ingredient-supply-graph.plan.r31.md): 원재료 입고→가공→음식점 납품과 통계/가격 근거를 다른 관계로 표현하는 방향. 기존 RDB·업무 원장 재사용과 읽기 전용 그래프 조회를 제안했다. 신규 그래프 DB나 실제 거래 관계를 생성하지 않는다.
+- 재료–레시피/HS/가격/업체 근거, Simulation 제조 투입·산출, 창고 입출고 소스를 확인했다. 각 코드의 존재만 확인했으며 운영 제조·납품 종단 완성이나 DB 결속을 판정하지 않았다. 자료/품목과 실제 물품 묶음, 가상 흐름과 운영 원장을 구분한다.
+- 검증: 문서4개 지정 Fast와 `git diff --check` 통과, 새 기획의 로컬 링크10개 존재·후행 공백 없음 확인. Fast의 build/test는 문서 범위로 건너뛰었으며 Runtime 검증은 하지 않았다.
+- 이번 소유 변경은 r31·해당 README·PLANNING·이 snapshot의 기획 문서4개다. 자료 수집·DB 재조회/쓰기·제품 코드·Unity·영상·commit·push 없음. 다음 검토는 메뉴 중심 역방향 조회의 진입점과 기존 식별자 대조다. 새 디오라마 규칙 후보 없음.
+
+## 메뉴 재료·HS·국내 가격·수출입 단위가액 (2026-09-24)
+
+- [가격 조사](../Changes/2026-09-24-menu-ingredient-price-research.md): 기존 메뉴/레시피를 출발점으로 12재료·HS2022 후보16개 대조. 기존 2025년 수입 재사용, 수출16코드·KAMIS 2026-09-23 응답 추가 수집. 실제 음식점 배합·원가/통관 판정 아님.
+- 기존 로컬 MySQL 공공자료 저장소에 검토 보류 사본 저장. `menu-prices-*` 도구와 scope/사용 문서 추가. 입력 hash·원 단위·수입/수출 방향·자료 결손·원본 계보 유지. 토마토 수입/생두 수출 중량 없음, 냉장 닭 수입 기록 없음. KAMIS 0값은 무료가 아닌 결손.
+- 축산물 01/02 동일 응답이므로 도매 자료로 쓰거나 독립 시세로 중복 집계하지 않는다. 국내 요청 결과79행과 독립 조사 조건52행을 구분하고 별도 해석 주의를 저장했다. 현재 범위는 수치/관계 조사이며 매장 원가/UI·Unity/영상 연결은 안 했다.
+- 전체 도구 build 경고0/오류0, 자체 검사27항목·실제 저장/멱등/독립 재조회 검증. 상세 행수·최종 검증은 위 조사 기록 참조. 기존 복구 컨테이너 종료·원본 볼륨 보존. commit·push·게시·배포 없음.
+
+## 방문 메뉴·공공 레시피 전체 대조 및 관계 저장 (2026-09-24)
+
+- [관계 테이블 기록](../Changes/2026-09-24-menu-recipe-relations.md): 별도 배달 SQLite에 menu_recipe_mappings/official_recipe_reference_snapshots 추가. 기존 식약처 원본 유지, 메뉴ID-레시피ID N:M/FK/연결 이유/검토 상태/내용 판본 결속. 기존 조사 JSON·ID는 보존하고 재구축 가능한 조회 색인으로 연결했다.
+- 후속으로 기록된60개 메뉴 모두 대조 이유 저장. 메뉴21개에 참고 레시피13종·N:M 연결22건, 구성 확인 필요11개·현재 사본의 적절한 후보 없음28개. 실제 매장 배합이 아니라 음식 유형/일부 구성 비교 후보이며 원문 재료를 매장 재료로 복제하지 않았다.
+- 최신 판본 `1e4d757883b37eefc67903afa314f9430202800e24c7eef93b0015aa1e9eebfb`. 배달 `menu_recipe_review.py`·검토 JSON·전체 메뉴별 결과 문서 추가, 기존 저장/조회와 연결. 입력hash·누락/중복·연결 모순 거절, 연결0건의 이유도 조회 가능.
+- Python31/31·실제 DB 백업/멱등 저장/독립 재조회·기존 모든 테이블 행 보존·무결성/외래키 확인. 최초3판본 보존 후 총4판본/판본별메뉴240행, 관찰메뉴60개. 신규 외부수집/MySQL/Unity/영상/서버API 변경·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 기존 공식 레시피 볼륨 복구 조회·로컬 개발 접속 (2026-09-24)
+
+- [복구 기록](../Changes/2026-09-24-local-recipe-volume-recovery.md): 현재 mysql_data가 아닌 hongdal_hongdal_dev_mysql_data에서 레시피 발견. 원본 읽기전용 복사 후 네트워크/쓰기 차단된 복구본에서 식약처1,146건·재료1,903·관계12,781 실제 조회. 복구 컨테이너는 종료했고 두 볼륨 보존. 현재 DB 덮어쓰기/볼륨 교체 없음.
+- 사용자 요청으로 현재 DB에 local_developer@localhost만 빈 비밀번호 추가. eng/verification/local-mysql-console.ps1로 소유·loopback 확인 후 내부 소켓 사용. root/앱 비밀번호 유지. 로컬 성공·다른 컨테이너TCP1045거절·현재 테이블100 유지 확인. Mongo/Redis/다른 프로젝트 변경 없음.
+- 배달 recover_recipe_snapshot.py로 기존 DTO 대응 사본1,146건 확보. 일반 구성 후보 닭강정1건을 기존 SQLite 메뉴 조사 판본에 연결·재조회. Python16/16·멱등 통과. HTTP API/Unity 실행·전 메뉴 매칭·가격/HS확정·재수집·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 배달 관찰 메뉴·재료 HS 조사 색인 (2026-09-24)
+
+- 별도 배달 저장소 `premiere-control/research_menu_catalog.py`, `test_research_menu_catalog.py`, `edit-kit/menu-ingredient-research.md` 추가. 기존 비공개 SQLite에 매장 후보41·메뉴원문60·방문연결60 저장,19메뉴에 재료 단서. 운영 매장/레시피/통관 판정이 아니다.
+- WCO HS2022 육류/커피 품명과 기존 trade-retail 후보를 대조했다. 메가 하우스밀크 라떼 공식 본문 확인,60계 간지치킨은 공식 검색 발췌만 확인/직접502. 전 메뉴 조사·지점 실물 배합·원산지·통계 결합은 미완료다.
+- 시험5/5·실제 DB 독립 재조회/무결성/멱등 검증. 서버 MySQL/Mongo 수집·API·Unity·영상 변경·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 배달 편집용 기록 DB 저장 r30 (2026-09-24)
+
+- [r30](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/delivery-editorial-archive.implementation.r30.md): 별도 배달 저장소에 archive_delivery_records.py·시험·사용 기록 추가. 비공개 로컬 SQLite에 방문41건·메뉴언급60행·영상6판본·원본구간28개·영향구간517행 저장. Git 제외 확인.
+- 합성6/6·실제 독립 재조회/무결성/중복 재입력0·방문별 본편/공유지도 영향 조회 확인. 23일은 메타데이터 결속, 22일은 정확 시각 미완료/전체 검토. 전 프레임 검수·자동 제외·외부 게시 확인·서버 DB/API·Unity 통합은 미완료다.
+- 기존 영상/원본/확정 선택은 보존했다. 실제 요청 등록·삭제·렌더·재업로드·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 방문·매장·메뉴 DB 축적 기획 r29 (2026-09-24)
+
+- [r29](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/delivery-visit-menu-storage.plan.r29.md): 사용자 의도에 따라 재사용 매장/메뉴와 개별 방문, 미디어/조사 근거를 구분해 저장하는 방향을 기록했다.
+- 음식점공개프로필·음식점메뉴·PublicDataIngestionDbContext 코드를 확인했다. 운영 판매 테이블에 관찰 사실을 바로 넣지 않고 기존 계약 재사용을 먼저 검토한다. 날짜별 입력 판본·대상 로컬 DB·가져오기는 미확정이다.
+- 코드 조회·문서만 변경. DB 생성/저장/재조회·Migration·수집·Unity·영상 편집·시험·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 배달 메뉴 기반 재료·가격·무역 조사 기획 r28 (2026-09-24)
+
+- [r28](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/delivery-menu-ingredient-research.plan.r28.md): 당분간 실제 배달 메뉴를 출발점으로 재료 후보와 국내 가격·무역 통계를 연결하는 방향을 기록했다. 첫 메뉴와 공급자는 미정이다.
+- 기존 메뉴 파이프라인 및 HS 조회 코드를 확인했다. 현재 HS 조회 경로는 2025 수입 범위이고 수출은 NotCollected이므로 수출 자료까지 준비됐다고 주장하지 않는다. 일반 조리 자료/매장 사실과 국내 가격/무역 단위가액을 분리한다.
+- 기획 문서만 변경. 신규 조사·수집·DB·코드·Unity·재편집·실행 시험·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 배달 영상용 디오라마 정밀화 기획 r27 (2026-09-24)
+
+- [r27](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/delivery-video-diorama-detail.plan.r27.md): 사용자의 9월22·23일 배달 영상 활용 의도를 반영했다. 검증된 공개 매장과 기존 도로/건물 결속을 먼저 정밀화하고 날짜별 방문 기록은 공간 기반과 분리한다.
+- 첫 구역·중복 매장·실제 경로는 미확인이다. 문서만 변경했으며 전체 영상 재검토·수집·코드·Unity·모델링·재편집·확정본 교체·commit·push 없음. r26 계층 자료 선행 유지. 새 디오라마 규칙 후보 없음.
+
+## 전자 사물함 소형 화물·퀵서비스 r3 (2026-09-24)
+
+- [기획 r3](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/locker-small-cargo-quick-service.plan.r3.md): 사용자가 음식 배달보다 소형 화물·퀵서비스로 방향을 구체화했다. 관리업체의 거점 위치 등록과 보내는 사람의 운송 의뢰를 분리하며 상점 판매를 필수로 하지 않는다.
+- 의뢰자·품목·크기/중량·요금·장비 연동·접근 정책은 미정이다. r1 Simulation/실운영 비활성 유지. 문서만 변경, 코드·DB·Unity·시험·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 건물 관리업체·전자 사물함 기획 r2 (2026-09-24)
+
+- [확장 제안 r2](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/building-managed-lockers.proposal.r2.md): 건물 관리업체가 관리하는 사물함에서 기사 픽업·수령인 전달로 연결하는 구상을 기록했다. 상세 역할·칸 예약·설비 사건과 업무 인수의 구분은 제안이며 첫 투입 주체는 미정이다.
+- r1 비주거 거점·Simulation·실제 지급 비활성을 유지한다. 문서만 변경했으며 코드·DB·Unity·장비·시험·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## P1 제61류 일상 양말·스타킹 배치 r75 (2026-09-23)
+
+- [구현 기록 r75](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p1-everyday-hosiery-batch.implementation.r75.md)에 따라 HS6 8개를 준비했다. UN Comtrade preview 355행과 합성섬유 팬티스타킹·면 기본 양말 후보 2건을 수집했고 6개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12·정규화 130행, 전수 대장 자체시험 10/10을 통과했다. 로컬 생성 대장은 완료 487개·후보 212개·검색 무결과 227개·대기 5,125개다.
+- `hongdal-mysql-1`이 모바일 현장 시험 override로 기동되어 수집기의 `ComposeMismatch` 보호 검사가 저장을 차단했다. 다른 환경을 재구성하지 않았으며 저장·독립 재조회·멱등 재적용은 미완료다. 다음 실행은 같은 배치와 전수 대장의 DB 검증부터 재개한다.
+
+## 계층별 자료 선행 r26 (2026-09-24)
+
+- [r26](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/hierarchical-data-first.plan.r26.md): 사용자 요청으로 자료 재고·행정 포함 관계·출처·지역별 조회 검증을 먼저, 확대에 따른 로드와 카메라 연출은 후속으로 명시했다. 기존 카메라 제거/롤백이나 전국 자료 완성까지 검증 보류를 뜻하지 않는다.
+- r24의 경기도부터 확장하는 범위와 r25 고속도로 후속 기획은 유지한다. 이번 변경은 기획 문서·목차·상태뿐이며 신규 수집·코드·DB·Unity 변경·실행 시험·캡처·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 고속도로 관찰 후속 기획 r25 (2026-09-23)
+
+- [r25](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/highway-observation.plan.r25.md): 전국·시도에서 주요 고속도로를 보여주고 이후 지역 간 차량 이동으로 연결할 방향을 문서로만 기록했다. 국도·지방도 전수 표현은 이번 범위가 아니다.
+- 행정 권역 r24가 선행이며 첫 노선·원본·줌 기준은 미정이다. 사용자 재개 요청 전 수집·개발을 시작하지 않는다. 코드·DB·Unity 변경·캡처·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 행정 권역 우선 r24 (2026-09-23)
+
+- [r24](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/administrative-regions-first.r24.md): 사용자 요청에 따라 경기 하위 시·군 → 다른 도 → 읍·면·동/디오라마를 산맥 상세화보다 우선한다.
+- 실제 생성기·Unity View·로컬 사본을 대조했다. 광역 참고28개에 경기도는 있지만 상세89개는 서울25구+64동이며, 검증 계약과 광역 상세 진입도 서울에 결속되어 있다. 경기 하위 자료와 지역 중립 계약이 다음 작업이다. 전체 DB 재고 조사나 최신 경계 확보 완료가 아니다.
+- 이번에는 기획·목차만 변경. 제품 코드·Editor 설정·Scene·DB 변경, 새 캡처·실행 시험·rollback·백업 생성·commit·push 없음. r23 원본/코드/증거를 보존하되 후순위 검토로 전환한다. 새 디오라마 규칙 후보 없음.
+
+## 실제 높이·한강 표본 r23 — 후순위 검토 보존 (2026-09-23)
+
+- [r23](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/globe-relief-review.r23.md): build-globe-relief-review.py, Unity 서울중간공간View/지형높이Patch와 시험 변경. 기존 DSM N37E127과 한강 feature506을 로컬 사본으로 연결, 40,401정점/80,000삼각형·높이1배. 사진 제외.
+- 원본hash·결측/범위·반복 생성 검증, EditMode19/19 통과. 실제 Play에서 산줄기/계곡과 한강 일부 참고선 Game View 확인. Unity Documentation/Changes/2026-09-23-globe-relief-r23에 캡처. 서울 평면 구역이 강을 가리는 문제는 지형 표본 관찰 중 숨김으로 보완.
+- 로컬 Editor 전용 자료이며 Resources/배포/DB에 새 저장하지 않음. 전국 지형·정확한 하상/강 폭·표본 밖 경계 연속성 미완료. 기존 서버 연결 오류와 별개. Scene 저장·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 전 세계 육지 폴리곤 r22 (2026-09-23)
+
+- [r22](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/world-land-polygons.r22.md): build-world-land-polygons.py, Unity WorldLandPolygons Resource/meta·세계육지Polygon사본·세계지구본View·시험 변경. 기존 승인 Catalog의 177영역·288폴리곤을 전수 변환, 37,438꼭짓점/63,405삼각형으로 세계 육지 격자 대체.
+- 동일 생성 hash·원본 면적/도형 포함 검사, 세계 시험23/23·수도권18/18 통과. 실제 Play 아시아/북미/남극 Game View, 수도권 메시 교체·원본 복원 확인. Unity Documentation/Changes/2026-09-23-world-land-polygons-r22에 캡처. Play 종료.
+- 1:110M 원본 정확도 한계 유지, 새 정밀 자료/고도/하천 확보 아님. 해양생활연출 LookRotation 경고와 기존 서버 연결 오류는 별개로 남아 Console 0 아님. Scene 저장·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 수도권 해안 폴리곤 r21 (2026-09-23)
+
+- [r21](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/capital-land-polygons.r21.md): build-korea-admin-context.py가 기존 원본에서 수도권 주변 육지 2,193꼭짓점/2,738삼각형 생성. Unity 서울중간공간View의 선택적 landPatch 검증·곡면 메시·기존 격자 부분 교체와 복원, 관련 시험 추가.
+- EditMode 18/18, 반복 생성 hash 일치, 원본 내부 삼각형/면적 검사 통과. 실제 Play 수도권 API-direct/원본 메시 복원·재사용 확인. 캡처는 Unity Documentation/Changes/2026-09-23-capital-land-polygons-r21.
+- 현행 공식 경계·고도 지형·범위 밖 육지 개선은 미완료. 기존 서버 연결 오류 있음. 신규 수집·DB 쓰기·Scene 저장·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 행정 경계 정밀도 부분 보완 r20 (2026-09-23)
+
+- [r20](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/administrative-boundary-precision.r20.md): 생성기의 추가 단순화 제거, 8,929개 원본 점 유지. Unity 서울중간공간View에서 원본 끝점을 보존하는 구면 경계 선분 보간·관련 시험 추가.
+- Pipeline EditMode 17/17, 반복 생성 hash 일치. 새로운 데이터 수집·DB 쓰기·Scene 저장·commit·push 없음.
+- 실제 Play 수도권 28개 context 준비·API-direct 전환·Game View 캡처 확인 후 Play 종료. Unity Documentation/Changes/2026-09-23-boundary-precision-r20에 보관. 계단형 해안은 여전히 남아 시각적 개선은 제한적이다.
+- 저해상도 육지 바탕과 광역 원본 자체의 정확도 한계는 남아 있어 전체 정밀도 해결로 판단하지 않는다. 새 디오라마 규칙 후보 없음.
+
+## 경기·인천 포함 광역 참고 연결 r19 (2026-09-23)
+
+- [r19](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/capital-admin-context.r19.md): 광역경계참고자료/Program 수집 경로, build-korea-admin-context.py, Unity 서울중간공간View context층·세계지구본 진입·시험 변경. NE 원본 수집, 28개 광역 링과 기존89개 서울 영역 결속. Editor 자동 준비 파일 변경.
+- 시험15/15·재생성 동일hash·대표 좌표3곳 포함 검사·Play 한반도→수도권→서울 API-direct와 Game View 캡처 확인. 화면에 서울/경기/인천 함께 표시. 배경 해안과 벡터 경계 해상도 차이는 후속.
+- DB apply는 ComposeMismatch/예상 DB identity 불일치로 쓰기 전 차단. 파일 수집만 완료, DB 저장/재조회/멱등 미완료. 공식 최신 경계·경기/인천 하위동·물리 입력 완주 미완료. 기존 localhost:5204 오류 있음. Scene 저장·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## P1 제61류 일상 편물 속옷·잠옷 배치 r74 (2026-09-23)
+
+- [구현 기록 r74](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p1-everyday-underwear-nightwear-batch.implementation.r74.md)에 따라 HS6 12개를 추가했다. UN Comtrade preview 361행과 남성 면 팬티·남성 면 파자마·여성 면 팬티 후보 3건을 수집했고 9개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 195행을 로컬 MySQL에 저장·독립 재조회했고 같은 입력 신규 0행을 확인했다. 전수 대장은 완료 479개·후보 210개·검색 무결과 221개·대기 5,133개이며 11,226행 재조회와 두 번째 적용 신규·수정 0행을 확인했다.
+- 다음 후보군은 제61류 일상 양말류다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## 지구본→한반도→서울 화면 확인 r18 (2026-09-23)
+
+- [r18](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/globe-peninsula-seoul-capture.r18.md): 동일 Play에서 거리53 지구본→거리32 한반도→곡면 서울89개 영역을 API로 전환하고 UI 포함 Game View 3장 기록. Unity Documentation/Changes/2026-09-23-globe-seoul-stages-r18에 보관.
+- 한반도 위경도선/패널 혼잡, 서울 진입 확대 폭·광역 중간 계층 부족 확인. 물리 입력/Console 오류 0 미검증. 이번 제품 코드 변경 없음. 복귀 후 Play 종료, Scene 저장·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 행정 경계 Editor 자동 준비 r17 (2026-09-23)
+
+- [r17](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/administrative-editor-autoload.r17.md): Unity 서울중간공간Loader의 프로젝트별 경로/hash 설정·Play 자동 준비·해제 메뉴, 서울중간공간View/세계지구본View의 서울 초점 진입 조건, 관련 시험 변경.
+- 시험14/14·hash 불일치 거절·실제 Play 두 번 자동 준비(Ready/89개/View1개)·앞면/뒷면 진입 true/false 확인. 자동 로드 후 중랑구 Game View 캡처 보관. 로컬 EditorPrefs에 기존 v3 사본 지정.
+- 데이터 배포·전국 경계·물리 입력 완주·Console 오류 0 미검증. Scene 저장·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 서울 경계 지구본 결속 r16 (2026-09-23)
+
+- [r16](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/administrative-globe-binding.r16.md): 기존 경계 생성기에 위경도/v3 사본 추가. 별도 Unity 서울중간공간View/Loader/Tests 변경. 같은 지구본 카메라 사용·부모 기반 선택·지명 겹침 회피·구면 Collider 선택과 복원 구현.
+- 시험13/13, 동일 입력 hash 반복 일치, 실제 Play 서울→중랑구→복귀 함수 호출/대표 도형 Raycast/카메라 복원 확인. Game View 캡처는 Unity Documentation/Changes/2026-09-23-admin-globe-r16에 보관.
+- 전국 경계·자동 로드·물리 입력 완주·Console 오류 0 미검증. Scene 저장·commit·push 없음. 새 디오라마 규칙 후보 없음. r15의 별도 평면 경로는 v1/v2 호환용으로 유지한다.
+
+## 행정구역 포함 관계 리팩토링 r15 (2026-09-23)
+
+- [r15](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/administrative-hierarchy-refactor.r15.md): 별도 Unity 저장소의 `행정구역Hierarchy`와 시험 추가, `서울중간공간View`에 부모 기반 표시·선택 연결, 동적 구 버튼, 임의 중랑구 자동 진입 제거. 기존 v1/v2 자료 계약 보존.
+- 포함 관계 시험 6/6 및 서울 호환 회귀 10/10 통과. 관련 diff 검사 통과. 전국 자료 수집·DB 저장·곡면 결속은 미완료. Play Mode/Game View 미검증. Scene 저장·commit/push 없음. 새 디오라마 규칙 후보 없음.
+
+## 사진형 한반도 제외·행정 경계 우선 r14 (2026-09-23)
+
+- [r14](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/administrative-globe-first.r14.md): Unity 한반도지형미리보기View 사진/래스터 하천 표시 금지·안내 수정, 관련 세계지구본/화면오차 시험 기대값 변경. 원본 파일은 보존.
+- 전국 시도→시군구→읍면동 지리 경계 우선으로 방향 변경. 기존 서울 고정 개수 계약은 전국 확장에 바로 사용하지 않는다. 전국 경계 데이터 확보·DB 저장·Unity 표시는 미완료.
+- 표시 정책 변경 관련 시험: 세계지구본22/22·화면오차6/6 통과. 관련 diff 검사 통과. 이번 변경의 Play/Game View 미검증.
+- 중단된 r13의 texture/기호 개선과 시험6/6은 보존하되 더 확장하지 않는다. Scene 저장·commit/push 없음. 새 디오라마 규칙 후보 없음.
+
+## P1 제61류 일상 편물 상의 배치 r73 (2026-09-23)
+
+- [구현 기록 r73](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p1-everyday-knitted-tops-batch.implementation.r73.md)에 따라 HS6 8개를 추가했다. UN Comtrade preview 상한 500행에서 무역 행 104개와 면 100% 반팔 티셔츠 후보 1건을 수집했고 7개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 129행을 로컬 MySQL에 저장·독립 재조회했고 같은 입력 신규 0행을 확인했다. 전수 대장은 완료 467개·후보 207개·검색 무결과 212개·대기 5,145개이며 11,226행 재조회와 두 번째 적용 신규·수정 0행을 확인했다.
+- 다음 후보군은 제61류 일상 편물 속옷·양말이다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## 이천 지구 결속 확대 r12 (2026-09-23)
+
+- [r12](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/continuous-geographic-zoom.r12.md): Python 정점별 위경도 추가, Unity `이천지구연속확대View`/meta 추가. 기존 지구본 카메라의 로그 거리 보간으로 확대/축소.
+- Play API 왕복0→0.4→1→0에서 초점 (0.50,0.50) 확인. 지정 지구본 카메라 렌더 기록. 직접 휠/전체 Game View/자동 시험 suite 미검증.
+- 주변 지도와 상세면 색·해상도 단절 및 선박 표시 과대가 남으며 구/동 통합 미완료. 로컬 검토만 구현, 완성된 연속 지형 시스템 아님. Play 종료·Scene 저장/commit/push 없음. 새 디오라마 규칙 후보 없음.
+
+## 연속 지리 확대 조사·제안 r11 (2026-09-23)
+
+- [r11](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/continuous-geographic-zoom.r11.md): OGC 3D Tiles와 Cesium Unity 공식 문서 조사. 지구본 최대 확대→서울 별도 카메라, 이천 임시 좌표/카메라의 단절을 코드로 확인했다.
+- 같은 위경도 초점·미터/구체 축척·부모 지형/자식 상세도와 행정 정보 계층 분리를 제안했다. 첫 후보는 이천 한 지점의 왕복 확대. 제품 변경/Play/DB/commit/push 없음. 새 디오라마 규칙 후보 없음.
+
+## 이천 실제 높이 로컬 표현 r10 (2026-09-23)
+
+- [r10](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/icheon-local-preview.r10.md): `build-icheon-preview.py` 좌표 정렬과 별도 Unity `이천입체지형검토View.cs`/meta 구현. DSM 높이 1배 3km 타일, 정점10,201개. 동결 출력 재생성 hash 동일.
+- Play 생성·카메라 변경·법선/잘못된 계약/Collider 검사·삭제 확인. 지정 카메라 렌더 2장. 전체 Game View 통합 미완료, 기존 서버/Replay Console 오류8건. 원영상의 정점색 축소로 흐림 남음.
+- 로컬 검토 도구이며 자동 확대 연결·공장/운송·배포 없음. Scene 저장·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 이천 실제 높이 표현 준비 r9 (2026-09-23)
+
+- [r9](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/icheon-unity-relief.r9.md): 확보 DSM을 메시 높이로, 위성영상을 표면 색으로 사용하는 방향을 기록했다. 기존 Unity View와 r8 자료 상태 확인만 수행했다.
+- 자료 검토보류·좌표 정렬·대표 타일 명세 결속이 남았다. Unity 코드/Scene·Play/Game View 변경 또는 검증 없음. 새 디오라마 규칙 후보 없음. commit/push 없음.
+
+## 이천 실제 지형 자료 수집 r8 (2026-09-23)
+
+- [수집 기록 r8](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/icheon-terrain-research.r8.md): 약 4km 검토 창 DSM·2025년 Sentinel-2 영상 확보. `eng/Ssalddel.PublicDataPortalImport/이천지형원본.cs`, CLI 연결, `eng/public-spatial/inspect-icheon-review.py` 추가.
+- importer build 통과. DSM 원본 로컬 MySQL 신규 1건·재적용 신규 0건·독립 재조회 확인. 위성영상·clip·품질 JSON은 비공개 파일 단계, 정규화 지형 셀 0건. 실제 도로·공장 부지·좌표계 정렬은 미완료.
+- Unity 변경/실행·commit·push 없음. 다음은 파생 자료 DB 계보와 좌표 정렬 후 대표 지형 타일 준비. 새 디오라마 규칙 후보 없음.
+
+## 한반도 지형 위 물류 표본 r7 (2026-09-23)
+
+- [r7](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/README.md): 사용자 재지정에 따라 r6 별도 모형 대신 기존 GlobeVisualRoot/한반도지형미리보기View에 합성 거점과 트럭1대를 결속했다. Unity `한반도물류시각표본View.cs`·시험/meta·`Documentation/Changes/2026-09-23-terrain-logistics/` 추가.
+- 시험4/4, Play에서 시간에 따른 위치 변화·두 관점 Game View 확인. 운영 쓰기·실제 도로·Scene 저장·빌드·commit/push 없음. 지도 확대 시 저해상도·해안 픽셀 경계, 배경 글자 배치 문제는 미해결. 다음은 사용자 화면 판단 후 상세 지형/경로 표현 기획. 새 디오라마 규칙 후보 없음.
+
+## P1 제48류 가정용 종이 문구·정리용품 배치 r72 (2026-09-23)
+
+- [구현 기록 r72](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p1-household-paper-stationery-batch.implementation.r72.md)에 따라 HS6 8개를 추가했다. UN Comtrade preview 358행에서 무역 행 104개와 봉투·스프링 노트·D링 바인더 후보 3건을 수집했고 5개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 131행을 로컬 MySQL에 저장·독립 재조회했고 같은 입력 신규 0행을 확인했다. 전수 대장은 완료 459개·후보 206개·검색 무결과 205개·대기 5,153개이며 11,226행 재조회와 두 번째 적용 신규·수정 0행을 확인했다.
+- 다음 후보군은 제61·62류 일상 의류 기본품이다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## P1 제48류 가정용 종이 위생·생활재 배치 r71 (2026-09-23)
+
+- [구현 기록 r71](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p1-household-paper-hygiene-batch.implementation.r71.md)에 따라 HS6 8개를 추가했다. UN Comtrade preview 256행과 화장지·미용티슈·종이접시 후보 3건을 수집했고 5개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 131행을 로컬 MySQL에 저장·독립 재조회했고 같은 입력 신규 0행을 확인했다. 전수 대장은 완료 451개·후보 203개·검색 무결과 200개·대기 5,161개이며 11,226행 재조회와 두 번째 적용 신규·수정 0행을 확인했다.
+- 다음 후보군은 제48류 가정용 종이 문구·정리용품이다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## P1 제33·34류 가정용 실내 방향·생활 관리 제품 배치 r70 (2026-09-23)
+
+- [구현 기록 r70](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p1-household-deodorizing-maintenance-batch.implementation.r70.md)에 따라 HS6 8개를 추가했다. UN Comtrade preview 280행과 실내 방향제·가구 광택제·양초 후보 3건을 수집했고 5개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 131행을 로컬 MySQL에 저장·독립 재조회했고 같은 입력 신규 0행을 확인했다. 전수 대장은 완료 443개·후보 200개·검색 무결과 195개·대기 5,169개이며 11,226행 재조회와 두 번째 적용 신규·수정 0행을 확인했다.
+- 다음 후보군은 제48류 가정용 종이 위생·생활재다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## P1 제33류 가정용 개인관리 제품 배치 r69 (2026-09-23)
+
+- [구현 기록 r69](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p1-household-personal-care-batch.implementation.r69.md)에 따라 HS6 9개를 추가했다. UN Comtrade preview 500행과 향수·립스틱·페이셜크림 후보 3건을 수집했고 6개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 147행을 로컬 MySQL에 저장·독립 재조회했고 같은 입력 신규 0행을 확인했다. 전수 대장은 완료 435개·후보 197개·검색 무결과 190개·대기 5,177개이며 11,226행 재조회와 두 번째 적용 신규·수정 0행을 확인했다.
+- 다음 후보군은 제33·34류 가정용 실내 방향·생활 관리 제품이다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## 원두 새벽 배송 시각 표본 r6 (2026-09-23)
+
+- [r6](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/README.md): 별도 Unity 저장소에 `원두배송시각표본View.cs`와 EditMode 시험을 추가. 기존 Scene에서 Editor 전용 임시 도형 모형·트럭·담당자를 표시하며 운영 쓰기 없음. 시험6/6, 실제 Play 자연 시간 이동·정차와 Game View2장 확인.
+- 캡처/기록: Unity `Documentation/Changes/2026-09-23-coffee-preview/`. 실제 행정동 좌표·서버 사본·제조/운송/인수 연결은 후속. UI 일부 겹침/가림, 물리 클릭·Console 전체·빌드 미검증. 기존 자료를 수정/대체하지 않았으며 Scene 저장·commit/push 없음. 새 디오라마 규칙 후보 없음.
+
+## 가맹본부·제조시설 범위 r3 (2026-09-23, 이력)
+
+- [r3](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/README.md): 상온 품목 시작 방향 수용, 커피 매장 포함 외식 가맹점과 제조시설을 기획 범위에 추가. 원료 Lot→제조→제품 Lot 및 자체/위탁·제조/창고 책임 분리 제안.
+- 다음 질문은 커피 원두 제조를 첫 사례로 고를지 여부. 아직 품목·공정·법적 요건 확정 아님. 기존 제조 코드 조사는 후속이며 이번에는 문서만 변경. DB·Unity·commit/push 없음.
+
+## 가맹본부 운영 모형 확정 r2 (2026-09-23, 이력)
+
+- [r2](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/README.md): 외부 가상 가맹본부 한 곳의 플랫폼 이용 모형 승인 반영. 플랫폼·본부·독립 점주·공급/운송 책임을 구분하고 새벽 인수 r29 범위 유지.
+- 다음 미답변은 첫 상온 품목 한 종류 여부. 이번에는 기획 문서만 변경, 코드·DB·Unity·commit/push 없음.
+
+## 가맹본부 운영 법령 조사 r1 (2026-09-23, 이력)
+
+- [조사 r1](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/README.md): 가맹사업법·필수품목 협의·광고판촉·점주 보호·식품 운반 관련 공식 자료 확인, 기존 주문/창고/화물/음식판매 OS와 분리한 가맹본부 책임 제안.
+- 일부 법령 본문 추출/현행 판본 대조 한계 명시. 법령 규칙 코드화 전 부칙·예외·전문가 검토 필요. 문서만 변경, DB·제품·Unity·commit/push 없음.
+
+## 새벽 식자재 인수 범위·재사용 조사 r29 (2026-09-23)
+
+- [r29](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/dawn-restaurant-supply.scope.r29.md): 창고 입고 표본·출고화물 OS 인계·음식점 조리/배송 표본 소스 확인. 조리 메서드의 식자재 재고 연결 미확인으로 첫 범위를 음식점 인수 한 건으로 좁혔다.
+- 문서만 변경. 다음은 Lot·부분 인수·저장 계약 대조와 WI 명세 결속. 정확 계약 미정 상태에서 제품 구현/Goal을 자동 활성화하지 않았다. 시험·DB·Unity 실행·commit·push 없음.
+
+## P1 제33·34류 가정용 개인위생·세정 제품 배치 r68 (2026-09-23)
+
+- [구현 기록 r68](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p1-household-hygiene-cleaning-batch.implementation.r68.md)에 따라 HS6 10개를 추가했다. UN Comtrade 공개 preview 500행과 샴푸·치약·분말 세탁세제 후보 3건을 수집했고 7개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 163행을 로컬 MySQL에 저장·독립 재조회했고 같은 입력 신규 0행을 확인했다. 전수 대장은 완료 426개·후보 194개·검색 무결과 184개·대기 5,186개이며 11,226행 재조회와 두 번째 적용 신규·수정 0행을 확인했다.
+- 다음 후보군은 제33류 가정용 개인관리 제품이다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## 행정동 디오라마 진입 r28 (2026-09-23)
+
+- [r28](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/dong-diorama-entry.implementation.r28.md): Unity 경계/지명 선택을 연결하고 면목7동만 기존 사가정 일부 보기로 진입. 그 외 준비 중 안내. 기존 구와 시점 복원.
+- 시험9/9·실제 Play에서 미준비/진입/복귀와 카메라 값 동일 확인·캡처. 물리 클릭·빌드 미검증, 지명 버튼 겹침 남음. Play 종료, Scene 저장·commit/push 없음.
+
+## 4개 구 행정동 표현 r27 (2026-09-23, 이력)
+
+- [r27](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/four-district-preview.implementation.r27.md): 기존 공식2023년 경계를 중랑16·동대문14·광진15·노원19동으로 확장. 변환 도구와 Unity View/계약 시험 변경, 기존 v1 읽기 유지.
+- 동일 출력 hash 확인·EditMode7/7·실제 Play 4구 선택/캡처. 이전 임시 루트 중첩을 고쳐 재실행 후 루트1개 확인. Play 종료.
+- 로컬 수동 사본 열기이며 DB/Resources/Scene 저장 없음. 글자 겹침·UI 가림, 물리 입력·빌드·기존 서버 오류는 남음. commit/push 없음.
+
+## 서울·중랑구 중간 공간 표현 r26 (2026-09-23, 이력)
+
+- [r26](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/seoul-hierarchy-preview.implementation.r26.md): r25 원본에서 25구+중랑구16동을 변환·개별 도형 검증, 동일 입력 hash 동일. 변환 도구와 Unity 검토 사본 Loader/View/시험 및 기존 지구본 연결 변경.
+- EditMode 신규4/4·기존22/22, 실제 `SimulationWorldShell` Play에서 서울→중랑구→사가정→기존 디오라마→복귀 및 Game View 캡처. 최종 코드 재실행 확인, Play 종료.
+- 2023년 참고 경계·Editor 수동 사본 열기이며 Resources/Scene 배포 반영 아님. 지명 겹침·시점 연속성 보완 필요. 기존 서버 연결/세션·Replay 오류 때문에 Console0 아님. 물리 입력·Windows 빌드·업무 E2E 미검증. commit/push 없음.
+
+## 공간 자료 재고·서울 경계 보충 r25 (2026-09-23, 수집 이력)
+
+- [r25](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/spatial-data-inventory.collection.r25.md): 기존 지구/한반도/사가정 자료와 30행정동 대장 대조. 원본 경로 3개 누락, 현재 중랑구 ID 정규화 DB 조회 0행 확인(Mongo/다른 ID 부재 판정 아님).
+- 서울 공식 2023년 행정동425·자치구25 객체 ZIP 확보. 행정동은 기존 hash 동일 복구. 기존 로컬 MySQL에 원본 경로·hash 등록2건, 재입력 신규0·독립 재조회2건. 정규화 도형·Unity 반영 미완료.
+- 수집 CLI 빌드 경고0/오류0. 다음은 서울25구 좌표·코드·도형 검증과 중랑구 사본 생성. 최신 경계 관문은 그대로 유지. commit/push 없음.
+
+## VWorld 연결 점검 r24 (2026-09-23)
+
+- [r24](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/vworld-connection-check.r24.md): 승인된 WMTS/TMS 설정 저장 성공, 공식 TMS Y/X 주소 규격 확인.
+- 타일 1장 요청은 내장 브라우저 차단으로 이미지·인증 응답 미확보. 오류 도구 출력에 키가 포함되어 사용자 재발급 후 안전한 비밀 설정으로 재개해야 한다. 키 값은 문서에 보존하지 않는다.
+- Unity/Scene/DB 변경·commit·push 없음. 다음 단계는 안전한 인증 연결 시험이며 지도 적용 완료가 아니다.
+
+## 단계별 지도 공급자 조사 r23 (2026-09-23)
+
+- [r23](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/map-provider-research.r23.md): Google Tiles/Cesium Unity, NAVER 지도·좌표 API, VWorld WMTS 공식 자료 조사.
+- 한국 Google 실사3D를 전제로 하지 않고, NAVER 지도와 3D 메시 원본을 구분. 중간 지도는 VWorld 우선 검토 제안, 기존 디오라마 보존.
+- 인증 호출·데이터 다운로드/DB 적재·SDK 설치·Scene 수정 없음. 조사 문서 및 목차만 갱신.
+
+## 중간 공간 계층 설계 r22 (2026-09-23)
+
+- [r22](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/spatial-zoom-hierarchy.r22.md): 현재 Region이 서울 전체가 아닌 사가정 후보 범위이며 중간 단계가 주로 선택 UI임을 소스에서 확인.
+- 한반도→서울→중랑구 실제 지도 연결을 첫 구현 후보로 정리. 역세권과 행정동을 엄격한 포함 관계로 취급하지 않는다.
+- 이번 턴은 조사·문서만 변경. 중간 지도 DB/배치 자료 결속·좌표 정합은 미검증. r21 구현 보존, commit/push 없음.
+
+## 사가정 디오라마 전환 r21 (2026-09-23)
+
+- [r21](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/globe-diorama-transition.r21.md): 별도 Unity 저장소 `세계지구본View.cs`에 준비 관문 재사용·확대/페이드·중복 방지·복귀 시점 보존 추가.
+- 기존 회귀 22/22, 실제 Play 공개 호출 진입/중복 거절/복귀와 Game View 확인. 물리 입력·중간 프레임 부드러움·빌드는 미검증.
+- 서버 연결 오류와 업무 결과 0건은 기존 상태로 남는다. Scene/DB 변경·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 움직임 우선 관찰 시도 r20 (2026-09-23)
+
+- [r20](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/animation-first-preview.r20.md): 지구본 운송 모형20개 중심, 큰 패널/전체 선 숨김. 모형 선택→선 하나·하단 카드→근거 펼치기, 빈 곳/닫기로 복귀.
+- Unity View/Loader 수정·컴파일 및 실제 Play 투영좌표 선택/빈 위치 검증·Game View 확인. 물리 마우스·드래그 충돌·카드 작은 화면 가독성은 후속. 트럭·배달 모듈 확장은 아직 아님.
+- DB/Scene 저장/commit/push 없음. Play 종료. 기존 해양 안내 패널 숨김 순서와 모형 밀집은 추가 개선 대상.
+
+## P0 제12류 가정용 조리 씨앗·식물 재료 배치 r67 (2026-09-23)
+
+- [구현 기록 r67](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-household-culinary-seeds-plants-batch.implementation.r67.md)에 따라 HS6 8개를 추가했다. UN Comtrade 원본 응답 124행과 건조 미역 공개 색인 후보 1건을 수집했고 정확한 원물 결속이 없는 7개는 `SearchNoCandidate`로 보존했다. 공식 순중량 결측 2건은 0으로 만들지 않았다.
+- 배치 자체시험 12/12, 정규화 117행을 확인했다. 로컬 `hongdal-mysql-1 / hongdal_dev` 저장·독립 재조회 117행과 같은 입력 신규 0행을 확인했다. HSK10 자식이 많은 품목은 불변 manifest에 전체를 보존하고 DB 검토 사본을 코드 목록·개수·원문 hash로 압축한다.
+- 전수 대장은 완료 416개, 후보 관찰 191개, 제한 40개, 채널 부적합 8개, 검색 무결과 177개, 대기 5,196개다. 전수 대장 11,226행을 독립 재조회했고 두 번째 저장은 신규·수정 0행이었다.
+- 다음 후보군은 P1 제33·34류 가정용 개인위생·세정 제품이다. 수집기 빌드 경고 0개·오류 0개다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## HS 중심 자료 연결 r19 (2026-09-23)
+
+- [구현 r19](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/hs-centered-query.implementation.r19.md): 기존 로컬 DB 분류 411행·수입 관측/상태 4,124행을 HS2022/H6·HS6·한국·2025·수입·상대국·단위 기준으로 묶었다. HS408개 중 관측359·무관측49, 세계합계 포함 상대국 묶음1,855개. DB 쓰기 없음.
+- CLI HS 색인 조회·출처 hash 사본, Unity HS 검색/상세/국가 연결선 추가. 반복 export 동일 hash, build 오류/경고0·CLI5/5·Unity7/7. 실제 Play HS030214→국가5개 연결·50회 품목 왕복 후 루트1개 유지.
+- HSK2026·상품 후보·HS 없는 운송통계와 자동 결속하지 않는다. 수출 미수집/결측은0 아님. 현재 영어명 정확 일치 국가만 지도 연결; 공식 M49↔ISO·한국어 표시명은 후속. Play 종료·Scene 저장/commit/push 없음.
+
+## 지구본 기울기·자전축 교정 r18 (2026-09-23)
+
+- [교정 r18](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/axial-tilt.correction.r18.md): 화면 북극 오른쪽 23.5도 표시, 한반도 중앙 유지. 자동 회전을 월드 Y축에서 로컬 남북축으로 변경해 자전 중 기울기 변화를 막았다.
+- Unity 지구본 시험 22/22, 실제 Play 표시각 23.5000076도·운송 모형 20개·Game View 확인. 천문 공전면 모사와는 구분한다. Play 종료·Scene 저장/commit/push 없음.
+
+## DB 기반 선박·항공기 지구본 관찰 r17 (2026-09-23)
+
+- [구현 r17](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/transport-preview.implementation.r17.md): 로컬 DB 2,431행 재조회 후 20개 대표 관측 사본 생성. 해상 10·항공 10 고정 모형이며 실제 대수/항로/물동량 비례 아님. 원자료 상세와 선택 기준을 표시한다.
+- CLI preview 분기·Unity 운송수단 View/Loader/Tests/meta 추가. 수집기 build 오류/경고 0, Unity 시험 8/8. 실제 Play 반복 로드·1,000회 갱신·Transform 101개 유지·Collider 0. [실제 Game View](../Changes/2026-09-23-transport-preview.md) 확인.
+- 기존 서버 세션 오류는 남아 전체 Console 0 아님. 물리 클릭·배포 빌드 미검증. Play 종료·Scene 저장/commit/push 없음. r16 중량 단위·항만 포함 관계 검토는 별도.
+
+## 2025년 관세청 해상·항공 물동량 수집 r16 (2026-09-23)
+
+- [결과 r16](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/port-movement.collection.r16.md): 사용자 활용신청 이후 세 API 접근 정상. 관세청 입항/출항 × 해상/항공 2025년 원본 16,860행 수집, 5국가 항만·공항별 2,431행을 기존 로컬 MySQL에 저장했다.
+- 독립 재조회 2,431행·재입력 신규 0·별도 verify 성공. CLI build 오류/경고 0, 자체시험 6/6. 새 `항만물동량자료Pipeline`과 Program 진입 추가.
+- 원필드는 TextValue에 보존하고 중량 단위 검토 전 NumericValue는 null로 유지한다. 항만 간 합산·선박 대수 추정 없음. r15 API 차단은 해소되었으나 과거 기록은 보존한다.
+- Unity·원격 DB·공개 게시·commit·push 없음.
+
+## 2025년 운송수단별 공공자료 수집 r15 (2026-09-23)
+
+- [수집 결과 r15](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/transport-mode-data.collection.r15.md): 인천공항 공식 2025년 JSON 15,375행 확보, 5국가 9,045행에서 월·출발/도착·여객기/화물기별 관측 912개 생성. kg와 운항 편을 구분하며 전국 통관 통계로 해석하지 않는다.
+- 기존 CLI `항공물동량자료Pipeline`/Program 진입을 추가했다. `hongdal_dev` 912개 저장·독립 재조회, 같은 입력 신규 0, 별도 verify 912개. 수집 CLI build 오류/경고 0·파서 자체시험 5/5. 아래 r66에서 관찰한 당시 참조 결손 이후 현재 수집 CLI 빌드는 통과했다.
+- 관세청 입항/출항·인천공항 국가별 API는 현재 키에 HTTP 403 `SERVICE_KEY_IS_NOT_REGISTERED_ERROR`. 해상 수치 미확보를 0으로 채우지 않았다. 사용자 활용신청·키 등록 확인 후 재개한다.
+- Unity·Scene·원격 DB·공개 게시·commit·push 변경 없음. 기존 r14 표현은 유지한다.
+
+## P0 제12류 가정용 식용 견과·씨앗류 배치 r66 (2026-09-23)
+
+- [구현 기록 r66](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-household-edible-nuts-seeds-batch.implementation.r66.md)에 따라 HS6 9개를 추가했다. UN Comtrade 원본 응답 184행과 생알땅콩·생 해바라기씨·생 참깨 공개 색인 후보 3건을 수집했고 정확한 결속이 없는 6개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 147행을 확인했다. 로컬 `hongdal-mysql-1 / hongdal_dev` 저장·독립 재조회 147행과 같은 입력 신규 0행을 확인했다.
+- 전수 대장은 완료 408개, 후보 관찰 190개, 제한 40개, 채널 부적합 8개, 검색 무결과 170개, 대기 5,204개다. 전수 대장 11,226행을 독립 재조회했고 두 번째 저장은 신규·수정 0행이었다.
+- 다음 후보군은 제12류 가정용 조리 씨앗·식물 재료다. 병렬 작업 중 잠시 발생한 `항공물동량자료Pipeline` 참조 결손은 합류 후 해소되었고 수집기 전체 빌드 경고 0개·오류 0개를 확인했다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## 2025년 국가별 무역 실제 수집·관찰 r14 (2026-09-23)
+
+- [결과 r14](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/trade-data-binding.implementation.r14.md): 관세청 2025년 한국↔CN/JP/US/AU/VN 실제 수신·12개월 검사·연간 총계 사용. 기존 로컬 MySQL에 20개 신규 저장·독립 재조회 20·재입력 신규 0. 원본/metadata/receipt/hash는 비공개 artifacts/local에 보존한다.
+- 변경: 기존 수집 CLI 진입+`국가무역관찰Pipeline`, 별도 Unity의 국가무역 View/Loader/Tests/meta 및 기존 해양 연출 숨김·복귀. 검토용 동결 사본만 읽어 10흐름·상징 화물 40개를 표시한다. 실제 선박/항공기 수·운항 경로가 아니다.
+- CLI build 오류/경고 0·파서 7/7, Unity 무역 10/10·해양 회귀 7/7·지구본 회귀 21/21. 실제 Play에서 반복 로드·1,000회 갱신·hash 거부·40개 유지 및 [Game View 2장](../Changes/2026-09-23-trade-data.md) 확인. 버튼은 onClick 호출 검증, 물리 클릭 미검증. 사본 재생성 동일 hash·지정 경로 Fast diff 통과.
+- 기존 서버 세션 오류가 남아 전체 Console 0은 아니다. Play 종료·Scene 저장/정식 빌드/공개 배포/commit/push 없음. 후속은 수단별 자료 확보와 배포 검토. 새 디오라마 규칙 후보 없음.
+
+## 세계 해역 가상 선박 r11 (2026-09-23)
+
+- [구현·검증 r11](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/international-ships.implementation.r11.md): 별도 Unity `가상해양항로Catalog`·meta 추가, `해양생활연출View`·해양 시험 확장. 기존 동해 포함 6개 합성 항로·12척, 중국·동남아·일본·미국·호주 주변 왕복. 물고기 3개와 수온 실험은 유지한다.
+- 컴파일·해양 EditMode 7/7 통과. 대만 육지 교차 후보를 수정 후 재검증. 실제 Play Mode에서 6항로·12척·3마리와 자동 시계 진행, 1,000회 갱신·숨김/재표시 후 자식 36개 유지·Collider 0 확인. [Game View 2장](../Changes/2026-09-23-international-ships.md). 물리 드래그·빌드·Hosted 미검증. 이전 지구본/어군 시험은 [r10 증거](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/marine-motion.implementation.r10.md)이며 이번 전수 재실행은 아니다.
+- Editor 전용 합성 연출, 실제 항로/항만/AIS 아님. 기존 서버 세션/연결 오류로 전체 Console 0 아님. Play 종료·Scene 저장/DB/API 변경·commit/push 없음. 새 디오라마 규칙 후보 없음.
+
+## P0 제3류 남은 가정용 건조·염장·훈제 어류 배치 r65 (2026-09-22)
+
+- [구현 기록 r65](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-remaining-household-dried-salted-smoked-fish-batch.implementation.r65.md)에 따라 HS6 10개를 추가했다. UN Comtrade 원본 응답 90행과 건조 굴비·멸치젓 공개 색인 후보 2건을 수집했고 정확한 결속이 없는 8개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 132행을 확인했다. 로컬 `hongdal-mysql-1 / hongdal_dev` 저장·독립 재조회 132행과 같은 입력 신규·수정 0행을 확인했다.
+- 전수 대장은 완료 399개, 후보 관찰 187개, 제한 40개, 채널 부적합 8개, 검색 무결과 164개, 대기 5,213개다. 전수 대장 11,226행을 독립 재조회했고 두 번째 저장은 신규·수정 0행이었다.
+- 다음 후보군은 제12류 가정용 식용 견과·씨앗류다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## 지역 디오라마용 배달 방문 기록 (2026-09-22)
+
+- [연결 기록](../Changes/2026-09-22-delivery-record-preview.md): 사용자 정정에 따라 지구본 영상 카드와 재생 UI를 제거했다. 영상은 편집 작업공간에만 두고 매장·메뉴·방문 사실을 delivery-visit-record.v2로 공유한다.
+- 기존 행정동 해석기에 BindPickupRecords를 추가했다. 확인된 행정동/역세권 ID로만 선택하며 미배정·다른 지역·중복을 구분한다. 실제 7건은 경계 원본 부재로 지역 미배정이며 DB/API 공급·지역 화면 표시는 미완료다.
+- 집중 시험 8/8 통과. 기존 지구본 UI 검증은 폐기된 접근의 이력일 뿐 현재 증거가 아니다. 운영 상태 변경·Scene 저장·commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## P0 제3류 가정용 건조·염장·훈제 어류 배치 r64 (2026-09-22)
+
+- [구현 기록 r64](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-household-dried-salted-smoked-fish-batch.implementation.r64.md)에 따라 HS6 8개를 추가했다. UN Comtrade 원본 응답 48행과 훈제 연어·건조 명태·건조 멸치 공개 색인 후보 3건을 수집했고 정확한 결속이 없는 5개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 101행을 확인했다. 로컬 `hongdal-mysql-1 / hongdal_dev` 저장·독립 재조회 101행과 같은 입력 신규 0행을 확인했다.
+- 전수 대장은 완료 389개, 후보 관찰 185개, 제한 40개, 채널 부적합 8개, 검색 무결과 156개, 대기 5,223개다. 전수 대장 11,226행을 독립 재조회했고 두 번째 저장은 신규·수정 0행이었다.
+- 다음 후보군은 제3류에 남은 가정용 건조·염장·훈제 어류다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## P0 제3류 남은 가정용 냉동 어류 필레·어육 배치 r63 (2026-09-22)
+
+- [구현 기록 r63](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-remaining-household-frozen-fish-fillets-meat-batch.implementation.r63.md)에 따라 HS6 8개를 추가했다. UN Comtrade 원본 응답 94행과 냉동 순살 고등어 필레 공개 색인 후보 1건을 수집했고 정확한 결속이 없는 7개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 95행을 확인했다. 로컬 `hongdal-mysql-1 / hongdal_dev` 저장·독립 재조회 95행과 같은 입력 신규 0행을 확인했다.
+- 전수 대장은 완료 381개, 후보 관찰 182개, 제한 40개, 채널 부적합 8개, 검색 무결과 151개, 대기 5,231개다. 전수 대장 11,226행을 독립 재조회했고 두 번째 저장은 신규·수정 0행이었다.
+- 다음 후보군은 제3류 가정용 건조·염장·훈제 어류다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## 지구본 수온 사본 결속 r8 (2026-09-22)
+
+- [구현·검증 기록 r8](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/temperature-globe-binding.implementation.r8.md): NOAA 과거 L4 수온 7일×9격자 확보, 로컬 `hongdal-mysql-1 / hongdal_dev` 신규 63·독립 재조회 63·재입력 신규/수정 0. r4의 소표본 수신 차단 해소. 국내 API 인증 차단은 유지한다.
+- 기존 수온 CLI export 추가, 별도 Unity `해수면수온미리보기View`·Editor Loader·시험/meta로 SHA 검증 사본을 메모리에 연결했다. 날짜·좌표 선택으로 수온·분석오차·출처를 표시한다. 배포 자원·원격 API·운영 상태 쓰기 없음.
+- CLI build/자체시험 14/14·Unity 컴파일/EditMode 10/10, 반복 export 동일 hash 확인. 실제 Play Mode API 조작·[Game View 2장](../Changes/2026-09-22-globe-sst.md) 확인. 물리 클릭·빌드는 미검증이며 기존 시험 도구/월드 종료 오류는 별도다.
+- 물고기 이동은 가상 실험 규칙 또는 실제 어종 근거 중 사용자 선택 대기이며 아직 구현하지 않았다. Play Mode 종료·Scene 저장/commit/push 없음. 새 디오라마 규칙 후보 없음.
+
+## P0 제3류 가정용 냉동 어류 필레 배치 r62 (2026-09-22)
+
+- [구현 기록 r62](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-household-frozen-fish-fillets-batch.implementation.r62.md)에 따라 HS6 12개를 추가했다. UN Comtrade 원본 응답 53행과 공개 색인 후보 4건을 수집했고 정확한 결속이 없는 8개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 138행을 확인했다. 로컬 `hongdal-mysql-1 / hongdal_dev` 저장·독립 재조회 138행과 같은 입력 신규 0행을 확인했다.
+- 전수 대장은 완료 373개, 후보 관찰 181개, 제한 40개, 대기 5,239개다. 전수 대장 11,226행을 독립 재조회했고 두 번째 저장은 신규·수정 0행이었다.
+- 다음 후보군은 제3류 남은 가정용 냉동 어류 필레·어육이다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## 지구본 위경도 기준선 r7 (2026-09-22)
+
+- [구현·검증 기록 r7](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/globe-graticule.implementation.r7.md): 별도 Unity `지구위경도선View`·시험·meta와 기존 지구본 초기화 결속. 흰색 10도 주선/확대 2도 보조선, 한반도 주변 좌표 표시. 새 Scene·DB·외부 API·업무 상태 변경 없음.
+- 새 EditMode 4/4와 기존 지구본 21/21 통과. 선 굵기 보정 후 재컴파일 성공, 실제 Play Mode 카메라 API로 10→2→10도·선 수 259 유지 및 [전체/확대 Game View](../Changes/2026-09-22-globe-graticule.md) 확인. 실제 휠 입력·모바일·빌드 검증은 아니다.
+- 기존 월드 종료 부모 변경 오류와 시험 도구 콜백 오류는 별도 미해결이며 Console 0을 주장하지 않는다. Play Mode 종료, Scene 저장·commit·push 없음. 수온·어군 이동은 후속, 새 디오라마 규칙 후보 없음.
+
+## P0 제3류 가정용 냉동 갑각류·연체동물 배치 r61 (2026-09-22)
+
+- [구현 기록 r61](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-household-frozen-shellfish-batch.implementation.r61.md)에 따라 HS6 12개를 추가했다. UN Comtrade 원본 응답 166행과 공개 색인 후보 8건을 수집했고 정확한 결속이 없는 4개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 188행을 확인했다. 로컬 `hongdal-mysql-1 / hongdal_dev` 저장·독립 재조회 188행과 같은 입력 신규 0행을 확인했다.
+- 전수 대장은 완료 361개, 후보 관찰 177개, 제한 40개, 대기 5,251개다. 전수 대장 11,226행을 독립 재조회했고 두 번째 저장은 신규·수정 0행이었다.
+- 다음 후보군은 제3류 가정용 냉동 어류 필레·어육이다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## 지구본 수산물 통계 로컬 미리보기 r6 (2026-09-22)
+
+- [구현·검증 기록 r6](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/globe-trade-preview.implementation.r6.md). CLI의 `preview` 분기에서 기존 DB 12행과 원본 hash를 재조회해 로컬 검토용 읽기 사본을 생성했다. 이번 DB 쓰기 없음.
+- 별도 Unity에 `수산물통계미리보기View`, 전용 Editor Loader·시험을 추가했다. 기존 지구본의 대한민국 표식에서 3개 품목의 2026-06 수입 중량/금액·출처를 열고 접는다. 비공개 검토 원본은 Resources나 배포 자원으로 복사하지 않았다.
+- CLI build·Unity 최종 컴파일 및 EditMode 6/6 통과. 실제 Play Mode에서 품목 전환·접기·재열기를 버튼 이벤트로 검증했고 [Game View](../assets/changes/2026-09-22-marine-globe-preview/game-view-salmon.png)를 남겼다. 실제 마우스 클릭·모바일·빌드 검증은 아니다.
+- 기존 PlayerView의 하위 Canvas 숨김을 피하도록 독립 UI 루트로 분리했다. 기존 월드 종료 시 `OSLifecycleValidationRuntime` 부모 변경 오류는 남으며 Console 0을 주장하지 않는다.
+- Play Mode 종료, Scene 저장·commit·push 없음. 수온·어군 이동·지속 서버 연동은 후속. 새 디오라마 규칙 후보 없음.
+
+## P0 제3류 남은 가정용 일반 냉동 어류 배치 r60 (2026-09-22)
+
+- [구현 기록 r60](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-remaining-household-frozen-fish-batch.implementation.r60.md)에 따라 HS6 12개를 추가했다. UN Comtrade 원본 응답 100행을 수집했고 정확한 품목·형태·보관 상태·가격을 함께 확인하지 못해 12개 모두 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 178행을 확인했다. 로컬 `hongdal-mysql-1 / hongdal_dev` 저장·독립 재조회 178행과 같은 입력 신규 0행을 확인했다.
+- 전수 대장은 완료 349개, 후보 관찰 169개, 제한 40개, 대기 5,263개다. 전수 대장 11,226행을 독립 재조회했고 두 번째 저장은 신규·수정 0행이었다.
+- 다음 후보군은 제3류 가정용 냉동 갑각류·연체동물이다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## P0 제3류 가정용 일반 냉동 어류 배치 r59 (2026-09-22)
+
+- [구현 기록 r59](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-household-frozen-fish-batch.implementation.r59.md)에 따라 HS6 12개를 추가했다. UN Comtrade 원본 69행과 공개 색인 동태 후보 1건을 수집했고 정확한 제0303호 후보가 없는 11개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 151행을 확인했다. 로컬 `hongdal-mysql-1 / hongdal_dev` 저장·독립 재조회 151행과 같은 입력 신규 0행을 확인했다.
+- 전수 대장은 완료 337개, 후보 관찰 169개, 제한 40개, 대기 5,275개다. 전수 대장 11,226행을 독립 재조회했고 두 번째 저장은 신규·수정 0행이었다.
+- 다음 후보군은 제3류 남은 가정용 일반 냉동 어류다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## 국내 해양 자료·수정 이력 기반 r5 (2026-09-22)
+
+- [구현·검증 기록 r5](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/domestic-marine-history.implementation.r5.md): `국내해양통계RevisionNormalizer`, 집중 시험, `국내해양자료Pipeline` 및 기존 CLI 분기로 원본 hash·불변 값 판본·수집 실패·독립 재조회를 연결했다. 기존 공통 최신값 저장 경로는 변경하지 않았다.
+- 집중 시험 10/10, CLI build 성공. 관세청 HS6 요청이 HSK10 상세를 반환하는 실제 응답을 확인하고 원천 코드를 보존했다. `202606` 수산물 3개 품목·국가 조합, 수입/수출 중량·금액 **12행**과 원본 3건·조회 결과 4건을 로컬 `hongdal-mysql-1 / hongdal_dev`에 저장했다.
+- batch `20260922T080805-61216b99`의 별도 CLI 재조회 성공, 동일 batch 재처리 신규 **0행**. 실제 공급원 수정은 미관찰이며 수정값 별도 판본은 자동 시험으로 검증했다. 원본·metadata·receipt는 비공개 로컬 자료로 보존한다.
+- 8개 경로 지정 Fast 통과: diff·서버/시험 build·집중 시험 10/10. 검증 로그 `artifacts/local/validation/20260922-171024/`. 전체 서버 회귀 시험과 Unity 실행 증거는 아니다.
+- 국립해양조사원 수온 API HTTP 403 `ServiceKeyNotRegistered`: 실패 기록만 저장, 수온 값 0행. 해당 API 활용 승인/키 확인 후 실제 응답 매핑부터 재개한다. [r4 NOAA 경로](Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/temperature-replay.implementation.r4.md)의 원본 확보 시간 초과도 별도 미해결이다.
+- 정기 수집·전수 수집·Unity 제품 코드·Scene·Play Mode·Game View·commit·push 없음. 이번 단계는 수동 수집·DB 검증이며 공개/클라이언트 연동과 구분한다. 새 디오라마 규칙 후보 없음.
+
+## 진행 음식 관찰 연결 보완 r22 (2026-09-22)
+
+- [구현·검증 기록 r22](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/active-food-observation-repair.implementation.r22.md): r21 수용 범위로 기존 지역 조회 UseCase·Interpreter·배치 계획기와 별도 Unity의 다중 OS 표현 모델/시험만 좁게 보완했다. 정상 업무 경로를 재구현하지 않았다.
+- 진행 사본 배치, 같은 revision의 TTL 갱신, 낮은 revision 삭제 보호를 수정했다. 같은 판본에서 다른 업무 내용은 거절하며 운영 음식 6단계를 원문 코드/판본 그대로 표현한다. 전달 완료는 수령 확인 대기와 구분한다.
+- 공유 코어 28/28·서버 11/11 통과. 실제 Unity 표현 소스를 직접 컴파일한 순수 진단에서 음식 6단계/다른 OS 거절 6건/표본 77판본을 확인했다. 600개 시각 입력 순회는 10분 실시간 관찰이 아니다.
+- 변경 경로 10개 지정 Fast 통과: diff·코드맵·증거 책임 검사, `Ssalddel.Unity.slnx`/`Ssalddel.v0.0.slnx` 빌드와 집중 시험. 상세 로그 `artifacts/local/validation/20260922-155211/`. 별도 Unity 수정 코드 diff와 새 문서 상대 링크도 확인했다.
+- Unity Editor 재컴파일 요청은 시간 초과했다. NUnit 6사례 추가는 했지만 EditMode·Play Mode·Game View·실제 DB/인증 HTTP·Windows 빌드는 미검증이다.
+- 다음은 운영 의미 위치 3곳의 기존 합성 배치 기준점 결속→진행/완료 사본 전환·실패 보존 회귀→실제 음식 API와 Game View 검증이다. 현재 배치 JSON은 표본 위치만 있어 실제 화면 결속 완료로 보고하지 않는다.
+- 로컬 TRX/진단: `artifacts/local/validation/os-lifecycle-api-audit-20260922/`. 기존 병렬 변경 보존, DB·Scene·commit·push 변경 없음. 새 디오라마 규칙 후보 없음.
+
+## P0 제3류 가정용 신선·냉장 어류 배치 r58 (2026-09-22)
+
+- [구현 기록 r58](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-household-fresh-chilled-fish-batch.implementation.r58.md)에 따라 HS6 10개를 추가했다. UN Comtrade 원본 24행과 공개 색인 상품 후보 3건을 수집했고 정확한 제0302호 후보가 없는 7개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 89행을 확인했다. 로컬 `hongdal-mysql-1 / hongdal_dev` 저장·독립 재조회 89행과 같은 입력 신규 0행을 확인했다.
+- 전수 대장은 완료 325개, 후보 관찰 168개, 제한 40개, 대기 5,287개다. 전수 대장 11,226행을 독립 재조회했고 두 번째 저장은 신규·수정 0행이었다.
+- 다음 후보군은 제3류 가정용 일반 냉동 어류다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## 행정동 참조 디오라마·Unity 중심 OS 생명주기 제안 r20 (2026-09-22)
+
+- [제안 r20](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/unity-first-reference-and-os-lifecycle.proposal.r20.md)에 면목제3·8동/사가정 참조, 30개 동 후보와 활성 역 프로필의 차이, 고정 지역 조회·공간/업무 갱신 분리 등 코드 대조 결과를 기록했다.
+- Unity에서 생활 모습을 확인하며 공통 업무 규칙을 보완하는 방향은 사용자 요청으로 기록했고, 세부 구현 순서는 `Proposed`다. P0 공간 연결·복귀, P1 음식 업무 정상 흐름, P2 대표 회복, P3 다른 동 한 곳, P4 창고·마트·화물 독립 검증을 제안한다.
+- 기존 4 OS·8사례·77단계의 격리 표본 실행/동결 표현과 실제 업무 Controller/UseCase·Unity live HTTP 종단 검증을 구분했다. 기존 현행 경계 게시 차단은 유지한다.
+- 이번 범위는 문서·소스 조사다. 제품 코드·Unity 실행·DB·Scene·commit·push는 변경하지 않았다. 새 디오라마 규칙 후보 없음.
+- 검증: 변경 문서 4개 한정 Fast·`git diff --check` 통과(build/test 대상 없음). 추가한 제안서의 상대 파일 링크는 확인했다. 네 문서 전체 링크 검사에서는 기존 용마산 Game View의 로컬 PNG 누락 1건이 남아 있으며 이번 작업에서 생성하거나 대체하지 않았다.
+
+## P0 제9류 남은 가정용 커피·차·향신료 배치 r57 (2026-09-22)
+
+- [구현 기록 r57](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-remaining-household-coffee-tea-spices-batch.implementation.r57.md)에 따라 남은 HS6 10개를 추가했다. UN Comtrade 원본 188행과 공개 색인 상품 후보 4건을 수집했고 정확한 후보가 없는 6개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험 12/12, 정규화 150행을 확인했다. 로컬 `hongdal-mysql-1 / hongdal_dev` 저장·독립 재조회 150행과 같은 입력 신규 0행을 확인했다.
+- 전수 대장은 완료 315개, 후보 관찰 165개, 제한 40개, 대기 5,297개다. 전수 대장 11,226행을 독립 재조회했고 두 번째 저장은 신규·수정 0행이었다.
+- 다음 후보군은 제3류 가정용 일반 냉동·냉장 수산물이다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## P0 제8류 남은 일상 과실 배치 r56 (2026-09-22)
+
+- [구현 기록 r56](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-remaining-everyday-fruit-batch.implementation.r56.md)에 따라 HS6 9개를 추가했다. UN Comtrade 원본 82행과 공개 색인 상품 후보 8건을 수집했고 신선 품목을 확인하지 못한 라즈베리 1개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험은 12/12, 정규화 결과는 132행이다. 로컬 `hongdal-mysql-1 / hongdal_dev` 저장·독립 재조회 132행과 같은 입력 신규 0행을 확인했다.
+- 전수 대장은 완료 305개, 후보 관찰 161개, 제한 40개, 대기 5,307개다. 전수 대장 11,226행을 독립 재조회했고 두 번째 저장은 신규·수정 0행이었다.
+- 다음 후보군은 제9류 가정용 커피·차·향신료다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## P0 제8류 일상 과실 배치 r55 (2026-09-22)
+
+- [구현 기록 r55](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-everyday-fruit-batch.implementation.r55.md)에 따라 HS6 11개를 추가했다. UN Comtrade 원본 125행과 공개 색인 상품 후보 10건을 수집했고 오렌지 1개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험은 12/12, 정규화 결과는 166행이다. 로컬 `hongdal-mysql-1 / hongdal_dev` 저장·독립 재조회 166행과 같은 입력 신규 0행을 확인했다.
+- 전수 대장은 완료 296개, 후보 관찰 153개, 제한 40개, 대기 5,316개다. 전수 대장 11,226행을 독립 재조회했고 두 번째 저장은 신규·수정 0행이었다.
+- 다음 후보군은 제8류 남은 일상 과실이다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## P0 제21·22류 가정용 커피·차 조제품과 물·비알코올 음료 배치 r54 (2026-09-22)
+
+- [구현 기록 r54](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-household-coffee-tea-water-beverages-batch.implementation.r54.md)에 따라 HS6 8개를 추가했다. UN Comtrade 원본 436행과 공개 색인 상품 후보 5건을 수집했고 3개는 `SearchNoCandidate`로 보존했다.
+- 배치 자체시험은 12/12, 정규화 결과는 133행이다. 로컬 `hongdal-mysql-1 / hongdal_dev` 저장·독립 재조회 133행과 같은 입력 신규 0행을 확인했다.
+- 전수 대장은 완료 285개, 후보 관찰 143개, 제한 40개, 대기 5,327개다. 전수 대장 11,226행을 독립 재조회했고 두 번째 저장은 신규·수정 0행이었다.
+- 다음 후보군은 제8류 일상 과실이다. 원격 DB·게시·Unity·commit·push는 수행하지 않았다.
+
+## 역할 앱 OS 생명주기·시각 기반 정리 (2026-09-22)
+
+- 주문자·음식점·관리자 Blazor Hybrid 앱은 공통 `RoleAppTheme`과 `role-app-foundation.css`를 사용하도록 맞췄다. 역할별 강조색은 유지하되 포커스, 44px 터치 영역, 모션 감소, 확대 가능한 viewport 규칙을 공유한다. 배달기사 네이티브 MAUI 앱은 같은 청록·남색 계열 XAML 팔레트를 사용한다.
+- 네 앱의 MAUI `Window` 생명주기를 `역할앱생명주기State`에 연결하고 `앱 활성 / 잠시 멈춤 / 다시 여는 중 / 네트워크 없음 / 종료 중`을 짧은 상태로 투영했다. 이 표시는 운영 준비나 서버 성공을 확정하지 않으며 인증·데이터 상태와 분리한다. 좁은 화면의 정상 상태는 점만 남겨 앱바 공간을 보존한다.
+- 주문자·음식점·관리자 WebView와 배달기사 네이티브 창을 실제 Windows에서 다시 캡처했다. 집중 시험 44/44 통과, 네 Windows 앱 모두 최종 순차 빌드에서 경고 0·오류 0이다. 초기 병렬 빌드는 공통 `Ssalddel.Ui.Common` 출력 잠금으로 세 앱이 실패했으며 순차 재실행으로 검증했다.
+- 아직 OS 재개 신호가 인증 재검증·정본 재조회·SignalR/poll/지도 재개를 조율하지는 않는다. Android 실제 기기, 백그라운드 중 토큰 만료, 오프라인 재개도 미검증이다. API·업무 상태·DB·배포·commit·push는 변경하거나 수행하지 않았다.
+
+## 행정동·역세권·사가정 디오라마 전환 구현 r2 (2026-09-22)
+
+- [구현 기록 r2](Planning/시스템/PLAN-SYSTEM-GEOSPATIAL-TILE-SEMANTIC-ZOOM/admin-station-diorama-transition.implementation.r2.md)에 따라 기존 곡면 지구본의 한반도 거점 뒤에 `Z3 권역 → Z4 면목제3·8동 → Z4.5 사가정역 → Z5 기존 사가정 1km 디오라마` 전환을 추가했다.
+- 행정동은 `HistoricalBoundaryCandidate_CurrentPublicationBlocked`, 역세권은 `LocalPrivateReview_Ready`로 표시한다. 새 경계·건물·NPC를 만들지 않고 기존 고유 식별자와 `ActiveStationDioramaHost`만 재사용한다.
+- Unity 재컴파일 오류 없음, 새 전환 3/3·지구본 21/21·역세권 모듈 11/11 통과. 실제 `SimulationWorldShell` Play Mode에서 디오라마 열기와 `CameraDistance=33 / Hubs / StationArea` 복귀를 확인했고 Console 오류는 0건이었다.
+- Scene은 dirty가 아니며 SHA-256도 작업 전후 동일하다. 실제 마우스 클릭·Windows Player·현재 행정 경계·다른 역은 미검증이다. commit·push·배포는 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## P0 제21류 가정용 소스·조미료·수프·일상 조제품 배치 r53 (2026-09-22)
+
+- [구현 기록 r53](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-household-sauces-seasonings-soups-batch.implementation.r53.md)에 따라 HS6 8개를 추가했다. UN Comtrade 원본 338행과 공개 색인 상품 후보 8건을 수집했다.
+- 정규화 136행을 로컬 `hongdal-mysql-1 / hongdal_dev`에 저장·재조회했다. 동일 입력 재실행 신규 0행, 배치 자체시험 12/12를 확인했다.
+- 전수 대장은 완료 277개, 후보 관찰 138개, 제한 40개, 대기 5,335개다. 다음 후보군은 제21류 커피·차 조제품과 제22류 물·비알코올 음료다.
+- 원격 DB·외부 게시·Unity·commit·push는 수행하지 않았다.
+
+## 공간 타일 기반 단계적 의미 확대 계획 r1 (2026-09-22)
+
+- [계획 r1](Planning/시스템/PLAN-SYSTEM-GEOSPATIAL-TILE-SEMANTIC-ZOOM/README.md)에 지구본→한반도→지역→행정동·역세권→디오라마 확대의 자료 주소·정보 공개·지연 적재 순서를 정리했다.
+- 의미 확대 `Z0~Z5`, 세계 `WorldCRS84Quad`, 국내 `kr5186`, 로컬 ENU와 `H1~H5`를 서로 다른 축으로 유지한다. 현재 1·4·16 Mesh는 비교 모판으로만 보존한다.
+- 첫 개발 후보는 한반도 Z2의 논리 tile 선택, 8px 임시 화면 오차, 원본 최대 수준 제한, 지연 생성·회수, 서울 카드와 축소 복귀까지다. EPSG:5186·행정동 디오라마 인계는 다음 수직 단위로 분리한다.
+- 이번 변경은 기획 문서뿐이며 Unity·서버 코드, Scene, 실행 시험, commit·push는 수행하지 않았다.
+
+## P0 제20류 남은 일상 견과·과실 조제품과 사과·혼합 주스 배치 r52 (2026-09-22)
+
+- [구현 기록 r52](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-remaining-fruit-nut-juice-batch.implementation.r52.md)에 따라 HS6 10개를 추가했다. UN Comtrade 원본 365행과 공개 색인 상품 후보 3건을 수집했고 7개는 `SearchNoCandidate`로 보존했다.
+- 정규화 155행을 로컬 `hongdal-mysql-1 / hongdal_dev`에 저장·재조회했다. 동일 입력 재실행 신규 0행, 배치 자체시험 12/12를 확인했다.
+- 전수 대장은 완료 269개, 후보 관찰 130개, 제한 40개, 대기 5,343개다. 다음 후보군은 제21류 가정용 소스·조미료·수프·일상 조제품이다.
+- 원격 DB·외부 게시·Unity·commit·push는 수행하지 않았다.
+
+## P0 제20류 일상 과실·채소 주스 배치 r51 (2026-09-22)
+
+- [구현 기록 r51](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-everyday-fruit-juices-batch.implementation.r51.md)에 따라 HS6 12개를 추가했다. UN Comtrade 원본 205행과 공개 색인 상품 후보 1건을 수집했고 11개는 `SearchNoCandidate`로 보존했다.
+- 정규화 193행을 로컬 `hongdal-mysql-1 / hongdal_dev`에 저장·재조회했다. 동일 입력 재실행 신규 0행, 배치 자체시험 12/12를 확인했다.
+- 전수 대장은 완료 259개, 후보 관찰 127개, 제한 40개, 채널 부적합 8개, 검색 무결과 84개, 대기 5,353개다. 다음 후보군은 제20류 남은 일상 견과·과실 조제품과 사과·혼합 주스다.
+- 원격 DB·외부 게시·Unity·commit·push는 수행하지 않았다.
+
+## 주문자 마트 화면 검토용 샘플 미리보기 (2026-09-22)
+
+- 실제 `/food/mart` API·기능 플래그 경로는 유지하고, 사용자가 명시적으로 `/food/mart?preview=sample`을 연 경우에만 감자·양파·달걀·현미·들기름·풋고추 6개 화면 검토 자료를 표시한다. 실제 API 실패를 샘플 성공으로 바꾸지 않는다.
+- 미리보기에는 `실제 주문이나 운영 원장에 연결되지 않음` 경계를 화면에 표시하고, 검색·판매 가능 필터·새로고침은 서버 쓰기 없이 미리보기 자료 안에서만 동작한다.
+- 목록 화면은 기술적인 공개 원장 설명과 중복 단계 내비게이션을 제거하고 `상품명·판매 단위·가격·재고·자세히·구매하기`만 남겼다. 좁은 앱 셸에서는 상품 카드가 가로형 단일열로 읽히며, 주문자 Windows 빌드 경고 0·오류 0, 마트 화면 집중 시험 18/18 통과, 실제 WebView에서 6개 목록과 첫 상품 카드를 확인했다.
+- 운영 DB·주문·재고·API 계약·배포·commit·push는 변경하거나 수행하지 않았다.
+
+## P0 제20류 통조림 과일·가정용 조제 채소 배치 r50 (2026-09-22)
+
+- [구현 기록 r50](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-everyday-canned-fruit-vegetable-batch.implementation.r50.md)에 따라 HS6 12개를 추가했다. UN Comtrade 원본 268행과 공개 색인 상품 후보 3건을 수집했고 9개는 `SearchNoCandidate`로 보존했다.
+- 정규화 195행을 로컬 `hongdal-mysql-1 / hongdal_dev`에 저장·재조회했다. 동일 입력 재실행 신규 0행, 배치 자체시험 12/12를 확인했다.
+- 전수 대장은 완료 247개, 후보 관찰 126개, 제한 40개, 채널 부적합 8개, 검색 무결과 73개, 대기 5,365개다. 다음 후보군은 제20류 일상 과실주스다.
+- 원격 DB·외부 게시·Unity·commit·push는 수행하지 않았다.
+
+## P0 제20류 일상 보존 채소·과일 조제품 배치 r49 (2026-09-22)
+
+- [구현 기록 r49](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-everyday-preserved-vegetable-fruit-batch.implementation.r49.md)에 따라 HS6 12개와 HSK10 자식 18개를 추가했다. UN Comtrade 원본 362행과 공개 색인 상품 후보 7건을 수집했고 5개는 `SearchNoCandidate`로 보존했다.
+- 정규화 199행을 로컬 `hongdal-mysql-1 / hongdal_dev`에 저장·재조회했다. 동일 입력 재실행 신규 0행, 배치 자체시험 12/12를 확인했다.
+- 전수 대장은 완료 235개, 후보 관찰 123개, 제한 40개, 채널 부적합 8개, 검색 무결과 64개, 대기 5,377개다. 다음 후보군은 제20류 통조림 과일·가정용 조제 채소다.
+- 원격 DB·외부 게시·Unity·commit·push는 수행하지 않았다.
+
+## P0 제19류 남은 일상 조제품 배치 r48 (2026-09-21)
+
+- [구현 기록 r48](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-remaining-chapter19-preparations-batch.implementation.r48.md)에 따라 제19류의 남은 HS6 9개와 HSK10 자식 22개를 `chapter19-remaining-everyday-preparations-01`로 추가했다. UN Comtrade 원본 275행과 공개 색인 상품 후보 5건을 수집했고 정확한 상세 근거가 부족한 4개는 `SearchNoCandidate`로 보존했다.
+- 정규화 149행을 로컬 `hongdal-mysql-1 / hongdal_dev`에 저장·재조회했다. 동일 입력 재실행은 신규 0행이었고 배치 자체시험 12/12를 통과했다.
+- 전수 대장은 완료 223개, 후보 관찰 116개, 제한 40개, 채널 부적합 8개, 검색 무결과 59개, 대기 5,389개다. 두 번째 저장 신규·수정 0행과 독립 재조회 11,226행을 확인했다.
+- 다음 P0 후보군은 제20류 일상 보존 채소·과일 조제품이다. 원격 DB·외부 게시·Unity·commit·push는 수행하지 않았다.
+
+## 지구 곡면 연속 의미 확대 구현 r47 (2026-09-21)
+
+- [구현 기록 r47](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/curved-globe-semantic-zoom.implementation.r47.md)에 따라 직사각형 권역판과 0.75초 평면 전환을 현행 기본 확대 경로에서 제거했다. 한반도 자료층은 `GlobeVisualRoot`와 같은 구체 좌표계를 사용하고 마우스 휠 확대량에 따라 해안·지형 음영·하천이 연속적으로 드러난다.
+- Natural Earth 음영 지형을 구면 Mesh에 투영하고 `KR/KP` 경계 안의 셀만 삼각형으로 생성해 원본 이미지의 직사각형 범위가 화면에 노출되지 않게 했다. 해상도는 96×72, 생성 정점은 7,081개다.
+- Unity 재컴파일 오류 없음, 관련 EditMode 21/21 통과, 실제 `SimulationWorldShell` Play Mode에서 `Hero=True / Stage=Rivers / Blend=0.75 / Curved=True / Vertices=7081`을 확인했다. Game View에서는 남북한 육지에만 지형 음영이 나타나는 것을 확인했다.
+- 실제 DEM 높이 Mesh, 대한민국 행정 권역 tile, 사가정 디오라마 전환은 후속 범위다. 기존 Scene 오류가 남아 있어 Console 0이나 통합 E5 이상은 주장하지 않는다. Scene 저장·commit·push는 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## P0 일상 면·곡물·빵류 배치 r46 (2026-09-21)
+
+- [구현 기록 r46](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-everyday-pasta-bakery-batch.implementation.r46.md)에 따라 제19류 HS6 8개와 HSK10 자식 27개를 `chapter19-everyday-pasta-bakery-01`로 추가했다. UN Comtrade 원본 467행과 공개 색인 상품 후보 7건을 수집했고 직접 상세 근거가 없는 1개 코드는 `SearchNoCandidate`로 보존했다.
+- 정규화 135행을 로컬 `hongdal-mysql-1 / hongdal_dev`에 저장·재조회했다. 동일 입력 재실행은 신규 0행이었고 배치 자체시험 12/12를 통과했다.
+- 전수 대장은 완료 214개, 후보 관찰 111개, 제한 40개, 채널 부적합 8개, 검색 무결과 55개, 대기 5,398개다. 두 번째 저장 신규·수정 0행과 독립 재조회 11,226행을 확인했다.
+- 다음 P0 후보군은 제19류 남은 일상 조제품이다. 원격 DB·외부 게시·Unity·commit·push는 수행하지 않았다.
+
+## P0 일상 가공 육류·수산 식품 배치 r45 (2026-09-21)
+
+- [구현 기록 r45](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-everyday-prepared-meat-seafood-batch.implementation.r45.md)에 따라 제16류 HS6 12개와 HSK10 자식 31개를 `chapter16-everyday-prepared-meat-seafood-01`로 추가했다. UN Comtrade 원본 214행과 공개 색인 상품 후보 5건을 수집했고 법정 품목 경계를 정확히 확인하지 못한 7개 코드는 `SearchNoCandidate`로 보존했다.
+- 정규화 193행을 로컬 `hongdal-mysql-1 / hongdal_dev`에 저장·재조회했다. 동일 입력 재실행은 신규 0행이었고 배치 자체시험 12/12를 통과했다.
+- 전수 대장은 완료 206개, 후보 관찰 104개, 제한 40개, 채널 부적합 8개, 검색 무결과 54개, 대기 5,406개다. 두 번째 저장 신규·수정 0행과 독립 재조회 11,226행을 확인했다.
+- 다음 P0 후보군은 제19류 일상 면·빵·곡물 조제품이다. 원격 DB·외부 게시·Unity·commit·push는 수행하지 않았다.
+
+## 지구본→권역 지형판 자연 전환 구현 r44 (2026-09-21)
+
+- [구현 기록 r44](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/globe-regional-terrain-transition.implementation.r44.md)에 따라 같은 프레임에 지구본을 끄고 지형판을 켜던 전환을 0.75초 양방향 공간 전환으로 바꿨다. 작은 지형판이 한반도 표면 앞에서 자란 뒤 지구본이 물러나고, 최종 7도 권역판으로 펴진다.
+- 전환 중 확대 방향이 바뀌면 현재 진행값부터 역방향으로 이어진다. 확대 복귀도 같은 궤적을 사용하며 표현 상태는 중간 관문을 기준으로 `Globe`와 `RegionalTerrain`을 구분한다.
+- 실제 Game View 점검 중 배경판과 지형 이미지의 깊이 충돌로 생긴 줄무늬를 발견해 지형층을 앞쪽으로 분리했다. 수정 뒤 최종 지형판 캡처에서 줄무늬가 사라진 것을 확인했다.
+- Unity 재컴파일 오류 없음, 관련 EditMode 21/21 통과, 실제 Play Mode에서 자동 진입과 자동 복귀의 상태·진행값을 확인했다. 기존 서버 세션·Replay 관련 오류 9건은 남아 있어 Console 0이나 통합 E5 이상은 주장하지 않는다.
+- commit·push·Scene 저장은 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## P0 가정용 설탕·감미료 배치 r43 (2026-09-21)
+
+- [구현 기록 r43](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-household-sugars-sweeteners-batch.implementation.r43.md)에 따라 제17류 HS6 12개와 HSK10 자식 25개를 `chapter17-household-sugars-sweeteners-01`로 추가했다. UN Comtrade 원본 379행, 공개 색인 상품 후보 6건을 수집했고 법정 경계를 정확히 확인하지 못한 7개 코드는 `SearchNoCandidate`로 보존했다.
+- 정규화 198행을 로컬 `hongdal-mysql-1 / hongdal_dev`에 저장·재조회했다. 동일 입력 재실행은 신규 0행이었고 배치 자체시험 12/12를 통과했다.
+- 전수 대장은 완료 194개, 후보 관찰 99개, 제한 40개, 채널 부적합 8개, 검색 무결과 47개, 대기 5,418개다. 두 번째 저장 신규·수정 0행과 독립 재조회 11,226행을 확인했다.
+- 다음 P0 후보군은 제16류 일상 가공 육류·수산 식품이다. 원격 DB·외부 게시·Unity·commit·push는 수행하지 않았다.
+
+## 지구본→권역 지형판→디오라마 3계층 구현 r42 (2026-09-21)
+
+- [구현 기록 r42](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/three-layer-regional-terrain-board.implementation.r42.md)에 따라 별도 Unity 저장소의 기존 지구본과 행정동·역세권 디오라마 사이에 `RegionalTerrain` 표현 계층을 추가했다. 확대 흐름은 `Globe → RegionalTerrain → Diorama`로 명시됐으며 모두 읽기 전용 Presentation이다.
+- Natural Earth 1:10m 음영 지형을 한반도 범위로 동결하고 7도 기울어진 얕은 지형판으로 표시했다. 한강·압록강·두만강은 검증 자료로 별도 표시했고, 대동강은 현재 자료 결손을 임의 선형으로 채우지 않았다. 실제 DEM 높이 Mesh나 운행 가능 지형이라고 주장하지 않는다.
+- 새 Scene을 만들거나 canonical `SimulationWorldShell`을 저장하지 않았다. Unity 재컴파일 오류 없음, 관련 EditMode 20/20 통과, 실제 Play Mode에서 `Layer=RegionalTerrain;Stage=Rivers;Terrain=True;Corridor=False`를 확인하고 Game View 카메라 증거를 저장했다.
+- 기존 서버 세션 부재·Replay hash 불일치·비활성화 중 부모 변경 등의 장면 오류는 남아 있다. 이번 지형판 전용 오류는 확인되지 않았지만 Console 0과 통합 E5 이상은 주장하지 않는다.
+- 실제 DEM Mesh, 권역 거점 서버 상태 사본, 선택한 행정동·역세권 디오라마 전환은 후속 범위다. commit·push는 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## P0 가정용 식용유 배치 r41 (2026-09-21)
+
+- [구현 기록 r41](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-household-edible-oils-batch.implementation.r41.md)에 따라 제15류 가정용 식용유 HS6 10개와 관세청 HSK10 자식 19개를 `chapter15-household-edible-oils-01`로 추가했다. UN Comtrade 2025 대한민국 수입 원본 244행과 공개 색인 상품 후보 6건을 수집했고 법정 품목 경계를 명확히 확인하지 못한 4개는 `SearchNoCandidate`로 보존했다.
+- 새 배치는 정규화 166행을 로컬 `hongdal-mysql-1 / hongdal_dev`에 저장했다. 두 번째 저장은 신규 0행·기존 166행, 별도 재조회는 166행 일치였다. 수집기 빌드 경고 0·오류 0, 배치 자체시험 12/12를 통과했다.
+- 전수 대장은 182개 판정, 대표 상품 후보 94개, 제한 40개, 채널 부적합 8개, 검색 무결과 40개, 대기 5,430개로 다시 계산했다. 동일 입력 재적용은 신규·수정 0행이었고 독립 재조회 11,226행을 확인했다.
+- 관세청 성질별 분류의 선택 HSK10 19개는 모두 `원자재`다. 이를 숨기거나 소비재로 바꾸지 않고 법정 분류와 가정용 공개 상품 관찰을 분리했다. 다음 P0 후보군은 제17류 설탕·감미료다. 원격 DB·외부 게시·Unity·commit·push는 수행하지 않았다.
+
+## 역할 앱 로그인·첫 화면 단순화 (2026-09-21)
+
+- 관리자 로그인은 관리자 아이디·비밀번호 한 방식만 남기고 카카오·구글·네이버 등 소셜 로그인 선택과 처리 경로를 화면에서 제거했다.
+- 관리자 운영 개요, 음식점 로그인·운영 홈, 배달기사 로그인·업무 요약에 주문자 앱과 조화되는 넓은 여백, 둥근 카드, 역할별 첫 행동 중심의 문구와 색상 계층을 적용했다. API·인증 계약·주문·배차 상태 전이는 변경하지 않았다.
+- 관리자·음식점·배달기사 Windows 빌드는 각각 경고 0·오류 0, 관련 아키텍처 시험은 25/25를 통과했다. 실제 WebView 실행 화면에서 관리자·음식점 로그인을 캡처했고, 관리자 소개 문구의 과도한 줄바꿈과 포커스 윤곽도 캡처 피드백으로 보정했다. 배달기사 네이티브 앱은 창 생성까지 확인했지만 현재 캡처 도구가 네이티브 창을 반환하지 않아 화면 증거는 미확보다.
+- commit·push·배포는 수행하지 않았다.
+
+## 한반도 단계적 지형 확대 확정 r40 (2026-09-21)
+
+- [확정 r40](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/korean-peninsula-progressive-terrain-reveal.decision.r40.md)에 지구본 확대 시 `해안 윤곽 → DEM 높이·산지 → 4대 하천 → 거점·교류축` 순으로 공간을 먼저 읽게 하는 표현 순서를 고정했다.
+- `동고서저`는 손으로 만든 보정 규칙이 아니라 SRTM 기반 동결 DEM의 결과가 자연스럽게 판독되는지 확인하는 검증 관점으로 한정했다. 산맥 형태와 산맥 이름도 분리하고, 이름은 별도 출처 영수증이 준비된 다음 확대 단계에서만 연다.
+- 현재 Unity는 편집 모드 지구본과 0.3초 확대 관문, 2D 교류축 8개 거점·7개 구간까지만 구현돼 있다. 비공개 저장소에는 VWorld·국토지리정보원 90m 한반도 DEM 원본이 있으나 `CC BY-NC-ND`로 기록된 비교 자료라 제품 가공·동봉에는 사용하지 않았다. SRTM·Natural Earth 1:10m·HydroRIVERS 기반 실제 투영, 지형 Mesh와 서버 상태 사본은 아직 생성되지 않았다.
+- 이번 판본은 기획 정리만 수행했다. Unity 코드·Scene·Play Mode·Game View·자료 다운로드·commit·push는 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## P0 생활 곡물·일상 제분품 배치 r39 (2026-09-21)
+
+- [구현 기록 r39](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-everyday-grains-milling-batch.implementation.r39.md)에 따라 제10·11류 생활 곡물·일상 제분품 HS6 12개와 관세청 HSK10 자식 24개를 `chapter10-11-everyday-grains-milling-01`로 추가했다. UN Comtrade 2025 대한민국 수입 원본 236행과 공개 색인 상품 후보 9건을 수집했고 정확한 형태를 확인하지 못한 3개는 `SearchNoCandidate`로 보존했다.
+- 새 배치는 정규화 201행을 로컬 `hongdal-mysql-1 / hongdal_dev`에 저장했다. 두 번째 저장은 신규 0행·기존 201행, 별도 재조회는 201행 일치였다. 수집기 빌드 경고 0·오류 0, 배치 자체시험 12/12를 통과했다.
+- 전수 대장은 172개 판정, 대표 상품 후보 88개, 제한 40개, 채널 부적합 8개, 검색 무결과 36개, 대기 5,440개로 다시 계산했다. 첫 저장은 상태 12개 갱신, 두 번째 저장은 신규·수정 0행이었고 독립 재조회 11,226행을 확인했다.
+- 긴 배치 ID가 MySQL 8.4 사용자 잠금 이름 64자 상한에 걸린 것을 확인해 업무 접두사와 SHA-256 축약 잠금으로 보완했다. 최상위 MySQL 예외도 번호와 SQLSTATE만 진단하며 비밀값·오류 원문은 노출하지 않는다.
+- 다음 P0 후보군은 제15류 가정용 식용유다. 원격 DB·외부 게시·Unity·commit·push는 수행하지 않았다.
+
+## 관계형 테이블 소유권·공공데이터 migration 충돌 정리 (2026-09-21)
+
+- 삭제·통합 없이 중앙·농수산·공공데이터·전통시장 네 `DbContext`의 런타임 EF 모델을 [관계형 테이블 소유권 대장](../../eng/execution-ledgers/relational-table-ownership.json)으로 생성했다. 모델 테이블 236개와 migration history 4개를 기록했으며 Context 간 중복 소유는 0개다.
+- 공공데이터 구성 16개에 `IDedicatedDbContextConfiguration`을 적용하고 중앙 Context 격리 시험에 `PublicDataIngestionDbContext`를 포함했다. 소유권 이전 migration은 실제 테이블을 삭제하지 않고, 과거 중앙 migration이 만든 14개 스키마와 시간 정밀도 열·World Bank seed가 모두 있을 때만 전용 history의 첫 6개 이력을 인계한다.
+- 임시 빈 DB에서 중앙 migration 전체 적용 후 공공데이터 migration을 연속 적용했다. 충돌 없이 공공데이터 테이블 16개와 전용 history 7개가 성립했으며 임시 DB는 검증 뒤 삭제했다. 기존 `hongdal_dev`·`hongdal_ui_dev`의 테이블과 데이터는 변경하지 않았다.
+- `Ssalddel` 빌드 경고·오류 0, 영속성 집중 시험 34/34, 공공데이터 pending-model 검사와 migration SQL 무삭제 검사를 통과했다. 공통 Fast 검증은 diff 검사와 Simulation·Unity 빌드를 통과했으나, 더티 작업트리 218개 경로를 함께 다루는 전체 v3.5 빌드가 장시간 새 출력 없이 정체되어 중단했으므로 전체 통과로 보지 않는다.
+- 현재 런타임 모델에는 별도 작업의 미반영 변경이 남아 있어 `SsalddelContext` pending model 경고가 계속된다. 이번 소유권 migration에는 해당 열 변경을 포함하지 않았고 commit·push도 수행하지 않았다.
+
+## 편집 모드 지구본·한반도 확대 검증 r38 (2026-09-21)
+
+- [구현 기록 r38](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/editor-preview-and-peninsula-zoom.implementation.r38.md)에 Play 버튼 없이 보이는 임시 지구본과 한반도 확대 자료층 검증을 기록했다.
+- 편집 모드의 canonical `SimulationWorldShell` Game View에서 한반도 중심 지구본이 기본 표시된다. 생성 객체는 `DontSaveInEditor`이며 편집 모드는 런타임 표현 상태·운영·Simulation 권위를 변경하지 않는다.
+- Play Mode에서는 대한민국 선택과 0.3초 확대 안정 관문 뒤 한반도 교류축 8개 거점·7개 구간, 도라산 Z4 카드를 확인했다. 교류축이 열리면 중복 국가 카드를 접고 축소하면 복원한다.
+- Unity 재컴파일 오류 없음, 관련 EditMode 16/16 통과. 기존 서버 세션 부재·Replay hash 불일치 등 Console 오류 8건은 남아 있다. commit·push는 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## P0 생활 채소·뿌리류 배치 r37 (2026-09-21)
+
+- [구현 기록 r37](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-everyday-vegetables-batch.implementation.r37.md)에 따라 제7류 생활 채소·뿌리류 HS6 12개와 관세청 HSK10 자식 23개를 `chapter07-everyday-vegetables-01`로 추가했다. UN Comtrade 2025 대한민국 수입 원본 70행과 공개 색인 상품 후보 7건을 수집했고 안정적인 상세 후보를 확인하지 못한 5개는 `SearchNoCandidate`로 보존했다.
+- 새 배치는 정규화 161행을 로컬 `hongdal-mysql-1 / hongdal_dev`에 저장했다. 두 번째 저장은 신규 0행·기존 161행, 별도 재조회는 161행 일치였다. 수집기 빌드 경고 0·오류 0, 배치 자체시험 12/12를 통과했다.
+- 전수 대장은 160개 판정, 대표 상품 후보 79개, 제한 40개, 채널 부적합 8개, 검색 무결과 33개, 대기 5,452개로 다시 계산했다. 첫 저장은 상태 12개 갱신, 두 번째 저장은 신규·수정 0행이었고 독립 재조회 11,226행을 확인했다.
+- 모바일 현장 시험 Compose가 재생성한 로컬 MySQL에 비루트 앱 계정이 없어 쓰기가 처음 차단됐다. 현재 Compose 환경의 비밀값을 출력하지 않고 로컬 계정과 `hongdal_dev` 권한을 복구한 뒤 위 저장을 검증했다. 원격 DB·외부 게시·Unity·commit·push는 수행하지 않았다.
+- 다음 P0 후보군은 제10·11류 곡물과 일상 제분품이다. 쌀·밀·보리·귀리·옥수수와 가정용 밀가루·분말을 우선하고 종자 전용·산업 제분 부산물은 뒤로 보낸다.
+
+## 한반도 시작 구도·접이식 정보 구현 r36 (2026-09-21)
+
+- [구현 기록 r36](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/korean-peninsula-hero-pose.implementation.r36.md)에 기획 r32·r33과 이번 접이식 정보 결정을 묶어 기록했다.
+- 별도 Unity 저장소의 `세계지구본View`가 한반도를 중앙에 두고 중국 왼쪽·일본 오른쪽으로 시작하며, 5초 무입력 뒤에만 자동 자전한다. 제목·출처 정보는 기본적으로 접혀 있고 `정보 열기` 또는 객체 선택 때만 나타난다.
+- Unity 재컴파일 오류 없음, 관련 EditMode 15/15 통과, 실제 `SimulationWorldShell` Play Mode Game View를 확인하고 화면을 저장했다. 기존 서버 세션 부재·Replay hash 불일치 등 Console 오류 8건은 남아 있어 Console 0이나 통합 E5 이상은 주장하지 않는다.
+- 새 Scene·서버 API·운영·Simulation 상태는 변경하지 않았다. commit·push는 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## P0 유제품·식용란·꿀 첫 배치 r35 (2026-09-21)
+
+- [구현 기록 r35](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/p0-dairy-daily-batch.implementation.r35.md)에 따라 P0 첫 묶음 HS6 12개와 관세청 HSK10 자식 23개를 `chapter04-dairy-daily-01`로 추가했다. UN Comtrade 2025 대한민국 수입 원본 291행과 공개 색인 상품 후보 9건을 수집했고, 정확한 후보를 확인하지 못한 3개는 0건으로 보존했다.
+- 새 배치는 정규화 193행을 로컬 `hongdal-mysql-1 / hongdal_dev`에 저장했다. 두 번째 저장은 신규 0행, 별도 재조회는 193행 일치였다. 수집기 빌드 경고 0·오류 0, 배치 자체시험 12/12를 통과했다.
+- 재생성된 로컬 DB에는 관세청 23,796행, 기본 무역·소매 45행, 기존 반복 배치 14개 1,429행을 원본 hash로 복구했다. 전수 대장은 148개 판정, 대표 상품 후보 72개, 제한 40개, 채널 부적합 8개, 검색 무결과 28개, 대기 5,464개로 다시 계산했고 두 번째 저장 신규·수정 0행과 독립 재조회 11,226행을 확인했다.
+- 다음 P0 후보군은 제7류 생활 채소·뿌리류다. 정확한 8~12개 코드는 미정이다. Unity 투영·Scene·Play Mode·Game View·외부 게시·commit·push는 수행하지 않았다.
+
+## HS6 생활 밀착 조사 우선순위 r34 (2026-09-21)
+
+- [확정 r34](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/hs6-retail-research-priority.decision.r34.md)와 [기계 판독 정책](../../eng/public-data/trade-retail/review-priority-policy.v1.json)에 `P0 식품·필수 생필품 → P1 위생·의류·주거 생활재 → P2 일반 소매·지역 운영재 → P3 산업재·특수 품목` 순서를 고정했다.
+- 우선순위는 실제 검색량·판매량 주장이 아니라 관세청 소비재 분류, 일상 사용성, 디오라마 관찰 가치와 수입액 보조 정렬을 이용한 조사 효용 순서다. 기존 HS6 전수 대장과 136개 판정은 변경하지 않았다.
+- 다음 조사 묶음은 `030195` 단순 연속 진행 대신 제4류 우유·요구르트·버터·치즈·식용란·꿀의 미처리 코드 8~12개다. 생체·희귀·부산물·산업 원료는 같은 류 안에서도 후순위다.
+- 시간당 자동 조사도 같은 우선순위 정책을 읽도록 갱신한다. 자료 수집·MySQL 쓰기·Unity 실행·commit·push는 이번 우선순위 확정 범위에서 수행하지 않았다.
+
+## 한반도 시작 5초 유지 확정 r33 (2026-09-21)
+
+- [확정 r33](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/korean-peninsula-start-hold.decision.r33.md)에 Play Mode 시작 뒤 5초 동안 `KoreanPeninsulaHeroPose`를 유지하고, 사용자 입력이 없을 때만 느린 자동 자전을 시작하도록 확정했다.
+- 5초 안에 드래그·확대·선택 입력이 생기면 유지 타이머를 취소하고 자유 조작을 우선한다. 화면 비활성화·일시정지·로딩 시간은 실제 관찰 시간에서 제외한다.
+- 이번 변경은 다음 개발 묶음의 기획 2회차다. Unity 코드·Scene·Play Mode·Game View 재검증·commit·push는 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## 한반도 중심 시작 구도 제안 r32 (2026-09-21)
+
+- [제안 r32](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/korean-peninsula-start-composition.proposal.r32.md)에 Play Mode 시작 시 한반도를 Game View 정중앙에 두고 중국 동부 해안은 왼쪽, 일본 열도는 오른쪽 맥락으로 함께 선명하게 읽히는 `KoreanPeninsulaHeroPose`를 기록했다.
+- 중국·일본은 한반도보다 한 단계 낮은 강조로 두되 해안선·국가 경계·국가 이름을 판독할 수 있게 유지한다. 이 시작 구도는 Presentation 기본값일 뿐 국가 선택이나 Simulation·운영 상태를 바꾸지 않는다.
+- 다음 질문은 시작 구도를 5초 유지한 뒤 무입력일 때만 자동 자전을 시작할지 여부다. 이번 변경은 다음 개발 묶음의 첫 기획이며 Unity 코드·Scene·Game View 재검증·commit·push는 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## HS6 오름차순 순차 조사 r31 (2026-09-21)
+
+- [구현 기록 r31](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/hs6-sequential-census-batches.implementation.r31.md)에 따라 `021019`~`030194` HS6 12개와 관세청 HSK10 자식 22개를 `chapter02-meat-06`으로 추가했다.
+- 염장·건조·훈연 육류 3개 코드에 쿠팡 공개 색인 후보 3건을 `PendingHumanReview`로 기록했다. 정확한 육류 후보가 없는 3개는 `SearchNoCandidate`, 생체 어류 6개는 쿠팡 공식 생체동물 판매 제한에 따라 `RestrictedOrSensitive`로 기록했다.
+- 배치 자체시험 12개를 통과했고 정규화 131행을 로컬 MySQL에 저장·독립 재조회했다. 동일 입력 재적용은 신규 0행·기존 131행이었다.
+- 전수 대장 11,226행은 후보 관찰 63개·제한 완료 40개·채널 부적합 8개·검색 무결과 25개·대기 5,476개·통계 특수 1개로 갱신했다. 최초 갱신은 12행, 반복 적용은 신규·수정 0행이고 다음 시작점은 `030195`다.
+- 시간당 `HS6 남은 대기 코드 연속 조사`는 활성 상태를 유지한다. 읽기 API, Unity 투영·Game View, 외부 게시, commit·push는 수행하지 않았다.
+
+## 카메라 안정 요청 관문 구현 r30 (2026-09-21)
+
+- 기획 r25·r27·r28을 첫 `기획 3회 → 작은 개발 1회` 묶음으로 결속하고 [구현 기록 r30](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/camera-stability-request-gate.implementation.r30.md)을 남겼다.
+- 별도 Unity 저장소에 `공간관찰요청안정관문`을 추가하고 `세계지구본View`가 마지막 확대 입력 뒤 0.3초에 최종 한반도 표시 상태만 적용하도록 연결했다. 대기 중에는 작은 `자료 불러오는 중` 상태를 표시한다.
+- Unity 재컴파일은 오류 없이 완료됐고 `Ssalddel.Unity.Tests.EditMode.세계지구본Tests` 13/13이 통과했다. 열린 Editor 때문에 명령줄 시험은 실행하지 못해 같은 Editor의 Unity Pipeline 시험으로 대체했다.
+- Scene·Builder·서버 API·지형 자료는 변경하지 않았다. 이후 canonical `SimulationWorldShell`을 실제 Play Mode로 실행해 Game View의 지구본·국가 경계 렌더를 캡처했다. 다만 별도 `OrdererApp` 창 간섭과 로컬 서버 세션 부재·운영 계획 서버 연결 실패·비활성화 중 부모 변경 오류가 재현되어 Console 0이나 완전한 통합 검증은 주장하지 않으며 통합 E는 E4를 넘기지 않는다. commit·push는 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## HS6 오름차순 순차 조사 r29 (2026-09-21)
+
+- [구현 기록 r29](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/hs6-sequential-census-batches.implementation.r29.md)에 따라 `020755`~`021012` HS6 12개와 관세청 HSK10 자식 24개를 `chapter02-meat-05`로 추가했다.
+- 염장·숙성·훈연 삼겹살 조건이 확인된 `021012`의 쿠팡 공개 색인 후보 3건만 `PendingHumanReview`로 기록했다. 특수육·비추출 지방·뼈 있는 염장육 등 11개 코드는 형태나 가공 조건이 맞지 않는 상품을 붙이지 않고 `SearchNoCandidate`로 남겼다.
+- 배치 자체시험 12개를 통과했고 정규화 87행을 로컬 MySQL에 저장·독립 재조회했다. 동일 입력 재적용은 신규 0행·기존 87행이었다.
+- 전수 대장 11,226행은 후보 관찰 60개·제한 완료 34개·채널 부적합 8개·검색 무결과 22개·대기 5,488개·통계 특수 1개로 갱신했다. 최초 갱신은 12행, 반복 적용은 신규·수정 0행이고 다음 시작점은 `021019`다.
+- 시간당 반복하는 `HS6 남은 대기 코드 연속 조사`를 활성화했다. 각 실행은 겹치는 코드를 건너뛰고 검증 가능한 다음 묶음만 처리한다.
+- 읽기 API, Unity 투영·Game View, 외부 게시, commit·push는 수행하지 않았다.
+
+## 카메라 안정 요청 관문 확정 r28 (2026-09-21)
+
+- [카메라 안정 요청 관문 확정 r28](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/camera-stability-request-gate.decision.r28.md)에 마지막 카메라 입력 뒤 0.3초 동안 관찰 문맥이 안정되면 최종 확대 수준의 자료만 요청하도록 확정했다.
+- 카메라 조작은 즉시 반응하고, 대기 중에는 마지막 검증 화면을 유지한다. 새 입력이 생기면 대기를 다시 시작하며 늦게 도착한 이전 세대 응답은 적용하지 않는다.
+- 이번 변경은 기획 계약만 갱신했다. 자료 수집·API·Unity 코드/Scene·Game View·E 승격·commit·push는 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## 확대 기반 공간 자료 적재 확정 r27 (2026-09-21)
+
+- [확대 기반 공간 자료 적재 확정 r27](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/zoom-driven-spatial-streaming.decision.r27.md)에 카메라 확대 수준·화면 범위·활성 자료층을 기준으로 필요한 공간 상태 사본만 요청하는 흐름을 확정했다.
+- 연속 확대 중 요청 남발 방지, 오래된 응답 거절, 정적 tile과 동적 운영 상태의 cache·TTL 분리, 부분 실패 격리, 화면 밖 상세 객체 회수와 선택 카드 지연 적재를 계약으로 정리했다.
+- 한반도 Z2 기본 하천은 한강·대동강·압록강·두만강으로 제한하고 실제 HydroRIVERS 절단 결과와 이름 출처가 확인된 선만 표시한다.
+- 이번 변경은 기획 계약만 갱신했다. 자료 수집·DB 저장·상태 사본/API·Unity 코드/Scene·Game View·E 승격·commit·push는 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## HS6 오름차순 순차 조사 r26 (2026-09-21)
+
+- [구현 기록 r26](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/hs6-sequential-census-batches.implementation.r26.md)에 따라 `020725`~`020754` HS6 12개와 관세청 HSK10 자식 22개를 `chapter02-meat-04`로 추가했다.
+- 쿠팡 공개 색인에서 축종·원물·형태·냉장/냉동 조건이 확인된 5개 코드의 후보 8건만 `PendingHumanReview`로 기록했다. 칠면조 절단육·오리 지방간·거위류 7개는 가공품이나 보관 상태 불명 후보를 붙이지 않고 `SearchNoCandidate`로 남겼다.
+- 배치 자체시험 12개를 통과했고 정규화 78행을 로컬 MySQL에 저장·독립 재조회했다. 동일 입력 재적용은 신규 0행·기존 78행이었다.
+- 전수 대장 11,226행은 후보 관찰 59개·제한 완료 34개·채널 부적합 8개·검색 무결과 11개·대기 5,500개·통계 특수 1개로 재생성했다. 최초 갱신은 12행, 반복 적용은 신규·수정 0행이고 다음 시작점은 `020755`다.
+- 읽기 API, Unity 투영·Game View, 외부 게시, commit·push는 수행하지 않았다.
+
+## 공간 의미 확대·객체 카드 확정 r25 (2026-09-21)
+
+- [공간 의미 확대·객체 카드 확정 r25](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/spatial-semantic-zoom-object-card.decision.r25.md)에 `공간 → 확대 수준별 자료층 → 객체 선택 → 상세 카드 → 준비된 하위 공간`의 공통 정보 구조를 확정했다.
+- `SpatialObservationSnapshot`, `VisibleLayerDescriptors`, `SpatialObservationObject`, `SpatialObjectDetailCard`의 기획 계약을 정의했다. 거점·건물·NPC·차량·업무 객체는 같은 선택 틀을 쓰되 정적 지리 revision과 동적 운영 revision, 개인정보 공개 범위는 분리한다.
+- 한반도 첫 지형 자료 조합은 SRTM 30m·HydroRIVERS·Natural Earth 1:10m으로 확정했다. 평지·분지는 공식 경계가 아니라 `DerivedLowlandCandidate`로 유지한다.
+- 이번 변경은 기획 계약만 갱신했다. 원본 수집·hash·DB 저장·상태 사본 생성·Unity 코드/Scene·Game View·E 승격·commit·push는 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## 한반도 지형 우선 의미 확대 제안 r24 (2026-09-21)
+
+- [한반도 지형 의미 확대 제안 r24](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/korean-peninsula-terrain-semantic-zoom.proposal.r24.md)에 `지구본 → 한반도 지형판 → 거점·교류축 → 역·도시 카드 → 승인 디오라마` 순서를 기록했다. 현행 카드는 제거하지 않고 지형·거점 선택의 상세 패널로 내린다.
+- 표고는 NASA/USGS SRTM 1 Arc-Second를 첫 추천 기준으로, 주요 하천은 HydroRIVERS, 광역 해안은 Natural Earth `1:10m`을 후보로 정리했다. Copernicus GLO-30은 현행 접근 조건을 확인하기 전 기본 자료로 고정하지 않는다.
+- 평지는 공식 경계처럼 그리지 않고 DEM의 표고·경사에서 계산한 `DerivedLowlandCandidate`로 제한한다. 거점도 상대 순서 자료를 실제 좌표로 승격하지 않고 별도 위경도 출처 영수증을 요구한다.
+- 이번 변경은 기획·공식 자료원 조사만 수행했다. 원본 다운로드·hash·DB 저장·동결 투영 생성·Unity 코드/Scene·Play Mode/Game View·E 승격·commit·push는 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## 역할 앱 사용자 화면의 개발 설명 축소 (2026-09-21)
+
+- 사용자 요청에 따라 주문자 홈·음식 주문 진입·음식점 홈·운영자 운송 현황의 현장 검증 범위, 화면 코드, 서버 권위와 Command 설명을 줄이고 사용자 행동 중심 문구로 교체했다. 기존 route·권한·상태 전이·오류 처리는 변경하지 않았다.
+- 주문자 앱에는 따뜻한 아이보리 바탕, 딥 틸 강조색, 반투명 상단 바, 큰 곡률의 카드, 일관된 그림자·여백·타이포그래피를 적용했다. 홈은 생활형 히어로와 빠른 선택 카드로, 음식 주문 진입은 음식점·살뜰마트의 두 서비스 카드로 재구성했다. 주문자 화면에서 장문의 역할 설명은 숨겼지만 구성요소와 업무 계약은 보존했다.
+- 공통 `MobileFieldTestBanner`는 `테스트 환경 · 실제 주문 아님`을 항상 표시하고 서버 주소·Simulation·판본은 접힌 상세로 이동했다. 실제 주문 오인 방지와 결제 비구속 안내는 유지하면서 옅은 호박색 보조 배너로 낮췄다. 개발용 페이지 목록의 검증 정보까지 일괄 삭제하지 않았다.
+- 변경 경로: `OrdererApp/Components/Layout/MainLayout.razor(.css)`, `OrdererApp/Components/Orderer/OrdererMobileHomeScreen.razor(.css)`, `OrdererApp/Components/Pages/FoodOrderHome.razor(.css)`, `OrdererApp/wwwroot/app.css`, `RestaurantDeskApp/Components/Pages/Home.razor`, `SsalddelAdminApp/Components/Pages/Operations.razor`, `Ssalddel.Ui.Common/Areas/App/Components/MobileFieldTestBanner.razor(.css)`, 관련 주문자 표시 시험.
+- 주문자 화면 관련 집중 시험 66/66과 주문자 Windows build(경고·오류 0)가 통과했다. 현대화한 홈의 실제 Windows 렌더를 확인했으며 route·하단 탐색·서비스 진입이 함께 표시됐다. 음식 주문 화면의 현대화 이후 실제 렌더, Android 실기기, 생성 이미지 또는 Figma 시안과의 정밀 대조는 아직 미검증이다. 생명주기 인증 만료·복귀 기능은 이번 수정에 포함하지 않았고 다음 작업으로 유지한다. commit·push는 하지 않았다.
+- 로컬 주문자 앱은 `http://127.0.0.1:5321`의 실제 API와 연결했고, 기존 `hongdal_dev`를 보존한 채 UI 검증 전용 MySQL `hongdal_ui_dev`와 별도 Mongo 컨테이너 `hongdal-ui-mongo`를 사용했다. `/health/ready` 200과 중랑구 음식점 조회 3건을 확인했으며, Windows 앱에서도 `면목 분식 샘플`, `사가정 한상 샘플`, `용마 국수 샘플`이 기술 오류 화면 없이 표시됐다. 이 자료는 Simulation 합성 fixture이며 실제 업체·메뉴·가격이 아니다.
+- 실제 렌더 증거는 `artifacts/local/ui-review-20260921-modern/orderer-food-db-connected.png`와 `orderer-food-db-results.png`에 남겼다. 주문자 Windows build는 경고·오류 0으로 다시 통과했다. 실행 중인 로컬 프로세스·Docker 검증 상태일 뿐 운영 배포나 운영 DB 연결 증거가 아니며 commit·push는 수행하지 않았다.
+- 범위 지정 Task 검증은 diff 검사 통과 뒤 `Ssalddel.v3.5.slnx` 전체 build에서 장시간 결과가 나오지 않아 중단했다. 전체 묶음 검증 성공으로 보지 않으며 로그는 `artifacts/local/validation/20260921-155503`에 남겼다.
+
+## HS6 오름차순 순차 조사 r23 (2026-09-21)
+
+- [구현 기록 r23](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/hs6-sequential-census-batches.implementation.r23.md)에 따라 `020622`~`020724` HS6 12개와 관세청 HSK10 자식 22개를 `chapter02-meat-03`으로 추가했다.
+- 쿠팡 공개 색인에서 축종·원물·냉장/냉동 조건이 확인된 8개 코드의 후보 13건만 `PendingHumanReview`로 기록했다. 냉장 돼지 설육·냉동 돼지 간·냉장 양/염소/말 설육·냉장 통 칠면조 4개는 무관한 가공품이나 반려동물용 상품을 붙이지 않고 `SearchNoCandidate`로 남겼다.
+- 배치 자체시험 12개를 통과했고 정규화 121행을 로컬 MySQL에 저장·독립 재조회했다. 동일 입력 재적용은 신규 0행·기존 121행이었다.
+- 전수 대장 11,226행은 후보 관찰 54개·제한 완료 34개·채널 부적합 8개·검색 무결과 4개·대기 5,512개·통계 특수 1개로 재생성했다. 반복 적용은 신규·수정 0행이고 다음 시작점은 `020725`다.
+- 읽기 API, Unity 투영·Game View, 외부 게시, commit·push는 수행하지 않았다.
+
+## 한반도 교류 생활상 시각 검증 r22 (2026-09-21)
+
+- [한반도 교류 생활상 시각 검증 r22](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/corridor-exchange-scenario-visual.implementation.r22.md)에 따라 기존 교류축 화면에 8개 거점·7개 상태 구간, 북행·남행 가상 물자 열차와 생활 물자 카드를 추가했다.
+- 화면에는 `SimulationAnalog · 실제 운행/통행/교역량이 아닙니다`를 고정 표시하며 선택과 애니메이션은 운영·Simulation 상태를 쓰지 않는다.
+- Unity EditMode 13/13 통과, 실제 `SimulationWorldShell` Play Mode와 전용 지구본 카메라 Game View 캡처를 확인했다. 이동 표식 두 개의 3초 간격 위치 변화도 확인했다.
+- 전체 Scene Play Mode에서는 기존 저장 hash 불일치와 로컬 서버 미연결 오류가 재현돼 Console 0은 확보하지 못했다. Scene·Builder, DB/API, commit·push와 E 승격은 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## HS6 오름차순 순차 조사 r21 (2026-09-21)
+
+- [구현 기록 r21](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/hs6-sequential-census-batches.implementation.r21.md)에 따라 기존 30개 뒤의 법정 HS6를 `010121`부터 `020621`까지 오름차순으로 이어 처리했다. 제1류 전체 34개와 제2류 첫 24개, 합계 58개 HS6에 관세청 2026 HSK10 자식 97개를 결속했다.
+- 제1류는 쿠팡 공식 판매 제한 정책에 따라 34개 모두 상품 0건의 `RestrictedOrSensitive`로 닫았다. 제2류는 도체 8개를 `ChannelInapplicable`로 닫고 나머지 16개에 검색 색인 후보 36건을 `PendingHumanReview`로 기록했다. 냉동 근거가 불명확한 소 혀 후보 두 건은 제외했다.
+- 다섯 순차 배치 정규화 자료는 562행이며 기존 다섯 배치를 포함한 열 반복 배치는 1,012행이다. 각 신규 배치는 최초 저장·독립 재조회·동일 입력 신규 0행을 확인했다.
+- HS6 전수 대장 11,226행은 후보 관찰 46개·제한 완료 34개·채널 부적합 8개·대기 5,524개·통계 특수 1개로 재생성했다. 적용 직후 독립 재조회했고 반복 적용은 신규·수정 0행이었다.
+- 관세청 HSK10 성질 분류 11,327행과 법정 HS6 조사 대장 5,612개는 서로 다른 단위다. 다음 오름차순 시작점은 `020622`다.
+- 수집기 build는 경고 0·오류 0, 신규 배치 자체시험은 각각 12개, 전수 대장 자체시험은 10개를 통과했다. 읽기 API, Unity 투영·Game View, 외부 게시, commit·push는 수행하지 않았다.
+
+## 한반도 의미 확대 첫 수직 슬라이스 r20 (2026-09-21)
+
+- [개발 인계·구현 기록 r20](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/semantic-zoom-first-slice.implementation.r20.md)에 따라 기존 지구본의 대한민국 선택과 카메라 거리 이력을 이용해 `지구본 → 한반도 서부 교류축 → 도라산 근거 카드 → 지구본 복귀`를 읽기 전용으로 연결했다.
+- Unity 동결 자원은 공식 출처 5건, 거점 8개, 구간 7개의 자료 상태만 가진다. 판문·봉동은 별도 항목과 `AwaitingIdentityReview`를 유지하고 현재 통행·정밀 노선·운영 권위는 만들지 않는다.
+- 기존 `SimulationWorldShell`과 Builder는 수정하지 않았다. 연결된 Unity 6000.5.6f1 Editor 재컴파일 뒤 `세계지구본Tests` 13/13이 통과했다.
+- 실제 DB/API 적재·서버 상태 사본, Play Mode·Game View, E 승격, commit·push는 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## 한반도 의미 확대·정보층 r19 (2026-09-21)
+
+- [한반도 의미 확대·정보층 r19](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/korean-peninsula-semantic-zoom-information-layers.decision.r19.md)에 `Z0 세계 → Z1 동아시아 → Z2 한반도 → Z3 서부 교류축 → Z4 역 거점 → Z5 승인 디오라마`의 의미 확대 단계를 확정했다.
+- 부산–서울–도라산–판문/봉동 검토 구간–개성–평양–신의주를 첫 축으로 두되 현재 국내 운행·역사 운행·현재 단절·국제 회랑·시나리오를 서로 다른 선과 상태로 분리한다. 카메라 거리는 입력일 뿐 자료 정밀도 권위가 아니며, 서버의 최대 관찰 수준과 자료 준비도가 확대 상한을 정한다.
+- 이번 판본은 기획 문서화만 수행했다. r18 출처 5건·주장 7건의 실제 DB 적재, 읽기 투영, Unity 코드·Scene·카메라 변경, Play Mode·Game View와 E 승격은 수행하지 않았다. 새 디오라마 규칙 후보는 없다.
+
+## 서부 교류축 역·사건 출처 대장 r18 (2026-09-21)
+
+- [서부 교류축 역·사건 출처 대장 r18](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/western-corridor-station-source-ledger.research.r18.md)에 도라산·판문·봉동·개성 관련 공식 출처 5건과 사실 주장 7건을 저장소 기준선으로 기록했다.
+- 2026년 서울–도라산 국내 관광 운행, 2007년 문산–도라산–판문–개성 시험운행, `문산–봉동(판문역)` 화물 사업 표현, 2024년 연결부 단절 관측과 UN 국제 회랑 기술을 현재·역사·단절·구상으로 분리했다.
+- 판문역과 봉동역의 관계는 공식 표현만으로 동일성·개명·공간 관계를 확정하지 않고 `AwaitingIdentityReview`로 남겼다. 문서화만 수행했고 원문 동결·hash, MongoDB/RDB 적재, 읽기 API, Graph Map·배치맵·Unity 변경은 수행하지 않았다. 새 디오라마 규칙 후보는 없다.
+
+## 제1류 생축 12개 순차 조사·0건 완료 계약 r17 (2026-09-21)
+
+- HS6 미처리 대장을 오름차순으로 이어 `010121`~`010392` 12개와 관세청 HSK10 자식 23개를 `chapter01-live-animals-01` 배치로 묶었다. 12개 모두 살아있는 말·소·버펄로·돼지류이며 관세청 성질별 `소비재`는 통계 분류일 뿐 판매 가능 판정이 아니다.
+- 쿠팡 공식 판매 불가 품목 정책을 브라우저로 확인해 12개를 `RestrictedOrSensitive / LiveAnimalOnlineSaleProhibited`로 닫았다. 완구·사료·축산물을 대신 붙이지 않았고 대표 상품·가격 관찰은 0건, `distributionApproved=false`다.
+- 기존 다섯 v1/v2 입력을 보존하면서 신규 manifest v2·상품 검토 v3를 추가했다. 코드별 대표 상품 0~3건, 명시적 제한·검색 무결과·채널 부적합, 복수 HSK10, UN 무역행 결손·상대국 5개 미만·순중량 null을 0으로 바꾸지 않는 계약을 지원한다.
+- UN Comtrade 2025년 대한민국 수입 원본 28행에서 세계 합계가 있는 6개와 응답 행이 없는 6개를 분리했다. 신규 배치는 무역 58·HS 분류 12·채널 검토 12·상품 검토 결과 12, 합계 94행을 로컬 MySQL에 저장하고 독립 재조회했다. 동일 입력 반복 적용은 신규 0·기존 94였다.
+- 전체 HS6 대장은 후보 관찰 30개·제한 완료 12개·대기 5,570개·통계 특수 1개로 갱신했다. 최초 적용에서 12행만 수정됐고 반복 적용은 신규·수정 0행이었다. 기존 다섯 배치 자체시험도 각각 12개 검사를 통과해 기존 450행 계약을 유지했다.
+- [구현 기록 r17](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/chapter01-live-animals-sequential-batch.implementation.r17.md)과 수집기 README·기획 목차를 갱신했다. 읽기 API, Unity 투영·Game View, 외부 게시, commit·push는 수행하지 않았다.
+
+## 도라산 첫 상세 조사역 확정 r16 (2026-09-21)
+
+- [도라산 첫 상세 조사역 결정 r16](Planning/시스템/PLAN-SYSTEM-KOREAN-PENINSULA-PUBLIC-DATA-WORLD/dorasan-first-detailed-station-research.decision.r16.md)에 따라 도라산역을 부산–서울–개성–평양–신의주–단둥 서부 교류축의 남측 마지막 상세 거점이자 첫 상세 조사역으로 확정했다.
+- 첫 범위는 공식 역 식별·좌표·노선·연혁, 도라산–봉동–개성 연결의 역사·제한·단절·구상 상태, 자료 권위와 결손을 대장화하는 조사 관문이다. 군사·보안 세부와 임의 출입구·통행선·시설 용도는 수집하거나 합성하지 않는다.
+- DB 적재, 읽기 API, Graph Map, 배치맵, Unity, 1km 디오라마, 실제 운행·출입 확정은 수행하지 않았다. 새 디오라마 규칙 후보는 없다.
+
+## 제9류 소비재 10개 반복 수집 r15 (2026-09-21)
+
+- 기존 20개와 겹치지 않는 마테·육두구·카다멈·코리앤더·강황·카레·월계수류 법정 HS6 10개와 HSK10·내부 상품군·쿠팡 대표 상품 후보를 `chapter09-retail-consumer-02`로 묶었다. 모든 상품 결속은 `PendingHumanReview`다.
+- UN Comtrade 대한민국 2025년 수입 원본 195행에서 무역 120행, 분류 10행, 카테고리 후보 10행, 상품 관찰 10행 등 150행을 로컬 MySQL에 저장했다. 독립 재조회 150행과 동일 입력 신규 0행·기존 150행을 확인했다.
+- 전체 전수 대장은 관찰 30개·대기 5,582개·통계 특수 1개로 갱신했다. 갱신된 10행 뒤 동일 입력 반복 적용은 신규·수정 0행이었다. 다섯 반복 배치의 정규화 자료는 합계 450행이다.
+- 쿠팡 접근 제한은 우회하지 않았고 가격·배송·원산지 표시는 시점 관찰 후보일 뿐이다. 순중량이 없는 `091020` 사프란은 0으로 꾸미지 않고 결손 수치 계약 후속으로 남겼다. 읽기 API, Unity, 외부 게시, commit·push는 수행하지 않았다.
+
+## 관세청 HS 계층·성질별 전수 적재 r14 (2026-09-21)
+
+- 공공데이터포털의 관세청 2026 HS 부호와 HSK 성질별 분류 XLSX를 공식 공개 URL에서 수집하고 고정 길이·SHA-256·시트·헤더를 검증했다. 공공누리 제1유형 출처표시 자료이며 로컬 비공개 검토 상태로만 보존한다.
+- HS 계층 12,469행은 말단 HSK10 11,327행과 7~9단위 중간 계층 1,142행으로 구분했다. 성질별 2026 시트 11,327행은 말단 HSK10 집합과 정확히 일치하고 소비재 3,261·원자재 5,183·자본재 2,883이다.
+- 기존 공공자료 MySQL 원장에 두 계보 합계 23,796행을 저장했다. 독립 재조회에서 행 수와 원본 hash를 확인했고 동일 입력 반복 적용은 신규 0·수정 0·기존 23,796이었다. 새 migration은 없다.
+- 국내 특수 `2424000000`과 UN 통계 특수 `999999`는 분리했다. 성질 분류를 소매 판매 가능성이나 개별 상품 HS 확정으로 승격하지 않았다. build는 경고 0·오류 0, 자체검사 18개가 통과했다. 읽기 API, Unity, 외부 게시, commit·push는 수행하지 않았다.
+
+## 09류 8개 코드 반복 수집 r13 (2026-09-21)
+
+- `coffee-vanilla-clove-ginger-01`로 볶은 커피·바닐라·정향·생강의 가공 전후 HS6 8개와 쿠팡 대표 상품 후보를 추가했다. 상품 후보는 법적 HS 판정이 아닌 `PendingHumanReview`다.
+- UN Comtrade 대한민국 2025년 수입 원본 203행에서 무역 96행, 분류 8행, 소매 카테고리 후보 8행, 상품 관찰 8행 등 120행을 `hongdal-mysql-1 / hongdal_dev`에 저장했다. 독립 재조회 120행과 동일 입력 신규 0행·기존 120행을 확인했다.
+- 전수 대장을 다시 생성해 법정 HS6 후보 관찰 20개, 대기 5,592개, 통계 특수 1개로 갱신했다. 갱신 직후 동일 입력 재실행은 신규 0·수정 0·기존 11,226행이었다. 네 반복 배치 정규화 자료는 합계 300행이다.
+- 쿠팡 직접 검색 403은 우회하지 않았으며 색인 시점 가격·배송·원산지 주장은 현재 판매나 법적 분류 증거가 아니다. 읽기 API, Unity 투영·Game View, 외부 게시, commit·push는 수행하지 않았다. 새 디오라마 규칙 후보는 없다.
+
+## HS6 전수 대장·통향신료 반복 수집 r12 (2026-09-21)
+
+- WCO 법정 HS6 `5,612개`와 UN Comtrade H6의 통계 특수 `999999`를 분리하고, 공식 분류 5,613행과 코드별 소매 조사 상태 5,613행을 생성하는 전수 대장 실행기를 추가했다.
+- 합계 `11,226행`을 `hongdal-mysql-1 / hongdal_dev`에 저장·독립 재조회했다. 반복 배치 기준 대표 상품 후보 관찰은 12개, 대기는 5,600개, 통계 특수 1개다. 교정 뒤 동일 입력 재실행은 신규 0행·수정 0행·기존 11,226행이었다.
+- `whole-spices-01`로 통후추·건고추·실론계피·커민 씨 4개 코드를 추가했다. UN Comtrade 원본 85행에서 무역 48행, 분류 4행, 카테고리 후보 4행, 상품 관찰 4행 등 60행을 저장했고 독립 재조회와 동일 입력 신규 0행을 확인했다.
+- 쿠팡 직접 검색은 403으로 거절되어 우회하지 않았다. 공개 검색 색인 관찰은 모두 `PendingHumanReview`, `affiliate=false`, `distributionApproved=false`이며 현재 가격·순위·법적 원산지·HS 확정 증거가 아니다.
+- 실행기 build는 경고 0·오류 0, 전수 자체시험 10개와 상품 배치 자체시험 12개가 통과했다. HS 계층 총대장·말단 HSK10 성질별 보조 분류 반입, 읽기 API, Unity 투영·Game View, 외부 게시, commit·push는 수행하지 않았다. 새 디오라마 규칙 후보는 없다.
+
+## 분쇄 향신료 무역·소매 반복 수집 r11 (2026-09-21)
+
+- `ground-spices-01`로 HS6 `090412`, `090422`, `090620`, `090932`의 분쇄 후추·고추류·계피·커민을 두 번째 반복 배치로 수집했다. 한국 HSK10, 내부 소매 카테고리, 쿠팡 말단 카테고리 후보와 개별 상품 관찰은 분리했다.
+- UN Comtrade 대한민국 2025년 수입 원본 111행을 동결하고 무역 48행, HS 분류 4행, 카테고리 후보 4행, 상품 관찰 4행 등 60행을 `hongdal-mysql-1 / hongdal_dev`에 저장했다. 독립 재조회 60행과 동일 입력 신규 0행·기존 60행을 확인했다.
+- 쿠팡 공개 색인의 가격·배송·재고·원산지 문구는 관찰 후보일 뿐 현재 판매나 법적 원산지 증거가 아니다. 네 건 모두 `PendingHumanReview`, `affiliate=false`, `distributionApproved=false`이고 숫자 `displayCategoryCode`는 미확정이다.
+- 서버 읽기 API, Unity 투영·Game View, 외부 게시, commit·push는 수행하지 않았다. 국가 무역 자료를 행정동·건물에 배분하지 않았으며 새 디오라마 규칙 후보는 없다.
+
+## HS·소매 카테고리 반복 수집 첫 배치 r10 (2026-09-21)
+
+- `beverage-raw-01` 반복 배치 실행기를 추가하고 HS6 `090111`, `090210`, `090230`, `180500`의 한국 HSK10·내부 소매 카테고리·쿠팡 말단 카테고리 후보를 분리했다. 쿠팡 숫자 `displayCategoryCode`는 WING 또는 인증된 판매자 API 확인 전까지 `null`과 `PendingSellerCategoryVerification`이다.
+- UN Comtrade의 대한민국 2025년 수입 원본 208행을 수집하고 각 품목의 세계·금액 상위 5개 상대국을 금액·순중량으로 정규화했다. 관세법령정보포털의 2026년 한국 분류표로 네 HSK10 명칭을 교차 확인했다.
+- 쿠팡 직접 검색은 403으로 거절되어 우회하지 않았다. 공개 색인된 쿠팡 상세 페이지의 생두·녹차·홍차·코코아 후보 한 건씩을 관찰했으며 검색 순위·현재 가격·현재 재고로 승격하지 않았다. 네 건 모두 `PendingHumanReview`, `affiliate=false`, `distributionApproved=false`다.
+- 기존 공공자료 원장에 무역 48행, HS 분류 4행, 카테고리 결속 후보 4행, 대표 상품 4행 등 60행을 저장했다. 독립 재조회 60행과 동일 입력 신규 0행·기존 60행을 확인했다. 새 migration은 없다.
+- 실행기 build는 경고 0·오류 0, 자체시험 12개를 통과했다. 서버 읽기 API, Unity 투영·Game View, 외부 게시, commit·push는 수행하지 않았다. 새 디오라마 규칙 후보는 없다.
+
+## HS 무역 통계·소매 상품 관찰 실제 수집 r9 (2026-09-21)
+
+- UN Comtrade 공개 API에서 대한민국의 2025년 연간 수입 통계 131행을 실제 수집했다. HS6 `090121` 볶은 커피, `080390` 바나나, `030617` 냉동 새우류의 세계 합계와 품목별 수입금액 상위 5개 상대국을 금액·순중량으로 정규화했다.
+- 네이버 가격비교·쿠팡의 수동 상품 관찰 6건을 별도 원본으로 결속했다. 여섯 건 모두 광고이며 `PendingHumanReview`, `affiliate=false`, `distributionApproved=false`다. 상품명·판매자 원산지 주장을 무역 상대국 증거로 승격하지 않았다.
+- 기존 `public_data_ingestion_runs`, `public_data_raw_snapshots`, `public_data_normalized_records`를 재사용해 통계 36행, HS 분류 3행, 상품 관찰 6행 등 45행을 `hongdal-mysql-1 / hongdal_dev`에 저장했다. 새 migration이나 테이블은 추가하지 않았다.
+- 새 DB 문맥 독립 재조회에서 45행을 확인했고 동일 입력 재실행은 신규 0행·기존 45행이었다. 공식 원본·HS 참고·상대국 참고·상품 관찰의 SHA-256 네 개도 확인했다.
+- 실제 외부 수집·로컬 MySQL 저장·재조회는 완료했다. 읽기 API, Unity 투영, Game View, 외부 게시, commit·push는 수행하지 않았다. 새 디오라마 규칙 후보는 없다.
+
+## 검색 상단 대표 상품 수동 관찰 r8 (2026-09-21)
+
+- 자동 API나 대량 scraping 대신 네이버 가격비교와 쿠팡에서 `원두 커피 1kg`, `바나나`, `냉동 새우`를 각각 한 번 조회하고 첫 노출 상품 한 건씩을 수동 관찰했다.
+- 여섯 건 모두 광고 배치였으므로 `검색 상단 관찰 후보`와 `인기·추천 상품`을 분리했다. 상품명·가격·배송·정리한 링크·원산지 확인 상태만 기록하고 추적 parameter, 이미지, 페이지 본문, 계정 정보는 보존하지 않았다.
+- 네이버 바나나의 필리핀산 문구와 쿠팡 커피의 베트남 원두 문구는 판매 페이지 주장으로만 기록했다. 관세청 통계의 상대국이나 개별 상품 원산지 정본으로 승격하지 않았다.
+- 이번 단계에서는 수동 조사와 기획 문서 갱신만 했다. MySQL 적재, migration, API·Unity 구현, Runtime 검증, commit·push는 수행하지 않았다. 다음 관문은 세 묶음의 정확한 HS 세번·가공 상태·확정 기간·상대국 검증이다.
+
+## 무역 품목·소매 카테고리·대표 상품 연결 계획 r7 (2026-09-21)
+
+- 지구본의 국가별 수출입 흐름에서 `관세 HS 품목 → 소매 카테고리 후보 → 대표 상품 관찰 → 외부몰 이동`으로 탐색하되 세 사실을 분리하기로 했다. HS와 소매 카테고리는 다대다 검토 연결이며 상품 링크만으로 원산지·제조국·수입국을 확정하지 않는다.
+- 네이버 공식 공지를 확인한 결과 기존 쇼핑 검색 API는 2026-07-31 종료돼 신규 자동 수집 기반으로 사용할 수 없다. 쿠팡 일반 Open API는 판매자·통합 사업자의 상품·주문·물류 관리 중심이므로 소비자 전체 상품 검색으로 간주하지 않는다. 자동 HTML scraping은 기본안에서 제외했다.
+- 첫 상품 후보는 커피류·바나나류·냉동 새우류이며, 정확한 HS 세번과 기간·상대국은 관세청 자료로 다시 확인한다. 상품은 플랫폼별 1~2개 사람이 검토한 일반 링크로 시작하고 가격 자동 갱신·제휴 링크·상품 이미지 배포는 후속 승인으로 남긴다.
+- Unity는 서버의 승인된 통계·카테고리 연결·상품 관찰 카드를 읽고 외부 이동 전 플랫폼·제휴·가격 유효성을 고지한다. 구매·결제·주문은 하지 않으며 링크가 만료돼도 무역 통계 조회는 유지한다.
+- 이번 단계에서는 공식 문서 조사와 계획 갱신만 했다. 실제 관세·상품 수집, MySQL migration·적재, API·Unity 구현, Runtime 검증, commit·push는 수행하지 않았다. 새 디오라마 규칙 후보도 만들지 않았다.
+
+## 지구본 다중 규모 상향식·하향식 수집·표현 계획 r6 (2026-09-21)
+
+- 지구본부터 행정동·건물까지의 확대 구조에 맞춰 자료 수집을 상향식 하나로 고정하지 않기로 했다. 국가별 무역·광역 통계·기상·해양은 원래 단위대로 하향식으로 보존하고, 건물·주소·시장·창고·현장 검증은 상향식으로 축적한다. 두 방향은 지역·거점·기간·출처 판본으로만 결속하며 서로의 결손을 추정으로 채우지 않는다.
+- 확대 수준별로 `세계 국가 흐름 → 한반도 항만·물류 거점 → 대한민국 행정 권역 → 행정동 생활 → 건물 상세`를 별도 읽기 투영으로 제공한다. 확대할 때 상위 집계를 개별 객체로 임의 분해하지 않고 해당 정밀도의 근거 자료로 교체한다.
+- 물류·수산·무역 표현을 `M0 집계 흐름 → M1 거점 흐름 → M2 입출항 관측 → M3 실제 항적`으로 구분했다. 현재 관세·수협 자료는 M0·일부 M1 후보이며, 실제 배 이동은 공식 입출항 또는 위치 시계열을 확인하기 전까지 표현하지 않는다.
+- 첫 독립 수집 후보는 `L1 면목동 행정코드·건축물`과 `G1 대한민국 국가별 수출입 집계 흐름`이다. 둘은 같은 수집 원장과 검증 방식을 공유하지만 서로 선후행 종속이 아니고 국가 값을 면목동에 자동 배분하지 않는다.
+- 이번 단계에서는 계획 문서만 갱신했다. 실제 API 호출·MySQL 적재·Unity 흐름 애니메이션·Runtime 검증·commit·push는 수행하지 않았다. 새 디오라마 규칙 후보도 만들지 않았다.
+
+## 공공데이터포털 분야 분류·MySQL 수집 계획 r5 (2026-09-21)
+
+- 로그인된 공공데이터포털 활용 목록을 읽기 전용으로 확인해 현재 Open API 37건과 파일데이터 7건을 8개 자료 분야로 분류했다. 저장소의 기존 33개 API/10개 업무 모듈 catalog와 차이가 있어 다음 구현에서 공개 data ID를 기준으로 사용 가능 상태와 adapter 준비 상태를 대조한다. 인증키·개인정보·활용신청 내부 식별자는 기록하지 않았다.
+- 기존 `ExternalDataSourceCatalog → ExternalDataIngestionRuntime → PublicDataIngestionDbContext`와 `public_data_ingestion_runs`, `public_data_raw_snapshots`, `public_data_normalized_records`, `public_data_region_mappings`를 재사용하는 계획을 확정 후보로 작성했다. 원본 본문은 비공개 원본 저장소에 두고 MySQL에는 실행·hash·계보·정규화·지역 매핑을 적재한다.
+- 수집 우선순위는 `P0 출처 대장 대조 → P1 사가정·면목제3·8동 공간 기반 → P2 지역 생활 관찰층 → P3 전국 공급망·경제 시계열 → P4 보호·후순위`다. 첫 실제 적재 후보는 면목동 제한 범위의 `행정표준코드 법정동 + 건축HUB 건축물대장`이다.
+- 이번 단계에서는 실제 API 호출·파일 다운로드·MySQL migration·적재·독립 재조회·Unity 변경을 수행하지 않았다. 구현, Runtime, commit, push도 수행하지 않았다. 다음 결정은 첫 두 자료의 제한 수집·MySQL 저장·독립 재조회 실행 승인이다.
+
+## 세계 구체 지구본·국가 정보 첫 수직 슬라이스 r4 구현 (2026-09-21)
+
+- Natural Earth `1:110m Admin 0 Countries`와 World Bank 국가 메타데이터·최근 비결측 인구를 동결 입력으로 수집해 177개 국가, 289개 ring, 10,654개 점의 읽기 전용 catalog를 생성했다. 같은 입력을 두 번 생성한 catalog SHA-256은 모두 `B18AB971C957620A8184E0A0B53FC0F3060158B0366E2E06ABB8A4963F767D9A`였다.
+- canonical `SimulationWorldShell / WorldMapRoot`에 `GlobeRoot`를 한 번만 결속하고 구체 바다, 저해상 육지, 국가 경계, 전용 카메라와 국가 정보 UI를 구현했다. Unity는 운영·Simulation 상태를 바꾸지 않는 읽기 전용 관찰 표현으로 유지한다.
+- 유휴 서→동 자동 자전, drag 회전·wheel 확대 코드, 국가 경계 판독·선택 강조, 177개 국가 정보 표시를 구현했다. 대한민국은 기존 사가정 관찰 표현으로 전환하고 지구본으로 돌아왔을 때 선택·회전·확대 상태를 복원한다.
+- 실제 Game View에서 지구본 전체, 대한민국 정보 패널, 사가정 상세 전환과 복귀를 확인했다. 자동 자전은 실행 중 회전값 변화로 확인했다. 실제 포인터를 주입한 drag·wheel 수동 증거는 아직 남아 있다.
+- 집중 EditMode 시험은 `11/11` 통과했다. 기존 서버 미연결·재생 hash 관련 Console 오류는 이 슬라이스 밖의 선행 결손이며 새 지구본 코드의 전용 예외는 확인되지 않았다.
+- 이번 catalog는 Unity 로컬 동결 사본이다. live 서버 국가 상태 사본 API, 운영 DB 저장·독립 재조회, 정기 갱신은 구현하지 않았으므로 전체 통합 증거 상한은 E4다. commit·push는 수행하지 않았다.
+
+## 사가정 빈 공간 공개 건물 보조 레이어 구현 (2026-09-21)
+
+- 기존 Game View의 `SagajeongReferenceR3Fallback`은 로컬 브이월드 4,062개 건물 오버레이가 사라져 OSM 기준 건물 602개만 표시된 상태였다. 로그인 없는 브이월드 원본 재취득은 차단되어, Overture Buildings `2026-08-19.0`의 사가정 1km bbox 공개 윤곽 2,969개를 별도 검토 입력으로 동결했다. 원본 SHA-256은 `96DC6451392391A9A31BB34AE17F3CB2501E1967EAF8155ECD74CC0FBAA560F9`다.
+- 새 생성기는 기존 r3와 의미 있게 겹치는 602개를 제외하고 경계 밖·극소 윤곽 120개를 제외해 2,247개만 보조 레이어로 만든다. 이 윤곽은 주소·용도·실측 높이·통행 권위가 없으며 모두 `SymbolicFallback4m`, `LocalPrivateReview`, `distributionApproved=false`다. 기존 도로·주소 결속·건물 높이는 덮어쓰지 않는다.
+- Unity는 `sagajeong-spatial-presentation.overture-private-review.r1`의 동결 provider·dataset·license·hash·길이를 검사한다. Editor 메뉴가 검증 성공 뒤에만 로컬 경로를 `EditorPrefs`에 기록하고 Scene·Prefab·빌드에는 남기지 않는다. 모형 조립 보고와 화면 하단에는 실제 렌더 건물 수를 별도로 계산한다.
+- Unity EditMode 계약 시험 `56/56`, 사가정 모형 표현 시험 `4/4`를 통과했다. 실제 `SimulationWorldShell` 사가정 관찰 카메라에서 기존 602개와 보조 2,247개를 합친 2,849개 건물 매스가 렌더된 전체 화면을 `artifacts/local/captures/sagajeong-overture-filled-camera.png`로 확인했다. 이 화면은 표현 증거일 뿐 현행 주소·통행·업무·게임플레이 증거가 아니다.
+- 동결 입력으로 생성기를 두 번 실행해 두 번 모두 내용 hash `4D867574CBBB58D2EA6478B8FCEB4BBED80463B30746F191D7282D94E003C3DC`와 파일 SHA-256 `D0552E82130BB5E87A8B7B48201A7F0193252E3374200941F0E9D836008BA68B`가 같음을 확인했다. 디오라마 증거 대장 r5 검증과 변조 거절 시험도 통과했다.
+- 새 디오라마 공통 규칙 후보는 만들지 않았다. 기존 후보 `보충 공간층은 원천별 시각·좌표계·권위를 보존한다`를 지지하는 SourceReceipt만 추가했으며 공통 적용·E 승격·공개 배포 승인은 하지 않았다.
+
+## 면목제3·8동 아이소메트릭 디오라마 우선 전환 (2026-09-21)
+
+- 당분간 모바일 운영 앱의 현실 적용 확대보다 `region:kr:hjd:1126057500` 면목제3·8동을 사각 받침의 아이소메트릭 Unity 디오라마로 정교화하는 일을 먼저 하기로 기획 우선순위를 전환했다. 다른 29개 행정동은 같은 계약의 확장 후보로 유지하되 면목제3·8동과 같은 깊이라고 간주하지 않는다.
+- 사각 받침은 카메라·배경·모듈 교체를 위한 표현 프레임일 뿐 실제 행정동 경계를 네모로 바꾸지 않는다. 경계·건물 귀속·주소·집계는 서버 정본을 따르고, 기존 사가정역 1km×1km 모듈은 면목제3·8동 안의 고정밀 상세 관찰 창으로 재사용한다.
+- 정교화 순서를 `현행 경계·건물·필지·주소·출입구 → 지형·도로·보도·건물 매스 → 현장 사진 근거의 거리·외관 보정 → 검증된 대표 대상 Blender 상세화 → 사람·차량·운영·절기·오행·광고 overlay`로 고정했다. 뒤 단계는 앞 단계의 자료 결손을 숨기지 않는다.
+- 사용자가 배달 중 모으는 사진은 안전하게 정차한 뒤 공공장소에서만 촬영하고, 주문 화면·고객 상세 주소·사유지 내부·얼굴·차량번호·세대번호·공동현관 정보를 수집하거나 배포하지 않는다. 사진은 촬영 시각·대상·방향·대략 위치·hash·권리·개인정보 검토를 갖춘 비공개 현장 관찰 후보로 먼저 기록하며 공공자료 식별자와 검토 결속되기 전에는 표현 정본으로 사용하지 않는다.
+- 네 역할 앱은 현행 에뮬레이터 검증 결과를 보존하고 당분간 유지·회귀·현장 자료 확인에 필요한 최소 보완만 한다. 결제·배포·현실 운영 확대는 별도 재승인 전까지 디오라마보다 앞서지 않는다.
+- 우선 전환 당시에는 기획 문서와 기준선만 갱신했다. 이후 위의 사가정 빈 공간 보조 레이어를 구현·검증했지만, 현행 행정동 경계·현장 사진 수집, DB, Blender, Unity Scene·Prefab 저장, E 승격, commit·push는 수행하지 않았다.
+
+## 음식 주문 네 역할 Android 에뮬레이터 우선 검증 기반 (2026-09-21)
+
+- 주문자·음식점·음식 배달 기사·운영자 네 앱을 독립 Android 패키지 `0.1.0`으로 정리했다. 주문자는 음식점 탐색·주문·진행 조회, 음식점은 로그인 뒤 주문함·조리시간, 기사는 기사 로그인 뒤 배차·위치·정산 업무, 운영자는 운영 개요·운송·후속 복구·현금 흐름으로 첫 동선을 좁혔다. 현재 검증 순서는 `코드·UI 보완 → Android Emulator → 물리 기기 최종 확인`이다.
+- 네 역할 앱의 실제 HTTP Client 소스를 `eng/Ssalddel.RoleAppHeadlessE2E`에 함께 컴파일했다. 실행기가 음식점 전용 API로 격리 합성 메뉴를 멱등 준비한 뒤 `주문자 주문 등록 → 음식점 수락·조리·픽업 준비 → 음식 배달 기사 추천·배정·픽업·전달 → 주문자 수령 확인`을 같은 주문번호로 수행한다. 운영자 앱의 `AdminAuthenticatedApiClient`는 각 단계에서 `RestaurantDecision → CookingAndDispatch → PickupHandoff → Delivery → ReceiptConfirmation → Closed`와 정상 조화·운영자 확인 불필요를 재조회한다. 기존 진행 주문이 있어도 실행 전 가명 업무 기준선을 잡아 이번 주문의 `WorkStableId`만 추적한다.
+- 새 격리 `Staging + Simulation` MySQL/Mongo 표본에서 주문 `FOOD-20260920223640344`가 `role-app-headless-e2e.r2 / Completed`로 끝났다. MySQL 독립 재조회 결과는 `수령확인 / 배달완료`, 상태 이력 7건, 상품 1건이었다. 동일 주문의 Unity 읽기 전용 운영 사본은 `주문대기 → 조리중 → 기사배정 → 픽업완료 → 전달완료`를 같은 가명 업무로 적용한 뒤 수령 확인에서 제거됐다. 이는 서버·DB·Unity 계약 어셈블리의 headless 실행 증거이며 Android UI·Unity Editor/Play Mode/Game View 증거는 아니다.
+- 주문자 모바일 앱의 첫 동선에서는 공동주문·같이 주문 진입을 제외했다. 홈 카드·서랍·하단 이동·역할 목적 흐름과 공용 작업공간 resolver는 음식·살뜰마트·화물·주문 원장만 연결한다. 과거 공동구매 원장·route·서버 계약은 다른 제품 판본과 이력 호환을 위해 삭제하지 않았고, 현재 모바일 앱에서만 미지원으로 판정한다. 변경한 주문자 Release APK를 에뮬레이터에 재설치해 홈과 서랍의 실제 UI tree에 공동주문 표현이 없고 음식 주문·음식점 찾기·음식 주문 내역만 노출되는 것을 확인했다.
+- 기본 Release는 공인 HTTPS 주소만 허용한다. 내부 시험 빌드만 명시한 로컬 HTTP를 허용하며 일반 Release의 fail-closed 경계는 유지한다. 공통 배너는 `내부 테스트 / Simulation / 서버 / 판본`을 표시한다. 저장소 밖 keystore와 환경 변수 비밀번호로 APK·AAB와 SHA-256 목록을 만드는 `eng/release/publish-mobile-field-test.ps1`의 `-PlanOnly`와 `Staging + Simulation` compose 구성을 통과했다.
+- 주문자 자신의 진행 주문 상세에만 배정 기사 최신 위치 사본을 제공한다. 배정 전과 종료 뒤에는 좌표를 내보내지 않고 30초를 넘긴 자료는 `갱신지연`으로 표시하며, 기사 고유 식별자와 이동 이력은 응답에서 제외했다. `Staging + Simulation`에서만 사가정 합성 음식점 3곳·메뉴 9개와 네 역할 개발 계정을 멱등하게 준비한다.
+- 기사 앱 전경 위치 heartbeat와 주문자 진행 조회를 10초 간격으로 맞췄다. 기사 추천은 FCM 알림 뒤 서버 업무 공간 API를 재조회하는 경계로 교정했고 `FDriverApp`의 SignalR client와 패키지 의존은 제거했다. Android foreground service, package 전용 FCM 수신 adapter, 화면 꺼짐·백그라운드 GPS는 아직 구현하지 않았다.
+- Android 16/API 36 AVD `codex_shipper_capture`의 `emulator-5554`에 네 Release APK를 빌드·설치했다. 네 패키지 모두 `versionName=0.1.0`이고 산출물은 `artifacts/local/mobile-field-test/emulator-release-20260921`, 화면·UI tree 증거는 `artifacts/local/mobile-field-test/emulator-smoke`에 둔다.
+- 에뮬레이터는 `Staging + Simulation`, `http://10.0.2.2:5321/`, 격리 MySQL·MongoDB `ssalddel_mobile_field_test`를 사용했다. `/health/ready` 200을 확인했고 관리자 인증 뒤 운영 개요·운송·운행 기사·한시 수요 할증·후속 복구·현금 흐름 조회가 모두 200으로 응답했다. 기존 운영 자료는 복사하지 않았다.
+- Android 16에서 AppBar와 상태 표시줄이 겹친 세 MAUI Blazor 앱의 `MainPage.xaml`에 `SafeAreaEdges="Container"`를 적용했다. 음식점 내부 시험 배너는 `MudMainContent` 안으로 옮겨 본문 흐름과 결속했다. 세 앱을 재빌드·재설치한 뒤 주문자·음식점·운영자 상단 간격과 배너를 실제 에뮬레이터 렌더로 확인했다. 기사 native 화면은 기존 안전 영역이 정상이라 수정하지 않았다.
+- 실제 에뮬레이터 동선은 주문자 홈→음식점·메뉴, 음식점 로그인→`신규 주문 수신함`, 운영자 로그인→운영 개요→운송·기사 현황→후속 처리 복구→현금 흐름, 기사 로그인→지도·업무 공간까지 확인했다. 음식점은 서버 연결 뒤 미처리 주문이 없는 정본 빈 상태를 표시했고 샘플 주문으로 대체하지 않았다. 운영자 검증은 읽기 전용 조회까지만 수행했고 기사 `운행 시작`은 상태 변경이라 누르지 않았다. 각 최종 동선의 Android crash buffer는 비어 있었다.
+- 같은 Android 16 에뮬레이터에서 음식점 UI가 주문 `FOOD-20260920232322276`을 수락하자 기사 앱에 새 추천이 나타나는 첫 앱 간 인계를 확인했다. 짧은 추천 만료 시간을 피해 완주 표본 `FOOD-20260920233157480`은 주문 등록·음식점 수락까지만 격리 API로 준비하고, 이후 음식점 UI의 `기사배정`·픽업 준비, 기사 UI의 `수락 → 음식점 픽업 → 고객 전달`, 주문자 UI의 `전달완료 → 음식 수령 확인 → 인수완료`를 같은 주문번호로 수행했다. 따라서 음식점 수락 버튼부터 수령 확인까지 한 주문에서 모두 누른 단일 UI 시나리오는 아니지만, 각 상태 변경의 다른 앱 반영과 서버 정본 결속은 확인했다. 화면과 UI tree 원본은 `artifacts/local/mobile-field-test/emulator-lifecycle-20260921`에 둔다.
+- 같은 주문을 독립 API로 재조회한 결과는 `수령확인 / 배달완료 / 인수완료`, 수령 확인 true, 후속 가능 행동 0건, 상태 이력 7건이었다. 관리자 운영 추적은 `Closed / 완료`, 체크포인트 6개, 정상 경로 조화 true, 운영자 확인 불필요, 기술 이상·경고·복구 안내 0건이었다. MySQL 직접 재조회도 `주문대기 → 조리중 → 기사배정 → 기사배정 → 픽업완료 → 전달완료 → 수령확인` 7건과 최종 `수령확인 / 배달완료`를 반환했다.
+- 음식점 수락은 서버에서 성공했지만 Android 전표 출력 JavaScript가 패키징되지 않아 화면이 전체 수락 실패로 오인하던 결손을 발견했다. 공용 정적 자산 경로를 실제 RCL `_content` 경로로 옮기고 출력 실패를 서버 상태 전이 실패와 분리했다. 내부 시험 음식점 기본 주소·좌표도 격리 표본과 맞춰 배차 주소 좌표 실패를 제거했다. 수정 APK 안의 자산 포함과 재설치를 확인했고 관련 구성 집중 시험 `21/21`이 통과했다.
+- 오래 유지된 주문자 세션으로 원장을 새로 고칠 때 HTTP 401을 오류 카드로 표시하는 동작을 관찰했다. 재로그인 뒤 전체 8건과 최종 주문을 정상 조회해 수령 확인을 완료했지만, 401 시 자동 로그아웃 또는 로그인 화면 유도는 후속 UX 보완으로 남아 있다.
+- 이전 2026-09-20 증거로 Samsung `SM-N981N` Android 13 장치에 당시 네 `0.1.0` APK를 설치해 첫 화면·프로세스·Activity·무충돌을 확인했고 `artifacts/local/mobile-field-test/device-smoke/release-usb`에 캡처를 남겼다. 기사 앱의 지도 런타임 의존성은 최종적으로 중앙 판본 `Square.OkIO.JVM 3.17.0`을 `FDriverApp`의 Android 대상에만 직접 연결하고 공용 `DriverApp.NaverMaps.Android` 바인딩에서는 OkIO Maven 항목을 제거해, `DriverApp`의 전이 의존성과 중복 D8 class가 생기지 않게 정리했다. 수정 뒤 `DriverApp` Android Release build와 `FDriverApp` Android Release publish·재설치·재실행이 성공했다. 이번 안전 영역 수정판 네 APK의 물리 기기 재설치·재검증은 사용자 결정에 따라 마지막 단계로 보류했다.
+- Naver 지도 키가 없어 기사 로그인 뒤 실제 지도 타일 인증·표시는 검증하지 못했다. `kr.ssalddel.fdriver`용 Firebase 설정과 Android 수신 adapter가 없어 실제 FCM 수신도 미검증이며, 현재 화면의 `FCM 추천 알림 준비`는 성공 증거가 아니라 10초 서버 조회 복구 상태를 함께 뜻한다.
+- 기존 역할 동선·서버 경계·합성 자료·UI 구성 집중 시험 `104/104`, 관리자 endpoint metadata·기능 플래그 집중 시험 `84/84`, 모바일 구성·공용 API·안전 영역·배너 위치 집중 시험 `62/62`가 통과했다. 공동주문 모바일 진입 제거와 관련 navigation resolver를 포함한 집중 시험 `79/79`도 통과했다. 전체 `Ssalddel.Simulation.Tests` `1979/1979`와 `Ssalddel.Unity.Tests` `802/802`도 통과했다. 전체 `Ssalddel.Tests`는 이번 모바일 변경 밖의 기존 아키텍처 문구·WebApp capability·API metadata·공식 재료 CSS 검사 7건 때문에 `5380/5387`로 끝났으며 모바일 집중 시험 실패는 없었다. 네 Android Release 에뮬레이터 패키지 빌드·설치도 성공했다. 전체 `Ssalddel.v3.5.slnx` 검증은 병렬 MAUI typemap cache 충돌 뒤 직렬 재시도가 관련 없는 여러 앱 AOT까지 장시간 수행해 완주하지 않았으므로 성공으로 간주하지 않는다. 기존 범위 지정 Fast 검증 `277/277` 기록은 `artifacts/local/validation/20260920-212203`에 있다.
+- 운영자 앱을 포함한 동일 주문의 네 화면 동시 캡처, GPS·백그라운드, 실제 FCM 수신, Naver 지도 인증, 공인 HTTPS 원격 서버, 외부 keystore 배포 서명·AAB, Google Play 내부 테스트, Unity Editor·Game View, 최신 APK 물리 기기 최종 검증은 남아 있다. 이번 에뮬레이터 검증은 기사 전경 위치 전송과 10초 서버 조회 복구를 사용했으며 물리 기기·실제 푸시 증거가 아니다. commit·push는 수행하지 않았다. 후속 재개 순서는 [구현·검증 경계](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/four-role-mobile-field-test.r1.md)에 둔다.
+
 ## AI 대화 기반 사용자 의도 관찰 기록 (2026-09-19)
 
 - 로컬 Codex 주 작업 세션의 최근 3개월 범위에서 `생각이 존재한다`, `했으면 좋겠다`, `마음이 있다`처럼 반복된 사용자 표현을 조사했다. 관련 세션 62개에서 1차 후보 2,312건을 찾고 정확 중복과 짧은 단순 동의를 제외한 의도 후보 2,188건을 선호·탐색·구현 요청·결정 후보로 분류했다.

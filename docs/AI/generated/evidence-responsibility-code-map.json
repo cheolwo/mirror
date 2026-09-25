@@ -24,7 +24,7 @@
       "managementSystem": "G1",
       "koreanName": "\uD68C\uADC0 \uC99D\uAC70",
       "technicalName": "E3\uD68C\uADC0\uC99D\uAC70Module",
-      "primaryCount": 300,
+      "primaryCount": 301,
       "secondaryCount": 1
     },
     {
@@ -14349,6 +14349,25 @@
       "stepKeys": []
     },
     {
+      "componentId": "Ssalddel.Unity.Tests:Ssalddel.Unity.Tests.RegionalPickupRecordBindingTests",
+      "isCoverageCandidate": true,
+      "assemblyName": "Ssalddel.Unity.Tests",
+      "componentName": "Ssalddel.Unity.Tests.RegionalPickupRecordBindingTests",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Unity.Tests/RegionalPickupRecordBindingTests.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E3",
+      "responsibility": "\uC601\uC0C1 \uC5C6\uB294 \uBC29\uBB38 \uAE30\uB85D\uC758 \uD589\uC815\uB3D9 \uBC0F \uC5ED\uC138\uAD8C \uC120\uD0DD\uACFC \uBBF8\uBC30\uC815 \uACA9\uB9AC\uB97C \uAC80\uC99D\uD55C\uB2E4.",
+      "boundary": "\uC9C0\uC5ED \uC18C\uC18D \uD655\uC815, DB/API \uACF5\uAE09, \uC2E4\uC81C Unity \uC9C0\uC5ED \uD654\uBA74 \uD45C\uC2DC\uC758 \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+      "primarySubmoduleKey": "",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
+      "workOrderIds": [],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
       "componentId": "Ssalddel.Unity.Tests:Ssalddel.Unity.Tests.RuleSeedbedExperimentTests",
       "isCoverageCandidate": true,
       "assemblyName": "Ssalddel.Unity.Tests",
@@ -19632,8 +19651,8 @@
     }
   ],
   "coverage": {
-    "candidateTypeCount": 872,
-    "annotatedTypeCount": 868,
+    "candidateTypeCount": 873,
+    "annotatedTypeCount": 869,
     "excludedTypeCount": 4,
     "uncoveredTypeCount": 0,
     "annotatedMethodCount": 17
