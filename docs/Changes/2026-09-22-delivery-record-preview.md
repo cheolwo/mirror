@@ -1,5 +1,7 @@
 # 지역 디오라마용 방문 기록 데이터
 
+배달 영상의 로컬 작업공간·MYBOX 보관 폴더·최신 공유 링크는 [배달 영상 MYBOX 경로 안내](../ProjectOverview/배달영상-MYBOX-경로.md)에 정리한다.
+
 사용자 정정에 따라 지구본에 펼치는 영상 카드를 제거했다. 이전 영상 재생 UI·Editor Loader·전용 UI 시험도 제거했다. 영상은 편집 작업공간에만 남긴다.
 
 공유 파일: `C:/Users/user/Documents/ChatGPT/배달/edit-kit/delivery-visits.v2.json`.
