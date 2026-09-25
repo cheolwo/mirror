@@ -1,5 +1,39 @@
 # 공공데이터 소표본 검토 반입
 
+## 서울 중간 공간 경계 원본
+
+- `seoul-boundaries-acquire <repo-root>`: 서울 공식 OA-22160/22161 역사적 2023-10-31 ZIP만 수집. 응답 8MiB/45초, redirect/retry 없음. 비어 있지 않은 수집 폴더 재사용 거부.
+- `seoul-boundaries-apply` / `seoul-boundaries-verify`: 기존 로컬 DB 원본 등록 서비스로 hash·비공개 파일 경로만 저장/재조회. 정규화 도형·최신 행정 경계·Unity 적용이 아니다. [r25 결과](../../docs/AI/Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/spatial-data-inventory.collection.r25.md).
+
+## HS 중심 무역 조회
+
+- `hs-index-preview <repo-root>`는 기존 로컬 MySQL을 읽기만 하여 H6(HS 2022)·한국·2025년 수입 자료를 HS6별로 묶는다. `hs-index-self-test`는 단위·중복 충돌·결측/0 경계를 검사한다.
+- 세계합계는 partner M49 0으로 별도 유지, 배치 간 같은 관측은 합산하지 않는다. 중복 값이 다르면 실패한다. 원본 hash·자료집합·판본·record key를 보존한다.
+- `artifacts/local/public-data/hs-trade-index-r1/hs-index-<hash>.json`과 `.sha256` 생성. 동일 DB 입력은 동일 hash다. 파일 이름의 hash가 달라지는 새 결과도 이전 사본을 덮어쓰지 않는다.
+- 수출 미수집·순중량 결측·자료 없는 품목을 0으로 해석하지 않는다. HSK 2026·소매 상품 후보·HS 미구분 운송자료는 자동 병합하지 않는다. [구현 r19](../../docs/AI/Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/hs-centered-query.implementation.r19.md).
+
+## 2025년 관세청 국가별 입항·출항
+
+- [수집 결과 r16](../../docs/AI/Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/port-movement.collection.r16.md).
+- `port-movement-acquire <repo-root>`: 기존 비밀 저장소의 키로 2025년 입항/출항 × 해상/항공 4응답을 수집한다. 응답당 32MiB/60초, 자동 retry·redirect 없음. 완료 응답 hash 확인 후 재사용.
+- `port-movement-self-test <repo-root>`는 동결 원본 기반 6검사, `port-movement-apply`는 기존 로컬 DB에 5국가 원필드 2,431행 저장·재조회, `port-movement-verify`는 독립 읽기 검증이다.
+- `artifacts/local/public-data/kcs-port-movement-2025-r1/`에 원본·영수증 보존. 중량 단위 검토 전 NumericValue=null, 비공개 검토보류. 항만 합산·선박 대수 추정·Unity export 없음.
+
+## 2025년 인천공항 국가별 운송실적
+
+- [실제 수집·저장 결과 r15](../../docs/AI/Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/transport-mode-data.collection.r15.md). 전국 통계가 아닌 인천공항 노선별 실적이다.
+- `air-movement-acquire <repo-root>`: 공식 과거 20251231 공개 JSON과 이용조건 확보. 20MiB/45초 제한, 자동 재시도·redirect 없음, 완료 파일 재수집 거부. API key 불필요.
+- `air-movement-self-test <repo-root>`: 수집된 원본 hash 확인 후 5개 파서 검사. `air-movement-apply`는 기존 로컬 MySQL에 검토보류 912개를 저장하고 독립 재조회한다. `air-movement-verify`는 읽기 전용 재검증이다.
+- 출력: `artifacts/local/public-data/air-movement-2025-r1/`. 5국가·월·출발/도착·여객기/화물기별 직화물/환적/우편 kg와 운항 편을 보존한다. 누락 그룹은 0으로 생성하지 않는다. Unity export·배포·해상량 추정 없음.
+
+## 2025년 국가별 무역 관찰
+
+- [수집·DB·Unity 실행 기록 r14](../../docs/AI/Planning/시스템/PLAN-SYSTEM-GLOBE-FISHERIES-OBSERVATION/trade-data-binding.implementation.r14.md).
+- `country-trade-acquire <repo-root>`: 공식 이용조건 확인 후 한국↔CN/JP/US/AU/VN 2025년 12개월 조회. 전체 HS 월별 상세에서 공급원 총계만 사용한다. 국가별 50MiB/90초, 자동 재시도·정기 수집 없음. 완료 receipt 존재 시 재수집 거부.
+- `country-trade-self-test <repo-root>`: DB/API 없이 파서 검증. `country-trade-apply`는 기존 로컬 MySQL에 불변 판본 20개 저장, `country-trade-verify`는 독립 재조회, `country-trade-preview`는 재조회 후 비공개 읽기 사본과 SHA256 생성.
+- 출력은 `artifacts/local/public-data/korea-trade-2025-r1/`. 기존 비밀 저장소의 관세청 키·기존 로컬 DB 보호 검사를 재사용한다. 연결 설정/비밀번호를 저장소나 로그에 넣지 않는다.
+- Unity Play에서 `Tools/Mirror/2025 국가별 무역 사본 열기`로 `globe-preview.json`을 선택한다. 중립 화물이며 실제 선박/항공기 수로 해석하지 않는다. 원격 DB·공개 게시·배포 자원 포함 없음.
+
 ## 면목동 집·길·터전 표본 검토
 
 - [실행 결과·미완료 구간](../../docs/Reports/면목동-집길터전-공식자료와표본결속-2026-09-08.md). 정확 출력은 `artifacts/local/public-data/myeonmok-land-20260908-r1/`, 기존5537관측/지도/가격 원본은 고정hash로 보존한다.

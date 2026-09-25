@@ -1,0 +1,209 @@
+{
+  "schemaVersion": "trade-retail-batch.v2",
+  "batchId": "chapter01-live-animals-01",
+  "displayName": "제1류 살아있는 가축 순차 조사 첫 배치",
+  "period": "2025",
+  "reporterCode": 410,
+  "flowCode": "M",
+  "classificationCode": "H6",
+  "expectedSourceRows": 28,
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "distributionApproved": false,
+  "productObservationRelativePath": "eng/public-data/trade-retail/batches/chapter01-live-animals-01.products.reviewed.json",
+  "hsEntries": [
+    {
+      "hs6": "010121",
+      "hsk10Entries": [
+        { "hsk10": "0101211000", "koreanName": "농가 사육용", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0101219000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed",
+      "expectedWorldValueUsd": 1440755,
+      "expectedWorldNetWeightKg": 10074.66,
+      "retailTriageStatus": "RestrictedOrSensitive",
+      "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE",
+      "expectedProductObservationCount": 0,
+      "searchQuery": "순종 번식용 살아있는 말"
+    },
+    {
+      "hs6": "010129",
+      "hsk10Entries": [
+        { "hsk10": "0101291000", "koreanName": "경주말", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0101299000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed",
+      "expectedWorldValueUsd": 16546092,
+      "expectedWorldNetWeightKg": 159671,
+      "retailTriageStatus": "RestrictedOrSensitive",
+      "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE",
+      "expectedProductObservationCount": 0,
+      "searchQuery": "경주용 기타 살아있는 말"
+    },
+    {
+      "hs6": "010130",
+      "hsk10Entries": [
+        { "hsk10": "0101300000", "koreanName": "당나귀", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows",
+      "expectedWorldValueUsd": null,
+      "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "RestrictedOrSensitive",
+      "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE",
+      "expectedProductObservationCount": 0,
+      "searchQuery": "살아있는 당나귀"
+    },
+    {
+      "hs6": "010190",
+      "hsk10Entries": [
+        { "hsk10": "0101900000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows",
+      "expectedWorldValueUsd": null,
+      "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "RestrictedOrSensitive",
+      "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE",
+      "expectedProductObservationCount": 0,
+      "searchQuery": "살아있는 노새 버새"
+    },
+    {
+      "hs6": "010221",
+      "hsk10Entries": [
+        { "hsk10": "0102211000", "koreanName": "젖소", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0102212000", "koreanName": "육우(肉牛)", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0102219000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed",
+      "expectedWorldValueUsd": 283000,
+      "expectedWorldNetWeightKg": 1488,
+      "retailTriageStatus": "RestrictedOrSensitive",
+      "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE",
+      "expectedProductObservationCount": 0,
+      "searchQuery": "순종 번식용 살아있는 소"
+    },
+    {
+      "hs6": "010229",
+      "hsk10Entries": [
+        { "hsk10": "0102291000", "koreanName": "젖소", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0102292000", "koreanName": "육우(肉牛)", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0102299000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows",
+      "expectedWorldValueUsd": null,
+      "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "RestrictedOrSensitive",
+      "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE",
+      "expectedProductObservationCount": 0,
+      "searchQuery": "기타 살아있는 소"
+    },
+    {
+      "hs6": "010231",
+      "hsk10Entries": [
+        { "hsk10": "0102310000", "koreanName": "번식용", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows",
+      "expectedWorldValueUsd": null,
+      "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "RestrictedOrSensitive",
+      "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE",
+      "expectedProductObservationCount": 0,
+      "searchQuery": "순종 번식용 살아있는 버펄로"
+    },
+    {
+      "hs6": "010239",
+      "hsk10Entries": [
+        { "hsk10": "0102391000", "koreanName": "젖소", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0102392000", "koreanName": "육우(肉牛)", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0102399000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed",
+      "expectedWorldValueUsd": 61,
+      "expectedWorldNetWeightKg": 0.001,
+      "retailTriageStatus": "RestrictedOrSensitive",
+      "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE",
+      "expectedProductObservationCount": 0,
+      "searchQuery": "기타 살아있는 버펄로"
+    },
+    {
+      "hs6": "010290",
+      "hsk10Entries": [
+        { "hsk10": "0102901000", "koreanName": "번식용", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0102909010", "koreanName": "젖소", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0102909020", "koreanName": "육우(肉牛)", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0102909090", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows",
+      "expectedWorldValueUsd": null,
+      "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "RestrictedOrSensitive",
+      "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE",
+      "expectedProductObservationCount": 0,
+      "searchQuery": "기타 살아있는 소과 동물"
+    },
+    {
+      "hs6": "010310",
+      "hsk10Entries": [
+        { "hsk10": "0103100000", "koreanName": "번식용", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed",
+      "expectedWorldValueUsd": 1887348,
+      "expectedWorldNetWeightKg": 74000,
+      "retailTriageStatus": "RestrictedOrSensitive",
+      "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE",
+      "expectedProductObservationCount": 0,
+      "searchQuery": "순종 번식용 살아있는 돼지"
+    },
+    {
+      "hs6": "010391",
+      "hsk10Entries": [
+        { "hsk10": "0103910000", "koreanName": "중량이 50킬로그램 미만인 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows",
+      "expectedWorldValueUsd": null,
+      "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "RestrictedOrSensitive",
+      "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE",
+      "expectedProductObservationCount": 0,
+      "searchQuery": "50킬로그램 미만 살아있는 돼지"
+    },
+    {
+      "hs6": "010392",
+      "hsk10Entries": [
+        { "hsk10": "0103920000", "koreanName": "중량이 50킬로그램 이상인 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed",
+      "expectedWorldValueUsd": 1660500,
+      "expectedWorldNetWeightKg": 75630,
+      "retailTriageStatus": "RestrictedOrSensitive",
+      "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE",
+      "expectedProductObservationCount": 0,
+      "searchQuery": "50킬로그램 이상 살아있는 돼지"
+    }
+  ],
+  "sources": {
+    "trade": "https://comtradeapi.un.org/public/v1/preview/C/A/HS",
+    "hsReference": "https://comtradeapi.un.org/files/v1/app/reference/H6.json",
+    "kcsHsMaster": "https://www.data.go.kr/data/15049722/fileData.do",
+    "kcsNatureClassification": "https://www.data.go.kr/data/15049720/fileData.do",
+    "coupangRestrictedItemsPolicy": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"
+  },
+  "limitations": [
+    "PublicPreviewAnnualAggregateMayBeRevised",
+    "NoReportedRowsInResponseIsNotProofOfNoTrade",
+    "KcsNatureClassificationDoesNotMeanRetailEligibility",
+    "LiveAnimalOnlineSaleProhibitedByMarketplacePolicy",
+    "NoRepresentativeProductOrPriceObservationCreated",
+    "PrivateReviewOnly"
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "trade-retail-batch.v1",
+  "batchId": "coffee-vanilla-clove-ginger-01",
+  "displayName": "볶은 커피·바닐라·정향·생강 배치",
+  "period": "2025",
+  "reporterCode": 410,
+  "flowCode": "M",
+  "classificationCode": "H6",
+  "expectedSourceRows": 203,
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "distributionApproved": false,
+  "productObservationRelativePath": "eng/public-data/trade-retail/batches/coffee-vanilla-clove-ginger-01.products.reviewed.json",
+  "hsEntries": [
+    {
+      "hs6": "090121",
+      "hsk10": "0901210000",
+      "koreanName": "볶은 커피 - 카페인을 제거하지 않은 것",
+      "expectedWorldValueUsd": 361173321,
+      "expectedWorldNetWeightKg": 17179143.041,
+      "retailCategoryStableId": "retail-category:roasted-caffeinated-coffee",
+      "retailCategoryName": "카페인 볶은 원두",
+      "coupangLeafCategoryCandidate": "로스팅홀빈",
+      "coupangDisplayCategoryCode": null,
+      "categoryBindingStatus": "PendingSellerCategoryVerification",
+      "searchQuery": "브라질 산토스 로스팅 원두"
+    },
+    {
+      "hs6": "090122",
+      "hsk10": "0901220000",
+      "koreanName": "볶은 커피 - 카페인을 제거한 것",
+      "expectedWorldValueUsd": 44254581,
+      "expectedWorldNetWeightKg": 1763283.254,
+      "retailCategoryStableId": "retail-category:roasted-decaffeinated-coffee",
+      "retailCategoryName": "디카페인 볶은 원두",
+      "coupangLeafCategoryCandidate": "로스팅홀빈",
+      "coupangDisplayCategoryCode": null,
+      "categoryBindingStatus": "PendingSellerCategoryVerification",
+      "searchQuery": "디카페인 홀빈 원두"
+    },
+    {
+      "hs6": "090510",
+      "hsk10": "0905100000",
+      "koreanName": "바닐라 - 부수지도 잘게 부수지도 않은 것",
+      "expectedWorldValueUsd": 2508974,
+      "expectedWorldNetWeightKg": 27865.73,
+      "retailCategoryStableId": "retail-category:whole-vanilla-bean",
+      "retailCategoryName": "바닐라빈 원물",
+      "coupangLeafCategoryCandidate": "기타 향신료",
+      "coupangDisplayCategoryCode": null,
+      "categoryBindingStatus": "PendingSellerCategoryVerification",
+      "searchQuery": "바닐라빈 100% 원물"
+    },
+    {
+      "hs6": "090520",
+      "hsk10": "0905200000",
+      "koreanName": "바닐라 - 부수거나 잘게 부순 것",
+      "expectedWorldValueUsd": 112016,
+      "expectedWorldNetWeightKg": 1342.725,
+      "retailCategoryStableId": "retail-category:ground-vanilla",
+      "retailCategoryName": "바닐라빈 분말",
+      "coupangLeafCategoryCandidate": "기타베이킹재료",
+      "coupangDisplayCategoryCode": null,
+      "categoryBindingStatus": "PendingSellerCategoryVerification",
+      "searchQuery": "바닐라빈 파우더 100%"
+    },
+    {
+      "hs6": "090710",
+      "hsk10": "0907100000",
+      "koreanName": "정향 - 부수지도 잘게 부수지도 않은 것",
+      "expectedWorldValueUsd": 1036486,
+      "expectedWorldNetWeightKg": 90911.33,
+      "retailCategoryStableId": "retail-category:whole-clove",
+      "retailCategoryName": "정향 원물",
+      "coupangLeafCategoryCandidate": "기타 향신료",
+      "coupangDisplayCategoryCode": null,
+      "categoryBindingStatus": "PendingSellerCategoryVerification",
+      "searchQuery": "정향 클로브 원물 홀"
+    },
+    {
+      "hs6": "090720",
+      "hsk10": "0907200000",
+      "koreanName": "정향 - 부수거나 잘게 부순 것",
+      "expectedWorldValueUsd": 47548,
+      "expectedWorldNetWeightKg": 4843.133,
+      "retailCategoryStableId": "retail-category:ground-clove",
+      "retailCategoryName": "정향 분말",
+      "coupangLeafCategoryCandidate": "건강 분말",
+      "coupangDisplayCategoryCode": null,
+      "categoryBindingStatus": "PendingSellerCategoryVerification",
+      "searchQuery": "정향 분말 가루"
+    },
+    {
+      "hs6": "091011",
+      "hsk10": "0910110000",
+      "koreanName": "생강 - 부수지도 잘게 부수지도 않은 것",
+      "expectedWorldValueUsd": 9422975,
+      "expectedWorldNetWeightKg": 6117635.329,
+      "retailCategoryStableId": "retail-category:whole-ginger",
+      "retailCategoryName": "생강 원물",
+      "coupangLeafCategoryCandidate": "생강",
+      "coupangDisplayCategoryCode": null,
+      "categoryBindingStatus": "PendingSellerCategoryVerification",
+      "searchQuery": "국내산 햇 흙생강 원물"
+    },
+    {
+      "hs6": "091012",
+      "hsk10": "0910120000",
+      "koreanName": "생강 - 부수거나 잘게 부순 것",
+      "expectedWorldValueUsd": 378247,
+      "expectedWorldNetWeightKg": 278445.07,
+      "retailCategoryStableId": "retail-category:ground-ginger",
+      "retailCategoryName": "생강 분말",
+      "coupangLeafCategoryCandidate": "강황/진저/계피",
+      "coupangDisplayCategoryCode": null,
+      "categoryBindingStatus": "PendingSellerCategoryVerification",
+      "searchQuery": "국산 100% 생강가루"
+    }
+  ],
+  "sources": {
+    "trade": "https://comtradeapi.un.org/public/v1/preview/C/A/HS",
+    "hsReference": "https://comtradeapi.un.org/files/v1/app/reference/H6.json",
+    "koreanHsk": "https://unipass.customs.go.kr/clip/hsinfosrch/openULS0201007Q.do",
+    "coupangCategoryGuide": "https://developers.coupangcorp.com/hc/ko/article_attachments/360054636091"
+  },
+  "limitations": [
+    "PublicPreviewAnnualAggregateMayBeRevised",
+    "HsCategoryIsNotIndividualProductClassification",
+    "CoupangDisplayCategoryCodeRequiresWingOrAuthenticatedSellerApi",
+    "CategoryAndProductBindingsRequireHumanReview",
+    "PrivateReviewOnly"
+  ]
+}

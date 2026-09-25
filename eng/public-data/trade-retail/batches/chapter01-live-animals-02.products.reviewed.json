@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "representative-product-observation.v3",
+  "batchId": "chapter01-live-animals-02",
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "collectionMethod": "OfficialMarketplacePolicyReview",
+  "directMarketplaceSearchStatus": "PolicyRestricted",
+  "distributionApproved": false,
+  "codeReviews": [
+    { "hs6": "010410", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "살아있는 양", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010420", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "살아있는 염소", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010511", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "185그램 이하 살아있는 닭 병아리", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010512", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "185그램 이하 살아있는 칠면조", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010513", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "185그램 이하 살아있는 오리", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010514", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "185그램 이하 살아있는 거위", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010515", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "185그램 이하 살아있는 기니아새", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010594", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "185그램 초과 살아있는 닭", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010599", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "185그램 초과 살아있는 오리 거위 칠면조", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010611", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "살아있는 영장류", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010612", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "살아있는 해양 포유동물", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010613", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "살아있는 낙타 낙타과 동물", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false }
+  ],
+  "items": [],
+  "limitations": [
+    "OfficialMarketplacePolicyReview",
+    "NoRepresentativeProductOrPriceObservationCreated",
+    "PrivateReviewOnly",
+    "DistributionNotApproved"
+  ]
+}

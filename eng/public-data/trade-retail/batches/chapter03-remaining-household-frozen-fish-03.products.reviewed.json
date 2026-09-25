@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "representative-product-observation.v3",
+  "batchId": "chapter03-remaining-household-frozen-fish-03",
+  "observedAt": "2026-09-22T17:01:58+09:00",
+  "collectionMethod": "SearchEngineDomainFilteredCoupangDetailObservation",
+  "directMarketplaceSearchStatus": "CompletedViaIndexedSearch",
+  "distributionApproved": false,
+  "codeReviews": [
+    { "hs6": "030323", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 틸라피아 통마리 원물", "reasonCode": "NoExactIndexedFrozenWholeTilapiaDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "030324", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 메기 통마리 원물", "reasonCode": "NoExactIndexedFrozenWholeCatfishDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "030325", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 잉어 통마리 원물", "reasonCode": "NoExactIndexedFrozenWholeCarpDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "030326", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 장어 통마리 원물", "reasonCode": "NoExactIndexedFrozenWholeEelDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "030341", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 날개다랑어 통참치 원물", "reasonCode": "NoExactIndexedFrozenWholeAlbacoreTunaDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "030342", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 황다랑어 통참치 원물", "reasonCode": "NoExactIndexedFrozenWholeYellowfinTunaDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "030343", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 가다랑어 통참치 원물", "reasonCode": "NoExactIndexedFrozenWholeSkipjackTunaDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "030344", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 눈다랑어 통참치 원물", "reasonCode": "NoExactIndexedFrozenWholeBigeyeTunaDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "030345", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 참다랑어 통참치 급냉 1미", "reasonCode": "IndexedFrozenWholeBluefinListingsLackedStablePriceOrStorageState", "evidenceUrls": ["https://www.coupang.com/vp/products/9571028658", "https://www.coupang.com/vp/products/9572243451"], "distributionApproved": false },
+    { "hs6": "030346", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 남방참다랑어 통참치 원물", "reasonCode": "NoExactIndexedFrozenWholeSouthernBluefinTunaDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "030351", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 청어 통마리 원물", "reasonCode": "NoExactIndexedFrozenWholeHerringDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "030366", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 헤이크 통마리 원물", "reasonCode": "NoExactIndexedFrozenWholeHakeDetailObserved", "evidenceUrls": [], "distributionApproved": false }
+  ],
+  "items": [],
+  "limitations": ["SearchEngineRankNotMarketplaceRank", "DirectMarketplaceAccessMayReturn403", "PricesAndAvailabilityMayChange", "HsBindingsPendingHumanReview", "PrivateReviewOnly", "DistributionNotApproved", "PriorityTierIsNotPopularityClaim"]
+}

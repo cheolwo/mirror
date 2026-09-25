@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "trade-retail-batch.v1",
+  "batchId": "whole-spices-01",
+  "displayName": "통향신료 첫 배치",
+  "period": "2025",
+  "reporterCode": 410,
+  "flowCode": "M",
+  "classificationCode": "H6",
+  "expectedSourceRows": 85,
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "distributionApproved": false,
+  "productObservationRelativePath": "eng/public-data/trade-retail/batches/whole-spices-01.products.reviewed.json",
+  "hsEntries": [
+    {
+      "hs6": "090411",
+      "hsk10": "0904110000",
+      "koreanName": "부수지도 잘게 부수지도 않은 후추",
+      "expectedWorldValueUsd": 52470010,
+      "expectedWorldNetWeightKg": 7001937.399,
+      "retailCategoryStableId": "retail-category:whole-black-pepper",
+      "retailCategoryName": "통후추",
+      "coupangLeafCategoryCandidate": "후추",
+      "coupangDisplayCategoryCode": null,
+      "categoryBindingStatus": "PendingSellerCategoryVerification",
+      "searchQuery": "직접 갈아먹는 통후추"
+    },
+    {
+      "hs6": "090421",
+      "hsk10": "0904210000",
+      "koreanName": "부수지도 잘게 부수지도 않은 건조 고추류",
+      "expectedWorldValueUsd": 11354255,
+      "expectedWorldNetWeightKg": 4022245.006,
+      "retailCategoryStableId": "retail-category:whole-dried-chili-pepper",
+      "retailCategoryName": "건고추",
+      "coupangLeafCategoryCandidate": "건고추",
+      "coupangDisplayCategoryCode": null,
+      "categoryBindingStatus": "PendingSellerCategoryVerification",
+      "searchQuery": "잘 말린 건고추 600g"
+    },
+    {
+      "hs6": "090611",
+      "hsk10": "0906110000",
+      "koreanName": "부수지도 잘게 부수지도 않은 실론계피",
+      "expectedWorldValueUsd": 3412054,
+      "expectedWorldNetWeightKg": 1220613.924,
+      "retailCategoryStableId": "retail-category:ceylon-cinnamon-stick",
+      "retailCategoryName": "실론 시나몬 스틱",
+      "coupangLeafCategoryCandidate": "강황/진저/계피",
+      "coupangDisplayCategoryCode": null,
+      "categoryBindingStatus": "PendingSellerCategoryVerification",
+      "searchQuery": "실론 시나몬 스틱"
+    },
+    {
+      "hs6": "090931",
+      "hsk10": "0909310000",
+      "koreanName": "부수지도 잘게 부수지도 않은 커민 씨",
+      "expectedWorldValueUsd": 1603107,
+      "expectedWorldNetWeightKg": 351641.203,
+      "retailCategoryStableId": "retail-category:whole-cumin-seed",
+      "retailCategoryName": "커민·큐민 씨드",
+      "coupangLeafCategoryCandidate": "허브향신료",
+      "coupangDisplayCategoryCode": null,
+      "categoryBindingStatus": "PendingSellerCategoryVerification",
+      "searchQuery": "큐민 씨드"
+    }
+  ],
+  "sources": {
+    "trade": "https://comtradeapi.un.org/public/v1/preview/C/A/HS",
+    "hsReference": "https://comtradeapi.un.org/files/v1/app/reference/H6.json",
+    "koreanHsk": "https://unipass.customs.go.kr/clip/hsinfosrch/openULS0201007Q.do",
+    "coupangCategoryGuide": "https://developers.coupangcorp.com/hc/ko/article_attachments/360054636091"
+  },
+  "limitations": [
+    "PublicPreviewAnnualAggregateMayBeRevised",
+    "HsCategoryIsNotIndividualProductClassification",
+    "CoupangDisplayCategoryCodeRequiresWingOrAuthenticatedSellerApi",
+    "CategoryAndProductBindingsRequireHumanReview",
+    "PrivateReviewOnly"
+  ]
+}

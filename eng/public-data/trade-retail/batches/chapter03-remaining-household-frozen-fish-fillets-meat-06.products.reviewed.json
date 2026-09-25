@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "representative-product-observation.v3",
+  "batchId": "chapter03-remaining-household-frozen-fish-fillets-meat-06",
+  "observedAt": "2026-09-22T20:38:31+09:00",
+  "collectionMethod": "SearchEngineDomainFilteredCoupangDetailObservation",
+  "directMarketplaceSearchStatus": "CompletedViaIndexedSearch",
+  "distributionApproved": false,
+  "codeReviews": [
+    { "hs6": "030484", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 황새치 필렛 스테이크", "reasonCode": "NoExactIndexedFrozenSwordfishFilletDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "030486", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 청어 순살 필렛", "reasonCode": "NoExactIndexedFrozenHerringFilletDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "030487", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 참치 필렛 원물", "reasonCode": "NoExactIndexedFrozenTunaFilletDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "030489", "retailTriageStatus": "ProductCandidateObserved", "searchStatus": "IndexedCandidateObserved", "representativeProductStatus": "PendingHumanReview", "candidateCount": 1, "searchQuery": "냉동 고등어 순살 필렛", "reasonCode": "IndexedFrozenMackerelFilletCandidateObserved", "evidenceUrls": ["https://www.coupang.com/vp/products/8422641348"], "distributionApproved": false },
+    { "hs6": "030491", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 틸라피아 메기 어육 연육 원물", "reasonCode": "NoExactIndexedFrozenCommonFishMeatDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "030492", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 연어 어육 연육 원물", "reasonCode": "NoExactIndexedFrozenSalmonidMeatDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "030493", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 대구 명태 어육 연육 원물", "reasonCode": "NoExactIndexedFrozenCodFamilyMeatDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "030499", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "냉동 기타 어육 연육 원물", "reasonCode": "NoExactIndexedFrozenOtherFishMeatDetailObserved", "evidenceUrls": [], "distributionApproved": false }
+  ],
+  "items": [
+    { "observationStableId": "product-observation:coupang:frozen-mackerel-fillet:20260922:1", "platformCode": "coupang", "searchQuery": "냉동 고등어 순살 필렛", "resultPosition": 1, "placementCode": "OrganicIndexedResult", "productTitle": "고등어청년 순살 고등어 필렛 (냉동)", "canonicalExternalUrl": "https://www.coupang.com/vp/products/8422641348", "observedPriceKrw": 13430, "referencePriceKrw": 19190, "shippingPriceKrw": null, "availabilityCode": "UnavailableWhenIndexed", "indexFreshnessText": "IndexedObservation2026-09-22", "marketplaceCategoryCandidate": "고등어", "categoryEvidenceCode": "CoupangIndexedProductDetail", "retailCategoryStableId": "retail-category:frozen-mackerel-fillet", "hs6Candidate": "030489", "hsk10Candidate": "0304895000", "hsBindingStatus": "PendingHumanReview", "originClaim": null, "originEvidenceCode": "Unverified", "affiliate": false, "distributionApproved": false }
+  ],
+  "limitations": ["SearchEngineRankNotMarketplaceRank", "DirectMarketplaceAccessMayReturn403", "PricesAndAvailabilityMayChange", "HsBindingsPendingHumanReview", "PrivateReviewOnly", "DistributionNotApproved", "PriorityTierIsNotPopularityClaim"]
+}

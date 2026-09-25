@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "trade-retail-batch.v1",
+  "batchId": "beverage-raw-01",
+  "displayName": "커피·차·코코아 원재료·완제품 첫 배치",
+  "period": "2025",
+  "reporterCode": 410,
+  "flowCode": "M",
+  "classificationCode": "H6",
+  "expectedSourceRows": 208,
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "distributionApproved": false,
+  "productObservationRelativePath": "eng/public-data/trade-retail/batches/beverage-raw-01.products.reviewed.json",
+  "hsEntries": [
+    {
+      "hs6": "090111",
+      "hsk10": "0901110000",
+      "koreanName": "카페인을 제거하지 않은 볶지 않은 커피",
+      "expectedWorldValueUsd": 1212437445,
+      "expectedWorldNetWeightKg": 167421062.365,
+      "retailCategoryStableId": "retail-category:green-coffee-bean",
+      "retailCategoryName": "커피 생두",
+      "coupangLeafCategoryCandidate": "생두",
+      "coupangDisplayCategoryCode": null,
+      "categoryBindingStatus": "PendingSellerCategoryVerification",
+      "searchQuery": "커피 생두 1kg"
+    },
+    {
+      "hs6": "090210",
+      "hsk10": "0902100000",
+      "koreanName": "3kg 이하로 직접 포장된 발효하지 않은 녹차",
+      "expectedWorldValueUsd": 730918,
+      "expectedWorldNetWeightKg": 18615.638,
+      "retailCategoryStableId": "retail-category:green-tea-small-pack",
+      "retailCategoryName": "소포장 녹차",
+      "coupangLeafCategoryCandidate": "녹차",
+      "coupangDisplayCategoryCode": null,
+      "categoryBindingStatus": "PendingSellerCategoryVerification",
+      "searchQuery": "녹차 티백"
+    },
+    {
+      "hs6": "090230",
+      "hsk10": "0902300000",
+      "koreanName": "3kg 이하로 직접 포장된 홍차와 부분 발효차",
+      "expectedWorldValueUsd": 9836649,
+      "expectedWorldNetWeightKg": 512945.338,
+      "retailCategoryStableId": "retail-category:black-tea-small-pack",
+      "retailCategoryName": "소포장 홍차",
+      "coupangLeafCategoryCandidate": "홍차",
+      "coupangDisplayCategoryCode": null,
+      "categoryBindingStatus": "PendingSellerCategoryVerification",
+      "searchQuery": "홍차 티백"
+    },
+    {
+      "hs6": "180500",
+      "hsk10": "1805000000",
+      "koreanName": "설탕이나 감미료를 첨가하지 않은 코코아 가루",
+      "expectedWorldValueUsd": 90764518,
+      "expectedWorldNetWeightKg": 10928965.619,
+      "retailCategoryStableId": "retail-category:unsweetened-cocoa-powder",
+      "retailCategoryName": "무가당 코코아 가루",
+      "coupangLeafCategoryCandidate": "코코아/핫초코분말",
+      "coupangDisplayCategoryCode": null,
+      "categoryBindingStatus": "PendingSellerCategoryVerification",
+      "searchQuery": "무가당 코코아 파우더"
+    }
+  ],
+  "sources": {
+    "trade": "https://comtradeapi.un.org/public/v1/preview/C/A/HS",
+    "hsReference": "https://comtradeapi.un.org/files/v1/app/reference/H6.json",
+    "koreanHsk": "https://unipass.customs.go.kr/clip/hsinfosrch/openULS0201007Q.do",
+    "coupangCategoryGuide": "https://developers.coupangcorp.com/hc/ko/article_attachments/360054636091"
+  },
+  "limitations": [
+    "PublicPreviewAnnualAggregateMayBeRevised",
+    "HsCategoryIsNotIndividualProductClassification",
+    "CoupangDisplayCategoryCodeRequiresWingOrAuthenticatedSellerApi",
+    "CategoryAndProductBindingsRequireHumanReview",
+    "PrivateReviewOnly"
+  ]
+}

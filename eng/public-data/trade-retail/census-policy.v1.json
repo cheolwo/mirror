@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "trade-retail-hs-census-policy.v1",
+  "classificationCode": "H6",
+  "classificationVintage": "HS 2022",
+  "expectedReferenceRows": 6940,
+  "expectedLeafHs6Count": 5613,
+  "expectedLegalHs6Count": 5612,
+  "statisticalSpecialCodes": [
+    "999999"
+  ],
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "reviewBatchSize": 4,
+  "representativeProductTarget": {
+    "minimum": 0,
+    "maximum": 3
+  },
+  "retailTriageStatusCodes": [
+    "PendingRetailTriage",
+    "ProductCandidateObserved",
+    "SearchNoCandidate",
+    "ChannelInapplicable",
+    "RestrictedOrSensitive",
+    "NoCoupangCandidateObserved",
+    "NonConsumerOrChannelInapplicable",
+    "SearchBlocked",
+    "RecheckRequired"
+  ],
+  "searchStatusCodes": [
+    "NotAttempted",
+    "DirectSearchBlocked403",
+    "IndexedCandidateObserved",
+    "NoIndexedCandidateObserved",
+    "PolicyReviewedRestricted",
+    "NotApplicable"
+  ],
+  "rules": [
+    "EveryLeafHs6MustHaveExactlyOneReviewQueueRecord",
+    "HsClassificationAndIndividualProductObservationRemainSeparate",
+    "ZeroCandidateIsAValidReviewedOutcome",
+    "DirectMarketplaceAccessRestrictionsMustNotBeBypassed",
+    "PriceAvailabilityOriginAndRankingRemainPointInTimeClaims",
+    "SellerCategoryCodeAndHsProductBindingRequireHumanReview",
+    "PrivateReviewOnlyUntilDistributionApproval"
+  ],
+  "distributionApproved": false
+}

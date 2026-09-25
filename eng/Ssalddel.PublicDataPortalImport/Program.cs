@@ -9,6 +9,141 @@ using 살뜰.Services.External.PublicData.Korea;
 var result = new Dictionary<string, object?> { ["databaseWriteAttempted"]=false, ["committed"]=false };
 try
 {
+    if (args.Length == 2 && args[0].StartsWith("menu-foundation-", StringComparison.Ordinal))
+    {
+        await 메뉴재료기반Query.RunAsync(args[0]["menu-foundation-".Length..], Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])), result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true })); return 0;
+    }
+    if (args.Length == 2 && args[0].StartsWith("menu-prices-", StringComparison.Ordinal))
+    {
+        await 메뉴재료가격조사.RunAsync(args[0]["menu-prices-".Length..], Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])), result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true })); return 0;
+    }
+    if(args.Length==2 && args[0].StartsWith("admin1-context-",StringComparison.Ordinal))
+    {
+        await 광역경계참고자료.RunAsync(args[0]["admin1-context-".Length..],Path.GetFullPath(args[1]),result);
+        Console.WriteLine(JsonSerializer.Serialize(result,new JsonSerializerOptions{WriteIndented=true}));return 0;
+    }
+    if(args.Length==2 && args[0].StartsWith("icheon-terrain-",StringComparison.Ordinal))
+    {
+        await 이천지형원본.RunAsync(args[0]["icheon-terrain-".Length..],Path.GetFullPath(args[1]),result);
+        Console.WriteLine(JsonSerializer.Serialize(result,new JsonSerializerOptions{WriteIndented=true}));return 0;
+    }
+    if(args.Length==2 && args[0].StartsWith("seoul-boundaries-",StringComparison.Ordinal))
+    {
+        await 서울중간공간자료.RunAsync(args[0]["seoul-boundaries-".Length..],Path.GetFullPath(args[1]),result);
+        Console.WriteLine(JsonSerializer.Serialize(result,new JsonSerializerOptions{WriteIndented=true}));return 0;
+    }
+    if(args.Length==2 && args[0].StartsWith("hs-index-",StringComparison.Ordinal))
+    {
+        await Hs무역조회Pipeline.RunAsync(args[0]["hs-index-".Length..],Path.GetFullPath(args[1]),result);
+        Console.WriteLine(JsonSerializer.Serialize(result,new JsonSerializerOptions{WriteIndented=true}));return 0;
+    }
+    if(args.Length==2 && args[0].StartsWith("port-movement-",StringComparison.Ordinal))
+    {
+        await 항만물동량자료Pipeline.RunAsync(args[0]["port-movement-".Length..],Path.GetFullPath(args[1]),result);
+        Console.WriteLine(JsonSerializer.Serialize(result,new JsonSerializerOptions{WriteIndented=true}));return 0;
+    }
+    if(args.Length==2 && args[0].StartsWith("air-movement-",StringComparison.Ordinal))
+    {
+        await 항공물동량자료Pipeline.RunAsync(args[0]["air-movement-".Length..],Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),result);
+        Console.WriteLine(JsonSerializer.Serialize(result,new JsonSerializerOptions{WriteIndented=true}));return 0;
+    }
+    if(args.Length==2 && args[0].StartsWith("country-trade-",StringComparison.Ordinal))
+    {
+        await 국가무역관찰Pipeline.RunAsync(args[0]["country-trade-".Length..],Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),result);
+        Console.WriteLine(JsonSerializer.Serialize(result,new JsonSerializerOptions{WriteIndented=true}));return 0;
+    }
+    const string domesticMarinePrefix = "domestic-marine-";
+    if (args.Length >= 3 && args[0].StartsWith(domesticMarinePrefix, StringComparison.Ordinal))
+    {
+        await 국내해양자료Pipeline.RunAsync(args[0][domesticMarinePrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])), args[2..], result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+        return 0;
+    }
+    const string marineSstPrefix = "marine-sst-";
+    if (args.Length == 2 && args[0].StartsWith(marineSstPrefix, StringComparison.Ordinal))
+    {
+        await 해수면수온표본.RunAsync(args[0][marineSstPrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])), result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+        return 0;
+    }
+    if (args.Length == 2 && args[0] == "kcs-hs-census-acquire")
+    {
+        await 관세청Hs분류전수조사.AcquireAsync(
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+        return 0;
+    }
+    const string kcsHsCensusPrefix = "kcs-hs-census-";
+    if (args.Length == 2 && args[0].StartsWith(kcsHsCensusPrefix, StringComparison.Ordinal))
+    {
+        await 관세청Hs분류전수조사.ImportAsync(
+            args[0][kcsHsCensusPrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+        return 0;
+    }
+    if (args.Length == 3 && args[0] == "trade-retail-batch-acquire")
+    {
+        await 무역소매Batch.AcquireAsync(
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            args[2],
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+        return 0;
+    }
+    const string tradeRetailBatchPrefix = "trade-retail-batch-";
+    if (args.Length == 3 && args[0].StartsWith(tradeRetailBatchPrefix, StringComparison.Ordinal))
+    {
+        await 무역소매Batch.ImportAsync(
+            args[0][tradeRetailBatchPrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            args[2],
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+        return 0;
+    }
+    if (args.Length == 2 && args[0] == "trade-retail-census-acquire")
+    {
+        await 무역소매Hs전수조사.AcquireAsync(
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+        return 0;
+    }
+    const string tradeRetailCensusPrefix = "trade-retail-census-";
+    if (args.Length == 2 && args[0].StartsWith(tradeRetailCensusPrefix, StringComparison.Ordinal))
+    {
+        await 무역소매Hs전수조사.ImportAsync(
+            args[0][tradeRetailCensusPrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+        return 0;
+    }
+    if (args.Length == 2 && args[0] == "trade-retail-acquire")
+    {
+        await 무역소매대표상품Acquisition.RunAsync(
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+        return 0;
+    }
+    const string tradeRetailPrefix = "trade-retail-";
+    if (args.Length == 2 && args[0].StartsWith(tradeRetailPrefix, StringComparison.Ordinal))
+    {
+        await 무역소매대표상품Import.RunAsync(
+            args[0][tradeRetailPrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+        return 0;
+    }
     const string jungnangMarketVisualPrefix = "jungnang-market-visual-";
     if (args.Length == 2 && args[0].StartsWith(jungnangMarketVisualPrefix, StringComparison.Ordinal))
     {
@@ -368,7 +503,7 @@ try
 catch(Exception ex)
 {
     result["errorCode"]=ex is InvalidDataException ? ex.Message : ex.GetType().Name;
-    var databaseError = ex.InnerException;
+    var databaseError = ex;
     while (databaseError?.InnerException is not null) databaseError = databaseError.InnerException;
     if (databaseError is MySqlConnector.MySqlException mysqlException)
     {

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "trade-retail-batch.v2",
+  "batchId": "chapter02-meat-05",
+  "displayName": "제2류 육과 식용 설육 순차 조사 다섯 번째 배치",
+  "period": "2025",
+  "reporterCode": 410,
+  "flowCode": "M",
+  "classificationCode": "H6",
+  "expectedSourceRows": 22,
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "distributionApproved": false,
+  "productObservationRelativePath": "eng/public-data/trade-retail/batches/chapter02-meat-05.products.reviewed.json",
+  "hsEntries": [
+    {
+      "hs6": "020755", "hsk10Entries": [{ "hsk10": "0207551000", "koreanName": "절단육", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207552010", "koreanName": "간", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207552090", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactFrozenGooseCutOrOffalCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "냉동 거위 절단육 설육 원물"
+    },
+    {
+      "hs6": "020760", "hsk10Entries": [{ "hsk10": "0207601000", "koreanName": "절단하지 않은 육(신선한 것이나 냉장한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207602000", "koreanName": "절단하지 않은 육(냉동한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207603100", "koreanName": "절단육", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207603210", "koreanName": "간", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207603290", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207604100", "koreanName": "절단육", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207604210", "koreanName": "간", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207604290", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactGuineaFowlMeatCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "뿔닭 고기 냉장 냉동 원물"
+    },
+    {
+      "hs6": "020810", "hsk10Entries": [{ "hsk10": "0208100000", "koreanName": "토끼의 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactRabbitOrHareMeatCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "토끼고기 식용 냉장 냉동 원물"
+    },
+    {
+      "hs6": "020830", "hsk10Entries": [{ "hsk10": "0208300000", "koreanName": "영장류의 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactPrimateMeatCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "영장류 고기 식용 원물"
+    },
+    {
+      "hs6": "020840", "hsk10Entries": [{ "hsk10": "0208401000", "koreanName": "고래ㆍ돌고래ㆍ쇠돌고래ㆍ매너티ㆍ듀공의 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0208402000", "koreanName": "물개ㆍ바다사자ㆍ바다코끼리의 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 71458, "expectedWorldNetWeightKg": 15000,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactMarineMammalMeatCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "고래고기 해양 포유동물 고기 식용 원물"
+    },
+    {
+      "hs6": "020850", "hsk10Entries": [{ "hsk10": "0208500000", "koreanName": "파충류의 것(뱀과 거북을 포함한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactReptileMeatCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "악어 뱀 거북 고기 식용 원물"
+    },
+    {
+      "hs6": "020860", "hsk10Entries": [{ "hsk10": "0208600000", "koreanName": "낙타와 그 밖의 낙타과의 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactCamelidMeatCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "낙타고기 식용 냉장 냉동 원물"
+    },
+    {
+      "hs6": "020890", "hsk10Entries": [{ "hsk10": "0208901000", "koreanName": "사슴의 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0208909010", "koreanName": "해양동물의 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0208909090", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 1205997, "expectedWorldNetWeightKg": 244364.506,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactOtherSpeciesMeatCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "사슴 타조 개구리 고기 식용 원물"
+    },
+    {
+      "hs6": "020910", "hsk10Entries": [{ "hsk10": "0209100000", "koreanName": "돼지의 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 13664160, "expectedWorldNetWeightKg": 9241121.76,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactUnrenderedPigFatCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "돼지 비계 비육지방 냉장 냉동 원물"
+    },
+    {
+      "hs6": "020990", "hsk10Entries": [{ "hsk10": "0209900000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactUnrenderedPoultryFatCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "닭 오리 지방 비계 냉장 냉동 원물"
+    },
+    {
+      "hs6": "021011", "hsk10Entries": [{ "hsk10": "0210110000", "koreanName": "넓적다리살ㆍ어깨살과 이를 절단한 것(뼈가 있는 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 631752, "expectedWorldNetWeightKg": 19752.34,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactBoneInCuredPorkHamOrShoulderCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "뼈있는 하몽 돼지 넓적다리 어깨 염장 건조 훈제"
+    },
+    {
+      "hs6": "021012", "hsk10Entries": [{ "hsk10": "0210120000", "koreanName": "복부살(삼겹살)과 이를 절단한 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 12936653, "expectedWorldNetWeightKg": 1543810.582,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedCuredOrSmokedPorkBellyCandidatesObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 3, "searchQuery": "훈제 염장 숙성 삼겹살 베이컨"
+    }
+  ]
+}

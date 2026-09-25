@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "trade-retail-batch.v2",
+  "batchId": "chapter03-household-dried-salted-smoked-fish-07",
+  "displayName": "P0 제3류 가정용 건조·염장·훈제 어류 조사 배치",
+  "period": "2025",
+  "reporterCode": 410,
+  "flowCode": "M",
+  "classificationCode": "H6",
+  "expectedSourceRows": 48,
+  "observedAt": "2026-09-22T21:49:33+09:00",
+  "distributionApproved": false,
+  "productObservationRelativePath": "eng/public-data/trade-retail/batches/chapter03-household-dried-salted-smoked-fish-07.products.reviewed.json",
+  "hsEntries": [
+    { "hs6": "030532", "hsk10Entries": [{ "hsk10": "0305321000", "koreanName": "대구과 등 어류 필레(건조)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0305322000", "koreanName": "대구과 등 어류 필레(염장·염수장)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }], "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 1297728, "expectedWorldNetWeightKg": 132626.54, "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactIndexedDriedOrSaltedCodFamilyFilletDetailObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "건조 염장 대구 필레" },
+    { "hs6": "030541", "hsk10Entries": [{ "hsk10": "0305410000", "koreanName": "훈제 연어", "natureGroupCode": "10000000", "natureGroupName": "소비재" }], "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 3167280, "expectedWorldNetWeightKg": 112305.878, "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedSmokedSalmonCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "훈제 연어 슬라이스" },
+    { "hs6": "030542", "hsk10Entries": [{ "hsk10": "0305420000", "koreanName": "훈제 청어", "natureGroupCode": "10000000", "natureGroupName": "소비재" }], "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null, "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactIndexedSmokedHerringDetailObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "훈제 청어" },
+    { "hs6": "030543", "hsk10Entries": [{ "hsk10": "0305430000", "koreanName": "훈제 송어", "natureGroupCode": "10000000", "natureGroupName": "소비재" }], "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 261, "expectedWorldNetWeightKg": 16.54, "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactIndexedSmokedTroutDetailObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "훈제 송어" },
+    { "hs6": "030551", "hsk10Entries": [{ "hsk10": "0305510000", "koreanName": "건조 대구", "natureGroupCode": "10000000", "natureGroupName": "소비재" }], "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 2041125, "expectedWorldNetWeightKg": 176177.80, "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactIndexedDriedCodStorageDetailObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "건조 대구" },
+    { "hs6": "030553", "hsk10Entries": [{ "hsk10": "0305531000", "koreanName": "건조 명태(북어)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0305539000", "koreanName": "그 밖의 건조 대구과 어류", "natureGroupCode": "10000000", "natureGroupName": "소비재" }], "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 83631174, "expectedWorldNetWeightKg": 8126118.605, "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedDriedPollockCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "건조 황태채 북어채" },
+    { "hs6": "030554", "hsk10Entries": [{ "hsk10": "0305541000", "koreanName": "건조 멸치", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0305549000", "koreanName": "그 밖의 건조 청어·정어리·고등어류 등", "natureGroupCode": "10000000", "natureGroupName": "소비재" }], "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 382410, "expectedWorldNetWeightKg": 66006.252, "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedDriedAnchovyCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "건멸치 국물용" },
+    { "hs6": "030562", "hsk10Entries": [{ "hsk10": "0305620000", "koreanName": "염장·염수장 대구", "natureGroupCode": "10000000", "natureGroupName": "소비재" }], "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 354, "expectedWorldNetWeightKg": 42.661, "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactIndexedSaltedCodStorageDetailObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "염장 대구" }
+  ],
+  "limitations": ["SearchEngineRankNotMarketplaceRank", "DirectMarketplaceAccessMayReturn403", "PricesAndAvailabilityMayChange", "NoReportedRowsInResponseIsNotProofOfNoTrade", "HsBindingsPendingHumanReview", "PrivateReviewOnly", "DistributionNotApproved", "PriorityTierIsNotPopularityClaim"]
+}

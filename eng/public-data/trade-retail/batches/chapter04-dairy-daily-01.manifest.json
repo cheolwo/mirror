@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "trade-retail-batch.v2",
+  "batchId": "chapter04-dairy-daily-01",
+  "displayName": "P0 제4류 우유·유제품·식용란·천연꿀 우선 조사 첫 번째 배치",
+  "period": "2025",
+  "reporterCode": 410,
+  "flowCode": "M",
+  "classificationCode": "H6",
+  "expectedSourceRows": 291,
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "distributionApproved": false,
+  "productObservationRelativePath": "eng/public-data/trade-retail/batches/chapter04-dairy-daily-01.products.reviewed.json",
+  "hsEntries": [
+    {
+      "hs6": "040110",
+      "hsk10Entries": [{ "hsk10": "0401100000", "koreanName": "지방분이 전 중량의 100분의 1 이하인 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 45350, "expectedWorldNetWeightKg": 37114.944,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedLowFatMilkCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "저지방 우유 1퍼센트"
+    },
+    {
+      "hs6": "040120",
+      "hsk10Entries": [{ "hsk10": "0401200000", "koreanName": "지방분이 전 중량의 100분의 1 초과 100분의 6 이하인 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 41093327, "expectedWorldNetWeightKg": 50740384.297,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoIndexedCandidateWithVerifiedFatRange", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "우유 지방분 1퍼센트 초과 6퍼센트 이하"
+    },
+    {
+      "hs6": "040140",
+      "hsk10Entries": [{ "hsk10": "0401401000", "koreanName": "냉동크림", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0401409000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 238891, "expectedWorldNetWeightKg": 34193.132,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactCreamCandidateWithVerifiedFatRange", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "크림 유지방 6퍼센트 초과 10퍼센트 이하"
+    },
+    {
+      "hs6": "040150",
+      "hsk10Entries": [{ "hsk10": "0401501000", "koreanName": "냉동크림", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0401509000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 194246713, "expectedWorldNetWeightKg": 44143742.894,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedWhippingCreamCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "매일유업 휘핑크림"
+    },
+    {
+      "hs6": "040320",
+      "hsk10Entries": [{ "hsk10": "0403201000", "koreanName": "액체 상태인 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0403202000", "koreanName": "냉동한 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0403209000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 15251745, "expectedWorldNetWeightKg": 2724199.433,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedYoghurtCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "풀무원 설탕무첨가 플레인 요거트 400g"
+    },
+    {
+      "hs6": "040510",
+      "hsk10Entries": [{ "hsk10": "0405100000", "koreanName": "버터", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 250347607, "expectedWorldNetWeightKg": 27522765.413,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedButterCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "가염 버터 454g"
+    },
+    {
+      "hs6": "040520",
+      "hsk10Entries": [{ "hsk10": "0405200000", "koreanName": "데어리 스프레드(dairy spread)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 39127049, "expectedWorldNetWeightKg": 5544231.35,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactDairySpreadCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "데어리 스프레드"
+    },
+    {
+      "hs6": "040610",
+      "hsk10Entries": [{ "hsk10": "0406101010", "koreanName": "모차렐라 치즈(Mozzarella cheese)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0406101020", "koreanName": "크림 치즈", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0406101090", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0406102000", "koreanName": "커드(curd)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 536882617, "expectedWorldNetWeightKg": 105694137.901,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedFreshCheeseCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "덴마크 리코타 치즈"
+    },
+    {
+      "hs6": "040630",
+      "hsk10Entries": [{ "hsk10": "0406300000", "koreanName": "가공치즈(갈았거나 가루 모양의 것은 제외한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 48402606, "expectedWorldNetWeightKg": 6499279.195,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedProcessedCheeseCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "소와나무 체다 슬라이스 가공치즈"
+    },
+    {
+      "hs6": "040690",
+      "hsk10Entries": [{ "hsk10": "0406901000", "koreanName": "체더 치즈(Cheddar cheese)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0406902000", "koreanName": "하우다 치즈(Gouda cheese)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0406903000", "koreanName": "카망베르 치즈(Camembert cheese)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0406904000", "koreanName": "에멘탈 치즈(Emmental cheese)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0406909000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 201859174, "expectedWorldNetWeightKg": 33846773.704,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedBlockCheeseCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "퍼시픽 모짜렐라 블록 치즈"
+    },
+    {
+      "hs6": "040721",
+      "hsk10Entries": [{ "hsk10": "0407210000", "koreanName": "닭[갈루스 도메스티쿠스(Gallus domesticus)종으로 한정한다]의 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 20469, "expectedWorldNetWeightKg": 930,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedFreshTableEggCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "무항생제 생계란 30구"
+    },
+    {
+      "hs6": "040900",
+      "hsk10Entries": [{ "hsk10": "0409000000", "koreanName": "천연꿀", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 21292154, "expectedWorldNetWeightKg": 2564441.689,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedNaturalHoneyCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "국내산 천연벌꿀 500g"
+    }
+  ]
+}

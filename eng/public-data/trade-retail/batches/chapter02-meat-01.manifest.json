@@ -1,0 +1,155 @@
+{
+  "schemaVersion": "trade-retail-batch.v2",
+  "batchId": "chapter02-meat-01",
+  "displayName": "제2류 육과 식용 설육 순차 조사 첫 번째 배치",
+  "period": "2025",
+  "reporterCode": 410,
+  "flowCode": "M",
+  "classificationCode": "H6",
+  "expectedSourceRows": 70,
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "distributionApproved": false,
+  "productObservationRelativePath": "eng/public-data/trade-retail/batches/chapter02-meat-01.products.reviewed.json",
+  "hsEntries": [
+    {
+      "hs6": "020110",
+      "hsk10Entries": [
+        { "hsk10": "0201100000", "koreanName": "도체(屠體)와 이분도체(二分屠體)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "ChannelInapplicable", "retailTriageReasonCode": "WholesaleCarcassNotConsumerRetailUnit",
+      "policyEvidenceUrl": null, "expectedProductObservationCount": 0,
+      "searchQuery": "냉장 소 도체 이분도체"
+    },
+    {
+      "hs6": "020120",
+      "hsk10Entries": [
+        { "hsk10": "0201201000", "koreanName": "갈비", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0201209000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 141330793, "expectedWorldNetWeightKg": 11090762.389,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedRetailCandidateObserved",
+      "policyEvidenceUrl": null, "expectedProductObservationCount": 3,
+      "searchQuery": "냉장 소갈비 찜갈비 LA갈비"
+    },
+    {
+      "hs6": "020130",
+      "hsk10Entries": [
+        { "hsk10": "0201300000", "koreanName": "뼈 없는 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 1117810854, "expectedWorldNetWeightKg": 86493727.26,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedRetailCandidateObserved",
+      "policyEvidenceUrl": null, "expectedProductObservationCount": 3,
+      "searchQuery": "냉장 뼈없는 소고기 국거리 안심 사태"
+    },
+    {
+      "hs6": "020210",
+      "hsk10Entries": [
+        { "hsk10": "0202100000", "koreanName": "도체(屠體)와 이분도체(二分屠體)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 57572, "expectedWorldNetWeightKg": 11896.38,
+      "retailTriageStatus": "ChannelInapplicable", "retailTriageReasonCode": "WholesaleCarcassNotConsumerRetailUnit",
+      "policyEvidenceUrl": null, "expectedProductObservationCount": 0,
+      "searchQuery": "냉동 소 도체 이분도체"
+    },
+    {
+      "hs6": "020220",
+      "hsk10Entries": [
+        { "hsk10": "0202201000", "koreanName": "갈비", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0202209000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 990937936, "expectedWorldNetWeightKg": 135710951.033,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedRetailCandidateObserved",
+      "policyEvidenceUrl": null, "expectedProductObservationCount": 3,
+      "searchQuery": "냉동 소갈비 LA갈비"
+    },
+    {
+      "hs6": "020230",
+      "hsk10Entries": [
+        { "hsk10": "0202300000", "koreanName": "뼈 없는 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 1601897338, "expectedWorldNetWeightKg": 234814620.88,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedRetailCandidateObserved",
+      "policyEvidenceUrl": null, "expectedProductObservationCount": 3,
+      "searchQuery": "냉동 뼈없는 소고기 다짐육 샤브샤브 부채살"
+    },
+    {
+      "hs6": "020311",
+      "hsk10Entries": [
+        { "hsk10": "0203110000", "koreanName": "도체(屠體)와 이분도체(二分屠體)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "ChannelInapplicable", "retailTriageReasonCode": "WholesaleCarcassNotConsumerRetailUnit",
+      "policyEvidenceUrl": null, "expectedProductObservationCount": 0,
+      "searchQuery": "냉장 돼지 도체 이분도체"
+    },
+    {
+      "hs6": "020312",
+      "hsk10Entries": [
+        { "hsk10": "0203120000", "koreanName": "넓적다리살ㆍ어깨살과 이를 절단한 것(뼈가 있는 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedCandidateRequiresHsBoundaryReview",
+      "policyEvidenceUrl": null, "expectedProductObservationCount": 2,
+      "searchQuery": "냉장 돼지 뼈사태 앞다리 뒷다리"
+    },
+    {
+      "hs6": "020319",
+      "hsk10Entries": [
+        { "hsk10": "0203191000", "koreanName": "삼겹살", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0203199000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 240491661, "expectedWorldNetWeightKg": 39866736.98,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedRetailCandidateObserved",
+      "policyEvidenceUrl": null, "expectedProductObservationCount": 2,
+      "searchQuery": "냉장 돼지고기 삼겹살"
+    },
+    {
+      "hs6": "020321",
+      "hsk10Entries": [
+        { "hsk10": "0203210000", "koreanName": "도체(屠體)와 이분도체(二分屠體)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 270995, "expectedWorldNetWeightKg": 12852.51,
+      "retailTriageStatus": "ChannelInapplicable", "retailTriageReasonCode": "WholesaleCarcassNotConsumerRetailUnit",
+      "policyEvidenceUrl": null, "expectedProductObservationCount": 0,
+      "searchQuery": "냉동 돼지 도체 이분도체"
+    },
+    {
+      "hs6": "020322",
+      "hsk10Entries": [
+        { "hsk10": "0203220000", "koreanName": "넓적다리살ㆍ어깨살과 이를 절단한 것(뼈가 있는 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 103439, "expectedWorldNetWeightKg": 26137.98,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedCandidateRequiresHsBoundaryReview",
+      "policyEvidenceUrl": null, "expectedProductObservationCount": 1,
+      "searchQuery": "냉동 돼지 뼈사태 뒷다리"
+    },
+    {
+      "hs6": "020329",
+      "hsk10Entries": [
+        { "hsk10": "0203291000", "koreanName": "삼겹살", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0203299000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 1809988098, "expectedWorldNetWeightKg": 511589656.165,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedRetailCandidateObserved",
+      "policyEvidenceUrl": null, "expectedProductObservationCount": 2,
+      "searchQuery": "냉동 돼지고기 삼겹살"
+    }
+  ],
+  "sources": {
+    "trade": "https://comtradeapi.un.org/public/v1/preview/C/A/HS",
+    "hsReference": "https://comtradeapi.un.org/files/v1/app/reference/H6.json",
+    "kcsHsMaster": "https://www.data.go.kr/data/15049722/fileData.do",
+    "kcsNatureClassification": "https://www.data.go.kr/data/15049720/fileData.do",
+    "coupangIndexedResults": "https://www.coupang.com/"
+  },
+  "limitations": [
+    "PublicPreviewAnnualAggregateMayBeRevised",
+    "NoReportedRowsInResponseIsNotProofOfNoTrade",
+    "KcsNatureClassificationDoesNotMeanRetailEligibility",
+    "SearchEngineIndexIsNotMarketplaceRanking",
+    "ProductCandidatesRequireHumanHsReview",
+    "PricesAndAvailabilityMayChange",
+    "PrivateReviewOnly"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "representative-product-observation.v3",
+  "batchId": "chapter01-live-animals-03",
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "collectionMethod": "OfficialMarketplacePolicyReview",
+  "directMarketplaceSearchStatus": "PolicyRestricted",
+  "distributionApproved": false,
+  "codeReviews": [
+    { "hs6": "010614", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "살아있는 토끼 산토끼", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010619", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "살아있는 포유동물 개 사슴 곰 여우 밍크", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010620", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "살아있는 파충류 뱀 자라 거북", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010631", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "살아있는 맹금류", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010632", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "살아있는 앵무류", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010633", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "살아있는 타조 에뮤", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010639", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "그 밖의 살아있는 새", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010641", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "살아있는 벌", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010649", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "그 밖의 살아있는 곤충", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010690", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "살아있는 양서류 환형동물", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false }
+  ],
+  "items": [],
+  "limitations": [
+    "OfficialMarketplacePolicyReview",
+    "NoRepresentativeProductOrPriceObservationCreated",
+    "PrivateReviewOnly",
+    "DistributionNotApproved"
+  ]
+}

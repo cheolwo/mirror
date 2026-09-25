@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "trade-retail-batch.v2",
+  "batchId": "chapter01-live-animals-03",
+  "displayName": "제1류 살아있는 동물 순차 조사 세 번째 배치",
+  "period": "2025",
+  "reporterCode": 410,
+  "flowCode": "M",
+  "classificationCode": "H6",
+  "expectedSourceRows": 158,
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "distributionApproved": false,
+  "productObservationRelativePath": "eng/public-data/trade-retail/batches/chapter01-live-animals-03.products.reviewed.json",
+  "hsEntries": [
+    {
+      "hs6": "010614",
+      "hsk10Entries": [
+        { "hsk10": "0106141000", "koreanName": "번식용", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0106149000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 545690, "expectedWorldNetWeightKg": 15701.5,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "살아있는 토끼 산토끼"
+    },
+    {
+      "hs6": "010619",
+      "hsk10Entries": [
+        { "hsk10": "0106191000", "koreanName": "개", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0106193000", "koreanName": "사슴", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0106194000", "koreanName": "곰", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0106195010", "koreanName": "여우-번식용", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0106195090", "koreanName": "여우-기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0106196010", "koreanName": "밍크-번식용", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0106196090", "koreanName": "밍크-기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0106199000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 14708622, "expectedWorldNetWeightKg": 54264.227,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "살아있는 포유동물 개 사슴 곰 여우 밍크"
+    },
+    {
+      "hs6": "010620",
+      "hsk10Entries": [
+        { "hsk10": "0106201000", "koreanName": "뱀", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0106202000", "koreanName": "자라", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0106203000", "koreanName": "거북", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0106209000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 1621111, "expectedWorldNetWeightKg": 31243.467,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "살아있는 파충류 뱀 자라 거북"
+    },
+    {
+      "hs6": "010631",
+      "hsk10Entries": [
+        { "hsk10": "0106310000", "koreanName": "맹금류", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 44702, "expectedWorldNetWeightKg": 86.4,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "살아있는 맹금류"
+    },
+    {
+      "hs6": "010632",
+      "hsk10Entries": [
+        { "hsk10": "0106320000", "koreanName": "앵무류[패럿류ㆍ패러키트류ㆍ금강앵무류ㆍ유황앵무류를 포함한다]", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 273040, "expectedWorldNetWeightKg": 396,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "살아있는 앵무류"
+    },
+    {
+      "hs6": "010633",
+      "hsk10Entries": [
+        { "hsk10": "0106330000", "koreanName": "타조와 에뮤[드로마이어스 노배홀란디애]", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "살아있는 타조 에뮤"
+    },
+    {
+      "hs6": "010639",
+      "hsk10Entries": [
+        { "hsk10": "0106390000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 7830, "expectedWorldNetWeightKg": 10.6,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "그 밖의 살아있는 새"
+    },
+    {
+      "hs6": "010641",
+      "hsk10Entries": [
+        { "hsk10": "0106410000", "koreanName": "벌", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "살아있는 벌"
+    },
+    {
+      "hs6": "010649",
+      "hsk10Entries": [
+        { "hsk10": "0106490000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 1151338, "expectedWorldNetWeightKg": 21280.085,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "그 밖의 살아있는 곤충"
+    },
+    {
+      "hs6": "010690",
+      "hsk10Entries": [
+        { "hsk10": "0106901000", "koreanName": "양서류", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0106903010", "koreanName": "환형동물류-갯지렁이", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0106903020", "koreanName": "환형동물류-실지렁이", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0106903090", "koreanName": "환형동물류-기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0106909000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 7082317, "expectedWorldNetWeightKg": 486187.376,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "살아있는 양서류 환형동물"
+    }
+  ],
+  "sources": {
+    "trade": "https://comtradeapi.un.org/public/v1/preview/C/A/HS",
+    "hsReference": "https://comtradeapi.un.org/files/v1/app/reference/H6.json",
+    "kcsHsMaster": "https://www.data.go.kr/data/15049722/fileData.do",
+    "kcsNatureClassification": "https://www.data.go.kr/data/15049720/fileData.do",
+    "coupangRestrictedItemsPolicy": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"
+  },
+  "limitations": [
+    "PublicPreviewAnnualAggregateMayBeRevised",
+    "NoReportedRowsInResponseIsNotProofOfNoTrade",
+    "KcsNatureClassificationDoesNotMeanRetailEligibility",
+    "LiveAnimalOnlineSaleProhibitedByMarketplacePolicy",
+    "NoRepresentativeProductOrPriceObservationCreated",
+    "PrivateReviewOnly"
+  ]
+}

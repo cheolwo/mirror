@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "representative-product-observation.v3",
+  "batchId": "chapter12-household-culinary-seeds-plants-02",
+  "observedAt": "2026-09-23T09:42:26+09:00",
+  "collectionMethod": "SearchEngineDomainFilteredCoupangDetailObservation",
+  "directMarketplaceSearchStatus": "CompletedViaIndexedSearch",
+  "distributionApproved": false,
+  "codeReviews": [
+    { "hs6": "120750", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "겨자씨 홀씨드 원물 식용", "reasonCode": "NoExactIndexedRawMustardSeedDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "120791", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "식용 양귀비씨 포피씨드", "reasonCode": "NoExactIndexedEdiblePoppySeedDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "121221", "retailTriageStatus": "ProductCandidateObserved", "searchStatus": "IndexedCandidateObserved", "representativeProductStatus": "PendingHumanReview", "candidateCount": 1, "searchQuery": "완도 건미역 자른미역 500g", "reasonCode": "IndexedDriedSeaMustardCandidateObserved", "evidenceUrls": ["https://www.coupang.com/vp/products/8453354944"], "distributionApproved": false },
+    { "hs6": "121291", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "사탕무 원물 식용", "reasonCode": "NoExactIndexedSugarBeetRootDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "121292", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "캐롭 로커스트콩 원물 식용", "reasonCode": "NoExactIndexedUnprocessedCarobDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "121293", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "사탕수수 원물 줄기 식용", "reasonCode": "NoExactIndexedSugarCaneStemDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "121294", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "볶지 않은 치커리 뿌리 원물", "reasonCode": "NoExactIndexedUnroastedChicoryRootDetailObserved", "evidenceUrls": [], "distributionApproved": false },
+    { "hs6": "121299", "retailTriageStatus": "SearchNoCandidate", "searchStatus": "NoIndexedCandidateObserved", "representativeProductStatus": "NoCandidateObserved", "candidateCount": 0, "searchQuery": "곤약 원물 건조 식용", "reasonCode": "NoExactIndexedUnprocessedKonjacOrOtherPlantDetailObserved", "evidenceUrls": [], "distributionApproved": false }
+  ],
+  "items": [
+    { "observationStableId": "product-observation:coupang:dried-sea-mustard:20260923:1", "platformCode": "coupang", "searchQuery": "완도 건미역 자른미역 500g", "resultPosition": 1, "placementCode": "OrganicIndexedResult", "productTitle": "완도 명품 자른미역, 500g, 1개", "canonicalExternalUrl": "https://www.coupang.com/vp/products/8453354944", "observedPriceKrw": 13470, "referencePriceKrw": 15900, "shippingPriceKrw": 0, "availabilityCode": "AvailableWhenIndexed", "indexFreshnessText": "IndexedObservation2026-09-23", "marketplaceCategoryCandidate": "건미역", "categoryEvidenceCode": "CoupangIndexedProductDetail", "retailCategoryStableId": "retail-category:dried-sea-mustard", "hs6Candidate": "121221", "hsk10Candidate": "1212212010", "hsBindingStatus": "PendingHumanReview", "originClaim": null, "originEvidenceCode": "Unverified", "affiliate": false, "distributionApproved": false }
+  ],
+  "limitations": ["SearchEngineRankNotMarketplaceRank", "DirectMarketplaceAccessMayReturn403", "PricesAndAvailabilityMayChange", "HsBindingsPendingHumanReview", "PrivateReviewOnly", "DistributionNotApproved", "PriorityTierIsNotPopularityClaim"]
+}

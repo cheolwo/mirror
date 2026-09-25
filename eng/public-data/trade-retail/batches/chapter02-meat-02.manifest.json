@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "trade-retail-batch.v2",
+  "batchId": "chapter02-meat-02",
+  "displayName": "제2류 육과 식용 설육 순차 조사 두 번째 배치",
+  "period": "2025",
+  "reporterCode": 410,
+  "flowCode": "M",
+  "classificationCode": "H6",
+  "expectedSourceRows": 22,
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "distributionApproved": false,
+  "productObservationRelativePath": "eng/public-data/trade-retail/batches/chapter02-meat-02.products.reviewed.json",
+  "hsEntries": [
+    {
+      "hs6": "020410", "hsk10Entries": [{ "hsk10": "0204100000", "koreanName": "어린 면양의 도체(屠體)와 이분도체(二分屠體)(신선한 것이나 냉장한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 136295, "expectedWorldNetWeightKg": 22149.82,
+      "retailTriageStatus": "ChannelInapplicable", "retailTriageReasonCode": "WholesaleCarcassNotConsumerRetailUnit", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "냉장 어린 면양 도체 이분도체"
+    },
+    {
+      "hs6": "020421", "hsk10Entries": [{ "hsk10": "0204210000", "koreanName": "도체(屠體)와 이분도체(二分屠體)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "ChannelInapplicable", "retailTriageReasonCode": "WholesaleCarcassNotConsumerRetailUnit", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "냉장 면양 도체 이분도체"
+    },
+    {
+      "hs6": "020422", "hsk10Entries": [{ "hsk10": "0204220000", "koreanName": "그 밖의 것으로서 뼈째로 절단한 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 75752054, "expectedWorldNetWeightKg": 8045381.69,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedRetailCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 3, "searchQuery": "냉장 뼈있는 양고기 프렌치랙 숄더랙"
+    },
+    {
+      "hs6": "020423", "hsk10Entries": [{ "hsk10": "0204230000", "koreanName": "뼈 없는 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 4037624, "expectedWorldNetWeightKg": 320014.31,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedCandidateRequiresStorageStateReview", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "냉장 무골 양고기 뒷다리살"
+    },
+    {
+      "hs6": "020430", "hsk10Entries": [{ "hsk10": "0204300000", "koreanName": "어린 면양의 도체(屠體)와 이분도체(二分屠體)(냉동한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 94037, "expectedWorldNetWeightKg": 16238.8,
+      "retailTriageStatus": "ChannelInapplicable", "retailTriageReasonCode": "WholesaleCarcassNotConsumerRetailUnit", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "냉동 어린 면양 도체 이분도체"
+    },
+    {
+      "hs6": "020441", "hsk10Entries": [{ "hsk10": "0204410000", "koreanName": "도체(屠體)와 이분도체(二分屠體)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "ChannelInapplicable", "retailTriageReasonCode": "WholesaleCarcassNotConsumerRetailUnit", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "냉동 면양 도체 이분도체"
+    },
+    {
+      "hs6": "020442", "hsk10Entries": [{ "hsk10": "0204420000", "koreanName": "그 밖의 것으로서 뼈째로 절단한 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 81299911, "expectedWorldNetWeightKg": 9995883.56,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedRetailCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 3, "searchQuery": "냉동 뼈있는 양고기 숄더랙 프렌치랙 갈비"
+    },
+    {
+      "hs6": "020443", "hsk10Entries": [{ "hsk10": "0204430000", "koreanName": "뼈 없는 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 38151537, "expectedWorldNetWeightKg": 4709545.48,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedCandidateRequiresBoneStateReview", "policyEvidenceUrl": null, "expectedProductObservationCount": 3, "searchQuery": "냉동 무골 양고기 큐브"
+    },
+    {
+      "hs6": "020450", "hsk10Entries": [{ "hsk10": "0204500000", "koreanName": "염소의 고기", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 66413697, "expectedWorldNetWeightKg": 10759833.61,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedRetailCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 3, "searchQuery": "염소고기 흑염소 정육 갈비"
+    },
+    {
+      "hs6": "020500", "hsk10Entries": [{ "hsk10": "0205000000", "koreanName": "말ㆍ당나귀ㆍ노새ㆍ버새의 고기(신선한 것, 냉장하거나 냉동한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedRetailCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 2, "searchQuery": "국내산 냉동 말고기 말갈비"
+    },
+    {
+      "hs6": "020610", "hsk10Entries": [{ "hsk10": "0206100000", "koreanName": "소의 것(신선한 것이나 냉장한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 50900997, "expectedWorldNetWeightKg": 3980240.804,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedRetailCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "당일도축 냉장 한우 소간"
+    },
+    {
+      "hs6": "020621", "hsk10Entries": [{ "hsk10": "0206210000", "koreanName": "혀", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 605366, "expectedWorldNetWeightKg": 55561.4,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedStrictFrozenCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "냉동 우설 소혀 구이용"
+    }
+  ],
+  "sources": {
+    "trade": "https://comtradeapi.un.org/public/v1/preview/C/A/HS",
+    "hsReference": "https://comtradeapi.un.org/files/v1/app/reference/H6.json",
+    "kcsHsMaster": "https://www.data.go.kr/data/15049722/fileData.do",
+    "kcsNatureClassification": "https://www.data.go.kr/data/15049720/fileData.do",
+    "coupangIndexedResults": "https://www.coupang.com/"
+  },
+  "limitations": ["PublicPreviewAnnualAggregateMayBeRevised", "NoReportedRowsInResponseIsNotProofOfNoTrade", "KcsNatureClassificationDoesNotMeanRetailEligibility", "SearchEngineIndexIsNotMarketplaceRanking", "ProductCandidatesRequireHumanHsReview", "PricesAndAvailabilityMayChange", "PrivateReviewOnly"]
+}

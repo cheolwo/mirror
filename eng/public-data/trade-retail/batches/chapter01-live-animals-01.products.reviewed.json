@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "representative-product-observation.v3",
+  "batchId": "chapter01-live-animals-01",
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "collectionMethod": "OfficialMarketplacePolicyReview",
+  "directMarketplaceSearchStatus": "PolicyRestricted",
+  "distributionApproved": false,
+  "codeReviews": [
+    { "hs6": "010121", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "순종 번식용 살아있는 말", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010129", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "경주용 기타 살아있는 말", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010130", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "살아있는 당나귀", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010190", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "살아있는 노새 버새", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010221", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "순종 번식용 살아있는 소", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010229", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "기타 살아있는 소", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010231", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "순종 번식용 살아있는 버펄로", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010239", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "기타 살아있는 버펄로", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010290", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "기타 살아있는 소과 동물", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010310", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "순종 번식용 살아있는 돼지", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010391", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "50킬로그램 미만 살아있는 돼지", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false },
+    { "hs6": "010392", "retailTriageStatus": "RestrictedOrSensitive", "searchStatus": "PolicyReviewedRestricted", "representativeProductStatus": "NotApplicable", "candidateCount": 0, "searchQuery": "50킬로그램 이상 살아있는 돼지", "reasonCode": "LiveAnimalOnlineSaleProhibited", "evidenceUrls": ["https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"], "distributionApproved": false }
+  ],
+  "items": [],
+  "limitations": [
+    "OfficialMarketplacePolicyReview",
+    "NoRepresentativeProductOrPriceObservationCreated",
+    "PrivateReviewOnly",
+    "DistributionNotApproved"
+  ]
+}

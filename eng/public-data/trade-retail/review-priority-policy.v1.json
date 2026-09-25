@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "trade-retail-review-priority-policy.v1",
+  "policyId": "hs6-retail-research-priority-20260921",
+  "effectiveAt": "2026-09-21T00:00:00+09:00",
+  "purpose": "생활 밀착 품목을 먼저 조사하고 산업재와 희귀·특수 품목은 뒤로 보내 조사 비용을 통제한다.",
+  "priorityIsPopularityClaim": false,
+  "distributionApproved": false,
+  "selectionRules": [
+    "OnlyPendingRetailTriageCodesAreSelectable",
+    "PreferCoherentCategoryBatchesOfEightToTwelveCodes",
+    "KcsDirectConsumerGoodsRaisePriority",
+    "EverydayUseAndDioramaObservationValueRaisePriority",
+    "TradeValueIsTieBreakerNotPopularityProof",
+    "RestrictedSensitiveRareSpeciesAndBulkIndustrialGoodsLowerPriority",
+    "ZeroProductCandidateRemainsValid",
+    "OriginalHs6CensusOrderAndCompletenessArePreserved"
+  ],
+  "tiers": [
+    {
+      "code": "P0",
+      "name": "식품·필수 생필품",
+      "order": 0,
+      "chapterGroups": ["04", "07", "10", "11", "15", "16", "17", "18", "19", "20", "21", "22", "03", "08", "09", "12", "02"],
+      "preferredSubjects": ["우유·유제품", "달걀·꿀", "채소", "쌀·곡물·가루", "식용유", "육류·수산 식품", "설탕", "빵·면·가공식품", "음료", "과일", "커피·차·향신료"],
+      "deprioritizeWithinTier": ["살아있는 동물", "희귀 축종·어종", "부산물", "사료·종자 전용", "대량 산업 원료"]
+    },
+    {
+      "code": "P1",
+      "name": "위생·청소·의류·주거 생활재",
+      "order": 1,
+      "chapterGroups": ["30", "33", "34", "39", "48", "56", "61", "62", "63", "64", "85", "94", "96"],
+      "preferredSubjects": ["일반 의약·위생 후보", "비누·세제", "생활 플라스틱", "화장지·종이 생활재", "의류·신발", "소형 생활가전", "가구·조명", "생활 잡화"],
+      "deprioritizeWithinTier": ["전문의료·처방 권한 품목", "산업용 화학 중간재", "부품 단독", "대형 설비"]
+    },
+    {
+      "code": "P2",
+      "name": "일반 소매·지역 운영재",
+      "order": 2,
+      "chapterGroups": ["06", "13", "14", "23", "40", "42", "44", "49", "57", "65", "66", "67", "73", "76", "82", "83", "84", "87", "90", "91", "92", "95"],
+      "preferredSubjects": ["원예·시장 상품", "포장·주방·보관재", "책·인쇄물", "가방·액세서리", "공구", "자전거·차량 생활 부품", "문화·스포츠·완구"],
+      "deprioritizeWithinTier": ["완성품과 연결되지 않는 범용 부품", "사업자 전용 장비", "고위험 이동수단"]
+    },
+    {
+      "code": "P3",
+      "name": "산업재·원자재·특수·민감 품목",
+      "order": 3,
+      "chapterGroups": ["01", "05", "24", "25", "26", "27", "28", "29", "31", "32", "35", "36", "37", "38", "41", "43", "45", "46", "47", "50", "51", "52", "53", "54", "55", "58", "59", "60", "68", "69", "70", "71", "72", "74", "75", "78", "79", "80", "81", "86", "88", "89", "93", "97"],
+      "preferredSubjects": [],
+      "deprioritizeWithinTier": ["광물·화학 원료", "산업용 섬유", "귀금속", "대형 운송장비", "무기류", "수집품·골동품"]
+    }
+  ],
+  "initialCategorySequence": [
+    "04-dairy-eggs-honey",
+    "07-vegetables",
+    "10-11-grains-milling",
+    "15-edible-oils",
+    "16-22-prepared-food-and-beverages",
+    "03-non-live-common-seafood",
+    "08-09-fruit-coffee-tea-spices",
+    "33-34-hygiene-cleaning",
+    "48-paper-household",
+    "61-64-apparel-footwear",
+    "85-94-consumer-appliances-furniture"
+  ],
+  "nextPreferredBatch": {
+    "category": "61-everyday-hosiery-03",
+    "selection": "Pending everyday cotton and synthetic socks and ordinary hosiery before medical compression hosiery, specialist sportswear or rare-material articles",
+    "selectedHs6": [],
+    "batchSize": 12,
+    "selectionStatus": "CandidateSelectionRequired"
+  }
+}

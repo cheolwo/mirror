@@ -1,0 +1,159 @@
+{
+  "schemaVersion": "trade-retail-batch.v2",
+  "batchId": "chapter01-live-animals-02",
+  "displayName": "제1류 살아있는 동물 순차 조사 두 번째 배치",
+  "period": "2025",
+  "reporterCode": 410,
+  "flowCode": "M",
+  "classificationCode": "H6",
+  "expectedSourceRows": 16,
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "distributionApproved": false,
+  "productObservationRelativePath": "eng/public-data/trade-retail/batches/chapter01-live-animals-02.products.reviewed.json",
+  "hsEntries": [
+    {
+      "hs6": "010410",
+      "hsk10Entries": [
+        { "hsk10": "0104101000", "koreanName": "번식용", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0104109000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 313314, "expectedWorldNetWeightKg": 3380,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "살아있는 양"
+    },
+    {
+      "hs6": "010420",
+      "hsk10Entries": [
+        { "hsk10": "0104201000", "koreanName": "젖염소", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0104209000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 625019, "expectedWorldNetWeightKg": 18035,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "살아있는 염소"
+    },
+    {
+      "hs6": "010511",
+      "hsk10Entries": [
+        { "hsk10": "0105111000", "koreanName": "번식용", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0105119000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 16845985, "expectedWorldNetWeightKg": 30361.2,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "185그램 이하 살아있는 닭 병아리"
+    },
+    {
+      "hs6": "010512",
+      "hsk10Entries": [
+        { "hsk10": "0105120000", "koreanName": "칠면조", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "185그램 이하 살아있는 칠면조"
+    },
+    {
+      "hs6": "010513",
+      "hsk10Entries": [
+        { "hsk10": "0105131000", "koreanName": "번식용", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0105139000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 1140244, "expectedWorldNetWeightKg": 213.706,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "185그램 이하 살아있는 오리"
+    },
+    {
+      "hs6": "010514",
+      "hsk10Entries": [
+        { "hsk10": "0105140000", "koreanName": "거위", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "185그램 이하 살아있는 거위"
+    },
+    {
+      "hs6": "010515",
+      "hsk10Entries": [
+        { "hsk10": "0105150000", "koreanName": "기니아새", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "185그램 이하 살아있는 기니아새"
+    },
+    {
+      "hs6": "010594",
+      "hsk10Entries": [
+        { "hsk10": "0105941000", "koreanName": "번식용", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0105949000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "185그램 초과 살아있는 닭"
+    },
+    {
+      "hs6": "010599",
+      "hsk10Entries": [
+        { "hsk10": "0105991010", "koreanName": "번식용", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0105991090", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0105992000", "koreanName": "칠면조", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0105999000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "185그램 초과 살아있는 오리 거위 칠면조"
+    },
+    {
+      "hs6": "010611",
+      "hsk10Entries": [
+        { "hsk10": "0106110000", "koreanName": "영장류", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 3595000, "expectedWorldNetWeightKg": 1019,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "살아있는 영장류"
+    },
+    {
+      "hs6": "010612",
+      "hsk10Entries": [
+        { "hsk10": "0106121000", "koreanName": "고래ㆍ돌고래ㆍ쇠돌고래(고래목의 포유동물), 매너티ㆍ듀공(바다소목의 포유동물)", "natureGroupCode": "10000000", "natureGroupName": "소비재" },
+        { "hsk10": "0106122000", "koreanName": "물개, 바다사자와 바다코끼리(기각아목의 포유동물)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 80970, "expectedWorldNetWeightKg": 135,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "살아있는 해양 포유동물"
+    },
+    {
+      "hs6": "010613",
+      "hsk10Entries": [
+        { "hsk10": "0106130000", "koreanName": "낙타와 그 밖의 낙타과의 동물[카멜리대(Camelidae)과]", "natureGroupCode": "10000000", "natureGroupName": "소비재" }
+      ],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited",
+      "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0,
+      "searchQuery": "살아있는 낙타 낙타과 동물"
+    }
+  ],
+  "sources": {
+    "trade": "https://comtradeapi.un.org/public/v1/preview/C/A/HS",
+    "hsReference": "https://comtradeapi.un.org/files/v1/app/reference/H6.json",
+    "kcsHsMaster": "https://www.data.go.kr/data/15049722/fileData.do",
+    "kcsNatureClassification": "https://www.data.go.kr/data/15049720/fileData.do",
+    "coupangRestrictedItemsPolicy": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE"
+  },
+  "limitations": [
+    "PublicPreviewAnnualAggregateMayBeRevised",
+    "NoReportedRowsInResponseIsNotProofOfNoTrade",
+    "KcsNatureClassificationDoesNotMeanRetailEligibility",
+    "LiveAnimalOnlineSaleProhibitedByMarketplacePolicy",
+    "NoRepresentativeProductOrPriceObservationCreated",
+    "PrivateReviewOnly"
+  ]
+}

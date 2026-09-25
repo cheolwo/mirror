@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "trade-retail-batch.v2",
+  "batchId": "chapter02-meat-04",
+  "displayName": "제2류 육과 식용 설육 순차 조사 네 번째 배치",
+  "period": "2025",
+  "reporterCode": 410,
+  "flowCode": "M",
+  "classificationCode": "H6",
+  "expectedSourceRows": 11,
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "distributionApproved": false,
+  "productObservationRelativePath": "eng/public-data/trade-retail/batches/chapter02-meat-04.products.reviewed.json",
+  "hsEntries": [
+    {
+      "hs6": "020725", "hsk10Entries": [{ "hsk10": "0207250000", "koreanName": "절단하지 않은 육(냉동한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 42838, "expectedWorldNetWeightKg": 11776.49,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedStrictFrozenWholeTurkeyCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "냉동 통 칠면조 원물"
+    },
+    {
+      "hs6": "020726", "hsk10Entries": [{ "hsk10": "0207261000", "koreanName": "절단육", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207262010", "koreanName": "간", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207262090", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactFreshOrChilledTurkeyCutCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "냉장 칠면조 절단육 원물"
+    },
+    {
+      "hs6": "020727", "hsk10Entries": [{ "hsk10": "0207271000", "koreanName": "절단육", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207272010", "koreanName": "간", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207272090", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 2132582, "expectedWorldNetWeightKg": 445287.67,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactFrozenTurkeyCutCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "냉동 칠면조 절단육 원물"
+    },
+    {
+      "hs6": "020741", "hsk10Entries": [{ "hsk10": "0207410000", "koreanName": "절단하지 않은 육(신선한 것이나 냉장한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedStrictChilledWholeDuckCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "냉장 통오리 생오리 원물"
+    },
+    {
+      "hs6": "020742", "hsk10Entries": [{ "hsk10": "0207420000", "koreanName": "절단하지 않은 육(냉동한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 98, "expectedWorldNetWeightKg": 12.2,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedStrictFrozenWholeDuckCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "냉동 통오리 생오리 원물"
+    },
+    {
+      "hs6": "020743", "hsk10Entries": [{ "hsk10": "0207430000", "koreanName": "지방간(신선한 것이나 냉장한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactFreshOrChilledDuckFattyLiverCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "냉장 오리 지방간 푸아그라 원물"
+    },
+    {
+      "hs6": "020744", "hsk10Entries": [{ "hsk10": "0207441000", "koreanName": "절단육", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207442010", "koreanName": "간", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207442090", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedStrictChilledDuckCutCandidatesObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 3, "searchQuery": "냉장 오리 가슴살 다리살 로스 원물"
+    },
+    {
+      "hs6": "020745", "hsk10Entries": [{ "hsk10": "0207451000", "koreanName": "절단육", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207452010", "koreanName": "간", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207452090", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 1402481, "expectedWorldNetWeightKg": 358863.8,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedStrictFrozenDuckCutCandidatesObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 2, "searchQuery": "냉동 오리 가슴살 로스 원물"
+    },
+    {
+      "hs6": "020751", "hsk10Entries": [{ "hsk10": "0207510000", "koreanName": "절단하지 않은 육(신선한 것이나 냉장한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactFreshOrChilledWholeGooseCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "냉장 통거위 거위고기 원물"
+    },
+    {
+      "hs6": "020752", "hsk10Entries": [{ "hsk10": "0207520000", "koreanName": "절단하지 않은 육(냉동한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactFrozenWholeGooseCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "냉동 통거위 거위고기 원물"
+    },
+    {
+      "hs6": "020753", "hsk10Entries": [{ "hsk10": "0207530000", "koreanName": "지방간(신선한 것이나 냉장한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactFreshOrChilledGooseFattyLiverCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "냉장 거위 지방간 푸아그라 원물"
+    },
+    {
+      "hs6": "020754", "hsk10Entries": [{ "hsk10": "0207541000", "koreanName": "절단육", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207542010", "koreanName": "간", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207542090", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactFreshOrChilledGooseCutCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "냉장 거위 절단육 원물"
+    }
+  ]
+}

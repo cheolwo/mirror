@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "trade-retail-batch.v2",
+  "batchId": "chapter02-meat-06",
+  "displayName": "제2류 육과 식용 설육 및 제3류 생체 어류 순차 조사 여섯 번째 배치",
+  "period": "2025",
+  "reporterCode": 410,
+  "flowCode": "M",
+  "classificationCode": "H6",
+  "expectedSourceRows": 76,
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "distributionApproved": false,
+  "productObservationRelativePath": "eng/public-data/trade-retail/batches/chapter02-meat-06.products.reviewed.json",
+  "hsEntries": [
+    {
+      "hs6": "021019", "hsk10Entries": [{ "hsk10": "0210190000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 6237462, "expectedWorldNetWeightKg": 230234.911,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedCuredOrSmokedPorkOtherCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "훈제 돼지 목심 염장 건조"
+    },
+    {
+      "hs6": "021020", "hsk10Entries": [{ "hsk10": "0210201000", "koreanName": "건조하거나 훈제한 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0210209000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 16631, "expectedWorldNetWeightKg": 942.916,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedCuredDriedBovineCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "한우 프로슈토 건조 염장"
+    },
+    {
+      "hs6": "021091", "hsk10Entries": [{ "hsk10": "0210910000", "koreanName": "영장류의 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactCuredPrimateMeatCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "영장류 고기 염장 건조 훈제"
+    },
+    {
+      "hs6": "021092", "hsk10Entries": [{ "hsk10": "0210921000", "koreanName": "고래ㆍ돌고래ㆍ쇠돌고래ㆍ매너티ㆍ듀공의 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0210922000", "koreanName": "물개ㆍ바다사자ㆍ바다코끼리의 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactCuredMarineMammalMeatCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "고래 해양 포유동물 고기 염장 건조 훈제"
+    },
+    {
+      "hs6": "021093", "hsk10Entries": [{ "hsk10": "0210930000", "koreanName": "파충류의 것(뱀과 거북을 포함한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 50259, "expectedWorldNetWeightKg": 806.01,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactCuredReptileMeatCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "파충류 고기 염장 건조 훈제"
+    },
+    {
+      "hs6": "021099", "hsk10Entries": [{ "hsk10": "0210991010", "koreanName": "소의 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0210991090", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0210999020", "koreanName": "가금류의 것", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0210999090", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 49944, "expectedWorldNetWeightKg": 427.064,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedCuredDriedOtherMeatCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "오리 가슴살 프로슈토 염장 건조"
+    },
+    {
+      "hs6": "030111", "hsk10Entries": [{ "hsk10": "0301111000", "koreanName": "비단잉어", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0301119000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 4676741, "expectedWorldNetWeightKg": 84598.594,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited", "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0, "searchQuery": "살아있는 관상용 민물고기"
+    },
+    {
+      "hs6": "030119", "hsk10Entries": [{ "hsk10": "0301190000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 641894, "expectedWorldNetWeightKg": 18618.174,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited", "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0, "searchQuery": "살아있는 관상용 어류"
+    },
+    {
+      "hs6": "030191", "hsk10Entries": [{ "hsk10": "0301910000", "koreanName": "송어", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited", "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0, "searchQuery": "살아있는 송어"
+    },
+    {
+      "hs6": "030192", "hsk10Entries": [{ "hsk10": "0301921000", "koreanName": "실뱀장어(양식용)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0301922000", "koreanName": "새끼뱀장어(양식용)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0301929010", "koreanName": "실뱀장어(양식용 제외)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0301929090", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 116221413, "expectedWorldNetWeightKg": 1410393.28,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited", "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0, "searchQuery": "살아있는 뱀장어 치어"
+    },
+    {
+      "hs6": "030193", "hsk10Entries": [{ "hsk10": "0301931000", "koreanName": "붕어", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0301939000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 6034689, "expectedWorldNetWeightKg": 1789062.1,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited", "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0, "searchQuery": "살아있는 잉어 붕어"
+    },
+    {
+      "hs6": "030194", "hsk10Entries": [{ "hsk10": "0301940000", "koreanName": "대서양 참다랑어와 태평양 참다랑어", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "RestrictedOrSensitive", "retailTriageReasonCode": "LiveAnimalOnlineSaleProhibited", "policyEvidenceUrl": "https://marketplace.coupang.com/information-center/blog-news7?rf=MARKETPLACE", "expectedProductObservationCount": 0, "searchQuery": "살아있는 참다랑어"
+    }
+  ]
+}

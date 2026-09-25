@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "trade-retail-batch.v2",
+  "batchId": "chapter02-meat-03",
+  "displayName": "제2류 육과 식용 설육 순차 조사 세 번째 배치",
+  "period": "2025",
+  "reporterCode": 410,
+  "flowCode": "M",
+  "classificationCode": "H6",
+  "expectedSourceRows": 55,
+  "observedAt": "2026-09-21T00:00:00+09:00",
+  "distributionApproved": false,
+  "productObservationRelativePath": "eng/public-data/trade-retail/batches/chapter02-meat-03.products.reviewed.json",
+  "hsEntries": [
+    {
+      "hs6": "020622", "hsk10Entries": [{ "hsk10": "0206220000", "koreanName": "간", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 101896, "expectedWorldNetWeightKg": 79552.7,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedStrictFrozenCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "냉동 소간 식용 원물"
+    },
+    {
+      "hs6": "020629", "hsk10Entries": [{ "hsk10": "0206291000", "koreanName": "꼬리", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0206292000", "koreanName": "족", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0206299000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 144876287, "expectedWorldNetWeightKg": 29496388.061,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedFrozenOffalCandidatesObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 2, "searchQuery": "냉동 소 우족 스지 식용 원물"
+    },
+    {
+      "hs6": "020630", "hsk10Entries": [{ "hsk10": "0206300000", "koreanName": "돼지의 것(신선한 것이나 냉장한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 19, "expectedWorldNetWeightKg": 8.58,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactFreshOrChilledSwineOffalCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "냉장 돼지 내장 식용 원물"
+    },
+    {
+      "hs6": "020641", "hsk10Entries": [{ "hsk10": "0206410000", "koreanName": "간", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactFrozenSwineLiverCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "냉동 돼지 간 식용 원물"
+    },
+    {
+      "hs6": "020649", "hsk10Entries": [{ "hsk10": "0206491000", "koreanName": "족", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0206499000", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 46322824, "expectedWorldNetWeightKg": 21526584.482,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedStrictFrozenCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "냉동 돼지 장족 생족 원물"
+    },
+    {
+      "hs6": "020680", "hsk10Entries": [{ "hsk10": "0206800000", "koreanName": "기타(신선한 것이나 냉장한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactFreshOrChilledSpecifiedAnimalOffalCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "냉장 양 염소 말 내장 식용 원물"
+    },
+    {
+      "hs6": "020690", "hsk10Entries": [{ "hsk10": "0206900000", "koreanName": "기타(냉동한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 722398, "expectedWorldNetWeightKg": 278953.06,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedStrictFrozenCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "냉동 양간 식용 원물"
+    },
+    {
+      "hs6": "020711", "hsk10Entries": [{ "hsk10": "0207110000", "koreanName": "절단하지 않은 육(신선한 것이나 냉장한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedStrictChilledWholeChickenCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "냉장 통닭 생닭 원물"
+    },
+    {
+      "hs6": "020712", "hsk10Entries": [{ "hsk10": "0207120000", "koreanName": "절단하지 않은 육(냉동한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 753649, "expectedWorldNetWeightKg": 372853,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedStrictFrozenWholeChickenCandidateObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 1, "searchQuery": "냉동 영계 통닭 원물"
+    },
+    {
+      "hs6": "020713", "hsk10Entries": [{ "hsk10": "0207131000", "koreanName": "절단육", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207132010", "koreanName": "간", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207132090", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedStrictChilledCutCandidatesObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 3, "searchQuery": "냉장 생 닭가슴살 닭다리 닭날개 원물"
+    },
+    {
+      "hs6": "020714", "hsk10Entries": [{ "hsk10": "0207141010", "koreanName": "다리", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207141020", "koreanName": "가슴", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207141030", "koreanName": "날개", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207141090", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207142010", "koreanName": "간", "natureGroupCode": "10000000", "natureGroupName": "소비재" }, { "hsk10": "0207142090", "koreanName": "기타", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "Observed", "expectedWorldValueUsd": 488087864, "expectedWorldNetWeightKg": 215514374.162,
+      "retailTriageStatus": "ProductCandidateObserved", "retailTriageReasonCode": "IndexedStrictFrozenCutCandidatesObserved", "policyEvidenceUrl": null, "expectedProductObservationCount": 3, "searchQuery": "냉동 생 닭가슴살 닭다리 닭날개 원물"
+    },
+    {
+      "hs6": "020724", "hsk10Entries": [{ "hsk10": "0207240000", "koreanName": "절단하지 않은 육(신선한 것이나 냉장한 것으로 한정한다)", "natureGroupCode": "10000000", "natureGroupName": "소비재" }],
+      "tradeObservationStatus": "NoReportedRows", "expectedWorldValueUsd": null, "expectedWorldNetWeightKg": null,
+      "retailTriageStatus": "SearchNoCandidate", "retailTriageReasonCode": "NoExactFreshOrChilledWholeTurkeyCandidateIndexed", "policyEvidenceUrl": null, "expectedProductObservationCount": 0, "searchQuery": "냉장 통 칠면조 생고기 원물"
+    }
+  ],
+  "sources": {
+    "trade": "https://comtradeapi.un.org/public/v1/preview/C/A/HS",
+    "hsReference": "https://comtradeapi.un.org/files/v1/app/reference/H6.json",
+    "kcsHsMaster": "https://www.data.go.kr/data/15049722/fileData.do",
+    "kcsNatureClassification": "https://www.data.go.kr/data/15049720/fileData.do",
+    "coupangIndexedResults": "https://www.coupang.com/"
+  },
+  "limitations": ["PublicPreviewAnnualAggregateMayBeRevised", "NoReportedRowsInResponseIsNotProofOfNoTrade", "KcsNatureClassificationDoesNotMeanRetailEligibility", "SearchEngineIndexIsNotMarketplaceRanking", "ProductCandidatesRequireHumanHsReview", "PricesAndAvailabilityMayChange", "PrivateReviewOnly"]
+}

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "menu-ingredient-price-research.v1",
+  "period": "2025",
+  "recipeResearchRevision": "1e4d757883b37eefc67903afa314f9430202800e24c7eef93b0015aa1e9eebfb",
+  "recipeSnapshotSha256": "bae7eff431556bbec9a8939efc4eb5a95191556d4f37b1d0973fd721058fa0ed",
+  "mappingState": "CandidateOnly",
+  "use": "PrivateReviewOnly;NotRestaurantComposition;NotCustomsDecision;NotRecipeCost",
+  "ingredients": [
+    {"id":"rice","name":"쌀","basis":"비빔밥·김밥·리조또의 밥/쌀 일반 구성 참고","hs6":["100630"],"kamisCodes":["111"],"constraint":"정미/반정미 후보. 현미·쌀가루·조리된 밥과 구분. 품종·등급 일치 미확인."},
+    {"id":"wheat-flour","name":"밀가루","basis":"롤피자·튀김의 밀가루 일반 구성 참고","hs6":["110100"],"kamisCodes":[],"constraint":"밀/메슬린 가루 범주. 빵·튀김가루 혼합제품의 통관 코드가 아님. KAMIS 후보 없음."},
+    {"id":"beef","name":"소고기","basis":"버거·갈비탕·소고기찜의 육류 일반 구성 참고","hs6":["020130","020230"],"kamisCodes":["4301","4401","512"],"constraint":"각각 뼈 없는 냉장/냉동 후보만. 갈비 등 뼈 있는 부위·원산지·국내 등급과 직접 비교 금지."},
+    {"id":"pork","name":"돼지고기","basis":"미니버거 참고 레시피의 혼합 패티. 실제 매장 패티의 성분 확정 아님","hs6":["020319","020329"],"kamisCodes":["4304","4402","514"],"constraint":"각각 냉장/냉동 기타 부위 후보. 모든 돼지고기를 포괄하거나 특정 부위에 자동 배정하지 않음."},
+    {"id":"chicken","name":"닭고기","basis":"닭강정·닭볶음탕 일반 구성 참고","hs6":["020713","020714"],"kamisCodes":["9901","515"],"constraint":"각각 냉장/냉동 절단육·설육 후보. KAMIS 통닭 및 완제품 닭강정과 동일 규격 아님."},
+    {"id":"milk","name":"우유","basis":"라떼 공식 재료 단서 및 공공 레시피의 유제품 참고","hs6":["040120"],"kamisCodes":["9908"],"constraint":"지방 1% 초과~6% 이하 비농축·무가당 우유/크림 후보. 지방률·농축·가당 확인 필요. L를 kg으로 환산하지 않음."},
+    {"id":"potato","name":"감자","basis":"닭볶음탕의 감자 일반 구성 참고","hs6":["070190"],"kamisCodes":["152"],"constraint":"종자용 제외 신선/냉장. 냉동 감자·감자튀김·전분과 구분."},
+    {"id":"onion","name":"양파","basis":"닭볶음탕·버거·피자 등의 일반 구성 참고","hs6":["070310"],"kamisCodes":["245"],"constraint":"신선/냉장 양파 및 샬롯 집계. 양파만의 수입가격이라고 단정하지 않음."},
+    {"id":"garlic","name":"마늘","basis":"육류·양념 일반 구성 참고","hs6":["070320"],"kamisCodes":["258"],"constraint":"신선/냉장 마늘. KAMIS 깐마늘과 가공·껍질 제거·규격 차이를 확인해야 함."},
+    {"id":"carrot","name":"당근","basis":"김밥·비빔밥·닭볶음탕 일반 구성 참고","hs6":["070610"],"kamisCodes":["232"],"constraint":"신선/냉장 당근 및 순무 집계. 당근 단독 수입가격 아님."},
+    {"id":"tomato","name":"토마토","basis":"토마토 닭볶음탕·토마토떡볶이 변형 레시피. 실제 매장의 사용 확인 아님","hs6":["070200"],"kamisCodes":["225"],"constraint":"신선/냉장. 소스/케첩/통조림과 구분. 극소량·중량 결손이면 가격 해석 제한."},
+    {"id":"coffee","name":"커피","basis":"커피·라떼 메뉴 명칭 및 공식 설명 단서","hs6":["090111","090121"],"kamisCodes":[],"constraint":"각각 볶지 않은/볶은 비디카페인 커피 후보. 생두와 원두는 별개, 추출 커피와 비교 금지. KAMIS 후보 없음."}
+  ]
+}
