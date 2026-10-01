@@ -51,9 +51,25 @@
             </div>
             <div>
                 <span>조회 범위</span>
-                <strong>@(Context.상세조회가능여부 ? "참여자 상세" : "공개 항목")</strong>
+                <strong>@ResolveAccessScopeLabel(Context)</strong>
             </div>
         </div>
+
+        @if (string.Equals(Context.원장템플릿Key, CommunityLedgerTemplateKeys.GroupImport, StringComparison.OrdinalIgnoreCase))
+        {
+            @if (Context.역할권한관리가능여부)
+            {
+                <CommunityGroupImportRoleAccessPanel LedgerId="@Context.원장Id" Saved="RequestRefreshAsync" />
+            }
+            else if (Context.역할범위조회여부)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">
+                    현재 계정은 <strong>@Context.접근역할명</strong> 권한으로 @(Context.조회가능노드Ids.Count)개 노드를 조회합니다.
+                    편집 가능한 노드는 @(Context.편집가능노드Ids.Count)개이며,
+                    운송 주선은 @(Context.운송주선가능여부 ? "허용됨" : "허용되지 않음") 상태입니다.
+                </MudAlert>
+            }
+        }
 
         @if (Context.다이어그램 is { Nodes.Count: > 0 } diagram)
         {
@@ -120,8 +136,16 @@
                                             <MudIcon Icon="@ResolveNodeIcon(nodeLayout.Node)" Size="Size.Small" />
                                         </span>
                                         @ResolveNodeTypeLabel(nodeLayout.Node)
+                                        @if (nodeLayout.Node.OrganizationReferences?.Count > 0)
+                                        {
+                                            <span class="ledger-diagram-detail__node-organization-count">@($"업체 {nodeLayout.Node.OrganizationReferences.Count}")</span>
+                                        }
                                     </span>
                                     <strong>@nodeLayout.Node.Title</strong>
+                                    @if (!string.IsNullOrWhiteSpace(BuildAssigneeSummary(nodeLayout.Node.NodeId)))
+                                    {
+                                        <small class="ledger-diagram-detail__node-assignee">담당 · @BuildAssigneeSummary(nodeLayout.Node.NodeId)</small>
+                                    }
                                     <small class="ledger-diagram-detail__node-state">
                                         <i></i>
                                         @BuildNodeState(nodeLayout.Node)
@@ -143,8 +167,16 @@
                                     <span class="ledger-diagram-detail__mobile-type">
                                         <MudIcon Icon="@ResolveNodeIcon(node)" Size="Size.Small" />
                                         @ResolveNodeTypeLabel(node)
+                                        @if (node.OrganizationReferences?.Count > 0)
+                                        {
+                                            <span class="ledger-diagram-detail__node-organization-count">@($"업체 {node.OrganizationReferences.Count}")</span>
+                                        }
                                     </span>
                                     <strong>@node.Title</strong>
+                                    @if (!string.IsNullOrWhiteSpace(BuildAssigneeSummary(node.NodeId)))
+                                    {
+                                        <small class="ledger-diagram-detail__mobile-assignee">담당 · @BuildAssigneeSummary(node.NodeId)</small>
+                                    }
                                     <small class="ledger-diagram-detail__mobile-state">
                                         <i></i>
                                         @BuildNodeState(node)
@@ -207,6 +239,78 @@
                                 <dd>@BuildNodeState(SelectedNode)</dd>
                             </div>
                         </dl>
+
+                        @if (Context.상세조회가능여부 || Context.역할범위조회여부)
+                        {
+                            <section class="ledger-diagram-detail__assignees" aria-label="블록 담당자">
+                                <strong>블록 담당자</strong>
+                                @if (SelectedBlock is { 담당자목록.Count: > 0 } assignedBlock)
+                                {
+                                    <MudChipSet T="string" ReadOnly="true">
+                                        @foreach (var assignee in assignedBlock.담당자목록)
+                                        {
+                                            <MudChip T="string" Value="@assignee.UserId" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">
+                                                @($"{assignee.ResponsibilityName} · {assignee.DisplayName} ({assignee.RoleLabel})")
+                                            </MudChip>
+                                        }
+                                    </MudChipSet>
+                                }
+                                else
+                                {
+                                    <span>아직 지정된 담당자가 없습니다.</span>
+                                }
+                            </section>
+
+                            @if (Context.상세조회가능여부)
+                            {
+                                <CommunityLedgerBlockAssignmentPanel LedgerId="@Context.원장Id"
+                                                                     BlockId="@SelectedNode.NodeId"
+                                                                     Saved="RequestRefreshAsync" />
+                            }
+                        }
+
+                        @if (SelectedNode.OrganizationReferences is { Count: > 0 } organizationReferences)
+                        {
+                            <section class="ledger-diagram-detail__organizations" aria-label="연결 업체 후보">
+                                <div class="ledger-diagram-detail__organizations-heading">
+                                    <strong>연결 업체·기관</strong>
+                                    <span>@($"{organizationReferences.Count:N0}곳")</span>
+                                </div>
+                                @foreach (var organization in organizationReferences)
+                                {
+                                    var websiteUrl = ResolveExternalHttpUrl(organization.OfficialWebsiteUrl);
+                                    var sourceUrl = ResolveExternalHttpUrl(organization.SourceReferenceUrl);
+                                    <article>
+                                        <div>
+                                            <strong>@organization.DisplayName</strong>
+                                            <span>@organization.RoleLabel · @organization.CountryCode</span>
+                                        </div>
+                                        <MudChipSet T="string" ReadOnly="true">
+                                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">
+                                                @ResolveOrganizationRelationshipLabel(organization)
+                                            </MudChip>
+                                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">
+                                                @ResolveOrganizationVerificationLabel(organization)
+                                            </MudChip>
+                                        </MudChipSet>
+                                        @if (websiteUrl is not null || sourceUrl is not null)
+                                        {
+                                            <div class="ledger-diagram-detail__organization-links">
+                                                @if (websiteUrl is not null)
+                                                {
+                                                    <a href="@websiteUrl" target="_blank" rel="noopener noreferrer">공식 사이트</a>
+                                                }
+                                                @if (sourceUrl is not null && !string.Equals(sourceUrl, websiteUrl, StringComparison.OrdinalIgnoreCase))
+                                                {
+                                                    <a href="@sourceUrl" target="_blank" rel="noopener noreferrer">조사 출처</a>
+                                                }
+                                            </div>
+                                        }
+                                    </article>
+                                }
+                                <small>연결 정보는 조사 후보이며 선정·계약·면허 확인을 대신하지 않습니다.</small>
+                            </section>
+                        }
 
                         @if (SelectedBlock is { 항목.Count: > 0 } block)
                         {
@@ -352,7 +456,7 @@
 @code {
     private const int CanvasWidth = 560;
     private const int NodeWidth = 140;
-    private const int NodeHeight = 94;
+    private const int NodeHeight = 108;
     private const int LeftMargin = 30;
     private const int TopMargin = 48;
     private const int ColumnGap = 40;
@@ -402,6 +506,27 @@
         => Context?.블록목록.FirstOrDefault(block =>
             string.Equals(block.블록Id, selectedNodeId, StringComparison.OrdinalIgnoreCase));
 
+    private string BuildAssigneeSummary(string nodeId)
+    {
+        var assignees = Context?.블록목록.FirstOrDefault(block =>
+            string.Equals(block.블록Id, nodeId, StringComparison.OrdinalIgnoreCase))?.담당자목록 ?? [];
+        var primary = assignees.FirstOrDefault(assignee =>
+            string.Equals(
+                assignee.ResponsibilityType,
+                CommunityLedgerBlockResponsibilityTypes.Primary,
+                StringComparison.OrdinalIgnoreCase));
+        if (primary is not null)
+        {
+            return primary.DisplayName;
+        }
+
+        return assignees.Count == 0
+            ? string.Empty
+            : assignees.Count == 1
+                ? assignees[0].DisplayName
+                : $"{assignees[0].DisplayName} 외 {assignees.Count - 1}명";
+    }
+
     private IReadOnlyList<PlatformCommunityLedgerNodeActionResponse> SelectedNodeActions
         => Context?.노드행동목록
                .Where(action => string.Equals(action.블록Id, selectedNodeId, StringComparison.OrdinalIgnoreCase))
@@ -412,6 +537,36 @@
         => pendingAction is not null
            && !isExecutingAction
            && (!pendingAction.사진필수여부 || evidenceFile is not null && evidenceConfirmed);
+
+    private static string ResolveAccessScopeLabel(PlatformCommunityPostLedgerContextResponse context)
+        => context.역할범위조회여부
+            ? $"{context.접근역할명} 역할 범위"
+            : context.상세조회가능여부
+                ? "참여자 상세"
+                : "공개 항목";
+
+    private static string ResolveOrganizationRelationshipLabel(
+        DiagramOrganizationReferenceDto organization)
+        => organization.IsPlatformPartner
+            ? "플랫폼 제휴"
+            : "플랫폼 제휴 없음";
+
+    private static string ResolveOrganizationVerificationLabel(
+        DiagramOrganizationReferenceDto organization)
+        => organization.CanBeSelectedForOperations
+            ? "업무 선택 가능"
+            : string.Equals(
+                organization.CompanySourceVerificationStatusCode,
+                DiagramOrganizationVerificationStatusCodes.PublicSourceReviewed,
+                StringComparison.OrdinalIgnoreCase)
+                ? "공개 출처 확인"
+                : "별도 검증 필요";
+
+    private static string? ResolveExternalHttpUrl(string? value)
+        => Uri.TryCreate(value, UriKind.Absolute, out var uri)
+           && uri.Scheme is "http" or "https"
+            ? uri.AbsoluteUri
+            : null;
 
     protected override void OnInitialized()
     {

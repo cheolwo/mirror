@@ -151,4 +151,106 @@ public sealed class PlatformCommunityDecorationStateServiceTests
             Assert.Equal("Hongdal Lecture Link", product.CreatorName);
         });
     }
+
+    [Fact]
+    public void 승인된전통시장팩은_해당시장범위에서만_기본해석된다()
+    {
+        var service = new PlatformCommunityDecorationStateService();
+        var product = service.Products.Single(item =>
+            string.Equals(item.PackKey, "market-theme-seongnam-harvest-v1", StringComparison.OrdinalIgnoreCase));
+
+        var matching = service.ResolveTraditionalMarketThemeProduct("traditional-market:sample-seongnam");
+        var unrelated = service.ResolveTraditionalMarketThemeProduct("traditional-market:another-market");
+
+        Assert.Same(product, matching);
+        Assert.Null(unrelated);
+        Assert.True(product.TraditionalMarketTheme?.IsOfficiallyApplicable);
+        Assert.True(service.IsProductActive(product));
+    }
+
+    [Fact]
+    public void 전통시장팩카탈로그는_공식적용가능한시장범위상품을_생성한다()
+    {
+        var products = TraditionalMarketThemeCatalog.CreateProducts();
+
+        Assert.Equal(TraditionalMarketThemeCatalog.Definitions.Count, products.Count);
+        Assert.All(products, product =>
+        {
+            Assert.True(product.IsTraditionalMarketTheme);
+            Assert.True(product.TraditionalMarketTheme?.IsOfficiallyApplicable);
+            Assert.StartsWith(
+                "traditional-market:",
+                product.TraditionalMarketTheme!.MarketScopeKey,
+                StringComparison.OrdinalIgnoreCase);
+        });
+    }
+
+    [Fact]
+    public void 디자이너의전통시장팩초안은_검수와상인회승인전에는_적용되지않는다()
+    {
+        var service = new PlatformCommunityDecorationStateService();
+        var sampleManifest = service.Products
+            .Single(item => item.IsTraditionalMarketTheme)
+            .TraditionalMarketTheme! with
+        {
+            MarketScopeKey = "traditional-market:designer-pilot",
+            MarketName = "디자이너 참여 시장"
+        };
+
+        var created = service.TryCreateTraditionalMarketThemePackage(
+            "우리 시장 이야기",
+            "동네 디자이너",
+            "시장과 함께 검토할 표식 묶음",
+            0,
+            sampleManifest,
+            out var product,
+            out var message);
+
+        Assert.True(created);
+        Assert.NotNull(product);
+        Assert.Equal("초안", product.TraditionalMarketTheme?.ReviewStatus);
+        Assert.Equal("검토 전", product.TraditionalMarketTheme?.AssociationApprovalStatus);
+        Assert.False(product.TraditionalMarketTheme?.IsOfficiallyApplicable);
+        Assert.False(service.ApplyProduct(product));
+        Assert.Null(service.ResolveTraditionalMarketThemeProduct("traditional-market:designer-pilot"));
+        Assert.Contains("상인회 승인", message);
+    }
+
+    [Fact]
+    public void 전통시장팩은_다른시장범위에_적용할수없다()
+    {
+        var service = new PlatformCommunityDecorationStateService();
+
+        var applied = service.ApplyTraditionalMarketThemePack(
+            "traditional-market:another-market",
+            "market-theme-seongnam-harvest-v1");
+
+        Assert.False(applied);
+        Assert.Empty(service.ActiveTraditionalMarketThemePackByScope);
+    }
+
+    [Fact]
+    public void 전통시장팩초안은_시장식별자가없는범위키를_거부한다()
+    {
+        var service = new PlatformCommunityDecorationStateService();
+        var sampleManifest = service.Products
+            .Single(item => item.IsTraditionalMarketTheme)
+            .TraditionalMarketTheme! with
+        {
+            MarketScopeKey = "traditional-market:"
+        };
+
+        var created = service.TryCreateTraditionalMarketThemePackage(
+            "식별자 없는 시장 팩",
+            "동네 디자이너",
+            "잘못된 범위를 검증하는 초안",
+            0,
+            sampleManifest,
+            out var product,
+            out var message);
+
+        Assert.False(created);
+        Assert.Null(product);
+        Assert.Contains("traditional-market:", message);
+    }
 }

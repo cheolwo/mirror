@@ -18,11 +18,11 @@ flowchart LR
 
 | 단계 | 책임 | 대표 코드 |
 | --- | --- | --- |
-| Command/API | 사용자의 실행 의도 수신 | `Hongdal.Controllers`, `ShipperApp.Services.Commerce.Orders.Commands` |
+| Command/API | 사용자의 실행 의도 수신 | `Hongdal.Controllers`, `HongdalApp.Services.Commerce.Orders.Commands` |
 | Handler/Service | 검증, 권한, 핵심 상태 전이 | `WarehouseOperationService`, `ProcessCommerceOrderCommandHandler` |
 | Domain/Store | 저장되는 업무 상태 | `Hongdal.Domain`, `InMemoryShipperStore` |
 | Event/Outbox | 후속 처리 대기 또는 발생 사실 기록 | `CommerceOrderProcessedEvent`, `배차추천알림Outbox` |
-| Query/View | 지금 처리해야 할 일 표시 | `Hongdal.Ui.Common`, `ShipperApp.Components`, `DriverApp` |
+| Query/View | 지금 처리해야 할 일 표시 | `Hongdal.Ui.Common`, `HongdalApp.Components`, `DriverApp` |
 
 ## 운영 레인
 
@@ -157,12 +157,12 @@ flowchart TD
 
 대표 파일:
 
-- `ShipperApp/Services/Commerce/Orders/Commands/ProcessCommerceOrderCommandHandler.cs`
+- `HongdalApp/Services/Commerce/Orders/Commands/ProcessCommerceOrderCommandHandler.cs`
 - `docs/Architecture/OutboundBatchEngine.md`
-- `ShipperApp/Services/Warehouse/Fulfillment/WarehousePickingPlanner.cs`
-- `ShipperApp/Services/Warehouse/Fulfillment/WarehouseOrderPickingTask.cs`
-- `ShipperApp/Services/Warehouse/Fulfillment/WarehousePackingTask.cs`
-- `ShipperApp/Components/Pages/OrderFulfillment.razor`
+- `HongdalApp/Services/Warehouse/Fulfillment/WarehousePickingPlanner.cs`
+- `HongdalApp/Services/Warehouse/Fulfillment/WarehouseOrderPickingTask.cs`
+- `HongdalApp/Services/Warehouse/Fulfillment/WarehousePackingTask.cs`
+- `HongdalApp/Components/Pages/OrderFulfillment.razor`
 
 ## 2-1. 판매채널 주문 동기화 흐름
 
@@ -301,7 +301,7 @@ flowchart TD
 
 대표 파일:
 
-- `ShipperApp/Services/Customs`
+- `HongdalApp/Services/Customs`
 - `Hongdal.Domain/통관`
 - `Hongdal/Application/Warehouse/Handlers/국제거래통관절차생성EventHandler.cs`
 

@@ -1,0 +1,231 @@
+.import-order-commandbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 16px;
+    padding: 16px 18px;
+    border: 1px solid rgba(33, 79, 61, 0.18);
+    border-radius: 14px;
+    background: #f7f8f5;
+}
+
+.import-order-commandbar > div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.import-order-commandbar span { color: #65736b; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; }
+
+.import-order-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 370px;
+    gap: 20px;
+    align-items: start;
+}
+
+.import-order-diagram-panel,
+.import-order-conversation-panel {
+    display: grid;
+    gap: 16px;
+}
+
+.import-order-conversation-panel {
+    position: sticky;
+    top: 72px;
+}
+
+.import-order-diagram-paper,
+.import-ledger-detail-card,
+.import-order-conversation-panel ::deep .mud-paper {
+    border-color: rgba(33, 79, 61, 0.16) !important;
+    border-radius: 16px !important;
+}
+
+.import-order-panel-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.import-ledger-diagram {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+        "n1 n2 n3"
+        "n4 center n5"
+        "n6 n7 n8";
+    gap: 16px;
+    min-height: 570px;
+    padding: 32px;
+    border-radius: 18px;
+    background:
+        linear-gradient(90deg, transparent calc(50% - 1px), rgba(33, 79, 61, 0.12) 50%, transparent calc(50% + 1px)),
+        linear-gradient(transparent calc(50% - 1px), rgba(33, 79, 61, 0.12) 50%, transparent calc(50% + 1px)),
+        radial-gradient(circle at center, rgba(61, 110, 82, 0.12), transparent 42%),
+        #f2f6f3;
+}
+
+.import-ledger-node,
+.import-order-center {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    min-width: 0;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px;
+    border-radius: 14px;
+    text-align: center;
+}
+
+.import-ledger-node {
+    border: 1px solid rgba(74, 96, 84, 0.24);
+    background: #fff;
+    color: #213129;
+    cursor: pointer;
+    transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+.import-ledger-node:hover,
+.import-ledger-node--selected {
+    transform: translateY(-3px);
+    border-color: var(--ledger-tone);
+    box-shadow: 0 12px 28px rgba(23, 37, 31, 0.12);
+}
+
+.import-ledger-node--1 { grid-area: n1; }
+.import-ledger-node--2 { grid-area: n2; }
+.import-ledger-node--3 { grid-area: n3; }
+.import-ledger-node--4 { grid-area: n4; }
+.import-ledger-node--5 { grid-area: n5; }
+.import-ledger-node--6 { grid-area: n6; }
+.import-ledger-node--7 { grid-area: n7; }
+.import-ledger-node--8 { grid-area: n8; }
+
+.import-ledger-node-icon {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    margin-bottom: 4px;
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--ledger-tone) 14%, #fff);
+    color: var(--ledger-tone);
+}
+
+.import-ledger-node small { color: #65736b; font-size: 0.62rem; }
+.import-ledger-node strong { font-size: 0.82rem; }
+.import-ledger-node em { color: var(--ledger-tone); font-size: 0.67rem; font-style: normal; font-weight: 800; }
+
+.import-order-center {
+    grid-area: center;
+    border: 2px solid #214f3d;
+    background: #214f3d;
+    color: #fff;
+    box-shadow: 0 18px 38px rgba(33, 79, 61, 0.25);
+}
+
+.import-order-center > span { font-size: 0.62rem; letter-spacing: 0.12em; opacity: 0.72; }
+.import-order-center ::deep .mud-icon-root { margin: 5px 0; font-size: 2rem; }
+.import-order-center strong { font-size: 0.88rem; }
+.import-order-center small { max-width: 100%; overflow: hidden; font-size: 0.65rem; opacity: 0.78; text-overflow: ellipsis; }
+.import-order-center em { padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.14); font-size: 0.62rem; font-style: normal; }
+
+.import-ledger-tone-teal { --ledger-tone: #167568; }
+.import-ledger-tone-green { --ledger-tone: #3b7b4f; }
+.import-ledger-tone-amber { --ledger-tone: #a06015; }
+.import-ledger-tone-slate { --ledger-tone: #526777; }
+.import-ledger-tone-purple { --ledger-tone: #76538f; }
+.import-ledger-tone-blue { --ledger-tone: #316da6; }
+.import-ledger-tone-olive { --ledger-tone: #687d36; }
+.import-ledger-tone-orange { --ledger-tone: #b65f2e; }
+
+.import-ledger-detail-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.import-ledger-detail-icon {
+    display: grid;
+    flex: 0 0 auto;
+    width: 58px;
+    height: 58px;
+    place-items: center;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--ledger-tone) 14%, #fff);
+    color: var(--ledger-tone);
+}
+
+.import-ledger-detail-body { min-width: 0; flex: 1; }
+
+.import-order-comment-list {
+    display: grid;
+    max-height: 440px;
+    gap: 10px;
+    overflow: auto;
+    padding-right: 3px;
+}
+
+.import-order-comment-list article {
+    padding: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.26);
+    border-radius: 11px;
+}
+
+.import-order-comment-list article > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.import-order-comment-list small { color: #65736b; font-size: 0.64rem; }
+.import-order-comment-list p { margin: 8px 0 0; font-size: 0.81rem; line-height: 1.5; }
+.import-order-comment-list details { margin-top: 7px; color: #65736b; font-size: 0.74rem; }
+.import-order-comment-list summary { cursor: pointer; color: #315d49; font-weight: 800; }
+
+.import-order-comment-node {
+    display: inline-block;
+    margin-top: 7px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: #e8f0eb;
+    color: #315d49;
+    font-size: 0.64rem;
+    font-weight: 800;
+}
+
+.import-order-comment-compose {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+@media (max-width: 1060px) {
+    .import-order-workspace { grid-template-columns: 1fr; }
+    .import-order-conversation-panel { position: static; }
+}
+
+@media (max-width: 720px) {
+    .import-order-commandbar,
+    .import-ledger-detail-card { align-items: flex-start; flex-direction: column; }
+    .import-ledger-diagram {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-areas:
+            "center center"
+            "n1 n2"
+            "n3 n4"
+            "n5 n6"
+            "n7 n8";
+        min-height: auto;
+        padding: 16px;
+    }
+    .import-order-center { min-height: 150px; }
+    .import-ledger-node { min-height: 130px; }
+}

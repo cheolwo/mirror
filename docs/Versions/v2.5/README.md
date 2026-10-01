@@ -51,7 +51,7 @@
 ## 우선 앱/모듈
 
 - `OrdererApp`
-- `ShipperApp`
+- `HongdalApp`
 - `WarehouseManagerApp`
 - `CargoYongdalDispatchEngine`
 - 주문자 집단 식별 서비스

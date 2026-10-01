@@ -1,5 +1,5 @@
 @implements IDisposable
-@inject YouTube공개콘텐츠Service YouTubeContent
+@inject YouTube관리콘텐츠Service YouTubeContent
 @inject PlatformCommunityPostDraftStateService CommunityPostDrafts
 @inject NavigationManager Navigation
 
@@ -111,7 +111,7 @@
                         <small>@selectedPlaylist.제목 · @FormatDate(selectedVideo.게시일시Utc)</small>
                     </div>
                     <div class="prajna-library__watch-actions">
-                        @if (SelectedScripturePack is { } selectedScripturePack)
+                        @if (ShowDecorationLinks && SelectedScripturePack is { } selectedScripturePack)
                         {
                             <a class="prajna-library__decoration-link" href="@DecorationProductHref(selectedScripturePack)">
                                 <span>@selectedScripturePack.Symbol</span>
@@ -141,6 +141,8 @@
                     </a>
                 </div>
 
+                @if (ShowCommunityShare)
+                {
                 <section class="prajna-library__community-share" aria-label="강의 글귀 커뮤니티 공유">
                     <div class="prajna-library__community-share-intro">
                         <span class="prajna-library__community-share-icon">
@@ -211,6 +213,7 @@
                         </div>
                     }
                 </section>
+                }
             </section>
         }
 
@@ -238,7 +241,7 @@
                         <strong>@requestedPlaylist.제목</strong>
                         <p>선택한 재생목록을 목록 맨 위에 펼쳐 두었습니다.</p>
                     </div>
-                    @if (requestedPack is not null)
+                    @if (ShowDecorationLinks && requestedPack is not null)
                     {
                         <a href="@DecorationProductHref(requestedPack)">
                             꾸미기 팩으로 돌아가기
@@ -338,7 +341,7 @@
                                             }
                                         </div>
                                         <div class="prajna-library__collection-actions">
-                                            @if (scripturePack is not null)
+                                            @if (ShowDecorationLinks && scripturePack is not null)
                                             {
                                                 <a class="prajna-library__decoration-link" href="@DecorationProductHref(scripturePack)">
                                                     <span>@scripturePack.Symbol</span>
@@ -367,7 +370,7 @@
 
 @code {
     [Parameter]
-    public string ChannelId { get; set; } = YouTube공개콘텐츠Service.홍익학당ChannelId;
+    public string ChannelId { get; set; } = YouTube관리콘텐츠Service.홍익학당ChannelId;
 
     [Parameter]
     public string ChannelName { get; set; } = "홍익학당";
@@ -380,6 +383,12 @@
 
     [Parameter]
     public string? InitialPlaylistId { get; set; }
+
+    [Parameter]
+    public bool ShowCommunityShare { get; set; }
+
+    [Parameter]
+    public bool ShowDecorationLinks { get; set; }
 
     private readonly CancellationTokenSource lifetimeCancellation = new();
     private readonly Dictionary<string, IReadOnlyList<YouTube재생목록영상Dto>> playlistVideoCache = new(StringComparer.Ordinal);

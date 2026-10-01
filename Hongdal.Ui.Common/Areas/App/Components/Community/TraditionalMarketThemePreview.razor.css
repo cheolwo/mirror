@@ -1,0 +1,124 @@
+.traditional-market-theme-preview {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 142px;
+    padding: 16px;
+    border: 1px solid color-mix(in srgb, var(--market-preview-header) 30%, #d8dedb);
+    border-radius: 6px;
+    background: var(--market-preview-background);
+    color: #1f2925;
+}
+
+.traditional-market-theme-preview header {
+    display: grid;
+    grid-template-columns: 8px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+    padding-bottom: 13px;
+    border-bottom: 2px solid var(--market-preview-header);
+}
+
+.traditional-market-theme-preview header div {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.traditional-market-theme-preview header small {
+    overflow: hidden;
+    color: var(--market-preview-header);
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.traditional-market-theme-preview header strong {
+    overflow: hidden;
+    font-size: 0.96rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.traditional-market-theme-preview__board {
+    width: 8px;
+    height: 34px;
+    background: var(--market-preview-board);
+}
+
+.traditional-market-theme-preview__day {
+    padding: 6px 8px;
+    border: 1px solid var(--market-preview-day);
+    color: var(--market-preview-day);
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.traditional-market-theme-preview__surfaces {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 13px;
+}
+
+.traditional-market-theme-preview__surfaces > span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    color: #59645f;
+    font-size: 0.72rem;
+    white-space: nowrap;
+}
+
+.traditional-market-theme-preview__surfaces i {
+    display: block;
+    flex: 0 0 auto;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background: currentColor;
+}
+
+.traditional-market-theme-preview__surfaces .is-product {
+    color: var(--market-preview-product);
+}
+
+.traditional-market-theme-preview__surfaces .is-pickup {
+    color: var(--market-preview-pickup);
+}
+
+.traditional-market-theme-preview__surfaces .is-story {
+    color: var(--market-preview-story);
+}
+
+.traditional-market-theme-preview.is-compact {
+    min-height: 112px;
+    padding: 12px;
+}
+
+.traditional-market-theme-preview.is-compact header {
+    padding-bottom: 9px;
+}
+
+.traditional-market-theme-preview.is-compact header strong {
+    font-size: 0.82rem;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.traditional-market-theme-preview.is-compact .traditional-market-theme-preview__surfaces {
+    margin-top: 9px;
+}
+
+@media (max-width: 420px) {
+    .traditional-market-theme-preview__surfaces {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .traditional-market-theme-preview__surfaces > span {
+        white-space: normal;
+    }
+}

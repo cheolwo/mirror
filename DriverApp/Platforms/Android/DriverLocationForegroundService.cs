@@ -179,7 +179,7 @@ public sealed class DriverLocationForegroundService : Service
             : new Notification.Builder(this);
 
         builder
-            .SetContentTitle("홍달 운행 위치 송신")
+            .SetContentTitle("살뜰 운행 위치 송신")
             .SetContentText("운행 중 서버에 현재 위치를 주기적으로 전송합니다.")
             .SetSmallIcon(Resource.Mipmap.appicon)
             .SetOngoing(true)

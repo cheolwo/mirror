@@ -1,0 +1,222 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using System.ComponentModel
+@using Hongdal.Contracts.Common.Inbound
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@implements IDisposable
+
+@if (ViewModel.SourceNode is not null)
+{
+    var selectedCandidate = ViewModel.SelectedCandidate;
+    <aside class="platform-diagram-warehouse-proxy-panel"
+           role="dialog"
+           aria-label="창고 물류 대행 신청"
+           @onclick:stopPropagation="true"
+           @onpointerdown:stopPropagation="true"
+           @onpointerup:stopPropagation="true">
+        <MudStack Spacing="2">
+            <MudStack Row="true" AlignItems="AlignItems.Start" Justify="Justify.SpaceBetween" Spacing="1">
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.subtitle2">창고 물류 대행 신청</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@ViewModel.SourceNode.Title 블록에서 시작</MudText>
+                </MudStack>
+                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                               Size="Size.Small"
+                               Color="Color.Default"
+                               OnClick="ViewModel.Close"
+                               aria-label="창고 물류 대행 신청 닫기" />
+            </MudStack>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                창고 후보와 신청 값을 확인한 뒤, 다이어그램 안에서 바로 입고/물류 대행 요청을 등록합니다.
+            </MudText>
+            @if (ViewModel.IsLoading)
+            {
+                <MudProgressLinear Indeterminate="true" Color="Color.Success" />
+            }
+            <div class="platform-diagram-warehouse-candidate-list">
+                @foreach (var candidate in ViewModel.Candidates)
+                {
+                    <button type="button"
+                            class="@BuildCandidateClass(candidate)"
+                            title="@candidate.Description"
+                            @onclick="@(() => ViewModel.SelectCandidate(candidate.Key))">
+                        <span class="platform-diagram-warehouse-candidate-name">@candidate.Name</span>
+                        <span class="platform-diagram-warehouse-candidate-meta">@candidate.ScopeLabel · @candidate.ProxyTypeLabel</span>
+                        @if (!string.IsNullOrWhiteSpace(candidate.Address))
+                        {
+                            <span class="platform-diagram-warehouse-candidate-address">@candidate.Address</span>
+                        }
+                    </button>
+                }
+            </div>
+            @if (selectedCandidate is not null)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">
+                    @selectedCandidate.Description
+                </MudAlert>
+                @if (selectedCandidate.WarehouseId is null)
+                {
+                    <MudAlert Severity="Severity.Warning" Dense="true" Variant="Variant.Outlined">
+                        이 후보는 아직 실제 창고 ID가 없어 API 신청 대신 업무 화면에서 창고를 먼저 등록해야 합니다.
+                    </MudAlert>
+                }
+                <MudDivider />
+                <MudText Typo="Typo.subtitle2">신청 입력</MudText>
+                <MudGrid Class="platform-diagram-warehouse-request-form">
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="공급처 코드"
+                                      @bind-Value="ViewModel.Draft.SupplierCode"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="공급처명"
+                                      @bind-Value="ViewModel.Draft.SupplierName"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="원주문 참조번호"
+                                      @bind-Value="ViewModel.Draft.OrderReference"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudDatePicker Label="예정 도착일"
+                                       @bind-Date="ViewModel.Draft.ExpectedArrivalDate"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="계약번호"
+                                      @bind-Value="ViewModel.Draft.ContractNo"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudSelect T="string"
+                                   Label="입고 계약 유형"
+                                   @bind-Value="ViewModel.Draft.ContractType"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense">
+                            @foreach (var type in PlatformCommunityWarehouseProxyViewModel.ContractTypeOptions)
+                            {
+                                <MudSelectItem T="string" Value="@type">@입고계약유형코드.GetDisplayName(type)</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="계약 상대방"
+                                      @bind-Value="ViewModel.Draft.ContractCounterpartyName"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Label="정산방식"
+                                      @bind-Value="ViewModel.Draft.ContractSettlementType"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField T="decimal"
+                                         Label="판매수수료율(%)"
+                                         @bind-Value="ViewModel.Draft.ContractCommissionRate"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Min="0"
+                                         Max="100" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField T="decimal"
+                                         Label="일 보관료"
+                                         @bind-Value="ViewModel.Draft.ContractDailyStorageFee"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Min="0" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField Label="신청 메모"
+                                      @bind-Value="ViewModel.Draft.Notes"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Lines="3" />
+                    </MudItem>
+                </MudGrid>
+            }
+            @if (!string.IsNullOrWhiteSpace(ViewModel.Message))
+            {
+                <MudAlert Severity="@ViewModel.MessageSeverity" Dense="true" Variant="Variant.Outlined">
+                    @ViewModel.Message
+                </MudAlert>
+            }
+            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.Send"
+                           Disabled="@(!ViewModel.CanSubmit)"
+                           OnClick="@(() => ViewModel.SubmitAsync())">
+                    @(ViewModel.IsSubmitting ? "신청 중" : "다이어그램에서 신청")
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.OpenInNew"
+                           Disabled="@(selectedCandidate is null)"
+                           OnClick="OpenWorkspaceAsync">
+                    업무 화면에서 자세히 작성
+                </MudButton>
+            </MudStack>
+        </MudStack>
+    </aside>
+}
+
+@code {
+    private PlatformCommunityWarehouseProxyViewModel? subscribedViewModel;
+
+    [Parameter, EditorRequired]
+    public PlatformCommunityWarehouseProxyViewModel ViewModel { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<string> WorkspaceRequested { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(subscribedViewModel, ViewModel))
+        {
+            return;
+        }
+
+        Unsubscribe();
+        subscribedViewModel = ViewModel;
+        subscribedViewModel.PropertyChanged += HandleViewModelChanged;
+    }
+
+    private string BuildCandidateClass(WarehouseProxyCandidate candidate)
+        => string.Equals(candidate.Key, ViewModel.SelectedCandidateKey, StringComparison.OrdinalIgnoreCase)
+            ? "platform-diagram-warehouse-candidate platform-diagram-warehouse-candidate--selected"
+            : "platform-diagram-warehouse-candidate";
+
+    private async Task OpenWorkspaceAsync()
+    {
+        var url = ViewModel.BuildWorkspaceUrl();
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return;
+        }
+
+        ViewModel.Close();
+        await WorkspaceRequested.InvokeAsync(url);
+    }
+
+    private void HandleViewModelChanged(object? sender, PropertyChangedEventArgs args)
+        => _ = InvokeAsync(StateHasChanged);
+
+    private void Unsubscribe()
+    {
+        if (subscribedViewModel is not null)
+        {
+            subscribedViewModel.PropertyChanged -= HandleViewModelChanged;
+            subscribedViewModel = null;
+        }
+    }
+
+    public void Dispose() => Unsubscribe();
+}

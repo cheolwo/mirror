@@ -1,0 +1,19 @@
+.hongdal-server-grid-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+}
+
+.hongdal-server-grid-scroll ::deep .mud-table-cell {
+    word-break: keep-all;
+}
+
+.hongdal-server-grid-scroll ::deep th.mud-table-cell {
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .hongdal-server-grid-content {
+        min-width: 0 !important;
+    }
+}

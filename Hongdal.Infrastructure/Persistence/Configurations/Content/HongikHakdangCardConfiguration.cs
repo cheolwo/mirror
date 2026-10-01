@@ -16,6 +16,7 @@ public sealed class HongikHakdangCardCollectionConfiguration
         builder.Property(x => x.Name).HasColumnName("name").HasMaxLength(300).IsRequired();
         builder.Property(x => x.SortOrder).HasColumnName("sort_order");
         builder.Property(x => x.IsActive).HasColumnName("is_active");
+        builder.Property(x => x.IsAdminEnabled).HasColumnName("is_admin_enabled");
         builder.Property(x => x.LastSeenAtUtc).HasColumnName("last_seen_at_utc");
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");
         builder.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc");
@@ -49,6 +50,9 @@ public sealed class HongikHakdangCardConfiguration : IEntityTypeConfiguration<Ho
         builder.Property(x => x.ImageDownloadError).HasColumnName("image_download_error").HasMaxLength(1000);
         builder.Property(x => x.ImageDownloadedAtUtc).HasColumnName("image_downloaded_at_utc");
         builder.Property(x => x.IsActive).HasColumnName("is_active");
+        builder.Property(x => x.IsAdminEnabled).HasColumnName("is_admin_enabled");
+        builder.Property(x => x.IsCommunityPublicationApproved)
+            .HasColumnName("is_community_publication_approved");
         builder.Property(x => x.LastSeenAtUtc).HasColumnName("last_seen_at_utc");
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");
         builder.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc");
@@ -60,6 +64,8 @@ public sealed class HongikHakdangCardConfiguration : IEntityTypeConfiguration<Ho
             .HasDatabaseName("IX_hh_cards_active_last_seen");
         builder.HasIndex(x => x.ImageDownloadStatus)
             .HasDatabaseName("IX_hh_cards_download_status");
+        builder.HasIndex(x => new { x.IsCommunityPublicationApproved, x.IsActive, x.IsAdminEnabled })
+            .HasDatabaseName("IX_hh_cards_community_publication");
     }
 }
 

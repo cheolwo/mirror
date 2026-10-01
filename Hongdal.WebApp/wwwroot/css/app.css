@@ -147,6 +147,36 @@ h1:focus {
     gap: 16px;
 }
 
+.web-diagram-workbench {
+    display: grid;
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+}
+
+.web-diagram-palette {
+    position: sticky;
+    top: 76px;
+    max-height: calc(100dvh - 96px);
+    overflow-y: auto;
+}
+
+.web-diagram-canvas {
+    min-width: 0;
+    overflow: hidden;
+}
+
+@media (max-width: 1100px) {
+    .web-diagram-workbench {
+        grid-template-columns: 1fr;
+    }
+
+    .web-diagram-palette {
+        position: static;
+        max-height: none;
+    }
+}
+
 .web-link-card {
     height: 100%;
     border-radius: 8px;

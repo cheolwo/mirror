@@ -1,0 +1,123 @@
+<MudGrid Spacing="3">
+    <MudItem xs="12" lg="8">
+        <MudText Typo="Typo.subtitle1" Class="mb-2">인계 대상 재고</MudText>
+        <WarehouseInventoryTable Items="@Inventory.항목목록"
+                                 Busy="@(Inventory.처리중 || Handoff.처리중)"
+                                 EmptyText="운송에 인계할 수 있는 재고가 없습니다."
+                                 SelectLabel="인계 선택"
+                                 OnSelect="SelectInventory" />
+    </MudItem>
+    <MudItem xs="12" lg="4">
+        <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+            <MudForm @ref="_form" @bind-IsValid="_formValid">
+                <MudStack Spacing="2">
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.subtitle1">운송 인계 정보</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            @SelectedInventoryText
+                        </MudText>
+                    </MudStack>
+
+                    @if (!string.IsNullOrWhiteSpace(Handoff.오류메시지))
+                    {
+                        <MudAlert Severity="Severity.Error" Dense="true">@Handoff.오류메시지</MudAlert>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(Handoff.성공메시지))
+                    {
+                        <MudAlert Severity="Severity.Success" Dense="true">@Handoff.성공메시지</MudAlert>
+                    }
+
+                    <MudNumericField T="int"
+                                     Label="요청 수량"
+                                     Min="1"
+                                     Variant="Variant.Outlined"
+                                     @bind-Value="_draft.요청수량"
+                                     Required="true" />
+                    <MudTextField Label="하차지 주소"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="_draft.하차지주소"
+                                  Required="true" />
+                    <MudTextField Label="상세 주소"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="_draft.하차지상세주소" />
+                    <MudTextField Label="화물 종류"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="_draft.화물종류" />
+                    <MudTextField Label="차량 종류"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="_draft.차량종류" />
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.LocalShipping"
+                               Disabled="@SubmitDisabled"
+                               OnClick="SubmitAsync">
+                        운송 업무로 인계
+                    </MudButton>
+                </MudStack>
+            </MudForm>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private MudForm? _form;
+    private bool _formValid;
+    private 재고운송의뢰생성요청 _draft = new();
+
+    [Parameter, EditorRequired]
+    public 출고재고조회ViewModel Inventory { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public 출고운송인계ViewModel Handoff { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnCompleted { get; set; }
+
+    private bool SubmitDisabled
+        => Handoff.처리중
+           || Inventory.선택된항목 is null
+           || !_formValid;
+
+    private string SelectedInventoryText
+        => Inventory.선택된항목 is { } item
+            ? $"{item.상품명} · 가용 {item.가용수량}"
+            : "왼쪽 목록에서 인계할 재고를 선택해 주세요.";
+
+    private void SelectInventory(재고항목응답 item)
+    {
+        Inventory.선택(item.입고상품Id);
+        _draft = new 재고운송의뢰생성요청
+        {
+            입고상품Id = item.입고상품Id,
+            요청수량 = item.가용수량 > 0 ? 1 : 0,
+            화물종류 = item.상품명
+        };
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (_form is null)
+        {
+            return;
+        }
+
+        await _form.ValidateAsync();
+        if (!_formValid)
+        {
+            return;
+        }
+
+        Handoff.초안적용(_draft);
+        if (!await Handoff.실행Async())
+        {
+            return;
+        }
+
+        _draft = new 재고운송의뢰생성요청();
+        if (OnCompleted.HasDelegate)
+        {
+            await OnCompleted.InvokeAsync();
+        }
+    }
+}

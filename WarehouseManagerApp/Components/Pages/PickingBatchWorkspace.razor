@@ -1,5 +1,5 @@
 @page "/work/picking-batch"
-@inject IWarehousePickingBatchWorkspaceService PickingService
+@inherits MvvmComponentBase<창고피킹배치PageViewModel>
 
 <PageTitle>피킹 배치</PageTitle>
 
@@ -12,7 +12,7 @@
                     창고별 피킹/포장 방식과 적재대별 피킹 작업을 확인합니다.
                 </MudText>
             </MudStack>
-            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">@SelectedWarehouseName</MudChip>
+            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">@ViewModel.선택창고명</MudChip>
         </MudStack>
 
         <MudGrid>
@@ -20,29 +20,29 @@
                 <MudPaper Class="pa-4 h-100" Elevation="0" Outlined="true">
                     <MudStack Spacing="3">
                         <MudText Typo="Typo.h6">창고 옵션</MudText>
-                        <MudSelect T="long" Label="창고" Value="selectedWarehouseId" ValueChanged="OnWarehouseChanged" Variant="Variant.Outlined">
-                            @foreach (var option in warehouseOptions)
+                        <MudSelect T="long" Label="창고" Value="ViewModel.선택창고Id" ValueChanged="OnWarehouseChanged" Variant="Variant.Outlined">
+                            @foreach (var option in ViewModel.창고옵션목록)
                             {
                                 <MudSelectItem T="long" Value="@option.WarehouseId">@option.WarehouseName</MudSelectItem>
                             }
                         </MudSelect>
 
-                        <MudSelect T="피킹포장처리방식" Label="피킹/포장 방식" @bind-Value="selectedMode" Variant="Variant.Outlined">
+                        <MudSelect T="피킹포장처리방식" Label="피킹/포장 방식" @bind-Value="ViewModel.선택처리방식" Variant="Variant.Outlined">
                             <MudSelectItem T="피킹포장처리방식" Value="피킹포장처리방식.피킹만">피킹만</MudSelectItem>
                             <MudSelectItem T="피킹포장처리방식" Value="피킹포장처리방식.피킹포장통합">피킹+포장 통합</MudSelectItem>
                             <MudSelectItem T="피킹포장처리방식" Value="피킹포장처리방식.피킹포장분리">피킹+포장 분리</MudSelectItem>
                         </MudSelect>
 
-                        <MudSwitch T="bool" Label="상품 바코드 검증" @bind-Value="isBarcodeRequired" Color="Color.Primary" />
+                        <MudSwitch T="bool" Label="상품 바코드 검증" @bind-Value="ViewModel.상품Barcode검증필수" Color="Color.Primary" />
 
-                        @if (SelectedWarehouseOption is not null)
+                        @if (ViewModel.선택창고옵션 is not null)
                         {
                             <MudStack Spacing="1">
-                                @if (SelectedWarehouseOption.IsHongdalMartUrbanWarehouse)
+                                @if (ViewModel.선택창고옵션.IsHongdalMartUrbanWarehouse)
                                 {
                                     <MudChip T="string" Color="Color.Success" Variant="Variant.Filled">알뜰살뜰 마트 도심 창고</MudChip>
                                 }
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">@SelectedWarehouseOption.OperationMemo</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@ViewModel.선택창고옵션.OperationMemo</MudText>
                             </MudStack>
                         }
 
@@ -53,9 +53,9 @@
                             옵션 저장
                         </MudButton>
 
-                        @if (!string.IsNullOrWhiteSpace(optionMessage))
+                        @if (!string.IsNullOrWhiteSpace(ViewModel.옵션메시지))
                         {
-                            <MudAlert Severity="@optionSeverity">@optionMessage</MudAlert>
+                            <MudAlert Severity="@OptionSeverity">@ViewModel.옵션메시지</MudAlert>
                         }
                     </MudStack>
                 </MudPaper>
@@ -66,10 +66,10 @@
                     <MudStack Spacing="3">
                         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
                             <MudText Typo="Typo.h6">내 피킹 작업</MudText>
-                            <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">@($"{assignedTasks.Count}건")</MudChip>
+                            <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">@($"{ViewModel.배정작업목록.Count}건")</MudChip>
                         </MudStack>
 
-                        <MudTable Items="assignedTasks" Dense="true" Hover="true" Elevation="0">
+                        <MudTable Items="ViewModel.배정작업목록" Dense="true" Hover="true" Elevation="0">
                             <HeaderContent>
                                 <MudTh>상태</MudTh>
                                 <MudTh>상품</MudTh>
@@ -106,7 +106,7 @@
                     <MudItem xs="12" md="4">
                         <MudTextField T="string"
                                       Label="적재대 위치 바코드"
-                                      @bind-Value="rackBarcode"
+                                      @bind-Value="ViewModel.적재대Barcode"
                                       Variant="Variant.Outlined"
                                       Immediate="true"
                                       Adornment="Adornment.Start"
@@ -124,24 +124,24 @@
                     </MudItem>
                 </MudGrid>
 
-                @if (!string.IsNullOrWhiteSpace(scanMessage))
+                @if (!string.IsNullOrWhiteSpace(ViewModel.스캔메시지))
                 {
-                    <MudAlert Severity="@scanSeverity">@scanMessage</MudAlert>
+                    <MudAlert Severity="@ScanSeverity">@ViewModel.스캔메시지</MudAlert>
                 }
 
-                @if (rackItems.Count > 0)
+                @if (ViewModel.적재대작업목록.Count > 0)
                 {
                     <MudGrid>
                         <MudItem xs="12" md="5">
                             <MudList T="WarehousePickingTaskItem" Dense="true">
-                                @foreach (var item in rackItems)
+                                @foreach (var item in ViewModel.적재대작업목록)
                                 {
                                     <MudListItem Value="@item"
                                                  OnClick="@(() => SelectTask(item))">
                                         <MudStack Spacing="0">
                                             <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
                                                 <MudText Typo="Typo.body2">@item.ProductName</MudText>
-                                                @if (selectedTask?.TaskKey == item.TaskKey)
+                                                @if (ViewModel.선택작업?.TaskKey == item.TaskKey)
                                                 {
                                                     <MudChip T="string" Size="Size.Small" Color="Color.Primary">선택</MudChip>
                                                 }
@@ -154,7 +154,7 @@
                         </MudItem>
                         <MudItem xs="12" md="7">
                             <MudPaper Class="pa-3" Elevation="0" Outlined="true">
-                                @if (selectedTask is null)
+                                @if (ViewModel.선택작업 is null)
                                 {
                                     <MudText Typo="Typo.body2" Color="Color.Secondary">상품을 선택하세요.</MudText>
                                 }
@@ -162,14 +162,14 @@
                                 {
                                     <MudStack Spacing="3">
                                         <MudStack Spacing="0">
-                                            <MudText Typo="Typo.subtitle1">@selectedTask.ProductName</MudText>
-                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@($"{selectedTask.RackCode} · 잔여 {selectedTask.RemainingQuantity}")</MudText>
-                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@($"작업자 묶음 바코드 {selectedTask.WorkerBundleBarcode}")</MudText>
+                                            <MudText Typo="Typo.subtitle1">@ViewModel.선택작업.ProductName</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@($"{ViewModel.선택작업.RackCode} · 잔여 {ViewModel.선택작업.RemainingQuantity}")</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@($"작업자 묶음 바코드 {ViewModel.선택작업.WorkerBundleBarcode}")</MudText>
                                         </MudStack>
 
                                         <MudTextField T="string"
                                                       Label="상품 바코드"
-                                                      @bind-Value="productBarcode"
+                                                      @bind-Value="ViewModel.상품Barcode"
                                                       Variant="Variant.Outlined"
                                                       Immediate="true"
                                                       Adornment="Adornment.Start"
@@ -177,15 +177,15 @@
 
                                         <MudNumericField T="int"
                                                          Label="피킹 수량"
-                                                         @bind-Value="pickQuantity"
+                                                         @bind-Value="ViewModel.피킹수량"
                                                          Min="1"
-                                                         Max="@selectedTask.RemainingQuantity"
+                                                         Max="@ViewModel.선택작업.RemainingQuantity"
                                                          Variant="Variant.Outlined" />
 
                                         <MudButton Variant="Variant.Filled"
                                                    Color="Color.Success"
                                                    StartIcon="@Icons.Material.Filled.Done"
-                                                   Disabled="@(selectedTask.RemainingQuantity == 0)"
+                                                   Disabled="@(ViewModel.선택작업.RemainingQuantity == 0)"
                                                    OnClick="CompletePickAsync">
                                             피킹 완료
                                         </MudButton>
@@ -201,113 +201,46 @@
 </MudContainer>
 
 @code {
-    private IReadOnlyList<WarehousePickingWarehouseOption> warehouseOptions = [];
-    private IReadOnlyList<WarehousePickingTaskItem> assignedTasks = [];
-    private IReadOnlyList<WarehousePickingTaskItem> rackItems = [];
-    private WarehousePickingTaskItem? selectedTask;
-    private long selectedWarehouseId = 10;
-    private 피킹포장처리방식 selectedMode = 피킹포장처리방식.피킹포장분리;
-    private bool isBarcodeRequired = true;
-    private string rackBarcode = "LOC-A-01-02";
-    private string productBarcode = string.Empty;
-    private int pickQuantity = 1;
-    private string? optionMessage;
-    private string? scanMessage;
-    private Severity optionSeverity = Severity.Info;
-    private Severity scanSeverity = Severity.Info;
+    protected override Task OnInitializedAsync()
+        => ViewModel.초기화Async();
 
-    private string SelectedWarehouseName => warehouseOptions.FirstOrDefault(x => x.WarehouseId == selectedWarehouseId)?.WarehouseName ?? "창고";
+    private Task OnWarehouseChanged(long warehouseId)
+        => ViewModel.창고변경Async(warehouseId);
 
-    private WarehousePickingWarehouseOption? SelectedWarehouseOption => warehouseOptions.FirstOrDefault(x => x.WarehouseId == selectedWarehouseId);
-
-    protected override async Task OnInitializedAsync()
-    {
-        warehouseOptions = await PickingService.GetWarehouseOptionsAsync();
-        var first = warehouseOptions.FirstOrDefault();
-        if (first is not null)
-        {
-            selectedWarehouseId = first.WarehouseId;
-            selectedMode = first.Mode;
-            isBarcodeRequired = first.IsBarcodeRequired;
-        }
-
-        await LoadAssignedTasksAsync();
-    }
-
-    private async Task OnWarehouseChanged(long warehouseId)
-    {
-        selectedWarehouseId = warehouseId;
-        var option = warehouseOptions.FirstOrDefault(x => x.WarehouseId == selectedWarehouseId);
-        if (option is not null)
-        {
-            selectedMode = option.Mode;
-            isBarcodeRequired = option.IsBarcodeRequired;
-        }
-
-        rackItems = [];
-        selectedTask = null;
-        scanMessage = null;
-        await LoadAssignedTasksAsync();
-    }
-
-    private async Task SaveWarehouseOptionAsync()
-    {
-        var option = await PickingService.UpdateWarehouseOptionAsync(selectedWarehouseId, selectedMode, isBarcodeRequired);
-        warehouseOptions = warehouseOptions.Select(x => x.WarehouseId == option.WarehouseId ? option : x).ToArray();
-        optionSeverity = Severity.Success;
-        optionMessage = $"{option.WarehouseName} 옵션을 저장했습니다.";
-        await LoadAssignedTasksAsync();
-    }
-
-    private async Task LoadAssignedTasksAsync()
-    {
-        assignedTasks = await PickingService.GetAssignedTasksAsync(selectedWarehouseId);
-    }
+    private Task SaveWarehouseOptionAsync()
+        => ViewModel.옵션저장Async();
 
     private async Task OnRackKeyDownAsync(KeyboardEventArgs args)
     {
         if (args.Key is "Enter" or "NumpadEnter")
         {
-            await ScanRackAsync();
+            await ViewModel.적재대조회Async();
         }
     }
 
-    private async Task ScanRackAsync()
-    {
-        var result = await PickingService.ScanRackAsync(selectedWarehouseId, rackBarcode);
-        rackItems = result.Items;
-        selectedTask = rackItems.FirstOrDefault();
-        productBarcode = selectedTask?.ProductBarcode ?? string.Empty;
-        pickQuantity = selectedTask is null ? 1 : Math.Min(1, selectedTask.RemainingQuantity);
-        scanSeverity = result.IsSuccess ? Severity.Success : Severity.Warning;
-        scanMessage = result.Message;
-        await LoadAssignedTasksAsync();
-    }
+    private Task ScanRackAsync()
+        => ViewModel.적재대조회Async();
 
     private void SelectTask(WarehousePickingTaskItem item)
-    {
-        selectedTask = item;
-        productBarcode = item.ProductBarcode;
-        pickQuantity = Math.Min(1, item.RemainingQuantity);
-    }
+        => ViewModel.작업선택(item);
 
-    private async Task CompletePickAsync()
-    {
-        if (selectedTask is null)
+    private Task CompletePickAsync()
+        => ViewModel.피킹완료Async();
+
+    private Severity OptionSeverity
+        => ResolveSeverity(ViewModel.옵션메시지수준);
+
+    private Severity ScanSeverity
+        => ResolveSeverity(ViewModel.스캔메시지수준);
+
+    private static Severity ResolveSeverity(창고페이지메시지수준 level)
+        => level switch
         {
-            return;
-        }
-
-        var result = await PickingService.CompletePickAsync(selectedTask.TaskKey, rackBarcode, productBarcode, pickQuantity);
-        scanSeverity = result.IsSuccess ? Severity.Success : Severity.Error;
-        scanMessage = result.Message;
-        await LoadAssignedTasksAsync();
-        var rackResult = await PickingService.ScanRackAsync(selectedWarehouseId, rackBarcode);
-        rackItems = rackResult.Items;
-        selectedTask = rackItems.FirstOrDefault();
-        productBarcode = selectedTask?.ProductBarcode ?? string.Empty;
-        pickQuantity = selectedTask is null ? 1 : Math.Min(1, selectedTask.RemainingQuantity);
-    }
+            창고페이지메시지수준.성공 => Severity.Success,
+            창고페이지메시지수준.경고 => Severity.Warning,
+            창고페이지메시지수준.오류 => Severity.Error,
+            _ => Severity.Info
+        };
 
     private static Color StatusColor(string status)
         => status switch

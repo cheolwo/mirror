@@ -10,6 +10,12 @@ public sealed class 기사배차수락취소요청
     public string? 사유 { get; set; }
 }
 
+public sealed class 기사배차처리응답
+{
+    public string RequestId { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+}
+
 public sealed class 기사배차액션응답
 {
     public string RequestId { get; set; } = string.Empty;

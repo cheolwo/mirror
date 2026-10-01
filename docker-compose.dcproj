@@ -19,8 +19,8 @@
     <None Include="Docs\ViewControllerMapping\DriverApp\기사화면_상세매핑.md" />
     <None Include="Docs\ViewControllerMapping\README.md" />
     <None Include="Docs\ViewControllerMapping\Server\README.md" />
-    <None Include="Docs\ViewControllerMapping\ShipperApp\README.md" />
-    <None Include="Docs\ViewControllerMapping\ShipperApp\화주화면_상세매핑.md" />
+    <None Include="Docs\ViewControllerMapping\HongdalApp\README.md" />
+    <None Include="Docs\ViewControllerMapping\HongdalApp\화주화면_상세매핑.md" />
     <None Include="Hongdal.Domain\Hongdal.Domain.csproj" />
     <None Include="Hongdal.FoodApi\appsettings.Development.json" />
     <None Include="Hongdal.FoodApi\appsettings.json" />

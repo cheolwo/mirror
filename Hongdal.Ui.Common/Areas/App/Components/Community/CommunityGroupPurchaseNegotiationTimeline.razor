@@ -1,0 +1,352 @@
+@inject PlatformCommunityService CommunityService
+
+<section class="negotiation" aria-label="공동구매 공개 협의와 숙고">
+    <header class="negotiation__header">
+        <div>
+            <MudText Typo="Typo.overline" Class="negotiation__kicker">OPEN NEGOTIATION LEDGER</MudText>
+            <MudText Typo="Typo.h6">커뮤니티 공개 협의 기록</MudText>
+            <MudText Typo="Typo.body2" Class="negotiation__description">
+                생산자와 공동구매 대표의 제안·수정·합의 근거는 함께 보고, 연락처와 내부 사용자 식별자는 공개하지 않습니다.
+            </MudText>
+        </div>
+        <div class="negotiation__badges" aria-label="공개 협의 원칙">
+            <span>연락처 비공개</span>
+            <span>합의 과정 공개</span>
+            <span>쟁점 숙고</span>
+        </div>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(statusMessage))
+    {
+        <MudAlert Severity="@statusSeverity" Variant="Variant.Outlined" Dense="true">@statusMessage</MudAlert>
+    }
+
+    @if (isLoading)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+    }
+    else
+    {
+        <div class="negotiation__timeline">
+            <div class="negotiation__section-heading">
+                <div>
+                    <MudText Typo="Typo.subtitle1">제안부터 합의까지</MudText>
+                    <MudText Typo="Typo.caption">조건이 바뀔 때마다 새 기록을 남겨 이전 제안을 덮어쓰지 않습니다.</MudText>
+                </div>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadTimelineAsync" Disabled="@isBusy">
+                    새로고침
+                </MudButton>
+            </div>
+
+            @if (timeline.Events.Count == 0)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                    아직 실제 협의 기록이 없어 아래에 공개 방식 예시를 보여줍니다.
+                </MudAlert>
+                @foreach (var example in PreviewEvents)
+                {
+                    <article class="negotiation__event negotiation__event--example">
+                        <span class="negotiation__event-dot"></span>
+                        <div>
+                            <div class="negotiation__event-meta">
+                                <strong>@example.Actor</strong>
+                                <span>@example.Role</span>
+                                <em>화면 예시</em>
+                            </div>
+                            <p>@example.Summary</p>
+                        </div>
+                    </article>
+                }
+            }
+            else
+            {
+                @foreach (var item in timeline.Events)
+                {
+                    <article class="negotiation__event">
+                        <span class="negotiation__event-dot"></span>
+                        <div>
+                            <div class="negotiation__event-meta">
+                                <strong>@item.MaskedActorDisplayName</strong>
+                                <span>@item.ActorRoleLabel</span>
+                                <em>@GetEventTypeLabel(item.EventTypeCode)</em>
+                                <time>@FormatDateTime(item.CreatedAtUtc)</time>
+                            </div>
+                            <p>@item.PublicSummary</p>
+                        </div>
+                    </article>
+                }
+            }
+        </div>
+
+        <details class="negotiation__composer">
+            <summary>
+                <span><strong>공개 협의 내용 남기기</strong><small>가격·규격·수량·이행 조건만 기록하고 연락처는 입력하지 않습니다.</small></span>
+                <MudIcon Icon="@Icons.Material.Filled.AddComment" />
+            </summary>
+            <div class="negotiation__form-grid">
+                <MudSelect T="string" Label="기록 유형" @bind-Value="eventDraft.EventTypeCode" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@DomesticGroupPurchaseNegotiationEventTypeCodes.Proposal">최초 제안</MudSelectItem>
+                    <MudSelectItem Value="@DomesticGroupPurchaseNegotiationEventTypeCodes.CounterProposal">수정 제안</MudSelectItem>
+                    <MudSelectItem Value="@DomesticGroupPurchaseNegotiationEventTypeCodes.Clarification">확인 질문·답변</MudSelectItem>
+                    <MudSelectItem Value="@DomesticGroupPurchaseNegotiationEventTypeCodes.Agreement">합의</MudSelectItem>
+                </MudSelect>
+                <MudTextField Label="가린 표시명" @bind-Value="eventDraft.MaskedActorDisplayName" HelperText="예: 생산자 김○○" Variant="Variant.Outlined" />
+                <MudTextField Label="역할" @bind-Value="eventDraft.ActorRoleLabel" HelperText="예: 생산자, 공동구매 대표" Variant="Variant.Outlined" />
+                <MudTextField Label="공개할 협의 내용" @bind-Value="eventDraft.PublicSummary" Lines="3" Variant="Variant.Outlined" Class="negotiation__form-wide" />
+            </div>
+            <div class="negotiation__form-footer">
+                <MudText Typo="Typo.caption">전화번호·이메일이 포함되면 서버가 등록을 거부합니다.</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Publish" OnClick="AppendEventAsync" Disabled="@isBusy">
+                    협의 기록 공개
+                </MudButton>
+            </div>
+        </details>
+
+        <div class="negotiation__issues">
+            <div class="negotiation__section-heading">
+                <div>
+                    <MudText Typo="Typo.subtitle1">쟁점과 숙고</MudText>
+                    <MudText Typo="Typo.caption">쟁점은 정해진 종료 시각과 서로 다른 두 명 이상의 의견을 거친 뒤에만 해결할 수 있습니다.</MudText>
+                </div>
+                <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined">@($"숙고 중 {OpenIssueCount}건")</MudChip>
+            </div>
+
+            @if (timeline.Issues.Count == 0)
+            {
+                <article class="negotiation__issue negotiation__issue--example">
+                    <div class="negotiation__issue-title">
+                        <div><strong>예시 · 중간 거점이 전체 물량을 당일 처리할 수 있는가?</strong><span>전통시장 거점의 일 처리량과 분류 인력이 아직 확인되지 않음</span></div>
+                        <span>24시간 숙고 예시</span>
+                    </div>
+                    <p>대표·생산자뿐 아니라 수령 참여자와 거점 운영자가 처리량, 분할 입고 대안, 위험을 공개 의견으로 남기는 방식입니다.</p>
+                </article>
+            }
+
+            @foreach (var issue in timeline.Issues)
+            {
+                <article class="negotiation__issue">
+                    <div class="negotiation__issue-title">
+                        <div>
+                            <strong>@issue.Title</strong>
+                            <span>@($"{issue.MaskedReporterDisplayName} · {issue.ReporterRoleLabel}")</span>
+                        </div>
+                        <span class="@GetIssueStatusClass(issue)">@GetIssueStatusLabel(issue)</span>
+                    </div>
+                    <p>@issue.PublicSummary</p>
+                    <div class="negotiation__issue-rule">
+                        <span>숙고 종료 @FormatDateTime(issue.DeliberationClosesAtUtc)</span>
+                        <span>서로 다른 참여자 @(issue.DistinctParticipantCount)명</span>
+                        <span>@(issue.CanResolve ? "해결안 기록 가능" : "해결안 기록 대기")</span>
+                    </div>
+                    @foreach (var position in issue.Positions)
+                    {
+                        <div class="negotiation__position">
+                            <span>@GetPositionLabel(position.PositionCode)</span>
+                            <div><strong>@($"{position.MaskedParticipantDisplayName} · {position.ParticipantRoleLabel}")</strong><p>@position.PublicRationale</p></div>
+                        </div>
+                    }
+                    @if (issue.Resolution is not null)
+                    {
+                        <div class="negotiation__resolution">
+                            <strong>@issue.Resolution.ResolutionSummary</strong>
+                            <p>@issue.Resolution.DecisionRationale</p>
+                            <span>@($"{issue.Resolution.MaskedResolverDisplayName} · {issue.Resolution.ResolverRoleLabel} · {FormatDateTime(issue.Resolution.ResolvedAtUtc)}")</span>
+                        </div>
+                    }
+                </article>
+            }
+        </div>
+
+        <div class="negotiation__actions">
+            <details class="negotiation__composer">
+                <summary><span><strong>새 쟁점 열기</strong><small>즉시 결론 내리지 않고 숙고 시간을 먼저 확보합니다.</small></span><MudIcon Icon="@Icons.Material.Filled.ReportProblem" /></summary>
+                <div class="negotiation__form-grid">
+                    <MudTextField Label="쟁점 제목" @bind-Value="issueDraft.Title" Variant="Variant.Outlined" />
+                    <MudNumericField T="int" Label="숙고 시간" @bind-Value="issueDraft.DeliberationHours" Min="1" Max="168" Variant="Variant.Outlined" />
+                    <MudTextField Label="가린 표시명" @bind-Value="issueDraft.MaskedReporterDisplayName" Variant="Variant.Outlined" />
+                    <MudTextField Label="역할" @bind-Value="issueDraft.ReporterRoleLabel" Variant="Variant.Outlined" />
+                    <MudTextField Label="쟁점과 확인할 사실" @bind-Value="issueDraft.PublicSummary" Lines="3" Variant="Variant.Outlined" Class="negotiation__form-wide" />
+                </div>
+                <div class="negotiation__form-footer">
+                    <MudText Typo="Typo.caption">숙고 시간은 1~168시간이며 종료 전에는 해결 처리가 차단됩니다.</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.HourglassTop" OnClick="OpenIssueAsync" Disabled="@isBusy">쟁점 공개</MudButton>
+                </div>
+            </details>
+
+            @if (timeline.Issues.Any(item => item.StatusCode == DomesticGroupPurchaseNegotiationIssueStatusCodes.Deliberating))
+            {
+                <details class="negotiation__composer">
+                    <summary><span><strong>숙고 의견 남기기</strong><small>지지·우려·대안을 근거와 함께 기록합니다.</small></span><MudIcon Icon="@Icons.Material.Filled.Forum" /></summary>
+                    <div class="negotiation__form-grid">
+                        <MudSelect T="Guid?" Label="쟁점" @bind-Value="selectedIssueId" Variant="Variant.Outlined">
+                            @foreach (var issue in timeline.Issues.Where(item => item.StatusCode == DomesticGroupPurchaseNegotiationIssueStatusCodes.Deliberating))
+                            {
+                                <MudSelectItem T="Guid?" Value="@((Guid?)issue.IssueId)">@issue.Title</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect T="string" Label="의견 성격" @bind-Value="positionDraft.PositionCode" Variant="Variant.Outlined">
+                            <MudSelectItem Value="@DomesticGroupPurchaseDeliberationPositionCodes.Support">지지</MudSelectItem>
+                            <MudSelectItem Value="@DomesticGroupPurchaseDeliberationPositionCodes.Concern">우려</MudSelectItem>
+                            <MudSelectItem Value="@DomesticGroupPurchaseDeliberationPositionCodes.Alternative">대안</MudSelectItem>
+                        </MudSelect>
+                        <MudTextField Label="가린 표시명" @bind-Value="positionDraft.MaskedParticipantDisplayName" Variant="Variant.Outlined" />
+                        <MudTextField Label="역할" @bind-Value="positionDraft.ParticipantRoleLabel" Variant="Variant.Outlined" />
+                        <MudTextField Label="판단 근거와 대안" @bind-Value="positionDraft.PublicRationale" Lines="3" Variant="Variant.Outlined" Class="negotiation__form-wide" />
+                    </div>
+                    <div class="negotiation__form-footer">
+                        <MudText Typo="Typo.caption">같은 사람이 여러 번 의견을 남겨도 서로 다른 참여자 수는 한 명으로 계산합니다.</MudText>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.RateReview" OnClick="AddPositionAsync" Disabled="@isBusy">의견 공개</MudButton>
+                    </div>
+                </details>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter] public Guid CampaignId { get; set; }
+
+    private Guid loadedCampaignId;
+    private bool isLoading = true;
+    private bool isBusy;
+    private string? statusMessage;
+    private Severity statusSeverity = Severity.Info;
+    private Guid? selectedIssueId;
+    private DomesticGroupPurchaseNegotiationTimelineResponse timeline = new();
+    private DomesticGroupPurchaseNegotiationEventRequest eventDraft = NewEventDraft();
+    private DomesticGroupPurchaseNegotiationIssueRequest issueDraft = NewIssueDraft();
+    private DomesticGroupPurchaseDeliberationPositionRequest positionDraft = NewPositionDraft();
+
+    private static readonly IReadOnlyList<PreviewEvent> PreviewEvents =
+    [
+        new("공동구매 대표 박○○", "구매 대표", "10kg 통풍 박스 단위, 금요일 오전까지 500kg 출하가 가능한지 제안했습니다."),
+        new("생산자 김○○", "생산자", "현재 420kg은 가능하고 나머지 80kg은 다음 날 분할 출하하는 수정안을 제시했습니다."),
+        new("수령 참여자 이○○", "커뮤니티 구성원", "거점 일 처리량이 확인될 때까지 합의를 보류하고 분할 입고 대안을 함께 검토하자고 요청했습니다.")
+    ];
+
+    private int OpenIssueCount => timeline.Issues.Count(item => item.StatusCode == DomesticGroupPurchaseNegotiationIssueStatusCodes.Deliberating);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (CampaignId == Guid.Empty || loadedCampaignId == CampaignId)
+        {
+            return;
+        }
+
+        loadedCampaignId = CampaignId;
+        await LoadTimelineAsync();
+    }
+
+    private async Task LoadTimelineAsync()
+    {
+        isLoading = true;
+        try
+        {
+            timeline = await CommunityService.GetDomesticGroupPurchaseNegotiationTimelineAsync(CampaignId);
+            selectedIssueId = timeline.Issues.FirstOrDefault(item => item.StatusCode == DomesticGroupPurchaseNegotiationIssueStatusCodes.Deliberating)?.IssueId;
+            statusMessage = null;
+        }
+        catch (HttpRequestException)
+        {
+            statusSeverity = Severity.Warning;
+            statusMessage = "공개 협의 기록 API에 연결하지 못했습니다. 화면 예시로 구조를 확인할 수 있습니다.";
+            timeline = new DomesticGroupPurchaseNegotiationTimelineResponse { GroupPurchaseCampaignId = CampaignId };
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task AppendEventAsync()
+        => await ExecuteAsync(
+            () => CommunityService.AppendDomesticGroupPurchaseNegotiationEventAsync(CampaignId, eventDraft),
+            "협의 기록을 커뮤니티에 공개했습니다.",
+            () => eventDraft = NewEventDraft());
+
+    private async Task OpenIssueAsync()
+        => await ExecuteAsync(
+            () => CommunityService.OpenDomesticGroupPurchaseNegotiationIssueAsync(CampaignId, issueDraft),
+            "쟁점을 열고 숙고 시간을 시작했습니다.",
+            () => issueDraft = NewIssueDraft());
+
+    private async Task AddPositionAsync()
+    {
+        if (selectedIssueId is null)
+        {
+            statusSeverity = Severity.Warning;
+            statusMessage = "의견을 남길 쟁점을 선택하세요.";
+            return;
+        }
+
+        await ExecuteAsync(
+            () => CommunityService.AddDomesticGroupPurchaseDeliberationPositionAsync(CampaignId, selectedIssueId.Value, positionDraft),
+            "숙고 의견을 공개했습니다.",
+            () => positionDraft = NewPositionDraft());
+    }
+
+    private async Task ExecuteAsync<T>(Func<Task<T>> action, string successMessage, Action reset)
+    {
+        isBusy = true;
+        try
+        {
+            await action();
+            reset();
+            await LoadTimelineAsync();
+            statusSeverity = Severity.Success;
+            statusMessage = successMessage;
+        }
+        catch (HttpRequestException)
+        {
+            statusSeverity = Severity.Error;
+            statusMessage = "등록하지 못했습니다. 필수 항목과 연락처 포함 여부, 숙고 규칙을 확인하세요.";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private static DomesticGroupPurchaseNegotiationEventRequest NewEventDraft()
+        => new() { EventTypeCode = DomesticGroupPurchaseNegotiationEventTypeCodes.Proposal };
+
+    private static DomesticGroupPurchaseNegotiationIssueRequest NewIssueDraft()
+        => new() { DeliberationHours = 24 };
+
+    private static DomesticGroupPurchaseDeliberationPositionRequest NewPositionDraft()
+        => new() { PositionCode = DomesticGroupPurchaseDeliberationPositionCodes.Concern };
+
+    private static string GetEventTypeLabel(string code)
+        => code switch
+        {
+            DomesticGroupPurchaseNegotiationEventTypeCodes.Proposal => "제안",
+            DomesticGroupPurchaseNegotiationEventTypeCodes.CounterProposal => "수정 제안",
+            DomesticGroupPurchaseNegotiationEventTypeCodes.Clarification => "확인",
+            DomesticGroupPurchaseNegotiationEventTypeCodes.Agreement => "합의",
+            DomesticGroupPurchaseNegotiationEventTypeCodes.IssueRaised => "쟁점 제기",
+            DomesticGroupPurchaseNegotiationEventTypeCodes.DeliberationOpinion => "숙고 의견",
+            DomesticGroupPurchaseNegotiationEventTypeCodes.Resolution => "결정",
+            _ => "협의 기록"
+        };
+
+    private static string GetPositionLabel(string code)
+        => code switch
+        {
+            DomesticGroupPurchaseDeliberationPositionCodes.Support => "지지",
+            DomesticGroupPurchaseDeliberationPositionCodes.Alternative => "대안",
+            _ => "우려"
+        };
+
+    private static string GetIssueStatusLabel(DomesticGroupPurchaseNegotiationIssueResponse issue)
+        => issue.StatusCode == DomesticGroupPurchaseNegotiationIssueStatusCodes.Resolved ? "해결 기록됨" : "숙고 중";
+
+    private static string GetIssueStatusClass(DomesticGroupPurchaseNegotiationIssueResponse issue)
+        => issue.StatusCode == DomesticGroupPurchaseNegotiationIssueStatusCodes.Resolved
+            ? "negotiation__status negotiation__status--resolved"
+            : "negotiation__status";
+
+    private static string FormatDateTime(DateTimeOffset value)
+        => value.ToLocalTime().ToString("M월 d일 HH:mm");
+
+    private sealed record PreviewEvent(string Actor, string Role, string Summary);
+}

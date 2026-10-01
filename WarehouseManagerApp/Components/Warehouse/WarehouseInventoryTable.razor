@@ -1,0 +1,79 @@
+@if (Busy)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (Items.Count == 0)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@EmptyText</MudAlert>
+}
+else
+{
+    <MudTable T="재고항목응답"
+              Items="@Items"
+              Dense="true"
+              Hover="true"
+              Breakpoint="Breakpoint.Sm"
+              Elevation="0">
+        <HeaderContent>
+            <MudTh>상품</MudTh>
+            <MudTh>SKU</MudTh>
+            <MudTh>가용</MudTh>
+            <MudTh>예약</MudTh>
+            <MudTh>보관 위치</MudTh>
+            <MudTh>상태</MudTh>
+            @if (OnSelect.HasDelegate)
+            {
+                <MudTh></MudTh>
+            }
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="상품">
+                <MudText Typo="Typo.body2">@context.상품명</MudText>
+                @if (!string.IsNullOrWhiteSpace(context.옵션명))
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.옵션명</MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="SKU">@context.SKU</MudTd>
+            <MudTd DataLabel="가용">@context.가용수량</MudTd>
+            <MudTd DataLabel="예약">@context.예약수량</MudTd>
+            <MudTd DataLabel="보관 위치">@DisplayLocation(context.보관위치)</MudTd>
+            <MudTd DataLabel="상태">@DisplayStatus(context.상태)</MudTd>
+            @if (OnSelect.HasDelegate)
+            {
+                <MudTd DataLabel="작업">
+                    <MudButton Size="Size.Small"
+                               Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               Disabled="@(context.가용수량 <= 0)"
+                               OnClick="@(() => OnSelect.InvokeAsync(context))">
+                        @SelectLabel
+                    </MudButton>
+                </MudTd>
+            }
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<재고항목응답> Items { get; set; } = [];
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public string EmptyText { get; set; } = "조회된 재고가 없습니다.";
+
+    [Parameter]
+    public string SelectLabel { get; set; } = "선택";
+
+    [Parameter]
+    public EventCallback<재고항목응답> OnSelect { get; set; }
+
+    private static string DisplayLocation(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "미배정" : value;
+
+    private static string DisplayStatus(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "확인 필요" : value;
+}

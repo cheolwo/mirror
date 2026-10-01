@@ -18,7 +18,20 @@ namespace 홍달.Data
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var db = scope.ServiceProvider.GetRequiredService<HongdalContext>();
 
-            var roles = new[] { 역할명.기사, 역할명.화주, 역할명.판매자, 역할명.창고관리자, 역할명.관세사, 역할명.서버관리자 };
+            var roles = new[]
+            {
+                역할명.기사,
+                역할명.화주,
+                역할명.판매자,
+                역할명.창고관리자,
+                역할명.보세창고운영자,
+                역할명.FTZ운영자,
+                역할명.보세운송사,
+                역할명.풀필먼트운영자,
+                역할명.택배운송사,
+                역할명.관세사,
+                역할명.서버관리자
+            };
             foreach (var role in roles)
             {
                 if (!await roleManager.RoleExistsAsync(role))

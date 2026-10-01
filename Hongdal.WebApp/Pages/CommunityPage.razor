@@ -1,63 +1,191 @@
 @page "/community"
-@implements IDisposable
-@inject PlatformDiagramPaletteStateService DiagramPalette
+@inject PlatformCommunityService CommunityService
 
-<PlatformCommunityHome AppName="홍달 웹앱"
-                       RoleLabel="웹 사용자"
-                       AppKey="shipper"
-                       UseBaguaRoleTransitionPages="true"
-                       QuickActions="QuickActions"
-                       QueryLedgerTemplateKey="QueryLedgerTemplateKey"
-                       QueryDiagramMode="QueryDiagramMode"
-                       QueryPostId="QueryPostId" />
+<PageTitle>살뜰 생활 게시판</PageTitle>
 
-@code {
-    [Parameter]
-    [SupplyParameterFromQuery(Name = "ledgerTemplate")]
-    public string? QueryLedgerTemplateKey { get; set; }
+<PlatformCommunityReadingThemeFrame>
+<main class="community-directory">
+    <header class="community-directory__hero">
+        <div>
+            <span>COMMUNITY BOARDS</span>
+            <h1>살뜰 생활 게시판</h1>
+            <p>사람과 정보를 만나고, 함께할 일을 모아 공동 원장과 완료 사례까지 이어갑니다.</p>
+        </div>
+        <label class="community-directory__search">
+            <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+            <input type="search"
+                   aria-label="게시판 검색"
+                   placeholder="게시판 이름이나 주제 검색"
+                   value="@SearchText"
+                   @oninput="HandleSearchInput" />
+        </label>
+    </header>
 
-    [Parameter]
-    [SupplyParameterFromQuery(Name = "diagram")]
-    public string? QueryDiagramMode { get; set; }
-
-    [Parameter]
-    [SupplyParameterFromQuery(Name = "postId")]
-    public long? QueryPostId { get; set; }
-
-    private static readonly IReadOnlyList<PlatformHomeQuickAction> QuickActions =
-    [
-        new("공동구매 제안", "제안 글부터 수요 모집, 이의 검토와 전자서명까지 한 흐름으로 진행합니다.", "/community/group-purchase", Icons.Material.Filled.GroupAdd, Color.Success),
-        new("운송 단가 질문", "운송 의뢰 작성 중 생성한 초안을 게시판에서 다듬습니다.", "/shipper/request", Icons.Material.Filled.PostAdd, Color.Primary),
-        new("기사 경험 보기", "추천 배차와 현장 예외 상황을 기사 관점에서 봅니다.", "/driver/recommendations", Icons.Material.Filled.Route, Color.Info)
-    ];
-
-    protected override void OnInitialized()
+    @if (!string.IsNullOrWhiteSpace(StatusMessage))
     {
-        DiagramPalette.Changed += HandleDiagramModeChanged;
+        <MudAlert Severity="Severity.Warning" Dense="true">@StatusMessage</MudAlert>
     }
 
-    protected override void OnParametersSet()
+    <a class="community-directory__all" href="/community/boards">
+        <span class="community-directory__icon"><MudIcon Icon="@Icons.Material.Filled.DynamicFeed" /></span>
+        <span><strong>전체 글</strong><small>공개 게시판의 글을 한 번에 봅니다.</small></span>
+        <b>@TotalPostCount.ToString("N0")</b>
+        <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+    </a>
+
+    @if (IsLoading)
     {
-        if (IsTruthyQueryValue(QueryDiagramMode))
+        <div class="community-directory__state" aria-live="polite">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            <span>게시판을 불러오는 중입니다.</span>
+        </div>
+    }
+    else if (VisibleGroups.Count == 0)
+    {
+        <div class="community-directory__state">
+            <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" />
+            <span>검색 조건에 맞는 게시판이 없습니다.</span>
+        </div>
+    }
+    else
+    {
+        @foreach (var group in VisibleGroups)
         {
-            DiagramPalette.SetDiagramMode(true);
+            <section class="community-directory__group" aria-labelledby="@($"board-group-{group.Key}")">
+                <header>
+                    <span>@GroupEyebrow(group.Key)</span>
+                    <h2 id="@($"board-group-{group.Key}")">@group.First().GroupDisplayName</h2>
+                </header>
+                <div class="community-directory__list">
+                    @foreach (var board in group)
+                    {
+                        <a class="community-directory__board"
+                           href="@BoardHref(board.BoardKey)">
+                            <span class="community-directory__icon">
+                                <MudIcon Icon="@ResolveBoardIcon(board.BoardKey)" />
+                            </span>
+                            <span>
+                                <strong>@board.DisplayName</strong>
+                                <small>@board.Description</small>
+                            </span>
+                            <b>@board.PostCount.ToString("N0")</b>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </a>
+                    }
+                </div>
+            </section>
         }
     }
 
-    private static bool IsTruthyQueryValue(string? value)
-        => !string.IsNullOrWhiteSpace(value) &&
-           (value.Equals("1", StringComparison.OrdinalIgnoreCase) ||
-            value.Equals("true", StringComparison.OrdinalIgnoreCase) ||
-            value.Equals("yes", StringComparison.OrdinalIgnoreCase) ||
-            value.Equals("diagram", StringComparison.OrdinalIgnoreCase));
+    <aside class="community-directory__safety" aria-label="안전센터">
+        <span class="community-directory__icon"><MudIcon Icon="@Icons.Material.Filled.HealthAndSafety" /></span>
+        <span>
+            <strong>신고·분쟁은 안전센터에서 보호합니다.</strong>
+            <small>신고 원문과 첨부·댓글은 일반 게시판 목록에 공개하지 않습니다.</small>
+        </span>
+        <MudButton Href="/community/safety"
+                   Variant="Variant.Outlined"
+                   Color="Color.Error"
+                   EndIcon="@Icons.Material.Filled.ChevronRight">
+            안전센터
+        </MudButton>
+    </aside>
+</main>
+</PlatformCommunityReadingThemeFrame>
 
-    private void HandleDiagramModeChanged()
+@code {
+    private IReadOnlyList<CommunityBoardSummaryResponse> BoardSummaries { get; set; } = [];
+    private string SearchText { get; set; } = string.Empty;
+    private string? StatusMessage { get; set; }
+    private bool IsLoading { get; set; } = true;
+
+    private int TotalPostCount => BoardSummaries.Sum(board => board.PostCount);
+
+    private IReadOnlyList<IGrouping<string, CommunityBoardSummaryResponse>> VisibleGroups
+        => BoardSummaries
+            .Where(MatchesSearch)
+            .GroupBy(board => board.GroupCode)
+            .ToArray();
+
+    protected override async Task OnInitializedAsync()
     {
-        _ = InvokeAsync(StateHasChanged);
+        try
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            var serverBoards = await CommunityService.GetBoardSummariesAsync("shipper", timeout.Token);
+            BoardSummaries = MergeWithCoreBoards(serverBoards);
+        }
+        catch (Exception)
+        {
+            BoardSummaries = MergeWithCoreBoards([]);
+            StatusMessage = "게시글 수를 불러오지 못해 기본 게시판 구성을 표시합니다.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
-    public void Dispose()
+    private static IReadOnlyList<CommunityBoardSummaryResponse> MergeWithCoreBoards(
+        IReadOnlyList<CommunityBoardSummaryResponse> serverBoards)
     {
-        DiagramPalette.Changed -= HandleDiagramModeChanged;
+        var byKey = serverBoards
+            .Where(board => !string.IsNullOrWhiteSpace(board.BoardKey))
+            .GroupBy(board => board.BoardKey, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+        var merged = CommunityBoardCatalog.PublicBoards
+            .Select(board => byKey.TryGetValue(board.Key, out var serverBoard)
+                ? serverBoard
+                : new CommunityBoardSummaryResponse
+                {
+                    BoardKey = board.Key,
+                    DisplayName = board.DisplayName,
+                    Description = board.Description,
+                    GroupCode = board.GroupCode,
+                    GroupDisplayName = board.GroupDisplayName,
+                    IsUserCreatable = board.IsUserCreatable
+                })
+            .ToList();
+        merged.AddRange(serverBoards.Where(board => board.IsCustom));
+        return merged;
     }
+
+    private bool MatchesSearch(CommunityBoardSummaryResponse board)
+    {
+        var search = SearchText.Trim();
+        return search.Length == 0
+               || board.DisplayName.Contains(search, StringComparison.OrdinalIgnoreCase)
+               || board.Description.Contains(search, StringComparison.OrdinalIgnoreCase)
+               || board.GroupDisplayName.Contains(search, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void HandleSearchInput(ChangeEventArgs args)
+        => SearchText = args.Value?.ToString() ?? string.Empty;
+
+    private static string BoardHref(string boardKey)
+        => $"/community/boards?boardKey={Uri.EscapeDataString(boardKey)}";
+
+    private static string GroupEyebrow(string groupCode)
+        => groupCode switch
+        {
+            CommunityBoardGroupCodes.CollectiveWork => "COLLECTIVE WORK",
+            CommunityBoardGroupCodes.ServiceOperation => "SERVICE OPERATION",
+            _ => "PEOPLE & INFORMATION"
+        };
+
+    private static string ResolveBoardIcon(string boardKey)
+        => boardKey switch
+        {
+            CommunityBoardKeys.NoticeGuide => Icons.Material.Filled.Campaign,
+            CommunityBoardKeys.Vow => Icons.Material.Filled.FavoriteBorder,
+            CommunityBoardKeys.FreeLife => Icons.Material.Filled.Forum,
+            CommunityBoardKeys.QuestionHelp => Icons.Material.Filled.HelpOutline,
+            CommunityBoardKeys.InformationPrices => Icons.Material.Filled.QueryStats,
+            CommunityBoardKeys.Participation => Icons.Material.Filled.Groups,
+            CommunityBoardKeys.SalesSupply => Icons.Material.Filled.Storefront,
+            CommunityBoardKeys.LedgerProgress => Icons.Material.Filled.AccountTree,
+            CommunityBoardKeys.CompletionReview => Icons.Material.Filled.Verified,
+            CommunityBoardKeys.ProductFeedback => Icons.Material.Filled.Lightbulb,
+            _ => Icons.Material.Filled.Topic
+        };
 }

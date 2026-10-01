@@ -1,0 +1,238 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<div class="@BuildRootClass()" style="@BuildRootStyle()">
+    <button type="button"
+            class="platform-community-bagua-toggle"
+            aria-expanded="@IsOpen"
+            aria-label="@ToggleAriaLabel"
+            @onpointerdown="BeginDrag"
+            @onpointermove="HandleDrag"
+            @onpointerup="EndDrag"
+            @onpointercancel="CancelDrag"
+            @onkeydown="HandleKeyDown"
+            @onkeydown:preventDefault="true">
+        <span class="platform-community-bagua-toggle-mark">@ToggleSymbol</span>
+        <span>
+            <strong>@ToggleTitle</strong>
+            <small>@ToggleDescription</small>
+        </span>
+        <MudIcon Icon="@(IsOpen ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" />
+    </button>
+    @if (IsOpen)
+    {
+        @if (ShowPrajnaUpayaNavigator)
+        {
+            <HongdalPrajnaUpayaTaegeukNavigator AccentColor="@DecorationState.HomeThemeAccentColor"
+                                               Theme="@DecorationState.ActiveHomeTheme"
+                                               UpayaLabel="@UpayaLabel"
+                                               PrajnaLabel="@PrajnaLabel"
+                                               UpayaSelected="@(() => InvokeAndCloseAsync(UpayaSelected))"
+                                               PrajnaSelected="@(() => InvokeAndCloseAsync(PrajnaSelected))"
+                                               CommunitySelected="@(() => InvokeAndCloseAsync(CommunitySelected))"
+                                               StoreSelected="@(() => InvokeAndCloseAsync(StoreSelected))" />
+        }
+        else
+        {
+            <HongdalLaterHeavenBaguaNavigator RoleLabel="@RoleLabel"
+                                               NavigationItems="@NavigationItems"
+                                               AccentColor="@DecorationState.BaguaAccentColor"
+                                               CenterSymbol="@CenterSymbol"
+                                               CenterTrigramName="@CenterTrigramName"
+                                               CenterDestinationLabel="@CenterDestinationLabel"
+                                               CenterSelected="@(() => InvokeAndCloseAsync(CenterSelected))"
+                                               ShowTaegeukCenter="@ShowTaegeukCenter"
+                                               TaegeukYangDestinationLabel="커뮤니티"
+                                               TaegeukYinDestinationLabel="상점"
+                                               TaegeukYangSelected="@(() => InvokeAndCloseAsync(TaegeukYangSelected))"
+                                               TaegeukYinSelected="@(() => InvokeAndCloseAsync(TaegeukYinSelected))"
+                                               ShowTrigramSymbols="@DecorationState.IsBaguaDecorationEnabled"
+                                               CenterTransferTrigramKey="zhen"
+                                               CenterTransferDestinationLabel="공동구매"
+                                               CenterTransferCompleted="InvokeCenterTransferAndCloseAsync"
+                                               DestinationSelected="InvokeDestinationAndCloseAsync" />
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public PlatformCommunityDecorationStateService DecorationState { get; set; } = null!;
+
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public bool ShowPrajnaUpayaNavigator { get; set; }
+
+    [Parameter]
+    public string UpayaLabel { get; set; } = "방편";
+
+    [Parameter]
+    public string PrajnaLabel { get; set; } = "정보";
+
+    [Parameter]
+    public string RoleLabel { get; set; } = "플랫폼 구성원";
+
+    [Parameter]
+    public IReadOnlyList<HongdalCardinalNavigationOption> NavigationItems { get; set; } = [];
+
+    [Parameter]
+    public string CenterSymbol { get; set; } = "☶";
+
+    [Parameter]
+    public string CenterTrigramName { get; set; } = "간";
+
+    [Parameter]
+    public string CenterDestinationLabel { get; set; } = "커뮤니티";
+
+    [Parameter]
+    public bool ShowTaegeukCenter { get; set; } = true;
+
+    [Parameter]
+    public EventCallback UpayaSelected { get; set; }
+
+    [Parameter]
+    public EventCallback PrajnaSelected { get; set; }
+
+    [Parameter]
+    public EventCallback CommunitySelected { get; set; }
+
+    [Parameter]
+    public EventCallback StoreSelected { get; set; }
+
+    [Parameter]
+    public EventCallback CenterSelected { get; set; }
+
+    [Parameter]
+    public EventCallback TaegeukYangSelected { get; set; }
+
+    [Parameter]
+    public EventCallback TaegeukYinSelected { get; set; }
+
+    [Parameter]
+    public EventCallback<HongdalCardinalNavigationOption> CenterTransferCompleted { get; set; }
+
+    [Parameter]
+    public EventCallback<HongdalCardinalNavigationOption> DestinationSelected { get; set; }
+
+    private bool isDragging;
+    private bool hasDragMoved;
+    private double dragStartX;
+
+    private string ToggleAriaLabel => ShowPrajnaUpayaNavigator
+        ? $"{PrajnaLabel}와 {UpayaLabel}의 두 겹 태극을 끌어 펼치거나 접기"
+        : "후천 사방 이동판을 끌어 펼치거나 접기";
+
+    private string ToggleSymbol => ShowPrajnaUpayaNavigator
+        ? "☯"
+        : DecorationState.BaguaSymbol;
+
+    private string ToggleTitle => ShowPrajnaUpayaNavigator
+        ? $"{PrajnaLabel} · {UpayaLabel}"
+        : "후천 사방 이동";
+
+    private string ToggleDescription => ShowPrajnaUpayaNavigator
+        ? "역할을 정하기 전의 두 겹 태극"
+        : $"{RoleLabel} 역할의 동서남북 기능";
+
+    private string BuildRootClass()
+        => IsOpen
+            ? "platform-community-bagua-entry platform-community-bagua-entry--open"
+            : "platform-community-bagua-entry platform-community-bagua-entry--closed";
+
+    private string BuildRootStyle()
+        => $"--bagua-decoration-accent: {(ShowPrajnaUpayaNavigator ? DecorationState.HomeThemeAccentColor : DecorationState.BaguaAccentColor)};";
+
+    private void BeginDrag(PointerEventArgs args)
+    {
+        isDragging = true;
+        hasDragMoved = false;
+        dragStartX = args.ClientX;
+    }
+
+    private async Task HandleDrag(PointerEventArgs args)
+    {
+        if (!isDragging)
+        {
+            return;
+        }
+
+        var deltaX = args.ClientX - dragStartX;
+        if (Math.Abs(deltaX) < 14)
+        {
+            return;
+        }
+
+        hasDragMoved = true;
+        if (deltaX <= -28)
+        {
+            await SetOpenAsync(true);
+        }
+        else if (deltaX >= 28)
+        {
+            await SetOpenAsync(false);
+        }
+    }
+
+    private async Task EndDrag()
+    {
+        if (!isDragging)
+        {
+            return;
+        }
+
+        isDragging = false;
+        if (!hasDragMoved)
+        {
+            await SetOpenAsync(!IsOpen);
+        }
+
+        hasDragMoved = false;
+    }
+
+    private void CancelDrag()
+    {
+        isDragging = false;
+        hasDragMoved = false;
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key is "Enter" or " ")
+        {
+            await SetOpenAsync(!IsOpen);
+        }
+    }
+
+    private async Task SetOpenAsync(bool value)
+    {
+        if (IsOpen == value)
+        {
+            return;
+        }
+
+        IsOpen = value;
+        await IsOpenChanged.InvokeAsync(value);
+    }
+
+    private async Task InvokeAndCloseAsync(EventCallback callback)
+    {
+        await SetOpenAsync(false);
+        await callback.InvokeAsync();
+    }
+
+    private async Task InvokeCenterTransferAndCloseAsync(HongdalCardinalNavigationOption option)
+    {
+        await SetOpenAsync(false);
+        await CenterTransferCompleted.InvokeAsync(option);
+    }
+
+    private async Task InvokeDestinationAndCloseAsync(HongdalCardinalNavigationOption option)
+    {
+        await SetOpenAsync(false);
+        await DestinationSelected.InvokeAsync(option);
+    }
+}

@@ -1,0 +1,229 @@
+.community-author-diagram-tool {
+    display: grid;
+    gap: 14px;
+    padding: 12px 2px 2px;
+}
+
+.community-author-diagram-template,
+.community-author-diagram-add {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.community-author-diagram-add {
+    grid-template-columns: minmax(140px, .7fr) minmax(180px, 1fr) auto;
+}
+
+.community-author-diagram-counts {
+    display: flex;
+    gap: 8px;
+    color: var(--mud-palette-text-secondary);
+    font-size: .78rem;
+}
+
+.community-author-diagram-counts span {
+    padding: 3px 8px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 4px;
+}
+
+.community-author-diagram-flow {
+    display: grid;
+    max-height: 540px;
+    overflow: auto;
+    padding-inline: 2px;
+}
+
+.community-author-diagram-node {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: start;
+    padding: 10px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 6px;
+    background: var(--mud-palette-surface);
+}
+
+.community-author-diagram-number {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--mud-palette-primary);
+    color: var(--mud-palette-primary-text);
+    font-weight: 700;
+}
+
+.community-author-diagram-fields {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.community-author-diagram-node-actions {
+    display: flex;
+    align-items: center;
+}
+
+.community-author-diagram-edge {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    min-height: 54px;
+    padding-left: 10px;
+    color: var(--mud-palette-text-secondary);
+}
+
+.community-author-diagram-organizations {
+    display: grid;
+    gap: 12px;
+    padding-block: 12px;
+    border-block: 1px solid var(--mud-palette-lines-default);
+}
+
+.community-author-diagram-organizations > header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.community-author-diagram-organization-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    align-items: center;
+}
+
+.community-author-diagram-directory {
+    display: grid;
+    gap: 8px;
+}
+
+.community-author-diagram-directory-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.community-author-diagram-directory-results {
+    display: grid;
+    max-height: 260px;
+    overflow: auto;
+    border-block: 1px solid var(--mud-palette-lines-default);
+}
+
+.community-author-diagram-directory-results article {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+    padding-block: 9px;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.community-author-diagram-directory-results article:last-child {
+    border-bottom: 0;
+}
+
+.community-author-diagram-directory-results strong,
+.community-author-diagram-directory-results span,
+.community-author-diagram-directory-results a {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.community-author-diagram-directory-results span,
+.community-author-diagram-directory-results a {
+    font-size: .75rem;
+}
+
+.community-author-diagram-directory-results span {
+    color: var(--mud-palette-text-secondary);
+}
+
+.community-author-diagram-organization-form > :nth-child(7),
+.community-author-diagram-organization-form > :nth-child(8),
+.community-author-diagram-organization-form > :nth-child(9) {
+    grid-column: 1 / -1;
+}
+
+.community-author-diagram-organization-list {
+    display: grid;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.community-author-diagram-organization-list > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+    padding-block: 8px;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.community-author-diagram-organization-list strong,
+.community-author-diagram-organization-list span {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.community-author-diagram-organization-list span {
+    color: var(--mud-palette-text-secondary);
+    font-size: .78rem;
+}
+
+.community-author-diagram-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+@media (max-width: 600px) {
+    .community-author-diagram-template,
+    .community-author-diagram-add {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .community-author-diagram-add > :nth-child(2) {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+
+    .community-author-diagram-node {
+        grid-template-columns: 32px minmax(0, 1fr);
+    }
+
+    .community-author-diagram-node-actions {
+        grid-column: 2;
+        justify-content: flex-end;
+    }
+
+    .community-author-diagram-organizations > header {
+        display: grid;
+    }
+
+    .community-author-diagram-organization-form {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .community-author-diagram-directory-search {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .community-author-diagram-directory-results article {
+        align-items: flex-start;
+    }
+
+    .community-author-diagram-organization-form > * {
+        grid-column: 1 !important;
+    }
+}

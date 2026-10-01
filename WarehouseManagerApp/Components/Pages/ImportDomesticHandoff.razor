@@ -1,0 +1,46 @@
+@page "/warehouse/import/domestic-handoff"
+@inherits MvvmComponentBase<수입국내운송인계PageViewModel>
+
+<PageTitle>수입 국내 운송 인계</PageTitle>
+
+<WarehousePageShell Model="@ViewModel"
+                    Title="수입 국내 운송 인계"
+                    Description="반출 화물을 국내 창고나 최종 도착지 운송으로 인계합니다."
+                    Icon="@Icons.Material.Filled.LocalShipping"
+                    Color="Color.Success">
+    <Actions>
+        <MudButton Href="@WarehouseManagerRoutes.ImportRelease"
+                   Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Outbox">
+            반출 대상
+        </MudButton>
+    </Actions>
+    <ChildContent>
+        @if (!string.IsNullOrWhiteSpace(ViewModel.재고조회.오류메시지))
+        {
+            <MudAlert Severity="Severity.Error">@ViewModel.재고조회.오류메시지</MudAlert>
+        }
+
+        <WarehouseTransportHandoffPanel Inventory="@ViewModel.재고조회"
+                                        Handoff="@ViewModel.운송인계"
+                                        OnCompleted="ReloadAsync" />
+    </ChildContent>
+</WarehousePageShell>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        EnsureProfile();
+        await ViewModel.초기화Async();
+    }
+
+    private Task ReloadAsync() => ViewModel.초기화Async();
+
+    private void EnsureProfile()
+    {
+        if (!string.Equals(ViewModel.세션.운영ProfileCode, 창고운영ProfileCodes.보세수입, StringComparison.OrdinalIgnoreCase))
+        {
+            ViewModel.세션.운영Profile설정(창고운영ProfileCodes.보세수입);
+        }
+    }
+}

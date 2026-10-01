@@ -14,6 +14,15 @@ public sealed class 운송이벤트생성CommandHandler : IRequestHandler<운송
 
     public async Task<운송이벤트로그응답> Handle(운송이벤트생성Command request, CancellationToken cancellationToken)
     {
+        if (string.Equals(
+                request.이벤트타입,
+                운송이벤트유형.배차엔진판단감사,
+                StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(
+                "배차 엔진 판단 감사 이벤트는 배차 실행 경로에서만 생성할 수 있습니다.");
+        }
+
         var entity = new 운송이벤트
         {
             의뢰Id = request.의뢰Id,

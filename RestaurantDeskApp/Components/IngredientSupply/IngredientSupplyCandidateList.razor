@@ -1,0 +1,106 @@
+<section class="ingredient-supply-comparison" aria-labelledby="ingredient-supply-comparison-title">
+    <div class="ingredient-supply-page__section-heading">
+        <div>
+            <MudText Typo="Typo.overline">가격 비교</MudText>
+            <MudText Typo="Typo.h6" id="ingredient-supply-comparison-title">예상 도착단가 후보</MudText>
+        </div>
+        <MudChip T="string" Variant="Variant.Outlined" Color="Color.Default">@Comparison.후보목록.Count 건</MudChip>
+    </div>
+
+    @if (Comparison.후보목록.Count == 0)
+    {
+        <div class="ingredient-supply-empty">
+            <MudIcon Icon="@Icons.Material.Filled.Inventory2" />
+            <MudText Typo="Typo.body2">입력 조건으로 비교할 공급 후보가 없습니다.</MudText>
+        </div>
+    }
+    else
+    {
+        <div class="ingredient-supply-candidate-list">
+            @foreach (var candidate in Comparison.후보목록)
+            {
+                var selected = Comparison.선택후보Id == candidate.후보Id;
+                var lowest = Comparison.예상도착단가최저후보?.후보Id == candidate.후보Id;
+                <article class="ingredient-supply-candidate @(selected ? "is-selected" : null)">
+                    <header>
+                        <div>
+                            <MudText Typo="Typo.overline">@candidate.공급경로명</MudText>
+                            <MudText Typo="Typo.h6">@candidate.공급주체명</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@candidate.원산지Label · @candidate.품목Label</MudText>
+                        </div>
+                        @if (lowest)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">예상 최저</MudChip>
+                        }
+                    </header>
+
+                    <dl class="ingredient-supply-candidate__price">
+                        <div>
+                            <dt>현재 비교 단가</dt>
+                            <dd>@FormatPrice(candidate.현재비교단가, candidate)</dd>
+                        </div>
+                        <div>
+                            <dt>예상 도착단가</dt>
+                            <dd>@FormatPrice(candidate.예상도착단가, candidate)</dd>
+                        </div>
+                        <div class="is-saving">
+                            <dt>단위당 예상 절감</dt>
+                            <dd>@FormatPrice(candidate.단위당예상절감액, candidate) · @candidate.예상절감률.ToString("0.0")%</dd>
+                        </div>
+                    </dl>
+
+                    <div class="ingredient-supply-candidate__breakdown">
+                        <span>품목 @FormatPrice(candidate.품목단가, candidate)</span>
+                        <span>물류·작업 @FormatPrice(candidate.물류작업단가, candidate)</span>
+                        @if (candidate.수입부대비용단가 > 0)
+                        {
+                            <span>통관·검역 예상 @FormatPrice(candidate.수입부대비용단가, candidate)</span>
+                        }
+                    </div>
+
+                    <div class="ingredient-supply-candidate__facts">
+                        <span><MudIcon Icon="@Icons.Material.Filled.Groups" Size="Size.Small" /> 최소 @candidate.최소공동수량.ToString("N0")@candidate.수량단위 · 현재 @candidate.현재참여음식점수 곳</span>
+                        <span><MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small" /> @candidate.예상납품일.ToString("yyyy.MM.dd") 예상</span>
+                        <span><MudIcon Icon="@Icons.Material.Filled.Thermostat" Size="Size.Small" /> @candidate.보관조건Label</span>
+                    </div>
+
+                    <div class="ingredient-supply-candidate__roles">
+                        @foreach (var role in candidate.필요역할)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@role</MudChip>
+                        }
+                    </div>
+
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">기준: @candidate.가격기준Label</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Warning">별도 확인: @candidate.제외비용Label</MudText>
+
+                    <footer>
+                        <MudButton Variant="@(selected ? Variant.Filled : Variant.Outlined)"
+                                   Color="Color.Primary"
+                                   StartIcon="@(selected ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.TouchApp)"
+                                   OnClick="@(() => CandidateSelected.InvokeAsync(candidate.후보Id))">
+                            @(selected ? "조건 선택됨" : "이 조건 선택")
+                        </MudButton>
+                    </footer>
+                </article>
+            }
+        </div>
+    }
+
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="ingredient-supply-comparison__boundary">
+        예상 최저 후보는 자동 선정되지 않습니다. 음식점이 규격·품질·납기·부대비용을 확인하고 조건을 직접 선택해야 합니다.
+    </MudAlert>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public 음식점식재료공급비교ViewModel Comparison { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<string> CandidateSelected { get; set; }
+
+    private static string FormatPrice(decimal price, 음식점식재료공급후보 candidate)
+        => string.Equals(candidate.통화코드, "KRW", StringComparison.OrdinalIgnoreCase)
+            ? $"{price:N0}원/{candidate.수량단위}"
+            : $"{price:N2} {candidate.통화코드}/{candidate.수량단위}";
+}

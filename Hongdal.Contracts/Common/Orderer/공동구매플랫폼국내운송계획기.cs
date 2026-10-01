@@ -67,6 +67,7 @@ public static class 공동구매국내운송원천의뢰유형코드
 public static class 공동구매국내운송도착지유형코드
 {
     public const string ThreePlWarehouse = "ThreePlWarehouse";
+    public const string DedicatedWarehouse = "DedicatedWarehouse";
     public const string ApartmentComplexDirectDistribution = "ApartmentComplexDirectDistribution";
     public const string OrdererGroupRepresentativeDropoff = "OrdererGroupRepresentativeDropoff";
 }
@@ -202,6 +203,9 @@ public sealed class 공동구매플랫폼국내운송초안요청
     public int? EstimatedThreePlTransportFareKrw { get; set; }
     public int? EstimatedThreePlInboundFeeKrw { get; set; }
     public int? EstimatedThreePlStorageFeeKrw { get; set; }
+    public int? EstimatedDedicatedWarehouseTransportFareKrw { get; set; }
+    public int? EstimatedDedicatedWarehouseInboundFeeKrw { get; set; }
+    public int? EstimatedDedicatedWarehouseStorageFeeKrw { get; set; }
     public int? EstimatedApartmentDirectTransportFareKrw { get; set; }
     public int? EstimatedDriverUnitDistributionFeeKrw { get; set; }
     public int? EstimatedSeparateWorkerDistributionFeeKrw { get; set; }
@@ -222,6 +226,8 @@ public sealed class 공동구매플랫폼국내운송초안요청
     public DateTime? PickupWindowStartAtUtc { get; set; }
     public DateTime? PickupWindowEndAtUtc { get; set; }
     public string ThreePlWarehouseName { get; set; } = string.Empty;
+    public string DedicatedWarehouseName { get; set; } = string.Empty;
+    public bool DedicatedWarehouseColdChainFacilityConfirmed { get; set; }
     public string ApartmentComplexCode { get; set; } = string.Empty;
     public string ApartmentComplexName { get; set; } = string.Empty;
     public bool DriverPerformsApartmentUnitDistribution { get; set; } = true;
@@ -357,6 +363,7 @@ public sealed class PlatformEntrustedDestinationPlanDto
     public string DestinationTypeCode { get; set; } = 공동구매국내운송도착지유형코드.ThreePlWarehouse;
     public string DestinationName { get; set; } = string.Empty;
     public string ThreePlWarehouseName { get; set; } = string.Empty;
+    public string DedicatedWarehouseName { get; set; } = string.Empty;
     public string ApartmentComplexCode { get; set; } = string.Empty;
     public string ApartmentComplexName { get; set; } = string.Empty;
     public bool DirectApartmentDistribution { get; set; }
@@ -413,6 +420,7 @@ public sealed class PlatformEntrustedColdChainPlanDto
     public bool RequiresColdChain { get; set; }
     public bool ColdChainVehicleConfirmed { get; set; }
     public bool ThreePlColdChainFacilityConfirmed { get; set; }
+    public bool DedicatedWarehouseColdChainFacilityConfirmed { get; set; }
     public bool SelectedDestinationColdChainCompatible { get; set; } = true;
     public IReadOnlyList<string> RequiredActionCodes { get; set; } = [];
     public string Memo { get; set; } = string.Empty;
@@ -657,6 +665,7 @@ public static class 공동구매플랫폼국내운송계획기
                 DestinationTypeCode = destinationType,
                 DestinationName = destinationName,
                 ThreePlWarehouseName = request.ThreePlWarehouseName.Trim(),
+                DedicatedWarehouseName = request.DedicatedWarehouseName.Trim(),
                 ApartmentComplexCode = request.ApartmentComplexCode.Trim(),
                 ApartmentComplexName = request.ApartmentComplexName.Trim(),
                 DirectApartmentDistribution = destinationType == 공동구매국내운송도착지유형코드.ApartmentComplexDirectDistribution,
@@ -710,6 +719,7 @@ public static class 공동구매플랫폼국내운송계획기
                 RequiresColdChain = requiresColdChain,
                 ColdChainVehicleConfirmed = request.ColdChainVehicleConfirmed,
                 ThreePlColdChainFacilityConfirmed = request.ThreePlColdChainFacilityConfirmed,
+                DedicatedWarehouseColdChainFacilityConfirmed = request.DedicatedWarehouseColdChainFacilityConfirmed,
                 SelectedDestinationColdChainCompatible = IsDestinationColdChainCompatible(request, destinationType, requiresColdChain),
                 RequiredActionCodes = coldChainActionCodes,
                 Memo = BuildColdChainMemo(destinationType, requiresColdChain, request)
@@ -912,6 +922,12 @@ public static class 공동구매플랫폼국내운송계획기
         {
             yield return 공동구매국내운송필요조치코드.ConfirmColdChainThreePlFacility;
         }
+
+        if (destinationType == 공동구매국내운송도착지유형코드.DedicatedWarehouse &&
+            !request.DedicatedWarehouseColdChainFacilityConfirmed)
+        {
+            yield return 공동구매국내운송필요조치코드.ConfirmColdChainThreePlFacility;
+        }
     }
 
     private static IEnumerable<PlatformEntrustedDestinationCostOptionDto> BuildDestinationCostOptions(
@@ -933,6 +949,22 @@ public static class 공동구매플랫폼국내운송계획기
                 request.EstimatedFareKrw),
             request.EstimatedThreePlInboundFeeKrw,
             request.EstimatedThreePlStorageFeeKrw,
+            null,
+            requiresColdChain);
+
+        yield return BuildCostOption(
+            request,
+            fulfillmentPlan,
+            공동구매국내운송도착지유형코드.DedicatedWarehouse,
+            "Dedicated warehouse inbound",
+            공동구매공동주택분배책임코드.None,
+            ResolveRouteFare(
+                request.EstimatedDedicatedWarehouseTransportFareKrw,
+                selectedDestinationType,
+                공동구매국내운송도착지유형코드.DedicatedWarehouse,
+                request.EstimatedFareKrw),
+            request.EstimatedDedicatedWarehouseInboundFeeKrw,
+            request.EstimatedDedicatedWarehouseStorageFeeKrw,
             null,
             requiresColdChain);
 
@@ -1097,6 +1129,11 @@ public static class 공동구매플랫폼국내운송계획기
         if (string.Equals(value, 공동구매국내운송도착지유형코드.OrdererGroupRepresentativeDropoff, StringComparison.OrdinalIgnoreCase))
         {
             return 공동구매국내운송도착지유형코드.OrdererGroupRepresentativeDropoff;
+        }
+
+        if (string.Equals(value, 공동구매국내운송도착지유형코드.DedicatedWarehouse, StringComparison.OrdinalIgnoreCase))
+        {
+            return 공동구매국내운송도착지유형코드.DedicatedWarehouse;
         }
 
         return 공동구매국내운송도착지유형코드.ThreePlWarehouse;
@@ -1478,6 +1515,12 @@ public static class 공동구매플랫폼국내운송계획기
             return fulfillmentPlan.주문자집단배송권명;
         }
 
+        if (destinationType == 공동구매국내운송도착지유형코드.DedicatedWarehouse
+            && !string.IsNullOrWhiteSpace(request.DedicatedWarehouseName))
+        {
+            return request.DedicatedWarehouseName.Trim();
+        }
+
         if (!string.IsNullOrWhiteSpace(request.ThreePlWarehouseName))
         {
             return request.ThreePlWarehouseName.Trim();
@@ -1507,9 +1550,14 @@ public static class 공동구매플랫폼국내운송계획기
         string destinationType)
     {
         var fare = request.EstimatedFareKrw.HasValue ? $"{request.EstimatedFareKrw.Value:N0} KRW" : "fare TBD";
-        var routeLabel = destinationType == 공동구매국내운송도착지유형코드.ApartmentComplexDirectDistribution
-            ? "bonded-area-to-apartment-direct-distribution"
-            : "bonded-area-to-3PL";
+        var routeLabel = destinationType switch
+        {
+            공동구매국내운송도착지유형코드.ApartmentComplexDirectDistribution
+                => "bonded-area-to-apartment-direct-distribution",
+            공동구매국내운송도착지유형코드.DedicatedWarehouse
+                => "bonded-area-to-dedicated-warehouse",
+            _ => "bonded-area-to-3PL"
+        };
 
         if (string.Equals(settlementPolicy, 공동구매국내운송정산정책코드.PlatformCollectsOrdererPaymentsAndPaysDriverAfterDropoff, StringComparison.OrdinalIgnoreCase))
         {
@@ -1533,9 +1581,11 @@ public static class 공동구매플랫폼국내운송계획기
             return true;
         }
 
-        return request.ColdChainVehicleConfirmed &&
-            (destinationType != 공동구매국내운송도착지유형코드.ThreePlWarehouse ||
-             request.ThreePlColdChainFacilityConfirmed);
+        return request.ColdChainVehicleConfirmed
+               && (destinationType != 공동구매국내운송도착지유형코드.ThreePlWarehouse
+                   || request.ThreePlColdChainFacilityConfirmed)
+               && (destinationType != 공동구매국내운송도착지유형코드.DedicatedWarehouse
+                   || request.DedicatedWarehouseColdChainFacilityConfirmed);
     }
 
     private static string BuildColdChainMemo(
@@ -1555,6 +1605,13 @@ public static class 공동구매플랫폼국내운송계획기
                 : "Cold-chain cargo. Select only a 3PL warehouse with refrigerated/frozen storage capability.";
         }
 
+        if (destinationType == 공동구매국내운송도착지유형코드.DedicatedWarehouse)
+        {
+            return request.DedicatedWarehouseColdChainFacilityConfirmed
+                ? "Cold-chain cargo. The dedicated warehouse refrigerated/frozen facility is confirmed."
+                : "Cold-chain cargo. Confirm the dedicated warehouse refrigerated/frozen facility before dispatch.";
+        }
+
         return "Cold-chain cargo. The delegated driver route must use a confirmed refrigerated/frozen-capable vehicle through apartment or representative dropoff.";
     }
 
@@ -1569,6 +1626,8 @@ public static class 공동구매플랫폼국내운송계획기
         {
             공동구매국내운송도착지유형코드.ThreePlWarehouse
                 => $"Inbound to 3PL for group purchase {fulfillmentPlan.공동구매Id}; useful for storage, sales-channel listing, and later outbound batch.{coldChainMemo}",
+            공동구매국내운송도착지유형코드.DedicatedWarehouse
+                => $"Inbound to the selected dedicated warehouse for group purchase {fulfillmentPlan.공동구매Id}; ownership and operating responsibility stay explicit.{coldChainMemo}",
             공동구매국내운송도착지유형코드.ApartmentComplexDirectDistribution
                 => $"Direct apartment route with distribution responsibility: {distributionResponsibility}.{coldChainMemo}",
             공동구매국내운송도착지유형코드.OrdererGroupRepresentativeDropoff
@@ -1617,6 +1676,11 @@ public static class 공동구매플랫폼국내운송계획기
                 : "driver completes apartment complex dropoff only";
 
             return $"Direct apartment route for orderer group {fulfillmentPlan.주문자집단배송권키}; {distributionScope}.";
+        }
+
+        if (destinationType == 공동구매국내운송도착지유형코드.DedicatedWarehouse)
+        {
+            return $"Dedicated warehouse route for orderer group {fulfillmentPlan.주문자집단배송권키}.";
         }
 
         return $"3PL warehouse route for orderer group {fulfillmentPlan.주문자집단배송권키}.";

@@ -1,0 +1,171 @@
+@page "/global/products/{Slug}"
+@layout GlobalTradeLayout
+@inject GlobalTradeWorkspaceService Workspace
+
+<PageTitle>@(Product is null ? "Product not found" : $"{Product.ProductName} | Hongdal Global")</PageTitle>
+
+<main class="global-detail-page">
+    @if (Product is null)
+    {
+        <section class="global-detail-empty">
+            <MudIcon Icon="@Icons.Material.Filled.SearchOff" />
+            <h1>Product not found</h1>
+            <p>The product may still be under review or the address may have changed.</p>
+            <MudButton Href="@GlobalTradeRoutes.Home" Variant="Variant.Filled" Color="Color.Primary">Back to products</MudButton>
+        </section>
+    }
+    else
+    {
+        <MudBreadcrumbs Items="Breadcrumbs" Class="global-detail-breadcrumbs" />
+
+        <section class="global-detail-hero">
+            <div class="global-detail-visual" style="@($"--detail-accent: {Product.AccentColor}")">
+                <span>@Product.CountryCode · @Product.CountryName</span>
+                <strong>@Product.Symbol</strong>
+                <small>Supplier preview image area</small>
+            </div>
+
+            <div class="global-detail-summary">
+                <div class="global-detail-kicker">
+                    <span>@Product.Category</span>
+                    <span>@Product.SupplierName</span>
+                </div>
+                <h1>@Product.ProductName</h1>
+                <p>@Product.Description</p>
+
+                <div class="global-detail-facts">
+                    <div><span>Supply price</span><strong>@Product.SupplyPrice.ToString("N2") @Product.CurrencyCode</strong></div>
+                    <div><span>Minimum order</span><strong>@Product.MinimumOrderQuantity units</strong></div>
+                    <div><span>Sample</span><strong>@(Product.SampleAvailable ? "Available" : "On request")</strong></div>
+                    <div><span>Trade term</span><strong>@Product.Incoterm</strong></div>
+                </div>
+
+                <div class="global-retail-reference">
+                    <div>
+                        <strong>Retail demand reference</strong>
+                        <span>Affiliate destinations remain separate from wholesale import requests.</span>
+                    </div>
+                    @if (string.IsNullOrWhiteSpace(Product.AffiliateUrl))
+                    {
+                        <MudButton Variant="Variant.Outlined" Disabled="true" StartIcon="@Icons.Material.Filled.Link">Affiliate link slot</MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Href="@Product.AffiliateUrl" Target="_blank" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew">View retail listing</MudButton>
+                    }
+                </div>
+                @if (RelatedThread is not null)
+                {
+                    <MudButton Href="@GlobalTradeRoutes.CommunityThread(RelatedThread.Id)" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Forum" Class="mt-3">
+                        이 상품의 한국 수입 대화 참여
+                    </MudButton>
+                }
+            </div>
+        </section>
+
+        <section class="global-detail-content">
+            <div class="global-detail-review">
+                <div class="global-detail-section-title">
+                    <span>TRADE READINESS</span>
+                    <h2>Information to review before import</h2>
+                </div>
+
+                <div class="global-readiness-grid">
+                    <article>
+                        <MudIcon Icon="@Icons.Material.Filled.Tag" />
+                        <span>Suggested HS code</span>
+                        <strong>@(string.IsNullOrWhiteSpace(Product.SuggestedHsCode) ? "Review needed" : Product.SuggestedHsCode)</strong>
+                        <p>A suggestion only. Final classification belongs in the customs review workflow.</p>
+                    </article>
+                    <article>
+                        <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" />
+                        <span>Documents</span>
+                        <strong>@Product.CertificationSummary</strong>
+                        <p>Product-specific Korean import requirements must still be confirmed.</p>
+                    </article>
+                    <article>
+                        <MudIcon Icon="@Icons.Material.Filled.Inventory2" />
+                        <span>Pilot path</span>
+                        <strong>Sample → demand → import</strong>
+                        <p>Interest is collected before a commercial quantity is committed.</p>
+                    </article>
+                </div>
+            </div>
+
+            <aside class="global-import-request-card">
+                @if (SubmittedRequest is not null)
+                {
+                    <div class="global-request-success">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+                        <span>REQUEST RECEIVED</span>
+                        <h2>We added this product to the Korean import review queue.</h2>
+                        <p>Reference HD-IR-@SubmittedRequest.Id.ToString("D4") · @SubmittedRequest.ExpectedQuantity units</p>
+                        <MudButton Href="@GlobalTradeRoutes.ImportRequests" Variant="Variant.Outlined" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">
+                            한국 수입 요청함 보기
+                        </MudButton>
+                    </div>
+                }
+                else
+                {
+                    <span class="global-form-kicker">FOR KOREAN IMPORTERS</span>
+                    <h2>Request an import review</h2>
+                    <p>Share an initial quantity. This is an interest request, not a purchase contract.</p>
+
+                    @if (!string.IsNullOrWhiteSpace(ValidationMessage))
+                    {
+                        <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">@ValidationMessage</MudAlert>
+                    }
+
+                    <MudStack Spacing="2">
+                        <MudTextField T="string" @bind-Value="Draft.RequesterName" Label="담당자 이름" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudTextField T="string" @bind-Value="Draft.CompanyName" Label="회사 또는 공동체" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudTextField T="string" @bind-Value="Draft.Email" Label="이메일" InputType="InputType.Email" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudNumericField T="int" @bind-Value="Draft.ExpectedQuantity" Label="예상 수량" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudTextField T="string" @bind-Value="Draft.Note" Label="요청 내용" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true" EndIcon="@Icons.Material.Filled.Send" OnClick="SubmitRequest">
+                            한국 수입 검토 요청
+                        </MudButton>
+                    </MudStack>
+                }
+            </aside>
+        </section>
+    }
+</main>
+
+@code {
+    [Parameter] public string? Slug { get; set; }
+
+    private GlobalTradeProduct? Product => Workspace.FindProduct(Slug);
+    private GlobalTradeCommunityThread? RelatedThread => Product is null
+        ? null
+        : Workspace.CommunityThreads.FirstOrDefault(thread => thread.ProductId == Product.Id);
+    private GlobalImportInterestDraft Draft { get; } = new();
+    private GlobalImportInterestRequest? SubmittedRequest;
+    private string? ValidationMessage;
+
+    private List<BreadcrumbItem> Breadcrumbs =>
+    [
+        new("Global", href: GlobalTradeRoutes.Home),
+        new(Product?.CountryName ?? "Product", href: null, disabled: true)
+    ];
+
+    private void SubmitRequest()
+    {
+        if (Product is null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Draft.RequesterName)
+            || string.IsNullOrWhiteSpace(Draft.Email)
+            || !Draft.Email.Contains('@')
+            || Draft.ExpectedQuantity <= 0)
+        {
+            ValidationMessage = "담당자 이름, 올바른 이메일, 예상 수량을 입력해 주세요.";
+            return;
+        }
+
+        ValidationMessage = null;
+        SubmittedRequest = Workspace.SubmitImportInterest(Product, Draft);
+    }
+}

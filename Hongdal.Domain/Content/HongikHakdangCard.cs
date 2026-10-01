@@ -12,6 +12,8 @@ public sealed class HongikHakdangCardCollection
 
     public bool IsActive { get; set; } = true;
 
+    public bool IsAdminEnabled { get; set; } = true;
+
     public DateTime LastSeenAtUtc { get; set; }
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
@@ -57,6 +59,10 @@ public sealed class HongikHakdangCard
     public DateTime? ImageDownloadedAtUtc { get; set; }
 
     public bool IsActive { get; set; } = true;
+
+    public bool IsAdminEnabled { get; set; } = true;
+
+    public bool IsCommunityPublicationApproved { get; set; }
 
     public DateTime LastSeenAtUtc { get; set; }
 

@@ -1,0 +1,163 @@
+<aside class="page-catalog-detail" aria-labelledby="page-catalog-detail-title">
+    @if (ViewModel.SelectedPage is null)
+    {
+        <div class="page-catalog-detail__empty">
+            <MudIcon Icon="@Icons.Material.Filled.WebAsset" Size="Size.Large" />
+            <MudText Typo="Typo.body2">관리할 페이지를 선택해 주세요.</MudText>
+        </div>
+    }
+    else
+    {
+        var managedPage = ViewModel.SelectedPage;
+        <header>
+            <div>
+                <MudText Typo="Typo.overline">SELECTED PAGE</MudText>
+                <MudText id="page-catalog-detail-title" Typo="Typo.h5">@managedPage.Title</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@managedPage.AppName · @managedPage.AreaName</MudText>
+            </div>
+            <MudChip T="string" Color="@LifecycleColor(managedPage.Lifecycle)" Variant="Variant.Outlined">
+                @LifecycleLabel(managedPage.Lifecycle)
+            </MudChip>
+        </header>
+
+        <MudText Typo="Typo.body2">@managedPage.Purpose</MudText>
+
+        <dl class="page-catalog-detail__facts">
+            <div><dt>route</dt><dd><code>@managedPage.RouteTemplate</code></dd></div>
+            <div><dt>화면 확인 경로</dt><dd><code>@managedPage.PreviewPath</code></dd></div>
+            <div><dt>관리 책임</dt><dd>@managedPage.OwnerRole</dd></div>
+            <div><dt>인증</dt><dd>@(managedPage.RequiresAuthentication ? "로그인 필요" : "공개 조회 가능")</dd></div>
+        </dl>
+
+        <div class="page-catalog-detail__roles" aria-label="사용 역할">
+            @foreach (var role in managedPage.AudienceRoles)
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@role</MudChip>
+            }
+        </div>
+
+        <div class="page-catalog-detail__source">
+            <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" />
+            <code>@managedPage.SourcePath</code>
+        </div>
+
+        @if (managedPage.HasExternalEffects)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                게시·숨김·상태 변경처럼 외부 효과가 가능한 화면입니다. 검토 메타데이터와 실제 권한·API 경계를 함께 확인해야 합니다.
+            </MudAlert>
+        }
+
+        <section class="page-catalog-detail__editor" aria-label="페이지 관리 메타데이터">
+            <MudSelect T="AdminPageReviewState"
+                       Label="검토 상태"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Disabled="@(!CanManage || Busy)"
+                       @bind-Value="ViewModel.ReviewState">
+                @foreach (var state in Enum.GetValues<AdminPageReviewState>())
+                {
+                    <MudSelectItem T="AdminPageReviewState" Value="@state">@ReviewLabel(state)</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudSelect T="AdminPageNavigationState"
+                       Label="내비게이션 노출"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Disabled="@(!CanManage || Busy)"
+                       @bind-Value="ViewModel.NavigationState">
+                @foreach (var state in Enum.GetValues<AdminPageNavigationState>())
+                {
+                    <MudSelectItem T="AdminPageNavigationState" Value="@state">@NavigationLabel(state)</MudSelectItem>
+                }
+            </MudSelect>
+
+            <div class="page-catalog-detail__checks">
+                <MudCheckBox T="bool"
+                             Label="데스크톱 검증"
+                             Color="Color.Success"
+                             Disabled="@(!CanManage || Busy)"
+                             @bind-Value="ViewModel.DesktopVerified" />
+                <MudCheckBox T="bool"
+                             Label="모바일 검증"
+                             Color="Color.Success"
+                             Disabled="@(!CanManage || Busy)"
+                             @bind-Value="ViewModel.MobileVerified" />
+            </div>
+
+            <MudTextField T="string"
+                          Label="운영 메모"
+                          Lines="3"
+                          Counter="500"
+                          MaxLength="500"
+                          Variant="Variant.Outlined"
+                          Disabled="@(!CanManage || Busy)"
+                          @bind-Value="ViewModel.AdminNote" />
+
+            <div class="page-catalog-detail__reviewed">
+                <span>최근 검토</span>
+                <strong>@ReviewHistory(managedPage)</strong>
+            </div>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       Disabled="@(!CanManage || Busy)"
+                       OnClick="SaveRequested">
+                관리 메타데이터 저장
+            </MudButton>
+        </section>
+    }
+</aside>
+
+@code {
+    [Parameter, EditorRequired]
+    public AdminPageCatalogDetailViewModel ViewModel { get; set; } = default!;
+
+    [Parameter]
+    public bool CanManage { get; set; }
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public EventCallback SaveRequested { get; set; }
+
+    private static string LifecycleLabel(AdminPageLifecycle lifecycle)
+        => lifecycle switch
+        {
+            AdminPageLifecycle.Active => "현재 사용",
+            AdminPageLifecycle.Preview => "Preview",
+            _ => "내부 전용"
+        };
+
+    private static Color LifecycleColor(AdminPageLifecycle lifecycle)
+        => lifecycle switch
+        {
+            AdminPageLifecycle.Active => Color.Success,
+            AdminPageLifecycle.Preview => Color.Info,
+            _ => Color.Secondary
+        };
+
+    private static string ReviewLabel(AdminPageReviewState state)
+        => state switch
+        {
+            AdminPageReviewState.Verified => "검증 완료",
+            AdminPageReviewState.Blocked => "차단",
+            _ => "검토 필요"
+        };
+
+    private static string NavigationLabel(AdminPageNavigationState state)
+        => state switch
+        {
+            AdminPageNavigationState.Primary => "주요 메뉴",
+            AdminPageNavigationState.Contextual => "문맥 진입",
+            _ => "숨김"
+        };
+
+    private static string ReviewHistory(AdminManagedPageSnapshot managedPage)
+        => managedPage.LastReviewedAt is null
+            ? "아직 검토 기록 없음"
+            : $"{managedPage.LastReviewedAt.Value.ToLocalTime():yyyy.MM.dd HH:mm} · {managedPage.LastReviewer}";
+}

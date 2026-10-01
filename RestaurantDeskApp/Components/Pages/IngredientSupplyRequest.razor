@@ -1,0 +1,138 @@
+@page "/ingredients/supply-request"
+@implements IDisposable
+@inject 음식점식재료공급요청PageViewModel PageViewModel
+
+<PageTitle>식재료 공급 요청</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="ingredient-supply-page py-4">
+    <header class="ingredient-supply-page__header">
+        <div>
+            <MudText Typo="Typo.overline">음식점 구매 업무</MudText>
+            <MudText Typo="Typo.h4">식재료 공급 요청</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary">
+                필요한 양을 다른 음식점 수요와 모아 국내 산지 공급 또는 수입 공동공급 조건을 비교합니다.
+            </MudText>
+        </div>
+        <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Science">
+            Simulation
+        </MudChip>
+    </header>
+
+    @if (PageViewModel.처리중 && !PageViewModel.초기화됨)
+    {
+        <section class="ingredient-supply-page__loading" aria-label="식재료 공급 요청 불러오는 중">
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="220px" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="180px" />
+        </section>
+    }
+    else if (PageViewModel.상태 == PageViewModel상태.실패)
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+            @PageViewModel.오류메시지
+            <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="ReloadAsync">다시 불러오기</MudButton>
+        </MudAlert>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="ingredient-supply-page__notice">
+            표시 가격은 화면 검증용 추정치입니다. 공급자 선정, 계약, 결제, 수입자 지정, 통관·검역 또는 운송 실행은 발생하지 않습니다.
+        </MudAlert>
+
+        @if (!string.IsNullOrWhiteSpace(PageViewModel.메시지))
+        {
+            <MudAlert Severity="@MessageSeverity" Variant="Variant.Filled" Dense="true" Class="ingredient-supply-page__message">
+                @PageViewModel.메시지
+            </MudAlert>
+        }
+
+        <section class="ingredient-supply-page__route" aria-labelledby="ingredient-supply-route-title">
+            <div class="ingredient-supply-page__section-heading">
+                <div>
+                    <MudText Typo="Typo.overline">공급 경로</MudText>
+                    <MudText Typo="Typo.h6" id="ingredient-supply-route-title">@PageViewModel.작성.경로명</MudText>
+                </div>
+                <div class="ingredient-supply-route-segmented" role="group" aria-label="식재료 공급 경로 선택">
+                    <MudButton Variant="@RouteVariant(음식점식재료공급경로.국내산지)"
+                               Color="Color.Success"
+                               StartIcon="@Icons.Material.Filled.Agriculture"
+                               OnClick="@(() => SelectRouteAsync(음식점식재료공급경로.국내산지))">
+                        국내 산지
+                    </MudButton>
+                    <MudButton Variant="@RouteVariant(음식점식재료공급경로.공동수입)"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Public"
+                               OnClick="@(() => SelectRouteAsync(음식점식재료공급경로.공동수입))">
+                        수입 공동공급
+                    </MudButton>
+                </div>
+            </div>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@PageViewModel.작성.경로설명</MudText>
+        </section>
+
+        <MudGrid Class="ingredient-supply-page__workspace">
+            <MudItem xs="12" lg="5">
+                <IngredientSupplyRequestForm Draft="@Draft"
+                                             Busy="@PageViewModel.명령처리중"
+                                             CompareRequested="CompareAsync"
+                                             SaveRequested="SaveDraftAsync"
+                                             ResetRequested="ResetDraft" />
+            </MudItem>
+            <MudItem xs="12" lg="7">
+                <IngredientSupplyCandidateList Comparison="@PageViewModel.비교"
+                                               CandidateSelected="SelectCandidate" />
+            </MudItem>
+        </MudGrid>
+
+        <IngredientSupplyProgressList Requests="@PageViewModel.진행.요청목록" />
+    }
+</MudContainer>
+
+@code {
+    private 음식점식재료공급요청Draft Draft => PageViewModel.작성.현재초안;
+
+    private Severity MessageSeverity
+        => PageViewModel.메시지종류 switch
+        {
+            음식점식재료공급메시지종류.성공 => Severity.Success,
+            음식점식재료공급메시지종류.경고 => Severity.Warning,
+            음식점식재료공급메시지종류.오류 => Severity.Error,
+            _ => Severity.Info
+        };
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageViewModel.PropertyChanged += HandleViewModelChanged;
+        await PageViewModel.초기화Async();
+    }
+
+    private Task SelectRouteAsync(음식점식재료공급경로 route)
+        => PageViewModel.공급경로선택Async(route);
+
+    private Task CompareAsync()
+        => PageViewModel.조건으로비교Async();
+
+    private Task SaveDraftAsync()
+        => PageViewModel.초안저장Async();
+
+    private void SelectCandidate(string candidateId)
+        => PageViewModel.공급후보선택(candidateId);
+
+    private void ResetDraft()
+        => PageViewModel.현재공급조건초기화();
+
+    private Task ReloadAsync()
+        => PageViewModel.새로고침Async();
+
+    private Variant RouteVariant(음식점식재료공급경로 route)
+        => PageViewModel.작성.공급경로 == route ? Variant.Filled : Variant.Outlined;
+
+    private void HandleViewModelChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        PageViewModel.PropertyChanged -= HandleViewModelChanged;
+        PageViewModel.Dispose();
+    }
+}

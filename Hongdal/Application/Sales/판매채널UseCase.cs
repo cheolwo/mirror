@@ -10,11 +10,17 @@ public interface I판매채널UseCase
 {
     Task<Result<판매채널계정목록응답>> 계정목록Async(CancellationToken cancellationToken);
     Task<Result<판매채널계정항목응답>> 계정생성Async(판매채널계정저장요청 request, 판매채널요청Context context, CancellationToken cancellationToken);
+    Task<Result<판매채널계정항목응답>> 계정수정Async(long accountId, 판매채널계정저장요청 request, 판매채널요청Context context, CancellationToken cancellationToken);
+    Task<Result> 계정삭제Async(long accountId, 판매채널요청Context context, CancellationToken cancellationToken);
     Task<Result<판매상품목록응답>> 상품목록Async(CancellationToken cancellationToken);
     Task<Result<판매상품항목응답>> 상품생성Async(판매상품저장요청 request, 판매채널요청Context context, CancellationToken cancellationToken);
+    Task<Result<판매상품항목응답>> 상품수정Async(long productId, 판매상품저장요청 request, 판매채널요청Context context, CancellationToken cancellationToken);
+    Task<Result> 상품삭제Async(long productId, 판매채널요청Context context, CancellationToken cancellationToken);
     Task<Result<판매상품목록응답>> 샘플상품시드Async(판매상품샘플시드요청 request, 판매채널요청Context context, CancellationToken cancellationToken);
     Task<Result<채널출품목록응답>> 출품목록Async(CancellationToken cancellationToken);
     Task<Result<채널출품항목응답>> 출품생성Async(채널출품저장요청 request, 판매채널요청Context context, CancellationToken cancellationToken);
+    Task<Result<채널출품항목응답>> 출품수정Async(long listingId, 채널출품저장요청 request, 판매채널요청Context context, CancellationToken cancellationToken);
+    Task<Result> 출품삭제Async(long listingId, 판매채널요청Context context, CancellationToken cancellationToken);
 }
 
 [HongdalApiWorkflow(HongdalWorkflow.SalesChannelFulfillment)]
@@ -57,6 +63,27 @@ public sealed class 판매채널UseCase : I판매채널UseCase
         return result;
     }
 
+    public async Task<Result<판매채널계정항목응답>> 계정수정Async(
+        long accountId,
+        판매채널계정저장요청 request,
+        판매채널요청Context context,
+        CancellationToken cancellationToken)
+    {
+        var result = await _salesChannelService.UpdateAccountAsync(accountId, request, cancellationToken);
+        await 로그기록Async("SalesChannel", "AccountUpdated", $"{{\"accountId\":{result.Id}}}", context, cancellationToken);
+        return result;
+    }
+
+    public async Task<Result> 계정삭제Async(
+        long accountId,
+        판매채널요청Context context,
+        CancellationToken cancellationToken)
+    {
+        await _salesChannelService.DeleteAccountAsync(accountId, cancellationToken);
+        await 로그기록Async("SalesChannel", "AccountDeleted", $"{{\"accountId\":{accountId}}}", context, cancellationToken);
+        return Result.Ok();
+    }
+
     public async Task<Result<판매상품목록응답>> 상품목록Async(CancellationToken cancellationToken)
         => await _salesChannelService.GetProductsAsync(cancellationToken);
 
@@ -68,6 +95,27 @@ public sealed class 판매채널UseCase : I판매채널UseCase
         var result = await _salesChannelService.CreateProductAsync(request, cancellationToken);
         await 로그기록Async("SalesProduct", "ProductCreated", $"{{\"productId\":{result.Id},\"inboundItemId\":{result.입고상품Id}}}", context, cancellationToken);
         return result;
+    }
+
+    public async Task<Result<판매상품항목응답>> 상품수정Async(
+        long productId,
+        판매상품저장요청 request,
+        판매채널요청Context context,
+        CancellationToken cancellationToken)
+    {
+        var result = await _salesChannelService.UpdateProductAsync(productId, request, cancellationToken);
+        await 로그기록Async("SalesProduct", "ProductUpdated", $"{{\"productId\":{result.Id}}}", context, cancellationToken);
+        return result;
+    }
+
+    public async Task<Result> 상품삭제Async(
+        long productId,
+        판매채널요청Context context,
+        CancellationToken cancellationToken)
+    {
+        await _salesChannelService.DeleteProductAsync(productId, cancellationToken);
+        await 로그기록Async("SalesProduct", "ProductDeleted", $"{{\"productId\":{productId}}}", context, cancellationToken);
+        return Result.Ok();
     }
 
     public async Task<Result<판매상품목록응답>> 샘플상품시드Async(
@@ -91,6 +139,27 @@ public sealed class 판매채널UseCase : I판매채널UseCase
         var result = await _salesChannelService.CreateListingAsync(request, cancellationToken);
         await 로그기록Async("Listing", "ListingCreated", $"{{\"listingId\":{result.Id},\"salesProductId\":{result.판매상품Id},\"accountId\":{result.판매채널계정Id}}}", context, cancellationToken);
         return result;
+    }
+
+    public async Task<Result<채널출품항목응답>> 출품수정Async(
+        long listingId,
+        채널출품저장요청 request,
+        판매채널요청Context context,
+        CancellationToken cancellationToken)
+    {
+        var result = await _salesChannelService.UpdateListingAsync(listingId, request, cancellationToken);
+        await 로그기록Async("Listing", "ListingUpdated", $"{{\"listingId\":{result.Id}}}", context, cancellationToken);
+        return result;
+    }
+
+    public async Task<Result> 출품삭제Async(
+        long listingId,
+        판매채널요청Context context,
+        CancellationToken cancellationToken)
+    {
+        await _salesChannelService.DeleteListingAsync(listingId, cancellationToken);
+        await 로그기록Async("Listing", "ListingDeleted", $"{{\"listingId\":{listingId}}}", context, cancellationToken);
+        return Result.Ok();
     }
 
     private async Task 로그기록Async(

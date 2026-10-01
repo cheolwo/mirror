@@ -1,0 +1,88 @@
+@page "/warehouse/general/inventory"
+@inherits MvvmComponentBase<일반재고현황PageViewModel>
+
+<PageTitle>일반 재고 현황</PageTitle>
+
+<WarehousePageShell Model="@ViewModel"
+                    Title="일반 재고 현황"
+                    Description="출고 가능한 수량과 보관 위치를 확인합니다."
+                    Icon="@Icons.Material.Filled.Inventory2"
+                    Color="Color.Primary">
+    <Actions>
+        <MudStack Row="true" Spacing="1">
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       Disabled="@ViewModel.처리중"
+                       OnClick="ReloadAsync">
+                새로고침
+            </MudButton>
+            <MudButton Href="@WarehouseManagerRoutes.GeneralTransportHandoff"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.LocalShipping">
+                운송 인계
+            </MudButton>
+        </MudStack>
+    </Actions>
+    <ChildContent>
+        @if (!string.IsNullOrWhiteSpace(ViewModel.출고재고조회.오류메시지))
+        {
+            <MudAlert Severity="Severity.Error">@ViewModel.출고재고조회.오류메시지</MudAlert>
+        }
+
+        <MudGrid>
+            <MudItem xs="6" md="3">
+                <MudPaper Class="pa-3 h-100" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">재고 품목</MudText>
+                    <MudText Typo="Typo.h5">@Inventory.Count</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudPaper Class="pa-3 h-100" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">가용 수량</MudText>
+                    <MudText Typo="Typo.h5">@Inventory.Sum(item => item.가용수량)</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudPaper Class="pa-3 h-100" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">예약 수량</MudText>
+                    <MudText Typo="Typo.h5">@Inventory.Sum(item => item.예약수량)</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudPaper Class="pa-3 h-100" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">위치 미배정</MudText>
+                    <MudText Typo="Typo.h5">@Inventory.Count(item => string.IsNullOrWhiteSpace(item.보관위치))</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+            <MudText Typo="Typo.h6" Class="mb-3">보관 재고</MudText>
+            <WarehouseInventoryTable Items="@Inventory" Busy="@ViewModel.처리중" />
+        </MudPaper>
+    </ChildContent>
+</WarehousePageShell>
+
+@code {
+    private IReadOnlyList<재고항목응답> Inventory => ViewModel.출고재고조회.항목목록;
+
+    protected override async Task OnInitializedAsync()
+    {
+        EnsureProfile();
+        await ViewModel.초기화Async();
+    }
+
+    private Task ReloadAsync() => ViewModel.초기화Async();
+
+    private void EnsureProfile()
+    {
+        if (!string.Equals(
+                ViewModel.세션.운영ProfileCode,
+                창고운영ProfileCodes.일반입출고,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            ViewModel.세션.운영Profile설정(창고운영ProfileCodes.일반입출고);
+        }
+    }
+}

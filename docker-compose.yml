@@ -5,36 +5,68 @@ services:
       dockerfile: Hongdal/Dockerfile
     restart: unless-stopped
     ports:
-      - "8080:8080"
-      - "8081:8081"
+      - "${HONGDAL_BIND_ADDRESS:-127.0.0.1}:8080:8080"
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: "${HONGDAL_ASPNETCORE_ENVIRONMENT:-Development}"
       ASPNETCORE_URLS: http://+:8080
+      DOTNET_RUNNING_IN_CONTAINER: "true"
       ConnectionStrings__DefaultConnection: "${HONGDAL_DB_CONNECTION_STRING:-server=mysql;port=3306;database=hongdal_dev;user=hongdal;password=YOUR_LOCAL_PASSWORD;}"
+      TransientState__Provider: "${HONGDAL_TRANSIENT_STATE_PROVIDER:-Memory}"
       Redis__ConnectionString: "${HONGDAL_REDIS_CONNECTION_STRING:-redis:6379}"
       MongoDb__ConnectionString: "${HONGDAL_MONGO_CONNECTION_STRING:-mongodb://hongdal:YOUR_LOCAL_PASSWORD@mongo:27017/?authSource=admin}"
       MongoDb__Database: hongdal_dev
+      DatabaseInitialization__RunAtStartup: "${HONGDAL_DATABASE_INITIALIZATION_AT_STARTUP:-false}"
+      DatabaseInitialization__FailOnError: "true"
       Jwt__Issuer: Hongdal.Dev
       Jwt__Audience: Hongdal.Client.Dev
       Jwt__SecretKey: "${HONGDAL_JWT_SECRET_KEY:-development-only-jwt-secret-key-change-me-32bytes}"
+      IsmsPProtectedData__Aes256GcmKeyBase64: "${HONGDAL_ISMSP_AES256_GCM_KEY_BASE64:-}"
+      IsmsPProtectedData__HashSalt: "${HONGDAL_ISMSP_HASH_SALT:-}"
+      IsmsPProtectedData__TransportKeyId: "${HONGDAL_ISMSP_TRANSPORT_KEY_ID:-hongdal-local-transport-v1}"
+      IsmsPProtectedData__TransportPublicKeyPem: "${HONGDAL_ISMSP_TRANSPORT_PUBLIC_KEY_PEM:-}"
+      IsmsPProtectedData__TransportPrivateKeyPem: "${HONGDAL_ISMSP_TRANSPORT_PRIVATE_KEY_PEM:-}"
+      IsmsPProtectedData__FailWhenKeyMissing: "${HONGDAL_ISMSP_FAIL_WHEN_KEY_MISSING:-false}"
+      AgriculturalFisheriesBatch__Enabled: "${HONGDAL_AGRICULTURAL_FISHERIES_BATCH_ENABLED:-false}"
+      AgriculturalFisheriesBatch__KamisDailyEnabled: "${HONGDAL_KAMIS_DAILY_BATCH_ENABLED:-true}"
+      AgriculturalFisheriesBatch__KamisDailyCronExpression: "${HONGDAL_KAMIS_DAILY_CRON_EXPRESSION:-0 30 6 * * ?}"
+      AgriculturalFisheriesBatch__KamisMonthlyEnabled: "${HONGDAL_KAMIS_MONTHLY_BATCH_ENABLED:-true}"
+      AgriculturalFisheriesBatch__KamisMonthlyCronExpression: "${HONGDAL_KAMIS_MONTHLY_CRON_EXPRESSION:-0 0 7 2 * ?}"
+      AgriculturalFisheriesBatch__UsdaMonthlyEnabled: "${HONGDAL_USDA_MONTHLY_BATCH_ENABLED:-true}"
+      AgriculturalFisheriesBatch__UsdaMonthlyCronExpression: "${HONGDAL_USDA_MONTHLY_CRON_EXPRESSION:-0 30 7 10 * ?}"
+      PublicData__Kamis__CertificationKey: "${HONGDAL_KAMIS_CERTIFICATION_KEY:-}"
+      PublicData__Kamis__RequesterId: "${HONGDAL_KAMIS_REQUESTER_ID:-}"
+      PublicData__UsdaNassQuickStats__ApiKey: "${HONGDAL_USDA_NASS_API_KEY:-}"
       TossPayments__ClientKey: "${HONGDAL_TOSS_CLIENT_KEY:-development-only-client-key}"
       TossPayments__SecretKey: "${HONGDAL_TOSS_SECRET_KEY:-development-only-secret-key}"
       GoogleGeocodingApiKey: "${HONGDAL_GOOGLE_GEOCODING_API_KEY:-development-only-google-geocoding-key}"
       NaverCloudDirections__ApiKeyId: "${HONGDAL_NAVER_CLOUD_DIRECTIONS_API_KEY_ID:-development-only-naver-key-id}"
       NaverCloudDirections__ApiKey: "${HONGDAL_NAVER_CLOUD_DIRECTIONS_API_KEY:-development-only-naver-key}"
+      CommunityPostTranslation__Enabled: "${HONGDAL_COMMUNITY_TRANSLATION_ENABLED:-false}"
+      CommunityPostTranslation__ApiKey: "${HONGDAL_AZURE_TRANSLATOR_KEY:-}"
+      CommunityPostTranslation__Region: "${HONGDAL_AZURE_TRANSLATOR_REGION:-koreacentral}"
+      HongdalLogging__FilePath: "logs/hongdal-.log"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:8080/health/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     depends_on:
       mysql:
         condition: service_healthy
-      redis:
-        condition: service_healthy
       mongo:
         condition: service_healthy
+    volumes:
+      - app_data:/app/App_Data
+      - app_uploads:/app/uploads
+      - app_community:/app/community
+      - app_logs:/app/logs
 
   mysql:
     image: mysql:8.4
     restart: unless-stopped
     ports:
-      - "13306:3306"
+      - "127.0.0.1:13306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: "${HONGDAL_MYSQL_ROOT_PASSWORD:-YOUR_LOCAL_ROOT_PASSWORD}"
       MYSQL_DATABASE: hongdal_dev
@@ -55,9 +87,10 @@ services:
 
   redis:
     image: redis:7.4-alpine
+    profiles: ["redis"]
     restart: unless-stopped
     ports:
-      - "16379:6379"
+      - "127.0.0.1:16379:6379"
     command: ["redis-server", "--appendonly", "yes"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -71,7 +104,7 @@ services:
     image: mongo:8.0
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: hongdal
       MONGO_INITDB_ROOT_PASSWORD: "${HONGDAL_MONGO_ROOT_PASSWORD:-YOUR_LOCAL_PASSWORD}"
@@ -85,6 +118,10 @@ services:
       - mongo_data:/data/db
 
 volumes:
+  app_data:
+  app_uploads:
+  app_community:
+  app_logs:
   mysql_data:
   redis_data:
   mongo_data:

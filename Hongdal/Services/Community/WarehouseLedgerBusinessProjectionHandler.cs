@@ -6,25 +6,25 @@ using 홍달.도메인.창고;
 
 namespace Hongdal.Services.Community;
 
-public sealed class 창고원장업무투영Handler : I원장업무투영동기화Handler
+public sealed class 입출고원장업무투영Handler : I원장업무투영동기화Handler
 {
     private readonly HongdalContext _db;
-    private readonly ILogger<창고원장업무투영Handler> _logger;
+    private readonly ILogger<입출고원장업무투영Handler> _logger;
 
-    public 창고원장업무투영Handler(
+    public 입출고원장업무투영Handler(
         HongdalContext db,
-        ILogger<창고원장업무투영Handler> logger)
+        ILogger<입출고원장업무투영Handler> logger)
     {
         _db = db;
         _logger = logger;
     }
 
     public bool 처리대상인가(커뮤니티원장Dto 원장)
-        => 창고원장업무투영Snapshot.처리대상인가(원장);
+        => 입출고원장업무투영Snapshot.처리대상인가(원장);
 
     public async Task 동기화Async(커뮤니티원장Dto 원장, CancellationToken cancellationToken = default)
     {
-        var snapshot = 창고원장업무투영Snapshot.생성(원장);
+        var snapshot = 입출고원장업무투영Snapshot.생성(원장);
         if (snapshot is null)
         {
             return;
@@ -157,7 +157,7 @@ public sealed class 창고원장업무투영Handler : I원장업무투영동기�
 
     private async Task<bool> 입고요청반영Async(
         long inboundId,
-        창고원장업무투영Snapshot snapshot,
+        입출고원장업무투영Snapshot snapshot,
         DateTime now,
         HashSet<long> touchedInboundIds,
         HashSet<long> touchedInboundItemIds,
@@ -176,7 +176,7 @@ public sealed class 창고원장업무투영Handler : I원장업무투영동기�
 
     private async Task<bool> 입고상품반영Async(
         long inboundItemId,
-        창고원장업무투영Snapshot snapshot,
+        입출고원장업무투영Snapshot snapshot,
         DateTime now,
         HashSet<long> touchedInboundItemIds,
         CancellationToken cancellationToken)
@@ -192,7 +192,7 @@ public sealed class 창고원장업무투영Handler : I원장업무투영동기�
 
     private async Task<bool> 출고예정반영Async(
         long outboundId,
-        창고원장업무투영Snapshot snapshot,
+        입출고원장업무투영Snapshot snapshot,
         DateTime now,
         HashSet<long> touchedOutboundIds,
         HashSet<long> touchedInboundIds,
@@ -212,7 +212,7 @@ public sealed class 창고원장업무투영Handler : I원장업무투영동기�
 
     private async Task<bool> 출고묶음반영Async(
         long bundleId,
-        창고원장업무투영Snapshot snapshot,
+        입출고원장업무투영Snapshot snapshot,
         DateTime now,
         HashSet<long> touchedBundleIds,
         CancellationToken cancellationToken)
@@ -228,7 +228,7 @@ public sealed class 창고원장업무투영Handler : I원장업무투영동기�
 
     private async Task<bool> 연결입고반영Async(
         출고예정 outbound,
-        창고원장업무투영Snapshot snapshot,
+        입출고원장업무투영Snapshot snapshot,
         DateTime now,
         HashSet<long> touchedInboundIds,
         HashSet<long> touchedInboundItemIds,
@@ -258,7 +258,7 @@ public sealed class 창고원장업무투영Handler : I원장업무투영동기�
 
     private async Task<bool> 입고요청상품반영Async(
         long inboundId,
-        창고원장업무투영Snapshot snapshot,
+        입출고원장업무투영Snapshot snapshot,
         DateTime now,
         HashSet<long> touchedInboundItemIds,
         CancellationToken cancellationToken)
@@ -278,7 +278,7 @@ public sealed class 창고원장업무투영Handler : I원장업무투영동기�
         return changed;
     }
 
-    private static bool ApplyInbound(입고요청 entity, 창고원장업무투영Snapshot snapshot, DateTime now)
+    private static bool ApplyInbound(입고요청 entity, 입출고원장업무투영Snapshot snapshot, DateTime now)
     {
         var changed = ApplyLedgerLink(entity.커뮤니티원장Id, snapshot.LedgerId, value => entity.커뮤니티원장Id = value);
         changed |= ApplyLedgerLink(entity.커뮤니티원장템플릿Key, snapshot.LedgerTemplateKey, value => entity.커뮤니티원장템플릿Key = value);
@@ -297,7 +297,7 @@ public sealed class 창고원장업무투영Handler : I원장업무투영동기�
         return true;
     }
 
-    private static bool ApplyInboundItem(입고상품 entity, 창고원장업무투영Snapshot snapshot, DateTime now)
+    private static bool ApplyInboundItem(입고상품 entity, 입출고원장업무투영Snapshot snapshot, DateTime now)
     {
         var changed = ApplyLedgerLink(entity.커뮤니티원장Id, snapshot.LedgerId, value => entity.커뮤니티원장Id = value);
         changed |= ApplyLedgerLink(entity.커뮤니티원장템플릿Key, snapshot.LedgerTemplateKey, value => entity.커뮤니티원장템플릿Key = value);
@@ -323,7 +323,7 @@ public sealed class 창고원장업무투영Handler : I원장업무투영동기�
         return true;
     }
 
-    private static bool ApplyOutbound(출고예정 entity, 창고원장업무투영Snapshot snapshot, DateTime now)
+    private static bool ApplyOutbound(출고예정 entity, 입출고원장업무투영Snapshot snapshot, DateTime now)
     {
         var changed = ApplyLedgerLink(entity.커뮤니티원장Id, snapshot.LedgerId, value => entity.커뮤니티원장Id = value);
         changed |= ApplyLedgerLink(entity.커뮤니티원장템플릿Key, snapshot.LedgerTemplateKey, value => entity.커뮤니티원장템플릿Key = value);
@@ -342,7 +342,7 @@ public sealed class 창고원장업무투영Handler : I원장업무투영동기�
         return true;
     }
 
-    private static bool ApplyOutboundBundle(출고묶음 entity, 창고원장업무투영Snapshot snapshot, DateTime now)
+    private static bool ApplyOutboundBundle(출고묶음 entity, 입출고원장업무투영Snapshot snapshot, DateTime now)
     {
         var changed = ApplyLedgerLink(entity.커뮤니티원장Id, snapshot.LedgerId, value => entity.커뮤니티원장Id = value);
         changed |= ApplyLedgerLink(entity.커뮤니티원장템플릿Key, snapshot.LedgerTemplateKey, value => entity.커뮤니티원장템플릿Key = value);
@@ -383,7 +383,7 @@ public sealed class 창고원장업무투영Handler : I원장업무투영동기�
 
     private static bool ApplyLedgerLink(string? current, string? value, Action<string> setter)
     {
-        var cleaned = 창고원장업무투영Snapshot.Clean(value);
+        var cleaned = 입출고원장업무투영Snapshot.Clean(value);
         if (cleaned is null || string.Equals(current, cleaned, StringComparison.Ordinal))
         {
             return false;
@@ -395,12 +395,12 @@ public sealed class 창고원장업무투영Handler : I원장업무투영동기�
 
     private static bool ContainsAny(string? source, params string[] candidates)
     {
-        var text = 창고원장업무투영Snapshot.Clean(source);
+        var text = 입출고원장업무투영Snapshot.Clean(source);
         return text is not null && candidates.Any(candidate => text.Contains(candidate, StringComparison.OrdinalIgnoreCase));
     }
 }
 
-public sealed class 창고원장업무투영Snapshot
+public sealed class 입출고원장업무투영Snapshot
 {
     public string LedgerId { get; init; } = string.Empty;
     public string LedgerTemplateKey { get; init; } = string.Empty;
@@ -448,7 +448,7 @@ public sealed class 창고원장업무투영Snapshot
         });
     }
 
-    public static 창고원장업무투영Snapshot? 생성(커뮤니티원장Dto 원장)
+    public static 입출고원장업무투영Snapshot? 생성(커뮤니티원장Dto 원장)
     {
         if (!처리대상인가(원장))
         {
@@ -477,7 +477,7 @@ public sealed class 창고원장업무투영Snapshot
             TryGet(outboundBlock?.Data, "원천Id", "SourceId", "sourceId"),
             TryGet(inboundBlock?.Data, "원천Id", "SourceId", "sourceId"));
 
-        return new 창고원장업무투영Snapshot
+        return new 입출고원장업무투영Snapshot
         {
             LedgerId = Clean(원장.원장Id) ?? string.Empty,
             LedgerTemplateKey = Clean(원장.원장템플릿Key) ?? string.Empty,

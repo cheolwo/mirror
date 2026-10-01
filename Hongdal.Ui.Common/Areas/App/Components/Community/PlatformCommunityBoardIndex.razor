@@ -1,0 +1,81 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<section class="platform-community-board-index" aria-labelledby="community-board-index-title">
+    <header class="platform-community-board-index__header">
+        <div>
+            <span>COMMUNITY BOARDS</span>
+            <h1 id="community-board-index-title">살뜰 생활 게시판</h1>
+            <p>관심 있는 게시판을 고르면 그곳의 글 목록으로 이동합니다.</p>
+        </div>
+        <label class="platform-community-board-index__search">
+            <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+            <input type="search"
+                   aria-label="게시판 검색"
+                   placeholder="게시판 이름이나 주제 검색"
+                   value="@SearchText"
+                   @oninput="HandleSearchInput" />
+        </label>
+    </header>
+
+    <a class="platform-community-board-index__all" href="@AllBoard.Href">
+        <span class="platform-community-board-index__icon">
+            <MudIcon Icon="@AllBoard.Icon" />
+        </span>
+        <span>
+            <strong>전체 글</strong>
+            <small>@AllBoard.Description</small>
+        </span>
+        <b>@AllBoard.PostCount</b>
+        <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+    </a>
+
+    @if (Boards.Count == 0)
+    {
+        <div class="platform-community-board-index__empty">
+            <MudIcon Icon="@Icons.Material.Filled.SearchOff" />
+            <span>검색 조건에 맞는 게시판이 없습니다.</span>
+        </div>
+    }
+    else
+    {
+        <div class="platform-community-board-index__list">
+            @foreach (var board in Boards)
+            {
+                <a class="platform-community-board-index__item" href="@board.Href">
+                    <span class="platform-community-board-index__icon">
+                        <MudIcon Icon="@board.Icon" />
+                    </span>
+                    <span>
+                        <strong>@board.Name</strong>
+                        <small>@board.Description</small>
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Variant="Variant.Text"
+                                 Color="@board.PostingAccessColor">
+                            @board.PostingAccessLabel
+                        </MudChip>
+                    </span>
+                    <b>@board.PostCount</b>
+                    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                </a>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public CommunityBoardNavigationItem AllBoard { get; set; } = default!;
+
+    [Parameter]
+    public IReadOnlyList<CommunityBoardNavigationItem> Boards { get; set; } = [];
+
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> SearchTextChanged { get; set; }
+
+    private Task HandleSearchInput(ChangeEventArgs args)
+        => SearchTextChanged.InvokeAsync(args.Value?.ToString() ?? string.Empty);
+}

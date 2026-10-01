@@ -115,6 +115,10 @@ public sealed class WorkflowApiEndpointDto
 
     public string ProductVersionName { get; init; } = string.Empty;
 
+    public string FeatureKey { get; init; } = string.Empty;
+
+    public bool IsEnabled { get; init; }
+
     public IReadOnlyList<string> WorkflowCodes { get; init; } = [];
 
     public IReadOnlyList<string> WorkflowNames { get; init; } = [];
@@ -151,9 +155,17 @@ public sealed class OperatingSystemDto
 {
     public string OperatingSystemCode { get; init; } = string.Empty;
 
+    public string CanonicalOperatingSystemId { get; init; } = string.Empty;
+
+    public IReadOnlyList<string> OperatingSystemAliases { get; init; } = [];
+
     public string OperatingSystemName { get; init; } = string.Empty;
 
     public string Purpose { get; init; } = string.Empty;
+
+    public string FeatureKey { get; init; } = string.Empty;
+
+    public bool IsEnabled { get; init; }
 
     public IReadOnlyList<OperatingSystemWorkflowDto> Workflows { get; init; } = [];
 
@@ -173,6 +185,12 @@ public sealed class OperatingSystemEngineDto
 {
     public string EngineCode { get; init; } = string.Empty;
 
+    public string EngineFamilyId { get; init; } = string.Empty;
+
+    public IReadOnlyList<string> ImplementationIds { get; init; } = [];
+
+    public string RuntimeStatus { get; init; } = RuntimeCapabilityStatuses.Declared;
+
     public string EngineName { get; init; } = string.Empty;
 
     public string AdjustmentPolicy { get; init; } = string.Empty;
@@ -180,6 +198,8 @@ public sealed class OperatingSystemEngineDto
 
 public sealed class OperatingSystemSchedulingPolicyDto
 {
+    public string RuntimeStatus { get; init; } = RuntimeCapabilityStatuses.Declared;
+
     public string PolicyKindCode { get; init; } = string.Empty;
 
     public string PolicyKindName { get; init; } = string.Empty;

@@ -1,11 +1,18 @@
 using Hongdal.ApiMetadata;
+using Hongdal.Contracts.Common.Metadata;
 using Hongdal.Services.Community;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hongdal.Controllers.Common;
 
-[HongdalApiVersion(HongdalProductVersion.V1_0)]
+[HongdalCommunityV0Module(
+    HongdalCommunityV0ModuleKeys.Participation,
+    HongdalModuleKind.Api,
+    "원장·다이어그램 대화방과 메시지 조회 HTTP 경계",
+    ReleaseStage = HongdalCommunityV0ReleaseStages.ClosedLoop,
+    Boundary = "참여자와 공개 범위를 확인하지 않은 비공개 대화 노출을 허용하지 않습니다.")]
+[HongdalApiVersion(HongdalProductVersion.V0_0)]
 [HongdalApiWorkflow(HongdalWorkflow.CommunityTrust)]
 [HongdalApiGrowthTrack(HongdalApiGrowthTrack.Community)]
 [ApiController]

@@ -1,0 +1,87 @@
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+
+<section class="public-data-workspace__query-section public-data-workspace__query-section--compare">
+    <label class="public-data-workspace__field">
+        <span>한국 품목</span>
+        <select @bind="ViewModel.국내.선택HsCode">
+            @foreach (var item in ViewModel.국내.품목)
+            {
+                <option value="@item.HsPrefix">@item.ProductName</option>
+            }
+        </select>
+    </label>
+    <label class="public-data-workspace__field">
+        <span>미국 공식 품목명</span>
+        <input list="usda-comparison-commodities"
+               @bind="ViewModel.미국.품목명"
+               autocomplete="off" />
+    </label>
+    <datalist id="usda-comparison-commodities">
+        @foreach (var commodity in 미국농수산가격조회ViewModel.품목예시)
+        {
+            <option value="@commodity"></option>
+        }
+    </datalist>
+    <label class="public-data-workspace__field">
+        <span>호주 식품 분류</span>
+        <select @bind="ViewModel.호주.선택IndexCode">
+            @foreach (var index in ViewModel.호주.Catalog.Indexes)
+            {
+                <option value="@index.Code">@index.Label</option>
+            }
+        </select>
+    </label>
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Info"
+               StartIcon="@Icons.Material.Filled.CompareArrows"
+               Disabled="ViewModel.IsLoading"
+               OnClick="@(() => ViewModel.LoadComparisonAsync())">
+        세 나라 조회
+    </MudButton>
+</section>
+
+<농수산가격ComparisonSummary Domestic="@ViewModel.국내.응답"
+                               UnitedStates="@ViewModel.미국.응답"
+                               Australia="@ViewModel.호주.응답" />
+
+<div class="public-data-workspace__comparison-details">
+    <section>
+        <header>
+            <div>
+                <span>KR · 실제 단가</span>
+                <strong>@ViewModel.국내.선택품목명</strong>
+            </div>
+        </header>
+        <국내농수산가격Result Response="@ViewModel.국내.응답"
+                              ErrorMessage="@ViewModel.국내.오류메시지" />
+    </section>
+    <section>
+        <header>
+            <div>
+                <span>US · 생산자 수취가격</span>
+                <strong>@ViewModel.미국.정규화품목명</strong>
+            </div>
+        </header>
+        <미국농수산가격Result Response="@ViewModel.미국.응답"
+                              ErrorMessage="@ViewModel.미국.오류메시지" />
+    </section>
+    <section>
+        <header>
+            <div>
+                <span>AU · 소비자가격지수</span>
+                <strong>@ViewModel.호주.선택Index명</strong>
+            </div>
+        </header>
+        <호주농수산가격Result Response="@ViewModel.호주.응답"
+                              ErrorMessage="@ViewModel.호주.오류메시지" />
+    </section>
+</div>
+
+<p class="public-data-workspace__comparison-note">
+    한국·미국 자료는 조사 단계와 단위가 다르고, 호주 자료는 실제 단가가 아닌 가격지수입니다. 동일 통화의 구매 견적으로 환산하지 않습니다.
+</p>
+
+@code {
+    [Parameter, EditorRequired]
+    public 농수산가격비교PageViewModel ViewModel { get; set; } = default!;
+}

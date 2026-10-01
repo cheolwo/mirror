@@ -1,0 +1,138 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+
+@if (Model.IsApplicable)
+{
+    <section class="market-meat-journey" aria-labelledby="market-meat-journey-title">
+        <header class="market-meat-journey__header">
+            <div>
+                <span><MudIcon Icon="@Icons.Material.Filled.Storefront" Size="Size.Small" /> 지역에서 만드는 마지막 상품</span>
+                <h2 id="market-meat-journey-title">@Model.Title</h2>
+                <p>해외 도축과 한국 수입 절차가 끝난 뒤, 허가된 전통시장 작업자가 정육·소분하고 지역 배송자가 냉장 상태로 전달합니다.</p>
+            </div>
+            <div class="market-meat-journey__route" aria-label="수입육 경로">
+                <strong>@Model.SourceCountryCode</strong>
+                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                <strong>@Model.DestinationCountryCode</strong>
+                <small>HS @Model.HsCode · @Model.TemperatureCode</small>
+            </div>
+        </header>
+
+        <div class="market-meat-journey__boundaries">
+            <div>
+                <span>해외에서 완료</span>
+                <strong>도축·1차 처리·수출검역</strong>
+                <small>한국 수출 승인 작업장과 lot 기준</small>
+            </div>
+            <div>
+                <span>국내 작업 전 관문</span>
+                <strong>검역·수입검사·세관 반출</strong>
+                <small>공식 결과 전에는 시장 작업을 열지 않음</small>
+            </div>
+            <div>
+                <span>지역에서 담당</span>
+                <strong>정육·포장·동네 냉장배송</strong>
+                <small>각 사업자가 인허가와 계약 범위에서 직접 수락</small>
+            </div>
+        </div>
+
+        <section class="market-meat-journey__economics" aria-labelledby="market-meat-economics-title">
+            <header>
+                <div>
+                    <span>지역 사업자의 대가를 포함한 가격</span>
+                    <h3 id="market-meat-economics-title">판매가능 중량 기준으로 비교</h3>
+                </div>
+                <strong>견적 전</strong>
+            </header>
+            <p>@Model.PricingBasisLabel</p>
+            <ul>
+                @foreach (var cost in Model.CostInputs)
+                {
+                    <li class="@(cost.PaysLocalBusiness ? "is-local" : null)">
+                        <strong>@cost.Label</strong>
+                        <span>@cost.Detail</span>
+                        @if (cost.PaysLocalBusiness)
+                        {
+                            <small>지역 사업자 서비스 대가</small>
+                        }
+                    </li>
+                }
+            </ul>
+        </section>
+
+        <section class="market-meat-journey__requirements" aria-labelledby="market-meat-requirements-title">
+            <header>
+                <div>
+                    <span>전통시장이라는 장소와 영업 권한은 별개</span>
+                    <h3 id="market-meat-requirements-title">작업별 확인 범위</h3>
+                </div>
+                <strong>@($"{Model.Requirements.Count}개 확인")</strong>
+            </header>
+            <div>
+                @foreach (var requirement in Model.Requirements)
+                {
+                    <article>
+                        <div>
+                            <strong>@requirement.Label</strong>
+                            <p>@requirement.Detail</p>
+                        </div>
+                        <span>@string.Join(" · ", requirement.CandidateBusinessTypes)</span>
+                    </article>
+                }
+            </div>
+        </section>
+
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="market-meat-journey__notice">
+            시장 상인은 통관 수리 뒤의 국내 2차 가공만 맡습니다. 플랫폼은 작업자·배송자를 자동 선정하거나 인허가, 검역·통관 결과, 냉장 상태를 대신 보증하지 않습니다.
+        </MudAlert>
+
+        <div class="market-meat-journey__progress">
+            <span>현재 확인</span>
+            <strong>@($"{Model.CompletedStageCount}/{Model.Stages.Count}단계")</strong>
+            <small>@Model.CurrentStage?.Label</small>
+        </div>
+
+        <ol class="market-meat-journey__stages">
+            @foreach (var stage in Model.Stages.OrderBy(stage => stage.Number))
+            {
+                <li class="@BuildStageClass(stage.State)">
+                    <div class="market-meat-journey__stage-number">
+                        <span>@stage.Number</span>
+                        <MudIcon Icon="@ResolveStageIcon(stage.State)" Size="Size.Small" />
+                    </div>
+                    <strong>@stage.Label</strong>
+                    <p>@stage.Detail</p>
+                    <div class="market-meat-journey__stage-meta">
+                        <span>@stage.ResponsibleRoleLabel</span>
+                        <small>@stage.EvidenceLabel</small>
+                    </div>
+                </li>
+            }
+        </ol>
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public CommunityTraditionalMarketImportedMeatFulfillmentSnapshot Model { get; set; } = new();
+
+    private static string BuildStageClass(CommunityTraditionalMarketImportedMeatStageState state)
+        => state switch
+        {
+            CommunityTraditionalMarketImportedMeatStageState.Completed => "is-completed",
+            CommunityTraditionalMarketImportedMeatStageState.Current => "is-current",
+            CommunityTraditionalMarketImportedMeatStageState.OfficialResultRequired => "is-official",
+            CommunityTraditionalMarketImportedMeatStageState.SeparateContractRequired => "is-contract",
+            _ => "is-waiting"
+        };
+
+    private static string ResolveStageIcon(CommunityTraditionalMarketImportedMeatStageState state)
+        => state switch
+        {
+            CommunityTraditionalMarketImportedMeatStageState.Completed => Icons.Material.Filled.CheckCircle,
+            CommunityTraditionalMarketImportedMeatStageState.Current => Icons.Material.Filled.PlayCircle,
+            CommunityTraditionalMarketImportedMeatStageState.OfficialResultRequired => Icons.Material.Filled.Policy,
+            CommunityTraditionalMarketImportedMeatStageState.SeparateContractRequired => Icons.Material.Filled.Handshake,
+            _ => Icons.Material.Filled.Schedule
+        };
+}

@@ -1,0 +1,263 @@
+@using Hongdal.Contracts.Common.Content
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inherits ViewModelParameterComponentBase<CommunityAuthoringAiDraftViewModel>
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<section class="community-ai-draft" aria-label="LLM 근거 초안">
+    <header class="community-ai-draft__heading">
+        <div>
+            <MudText Typo="Typo.overline" Color="Color.Primary">EVIDENCE DRAFT</MudText>
+            <MudText Typo="Typo.subtitle1">LLM 근거 초안</MudText>
+        </div>
+        <MudTooltip Text="생성 결과 비우기">
+            <MudIconButton Icon="@Icons.Material.Filled.RestartAlt"
+                           Disabled="@ViewModel.IsLoading"
+                           OnClick="ViewModel.ResetResult"
+                           aria-label="생성 결과 비우기" />
+        </MudTooltip>
+    </header>
+
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+        조회한 공개 자료만 근거로 쓰며 결과는 검토용 초안으로만 반환됩니다.
+    </MudAlert>
+
+    <MudTextField T="string"
+                  Label="글의 목적"
+                  Value="@ViewModel.Objective"
+                  ValueChanged="ChangeObjective"
+                  Lines="3"
+                  MaxLength="800"
+                  Counter="800"
+                  Immediate="true"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense" />
+
+    <div class="community-ai-draft__filters">
+        <MudTextField T="string"
+                      Label="주제"
+                      Value="@ViewModel.Topic"
+                      ValueChanged="ChangeTopic"
+                      MaxLength="200"
+                      Immediate="true"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense" />
+        <MudSelect T="string"
+                   Label="자료 원천"
+                   Value="@ViewModel.SourceKey"
+                   ValueChanged="ChangeSource"
+                   Variant="Variant.Outlined"
+                   Margin="Margin.Dense">
+            <MudSelectItem T="string" Value="@(string.Empty)">기본 수집 자료</MudSelectItem>
+            @foreach (var source in ViewModel.Sources)
+            {
+                <MudSelectItem T="string" Value="@source.SourceKey">@source.DisplayName</MudSelectItem>
+            }
+        </MudSelect>
+        <MudTextField T="string"
+                      Label="검색어"
+                      Value="@ViewModel.SearchText"
+                      ValueChanged="ChangeSearchText"
+                      MaxLength="160"
+                      Immediate="true"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense" />
+        <MudTextField T="string"
+                      Label="국가 코드"
+                      Placeholder="KR, US, AU"
+                      Value="@ViewModel.CountryCode"
+                      ValueChanged="ChangeCountryCode"
+                      MaxLength="3"
+                      Immediate="true"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense" />
+        <MudDateRangePicker Label="자료 기간"
+                            DateRange="@SelectedRange"
+                            DateRangeChanged="ChangeDateRange"
+                            DateFormat="yyyy-MM-dd"
+                            MaxDays="366"
+                            Editable="true"
+                            Clearable="true"
+                            Variant="Variant.Outlined"
+                            Margin="Margin.Dense" />
+        <MudNumericField T="int"
+                         Label="최대 근거 수"
+                         Value="@ViewModel.MaxEvidenceItems"
+                         ValueChanged="ChangeMaxEvidenceItems"
+                         Min="1"
+                         Max="20"
+                         Variant="Variant.Outlined"
+                         Margin="Margin.Dense" />
+    </div>
+
+    <div class="community-ai-draft__tools" aria-label="LLM 자료 도구 선택">
+        <MudCheckBox T="bool"
+                     Label="수집 자료 조회"
+                     Value="@ViewModel.IncludeInformationCollection"
+                     ValueChanged="ChangeInformationCollection"
+                     Color="Color.Primary" />
+        <MudCheckBox T="bool"
+                     Label="YouTube·SNS 다시 조사"
+                     Value="@ViewModel.IncludeYouTubeSocialResearch"
+                     ValueChanged="ChangeYouTubeSocialResearch"
+                     Color="Color.Primary" />
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            SNS 재조사는 YouTube·SNS 탭의 현재 조건을 사용하며 외부 API 비용이 발생할 수 있습니다.
+        </MudText>
+    </div>
+
+    <div class="community-ai-draft__actions">
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.AutoAwesome"
+                   Disabled="@ViewModel.IsLoading"
+                   OnClick="GenerateRequested">
+            근거 초안 만들기
+        </MudButton>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ViewModel.StatusMessage))
+    {
+        <MudAlert Severity="@StatusSeverity" Variant="Variant.Outlined" Dense="true">
+            @ViewModel.StatusMessage
+        </MudAlert>
+    }
+
+    @if (ViewModel.IsLoading)
+    {
+        <div class="community-ai-draft__loading">
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="68px" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="240px" />
+        </div>
+    }
+    else if (ViewModel.Result is { } result)
+    {
+        <section class="community-ai-draft__executions" aria-label="자료 도구 실행 결과">
+            <MudText Typo="Typo.subtitle2">자료 도구</MudText>
+            @foreach (var execution in result.ToolExecutions)
+            {
+                <div class="community-ai-draft__execution">
+                    <MudIcon Icon="@(execution.Succeeded ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.ErrorOutline)"
+                             Color="@(execution.Succeeded ? Color.Success : Color.Warning)"
+                             Size="Size.Small" />
+                    <span>
+                        <strong>@execution.DisplayName</strong>
+                        <small>@execution.Message</small>
+                    </span>
+                </div>
+            }
+        </section>
+
+        @if (result.Draft is { } draft)
+        {
+            <section class="community-ai-draft__preview" aria-label="LLM 글 초안 미리보기">
+                <header>
+                    <MudText Typo="Typo.subtitle2">@draft.Title</MudText>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning">
+                        검토 필요
+                    </MudChip>
+                </header>
+                <MudText Typo="Typo.body2" Class="community-ai-draft__body">@draft.Body</MudText>
+            </section>
+
+            @if (draft.OpenQuestions.Count > 0)
+            {
+                <section class="community-ai-draft__questions" aria-label="확인할 질문">
+                    <MudText Typo="Typo.subtitle2">확인할 질문</MudText>
+                    <ul>
+                        @foreach (var question in draft.OpenQuestions)
+                        {
+                            <li>@question</li>
+                        }
+                    </ul>
+                </section>
+            }
+
+            <div class="community-ai-draft__actions">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.PostAdd"
+                           Disabled="@(!ViewModel.CanApply)"
+                           OnClick="ApplyRequested">
+                    현재 초안에 적용
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Hub"
+                           Disabled="@(draft.SuggestedDiagramSteps.Count == 0)"
+                           OnClick="ImportDiagramRequested">
+                    다이어그램 단계로 가져오기
+                </MudButton>
+            </div>
+        }
+
+        @if (result.Evidence.Count > 0)
+        {
+            <section class="community-ai-draft__evidence" aria-label="LLM 입력 근거">
+                <MudText Typo="Typo.subtitle2">입력 근거 @(result.Evidence.Count)건</MudText>
+                <MudTable T="CommunityAuthoringAiEvidenceDto"
+                          Items="@result.Evidence"
+                          Dense="true"
+                          Hover="true"
+                          Breakpoint="Breakpoint.Sm"
+                          Elevation="0">
+                    <HeaderContent>
+                        <MudTh>출처</MudTh>
+                        <MudTh>자료</MudTh>
+                        <MudTh>기준</MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="item">
+                        <MudTd DataLabel="출처">@item.Provider</MudTd>
+                        <MudTd DataLabel="자료">
+                            <a href="@item.OriginalUrl" target="_blank" rel="noopener noreferrer">@item.Title</a>
+                        </MudTd>
+                        <MudTd DataLabel="기준">@(item.ReferenceDate?.ToString("yyyy-MM-dd") ?? "-")</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </section>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(result.Model))
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                @result.Model · 이번 호출 @result.ActualCostUsd.ToString("0.000000") USD · 월 누적 @result.MonthlyUsedUsd.ToString("0.0000") / @result.MonthlyBudgetUsd.ToString("0.00") USD
+            </MudText>
+        }
+    }
+</section>
+
+@code {
+    [Parameter]
+    public EventCallback GenerateRequested { get; set; }
+
+    [Parameter]
+    public EventCallback ApplyRequested { get; set; }
+
+    [Parameter]
+    public EventCallback ImportDiagramRequested { get; set; }
+
+    private DateRange SelectedRange => new(ViewModel.StartDate, ViewModel.EndDate);
+
+    private Severity StatusSeverity
+        => ViewModel.StatusKind switch
+        {
+            CommunityComposerMessageKind.Success => Severity.Success,
+            CommunityComposerMessageKind.Warning => Severity.Warning,
+            CommunityComposerMessageKind.Error => Severity.Error,
+            _ => Severity.Info
+        };
+
+    private void ChangeObjective(string value) => ViewModel.Objective = value;
+    private void ChangeTopic(string value) => ViewModel.Topic = value;
+    private void ChangeSource(string value) => ViewModel.SourceKey = value;
+    private void ChangeSearchText(string value) => ViewModel.SearchText = value;
+    private void ChangeCountryCode(string value) => ViewModel.CountryCode = value;
+    private void ChangeMaxEvidenceItems(int value) => ViewModel.MaxEvidenceItems = value;
+    private void ChangeInformationCollection(bool value) => ViewModel.IncludeInformationCollection = value;
+    private void ChangeYouTubeSocialResearch(bool value) => ViewModel.IncludeYouTubeSocialResearch = value;
+
+    private void ChangeDateRange(DateRange range)
+    {
+        ViewModel.StartDate = range.Start;
+        ViewModel.EndDate = range.End;
+    }
+}

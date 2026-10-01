@@ -62,9 +62,16 @@ public static class PlatformHomeWorkspaceCatalog
             "공동구매",
             "모집, 구매, 분배, 정산 표시를 함께 굴리는 공동 업무",
             CommunityLedgerTemplateKeys.GroupPurchase,
-            "/group-purchase",
+            "/community/group-purchase",
             Icons.Material.Filled.Groups,
             Color.Primary),
+        Create(
+            "공동수입",
+            "공동구매 수요를 이어 해외 선적, 통관, 3PL 입고와 국내 분배를 처리하는 업무",
+            CommunityLedgerTemplateKeys.GroupImport,
+            "/community/group-import",
+            Icons.Material.Filled.Public,
+            Color.Info),
         Create(
             "생활 요청",
             "심부름, 도움 요청, 동네 협업처럼 정형화되지 않은 업무",

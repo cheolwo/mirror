@@ -1,0 +1,178 @@
+@page "/shipper/warehouse/inventory"
+@using Hongdal.Contracts.Common.Inventory
+@using Hongdal.Contracts.Common.Sales
+@using HongdalApp.Services
+@inject NavigationManager Navigation
+@inject IShipperSalesService SalesService
+
+<PageTitle>재고 목록</PageTitle>
+
+<MudStack Spacing="3">
+    <HongdalWarehouseInventoryHub
+        @ref="inventoryHub"
+        Description="주문자, 화주, 창고관리자가 같은 앱 안에서 입고상품의 다음 액션을 결정하는 화면입니다."
+        AuxiliaryMetricLabel="연결 채널 계정"
+        AuxiliaryMetricValue="@accounts.Count.ToString()"
+        IsBusy="@isBusy"
+        OnReconsignmentRequested="SelectForReconsignment"
+        OnSaleRequested="SelectForSale" />
+
+    @if (selectedInventory is not null && currentAction == InventoryAction.Sale)
+    {
+        <MudContainer MaxWidth="MaxWidth.False" Class="pb-6">
+            <MudCard>
+            <MudCardContent>
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6">판매 등록 - @selectedInventory.상품명</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">입고된 재고를 판매상품으로 등록하고 원하면 바로 채널출품까지 연결합니다.</MudText>
+
+                    @if (!string.IsNullOrWhiteSpace(message))
+                    {
+                        <MudAlert Severity="@messageSeverity">@message</MudAlert>
+                    }
+
+                    @if (accounts.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Warning">연결된 판매채널 계정이 없습니다. 먼저 판매채널 연결 화면에서 계정을 등록해 주세요.</MudAlert>
+                    }
+
+                    <MudGrid>
+                        <MudItem xs="12" md="4"><MudTextField Label="대표상품명" @bind-Value="saleProductName" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" md="4"><MudTextField Label="판매 SKU" @bind-Value="saleSku" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" md="4"><MudNumericField T="decimal" Label="판매가" @bind-Value="salePrice" Variant="Variant.Outlined" Min="0" /></MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="long?" Label="즉시 출품 채널(선택)" @bind-Value="selectedAccountId" Variant="Variant.Outlined">
+                                <MudSelectItem T="long?" Value="@((long?)null)">출품 없이 판매상품만 생성</MudSelectItem>
+                                @foreach (var account in accounts)
+                                {
+                                    <MudSelectItem T="long?" Value="@account.Id">@account.채널종류 - @account.상점명</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudStack Row="true" Spacing="2">
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" Disabled="isBusy" OnClick="CreateSaleAsync">판매 등록</MudButton>
+                        <MudButton Variant="Variant.Outlined" OnClick="ClearSelection">취소</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => Navigation.NavigateTo(ShipperRoutes.SalesChannels))">채널 연결 화면</MudButton>
+                    </MudStack>
+                </MudStack>
+            </MudCardContent>
+            </MudCard>
+        </MudContainer>
+    }
+</MudStack>
+
+@code {
+    private readonly List<판매채널계정항목응답> accounts = [];
+    private bool isBusy;
+    private string? message;
+    private Severity messageSeverity = Severity.Info;
+    private HongdalWarehouseInventoryHub? inventoryHub;
+
+    private 재고항목응답? selectedInventory;
+    private InventoryAction currentAction = InventoryAction.None;
+
+    private string saleProductName = string.Empty;
+    private string saleSku = string.Empty;
+    private decimal salePrice;
+    private long? selectedAccountId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAccountsAsync();
+    }
+
+    private async Task LoadAccountsAsync()
+    {
+        try
+        {
+            accounts.Clear();
+            accounts.AddRange((await SalesService.GetAccountsAsync())?.Items ?? []);
+        }
+        catch (Exception ex)
+        {
+            messageSeverity = Severity.Error;
+            message = ex.Message;
+        }
+    }
+
+    private Task SelectForReconsignment(재고항목응답 item)
+    {
+        Navigation.NavigateTo(ShipperRoutes.ReconsignmentOrdersForInventory(item.입고상품Id));
+        return Task.CompletedTask;
+    }
+
+    private Task SelectForSale(재고항목응답 item)
+    {
+        selectedInventory = item;
+        currentAction = InventoryAction.Sale;
+        saleProductName = item.상품명;
+        saleSku = string.IsNullOrWhiteSpace(item.SKU) ? $"SALE-{item.입고상품Id}" : item.SKU;
+        salePrice = 0m;
+        selectedAccountId = accounts.FirstOrDefault()?.Id;
+        return Task.CompletedTask;
+    }
+
+    private void ClearSelection()
+    {
+        selectedInventory = null;
+        currentAction = InventoryAction.None;
+    }
+
+    private async Task CreateSaleAsync()
+    {
+        if (selectedInventory is null || isBusy)
+        {
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            var product = await SalesService.CreateProductAsync(new 판매상품저장요청
+            {
+                입고상품Id = selectedInventory.입고상품Id,
+                대표상품명 = saleProductName,
+                판매SKU = saleSku,
+                판매가 = salePrice
+            });
+
+            if (product is not null && selectedAccountId.HasValue)
+            {
+                await SalesService.CreateListingAsync(new 채널출품저장요청
+                {
+                    판매상품Id = product.Id,
+                    판매채널계정Id = selectedAccountId.Value
+                });
+
+                messageSeverity = Severity.Success;
+                message = $"판매상품 {product.대표상품명} 등록 후 채널출품까지 생성했습니다.";
+            }
+            else
+            {
+                messageSeverity = Severity.Success;
+                message = $"판매상품 {product?.대표상품명} 을 등록했습니다.";
+            }
+
+            ClearSelection();
+            await inventoryHub!.ReloadAsync();
+            Navigation.NavigateTo(ShipperRoutes.ProductListings);
+        }
+        catch (Exception ex)
+        {
+            messageSeverity = Severity.Error;
+            message = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private enum InventoryAction
+    {
+        None,
+        Sale
+    }
+}

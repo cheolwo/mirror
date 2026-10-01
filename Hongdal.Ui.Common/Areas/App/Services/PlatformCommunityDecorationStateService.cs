@@ -6,6 +6,7 @@ namespace Hongdal.Ui.Common.Areas.App.Services;
 public enum CommunityDecorationTarget
 {
     HomeNavigatorTheme,
+    TraditionalMarketTheme,
     Bagua,
     DiagramNode,
     BaguaTransitionMotion
@@ -96,7 +97,8 @@ public sealed record CommunityDecorationProduct(
     HomeNavigatorThemeManifest? HomeTheme = null,
     BaguaTransitionMotionManifest? BaguaMotion = null,
     bool IsCustom = false,
-    ScriptureDecorationSource? ScriptureSource = null)
+    ScriptureDecorationSource? ScriptureSource = null,
+    TraditionalMarketThemeManifest? TraditionalMarketTheme = null)
 {
     public bool IsFree => PriceAmount <= 0;
 
@@ -104,6 +106,10 @@ public sealed record CommunityDecorationProduct(
 
     public bool IsBaguaMotion
         => Target == CommunityDecorationTarget.BaguaTransitionMotion && BaguaMotion is not null;
+
+    public bool IsTraditionalMarketTheme
+        => Target == CommunityDecorationTarget.TraditionalMarketTheme
+           && TraditionalMarketTheme is not null;
 }
 
 public sealed class PlatformCommunityDecorationStateService
@@ -115,6 +121,7 @@ public sealed class PlatformCommunityDecorationStateService
     private readonly HashSet<string> sessionPurchasedPackKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> serverOwnedPackKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> activeBaguaMotionPackByScope = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> activeTraditionalMarketThemePackByScope = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<CommunityDecorationAsset> customAssets = [];
     private readonly List<CommunityDecorationProduct> products;
 
@@ -142,6 +149,11 @@ public sealed class PlatformCommunityDecorationStateService
     public bool IsHomeThemeEnabled { get; private set; } = true;
 
     public bool IsBaguaMotionEnabled { get; private set; } = true;
+
+    public bool IsTraditionalMarketThemeEnabled { get; private set; } = true;
+
+    public IReadOnlyDictionary<string, string> ActiveTraditionalMarketThemePackByScope
+        => activeTraditionalMarketThemePackByScope;
 
     public string? ActiveBaguaAssetKey { get; private set; } = BasicBaguaAssetKey;
 
@@ -211,8 +223,46 @@ public sealed class PlatformCommunityDecorationStateService
                 ? IsBaguaMotionEnabled && product.BaguaMotion!.SlotPatterns.All(pattern =>
                     activeBaguaMotionPackByScope.TryGetValue(pattern, out var packKey) &&
                     string.Equals(packKey, product.PackKey, StringComparison.OrdinalIgnoreCase))
-                : product.Assets.Any(IsAssetActive);
+                : product.IsTraditionalMarketTheme
+                    ? IsTraditionalMarketThemeEnabled
+                      && string.Equals(
+                          ResolveTraditionalMarketThemeProduct(product.TraditionalMarketTheme!.MarketScopeKey)?.PackKey,
+                          product.PackKey,
+                          StringComparison.OrdinalIgnoreCase)
+                    : product.Assets.Any(IsAssetActive);
     }
+
+    public CommunityDecorationProduct? ResolveTraditionalMarketThemeProduct(string? marketScopeKey)
+    {
+        if (!IsTraditionalMarketThemeEnabled || string.IsNullOrWhiteSpace(marketScopeKey))
+        {
+            return null;
+        }
+
+        var normalizedScope = marketScopeKey.Trim();
+        if (activeTraditionalMarketThemePackByScope.TryGetValue(normalizedScope, out var packKey))
+        {
+            var selected = FindOwnedTraditionalMarketThemeProduct(packKey);
+            if (selected?.TraditionalMarketTheme is { } selectedTheme
+                && selectedTheme.IsOfficiallyApplicable
+                && string.Equals(selectedTheme.MarketScopeKey, normalizedScope, StringComparison.OrdinalIgnoreCase))
+            {
+                return selected;
+            }
+        }
+
+        return products.FirstOrDefault(product =>
+            product.IsTraditionalMarketTheme
+            && product.TraditionalMarketTheme!.IsOfficiallyApplicable
+            && IsProductOwned(product)
+            && string.Equals(
+                product.TraditionalMarketTheme.MarketScopeKey,
+                normalizedScope,
+                StringComparison.OrdinalIgnoreCase));
+    }
+
+    public TraditionalMarketThemeManifest? ResolveTraditionalMarketTheme(string? marketScopeKey)
+        => ResolveTraditionalMarketThemeProduct(marketScopeKey)?.TraditionalMarketTheme;
 
     public BaguaTransitionMotionManifest? ResolveBaguaMotion(
         string assetSlotKey,
@@ -255,6 +305,7 @@ public sealed class PlatformCommunityDecorationStateService
         }
 
         RemoveInactiveBaguaMotionSelections();
+        RemoveInactiveTraditionalMarketThemeSelections();
         Changed?.Invoke();
     }
 
@@ -267,6 +318,7 @@ public sealed class PlatformCommunityDecorationStateService
 
         serverOwnedPackKeys.Clear();
         RemoveInactiveBaguaMotionSelections();
+        RemoveInactiveTraditionalMarketThemeSelections();
         Changed?.Invoke();
     }
 
@@ -280,6 +332,7 @@ public sealed class PlatformCommunityDecorationStateService
         serverOwnedPackKeys.Clear();
         sessionPurchasedPackKeys.Clear();
         RemoveInactiveBaguaMotionSelections();
+        RemoveInactiveTraditionalMarketThemeSelections();
         Changed?.Invoke();
     }
 
@@ -315,13 +368,70 @@ public sealed class PlatformCommunityDecorationStateService
             return true;
         }
 
+        if (product.IsTraditionalMarketTheme)
+        {
+            var theme = product.TraditionalMarketTheme!;
+            if (!theme.IsOfficiallyApplicable)
+            {
+                return false;
+            }
+
+            activeTraditionalMarketThemePackByScope[theme.MarketScopeKey] = product.PackKey;
+            IsTraditionalMarketThemeEnabled = true;
+            Changed?.Invoke();
+            return true;
+        }
+
         return product.Assets.FirstOrDefault() is { } firstAsset && Apply(firstAsset);
+    }
+
+    public bool ApplyHomeThemePack(string? packKey)
+    {
+        if (string.IsNullOrWhiteSpace(packKey))
+        {
+            return false;
+        }
+
+        var product = products.FirstOrDefault(candidate =>
+            candidate.IsHomeTheme &&
+            string.Equals(candidate.PackKey, packKey.Trim(), StringComparison.OrdinalIgnoreCase));
+        return product is not null && ApplyProduct(product);
     }
 
     public void RestoreDefaultHomeTheme()
     {
         ActiveHomeThemePackKey = DefaultHomeThemePackKey;
         IsHomeThemeEnabled = true;
+        Changed?.Invoke();
+    }
+
+    public bool ApplyTraditionalMarketThemePack(string? marketScopeKey, string? packKey)
+    {
+        if (string.IsNullOrWhiteSpace(marketScopeKey) || string.IsNullOrWhiteSpace(packKey))
+        {
+            return false;
+        }
+
+        var normalizedScope = marketScopeKey.Trim();
+        var product = products.FirstOrDefault(candidate =>
+            candidate.IsTraditionalMarketTheme
+            && string.Equals(candidate.PackKey, packKey.Trim(), StringComparison.OrdinalIgnoreCase)
+            && string.Equals(
+                candidate.TraditionalMarketTheme!.MarketScopeKey,
+                normalizedScope,
+                StringComparison.OrdinalIgnoreCase));
+        return product is not null && ApplyProduct(product);
+    }
+
+    public void RestoreDefaultTraditionalMarketTheme(string? marketScopeKey)
+    {
+        if (string.IsNullOrWhiteSpace(marketScopeKey))
+        {
+            return;
+        }
+
+        activeTraditionalMarketThemePackByScope.Remove(marketScopeKey.Trim());
+        IsTraditionalMarketThemeEnabled = true;
         Changed?.Invoke();
     }
 
@@ -374,6 +484,9 @@ public sealed class PlatformCommunityDecorationStateService
         {
             case CommunityDecorationTarget.HomeNavigatorTheme:
                 IsHomeThemeEnabled = enabled;
+                break;
+            case CommunityDecorationTarget.TraditionalMarketTheme:
+                IsTraditionalMarketThemeEnabled = enabled;
                 break;
             case CommunityDecorationTarget.Bagua:
                 IsBaguaDecorationEnabled = enabled;
@@ -544,6 +657,79 @@ public sealed class PlatformCommunityDecorationStateService
         return true;
     }
 
+    public bool TryCreateTraditionalMarketThemePackage(
+        string? title,
+        string? creatorName,
+        string? summary,
+        decimal priceAmount,
+        TraditionalMarketThemeManifest manifest,
+        out CommunityDecorationProduct? product,
+        out string message)
+    {
+        ArgumentNullException.ThrowIfNull(manifest);
+
+        var normalizedTitle = title?.Trim();
+        var normalizedCreator = creatorName?.Trim();
+        var normalizedSummary = summary?.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedTitle))
+        {
+            product = null;
+            message = "시장 꾸미기 팩 이름을 입력해 주세요.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedCreator))
+        {
+            product = null;
+            message = "디자이너 표시명을 입력해 주세요.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedSummary))
+        {
+            product = null;
+            message = "시장 꾸미기 팩 설명을 입력해 주세요.";
+            return false;
+        }
+
+        if (priceAmount < 0)
+        {
+            product = null;
+            message = "판매 가격은 0원 이상이어야 합니다.";
+            return false;
+        }
+
+        if (!TraditionalMarketThemePolicy.TryPrepareDraft(
+                manifest,
+                out var normalizedManifest,
+                out message))
+        {
+            product = null;
+            return false;
+        }
+
+        var keySuffix = Guid.NewGuid().ToString("N");
+        var packKey = $"traditional-market-theme-draft-{keySuffix}";
+        product = new(
+            $"store-{packKey}",
+            packKey,
+            normalizedTitle,
+            normalizedCreator,
+            normalizedSummary,
+            CommunityDecorationTarget.TraditionalMarketTheme,
+            priceAmount,
+            "KRW",
+            [],
+            IsCustom: true,
+            TraditionalMarketTheme: normalizedManifest);
+
+        products.Insert(0, product);
+        ownedPackKeys.Add(packKey);
+        Changed?.Invoke();
+        message = $"{normalizedTitle} 팩을 초안으로 저장했습니다. 플랫폼 검수와 상인회 승인을 모두 받은 뒤 공식 화면에 적용할 수 있습니다.";
+        return true;
+    }
+
     private CommunityDecorationAsset? FindAsset(string? key)
     {
         if (string.IsNullOrWhiteSpace(key))
@@ -567,6 +753,13 @@ public sealed class PlatformCommunityDecorationStateService
         return product is not null && IsProductOwned(product) ? product : null;
     }
 
+    private CommunityDecorationProduct? FindOwnedTraditionalMarketThemeProduct(string packKey)
+    {
+        var product = products.FirstOrDefault(item => item.IsTraditionalMarketTheme
+            && string.Equals(item.PackKey, packKey, StringComparison.OrdinalIgnoreCase));
+        return product is not null && IsProductOwned(product) ? product : null;
+    }
+
     private void RemoveInactiveBaguaMotionSelections()
     {
         foreach (var scope in activeBaguaMotionPackByScope
@@ -578,6 +771,18 @@ public sealed class PlatformCommunityDecorationStateService
         }
 
         activeBaguaMotionPackByScope.TryAdd("*", DefaultBaguaMotionPackKey);
+    }
+
+    private void RemoveInactiveTraditionalMarketThemeSelections()
+    {
+        foreach (var scope in activeTraditionalMarketThemePackByScope
+                     .Where(pair => FindOwnedTraditionalMarketThemeProduct(pair.Value)?.TraditionalMarketTheme is not { IsOfficiallyApplicable: true } theme
+                                    || !string.Equals(theme.MarketScopeKey, pair.Key, StringComparison.OrdinalIgnoreCase))
+                     .Select(pair => pair.Key)
+                     .ToArray())
+        {
+            activeTraditionalMarketThemePackByScope.Remove(scope);
+        }
     }
 
     private static IEnumerable<string> BuildBaguaMotionScopePriority(
@@ -741,6 +946,7 @@ public sealed class PlatformCommunityDecorationStateService
         };
 
         products.AddRange(ScriptureDecorationCatalog.CreateProducts());
+        products.AddRange(TraditionalMarketThemeCatalog.CreateProducts());
 
         foreach (var pack in 노드스티커Catalog.기본팩목록)
         {

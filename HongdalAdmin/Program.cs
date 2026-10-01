@@ -3,6 +3,7 @@ using HongdalAdmin.Options;
 using HongdalAdmin.Services;
 using Hongdal.Client.Infrastructure.Transport;
 using Hongdal.Ui.Common.Areas.App.Services;
+using Hongdal.Ui.Common.Areas.App.ViewModels;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +26,9 @@ builder.Services.AddMudServices();
 builder.Services.Configure<관리자ApiOptions>(builder.Configuration.GetSection(관리자ApiOptions.SectionName));
 builder.Services.Configure<FoodApiOptions>(builder.Configuration.GetSection(FoodApiOptions.SectionName));
 builder.Services.AddScoped<ITransportRequestLedgerObserver, TransportRequestLedgerObserver>();
-builder.Services.AddHongdalUiCommonAppServices();
+builder.Services.AddHongdalUiCommonAppServices<관리자인증세션Service>();
+builder.Services.AddTransient<관리자Controller기능모음ViewModel>();
+builder.Services.AddTransient<관리자전체Api기능모음ViewModel>();
 builder.Services.AddScoped(sp =>
 {
     var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<관리자ApiOptions>>().Value;

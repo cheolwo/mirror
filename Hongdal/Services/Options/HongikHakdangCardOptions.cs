@@ -22,7 +22,7 @@ public sealed class HongikHakdangCardOptions
 
     public int MaxConcurrentDownloads { get; set; } = 4;
 
-    public bool DeliveryEnabled { get; set; } = true;
+    public bool DeliveryEnabled { get; set; }
 
     public bool PrepareVariantsOnSync { get; set; } = true;
 

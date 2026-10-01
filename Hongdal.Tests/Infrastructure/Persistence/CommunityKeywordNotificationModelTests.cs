@@ -92,6 +92,47 @@ public sealed class CommunityKeywordNotificationModelTests
                 ?.GetMaxLength());
     }
 
+    [Fact]
+    public void MigrationAndSnapshot_ContainOnlyThePostAuthorDisplayCountryColumns()
+    {
+        using var context = CreateContext();
+        const string migrationId = "20260717134000_AddCommunityPostAuthorDisplayCountry";
+        Assert.Contains(migrationId, context.Database.GetMigrations());
+
+        var migrationsAssembly = context.GetService<IMigrationsAssembly>();
+        var migration = migrationsAssembly.CreateMigration(
+            migrationsAssembly.Migrations[migrationId],
+            context.Database.ProviderName!);
+        var addedColumns = migration.UpOperations
+            .OfType<AddColumnOperation>()
+            .OrderBy(operation => operation.Name, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(3, addedColumns.Length);
+        Assert.All(addedColumns, operation => Assert.Equal("platform_community_posts", operation.Table));
+        Assert.Equal(
+            [
+                nameof(PlatformCommunityPost.AuthorDisplayCountryCode),
+                nameof(PlatformCommunityPost.AuthorDisplayCountryName),
+                nameof(PlatformCommunityPost.IsAuthorDisplayCountryPublic)
+            ],
+            addedColumns.Select(operation => operation.Name).ToArray());
+        Assert.DoesNotContain(migration.UpOperations, operation => operation is CreateTableOperation);
+
+        var post = context.Model.FindEntityType(typeof(PlatformCommunityPost));
+        Assert.Equal(2, post?.FindProperty(nameof(PlatformCommunityPost.AuthorDisplayCountryCode))?.GetMaxLength());
+        Assert.Equal(80, post?.FindProperty(nameof(PlatformCommunityPost.AuthorDisplayCountryName))?.GetMaxLength());
+
+        var snapshotType = typeof(CommunityKeywordNotificationProcessor).Assembly
+            .GetType("Hongdal.Migrations.HongdalContextModelSnapshot");
+        var snapshot = Assert.IsAssignableFrom<ModelSnapshot>(
+            Activator.CreateInstance(snapshotType!, nonPublic: true));
+        var snapshotPost = snapshot.Model.FindEntityType(typeof(PlatformCommunityPost).FullName!);
+        Assert.Equal(2, snapshotPost?.FindProperty(nameof(PlatformCommunityPost.AuthorDisplayCountryCode))?.GetMaxLength());
+        Assert.Equal(80, snapshotPost?.FindProperty(nameof(PlatformCommunityPost.AuthorDisplayCountryName))?.GetMaxLength());
+        Assert.NotNull(snapshotPost?.FindProperty(nameof(PlatformCommunityPost.IsAuthorDisplayCountryPublic)));
+    }
+
     private static void AssertTable<TEntity>(HongdalContext context, string tableName)
         where TEntity : class
         => Assert.Equal(tableName, context.Model.FindEntityType(typeof(TEntity))?.GetTableName());

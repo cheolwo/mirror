@@ -1,0 +1,203 @@
+.community-post-action-flow {
+    display: grid;
+    gap: 14px;
+    padding: 16px 0;
+    border-block: 1px solid #d9dedb;
+}
+
+.community-post-action-flow__header,
+.community-post-action-flow__message,
+.community-post-action-flow__actions,
+.community-post-action-flow__participant-count,
+.community-post-action-flow__role-progress {
+    display: flex;
+    align-items: center;
+}
+
+.community-post-action-flow__header {
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.community-post-action-flow__header > div {
+    display: grid;
+    gap: 2px;
+}
+
+.community-post-action-flow__header > div > span,
+.community-post-action-flow__boundary,
+.community-post-action-flow__message p,
+.community-post-action-flow__stages small,
+.community-post-action-flow__role-progress span {
+    color: #5f6964;
+}
+
+.community-post-action-flow__header > div > span {
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.community-post-action-flow__header > div > strong {
+    font-size: 0.94rem;
+}
+
+.community-post-action-flow__participant-count {
+    flex: 0 0 auto;
+    gap: 5px;
+    color: #2f5f4a;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.community-post-action-flow__message {
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.community-post-action-flow__message > svg {
+    flex: 0 0 auto;
+    margin-top: 2px;
+}
+
+.community-post-action-flow__message > div {
+    min-width: 0;
+}
+
+.community-post-action-flow__message h3,
+.community-post-action-flow__message p {
+    margin: 0;
+}
+
+.community-post-action-flow__message h3 {
+    font-size: 1rem;
+    line-height: 1.45;
+}
+
+.community-post-action-flow__message p {
+    margin-top: 4px;
+    font-size: 0.86rem;
+    line-height: 1.55;
+}
+
+.community-post-action-flow__stages {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(64px, 1fr));
+    gap: 0;
+    min-width: 440px;
+    margin: 0;
+    padding: 2px 0 4px;
+    list-style: none;
+    overflow-x: auto;
+}
+
+.community-post-action-flow__stages li {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    text-align: center;
+}
+
+.community-post-action-flow__stages li::before {
+    content: "";
+    position: absolute;
+    top: 5px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #d9dedb;
+}
+
+.community-post-action-flow__stages li:first-child::before {
+    left: 50%;
+    width: 50%;
+}
+
+.community-post-action-flow__stages li:last-child::before {
+    width: 50%;
+}
+
+.community-post-action-flow__stages li > span {
+    position: relative;
+    z-index: 1;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #b7c0bb;
+    border-radius: 50%;
+    background: #fff;
+}
+
+.community-post-action-flow__stages li.is-complete::before,
+.community-post-action-flow__stages li.is-current::before {
+    background: #4f7b64;
+}
+
+.community-post-action-flow__stages li.is-complete > span {
+    border-color: #4f7b64;
+    background: #4f7b64;
+}
+
+.community-post-action-flow__stages li.is-current > span {
+    border-color: #b25d45;
+    background: #fff;
+    box-shadow: 0 0 0 3px #f3ddd7;
+}
+
+.community-post-action-flow__stages li.is-current small {
+    color: #8e432f;
+    font-weight: 800;
+}
+
+.community-post-action-flow__stages small {
+    font-size: 0.7rem;
+    white-space: nowrap;
+}
+
+.community-post-action-flow__role-progress {
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 10px;
+    background: #f4f6f5;
+    font-size: 0.8rem;
+}
+
+.community-post-action-flow__role-progress strong {
+    color: #2f5f4a;
+}
+
+.community-post-action-flow__actions {
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.community-post-action-flow__boundary {
+    font-size: 0.73rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+    .community-post-action-flow {
+        gap: 12px;
+        padding: 14px 0;
+    }
+
+    .community-post-action-flow__header {
+        align-items: flex-start;
+    }
+
+    .community-post-action-flow__stages {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        min-width: 0;
+        overflow: visible;
+    }
+
+    .community-post-action-flow__stages small {
+        font-size: 0.62rem;
+        line-height: 1.25;
+        white-space: normal;
+    }
+
+    .community-post-action-flow__actions ::deep .mud-button-root {
+        width: 100%;
+    }
+}

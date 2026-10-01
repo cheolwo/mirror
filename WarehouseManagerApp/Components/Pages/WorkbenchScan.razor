@@ -1,4 +1,5 @@
 @page "/work/{ProcessCode}/workbench"
+@inherits MvvmComponentBase<창고작업대스캔PageViewModel>
 @inject NavigationManager Navigation
 
 <PageTitle>@Definition.Title</PageTitle>
@@ -24,7 +25,7 @@
 
                 <MudTextField T="string"
                               Label="작업대 바코드"
-                              Value="@workbenchBarcode"
+                              Value="@ViewModel.작업대Barcode"
                               ValueChanged="OnBarcodeChanged"
                               Variant="Variant.Outlined"
                               Immediate="true"
@@ -34,9 +35,9 @@
                               AdornmentIcon="@Icons.Material.Filled.QrCodeScanner"
                               OnKeyDown="OnKeyDownAsync" />
 
-                @if (!string.IsNullOrWhiteSpace(message))
+                @if (!string.IsNullOrWhiteSpace(ViewModel.안내메시지))
                 {
-                    <MudAlert Severity="@messageSeverity">@message</MudAlert>
+                    <MudAlert Severity="@messageSeverity">@ViewModel.안내메시지</MudAlert>
                 }
 
                 <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
@@ -67,18 +68,22 @@
     [Parameter]
     public string ProcessCode { get; set; } = WarehouseWorkProcessCodes.Inbound;
 
-    private string workbenchBarcode = string.Empty;
-    private string? message;
     private Severity messageSeverity = Severity.Info;
 
     private WorkbenchDefinition Definition => ResolveDefinition(ProcessCode);
 
-    private bool CanConfirm => IsValidWorkbenchBarcode(workbenchBarcode);
+    private bool CanConfirm => ViewModel.확인가능;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        ViewModel.초기화();
+    }
 
     private Task OnBarcodeChanged(string value)
     {
-        workbenchBarcode = (value ?? string.Empty).Trim();
-        message = null;
+        ViewModel.작업대Barcode = (value ?? string.Empty).Trim();
+        messageSeverity = Severity.Info;
         return Task.CompletedTask;
     }
 
@@ -95,32 +100,26 @@
         if (!CanConfirm)
         {
             messageSeverity = Severity.Warning;
-            message = "작업대 바코드를 입력해 주세요. 예: WB:IN-01";
+            ViewModel.작업대확인();
+            return;
+        }
+
+        if (!ViewModel.작업대확인())
+        {
+            messageSeverity = Severity.Warning;
             return;
         }
 
         messageSeverity = Severity.Success;
-        message = $"{Definition.Label} 작업대 {NormalizeWorkbenchBarcode(workbenchBarcode)} 확인이 완료되었습니다.";
         await Task.Delay(300);
         Navigation.NavigateTo(Definition.NextRoute);
     }
 
     private void Clear()
     {
-        workbenchBarcode = string.Empty;
-        message = null;
+        ViewModel.초기화();
+        messageSeverity = Severity.Info;
     }
-
-    private static bool IsValidWorkbenchBarcode(string value)
-    {
-        var normalized = NormalizeWorkbenchBarcode(value);
-        return normalized.StartsWith("WB:", StringComparison.OrdinalIgnoreCase)
-            || normalized.StartsWith("BENCH:", StringComparison.OrdinalIgnoreCase)
-            || normalized.StartsWith("TABLE:", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string NormalizeWorkbenchBarcode(string value)
-        => (value ?? string.Empty).Trim().ToUpperInvariant();
 
     private static WorkbenchDefinition ResolveDefinition(string? processCode)
     {

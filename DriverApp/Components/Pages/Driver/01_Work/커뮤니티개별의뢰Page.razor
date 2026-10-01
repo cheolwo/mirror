@@ -1,0 +1,190 @@
+@page "/driver/work/community-inquiries"
+@using Hongdal.Contracts.Common.Community
+@inject IDriverWorkApiService WorkApi
+
+<PageTitle>커뮤니티 개별 의뢰</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
+    <MudStack Spacing="3">
+        <MudPaper Class="pa-4" Elevation="1">
+            <MudStack Spacing="1">
+                <MudText Typo="Typo.overline" Color="Color.Primary">COMMUNITY DIRECT INQUIRIES</MudText>
+                <MudText Typo="Typo.h4">커뮤니티 개별 의뢰</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    운행 중 공개 글을 보고 들어온 제안을 검토합니다. 수락은 협의 의사 표시이며 정식 배차 확정은 아닙니다.
+                </MudText>
+            </MudStack>
+        </MudPaper>
+
+        @if (!string.IsNullOrWhiteSpace(_상태문구))
+        {
+            <MudAlert Severity="@_상태종류" Variant="Variant.Outlined">@_상태문구</MudAlert>
+        }
+
+        @if (_로딩중)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+        }
+        else if (_의뢰목록.Count == 0)
+        {
+            <MudPaper Class="pa-5" Elevation="0" Outlined="true">
+                <MudStack AlignItems="AlignItems.Center" Spacing="2">
+                    <MudIcon Icon="@Icons.Material.Filled.MarkEmailUnread" Size="Size.Large" Color="Color.Default" />
+                    <MudText Typo="Typo.h6">아직 도착한 개별 의뢰가 없습니다.</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">운행 시작 화면에서 커뮤니티 공개가 켜져 있는지 확인하세요.</MudText>
+                </MudStack>
+            </MudPaper>
+        }
+        else
+        {
+            @foreach (var inquiry in _의뢰목록)
+            {
+                <MudPaper Class="pa-4" Elevation="1">
+                    <MudStack Spacing="2">
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                            <div>
+                                <MudText Typo="Typo.h6">@inquiry.CargoSummary · @inquiry.QuantitySummary</MudText>
+                                <MudText Typo="Typo.caption">@inquiry.RequesterRoleLabel · @FormatDate(inquiry.CreatedAtUtc)</MudText>
+                            </div>
+                            <MudChip T="string" Color="@StatusColor(inquiry.StatusCode)" Variant="Variant.Outlined">@StatusLabel(inquiry.StatusCode)</MudChip>
+                        </MudStack>
+
+                        @if (!string.IsNullOrWhiteSpace(inquiry.SourceContextLabel))
+                        {
+                            <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">공동구매·커뮤니티 출처: @inquiry.SourceContextLabel</MudAlert>
+                        }
+
+                        <MudGrid Spacing="2">
+                            <MudItem xs="12" sm="6"><MudText Typo="Typo.subtitle2">상차 지역</MudText><MudText Typo="Typo.body2">@inquiry.PickupAreaLabel</MudText></MudItem>
+                            <MudItem xs="12" sm="6"><MudText Typo="Typo.subtitle2">하차 지역</MudText><MudText Typo="Typo.body2">@inquiry.DropoffAreaLabel</MudText></MudItem>
+                            <MudItem xs="12" sm="6"><MudText Typo="Typo.subtitle2">희망 시간</MudText><MudText Typo="Typo.body2">@inquiry.RequestedPickupWindow</MudText></MudItem>
+                            <MudItem xs="12" sm="6"><MudText Typo="Typo.subtitle2">공개 메시지</MudText><MudText Typo="Typo.body2">@inquiry.PublicMessage</MudText></MudItem>
+                        </MudGrid>
+
+                        @if (inquiry.StatusCode == CommunityDriverInquiryStatusCodes.Pending)
+                        {
+                            <MudTextField Label="기사 공개 답변(선택)"
+                                          Value="@GetReply(inquiry.InquiryId)"
+                                          ValueChanged="@((string value) => SetReply(inquiry.InquiryId, value))"
+                                          Variant="Variant.Outlined"
+                                          Lines="2"
+                                          HelperText="연락처는 적지 마세요. 상세 협의는 정식 의뢰 원장에서 진행합니다." />
+                            <MudStack Row="true" Spacing="1">
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Check" Disabled="@_처리중" OnClick="@(() => DecideAsync(inquiry, CommunityDriverInquiryDecisionCodes.Accept))">제안 수락</MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Close" Disabled="@_처리중" OnClick="@(() => DecideAsync(inquiry, CommunityDriverInquiryDecisionCodes.Decline))">이번에는 거절</MudButton>
+                            </MudStack>
+                        }
+                        else
+                        {
+                            <MudAlert Severity="@StatusSeverity(inquiry.StatusCode)" Dense="true" Variant="Variant.Outlined">
+                                @inquiry.NextStepMessage
+                                @if (!string.IsNullOrWhiteSpace(inquiry.DriverPublicMessage))
+                                {
+                                    <div>기사 답변: @inquiry.DriverPublicMessage</div>
+                                }
+                            </MudAlert>
+                        }
+                    </MudStack>
+                </MudPaper>
+            }
+        }
+
+        <MudStack Row="true" Spacing="1">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync" Disabled="@_로딩중">새로고침</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Secondary" Href="@DriverRoutes.WorkStart">운행 시작 화면</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Secondary" Href="@DriverRoutes.Home">기사 홈</MudButton>
+        </MudStack>
+    </MudStack>
+</MudContainer>
+
+@code {
+    private readonly List<CommunityDriverInquiryResponse> _의뢰목록 = [];
+    private readonly Dictionary<Guid, string> _답변 = [];
+    private bool _로딩중 = true;
+    private bool _처리중;
+    private string? _상태문구;
+    private Severity _상태종류 = Severity.Info;
+
+    protected override async Task OnInitializedAsync()
+        => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _로딩중 = true;
+        try
+        {
+            var items = await WorkApi.커뮤니티의뢰목록Async();
+            _의뢰목록.Clear();
+            _의뢰목록.AddRange(items);
+            _상태문구 = null;
+        }
+        catch (Exception ex)
+        {
+            _상태종류 = Severity.Error;
+            _상태문구 = $"커뮤니티 의뢰를 불러오지 못했습니다: {ex.Message}";
+        }
+        finally
+        {
+            _로딩중 = false;
+        }
+    }
+
+    private async Task DecideAsync(CommunityDriverInquiryResponse inquiry, string decisionCode)
+    {
+        _처리중 = true;
+        try
+        {
+            await WorkApi.커뮤니티의뢰답변Async(
+                inquiry.InquiryId,
+                new CommunityDriverInquiryDecisionRequest
+                {
+                    DecisionCode = decisionCode,
+                    DriverPublicMessage = GetReply(inquiry.InquiryId)
+                });
+            await LoadAsync();
+            _상태종류 = Severity.Success;
+            _상태문구 = decisionCode == CommunityDriverInquiryDecisionCodes.Accept
+                ? "의뢰 제안을 수락했습니다. 정식 운송 의뢰와 상세 조건 확인이 이어져야 합니다."
+                : "이번 의뢰를 수행하기 어렵다고 답했습니다.";
+        }
+        catch (Exception ex)
+        {
+            _상태종류 = Severity.Error;
+            _상태문구 = $"답변을 처리하지 못했습니다: {ex.Message}";
+        }
+        finally
+        {
+            _처리중 = false;
+        }
+    }
+
+    private string GetReply(Guid inquiryId)
+        => _답변.GetValueOrDefault(inquiryId, string.Empty);
+
+    private void SetReply(Guid inquiryId, string value)
+        => _답변[inquiryId] = value;
+
+    private static string StatusLabel(string status)
+        => status switch
+        {
+            CommunityDriverInquiryStatusCodes.Accepted => "수락함",
+            CommunityDriverInquiryStatusCodes.Declined => "거절함",
+            CommunityDriverInquiryStatusCodes.DriverUnavailable => "운행 종료로 마감",
+            _ => "답변 대기"
+        };
+
+    private static Color StatusColor(string status)
+        => status switch
+        {
+            CommunityDriverInquiryStatusCodes.Accepted => Color.Success,
+            CommunityDriverInquiryStatusCodes.Declined => Color.Error,
+            CommunityDriverInquiryStatusCodes.DriverUnavailable => Color.Default,
+            _ => Color.Warning
+        };
+
+    private static Severity StatusSeverity(string status)
+        => status == CommunityDriverInquiryStatusCodes.Accepted ? Severity.Success : Severity.Info;
+
+    private static string FormatDate(DateTimeOffset value)
+        => value.ToLocalTime().ToString("M월 d일 HH:mm");
+}

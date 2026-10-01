@@ -1,0 +1,19 @@
+.hongdal-account-workspace {
+    display: grid;
+    gap: 12px;
+    width: 100%;
+}
+
+.hongdal-account-workspace__cards {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .hongdal-account-workspace__table {
+        display: none;
+    }
+
+    .hongdal-account-workspace__cards {
+        display: block;
+    }
+}

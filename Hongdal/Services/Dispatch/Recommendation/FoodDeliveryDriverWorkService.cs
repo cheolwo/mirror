@@ -1,6 +1,8 @@
 using FluentResults;
+using Hongdal.Application.CommandProcessing;
 using Hongdal.Application.Driver.DispatchAction;
 using Hongdal.Contracts.Common.Drivers;
+using Hongdal.Contracts.Common.Operations;
 using Hongdal.Contracts.Food;
 using Hongdal.Services.Community;
 using Hongdal.Services.Food;
@@ -63,6 +65,7 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
     private readonly I음식마트원장Mongo동기화Service _foodLedgerSync;
     private readonly I운송원장Mongo동기화Service _transportLedgerSync;
     private readonly I기사월정산Service _settlementService;
+    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly ILogger<음식배달기사업무Service> _logger;
 
     public 음식배달기사업무Service(
@@ -75,6 +78,7 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         I음식마트원장Mongo동기화Service foodLedgerSync,
         I운송원장Mongo동기화Service transportLedgerSync,
         I기사월정산Service settlementService,
+        ICurrentUserAccessor currentUserAccessor,
         ILogger<음식배달기사업무Service> logger)
     {
         _db = db;
@@ -86,6 +90,7 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         _foodLedgerSync = foodLedgerSync;
         _transportLedgerSync = transportLedgerSync;
         _settlementService = settlementService;
+        _currentUserAccessor = currentUserAccessor;
         _logger = logger;
     }
 
@@ -155,6 +160,16 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         bool requireBundle,
         CancellationToken cancellationToken)
     {
+        var executionBoundary = CollectiveActionDispatchBoundaryPolicy.Evaluate(
+            DispatchConfirmationBoundaryRequest.ForDriverSelfAcceptance(
+                _currentUserAccessor.UserId,
+                driverId));
+        if (!executionBoundary.CanConfirmDispatch)
+        {
+            return Result.Fail<FoodDeliveryDriverActionResponse>(
+                "플랫폼의 후보 정보만으로 배차를 확정할 수 없습니다. 참여 기사 본인의 수락이 필요합니다.");
+        }
+
         var normalizedIds = (offerIds ?? [])
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Select(x => x.Trim())

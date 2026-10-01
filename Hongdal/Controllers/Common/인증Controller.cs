@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Hongdal.Controllers.Common;
 
-[HongdalApiVersion(HongdalProductVersion.V1_0)]
+[HongdalApiVersion(HongdalProductVersion.V0_0)]
 [ApiController]
 [Route("api/v1/auth")]
 public class 인증Controller : ControllerBase

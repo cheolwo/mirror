@@ -1,3 +1,5 @@
+using Hongdal.Contracts.Common.VehicleLoading;
+
 namespace DriverApp.Models.Driver.Samples;
 
 public sealed record 기사현재위치샘플(
@@ -93,14 +95,17 @@ public sealed record 기사운송샘플항목(
             var 기준화물 = 상차대상화물목록[0];
             return 상차대상화물목록.Any(item =>
                 !string.Equals(item.Label, 기준화물.Label, StringComparison.Ordinal)
+                || !string.Equals(item.하차위치, 기준화물.하차위치, StringComparison.Ordinal)
+                || item.하차순번 != 기준화물.하차순번
+                || !string.Equals(item.차량적재위치, 기준화물.차량적재위치, StringComparison.Ordinal)
                 || item.수량 != 기준화물.수량
                 || item.중량Kg != 기준화물.중량Kg);
         }
     }
 
     public string 적재순번운영안내 => 적재순번필요
-        ? "상품 구성, 수량, 중량이 달라 하차 순서에 맞춘 적재순번을 표시합니다."
-        : "동일 상품, 동일 수량, 동일 중량이면 적재순번 없이 수량 확인 중심으로 상차합니다.";
+        ? 혼적상하차순서계획기.후방하차운영원칙
+        : "동일 하차지와 동일 규격 화물은 별도 혼적 순서 없이 수량 확인 중심으로 상차합니다.";
 }
 
 public sealed record 기사상차체크항목(
@@ -125,6 +130,8 @@ public sealed record 기사상차대상화물(
     public string 하차순번표시 => $"{하차순번}번째 하차";
 
     public string 수량중량표시 => $"{수량:N0}개 / {중량Kg:0.##}kg";
+
+    public string 상하차동선표시 => $"{적재순번표시} 상차 → {차량적재위치} → {하차순번표시}";
 }
 
 public sealed record 기사정산샘플요약(

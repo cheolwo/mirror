@@ -1,0 +1,65 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<nav class="platform-community-mobile-nav" aria-label="커뮤니티 모바일 내비게이션">
+    @if (UseCompactHomeSummary)
+    {
+        <button type="button" class="@BuildClass(IsCompactHomeSummaryVisible)" @onclick="HomeRequested">
+            <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small" />
+            <span>홈</span>
+        </button>
+        <button type="button" class="@BuildClass(!IsWorkMode && !IsCompactHomeSummaryVisible)" @onclick="BoardRequested">
+            <MudIcon Icon="@Icons.Material.Filled.ViewList" Size="Size.Small" />
+            <span>게시판</span>
+        </button>
+    }
+    else
+    {
+        <button type="button" class="@BuildClass(!IsWorkMode)" @onclick="CommunityRequested">
+            <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small" />
+            <span>커뮤니티</span>
+        </button>
+        <a href="#community-board-list" class="platform-community-mobile-nav-item">
+            <MudIcon Icon="@Icons.Material.Filled.ViewList" Size="Size.Small" />
+            <span>게시판</span>
+        </a>
+    }
+    <button type="button" class="platform-community-mobile-nav-item platform-community-mobile-nav-compose" @onclick="ComposeRequested">
+        <MudIcon Icon="@Icons.Material.Filled.Add" />
+        <span>글쓰기</span>
+    </button>
+    <button type="button" class="@BuildClass(IsWorkMode)" @onclick="WorkRequested">
+        <MudIcon Icon="@Icons.Material.Filled.Work" Size="Size.Small" />
+        <span>업무</span>
+    </button>
+</nav>
+
+@code {
+    [Parameter]
+    public bool UseCompactHomeSummary { get; set; }
+
+    [Parameter]
+    public bool IsCompactHomeSummaryVisible { get; set; }
+
+    [Parameter]
+    public bool IsWorkMode { get; set; }
+
+    [Parameter]
+    public EventCallback HomeRequested { get; set; }
+
+    [Parameter]
+    public EventCallback BoardRequested { get; set; }
+
+    [Parameter]
+    public EventCallback CommunityRequested { get; set; }
+
+    [Parameter]
+    public EventCallback ComposeRequested { get; set; }
+
+    [Parameter]
+    public EventCallback WorkRequested { get; set; }
+
+    private static string BuildClass(bool active)
+        => active
+            ? "platform-community-mobile-nav-item platform-community-mobile-nav-item--active"
+            : "platform-community-mobile-nav-item";
+}

@@ -1,0 +1,576 @@
+@page "/community/me"
+@page "/community/me/{SectionKey}"
+@page "/community/decorations"
+@page "/community/decorations/{ProductKey}"
+@implements IDisposable
+@inject WebAuthSessionService AuthSession
+@inject CommunityPersonalPreferenceService Preferences
+@inject PlatformCommunityDecorationStateService DecorationState
+@inject ICommunityDecorationSelectionStore DecorationSelectionStore
+@inject PlatformCommunityService CommunityService
+
+<PageTitle>@CurrentSectionTitle · 살뜰 커뮤니티</PageTitle>
+
+<main class="community-personal-shell">
+    <header class="community-personal-header">
+        <div class="community-personal-avatar" aria-hidden="true">
+            <MudIcon Icon="@Icons.Material.Filled.Person" />
+        </div>
+        <div>
+            <span>MY COMMUNITY</span>
+            <h1>@IdentityLabel</h1>
+            <p>@IdentityDescription</p>
+        </div>
+        <MudChip T="string" Variant="Variant.Outlined" Color="@(AuthSession.IsLoggedIn ? Color.Success : Color.Default)" Size="Size.Small">
+            @(AuthSession.IsLoggedIn ? "계정 연결됨" : "방문자")
+        </MudChip>
+    </header>
+
+    <nav class="community-personal-tabs" aria-label="내 커뮤니티 메뉴">
+        @foreach (var section in Sections)
+        {
+            <a href="@section.Href" class="@BuildSectionClass(section.Key)" aria-current="@(CurrentSection == section.Key ? "page" : null)">
+                <MudIcon Icon="@section.Icon" Size="Size.Small" />
+                <span>@section.Title</span>
+            </a>
+        }
+    </nav>
+
+    @if (CurrentSection == "overview")
+    {
+        <section class="community-personal-section" aria-labelledby="personal-overview-title">
+            <div class="community-personal-section-heading">
+                <div>
+                    <span>OVERVIEW</span>
+                    <h2 id="personal-overview-title">내 정보</h2>
+                </div>
+                <MudButton Href="/community" Variant="Variant.Text" Color="Color.Secondary" EndIcon="@Icons.Material.Filled.ChevronRight">
+                    게시판 보기
+                </MudButton>
+            </div>
+
+            <div class="community-personal-facts">
+                <div><span>표시 이름</span><strong>@IdentityLabel</strong></div>
+                <div><span>현재 역할</span><strong>@AuthSession.CurrentTheme.RoleLabel</strong></div>
+                <div><span>내 글</span><strong>@MyPosts.Count</strong></div>
+                <div><span>내 원장</span><strong>@MyLedgers.Count</strong></div>
+                <div><span>보유 꾸미기</span><strong>@OwnedDecorationCount</strong></div>
+                <div><span>현재 테마</span><strong>@ActiveThemeTitle</strong></div>
+            </div>
+
+            <div class="community-personal-shortcuts">
+                <a href="/community/write">
+                    <MudIcon Icon="@Icons.Material.Filled.Edit" />
+                    <span><strong>새 글</strong><small>가볍게 쓰고 필요할 때 원장과 공동행동으로 이어갑니다.</small></span>
+                </a>
+                <a href="/community/me/actions">
+                    <MudIcon Icon="@Icons.Material.Filled.Groups" />
+                    <span><strong>참여 중</strong><small>내가 관심을 표시하거나 함께하기 시작한 흐름을 봅니다.</small></span>
+                </a>
+                <a href="/community/decorations">
+                    <MudIcon Icon="@Icons.Material.Filled.Palette" />
+                    <span><strong>꾸미기</strong><small>홈 이동판과 다이어그램 표시를 내 취향에 맞춥니다.</small></span>
+                </a>
+            </div>
+        </section>
+    }
+    else if (CurrentSection == "posts")
+    {
+        <section class="community-personal-section" aria-labelledby="personal-posts-title">
+            <div class="community-personal-section-heading">
+                <div><span>POSTS</span><h2 id="personal-posts-title">내 글</h2></div>
+                <MudButton Href="/community/write" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit">글쓰기</MudButton>
+            </div>
+            @if (IsPersonalDataLoading)
+            {
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+            }
+            else if (MyPosts.Count == 0)
+            {
+                <div class="community-personal-empty">
+                    <MudIcon Icon="@Icons.Material.Filled.Article" />
+                    <strong>계정에 연결된 글이 없습니다.</strong>
+                    <span>닉네임으로 쓴 글은 글 비밀번호로 관리되고, 로그인 계정 글만 이곳에 모입니다.</span>
+                </div>
+            }
+            else
+            {
+                <div class="community-personal-list">
+                    @foreach (var post in MyPosts)
+                    {
+                        <a href="@($"/community/posts/{post.Id}")">
+                            <span class="community-personal-list-icon"><MudIcon Icon="@Icons.Material.Filled.Article" /></span>
+                            <span><strong>@post.Title</strong><small>@post.Category · @FormatDate(post.CreatedAtUtc)</small></span>
+                            <span class="community-personal-list-count">댓글 @post.CommentCount</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </a>
+                    }
+                </div>
+            }
+        </section>
+    }
+    else if (CurrentSection == "actions")
+    {
+        <section class="community-personal-section" aria-labelledby="personal-actions-title">
+            <div class="community-personal-section-heading">
+                <div><span>PARTICIPATION</span><h2 id="personal-actions-title">참여 중</h2></div>
+            </div>
+            <div class="community-personal-focus">
+                <MudIcon Icon="@Icons.Material.Filled.Groups" />
+                <div>
+                    <strong>글에서 시작한 참여 흐름</strong>
+                    <p>관심 표시, 가원장, 역할 참여, 실행 준비가 이어진 항목을 단계별로 확인합니다.</p>
+                </div>
+                <MudButton Href="/community/actions" Variant="Variant.Filled" Color="Color.Success" EndIcon="@Icons.Material.Filled.ChevronRight">
+                    참여 내역 열기
+                </MudButton>
+            </div>
+        </section>
+    }
+    else if (CurrentSection == "ledgers")
+    {
+        <section class="community-personal-section" aria-labelledby="personal-ledgers-title">
+            <div class="community-personal-section-heading">
+                <div><span>LEDGERS</span><h2 id="personal-ledgers-title">내 원장</h2></div>
+                <MudButton Href="/community/write" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit">원장으로 글쓰기</MudButton>
+            </div>
+            @if (IsPersonalDataLoading)
+            {
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+            }
+            else if (MyLedgers.Count == 0)
+            {
+                <div class="community-personal-empty">
+                    <MudIcon Icon="@Icons.Material.Filled.Assignment" />
+                    <strong>현재 계정에서 확인할 원장이 없습니다.</strong>
+                    <span>게시글에서 참여가 모이면 가원장을 만들고, 실행 조건이 갖춰질 때 실제 원장으로 이어갈 수 있습니다.</span>
+                </div>
+            }
+            else
+            {
+                <div class="community-personal-list">
+                    @foreach (var ledger in MyLedgers)
+                    {
+                        <a href="/community/workspace">
+                            <span class="community-personal-list-icon"><MudIcon Icon="@Icons.Material.Filled.Assignment" /></span>
+                            <span><strong>@ledger.제목</strong><small>@ledger.원장템플릿명 · @FormatDate(ledger.수정시각Utc)</small></span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </a>
+                    }
+                </div>
+            }
+        </section>
+    }
+    else if (CurrentSection == "notifications")
+    {
+        <section class="community-personal-section" aria-labelledby="personal-notifications-title">
+            <div class="community-personal-section-heading">
+                <div><span>NOTIFICATIONS</span><h2 id="personal-notifications-title">알림</h2></div>
+            </div>
+            <div class="community-personal-setting-row">
+                <span><strong>댓글과 답글</strong><small>내 글과 댓글에 새 답글이 달릴 때 알립니다.</small></span>
+                <MudSwitch T="bool" @bind-Value="Preferences.Current.NotifyReplies" Color="Color.Primary" />
+            </div>
+            <div class="community-personal-setting-row">
+                <span><strong>참여 흐름 변경</strong><small>가원장 생성, 역할 참여, 실행 가능성 변경을 알립니다.</small></span>
+                <MudSwitch T="bool" @bind-Value="Preferences.Current.NotifyJourneyChanges" Color="Color.Primary" />
+            </div>
+            <div class="community-personal-setting-actions">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SavePreferencesAsync">알림 설정 저장</MudButton>
+            </div>
+        </section>
+    }
+    else if (CurrentSection == "decorations")
+    {
+        <section class="community-personal-section" aria-labelledby="personal-decorations-title">
+            <div class="community-personal-section-heading">
+                <div><span>APPEARANCE</span><h2 id="personal-decorations-title">꾸미기</h2></div>
+                @if (!string.IsNullOrWhiteSpace(ProductKey))
+                {
+                    <MudButton Href="/community/decorations" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">전체 보기</MudButton>
+                }
+            </div>
+
+            <div class="community-personal-decoration-toggles">
+                <MudSwitch T="bool" Value="@DecorationState.IsHomeThemeEnabled" ValueChanged="@((bool value) => SetDecorationTarget(CommunityDecorationTarget.HomeNavigatorTheme, value))" Color="Color.Primary" Label="홈 · 게시판 테마" />
+                <MudSwitch T="bool" Value="@DecorationState.IsTraditionalMarketThemeEnabled" ValueChanged="@((bool value) => SetDecorationTarget(CommunityDecorationTarget.TraditionalMarketTheme, value))" Color="Color.Primary" Label="전통시장 꾸미기 팩" />
+                <MudSwitch T="bool" Value="@DecorationState.IsBaguaDecorationEnabled" ValueChanged="@((bool value) => SetDecorationTarget(CommunityDecorationTarget.Bagua, value))" Color="Color.Primary" Label="사방 이동판" />
+                <MudSwitch T="bool" Value="@DecorationState.IsNodeDecorationEnabled" ValueChanged="@((bool value) => SetDecorationTarget(CommunityDecorationTarget.DiagramNode, value))" Color="Color.Primary" Label="다이어그램 도형" />
+                <MudSwitch T="bool" Value="@DecorationState.IsBaguaMotionEnabled" ValueChanged="@((bool value) => SetDecorationTarget(CommunityDecorationTarget.BaguaTransitionMotion, value))" Color="Color.Primary" Label="이동 효과" />
+            </div>
+
+            <div class="community-decoration-products">
+                @foreach (var product in VisibleDecorationProducts)
+                {
+                    <article class="@BuildDecorationProductClass(product)">
+                        @if (product.TraditionalMarketTheme is { } marketTheme)
+                        {
+                            <div class="community-decoration-product-market-preview">
+                                <TraditionalMarketThemePreview Theme="marketTheme" Title="@product.Title" Compact="true" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="community-decoration-product-preview" style="@($"--decoration-accent: {ResolveProductAccent(product)}")">
+                                <span>@ResolveProductSymbol(product)</span>
+                            </div>
+                        }
+                        <div class="community-decoration-product-copy">
+                            <span>@ResolveDecorationTargetLabel(product.Target)</span>
+                            <h3>@product.Title</h3>
+                            <p>@product.Summary</p>
+                            @if (product.IsHomeTheme)
+                            {
+                                <small>홈 · 게시판 · 글 목록 · 글 본문</small>
+                            }
+                            else if (product.TraditionalMarketTheme is { } traditionalMarketTheme)
+                            {
+                                <small>@traditionalMarketTheme.MarketName · 상인회 @traditionalMarketTheme.AssociationApprovalStatus</small>
+                                <small>@traditionalMarketTheme.DesignerCompensationPolicyLabel</small>
+                            }
+                            <small>@product.CreatorName</small>
+                        </div>
+                        <div class="community-decoration-product-action">
+                            @if (DecorationState.IsProductActive(product))
+                            {
+                                <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small">사용 중</MudChip>
+                            }
+                            else if (DecorationState.IsProductOwned(product))
+                            {
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ApplyDecoration(product))">사용</MudButton>
+                            }
+                            else
+                            {
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="@(() => OwnDecoration(product))">
+                                    @(product.IsFree ? "보유" : $"{product.PriceAmount:N0} {product.CurrencyCode}")
+                                </MudButton>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+    }
+    else
+    {
+        <section class="community-personal-section" aria-labelledby="personal-settings-title">
+            <div class="community-personal-section-heading">
+                <div><span>PREFERENCES</span><h2 id="personal-settings-title">사용 설정</h2></div>
+            </div>
+            <div class="community-personal-setting-row community-personal-setting-row--stacked">
+                <span><strong>게시글 보기 방식</strong><small>게시판을 열었을 때 선호하는 기본 형태입니다.</small></span>
+                <MudRadioGroup T="string" @bind-Value="Preferences.Current.PostViewMode">
+                    <MudStack Row="true" Spacing="2">
+                        <MudRadio T="string" Value="@("목록형")" Color="Color.Primary">목록형</MudRadio>
+                        <MudRadio T="string" Value="@("카드형")" Color="Color.Primary">카드형</MudRadio>
+                    </MudStack>
+                </MudRadioGroup>
+            </div>
+            <div class="community-personal-setting-row">
+                <span><strong>활동 국가 표시</strong><small>글을 쓸 때 내 활동 국가 공개 선택을 기본으로 사용합니다.</small></span>
+                <MudSwitch T="bool" @bind-Value="Preferences.Current.ShowActivityCountry" Color="Color.Primary" />
+            </div>
+            <div class="community-personal-setting-row">
+                <span><strong>간결한 개인 메뉴</strong><small>개인 메뉴에서 자주 쓰는 항목을 먼저 보도록 저장합니다.</small></span>
+                <MudSwitch T="bool" @bind-Value="Preferences.Current.UseCompactPersonalMenu" Color="Color.Primary" />
+            </div>
+            <div class="community-personal-setting-actions">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SavePreferencesAsync">설정 저장</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="ResetPreferencesAsync">기본값</MudButton>
+            </div>
+        </section>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(StatusMessage))
+    {
+        <MudAlert Severity="@StatusSeverity" Variant="Variant.Outlined" Dense="true">@StatusMessage</MudAlert>
+    }
+</main>
+
+@code {
+    [Parameter]
+    public string? SectionKey { get; set; }
+
+    [Parameter]
+    public string? ProductKey { get; set; }
+
+    private readonly List<PlatformCommunityPostResponse> MyPosts = [];
+    private readonly List<PlatformCommunityPostLedgerChoiceResponse> MyLedgers = [];
+    private bool IsPersonalDataLoading;
+    private string? StatusMessage;
+    private Severity StatusSeverity = Severity.Info;
+
+    private static readonly IReadOnlyList<PersonalSection> Sections =
+    [
+        new("overview", "내 정보", "/community/me", Icons.Material.Filled.AccountCircle),
+        new("posts", "내 글", "/community/me/posts", Icons.Material.Filled.Article),
+        new("actions", "참여 중", "/community/me/actions", Icons.Material.Filled.Groups),
+        new("ledgers", "내 원장", "/community/me/ledgers", Icons.Material.Filled.Assignment),
+        new("notifications", "알림", "/community/me/notifications", Icons.Material.Filled.Notifications),
+        new("decorations", "꾸미기", "/community/decorations", Icons.Material.Filled.Palette),
+        new("settings", "사용 설정", "/community/me/settings", Icons.Material.Filled.Settings)
+    ];
+
+    private string CurrentSection
+        => !string.IsNullOrWhiteSpace(ProductKey)
+           || SectionKey?.Equals("decorations", StringComparison.OrdinalIgnoreCase) == true
+           || NavigationPathIsDecoration()
+            ? "decorations"
+            : Sections.Any(item => item.Key.Equals(SectionKey, StringComparison.OrdinalIgnoreCase))
+                ? SectionKey!.ToLowerInvariant()
+                : "overview";
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    private string CurrentSectionTitle
+        => Sections.First(item => item.Key == CurrentSection).Title;
+
+    private string IdentityLabel
+        => AuthSession.UserName ?? "방문자";
+
+    private string IdentityDescription
+        => AuthSession.IsLoggedIn
+            ? $"{AuthSession.CurrentTheme.RoleLabel} 역할로 연결된 개인 활동입니다."
+            : "이 브라우저에서 작성과 꾸미기 설정을 이어서 볼 수 있습니다.";
+
+    private int OwnedDecorationCount
+        => DecorationState.Products.Count(DecorationState.IsProductOwned);
+
+    private string ActiveThemeTitle
+        => DecorationState.Products.FirstOrDefault(product =>
+               product.IsHomeTheme && DecorationState.IsProductActive(product))?.Title
+           ?? "기본 홈";
+
+    private IReadOnlyList<CommunityDecorationProduct> VisibleDecorationProducts
+        => string.IsNullOrWhiteSpace(ProductKey)
+            ? DecorationState.Products
+            : DecorationState.Products
+                .Where(product => product.Key.Equals(ProductKey, StringComparison.OrdinalIgnoreCase)
+                                  || product.PackKey.Equals(ProductKey, StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+
+    protected override void OnInitialized()
+    {
+        AuthSession.Changed += HandleAuthChanged;
+        DecorationState.Changed += HandleDecorationChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        await Preferences.LoadAsync(AuthSession.UserId);
+        await RestoreDecorationSelectionAsync();
+        await LoadPersonalDataAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadPersonalDataAsync()
+    {
+        IsPersonalDataLoading = true;
+        MyPosts.Clear();
+        MyLedgers.Clear();
+
+        try
+        {
+            if (AuthSession.IsLoggedIn && !string.IsNullOrWhiteSpace(AuthSession.UserName))
+            {
+                var response = await CommunityService.GetPostsAsync("shipper");
+                MyPosts.AddRange(response.Items.Where(post =>
+                    post.Nickname.Equals(AuthSession.UserName, StringComparison.OrdinalIgnoreCase)));
+                MyLedgers.AddRange(await CommunityService.GetMyLedgersAsync());
+            }
+        }
+        catch
+        {
+            StatusSeverity = Severity.Info;
+            StatusMessage = "계정 활동을 아직 불러오지 못했습니다. 개인 설정과 꾸미기는 계속 사용할 수 있습니다.";
+        }
+        finally
+        {
+            IsPersonalDataLoading = false;
+        }
+    }
+
+    private string BuildSectionClass(string key)
+        => key == CurrentSection
+            ? "community-personal-tab community-personal-tab--active"
+            : "community-personal-tab";
+
+    private bool NavigationPathIsDecoration()
+        => Navigation.ToBaseRelativePath(Navigation.Uri)
+            .Split('?', '#')[0]
+            .StartsWith("community/decorations", StringComparison.OrdinalIgnoreCase);
+
+    private async Task SetDecorationTarget(CommunityDecorationTarget target, bool enabled)
+    {
+        DecorationState.SetTargetEnabled(target, enabled);
+        if (target is CommunityDecorationTarget.HomeNavigatorTheme
+            or CommunityDecorationTarget.TraditionalMarketTheme)
+        {
+            await SaveDecorationSelectionAsync();
+        }
+    }
+
+    private async Task OwnDecoration(CommunityDecorationProduct product)
+    {
+        DecorationState.Purchase(product);
+        DecorationState.ApplyProduct(product);
+        if (!await SaveDecorationSelectionAsync())
+        {
+            return;
+        }
+
+        StatusSeverity = Severity.Success;
+        StatusMessage = $"{product.Title} 꾸미기를 현재 브라우저에서 사용할 수 있게 했습니다.";
+    }
+
+    private async Task ApplyDecoration(CommunityDecorationProduct product)
+    {
+        if (!DecorationState.ApplyProduct(product))
+        {
+            StatusSeverity = Severity.Warning;
+            StatusMessage = "먼저 꾸미기를 보유해야 사용할 수 있습니다.";
+            return;
+        }
+
+        if (!await SaveDecorationSelectionAsync())
+        {
+            return;
+        }
+
+        StatusSeverity = Severity.Success;
+        StatusMessage = $"{product.Title} 꾸미기를 적용했습니다.";
+    }
+
+    private async Task RestoreDecorationSelectionAsync()
+    {
+        var selection = await DecorationSelectionStore.LoadAsync();
+        if (selection is null)
+        {
+            return;
+        }
+
+        DecorationState.ApplyHomeThemePack(selection.ActiveHomeThemePackKey);
+        DecorationState.SetTargetEnabled(
+            CommunityDecorationTarget.HomeNavigatorTheme,
+            selection.IsHomeThemeEnabled);
+        foreach (var (marketScopeKey, packKey) in selection.ActiveTraditionalMarketThemePackByScope
+                     ?? new Dictionary<string, string>())
+        {
+            DecorationState.ApplyTraditionalMarketThemePack(marketScopeKey, packKey);
+        }
+
+        DecorationState.SetTargetEnabled(
+            CommunityDecorationTarget.TraditionalMarketTheme,
+            selection.IsTraditionalMarketThemeEnabled);
+    }
+
+    private async Task<bool> SaveDecorationSelectionAsync()
+    {
+        try
+        {
+            await DecorationSelectionStore.SaveAsync(new(
+                DecorationState.ActiveHomeThemePackKey,
+                DecorationState.IsHomeThemeEnabled,
+                new Dictionary<string, string>(DecorationState.ActiveTraditionalMarketThemePackByScope),
+                DecorationState.IsTraditionalMarketThemeEnabled));
+            return true;
+        }
+        catch (JSException)
+        {
+            StatusSeverity = Severity.Warning;
+            StatusMessage = "브라우저 저장소를 사용할 수 없어 꾸미기 선택을 이번 화면에서만 적용했습니다.";
+            return false;
+        }
+    }
+
+    private async Task SavePreferencesAsync()
+    {
+        try
+        {
+            await Preferences.SaveAsync(AuthSession.UserId);
+            StatusSeverity = Severity.Success;
+            StatusMessage = "내 사용 설정을 이 브라우저에 저장했습니다.";
+        }
+        catch (JSException)
+        {
+            StatusSeverity = Severity.Warning;
+            StatusMessage = "브라우저 저장소를 사용할 수 없어 설정을 저장하지 못했습니다.";
+        }
+    }
+
+    private async Task ResetPreferencesAsync()
+    {
+        await Preferences.ResetAsync(AuthSession.UserId);
+        StatusSeverity = Severity.Info;
+        StatusMessage = "개인 설정을 기본값으로 되돌렸습니다.";
+    }
+
+    private void HandleAuthChanged()
+        => _ = InvokeAsync(async () =>
+        {
+            await Preferences.LoadAsync(AuthSession.UserId);
+            await LoadPersonalDataAsync();
+            StateHasChanged();
+        });
+
+    private void HandleDecorationChanged()
+        => _ = InvokeAsync(StateHasChanged);
+
+    private static string ResolveDecorationTargetLabel(CommunityDecorationTarget target)
+        => target switch
+        {
+            CommunityDecorationTarget.HomeNavigatorTheme => "홈 · 게시판 테마",
+            CommunityDecorationTarget.TraditionalMarketTheme => "전통시장 꾸미기 팩",
+            CommunityDecorationTarget.Bagua => "사방 이동판",
+            CommunityDecorationTarget.DiagramNode => "다이어그램 도형",
+            CommunityDecorationTarget.BaguaTransitionMotion => "이동 효과",
+            _ => "꾸미기"
+        };
+
+    private static string ResolveProductSymbol(CommunityDecorationProduct product)
+        => product.Assets.FirstOrDefault()?.PreviewSymbol
+           ?? product.HomeTheme?.ClosedHandle.Title
+           ?? product.TraditionalMarketTheme?.MarketDayBanner.Title
+           ?? product.BaguaMotion?.PreviewSymbol
+           ?? "◇";
+
+    private static string ResolveProductAccent(CommunityDecorationProduct product)
+        => product.Assets.FirstOrDefault()?.AccentColor
+           ?? product.HomeTheme?.AccentColor
+           ?? product.TraditionalMarketTheme?.AccentColor
+           ?? product.BaguaMotion?.AccentColor
+           ?? "#147d64";
+
+    private string BuildDecorationProductClass(CommunityDecorationProduct product)
+    {
+        var classes = new List<string> { "community-decoration-product" };
+        if (product.IsTraditionalMarketTheme)
+        {
+            classes.Add("community-decoration-product--market");
+        }
+
+        if (DecorationState.IsProductActive(product))
+        {
+            classes.Add("community-decoration-product--active");
+        }
+
+        return string.Join(' ', classes);
+    }
+
+    private static string FormatDate(DateTime value)
+        => value.ToLocalTime().ToString("yyyy.MM.dd HH:mm");
+
+    public void Dispose()
+    {
+        AuthSession.Changed -= HandleAuthChanged;
+        DecorationState.Changed -= HandleDecorationChanged;
+    }
+
+    private sealed record PersonalSection(string Key, string Title, string Href, string Icon);
+}

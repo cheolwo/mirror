@@ -61,10 +61,18 @@ public sealed class PlatformCommunityPostResponse
     public string RoleTag { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
+    public string OriginalLanguageCode { get; set; } = CommunityDisplayLanguageCodes.Korean;
     public string? SharedLinkUrl { get; set; }
+    public PlatformCommunityPostSalesOfferResponse? SalesOffer { get; set; }
     public string? 커뮤니티원장Id { get; set; }
     public PlatformCommunityPostLedgerContextResponse? 원장Context { get; set; }
     public string Nickname { get; set; } = string.Empty;
+    public bool IsAuthorDisplayCountryPublic { get; set; }
+    public string? AuthorDisplayCountryCode { get; set; }
+    public string? AuthorDisplayCountryName { get; set; }
+    public bool IsSystemGenerated { get; set; }
+    public string? SystemPostKind { get; set; }
+    public string? PrivacyNotice { get; set; }
     public bool IsReportBoardPost { get; set; }
     public string ReporterDisplayName { get; set; } = string.Empty;
     public string ReportedDisplayName { get; set; } = string.Empty;
@@ -72,31 +80,98 @@ public sealed class PlatformCommunityPostResponse
     public bool IsReportSubjectMasked { get; set; }
     public bool IsOperatorPinned { get; set; }
     public DateTime? OperatorPinnedAtUtc { get; set; }
+    public bool IsCommunityMomentumPromoted { get; set; }
+    public string? CommunityMomentumCode { get; set; }
+    public string? CommunityMomentumMessage { get; set; }
+    public int CommunityMomentumRoleParticipantCount { get; set; }
+    public DateTime? CommunityMomentumUpdatedAtUtc { get; set; }
     public int RecommendationCount { get; set; }
     public int CommentCount { get; set; }
     public DateTime? LastEngagedAtUtc { get; set; }
     public bool IsTrending { get; set; }
+    public string PublicationStatusCode { get; set; } = PlatformCommunityPostPublicationStatuses.Published;
+    public DateTime? ScheduledPublishAtUtc { get; set; }
+    public DateTime? PublishedAtUtc { get; set; }
+    public int PublicationAttemptCount { get; set; }
+    public string? PublicationLastError { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public DateTime UpdatedAtUtc { get; set; }
     public IReadOnlyList<PlatformCommunityPostAttachmentResponse> Attachments { get; set; } = [];
     public IReadOnlyList<PlatformCommunityPostCommentResponse> RecentComments { get; set; } = [];
 }
 
+public static class PlatformCommunityPostPublicationStatuses
+{
+    public const string Scheduled = "scheduled";
+    public const string Publishing = "publishing";
+    public const string Published = "published";
+    public const string Cancelled = "cancelled";
+    public const string Failed = "failed";
+
+    public static bool IsSupported(string? value)
+        => value is Scheduled or Publishing or Published or Cancelled or Failed;
+}
+
+public static class PlatformCommunityPostSchedulePolicy
+{
+    public static readonly TimeSpan MinimumLeadTime = TimeSpan.FromMinutes(1);
+    public static readonly TimeSpan MaximumLeadTime = TimeSpan.FromDays(365);
+}
+
+public static class PlatformCommunitySystemPostKinds
+{
+    public const string LedgerCompletion = "ledger-completion";
+    public const string KamisPriceBrief = "kamis-price-brief";
+    public const string Reflection = "reflection";
+    public const string ActivityDigest = "activity-digest";
+    public const string PrajnaContent = "prajna-content";
+    public const string AutomatedEditorial = "automated-editorial";
+}
+
+public static class PlatformCommunityPostCategories
+{
+    public const string Vow = "서원";
+    public const string General = "자유·생활";
+    public const string Sales = "판매·공급";
+    public const string ReportDispute = "신고/분쟁";
+}
+
+public static class PlatformCommunityPostCategoryPolicy
+{
+    public static string Resolve(string? requestedCategory, bool hasSalesOffer)
+        => CommunityBoardCatalog.ResolveCanonicalCategory(
+            hasSalesOffer
+                ? PlatformCommunityPostCategories.Sales
+                : requestedCategory);
+}
+
 public sealed class PlatformCommunityPostCreateRequest
 {
     public string AppKey { get; set; } = "platform";
-    public string Category { get; set; } = "자유";
+    public string Category { get; set; } = PlatformCommunityPostCategories.General;
     public string WorkflowTag { get; set; } = "국내 화물 운송";
     public string RoleTag { get; set; } = "플랫폼 구성원";
     public string Title { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
+    public string? OriginalLanguageCode { get; set; }
     public string? SharedLinkUrl { get; set; }
+    public PlatformCommunityPostSalesOfferRequest? SalesOffer { get; set; }
     public string? 커뮤니티원장Id { get; set; }
     public string Nickname { get; set; } = string.Empty;
+    public bool IsAuthorDisplayCountryPublic { get; set; }
+    public string? AuthorDisplayCountryCode { get; set; }
+    public string? AuthorDisplayCountryName { get; set; }
     public bool IsReportBoardPost { get; set; }
     public string? ReporterDisplayName { get; set; }
     public string? ReportedDisplayName { get; set; }
     public string Password { get; set; } = string.Empty;
+}
+
+public sealed class PlatformCommunityPostScheduleCreateRequest
+{
+    public PlatformCommunityPostCreateRequest Post { get; set; } = new();
+
+    public DateTime ScheduledPublishAtUtc { get; set; }
 }
 
 public sealed class PlatformCommunityPostAudioResponse
@@ -113,6 +188,22 @@ public sealed class PlatformCommunityPostAudioResponse
     public IReadOnlyList<PlatformCommunityPostAudioSegmentResponse> Segments { get; set; } = [];
 }
 
+public sealed class PlatformCommunityPostTranslationResponse
+{
+    public long PostId { get; set; }
+    public string SourceLanguageCode { get; set; } = CommunityDisplayLanguageCodes.Korean;
+    public string TargetLanguageCode { get; set; } = CommunityDisplayLanguageCodes.English;
+    public string OriginalTitle { get; set; } = string.Empty;
+    public string OriginalBody { get; set; } = string.Empty;
+    public string TranslatedTitle { get; set; } = string.Empty;
+    public string TranslatedBody { get; set; } = string.Empty;
+    public string Provider { get; set; } = string.Empty;
+    public bool IsMachineTranslated { get; set; }
+    public bool IsCached { get; set; }
+    public bool IsHumanReviewed { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
+}
+
 public sealed class PlatformCommunityPostAudioSegmentResponse
 {
     public int Sequence { get; set; }
@@ -124,18 +215,68 @@ public sealed class PlatformCommunityPostAudioSegmentResponse
 
 public sealed class PlatformCommunityPostUpdateRequest
 {
-    public string Category { get; set; } = "자유";
+    public string Category { get; set; } = PlatformCommunityPostCategories.General;
     public string WorkflowTag { get; set; } = "국내 화물 운송";
     public string RoleTag { get; set; } = "플랫폼 구성원";
     public string Title { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
+    public string? OriginalLanguageCode { get; set; }
     public string? SharedLinkUrl { get; set; }
+    public PlatformCommunityPostSalesOfferRequest? SalesOffer { get; set; }
     public string? 커뮤니티원장Id { get; set; }
     public string Nickname { get; set; } = string.Empty;
+    public bool IsAuthorDisplayCountryPublic { get; set; }
+    public string? AuthorDisplayCountryCode { get; set; }
+    public string? AuthorDisplayCountryName { get; set; }
     public bool IsReportBoardPost { get; set; }
     public string? ReporterDisplayName { get; set; }
     public string? ReportedDisplayName { get; set; }
     public string Password { get; set; } = string.Empty;
+}
+
+public sealed class PlatformCommunityPostSalesOfferRequest
+{
+    public string ProductTitle { get; set; } = string.Empty;
+    public decimal AvailableQuantity { get; set; } = 1;
+    public string QuantityUnit { get; set; } = "개";
+    public decimal UnitPrice { get; set; }
+    public string CurrencyCode { get; set; } = "KRW";
+    public IReadOnlyList<string> AcceptedPaymentMethods { get; set; } =
+        [PlatformCommunitySalesPaymentMethodCodes.DirectCash];
+    public bool AllowsGroupPurchase { get; set; } = true;
+    public string Status { get; set; } = PlatformCommunitySalesOfferStatuses.Open;
+}
+
+public sealed class PlatformCommunityPostSalesOfferResponse
+{
+    public string ProductTitle { get; set; } = string.Empty;
+    public decimal AvailableQuantity { get; set; }
+    public string QuantityUnit { get; set; } = string.Empty;
+    public decimal UnitPrice { get; set; }
+    public string CurrencyCode { get; set; } = string.Empty;
+    public IReadOnlyList<string> AcceptedPaymentMethods { get; set; } = [];
+    public bool AllowsGroupPurchase { get; set; }
+    public string Status { get; set; } = PlatformCommunitySalesOfferStatuses.Open;
+}
+
+public static class PlatformCommunitySalesOfferStatuses
+{
+    public const string Open = "open";
+    public const string SoldOut = "sold-out";
+    public const string Closed = "closed";
+
+    public static IReadOnlyList<string> All { get; } = [Open, SoldOut, Closed];
+}
+
+public static class PlatformCommunitySalesPaymentMethodCodes
+{
+    public const string TossPayments = "platform.toss-payments";
+    public const string NaverPay = "platform.naver-pay";
+    public const string PayPal = "platform.paypal";
+    public const string DirectCash = "direct.cash";
+
+    public static IReadOnlyList<string> All { get; } =
+        [TossPayments, NaverPay, PayPal, DirectCash];
 }
 
 public sealed class PlatformCommunityPostLedgerContextResponse
@@ -156,6 +297,13 @@ public sealed class PlatformCommunityPostLedgerContextResponse
     public bool 참여요청필요여부 { get; set; }
     public bool 재사용허용여부 { get; set; }
     public bool 재공유허용여부 { get; set; }
+    public bool 역할범위조회여부 { get; set; }
+    public string 접근역할Code { get; set; } = string.Empty;
+    public string 접근역할명 { get; set; } = string.Empty;
+    public bool 역할권한관리가능여부 { get; set; }
+    public IReadOnlyList<string> 조회가능노드Ids { get; set; } = [];
+    public IReadOnlyList<string> 편집가능노드Ids { get; set; } = [];
+    public bool 운송주선가능여부 { get; set; }
     public DiagramSnapshotDto? 다이어그램 { get; set; }
     public IReadOnlyList<PlatformCommunityLedgerBlockResponse> 블록목록 { get; set; } = [];
     public IReadOnlyList<string> 가능한행동목록 { get; set; } = [];
@@ -183,7 +331,17 @@ public sealed class PlatformCommunityLedgerBlockResponse
     public string 블록유형 { get; set; } = string.Empty;
     public string 제목 { get; set; } = string.Empty;
     public string? 상태 { get; set; }
+    public IReadOnlyList<PlatformCommunityLedgerBlockAssigneeResponse> 담당자목록 { get; set; } = [];
     public IReadOnlyDictionary<string, string> 항목 { get; set; } = new Dictionary<string, string>();
+}
+
+public sealed class PlatformCommunityLedgerBlockAssigneeResponse
+{
+    public string UserId { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public string RoleLabel { get; set; } = string.Empty;
+    public string ResponsibilityType { get; set; } = CommunityLedgerBlockResponsibilityTypes.Primary;
+    public string ResponsibilityName { get; set; } = "주담당";
 }
 
 public sealed class PlatformCommunityLedgerNodeActionResponse

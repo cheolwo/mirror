@@ -1,0 +1,114 @@
+<HongdalServerDataGrid @ref="_grid"
+                       TItem="입고요청항목응답"
+                       ViewModel="@ViewModel"
+                       RowsPerPage="25"
+                       MinimumWidth="980"
+                       SkeletonColumns="6"
+                       SearchPlaceholder="업체 코드·명칭, 상품, SKU, 참조번호 검색"
+                       EmptyText="조건에 맞는 입고 예정이 없습니다.">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">입고 예정 목록</MudText>
+    </ToolBarContent>
+    <Columns>
+        <TemplateColumn T="입고요청항목응답" Title="업체" Sortable="false">
+            <CellTemplate>
+                <MudText Typo="Typo.body2">@DisplaySupplierName(context.Item)</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@DisplaySupplierCode(context.Item)</MudText>
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn T="입고요청항목응답" Title="예정 품목" Sortable="false">
+            <CellTemplate>
+                <MudText Typo="Typo.body2">@DisplayProductName(context.Item)</MudText>
+                @if (!string.IsNullOrWhiteSpace(context.Item.예정SKU) || context.Item.예정수량.HasValue)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        @DisplayProductDetail(context.Item)
+                    </MudText>
+                }
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn T="입고요청항목응답" Title="참조번호" Sortable="false">
+            <CellTemplate>
+                <MudText Typo="Typo.body2">@DisplayReference(context.Item)</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@($"입고 #{context.Item.Id}")</MudText>
+            </CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn T="입고요청항목응답"
+                        TProperty="DateTime?"
+                        Property="item => item.예정도착일"
+                        Title="도착 예정"
+                        Format="yyyy-MM-dd HH:mm" />
+        <TemplateColumn T="입고요청항목응답" Title="입고 흐름" Sortable="false">
+            <CellTemplate>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+                    @입고흐름유형코드.GetDisplayName(context.Item.입고흐름유형)
+                </MudChip>
+            </CellTemplate>
+        </TemplateColumn>
+        @if (OnSelect.HasDelegate)
+        {
+            <TemplateColumn T="입고요청항목응답" Title="" Sortable="false">
+                <CellTemplate>
+                    <MudTooltip Text="@SelectLabel">
+                        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                                       Color="@Color"
+                                       Size="Size.Small"
+                                       OnClick="@(() => OnSelect.InvokeAsync(context.Item))"
+                                       aria-label="@SelectLabel" />
+                    </MudTooltip>
+                </CellTemplate>
+            </TemplateColumn>
+        }
+    </Columns>
+</HongdalServerDataGrid>
+
+@code {
+    private HongdalServerDataGrid<입고요청항목응답>? _grid;
+
+    [Parameter, EditorRequired]
+    public 입고예정조회ViewModel ViewModel { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<입고요청항목응답> OnSelect { get; set; }
+
+    [Parameter]
+    public string SelectLabel { get; set; } = "입고 작업 열기";
+
+    [Parameter]
+    public Color Color { get; set; } = Color.Primary;
+
+    public Task ReloadAsync()
+        => _grid?.ReloadAsync() ?? Task.CompletedTask;
+
+    private static string DisplaySupplierName(입고요청항목응답 item)
+        => string.IsNullOrWhiteSpace(item.공급처명) ? "업체명 미등록" : item.공급처명;
+
+    private static string DisplaySupplierCode(입고요청항목응답 item)
+        => string.IsNullOrWhiteSpace(item.공급처코드) ? "코드 미등록" : item.공급처코드;
+
+    private static string DisplayProductName(입고요청항목응답 item)
+        => string.IsNullOrWhiteSpace(item.예정상품명) ? "품목 정보 없음" : item.예정상품명;
+
+    private static string DisplayProductDetail(입고요청항목응답 item)
+    {
+        var values = new List<string>(2);
+        if (!string.IsNullOrWhiteSpace(item.예정SKU))
+        {
+            values.Add(item.예정SKU);
+        }
+
+        if (item.예정수량.HasValue)
+        {
+            values.Add($"{item.예정수량.Value:N0}개");
+        }
+
+        return string.Join(" · ", values);
+    }
+
+    private static string DisplayReference(입고요청항목응답 item)
+        => !string.IsNullOrWhiteSpace(item.주문참조번호)
+            ? item.주문참조번호
+            : !string.IsNullOrWhiteSpace(item.원주문참조번호)
+                ? item.원주문참조번호
+                : "참조번호 없음";
+}

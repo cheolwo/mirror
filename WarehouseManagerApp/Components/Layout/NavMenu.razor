@@ -4,28 +4,49 @@
 
 <MudNavMenu Class="pa-3 warehouse-navmenu">
     <MudStack Spacing="0" Class="px-2 pb-3">
-        <MudText Typo="Typo.subtitle1" Class="fw-bold">Warehouse Manager</MudText>
+        <MudText Typo="Typo.subtitle1" Class="fw-bold">살뜰 창고</MudText>
         <MudText Typo="Typo.caption" Color="Color.Secondary">창고 공정 / 도심 물류</MudText>
     </MudStack>
     <MudDivider Class="mb-3" />
 
-    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">플랫폼 홈</MudNavLink>
-    <MudNavLink Href="work/inbound" Icon="@Icons.Material.Filled.MoveToInbox">입고 시작</MudNavLink>
-    <MudNavLink Href="work/outbound" Icon="@Icons.Material.Filled.Outbox">출고 시작</MudNavLink>
-    <MudNavLink Href="work/packing" Icon="@Icons.Material.Filled.Inventory">포장 시작</MudNavLink>
-    <MudNavLink Href="work/market-fulfillment" Icon="@Icons.Material.Filled.Storefront">마켓 출고</MudNavLink>
-    <MudNavLink Href="work/international-forwarding" Icon="@Icons.Material.Filled.Public">해외 배송대행</MudNavLink>
-    <MudNavLink Href="work/delivery-agency" Icon="@Icons.Material.Filled.LocalShipping">국내 배송대행</MudNavLink>
+    <MudNavLink Href="@WarehouseManagerRoutes.Home" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">플랫폼 홈</MudNavLink>
+    <MudNavLink Href="@WarehouseManagerRoutes.Warehouse" Icon="@Icons.Material.Filled.Warehouse">창고 운영 홈</MudNavLink>
+    <MudNavLink Href="@WarehouseManagerRoutes.ExpectedInbounds" Icon="@Icons.Material.Filled.EventAvailable">입고 예정 조회</MudNavLink>
+
+    <MudNavGroup Title="일반 입출고" Icon="@Icons.Material.Filled.Inventory2" Expanded="true">
+        <MudNavLink Href="@WarehouseManagerRoutes.InboundProductScan" Icon="@Icons.Material.Filled.MoveToInbox">입고 작업</MudNavLink>
+        <MudNavLink Href="@WarehouseManagerRoutes.GeneralInventory" Icon="@Icons.Material.Filled.Inventory2">재고 현황</MudNavLink>
+        <MudNavLink Href="@WarehouseManagerRoutes.PickingBatch" Icon="@Icons.Material.Filled.Outbox">출고 작업</MudNavLink>
+        <MudNavLink Href="@WarehouseManagerRoutes.GeneralTransportHandoff" Icon="@Icons.Material.Filled.LocalShipping">운송 인계</MudNavLink>
+    </MudNavGroup>
+
+    <MudNavGroup Title="보세·수입" Icon="@Icons.Material.Filled.Public">
+        <MudNavLink Href="@WarehouseManagerRoutes.ImportArrival" Icon="@Icons.Material.Filled.MoveToInbox">수입 화물 반입</MudNavLink>
+        <MudNavLink Href="@WarehouseManagerRoutes.ImportCustoms" Icon="@Icons.Material.Filled.FactCheck">보세·통관 상태</MudNavLink>
+        <MudNavLink Href="@WarehouseManagerRoutes.ImportRelease" Icon="@Icons.Material.Filled.Outbox">수입 화물 반출</MudNavLink>
+        <MudNavLink Href="@WarehouseManagerRoutes.ImportDomesticHandoff" Icon="@Icons.Material.Filled.LocalShipping">국내 운송 인계</MudNavLink>
+    </MudNavGroup>
+
+    <MudNavGroup Title="공동주택 물류" Icon="@Icons.Material.Filled.Group">
+        <MudNavLink Href="@WarehouseManagerRoutes.ApartmentArrivals" Icon="@Icons.Material.Filled.Schedule">반입 예정</MudNavLink>
+        <MudNavLink Href="@WarehouseManagerRoutes.ApartmentInbound" Icon="@Icons.Material.Filled.MoveToInbox">입고 확인</MudNavLink>
+        <MudNavLink Href="@WarehouseManagerRoutes.ApartmentAllocation" Icon="@Icons.Material.Filled.Rule">세대별 배분</MudNavLink>
+        <MudNavLink Href="@WarehouseManagerRoutes.ApartmentHandoff" Icon="@Icons.Material.Filled.VerifiedUser">입주민 인계</MudNavLink>
+        <MudNavLink Href="@WarehouseManagerRoutes.ApartmentUnclaimed" Icon="@Icons.Material.Filled.Warning">미수령 관리</MudNavLink>
+    </MudNavGroup>
+
+    <MudNavGroup Title="마트 도심 창고" Icon="@Icons.Material.Filled.Storefront">
+        <MudNavLink Href="@WarehouseManagerRoutes.MartHome" Icon="@Icons.Material.Filled.Storefront">마트 운영 홈</MudNavLink>
+        <MudNavLink Href="@WarehouseManagerRoutes.MartWorkBoard" Icon="@Icons.Material.Filled.Dashboard">작업 보드</MudNavLink>
+        <MudNavLink Href="@WarehouseManagerRoutes.MartPickingPacking" Icon="@Icons.Material.Filled.ShoppingCartCheckout">피킹·포장</MudNavLink>
+    </MudNavGroup>
 
     <MudDivider Class="my-3" />
-    <MudNavLink Href="mart" Icon="@Icons.Material.Filled.Storefront">알뜰살뜰 마트</MudNavLink>
-    <MudNavLink Href="mart/work-board" Icon="@Icons.Material.Filled.Dashboard">알뜰살뜰 마트 작업 보드</MudNavLink>
-    <MudNavLink Href="mart/picking" Icon="@Icons.Material.Filled.ShoppingCartCheckout">알뜰살뜰 마트 피킹/포장</MudNavLink>
-
-    <MudDivider Class="my-3" />
-    <MudNavLink Href="scan" Icon="@Icons.Material.Filled.QrCodeScanner">스캔 스테이션</MudNavLink>
-    <MudNavLink Href="work-board" Icon="@Icons.Material.Filled.ViewKanban">일반 작업 보드</MudNavLink>
-    <MudNavLink Href="work/picking-batch" Icon="@Icons.Material.Filled.Inventory2">피킹 배치</MudNavLink>
+    <MudNavLink Href="@WarehouseManagerRoutes.Scan" Icon="@Icons.Material.Filled.QrCodeScanner">스캔 스테이션</MudNavLink>
+    <MudNavLink Href="@WarehouseManagerRoutes.WorkBoard" Icon="@Icons.Material.Filled.ViewKanban">공통 작업 보드</MudNavLink>
+    <MudNavLink Href="@WarehouseManagerRoutes.WarehouseExceptions" Icon="@Icons.Material.Filled.Warning">예외 처리</MudNavLink>
+    <MudNavLink Href="@WarehouseManagerRoutes.WarehouseHistory" Icon="@Icons.Material.Filled.History">작업 이력</MudNavLink>
+    <MudNavLink Href="@WarehouseManagerRoutes.WarehouseSettings" Icon="@Icons.Material.Filled.Settings">창고 설정</MudNavLink>
 
     <MudDivider Class="my-3" />
     <MudStack Spacing="1" Class="px-2 pb-2">

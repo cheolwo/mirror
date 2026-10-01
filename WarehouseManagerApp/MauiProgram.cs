@@ -20,12 +20,10 @@ public static class MauiProgram
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddMudServices();
         builder.Services.AddHongdalUiCommonAppServices();
+        builder.Services.AddWarehouseManagerApplication();
         builder.Services.AddHongdalApiHttpClient(HongdalApiEndpoint.ResolveBaseAddress(
             builder.Configuration[HongdalApiEndpoint.ConfigurationKey],
             new Uri(HongdalApiEndpoint.LocalDevelopmentBaseAddress)));
-        builder.Services.AddSingleton<IWarehouseWorkEntryGateService, SampleWarehouseWorkEntryGateService>();
-        builder.Services.AddSingleton<IInboundReceivingWorkflowService, SampleInboundReceivingWorkflowService>();
-        builder.Services.AddSingleton<IWarehousePickingBatchWorkspaceService, SampleWarehousePickingBatchWorkspaceService>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();

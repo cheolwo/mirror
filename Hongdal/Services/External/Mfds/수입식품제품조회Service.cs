@@ -1,41 +1,39 @@
 using System.Globalization;
-using System.Text;
-using System.Text.Json;
-using System.Xml.Linq;
 using Microsoft.Extensions.Options;
 
-namespace 홍달.Services.External.Mfds
+namespace 홍달.Services.External.Mfds;
+
+public sealed class 수입식품제품조회Service : I수입식품제품조회Service
 {
-    public interface I수입식품제품조회Service
+    private readonly HttpClient _httpClient;
+    private readonly 수입식품제품조회Options _옵션;
+
+    public 수입식품제품조회Service(
+        HttpClient httpClient,
+        IOptions<수입식품제품조회Options> 옵션)
     {
-        Task<수입식품제품조회응답DTO> 조회Async(수입식품제품조회요청DTO 요청, CancellationToken 취소토큰 = default);
+        _httpClient = httpClient;
+        _옵션 = 옵션.Value;
+
+        if (string.IsNullOrWhiteSpace(_옵션.ServiceKey))
+        {
+            throw new InvalidOperationException(
+                "수입식품제품조회:ServiceKey 또는 PublicData:DataGoKrServiceKey 설정이 필요합니다.");
+        }
     }
 
-    public sealed class 수입식품제품조회Service : I수입식품제품조회Service
+    public async Task<수입식품제품조회응답DTO> 조회Async(
+        수입식품제품조회요청DTO 요청,
+        CancellationToken 취소토큰 = default)
     {
-        private readonly HttpClient _httpClient;
-        private readonly 수입식품제품조회Options _옵션;
+        ArgumentNullException.ThrowIfNull(요청);
 
-        public 수입식품제품조회Service(HttpClient httpClient, IOptions<수입식품제품조회Options> 옵션)
-        {
-            _httpClient = httpClient;
-            _옵션 = 옵션.Value;
-
-            if (string.IsNullOrWhiteSpace(_옵션.ServiceKey))
-            {
-                throw new InvalidOperationException("수입식품제품조회:ServiceKey 설정이 필요합니다.");
-            }
-        }
-
-        public async Task<수입식품제품조회응답DTO> 조회Async(수입식품제품조회요청DTO 요청, CancellationToken 취소토큰 = default)
-        {
-            ArgumentNullException.ThrowIfNull(요청);
-
-            var 페이지번호 = 요청.페이지번호 <= 0 ? 1 : 요청.페이지번호;
-            var 한페이지결과수 = 요청.한페이지결과수 <= 0 ? 10 : 요청.한페이지결과수;
-            var 데이터형식 = 문자열형식정리(string.IsNullOrWhiteSpace(요청.데이터형식) ? _옵션.DefaultType : 요청.데이터형식);
-
-            var 요청주소 = 요청주소생성(new Dictionary<string, string?>
+        var 페이지번호 = 요청.페이지번호 <= 0 ? 1 : 요청.페이지번호;
+        var 한페이지결과수 = 요청.한페이지결과수 <= 0 ? 10 : 요청.한페이지결과수;
+        var 데이터형식 = Mfds공공데이터요청Builder.데이터형식정리(요청.데이터형식, _옵션.DefaultType);
+        var 요청주소 = Mfds공공데이터요청Builder.요청주소생성(
+            _옵션.Path,
+            new Dictionary<string, string?>
             {
                 ["serviceKey"] = _옵션.ServiceKey,
                 ["pageNo"] = 페이지번호.ToString(CultureInfo.InvariantCulture),
@@ -44,309 +42,47 @@ namespace 홍달.Services.External.Mfds
                 ["DCLR_PRDT_DIVS_NM"] = 요청.신고제품구분명,
                 ["MNFT_NATN_NM"] = 요청.제조국가명,
                 ["PRDT_NM"] = 요청.제품명,
-                ["PRDLST_NM"] = 요청.품목명,
-                ["DCLR_PRDT_DIVS_CD"] = 요청.신고제품구분코드,
-                ["MNFT_NATN_CD"] = 요청.제조국가코드,
-                ["PRDLST_CD"] = 요청.품목코드,
-                ["MEAT_PRDLST_NM"] = 요청.육류품목명,
-                ["MEAT_PRDLST_CD"] = 요청.육류품목코드
+                ["PRDLST_NM"] = 요청.품목명
             });
 
-            using var 응답 = await _httpClient.GetAsync(요청주소, 취소토큰);
-            응답.EnsureSuccessStatusCode();
+        using var 응답 = await _httpClient.GetAsync(요청주소, 취소토큰);
+        응답.EnsureSuccessStatusCode();
 
-            var 본문텍스트 = await 응답.Content.ReadAsStringAsync(취소토큰);
-            return string.Equals(데이터형식, "json", StringComparison.OrdinalIgnoreCase)
-                ? JSON응답파싱(본문텍스트)
-                : XML응답파싱(본문텍스트);
-        }
+        var 본문텍스트 = await 응답.Content.ReadAsStringAsync(취소토큰);
+        var 파싱결과 = Mfds공공데이터목록Parser.파싱(본문텍스트, 데이터형식, 항목변환);
 
-        private string 요청주소생성(IReadOnlyDictionary<string, string?> 매개변수목록)
+        return new 수입식품제품조회응답DTO
         {
-            var 빌더 = new StringBuilder(_옵션.Path.TrimStart('/'));
-            var 첫매개변수인지여부 = true;
-
-            foreach (var 항목 in 매개변수목록)
+            헤더 = new 수입식품제품조회헤더DTO
             {
-                if (string.IsNullOrWhiteSpace(항목.Value))
+                결과코드 = 파싱결과.결과코드,
+                결과메시지 = 파싱결과.결과메시지
+            },
+            본문 = new 수입식품제품조회본문DTO
+            {
+                한페이지결과수 = 파싱결과.한페이지결과수,
+                페이지번호 = 파싱결과.페이지번호,
+                전체결과수 = 파싱결과.전체결과수,
+                아이템 = new 수입식품제품조회아이템목록DTO
                 {
-                    continue;
-                }
-
-                빌더.Append(첫매개변수인지여부 ? '?' : '&');
-                빌더.Append(항목.Key);
-                빌더.Append('=');
-                빌더.Append(Uri.EscapeDataString(항목.Value!));
-                첫매개변수인지여부 = false;
-            }
-
-            return 빌더.ToString();
-        }
-
-        private static 수입식품제품조회응답DTO XML응답파싱(string 본문텍스트)
-        {
-            var 문서 = XDocument.Parse(본문텍스트);
-            var 루트 = 문서.Root;
-            var 헤더 = 첫자식찾기(루트, "header");
-            var 본문 = 첫자식찾기(루트, "body");
-            var 항목목록 = 모든자손찾기(본문 ?? 루트, "item").Select(XML항목변환).ToList();
-
-            return new 수입식품제품조회응답DTO
-            {
-                헤더 = new 수입식품제품조회헤더DTO
-                {
-                    결과코드 = 문자열찾기(헤더, "resultCode") ?? 문자열찾기(루트, "resultCode"),
-                    결과메시지 = 문자열찾기(헤더, "resultMsg") ?? 문자열찾기(루트, "resultMsg")
-                },
-                본문 = new 수입식품제품조회본문DTO
-                {
-                    한페이지결과수 = 정수찾기(본문 ?? 루트, "numOfRows") ?? 0,
-                    페이지번호 = 정수찾기(본문 ?? 루트, "pageNo") ?? 0,
-                    전체결과수 = 정수찾기(본문 ?? 루트, "totalCount") ?? 0,
-                    아이템 = new 수입식품제품조회아이템목록DTO
-                    {
-                        항목 = 항목목록
-                    }
-                }
-            };
-        }
-
-        private static 수입식품제품조회응답DTO JSON응답파싱(string 본문텍스트)
-        {
-            using var 문서 = JsonDocument.Parse(본문텍스트);
-            var 루트 = 문서.RootElement;
-            var 응답영역 = 속성찾기(루트, "response") ?? 루트;
-            var 헤더영역 = 속성찾기(응답영역, "header");
-            var 본문영역 = 속성찾기(응답영역, "body");
-            var 항목목록 = JSON항목찾기(본문영역 ?? 응답영역).Select(JSON항목변환).ToList();
-
-            return new 수입식품제품조회응답DTO
-            {
-                헤더 = new 수입식품제품조회헤더DTO
-                {
-                    결과코드 = JSON문자열찾기(헤더영역, "resultCode") ?? JSON문자열찾기(응답영역, "resultCode"),
-                    결과메시지 = JSON문자열찾기(헤더영역, "resultMsg") ?? JSON문자열찾기(응답영역, "resultMsg")
-                },
-                본문 = new 수입식품제품조회본문DTO
-                {
-                    한페이지결과수 = JSON정수찾기(본문영역 ?? 응답영역, "numOfRows") ?? 0,
-                    페이지번호 = JSON정수찾기(본문영역 ?? 응답영역, "pageNo") ?? 0,
-                    전체결과수 = JSON정수찾기(본문영역 ?? 응답영역, "totalCount") ?? 0,
-                    아이템 = new 수입식품제품조회아이템목록DTO
-                    {
-                        항목 = 항목목록
-                    }
-                }
-            };
-        }
-
-        private static 수입식품제품조회항목DTO XML항목변환(XElement 항목)
-        {
-            var 결과 = new 수입식품제품조회항목DTO
-            {
-                신고제품구분코드 = 문자열찾기(항목, "DCLR_PRDT_DIVS_CD"),
-                신고제품구분명 = 문자열찾기(항목, "DCLR_PRDT_DIVS_NM"),
-                제조국가코드 = 문자열찾기(항목, "MNFT_NATN_CD"),
-                제조국가명 = 문자열찾기(항목, "MNFT_NATN_NM"),
-                제품명 = 문자열찾기(항목, "PRDT_NM"),
-                육류품목코드 = 문자열찾기(항목, "MEAT_PRDLST_CD"),
-                육류품목명 = 문자열찾기(항목, "MEAT_PRDLST_NM"),
-                품목코드 = 문자열찾기(항목, "PRDLST_CD"),
-                품목명 = 문자열찾기(항목, "PRDLST_NM"),
-                수입식품관리번호 = 문자열찾기(항목, "IPRT_FOOD_MNG_NO")
-            };
-
-            return 결과;
-        }
-
-        private static 수입식품제품조회항목DTO JSON항목변환(JsonElement 항목)
-        {
-            return new 수입식품제품조회항목DTO
-            {
-                신고제품구분코드 = JSON문자열찾기(항목, "DCLR_PRDT_DIVS_CD"),
-                신고제품구분명 = JSON문자열찾기(항목, "DCLR_PRDT_DIVS_NM"),
-                제조국가코드 = JSON문자열찾기(항목, "MNFT_NATN_CD"),
-                제조국가명 = JSON문자열찾기(항목, "MNFT_NATN_NM"),
-                제품명 = JSON문자열찾기(항목, "PRDT_NM"),
-                육류품목코드 = JSON문자열찾기(항목, "MEAT_PRDLST_CD"),
-                육류품목명 = JSON문자열찾기(항목, "MEAT_PRDLST_NM"),
-                품목코드 = JSON문자열찾기(항목, "PRDLST_CD"),
-                품목명 = JSON문자열찾기(항목, "PRDLST_NM"),
-                수입식품관리번호 = JSON문자열찾기(항목, "IPRT_FOOD_MNG_NO")
-            };
-        }
-
-        private static XElement? 첫자식찾기(XElement? 요소, string 이름)
-        {
-            return 요소?.Elements().FirstOrDefault(x => string.Equals(x.Name.LocalName, 이름, StringComparison.OrdinalIgnoreCase));
-        }
-
-        private static IEnumerable<XElement> 모든자손찾기(XElement? 요소, string 이름)
-        {
-            return 요소?.Descendants().Where(x => string.Equals(x.Name.LocalName, 이름, StringComparison.OrdinalIgnoreCase))
-                ?? Enumerable.Empty<XElement>();
-        }
-
-        private static string? 문자열찾기(XElement? 요소, string 이름)
-        {
-            return 요소?.Elements().FirstOrDefault(x => string.Equals(x.Name.LocalName, 이름, StringComparison.OrdinalIgnoreCase))?.Value
-                ?? 요소?.Descendants().FirstOrDefault(x => string.Equals(x.Name.LocalName, 이름, StringComparison.OrdinalIgnoreCase))?.Value;
-        }
-
-        private static int? 정수찾기(XElement? 요소, string 이름)
-        {
-            var 값 = 문자열찾기(요소, 이름);
-            return int.TryParse(값, NumberStyles.Any, CultureInfo.InvariantCulture, out var 결과) ? 결과 : null;
-        }
-
-        private static JsonElement? 속성찾기(JsonElement 요소, string 이름)
-        {
-            if (요소.ValueKind != JsonValueKind.Object)
-            {
-                return null;
-            }
-
-            foreach (var 속성 in 요소.EnumerateObject())
-            {
-                if (string.Equals(속성.Name, 이름, StringComparison.OrdinalIgnoreCase))
-                {
-                    return 속성.Value;
+                    항목 = 파싱결과.항목목록.ToList()
                 }
             }
-
-            return null;
-        }
-
-        private static IEnumerable<JsonElement> JSON항목찾기(JsonElement 요소)
-        {
-            var 목록 = new List<JsonElement>();
-            var 항목영역 = 속성찾기(요소, "items");
-            if (항목영역.HasValue)
-            {
-                var 값 = 항목영역.Value;
-                if (값.ValueKind == JsonValueKind.Array)
-                {
-                    목록.AddRange(값.EnumerateArray());
-                    return 목록;
-                }
-
-                var 내부항목 = 속성찾기(값, "item");
-                if (내부항목.HasValue && 내부항목.Value.ValueKind == JsonValueKind.Array)
-                {
-                    목록.AddRange(내부항목.Value.EnumerateArray());
-                    return 목록;
-                }
-            }
-
-            var 직접항목 = 속성찾기(요소, "item");
-            if (직접항목.HasValue)
-            {
-                if (직접항목.Value.ValueKind == JsonValueKind.Array)
-                {
-                    목록.AddRange(직접항목.Value.EnumerateArray());
-                }
-                else if (직접항목.Value.ValueKind == JsonValueKind.Object)
-                {
-                    목록.Add(직접항목.Value);
-                }
-            }
-
-            return 목록;
-        }
-
-        private static string? JSON문자열찾기(JsonElement? 요소, string 이름)
-        {
-            if (!요소.HasValue)
-            {
-                return null;
-            }
-
-            var 속성 = 속성찾기(요소.Value, 이름);
-            return 속성.HasValue ? 속성.Value.ToString() : null;
-        }
-
-        private static int? JSON정수찾기(JsonElement? 요소, string 이름)
-        {
-            if (!요소.HasValue)
-            {
-                return null;
-            }
-
-            var 속성 = 속성찾기(요소.Value, 이름);
-            if (!속성.HasValue)
-            {
-                return null;
-            }
-
-            return 속성.Value.ValueKind switch
-            {
-                JsonValueKind.Number when 속성.Value.TryGetInt32(out var 결과) => 결과,
-                JsonValueKind.String when int.TryParse(속성.Value.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var 결과) => 결과,
-                _ => null
-            };
-        }
-
-        private static string 문자열형식정리(string 값)
-        {
-            var 정리된값 = 값.Trim().ToLowerInvariant();
-            return 정리된값 == "json" ? "json" : "xml";
-        }
+        };
     }
 
-    public sealed class 수입식품제품조회요청DTO
-    {
-        public int 페이지번호 { get; set; } = 1;
-        public int 한페이지결과수 { get; set; } = 10;
-        public string 데이터형식 { get; set; } = "xml";
-
-        public string? 신고제품구분코드 { get; set; }
-        public string? 신고제품구분명 { get; set; }
-        public string? 제조국가코드 { get; set; }
-        public string? 제조국가명 { get; set; }
-        public string? 제품명 { get; set; }
-        public string? 육류품목코드 { get; set; }
-        public string? 육류품목명 { get; set; }
-        public string? 품목코드 { get; set; }
-        public string? 품목명 { get; set; }
-        public string? 수입식품관리번호 { get; set; }
-    }
-
-    public sealed class 수입식품제품조회응답DTO
-    {
-        public 수입식품제품조회헤더DTO? 헤더 { get; set; }
-        public 수입식품제품조회본문DTO? 본문 { get; set; }
-    }
-
-    public sealed class 수입식품제품조회헤더DTO
-    {
-        public string? 결과코드 { get; set; }
-        public string? 결과메시지 { get; set; }
-    }
-
-    public sealed class 수입식품제품조회본문DTO
-    {
-        public int 한페이지결과수 { get; set; }
-        public int 페이지번호 { get; set; }
-        public int 전체결과수 { get; set; }
-        public 수입식품제품조회아이템목록DTO? 아이템 { get; set; }
-    }
-
-    public sealed class 수입식품제품조회아이템목록DTO
-    {
-        public List<수입식품제품조회항목DTO> 항목 { get; set; } = [];
-    }
-
-    public sealed class 수입식품제품조회항목DTO
-    {
-        public string? 신고제품구분코드 { get; set; }
-        public string? 신고제품구분명 { get; set; }
-        public string? 제조국가코드 { get; set; }
-        public string? 제조국가명 { get; set; }
-        public string? 제품명 { get; set; }
-        public string? 육류품목코드 { get; set; }
-        public string? 육류품목명 { get; set; }
-        public string? 품목코드 { get; set; }
-        public string? 품목명 { get; set; }
-        public string? 수입식품관리번호 { get; set; }
-    }
+    private static 수입식품제품조회항목DTO 항목변환(Mfds공공데이터항목 항목)
+        => new()
+        {
+            신고제품구분코드 = 항목.문자열("DCLR_PRDT_DIVS_CD"),
+            신고제품구분명 = 항목.문자열("DCLR_PRDT_DIVS_NM"),
+            제조국가코드 = 항목.문자열("MNFT_NATN_CD"),
+            제조국가명 = 항목.문자열("MNFT_NATN_NM"),
+            제품명 = 항목.문자열("PRDT_NM"),
+            육류품목코드 = 항목.문자열("MEAT_PRDLST_CD"),
+            육류품목명 = 항목.문자열("MEAT_PRDLST_NM"),
+            품목코드 = 항목.문자열("PRDLST_CD"),
+            품목명 = 항목.문자열("PRDLST_NM"),
+            수입식품관리번호 = 항목.문자열("IPRT_FOOD_MNG_NO")
+        };
 }

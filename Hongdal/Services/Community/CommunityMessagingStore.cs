@@ -476,6 +476,9 @@ public sealed class Mongo커뮤니티대화저장소 : I커뮤니티대화저장
                 X = node.X,
                 Y = node.Y,
                 RelatedRoute = node.RelatedRoute,
+                OrganizationReferences = (node.OrganizationReferences ?? [])
+                    .Select(ToDocument)
+                    .ToArray(),
                 Data = NormalizeDictionary(node.Data)
             }).ToArray(),
             Edges = dto.Edges.Select(edge => new 커뮤니티다이어그램연결선문서
@@ -571,6 +574,9 @@ public sealed class Mongo커뮤니티대화저장소 : I커뮤니티대화저장
                 X = node.X,
                 Y = node.Y,
                 RelatedRoute = node.RelatedRoute,
+                OrganizationReferences = (node.OrganizationReferences ?? [])
+                    .Select(ToDto)
+                    .ToArray(),
                 Data = node.Data
             }).ToArray(),
             Edges = 문서.Edges.Select(edge => new DiagramEdgeDto
@@ -583,6 +589,48 @@ public sealed class Mongo커뮤니티대화저장소 : I커뮤니티대화저장
                 Data = edge.Data
             }).ToArray(),
             Metadata = 문서.Metadata
+        };
+
+    private static 커뮤니티다이어그램업체참조문서 ToDocument(
+        DiagramOrganizationReferenceDto dto)
+        => new()
+        {
+            ReferenceId = dto.ReferenceId,
+            OrganizationKey = dto.OrganizationKey,
+            DisplayName = dto.DisplayName,
+            RoleLabel = dto.RoleLabel,
+            CountryCode = dto.CountryCode,
+            OfficialWebsiteUrl = dto.OfficialWebsiteUrl,
+            SourceKindCode = dto.SourceKindCode,
+            SourceReferenceUrl = dto.SourceReferenceUrl,
+            DirectoryStatusCode = dto.DirectoryStatusCode,
+            PlatformRelationshipStatusCode = dto.PlatformRelationshipStatusCode,
+            CompanySourceVerificationStatusCode = dto.CompanySourceVerificationStatusCode,
+            RegulatoryVerificationStatusCode = dto.RegulatoryVerificationStatusCode,
+            IsPlatformPartner = dto.IsPlatformPartner,
+            CanBeSelectedForOperations = dto.CanBeSelectedForOperations,
+            CapabilityCodes = (dto.CapabilityCodes ?? []).ToArray()
+        };
+
+    private static DiagramOrganizationReferenceDto ToDto(
+        커뮤니티다이어그램업체참조문서 문서)
+        => new()
+        {
+            ReferenceId = 문서.ReferenceId,
+            OrganizationKey = 문서.OrganizationKey,
+            DisplayName = 문서.DisplayName,
+            RoleLabel = 문서.RoleLabel,
+            CountryCode = 문서.CountryCode,
+            OfficialWebsiteUrl = 문서.OfficialWebsiteUrl,
+            SourceKindCode = 문서.SourceKindCode,
+            SourceReferenceUrl = 문서.SourceReferenceUrl,
+            DirectoryStatusCode = 문서.DirectoryStatusCode,
+            PlatformRelationshipStatusCode = 문서.PlatformRelationshipStatusCode,
+            CompanySourceVerificationStatusCode = 문서.CompanySourceVerificationStatusCode,
+            RegulatoryVerificationStatusCode = 문서.RegulatoryVerificationStatusCode,
+            IsPlatformPartner = 문서.IsPlatformPartner,
+            CanBeSelectedForOperations = 문서.CanBeSelectedForOperations,
+            CapabilityCodes = (문서.CapabilityCodes ?? []).ToArray()
         };
 
     private static DiagramWorkContextDto ToDto(커뮤니티업무Context문서 문서)
@@ -830,7 +878,28 @@ public sealed class 커뮤니티다이어그램노드문서
     public double X { get; set; }
     public double Y { get; set; }
     public string? RelatedRoute { get; set; }
+    public IReadOnlyList<커뮤니티다이어그램업체참조문서> OrganizationReferences { get; set; } = [];
     public Dictionary<string, string> Data { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+}
+
+public sealed class 커뮤니티다이어그램업체참조문서
+{
+    public string ReferenceId { get; set; } = string.Empty;
+    public string OrganizationKey { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public string RoleLabel { get; set; } = string.Empty;
+    public string CountryCode { get; set; } = "ZZ";
+    public string OfficialWebsiteUrl { get; set; } = string.Empty;
+    public string SourceKindCode { get; set; } = DiagramOrganizationSourceKindCodes.ManualResearch;
+    public string SourceReferenceUrl { get; set; } = string.Empty;
+    public string DirectoryStatusCode { get; set; } = string.Empty;
+    public string PlatformRelationshipStatusCode { get; set; } = string.Empty;
+    public string CompanySourceVerificationStatusCode { get; set; } =
+        DiagramOrganizationVerificationStatusCodes.VerificationRequired;
+    public string RegulatoryVerificationStatusCode { get; set; } = string.Empty;
+    public bool IsPlatformPartner { get; set; }
+    public bool CanBeSelectedForOperations { get; set; }
+    public IReadOnlyList<string> CapabilityCodes { get; set; } = [];
 }
 
 public sealed class 커뮤니티다이어그램연결선문서

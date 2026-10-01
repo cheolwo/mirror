@@ -1,10 +1,9 @@
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using DriverApp.Models.Driver;
 using DriverApp.Models.Driver.Samples;
 using DriverApp.Services.Geo;
 using Hongdal.Client.Infrastructure;
 using Hongdal.Contracts.Driver.Reservation;
+using Hongdal.Contracts.Driver.Recommendation;
 using Hongdal.Contracts.Driver.Settlement;
 using Hongdal.Contracts.Driver.Transport;
 using Hongdal.Contracts.Driver.Work;
@@ -14,8 +13,12 @@ namespace DriverApp.Services.Samples;
 
 public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataService
 {
-    private readonly HttpClient _httpClient;
     private readonly IAuthSession _authSession;
+    private readonly IDriverTransportApiService _transportApi;
+    private readonly IDriverRecommendationApiService _recommendationApi;
+    private readonly IDriverSettlementApiService _settlementApi;
+    private readonly IDriverReservationApiService _reservationApi;
+    private readonly IDriverWorkApiService _workApi;
     private readonly 기사샘플데이터Service _sampleFallback;
     private readonly IOptions<ClientDataModeOptions> _dataModeOptions;
     private bool _loaded;
@@ -29,13 +32,21 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
     private IReadOnlyList<기사알림샘플항목> _알림목록 = [];
 
     public ServerBackedDriverSampleDataService(
-        HttpClient httpClient,
         IAuthSession authSession,
+        IDriverTransportApiService transportApi,
+        IDriverRecommendationApiService recommendationApi,
+        IDriverSettlementApiService settlementApi,
+        IDriverReservationApiService reservationApi,
+        IDriverWorkApiService workApi,
         기사샘플데이터Service sampleFallback,
         IOptions<ClientDataModeOptions> dataModeOptions)
     {
-        _httpClient = httpClient;
         _authSession = authSession;
+        _transportApi = transportApi;
+        _recommendationApi = recommendationApi;
+        _settlementApi = settlementApi;
+        _reservationApi = reservationApi;
+        _workApi = workApi;
         _sampleFallback = sampleFallback;
         _dataModeOptions = dataModeOptions;
         ApplyEmptyState();
@@ -113,24 +124,12 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
 
     private async Task LoadLiveServerDataAsync(CancellationToken cancellationToken)
     {
-        var recommendations = await GetAuthorizedJsonAsync<IReadOnlyList<ServerDispatchRecommendationDto>>(
-            "api/v1/driver/recommendations",
-            cancellationToken);
-        var transports = await GetAuthorizedJsonAsync<IReadOnlyList<기사운송요약응답>>(
-            "api/v1/driver/transports",
-            cancellationToken);
-        var settlement = await GetAuthorizedJsonAsync<기사정산응답>(
-            "api/v1/driver/settlements/current-month",
-            cancellationToken);
-        var reservations = await GetAuthorizedJsonAsync<IReadOnlyList<기사예약목록응답>>(
-            "api/v1/driver/reservations",
-            cancellationToken);
-        var workStatus = await GetAuthorizedJsonAsync<기사운행상태응답>(
-            "api/v1/driver/work/status",
-            cancellationToken);
-        var currentWork = await GetAuthorizedJsonAsync<기사현재근무응답>(
-            "api/v1/driver/work/current",
-            cancellationToken);
+        var recommendations = await _recommendationApi.전체조회Async(cancellationToken);
+        var transports = await _transportApi.목록조회Async(cancellationToken);
+        var settlement = await _settlementApi.현재월조회Async(cancellationToken);
+        var reservations = await _reservationApi.목록조회Async(cancellationToken);
+        var workStatus = await _workApi.운행상태조회Async(cancellationToken);
+        var currentWork = await _workApi.현재근무조회Async(cancellationToken);
 
         if (recommendations is not null)
         {
@@ -153,20 +152,6 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
         }
 
         ApplyWorkState(workStatus, currentWork);
-    }
-
-    private async Task<T?> GetAuthorizedJsonAsync<T>(string path, CancellationToken cancellationToken)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Get, path);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _authSession.AccessToken);
-
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new InvalidOperationException(await BuildFailureMessageAsync(response, path, cancellationToken));
-        }
-
-        return await response.Content.ReadFromJsonAsync<T>(cancellationToken);
     }
 
     private void ApplyWorkState(기사운행상태응답? workStatus, 기사현재근무응답? currentWork)
@@ -196,18 +181,7 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
             _예약목록.Count);
     }
 
-    private static async Task<string> BuildFailureMessageAsync(HttpResponseMessage response, string path, CancellationToken cancellationToken)
-    {
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (string.IsNullOrWhiteSpace(body))
-        {
-            return $"기사 서버 API 조회에 실패했습니다. path={path}, HTTP {(int)response.StatusCode}";
-        }
-
-        return $"기사 서버 API 조회에 실패했습니다. path={path}, HTTP {(int)response.StatusCode}: {body}";
-    }
-
-    private static DriverRequestItem ToRequestItem(ServerDispatchRecommendationDto source)
+    private static DriverRequestItem ToRequestItem(기사배차추천항목응답 source)
     {
         return new DriverRequestItem
         {
@@ -249,7 +223,7 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
             복귀지출처 = source.복귀지출처,
             복귀추천사유 = source.복귀추천사유,
             요약설명 = $"{source.화물종류} 운송, {source.픽업지}에서 {source.하차지}까지",
-            상세설명 = "홍달 서버의 기사 추천 API에서 내려온 의뢰입니다.",
+            상세설명 = "살뜰 서비스의 기사 추천 API에서 내려온 의뢰입니다.",
             상태 = source.상태,
             배차상태 = source.배차상태,
             추천시작시각 = source.추천시작시각,
@@ -288,7 +262,7 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
             source.StartLocation,
             source.ReturnDestination,
             source.IsFuture ? "확정" : "완료",
-            "홍달 서버 예약 API에서 조회됨");
+            "살뜰 서비스 예약 API에서 조회됨");
     }
 
     private static 기사정산샘플요약 ToSettlementSummary(기사정산응답 source)
@@ -375,44 +349,4 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
         _알림목록 = _sampleFallback.알림목록;
     }
 
-    private sealed class ServerDispatchRecommendationDto
-    {
-        public string 의뢰Id { get; set; } = string.Empty;
-        public string 화물종류 { get; set; } = string.Empty;
-        public string 운송의뢰유형코드 { get; set; } = "GeneralCargoTransport";
-        public string 운송의뢰유형표시 { get; set; } = "일반 화물";
-        public bool 공동주문운송여부 { get; set; }
-        public bool 세대배송포함여부 { get; set; }
-        public int? 세대배송건수 { get; set; }
-        public string 세대배송업무표시 { get; set; } = "상하차";
-        public string 픽업지 { get; set; } = string.Empty;
-        public string 하차지 { get; set; } = string.Empty;
-        public decimal? 픽업_위도 { get; set; }
-        public decimal? 픽업_경도 { get; set; }
-        public decimal? 하차_위도 { get; set; }
-        public decimal? 하차_경도 { get; set; }
-        public decimal? 직선거리Km { get; set; }
-        public decimal? 주행거리Km { get; set; }
-        public decimal? 픽업거리Km { get; set; }
-        public decimal? 공차거리Km { get; set; }
-        public decimal? 운송거리Km { get; set; }
-        public decimal? 복귀예상거리Km { get; set; }
-        public decimal? 지금바로복귀거리Km { get; set; }
-        public decimal? 복귀우회증가거리Km { get; set; }
-        public decimal? 총공차거리Km { get; set; }
-        public decimal? 예상톨비 { get; set; }
-        public decimal? 예상연료비 { get; set; }
-        public decimal? 예상총비용 { get; set; }
-        public decimal? 예상수익 { get; set; }
-        public decimal? 추천점수 { get; set; }
-        public string 추천사유 { get; set; } = string.Empty;
-        public bool 복귀지기준추천여부 { get; set; }
-        public string? 복귀지출처 { get; set; }
-        public string? 복귀추천사유 { get; set; }
-        public bool 차량적합여부 { get; set; } = true;
-        public string 상태 { get; set; } = string.Empty;
-        public string 배차상태 { get; set; } = string.Empty;
-        public DateTime? 추천시작시각 { get; set; }
-        public DateTime? 추천만료시각 { get; set; }
-    }
 }

@@ -1,0 +1,36 @@
+@using Microsoft.Extensions.Options
+@using HongdalApp.Options
+@inject IOptions<ShipperSmokeOptions> SmokeOptions
+@inject NavigationManager Navigation
+
+@code {
+    private bool redirected;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (!firstRender || redirected)
+        {
+            return;
+        }
+
+        var startPath = SmokeOptions.Value.StartPath;
+        if (string.IsNullOrWhiteSpace(startPath))
+        {
+            return;
+        }
+
+        redirected = true;
+        Navigation.NavigateTo(Normalize(startPath));
+    }
+
+    private static string Normalize(string path)
+    {
+        var trimmed = path.Trim();
+        if (trimmed.StartsWith("/", StringComparison.Ordinal))
+        {
+            return trimmed;
+        }
+
+        return "/" + trimmed;
+    }
+}

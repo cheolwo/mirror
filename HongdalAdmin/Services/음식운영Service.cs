@@ -120,7 +120,7 @@ public sealed class 음식운영Service
                 {
                     리뷰Id = 1,
                     음식점Id = 101,
-                    음식점명 = "홍달분식 강남점",
+                    음식점명 = "살뜰분식 강남점",
                     주문자UserId = "ORDERER-001",
                     주문번호 = "FOOD-ORDER-001",
                     별점 = 2,
@@ -136,7 +136,7 @@ public sealed class 음식운영Service
                 {
                     리뷰Id = 2,
                     음식점Id = 102,
-                    음식점명 = "홍달도시락 마포점",
+                    음식점명 = "살뜰도시락 마포점",
                     주문자UserId = "ORDERER-002",
                     주문번호 = "FOOD-ORDER-002",
                     별점 = 5,

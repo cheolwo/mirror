@@ -9,7 +9,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnableDefaultCssItems>false</EnableDefaultCssItems>
-    <ApplicationTitle>Hongdal HR Manager</ApplicationTitle>
+    <ApplicationTitle>살뜰 인사</ApplicationTitle>
     <ApplicationId>com.hongdal.hrmanagerapp</ApplicationId>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>

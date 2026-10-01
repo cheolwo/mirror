@@ -112,7 +112,7 @@ flowchart TD
 ## 우선 대상 모듈
 
 - `WarehouseManagerApp`
-- `ShipperApp`
+- `HongdalApp`
 - `OrdererApp`
 - `Hongdal.Domain`
 - `Hongdal.Infrastructure`

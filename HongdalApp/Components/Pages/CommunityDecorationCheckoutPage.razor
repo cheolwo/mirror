@@ -1,0 +1,348 @@
+@page "/community/decorations/{ProductKey}/checkout"
+@using Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Ui.Common.Areas.App.Services
+@inject PlatformCommunityDecorationStateService DecorationState
+@inject 꾸미기보유권동기화Service 꾸미기보유권동기화Service
+@inject NavigationManager Navigation
+
+<PageTitle>FakePG 결제 · Hongdal</PageTitle>
+
+@if (product is null)
+{
+    <main class="decoration-checkout decoration-checkout--missing">
+        <h1>결제할 상품을 찾을 수 없습니다.</h1>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="BackToStore">상점으로</MudButton>
+    </main>
+}
+else if (paymentCompleted)
+{
+    <main class="decoration-checkout decoration-checkout--complete">
+        <span class="decoration-checkout__complete-icon">
+            <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Large" />
+        </span>
+        <small>FAKEPG PAYMENT APPROVED</small>
+        <h1>꾸미기를 구매했습니다.</h1>
+        @if (product.IsBaguaMotion)
+        {
+            <p>@product.Title 상품을 이번 앱 실행의 임시 보유함에 추가했습니다. 적용 여부는 사용자가 직접 선택합니다.</p>
+        }
+        else
+        {
+            <p>@product.Title 상품을 내 보유함에 추가했습니다. 적용 여부는 사용자가 직접 선택합니다.</p>
+        }
+        @if (product.HomeTheme is { } completedTheme)
+        {
+            <div class="decoration-checkout__complete-preview">
+                <HongdalHomeNavigatorThemePreview Theme="@completedTheme" Title="@product.Title" Compact="true" />
+            </div>
+        }
+        else if (product.TraditionalMarketTheme is { } completedMarketTheme)
+        {
+            <div class="decoration-checkout__complete-preview">
+                <TraditionalMarketThemePreview Theme="completedMarketTheme" Title="@product.Title" Compact="true" />
+            </div>
+        }
+        else if (product.BaguaMotion is { } completedMotion)
+        {
+            <div class="decoration-checkout__complete-preview">
+                <BaguaMotionPackPreview Manifest="@completedMotion" Title="@product.Title" Compact="true" />
+            </div>
+        }
+        @if (!string.IsNullOrWhiteSpace(applyMessage))
+        {
+            <MudAlert Severity="Severity.Success" Dense="true">@applyMessage</MudAlert>
+        }
+        <dl>
+            <div><dt>주문 번호</dt><dd>@orderId</dd></div>
+            <div><dt>결제 수단</dt><dd>@paymentMethod</dd></div>
+            <div><dt>승인 금액</dt><dd>@FormatPrice(product)</dd></div>
+            <div><dt>결제 환경</dt><dd>Development · FakePG</dd></div>
+        </dl>
+        @if (product.IsHomeTheme || product.IsTraditionalMarketTheme || product.IsBaguaMotion)
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       StartIcon="@Icons.Material.Filled.AutoAwesome"
+                       Disabled="@DecorationState.IsProductActive(product)"
+                       OnClick="ApplyPurchasedAsync">
+                @(DecorationState.IsProductActive(product)
+                    ? "현재 적용 중"
+                    : product.IsBaguaMotion
+                        ? "구매한 애니메이션 적용"
+                        : product.IsTraditionalMarketTheme
+                            ? "구매한 시장 팩 적용"
+                        : "구매한 전체 테마 적용")
+            </MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="OpenDetail">상품에서 적용 항목 고르기</MudButton>
+        }
+        <MudButton Variant="Variant.Text" Color="Color.Default" FullWidth="true" OnClick="BackToStore">상점 계속 둘러보기</MudButton>
+    </main>
+}
+else
+{
+    <main class="decoration-checkout">
+        <header class="decoration-checkout__header">
+            <button type="button" @onclick="OpenDetail">
+                <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+                상품 상세
+            </button>
+            <div>
+                <span>DEVELOPMENT ONLY</span>
+                <h1>FakePG 결제</h1>
+                <p>실제 금액이 청구되지 않는 개발용 결제 승인 화면입니다.</p>
+            </div>
+            <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Large" />
+        </header>
+
+        <div class="decoration-checkout__layout">
+            <section class="decoration-checkout__form">
+                <div class="decoration-checkout__section-title">
+                    <span>1</span>
+                    <div>
+                        <strong>결제 수단</strong>
+                        <small>FakePG에서 표시할 가상 수단을 선택합니다.</small>
+                    </div>
+                </div>
+                <div class="decoration-checkout__methods">
+                    @foreach (var method in PaymentMethods)
+                    {
+                        <label class="@(paymentMethod == method.Key ? "is-selected" : null)">
+                            <input type="radio" name="fake-payment-method" value="@method.Key" @onchange="@(() => paymentMethod = method.Key)" />
+                            <MudIcon Icon="@method.Icon" Color="@method.Color" />
+                            <span><b>@method.Label</b><small>@method.Description</small></span>
+                        </label>
+                    }
+                </div>
+
+                <div class="decoration-checkout__section-title">
+                    <span>2</span>
+                    <div>
+                        <strong>구매 확인</strong>
+                        <small>상품 사용 범위와 개발 결제 조건을 확인합니다.</small>
+                    </div>
+                </div>
+                <div class="decoration-checkout__notices">
+                    @if (product.IsHomeTheme)
+                    {
+                        <p><MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" /> 방편·반야·커뮤니티·상점·간괘·테두리·라벨·손잡이 8개 슬롯이 하나의 패키지로 제공됩니다.</p>
+                        <p><MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" /> 구매 후 명시적으로 적용할 때 전체 슬롯이 한 번에 변경됩니다.</p>
+                    }
+                    else if (product.TraditionalMarketTheme is { } marketTheme)
+                    {
+                        <p><MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" /> @marketTheme.MarketName 범위의 시장 머리말·게시판·장날·상품·수령·성사 이야기 표식이 함께 제공됩니다.</p>
+                        <p><MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" /> 플랫폼 검수와 상인회 승인이 모두 유지되는 동안만 공식 시장 화면에 적용됩니다.</p>
+                        <p><MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" /> 가격·수량·원산지·수령 시간과 같은 거래 정보는 팩이 변경하지 않습니다.</p>
+                    }
+                    else if (product.BaguaMotion is { } motion)
+                    {
+                        <p><MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" /> 역할별 괘 이동 장면 125개 중 @(motion.CoveredPerspectiveSlotCount)개 슬롯에 적용되는 작품입니다.</p>
+                        <p><MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" /> 동작 줄이기 설정에서는 움직임 대신 안전한 도착 상태를 표시합니다.</p>
+                    }
+                    else
+                    {
+                        <p><MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" /> 플랫폼 안의 괘상 또는 다이어그램 노드 꾸미기에 사용할 수 있습니다.</p>
+                    }
+                    <p><MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" /> 크리에이터 상품은 등록 권리와 규격 검수를 통과한 항목으로 가정합니다.</p>
+                    <p><MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" /> 현재 FakePG에서는 실제 카드 승인과 창작자 정산을 수행하지 않습니다.</p>
+                    @if (product.IsBaguaMotion)
+                    {
+                        <p><MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" /> 애니메이션 보유권은 현재 시제품 단계라 앱을 다시 시작하면 초기화됩니다.</p>
+                    }
+                </div>
+                <label class="decoration-checkout__agree">
+                    <input type="checkbox" @bind="agreed" />
+                    <span>개발용 결제이며 실제 청구가 발생하지 않는다는 내용을 확인했습니다.</span>
+                </label>
+                @if (!string.IsNullOrWhiteSpace(paymentError))
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true">@paymentError</MudAlert>
+                }
+            </section>
+
+            <aside class="decoration-checkout__summary">
+                <span>주문 상품</span>
+                @if (product.HomeTheme is { } theme)
+                {
+                    <div class="decoration-checkout__theme-product">
+                        <HongdalHomeNavigatorThemePreview Theme="@theme" Title="@product.Title" Compact="true" />
+                        <div>
+                            <strong>@product.Title</strong>
+                            <small>@product.CreatorName</small>
+                            <small>@($"전체 테마 {theme.Slots.Count}개 슬롯 · v{theme.Version}")</small>
+                        </div>
+                    </div>
+                }
+                else if (product.TraditionalMarketTheme is { } marketTheme)
+                {
+                    <div class="decoration-checkout__theme-product">
+                        <TraditionalMarketThemePreview Theme="marketTheme" Title="@product.Title" Compact="true" />
+                        <div>
+                            <strong>@product.Title</strong>
+                            <small>@product.CreatorName</small>
+                            <small>@($"{marketTheme.MarketName} · {marketTheme.Slots.Count}개 표식 · v{marketTheme.Version}")</small>
+                        </div>
+                    </div>
+                }
+                else if (product.BaguaMotion is { } motion)
+                {
+                    <div class="decoration-checkout__motion-product">
+                        <BaguaMotionPackPreview Manifest="@motion" Title="@product.Title" Compact="true" />
+                        <div>
+                            <strong>@product.Title</strong>
+                            <small>@product.CreatorName</small>
+                            <small>@($"전환 애니메이션 · {motion.CoveredPerspectiveSlotCount}/125 슬롯 · v{motion.Version}")</small>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="decoration-checkout__product">
+                        @if (product.Assets.FirstOrDefault()?.NodeSticker is { } sticker)
+                        {
+                            <img src="@sticker.이미지Url" alt="@sticker.대체Text" />
+                        }
+                        else
+                        {
+                            <span style="@($"background: {product.Assets.FirstOrDefault()?.AccentColor ?? "#2563eb"};")">@product.Assets.FirstOrDefault()?.PreviewSymbol</span>
+                        }
+                        <div>
+                            <strong>@product.Title</strong>
+                            <small>@product.CreatorName</small>
+                            <small>@($"꾸미기 {product.Assets.Count}개 포함")</small>
+                        </div>
+                    </div>
+                }
+                <dl>
+                    <div><dt>상품 금액</dt><dd>@FormatPrice(product)</dd></div>
+                    <div><dt>수수료</dt><dd>₩0</dd></div>
+                    <div class="decoration-checkout__total"><dt>최종 승인</dt><dd>@FormatPrice(product)</dd></div>
+                </dl>
+                <button type="button"
+                        class="decoration-checkout__pay"
+                        disabled="@(!agreed || isProcessing)"
+                        @onclick="ApprovePaymentAsync">
+                    @if (isProcessing)
+                    {
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Inherit" />
+                        <span>승인 중</span>
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" />
+                        <span>@($"{FormatPrice(product)} 페이크 결제")</span>
+                    }
+                </button>
+                <small>@(product.IsBaguaMotion
+                    ? "승인 시 이번 실행의 임시 보유 상태에만 추가되며 자동 적용하지 않습니다."
+                    : "승인 시 개발용 구매·보유권 상태만 기록되며 자동 적용하지 않습니다.")</small>
+            </aside>
+        </div>
+    </main>
+}
+
+@code {
+    [Parameter]
+    public string ProductKey { get; set; } = string.Empty;
+
+    private static readonly IReadOnlyList<PaymentMethodOption> PaymentMethods =
+    [
+        new("FakeCard", "가상 카드", "테스트 카드 승인", Icons.Material.Filled.CreditCard, Color.Primary),
+        new("FakePay", "가상 간편결제", "테스트 지갑 승인", Icons.Material.Filled.AccountBalanceWallet, Color.Secondary)
+    ];
+
+    private CommunityDecorationProduct? product;
+    private string paymentMethod = "FakeCard";
+    private bool agreed;
+    private bool isProcessing;
+    private bool paymentCompleted;
+    private string orderId = string.Empty;
+    private string? applyMessage;
+    private string? paymentError;
+
+    protected override void OnParametersSet()
+    {
+        product = DecorationState.Products.FirstOrDefault(item =>
+            string.Equals(item.Key, ProductKey, StringComparison.OrdinalIgnoreCase)
+            && HongdalClientContentPolicy.IsVisibleToGeneralClient(item));
+        if (product is not null && DecorationState.IsProductOwned(product) && !product.IsFree)
+        {
+            paymentCompleted = true;
+            orderId = $"FAKE-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid():N}"[..28];
+        }
+    }
+
+    private async Task ApprovePaymentAsync()
+    {
+        if (product is null || !agreed || isProcessing)
+        {
+            return;
+        }
+
+        isProcessing = true;
+        paymentError = null;
+        try
+        {
+            if (꾸미기보유권동기화Service.서버구매지원상품인가(product))
+            {
+                var result = await 꾸미기보유권동기화Service.ConfirmFakePurchaseAsync(product, paymentMethod);
+                if (!result.성공 || result.결제승인 is null)
+                {
+                    paymentError = result.안내문구;
+                    return;
+                }
+
+                orderId = result.결제승인.OrderId;
+            }
+            else
+            {
+                await Task.Delay(450);
+                DecorationState.Purchase(product);
+                orderId = $"FAKE-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..34];
+            }
+
+            paymentCompleted = true;
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private Task ApplyPurchasedAsync()
+    {
+        if (product is not null && DecorationState.ApplyProduct(product))
+        {
+            applyMessage = product.IsBaguaMotion
+                ? $"{product.Title}을(를) 지정된 괘 전환 슬롯에 적용했습니다."
+                : product.IsTraditionalMarketTheme
+                    ? $"{product.Title}을(를) {product.TraditionalMarketTheme!.MarketName}에 적용했습니다."
+                : $"{product.Title}의 전체 영역을 홈에 적용했습니다.";
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void BackToStore()
+        => Navigation.NavigateTo(ShipperRoutes.CommunityDecorations);
+
+    private void OpenDetail()
+    {
+        if (product is not null)
+        {
+            Navigation.NavigateTo(ShipperRoutes.CommunityDecorationDetailFor(product.Key));
+        }
+    }
+
+    private static string FormatPrice(CommunityDecorationProduct item)
+        => item.IsFree
+            ? "무료"
+            : item.CurrencyCode.Equals("KRW", StringComparison.OrdinalIgnoreCase)
+                ? $"₩{item.PriceAmount:N0}"
+                : $"{item.PriceAmount:N2} {item.CurrencyCode}";
+
+    private sealed record PaymentMethodOption(string Key, string Label, string Description, string Icon, Color Color);
+}

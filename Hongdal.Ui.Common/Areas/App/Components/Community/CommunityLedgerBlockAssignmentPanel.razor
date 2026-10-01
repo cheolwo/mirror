@@ -1,0 +1,206 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Contracts.Common.Community
+@using Hongdal.Ui.Common.Areas.App.Services
+@inject PlatformCommunityService CommunityService
+
+@if (isLoading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (settings?.CanManage == true)
+{
+    <MudPaper Elevation="0" Outlined="true" Class="pa-3 mt-3">
+        <MudStack Spacing="2">
+            <div>
+                <MudText Typo="Typo.subtitle2">블록 담당자 지정</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">원장 참여자 중 주담당 1명과 협업·검토 담당자를 지정합니다.</MudText>
+            </div>
+
+            @foreach (var candidate in settings.Candidates)
+            {
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="2">
+                    <MudCheckBox T="bool"
+                                 Value="@IsSelected(candidate.UserId)"
+                                 ValueChanged="@(selected => ToggleCandidate(candidate.UserId, selected))"
+                                 Label="@($"{candidate.DisplayName} · {candidate.RoleLabel}")" />
+                    <MudSelect T="string"
+                               Value="@ResponsibilityType(candidate.UserId)"
+                               ValueChanged="@(value => ChangeResponsibility(candidate.UserId, value))"
+                               Disabled="@(!IsSelected(candidate.UserId))"
+                               Dense="true"
+                               Margin="Margin.Dense"
+                               Style="min-width: 104px;">
+                        <MudSelectItem Value="@CommunityLedgerBlockResponsibilityTypes.Primary">주담당</MudSelectItem>
+                        <MudSelectItem Value="@CommunityLedgerBlockResponsibilityTypes.Collaborator">협업</MudSelectItem>
+                        <MudSelectItem Value="@CommunityLedgerBlockResponsibilityTypes.Reviewer">검토</MudSelectItem>
+                    </MudSelect>
+                </MudStack>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(statusMessage))
+            {
+                <MudAlert Severity="@statusSeverity" Dense="true" Variant="Variant.Outlined">@statusMessage</MudAlert>
+            }
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.AssignmentInd"
+                       Disabled="@isSaving"
+                       OnClick="SaveAsync">
+                @(isSaving ? "저장 중" : "담당자 저장")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public string LedgerId { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string BlockId { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback Saved { get; set; }
+
+    private readonly Dictionary<string, string> selectedAssignments = new(StringComparer.OrdinalIgnoreCase);
+    private CommunityLedgerBlockAssignmentSettingsResponse? settings;
+    private string? loadedKey;
+    private string statusMessage = string.Empty;
+    private Severity statusSeverity = Severity.Info;
+    private bool isLoading;
+    private bool isSaving;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var key = $"{LedgerId}:{BlockId}";
+        if (string.Equals(loadedKey, key, StringComparison.OrdinalIgnoreCase)
+            || string.IsNullOrWhiteSpace(LedgerId)
+            || string.IsNullOrWhiteSpace(BlockId))
+        {
+            return;
+        }
+
+        loadedKey = key;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        statusMessage = string.Empty;
+        try
+        {
+            settings = await CommunityService.GetLedgerBlockAssignmentsAsync(LedgerId, BlockId);
+            selectedAssignments.Clear();
+            foreach (var assignment in settings?.Assignments ?? [])
+            {
+                selectedAssignments[assignment.UserId] = assignment.ResponsibilityType;
+            }
+        }
+        catch (HttpRequestException)
+        {
+            settings = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private bool IsSelected(string userId)
+        => selectedAssignments.ContainsKey(userId);
+
+    private string ResponsibilityType(string userId)
+        => selectedAssignments.GetValueOrDefault(userId, CommunityLedgerBlockResponsibilityTypes.Collaborator);
+
+    private void ToggleCandidate(string userId, bool selected)
+    {
+        if (!selected)
+        {
+            selectedAssignments.Remove(userId);
+            return;
+        }
+
+        var hasPrimary = selectedAssignments.Values.Contains(
+            CommunityLedgerBlockResponsibilityTypes.Primary,
+            StringComparer.OrdinalIgnoreCase);
+        selectedAssignments[userId] = hasPrimary
+            ? CommunityLedgerBlockResponsibilityTypes.Collaborator
+            : CommunityLedgerBlockResponsibilityTypes.Primary;
+    }
+
+    private void ChangeResponsibility(string userId, string responsibilityType)
+    {
+        if (!selectedAssignments.ContainsKey(userId))
+        {
+            return;
+        }
+
+        var wasPrimary = string.Equals(
+            selectedAssignments[userId],
+            CommunityLedgerBlockResponsibilityTypes.Primary,
+            StringComparison.OrdinalIgnoreCase);
+        if (string.Equals(responsibilityType, CommunityLedgerBlockResponsibilityTypes.Primary, StringComparison.OrdinalIgnoreCase))
+        {
+            foreach (var currentPrimary in selectedAssignments
+                         .Where(item => item.Value == CommunityLedgerBlockResponsibilityTypes.Primary)
+                         .Select(item => item.Key)
+                         .ToArray())
+            {
+                selectedAssignments[currentPrimary] = CommunityLedgerBlockResponsibilityTypes.Collaborator;
+            }
+        }
+        else if (wasPrimary)
+        {
+            var nextPrimary = selectedAssignments.Keys.FirstOrDefault(candidateId =>
+                !string.Equals(candidateId, userId, StringComparison.OrdinalIgnoreCase));
+            if (nextPrimary is null)
+            {
+                return;
+            }
+
+            selectedAssignments[nextPrimary] = CommunityLedgerBlockResponsibilityTypes.Primary;
+        }
+
+        selectedAssignments[userId] = responsibilityType;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (settings is null || isSaving)
+        {
+            return;
+        }
+
+        isSaving = true;
+        statusMessage = string.Empty;
+        try
+        {
+            settings = await CommunityService.UpdateLedgerBlockAssignmentsAsync(
+                LedgerId,
+                BlockId,
+                new CommunityLedgerBlockAssignmentUpdateRequest
+                {
+                    ExpectedRevision = settings.Revision,
+                    Assignments = selectedAssignments.Select(item => new CommunityLedgerBlockAssigneeUpdateRequest
+                    {
+                        UserId = item.Key,
+                        ResponsibilityType = item.Value
+                    }).ToArray()
+                });
+            statusSeverity = Severity.Success;
+            statusMessage = "블록 담당자를 저장했습니다.";
+            await Saved.InvokeAsync();
+        }
+        catch (HttpRequestException ex)
+        {
+            statusSeverity = Severity.Error;
+            statusMessage = $"담당자를 저장하지 못했습니다: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

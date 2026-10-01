@@ -1,0 +1,64 @@
+@page "/warehouse/import/arrival"
+@inherits MvvmComponentBase<수입화물반입PageViewModel>
+
+<PageTitle>수입 화물 반입</PageTitle>
+
+<WarehousePageShell Model="@ViewModel"
+                    Title="수입 화물 반입"
+                    Description="선적·도착 예정과 보세 창고 반입 대상을 확인합니다."
+                    Icon="@Icons.Material.Filled.MoveToInbox"
+                    Color="Color.Info">
+    <Actions>
+        <MudStack Row="true" Spacing="1">
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       Disabled="@ViewModel.처리중"
+                       OnClick="ReloadAsync">
+                새로고침
+            </MudButton>
+            <MudButton Href="@WarehouseManagerRoutes.ImportCustoms"
+                       Variant="Variant.Filled"
+                       Color="Color.Info"
+                       EndIcon="@Icons.Material.Filled.ChevronRight">
+                통관 상태
+            </MudButton>
+        </MudStack>
+    </Actions>
+    <ChildContent>
+        @if (!string.IsNullOrWhiteSpace(ViewModel.입고예정조회.오류메시지))
+        {
+            <MudAlert Severity="Severity.Error">@ViewModel.입고예정조회.오류메시지</MudAlert>
+        }
+
+        <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+            <HongdalOperationState ViewModel="@ViewModel.입고예정조회" />
+            <WarehouseExpectedInboundGrid @ref="_grid"
+                                          ViewModel="@ViewModel.입고예정조회"
+                                          Color="Color.Info" />
+        </MudPaper>
+
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+            @ViewModel.원장물류.선택한경로안내
+        </MudAlert>
+    </ChildContent>
+</WarehousePageShell>
+
+@code {
+    private WarehouseExpectedInboundGrid? _grid;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        EnsureProfile();
+    }
+
+    private Task ReloadAsync() => _grid?.ReloadAsync() ?? Task.CompletedTask;
+
+    private void EnsureProfile()
+    {
+        if (!string.Equals(ViewModel.세션.운영ProfileCode, 창고운영ProfileCodes.보세수입, StringComparison.OrdinalIgnoreCase))
+        {
+            ViewModel.세션.운영Profile설정(창고운영ProfileCodes.보세수입);
+        }
+    }
+}

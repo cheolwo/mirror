@@ -6,7 +6,7 @@ namespace Hongdal.Ui.Common.Areas.App.Components.Community;
 public partial class PlatformCommunityHome
 {
     private const int DiagramNodeBaseZIndex = 10;
-    private readonly PlatformDiagramNodeStackOrder diagramNodeStackOrder = new();
+    private PlatformDiagramNodeStackOrder diagramNodeStackOrder => DiagramCanvas.StackOrder;
 
     private string BuildDiagramNodeStackStyle(
         원장블록노드 node,
@@ -27,18 +27,18 @@ public partial class PlatformCommunityHome
     private bool CanBringSelectedDiagramNodeToFront()
     {
         SynchronizeDiagramNodeStackOrder(선택원장블록흐름도.Nodes);
-        return diagramNodeStackOrder.CanMoveToFront(선택원장블록노드제목);
+        return DiagramCanvas.CanBringSelectedNodeToFront();
     }
 
     private bool CanSendSelectedDiagramNodeToBack()
     {
         SynchronizeDiagramNodeStackOrder(선택원장블록흐름도.Nodes);
-        return diagramNodeStackOrder.CanMoveToBack(선택원장블록노드제목);
+        return DiagramCanvas.CanSendSelectedNodeToBack();
     }
 
     private void BringSelectedDiagramNodeToFront()
     {
-        if (!diagramNodeStackOrder.MoveToFront(선택원장블록노드제목))
+        if (!DiagramCanvas.BringSelectedNodeToFront())
         {
             return;
         }
@@ -49,7 +49,7 @@ public partial class PlatformCommunityHome
 
     private void SendSelectedDiagramNodeToBack()
     {
-        if (!diagramNodeStackOrder.MoveToBack(선택원장블록노드제목))
+        if (!DiagramCanvas.SendSelectedNodeToBack())
         {
             return;
         }
@@ -59,12 +59,12 @@ public partial class PlatformCommunityHome
     }
 
     private void SynchronizeDiagramNodeStackOrder(IReadOnlyList<원장블록노드> nodes)
-        => diagramNodeStackOrder.Synchronize(nodes.Select(node => node.Title));
+        => DiagramCanvas.SynchronizeStackOrder(nodes.Select(node => node.Title));
 
     private string BuildDiagramNodeStackLabel(원장블록노드 node)
     {
         SynchronizeDiagramNodeStackOrder(선택원장블록흐름도.Nodes);
-        var layerIndex = diagramNodeStackOrder.GetLayerIndex(node.Title);
+        var layerIndex = DiagramCanvas.GetNodeLayerIndex(node.Title);
         if (layerIndex < 0)
         {
             return "겹침 순서 없음";
@@ -82,7 +82,7 @@ public partial class PlatformCommunityHome
 
     private int ResolveDiagramNodeZIndex(string nodeTitle)
     {
-        var layerIndex = diagramNodeStackOrder.GetLayerIndex(nodeTitle);
+        var layerIndex = DiagramCanvas.GetNodeLayerIndex(nodeTitle);
         return DiagramNodeBaseZIndex + (Math.Max(0, layerIndex) * 2);
     }
 }

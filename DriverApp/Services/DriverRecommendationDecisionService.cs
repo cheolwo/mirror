@@ -1,6 +1,3 @@
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Text.Json;
 using DriverApp.Models.Driver;
 using Hongdal.Client.Infrastructure.Transport;
 using Hongdal.Contracts.Driver.Action;
@@ -9,18 +6,15 @@ namespace DriverApp.Services;
 
 public sealed class DriverRecommendationDecisionService : IDriverRecommendationDecisionService
 {
-    private readonly HttpClient _httpClient;
-    private readonly IAuthSession _authSession;
+    private readonly IDriverDispatchActionApiService _dispatchActionApi;
     private readonly ITransportRequestLedgerObserver _ledgerObserver;
     private readonly Dictionary<string, RecommendationDecisionState> _decisions = new(StringComparer.OrdinalIgnoreCase);
 
     public DriverRecommendationDecisionService(
-        HttpClient httpClient,
-        IAuthSession authSession,
+        IDriverDispatchActionApiService dispatchActionApi,
         ITransportRequestLedgerObserver ledgerObserver)
     {
-        _httpClient = httpClient;
-        _authSession = authSession;
+        _dispatchActionApi = dispatchActionApi;
         _ledgerObserver = ledgerObserver;
     }
 
@@ -40,11 +34,11 @@ public sealed class DriverRecommendationDecisionService : IDriverRecommendationD
 
     public async Task<RecommendationDecisionState> AcceptAsync(DriverRequestItem request, CancellationToken cancellationToken = default)
     {
-        await PostServerAsync($"api/v1/driver/dispatch-actions/{Uri.EscapeDataString(request.의뢰Id)}/accept", null, cancellationToken);
+        await _dispatchActionApi.수락Async(request.의뢰Id, cancellationToken);
         _ledgerObserver.RequestRefresh(request.의뢰Id, "DriverApp.Accepted");
         return SaveAccepted(
             request,
-            "홍달 서버에서 배차 수락 처리되었습니다.");
+            "살뜰 서비스에서 배차 수락 처리되었습니다.");
     }
 
     public RecommendationDecisionState Hold(DriverRequestItem request)
@@ -68,12 +62,12 @@ public sealed class DriverRecommendationDecisionService : IDriverRecommendationD
 
     public async Task<RecommendationDecisionState> CancelAcceptedAsync(DriverRequestItem request, string reason, CancellationToken cancellationToken = default)
     {
-        await PostServerAsync(
-            $"api/v1/driver/dispatch-actions/{Uri.EscapeDataString(request.의뢰Id)}/cancel-acceptance",
+        await _dispatchActionApi.수락취소Async(
+            request.의뢰Id,
             new 기사배차수락취소요청 { 사유 = reason },
             cancellationToken);
         _ledgerObserver.RequestRefresh(request.의뢰Id, "DriverApp.AcceptanceCanceled");
-        var memo = "홍달 서버에서 배차 수락 취소가 접수되었습니다.";
+        var memo = "살뜰 서비스에서 배차 수락 취소가 접수되었습니다.";
         if (!string.IsNullOrWhiteSpace(reason))
         {
             memo = $"{memo} 사유: {reason}";
@@ -92,12 +86,12 @@ public sealed class DriverRecommendationDecisionService : IDriverRecommendationD
 
     public async Task<RecommendationDecisionState> RejectAsync(DriverRequestItem request, string reason, CancellationToken cancellationToken = default)
     {
-        await PostServerAsync(
-            $"api/v1/driver/dispatch-actions/{Uri.EscapeDataString(request.의뢰Id)}/reject",
+        await _dispatchActionApi.거절Async(
+            request.의뢰Id,
             new 기사배차거절요청 { 사유 = reason },
             cancellationToken);
         _ledgerObserver.RequestRefresh(request.의뢰Id, "DriverApp.Rejected");
-        var memo = "홍달 서버에서 배차 거절 처리되었습니다.";
+        var memo = "살뜰 서비스에서 배차 거절 처리되었습니다.";
         if (!string.IsNullOrWhiteSpace(reason))
         {
             memo = $"{memo} 사유: {reason}";
@@ -171,109 +165,6 @@ public sealed class DriverRecommendationDecisionService : IDriverRecommendationD
             source);
     }
 
-    private async Task PostServerAsync(string path, object? payload, CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(_authSession.AccessToken))
-        {
-            throw new InvalidOperationException("서버 인증 정보가 없어 배차 처리를 요청할 수 없습니다.");
-        }
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, path);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _authSession.AccessToken);
-        if (payload is not null)
-        {
-            request.Content = JsonContent.Create(payload);
-        }
-
-        HttpResponseMessage response;
-        try
-        {
-            response = await _httpClient.SendAsync(request, cancellationToken);
-        }
-        catch (HttpRequestException ex)
-        {
-            throw new InvalidOperationException("서버 배차 처리 API에 연결할 수 없습니다.", ex);
-        }
-        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
-        {
-            throw new InvalidOperationException("서버 배차 처리 API 응답이 지연되어 요청이 중단되었습니다.", ex);
-        }
-
-        using (response)
-        {
-            if (response.IsSuccessStatusCode)
-            {
-                return;
-            }
-
-            throw new InvalidOperationException(await BuildFailureMessageAsync(response, cancellationToken));
-        }
-    }
-
-    private static async Task<string> BuildFailureMessageAsync(HttpResponseMessage response, CancellationToken cancellationToken)
-    {
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (string.IsNullOrWhiteSpace(body))
-        {
-            return $"서버 배차 처리에 실패했습니다. HTTP {(int)response.StatusCode}";
-        }
-
-        try
-        {
-            using var document = JsonDocument.Parse(body);
-            var root = document.RootElement;
-            var title = ReadString(root, "title");
-            var errorCode = ReadString(root, "errorCode");
-            var traceId = ReadString(root, "traceId");
-            var errors = ReadErrors(root);
-            var message = errors.Count > 0
-                ? string.Join(" / ", errors)
-                : string.IsNullOrWhiteSpace(title)
-                    ? body
-                    : title;
-
-            var suffix = new List<string>();
-            if (!string.IsNullOrWhiteSpace(errorCode))
-            {
-                suffix.Add(errorCode);
-            }
-
-            if (!string.IsNullOrWhiteSpace(traceId))
-            {
-                suffix.Add($"traceId={traceId}");
-            }
-
-            return suffix.Count == 0
-                ? $"서버 배차 처리에 실패했습니다. HTTP {(int)response.StatusCode}: {message}"
-                : $"서버 배차 처리에 실패했습니다. HTTP {(int)response.StatusCode}: {message} ({string.Join(", ", suffix)})";
-        }
-        catch (JsonException)
-        {
-            return $"서버 배차 처리에 실패했습니다. HTTP {(int)response.StatusCode}: {body}";
-        }
-    }
-
-    private static string? ReadString(JsonElement root, string propertyName)
-    {
-        return root.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
-            ? value.GetString()
-            : null;
-    }
-
-    private static IReadOnlyList<string> ReadErrors(JsonElement root)
-    {
-        if (!root.TryGetProperty("errors", out var errors) || errors.ValueKind != JsonValueKind.Array)
-        {
-            return [];
-        }
-
-        return errors.EnumerateArray()
-            .Where(x => x.ValueKind == JsonValueKind.String)
-            .Select(x => x.GetString())
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Cast<string>()
-            .ToArray();
-    }
 }
 
 public static class DriverRecommendationDecisionCode

@@ -1,5 +1,5 @@
 @page "/work/{ProcessCode}"
-@inject IWarehouseWorkEntryGateService EntryGateService
+@inherits MvvmComponentBase<창고작업시작PageViewModel>
 @inject NavigationManager Navigation
 
 <PageTitle>@Definition.Title</PageTitle>
@@ -18,7 +18,7 @@
                                        ProcessLabel="@Definition.Label"
                                        ChipColor="@Definition.Color"
                                        PanelClass="pa-4"
-                                       IsBusy="@isBusy"
+                                       IsBusy="@ViewModel.확인중"
                                        VerificationHandler="VerifyAsync"
                                        Verified="OnVerifiedAsync" />
 
@@ -32,22 +32,16 @@
     [Parameter]
     public string ProcessCode { get; set; } = WarehouseWorkProcessCodes.Inbound;
 
-    private bool isBusy;
-
     private WorkDefinition Definition => ResolveDefinition(ProcessCode);
 
-    private async Task<WarehouseWorkOperatorVerificationResult> VerifyAsync(string phoneSuffix)
+    protected override void OnParametersSet()
     {
-        isBusy = true;
-        try
-        {
-            return await EntryGateService.VerifyAsync(Definition.ProcessCode, phoneSuffix);
-        }
-        finally
-        {
-            isBusy = false;
-        }
+        base.OnParametersSet();
+        ViewModel.초기화(Definition.ProcessCode);
     }
+
+    private Task<WarehouseWorkOperatorVerificationResult> VerifyAsync(string phoneSuffix)
+        => ViewModel.작업자확인결과Async(phoneSuffix);
 
     private async Task OnVerifiedAsync(WarehouseWorkOperatorVerificationResult result)
     {

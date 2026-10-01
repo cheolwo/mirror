@@ -1,52 +1,60 @@
 @page "/driver/home/summary"
-@using DriverApp.Models.Driver.Home
+@using DriverApp.ViewModels.Driver.Home
+@inherits MvvmComponentBase<기사홈PageViewModel>
 
 <PageTitle>기사 홈 요약</PageTitle>
 
-@if (_isLoading)
+@if (ViewModel.불러오는중)
 {
     <MudStack Class="pa-4" AlignItems="AlignItems.Center" Justify="Justify.Center">
         <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
     </MudStack>
 }
-else if (!string.IsNullOrWhiteSpace(_errorMessage))
+else if (ViewModel.오류발생)
 {
-    <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
+    <MudStack Spacing="2">
+        <MudAlert Severity="Severity.Error">@ViewModel.오류메시지</MudAlert>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   OnClick="@(() => ViewModel.RefreshCommand.ExecuteAsync(null))">
+            다시 시도
+        </MudButton>
+    </MudStack>
 }
-else
+else if (ViewModel.표시준비됨)
 {
     <MudStack Spacing="3">
         <MudPaper Class="pa-4" Elevation="1">
             <MudStack Spacing="1">
-                <MudText Typo="Typo.h5">홍달 기사</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">현재 상태: @_viewModel.홈상태문구</MudText>
+                <MudText Typo="Typo.h5">살뜰 기사</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">현재 상태: @ViewModel.화면.홈상태문구</MudText>
             </MudStack>
         </MudPaper>
 
         <MudPaper Class="pa-4" Elevation="2">
             <MudStack Spacing="2">
-                <MudText Typo="Typo.h6">@_viewModel.홈상태문구</MudText>
-                <MudText Typo="Typo.body1">@_viewModel.주요행동문구</MudText>
+                <MudText Typo="Typo.h6">@ViewModel.화면.홈상태문구</MudText>
+                <MudText Typo="Typo.body1">@ViewModel.화면.주요행동문구</MudText>
 
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            Size="Size.Large"
                            FullWidth="true"
-                           OnClick="NavigatePrimaryAction">
-                    @주요행동라벨
+                           Href="@ViewModel.주요행동경로">
+                    @ViewModel.주요행동라벨
                 </MudButton>
 
                 <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
-                    <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled">@_viewModel.운행상태</MudChip>
-                    @if (_viewModel.운행중)
+                    <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled">@ViewModel.화면.운행상태</MudChip>
+                    @if (ViewModel.화면.운행중)
                     {
                         <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined">운행중</MudChip>
                     }
-                    @if (_viewModel.진행중운송있음)
+                    @if (ViewModel.화면.진행중운송있음)
                     {
                         <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">진행중 운송</MudChip>
                     }
-                    @if (_viewModel.알림오류)
+                    @if (ViewModel.화면.알림오류)
                     {
                         <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined">알림 확인 필요</MudChip>
                     }
@@ -59,20 +67,20 @@ else
                 <MudPaper Class="pa-4" Elevation="1">
                     <MudText Typo="Typo.h6">오늘 할 일</MudText>
                     <MudStack Class="mt-3" Spacing="2">
-                        @if (_viewModel.오늘할일.Count == 0)
+                        @if (ViewModel.화면.오늘할일.Count == 0)
                         {
                             <MudText Typo="Typo.body2">지금은 바로 처리할 작업이 없습니다.</MudText>
                         }
                         else
                         {
-                            @foreach (var item in _viewModel.오늘할일)
+                            @foreach (var item in ViewModel.화면.오늘할일)
                             {
                                 <MudPaper Class="pa-3" Elevation="0" Outlined="true">
                                     <MudStack Spacing="1">
                                         <MudText Typo="Typo.subtitle2">@item.종류</MudText>
                                         <MudText Typo="Typo.body1">@item.제목</MudText>
                                         <MudText Typo="Typo.body2" Color="Color.Secondary">@item.설명</MudText>
-                                        <MudButton Variant="Variant.Text" OnClick="@(() => NavigateTo(item.이동경로))">이동</MudButton>
+                                        <MudButton Variant="Variant.Text" Href="@item.이동경로">이동</MudButton>
                                     </MudStack>
                                 </MudPaper>
                             }
@@ -85,10 +93,10 @@ else
                 <MudPaper Class="pa-4" Elevation="1">
                     <MudText Typo="Typo.h6">정산 요약</MudText>
                     <MudStack Class="mt-3" Spacing="1">
-                        <MudText>이번 달 배차 건수: @_viewModel.이번달배차건수</MudText>
-                        <MudText>이번 달 이용료: @_viewModel.이번달이용료원화</MudText>
-                        <MudText>월 상한 잔여 금액: @_viewModel.월상한남은금액원화</MudText>
-                        <MudText Color="Color.Secondary">@_viewModel.정산상태문구</MudText>
+                        <MudText>이번 달 배차 건수: @ViewModel.화면.이번달배차건수</MudText>
+                        <MudText>이번 달 이용료: @ViewModel.화면.이번달이용료원화</MudText>
+                        <MudText>월 상한 잔여 금액: @ViewModel.화면.월상한남은금액원화</MudText>
+                        <MudText Color="Color.Secondary">@ViewModel.화면.정산상태문구</MudText>
                     </MudStack>
                 </MudPaper>
             </MudItem>
@@ -97,65 +105,5 @@ else
 }
 
 @code {
-    [Inject] private IApiClient ApiClient { get; set; } = default!;
-    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
-
-    private 기사홈ViewModel _viewModel = 기사홈ViewModel.Empty();
-    private bool _isLoading = true;
-    private string? _errorMessage;
-
-    private string 주요행동라벨 => _viewModel.주요행동문구;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadAsync();
-    }
-
-    private async Task LoadAsync()
-    {
-        _isLoading = true;
-        _errorMessage = null;
-
-        try
-        {
-            var dto = await ApiClient.GetJsonAsync<Hongdal.Contracts.Driver.Home.기사홈요약응답>("api/v1/driver/home");
-            if (dto is null)
-            {
-                _errorMessage = "기사 홈 정보를 불러오지 못했습니다.";
-                return;
-            }
-
-            _viewModel = 기사홈ViewModel.From(dto);
-        }
-        catch (Exception ex)
-        {
-            _errorMessage = ex.Message;
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
-
-    private void NavigatePrimaryAction()
-    {
-        NavigateTo(_viewModel.주요행동코드 switch
-        {
-            "VIEW_CURRENT_TRANSPORT" => "/driver/transports/current",
-            "START_WORK" => "/driver/work/start",
-            "VIEW_RECOMMENDATIONS" => DriverRoutes.Recommendations,
-            "VIEW_RESERVATION" => "/driver/reservations",
-            "CHECK_NOTIFICATION" => "/driver/notifications/settings",
-            "VIEW_SETTLEMENT" => "/driver/settlements/current-month",
-            _ => DriverRoutes.Recommendations
-        });
-    }
-
-    private void NavigateTo(string path)
-    {
-        if (!string.IsNullOrWhiteSpace(path))
-        {
-            NavigationManager.NavigateTo(path);
-        }
-    }
+    protected override Task OnInitializedAsync() => ViewModel.InitializeAsync();
 }

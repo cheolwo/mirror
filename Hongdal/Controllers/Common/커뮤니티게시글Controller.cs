@@ -1,5 +1,6 @@
 using Hongdal.ApiMetadata;
 using Hongdal.Contracts.Common.Community;
+using Hongdal.Contracts.Common.Metadata;
 using Hongdal.Services.Community;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,25 +8,40 @@ using System.Security.Claims;
 
 namespace Hongdal.Controllers.Common;
 
-[HongdalApiVersion(HongdalProductVersion.V1_0)]
+[HongdalCommunityV0Module(
+    HongdalCommunityV0ModuleKeys.Content,
+    HongdalModuleKind.Api,
+    "게시글 조회·발행·음성·번역·원장 문맥 HTTP 경계",
+    ReleaseStage = HongdalCommunityV0ReleaseStages.Persistence,
+    Boundary = "공개 읽기와 게시글 작성자 명령만 연결하며 첨부·댓글 참여·운영 심의는 별도 Controller가 처리합니다.")]
+[HongdalApiVersion(HongdalProductVersion.V0_0)]
 [HongdalApiWorkflow(HongdalWorkflow.CommunityTrust)]
 [HongdalApiGrowthTrack(HongdalApiGrowthTrack.Community)]
 [ApiController]
 [Route("api/v1/community/posts")]
 public sealed class 커뮤니티게시글Controller : ControllerBase
 {
-    private readonly I커뮤니티게시글UseCase _useCase;
+    private readonly I커뮤니티게시글조회UseCase _readUseCase;
+    private readonly I커뮤니티게시글발행UseCase _publishingUseCase;
     private readonly I커뮤니티게시글음성조회Service _audioService;
-    private readonly I게시글원장ContextService _원장ContextService;
+    private readonly ICommunityPostTranslationService _translationService;
+    private readonly I게시글원장선택조회Service _ledgerSelectionService;
+    private readonly I게시글원장표시ContextService _ledgerContextService;
 
     public 커뮤니티게시글Controller(
-        I커뮤니티게시글UseCase useCase,
+        I커뮤니티게시글조회UseCase readUseCase,
+        I커뮤니티게시글발행UseCase publishingUseCase,
         I커뮤니티게시글음성조회Service audioService,
-        I게시글원장ContextService 원장ContextService)
+        ICommunityPostTranslationService translationService,
+        I게시글원장선택조회Service ledgerSelectionService,
+        I게시글원장표시ContextService ledgerContextService)
     {
-        _useCase = useCase;
+        _readUseCase = readUseCase;
+        _publishingUseCase = publishingUseCase;
         _audioService = audioService;
-        _원장ContextService = 원장ContextService;
+        _translationService = translationService;
+        _ledgerSelectionService = ledgerSelectionService;
+        _ledgerContextService = ledgerContextService;
     }
 
     [HttpGet]
@@ -33,13 +49,31 @@ public sealed class 커뮤니티게시글Controller : ControllerBase
     public async Task<IActionResult> List(
         [FromQuery] string? appKey,
         [FromQuery] string? category,
+        [FromQuery] string? boardKey,
+        [FromQuery] string? workflowTag,
+        [FromQuery] string? roleTag,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        var result = await _useCase.목록Async(appKey, category, page, pageSize, cancellationToken);
+        var result = await _readUseCase.목록Async(
+            appKey,
+            category,
+            boardKey,
+            workflowTag,
+            roleTag,
+            page,
+            pageSize,
+            cancellationToken);
         return this.ToActionResult(result);
     }
+
+    [HttpGet("board-summaries")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ListBoardSummaries(
+        [FromQuery] string? appKey,
+        CancellationToken cancellationToken)
+        => this.ToActionResult(await _readUseCase.게시판요약목록Async(appKey, cancellationToken));
 
     [HttpPost]
     [AllowAnonymous]
@@ -47,7 +81,7 @@ public sealed class 커뮤니티게시글Controller : ControllerBase
         [FromBody] PlatformCommunityPostCreateRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await _useCase.생성Async(request, cancellationToken);
+        var result = await _publishingUseCase.생성Async(request, cancellationToken);
         return result.IsSuccess
             ? CreatedAtAction(nameof(Get), new { id = result.Value.Id }, result.Value)
             : this.ToActionResult(result);
@@ -58,7 +92,7 @@ public sealed class 커뮤니티게시글Controller : ControllerBase
     public async Task<IActionResult> ListMyLedgers(
         [FromQuery] string? workflowTag,
         CancellationToken cancellationToken)
-        => Ok(await _원장ContextService.연결가능원장목록조회Async(
+        => Ok(await _ledgerSelectionService.연결가능원장목록조회Async(
             CurrentUserId(),
             workflowTag,
             cancellationToken));
@@ -68,7 +102,7 @@ public sealed class 커뮤니티게시글Controller : ControllerBase
     public async Task<IActionResult> ListSharedLedgers(
         [FromQuery] string? workflowTag,
         CancellationToken cancellationToken)
-        => Ok(await _원장ContextService.공유원장목록조회Async(
+        => Ok(await _ledgerSelectionService.공유원장목록조회Async(
             CurrentUserId(),
             workflowTag,
             cancellationToken));
@@ -79,7 +113,7 @@ public sealed class 커뮤니티게시글Controller : ControllerBase
         string ledgerId,
         CancellationToken cancellationToken)
     {
-        var context = await _원장ContextService.조회Async(
+        var context = await _ledgerContextService.조회Async(
             ledgerId,
             CurrentUserId(),
             cancellationToken);
@@ -89,10 +123,18 @@ public sealed class 커뮤니티게시글Controller : ControllerBase
     [HttpGet("{id:long}")]
     [AllowAnonymous]
     public async Task<IActionResult> Get(long id, CancellationToken cancellationToken)
-    {
-        var result = await _useCase.상세Async(id, cancellationToken);
-        return this.ToActionResult(result);
-    }
+        => this.ToActionResult(await _readUseCase.상세Async(id, cancellationToken));
+
+    [HttpPost("{id:long}/translations/{targetLanguageCode}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Translate(
+        long id,
+        string targetLanguageCode,
+        CancellationToken cancellationToken)
+        => this.ToActionResult(await _translationService.GetOrCreateAsync(
+            id,
+            targetLanguageCode,
+            cancellationToken));
 
     [HttpGet("{id:long}/audio")]
     [AllowAnonymous]
@@ -124,165 +166,13 @@ public sealed class 커뮤니티게시글Controller : ControllerBase
             : File(audio.Content, audio.ContentType, audio.FileName, enableRangeProcessing: true);
     }
 
-    [HttpPost("{id:long}/attachments")]
-    [AllowAnonymous]
-    [RequestSizeLimit(20_000_000)]
-    public async Task<IActionResult> UploadAttachment(
-        long id,
-        [FromForm] PlatformCommunityPostAttachmentUploadRequest request,
-        CancellationToken cancellationToken)
-    {
-        if (request.File is null)
-        {
-            return this.ToProblemActionResult("업로드할 이미지 파일을 선택해야 합니다.");
-        }
-
-        await using var stream = request.File.OpenReadStream();
-        var command = new 커뮤니티게시글첨부업로드Command(
-            request.Password,
-            stream,
-            request.File.FileName,
-            request.File.ContentType,
-            request.File.Length);
-        var result = await _useCase.첨부업로드Async(id, command, cancellationToken);
-        return this.ToActionResult(result);
-    }
-
     [HttpPut("{id:long}")]
     [AllowAnonymous]
     public async Task<IActionResult> Update(
         long id,
         [FromBody] PlatformCommunityPostUpdateRequest request,
         CancellationToken cancellationToken)
-    {
-        var result = await _useCase.수정Async(id, request, cancellationToken);
-        return this.ToActionResult(result);
-    }
-
-    [HttpPost("{id:long}/operator-pin")]
-    [Authorize(Policy = "서버관리자전용")]
-    public async Task<IActionResult> SetOperatorPin(
-        long id,
-        [FromBody] PlatformCommunityPostOperatorPinRequest request,
-        CancellationToken cancellationToken)
-    {
-        var result = await _useCase.운영자고정Async(id, request, cancellationToken);
-        return this.ToActionResult(result);
-    }
-
-    [HttpPost("{id:long}/recommendations")]
-    [AllowAnonymous]
-    public async Task<IActionResult> Recommend(
-        long id,
-        [FromBody] PlatformCommunityPostRecommendationRequest request,
-        CancellationToken cancellationToken)
-    {
-        var fallbackKey = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
-        var result = await _useCase.추천Async(id, request, fallbackKey, cancellationToken);
-        return this.ToActionResult(result);
-    }
-
-    [HttpGet("{id:long}/comments")]
-    [AllowAnonymous]
-    public async Task<IActionResult> ListComments(long id, CancellationToken cancellationToken)
-    {
-        var result = await _useCase.댓글목록Async(id, cancellationToken);
-        return this.ToActionResult(result);
-    }
-
-    [HttpPost("{id:long}/comments")]
-    [AllowAnonymous]
-    public async Task<IActionResult> CreateComment(
-        long id,
-        [FromBody] PlatformCommunityPostCommentCreateRequest request,
-        CancellationToken cancellationToken)
-    {
-        var result = await _useCase.댓글작성Async(id, request, cancellationToken);
-        return this.ToActionResult(result);
-    }
-
-    [HttpDelete("{id:long}/comments/{commentId:long}")]
-    [AllowAnonymous]
-    public async Task<IActionResult> DeleteComment(
-        long id,
-        long commentId,
-        [FromBody] PlatformCommunityPostPasswordRequest request,
-        CancellationToken cancellationToken)
-    {
-        var result = await _useCase.댓글삭제Async(id, commentId, request, cancellationToken);
-        return this.ToNoContentActionResult(result);
-    }
-
-    [HttpPost("comments/{commentId:long}/reports")]
-    [AllowAnonymous]
-    public async Task<IActionResult> ReportComment(long commentId, CancellationToken cancellationToken)
-    {
-        var result = await _useCase.댓글신고Async(commentId, cancellationToken);
-        return this.ToNoContentActionResult(result);
-    }
-
-    [HttpPost("comments/{commentId:long}/operator-hidden")]
-    [Authorize(Policy = "서버관리자전용")]
-    public async Task<IActionResult> SetCommentOperatorHidden(
-        long commentId,
-        [FromBody] PlatformCommunityOperatorHiddenRequest request,
-        CancellationToken cancellationToken)
-    {
-        var result = await _useCase.댓글운영자숨김Async(commentId, request, cancellationToken);
-        return this.ToNoContentActionResult(result);
-    }
-
-    [HttpGet("attachments/{attachmentId:long}/comments")]
-    [AllowAnonymous]
-    public async Task<IActionResult> ListAttachmentComments(
-        long attachmentId,
-        CancellationToken cancellationToken)
-    {
-        var result = await _useCase.첨부댓글목록Async(attachmentId, cancellationToken);
-        return this.ToActionResult(result);
-    }
-
-    [HttpPost("attachments/{attachmentId:long}/comments")]
-    [AllowAnonymous]
-    public async Task<IActionResult> CreateAttachmentComment(
-        long attachmentId,
-        [FromBody] PlatformCommunityPostAttachmentCommentCreateRequest request,
-        CancellationToken cancellationToken)
-    {
-        var result = await _useCase.첨부댓글작성Async(attachmentId, request, cancellationToken);
-        return this.ToActionResult(result);
-    }
-
-    [HttpDelete("attachments/{attachmentId:long}/comments/{commentId:long}")]
-    [AllowAnonymous]
-    public async Task<IActionResult> DeleteAttachmentComment(
-        long attachmentId,
-        long commentId,
-        [FromBody] PlatformCommunityPostPasswordRequest request,
-        CancellationToken cancellationToken)
-    {
-        var result = await _useCase.첨부댓글삭제Async(attachmentId, commentId, request, cancellationToken);
-        return this.ToNoContentActionResult(result);
-    }
-
-    [HttpPost("attachments/comments/{commentId:long}/reports")]
-    [AllowAnonymous]
-    public async Task<IActionResult> ReportAttachmentComment(long commentId, CancellationToken cancellationToken)
-    {
-        var result = await _useCase.첨부댓글신고Async(commentId, cancellationToken);
-        return this.ToNoContentActionResult(result);
-    }
-
-    [HttpPost("attachments/comments/{commentId:long}/operator-hidden")]
-    [Authorize(Policy = "서버관리자전용")]
-    public async Task<IActionResult> SetAttachmentCommentOperatorHidden(
-        long commentId,
-        [FromBody] PlatformCommunityOperatorHiddenRequest request,
-        CancellationToken cancellationToken)
-    {
-        var result = await _useCase.첨부댓글운영자숨김Async(commentId, request, cancellationToken);
-        return this.ToNoContentActionResult(result);
-    }
+        => this.ToActionResult(await _publishingUseCase.수정Async(id, request, cancellationToken));
 
     [HttpDelete("{id:long}")]
     [AllowAnonymous]
@@ -290,18 +180,12 @@ public sealed class 커뮤니티게시글Controller : ControllerBase
         long id,
         [FromBody] PlatformCommunityPostPasswordRequest request,
         CancellationToken cancellationToken)
-    {
-        var result = await _useCase.삭제Async(id, request, cancellationToken);
-        return this.ToNoContentActionResult(result);
-    }
+        => this.ToNoContentActionResult(await _publishingUseCase.삭제Async(
+            id,
+            request,
+            cancellationToken));
 
     private string? CurrentUserId()
         => User.FindFirstValue(ClaimTypes.NameIdentifier)
            ?? User.FindFirstValue("sub");
-}
-
-public sealed class PlatformCommunityPostAttachmentUploadRequest
-{
-    public string Password { get; set; } = string.Empty;
-    public IFormFile File { get; set; } = null!;
 }

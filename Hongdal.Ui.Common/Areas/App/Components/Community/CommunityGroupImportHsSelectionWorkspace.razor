@@ -1,0 +1,376 @@
+<div class="group-import-hs-workspace">
+    <header class="group-import-hs-header">
+        <div>
+            <MudText Typo="Typo.overline" Class="group-import-hs-kicker">공동수입 원장 · 상품 선택</MudText>
+            <MudText Typo="Typo.h4">HS 코드로 함께 들여올 상품 정하기</MudText>
+            <MudText Typo="Typo.body1" Class="group-import-hs-copy">
+                상품 분류와 통관 주의사항을 확인하고, 구매 후보를 모아 공동 선택안으로 엽니다.
+            </MudText>
+        </div>
+        <dl class="group-import-hs-metrics">
+            <div>
+                <dt>담은 후보</dt>
+                <dd>@selectedCandidates.Count</dd>
+            </div>
+            <div>
+                <dt>진행 중 선택</dt>
+                <dd>@importCampaigns.Count</dd>
+            </div>
+        </dl>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(statusMessage))
+    {
+        <MudAlert Severity="@statusSeverity" Variant="Variant.Outlined" Dense="true">@statusMessage</MudAlert>
+    }
+
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+        이 화면의 상품 선택은 수입 의향을 모으는 단계입니다. 실제 공동수입 원장이 등록되면 승인되고 현재 수임 가능한 수입 전문 관세사에게 HS 코드 검토 알림이 자동으로 전달됩니다.
+    </MudAlert>
+
+    <nav class="group-import-hs-tabs" role="tablist" aria-label="공동수입 상품 선택 화면">
+        <button type="button"
+                role="tab"
+                aria-selected="@(activeView == GroupImportView.Catalog)"
+                class="@BuildTabClass(GroupImportView.Catalog)"
+                @onclick="@(() => SelectView(GroupImportView.Catalog))">
+            <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+            HS 코드로 후보 구성
+        </button>
+        <button type="button"
+                role="tab"
+                aria-selected="@(activeView == GroupImportView.Campaigns)"
+                class="@BuildTabClass(GroupImportView.Campaigns)"
+                @onclick="@(() => SelectView(GroupImportView.Campaigns))">
+            <MudIcon Icon="@Icons.Material.Filled.HowToVote" Size="Size.Small" />
+            공동 선택 참여
+        </button>
+    </nav>
+
+    @if (activeView == GroupImportView.Catalog)
+    {
+        <section class="group-import-hs-search" aria-labelledby="group-import-hs-search-title">
+            <div class="group-import-hs-section-heading">
+                <div>
+                    <MudText Typo="Typo.h6" id="group-import-hs-search-title">상품 분류 찾기</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">HS 코드 또는 상품명으로 검색합니다.</MudText>
+                </div>
+                <MudChip T="string" Variant="Variant.Outlined" Color="Color.Info">@($"{catalogResult.TotalCount:N0}개 분류")</MudChip>
+            </div>
+
+            <div class="group-import-hs-search-controls">
+                <MudTextField @bind-Value="searchQuery"
+                              Label="HS 코드 · 상품명"
+                              Placeholder="예: 2106.90, 조제식품, 의자"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" />
+                <MudSelect T="string"
+                           Label="업무 분류"
+                           @bind-Value="selectedBusinessCategory"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense">
+                    <MudSelectItem Value="@("all")">전체</MudSelectItem>
+                    <MudSelectItem Value="@("10")">식품 관련</MudSelectItem>
+                    <MudSelectItem Value="@("20")">일반 화물</MudSelectItem>
+                    <MudSelectItem Value="@("30")">복합</MudSelectItem>
+                    <MudSelectItem Value="@("0")">미분류</MudSelectItem>
+                </MudSelect>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Search"
+                           Disabled="@isCatalogLoading"
+                           OnClick="SearchHsCodesAsync">
+                    검색
+                </MudButton>
+            </div>
+
+            <div class="group-import-hs-price-basis" aria-label="수입 평균단가 조회 기준">
+                <div class="group-import-hs-price-basis-heading">
+                    <MudIcon Icon="@Icons.Material.Filled.QueryStats" Color="Color.Info" />
+                    <div>
+                        <strong>수입 평균단가 기준</strong>
+                        <span>국가와 기간을 정한 뒤 각 HS 코드의 평균 단가를 조회합니다.</span>
+                    </div>
+                </div>
+                <div class="group-import-hs-price-basis-controls">
+                    <MudTextField @bind-Value="marketCountryCode"
+                                  Label="수출국 코드"
+                                  Placeholder="예: CN, VN, US"
+                                  MaxLength="3"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                    <MudTextField @bind-Value="marketReferenceMonth"
+                                  Label="기준월(YYYYMM)"
+                                  Placeholder="예: 202605"
+                                  MaxLength="6"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                    <MudNumericField T="int"
+                                     @bind-Value="marketLookbackMonths"
+                                     Label="조회기간(개월)"
+                                     Min="1"
+                                     Max="12"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                    <MudNumericField T="decimal"
+                                     @bind-Value="marketFxRateKrwPerUsd"
+                                     Label="가정 환율(원/USD)"
+                                     Min="1"
+                                     Format="N0"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </div>
+                <small>최근 월 통계가 아직 집계되지 않았다면 기준월을 더 이전으로 조정해 주세요.</small>
+            </div>
+        </section>
+
+        <div class="group-import-hs-builder">
+            <section class="group-import-hs-results" aria-label="HS 코드 검색 결과">
+                @if (isCatalogLoading)
+                {
+                    <div class="group-import-hs-loading" aria-live="polite">
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                        <span>HS 코드 분류를 불러오는 중입니다.</span>
+                    </div>
+                }
+                else if (catalogResult.Items.Count == 0)
+                {
+                    <div class="group-import-hs-empty">
+                        <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Large" />
+                        <strong>검색된 상품 분류가 없습니다.</strong>
+                        <span>다른 상품명이나 HS 코드 앞자리로 다시 찾아보세요.</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="group-import-hs-result-list">
+                        @foreach (var item in catalogResult.Items)
+                        {
+                            <article class="@BuildHsCodeItemClass(item)">
+                                <div class="group-import-hs-code">
+                                    <strong>@item.Code</strong>
+                                    <span>@item.LevelLabel</span>
+                                </div>
+                                <div class="group-import-hs-product">
+                                    <strong>@DisplayHsCodeName(item)</strong>
+                                    @if (!string.IsNullOrWhiteSpace(item.EnglishName))
+                                    {
+                                        <small>@item.EnglishName</small>
+                                    }
+                                    <div class="group-import-hs-tags">
+                                        <span>@item.BusinessCategoryLabel</span>
+                                        @foreach (var tag in item.RiskTags.Take(3))
+                                        {
+                                            <span class="group-import-hs-tag--warning">@tag.Label</span>
+                                        }
+                                    </div>
+                                </div>
+                                 <MudButton Variant="@(IsCandidateSelected(item.Id) ? Variant.Filled : Variant.Outlined)"
+                                           Color="@(IsCandidateSelected(item.Id) ? Color.Success : Color.Primary)"
+                                           Size="Size.Small"
+                                           StartIcon="@(IsCandidateSelected(item.Id) ? Icons.Material.Filled.Check : Icons.Material.Filled.Add)"
+                                           OnClick="@(() => AddCandidate(item))">
+                                     @(IsCandidateSelected(item.Id) ? "담김" : "후보 담기")
+                                 </MudButton>
+                                <div class="group-import-hs-price-slot">
+                                    <CommunityGroupImportPriceSignal HsCode="@item.Code"
+                                                                     CountryCode="@marketCountryCode"
+                                                                     ReferenceMonth="@marketReferenceMonth"
+                                                                     LookbackMonths="@marketLookbackMonths"
+                                                                     FxRateKrwPerUsd="@marketFxRateKrwPerUsd" />
+                                </div>
+                            </article>
+                        }
+                    </div>
+
+                    <div class="group-import-hs-pagination">
+                        <MudButton Variant="Variant.Text"
+                                   StartIcon="@Icons.Material.Filled.ChevronLeft"
+                                   Disabled="@(catalogResult.Page <= 1 || isCatalogLoading)"
+                                   OnClick="LoadPreviousCatalogPageAsync">
+                            이전
+                        </MudButton>
+                        <span>@catalogResult.Page / @CatalogPageCount</span>
+                        <MudButton Variant="Variant.Text"
+                                   EndIcon="@Icons.Material.Filled.ChevronRight"
+                                   Disabled="@(catalogResult.Page >= CatalogPageCount || isCatalogLoading)"
+                                   OnClick="LoadNextCatalogPageAsync">
+                            다음
+                        </MudButton>
+                    </div>
+                }
+            </section>
+
+            <aside class="group-import-hs-selection" aria-labelledby="group-import-hs-selection-title">
+                <div class="group-import-hs-section-heading">
+                    <div>
+                        <MudText Typo="Typo.h6" id="group-import-hs-selection-title">공동수입 후보</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">@($"{selectedCandidates.Count}개 상품")</MudText>
+                    </div>
+                </div>
+
+                @if (selectedCandidates.Count == 0)
+                {
+                    <div class="group-import-hs-empty group-import-hs-empty--selection">
+                        <MudIcon Icon="@Icons.Material.Filled.AddShoppingCart" Size="Size.Large" />
+                        <strong>비교할 상품 후보를 두 개 이상 담아주세요.</strong>
+                    </div>
+                }
+                else
+                {
+                    <div class="group-import-hs-candidates">
+                        @foreach (var candidate in selectedCandidates)
+                        {
+                            <div class="group-import-hs-candidate">
+                                <div>
+                                    <strong>@candidate.HsCode</strong>
+                                    <span>@candidate.CategoryLabel</span>
+                                </div>
+                                <MudTooltip Text="후보에서 제거">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                   Size="Size.Small"
+                                                   Color="Color.Error"
+                                                   OnClick="@(() => RemoveCandidate(candidate.HsCodeEntryId))" />
+                                </MudTooltip>
+                                <MudTextField @bind-Value="candidate.ProductName"
+                                              Label="구매 후보 상품명"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Class="group-import-hs-candidate-name" />
+                            </div>
+                        }
+                    </div>
+
+                    <div class="group-import-hs-draft-form">
+                        <MudTextField @bind-Value="draft.Title" Label="공동 선택 제목" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudTextField @bind-Value="draft.CreatorDisplayName" Label="개설자 표시명" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudTextField @bind-Value="draft.CommunityScope" Label="커뮤니티·지역 범위" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudSelect T="string" @bind-Value="draft.LogisticsMode" Label="예상 운송 방식" Variant="Variant.Outlined" Margin="Margin.Dense">
+                            <MudSelectItem Value="@("LCL")">LCL 혼재 화물</MudSelectItem>
+                            <MudSelectItem Value="@("FCL")">FCL 컨테이너</MudSelectItem>
+                            <MudSelectItem Value="@("국제특송")">국제특송</MudSelectItem>
+                        </MudSelect>
+                        <MudTextField @bind-Value="draft.QuantityUnit" Label="수량 단위" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudNumericField T="int" @bind-Value="draft.MinimumParticipantCount" Label="최소 참여자" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudNumericField T="int" @bind-Value="draft.MinimumTotalQuantity" Label="최소 총수량" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudNumericField T="int" @bind-Value="draft.OpenDays" Label="선택 기간(일)" Min="1" Max="30" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudTextField @bind-Value="draft.Description" Label="상품 조건과 공동수입 메모" Lines="3" Variant="Variant.Outlined" Class="group-import-hs-form-wide" />
+                    </div>
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               FullWidth="true"
+                               StartIcon="@Icons.Material.Filled.HowToVote"
+                               Disabled="@isCampaignBusy"
+                               OnClick="CreateImportSelectionAsync">
+                        공동 선택 열기
+                    </MudButton>
+                }
+            </aside>
+        </div>
+    }
+    else
+    {
+        <section class="group-import-hs-campaign-area" aria-label="진행 중인 공동수입 상품 선택">
+            <aside class="group-import-hs-campaign-list">
+                <div class="group-import-hs-section-heading">
+                    <div>
+                        <MudText Typo="Typo.h6">진행 중인 공동 선택</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">@($"{importCampaigns.Count}건")</MudText>
+                    </div>
+                    <MudTooltip Text="공동 선택 새로고침">
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="LoadImportCampaignsAsync" Disabled="@isCampaignLoading" />
+                    </MudTooltip>
+                </div>
+
+                @if (isCampaignLoading)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                }
+                else if (!string.IsNullOrWhiteSpace(campaignLoadMessage))
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true">@campaignLoadMessage</MudAlert>
+                }
+                else if (importCampaigns.Count == 0)
+                {
+                    <div class="group-import-hs-empty">
+                        <MudIcon Icon="@Icons.Material.Filled.HowToVote" Size="Size.Large" />
+                        <strong>진행 중인 공동 선택이 없습니다.</strong>
+                        <MudButton Variant="Variant.Text" OnClick="@(() => SelectView(GroupImportView.Catalog))">상품 후보 구성하기</MudButton>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var campaign in importCampaigns)
+                    {
+                        <button type="button" class="@BuildCampaignClass(campaign)" @onclick="@(() => SelectCampaignAsync(campaign.Id))">
+                            <span>@GetCampaignStateLabel(campaign)</span>
+                            <strong>@campaign.Title</strong>
+                            <small>@BuildCampaignHsSummary(campaign)</small>
+                            <small>@($"{campaign.TotalVoteCount}명 참여")</small>
+                        </button>
+                    }
+                }
+            </aside>
+
+            <main class="group-import-hs-campaign-detail">
+                @if (selectedCampaign is null)
+                {
+                    <div class="group-import-hs-empty group-import-hs-empty--detail">
+                        <MudIcon Icon="@Icons.Material.Filled.PlaylistAddCheck" Size="Size.Large" />
+                        <strong>공동 선택 건을 선택해 주세요.</strong>
+                    </div>
+                }
+                else
+                {
+                    <header class="group-import-hs-campaign-title">
+                        <div>
+                            <MudText Typo="Typo.overline">@selectedCampaign.CommunityScope</MudText>
+                            <MudText Typo="Typo.h5">@selectedCampaign.Title</MudText>
+                            <MudText Typo="Typo.body2">@selectedCampaign.Description</MudText>
+                        </div>
+                        <MudChip T="string" Color="@GetCampaignColor(selectedCampaign)" Variant="Variant.Outlined">@GetCampaignStateLabel(selectedCampaign)</MudChip>
+                    </header>
+
+                    <div class="group-import-hs-option-list">
+                        @foreach (var option in selectedCampaign.Options)
+                        {
+                            <label class="@BuildOptionClass(option.OptionId)">
+                                <input type="checkbox"
+                                       checked="@IsCampaignOptionSelected(option.OptionId)"
+                                       disabled="@(selectedCampaign.Status != CommunityVoteStatusCodes.Open)"
+                                       @onchange="@(_ => ToggleCampaignOption(option.OptionId))" />
+                                <span class="group-import-hs-option-code">@option.HsCode</span>
+                                <span class="group-import-hs-option-name">
+                                    <strong>@option.Text</strong>
+                                    <small>@($"{option.VoteCount}명 · {option.RequestedQuantity}{option.QuantityUnit}")</small>
+                                </span>
+                            </label>
+                        }
+                    </div>
+
+                    @if (selectedCampaign.Status == CommunityVoteStatusCodes.Open)
+                    {
+                        <div class="group-import-hs-participation">
+                            <MudTextField @bind-Value="participantDisplayName" Label="참여자 표시명" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            <MudNumericField T="int" @bind-Value="requestedQuantity" Label="희망 수량" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Success"
+                                       StartIcon="@Icons.Material.Filled.CheckCircle"
+                                       Disabled="@(selectedOptionIds.Count == 0 || isCampaignBusy)"
+                                       OnClick="CastImportChoiceAsync">
+                                선택 반영
+                            </MudButton>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">마감된 선택안입니다. 결과와 후속 공동수입 원장을 확인해 주세요.</MudAlert>
+                    }
+                }
+            </main>
+        </section>
+    }
+</div>

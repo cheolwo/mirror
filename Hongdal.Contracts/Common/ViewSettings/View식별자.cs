@@ -5,7 +5,7 @@ public static class App식별자
     public const string DriverApp = "DriverApp";
     public const string CargoYongdalDriverApp = "CargoYongdalDriverApp";
     public const string FoodDeliveryDriverApp = "FoodDeliveryDriverApp";
-    public const string ShipperApp = "ShipperApp";
+    public const string HongdalApp = "HongdalApp";
     public const string WarehouseManagerApp = "WarehouseManagerApp";
     public const string HongdalAdmin = "HongdalAdmin";
     public const string RestaurantDeskApp = "RestaurantDeskApp";
@@ -21,6 +21,7 @@ public static class View식별자
         public const string ExplorationCampaigns = "driver.exploration-campaigns";
         public const string Reservations = "driver.reservations";
         public const string CurrentTransport = "driver.current-transport";
+        public const string CommunityInquiries = "driver.community-inquiries";
         public const string Settlements = "driver.settlements";
         public const string Notifications = "driver.notifications";
         public const string ViewSettings = "driver.view-settings";

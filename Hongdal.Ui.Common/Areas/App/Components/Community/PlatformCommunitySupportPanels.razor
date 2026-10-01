@@ -1,0 +1,43 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Ui.Common.Areas.App.Models
+
+<MudPaper Elevation="0" Outlined="true" Class="pa-4">
+    <MudStack Spacing="2">
+        <MudText Typo="Typo.subtitle1">업무 바로가기</MudText>
+        @foreach (var action in QuickActions)
+        {
+            <MudButton Href="@action.Href"
+                       Variant="Variant.Outlined"
+                       Color="@action.Color"
+                       StartIcon="@action.Icon"
+                       EndIcon="@Icons.Material.Filled.ChevronRight"
+                       Class="platform-community-action">
+                <MudStack Spacing="0" AlignItems="AlignItems.Start">
+                    <MudText Typo="Typo.body2">@action.Title</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@action.Description</MudText>
+                </MudStack>
+            </MudButton>
+        }
+    </MudStack>
+</MudPaper>
+
+<MudPaper Elevation="0" Outlined="true" Class="pa-4">
+    <MudStack Spacing="2">
+        <MudText Typo="Typo.subtitle1">운영 흐름</MudText>
+        @foreach (var item in OperatingNotes)
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="1">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                <MudText Typo="Typo.body2">@item</MudText>
+            </MudStack>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<PlatformHomeQuickAction> QuickActions { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<string> OperatingNotes { get; set; } = [];
+}

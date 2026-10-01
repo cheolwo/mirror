@@ -18,5 +18,10 @@ public sealed class OperatingMarketContextAccessorTests
             OperatingMarketContextSourceCodes.Deployment,
             accessor.Current.SourceCode);
         Assert.Equal(marketCode, accessor.Current.Profile.MarketCode);
+        Assert.Equal(
+            marketCode == OperatingMarketCodes.Korea
+                ? OperatingTimeZoneIds.Korea
+                : OperatingTimeZoneIds.CoordinatedUniversal,
+            accessor.Current.TimeZoneId);
     }
 }

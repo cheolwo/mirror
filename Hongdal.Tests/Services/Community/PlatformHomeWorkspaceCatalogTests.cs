@@ -32,6 +32,7 @@ public sealed class PlatformHomeWorkspaceCatalogTests
         Assert.Contains(CommunityLedgerTemplateKeys.WarehouseInbound, keys);
         Assert.Contains(CommunityLedgerTemplateKeys.LocalSale, keys);
         Assert.Contains(CommunityLedgerTemplateKeys.GroupPurchase, keys);
+        Assert.Contains(CommunityLedgerTemplateKeys.GroupImport, keys);
         Assert.Contains(CommunityLedgerTemplateKeys.Errand, keys);
     }
 
@@ -46,7 +47,7 @@ public sealed class PlatformHomeWorkspaceCatalogTests
         Assert.Contains("국내 화물 운송 OS", osNames);
         Assert.Contains("음식 배달 OS", osNames);
         Assert.Contains("창고·커머스 이행 OS", osNames);
-        Assert.Contains("공동주문 수입 OS", osNames);
+        Assert.Contains("공동수입 OS", osNames);
         Assert.Contains("커뮤니티 신뢰 OS", osNames);
     }
 }

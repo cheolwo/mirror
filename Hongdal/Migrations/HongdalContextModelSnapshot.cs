@@ -71,6 +71,15 @@ namespace Hongdal.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("varchar(40)");
 
+                    b.Property<string>("RequestedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("varchar(450)");
+
+                    b.Property<string>("ReviewedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("varchar(450)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -89,6 +98,9 @@ namespace Hongdal.Migrations
                     b.HasIndex("AppKey", "BoardKey", "IsDeleted");
 
                     b.HasIndex("AppKey", "Status", "IsDeleted", "UpdatedAtUtc");
+
+                    b.HasIndex("RequestedByUserId", "Status", "IsDeleted", "CreatedAtUtc")
+                        .HasDatabaseName("IX_community_board_requests_requester_status");
 
                     b.ToTable("platform_community_board_requests", (string)null);
                 });
@@ -377,6 +389,14 @@ namespace Hongdal.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("varchar(450)");
 
+                    b.Property<string>("AuthorDisplayCountryCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("varchar(2)");
+
+                    b.Property<string>("AuthorDisplayCountryName")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
                     b.Property<string>("Body")
                         .IsRequired()
                         .HasMaxLength(4000)
@@ -390,10 +410,30 @@ namespace Hongdal.Migrations
                     b.Property<int>("CommentCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("CommunityMomentumCode")
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<string>("CommunityMomentumMessage")
+                        .HasMaxLength(240)
+                        .HasColumnType("varchar(240)");
+
+                    b.Property<int>("CommunityMomentumRoleParticipantCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CommunityMomentumUpdatedAtUtc")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime(6)");
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsAuthorDisplayCountryPublic")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsCommunityMomentumPromoted")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("IsOperatorPinned")
@@ -413,10 +453,37 @@ namespace Hongdal.Migrations
                     b.Property<DateTime?>("OperatorPinnedAtUtc")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("OriginalLanguageCode")
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("varchar(200)");
+
+                    b.Property<int>("PublicationAttemptCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PublicationClaimedAtUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("PublicationLastError")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<DateTime?>("PublicationNextAttemptAtUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("PublicationStatusCode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasDefaultValue("published");
+
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("RecommendationCount")
                         .HasColumnType("int");
@@ -434,9 +501,15 @@ namespace Hongdal.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("varchar(40)");
 
+                    b.Property<string>("SalesOfferJson")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("SharedLinkUrl")
                         .HasMaxLength(1000)
                         .HasColumnType("varchar(1000)");
+
+                    b.Property<DateTime?>("ScheduledPublishAtUtc")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -464,6 +537,9 @@ namespace Hongdal.Migrations
                     b.HasIndex("Category", "IsDeleted", "CreatedAtUtc");
 
                     b.HasIndex("IsReportBoardPost", "IsDeleted", "CreatedAtUtc");
+
+                    b.HasIndex("PublicationStatusCode", "PublicationNextAttemptAtUtc", "PublicationClaimedAtUtc")
+                        .HasDatabaseName("IX_platform_community_posts_publication_due");
 
                     b.HasIndex("WorkflowTag", "RoleTag", "IsDeleted", "CreatedAtUtc");
 
@@ -846,6 +922,73 @@ namespace Hongdal.Migrations
                     b.ToTable("platform_community_post_recommendations", (string)null);
                 });
 
+            modelBuilder.Entity("Hongdal.Domain.Community.PlatformCommunityPostTranslation", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsHumanReviewed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<long>("PostId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("ProviderModelVersion")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("SourceContentHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength();
+
+                    b.Property<string>("SourceLanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<string>("TargetLanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<string>("TranslatedBody")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TranslatedTitle")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId", "CreatedAtUtc")
+                        .HasDatabaseName("IX_community_post_translation_post_created");
+
+                    b.HasIndex("PostId", "TargetLanguageCode", "SourceContentHash")
+                        .IsUnique()
+                        .HasDatabaseName("UX_community_post_translation_content");
+
+                    b.ToTable("platform_community_post_translations", (string)null);
+                });
+
             modelBuilder.Entity("Hongdal.Domain.Community.커뮤니티원장상태이벤트", b =>
                 {
                     b.Property<long>("Id")
@@ -978,6 +1121,14 @@ namespace Hongdal.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("is_active");
 
+                    b.Property<bool>("IsAdminEnabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_admin_enabled");
+
+                    b.Property<bool>("IsCommunityPublicationApproved")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_community_publication_approved");
+
                     b.Property<DateTime>("LastSeenAtUtc")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("last_seen_at_utc");
@@ -1029,6 +1180,9 @@ namespace Hongdal.Migrations
 
                     b.HasIndex("IsActive", "LastSeenAtUtc")
                         .HasDatabaseName("IX_hh_cards_active_last_seen");
+
+                    b.HasIndex("IsCommunityPublicationApproved", "IsActive", "IsAdminEnabled")
+                        .HasDatabaseName("IX_hh_cards_community_publication");
 
                     b.ToTable("hongik_hakdang_cards", (string)null);
                 });
@@ -1383,6 +1537,10 @@ namespace Hongdal.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("is_active");
 
+                    b.Property<bool>("IsAdminEnabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_admin_enabled");
+
                     b.Property<DateTime>("LastSeenAtUtc")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("last_seen_at_utc");
@@ -1517,6 +1675,27 @@ namespace Hongdal.Migrations
                         .HasColumnType("varchar(100)")
                         .HasColumnName("uploads_playlist_id");
 
+                    b.Property<string>("Handle")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("channel_handle");
+
+                    b.Property<string>("국가코드")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("varchar(2)")
+                        .HasColumnName("country_code");
+
+                    b.Property<string>("기본언어코드")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("default_language_code");
+
+                    b.Property<int>("구매발견점수")
+                        .HasColumnType("int")
+                        .HasColumnName("purchase_discovery_score");
+
                     b.Property<DateTime?>("마지막동기화일시Utc")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("last_synced_at_utc");
@@ -1538,10 +1717,67 @@ namespace Hongdal.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("updated_at_utc");
 
+                    b.Property<int>("수입발견점수")
+                        .HasColumnType("int")
+                        .HasColumnName("import_discovery_score");
+
                     b.Property<string>("썸네일Url")
                         .HasMaxLength(1000)
                         .HasColumnType("varchar(1000)")
                         .HasColumnName("thumbnail_url");
+
+                    b.Property<bool>("음식채널여부")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_food_channel");
+
+                    b.Property<string>("음식콘텐츠분류")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("food_category_codes");
+
+                    b.Property<string>("조사근거Url")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("research_source_url");
+
+                    b.Property<string>("공식출처Url")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("official_source_url");
+
+                    b.Property<string>("관점표시")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("perspective_label");
+
+                    b.Property<DateTime?>("자료확인일시Utc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("source_verified_at_utc");
+
+                    b.Property<bool>("지식성찰채널여부")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_knowledge_reflection_channel");
+
+                    b.Property<string>("지식성찰분류")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("knowledge_reflection_category_codes");
+
+                    b.Property<bool>("반야게시허용여부")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_prajna_publication_allowed");
+
+                    b.Property<string>("조사메모")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("research_note");
+
+                    b.Property<DateTime?>("조사확인일시Utc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("research_verified_at_utc");
 
                     b.Property<string>("채널명")
                         .IsRequired()
@@ -1561,6 +1797,14 @@ namespace Hongdal.Migrations
 
                     b.HasIndex("ChannelId")
                         .IsUnique();
+
+                    b.HasIndex("국가코드", "활성화여부", "마지막동기화일시Utc")
+                        .HasDatabaseName("IX_youtube_watched_channels_country_active_sync");
+
+                    b.HasIndex("음식채널여부", "구매발견점수", "수입발견점수");
+
+                    b.HasIndex("지식성찰채널여부", "반야게시허용여부", "활성화여부")
+                        .HasDatabaseName("IX_youtube_watched_channels_knowledge_prajna_active");
 
                     b.HasIndex("활성화여부", "마지막동기화일시Utc");
 
@@ -1658,6 +1902,140 @@ namespace Hongdal.Migrations
                     b.HasIndex("신규업로드여부", "공유상태", "최초감지일시Utc");
 
                     b.ToTable("youtube_channel_videos", (string)null);
+                });
+
+            modelBuilder.Entity("Hongdal.Domain.Content.YouTube영상상품후보", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("YouTube채널영상Id")
+                        .HasColumnType("bigint")
+                        .HasColumnName("youtube_channel_video_id");
+
+                    b.Property<string>("HS코드후보")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("hs_code_candidate");
+
+                    b.Property<string>("검수메모")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("review_note");
+
+                    b.Property<string>("검수상태")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("review_status");
+
+                    b.Property<DateTime?>("검수일시Utc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("reviewed_at_utc");
+
+                    b.Property<string>("검수자UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("varchar(450)")
+                        .HasColumnName("reviewer_user_id");
+
+                    b.Property<string>("공식구매Url")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("official_purchase_url");
+
+                    b.Property<string>("물류방식")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("logistics_mode");
+
+                    b.Property<string>("발견근거")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("discovery_evidence");
+
+                    b.Property<string>("브랜드명")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("brand_name");
+
+                    b.Property<DateTime>("생성일시Utc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<DateTime>("수정일시Utc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<decimal>("신뢰도")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("decimal(5,4)")
+                        .HasColumnName("confidence");
+
+                    b.Property<string>("상품명")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("product_name");
+
+                    b.Property<string>("상품키")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("product_key");
+
+                    b.Property<string>("온도코드")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("temperature_code");
+
+                    b.Property<string>("원산지국가코드")
+                        .HasMaxLength(2)
+                        .HasColumnType("varchar(2)")
+                        .HasColumnName("origin_country_code");
+
+                    b.Property<int?>("영상구간초")
+                        .HasColumnType("int")
+                        .HasColumnName("video_timestamp_seconds");
+
+                    b.Property<string>("추출방식")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)")
+                        .HasColumnName("extraction_method");
+
+                    b.Property<string>("허용의향유형")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("allowed_intent_types");
+
+                    b.Property<string>("협찬표시상태")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("sponsorship_disclosure_status");
+
+                    b.Property<string>("후보유형")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)")
+                        .HasColumnName("candidate_type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("검수상태", "수정일시Utc");
+
+                    b.HasIndex("후보유형", "검수상태");
+
+                    b.HasIndex("YouTube채널영상Id", "상품키")
+                        .IsUnique();
+
+                    b.ToTable("youtube_video_product_candidates", (string)null);
                 });
 
             modelBuilder.Entity("Hongdal.Domain.Education.교육과정", b =>
@@ -6461,6 +6839,12 @@ namespace Hongdal.Migrations
                         .HasColumnType("varchar(200)")
                         .HasColumnName("공급처명");
 
+                    b.Property<string>("공급처코드")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("공급처코드");
+
                     b.Property<decimal>("보관료일단가")
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("보관료일단가");
@@ -8863,6 +9247,17 @@ namespace Hongdal.Migrations
                     b.Navigation("Post");
                 });
 
+            modelBuilder.Entity("Hongdal.Domain.Community.PlatformCommunityPostTranslation", b =>
+                {
+                    b.HasOne("Hongdal.Domain.Community.PlatformCommunityPost", "Post")
+                        .WithMany("Translations")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+                });
+
             modelBuilder.Entity("Hongdal.Domain.Content.YouTube채널영상", b =>
                 {
                     b.HasOne("Hongdal.Domain.Content.YouTube감시채널", "감시채널")
@@ -8872,6 +9267,17 @@ namespace Hongdal.Migrations
                         .IsRequired();
 
                     b.Navigation("감시채널");
+                });
+
+            modelBuilder.Entity("Hongdal.Domain.Content.YouTube영상상품후보", b =>
+                {
+                    b.HasOne("Hongdal.Domain.Content.YouTube채널영상", "영상")
+                        .WithMany("상품후보")
+                        .HasForeignKey("YouTube채널영상Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("영상");
                 });
 
             modelBuilder.Entity("Hongdal.Domain.Education.교육과정과목", b =>
@@ -9175,6 +9581,8 @@ namespace Hongdal.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("Recommendations");
+
+                    b.Navigation("Translations");
                 });
 
             modelBuilder.Entity("Hongdal.Domain.Community.PlatformCommunityPostAttachment", b =>
@@ -9204,6 +9612,11 @@ namespace Hongdal.Migrations
             modelBuilder.Entity("Hongdal.Domain.Content.YouTube감시채널", b =>
                 {
                     b.Navigation("영상");
+                });
+
+            modelBuilder.Entity("Hongdal.Domain.Content.YouTube채널영상", b =>
+                {
+                    b.Navigation("상품후보");
                 });
 
             modelBuilder.Entity("Hongdal.Domain.Education.교육과정", b =>

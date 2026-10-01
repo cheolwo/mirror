@@ -32,10 +32,17 @@ public interface I공동구매자동집단화UseCase
 public sealed class 공동구매자동집단화UseCase : I공동구매자동집단화UseCase
 {
     private readonly I공동구매자동집단화저장소 _저장소;
+    private readonly I공동구매수령창고Service _수령창고Service;
+    private readonly I공동구매개별주문원장Service _개별주문원장Service;
 
-    public 공동구매자동집단화UseCase(I공동구매자동집단화저장소 저장소)
+    public 공동구매자동집단화UseCase(
+        I공동구매자동집단화저장소 저장소,
+        I공동구매수령창고Service 수령창고Service,
+        I공동구매개별주문원장Service 개별주문원장Service)
     {
         _저장소 = 저장소;
+        _수령창고Service = 수령창고Service;
+        _개별주문원장Service = 개별주문원장Service;
     }
 
     public async Task<공동구매처리결과<IReadOnlyList<공동구매자동집단응답>>> 목록조회Async(
@@ -52,7 +59,46 @@ public sealed class 공동구매자동집단화UseCase : I공동구매자동집�
     {
         try
         {
+            var 주문확정수요 = 주문확정수요인가(command);
+            if (주문확정수요)
+            {
+                var warehouse = await _수령창고Service.확보Async(command, cancellationToken);
+                command.도착창고Id = warehouse.창고Id;
+                command.도착창고유형 = warehouse.창고유형;
+                command.도착창고명 = warehouse.창고명;
+                command.수령지주소참조키 = warehouse.주소참조키;
+            }
+
             var group = await _저장소.수요등록Async(command, cancellationToken);
+            if (주문확정수요)
+            {
+                var demand = group.수요목록.FirstOrDefault(x =>
+                    string.Equals(x.수요출처키, command.수요출처키, StringComparison.Ordinal))
+                    ?? group.수요목록.FirstOrDefault(x =>
+                        string.Equals(x.주문자키, command.주문자키, StringComparison.Ordinal));
+                if (demand is null)
+                {
+                    throw new InvalidOperationException("등록한 주문자 수요를 자동집단에서 찾을 수 없습니다.");
+                }
+
+                if (string.IsNullOrWhiteSpace(demand.공동구매주문집계원장Id)
+                    || string.IsNullOrWhiteSpace(demand.개별주문원장Id)
+                    || string.IsNullOrWhiteSpace(demand.입고예정원장Id))
+                {
+                    var ledgers = await _개별주문원장Service.생성및연결Async(
+                        group,
+                        demand,
+                        cancellationToken);
+                    group = await _저장소.개별주문원장연결Async(
+                        group.자동집단Id,
+                        demand.수요Id,
+                        ledgers.공동구매주문집계원장Id,
+                        ledgers.개별주문원장Id,
+                        ledgers.입고예정원장Id,
+                        cancellationToken);
+                }
+            }
+
             return 공동구매처리결과<공동구매자동집단응답>.성공결과(group);
         }
         catch (InvalidOperationException ex)
@@ -60,4 +106,9 @@ public sealed class 공동구매자동집단화UseCase : I공동구매자동집�
             return 공동구매처리결과<공동구매자동집단응답>.잘못된요청(ex.Message);
         }
     }
+
+    private static bool 주문확정수요인가(공동구매자동수요등록Command command)
+        => command.수요유형 == 공동구매자동수요유형코드.예약결제
+           || command.결제상태 is 공동구매자동결제상태코드.예약됨
+               or 공동구매자동결제상태코드.결제확정;
 }

@@ -146,7 +146,7 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
         }
         catch (HttpRequestException ex)
         {
-            throw new FDriverApiException("홍달 서버에 연결할 수 없습니다.", null, ex);
+            throw new FDriverApiException("살뜰 서비스에 연결할 수 없습니다.", null, ex);
         }
         catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
         {

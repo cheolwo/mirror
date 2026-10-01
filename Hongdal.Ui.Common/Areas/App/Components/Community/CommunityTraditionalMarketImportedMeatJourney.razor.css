@@ -1,0 +1,376 @@
+.market-meat-journey {
+    display: grid;
+    gap: 20px;
+    margin: 24px 0;
+    padding: 24px 0;
+    border-top: 1px solid #ccd3d1;
+    border-bottom: 1px solid #ccd3d1;
+    color: #202725;
+}
+
+.market-meat-journey__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 24px;
+    align-items: start;
+}
+
+.market-meat-journey__header > div:first-child > span,
+.market-meat-journey__economics header span,
+.market-meat-journey__requirements header span {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    color: #26705d;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.market-meat-journey__header h2,
+.market-meat-journey__economics h3,
+.market-meat-journey__requirements h3 {
+    margin: 6px 0 0;
+    letter-spacing: 0;
+}
+
+.market-meat-journey__header h2 {
+    font-size: 24px;
+    line-height: 1.3;
+}
+
+.market-meat-journey__header p {
+    max-width: 780px;
+    margin: 8px 0 0;
+    color: #5b6562;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.market-meat-journey__route {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    gap: 8px;
+    align-items: center;
+    min-width: 170px;
+    padding: 10px 12px;
+    border: 1px solid #b8c1be;
+    background: #fff;
+}
+
+.market-meat-journey__route strong {
+    font-size: 13px;
+}
+
+.market-meat-journey__route small {
+    grid-column: 1 / -1;
+    color: #65716d;
+    font-size: 11px;
+}
+
+.market-meat-journey__boundaries {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid #d5dbd9;
+    border-bottom: 1px solid #d5dbd9;
+}
+
+.market-meat-journey__boundaries > div {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    padding: 14px 16px;
+}
+
+.market-meat-journey__boundaries > div + div {
+    border-left: 1px solid #d5dbd9;
+}
+
+.market-meat-journey__boundaries span {
+    color: #26705d;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.market-meat-journey__boundaries strong {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.market-meat-journey__boundaries small {
+    color: #6a7471;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.market-meat-journey__economics,
+.market-meat-journey__requirements {
+    display: grid;
+    gap: 12px;
+}
+
+.market-meat-journey__economics header,
+.market-meat-journey__requirements header {
+    display: flex;
+    gap: 16px;
+    align-items: end;
+    justify-content: space-between;
+}
+
+.market-meat-journey__economics h3,
+.market-meat-journey__requirements h3 {
+    font-size: 18px;
+    line-height: 1.35;
+}
+
+.market-meat-journey__economics header > strong,
+.market-meat-journey__requirements header > strong {
+    flex: 0 0 auto;
+    padding: 5px 8px;
+    border: 1px solid #b88b24;
+    color: #8b6411;
+    font-size: 11px;
+}
+
+.market-meat-journey__economics > p {
+    margin: 0;
+    padding: 10px 12px;
+    border-left: 3px solid #26705d;
+    background: #f3f6f5;
+    color: #43504c;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.market-meat-journey__economics ul {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid #d5dbd9;
+    border-left: 1px solid #d5dbd9;
+    list-style: none;
+}
+
+.market-meat-journey__economics li {
+    display: grid;
+    align-content: start;
+    gap: 5px;
+    min-width: 0;
+    min-height: 112px;
+    padding: 12px;
+    border-right: 1px solid #d5dbd9;
+    border-bottom: 1px solid #d5dbd9;
+}
+
+.market-meat-journey__economics li.is-local {
+    box-shadow: inset 3px 0 0 #26705d;
+}
+
+.market-meat-journey__economics li strong {
+    font-size: 13px;
+}
+
+.market-meat-journey__economics li span,
+.market-meat-journey__requirements article p {
+    color: #5e6965;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.market-meat-journey__economics li small {
+    color: #26705d;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.market-meat-journey__requirements > div {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid #d5dbd9;
+    border-left: 1px solid #d5dbd9;
+}
+
+.market-meat-journey__requirements article {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    padding: 12px;
+    border-right: 1px solid #d5dbd9;
+    border-bottom: 1px solid #d5dbd9;
+}
+
+.market-meat-journey__requirements article strong {
+    font-size: 13px;
+}
+
+.market-meat-journey__requirements article p {
+    margin: 4px 0 0;
+}
+
+.market-meat-journey__requirements article > span {
+    color: #8b6411;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.market-meat-journey__notice {
+    border-radius: 0 !important;
+}
+
+.market-meat-journey__progress {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    padding-top: 4px;
+}
+
+.market-meat-journey__progress span,
+.market-meat-journey__progress small {
+    color: #64706c;
+    font-size: 11px;
+}
+
+.market-meat-journey__progress strong {
+    font-size: 14px;
+}
+
+.market-meat-journey__stages {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    margin: 0;
+    padding: 0;
+    border-top: 3px solid #7c8884;
+    border-left: 1px solid #d5dbd9;
+    list-style: none;
+}
+
+.market-meat-journey__stages li {
+    display: grid;
+    grid-template-rows: auto auto minmax(84px, 1fr) auto;
+    gap: 8px;
+    min-width: 0;
+    min-height: 218px;
+    padding: 12px;
+    border-right: 1px solid #d5dbd9;
+    border-bottom: 1px solid #d5dbd9;
+}
+
+.market-meat-journey__stages li.is-completed {
+    border-top: 3px solid #26705d;
+    margin-top: -3px;
+}
+
+.market-meat-journey__stages li.is-current {
+    border-top: 3px solid #b88b24;
+    margin-top: -3px;
+    background: #fffaf0;
+}
+
+.market-meat-journey__stages li.is-official,
+.market-meat-journey__stages li.is-contract {
+    border-top: 3px solid #6d7975;
+    margin-top: -3px;
+}
+
+.market-meat-journey__stage-number {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #66716d;
+}
+
+.market-meat-journey__stage-number span {
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border: 1px solid #bdc5c2;
+    border-radius: 50%;
+    font-size: 11px;
+}
+
+.market-meat-journey__stages li > strong {
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.market-meat-journey__stages li > p {
+    margin: 0;
+    color: #5e6865;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.market-meat-journey__stage-meta {
+    display: grid;
+    gap: 4px;
+    padding-top: 8px;
+    border-top: 1px solid #e0e4e2;
+}
+
+.market-meat-journey__stage-meta span {
+    color: #26705d;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.market-meat-journey__stage-meta small {
+    color: #777f7c;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+@media (max-width: 1000px) {
+    .market-meat-journey__economics ul,
+    .market-meat-journey__stages {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .market-meat-journey {
+        gap: 16px;
+        margin: 18px 0;
+        padding: 18px 0;
+    }
+
+    .market-meat-journey__header {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .market-meat-journey__header h2 {
+        font-size: 20px;
+    }
+
+    .market-meat-journey__route {
+        width: 100%;
+    }
+
+    .market-meat-journey__boundaries,
+    .market-meat-journey__economics ul,
+    .market-meat-journey__requirements > div,
+    .market-meat-journey__stages {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .market-meat-journey__boundaries > div + div {
+        border-top: 1px solid #d5dbd9;
+        border-left: 0;
+    }
+
+    .market-meat-journey__economics header,
+    .market-meat-journey__requirements header {
+        align-items: start;
+    }
+
+    .market-meat-journey__economics li,
+    .market-meat-journey__stages li {
+        min-height: auto;
+    }
+
+    .market-meat-journey__stages li {
+        grid-template-rows: auto;
+    }
+}

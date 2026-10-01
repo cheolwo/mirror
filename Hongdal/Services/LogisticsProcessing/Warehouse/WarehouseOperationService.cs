@@ -31,12 +31,8 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
 
     public async Task<창고목록응답> GetWarehousesAsync(CancellationToken cancellationToken)
     {
-        var userId = _currentUserAccessor.UserId;
-        var query = _db.창고.AsNoTracking().AsQueryable();
-        if (!string.IsNullOrWhiteSpace(userId))
-        {
-            query = query.Where(x => x.소유자UserId == userId || _db.창고사용자.Any(wu => wu.창고Id == x.Id && wu.UserId == userId));
-        }
+        var userId = RequireUserId();
+        var query = 접근가능창고Query(userId).AsNoTracking();
 
         var items = await query
             .OrderBy(x => x.창고명)
@@ -103,8 +99,53 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
         };
     }
 
+    public async Task<창고요약응답> UpdateWarehouseAsync(
+        long warehouseId,
+        창고저장요청 request,
+        CancellationToken cancellationToken)
+    {
+        var userId = RequireUserId();
+        var entity = await 접근가능창고Query(userId)
+            .FirstOrDefaultAsync(x => x.Id == warehouseId, cancellationToken)
+            ?? throw new InvalidOperationException("창고를 찾을 수 없거나 접근할 수 없습니다.");
+
+        entity.창고명 = request.창고명.Trim();
+        entity.소유자유형 = string.IsNullOrWhiteSpace(request.소유자유형) ? entity.소유자유형 : request.소유자유형.Trim();
+        entity.창고유형 = string.IsNullOrWhiteSpace(request.창고유형) ? entity.창고유형 : request.창고유형.Trim();
+        entity.물류대행지분류 = LogisticsProxySiteTypes.Normalize(request.물류대행지분류);
+        entity.주소 = request.주소.Trim();
+        entity.담당자명 = request.담당자명.Trim();
+        entity.연락처 = request.연락처.Trim();
+        entity.위도 = request.위도;
+        entity.경도 = request.경도;
+        entity.기본창고여부 = request.기본창고여부;
+        entity.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(cancellationToken);
+        return ToWarehouseResponse(entity);
+    }
+
+    public async Task DeleteWarehouseAsync(long warehouseId, CancellationToken cancellationToken)
+    {
+        var userId = RequireUserId();
+        var entity = await 접근가능창고Query(userId)
+            .FirstOrDefaultAsync(x => x.Id == warehouseId, cancellationToken)
+            ?? throw new InvalidOperationException("창고를 찾을 수 없거나 접근할 수 없습니다.");
+
+        if (await _db.입고요청.AnyAsync(x => x.창고Id == warehouseId, cancellationToken)
+            || await _db.입고상품.AnyAsync(x => x.창고Id == warehouseId, cancellationToken))
+        {
+            throw new InvalidOperationException("입고 또는 재고 이력이 있는 창고는 삭제할 수 없습니다.");
+        }
+
+        var users = await _db.창고사용자.Where(x => x.창고Id == warehouseId).ToArrayAsync(cancellationToken);
+        _db.창고사용자.RemoveRange(users);
+        _db.창고.Remove(entity);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<창고사용자목록응답> GetWarehouseUsersAsync(long warehouseId, CancellationToken cancellationToken)
     {
+        await 창고접근확인Async(warehouseId, RequireUserId(), cancellationToken);
         var items = await _db.창고사용자.AsNoTracking()
             .Where(x => x.창고Id == warehouseId)
             .OrderByDescending(x => x.IsPrimary)
@@ -125,6 +166,7 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
 
     public async Task<창고사용자항목응답> AddWarehouseUserAsync(long warehouseId, 창고사용자저장요청 request, CancellationToken cancellationToken)
     {
+        await 창고접근확인Async(warehouseId, RequireUserId(), cancellationToken);
         var entity = new 창고사용자
         {
             창고Id = warehouseId,
@@ -149,41 +191,153 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
         };
     }
 
+    public async Task<창고사용자항목응답> UpdateWarehouseUserAsync(
+        long warehouseId,
+        long warehouseUserId,
+        창고사용자저장요청 request,
+        CancellationToken cancellationToken)
+    {
+        await 창고접근확인Async(warehouseId, RequireUserId(), cancellationToken);
+        var entity = await _db.창고사용자
+            .FirstOrDefaultAsync(x => x.Id == warehouseUserId && x.창고Id == warehouseId, cancellationToken)
+            ?? throw new InvalidOperationException("창고 사용자를 찾을 수 없습니다.");
+
+        entity.UserId = request.UserId.Trim();
+        entity.역할명 = request.역할명.Trim();
+        entity.IsPrimary = request.IsPrimary;
+        entity.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(cancellationToken);
+        return ToWarehouseUserResponse(entity);
+    }
+
+    public async Task DeleteWarehouseUserAsync(
+        long warehouseId,
+        long warehouseUserId,
+        CancellationToken cancellationToken)
+    {
+        await 창고접근확인Async(warehouseId, RequireUserId(), cancellationToken);
+        var entity = await _db.창고사용자
+            .FirstOrDefaultAsync(x => x.Id == warehouseUserId && x.창고Id == warehouseId, cancellationToken)
+            ?? throw new InvalidOperationException("창고 사용자를 찾을 수 없습니다.");
+        _db.창고사용자.Remove(entity);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<입고요청목록응답> GetInboundsAsync(CancellationToken cancellationToken)
     {
         var userId = RequireUserId();
-        var items = await _db.입고요청.AsNoTracking()
-            .Where(x => x.주문자UserId == userId || _db.창고.Any(w => w.Id == x.창고Id && w.소유자UserId == userId))
+        var entities = await 접근가능입고Query(userId)
+            .AsNoTracking()
+            .Where(x => x.상태 != 입고상태.취소)
             .OrderByDescending(x => x.CreatedAt)
-            .Select(x => new 입고요청항목응답
-            {
-                Id = x.Id,
-                창고Id = x.창고Id,
-                입고흐름유형 = x.입고흐름유형,
-                입고생성경로 = x.입고생성경로,
-                계약선행여부 = x.계약선행여부,
-                자동생성여부 = x.자동생성여부,
-                주문Id = x.주문Id,
-                주문참조번호 = x.주문참조번호,
-                주문자UserId = x.주문자UserId,
-                판매자UserId = x.판매자UserId,
-                출고예정Id = x.출고예정Id,
-                운송의뢰Id = x.운송의뢰Id,
-                공급처명 = x.공급처명,
-                원주문참조번호 = x.원주문참조번호,
-                상태 = x.상태,
-                예정도착일 = x.예정도착일,
-                입고완료일시 = x.입고완료일시,
-                계약정보 = CreateContractSnapshot(x)
-            })
             .ToArrayAsync(cancellationToken);
+        var expectedOutbounds = await LoadExpectedOutboundsAsync(entities, cancellationToken);
+        var items = entities
+            .Select(entity => ToInboundResponse(
+                entity,
+                expectedOutbounds.GetValueOrDefault(entity.Id)))
+            .ToArray();
 
         return new 입고요청목록응답 { Items = items };
+    }
+
+    public async Task<입고요청페이지응답> QueryInboundsAsync(
+        입고요청목록조회요청 request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var page = Math.Max(0, request.Page);
+        var pageSize = Math.Clamp(request.PageSize, 1, 200);
+        var query = 접근가능입고Query(RequireUserId())
+            .AsNoTracking()
+            .Where(x => x.상태 != 입고상태.취소);
+
+        if (request.WarehouseId is > 0)
+        {
+            query = query.Where(x => x.창고Id == request.WarehouseId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Status))
+        {
+            var status = request.Status.Trim();
+            query = query.Where(x => x.상태 == status);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.FlowType))
+        {
+            var flowType = 입고흐름유형코드.Normalize(request.FlowType);
+            query = query.Where(x => x.입고흐름유형 == flowType);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var search = request.Search.Trim();
+            var idMatched = long.TryParse(search, out var inboundId);
+            query = query.Where(x =>
+                (idMatched && x.Id == inboundId)
+                || x.공급처코드.Contains(search)
+                || x.공급처명.Contains(search)
+                || x.원주문참조번호.Contains(search)
+                || x.주문참조번호.Contains(search)
+                || x.계약번호.Contains(search)
+                || _db.출고예정.Any(outbound =>
+                    outbound.입고요청Id == x.Id
+                    && (outbound.상품명.Contains(search) || outbound.SKU.Contains(search))));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var descending = request.SortDescending;
+        var sortedQuery = request.SortBy?.Trim() switch
+        {
+            nameof(입고요청항목응답.Id) => descending
+                ? query.OrderByDescending(x => x.Id)
+                : query.OrderBy(x => x.Id),
+            nameof(입고요청항목응답.창고Id) => descending
+                ? query.OrderByDescending(x => x.창고Id).ThenByDescending(x => x.Id)
+                : query.OrderBy(x => x.창고Id).ThenBy(x => x.Id),
+            nameof(입고요청항목응답.공급처코드) => descending
+                ? query.OrderByDescending(x => x.공급처코드).ThenByDescending(x => x.Id)
+                : query.OrderBy(x => x.공급처코드).ThenBy(x => x.Id),
+            nameof(입고요청항목응답.공급처명) => descending
+                ? query.OrderByDescending(x => x.공급처명).ThenByDescending(x => x.Id)
+                : query.OrderBy(x => x.공급처명).ThenBy(x => x.Id),
+            nameof(입고요청항목응답.원주문참조번호) => descending
+                ? query.OrderByDescending(x => x.원주문참조번호).ThenByDescending(x => x.Id)
+                : query.OrderBy(x => x.원주문참조번호).ThenBy(x => x.Id),
+            nameof(입고요청항목응답.상태) => descending
+                ? query.OrderByDescending(x => x.상태).ThenByDescending(x => x.Id)
+                : query.OrderBy(x => x.상태).ThenBy(x => x.Id),
+            nameof(입고요청항목응답.예정도착일) => descending
+                ? query.OrderByDescending(x => x.예정도착일).ThenByDescending(x => x.Id)
+                : query.OrderBy(x => x.예정도착일).ThenBy(x => x.Id),
+            _ => query.OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id)
+        };
+
+        var skip = (int)Math.Min((long)page * pageSize, int.MaxValue);
+        var entities = await sortedQuery
+            .Skip(skip)
+            .Take(pageSize)
+            .ToArrayAsync(cancellationToken);
+        var expectedOutbounds = await LoadExpectedOutboundsAsync(entities, cancellationToken);
+
+        return new 입고요청페이지응답
+        {
+            Items = entities
+                .Select(entity => ToInboundResponse(
+                    entity,
+                    expectedOutbounds.GetValueOrDefault(entity.Id)))
+                .ToArray(),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 
     public async Task<입고요청항목응답> CreateInboundAsync(입고요청저장요청 request, CancellationToken cancellationToken)
     {
         var userId = RequireUserId();
+        await 창고접근확인Async(request.창고Id, userId, cancellationToken);
         var contract = (request.계약정보 ?? 입고계약스냅샷.Default(request.공급처명)).Normalize();
         if (string.IsNullOrWhiteSpace(contract.계약상대방명))
         {
@@ -205,6 +359,7 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
             판매자UserId = request.판매자UserId.Trim(),
             출고예정Id = request.출고예정Id,
             운송의뢰Id = string.IsNullOrWhiteSpace(request.운송의뢰Id) ? null : request.운송의뢰Id.Trim(),
+            공급처코드 = request.공급처코드.Trim(),
             공급처명 = request.공급처명.Trim(),
             원주문참조번호 = request.원주문참조번호.Trim(),
             예정도착일 = request.예정도착일,
@@ -231,6 +386,9 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
         {
             Id = entity.Id,
             창고Id = entity.창고Id,
+            커뮤니티원장Id = entity.커뮤니티원장Id,
+            커뮤니티원장템플릿Key = entity.커뮤니티원장템플릿Key,
+            커뮤니티원장상태 = entity.커뮤니티원장상태,
             입고흐름유형 = entity.입고흐름유형,
             입고생성경로 = entity.입고생성경로,
             계약선행여부 = entity.계약선행여부,
@@ -241,6 +399,7 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
             판매자UserId = entity.판매자UserId,
             출고예정Id = entity.출고예정Id,
             운송의뢰Id = entity.운송의뢰Id,
+            공급처코드 = entity.공급처코드,
             공급처명 = entity.공급처명,
             원주문참조번호 = entity.원주문참조번호,
             상태 = entity.상태,
@@ -250,11 +409,81 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
         };
     }
 
+    public async Task<입고요청항목응답> UpdateInboundAsync(
+        long inboundId,
+        입고요청저장요청 request,
+        CancellationToken cancellationToken)
+    {
+        var userId = RequireUserId();
+        var entity = await 접근가능입고Query(userId)
+            .FirstOrDefaultAsync(x => x.Id == inboundId, cancellationToken)
+            ?? throw new InvalidOperationException("입고요청을 찾을 수 없거나 접근할 수 없습니다.");
+        if (entity.상태 != 입고상태.예정)
+        {
+            throw new InvalidOperationException("입고 예정 상태에서만 입고요청을 수정할 수 있습니다.");
+        }
+
+        await 창고접근확인Async(request.창고Id, userId, cancellationToken);
+        var contract = (request.계약정보 ?? 입고계약스냅샷.Default(request.공급처명)).Normalize();
+        if (string.IsNullOrWhiteSpace(contract.계약상대방명))
+        {
+            contract.계약상대방명 = request.공급처명.Trim();
+        }
+
+        entity.창고Id = request.창고Id;
+        entity.입고흐름유형 = 입고흐름유형코드.Normalize(request.입고흐름유형);
+        entity.입고생성경로 = string.IsNullOrWhiteSpace(request.입고생성경로)
+            ? BuildInboundSourceLabel(request.입고흐름유형)
+            : request.입고생성경로.Trim();
+        entity.계약선행여부 = request.계약선행여부;
+        entity.자동생성여부 = request.자동생성여부;
+        entity.주문Id = request.주문Id;
+        entity.주문참조번호 = request.주문참조번호.Trim();
+        entity.판매자UserId = request.판매자UserId.Trim();
+        entity.출고예정Id = request.출고예정Id;
+        entity.운송의뢰Id = string.IsNullOrWhiteSpace(request.운송의뢰Id) ? null : request.운송의뢰Id.Trim();
+        entity.공급처코드 = request.공급처코드.Trim();
+        entity.공급처명 = request.공급처명.Trim();
+        entity.원주문참조번호 = request.원주문참조번호.Trim();
+        entity.예정도착일 = request.예정도착일;
+        entity.비고 = request.비고.Trim();
+        entity.계약번호 = contract.계약번호;
+        entity.계약유형 = contract.계약유형;
+        entity.계약상대방명 = contract.계약상대방명;
+        entity.정산방식 = contract.정산방식;
+        entity.판매수수료율 = contract.판매수수료율;
+        entity.보관료일단가 = contract.보관료일단가;
+        entity.통관필요여부 = contract.통관필요여부;
+        entity.계약시작일 = contract.계약시작일;
+        entity.계약종료일 = contract.계약종료일;
+        entity.계약메모 = contract.계약메모;
+        entity.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(cancellationToken);
+        return ToInboundResponse(entity);
+    }
+
+    public async Task CancelInboundAsync(long inboundId, CancellationToken cancellationToken)
+    {
+        var userId = RequireUserId();
+        var entity = await 접근가능입고Query(userId)
+            .FirstOrDefaultAsync(x => x.Id == inboundId, cancellationToken)
+            ?? throw new InvalidOperationException("입고요청을 찾을 수 없거나 접근할 수 없습니다.");
+        if (entity.상태 != 입고상태.예정)
+        {
+            throw new InvalidOperationException("입고 예정 상태에서만 입고요청을 취소할 수 있습니다.");
+        }
+
+        entity.상태 = 입고상태.취소;
+        entity.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<입고상품목록응답> CompleteInboundAsync(long inboundId, 입고완료요청 request, CancellationToken cancellationToken)
     {
         var userId = RequireUserId();
-        var inbound = await _db.입고요청.FirstOrDefaultAsync(x => x.Id == inboundId, cancellationToken)
-            ?? throw new InvalidOperationException("입고요청을 찾을 수 없습니다.");
+        var inbound = await 접근가능입고Query(userId)
+            .FirstOrDefaultAsync(x => x.Id == inboundId, cancellationToken)
+            ?? throw new InvalidOperationException("입고요청을 찾을 수 없거나 접근할 수 없습니다.");
 
         inbound.상태 = 입고상태.입고완료;
         inbound.입고완료일시 = DateTime.UtcNow;
@@ -267,8 +496,11 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
             {
                 입고요청Id = inbound.Id,
                 창고Id = inbound.창고Id,
+                커뮤니티원장Id = inbound.커뮤니티원장Id,
+                커뮤니티원장템플릿Key = inbound.커뮤니티원장템플릿Key,
+                커뮤니티원장상태 = inbound.커뮤니티원장상태,
                 소유자UserId = inbound.주문자UserId,
-                판매자UserId = userId,
+                판매자UserId = inbound.판매자UserId,
                 상품명 = item.상품명.Trim(),
                 SKU = item.SKU.Trim(),
                 옵션명 = item.옵션명.Trim(),
@@ -342,6 +574,9 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
                 Id = item.Id,
                 입고요청Id = item.입고요청Id,
                 창고Id = item.창고Id,
+                커뮤니티원장Id = item.커뮤니티원장Id,
+                커뮤니티원장템플릿Key = item.커뮤니티원장템플릿Key,
+                커뮤니티원장상태 = item.커뮤니티원장상태,
                 소유자UserId = item.소유자UserId,
                 판매자UserId = item.판매자UserId,
                 상품명 = item.상품명,
@@ -362,13 +597,16 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
     {
         var userId = RequireUserId();
         var warehouseNames = _db.창고.AsNoTracking();
-        var items = await _db.입고상품.AsNoTracking()
-            .Where(x => x.소유자UserId == userId || x.판매자UserId == userId)
+        var items = await 접근가능재고Query(userId)
+            .AsNoTracking()
             .OrderByDescending(x => x.UpdatedAt)
             .Select(x => new 재고항목응답
             {
                 입고상품Id = x.Id,
                 창고Id = x.창고Id,
+                커뮤니티원장Id = x.커뮤니티원장Id,
+                커뮤니티원장템플릿Key = x.커뮤니티원장템플릿Key,
+                커뮤니티원장상태 = x.커뮤니티원장상태,
                 창고명 = warehouseNames.Where(w => w.Id == x.창고Id).Select(w => w.창고명).FirstOrDefault() ?? string.Empty,
                 소유자UserId = x.소유자UserId,
                 판매자UserId = x.판매자UserId,
@@ -389,8 +627,9 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
     public async Task<창고작업결과응답> InspectInboundItemAsync(long inboundItemId, 입고검수요청 request, CancellationToken cancellationToken)
     {
         var userId = RequireUserId();
-        var item = await _db.입고상품.FirstOrDefaultAsync(x => x.Id == inboundItemId, cancellationToken)
-            ?? throw new InvalidOperationException("입고상품을 찾을 수 없습니다.");
+        var item = await 접근가능재고Query(userId)
+            .FirstOrDefaultAsync(x => x.Id == inboundItemId, cancellationToken)
+            ?? throw new InvalidOperationException("입고상품을 찾을 수 없거나 접근할 수 없습니다.");
 
         if (request.검수수량 <= 0)
         {
@@ -436,8 +675,9 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
     public async Task<창고작업결과응답> PutAwayInventoryItemAsync(long inboundItemId, 적재위치배정요청 request, CancellationToken cancellationToken)
     {
         var userId = RequireUserId();
-        var item = await _db.입고상품.FirstOrDefaultAsync(x => x.Id == inboundItemId, cancellationToken)
-            ?? throw new InvalidOperationException("입고상품을 찾을 수 없습니다.");
+        var item = await 접근가능재고Query(userId)
+            .FirstOrDefaultAsync(x => x.Id == inboundItemId, cancellationToken)
+            ?? throw new InvalidOperationException("입고상품을 찾을 수 없거나 접근할 수 없습니다.");
 
         if (string.IsNullOrWhiteSpace(request.보관위치))
         {
@@ -472,8 +712,9 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
     public async Task<창고작업결과응답> PackInventoryItemAsync(long inboundItemId, 포장작업요청 request, CancellationToken cancellationToken)
     {
         var userId = RequireUserId();
-        var item = await _db.입고상품.FirstOrDefaultAsync(x => x.Id == inboundItemId, cancellationToken)
-            ?? throw new InvalidOperationException("입고상품을 찾을 수 없습니다.");
+        var item = await 접근가능재고Query(userId)
+            .FirstOrDefaultAsync(x => x.Id == inboundItemId, cancellationToken)
+            ?? throw new InvalidOperationException("입고상품을 찾을 수 없거나 접근할 수 없습니다.");
 
         if (request.포장수량 <= 0 || request.포장수량 > item.가용수량 + item.예약수량)
         {
@@ -507,8 +748,9 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
     public async Task<Hongdal.Contracts.Shipper.Request.화주운송의뢰응답> CreateReconsignmentRequestAsync(재고운송의뢰생성요청 request, CancellationToken cancellationToken)
     {
         var userId = RequireUserId();
-        var item = await _db.입고상품.FirstOrDefaultAsync(x => x.Id == request.입고상품Id, cancellationToken)
-            ?? throw new InvalidOperationException("입고상품을 찾을 수 없습니다.");
+        var item = await 접근가능재고Query(userId)
+            .FirstOrDefaultAsync(x => x.Id == request.입고상품Id, cancellationToken)
+            ?? throw new InvalidOperationException("입고상품을 찾을 수 없거나 접근할 수 없습니다.");
 
         if (item.가용수량 < request.요청수량 || request.요청수량 <= 0)
         {
@@ -632,9 +874,131 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
         return Hongdal.Application.Shipper.Request.화주운송의뢰매퍼.To응답(shipRequest);
     }
 
+    private static 창고요약응답 ToWarehouseResponse(창고 entity)
+        => new()
+        {
+            Id = entity.Id,
+            창고명 = entity.창고명,
+            소유자UserId = entity.소유자UserId,
+            소유자유형 = entity.소유자유형,
+            창고유형 = entity.창고유형,
+            물류대행지분류 = LogisticsProxySiteTypes.Normalize(entity.물류대행지분류),
+            주소 = entity.주소,
+            담당자명 = entity.담당자명,
+            연락처 = entity.연락처,
+            위도 = entity.위도,
+            경도 = entity.경도,
+            기본창고여부 = entity.기본창고여부,
+            IsActive = entity.IsActive
+        };
+
+    private static 창고사용자항목응답 ToWarehouseUserResponse(창고사용자 entity)
+        => new()
+        {
+            Id = entity.Id,
+            창고Id = entity.창고Id,
+            UserId = entity.UserId,
+            사용자명 = entity.UserId,
+            역할명 = entity.역할명,
+            IsPrimary = entity.IsPrimary
+        };
+
+    private static 입고요청항목응답 ToInboundResponse(
+        입고요청 entity,
+        출고예정? expectedOutbound = null)
+        => new()
+        {
+            Id = entity.Id,
+            창고Id = entity.창고Id,
+            커뮤니티원장Id = entity.커뮤니티원장Id,
+            커뮤니티원장템플릿Key = entity.커뮤니티원장템플릿Key,
+            커뮤니티원장상태 = entity.커뮤니티원장상태,
+            입고흐름유형 = entity.입고흐름유형,
+            입고생성경로 = entity.입고생성경로,
+            계약선행여부 = entity.계약선행여부,
+            자동생성여부 = entity.자동생성여부,
+            주문Id = entity.주문Id,
+            주문참조번호 = entity.주문참조번호,
+            주문자UserId = entity.주문자UserId,
+            판매자UserId = entity.판매자UserId,
+            출고예정Id = entity.출고예정Id,
+            운송의뢰Id = entity.운송의뢰Id,
+            공급처코드 = entity.공급처코드,
+            공급처명 = entity.공급처명,
+            예정상품명 = expectedOutbound?.상품명 ?? string.Empty,
+            예정SKU = expectedOutbound?.SKU ?? string.Empty,
+            예정수량 = expectedOutbound?.수량,
+            원주문참조번호 = entity.원주문참조번호,
+            상태 = entity.상태,
+            예정도착일 = entity.예정도착일,
+            입고완료일시 = entity.입고완료일시,
+            계약정보 = CreateContractSnapshot(entity)
+        };
+
+    private async Task<IReadOnlyDictionary<long, 출고예정>> LoadExpectedOutboundsAsync(
+        IReadOnlyCollection<입고요청> inbounds,
+        CancellationToken cancellationToken)
+    {
+        var inboundIds = inbounds.Select(entity => entity.Id).Distinct().ToArray();
+        if (inboundIds.Length == 0)
+        {
+            return new Dictionary<long, 출고예정>();
+        }
+
+        var outbounds = await _db.출고예정
+            .AsNoTracking()
+            .Where(outbound => outbound.입고요청Id.HasValue
+                               && inboundIds.Contains(outbound.입고요청Id.Value))
+            .OrderBy(outbound => outbound.Id)
+            .ToArrayAsync(cancellationToken);
+
+        return outbounds
+            .GroupBy(outbound => outbound.입고요청Id!.Value)
+            .ToDictionary(group => group.Key, group => group.First());
+    }
+
     private string RequireUserId()
     {
-        return _currentUserAccessor.UserId ?? throw new InvalidOperationException("로그인 사용자를 확인할 수 없습니다.");
+        var userId = _currentUserAccessor.UserId?.Trim();
+        return !string.IsNullOrWhiteSpace(userId)
+            ? userId
+            : throw new InvalidOperationException("로그인 사용자를 확인할 수 없습니다.");
+    }
+
+    private IQueryable<창고> 접근가능창고Query(string userId)
+        => _db.창고.Where(warehouse =>
+            warehouse.소유자UserId == userId
+            || _db.창고사용자.Any(user =>
+                user.창고Id == warehouse.Id && user.UserId == userId));
+
+    private IQueryable<입고요청> 접근가능입고Query(string userId)
+        => _db.입고요청.Where(inbound =>
+            inbound.주문자UserId == userId
+            || _db.창고.Any(warehouse =>
+                warehouse.Id == inbound.창고Id && warehouse.소유자UserId == userId)
+            || _db.창고사용자.Any(user =>
+                user.창고Id == inbound.창고Id && user.UserId == userId));
+
+    private IQueryable<입고상품> 접근가능재고Query(string userId)
+        => _db.입고상품.Where(item =>
+            item.소유자UserId == userId
+            || item.판매자UserId == userId
+            || _db.창고.Any(warehouse =>
+                warehouse.Id == item.창고Id && warehouse.소유자UserId == userId)
+            || _db.창고사용자.Any(user =>
+                user.창고Id == item.창고Id && user.UserId == userId));
+
+    private async Task 창고접근확인Async(
+        long warehouseId,
+        string userId,
+        CancellationToken cancellationToken)
+    {
+        if (!await 접근가능창고Query(userId).AnyAsync(
+                warehouse => warehouse.Id == warehouseId,
+                cancellationToken))
+        {
+            throw new InvalidOperationException("창고를 찾을 수 없거나 접근할 수 없습니다.");
+        }
     }
 
     private static 재고이동 CreateInventoryMovement(입고상품 item, string movementType, int quantity, string userId, string memo, DateTime occurredAt)

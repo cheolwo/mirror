@@ -7,7 +7,7 @@ using Hongdal.ApiMetadata;
 
 namespace Hongdal.Controllers.Common;
 
-[HongdalApiVersion(HongdalProductVersion.V1_0)]
+[HongdalApiVersion(HongdalProductVersion.V0_0)]
 [HongdalApiGrowthTrack(HongdalApiGrowthTrack.Community)]
 [ApiController]
 [Authorize]

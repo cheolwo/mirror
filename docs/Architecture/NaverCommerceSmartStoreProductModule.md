@@ -22,7 +22,7 @@
 
 ## 구현 방향
 
-현재 구현은 `ShipperApp.Services.Commerce.Naver` 아래에 외부 API 어댑터로 둔다.
+현재 구현은 `HongdalApp.Services.Commerce.Naver` 아래에 외부 API 어댑터로 둔다.
 
 - `INaverSmartStoreProductClient`: 상품 등록, 조회, 수정, 삭제 클라이언트 계약
 - `NaverSmartStoreProductClient`: 네이버 상품 v2 엔드포인트 호출 구현

@@ -1,0 +1,13 @@
+@page "/community/actions"
+@page "/community/actions/{PageKey}"
+
+<CommunityCollectiveActionWorkspace PageKey="@PageKey" CampaignId="@CampaignId" />
+
+@code {
+    [Parameter]
+    public string? PageKey { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "campaignId")]
+    public Guid? CampaignId { get; set; }
+}

@@ -1,0 +1,116 @@
+@using Hongdal.Contracts.Common.Community
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<section class="community-evidence-chart" aria-label="@($"통계 근거: {Model.Title}")">
+    <header>
+        <div>
+            <MudText Typo="Typo.overline" Color="Color.Primary">EVIDENCE</MudText>
+            <MudText Typo="Typo.subtitle1">@Model.Title</MudText>
+        </div>
+        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Icon="@ChartIcon">
+            @ChartTypeLabel
+        </MudChip>
+    </header>
+
+    <MudText Typo="Typo.body2" Class="community-evidence-chart__claim">@Model.Claim</MudText>
+
+    <div class="community-evidence-chart__canvas">
+        <MudChart T="double"
+                  ChartType="@ResolvedChartType"
+                  ChartSeries="@ChartSeries"
+                  ChartLabels="@ChartLabels"
+                  Width="100%"
+                  Height="260px"
+                  LegendPosition="Position.Bottom" />
+    </div>
+
+    @if (ShowStatistics)
+    {
+        <div class="community-evidence-chart__statistics" aria-label="요약 통계">
+            <span><small>합계</small><strong>@FormatValue(Statistics.Total)</strong></span>
+            <span><small>평균</small><strong>@FormatValue(Statistics.Average)</strong></span>
+            <span><small>범위</small><strong>@($"{FormatValue(Statistics.Minimum)} - {FormatValue(Statistics.Maximum)}")</strong></span>
+            <span><small>처음→마지막</small><strong>@FormatChange(Statistics.FirstToLastChangePercent)</strong></span>
+        </div>
+    }
+
+    <div class="community-evidence-chart__reading">
+        <div>
+            <MudIcon Icon="@Icons.Material.Filled.Analytics" Size="Size.Small" Color="Color.Info" />
+            <MudText Typo="Typo.body2">@Model.Interpretation</MudText>
+        </div>
+        <div>
+            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Color="Color.Warning" />
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Model.Limitation</MudText>
+        </div>
+    </div>
+
+    <footer>
+        <span>@Model.SourceLabel · 기준 @Model.ReferenceDate · 단위 @Model.Unit</span>
+        @if (HasSourceUrl)
+        {
+            <a class="community-evidence-chart__source-link"
+               href="@Model.SourceUrl"
+               target="_blank"
+               rel="noopener noreferrer">원문 확인</a>
+        }
+    </footer>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public CommunityEvidenceChartBlock Model { get; set; } = null!;
+
+    [Parameter]
+    public bool ShowStatistics { get; set; } = true;
+
+    private string[] ChartLabels
+        => Model.Points.Select(point => point.Label).ToArray();
+
+    private List<ChartSeries<double>> ChartSeries
+        =>
+        [
+            new()
+            {
+                Name = Model.SeriesLabel,
+                Data = Model.Points.Select(point => (double)point.Value).ToArray()
+            }
+        ];
+
+    private CommunityEvidenceChartStatistics Statistics
+        => CommunityEvidenceChartPolicy.CalculateStatistics(Model);
+
+    private ChartType ResolvedChartType
+        => Model.ChartTypeCode switch
+        {
+            CommunityEvidenceChartTypeCodes.Line => ChartType.Line,
+            CommunityEvidenceChartTypeCodes.Donut => ChartType.Donut,
+            _ => ChartType.Bar
+        };
+
+    private string ChartTypeLabel
+        => Model.ChartTypeCode switch
+        {
+            CommunityEvidenceChartTypeCodes.Line => "선 그래프",
+            CommunityEvidenceChartTypeCodes.Donut => "도넛 그래프",
+            _ => "막대 그래프"
+        };
+
+    private string ChartIcon
+        => Model.ChartTypeCode switch
+        {
+            CommunityEvidenceChartTypeCodes.Line => Icons.Material.Filled.ShowChart,
+            CommunityEvidenceChartTypeCodes.Donut => Icons.Material.Filled.DonutLarge,
+            _ => Icons.Material.Filled.BarChart
+        };
+
+    private bool HasSourceUrl
+        => Uri.TryCreate(Model.SourceUrl, UriKind.Absolute, out var uri)
+           && uri.Scheme is "http" or "https";
+
+    private string FormatValue(decimal value)
+        => $"{value:N2} {Model.Unit}";
+
+    private static string FormatChange(decimal? value)
+        => value.HasValue ? $"{value.Value:+0.##;-0.##;0}%" : "비교 불가";
+}

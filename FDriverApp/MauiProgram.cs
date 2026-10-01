@@ -3,12 +3,14 @@ using FDriverApp.Controls;
 using FDriverApp.Handlers;
 using FDriverApp.Pages;
 using Hongdal.Ui.Common.Areas.App.Services;
+using Hongdal.Ui.Common.Areas.App.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
 using Syncfusion.Maui.Toolkit.Hosting;
 
 using FDriverApp.Services;
+using FDriverApp.ViewModels;
 using Hongdal.Client.Infrastructure.Security;
 
 namespace FDriverApp
@@ -76,6 +78,14 @@ namespace FDriverApp
             builder.Services.AddSingleton<ManageMetaPageModel>();
 
             builder.Services.AddHongdalUiCommonAppServices<IFDriverAuthSession>();
+            builder.Services.AddTransient<음식배달기사Controller기능모음ViewModel>();
+            builder.Services.AddTransient<기사Controller기능모음ViewModel>();
+            builder.Services.AddTransient<음식배달기사운행ViewModel>();
+            builder.Services.AddTransient<음식배달수락ViewModel>();
+            builder.Services.AddTransient<음식배달이행ViewModel>();
+            builder.Services.AddTransient<음식배달경로ViewModel>();
+            builder.Services.AddTransient<음식배달기사업무기능ViewModel>();
+            builder.Services.AddTransient<음식배달기사Api기능모음ViewModel>();
             builder.Services.AddMudServices();
             builder.Services.AddMauiBlazorWebView();
 

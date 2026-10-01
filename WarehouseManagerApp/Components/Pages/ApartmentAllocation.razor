@@ -1,0 +1,109 @@
+@page "/warehouse/apartment/allocation"
+@inherits MvvmComponentBase<공동주택세대배분PageViewModel>
+
+<PageTitle>공동주택 세대별 배분</PageTitle>
+
+<WarehousePageShell Model="@ViewModel"
+                    Title="공동주택 세대별 배분"
+                    Description="공동주문과 단지 재고를 세대별 출고 단위로 확인합니다."
+                    Icon="@Icons.Material.Filled.Rule"
+                    Color="Color.Secondary">
+    <Actions>
+        <MudButton Href="@WarehouseManagerRoutes.ApartmentHandoff"
+                   Variant="Variant.Filled"
+                   Color="Color.Secondary"
+                   EndIcon="@Icons.Material.Filled.ChevronRight">
+            수령 인계
+        </MudButton>
+    </Actions>
+    <ChildContent>
+        @if (!string.IsNullOrWhiteSpace(ViewModel.재고조회.오류메시지))
+        {
+            <MudAlert Severity="Severity.Error">@ViewModel.재고조회.오류메시지</MudAlert>
+        }
+
+        <MudGrid>
+            <MudItem xs="6" md="3">
+                <MudPaper Class="pa-3 h-100" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">개별 주문</MudText>
+                    <MudText Typo="Typo.h5">@ViewModel.주문집계.개별주문수</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudPaper Class="pa-3 h-100" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">총 주문 수량</MudText>
+                    <MudText Typo="Typo.h5">@ViewModel.재고배분.총주문수량</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudPaper Class="pa-3 h-100" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">가용 재고</MudText>
+                    <MudText Typo="Typo.h5">@ViewModel.재고배분.총가용재고</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudPaper Class="pa-3 h-100" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">부족 수량</MudText>
+                    <MudText Typo="Typo.h5" Color="@(ViewModel.재고배분.참고재고부족수량 > 0 ? Color.Error : Color.Success)">
+                        @ViewModel.재고배분.참고재고부족수량
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        @if (!ViewModel.주문집계.집계완료)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@ViewModel.주문집계.집계안내</MudAlert>
+        }
+
+        <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+            <MudText Typo="Typo.h6" Class="mb-3">세대별 주문</MudText>
+            @if (ViewModel.주문집계.개별주문목록.Count == 0)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">배분할 공동주문이 없습니다.</MudAlert>
+            }
+            else
+            {
+                <MudTable T="공동주문개별주문항목ViewModel" Items="@ViewModel.주문집계.개별주문목록" Dense="true" Hover="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>주문자</MudTh>
+                        <MudTh>주문 원장</MudTh>
+                        <MudTh>수량</MudTh>
+                        <MudTh>입고 상태</MudTh>
+                        <MudTh>결제 상태</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="주문자">@(string.IsNullOrWhiteSpace(context.주문자표시명) ? context.주문자키 : context.주문자표시명)</MudTd>
+                        <MudTd DataLabel="주문 원장">@context.개별주문원장Id</MudTd>
+                        <MudTd DataLabel="수량">@context.주문수량 @context.수량단위</MudTd>
+                        <MudTd DataLabel="입고 상태">@context.입고의미상태</MudTd>
+                        <MudTd DataLabel="결제 상태">@context.결제상태</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudPaper>
+
+        <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+            <MudText Typo="Typo.h6" Class="mb-3">배분 후보 재고</MudText>
+            <WarehouseInventoryTable Items="@ViewModel.재고배분.재고후보목록"
+                                     Busy="@ViewModel.처리중"
+                                     EmptyText="공동주문 상품과 일치하는 재고가 없습니다." />
+        </MudPaper>
+    </ChildContent>
+</WarehousePageShell>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        EnsureProfile();
+        await ViewModel.초기화Async();
+    }
+
+    private void EnsureProfile()
+    {
+        if (!string.Equals(ViewModel.세션.운영ProfileCode, 창고운영ProfileCodes.공동주택물류, StringComparison.OrdinalIgnoreCase))
+        {
+            ViewModel.세션.운영Profile설정(창고운영ProfileCodes.공동주택물류);
+        }
+    }
+}

@@ -1,0 +1,395 @@
+.community-market-day {
+    --market-day-primary: #16745b;
+    --market-day-accent: #c18416;
+    --market-day-board: #b8443c;
+    --market-day-product: #35566b;
+    --market-day-pickup: #694f3d;
+    margin-top: 28px;
+    padding: 28px 0;
+    border-top: 2px solid var(--market-day-primary);
+    border-bottom: 1px solid #d7ded9;
+    color: #1f2925;
+}
+
+.community-market-day__header,
+.community-market-day__schedule > header,
+.community-market-day__inventory > header,
+.community-market-day__merchants > header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.community-market-day__header > div > span,
+.community-market-day__schedule header span,
+.community-market-day__inventory header span,
+.community-market-day__merchants header span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--market-day-primary);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.community-market-day h2,
+.community-market-day h3,
+.community-market-day p {
+    margin: 0;
+}
+
+.community-market-day h2 {
+    margin-top: 6px;
+    font-size: 1.5rem;
+    line-height: 1.35;
+}
+
+.community-market-day h3 {
+    margin-top: 4px;
+    font-size: 1.06rem;
+    line-height: 1.35;
+}
+
+.community-market-day__header p {
+    margin-top: 8px;
+    color: #5e6964;
+    line-height: 1.55;
+}
+
+.community-market-day__header > strong,
+.community-market-day__schedule > header > strong,
+.community-market-day__inventory > header > strong,
+.community-market-day__merchants > header > strong {
+    flex: 0 0 auto;
+    padding: 7px 10px;
+    border: 1px solid var(--market-day-accent);
+    color: var(--market-day-accent);
+    font-size: 0.78rem;
+}
+
+.community-market-day__place {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 22px;
+    border-top: 1px solid #d7ded9;
+    border-bottom: 1px solid #d7ded9;
+}
+
+.community-market-day__place > div {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    padding: 16px;
+}
+
+.community-market-day__place > div + div {
+    border-left: 1px solid #d7ded9;
+}
+
+.community-market-day__place span,
+.community-market-day__place small {
+    color: #68736e;
+}
+
+.community-market-day__theme {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.15fr);
+    gap: 22px;
+    margin-top: 26px;
+    padding: 18px 0;
+    border-top: 1px solid #d7ded9;
+    border-bottom: 1px solid #d7ded9;
+}
+
+.community-market-day__theme-preview,
+.community-market-day__theme-copy {
+    min-width: 0;
+}
+
+.community-market-day__theme-copy > span {
+    color: var(--market-day-primary);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.community-market-day__theme-copy p {
+    margin-top: 7px;
+    color: #59655f;
+    line-height: 1.5;
+}
+
+.community-market-day__theme-copy dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 14px;
+    margin: 13px 0 5px;
+}
+
+.community-market-day__theme-copy dl > div {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 7px;
+    min-width: 0;
+}
+
+.community-market-day__theme-copy dt {
+    color: #78827d;
+    font-size: 0.76rem;
+}
+
+.community-market-day__theme-copy dd {
+    margin: 0;
+    color: #37433d;
+    font-size: 0.78rem;
+    overflow-wrap: anywhere;
+}
+
+.community-market-day__schedule,
+.community-market-day__inventory,
+.community-market-day__merchants {
+    margin-top: 26px;
+}
+
+.community-market-day__schedule > div {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 14px;
+    border-top: 1px solid #d7ded9;
+    border-bottom: 1px solid #d7ded9;
+}
+
+.community-market-day__schedule article {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 9px;
+    min-width: 0;
+    padding: 15px;
+}
+
+.community-market-day__schedule article + article {
+    border-left: 1px solid #d7ded9;
+}
+
+.community-market-day__schedule article .mud-icon-root {
+    grid-row: 1 / span 2;
+    color: var(--market-day-primary);
+}
+
+.community-market-day__schedule article span {
+    color: #68736e;
+    font-size: 0.76rem;
+}
+
+.community-market-day__inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 14px;
+    border-top: 1px solid #d7ded9;
+    border-bottom: 1px solid #d7ded9;
+}
+
+.community-market-day__inventory-grid > div {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    padding: 16px;
+    border-top: 3px solid #aeb8b3;
+}
+
+.community-market-day__inventory-grid > div + div {
+    border-left: 1px solid #d7ded9;
+}
+
+.community-market-day__inventory-grid > .is-reserved {
+    border-top-color: var(--market-day-primary);
+}
+
+.community-market-day__inventory-grid > .is-walk-in {
+    border-top-color: var(--market-day-accent);
+}
+
+.community-market-day__inventory-grid span,
+.community-market-day__inventory-grid small {
+    color: #68736e;
+}
+
+.community-market-day__inventory-grid strong {
+    font-size: 1.25rem;
+}
+
+.community-market-day__inventory-policy {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.community-market-day__inventory-policy p {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 11px 12px;
+    background: #f4f7f5;
+    color: #4e5b55;
+    line-height: 1.45;
+}
+
+.community-market-day__inventory-policy .mud-icon-root {
+    flex: 0 0 auto;
+    color: var(--market-day-primary);
+}
+
+.community-market-day__merchants > div {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 14px;
+    border-top: 1px solid #d7ded9;
+}
+
+.community-market-day__merchant-role {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    min-width: 0;
+    padding: 16px 14px;
+    border-right: 1px solid #d7ded9;
+    border-bottom: 1px solid #d7ded9;
+}
+
+.community-market-day__merchant-role:nth-child(2n) {
+    border-right: 0;
+}
+
+.community-market-day__merchant-role p {
+    margin-top: 5px;
+    color: #59655f;
+    line-height: 1.45;
+}
+
+.community-market-day__merchant-role small {
+    display: block;
+    margin-top: 7px;
+    color: #7b5b19;
+}
+
+.community-market-day__announcement {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 12px;
+    margin-top: 18px;
+    padding: 15px;
+    border-left: 3px solid var(--market-day-accent);
+    background: #faf8f1;
+}
+
+.community-market-day__announcement div {
+    display: grid;
+    gap: 4px;
+}
+
+.community-market-day__announcement span {
+    color: #665f4f;
+}
+
+.community-market-day__stages {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 24px 0 18px;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid #d7ded9;
+    border-left: 1px solid #d7ded9;
+}
+
+.community-market-day__stages li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 9px;
+    min-width: 0;
+    padding: 14px;
+    border-right: 1px solid #d7ded9;
+    border-bottom: 1px solid #d7ded9;
+}
+
+.community-market-day__stages li > span {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border: 1px solid #aeb8b3;
+    border-radius: 50%;
+    color: #67726d;
+    font-size: 0.76rem;
+}
+
+.community-market-day__stages li.is-completed > span {
+    border-color: var(--market-day-primary);
+    background: var(--market-day-primary);
+    color: #fff;
+}
+
+.community-market-day__stages li.is-current {
+    background: #f0f7f4;
+}
+
+.community-market-day__stages li.is-current > span {
+    border-color: var(--market-day-primary);
+    color: var(--market-day-primary);
+}
+
+.community-market-day__stages p {
+    margin-top: 5px;
+    color: #65706b;
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+@media (max-width: 760px) {
+    .community-market-day {
+        padding: 22px 0;
+    }
+
+    .community-market-day__header,
+    .community-market-day__schedule > header,
+    .community-market-day__inventory > header,
+    .community-market-day__merchants > header {
+        display: grid;
+        gap: 12px;
+    }
+
+    .community-market-day__header > strong,
+    .community-market-day__schedule > header > strong,
+    .community-market-day__inventory > header > strong,
+    .community-market-day__merchants > header > strong {
+        justify-self: start;
+    }
+
+    .community-market-day__place,
+    .community-market-day__theme,
+    .community-market-day__schedule > div,
+    .community-market-day__inventory-grid,
+    .community-market-day__inventory-policy,
+    .community-market-day__merchants > div,
+    .community-market-day__stages {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .community-market-day__theme-copy dl {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .community-market-day__place > div + div,
+    .community-market-day__schedule article + article,
+    .community-market-day__inventory-grid > div + div,
+    .community-market-day__merchant-role,
+    .community-market-day__merchant-role:nth-child(2n) {
+        border-left: 0;
+        border-right: 0;
+    }
+
+    .community-market-day__place > div + div,
+    .community-market-day__schedule article + article {
+        border-top: 1px solid #d7ded9;
+    }
+}

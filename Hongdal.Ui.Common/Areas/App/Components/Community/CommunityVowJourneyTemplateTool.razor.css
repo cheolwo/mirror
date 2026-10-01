@@ -1,0 +1,37 @@
+.community-vow-template-tool {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+}
+
+.community-vow-template-tool > header {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.community-vow-template-tool__sections {
+    column-count: 2;
+    column-gap: 24px;
+    margin: 0;
+    padding: 12px 12px 12px 32px;
+    border-block: 1px solid var(--mud-palette-lines-default);
+}
+
+.community-vow-template-tool__sections li {
+    break-inside: avoid;
+    font-size: .875rem;
+    line-height: 1.6;
+    padding-inline-start: 4px;
+}
+
+@media (max-width: 600px) {
+    .community-vow-template-tool {
+        padding-inline: 12px;
+    }
+
+    .community-vow-template-tool__sections {
+        column-count: 1;
+    }
+}

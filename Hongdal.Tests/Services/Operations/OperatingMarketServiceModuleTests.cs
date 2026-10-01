@@ -19,6 +19,21 @@ public sealed class OperatingMarketServiceModuleTests
             KoreaOperatingMarketFreightWorkflowPolicy>(
             services,
             OperatingMarketCodes.Korea);
+
+        var deployment = GetDeployment(services);
+        Assert.Equal(OperatingTimeZoneIds.Korea, deployment.TimeZoneId);
+        Assert.DoesNotContain(
+            services,
+            descriptor => descriptor.ServiceType == typeof(IUnitedStatesAddressGeocoder));
+        Assert.DoesNotContain(
+            services,
+            descriptor => descriptor.ServiceType == typeof(IUnitedStatesDeliveryScopePlanner));
+        Assert.DoesNotContain(
+            services,
+            descriptor => descriptor.ServiceType == typeof(IUnitedStatesDeliveryScopeService));
+        AssertDirectoryService<UnavailableThirdPartyLogisticsProviderDirectoryService>(services);
+        AssertOutreachService<
+            UnavailableThirdPartyLogisticsProviderOutreachPreparationService>(services);
     }
 
     [Fact]
@@ -31,22 +46,78 @@ public sealed class OperatingMarketServiceModuleTests
             UnitedStatesOperatingMarketFreightWorkflowPolicy>(
             services,
             OperatingMarketCodes.UnitedStates);
+
+        var deployment = GetDeployment(services);
+        Assert.Equal(OperatingTimeZoneIds.CoordinatedUniversal, deployment.TimeZoneId);
+        Assert.Contains(
+            services,
+            descriptor => descriptor.ServiceType == typeof(IUnitedStatesAddressGeocoder));
+        Assert.Contains(
+            services,
+            descriptor => descriptor.ServiceType == typeof(IUnitedStatesDeliveryScopePlanner));
+        Assert.Contains(
+            services,
+            descriptor => descriptor.ServiceType == typeof(IUnitedStatesDeliveryScopeService));
+        AssertDirectoryService<UnitedStatesThirdPartyLogisticsProviderDirectoryService>(services);
+        AssertOutreachService<
+            UnitedStatesThirdPartyLogisticsProviderOutreachPreparationService>(services);
     }
 
     [Fact]
-    public void Registration_ReadsVerifiedPartnerFromServerConfiguration()
+    public void Registration_ReadsStructuredPartnerVerificationFromServerConfiguration()
     {
         var services = RegisterServices(
             OperatingMarketCodes.UnitedStates,
-            " broker-partner-1 ");
+            includeCompletePartner: true,
+            timeZoneId: "America/Chicago");
 
-        var deploymentDescriptor = Assert.Single(
+        var deployment = GetDeployment(services);
+        Assert.Equal("broker-participant-1", deployment.VerifiedLicensedBrokerPartnerId);
+        Assert.Equal("America/Chicago", deployment.TimeZoneId);
+
+        var registryDescriptor = Assert.Single(
             services,
-            descriptor => descriptor.ServiceType == typeof(IOperatingMarketDeployment));
-        var deployment = Assert.IsType<OperatingMarketDeployment>(
-            deploymentDescriptor.ImplementationInstance);
+            descriptor => descriptor.ServiceType ==
+                          typeof(IOperatingMarketFreightServiceProviderRegistry));
+        var registry = Assert.IsType<DeploymentOperatingMarketFreightServiceProviderRegistry>(
+            registryDescriptor.ImplementationInstance);
+        var verification = Assert.IsType<OperatingMarketFreightServiceProviderVerification>(
+            registry.Current);
 
-        Assert.Equal("broker-partner-1", deployment.VerifiedLicensedBrokerPartnerId);
+        Assert.Equal("MC-123456", verification.AuthorityReference);
+        Assert.Equal(
+            FreightServiceProviderRoleCodes.UnitedStatesPropertyBroker,
+            verification.ServiceProviderRoleCode);
+        Assert.Contains(
+            FreightComplianceRequirementCodes.UnitedStatesFinancialSecurityActive,
+            verification.SatisfiedRequirementCodes);
+        Assert.Equal(
+            new DateTimeOffset(2027, 7, 1, 0, 0, 0, TimeSpan.Zero),
+            verification.VerificationExpiresAtUtc);
+    }
+
+    [Fact]
+    public void Registration_LegacyPartnerIdDoesNotInventComplianceEvidence()
+    {
+        var configuration = CreateConfiguration(
+            OperatingMarketCodes.UnitedStates,
+            legacyPartnerId: "broker-partner-1");
+        var services = new ServiceCollection();
+
+        services.AddHongdalOperatingMarketServices(configuration);
+
+        var registryDescriptor = Assert.Single(
+            services,
+            descriptor => descriptor.ServiceType ==
+                          typeof(IOperatingMarketFreightServiceProviderRegistry));
+        var registry = Assert.IsAssignableFrom<IOperatingMarketFreightServiceProviderRegistry>(
+            registryDescriptor.ImplementationInstance);
+        var verification = Assert.IsType<OperatingMarketFreightServiceProviderVerification>(
+            registry.Current);
+
+        Assert.Equal("broker-partner-1", verification.ServiceProviderParticipantId);
+        Assert.Empty(verification.AuthorityReference);
+        Assert.Empty(verification.SatisfiedRequirementCodes);
     }
 
     [Fact]
@@ -63,18 +134,22 @@ public sealed class OperatingMarketServiceModuleTests
 
     private static ServiceCollection RegisterServices(
         string? marketCode,
-        string? verifiedLicensedBrokerPartnerId = null)
+        bool includeCompletePartner = false,
+        string? timeZoneId = null)
     {
         var services = new ServiceCollection();
         services.AddHongdalOperatingMarketServices(CreateConfiguration(
             marketCode,
-            verifiedLicensedBrokerPartnerId));
+            includeCompletePartner,
+            timeZoneId));
         return services;
     }
 
     private static IConfiguration CreateConfiguration(
         string? marketCode,
-        string? verifiedLicensedBrokerPartnerId = null)
+        bool includeCompletePartner = false,
+        string? timeZoneId = null,
+        string? legacyPartnerId = null)
     {
         var values = new Dictionary<string, string?>();
         if (marketCode is not null)
@@ -82,11 +157,34 @@ public sealed class OperatingMarketServiceModuleTests
             values[$"{OperatingMarketDeploymentOptions.SectionName}:MarketCode"] = marketCode;
         }
 
-        if (verifiedLicensedBrokerPartnerId is not null)
+        if (timeZoneId is not null)
+        {
+            values[$"{OperatingMarketDeploymentOptions.SectionName}:TimeZoneId"] = timeZoneId;
+        }
+
+        if (legacyPartnerId is not null)
         {
             values[$"{OperatingMarketDeploymentOptions.SectionName}:" +
                    nameof(OperatingMarketDeploymentOptions.VerifiedLicensedBrokerPartnerId)] =
-                verifiedLicensedBrokerPartnerId;
+                legacyPartnerId;
+        }
+
+        if (includeCompletePartner)
+        {
+            var prefix =
+                $"{OperatingMarketDeploymentOptions.SectionName}:FreightServiceProvider";
+            values[$"{prefix}:ParticipantId"] = "broker-participant-1";
+            values[$"{prefix}:ParticipantRoleCode"] =
+                FreightServiceProviderRoleCodes.UnitedStatesPropertyBroker;
+            values[$"{prefix}:AuthorityReference"] = "MC-123456";
+            values[$"{prefix}:VerifiedAtUtc"] = "2026-07-01T00:00:00+00:00";
+            values[$"{prefix}:VerificationExpiresAtUtc"] = "2027-07-01T00:00:00+00:00";
+            values[$"{prefix}:SatisfiedRequirementCodes:0"] =
+                FreightComplianceRequirementCodes.UnitedStatesBrokerAuthorityActive;
+            values[$"{prefix}:SatisfiedRequirementCodes:1"] =
+                FreightComplianceRequirementCodes.UnitedStatesFinancialSecurityActive;
+            values[$"{prefix}:SatisfiedRequirementCodes:2"] =
+                FreightComplianceRequirementCodes.UnitedStatesProcessAgentDesignationActive;
         }
 
         return new ConfigurationBuilder()
@@ -94,16 +192,47 @@ public sealed class OperatingMarketServiceModuleTests
             .Build();
     }
 
-    private static void AssertMarketModule<TModule, TAddressAdapter, TFreightPolicy>(
-        IServiceCollection services,
-        string expectedMarketCode)
+    private static IOperatingMarketDeployment GetDeployment(IServiceCollection services)
     {
         var deploymentDescriptor = Assert.Single(
             services,
             descriptor => descriptor.ServiceType == typeof(IOperatingMarketDeployment));
-        var deployment = Assert.IsType<OperatingMarketDeployment>(
+        return Assert.IsType<OperatingMarketDeployment>(
             deploymentDescriptor.ImplementationInstance);
-        Assert.Equal(expectedMarketCode, deployment.MarketCode);
+    }
+
+    private static void AssertDirectoryService<TService>(IServiceCollection services)
+    {
+        Assert.Single(
+            services,
+            descriptor => descriptor.ServiceType ==
+                          typeof(IThirdPartyLogisticsProviderDirectoryService));
+
+        using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        Assert.IsType<TService>(scope.ServiceProvider
+            .GetRequiredService<IThirdPartyLogisticsProviderDirectoryService>());
+    }
+
+    private static void AssertOutreachService<TService>(IServiceCollection services)
+    {
+        Assert.Single(
+            services,
+            descriptor => descriptor.ServiceType ==
+                          typeof(IThirdPartyLogisticsProviderOutreachPreparationService));
+
+        using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        Assert.IsType<TService>(scope.ServiceProvider
+            .GetRequiredService<
+                IThirdPartyLogisticsProviderOutreachPreparationService>());
+    }
+
+    private static void AssertMarketModule<TModule, TAddressAdapter, TFreightPolicy>(
+        IServiceCollection services,
+        string expectedMarketCode)
+    {
+        Assert.Equal(expectedMarketCode, GetDeployment(services).MarketCode);
 
         var moduleDescriptor = Assert.Single(
             services,
@@ -118,7 +247,7 @@ public sealed class OperatingMarketServiceModuleTests
         var policyDescriptor = Assert.Single(
             services,
             descriptor => descriptor.ServiceType == typeof(IOperatingMarketFreightWorkflowPolicy));
-        Assert.Equal(typeof(TFreightPolicy), policyDescriptor.ImplementationType);
+        Assert.NotNull(policyDescriptor.ImplementationFactory);
 
         var contextDescriptor = Assert.Single(
             services,
@@ -126,5 +255,25 @@ public sealed class OperatingMarketServiceModuleTests
         Assert.Equal(
             typeof(DeploymentOperatingMarketContextAccessor),
             contextDescriptor.ImplementationType);
+
+        var runtimeProfileDescriptor = Assert.Single(
+            services,
+            descriptor => descriptor.ServiceType == typeof(IOperatingMarketRuntimeProfileService));
+        Assert.Equal(
+            typeof(OperatingMarketRuntimeProfileService),
+            runtimeProfileDescriptor.ImplementationType);
+
+        Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(TimeProvider));
+
+        using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        Assert.IsType<TFreightPolicy>(
+            scope.ServiceProvider.GetRequiredService<IOperatingMarketFreightWorkflowPolicy>());
+        Assert.Equal(
+            expectedMarketCode,
+            scope.ServiceProvider
+                .GetRequiredService<IOperatingMarketRuntimeProfileService>()
+                .GetCurrent()
+                .MarketCode);
     }
 }

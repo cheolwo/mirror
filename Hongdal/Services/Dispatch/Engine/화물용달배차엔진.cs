@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Hongdal.Contracts.Common.Versioning;
 using 홍달.도메인.공통;
 using 홍달.도메인.배차;
 using 홍달.Services.Dispatch.Queue;
@@ -26,20 +27,31 @@ public sealed class 화물용달배차엔진 : 정책기반배차엔진
         _logger = logger;
     }
 
-    public override string 엔진코드 => "CargoYongdalDispatchEngine";
+    public override string 엔진코드 => EngineImplementationIds.CargoYongdalDispatch;
 
     public override string 표시명 => "화물/용달 배차 엔진";
 
     public override int 배차업무유형 => 상태값.배차업무유형.용달운송;
 
-    public override async Task<배차추천후보?> 다음후보선정Async(
+    public override async Task<배차추천후보선정결과> 다음후보선정Async(
         운송원장 queue,
         string? 제외기사Id = null,
         CancellationToken cancellationToken = default)
     {
+        if (queue is null)
+        {
+            return 배차추천후보선정결과.잘못된입력("배차대기 원장이 제공되지 않았습니다.");
+        }
+
         var request = await _db.화주운송의뢰
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.의뢰Id == queue.의뢰Id, cancellationToken);
+        if (request is null)
+        {
+            return 배차추천후보선정결과.잘못된입력(
+                $"화물/용달 배차에 필요한 운송 의뢰를 찾을 수 없습니다. RequestId={queue.의뢰Id}");
+        }
+
         var source = _sourceClassifier.분류(queue);
         var flow = _flowResolver.Resolve(queue, request);
 

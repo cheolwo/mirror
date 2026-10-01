@@ -1,0 +1,114 @@
+@if (Busy)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (Items.Count == 0)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@EmptyText</MudAlert>
+}
+else
+{
+    <MudTable T="입고요청항목응답"
+              Items="@Items"
+              Dense="true"
+              Hover="true"
+              Breakpoint="Breakpoint.Sm"
+              Elevation="0">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>업체</MudTh>
+            <MudTh>예정 품목</MudTh>
+            <MudTh>참조번호</MudTh>
+            <MudTh>입고 흐름</MudTh>
+            <MudTh>도착 예정</MudTh>
+            <MudTh>상태</MudTh>
+            @if (OnSelect.HasDelegate)
+            {
+                <MudTh></MudTh>
+            }
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ID">@context.Id</MudTd>
+            <MudTd DataLabel="업체">
+                <MudText Typo="Typo.body2">@context.공급처명</MudText>
+                @if (!string.IsNullOrWhiteSpace(context.공급처코드))
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.공급처코드</MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="예정 품목">
+                <MudText Typo="Typo.body2">@(string.IsNullOrWhiteSpace(context.예정상품명) ? "-" : context.예정상품명)</MudText>
+                @if (!string.IsNullOrWhiteSpace(context.예정SKU) || context.예정수량.HasValue)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@DisplayProductDetail(context)</MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="참조번호">@DisplayReference(context)</MudTd>
+            <MudTd DataLabel="입고 흐름">@입고흐름유형코드.GetDisplayName(context.입고흐름유형)</MudTd>
+            <MudTd DataLabel="도착 예정">@DisplayArrival(context.예정도착일)</MudTd>
+            <MudTd DataLabel="상태">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@StatusColor(context.상태)">
+                    @DisplayStatus(context.상태)
+                </MudChip>
+            </MudTd>
+            @if (OnSelect.HasDelegate)
+            {
+                <MudTd DataLabel="작업">
+                    <MudButton Size="Size.Small"
+                               Variant="Variant.Text"
+                               Color="Color.Primary"
+                               EndIcon="@Icons.Material.Filled.ChevronRight"
+                               OnClick="@(() => OnSelect.InvokeAsync(context))">
+                        @SelectLabel
+                    </MudButton>
+                </MudTd>
+            }
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<입고요청항목응답> Items { get; set; } = [];
+
+    [Parameter]
+    public bool Busy { get; set; }
+
+    [Parameter]
+    public string EmptyText { get; set; } = "조회된 입고 작업이 없습니다.";
+
+    [Parameter]
+    public string SelectLabel { get; set; } = "선택";
+
+    [Parameter]
+    public EventCallback<입고요청항목응답> OnSelect { get; set; }
+
+    private static string DisplayReference(입고요청항목응답 item)
+        => !string.IsNullOrWhiteSpace(item.주문참조번호)
+            ? item.주문참조번호
+            : !string.IsNullOrWhiteSpace(item.원주문참조번호)
+                ? item.원주문참조번호
+                : "-";
+
+    private static string DisplayProductDetail(입고요청항목응답 item)
+        => string.Join(
+            " · ",
+            new[]
+            {
+                item.예정SKU,
+                item.예정수량.HasValue ? $"{item.예정수량.Value:N0}개" : string.Empty
+            }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private static string DisplayArrival(DateTime? value)
+        => value?.ToString("yyyy-MM-dd HH:mm") ?? "미정";
+
+    private static string DisplayStatus(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "대기" : value;
+
+    private static Color StatusColor(string? value)
+        => value?.Contains("완료", StringComparison.OrdinalIgnoreCase) == true
+            ? Color.Success
+            : value?.Contains("취소", StringComparison.OrdinalIgnoreCase) == true
+                ? Color.Error
+                : Color.Default;
+}

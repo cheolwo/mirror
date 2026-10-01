@@ -13,16 +13,21 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
     <PackageReference Include="SkiaSharp" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Hongdal.Community\Hongdal.Community.csproj" />
     <ProjectReference Include="..\Hongdal.Domain\Hongdal.Domain.csproj" />
     <ProjectReference Include="..\Hongdal\Hongdal.csproj" />
     <ProjectReference Include="..\Hongdal.Client.Infrastructure\Hongdal.Client.Infrastructure.csproj" />
     <ProjectReference Include="..\Hongdal.Ui.Common\Hongdal.Ui.Common.csproj" />
+    <ProjectReference Include="..\Hongdal.WebApp\Hongdal.WebApp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

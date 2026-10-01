@@ -43,7 +43,7 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
         var freightWorkflowDecision = _freightWorkflowPolicy.Evaluate(
             new OperatingMarketFreightWorkflowRequest
             {
-                RequestsTransportationArrangement = true
+                ActivityCode = FreightWorkflowActivityCodes.QualifiedProviderParticipationRequest
             });
         if (!freightWorkflowDecision.CanProceed)
         {

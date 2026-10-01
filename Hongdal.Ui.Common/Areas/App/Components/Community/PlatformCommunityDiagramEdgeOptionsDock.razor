@@ -1,0 +1,151 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+
+<button type="button"
+        class="@BuildToggleClass()"
+        title="@BuildToggleLabel()"
+        aria-label="@BuildToggleLabel()"
+        @onclick="Toggle"
+        @onclick:stopPropagation="true"
+        @onpointerdown:stopPropagation="true"
+        @onpointerup:stopPropagation="true">
+    <MudIcon Icon="@BuildToggleIcon()" Size="Size.Small" />
+</button>
+<aside class="@BuildDockClass()"
+       aria-label="선 옵션"
+       @onclick:stopPropagation="true"
+       @onpointerdown:stopPropagation="true"
+       @onpointerup:stopPropagation="true">
+    <button type="button"
+            class="platform-ledger-mobile-dock-close"
+            aria-label="선 옵션 닫기"
+            @onclick="Toggle">
+        <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+    </button>
+    <div class="platform-ledger-edge-dock-content">
+        @if (SelectedEdge is null)
+        {
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.subtitle2">선 옵션</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    선을 선택하면 모양과 의미를 조정할 수 있습니다.
+                </MudText>
+            </MudStack>
+        }
+        else
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
+                <MudText Typo="Typo.subtitle2">선 속성</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                               Size="Size.Small"
+                               Color="Color.Default"
+                               OnClick="Collapse"
+                               aria-label="선 속성 닫기" />
+            </MudStack>
+            <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Filled">
+                @($"{SelectedEdge.FromTitle} -> {SelectedEdge.ToTitle}")
+            </MudChip>
+            @if (SelectedEdge.IsCustom)
+            {
+                <MudTextField T="string"
+                              Label="선 이름"
+                              Value="@SelectedEdge.Label"
+                              ValueChanged="@LabelChanged"
+                              Placeholder="화살표 의미"
+                              Immediate="true"
+                              Variant="Variant.Outlined"
+                              Class="platform-ledger-edge-label-input" />
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Error"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Delete"
+                           OnClick="@DeleteRequested">
+                    연결 삭제
+                </MudButton>
+            }
+            else
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">기본 연결</MudChip>
+            }
+            <MudSelect T="DiagramEdgeStyleKind"
+                       Label="선 모양"
+                       Value="@SelectedEdge.Style"
+                       ValueChanged="@StyleChanged"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense">
+                @foreach (var style in StyleOptions)
+                {
+                    <MudSelectItem T="DiagramEdgeStyleKind" Value="@style">@BuildStyleLabel(style)</MudSelectItem>
+                }
+            </MudSelect>
+            <div class="@BuildStylePreviewClass(SelectedEdge.Style)" aria-hidden="true">
+                <span></span>
+            </div>
+        }
+    </div>
+</aside>
+
+@code {
+    private static readonly IReadOnlyList<DiagramEdgeStyleKind> StyleOptions =
+    [
+        DiagramEdgeStyleKind.Curve,
+        DiagramEdgeStyleKind.Straight,
+        DiagramEdgeStyleKind.Elbow
+    ];
+
+    [Parameter, EditorRequired]
+    public PlatformCommunityDiagramCanvasViewModel Canvas { get; set; } = default!;
+
+    [Parameter]
+    public 원장블록연결선? SelectedEdge { get; set; }
+
+    [Parameter]
+    public EventCallback<string> LabelChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<DiagramEdgeStyleKind> StyleChanged { get; set; }
+
+    [Parameter]
+    public EventCallback DeleteRequested { get; set; }
+
+    private string BuildDockClass()
+    {
+        var state = Canvas.IsEdgeOptionDockCollapsed
+            ? " platform-ledger-edge-options-dock--collapsed"
+            : " platform-ledger-edge-options-dock--expanded";
+        var empty = SelectedEdge is null
+            ? " platform-ledger-edge-options-dock--empty"
+            : string.Empty;
+        return $"platform-ledger-edge-options-dock{state}{empty}";
+    }
+
+    private string BuildToggleClass()
+        => Canvas.IsEdgeOptionDockCollapsed
+            ? "platform-ledger-edge-dock-toggle platform-ledger-edge-dock-toggle--collapsed"
+            : "platform-ledger-edge-dock-toggle platform-ledger-edge-dock-toggle--expanded";
+
+    private string BuildToggleIcon()
+        => Canvas.IsEdgeOptionDockCollapsed
+            ? Icons.Material.Filled.ChevronLeft
+            : Icons.Material.Filled.ChevronRight;
+
+    private string BuildToggleLabel()
+        => Canvas.IsEdgeOptionDockCollapsed ? "선 옵션 열기" : "선 옵션 접기";
+
+    private void Toggle()
+        => Canvas.IsEdgeOptionDockCollapsed = !Canvas.IsEdgeOptionDockCollapsed;
+
+    private void Collapse()
+        => Canvas.IsEdgeOptionDockCollapsed = true;
+
+    private static string BuildStyleLabel(DiagramEdgeStyleKind style)
+        => style switch
+        {
+            DiagramEdgeStyleKind.Straight => "직선",
+            DiagramEdgeStyleKind.Elbow => "꺾은선",
+            _ => "곡선"
+        };
+
+    private static string BuildStylePreviewClass(DiagramEdgeStyleKind style)
+        => $"platform-ledger-edge-style-preview platform-ledger-edge-style-preview--{style.ToString().ToLowerInvariant()}";
+}

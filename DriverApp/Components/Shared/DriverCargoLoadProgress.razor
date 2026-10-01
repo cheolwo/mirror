@@ -1,0 +1,149 @@
+<section class="cargo-load-progress @(IsUnloading ? "cargo-load-progress--unloading" : "cargo-load-progress--loading")">
+    <div class="cargo-load-progress__heading">
+        <div>
+            <MudText Typo="Typo.subtitle1">@Title</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@Description</MudText>
+        </div>
+        <MudChip T="string"
+                 Size="Size.Small"
+                 Color="@ProgressColor"
+                 Variant="Variant.Filled">
+            @CompletionPercent%
+        </MudChip>
+    </div>
+
+    <div class="cargo-truck"
+         role="progressbar"
+         aria-label="@AriaLabel"
+         aria-valuemin="0"
+         aria-valuemax="100"
+         aria-valuenow="@CompletionPercent"
+         aria-valuetext="@AriaValueText">
+        <div class="cargo-truck__load-bed">
+            <div class="cargo-truck__fill" style="@VehicleFillStyle"></div>
+            <div class="cargo-truck__grid" aria-hidden="true"></div>
+            <span class="cargo-truck__load-label">@VehicleLoadLabel</span>
+        </div>
+        <div class="cargo-truck__cab" aria-hidden="true">
+            <div class="cargo-truck__window"></div>
+        </div>
+        <div class="cargo-truck__bumper" aria-hidden="true"></div>
+        <div class="cargo-truck__wheel cargo-truck__wheel--rear" aria-hidden="true"></div>
+        <div class="cargo-truck__wheel cargo-truck__wheel--front" aria-hidden="true"></div>
+    </div>
+
+    <div class="cargo-load-progress__bar" aria-hidden="true">
+        <div class="cargo-load-progress__bar-fill" style="@CompletionFillStyle"></div>
+    </div>
+
+    <div class="cargo-load-progress__summary">
+        <MudText Typo="Typo.body2">
+            <strong>@OperationLabel @CompletedItemCount/@(TotalItemCount)건</strong>
+        </MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">@BasisSummary</MudText>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<기사상차대상화물> CargoItems { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlySet<string> ConfirmedCargoCodes { get; set; } = new HashSet<string>();
+
+    [Parameter]
+    public bool IsUnloading { get; set; }
+
+    private int TotalItemCount { get; set; }
+
+    private int CompletedItemCount { get; set; }
+
+    private int CompletionPercent { get; set; }
+
+    private int VehicleFillPercent => IsUnloading ? 100 - CompletionPercent : CompletionPercent;
+
+    private decimal TotalBasisAmount { get; set; }
+
+    private decimal CompletedBasisAmount { get; set; }
+
+    private CargoProgressBasis Basis { get; set; }
+
+    private string Title => IsUnloading ? "차량 하차 모드" : "차량 상차 모드";
+
+    private string Description => IsUnloading
+        ? "화물 하차를 확인할 때마다 차량 적재함이 비워집니다."
+        : "화물 상차를 확인할 때마다 차량 적재함이 채워집니다.";
+
+    private string OperationLabel => IsUnloading ? "하차 확인" : "상차 확인";
+
+    private string VehicleLoadLabel => IsUnloading
+        ? $"차량 잔량 {VehicleFillPercent}%"
+        : $"차량 적재 {VehicleFillPercent}%";
+
+    private string AriaLabel => IsUnloading ? "차량 하차 진행률" : "차량 상차 진행률";
+
+    private string AriaValueText => $"{OperationLabel} {CompletionPercent}퍼센트, {VehicleLoadLabel}";
+
+    private string VehicleFillStyle => $"width: {VehicleFillPercent}%";
+
+    private string CompletionFillStyle => $"width: {CompletionPercent}%";
+
+    private Color ProgressColor => CompletionPercent >= 100 ? Color.Success : IsUnloading ? Color.Info : Color.Primary;
+
+    private string BasisSummary => Basis switch
+    {
+        CargoProgressBasis.Weight => $"중량 기준 {CompletedBasisAmount:0.##} / {TotalBasisAmount:0.##}kg",
+        CargoProgressBasis.Quantity => $"수량 기준 {CompletedBasisAmount:N0} / {TotalBasisAmount:N0}개",
+        _ => $"화물 건수 기준 {CompletedItemCount:N0} / {TotalItemCount:N0}건"
+    };
+
+    protected override void OnParametersSet()
+    {
+        TotalItemCount = CargoItems.Count;
+        var completedItems = CargoItems
+            .Where(item => ConfirmedCargoCodes.Contains(item.Code))
+            .ToArray();
+        CompletedItemCount = completedItems.Length;
+
+        Basis = ResolveBasis(CargoItems);
+        (TotalBasisAmount, CompletedBasisAmount) = Basis switch
+        {
+            CargoProgressBasis.Weight => (
+                CargoItems.Sum(item => item.중량Kg),
+                completedItems.Sum(item => item.중량Kg)),
+            CargoProgressBasis.Quantity => (
+                CargoItems.Sum(item => (decimal)item.수량),
+                completedItems.Sum(item => (decimal)item.수량)),
+            _ => (TotalItemCount, CompletedItemCount)
+        };
+
+        CompletionPercent = TotalBasisAmount <= 0
+            ? 0
+            : Math.Clamp(
+                (int)Math.Round(CompletedBasisAmount / TotalBasisAmount * 100m, MidpointRounding.AwayFromZero),
+                0,
+                100);
+    }
+
+    private static CargoProgressBasis ResolveBasis(IReadOnlyList<기사상차대상화물> items)
+    {
+        if (items.Count > 0 && items.All(item => item.중량Kg > 0))
+        {
+            return CargoProgressBasis.Weight;
+        }
+
+        if (items.Count > 0 && items.All(item => item.수량 > 0))
+        {
+            return CargoProgressBasis.Quantity;
+        }
+
+        return CargoProgressBasis.ItemCount;
+    }
+
+    private enum CargoProgressBasis
+    {
+        ItemCount,
+        Quantity,
+        Weight
+    }
+}

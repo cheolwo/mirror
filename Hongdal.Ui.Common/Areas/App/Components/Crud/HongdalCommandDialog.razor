@@ -1,0 +1,85 @@
+@typeparam TDraft
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inherits ViewModelParameterComponentBase<I명령ViewModel<TDraft>>
+@namespace Hongdal.Ui.Common.Areas.App.Components.Crud
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@ViewModel.다이얼로그정책.제목</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="2">
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                @ViewModel.다이얼로그정책.안내문구
+            </MudText>
+
+            @Content
+
+            @if (EditorContent is not null)
+            {
+                <MudForm @ref="_form">
+                    @EditorContent(ViewModel.초안)
+                </MudForm>
+            }
+
+            <HongdalOperationState ViewModel="@ViewModel" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Disabled="@ViewModel.처리중" OnClick="Cancel">
+            @ViewModel.다이얼로그정책.취소버튼문구
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="@ConfirmColor"
+                   Disabled="@(!ViewModel.실행가능)"
+                   OnClick="SubmitAsync">
+            @ViewModel.다이얼로그정책.확인버튼문구
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private MudForm? _form;
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment<TDraft>? EditorContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? Content { get; set; }
+
+    private Color ConfirmColor => ViewModel.다이얼로그정책.위험수준 switch
+    {
+        명령위험수준.파괴적 => Color.Error,
+        명령위험수준.주의 => Color.Warning,
+        _ => Color.Primary
+    };
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitAsync()
+    {
+        if (_form is not null)
+        {
+            await _form.ValidateAsync();
+            if (!_form.IsValid)
+            {
+                return;
+            }
+        }
+
+        var succeeded = await ViewModel.실행Async();
+        if (succeeded && !string.IsNullOrWhiteSpace(ViewModel.성공메시지))
+        {
+            Snackbar.Add(ViewModel.성공메시지, Severity.Success);
+        }
+
+        if (succeeded && ViewModel.다이얼로그정책.성공시닫기)
+        {
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+}

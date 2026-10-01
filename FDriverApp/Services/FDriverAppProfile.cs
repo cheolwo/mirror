@@ -5,7 +5,7 @@ namespace FDriverApp.Services;
 public sealed class FDriverAppProfile
 {
     public string AppKey { get; } = 기사앱식별자.FoodDeliveryDriverApp;
-    public string DisplayName { get; } = "홍달 음식 배달";
+    public string DisplayName { get; } = "살뜰 배달";
     public string DriverRole { get; } = "음식 배달 기사";
     public string DriverDomain { get; } = 기사도메인구분.음식배달;
     public string PrimaryWorkType { get; } = 기사업무유형코드.음식배달;

@@ -13,7 +13,7 @@
 | [HumanResourcesManagerApp](HumanResourcesManagerApp/) | 1 | 0 | 0 |
 | [OrdererApp](OrdererApp/) | 8 | 0 | 0 |
 | [RestaurantDeskApp](RestaurantDeskApp/) | 5 | 0 | 0 |
-| [ShipperApp](ShipperApp/) | 30 | 5 | 0 |
+| [HongdalApp](HongdalApp/) | 30 | 5 | 0 |
 | [WarehouseManagerApp](WarehouseManagerApp/) | 13 | 0 | 0 |
 
 ## 문서 형식

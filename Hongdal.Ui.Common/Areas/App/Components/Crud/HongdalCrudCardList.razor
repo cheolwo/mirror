@@ -1,0 +1,61 @@
+@typeparam TItem where TItem : class
+@namespace Hongdal.Ui.Common.Areas.App.Components.Crud
+
+@if (Loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="my-2" />
+}
+else if (!Items.Any())
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">@EmptyText</MudAlert>
+}
+else
+{
+    <MudGrid Spacing="2">
+        @foreach (var item in Items)
+        {
+            <MudItem xs="12" sm="6">
+                <MudCard Elevation="0"
+                         Class="@GetCardClass(item)"
+                         role="button"
+                         tabindex="0"
+                         @onclick="@(() => SelectItemAsync(item))"
+                         @onkeydown="@(args => HandleKeyDownAsync(args, item))">
+                    <MudCardContent>
+                        @CardContent(item)
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TItem> Items { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public RenderFragment<TItem> CardContent { get; set; } = default!;
+
+    [Parameter]
+    public TItem? SelectedItem { get; set; }
+
+    [Parameter]
+    public EventCallback<TItem> SelectedItemChanged { get; set; }
+
+    [Parameter]
+    public bool Loading { get; set; }
+
+    [Parameter]
+    public string EmptyText { get; set; } = "조회된 항목이 없습니다.";
+
+    private string GetCardClass(TItem item)
+        => EqualityComparer<TItem>.Default.Equals(item, SelectedItem)
+            ? "hongdal-crud-card hongdal-crud-card--selected"
+            : "hongdal-crud-card";
+
+    private Task SelectItemAsync(TItem item) => SelectedItemChanged.InvokeAsync(item);
+
+    private Task HandleKeyDownAsync(KeyboardEventArgs args, TItem item)
+        => args.Key is "Enter" or " " ? SelectItemAsync(item) : Task.CompletedTask;
+}

@@ -13,7 +13,7 @@
 
 ## 모듈 경계
 
-공통 채널 계층은 `ShipperApp.Services.Commerce` 아래에 둔다.
+공통 채널 계층은 `HongdalApp.Services.Commerce` 아래에 둔다.
 
 - `ICommerceChannelCatalog`: 앱에서 지원하는 판매채널 목록과 채널 식별자 해석
 - `CommerceChannelDescriptor`: 채널명, 외부 제공자명, 상품 CRUD 지원 여부, 연동 상태
@@ -22,9 +22,9 @@
 
 채널별 저수준 API 클라이언트는 제공자별 하위 네임스페이스에 둔다.
 
-- `ShipperApp.Services.Commerce.Naver`
-- `ShipperApp.Services.Commerce.Coupang`
-- `ShipperApp.Services.Commerce.Amazon`
+- `HongdalApp.Services.Commerce.Naver`
+- `HongdalApp.Services.Commerce.Coupang`
+- `HongdalApp.Services.Commerce.Amazon`
 
 ## 현재 동작
 

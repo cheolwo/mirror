@@ -9,4 +9,4 @@
 | 묶음 배달 | 포함 | 음식 배달 정책 | 도심 거리/시간 기준 |
 | 음식점 일반 배달 | 참조 | `RestaurantDeskApp`, `FDriverApp` | 3.0 흐름과 운영 경계 유지 |
 | 주문자 집단 공동 주문 | 참조 | `OrdererApp`, 공동 주문 서비스 | 2.5 흐름과 운영 경계 유지 |
-| 국내 화물/용달 핵심 변경 | 보류 | `DriverApp`, `ShipperApp` | 1.0 안정성 유지 |
+| 국내 화물/용달 핵심 변경 | 보류 | `DriverApp`, `HongdalApp` | 1.0 안정성 유지 |

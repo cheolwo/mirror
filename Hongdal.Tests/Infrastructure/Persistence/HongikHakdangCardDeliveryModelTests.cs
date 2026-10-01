@@ -36,6 +36,11 @@ public sealed class HongikHakdangCardDeliveryModelTests
 
         var installation = context.Model.FindEntityType(typeof(HongdalMobilePushInstallation))!;
         Assert.Equal(4096, installation.FindProperty(nameof(HongdalMobilePushInstallation.PushToken))!.GetMaxLength());
+
+        var card = context.Model.FindEntityType(typeof(HongikHakdangCard))!;
+        var collection = context.Model.FindEntityType(typeof(HongikHakdangCardCollection))!;
+        Assert.NotNull(card.FindProperty(nameof(HongikHakdangCard.IsAdminEnabled)));
+        Assert.NotNull(collection.FindProperty(nameof(HongikHakdangCardCollection.IsAdminEnabled)));
     }
 
     [Fact]
@@ -62,6 +67,12 @@ public sealed class HongikHakdangCardDeliveryModelTests
         Assert.Equal(
             "hongdal_mobile_push_installations",
             snapshot.Model.FindEntityType(typeof(HongdalMobilePushInstallation).FullName!)?.GetTableName());
+        Assert.NotNull(
+            snapshot.Model.FindEntityType(typeof(HongikHakdangCard).FullName!)
+                ?.FindProperty(nameof(HongikHakdangCard.IsAdminEnabled)));
+        Assert.NotNull(
+            snapshot.Model.FindEntityType(typeof(HongikHakdangCardCollection).FullName!)
+                ?.FindProperty(nameof(HongikHakdangCardCollection.IsAdminEnabled)));
     }
 
     private static void AssertEntityTable<TEntity>(HongdalContext context, string tableName)

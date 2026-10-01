@@ -1,0 +1,36 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@inherits MvvmComponentBase<YouTubeFoodCommunityDiscoveryViewModel>
+@using Hongdal.Ui.Common.Areas.App.Services
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inject PlatformCommunityPostDraftStateService CommunityPostDrafts
+@inject NavigationManager Navigation
+
+<PageTitle>음식 영상 발견</PageTitle>
+
+<main class="community-food-workspace">
+    <header class="community-food-workspace__header">
+        <a href="/community" aria-label="커뮤니티 글 목록으로 돌아가기">
+            <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+            글 목록
+        </a>
+        <div>
+            <span>FOOD DISCOVERY</span>
+            <h1>영상에서 발견한 음식</h1>
+            <p>음식 영상을 정보 글로 나누고, 사람들의 관심이 모인 뒤에만 공동구매나 수입 검토로 이어갑니다.</p>
+        </div>
+    </header>
+
+    <CommunityYouTubeFoodDiscovery ViewModel="@ViewModel"
+                                   ShareRequested="ShareToCommunity" />
+</main>
+
+@code {
+    protected override async Task OnInitializedAsync()
+        => await ViewModel.LoadAsync(forceRefresh: false);
+
+    private void ShareToCommunity(PlatformCommunityPostDraft draft)
+    {
+        CommunityPostDrafts.Prepare(draft);
+        Navigation.NavigateTo("/community/write");
+    }
+}

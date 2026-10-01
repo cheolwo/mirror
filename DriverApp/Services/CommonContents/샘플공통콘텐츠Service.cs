@@ -16,11 +16,11 @@ public sealed class 샘플공통콘텐츠Service : I공통콘텐츠Service
         var dto = new 홍달위젯콘텐츠Dto
         {
             콘텐츠Id = 1,
-            제목 = 위치.Equals("lock", StringComparison.OrdinalIgnoreCase) ? "홍달 잠금화면 콘텐츠" : "홍달 홈 위젯 콘텐츠",
-            설명 = "홍달 공통콘텐츠 샘플 카드",
+            제목 = 위치.Equals("lock", StringComparison.OrdinalIgnoreCase) ? "살뜰 잠금화면 콘텐츠" : "살뜰 홈 위젯 콘텐츠",
+            설명 = "살뜰 공통콘텐츠 샘플 카드",
             이미지Url = null,
             이동Url = "https://example.invalid/hongdal-common-content",
-            상태문구 = "홍달과 연결됨"
+            상태문구 = "살뜰과 연결됨"
         };
 
         return Task.FromResult<홍달위젯콘텐츠Dto?>(dto);

@@ -225,6 +225,14 @@
     font-weight: 700;
 }
 
+.ledger-diagram-detail__node-organization-count {
+    margin-left: auto;
+    color: #526174;
+    font-size: 0.62rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
 .ledger-diagram-detail__node-icon {
     display: grid;
     width: 21px;
@@ -243,11 +251,18 @@
 }
 
 .ledger-diagram-detail__node > strong,
+.ledger-diagram-detail__node-assignee,
 .ledger-diagram-detail__node-state {
     width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.ledger-diagram-detail__node-assignee,
+.ledger-diagram-detail__mobile-assignee {
+    color: #335f79;
+    font-size: 0.66rem;
 }
 
 .ledger-diagram-detail__node > strong {
@@ -270,6 +285,67 @@
     flex: 0 0 7px;
     border-radius: 50%;
     background: var(--state-accent);
+}
+
+.ledger-diagram-detail__assignees {
+    display: grid;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #e1e6ed;
+    color: #405064;
+    font-size: 0.78rem;
+}
+
+.ledger-diagram-detail__organizations {
+    display: grid;
+    gap: 9px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #e1e6ed;
+}
+
+.ledger-diagram-detail__organizations-heading,
+.ledger-diagram-detail__organizations article > div:first-child,
+.ledger-diagram-detail__organization-links {
+    display: flex;
+    align-items: center;
+}
+
+.ledger-diagram-detail__organizations-heading {
+    justify-content: space-between;
+    gap: 8px;
+    color: #30445f;
+    font-size: 0.8rem;
+}
+
+.ledger-diagram-detail__organizations article {
+    display: grid;
+    gap: 6px;
+    padding: 9px 0;
+    border-bottom: 1px solid #edf0f4;
+}
+
+.ledger-diagram-detail__organizations article > div:first-child {
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.ledger-diagram-detail__organizations article strong,
+.ledger-diagram-detail__organizations article span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.ledger-diagram-detail__organizations article span,
+.ledger-diagram-detail__organizations > small {
+    color: #697386;
+    font-size: 0.72rem;
+}
+
+.ledger-diagram-detail__organization-links {
+    gap: 12px;
+    font-size: 0.74rem;
 }
 
 .ledger-diagram-detail__kind--participant {

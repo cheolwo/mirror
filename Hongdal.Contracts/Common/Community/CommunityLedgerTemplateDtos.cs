@@ -1,3 +1,5 @@
+using Hongdal.Contracts.Common.Versioning;
+
 namespace Hongdal.Contracts.Common.Community;
 
 public sealed class CommunityLedgerTemplateResponse
@@ -11,6 +13,8 @@ public sealed class CommunityLedgerTemplateResponse
     public string OperatingSystemRoleCode { get; set; } = CommunityLedgerOperatingSystemRoleCodes.Scheduler;
     public string OperatingSystemRoleSummary { get; set; } = "OS는 원장 상태와 구성 규칙을 기준으로 API/엔진 호출 순서, 큐, 재시도, 후속 원장 생성을 조율합니다.";
     public string Summary { get; set; } = string.Empty;
+    public bool IsCommunityOpportunityTemplate { get; set; }
+    public bool IsInternalAggregationTemplate { get; set; }
     public string 원함확인질문 { get; set; } = "무엇을 원하나요?";
     public string 원함확인설명 { get; set; } = "원장은 사용자가 원하는 일을 바로 실행하기 전에, 그 원함을 참여자와 시스템이 함께 이해할 수 있는 업무 모양으로 정리하는 단계입니다.";
     public IReadOnlyList<string> 원함확인질문목록 { get; set; } =
@@ -427,6 +431,7 @@ public sealed class CommunityLedgerExperienceEventResponse
 public static class CommunityLedgerTemplateKeys
 {
     public const string Order = "order";
+    public const string GroupOrder = "group-order";
     public const string CargoTransport = "cargo-transport";
     public const string FoodOrder = "food-order";
     public const string FoodDelivery = "food-delivery";
@@ -435,6 +440,8 @@ public static class CommunityLedgerTemplateKeys
     public const string WarehouseInbound = "warehouse-inbound";
     public const string LocalSale = "local-sale";
     public const string GroupPurchase = "group-purchase";
+    public const string GroupImport = "group-import";
+    public const string MeatImportReadiness = "meat-import-readiness";
     public const string Errand = "errand";
 }
 
@@ -442,6 +449,7 @@ public static class CommunityLedgerImplementationModuleCodes
 {
     public const string CommunityConversation = "community-conversation";
     public const string WishLedgerAssessment = "wish-ledger-assessment";
+    public const string GroupOrderAggregation = "group-order-aggregation";
     public const string OrderRoot = "order-root";
     public const string CargoTransport = "cargo-transport";
     public const string TransportProgress = "transport-progress";
@@ -471,6 +479,7 @@ public static class CommunityLedgerRelationTypes
 
 public static class 주문원장포함역할
 {
+    public const string 주문집계 = "주문집계";
     public const string 개별주문 = "개별주문";
     public const string 판매 = "판매";
     public const string 창고입고 = "창고입고";
@@ -480,12 +489,31 @@ public static class 주문원장포함역할
 
     public static IReadOnlySet<string> All { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
+        주문집계,
         개별주문,
         판매,
         창고입고,
         창고출고,
         배송,
         운송
+    };
+}
+
+public static class 공동수입원장관계역할
+{
+    public const string 원천공동구매 = "원천공동구매";
+    public const string 국제운송 = "국제운송";
+    public const string 국내운송 = "국내운송";
+    public const string 물류거점입고 = "물류거점입고";
+    public const string 물류거점출고 = "물류거점출고";
+
+    public static IReadOnlySet<string> All { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        원천공동구매,
+        국제운송,
+        국내운송,
+        물류거점입고,
+        물류거점출고
     };
 }
 
@@ -538,12 +566,12 @@ public static class CommunityLedgerExperienceEventCodes
 
 public static class CommunityLedgerOperatingSystemCodes
 {
-    public const string CommunityTrust = "CommunityTrustOS";
-    public const string DomesticCargoTransport = "DomesticCargoTransportOS";
-    public const string FoodDelivery = "FoodDeliveryOS";
-    public const string HongdalMartUrbanLogistics = "HongdalMartUrbanLogisticsOS";
-    public const string WarehouseCommerceFulfillment = "WarehouseCommerceFulfillmentOS";
-    public const string GroupPurchaseImport = "GroupPurchaseImportOS";
+    public const string CommunityTrust = OperatingSystemIds.CommunityTrust;
+    public const string DomesticCargoTransport = OperatingSystemIds.DomesticCargoTransport;
+    public const string FoodDelivery = OperatingSystemIds.FoodDelivery;
+    public const string HongdalMartUrbanLogistics = OperatingSystemIds.HongdalMartUrbanLogistics;
+    public const string WarehouseCommerceFulfillment = OperatingSystemIds.WarehouseCommerceFulfillment;
+    public const string GroupPurchaseImport = OperatingSystemIds.GroupPurchaseImport;
 }
 
 public static class CommunityLedgerOperatingSystemRoleCodes
@@ -565,6 +593,8 @@ public static class CommunityLedgerEngineHints
 public static class CommunityLedgerCompositionRuleCodes
 {
     public const string OrderBeforeFulfillment = "OrderBeforeFulfillment";
+    public const string GroupPurchaseAgreementBeforeGroupOrder = "GroupPurchaseAgreementBeforeGroupOrder";
+    public const string GroupOrderRequiresIndividualOrders = "GroupOrderRequiresIndividualOrders";
     public const string GroupPurchaseRequiresIndividualOrders = "GroupPurchaseRequiresIndividualOrders";
     public const string TransportRequestBeforePickupDropoff = "TransportRequestBeforePickupDropoff";
     public const string FoodOrderBeforeDelivery = "FoodOrderBeforeDelivery";
@@ -577,6 +607,7 @@ public static class CommunityLedgerCompositionRuleCodes
     public const string GroupPurchaseDemandBeforeImportDecision = "GroupPurchaseDemandBeforeImportDecision";
     public const string GroupPurchaseImportDecisionBeforeShipment = "GroupPurchaseImportDecisionBeforeShipment";
     public const string GroupPurchaseCustomsBeforeDomesticDistribution = "GroupPurchaseCustomsBeforeDomesticDistribution";
+    public const string CommunityDiscussionBeforeMeatImportReadiness = "CommunityDiscussionBeforeMeatImportReadiness";
     public const string RequestAndParticipantBeforeProgress = "RequestAndParticipantBeforeProgress";
 }
 

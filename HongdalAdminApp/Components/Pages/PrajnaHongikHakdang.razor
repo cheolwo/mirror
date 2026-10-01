@@ -1,0 +1,476 @@
+@page "/prajna/hongik-hakdang"
+@implements IDisposable
+@inject AdminAuthSession Session
+@inject HongikHakdangAdminService AdminService
+@inject NavigationManager Navigation
+
+<PageTitle>반야 · 지식·성찰 자료 관리</PageTitle>
+
+<MudStack Spacing="3">
+    <div class="admin-page-header">
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.overline" Color="Color.Primary">般若 · INTERNAL REVIEW</MudText>
+            <MudText Typo="Typo.h4">지식·성찰 자료 관리</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                홍익학당을 포함한 여러 자기계발·철학·종교 교육 채널의 공개 자료를 같은 기준으로 검토합니다. 채널 수집과 반야 게시는 별도로 승인하며 제휴나 관점의 우열을 의미하지 않습니다.
+            </MudText>
+        </MudStack>
+        <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+            <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="OpenPrajnaHub">
+                반야 사방괘
+            </MudButton>
+            @if (Session.IsServerAdmin)
+            {
+                <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined">서버관리자 전용</MudChip>
+            }
+        </MudStack>
+    </div>
+
+    @if (!Session.IsServerAdmin)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+            서버관리자 로그인이 필요합니다.
+            <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="OpenLogin">로그인</MudButton>
+        </MudAlert>
+    }
+    else
+    {
+        <section id="policy">
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                카드는 `반야 게시 승인`, 영상은 `채널 반야 허용`과 영상별 `공개`가 모두 필요합니다. 전체 반야 배치 설정이 켜진 경우에만 승인 항목을 한 번에 하나씩 게시하며, 모바일 카드 배포는 별도 기능입니다.
+            </MudAlert>
+        </section>
+
+        <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Sync" Disabled="@isBusy" OnClick="SyncCardsAsync">
+                카드 동기화
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Image" Disabled="@isBusy" OnClick="PrepareVariantsAsync">
+                파생 이미지 준비
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.VideoLibrary" Disabled="@isBusy" OnClick="SyncYouTubeAsync">
+                YouTube 동기화
+            </MudButton>
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@isBusy" OnClick="LoadAsync">
+                새로고침
+            </MudButton>
+        </MudStack>
+
+        @if (!string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <MudAlert Severity="@statusSeverity" Dense="true">@statusMessage</MudAlert>
+        }
+
+        @if (isLoading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+        }
+        else if (snapshot is not null)
+        {
+            <MudGrid>
+                <MudItem xs="12" sm="6" lg="3">
+                    <MetricCard Title="카드 묶음" Value="@snapshot.Collections.Count.ToString()" Description="수집된 컬렉션" Icon="@Icons.Material.Filled.Collections" AccentColor="Color.Primary" />
+                </MudItem>
+                <MudItem xs="12" sm="6" lg="3">
+                    <MetricCard Title="고유 카드" Value="@UniqueCardCount.ToString()" Description="중복 제외 카드" Icon="@Icons.Material.Filled.Style" AccentColor="Color.Info" />
+                </MudItem>
+                <MudItem xs="12" sm="6" lg="3">
+                    <MetricCard Title="감시 채널" Value="@snapshot.Channels.Count.ToString()" Description="관리자가 등록한 채널" Icon="@Icons.Material.Filled.Subscriptions" AccentColor="Color.Secondary" />
+                </MudItem>
+                <MudItem xs="12" sm="6" lg="3">
+                    <MetricCard Title="감지 영상" Value="@snapshot.Videos.Count.ToString()" Description="최근 100건 이내" Icon="@Icons.Material.Filled.SmartDisplay" AccentColor="Color.Success" />
+                </MudItem>
+            </MudGrid>
+
+            <section id="cards">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6">수집 카드 · 검토 및 반야 게시 승인</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        원본 사이트에서 감지된 상태와 별개로, 관리자가 검토에 사용할 묶음과 카드를 켜거나 끌 수 있습니다. 설정은 다음 동기화 후에도 유지됩니다.
+                    </MudText>
+                    @if (snapshot.Collections.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">수집된 카드가 없습니다. 카드 동기화를 실행해 주세요.</MudText>
+                    }
+                    else
+                    {
+                        @foreach (var collection in snapshot.Collections)
+                        {
+                            <MudExpansionPanels Elevation="0">
+                                <MudExpansionPanel Text="@($"{collection.Name} · 카드 {collection.Cards.Count}개")">
+                                    <TitleContent>
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap" Style="width: 100%; padding-right: 12px;">
+                                            <MudStack Spacing="0">
+                                                <MudText Typo="Typo.subtitle1">@collection.Name</MudText>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">@collection.SourceKey · 카드 @(collection.Cards.Count)개</MudText>
+                                            </MudStack>
+                                            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                                <MudChip T="string" Size="Size.Small" Color="@(collection.IsActive ? Color.Info : Color.Default)" Variant="Variant.Outlined">
+                                                    원본 @(collection.IsActive ? "감지" : "미감지")
+                                                </MudChip>
+                                                <MudChip T="string" Size="Size.Small" Color="@(collection.IsAdminEnabled ? Color.Success : Color.Warning)" Variant="Variant.Filled">
+                                                    관리자 @(collection.IsAdminEnabled ? "ON" : "OFF")
+                                                </MudChip>
+                                            </MudStack>
+                                        </MudStack>
+                                    </TitleContent>
+                                    <ChildContent>
+                                        <MudStack Spacing="2">
+                                            <MudButton Size="Size.Small"
+                                                       Variant="Variant.Outlined"
+                                                       Color="@(collection.IsAdminEnabled ? Color.Warning : Color.Success)"
+                                                       StartIcon="@(collection.IsAdminEnabled ? Icons.Material.Filled.ToggleOff : Icons.Material.Filled.ToggleOn)"
+                                                       Disabled="@isBusy"
+                                                       OnClick="@(() => ToggleCollectionAsync(collection))">
+                                                묶음 @(collection.IsAdminEnabled ? "끄기" : "켜기")
+                                            </MudButton>
+
+                                            <MudGrid Spacing="2">
+                                                @foreach (var card in collection.Cards)
+                                                {
+                                                    <MudItem xs="12" sm="6" lg="4" xl="3">
+                                                        <MudPaper Elevation="0" Outlined="true" Class="pa-3 h-100">
+                                                            <MudStack Spacing="2">
+                                                                <div class="admin-card-preview">
+                                                                    <img src="@GetPreviewUrl(card)" alt="@CardTitle(card)" loading="lazy" />
+                                                                </div>
+                                                                <MudText Typo="Typo.subtitle2">@CardTitle(card)</MudText>
+                                                                @if (!string.IsNullOrWhiteSpace(card.Description))
+                                                                {
+                                                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="admin-card-description">@card.Description</MudText>
+                                                                }
+                                                                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                                                    <MudChip T="string" Size="Size.Small" Color="@(card.IsActive ? Color.Info : Color.Default)" Variant="Variant.Outlined">
+                                                                        원본 @(card.IsActive ? "감지" : "미감지")
+                                                                    </MudChip>
+                                                                    <MudChip T="string" Size="Size.Small" Color="@(card.IsAdminEnabled ? Color.Success : Color.Warning)" Variant="Variant.Filled">
+                                                                        관리자 @(card.IsAdminEnabled ? "ON" : "OFF")
+                                                                    </MudChip>
+                                                                    <MudChip T="string" Size="Size.Small" Color="@(card.IsCommunityPublicationApproved ? Color.Primary : Color.Default)" Variant="Variant.Outlined">
+                                                                        반야 게시 @(card.IsCommunityPublicationApproved ? "승인" : "미승인")
+                                                                    </MudChip>
+                                                                </MudStack>
+                                                                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                                                    <MudButton Size="Size.Small"
+                                                                               Variant="Variant.Text"
+                                                                               StartIcon="@Icons.Material.Filled.ImageSearch"
+                                                                               Disabled="@isBusy"
+                                                                               OnClick="@(() => LoadCardPreviewAsync(card))">
+                                                                        저장 이미지 보기
+                                                                    </MudButton>
+                                                                    <MudButton Size="Size.Small"
+                                                                               Variant="Variant.Outlined"
+                                                                               Color="@(card.IsAdminEnabled ? Color.Warning : Color.Success)"
+                                                                               Disabled="@isBusy"
+                                                                               OnClick="@(() => ToggleCardAsync(card))">
+                                                                        @(card.IsAdminEnabled ? "끄기" : "켜기")
+                                                                    </MudButton>
+                                                                    <MudButton Size="Size.Small"
+                                                                               Variant="Variant.Filled"
+                                                                               Color="@(card.IsCommunityPublicationApproved ? Color.Warning : Color.Primary)"
+                                                                               Disabled="@isBusy"
+                                                                               OnClick="@(() => ToggleCardCommunityPublicationAsync(card))">
+                                                                        @(card.IsCommunityPublicationApproved ? "게시 승인 해제" : "반야 게시 승인")
+                                                                    </MudButton>
+                                                                </MudStack>
+                                                            </MudStack>
+                                                        </MudPaper>
+                                                    </MudItem>
+                                                }
+                                            </MudGrid>
+                                        </MudStack>
+                                    </ChildContent>
+                                </MudExpansionPanel>
+                            </MudExpansionPanels>
+                        }
+                    }
+                </MudStack>
+            </MudPaper>
+            </section>
+
+            <section id="videos">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6">YouTube 감시 채널</MudText>
+                    <MudTable Items="snapshot.Channels" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
+                        <HeaderContent>
+                            <MudTh>채널</MudTh>
+                            <MudTh>관점·분류</MudTh>
+                            <MudTh>상태</MudTh>
+                            <MudTh>마지막 동기화</MudTh>
+                            <MudTh>반야 게시</MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="channel">
+                            <MudTd DataLabel="채널">
+                                <MudText Typo="Typo.body2">@channel.채널명</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@channel.ChannelId</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="관점·분류">
+                                <MudText Typo="Typo.body2">@(string.IsNullOrWhiteSpace(channel.관점표시) ? "미분류" : channel.관점표시)</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@string.Join(" · ", channel.지식성찰분류목록)</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="상태">@(channel.활성화여부 ? "활성" : "중지")</MudTd>
+                            <MudTd DataLabel="마지막 동기화">@FormatDate(channel.마지막동기화일시Utc)</MudTd>
+                            <MudTd DataLabel="반야 게시">
+                                <MudButton Size="Size.Small"
+                                           Variant="Variant.Outlined"
+                                           Color="@(channel.반야게시허용여부 ? Color.Warning : Color.Primary)"
+                                           Disabled="@(isBusy || (!channel.지식성찰채널여부 && !channel.반야게시허용여부))"
+                                           OnClick="@(() => ToggleChannelPrajnaPublicationAsync(channel))">
+                                    @(channel.반야게시허용여부 ? "채널 승인 해제" : channel.지식성찰채널여부 ? "채널 반야 허용" : "프로필 확인 필요")
+                                </MudButton>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudStack>
+            </MudPaper>
+            </section>
+
+            <section id="review">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6">영상 검토 · 반야 게시 승인</MudText>
+                    <MudTable Items="snapshot.Videos" Dense="true" Hover="true" Breakpoint="Breakpoint.Md">
+                        <HeaderContent>
+                            <MudTh>영상</MudTh>
+                            <MudTh>상태</MudTh>
+                            <MudTh>감지일</MudTh>
+                            <MudTh>관리</MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="video">
+                            <MudTd DataLabel="영상">
+                                <MudText Typo="Typo.body2">@video.제목</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@video.채널명</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="상태">@video.공유상태</MudTd>
+                            <MudTd DataLabel="감지일">@FormatDate(video.최초감지일시Utc)</MudTd>
+                            <MudTd DataLabel="관리">
+                                <MudButton Size="Size.Small"
+                                           Variant="Variant.Text"
+                                           Color="@(IsApproved(video) ? Color.Secondary : Color.Primary)"
+                                           Disabled="@(isBusy || !IsChannelPrajnaAllowed(video))"
+                                           OnClick="@(() => TogglePublicationAsync(video))">
+                                    @(IsChannelPrajnaAllowed(video) ? (IsApproved(video) ? "게시 승인 해제" : "반야 게시 승인") : "채널 승인 필요")
+                                </MudButton>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudStack>
+            </MudPaper>
+            </section>
+
+            <MudDivider />
+            <HongdalPrajnaLectureLibrary ShowCommunityShare="false"
+                                          ShowDecorationLinks="false" />
+        }
+    }
+</MudStack>
+
+@code {
+    private HongikHakdangAdminSnapshot? snapshot;
+    private bool isLoading;
+    private bool isBusy;
+    private string? statusMessage;
+    private Severity statusSeverity = Severity.Info;
+    private readonly Dictionary<long, string> previewUrls = [];
+
+    private int UniqueCardCount
+        => snapshot?.Collections
+               .SelectMany(collection => collection.Cards)
+               .Select(card => card.Id)
+               .Distinct()
+               .Count()
+           ?? 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Session.Changed += HandleSessionChanged;
+        await Session.RestoreAsync();
+        if (Session.IsServerAdmin)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private void OpenLogin() => Navigation.NavigateTo("/login");
+
+    private void OpenPrajnaHub() => Navigation.NavigateTo("/prajna");
+
+    private async Task LoadAsync()
+    {
+        if (!Session.IsServerAdmin)
+        {
+            return;
+        }
+
+        isLoading = true;
+        try
+        {
+            snapshot = await AdminService.LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            statusSeverity = Severity.Error;
+            statusMessage = $"자료를 불러오지 못했습니다: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SyncCardsAsync()
+    {
+        await RunActionAsync(async () =>
+        {
+            var result = await AdminService.SyncCardsAsync();
+            return result.Message;
+        });
+    }
+
+    private async Task PrepareVariantsAsync()
+    {
+        await RunActionAsync(async () =>
+        {
+            var result = await AdminService.PrepareVariantsAsync();
+            return $"파생 이미지 {result.GeneratedVariantCount}개를 만들고 {result.ReusedVariantCount}개를 재사용했습니다.";
+        });
+    }
+
+    private Task ToggleCollectionAsync(HongikHakdangCardCollectionDto collection)
+        => RunActionAsync(async () =>
+        {
+            var result = await AdminService.SetCollectionActivationAsync(collection.Id, !collection.IsAdminEnabled);
+            return result.Message;
+        });
+
+    private Task ToggleCardAsync(HongikHakdangCardDto card)
+        => RunActionAsync(async () =>
+        {
+            var result = await AdminService.SetCardActivationAsync(card.Id, !card.IsAdminEnabled);
+            return result.Message;
+        });
+
+    private Task ToggleCardCommunityPublicationAsync(HongikHakdangCardDto card)
+        => RunActionAsync(async () =>
+        {
+            var result = await AdminService.SetCardCommunityPublicationAsync(
+                card.Id,
+                !card.IsCommunityPublicationApproved);
+            return result.Message;
+        });
+
+    private async Task LoadCardPreviewAsync(HongikHakdangCardDto card)
+    {
+        if (isBusy)
+        {
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            var dataUrl = await AdminService.GetCardImageDataUrlAsync(card.Id);
+            if (dataUrl is null)
+            {
+                statusSeverity = Severity.Warning;
+                statusMessage = "서버에 저장된 원본 이미지가 없어 외부 미리보기를 유지합니다.";
+                return;
+            }
+
+            previewUrls[card.Id] = dataUrl;
+            statusSeverity = Severity.Success;
+            statusMessage = "서버에 저장된 카드 이미지를 불러왔습니다.";
+        }
+        catch (Exception ex)
+        {
+            statusSeverity = Severity.Error;
+            statusMessage = $"카드 이미지를 불러오지 못했습니다: {ex.Message}";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task SyncYouTubeAsync()
+    {
+        await RunActionAsync(async () =>
+        {
+            var result = await AdminService.SyncYouTubeAsync();
+            return result.메시지;
+        });
+    }
+
+    private async Task TogglePublicationAsync(YouTube채널영상Dto video)
+    {
+        await RunActionAsync(async () =>
+        {
+            var approve = !IsApproved(video);
+            await AdminService.SetVideoPublicationAsync(video.VideoId, approve);
+            return approve
+                ? "영상을 반야 게시 후보로 승인했습니다. 배치가 활성화되면 순서대로 게시합니다."
+                : "영상의 반야 게시 승인을 해제했습니다.";
+        });
+    }
+
+    private Task ToggleChannelPrajnaPublicationAsync(YouTube감시채널Dto channel)
+        => RunActionAsync(async () =>
+        {
+            var allow = !channel.반야게시허용여부;
+            await AdminService.SetChannelPrajnaPublicationAsync(channel.ChannelId, allow);
+            return allow
+                ? $"{channel.채널명} 채널을 반야 영상 후보 출처로 허용했습니다. 영상별 공개 승인은 별도로 유지됩니다."
+                : $"{channel.채널명} 채널의 반야 게시 허용을 해제했습니다.";
+        });
+
+    private bool IsChannelPrajnaAllowed(YouTube채널영상Dto video)
+        => snapshot?.Channels.Any(channel =>
+               channel.반야게시허용여부
+               && string.Equals(channel.ChannelId, video.ChannelId, StringComparison.Ordinal)) == true;
+
+    private async Task RunActionAsync(Func<Task<string>> action)
+    {
+        if (isBusy)
+        {
+            return;
+        }
+
+        isBusy = true;
+        statusMessage = null;
+        try
+        {
+            statusMessage = await action();
+            statusSeverity = Severity.Success;
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            statusSeverity = Severity.Error;
+            statusMessage = $"관리 작업에 실패했습니다: {ex.Message}";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private static bool IsApproved(YouTube채널영상Dto video)
+        => string.Equals(video.공유상태, "공개", StringComparison.Ordinal);
+
+    private string GetPreviewUrl(HongikHakdangCardDto card)
+        => previewUrls.TryGetValue(card.Id, out var dataUrl)
+            ? dataUrl
+            : card.ThumbnailImageUrl ?? card.OriginalImageUrl;
+
+    private static string CardTitle(HongikHakdangCardDto card)
+        => string.IsNullOrWhiteSpace(card.Title) ? $"카드 #{card.Id}" : card.Title;
+
+    private static string FormatDate(DateTime? value)
+        => value?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-";
+
+    private void HandleSessionChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Session.Changed -= HandleSessionChanged;
+}

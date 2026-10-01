@@ -9,14 +9,20 @@
     <Project Path="HongdalAdmin/HongdalAdmin.csproj">
       <Build Solution="Debug|*" Project="false" />
     </Project>
+    <Project Path="HongdalAdminApp/HongdalAdminApp.csproj">
+      <Deploy Solution="Debug|*" />
+    </Project>
     <Project Path="OrdererApp/OrdererApp.csproj" />
     <Project Path="RestaurantDeskApp/RestaurantDeskApp.csproj" />
-    <Project Path="ShipperApp/ShipperApp.csproj">
+    <Project Path="HongdalApp/HongdalApp.csproj">
       <Deploy Solution="Debug|*" />
     </Project>
     <Project Path="WarehouseManagerApp/WarehouseManagerApp.csproj">
       <Deploy Solution="Debug|*" />
     </Project>
+  </Folder>
+  <Folder Name="/Server Modules/">
+    <Project Path="Hongdal.Community/Hongdal.Community.csproj" />
   </Folder>
   <Folder Name="/Server/">
     <Project Path="docker-compose.dcproj">

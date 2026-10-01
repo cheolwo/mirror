@@ -1,6 +1,7 @@
 using FluentResults;
 using Hongdal.ApiMetadata;
 using Hongdal.Contracts.Common.Community;
+using Hongdal.Contracts.Common.Metadata;
 
 namespace Hongdal.Services.Community;
 
@@ -20,6 +21,12 @@ public interface I커뮤니티대화UseCase
         CancellationToken cancellationToken);
 }
 
+[HongdalCommunityV0Module(
+    HongdalCommunityV0ModuleKeys.Participation,
+    HongdalModuleKind.Application,
+    "공동 원장과 다이어그램에 연결된 대화방·메시지 맥락을 조회",
+    ReleaseStage = HongdalCommunityV0ReleaseStages.ClosedLoop,
+    Boundary = "대화 기록은 참여자의 합의를 대신하지 않으며 연락처와 비공개 참여 정보는 권한 범위 안에서만 조회해야 합니다.")]
 [HongdalApiWorkflow(HongdalWorkflow.CommunityTrust)]
 [HongdalUseCase("커뮤니티 다이어그램 대화 조회", Summary = "다이어그램 대화방과 저장된 메시지를 조회해 커뮤니티 소통 맥락을 복원합니다.")]
 [HongdalUseCaseActor(HongdalActor.CommunityMember)]

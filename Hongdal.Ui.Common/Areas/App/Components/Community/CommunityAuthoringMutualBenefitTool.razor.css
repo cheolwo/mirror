@@ -1,0 +1,114 @@
+.community-mutual-benefit-tool {
+    display: grid;
+    gap: 14px;
+    padding: 14px;
+}
+
+.community-mutual-benefit-tool__heading,
+.community-mutual-benefit-tool__role-heading,
+.community-mutual-benefit-role > header,
+.community-mutual-benefit-result > header {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.community-mutual-benefit-tool__shared-rules,
+.community-mutual-benefit-tool__roles,
+.community-mutual-benefit-result {
+    display: grid;
+    gap: 10px;
+}
+
+.community-mutual-benefit-tool__rule-grid,
+.community-mutual-benefit-tool__evidence-grid,
+.community-mutual-benefit-role__identity,
+.community-mutual-benefit-role__numbers {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.community-mutual-benefit-tool__evidence-grid {
+    grid-template-columns: minmax(0, 1fr) 96px;
+}
+
+.community-mutual-benefit-tool__role-actions,
+.community-mutual-benefit-tool__controls {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+}
+
+.community-mutual-benefit-role {
+    border-block-start: 1px solid var(--mud-palette-lines-default);
+    display: grid;
+    gap: 10px;
+    padding-block: 12px 2px;
+}
+
+.community-mutual-benefit-role__identity {
+    flex: 1;
+}
+
+.community-mutual-benefit-role__descriptions {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.community-mutual-benefit-role__numbers {
+    align-items: center;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(180px, auto);
+}
+
+.community-mutual-benefit-role > footer {
+    align-items: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+}
+
+.community-mutual-benefit-result {
+    border-block: 1px solid var(--mud-palette-lines-default);
+    padding-block: 12px;
+}
+
+.community-mutual-benefit-result > header {
+    justify-content: flex-start;
+}
+
+@media (max-width: 720px) {
+    .community-mutual-benefit-tool {
+        padding-inline: 10px;
+    }
+
+    .community-mutual-benefit-tool__rule-grid,
+    .community-mutual-benefit-role__descriptions,
+    .community-mutual-benefit-role__numbers {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .community-mutual-benefit-tool__controls {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .community-mutual-benefit-tool__evidence-grid,
+    .community-mutual-benefit-role__identity {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .community-mutual-benefit-tool__heading,
+    .community-mutual-benefit-tool__role-heading {
+        align-items: flex-start;
+    }
+
+    .community-mutual-benefit-tool__role-actions {
+        justify-content: flex-end;
+    }
+}

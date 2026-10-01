@@ -1,0 +1,207 @@
+@inherits LayoutComponentBase
+
+@implements IDisposable
+@inject ShipperLocalizationService L
+@inject ShipperOperatingProfileService ProfileService
+@inject HongdalClientRoleService RoleService
+@inject NavigationManager Navigation
+@using Microsoft.AspNetCore.Components.Routing
+
+<CascadingValue Value="L.Language">
+    <MudLayout>
+        <MudAppBar Dense="true" Fixed="false" Elevation="0" Class="shipper-appbar">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" Class="shipper-menu-button" />
+            <MudStack Spacing="0" Class="shipper-appbar-title">
+                <MudText Typo="Typo.subtitle1" Class="fw-bold">살뜰</MudText>
+                <MudText Typo="Typo.caption" Class="shipper-appbar-subtitle">@ProfileLabel</MudText>
+            </MudStack>
+            <MudSpacer />
+            <MudButton Variant="Variant.Text" Color="Color.Inherit" Disabled="@(!CanGoBack)" OnClick="GoBack" Class="shipper-menu-button">← 뒤로가기</MudButton>
+            <MudButtonGroup Color="Color.Inherit" Size="Size.Small" Class="shipper-language-toggle">
+                <MudButton Variant='@LanguageButtonVariant("ko")' OnClick='@(() => L.SetLanguage("ko"))'>@L.T("Language.Korean")</MudButton>
+                <MudButton Variant='@LanguageButtonVariant("en")' OnClick='@(() => L.SetLanguage("en"))'>@L.T("Language.English")</MudButton>
+            </MudButtonGroup>
+            <div class="hongdal-role-switcher">
+                <button type="button"
+                        class="shipper-profile-button hongdal-role-trigger"
+                        aria-label="활동 역할 선택"
+                        aria-expanded="@_rolePanelOpen"
+                        @onclick="ToggleRolePanel">
+                    <MudIcon Icon="@Icons.Material.Filled.Person" />
+                </button>
+
+                @if (_rolePanelOpen)
+                {
+                    <button type="button" class="hongdal-role-panel-dismiss" aria-label="역할 선택 닫기" @onclick="CloseRolePanel"></button>
+                    <section class="hongdal-role-panel" role="dialog" aria-modal="true" aria-label="활동 역할 선택" @onclick:stopPropagation="true">
+                        <div class="hongdal-role-panel-handle" aria-hidden="true"></div>
+                        <div class="hongdal-role-panel-header">
+                            <div>
+                                <span>활동 역할</span>
+                                <strong>@RolePanelCurrentState</strong>
+                                <small>역할을 고르면 홈의 사방괘와 업무 메뉴가 함께 바뀝니다.</small>
+                            </div>
+                            <button type="button" aria-label="닫기" @onclick="CloseRolePanel">
+                                <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                            </button>
+                        </div>
+
+                        <button type="button"
+                                class="@BuildRoleOptionClass(HongdalClientRole.Unspecified)"
+                                @onclick="@(() => SetRole(HongdalClientRole.Unspecified))">
+                            <span class="hongdal-role-option-icon hongdal-role-option-icon--common">
+                                <MudIcon Icon="@Icons.Material.Filled.AllInclusive" Size="Size.Small" />
+                            </span>
+                            <span class="hongdal-role-option-copy">
+                                <strong>공통 홈</strong>
+                                <small>역할 없이 정보와 대화의 공통 홈에서 시작</small>
+                            </span>
+                            @if (RoleService.IsUnspecified)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Secondary" Size="Size.Small" />
+                            }
+                        </button>
+
+                        <button type="button"
+                                class="@BuildRoleOptionClass(HongdalClientRole.Shipper)"
+                                @onclick="@(() => SetRole(HongdalClientRole.Shipper))">
+                            <span class="hongdal-role-option-icon hongdal-role-option-icon--shipper">
+                                <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Small" />
+                            </span>
+                            <span class="hongdal-role-option-copy">
+                                <strong>화주</strong>
+                                <small>운송 의뢰 · 판매 · 물류 운영</small>
+                            </span>
+                            @if (RoleService.IsShipper)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Primary" Size="Size.Small" />
+                            }
+                        </button>
+
+                        <button type="button"
+                                class="@BuildRoleOptionClass(HongdalClientRole.WarehouseManager)"
+                                @onclick="@(() => SetRole(HongdalClientRole.WarehouseManager))">
+                            <span class="hongdal-role-option-icon hongdal-role-option-icon--warehouse">
+                                <MudIcon Icon="@Icons.Material.Filled.Warehouse" Size="Size.Small" />
+                            </span>
+                            <span class="hongdal-role-option-copy">
+                                <strong>창고 관리자</strong>
+                                <small>입고 · 출고 · 판매 · 배송 운영</small>
+                            </span>
+                            @if (RoleService.IsWarehouseManager)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                            }
+                        </button>
+                    </section>
+                }
+            </div>
+        </MudAppBar>
+
+        <MudDrawer Open="@_drawerOpen" Variant="DrawerVariant.Temporary" Elevation="1" ClipMode="DrawerClipMode.Always" Class="shipper-drawer" @onclick="CloseDrawer">
+            <NavMenu />
+        </MudDrawer>
+
+        <MudMainContent Class="shipper-main-content pa-4">
+            @Body
+        </MudMainContent>
+    </MudLayout>
+</CascadingValue>
+
+@code {
+    private bool _drawerOpen;
+    private readonly Stack<string> _navigationHistory = new();
+    private string? _currentUri;
+    private bool _isNavigatingBack;
+    private bool _rolePanelOpen;
+
+    private bool CanGoBack => _navigationHistory.Count > 0;
+
+    private string ProfileLabel => RoleService.CurrentRole switch
+    {
+        HongdalClientRole.WarehouseManager => "창고 관리자 · 통합 창고 운영",
+        HongdalClientRole.Shipper => $"화주 · {(ProfileService.IsDomestic ? "국내 운송 운영" : "글로벌 물류 운영")}",
+        _ => "공통 홈 · 커뮤니티"
+    };
+
+    private string RolePanelCurrentState => RoleService.HasRole
+        ? $"현재 {RoleService.RoleLabel} 역할입니다."
+        : "아직 역할을 정하지 않았습니다.";
+
+    protected override void OnInitialized()
+    {
+        L.Changed += HandleChanged;
+        ProfileService.Changed += HandleChanged;
+        RoleService.Changed += HandleChanged;
+        Navigation.LocationChanged += HandleLocationChanged;
+        _currentUri = Navigation.Uri;
+    }
+
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+
+    private void CloseDrawer() => _drawerOpen = false;
+
+    private Variant LanguageButtonVariant(string language)
+    {
+        return L.IsLanguage(language) ? Variant.Filled : Variant.Text;
+    }
+
+    private void ToggleRolePanel() => _rolePanelOpen = !_rolePanelOpen;
+
+    private void CloseRolePanel() => _rolePanelOpen = false;
+
+    private string BuildRoleOptionClass(HongdalClientRole role) => RoleService.CurrentRole == role
+        ? "hongdal-role-option hongdal-role-option--active"
+        : "hongdal-role-option";
+
+    private void SetRole(HongdalClientRole role)
+    {
+        RoleService.SetRole(role);
+        _rolePanelOpen = false;
+        Navigation.NavigateTo(ShipperRoutes.Home);
+    }
+
+    private void GoBack()
+    {
+        if (_navigationHistory.Count == 0)
+        {
+            return;
+        }
+
+        var previousUri = _navigationHistory.Pop();
+        _isNavigatingBack = true;
+        Navigation.NavigateTo(previousUri);
+    }
+
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        if (_isNavigatingBack)
+        {
+            _isNavigatingBack = false;
+            _currentUri = args.Location;
+            InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(_currentUri) && !string.Equals(_currentUri, args.Location, StringComparison.OrdinalIgnoreCase))
+        {
+            _navigationHistory.Push(_currentUri);
+        }
+
+        _currentUri = args.Location;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        L.Changed -= HandleChanged;
+        ProfileService.Changed -= HandleChanged;
+        RoleService.Changed -= HandleChanged;
+        Navigation.LocationChanged -= HandleLocationChanged;
+    }
+}

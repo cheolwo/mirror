@@ -1,0 +1,202 @@
+@typeparam TItem where TItem : class
+@using System.Globalization
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inherits ViewModelParameterComponentBase<I서버목록조회ViewModel<TItem>>
+@namespace Hongdal.Ui.Common.Areas.App.Components.Crud
+
+<div class="hongdal-server-grid-scroll">
+    <div class="hongdal-server-grid-content" style="@GridContainerStyle">
+        <MudDataGrid @ref="_grid"
+                     T="TItem"
+                     ServerData="LoadServerDataAsync"
+                     Dense="@Dense"
+                     Hover="@Hover"
+                     Striped="@Striped"
+                     Filterable="@Filterable"
+                     SortMode="SortMode.Multiple"
+                     RowsPerPage="@RowsPerPage"
+                     SelectedItem="@SelectedItem"
+                     SelectedItemChanged="HandleSelectedItemChanged"
+                     SelectOnRowClick="true"
+                     LoadingProgressColor="Color.Primary">
+    <ToolBarContent>
+        @ToolBarContent
+        @if (ShowSearch)
+        {
+            <MudSpacer />
+            <MudTextField T="string"
+                          Value="@_searchText"
+                          ValueChanged="SearchChangedAsync"
+                          Placeholder="@SearchPlaceholder"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Immediate="true"
+                          DebounceInterval="@SearchDebounceMilliseconds"
+                          Clearable="true"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Outlined.Search"
+                          Style="max-width: 320px" />
+        }
+    </ToolBarContent>
+    <Columns>
+        @Columns
+    </Columns>
+    <LoadingContent>
+        <HongdalLoadingSkeleton Rows="@SkeletonRows"
+                                Columns="@SkeletonColumns"
+                                DelayMilliseconds="@SkeletonDelayMilliseconds" />
+    </LoadingContent>
+    <NoRecordsContent>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="pa-4">@EmptyText</MudText>
+    </NoRecordsContent>
+    <PagerContent>
+        <MudDataGridPager T="TItem"
+                          PageSizeOptions="@PageSizeOptions"
+                          RowsPerPageString="페이지당 항목"
+                          InfoFormat="{first_item}-{last_item} / {all_items}" />
+    </PagerContent>
+        </MudDataGrid>
+    </div>
+</div>
+
+@code {
+    private MudDataGrid<TItem>? _grid;
+    private readonly SemaphoreSlim _loadGate = new(1, 1);
+    private string? _searchText;
+
+    [Parameter, EditorRequired]
+    public RenderFragment Columns { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment? ToolBarContent { get; set; }
+
+    [Parameter]
+    public TItem? SelectedItem { get; set; }
+
+    [Parameter]
+    public EventCallback<TItem?> SelectedItemChanged { get; set; }
+
+    [Parameter]
+    public bool Dense { get; set; } = true;
+
+    [Parameter]
+    public bool Hover { get; set; } = true;
+
+    [Parameter]
+    public bool Striped { get; set; }
+
+    [Parameter]
+    public bool Filterable { get; set; }
+
+    [Parameter]
+    public bool ShowSearch { get; set; } = true;
+
+    [Parameter]
+    public string SearchPlaceholder { get; set; } = "검색";
+
+    [Parameter]
+    public int SearchDebounceMilliseconds { get; set; } = 350;
+
+    [Parameter]
+    public int RowsPerPage { get; set; } = 25;
+
+    [Parameter]
+    public int[] PageSizeOptions { get; set; } = [10, 25, 50, 100];
+
+    [Parameter]
+    public string EmptyText { get; set; } = "조회된 항목이 없습니다.";
+
+    [Parameter]
+    public int SkeletonRows { get; set; } = 5;
+
+    [Parameter]
+    public int SkeletonColumns { get; set; } = 5;
+
+    [Parameter]
+    public int SkeletonDelayMilliseconds { get; set; } = 180;
+
+    [Parameter]
+    public int? MinimumWidth { get; set; }
+
+    private string? GridContainerStyle => MinimumWidth is > 0
+        ? $"min-width: {MinimumWidth.Value}px;"
+        : null;
+
+    public Task ReloadAsync()
+        => _grid?.ReloadServerData() ?? Task.CompletedTask;
+
+    private async Task<GridData<TItem>> LoadServerDataAsync(
+        GridState<TItem> state,
+        CancellationToken cancellationToken)
+    {
+        await _loadGate.WaitAsync(cancellationToken);
+        try
+        {
+            var request = new 목록조회요청
+            {
+                페이지 = state.Page,
+                페이지크기 = state.PageSize,
+                검색어 = _searchText,
+                정렬조건 = state.SortDefinitions
+                    .Where(item => !string.IsNullOrWhiteSpace(item.SortBy))
+                    .Select(item => new 목록정렬조건(
+                        item.SortBy,
+                        item.Descending ? 목록정렬방향.내림차순 : 목록정렬방향.오름차순,
+                        item.Index))
+                    .ToArray(),
+                필터조건 = state.FilterDefinitions
+                    .Select(ToFilter)
+                    .Where(item => item is not null)
+                    .Cast<목록필터조건>()
+                    .ToArray()
+            };
+
+            var succeeded = await ViewModel.조회Async(request, cancellationToken);
+            var result = succeeded ? ViewModel.결과 : 목록조회결과<TItem>.비어있음;
+            return new GridData<TItem>
+            {
+                Items = result.항목,
+                TotalItems = result.전체건수
+            };
+        }
+        finally
+        {
+            _loadGate.Release();
+        }
+    }
+
+    private Task HandleSelectedItemChanged(TItem? item)
+        => SelectedItemChanged.InvokeAsync(item);
+
+    private async Task SearchChangedAsync(string? value)
+    {
+        _searchText = value;
+        if (_grid is not null)
+        {
+            if (_grid.CurrentPage == 0)
+            {
+                await _grid.ReloadServerData();
+            }
+            else
+            {
+                _grid.NavigateTo(Page.First);
+            }
+        }
+    }
+
+    private static 목록필터조건? ToFilter(IFilterDefinition<TItem> filter)
+    {
+        var field = filter.Column?.PropertyName ?? filter.Title;
+        if (string.IsNullOrWhiteSpace(field) || filter.Value is null)
+        {
+            return null;
+        }
+
+        var value = filter.Value is IFormattable formattable
+            ? formattable.ToString(null, CultureInfo.InvariantCulture)
+            : filter.Value.ToString();
+        return string.IsNullOrWhiteSpace(value)
+            ? null
+            : new 목록필터조건(field, filter.Operator?.ToString() ?? "Equal", value);
+    }
+}

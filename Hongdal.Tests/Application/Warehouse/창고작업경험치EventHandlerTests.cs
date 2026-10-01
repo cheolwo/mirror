@@ -19,22 +19,22 @@ public sealed class 창고작업경험치EventHandlerTests
         var occurredAt = new DateTime(2026, 7, 12, 5, 0, 0, DateTimeKind.Utc);
 
         await handler.Handle(
-            new 창고입고완료됨Event("warehouse-user", 역할명.창고관리자, 10, 2, "/inbounds/10/complete", "trace-1", occurredAt, App식별자.ShipperApp),
+            new 창고입고완료됨Event("warehouse-user", 역할명.창고관리자, 10, 2, "/inbounds/10/complete", "trace-1", occurredAt, App식별자.HongdalApp),
             CancellationToken.None);
         await handler.Handle(
-            new 창고입고검수완료됨Event("warehouse-user", 역할명.창고관리자, 20, 8, 1, "/inventory/20/inspect", "trace-2", occurredAt, App식별자.ShipperApp),
+            new 창고입고검수완료됨Event("warehouse-user", 역할명.창고관리자, 20, 8, 1, "/inventory/20/inspect", "trace-2", occurredAt, App식별자.HongdalApp),
             CancellationToken.None);
         await handler.Handle(
-            new 창고적재위치배정됨Event("warehouse-user", 역할명.창고관리자, 30, "A-1", "/inventory/30/put-away", "trace-3", occurredAt, App식별자.ShipperApp),
+            new 창고적재위치배정됨Event("warehouse-user", 역할명.창고관리자, 30, "A-1", "/inventory/30/put-away", "trace-3", occurredAt, App식별자.HongdalApp),
             CancellationToken.None);
         await handler.Handle(
-            new 창고포장완료됨Event("warehouse-user", 역할명.창고관리자, 40, 3, "/inventory/40/pack", "trace-4", occurredAt, App식별자.ShipperApp),
+            new 창고포장완료됨Event("warehouse-user", 역할명.창고관리자, 40, 3, "/inventory/40/pack", "trace-4", occurredAt, App식별자.HongdalApp),
             CancellationToken.None);
         await handler.Handle(
             new 창고피킹완료됨Event("warehouse-user", 역할명.창고관리자, "PICK-20-001", 20, 4, "/picking-tasks/PICK-20-001/complete", "trace-4-pick", occurredAt, App식별자.WarehouseManagerApp),
             CancellationToken.None);
         await handler.Handle(
-            new 창고재위탁운송생성됨Event("warehouse-user", 역할명.창고관리자, 50, 1, "HD-50", "/inventory/reconsignment", "trace-5", occurredAt, App식별자.ShipperApp),
+            new 창고재위탁운송생성됨Event("warehouse-user", 역할명.창고관리자, 50, 1, "HD-50", "/inventory/reconsignment", "trace-5", occurredAt, App식별자.HongdalApp),
             CancellationToken.None);
 
         Assert.Collection(
@@ -54,7 +54,7 @@ public sealed class 창고작업경험치EventHandlerTests
         string sourceId,
         string sourceDisplayId,
         string route,
-        string appKey = App식별자.ShipperApp)
+        string appKey = App식별자.HongdalApp)
     {
         Assert.Equal("warehouse-user", request.UserId);
         Assert.Equal(역할명.창고관리자, request.RoleName);

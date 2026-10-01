@@ -6,6 +6,9 @@ public sealed class 재고항목응답
 {
     public long 입고상품Id { get; set; }
     public long 창고Id { get; set; }
+    public string? 커뮤니티원장Id { get; set; }
+    public string? 커뮤니티원장템플릿Key { get; set; }
+    public string? 커뮤니티원장상태 { get; set; }
     public string 창고명 { get; set; } = string.Empty;
     public string 소유자UserId { get; set; } = string.Empty;
     public string 판매자UserId { get; set; } = string.Empty;

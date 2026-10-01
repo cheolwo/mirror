@@ -21,9 +21,9 @@
 
 ```mermaid
 flowchart LR
-    S1["ShipperApp-P01<br/>화주 홈"]
-    S2["ShipperApp-P02<br/>운송 의뢰 작성"]
-    S3["ShipperApp-P03<br/>의뢰 상세/타임라인"]
+    S1["HongdalApp-P01<br/>화주 홈"]
+    S2["HongdalApp-P02<br/>운송 의뢰 작성"]
+    S3["HongdalApp-P03<br/>의뢰 상세/타임라인"]
     A1["HongdalAdmin-P19<br/>배차대기"]
     D1["DriverApp-P06<br/>운행 시작"]
     D2["DriverApp-P07<br/>지도 홈/추천 배너"]
@@ -53,9 +53,9 @@ flowchart LR
 
 서버 원장 상태 전파는 `GET api/v1/transport-request-ledgers/{requestId}/events`도 함께 확인한다. 이 응답의 의뢰, 결제, 배차, 정산, 운송 상태가 화주 상세, 기사 현재 운송, 관리자 운송 상세의 표시값과 어긋나면 1.0 스모크 실패로 본다.
 
-### ShipperApp 1.0 E2E 점검 범위
+### HongdalApp 1.0 E2E 점검 범위
 
-ShipperApp은 1.0 스모크에서 운송 의뢰를 만들고, 같은 의뢰가 화주 홈과 상세 타임라인에서 다시 조회되는지를 우선 확인한다. 판매채널, HS 검토, 창고 출고 알림처럼 운영 콘솔에 보이는 보조 흐름은 아직 일부 샘플/인메모리 서비스가 남아 있으므로, 아래 표의 핵심 운송 경로와 분리해서 판단한다.
+HongdalApp은 1.0 스모크에서 운송 의뢰를 만들고, 같은 의뢰가 화주 홈과 상세 타임라인에서 다시 조회되는지를 우선 확인한다. 판매채널, HS 검토, 창고 출고 알림처럼 운영 콘솔에 보이는 보조 흐름은 아직 일부 샘플/인메모리 서비스가 남아 있으므로, 아래 표의 핵심 운송 경로와 분리해서 판단한다.
 
 | 화면/기능 | 1.0 확인 API | 판정 기준 |
 | --- | --- | --- |
@@ -64,15 +64,15 @@ ShipperApp은 1.0 스모크에서 운송 의뢰를 만들고, 같은 의뢰가 �
 | 의뢰 상세 `/shipper/request/{requestId}` | `GET api/v1/shipper/requests/{requestId}` | 결제, 배차, 수락, 상차, 하차, 정산 상태가 방금 만든 `requestId`로 다시 보인다. |
 | CSV 일괄등록 `/shipper/request/bulk` | `POST api/v1/shipper/requests/bulk/preview`, `POST api/v1/shipper/requests/bulk/confirm-preview` | 미리보기와 확정 등록이 인메모리 결과가 아니라 서버 파서/검증 결과로 표시된다. |
 | 공개 화물 `/shipper/public-cargo` | `GET api/v1/shipper/requests/public` | 공개 상태 의뢰만 익명 요약으로 조회된다. |
-| 결제 진입 | `POST api/v1/payments/prepare`, `POST api/v1/payments/toss/prepare`, 승인 API | 현재 ShipperApp은 결제 상태 표시 중심이다. 실제 결제창 준비/승인 호출이 없으면 1.0 결제 E2E 완료로 보지 않는다. |
+| 결제 진입 | `POST api/v1/payments/prepare`, `POST api/v1/payments/toss/prepare`, 승인 API | 현재 HongdalApp은 결제 상태 표시 중심이다. 실제 결제창 준비/승인 호출이 없으면 1.0 결제 E2E 완료로 보지 않는다. |
 
 ## 필수 화면 검증 표
 
 | 순서 | 페이지 | 앱/라우트 | 주 사용자 | 검증할 상태 | 서버/API 확인 | 현재 문서 |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 1 | `ShipperApp-P01` 화주 홈 | `ShipperApp` `/shipper` | 화주 | 최근 의뢰, 운송 의뢰 작성, 의뢰 상세 진입 | 홈 데이터가 서버 의뢰 목록과 어긋나지 않는지 확인 | [문서](page-docs/ShipperApp/ShipperApp-P01/) |
-| 2 | `ShipperApp-P02` 운송 의뢰 작성 | `ShipperApp` `/shipper/request` | 화주 | 의뢰 생성, 결제/정산 조건, 상하차지 | `POST api/v1/shipper/requests`, 차량 추천 API | [문서](page-docs/ShipperApp/ShipperApp-P02/) |
-| 3 | `ShipperApp-P03` 의뢰 상세/타임라인 | `ShipperApp` `/shipper/request/{RequestId}` | 화주 | 결제, 배차, 수락, 상차, 하차, 정산 타임라인 | `GET api/v1/shipper/requests/{requestId}` | [문서](page-docs/ShipperApp/ShipperApp-P03/) |
+| 1 | `HongdalApp-P01` 화주 홈 | `HongdalApp` `/shipper` | 화주 | 최근 의뢰, 운송 의뢰 작성, 의뢰 상세 진입 | 홈 데이터가 서버 의뢰 목록과 어긋나지 않는지 확인 | [문서](page-docs/HongdalApp/HongdalApp-P01/) |
+| 2 | `HongdalApp-P02` 운송 의뢰 작성 | `HongdalApp` `/shipper/request` | 화주 | 의뢰 생성, 결제/정산 조건, 상하차지 | `POST api/v1/shipper/requests`, 차량 추천 API | [문서](page-docs/HongdalApp/HongdalApp-P02/) |
+| 3 | `HongdalApp-P03` 의뢰 상세/타임라인 | `HongdalApp` `/shipper/request/{RequestId}` | 화주 | 결제, 배차, 수락, 상차, 하차, 정산 타임라인 | `GET api/v1/shipper/requests/{requestId}` | [문서](page-docs/HongdalApp/HongdalApp-P03/) |
 | 4 | `HongdalAdmin-P19` 배차대기 | `HongdalAdmin` `/dispatch/wait` | 관리자 | 배차대기, 추천중, 후보부족, 추천 잠금 | `GET api/v1/dispatch/wait` | [문서](page-docs/HongdalAdmin/HongdalAdmin-P19/) |
 | 5 | `DriverApp-P06` 운행 시작 | `DriverApp` `/driver/work/start` | 기사 | 운행 시작, 위치 송신 시작, 복귀/수익 선호 | `api/v1/driver/work/*`, 위치 송신 API | [문서](page-docs/DriverApp/DriverApp-P06/) |
 | 6 | `DriverApp-P07` 지도 홈/추천 배너 | `DriverApp` `/driver/home` | 기사 | 신규 추천 배너, 60초 응답 제한, 현재 운송 진입 | `GET api/v1/driver/home`, 추천 API | [문서](page-docs/DriverApp/DriverApp-P07/) |
@@ -122,7 +122,7 @@ ShipperApp은 1.0 스모크에서 운송 의뢰를 만들고, 같은 의뢰가 �
 
 ## 다음 보완 순서
 
-1. `ShipperApp-P01`부터 `DriverApp-P15`까지는 실제 개발 시드 데이터로 다시 열어 본다.
+1. `HongdalApp-P01`부터 `DriverApp-P15`까지는 실제 개발 시드 데이터로 다시 열어 본다.
 2. `HongdalAdmin-P16`부터 `HongdalAdmin-P27-5`까지는 서버 관리자 로그인 상태에서 다시 캡처한다.
 3. 각 페이지 README의 `API 경로와 코드 연결`이 실제 코드와 어긋나면 그 자리에서 고친다.
 4. 렌더링만 통과한 페이지와 실제 서버 API 데이터까지 확인한 페이지를 구분해 표시한다.

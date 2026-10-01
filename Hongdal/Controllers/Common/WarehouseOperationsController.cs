@@ -10,11 +10,16 @@ using Hongdal.Security;
 using System.Security.Claims;
 using Hongdal.Controllers;
 using Hongdal.ApiMetadata;
+using 홍달.Services.Versioning;
 
 namespace Hongdal.Controllers.Common;
 
-[HongdalApiVersion(HongdalProductVersion.V1_5)]
+[HongdalApiVersion(
+    HongdalProductVersion.V1_5,
+    FeatureKey = VersionFeatureFlagKeys.WarehouseFulfillmentWorkflow,
+    WorkflowKey = VersionFeatureFlagKeys.WarehouseFulfillmentWorkflow)]
 [HongdalApiWorkflow(HongdalWorkflow.WarehouseFulfillment)]
+[HongdalApiGrowthTrack(HongdalApiGrowthTrack.Warehouse)]
 [ApiController]
 [Authorize(Policy = "운영사용자전용")]
 [Route("api/v1/warehouse-operations")]
@@ -47,6 +52,22 @@ public sealed class WarehouseOperationsController : ControllerBase
         return this.ToActionResult(result);
     }
 
+    [HttpPut("warehouses/{warehouseId:long}")]
+    [RequireHrRole(HrDetailedRoleCodes.WarehouseManager)]
+    public async Task<IActionResult> 창고수정(long warehouseId, [FromBody] 창고저장요청 request, CancellationToken cancellationToken)
+    {
+        var result = await _useCase.창고수정Async(warehouseId, request, 요청Context생성(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpDelete("warehouses/{warehouseId:long}")]
+    [RequireHrRole(HrDetailedRoleCodes.WarehouseManager)]
+    public async Task<IActionResult> 창고삭제(long warehouseId, CancellationToken cancellationToken)
+    {
+        var result = await _useCase.창고삭제Async(warehouseId, 요청Context생성(), cancellationToken);
+        return this.ToNoContentActionResult(result);
+    }
+
     [HttpGet("warehouses/{warehouseId:long}/users")]
     [RequireHrRole(HrDetailedRoleCodes.WarehouseManager)]
     public async Task<IActionResult> 창고사용자목록(long warehouseId, CancellationToken cancellationToken)
@@ -63,6 +84,35 @@ public sealed class WarehouseOperationsController : ControllerBase
         return this.ToActionResult(result);
     }
 
+    [HttpPut("warehouses/{warehouseId:long}/users/{warehouseUserId:long}")]
+    [RequireHrRole(HrDetailedRoleCodes.WarehouseManager)]
+    public async Task<IActionResult> 창고사용자수정(
+        long warehouseId,
+        long warehouseUserId,
+        [FromBody] 창고사용자저장요청 request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _useCase.창고사용자수정Async(
+            warehouseId,
+            warehouseUserId,
+            request,
+            요청Context생성(),
+            cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpDelete("warehouses/{warehouseId:long}/users/{warehouseUserId:long}")]
+    [RequireHrRole(HrDetailedRoleCodes.WarehouseManager)]
+    public async Task<IActionResult> 창고사용자삭제(long warehouseId, long warehouseUserId, CancellationToken cancellationToken)
+    {
+        var result = await _useCase.창고사용자삭제Async(
+            warehouseId,
+            warehouseUserId,
+            요청Context생성(),
+            cancellationToken);
+        return this.ToNoContentActionResult(result);
+    }
+
     [HttpGet("inbounds")]
     [RequireHrRole(
         HrDetailedRoleCodes.WarehouseManager,
@@ -70,6 +120,18 @@ public sealed class WarehouseOperationsController : ControllerBase
     public async Task<IActionResult> 입고목록(CancellationToken cancellationToken)
     {
         var result = await _useCase.입고목록Async(cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpGet("inbounds/query")]
+    [RequireHrRole(
+        HrDetailedRoleCodes.WarehouseManager,
+        HrDetailedRoleCodes.WarehouseInboundOperator)]
+    public async Task<IActionResult> 입고목록조회(
+        [FromQuery] 입고요청목록조회요청 request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _useCase.입고목록조회Async(request, cancellationToken);
         return this.ToActionResult(result);
     }
 
@@ -81,6 +143,26 @@ public sealed class WarehouseOperationsController : ControllerBase
     {
         var result = await _useCase.입고생성Async(request, 요청Context생성(), cancellationToken);
         return this.ToActionResult(result);
+    }
+
+    [HttpPut("inbounds/{inboundId:long}")]
+    [RequireHrRole(
+        HrDetailedRoleCodes.WarehouseManager,
+        HrDetailedRoleCodes.WarehouseInboundOperator)]
+    public async Task<IActionResult> 입고수정(long inboundId, [FromBody] 입고요청저장요청 request, CancellationToken cancellationToken)
+    {
+        var result = await _useCase.입고수정Async(inboundId, request, 요청Context생성(), cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpDelete("inbounds/{inboundId:long}")]
+    [RequireHrRole(
+        HrDetailedRoleCodes.WarehouseManager,
+        HrDetailedRoleCodes.WarehouseInboundOperator)]
+    public async Task<IActionResult> 입고취소(long inboundId, CancellationToken cancellationToken)
+    {
+        var result = await _useCase.입고취소Async(inboundId, 요청Context생성(), cancellationToken);
+        return this.ToNoContentActionResult(result);
     }
 
     [HttpPost("inbounds/{inboundId:long}/complete")]

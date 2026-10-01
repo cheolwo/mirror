@@ -1,0 +1,257 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inject Hongdal.Ui.Common.Areas.App.Services.IHongdalAccessTokenProvider AccessTokenProvider
+
+@if (Post.Attachments.Count > 0)
+{
+    <div class="platform-community-attachments">
+        @foreach (var attachment in Post.Attachments)
+        {
+            var attachmentCommentForm = ViewModel.GetAttachmentCommentForm(attachment.Id);
+
+            <div class="platform-community-attachment-item">
+                <a href="@attachment.Url" target="_blank" rel="noopener noreferrer">
+                    <img src="@attachment.Url" alt="@attachment.OriginalFileName" />
+                </a>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Image comments @attachment.CommentCount</MudText>
+                @if (attachment.RecentComments.Count > 0)
+                {
+                    <MudStack Spacing="1" Class="platform-community-comments">
+                        @foreach (var comment in attachment.RecentComments)
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
+                                <HongdalCommunityRoleProfileBadge DisplayName="@DisplayCommentNickname(comment.Nickname)"
+                                                                  ContextKey="@Post.AppKey"
+                                                                  Category="@Post.Category"
+                                                                  IsMasked="@IsReportPost"
+                                                                  Compact="true" />
+                                <MudText Typo="Typo.caption">@comment.Body</MudText>
+                                <MudButton Variant="Variant.Text"
+                                           Size="Size.Small"
+                                           Color="Color.Secondary"
+                                           OnClick="@(() => ReportAttachmentCommentAsync(comment.Id))">
+                                    Report
+                                </MudButton>
+                                <MudButton Variant="Variant.Text"
+                                           Size="Size.Small"
+                                           Color="Color.Error"
+                                           OnClick="@(() => DeleteAttachmentCommentAsync(attachment.Id, comment.Id))">
+                                    Delete
+                                </MudButton>
+                            </MudStack>
+                        }
+                    </MudStack>
+                }
+                <MudStack Spacing="1" Class="platform-community-image-comment-form">
+                    @if (UsesAutomaticAnonymousNickname)
+                    {
+                        <MudTextField T="string" Label="자동 익명 닉네임" Value="@AutomaticAnonymousNicknameDisplay" ReadOnly="true" Margin="Margin.Dense" />
+                    }
+                    else
+                    {
+                        <MudTextField T="string" Placeholder="Nickname" @bind-Value="attachmentCommentForm.Nickname" MaxLength="40" Margin="Margin.Dense" />
+                    }
+                    <MudTextField T="string" Placeholder="Password" @bind-Value="attachmentCommentForm.Password" InputType="InputType.Password" MaxLength="100" Margin="Margin.Dense" />
+                    <MudTextField T="string" Placeholder="Image comment" @bind-Value="attachmentCommentForm.Body" MaxLength="1000" Margin="Margin.Dense" />
+                    <MudButton Variant="Variant.Outlined"
+                               Size="Size.Small"
+                               Color="Color.Primary"
+                               OnClick="@(() => SaveAttachmentCommentAsync(attachment.Id))">
+                        Comment
+                    </MudButton>
+                </MudStack>
+            </div>
+        }
+    </div>
+}
+
+@if (Post.RecentComments.Count > 0 && ViewModel.IsCommentsExpanded(Post.Id))
+{
+    <MudStack Spacing="1" Class="platform-community-comments">
+        @foreach (var comment in Post.RecentComments)
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
+                <HongdalCommunityRoleProfileBadge DisplayName="@DisplayCommentNickname(comment.Nickname)"
+                                                  ContextKey="@Post.AppKey"
+                                                  Category="@Post.Category"
+                                                  IsMasked="@IsReportPost"
+                                                  Compact="true" />
+                <MudText Typo="Typo.caption">@comment.Body</MudText>
+                <MudButton Variant="Variant.Text"
+                           Size="Size.Small"
+                           Color="Color.Secondary"
+                           OnClick="@(() => ReportCommentAsync(comment.Id))">
+                    Report
+                </MudButton>
+                <MudButton Variant="Variant.Text"
+                           Size="Size.Small"
+                           Color="Color.Error"
+                           OnClick="@(() => DeleteCommentAsync(comment.Id))">
+                    Delete
+                </MudButton>
+            </MudStack>
+        }
+    </MudStack>
+}
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="platform-community-meta">
+        <HongdalCommunityRoleProfileBadge DisplayName="@DisplayPostNickname()"
+                                          ContextKey="@Post.AppKey"
+                                          Category="@Post.Category"
+                                          IsMasked="@IsReportPost"
+                                          Compact="true" />
+        @if (HasPublicAuthorCountry())
+        {
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Public">
+                활동 국가 @Post.AuthorDisplayCountryCode · @Post.AuthorDisplayCountryName
+            </MudChip>
+        }
+        <MudText Typo="Typo.caption">추천 @Post.RecommendationCount</MudText>
+        <MudText Typo="Typo.caption">댓글 @Post.CommentCount</MudText>
+        <MudText Typo="Typo.caption">· @FormatDate(Post.CreatedAtUtc)</MudText>
+    </MudStack>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+        <MudButton Variant="Variant.Text"
+                   Size="Size.Small"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.ThumbUp"
+                   OnClick="RecommendAsync">
+            추천
+        </MudButton>
+        <MudButton Variant="Variant.Text"
+                   Size="Size.Small"
+                   Color="Color.Info"
+                   StartIcon="@Icons.Material.Filled.ChatBubbleOutline"
+                   OnClick="ToggleComments">
+            댓글 @Post.CommentCount
+        </MudButton>
+        @if (CanManagePosts)
+        {
+            <MudButton Variant="Variant.Text"
+                       Size="Size.Small"
+                       Color="Color.Warning"
+                       StartIcon="@Icons.Material.Filled.PushPin"
+                       OnClick="ToggleOperatorPinAsync">
+                @(Post.IsOperatorPinned ? "고정 해제" : "상단 고정")
+            </MudButton>
+        }
+        @if (!Post.IsSystemGenerated)
+        {
+            <MudButton Variant="Variant.Text"
+                       Size="Size.Small"
+                       Color="Color.Secondary"
+                       OnClick="@(() => EditRequested.InvokeAsync(Post))">
+                수정
+            </MudButton>
+        }
+    </MudStack>
+</MudStack>
+
+@if (ViewModel.IsCommentsExpanded(Post.Id))
+{
+    var commentForm = ViewModel.GetCommentForm(Post.Id);
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="platform-community-comment-form">
+        @if (UsesAutomaticAnonymousNickname)
+        {
+            <MudTextField T="string" Label="자동 익명 닉네임" Value="@AutomaticAnonymousNicknameDisplay" ReadOnly="true" Margin="Margin.Dense" />
+        }
+        else
+        {
+            <MudTextField T="string" Placeholder="닉네임" @bind-Value="commentForm.Nickname" MaxLength="40" Margin="Margin.Dense" />
+        }
+        <MudTextField T="string" Placeholder="비밀번호" @bind-Value="commentForm.Password" InputType="InputType.Password" MaxLength="100" Margin="Margin.Dense" />
+        <MudTextField T="string" Placeholder="댓글" @bind-Value="commentForm.Body" MaxLength="1000" Margin="Margin.Dense" />
+        <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary" OnClick="SaveCommentAsync">
+            댓글 등록
+        </MudButton>
+    </MudStack>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public PlatformCommunityPostResponse Post { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public PlatformCommunityPostEngagementViewModel ViewModel { get; set; } = null!;
+
+    [Parameter]
+    public bool CanManagePosts { get; set; }
+
+    [Parameter]
+    public EventCallback<PlatformCommunityCommandResult> CommandCompleted { get; set; }
+
+    [Parameter]
+    public EventCallback<PlatformCommunityPostResponse> EditRequested { get; set; }
+
+    private bool IsReportPost
+        => Post.IsReportBoardPost
+           || Post.Category.Contains("신고", StringComparison.OrdinalIgnoreCase)
+           || Post.Category.Contains("분쟁", StringComparison.OrdinalIgnoreCase);
+
+    private bool UsesAutomaticAnonymousNickname
+        => CommunityBoardCatalog.Find(Post.Category)?.AllowsAnonymousPosting == true
+           && string.IsNullOrWhiteSpace(AccessTokenProvider.AccessToken);
+
+    private string AutomaticAnonymousNicknameDisplay
+        => CommunityAnonymousNicknameCatalog.Preview(Post.Category);
+
+    private string DisplayPostNickname()
+        => IsReportPost ? "익명 신고자" : Post.Nickname;
+
+    private bool HasPublicAuthorCountry()
+        => Post.IsAuthorDisplayCountryPublic
+           && !string.IsNullOrWhiteSpace(Post.AuthorDisplayCountryCode)
+           && !string.IsNullOrWhiteSpace(Post.AuthorDisplayCountryName)
+           && !IsReportPost;
+
+    private string DisplayCommentNickname(string nickname)
+        => IsReportPost ? "익명 참여자" : nickname;
+
+    private static string FormatDate(DateTime createdAtUtc)
+        => createdAtUtc.ToLocalTime().ToString("yyyy.MM.dd HH:mm");
+
+    private async Task RecommendAsync()
+        => await CompleteAsync(await ViewModel.RecommendAsync(Post.Id));
+
+    private async Task ToggleOperatorPinAsync()
+        => await CompleteAsync(await ViewModel.SetOperatorPinAsync(Post.Id, !Post.IsOperatorPinned));
+
+    private async Task SaveCommentAsync()
+    {
+        if (UsesAutomaticAnonymousNickname)
+        {
+            ViewModel.GetCommentForm(Post.Id).Nickname = AutomaticAnonymousNicknameDisplay;
+        }
+
+        await CompleteAsync(await ViewModel.SaveCommentAsync(Post.Id));
+    }
+
+    private async Task DeleteCommentAsync(long commentId)
+        => await CompleteAsync(await ViewModel.DeleteCommentAsync(Post.Id, commentId));
+
+    private async Task ReportCommentAsync(long commentId)
+        => await CompleteAsync(await ViewModel.ReportCommentAsync(commentId));
+
+    private async Task SaveAttachmentCommentAsync(long attachmentId)
+    {
+        if (UsesAutomaticAnonymousNickname)
+        {
+            ViewModel.GetAttachmentCommentForm(attachmentId).Nickname = AutomaticAnonymousNicknameDisplay;
+        }
+
+        await CompleteAsync(await ViewModel.SaveAttachmentCommentAsync(attachmentId));
+    }
+
+    private async Task DeleteAttachmentCommentAsync(long attachmentId, long commentId)
+        => await CompleteAsync(await ViewModel.DeleteAttachmentCommentAsync(attachmentId, commentId));
+
+    private async Task ReportAttachmentCommentAsync(long commentId)
+        => await CompleteAsync(await ViewModel.ReportAttachmentCommentAsync(commentId));
+
+    private void ToggleComments()
+        => ViewModel.ToggleComments(Post.Id);
+
+    private async Task CompleteAsync(PlatformCommunityCommandResult result)
+        => await CommandCompleted.InvokeAsync(result);
+}

@@ -72,7 +72,7 @@ Amazon Seller Central states that FBA does not fulfill fresh produce, chilled fo
 
 - Planner: `Hongdal.Contracts/Common/Sales/AmazonExportReadinessPlanner.cs`
 - Tests: `Hongdal.Tests/Contracts/Common/Sales/AmazonExportReadinessPlannerTests.cs`
-- Payload draft builder: `ShipperApp/Services/Commerce/Amazon/AmazonSpApiProductPayloadBuilder.cs`
+- Payload draft builder: `HongdalApp/Services/Commerce/Amazon/AmazonSpApiProductPayloadBuilder.cs`
 
 The planner returns two separate readiness flags:
 

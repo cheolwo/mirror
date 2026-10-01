@@ -35,6 +35,26 @@ public sealed class 이미지생성요청
     public string 해상도 { get; set; } = "1K";
 }
 
+public sealed class 커뮤니티글쓰기이미지프롬프트생성기 : I이미지프롬프트생성기
+{
+    public string 이미지용도 => 생성이미지용도.커뮤니티글쓰기이미지;
+
+    public string CreatePrompt(이미지생성요청 request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var authorPrompt = string.IsNullOrWhiteSpace(request.설명)
+            ? request.제목
+            : request.설명.Trim();
+        var context = string.IsNullOrWhiteSpace(request.추가맥락)
+            ? string.Empty
+            : $" Context: {request.추가맥락.Trim()}.";
+
+        return $"Create one editorial image for a community article. {authorPrompt}.{context} "
+               + "Use a clear focal subject and natural composition. Do not add a watermark or brand logo. "
+               + "Do not present invented labels, official seals, statistics, or documentary evidence unless explicitly requested.";
+    }
+}
+
 public abstract class 이미지프롬프트생성기Base : I이미지프롬프트생성기
 {
     public abstract string 이미지용도 { get; }

@@ -4,6 +4,7 @@ using Hongdal.Application.CommandProcessing;
 using Microsoft.Extensions.Logging;
 using 홍달.Services.Dispatch.Coordination;
 using 홍달.Services.Dispatch.Queue;
+using Hongdal.Services.Community;
 
 public sealed class 운행종료CommandHandler : IRequestHandler<운행종료Command, Unit>
 {
@@ -13,6 +14,7 @@ public sealed class 운행종료CommandHandler : IRequestHandler<운행종료Com
     private readonly I배달권실행공간Store _배달권실행공간Store;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly I참여자실행권한검사 _권한검사;
+    private readonly ICommunityDriverAvailabilityService _communityDriverAvailabilityService;
     private readonly ILogger<운행종료CommandHandler> _logger;
 
     public 운행종료CommandHandler(
@@ -22,6 +24,7 @@ public sealed class 운행종료CommandHandler : IRequestHandler<운행종료Com
         I배달권실행공간Store 배달권실행공간Store,
         ICurrentUserAccessor currentUserAccessor,
         I참여자실행권한검사 권한검사,
+        ICommunityDriverAvailabilityService communityDriverAvailabilityService,
         ILogger<운행종료CommandHandler> logger)
     {
         _db = db;
@@ -30,6 +33,7 @@ public sealed class 운행종료CommandHandler : IRequestHandler<운행종료Com
         _배달권실행공간Store = 배달권실행공간Store;
         _currentUserAccessor = currentUserAccessor;
         _권한검사 = 권한검사;
+        _communityDriverAvailabilityService = communityDriverAvailabilityService;
         _logger = logger;
     }
 
@@ -52,6 +56,7 @@ public sealed class 운행종료CommandHandler : IRequestHandler<운행종료Com
         await _국내화물운송기사상태Service.운행종료Async(request.기사Id, cancellationToken);
         await _배달권실행공간Store.Remove기사Async(request.기사Id, cancellationToken);
         await tx.CommitAsync(cancellationToken);
+        _communityDriverAvailabilityService.Close(request.기사Id);
 
         _logger.LogInformation(
             "Action={Action} DriverId={DriverId} BeforeStatus={BeforeStatus} AfterStatus={AfterStatus} Result={Result} TraceId={TraceId} OccurredAt={OccurredAt}",

@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Hongdal.Contracts.Common.Operations;
 
 namespace 홍달.Services.Dispatch.Queue
 {
@@ -11,7 +12,10 @@ namespace 홍달.Services.Dispatch.Queue
         Task<배차대기원장전환결과> 추천거절처리Async(string requestId, string driverId, CancellationToken cancellationToken = default);
         Task<배차대기원장전환결과> 추천만료처리Async(string requestId, CancellationToken cancellationToken = default);
         Task<배차대기원장전환결과> 공개배차로전환Async(string requestId, CancellationToken cancellationToken = default);
-        Task<배차대기원장전환결과> 배차확정처리Async(string requestId, string driverId, CancellationToken cancellationToken = default);
+        Task<배차대기원장전환결과> 실행주체확정결과동기화Async(
+            string requestId,
+            DispatchConfirmationBoundaryRequest confirmation,
+            CancellationToken cancellationToken = default);
         Task<배차대기원장전환결과> 배차수락취소처리Async(string requestId, string driverId, string? reason = null, CancellationToken cancellationToken = default);
     }
 
@@ -42,7 +46,12 @@ namespace 홍달.Services.Dispatch.Queue
         public const string 공개배차전환됨 = "공개배차전환됨";
         public const string 확정됨 = "확정됨";
         public const string 후보없음 = "후보없음";
+        public const string 추천준비안됨 = "추천준비안됨";
+        public const string 후보선정입력오류 = "후보선정입력오류";
+        public const string 배차구성오류 = "배차구성오류";
         public const string 수락취소됨 = "수락취소됨";
         public const string 창고선행작업대기 = "창고선행작업대기";
+        public const string 실행결정권한없음 = "실행결정권한없음";
+        public const string 실행결정불일치 = "실행결정불일치";
     }
 }

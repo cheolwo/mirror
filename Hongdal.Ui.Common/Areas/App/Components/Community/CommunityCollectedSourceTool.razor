@@ -1,0 +1,203 @@
+@using Hongdal.Contracts.Common.Community
+@using Hongdal.Contracts.Common.Content
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inherits ViewModelParameterComponentBase<CommunityInformationReviewPageViewModel>
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<section class="community-author-source-tool" aria-label="수집 자료 찾기">
+    <div class="community-author-source-filters">
+        <MudSelect T="string"
+                   Label="원천"
+                   Variant="Variant.Outlined"
+                   Margin="Margin.Dense"
+                   @bind-Value="ViewModel.SelectedSourceKey">
+            <MudSelectItem T="string" Value="@AllValue">전체 원천</MudSelectItem>
+            @foreach (var source in ViewModel.Sources)
+            {
+                <MudSelectItem T="string" Value="@source.SourceKey">@source.DisplayName</MudSelectItem>
+            }
+        </MudSelect>
+        <MudSelect T="string"
+                   Label="국가"
+                   Variant="Variant.Outlined"
+                   Margin="Margin.Dense"
+                   @bind-Value="ViewModel.CountryCode">
+            <MudSelectItem T="string" Value="@AllValue">전체 국가</MudSelectItem>
+            <MudSelectItem T="string" Value="@("KR")">KR · 대한민국</MudSelectItem>
+            <MudSelectItem T="string" Value="@("US")">US · 미국</MudSelectItem>
+            <MudSelectItem T="string" Value="@("ZZ")">ZZ · 미분류</MudSelectItem>
+        </MudSelect>
+        <MudSelect T="string"
+                   Label="검토 상태"
+                   Variant="Variant.Outlined"
+                   Margin="Margin.Dense"
+                   @bind-Value="ViewModel.ReviewState">
+            <MudSelectItem T="string" Value="@AllValue">전체 상태</MudSelectItem>
+            @foreach (var state in ReviewStates)
+            {
+                <MudSelectItem T="string" Value="@state.Code">@state.Label</MudSelectItem>
+            }
+        </MudSelect>
+        <MudTextField T="string"
+                      Label="제목·내용·태그 검색"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Immediate="true"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      @bind-Value="ViewModel.SearchText" />
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Search"
+                   Disabled="@ViewModel.IsLoading"
+                   OnClick="RefreshAsync">
+            조회
+        </MudButton>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ViewModel.ErrorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true">@ViewModel.ErrorMessage</MudAlert>
+    }
+    @foreach (var failure in ViewModel.Failures)
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true">
+            @SourceName(failure.SourceKey): @failure.Message
+        </MudAlert>
+    }
+
+    @if (ViewModel.IsLoading)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+    }
+    else if (ViewModel.Candidates.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">조건에 맞는 수집 자료가 없습니다.</MudAlert>
+    }
+    else
+    {
+        <div class="community-author-source-results" role="list" aria-label="수집 자료 목록">
+            @foreach (var candidate in ViewModel.Candidates)
+            {
+                <button type="button"
+                        class="community-author-source-result @(IsSelected(candidate) ? "is-selected" : string.Empty)"
+                        @onclick="@(() => ViewModel.SelectCandidate(candidate))">
+                    @if (!string.IsNullOrWhiteSpace(candidate.ThumbnailUrl))
+                    {
+                        <img src="@candidate.ThumbnailUrl" alt="" loading="lazy" />
+                    }
+                    <span>
+                        <strong>@candidate.Title</strong>
+                        <small>@candidate.Provider · @FormatReferenceDate(candidate)</small>
+                        <em>@candidate.Summary</em>
+                    </span>
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Color="@ReviewStateColor(candidate.ReviewState)"
+                             Variant="Variant.Outlined">
+                        @ReviewStateLabel(candidate.ReviewState)
+                    </MudChip>
+                </button>
+            }
+        </div>
+    }
+
+    @if (ViewModel.SelectedCandidate is { } selected)
+    {
+        <section class="community-author-source-detail" aria-label="선택한 자료">
+            <header>
+                <div>
+                    <MudText Typo="Typo.overline" Color="Color.Primary">SELECTED SOURCE</MudText>
+                    <MudText Typo="Typo.h6">@selected.Title</MudText>
+                </div>
+                <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                               Color="Color.Secondary"
+                               Href="@selected.OriginalUrl"
+                               Target="_blank"
+                               aria-label="원문 열기" />
+            </header>
+            <MudText Typo="Typo.body2">@selected.Summary</MudText>
+            <div class="community-author-source-meta">
+                <span><strong>출처</strong>@selected.Provider</span>
+                <span><strong>기준</strong>@FormatReferenceDate(selected)</span>
+                <span><strong>국가·언어</strong>@selected.CountryCode · @selected.LanguageCode</span>
+            </div>
+            <MudAlert Severity="Severity.Warning" Dense="true" Variant="Variant.Text">@selected.Limitations</MudAlert>
+            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.PlaylistAdd"
+                           OnClick="@(() => ViewModel.AppendCandidateToDraft(selected, DefaultNickname))">
+                    본문에 추가
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.EditNote"
+                           OnClick="@(() => ViewModel.PrepareDraft(selected, DefaultNickname))">
+                    새 초안
+                </MudButton>
+            </MudStack>
+        </section>
+    }
+
+    @if (ViewModel.HasDraftConflict && ViewModel.PendingDraftCandidate is { } pending)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="community-author-source-conflict">
+            <MudText Typo="Typo.body2">기존 초안을 유지할지, @pending.Title 자료로 바꿀지 선택해 주세요.</MudText>
+            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                <MudButton Variant="Variant.Outlined" Color="Color.Inherit" OnClick="@(() => ViewModel.ContinueExistingDraft(DefaultNickname))">기존 초안 계속</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Inherit" OnClick="@(() => ViewModel.ReplaceDraftAsync(DefaultNickname))">이 자료로 바꾸기</MudButton>
+            </MudStack>
+        </MudAlert>
+    }
+</section>
+
+@code {
+    private const string AllValue = "";
+
+    [Parameter]
+    public string DefaultNickname { get; set; } = "홍달 운영자";
+
+    private static readonly IReadOnlyList<(string Code, string Label)> ReviewStates =
+    [
+        (CommunityInformationReviewStates.PendingReview, "검토 대기"),
+        (CommunityInformationReviewStates.Approved, "승인"),
+        (CommunityInformationReviewStates.OfficialObservation, "공식 관측값"),
+        (CommunityInformationReviewStates.Baseline, "기준선"),
+        (CommunityInformationReviewStates.Excluded, "제외")
+    ];
+
+    private bool IsSelected(CommunityInformationCandidateDto candidate)
+        => string.Equals(
+            candidate.CandidateKey,
+            ViewModel.SelectedCandidate?.CandidateKey,
+            StringComparison.OrdinalIgnoreCase);
+
+    private Task RefreshAsync()
+        => ViewModel.RefreshAsync();
+
+    private string SourceName(string sourceKey)
+        => ViewModel.Sources.FirstOrDefault(source =>
+               string.Equals(source.SourceKey, sourceKey, StringComparison.OrdinalIgnoreCase))?.DisplayName
+           ?? sourceKey;
+
+    private static string FormatReferenceDate(CommunityInformationCandidateDto candidate)
+        => candidate.ReferenceDate?.ToString("yyyy-MM-dd")
+           ?? candidate.PublishedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd")
+           ?? "기준일 없음";
+
+    private static string ReviewStateLabel(string state)
+        => ReviewStates.FirstOrDefault(item =>
+               string.Equals(item.Code, state, StringComparison.OrdinalIgnoreCase)).Label
+           ?? state;
+
+    private static Color ReviewStateColor(string state)
+        => state switch
+        {
+            CommunityInformationReviewStates.PendingReview => Color.Warning,
+            CommunityInformationReviewStates.Approved => Color.Success,
+            CommunityInformationReviewStates.OfficialObservation => Color.Info,
+            CommunityInformationReviewStates.Excluded => Color.Error,
+            _ => Color.Default
+        };
+}

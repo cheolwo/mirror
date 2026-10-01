@@ -1,0 +1,144 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+
+<section class="platform-ledger-mobile-flow" aria-label="모바일 세로 다이어그램">
+    <header class="platform-ledger-mobile-flow-header">
+        <div>
+            <span>MOBILE FLOW</span>
+            <strong>위에서 아래로 한 단계씩 확인하세요</strong>
+            <small>노드를 누르면 현재 단계에 집중하고, 상세·순서·연결 작업을 이어갈 수 있습니다.</small>
+        </div>
+        <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+            <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">@($"{Steps.Count}단계")</MudChip>
+            <PlatformDiagramFormNodeMenu FormNodes="@FormNodes"
+                                         FormNodeSelected="FormNodeSelected" />
+        </MudStack>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(ConnectionStartNodeTitle))
+    {
+        <MudAlert Severity="Severity.Info" Dense="true" Class="platform-ledger-mobile-connect-guide">
+            <strong>@ConnectionStartNodeTitle</strong>에서 연결을 시작했습니다. 아래에서 연결할 노드를 선택하세요.
+            <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Info" OnClick="ConnectionCancelRequested">취소</MudButton>
+        </MudAlert>
+    }
+
+    <div class="platform-ledger-mobile-flow-list">
+        @foreach (var step in Steps)
+        {
+            <article class="platform-ledger-mobile-step">
+                <button type="button"
+                        class="@step.NodeClass"
+                        style="@step.ReadinessStyle"
+                        aria-pressed="@step.IsSelected"
+                        @onclick="@(() => NodeSelected.InvokeAsync(step.Node))">
+                    <span class="platform-ledger-mobile-node-fill" aria-hidden="true"></span>
+                    <span class="platform-ledger-mobile-step-number">@step.Number</span>
+                    <span class="platform-ledger-mobile-node-icon">
+                        @if (!string.IsNullOrWhiteSpace(step.StickerUrl))
+                        {
+                            <img src="@step.StickerUrl" alt="@step.StickerAltText" />
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@step.Icon" Color="@step.Node.Color" />
+                        }
+                    </span>
+                    <span class="platform-ledger-mobile-node-copy">
+                        <span class="platform-ledger-mobile-node-meta">
+                            <span>@step.RoleLabel</span>
+                            <b>@step.ProcessingStateLabel</b>
+                        </span>
+                        <strong>@step.Node.Title</strong>
+                        <small>@step.Node.Description</small>
+                        <span class="platform-ledger-mobile-node-readiness">
+                            <span><i></i></span>
+                            <b>@($"{step.Readiness.Percent}%")</b>
+                            <em>@step.Readiness.CountLabel</em>
+                        </span>
+                    </span>
+                </button>
+
+                @if (step.IsSelected)
+                {
+                    <div class="platform-ledger-mobile-node-focus">
+                        <p class="platform-ledger-mobile-readiness-guidance">
+                            <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Size="Size.Small" />
+                            <span>@step.Readiness.GuidanceLabel</span>
+                        </p>
+                        @if (step.Badges.Count > 0)
+                        {
+                            <div class="platform-ledger-mobile-node-badges">
+                                @foreach (var badge in step.Badges)
+                                {
+                                    <span class="@badge.CssClass" title="@badge.Description">
+                                        <MudIcon Icon="@badge.Icon" Size="Size.Small" />
+                                        <span>@badge.Label</span>
+                                    </span>
+                                }
+                            </div>
+                        }
+                        <div class="platform-ledger-mobile-node-actions">
+                            <MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew" OnClick="@(() => NodeDetailRequested.InvokeAsync(step.Node))">상세</MudButton>
+                            <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.AccountTree" Disabled="@(!step.CanStartConnection)" OnClick="ConnectionStartRequested">연결</MudButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.FlipToFront" Size="Size.Small" Color="Color.Secondary" Disabled="@(!CanBringToFront)" OnClick="BringToFrontRequested" aria-label="선택 노드를 맨 앞으로 보내기" />
+                            <MudIconButton Icon="@Icons.Material.Filled.FlipToBack" Size="Size.Small" Color="Color.Secondary" Disabled="@(!CanSendToBack)" OnClick="SendToBackRequested" aria-label="선택 노드를 맨 뒤로 보내기" />
+                            <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" Color="Color.Default" Disabled="@(!CanMoveBackward)" OnClick="@(() => NodeMoveRequested.InvokeAsync(-1))" aria-label="위 단계로 이동" />
+                            <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" Color="Color.Default" Disabled="@(!CanMoveForward)" OnClick="@(() => NodeMoveRequested.InvokeAsync(1))" aria-label="아래 단계로 이동" />
+                        </div>
+                        @if (step.ExtraEdges.Count > 0)
+                        {
+                            <div class="platform-ledger-mobile-extra-edges">
+                                <span>추가 연결</span>
+                                @foreach (var edge in step.ExtraEdges)
+                                {
+                                    <button type="button" @onclick="@(() => EdgeSelected.InvokeAsync(edge))">@edge.Label · @edge.ToTitle</button>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (step.PrimaryEdge is not null || step.Number < Steps.Count)
+                {
+                    <button type="button"
+                            class="@step.ConnectorClass"
+                            disabled="@(step.PrimaryEdge is null)"
+                            @onclick="@(() => SelectPrimaryEdgeAsync(step.PrimaryEdge))">
+                        <span class="platform-ledger-mobile-connector-rail">
+                            <i></i>
+                            <MudIcon Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" />
+                        </span>
+                        <span>@(step.PrimaryEdge?.Label ?? "다음 단계")</span>
+                    </button>
+                }
+            </article>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<PlatformCommunityDiagramMobileStep> Steps { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<PlatformDiagramPaletteBlock> FormNodes { get; set; } = [];
+
+    [Parameter] public string? ConnectionStartNodeTitle { get; set; }
+    [Parameter] public bool CanBringToFront { get; set; }
+    [Parameter] public bool CanSendToBack { get; set; }
+    [Parameter] public bool CanMoveBackward { get; set; }
+    [Parameter] public bool CanMoveForward { get; set; }
+    [Parameter] public EventCallback<PlatformDiagramPaletteBlock> FormNodeSelected { get; set; }
+    [Parameter] public EventCallback<원장블록노드> NodeSelected { get; set; }
+    [Parameter] public EventCallback<원장블록노드> NodeDetailRequested { get; set; }
+    [Parameter] public EventCallback<원장블록연결선> EdgeSelected { get; set; }
+    [Parameter] public EventCallback<int> NodeMoveRequested { get; set; }
+    [Parameter] public EventCallback ConnectionStartRequested { get; set; }
+    [Parameter] public EventCallback ConnectionCancelRequested { get; set; }
+    [Parameter] public EventCallback BringToFrontRequested { get; set; }
+    [Parameter] public EventCallback SendToBackRequested { get; set; }
+
+    private Task SelectPrimaryEdgeAsync(원장블록연결선? edge)
+        => edge is null ? Task.CompletedTask : EdgeSelected.InvokeAsync(edge);
+}

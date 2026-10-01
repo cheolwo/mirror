@@ -1,6 +1,7 @@
 using FluentResults;
 using Hongdal.ApiMetadata;
 using Hongdal.Contracts.Common.Community;
+using Hongdal.Contracts.Common.Metadata;
 using Microsoft.AspNetCore.Http;
 
 namespace Hongdal.Services.Community;
@@ -10,6 +11,7 @@ public interface I커뮤니티투표UseCase
     Task<Result<CommunityVoteListResponse>> 목록Async(
         string? appKey,
         string? communityScope,
+        string? hsCode,
         CancellationToken cancellationToken);
 
     Task<Result<CommunityVoteResponse>> 상세Async(Guid voteId, CancellationToken cancellationToken);
@@ -44,6 +46,12 @@ public interface I커뮤니티투표UseCase
         CancellationToken cancellationToken);
 }
 
+[HongdalCommunityV0Module(
+    HongdalCommunityV0ModuleKeys.Participation,
+    HongdalModuleKind.Application,
+    "비구속 수요 투표·참여 의사·결의문 초안과 서명 상태를 처리",
+    ReleaseStage = HongdalCommunityV0ReleaseStages.DomesticGroupPurchasePilot,
+    Boundary = "0.0 투표는 참여 신호이며 주문·계약을 확정하지 않습니다. 자동 집단화와 수입 실행은 후속 기능 플래그 경계입니다.")]
 [HongdalApiWorkflow(HongdalWorkflow.CommunityTrust)]
 [HongdalUseCase("커뮤니티 투표와 결의문", Summary = "커뮤니티 참여자가 투표를 만들고 참여하며, 필요한 경우 결의문 초안과 전자서명 흐름으로 연결합니다.")]
 [HongdalUseCaseActor(HongdalActor.CommunityMember)]
@@ -75,8 +83,25 @@ public sealed class 커뮤니티투표UseCase : I커뮤니티투표UseCase
     public async Task<Result<CommunityVoteListResponse>> 목록Async(
         string? appKey,
         string? communityScope,
+        string? hsCode,
         CancellationToken cancellationToken)
-        => Result.Ok(await _voteService.ListAsync(appKey, communityScope, cancellationToken));
+    {
+        string? normalizedHsCode;
+        try
+        {
+            normalizedHsCode = CommunityVoteHsCode.NormalizeOptional(hsCode);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest<CommunityVoteListResponse>(ex.Message);
+        }
+
+        return Result.Ok(await _voteService.ListAsync(
+            appKey,
+            communityScope,
+            normalizedHsCode,
+            cancellationToken));
+    }
 
     public async Task<Result<CommunityVoteResponse>> 상세Async(Guid voteId, CancellationToken cancellationToken)
     {

@@ -1,0 +1,230 @@
+@implements IAsyncDisposable
+@using System.Globalization
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+
+@if (ViewModel.IsPanelOpen)
+{
+    <aside class="platform-diagram-room-panel"
+           role="dialog"
+           aria-label="다이어그램 대화방"
+           @onclick:stopPropagation="true"
+           @onpointerdown:stopPropagation="true"
+           @onpointerup:stopPropagation="true">
+        <MudStack Spacing="2">
+            <MudStack Row="true" AlignItems="AlignItems.Start" Justify="Justify.SpaceBetween" Spacing="1">
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.subtitle2">다이어그램 대화방</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@Context.RoomName</MudText>
+                </MudStack>
+                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                               Size="Size.Small"
+                               Color="Color.Default"
+                               OnClick="ClosePanel"
+                               aria-label="다이어그램 대화방 닫기" />
+            </MudStack>
+            <div class="platform-diagram-room-status">
+                <span>
+                    <MudIcon Icon="@Icons.Material.Filled.WifiTethering" Size="Size.Small" />
+                    @ViewModel.ConnectionLabel
+                </span>
+                <strong>@DiagramCollaborationHubPath</strong>
+            </div>
+            <div class="platform-diagram-room-meta-grid">
+                <div>
+                    <span>원장</span>
+                    <strong>@Context.DiagramName</strong>
+                </div>
+                <div>
+                    <span>현재 원장</span>
+                    <strong>@Context.CurrentLedgerLabel</strong>
+                </div>
+                <div>
+                    <span>방 ID</span>
+                    <strong>@Context.RoomId</strong>
+                </div>
+            </div>
+            <div @ref="feedElement"
+                 class="platform-diagram-room-feed"
+                 aria-label="다이어그램 대화방 메시지">
+                @if (ViewModel.IsHistoryLoading)
+                {
+                    <div class="platform-diagram-room-loading">
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Secondary" />
+                        <span>이전 대화를 불러오는 중</span>
+                    </div>
+                }
+                @foreach (var message in ViewModel.Messages)
+                {
+                    <div class="@BuildMessageClass(message)">
+                        @if (!message.IsMine && !message.IsSystem)
+                        {
+                            <span class="platform-diagram-room-avatar"
+                                  style="@BuildAvatarStyle(message.SenderUserId)"
+                                  title="@message.SenderDisplayName">
+                                @BuildAvatarText(message.SenderDisplayName)
+                            </span>
+                        }
+                        <div class="platform-diagram-room-bubble">
+                            <span class="platform-diagram-room-message-meta">
+                                @BuildAuthorLabel(message)
+                                <small>@BuildTimeLabel(message.SentAt)</small>
+                            </span>
+                            <strong>@message.Message</strong>
+                        </div>
+                    </div>
+                }
+            </div>
+            @if (!string.IsNullOrWhiteSpace(ViewModel.NotificationMessage))
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">
+                    @ViewModel.NotificationMessage
+                </MudAlert>
+            }
+            <div class="platform-diagram-room-composer">
+                <MudTextField T="string"
+                              Value="@ViewModel.MessageInput"
+                              ValueChanged="@((string value) => ViewModel.MessageInput = value)"
+                              Placeholder="메시지를 입력하세요"
+                              Immediate="true"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Lines="2"
+                              aria-label="다이어그램 대화방 메시지 입력" />
+                <MudIconButton Icon="@Icons.Material.Filled.Send"
+                               Color="Color.Primary"
+                               Disabled="@(!ViewModel.CanSend)"
+                               OnClick="SendMessageAsync"
+                               aria-label="다이어그램 대화방 메시지 전송" />
+            </div>
+            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Send"
+                           OnClick="PrepareShare">
+                    현재 다이어그램 공유
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Secondary"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.OpenInNew"
+                           Disabled="@(!CanOpenWork)"
+                           OnClick="OnOpenWork">
+                    업무 화면 열기
+                </MudButton>
+            </MudStack>
+        </MudStack>
+    </aside>
+}
+
+<button type="button"
+        class="platform-diagram-room-fab"
+        title="다이어그램 대화방"
+        aria-label="다이어그램 대화방"
+        @onclick="TogglePanelAsync"
+        @onclick:stopPropagation="true"
+        @onpointerdown:stopPropagation="true"
+        @onpointerup:stopPropagation="true">
+    <MudIcon Icon="@Icons.Material.Filled.Forum" Size="Size.Medium" />
+</button>
+
+@code {
+    private const string DiagramCollaborationHubPath = "/hubs/diagram-collaboration";
+    private ElementReference feedElement;
+    private IJSObjectReference? diagramModule;
+
+    [Parameter, EditorRequired]
+    public PlatformCommunityDiagramChatViewModel ViewModel { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public CommunityDiagramChatContext Context { get; set; } = default!;
+
+    [Parameter]
+    public int NodeCount { get; set; }
+
+    [Parameter]
+    public int EdgeCount { get; set; }
+
+    [Parameter]
+    public bool CanOpenWork { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenWork { get; set; }
+
+    protected override void OnParametersSet()
+        => ViewModel.SetContext(Context);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!ViewModel.NeedsFeedScroll)
+        {
+            return;
+        }
+
+        ViewModel.MarkFeedScrolled();
+        diagramModule ??= await JSRuntime.InvokeAsync<IJSObjectReference>("import", "/js/platformDiagram.js");
+        await diagramModule.InvokeVoidAsync("scrollToBottom", feedElement);
+    }
+
+    private async Task TogglePanelAsync()
+    {
+        ViewModel.SetContext(Context);
+        await ViewModel.TogglePanelAsync();
+    }
+
+    private void ClosePanel() => ViewModel.ClosePanel();
+
+    private void PrepareShare()
+    {
+        ViewModel.SetContext(Context);
+        ViewModel.PrepareShare(NodeCount, EdgeCount);
+    }
+
+    private async Task SendMessageAsync()
+    {
+        ViewModel.SetContext(Context);
+        await ViewModel.SendAsync();
+    }
+
+    private static string BuildMessageClass(CommunityDiagramChatMessage message)
+    {
+        var mine = message.IsMine ? " platform-diagram-room-message--mine" : string.Empty;
+        var system = message.IsSystem ? " platform-diagram-room-message--system" : string.Empty;
+        return $"platform-diagram-room-message{mine}{system}";
+    }
+
+    private static string BuildAuthorLabel(CommunityDiagramChatMessage message)
+        => message.IsSystem ? "시스템" : message.IsMine ? "나" : message.SenderDisplayName;
+
+    private static string BuildTimeLabel(DateTime sentAtUtc)
+    {
+        var local = sentAtUtc.Kind == DateTimeKind.Utc ? sentAtUtc.ToLocalTime() : sentAtUtc;
+        return local.ToString("HH:mm", CultureInfo.CurrentCulture);
+    }
+
+    private static string BuildAvatarText(string displayName)
+    {
+        var text = string.IsNullOrWhiteSpace(displayName) ? "익명" : displayName.Trim();
+        return text.Length <= 2 ? text : text[..1];
+    }
+
+    private static string BuildAvatarStyle(string senderUserId)
+    {
+        var colors = new[] { "#2563eb", "#0891b2", "#7c3aed", "#16a34a", "#be123c", "#c2410c" };
+        var hash = string.IsNullOrWhiteSpace(senderUserId)
+            ? 0
+            : senderUserId.Aggregate(0, (current, ch) => unchecked(current * 31 + ch));
+        var index = Math.Abs(hash % colors.Length);
+        return $"--diagram-room-avatar-color: {colors[index]};";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (diagramModule is not null)
+        {
+            await diagramModule.DisposeAsync();
+        }
+    }
+}

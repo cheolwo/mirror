@@ -638,6 +638,7 @@ public static class HongdalV1DevelopmentDataSeeder
                 주문자UserId = shipperId,
                 판매자UserId = shipperId,
                 운송의뢰Id = "V1-DEV-REQ-003",
+                공급처코드 = "V1-DEV-SUP-001",
                 공급처명 = supplierName,
                 원주문참조번호 = originalReference,
                 상태 = status,
@@ -669,6 +670,7 @@ public static class HongdalV1DevelopmentDataSeeder
         inbound.자동생성여부 = true;
         inbound.판매자UserId = shipperId;
         inbound.운송의뢰Id = "V1-DEV-REQ-003";
+        inbound.공급처코드 = "V1-DEV-SUP-001";
         inbound.공급처명 = supplierName;
         inbound.원주문참조번호 = originalReference;
         inbound.상태 = status;

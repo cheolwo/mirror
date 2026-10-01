@@ -1,0 +1,41 @@
+<section class="ingredient-supply-progress" aria-labelledby="ingredient-supply-progress-title">
+    <div class="ingredient-supply-page__section-heading">
+        <div>
+            <MudText Typo="Typo.overline">요청 진행</MudText>
+            <MudText Typo="Typo.h6" id="ingredient-supply-progress-title">저장된 공급 요청</MudText>
+        </div>
+        <MudChip T="string" Variant="Variant.Outlined">@Requests.Count 건</MudChip>
+    </div>
+
+    <div class="ingredient-supply-progress__list">
+        @foreach (var request in Requests)
+        {
+            <article>
+                <div class="ingredient-supply-progress__status">
+                    <MudIcon Icon="@(request.요청.공급경로 == 음식점식재료공급경로.국내산지 ? Icons.Material.Filled.Agriculture : Icons.Material.Filled.Public)" />
+                    <div>
+                        <strong>@request.요청.품목명</strong>
+                        <span>@request.요청Id · @request.상태Label</span>
+                    </div>
+                </div>
+                <dl>
+                    <div><dt>경로</dt><dd>@RouteLabel(request.요청.공급경로)</dd></div>
+                    <div><dt>수량</dt><dd>@request.요청.필요수량.ToString("N0")@request.요청.수량단위 · @request.요청.납품주기</dd></div>
+                    <div><dt>납품</dt><dd>@request.요청.희망납품일?.ToString("yyyy.MM.dd") · @request.요청.납품지역</dd></div>
+                    <div><dt>선택 조건</dt><dd>@(request.선택후보Label ?? "아직 선택하지 않음")</dd></div>
+                </dl>
+                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">운영 효력 없음</MudChip>
+            </article>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<음식점식재료공급요청Snapshot> Requests { get; set; } = [];
+
+    private static string RouteLabel(음식점식재료공급경로 route)
+        => route == 음식점식재료공급경로.국내산지
+            ? "국내 산지"
+            : "수입 공동공급";
+}

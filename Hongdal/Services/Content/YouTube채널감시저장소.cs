@@ -12,6 +12,10 @@ public interface IYouTube채널감시저장소
 
     Task<List<YouTube감시채널>> 활성채널추적조회Async(CancellationToken cancellationToken);
 
+    Task<List<YouTube감시채널>> 국가별활성채널추적조회Async(
+        string 국가코드,
+        CancellationToken cancellationToken);
+
     Task<HashSet<string>> 기존영상Id조회Async(
         string channelId,
         IReadOnlyCollection<string> 후보VideoIds,
@@ -61,6 +65,17 @@ public sealed class EfYouTube채널감시저장소 : IYouTube채널감시저장�
             .Where(x => x.활성화여부)
             .OrderBy(x => x.Id)
             .ToListAsync(cancellationToken);
+
+    public Task<List<YouTube감시채널>> 국가별활성채널추적조회Async(
+        string 국가코드,
+        CancellationToken cancellationToken)
+    {
+        var query = _db.YouTube감시채널.Where(channel => channel.활성화여부);
+        query = 국가코드 == Contracts.Common.Content.YouTube채널수집국가코드.미분류
+            ? query.Where(channel => channel.국가코드 == null || channel.국가코드 == string.Empty || channel.국가코드 == 국가코드)
+            : query.Where(channel => channel.국가코드 == 국가코드);
+        return query.OrderBy(channel => channel.Id).ToListAsync(cancellationToken);
+    }
 
     public async Task<HashSet<string>> 기존영상Id조회Async(
         string channelId,

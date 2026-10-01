@@ -1,0 +1,311 @@
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inherits ViewModelParameterComponentBase<CommunityAuthoringMutualBenefitViewModel>
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<section class="community-mutual-benefit-tool" aria-label="상호 이익 사전 검토">
+    <header class="community-mutual-benefit-tool__heading">
+        <div>
+            <MudText Typo="Typo.overline" Color="Color.Primary">MUTUAL BENEFIT REVIEW</MudText>
+            <MudText Typo="Typo.subtitle1">Win-Win 사전 검토</MudText>
+        </div>
+        <MudTooltip Text="기본 역할과 규칙으로 초기화">
+            <MudIconButton Icon="@Icons.Material.Filled.RestartAlt"
+                           Color="Color.Default"
+                           OnClick="Reset"
+                           aria-label="상호 이익 검토 초기화" />
+        </MudTooltip>
+    </header>
+
+    <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">
+        한쪽의 이익만 계산하지 않고 영향을 받는 역할별 편익·부담·위험을 나란히 확인합니다. 이 결과는 거래 승인이나 실행 지시가 아닙니다.
+    </MudAlert>
+
+    <div class="community-mutual-benefit-tool__shared-rules">
+        <MudTextField T="string"
+                      Label="함께 이루려는 목적"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Immediate="true"
+                      Lines="2"
+                      @bind-Value="ViewModel.SharedPurpose" />
+        <div class="community-mutual-benefit-tool__rule-grid">
+            <MudTextField T="string"
+                          Label="비용·편익·업무 배분 기준"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Immediate="true"
+                          Lines="3"
+                          @bind-Value="ViewModel.AllocationRule" />
+            <MudTextField T="string"
+                          Label="중단·재협의 기준"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Immediate="true"
+                          Lines="3"
+                          @bind-Value="ViewModel.ExitRule" />
+        </div>
+        <div class="community-mutual-benefit-tool__evidence-grid">
+            <MudTextField T="string"
+                          Label="근거와 확인 시점"
+                          Placeholder="가격 자료, 예비 견적, 인터뷰와 확인 날짜"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Immediate="true"
+                          @bind-Value="ViewModel.EvidenceNote" />
+            <MudTextField T="string"
+                          Label="통화"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Immediate="true"
+                          MaxLength="3"
+                          @bind-Value="ViewModel.CurrencyCode" />
+        </div>
+    </div>
+
+    <div class="community-mutual-benefit-tool__role-heading">
+        <div>
+            <MudText Typo="Typo.subtitle2">영향을 받는 역할</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@($"{ViewModel.Roles.Count:N0}개 역할")</MudText>
+        </div>
+        <div class="community-mutual-benefit-tool__role-actions">
+            @if (ImportDiagramRolesRequested.HasDelegate)
+            {
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.AccountTree"
+                           OnClick="ImportDiagramRolesRequested">
+                    다이어그램 역할
+                </MudButton>
+            }
+            <MudTooltip Text="영향을 받는 역할 추가">
+                <MudIconButton Icon="@Icons.Material.Filled.PersonAdd"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               OnClick="AddRole"
+                               aria-label="역할 추가" />
+            </MudTooltip>
+        </div>
+    </div>
+
+    <div class="community-mutual-benefit-tool__roles">
+        @foreach (var role in ViewModel.Roles)
+        {
+            var roleAssessment = ViewModel.Assessment?.Roles.FirstOrDefault(item =>
+                string.Equals(item.RoleKey, role.RoleKey, StringComparison.Ordinal));
+            <section class="community-mutual-benefit-role" @key="role.RoleKey">
+                <header>
+                    <div class="community-mutual-benefit-role__identity">
+                        <MudTextField T="string"
+                                      Label="역할"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      @bind-Value="role.RoleLabel" />
+                        <MudTextField T="string"
+                                      Label="후보·참여자"
+                                      Placeholder="미정 가능"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      @bind-Value="role.ParticipantLabel" />
+                    </div>
+                    <MudTooltip Text="역할 제거">
+                        <MudIconButton Icon="@Icons.Material.Filled.RemoveCircleOutline"
+                                       Color="Color.Error"
+                                       Size="Size.Small"
+                                       OnClick="@(() => RemoveRole(role))"
+                                       aria-label="역할 제거" />
+                    </MudTooltip>
+                </header>
+                <div class="community-mutual-benefit-role__descriptions">
+                    <MudTextField T="string"
+                                  Label="기대 편익"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  Lines="2"
+                                  @bind-Value="role.ExpectedBenefit" />
+                    <MudTextField T="string"
+                                  Label="기여·부담"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  Lines="2"
+                                  @bind-Value="role.ContributionOrBurden" />
+                    <MudTextField T="string"
+                                  Label="위험·미확정 조건"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  Lines="2"
+                                  @bind-Value="role.RiskOrCondition" />
+                </div>
+                <div class="community-mutual-benefit-role__numbers">
+                    <MudNumericField T="decimal?"
+                                     Label="기대 편익 금액"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Min="0"
+                                     Adornment="Adornment.End"
+                                     AdornmentText="@ViewModel.CurrencyCode"
+                                     @bind-Value="role.ExpectedBenefitAmount" />
+                    <MudNumericField T="decimal?"
+                                     Label="예상 부담 금액"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Min="0"
+                                     Adornment="Adornment.End"
+                                     AdornmentText="@ViewModel.CurrencyCode"
+                                     @bind-Value="role.ExpectedBurdenAmount" />
+                    <MudCheckBox T="bool"
+                                 Label="당사자가 직접 확인함"
+                                 Color="Color.Primary"
+                                 @bind-Value="role.ParticipantReviewed" />
+                </div>
+                @if (roleAssessment is not null)
+                {
+                    <footer>
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Variant="Variant.Outlined"
+                                 Color="@RoleStatusColor(roleAssessment.StatusCode)"
+                                 Icon="@RoleStatusIcon(roleAssessment.StatusCode)">
+                            @CommunityAuthoringMutualBenefitViewModel.ResolveRoleStatusLabel(roleAssessment.StatusCode)
+                        </MudChip>
+                        @if (roleAssessment.NetBenefitAmount is decimal netBenefit)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @($"순편익 추정 {netBenefit:N2} {ViewModel.Assessment?.CurrencyCode}")
+                            </MudText>
+                        }
+                        @foreach (var issue in roleAssessment.Issues)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error">@issue</MudText>
+                        }
+                    </footer>
+                }
+            </section>
+        }
+    </div>
+
+    <div class="community-mutual-benefit-tool__controls">
+        <MudCheckBox T="bool"
+                     Label="역할별 금액을 글 본문에도 공개"
+                     Color="Color.Primary"
+                     @bind-Value="ViewModel.IncludeAmountsInDraft" />
+        <MudStack Row="true" Spacing="1" Justify="Justify.FlexEnd" Wrap="Wrap.Wrap">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Balance"
+                       OnClick="Evaluate">
+                판정하기
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.PostAdd"
+                       Disabled="@(!ViewModel.HasAssessment)"
+                       OnClick="ApplyToDraftRequested">
+                글에 넣기
+            </MudButton>
+        </MudStack>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ViewModel.StatusMessage))
+    {
+        <MudAlert Severity="@AssessmentSeverity" Dense="true" Variant="Variant.Outlined">
+            @ViewModel.StatusMessage
+        </MudAlert>
+    }
+
+    @if (ViewModel.Assessment is { } assessment)
+    {
+        <section class="community-mutual-benefit-result" aria-label="상호 이익 판정 결과">
+            <header>
+                <MudIcon Icon="@AssessmentIcon" Color="@AssessmentColor" />
+                <div>
+                    <MudText Typo="Typo.subtitle1">@ViewModel.AssessmentStatusLabel</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        @($"당사자 확인 {assessment.ReviewedRoleCount:N0}/{assessment.RoleCount:N0} · 금액 비교 {assessment.QuantifiedRoleCount:N0}/{assessment.RoleCount:N0}")
+                    </MudText>
+                </div>
+            </header>
+            @foreach (var issue in assessment.Issues)
+            {
+                <MudText Typo="Typo.body2" Color="Color.Error">@issue</MudText>
+            }
+            @foreach (var warning in assessment.Warnings)
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@warning</MudText>
+            }
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                @CommunityMutualBenefitAssessmentResult.EconomicValidationNotice
+            </MudText>
+        </section>
+    }
+</section>
+
+@code {
+    [Parameter]
+    public EventCallback ImportDiagramRolesRequested { get; set; }
+
+    [Parameter]
+    public EventCallback ApplyToDraftRequested { get; set; }
+
+    private Severity AssessmentSeverity
+        => ViewModel.Assessment?.StatusCode switch
+        {
+            CommunityMutualBenefitAssessmentStatusCodes.NeedsAdjustment => Severity.Error,
+            CommunityMutualBenefitAssessmentStatusCodes.NeedsInformation => Severity.Warning,
+            CommunityMutualBenefitAssessmentStatusCodes.MutualBenefitCandidate => Severity.Success,
+            _ => Severity.Info
+        };
+
+    private Color AssessmentColor
+        => ViewModel.Assessment?.StatusCode switch
+        {
+            CommunityMutualBenefitAssessmentStatusCodes.NeedsAdjustment => Color.Error,
+            CommunityMutualBenefitAssessmentStatusCodes.NeedsInformation => Color.Warning,
+            CommunityMutualBenefitAssessmentStatusCodes.MutualBenefitCandidate => Color.Success,
+            _ => Color.Info
+        };
+
+    private string AssessmentIcon
+        => ViewModel.Assessment?.StatusCode switch
+        {
+            CommunityMutualBenefitAssessmentStatusCodes.NeedsAdjustment => Icons.Material.Filled.ReportProblem,
+            CommunityMutualBenefitAssessmentStatusCodes.NeedsInformation => Icons.Material.Filled.HelpOutline,
+            CommunityMutualBenefitAssessmentStatusCodes.MutualBenefitCandidate => Icons.Material.Filled.Handshake,
+            _ => Icons.Material.Filled.Forum
+        };
+
+    private void AddRole()
+        => ViewModel.AddRole();
+
+    private void RemoveRole(CommunityMutualBenefitRoleViewModel role)
+        => ViewModel.RemoveRole(role);
+
+    private void Evaluate()
+        => ViewModel.Evaluate();
+
+    private void Reset()
+        => ViewModel.Reset();
+
+    private static Color RoleStatusColor(string statusCode)
+        => statusCode switch
+        {
+            CommunityMutualBenefitRoleStatusCodes.NeedsAdjustment => Color.Error,
+            CommunityMutualBenefitRoleStatusCodes.NeedsInformation => Color.Warning,
+            CommunityMutualBenefitRoleStatusCodes.Candidate => Color.Success,
+            _ => Color.Info
+        };
+
+    private static string RoleStatusIcon(string statusCode)
+        => statusCode switch
+        {
+            CommunityMutualBenefitRoleStatusCodes.NeedsAdjustment => Icons.Material.Filled.ReportProblem,
+            CommunityMutualBenefitRoleStatusCodes.NeedsInformation => Icons.Material.Filled.HelpOutline,
+            CommunityMutualBenefitRoleStatusCodes.Candidate => Icons.Material.Filled.CheckCircle,
+            _ => Icons.Material.Filled.Schedule
+        };
+}

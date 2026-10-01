@@ -1,0 +1,476 @@
+@page "/shipper/customs/hs-reviews"
+@using HongdalApp.Models.Shipper
+@using HongdalApp.Services.Customs
+@inject ICustomsHsReviewService CustomsReviewService
+@inject IHsCodeAgencyCapabilityService HsCodeAgencyCapabilityService
+@inject IShipperOperationsService ShipperOperations
+
+<PageTitle>HS 코드 검토</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="py-6">
+    <MudStack Spacing="3">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h4">HS 코드 검토</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">수출입 물류 흐름이 감지되면 관세사 검토 요청을 만들고, 후보 HS 코드를 근거와 함께 확인합니다.</MudText>
+            </MudStack>
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="LoadAsync">새로고침</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Disabled="isBusy" OnClick="CreateSampleExportRequestAsync">샘플 수출 의뢰 등록</MudButton>
+            </MudStack>
+        </MudStack>
+
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <MudAlert Severity="@messageSeverity">@message</MudAlert>
+        }
+
+        <MudPaper Class="pa-4" Outlined="true">
+            <MudStack Spacing="3">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.h6">HS 코드 기반 대행 가능성 조회</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">화주가 HS 코드로 플랫폼 내 통관 대행·수입 대행 이력과 필요 서류를 확인합니다.</MudText>
+                    </MudStack>
+                    <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">화주 조회 권한</MudChip>
+                </MudStack>
+
+                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.End" Wrap="Wrap.Wrap">
+                    <MudTextField @bind-Value="hsCodeQuery"
+                                  Label="HS 코드"
+                                  Placeholder="예: 9401.69"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Disabled="isCapabilityBusy"
+                               OnClick="LookupHsCodeAgencyCapabilityAsync">
+                        조회
+                    </MudButton>
+                </MudStack>
+
+                <MudStack Spacing="2">
+                    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                        <MudText Typo="Typo.subtitle2">HS 코드 업무 분류</MudText>
+                        <MudButton Size="Size.Small"
+                                   Variant="@SelectedCategoryButtonVariant(HsCodeBusinessCategory.All)"
+                                   Color="Color.Primary"
+                                   OnClick="() => SetBusinessCategoryAsync(HsCodeBusinessCategory.All)">
+                            전체
+                        </MudButton>
+                        <MudButton Size="Size.Small"
+                                   Variant="@SelectedCategoryButtonVariant(HsCodeBusinessCategory.Food)"
+                                   Color="Color.Primary"
+                                   OnClick="() => SetBusinessCategoryAsync(HsCodeBusinessCategory.Food)">
+                            식품 관련
+                        </MudButton>
+                        <MudButton Size="Size.Small"
+                                   Variant="@SelectedCategoryButtonVariant(HsCodeBusinessCategory.GeneralCargo)"
+                                   Color="Color.Primary"
+                                   OnClick="() => SetBusinessCategoryAsync(HsCodeBusinessCategory.GeneralCargo)">
+                            일반 화물
+                        </MudButton>
+                    </MudStack>
+
+                    @if (capabilitySamples.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">해당 분류에 표시할 HS 코드가 없습니다.</MudText>
+                    }
+                    else
+                    {
+                        <MudTable Items="capabilitySamples" Dense="true" Hover="true">
+                            <HeaderContent>
+                                <MudTh>HS 코드</MudTh>
+                                <MudTh>분류</MudTh>
+                                <MudTh>리스크</MudTh>
+                                <MudTh>주의 태그</MudTh>
+                                <MudTh>통관/수입 이력</MudTh>
+                                <MudTh></MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="HS 코드">@context.HsCode</MudTd>
+                                <MudTd DataLabel="분류">@BusinessCategoryLabel(context.BusinessCategory)</MudTd>
+                                <MudTd DataLabel="리스크">@context.RiskLevel</MudTd>
+                                <MudTd DataLabel="주의 태그">
+                                    <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                        @foreach (var tag in context.RiskTags.Take(2))
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Color="@RiskTagColor(tag)" Variant="Variant.Outlined">@tag.Label</MudChip>
+                                        }
+                                        @if (context.RiskTags.Count > 2)
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Variant="Variant.Text">+@(context.RiskTags.Count - 2)</MudChip>
+                                        }
+                                    </MudStack>
+                                </MudTd>
+                                <MudTd DataLabel="통관/수입 이력">@context.CustomsAgencyCaseCount / @context.ImportAgencyCaseCount</MudTd>
+                                <MudTd>
+                                    <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="() => SelectCapabilitySampleAsync(context)">
+                                        상세 조회
+                                    </MudButton>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </MudStack>
+
+                @if (capabilityResult is not null)
+                {
+                    <MudGrid>
+                        <MudItem xs="12" md="3">
+                            <MudPaper Class="pa-3" Outlined="true">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">통관 대행</MudText>
+                                <MudText Typo="Typo.h6">@(capabilityResult.HasPlatformCustomsAgency ? "가능 이력 있음" : "이력 없음")</MudText>
+                                <MudText Typo="Typo.body2">@(capabilityResult.CustomsAgencyCaseCount)건</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" md="3">
+                            <MudPaper Class="pa-3" Outlined="true">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">수입 대행</MudText>
+                                <MudText Typo="Typo.h6">@(capabilityResult.HasPlatformImportAgency ? "가능 이력 있음" : "이력 없음")</MudText>
+                                <MudText Typo="Typo.body2">@(capabilityResult.ImportAgencyCaseCount)건</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" md="3">
+                            <MudPaper Class="pa-3" Outlined="true">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">리스크</MudText>
+                                <MudText Typo="Typo.h6">@capabilityResult.RiskLevel</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" md="3">
+                            <MudPaper Class="pa-3" Outlined="true">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">조회 HS</MudText>
+                                <MudText Typo="Typo.h6">@capabilityResult.HsCode</MudText>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudAlert Severity="Severity.Info">@capabilityResult.Summary</MudAlert>
+                    <MudAlert Severity="Severity.Warning">@capabilityResult.DisclosurePolicy</MudAlert>
+
+                    @if (capabilityResult.RiskTags.Count > 0)
+                    {
+                        <MudPaper Class="pa-3" Outlined="true">
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.subtitle2">HS 코드 주의 태그</MudText>
+                                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                    @foreach (var tag in capabilityResult.RiskTags)
+                                    {
+                                        <MudChip T="string" Color="@RiskTagColor(tag)" Variant="Variant.Outlined">@tag.Label</MudChip>
+                                    }
+                                </MudStack>
+                                <MudList T="HsCodeAgencyRiskTag" Dense="true">
+                                    @foreach (var tag in capabilityResult.RiskTags)
+                                    {
+                                        <MudListItem T="HsCodeAgencyRiskTag">
+                                            <MudText Typo="Typo.body2">@tag.Label</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@tag.Reason</MudText>
+                                        </MudListItem>
+                                    }
+                                </MudList>
+                            </MudStack>
+                        </MudPaper>
+                    }
+
+                    @if (capabilityResult.PaidAccessRequired && !paidDataUnlocked)
+                    {
+                        <MudPaper Class="pa-3" Outlined="true">
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.subtitle2">동의 기반 사례 데이터</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                        공개 동의된 화주 사례만 익명화해 열람합니다. 열람료 @capabilityResult.PaidAccessPrice.ToString("N0")원 중 @capabilityResult.ContributorRewardRate.ToString("P0")는 데이터 제공 화주 정산 대상으로 표시됩니다.
+                                    </MudText>
+                                </MudStack>
+                                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="UnlockPaidHsCodeData">
+                                    유료 열람 승인
+                                </MudButton>
+                            </MudStack>
+                        </MudPaper>
+                    }
+
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudText Typo="Typo.subtitle2" Class="mb-2">최근 플랫폼 처리 이력</MudText>
+                            @if (capabilityResult.RecentCases.Count == 0)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">확인 가능한 처리 이력이 없습니다.</MudText>
+                            }
+                            else
+                            {
+                                <MudTable Items="VisibleCapabilityCases()" Dense="true" Hover="true">
+                                    <HeaderContent>
+                                        <MudTh>유형</MudTh>
+                                        <MudTh>경로</MudTh>
+                                        <MudTh>상태</MudTh>
+                                        <MudTh>메모</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd DataLabel="유형">@context.AgencyType</MudTd>
+                                        <MudTd DataLabel="경로">@context.CountryRoute</MudTd>
+                                        <MudTd DataLabel="상태">@context.CaseStatus</MudTd>
+                                        <MudTd DataLabel="메모">@context.Note</MudTd>
+                                    </RowTemplate>
+                                </MudTable>
+                                @if (capabilityResult.PaidAccessRequired && !paidDataUnlocked)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        비동의 사례와 유료 세부 사례는 숨김 처리됩니다.
+                                    </MudText>
+                                }
+                            }
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudText Typo="Typo.subtitle2" Class="mb-2">요청 전 준비 서류</MudText>
+                            <MudList T="string" Dense="true">
+                                @foreach (var document in capabilityResult.RequiredDocuments)
+                                {
+                                    <MudListItem T="string">@document</MudListItem>
+                                }
+                            </MudList>
+                        </MudItem>
+                    </MudGrid>
+                }
+            </MudStack>
+        </MudPaper>
+
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4" Outlined="true">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">검토 요청</MudText>
+                    <MudText Typo="Typo.h4">@RequestedCount</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4" Outlined="true">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">관세사 배정</MudText>
+                    <MudText Typo="Typo.h4">@AssignedCount</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4" Outlined="true">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">검토 완료</MudText>
+                    <MudText Typo="Typo.h4">@CompletedCount</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-3">관세사 HS 검토함</MudText>
+                @if (reviews.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info">HS 검토 요청이 없습니다. 수출입 의뢰가 등록되면 자동으로 요청이 생성됩니다.</MudAlert>
+                }
+                else
+                {
+                    <MudTable Items="reviews.OrderByDescending(x => x.CreatedAt)" Dense="true" Hover="true">
+                        <HeaderContent>
+                            <MudTh>의뢰</MudTh>
+                            <MudTh>흐름</MudTh>
+                            <MudTh>상품</MudTh>
+                            <MudTh>후보 HS</MudTh>
+                            <MudTh>관세사</MudTh>
+                            <MudTh>상태</MudTh>
+                            <MudTh>작업</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="의뢰">@context.TransportRequestId</MudTd>
+                            <MudTd DataLabel="흐름">@context.FlowDirection</MudTd>
+                            <MudTd DataLabel="상품">
+                                <MudText Typo="Typo.body2">@context.CargoName</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@context.PickupLocation → @context.DropoffLocation</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="후보 HS">
+                                <MudText Typo="Typo.body2">@FormatTopSuggestion(context)</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Suggestions.FirstOrDefault()?.Reason</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="관세사">@DisplayBroker(context)</MudTd>
+                            <MudTd DataLabel="상태">@context.Status</MudTd>
+                            <MudTd DataLabel="작업">
+                                <MudStack Row="true" Spacing="1">
+                                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="context.Status != CustomsHsReviewStatusCodes.Requested" OnClick="() => AssignBrokerAsync(context.Id)">배정</MudButton>
+                                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" Disabled="context.Status == CustomsHsReviewStatusCodes.Completed" OnClick="() => CompleteReviewAsync(context)">HS 확정</MudButton>
+                                </MudStack>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudStack>
+</MudContainer>
+
+@code {
+    private readonly List<CustomsHsReviewRequest> reviews = [];
+    private bool isBusy;
+    private bool isCapabilityBusy;
+    private bool paidDataUnlocked;
+    private HsCodeBusinessCategory selectedBusinessCategory = HsCodeBusinessCategory.All;
+    private IReadOnlyList<HsCodeAgencyCapabilityResult> capabilitySamples = [];
+    private string hsCodeQuery = "9401.69";
+    private HsCodeAgencyCapabilityResult? capabilityResult;
+    private string? message;
+    private Severity messageSeverity = Severity.Info;
+
+    private int RequestedCount => reviews.Count(x => x.Status == CustomsHsReviewStatusCodes.Requested);
+    private int AssignedCount => reviews.Count(x => x.Status == CustomsHsReviewStatusCodes.BrokerAssigned);
+    private int CompletedCount => reviews.Count(x => x.Status == CustomsHsReviewStatusCodes.Completed);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+        await LoadCapabilitySamplesAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        reviews.Clear();
+        reviews.AddRange(await CustomsReviewService.GetReviewsAsync());
+    }
+
+    private async Task LookupHsCodeAgencyCapabilityAsync()
+    {
+        if (isCapabilityBusy)
+        {
+            return;
+        }
+
+        isCapabilityBusy = true;
+        try
+        {
+            capabilityResult = await HsCodeAgencyCapabilityService.LookupAsync(hsCodeQuery, "shipper-demo");
+            paidDataUnlocked = false;
+        }
+        catch (Exception ex)
+        {
+            messageSeverity = Severity.Error;
+            message = ex.Message;
+        }
+        finally
+        {
+            isCapabilityBusy = false;
+        }
+    }
+
+    private async Task LoadCapabilitySamplesAsync()
+    {
+        capabilitySamples = await HsCodeAgencyCapabilityService.BrowseAsync(selectedBusinessCategory, "shipper-demo");
+    }
+
+    private async Task SetBusinessCategoryAsync(HsCodeBusinessCategory category)
+    {
+        selectedBusinessCategory = category;
+        await LoadCapabilitySamplesAsync();
+    }
+
+    private async Task SelectCapabilitySampleAsync(HsCodeAgencyCapabilityResult item)
+    {
+        hsCodeQuery = item.HsCode;
+        await LookupHsCodeAgencyCapabilityAsync();
+    }
+
+    private Variant SelectedCategoryButtonVariant(HsCodeBusinessCategory category)
+        => selectedBusinessCategory == category ? Variant.Filled : Variant.Outlined;
+
+    private static string BusinessCategoryLabel(HsCodeBusinessCategory category)
+        => category switch
+        {
+            HsCodeBusinessCategory.Food => "식품 관련",
+            HsCodeBusinessCategory.GeneralCargo => "일반 화물",
+            HsCodeBusinessCategory.Mixed => "복합",
+            HsCodeBusinessCategory.Unknown => "미분류",
+            _ => "전체"
+        };
+
+    private static Color RiskTagColor(HsCodeAgencyRiskTag tag)
+        => tag.Severity == "high" ? Color.Warning : Color.Info;
+
+    private void UnlockPaidHsCodeData()
+    {
+        paidDataUnlocked = true;
+        messageSeverity = Severity.Success;
+        message = "샘플 열람 승인이 완료되었습니다. 실제 결제 연동 시에는 결제 승인 후 동의된 사례만 표시됩니다.";
+    }
+
+    private IReadOnlyList<HsCodeAgencyCapabilityCase> VisibleCapabilityCases()
+    {
+        if (capabilityResult is null)
+        {
+            return [];
+        }
+
+        return capabilityResult.RecentCases
+            .Where(x => x.ContributorConsented && (!x.IsPaidDetail || paidDataUnlocked))
+            .ToList();
+    }
+
+    private async Task CreateSampleExportRequestAsync()
+    {
+        if (isBusy)
+        {
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            await ShipperOperations.AddRequestAsync(new ShipperRequestItem
+            {
+                의뢰Id = $"SHP-EXP-{DateTime.Now:HHmmss}",
+                화물종류 = "원목 의자 세트",
+                의뢰상태 = "접수",
+                결제상태 = "결제대기",
+                배차상태 = "매칭중",
+                운송방식 = "수출운송",
+                차량종류 = "1톤",
+                결제수단 = "별도정산",
+                결제예정금액 = 260000,
+                생성일시 = DateTime.Now,
+                픽업지 = "서울 서부 허브",
+                하차지 = "Seattle, WA, United States"
+            });
+
+            await LoadAsync();
+            messageSeverity = Severity.Success;
+            message = "수출 운송의뢰를 등록하고 HS 코드 검토 요청을 생성했습니다.";
+        }
+        catch (Exception ex)
+        {
+            messageSeverity = Severity.Error;
+            message = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task AssignBrokerAsync(long reviewId)
+    {
+        var broker = CustomsReviewService.GetAvailableBrokers().First();
+        await CustomsReviewService.AssignBrokerAsync(reviewId, broker.BrokerId);
+        await LoadAsync();
+    }
+
+    private async Task CompleteReviewAsync(CustomsHsReviewRequest review)
+    {
+        var hsCode = review.Suggestions.FirstOrDefault(x => x.HsCode != "검토필요")?.HsCode ?? "검토필요";
+        await CustomsReviewService.CompleteReviewAsync(review.Id, hsCode, "샘플 관세사 검토로 HS 코드를 확정했습니다.");
+        await LoadAsync();
+    }
+
+    private static string FormatTopSuggestion(CustomsHsReviewRequest review)
+    {
+        var suggestion = review.Suggestions.FirstOrDefault();
+        if (suggestion is null)
+        {
+            return "-";
+        }
+
+        return $"{suggestion.HsCode} · {suggestion.ConfidenceScore:P0}";
+    }
+
+    private static string DisplayBroker(CustomsHsReviewRequest review)
+        => string.IsNullOrWhiteSpace(review.AssignedBrokerName) ? "-" : review.AssignedBrokerName!;
+}

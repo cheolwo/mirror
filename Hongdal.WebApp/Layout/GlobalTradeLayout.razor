@@ -1,0 +1,33 @@
+@inherits LayoutComponentBase
+
+<MudLayout Class="global-trade-shell">
+    <MudAppBar Elevation="0" Color="Color.Transparent" Class="global-trade-nav">
+        <MudLink Href="@GlobalTradeRoutes.Home" Underline="Underline.None" Class="global-trade-brand">
+            <span class="global-trade-brand-mark">H</span>
+            <span>
+                <strong>Hongdal Global</strong>
+                <small>Trade discovery for Korea</small>
+            </span>
+        </MudLink>
+        <MudSpacer />
+        <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Class="global-trade-nav-actions">
+            <MudButton Href="@GlobalTradeRoutes.Home" Variant="Variant.Text" Color="Color.Inherit">Products</MudButton>
+            <MudButton Href="@GlobalTradeRoutes.CommunityThread(101)" Variant="Variant.Text" Color="Color.Inherit">Community</MudButton>
+            <MudButton Href="@GlobalTradeRoutes.SupplierApply" Variant="Variant.Text" Color="Color.Inherit">For suppliers</MudButton>
+            <MudButton Href="@GlobalTradeRoutes.ImportRequests" Variant="Variant.Text" Color="Color.Inherit">한국 수입 검토</MudButton>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">EN · 한국어</MudChip>
+        </MudStack>
+    </MudAppBar>
+
+    <MudMainContent Class="global-trade-main">
+        @Body
+    </MudMainContent>
+
+    <footer class="global-trade-footer">
+        <div>
+            <strong>Hongdal Global</strong>
+            <span>Discover globally. Validate demand. Bring products to Korea.</span>
+        </div>
+        <span>Trade information is reviewed before an import proceeds.</span>
+    </footer>
+</MudLayout>

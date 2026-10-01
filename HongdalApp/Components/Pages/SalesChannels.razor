@@ -1,0 +1,44 @@
+@page "/shipper/sales/channels"
+@inherits MvvmComponentBase<화주판매채널계정PageViewModel>
+@inject NavigationManager Navigation
+
+<PageTitle>판매채널 연결</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="py-6">
+    <MudStack Spacing="3">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h4">판매채널 연결</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    스마트스토어, 쿠팡 등 판매채널 계정을 연결해 입고상품 판매 흐름을 준비합니다.
+                </MudText>
+            </MudStack>
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Inventory2"
+                       OnClick="@(() => Navigation.NavigateTo(ShipperRoutes.ProductListings))">
+                출품 관리
+            </MudButton>
+        </MudStack>
+
+        @if (!string.IsNullOrWhiteSpace(ViewModel.초기화오류메시지))
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+                @ViewModel.초기화오류메시지
+            </MudAlert>
+        }
+
+        <HongdalSalesChannelAccountWorkspace ViewModel="@ViewModel.계정Crud"
+                                             ChannelOptions="@ViewModel.지원채널목록"
+                                             Initializing="@ViewModel.초기화중"
+                                             RefreshRequested="RefreshAsync" />
+    </MudStack>
+</MudContainer>
+
+@code {
+    protected override async Task OnInitializedAsync()
+        => await ViewModel.초기화Async();
+
+    private async Task RefreshAsync()
+        => await ViewModel.초기화Async();
+}

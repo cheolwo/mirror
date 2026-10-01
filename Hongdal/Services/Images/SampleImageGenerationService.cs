@@ -223,7 +223,11 @@ public sealed class 샘플이미지생성Service : I샘플이미지생성Service
         try
         {
             var result = await _kieAiClient.CreateTextToImageTaskAsync(
-                new KieAiCreateTaskRequest(entity.프롬프트, entity.종횡비, entity.해상도, callbackUrl),
+                new KieAiCreateTaskRequest(
+                    entity.프롬프트,
+                    entity.종횡비,
+                    Quality: null,
+                    CallBackUrl: callbackUrl),
                 cancellationToken);
 
             entity.외부TaskId = result.TaskId;
@@ -284,7 +288,8 @@ public sealed class 샘플이미지생성Service : I샘플이미지생성Service
         await using var imageStream = await _kieAiClient.DownloadImageAsync(detail.ImageUrl, cancellationToken);
         var extension = ResolveFileExtension(detail.ImageUrl);
         var fileName = $"{entity.작업코드}{extension}";
-        var folder = $"sample-images/{entity.이미지용도}/{entity.대상타입}/{entity.대상식별자}";
+        var rootFolder = entity.샘플데이터여부 ? "sample-images" : "generated-images";
+        var folder = $"{rootFolder}/{entity.이미지용도}/{entity.대상타입}/{entity.대상식별자}";
         var uploadResult = await _googleCloudStorageService.UploadAsync(imageStream, fileName, ResolveContentType(extension), folder, cancellationToken);
 
         entity.저장Bucket = uploadResult.BucketName;

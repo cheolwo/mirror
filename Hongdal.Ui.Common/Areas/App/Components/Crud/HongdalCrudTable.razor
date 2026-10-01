@@ -1,0 +1,70 @@
+@typeparam TItem where TItem : class
+@namespace Hongdal.Ui.Common.Areas.App.Components.Crud
+
+<MudTable T="TItem"
+          Items="@Items"
+          Loading="@Loading"
+          Dense="@Dense"
+          Hover="true"
+          Breakpoint="Breakpoint.Sm"
+          RowsPerPage="@RowsPerPage"
+          OnRowClick="HandleRowClick"
+          SelectedItem="@SelectedItem"
+          SelectedItemChanged="HandleSelectedItemChanged">
+    <HeaderContent>
+        @HeaderContent
+    </HeaderContent>
+    <RowTemplate Context="item">
+        @RowContent(item)
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="pa-4">@EmptyText</MudText>
+    </NoRecordsContent>
+    <PagerContent>
+        @if (ShowPager)
+        {
+            <MudTablePager PageSizeOptions="@PageSizeOptions" />
+        }
+    </PagerContent>
+</MudTable>
+
+@code {
+    [Parameter, EditorRequired]
+    public IEnumerable<TItem> Items { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public RenderFragment HeaderContent { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public RenderFragment<TItem> RowContent { get; set; } = default!;
+
+    [Parameter]
+    public TItem? SelectedItem { get; set; }
+
+    [Parameter]
+    public EventCallback<TItem> SelectedItemChanged { get; set; }
+
+    [Parameter]
+    public bool Loading { get; set; }
+
+    [Parameter]
+    public bool Dense { get; set; } = true;
+
+    [Parameter]
+    public bool ShowPager { get; set; } = true;
+
+    [Parameter]
+    public int RowsPerPage { get; set; } = 10;
+
+    [Parameter]
+    public int[] PageSizeOptions { get; set; } = [10, 25, 50];
+
+    [Parameter]
+    public string EmptyText { get; set; } = "조회된 항목이 없습니다.";
+
+    private Task HandleSelectedItemChanged(TItem? item)
+        => item is null ? Task.CompletedTask : SelectedItemChanged.InvokeAsync(item);
+
+    private Task HandleRowClick(TableRowClickEventArgs<TItem> args)
+        => args.Item is null ? Task.CompletedTask : SelectedItemChanged.InvokeAsync(args.Item);
+}

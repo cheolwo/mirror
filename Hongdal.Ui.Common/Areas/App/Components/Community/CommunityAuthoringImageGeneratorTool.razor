@@ -1,0 +1,275 @@
+@using Hongdal.Contracts.Common.Content
+@using Hongdal.Contracts.Common.Metadata
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@attribute [HongdalCodeMetadata(HongdalCodeFeatureKeys.CommunityAuthoringImage, HongdalCodeLayer.View, "문맥별 이미지 계획·검토·생성 상태를 표시하는 글쓰기 도구", ContractType = typeof(CommunityAuthoringImageGeneratorViewModel), FlowOrder = 5, Effects = HongdalCodeEffect.UiStateMutation | HongdalCodeEffect.MayIncurExternalCost, Boundary = "생성 버튼을 누르기 전 비용과 외부 전송 경계를 화면에 알립니다.")]
+@inherits ViewModelParameterComponentBase<CommunityAuthoringImageGeneratorViewModel>
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<section class="community-author-image-tool" aria-label="AI 글 이미지 생성">
+    <header class="community-author-image-tool__heading">
+        <div>
+            <MudText Typo="Typo.overline" Color="Color.Primary">GPT IMAGE</MudText>
+            <MudText Typo="Typo.subtitle1">문맥별 글 이미지</MudText>
+        </div>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.AutoFixHigh"
+                   Disabled="@ViewModel.IsBusy"
+                   OnClick="PlanAsync">
+            문맥 나누기
+        </MudButton>
+    </header>
+
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+        문맥 분석에는 생성 비용이 들지 않습니다. 선택한 문맥마다 Kie.ai 이미지 생성 작업이 별도로 한 건씩 등록되며, 수정한 프롬프트를 전송하기 전에 개인정보와 비공개 연락처를 제거해야 합니다.
+    </MudAlert>
+
+    <div class="community-author-image-tool__plan-controls">
+        <MudNumericField T="int"
+                         Label="최대 이미지"
+                         Min="1"
+                         Max="@CommunityAuthoringImageLimits.MaximumPlannedImages"
+                         @bind-Value="ViewModel.MaxImages"
+                         Variant="Variant.Outlined"
+                         Margin="Margin.Dense" />
+        <div class="community-author-image-tool__ratio-control">
+            <MudText Typo="Typo.caption">기본 비율</MudText>
+            <MudToggleGroup T="string"
+                            Value="@ViewModel.DefaultAspectRatio"
+                            ValueChanged="ChangeDefaultAspectRatio"
+                            SelectionMode="SelectionMode.SingleSelection"
+                            Outlined="true"
+                            Delimiters="true"
+                            Size="Size.Small"
+                            Color="Color.Primary">
+                <MudToggleItem T="string" Value="@CommunityAuthoringImageAspectRatios.Auto" Text="자동" />
+                <MudToggleItem T="string" Value="@CommunityAuthoringImageAspectRatios.Square" Text="정사각" />
+                <MudToggleItem T="string" Value="@CommunityAuthoringImageAspectRatios.Landscape" Text="가로" />
+                <MudToggleItem T="string" Value="@CommunityAuthoringImageAspectRatios.Portrait" Text="세로" />
+            </MudToggleGroup>
+        </div>
+    </div>
+
+    @if (ViewModel.IsBusy)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+    }
+
+    @if (!string.IsNullOrWhiteSpace(ViewModel.StatusMessage))
+    {
+        <MudAlert Severity="@StatusSeverity" Dense="true" Variant="Variant.Text" aria-live="polite">
+            @ViewModel.StatusMessage
+        </MudAlert>
+    }
+
+    @if (ViewModel.HasPlan)
+    {
+        <div class="community-author-image-tool__batch-bar">
+            <div class="community-author-image-tool__meta">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+                    원문 @ViewModel.SourceSectionCount 구간
+                </MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">
+                    생성 선택 @ViewModel.IncludedCount
+                </MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">
+                    게시글 첨부 @ViewModel.SelectedForPostCount/@CommunityAuthoringImageLimits.MaximumPlannedImages
+                </MudChip>
+            </div>
+            <div class="community-author-image-tool__actions">
+                @if (ViewModel.CanRefresh)
+                {
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Default"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Refresh"
+                               Disabled="@ViewModel.IsBusy"
+                               OnClick="RefreshPendingAsync">
+                        상태 확인
+                    </MudButton>
+                }
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Collections"
+                           Disabled="@(!ViewModel.CanGenerateSelected)"
+                           OnClick="GenerateSelectedAsync">
+                    선택 문맥 생성
+                </MudButton>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(ViewModel.Guidance))
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@ViewModel.Guidance</MudText>
+        }
+
+        <div class="community-author-image-tool__segments">
+            @foreach (var item in ViewModel.Items)
+            {
+                <article class="community-author-image-segment" aria-label="@($"이미지 문맥 {item.Sequence}: {item.Title}")">
+                    <header class="community-author-image-segment__heading">
+                        <div class="community-author-image-segment__title">
+                            <MudCheckBox T="bool"
+                                         @bind-Value="item.IsIncluded"
+                                         Color="Color.Primary"
+                                         Disabled="@ViewModel.IsBusy"
+                                         aria-label="@($"{item.Sequence}번 문맥 생성 선택")" />
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary">@item.Sequence</MudChip>
+                            <MudText Typo="Typo.subtitle2">@item.Title</MudText>
+                        </div>
+                        @if (item.Task is { } headingTask)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@TaskColor(headingTask)">
+                                @TaskStatusLabel(headingTask)
+                            </MudChip>
+                        }
+                    </header>
+
+                    <div class="community-author-image-segment__context">
+                        @item.Context
+                    </div>
+
+                    <MudTextField T="string"
+                                  Label="Kie.ai 프롬프트"
+                                  @bind-Value="item.Prompt"
+                                  Immediate="true"
+                                  Lines="8"
+                                  MaxLength="@CommunityAuthoringImageLimits.MaximumPromptLength"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+
+                    <div class="community-author-image-segment__controls">
+                        <MudToggleGroup T="string"
+                                        Value="@item.AspectRatio"
+                                        ValueChanged="@(value => ChangeAspectRatio(item, value))"
+                                        SelectionMode="SelectionMode.SingleSelection"
+                                        Outlined="true"
+                                        Delimiters="true"
+                                        Size="Size.Small"
+                                        Color="Color.Primary">
+                            <MudToggleItem T="string" Value="@CommunityAuthoringImageAspectRatios.Auto" Text="자동" />
+                            <MudToggleItem T="string" Value="@CommunityAuthoringImageAspectRatios.Square" Text="정사각" />
+                            <MudToggleItem T="string" Value="@CommunityAuthoringImageAspectRatios.Landscape" Text="가로" />
+                            <MudToggleItem T="string" Value="@CommunityAuthoringImageAspectRatios.Portrait" Text="세로" />
+                        </MudToggleGroup>
+
+                        <div class="community-author-image-tool__actions">
+                            @if (item.CanRefresh)
+                            {
+                                <MudTooltip Text="이 문맥의 생성 상태 확인">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                                   Size="Size.Small"
+                                                   Disabled="@ViewModel.IsBusy"
+                                                   OnClick="@(() => RefreshAsync(item))"
+                                                   aria-label="@($"{item.Sequence}번 이미지 상태 확인")" />
+                                </MudTooltip>
+                            }
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.Image"
+                                       Disabled="@(ViewModel.IsBusy || !item.CanGenerate)"
+                                       OnClick="@(() => GenerateAsync(item))">
+                                @(item.Task is null ? "생성" : "다시 생성")
+                            </MudButton>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(item.ErrorMessage))
+                    {
+                        <MudAlert Severity="Severity.Error" Dense="true" Variant="Variant.Text">
+                            @item.ErrorMessage
+                        </MudAlert>
+                    }
+
+                    @if (item.Task is { } task)
+                    {
+                        <div class="community-author-image-tool__meta">
+                            <span>@task.AspectRatio</span>
+                            <span>@task.Model</span>
+                            <span>@task.Message</span>
+                        </div>
+
+                        @if (task.IsSuccess && !string.IsNullOrWhiteSpace(task.ImageUrl))
+                        {
+                            <figure class="community-author-image-tool__preview">
+                                <img src="@task.ImageUrl"
+                                     alt="@($"{item.Title} 문맥의 AI 생성 이미지 미리보기")"
+                                     loading="lazy" />
+                                <figcaption>@task.Disclosure</figcaption>
+                            </figure>
+
+                            <MudButton Variant="@(item.IsSelectedForPost ? Variant.Outlined : Variant.Filled)"
+                                       Color="@(item.IsSelectedForPost ? Color.Success : Color.Primary)"
+                                       Size="Size.Small"
+                                       StartIcon="@(item.IsSelectedForPost ? Icons.Material.Filled.Close : Icons.Material.Filled.AttachFile)"
+                                       Disabled="@(ViewModel.IsBusy || (!item.IsSelectedForPost && !item.CanSelectForPost))"
+                                       OnClick="@(() => TogglePostSelection(item))">
+                                @(item.IsSelectedForPost ? "첨부 선택 해제" : "게시글 이미지로 선택")
+                            </MudButton>
+                        }
+                    }
+                </article>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter]
+    public string? DraftTitle { get; set; }
+
+    [Parameter]
+    public string? DraftBody { get; set; }
+
+    private Severity StatusSeverity
+        => ViewModel.StatusKind switch
+        {
+            CommunityComposerMessageKind.Success => Severity.Success,
+            CommunityComposerMessageKind.Warning => Severity.Warning,
+            CommunityComposerMessageKind.Error => Severity.Error,
+            _ => Severity.Info
+        };
+
+    private Task PlanAsync()
+        => ViewModel.PlanAsync(DraftTitle, DraftBody);
+
+    private void ChangeDefaultAspectRatio(string value)
+        => ViewModel.DefaultAspectRatio = value;
+
+    private static void ChangeAspectRatio(CommunityAuthoringImagePromptItemViewModel item, string value)
+        => item.AspectRatio = value;
+
+    private Task GenerateSelectedAsync()
+        => ViewModel.GenerateSelectedAsync();
+
+    private Task GenerateAsync(CommunityAuthoringImagePromptItemViewModel item)
+        => ViewModel.GenerateAsync(item);
+
+    private Task RefreshPendingAsync()
+        => ViewModel.RefreshPendingAsync();
+
+    private Task RefreshAsync(CommunityAuthoringImagePromptItemViewModel item)
+        => ViewModel.RefreshAsync(item);
+
+    private void TogglePostSelection(CommunityAuthoringImagePromptItemViewModel item)
+        => ViewModel.TogglePostSelection(item);
+
+    private static Color TaskColor(CommunityAuthoringImageTaskResponse task)
+        => task.IsSuccess
+            ? Color.Success
+            : task.StatusCode == CommunityAuthoringImageTaskStatusCodes.Failed
+                ? Color.Error
+                : Color.Info;
+
+    private static string TaskStatusLabel(CommunityAuthoringImageTaskResponse task)
+        => task.StatusCode switch
+        {
+            CommunityAuthoringImageTaskStatusCodes.Completed => "완료",
+            CommunityAuthoringImageTaskStatusCodes.Failed => "실패",
+            CommunityAuthoringImageTaskStatusCodes.Processing => "생성 중",
+            _ => "대기"
+        };
+}

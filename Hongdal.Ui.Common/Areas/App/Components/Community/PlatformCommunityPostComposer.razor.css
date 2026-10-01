@@ -1,0 +1,149 @@
+.community-sales-compose {
+    margin-top: 0.75rem;
+}
+
+.community-sales-compose__toggle {
+    align-items: flex-start;
+    background: #f8fafc;
+    border: 1px solid #dbe4ee;
+    border-radius: 14px;
+    color: #334155;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.8rem 0.9rem;
+    text-align: left;
+    width: 100%;
+}
+
+.community-sales-compose__toggle > span {
+    align-items: center;
+    display: flex;
+    font-weight: 750;
+    gap: 0.4rem;
+}
+
+.community-sales-compose__toggle small {
+    color: #64748b;
+    line-height: 1.45;
+}
+
+.community-sales-compose__toggle.is-active {
+    background: #effdf5;
+    border-color: #4bbf83;
+    color: #11643d;
+}
+
+.community-sales-compose__fields {
+    display: grid;
+    gap: 0.6rem;
+    grid-template-columns: minmax(0, 1.6fr) minmax(8rem, 0.7fr) minmax(7rem, 0.6fr);
+    margin-top: 0.75rem;
+}
+
+.community-sales-compose__product {
+    grid-column: 1 / -1;
+}
+
+.community-sales-compose__payments {
+    background: #fffdf5;
+    border: 1px solid #f0e3b1;
+    border-radius: 12px;
+    margin-top: 0.65rem;
+    padding: 0.7rem 0.8rem;
+}
+
+.community-sales-compose__payments > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.45rem;
+}
+
+.community-sales-compose__payments > small {
+    color: #77642d;
+    display: block;
+    line-height: 1.45;
+    margin-top: 0.25rem;
+}
+
+.community-sales-compose__status {
+    margin-top: 0.65rem;
+    max-width: 14rem;
+}
+
+.platform-community-compose-board-tab:disabled {
+    cursor: not-allowed;
+    opacity: 0.42;
+}
+
+.platform-community-compose-schedule {
+    background: #f7fafc;
+    border: 1px solid #d7e0e8;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+}
+
+.platform-community-compose-schedule-fields {
+    display: grid;
+    gap: 0.65rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.platform-community-compose-schedule > small {
+    align-items: center;
+    color: #52606d;
+    display: flex;
+    gap: 0.35rem;
+    line-height: 1.45;
+    margin-top: 0.35rem;
+}
+
+.platform-community-compose-context--schedule {
+    align-items: center;
+    color: #155e75;
+    display: inline-flex;
+    gap: 0.25rem;
+}
+
+.platform-community-compose-authoring-tool {
+    background: var(--mud-palette-surface);
+    border-inline-start: 1px solid var(--mud-palette-lines-default);
+    bottom: 0;
+    box-shadow: -10px 0 28px rgba(15, 23, 42, 0.16);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    position: fixed;
+    right: max(0px, calc((100vw - 920px) / 2));
+    top: 0;
+    width: min(560px, 100vw);
+    z-index: 7;
+}
+
+@media (max-width: 640px) {
+    .platform-community-compose-authoring-tool {
+        border-inline-start: 0;
+        box-shadow: none;
+        right: 0;
+        width: 100vw;
+    }
+
+    .platform-community-compose-schedule-fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .community-sales-compose__fields {
+        grid-template-columns: minmax(0, 1fr) minmax(6.5rem, 0.65fr);
+    }
+
+    .community-sales-compose__product {
+        grid-column: 1 / -1;
+    }
+
+    .community-sales-compose__payments > div {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+}

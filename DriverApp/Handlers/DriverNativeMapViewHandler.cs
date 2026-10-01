@@ -8,6 +8,7 @@ public partial class DriverNativeMapViewHandler
     public static readonly IPropertyMapper<DriverNativeMapView, DriverNativeMapViewHandler> Mapper =
         new PropertyMapper<DriverNativeMapView, DriverNativeMapViewHandler>(ViewHandler.ViewMapper)
         {
+            [nameof(DriverNativeMapView.MapProviderCode)] = MapOptions,
             [nameof(DriverNativeMapView.CenterLatitude)] = MapCamera,
             [nameof(DriverNativeMapView.CenterLongitude)] = MapCamera,
             [nameof(DriverNativeMapView.Zoom)] = MapCamera,

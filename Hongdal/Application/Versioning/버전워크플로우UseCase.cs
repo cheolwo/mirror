@@ -33,8 +33,8 @@ public sealed class 버전워크플로우UseCase : I버전워크플로우UseCase
             Flags = flags,
             Workflows = BuildWorkflowStates(flags),
             WorkflowRelations = HongdalWorkflowRelations.GetAll().Select(ToDto).ToArray(),
-            OperatingSystems = HongdalOperatingSystems.GetAll().Select(ToDto).ToArray(),
-            ApiEndpoints = BuildApiEndpoints()
+            OperatingSystems = HongdalOperatingSystems.GetAll().Select(item => ToDto(item, flags)).ToArray(),
+            ApiEndpoints = BuildApiEndpoints(flags)
         };
     }
 
@@ -137,20 +137,23 @@ public sealed class 버전워크플로우UseCase : I버전워크플로우UseCase
         };
     }
 
-    private static IReadOnlyList<WorkflowApiEndpointDto> BuildApiEndpoints()
+    private static IReadOnlyList<WorkflowApiEndpointDto> BuildApiEndpoints(
+        IReadOnlyDictionary<string, bool> flags)
     {
         return typeof(버전워크플로우UseCase).Assembly
             .GetTypes()
             .Where(type => typeof(ControllerBase).IsAssignableFrom(type)
                 && !type.IsAbstract
                 && type.Name.EndsWith("Controller", StringComparison.Ordinal))
-            .SelectMany(BuildControllerEndpoints)
+            .SelectMany(type => BuildControllerEndpoints(type, flags))
             .OrderBy(endpoint => endpoint.RoutePattern, StringComparer.Ordinal)
             .ThenBy(endpoint => endpoint.Method, StringComparer.Ordinal)
             .ToArray();
     }
 
-    private static IEnumerable<WorkflowApiEndpointDto> BuildControllerEndpoints(Type controllerType)
+    private static IEnumerable<WorkflowApiEndpointDto> BuildControllerEndpoints(
+        Type controllerType,
+        IReadOnlyDictionary<string, bool> flags)
     {
         var controllerRoute = controllerType.GetCustomAttribute<RouteAttribute>(inherit: true)?.Template ?? string.Empty;
         var controllerVersion = controllerType.GetCustomAttribute<HongdalApiVersionAttribute>(inherit: true);
@@ -161,7 +164,11 @@ public sealed class 버전워크플로우UseCase : I버전워크플로우UseCase
 
         foreach (var action in GetActionMethods(controllerType))
         {
-            var actionVersion = action.GetCustomAttribute<HongdalApiVersionAttribute>(inherit: true) ?? controllerVersion;
+            var declaredActionVersion = action.GetCustomAttribute<HongdalApiVersionAttribute>(inherit: true);
+            var actionVersion = declaredActionVersion ?? controllerVersion;
+            var featureKey = !string.IsNullOrWhiteSpace(declaredActionVersion?.FeatureKey)
+                ? declaredActionVersion.FeatureKey
+                : controllerVersion?.FeatureKey;
             var actionWorkflows = action.GetCustomAttributes<HongdalApiWorkflowAttribute>(inherit: true).DefaultIfEmpty().Where(x => x is not null).Cast<HongdalApiWorkflowAttribute>().ToArray();
             if (actionWorkflows.Length == 0)
             {
@@ -193,6 +200,9 @@ public sealed class 버전워크플로우UseCase : I버전워크플로우UseCase
                         RoutePattern = CombineRoutes(controllerRoute, httpAttribute.Template),
                         ProductVersionCode = actionVersion?.Version.ToString() ?? string.Empty,
                         ProductVersionName = actionVersion?.VersionLabel ?? string.Empty,
+                        FeatureKey = featureKey ?? string.Empty,
+                        IsEnabled = string.IsNullOrWhiteSpace(featureKey)
+                            || flags.TryGetValue(featureKey, out var enabled) && enabled,
                         WorkflowCodes = actionWorkflows.Select(attribute => attribute.Workflow.ToString()).Distinct(StringComparer.Ordinal).ToArray(),
                         WorkflowNames = actionWorkflows.Select(attribute => attribute.WorkflowLabel).Distinct(StringComparer.Ordinal).ToArray(),
                         GrowthTrackCodes = actionGrowthTracks.Select(attribute => attribute.Track.ToString()).Distinct(StringComparer.Ordinal).ToArray(),
@@ -264,18 +274,39 @@ public sealed class 버전워크플로우UseCase : I버전워크플로우UseCase
         };
     }
 
-    private static OperatingSystemDto ToDto(HongdalOperatingSystemDefinition operatingSystem)
+    private static OperatingSystemDto ToDto(
+        HongdalOperatingSystemDefinition operatingSystem,
+        IReadOnlyDictionary<string, bool> flags)
     {
+        var canonicalId = HongdalOperatingSystems.GetCanonicalId(operatingSystem.OperatingSystem);
+        var featureKey = GetOperatingSystemFeatureKey(operatingSystem.OperatingSystem);
         return new OperatingSystemDto
         {
             OperatingSystemCode = operatingSystem.OperatingSystem.ToString(),
+            CanonicalOperatingSystemId = canonicalId,
+            OperatingSystemAliases = OperatingSystemIds.GetAliases(canonicalId),
             OperatingSystemName = operatingSystem.Name,
             Purpose = operatingSystem.Purpose,
+            FeatureKey = featureKey ?? string.Empty,
+            IsEnabled = featureKey is null || flags.TryGetValue(featureKey, out var enabled) && enabled,
             Workflows = operatingSystem.Workflows.Select(ToOperatingSystemWorkflowDto).ToArray(),
             Engines = operatingSystem.Engines.Select(ToOperatingSystemEngineDto).ToArray(),
             SchedulingPolicies = operatingSystem.SchedulingPolicies.Select(ToOperatingSystemSchedulingPolicyDto).ToArray()
         };
     }
+
+    private static string? GetOperatingSystemFeatureKey(HongdalOperatingSystem operatingSystem)
+        => operatingSystem switch
+        {
+            HongdalOperatingSystem.DomesticCargoTransport => VersionFeatureFlagKeys.DomesticTransportWorkflow,
+            HongdalOperatingSystem.WarehouseCommerceFulfillment => VersionFeatureFlagKeys.WarehouseFulfillmentWorkflow,
+            HongdalOperatingSystem.GroupPurchaseImport => VersionFeatureFlagKeys.GroupPurchaseImportWorkflow,
+            HongdalOperatingSystem.FoodDelivery => VersionFeatureFlagKeys.FoodDeliveryWorkflow,
+            HongdalOperatingSystem.HongdalMartUrbanLogistics => VersionFeatureFlagKeys.HongdalMartWorkflow,
+            HongdalOperatingSystem.CommunityTrust => VersionFeatureFlagKeys.CommunityTrustWorkflow,
+            HongdalOperatingSystem.PlatformOperations => null,
+            _ => throw new ArgumentOutOfRangeException(nameof(operatingSystem), operatingSystem, "Unknown Hongdal operating system.")
+        };
 
     private static OperatingSystemWorkflowDto ToOperatingSystemWorkflowDto(HongdalWorkflow workflow)
     {
@@ -288,9 +319,19 @@ public sealed class 버전워크플로우UseCase : I버전워크플로우UseCase
 
     private static OperatingSystemEngineDto ToOperatingSystemEngineDto(HongdalOperatingSystemEngine engine)
     {
+        var implementationIds = EngineImplementationCatalog.GetAll()
+            .Where(binding => string.Equals(binding.EngineFamilyId, engine.EngineCode, StringComparison.Ordinal))
+            .Select(binding => binding.ImplementationId)
+            .ToArray();
+
         return new OperatingSystemEngineDto
         {
             EngineCode = engine.EngineCode,
+            EngineFamilyId = engine.EngineCode,
+            ImplementationIds = implementationIds,
+            RuntimeStatus = implementationIds.Length > 0
+                ? RuntimeCapabilityStatuses.Active
+                : RuntimeCapabilityStatuses.Declared,
             EngineName = engine.EngineName,
             AdjustmentPolicy = engine.AdjustmentPolicy
         };

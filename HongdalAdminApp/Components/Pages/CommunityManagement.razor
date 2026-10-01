@@ -1,0 +1,535 @@
+@page "/community-management"
+@implements IDisposable
+@inject AdminAuthSession Session
+@inject CommunityManagementAdminService AdminService
+@inject NavigationManager Navigation
+
+<PageTitle>커뮤니티 운영</PageTitle>
+
+<MudStack Spacing="3">
+    <div class="admin-page-header">
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.overline" Color="Color.Primary">COMMUNITY OPERATIONS</MudText>
+            <MudText Typo="Typo.h4">커뮤니티 운영</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                사용자 ID를 기준으로 계정, 활동 로그, 게시글과 댓글을 함께 확인하고 조치 내역을 남깁니다.
+            </MudText>
+        </MudStack>
+        <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined">서버관리자 전용</MudChip>
+    </div>
+
+    @if (!Session.IsServerAdmin)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+            서버관리자 로그인이 필요합니다.
+            <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="OpenLogin">로그인</MudButton>
+        </MudAlert>
+    }
+    else
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" sm="8" md="9">
+                    <MudTextField T="string"
+                                  Label="사용자 ID"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  HelperText="계정의 정확한 UserId를 입력합니다."
+                                  @bind-Value="userIdInput" />
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Search"
+                               FullWidth="true"
+                               Disabled="@(isBusy || string.IsNullOrWhiteSpace(userIdInput))"
+                               OnClick="SearchAsync">
+                        조회
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        @if (!string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <MudAlert Severity="@statusSeverity" Dense="true" Variant="Variant.Outlined">@statusMessage</MudAlert>
+        }
+
+        @if (isBusy)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+        }
+
+        @if (workspace is not null)
+        {
+            <MudTabs Rounded="true" Elevation="0">
+                <MudTabPanel Text="계정·연락" Icon="@Icons.Material.Filled.PersonSearch">
+                    <MudStack Spacing="3">
+                        @if (!workspace.AccountExists)
+                        {
+                            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+                                계정 정보는 없지만 같은 사용자 ID로 남은 게시글이나 활동 로그는 계속 확인할 수 있습니다.
+                            </MudAlert>
+                        }
+
+                        <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                            <MudGrid Spacing="2">
+                                <MudItem xs="12" md="6">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">사용자 ID</MudText>
+                                    <MudText Typo="Typo.body1" Class="text-break">@workspace.UserId</MudText>
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">사용자명</MudText>
+                                    <MudText Typo="Typo.body1">@ValueOrDash(workspace.UserName)</MudText>
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">이메일</MudText>
+                                    <MudText Typo="Typo.body1" Class="text-break">@ValueOrDash(workspace.Email)</MudText>
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">연락처</MudText>
+                                    <MudText Typo="Typo.body1">@ValueOrDash(workspace.PhoneNumber)</MudText>
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                        @foreach (var role in workspace.Roles)
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">@role</MudChip>
+                                        }
+                                        @if (workspace.Roles.Count == 0)
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">역할 없음</MudChip>
+                                        }
+                                    </MudStack>
+                                </MudItem>
+                            </MudGrid>
+                        </MudPaper>
+
+                        <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.h6">연락 조치 기록</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    연락 전에 목적을 적으면 관리자, 대상 사용자, 연락 수단이 감사 기록에 남습니다.
+                                </MudText>
+                                <MudGrid Spacing="2">
+                                    <MudItem xs="12" sm="4">
+                                        <MudSelect T="string" Label="연락 수단" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="contactChannel">
+                                            <MudSelectItem T="string" Value="@("Phone")">전화</MudSelectItem>
+                                            <MudSelectItem T="string" Value="@("Email")">이메일</MudSelectItem>
+                                            <MudSelectItem T="string" Value="@("Other")">기타</MudSelectItem>
+                                        </MudSelect>
+                                    </MudItem>
+                                    <MudItem xs="12" sm="8">
+                                        <MudTextField T="string"
+                                                      Label="연락 목적·메모"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      Lines="2"
+                                                      MaxLength="1000"
+                                                      @bind-Value="contactNote" />
+                                    </MudItem>
+                                </MudGrid>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           StartIcon="@ContactIcon"
+                                           Disabled="@(!CanRecordContact)"
+                                           OnClick="RecordContactAsync">
+                                    기록 후 연락 앱 열기
+                                </MudButton>
+                            </MudStack>
+                        </MudPaper>
+                    </MudStack>
+                </MudTabPanel>
+
+                <MudTabPanel Text="활동 로그" Icon="@Icons.Material.Filled.History">
+                    @if (activityLogs is null || activityLogs.Items.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">이 사용자 ID로 기록된 API 활동이 없습니다.</MudAlert>
+                    }
+                    else
+                    {
+                        <MudTable Items="activityLogs.Items" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
+                            <HeaderContent>
+                                <MudTh>시각</MudTh>
+                                <MudTh>앱</MudTh>
+                                <MudTh>행위</MudTh>
+                                <MudTh>경로</MudTh>
+                                <MudTh>결과</MudTh>
+                            </HeaderContent>
+                            <RowTemplate Context="log">
+                                <MudTd DataLabel="시각">@FormatDate(log.OccurredAtUtc)</MudTd>
+                                <MudTd DataLabel="앱">@log.AppKey</MudTd>
+                                <MudTd DataLabel="행위">
+                                    <MudText Typo="Typo.body2">@log.ActionType</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@log.ActionName</MudText>
+                                </MudTd>
+                                <MudTd DataLabel="경로" Class="text-break">@log.Route</MudTd>
+                                <MudTd DataLabel="결과">
+                                    <MudChip T="string" Size="Size.Small" Color="@(log.IsSuccess ? Color.Success : Color.Error)" Variant="Variant.Outlined">
+                                        @(log.IsSuccess ? "성공" : "실패")
+                                    </MudChip>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </MudTabPanel>
+
+                <MudTabPanel Text="게시글·댓글" Icon="@Icons.Material.Filled.Forum">
+                    <MudStack Spacing="3">
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                            수정·숨김·복구에는 공통 조치 사유가 필요합니다. 숨김은 데이터를 지우지 않아 운영자가 다시 복구할 수 있습니다.
+                        </MudAlert>
+                        <MudTextField T="string"
+                                      Label="조치 사유"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      MaxLength="1000"
+                                      HelperText="2자 이상 입력해야 조치 버튼이 활성화됩니다."
+                                      @bind-Value="moderationReason" />
+
+                        @if (workspace.Posts.Count == 0)
+                        {
+                            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">이 사용자 ID로 작성된 게시글이 없습니다.</MudAlert>
+                        }
+                        else
+                        {
+                            @foreach (var post in workspace.Posts)
+                            {
+                                <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                                    <MudStack Spacing="2">
+                                        <MudStack Row="true" AlignItems="AlignItems.Start" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+                                            <MudStack Spacing="0" Style="min-width: 0;">
+                                                <MudText Typo="Typo.h6">@post.Title</MudText>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                    #@post.Id · @post.AppKey · @post.Category · @FormatDate(post.CreatedAtUtc)
+                                                </MudText>
+                                            </MudStack>
+                                            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                                @if (post.IsSystemGenerated)
+                                                {
+                                                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">시스템 기록</MudChip>
+                                                }
+                                                <MudChip T="string" Size="Size.Small" Color="@(post.IsDeleted ? Color.Warning : Color.Success)" Variant="Variant.Outlined">
+                                                    @(post.IsDeleted ? "숨김" : "공개")
+                                                </MudChip>
+                                            </MudStack>
+                                        </MudStack>
+
+                                        @if (editingPostId == post.Id)
+                                        {
+                                            <MudTextField T="string" Label="제목" Variant="Variant.Outlined" MaxLength="160" @bind-Value="editTitle" />
+                                            <MudTextField T="string" Label="본문" Variant="Variant.Outlined" Lines="6" MaxLength="4000" @bind-Value="editBody" />
+                                            <MudStack Row="true" Spacing="1">
+                                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!CanModerate)" OnClick="@(() => SavePostAsync(post.Id))">저장</MudButton>
+                                                <MudButton Variant="Variant.Text" OnClick="CancelEdit">취소</MudButton>
+                                            </MudStack>
+                                        }
+                                        else
+                                        {
+                                            <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@post.Body</MudText>
+                                            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                                <MudButton Size="Size.Small"
+                                                           Variant="Variant.Outlined"
+                                                           StartIcon="@Icons.Material.Filled.Edit"
+                                                           Disabled="@(post.IsSystemGenerated || isBusy)"
+                                                           OnClick="@(() => BeginEdit(post))">
+                                                    내용 수정
+                                                </MudButton>
+                                                <MudButton Size="Size.Small"
+                                                           Variant="Variant.Outlined"
+                                                           Color="@(post.IsDeleted ? Color.Success : Color.Warning)"
+                                                           StartIcon="@(post.IsDeleted ? Icons.Material.Filled.Restore : Icons.Material.Filled.VisibilityOff)"
+                                                           Disabled="@(post.IsSystemGenerated || !CanModerate || isBusy)"
+                                                           OnClick="@(() => TogglePostAsync(post))">
+                                                    @(post.IsDeleted ? "복구" : "숨김")
+                                                </MudButton>
+                                            </MudStack>
+                                        }
+
+                                        @if (post.Comments.Count > 0 || post.Attachments.Any(x => x.Comments.Count > 0))
+                                        {
+                                            <MudExpansionPanels MultiExpansion="true" Elevation="0">
+                                                @if (post.Comments.Count > 0)
+                                                {
+                                                    <MudExpansionPanel Text="@($"게시글 댓글 {post.Comments.Count}개")">
+                                                        <MudStack Spacing="2">
+                                                            @foreach (var comment in post.Comments)
+                                                            {
+                                                                <MudPaper Elevation="0" Outlined="true" Class="pa-3">
+                                                                    <MudStack Row="true" AlignItems="AlignItems.Start" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+                                                                        <MudStack Spacing="0" Style="min-width: 0;">
+                                                                            <MudText Typo="Typo.body2">@comment.Body</MudText>
+                                                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                                                @comment.Nickname · @FormatDate(comment.CreatedAtUtc) · 신고 @comment.ReportCount
+                                                                            </MudText>
+                                                                        </MudStack>
+                                                                        <MudButton Size="Size.Small"
+                                                                                   Variant="Variant.Text"
+                                                                                   Color="@(comment.IsOperatorHidden ? Color.Success : Color.Warning)"
+                                                                                   Disabled="@(!CanModerate || comment.IsDeleted || isBusy)"
+                                                                                   OnClick="@(() => ToggleCommentAsync(comment))">
+                                                                            @(comment.IsOperatorHidden ? "숨김 해제" : "숨김")
+                                                                        </MudButton>
+                                                                    </MudStack>
+                                                                </MudPaper>
+                                                            }
+                                                        </MudStack>
+                                                    </MudExpansionPanel>
+                                                }
+
+                                                @foreach (var attachment in post.Attachments.Where(x => x.Comments.Count > 0))
+                                                {
+                                                    <MudExpansionPanel Text="@($"첨부 댓글 · {attachment.OriginalFileName} ({attachment.Comments.Count}개)")">
+                                                        <MudStack Spacing="2">
+                                                            @foreach (var comment in attachment.Comments)
+                                                            {
+                                                                <MudPaper Elevation="0" Outlined="true" Class="pa-3">
+                                                                    <MudStack Row="true" AlignItems="AlignItems.Start" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+                                                                        <MudStack Spacing="0" Style="min-width: 0;">
+                                                                            <MudText Typo="Typo.body2">@comment.Body</MudText>
+                                                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                                                @comment.Nickname · @FormatDate(comment.CreatedAtUtc) · 신고 @comment.ReportCount
+                                                                            </MudText>
+                                                                        </MudStack>
+                                                                        <MudButton Size="Size.Small"
+                                                                                   Variant="Variant.Text"
+                                                                                   Color="@(comment.IsOperatorHidden ? Color.Success : Color.Warning)"
+                                                                                   Disabled="@(!CanModerate || comment.IsDeleted || isBusy)"
+                                                                                   OnClick="@(() => ToggleAttachmentCommentAsync(comment))">
+                                                                            @(comment.IsOperatorHidden ? "숨김 해제" : "숨김")
+                                                                        </MudButton>
+                                                                    </MudStack>
+                                                                </MudPaper>
+                                                            }
+                                                        </MudStack>
+                                                    </MudExpansionPanel>
+                                                }
+                                            </MudExpansionPanels>
+                                        }
+                                    </MudStack>
+                                </MudPaper>
+                            }
+                        }
+                    </MudStack>
+                </MudTabPanel>
+            </MudTabs>
+        }
+    }
+</MudStack>
+
+@code {
+    private string userIdInput = string.Empty;
+    private CommunityManagementUserResponse? workspace;
+    private 사용자행위로그목록응답? activityLogs;
+    private bool isBusy;
+    private string? statusMessage;
+    private Severity statusSeverity = Severity.Info;
+    private string contactChannel = "Phone";
+    private string contactNote = string.Empty;
+    private string moderationReason = string.Empty;
+    private long? editingPostId;
+    private string editTitle = string.Empty;
+    private string editBody = string.Empty;
+
+    private bool CanModerate => moderationReason.Trim().Length >= 2;
+
+    private bool CanRecordContact
+        => workspace?.AccountExists == true
+           && contactNote.Trim().Length >= 2
+           && !isBusy
+           && (contactChannel != "Phone" || !string.IsNullOrWhiteSpace(workspace.PhoneNumber))
+           && (contactChannel != "Email" || !string.IsNullOrWhiteSpace(workspace.Email));
+
+    private string ContactIcon
+        => contactChannel switch
+        {
+            "Email" => Icons.Material.Filled.Email,
+            "Other" => Icons.Material.Filled.NoteAdd,
+            _ => Icons.Material.Filled.Phone
+        };
+
+    protected override async Task OnInitializedAsync()
+    {
+        Session.Changed += HandleSessionChanged;
+        await Session.RestoreAsync();
+    }
+
+    private void OpenLogin() => Navigation.NavigateTo("/login");
+
+    private async Task SearchAsync()
+    {
+        var userId = userIdInput.Trim();
+        if (string.IsNullOrWhiteSpace(userId) || isBusy)
+        {
+            return;
+        }
+
+        isBusy = true;
+        statusMessage = null;
+        editingPostId = null;
+        try
+        {
+            var workspaceTask = AdminService.GetUserAsync(userId);
+            var logsTask = AdminService.GetActivityLogsAsync(userId);
+            await Task.WhenAll(workspaceTask, logsTask);
+            workspace = await workspaceTask;
+            activityLogs = await logsTask;
+            statusSeverity = workspace.AccountExists ? Severity.Success : Severity.Info;
+            statusMessage = workspace.AccountExists
+                ? $"{workspace.UserName} 계정과 커뮤니티 활동을 불러왔습니다."
+                : "계정은 없지만 연결된 게시글과 활동 로그를 조회했습니다.";
+        }
+        catch (Exception ex)
+        {
+            statusSeverity = Severity.Error;
+            statusMessage = $"사용자 정보를 불러오지 못했습니다: {ex.Message}";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        if (workspace is null)
+        {
+            return;
+        }
+
+        var userId = workspace.UserId;
+        workspace = await AdminService.GetUserAsync(userId);
+        activityLogs = await AdminService.GetActivityLogsAsync(userId);
+    }
+
+    private async Task RecordContactAsync()
+    {
+        if (workspace is null || !CanRecordContact)
+        {
+            return;
+        }
+
+        await RunActionAsync(async () =>
+        {
+            var result = await AdminService.RecordContactAsync(
+                workspace.UserId,
+                contactChannel,
+                contactNote.Trim());
+            await OpenContactAppAsync(workspace, contactChannel);
+            contactNote = string.Empty;
+            return result.Message;
+        }, refresh: false);
+    }
+
+    private async Task OpenContactAppAsync(CommunityManagementUserResponse user, string channel)
+    {
+        Uri? uri = channel switch
+        {
+            "Phone" when !string.IsNullOrWhiteSpace(user.PhoneNumber)
+                => new Uri($"tel:{new string(user.PhoneNumber.Where(character => char.IsDigit(character) || character == '+').ToArray())}"),
+            "Email" when !string.IsNullOrWhiteSpace(user.Email)
+                => new Uri($"mailto:{Uri.EscapeDataString(user.Email)}?subject={Uri.EscapeDataString("살뜰 커뮤니티 운영 관련 안내")}"),
+            _ => null
+        };
+
+        if (uri is not null)
+        {
+            await Microsoft.Maui.ApplicationModel.Launcher.Default.TryOpenAsync(uri);
+        }
+    }
+
+    private void BeginEdit(CommunityManagementPostResponse post)
+    {
+        editingPostId = post.Id;
+        editTitle = post.Title;
+        editBody = post.Body;
+    }
+
+    private void CancelEdit()
+    {
+        editingPostId = null;
+        editTitle = string.Empty;
+        editBody = string.Empty;
+    }
+
+    private async Task SavePostAsync(long postId)
+    {
+        if (!CanModerate)
+        {
+            return;
+        }
+
+        await RunActionAsync(async () =>
+        {
+            var result = await AdminService.UpdatePostAsync(postId, new CommunityManagementPostUpdateRequest
+            {
+                Title = editTitle,
+                Body = editBody,
+                Reason = moderationReason.Trim()
+            });
+            CancelEdit();
+            return result.Message;
+        });
+    }
+
+    private Task TogglePostAsync(CommunityManagementPostResponse post)
+        => RunActionAsync(async () =>
+        {
+            var result = await AdminService.SetPostHiddenAsync(post.Id, !post.IsDeleted, moderationReason.Trim());
+            return result.Message;
+        });
+
+    private Task ToggleCommentAsync(CommunityManagementCommentResponse comment)
+        => RunActionAsync(async () =>
+        {
+            var result = await AdminService.SetCommentHiddenAsync(comment.Id, !comment.IsOperatorHidden, moderationReason.Trim());
+            return result.Message;
+        });
+
+    private Task ToggleAttachmentCommentAsync(CommunityManagementAttachmentCommentResponse comment)
+        => RunActionAsync(async () =>
+        {
+            var result = await AdminService.SetAttachmentCommentHiddenAsync(comment.Id, !comment.IsOperatorHidden, moderationReason.Trim());
+            return result.Message;
+        });
+
+    private async Task RunActionAsync(Func<Task<string>> action, bool refresh = true)
+    {
+        if (isBusy)
+        {
+            return;
+        }
+
+        isBusy = true;
+        statusMessage = null;
+        try
+        {
+            statusMessage = await action();
+            statusSeverity = Severity.Success;
+            if (refresh)
+            {
+                await RefreshAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            statusSeverity = Severity.Error;
+            statusMessage = $"운영 조치에 실패했습니다: {ex.Message}";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private static string ValueOrDash(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "-" : value;
+
+    private static string FormatDate(DateTime value)
+        => value.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+
+    private void HandleSessionChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Session.Changed -= HandleSessionChanged;
+}

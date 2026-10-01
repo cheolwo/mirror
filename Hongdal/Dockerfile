@@ -2,10 +2,14 @@
 
 # 이 스테이지는 VS에서 빠른 모드로 실행할 때 사용됩니다(디버그 구성의 기본값).
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
-EXPOSE 8081
+ENV ASPNETCORE_HTTP_PORTS=8080
 
 
 # 이 스테이지는 서비스 프로젝트를 빌드하는 데 사용됩니다.
@@ -20,15 +24,24 @@ COPY ["Hongdal.Infrastructure/Hongdal.Infrastructure.csproj", "Hongdal.Infrastru
 RUN dotnet restore "./Hongdal/Hongdal.csproj"
 COPY . .
 WORKDIR "/src/Hongdal"
-RUN dotnet build "./Hongdal.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # 이 스테이지는 최종 스테이지에 복사할 서비스 프로젝트를 게시하는 데 사용됩니다.
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Hongdal.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./Hongdal.csproj" \
+    -c $BUILD_CONFIGURATION \
+    --no-restore \
+    -o /app/publish \
+    /p:UseAppHost=false
 
 # 이 스테이지는 프로덕션에서 사용되거나 VS에서 일반 모드로 실행할 때 사용됩니다(디버그 구성을 사용하지 않는 경우 기본값).
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+USER root
+RUN mkdir -p /app/App_Data /app/uploads /app/community /app/logs \
+    && chown -R $APP_UID:$APP_UID /app/App_Data /app/uploads /app/community /app/logs
+COPY --from=publish --chown=$APP_UID:$APP_UID /app/publish .
+USER $APP_UID
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl --fail --silent --show-error http://127.0.0.1:8080/health/ready || exit 1
 ENTRYPOINT ["dotnet", "Hongdal.dll"]

@@ -1,80 +1,96 @@
 @page "/"
 
-<WebPageHeader Title="홍달 웹앱 업무 홈"
-               Description="기사, 화주, 창고, 주문자 화면을 앱별 복제판으로 나누지 않고 하나의 WebAssembly 업무 셸 안에서 검증합니다."
-               Badge="홍달 1.0 통합 웹" />
+<PageTitle>역할별 화면 체험 | 살뜰</PageTitle>
 
-<MudGrid>
-    <MudItem xs="12" lg="8">
-        <MudPaper Elevation="0" Outlined="true" Class="pa-4 mb-4">
-            <MudStack Spacing="3">
-                <MudStack Spacing="1">
-                    <MudText Typo="Typo.h6">1.0 핵심 운송 흐름</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        운송 의뢰가 배차, 기사 수락, 상차/하차 증빙, 결제/정산까지 닫히는지 먼저 확인합니다.
-                    </MudText>
-                </MudStack>
-                <WebPageLinkGrid Items="CoreWorkflowLinks" />
-            </MudStack>
-        </MudPaper>
+<main class="role-experience @SelectedRole.ThemeClass">
+    <header class="role-experience__header">
+        <div>
+            <span>HONGDAL WEB PREVIEW</span>
+            <h1>역할별 화면 체험</h1>
+            <p>현재 구현된 주요 화면을 역할에 따라 바로 열어볼 수 있습니다.</p>
+        </div>
+        <MudChip T="string" Variant="Variant.Outlined" Color="Color.Primary" Icon="@Icons.Material.Filled.Visibility">
+            @(WebExperienceCatalog.Roles.Count)개 역할
+        </MudChip>
+    </header>
 
-        <MudPaper Elevation="0" Outlined="true" Class="pa-4">
-            <MudStack Spacing="3">
-                <MudStack Spacing="1">
-                    <MudText Typo="Typo.h6">업무 영역</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        같은 웹앱 안에서 창고, 주문자, 커뮤니티 같은 확장 업무로 이동합니다.
-                    </MudText>
-                </MudStack>
-                <WebPageLinkGrid Items="BusinessAreaLinks" />
-            </MudStack>
-        </MudPaper>
-    </MudItem>
-    <MudItem xs="12" lg="4">
-        <MudStack Spacing="3">
-            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
-                <MudStack Spacing="2">
-                    <MudText Typo="Typo.h6">통합 기준</MudText>
-                    <MudList T="string" Dense="true">
-                        <MudListItem Icon="@Icons.Material.Filled.CheckCircle">하나의 WebAssembly 셸 안에서 업무 영역을 전환</MudListItem>
-                        <MudListItem Icon="@Icons.Material.Filled.CheckCircle">공통 계약과 UI 컴포넌트는 WebApp에서 우선 검증</MudListItem>
-                        <MudListItem Icon="@Icons.Material.Filled.CheckCircle">지도, 위치, 푸시, 카메라는 플랫폼별 구현으로 유지</MudListItem>
-                        <MudListItem Icon="@Icons.Material.Filled.CheckCircle">서버 API는 `HongdalApiBaseAddress` 기준으로 호출</MudListItem>
-                    </MudList>
-                </MudStack>
-            </MudPaper>
+    <nav class="role-experience__selector" aria-label="체험할 역할 선택">
+        @foreach (var role in WebExperienceCatalog.Roles)
+        {
+            var isSelected = role.Key == SelectedRole.Key;
+            <button type="button"
+                    class="role-experience__role-button @(isSelected ? "is-selected" : null)"
+                    aria-pressed="@isSelected"
+                    @onclick="@(() => SelectRole(role))">
+                <MudIcon Icon="@role.Icon" Size="Size.Small" />
+                <span>@role.Title</span>
+            </button>
+        }
+    </nav>
 
-            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
-                <MudStack Spacing="1">
-                    <MudText Typo="Typo.h6">정리 방향</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        기존 MAUI 화면 이름을 그대로 복사하기보다, 홍달 웹앱 안에서 업무 단위 라우트와 공통 서비스를 먼저 안정화합니다.
-                    </MudText>
-                </MudStack>
-            </MudPaper>
-        </MudStack>
-    </MudItem>
-</MudGrid>
+    <section class="role-experience__workspace" aria-live="polite">
+        <div class="role-experience__preview">
+            <img src="@SelectedRole.ImageUrl"
+                 alt="@SelectedRole.ImageAlt"
+                 loading="eager" />
+            <div class="role-experience__preview-label">
+                <span>@SelectedRole.Eyebrow</span>
+                <strong>@SelectedRole.Title</strong>
+            </div>
+        </div>
 
-<실시간베스트Section />
+        <div class="role-experience__screens">
+            <div class="role-experience__screens-heading">
+                <div>
+                    <span>@SelectedRole.Eyebrow</span>
+                    <h2>@SelectedRole.Title</h2>
+                    <p>@SelectedRole.Description</p>
+                </div>
+                <MudButton Href="@SelectedRole.StartHref"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@SelectedRole.Icon"
+                           EndIcon="@Icons.Material.Filled.ArrowForward">
+                    @SelectedRole.StartLabel
+                </MudButton>
+            </div>
+
+            <div class="role-experience__screen-list">
+                @foreach (var screen in SelectedRole.Screens)
+                {
+                    <a class="role-experience__screen-link" href="@screen.Href">
+                        <span class="role-experience__screen-icon">
+                            <MudIcon Icon="@screen.Icon" Size="Size.Small" />
+                        </span>
+                        <span class="role-experience__screen-copy">
+                            <strong>@screen.Title</strong>
+                            <small>@screen.Description</small>
+                        </span>
+                        <span class="role-experience__screen-meta">
+                            <small>@screen.AreaLabel</small>
+                            <em>@screen.Status</em>
+                        </span>
+                        <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                    </a>
+                }
+            </div>
+        </div>
+    </section>
+
+    <section class="role-experience__community">
+        <div class="role-experience__section-title">
+            <span>PUBLIC COMMUNITY</span>
+            <h2>지금 공개된 커뮤니티</h2>
+        </div>
+        <실시간베스트Section />
+    </section>
+</main>
 
 @code {
-    private static readonly IReadOnlyList<WebAppPageLink> CoreWorkflowLinks =
-    [
-        new("웹 로그인", "대표 역할을 확인하고 역할 기반 레이아웃과 API 토큰 사용을 검증합니다.", "/login", Icons.Material.Filled.Login, "공통"),
-        new("운송 의뢰 작성", "화물, 상하차지, 결제 조건을 입력해 1.0 운송 흐름을 시작합니다.", "/shipper/request", Icons.Material.Filled.PostAdd, "화주·판매자"),
-        new("의뢰 상세 타임라인", "결제, 배차, 수락, 상차, 하차, 정산 상태가 한 화면에서 이어지는지 확인합니다.", "/shipper/request/HD-WEB-001", Icons.Material.Filled.Timeline, "화주·판매자"),
-        new("기사 운행 시작", "기사 운행 상태와 위치 갱신 계약을 웹에서 먼저 검증합니다.", "/driver/work/start", Icons.Material.Filled.PlayArrow, "기사"),
-        new("기사 추천 배차", "추천 카드, 상세 확인, 수락/거절 판단을 웹에서 먼저 검증합니다.", "/driver/recommendations", Icons.Material.Filled.TaskAlt, "기사"),
-        new("진행 중 운송", "현재 운송의 다음 행동을 확인하고 상하차 증빙으로 이어갑니다.", "/driver/transports/current", Icons.Material.Filled.LocalShipping, "기사")
-    ];
+    private WebExperienceRole SelectedRole { get; set; } = WebExperienceCatalog.DefaultRole;
 
-    private static readonly IReadOnlyList<WebAppPageLink> BusinessAreaLinks =
-    [
-        new("화주·판매자 작업공간", "운송 의뢰와 판매/입고 확장 업무의 출발점입니다.", "/shipper", Icons.Material.Filled.LocalShipping, "화주·판매자"),
-        new("기사 작업공간", "운행 시작, 추천, 현재 운송, 정산으로 이어질 기사 업무 홈입니다.", "/driver/home", Icons.Material.Filled.Route, "기사"),
-        new("창고·현장 작업공간", "스캔, 피킹, 포장, 알뜰살뜰 마트 현장 작업을 하나의 영역으로 정리합니다.", "/warehouse", Icons.Material.Filled.Warehouse, "창고·현장"),
-        new("주문자·공동주문", "공동주문 의사 표시와 주문 내역 확인을 담을 영역입니다.", "/orderer", Icons.Material.Filled.Groups, "주문자"),
-        new("커뮤니티", "역할별 업무 경험과 문의를 같은 셸 안에서 연결합니다.", "/community", Icons.Material.Filled.Forum, "공통")
-    ];
+    private void SelectRole(WebExperienceRole role)
+    {
+        SelectedRole = role;
+    }
 }

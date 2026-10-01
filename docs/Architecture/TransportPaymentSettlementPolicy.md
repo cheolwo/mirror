@@ -104,7 +104,7 @@
 
 | 앱 | 화면 책임 |
 | --- | --- |
-| `ShipperApp` | 결제 보증 여부, 결제 만료, 환불 상태, 조기 정산 승인 여부 표시 |
+| `HongdalApp` | 결제 보증 여부, 결제 만료, 환불 상태, 조기 정산 승인 여부 표시 |
 | `DriverApp` | 보증 운송 여부, 예상 정산일, 조기 정산 후보, 보류 사유 표시 |
 | `HongdalAdmin` | 결제/정산 원장, 증빙, 이의제기, 조기 정산 승인, 부분 정산, 환불 지시 |
 
@@ -119,7 +119,7 @@
 
 ## 개발용 Fake Provider
 
-실제 운영 전까지는 `FakePG`와 `FakeSettlement`를 개발용 화면에서만 사용한다. `FakePG` 결제창은 실제 결제가 시작되는 사용 위치에 맞춰 `ShipperApp`의 운송 의뢰 상세 화면에 붙이고, Admin은 원장 확인과 정산 지시 검증 역할에 집중한다. 이 모드는 실제 화주, 기사, 결제, 정산, 운송계약을 만들지 않고 다음 상태 전이를 검증하는 용도다.
+실제 운영 전까지는 `FakePG`와 `FakeSettlement`를 개발용 화면에서만 사용한다. `FakePG` 결제창은 실제 결제가 시작되는 사용 위치에 맞춰 `HongdalApp`의 운송 의뢰 상세 화면에 붙이고, Admin은 원장 확인과 정산 지시 검증 역할에 집중한다. 이 모드는 실제 화주, 기사, 결제, 정산, 운송계약을 만들지 않고 다음 상태 전이를 검증하는 용도다.
 
 1. `결제확보대기`에서 `결제확보됨`으로 전환한다.
 2. 결제 확보 이후 `상차완료`와 `하차완료` 증빙 상태를 만든다.
@@ -135,7 +135,7 @@
 | --- | --- |
 | Server | `POST /api/v1/payments/fake/confirm`이 Development 환경에서만 FakePG 결제 승인 레코드를 만든다. |
 | Server 원장 | `provider_type=990`, `PG사=FakePG`, `결제Id=SIM-FPG-*`, `PaymentKey=fake_pg_*`로 실운영 결제와 구분한다. |
-| ShipperApp | 운송 의뢰 상세의 `Fake 결제창`이 서버 FakePG 승인 API를 호출한다. |
+| HongdalApp | 운송 의뢰 상세의 `Fake 결제창`이 서버 FakePG 승인 API를 호출한다. |
 | HongdalAdmin | 결제 목록과 운송 결제/정산 상세에서 FakePG 결제 레코드를 조회할 수 있다. Admin에서 직접 Fake 승인하는 액션은 아직 없다. |
 | HongdalAdmin 개발 콘솔 | `FakePaymentSettlementConsole`은 별도 메모리 시뮬레이션이며 서버 FakePG API와 연결되어 있지 않다. |
 | Hongdal.WebApp | 일부 결제 화면에 Toss 준비/승인 호출이 남아 있다. 1.0 기본 경로로 쓰지 않을 경우 FakePG 또는 읽기 전용 검증 화면으로 바꿔야 한다. |

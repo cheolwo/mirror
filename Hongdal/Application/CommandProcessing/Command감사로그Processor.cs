@@ -83,7 +83,7 @@ public sealed class Command감사로그Processor : ICommand후처리Processor
 
         if (path.StartsWith("/api/v1/shipper", StringComparison.OrdinalIgnoreCase))
         {
-            return App식별자.ShipperApp;
+            return App식별자.HongdalApp;
         }
 
         if (path.StartsWith("/api/v1/admin", StringComparison.OrdinalIgnoreCase))

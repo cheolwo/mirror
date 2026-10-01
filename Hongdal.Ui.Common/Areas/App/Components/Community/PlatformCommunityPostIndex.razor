@@ -1,0 +1,105 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Contracts.Common.Community
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+
+<section class="platform-community-post-index" aria-label="커뮤니티 글 목록">
+    <header class="platform-community-post-index__header">
+        <a href="/community">
+            <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+            전체 게시판
+        </a>
+        <strong>@SelectedBoard</strong>
+    </header>
+    <nav class="platform-community-post-index__boards" aria-label="게시판 선택">
+        @foreach (var board in Boards)
+        {
+            <a class="@BuildBoardClass(board)"
+               href="@board.Href"
+               aria-current="@(board.IsSelected ? "page" : null)">
+                <span>@board.Name</span>
+                <small>@board.PostingAccessLabel</small>
+                <b>@board.PostCount</b>
+            </a>
+        }
+    </nav>
+
+    @if (IsLoading)
+    {
+        <div class="platform-community-post-index__loading" aria-live="polite">
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+            <span>커뮤니티 글을 불러오는 중입니다.</span>
+        </div>
+    }
+    else
+    {
+        <PlatformCommunityPostList BoardName="@SelectedBoard"
+                                   FilterOptions="@FilterOptions"
+                                   SelectedFilter="@SelectedFilter"
+                                   SelectedFilterChanged="@SelectedFilterChanged"
+                                   ViewMode="@ViewMode"
+                                   ViewModeChanged="@ViewModeChanged"
+                                   ComposeRequested="@ComposeRequested"
+                                   Posts="@Posts"
+                                   SeedPosts="@SeedPosts"
+                                   VisiblePostCount="@VisiblePostCount"
+                                   PostSelected="@PostSelected"
+                                   SeedPostSelected="@SeedPostSelected"
+                                   SearchText="@SearchText"
+                                   SearchTextChanged="@SearchTextChanged" />
+    }
+</section>
+
+@code {
+    [Parameter]
+    public string SelectedBoard { get; set; } = "전체";
+
+    [Parameter]
+    public IReadOnlyList<CommunityBoardNavigationItem> Boards { get; set; } = [];
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<string> FilterOptions { get; set; } = [];
+
+    [Parameter]
+    public string SelectedFilter { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> SelectedFilterChanged { get; set; }
+
+    [Parameter]
+    public CommunityPostViewMode ViewMode { get; set; }
+
+    [Parameter]
+    public EventCallback<CommunityPostViewMode> ViewModeChanged { get; set; }
+
+    [Parameter]
+    public EventCallback ComposeRequested { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<PlatformCommunityPostResponse> Posts { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<CommunitySeedPost> SeedPosts { get; set; } = [];
+
+    [Parameter]
+    public int VisiblePostCount { get; set; }
+
+    [Parameter]
+    public EventCallback<PlatformCommunityPostResponse> PostSelected { get; set; }
+
+    [Parameter]
+    public EventCallback<CommunitySeedPost> SeedPostSelected { get; set; }
+
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> SearchTextChanged { get; set; }
+
+    private static string BuildBoardClass(CommunityBoardNavigationItem board)
+        => board.IsSelected
+            ? "platform-community-post-index__board platform-community-post-index__board--selected"
+            : "platform-community-post-index__board";
+}

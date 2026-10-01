@@ -1,0 +1,269 @@
+@page "/global/orders/{OrderCode}"
+@inject GlobalTradeWorkspaceService Workspace
+
+<PageTitle>@(Order is null ? "수입 주문원장" : $"{Order.OrderCode} 주문원장")</PageTitle>
+
+@if (Order is null)
+{
+    <MudAlert Severity="Severity.Warning">수입 주문원장을 찾을 수 없습니다.</MudAlert>
+}
+else
+{
+    <WebPageHeader Eyebrow="Order Ledger · Import to Korea"
+                   Title="수입 주문원장"
+                   Description="한국 수입자의 주문을 중심으로 커뮤니티 대화, 공급자, 통관, 선적, 창고와 국내 분배 원장을 결합합니다."
+                   Badge="@Order.Status" />
+
+    <div class="import-order-commandbar">
+        <div>
+            <span>@Order.OrderCode</span>
+            <strong>@Order.ProductName</strong>
+        </div>
+        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+            @if (Order.SourceCommunityThreadId is long threadId)
+            {
+                <MudButton Href="@GlobalTradeRoutes.CommunityThread(threadId)" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Forum">원본 대화</MudButton>
+            }
+            <MudButton Href="@GlobalTradeRoutes.Product(Order.ProductSlug)" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Inventory2">상품 페이지</MudButton>
+        </MudStack>
+    </div>
+
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" lg="3">@OrderFact("한국 수입자", Order.ImporterName, "도착국 KR", Icons.Material.Filled.Business)</MudItem>
+        <MudItem xs="12" sm="6" lg="3">@OrderFact("해외 공급자", Order.SupplierName, Order.SupplierCountry, Icons.Material.Filled.Factory)</MudItem>
+        <MudItem xs="12" sm="6" lg="3">@OrderFact("주문 초안", $"{Order.OrderQuantity:N0}개", $"{Order.UnitPrice:N2} {Order.CurrencyCode} · {Order.Incoterm}", Icons.Material.Filled.ShoppingCart)</MudItem>
+        <MudItem xs="12" sm="6" lg="3">@OrderFact("목표 입고", Order.TargetInboundDate?.ToString("yyyy-MM-dd") ?? "미정", "한국 창고 입고 기준", Icons.Material.Filled.CalendarMonth)</MudItem>
+    </MudGrid>
+
+    <div class="import-order-workspace">
+        <section class="import-order-diagram-panel">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4 import-order-diagram-paper">
+                <div class="import-order-panel-head">
+                    <div>
+                        <MudText Typo="Typo.h6">주문원장 결합 다이어그램</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">중앙 주문원장이 거래의 기준이 되고 각 전문 원장은 자기 업무를 소유합니다.</MudText>
+                    </div>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">원장 @(Order.LinkedLedgers.Count)개 결합</MudChip>
+                </div>
+
+                <div class="import-ledger-diagram" aria-label="수입 주문원장 연결 다이어그램">
+                    @for (var index = 0; index < Order.LinkedLedgers.Count; index++)
+                    {
+                        var node = Order.LinkedLedgers[index];
+                        <button type="button"
+                                class="@NodeClass(node, index)"
+                                @onclick="@(() => SelectNode(node))">
+                            <span class="import-ledger-node-icon"><MudIcon Icon="@NodeIcon(node.Icon)" /></span>
+                            <small>@node.LedgerType</small>
+                            <strong>@node.Title</strong>
+                            <em>@node.Status</em>
+                        </button>
+
+                        @if (index == 3)
+                        {
+                            <div class="import-order-center">
+                                <span>중심 원장</span>
+                                <MudIcon Icon="@Icons.Material.Filled.ShoppingCartCheckout" />
+                                <strong>수입 주문원장</strong>
+                                <small>@Order.OrderCode</small>
+                                <em>@Order.Status</em>
+                            </div>
+                        }
+                    }
+                </div>
+            </MudPaper>
+
+            @if (SelectedNode is not null)
+            {
+                <MudPaper Elevation="0" Outlined="true" Class="pa-4 import-ledger-detail-card">
+                    <div class="import-ledger-detail-icon import-ledger-tone-@SelectedNode.Tone">
+                        <MudIcon Icon="@NodeIcon(SelectedNode.Icon)" />
+                    </div>
+                    <div class="import-ledger-detail-body">
+                        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                            <MudText Typo="Typo.overline" Color="Color.Secondary">@SelectedNode.LedgerType</MudText>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">@SelectedNode.Status</MudChip>
+                        </MudStack>
+                        <MudText Typo="Typo.h5" Class="mb-1">@SelectedNode.Title</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">@SelectedNode.Description</MudText>
+                        <MudText Typo="Typo.caption" Class="mt-2 d-block">담당 역할 · @SelectedNode.OwnerRole</MudText>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(SelectedNode.Href))
+                    {
+                        <MudButton Href="@SelectedNode.Href" Variant="Variant.Filled" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward">업무 화면 열기</MudButton>
+                    }
+                </MudPaper>
+            }
+        </section>
+
+        <aside class="import-order-conversation-panel">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                <div class="import-order-panel-head">
+                    <div>
+                        <MudText Typo="Typo.h6">연결된 대화</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">전체 주문 또는 선택한 원장 노드에 댓글을 남깁니다.</MudText>
+                    </div>
+                    @if (SelectedNode is not null)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Secondary">@SelectedNode.Title</MudChip>
+                    }
+                </div>
+
+                @if (SourceThread is null)
+                {
+                    <MudAlert Severity="Severity.Normal" Dense="true">이 주문은 수입 요청함에서 만들어져 연결된 커뮤니티 글이 없습니다.</MudAlert>
+                }
+                else
+                {
+                    <div class="import-order-comment-list">
+                        @foreach (var comment in VisibleComments)
+                        {
+                            <article>
+                                <div>
+                                    <strong>@comment.AuthorName</strong>
+                                    <small>@comment.AuthorRole · @comment.CreatedAt.ToLocalTime().ToString("MM-dd HH:mm")</small>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(comment.LedgerKey))
+                                {
+                                    <span class="import-order-comment-node">@NodeTitle(comment.LedgerKey)</span>
+                                }
+                                <p>@comment.OriginalText</p>
+                                @if (!string.IsNullOrWhiteSpace(comment.TranslatedText))
+                                {
+                                    <details>
+                                        <summary>번역 보기</summary>
+                                        @comment.TranslatedText
+                                    </details>
+                                }
+                            </article>
+                        }
+                    </div>
+
+                    <div class="import-order-comment-compose">
+                        <MudTextField T="string" @bind-Value="CommentAuthor" Label="작성자" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudTextField T="string" @bind-Value="CommentText" Label="업무 댓글" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2" />
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Send" OnClick="AddNodeComment">
+                            @(SelectedNode is null ? "주문원장에 댓글" : $"{SelectedNode.Title}에 댓글")
+                        </MudButton>
+                    </div>
+                }
+            </MudPaper>
+
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-3">주문원장의 역할</MudText>
+                <MudList T="string" Dense="true">
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle">수입자·공급자·상품·수량을 거래 기준으로 유지</MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle">전문 원장의 상태를 결합하되 세부자료는 각 원장이 소유</MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle">커뮤니티 대화와 실제 업무 이력을 같은 주문에 연결</MudListItem>
+                </MudList>
+            </MudPaper>
+        </aside>
+    </div>
+}
+
+@code {
+    [Parameter] public string? OrderCode { get; set; }
+
+    private GlobalImportOrderLedger? Order => Workspace.FindImportOrder(OrderCode);
+    private GlobalTradeCommunityThread? SourceThread => Order?.SourceCommunityThreadId is long threadId
+        ? Workspace.FindCommunityThread(threadId)
+        : null;
+    private GlobalLinkedLedgerNode? SelectedNode;
+    private string CommentAuthor = "한국 수입자";
+    private string CommentText = string.Empty;
+
+    private IEnumerable<GlobalTradeCommunityComment> VisibleComments => SourceThread is null
+        ? Enumerable.Empty<GlobalTradeCommunityComment>()
+        : SourceThread.Comments
+            .Where(comment => SelectedNode is null
+                || string.IsNullOrWhiteSpace(comment.LedgerKey)
+                || string.Equals(comment.LedgerKey, SelectedNode.Key, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(comment => comment.CreatedAt);
+
+    protected override void OnParametersSet()
+    {
+        SelectedNode ??= Order?.LinkedLedgers.FirstOrDefault();
+    }
+
+    private void SelectNode(GlobalLinkedLedgerNode node)
+        => SelectedNode = node;
+
+    private void AddNodeComment()
+    {
+        if (SourceThread is null || string.IsNullOrWhiteSpace(CommentAuthor) || string.IsNullOrWhiteSpace(CommentText))
+        {
+            return;
+        }
+
+        Workspace.AddCommunityComment(
+            SourceThread.Id,
+            CommentAuthor,
+            SelectedNode?.OwnerRole ?? "주문 참여자",
+            "ko",
+            CommentText,
+            SelectedNode?.Key);
+        CommentText = string.Empty;
+    }
+
+    private string NodeTitle(string ledgerKey)
+        => Order?.LinkedLedgers.FirstOrDefault(node => node.Key == ledgerKey)?.Title ?? "업무 노드";
+
+    private string NodeClass(GlobalLinkedLedgerNode node, int index)
+    {
+        var selected = SelectedNode?.Key == node.Key ? " import-ledger-node--selected" : string.Empty;
+        return $"import-ledger-node import-ledger-node--{index + 1} import-ledger-tone-{node.Tone}{selected}";
+    }
+
+    private static string NodeIcon(string icon) => icon switch
+    {
+        "inventory" => Icons.Material.Filled.Inventory2,
+        "groups" => Icons.Material.Filled.Groups,
+        "description" => Icons.Material.Filled.Description,
+        "fact-check" => Icons.Material.Filled.FactCheck,
+        "payments" => Icons.Material.Filled.Payments,
+        "shipping" => Icons.Material.Filled.Public,
+        "warehouse" => Icons.Material.Filled.Warehouse,
+        "local-shipping" => Icons.Material.Filled.LocalShipping,
+        _ => Icons.Material.Filled.AccountTree
+    };
+
+    private static RenderFragment OrderFact(string label, string value, string subtext, string icon) => builder =>
+    {
+        builder.OpenComponent<MudPaper>(0);
+        builder.AddAttribute(1, "Elevation", 0);
+        builder.AddAttribute(2, "Outlined", true);
+        builder.AddAttribute(3, "Class", "pa-3 h-100");
+        builder.AddAttribute(4, "ChildContent", (RenderFragment)(childBuilder =>
+        {
+            childBuilder.OpenComponent<MudStack>(0);
+            childBuilder.AddAttribute(1, "Row", true);
+            childBuilder.AddAttribute(2, "Spacing", 2);
+            childBuilder.AddAttribute(3, "AlignItems", AlignItems.Center);
+            childBuilder.AddAttribute(4, "ChildContent", (RenderFragment)(stackBuilder =>
+            {
+                stackBuilder.OpenComponent<MudIcon>(0);
+                stackBuilder.AddAttribute(1, "Icon", icon);
+                stackBuilder.AddAttribute(2, "Color", Color.Primary);
+                stackBuilder.CloseComponent();
+                stackBuilder.OpenElement(3, "div");
+                stackBuilder.OpenComponent<MudText>(4);
+                stackBuilder.AddAttribute(5, "Typo", Typo.caption);
+                stackBuilder.AddAttribute(6, "Color", Color.Secondary);
+                stackBuilder.AddAttribute(7, "ChildContent", (RenderFragment)(textBuilder => textBuilder.AddContent(0, label)));
+                stackBuilder.CloseComponent();
+                stackBuilder.OpenComponent<MudText>(8);
+                stackBuilder.AddAttribute(9, "Typo", Typo.subtitle2);
+                stackBuilder.AddAttribute(10, "ChildContent", (RenderFragment)(textBuilder => textBuilder.AddContent(0, value)));
+                stackBuilder.CloseComponent();
+                stackBuilder.OpenComponent<MudText>(11);
+                stackBuilder.AddAttribute(12, "Typo", Typo.caption);
+                stackBuilder.AddAttribute(13, "Color", Color.Secondary);
+                stackBuilder.AddAttribute(14, "ChildContent", (RenderFragment)(textBuilder => textBuilder.AddContent(0, subtext)));
+                stackBuilder.CloseComponent();
+                stackBuilder.CloseElement();
+            }));
+            childBuilder.CloseComponent();
+        }));
+        builder.CloseComponent();
+    };
+}

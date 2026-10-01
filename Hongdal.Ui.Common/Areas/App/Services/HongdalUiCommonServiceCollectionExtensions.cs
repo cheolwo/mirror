@@ -5,17 +5,38 @@ namespace Hongdal.Ui.Common.Areas.App.Services;
 
 public static class HongdalUiCommonServiceCollectionExtensions
 {
+    public static IServiceCollection AddHongdalCommunityWritingServices(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        services.AddHongdalUiCoreModule();
+        services.AddCommunityWritingUiModule();
+        return services;
+    }
+
+    public static IServiceCollection AddHongdalCommunityWritingServices<TAccessTokenProvider>(
+        this IServiceCollection services)
+        where TAccessTokenProvider : class, IHongdalAccessTokenProvider
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        services.TryAddScoped<IHongdalAccessTokenProvider>(provider =>
+            provider.GetRequiredService<TAccessTokenProvider>());
+
+        return services.AddHongdalCommunityWritingServices();
+    }
+
     public static IServiceCollection AddHongdalUiCommonAppServices(this IServiceCollection services)
-        => AddHongdalUiCommonCoreServices(services);
+        => AddHongdalUiCommonModules(services);
 
     public static IServiceCollection AddHongdalUiCommonAppServices<TAccessTokenProvider>(
         this IServiceCollection services)
         where TAccessTokenProvider : class, IHongdalAccessTokenProvider
     {
-        services.TryAddScoped<IHongdalAccessTokenProvider>(
-            serviceProvider => serviceProvider.GetRequiredService<TAccessTokenProvider>());
+        services.TryAddScoped<IHongdalAccessTokenProvider>(provider =>
+            provider.GetRequiredService<TAccessTokenProvider>());
 
-        return AddHongdalUiCommonCoreServices(services);
+        return AddHongdalUiCommonModules(services);
     }
 
     public static IServiceCollection AddHongdalApiHttpClient(
@@ -43,29 +64,22 @@ public static class HongdalUiCommonServiceCollectionExtensions
 
         services.TryAdd(new ServiceDescriptor(
             typeof(HttpClient),
-            serviceProvider => CreateHttpClient(baseAddressFactory(serviceProvider), timeout),
+            provider => CreateHttpClient(baseAddressFactory(provider), timeout),
             lifetime));
 
         return services;
     }
 
-    private static IServiceCollection AddHongdalUiCommonCoreServices(IServiceCollection services)
+    private static IServiceCollection AddHongdalUiCommonModules(IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.TryAddScoped<PlatformCommunityService>();
-        services.TryAddScoped<PlatformHomeModeStateService>();
-        services.TryAddScoped<PlatformDiagramPaletteStateService>();
-        services.AddScoped<HongdalIsmsPClientEncryptionService>();
-        services.TryAddScoped<IHongdalAccessTokenProvider, EmptyHongdalAccessTokenProvider>();
-        services.AddScoped<HongdalProtectedApiClient>();
-        services.AddScoped<HongikHakdangCardDeliveryClient>();
-        services.AddScoped<CommunityLedgerNodeActionService>();
-        services.AddScoped<YouTube공개콘텐츠Service>();
-        services.AddScoped<PlatformCommunityDecorationStateService>();
-        services.AddScoped<PlatformCommunityPostDraftStateService>();
-        services.AddScoped<IDiagramCollaborationClientService>(_ => NoopDiagramCollaborationClientService.Instance);
-        services.AddSingleton<IHongdalIdentifierCodeGenerator, ZxingHongdalIdentifierCodeGenerator>();
+        services.AddHongdalUiCoreModule();
+        services.AddCommunityPlatformUiModule();
+        services.AddGroupPurchaseUiModule();
+        services.AddSalesUiModule();
+        services.AddOrderUiModule();
+        services.AddWarehouseUiModule();
         return services;
     }
 

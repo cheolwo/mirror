@@ -1,0 +1,70 @@
+@page "/warehouse/apartment/inbound"
+@inherits MvvmComponentBase<공동주택입고확인PageViewModel>
+
+<PageTitle>공동주택 입고 확인</PageTitle>
+
+<WarehousePageShell Model="@ViewModel"
+                    Title="공동주택 입고 확인"
+                    Description="단지 도착 수량과 화물 상태를 확인한 뒤 세대 배분으로 넘깁니다."
+                    Icon="@Icons.Material.Filled.MoveToInbox"
+                    Color="Color.Secondary">
+    <Actions>
+        <MudStack Row="true" Spacing="1">
+            <MudButton Href="@WarehouseManagerRoutes.Scan"
+                       Variant="Variant.Outlined"
+                       StartIcon="@Icons.Material.Filled.QrCodeScanner">
+                화물 스캔
+            </MudButton>
+            <MudButton Href="@WarehouseManagerRoutes.ApartmentAllocation"
+                       Variant="Variant.Filled"
+                       Color="Color.Secondary"
+                       EndIcon="@Icons.Material.Filled.ChevronRight">
+                세대 배분
+            </MudButton>
+        </MudStack>
+    </Actions>
+    <ChildContent>
+        @if (!string.IsNullOrWhiteSpace(ViewModel.입고.오류메시지))
+        {
+            <MudAlert Severity="Severity.Error">@ViewModel.입고.오류메시지</MudAlert>
+        }
+
+        <MudGrid>
+            <MudItem xs="6" md="3">
+                <MudPaper Class="pa-3 h-100" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">입고 요청</MudText>
+                    <MudText Typo="Typo.h5">@ViewModel.입고.입고요청목록.Count</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudPaper Class="pa-3 h-100" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">확인된 재고</MudText>
+                    <MudText Typo="Typo.h5">@ViewModel.입고.재고목록.Count</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+            <MudText Typo="Typo.h6" Class="mb-3">입고 확인 대상</MudText>
+            <WarehouseInboundTable Items="@ViewModel.입고.입고요청목록"
+                                   Busy="@ViewModel.처리중"
+                                   EmptyText="현재 입고 확인 대상이 없습니다." />
+        </MudPaper>
+    </ChildContent>
+</WarehousePageShell>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        EnsureProfile();
+        await ViewModel.초기화Async();
+    }
+
+    private void EnsureProfile()
+    {
+        if (!string.Equals(ViewModel.세션.운영ProfileCode, 창고운영ProfileCodes.공동주택물류, StringComparison.OrdinalIgnoreCase))
+        {
+            ViewModel.세션.운영Profile설정(창고운영ProfileCodes.공동주택물류);
+        }
+    }
+}

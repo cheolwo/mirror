@@ -1,5 +1,7 @@
 using Hongdal.Contracts.Common.Community;
+using Hongdal.Extensions;
 using Hongdal.Services.Community;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Hongdal.Tests.Services.Community;
 
@@ -143,5 +145,29 @@ public sealed class CommunityLedgerStoreContractTests
         Assert.DoesNotContain(
             typeof(커뮤니티포함원장참조Dto).GetProperties(),
             property => property.Name.Contains("상태", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Ledger_source_store_and_projection_work_store_have_separate_responsibilities()
+    {
+        Assert.True(typeof(I커뮤니티원장저장소).IsAssignableFrom(typeof(Mongo커뮤니티원장저장소)));
+        Assert.False(typeof(I커뮤니티원장투영작업저장소).IsAssignableFrom(typeof(Mongo커뮤니티원장저장소)));
+        Assert.True(typeof(I커뮤니티원장투영작업저장소).IsAssignableFrom(typeof(Mongo커뮤니티원장투영작업저장소)));
+        Assert.False(typeof(I커뮤니티원장저장소).IsAssignableFrom(typeof(Mongo커뮤니티원장투영작업저장소)));
+
+        var services = new ServiceCollection();
+        services.AddHongdalDomainServices();
+
+        Assert.Contains(services, descriptor =>
+            descriptor.ServiceType == typeof(I커뮤니티원장투영작업저장소)
+            && descriptor.ImplementationType == typeof(Mongo커뮤니티원장투영작업저장소));
+
+        var eventStoreDependencies = typeof(이벤트발행커뮤니티원장저장소)
+            .GetConstructors()
+            .Single()
+            .GetParameters()
+            .Select(parameter => parameter.ParameterType)
+            .ToArray();
+        Assert.Contains(typeof(I커뮤니티원장투영작업저장소), eventStoreDependencies);
     }
 }

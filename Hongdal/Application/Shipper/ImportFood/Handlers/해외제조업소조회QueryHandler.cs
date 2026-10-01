@@ -27,6 +27,12 @@ public sealed class 해외제조업소조회QueryHandler : IRequestHandler<해�
 
         return new 해외제조업소조회화면응답
         {
+            조회메타데이터 = new 수입식품공식자료조회메타데이터
+            {
+                데이터셋키 = "mfds-imported-food-overseas-manufacturer",
+                공식문서Url = "https://www.data.go.kr/data/15073967/openapi.do",
+                조회시각Utc = DateTimeOffset.UtcNow
+            },
             결과코드 = 응답.헤더?.결과코드 ?? string.Empty,
             결과메시지 = 응답.헤더?.결과메시지 ?? string.Empty,
             페이지번호 = 응답.본문?.페이지번호 ?? request.페이지번호,

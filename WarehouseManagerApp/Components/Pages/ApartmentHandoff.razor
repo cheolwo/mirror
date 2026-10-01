@@ -1,0 +1,82 @@
+@page "/warehouse/apartment/handoff"
+@inherits MvvmComponentBase<공동주택수령인계PageViewModel>
+
+<PageTitle>공동주택 입주민 수령 인계</PageTitle>
+
+<WarehousePageShell Model="@ViewModel"
+                    Title="공동주택 입주민 수령 인계"
+                    Description="입고 완료된 세대별 주문을 수령 확인 대상으로 조회합니다."
+                    Icon="@Icons.Material.Filled.VerifiedUser"
+                    Color="Color.Success">
+    <Actions>
+        <MudStack Row="true" Spacing="1">
+            <MudButton Href="@WarehouseManagerRoutes.ApartmentAllocation"
+                       Variant="Variant.Outlined"
+                       StartIcon="@Icons.Material.Filled.Rule">
+                세대 배분
+            </MudButton>
+            <MudButton Href="@WarehouseManagerRoutes.ApartmentUnclaimed"
+                       Variant="Variant.Filled"
+                       Color="Color.Warning"
+                       EndIcon="@Icons.Material.Filled.ChevronRight">
+                미수령 관리
+            </MudButton>
+        </MudStack>
+    </Actions>
+    <ChildContent>
+        <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+            <MudStack Spacing="2">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.h6">수령 인계 대상</MudText>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">
+                        @($"{ReadyOrders.Count}건")
+                    </MudChip>
+                </MudStack>
+                @if (ReadyOrders.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">현재 수령 인계 가능한 세대 주문이 없습니다.</MudAlert>
+                }
+                else
+                {
+                    <MudTable T="공동주문개별주문항목ViewModel" Items="@ReadyOrders" Dense="true" Hover="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>주문자</MudTh>
+                            <MudTh>주문 원장</MudTh>
+                            <MudTh>수량</MudTh>
+                            <MudTh>도착 거점</MudTh>
+                            <MudTh>상태</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="주문자">@(string.IsNullOrWhiteSpace(context.주문자표시명) ? context.주문자키 : context.주문자표시명)</MudTd>
+                            <MudTd DataLabel="주문 원장">@context.개별주문원장Id</MudTd>
+                            <MudTd DataLabel="수량">@context.주문수량 @context.수량단위</MudTd>
+                            <MudTd DataLabel="도착 거점">@(string.IsNullOrWhiteSpace(context.도착창고명) ? "공동주택 거점" : context.도착창고명)</MudTd>
+                            <MudTd DataLabel="상태">
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">수령 확인 대기</MudChip>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudStack>
+        </MudPaper>
+    </ChildContent>
+</WarehousePageShell>
+
+@code {
+    private IReadOnlyList<공동주문개별주문항목ViewModel> ReadyOrders
+        => ViewModel.주문집계.개별주문목록
+            .Where(order => string.Equals(
+                order.입고의미상태,
+                공동구매개별주문입고상태코드.입고완료,
+                StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (!string.Equals(ViewModel.세션.운영ProfileCode, 창고운영ProfileCodes.공동주택물류, StringComparison.OrdinalIgnoreCase))
+        {
+            ViewModel.세션.운영Profile설정(창고운영ProfileCodes.공동주택물류);
+        }
+    }
+}

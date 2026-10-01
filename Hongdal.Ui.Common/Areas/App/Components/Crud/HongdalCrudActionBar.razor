@@ -1,0 +1,85 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Crud
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="hongdal-crud-action-bar">
+    @if (!string.IsNullOrWhiteSpace(Summary))
+    {
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@Summary</MudText>
+    }
+
+    <MudSpacer />
+
+    @AdditionalActions
+
+    @if (OnRefresh.HasDelegate)
+    {
+        <MudTooltip Text="새로고침">
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                           Color="Color.Primary"
+                           Disabled="@IsBusy"
+                           OnClick="@OnRefresh"
+                           aria-label="새로고침" />
+        </MudTooltip>
+    }
+    @if (OnCreate.HasDelegate)
+    {
+        <MudTooltip Text="등록">
+            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                           Color="Color.Success"
+                           Disabled="@(IsBusy || !CanCreate)"
+                           OnClick="@OnCreate"
+                           aria-label="등록" />
+        </MudTooltip>
+    }
+    @if (OnEdit.HasDelegate)
+    {
+        <MudTooltip Text="수정">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                           Color="Color.Primary"
+                           Disabled="@(IsBusy || !CanEdit)"
+                           OnClick="@OnEdit"
+                           aria-label="수정" />
+        </MudTooltip>
+    }
+    @if (OnDelete.HasDelegate)
+    {
+        <MudTooltip Text="삭제">
+            <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                           Color="Color.Error"
+                           Disabled="@(IsBusy || !CanDelete)"
+                           OnClick="@OnDelete"
+                           aria-label="삭제" />
+        </MudTooltip>
+    }
+</MudStack>
+
+@code {
+    [Parameter]
+    public string? Summary { get; set; }
+
+    [Parameter]
+    public bool IsBusy { get; set; }
+
+    [Parameter]
+    public bool CanCreate { get; set; } = true;
+
+    [Parameter]
+    public bool CanEdit { get; set; } = true;
+
+    [Parameter]
+    public bool CanDelete { get; set; } = true;
+
+    [Parameter]
+    public EventCallback OnRefresh { get; set; }
+
+    [Parameter]
+    public EventCallback OnCreate { get; set; }
+
+    [Parameter]
+    public EventCallback OnEdit { get; set; }
+
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+
+    [Parameter]
+    public RenderFragment? AdditionalActions { get; set; }
+}

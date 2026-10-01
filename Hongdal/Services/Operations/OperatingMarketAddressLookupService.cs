@@ -219,22 +219,65 @@ public sealed class KoreaRoadAddressLookupAdapter : IOperatingMarketAddressLooku
 
 public sealed class UnitedStatesAddressLookupAdapter : IOperatingMarketAddressLookupAdapter
 {
+    private readonly IUnitedStatesAddressGeocoder _addressGeocoder;
+
+    public UnitedStatesAddressLookupAdapter(IUnitedStatesAddressGeocoder addressGeocoder)
+    {
+        ArgumentNullException.ThrowIfNull(addressGeocoder);
+        _addressGeocoder = addressGeocoder;
+    }
+
     public string MarketCode => OperatingMarketCodes.UnitedStates;
 
-    public string ProviderCode => OperatingAddressProviderCodes.GoogleAddressValidation;
+    public string ProviderCode => OperatingAddressProviderCodes.UnitedStatesCensusGeocoder;
 
-    public Task<OperatingMarketAddressSearchResult> SearchAsync(
+    public async Task<OperatingMarketAddressSearchResult> SearchAsync(
         OperatingMarketAddressSearchRequest request,
         CancellationToken cancellationToken = default)
-        => Task.FromResult(new OperatingMarketAddressSearchResult
+    {
+        var response = await _addressGeocoder.GeocodeAsync(
+            request.Query,
+            cancellationToken);
+        var allItems = response.Items.Select(item => new OperatingMarketAddressCandidate
         {
-            Success = false,
-            ProviderConfigured = false,
+            MarketCode = MarketCode,
+            CountryCode = OperatingMarketCodes.UnitedStates,
+            FormattedAddress = item.MatchedAddress,
+            PostalCode = item.PostalCode,
+            AdministrativeAreaCode = item.StateCode,
+            Locality = item.City,
+            Latitude = item.Latitude,
+            Longitude = item.Longitude,
+            MatchPrecisionCode = OperatingAddressMatchPrecisionCodes.AddressRange,
+            ProviderCode = ProviderCode,
+            ProviderReference = item.TigerLineId,
+            ProviderDatasetVersion = response.DatasetVersion,
+            ProviderGeographyVintage = response.GeographyVintage,
+            GeographicAreas = item.GeographicAreas
+        }).ToArray();
+        var page = Math.Max(1, request.Page);
+        var pageSize = Math.Clamp(request.PageSize, 1, 30);
+        var skip = (long)(page - 1) * pageSize;
+        OperatingMarketAddressCandidate[] items = skip >= allItems.Length
+            ? []
+            : allItems.Skip((int)skip).Take(pageSize).ToArray();
+
+        return new OperatingMarketAddressSearchResult
+        {
+            Success = response.Success,
+            ProviderConfigured = response.ProviderConfigured,
             MarketCode = MarketCode,
             ProviderCode = ProviderCode,
-            ErrorCode = OperatingMarketAddressErrorCodes.ProviderNotConfigured,
-            ErrorMessage = "The United States address validation provider is not configured.",
-            Page = request.Page,
-            PageSize = request.PageSize
-        });
+            ErrorCode = response.Success
+                ? null
+                : response.ProviderConfigured
+                    ? OperatingMarketAddressErrorCodes.ProviderRequestFailed
+                    : OperatingMarketAddressErrorCodes.ProviderNotConfigured,
+            ErrorMessage = response.ErrorMessage,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = allItems.Length,
+            Items = items
+        };
+    }
 }

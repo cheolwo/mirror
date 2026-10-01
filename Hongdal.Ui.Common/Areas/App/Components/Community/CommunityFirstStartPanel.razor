@@ -1,0 +1,81 @@
+<section class="community-first-start" aria-labelledby="community-first-title">
+    <header class="community-first-start__header">
+        <span class="community-first-start__eyebrow">COMMUNITY 0.0</span>
+        <MudText Typo="Typo.h4" Class="community-first-start__title" id="community-first-title">@Title</MudText>
+        <MudText Typo="Typo.body1" Color="Color.Secondary" Class="community-first-start__description">
+            @Description
+        </MudText>
+
+        <nav class="community-first-start__actions" aria-label="커뮤니티 시작 메뉴">
+            <MudButton Href="@BrowseHref"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Forum">
+                @BrowseLabel
+            </MudButton>
+            @if (!string.IsNullOrWhiteSpace(InformationHref))
+            {
+                <MudButton Href="@InformationHref"
+                           Variant="Variant.Outlined"
+                           Color="Color.Info"
+                           StartIcon="@Icons.Material.Filled.Insights">
+                    @InformationLabel
+                </MudButton>
+            }
+            <MudButton Href="@ParticipationHref"
+                       Variant="Variant.Text"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.Edit">
+                @ParticipationLabel
+            </MudButton>
+        </nav>
+    </header>
+
+    <ol class="community-first-start__steps" aria-label="커뮤니티 이용 순서">
+        @foreach (var step in Steps)
+        {
+            <li>
+                <span class="community-first-start__step-number">@step.Number</span>
+                <span>
+                    <strong>@step.Title</strong>
+                    <small>@step.Description</small>
+                </span>
+            </li>
+        }
+    </ol>
+</section>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "먼저 둘러보고, 필요할 때 참여하세요";
+
+    [Parameter]
+    public string Description { get; set; } = "로그인하지 않아도 새 글과 공개 정보를 확인할 수 있습니다. 궁금한 점이나 함께할 일이 생기면 그때 글을 남겨 주세요.";
+
+    [Parameter, EditorRequired]
+    public string BrowseHref { get; set; } = string.Empty;
+
+    [Parameter]
+    public string BrowseLabel { get; set; } = "새 글 둘러보기";
+
+    [Parameter]
+    public string? InformationHref { get; set; }
+
+    [Parameter]
+    public string InformationLabel { get; set; } = "공개 정보 보기";
+
+    [Parameter, EditorRequired]
+    public string ParticipationHref { get; set; } = string.Empty;
+
+    [Parameter]
+    public string ParticipationLabel { get; set; } = "글쓰기와 참여";
+
+    private static readonly IReadOnlyList<CommunityStartStep> Steps =
+    [
+        new("1", "둘러보기", "새 글과 이웃의 반응을 가볍게 확인합니다."),
+        new("2", "정보 확인", "출처가 표시된 공개 정보를 비교합니다."),
+        new("3", "참여하기", "질문·제안·공동구매 글로 대화를 시작합니다.")
+    ];
+
+    private sealed record CommunityStartStep(string Number, string Title, string Description);
+}

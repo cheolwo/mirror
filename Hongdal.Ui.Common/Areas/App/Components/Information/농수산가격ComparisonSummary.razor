@@ -1,0 +1,104 @@
+@using Hongdal.Contracts.Common.AgriculturalFisheries
+@using Hongdal.Contracts.Common.PublicData
+
+<section class="comparison-summary" aria-label="세 나라 농수산물 가격 비교 기준">
+    <header>
+        <div>
+            <span>COMPARISON BASIS</span>
+            <strong>자료 성격을 먼저 확인합니다</strong>
+        </div>
+        <small>통화·단위·유통단계를 유지한 원문 비교</small>
+    </header>
+
+    <div class="comparison-summary__grid">
+        <article class="comparison-summary__country comparison-summary__country--kr">
+            <div class="comparison-summary__country-header">
+                <span>KR</span>
+                <strong>한국</strong>
+                <small>실제 단가</small>
+            </div>
+            <strong class="comparison-summary__value">@DomesticValue</strong>
+            <span>@DomesticPeriod</span>
+            <p>aT 도·소매 조사 · 원/kg</p>
+        </article>
+
+        <article class="comparison-summary__country comparison-summary__country--us">
+            <div class="comparison-summary__country-header">
+                <span>US</span>
+                <strong>미국</strong>
+                <small>생산자 수취가격</small>
+            </div>
+            <strong class="comparison-summary__value">@UnitedStatesValue</strong>
+            <span>@UnitedStatesPeriod</span>
+            <p>USDA NASS · 원문 단위 유지</p>
+        </article>
+
+        <article class="comparison-summary__country comparison-summary__country--au">
+            <div class="comparison-summary__country-header">
+                <span>AU</span>
+                <strong>호주</strong>
+                <small>소비자가격지수</small>
+            </div>
+            <strong class="comparison-summary__value">@AustraliaValue</strong>
+            <span>@AustraliaPeriod</span>
+            <p>ABS CPI · 실제 A$/kg 단가 아님</p>
+        </article>
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    public AgriculturalFisheriesDomesticPriceResponse? Domestic { get; set; }
+
+    [Parameter]
+    public 미국농수산가격조회응답? UnitedStates { get; set; }
+
+    [Parameter]
+    public 호주농수산식품가격조회응답? Australia { get; set; }
+
+    private AtDomesticFoodPriceAggregate? DomesticLatest
+        => Domestic?.Price?.Retail ?? Domestic?.Price?.Wholesale;
+
+    private 미국농수산가격항목? UnitedStatesLatest
+        => UnitedStates?.Items
+            .OrderByDescending(item => ParseYear(item.Year))
+            .ThenByDescending(item => item.ReferencePeriod, StringComparer.Ordinal)
+            .FirstOrDefault();
+
+    private 호주농수산식품가격항목? AustraliaLatest
+        => Australia?.Items
+            .OrderByDescending(item => item.ReferencePeriod, StringComparer.Ordinal)
+            .FirstOrDefault();
+
+    private string DomesticValue
+        => DomesticLatest is { } item ? $"{item.AverageKrwPerKg:N0}원/kg" : ResolveEmpty(Domestic?.Success);
+
+    private string DomesticPeriod
+        => DomesticLatest?.LatestSurveyDate ?? "조회 전";
+
+    private string UnitedStatesValue
+        => UnitedStatesLatest is { } item
+            ? $"{item.RawValue} {item.Unit}".Trim()
+            : ResolveEmpty(UnitedStates?.Success);
+
+    private string UnitedStatesPeriod
+        => UnitedStatesLatest is { } item
+            ? string.IsNullOrWhiteSpace(item.ReferencePeriod)
+                ? item.Year
+                : $"{item.Year} · {item.ReferencePeriod}"
+            : "조회 전";
+
+    private string AustraliaValue
+        => AustraliaLatest is { } item
+            ? $"{item.RawValue} {item.UnitLabel}".Trim()
+            : ResolveEmpty(Australia?.Success);
+
+    private string AustraliaPeriod
+        => AustraliaLatest?.ReferencePeriod ?? "조회 전";
+
+    private static int ParseYear(string value)
+        => int.TryParse(value, out var year) ? year : 0;
+
+    private static string ResolveEmpty(bool? success)
+        => success == false ? "자료 확인 필요" : "조회 전";
+}

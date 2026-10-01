@@ -1,0 +1,244 @@
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inherits ViewModelParameterComponentBase<CommunityAuthoringPeriodStatisticsViewModel>
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<section class="community-period-statistics" aria-label="기간 자료 통계">
+    <header class="community-period-statistics__heading">
+        <div>
+            <MudText Typo="Typo.overline" Color="Color.Primary">PERIOD STATISTICS</MudText>
+            <MudText Typo="Typo.subtitle1">기간 자료 통계</MudText>
+        </div>
+        <MudTooltip Text="기간 통계 초기화">
+            <MudIconButton Icon="@Icons.Material.Filled.RestartAlt"
+                           OnClick="Reset"
+                           aria-label="기간 통계 초기화" />
+        </MudTooltip>
+    </header>
+
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+        서버가 보관했거나 원천 선택 뒤 조회한 자료를 기간별로 집계합니다. 원천 전체 모집단이나 미래 가격 예측은 아닙니다.
+    </MudAlert>
+
+    <div class="community-period-statistics__filters">
+        <MudDateRangePicker Label="통계 기간"
+                            DateRange="@SelectedRange"
+                            DateRangeChanged="ChangeDateRangeAsync"
+                            DateFormat="yyyy-MM-dd"
+                            MaxDays="366"
+                            Margin="Margin.Dense"
+                            Variant="Variant.Outlined"
+                            Editable="true"
+                            Clearable="true" />
+        <MudSelect T="string"
+                   Label="자료 원천"
+                   Value="@ViewModel.SourceKey"
+                   ValueChanged="ChangeSource"
+                   Margin="Margin.Dense"
+                   Variant="Variant.Outlined">
+            <MudSelectItem T="string" Value="@(string.Empty)">전체 자료</MudSelectItem>
+            @foreach (var source in ViewModel.Sources)
+            {
+                <MudSelectItem T="string" Value="@source.SourceKey">@source.DisplayName</MudSelectItem>
+            }
+        </MudSelect>
+        <MudTextField T="string"
+                      Label="국가 코드"
+                      Placeholder="KR, US"
+                      Value="@ViewModel.CountryCode"
+                      ValueChanged="ChangeCountry"
+                      MaxLength="3"
+                      Margin="Margin.Dense"
+                      Variant="Variant.Outlined" />
+        <MudTextField T="string"
+                      Label="자료 검색어"
+                      Value="@ViewModel.SearchText"
+                      ValueChanged="ChangeSearchText"
+                      Immediate="true"
+                      MaxLength="80"
+                      Margin="Margin.Dense"
+                      Variant="Variant.Outlined" />
+    </div>
+
+    <div class="community-period-statistics__mode">
+        <MudToggleGroup T="string"
+                        Value="@ViewModel.MetricCode"
+                        ValueChanged="ChangeMetric"
+                        SelectionMode="SelectionMode.SingleSelection"
+                        Outlined="true"
+                        Delimiters="true"
+                        Size="Size.Small"
+                        Color="Color.Primary">
+            @foreach (var metric in CommunityAuthoringPeriodStatisticsViewModel.Metrics)
+            {
+                <MudToggleItem T="string" Value="@metric.Code" Text="@metric.DisplayName" />
+            }
+        </MudToggleGroup>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.QueryStats"
+                   Disabled="@ViewModel.IsLoading"
+                   OnClick="GenerateAsync">
+            통계 만들기
+        </MudButton>
+    </div>
+
+    @if (ViewModel.MetricCode == CommunityPeriodStatisticsMetricCodes.NumericAverage
+         && ViewModel.HasSeriesChoices)
+    {
+        <div class="community-period-statistics__series">
+            <MudSelect T="string"
+                       Label="그래프로 만들 수치 계열"
+                       HelperText="품목·지역·조사단계·단위가 같은 관측값만 한 그래프로 계산합니다."
+                       Value="@ViewModel.MetricSeriesSelectionKey"
+                       ValueChanged="ChangeMetricSeries"
+                       Margin="Margin.Dense"
+                       Variant="Variant.Outlined">
+                <MudSelectItem T="string" Value="@(string.Empty)">수치 계열을 선택해 주세요</MudSelectItem>
+                @foreach (var series in ViewModel.AvailableSeries)
+                {
+                    <MudSelectItem T="string" Value="@series.SelectionKey">@series.DisplayName</MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(ViewModel.StatusMessage))
+    {
+        <MudAlert Severity="@StatusSeverity" Variant="Variant.Outlined" Dense="true">
+            @ViewModel.StatusMessage
+        </MudAlert>
+    }
+
+    @if (ViewModel.IsLoading)
+    {
+        <div class="community-period-statistics__loading">
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="220px" />
+        </div>
+    }
+    else if (ViewModel.HasResult)
+    {
+        <div class="community-period-statistics__summary" aria-label="기간 통계 요약">
+            <span><small>자료</small><strong>@($"{ViewModel.RecordCount:N0}건")</strong></span>
+            <span><small>숫자 관측</small><strong>@($"{ViewModel.NumericValueCount:N0}건")</strong></span>
+            <span><small>집계 구간</small><strong>@($"{ViewModel.Buckets.Count:N0}개")</strong></span>
+            @if (ViewModel.Statistics is { } statistics)
+            {
+                <span><small>구간 평균</small><strong>@statistics.Average.ToString("N2")</strong></span>
+            }
+        </div>
+
+        @if (ViewModel.QueryLimitReached)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Text" Dense="true">
+                조회 한도 100건에 도달했습니다. 검색어·원천·기간을 좁혀 전체 범위를 다시 확인해 주세요.
+            </MudAlert>
+        }
+
+        <MudTable T="CommunityPeriodStatisticsBucket"
+                  Items="@ViewModel.Buckets"
+                  Dense="true"
+                  Hover="true"
+                  Breakpoint="Breakpoint.Sm"
+                  Elevation="0">
+            <HeaderContent>
+                <MudTh>기간</MudTh>
+                <MudTh>자료</MudTh>
+                <MudTh>숫자 관측</MudTh>
+                <MudTh>집계값</MudTh>
+            </HeaderContent>
+            <RowTemplate Context="bucket">
+                <MudTd DataLabel="기간">@bucket.Label</MudTd>
+                <MudTd DataLabel="자료">@($"{bucket.RecordCount:N0}건")</MudTd>
+                <MudTd DataLabel="숫자 관측">@($"{bucket.NumericValueCount:N0}건")</MudTd>
+                <MudTd DataLabel="집계값">@FormatBucketValue(bucket)</MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        @if (ViewModel.Preview is { } preview)
+        {
+            <CommunityEvidenceChartDisplay Model="@preview" />
+        }
+
+        <div class="community-period-statistics__actions">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.InsertChart"
+                       Disabled="@(!ViewModel.CanImportToEvidenceChart)"
+                       OnClick="ImportToEvidenceChartRequested">
+                근거 그래프로 가져오기
+            </MudButton>
+        </div>
+    }
+
+    @if (ViewModel.Failures.Count > 0)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Text" Dense="true">
+            일부 자료 원천을 조회하지 못해 해당 자료는 통계에서 제외됐습니다.
+        </MudAlert>
+    }
+</section>
+
+@code {
+    [Parameter]
+    public EventCallback ImportToEvidenceChartRequested { get; set; }
+
+    private DateRange SelectedRange
+        => new(ViewModel.StartDate, ViewModel.EndDate);
+
+    private Severity StatusSeverity
+        => ViewModel.StatusKind switch
+        {
+            CommunityComposerMessageKind.Success => Severity.Success,
+            CommunityComposerMessageKind.Warning => Severity.Warning,
+            CommunityComposerMessageKind.Error => Severity.Error,
+            _ => Severity.Info
+        };
+
+    private async Task ChangeDateRangeAsync(DateRange range)
+    {
+        ViewModel.SetDateRange(range.Start, range.End);
+        if (range.Start.HasValue && range.End.HasValue)
+        {
+            await ViewModel.GenerateAsync();
+        }
+    }
+
+    private async Task ChangeSource(string value)
+    {
+        ViewModel.SelectSource(value);
+        if (ViewModel.StartDate.HasValue && ViewModel.EndDate.HasValue)
+        {
+            await ViewModel.GenerateAsync();
+        }
+    }
+
+    private void ChangeCountry(string value)
+        => ViewModel.CountryCode = value;
+
+    private void ChangeSearchText(string value)
+        => ViewModel.SearchText = value;
+
+    private void ChangeMetric(string value)
+        => ViewModel.MetricCode = value;
+
+    private async Task ChangeMetricSeries(string value)
+    {
+        ViewModel.MetricSeriesSelectionKey = value;
+        if (!string.IsNullOrWhiteSpace(value)
+            && ViewModel.StartDate.HasValue
+            && ViewModel.EndDate.HasValue)
+        {
+            await ViewModel.GenerateAsync();
+        }
+    }
+
+    private Task GenerateAsync()
+        => ViewModel.GenerateAsync();
+
+    private void Reset()
+        => ViewModel.Reset();
+
+    private string FormatBucketValue(CommunityPeriodStatisticsBucket bucket)
+        => bucket.Value.HasValue ? bucket.Value.Value.ToString("N2") : "-";
+}

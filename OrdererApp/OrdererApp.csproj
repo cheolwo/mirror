@@ -9,7 +9,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnableDefaultCssItems>false</EnableDefaultCssItems>
-    <ApplicationTitle>홍달 주문자</ApplicationTitle>
+    <ApplicationTitle>살뜰 주문</ApplicationTitle>
     <ApplicationId>com.hongdal.ordererapp</ApplicationId>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>

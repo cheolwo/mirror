@@ -47,7 +47,7 @@
 ## API 경로와 코드 연결
 
 - 화면 소스: [WarehouseManagerApp/Components/Pages/MartWorkStart.razor](../../../../../WarehouseManagerApp/Components/Pages/MartWorkStart.razor)
-- 클라이언트 서비스/계약: [ShipperApp/Services/IWarehouseWorkEntryGateService.cs](../../../../../ShipperApp/Services/IWarehouseWorkEntryGateService.cs), [ShipperApp/Services/SampleWarehouseWorkEntryGateService.cs](../../../../../ShipperApp/Services/SampleWarehouseWorkEntryGateService.cs), [WarehouseManagerApp/Services/IWarehouseWorkEntryGateService.cs](../../../../../WarehouseManagerApp/Services/IWarehouseWorkEntryGateService.cs), [WarehouseManagerApp/Services/SampleWarehouseWorkEntryGateService.cs](../../../../../WarehouseManagerApp/Services/SampleWarehouseWorkEntryGateService.cs)
+- 클라이언트 서비스/계약: [HongdalApp/Services/IWarehouseWorkEntryGateService.cs](../../../../../HongdalApp/Services/IWarehouseWorkEntryGateService.cs), [HongdalApp/Services/SampleWarehouseWorkEntryGateService.cs](../../../../../HongdalApp/Services/SampleWarehouseWorkEntryGateService.cs), [WarehouseManagerApp/Services/IWarehouseWorkEntryGateService.cs](../../../../../WarehouseManagerApp/Services/IWarehouseWorkEntryGateService.cs), [WarehouseManagerApp/Services/SampleWarehouseWorkEntryGateService.cs](../../../../../WarehouseManagerApp/Services/SampleWarehouseWorkEntryGateService.cs)
 
 현재 문서와 소스에서 직접 연결된 `api/v1/...` 경로를 찾지 못했습니다. 이 화면은 정적 안내, 라우팅, 메뉴 진입, 오류 표시, 또는 다른 화면으로 넘기는 책임이 중심일 수 있습니다.
 

@@ -9,6 +9,6 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        return new Window(new MainPage()) { Title = "홍달 주문자" };
+        return new Window(new MainPage()) { Title = "살뜰 주문" };
     }
 }

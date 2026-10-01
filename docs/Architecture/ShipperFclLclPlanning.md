@@ -16,7 +16,7 @@ FCL/LCL planning belongs before the final transport request. A shipper often nee
 ## Current UI
 
 - Route: `/shipper/international/fcl-lcl`
-- App: `ShipperApp`
+- App: `HongdalApp`
 - Entry points:
   - Shipper home quick actions
   - Work mode transport tab

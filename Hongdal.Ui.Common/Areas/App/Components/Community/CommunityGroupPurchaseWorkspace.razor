@@ -10,6 +10,9 @@
             </MudText>
         </div>
         <MudStack Row="true" Spacing="1" Class="group-purchase-hero-actions">
+            <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Groups" Href="/community/actions">
+                함께 하는 일
+            </MudButton>
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadCampaignsAsync" Disabled="@isBusy">
                 새로고침
             </MudButton>
@@ -126,6 +129,24 @@
                         <div><strong>@GetSignatureProgress()</strong><span>전자서명</span></div>
                     </div>
                 </section>
+
+                <CommunityGroupPurchaseProducerDirectory CampaignId="@selectedCampaign.Id"
+                                                         CampaignTitle="@selectedCampaign.Title" />
+
+                <CommunityDriverAvailabilityBoard SourceGroupPurchaseCampaignId="@selectedCampaign.Id"
+                                                  SourceContextLabel="@selectedCampaign.Title"
+                                                  SuggestedCargoSummary="@GetProductSummary(selectedCampaign)"
+                                                  SuggestedQuantitySummary="@($"{selectedCampaign.GroupPurchase?.TotalRequestedQuantity ?? 0}{selectedCampaign.GroupPurchase?.QuantityUnit}")" />
+
+                <CommunityGroupPurchaseFulfillmentRoutePlanner CampaignId="@selectedCampaign.Id"
+                                                              CampaignTitle="@selectedCampaign.Title"
+                                                              SuggestedProductSummary="@GetProductSummary(selectedCampaign)"
+                                                              SuggestedQuantitySummary="@($"{selectedCampaign.GroupPurchase?.TotalRequestedQuantity ?? 0}{selectedCampaign.GroupPurchase?.QuantityUnit}")"
+                                                              SuggestedPlannedQuantity="@(selectedCampaign.GroupPurchase?.TotalRequestedQuantity ?? 0)"
+                                                              SuggestedQuantityUnit="@(selectedCampaign.GroupPurchase?.QuantityUnit ?? "개")"
+                                                              SuggestedDestinationLabel="@(selectedCampaign.GroupPurchase?.PickupPoints.FirstOrDefault()?.Name ?? selectedCampaign.CommunityScope)" />
+
+                <CommunityGroupPurchaseNegotiationTimeline CampaignId="@selectedCampaign.Id" />
 
                 <section class="group-purchase-process" aria-label="공동구매 절차 다이어그램">
                     <div class="group-purchase-section-heading">
@@ -366,14 +387,21 @@
         try
         {
             var response = await CommunityService.GetGroupPurchaseVotesAsync();
-            campaigns = response.Items.OrderByDescending(x => x.CreatedAtUtc).ToList();
-            if (selectedCampaign is not null)
+            campaigns = response.Items
+                .Where(campaign => !CommunityVoteWorkflowClassifier.IsGroupImport(campaign))
+                .OrderByDescending(x => x.CreatedAtUtc)
+                .ToList();
+            if (selectedCampaign is not null && campaigns.Any(campaign => campaign.Id == selectedCampaign.Id))
             {
                 await SelectCampaignAsync(selectedCampaign.Id);
             }
             else if (campaigns.Count > 0)
             {
                 await SelectCampaignAsync(campaigns[0].Id);
+            }
+            else
+            {
+                selectedCampaign = null;
             }
         }
         catch (Exception ex)
@@ -440,7 +468,7 @@
             post = await CommunityService.CreatePostAsync(new PlatformCommunityPostCreateRequest
             {
                 AppKey = "shipper",
-                Category = "공동구매",
+                Category = CommunityBoardCatalog.Participation.DisplayName,
                 WorkflowTag = "공동 구매",
                 RoleTag = "구매 참여자",
                 Title = draft.Title.Trim(),

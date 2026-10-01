@@ -1,0 +1,365 @@
+@inject PlatformCommunityService CommunityService
+
+<section class="fulfillment-planner" aria-label="공동구매 이행 경로와 원장 생성 계획">
+    <header class="fulfillment-planner__header">
+        <div>
+            <MudText Typo="Typo.overline" Class="fulfillment-planner__kicker">ORDER-CENTERED FULFILLMENT</MudText>
+            <MudText Typo="Typo.h6">발주 주문 원장과 이행 경로 선택</MudText>
+            <MudText Typo="Typo.body2" Class="fulfillment-planner__description">
+                중간 거점 옵션에 따라 주문 원장이 포함할 입고·출고·운송 원장과 업무 다이어그램을 다르게 구성합니다.
+            </MudText>
+        </div>
+        <span class="fulfillment-planner__draft-badge">초안 골격</span>
+    </header>
+
+    <div class="fulfillment-planner__routes" aria-label="이행 경로 선택">
+        @foreach (var option in RouteOptions)
+        {
+            <button type="button"
+                    class="@BuildRouteClass(option.Code)"
+                    @onclick="@(() => SelectRoute(option.Code))">
+                <MudIcon Icon="@option.Icon" Size="Size.Large" />
+                <span><strong>@option.Title</strong><small>@option.Description</small></span>
+            </button>
+        }
+    </div>
+
+    <div class="fulfillment-planner__form">
+        <MudTextField Label="생산자·공급자" @bind-Value="producerDisplayName" Variant="Variant.Outlined" />
+        <MudTextField Label="발주 품목" @bind-Value="productSummary" Variant="Variant.Outlined" />
+        <MudTextField Label="발주 수량" @bind-Value="quantitySummary" Variant="Variant.Outlined" />
+        <MudNumericField T="decimal" Label="수치형 발주량" @bind-Value="plannedQuantity" Min="0" Variant="Variant.Outlined" />
+        <MudTextField Label="수량 단위" @bind-Value="quantityUnit" Variant="Variant.Outlined" />
+        <MudTextField Label="최종 공동 수령·집합지" @bind-Value="destinationLabel" Variant="Variant.Outlined" />
+        @if (selectedRouteCode != DomesticGroupPurchaseFulfillmentRouteCodes.DirectCollectionPoint)
+        {
+            <MudTextField Label="중간 거점 이름" @bind-Value="hubDisplayName" Variant="Variant.Outlined" />
+            <MudTextField Label="거점 참조 키" @bind-Value="hubReferenceKey" HelperText="전통시장 또는 3PL 디렉터리 연동용" Variant="Variant.Outlined" />
+        }
+    </div>
+
+    <div class="fulfillment-planner__readiness">
+        <div>
+            <MudIcon Icon="@Icons.Material.Filled.Handshake" />
+            <span><strong>발주 전 상호 확인</strong><small>협의 기록과 동일한 조건인지 확인합니다.</small></span>
+        </div>
+        <MudCheckBox T="bool" @bind-Value="producerTermsAccepted" Color="Color.Primary">생산자가 공급·출하 조건을 수락함</MudCheckBox>
+        <MudCheckBox T="bool" @bind-Value="buyerRepresentativeTermsAccepted" Color="Color.Primary">공동구매 대표가 인수·발주 조건을 수락함</MudCheckBox>
+        <MudCheckBox T="bool" @bind-Value="supplyCompatibilityConfirmed" Color="Color.Primary">포장 규격과 양측 물량 조건을 확인함</MudCheckBox>
+    </div>
+
+    @if (selectedRouteCode != DomesticGroupPurchaseFulfillmentRouteCodes.DirectCollectionPoint)
+    {
+        <div class="fulfillment-planner__hub-capability">
+            <div class="fulfillment-planner__hub-capability-heading">
+                <div>
+                    <MudText Typo="Typo.subtitle2">중간 거점 실행 가능성</MudText>
+                    <MudText Typo="Typo.caption">전통시장·3PL 디렉터리 연결 후에는 이 값들을 실제 거점 정보로 채웁니다.</MudText>
+                </div>
+                <div class="fulfillment-planner__capacity-inputs">
+                    <MudNumericField T="decimal" Label="일일 처리 가능량" @bind-Value="hubHandlingCapacity" Min="0" Variant="Variant.Outlined" />
+                    <MudTextField Label="처리량 단위" @bind-Value="hubCapacityUnit" Variant="Variant.Outlined" />
+                </div>
+            </div>
+            <div class="fulfillment-planner__hub-checks">
+                <MudCheckBox T="bool" @bind-Value="hubOperatorConsent" Color="Color.Primary">거점 운영자 사용 동의</MudCheckBox>
+                <MudCheckBox T="bool" @bind-Value="hubSiteVerified" Color="Color.Primary">현장 확인 완료</MudCheckBox>
+                <MudCheckBox T="bool" @bind-Value="hubSupportsBulkReceiving" Color="Color.Primary">공동구매 물량 일괄 입고</MudCheckBox>
+                <MudCheckBox T="bool" @bind-Value="hubSupportsSorting" Color="Color.Primary">선별·재포장 지원</MudCheckBox>
+                <MudCheckBox T="bool" @bind-Value="hubSupportsStorage" Color="Color.Primary">임시 보관 지원</MudCheckBox>
+                <MudCheckBox T="bool" @bind-Value="hubSupportsLastMileHandoff" Color="Color.Primary">후속 운송 인계 지원</MudCheckBox>
+            </div>
+        </div>
+    }
+
+    <div class="fulfillment-planner__options">
+        <MudCheckBox T="bool" @bind-Value="requiresSorting" Color="Color.Primary" Disabled="@(selectedRouteCode == DomesticGroupPurchaseFulfillmentRouteCodes.DirectCollectionPoint)">거점에서 공동구매별 선별·재포장</MudCheckBox>
+        <MudCheckBox T="bool" @bind-Value="requiresStorage" Color="Color.Primary" Disabled="@(selectedRouteCode == DomesticGroupPurchaseFulfillmentRouteCodes.DirectCollectionPoint)">거점 임시 보관</MudCheckBox>
+        <MudCheckBox T="bool" @bind-Value="requiresLastMileDelivery" Color="Color.Primary" Disabled="@(selectedRouteCode == DomesticGroupPurchaseFulfillmentRouteCodes.DirectCollectionPoint)">거점에서 최종 집합지까지 후속 운송</MudCheckBox>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AccountTree" OnClick="RefreshPlan">
+            옵션으로 다이어그램 만들기
+        </MudButton>
+    </div>
+
+    @if (plan is not null)
+    {
+        var orderRoot = plan.LedgerNodes.First(node => node.IsOrderRoot);
+        var flowNodes = plan.LedgerNodes.Where(node => !node.IsOrderRoot).OrderBy(node => node.StageOrder).ToArray();
+
+        <div class="fulfillment-planner__diagram-heading">
+            <div>
+                <MudText Typo="Typo.subtitle1">@plan.RouteLabel 다이어그램</MudText>
+                <MudText Typo="Typo.caption">주문 옵션이 바뀌면 포함 원장과 업무 인계 순서도 함께 바뀝니다.</MudText>
+            </div>
+            <span>@($"{plan.LedgerNodes.Count}개 원장 · {plan.LedgerEdges.Count}개 관계 · v{plan.PlanVersion} · {ShortFingerprint(plan.PlanFingerprint)}")</span>
+        </div>
+
+        <div class="fulfillment-planner__order-root">
+            <MudIcon Icon="@Icons.Material.Filled.ShoppingCartCheckout" Size="Size.Large" />
+            <div>
+                <small>중심 원장</small>
+                <strong>@orderRoot.Title</strong>
+                <span>@orderRoot.StageSummary</span>
+            </div>
+            <span class="fulfillment-planner__contains">후속 원장 @flowNodes.Length 개 포함</span>
+        </div>
+
+        <div class="fulfillment-planner__flow" aria-label="선택 옵션에 따른 원장 흐름">
+            @for (var index = 0; index < flowNodes.Length; index++)
+            {
+                var node = flowNodes[index];
+                <article class="fulfillment-planner__node">
+                    <div class="fulfillment-planner__node-icon">
+                        <MudIcon Icon="@ResolveLedgerIcon(node.LedgerTemplateKey)" />
+                    </div>
+                    <div>
+                        <span class="fulfillment-planner__node-role">@ResolveRoleLabel(node.IncludedLedgerRole)</span>
+                        <strong>@node.Title</strong>
+                        <small>@node.ResponsiblePartyLabel</small>
+                        <p>@node.StageSummary</p>
+                    </div>
+                </article>
+                @if (index < flowNodes.Length - 1)
+                {
+                    <span class="fulfillment-planner__arrow" aria-hidden="true">→</span>
+                }
+            }
+        </div>
+
+        @if (plan.PlanningWarnings.Count > 0)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="fulfillment-planner__alert">
+                @foreach (var warning in plan.PlanningWarnings)
+                {
+                    <div>· @warning</div>
+                }
+            </MudAlert>
+        }
+
+        @if (createdDraft is not null)
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true" Class="fulfillment-planner__alert">
+                @createdDraft.GuidanceMessage
+            </MudAlert>
+        }
+
+        <footer class="fulfillment-planner__footer">
+            <div>
+                <strong>@plan.Summary</strong>
+                <small>현재는 실제 발주·Mongo 원장 저장 전 단계이며 서버 메모리 초안만 생성합니다.</small>
+            </div>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.ReceiptLong"
+                       OnClick="CreateOrderDraftAsync"
+                       Disabled="@(!plan.OrderPlacementReady || isSaving)">
+                발주·원장 생성 초안 저장
+            </MudButton>
+        </footer>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public Guid CampaignId { get; set; }
+    [Parameter] public string CampaignTitle { get; set; } = string.Empty;
+    [Parameter] public string SuggestedProductSummary { get; set; } = string.Empty;
+    [Parameter] public string SuggestedQuantitySummary { get; set; } = string.Empty;
+    [Parameter] public decimal SuggestedPlannedQuantity { get; set; }
+    [Parameter] public string SuggestedQuantityUnit { get; set; } = string.Empty;
+    [Parameter] public string SuggestedDestinationLabel { get; set; } = string.Empty;
+
+    private static readonly IReadOnlyList<RouteOption> RouteOptions =
+    [
+        new(DomesticGroupPurchaseFulfillmentRouteCodes.TraditionalMarketHub, "전통시장 거점", "공동 입고·선별 후 수령지로 인계", Icons.Material.Filled.Storefront),
+        new(DomesticGroupPurchaseFulfillmentRouteCodes.ThirdPartyLogistics, "3PL 업체", "입고·보관·피킹·출고를 위탁", Icons.Material.Filled.Warehouse),
+        new(DomesticGroupPurchaseFulfillmentRouteCodes.DirectCollectionPoint, "집합지 직송", "생산지에서 차량으로 공동 수령지까지 직행", Icons.Material.Filled.LocalShipping)
+    ];
+
+    private Guid loadedCampaignId;
+    private string selectedRouteCode = DomesticGroupPurchaseFulfillmentRouteCodes.DirectCollectionPoint;
+    private string producerDisplayName = "회원 생산자";
+    private string productSummary = string.Empty;
+    private string quantitySummary = string.Empty;
+    private decimal plannedQuantity;
+    private string quantityUnit = string.Empty;
+    private string destinationLabel = string.Empty;
+    private string hubDisplayName = string.Empty;
+    private string hubReferenceKey = string.Empty;
+    private bool requiresSorting;
+    private bool requiresStorage;
+    private bool requiresLastMileDelivery;
+    private bool producerTermsAccepted;
+    private bool buyerRepresentativeTermsAccepted;
+    private bool supplyCompatibilityConfirmed;
+    private bool hubOperatorConsent;
+    private bool hubSiteVerified;
+    private bool hubSupportsBulkReceiving;
+    private bool hubSupportsSorting;
+    private bool hubSupportsStorage;
+    private bool hubSupportsLastMileHandoff;
+    private decimal hubHandlingCapacity;
+    private string hubCapacityUnit = string.Empty;
+    private bool isSaving;
+    private DomesticGroupPurchaseFulfillmentPlanResponse? plan;
+    private DomesticGroupPurchaseFulfillmentOrderDraftResponse? createdDraft;
+
+    protected override void OnParametersSet()
+    {
+        if (CampaignId == Guid.Empty || CampaignId == loadedCampaignId)
+        {
+            return;
+        }
+
+        loadedCampaignId = CampaignId;
+        productSummary = SuggestedProductSummary;
+        quantitySummary = SuggestedQuantitySummary;
+        plannedQuantity = SuggestedPlannedQuantity;
+        quantityUnit = SuggestedQuantityUnit;
+        hubCapacityUnit = SuggestedQuantityUnit;
+        destinationLabel = SuggestedDestinationLabel;
+        producerTermsAccepted = false;
+        buyerRepresentativeTermsAccepted = false;
+        supplyCompatibilityConfirmed = false;
+        createdDraft = null;
+        RefreshPlan();
+    }
+
+    private void SelectRoute(string routeCode)
+    {
+        selectedRouteCode = routeCode;
+        createdDraft = null;
+        ResetHubCapabilities();
+        switch (routeCode)
+        {
+            case DomesticGroupPurchaseFulfillmentRouteCodes.TraditionalMarketHub:
+                hubDisplayName = "지역 전통시장 공동물류 거점";
+                hubReferenceKey = string.Empty;
+                requiresSorting = true;
+                requiresStorage = false;
+                requiresLastMileDelivery = true;
+                break;
+            case DomesticGroupPurchaseFulfillmentRouteCodes.ThirdPartyLogistics:
+                hubDisplayName = "지역 3PL 업체";
+                hubReferenceKey = string.Empty;
+                requiresSorting = true;
+                requiresStorage = true;
+                requiresLastMileDelivery = true;
+                break;
+            default:
+                hubDisplayName = string.Empty;
+                hubReferenceKey = string.Empty;
+                requiresSorting = false;
+                requiresStorage = false;
+                requiresLastMileDelivery = false;
+                break;
+        }
+        RefreshPlan();
+    }
+
+    private void RefreshPlan()
+    {
+        createdDraft = null;
+        plan = DomesticGroupPurchaseFulfillmentPlanBuilder.Preview(BuildRequest());
+    }
+
+    private async Task CreateOrderDraftAsync()
+    {
+        if (CampaignId == Guid.Empty || plan?.OrderPlacementReady != true)
+        {
+            return;
+        }
+
+        isSaving = true;
+        try
+        {
+            createdDraft = await CommunityService.CreateDomesticGroupPurchaseFulfillmentOrderDraftAsync(
+                CampaignId,
+                BuildRequest());
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException)
+        {
+            plan.PlanningWarnings = ["발주·원장 생성 초안 API를 사용할 수 없습니다. 로그인과 서버 연결 상태를 확인해 주세요."];
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private DomesticGroupPurchaseFulfillmentPlanRequest BuildRequest()
+        => new()
+        {
+            GroupPurchaseCampaignId = CampaignId,
+            CampaignTitle = CampaignTitle,
+            RouteCode = selectedRouteCode,
+            ProducerDisplayName = producerDisplayName,
+            ProductSummary = productSummary,
+            QuantitySummary = quantitySummary,
+            PlannedQuantity = plannedQuantity,
+            QuantityUnit = quantityUnit,
+            DestinationLabel = destinationLabel,
+            HubReferenceKey = hubReferenceKey,
+            HubDisplayName = hubDisplayName,
+            RequiresSorting = requiresSorting,
+            RequiresStorage = requiresStorage,
+            RequiresLastMileDelivery = requiresLastMileDelivery,
+            ProducerTermsAccepted = producerTermsAccepted,
+            BuyerRepresentativeTermsAccepted = buyerRepresentativeTermsAccepted,
+            SupplyCompatibilityConfirmed = supplyCompatibilityConfirmed,
+            HubCapabilities = new DomesticGroupPurchaseFulfillmentHubCapabilitySnapshot
+            {
+                HasOperatorConsent = hubOperatorConsent,
+                SiteVerified = hubSiteVerified,
+                SupportsBulkReceiving = hubSupportsBulkReceiving,
+                SupportsSorting = hubSupportsSorting,
+                SupportsStorage = hubSupportsStorage,
+                SupportsLastMileHandoff = hubSupportsLastMileHandoff,
+                HandlingCapacity = hubHandlingCapacity,
+                CapacityUnit = hubCapacityUnit
+            }
+        };
+
+    private void ResetHubCapabilities()
+    {
+        hubOperatorConsent = false;
+        hubSiteVerified = false;
+        hubSupportsBulkReceiving = false;
+        hubSupportsSorting = false;
+        hubSupportsStorage = false;
+        hubSupportsLastMileHandoff = false;
+        hubHandlingCapacity = 0;
+        hubCapacityUnit = quantityUnit;
+    }
+
+    private static string ShortFingerprint(string value)
+        => string.IsNullOrWhiteSpace(value)
+            ? "지문 없음"
+            : value[..Math.Min(10, value.Length)];
+
+    private string BuildRouteClass(string routeCode)
+        => selectedRouteCode == routeCode
+            ? "fulfillment-planner__route fulfillment-planner__route--selected"
+            : "fulfillment-planner__route";
+
+    private static string ResolveLedgerIcon(string templateKey)
+        => templateKey switch
+        {
+            CommunityLedgerTemplateKeys.LocalSale => Icons.Material.Filled.Handshake,
+            CommunityLedgerTemplateKeys.WarehouseInbound => Icons.Material.Filled.MoveToInbox,
+            CommunityLedgerTemplateKeys.WarehouseOutbound => Icons.Material.Filled.Outbox,
+            CommunityLedgerTemplateKeys.CargoTransport => Icons.Material.Filled.LocalShipping,
+            _ => Icons.Material.Filled.Description
+        };
+
+    private static string ResolveRoleLabel(string role)
+        => role switch
+        {
+            주문원장포함역할.판매 => "판매 원장",
+            주문원장포함역할.창고입고 => "입고 원장",
+            주문원장포함역할.창고출고 => "출고 원장",
+            주문원장포함역할.운송 => "운송 원장",
+            _ => "관련 원장"
+        };
+
+    private sealed record RouteOption(string Code, string Title, string Description, string Icon);
+}

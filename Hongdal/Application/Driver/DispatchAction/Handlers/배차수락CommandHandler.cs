@@ -4,6 +4,7 @@ using FluentResults;
 using Microsoft.Extensions.Logging;
 using Hongdal.Application.CommandProcessing;
 using Hongdal.Contracts.Common.Hr;
+using Hongdal.Contracts.Common.Operations;
 using 홍달.도메인.공통;
 
 namespace Hongdal.Application.Driver.DispatchAction;
@@ -38,6 +39,16 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         if (!_권한검사.Try검증(_currentUserAccessor.UserId, _currentUserAccessor.Role, request.참여자Id, request.실행역할, out var 권한오류))
         {
             return Result.Fail<배차수락결과>(권한오류);
+        }
+
+        var executionBoundary = CollectiveActionDispatchBoundaryPolicy.Evaluate(
+            DispatchConfirmationBoundaryRequest.ForDriverSelfAcceptance(
+                _currentUserAccessor.UserId,
+                request.기사Id));
+        if (!executionBoundary.CanConfirmDispatch)
+        {
+            return Result.Fail<배차수락결과>(
+                "플랫폼의 후보 정보만으로 배차를 확정할 수 없습니다. 참여 기사 본인의 수락이 필요합니다.");
         }
 
         await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);

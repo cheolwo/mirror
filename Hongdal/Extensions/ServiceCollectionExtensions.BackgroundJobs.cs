@@ -1,4 +1,6 @@
 using Quartz;
+using Hongdal.Infrastructure.BackgroundJobs.AgriculturalFisheries;
+using Hongdal.Infrastructure.BackgroundJobs.Community;
 using Hongdal.Infrastructure.BackgroundJobs.Content;
 using Hongdal.Infrastructure.BackgroundJobs.SalesOrders;
 using Hongdal.Services.LogisticsProcessing.SalesOrders;
@@ -18,8 +20,12 @@ public static partial class ServiceCollectionExtensions
         SalesChannelOrderSyncOptions salesOrderSyncOptions,
         YouTubeOptions youTubeOptions,
         HongikHakdangCardOptions hongikHakdangCardOptions,
+        AgriculturalFisheriesBatchOptions agriculturalFisheriesBatchOptions,
+        CommunityEditorialBatchOptions communityEditorialBatchOptions,
         HongdalExecutionOptions executionOptions)
     {
+        services.AddScoped<AgriculturalFisheriesBatchRunner>();
+        services.AddScoped<CommunityEditorialBatchRunner>();
         services.AddQuartz(q =>
         {
             if (executionOptions.Mode == HongdalExecutionMode.Operational)
@@ -120,9 +126,131 @@ public static partial class ServiceCollectionExtensions
                             .RepeatForever()));
                 }
             }
+
+            if (agriculturalFisheriesBatchOptions.Enabled)
+            {
+                AddAgriculturalFisheriesBatchJobs(q, agriculturalFisheriesBatchOptions);
+            }
+
+            if (communityEditorialBatchOptions.Enabled)
+            {
+                AddCommunityEditorialBatchJobs(q, communityEditorialBatchOptions);
+            }
         });
 
         services.AddQuartzHostedService(options => { options.WaitForJobsToComplete = true; });
         return services;
+    }
+
+    private static void AddAgriculturalFisheriesBatchJobs(
+        IServiceCollectionQuartzConfigurator quartz,
+        AgriculturalFisheriesBatchOptions options)
+    {
+        var timeZone = AgriculturalFisheriesBatchSchedule.ResolveTimeZone(options.TimeZoneId);
+
+        if (options.KamisDailyEnabled)
+        {
+            var jobKey = new JobKey("KamisDailyPriceCollection");
+            quartz.AddJob<KamisDailyPriceCollectionJob>(job => job.WithIdentity(jobKey));
+            quartz.AddTrigger(trigger => trigger
+                .ForJob(jobKey)
+                .WithIdentity("KamisDailyPriceCollection-trigger")
+                .WithCronSchedule(
+                    options.KamisDailyCronExpression,
+                    schedule => schedule
+                        .InTimeZone(timeZone)
+                        .WithMisfireHandlingInstructionDoNothing()));
+        }
+
+        if (options.KamisMonthlyEnabled)
+        {
+            var jobKey = new JobKey("KamisMonthlyPriceCollection");
+            quartz.AddJob<KamisMonthlyPriceCollectionJob>(job => job.WithIdentity(jobKey));
+            quartz.AddTrigger(trigger => trigger
+                .ForJob(jobKey)
+                .WithIdentity("KamisMonthlyPriceCollection-trigger")
+                .WithCronSchedule(
+                    options.KamisMonthlyCronExpression,
+                    schedule => schedule
+                        .InTimeZone(timeZone)
+                        .WithMisfireHandlingInstructionDoNothing()));
+        }
+
+        if (options.UsdaMonthlyEnabled)
+        {
+            var jobKey = new JobKey("UsdaMonthlyPriceCollection");
+            quartz.AddJob<UsdaMonthlyPriceCollectionJob>(job => job.WithIdentity(jobKey));
+            quartz.AddTrigger(trigger => trigger
+                .ForJob(jobKey)
+                .WithIdentity("UsdaMonthlyPriceCollection-trigger")
+                .WithCronSchedule(
+                    options.UsdaMonthlyCronExpression,
+                    schedule => schedule
+                        .InTimeZone(timeZone)
+                        .WithMisfireHandlingInstructionDoNothing()));
+        }
+    }
+
+    private static void AddCommunityEditorialBatchJobs(
+        IServiceCollectionQuartzConfigurator quartz,
+        CommunityEditorialBatchOptions options)
+    {
+        var timeZone = AgriculturalFisheriesBatchSchedule.ResolveTimeZone(options.TimeZoneId);
+
+        if (options.KamisPriceBriefEnabled)
+        {
+            var jobKey = new JobKey("CommunityKamisPriceBrief");
+            quartz.AddJob<CommunityKamisPriceBriefJob>(job => job.WithIdentity(jobKey));
+            quartz.AddTrigger(trigger => trigger
+                .ForJob(jobKey)
+                .WithIdentity("CommunityKamisPriceBrief-trigger")
+                .WithCronSchedule(
+                    options.KamisPriceBriefCronExpression,
+                    schedule => schedule
+                        .InTimeZone(timeZone)
+                        .WithMisfireHandlingInstructionDoNothing()));
+        }
+
+        if (options.ReflectionEnabled)
+        {
+            var jobKey = new JobKey("CommunityReflection");
+            quartz.AddJob<CommunityReflectionJob>(job => job.WithIdentity(jobKey));
+            quartz.AddTrigger(trigger => trigger
+                .ForJob(jobKey)
+                .WithIdentity("CommunityReflection-trigger")
+                .WithCronSchedule(
+                    options.ReflectionCronExpression,
+                    schedule => schedule
+                        .InTimeZone(timeZone)
+                        .WithMisfireHandlingInstructionDoNothing()));
+        }
+
+        if (options.ActivityDigestEnabled)
+        {
+            var jobKey = new JobKey("CommunityActivityDigest");
+            quartz.AddJob<CommunityActivityDigestJob>(job => job.WithIdentity(jobKey));
+            quartz.AddTrigger(trigger => trigger
+                .ForJob(jobKey)
+                .WithIdentity("CommunityActivityDigest-trigger")
+                .WithCronSchedule(
+                    options.ActivityDigestCronExpression,
+                    schedule => schedule
+                        .InTimeZone(timeZone)
+                        .WithMisfireHandlingInstructionDoNothing()));
+        }
+
+        if (options.PrajnaPublicationEnabled)
+        {
+            var jobKey = new JobKey("CommunityPrajnaPublication");
+            quartz.AddJob<CommunityPrajnaPublicationJob>(job => job.WithIdentity(jobKey));
+            quartz.AddTrigger(trigger => trigger
+                .ForJob(jobKey)
+                .WithIdentity("CommunityPrajnaPublication-trigger")
+                .WithCronSchedule(
+                    options.PrajnaPublicationCronExpression,
+                    schedule => schedule
+                        .InTimeZone(timeZone)
+                        .WithMisfireHandlingInstructionDoNothing()));
+        }
     }
 }

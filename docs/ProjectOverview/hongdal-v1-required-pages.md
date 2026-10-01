@@ -19,28 +19,28 @@
 
 ## 페이지 번호 체계
 
-1.0 페이지 식별자는 실제 프로젝트명을 접두사로 붙여 `ShipperApp-P01`, `DriverApp-P06`, `HongdalAdmin-P22-1`처럼 관리한다. 번호는 화면 이름이 바뀌더라도 유지하고, 실제 라우트나 파일이 바뀌면 이 문서의 코드 연결만 갱신한다.
+1.0 페이지 식별자는 실제 프로젝트명을 접두사로 붙여 `HongdalApp-P01`, `DriverApp-P06`, `HongdalAdmin-P22-1`처럼 관리한다. 번호는 화면 이름이 바뀌더라도 유지하고, 실제 라우트나 파일이 바뀌면 이 문서의 코드 연결만 갱신한다.
 
-독립 라우트나 독립 책임을 가진 화면은 `ShipperApp-P03`처럼 부모 번호를 가진다. 그 안에 들어가는 세부 페이지, 섹션, 탭, 모달, 보조 설정 화면은 `ShipperApp-P03-1`, `ShipperApp-P03-2`처럼 부모 번호 아래에 붙인다. 예를 들어 `ShipperApp-P03 의뢰 상세/타임라인` 안의 결제 안내는 `ShipperApp-P03-1`, 예외/분쟁 확인은 `ShipperApp-P03-2`로 관리한다.
+독립 라우트나 독립 책임을 가진 화면은 `HongdalApp-P03`처럼 부모 번호를 가진다. 그 안에 들어가는 세부 페이지, 섹션, 탭, 모달, 보조 설정 화면은 `HongdalApp-P03-1`, `HongdalApp-P03-2`처럼 부모 번호 아래에 붙인다. 예를 들어 `HongdalApp-P03 의뢰 상세/타임라인` 안의 결제 안내는 `HongdalApp-P03-1`, 예외/분쟁 확인은 `HongdalApp-P03-2`로 관리한다.
 
 목록과 상세는 둘 다 원장을 여는 핵심 화면이면 상위 번호를 유지한다. 반대로 같은 원장 안에서 이벤트, 증빙, 정산, 설정처럼 일부 관점만 다루는 화면은 하위 번호로 내린다. 이미 문서에 남은 상위 번호는 재사용하지 않고, 이후 새 독립 화면이 생기면 다음 빈 상위 번호를 부여한다.
 
 | 번호 범위 | 의미 |
 | --- | --- |
-| `ShipperApp-P01`~`ShipperApp-P03`, `ShipperApp-P03-*` | 화주가 운송 의뢰를 만들고 상태를 확인하는 화면 |
+| `HongdalApp-P01`~`HongdalApp-P03`, `HongdalApp-P03-*` | 화주가 운송 의뢰를 만들고 상태를 확인하는 화면 |
 | `DriverApp-P06`~`DriverApp-P15`, `DriverApp-P06-*`, `DriverApp-P07-*`, `DriverApp-P14-*`, `DriverApp-P15-*` | 기사가 운행을 시작하고 추천, 상차, 하차, 정산을 처리하는 화면 |
 | `HongdalAdmin-P16`~`HongdalAdmin-P22`, `HongdalAdmin-P22-*`, `HongdalAdmin-P26-*`, `HongdalAdmin-P27-*` | 관리자가 배차, 운송, 증빙, 정산, 예외를 운영하는 화면 |
 | `Public-P28` | 수령자 또는 공개 POD 확인 확장 화면 |
 
 ## 한글/영문 표기 원칙
 
-ShipperApp-P01부터 Public-P28까지의 화면 이름과 업무 설명은 한글 도메인 용어를 우선한다. 반대로 실제 파일명, 클래스명, 메서드명, API 경로는 코드와 바로 대조할 수 있어야 하므로 원문 표기를 유지한다.
+HongdalApp-P01부터 Public-P28까지의 화면 이름과 업무 설명은 한글 도메인 용어를 우선한다. 반대로 실제 파일명, 클래스명, 메서드명, API 경로는 코드와 바로 대조할 수 있어야 하므로 원문 표기를 유지한다.
 
 | 구분 | 표기 원칙 | 예시 |
 | --- | --- | --- |
 | 화면 이름 | 사용자가 이해하는 한글 업무명으로 쓴다 | `운송 의뢰 작성`, `기사 추천 상세`, `운송 증빙` |
 | 도메인 상태 | 서버 상태와 업무 의미가 보이도록 한글로 쓴다 | `배차대기`, `추천중`, `상차 완료`, `정산 후보` |
-| 앱/프로젝트명 | 실제 프로젝트명을 유지한다 | `ShipperApp`, `DriverApp`, `HongdalAdmin` |
+| 앱/프로젝트명 | 실제 프로젝트명을 유지한다 | `HongdalApp`, `DriverApp`, `HongdalAdmin` |
 | 파일/클래스/메서드 | 코드 검색이 가능하도록 실제 이름을 유지한다 | `ShipperRequestDetail.razor`, `배차수락CommandHandler` |
 | 기술 접미사 | 처음 볼 때 뜻이 드러나도록 한글 설명을 붙인다 | `Controller(컨트롤러)`, `Handler(핸들러)`, `Service(서비스)` |
 | 약어 | 물류·기술 약어는 원문을 유지하되 의미를 문맥에 붙인다 | `POD(하차 증빙)`, `FCM`, `SignalR`, `API` |
@@ -53,16 +53,16 @@ ShipperApp-P01부터 Public-P28까지의 화면 이름과 업무 설명은 한�
 
 보안상 캡처에는 실제 고객 주소, 연락처, 차량번호, 계좌번호, 가상계좌, 결제 식별자, POD 원본, 실제 위치 좌표를 그대로 넣지 않는다. 개발용 샘플 데이터로 찍거나, 민감정보를 마스킹한 뒤 넣는다.
 
-현재 Android 에뮬레이터 기준 렌더링 스모크 결과와 대표 캡처는 [홍달 1.0 렌더링/캡처 검증 요약](hongdal-v1-render-capture-summary.md)에 둔다. 2026-07-09 기준 `DriverApp` 23개, `ShipperApp` 30개, `WarehouseManagerApp` 22개 라우트가 Blazor 오류 UI 없이 렌더링되는 것을 확인했다. 이 결과는 `ShipperApp-P01`~`ShipperApp-P03`, `DriverApp-P06`~`DriverApp-P15`, 창고 확장 화면을 README에 설명할 때 근거로 사용한다.
+현재 Android 에뮬레이터 기준 렌더링 스모크 결과와 대표 캡처는 [홍달 1.0 렌더링/캡처 검증 요약](hongdal-v1-render-capture-summary.md)에 둔다. 2026-07-09 기준 `DriverApp` 23개, `HongdalApp` 30개, `WarehouseManagerApp` 22개 라우트가 Blazor 오류 UI 없이 렌더링되는 것을 확인했다. 이 결과는 `HongdalApp-P01`~`HongdalApp-P03`, `DriverApp-P06`~`DriverApp-P15`, 창고 확장 화면을 README에 설명할 때 근거로 사용한다.
 
 | 번호 | 캡처 이미지 속성 | 권장 파일 경로 | 캡처 기준 |
 | --- | --- | --- | --- |
-| ShipperApp-P01 | 화주 홈/업무 진입 캡처 | `assets/v1-pages/P01-화주홈.png` | 최근 의뢰와 ShipperApp-P02/ShipperApp-P03 진입이 보이는 상태 |
-| ShipperApp-P02 | 운송 의뢰 작성 캡처 | `assets/v1-pages/P02-운송의뢰작성.png` | 상차지, 하차지, 화물, 결제 조건 입력 흐름 |
-| ShipperApp-P02-1 | 운송 의뢰 대량 등록 캡처 | `assets/v1-pages/P02-1-운송의뢰대량등록.png` | 여러 운송 의뢰를 파일 또는 목록으로 등록하는 흐름 |
-| ShipperApp-P03 | 의뢰 상세/타임라인 캡처 | `assets/v1-pages/P03-의뢰상세타임라인.png` | 결제, 배차, 수락, 상차, 하차, 정산 타임라인 |
-| ShipperApp-P03-1 | 결제/입금 안내 캡처 | `assets/v1-pages/P03-1-결제입금안내.png` | 가상계좌/결제대기/입금 요청 알림 상태. 민감 결제값은 마스킹 |
-| ShipperApp-P03-2 | 예외/분쟁 확인 캡처 | `assets/v1-pages/P03-2-예외분쟁확인.png` | 현장 예외 사유와 다음 행동 안내. 사진 원본은 마스킹 |
+| HongdalApp-P01 | 화주 홈/업무 진입 캡처 | `assets/v1-pages/P01-화주홈.png` | 최근 의뢰와 HongdalApp-P02/HongdalApp-P03 진입이 보이는 상태 |
+| HongdalApp-P02 | 운송 의뢰 작성 캡처 | `assets/v1-pages/P02-운송의뢰작성.png` | 상차지, 하차지, 화물, 결제 조건 입력 흐름 |
+| HongdalApp-P02-1 | 운송 의뢰 대량 등록 캡처 | `assets/v1-pages/P02-1-운송의뢰대량등록.png` | 여러 운송 의뢰를 파일 또는 목록으로 등록하는 흐름 |
+| HongdalApp-P03 | 의뢰 상세/타임라인 캡처 | `assets/v1-pages/P03-의뢰상세타임라인.png` | 결제, 배차, 수락, 상차, 하차, 정산 타임라인 |
+| HongdalApp-P03-1 | 결제/입금 안내 캡처 | `assets/v1-pages/P03-1-결제입금안내.png` | 가상계좌/결제대기/입금 요청 알림 상태. 민감 결제값은 마스킹 |
+| HongdalApp-P03-2 | 예외/분쟁 확인 캡처 | `assets/v1-pages/P03-2-예외분쟁확인.png` | 현장 예외 사유와 다음 행동 안내. 사진 원본은 마스킹 |
 | DriverApp-P06 | 운행 시작 캡처 | `assets/v1-pages/P06-운행시작.png` | 운행 시작, 위치 송신 안내, 복귀/수익 선호 |
 | DriverApp-P06-1 | 운행 설정 캡처 | `assets/v1-pages/P06-1-운행설정.png` | 복귀/수익 선호, 위치 송신, 운행 조건 설정 |
 | DriverApp-P07 | 지도 홈/추천 배너 캡처 | `assets/v1-pages/P07-지도홈추천배너.png` | 지도 위 추천 배너와 응답 제한 시간 |
@@ -101,60 +101,60 @@ ShipperApp-P01부터 Public-P28까지의 화면 이름과 업무 설명은 한�
 이미지가 실제로 추가되면 각 페이지 설명 아래에 다음 형식으로 붙인다.
 
 ```markdown
-![ShipperApp-P03 의뢰 상세/타임라인](assets/v1-pages/P03-의뢰상세타임라인.png)
+![HongdalApp-P03 의뢰 상세/타임라인](assets/v1-pages/P03-의뢰상세타임라인.png)
 ```
 
 현재 첨부된 캡처는 다음과 같다. 상위 페이지와 일부 하위 페이지는 실제 렌더링된 화면을 기준으로 캡처를 붙였고, 아직 캡처하지 않은 하위 페이지는 `캡처 예정`으로 남긴다.
 
-ShipperApp-P03-1과 ShipperApp-P03-2는 아직 독립 라우트가 아니라 ShipperApp-P03 의뢰 상세 화면 안의 결제/예외 섹션으로 닫는 구조다. 그래서 현재 캡처도 같은 상세 화면을 기준으로 붙인다. DriverApp-P14와 DriverApp-P15는 기사 앱의 정산/알림 대표 라우트로 캡처했다.
+HongdalApp-P03-1과 HongdalApp-P03-2는 아직 독립 라우트가 아니라 HongdalApp-P03 의뢰 상세 화면 안의 결제/예외 섹션으로 닫는 구조다. 그래서 현재 캡처도 같은 상세 화면을 기준으로 붙인다. DriverApp-P14와 DriverApp-P15는 기사 앱의 정산/알림 대표 라우트로 캡처했다.
 
 ## 상위/하위 페이지별 캡처
 
-### ShipperApp-P01 화주 홈/업무 진입
+### HongdalApp-P01 화주 홈/업무 진입
 
 - 라우트: `/shipper`
 - 역할: 화주가 운송 의뢰와 진행 상태 확인 흐름으로 들어가는 관문이다.
 - 캡처: `assets/v1-pages/P01-화주홈.png`
 
-<img src="assets/v1-pages/P01-화주홈.png" alt="ShipperApp-P01 화주 홈" width="420">
+<img src="assets/v1-pages/P01-화주홈.png" alt="HongdalApp-P01 화주 홈" width="420">
 
-### ShipperApp-P02 운송 의뢰 작성
+### HongdalApp-P02 운송 의뢰 작성
 
 - 라우트: `/shipper/request`
 - 역할: 상차지, 하차지, 화물, 차량 조건, 결제 조건을 입력해 운송 의뢰를 생성한다.
 - 캡처: `assets/v1-pages/P02-운송의뢰작성.png`
 
-<img src="assets/v1-pages/P02-운송의뢰작성.png" alt="ShipperApp-P02 운송 의뢰 작성" width="420">
+<img src="assets/v1-pages/P02-운송의뢰작성.png" alt="HongdalApp-P02 운송 의뢰 작성" width="420">
 
-### ShipperApp-P02-1 운송 의뢰 대량 등록
+### HongdalApp-P02-1 운송 의뢰 대량 등록
 
 - 라우트: `/shipper/request/bulk`
 - 역할: 여러 운송 의뢰를 파일 또는 목록으로 한 번에 등록한다.
 - 캡처 예정: `assets/v1-pages/P02-1-운송의뢰대량등록.png`
 
-### ShipperApp-P03 의뢰 상세/타임라인
+### HongdalApp-P03 의뢰 상세/타임라인
 
 - 라우트: `/shipper/request/{RequestId}`
 - 역할: 결제, 배차, 수락, 상차, 하차, 정산 상태를 화주가 한 화면에서 추적한다.
 - 캡처: `assets/v1-pages/P03-의뢰상세타임라인.png`
 
-<img src="assets/v1-pages/P03-의뢰상세타임라인.png" alt="ShipperApp-P03 의뢰 상세 타임라인" width="420">
+<img src="assets/v1-pages/P03-의뢰상세타임라인.png" alt="HongdalApp-P03 의뢰 상세 타임라인" width="420">
 
-### ShipperApp-P03-1 결제/입금 안내
+### HongdalApp-P03-1 결제/입금 안내
 
 - 라우트: 우선 `/shipper/request/{RequestId}` 내부 섹션
 - 역할: 가상계좌, 입금대기, 입금 요청 알림 상태를 화주가 확인한다.
 - 캡처: `assets/v1-pages/P03-1-결제입금안내.png`
 
-<img src="assets/v1-pages/P03-1-결제입금안내.png" alt="ShipperApp-P03-1 결제 입금 안내" width="420">
+<img src="assets/v1-pages/P03-1-결제입금안내.png" alt="HongdalApp-P03-1 결제 입금 안내" width="420">
 
-### ShipperApp-P03-2 예외/분쟁 확인
+### HongdalApp-P03-2 예외/분쟁 확인
 
 - 라우트: 우선 `/shipper/request/{RequestId}` 내부 섹션
 - 역할: 상차/하차 예외와 분쟁 가능 상태를 화주 관점에서 확인한다.
 - 캡처: `assets/v1-pages/P03-2-예외분쟁확인.png`
 
-<img src="assets/v1-pages/P03-2-예외분쟁확인.png" alt="ShipperApp-P03-2 예외 분쟁 확인" width="420">
+<img src="assets/v1-pages/P03-2-예외분쟁확인.png" alt="HongdalApp-P03-2 예외 분쟁 확인" width="420">
 
 ### DriverApp-P06 운행 시작
 
@@ -348,7 +348,7 @@ ShipperApp-P03-1과 ShipperApp-P03-2는 아직 독립 라우트가 아니라 Shi
 
 ```mermaid
 flowchart LR
-    A["ShipperApp-P02 화주 운송 의뢰 작성"] --> B["ShipperApp-P03 화주 의뢰 상세/타임라인"]
+    A["HongdalApp-P02 화주 운송 의뢰 작성"] --> B["HongdalApp-P03 화주 의뢰 상세/타임라인"]
     B --> C["HongdalAdmin-P19 관리자 배차대기"]
     C --> D["DriverApp-P07 기사 지도 홈/추천 배너"]
     D --> E["DriverApp-P09 기사 추천 상세"]
@@ -370,12 +370,12 @@ flowchart LR
 
 | 번호 | 필수 화면 | 현재 라우트/파일 | 주 책임 | 연결 API/상태 | 현재 판정 |
 | --- | --- | --- | --- | --- | --- |
-| ShipperApp-P01 | 화주 홈/업무 진입 | `/shipper`<br>`ShipperApp/Components/Pages/Home.razor`<br>`/`는 `UnifiedHome.razor`의 역할 진입점 | 운송 의뢰, 의뢰 타임라인, 창고/판매 업무로 이동 | 서버 상태 요약, 최근 의뢰 | 라우트 확인 |
-| ShipperApp-P02 | 운송 의뢰 작성 | `/shipper/request`<br>`ShipperApp/Components/Pages/ShipperRequestWizard.razor` | 상차지, 하차지, 화물, 차량 조건, 결제 조건을 입력해 의뢰를 생성 | `api/v1/shipper/requests` | 1.0 필수 |
-| ShipperApp-P02-1 | 운송 의뢰 대량 등록 | `/shipper/request/bulk`<br>`ShipperApp/Components/Pages/ShipperBulkImport.razor` | 여러 의뢰를 한 번에 등록 | `api/v1/shipper/requests` 대량 등록 후보 | ShipperApp-P02의 보조 화면 |
-| ShipperApp-P03 | 의뢰 상세/타임라인 | `/shipper/request/{RequestId}`<br>`ShipperApp/Components/Pages/ShipperRequestDetail.razor` | 결제, 배차, 수락, 상차, 하차, POD, 정산 상태를 한 화면에서 확인 | `api/v1/shipper/requests`, `api/v1/payments`, 운송 이벤트 | 1.0 필수 |
-| ShipperApp-P03-1 | 결제/입금 안내 | 우선 ShipperApp-P03 안에 포함 | 운송완료후정산, 가상계좌 입금대기, 1/3/7일 알림 상태 확인 | `api/v1/payments` | 상세 화면 안에서 먼저 닫고, 커지면 분리 |
-| ShipperApp-P03-2 | 예외/분쟁 확인 | 우선 ShipperApp-P03 안에 포함 | 상차물건없음, 수량불일치, 하차지부재, 증빙업로드실패 같은 예외를 화주 관점에서 확인 | 운송 이벤트, 관리자 확인 상태 | 상세 화면 안에서 먼저 닫고, 커지면 분리 |
+| HongdalApp-P01 | 화주 홈/업무 진입 | `/shipper`<br>`HongdalApp/Components/Pages/Home.razor`<br>`/`는 `UnifiedHome.razor`의 역할 진입점 | 운송 의뢰, 의뢰 타임라인, 창고/판매 업무로 이동 | 서버 상태 요약, 최근 의뢰 | 라우트 확인 |
+| HongdalApp-P02 | 운송 의뢰 작성 | `/shipper/request`<br>`HongdalApp/Components/Pages/ShipperRequestWizard.razor` | 상차지, 하차지, 화물, 차량 조건, 결제 조건을 입력해 의뢰를 생성 | `api/v1/shipper/requests` | 1.0 필수 |
+| HongdalApp-P02-1 | 운송 의뢰 대량 등록 | `/shipper/request/bulk`<br>`HongdalApp/Components/Pages/ShipperBulkImport.razor` | 여러 의뢰를 한 번에 등록 | `api/v1/shipper/requests` 대량 등록 후보 | HongdalApp-P02의 보조 화면 |
+| HongdalApp-P03 | 의뢰 상세/타임라인 | `/shipper/request/{RequestId}`<br>`HongdalApp/Components/Pages/ShipperRequestDetail.razor` | 결제, 배차, 수락, 상차, 하차, POD, 정산 상태를 한 화면에서 확인 | `api/v1/shipper/requests`, `api/v1/payments`, 운송 이벤트 | 1.0 필수 |
+| HongdalApp-P03-1 | 결제/입금 안내 | 우선 HongdalApp-P03 안에 포함 | 운송완료후정산, 가상계좌 입금대기, 1/3/7일 알림 상태 확인 | `api/v1/payments` | 상세 화면 안에서 먼저 닫고, 커지면 분리 |
+| HongdalApp-P03-2 | 예외/분쟁 확인 | 우선 HongdalApp-P03 안에 포함 | 상차물건없음, 수량불일치, 하차지부재, 증빙업로드실패 같은 예외를 화주 관점에서 확인 | 운송 이벤트, 관리자 확인 상태 | 상세 화면 안에서 먼저 닫고, 커지면 분리 |
 
 화주 앱에서 가장 먼저 완성해야 할 화면은 `의뢰 상세/타임라인`이다. 의뢰 작성 화면이 있어도 이후 상태가 보이지 않으면 1.0 워크플로우는 사용자가 체감하기 어렵다.
 
@@ -436,7 +436,7 @@ flowchart LR
 
 | 방식 | 화면 | 처리 기준 |
 | --- | --- | --- |
-| 최소 방식 | ShipperApp-P03 화주 의뢰 상세와 HongdalAdmin-P22-2 관리자 운송 증빙에서 확인 | 수령자 직접 확인 없이 기사 증빙과 화주 확인으로 닫는다. |
+| 최소 방식 | HongdalApp-P03 화주 의뢰 상세와 HongdalAdmin-P22-2 관리자 운송 증빙에서 확인 | 수령자 직접 확인 없이 기사 증빙과 화주 확인으로 닫는다. |
 | 확장 방식 | Public-P28 공개 POD 확인 화면 또는 수령자 확인 링크 | 수령자가 하차 사진, 인수 상태, 이의 제기를 직접 확인한다. |
 
 초기에는 최소 방식으로 닫고, 수령자 직접 확인이 필요해지는 순간 별도 공개 화면으로 분리한다.
@@ -447,14 +447,14 @@ flowchart LR
 
 | 상태 변경 | 조작 화면 | 반드시 반영되어야 하는 화면 | 비고 |
 | --- | --- | --- | --- |
-| 운송 의뢰 등록 | ShipperApp-P02 화주 운송 의뢰 작성 | ShipperApp-P03 화주 의뢰 상세, HongdalAdmin-P17 관리자 의뢰 목록, HongdalAdmin-P19 관리자 배차대기, DriverApp-P08/DriverApp-P09 기사 추천 후보 | 등록 직후 화주는 타임라인을 볼 수 있어야 한다. |
+| 운송 의뢰 등록 | HongdalApp-P02 화주 운송 의뢰 작성 | HongdalApp-P03 화주 의뢰 상세, HongdalAdmin-P17 관리자 의뢰 목록, HongdalAdmin-P19 관리자 배차대기, DriverApp-P08/DriverApp-P09 기사 추천 후보 | 등록 직후 화주는 타임라인을 볼 수 있어야 한다. |
 | 기사 추천 노출 | 서버 배차대기/추천 처리 | DriverApp-P07 기사 지도 홈 배너, DriverApp-P08/DriverApp-P09 기사 추천 목록/상세, HongdalAdmin-P19 관리자 배차대기 | 추천 잠금 중에는 같은 의뢰를 다른 기사에게 중복 추천하지 않는다. |
-| 기사 수락 | DriverApp-P10 기사 배차 처리 | DriverApp-P11 기사 진행 중 운송, ShipperApp-P03 화주 의뢰 상세, HongdalAdmin-P22 관리자 운송 상세, HongdalAdmin-P22-1 관리자 운송 이벤트 | 수락 즉시 화주에게 상차 준비 알림 후보가 생긴다. |
-| 기사 거절/만료 | DriverApp-P10 기사 배차 처리 또는 타임아웃 | DriverApp-P08/DriverApp-P09 기사 추천 화면 제거, HongdalAdmin-P22-1 관리자 이벤트, HongdalAdmin-P19 배차대기 재추천 상태, ShipperApp-P03 화주 의뢰 상세 | 화주에게는 불필요한 세부 거절 사유를 과노출하지 않는다. |
-| 상차 완료 | DriverApp-P12 기사 상차 화면 | DriverApp-P11 기사 진행 중 운송, ShipperApp-P03 화주 의뢰 상세, HongdalAdmin-P22/HongdalAdmin-P22-2 관리자 운송 상세/증빙 | 사진 업로드 성공 이후에만 상차 완료로 전이한다. |
-| 상차 예외 | DriverApp-P12 기사 상차 화면 | HongdalAdmin-P22-1 관리자 이벤트/예외 확인, ShipperApp-P03 화주 의뢰 상세 경고 | 물건없음, 수량불일치, 담당자부재는 업무 상태가 달라지는 사건이다. |
-| 하차 완료 | DriverApp-P13 기사 하차 화면 | ShipperApp-P03 화주 의뢰 상세, HongdalAdmin-P22/HongdalAdmin-P22-2/HongdalAdmin-P22-3 관리자 운송 상세/증빙/정산, DriverApp-P14 기사 정산 확인 | 사진 업로드와 POD 연결 뒤 완료로 전이한다. |
-| 입금 요청/입금 완료 | HongdalAdmin-P22-3/HongdalAdmin-P26 정산 이벤트/결제 API | ShipperApp-P03 화주 의뢰 상세, DriverApp-P14 기사 정산 확인, HongdalAdmin-P22-3/HongdalAdmin-P26/HongdalAdmin-P26-1 관리자 운송 정산/결제 목록 | 운송완료후정산은 1일/3일/7일 알림 예약을 가진다. |
+| 기사 수락 | DriverApp-P10 기사 배차 처리 | DriverApp-P11 기사 진행 중 운송, HongdalApp-P03 화주 의뢰 상세, HongdalAdmin-P22 관리자 운송 상세, HongdalAdmin-P22-1 관리자 운송 이벤트 | 수락 즉시 화주에게 상차 준비 알림 후보가 생긴다. |
+| 기사 거절/만료 | DriverApp-P10 기사 배차 처리 또는 타임아웃 | DriverApp-P08/DriverApp-P09 기사 추천 화면 제거, HongdalAdmin-P22-1 관리자 이벤트, HongdalAdmin-P19 배차대기 재추천 상태, HongdalApp-P03 화주 의뢰 상세 | 화주에게는 불필요한 세부 거절 사유를 과노출하지 않는다. |
+| 상차 완료 | DriverApp-P12 기사 상차 화면 | DriverApp-P11 기사 진행 중 운송, HongdalApp-P03 화주 의뢰 상세, HongdalAdmin-P22/HongdalAdmin-P22-2 관리자 운송 상세/증빙 | 사진 업로드 성공 이후에만 상차 완료로 전이한다. |
+| 상차 예외 | DriverApp-P12 기사 상차 화면 | HongdalAdmin-P22-1 관리자 이벤트/예외 확인, HongdalApp-P03 화주 의뢰 상세 경고 | 물건없음, 수량불일치, 담당자부재는 업무 상태가 달라지는 사건이다. |
+| 하차 완료 | DriverApp-P13 기사 하차 화면 | HongdalApp-P03 화주 의뢰 상세, HongdalAdmin-P22/HongdalAdmin-P22-2/HongdalAdmin-P22-3 관리자 운송 상세/증빙/정산, DriverApp-P14 기사 정산 확인 | 사진 업로드와 POD 연결 뒤 완료로 전이한다. |
+| 입금 요청/입금 완료 | HongdalAdmin-P22-3/HongdalAdmin-P26 정산 이벤트/결제 API | HongdalApp-P03 화주 의뢰 상세, DriverApp-P14 기사 정산 확인, HongdalAdmin-P22-3/HongdalAdmin-P26/HongdalAdmin-P26-1 관리자 운송 정산/결제 목록 | 운송완료후정산은 1일/3일/7일 알림 예약을 가진다. |
 
 ## 구현 우선순위
 
@@ -469,18 +469,18 @@ flowchart LR
 
 ## 페이지별 필요 이유, 보안, 관계
 
-이 표는 ShipperApp-P01부터 Public-P28까지를 구현할 때 단순히 화면이 있는지만 보지 않기 위한 기준이다. 각 페이지는 왜 필요한지, 민감정보와 증빙이 안전하게 다뤄지는지, 어떤 다른 페이지와 유스케이스를 주고받는지를 함께 확인한다.
+이 표는 HongdalApp-P01부터 Public-P28까지를 구현할 때 단순히 화면이 있는지만 보지 않기 위한 기준이다. 각 페이지는 왜 필요한지, 민감정보와 증빙이 안전하게 다뤄지는지, 어떤 다른 페이지와 유스케이스를 주고받는지를 함께 확인한다.
 
 보안 항목은 현재 구현 완료 여부가 아니라 페이지를 완성할 때 반드시 확인할 점이다. 주소, 연락처, 위치, 사진, POD, 인수증, 결제, 정산, 관리자 감사 기록은 기본적으로 역할 기반 권한, 전송 구간 암호화, 저장 시 암호화 또는 마스킹, 조회 로그를 검토해야 한다.
 
 | 번호 | 왜 필요한가 | 보안/암호화 확인 | 관계 페이지·유스케이스 |
 | --- | --- | --- | --- |
-| ShipperApp-P01 | 화주가 1.0 업무로 들어가는 관문이다. 최근 의뢰와 다음 행동을 보여주되 직접 상태 변경은 하지 않는다. | 홈 요약에는 상세 주소, 연락처, 증빙 원본을 노출하지 않는다. 사용자별 의뢰만 조회되는지 확인한다. | ShipperApp-P02 운송 의뢰 작성, ShipperApp-P03 의뢰 상세, 운송의뢰조회 |
-| ShipperApp-P02 | 운송 의뢰 원장을 생성하는 화면이다. 여기서 입력된 화물, 상하차, 결제 조건이 이후 배차와 증빙의 기준이 된다. | 주소, 연락처, 결제 조건, 화물 특이사항은 전송 구간 암호화와 서버 권한 검증이 필요하다. 금액과 결제 조건은 클라이언트 값을 그대로 신뢰하지 않는다. | ShipperApp-P02-1, ShipperApp-P03, HongdalAdmin-P17, HongdalAdmin-P19, DriverApp-P08/DriverApp-P09, 운송의뢰등록, 배차대기생성 |
-| ShipperApp-P02-1 | 운송 의뢰를 대량 등록하는 보조 화면이다. 같은 원장 생성 책임을 가지지만 입력 단위가 여러 건이다. | 파일 업로드, 대량 주소, 연락처, 금액 정보가 포함될 수 있으므로 파일 검증과 행별 권한 검증이 필요하다. | ShipperApp-P02, ShipperApp-P03, 대량운송의뢰등록 |
-| ShipperApp-P03 | 화주가 전체 진행 상태를 한 화면에서 확인하는 기준 화면이다. 상태가 보이지 않으면 운송이 진행되어도 신뢰가 생기기 어렵다. | 역할별 마스킹이 필요하다. 기사 연락처, 상세주소, POD, 결제 정보는 화주 권한과 의뢰 소유권을 확인한 뒤 노출한다. | ShipperApp-P02, ShipperApp-P03-1, ShipperApp-P03-2, DriverApp-P10, DriverApp-P12, DriverApp-P13, HongdalAdmin-P22-3/HongdalAdmin-P26, 운송상태조회 |
-| ShipperApp-P03-1 | 운송완료후정산, 가상계좌, 입금 요청 알림을 화주가 이해하고 처리하게 하는 화면이다. | 결제 키, 가상계좌, 입금자 정보는 마스킹한다. 결제 승인과 콜백은 서버에서 서명, 금액, 대상 의뢰를 재검증한다. | ShipperApp-P03, HongdalAdmin-P22-3, HongdalAdmin-P26, 결제준비, 결제승인, 입금요청알림 |
-| ShipperApp-P03-2 | 현장 예외와 분쟁 가능성을 화주가 확인하고 다음 행동을 정하게 하는 화면이다. | 예외 사진과 메모에는 개인정보가 섞일 수 있으므로 원본 접근 권한과 다운로드 권한을 분리한다. 조회 로그를 남긴다. | ShipperApp-P03, DriverApp-P12, DriverApp-P13, HongdalAdmin-P22-1, HongdalAdmin-P22-2, 운송문제신고 |
+| HongdalApp-P01 | 화주가 1.0 업무로 들어가는 관문이다. 최근 의뢰와 다음 행동을 보여주되 직접 상태 변경은 하지 않는다. | 홈 요약에는 상세 주소, 연락처, 증빙 원본을 노출하지 않는다. 사용자별 의뢰만 조회되는지 확인한다. | HongdalApp-P02 운송 의뢰 작성, HongdalApp-P03 의뢰 상세, 운송의뢰조회 |
+| HongdalApp-P02 | 운송 의뢰 원장을 생성하는 화면이다. 여기서 입력된 화물, 상하차, 결제 조건이 이후 배차와 증빙의 기준이 된다. | 주소, 연락처, 결제 조건, 화물 특이사항은 전송 구간 암호화와 서버 권한 검증이 필요하다. 금액과 결제 조건은 클라이언트 값을 그대로 신뢰하지 않는다. | HongdalApp-P02-1, HongdalApp-P03, HongdalAdmin-P17, HongdalAdmin-P19, DriverApp-P08/DriverApp-P09, 운송의뢰등록, 배차대기생성 |
+| HongdalApp-P02-1 | 운송 의뢰를 대량 등록하는 보조 화면이다. 같은 원장 생성 책임을 가지지만 입력 단위가 여러 건이다. | 파일 업로드, 대량 주소, 연락처, 금액 정보가 포함될 수 있으므로 파일 검증과 행별 권한 검증이 필요하다. | HongdalApp-P02, HongdalApp-P03, 대량운송의뢰등록 |
+| HongdalApp-P03 | 화주가 전체 진행 상태를 한 화면에서 확인하는 기준 화면이다. 상태가 보이지 않으면 운송이 진행되어도 신뢰가 생기기 어렵다. | 역할별 마스킹이 필요하다. 기사 연락처, 상세주소, POD, 결제 정보는 화주 권한과 의뢰 소유권을 확인한 뒤 노출한다. | HongdalApp-P02, HongdalApp-P03-1, HongdalApp-P03-2, DriverApp-P10, DriverApp-P12, DriverApp-P13, HongdalAdmin-P22-3/HongdalAdmin-P26, 운송상태조회 |
+| HongdalApp-P03-1 | 운송완료후정산, 가상계좌, 입금 요청 알림을 화주가 이해하고 처리하게 하는 화면이다. | 결제 키, 가상계좌, 입금자 정보는 마스킹한다. 결제 승인과 콜백은 서버에서 서명, 금액, 대상 의뢰를 재검증한다. | HongdalApp-P03, HongdalAdmin-P22-3, HongdalAdmin-P26, 결제준비, 결제승인, 입금요청알림 |
+| HongdalApp-P03-2 | 현장 예외와 분쟁 가능성을 화주가 확인하고 다음 행동을 정하게 하는 화면이다. | 예외 사진과 메모에는 개인정보가 섞일 수 있으므로 원본 접근 권한과 다운로드 권한을 분리한다. 조회 로그를 남긴다. | HongdalApp-P03, DriverApp-P12, DriverApp-P13, HongdalAdmin-P22-1, HongdalAdmin-P22-2, 운송문제신고 |
 | DriverApp-P06 | 기사가 운행을 시작하고 서버가 추천 후보로 볼 수 있게 만드는 화면이다. | 위치 정보 수집 동의, 운행 중 위치 송신 범위, 보관 기간을 명확히 한다. 위치 데이터는 기사 본인, 배차 엔진, 관리자 최소 범위로 제한한다. | DriverApp-P06-1, DriverApp-P07, HongdalAdmin-P20, 배차후보선정, 기사위치갱신 |
 | DriverApp-P06-1 | 운행 조건과 선호를 조정하는 보조 화면이다. | 위치 송신, 복귀 선호, 수익 선호 같은 설정은 기사 본인의 의사로만 바뀌어야 한다. | DriverApp-P06, 운행설정 |
 | DriverApp-P07 | 기사 지도 홈에서 추천 수신과 현재 운송 진입을 담당한다. 지도 홈이 과부하되면 운행 중 판단 비용이 커진다. | 추천 배너에는 민감 상세주소를 과노출하지 않는다. 잠금된 추천은 해당 기사에게만 보여야 한다. | DriverApp-P07-1, DriverApp-P08, DriverApp-P09, DriverApp-P11, DriverApp-P15, 추천노출, 추천만료 |
@@ -499,14 +499,14 @@ flowchart LR
 | HongdalAdmin-P16 | 운영자가 막힌 상태를 빠르게 보는 대시보드다. 상세 처리는 각 전용 화면으로 넘긴다. | 대시보드에는 최소 요약만 노출한다. 관리자 역할별로 금액, 연락처, 증빙 접근 범위를 나눈다. | HongdalAdmin-P17, HongdalAdmin-P19, HongdalAdmin-P21, HongdalAdmin-P22-3/HongdalAdmin-P26, 운영요약조회 |
 | HongdalAdmin-P17 | 관리자 의뢰 목록이다. 화주 의뢰가 배차와 운송으로 잘 이어지는지 운영자가 추적한다. | 목록에서는 상세주소와 연락처를 마스킹한다. 조회 가능한 관리자 역할을 제한한다. | HongdalAdmin-P18, HongdalAdmin-P19, HongdalAdmin-P22, 의뢰관리조회 |
 | HongdalAdmin-P18 | 관리자 의뢰 상세다. 의뢰 원문, 결제 조건, 배차 연결 상태를 함께 확인한다. | 화주 입력 원문에는 민감정보가 포함된다. 상세 조회 권한과 조회 로그가 필요하다. | HongdalAdmin-P17, HongdalAdmin-P19, HongdalAdmin-P22, HongdalAdmin-P26, 의뢰상세조회 |
-| HongdalAdmin-P19 | 배차대기와 추천 잠금 상태를 운영자가 보는 화면이다. 중복 추천과 후보 부족을 다룬다. | 추천 잠금, 후보 기사 정보는 운영 목적 범위로만 노출한다. 수동 조정은 관리자 감사 로그를 남긴다. | ShipperApp-P02, DriverApp-P08/DriverApp-P09, DriverApp-P10, HongdalAdmin-P20, 배차대기조회, 재추천 |
+| HongdalAdmin-P19 | 배차대기와 추천 잠금 상태를 운영자가 보는 화면이다. 중복 추천과 후보 부족을 다룬다. | 추천 잠금, 후보 기사 정보는 운영 목적 범위로만 노출한다. 수동 조정은 관리자 감사 로그를 남긴다. | HongdalApp-P02, DriverApp-P08/DriverApp-P09, DriverApp-P10, HongdalAdmin-P20, 배차대기조회, 재추천 |
 | HongdalAdmin-P20 | 운행 중 기사 위치와 추천 가능 상태를 운영자가 확인하는 화면이다. | 위치 정보는 가장 민감한 데이터 중 하나다. 실시간 위치 조회 권한, 보관 기간, 목적 외 사용 방지 기준을 둔다. | DriverApp-P06, DriverApp-P07, HongdalAdmin-P19, 기사운행현황조회 |
 | HongdalAdmin-P21 | 운송 목록이다. 진행 중, 완료, 예외 운송을 단계별로 찾고 상세로 들어간다. | 목록에는 최소 식별 정보만 노출한다. 상태 필터와 권한을 같이 적용한다. | HongdalAdmin-P22, HongdalAdmin-P22-1, HongdalAdmin-P22-2, HongdalAdmin-P22-3, 운송목록조회 |
 | HongdalAdmin-P22 | 운송 하나의 중심 상세 화면이다. 상태, 기사, 화주, 증빙, 정산을 연결한다. | 여러 민감정보가 모이는 화면이므로 역할별 섹션 권한이 필요하다. 조회 로그와 관리자 행위 로그를 남긴다. | HongdalAdmin-P21, HongdalAdmin-P22-1, HongdalAdmin-P22-2, HongdalAdmin-P22-3, 운송상세조회 |
 | HongdalAdmin-P22-1 | 운송 이벤트 감사 화면이다. 수락, 거절, 만료, 상차, 하차, 예외를 시간순으로 설명한다. | 이벤트 사유와 메모는 변조되면 안 된다. 사후 수정 제한, 원본 보존, 감사 로그를 확인한다. | DriverApp-P10, DriverApp-P12, DriverApp-P13, HongdalAdmin-P22, 운송이벤트조회 |
 | HongdalAdmin-P22-2 | 운송 증빙 화면이다. 사진, POD, 인수증, 서명, 문서 조회를 다룬다. | 증빙 파일은 암호화 저장, 접근 권한, 다운로드 권한, 워터마크 또는 조회 로그를 검토한다. | DriverApp-P12, DriverApp-P13, HongdalAdmin-P22, HongdalAdmin-P27, 증빙조회, 문서관리 |
-| HongdalAdmin-P22-3 | 운송 정산 상세다. 하차 완료 후 입금 요청, 입금 완료, 기사 정산 후보를 연결한다. | 정산 금액, 계좌, 입금 상태는 역할별로 분리한다. 금액 변경과 정산 완료 처리는 감사 로그를 남긴다. | ShipperApp-P03, DriverApp-P13, DriverApp-P14, HongdalAdmin-P26, 운송완료입금요청, 정산후보생성 |
-| HongdalAdmin-P26 | 결제 목록이다. 결제대기와 입금완료를 운영자가 관리한다. | 결제 식별자, 가상계좌, 계좌 정보, 영수증은 마스킹한다. 결제 상태 변경은 서버 검증과 로그가 필요하다. | ShipperApp-P03-1, HongdalAdmin-P22-3, 결제조회 |
+| HongdalAdmin-P22-3 | 운송 정산 상세다. 하차 완료 후 입금 요청, 입금 완료, 기사 정산 후보를 연결한다. | 정산 금액, 계좌, 입금 상태는 역할별로 분리한다. 금액 변경과 정산 완료 처리는 감사 로그를 남긴다. | HongdalApp-P03, DriverApp-P13, DriverApp-P14, HongdalAdmin-P26, 운송완료입금요청, 정산후보생성 |
+| HongdalAdmin-P26 | 결제 목록이다. 결제대기와 입금완료를 운영자가 관리한다. | 결제 식별자, 가상계좌, 계좌 정보, 영수증은 마스킹한다. 결제 상태 변경은 서버 검증과 로그가 필요하다. | HongdalApp-P03-1, HongdalAdmin-P22-3, 결제조회 |
 | HongdalAdmin-P26-1 | 정산 목록이다. 정산예정과 정산완료를 운영자가 관리한다. | 정산 금액, 계좌, 수수료 정보는 역할별로 분리한다. 정산 완료 처리는 감사 로그를 남긴다. | DriverApp-P14, HongdalAdmin-P22-3, 정산관리 |
 | HongdalAdmin-P27 | 문서 목록 화면이다. 문서 보관 상태와 상세 진입을 담당한다. | 문서 종류별 암호화, 다운로드 허용, 보관 기간, 서명 필요 여부를 확인한다. | HongdalAdmin-P22-2, HongdalAdmin-P27-1, HongdalAdmin-P27-2, HongdalAdmin-P27-4, 문서관리 |
 | HongdalAdmin-P27-1 | 문서 업로드 화면이다. | 업로드 파일 검증, 바이러스 검사, 문서 유형 검증, 권한 검사를 둔다. | HongdalAdmin-P27, 문서업로드 |
@@ -514,7 +514,7 @@ flowchart LR
 | HongdalAdmin-P27-3 | 문서 정책 상세 화면이다. | 문서 코드별 보관 기간, 다운로드 제한, 서명 필요 여부를 변경할 때 감사 로그를 남긴다. | HongdalAdmin-P27-2, 문서정책상세 |
 | HongdalAdmin-P27-4 | 문서 조회 로그 화면이다. | 조회자, 조회 시간, 다운로드 여부는 변조되지 않는 감사 기록으로 관리한다. | HongdalAdmin-P27, 문서조회로그 |
 | HongdalAdmin-P27-5 | 파일/POD 관리 화면이다. | POD 원본 접근, 썸네일, 다운로드 권한을 분리한다. | HongdalAdmin-P22-2, HongdalAdmin-P27, 파일POD관리 |
-| Public-P28 | 공개 POD 확인 확장 화면이다. 수령자가 직접 확인해야 할 때만 별도 공개 링크로 둔다. | 공개 링크는 만료 시간, 일회성 토큰, 최소 정보 노출, 다운로드 제한이 필요하다. | DriverApp-P13, HongdalAdmin-P22-2, ShipperApp-P03, 공개POD조회, 이의제기 |
+| Public-P28 | 공개 POD 확인 확장 화면이다. 수령자가 직접 확인해야 할 때만 별도 공개 링크로 둔다. | 공개 링크는 만료 시간, 일회성 토큰, 최소 정보 노출, 다운로드 제한이 필요하다. | DriverApp-P13, HongdalAdmin-P22-2, HongdalApp-P03, 공개POD조회, 이의제기 |
 
 ## 순서별 코드 검증표
 
@@ -522,12 +522,12 @@ flowchart LR
 
 | 번호 | 검증할 페이지 | 클라이언트 코드 | 서버/API 연결 | 검증 포인트 |
 | --- | --- | --- | --- | --- |
-| ShipperApp-P01 | 화주 홈/업무 진입 | `ShipperApp/Components/Pages/Home.razor`<br>`ShipperApp/Services/ShipperRoutes.cs` | `ServerBackedShipperOperationsService`의 `api/v1/shipper/requests` 조회 | 최근 의뢰에서 ShipperApp-P03으로 이동하고, 홈이 직접 상태 변경을 하지 않는지 확인 |
-| ShipperApp-P02 | 운송 의뢰 작성 | `ShipperRequestWizard.razor`<br>`ServerBackedShipperOperationsService.CreateAsync` | `화주운송의뢰Controller`<br>`api/v1/shipper/requests` | 등록 후 의뢰 원장과 배차대기 진입 조건이 맞는지 확인 |
-| ShipperApp-P02-1 | 운송 의뢰 대량 등록 | `ShipperBulkImport.razor` | 대량 등록 API 후보 | 여러 의뢰 생성 시 행별 검증과 실패 행 안내가 분리되는지 확인 |
-| ShipperApp-P03 | 의뢰 상세/타임라인 | `ShipperRequestDetail.razor`<br>`ServerBackedShipperOperationsService.GetRequestAsync` | `api/v1/shipper/requests/{id}`<br>`api/v1/payments` | 결제, 배차, 수락, 상차, 하차, 정산 상태가 한 화면에서 끊기지 않는지 확인 |
-| ShipperApp-P03-1 | 결제/입금 안내 | 우선 ShipperApp-P03 내부 섹션 | `화주결제Controller`<br>`토스결제준비CommandHandler`<br>`토스결제승인CommandHandler` | 운송완료후정산, 가상계좌/결제대기, 1/3/7일 알림 상태를 화주가 이해할 수 있는지 확인 |
-| ShipperApp-P03-2 | 예외/분쟁 확인 | 우선 ShipperApp-P03 내부 섹션 | `운송이벤트Controller`<br>`운송문제신고CommandHandler` | 기사 예외 신고가 화주에게 다음 행동 중심으로 보이는지 확인 |
+| HongdalApp-P01 | 화주 홈/업무 진입 | `HongdalApp/Components/Pages/Home.razor`<br>`HongdalApp/Services/ShipperRoutes.cs` | `ServerBackedShipperOperationsService`의 `api/v1/shipper/requests` 조회 | 최근 의뢰에서 HongdalApp-P03으로 이동하고, 홈이 직접 상태 변경을 하지 않는지 확인 |
+| HongdalApp-P02 | 운송 의뢰 작성 | `ShipperRequestWizard.razor`<br>`ServerBackedShipperOperationsService.CreateAsync` | `화주운송의뢰Controller`<br>`api/v1/shipper/requests` | 등록 후 의뢰 원장과 배차대기 진입 조건이 맞는지 확인 |
+| HongdalApp-P02-1 | 운송 의뢰 대량 등록 | `ShipperBulkImport.razor` | 대량 등록 API 후보 | 여러 의뢰 생성 시 행별 검증과 실패 행 안내가 분리되는지 확인 |
+| HongdalApp-P03 | 의뢰 상세/타임라인 | `ShipperRequestDetail.razor`<br>`ServerBackedShipperOperationsService.GetRequestAsync` | `api/v1/shipper/requests/{id}`<br>`api/v1/payments` | 결제, 배차, 수락, 상차, 하차, 정산 상태가 한 화면에서 끊기지 않는지 확인 |
+| HongdalApp-P03-1 | 결제/입금 안내 | 우선 HongdalApp-P03 내부 섹션 | `화주결제Controller`<br>`토스결제준비CommandHandler`<br>`토스결제승인CommandHandler` | 운송완료후정산, 가상계좌/결제대기, 1/3/7일 알림 상태를 화주가 이해할 수 있는지 확인 |
+| HongdalApp-P03-2 | 예외/분쟁 확인 | 우선 HongdalApp-P03 내부 섹션 | `운송이벤트Controller`<br>`운송문제신고CommandHandler` | 기사 예외 신고가 화주에게 다음 행동 중심으로 보이는지 확인 |
 | DriverApp-P06 | 운행 시작 | `운행시작Page.razor`<br>`DriverWorkApiService` | `기사운행Controller`<br>`api/v1/driver/work/start`, `/location`, `/stop` | 운행 시작 뒤 위치 heartbeat(주기 송신)와 기사 상태 Store(상태 저장소)가 갱신되는지 확인 |
 | DriverApp-P06-1 | 운행 설정 | `운행설정Page.razor` | 운행 설정 API 후보 | 운행 설정이 기사 위치 송신과 추천 후보 판단에 반영되는지 확인 |
 | DriverApp-P07 | 지도 홈/추천 배너 | `DriverApp/Components/Pages/Home.razor`<br>`SampleDriverRecommendationNotificationService` | `api/v1/driver/recommendations` 또는 FCM/SignalR/폴링 확장 | 신규 추천 배너, 60초 응답 제한, 현재 운송 진입이 분리되어 있는지 확인 |
@@ -580,9 +580,9 @@ flowchart LR
 
 | 구분 | 먼저 볼 위치 |
 | --- | --- |
-| 화주 라우트 | `ShipperApp/Services/ShipperRoutes.cs` |
+| 화주 라우트 | `HongdalApp/Services/ShipperRoutes.cs` |
 | 기사 라우트 | `DriverApp/Services/DriverRoutes.cs` |
-| 화주 의뢰 화면 | `ShipperApp/Components/Pages/ShipperRequestWizard.razor`, `ShipperApp/Components/Pages/ShipperRequestDetail.razor` |
+| 화주 의뢰 화면 | `HongdalApp/Components/Pages/ShipperRequestWizard.razor`, `HongdalApp/Components/Pages/ShipperRequestDetail.razor` |
 | 기사 추천 화면 | `DriverApp/Components/Pages/Driver/02_Recommendation` |
 | 기사 진행 화면 | `DriverApp/Components/Pages/Driver/03_Progress` |
 | 기사 정산 화면 | `DriverApp/Components/Pages/Driver/05_Settlement` |

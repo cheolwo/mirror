@@ -1,0 +1,141 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+
+<MudPaper Elevation="0" Outlined="true" Class="pa-4 platform-community-post platform-community-post--expanded">
+    <MudStack Spacing="2">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudIcon Icon="@(Post.IsSystemGenerated ? Icons.Material.Filled.Verified : Icons.Material.Filled.Forum)"
+                         Color="@(Post.IsSystemGenerated ? Color.Success : Color.Primary)" />
+                <MudText Typo="Typo.subtitle1">@Post.Title</MudText>
+            </MudStack>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
+                @if (Post.IsOperatorPinned)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled">운영 고정</MudChip>
+                }
+                else if (Post.IsTrending)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">활동 글</MudChip>
+                }
+                @if (Post.IsSystemGenerated)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">
+                        @CommunitySystemPostDisplay.BadgeLabel(Post.SystemPostKind)
+                    </MudChip>
+                }
+                @if (Post.IsCommunityMomentumPromoted)
+                {
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Color="Color.Warning"
+                             Variant="Variant.Outlined"
+                             Icon="@Icons.Material.Filled.Hub">
+                        @CommunityMomentumLabel(Post.CommunityMomentumCode)
+                    </MudChip>
+                }
+                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@Post.Category</MudChip>
+                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">@Post.WorkflowTag</MudChip>
+                <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">@Post.RoleTag</MudChip>
+                @if (IsReportPost)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined">신고 게시판</MudChip>
+                }
+            </MudStack>
+        </MudStack>
+
+        @if (Post.SalesOffer is not null)
+        {
+            <PlatformCommunitySalesOfferPanel Post="@Post"
+                                               InquiryRequested="@SalesInquiryRequested" />
+        }
+
+        <CommunityPostTranslationContent @key="Post.Id"
+                                         Post="@Post"
+                                         IsReportPost="@IsReportPost" />
+
+        @if (Post.IsCommunityMomentumPromoted
+             && !string.IsNullOrWhiteSpace(Post.CommunityMomentumMessage))
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Icon="@Icons.Material.Filled.Hub">
+                @Post.CommunityMomentumMessage
+            </MudAlert>
+        }
+
+        <PlatformCommunityPostParticipationPanel Post="@Post"
+                                                  ViewModel="@ViewModel"
+                                                  CommandCompleted="@CommandCompleted"
+                                                  PromoteRequested="@PromoteRequested"
+                                                  JoinPartyRoleRequested="@JoinPartyRoleRequested"
+                                                  JoinProfessionalRoleRequested="@JoinProfessionalRoleRequested" />
+
+        <PlatformCommunityPostLedgerContextPanel Post="@Post"
+                                                  IsReusing="@IsSharedLedgerReusing"
+                                                  DiagramRequested="@DiagramRequested"
+                                                  StartFromCompletionRequested="@StartFromCompletionRequested"
+                                                  ReuseRequested="@ReuseRequested" />
+
+        <PlatformCommunityPostContentExtras Post="@Post" />
+
+        <PlatformCommunityPostConversationPanel Post="@Post"
+                                                 ViewModel="@ViewModel"
+                                                 CanManagePosts="@CanManagePosts"
+                                                 CommandCompleted="@CommandCompleted"
+                                                 EditRequested="@EditRequested" />
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public PlatformCommunityPostResponse Post { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public PlatformCommunityPostEngagementViewModel ViewModel { get; set; } = null!;
+
+    [Parameter]
+    public bool CanManagePosts { get; set; }
+
+    [Parameter]
+    public bool IsSharedLedgerReusing { get; set; }
+
+    [Parameter]
+    public EventCallback<string> SalesInquiryRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<PlatformCommunityCommandResult> CommandCompleted { get; set; }
+
+    [Parameter]
+    public EventCallback<string> PromoteRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<string> JoinPartyRoleRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<string> JoinProfessionalRoleRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<PlatformCommunityPostLedgerContextResponse> DiagramRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<PlatformCommunityPostLedgerContextResponse> StartFromCompletionRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<PlatformCommunityPostLedgerContextResponse> ReuseRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<PlatformCommunityPostResponse> EditRequested { get; set; }
+
+    private bool IsReportPost
+        => Post.IsReportBoardPost
+           || Post.Category.Contains("신고", StringComparison.OrdinalIgnoreCase)
+           || Post.Category.Contains("분쟁", StringComparison.OrdinalIgnoreCase)
+           || Post.Category.Contains("report", StringComparison.OrdinalIgnoreCase);
+
+    private static string CommunityMomentumLabel(string? code)
+        => code switch
+        {
+            CommunityPostMomentumCodes.ReadyForRealLedgerReview => "전환 검토 준비",
+            CommunityPostMomentumCodes.PartyForming => "참여팀 구성중",
+            _ => "역할 참여 모집"
+        };
+}

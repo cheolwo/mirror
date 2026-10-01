@@ -11,7 +11,7 @@ using Hongdal.ApiMetadata;
 
 namespace Hongdal.Controllers.App;
 
-[HongdalApiVersion(HongdalProductVersion.V1_0)]
+[HongdalApiVersion(HongdalProductVersion.V0_0)]
 [ApiController]
 [Route("api/v1/app/common-contents")]
 [Authorize]

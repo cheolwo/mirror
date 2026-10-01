@@ -10,7 +10,7 @@ public sealed class WebShipperSalesWorkspaceService
         {
             Id = 1,
             채널종류 = CommerceChannelKeys.SmartStore,
-            상점명 = "홍달 샘플 스토어",
+            상점명 = "살뜰 샘플 스토어",
             연결상태 = "연결됨",
             마지막동기화일시 = DateTime.Now.AddMinutes(-42)
         },
@@ -18,7 +18,7 @@ public sealed class WebShipperSalesWorkspaceService
         {
             Id = 2,
             채널종류 = CommerceChannelKeys.Coupang,
-            상점명 = "홍달 풀필먼트",
+            상점명 = "살뜰 풀필먼트",
             연결상태 = "인증확인필요",
             마지막동기화일시 = DateTime.Now.AddHours(-5)
         }

@@ -1,0 +1,91 @@
+.community-author-evidence-tool {
+    display: grid;
+    gap: 14px;
+    padding: 14px;
+}
+
+.community-author-evidence-tool--standalone {
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 8px;
+}
+
+.community-author-evidence-tool__heading,
+.community-author-evidence-tool__mode,
+.community-author-evidence-tool__data-heading,
+.community-author-evidence-tool__actions,
+.community-author-evidence-point {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.community-author-evidence-tool__heading-actions {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+}
+
+.community-author-evidence-tool__fields,
+.community-author-evidence-tool__source,
+.community-author-evidence-tool__data-list,
+.community-author-evidence-tool__errors {
+    display: grid;
+    gap: 9px;
+}
+
+.community-author-evidence-tool__two-column {
+    display: grid;
+    gap: 9px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.community-author-evidence-tool__data-heading {
+    border-block-start: 1px solid var(--mud-palette-lines-default);
+    padding-block-start: 12px;
+}
+
+.community-author-evidence-point {
+    display: grid;
+    grid-template-columns: minmax(120px, 1fr) minmax(150px, 1fr) auto;
+}
+
+.community-author-evidence-tool__source {
+    border-block-start: 1px solid var(--mud-palette-lines-default);
+    padding-block-start: 12px;
+}
+
+.community-author-evidence-tool__actions {
+    justify-content: flex-end;
+}
+
+.community-author-evidence-tool__errors {
+    border-inline-start: 3px solid var(--mud-palette-error);
+    padding-inline-start: 10px;
+}
+
+@media (max-width: 640px) {
+    .community-author-evidence-tool {
+        padding-inline: 10px;
+    }
+
+    .community-author-evidence-tool__mode {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .community-author-evidence-tool__two-column,
+    .community-author-evidence-point {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .community-author-evidence-point > :last-child {
+        justify-self: end;
+    }
+
+    .community-author-evidence-tool__actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}

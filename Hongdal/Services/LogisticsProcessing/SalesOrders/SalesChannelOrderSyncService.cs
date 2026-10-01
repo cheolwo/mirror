@@ -71,22 +71,36 @@ public sealed class SalesChannelOrderSyncService : ISalesChannelOrderSyncService
             var sinceUtc = account.마지막동기화일시 ?? now.AddMinutes(-Math.Max(1, _options.LookbackMinutes));
             var orders = await client.FetchOrdersAsync(account, sinceUtc, cancellationToken);
             fetchedOrderCount += orders.Count;
+            var retryRequired = false;
 
             foreach (var order in orders)
             {
-                var created = await CreateWarehouseOutboundRequestsAsync(account, order, cancellationToken);
-                if (created == 0)
+                var creationResult = await CreateWarehouseOutboundRequestsAsync(account, order, cancellationToken);
+                retryRequired |= creationResult.RetryRequired;
+
+                if (creationResult.CreatedCount == 0)
                 {
                     skippedOrderCount++;
                 }
                 else
                 {
-                    createdOutboundCount += created;
+                    createdOutboundCount += creationResult.CreatedCount;
                 }
             }
 
-            account.마지막동기화일시 = now;
-            account.UpdatedAt = now;
+            if (!retryRequired)
+            {
+                account.마지막동기화일시 = now;
+                account.UpdatedAt = now;
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "Action={Action} AccountId={AccountId} SyncScope={SyncScope}",
+                    "SalesChannelOrderSyncCursorRetainedForRetry",
+                    account.Id,
+                    normalizedScope);
+            }
         }
 
         await _db.SaveChangesAsync(cancellationToken);
@@ -99,14 +113,14 @@ public sealed class SalesChannelOrderSyncService : ISalesChannelOrderSyncService
             skippedOrderCount);
     }
 
-    private async Task<int> CreateWarehouseOutboundRequestsAsync(
+    private async Task<WarehouseOutboundCreationResult> CreateWarehouseOutboundRequestsAsync(
         홍달.도메인.판매.판매채널계정 account,
         SalesChannelOrderFeedEntry order,
         CancellationToken cancellationToken)
     {
         if (order.Items.Count == 0 || string.IsNullOrWhiteSpace(order.ChannelOrderNo))
         {
-            return 0;
+            return WarehouseOutboundCreationResult.Skipped;
         }
 
         var orderReference = CreateOrderReference(order.ChannelType, order.ChannelOrderNo);
@@ -124,7 +138,11 @@ public sealed class SalesChannelOrderSyncService : ISalesChannelOrderSyncService
                       && (product.판매SKU == item.Sku || listing.채널상품번호 == item.ChannelProductNo)
                 select new { listing, product, inboundItem };
 
-            var mapped = await listingQuery.FirstOrDefaultAsync(cancellationToken);
+            // 예약 재고는 ExecuteUpdateAsync로 직접 갱신되므로 같은 동기화 실행에서
+            // 이전 주문의 추적 스냅샷을 재사용하지 않고 최신 DB 값을 다시 읽는다.
+            var mapped = await listingQuery
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cancellationToken);
             if (mapped is null)
             {
                 continue;
@@ -160,7 +178,7 @@ public sealed class SalesChannelOrderSyncService : ISalesChannelOrderSyncService
 
         if (lines.Count == 0)
         {
-            return 0;
+            return WarehouseOutboundCreationResult.Skipped;
         }
 
         var plan = await _outboundBatchEngine.PlanAsync(new OutboundBatchPlanRequest
@@ -172,37 +190,124 @@ public sealed class SalesChannelOrderSyncService : ISalesChannelOrderSyncService
             Lines = lines
         }, cancellationToken);
 
-        foreach (var allocation in plan.Allocations)
-        {
-            _db.출고예정.Add(new 홍달.도메인.창고.출고예정
-            {
-                주문참조번호 = orderReference,
-                판매상품Id = allocation.SalesProductId,
-                입고상품Id = allocation.InboundProductId,
-                판매자UserId = account.UserId,
-                주문자UserId = string.IsNullOrWhiteSpace(order.BuyerName) ? order.RecipientName : order.BuyerName,
-                출고창고Id = allocation.WarehouseId,
-                상품명 = allocation.ProductName,
-                SKU = allocation.Sku,
-                수량 = allocation.Quantity,
-                상태 = 홍달.도메인.창고.출고상태.예정,
-                CreatedAt = now,
-                UpdatedAt = now
-            });
-        }
-
-        if (plan.UnallocatedLines.Count > 0)
+        if (!CanPersistPlan(plan))
         {
             _logger.LogInformation(
                 "Action={Action} OrderReference={OrderReference} UnallocatedLineCount={UnallocatedLineCount} Message={Message}",
-                "OutboundBatchPlanPartiallyUnallocated",
+                "OutboundBatchPlanIncompleteNotPersisted",
                 orderReference,
                 plan.UnallocatedLines.Count,
                 plan.Message);
+            return WarehouseOutboundCreationResult.Retry;
         }
 
-        return plan.Allocations.Count;
+        var persisted = await TryPersistCompletePlanAsync(
+            account,
+            order,
+            orderReference,
+            plan,
+            now,
+            cancellationToken);
+        if (!persisted)
+        {
+            _logger.LogInformation(
+                "Action={Action} OrderReference={OrderReference} Message={Message}",
+                "OutboundInventoryReservationConflict",
+                orderReference,
+                "계획 이후 재고가 변경되어 출고 예약을 원자적으로 확보하지 못했습니다.");
+            return WarehouseOutboundCreationResult.Retry;
+        }
+
+        return new WarehouseOutboundCreationResult(plan.Allocations.Count, RetryRequired: false);
     }
+
+    private async Task<bool> TryPersistCompletePlanAsync(
+        홍달.도메인.판매.판매채널계정 account,
+        SalesChannelOrderFeedEntry order,
+        string orderReference,
+        OutboundBatchPlanResult plan,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var reservationQuantities = BuildInventoryReservationQuantities(plan.Allocations);
+        var executionStrategy = _db.Database.CreateExecutionStrategy();
+
+        return await executionStrategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+            foreach (var reservation in reservationQuantities.OrderBy(item => item.Key))
+            {
+                var quantity = reservation.Value;
+                var affected = await _db.입고상품
+                    .Where(item => item.Id == reservation.Key
+                                   && item.판매자UserId == account.UserId
+                                   && item.가용수량 >= quantity)
+                    .ExecuteUpdateAsync(
+                        setters => setters
+                            .SetProperty(item => item.가용수량, item => item.가용수량 - quantity)
+                            .SetProperty(item => item.예약수량, item => item.예약수량 + quantity)
+                            .SetProperty(item => item.UpdatedAt, now),
+                        cancellationToken);
+
+                if (affected != 1)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    return false;
+                }
+            }
+
+            var outboundRows = plan.Allocations
+                .Select(allocation => new 홍달.도메인.창고.출고예정
+                {
+                    주문참조번호 = orderReference,
+                    판매상품Id = allocation.SalesProductId,
+                    입고상품Id = allocation.InboundProductId,
+                    판매자UserId = account.UserId,
+                    주문자UserId = string.IsNullOrWhiteSpace(order.BuyerName) ? order.RecipientName : order.BuyerName,
+                    출고창고Id = allocation.WarehouseId,
+                    상품명 = allocation.ProductName,
+                    SKU = allocation.Sku,
+                    수량 = allocation.Quantity,
+                    상태 = 홍달.도메인.창고.출고상태.예정,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                })
+                .ToArray();
+
+            _db.출고예정.AddRange(outboundRows);
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return true;
+            }
+            catch
+            {
+                foreach (var row in outboundRows)
+                {
+                    _db.Entry(row).State = EntityState.Detached;
+                }
+
+                throw;
+            }
+        });
+    }
+
+    internal static IReadOnlyDictionary<long, int> BuildInventoryReservationQuantities(
+        IReadOnlyList<OutboundBatchAllocation> allocations)
+        => allocations
+            .Where(allocation => allocation.Quantity > 0)
+            .GroupBy(allocation => allocation.InboundProductId)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Sum(allocation => allocation.Quantity));
+
+    internal static bool CanPersistPlan(OutboundBatchPlanResult plan)
+        => plan.IsComplete
+           && plan.Allocations.Count > 0
+           && plan.Allocations.All(allocation => allocation.InboundProductId > 0 && allocation.Quantity > 0)
+           && plan.UnallocatedLines.Count == 0;
 
     private static string NormalizeScope(string syncScope)
         => string.Equals(syncScope, CommerceChannelOrderSyncScopes.Overseas, StringComparison.OrdinalIgnoreCase)
@@ -214,4 +319,11 @@ public sealed class SalesChannelOrderSyncService : ISalesChannelOrderSyncService
 
     private static string CreateLineKey(string sku, int sequence)
         => $"{sku.Trim()}#{sequence}";
+
+    private readonly record struct WarehouseOutboundCreationResult(int CreatedCount, bool RetryRequired)
+    {
+        public static WarehouseOutboundCreationResult Skipped => new(0, RetryRequired: false);
+
+        public static WarehouseOutboundCreationResult Retry => new(0, RetryRequired: true);
+    }
 }

@@ -9,8 +9,6 @@ namespace 홍달.Services.Dispatch.Queue;
 
 public sealed class 음식배달배차업무정책 : I배차업무정책
 {
-    private static readonly TimeSpan 위치유효시간 = TimeSpan.FromMinutes(10);
-
     private readonly I국내화물운송기사상태Store _기사상태Store;
     private readonly IDriverRejectedRequestStore _거절Store;
     private readonly I배차추천경로Service _경로Service;
@@ -63,8 +61,10 @@ public sealed class 음식배달배차업무정책 : I배차업무정책
                 || !string.Equals(candidate.운행상태, 상태값.기사운행상태.운행중, StringComparison.OrdinalIgnoreCase)
                 || !candidate.Latitude.HasValue
                 || !candidate.Longitude.HasValue
-                || !candidate.위치수신시각Utc.HasValue
-                || now - candidate.위치수신시각Utc.Value > 위치유효시간
+                || !기사위치신선도정책.유효한가(
+                    candidate.위치수신시각Utc,
+                    now,
+                    _options.기사위치유효시간분)
                 || rejectedDriverIds.Contains(candidate.DriverId)
                 || (!string.IsNullOrWhiteSpace(제외기사Id)
                     && string.Equals(candidate.DriverId, 제외기사Id, StringComparison.Ordinal)))

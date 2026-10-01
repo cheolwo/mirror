@@ -47,12 +47,12 @@
 ## API 경로와 코드 연결
 
 - 화면 소스: [DriverApp/Components/Pages/Login.razor](../../../../../DriverApp/Components/Pages/Login.razor)
-- 클라이언트 서비스/계약: [DriverApp/Services/AuthApiService.cs](../../../../../DriverApp/Services/AuthApiService.cs), [DriverApp/Services/AuthSession.cs](../../../../../DriverApp/Services/AuthSession.cs), [DriverApp/Services/IAuthSession.cs](../../../../../DriverApp/Services/IAuthSession.cs), [ShipperApp/Services/AuthApiService.cs](../../../../../ShipperApp/Services/AuthApiService.cs), [ShipperApp/Services/AuthSession.cs](../../../../../ShipperApp/Services/AuthSession.cs), [ShipperApp/Services/IAuthSession.cs](../../../../../ShipperApp/Services/IAuthSession.cs)
+- 클라이언트 서비스/계약: [DriverApp/Services/AuthApiService.cs](../../../../../DriverApp/Services/AuthApiService.cs), [DriverApp/Services/AuthSession.cs](../../../../../DriverApp/Services/AuthSession.cs), [DriverApp/Services/IAuthSession.cs](../../../../../DriverApp/Services/IAuthSession.cs), [HongdalApp/Services/AuthApiService.cs](../../../../../HongdalApp/Services/AuthApiService.cs), [HongdalApp/Services/AuthSession.cs](../../../../../HongdalApp/Services/AuthSession.cs), [HongdalApp/Services/IAuthSession.cs](../../../../../HongdalApp/Services/IAuthSession.cs)
 
 | 구분 | 메서드 | API 경로 | 클라이언트/문서 근거 | 서버 근거 |
 | --- | --- | --- | --- | --- |
 | 클라이언트 서비스 | POST | `api/v1/auth/login` | [DriverApp/Services/AuthApiService.cs](../../../../../DriverApp/Services/AuthApiService.cs) | `POST api/v1/auth/login` [Hongdal/Controllers/Common/인증Controller.cs](../../../../../Hongdal/Controllers/Common/인증Controller.cs) |
-| 클라이언트 서비스 | POST | `api/v1/auth/login` | [ShipperApp/Services/AuthApiService.cs](../../../../../ShipperApp/Services/AuthApiService.cs) | `POST api/v1/auth/login` [Hongdal/Controllers/Common/인증Controller.cs](../../../../../Hongdal/Controllers/Common/인증Controller.cs) |
+| 클라이언트 서비스 | POST | `api/v1/auth/login` | [HongdalApp/Services/AuthApiService.cs](../../../../../HongdalApp/Services/AuthApiService.cs) | `POST api/v1/auth/login` [Hongdal/Controllers/Common/인증Controller.cs](../../../../../Hongdal/Controllers/Common/인증Controller.cs) |
 
 검증할 때는 이 화면이 직접 메모리 데이터만 보는지, 위 API 응답을 받아 상태를 표시하는지, 실패했을 때 사용자가 다음 행동을 알 수 있는지 확인합니다.
 

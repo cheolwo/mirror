@@ -1,0 +1,175 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Contracts.Common.Community
+@using Hongdal.Ui.Common.Areas.App.Models
+
+<div id="community-current-ledger" class="platform-ledger-context-panel" aria-label="현재 원장 컨텍스트">
+    <div class="platform-current-ledger-picker">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap" Spacing="1">
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.subtitle2">내 원장 불러오기</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">기존 원장을 선택하면 원함, 원장 유형, 블록 입력, 다이어그램 연결이 현재 컨텍스트로 로드됩니다.</MudText>
+            </MudStack>
+            @if (SelectedLedger is not null)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">@SelectedLedger.StateLabel</MudChip>
+            }
+        </MudStack>
+        <div class="platform-current-ledger-list">
+            @foreach (var ledger in Ledgers)
+            {
+                <button type="button"
+                        class="@ResolveLedgerClass(ledger)"
+                        title="@ledger.Summary"
+                        @onclick="@(() => LedgerSelected.InvokeAsync(ledger.Id))">
+                    <span class="platform-current-ledger-title">@ledger.Title</span>
+                    <span class="platform-current-ledger-meta">@($"{CommunityLedgerTemplateCatalog.Find(ledger.TemplateKey).DisplayName} · {ledger.StateLabel}")</span>
+                    <span class="platform-current-ledger-meta">@ledger.LastUpdatedLabel</span>
+                </button>
+            }
+        </div>
+    </div>
+    <MudStack Row="true" AlignItems="AlignItems.Start" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap" Spacing="2">
+        <MudStack Spacing="0">
+            <MudText Typo="Typo.subtitle2">현재 원장 컨텍스트</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@ContextSummary</MudText>
+        </MudStack>
+        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+            @if (SelectedLedger is not null)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">@SelectedLedger.Title</MudChip>
+            }
+            <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Filled">@WorkflowModeLabel</MudChip>
+            <MudChip T="string" Size="Size.Small" Color="@DecisionColor" Variant="Variant.Filled">@DecisionLabel</MudChip>
+            <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">@OperatingSystemLabel</MudChip>
+        </MudStack>
+    </MudStack>
+
+    <div class="platform-ledger-context-grid">
+        <div class="platform-ledger-context-cell">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">원함</MudText>
+            <MudText Typo="Typo.subtitle2">@WishTitle</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@WishDetails</MudText>
+        </div>
+        <div class="platform-ledger-context-cell">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">추천 원장</MudText>
+            <MudText Typo="Typo.subtitle2">@Template.DisplayName</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Template.Summary</MudText>
+        </div>
+        <div class="platform-ledger-context-cell">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">다이어그램</MudText>
+            <MudText Typo="Typo.subtitle2">@($"{NodeCount}개 블록 · {EdgeCount}개 연결")</MudText>
+            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mt-1">
+                @foreach (var gap in ImprovementItems)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">@gap</MudChip>
+                }
+            </MudStack>
+        </div>
+        <div class="platform-ledger-context-cell">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">관련 메뉴</MudText>
+            @if (Workspace is not null)
+            {
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudIcon Icon="@Workspace.Icon" Color="@Workspace.Color" Size="Size.Small" />
+                    <MudText Typo="Typo.subtitle2">@Workspace.Title</MudText>
+                </MudStack>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@Workspace.Description</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.subtitle2">커뮤니티 원장</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">관련 업무 메뉴를 원장 정보로 더 연결할 수 있습니다.</MudText>
+            }
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@($"{Template.ProcessingSurfaces.Count}개 API/업무 후보")</MudText>
+        </div>
+    </div>
+
+    <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Secondary"
+                   Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.AccountTree"
+                   OnClick="OpenDiagramRequested">
+            다이어그램으로 보기
+        </MudButton>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.Edit"
+                   OnClick="CommunityDraftRequested">
+            커뮤니티 초안
+        </MudButton>
+        @if (Workspace is not null && !string.IsNullOrWhiteSpace(Workspace.EntryHref))
+        {
+            <MudButton Href="@Workspace.EntryHref"
+                       Variant="Variant.Text"
+                       Color="@Workspace.Color"
+                       Size="Size.Small"
+                       EndIcon="@Icons.Material.Filled.ChevronRight">
+                관련 업무 열기
+            </MudButton>
+        }
+    </MudStack>
+</div>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<현재원장컨텍스트> Ledgers { get; set; } = [];
+
+    [Parameter]
+    public 현재원장컨텍스트? SelectedLedger { get; set; }
+
+    [Parameter, EditorRequired]
+    public CommunityLedgerTemplateResponse Template { get; set; } = default!;
+
+    [Parameter]
+    public string ContextSummary { get; set; } = string.Empty;
+
+    [Parameter]
+    public string WorkflowModeLabel { get; set; } = string.Empty;
+
+    [Parameter]
+    public string DecisionLabel { get; set; } = string.Empty;
+
+    [Parameter]
+    public Color DecisionColor { get; set; }
+
+    [Parameter]
+    public string OperatingSystemLabel { get; set; } = string.Empty;
+
+    [Parameter]
+    public string WishTitle { get; set; } = string.Empty;
+
+    [Parameter]
+    public string WishDetails { get; set; } = string.Empty;
+
+    [Parameter]
+    public int NodeCount { get; set; }
+
+    [Parameter]
+    public int EdgeCount { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<string> ImprovementItems { get; set; } = [];
+
+    [Parameter]
+    public PlatformHomeWorkspaceProfile? Workspace { get; set; }
+
+    [Parameter]
+    public EventCallback<string> LedgerSelected { get; set; }
+
+    [Parameter]
+    public EventCallback OpenDiagramRequested { get; set; }
+
+    [Parameter]
+    public EventCallback CommunityDraftRequested { get; set; }
+
+    private string ResolveLedgerClass(현재원장컨텍스트 ledger)
+    {
+        var selected = string.Equals(ledger.Id, SelectedLedger?.Id, StringComparison.OrdinalIgnoreCase)
+            ? " platform-current-ledger-card--selected"
+            : string.Empty;
+
+        return $"platform-current-ledger-card{selected}";
+    }
+}

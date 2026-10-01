@@ -1,6 +1,6 @@
 namespace HongdalAdmin.Services;
 
-public sealed class 관리자인증세션Service
+public sealed class 관리자인증세션Service : Hongdal.Ui.Common.Areas.App.Services.IHongdalAccessTokenProvider
 {
     private const string DevelopmentBootstrapSectionName = "AdminAuth:DevelopmentBootstrap";
 

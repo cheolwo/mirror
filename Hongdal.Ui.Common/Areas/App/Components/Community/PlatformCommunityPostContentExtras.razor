@@ -1,0 +1,112 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+@foreach (var evidenceChart in CommunityEvidenceChartTextCodec.DecodeAll(Post.Body))
+{
+    <CommunityEvidenceChartDisplay Model="@evidenceChart" />
+}
+
+@if (PlatformCommunityPostPresentation.IsDiagramPost(Post.Category, Post.Body))
+{
+    var diagramNodes = PlatformCommunityPostPresentation.BuildDiagramPreviewNodes(Post.Body, Post.WorkflowTag);
+    <div class="platform-community-readme-card" aria-label="게시글 다이어그램 미리보기">
+        <div class="platform-community-readme-header">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />
+                <strong>README.md</strong>
+            </MudStack>
+            <span>업무 흐름 다이어그램</span>
+        </div>
+        <div class="platform-community-mini-diagram">
+            @for (var index = 0; index < diagramNodes.Count; index++)
+            {
+                <span class="platform-community-diagram-node">@diagramNodes[index]</span>
+                @if (index < diagramNodes.Count - 1)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                }
+            }
+        </div>
+    </div>
+}
+
+@if (IsReportPost)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+        관찰자에게는 신고자와 피신고자가 익명으로 표시됩니다. 당사자와 운영자는 별도 권한 확인 후 필요한 범위의 정보만 확인합니다.
+    </MudAlert>
+    <MudGrid>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-3 platform-community-report-subject">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">신고한 자</MudText>
+                <MudText Typo="Typo.subtitle2">@ReportReporterLabel()</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-3 platform-community-report-subject">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">신고받는 자</MudText>
+                <MudText Typo="Typo.subtitle2">@ReportReportedLabel()</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+
+@if (!string.IsNullOrWhiteSpace(Post.SharedLinkUrl))
+{
+    @if (PlatformCommunityPostPresentation.IsYouTubeSharedLink(Post.SharedLinkUrl))
+    {
+        <div class="platform-community-lecture-share-card">
+            <span class="platform-community-lecture-share-icon">
+                <MudIcon Icon="@(PlatformCommunityPostPresentation.IsFoodYouTubePost(Post) ? Icons.Material.Filled.Restaurant : Icons.Material.Filled.PlayCircle)" Size="Size.Medium" />
+            </span>
+            <span class="platform-community-lecture-share-copy">
+                <small>@PlatformCommunityPostPresentation.ResolveSharedVideoEyebrow(Post)</small>
+                <strong>@PlatformCommunityPostPresentation.ResolveSharedVideoTitle(Post.Title)</strong>
+            </span>
+            <MudButton Href="@Post.SharedLinkUrl"
+                       Target="_blank"
+                       Rel="noopener noreferrer"
+                       Variant="Variant.Filled"
+                       Color="Color.Info"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.PlayCircleOutline">
+                YouTube에서 보기
+            </MudButton>
+        </div>
+    }
+    else
+    {
+        <MudButton Href="@Post.SharedLinkUrl"
+                   Target="_blank"
+                   Rel="noopener noreferrer"
+                   Variant="Variant.Outlined"
+                   Color="Color.Info"
+                   Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.Link">
+            공유 링크 열기
+        </MudButton>
+    }
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public PlatformCommunityPostResponse Post { get; set; } = null!;
+
+    private bool IsReportPost
+        => Post.IsReportBoardPost
+           || Post.Category.Contains("신고", StringComparison.OrdinalIgnoreCase)
+           || Post.Category.Contains("분쟁", StringComparison.OrdinalIgnoreCase)
+           || Post.Category.Contains("report", StringComparison.OrdinalIgnoreCase);
+
+    private string ReportReporterLabel()
+        => Post.IsReportSubjectMasked
+            ? "익명 신고자"
+            : Fallback(Post.ReporterDisplayName, "신고자");
+
+    private string ReportReportedLabel()
+        => Post.IsReportSubjectMasked
+            ? "익명 피신고자"
+            : Fallback(Post.ReportedDisplayName, "피신고자");
+
+    private static string Fallback(string? value, string fallback)
+        => string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+}

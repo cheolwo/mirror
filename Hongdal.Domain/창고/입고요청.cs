@@ -53,6 +53,10 @@ public class 입고요청
     [MaxLength(200)]
     public string 공급처명 { get; set; } = string.Empty;
 
+    [Column("공급처코드")]
+    [MaxLength(100)]
+    public string 공급처코드 { get; set; } = string.Empty;
+
     [Column("원주문참조번호")]
     [MaxLength(100)]
     public string 원주문참조번호 { get; set; } = string.Empty;

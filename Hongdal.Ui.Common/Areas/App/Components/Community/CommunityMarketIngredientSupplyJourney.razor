@@ -1,0 +1,136 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+
+@if (Model.IsApplicable)
+{
+    <section class="market-ingredient-supply" aria-labelledby="market-ingredient-supply-title">
+        <header class="market-ingredient-supply__header">
+            <div>
+                <span><MudIcon Icon="@Icons.Material.Filled.Restaurant" Size="Size.Small" /> 시장 안에서 다시 쓰이는 식재료</span>
+                <h3 id="market-ingredient-supply-title">@Model.Title</h3>
+                <p>공동구매 식재료가 필요한 시장 조리 가게도 직접 수요를 등록할 수 있습니다. 가정 예약분은 먼저 잠그고 가게 공급은 별도 물량·가격·정산으로 관리합니다.</p>
+            </div>
+            <strong>@Model.StatusLabel</strong>
+        </header>
+
+        <dl class="market-ingredient-supply__allocation">
+            <div class="is-household">
+                <dt>가정 예약 보호</dt>
+                <dd>@FormatQuantity(Model.HouseholdReservedQuantity)</dd>
+                <small>가게 공급으로 자동 전환 안 함</small>
+            </div>
+            <div class="is-business">
+                <dt>조리 가게 공급 확정</dt>
+                <dd>@FormatQuantity(Model.ConfirmedBusinessSupplyQuantity)</dd>
+                <small>가게가 직접 수락한 물량</small>
+            </div>
+            <div>
+                <dt>가게 추가 관심</dt>
+                <dd>@FormatQuantity(Model.UnconfirmedBusinessSupplyQuantity)</dd>
+                <small>수락 전에는 공급으로 확정 안 함</small>
+            </div>
+            <div>
+                <dt>공급 확정 상태</dt>
+                <dd>@(Model.CanConfirmBusinessSupply ? "확정 가능" : "조건 확인 중")</dd>
+                <small>영업 범위·보관·lot 확인</small>
+            </div>
+        </dl>
+
+        <section class="market-ingredient-supply__businesses" aria-labelledby="market-ingredient-supply-businesses-title">
+            <header>
+                <div>
+                    <span>플랫폼·상인회 자동 배정 없음</span>
+                    <h3 id="market-ingredient-supply-businesses-title">식재료를 직접 수락한 가게</h3>
+                </div>
+                <strong>@($"{Model.Businesses.Count(business => business.DirectlyAccepted)}/{Model.Businesses.Count} 수락")</strong>
+            </header>
+
+            @if (Model.Businesses.Count == 0)
+            {
+                <div class="market-ingredient-supply__empty">
+                    <MudIcon Icon="@Icons.Material.Filled.AddBusiness" />
+                    <div>
+                        <strong>시장 조리 가게의 수요를 기다리고 있습니다.</strong>
+                        <span>가게 참조키와 필요한 품목·규격·수량·사용 목적·보관 조건을 받은 뒤 공급 조건을 제안합니다.</span>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="market-ingredient-supply__business-grid">
+                    @foreach (var business in Model.Businesses)
+                    {
+                        <article class="@(business.DirectlyAccepted ? "is-accepted" : null)">
+                            <MudIcon Icon="@(business.DirectlyAccepted ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.PersonAdd)"
+                                     Color="@(business.DirectlyAccepted ? Color.Success : Color.Default)" />
+                            <div>
+                                <strong>@business.DisplayName</strong>
+                                <span>@business.IngredientUseLabel</span>
+                                <dl>
+                                    <div><dt>요청</dt><dd>@FormatQuantity(business.RequestedQuantity)</dd></div>
+                                    <div><dt>확정</dt><dd>@FormatQuantity(business.ConfirmedQuantity)</dd></div>
+                                </dl>
+                                <small>@business.BusinessTypeLabel</small>
+                                <small>@business.VerificationLabel</small>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+
+        <section class="market-ingredient-supply__stages" aria-labelledby="market-ingredient-supply-stages-title">
+            <header>
+                <div>
+                    <span>공동구매에서 가게 조리장까지</span>
+                    <h3 id="market-ingredient-supply-stages-title">가게 공급 6단계</h3>
+                </div>
+                @if (Model.CurrentStage is { } currentStage)
+                {
+                    <strong>@($"현재 · {currentStage.Label}")</strong>
+                }
+            </header>
+            <ol>
+                @foreach (var stage in Model.Stages.OrderBy(stage => stage.Number))
+                {
+                    <li class="@BuildStageClass(stage.State)">
+                        <span>@stage.Number</span>
+                        <div>
+                            <strong>@stage.Label</strong>
+                            <p>@stage.Detail</p>
+                            <small>@stage.EvidenceLabel</small>
+                        </div>
+                    </li>
+                }
+            </ol>
+        </section>
+
+        <div class="market-ingredient-supply__policies">
+            <p><MudIcon Icon="@Icons.Material.Filled.Groups" Size="Size.Small" /> @Model.DemandPolicyLabel</p>
+            <p><MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" /> @Model.AllocationPolicyLabel</p>
+            <p><MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" /> @Model.PricingPolicyLabel</p>
+            <p><MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" /> @Model.TraceabilityPolicyLabel</p>
+        </div>
+
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+            식재료 공급 참여는 가게의 메뉴 판매나 음식 주문을 자동 생성하지 않습니다. 가게는 실제 영업신고 범위, 조리시설, 보관 조건과 식재료 표시 책임을 확인하고 공급 거래를 직접 수락합니다.
+        </MudAlert>
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public CommunityMarketIngredientSupplySnapshot Model { get; set; } = new();
+
+    private string FormatQuantity(decimal quantity)
+        => $"{quantity:N0}{Model.QuantityUnit}";
+
+    private static string BuildStageClass(CommunityMarketIngredientSupplyStageState state)
+        => state switch
+        {
+            CommunityMarketIngredientSupplyStageState.Completed => "is-completed",
+            CommunityMarketIngredientSupplyStageState.Current => "is-current",
+            CommunityMarketIngredientSupplyStageState.DirectAcceptanceRequired => "is-acceptance",
+            _ => "is-waiting"
+        };
+}

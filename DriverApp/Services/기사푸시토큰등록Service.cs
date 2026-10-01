@@ -1,5 +1,3 @@
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using Hongdal.Contracts.Driver.Notification;
 using Microsoft.Maui.Storage;
 
@@ -9,12 +7,14 @@ public sealed class 기사푸시토큰등록Service : I기사푸시토큰등록S
 {
     private const string 저장키 = "hongdal.driver.fcmToken.v1";
 
-    private readonly HttpClient _httpClient;
+    private readonly IDriverNotificationApiService _notificationApi;
     private readonly IAuthSession _authSession;
 
-    public 기사푸시토큰등록Service(HttpClient httpClient, IAuthSession authSession)
+    public 기사푸시토큰등록Service(
+        IDriverNotificationApiService notificationApi,
+        IAuthSession authSession)
     {
-        _httpClient = httpClient;
+        _notificationApi = notificationApi;
         _authSession = authSession;
     }
 
@@ -49,14 +49,8 @@ public sealed class 기사푸시토큰등록Service : I기사푸시토큰등록S
             return;
         }
 
-        using var request = new HttpRequestMessage(HttpMethod.Put, "api/v1/driver/notifications/push-token");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _authSession.AccessToken);
-        request.Content = JsonContent.Create(new 기사푸시토큰등록요청
-        {
-            PushToken = pushToken
-        });
-
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        await _notificationApi.푸시토큰등록Async(
+            new 기사푸시토큰등록요청 { PushToken = pushToken },
+            cancellationToken);
     }
 }

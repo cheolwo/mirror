@@ -1,0 +1,94 @@
+.community-journey-summary {
+    display: grid;
+    gap: 8px;
+    padding: 10px 0;
+    border-block: 1px solid var(--mud-palette-lines-default);
+}
+
+.community-journey-summary__heading,
+.community-journey-summary__facts {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.community-journey-summary__heading {
+    justify-content: space-between;
+}
+
+.community-journey-summary__heading > div {
+    display: grid;
+    gap: 1px;
+}
+
+.community-journey-summary__heading span,
+.community-journey-summary p {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+}
+
+.community-journey-summary__heading strong {
+    font-size: 0.95rem;
+}
+
+.community-journey-summary__stages {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.community-journey-summary__stages li {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    color: var(--mud-palette-text-secondary);
+}
+
+.community-journey-summary__stages li > span {
+    height: 3px;
+    background: var(--mud-palette-lines-default);
+}
+
+.community-journey-summary__stages li.is-complete > span,
+.community-journey-summary__stages li.is-current > span {
+    background: var(--mud-palette-primary);
+}
+
+.community-journey-summary__stages li.is-current {
+    color: var(--mud-palette-primary);
+    font-weight: 700;
+}
+
+.community-journey-summary__stages small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.68rem;
+}
+
+.community-journey-summary__facts span {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.74rem;
+}
+
+.community-journey-summary p {
+    margin: 0;
+    line-height: 1.45;
+}
+
+@media (max-width: 600px) {
+    .community-journey-summary__heading {
+        align-items: flex-start;
+    }
+
+    .community-journey-summary__facts {
+        gap: 6px 10px;
+    }
+}

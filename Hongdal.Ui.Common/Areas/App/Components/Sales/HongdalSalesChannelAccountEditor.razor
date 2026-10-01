@@ -1,0 +1,53 @@
+@using Hongdal.Contracts.Common.Sales
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@namespace Hongdal.Ui.Common.Areas.App.Components.Sales
+
+<MudGrid Spacing="2">
+    <MudItem xs="12">
+        <MudSelect T="string"
+                   Label="판매채널"
+                   Variant="Variant.Outlined"
+                   Margin="Margin.Dense"
+                   Required="true"
+                   RequiredError="판매채널을 선택해 주세요."
+                   Disabled="@ChannelLocked"
+                   @bind-Value="Model.채널종류">
+            @foreach (var channel in ChannelOptions)
+            {
+                <MudSelectItem T="string" Value="@channel.값">
+                    @channel.표시명
+                </MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTextField T="string"
+                      Label="상점명"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Required="true"
+                      RequiredError="상점명을 입력해 주세요."
+                      MaxLength="100"
+                      @bind-Value="Model.상점명" />
+    </MudItem>
+    <MudItem xs="12">
+        <MudTextField T="string"
+                      Label="인증 메모"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Lines="3"
+                      MaxLength="500"
+                      @bind-Value="Model.인증메모" />
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter, EditorRequired]
+    public 판매채널계정저장요청 Model { get; set; } = default!;
+
+    [Parameter]
+    public IReadOnlyList<업무선택항목<string>> ChannelOptions { get; set; } = [];
+
+    [Parameter]
+    public bool ChannelLocked { get; set; }
+}

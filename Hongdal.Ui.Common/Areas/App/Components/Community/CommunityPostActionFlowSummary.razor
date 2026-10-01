@@ -1,0 +1,118 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+
+<section class="community-post-action-flow" aria-label="게시글에서 함께 하는 일의 현재 단계">
+    <header class="community-post-action-flow__header">
+        <div>
+            <span>게시글에서 함께 하는 일</span>
+            <strong>@Flow.CurrentStageLabel</strong>
+        </div>
+        @if (Flow.ParticipantCount > 0)
+        {
+            <span class="community-post-action-flow__participant-count">
+                <MudIcon Icon="@Icons.Material.Filled.Groups" Size="Size.Small" />
+                @($"{Flow.ParticipantCount:N0}명")
+            </span>
+        }
+    </header>
+
+    <div class="community-post-action-flow__message">
+        <MudIcon Icon="@PrimaryIcon" Color="Color.Primary" />
+        <div>
+            <h3>@Flow.Title</h3>
+            <p>@Flow.Summary</p>
+        </div>
+    </div>
+
+    <ol class="community-post-action-flow__stages">
+        @foreach (var stage in Flow.Stages)
+        {
+            <li class="@BuildStageClass(stage)" aria-current="@(stage.IsCurrent ? "step" : null)">
+                <span aria-hidden="true"></span>
+                <small>@stage.Label</small>
+            </li>
+        }
+    </ol>
+
+    @if (Flow.RequiredRoleCount > 0)
+    {
+        <div class="community-post-action-flow__role-progress">
+            <span>필수 역할</span>
+            <strong>@Flow.FilledRequiredRoleCount/@Flow.RequiredRoleCount</strong>
+        </div>
+    }
+
+    <footer class="community-post-action-flow__actions">
+        @if (Flow.PrimaryActionKind == CommunityPostPrimaryActionKind.OpenJourney
+             && !string.IsNullOrWhiteSpace(Flow.PrimaryActionRoute))
+        {
+            <MudButton Href="@Flow.PrimaryActionRoute"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       EndIcon="@Icons.Material.Filled.ArrowForward">
+                @Flow.PrimaryActionLabel
+            </MudButton>
+        }
+        else if (Flow.PrimaryActionKind is CommunityPostPrimaryActionKind.StartGathering
+                 or CommunityPostPrimaryActionKind.ShowParticipationDetails)
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       StartIcon="@PrimaryIcon"
+                       Disabled="@IsBusy"
+                       OnClick="PrimaryActionRequested">
+                @Flow.PrimaryActionLabel
+            </MudButton>
+        }
+
+        @if (Flow.HasParticipationDetails
+             && (Flow.PrimaryActionKind != CommunityPostPrimaryActionKind.ShowParticipationDetails
+                 || DetailsExpanded))
+        {
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Default"
+                       Size="Size.Small"
+                       EndIcon="@(DetailsExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                       OnClick="DetailsRequested">
+                @(DetailsExpanded ? "참여 현황 닫기" : "참여 현황 보기")
+            </MudButton>
+        }
+    </footer>
+
+    <small class="community-post-action-flow__boundary">
+        관심과 가원장은 비구속적 기록입니다. 계약·결제·업무 배정·운송 주선을 자동으로 확정하지 않습니다.
+    </small>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public CommunityPostActionFlowViewModel Flow { get; set; } = null!;
+
+    [Parameter]
+    public bool IsBusy { get; set; }
+
+    [Parameter]
+    public bool DetailsExpanded { get; set; }
+
+    [Parameter]
+    public EventCallback PrimaryActionRequested { get; set; }
+
+    [Parameter]
+    public EventCallback DetailsRequested { get; set; }
+
+    private string PrimaryIcon
+        => Flow.PrimaryActionKind switch
+        {
+            CommunityPostPrimaryActionKind.StartGathering => Icons.Material.Filled.GroupAdd,
+            CommunityPostPrimaryActionKind.ShowParticipationDetails => Icons.Material.Filled.HowToReg,
+            CommunityPostPrimaryActionKind.OpenJourney => Icons.Material.Filled.Route,
+            _ => Icons.Material.Filled.Forum
+        };
+
+    private static string BuildStageClass(CommunityPostActionFlowStageViewModel stage)
+        => stage.IsCurrent
+            ? "is-current"
+            : stage.IsComplete ? "is-complete" : string.Empty;
+}

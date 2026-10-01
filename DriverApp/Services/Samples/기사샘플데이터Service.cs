@@ -2,6 +2,7 @@ using Bogus;
 using DriverApp.Models.Driver;
 using DriverApp.Models.Driver.Samples;
 using DriverApp.Services.Geo;
+using Hongdal.Contracts.Common.VehicleLoading;
 using System.Globalization;
 
 namespace DriverApp.Services.Samples;
@@ -205,13 +206,13 @@ public sealed class 기사샘플데이터Service : IDriverSampleDataService
                     new("lcl-count", "상차 수량 확인", "파렛트, 박스, 낱개 수량을 현장 담당자와 대조합니다."),
                     new("lcl-mixed", "타 화주 화물 혼입 여부 확인", "내 화물이 아닌 박스가 같이 실리지 않도록 확인합니다.")
                 ],
-                상차대상화물목록 =
+                상차대상화물목록 = 혼적순서반영(
                 [
-                    new("lcl-101-0301", "HDL-LCL-1010301", "생활용품 3박스", "101동 301호", 1, 1, "차량 앞쪽 1열", 3, 18m, "가장 먼저 내려야 하는 세대 물량입니다."),
-                    new("lcl-101-0802", "HDL-LCL-1010802", "생활용품 2박스", "101동 802호", 2, 2, "차량 앞쪽 2열", 2, 12m, "같은 동 물량끼리 붙여 적재합니다."),
-                    new("lcl-102-0504", "HDL-LCL-1020504", "생활용품 4박스", "102동 504호", 3, 3, "차량 중앙", 4, 24m, "중간 하차 물량입니다."),
-                    new("lcl-103-1201", "HDL-LCL-1031201", "생활용품 1박스", "103동 1201호", 4, 4, "차량 뒤쪽", 1, 6m, "마지막 하차 물량이므로 뒤쪽에 둡니다.")
-                ]
+                    new("lcl-101-0301", "HDL-LCL-1010301", "생활용품 3박스", "101동 301호", 1, 0, string.Empty, 3, 18m, string.Empty),
+                    new("lcl-101-0802", "HDL-LCL-1010802", "생활용품 2박스", "101동 802호", 2, 0, string.Empty, 2, 12m, string.Empty),
+                    new("lcl-102-0504", "HDL-LCL-1020504", "생활용품 4박스", "102동 504호", 3, 0, string.Empty, 4, 24m, string.Empty),
+                    new("lcl-103-1201", "HDL-LCL-1031201", "생활용품 1박스", "103동 1201호", 4, 0, string.Empty, 1, 6m, string.Empty)
+                ])
             },
             new 기사운송샘플항목(
                 2,
@@ -282,6 +283,29 @@ public sealed class 기사샘플데이터Service : IDriverSampleDataService
                 ]
             }
         ];
+    }
+
+    private static IReadOnlyList<기사상차대상화물> 혼적순서반영(
+        IReadOnlyList<기사상차대상화물> cargoItems)
+    {
+        var sourceByCode = cargoItems.ToDictionary(item => item.Code, StringComparer.Ordinal);
+        var plan = 혼적상하차순서계획기.계획(cargoItems
+            .Select(item => new 혼적화물순서요청항목(
+                item.Code,
+                item.Label,
+                item.하차위치,
+                item.하차순번,
+                item.중량Kg))
+            .ToArray());
+
+        return plan.상차순서
+            .Select(item => sourceByCode[item.화물코드] with
+            {
+                적재순번 = item.상차순번,
+                차량적재위치 = item.차량적재위치,
+                작업메모 = item.작업안내
+            })
+            .ToArray();
     }
 
     private static IReadOnlyList<기사알림샘플항목> 알림생성()

@@ -1,0 +1,72 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<MudStack Spacing="2" Class="platform-wish-intake">
+    <MudStack Spacing="0">
+        <MudText Typo="Typo.subtitle2">원함 먼저 묻기</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">
+            바로 원장을 쓰기 전에 사용자가 원하는 일과 조건을 적으면, 홍달이 어떤 원장으로 정리할 수 있는지 대략 안내합니다.
+        </MudText>
+    </MudStack>
+    <MudTextField T="string"
+                  Label="무엇을 원하나요?"
+                  Placeholder="예: 동네에서 같이 장을 보고 포장한 뒤 가까운 기사님에게 전달하고 싶어요."
+                  Value="@Wish"
+                  ValueChanged="WishChanged"
+                  Lines="3"
+                  Immediate="true"
+                  Variant="Variant.Outlined" />
+    <MudTextField T="string"
+                  Label="참여자, 장소, 시간, 조건"
+                  Placeholder="예: 주문자, 피킹할 사람, 포장 완료 시간, 전달 장소, 결제 표시나 사진 증빙이 필요한지"
+                  Value="@Conditions"
+                  ValueChanged="ConditionsChanged"
+                  Lines="2"
+                  Immediate="true"
+                  Variant="Variant.Outlined" />
+    <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center">
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Psychology"
+                   Disabled="@(!CanAnalyze)"
+                   OnClick="AnalyzeRequested">
+            홍달이 도울 수 있는 범위 보기
+        </MudButton>
+        @if (HasAnalysis)
+        {
+            <MudChip T="string" Size="Size.Small" Color="@DecisionColor" Variant="Variant.Filled">@DecisionLabel</MudChip>
+            <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">@RecommendedTemplateName</MudChip>
+        }
+    </MudStack>
+</MudStack>
+
+@code {
+    [Parameter]
+    public string Wish { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> WishChanged { get; set; }
+
+    [Parameter]
+    public string Conditions { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> ConditionsChanged { get; set; }
+
+    [Parameter]
+    public bool CanAnalyze { get; set; }
+
+    [Parameter]
+    public bool HasAnalysis { get; set; }
+
+    [Parameter]
+    public string DecisionLabel { get; set; } = string.Empty;
+
+    [Parameter]
+    public Color DecisionColor { get; set; }
+
+    [Parameter]
+    public string RecommendedTemplateName { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback AnalyzeRequested { get; set; }
+}

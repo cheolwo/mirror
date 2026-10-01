@@ -1,0 +1,61 @@
+<MudContainer MaxWidth="MaxWidth.False" Class="py-4 warehouse-page-shell">
+    <MudStack Spacing="3">
+        <MudStack Row="true"
+                  Justify="Justify.SpaceBetween"
+                  AlignItems="AlignItems.Center"
+                  Wrap="Wrap.Wrap"
+                  Class="warehouse-page-header">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudIcon Icon="@Icon" Color="@Color" Size="Size.Large" />
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.h5">@Title</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@Description</MudText>
+                    <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="mt-2">
+                        <MudChip T="string" Size="Size.Small" Color="@Color" Variant="Variant.Outlined">
+                            @Model.세션.운영Profile.표시명
+                        </MudChip>
+                        @if (Model.세션.선택된창고 is { } warehouse)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.Warehouse">
+                                @warehouse.창고명
+                            </MudChip>
+                        }
+                    </MudStack>
+                </MudStack>
+            </MudStack>
+            @Actions
+        </MudStack>
+
+        @if (!Model.현재창고에서사용가능)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+                현재 창고 운영 유형에서는 이 화면을 사용할 수 없습니다. 창고 운영 홈에서 유형을 전환해 주세요.
+            </MudAlert>
+        }
+
+        @ChildContent
+    </MudStack>
+</MudContainer>
+
+@code {
+    [Parameter, EditorRequired]
+    public 창고PageViewModelBase Model { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Description { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Icon { get; set; } = Icons.Material.Filled.Warehouse;
+
+    [Parameter]
+    public Color Color { get; set; } = Color.Primary;
+
+    [Parameter]
+    public RenderFragment? Actions { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

@@ -1,6 +1,7 @@
 using 홍달.도메인.공통;
 using 홍달.도메인.배차;
 using 홍달.Services.Dispatch.Queue;
+using Hongdal.Contracts.Common.Versioning;
 
 namespace 홍달.Services.Dispatch.Engine;
 
@@ -22,17 +23,22 @@ public sealed class 음식배달배차엔진 : 정책기반배차엔진
         _logger = logger;
     }
 
-    public override string 엔진코드 => "FoodDeliveryDispatchEngine";
+    public override string 엔진코드 => EngineImplementationIds.FoodDeliveryDispatch;
 
     public override string 표시명 => "음식 배달 배차 엔진";
 
     public override int 배차업무유형 => 상태값.배차업무유형.음식배달;
 
-    public override Task<배차추천후보?> 다음후보선정Async(
+    public override Task<배차추천후보선정결과> 다음후보선정Async(
         운송원장 queue,
         string? 제외기사Id = null,
         CancellationToken cancellationToken = default)
     {
+        if (queue is null)
+        {
+            return Task.FromResult(배차추천후보선정결과.잘못된입력("배차대기 원장이 제공되지 않았습니다."));
+        }
+
         var source = _sourceClassifier.분류(queue);
         var flow = _flowResolver.Resolve(queue);
         if (!flow.배차시작가능)
@@ -46,7 +52,7 @@ public sealed class 음식배달배차엔진 : 정책기반배차엔진
                 flow.표시명,
                 flow.배차시작조건);
 
-            return Task.FromResult<배차추천후보?>(null);
+            return Task.FromResult(배차추천후보선정결과.준비안됨(flow.배차시작조건));
         }
 
         return base.다음후보선정Async(queue, 제외기사Id, cancellationToken);

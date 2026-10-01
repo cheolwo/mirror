@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Hongdal.Contracts.Common.Operations;
 using Hongdal.Services.Community;
 
 namespace Hongdal.Application.Driver.DispatchAction;
@@ -46,7 +47,12 @@ public sealed partial class 배차수락사후처리EventHandler : INotification
 
         try
         {
-            await _원장전환Service.배차확정처리Async(notification.의뢰Id, notification.기사Id, cancellationToken);
+            await _원장전환Service.실행주체확정결과동기화Async(
+                notification.의뢰Id,
+                DispatchConfirmationBoundaryRequest.ForDriverSelfAcceptance(
+                    notification.기사Id,
+                    notification.기사Id),
+                cancellationToken);
         }
         catch (Exception ex)
         {

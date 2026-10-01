@@ -4,6 +4,8 @@ using 홍달.Services.Dispatch.Coordination;
 using 홍달.Services.Dispatch.Notification;
 using 홍달.Services.Dispatch.Queue;
 using 홍달.Services.Dispatch.Recommendation;
+using Hongdal.Services.Community;
+using Hongdal.Services.External.Naver;
 
 namespace Hongdal.Application.Driver.Work;
 
@@ -16,6 +18,8 @@ public sealed class 위치갱신CommandHandler : IRequestHandler<위치갱신Com
     private readonly I상차접근알림Service _상차접근알림Service;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly I참여자실행권한검사 _권한검사;
+    private readonly ICommunityDriverAvailabilityService _communityDriverAvailabilityService;
+    private readonly INaverMapsReverseGeocodingService _reverseGeocodingService;
     private readonly ILogger<위치갱신CommandHandler> _logger;
 
     public 위치갱신CommandHandler(
@@ -26,6 +30,8 @@ public sealed class 위치갱신CommandHandler : IRequestHandler<위치갱신Com
         I상차접근알림Service 상차접근알림Service,
         ICurrentUserAccessor currentUserAccessor,
         I참여자실행권한검사 권한검사,
+        ICommunityDriverAvailabilityService communityDriverAvailabilityService,
+        INaverMapsReverseGeocodingService reverseGeocodingService,
         ILogger<위치갱신CommandHandler> logger)
     {
         _db = db;
@@ -35,6 +41,8 @@ public sealed class 위치갱신CommandHandler : IRequestHandler<위치갱신Com
         _상차접근알림Service = 상차접근알림Service;
         _currentUserAccessor = currentUserAccessor;
         _권한검사 = 권한검사;
+        _communityDriverAvailabilityService = communityDriverAvailabilityService;
+        _reverseGeocodingService = reverseGeocodingService;
         _logger = logger;
     }
 
@@ -114,6 +122,32 @@ public sealed class 위치갱신CommandHandler : IRequestHandler<위치갱신Com
             _logger.LogWarning(ex, "상차지 접근 알림 검사 중 예외가 발생했습니다. DriverId={DriverId}", request.기사Id);
         }
 
+        string? communityDistrictLabel = null;
+        if (_communityDriverAvailabilityService.HasDistrictLocationConsent(request.기사Id))
+        {
+            try
+            {
+                var region = await _reverseGeocodingService.ResolveDistrictAsync(
+                    snapshot.Latitude,
+                    snapshot.Longitude,
+                    cancellationToken);
+                if (region is not null
+                    && !string.IsNullOrWhiteSpace(region.SidoName)
+                    && !string.IsNullOrWhiteSpace(region.SigunguName))
+                {
+                    var publicPost = _communityDriverAvailabilityService.UpdateDistrictLocation(
+                        request.기사Id,
+                        region.SidoName,
+                        region.SigunguName);
+                    communityDistrictLabel = publicPost?.CurrentDistrictLabel;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "기사 커뮤니티 구 단위 위치 변환 실패. DriverId={DriverId}", request.기사Id);
+            }
+        }
+
         return Result.Ok(new 기사위치갱신응답
         {
             DriverId = request.기사Id,
@@ -124,7 +158,8 @@ public sealed class 위치갱신CommandHandler : IRequestHandler<위치갱신Com
             Aging점수 = osState.Aging점수,
             Aging기준시각 = osState.Aging기준시각Utc,
             상차접근허용반경Km = osState.상차접근허용반경Km,
-            권장위치전송간격초 = 300
+            권장위치전송간격초 = 300,
+            커뮤니티현재공개지역 = communityDistrictLabel
         });
     }
 }

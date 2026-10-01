@@ -1,0 +1,247 @@
+@inject PlatformCommunityService CommunityService
+
+<section class="driver-availability" aria-label="운행 중 기사와 개별 운송 의뢰">
+    <header class="driver-availability__header">
+        <div>
+            <MudText Typo="Typo.overline" Class="driver-availability__kicker">DRIVERS ON THE ROAD</MudText>
+            <MudText Typo="Typo.h6">지금 운행 중인 기사</MudText>
+            <MudText Typo="Typo.body2" Class="driver-availability__description">
+                기사가 운행 시작 때 공개를 선택하면 차량과 주 활동지역만 보입니다. 정확한 위치와 연락처는 배차 확정 전까지 숨깁니다.
+            </MudText>
+        </div>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync" Disabled="@isBusy">새로고침</MudButton>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(statusMessage))
+    {
+        <MudAlert Severity="@statusSeverity" Variant="Variant.Outlined" Dense="true">@statusMessage</MudAlert>
+    }
+
+    @if (isLoading)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+    }
+    else if (posts.Count == 0)
+    {
+        <article class="driver-availability__card driver-availability__card--example">
+            <div class="driver-availability__avatar"><MudIcon Icon="@Icons.Material.Filled.LocalShipping" /></div>
+            <div class="driver-availability__card-main">
+                <div class="driver-availability__card-title"><strong>김○○ 기사 · 1톤 카고</strong><span>화면 예시</span></div>
+                <p>파주·고양 권역에서 운행 중 · 실제 공개 글이 생기면 이 자리에 표시됩니다.</p>
+                <small>정확한 GPS·전화번호·내부 기사 ID 비공개</small>
+            </div>
+        </article>
+    }
+    else
+    {
+        <div class="driver-availability__list">
+            @foreach (var post in posts)
+            {
+                <article class="driver-availability__card">
+                    <div class="driver-availability__avatar"><MudIcon Icon="@Icons.Material.Filled.LocalShipping" /></div>
+                    <div class="driver-availability__card-main">
+                        <div class="driver-availability__card-title">
+                            <strong>@post.MaskedDriverDisplayName · @post.VehicleSummary</strong>
+                            <span>운행 중</span>
+                        </div>
+                        <p>@ResolvePublicLocation(post) · @FormatStartedAt(post.StartedAtUtc) 운행 시작</p>
+                        <small>
+                            @(post.DistrictLocationConsentGranted
+                                ? "기사 동의로 시·도와 시·군·구까지만 공개 · 좌표와 동 단위 비공개"
+                                : "현재 위치 비공개 · 주 활동지역만 표시")
+                        </small>
+                    </div>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Send" OnClick="@(() => SelectPost(post))">
+                        개별 의뢰 제안
+                    </MudButton>
+                </article>
+            }
+        </div>
+    }
+
+    @if (selectedPost is not null)
+    {
+        <div class="driver-availability__inquiry">
+            <div class="driver-availability__inquiry-heading">
+                <div><strong>@(selectedPost.MaskedDriverDisplayName)에게 의뢰 제안</strong><small>이 단계는 제안이며 배차 확정이 아닙니다.</small></div>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CloseComposer" aria-label="의뢰 작성 닫기" />
+            </div>
+            <div class="driver-availability__form">
+                <MudTextField Label="화물·품목" @bind-Value="draft.CargoSummary" Variant="Variant.Outlined" />
+                <MudTextField Label="물량" @bind-Value="draft.QuantitySummary" Variant="Variant.Outlined" />
+                <MudTextField Label="상차 지역" @bind-Value="draft.PickupAreaLabel" HelperText="상세주소가 아닌 시·군·구 수준" Variant="Variant.Outlined" />
+                <MudTextField Label="하차 지역" @bind-Value="draft.DropoffAreaLabel" HelperText="상세주소가 아닌 시·군·구 수준" Variant="Variant.Outlined" />
+                <MudTextField Label="희망 상차 시간" @bind-Value="draft.RequestedPickupWindow" HelperText="예: 금요일 오전 9~11시" Variant="Variant.Outlined" />
+                <MudTextField Label="공개 메시지" @bind-Value="draft.PublicMessage" Lines="3" HelperText="전화번호·이메일은 입력할 수 없습니다." Variant="Variant.Outlined" Class="driver-availability__form-wide" />
+            </div>
+            <div class="driver-availability__inquiry-footer">
+                <MudText Typo="Typo.caption">기사가 수락하면 정식 운송 의뢰 원장에서 운임·상세주소·연락 방법을 확인합니다.</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.MarkEmailUnread" OnClick="SubmitAsync" Disabled="@isBusy">
+                    기사 앱으로 의뢰 보내기
+                </MudButton>
+            </div>
+        </div>
+    }
+
+    <details class="driver-availability__sent">
+        <summary @onclick="LoadSentInquiriesAsync">
+            <span><strong>내가 보낸 개별 의뢰 상태</strong><small>기사의 수락·거절 답변을 확인합니다.</small></span>
+            <MudIcon Icon="@Icons.Material.Filled.MarkEmailRead" />
+        </summary>
+        @if (sentInquiries.Count == 0)
+        {
+            <p>로그인 후 이 영역을 열면 내가 보낸 의뢰를 확인할 수 있습니다.</p>
+        }
+        else
+        {
+            <div class="driver-availability__sent-list">
+                @foreach (var inquiry in sentInquiries)
+                {
+                    <article>
+                        <div><strong>@inquiry.MaskedDriverDisplayName · @inquiry.CargoSummary</strong><span>@GetInquiryStatusLabel(inquiry.StatusCode)</span></div>
+                        <p>@inquiry.PickupAreaLabel → @inquiry.DropoffAreaLabel · @inquiry.RequestedPickupWindow</p>
+                        <small>@inquiry.NextStepMessage</small>
+                    </article>
+                }
+            </div>
+        }
+    </details>
+</section>
+
+@code {
+    [Parameter] public Guid? SourceGroupPurchaseCampaignId { get; set; }
+    [Parameter] public string? SourceContextLabel { get; set; }
+    [Parameter] public string? SuggestedCargoSummary { get; set; }
+    [Parameter] public string? SuggestedQuantitySummary { get; set; }
+
+    private readonly List<CommunityDriverAvailabilityPostResponse> posts = [];
+    private readonly List<CommunityDriverInquiryResponse> sentInquiries = [];
+    private CommunityDriverAvailabilityPostResponse? selectedPost;
+    private CommunityDriverInquiryCreateRequest draft = new();
+    private bool isLoading = true;
+    private bool isBusy;
+    private string? statusMessage;
+    private Severity statusSeverity = Severity.Info;
+    private Guid? initializedCampaignId;
+
+    protected override async Task OnInitializedAsync()
+        => await LoadAsync();
+
+    protected override void OnParametersSet()
+    {
+        if (initializedCampaignId == SourceGroupPurchaseCampaignId)
+        {
+            return;
+        }
+
+        initializedCampaignId = SourceGroupPurchaseCampaignId;
+        draft = CreateDraft();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        try
+        {
+            var response = await CommunityService.GetCommunityDriverAvailabilityAsync();
+            posts.Clear();
+            posts.AddRange(response.Items);
+            statusMessage = null;
+        }
+        catch (HttpRequestException)
+        {
+            statusSeverity = Severity.Warning;
+            statusMessage = "운행 중 기사 공개 글을 불러오지 못했습니다.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void SelectPost(CommunityDriverAvailabilityPostResponse post)
+    {
+        selectedPost = post;
+        draft = CreateDraft();
+        statusMessage = null;
+    }
+
+    private void CloseComposer()
+        => selectedPost = null;
+
+    private async Task SubmitAsync()
+    {
+        if (selectedPost is null)
+        {
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            draft.SourceGroupPurchaseCampaignId = SourceGroupPurchaseCampaignId;
+            draft.SourceContextLabel = SourceContextLabel;
+            var result = await CommunityService.CreateCommunityDriverInquiryAsync(selectedPost.PostId, draft);
+            selectedPost = null;
+            draft = CreateDraft();
+            statusSeverity = Severity.Success;
+            statusMessage = result is null
+                ? "기사 앱으로 의뢰 제안을 보냈습니다."
+                : $"{result.MaskedDriverDisplayName}에게 제안을 보냈습니다. 아직 배차 확정 전입니다.";
+            await LoadSentInquiriesAsync();
+        }
+        catch (HttpRequestException)
+        {
+            statusSeverity = Severity.Error;
+            statusMessage = "의뢰를 보내지 못했습니다. 필수 조건과 연락처 포함 여부, 기사의 현재 운행 상태를 확인하세요.";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task LoadSentInquiriesAsync()
+    {
+        try
+        {
+            var items = await CommunityService.GetMyCommunityDriverInquiriesAsync();
+            sentInquiries.Clear();
+            sentInquiries.AddRange(items);
+        }
+        catch (HttpRequestException)
+        {
+            if (sentInquiries.Count == 0)
+            {
+                statusSeverity = Severity.Info;
+                statusMessage = "내가 보낸 의뢰를 확인하려면 로그인해야 합니다.";
+            }
+        }
+    }
+
+    private CommunityDriverInquiryCreateRequest CreateDraft()
+        => new()
+        {
+            CargoSummary = SuggestedCargoSummary ?? string.Empty,
+            QuantitySummary = SuggestedQuantitySummary ?? string.Empty,
+            SourceGroupPurchaseCampaignId = SourceGroupPurchaseCampaignId,
+            SourceContextLabel = SourceContextLabel
+        };
+
+    private static string FormatStartedAt(DateTimeOffset value)
+        => value.ToLocalTime().ToString("M월 d일 HH:mm");
+
+    private static string ResolvePublicLocation(CommunityDriverAvailabilityPostResponse post)
+        => post.DistrictLocationConsentGranted && !string.IsNullOrWhiteSpace(post.CurrentDistrictLabel)
+            ? $"현재 {post.CurrentDistrictLabel}"
+            : $"주 활동지역 {post.OperatingAreaLabel}";
+
+    private static string GetInquiryStatusLabel(string status)
+        => status switch
+        {
+            CommunityDriverInquiryStatusCodes.Accepted => "기사가 수락함",
+            CommunityDriverInquiryStatusCodes.Declined => "기사가 거절함",
+            CommunityDriverInquiryStatusCodes.DriverUnavailable => "운행 종료로 마감",
+            _ => "기사 답변 대기"
+        };
+}

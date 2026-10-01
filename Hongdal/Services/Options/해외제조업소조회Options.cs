@@ -8,5 +8,6 @@ namespace 홍달.Services.Options
         public string Endpoint { get; set; } = "/getIprtFoodOvseaMnftBsshInfoInq02";
         public string ServiceKey { get; set; } = string.Empty;
         public string DefaultType { get; set; } = "xml";
+        public int TimeoutSeconds { get; set; } = 20;
     }
 }

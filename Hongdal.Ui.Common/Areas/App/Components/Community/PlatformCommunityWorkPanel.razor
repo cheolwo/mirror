@@ -1,0 +1,133 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Ui.Common.Areas.App.Models
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+
+<MudPaper id="community-work-panel" Elevation="0" Outlined="true" Class="@CssClass">
+    <MudStack Spacing="3">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h5">업무 모드</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    커뮤니티 흐름은 잠시 접고, 지금 처리할 업무 화면으로 바로 진입합니다.
+                </MudText>
+            </MudStack>
+            <MudChip T="string" Color="@ModeColor" Variant="Variant.Outlined">@RoleLabel</MudChip>
+        </MudStack>
+
+        <MudPaper Elevation="0" Outlined="true" Class="pa-3 platform-work-community-draft">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap" Spacing="2">
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.subtitle2">업무에서 커뮤니티 글쓰기</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        업무 중 궁금한 점이나 처리한 일을 바로 커뮤니티 글 초안으로 옮깁니다.
+                    </MudText>
+                </MudStack>
+                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.HelpOutline" OnClick="@(() => DraftRequested.InvokeAsync(WorkCommunityDraftKind.Question))">궁금한 점</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.TaskAlt" OnClick="@(() => DraftRequested.InvokeAsync(WorkCommunityDraftKind.WorkDone))">처리한 일</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" Size="Size.Small" StartIcon="@Icons.Material.Filled.Lightbulb" OnClick="@(() => DraftRequested.InvokeAsync(WorkCommunityDraftKind.Suggestion))">개선 제안</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Info" Size="Size.Small" StartIcon="@Icons.Material.Filled.Public" OnClick="@(() => DraftRequested.InvokeAsync(WorkCommunityDraftKind.InternationalCoordination))">국제 소통</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Assignment" OnClick="LedgerDraftRequested">원장 초안</MudButton>
+                </MudStack>
+            </MudStack>
+        </MudPaper>
+
+        <MudStack Spacing="2">
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.subtitle1">통합 업무 흐름</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    앱별 화면을 따로 외우지 않아도, 같은 원장 템플릿에서 업무 초안과 실행 화면으로 이어집니다.
+                </MudText>
+            </MudStack>
+            <MudGrid>
+                @foreach (var workspace in Workspaces)
+                {
+                    <MudItem xs="12" sm="6" lg="3">
+                        <div class="platform-unified-workspace platform-unified-workspace--compact">
+                            <MudStack Spacing="1">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+                                    <MudIcon Icon="@workspace.Icon" Color="@workspace.Color" />
+                                    <MudChip T="string" Size="Size.Small" Color="@workspace.Color" Variant="Variant.Outlined">@workspace.Title</MudChip>
+                                </MudStack>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@ResolveOperatingSystemName(workspace.OperatingSystemName)</MudText>
+                                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                    <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="@workspace.Color" StartIcon="@Icons.Material.Filled.Assignment" OnClick="@(() => WorkspaceLedgerDraftRequested.InvokeAsync(workspace.LedgerTemplateKey))">초안</MudButton>
+                                    @if (!string.IsNullOrWhiteSpace(workspace.EntryHref))
+                                    {
+                                        <MudButton Href="@workspace.EntryHref" Variant="Variant.Text" Size="Size.Small" Color="@workspace.Color" EndIcon="@Icons.Material.Filled.ChevronRight">열기</MudButton>
+                                    }
+                                </MudStack>
+                            </MudStack>
+                        </div>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudStack>
+
+        @if (Content is not null)
+        {
+            @Content
+        }
+        else if (QuickActions.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">이 앱에는 아직 업무 바로가기가 등록되어 있지 않습니다.</MudAlert>
+        }
+        else
+        {
+            <MudGrid>
+                @foreach (var action in QuickActions)
+                {
+                    <MudItem xs="12" sm="6" lg="4">
+                        <MudPaper Elevation="0" Outlined="true" Class="pa-4 h-100 platform-work-action-card">
+                            <MudStack Spacing="2">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                    <MudIcon Icon="@action.Icon" Color="@action.Color" Size="Size.Large" />
+                                    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Color="@action.Color" />
+                                </MudStack>
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.subtitle1" Class="fw-bold">@action.Title</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">@action.Description</MudText>
+                                </MudStack>
+                                <MudButton Href="@action.Href" Variant="Variant.Filled" Color="@action.Color" StartIcon="@action.Icon">열기</MudButton>
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public string CssClass { get; set; } = string.Empty;
+
+    [Parameter]
+    public Color ModeColor { get; set; }
+
+    [Parameter]
+    public string RoleLabel { get; set; } = string.Empty;
+
+    [Parameter]
+    public IReadOnlyList<PlatformHomeWorkspaceProfile> Workspaces { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<PlatformHomeQuickAction> QuickActions { get; set; } = [];
+
+    [Parameter]
+    public RenderFragment? Content { get; set; }
+
+    [Parameter]
+    public EventCallback<WorkCommunityDraftKind> DraftRequested { get; set; }
+
+    [Parameter]
+    public EventCallback LedgerDraftRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<string> WorkspaceLedgerDraftRequested { get; set; }
+
+    private static string ResolveOperatingSystemName(string? value)
+        => string.IsNullOrWhiteSpace(value)
+            ? "처리 체계"
+            : value.Trim().Replace(" OS", " 처리 체계", StringComparison.OrdinalIgnoreCase);
+}

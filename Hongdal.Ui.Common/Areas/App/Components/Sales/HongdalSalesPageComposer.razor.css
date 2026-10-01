@@ -1,0 +1,224 @@
+.sales-page-composer {
+    display: grid;
+    gap: 18px;
+    width: min(1180px, 100%);
+    margin: 0 auto;
+}
+
+.sales-page-composer__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.sales-page-composer__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(340px, .92fr);
+    gap: 26px;
+    align-items: start;
+}
+
+.sales-page-editor {
+    border-radius: 18px;
+}
+
+.order-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.order-mode-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 74px;
+    padding: 10px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 12px;
+}
+
+.order-mode-card span,
+.seller-line span:last-child,
+.group-order-callout span,
+.product-page-card__facts span,
+.external-reference-note {
+    display: grid;
+    gap: 2px;
+}
+
+.order-mode-card small,
+.seller-line small,
+.group-order-callout small,
+.product-page-card__facts small,
+.external-reference-note small {
+    color: var(--mud-palette-text-secondary);
+    font-size: .75rem;
+}
+
+.sales-page-preview {
+    position: sticky;
+    top: 84px;
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 28px;
+    background: #17201c;
+    box-shadow: 0 20px 48px rgba(23, 32, 28, .18);
+}
+
+.sales-page-preview__label {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 6px;
+    color: rgba(255, 255, 255, .7);
+    font-size: .75rem;
+}
+
+.sales-page-preview__label strong {
+    color: #b8f0ce;
+}
+
+.product-page-card {
+    overflow: hidden;
+    border-radius: 20px;
+    background: #fff;
+    color: #17201c;
+}
+
+.product-page-card__media {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: #edf3ef;
+}
+
+.product-page-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-page-card__placeholder {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+    color: #66756d;
+}
+
+.product-page-card__seller-type {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    padding: 6px 9px;
+    border-radius: 999px;
+    background: rgba(23, 32, 28, .88);
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 800;
+}
+
+.product-page-card__body {
+    display: grid;
+    gap: 15px;
+    padding: 20px;
+}
+
+.seller-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.seller-line__avatar {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #e6f5eb;
+    color: #21633d;
+    font-weight: 900;
+}
+
+.product-page-card__price {
+    color: #17693a;
+}
+
+.product-page-card__facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.product-page-card__facts > span {
+    padding: 12px;
+    border-radius: 11px;
+    background: #f4f7f5;
+}
+
+.group-order-callout {
+    display: flex;
+    gap: 10px;
+    padding: 13px;
+    border: 1px solid #b8dec6;
+    border-radius: 12px;
+    background: #eff9f2;
+    color: #215b37;
+}
+
+.external-reference-note {
+    padding: 13px;
+    border-radius: 12px;
+    background: #fff7e8;
+    color: #644611;
+}
+
+.product-page-card__primary {
+    min-height: 48px;
+    border: 0;
+    border-radius: 12px;
+    background: #21633d;
+    color: #fff;
+    font: inherit;
+    font-weight: 800;
+    opacity: .72;
+}
+
+.product-page-card__safety {
+    color: #7a8880;
+    text-align: center;
+}
+
+@media (max-width: 900px) {
+    .sales-page-composer__layout {
+        grid-template-columns: 1fr;
+    }
+
+    .sales-page-preview {
+        position: static;
+        width: min(430px, 100%);
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 600px) {
+    .sales-page-composer__header {
+        display: grid;
+    }
+
+    .order-mode-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sales-page-editor {
+        padding: 14px !important;
+        border-right: 0;
+        border-left: 0;
+        border-radius: 0;
+    }
+}

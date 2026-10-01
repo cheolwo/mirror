@@ -1,0 +1,127 @@
+.community-ai-draft {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px;
+}
+
+.community-ai-draft > * {
+    min-width: 0;
+}
+
+.community-ai-draft__heading,
+.community-ai-draft__preview > header {
+    align-items: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.community-ai-draft__filters {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.community-ai-draft__filters > :nth-child(5) {
+    grid-column: 1 / -1;
+}
+
+.community-ai-draft__tools,
+.community-ai-draft__executions,
+.community-ai-draft__questions,
+.community-ai-draft__evidence {
+    border-top: 1px solid var(--mud-palette-lines-default);
+    display: grid;
+    gap: 8px;
+    padding-top: 12px;
+}
+
+.community-ai-draft__tools > :last-child {
+    grid-column: 1 / -1;
+}
+
+.community-ai-draft__execution {
+    align-items: flex-start;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 24px minmax(0, 1fr);
+}
+
+.community-ai-draft__execution span,
+.community-ai-draft__execution small {
+    display: block;
+}
+
+.community-ai-draft__execution small {
+    color: var(--mud-palette-text-secondary);
+    margin-top: 2px;
+}
+
+.community-ai-draft__preview {
+    background: var(--mud-palette-background-gray);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 6px;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 12px;
+}
+
+.community-ai-draft__preview > * {
+    min-width: 0;
+}
+
+.community-ai-draft__preview > header ::deep .mud-typography {
+    flex: 1 1 220px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.community-ai-draft ::deep .community-ai-draft__body {
+    max-height: 360px;
+    overflow: auto;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.community-ai-draft__questions ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.community-ai-draft__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.community-ai-draft__loading {
+    display: grid;
+    gap: 10px;
+}
+
+.community-ai-draft__evidence a {
+    color: var(--mud-palette-primary);
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+    .community-ai-draft {
+        padding-inline: 10px;
+    }
+
+    .community-ai-draft__filters {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .community-ai-draft__filters > :nth-child(5) {
+        grid-column: auto;
+    }
+
+    .community-ai-draft__actions ::deep .mud-button-root {
+        width: 100%;
+    }
+}

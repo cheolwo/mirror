@@ -1,9 +1,16 @@
 using Hongdal.Contracts.Common.Drivers;
+using Hongdal.Contracts.Common.Operations;
 
 namespace DriverApp.Controls;
 
 public sealed class DriverNativeMapView : View
 {
+    public static readonly BindableProperty MapProviderCodeProperty = BindableProperty.Create(
+        nameof(MapProviderCode),
+        typeof(string),
+        typeof(DriverNativeMapView),
+        OperatingMapProviderCodes.NaverMaps);
+
     public static readonly BindableProperty CenterLatitudeProperty = BindableProperty.Create(
         nameof(CenterLatitude),
         typeof(double),
@@ -68,6 +75,12 @@ public sealed class DriverNativeMapView : View
     {
         get => (double)GetValue(CenterLatitudeProperty);
         set => SetValue(CenterLatitudeProperty, value);
+    }
+
+    public string MapProviderCode
+    {
+        get => (string)GetValue(MapProviderCodeProperty);
+        set => SetValue(MapProviderCodeProperty, value);
     }
 
     public double CenterLongitude

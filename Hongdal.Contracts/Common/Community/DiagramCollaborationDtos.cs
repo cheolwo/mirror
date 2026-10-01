@@ -223,6 +223,54 @@ public sealed class DiagramSnapshotDto
     public IReadOnlyDictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
 }
 
+public static class DiagramOrganizationSourceKindCodes
+{
+    public const string ManualResearch = "manual-research";
+
+    public const string ThirdPartyLogisticsDirectory = "third-party-logistics-directory";
+}
+
+public static class DiagramOrganizationVerificationStatusCodes
+{
+    public const string VerificationRequired = "verification-required";
+
+    public const string PublicSourceReviewed = "public-source-reviewed";
+}
+
+public sealed class DiagramOrganizationReferenceDto
+{
+    public string ReferenceId { get; set; } = string.Empty;
+
+    public string OrganizationKey { get; set; } = string.Empty;
+
+    public string DisplayName { get; set; } = string.Empty;
+
+    public string RoleLabel { get; set; } = string.Empty;
+
+    public string CountryCode { get; set; } = "ZZ";
+
+    public string OfficialWebsiteUrl { get; set; } = string.Empty;
+
+    public string SourceKindCode { get; set; } = DiagramOrganizationSourceKindCodes.ManualResearch;
+
+    public string SourceReferenceUrl { get; set; } = string.Empty;
+
+    public string DirectoryStatusCode { get; set; } = string.Empty;
+
+    public string PlatformRelationshipStatusCode { get; set; } = string.Empty;
+
+    public string CompanySourceVerificationStatusCode { get; set; } =
+        DiagramOrganizationVerificationStatusCodes.VerificationRequired;
+
+    public string RegulatoryVerificationStatusCode { get; set; } = string.Empty;
+
+    public bool IsPlatformPartner { get; set; }
+
+    public bool CanBeSelectedForOperations { get; set; }
+
+    public IReadOnlyList<string> CapabilityCodes { get; set; } = [];
+}
+
 public sealed class DiagramNodeDto
 {
     public string NodeId { get; set; } = string.Empty;
@@ -240,6 +288,8 @@ public sealed class DiagramNodeDto
     public double Y { get; set; }
 
     public string? RelatedRoute { get; set; }
+
+    public IReadOnlyList<DiagramOrganizationReferenceDto> OrganizationReferences { get; set; } = [];
 
     public IReadOnlyDictionary<string, string> Data { get; set; } = new Dictionary<string, string>();
 }

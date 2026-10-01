@@ -1,0 +1,138 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Contracts.Common.Community
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+
+<MudPaper Elevation="0" Outlined="true" Class="pa-4">
+    <MudStack Spacing="2">
+        <MudText Typo="Typo.subtitle1">개설된 게시판</MudText>
+        @if (IsLoading && ApprovedBoards.Count == 0)
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                <MudText Typo="Typo.body2" Color="Color.Secondary">게시판 목록을 불러오는 중입니다.</MudText>
+            </MudStack>
+        }
+        else if (ApprovedBoards.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary">아직 승인된 추가 게시판이 없습니다.</MudText>
+        }
+        else
+        {
+            <MudStack Spacing="1">
+                @foreach (var board in ApprovedBoards)
+                {
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Forum"
+                               OnClick="@(() => BoardSelected.InvokeAsync(board.Title))">
+                        <MudStack Spacing="0" AlignItems="AlignItems.Start">
+                            <MudText Typo="Typo.body2">@board.Title</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@board.Description</MudText>
+                        </MudStack>
+                    </MudButton>
+                }
+            </MudStack>
+        }
+    </MudStack>
+</MudPaper>
+
+<MudPaper Elevation="0" Outlined="true" Class="pa-4">
+    <MudStack Spacing="2">
+        <MudText Typo="Typo.subtitle1">게시판 개설 신청</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">
+            사용자가 필요한 게시판을 신청하면, 운영자가 승인한 뒤 모든 사용자에게 보입니다.
+        </MudText>
+        <MudTextField T="string" Label="게시판 이름" @bind-Value="Form.Title" MaxLength="60" />
+        <MudTextField T="string" Label="신청자" @bind-Value="Form.RequestedBy" MaxLength="40" />
+        <MudTextField T="string" Label="게시판 설명" @bind-Value="Form.Description" MaxLength="500" />
+        <MudTextField T="string" Label="개설 이유" @bind-Value="Form.RequestReason" Lines="3" MaxLength="1000" />
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="@IsSaving"
+                   StartIcon="@Icons.Material.Filled.AddCircleOutline"
+                   OnClick="SaveRequested">
+            개설 신청
+        </MudButton>
+    </MudStack>
+</MudPaper>
+
+@if (CanManage)
+{
+    <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+        <MudStack Spacing="2">
+            <MudText Typo="Typo.subtitle1">게시판 승인 대기</MudText>
+            @if (IsLoading && PendingBoards.Count == 0)
+            {
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">승인 대기 목록을 확인하는 중입니다.</MudText>
+                </MudStack>
+            }
+            else if (PendingBoards.Count == 0)
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">승인 대기 중인 게시판 신청이 없습니다.</MudText>
+            }
+            else
+            {
+                @foreach (var board in PendingBoards)
+                {
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-3">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.subtitle2">@board.Title</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">신청자: @board.RequestedBy · @FormatDate(board.CreatedAtUtc)</MudText>
+                            <MudText Typo="Typo.body2">@board.RequestReason</MudText>
+                            <MudTextField T="string" Label="운영 메모" @bind-Value="ReviewMemos[board.Id]" MaxLength="1000" Margin="Margin.Dense" />
+                            <MudStack Row="true" Spacing="1">
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" OnClick="@(() => ApproveRequested.InvokeAsync(board))">
+                                    승인
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => RejectRequested.InvokeAsync(board))">
+                                    반려
+                                </MudButton>
+                            </MudStack>
+                        </MudStack>
+                    </MudPaper>
+                }
+            }
+        </MudStack>
+    </MudPaper>
+}
+
+@code {
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public bool IsSaving { get; set; }
+
+    [Parameter]
+    public bool CanManage { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<PlatformCommunityBoardResponse> ApprovedBoards { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<PlatformCommunityBoardResponse> PendingBoards { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public PlatformCommunityBoardForm Form { get; set; } = default!;
+
+    [Parameter]
+    public Dictionary<long, string> ReviewMemos { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<string> BoardSelected { get; set; }
+
+    [Parameter]
+    public EventCallback SaveRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<PlatformCommunityBoardResponse> ApproveRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<PlatformCommunityBoardResponse> RejectRequested { get; set; }
+
+    private static string FormatDate(DateTime createdAtUtc)
+        => createdAtUtc.ToLocalTime().ToString("yyyy.MM.dd HH:mm");
+}

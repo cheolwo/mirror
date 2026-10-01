@@ -1,0 +1,649 @@
+@page "/diagram"
+@implements IDisposable
+@using Hongdal.Contracts.Common.Community
+@inject PlatformDiagramPaletteStateService DiagramPalette
+
+<WebPageHeader Eyebrow="Workflow Diagram"
+               Title="업무 다이어그램 작업대"
+               Description="원장별 노드와 절차 프리셋을 선택해 업무 흐름을 구성합니다."
+               Badge="전용 작업대" />
+
+<div class="web-diagram-workbench">
+    <MudPaper Elevation="0" Outlined="true" Class="pa-3 web-diagram-palette">
+        <MudStack Class="platform-block-palette" Spacing="2">
+            <MudStack Spacing="0" Class="platform-block-palette-header">
+                <MudText Typo="Typo.overline" Color="Color.Secondary">원장별 노드 팔레트</MudText>
+                <MudText Typo="Typo.subtitle2">@ActiveLedgerPaletteGroup.Title</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@($"{ActiveLedgerTemplate.WorkflowTag} · {원장처리체계표시명(ActiveLedgerTemplate.TargetOperatingSystemName)}")</MudText>
+            </MudStack>
+
+            <div class="platform-ledger-palette-group-grid" aria-label="원장별 노드 묶음">
+                @foreach (var group in LedgerPaletteGroups)
+                {
+                    <button type="button"
+                            class="@BuildLedgerPaletteGroupClass(group)"
+                            title="@group.Description"
+                            @onclick="@(() => SetLedgerPaletteGroup(group.WorkflowModeKey))">
+                        <span class="platform-ledger-palette-group-title">@group.Title</span>
+                        <span class="platform-ledger-palette-group-count">@($"{CountPaletteBlocks(group.WorkflowModeKey)}개 노드")</span>
+                    </button>
+                }
+            </div>
+
+            @if (ActiveWorkflowPreset is not null)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           Size="Size.Small"
+                           FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.AccountTree"
+                           OnClick="DrawActiveWorkflowPreset">
+                    @ActiveWorkflowPreset.Title 그리기
+                </MudButton>
+            }
+
+            @foreach (var section in ActivePaletteSections)
+            {
+                <section class="platform-block-palette-section" aria-label="@section.Title">
+                    <div class="platform-block-palette-section-header">
+                        <span>@section.Title</span>
+                        <small>@($"{section.Blocks.Count}개")</small>
+                    </div>
+                    <div class="platform-block-palette-grid">
+                        @foreach (var block in section.Blocks)
+                        {
+                            <button type="button"
+                                    class="@BuildPaletteItemClass(block)"
+                                    title="@block.Description"
+                                    @onclick="@(() => AddBlockToCanvas(block))">
+                                <span class="platform-block-palette-icon">
+                                    <MudIcon Icon="@block.Icon" Color="@block.Color" />
+                                </span>
+                                <span class="platform-block-palette-title">@block.Title</span>
+                                <span class="platform-block-palette-tag">@block.GroupLabel</span>
+                            </button>
+                        }
+                    </div>
+                </section>
+            }
+        </MudStack>
+    </MudPaper>
+
+    <MudPaper Elevation="0" Outlined="true" Class="web-diagram-canvas">
+        <PlatformCommunityHome AppName="살뜰"
+                               RoleLabel="웹 사용자"
+                               AppKey="shipper"
+                               UseBaguaRoleTransitionPages="true"
+                               QueryDiagramMode="true" />
+    </MudPaper>
+</div>
+
+<style>
+    .web-diagram-workbench {
+        display: grid;
+        grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+    }
+
+    .web-diagram-palette {
+        position: sticky;
+        top: 12px;
+        max-height: calc(100vh - 24px);
+        overflow: auto;
+    }
+
+    .web-diagram-canvas {
+        min-height: 70vh;
+        overflow: hidden;
+    }
+
+    .platform-ledger-palette-group-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .platform-ledger-palette-group {
+        appearance: none;
+        display: grid;
+        gap: 3px;
+        width: 100%;
+        min-height: 58px;
+        padding: 8px;
+        border: 1px solid rgba(var(--mud-palette-primary-rgb), 0.16);
+        border-radius: 8px;
+        background: var(--mud-palette-surface);
+        color: inherit;
+        cursor: pointer;
+        font: inherit;
+        text-align: left;
+        transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+    }
+
+    .platform-ledger-palette-group:hover,
+    .platform-ledger-palette-group:focus-visible {
+        border-color: rgba(var(--mud-palette-secondary-rgb), 0.48);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(var(--mud-palette-secondary-rgb), 0.12);
+    }
+
+    .platform-ledger-palette-group--selected {
+        border-color: var(--mud-palette-secondary);
+        background: color-mix(in srgb, var(--mud-palette-secondary) 10%, var(--mud-palette-surface));
+    }
+
+    .platform-ledger-palette-group-title {
+        overflow: hidden;
+        font-size: 0.8rem;
+        font-weight: 700;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .platform-ledger-palette-group-count {
+        color: var(--mud-palette-text-secondary);
+        font-size: 0.68rem;
+        line-height: 1.2;
+    }
+
+    .platform-block-palette-section {
+        display: grid;
+        gap: 8px;
+    }
+
+    .platform-block-palette-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        color: var(--mud-palette-text-secondary);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0;
+    }
+
+    .platform-block-palette-section-header small {
+        font-size: 0.68rem;
+        font-weight: 700;
+    }
+
+    .platform-block-palette-grid {
+        display: grid;
+        gap: 10px;
+    }
+
+    .platform-block-palette-item {
+        appearance: none;
+        display: grid;
+        justify-items: start;
+        gap: 6px;
+        width: 100%;
+        min-height: 96px;
+        padding: 12px;
+        border: 1px solid rgba(var(--mud-palette-primary-rgb), 0.18);
+        border-left-width: 4px;
+        border-radius: 8px;
+        background: var(--mud-palette-surface);
+        color: inherit;
+        cursor: pointer;
+        font: inherit;
+        text-align: left;
+        transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .platform-block-palette-item:hover,
+    .platform-block-palette-item:focus-visible {
+        border-color: rgba(var(--mud-palette-primary-rgb), 0.42);
+        box-shadow: 0 10px 22px rgba(var(--mud-palette-primary-rgb), 0.12);
+        outline: none;
+        transform: translateY(-1px);
+    }
+
+    .platform-block-palette-item--product {
+        border-left-color: #2563eb;
+    }
+
+    .platform-block-palette-item--sales-channel {
+        border-left-color: #db2777;
+    }
+
+    .platform-block-palette-item--warehouse {
+        border-left-color: #16a34a;
+    }
+
+    .platform-block-palette-item--place {
+        border-left-color: #0891b2;
+    }
+
+    .platform-block-palette-item--work {
+        border-left-color: #d97706;
+    }
+
+    .platform-block-palette-item--delivery {
+        border-left-color: #7c3aed;
+    }
+
+    .platform-block-palette-item--confirm {
+        border-left-color: #0f766e;
+    }
+
+    .platform-block-palette-item--form {
+        border-left-color: #0284c7;
+    }
+
+    .platform-block-palette-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--mud-palette-primary) 8%, var(--mud-palette-surface));
+    }
+
+    .platform-block-palette-title {
+        font-size: 0.92rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    .platform-block-palette-tag {
+        max-width: 100%;
+        overflow: hidden;
+        color: var(--mud-palette-text-secondary);
+        font-size: 0.72rem;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>
+
+@code {
+    private LedgerPaletteGroupItem ActiveLedgerPaletteGroup
+        => LedgerPaletteGroups.FirstOrDefault(group =>
+            string.Equals(group.WorkflowModeKey, DiagramPalette.WorkflowModeKey, StringComparison.OrdinalIgnoreCase))
+           ?? LedgerPaletteGroups[0];
+
+    private CommunityLedgerTemplateResponse ActiveLedgerTemplate
+        => CommunityLedgerTemplateCatalog.Find(ActiveLedgerPaletteGroup.LedgerTemplateKey);
+
+    private WorkflowPresetItem? ActiveWorkflowPreset
+        => WorkflowPresets.FirstOrDefault(preset =>
+            string.Equals(preset.WorkflowModeKey, ActiveLedgerPaletteGroup.WorkflowModeKey, StringComparison.OrdinalIgnoreCase));
+
+    private IReadOnlyList<PaletteBlockSectionItem> ActivePaletteSections
+        => BuildPaletteSections(ActiveLedgerPaletteGroup);
+
+    private static readonly IReadOnlyList<LedgerPaletteGroupItem> LedgerPaletteGroups =
+    [
+        new("cargo-v1", CommunityLedgerTemplateKeys.CargoTransport, "화물 운송 원장", "화주 의뢰, 기사 추천, 상차, 하차, 인수 확인 워크플로우입니다."),
+        new("warehouse-inbound", CommunityLedgerTemplateKeys.WarehouseInbound, "창고 입고 원장", "입고 발생, 작업대, 바코드, 입고 예정 매칭, 검수 워크플로우입니다."),
+        new("warehouse-outbound", CommunityLedgerTemplateKeys.WarehouseOutbound, "창고 출고 원장", "주문/운송 요청, 재고 확인, 피킹, 포장, 운송 인계 워크플로우입니다."),
+        new("food-delivery", CommunityLedgerTemplateKeys.FoodDelivery, "음식 배달 원장", "음식 주문, 조리, 픽업, 기사 배차, 배송 완료 워크플로우입니다."),
+        new("mart-instant", CommunityLedgerTemplateKeys.HongdalMart, "알뜰살뜰 마트 원장", "도심 재고, 피킹/포장, 사전 배차, 픽업 가능 상태 워크플로우입니다."),
+        new("group-purchase", CommunityLedgerTemplateKeys.GroupPurchase, "공동구매 원장", "수요 모집, 구매 확정, 수령 거점, 참여자 분배 워크플로우입니다."),
+        new("group-import", CommunityLedgerTemplateKeys.GroupImport, "공동수입 원장", "원천 공동구매, 수입 결정, 해외 선적, 통관, 3PL 입고 워크플로우입니다."),
+        new("community", CommunityLedgerTemplateKeys.Errand, "생활 요청 원장", "대화, 참여 신청, 역할 나누기, 베스트 원장 후보 워크플로우입니다.")
+    ];
+
+    private static readonly IReadOnlyList<PaletteBlockItem> PaletteBlocks =
+    [
+        new(PlatformDiagramPaletteStateService.CommonWorkflowModeKey, "wish", "원함", "공통 원장", "사용자가 원하는 일이나 해결하고 싶은 일을 캔버스의 시작점으로 둡니다.", "product", Icons.Material.Filled.Lightbulb, Color.Primary),
+        new(PlatformDiagramPaletteStateService.CommonWorkflowModeKey, "participant", "참여자", "공통 원장", "요청자, 수행자, 확인자, 운영자처럼 누가 관여하는지 둡니다.", "work", Icons.Material.Filled.Groups, Color.Info),
+        new(PlatformDiagramPaletteStateService.CommonWorkflowModeKey, "condition", "조건", "공통 원장", "시간, 장소, 비용, 제한 조건처럼 진행 전 확인해야 하는 조건을 둡니다.", "work", Icons.Material.Filled.Rule, Color.Warning),
+        new(PlatformDiagramPaletteStateService.CommonWorkflowModeKey, "schedule", "일정", "공통 원장", "마감, 예약 시간, 도착 예정, 픽업 가능 시각을 둡니다.", "work", Icons.Material.Filled.Event, Color.Warning),
+        new(PlatformDiagramPaletteStateService.CommonWorkflowModeKey, "evidence", "증빙", "공통 원장", "사진, 메모, 영수증, 인수증 같은 선택 증빙을 둡니다.", "confirm", Icons.Material.Filled.PhotoCamera, Color.Info),
+        new(PlatformDiagramPaletteStateService.CommonWorkflowModeKey, "settlement", "정산 표시", "공통 원장", "결제함, 미확인, 지급 예정, 완료 같은 돈 표시를 둡니다.", "confirm", Icons.Material.Filled.Payments, Color.Info),
+        new(PlatformDiagramPaletteStateService.CommonWorkflowModeKey, "issue-report", "신고/분쟁", "공통 원장", "문제 신고, 보류, 운영자 검토 상태를 둡니다.", "confirm", Icons.Material.Filled.ReportProblem, Color.Error),
+        new(PlatformDiagramPaletteStateService.CommonWorkflowModeKey, "generic-input-form", "일반 입력 폼", "입력 폼", "업무 목적과 필수·선택 항목을 직접 정하는 범용 폼입니다.", "form", Icons.Material.Filled.DynamicForm, Color.Info, PlatformDiagramFormKinds.Generic),
+        new(PlatformDiagramPaletteStateService.CommonWorkflowModeKey, "transport-request-form", "운송의뢰 폼", "입력 폼", "화물, 상하차지, 시간과 배차 조건을 입력받습니다.", "form", Icons.Material.Filled.DynamicForm, Color.Info, PlatformDiagramFormKinds.TransportRequest),
+        new(PlatformDiagramPaletteStateService.CommonWorkflowModeKey, "warehouse-outbound-form", "창고 출고 폼", "입력 폼", "출고 창고, 품목, 수량, 목적지와 시간을 입력받습니다.", "form", Icons.Material.Filled.DynamicForm, Color.Info, PlatformDiagramFormKinds.WarehouseOutbound),
+        new(PlatformDiagramPaletteStateService.CommonWorkflowModeKey, "warehouse-inbound-form", "창고 입고 폼", "입력 폼", "입고 창고, 예정 품목, 수량과 납품 정보를 입력받습니다.", "form", Icons.Material.Filled.DynamicForm, Color.Info, PlatformDiagramFormKinds.WarehouseInbound),
+        new(PlatformDiagramPaletteStateService.CommonWorkflowModeKey, "transport-pickup-confirmation-form", "상차 확인 폼", "입력 폼", "상차 시각, 적재 상태와 증빙을 입력받습니다.", "form", Icons.Material.Filled.DynamicForm, Color.Info, PlatformDiagramFormKinds.TransportPickupConfirmation),
+        new(PlatformDiagramPaletteStateService.CommonWorkflowModeKey, "transport-dropoff-confirmation-form", "하차 확인 폼", "입력 폼", "하차 시각, 인수 상태와 증빙을 입력받습니다.", "form", Icons.Material.Filled.DynamicForm, Color.Info, PlatformDiagramFormKinds.TransportDropoffConfirmation),
+
+        new("cargo-v1", "cargo-request", "운송 의뢰", "운송 1.0", "화주나 참여자가 맡기려는 화물, 조건, 요청 내용을 둡니다.", "product", Icons.Material.Filled.Assignment, Color.Primary),
+        new("cargo-v1", "dispatch-recommendation", "배차 추천", "운송 1.0", "기사 후보 추천과 추천 상태를 둡니다.", "work", Icons.Material.Filled.Recommend, Color.Warning),
+        new("cargo-v1", "driver-accept", "기사 수락", "운송 1.0", "추천 운송을 기사님이 수락한 결정을 둡니다.", "confirm", Icons.Material.Filled.CheckCircle, Color.Success),
+        new("cargo-v1", "driver-reject", "기사 거절", "운송 1.0", "운송 추천을 거절하거나 추천에서 제외한 결정을 둡니다.", "confirm", Icons.Material.Filled.Cancel, Color.Error),
+        new("cargo-v1", "pickup-place", "상차지", "운송 1.0", "화물이 출발하는 주소, 창고, 현장 위치를 둡니다.", "place", Icons.Material.Filled.Flag, Color.Tertiary),
+        new("cargo-v1", "pickup-arrival", "상차지 도착", "운송 1.0", "기사님이 상차지에 도착한 상태를 둡니다.", "confirm", Icons.Material.Filled.Place, Color.Info),
+        new("cargo-v1", "pickup-complete", "상차 완료", "운송 1.0", "상차 확인과 출발 가능 상태를 둡니다.", "confirm", Icons.Material.Filled.FileUpload, Color.Info),
+        new("cargo-v1", "pickup-proof", "상차 증빙", "운송 1.0", "상차 사진, 인수 확인, 현장 메모를 둡니다.", "confirm", Icons.Material.Filled.PhotoCamera, Color.Info),
+        new("cargo-v1", "cargo-leg", "운송 구간", "운송 1.0", "상차지와 하차지 사이의 실제 이동 구간을 둡니다.", "delivery", Icons.Material.Filled.LocalShipping, Color.Secondary),
+        new("cargo-v1", "dropoff-place", "하차지", "운송 1.0", "화물이 도착할 주소, 수령 현장, 하차 위치를 둡니다.", "place", Icons.Material.Filled.Flag, Color.Tertiary),
+        new("cargo-v1", "dropoff-arrival", "하차지 도착", "운송 1.0", "기사님이 하차지에 도착한 상태를 둡니다.", "confirm", Icons.Material.Filled.Place, Color.Info),
+        new("cargo-v1", "dropoff-complete", "하차 완료", "운송 1.0", "하차, 인수증, 완료 확인 상태를 둡니다.", "confirm", Icons.Material.Filled.TaskAlt, Color.Info),
+        new("cargo-v1", "receiver-confirm", "수령/인수 확인", "운송 1.0", "수령자 인수 확인과 최종 확인을 둡니다.", "confirm", Icons.Material.Filled.Verified, Color.Success),
+        new("cargo-v1", "admin-check", "관리자 점검", "운송 1.0", "막힌 지점, 증빙 누락, 정산 대기 점검을 둡니다.", "confirm", Icons.Material.Filled.AdminPanelSettings, Color.Info),
+
+        new("warehouse-inbound", "inbound-occurs", "입고 발생", "창고 입고", "입고가 발생한 출처와 이유를 둡니다.", "product", Icons.Material.Filled.MoveToInbox, Color.Primary),
+        new("warehouse-inbound", "inbound-flow-type", "입고 유형", "창고 입고", "계약 기반, 현장 임시, 주문 자동 입고 예정 분기를 둡니다.", "work", Icons.Material.Filled.CallSplit, Color.Warning),
+        new("warehouse-inbound", "contract-inbound", "계약 기반 입고", "창고 입고", "계약 DB와 입고계약스냅샷 확인 단계를 둡니다.", "warehouse", Icons.Material.Filled.Description, Color.Success),
+        new("warehouse-inbound", "unplanned-inbound", "현장 임시 입고", "창고 입고", "입고 관리자 수기 등록이나 미매칭 편입을 둡니다.", "warehouse", Icons.Material.Filled.EditNote, Color.Success),
+        new("warehouse-inbound", "order-auto-inbound", "주문 자동 입고 예정", "창고 입고", "주문자 창고 입고예정 자동 생성을 둡니다.", "warehouse", Icons.Material.Filled.AutoMode, Color.Success),
+        new("warehouse-inbound", "inbound-request", "입고 요청", "창고 입고", "입고요청 저장과 예정 정보를 둡니다.", "warehouse", Icons.Material.Filled.AssignmentTurnedIn, Color.Success),
+        new("warehouse-inbound", "inbound-workbench", "입고 작업대", "창고 입고", "입고 작업대 바코드 확인 단계를 둡니다.", "warehouse", Icons.Material.Filled.QrCodeScanner, Color.Success),
+        new("warehouse-inbound", "product-barcode", "상품 바코드", "창고 입고", "입고할 상품 바코드 스캔과 식별을 둡니다.", "product", Icons.Material.Filled.QrCode, Color.Primary),
+        new("warehouse-inbound", "inbound-bundle", "입고 묶음", "창고 입고", "입고 묶음 구성과 묶음 바코드를 둡니다.", "work", Icons.Material.Filled.Inventory, Color.Warning),
+        new("warehouse-inbound", "inbound-match", "입고 예정 매칭", "창고 입고", "입고 예정과 현장 입고를 매칭하거나 임시 입고로 편입합니다.", "work", Icons.Material.Filled.CompareArrows, Color.Warning),
+        new("warehouse-inbound", "inbound-confirm", "입고 확인", "창고 입고", "입고 확인 상태 변경을 둡니다.", "confirm", Icons.Material.Filled.TaskAlt, Color.Info),
+        new("warehouse-inbound", "inbound-inspection", "입고 검수", "창고 입고", "수량, 파손, 누락 여부 검수를 둡니다.", "work", Icons.Material.Filled.FactCheck, Color.Warning),
+        new("warehouse-inbound", "inbound-issue", "이상 기록", "창고 입고", "입고 이상, 파손, 누락 기록을 둡니다.", "confirm", Icons.Material.Filled.ReportProblem, Color.Error),
+
+        new("warehouse-outbound", "order-or-transport", "주문/운송 요청", "창고 출고", "주문 또는 운송 요청 발생 지점을 둡니다.", "product", Icons.Material.Filled.Assignment, Color.Primary),
+        new("warehouse-outbound", "sale-item-map", "판매상품 매핑", "창고 출고", "판매상품과 출고 대상 매핑을 둡니다.", "product", Icons.Material.Filled.Storefront, Color.Primary),
+        new("warehouse-outbound", "inbound-item-map", "입고상품 매핑", "창고 출고", "입고상품과 출고 대상 매핑을 둡니다.", "product", Icons.Material.Filled.Inventory2, Color.Primary),
+        new("warehouse-outbound", "stock-check", "재고 확인", "창고 출고", "출고 가능 재고 여부와 부족 여부를 확인합니다.", "warehouse", Icons.Material.Filled.Warehouse, Color.Success),
+        new("warehouse-outbound", "outbound-hold", "출고 보류", "창고 출고", "재고 부족이나 운영 확인으로 출고를 보류합니다.", "confirm", Icons.Material.Filled.PauseCircle, Color.Error),
+        new("warehouse-outbound", "outbound-reservation", "출고 예약", "창고 출고", "출고 예약과 출고 예정 생성을 둡니다.", "warehouse", Icons.Material.Filled.EventAvailable, Color.Success),
+        new("warehouse-outbound", "picking-task", "피킹 작업", "창고 출고", "피킹 작업 생성과 작업 진입을 둡니다.", "work", Icons.Material.Filled.Inventory, Color.Warning),
+        new("warehouse-outbound", "picking-complete", "피킹 완료", "창고 출고", "피킹 완료 상태와 후속 검수를 둡니다.", "confirm", Icons.Material.Filled.TaskAlt, Color.Info),
+        new("warehouse-outbound", "packing-task", "포장 작업", "창고 출고", "포장 작업과 포장 대상 확인을 둡니다.", "work", Icons.Material.Filled.Inventory2, Color.Warning),
+        new("warehouse-outbound", "packing-complete", "포장 완료", "창고 출고", "포장 완료와 출고 가능 상태를 둡니다.", "confirm", Icons.Material.Filled.DoneAll, Color.Info),
+        new("warehouse-outbound", "outbound-planned", "출고예정", "창고 출고", "출고예정 상태 변경과 운송 인계 기준을 둡니다.", "work", Icons.Material.Filled.Outbox, Color.Warning),
+        new("warehouse-outbound", "transport-handoff", "운송 인계", "창고 출고", "배차, 배송, 재위탁 운송으로 넘기는 지점을 둡니다.", "delivery", Icons.Material.Filled.LocalShipping, Color.Secondary),
+        new("warehouse-outbound", "reconsignment", "재위탁 운송", "창고 출고", "출고품을 국내 운송 의뢰로 전환합니다.", "delivery", Icons.Material.Filled.Route, Color.Secondary),
+
+        new("food-delivery", "food-order", "음식 주문", "음식 배달", "음식점 주문 또는 음식 주문 접수 지점을 둡니다.", "product", Icons.Material.Filled.Restaurant, Color.Primary),
+        new("food-delivery", "payment-approved", "결제 승인", "음식 배달", "결제 승인과 배차 가능 조건을 둡니다.", "confirm", Icons.Material.Filled.Payments, Color.Info),
+        new("food-delivery", "cooking-accepted", "조리 접수", "음식 배달", "음식점 조리 접수 상태를 둡니다.", "work", Icons.Material.Filled.SoupKitchen, Color.Warning),
+        new("food-delivery", "cooking-start", "조리 시작", "음식 배달", "조리 시작 상태를 둡니다.", "work", Icons.Material.Filled.LocalDining, Color.Warning),
+        new("food-delivery", "cooking-complete", "조리 완료", "음식 배달", "조리 완료와 픽업 가능 상태를 둡니다.", "confirm", Icons.Material.Filled.TaskAlt, Color.Info),
+        new("food-delivery", "pickup-request", "픽업 요청", "음식 배달", "픽업 요청과 픽업지 조건을 둡니다.", "delivery", Icons.Material.Filled.DeliveryDining, Color.Secondary),
+        new("food-delivery", "delivery-recommendation", "배달기사 추천", "음식 배달", "배달 기사 후보와 추천 배차를 둡니다.", "delivery", Icons.Material.Filled.Recommend, Color.Secondary),
+        new("food-delivery", "delivery-accept", "기사 수락", "음식 배달", "배달 기사 수락 결정을 둡니다.", "confirm", Icons.Material.Filled.CheckCircle, Color.Success),
+        new("food-delivery", "food-pickup-complete", "픽업 완료", "음식 배달", "음식 픽업 완료 상태를 둡니다.", "confirm", Icons.Material.Filled.TaskAlt, Color.Info),
+        new("food-delivery", "food-delivery-complete", "배송 완료", "음식 배달", "고객 배송 완료 상태를 둡니다.", "confirm", Icons.Material.Filled.DoneAll, Color.Info),
+        new("food-delivery", "food-receive-confirm", "수령 확인", "음식 배달", "주문자 또는 수령자의 확인을 둡니다.", "confirm", Icons.Material.Filled.Verified, Color.Success),
+
+        new("mart-instant", "mart-order", "마트 주문", "알뜰살뜰 마트", "알뜰살뜰 마트 주문 원장을 둡니다.", "product", Icons.Material.Filled.ShoppingCartCheckout, Color.Primary),
+        new("mart-instant", "urban-stock-check", "도심 재고 확인", "알뜰살뜰 마트", "도심 재고와 가까운 창고 후보를 확인합니다.", "warehouse", Icons.Material.Filled.Warehouse, Color.Success),
+        new("mart-instant", "stock-reservation", "재고 예약", "알뜰살뜰 마트", "주문에 사용할 재고를 예약합니다.", "warehouse", Icons.Material.Filled.Inventory2, Color.Success),
+        new("mart-instant", "mart-picking", "피킹 작업", "알뜰살뜰 마트", "도심 재고 피킹 작업을 둡니다.", "work", Icons.Material.Filled.Inventory, Color.Warning),
+        new("mart-instant", "mart-picking-complete", "피킹 완료", "알뜰살뜰 마트", "마트 피킹 완료 상태를 둡니다.", "confirm", Icons.Material.Filled.TaskAlt, Color.Info),
+        new("mart-instant", "mart-packing", "포장 작업", "알뜰살뜰 마트", "마트 주문 포장 작업을 둡니다.", "work", Icons.Material.Filled.Inventory2, Color.Warning),
+        new("mart-instant", "packing-eta", "포장 완료 예상", "알뜰살뜰 마트", "포장 완료 예상시각과 사전 배차 기준을 둡니다.", "work", Icons.Material.Filled.Schedule, Color.Warning),
+        new("mart-instant", "pre-dispatch", "사전 배차", "알뜰살뜰 마트", "포장 진행 중에도 가능한 서버 사전 배차를 둡니다.", "delivery", Icons.Material.Filled.Route, Color.Secondary),
+        new("mart-instant", "pickup-ready", "픽업 가능", "알뜰살뜰 마트", "포장 완료 후 픽업 가능 상태를 둡니다.", "confirm", Icons.Material.Filled.TaskAlt, Color.Info),
+        new("mart-instant", "driver-pickup", "기사 픽업", "알뜰살뜰 마트", "기사 픽업과 인계 상태를 둡니다.", "delivery", Icons.Material.Filled.DeliveryDining, Color.Secondary),
+        new("mart-instant", "customer-delivery", "고객 전달", "알뜰살뜰 마트", "고객 전달과 배송 완료 상태를 둡니다.", "delivery", Icons.Material.Filled.LocalShipping, Color.Secondary),
+        new("mart-instant", "mart-receive-confirm", "수령 확인", "알뜰살뜰 마트", "고객 수령 확인과 완료 상태를 둡니다.", "confirm", Icons.Material.Filled.Verified, Color.Success),
+
+        new("group-purchase", "group-demand-open", "수요 모집", "공동구매", "커뮤니티에서 함께 살 사람과 필요한 수량을 모읍니다.", "product", Icons.Material.Filled.Groups, Color.Primary),
+        new("group-purchase", "group-participant-demand", "참여 신청", "공동구매", "참여자, 희망 수량, 수령 희망 조건을 둡니다.", "work", Icons.Material.Filled.PersonAdd, Color.Info),
+        new("group-purchase", "group-quantity-threshold", "모집 수량", "공동구매", "최소 주문 수량, 목표 수량, 마감 조건을 둡니다.", "work", Icons.Material.Filled.Rule, Color.Warning),
+        new("group-purchase", "group-purchase-decision", "구매 확정", "공동구매", "공동 가격, 구매처, 구매 수량과 확정 근거를 둡니다.", "confirm", Icons.Material.Filled.TaskAlt, Color.Success),
+        new("group-purchase", "group-pickup-point", "수령 거점", "공동구매", "공동 수령 장소와 참여자별 인수 조건을 둡니다.", "warehouse", Icons.Material.Filled.Place, Color.Success),
+        new("group-purchase", "group-distribution", "참여자 분배", "공동구매", "수령 거점에서 참여자에게 나누고 전달하는 흐름을 둡니다.", "delivery", Icons.Material.Filled.LocalShipping, Color.Secondary),
+        new("group-purchase", "group-settlement-receipt", "정산/수령", "공동구매", "정산 표시, 수령 확인, 남은 이슈 마감을 둡니다.", "confirm", Icons.Material.Filled.Payments, Color.Info),
+
+        new("group-import", "group-source-purchase", "원천 공동구매", "공동수입", "확정된 공동구매 원장과 수량 합계를 수입 근거로 연결합니다.", "product", Icons.Material.Filled.Hub, Color.Primary),
+        new("group-import", "group-import-decision", "수입 결정", "공동수입", "수입 진행 여부, 가격, FCL/LCL 판단과 공급자 조건을 둡니다.", "confirm", Icons.Material.Filled.TaskAlt, Color.Success),
+        new("group-import", "group-overseas-shipment", "해외 선적", "공동수입", "해외 발송, 선적 문서, 진행 추적 정보를 둡니다.", "delivery", Icons.Material.Filled.Public, Color.Secondary),
+        new("group-import", "group-customs-release", "통관/반출", "공동수입", "통관 상태, 문서관리번호, 국내 반출 가능 상태를 둡니다.", "confirm", Icons.Material.Filled.FactCheck, Color.Info),
+        new("group-import", "group-third-party-inbound", "3PL 입고", "공동수입", "국내 3PL 창고 입고와 검수 연결 지점을 둡니다.", "warehouse", Icons.Material.Filled.Warehouse, Color.Success),
+        new("group-import", "group-household-distribution", "세대 분배", "공동수입", "참여자별 분배, 국내 배송, 수령 확인 흐름을 둡니다.", "delivery", Icons.Material.Filled.LocalShipping, Color.Secondary),
+        new("group-import", "group-settlement-receipt", "정산/수령", "공동수입", "수입 비용 정산, 수령 확인, 남은 이슈 마감을 둡니다.", "confirm", Icons.Material.Filled.Payments, Color.Info),
+
+        new("community", "community-post", "커뮤니티 글", "커뮤니티", "대화와 공유가 시작되는 글을 둡니다.", "work", Icons.Material.Filled.Forum, Color.Primary),
+        new("community", "join-request", "참여 신청", "커뮤니티", "원장이나 일에 참여하겠다는 신호를 둡니다.", "work", Icons.Material.Filled.PersonAdd, Color.Info),
+        new("community", "comment-discussion", "댓글 논의", "커뮤니티", "댓글로 조건을 맞추는 논의 흐름을 둡니다.", "work", Icons.Material.Filled.Chat, Color.Info),
+        new("community", "vote-opinion", "투표/의견", "커뮤니티", "선택지, 의견, 다수 결정을 둡니다.", "work", Icons.Material.Filled.HowToVote, Color.Warning),
+        new("community", "role-split", "역할 나누기", "커뮤니티", "요청자, 수행자, 확인자 같은 역할 분배를 둡니다.", "work", Icons.Material.Filled.AccountTree, Color.Warning),
+        new("community", "best-ledger-candidate", "베스트 원장 후보", "커뮤니티", "재사용할 만한 좋은 원장 패턴 후보를 둡니다.", "confirm", Icons.Material.Filled.Star, Color.Info),
+        new("community", "shared-ledger-pattern", "공유용 원장 패턴", "커뮤니티", "민감 정보를 걷어낸 공유 원장 패턴을 둡니다.", "confirm", Icons.Material.Filled.Share, Color.Info),
+        new("community", "anonymous-participation", "익명 참여", "커뮤니티", "닉네임, 활동명, 익명 라벨 기반 참여를 둡니다.", "work", Icons.Material.Filled.VisibilityOff, Color.Info),
+        new("community", "operator-review", "운영자 검토", "커뮤니티", "신고, 분쟁, 운영자 확인이 필요한 흐름을 둡니다.", "confirm", Icons.Material.Filled.AdminPanelSettings, Color.Error)
+    ];
+
+    private static readonly IReadOnlyList<WorkflowPresetItem> WorkflowPresets =
+    [
+        new(
+            "cargo-v1",
+            "cargo-v1-main",
+            "살뜰 1.0 절차",
+            CommunityLedgerTemplateKeys.CargoTransport,
+            [
+                FindPaletteBlock("cargo-v1", "cargo-request"),
+                FindPaletteBlock("cargo-v1", "dispatch-recommendation"),
+                FindPaletteBlock("cargo-v1", "driver-accept"),
+                FindPaletteBlock("cargo-v1", "pickup-place"),
+                FindPaletteBlock("cargo-v1", "pickup-arrival"),
+                FindPaletteBlock("cargo-v1", "pickup-complete"),
+                FindPaletteBlock("cargo-v1", "pickup-proof"),
+                FindPaletteBlock("cargo-v1", "cargo-leg"),
+                FindPaletteBlock("cargo-v1", "dropoff-place"),
+                FindPaletteBlock("cargo-v1", "dropoff-arrival"),
+                FindPaletteBlock("cargo-v1", "dropoff-complete"),
+                FindPaletteBlock("cargo-v1", "receiver-confirm"),
+                FindPaletteBlock(PlatformDiagramPaletteStateService.CommonWorkflowModeKey, "settlement"),
+                FindPaletteBlock("cargo-v1", "admin-check")
+            ],
+            [
+                new("운송 의뢰", "배차 추천", "의뢰 등록"),
+                new("배차 추천", "기사 수락", "추천 확인"),
+                new("기사 수락", "상차지", "배차 확정"),
+                new("상차지", "상차지 도착", "현장 이동"),
+                new("상차지 도착", "상차 완료", "화물 확인"),
+                new("상차 완료", "상차 증빙", "사진/인수 기록"),
+                new("상차 증빙", "운송 구간", "출발 가능"),
+                new("운송 구간", "하차지", "도착 예정"),
+                new("하차지", "하차지 도착", "현장 도착"),
+                new("하차지 도착", "하차 완료", "하차 처리"),
+                new("하차 완료", "수령/인수 확인", "수령자 확인"),
+                new("수령/인수 확인", "정산 표시", "완료 근거"),
+                new("정산 표시", "관리자 점검", "운영 확인")
+            ]),
+        new(
+            "group-purchase",
+            "group-purchase-main",
+            "공동구매 절차",
+            CommunityLedgerTemplateKeys.GroupPurchase,
+            [
+                FindPaletteBlock("group-purchase", "group-demand-open"),
+                FindPaletteBlock("group-purchase", "group-participant-demand"),
+                FindPaletteBlock("group-purchase", "group-quantity-threshold"),
+                FindPaletteBlock("group-purchase", "group-purchase-decision"),
+                FindPaletteBlock("group-purchase", "group-pickup-point"),
+                FindPaletteBlock("group-purchase", "group-distribution"),
+                FindPaletteBlock("group-purchase", "group-settlement-receipt")
+            ],
+            [
+                new("수요 모집", "참여 신청", "참여 의사"),
+                new("참여 신청", "모집 수량", "수량 합산"),
+                new("모집 수량", "구매 확정", "공동 조건 확정"),
+                new("구매 확정", "수령 거점", "구매 완료"),
+                new("수령 거점", "참여자 분배", "분배 준비"),
+                new("참여자 분배", "정산/수령", "수령 마감")
+            ]),
+        new(
+            "group-import",
+            "group-import-main",
+            "공동수입 절차",
+            CommunityLedgerTemplateKeys.GroupImport,
+            [
+                FindPaletteBlock("group-import", "group-source-purchase"),
+                FindPaletteBlock("group-import", "group-import-decision"),
+                FindPaletteBlock("group-import", "group-overseas-shipment"),
+                FindPaletteBlock("group-import", "group-customs-release"),
+                FindPaletteBlock("group-import", "group-third-party-inbound"),
+                FindPaletteBlock("group-import", "group-household-distribution"),
+                FindPaletteBlock("group-import", "group-settlement-receipt")
+            ],
+            [
+                new("원천 공동구매", "수입 결정", "수입 근거"),
+                new("수입 결정", "해외 선적", "구매 확정"),
+                new("해외 선적", "통관/반출", "수입 진행"),
+                new("통관/반출", "3PL 입고", "국내 입고"),
+                new("3PL 입고", "세대 분배", "분배 준비"),
+                new("세대 분배", "정산/수령", "수령 마감")
+            ])
+    ];
+
+    protected override void OnInitialized()
+    {
+        DiagramPalette.Changed += HandlePaletteChanged;
+        DiagramPalette.SetDiagramMode(true);
+        if (!IsKnownLedgerPaletteGroup(DiagramPalette.WorkflowModeKey))
+        {
+            DiagramPalette.SetWorkflowMode(
+                LedgerPaletteGroups[0].WorkflowModeKey,
+                LedgerPaletteGroups[0].LedgerTemplateKey);
+        }
+    }
+
+    private void SetLedgerPaletteGroup(string workflowModeKey)
+    {
+        var group = LedgerPaletteGroups.FirstOrDefault(item =>
+            IsSameKey(item.WorkflowModeKey, workflowModeKey))
+            ?? LedgerPaletteGroups[0];
+
+        DiagramPalette.SetDiagramMode(true);
+        DiagramPalette.SetWorkflowMode(group.WorkflowModeKey, group.LedgerTemplateKey);
+    }
+
+    private void AddBlockToCanvas(PaletteBlockItem block)
+    {
+        DiagramPalette.SetDiagramMode(true);
+        DiagramPalette.RequestBlock(ToDiagramPaletteBlock(block));
+    }
+
+    private void DrawActiveWorkflowPreset()
+    {
+        var preset = ActiveWorkflowPreset;
+        if (preset is null)
+        {
+            return;
+        }
+
+        DiagramPalette.SetDiagramMode(true);
+        DiagramPalette.SetWorkflowMode(preset.WorkflowModeKey, preset.LedgerTemplateKey);
+        DiagramPalette.RequestWorkflowPreset(new PlatformDiagramWorkflowPreset(
+            preset.Key,
+            preset.Title,
+            preset.LedgerTemplateKey,
+            preset.Nodes.Select(ToDiagramPaletteBlock).ToArray(),
+            preset.Connections
+                .Select(connection => new PlatformDiagramWorkflowConnection(
+                    connection.FromTitle,
+                    connection.ToTitle,
+                    connection.Label))
+                .ToArray()));
+    }
+
+    private static int CountPaletteBlocks(string workflowModeKey)
+        => PaletteBlocks.Count(block =>
+            IsSameKey(block.WorkflowModeKey, PlatformDiagramPaletteStateService.CommonWorkflowModeKey) ||
+            IsSameKey(block.WorkflowModeKey, workflowModeKey));
+
+    private static IReadOnlyList<PaletteBlockSectionItem> BuildPaletteSections(LedgerPaletteGroupItem group)
+    {
+        var sections = new List<PaletteBlockSectionItem>();
+        var commonBlocks = PaletteBlocks
+            .Where(block => IsSameKey(block.WorkflowModeKey, PlatformDiagramPaletteStateService.CommonWorkflowModeKey))
+            .ToArray();
+        if (commonBlocks.Length > 0)
+        {
+            sections.Add(new("공통 노드", commonBlocks));
+        }
+
+        var ledgerBlocks = PaletteBlocks
+            .Where(block => IsSameKey(block.WorkflowModeKey, group.WorkflowModeKey))
+            .ToArray();
+        if (ledgerBlocks.Length > 0)
+        {
+            sections.Add(new($"{group.Title} 노드", ledgerBlocks));
+        }
+
+        return sections;
+    }
+
+    private static bool IsKnownLedgerPaletteGroup(string workflowModeKey)
+        => LedgerPaletteGroups.Any(group => IsSameKey(group.WorkflowModeKey, workflowModeKey));
+
+    private static PaletteBlockItem FindPaletteBlock(string workflowModeKey, string key)
+        => PaletteBlocks.First(block =>
+            IsSameKey(block.WorkflowModeKey, workflowModeKey) &&
+            IsSameKey(block.Key, key));
+
+    private static PlatformDiagramPaletteBlock ToDiagramPaletteBlock(PaletteBlockItem block)
+        => new(
+            block.Key,
+            block.Title,
+            block.GroupLabel,
+            block.Description,
+            block.Kind,
+            block.FormKind);
+
+    private string BuildLedgerPaletteGroupClass(LedgerPaletteGroupItem group)
+    {
+        var selected = IsSameKey(group.WorkflowModeKey, ActiveLedgerPaletteGroup.WorkflowModeKey)
+            ? " platform-ledger-palette-group--selected"
+            : string.Empty;
+
+        return $"platform-ledger-palette-group{selected}";
+    }
+
+    private static string BuildPaletteItemClass(PaletteBlockItem block)
+        => $"platform-block-palette-item platform-block-palette-item--{block.Kind}";
+
+    private void HandlePaletteChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        DiagramPalette.Changed -= HandlePaletteChanged;
+    }
+
+    private static bool IsSameKey(string left, string right)
+        => string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
+
+    private static string 원장처리체계표시명(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "처리 체계";
+        }
+
+        return value.Trim().Replace(" OS", " 처리 체계", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private sealed record LedgerPaletteGroupItem(
+        string WorkflowModeKey,
+        string LedgerTemplateKey,
+        string Title,
+        string Description);
+
+    private sealed record PaletteBlockSectionItem(
+        string Title,
+        IReadOnlyList<PaletteBlockItem> Blocks);
+
+    private sealed record WorkflowPresetItem(
+        string WorkflowModeKey,
+        string Key,
+        string Title,
+        string? LedgerTemplateKey,
+        IReadOnlyList<PaletteBlockItem> Nodes,
+        IReadOnlyList<WorkflowPresetConnectionItem> Connections);
+
+    private sealed record WorkflowPresetConnectionItem(
+        string FromTitle,
+        string ToTitle,
+        string Label);
+
+    private sealed record PaletteBlockItem(
+        string WorkflowModeKey,
+        string Key,
+        string Title,
+        string GroupLabel,
+        string Description,
+        string Kind,
+        string Icon,
+        Color Color,
+        string? FormKind = null);
+}

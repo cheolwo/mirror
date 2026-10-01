@@ -1,0 +1,233 @@
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inherits ViewModelParameterComponentBase<CommunityAuthoringSocialResearchViewModel>
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<section class="community-author-social-tool" aria-label="YouTube와 SNS 자료 조사">
+    <div class="community-author-social-query">
+        <MudTextField T="string"
+                      Label="YouTube 영상 주소 또는 ID"
+                      Placeholder="https://www.youtube.com/watch?v=..."
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Immediate="true"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.OndemandVideo"
+                      @bind-Value="ViewModel.VideoReference" />
+        <MudTextField T="string"
+                      Label="핵심 검색어"
+                      Placeholder="공동구매, 지역 식재료"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Lines="2"
+                      @bind-Value="ViewModel.SearchTermsText" />
+        <MudTextField T="string"
+                      Label="함께 살펴볼 인접 주제"
+                      Placeholder="가격, 보관, 배송"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Lines="2"
+                      @bind-Value="ViewModel.AdjacentTopicsText" />
+        <div class="community-author-social-locale">
+            <MudTextField T="string" Label="국가" Placeholder="US" MaxLength="2" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="ViewModel.CountryCode" />
+            <MudTextField T="string" Label="언어" Placeholder="en" MaxLength="20" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="ViewModel.LanguageCode" />
+            <MudNumericField T="int" Label="원천별 결과" Min="1" Max="20" Variant="Variant.Outlined" Margin="Margin.Dense" @bind-Value="ViewModel.TakePerSource" />
+        </div>
+    </div>
+
+    <div class="community-author-social-sources" role="group" aria-label="SNS 조사 원천">
+        @foreach (var source in ViewModel.Sources)
+        {
+            <div class="community-author-social-source">
+                <MudCheckBox T="bool"
+                             Label="@source.Source.DisplayName"
+                             Disabled="@(!source.Source.Enabled)"
+                             Dense="true"
+                             @bind-Value="source.IsSelected" />
+                <span>@(source.Source.Enabled ? source.Source.Provider : "비활성")</span>
+                @if (source.IsSelected && source.Source.RequiresStartUrl)
+                {
+                    <MudTextField T="string"
+                                  Label="공개 게시물·계정 주소"
+                                  Placeholder="주소를 줄마다 하나씩 입력"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Lines="2"
+                                  @bind-Value="source.StartUrlsText" />
+                }
+            </div>
+        }
+    </div>
+
+    <div class="community-author-social-actions">
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.TravelExplore"
+                   Disabled="@(ViewModel.IsLoading || ViewModel.IsSavingWorkspace)"
+                   OnClick="ResearchAsync">
+            @(ViewModel.IsLoading ? "조사 중" : "자료 조사·저장")
+        </MudButton>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.History"
+                   Disabled="@(ViewModel.IsLoading || ViewModel.IsSavingWorkspace)"
+                   OnClick="LoadSavedWorkspaceAsync">
+            저장본 불러오기
+        </MudButton>
+    </div>
+
+    @if (ViewModel.HasSavedWorkspaces)
+    {
+        <section class="community-author-social-workspaces" aria-label="최근 YouTube 글쓰기 작업공간">
+            <header>
+                <MudText Typo="Typo.subtitle2">쌓인 영상별 작업</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">최근 @ViewModel.SavedWorkspaces.Count.ToString("N0")건</MudText>
+            </header>
+            <div>
+                @foreach (var workspace in ViewModel.SavedWorkspaces.Take(10))
+                {
+                    <button type="button" @onclick="@(() => LoadSavedWorkspaceAsync(workspace))">
+                        <MudIcon Icon="@Icons.Material.Filled.OndemandVideo" Color="Color.Primary" Size="Size.Small" />
+                        <span>
+                            <strong>@workspace.VideoTitle</strong>
+                            <small>@workspace.ChannelName · 다이어그램 @workspace.ImportJourneyNodeCount.ToString("N0")단계 · 업체 @workspace.OrganizationCandidateCount.ToString("N0")곳</small>
+                        </span>
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Variant="Variant.Outlined"
+                                 Color="@(workspace.OutreachReadinessCode == YouTubeImportOutreachReadinessCodes.ReadyForManualDraft ? Color.Success : Color.Info)">
+                            @CommunityAuthoringSocialResearchViewModel.ResolveOutreachReadinessLabel(workspace.OutreachReadinessCode)
+                        </MudChip>
+                    </button>
+                }
+            </div>
+        </section>
+    }
+
+    @if (ViewModel.IsLoading)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+    }
+    @if (!string.IsNullOrWhiteSpace(ViewModel.ErrorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true">@ViewModel.ErrorMessage</MudAlert>
+    }
+    @if (!string.IsNullOrWhiteSpace(ViewModel.StatusMessage))
+    {
+        <MudAlert Severity="Severity.Success" Dense="true" Variant="Variant.Outlined">@ViewModel.StatusMessage</MudAlert>
+    }
+
+    @if (ViewModel.Result is { } result)
+    {
+        <section class="community-author-social-result">
+            <header class="community-author-social-video">
+                @if (!string.IsNullOrWhiteSpace(result.Video.ThumbnailUrl))
+                {
+                    <img src="@result.Video.ThumbnailUrl"
+                         alt="@result.Video.Title"
+                         loading="lazy" />
+                }
+                <div>
+                    <MudText Typo="Typo.overline" Color="Color.Primary">RESEARCH DRAFT</MudText>
+                    <MudText Typo="Typo.h6">@result.Video.Title</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@result.Video.ChannelName · @result.Video.CountryCode · @result.Video.LanguageCode</MudText>
+                </div>
+                <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Href="@result.Video.OriginalUrl" Target="_blank" aria-label="영상 열기" />
+            </header>
+            <div class="community-author-social-summary">
+                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">@($"공개 자료 {result.Items.Count:N0}건")</MudChip>
+                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@result.Draft.CollectiveAction.WorkflowTag</MudChip>
+                @if (ViewModel.HasWorkspace)
+                {
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Color="Color.Success"
+                             Variant="Variant.Outlined"
+                             Icon="@Icons.Material.Filled.CloudDone">
+                        @ViewModel.WorkspaceStatusLabel · r@(ViewModel.WorkspaceRevision)
+                    </MudChip>
+                }
+            </div>
+            <div class="community-author-social-children" aria-label="YouTube 영상의 SNS 하위 자료">
+            @foreach (var source in result.Sources)
+            {
+                var sourceItems = result.Items
+                    .Where(item => string.Equals(item.SourceKey, source.SourceKey, StringComparison.OrdinalIgnoreCase))
+                    .Take(6)
+                    .ToArray();
+                <section class="community-author-social-source-group">
+                    <header>
+                        <MudText Typo="Typo.subtitle2">@source.DisplayName</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@($"{sourceItems.Length:N0}건")</MudText>
+                    </header>
+                    @if (sourceItems.Length == 0)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">저장된 공개 자료가 없습니다.</MudText>
+                    }
+                    @foreach (var item in sourceItems)
+                    {
+                        <a class="community-author-social-item" href="@item.OriginalUrl" target="_blank" rel="noopener noreferrer">
+                            <strong>@item.Title</strong>
+                            <span>@item.Provider · @item.PublishedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd")</span>
+                        </a>
+                    }
+                </section>
+            }
+            </div>
+            @foreach (var failure in result.Failures)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true">@failure.SourceKey · @failure.Message</MudAlert>
+            }
+            <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Text">
+                @result.Draft.CollectiveAction.NonBindingNotice
+            </MudAlert>
+            <div class="community-author-social-actions">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.PlaylistAdd"
+                           OnClick="ApplyToDraftRequested">
+                    글 초안에 반영
+                </MudButton>
+                @if (ViewModel.HasWorkspace)
+                {
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Save"
+                               Disabled="@ViewModel.IsSavingWorkspace"
+                               OnClick="SaveDraftRequested">
+                        편집 초안 저장
+                    </MudButton>
+                }
+            </div>
+        </section>
+    }
+</section>
+
+@code {
+    [Parameter]
+    public EventCallback ApplyToDraftRequested { get; set; }
+
+    [Parameter]
+    public EventCallback SaveDraftRequested { get; set; }
+
+    [Parameter]
+    public EventCallback WorkspaceLoaded { get; set; }
+
+    private async Task ResearchAsync()
+        => await ViewModel.ResearchAsync();
+
+    private async Task LoadSavedWorkspaceAsync()
+    {
+        if (await ViewModel.LoadSavedWorkspaceAsync())
+        {
+            await WorkspaceLoaded.InvokeAsync();
+        }
+    }
+
+    private async Task LoadSavedWorkspaceAsync(YouTubeSocialContextWorkspaceSummaryDto summary)
+    {
+        if (await ViewModel.LoadSavedWorkspaceAsync(summary))
+        {
+            await WorkspaceLoaded.InvokeAsync();
+        }
+    }
+}

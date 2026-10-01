@@ -1,0 +1,183 @@
+.community-author-social-tool {
+    display: grid;
+    gap: 14px;
+    padding: 12px 2px 2px;
+}
+
+.community-author-social-query,
+.community-author-social-sources,
+.community-author-social-result {
+    display: grid;
+    gap: 10px;
+}
+
+.community-author-social-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.community-author-social-workspaces {
+    display: grid;
+    gap: 8px;
+    padding-block: 12px;
+    border-block: 1px solid var(--mud-palette-lines-default);
+}
+
+.community-author-social-workspaces > header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.community-author-social-workspaces > div {
+    display: grid;
+    max-height: 360px;
+    overflow: auto;
+}
+
+.community-author-social-workspaces button {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 58px;
+    padding: 8px 2px;
+    border: 0;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.community-author-social-workspaces button:hover,
+.community-author-social-workspaces button:focus-visible {
+    background: var(--mud-palette-action-default-hover);
+    outline: none;
+}
+
+.community-author-social-workspaces button span,
+.community-author-social-workspaces button strong,
+.community-author-social-workspaces button small {
+    display: block;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.community-author-social-workspaces button small {
+    margin-top: 2px;
+    color: var(--mud-palette-text-secondary);
+    font-size: .76rem;
+}
+
+.community-author-social-locale {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.community-author-social-source {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px 10px;
+    padding-block: 8px;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.community-author-social-source > span {
+    color: var(--mud-palette-text-secondary);
+    font-size: .76rem;
+}
+
+.community-author-social-source > :last-child:not(span) {
+    grid-column: 1 / -1;
+}
+
+.community-author-social-result {
+    padding-top: 14px;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.community-author-social-result > header,
+.community-author-social-summary {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.community-author-social-video img {
+    width: 112px;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 6px;
+    flex: 0 0 auto;
+}
+
+.community-author-social-video > div {
+    min-width: 0;
+    flex: 1 1 220px;
+}
+
+.community-author-social-children {
+    display: grid;
+    gap: 12px;
+    padding-left: 12px;
+    border-left: 2px solid var(--mud-palette-lines-default);
+}
+
+.community-author-social-source-group {
+    display: grid;
+    gap: 4px;
+}
+
+.community-author-social-source-group > header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.community-author-social-item {
+    display: grid;
+    gap: 2px;
+    padding: 8px 2px;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+    color: inherit;
+    text-decoration: none;
+}
+
+.community-author-social-item:hover strong {
+    color: var(--mud-palette-primary);
+}
+
+.community-author-social-item span {
+    color: var(--mud-palette-text-secondary);
+    font-size: .76rem;
+}
+
+@media (max-width: 600px) {
+    .community-author-social-locale {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .community-author-social-video img {
+        width: 100%;
+    }
+
+    .community-author-social-workspaces button {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .community-author-social-workspaces button > :last-child {
+        grid-column: 2;
+        justify-self: start;
+    }
+}

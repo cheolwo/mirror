@@ -1,0 +1,13 @@
+.warehouse-page-shell {
+    width: 100%;
+}
+
+.warehouse-page-header {
+    min-height: 72px;
+}
+
+@media (max-width: 600px) {
+    .warehouse-page-header {
+        align-items: flex-start !important;
+    }
+}

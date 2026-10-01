@@ -1,3 +1,4 @@
+using Hongdal.Contracts.Common.Content;
 using Hongdal.Ui.Common.Areas.App.Services;
 
 namespace Hongdal.Tests.Services.Community;
@@ -74,4 +75,40 @@ public sealed class PlatformCommunityPostDraftStateServiceTests
             null,
             timestamp));
     }
+
+    [Fact]
+    public void FoodCreate_BuildsInformationOnlyCommunityDraftWithVideoContext()
+    {
+        var candidate = CreateFoodCandidate();
+
+        var draft = YouTubeFoodCommunityShareDraftFactory.Create(candidate);
+
+        Assert.Equal(PlatformCommunityPostDraftSourceKinds.YouTubeFood, draft.SourceKind);
+        Assert.Equal("자유", draft.Category);
+        Assert.Equal("공동구매", draft.WorkflowTag);
+        Assert.StartsWith("[음식 발견] 흡직 파프리카", draft.Title, StringComparison.Ordinal);
+        Assert.Contains("채널: Farm Table · HU", draft.Body, StringComparison.Ordinal);
+        Assert.Contains("게시글의 함께하기", draft.Body, StringComparison.Ordinal);
+        Assert.Contains("비구속적 가원장", draft.Body, StringComparison.Ordinal);
+        Assert.Contains("구매·수입·계약 제안이 아닙니다", draft.Body, StringComparison.Ordinal);
+        Assert.Equal("https://www.youtube.com/watch?v=food-1&t=95s", draft.SharedLinkUrl);
+    }
+
+    private static YouTube음식커뮤니티공유후보Dto CreateFoodCandidate()
+        => new(
+            7,
+            "흡직 파프리카",
+            "Paprika House",
+            "HU",
+            YouTube상품후보유형코드.식재료,
+            95,
+            "현지 생산자가 가공 과정을 소개합니다.",
+            "food-1",
+            "헝가리의 파프리카 만드는 법",
+            new DateTime(2026, 7, 15, 10, 0, 0, DateTimeKind.Utc),
+            "https://i.ytimg.com/vi/food-1/hqdefault.jpg",
+            "https://www.youtube.com/watch?v=food-1",
+            "channel-1",
+            "Farm Table",
+            "HU");
 }

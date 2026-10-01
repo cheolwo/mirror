@@ -51,15 +51,74 @@ public sealed class 음식샘플Store
         };
     }
 
-    public 음식점목록응답 GetNearbyRestaurants() => new()
+    public 음식점목록응답 GetNearbyRestaurants(
+        decimal? latitude = null,
+        decimal? longitude = null,
+        decimal radiusKm = 7m,
+        int limit = 20)
     {
-        Items = _restaurants.OrderBy(x => x.거리Km ?? decimal.MaxValue).ToArray()
-    };
+        if (!latitude.HasValue || !longitude.HasValue)
+        {
+            return new 음식점목록응답
+            {
+                Items = _restaurants
+                    .OrderBy(x => x.거리Km ?? decimal.MaxValue)
+                    .Take(Math.Clamp(limit, 1, 50))
+                    .ToArray()
+            };
+        }
+
+        var appliedRadius = Math.Clamp(radiusKm, 0.1m, 7m);
+        var items = _restaurants
+            .Select(restaurant => new
+            {
+                Restaurant = restaurant,
+                DistanceKm = DistanceKm(latitude.Value, longitude.Value, restaurant.위도, restaurant.경도)
+            })
+            .Where(item => item.DistanceKm <= appliedRadius)
+            .OrderBy(item => item.DistanceKm)
+            .Take(Math.Clamp(limit, 1, 50))
+            .Select(item => CopyWithDistance(item.Restaurant, item.DistanceKm))
+            .ToArray();
+        return new 음식점목록응답 { Items = items };
+    }
 
     public 음식점목록응답 GetPopularRestaurants() => new()
     {
         Items = _restaurants.OrderByDescending(x => x.평균평점).ThenByDescending(x => x.리뷰수).ToArray()
     };
+
+    private static decimal DistanceKm(decimal latitude1, decimal longitude1, decimal latitude2, decimal longitude2)
+    {
+        const double earthRadiusKm = 6371.0088d;
+        static double Radians(decimal degree) => (double)degree * Math.PI / 180d;
+
+        var lat1 = Radians(latitude1);
+        var lat2 = Radians(latitude2);
+        var deltaLat = lat2 - lat1;
+        var deltaLon = Radians(longitude2 - longitude1);
+        var a = Math.Pow(Math.Sin(deltaLat / 2d), 2d)
+                + Math.Cos(lat1) * Math.Cos(lat2) * Math.Pow(Math.Sin(deltaLon / 2d), 2d);
+        var distance = earthRadiusKm * 2d * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1d - a));
+        return Math.Round((decimal)distance, 2, MidpointRounding.AwayFromZero);
+    }
+
+    private static 음식점요약응답 CopyWithDistance(음식점요약응답 source, decimal distanceKm)
+        => new()
+        {
+            Id = source.Id,
+            상호명 = source.상호명,
+            카테고리 = source.카테고리,
+            주소 = source.주소,
+            대표이미지Url = source.대표이미지Url,
+            위도 = source.위도,
+            경도 = source.경도,
+            거리Km = distanceKm,
+            평균평점 = source.평균평점,
+            리뷰수 = source.리뷰수,
+            주문가능여부 = source.주문가능여부,
+            저평점주의필요 = source.저평점주의필요
+        };
 
     public 음식점리뷰목록응답 GetReviews(long restaurantId) => new()
     {

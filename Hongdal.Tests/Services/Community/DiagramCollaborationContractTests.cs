@@ -34,7 +34,19 @@ public sealed class DiagramCollaborationContractTests
                         NodeId = "warehouse-1",
                         Kind = "warehouse",
                         Title = "창고",
-                        RelatedRoute = "/shipper/inbound/requests"
+                        RelatedRoute = "/shipper/inbound/requests",
+                        OrganizationReferences =
+                        [
+                            new DiagramOrganizationReferenceDto
+                            {
+                                ReferenceId = "organization-1",
+                                OrganizationKey = "provider-1",
+                                DisplayName = "Example 3PL",
+                                RoleLabel = "3PL 물류 후보",
+                                CountryCode = "US",
+                                OfficialWebsiteUrl = "https://example.com/"
+                            }
+                        ]
                     }
                 ],
                 Edges =
@@ -53,6 +65,7 @@ public sealed class DiagramCollaborationContractTests
         Assert.Equal("마트 주문-창고-배송 흐름", request.Snapshot.DiagramName);
         Assert.Equal(CommunityLedgerTemplateKeys.HongdalMart, request.Snapshot.LedgerTemplateKey);
         Assert.Equal("/shipper/inbound/requests", request.Snapshot.Nodes.Single().RelatedRoute);
+        Assert.Equal("Example 3PL", request.Snapshot.Nodes.Single().OrganizationReferences.Single().DisplayName);
         Assert.Equal("출고 요청", request.Snapshot.Edges.Single().Label);
     }
 
@@ -89,7 +102,7 @@ public sealed class DiagramCollaborationContractTests
             {
                 WorkType = "WarehouseProxy",
                 WorkLabel = "창고 물류 대행",
-                AppKey = "ShipperApp",
+                AppKey = "HongdalApp",
                 PrimaryRoute = "/shipper/inbound/requests",
                 PrimaryActionLabel = "신청서 작성"
             }

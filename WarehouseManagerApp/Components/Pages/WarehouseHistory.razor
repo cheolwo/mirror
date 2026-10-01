@@ -1,0 +1,48 @@
+@page "/warehouse/history"
+@inherits MvvmComponentBase<창고작업이력PageViewModel>
+
+<PageTitle>창고 작업 이력</PageTitle>
+
+<WarehousePageShell Model="@ViewModel"
+                    Title="창고 작업 이력"
+                    Description="현재 작업 세션의 확인·스캔·업무 선택 상태를 확인합니다."
+                    Icon="@Icons.Material.Filled.History"
+                    Color="Color.Info">
+    <Actions>
+        <MudButton Href="@WarehouseManagerRoutes.WorkBoard"
+                   Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.ViewKanban">
+            작업 보드
+        </MudButton>
+    </Actions>
+    <ChildContent>
+        <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+            <MudTable T="HistoryRow" Items="@CurrentSessionRows" Dense="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>구분</MudTh>
+                    <MudTh>현재 값</MudTh>
+                    <MudTh>상태</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="구분">@context.Label</MudTd>
+                    <MudTd DataLabel="현재 값">@context.Value</MudTd>
+                    <MudTd DataLabel="상태">
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@context.Color">@context.Status</MudChip>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudPaper>
+    </ChildContent>
+</WarehousePageShell>
+
+@code {
+    private IReadOnlyList<HistoryRow> CurrentSessionRows =>
+    [
+        new("작업자 확인", ViewModel.세션.작업자확인결과?.OperatorName ?? "-", ViewModel.세션.작업자확인결과?.IsAllowed == true ? "확인" : "대기", ViewModel.세션.작업자확인결과?.IsAllowed == true ? Color.Success : Color.Default),
+        new("작업 공정", ViewModel.세션.현재ProcessCode ?? "-", string.IsNullOrWhiteSpace(ViewModel.세션.현재ProcessCode) ? "대기" : "진행", string.IsNullOrWhiteSpace(ViewModel.세션.현재ProcessCode) ? Color.Default : Color.Info),
+        new("작업대", ViewModel.세션.현재작업대Barcode ?? "-", string.IsNullOrWhiteSpace(ViewModel.세션.현재작업대Barcode) ? "미확인" : "확인", string.IsNullOrWhiteSpace(ViewModel.세션.현재작업대Barcode) ? Color.Default : Color.Success),
+        new("현재 작업", ViewModel.세션.현재작업Key ?? "-", string.IsNullOrWhiteSpace(ViewModel.세션.현재작업Key) ? "미선택" : "선택", string.IsNullOrWhiteSpace(ViewModel.세션.현재작업Key) ? Color.Default : Color.Primary)
+    ];
+
+    private sealed record HistoryRow(string Label, string Value, string Status, Color Color);
+}

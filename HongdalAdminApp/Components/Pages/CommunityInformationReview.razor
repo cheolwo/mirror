@@ -1,0 +1,502 @@
+@page "/"
+@page "/information-review"
+@inherits MvvmComponentBase<CommunityInformationReviewPageViewModel>
+@using Hongdal.Contracts.Common.Community
+@inject AdminAuthSession Session
+@inject NavigationManager Navigation
+
+<PageTitle>커뮤니티 글쓰기 작업대</PageTitle>
+
+<main class="information-review-page">
+    <header class="information-review-header">
+        <div>
+            <MudText Typo="Typo.overline" Color="Color.Primary">AUTHORING WORKBENCH</MudText>
+            <MudText Typo="Typo.h4">커뮤니티 글쓰기 작업대</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                공개 자료를 확인하고 글과 업무 흐름을 한 자리에서 정리합니다.
+            </MudText>
+        </div>
+        @if (Session.IsServerAdmin)
+        {
+            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.VerifiedUser">
+                    서버관리자 전용
+                </MudChip>
+                <MudSelect T="string"
+                           Class="information-vow-version-select"
+                           Label="서원 목표 버전"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Disabled="@ViewModel.Composer.Draft.HasContent"
+                           Value="@ViewModel.VowVersion.SelectedCode"
+                           ValueChanged="ChangeVowVersion">
+                    @foreach (var version in ViewModel.VowVersion.Versions)
+                    {
+                        <MudSelectItem T="string" Value="@version.Code">@version.DisplayName</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.EditNote"
+                           OnClick="OpenVowDraft">
+                    서원 쓰기
+                </MudButton>
+            </MudStack>
+        }
+    </header>
+
+    @if (!Session.IsServerAdmin)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+            서버관리자 로그인이 필요합니다.
+            <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="OpenLogin">로그인</MudButton>
+        </MudAlert>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">
+            자료 조사와 다이어그램 작성만으로 글·가원장·공동행동은 생성되지 않습니다. 게시 등록과 참여 전환은 각각 별도 확인으로 진행됩니다.
+        </MudAlert>
+
+        @if (!string.IsNullOrWhiteSpace(ViewModel.StatusMessage))
+        {
+            <MudAlert Severity="@(ViewModel.PublishedPostId.HasValue ? Severity.Success : Severity.Info)" Dense="true">
+                @ViewModel.StatusMessage
+            </MudAlert>
+        }
+
+        <section class="information-authoring-layout">
+            <div class="information-authoring-editor" aria-label="커뮤니티 글 편집">
+                <header class="information-authoring-section-heading">
+                    <div>
+                        <MudText Typo="Typo.overline" Color="Color.Primary">POST DRAFT</MudText>
+                        <MudText Typo="Typo.h6">글 초안</MudText>
+                    </div>
+                    @if (ViewModel.Composer.IsOpen
+                         && !ViewModel.LedgerPicker.IsPickerOpen
+                         && !ViewModel.LedgerPicker.IsDetailOpen
+                         && !ViewModel.LedgerPicker.IsHierarchyOpen)
+                    {
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Error"
+                                   StartIcon="@Icons.Material.Filled.DeleteOutline"
+                                   OnClick="ClearDraftAsync">
+                            비우기
+                        </MudButton>
+                    }
+                </header>
+
+                <div class="information-authoring-persona" aria-label="운영자 필명 선택">
+                    <MudSelect T="string"
+                               Label="운영자 필명"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Value="@ViewModel.WritingPersona.SelectedKey"
+                               ValueChanged="ChangeWritingPersona">
+                        @foreach (var persona in ViewModel.WritingPersona.Personas)
+                        {
+                            <MudSelectItem T="string" Value="@persona.Key">@persona.Nickname</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudTooltip Text="다음 운영자 필명">
+                        <MudIconButton Icon="@Icons.Material.Filled.SwapHoriz"
+                                       Color="Color.Primary"
+                                       OnClick="ViewModel.SelectNextWritingPersona"
+                                       aria-label="다음 운영자 필명" />
+                    </MudTooltip>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">
+                        운영자 필명
+                    </MudChip>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        @ViewModel.WritingPersona.Selected.Perspective 운영자가 관점별로 사용하는 공개 필명입니다.
+                    </MudText>
+                </div>
+
+                @if (ViewModel.LedgerPicker.IsDetailOpen)
+                {
+                    <CommunityLedgerDiagramDetail Context="@ViewModel.LedgerPicker.DetailContext"
+                                                  IsLoading="@ViewModel.LedgerPicker.IsDetailLoading"
+                                                  ErrorMessage="@ViewModel.LedgerPicker.DetailErrorMessage"
+                                                  OnBack="@(() => ViewModel.LedgerPicker.ReturnFromDetail())"
+                                                  OnAttach="AttachSelectedLedger"
+                                                  OnRefreshRequested="RefreshSelectedLedgerAsync" />
+                }
+                else if (ViewModel.LedgerPicker.IsHierarchyOpen)
+                {
+                    <CommunityOrderLedgerHierarchyDetail Context="@ViewModel.LedgerPicker.HierarchyContext"
+                                                         OnBack="ViewModel.LedgerPicker.ReturnToPicker"
+                                                         OnAttach="AttachSelectedLedger"
+                                                         OnOpenDiagram="ViewModel.LedgerPicker.OpenHierarchyLedgerDiagram" />
+                }
+                else if (ViewModel.LedgerPicker.IsPickerOpen)
+                {
+                    <PlatformCommunityLedgerPickerPage ViewModel="@ViewModel.LedgerPicker"
+                                                       BackRequested="ViewModel.LedgerPicker.ReturnToCompose"
+                                                       LedgerSelected="ViewModel.SelectLedger"
+                                                       DetailRequested="OpenSelectedLedgerDetailAsync"
+                                                       AttachRequested="AttachSelectedLedger" />
+                }
+                else if (!ViewModel.Composer.IsOpen)
+                {
+                    <div class="information-authoring-empty">
+                        <MudIcon Icon="@Icons.Material.Filled.EditNote" Color="Color.Primary" Size="Size.Large" />
+                        <MudText Typo="Typo.h6">새 글</MudText>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="OpenVowDraft">
+                            서원 초안 시작
+                        </MudButton>
+                    </div>
+                }
+                else
+                {
+                    <PlatformCommunityPostComposer ViewModel="@ViewModel.Composer"
+                                                   BoardCategories="BoardCategories"
+                                                   RoleTags="RoleTags"
+                                                   ResearchToolsRequested="OpenCollectedSourceTool"
+                                                   DiagramToolsRequested="OpenDiagramTool"
+                                                   EvidenceToolsRequested="OpenEvidenceChartTool"
+                                                   PeriodStatisticsToolsRequested="OpenPeriodStatisticsTool"
+                                                   MutualBenefitToolsRequested="OpenMutualBenefitTool"
+                                                   ImageGeneratorToolsRequested="OpenImageGeneratorTool"
+                                                   LedgerPickerLoading="@ViewModel.LedgerPicker.IsLoading"
+                                                   LedgerPickerRequested="OpenLedgerPickerAsync"
+                                                   Saved="HandleComposerSaved">
+                        <LedgerSettings>
+                            @if (!string.IsNullOrWhiteSpace(ViewModel.Composer.Draft.커뮤니티원장Id))
+                            {
+                                var attachedLedger = ViewModel.LedgerPicker.Items.FirstOrDefault(item =>
+                                    string.Equals(
+                                        item.원장Id,
+                                        ViewModel.Composer.Draft.커뮤니티원장Id,
+                                        StringComparison.OrdinalIgnoreCase));
+                                <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                        <span>
+                                            <strong>연결 원장</strong>
+                                            @(attachedLedger?.제목 ?? ViewModel.Composer.Draft.커뮤니티원장Id)
+                                        </span>
+                                        <MudIconButton Icon="@Icons.Material.Filled.LinkOff"
+                                                       Color="Color.Error"
+                                                       Size="Size.Small"
+                                                       OnClick="ViewModel.ClearAttachedLedger"
+                                                       aria-label="원장 첨부 해제" />
+                                    </MudStack>
+                                </MudAlert>
+                            }
+                        </LedgerSettings>
+                    </PlatformCommunityPostComposer>
+                }
+
+                <section class="information-scheduled-posts" aria-label="예약 발행 관리">
+                    <header>
+                        <div>
+                            <MudText Typo="Typo.overline" Color="Color.Primary">PUBLICATION QUEUE</MudText>
+                            <MudText Typo="Typo.subtitle1">예약 발행</MudText>
+                        </div>
+                        <MudTooltip Text="예약 목록 새로고침">
+                            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                           Disabled="@ViewModel.ScheduledPosts.IsLoading"
+                                           OnClick="RefreshScheduledPostsAsync"
+                                           aria-label="예약 목록 새로고침" />
+                        </MudTooltip>
+                    </header>
+
+                    @if (!string.IsNullOrWhiteSpace(ViewModel.ScheduledPosts.StatusMessage))
+                    {
+                        <MudAlert Severity="@ScheduledPostsStatusSeverity" Dense="true" Variant="Variant.Text">
+                            @ViewModel.ScheduledPosts.StatusMessage
+                        </MudAlert>
+                    }
+
+                    @if (ViewModel.ScheduledPosts.IsLoading)
+                    {
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="84px" />
+                    }
+                    else if (ViewModel.ScheduledPosts.Items.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">대기하거나 확인할 예약 글이 없습니다.</MudText>
+                    }
+                    else
+                    {
+                        <MudTable T="PlatformCommunityPostResponse"
+                                  Items="@ViewModel.ScheduledPosts.Items"
+                                  Dense="true"
+                                  Hover="true"
+                                  Breakpoint="Breakpoint.Sm"
+                                  Elevation="0">
+                            <HeaderContent>
+                                <MudTh>발행 시각</MudTh>
+                                <MudTh>게시판·제목</MudTh>
+                                <MudTh>상태</MudTh>
+                                <MudTh></MudTh>
+                            </HeaderContent>
+                            <RowTemplate Context="post">
+                                <MudTd DataLabel="발행 시각">@FormatScheduledAt(post)</MudTd>
+                                <MudTd DataLabel="게시판·제목">
+                                    <strong>@post.Category</strong>
+                                    <span class="information-scheduled-posts__title">@post.Title</span>
+                                </MudTd>
+                                <MudTd DataLabel="상태">
+                                    <MudChip T="string"
+                                             Size="Size.Small"
+                                             Variant="Variant.Outlined"
+                                             Color="@PublicationStatusColor(post.PublicationStatusCode)">
+                                        @PublicationStatusName(post.PublicationStatusCode)
+                                    </MudChip>
+                                </MudTd>
+                                <MudTd DataLabel="작업">
+                                    <MudTooltip Text="예약 취소">
+                                        <MudIconButton Icon="@Icons.Material.Filled.EventBusy"
+                                                       Color="Color.Error"
+                                                       Size="Size.Small"
+                                                       Disabled="@(post.PublicationStatusCode != PlatformCommunityPostPublicationStatuses.Scheduled || ViewModel.ScheduledPosts.CancellingPostId.HasValue)"
+                                                       OnClick="@(() => CancelScheduledPostAsync(post.Id))"
+                                                       aria-label="예약 취소" />
+                                    </MudTooltip>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </section>
+            </div>
+
+            <aside class="information-authoring-tools" aria-label="글쓰기 보조 도구">
+                <MudTabs @bind-ActivePanelIndex="ActiveToolIndex"
+                         Elevation="0"
+                         Rounded="false"
+                         ApplyEffectsToContainer="true">
+                    <MudTabPanel Text="수집 자료" Icon="@Icons.Material.Filled.Search">
+                        <CommunityCollectedSourceTool ViewModel="@ViewModel"
+                                                      DefaultNickname="@Session.UserName" />
+                    </MudTabPanel>
+                    <MudTabPanel Text="YouTube·SNS" Icon="@Icons.Material.Filled.OndemandVideo">
+                        <CommunityAuthoringSocialResearchTool ViewModel="@ViewModel.SocialResearch"
+                                                              ApplyToDraftRequested="ApplySocialResearchToDraftAsync"
+                                                              SaveDraftRequested="SaveSocialWorkspaceDraftAsync"
+                                                              WorkspaceLoaded="LoadSocialWorkspaceJourney" />
+                    </MudTabPanel>
+                    <MudTabPanel Text="다이어그램" Icon="@Icons.Material.Filled.Hub">
+                        <CommunityAuthoringDiagramTool ViewModel="@ViewModel.Diagram"
+                                                       ApplyToDraftRequested="ApplyDiagramToDraft"
+                                                       SaveWorkspaceRequested="SaveSocialWorkspaceDraftAsync"
+                                                       CanSaveWorkspace="@ViewModel.SocialResearch.HasWorkspace"
+                                                       IsSavingWorkspace="@ViewModel.SocialResearch.IsSavingWorkspace" />
+                    </MudTabPanel>
+                    <MudTabPanel Text="상호 이익" Icon="@Icons.Material.Filled.Handshake">
+                        <CommunityAuthoringMutualBenefitTool ViewModel="@ViewModel.MutualBenefit"
+                                                             ImportDiagramRolesRequested="ImportDiagramRolesToMutualBenefit"
+                                                             ApplyToDraftRequested="ApplyMutualBenefitToDraft" />
+                    </MudTabPanel>
+                    <MudTabPanel Text="근거 그래프" Icon="@Icons.Material.Filled.InsertChart">
+                        <CommunityAuthoringEvidenceChartTool ViewModel="@ViewModel.EvidenceChart"
+                                                              ImportMutualBenefitRequested="ImportMutualBenefitToEvidenceChart"
+                                                              ApplyToDraftRequested="ApplyEvidenceChartToDraft" />
+                    </MudTabPanel>
+                    <MudTabPanel Text="기간 통계" Icon="@Icons.Material.Filled.DateRange">
+                        <CommunityAuthoringPeriodStatisticsTool ViewModel="@ViewModel.PeriodStatistics"
+                                                                ImportToEvidenceChartRequested="ImportPeriodStatisticsToEvidenceChart" />
+                    </MudTabPanel>
+                    <MudTabPanel Text="서원 틀" Icon="@Icons.Material.Filled.AutoStories">
+                        <CommunityVowJourneyTemplateTool ViewModel="@ViewModel.VowJourneyTemplate"
+                                                         Version="@ViewModel.VowVersion.Selected"
+                                                         HasDraftContent="@ViewModel.Composer.Draft.HasContent"
+                                                         TemplateChanged="ChangeVowJourneyTemplate"
+                                                         ApplyRequested="ApplyVowJourneyTemplate" />
+                    </MudTabPanel>
+                    <MudTabPanel Text="이미지" Icon="@Icons.Material.Filled.AutoFixHigh">
+                        <CommunityAuthoringImageGeneratorTool ViewModel="@ViewModel.ImageGenerator"
+                                                               DraftTitle="@ViewModel.Composer.Draft.Title"
+                                                               DraftBody="@ViewModel.Composer.Draft.Body" />
+                    </MudTabPanel>
+                    <MudTabPanel Text="LLM 초안" Icon="@Icons.Material.Filled.AutoAwesome">
+                        <CommunityAuthoringAiDraftTool ViewModel="@ViewModel.AiDraft"
+                                                       GenerateRequested="GenerateAiDraftAsync"
+                                                       ApplyRequested="ApplyAiDraftToComposer"
+                                                       ImportDiagramRequested="ImportAiDiagramSteps" />
+                    </MudTabPanel>
+                </MudTabs>
+            </aside>
+        </section>
+    }
+</main>
+
+@code {
+    private static readonly IReadOnlyList<string> BoardCategories = CommunityBoardCatalog.PublicBoards
+        .Select(board => board.DisplayName)
+        .ToArray();
+
+    private static readonly IReadOnlyList<string> RoleTags =
+    [
+        "운영자 정보 공유",
+        "운영자 서원 기록",
+        "자료 정리",
+        "공동구매 자료 정리",
+        "공동체 안내"
+    ];
+
+    private int ActiveToolIndex
+    {
+        get => (int)ViewModel.ActiveTool;
+        set
+        {
+            var nextTool = Enum.IsDefined(typeof(CommunityAuthoringTool), value)
+                ? (CommunityAuthoringTool)value
+                : CommunityAuthoringTool.CollectedSources;
+            if (nextTool == CommunityAuthoringTool.AiDraft)
+            {
+                ViewModel.OpenAiDraftTool();
+                return;
+            }
+
+            if (nextTool == CommunityAuthoringTool.ImageGenerator)
+            {
+                ViewModel.OpenImageGeneratorTool();
+                return;
+            }
+
+            ViewModel.ActiveTool = nextTool;
+        }
+    }
+
+    private Severity ScheduledPostsStatusSeverity
+        => ViewModel.ScheduledPosts.StatusKind switch
+        {
+            CommunityComposerMessageKind.Success => Severity.Success,
+            CommunityComposerMessageKind.Warning => Severity.Warning,
+            CommunityComposerMessageKind.Error => Severity.Error,
+            _ => Severity.Info
+        };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Session.RestoreAsync();
+        if (Session.IsServerAdmin)
+        {
+            await ViewModel.InitializeAsync();
+        }
+    }
+
+    private void OpenLogin() => Navigation.NavigateTo("/login");
+
+    private void OpenVowDraft()
+        => ViewModel.OpenVowDraft(Session.UserName);
+
+    private Task ClearDraftAsync()
+        => ViewModel.ClearDraftAsync();
+
+    private Task OpenLedgerPickerAsync()
+        => ViewModel.OpenLedgerPickerAsync();
+
+    private void AttachSelectedLedger()
+        => ViewModel.AttachSelectedLedger();
+
+    private Task RefreshSelectedLedgerAsync()
+        => ViewModel.LedgerPicker.RefreshDetailAsync();
+
+    private void ChangeVowVersion(string code)
+        => ViewModel.SelectVowVersion(code);
+
+    private void ChangeVowJourneyTemplate(string key)
+        => ViewModel.SelectVowJourneyTemplate(key);
+
+    private void ChangeWritingPersona(string key)
+        => ViewModel.SelectWritingPersona(key);
+
+    private void OpenCollectedSourceTool()
+        => ViewModel.ActiveTool = CommunityAuthoringTool.CollectedSources;
+
+    private void OpenDiagramTool()
+        => ViewModel.ActiveTool = CommunityAuthoringTool.Diagram;
+
+    private void OpenMutualBenefitTool()
+        => ViewModel.OpenMutualBenefitTool();
+
+    private void OpenEvidenceChartTool()
+        => ViewModel.OpenEvidenceChartTool();
+
+    private void OpenPeriodStatisticsTool()
+        => ViewModel.OpenPeriodStatisticsTool();
+
+    private void OpenImageGeneratorTool()
+        => ViewModel.OpenImageGeneratorTool();
+
+    private async Task ApplySocialResearchToDraftAsync()
+        => await ViewModel.ApplySocialResearchToDraftAsync(Session.UserName);
+
+    private async Task SaveSocialWorkspaceDraftAsync()
+        => await ViewModel.SaveSocialWorkspaceDraftAsync();
+
+    private void LoadSocialWorkspaceJourney()
+        => ViewModel.LoadSocialWorkspaceJourney();
+
+    private void ApplyDiagramToDraft()
+        => ViewModel.ApplyDiagramToDraft(Session.UserName, BoardCategories);
+
+    private void ImportDiagramRolesToMutualBenefit()
+        => ViewModel.ImportDiagramRolesToMutualBenefit();
+
+    private void ApplyMutualBenefitToDraft()
+        => ViewModel.ApplyMutualBenefitToDraft(Session.UserName);
+
+    private void ImportMutualBenefitToEvidenceChart()
+        => ViewModel.ImportMutualBenefitToEvidenceChart();
+
+    private void ApplyEvidenceChartToDraft()
+        => ViewModel.ApplyEvidenceChartToDraft(Session.UserName);
+
+    private void ImportPeriodStatisticsToEvidenceChart()
+        => ViewModel.ImportPeriodStatisticsToEvidenceChart();
+
+    private void ApplyVowJourneyTemplate()
+        => ViewModel.ApplyVowJourneyTemplate(Session.UserName);
+
+    private Task GenerateAiDraftAsync()
+        => ViewModel.GenerateAiDraftAsync();
+
+    private void ApplyAiDraftToComposer()
+        => ViewModel.ApplyAiDraftToComposer(Session.UserName);
+
+    private void ImportAiDiagramSteps()
+        => ViewModel.ImportAiDiagramSteps();
+
+    private async Task OpenSelectedLedgerDetailAsync()
+        => await ViewModel.LedgerPicker.OpenPendingDetailAsync();
+
+    private async Task HandleComposerSaved(CommunityPostComposerSaveResult result)
+        => await ViewModel.HandleComposerSavedAsync(result);
+
+    private Task RefreshScheduledPostsAsync()
+        => ViewModel.ScheduledPosts.RefreshAsync();
+
+    private Task CancelScheduledPostAsync(long postId)
+        => ViewModel.ScheduledPosts.CancelAsync(postId);
+
+    private static string FormatScheduledAt(PlatformCommunityPostResponse post)
+        => post.ScheduledPublishAtUtc is DateTime scheduledAtUtc
+            ? scheduledAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+            : "-";
+
+    private static string PublicationStatusName(string status)
+        => status switch
+        {
+            PlatformCommunityPostPublicationStatuses.Scheduled => "발행 대기",
+            PlatformCommunityPostPublicationStatuses.Publishing => "발행 처리 중",
+            PlatformCommunityPostPublicationStatuses.Cancelled => "취소",
+            PlatformCommunityPostPublicationStatuses.Failed => "발행 실패",
+            PlatformCommunityPostPublicationStatuses.Published => "공개",
+            _ => status
+        };
+
+    private static Color PublicationStatusColor(string status)
+        => status switch
+        {
+            PlatformCommunityPostPublicationStatuses.Scheduled => Color.Info,
+            PlatformCommunityPostPublicationStatuses.Publishing => Color.Warning,
+            PlatformCommunityPostPublicationStatuses.Cancelled => Color.Default,
+            PlatformCommunityPostPublicationStatuses.Failed => Color.Error,
+            PlatformCommunityPostPublicationStatuses.Published => Color.Success,
+            _ => Color.Default
+        };
+}

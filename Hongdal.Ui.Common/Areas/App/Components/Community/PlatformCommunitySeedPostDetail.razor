@@ -1,0 +1,64 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<MudPaper Elevation="0" Class="pa-4 platform-community-post platform-community-seed-post platform-community-post--expanded">
+    <MudStack Spacing="2">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudAvatar Color="@Post.Color" Variant="Variant.Filled" Size="Size.Small">
+                    <MudIcon Icon="@Post.Icon" Size="Size.Small" />
+                </MudAvatar>
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.subtitle2">@Post.Author</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@Post.Category · @Post.Meta</MudText>
+                </MudStack>
+            </MudStack>
+            <MudChip T="string" Size="Size.Small" Color="@Post.Color" Variant="Variant.Outlined">@Post.Category</MudChip>
+        </MudStack>
+        <MudText Typo="Typo.subtitle1" Class="fw-bold">@Post.Title</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="platform-community-post-body">@Post.Body</MudText>
+
+        @if (Post.HasDiagramPreview)
+        {
+            var diagramNodes = PlatformCommunityPostPresentation.BuildDiagramPreviewNodes(Post.Body, Post.Category);
+            <div class="platform-community-readme-card" aria-label="README 다이어그램 예시">
+                <div class="platform-community-readme-header">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />
+                        <strong>README.md</strong>
+                    </MudStack>
+                    <span>게시판에서 바로 보는 다이어그램</span>
+                </div>
+                <div class="platform-community-mini-diagram">
+                    @for (var index = 0; index < diagramNodes.Count; index++)
+                    {
+                        <span class="platform-community-diagram-node">@diagramNodes[index]</span>
+                        @if (index < diagramNodes.Count - 1)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                        }
+                    }
+                </div>
+            </div>
+        }
+
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="platform-community-meta">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudIcon Icon="@Icons.Material.Filled.ThumbUp" Size="Size.Small" />
+                <MudText Typo="Typo.caption">@Post.RecommendationCount</MudText>
+            </MudStack>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudIcon Icon="@Icons.Material.Filled.ChatBubbleOutline" Size="Size.Small" />
+                <MudText Typo="Typo.caption">@Post.CommentCount</MudText>
+            </MudStack>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                <MudText Typo="Typo.caption">@Post.Meta</MudText>
+            </MudStack>
+        </MudStack>
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public CommunitySeedPost Post { get; set; } = null!;
+}

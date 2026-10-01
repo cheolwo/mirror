@@ -38,15 +38,19 @@ public sealed class Command알림Outbox발송Service : ICommand알림Outbox발�
     {
         var items = await _db.Command알림Outbox
             .Where(x => x.Status == 상태_대기
-                        && x.Target == "Shipper"
-                        && (x.FeatureName == Command알림FeatureNames.배차수락
-                            || x.FeatureName == Command알림FeatureNames.상차접근
-                            || x.FeatureName == Command알림FeatureNames.운송완료입금요청
-                            || x.FeatureName == Command알림FeatureNames.운송상차지도착
-                            || x.FeatureName == Command알림FeatureNames.운송상차완료
-                            || x.FeatureName == Command알림FeatureNames.운송하차지도착
-                            || x.FeatureName == Command알림FeatureNames.운송인수완료
-                            || x.FeatureName == Command알림FeatureNames.운송현장예외신고))
+                        && ((x.Target == "Shipper"
+                             && (x.FeatureName == Command알림FeatureNames.배차수락
+                                 || x.FeatureName == Command알림FeatureNames.상차접근
+                                 || x.FeatureName == Command알림FeatureNames.운송완료입금요청
+                                 || x.FeatureName == Command알림FeatureNames.운송상차지도착
+                                 || x.FeatureName == Command알림FeatureNames.운송상차완료
+                                 || x.FeatureName == Command알림FeatureNames.운송하차지도착
+                                 || x.FeatureName == Command알림FeatureNames.운송인수완료
+                                 || x.FeatureName == Command알림FeatureNames.운송현장예외신고))
+                            || (x.Target == "CustomsBroker"
+                                && x.FeatureName == Command알림FeatureNames.공동수입원장등록)
+                            || (x.Target == Command알림TargetNames.공동구매원장관계자
+                                && x.FeatureName == Command알림FeatureNames.공동구매원장변경)))
             .OrderBy(x => x.CreatedAt)
             .Take(take)
             .ToListAsync(cancellationToken);
@@ -112,13 +116,33 @@ public sealed class Command알림Outbox발송Service : ICommand알림Outbox발�
             return false;
         }
 
-        var token = await _userPushTokenStore.GetAsync(payload.TargetUserId, cancellationToken);
-        if (string.IsNullOrWhiteSpace(token))
+        var installationTokens = await _db.HongdalMobilePushInstallations
+            .AsNoTracking()
+            .Where(x => x.IsActive && x.UserId == payload.TargetUserId)
+            .Select(x => x.PushToken)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        if (installationTokens.Count > 0)
         {
-            return false;
+            var results = new List<bool>(installationTokens.Count);
+            foreach (var installationToken in installationTokens)
+            {
+                results.Add(await SendFcmAsync(installationToken, payload, cancellationToken));
+            }
+
+            return results.Any(sent => sent);
         }
 
-        return await _fcmPushService.SendToTokenAsync(
+        var token = await _userPushTokenStore.GetAsync(payload.TargetUserId, cancellationToken);
+        return !string.IsNullOrWhiteSpace(token)
+               && await SendFcmAsync(token, payload, cancellationToken);
+    }
+
+    private Task<bool> SendFcmAsync(
+        string token,
+        Command알림Payload payload,
+        CancellationToken cancellationToken)
+        => _fcmPushService.SendToTokenAsync(
             token,
             payload.Title,
             payload.Body,
@@ -128,10 +152,12 @@ public sealed class Command알림Outbox발송Service : ICommand알림Outbox발�
                 ["requestId"] = payload.RequestId,
                 ["driverId"] = payload.DriverId,
                 ["paymentId"] = payload.PaymentId,
-                ["orderId"] = payload.OrderId
+                ["orderId"] = payload.OrderId,
+                ["ledgerId"] = payload.LedgerId,
+                ["hsCodes"] = payload.HsCodes,
+                ["deepLink"] = payload.DeepLink
             },
             cancellationToken);
-    }
 
     private Task<bool> 알림톡발송Async(string featureName, Command알림Payload payload, CancellationToken cancellationToken)
     {

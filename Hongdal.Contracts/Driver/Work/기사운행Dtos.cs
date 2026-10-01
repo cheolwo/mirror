@@ -12,6 +12,8 @@ public sealed class 기사운행시작요청
     public bool 기본복귀지사용 { get; set; }
     public string? 복귀지출처 { get; set; }
     public string? 복귀콜선호 { get; set; }
+    public bool 커뮤니티운행공개 { get; set; } = true;
+    public bool 커뮤니티구단위위치공개동의 { get; set; }
 }
 
 public sealed class 기사운행시작응답
@@ -23,6 +25,10 @@ public sealed class 기사운행시작응답
     public string? 적용복귀지 { get; set; }
     public string? 복귀지출처 { get; set; }
     public string? 복귀콜선호 { get; set; }
+    public bool 커뮤니티운행공개됨 { get; set; }
+    public Guid? 커뮤니티운행공개글Id { get; set; }
+    public string 커뮤니티공개안내 { get; set; } = string.Empty;
+    public bool 커뮤니티구단위위치공개동의됨 { get; set; }
 }
 
 public sealed class 기사운행상태응답
@@ -60,6 +66,7 @@ public sealed class 기사위치갱신응답
     public DateTime Aging기준시각 { get; set; }
     public decimal? 상차접근허용반경Km { get; set; }
     public int 권장위치전송간격초 { get; set; } = 300;
+    public string? 커뮤니티현재공개지역 { get; set; }
 }
 
 public sealed class 기사현재근무응답

@@ -1,0 +1,472 @@
+@using System.Globalization
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+
+<section id="community-forum-list" class="platform-community-forum" aria-label="@($"{BoardName} 글 목록")">
+    <header class="platform-community-forum-toolbar">
+        <div class="platform-community-forum-toolbar-title">
+            <span>@BoardName</span>
+            <strong>글 목록</strong>
+            <small>@($"{VisiblePostCount:N0}개 글")</small>
+        </div>
+        <div class="platform-community-forum-view-tabs" role="group" aria-label="글 목록 필터">
+            @foreach (var filter in FilterOptions)
+            {
+                <button type="button"
+                        class="@BuildFilterClass(filter)"
+                        aria-pressed="@string.Equals(SelectedFilter, filter, StringComparison.OrdinalIgnoreCase)"
+                        @onclick="@(() => SelectedFilterChanged.InvokeAsync(filter))">
+                    @filter
+                </button>
+            }
+        </div>
+        <div class="platform-community-forum-display-switch" role="radiogroup" aria-label="게시글 보기 방식">
+            <button type="button"
+                    class="@BuildViewModeClass(CommunityPostViewMode.List)"
+                    role="radio"
+                    aria-checked="@(ViewMode == CommunityPostViewMode.List)"
+                    aria-label="목록형으로 보기"
+                    title="목록형으로 보기"
+                    @onclick="@(() => ViewModeChanged.InvokeAsync(CommunityPostViewMode.List))">
+                <MudIcon Icon="@Icons.Material.Filled.ViewList" Size="Size.Small" />
+            </button>
+            <button type="button"
+                    class="@BuildViewModeClass(CommunityPostViewMode.Cards)"
+                    role="radio"
+                    aria-checked="@(ViewMode == CommunityPostViewMode.Cards)"
+                    aria-label="카드형으로 보기"
+                    title="카드형으로 보기"
+                    @onclick="@(() => ViewModeChanged.InvokeAsync(CommunityPostViewMode.Cards))">
+                <MudIcon Icon="@Icons.Material.Filled.GridView" Size="Size.Small" />
+            </button>
+        </div>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.Edit"
+                   OnClick="ComposeRequested">
+            글쓰기
+        </MudButton>
+    </header>
+
+    @if (ViewMode == CommunityPostViewMode.List)
+    {
+        <div class="platform-community-forum-table" role="table" aria-label="커뮤니티 글 목록">
+            <div class="platform-community-forum-row platform-community-forum-row--head" role="row">
+                <span role="columnheader">번호</span>
+                <span role="columnheader">분류</span>
+                <span role="columnheader">제목</span>
+                <span role="columnheader">글쓴이</span>
+                <span role="columnheader">작성일</span>
+                <span role="columnheader">추천</span>
+                <span role="columnheader">댓글</span>
+            </div>
+
+            @foreach (var post in Posts)
+            {
+                <div class="@BuildPostRowClass(post)" role="row">
+                    <span class="platform-community-forum-number" role="cell">@(post.IsOperatorPinned ? "공지" : post.IsSystemGenerated ? CommunitySystemPostDisplay.ShortLabel(post.SystemPostKind) : post.Id.ToString(CultureInfo.InvariantCulture))</span>
+                    <span class="platform-community-forum-category" role="cell">@post.Category</span>
+                    <span class="platform-community-forum-subject" role="cell">
+                        <button type="button"
+                                aria-expanded="@IsPostSelected(post)"
+                                @onclick="@(() => PostSelected.InvokeAsync(post))">
+                            @if (post.IsSystemGenerated)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Small" />
+                            }
+                            else if (post.IsOperatorPinned)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Campaign" Size="Size.Small" />
+                            }
+                            else if (post.IsTrending)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment" Size="Size.Small" />
+                            }
+                            else if (IsFoodVideoPost(post))
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.SmartDisplay" Size="Size.Small" />
+                            }
+                            <strong>@post.Title</strong>
+                            @if (post.SalesOffer is { } salesOffer)
+                            {
+                                <em class="platform-community-sales-label">@SalesStatusLabel(salesOffer.Status) · @FormatSalesPrice(salesOffer)</em>
+                            }
+                            @if (post.IsCommunityMomentumPromoted)
+                            {
+                                <em class="platform-community-momentum-label">@CommunityMomentumLabel(post.CommunityMomentumCode)</em>
+                            }
+                            @if (post.CommentCount > 0)
+                            {
+                                <b>[@post.CommentCount]</b>
+                            }
+                        </button>
+                        <small>@post.WorkflowTag · @post.RoleTag · @DisplayPostNickname(post)@FormatPostCountryInline(post) · @FormatForumDate(post.CreatedAtUtc)</small>
+                    </span>
+                    <span class="platform-community-forum-author" role="cell">
+                        <span>@DisplayPostNickname(post)</span>
+                        @if (HasPublicAuthorCountry(post))
+                        {
+                            <span class="platform-community-country" title="활동 국가: @post.AuthorDisplayCountryName">
+                                <b>@post.AuthorDisplayCountryCode</b>
+                                <span>@post.AuthorDisplayCountryName</span>
+                            </span>
+                        }
+                    </span>
+                    <time role="cell" datetime="@post.CreatedAtUtc.ToString("O", CultureInfo.InvariantCulture)">@FormatForumDate(post.CreatedAtUtc)</time>
+                    <span class="platform-community-forum-count platform-community-forum-count--recommendations" role="cell">@post.RecommendationCount</span>
+                    <span class="platform-community-forum-count platform-community-forum-count--comments" role="cell">@post.CommentCount</span>
+                </div>
+            }
+
+            @foreach (var post in SeedPosts)
+            {
+                <div class="@BuildSeedPostRowClass(post)" role="row">
+                    <span class="platform-community-forum-number platform-community-forum-number--recommended" role="cell">추천</span>
+                    <span class="platform-community-forum-category" role="cell">@post.Category</span>
+                    <span class="platform-community-forum-subject" role="cell">
+                        <button type="button"
+                                aria-expanded="@IsSeedPostSelected(post)"
+                                @onclick="@(() => SeedPostSelected.InvokeAsync(post))">
+                            <MudIcon Icon="@post.Icon" Size="Size.Small" />
+                            <strong>@post.Title</strong>
+                            @if (post.CommentCount > 0)
+                            {
+                                <b>[@post.CommentCount]</b>
+                            }
+                        </button>
+                        <small>홍달 추천 · @post.Category · @post.Author · @post.Meta</small>
+                    </span>
+                    <span class="platform-community-forum-author" role="cell">@post.Author</span>
+                    <span role="cell">@post.Meta</span>
+                    <span class="platform-community-forum-count platform-community-forum-count--recommendations" role="cell">@post.RecommendationCount</span>
+                    <span class="platform-community-forum-count platform-community-forum-count--comments" role="cell">@post.CommentCount</span>
+                </div>
+            }
+
+            @if (VisiblePostCount == 0)
+            {
+                <div class="platform-community-forum-empty" role="row">
+                    <MudIcon Icon="@Icons.Material.Filled.Inbox" />
+                    <span>조건에 맞는 글이 없습니다.</span>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="platform-community-forum-card-grid" aria-label="커뮤니티 글 카드 목록">
+            @foreach (var post in Posts)
+            {
+                <article class="@BuildPostCardClass(post)">
+                    <header>
+                        <span>@post.Category</span>
+                        <time datetime="@post.CreatedAtUtc.ToString("O", CultureInfo.InvariantCulture)">@FormatForumDate(post.CreatedAtUtc)</time>
+                    </header>
+                    <button type="button"
+                            class="platform-community-forum-card-title"
+                            aria-expanded="@IsPostSelected(post)"
+                            @onclick="@(() => PostSelected.InvokeAsync(post))">
+                        @if (post.IsSystemGenerated)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Small" />
+                        }
+                        else if (post.IsOperatorPinned)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Campaign" Size="Size.Small" />
+                        }
+                        else if (post.IsTrending)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment" Size="Size.Small" />
+                        }
+                        else if (IsFoodVideoPost(post))
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.SmartDisplay" Size="Size.Small" />
+                        }
+                        <strong>@post.Title</strong>
+                        @if (post.IsCommunityMomentumPromoted)
+                        {
+                            <em class="platform-community-momentum-label">@CommunityMomentumLabel(post.CommunityMomentumCode)</em>
+                        }
+                    </button>
+                    @if (post.SalesOffer is { } offer)
+                    {
+                        var thumbnail = post.Attachments.FirstOrDefault();
+                        <div class="platform-community-sales-summary">
+                            @if (thumbnail is not null)
+                            {
+                                <img src="@thumbnail.Url" alt="@($"{offer.ProductTitle} 썸네일")" />
+                            }
+                            else
+                            {
+                                <span class="platform-community-sales-summary__placeholder" aria-hidden="true">
+                                    <MudIcon Icon="@Icons.Material.Filled.Image" />
+                                </span>
+                            }
+                            <div>
+                                <span>@SalesStatusLabel(offer.Status) @(offer.AllowsGroupPurchase ? "· 공동구매 제안 가능" : string.Empty)</span>
+                                <strong>@offer.ProductTitle</strong>
+                                <small>@FormatSalesPrice(offer) / @offer.QuantityUnit · 남은 수량 @FormatSalesQuantity(offer.AvailableQuantity)@offer.QuantityUnit</small>
+                            </div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(post.Body))
+                    {
+                        <p>@PlatformCommunityPostPresentation.ResolveVisibleBody(post.Body)</p>
+                    }
+                    <footer>
+                        <span class="platform-community-forum-card-author">
+                            <span>@DisplayPostNickname(post)</span>
+                            @if (HasPublicAuthorCountry(post))
+                            {
+                                <span class="platform-community-country" title="작성자가 공개한 활동 국가">
+                                    <b>@post.AuthorDisplayCountryCode</b>
+                                    <span>@post.AuthorDisplayCountryName</span>
+                                </span>
+                            }
+                        </span>
+                        <span class="platform-community-forum-card-tags">@post.WorkflowTag · @post.RoleTag</span>
+                        <span class="platform-community-forum-card-metrics">
+                            <MudIcon Icon="@Icons.Material.Filled.ThumbUp" Size="Size.Small" /> @post.RecommendationCount
+                            <MudIcon Icon="@Icons.Material.Filled.ChatBubbleOutline" Size="Size.Small" /> @post.CommentCount
+                        </span>
+                    </footer>
+                </article>
+            }
+
+            @foreach (var post in SeedPosts)
+            {
+                <article class="@BuildSeedPostCardClass(post)">
+                    <header>
+                        <span>@post.Category</span>
+                        <span>@post.Meta</span>
+                    </header>
+                    <button type="button"
+                            class="platform-community-forum-card-title"
+                            aria-expanded="@IsSeedPostSelected(post)"
+                            @onclick="@(() => SeedPostSelected.InvokeAsync(post))">
+                        <MudIcon Icon="@post.Icon" Size="Size.Small" />
+                        <strong>@post.Title</strong>
+                    </button>
+                    <p>@post.Body</p>
+                    <footer>
+                        <span class="platform-community-forum-card-author">@post.Author</span>
+                        <span class="platform-community-forum-card-tags">홍달 추천</span>
+                        <span class="platform-community-forum-card-metrics">
+                            <MudIcon Icon="@Icons.Material.Filled.ThumbUp" Size="Size.Small" /> @post.RecommendationCount
+                            <MudIcon Icon="@Icons.Material.Filled.ChatBubbleOutline" Size="Size.Small" /> @post.CommentCount
+                        </span>
+                    </footer>
+                </article>
+            }
+
+            @if (VisiblePostCount == 0)
+            {
+                <div class="platform-community-forum-empty platform-community-forum-card-empty">
+                    <MudIcon Icon="@Icons.Material.Filled.Inbox" />
+                    <span>조건에 맞는 글이 없습니다.</span>
+                </div>
+            }
+        </div>
+    }
+
+    <footer class="platform-community-forum-footer">
+        <label>
+            <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+            <input type="search"
+                   aria-label="게시글 검색"
+                   placeholder="제목, 내용, 작성자 검색"
+                   value="@SearchText"
+                   @oninput="HandleSearchInput" />
+            @if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                <button type="button" title="검색어 지우기" aria-label="검색어 지우기" @onclick="ClearSearchAsync">
+                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                </button>
+            }
+        </label>
+        <span>게시글 제목을 누르면 본문과 업무 흐름을 확인할 수 있습니다.</span>
+    </footer>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public string BoardName { get; set; } = "전체";
+
+    [Parameter]
+    public IReadOnlyList<string> FilterOptions { get; set; } = [];
+
+    [Parameter]
+    public string SelectedFilter { get; set; } = "전체글";
+
+    [Parameter]
+    public EventCallback<string> SelectedFilterChanged { get; set; }
+
+    [Parameter]
+    public CommunityPostViewMode ViewMode { get; set; }
+
+    [Parameter]
+    public EventCallback<CommunityPostViewMode> ViewModeChanged { get; set; }
+
+    [Parameter]
+    public EventCallback ComposeRequested { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<PlatformCommunityPostResponse> Posts { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<CommunitySeedPost> SeedPosts { get; set; } = [];
+
+    [Parameter]
+    public int VisiblePostCount { get; set; }
+
+    [Parameter]
+    public long? SelectedPostId { get; set; }
+
+    [Parameter]
+    public string? SelectedSeedPostTitle { get; set; }
+
+    [Parameter]
+    public EventCallback<PlatformCommunityPostResponse> PostSelected { get; set; }
+
+    [Parameter]
+    public EventCallback<CommunitySeedPost> SeedPostSelected { get; set; }
+
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> SearchTextChanged { get; set; }
+
+    private bool IsPostSelected(PlatformCommunityPostResponse post)
+        => SelectedPostId == post.Id;
+
+    private bool IsSeedPostSelected(CommunitySeedPost post)
+        => string.Equals(SelectedSeedPostTitle, post.Title, StringComparison.Ordinal);
+
+    private string BuildFilterClass(string filter)
+        => string.Equals(SelectedFilter, filter, StringComparison.OrdinalIgnoreCase)
+            ? "platform-community-forum-view-tab platform-community-forum-view-tab--selected"
+            : "platform-community-forum-view-tab";
+
+    private string BuildViewModeClass(CommunityPostViewMode viewMode)
+        => ViewMode == viewMode
+            ? "platform-community-forum-display-button platform-community-forum-display-button--selected"
+            : "platform-community-forum-display-button";
+
+    private string BuildPostRowClass(PlatformCommunityPostResponse post)
+    {
+        var selected = IsPostSelected(post) ? " platform-community-forum-row--selected" : string.Empty;
+        var notice = post.IsOperatorPinned ? " platform-community-forum-row--notice" : string.Empty;
+        var completion = post.IsSystemGenerated ? " platform-community-forum-row--completion" : string.Empty;
+        var momentum = post.IsCommunityMomentumPromoted ? " platform-community-forum-row--momentum" : string.Empty;
+        return $"platform-community-forum-row{selected}{momentum}{notice}{completion}";
+    }
+
+    private string BuildSeedPostRowClass(CommunitySeedPost post)
+    {
+        var selected = IsSeedPostSelected(post) ? " platform-community-forum-row--selected" : string.Empty;
+        return $"platform-community-forum-row platform-community-forum-row--recommended{selected}";
+    }
+
+    private string BuildPostCardClass(PlatformCommunityPostResponse post)
+    {
+        var selected = IsPostSelected(post) ? " platform-community-forum-card--selected" : string.Empty;
+        var notice = post.IsOperatorPinned ? " platform-community-forum-card--notice" : string.Empty;
+        var completion = post.IsSystemGenerated ? " platform-community-forum-card--completion" : string.Empty;
+        var momentum = post.IsCommunityMomentumPromoted ? " platform-community-forum-card--momentum" : string.Empty;
+        return $"platform-community-forum-card{selected}{momentum}{notice}{completion}";
+    }
+
+    private string BuildSeedPostCardClass(CommunitySeedPost post)
+    {
+        var selected = IsSeedPostSelected(post) ? " platform-community-forum-card--selected" : string.Empty;
+        return $"platform-community-forum-card platform-community-forum-card--recommended{selected}";
+    }
+
+    private static string FormatForumDate(DateTime createdAtUtc)
+    {
+        var local = createdAtUtc.ToLocalTime();
+        var now = DateTime.Now;
+        if (local.Date == now.Date)
+        {
+            return local.ToString("HH:mm", CultureInfo.InvariantCulture);
+        }
+
+        return local.Year == now.Year
+            ? local.ToString("MM.dd", CultureInfo.InvariantCulture)
+            : local.ToString("yy.MM.dd", CultureInfo.InvariantCulture);
+    }
+
+    private static string FormatSalesPrice(PlatformCommunityPostSalesOfferResponse offer)
+        => string.Equals(offer.CurrencyCode, "KRW", StringComparison.OrdinalIgnoreCase)
+            ? $"{offer.UnitPrice:N0}원"
+            : $"{offer.CurrencyCode.ToUpperInvariant()} {offer.UnitPrice:N2}";
+
+    private static string FormatSalesQuantity(decimal quantity)
+        => quantity == decimal.Truncate(quantity)
+            ? quantity.ToString("N0", CultureInfo.CurrentCulture)
+            : quantity.ToString("N2", CultureInfo.CurrentCulture).TrimEnd('0').TrimEnd('.');
+
+    private static string SalesStatusLabel(string status)
+        => status switch
+        {
+            PlatformCommunitySalesOfferStatuses.SoldOut => "품절",
+            PlatformCommunitySalesOfferStatuses.Closed => "판매 종료",
+            _ => "판매 중"
+        };
+
+    private static string DisplayPostNickname(PlatformCommunityPostResponse post)
+        => IsReportPost(post) ? "익명 신고자" : post.Nickname;
+
+    private static bool HasPublicAuthorCountry(PlatformCommunityPostResponse post)
+        => post.IsAuthorDisplayCountryPublic
+           && !string.IsNullOrWhiteSpace(post.AuthorDisplayCountryCode)
+           && !string.IsNullOrWhiteSpace(post.AuthorDisplayCountryName)
+           && !IsReportPost(post);
+
+    private static string FormatPostCountryInline(PlatformCommunityPostResponse post)
+        => HasPublicAuthorCountry(post)
+            ? $" · 활동 국가 {post.AuthorDisplayCountryCode} {post.AuthorDisplayCountryName}"
+            : string.Empty;
+
+    private static bool IsReportPost(PlatformCommunityPostResponse post)
+        => post.IsReportBoardPost
+           || ContainsReportKeyword(post.Category);
+
+    private static bool IsFoodVideoPost(PlatformCommunityPostResponse post)
+        => post.Title.StartsWith("[음식 발견]", StringComparison.OrdinalIgnoreCase)
+           && IsYouTubeUrl(post.SharedLinkUrl);
+
+    private static bool IsYouTubeUrl(string? value)
+    {
+        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri))
+        {
+            return false;
+        }
+
+        var host = uri.Host.TrimStart('.');
+        return host.Equals("youtu.be", StringComparison.OrdinalIgnoreCase)
+               || host.Equals("youtube.com", StringComparison.OrdinalIgnoreCase)
+               || host.EndsWith(".youtube.com", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool ContainsReportKeyword(string? category)
+        => !string.IsNullOrWhiteSpace(category)
+           && (category.Contains("신고", StringComparison.OrdinalIgnoreCase)
+               || category.Contains("분쟁", StringComparison.OrdinalIgnoreCase)
+               || category.Contains("report", StringComparison.OrdinalIgnoreCase));
+
+    private static string CommunityMomentumLabel(string? code)
+        => code switch
+        {
+            CommunityPostMomentumCodes.ReadyForRealLedgerReview => "전환 검토 준비",
+            CommunityPostMomentumCodes.PartyForming => "참여팀 구성중",
+            _ => "역할 참여 모집"
+        };
+
+    private Task HandleSearchInput(ChangeEventArgs args)
+        => SearchTextChanged.InvokeAsync(args.Value?.ToString() ?? string.Empty);
+
+    private Task ClearSearchAsync()
+        => SearchTextChanged.InvokeAsync(string.Empty);
+}

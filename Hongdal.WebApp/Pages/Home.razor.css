@@ -1,0 +1,311 @@
+.role-experience {
+    --role-accent: #2563eb;
+    --role-soft: #eff6ff;
+    --role-border: rgba(37, 99, 235, 0.28);
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+.role-experience--global {
+    --role-accent: #0f766e;
+    --role-soft: #ecfdf5;
+    --role-border: rgba(15, 118, 110, 0.28);
+}
+
+.role-experience--shipper {
+    --role-accent: #176b4d;
+    --role-soft: #edf8f2;
+    --role-border: rgba(23, 107, 77, 0.28);
+}
+
+.role-experience--driver {
+    --role-accent: #176b87;
+    --role-soft: #eef8fb;
+    --role-border: rgba(23, 107, 135, 0.28);
+}
+
+.role-experience--warehouse {
+    --role-accent: #5f7f37;
+    --role-soft: #f2f7e9;
+    --role-border: rgba(95, 127, 55, 0.28);
+}
+
+.role-experience__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 8px 0 24px;
+}
+
+.role-experience__header > div > span,
+.role-experience__screens-heading > div > span,
+.role-experience__preview-label span,
+.role-experience__section-title span {
+    display: block;
+    color: var(--role-accent);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0;
+}
+
+.role-experience__header h1 {
+    margin: 6px 0 8px;
+    font-size: 2rem;
+    line-height: 1.2;
+    letter-spacing: 0;
+}
+
+.role-experience__header p,
+.role-experience__screens-heading p {
+    margin: 0;
+    color: #64748b;
+    line-height: 1.65;
+}
+
+.role-experience__selector {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    padding-bottom: 16px;
+    overflow-x: auto;
+}
+
+.role-experience__role-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 132px;
+    min-height: 56px;
+    padding: 10px 12px;
+    border: 1px solid #d8e0e8;
+    border-radius: 6px;
+    background: #fff;
+    color: #475569;
+    font: inherit;
+    font-weight: 700;
+    letter-spacing: 0;
+    cursor: pointer;
+}
+
+.role-experience__role-button:hover,
+.role-experience__role-button.is-selected {
+    border-color: var(--role-accent);
+    background: var(--role-soft);
+    color: var(--role-accent);
+}
+
+.role-experience__role-button:focus-visible,
+.role-experience__screen-link:focus-visible {
+    outline: 3px solid var(--role-border);
+    outline-offset: 2px;
+}
+
+.role-experience__workspace {
+    display: grid;
+    grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.1fr);
+    gap: 32px;
+    align-items: stretch;
+    padding: 28px 0;
+    border-top: 1px solid var(--role-border);
+    border-bottom: 1px solid var(--role-border);
+}
+
+.role-experience__preview {
+    position: relative;
+    min-height: 420px;
+    max-height: 540px;
+    overflow: hidden;
+    border: 1px solid var(--role-border);
+    border-radius: 8px;
+    background: var(--role-soft);
+}
+
+.role-experience__preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+}
+
+.role-experience__preview-label {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #0f172a;
+    backdrop-filter: blur(8px);
+}
+
+.role-experience__preview-label strong {
+    font-size: 1rem;
+    letter-spacing: 0;
+}
+
+.role-experience__screens {
+    min-width: 0;
+}
+
+.role-experience__screens-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 4px 0 20px;
+}
+
+.role-experience__screens-heading h2,
+.role-experience__section-title h2 {
+    margin: 5px 0 8px;
+    font-size: 1.45rem;
+    line-height: 1.3;
+    letter-spacing: 0;
+}
+
+.role-experience__screen-list {
+    border-top: 1px solid #dbe3ea;
+}
+
+.role-experience__screen-link {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto 24px;
+    gap: 12px;
+    align-items: center;
+    min-height: 84px;
+    padding: 12px 4px;
+    border-bottom: 1px solid #dbe3ea;
+    color: #0f172a;
+    text-decoration: none;
+}
+
+.role-experience__screen-link:hover {
+    background: var(--role-soft);
+}
+
+.role-experience__screen-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background: var(--role-soft);
+    color: var(--role-accent);
+}
+
+.role-experience__screen-copy {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.role-experience__screen-copy strong {
+    font-size: 0.95rem;
+    letter-spacing: 0;
+}
+
+.role-experience__screen-copy small {
+    overflow: hidden;
+    color: #64748b;
+    line-height: 1.45;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.role-experience__screen-meta {
+    display: grid;
+    justify-items: end;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.role-experience__screen-meta small {
+    color: #64748b;
+}
+
+.role-experience__screen-meta em {
+    color: var(--role-accent);
+    font-size: 0.72rem;
+    font-style: normal;
+    font-weight: 800;
+}
+
+.role-experience__community {
+    padding-top: 32px;
+}
+
+.role-experience__section-title {
+    margin-bottom: 16px;
+}
+
+@media (max-width: 980px) {
+    .role-experience__selector {
+        grid-template-columns: repeat(5, minmax(148px, 1fr));
+    }
+
+    .role-experience__workspace {
+        grid-template-columns: 1fr;
+    }
+
+    .role-experience__preview {
+        min-height: 360px;
+        max-height: 460px;
+    }
+}
+
+@media (max-width: 700px) {
+    .role-experience__header {
+        align-items: flex-start;
+        padding-bottom: 18px;
+    }
+
+    .role-experience__header h1 {
+        font-size: 1.7rem;
+    }
+
+    .role-experience__header p {
+        max-width: 34ch;
+    }
+
+    .role-experience__workspace {
+        gap: 22px;
+        padding: 20px 0;
+    }
+
+    .role-experience__preview {
+        aspect-ratio: 16 / 10;
+        min-height: 0;
+        max-height: none;
+    }
+
+    .role-experience__screens-heading {
+        display: grid;
+        gap: 16px;
+    }
+
+    .role-experience__screen-link {
+        grid-template-columns: 40px minmax(0, 1fr) 20px;
+        min-height: 78px;
+    }
+
+    .role-experience__screen-meta {
+        display: none;
+    }
+
+    .role-experience__screen-copy small {
+        white-space: normal;
+    }
+
+    .role-experience__preview-label {
+        display: none;
+    }
+}

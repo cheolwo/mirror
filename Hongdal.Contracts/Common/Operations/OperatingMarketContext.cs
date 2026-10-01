@@ -16,7 +16,8 @@ public static class OperatingMarketContextSourceCodes
 
 public sealed record OperatingMarketContextSnapshot(
     string MarketCode,
-    string SourceCode)
+    string SourceCode,
+    string TimeZoneId = OperatingTimeZoneIds.CoordinatedUniversal)
 {
     public OperatingMarketProfile Profile => OperatingMarketProfileCatalog.Get(MarketCode);
 }

@@ -1,0 +1,123 @@
+<section class="page-catalog-list" aria-labelledby="page-catalog-list-title">
+    <header>
+        <div>
+            <MudText Typo="Typo.overline">MANAGED ROUTES</MudText>
+            <MudText id="page-catalog-list-title" Typo="Typo.h6">관리 대상 페이지</MudText>
+        </div>
+        <MudChip T="string" Variant="Variant.Outlined">@Items.Count.ToString("N0")건</MudChip>
+    </header>
+
+    @if (Items.Count == 0)
+    {
+        <div class="page-catalog-list__empty">
+            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" />
+            <MudText Typo="Typo.body2">조건에 맞는 관리 페이지가 없습니다.</MudText>
+        </div>
+    }
+    else
+    {
+        <MudTable Items="Items"
+                  Dense="true"
+                  Hover="true"
+                  Elevation="0"
+                  RowsPerPage="10"
+                  Breakpoint="Breakpoint.Md"
+                  Class="page-catalog-table">
+            <HeaderContent>
+                <MudTh>앱·영역</MudTh>
+                <MudTh>페이지</MudTh>
+                <MudTh>실행·검토</MudTh>
+                <MudTh>검증</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate Context="managedPage">
+                <MudTd DataLabel="앱·영역">
+                    <strong>@managedPage.AppName</strong>
+                    <small>@managedPage.AreaName</small>
+                </MudTd>
+                <MudTd DataLabel="페이지">
+                    <strong>@managedPage.Title</strong>
+                    <code>@managedPage.RouteTemplate</code>
+                </MudTd>
+                <MudTd DataLabel="실행·검토">
+                    <div class="page-catalog-table__chips">
+                        <MudChip T="string" Size="Size.Small" Color="@ExecutionColor(managedPage.ExecutionMode)" Variant="Variant.Outlined">
+                            @ExecutionLabel(managedPage.ExecutionMode)
+                        </MudChip>
+                        <MudChip T="string" Size="Size.Small" Color="@ReviewColor(managedPage.ReviewState)" Variant="Variant.Outlined">
+                            @ReviewLabel(managedPage.ReviewState)
+                        </MudChip>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="검증">
+                    <div class="page-catalog-table__verification" aria-label="화면 검증 상태">
+                        <MudIcon Icon="@(managedPage.DesktopVerified ? Icons.Material.Filled.DesktopWindows : Icons.Material.Outlined.DesktopWindows)"
+                                 Color="@(managedPage.DesktopVerified ? Color.Success : Color.Default)"
+                                 Size="Size.Small" />
+                        <MudIcon Icon="@(managedPage.MobileVerified ? Icons.Material.Filled.PhoneAndroid : Icons.Material.Outlined.PhoneAndroid)"
+                                 Color="@(managedPage.MobileVerified ? Color.Success : Color.Default)"
+                                 Size="Size.Small" />
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="관리">
+                    <MudTooltip Text="페이지 관리 상세">
+                        <MudIconButton Icon="@(SelectedPageKey == managedPage.PageKey ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.ChevronRight)"
+                                       Color="@(SelectedPageKey == managedPage.PageKey ? Color.Primary : Color.Default)"
+                                       OnClick="@(() => Selected.InvokeAsync(managedPage.PageKey))"
+                                       aria-label="@($"{managedPage.Title} 관리 상세")" />
+                    </MudTooltip>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="PageSizeOptions"
+                               RowsPerPageString="페이지당 행"
+                               InfoFormat="{first_item}-{last_item} / {all_items}" />
+            </PagerContent>
+        </MudTable>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<AdminManagedPageSnapshot> Items { get; set; } = [];
+
+    [Parameter]
+    public string? SelectedPageKey { get; set; }
+
+    [Parameter]
+    public EventCallback<string> Selected { get; set; }
+
+    private static readonly int[] PageSizeOptions = [10, 20, 50];
+
+    private static string ExecutionLabel(AdminPageExecutionMode mode)
+        => mode switch
+        {
+            AdminPageExecutionMode.ReadOnly => "조회 전용",
+            AdminPageExecutionMode.Simulation => "Simulation",
+            _ => "운영 효과"
+        };
+
+    private static Color ExecutionColor(AdminPageExecutionMode mode)
+        => mode switch
+        {
+            AdminPageExecutionMode.ReadOnly => Color.Info,
+            AdminPageExecutionMode.Simulation => Color.Warning,
+            _ => Color.Error
+        };
+
+    private static string ReviewLabel(AdminPageReviewState state)
+        => state switch
+        {
+            AdminPageReviewState.Verified => "검증 완료",
+            AdminPageReviewState.Blocked => "차단",
+            _ => "검토 필요"
+        };
+
+    private static Color ReviewColor(AdminPageReviewState state)
+        => state switch
+        {
+            AdminPageReviewState.Verified => Color.Success,
+            AdminPageReviewState.Blocked => Color.Error,
+            _ => Color.Warning
+        };
+}

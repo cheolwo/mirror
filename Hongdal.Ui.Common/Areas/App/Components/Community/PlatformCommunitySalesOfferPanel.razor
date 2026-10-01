@@ -1,0 +1,148 @@
+@using System.Globalization
+@using Hongdal.Contracts.Common.Community
+
+@if (Post.SalesOffer is { } offer)
+{
+    var isOpen = string.Equals(offer.Status, PlatformCommunitySalesOfferStatuses.Open, StringComparison.OrdinalIgnoreCase);
+    var thumbnail = Post.Attachments.FirstOrDefault();
+
+    <section class="community-sales-offer @(isOpen ? string.Empty : "is-closed")" aria-label="판매 상품 정보">
+        <div class="community-sales-offer__media">
+            @if (thumbnail is not null)
+            {
+                <img src="@thumbnail.Url" alt="@($"{offer.ProductTitle} 썸네일")" />
+            }
+            else
+            {
+                <span aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Image" /></span>
+                <small>첫 사진이<br />썸네일이 됩니다</small>
+            }
+        </div>
+
+        <div class="community-sales-offer__body">
+            <header>
+                <div>
+                    <span class="community-sales-offer__status">@SalesStatusLabel(offer.Status)</span>
+                    @if (offer.AllowsGroupPurchase)
+                    {
+                        <span class="community-sales-offer__group">공동구매 제안 가능</span>
+                    }
+                </div>
+                <strong>@offer.ProductTitle</strong>
+            </header>
+
+            <div class="community-sales-offer__price">
+                <strong>@FormatPrice(offer.UnitPrice, offer.CurrencyCode)</strong>
+                <span>/ @offer.QuantityUnit</span>
+                <small>남은 수량 @FormatQuantity(offer.AvailableQuantity)@offer.QuantityUnit</small>
+            </div>
+
+            <div class="community-sales-offer__methods" aria-label="판매자가 제시한 결제 방법">
+                @foreach (var method in offer.AcceptedPaymentMethods)
+                {
+                    <span>@PaymentMethodLabel(method)</span>
+                }
+            </div>
+
+            @if (isOpen)
+            {
+                <div class="community-sales-offer__inquiry">
+                    <MudNumericField T="decimal"
+                                     Label="희망 수량"
+                                     @bind-Value="inquiryQuantity"
+                                     Min="@((decimal)0.01)"
+                                     Max="@offer.AvailableQuantity"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                    <MudSelect T="string"
+                               Label="희망 결제"
+                               @bind-Value="selectedPaymentMethod"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var method in offer.AcceptedPaymentMethods)
+                        {
+                            <MudSelectItem Value="@method">@PaymentMethodLabel(method)</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.ChatBubbleOutline"
+                               OnClick="SendInquiryAsync">
+                        구매 문의 남기기
+                    </MudButton>
+                </div>
+            }
+
+            <p class="community-sales-offer__notice">
+                댓글로 수량·수령·결제 조건을 합의하세요. 플랫폼 결제 연결 여부는 주문 확정 전에 다시 확인하며,
+                당사자 간 현금 거래는 플랫폼이 지급·수령을 보증하지 않습니다.
+            </p>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public PlatformCommunityPostResponse Post { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<string> InquiryRequested { get; set; }
+
+    private decimal inquiryQuantity = 1;
+    private string selectedPaymentMethod = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        if (Post.SalesOffer is not { } offer)
+        {
+            return;
+        }
+
+        inquiryQuantity = Math.Clamp(inquiryQuantity, 0.01m, offer.AvailableQuantity);
+        if (!offer.AcceptedPaymentMethods.Contains(selectedPaymentMethod, StringComparer.OrdinalIgnoreCase))
+        {
+            selectedPaymentMethod = offer.AcceptedPaymentMethods.FirstOrDefault()
+                                    ?? PlatformCommunitySalesPaymentMethodCodes.DirectCash;
+        }
+    }
+
+    private Task SendInquiryAsync()
+    {
+        if (Post.SalesOffer is not { } offer)
+        {
+            return Task.CompletedTask;
+        }
+
+        var message = $"[구매 문의] {offer.ProductTitle} {FormatQuantity(inquiryQuantity)}{offer.QuantityUnit}, "
+                    + $"희망 결제: {PaymentMethodLabel(selectedPaymentMethod)}. 수령 방법과 최종 조건을 이야기하고 싶습니다.";
+        return InquiryRequested.InvokeAsync(message);
+    }
+
+    private static string FormatPrice(decimal amount, string currencyCode)
+        => string.Equals(currencyCode, "KRW", StringComparison.OrdinalIgnoreCase)
+            ? $"{amount:N0}원"
+            : $"{currencyCode.ToUpperInvariant()} {amount:N2}";
+
+    private static string FormatQuantity(decimal quantity)
+        => quantity == decimal.Truncate(quantity)
+            ? quantity.ToString("N0", CultureInfo.CurrentCulture)
+            : quantity.ToString("N2", CultureInfo.CurrentCulture).TrimEnd('0').TrimEnd('.');
+
+    private static string SalesStatusLabel(string status)
+        => status switch
+        {
+            PlatformCommunitySalesOfferStatuses.SoldOut => "품절",
+            PlatformCommunitySalesOfferStatuses.Closed => "판매 종료",
+            _ => "판매 중"
+        };
+
+    public static string PaymentMethodLabel(string method)
+        => method switch
+        {
+            PlatformCommunitySalesPaymentMethodCodes.TossPayments => "토스결제",
+            PlatformCommunitySalesPaymentMethodCodes.NaverPay => "네이버페이",
+            PlatformCommunitySalesPaymentMethodCodes.PayPal => "PayPal",
+            PlatformCommunitySalesPaymentMethodCodes.DirectCash => "당사자 간 현금",
+            _ => method
+        };
+}

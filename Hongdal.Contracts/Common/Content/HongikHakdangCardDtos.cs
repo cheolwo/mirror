@@ -14,7 +14,9 @@ public sealed record HongikHakdangCardDto(
     string? ImageSha256,
     bool IsActive,
     DateTime LastSeenAtUtc,
-    int SortOrder);
+    int SortOrder,
+    bool IsAdminEnabled = true,
+    bool IsCommunityPublicationApproved = false);
 
 public sealed record HongikHakdangCardCollectionDto(
     long Id,
@@ -23,7 +25,22 @@ public sealed record HongikHakdangCardCollectionDto(
     int SortOrder,
     bool IsActive,
     DateTime LastSeenAtUtc,
-    IReadOnlyList<HongikHakdangCardDto> Cards);
+    IReadOnlyList<HongikHakdangCardDto> Cards,
+    bool IsAdminEnabled = true);
+
+public sealed record HongikHakdangCardActivationUpdateRequest(bool Enabled);
+
+public sealed record HongikHakdangCardActivationUpdateResponse(
+    long Id,
+    bool Enabled,
+    string Message);
+
+public sealed record HongikHakdangCardCommunityPublicationUpdateRequest(bool Approved);
+
+public sealed record HongikHakdangCardCommunityPublicationUpdateResponse(
+    long Id,
+    bool Approved,
+    string Message);
 
 public sealed record HongikHakdangCardSyncResultDto(
     bool Executed,

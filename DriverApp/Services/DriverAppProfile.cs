@@ -5,7 +5,7 @@ namespace DriverApp.Services;
 public sealed class DriverAppProfile
 {
     public string AppKey { get; } = 기사앱식별자.CargoYongdalDriverApp;
-    public string DisplayName { get; } = "홍달 화물/용달기사";
+    public string DisplayName { get; } = "살뜰 기사";
     public string DriverRole { get; } = "화물/용달기사";
     public string DriverDomain { get; } = 기사도메인구분.화물용달;
     public string PrimaryWorkType { get; } = 기사업무유형코드.용달운송;

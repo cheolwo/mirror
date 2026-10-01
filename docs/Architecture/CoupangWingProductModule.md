@@ -33,7 +33,7 @@
 
 ## 구현 방향
 
-현재 구현은 `ShipperApp.Services.Commerce.Coupang` 아래에 외부 API 어댑터로 둔다.
+현재 구현은 `HongdalApp.Services.Commerce.Coupang` 아래에 외부 API 어댑터로 둔다.
 
 - `ICoupangWingProductClient`: 상품 생성, 조회, 수정, 부분수정, 삭제 클라이언트 계약
 - `CoupangWingProductClient`: 쿠팡 WING 상품 엔드포인트 호출 구현

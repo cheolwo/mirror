@@ -358,7 +358,7 @@ public sealed partial class 백오피스메모리Service : I백오피스Service
             공동구매분배책임코드 = "Driver",
             픽업_도로명주소 = "평택항 보세구역",
             픽업_상세주소 = "반출 대기장",
-            하차_도로명주소 = "홍달아파트",
+            하차_도로명주소 = "살뜰아파트",
             하차_상세주소 = "101동 세대배송",
             상태 = "대기",
             CreatedAt = now.AddMinutes(-40),
@@ -394,7 +394,7 @@ public sealed partial class 백오피스메모리Service : I백오피스Service
         _transportEvents.Add(new 운송이벤트로그응답 { Id = 1, 의뢰Id = "REQ-2026-001", 이벤트타입 = "상차완료", 이벤트시각 = now.AddHours(-1), 메타데이터 = "{}" });
         _transportEvents.Add(new 운송이벤트로그응답 { Id = 2, 의뢰Id = "REQ-2026-003", 이벤트타입 = "인수완료", 이벤트시각 = now.AddDays(-1).AddHours(4), 메타데이터 = "{\"receipt\":\"created\"}" });
         _transportEvents.Add(new 운송이벤트로그응답 { Id = 3, 의뢰Id = "TR-101", 이벤트타입 = "운송예외신고", 이벤트시각 = now.AddMinutes(-12), 메타데이터 = "{\"stage\":\"상차\",\"exceptionCode\":\"CargoMismatch\",\"reason\":\"상차지 도착 후 실제 수량이 의뢰 수량과 다릅니다.\",\"adminReviewRequired\":true}" });
-        _companies.Add(new 업체관리응답 { Id = 1, 업체명 = "홍달물류", 상태 = "거래중", 대표연락처 = "02-1234-5678", 담당자 = "김담당", 이메일 = "biz@example.com", 주소 = "서울", 정산결제조건 = "월말", 등록일 = now });
+        _companies.Add(new 업체관리응답 { Id = 1, 업체명 = "살뜰물류", 상태 = "거래중", 대표연락처 = "02-1234-5678", 담당자 = "김담당", 이메일 = "biz@example.com", 주소 = "서울", 정산결제조건 = "월말", 등록일 = now });
         _companies.Add(new 업체관리응답 { Id = 2, 업체명 = "달빛상사", 상태 = "심사중", 대표연락처 = "032-555-0000", 담당자 = "이담당", 이메일 = "moon@example.com", 주소 = "인천", 정산결제조건 = "선결제", 등록일 = now.AddDays(-3) });
         _shippers.Add(new 화주관리응답 { 화주Id = "SHIP-001", 사용자명 = "화주A", 이메일 = "shipper@example.com", 연락처 = "010-2222-3333", 의뢰건수 = 5, 최근의뢰일시 = now, 거래상태 = "거래중" });
         _shippers.Add(new 화주관리응답 { 화주Id = "SHIP-002", 사용자명 = "화주B", 이메일 = "shipper-b@example.com", 연락처 = "010-5555-6666", 의뢰건수 = 1, 최근의뢰일시 = now.AddHours(-2), 거래상태 = "신규" });
@@ -417,7 +417,7 @@ public sealed partial class 백오피스메모리Service : I백오피스Service
 
         var contentRequest = new 관리자공통콘텐츠저장요청
         {
-            제목 = "홍달 소개 영상",
+            제목 = "살뜰 소개 영상",
             설명 = "결제 전 혜택 안내 콘텐츠",
             콘텐츠유형 = 계약홍달콘텐츠유형.영상링크,
             영상Url = "https://example.invalid/hongdal-intro",

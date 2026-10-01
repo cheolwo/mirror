@@ -1,0 +1,118 @@
+.comparison-summary {
+    min-width: 0;
+    display: grid;
+    gap: 12px;
+}
+
+.comparison-summary > header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.comparison-summary > header div {
+    display: grid;
+    gap: 2px;
+}
+
+.comparison-summary > header span,
+.comparison-summary > header small,
+.comparison-summary__country > span,
+.comparison-summary__country > p {
+    color: #64748b;
+    font-size: 0.74rem;
+}
+
+.comparison-summary > header span {
+    color: #0f766e;
+    font-weight: 800;
+}
+
+.comparison-summary__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid #cbd5e1;
+    border-bottom: 1px solid #cbd5e1;
+}
+
+.comparison-summary__country {
+    min-width: 0;
+    display: grid;
+    gap: 5px;
+    padding: 14px 16px;
+    border-left: 3px solid #16865d;
+}
+
+.comparison-summary__country + .comparison-summary__country {
+    border-left-width: 1px;
+    border-left-color: #d8dee8;
+}
+
+.comparison-summary__country--us {
+    box-shadow: inset 3px 0 #b91c1c;
+}
+
+.comparison-summary__country--au {
+    box-shadow: inset 3px 0 #0369a1;
+}
+
+.comparison-summary__country-header {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.comparison-summary__country-header > span {
+    color: #475569;
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+
+.comparison-summary__country-header > small {
+    min-width: 0;
+    margin-left: auto;
+    color: #64748b;
+    font-size: 0.68rem;
+    text-align: right;
+}
+
+.comparison-summary__value {
+    min-height: 24px;
+    overflow-wrap: anywhere;
+    color: #172033;
+    font-size: 1rem;
+}
+
+.comparison-summary__country > p {
+    margin: 2px 0 0;
+    line-height: 1.4;
+}
+
+@media (max-width: 760px) {
+    .comparison-summary > header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .comparison-summary__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .comparison-summary__country + .comparison-summary__country {
+        border-top: 1px solid #d8dee8;
+        border-left-width: 3px;
+    }
+
+    .comparison-summary__country--us {
+        border-left-color: #b91c1c !important;
+        box-shadow: none;
+    }
+
+    .comparison-summary__country--au {
+        border-left-color: #0369a1 !important;
+        box-shadow: none;
+    }
+}

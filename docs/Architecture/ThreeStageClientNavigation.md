@@ -256,7 +256,7 @@ DiagramNodeAction
 2. 2단계 다이어그램 종류와 노드 관계
 3. 각 노드 행동에서 열리는 3단계 데이터 페이지
 
-`ShipperApp`, `WarehouseManagerApp`, `DriverApp` 같은 프로젝트별 카탈로그는 코드 위치와 라우트를 찾는 물리 색인으로 유지한다. 프로젝트가 다르다는 이유만으로 사용자에게 별도 앱처럼 설명하지 않는다.
+`HongdalApp`, `WarehouseManagerApp`, `DriverApp` 같은 프로젝트별 카탈로그는 코드 위치와 라우트를 찾는 물리 색인으로 유지한다. 프로젝트가 다르다는 이유만으로 사용자에게 별도 앱처럼 설명하지 않는다.
 
 새 화면 README에는 가능한 경우 다음을 기록한다.
 

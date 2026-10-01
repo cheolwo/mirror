@@ -1,0 +1,292 @@
+@page "/community/decorations"
+@using Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Ui.Common.Areas.App.Services
+@inject PlatformCommunityDecorationStateService DecorationState
+@inject NavigationManager Navigation
+
+<PageTitle>꾸미기 상점 · Hongdal</PageTitle>
+
+<main class="decoration-market">
+    <header class="decoration-market__hero">
+        <button type="button" class="decoration-market__back" @onclick="@(() => Navigation.NavigateTo(ShipperRoutes.Home))">
+            <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+            커뮤니티
+        </button>
+        <div class="decoration-market__hero-copy">
+            <span>COMMUNITY MAKER SHOP</span>
+            <h1>꾸미기 상점</h1>
+            <p>개인 홈 테마부터 시장별 이야기와 표식을 담은 전통시장 팩, 괘상·노드·전환 장면까지 한곳에서 만나보세요.</p>
+        </div>
+        <div class="decoration-market__summary">
+            <span><b>@GeneralClientProducts.Count</b>개 상품</span>
+            <span><b>@OwnedProductCount</b>개 보유</span>
+        </div>
+        <div class="decoration-market__hero-actions">
+            <button type="button" class="decoration-market__create" @onclick="OpenMaker">
+                <MudIcon Icon="@Icons.Material.Filled.AddPhotoAlternate" Size="Size.Small" />
+                내 꾸미기 만들기
+            </button>
+            <button type="button" class="decoration-market__create decoration-market__create--designer" @onclick="OpenThemeSubmit">
+                <MudIcon Icon="@Icons.Material.Filled.DesignServices" Size="Size.Small" />
+                디자이너 패키지 등록
+            </button>
+        </div>
+    </header>
+
+    <nav class="decoration-market__types" aria-label="꾸미기 상품 종류">
+        <button type="button" class="@(activeType == AllType ? "is-active" : null)" @onclick="@(() => activeType = AllType)">
+            <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" />
+            전체
+        </button>
+        <button type="button" class="@(activeType == HomeThemeType ? "is-active" : null)" @onclick="@(() => activeType = HomeThemeType)">
+            <MudIcon Icon="@Icons.Material.Filled.HomeRepairService" Size="Size.Small" />
+            홈 테마
+        </button>
+        <button type="button" class="@(activeType == ScriptureType ? "is-active" : null)" @onclick="@(() => activeType = ScriptureType)">
+            <MudIcon Icon="@Icons.Material.Filled.AutoStories" Size="Size.Small" />
+            경전·고전 팩
+        </button>
+        <button type="button" class="@(activeType == MarketThemeType ? "is-active" : null)" @onclick="@(() => activeType = MarketThemeType)">
+            <MudIcon Icon="@Icons.Material.Filled.Storefront" Size="Size.Small" />
+            전통시장 팩
+        </button>
+        <button type="button" class="@(activeType == AssetType ? "is-active" : null)" @onclick="@(() => activeType = AssetType)">
+            <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Small" />
+            노드·괘상
+        </button>
+        <button type="button" class="@(activeType == MotionType ? "is-active" : null)" @onclick="@(() => activeType = MotionType)">
+            <MudIcon Icon="@Icons.Material.Filled.Animation" Size="Size.Small" />
+            애니메이션
+        </button>
+    </nav>
+
+    <nav class="decoration-market__tabs" aria-label="꾸미기 상품 출처">
+        <button type="button" class="@(activeTab == PlatformTab ? "is-active" : null)" @onclick="@(() => activeTab = PlatformTab)">
+            <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Small" />
+            플랫폼 기본
+        </button>
+        <button type="button" class="@(activeTab == CreatorTab ? "is-active" : null)" @onclick="@(() => activeTab = CreatorTab)">
+            <MudIcon Icon="@Icons.Material.Filled.Palette" Size="Size.Small" />
+            크리에이터
+        </button>
+        <button type="button" class="@(activeTab == OwnedTab ? "is-active" : null)" @onclick="@(() => activeTab = OwnedTab)">
+            <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" />
+            내 보유
+        </button>
+    </nav>
+
+    <section class="decoration-market__section">
+        <div class="decoration-market__heading">
+            <div>
+                <span>@CurrentEyebrow</span>
+                <h2>@CurrentTitle</h2>
+            </div>
+            <small>@($"{VisibleProducts.Count}개 상품")</small>
+        </div>
+
+        @if (VisibleProducts.Count == 0)
+        {
+            <div class="decoration-market__empty">
+                <MudIcon Icon="@Icons.Material.Filled.ShoppingBag" />
+                <strong>이 조건에 맞는 상품이 없습니다.</strong>
+                <p>다른 상품 종류를 선택하거나 크리에이터 탭에서 새 패키지를 살펴보세요.</p>
+            </div>
+        }
+        else
+        {
+            <div class="decoration-market__grid">
+                @foreach (var product in VisibleProducts)
+                {
+                    <article class="decoration-market-card">
+                        <div class="decoration-market-card__preview" style="@($"--product-accent: {ProductAccent(product)};")">
+                            @if (product.HomeTheme is { } theme)
+                            {
+                                <HongdalHomeNavigatorThemePreview Theme="@theme" Title="@product.Title" Compact="true" />
+                            }
+                            else if (product.TraditionalMarketTheme is { } marketTheme)
+                            {
+                                <TraditionalMarketThemePreview Theme="marketTheme" Title="@product.Title" Compact="true" />
+                            }
+                            else if (product.BaguaMotion is { } motion)
+                            {
+                                <BaguaMotionPackPreview Manifest="@motion" Title="@product.Title" Compact="true" />
+                            }
+                            else
+                            {
+                                @foreach (var asset in product.Assets.Take(4))
+                                {
+                                    @if (asset.NodeSticker is not null)
+                                    {
+                                        <img src="@asset.NodeSticker.이미지Url" alt="@asset.NodeSticker.대체Text" />
+                                    }
+                                    else
+                                    {
+                                        <span>@asset.PreviewSymbol</span>
+                                    }
+                                }
+                            }
+                            <em>@ProductTypeLabel(product)</em>
+                            @if (DecorationState.IsProductActive(product))
+                            {
+                                <strong class="decoration-market-card__state">현재 적용 중</strong>
+                            }
+                            else if (DecorationState.IsProductOwned(product))
+                            {
+                                <strong class="decoration-market-card__state">보유 중</strong>
+                            }
+                        </div>
+                        <div class="decoration-market-card__copy">
+                            <span class="decoration-market-card__creator">
+                                @(product.ScriptureSource is not null
+                                    ? "강의 연결 테마"
+                                    : product.IsTraditionalMarketTheme
+                                        ? product.CreatorName
+                                        : IsPlatformProduct(product) ? "플랫폼 기본" : product.CreatorName)
+                            </span>
+                            <strong>@product.Title</strong>
+                            <p>@product.Summary</p>
+                            @if (product.ScriptureSource is { } scriptureSource)
+                            {
+                                <small class="decoration-market-card__scripture">
+                                    <b>@scriptureSource.Symbol</b>
+                                    @($"{scriptureSource.TraditionLabel} · {scriptureSource.ScriptureTitle} · 재생목록 {scriptureSource.Playlists.Count}개")
+                                </small>
+                            }
+                            else if (product.HomeTheme is { } manifest)
+                            {
+                                <small>@($"{manifest.RendererProfile} · {manifest.Slots.Count}개 슬롯 · v{manifest.Version}")</small>
+                            }
+                            else if (product.TraditionalMarketTheme is { } marketManifest)
+                            {
+                                <small>@($"{marketManifest.MarketName} · {marketManifest.Slots.Count}개 표식 · 상인회 {marketManifest.AssociationApprovalStatus}")</small>
+                            }
+                            else if (product.BaguaMotion is { } motion)
+                            {
+                                <small>@($"{motion.CharacterLabel} · 125개 중 {motion.CoveredPerspectiveSlotCount}개 슬롯 · v{motion.Version}")</small>
+                            }
+                            <div>
+                                <b>@FormatPrice(product)</b>
+                                <button type="button" @onclick="@(() => OpenDetail(product))">
+                                    상세 보기 <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+</main>
+
+@code {
+    private const string PlatformTab = "platform";
+    private const string CreatorTab = "creator";
+    private const string OwnedTab = "owned";
+    private const string AllType = "all";
+    private const string HomeThemeType = "home-theme";
+    private const string ScriptureType = "scripture";
+    private const string MarketThemeType = "market-theme";
+    private const string AssetType = "asset";
+    private const string MotionType = "motion";
+
+    private string activeTab = PlatformTab;
+    private string activeType = AllType;
+
+    private IReadOnlyList<CommunityDecorationProduct> VisibleProducts
+    {
+        get
+        {
+            var bySource = activeTab switch
+            {
+                CreatorTab => GeneralClientProducts.Where(product => !IsPlatformProduct(product) && !product.IsCustom),
+                OwnedTab => GeneralClientProducts.Where(DecorationState.IsProductOwned),
+                _ => GeneralClientProducts.Where(IsPlatformCuratedProduct)
+            };
+
+            return activeType switch
+            {
+                HomeThemeType => bySource.Where(product => product.IsHomeTheme).ToArray(),
+                ScriptureType => bySource.Where(product => product.ScriptureSource is not null).ToArray(),
+                MarketThemeType => bySource.Where(product => product.IsTraditionalMarketTheme).ToArray(),
+                AssetType => bySource.Where(product => !product.IsHomeTheme && !product.IsTraditionalMarketTheme && !product.IsBaguaMotion).ToArray(),
+                MotionType => bySource.Where(product => product.IsBaguaMotion).ToArray(),
+                _ => bySource.ToArray()
+            };
+        }
+    }
+
+    private IReadOnlyList<CommunityDecorationProduct> GeneralClientProducts
+        => DecorationState.Products
+            .Where(HongdalClientContentPolicy.IsVisibleToGeneralClient)
+            .ToArray();
+
+    private int OwnedProductCount
+        => GeneralClientProducts.Count(DecorationState.IsProductOwned);
+
+    private string CurrentEyebrow => activeType switch
+    {
+        ScriptureType => "SCRIPTURE & CLASSICS LINK PACKS",
+        MarketThemeType => "LOCAL MARKET DESIGN PACKS",
+        _ => activeTab switch
+        {
+            CreatorTab => "CREATOR MARKET",
+            OwnedTab => "MY LIBRARY",
+            _ => "HONGDAL ORIGINAL"
+        }
+    };
+
+    private string CurrentTitle => activeType switch
+    {
+        ScriptureType => "경전과 고전에서 영감을 받은 꾸미기",
+        MarketThemeType => "시장과 디자이너가 함께 만든 지역별 표식",
+        _ => activeTab switch
+        {
+            CreatorTab => "디자이너가 만든 완성형 패키지",
+            OwnedTab => "내가 사용할 수 있는 꾸미기",
+            _ => "플랫폼에서 제공하는 기본 꾸미기"
+        }
+    };
+
+    private void OpenDetail(CommunityDecorationProduct product)
+        => Navigation.NavigateTo(ShipperRoutes.CommunityDecorationDetailFor(product.Key));
+
+    private void OpenMaker()
+        => Navigation.NavigateTo(ShipperRoutes.CommunityDecorationCreate);
+
+    private void OpenThemeSubmit()
+        => Navigation.NavigateTo(ShipperRoutes.CommunityDecorationThemeSubmit);
+
+    private static bool IsPlatformProduct(CommunityDecorationProduct product)
+        => product.CreatorName.StartsWith("Hongdal", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsPlatformCuratedProduct(CommunityDecorationProduct product)
+        => IsPlatformProduct(product)
+           || product.TraditionalMarketTheme?.IsOfficiallyApplicable == true;
+
+    private static string ProductTypeLabel(CommunityDecorationProduct product)
+        => product.ScriptureSource is not null
+            ? "경전·고전 팩"
+            : product.Target switch
+            {
+                CommunityDecorationTarget.HomeNavigatorTheme => "홈 테마",
+                CommunityDecorationTarget.TraditionalMarketTheme => "전통시장 팩",
+                CommunityDecorationTarget.Bagua => "괘상",
+                CommunityDecorationTarget.DiagramNode => "노드 이미지",
+                CommunityDecorationTarget.BaguaTransitionMotion => "전환 애니메이션",
+                _ => "꾸미기"
+            };
+
+    private static string ProductAccent(CommunityDecorationProduct product)
+        => product.HomeTheme?.AccentColor
+           ?? product.TraditionalMarketTheme?.AccentColor
+           ?? product.BaguaMotion?.AccentColor
+           ?? product.Assets.FirstOrDefault()?.AccentColor
+           ?? "#2563eb";
+
+    private static string FormatPrice(CommunityDecorationProduct product)
+        => product.IsFree
+            ? "무료"
+            : product.CurrencyCode.Equals("KRW", StringComparison.OrdinalIgnoreCase)
+                ? $"₩{product.PriceAmount:N0}"
+                : $"{product.PriceAmount:N2} {product.CurrencyCode}";
+}

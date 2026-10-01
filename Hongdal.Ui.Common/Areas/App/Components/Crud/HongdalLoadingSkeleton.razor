@@ -1,0 +1,60 @@
+@implements IDisposable
+@namespace Hongdal.Ui.Common.Areas.App.Components.Crud
+
+@if (_visible)
+{
+    <div class="hongdal-loading-skeleton"
+         style="--hongdal-skeleton-columns: @Math.Max(1, Columns)"
+         role="progressbar"
+         aria-label="목록을 불러오는 중">
+        @for (var row = 0; row < Math.Max(1, Rows); row++)
+        {
+            <div class="hongdal-loading-skeleton__row">
+                @for (var column = 0; column < Math.Max(1, Columns); column++)
+                {
+                    <MudSkeleton SkeletonType="SkeletonType.Text"
+                                 Width="100%"
+                                 Height="24px"
+                                 Animation="Animation.Wave" />
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private readonly CancellationTokenSource _delayCancellation = new();
+    private bool _visible;
+
+    [Parameter]
+    public int Rows { get; set; } = 5;
+
+    [Parameter]
+    public int Columns { get; set; } = 5;
+
+    [Parameter]
+    public int DelayMilliseconds { get; set; } = 180;
+
+    protected override void OnInitialized()
+        => _ = ShowAfterDelayAsync();
+
+    public void Dispose()
+    {
+        _delayCancellation.Cancel();
+        _delayCancellation.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    private async Task ShowAfterDelayAsync()
+    {
+        try
+        {
+            await Task.Delay(Math.Max(0, DelayMilliseconds), _delayCancellation.Token);
+            _visible = true;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+}

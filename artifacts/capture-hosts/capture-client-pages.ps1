@@ -344,35 +344,35 @@ function Invoke-PageCapture {
 
 $hosts = @(
     @{
-        App = "ShipperApp"
+        App = "HongdalApp"
         Project = "artifacts\capture-hosts\ShipperSourceCaptureHost\ShipperSourceCaptureHost.csproj"
         Dll = "artifacts\capture-hosts\ShipperSourceCaptureHost\bin\Debug\net10.0\ShipperSourceCaptureHost.dll"
         Port = 5211
         Pages = @(
-            @{ Id = "ShipperApp-P01"; Path = "/shipper" },
-            @{ Id = "ShipperApp-P01-1"; Path = "/shipper/settings/profile" },
-            @{ Id = "ShipperApp-P01-2"; Path = "/shipper/settings/views" },
-            @{ Id = "ShipperApp-P01-3"; Path = "/shipper/public-cargo" },
-            @{ Id = "ShipperApp-P01-4"; Path = "/shipper/exploration/inbox" },
-            @{ Id = "ShipperApp-P02"; Path = "/shipper/request" },
-            @{ Id = "ShipperApp-P02-1"; Path = "/shipper/request/bulk" },
-            @{ Id = "ShipperApp-P02-2"; Path = "/dispatch/address-form" },
-            @{ Id = "ShipperApp-P03"; Path = "/shipper/request/SHP-1001" },
-            @{ Id = "ShipperApp-P04"; Path = "/shipper/inbound/dashboard" },
-            @{ Id = "ShipperApp-P04-1"; Path = "/shipper/inbound/requests" },
-            @{ Id = "ShipperApp-P05"; Path = "/shipper/warehouse/workspace" },
-            @{ Id = "ShipperApp-P05-1"; Path = "/shipper/warehouse/inventory" },
-            @{ Id = "ShipperApp-P05-2"; Path = "/shipper/warehouse/scan" },
-            @{ Id = "ShipperApp-P05-3"; Path = "/shipper/warehouse/work/inbound" },
-            @{ Id = "ShipperApp-P06"; Path = "/shipper/sales/channels" },
-            @{ Id = "ShipperApp-P06-1"; Path = "/shipper/sales/listings" },
-            @{ Id = "ShipperApp-P06-2"; Path = "/shipper/sales/orders" },
-            @{ Id = "ShipperApp-P07"; Path = "/shipper/international/fcl-lcl" },
-            @{ Id = "ShipperApp-P07-1"; Path = "/shipper/customs/hs-reviews" },
-            @{ Id = "ShipperApp-P08"; Path = "/shipper/reconsignment/orders" },
-            @{ Id = "ShipperApp-P90"; Path = "/weather" },
-            @{ Id = "ShipperApp-P91"; Path = "/counter" },
-            @{ Id = "ShipperApp-P99"; Path = "/not-found" }
+            @{ Id = "HongdalApp-P01"; Path = "/shipper" },
+            @{ Id = "HongdalApp-P01-1"; Path = "/shipper/settings/profile" },
+            @{ Id = "HongdalApp-P01-2"; Path = "/shipper/settings/views" },
+            @{ Id = "HongdalApp-P01-3"; Path = "/shipper/public-cargo" },
+            @{ Id = "HongdalApp-P01-4"; Path = "/shipper/exploration/inbox" },
+            @{ Id = "HongdalApp-P02"; Path = "/shipper/request" },
+            @{ Id = "HongdalApp-P02-1"; Path = "/shipper/request/bulk" },
+            @{ Id = "HongdalApp-P02-2"; Path = "/dispatch/address-form" },
+            @{ Id = "HongdalApp-P03"; Path = "/shipper/request/SHP-1001" },
+            @{ Id = "HongdalApp-P04"; Path = "/shipper/inbound/dashboard" },
+            @{ Id = "HongdalApp-P04-1"; Path = "/shipper/inbound/requests" },
+            @{ Id = "HongdalApp-P05"; Path = "/shipper/warehouse/workspace" },
+            @{ Id = "HongdalApp-P05-1"; Path = "/shipper/warehouse/inventory" },
+            @{ Id = "HongdalApp-P05-2"; Path = "/shipper/warehouse/scan" },
+            @{ Id = "HongdalApp-P05-3"; Path = "/shipper/warehouse/work/inbound" },
+            @{ Id = "HongdalApp-P06"; Path = "/shipper/sales/channels" },
+            @{ Id = "HongdalApp-P06-1"; Path = "/shipper/sales/listings" },
+            @{ Id = "HongdalApp-P06-2"; Path = "/shipper/sales/orders" },
+            @{ Id = "HongdalApp-P07"; Path = "/shipper/international/fcl-lcl" },
+            @{ Id = "HongdalApp-P07-1"; Path = "/shipper/customs/hs-reviews" },
+            @{ Id = "HongdalApp-P08"; Path = "/shipper/reconsignment/orders" },
+            @{ Id = "HongdalApp-P90"; Path = "/weather" },
+            @{ Id = "HongdalApp-P91"; Path = "/counter" },
+            @{ Id = "HongdalApp-P99"; Path = "/not-found" }
         )
     },
     @{

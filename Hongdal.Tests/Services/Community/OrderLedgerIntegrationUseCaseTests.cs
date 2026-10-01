@@ -103,7 +103,7 @@ public sealed class OrderLedgerIntegrationUseCaseTests
     }
 
     [Fact]
-    public async Task Group_purchase_is_composed_of_individual_order_ledgers()
+    public async Task Legacy_group_purchase_can_still_read_direct_individual_order_links()
     {
         var store = new FakeLedgerStore(
             Ledger("group-1", CommunityLedgerTemplateKeys.GroupPurchase),
@@ -124,6 +124,40 @@ public sealed class OrderLedgerIntegrationUseCaseTests
         var reference = Assert.Single(result.Value.포함원장목록);
         Assert.Equal(주문원장포함역할.개별주문, reference.역할);
         Assert.Equal(CommunityLedgerTemplateKeys.Order, reference.원장템플릿Key);
+    }
+
+    [Fact]
+    public async Task Group_purchase_contains_order_aggregation_and_aggregation_contains_individual_orders()
+    {
+        var store = new FakeLedgerStore(
+            Ledger("group-1", CommunityLedgerTemplateKeys.GroupPurchase),
+            Ledger("aggregation-1", CommunityLedgerTemplateKeys.GroupOrder),
+            Ledger("order-1", CommunityLedgerTemplateKeys.Order));
+        var useCase = new 주문원장통합UseCase(store);
+
+        var groupResult = await useCase.하위원장연결Async(
+            "group-1",
+            new 주문하위원장연결요청
+            {
+                하위원장Id = "aggregation-1",
+                역할 = 주문원장포함역할.주문집계,
+                필수여부 = true
+            },
+            "user-1");
+        var aggregationResult = await useCase.하위원장연결Async(
+            "aggregation-1",
+            new 주문하위원장연결요청
+            {
+                하위원장Id = "order-1",
+                역할 = 주문원장포함역할.개별주문,
+                필수여부 = true
+            },
+            "user-1");
+
+        Assert.True(groupResult.IsSuccess);
+        Assert.True(aggregationResult.IsSuccess);
+        Assert.Equal(주문원장포함역할.주문집계, Assert.Single(groupResult.Value.포함원장목록).역할);
+        Assert.Equal(주문원장포함역할.개별주문, Assert.Single(aggregationResult.Value.포함원장목록).역할);
     }
 
     [Fact]
@@ -168,7 +202,7 @@ public sealed class OrderLedgerIntegrationUseCaseTests
 
         var exception = Assert.Throws<InvalidOperationException>(() => 주문원장구성정책.저장요청검증(request));
 
-        Assert.Contains("공동주문 묶음에서만", exception.Message);
+        Assert.Contains("공동구매 주문집계에서만", exception.Message);
     }
 
     [Fact]

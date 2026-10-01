@@ -1,0 +1,55 @@
+@page "/warehouse/apartment/unclaimed"
+@inherits MvvmComponentBase<공동주택미수령관리PageViewModel>
+
+<PageTitle>공동주택 미수령 관리</PageTitle>
+
+<WarehousePageShell Model="@ViewModel"
+                    Title="공동주택 미수령 관리"
+                    Description="수령 기한이 지난 물품과 반송 검토 대상을 확인합니다."
+                    Icon="@Icons.Material.Filled.Warning"
+                    Color="Color.Warning">
+    <Actions>
+        <MudButton Href="@WarehouseManagerRoutes.ApartmentHandoff"
+                   Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.VerifiedUser">
+            수령 인계
+        </MudButton>
+    </Actions>
+    <ChildContent>
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4 h-100" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">수령 기한 경과</MudText>
+                    <MudText Typo="Typo.h5">0건</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4 h-100" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">연락 확인 중</MudText>
+                    <MudText Typo="Typo.h5">0건</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4 h-100" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">반송 검토</MudText>
+                    <MudText Typo="Typo.h5">0건</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <MudAlert Severity="Severity.Success" Variant="Variant.Outlined">
+            현재 등록된 미수령 물품이 없습니다.
+        </MudAlert>
+    </ChildContent>
+</WarehousePageShell>
+
+@code {
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (!string.Equals(ViewModel.세션.운영ProfileCode, 창고운영ProfileCodes.공동주택물류, StringComparison.OrdinalIgnoreCase))
+        {
+            ViewModel.세션.운영Profile설정(창고운영ProfileCodes.공동주택물류);
+        }
+    }
+}

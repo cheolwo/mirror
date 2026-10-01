@@ -40,7 +40,7 @@ AI를 배차나 추천에 사용할 때도 같은 원칙을 따른다. AI는 단
 | 핵심 엔진 | 운송 의뢰 배차 엔진 |
 | 핵심 원장 | Mongo `transport:{화주운송의뢰Id}` 운송 원장 |
 | RDB 실행 투영 | `운송실행투영` |
-| 핵심 앱 | `ShipperApp`, `DriverApp`, `HongdalAdmin` |
+| 핵심 앱 | `HongdalApp`, `DriverApp`, `HongdalAdmin` |
 
 국내 화물 운송 OS는 다른 OS의 하위 기능이 아니라 공통 실행 축이다. 공동주문 수입 OS, 창고·커머스 이행 OS, 알뜰살뜰 마트 도심 물류 OS는 자체 목적을 갖지만, 차량과 기사가 필요한 시점에는 국내 화물 운송 OS에 운송 의뢰를 인계한다.
 
@@ -48,7 +48,7 @@ AI를 배차나 추천에 사용할 때도 같은 원칙을 따른다. AI는 단
 
 | 참여자 | OS가 알아야 하는 입장 | 필요한 화면 | 필요한 엔진/정책 |
 | --- | --- | --- | --- |
-| 화주 | 제때 상차되고, 화물 조건이 기사에게 정확히 전달되며, 결제와 증빙 책임이 명확하기를 원한다. | `ShipperApp` 운송 의뢰 등록, 의뢰 목록, 결제/정산 처리 | 차량 적합성, 상차 시간창 EDF, 결제 완료 뒤 배차대기 생성 |
+| 화주 | 제때 상차되고, 화물 조건이 기사에게 정확히 전달되며, 결제와 증빙 책임이 명확하기를 원한다. | `HongdalApp` 운송 의뢰 등록, 의뢰 목록, 결제/정산 처리 | 차량 적합성, 상차 시간창 EDF, 결제 완료 뒤 배차대기 생성 |
 | 기사 | 상차지까지 거리, 차량 적합성, 상하차 부담, 수익, 대기 시간, 인수증/서명 조건을 미리 알고 싶다. | `DriverApp` 추천 목록, 추천 상세, 배차 처리, 상차/하차 화면 | Geo Nearest, Fit First, 기사대기 Aging, MLFQ 추천 전환 |
 | 수령자·인수자 | 물건이 언제 도착하고 누가 인수했는지, 사진·서명·POD가 남는지 확인되어야 한다. | `DriverApp` 하차 화면, 관리자 POD/문서 화면 | POD 처리, 인수증 증빙 정책, 하차 완료 이벤트 |
 | 플랫폼 운영자 | 후보 없음, 시간창 충돌, 증빙 누락, 정산 지연, 분쟁 가능성을 조기에 보고 조정해야 한다. | `HongdalAdmin` 배차대기, 운송 진행, 파일/POD, 정산 화면 | MLFQ 큐 전환, 후보 없음 사유, 운영자 보류, 정산 후보 생성 |
@@ -77,7 +77,7 @@ flowchart TD
 
 | 입력 출처 | 내부 정규화 | 원본의뢰유형 | 비고 |
 | --- | --- | --- | --- |
-| 화주 운송 의뢰 | `출고예정운송대상` | `CargoTransport` | ShipperApp에서는 운송 의뢰로 보이지만 서버 내부에서는 출고 예정 운송 대상으로 볼 수 있다 |
+| 화주 운송 의뢰 | `출고예정운송대상` | `CargoTransport` | HongdalApp에서는 운송 의뢰로 보이지만 서버 내부에서는 출고 예정 운송 대상으로 볼 수 있다 |
 | 창고 출고품 | `출고예정운송대상` | `WarehouseOutboundCargo` | 피킹/포장 또는 출고 준비 상태 확인 뒤 배차 |
 | 판매채널 출고 | `출고예정운송대상` | `SalesChannelOutboundCargo` | 판매채널 주문 출고 뒤 직접 배송이나 용달 배송이 필요한 경우 |
 | 공동주문 수입 | `출고예정운송대상` 또는 국내 운송 초안 | `GroupPurchaseCargoTransport` | 보세구역 반출 뒤 3PL 입고 또는 세대 배송 |
@@ -237,7 +237,7 @@ sequenceDiagram
 
 | 단계 | 앱/화면 | 보여줘야 하는 것 |
 | --- | --- | --- |
-| 운송 의뢰 등록 | `ShipperApp` `/shipper/request` | 상차지, 하차지, 화물 조건, 결제/정산 조건 |
+| 운송 의뢰 등록 | `HongdalApp` `/shipper/request` | 상차지, 하차지, 화물 조건, 결제/정산 조건 |
 | 배차 대기 운영 | `HongdalAdmin` `/dispatch/wait` | 원본의뢰유형, 큐 단계, 적용 정책, 후보 없음 사유 |
 | 기사 추천 | `DriverApp` `/driver/recommendations` | 일반 화물/창고 출고/공동주문 운송 구분, 차량 적합성 사유, 픽업 거리 |
 | 수락/거절 | `DriverApp` 추천 상세 | 수락, 거절, 보류 사유, 추천 만료 시간 |
@@ -286,9 +286,9 @@ sequenceDiagram
 
 | 앱 | 화면/경로 | 주 사용자 | OS 안에서의 역할 | 현재 서버 연동 상태 |
 | --- | --- | --- | --- | --- |
-| `ShipperApp` | `/shipper/request` | 화주 | 단건 운송 의뢰 등록, 화물/상하차/결제 조건 입력 | `ServerBackedShipperOperationsService`가 `POST /api/v1/shipper/requests` 호출 |
-| `ShipperApp` | `/shipper/request/bulk` | 화주 | CSV 일괄 등록, 대량 의뢰 미리보기/확정 | `화주운송의뢰BulkApiService`와 bulk API 연동 대상 |
-| `ShipperApp` | `/shipper/public-cargo` | 화주·공개 조회자 | 공개 화물 요약 확인 | `GET /api/v1/shipper/requests/public` 호출 |
+| `HongdalApp` | `/shipper/request` | 화주 | 단건 운송 의뢰 등록, 화물/상하차/결제 조건 입력 | `ServerBackedShipperOperationsService`가 `POST /api/v1/shipper/requests` 호출 |
+| `HongdalApp` | `/shipper/request/bulk` | 화주 | CSV 일괄 등록, 대량 의뢰 미리보기/확정 | `화주운송의뢰BulkApiService`와 bulk API 연동 대상 |
+| `HongdalApp` | `/shipper/public-cargo` | 화주·공개 조회자 | 공개 화물 요약 확인 | `GET /api/v1/shipper/requests/public` 호출 |
 | `DriverApp` | `/driver/recommendations` | 기사 | 기사별 추천 의뢰 목록, 상차지 거리, 예상 수익, 추천 유형 확인 | `ServerBackedDriverSampleDataService`가 `GET /api/v1/driver/recommendations`를 샘플 모델로 매핑 |
 | `DriverApp` | `/driver/recommendations/{의뢰Id}` | 기사 | 추천 상세, 상차/하차 조건, 수익, 인수증 조건 확인 | 추천 목록 데이터 기반 상세. 필요 시 `GET /api/v1/driver/requests/{requestId}`와 직접 연결 가능 |
 | `DriverApp` | `/driver/recommendations/{의뢰Id}/decision` | 기사 | 추천 수락, 거절, 수락 취소 | `DriverRecommendationDecisionService`가 수락/거절 API 호출, 실패 시 로컬 상태 보정 |
@@ -310,16 +310,16 @@ sequenceDiagram
 
 | Method | API | 주 사용 화면 | OS 역할 |
 | --- | --- | --- | --- |
-| `GET` | `/api/v1/shipper/requests` | `ShipperApp` 의뢰 목록, 관리자 의뢰 조회 후보 | 화주별 운송 의뢰 목록 조회 |
-| `GET` | `/api/v1/shipper/requests/public` | `ShipperApp` 공개 화물 | 공개 화물 요약 조회 |
-| `POST` | `/api/v1/shipper/requests/recommend-vehicle` | `ShipperApp` 의뢰 등록 | 화물 조건 기준 차량 추천 |
-| `POST` | `/api/v1/shipper/requests` | `ShipperApp` `/shipper/request` | 운송 의뢰 생성 |
+| `GET` | `/api/v1/shipper/requests` | `HongdalApp` 의뢰 목록, 관리자 의뢰 조회 후보 | 화주별 운송 의뢰 목록 조회 |
+| `GET` | `/api/v1/shipper/requests/public` | `HongdalApp` 공개 화물 | 공개 화물 요약 조회 |
+| `POST` | `/api/v1/shipper/requests/recommend-vehicle` | `HongdalApp` 의뢰 등록 | 화물 조건 기준 차량 추천 |
+| `POST` | `/api/v1/shipper/requests` | `HongdalApp` `/shipper/request` | 운송 의뢰 생성 |
 | `GET` | `/api/v1/shipper/requests/{requestId}` | 의뢰 상세 | 운송 의뢰 단건 조회 |
 | `PUT` | `/api/v1/shipper/requests/{requestId}` | 의뢰 수정 | 운송 의뢰 조건 수정 |
 | `DELETE` | `/api/v1/shipper/requests/{requestId}` | 의뢰 취소/삭제 | 운송 의뢰 삭제 |
-| `POST` | `/api/v1/shipper/requests/bulk/preview` | `ShipperApp` 일괄 등록 | CSV 일괄 등록 미리보기 |
-| `POST` | `/api/v1/shipper/requests/bulk/confirm` | `ShipperApp` 일괄 등록 | CSV 일괄 등록 확정 |
-| `POST` | `/api/v1/shipper/requests/bulk/confirm-preview` | `ShipperApp` 일괄 등록 | 미리보기 결과 기반 확정 등록 |
+| `POST` | `/api/v1/shipper/requests/bulk/preview` | `HongdalApp` 일괄 등록 | CSV 일괄 등록 미리보기 |
+| `POST` | `/api/v1/shipper/requests/bulk/confirm` | `HongdalApp` 일괄 등록 | CSV 일괄 등록 확정 |
+| `POST` | `/api/v1/shipper/requests/bulk/confirm-preview` | `HongdalApp` 일괄 등록 | 미리보기 결과 기반 확정 등록 |
 | `POST` | `/api/v1/shipper/requests/{requestId}/settlement/offline` | 현장 지급 처리 | 현장 지급 의뢰를 배차대기 진입 가능 상태로 전환 |
 | `POST` | `/api/v1/shipper/requests/{requestId}/settlement/postpay/approve` | 후불 승인 | 후불 의뢰를 배차대기 진입 가능 상태로 전환 |
 | `POST` | `/api/v1/shipper/requests/{requestId}/settlement/receipt` | 인수증 관리 | 인수증 번호와 증빙 조건 등록 |
@@ -386,7 +386,7 @@ sequenceDiagram
 
 1. `DriverApp` 추천 상세 화면은 현재 추천 목록 데이터를 기반으로 보여준다. 서버 상세 API인 `GET /api/v1/driver/requests/{requestId}`를 직접 호출하도록 연결하면 상세주소, 개인정보 노출 시점, 인수증 조건, 기존 운행 중 추가 추천의 경로 삽입 결과를 더 정확히 제어할 수 있다.
 2. `DriverApp` 진행 중 운송/상차/하차 화면은 서버 운송 목록을 샘플 모델로 매핑해 사용한다. 실제 `GET /api/v1/driver/transports/{id}` 상세 응답을 화면 모델의 기준으로 삼는 보강이 필요하다.
-3. `ShipperApp` 운송 의뢰 상세는 등록 이후 배차대기, 추천중, 추천만료/재추천중, 후보부족/보류, 기사수락, 상차접근중, 상차완료 상태를 한 화면에서 추적하도록 보강해야 한다.
+3. `HongdalApp` 운송 의뢰 상세는 등록 이후 배차대기, 추천중, 추천만료/재추천중, 후보부족/보류, 기사수락, 상차접근중, 상차완료 상태를 한 화면에서 추적하도록 보강해야 한다.
 4. `HongdalAdmin`의 `/dispatch/wait`, `/transports`, `/settlements`는 일부 메모리 서비스 기반 조회가 남아 있다. 운영 화면에서는 서버 API를 우선 조회하고 실패할 때만 개발 메모리로 fallback하는 구조가 좋다.
 5. 선결제 승인 이벤트가 `운송의뢰배차대기Service`로 완전히 통합되면 결제 API와 배차대기 API 사이의 경계가 더 명확해진다.
 6. API 응답에 `원본의뢰유형`, `운송의뢰유형표시`, `적용스케줄링정책`, `후보없음사유`, `추천만료시각`, `경로삽입결과`, `상차준비알림상태`를 내려주면 기사 앱과 화주 앱에서 국내 화물 운송 OS의 판단 과정을 더 잘 설명할 수 있다.

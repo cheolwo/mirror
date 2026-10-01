@@ -11,12 +11,59 @@
 
         <VerticalStackLayout Grid.Row="0"
                              Margin="16,8,16,0"
-                             Spacing="0"
+                             Spacing="8"
                              VerticalOptions="Start">
             <Label x:Name="TitleLabel"
                    IsVisible="False" />
             <Label x:Name="StatusLabel"
                    IsVisible="False" />
+
+            <Border Padding="5"
+                    BackgroundColor="#EFFFFFFF"
+                    Stroke="#cbd5e1"
+                    StrokeThickness="1">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="13" />
+                </Border.StrokeShape>
+                <Border.Shadow>
+                    <Shadow Brush="#33000000"
+                            Offset="0,3"
+                            Radius="9"
+                            Opacity="0.18" />
+                </Border.Shadow>
+
+                <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="5">
+                    <Button x:Name="KoreaDriverButton"
+                            Text="한국 기사용"
+                            Padding="12,7"
+                            FontSize="12"
+                            FontAttributes="Bold"
+                            CornerRadius="9"
+                            Clicked="OnKoreaDriverClicked" />
+                    <Button x:Name="UnitedStatesDriverButton"
+                            Grid.Column="1"
+                            Text="미국 기사용"
+                            Padding="12,7"
+                            FontSize="12"
+                            FontAttributes="Bold"
+                            CornerRadius="9"
+                            Clicked="OnUnitedStatesDriverClicked" />
+                    <VerticalStackLayout Grid.Column="2"
+                                         Spacing="0"
+                                         HorizontalOptions="End"
+                                         VerticalOptions="Center">
+                        <Label x:Name="OperatingMarketLabel"
+                               FontSize="11"
+                               FontAttributes="Bold"
+                               TextColor="#0f172a"
+                               HorizontalTextAlignment="End" />
+                        <Label x:Name="MapProviderLabel"
+                               FontSize="10"
+                               TextColor="#64748b"
+                               HorizontalTextAlignment="End" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
 
             <Border x:Name="RecommendationBanner"
                     Padding="12,9"

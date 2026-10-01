@@ -1,0 +1,57 @@
+.community-food-workspace {
+    display: grid;
+    width: min(100% - 28px, 1180px);
+    margin: 0 auto;
+    padding: 22px 0 48px;
+    gap: 16px;
+}
+
+.community-food-workspace__header {
+    display: grid;
+    gap: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.community-food-workspace__header > a {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 5px;
+    color: var(--mud-palette-text-secondary);
+    text-decoration: none;
+}
+
+.community-food-workspace__header > div {
+    display: grid;
+    max-width: 720px;
+    gap: 5px;
+}
+
+.community-food-workspace__header span {
+    color: var(--mud-palette-primary);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.community-food-workspace__header h1,
+.community-food-workspace__header p {
+    margin: 0;
+}
+
+.community-food-workspace__header h1 {
+    font-size: clamp(1.45rem, 3vw, 2rem);
+    line-height: 1.25;
+}
+
+.community-food-workspace__header p {
+    color: var(--mud-palette-text-secondary);
+    line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+    .community-food-workspace {
+        width: min(100% - 20px, 1180px);
+        padding-top: 12px;
+    }
+}

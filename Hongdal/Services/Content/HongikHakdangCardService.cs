@@ -13,7 +13,28 @@ public interface IHongikHakdangCardService
         CancellationToken cancellationToken);
 
     Task<HongikHakdangCardSyncResultDto> SyncAsync(CancellationToken cancellationToken);
+
+    Task<HongikHakdangCardActivationUpdateResponse?> SetCollectionEnabledAsync(
+        long collectionId,
+        bool enabled,
+        CancellationToken cancellationToken);
+
+    Task<HongikHakdangCardActivationUpdateResponse?> SetCardEnabledAsync(
+        long cardId,
+        bool enabled,
+        CancellationToken cancellationToken);
+
+    Task<HongikHakdangCardCommunityPublicationUpdateResponse?> SetCardCommunityPublicationApprovedAsync(
+        long cardId,
+        bool approved,
+        CancellationToken cancellationToken);
+
+    Task<HongikHakdangCardImageContentResult?> GetCardImageAsync(
+        long cardId,
+        CancellationToken cancellationToken);
 }
+
+public sealed record HongikHakdangCardImageContentResult(byte[] Bytes, string ContentType);
 
 public sealed class HongikHakdangCardService : IHongikHakdangCardService
 {
@@ -213,6 +234,85 @@ public sealed class HongikHakdangCardService : IHongikHakdangCardService
                 : $"홍익학당 카드 {seenCardKeys.Count}건과 컬렉션 {parsedCollections.Count}건을 수집했습니다.");
     }
 
+    public async Task<HongikHakdangCardActivationUpdateResponse?> SetCollectionEnabledAsync(
+        long collectionId,
+        bool enabled,
+        CancellationToken cancellationToken)
+    {
+        var collection = await _repository.FindCollectionTrackedAsync(collectionId, cancellationToken);
+        if (collection is null)
+        {
+            return null;
+        }
+
+        collection.IsAdminEnabled = enabled;
+        collection.UpdatedAtUtc = DateTime.UtcNow;
+        await _repository.SaveAsync(cancellationToken);
+        return new HongikHakdangCardActivationUpdateResponse(
+            collection.Id,
+            enabled,
+            enabled ? "카드 묶음을 관리자 검토 대상으로 켰습니다." : "카드 묶음을 관리자 검토 대상에서 껐습니다.");
+    }
+
+    public async Task<HongikHakdangCardActivationUpdateResponse?> SetCardEnabledAsync(
+        long cardId,
+        bool enabled,
+        CancellationToken cancellationToken)
+    {
+        var card = await _repository.FindCardTrackedAsync(cardId, cancellationToken);
+        if (card is null)
+        {
+            return null;
+        }
+
+        card.IsAdminEnabled = enabled;
+        card.UpdatedAtUtc = DateTime.UtcNow;
+        await _repository.SaveAsync(cancellationToken);
+        return new HongikHakdangCardActivationUpdateResponse(
+            card.Id,
+            enabled,
+            enabled ? "카드를 관리자 검토 대상으로 켰습니다." : "카드를 관리자 검토 대상에서 껐습니다.");
+    }
+
+    public async Task<HongikHakdangCardCommunityPublicationUpdateResponse?> SetCardCommunityPublicationApprovedAsync(
+        long cardId,
+        bool approved,
+        CancellationToken cancellationToken)
+    {
+        var card = await _repository.FindCardTrackedAsync(cardId, cancellationToken);
+        if (card is null)
+        {
+            return null;
+        }
+
+        card.IsCommunityPublicationApproved = approved;
+        card.UpdatedAtUtc = DateTime.UtcNow;
+        await _repository.SaveAsync(cancellationToken);
+        return new HongikHakdangCardCommunityPublicationUpdateResponse(
+            card.Id,
+            approved,
+            approved
+                ? "카드를 반야 게시 후보로 승인했습니다. 배치가 활성화되면 순서대로 게시합니다."
+                : "카드의 반야 게시 승인을 해제했습니다.");
+    }
+
+    public async Task<HongikHakdangCardImageContentResult?> GetCardImageAsync(
+        long cardId,
+        CancellationToken cancellationToken)
+    {
+        var card = await _repository.FindCardTrackedAsync(cardId, cancellationToken);
+        if (card is null
+            || string.IsNullOrWhiteSpace(card.LocalImagePath)
+            || !_imageStore.Exists(card.LocalImagePath))
+        {
+            return null;
+        }
+
+        return new HongikHakdangCardImageContentResult(
+            await _imageStore.ReadAsync(card.LocalImagePath, cancellationToken),
+            string.IsNullOrWhiteSpace(card.ImageContentType) ? "image/jpeg" : card.ImageContentType);
+    }
+
     private async Task<IReadOnlyList<CardImageDownloadResult>> DownloadMissingImagesAsync(
         IReadOnlyList<HongikHakdangCard> cards,
         CancellationToken cancellationToken)
@@ -288,8 +388,11 @@ public sealed class HongikHakdangCardService : IHongikHakdangCardService
                     x.Card.ImageSha256,
                     x.Card.IsActive,
                     x.Card.LastSeenAtUtc,
-                    x.SortOrder))
-                .ToArray());
+                    x.SortOrder,
+                    x.Card.IsAdminEnabled,
+                    x.Card.IsCommunityPublicationApproved))
+                .ToArray(),
+            collection.IsAdminEnabled);
 
     private static string? PreferNonEmpty(string? candidate, string? existing)
         => string.IsNullOrWhiteSpace(candidate) ? existing : candidate;

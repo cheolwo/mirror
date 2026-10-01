@@ -1,0 +1,216 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using System.Globalization
+@using Hongdal.Ui.Common.Areas.App.Services
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inject PlatformCommunityDecorationStateService DecorationState
+
+@if (Model.IsApplicable)
+{
+    <section class="community-market-day" style="@BuildMarketDayStyle()" aria-labelledby="community-market-day-title">
+        <header class="community-market-day__header">
+            <div>
+                <span><MudIcon Icon="@Icons.Material.Filled.Storefront" Size="Size.Small" /> 공동구매가 동네 장날로</span>
+                <h2 id="community-market-day-title">@Model.Title</h2>
+                <p>예약 물량은 먼저 지키고, 상인회와 참여 상인이 확정한 여유 물량만 현장에 펼칩니다.</p>
+            </div>
+            <strong>@Model.StatusLabel</strong>
+        </header>
+
+        <div class="community-market-day__place">
+            <div>
+                <span>시장</span>
+                <strong>@Model.MarketName</strong>
+                <small>@Model.CadenceLabel</small>
+            </div>
+            <div>
+                <span>품목</span>
+                <strong>@Model.ProductLabel</strong>
+                <small>@Model.ProductHandlingProfileLabel</small>
+            </div>
+        </div>
+
+        <CommunityDomesticMarketSupplyJourney Model="@Model.DomesticSupply" />
+
+        @if (MarketTheme is { } marketTheme && MarketThemeProduct is { } marketThemeProduct)
+        {
+            <section class="community-market-day__theme" aria-labelledby="community-market-day-theme-title">
+                <div class="community-market-day__theme-preview">
+                    <TraditionalMarketThemePreview Theme="marketTheme" Title="@marketThemeProduct.Title" />
+                </div>
+                <div class="community-market-day__theme-copy">
+                    <span>이 시장의 꾸미기 팩</span>
+                    <h3 id="community-market-day-theme-title">@marketThemeProduct.Title</h3>
+                    <p>@marketThemeProduct.Summary</p>
+                    <dl>
+                        <div><dt>디자인</dt><dd>@marketThemeProduct.CreatorName</dd></div>
+                        <div><dt>승인</dt><dd>플랫폼 @marketTheme.ReviewStatus · 상인회 @marketTheme.AssociationApprovalStatus</dd></div>
+                        <div><dt>사용</dt><dd>@marketTheme.LicenseLabel</dd></div>
+                        <div><dt>보상</dt><dd>@marketTheme.DesignerCompensationPolicyLabel</dd></div>
+                    </dl>
+                    <MudButton Href="@($"/community/decorations/{marketThemeProduct.Key}")"
+                               Variant="Variant.Text"
+                               Color="Color.Primary"
+                               EndIcon="@Icons.Material.Filled.ChevronRight">
+                        팩 자세히 보기
+                    </MudButton>
+                </div>
+            </section>
+        }
+
+        <section class="community-market-day__schedule" aria-labelledby="community-market-day-schedule-title">
+            <header>
+                <div>
+                    <span>사람들이 시장에서 만나는 시간</span>
+                    <h3 id="community-market-day-schedule-title">@FormatMarketDay(Model.MarketArrivalAt)</h3>
+                </div>
+                <strong>@(Model.ScheduleConfirmed ? "일정 확정" : "협의 중")</strong>
+            </header>
+            <div>
+                <article>
+                    <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Small" />
+                    <span>시장 입고</span>
+                    <strong>@FormatTime(Model.MarketArrivalAt)</strong>
+                </article>
+                <article>
+                    <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" />
+                    <span>예약 수령</span>
+                    <strong>@FormatTimeRange(Model.ReservationPickupStartsAt, Model.ReservationPickupEndsAt)</strong>
+                </article>
+                <article>
+                    <MudIcon Icon="@Icons.Material.Filled.ShoppingBasket" Size="Size.Small" />
+                    <span>현장 판매</span>
+                    <strong>@FormatTimeRange(Model.WalkInSaleStartsAt, Model.WalkInSaleEndsAt)</strong>
+                </article>
+            </div>
+        </section>
+
+        <section class="community-market-day__inventory" aria-labelledby="community-market-day-inventory-title">
+            <header>
+                <div>
+                    <span>공동구매 약속을 먼저 보호</span>
+                    <h3 id="community-market-day-inventory-title">예약과 현장판매 물량을 분리</h3>
+                </div>
+                <strong>@(Model.CanAdvertiseWalkInSale ? "현장판매 공개 가능" : "확정 전 공개 안 함")</strong>
+            </header>
+            <div class="community-market-day__inventory-grid">
+                <div class="is-reserved">
+                    <span>공동구매 예약</span>
+                    <strong>@FormatQuantity(Model.ReservedQuantity)</strong>
+                    <small>참여자 수령권 보호</small>
+                </div>
+                <div class="is-walk-in">
+                    <span>현장판매 확정</span>
+                    <strong>@FormatQuantity(Model.ConfirmedWalkInSaleQuantity)</strong>
+                    <small>상인이 별도로 수락한 재고</small>
+                </div>
+                <div>
+                    <span>추가 관심 후보</span>
+                    <strong>@FormatQuantity(Model.UnconfirmedWalkInSaleQuantity)</strong>
+                    <small>확정 전에는 광고하지 않음</small>
+                </div>
+            </div>
+            <div class="community-market-day__inventory-policy">
+                <p><MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Small" /> @Model.ReservationProtectionLabel</p>
+                <p><MudIcon Icon="@Icons.Material.Filled.AssignmentTurnedIn" Size="Size.Small" /> @Model.UnsoldInventoryPolicyLabel</p>
+            </div>
+        </section>
+
+        <section class="community-market-day__merchants" aria-labelledby="community-market-day-merchants-title">
+            <header>
+                <div>
+                    <span>플랫폼 자동 배정 없음</span>
+                    <h3 id="community-market-day-merchants-title">장날을 함께 만드는 역할</h3>
+                </div>
+                <strong>@($"{Model.MerchantRoles.Count(role => role.Accepted)}/{Model.MerchantRoles.Count} 참여")</strong>
+            </header>
+            <div>
+                @foreach (var role in Model.MerchantRoles)
+                {
+                    <article class="community-market-day__merchant-role @(role.Accepted ? "is-accepted" : null)">
+                        <MudIcon Icon="@(role.Accepted ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.PersonAdd)"
+                                 Color="@(role.Accepted ? Color.Success : Color.Default)" />
+                        <div>
+                            <strong>@role.Label</strong>
+                            <p>@role.Responsibility</p>
+                            <small>@role.VerificationLabel</small>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+
+        <div class="community-market-day__announcement">
+            <MudIcon Icon="@Icons.Material.Filled.Campaign" />
+            <div>
+                <strong>@Model.AnnouncementPolicyLabel</strong>
+                <span>@Model.PublicAudienceLabel</span>
+            </div>
+        </div>
+
+        <ol class="community-market-day__stages">
+            @foreach (var stage in Model.Stages.OrderBy(stage => stage.Number))
+            {
+                <li class="@BuildStageClass(stage.State)">
+                    <span>@stage.Number</span>
+                    <div>
+                        <strong>@stage.Label</strong>
+                        <p>@stage.Detail</p>
+                    </div>
+                </li>
+            }
+        </ol>
+
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+            상인회 합의는 개별 상인의 영업 자격과 판매 책임을 대신하지 않습니다. 각 상인이 작업·판매 물량과 비용을 직접 수락한 뒤 장날 배치를 확정합니다.
+        </MudAlert>
+    </section>
+}
+
+@code {
+    private static readonly CultureInfo KoreanCulture = CultureInfo.GetCultureInfo("ko-KR");
+
+    [Parameter, EditorRequired]
+    public CommunityMarketDaySnapshot Model { get; set; } = new();
+
+    private CommunityDecorationProduct? MarketThemeProduct
+        => DecorationState.ResolveTraditionalMarketThemeProduct(Model.MarketScopeKey);
+
+    private TraditionalMarketThemeManifest? MarketTheme
+        => MarketThemeProduct?.TraditionalMarketTheme;
+
+    private string BuildMarketDayStyle()
+        => MarketTheme is not { } theme
+            ? string.Empty
+            : string.Join(
+                ';',
+                $"--market-day-primary:{theme.MarketHeader.Color}",
+                $"--market-day-accent:{theme.MarketDayBanner.Color}",
+                $"--market-day-board:{theme.BoardMarker.Color}",
+                $"--market-day-product:{theme.ProductMarker.Color}",
+                $"--market-day-pickup:{theme.PickupSign.Color}");
+
+    private string FormatQuantity(decimal quantity)
+        => $"{quantity:N0}{Model.QuantityUnit}";
+
+    private static string FormatMarketDay(DateTimeOffset? value)
+        => value.HasValue
+            ? value.Value.ToString("M월 d일 dddd", KoreanCulture)
+            : "상인회와 장날 협의 중";
+
+    private static string FormatTime(DateTimeOffset? value)
+        => value.HasValue ? value.Value.ToString("HH:mm", KoreanCulture) : "미정";
+
+    private static string FormatTimeRange(DateTimeOffset? startsAt, DateTimeOffset? endsAt)
+        => startsAt.HasValue && endsAt.HasValue
+            ? $"{startsAt.Value:HH:mm}–{endsAt.Value:HH:mm}"
+            : "미정";
+
+    private static string BuildStageClass(CommunityMarketDayStageState state)
+        => state switch
+        {
+            CommunityMarketDayStageState.Completed => "is-completed",
+            CommunityMarketDayStageState.Current => "is-current",
+            CommunityMarketDayStageState.DirectAcceptanceRequired => "is-acceptance",
+            _ => "is-waiting"
+        };
+}

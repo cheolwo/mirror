@@ -1,0 +1,29 @@
+<Solution>
+  <Folder Name="/Community Clients/">
+    <Project Path="Hongdal.WebApp/Hongdal.WebApp.csproj" />
+    <Project Path="HongdalApp/HongdalApp.csproj">
+      <Deploy Solution="Debug|*" />
+    </Project>
+  </Folder>
+  <Folder Name="/Community Operations/">
+    <Project Path="HongdalAdminApp/HongdalAdminApp.csproj">
+      <Deploy Solution="Debug|*" />
+    </Project>
+  </Folder>
+  <Folder Name="/Server Modules/">
+    <Project Path="Hongdal.Community/Hongdal.Community.csproj" />
+  </Folder>
+  <Folder Name="/Server/">
+    <Project Path="Hongdal/Hongdal.csproj" />
+  </Folder>
+  <Folder Name="/Shared/">
+    <Project Path="Hongdal.Client.Infrastructure/Hongdal.Client.Infrastructure.csproj" />
+    <Project Path="Hongdal.Contracts/Hongdal.Contracts.csproj" />
+    <Project Path="Hongdal.Domain/Hongdal.Domain.csproj" />
+    <Project Path="Hongdal.Infrastructure/Hongdal.Infrastructure.csproj" />
+    <Project Path="Hongdal.Ui.Common/Hongdal.Ui.Common.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Hongdal.Tests/Hongdal.Tests.csproj" />
+  </Folder>
+</Solution>

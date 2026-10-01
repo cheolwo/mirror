@@ -1,0 +1,108 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+@if (Post.IsSystemGenerated && !string.IsNullOrWhiteSpace(Post.PrivacyNotice))
+{
+    <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true" Icon="@Icons.Material.Filled.PrivacyTip">
+        <strong>@CommunitySystemPostDisplay.DisclosureTitle(Post.SystemPostKind)</strong><br />
+        @Post.PrivacyNotice
+    </MudAlert>
+}
+
+@if (Post.원장Context is { } ledgerContext)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+        <MudStack Spacing="1">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+                    <strong>@(Post.IsSystemGenerated ? "완료된 공개 절차" : "현재 원장") · @ledgerContext.원장템플릿명</strong>
+                </MudStack>
+                <MudStack Row="true" Spacing="1">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@ledgerContext.상태</MudChip>
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Color="@(ledgerContext.기능활성화여부 ? Color.Success : Color.Warning)"
+                             Variant="Variant.Outlined">
+                        @(ledgerContext.기능활성화여부 ? "업무 기능 사용" : "업무 기능 준비 중")
+                    </MudChip>
+                </MudStack>
+            </MudStack>
+            <MudText Typo="Typo.body2">@ledgerContext.제목</MudText>
+            @if (!string.IsNullOrWhiteSpace(ledgerContext.현재단계))
+            {
+                <MudText Typo="Typo.caption">현재 단계 · @ledgerContext.현재단계</MudText>
+            }
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                @ledgerContext.처리체계명 · @(Post.IsSystemGenerated ? "개인정보를 제거한 절차 구조" : ledgerContext.원장Id)
+            </MudText>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
+                @foreach (var action in ledgerContext.가능한행동목록.Take(5))
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@action</MudChip>
+                }
+            </MudStack>
+            @if (ledgerContext.참여요청필요여부)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Warning">원장 상세와 업무 처리는 참여 승인 후 열립니다.</MudText>
+            }
+            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                @if (ledgerContext.다이어그램 is not null)
+                {
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Info"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.AccountTree"
+                               OnClick="@(() => DiagramRequested.InvokeAsync(ledgerContext))">
+                        다이어그램 같이 보기
+                    </MudButton>
+                }
+                @if (Post.IsSystemGenerated)
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Success"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.AddTask"
+                               OnClick="@(() => StartFromCompletionRequested.InvokeAsync(ledgerContext))">
+                        이 절차로 시작하기
+                    </MudButton>
+                }
+                @if (ledgerContext.재공유허용여부)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">재공유 허용</MudChip>
+                }
+                @if (ledgerContext.재사용허용여부)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">재사용 허용</MudChip>
+                }
+                @if (!ledgerContext.상세조회가능여부 && ledgerContext.재사용허용여부)
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.ContentCopy"
+                               Disabled="@IsReusing"
+                               OnClick="@(() => ReuseRequested.InvokeAsync(ledgerContext))">
+                        내 원장으로 가져오기
+                    </MudButton>
+                }
+            </MudStack>
+        </MudStack>
+    </MudAlert>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public PlatformCommunityPostResponse Post { get; set; } = null!;
+
+    [Parameter]
+    public bool IsReusing { get; set; }
+
+    [Parameter]
+    public EventCallback<PlatformCommunityPostLedgerContextResponse> DiagramRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<PlatformCommunityPostLedgerContextResponse> StartFromCompletionRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<PlatformCommunityPostLedgerContextResponse> ReuseRequested { get; set; }
+}

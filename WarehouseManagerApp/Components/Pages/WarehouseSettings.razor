@@ -1,0 +1,104 @@
+@page "/warehouse/settings"
+@inherits MvvmComponentBase<창고설정PageViewModel>
+@inject NavigationManager Navigation
+
+<PageTitle>창고 설정</PageTitle>
+
+<WarehousePageShell Model="@ViewModel"
+                    Title="창고 설정"
+                    Description="현재 창고의 운영 유형과 연결된 업무 화면을 관리합니다."
+                    Icon="@Icons.Material.Filled.Settings"
+                    Color="Color.Default">
+    <Actions>
+        <MudButton Href="@WarehouseManagerRoutes.Warehouse"
+                   Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Warehouse">
+            운영 홈
+        </MudButton>
+    </Actions>
+    <ChildContent>
+        @if (!string.IsNullOrWhiteSpace(ViewModel.창고Crud.조회.오류메시지))
+        {
+            <MudAlert Severity="Severity.Error">@ViewModel.창고Crud.조회.오류메시지</MudAlert>
+        }
+
+        <MudGrid>
+            <MudItem xs="12" lg="5">
+                <MudPaper Class="pa-4 h-100" Elevation="0" Outlined="true">
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.h6">운영 유형</MudText>
+                        <MudRadioGroup T="string" Value="@ViewModel.세션.운영ProfileCode" ValueChanged="SetProfile">
+                            @foreach (var profile in ViewModel.운영Profile목록)
+                            {
+                                <MudRadio T="string" Value="@profile.코드" Color="Color.Primary">
+                                    @profile.표시명
+                                </MudRadio>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="ml-8 mb-2">@profile.설명</MudText>
+                            }
+                        </MudRadioGroup>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" lg="7">
+                <MudPaper Class="pa-4 h-100" Elevation="0" Outlined="true">
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.h6">연결된 화면</MudText>
+                        <MudList T="string" Dense="true">
+                            @foreach (var page in ViewModel.현재Profile페이지목록)
+                            {
+                                <MudListItem T="string"
+                                             Icon="@(page.화면연결됨 ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Pending)"
+                                             IconColor="@(page.화면연결됨 ? Color.Success : Color.Default)"
+                                             Href="@(page.경로)"
+                                             Disabled="@(!page.화면연결됨)">
+                                    <MudText Typo="Typo.body2">@(page.표시명)</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@(page.설명)</MudText>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+            <MudStack Spacing="2">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.h6">등록된 창고</MudText>
+                    <MudButton Variant="Variant.Text"
+                               StartIcon="@Icons.Material.Filled.Refresh"
+                               Disabled="@ViewModel.창고Crud.조회.처리중"
+                               OnClick="ReloadWarehousesAsync">
+                        새로고침
+                    </MudButton>
+                </MudStack>
+                <MudTable T="창고요약응답" Items="@ViewModel.창고Crud.조회.항목목록" Dense="true" Hover="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>창고명</MudTh>
+                        <MudTh>주소</MudTh>
+                        <MudTh>담당자</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="창고명">@context.창고명</MudTd>
+                        <MudTd DataLabel="주소">@context.주소</MudTd>
+                        <MudTd DataLabel="담당자">@context.담당자명</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudStack>
+        </MudPaper>
+    </ChildContent>
+</WarehousePageShell>
+
+@code {
+    protected override Task OnInitializedAsync()
+        => ViewModel.창고Crud.조회.조회Async();
+
+    private void SetProfile(string profileCode)
+    {
+        ViewModel.세션.운영Profile설정(profileCode);
+        Navigation.NavigateTo(WarehouseManagerRoutes.WarehouseSettings, replace: true);
+    }
+
+    private Task ReloadWarehousesAsync()
+        => ViewModel.창고Crud.조회.조회Async();
+}

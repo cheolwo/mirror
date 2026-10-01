@@ -441,7 +441,7 @@ public static class 운송원장Mongo동기화Builder
 
         if (운송의뢰배차원천유형.IsAny(sourceType, 운송의뢰배차원천유형.공동주문국내운송))
         {
-            return CommunityLedgerTemplateKeys.GroupPurchase;
+            return CommunityLedgerTemplateKeys.GroupImport;
         }
 
         return CommunityLedgerTemplateKeys.CargoTransport;
@@ -455,7 +455,7 @@ public static class 운송원장Mongo동기화Builder
             CommunityLedgerTemplateKeys.FoodOrder => CommunityLedgerOperatingSystemCodes.FoodDelivery,
             CommunityLedgerTemplateKeys.HongdalMart => CommunityLedgerOperatingSystemCodes.HongdalMartUrbanLogistics,
             CommunityLedgerTemplateKeys.WarehouseOutbound => CommunityLedgerOperatingSystemCodes.WarehouseCommerceFulfillment,
-            CommunityLedgerTemplateKeys.GroupPurchase => CommunityLedgerOperatingSystemCodes.GroupPurchaseImport,
+            CommunityLedgerTemplateKeys.GroupImport => CommunityLedgerOperatingSystemCodes.GroupPurchaseImport,
             CommunityLedgerTemplateKeys.CargoTransport => CommunityLedgerOperatingSystemCodes.DomesticCargoTransport,
             _ => null
         };

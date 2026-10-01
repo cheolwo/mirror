@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:components="clr-namespace:FDriverApp.Components"
              x:Class="FDriverApp.Pages.HongdalHomePage"
-             Title="홍달 음식 배달 홈"
+             Title="살뜰 배달 홈"
              Shell.NavBarIsVisible="False">
     <BlazorWebView HostPage="wwwroot/index.html">
         <BlazorWebView.RootComponents>

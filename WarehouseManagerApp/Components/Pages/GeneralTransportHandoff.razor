@@ -1,0 +1,49 @@
+@page "/warehouse/general/transport-handoff"
+@inherits MvvmComponentBase<일반운송인계PageViewModel>
+
+<PageTitle>일반 운송 인계</PageTitle>
+
+<WarehousePageShell Model="@ViewModel"
+                    Title="일반 운송 인계"
+                    Description="출고 재고를 선택하고 국내 운송 업무로 인계합니다."
+                    Icon="@Icons.Material.Filled.LocalShipping"
+                    Color="Color.Success">
+    <Actions>
+        <MudButton Href="@WarehouseManagerRoutes.GeneralInventory"
+                   Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Inventory2">
+            재고 현황
+        </MudButton>
+    </Actions>
+    <ChildContent>
+        @if (!string.IsNullOrWhiteSpace(ViewModel.재고조회.오류메시지))
+        {
+            <MudAlert Severity="Severity.Error">@ViewModel.재고조회.오류메시지</MudAlert>
+        }
+
+        <WarehouseTransportHandoffPanel Inventory="@ViewModel.재고조회"
+                                        Handoff="@ViewModel.운송인계"
+                                        OnCompleted="ReloadAsync" />
+    </ChildContent>
+</WarehousePageShell>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        EnsureProfile();
+        await ViewModel.초기화Async();
+    }
+
+    private Task ReloadAsync() => ViewModel.초기화Async();
+
+    private void EnsureProfile()
+    {
+        if (!string.Equals(
+                ViewModel.세션.운영ProfileCode,
+                창고운영ProfileCodes.일반입출고,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            ViewModel.세션.운영Profile설정(창고운영ProfileCodes.일반입출고);
+        }
+    }
+}

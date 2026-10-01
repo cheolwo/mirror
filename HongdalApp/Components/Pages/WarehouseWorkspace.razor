@@ -1,0 +1,63 @@
+@page "/shipper/warehouse/workspace"
+
+<PageTitle>창고 운영 허브</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="py-6">
+    <MudStack Spacing="3">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h4">창고 운영 허브</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    HongdalApp은 입고, 재고, 주문 출고, 재위탁 운송 같은 운영 관리 화면만 담당합니다.
+                </MudText>
+            </MudStack>
+            <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">현장 작업은 WarehouseManagerApp</MudChip>
+        </MudStack>
+
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+            입고 검수, 적재, 포장, 배송대행 같은 작업자 확인 기반 현장 화면은 WarehouseManagerApp으로 분리했습니다.
+            이 화면에서는 화주/운영자가 확인해야 하는 현황과 후속 처리만 다룹니다.
+        </MudAlert>
+
+        <ShipperOperationsWorkspace />
+
+        <MudGrid>
+            @foreach (var item in WorkspaceLinks)
+            {
+                <MudItem xs="12" sm="6" lg="4">
+                    <MudPaper Elevation="0" Class="pa-4 h-100" Style="border:1px solid var(--mud-palette-divider); border-radius: 8px;">
+                        <MudStack Spacing="2">
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                <MudIcon Icon="@item.Icon" Color="@item.Color" />
+                                <MudChip T="string" Size="Size.Small" Color="@item.Color" Variant="Variant.Outlined">@item.Scope</MudChip>
+                            </MudStack>
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.subtitle1">@item.Title</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">@item.Description</MudText>
+                            </MudStack>
+                            <MudButton Variant="Variant.Text" Color="@item.Color" EndIcon="@Icons.Material.Filled.ChevronRight" OnClick="@(() => Navigation.NavigateTo(item.Route))">
+                                이동
+                            </MudButton>
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudStack>
+</MudContainer>
+
+@code {
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    private static IReadOnlyList<WorkspaceLink> WorkspaceLinks =>
+    [
+        new("입고 대시보드", "입고 예정, 검수 진행, 재고 전환 흐름을 운영자 관점에서 확인합니다.", "입고", ShipperRoutes.InboundDashboard, Icons.Material.Filled.Dashboard, Color.Primary),
+        new("입고 현황", "입고 예정 상품과 창고 입고 처리 대상을 확인합니다.", "입고", ShipperRoutes.InboundRequests, Icons.Material.Filled.MoveToInbox, Color.Warning),
+        new("재고 목록", "가용 재고를 판매 등록 또는 재위탁 운송으로 연결합니다.", "재고", ShipperRoutes.WarehouseInventory, Icons.Material.Filled.Inventory2, Color.Success),
+        new("재위탁 운송", "창고 재고를 다른 목적지로 보내는 운송 흐름을 관리합니다.", "배송", ShipperRoutes.ReconsignmentOrders, Icons.Material.Filled.LocalShipping, Color.Secondary),
+        new("주문 출고 알림", "판매채널 주문을 창고 출고 작업으로 전환해야 하는 대상을 확인합니다.", "출고", ShipperRoutes.OrderFulfillment, Icons.Material.Filled.Outbox, Color.Info)
+    ];
+
+    private sealed record WorkspaceLink(string Title, string Description, string Scope, string Route, string Icon, Color Color);
+}

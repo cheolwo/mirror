@@ -1,0 +1,705 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@inherits MvvmComponentBase<CommunityCollectiveActionPageViewModel>
+@using System.Globalization
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inject NavigationManager Navigation
+
+<PageTitle>@ViewModel.PageTitleText</PageTitle>
+
+<div class="collective-action-workspace">
+    <header class="collective-action-header">
+        <div class="collective-action-header__copy">
+            <a class="collective-action-back" href="@BuildBackRoute()">
+                <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+                @BuildBackLabel()
+            </a>
+            <div class="collective-action-heading-row">
+                <div>
+                    <span class="collective-action-kicker">함께 하는 일 · @ViewModel.CurrentPage.Number</span>
+                    <h1>@ViewModel.CurrentPage.Title</h1>
+                    <p>@ViewModel.CurrentPage.Description</p>
+                </div>
+                <MudTooltip Text="새로고침">
+                    <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                   Color="Color.Default"
+                                   Disabled="@ViewModel.처리중"
+                                   OnClick="RefreshAsync" />
+                </MudTooltip>
+            </div>
+        </div>
+    </header>
+
+    <nav class="collective-action-stage-nav" aria-label="함께 하는 일 단계">
+        @foreach (var stage in ViewModel.Navigation.JourneyStages)
+        {
+            <button type="button"
+                    class="@BuildStageClass(stage)"
+                    aria-current="@(ViewModel.Navigation.IsCurrent(stage.Key) ? "page" : null)"
+                    @onclick="@(() => NavigateToPage(stage.Key))">
+                <span>@stage.Number</span>
+                <strong>@stage.ShortTitle</strong>
+            </button>
+        }
+    </nav>
+
+    <nav class="collective-action-personal-nav" aria-label="내 참여와 커뮤니티 기록">
+        @foreach (var personalPage in ViewModel.Navigation.PersonalPages)
+        {
+            <button type="button"
+                    class="@(ViewModel.Navigation.IsCurrent(personalPage.Key) ? "is-active" : null)"
+                    aria-current="@(ViewModel.Navigation.IsCurrent(personalPage.Key) ? "page" : null)"
+                    @onclick="@(() => NavigateToPage(personalPage.Key))">
+                <MudIcon Icon="@ResolvePageIcon(personalPage.Icon)" Size="Size.Small" />
+                @personalPage.ShortTitle
+            </button>
+        }
+    </nav>
+
+    @if (ViewModel.처리중)
+    {
+        <section class="collective-action-loading" aria-label="불러오는 중">
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+            <div class="collective-action-loading__rows">
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="84px" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="160px" />
+            </div>
+        </section>
+    }
+    else if (!string.IsNullOrWhiteSpace(ViewModel.오류메시지))
+    {
+        <section class="collective-action-state">
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@ViewModel.오류메시지</MudAlert>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="RefreshAsync" StartIcon="@Icons.Material.Filled.Refresh">
+                다시 불러오기
+            </MudButton>
+        </section>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(ViewModel.DataNotice))
+        {
+            <MudAlert Severity="Severity.Info"
+                      Variant="Variant.Outlined"
+                      Dense="true"
+                      Icon="@Icons.Material.Filled.Visibility"
+                      Class="collective-action-data-notice">
+                @ViewModel.DataNotice
+            </MudAlert>
+        }
+
+        @if (ViewModel.VisibleActions.Count == 0)
+        {
+            <section class="collective-action-state">
+                <MudIcon Icon="@ResolvePageIcon(ViewModel.CurrentPage.Icon)" Size="Size.Large" />
+                <h2>@BuildEmptyTitle()</h2>
+                <p>@BuildEmptyDescription()</p>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Href="/community"
+                           StartIcon="@Icons.Material.Filled.Forum">
+                    생활 게시판 보기
+                </MudButton>
+            </section>
+        }
+        else
+        {
+            <section class="collective-action-picker" aria-label="함께 하는 일 선택">
+                @foreach (var action in ViewModel.VisibleActions)
+                {
+                    <button type="button"
+                            class="@BuildActionPickerClass(action)"
+                            @onclick="@(() => SelectAction(action.Id))">
+                        <span class="collective-action-picker__state">@action.StatusLabel</span>
+                        <strong>@action.Title</strong>
+                        <small>@action.CommunityScope · @BuildRouteLabel(action)</small>
+                    </button>
+                }
+            </section>
+
+            @if (ViewModel.SelectedAction is { } selected)
+            {
+                <section class="collective-action-summary" aria-labelledby="collective-action-selected-title">
+                    <div class="collective-action-summary__main">
+                        <div class="collective-action-summary__labels">
+                            <span>@selected.StatusLabel</span>
+                            @if (selected.IsPreview)
+                            {
+                                <span class="is-preview">둘러보기 예시</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(selected.SourceCountryCode))
+                            {
+                                <span>@selected.SourceCountryCode</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(selected.DestinationCountryCode)
+                                 && !string.Equals(selected.SourceCountryCode, selected.DestinationCountryCode, StringComparison.OrdinalIgnoreCase))
+                            {
+                                <span>@($"→ {selected.DestinationCountryCode}")</span>
+                            }
+                        </div>
+                        <h2 id="collective-action-selected-title">@selected.Title</h2>
+                        <p>@selected.Summary</p>
+                    </div>
+                    <dl class="collective-action-summary__metrics">
+                        <div>
+                            <dt>함께한 사람</dt>
+                            <dd>@($"{selected.ParticipantCount}명")</dd>
+                        </div>
+                        <div>
+                            <dt>확정 수량</dt>
+                            <dd>@($"{selected.CurrentCommittedQuantity:N0}{selected.QuantityUnit}")</dd>
+                        </div>
+                        <div>
+                            <dt>관심 포함</dt>
+                            <dd>@($"{selected.CurrentPotentialQuantity:N0}{selected.QuantityUnit}")</dd>
+                        </div>
+                        <div>
+                            <dt>최소 기준</dt>
+                            <dd>@($"{selected.MinimumOrderQuantity:N0}{selected.QuantityUnit}")</dd>
+                        </div>
+                    </dl>
+                </section>
+
+                @if (ViewModel.Delivery.IsApplicable)
+                {
+                    <CommunityUnitedStatesCollectiveImportJourney Model="@ViewModel.Delivery.Snapshot" />
+                }
+
+                @if (ViewModel.TraditionalMarketImportedMeat.IsApplicable)
+                {
+                    <CommunityTraditionalMarketImportedMeatJourney Model="@ViewModel.TraditionalMarketImportedMeat.Snapshot" />
+                }
+
+                @if (ViewModel.MarketDay.IsApplicable)
+                {
+                    <CommunityMarketDayJourney Model="@ViewModel.MarketDay.Snapshot" />
+                }
+
+                @if (ViewModel.CurrentPage.Key == CommunityCollectiveActionPageKeys.Gathering)
+                {
+                    <section class="collective-action-section">
+                        <div class="collective-action-section__heading">
+                            <div>
+                                <span>지금 모인 마음</span>
+                                <h2>@BuildGatheringHeadline(selected)</h2>
+                            </div>
+                            <strong>@BuildDemandPercent(selected)%</strong>
+                        </div>
+                        <MudProgressLinear Value="@BuildDemandPercent(selected)"
+                                           Rounded="false"
+                                           Color="Color.Success"
+                                           Size="Size.Medium" />
+                        <div class="collective-action-gathering-grid">
+                            <div>
+                                <span>확정 수량</span>
+                                <strong>@($"{selected.CurrentCommittedQuantity:N0}{selected.QuantityUnit}")</strong>
+                            </div>
+                            <div>
+                                <span>참여 의향 포함</span>
+                                <strong>@($"{selected.CurrentPotentialQuantity:N0}{selected.QuantityUnit}")</strong>
+                            </div>
+                            <div>
+                                <span>기준까지</span>
+                                <strong>@($"{Math.Max(0m, selected.MinimumOrderQuantity - selected.CurrentPotentialQuantity):N0}{selected.QuantityUnit}")</strong>
+                            </div>
+                        </div>
+                        <div class="collective-action-section__actions">
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       Href="/community"
+                                       StartIcon="@Icons.Material.Filled.Forum">
+                                원래 게시글 보기
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       Href="/community/group-purchase"
+                                       StartIcon="@Icons.Material.Filled.PersonAdd">
+                                참여 수량 확인
+                            </MudButton>
+                        </div>
+                    </section>
+                }
+                else if (ViewModel.CurrentPage.Key == CommunityCollectiveActionPageKeys.Conditions)
+                {
+                    <section class="collective-action-section">
+                        <div class="collective-action-section__heading">
+                            <div>
+                                <span>현재 리비전</span>
+                                <h2>서로 확인한 조건</h2>
+                            </div>
+                            <strong>@($"{ViewModel.Conditions.ConfirmedCount}/{ViewModel.Conditions.TotalCount}")</strong>
+                        </div>
+                        <div class="collective-action-condition-list">
+                            @foreach (var condition in ViewModel.Conditions.Items)
+                            {
+                                <div class="collective-action-condition">
+                                    <MudIcon Icon="@(condition.Confirmed ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Schedule)"
+                                             Color="@(condition.Confirmed ? Color.Success : Color.Warning)" />
+                                    <div>
+                                        <span>@condition.Label</span>
+                                        <strong>@condition.Value</strong>
+                                    </div>
+                                    <small>@condition.StatusLabel</small>
+                                </div>
+                            }
+                        </div>
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                            가격과 편익은 추정값이며, 주요 조건이 바뀌면 새 리비전으로 다시 동의합니다.
+                        </MudAlert>
+                    </section>
+                }
+                else if (ViewModel.CurrentPage.Key is CommunityCollectiveActionPageKeys.Party
+                         or CommunityCollectiveActionPageKeys.Professionals)
+                {
+                    <section class="collective-action-section">
+                        <div class="collective-action-section__heading">
+                            <div>
+                                <span>거래 참여팀</span>
+                                <h2>@(ViewModel.CurrentPage.Key == CommunityCollectiveActionPageKeys.Professionals ? "전문 역할의 빈자리" : "함께 맡을 역할")</h2>
+                            </div>
+                            <strong>@($"필수 {ViewModel.Party.AcceptedRequiredCount}/{ViewModel.Party.RequiredCount}")</strong>
+                        </div>
+                        @foreach (var category in BuildVisibleRoleSlots().GroupBy(slot => slot.Category))
+                        {
+                            <div class="collective-action-role-group">
+                                <h3>@category.Key</h3>
+                                <div class="collective-action-role-grid">
+                                    @foreach (var slot in category)
+                                    {
+                                        <article class="collective-action-role-card">
+                                            <div>
+                                                <MudIcon Icon="@(slot.Accepted ? Icons.Material.Filled.Verified : Icons.Material.Filled.PersonSearch)"
+                                                         Color="@(slot.Accepted ? Color.Success : Color.Default)" />
+                                                <span>@(slot.Required ? "필수 역할" : "필요 시 참여")</span>
+                                            </div>
+                                            <h4>@slot.RoleLabel</h4>
+                                            <p>@slot.Responsibility</p>
+                                            <footer>
+                                                <strong>@(slot.ParticipantLabel ?? "참여할 사람을 기다려요")</strong>
+                                                <small>@slot.StatusLabel</small>
+                                            </footer>
+                                        </article>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                            관심 표시는 면허·등록·영업 권한이나 실제 수임을 대신하지 않습니다. 역할별 수락과 계약 근거를 따로 확인합니다.
+                        </MudAlert>
+                    </section>
+                }
+                else if (ViewModel.CurrentPage.Key == CommunityCollectiveActionPageKeys.Readiness)
+                {
+                    <section class="collective-action-section">
+                        <div class="collective-action-section__heading">
+                            <div>
+                                <span>실행 전 확인</span>
+                                <h2>@(ViewModel.Readiness.ExecutionReviewReady ? "실행 검토를 시작할 수 있어요" : "아직 확인할 일이 남아 있어요")</h2>
+                            </div>
+                            <strong>@($"{ViewModel.Readiness.CompleteCount}/{ViewModel.Readiness.TotalCount}")</strong>
+                        </div>
+                        <ol class="collective-action-readiness-list">
+                            @foreach (var check in ViewModel.Readiness.Checks)
+                            {
+                                <li class="@(check.Complete ? "is-complete" : null)">
+                                    <span>
+                                        <MudIcon Icon="@(check.Complete ? Icons.Material.Filled.Check : Icons.Material.Filled.MoreHoriz)" />
+                                    </span>
+                                    <div>
+                                        <strong>@check.Label</strong>
+                                        <p>@check.Detail</p>
+                                    </div>
+                                    <small>@(check.Complete ? "확인" : check.BlocksExecution ? "필수" : "선택")</small>
+                                </li>
+                            }
+                        </ol>
+                        <MudAlert Severity="@(ViewModel.Readiness.ExecutionReviewReady ? Severity.Success : Severity.Warning)"
+                                  Variant="Variant.Outlined"
+                                  Dense="true">
+                            실행 검토 준비는 주문·계약·결제·배차 또는 운송 주선의 자동 확정을 뜻하지 않습니다.
+                        </MudAlert>
+                    </section>
+                }
+                else if (ViewModel.CurrentPage.Key == CommunityCollectiveActionPageKeys.InProgress)
+                {
+                    <section class="collective-action-section collective-action-capacity">
+                        <div class="collective-action-section__heading">
+                            <div>
+                                <span>추가 참여 창</span>
+                                <h2>@ViewModel.Execution.CapacityHeadline</h2>
+                            </div>
+                            <strong>@BuildDeadlineLabel()</strong>
+                        </div>
+
+                        <div class="collective-action-capacity__summary">
+                            <div>
+                                <span>확정 배치</span>
+                                <strong>@($"{ViewModel.Execution.CurrentCommittedQuantity:N0}{ViewModel.Execution.QuantityUnit}")</strong>
+                            </div>
+                            <div>
+                                <span>임시 참여 포함</span>
+                                <strong>@($"{ViewModel.Execution.CurrentPotentialQuantity:N0}{ViewModel.Execution.QuantityUnit}")</strong>
+                            </div>
+                            <div>
+                                <span>확인된 남은 여력</span>
+                                <strong>@($"{ViewModel.Execution.ConfirmedRemainingQuantity:N0}{ViewModel.Execution.QuantityUnit}")</strong>
+                            </div>
+                        </div>
+
+                        <div class="collective-action-capacity__evidence">
+                            @foreach (var evidence in ViewModel.Execution.CapacityEvidence)
+                            {
+                                <div class="collective-action-capacity-source">
+                                    <MudIcon Icon="@ResolveCapacityIcon(evidence.Status)"
+                                             Color="@ResolveCapacityColor(evidence.Status)" />
+                                    <div>
+                                        <span>@evidence.Label</span>
+                                        <strong>@BuildCapacityValue(evidence)</strong>
+                                        <small>@evidence.ResponsibleRole · @evidence.EvidenceLabel</small>
+                                    </div>
+                                    <em>@ResolveCapacityStatusLabel(evidence.Status)</em>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="collective-action-capacity__entry">
+                            <div>
+                                <span>추가로 함께할 수량</span>
+                                <MudNumericField T="decimal"
+                                                 @bind-Value="ViewModel.Execution.AdditionalQuantity"
+                                                 Min="1"
+                                                 Step="1"
+                                                 Variant="Variant.Outlined"
+                                                 Adornment="Adornment.End"
+                                                 AdornmentText="@ViewModel.Execution.QuantityUnit"
+                                                 HideSpinButtons="false" />
+                            </div>
+                            <div class="collective-action-capacity__projection">
+                                <span>참여 의향 반영 시</span>
+                                <strong>@($"{ViewModel.Execution.ProjectedPotentialQuantity:N0}{ViewModel.Execution.QuantityUnit}")</strong>
+                                @if (ViewModel.Execution.EstimatedCurrentUnitCost.HasValue
+                                     && ViewModel.Execution.EstimatedSafeMaximumUnitCost.HasValue)
+                                {
+                                    <small>@($"예상 도착원가 {ViewModel.Execution.EstimatedCurrentUnitCost:N0}원 → 최대 여력 기준 {ViewModel.Execution.EstimatedSafeMaximumUnitCost:N0}원")</small>
+                                }
+                            </div>
+                            <div class="collective-action-capacity__actions">
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           Disabled="@(!ViewModel.Execution.CanReviewCurrentBatch)"
+                                           OnClick="ReviewAdditionalParticipation"
+                                           StartIcon="@Icons.Material.Filled.AddShoppingCart">
+                                    현재 배치 검토
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Default"
+                                           OnClick="PrepareNextBatchWaitlist"
+                                           StartIcon="@Icons.Material.Filled.Update">
+                                    다음 배치 대기
+                                </MudButton>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(ViewModel.Execution.Message))
+                        {
+                            <MudAlert Severity="@ResolveMessageSeverity(ViewModel.Execution.MessageKind)"
+                                      Variant="Variant.Outlined"
+                                      Dense="true">
+                                @ViewModel.Execution.Message
+                            </MudAlert>
+                        }
+
+                        <div class="collective-action-section__actions">
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       Href="/community/group-purchase"
+                                       EndIcon="@Icons.Material.Filled.ArrowForward">
+                                담당 업무에서 이어가기
+                            </MudButton>
+                        </div>
+                    </section>
+
+                    <section class="collective-action-section">
+                        <div class="collective-action-section__heading">
+                            <div>
+                                <span>진행 기록</span>
+                                <h2>마음이 실제 행동으로 이어진 과정</h2>
+                            </div>
+                        </div>
+                        <ol class="collective-action-timeline">
+                            @foreach (var item in ViewModel.Execution.Timeline.OrderBy(entry => entry.At))
+                            {
+                                <li class="@(item.Complete ? "is-complete" : null)">
+                                    <time>@item.At.ToLocalTime().ToString("M월 d일", CultureInfo.GetCultureInfo("ko-KR"))</time>
+                                    <div>
+                                        <strong>@item.Title</strong>
+                                        <p>@item.Detail</p>
+                                    </div>
+                                </li>
+                            }
+                        </ol>
+                    </section>
+                }
+                else if (ViewModel.CurrentPage.Key is CommunityCollectiveActionPageKeys.Completed
+                         or CommunityCollectiveActionPageKeys.Stories)
+                {
+                    <section class="collective-action-section">
+                        <div class="collective-action-section__heading">
+                            <div>
+                                <span>함께 만든 결과</span>
+                                <h2>@selected.Title</h2>
+                            </div>
+                            <MudIcon Icon="@Icons.Material.Filled.Celebration" Color="Color.Success" Size="Size.Large" />
+                        </div>
+                        @if (ViewModel.Outcome.Items.Count == 0)
+                        {
+                            <div class="collective-action-inline-empty">실제 이행 결과가 원장에 기록되면 여기에 함께 표시됩니다.</div>
+                        }
+                        else
+                        {
+                            <div class="collective-action-outcome-grid">
+                                @foreach (var outcome in ViewModel.Outcome.Items)
+                                {
+                                    <article>
+                                        <span>@outcome.Label</span>
+                                        <strong>@outcome.Value</strong>
+                                        <p>@outcome.Detail</p>
+                                    </article>
+                                }
+                            </div>
+                        }
+                        <ol class="collective-action-timeline collective-action-timeline--compact">
+                            @foreach (var item in ViewModel.Execution.Timeline.OrderBy(entry => entry.At))
+                            {
+                                <li class="is-complete">
+                                    <time>@item.At.ToLocalTime().ToString("M월 d일", CultureInfo.GetCultureInfo("ko-KR"))</time>
+                                    <div>
+                                        <strong>@item.Title</strong>
+                                        <p>@item.Detail</p>
+                                    </div>
+                                </li>
+                            }
+                        </ol>
+                    </section>
+                }
+                else if (ViewModel.CurrentPage.Key == CommunityCollectiveActionPageKeys.Mine)
+                {
+                    <section class="collective-action-section">
+                        <div class="collective-action-section__heading">
+                            <div>
+                                <span>내 참여</span>
+                                <h2>내가 마음을 보탠 일</h2>
+                            </div>
+                            <strong>@($"{ViewModel.VisibleActions.Count}건")</strong>
+                        </div>
+                        <div class="collective-action-my-status">
+                            <div>
+                                <MudIcon Icon="@Icons.Material.Filled.Favorite" Color="Color.Error" />
+                                <span>관심과 참여</span>
+                                <strong>@selected.StatusLabel</strong>
+                            </div>
+                            <div>
+                                <MudIcon Icon="@Icons.Material.Filled.AssignmentInd" Color="Color.Info" />
+                                <span>맡은 역할</span>
+                                <strong>@BuildMyRoleLabel(selected)</strong>
+                            </div>
+                            <div>
+                                <MudIcon Icon="@Icons.Material.Filled.NextPlan" Color="Color.Warning" />
+                                <span>다음 확인</span>
+                                <strong>@BuildMyNextAction(selected)</strong>
+                            </div>
+                        </div>
+                    </section>
+                }
+            }
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? PageKey { get; set; }
+
+    [Parameter]
+    public Guid? CampaignId { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        ViewModel.Configure(PageKey, CampaignId);
+        await ViewModel.초기화Async();
+    }
+
+    private Task RefreshAsync()
+        => ViewModel.새로고침Async();
+
+    private void NavigateToPage(string pageKey)
+        => Navigation.NavigateTo(CommunityCollectiveActionRoutes.Build(pageKey, ViewModel.SelectedAction?.Id));
+
+    private void SelectAction(Guid actionId)
+    {
+        ViewModel.SelectAction(actionId);
+        Navigation.NavigateTo(CommunityCollectiveActionRoutes.Build(ViewModel.CurrentPage.Key, actionId), replace: true);
+    }
+
+    private void ReviewAdditionalParticipation()
+        => ViewModel.Execution.ReviewAdditionalParticipation();
+
+    private void PrepareNextBatchWaitlist()
+        => ViewModel.Execution.PrepareNextBatchWaitlist();
+
+    private string BuildBackRoute()
+        => CommunityCollectiveActionRoutes.BuildSourcePost(ViewModel.SelectedAction?.SourcePostId);
+
+    private string BuildBackLabel()
+        => ViewModel.SelectedAction?.SourcePostId is > 0 ? "원문 게시글" : "커뮤니티";
+
+    private string BuildStageClass(CommunityCollectiveActionPageDefinition stage)
+    {
+        var classes = new List<string> { "collective-action-stage" };
+        if (ViewModel.Navigation.IsCurrent(stage.Key))
+        {
+            classes.Add("is-active");
+        }
+
+        var selectedStage = ViewModel.SelectedAction is null
+            ? -1
+            : ViewModel.Navigation.JourneyStages
+                .Select((item, index) => (item, index))
+                .Where(item => item.item.Key == ViewModel.SelectedAction.CurrentPageKey)
+                .Select(item => item.index)
+                .DefaultIfEmpty(-1)
+                .First();
+        if (stage.Number - 1 < selectedStage)
+        {
+            classes.Add("is-past");
+        }
+        else if (stage.Number - 1 == selectedStage)
+        {
+            classes.Add("is-current-work");
+        }
+
+        return string.Join(' ', classes);
+    }
+
+    private string BuildActionPickerClass(CommunityCollectiveActionSnapshot action)
+        => ViewModel.SelectedAction?.Id == action.Id
+            ? "collective-action-picker__item is-selected"
+            : "collective-action-picker__item";
+
+    private IEnumerable<CommunityActionRoleSlotSnapshot> BuildVisibleRoleSlots()
+        => ViewModel.CurrentPage.Key == CommunityCollectiveActionPageKeys.Professionals
+            ? ViewModel.Party.Slots.Where(slot => !slot.Accepted
+                                                 && slot.Category is "통관·문서" or "운송 중개·주선" or "실제 운송" or "현장 이행")
+            : ViewModel.Party.Slots;
+
+    private static double BuildDemandPercent(CommunityCollectiveActionSnapshot action)
+        => action.MinimumOrderQuantity <= 0m
+            ? 0d
+            : Math.Min(100d, (double)(action.CurrentPotentialQuantity / action.MinimumOrderQuantity * 100m));
+
+    private static string BuildGatheringHeadline(CommunityCollectiveActionSnapshot action)
+    {
+        var remaining = Math.Max(0m, action.MinimumOrderQuantity - action.CurrentPotentialQuantity);
+        return remaining == 0m
+            ? "필요한 마음이 모였어요"
+            : $"{remaining:N0}{action.QuantityUnit}이 더 모이면 다음 조건을 맞춰볼 수 있어요";
+    }
+
+    private static string BuildRouteLabel(CommunityCollectiveActionSnapshot action)
+        => string.IsNullOrWhiteSpace(action.SourceCountryCode)
+            ? action.ProductLabel
+            : string.Equals(action.SourceCountryCode, action.DestinationCountryCode, StringComparison.OrdinalIgnoreCase)
+                ? $"{action.SourceCountryCode} · {action.ProductLabel}"
+                : $"{action.SourceCountryCode} → {action.DestinationCountryCode} · {action.ProductLabel}";
+
+    private string BuildDeadlineLabel()
+        => ViewModel.Execution.ClosesAt.HasValue
+            ? ViewModel.Execution.IsClosed
+                ? "현재 배치 마감"
+                : $"{ViewModel.Execution.ClosesAt.Value.ToLocalTime():M월 d일 HH:mm}까지"
+            : "마감 확인 중";
+
+    private static string BuildCapacityValue(CommunityCapacityEvidenceSnapshot evidence)
+        => evidence.Status == CommunityCapacityEvidenceStatus.NotRequired
+            ? "해당 없음"
+            : evidence.MaximumTotalQuantity.HasValue
+                ? $"총 {evidence.MaximumTotalQuantity.Value:N0}까지"
+                : "수량 확인 중";
+
+    private static string ResolveCapacityStatusLabel(CommunityCapacityEvidenceStatus status)
+        => status switch
+        {
+            CommunityCapacityEvidenceStatus.Confirmed => "확인",
+            CommunityCapacityEvidenceStatus.NotRequired => "해당 없음",
+            CommunityCapacityEvidenceStatus.Closed => "마감",
+            _ => "확인 중"
+        };
+
+    private static string ResolveCapacityIcon(CommunityCapacityEvidenceStatus status)
+        => status switch
+        {
+            CommunityCapacityEvidenceStatus.Confirmed => Icons.Material.Filled.Verified,
+            CommunityCapacityEvidenceStatus.NotRequired => Icons.Material.Filled.RemoveCircleOutline,
+            CommunityCapacityEvidenceStatus.Closed => Icons.Material.Filled.Lock,
+            _ => Icons.Material.Filled.HourglassTop
+        };
+
+    private static Color ResolveCapacityColor(CommunityCapacityEvidenceStatus status)
+        => status switch
+        {
+            CommunityCapacityEvidenceStatus.Confirmed => Color.Success,
+            CommunityCapacityEvidenceStatus.Pending => Color.Warning,
+            CommunityCapacityEvidenceStatus.Closed => Color.Error,
+            _ => Color.Default
+        };
+
+    private static Severity ResolveMessageSeverity(CommunityComposerMessageKind kind)
+        => kind switch
+        {
+            CommunityComposerMessageKind.Success => Severity.Success,
+            CommunityComposerMessageKind.Warning => Severity.Warning,
+            CommunityComposerMessageKind.Error => Severity.Error,
+            _ => Severity.Info
+        };
+
+    private static string ResolvePageIcon(string icon)
+        => icon switch
+        {
+            "groups" => Icons.Material.Filled.Groups,
+            "tune" => Icons.Material.Filled.Tune,
+            "diversity_3" => Icons.Material.Filled.Diversity3,
+            "fact_check" => Icons.Material.Filled.FactCheck,
+            "local_shipping" => Icons.Material.Filled.LocalShipping,
+            "celebration" => Icons.Material.Filled.Celebration,
+            "person_book" => Icons.Material.Filled.Person,
+            "auto_stories" => Icons.Material.Filled.AutoStories,
+            "support_agent" => Icons.Material.Filled.SupportAgent,
+            _ => Icons.Material.Filled.Groups
+        };
+
+    private string BuildEmptyTitle()
+        => ViewModel.CurrentPage.Key switch
+        {
+            CommunityCollectiveActionPageKeys.Mine => "아직 내가 함께한 일이 없어요",
+            CommunityCollectiveActionPageKeys.Stories => "아직 성사된 이야기가 없어요",
+            CommunityCollectiveActionPageKeys.Professionals => "지금 열린 전문가 요청이 없어요",
+            _ => "지금 표시할 함께 하는 일이 없어요"
+        };
+
+    private string BuildEmptyDescription()
+        => ViewModel.CurrentPage.Key == CommunityCollectiveActionPageKeys.Professionals
+            ? "새 가원장에서 전문 역할 참여를 요청하면 여기에 표시됩니다."
+            : "생활 게시판의 가벼운 이야기에서 새 마음 모으기를 시작할 수 있습니다.";
+
+    private static string BuildMyRoleLabel(CommunityCollectiveActionSnapshot action)
+        => action.RoleSlots.FirstOrDefault(slot => slot.Accepted)?.RoleLabel ?? "관심 참여자";
+
+    private static string BuildMyNextAction(CommunityCollectiveActionSnapshot action)
+        => action.CurrentPageKey switch
+        {
+            CommunityCollectiveActionPageKeys.Gathering => "다른 참여 기다리기",
+            CommunityCollectiveActionPageKeys.Readiness => "현재 조건 확인",
+            CommunityCollectiveActionPageKeys.InProgress => "진행과 추가 여력 확인",
+            CommunityCollectiveActionPageKeys.Completed => "결과 돌아보기",
+            _ => "조건 조율 확인"
+        };
+}

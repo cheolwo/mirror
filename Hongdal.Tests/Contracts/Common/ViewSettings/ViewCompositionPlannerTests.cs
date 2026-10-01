@@ -9,12 +9,12 @@ public sealed class ViewCompositionPlannerTests
     {
         var plan = ViewCompositionPlanner.BuildPlan(
             CreateCatalog(),
-            "ShipperApp",
+            "HongdalApp",
             "shipper",
             ViewCompositionSurfaceCode.PrimaryNavigation,
             [
                 new ViewCompositionPolicyOverride(
-                    "ShipperApp",
+                    "HongdalApp",
                     "shipper",
                     ViewCompositionSurfaceCode.PrimaryNavigation,
                     "shipper.sales-channels",
@@ -30,12 +30,12 @@ public sealed class ViewCompositionPlannerTests
     {
         var plan = ViewCompositionPlanner.BuildPlan(
             CreateCatalog(),
-            "ShipperApp",
+            "HongdalApp",
             "shipper",
             ViewCompositionSurfaceCode.PrimaryNavigation,
             [
                 new ViewCompositionPolicyOverride(
-                    "ShipperApp",
+                    "HongdalApp",
                     "shipper",
                     ViewCompositionSurfaceCode.PrimaryNavigation,
                     "shipper.request",
@@ -80,7 +80,7 @@ public sealed class ViewCompositionPlannerTests
     {
         var plan = ViewCompositionPlanner.BuildPlan(
             CreateCatalog(),
-            "ShipperApp",
+            "HongdalApp",
             "shipper",
             ViewCompositionSurfaceCode.ProfileMenu);
 
@@ -97,7 +97,7 @@ public sealed class ViewCompositionPlannerTests
         return
         [
             new(
-                "ShipperApp",
+                "HongdalApp",
                 "shipper",
                 ViewCompositionSurfaceCode.PrimaryNavigation,
                 "shipper.request",
@@ -110,7 +110,7 @@ public sealed class ViewCompositionPlannerTests
                 DefaultPolicyEnabled: true,
                 SortOrder: 10),
             new(
-                "ShipperApp",
+                "HongdalApp",
                 "shipper",
                 ViewCompositionSurfaceCode.PrimaryNavigation,
                 "shipper.sales-channels",
@@ -123,7 +123,7 @@ public sealed class ViewCompositionPlannerTests
                 DefaultPolicyEnabled: true,
                 SortOrder: 20),
             new(
-                "ShipperApp",
+                "HongdalApp",
                 "shipper",
                 ViewCompositionSurfaceCode.ProfileMenu,
                 "shipper.view-settings",

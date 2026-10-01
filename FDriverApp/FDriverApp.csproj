@@ -23,7 +23,7 @@
 		<MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
 
 		<!-- Display name -->
-		<ApplicationTitle>홍달 음식 배달</ApplicationTitle>
+		<ApplicationTitle>살뜰 배달</ApplicationTitle>
 
 		<!-- App Identifier -->
 		<ApplicationId>kr.hongdal.fdriver</ApplicationId>

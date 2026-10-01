@@ -1,0 +1,71 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject AdminAuthSession Session
+@inject NavigationManager Navigation
+
+<MudLayout>
+    <MudAppBar Dense="true" Elevation="0">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
+        <MudStack Spacing="0" Class="ml-2">
+            <MudText Typo="Typo.subtitle1">살뜰 관리자</MudText>
+            <MudText Typo="Typo.caption">글쓰기·자료 검토·발행 관리</MudText>
+        </MudStack>
+        <MudSpacer />
+        @if (Session.IsServerAdmin)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">@Session.UserName</MudChip>
+        }
+    </MudAppBar>
+
+    <MudDrawer @bind-Open="drawerOpen" Variant="DrawerVariant.Responsive" Elevation="1" ClipMode="DrawerClipMode.Always">
+        <MudNavMenu Class="pa-3">
+            <MudNavLink Href="/information-review" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.EditNote">글쓰기 작업대</MudNavLink>
+            <MudNavLink Href="/prajna" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AutoStories">외부 콘텐츠 검토</MudNavLink>
+            <MudDivider Class="my-3" />
+            <MudNavGroup Title="보조 관리" Icon="@Icons.Material.Filled.Settings" Expanded="false">
+                <MudNavLink Href="/overview" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">관리 개요</MudNavLink>
+                <MudNavLink Href="/community-management" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AdminPanelSettings">커뮤니티 운영</MudNavLink>
+                <MudNavLink Href="/page-catalog" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.WebAsset">페이지 운영</MudNavLink>
+            </MudNavGroup>
+            <MudDivider Class="my-3" />
+            @if (Session.IsServerAdmin)
+            {
+                <MudButton Variant="Variant.Text" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Logout" OnClick="LogoutAsync">
+                    로그아웃
+                </MudButton>
+            }
+            else
+            {
+                <MudNavLink Href="/login" Icon="@Icons.Material.Filled.Login">관리자 로그인</MudNavLink>
+            }
+        </MudNavMenu>
+    </MudDrawer>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.False" Class="pa-4 admin-content">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool drawerOpen = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Session.Changed += HandleSessionChanged;
+        await Session.RestoreAsync();
+    }
+
+    private void ToggleDrawer() => drawerOpen = !drawerOpen;
+
+    private async Task LogoutAsync()
+    {
+        await Session.LogoutAsync();
+        Navigation.NavigateTo("/login");
+    }
+
+    private void HandleSessionChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Session.Changed -= HandleSessionChanged;
+}

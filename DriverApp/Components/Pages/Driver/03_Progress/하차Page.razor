@@ -1,9 +1,6 @@
 @page "/driver/transports/{운송Id:long}/dropoff"
-@inject IDriverSampleDataService Samples
-@inject IDriverTransportCompletionPhotoService CompletionPhotoService
-@inject IDriverTransportExceptionService ExceptionService
-@using Microsoft.Maui.ApplicationModel
-@using Microsoft.Maui.Media
+@using DriverApp.ViewModels.Driver.Transport
+@inherits MvvmComponentBase<기사하차PageViewModel>
 
 <PageTitle>하차</PageTitle>
 
@@ -18,7 +15,7 @@
 
         <MudPaper Class="pa-4" Elevation="2">
             <MudStack Spacing="2">
-                @if (운송 is null)
+                @if (ViewModel.운송 is null)
                 {
                     <MudAlert Severity="Severity.Warning">운송 정보를 찾지 못했습니다.</MudAlert>
                 }
@@ -27,50 +24,75 @@
                     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
                         <MudStack Spacing="0">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">하차지</MudText>
-                            <MudText Typo="Typo.h6">@운송.하차지</MudText>
+                            <MudText Typo="Typo.h6">@ViewModel.운송.하차지</MudText>
                         </MudStack>
-                        <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">@운송.현재단계</MudChip>
+                        <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">@ViewModel.운송.현재단계</MudChip>
                     </MudStack>
 
                     <MudGrid>
                         <MudItem xs="12" sm="4">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">출발 상차지</MudText>
-                            <MudText Typo="Typo.body1">@운송.픽업지</MudText>
+                            <MudText Typo="Typo.body1">@ViewModel.운송.픽업지</MudText>
                         </MudItem>
                         <MudItem xs="12" sm="4">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">운송거리</MudText>
-                            <MudText Typo="Typo.body1">@운송.운송거리Km.ToString("0.0")km</MudText>
+                            <MudText Typo="Typo.body1">@ViewModel.운송.운송거리Km.ToString("0.0")km</MudText>
                         </MudItem>
                         <MudItem xs="12" sm="4">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">예상수익</MudText>
-                            <MudText Typo="Typo.body1">@운송.예상수익.ToString("N0")원</MudText>
+                            <MudText Typo="Typo.body1">@ViewModel.운송.예상수익.ToString("N0")원</MudText>
                         </MudItem>
                     </MudGrid>
 
                     <MudDivider />
 
-                    @if (운송.상차대상화물목록.Count > 0)
+                    @if (ViewModel.운송.상차대상화물목록.Count > 0)
                     {
                         <MudPaper Elevation="0" Class="pa-3">
                             <MudStack Spacing="2">
                                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
                                     <MudStack Spacing="0">
                                         <MudText Typo="Typo.subtitle1">세대/하차지별 하차 확인</MudText>
-                                        <MudText Typo="Typo.body2" Color="Color.Secondary">@DropoffGuideText</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">@ViewModel.화물.안내</MudText>
                                     </MudStack>
-                                    <MudChip T="string" Size="Size.Small" Color="@DropoffProgressColor" Variant="Variant.Filled">@DropoffProgressLabel</MudChip>
+                                    <MudChip T="string" Size="Size.Small" Color="@ViewModel.화물.진행색" Variant="Variant.Filled">@ViewModel.화물.진행라벨</MudChip>
                                 </MudStack>
 
-                                @if (NextDropoffCargo is not null)
+                                <DriverCargoLoadProgress CargoItems="@ViewModel.운송.상차대상화물목록"
+                                                         ConfirmedCargoCodes="@ViewModel.화물.하차완료코드"
+                                                         IsUnloading="true" />
+
+                                @if (ViewModel.화물.다음화물 is not null)
                                 {
-                                    <MudAlert Severity="Severity.Info" Dense="true">
-                                        다음 하차: @NextDropoffCargo.하차위치 · @NextDropoffCargo.Label · @NextDropoffCargo.수량중량표시
+                                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                                        <MudStack Spacing="1">
+                                            <MudText Typo="Typo.subtitle2">
+                                                지금 하차: @ViewModel.화물.다음화물.하차순번표시 · @ViewModel.화물.다음화물.하차위치
+                                            </MudText>
+                                            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@ViewModel.화물.다음화물.차량적재위치</MudChip>
+                                                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">@ViewModel.화물.다음화물.하차순번표시</MudChip>
+                                            </MudStack>
+                                            <MudText Typo="Typo.body2">@ViewModel.화물.다음화물.Label · @ViewModel.화물.다음화물.수량중량표시 · @ViewModel.화물.다음화물.Barcode</MudText>
+                                            <MudButton Variant="Variant.Text"
+                                                       Color="Color.Info"
+                                                       Size="Size.Small"
+                                                       StartIcon="@Icons.Material.Filled.TouchApp"
+                                                       OnClick="ViewModel.화물.다음화물선택">
+                                                다음 화물 선택
+                                            </MudButton>
+                                        </MudStack>
                                     </MudAlert>
+                                }
+                                else
+                                {
+                                    <MudAlert Severity="Severity.Success" Dense="true">권장 하차 순서의 모든 화물을 확인했습니다.</MudAlert>
                                 }
 
                                 <MudGrid>
                                     <MudItem xs="12" sm="8">
-                                        <MudTextField @bind-Value="dropoffBarcodeInput"
+                                        <MudTextField @bind-Value="ViewModel.화물.바코드입력"
                                                       Label="하차 바코드"
                                                       Placeholder="내릴 화물의 바코드를 스캔하거나 입력"
                                                       Variant="Variant.Outlined"
@@ -81,55 +103,62 @@
                                                    Color="Color.Info"
                                                    FullWidth="true"
                                                    StartIcon="@Icons.Material.Filled.QrCodeScanner"
-                                                   OnClick="LookupDropoffBarcode">
+                                                   OnClick="ViewModel.화물.바코드조회">
                                             바코드 조회
                                         </MudButton>
                                     </MudItem>
                                 </MudGrid>
 
-                                @if (SelectedDropoffCargo is not null)
+                                @if (ViewModel.화물.선택화물 is not null)
                                 {
                                     <MudPaper Elevation="0" Class="pa-3">
+                                        @if (ViewModel.화물.선택화물순서다름)
+                                        {
+                                            <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">
+                                                권장 다음 화물은 @(ViewModel.화물.다음화물?.Label)입니다. 먼저 내리면 다른 화물을 다시 옮겨야 하는지 확인해 주세요.
+                                            </MudAlert>
+                                        }
+
                                         <MudGrid>
                                             <MudItem xs="12" sm="4">
                                                 <MudText Typo="Typo.caption" Color="Color.Secondary">하차 순서</MudText>
-                                                <MudText Typo="Typo.h4" Color="Color.Info">@SelectedDropoffCargo.하차순번표시</MudText>
+                                                <MudText Typo="Typo.h4" Color="Color.Info">@ViewModel.화물.선택화물.하차순번표시</MudText>
                                             </MudItem>
                                             <MudItem xs="12" sm="8">
                                                 <MudText Typo="Typo.caption" Color="Color.Secondary">조회된 화물</MudText>
-                                                <MudText Typo="Typo.subtitle1">@SelectedDropoffCargo.Label</MudText>
-                                                <MudText Typo="Typo.body2">@SelectedDropoffCargo.하차위치 · @SelectedDropoffCargo.수량중량표시</MudText>
-                                                <MudText Typo="Typo.body2">@SelectedDropoffCargo.차량적재위치</MudText>
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">@SelectedDropoffCargo.작업메모</MudText>
+                                                <MudText Typo="Typo.subtitle1">@ViewModel.화물.선택화물.Label</MudText>
+                                                <MudText Typo="Typo.body2">@ViewModel.화물.선택화물.하차위치 · @ViewModel.화물.선택화물.수량중량표시</MudText>
+                                                <MudText Typo="Typo.body2">@ViewModel.화물.선택화물.차량적재위치</MudText>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">@ViewModel.화물.선택화물.작업메모</MudText>
                                             </MudItem>
                                         </MudGrid>
 
                                         <MudButton Variant="Variant.Filled"
                                                    Color="Color.Success"
                                                    StartIcon="@Icons.Material.Filled.CheckCircle"
-                                                   Disabled="@IsDropoffCargoConfirmed(SelectedDropoffCargo.Code)"
-                                                   OnClick="ConfirmSelectedDropoffCargo">
-                                            @(IsDropoffCargoConfirmed(SelectedDropoffCargo.Code) ? "하차 확인됨" : "이 화물 하차 확인")
+                                                   Disabled="@ViewModel.화물.하차확인됨(ViewModel.화물.선택화물.Code)"
+                                                   OnClick="ViewModel.화물.선택화물확인">
+                                            @(ViewModel.화물.하차확인됨(ViewModel.화물.선택화물.Code) ? "하차 확인됨" : "이 화물 하차 확인")
                                         </MudButton>
                                     </MudPaper>
                                 }
 
                                 <MudGrid>
-                                    @foreach (var item in OrderedDropoffCargo)
+                                    @foreach (var item in ViewModel.화물.정렬화물)
                                     {
                                         <MudItem xs="12" sm="6">
                                             <MudPaper Elevation="0" Class="pa-2">
                                                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Wrap="Wrap.Wrap">
                                                     <MudStack Spacing="0">
-                                                        <MudText Typo="Typo.body2">@item.하차위치</MudText>
+                                                        <MudText Typo="Typo.body2"><strong>@item.하차순번표시</strong> · @item.하차위치</MudText>
                                                         <MudText Typo="Typo.caption" Color="Color.Secondary">@item.Label · @item.수량중량표시</MudText>
-                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@item.Barcode</MudText>
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@item.차량적재위치 · @item.Barcode</MudText>
                                                     </MudStack>
                                                     <MudChip T="string"
                                                              Size="Size.Small"
-                                                             Color="@DropoffCargoChipColor(item)"
+                                                             Color="@ViewModel.화물.화물칩색(item)"
                                                              Variant="Variant.Outlined">
-                                                        @DropoffCargoChipLabel(item)
+                                                        @ViewModel.화물.화물칩라벨(item)
                                                     </MudChip>
                                                 </MudStack>
                                             </MudPaper>
@@ -145,46 +174,46 @@
                     <MudPaper Elevation="0" Class="pa-3">
                         <MudStack Spacing="2">
                             <MudText Typo="Typo.subtitle1">인수/결제 확인</MudText>
-                            <MudCheckBox T="bool" @bind-Value="dropoffPlaceConfirmed" Label="하차지에 도착했고 주소를 확인했습니다." Color="Color.Info" />
-                            <MudCheckBox T="bool" @bind-Value="receiverConfirmed" Label="수령자 또는 현장 담당자에게 화물을 인계했습니다." Color="Color.Info" />
-                            <MudSelect T="string" Label="현장 결제/증빙 방식" @bind-Value="paymentEvidenceMethod" Variant="Variant.Outlined">
+                            <MudCheckBox T="bool" @bind-Value="ViewModel.인계.하차지확인" Label="하차지에 도착했고 주소를 확인했습니다." Color="Color.Info" />
+                            <MudCheckBox T="bool" @bind-Value="ViewModel.인계.수령자확인" Label="수령자 또는 현장 담당자에게 화물을 인계했습니다." Color="Color.Info" />
+                            <MudSelect T="string" Label="현장 결제/증빙 방식" @bind-Value="ViewModel.인계.결제증빙방식" Variant="Variant.Outlined">
                                 <MudSelectItem Value="@("인수증")">인수증</MudSelectItem>
                                 <MudSelectItem Value="@("하단 계좌")">하단 계좌</MudSelectItem>
                                 <MudSelectItem Value="@("카드")">카드</MudSelectItem>
                                 <MudSelectItem Value="@("현금")">현금</MudSelectItem>
                                 <MudSelectItem Value="@("후불 정산")">후불 정산</MudSelectItem>
                             </MudSelect>
-                            <MudCheckBox T="bool" @bind-Value="paymentEvidenceConfirmed" Label="선택한 결제/증빙 방식을 현장에서 확인했습니다." Color="Color.Info" />
+                            <MudCheckBox T="bool" @bind-Value="ViewModel.인계.결제증빙확인" Label="선택한 결제/증빙 방식을 현장에서 확인했습니다." Color="Color.Info" />
                         </MudStack>
                     </MudPaper>
 
                     <DriverTransportIssuePanel Description="수량 부족, 다른 화물, 수령자 부재, 파손 의심 같은 하차 예외를 즉시 남깁니다."
-                                               IssueTypes="DropoffIssueTypes"
-                                               @bind-Open="dropoffIssuePanelOpen"
-                                               @bind-IssueType="dropoffIssueType"
-                                               @bind-Memo="dropoffIssueMemo"
-                                               IsReporting="@isIssueReporting"
-                                               OnSubmit="RecordDropoffIssueAsync" />
+                                               IssueTypes="@ViewModel.예외.유형목록"
+                                               @bind-Open="ViewModel.예외.열림"
+                                               @bind-IssueType="ViewModel.예외.유형"
+                                               @bind-Memo="ViewModel.예외.메모"
+                                               IsReporting="@ViewModel.예외.신고중"
+                                               OnSubmit="@(() => ViewModel.예외.신고Command.ExecuteAsync(null))" />
 
                     <DriverTransportProofPanel Title="하차 완료 사진"
                                                Description="하차 위치와 전달 상태가 확인되도록 촬영합니다. 사진 확인 후 완료 처리가 가능합니다."
-                                               PreviewUrl="@photoPreviewUrl"
+                                               PreviewUrl="@ViewModel.사진.미리보기Url"
                                                PreviewAlt="하차 완료 사진 미리보기"
-                                               FileName="@photoFileName"
-                                               StatusMessage="@statusMessage"
-                                               StatusSeverity="@statusSeverity"
-                                               HasPhoto="@HasPhoto"
-                                               IsCapturing="@isCapturing"
-                                               CanComplete="@CanComplete"
-                                               IsCompleting="@isCompleting"
-                                               CompletionGuide="@CompletionGuide"
+                                               FileName="@ViewModel.사진.파일명"
+                                               StatusMessage="@ViewModel.상태.메시지"
+                                               StatusSeverity="@ViewModel.상태.심각도"
+                                               HasPhoto="@ViewModel.사진.사진있음"
+                                               IsCapturing="@ViewModel.사진.촬영중"
+                                               CanComplete="@ViewModel.완료가능"
+                                               IsCompleting="@ViewModel.하차완료.처리중"
+                                               CompletionGuide="@ViewModel.완료안내"
                                                CaptureButtonText="하차 완료 사진 촬영"
                                                RetakeButtonText="하차 사진 다시 촬영"
                                                CompleteButtonText="하차 완료"
                                                CompletingText="하차 완료 처리 중"
-                                               OnCapture="CaptureCompletionPhotoAsync"
-                                               OnComplete="CompleteDropoffAsync"
-                                               OnClear="ClearPhoto" />
+                                               OnCapture="@(() => ViewModel.사진.촬영Command.ExecuteAsync(null))"
+                                               OnComplete="@(() => ViewModel.완료Command.ExecuteAsync(null))"
+                                               OnClear="ViewModel.사진.제거" />
                 }
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/driver/transports/current">진행 중 운송으로</MudButton>
             </MudStack>
@@ -196,312 +225,5 @@
     [Parameter]
     public long 운송Id { get; set; }
 
-    private 기사운송샘플항목? 운송 => Samples.운송조회(운송Id);
-
-    private static readonly string[] DropoffIssueTypes =
-    [
-        "수량 부족",
-        "다른 화물",
-        "바코드 훼손",
-        "수령자 부재",
-        "파손 의심"
-    ];
-
-    private bool isCapturing;
-    private string? photoFileName;
-    private string photoContentType = "image/jpeg";
-    private byte[]? photoBytes;
-    private string? photoPreviewUrl;
-    private string? uploadedObjectName;
-    private string? uploadedUrl;
-    private string? statusMessage;
-    private Severity statusSeverity = Severity.Info;
-    private bool dropoffPlaceConfirmed;
-    private bool receiverConfirmed;
-    private bool paymentEvidenceConfirmed;
-    private bool isCompleting;
-    private string paymentEvidenceMethod = "인수증";
-    private readonly HashSet<string> droppedCargoCodes = [];
-    private string? dropoffBarcodeInput;
-    private string? selectedDropoffCargoCode;
-    private bool dropoffIssuePanelOpen;
-    private string dropoffIssueType = "수량 부족";
-    private string? dropoffIssueMemo;
-    private bool isIssueReporting;
-
-    private bool HasPhoto => photoBytes is { Length: > 0 };
-
-    private IReadOnlyList<기사상차대상화물> OrderedDropoffCargo
-        => 운송?.상차대상화물목록
-            .OrderBy(item => item.하차순번)
-            .ThenBy(item => item.적재순번)
-            .ToArray()
-           ?? [];
-
-    private 기사상차대상화물? SelectedDropoffCargo
-        => 운송?.상차대상화물목록.FirstOrDefault(item => string.Equals(item.Code, selectedDropoffCargoCode, StringComparison.Ordinal));
-
-    private 기사상차대상화물? NextDropoffCargo
-        => OrderedDropoffCargo.FirstOrDefault(item => !droppedCargoCodes.Contains(item.Code));
-
-    private bool DropoffCargoCompleted
-        => 운송 is null
-           || 운송.상차대상화물목록.Count == 0
-           || 운송.상차대상화물목록.All(item => droppedCargoCodes.Contains(item.Code));
-
-    private string DropoffGuideText
-        => 운송?.적재순번필요 == true
-            ? "상차 때 정한 하차 순서대로 바코드를 확인하고 내려줍니다."
-            : "동일 규격 화물은 수량과 외관을 중심으로 확인합니다.";
-
-    private string DropoffProgressLabel
-        => 운송 is null || 운송.상차대상화물목록.Count == 0
-            ? "개별 확인 없음"
-            : $"{droppedCargoCodes.Count}/{운송.상차대상화물목록.Count} 하차 확인";
-
-    private Color DropoffProgressColor => DropoffCargoCompleted ? Color.Success : Color.Info;
-
-    private bool FieldChecksCompleted => dropoffPlaceConfirmed
-        && receiverConfirmed
-        && paymentEvidenceConfirmed
-        && !string.IsNullOrWhiteSpace(paymentEvidenceMethod);
-
-    private bool CanComplete => !isCapturing && DropoffCargoCompleted && FieldChecksCompleted && HasPhoto;
-
-    private string CompletionGuide
-    {
-        get
-        {
-            if (!FieldChecksCompleted && !HasPhoto)
-            {
-                return "인수/결제 확인을 완료하고 하차 완료 사진을 촬영해야 합니다.";
-            }
-
-            if (!FieldChecksCompleted)
-            {
-                return "인수자와 결제/증빙 확인을 모두 완료해야 합니다.";
-            }
-
-            if (!DropoffCargoCompleted)
-            {
-                return "세대/하차지별 화물 하차 확인을 완료해야 합니다.";
-            }
-
-            return "하차 완료 사진을 먼저 촬영해 주세요.";
-        }
-    }
-
-    private void LookupDropoffBarcode()
-    {
-        var barcode = dropoffBarcodeInput?.Trim();
-        if (string.IsNullOrWhiteSpace(barcode))
-        {
-            SetStatus("하차 바코드를 입력하거나 스캔해 주세요.", Severity.Warning);
-            return;
-        }
-
-        var item = 운송?.상차대상화물목록.FirstOrDefault(candidate =>
-            string.Equals(candidate.Barcode, barcode, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(candidate.Code, barcode, StringComparison.OrdinalIgnoreCase));
-
-        if (item is null)
-        {
-            SetStatus("현재 운송 건에 포함되지 않은 하차 바코드입니다.", Severity.Warning);
-            return;
-        }
-
-        selectedDropoffCargoCode = item.Code;
-        dropoffBarcodeInput = item.Barcode;
-        SetStatus($"{item.하차위치} 하차 정보를 불러왔습니다.", Severity.Info);
-    }
-
-    private void ConfirmSelectedDropoffCargo()
-    {
-        if (SelectedDropoffCargo is null)
-        {
-            SetStatus("먼저 하차 바코드를 조회해 주세요.", Severity.Warning);
-            return;
-        }
-
-        droppedCargoCodes.Add(SelectedDropoffCargo.Code);
-        SetStatus($"{SelectedDropoffCargo.하차위치} 하차 확인을 기록했습니다.", Severity.Success);
-    }
-
-    private bool IsDropoffCargoConfirmed(string code)
-        => droppedCargoCodes.Contains(code);
-
-    private string DropoffCargoChipLabel(기사상차대상화물 item)
-    {
-        if (IsDropoffCargoConfirmed(item.Code))
-        {
-            return "확인";
-        }
-
-        return 운송?.적재순번필요 == true ? item.하차순번표시 : "수량 확인";
-    }
-
-    private Color DropoffCargoChipColor(기사상차대상화물 item)
-    {
-        if (IsDropoffCargoConfirmed(item.Code))
-        {
-            return Color.Success;
-        }
-
-        return 운송?.적재순번필요 == true ? Color.Info : Color.Default;
-    }
-
-    private async Task RecordDropoffIssueAsync()
-    {
-        var memo = string.IsNullOrWhiteSpace(dropoffIssueMemo) ? "메모 없음" : dropoffIssueMemo.Trim();
-        try
-        {
-            isIssueReporting = true;
-            SetStatus("하차 문제를 서버에 신고하는 중입니다.", Severity.Info);
-
-            var result = await ExceptionService.ReportAsync(new DriverTransportExceptionReport(
-                TransportId: 운송Id,
-                Stage: "하차",
-                ExceptionCode: ToDropoffExceptionCode(dropoffIssueType),
-                Reason: dropoffIssueType,
-                Memo: memo,
-                RequestAdminReview: true));
-
-            SetStatus(
-                result.Reported
-                    ? $"{result.Message} {dropoffIssueType} · {memo}"
-                    : result.Message,
-                result.Reported ? Severity.Warning : Severity.Error);
-        }
-        catch (Exception ex)
-        {
-            SetStatus($"하차 문제 신고 중 오류가 발생했습니다. 다시 시도해 주세요. {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isIssueReporting = false;
-        }
-    }
-
-    private async Task CaptureCompletionPhotoAsync()
-    {
-        if (!MediaPicker.Default.IsCaptureSupported)
-        {
-            SetStatus("이 기기에서는 카메라 촬영을 지원하지 않습니다.", Severity.Warning);
-            return;
-        }
-
-        try
-        {
-            isCapturing = true;
-            SetStatus("카메라를 여는 중입니다.", Severity.Info);
-
-            var photo = await MediaPicker.Default.CapturePhotoAsync(new MediaPickerOptions
-            {
-                Title = "하차 완료 사진"
-            });
-
-            if (photo is null)
-            {
-                SetStatus("사진 촬영이 취소되었습니다.", Severity.Info);
-                return;
-            }
-
-            await using var imageStream = await photo.OpenReadAsync();
-            using var memoryStream = new MemoryStream();
-            await imageStream.CopyToAsync(memoryStream);
-
-            photoBytes = memoryStream.ToArray();
-            photoFileName = photo.FileName;
-            photoContentType = string.IsNullOrWhiteSpace(photo.ContentType) ? "image/jpeg" : photo.ContentType;
-            photoPreviewUrl = $"data:{photoContentType};base64,{Convert.ToBase64String(photoBytes)}";
-            uploadedObjectName = null;
-            uploadedUrl = null;
-            SetStatus("하차 완료 사진이 첨부되었습니다. 사진을 확인한 뒤 하차 완료를 눌러 주세요.", Severity.Success);
-        }
-        catch (FeatureNotSupportedException)
-        {
-            SetStatus("이 기기에서는 카메라 촬영을 지원하지 않습니다.", Severity.Warning);
-        }
-        catch (PermissionException)
-        {
-            SetStatus("카메라 권한이 필요합니다. 앱 권한 설정에서 카메라 접근을 허용해 주세요.", Severity.Error);
-        }
-        catch (Exception ex)
-        {
-            SetStatus($"사진 촬영 중 오류가 발생했습니다: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isCapturing = false;
-        }
-    }
-
-    private async Task CompleteDropoffAsync()
-    {
-        if (!CanComplete)
-        {
-            SetStatus("하차 완료 사진을 먼저 촬영해 주세요.", Severity.Warning);
-            return;
-        }
-
-        try
-        {
-            isCompleting = true;
-            SetStatus($"{paymentEvidenceMethod} 확인 후 하차 완료를 처리하는 중입니다.", Severity.Info);
-
-            var result = await CompletionPhotoService.CompleteWithPhotoAsync(new DriverTransportCompletionPhoto(
-                DriverTransportCompletionPhotoKind.Dropoff,
-                운송Id,
-                photoFileName ?? $"dropoff-complete-{운송Id}.jpg",
-                photoContentType,
-                photoBytes!,
-                ExistingObjectName: uploadedObjectName,
-                ExistingUrl: uploadedUrl));
-
-            var objectName = string.IsNullOrWhiteSpace(result.ObjectName) ? string.Empty : $" 저장 경로: {result.ObjectName}";
-            if (result.Uploaded)
-            {
-                uploadedObjectName = result.ObjectName;
-                uploadedUrl = result.Url;
-            }
-
-            SetStatus($"{result.Message}{objectName}", result.CompletionRecorded ? Severity.Success : Severity.Warning);
-        }
-        catch (Exception ex)
-        {
-            SetStatus($"하차 완료 처리에 실패했습니다. 다시 시도해 주세요. {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isCompleting = false;
-        }
-    }
-
-    private void SetStatus(string message, Severity severity)
-    {
-        statusMessage = message;
-        statusSeverity = severity;
-    }
-
-    private static string ToDropoffExceptionCode(string issueType)
-        => issueType switch
-        {
-            "수량 부족" => "Dropoff.QuantityShortage",
-            "다른 화물" => "Dropoff.WrongCargo",
-            "바코드 훼손" => "Dropoff.BarcodeDamaged",
-            "수령자 부재" => "Dropoff.RecipientAbsent",
-            "파손 의심" => "Dropoff.DamageSuspected",
-            _ => "Dropoff.FieldIssue"
-        };
-
-    private void ClearPhoto()
-    {
-        photoFileName = null;
-        photoBytes = null;
-        photoPreviewUrl = null;
-        photoContentType = "image/jpeg";
-        uploadedObjectName = null;
-        uploadedUrl = null;
-        SetStatus("첨부된 하차 사진을 제거했습니다.", Severity.Info);
-    }
+    protected override void OnParametersSet() => ViewModel.Initialize(운송Id);
 }

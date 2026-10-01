@@ -1,0 +1,171 @@
+@page "/global/import-requests"
+@inject GlobalTradeWorkspaceService Workspace
+@inject NavigationManager Navigation
+
+<PageTitle>글로벌 수입 요청함</PageTitle>
+
+<WebPageHeader Eyebrow="Hongdal Global · Korea Desk"
+               Title="글로벌 수입 요청함"
+               Description="해외 상품 공개 페이지에서 들어온 한국 수요를 검토하고 기존 HS·운송·공동수입 흐름으로 넘기는 운영 화면입니다."
+               Badge="세션 기반 뼈대" />
+
+<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-4">
+    현재 등록과 요청은 WebApp 세션 메모리에만 보관됩니다. 서버 저장·회원 인증·알림은 다음 단계의 연결 지점입니다.
+</MudAlert>
+
+<MudGrid Class="mb-4">
+    <MudItem xs="12" sm="6" lg="3">@Metric("공개 상품", PublishedProductCount.ToString(), Color.Primary, Icons.Material.Filled.Public)</MudItem>
+    <MudItem xs="12" sm="6" lg="3">@Metric("검토 대기 상품", PendingProductCount.ToString(), Color.Warning, Icons.Material.Filled.PendingActions)</MudItem>
+    <MudItem xs="12" sm="6" lg="3">@Metric("수입 요청", Workspace.ImportRequests.Count.ToString(), Color.Success, Icons.Material.Filled.Handshake)</MudItem>
+    <MudItem xs="12" sm="6" lg="3">@Metric("주문원장", Workspace.ImportOrders.Count.ToString(), Color.Info, Icons.Material.Filled.AccountTree)</MudItem>
+</MudGrid>
+
+<MudGrid>
+    <MudItem xs="12" lg="8">
+        <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
+                <div>
+                    <MudText Typo="Typo.h6">한국 수입 관심 요청</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">수량과 메모를 보고 다음 검토 단계를 정합니다.</MudText>
+                </div>
+                <MudButton Href="@GlobalTradeRoutes.Home" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew">
+                    글로벌 공개 홈
+                </MudButton>
+            </MudStack>
+
+            @if (Workspace.ImportRequests.Count == 0)
+            {
+                <MudAlert Severity="Severity.Normal">아직 접수된 수입 요청이 없습니다.</MudAlert>
+            }
+            else
+            {
+                <MudTable Items="Workspace.ImportRequests.OrderByDescending(request => request.CreatedAt)" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
+                    <HeaderContent>
+                        <MudTh>요청</MudTh>
+                        <MudTh>상품·공급자</MudTh>
+                        <MudTh>요청자</MudTh>
+                        <MudTh>수량</MudTh>
+                        <MudTh>상태</MudTh>
+                        <MudTh></MudTh>
+                        <MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="요청">HD-IR-@context.Id.ToString("D4")<br /><small>@context.CreatedAt.ToLocalTime().ToString("MM-dd HH:mm")</small></MudTd>
+                        <MudTd DataLabel="상품·공급자"><strong>@context.ProductName</strong><br /><small>@context.SupplierName</small></MudTd>
+                        <MudTd DataLabel="요청자">@context.RequesterName<br /><small>@context.CompanyName</small></MudTd>
+                        <MudTd DataLabel="수량">@context.ExpectedQuantity.ToString("N0")</MudTd>
+                        <MudTd DataLabel="상태"><MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">@context.Status</MudChip></MudTd>
+                        <MudTd>
+                            <MudButton Href="@GlobalTradeRoutes.Product(context.ProductSlug)" Size="Size.Small" Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ArrowForward">상품</MudButton>
+                        </MudTd>
+                        <MudTd>
+                            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AccountTree" OnClick="@(() => OpenOrCreateOrder(context.Id))">
+                                @(Workspace.FindImportOrderByRequest(context.Id) is null ? "주문 전환" : "주문원장")
+                            </MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                    <ChildRowContent>
+                        <MudTr>
+                            <td colspan="7" class="pa-3">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">요청 메모</MudText>
+                                <MudText Typo="Typo.body2">@(string.IsNullOrWhiteSpace(context.Note) ? "별도 메모 없음" : context.Note)</MudText>
+                            </td>
+                        </MudTr>
+                    </ChildRowContent>
+                </MudTable>
+            }
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" lg="4">
+        <MudStack Spacing="3">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-1">다음 업무로 넘기기</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                    이 뼈대에서는 새 시스템을 복제하지 않고 기존 검토 화면으로 연결합니다.
+                </MudText>
+                <MudStack Spacing="2">
+                    <MudButton Href="@ShipperRoutes.CustomsHsReviews" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.FactCheck">HS·통관 검토</MudButton>
+                    <MudButton Href="@ShipperRoutes.FclLclPlanner" Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Calculate">FCL/LCL·도착원가</MudButton>
+                    <MudButton Href="/community/group-import" Variant="Variant.Outlined" Color="Color.Secondary" FullWidth="true" StartIcon="@Icons.Material.Filled.Groups">공동수입 후보</MudButton>
+                </MudStack>
+            </MudPaper>
+
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                    <MudText Typo="Typo.h6">공급자 검수 대기</MudText>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Warning">@PendingProductCount</MudChip>
+                </MudStack>
+                @if (PendingProducts.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">현재 세션에는 검수 대기 상품이 없습니다.</MudText>
+                }
+                else
+                {
+                    <MudList T="GlobalTradeProduct" Dense="true">
+                        @foreach (var product in PendingProducts)
+                        {
+                            <MudListItem T="GlobalTradeProduct" Value="@product" Icon="@Icons.Material.Filled.Inventory2">
+                                <MudText Typo="Typo.body2"><strong>@product.ProductName</strong></MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@product.SupplierName · @product.CountryName</MudText>
+                            </MudListItem>
+                        }
+                    </MudList>
+                }
+                <MudButton Href="@GlobalTradeRoutes.SupplierApply" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward" Class="mt-2">공급자 등록 화면</MudButton>
+            </MudPaper>
+        </MudStack>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private IReadOnlyList<GlobalTradeProduct> PendingProducts => Workspace.Products
+        .Where(product => product.ReviewStatus == GlobalTradeReviewStatus.PendingReview)
+        .ToArray();
+
+    private int PendingProductCount => PendingProducts.Count;
+    private int PublishedProductCount => Workspace.Products.Count(product => product.ReviewStatus == GlobalTradeReviewStatus.Published);
+
+    private void OpenOrCreateOrder(long requestId)
+    {
+        var order = Workspace.CreateImportOrderFromRequest(requestId);
+        Navigation.NavigateTo(GlobalTradeRoutes.ImportOrder(order.OrderCode));
+    }
+
+    private static RenderFragment Metric(string label, string value, Color color, string icon) => builder =>
+    {
+        builder.OpenComponent<MudPaper>(0);
+        builder.AddAttribute(1, "Elevation", 0);
+        builder.AddAttribute(2, "Outlined", true);
+        builder.AddAttribute(3, "Class", "pa-4 h-100");
+        builder.AddAttribute(4, "ChildContent", (RenderFragment)(childBuilder =>
+        {
+            childBuilder.OpenComponent<MudStack>(0);
+            childBuilder.AddAttribute(1, "Row", true);
+            childBuilder.AddAttribute(2, "AlignItems", AlignItems.Center);
+            childBuilder.AddAttribute(3, "Spacing", 2);
+            childBuilder.AddAttribute(4, "ChildContent", (RenderFragment)(stackBuilder =>
+            {
+                stackBuilder.OpenComponent<MudIcon>(0);
+                stackBuilder.AddAttribute(1, "Icon", icon);
+                stackBuilder.AddAttribute(2, "Color", color);
+                stackBuilder.AddAttribute(3, "Size", Size.Large);
+                stackBuilder.CloseComponent();
+                stackBuilder.OpenElement(4, "div");
+                stackBuilder.OpenComponent<MudText>(5);
+                stackBuilder.AddAttribute(6, "Typo", Typo.caption);
+                stackBuilder.AddAttribute(7, "Color", Color.Secondary);
+                stackBuilder.AddAttribute(8, "ChildContent", (RenderFragment)(textBuilder => textBuilder.AddContent(0, label)));
+                stackBuilder.CloseComponent();
+                stackBuilder.OpenComponent<MudText>(9);
+                stackBuilder.AddAttribute(10, "Typo", Typo.h5);
+                stackBuilder.AddAttribute(11, "Color", color);
+                stackBuilder.AddAttribute(12, "ChildContent", (RenderFragment)(textBuilder => textBuilder.AddContent(0, value)));
+                stackBuilder.CloseComponent();
+                stackBuilder.CloseElement();
+            }));
+            childBuilder.CloseComponent();
+        }));
+        builder.CloseComponent();
+    };
+}

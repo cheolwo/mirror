@@ -1,0 +1,218 @@
+@using System.Globalization
+@using Hongdal.Ui.Common.Areas.App.Services
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+
+<div class="platform-ledger-diagram-toolbar" aria-label="원장 다이어그램 도구">
+    @if (ShowClose)
+    {
+        <MudTooltip Text="다이어그램 닫기">
+            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                           Size="Size.Small"
+                           Color="Color.Default"
+                           OnClick="OnClose"
+                           aria-label="다이어그램 닫기" />
+        </MudTooltip>
+    }
+    <MudTooltip Text="왼쪽으로 이동">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                       Size="Size.Small"
+                       Color="Color.Primary"
+                       Class="@(UseResponsiveOrderActions ? "platform-diagram-desktop-order-action" : null)"
+                       Disabled="@(!CanMoveBackward)"
+                       OnClick="OnMoveBackward"
+                       aria-label="선택 도형 왼쪽 이동" />
+    </MudTooltip>
+    <MudTooltip Text="오른쪽으로 이동">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowForward"
+                       Size="Size.Small"
+                       Color="Color.Primary"
+                       Class="@(UseResponsiveOrderActions ? "platform-diagram-desktop-order-action" : null)"
+                       Disabled="@(!CanMoveForward)"
+                       OnClick="OnMoveForward"
+                       aria-label="선택 도형 오른쪽 이동" />
+    </MudTooltip>
+    @if (UseResponsiveOrderActions)
+    {
+        <MudTooltip Text="위 단계로 이동">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
+                           Size="Size.Small"
+                           Color="Color.Primary"
+                           Class="platform-diagram-mobile-order-action"
+                           Disabled="@(!CanMoveBackward)"
+                           OnClick="OnMoveBackward"
+                           aria-label="선택 단계를 위로 이동" />
+        </MudTooltip>
+        <MudTooltip Text="아래 단계로 이동">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
+                           Size="Size.Small"
+                           Color="Color.Primary"
+                           Class="platform-diagram-mobile-order-action"
+                           Disabled="@(!CanMoveForward)"
+                           OnClick="OnMoveForward"
+                           aria-label="선택 단계를 아래로 이동" />
+        </MudTooltip>
+    }
+    <MudTooltip Text="선택 노드를 맨 앞으로 보내기">
+        <MudIconButton Icon="@Icons.Material.Filled.FlipToFront"
+                       Size="Size.Small"
+                       Color="Color.Secondary"
+                       Disabled="@(!CanBringToFront)"
+                       OnClick="OnBringToFront"
+                       aria-label="선택 노드를 맨 앞으로 보내기" />
+    </MudTooltip>
+    <MudTooltip Text="선택 노드를 맨 뒤로 보내기">
+        <MudIconButton Icon="@Icons.Material.Filled.FlipToBack"
+                       Size="Size.Small"
+                       Color="Color.Secondary"
+                       Disabled="@(!CanSendToBack)"
+                       OnClick="OnSendToBack"
+                       aria-label="선택 노드를 맨 뒤로 보내기" />
+    </MudTooltip>
+    <PlatformDiagramFormNodeMenu FormNodes="@FormNodes"
+                                 FormNodeSelected="OnFormNodeSelected" />
+    <MudTooltip Text="선택 도형에서 연결 시작">
+        <MudIconButton Icon="@Icons.Material.Filled.AccountTree"
+                       Size="Size.Small"
+                       Color="Color.Secondary"
+                       Disabled="@(!CanStartConnection)"
+                       OnClick="OnStartConnection"
+                       aria-label="선택 도형에서 연결 시작" />
+    </MudTooltip>
+    <MudTooltip Text="배치 초기화">
+        <MudIconButton Icon="@Icons.Material.Filled.RestartAlt"
+                       Size="Size.Small"
+                       Color="Color.Secondary"
+                       OnClick="OnReset"
+                       aria-label="도형 배치 초기화" />
+    </MudTooltip>
+    @if (!string.IsNullOrWhiteSpace(Canvas.ConnectionStartNodeTitle))
+    {
+        <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Filled">
+            @Canvas.ConnectionStartNodeTitle
+        </MudChip>
+        <MudTextField T="string"
+                      Value="@Canvas.NewConnectionLabel"
+                      ValueChanged="@((string value) => Canvas.NewConnectionLabel = value)"
+                      Placeholder="화살표 의미"
+                      Immediate="true"
+                      Variant="Variant.Outlined"
+                      Class="platform-ledger-edge-label-input" />
+        <MudTooltip Text="연결 취소">
+            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                           Size="Size.Small"
+                           Color="Color.Default"
+                           OnClick="OnCancelConnection"
+                           aria-label="연결 만들기 취소" />
+        </MudTooltip>
+    }
+    <div class="platform-ledger-layer-toolbar" aria-label="캔버스 레이어 우선순위">
+        @foreach (var layer in Layers.OrderBy(layer => layer.DisplayOrder))
+        {
+            <button type="button"
+                    class="@BuildLayerClass(layer)"
+                    title="@BuildLayerTitle(layer)"
+                    aria-pressed="@Canvas.IsLayerVisible(layer.Key, layer.IsLocked)"
+                    @onclick="@(() => Canvas.ToggleLayer(layer.Key, layer.IsLocked))">
+                <span class="platform-ledger-layer-order">@BuildLayerOrderLabel(layer)</span>
+                <MudIcon Icon="@layer.Icon" Size="Size.Small" />
+                <span>@layer.Label</span>
+            </button>
+        }
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Canvas.ConnectionMessage))
+{
+    <MudAlert Severity="@ConnectionSeverity"
+              Dense="true"
+              Class="platform-ledger-mobile-connect-guide">
+        @Canvas.ConnectionMessage
+    </MudAlert>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public PlatformCommunityDiagramCanvasViewModel Canvas { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<다이어그램레이어정의> Layers { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<PlatformDiagramPaletteBlock> FormNodes { get; set; } = [];
+
+    [Parameter]
+    public bool ShowClose { get; set; }
+
+    [Parameter]
+    public bool UseResponsiveOrderActions { get; set; }
+
+    [Parameter]
+    public bool CanMoveBackward { get; set; }
+
+    [Parameter]
+    public bool CanMoveForward { get; set; }
+
+    [Parameter]
+    public bool CanBringToFront { get; set; }
+
+    [Parameter]
+    public bool CanSendToBack { get; set; }
+
+    [Parameter]
+    public bool CanStartConnection { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback OnMoveBackward { get; set; }
+
+    [Parameter]
+    public EventCallback OnMoveForward { get; set; }
+
+    [Parameter]
+    public EventCallback OnBringToFront { get; set; }
+
+    [Parameter]
+    public EventCallback OnSendToBack { get; set; }
+
+    [Parameter]
+    public EventCallback<PlatformDiagramPaletteBlock> OnFormNodeSelected { get; set; }
+
+    [Parameter]
+    public EventCallback OnStartConnection { get; set; }
+
+    [Parameter]
+    public EventCallback OnReset { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancelConnection { get; set; }
+
+    private Severity ConnectionSeverity
+        => Canvas.ConnectionMessageKind switch
+        {
+            CommunityComposerMessageKind.Success => Severity.Success,
+            CommunityComposerMessageKind.Warning => Severity.Warning,
+            CommunityComposerMessageKind.Error => Severity.Error,
+            _ => Severity.Info
+        };
+
+    private string BuildLayerClass(다이어그램레이어정의 layer)
+    {
+        var active = Canvas.IsLayerVisible(layer.Key, layer.IsLocked)
+            ? " platform-ledger-layer-toggle--active"
+            : " platform-ledger-layer-toggle--hidden";
+        var locked = layer.IsLocked ? " platform-ledger-layer-toggle--locked" : string.Empty;
+        return $"platform-ledger-layer-toggle platform-ledger-layer-toggle--{layer.Key}{active}{locked}";
+    }
+
+    private string BuildLayerTitle(다이어그램레이어정의 layer)
+    {
+        var state = Canvas.IsLayerVisible(layer.Key, layer.IsLocked) ? "표시 중" : "숨김";
+        var lockText = layer.IsLocked ? " · 기준 레이어라 숨길 수 없습니다." : string.Empty;
+        return $"{BuildLayerOrderLabel(layer)}순위 {layer.Label} 레이어 · {state} · {layer.Description}{lockText}";
+    }
+
+    private static string BuildLayerOrderLabel(다이어그램레이어정의 layer)
+        => (layer.DisplayOrder / 10).ToString(CultureInfo.InvariantCulture);
+}

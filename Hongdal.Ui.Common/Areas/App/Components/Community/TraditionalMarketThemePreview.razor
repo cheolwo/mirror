@@ -1,0 +1,46 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Ui.Common.Areas.App.Services
+
+<div class="traditional-market-theme-preview @(Compact ? "is-compact" : null)"
+     style="@BuildStyle()"
+     aria-label="@($"{Theme.MarketName} 꾸미기 팩 미리보기")">
+    <header>
+        <span class="traditional-market-theme-preview__board" aria-hidden="true"></span>
+        <div>
+            <small>MARKET STORY</small>
+            <strong>@DisplayTitle</strong>
+        </div>
+        <span class="traditional-market-theme-preview__day">장날</span>
+    </header>
+
+    <div class="traditional-market-theme-preview__surfaces">
+        <span class="is-product"><i aria-hidden="true"></i> @(Compact ? "상품" : "상품 표식")</span>
+        <span class="is-pickup"><i aria-hidden="true"></i> @(Compact ? "수령" : "예약 수령")</span>
+        <span class="is-story"><i aria-hidden="true"></i> @(Compact ? "이야기" : "성사 이야기")</span>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public TraditionalMarketThemeManifest Theme { get; set; } = default!;
+
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public bool Compact { get; set; }
+
+    private string DisplayTitle
+        => string.IsNullOrWhiteSpace(Title) ? Theme.MarketName : Title.Trim();
+
+    private string BuildStyle()
+        => string.Join(
+            ';',
+            $"--market-preview-background:{Theme.PreviewBackground}",
+            $"--market-preview-header:{Theme.MarketHeader.Color}",
+            $"--market-preview-board:{Theme.BoardMarker.Color}",
+            $"--market-preview-day:{Theme.MarketDayBanner.Color}",
+            $"--market-preview-product:{Theme.ProductMarker.Color}",
+            $"--market-preview-pickup:{Theme.PickupSign.Color}",
+            $"--market-preview-story:{Theme.StoryCover.Color}");
+}

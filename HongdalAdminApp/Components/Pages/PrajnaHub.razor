@@ -1,0 +1,106 @@
+@page "/prajna"
+@inject NavigationManager Navigation
+
+<PageTitle>반야 운영 허브</PageTitle>
+
+<MudStack Spacing="3">
+    <div class="admin-page-header">
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.overline" Color="Color.Primary">般若 · SECOND DEPTH</MudText>
+            <MudText Typo="Typo.h4">반야 운영 허브</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                공통 홈 사방괘의 아래쪽 반야에서 한 단계 더 들어온 관리자 전용 자료 길잡이입니다.
+            </MudText>
+        </MudStack>
+        <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.AccountTree">
+            2단계 사방괘
+        </MudChip>
+    </div>
+
+    <div class="prajna-depth-trail" aria-label="현재 탐색 깊이">
+        <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.Home" OnClick="OpenHome">
+            공통 홈
+        </MudButton>
+        <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+        <MudChip T="string" Size="Size.Small" Color="Color.Primary">반야</MudChip>
+        <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+        <MudText Typo="Typo.caption" Color="Color.Secondary">관리 영역 선택</MudText>
+    </div>
+
+    <MudGrid Spacing="3">
+        <MudItem xs="12" lg="7">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4 prajna-nested-stage">
+                <div class="prajna-stage-heading">
+                    <div>
+                        <MudText Typo="Typo.overline" Color="Color.Primary">두 번째 사방괘</MudText>
+                        <MudText Typo="Typo.h6">관리할 반야 자료를 골라 주세요</MudText>
+                    </div>
+                    <MudIcon Icon="@Icons.Material.Filled.Hub" Color="Color.Primary" Size="Size.Large" />
+                </div>
+
+                <HongdalLaterHeavenBaguaNavigator RoleLabel="반야 관리자"
+                                                    NavigationItems="PrajnaNavigationItems"
+                                                    AccentColor="#6d4aff"
+                                                    CenterSymbol="般"
+                                                    CenterTrigramName="반야"
+                                                    CenterDestinationLabel="전체 자료 관리"
+                                                    CenterSelected="OpenAllMaterials"
+                                                    ShowTaegeukCenter="false"
+                                                    ShowTrigramSymbols="true"
+                                                    DestinationSelected="OpenPrajnaDestination" />
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" lg="5">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4 h-100">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6">네 방향의 의미</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        각 괘를 누르면 홍익학당 관리 화면의 해당 구역으로 바로 이동합니다. 가운데 반야를 누르면 전체 자료 관리 화면을 엽니다.
+                    </MudText>
+
+                    @foreach (var item in PrajnaNavigationItems)
+                    {
+                        <button type="button" class="prajna-destination-row" @onclick="@(() => OpenPrajnaDestination(item))">
+                            <span class="prajna-destination-symbol">@item.TrigramSymbol</span>
+                            <span>
+                                <strong>@item.BusinessLabel</strong>
+                                <small>@item.DestinationLabel</small>
+                            </span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </button>
+                    }
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudStack>
+
+@code {
+    private static readonly IReadOnlyList<HongdalCardinalNavigationOption> PrajnaNavigationItems =
+    [
+        new("li", "리", "☲", "남", "수집 카드와 묶음", HongdalCardinalNavigationActionKinds.Route, "/prajna/hongik-hakdang#cards")
+        {
+            BusinessLabel = "카드"
+        },
+        new("dui", "태", "☱", "서", "내부 검토와 공개 기준", HongdalCardinalNavigationActionKinds.Route, "/prajna/hongik-hakdang#policy")
+        {
+            BusinessLabel = "공개 원칙"
+        },
+        new("kan", "감", "☵", "북", "YouTube 채널과 동기화", HongdalCardinalNavigationActionKinds.Route, "/prajna/hongik-hakdang#videos")
+        {
+            BusinessLabel = "영상"
+        },
+        new("zhen", "진", "☳", "동", "감지 영상 승인", HongdalCardinalNavigationActionKinds.Route, "/prajna/hongik-hakdang#review")
+        {
+            BusinessLabel = "검토"
+        }
+    ];
+
+    private void OpenHome() => Navigation.NavigateTo("/");
+
+    private void OpenAllMaterials() => Navigation.NavigateTo("/prajna/hongik-hakdang");
+
+    private void OpenPrajnaDestination(HongdalCardinalNavigationOption item)
+        => Navigation.NavigateTo(item.Target);
+}

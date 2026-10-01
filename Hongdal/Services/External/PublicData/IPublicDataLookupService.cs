@@ -1,4 +1,5 @@
 using Hongdal.Contracts.Common.PublicData;
+using Hongdal.Contracts.Common.Customs;
 
 namespace 홍달.Services.External.PublicData;
 
@@ -35,6 +36,20 @@ public interface IHsCountryTradeUnitPriceLookupService
 {
     Task<HsCountryImportUnitPriceSimulationResult> SimulateImportUnitPriceAsync(
         HsCountryMonthlyTradeUnitPriceRequest request,
+        CancellationToken cancellationToken = default);
+}
+
+public interface IAtDomesticFoodPriceLookupService
+{
+    Task<AtDomesticFoodPriceLookupResult> LookupAsync(
+        AtDomesticFoodPriceRequest request,
+        CancellationToken cancellationToken = default);
+}
+
+public interface IFoodPriceComparisonService
+{
+    Task<FoodPriceComparisonResponse> CompareAsync(
+        FoodPriceComparisonRequest request,
         CancellationToken cancellationToken = default);
 }
 

@@ -9,7 +9,7 @@
 	<ImplicitUsings>enable</ImplicitUsings>
 	<Nullable>enable</Nullable>
 	<EnableDefaultCssItems>false</EnableDefaultCssItems>
-	<ApplicationTitle>RestaurantDeskApp</ApplicationTitle>
+	<ApplicationTitle>살뜰 식당</ApplicationTitle>
 	<ApplicationId>com.companyname.restaurantdeskapp</ApplicationId>
 	<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 	<ApplicationVersion>1</ApplicationVersion>

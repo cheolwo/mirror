@@ -146,7 +146,7 @@ public sealed class 기사홈ViewModel
                 종류 = "진행중 운송",
                 제목 = BuildTransportMessage(dto),
                 설명 = dto.현재운송단계 ?? "현재 운송을 확인해 주세요.",
-                이동경로 = "/driver/transports/current",
+                이동경로 = DriverRoutes.CurrentTransport,
                 우선순위 = 1
             });
         }
@@ -172,7 +172,7 @@ public sealed class 기사홈ViewModel
                 종류 = "오늘 예약",
                 제목 = BuildReservationMessage(dto),
                 설명 = "예약을 확인하고 운행 가능 시간을 점검하세요.",
-                이동경로 = "/driver/reservations",
+                이동경로 = DriverRoutes.Reservations,
                 우선순위 = 3
             });
         }
@@ -184,7 +184,7 @@ public sealed class 기사홈ViewModel
                 종류 = "알림 확인",
                 제목 = "푸시 알림 등록이 필요합니다.",
                 설명 = "배차추천 알림을 받으려면 알림 설정을 확인해야 합니다.",
-                이동경로 = "/driver/notifications/settings",
+                이동경로 = DriverRoutes.NotificationSettings,
                 우선순위 = 4
             });
         }
@@ -196,7 +196,7 @@ public sealed class 기사홈ViewModel
                 종류 = "정산 확인",
                 제목 = "이번 달 이용료를 확인해 주세요.",
                 설명 = $"현재 이용료 {dto.이번달이용료:0}원 / 남은 금액 {dto.남은이용료:0}원",
-                이동경로 = "/driver/settlements/current-month",
+                이동경로 = DriverRoutes.CurrentMonthSettlement,
                 우선순위 = 5
             });
         }

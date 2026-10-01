@@ -8,7 +8,7 @@ using Android.Widget;
 
 namespace DriverApp;
 
-[BroadcastReceiver(Label = "홍달 위젯", Exported = true)]
+[BroadcastReceiver(Label = "살뜰 위젯", Exported = true)]
 [IntentFilter(new[] { AppWidgetManager.ActionAppwidgetUpdate })]
 [MetaData("android.appwidget.provider", Resource = "@xml/hongdal_widget_info")]
 public sealed class 홍달위젯Provider : AppWidgetProvider
@@ -43,8 +43,8 @@ public sealed class 홍달위젯Provider : AppWidgetProvider
             var views = new RemoteViews(packageName, layoutId);
 
             var 저장소 = context.GetSharedPreferences("hongdal_widget", FileCreationMode.Private);
-            var 제목 = 저장소.GetString("title", "홍달") ?? "홍달";
-            var 상태문구 = 저장소.GetString("status", "홍달과 연결됨") ?? "홍달과 연결됨";
+            var 제목 = 저장소.GetString("title", "살뜰") ?? "살뜰";
+            var 상태문구 = 저장소.GetString("status", "살뜰과 연결됨") ?? "살뜰과 연결됨";
             var 이미지경로 = 저장소.GetString("image_path", null);
 
             if (titleId != 0)

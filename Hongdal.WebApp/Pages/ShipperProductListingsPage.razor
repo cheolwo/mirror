@@ -6,6 +6,11 @@
                Description="판매상품과 채널출품 상태를 조회하고 기존 판매상품을 다른 채널로 추가 출품합니다."
                Badge="출품" />
 
+<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddBusiness"
+           Href="@ShipperRoutes.SalesPageComposer" Class="mb-4">
+    판매 페이지 만들기
+</MudButton>
+
 @if (!string.IsNullOrWhiteSpace(Message))
 {
     <MudAlert Severity="@MessageSeverity" Class="mb-4">@Message</MudAlert>

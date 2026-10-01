@@ -1,0 +1,218 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<aside class="platform-diagram-node-detail-panel"
+       role="dialog"
+       aria-label="노드 상세 정보"
+       @onclick:stopPropagation="true"
+       @onpointerdown:stopPropagation="true"
+       @onpointerup:stopPropagation="true">
+    <MudStack Spacing="2">
+        <MudStack Row="true" AlignItems="AlignItems.Start" Justify="Justify.SpaceBetween" Spacing="1">
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.overline" Color="Color.Secondary">노드 상세</MudText>
+                <MudText Typo="Typo.subtitle1">@Presentation.Node.Title</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@Presentation.Node.GroupLabel</MudText>
+            </MudStack>
+            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                           Size="Size.Small"
+                           Color="Color.Default"
+                           OnClick="CloseRequested"
+                           aria-label="노드 상세 닫기" />
+        </MudStack>
+
+        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+            <MudChip T="string" Size="Size.Small" Color="@Presentation.ProcessingStateColor" Variant="Variant.Filled">
+                @Presentation.ProcessingStateLabel
+            </MudChip>
+            <MudChip T="string" Size="Size.Small" Color="@Presentation.Node.Color" Variant="Variant.Outlined">
+                @Presentation.KindLabel
+            </MudChip>
+            @if (!string.IsNullOrWhiteSpace(Presentation.StackLabel))
+            {
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="Color.Secondary"
+                         Variant="Variant.Outlined"
+                         Icon="@Icons.Material.Filled.Layers">
+                    @Presentation.StackLabel
+                </MudChip>
+            }
+            @if (!string.IsNullOrWhiteSpace(Presentation.FormKindLabel))
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">
+                    @Presentation.FormKindLabel
+                </MudChip>
+            }
+        </MudStack>
+
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@Presentation.Node.Description</MudText>
+
+        <div class="@Presentation.ReadinessClass" style="@Presentation.ReadinessStyle">
+            <div>
+                <strong>
+                    @if (Presentation.Readiness.Percent >= 100)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+                    }
+                    입력 준비도 @($"{Presentation.Readiness.Percent}%")
+                </strong>
+                <span>@Presentation.Readiness.CountLabel</span>
+            </div>
+            <span class="platform-diagram-node-readiness-track"><i></i></span>
+            <small>@Presentation.Readiness.GuidanceLabel</small>
+            @if (Presentation.Readiness.TrackedBlocks.Count > 0)
+            {
+                <div class="platform-diagram-node-quick-inputs">
+                    <div class="platform-diagram-node-quick-input-heading">
+                        <strong>필수 정보 바로 입력</strong>
+                        <span>입력하면 준비도가 즉시 반영됩니다.</span>
+                    </div>
+                    @foreach (var trackedBlock in Presentation.Readiness.TrackedBlocks)
+                    {
+                        <MudTextField T="string"
+                                      Label="@trackedBlock.DisplayName"
+                                      Value="@LedgerBlockValueResolver(trackedBlock.Code)"
+                                      ValueChanged="@((string value) => LedgerBlockValueChanged.InvokeAsync(new(trackedBlock.Code, value)))"
+                                      Placeholder="@trackedBlock.Purpose"
+                                      Immediate="true"
+                                      Lines="2"
+                                      Margin="Margin.Dense"
+                                      Variant="Variant.Outlined"
+                                      Class="platform-diagram-node-quick-input" />
+                    }
+                </div>
+            }
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Presentation.LedgerStatusLabel))
+        {
+            <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">
+                @Presentation.LedgerStatusLabel
+            </MudAlert>
+        }
+
+        @if (Presentation.ContextValues.Count > 0)
+        {
+            <div class="platform-diagram-node-context-list">
+                @foreach (var pair in Presentation.ContextValues)
+                {
+                    <div class="platform-diagram-node-context-item">
+                        <span>@pair.Key</span>
+                        <strong>@pair.Value</strong>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (Presentation.InputFields.Count > 0)
+        {
+            var isFormNode = Presentation.Node.Kind.Equals("form", StringComparison.OrdinalIgnoreCase);
+            <div class="platform-diagram-node-form-list">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.subtitle2">@(isFormNode ? "업무 폼 입력" : "단계별 입력 가이드")</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            @(isFormNode ? "입력값은 이 폼 노드의 준비도에 바로 반영됩니다." : "업무를 구체화할 때 참고하는 체크 항목입니다.")
+                        </MudText>
+                    </MudStack>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">
+                        @($"{Presentation.InputFields.Count}개 {(isFormNode ? "입력" : "참고")}")
+                    </MudChip>
+                </MudStack>
+                @if (isFormNode)
+                {
+                    @foreach (var field in Presentation.InputFields)
+                    {
+                        <MudTextField T="string"
+                                      Label="@($"{field.Label} · {(field.IsRequired ? "필수" : "선택")}")"
+                                      Value="@DiagramFormValueResolver(field)"
+                                      ValueChanged="@((string value) => DiagramFormValueChanged.InvokeAsync(new(field, value)))"
+                                      Placeholder="@field.InputType"
+                                      HelperText="@field.Description"
+                                      Required="@field.IsRequired"
+                                      Immediate="true"
+                                      Lines="@(field.InputType.Contains("텍스트", StringComparison.OrdinalIgnoreCase) ? 2 : 1)"
+                                      Margin="Margin.Dense"
+                                      Variant="Variant.Outlined" />
+                    }
+                }
+                else
+                {
+                    @foreach (var field in Presentation.InputFields)
+                    {
+                        <div class="platform-diagram-node-form-field">
+                            <div>
+                                <strong>@field.Label</strong>
+                                <span>@field.Description</span>
+                            </div>
+                            <MudChip T="string"
+                                     Size="Size.Small"
+                                     Color="@(field.IsRequired ? Color.Warning : Color.Default)"
+                                     Variant="Variant.Outlined">
+                                @(field.IsRequired ? "필수" : "선택") · @field.InputType
+                            </MudChip>
+                        </div>
+                    }
+                }
+            </div>
+        }
+
+        <MudAlert Severity="Severity.Normal" Dense="true" Variant="Variant.Outlined">
+            @Presentation.Action.Description
+        </MudAlert>
+
+        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+            <MudButton Variant="Variant.Filled"
+                       Color="@Presentation.Action.Color"
+                       StartIcon="@Presentation.Action.Icon"
+                       OnClick="NavigateRequested">
+                상세 정보 확인
+            </MudButton>
+            @if (Presentation.IsDiagramMode)
+            {
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.FlipToFront"
+                           Disabled="@(!Presentation.CanBringToFront)"
+                           OnClick="BringToFrontRequested">
+                    맨 앞으로
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.FlipToBack"
+                           Disabled="@(!Presentation.CanSendToBack)"
+                           OnClick="SendToBackRequested">
+                    맨 뒤로
+                </MudButton>
+            }
+            @if (Presentation.CanRequestWarehouseProxy)
+            {
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.Warehouse"
+                           OnClick="WarehouseProxyRequested">
+                    물류 대행 신청
+                </MudButton>
+            }
+        </MudStack>
+    </MudStack>
+</aside>
+
+@code {
+    [Parameter, EditorRequired]
+    public PlatformCommunityDiagramNodeDetailPresentation Presentation { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public Func<string, string> LedgerBlockValueResolver { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public Func<도형입력항목, string> DiagramFormValueResolver { get; set; } = null!;
+
+    [Parameter] public EventCallback<PlatformCommunityLedgerBlockValueChange> LedgerBlockValueChanged { get; set; }
+    [Parameter] public EventCallback<PlatformCommunityDiagramFormValueChange> DiagramFormValueChanged { get; set; }
+    [Parameter] public EventCallback CloseRequested { get; set; }
+    [Parameter] public EventCallback NavigateRequested { get; set; }
+    [Parameter] public EventCallback BringToFrontRequested { get; set; }
+    [Parameter] public EventCallback SendToBackRequested { get; set; }
+    [Parameter] public EventCallback WarehouseProxyRequested { get; set; }
+}

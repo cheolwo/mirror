@@ -3,13 +3,13 @@
 @using Hongdal.Contracts.Common.PublicData
 @inject IGroupPurchaseShipmentTrackingService ShipmentTrackingService
 
-<PageTitle>먹거리 공동주문</PageTitle>
+<PageTitle>먹거리 공동수입</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.False" Class="py-4 group-purchase-page">
     <MudStack Spacing="3">
         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
             <MudStack Spacing="0">
-                <MudText Typo="Typo.h4">먹거리 공동주문</MudText>
+                <MudText Typo="Typo.h4">먹거리 공동수입</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">
                     HS 코드상 식품으로 분류되는 상품 카드를 보고, 주문자가 직접 공동 주문 집단 개설을 신청합니다.
                 </MudText>
@@ -26,7 +26,7 @@
             <MudStack Spacing="3">
                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Wrap="Wrap.Wrap">
                     <MudStack Spacing="0">
-                        <MudText Typo="Typo.h6">해외 공동구매 화물 위치 조회</MudText>
+                        <MudText Typo="Typo.h6">공동수입 화물 위치 조회</MudText>
                         <MudText Typo="Typo.body2" Color="Color.Secondary">
                             플랫폼에 등록된 문서관리번호로 B/L 또는 AWB 기준 선적 상태와 공개 위치 이력을 확인합니다.
                         </MudText>
@@ -370,7 +370,7 @@
                         <MudStack Spacing="3">
                             <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Wrap="Wrap.Wrap">
                                 <MudStack Spacing="0">
-                                    <MudText Typo="Typo.h6">공동구매 지급 일정</MudText>
+                                    <MudText Typo="Typo.h6">공동수입 지급 일정</MudText>
                                     <MudText Typo="Typo.body2" Color="Color.Secondary">
                                         전액 선결제 대신 상차, 하차, 분배 확인 시점에 맞춰 나누어 지급합니다.
                                     </MudText>
@@ -617,7 +617,7 @@
             if (shipmentTracking is null)
             {
                 shipmentTrackingSeverity = Severity.Warning;
-                shipmentTrackingMessage = "해당 문서관리번호로 조회 가능한 해외 공동구매 선적 정보가 없습니다.";
+                shipmentTrackingMessage = "해당 문서관리번호로 조회 가능한 공동수입 선적 정보가 없습니다.";
                 return;
             }
 

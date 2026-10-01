@@ -17,7 +17,9 @@ public sealed record 운행시작Command : 홍달CommandBase, IRequest<Result<Ho
         decimal? 오늘의복귀지경도,
         bool 기본복귀지사용,
         string? 복귀지출처,
-        string? 복귀콜선호)
+        string? 복귀콜선호,
+        bool 커뮤니티운행공개,
+        bool 커뮤니티구단위위치공개동의)
     {
         기사Id = string.IsNullOrWhiteSpace(driverId) ? string.Empty : driverId;
         this.시작모드 = 시작모드;
@@ -30,6 +32,8 @@ public sealed record 운행시작Command : 홍달CommandBase, IRequest<Result<Ho
         this.기본복귀지사용 = 기본복귀지사용;
         this.복귀지출처 = 복귀지출처;
         this.복귀콜선호 = 복귀콜선호;
+        this.커뮤니티운행공개 = 커뮤니티운행공개;
+        this.커뮤니티구단위위치공개동의 = 커뮤니티구단위위치공개동의;
         참여자Id = 기사Id;
         실행역할 = 홍달역할유형.기사;
     }
@@ -45,4 +49,6 @@ public sealed record 운행시작Command : 홍달CommandBase, IRequest<Result<Ho
     public bool 기본복귀지사용 { get; init; }
     public string? 복귀지출처 { get; init; }
     public string? 복귀콜선호 { get; init; }
+    public bool 커뮤니티운행공개 { get; init; }
+    public bool 커뮤니티구단위위치공개동의 { get; init; }
 }

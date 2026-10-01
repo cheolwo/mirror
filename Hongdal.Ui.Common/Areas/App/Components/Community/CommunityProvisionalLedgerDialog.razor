@@ -1,0 +1,150 @@
+@using Hongdal.Contracts.Common.Community
+@using MudBlazor
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="form">
+            <MudStack Spacing="2">
+                <MudTextField T="string"
+                              Label="출발국 코드"
+                              HelperText="ISO 알파-2"
+                              MaxLength="2"
+                              Immediate="true"
+                              @bind-Value="originCountryCode" />
+                <MudTextField T="string"
+                              Label="도착국 코드"
+                              HelperText="ISO 알파-2"
+                              MaxLength="2"
+                              Immediate="true"
+                              @bind-Value="destinationCountryCode" />
+                <MudSelect T="string"
+                           Label="예상 운송수단"
+                           MultiSelection="true"
+                           Required="@IsCrossBorder"
+                           RequiredError="국경 간 거래는 예상 운송수단을 하나 이상 선택해 주세요."
+                           @bind-SelectedValues="selectedTransportModes">
+                    <MudSelectItem T="string" Value="@CommunityTransportModeCodes.Ocean">해상</MudSelectItem>
+                    <MudSelectItem T="string" Value="@CommunityTransportModeCodes.Air">항공</MudSelectItem>
+                    <MudSelectItem T="string" Value="@CommunityTransportModeCodes.Road">도로</MudSelectItem>
+                    <MudSelectItem T="string" Value="@CommunityTransportModeCodes.Rail">철도</MudSelectItem>
+                    <MudSelectItem T="string" Value="@CommunityTransportModeCodes.Multimodal">복합운송</MudSelectItem>
+                </MudSelect>
+                @if (!string.IsNullOrWhiteSpace(validationMessage))
+                {
+                    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true">
+                        @validationMessage
+                    </MudAlert>
+                }
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                    가원장은 관심과 역할 구성을 기록하는 비구속적 초안입니다. 주문·계약·결제·배차·운송 주선은 확정되지 않습니다.
+                </MudAlert>
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">취소</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Description"
+                   OnClick="SubmitAsync">
+            가원장 만들기
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private MudForm? form;
+    private string originCountryCode = string.Empty;
+    private string destinationCountryCode = string.Empty;
+    private IReadOnlyCollection<string> selectedTransportModes = [];
+    private string validationMessage = string.Empty;
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Guid InterestVoteId { get; set; }
+
+    [Parameter, EditorRequired]
+    public string IntentTypeCode { get; set; } = CommunityCollectiveIntentTypeCodes.GroupPurchase;
+
+    private string TradeDirectionCode => CommunityTradeDirectionCodes.ExpectedForIntent(IntentTypeCode);
+
+    private bool IsCrossBorder => !string.Equals(
+        TradeDirectionCode,
+        CommunityTradeDirectionCodes.Domestic,
+        StringComparison.OrdinalIgnoreCase);
+
+    protected override void OnParametersSet()
+    {
+        if (!IsCrossBorder && !selectedTransportModes.Any())
+        {
+            selectedTransportModes = [CommunityTransportModeCodes.Road];
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        validationMessage = string.Empty;
+        if (form is not null)
+        {
+            await form.ValidateAsync();
+            if (!form.IsValid)
+            {
+                return;
+            }
+        }
+
+        var origin = NormalizeCountryCode(originCountryCode);
+        var destination = NormalizeCountryCode(destinationCountryCode);
+        if ((!string.IsNullOrWhiteSpace(origin) && !IsValidCountryCode(origin))
+            || (!string.IsNullOrWhiteSpace(destination) && !IsValidCountryCode(destination)))
+        {
+            validationMessage = "국가 코드는 영문 두 자리로 입력해 주세요.";
+            return;
+        }
+
+        if (IsCrossBorder
+            && (string.IsNullOrWhiteSpace(origin)
+                || string.IsNullOrWhiteSpace(destination)
+                || string.Equals(origin, destination, StringComparison.OrdinalIgnoreCase)))
+        {
+            validationMessage = "국경 간 거래는 서로 다른 출발국과 도착국을 입력해 주세요.";
+            return;
+        }
+
+        if (!IsCrossBorder
+            && !string.IsNullOrWhiteSpace(origin)
+            && !string.IsNullOrWhiteSpace(destination)
+            && !string.Equals(origin, destination, StringComparison.OrdinalIgnoreCase))
+        {
+            validationMessage = "국내 거래의 출발국과 도착국은 같아야 합니다.";
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(new PromoteCommunityPostParticipationRequest
+        {
+            InterestVoteId = InterestVoteId,
+            DisplayLanguageCode = CommunityDisplayLanguageCodes.Korean,
+            CollectiveIntentTypeCode = IntentTypeCode,
+            TradeDirectionCode = TradeDirectionCode,
+            OriginCountryCode = origin,
+            DestinationCountryCode = destination,
+            TransportModeCodes = selectedTransportModes
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray(),
+            ConfirmProvisionalLedger = true,
+            ConfirmNonBindingEvidence = true,
+            ConfirmParticipantNotifications = true
+        }));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private static string NormalizeCountryCode(string? value)
+        => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim().ToUpperInvariant();
+
+    private static bool IsValidCountryCode(string value)
+        => value.Length == 2 && value.All(character => character is >= 'A' and <= 'Z');
+}

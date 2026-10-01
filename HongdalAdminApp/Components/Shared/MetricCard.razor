@@ -1,0 +1,18 @@
+<MudPaper Elevation="0" Outlined="true" Class="pa-4 h-100">
+    <MudStack Spacing="2">
+        <MudIcon Icon="@Icon" Color="@AccentColor" Size="Size.Large" />
+        <MudText Typo="Typo.h4">@Value</MudText>
+        <MudStack Spacing="0">
+            <MudText Typo="Typo.subtitle2">@Title</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Description</MudText>
+        </MudStack>
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Value { get; set; } = string.Empty;
+    [Parameter] public string Description { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Icon { get; set; } = string.Empty;
+    [Parameter] public Color AccentColor { get; set; } = Color.Primary;
+}

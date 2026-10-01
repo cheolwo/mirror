@@ -1,0 +1,275 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Contracts.Common.Community
+@using Hongdal.Ui.Common.Areas.App.Services
+@inject PlatformCommunityService CommunityService
+
+<section class="group-import-role-access" aria-label="공동수입 역할별 다이어그램 권한">
+    <MudExpansionPanels Elevation="0" Outlined="true">
+        <MudExpansionPanel Text="관세사 다이어그램 권한 조정" Icon="@Icons.Material.Filled.AdminPanelSettings">
+            @if (isLoading)
+            {
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+            }
+            else if (settings is null)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true" Variant="Variant.Outlined">
+                    권한 설정을 불러오지 못했습니다.
+                </MudAlert>
+            }
+            else
+            {
+                <MudStack Spacing="2">
+                    <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">
+                        별도 설정이 없는 승인 관세사는 HS 코드·선적서류·통관/반출 역할 노드만 조회합니다. 전체 흐름, 노드 편집, 운송 주선은 여기서 명시적으로 허용해야 합니다.
+                    </MudAlert>
+
+                    <MudSelect T="string"
+                               Label="권한을 조정할 관세사"
+                               Value="@selectedBrokerId"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               ValueChanged="OnBrokerChanged">
+                        @foreach (var broker in settings.CustomsBrokers)
+                        {
+                            <MudSelectItem Value="@broker.ParticipantId">
+                                @BuildBrokerLabel(broker)
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    @if (!string.IsNullOrWhiteSpace(selectedBrokerId))
+                    {
+                        <MudSwitch T="bool"
+                                   @bind-Value="draft.AccessEnabled"
+                                   Label="이 관세사의 공동수입 원장 접근 허용"
+                                   Color="Color.Primary" />
+
+                        <MudSelect T="string"
+                                   Label="조회 범위"
+                                   @bind-Value="draft.ViewScope"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Disabled="@(!draft.AccessEnabled)">
+                            <MudSelectItem Value="@CommunityLedgerNodeViewScopes.RoleOnly">관세사 역할 노드만</MudSelectItem>
+                            <MudSelectItem Value="@CommunityLedgerNodeViewScopes.SelectedNodes">구매 측이 선택한 노드만</MudSelectItem>
+                            <MudSelectItem Value="@CommunityLedgerNodeViewScopes.EntireDiagram">전체 공동수입 흐름</MudSelectItem>
+                        </MudSelect>
+
+                        @if (draft.ViewScope == CommunityLedgerNodeViewScopes.SelectedNodes)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">조회할 노드를 선택하세요.</MudText>
+                            @foreach (var node in settings.Nodes)
+                            {
+                                <MudCheckBox T="bool"
+                                             Value="@draft.VisibleNodeIds.Contains(node.NodeId)"
+                                             ValueChanged="@(value => ToggleVisibleNode(node.NodeId, value))"
+                                             Label="@BuildNodeLabel(node)"
+                                             Color="Color.Primary"
+                                             Disabled="@(!draft.AccessEnabled)" />
+                            }
+                        }
+
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">편집은 조회가 허용된 노드 중에서 다시 선택합니다.</MudText>
+                        @foreach (var node in EffectiveVisibleNodes)
+                        {
+                            <MudCheckBox T="bool"
+                                         Value="@draft.EditableNodeIds.Contains(node.NodeId)"
+                                         ValueChanged="@(value => ToggleEditableNode(node.NodeId, value))"
+                                         Label="@($"{node.Title} 편집 허용")"
+                                         Color="Color.Warning"
+                                         Disabled="@(!draft.AccessEnabled)" />
+                        }
+
+                        <MudSwitch T="bool"
+                                   @bind-Value="draft.CanCoordinateTransport"
+                                   Label="운송 주선 제안 허용"
+                                   Color="Color.Secondary"
+                                   Disabled="@(!draft.AccessEnabled)" />
+
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Save"
+                                   Disabled="@isSaving"
+                                   OnClick="SaveAsync">
+                            @(isSaving ? "저장 중" : "관세사 권한 저장")
+                        </MudButton>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(statusMessage))
+                    {
+                        <MudAlert Severity="@statusSeverity" Dense="true" Variant="Variant.Outlined">@statusMessage</MudAlert>
+                    }
+                </MudStack>
+            }
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public string LedgerId { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback Saved { get; set; }
+
+    private CommunityLedgerRoleAccessSettingsResponse? settings;
+    private readonly RoleGrantDraft draft = new();
+    private string selectedBrokerId = string.Empty;
+    private string statusMessage = string.Empty;
+    private Severity statusSeverity = Severity.Info;
+    private bool isLoading;
+    private bool isSaving;
+
+    private IReadOnlyList<CommunityLedgerRoleAccessNodeResponse> EffectiveVisibleNodes
+        => settings is null
+            ? []
+            : draft.ViewScope switch
+            {
+                CommunityLedgerNodeViewScopes.EntireDiagram => settings.Nodes,
+                CommunityLedgerNodeViewScopes.SelectedNodes => settings.Nodes
+                    .Where(node => draft.VisibleNodeIds.Contains(node.NodeId))
+                    .ToArray(),
+                _ => settings.Nodes.Where(node => node.IsCustomsRoleNode).ToArray()
+            };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (settings?.LedgerId == LedgerId || isLoading || string.IsNullOrWhiteSpace(LedgerId))
+        {
+            return;
+        }
+
+        isLoading = true;
+        try
+        {
+            settings = await CommunityService.GetLedgerRoleAccessSettingsAsync(LedgerId);
+            selectedBrokerId = settings?.CustomsBrokers.FirstOrDefault()?.ParticipantId ?? string.Empty;
+            LoadDraft();
+        }
+        catch (HttpRequestException)
+        {
+            settings = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OnBrokerChanged(string brokerId)
+    {
+        selectedBrokerId = brokerId;
+        statusMessage = string.Empty;
+        LoadDraft();
+    }
+
+    private void LoadDraft()
+    {
+        var grant = settings?.Grants.FirstOrDefault(item =>
+            string.Equals(item.TargetUserId, selectedBrokerId, StringComparison.OrdinalIgnoreCase));
+        draft.AccessEnabled = grant?.AccessEnabled ?? true;
+        draft.ViewScope = grant?.ViewScope ?? CommunityLedgerNodeViewScopes.RoleOnly;
+        draft.VisibleNodeIds = (grant?.VisibleNodeIds ?? []).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        draft.EditableNodeIds = (grant?.EditableNodeIds ?? []).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        draft.CanCoordinateTransport = grant?.CanCoordinateTransport ?? false;
+    }
+
+    private void ToggleVisibleNode(string nodeId, bool selected)
+    {
+        if (!selected)
+        {
+            draft.VisibleNodeIds.Remove(nodeId);
+            draft.EditableNodeIds.Remove(nodeId);
+            return;
+        }
+
+        draft.VisibleNodeIds.Add(nodeId);
+    }
+
+    private void ToggleEditableNode(string nodeId, bool selected)
+    {
+        if (selected)
+        {
+            draft.EditableNodeIds.Add(nodeId);
+        }
+        else
+        {
+            draft.EditableNodeIds.Remove(nodeId);
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (settings is null || string.IsNullOrWhiteSpace(selectedBrokerId) || isSaving)
+        {
+            return;
+        }
+
+        isSaving = true;
+        statusMessage = string.Empty;
+        try
+        {
+            var grants = settings.Grants
+                .Where(item => !string.Equals(item.TargetUserId, selectedBrokerId, StringComparison.OrdinalIgnoreCase))
+                .Select(ToUpdateRequest)
+                .Append(new CommunityLedgerRoleGrantUpdateRequest
+                {
+                    TargetUserId = selectedBrokerId,
+                    AccessEnabled = draft.AccessEnabled,
+                    ViewScope = draft.ViewScope,
+                    VisibleNodeIds = draft.VisibleNodeIds.ToArray(),
+                    EditableNodeIds = draft.EditableNodeIds.ToArray(),
+                    CanCoordinateTransport = draft.CanCoordinateTransport
+                })
+                .ToArray();
+            settings = await CommunityService.UpdateLedgerRoleAccessSettingsAsync(
+                LedgerId,
+                new CommunityLedgerRoleAccessUpdateRequest
+                {
+                    ExpectedRevision = settings.Revision,
+                    Grants = grants
+                });
+            LoadDraft();
+            statusSeverity = Severity.Success;
+            statusMessage = "관세사별 다이어그램 조회·편집·운송 주선 권한을 저장했습니다.";
+            await Saved.InvokeAsync();
+        }
+        catch (HttpRequestException ex)
+        {
+            statusSeverity = Severity.Error;
+            statusMessage = $"권한을 저장하지 못했습니다: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private static CommunityLedgerRoleGrantUpdateRequest ToUpdateRequest(CommunityLedgerRoleGrantResponse grant)
+        => new()
+        {
+            TargetUserId = grant.TargetUserId,
+            AccessEnabled = grant.AccessEnabled,
+            ViewScope = grant.ViewScope,
+            VisibleNodeIds = grant.VisibleNodeIds,
+            EditableNodeIds = grant.EditableNodeIds,
+            CanCoordinateTransport = grant.CanCoordinateTransport
+        };
+
+    private static string BuildBrokerLabel(CommunityLedgerCustomsBrokerCandidateResponse broker)
+        => string.IsNullOrWhiteSpace(broker.Region)
+            ? $"{broker.OfficeName} · {broker.DisplayName}"
+            : $"{broker.OfficeName} · {broker.DisplayName} · {broker.Region}";
+
+    private static string BuildNodeLabel(CommunityLedgerRoleAccessNodeResponse node)
+        => node.IsCustomsRoleNode ? $"{node.Title} · 기본 관세사 범위" : node.Title;
+
+    private sealed class RoleGrantDraft
+    {
+        public bool AccessEnabled { get; set; } = true;
+        public string ViewScope { get; set; } = CommunityLedgerNodeViewScopes.RoleOnly;
+        public HashSet<string> VisibleNodeIds { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> EditableNodeIds { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        public bool CanCoordinateTransport { get; set; }
+    }
+}

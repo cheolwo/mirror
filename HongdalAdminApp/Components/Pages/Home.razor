@@ -1,0 +1,59 @@
+@page "/overview"
+
+<PageTitle>글쓰기 운영 개요</PageTitle>
+
+<PlatformCommunityHome AppName="살뜰 관리자"
+                       RoleLabel="운영 작성자"
+                       AppKey="admin"
+                       UseCompactHomeSummary="true"
+                       ShowRealtimeBest="false"
+                       ShowPrajnaUpayaNavigator="true"
+                       PrajnaHref="/prajna"
+                       QuickActions="QuickActions">
+    <CommunityModeContent>
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+            자료를 확인해 글 초안을 만들고, 공개 범위와 게시 시각을 검토한 뒤 직접 발행하는 작업 공간입니다.
+        </MudAlert>
+    </CommunityModeContent>
+    <WorkModeContent>
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="0" Outlined="true" Class="pa-4 h-100">
+                    <MudIcon Icon="@Icons.Material.Filled.EditNote" Color="Color.Primary" Size="Size.Large" />
+                    <MudText Typo="Typo.h6" Class="mt-2">글 초안</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        게시판·주제·공개 범위를 정하고 임시 저장, 미리보기와 예약 발행을 관리합니다.
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="0" Outlined="true" Class="pa-4 h-100">
+                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Color="Color.Info" Size="Size.Large" />
+                    <MudText Typo="Typo.h6" Class="mt-2">자료 검토</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        공공데이터, YouTube·SNS와 플랫폼 기록을 확인하고 출처가 남은 글감으로 정리합니다.
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="0" Outlined="true" Class="pa-4 h-100">
+                    <MudIcon Icon="@Icons.Material.Filled.ScheduleSend" Color="Color.Success" Size="Size.Large" />
+                    <MudText Typo="Typo.h6" Class="mt-2">검토 후 발행</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        자동 수집 자료도 곧바로 게시하지 않고 운영자가 수정·승인한 뒤 즉시 또는 예약 발행합니다.
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </WorkModeContent>
+</PlatformCommunityHome>
+
+@code {
+    private static readonly IReadOnlyList<PlatformHomeQuickAction> QuickActions =
+    [
+        new("새 글 작성", "자료 조사부터 초안, 예약 발행까지 한 작업대에서 진행합니다.", "/information-review", Icons.Material.Filled.EditNote, Color.Primary),
+        new("외부 콘텐츠 검토", "카드·영상 자료를 확인하고 글감으로 정리합니다.", "/prajna", Icons.Material.Filled.AutoStories, Color.Info),
+        new("커뮤니티 운영", "필요할 때 사용자 활동과 게시글 운영 조치를 확인합니다.", "/community-management", Icons.Material.Filled.ManageAccounts, Color.Secondary),
+        new("관리자 로그인", "서버관리자 권한으로 관리 기능을 엽니다.", "/login", Icons.Material.Filled.AdminPanelSettings, Color.Secondary)
+    ];
+}

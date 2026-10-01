@@ -9,7 +9,7 @@ namespace Hongdal.Controllers.Common;
 
 [ApiController]
 [Authorize]
-[HongdalApiVersion(HongdalProductVersion.V1_0)]
+[HongdalApiVersion(HongdalProductVersion.V0_0)]
 [HongdalApiWorkflow(HongdalWorkflow.CommunityTrust)]
 [HongdalApiGrowthTrack(HongdalApiGrowthTrack.Community)]
 [Route("api/v1/traditional-market-councils")]

@@ -2,11 +2,11 @@
 
 Hongdal community is a gathering and coordination layer, not a paywalled social network. The platform should keep ordinary communication free so people can meet, ask, share, report, and coordinate without feeling forced into payment.
 
-## 홍달 1.0 제품 중심
+## 홍달 0.0 제품 기반
 
-홍달 1.0은 커뮤니티를 제품의 시작점으로 둔다. 사용자는 대화와 모집에서 공동 원장과 다이어그램을 만들고, 참여자가 직접 합의한 업무의 상태와 선택적 증빙을 기록한다. 운송·창고·주문 기능은 이 흐름을 처리하는 업무 도구이며, 커뮤니티를 단순 보조 레이어로 낮추지 않는다.
+홍달 0.0은 커뮤니티를 독립적인 제품 기반으로 먼저 구성한다. 사용자는 대화와 모집에서 공동 원장과 다이어그램을 만들고, 참여자가 직접 합의한 업무의 상태와 선택적 증빙을 기록한다. 국내 화물/용달 1.0과 이후의 운송·창고·주문 기능은 이 흐름을 처리하는 업무 도구이며, 커뮤니티를 단순 보조 레이어로 낮추지 않는다.
 
-플랫폼이 개입하는 유상 화물 배차·주선·운임 수취·정산은 허가·제휴·법률 검토 전 실운영하지 않는다. 코드와 화면은 샘플 데이터, FakePG와 모의 배차를 이용한 기술 검증에 한정할 수 있다. 상세 경계와 공식 근거는 [홍달 1.0 커뮤니티 중심 제품 원칙](CommunityFirstV1Policy.md)을 따른다.
+플랫폼이 개입하는 유상 화물 배차·주선·운임 수취·정산은 허가·제휴·법률 검토 전 실운영하지 않는다. 코드와 화면은 샘플 데이터, FakePG와 모의 배차를 이용한 기술 검증에 한정할 수 있다. 상세 경계와 공식 근거는 [커뮤니티 0.0 기반 제품 원칙](CommunityFoundationV0Policy.md)을 따른다.
 
 커뮤니티에서 운송 필요가 생기면 사용자가 게시글과 대화로 자발적으로 참여 의사를 밝히고, 당사자끼리 연락 정보 공개에 동의한 뒤 조건을 직접 합의한다. 플랫폼은 특정 기사를 추천·선정·배정하거나 운임과 계약 조건을 제시하지 않으며, 공동 원장은 당사자들이 합의한 뒤 진행 상태를 기록하는 선택적 도구로 사용한다.
 
@@ -79,6 +79,10 @@ These functions are treated as community infrastructure:
 
 The goal is to let people gather first. A community that charges too early loses the social density that makes the platform useful.
 
+## User-Created Boards
+
+고정 목적별 게시판에 없는 주제는 로그인 사용자가 개설을 신청할 수 있다. 신청 즉시 공개하지 않고 서버 관리자가 승인한 뒤 `구성원 게시판`으로 노출한다. 공개 목록은 승인된 게시판만 포함하며 승인 대기·반려 사유와 운영 메모는 관리자 검토 정보로 보호한다. 게시글 저장 시에도 승인 상태를 다시 검사해 임의 카테고리 문자열로 승인 절차를 우회하지 못하게 한다. 신청 계정, 검토 관리자, 대기 신청 제한과 후속 운영권 경계는 [사용자 개설 커뮤니티 게시판](UserCreatedCommunityBoards.md)을 따른다.
+
 ## Community Ledger Skeleton
 
 Community conversations can become lightweight ledgers when participants decide to handle a real-life task together. A ledger draft is not a platform-guaranteed contract. It is a shared board where participants can name roles, record state, attach optional evidence, and mark payment or completion confirmations for each other.
@@ -142,10 +146,10 @@ Priority modules:
 | 7 | 피킹/포장 원장 | Warehouse outbound or HongdalMart delivery ledger | Field work should be trackable independently from the broader order or outbound ledger. |
 | 8 | 마트주문 원장 | HongdalMart delivery ledger | Mart item demand and urban stock should be separated from generic warehouse outbound work. |
 | 9 | 마트 배송 원장 | HongdalMart delivery ledger | Delivery is the movement work after packing. `즉시배송` is a delivery-type attribute, not the ledger name. |
-| 10 | 공동주문 묶음 원장 | Group purchase ledger | A group order is a collection of independent order ledgers whose quantities and shared conditions are aggregated. |
-| 11 | 공동주문 수입 결정 원장 | Group purchase ledger | Import go/no-go, FCL/LCL, price, and quantity decisions need an explicit boundary. |
-| 12 | 공동주문 선적/통관 원장 | Group purchase ledger | Overseas shipment, documents, customs, and release state need their own lifecycle. |
-| 13 | 공동주문 입고/분배 원장 | Group purchase ledger | Domestic 3PL inbound and participant distribution coordinate downstream handoffs. |
+| 10 | 공동구매 수요/묶음 원장 | Group purchase ledger | Independent order ledgers are aggregated for domestic purchase confirmation, pickup-point receipt, and participant distribution. |
+| 11 | 공동수입 결정 원장 | Group import ledger | A confirmed group-purchase ledger is linked as the source before import go/no-go, FCL/LCL, price, and quantity are decided. |
+| 12 | 공동수입 선적/통관 원장 | Group import ledger | Overseas shipment, documents, customs, and release state stay outside the domestic group-purchase ledger. |
+| 13 | 공동수입 입고/분배 원장 | Group import ledger | Domestic 3PL inbound and participant distribution coordinate the import ledger's downstream handoffs. |
 | 14 | 결제/정산 표시 원장 | Cargo transport or related work ledger | Payment marks, counterpart confirmation, holds, and notes should remain participant-centered. |
 | 15 | 신고/분쟁 원장 | Errand or generic life-request ledger | Reports and disputes should not pollute ordinary workflow state, but they must remain linked. |
 | 16 | 음식 주문 원장 | Food delivery ledger | Menu order, restaurant acceptance, cooking, and ready state end before delivery begins. |
@@ -163,11 +167,17 @@ Representative ledger relationships:
 | 피킹/포장 원장 | 운송의뢰 원장 | Handoff | `1:N` | Packed items need external movement. |
 | 운송진행 원장 | 창고입고 원장 | Handoff | `1:N` | Dropoff is complete and the destination warehouse needs inbound processing. |
 | 마트주문 원장 | 피킹/포장 원장 | Requires | `1:N` | Mart order and urban stock are confirmed. |
+| 공동구매 수요/묶음 원장 | 발주 주문 원장 | Contains | `1:N` | Domestic demand, producer conditions, and the fulfillment route are confirmed. |
+| 발주 주문 원장 | 판매·입고·출고·운송 원장 | Contains | `1:N` | The chosen traditional-market hub, 3PL, or direct collection-point route determines which fulfillment ledgers are required. |
+| 공동구매 수요/묶음 원장 | 공동수입 결정 원장 | Handoff | `N:1` | Confirmed demand is intentionally fulfilled through an overseas supplier. |
+| 공동수입 선적/통관 원장 | 공동수입 입고/분배 원장 | Handoff | `1:N` | Customs release opens domestic inbound or distribution. |
 | 피킹/포장 원장 | 마트 배송 원장 | Handoff | `N:1` | Packed mart orders can be bundled into one delivery run. |
 | 마트 배송 원장 | 결제/정산 표시 원장 | Reference | `1:1` | Delivery or receiver confirmation is complete. |
 | 운송진행 원장 | 신고/분쟁 원장 | Reference | `1:N` | Delay, damage, disagreement, or issue report appears. |
 
 For a warehouse-to-warehouse movement, the diagram and ledger handoff must read `warehouse outbound -> transport pickup -> transport dropoff -> warehouse inbound`. The outbound boundary exposes right and bottom output ports, while the inbound boundary exposes left and top input ports. Dropoff items and evidence become inbound input; they are not copied into an unrelated standalone warehouse record.
+
+Domestic group-purchase fulfillment keeps the purchase-order ledger as the center of the execution hierarchy. A traditional-market hub route may add inbound handoff, optional sorting/outbound, and last-mile transport ledgers. A 3PL route adds warehouse inbound, warehouse outbound, and optional last-mile transport. A direct collection-point route normally adds only the producer sale and direct cargo-transport ledgers. Changing the order option changes the planned diagram and included-ledger set; it does not mutate unrelated existing ledgers. The actual purchase order and Mongo ledger documents are created only after the representative confirms the previewed plan.
 
 The template roles are defaults only. Participants should be able to rename, add, remove, and reassign roles. By default, a normal user should be able to participate across roles when the ledger context makes it reasonable. A role is therefore a visible participation label and work-context hint, not a hard authorization boundary.
 
@@ -337,6 +347,21 @@ A best ledger pattern should not expose:
 
 This creates a loop: the community starts a ledger, the right OS schedules the next work steps, APIs and use cases execute them, and the useful shape of that ledger can return to the community as a reusable work pattern. Over time, Hongdal can rank or recommend these patterns by completion rate, low dispute rate, clarity of roles, and participant feedback.
 
+### 완료 원장 자동 성립 사례
+
+커뮤니티 원장이 표준 `완료` 상태에 도달하면 원장 변경 이벤트의 재시도 가능한 투영 단계에서 `성립 사례` 게시글을 한 원장당 한 번 자동 생성한다. 이 글은 원본 원장의 공개 설정을 바꾸거나 원본 내용을 복제하지 않는 시스템 기록이다.
+
+- 글 제목과 본문에는 원장 템플릿명, 완료 여부, 카탈로그의 표준 운영 설명만 사용한다.
+- 원본 제목, 원함, 참여자, 연락처, 상세 주소, 금액, 상품·화물 세부값, 증빙과 메모 원문은 게시글에 넣지 않는다.
+- 게시글에서 여는 다이어그램은 원본 노드 ID와 제목, 설명, 경로, 데이터, 연결선 라벨을 제거하고 역할·거점·주문·인계·정산 같은 일반 단계와 연결 구조만 새 ID로 투영한다.
+- 저장된 다이어그램이 없는 원장은 원장 템플릿 카탈로그의 행동 순서로 비식별 표준 다이어그램을 만든다.
+- 자동 글은 일반 사용자가 수정하거나 삭제할 수 없고 운영자는 고정할 수 있다. 댓글과 추천은 사례에 대한 숙고와 개선 제안을 위해 허용한다.
+- `이 절차로 시작하기`는 원본 원장을 복사하지 않고 같은 원장 템플릿의 빈 작성 흐름만 연다.
+
+### 출처 기반 자동 정보 글
+
+게시판에 주기적으로 제공하는 자동 글은 일반 사용자의 활동처럼 위장하지 않고 `시스템 작성` 표시, 원천, 기준 시각과 해석 주의를 함께 제공한다. KAMIS 가격은 조사일·품목·등급·단위가 있는 관측값만 사용하고, 플랫폼 활동은 비식별 완료 원장 게시 기록의 건수만 집계한다. 원시 업무 로그, 참여자, 연락처, 상세 주소, 금액, 증빙과 신고·분쟁 원문은 자동 글의 입력으로 사용하지 않는다. 같은 원천과 기준일은 한 번만 발행하며 원천 자료가 없으면 빈 글을 만들지 않는다. 세부 구조와 일정은 [커뮤니티 자동 정보 발행 배치](CommunityAutomatedEditorialBatch.md)를 따른다.
+
 ## Unified Community Home
 
 The common community home is the first unified app shell. Client-specific apps may still provide their own work-mode content, but their entry points should be progressively exposed through the shared home rather than only through app-local navigation.
@@ -370,6 +395,24 @@ Community controllers should stay thin. HTTP routing, authorization policy, requ
 Community voting follows the same boundary. `커뮤니티투표Controller` delegates voting, closing, resolution document draft creation, and signature state changes to `커뮤니티투표UseCase`; the controller only maps the HTTP route and response shape.
 
 Activity signals also use the same boundary. `커뮤니티활동신호Controller` delegates privacy-safe work-log projection to `커뮤니티활동신호UseCase`, while `CommunityActivitySignalService` remains the lower-level query/projection service.
+
+## Domestic Group Purchase Public Negotiation
+
+A domestic group purchase should preserve the path to agreement, not only the final agreed values. The producer, group-purchase representative, pickup or hub operator, and participating community members may publish proposals, counterproposals, clarification, and agreement summaries to the campaign timeline. Public records contain masked display names, role labels, conditions, alternatives, and decision rationale. They must not contain phone numbers, email addresses, internal user identifiers, or private contact-channel content.
+
+When a participant raises a problem, the system opens a separate issue instead of silently overwriting the current terms. Each issue has a visible deliberation close time. Resolution is blocked until that time has passed and at least two distinct authenticated participants have submitted public positions. The member recording the resolution must also have participated in that deliberation, and the resolution keeps both the outcome and its rationale.
+
+The first implementation under `api/v1/orderer/domestic-group-purchases/{campaignId}/negotiation` is an in-memory contract, API, and UI skeleton. Production rollout must move these events to a durable community-ledger store, add campaign-membership and resolver-authority policy, and connect an accepted agreement fingerprint to the fulfillment order draft without making private contact information community-visible.
+
+## Driver Availability Posts And Direct Inquiries
+
+When a cargo driver starts a shift, the driver app may publish an actionable availability post to the community. This is separate from generic anonymized activity signals because a community member must be able to address an inquiry to one available driver without learning the driver's internal identifier. The public post therefore exposes only a masked driver name, vehicle summary, broad operating area, start time, and an opaque post id. It must not expose the driver's phone number, internal driver id, precise GPS coordinate, start address, or return destination.
+
+Current-location disclosure requires a second, explicit driver consent separate from publishing the availability post. When consent is present, the operational GPS coordinate may be sent to the configured reverse-geocoding provider, but the community availability store receives only the first- and second-level administrative names, such as `서울특별시 중랑구`. The third-level district or neighborhood, such as `면목동`, provider address text, road address, and source coordinate must never enter the public post. Without this consent, the post continues to show only the driver's registered broad operating area.
+
+A community member or group-purchase representative may use that opaque post id to send a direct transport inquiry containing a cargo summary, quantity, broad pickup and drop-off areas, and desired pickup window. The driver receives it in a separate driver-app screen and may accept or decline it. Acceptance records willingness to continue; it does not bypass the normal transport-request ledger, fare review, detailed-address protection, dispatch confirmation, or proof workflow. When the shift ends, the public availability post closes and unanswered inquiries become unavailable.
+
+The first implementation uses a singleton in-memory store and an 18-hour safety expiry. Production rollout must persist posts and inquiries, deliver push notifications, connect an accepted inquiry to a requester-owned transport-request draft with the preferred driver reference kept private, and add abuse, rate-limit, membership, and availability-capacity policy.
 
 ## Voting And Resolution Policy
 

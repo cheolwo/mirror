@@ -90,7 +90,7 @@ public sealed class FoodDeliveryDispatchAIReviewAdminService
                 {
                     OrderNo = "FOOD-2026-001",
                     RestaurantId = 1001,
-                    RestaurantName = "홍달분식 강남점",
+                    RestaurantName = "살뜰분식 강남점",
                     MenuSummary = "김밥 3, 떡볶이 2",
                     OrderAmount = 43000m,
                     OrderStatus = "조리중",

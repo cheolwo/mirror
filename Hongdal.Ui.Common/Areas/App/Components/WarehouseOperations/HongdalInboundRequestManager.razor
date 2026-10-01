@@ -1,20 +1,26 @@
 @using System.Globalization
 @using Hongdal.Contracts.Common.Inbound
+@using Hongdal.Contracts.Common.Sales
 @using Hongdal.Contracts.Common.Warehouse
+@using Hongdal.Ui.Common.Areas.App.Components.Crud
 @using Hongdal.Ui.Common.Areas.App.Services
+@using Hongdal.Ui.Common.Areas.App.ViewModels
 @using Microsoft.AspNetCore.Components
 @inject NavigationManager Navigation
 @inject IWarehouseWorkspaceService WarehouseService
+@inject 판매상품조회ViewModel ProductSearchViewModel
 
 <MudContainer MaxWidth="MaxWidth.False" Class="py-6">
     <MudStack Spacing="3">
-        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-            <MudStack Spacing="0">
-                <MudText Typo="Typo.h4">@Title</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">@Description</MudText>
+        <div class="inbound-page-header-wrap">
+            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="inbound-page-header">
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.h4">@Title</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@Description</MudText>
+                </MudStack>
+                <MudButton Class="inbound-page-refresh" Variant="Variant.Outlined" Color="Color.Primary" OnClick="LoadAsync">새로고침</MudButton>
             </MudStack>
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="LoadAsync">새로고침</MudButton>
-        </MudStack>
+        </div>
 
         @if (!string.IsNullOrWhiteSpace(message))
         {
@@ -51,12 +57,15 @@
                         <MudText Typo="Typo.h6">입고 요청 등록</MudText>
                         <MudGrid Class="mt-2">
                             <MudItem xs="12" md="6">
-                                <MudSelect T="long?" Label="창고" @bind-Value="selectedWarehouseId" Variant="Variant.Outlined">
-                                    @foreach (var warehouse in warehouses)
-                                    {
-                                        <MudSelectItem T="long?" Value="@warehouse.Id">@warehouse.창고명 · @LogisticsProxySiteTypes.GetDisplayName(warehouse.물류대행지분류)</MudSelectItem>
-                                    }
-                                </MudSelect>
+                                <HongdalAutocomplete TItem="창고요약응답"
+                                                     ViewModel="@warehouseSearchViewModel"
+                                                     Value="@SelectedWarehouse"
+                                                     ValueChanged="SelectWarehouseAsync"
+                                                     ToStringFunc="FormatWarehouse"
+                                                     Label="창고"
+                                                     Placeholder="창고명 또는 주소 검색"
+                                                     Required="true"
+                                                     Disabled="@(isBusy || isLoading)" />
                             </MudItem>
                             <MudItem xs="12" md="6">
                                 <MudSelect T="string" Label="입고 흐름" @bind-Value="inboundFlowType" Variant="Variant.Outlined">
@@ -71,6 +80,7 @@
                                     @입고흐름유형코드.GetDescription(inboundFlowType)
                                 </MudAlert>
                             </MudItem>
+                            <MudItem xs="12" md="6"><MudTextField Label="공급처 코드" @bind-Value="supplierCode" Variant="Variant.Outlined" /></MudItem>
                             <MudItem xs="12" md="6"><MudTextField Label="공급처명" @bind-Value="supplierName" Variant="Variant.Outlined" /></MudItem>
                             <MudItem xs="12" md="6"><MudTextField Label="원주문 참조번호" @bind-Value="orderReference" Variant="Variant.Outlined" /></MudItem>
                             <MudItem xs="12" md="6"><MudDatePicker Label="예정 도착일" @bind-Date="expectedArrivalDate" Variant="Variant.Outlined" /></MudItem>
@@ -97,56 +107,69 @@
 
         <MudCard>
             <MudCardContent>
-                <MudText Typo="Typo.h6" Class="mb-3">입고 요청 목록</MudText>
-
-                @if (isLoading)
-                {
-                    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-                }
-                else if (inbounds.Count == 0)
-                {
-                    <MudAlert Severity="Severity.Info">등록된 입고 요청이 없습니다.</MudAlert>
-                }
-                else
-                {
-                    <MudTable Items="inbounds.OrderByDescending(x => x.Id)" Dense="true" Hover="true">
-                        <HeaderContent>
-                            <MudTh>입고ID</MudTh>
-                            <MudTh>창고ID</MudTh>
-                            <MudTh>흐름</MudTh>
-                            <MudTh>공급처</MudTh>
-                            <MudTh>참조번호</MudTh>
-                            <MudTh>계약</MudTh>
-                            <MudTh>상태</MudTh>
-                            <MudTh>예정일</MudTh>
-                            <MudTh>처리</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="입고ID">@context.Id</MudTd>
-                            <MudTd DataLabel="창고ID">@context.창고Id</MudTd>
-                            <MudTd DataLabel="흐름">
-                                <MudChip T="string" Size="Size.Small" Color="@GetInboundFlowColor(context.입고흐름유형)" Variant="Variant.Filled">
-                                    @입고흐름유형코드.GetDisplayName(context.입고흐름유형)
+                <HongdalOperationState ViewModel="@inboundQueryViewModel" />
+                <HongdalServerDataGrid @ref="inboundGrid"
+                                       TItem="입고요청항목응답"
+                                       ViewModel="@inboundQueryViewModel"
+                                       SelectedItem="@selectedInbound"
+                                       SelectedItemChanged="SelectInboundAsync"
+                                       RowsPerPage="25"
+                                       MinimumWidth="1280"
+                                       SkeletonColumns="9"
+                                       SearchPlaceholder="공급처 코드·명칭, 상품, SKU, 참조번호 검색"
+                                       EmptyText="등록된 입고 요청이 없습니다.">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">입고 요청 목록</MudText>
+                    </ToolBarContent>
+                    <Columns>
+                        <PropertyColumn T="입고요청항목응답" TProperty="long" Property="item => item.Id" Title="입고ID" />
+                        <PropertyColumn T="입고요청항목응답" TProperty="long" Property="item => item.창고Id" Title="창고ID" />
+                        <TemplateColumn T="입고요청항목응답" Title="흐름" Sortable="false">
+                            <CellTemplate>
+                                <MudChip T="string"
+                                         Size="Size.Small"
+                                         Color="@GetInboundFlowColor(context.Item.입고흐름유형)"
+                                         Variant="Variant.Filled">
+                                    @입고흐름유형코드.GetDisplayName(context.Item.입고흐름유형)
                                 </MudChip>
-                                @if (!string.IsNullOrWhiteSpace(context.입고생성경로))
+                                @if (!string.IsNullOrWhiteSpace(context.Item.입고생성경로))
                                 {
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.입고생성경로</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Item.입고생성경로</MudText>
                                 }
-                            </MudTd>
-                            <MudTd DataLabel="공급처">@context.공급처명</MudTd>
-                            <MudTd DataLabel="참조번호">@context.원주문참조번호</MudTd>
-                            <MudTd DataLabel="계약">
-                                <MudText Typo="Typo.body2">@입고계약유형코드.GetDisplayName(context.계약정보.계약유형)</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">@context.계약정보.계약번호</MudText>
-                            </MudTd>
-                            <MudTd DataLabel="상태">@context.상태</MudTd>
-                            <MudTd DataLabel="예정일">@context.예정도착일?.ToString("yyyy-MM-dd")</MudTd>
-                            <MudTd DataLabel="처리">
-                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(isBusy || context.상태 == "입고완료")" OnClick="() => SelectInbound(context)">입고완료 준비</MudButton>
-                            </MudTd>
-                        </RowTemplate>
-                    </MudTable>
-                }
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn T="입고요청항목응답" TProperty="string" Property="item => item.공급처코드" Title="공급처 코드" />
+                        <PropertyColumn T="입고요청항목응답" TProperty="string" Property="item => item.공급처명" Title="공급처" />
+                        <TemplateColumn T="입고요청항목응답" Title="예정 품목" Sortable="false">
+                            <CellTemplate>
+                                <MudText Typo="Typo.body2">@(string.IsNullOrWhiteSpace(context.Item.예정상품명) ? "-" : context.Item.예정상품명)</MudText>
+                                @if (!string.IsNullOrWhiteSpace(context.Item.예정SKU))
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Item.예정SKU · @context.Item.예정수량</MudText>
+                                }
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn T="입고요청항목응답" TProperty="string" Property="item => item.원주문참조번호" Title="참조번호" />
+                        <TemplateColumn T="입고요청항목응답" Title="계약" Sortable="false">
+                            <CellTemplate>
+                                <MudText Typo="Typo.body2">@입고계약유형코드.GetDisplayName(context.Item.계약정보.계약유형)</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Item.계약정보.계약번호</MudText>
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn T="입고요청항목응답" TProperty="string" Property="item => item.상태" Title="상태" />
+                        <PropertyColumn T="입고요청항목응답" TProperty="DateTime?" Property="item => item.예정도착일" Title="예정일" Format="yyyy-MM-dd" />
+                        <TemplateColumn T="입고요청항목응답" Title="처리" Sortable="false">
+                            <CellTemplate>
+                                <MudButton Variant="Variant.Outlined"
+                                           Size="Size.Small"
+                                           Disabled="@(isBusy || context.Item.상태 == "입고완료")"
+                                           OnClick="@(() => SelectInbound(context.Item))">
+                                    입고완료 준비
+                                </MudButton>
+                            </CellTemplate>
+                        </TemplateColumn>
+                    </Columns>
+                </HongdalServerDataGrid>
             </MudCardContent>
         </MudCard>
 
@@ -159,6 +182,16 @@
                         <MudText Typo="Typo.body2" Color="Color.Secondary">현재 컴포넌트는 단일 상품 기준으로 입고완료를 처리합니다.</MudText>
 
                         <MudGrid>
+                            <MudItem xs="12">
+                                <HongdalAutocomplete TItem="판매상품항목응답"
+                                                     ViewModel="@ProductSearchViewModel"
+                                                     Value="@selectedSalesProduct"
+                                                     ValueChanged="SelectSalesProductAsync"
+                                                     ToStringFunc="FormatSalesProduct"
+                                                     Label="기존 판매상품"
+                                                     Placeholder="상품명 또는 SKU 검색"
+                                                     Disabled="@isBusy" />
+                            </MudItem>
                             <MudItem xs="12" md="4"><MudTextField Label="상품명" @bind-Value="itemName" Variant="Variant.Outlined" /></MudItem>
                             <MudItem xs="12" md="4"><MudTextField Label="SKU" @bind-Value="itemSku" Variant="Variant.Outlined" /></MudItem>
                             <MudItem xs="12" md="4"><MudTextField Label="옵션명" @bind-Value="itemOption" Variant="Variant.Outlined" /></MudItem>
@@ -183,8 +216,11 @@
     [Parameter] public string Description { get; set; } = "창고를 만들고 입고 요청을 등록한 뒤, 도착 상품을 입고완료 처리해 재고로 전환합니다.";
 
     private List<창고요약응답> warehouses = [];
-    private List<입고요청항목응답> inbounds = [];
+    private HongdalServerDataGrid<입고요청항목응답>? inboundGrid;
+    private 위임서버목록조회ViewModel<입고요청항목응답> inboundQueryViewModel = default!;
+    private 위임비동기검색ViewModel<창고요약응답> warehouseSearchViewModel = default!;
     private 입고요청항목응답? selectedInbound;
+    private 판매상품항목응답? selectedSalesProduct;
 
     private bool isLoading;
     private bool isBusy;
@@ -219,6 +255,7 @@
 
     private long? selectedWarehouseId;
     private string inboundFlowType = 입고흐름유형코드.계약기반입고;
+    private string supplierCode = string.Empty;
     private string supplierName = string.Empty;
     private string orderReference = string.Empty;
     private DateTime? expectedArrivalDate = DateTime.Today;
@@ -244,8 +281,21 @@
         _ => Severity.Success
     };
 
+    private 창고요약응답? SelectedWarehouse
+        => selectedWarehouseId is { } warehouseId
+            ? warehouses.FirstOrDefault(item => item.Id == warehouseId)
+            : null;
+
     protected override async Task OnInitializedAsync()
     {
+        inboundQueryViewModel = new 위임서버목록조회ViewModel<입고요청항목응답>(
+            "inbound-server-query",
+            "입고 요청 목록",
+            QueryInboundsAsync);
+        warehouseSearchViewModel = new 위임비동기검색ViewModel<창고요약응답>(
+            "warehouse-autocomplete",
+            "창고 검색",
+            SearchWarehousesAsync);
         await LoadAsync();
         ApplyDiagramWarehouseProxyRequestFromQuery();
     }
@@ -257,14 +307,17 @@
         try
         {
             warehouses = ((await WarehouseService.GetWarehousesAsync())?.Items ?? []).ToList();
-            inbounds = ((await WarehouseService.GetInboundsAsync())?.Items ?? []).ToList();
             if (!selectedWarehouseId.HasValue && warehouses.Count > 0)
             {
                 selectedWarehouseId = warehouses[0].Id;
             }
 
             messageSeverity = Severity.Info;
-            message = $"창고 {warehouses.Count}건, 입고 요청 {inbounds.Count}건을 불러왔습니다.";
+            message = $"창고 {warehouses.Count}건을 불러왔습니다.";
+            if (inboundGrid is not null)
+            {
+                await inboundGrid.ReloadAsync();
+            }
         }
         catch (Exception ex)
         {
@@ -276,6 +329,84 @@
             isLoading = false;
         }
     }
+
+    private async Task<목록조회결과<입고요청항목응답>> QueryInboundsAsync(
+        목록조회요청 request,
+        CancellationToken cancellationToken)
+    {
+        var normalized = request.정규화();
+        var firstSort = normalized.정렬조건.FirstOrDefault();
+        var response = await WarehouseService.QueryInboundsAsync(new 입고요청목록조회요청
+        {
+            Page = normalized.페이지,
+            PageSize = normalized.페이지크기,
+            Search = normalized.검색어,
+            SortBy = firstSort?.필드,
+            SortDescending = firstSort?.방향 != 목록정렬방향.오름차순
+        }, cancellationToken);
+
+        return response is null
+            ? 목록조회결과<입고요청항목응답>.비어있음
+            : new 목록조회결과<입고요청항목응답>(response.Items, response.TotalCount);
+    }
+
+    private Task<IReadOnlyList<창고요약응답>> SearchWarehousesAsync(
+        string? searchText,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        IEnumerable<창고요약응답> query = warehouses;
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            var search = searchText.Trim();
+            query = query.Where(item =>
+                item.창고명.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.주소.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || item.담당자명.Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return Task.FromResult<IReadOnlyList<창고요약응답>>(query.Take(20).ToArray());
+    }
+
+    private Task SelectWarehouseAsync(창고요약응답? warehouse)
+    {
+        selectedWarehouseId = warehouse?.Id;
+        return Task.CompletedTask;
+    }
+
+    private Task SelectInboundAsync(입고요청항목응답? inbound)
+    {
+        if (inbound is null)
+        {
+            ClearSelection();
+        }
+        else
+        {
+            SelectInbound(inbound);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task SelectSalesProductAsync(판매상품항목응답? product)
+    {
+        selectedSalesProduct = product;
+        if (product is not null)
+        {
+            itemName = product.대표상품명;
+            itemSku = product.판매SKU;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private static string FormatWarehouse(창고요약응답 warehouse)
+        => $"{warehouse.창고명} · {LogisticsProxySiteTypes.GetDisplayName(warehouse.물류대행지분류)}";
+
+    private static string FormatSalesProduct(판매상품항목응답 product)
+        => string.IsNullOrWhiteSpace(product.판매SKU)
+            ? product.대표상품명
+            : $"{product.대표상품명} · {product.판매SKU}";
 
     private async Task CreateWarehouseAsync()
     {
@@ -330,6 +461,7 @@
                 입고생성경로 = BuildInboundSourceLabel(inboundFlowType),
                 계약선행여부 = 입고흐름유형코드.RequiresExistingContract(inboundFlowType),
                 자동생성여부 = 입고흐름유형코드.IsOrderGenerated(inboundFlowType),
+                공급처코드 = supplierCode,
                 공급처명 = supplierName,
                 원주문참조번호 = orderReference,
                 예정도착일 = expectedArrivalDate,
@@ -347,7 +479,7 @@
                 }.Normalize()
             });
 
-            supplierName = orderReference = inboundMemo = string.Empty;
+            supplierCode = supplierName = orderReference = inboundMemo = string.Empty;
             inboundFlowType = 입고흐름유형코드.계약기반입고;
             contractNo = contractCounterpartyName = contractSettlementType = string.Empty;
             contractType = 입고계약유형코드.보관대행;
@@ -372,6 +504,7 @@
     private void SelectInbound(입고요청항목응답 inbound)
     {
         selectedInbound = inbound;
+        selectedSalesProduct = null;
         itemName = inbound.공급처명;
         itemSku = inbound.원주문참조번호;
         itemOption = string.Empty;
@@ -383,6 +516,7 @@
     private void ClearSelection()
     {
         selectedInbound = null;
+        selectedSalesProduct = null;
     }
 
     private static Color GetInboundFlowColor(string? flowType)

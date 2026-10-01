@@ -17,7 +17,7 @@
 		android:id="@+id/widget_title"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:text="홍달"
+		android:text="살뜰"
 		android:textStyle="bold"
 		android:textSize="16sp"
 		android:maxLines="1" />
@@ -26,7 +26,7 @@
 		android:id="@+id/widget_status"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:text="홍달과 연결됨"
+		android:text="살뜰과 연결됨"
 		android:textSize="12sp"
 		android:maxLines="1" />
 

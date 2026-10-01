@@ -6,7 +6,7 @@
     xmlns:sf="clr-namespace:Syncfusion.Maui.Toolkit.SegmentedControl;assembly=Syncfusion.Maui.Toolkit"
     xmlns:pages="clr-namespace:FDriverApp.Pages"
     Shell.FlyoutBehavior="Flyout"
-    Title="홍달 음식 배달">
+    Title="살뜰 배달">
 
     <ShellContent
         Title="홈"

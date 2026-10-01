@@ -133,7 +133,7 @@ public sealed class 창고작업경험치EventHandler :
                 route,
                 traceId,
                 occurredAtUtc,
-                string.IsNullOrWhiteSpace(appKey) ? App식별자.ShipperApp : appKey),
+                string.IsNullOrWhiteSpace(appKey) ? App식별자.HongdalApp : appKey),
             "창고 작업",
             cancellationToken);
 }

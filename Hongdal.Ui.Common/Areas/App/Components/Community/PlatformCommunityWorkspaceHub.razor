@@ -1,0 +1,62 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Ui.Common.Areas.App.Models
+
+<MudPaper Elevation="0" Outlined="true" Class="pa-4">
+    <MudStack Spacing="2">
+        <MudStack Spacing="0">
+            <MudText Typo="Typo.subtitle1">통합 업무 허브</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                커뮤니티에서 시작한 일을 원장 유형과 처리 체계 기준으로 정리합니다.
+            </MudText>
+        </MudStack>
+        <MudGrid>
+            @foreach (var workspace in Workspaces)
+            {
+                <MudItem xs="12" sm="6">
+                    <div class="platform-unified-workspace">
+                        <MudStack Spacing="1">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+                                <MudIcon Icon="@workspace.Icon" Color="@workspace.Color" />
+                                <MudChip T="string" Size="Size.Small" Color="@workspace.Color" Variant="Variant.Outlined">@ResolveOperatingSystemName(workspace.OperatingSystemName)</MudChip>
+                            </MudStack>
+                            <MudText Typo="Typo.subtitle2">@workspace.Title</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@workspace.Description</MudText>
+                            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                <MudButton Variant="Variant.Outlined"
+                                           Size="Size.Small"
+                                           Color="@workspace.Color"
+                                           StartIcon="@Icons.Material.Filled.Assignment"
+                                           OnClick="@(() => LedgerDraftRequested.InvokeAsync(workspace.LedgerTemplateKey))">
+                                    원장 초안
+                                </MudButton>
+                                @if (!string.IsNullOrWhiteSpace(workspace.EntryHref))
+                                {
+                                    <MudButton Href="@workspace.EntryHref"
+                                               Variant="Variant.Text"
+                                               Size="Size.Small"
+                                               Color="@workspace.Color"
+                                               EndIcon="@Icons.Material.Filled.ChevronRight">
+                                        열기
+                                    </MudButton>
+                                }
+                            </MudStack>
+                        </MudStack>
+                    </div>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<PlatformHomeWorkspaceProfile> Workspaces { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<string> LedgerDraftRequested { get; set; }
+
+    private static string ResolveOperatingSystemName(string? value)
+        => string.IsNullOrWhiteSpace(value)
+            ? "처리 체계"
+            : value.Trim().Replace(" OS", " 처리 체계", StringComparison.OrdinalIgnoreCase);
+}

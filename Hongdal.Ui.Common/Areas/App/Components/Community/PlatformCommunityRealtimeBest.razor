@@ -1,0 +1,43 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+@if (Items.Count > 0)
+{
+    <section class="platform-community-realtime-best" aria-label="실시간 베스트 글">
+        <header>
+            <div>
+                <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" />
+                <strong>실시간 베스트</strong>
+            </div>
+            <span>추천과 댓글이 모인 글</span>
+        </header>
+        <ol>
+            @for (var index = 0; index < Items.Count; index++)
+            {
+                var item = Items[index];
+                <li>
+                    <a href="#community-forum-list"
+                       @onclick="@(() => ItemSelected.InvokeAsync(item))">
+                        <span class="platform-community-realtime-best-rank">@(index + 1)</span>
+                        <span class="platform-community-realtime-best-category">@item.분류</span>
+                        <strong>@item.제목</strong>
+                        <span class="platform-community-realtime-best-author">@item.작성자</span>
+                        <span class="platform-community-realtime-best-meta">
+                            <MudIcon Icon="@Icons.Material.Filled.ThumbUp" Size="Size.Small" />
+                            @item.추천수
+                            <MudIcon Icon="@Icons.Material.Filled.ChatBubbleOutline" Size="Size.Small" />
+                            @item.댓글수
+                        </span>
+                    </a>
+                </li>
+            }
+        </ol>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<공통홈베스트글요약> Items { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<공통홈베스트글요약> ItemSelected { get; set; }
+}

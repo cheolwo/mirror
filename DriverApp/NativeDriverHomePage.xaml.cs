@@ -14,6 +14,7 @@ public partial class NativeDriverHomePage : ContentPage
     private readonly IDriverRecommendationNotificationService _recommendationNotificationService;
     private readonly DriverHomeRoutePlanningService _routePlanningService;
     private readonly I기사푸시토큰등록Service _pushTokenRegistrationService;
+    private readonly DriverOperatingProfileService _operatingProfileService;
     private bool _isSubscribed;
     private DriverMapMarkerItem? _incomingRecommendation;
     private DriverRequestItem? _incomingRecommendationRequest;
@@ -32,7 +33,8 @@ public partial class NativeDriverHomePage : ContentPage
         IDriverRecommendationDecisionService decisionService,
         IDriverRecommendationNotificationService recommendationNotificationService,
         DriverHomeRoutePlanningService routePlanningService,
-        I기사푸시토큰등록Service pushTokenRegistrationService)
+        I기사푸시토큰등록Service pushTokenRegistrationService,
+        DriverOperatingProfileService operatingProfileService)
     {
         InitializeComponent();
         _sampleDataService = sampleDataService;
@@ -41,12 +43,15 @@ public partial class NativeDriverHomePage : ContentPage
         _recommendationNotificationService = recommendationNotificationService;
         _routePlanningService = routePlanningService;
         _pushTokenRegistrationService = pushTokenRegistrationService;
+        _operatingProfileService = operatingProfileService;
+        ApplyOperatingProfile();
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
         SubscribeEvents();
+        ApplyOperatingProfile();
         try
         {
             await _sampleDataService.RefreshAsync();
@@ -96,6 +101,34 @@ public partial class NativeDriverHomePage : ContentPage
 
         TransportFooterBar.IsVisible = true;
         TransportFooterBar.ShowMarker(marker);
+    }
+
+    private void OnKoreaDriverClicked(object? sender, EventArgs e)
+        => _operatingProfileService.SetMarket(Hongdal.Contracts.Common.Operations.OperatingMarketCodes.Korea);
+
+    private void OnUnitedStatesDriverClicked(object? sender, EventArgs e)
+        => _operatingProfileService.SetMarket(Hongdal.Contracts.Common.Operations.OperatingMarketCodes.UnitedStates);
+
+    private void OnOperatingProfileChanged()
+        => MainThread.BeginInvokeOnMainThread(ApplyOperatingProfile);
+
+    private void ApplyOperatingProfile()
+    {
+        var profile = _operatingProfileService.Current;
+        MapView.MapProviderCode = profile.MapProviderCode;
+        OperatingMarketLabel.Text = profile.IsKorea ? "대한민국 운행" : "미국 운행";
+        MapProviderLabel.Text = profile.IsKorea
+            ? "NAVER 지도 · Directions"
+            : "Google 지도 · Routes";
+
+        ApplyProfileButtonState(KoreaDriverButton, profile.IsKorea, "#03c75a");
+        ApplyProfileButtonState(UnitedStatesDriverButton, profile.IsUnitedStates, "#4285f4");
+    }
+
+    private static void ApplyProfileButtonState(Button button, bool isSelected, string selectedColor)
+    {
+        button.BackgroundColor = Color.FromArgb(isSelected ? selectedColor : "#f1f5f9");
+        button.TextColor = Color.FromArgb(isSelected ? "#ffffff" : "#475569");
     }
 
     private async Task RegisterStoredPushTokenQuietlyAsync()
@@ -507,6 +540,7 @@ public partial class NativeDriverHomePage : ContentPage
 
         MapView.MarkerSelected += OnMarkerSelected;
         _recommendationNotificationService.Changed += OnIncomingRecommendationChanged;
+        _operatingProfileService.Changed += OnOperatingProfileChanged;
         _isSubscribed = true;
     }
 
@@ -519,6 +553,7 @@ public partial class NativeDriverHomePage : ContentPage
 
         MapView.MarkerSelected -= OnMarkerSelected;
         _recommendationNotificationService.Changed -= OnIncomingRecommendationChanged;
+        _operatingProfileService.Changed -= OnOperatingProfileChanged;
         _isSubscribed = false;
     }
 

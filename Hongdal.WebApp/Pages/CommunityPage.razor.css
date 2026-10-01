@@ -1,0 +1,175 @@
+.community-directory {
+    display: grid;
+    gap: 1.5rem;
+    width: min(1120px, calc(100% - 2rem));
+    margin: 0 auto;
+    padding: 2rem 0 5rem;
+}
+
+.community-directory__hero {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.8rem;
+    border: 1px solid var(--community-reading-border, rgba(83, 99, 82, .18));
+    border-radius: 6px;
+    background: var(--community-reading-surface, #fff);
+}
+
+.community-directory__hero span,
+.community-directory__group header span {
+    color: var(--community-reading-accent, #5f725c);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+}
+
+.community-directory__hero h1,
+.community-directory__group h2 {
+    margin: .25rem 0;
+}
+
+.community-directory__hero p {
+    margin: 0;
+    color: var(--community-reading-muted, #5e685d);
+}
+
+.community-directory__search {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    min-width: min(320px, 100%);
+    padding: .75rem 1rem;
+    border: 1px solid var(--community-reading-border, rgba(83, 99, 82, .2));
+    border-radius: 4px;
+    background: var(--community-reading-surface, #fff);
+}
+
+.community-directory__search input {
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--community-reading-text, inherit);
+}
+
+.community-directory__all,
+.community-directory__board,
+.community-directory__safety {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 1rem;
+    color: inherit;
+    text-decoration: none;
+}
+
+.community-directory__all {
+    padding: 1rem 1.2rem;
+    border-radius: 4px;
+    background: var(--community-reading-accent, #273229);
+    color: var(--community-reading-on-accent, #fff);
+}
+
+.community-directory__all span:nth-child(2),
+.community-directory__board span:nth-child(2),
+.community-directory__safety > span:nth-child(2) {
+    display: grid;
+    gap: .18rem;
+}
+
+.community-directory__all small {
+    color: color-mix(in srgb, var(--community-reading-on-accent, #fff) 76%, transparent);
+}
+
+.community-directory__group {
+    display: grid;
+    gap: .75rem;
+}
+
+.community-directory__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+}
+
+.community-directory__board {
+    min-height: 96px;
+    padding: 1rem;
+    border: 1px solid var(--community-reading-border, rgba(83, 99, 82, .16));
+    border-radius: 4px;
+    background: var(--community-reading-surface, #fff);
+    transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.community-directory__board:hover {
+    transform: translateY(-2px);
+    border-color: var(--community-reading-accent, rgba(69, 101, 66, .42));
+    box-shadow: 0 8px 20px rgba(var(--community-reading-accent-rgb, 37, 99, 235), .09);
+}
+
+.community-directory__board small,
+.community-directory__safety small {
+    color: var(--community-reading-muted, #687269);
+}
+
+.community-directory__icon {
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--community-reading-accent, #4e704a) 11%, var(--community-reading-surface, #fff));
+    color: var(--community-reading-accent, #4e704a);
+}
+
+.community-directory__state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    min-height: 180px;
+    color: var(--community-reading-muted, #657066);
+}
+
+.community-directory__safety {
+    padding: 1.15rem;
+    border: 1px solid rgba(174, 66, 57, .22);
+    border-radius: 4px;
+    background: rgba(255, 247, 245, .9);
+}
+
+.community-directory__safety .community-directory__icon {
+    background: rgba(174, 66, 57, .1);
+    color: #a33f38;
+}
+
+@media (max-width: 720px) {
+    .community-directory {
+        width: min(100% - 1rem, 1120px);
+        padding-top: .75rem;
+    }
+
+    .community-directory__hero {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 1.2rem;
+    }
+
+    .community-directory__search {
+        min-width: 0;
+    }
+
+    .community-directory__list {
+        grid-template-columns: 1fr;
+    }
+
+    .community-directory__safety {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .community-directory__safety .mud-button-root {
+        grid-column: 1 / -1;
+    }
+}

@@ -1,0 +1,180 @@
+@using Hongdal.Contracts.Common.Sales
+@using Hongdal.Ui.Common.Areas.App.Components.Crud
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inherits ViewModelParameterComponentBase<판매채널계정CrudViewModel>
+@namespace Hongdal.Ui.Common.Areas.App.Components.Sales
+@inject IDialogService DialogService
+
+<section class="hongdal-account-workspace" aria-label="판매채널 계정 관리">
+    <HongdalCrudActionBar Summary="@Summary"
+                          IsBusy="@IsBusy"
+                          CanEdit="@(SelectedAccount is not null)"
+                          CanDelete="@(SelectedAccount is not null)"
+                          OnRefresh="RefreshAsync"
+                          OnCreate="OpenCreateDialogAsync"
+                          OnEdit="OpenEditDialogAsync"
+                          OnDelete="OpenDeleteDialogAsync" />
+
+    <HongdalOperationState ViewModel="@ViewModel.조회" />
+
+    <div class="hongdal-account-workspace__table">
+        <HongdalCrudTable TItem="판매채널계정항목응답"
+                          Items="@ViewModel.조회.항목목록"
+                          Loading="@IsBusy"
+                          SelectedItem="@SelectedAccount"
+                          SelectedItemChanged="SelectAccountAsync"
+                          EmptyText="연결된 판매채널 계정이 없습니다.">
+            <HeaderContent>
+                <MudTh>ID</MudTh>
+                <MudTh>판매채널</MudTh>
+                <MudTh>외부 API</MudTh>
+                <MudTh>상점명</MudTh>
+                <MudTh>연결상태</MudTh>
+                <MudTh>마지막 동기화</MudTh>
+            </HeaderContent>
+            <RowContent Context="account">
+                <MudTd DataLabel="ID">@account.Id</MudTd>
+                <MudTd DataLabel="판매채널">@GetChannelName(account.채널종류)</MudTd>
+                <MudTd DataLabel="외부 API">@GetIntegrationStatus(account.채널종류)</MudTd>
+                <MudTd DataLabel="상점명">@account.상점명</MudTd>
+                <MudTd DataLabel="연결상태">@account.연결상태</MudTd>
+                <MudTd DataLabel="마지막 동기화">@FormatDate(account.마지막동기화일시)</MudTd>
+            </RowContent>
+        </HongdalCrudTable>
+    </div>
+
+    <div class="hongdal-account-workspace__cards">
+        <HongdalCrudCardList TItem="판매채널계정항목응답"
+                             Items="@ViewModel.조회.항목목록"
+                             Loading="@IsBusy"
+                             SelectedItem="@SelectedAccount"
+                             SelectedItemChanged="SelectAccountAsync"
+                             EmptyText="연결된 판매채널 계정이 없습니다.">
+            <CardContent Context="account">
+                <MudStack Spacing="1">
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.subtitle1">@account.상점명</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">#@account.Id</MudText>
+                    </MudStack>
+                    <MudText Typo="Typo.body2">@GetChannelName(account.채널종류)</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        외부 API @GetIntegrationStatus(account.채널종류) · @account.연결상태
+                    </MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        마지막 동기화 @FormatDate(account.마지막동기화일시)
+                    </MudText>
+                </MudStack>
+            </CardContent>
+        </HongdalCrudCardList>
+    </div>
+</section>
+
+@code {
+    private static readonly DialogOptions DialogOptions = new()
+    {
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true
+    };
+
+    [Parameter]
+    public IReadOnlyList<업무선택항목<string>> ChannelOptions { get; set; } = [];
+
+    [Parameter]
+    public EventCallback RefreshRequested { get; set; }
+
+    [Parameter]
+    public bool Initializing { get; set; }
+
+    private 판매채널계정항목응답? SelectedAccount => ViewModel.조회.선택된항목;
+    private bool IsBusy => Initializing || ViewModel.처리중;
+    private string Summary => $"연결 계정 {ViewModel.조회.항목목록.Count}개";
+
+    private Task SelectAccountAsync(판매채널계정항목응답 account)
+    {
+        ViewModel.조회.선택(account.Id);
+        return Task.CompletedTask;
+    }
+
+    private Task RefreshAsync()
+        => RefreshRequested.HasDelegate
+            ? RefreshRequested.InvokeAsync()
+            : ViewModel.조회.조회Async();
+
+    private async Task OpenCreateDialogAsync()
+    {
+        SetDefaultChannel(ViewModel.등록.초안);
+        await ShowEditorDialogAsync(ViewModel.등록, channelLocked: false);
+    }
+
+    private async Task OpenEditDialogAsync()
+    {
+        if (!ViewModel.수정.선택항목적용())
+        {
+            return;
+        }
+
+        await ShowEditorDialogAsync(ViewModel.수정, channelLocked: true);
+    }
+
+    private async Task ShowEditorDialogAsync(
+        I명령ViewModel<판매채널계정저장요청> command,
+        bool channelLocked)
+    {
+        var parameters = new DialogParameters
+        {
+            [nameof(HongdalSalesChannelAccountDialog.ViewModel)] = command,
+            [nameof(HongdalSalesChannelAccountDialog.ChannelOptions)] = ChannelOptions,
+            [nameof(HongdalSalesChannelAccountDialog.ChannelLocked)] = channelLocked
+        };
+
+        var dialog = await DialogService.ShowAsync<HongdalSalesChannelAccountDialog>(
+            command.다이얼로그정책.제목,
+            parameters,
+            DialogOptions);
+        await dialog.Result;
+    }
+
+    private async Task OpenDeleteDialogAsync()
+    {
+        if (SelectedAccount is null)
+        {
+            return;
+        }
+
+        I명령ViewModel<long> command = ViewModel.삭제;
+        var parameters = new DialogParameters
+        {
+            [nameof(HongdalDeleteDialog<long>.ViewModel)] = command,
+            [nameof(HongdalDeleteDialog<long>.TargetLabel)] = SelectedAccount.상점명
+        };
+        var dialog = await DialogService.ShowAsync<HongdalDeleteDialog<long>>(
+            command.다이얼로그정책.제목,
+            parameters,
+            DialogOptions);
+        await dialog.Result;
+    }
+
+    private void SetDefaultChannel(판매채널계정저장요청 draft)
+    {
+        if (!string.IsNullOrWhiteSpace(draft.채널종류))
+        {
+            return;
+        }
+
+        draft.채널종류 = ChannelOptions.FirstOrDefault()?.값 ?? string.Empty;
+        ViewModel.등록.입력변경알림();
+    }
+
+    private string GetChannelName(string channelType)
+        => ChannelOptions.FirstOrDefault(option =>
+               string.Equals(option.값, channelType, StringComparison.OrdinalIgnoreCase))?.표시명
+           ?? channelType;
+
+    private string GetIntegrationStatus(string channelType)
+        => ChannelOptions.FirstOrDefault(option =>
+               string.Equals(option.값, channelType, StringComparison.OrdinalIgnoreCase))?.설명
+           ?? "수동";
+
+    private static string FormatDate(DateTime? value)
+        => value?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "없음";
+}

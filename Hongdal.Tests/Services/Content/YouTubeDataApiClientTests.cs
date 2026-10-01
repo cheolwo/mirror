@@ -9,6 +9,49 @@ namespace Hongdal.Tests.Services.Content;
 public sealed class YouTubeDataApiClientTests
 {
     [Fact]
+    public async Task 채널검색Async_음식주제와지역언어조건을사용한다()
+    {
+        Uri? requestUri = null;
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            requestUri = request.RequestUri;
+            return JsonResponse(
+                """
+                {
+                  "items": [
+                    {
+                      "id": { "channelId": "UC_FOOD" },
+                      "snippet": {
+                        "publishedAt": "2020-01-02T03:04:05Z",
+                        "title": "음식 발견 채널",
+                        "description": "식재료와 상품 리뷰",
+                        "thumbnails": { "high": { "url": "https://img.example/food.jpg" } }
+                      }
+                    }
+                  ]
+                }
+                """);
+        });
+        var sut = CreateClient(handler);
+
+        var result = await sut.채널검색Async(
+            "한국 식재료",
+            10,
+            "kr",
+            "ko",
+            CancellationToken.None);
+
+        var channel = Assert.Single(result);
+        Assert.Equal("UC_FOOD", channel.ChannelId);
+        Assert.Equal("음식 발견 채널", channel.채널명);
+        Assert.Contains("type=channel", requestUri!.Query);
+        Assert.Contains("topicId=%2Fm%2F02wbm", requestUri.Query, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("q=%ED%95%9C%EA%B5%AD%20%EC%8B%9D%EC%9E%AC%EB%A3%8C", requestUri.Query, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("regionCode=KR", requestUri.Query);
+        Assert.Contains("relevanceLanguage=ko", requestUri.Query);
+    }
+
+    [Fact]
     public async Task 채널조회Async_업로드재생목록과채널정보를_반환한다()
     {
         Uri? requestUri = null;
@@ -45,6 +88,39 @@ public sealed class YouTubeDataApiClientTests
         Assert.Contains("part=snippet,contentDetails", requestUri!.Query);
         Assert.Contains("id=UC_TEST", requestUri.Query);
         Assert.Contains("key=test-key", requestUri.Query);
+    }
+
+    [Fact]
+    public async Task 채널Handle조회Async_공식Handle을채널ID와업로드목록으로해석한다()
+    {
+        Uri? requestUri = null;
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            requestUri = request.RequestUri;
+            return JsonResponse(
+                """
+                {
+                  "items": [
+                    {
+                      "id": "UC_TED",
+                      "snippet": { "title": "TED" },
+                      "contentDetails": {
+                        "relatedPlaylists": { "uploads": "UU_TED" }
+                      }
+                    }
+                  ]
+                }
+                """);
+        });
+        var sut = CreateClient(handler);
+
+        var result = await sut.채널Handle조회Async("@TED", CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Equal("UC_TED", result.ChannelId);
+        Assert.Equal("UU_TED", result.UploadsPlaylistId);
+        Assert.Contains("forHandle=TED", requestUri!.Query);
+        Assert.DoesNotContain("%40", requestUri.Query, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

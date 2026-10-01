@@ -1,0 +1,273 @@
+@page "/community/boards"
+@inject PlatformCommunityService CommunityService
+@inject NavigationManager Navigation
+
+<PageTitle>@($"{CurrentBoardName} 게시판")</PageTitle>
+
+<PlatformCommunityReadingThemeFrame>
+<main class="community-board-page">
+    <header class="community-board-page__header">
+        <a href="/community">
+            <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+            게시판 홈
+        </a>
+        <div>
+            <span>COMMUNITY BOARD</span>
+            <h1>@CurrentBoardName</h1>
+            <p>@CurrentBoardDescription</p>
+        </div>
+        @if (CurrentBoard?.IsUserCreatable != false)
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Edit"
+                       OnClick="OpenCompose">
+                글쓰기
+            </MudButton>
+        }
+    </header>
+
+    <nav class="community-board-page__navigation" aria-label="게시판 선택">
+        <a class="@BuildBoardLinkClass(null)" href="/community/boards">전체</a>
+        @foreach (var board in BoardSummaries)
+        {
+            <a class="@BuildBoardLinkClass(board.BoardKey)"
+               href="@BoardHref(board.BoardKey)">
+                <span>@board.DisplayName</span>
+                <b>@board.PostCount</b>
+            </a>
+        }
+    </nav>
+
+    @if (!string.IsNullOrWhiteSpace(WorkflowTag) || !string.IsNullOrWhiteSpace(RoleTag))
+    {
+        <div class="community-board-page__filters" aria-label="적용된 업무 필터">
+            <span>적용된 필터</span>
+            @if (!string.IsNullOrWhiteSpace(WorkflowTag))
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">@WorkflowTag</MudChip>
+            }
+            @if (!string.IsNullOrWhiteSpace(RoleTag))
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">@RoleTag</MudChip>
+            }
+            <MudButton Href="@BoardHref(CurrentBoard?.BoardKey)" Variant="Variant.Text" Size="Size.Small">필터 지우기</MudButton>
+        </div>
+    }
+
+    @if (IsLoading)
+    {
+        <div class="community-board-page__state" aria-live="polite">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            <span>글 목록을 불러오는 중입니다.</span>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <MudAlert Severity="Severity.Error">@ErrorMessage</MudAlert>
+    }
+    else
+    {
+        <PlatformCommunityPostList BoardName="@CurrentBoardName"
+                                   FilterOptions="@ListFilters"
+                                   SelectedFilter="@SelectedFilter"
+                                   SelectedFilterChanged="SelectListFilter"
+                                   ViewMode="@ViewMode"
+                                   ViewModeChanged="SelectViewMode"
+                                   ComposeRequested="OpenCompose"
+                                   Posts="@VisiblePosts"
+                                   SeedPosts="@NoSeedPosts"
+                                   VisiblePostCount="@VisiblePosts.Count"
+                                   PostSelected="OpenPost"
+                                   SearchText="@SearchText"
+                                   SearchTextChanged="SetSearchText" />
+
+        @if (Result.Page > 1 || Result.Page * Result.PageSize < Result.TotalCount)
+        {
+            <nav class="community-board-page__pagination" aria-label="글 목록 페이지">
+                <MudButton Disabled="@(Result.Page <= 1)"
+                           Href="@PageHref(Result.Page - 1)"
+                           Variant="Variant.Outlined">
+                    이전
+                </MudButton>
+                <span>@Result.Page / @TotalPages</span>
+                <MudButton Disabled="@(Result.Page >= TotalPages)"
+                           Href="@PageHref(Result.Page + 1)"
+                           Variant="Variant.Outlined">
+                    다음
+                </MudButton>
+            </nav>
+        }
+    }
+</main>
+</PlatformCommunityReadingThemeFrame>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "boardKey")]
+    public string? BoardKey { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "board")]
+    public string? LegacyBoardName { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "workflowTag")]
+    public string? WorkflowTag { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "roleTag")]
+    public string? RoleTag { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "page")]
+    public int Page { get; set; } = 1;
+
+    private static readonly IReadOnlyList<string> ListFilters = ["전체글", "공지", "추천글"];
+    private static readonly IReadOnlyList<CommunitySeedPost> NoSeedPosts = [];
+    private IReadOnlyList<CommunityBoardSummaryResponse> BoardSummaries { get; set; } = [];
+    private CommunityBoardSummaryResponse? CurrentBoard { get; set; }
+    private PlatformCommunityPostListResponse Result { get; set; } = new();
+    private string SelectedFilter { get; set; } = "전체글";
+    private string SearchText { get; set; } = string.Empty;
+    private CommunityPostViewMode ViewMode { get; set; }
+    private string? ErrorMessage { get; set; }
+    private bool IsLoading { get; set; }
+
+    private string CurrentBoardName => CurrentBoard?.DisplayName ?? "전체 글";
+    private string CurrentBoardDescription => CurrentBoard?.Description ?? "공개 게시판의 글을 한 번에 봅니다.";
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling(Result.TotalCount / (double)Math.Max(1, Result.PageSize)));
+
+    private IReadOnlyList<PlatformCommunityPostResponse> VisiblePosts
+        => Result.Items
+            .Where(MatchesListFilter)
+            .Where(MatchesSearch)
+            .ToArray();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            BoardSummaries = await CommunityService.GetBoardSummariesAsync("shipper", timeout.Token);
+            CurrentBoard = ResolveCurrentBoard(BoardSummaries);
+            var resolvedKey = CurrentBoard?.BoardKey
+                              ?? CommunityBoardCatalog.Find(BoardKey ?? LegacyBoardName)?.Key;
+            var legacyCategory = resolvedKey is null && !string.IsNullOrWhiteSpace(LegacyBoardName)
+                ? LegacyBoardName
+                : null;
+            Result = await CommunityService.GetBoardPostsAsync(
+                "shipper",
+                boardKey: resolvedKey,
+                category: legacyCategory,
+                workflowTag: WorkflowTag,
+                roleTag: RoleTag,
+                page: Math.Max(1, Page),
+                pageSize: 50,
+                cancellationToken: timeout.Token);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"글 목록을 불러오지 못했습니다: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private CommunityBoardSummaryResponse? ResolveCurrentBoard(
+        IReadOnlyList<CommunityBoardSummaryResponse> boards)
+    {
+        var requested = BoardKey ?? LegacyBoardName;
+        if (string.IsNullOrWhiteSpace(requested))
+        {
+            return null;
+        }
+
+        var catalogBoard = CommunityBoardCatalog.Find(requested);
+        var key = catalogBoard?.Key ?? requested.Trim();
+        return boards.FirstOrDefault(board =>
+                   string.Equals(board.BoardKey, key, StringComparison.OrdinalIgnoreCase)
+                   || string.Equals(board.DisplayName, requested, StringComparison.OrdinalIgnoreCase))
+               ?? (catalogBoard is null
+                   ? null
+                   : new CommunityBoardSummaryResponse
+                   {
+                       BoardKey = catalogBoard.Key,
+                       DisplayName = catalogBoard.DisplayName,
+                       Description = catalogBoard.Description,
+                       GroupCode = catalogBoard.GroupCode,
+                       GroupDisplayName = catalogBoard.GroupDisplayName,
+                       IsUserCreatable = catalogBoard.IsUserCreatable
+                   });
+    }
+
+    private bool MatchesListFilter(PlatformCommunityPostResponse post)
+        => SelectedFilter switch
+        {
+            "공지" => post.IsOperatorPinned,
+            "추천글" => post.IsTrending || post.RecommendationCount >= 5,
+            _ => true
+        };
+
+    private bool MatchesSearch(PlatformCommunityPostResponse post)
+    {
+        var search = SearchText.Trim();
+        return search.Length == 0
+               || Contains(post.Title, search)
+               || Contains(post.Body, search)
+               || Contains(post.Nickname, search)
+               || Contains(post.WorkflowTag, search)
+               || Contains(post.RoleTag, search);
+    }
+
+    private static bool Contains(string? value, string search)
+        => !string.IsNullOrWhiteSpace(value)
+           && value.Contains(search, StringComparison.OrdinalIgnoreCase);
+
+    private void SelectListFilter(string value) => SelectedFilter = value;
+    private void SelectViewMode(CommunityPostViewMode value) => ViewMode = value;
+    private void SetSearchText(string value) => SearchText = value;
+    private void OpenPost(PlatformCommunityPostResponse post) => Navigation.NavigateTo($"/community/posts/{post.Id}");
+
+    private void OpenCompose()
+    {
+        var suffix = CurrentBoard is null
+            ? string.Empty
+            : $"?board={Uri.EscapeDataString(CurrentBoard.DisplayName)}";
+        Navigation.NavigateTo($"/community/write{suffix}");
+    }
+
+    private string BuildBoardLinkClass(string? boardKey)
+        => string.Equals(CurrentBoard?.BoardKey, boardKey, StringComparison.OrdinalIgnoreCase)
+            || (CurrentBoard is null && boardKey is null)
+                ? "community-board-page__board-link community-board-page__board-link--active"
+                : "community-board-page__board-link";
+
+    private static string BoardHref(string? boardKey)
+        => string.IsNullOrWhiteSpace(boardKey)
+            ? "/community/boards"
+            : $"/community/boards?boardKey={Uri.EscapeDataString(boardKey)}";
+
+    private string PageHref(int page)
+    {
+        var query = new List<string>();
+        if (CurrentBoard is not null)
+        {
+            query.Add($"boardKey={Uri.EscapeDataString(CurrentBoard.BoardKey)}");
+        }
+        if (!string.IsNullOrWhiteSpace(WorkflowTag))
+        {
+            query.Add($"workflowTag={Uri.EscapeDataString(WorkflowTag)}");
+        }
+        if (!string.IsNullOrWhiteSpace(RoleTag))
+        {
+            query.Add($"roleTag={Uri.EscapeDataString(RoleTag)}");
+        }
+        query.Add($"page={Math.Max(1, page)}");
+        return $"/community/boards?{string.Join("&", query)}";
+    }
+}

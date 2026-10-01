@@ -1,0 +1,84 @@
+@page "/community/workspace"
+@page "/community/write"
+@page "/community/posts/{PostId:long}"
+@implements IDisposable
+@inject PlatformDiagramPaletteStateService DiagramPalette
+@inject NavigationManager Navigation
+
+<PlatformCommunityHome AppName="살뜰"
+                       RoleLabel="웹 사용자"
+                       AppKey="shipper"
+                       UseBaguaRoleTransitionPages="true"
+                       QuickActions="QuickActions"
+                       QueryLedgerTemplateKey="@QueryLedgerTemplateKey"
+                       QueryDiagramMode="@QueryDiagramMode"
+                       QueryPostId="@(PostId ?? QueryPostId)"
+                       QuerySeedPostTitle="@QuerySeedPostTitle"
+                       QueryBoardName="@QueryBoardName"
+                       StartInComposeMode="@IsWriteRoute" />
+
+@code {
+    [Parameter]
+    public long? PostId { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "postId")]
+    public long? QueryPostId { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "seed")]
+    public string? QuerySeedPostTitle { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "board")]
+    public string? QueryBoardName { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "ledgerTemplate")]
+    public string? QueryLedgerTemplateKey { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "diagram")]
+    public string? QueryDiagramMode { get; set; }
+
+    private bool IsWriteRoute
+        => Navigation.ToBaseRelativePath(Navigation.Uri)
+            .Split('?', '#')[0]
+            .Equals("community/write", StringComparison.OrdinalIgnoreCase);
+
+    private static readonly IReadOnlyList<PlatformHomeQuickAction> QuickActions =
+    [
+        new("함께 하는 일", "마음 모으기부터 실행 중 추가 참여와 완료 기록까지 이어서 봅니다.", "/community/actions", Icons.Material.Filled.Groups, Color.Success),
+        new("음식 영상 발견", "여러 나라의 음식 영상을 보고 커뮤니티에 정보 글로 나눕니다.", "/community/discover/food", Icons.Material.Filled.SmartDisplay, Color.Error),
+        new("글로벌 무역 대화", "해외 공급자와 댓글로 협의한 뒤 수입 주문원장과 업무 다이어그램으로 전환합니다.", GlobalTradeRoutes.CommunityThread(101), Icons.Material.Filled.Language, Color.Info),
+        new("공동구매 제안", "제안 글부터 수요 모집, 이의 검토와 전자서명까지 한 흐름으로 진행합니다.", "/community/group-purchase", Icons.Material.Filled.GroupAdd, Color.Success),
+        new("운송 단가 질문", "운송 의뢰 작성 중 생성한 초안을 게시판에서 다듬습니다.", "/shipper/request", Icons.Material.Filled.PostAdd, Color.Primary),
+        new("기사 경험 보기", "추천 배차와 현장 예외 상황을 기사 관점에서 봅니다.", "/driver/recommendations", Icons.Material.Filled.Route, Color.Info)
+    ];
+
+    protected override void OnInitialized()
+    {
+        DiagramPalette.Changed += HandleDiagramModeChanged;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (IsTruthyQueryValue(QueryDiagramMode))
+        {
+            DiagramPalette.SetDiagramMode(true);
+        }
+    }
+
+    private static bool IsTruthyQueryValue(string? value)
+        => !string.IsNullOrWhiteSpace(value) &&
+           (value.Equals("1", StringComparison.OrdinalIgnoreCase) ||
+            value.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+            value.Equals("yes", StringComparison.OrdinalIgnoreCase) ||
+            value.Equals("diagram", StringComparison.OrdinalIgnoreCase));
+
+    private void HandleDiagramModeChanged()
+        => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+        => DiagramPalette.Changed -= HandleDiagramModeChanged;
+}

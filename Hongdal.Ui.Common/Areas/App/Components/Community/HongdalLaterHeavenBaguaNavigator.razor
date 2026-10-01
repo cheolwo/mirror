@@ -487,7 +487,9 @@
             : $"{item.TrigramName}괘, {ResolveBusinessLabel(item)}, {item.Direction}, {item.DestinationLabel}로 이동";
 
     private static string ResolveBusinessLabel(HongdalCardinalNavigationOption item)
-        => item.TrigramKey switch
+        => !string.IsNullOrWhiteSpace(item.BusinessLabel)
+            ? item.BusinessLabel
+            : item.TrigramKey switch
         {
             "li" => "판매",
             "dui" => "창고",

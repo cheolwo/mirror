@@ -1,0 +1,89 @@
+@using Hongdal.Contracts.Common.AgriculturalFisheries
+
+<section class="price-result" aria-label="미국 농수산물 가격 조회 결과">
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true">@ErrorMessage</MudAlert>
+    }
+    else if (Response is null)
+    {
+        <div class="price-result__empty">
+            <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" />
+            <strong>미국 가격 조회 전</strong>
+        </div>
+    }
+    else if (!Response.Success)
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true">
+            @(Response.ErrorMessage ?? Response.Summary)
+        </MudAlert>
+    }
+    else if (Response.Items.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Dense="true">@Response.Summary</MudAlert>
+    }
+    else
+    {
+        <header class="price-result__header">
+            <div>
+                <span>미국 농무부 농업통계청(USDA NASS)</span>
+                <strong>@Response.Query.Commodity</strong>
+            </div>
+            <small>@Response.Query.YearFrom~@Response.Query.YearTo</small>
+        </header>
+
+        <div class="price-result__table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>연도</th>
+                        <th>구분</th>
+                        <th>값</th>
+                        <th>단위</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in VisibleItems)
+                    {
+                        <tr>
+                            <td>@item.Year</td>
+                            <td>@ResolveDescription(item)</td>
+                            <td class="price-result__value">@item.RawValue</td>
+                            <td>@item.Unit</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Response.Notices.Count > 0)
+        {
+            <p class="price-result__notice">@Response.Notices[0]</p>
+        }
+    }
+</section>
+
+@code {
+    [Parameter]
+    public 미국농수산가격조회응답? Response { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    private IEnumerable<미국농수산가격항목> VisibleItems
+        => Response?.Items
+            .OrderByDescending(item => ParseYear(item.Year))
+            .ThenBy(item => item.Class, StringComparer.Ordinal)
+            .Take(12)
+            ?? [];
+
+    private static int ParseYear(string value)
+        => int.TryParse(value, out var year) ? year : 0;
+
+    private static string ResolveDescription(미국농수산가격항목 item)
+        => !string.IsNullOrWhiteSpace(item.Class)
+            ? item.Class
+            : !string.IsNullOrWhiteSpace(item.ReferencePeriod)
+                ? item.ReferencePeriod
+                : item.StatisticCategory;
+}

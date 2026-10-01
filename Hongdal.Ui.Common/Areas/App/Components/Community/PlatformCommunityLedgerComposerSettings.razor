@@ -1,0 +1,114 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Contracts.Common.Community
+
+<section class="platform-community-compose-ledger-shortcut" aria-label="원장 연결">
+    <div class="platform-community-compose-setting-heading">
+        <div>
+            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+            <strong>원장 연결</strong>
+        </div>
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Primary"
+                   Size="Size.Small"
+                   Disabled="@IsPickerLoading"
+                   OnClick="PickerRequested">
+            원장 선택
+        </MudButton>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(SelectedLedgerId))
+    {
+        var selectedLedger = Ledgers.FirstOrDefault(x =>
+            string.Equals(x.원장Id, SelectedLedgerId, StringComparison.OrdinalIgnoreCase));
+        <div class="platform-community-compose-selected-ledger">
+            <span>
+                <strong>@(selectedLedger?.제목 ?? "선택한 원장")</strong>
+                <small>@SelectedLedgerId</small>
+            </span>
+            <div>
+                @if (selectedLedger?.내가만든원장 == true)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Public"
+                                   Size="Size.Small"
+                                   Color="Color.Primary"
+                                   OnClick="SharingSettingsRequested"
+                                   aria-label="원장 공개 설정" />
+                }
+                <MudIconButton Icon="@Icons.Material.Filled.LinkOff"
+                               Size="Size.Small"
+                               Color="Color.Error"
+                               OnClick="ClearRequested"
+                               aria-label="원장 첨부 해제" />
+            </div>
+        </div>
+    }
+
+    @if (SharingSettings is not null)
+    {
+        var settings = SharingSettings;
+        <div class="platform-community-ledger-sharing-settings">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+                <MudText Typo="Typo.subtitle2">원장 공개 설정</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="CloseSharingSettingsRequested" aria-label="공개 설정 닫기" />
+            </MudStack>
+            <MudSelect T="string" Label="원장 공개 범위" @bind-Value="settings.공개범위" Variant="Variant.Outlined" Margin="Margin.Dense">
+                <MudSelectItem Value="@커뮤니티원장공개범위.비공개">비공개</MudSelectItem>
+                <MudSelectItem Value="@커뮤니티원장공개범위.커뮤니티">홍달 커뮤니티 공개</MudSelectItem>
+                <MudSelectItem Value="@커뮤니티원장공개범위.전체공개">링크 전체 공개</MudSelectItem>
+            </MudSelect>
+            <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+                <MudSwitch T="bool" Label="재사용 허용" @bind-Value="settings.재사용허용여부" Color="Color.Primary" Disabled="@(settings.공개범위 == 커뮤니티원장공개범위.비공개)" />
+                <MudSwitch T="bool" Label="재공유 허용" @bind-Value="settings.재공유허용여부" Color="Color.Primary" Disabled="@(settings.공개범위 == 커뮤니티원장공개범위.비공개)" />
+            </MudStack>
+            <div class="platform-community-ledger-sharing-item-list">
+                @foreach (var item in settings.항목목록)
+                {
+                    <MudCheckBox T="bool"
+                                 @bind-Value="item.공개여부"
+                                 Label="@item.표시명"
+                                 Color="Color.Primary"
+                                 Disabled="@(settings.공개범위 == 커뮤니티원장공개범위.비공개)" />
+                }
+            </div>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       Disabled="@IsSharingSettingsSaving"
+                       OnClick="SaveSharingSettingsRequested">
+                공개 설정 저장
+            </MudButton>
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter]
+    public string? SelectedLedgerId { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<PlatformCommunityPostLedgerChoiceResponse> Ledgers { get; set; } = [];
+
+    [Parameter]
+    public 커뮤니티원장공개설정Response? SharingSettings { get; set; }
+
+    [Parameter]
+    public bool IsPickerLoading { get; set; }
+
+    [Parameter]
+    public bool IsSharingSettingsSaving { get; set; }
+
+    [Parameter]
+    public EventCallback PickerRequested { get; set; }
+
+    [Parameter]
+    public EventCallback SharingSettingsRequested { get; set; }
+
+    [Parameter]
+    public EventCallback ClearRequested { get; set; }
+
+    [Parameter]
+    public EventCallback CloseSharingSettingsRequested { get; set; }
+
+    [Parameter]
+    public EventCallback SaveSharingSettingsRequested { get; set; }
+}

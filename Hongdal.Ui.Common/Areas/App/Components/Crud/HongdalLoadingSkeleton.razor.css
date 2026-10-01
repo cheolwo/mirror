@@ -1,0 +1,23 @@
+.hongdal-loading-skeleton {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+    padding: 16px;
+}
+
+.hongdal-loading-skeleton__row {
+    display: grid;
+    grid-template-columns: repeat(var(--hongdal-skeleton-columns), minmax(0, 1fr));
+    gap: 16px;
+    min-height: 24px;
+}
+
+@media (max-width: 600px) {
+    .hongdal-loading-skeleton__row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .hongdal-loading-skeleton__row > :not(:first-child) {
+        display: none;
+    }
+}

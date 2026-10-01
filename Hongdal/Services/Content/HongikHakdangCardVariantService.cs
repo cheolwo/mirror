@@ -56,6 +56,7 @@ public sealed class HongikHakdangCardVariantService : IHongikHakdangCardVariantS
         var query = _db.HongikHakdangCards
             .Include(x => x.ImageVariants)
             .Where(x => x.IsActive
+                        && x.IsAdminEnabled
                         && x.ImageDownloadStatus == HongikHakdangCard.ImageDownloadedStatus
                         && x.LocalImagePath != null
                         && x.ImageSha256 != null);

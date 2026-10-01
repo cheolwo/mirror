@@ -5,10 +5,9 @@
 <MudLayout Class="@CurrentTheme.ShellClass">
     <MudAppBar Elevation="1" Color="Color.Default" Dense="true" Class="web-appbar">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Edge="Edge.Start" Color="Color.Inherit" OnClick="ToggleDrawer" />
-        <MudText Typo="Typo.h6">홍달 웹앱</MudText>
+        <MudText Typo="Typo.h6">살뜰 웹 프리뷰</MudText>
         <MudSpacer />
         <MudChip T="string" Class="web-role-chip" Variant="Variant.Filled" Size="Size.Small">@CurrentTheme.RoleLabel</MudChip>
-        <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small">Blazor WebAssembly</MudChip>
     </MudAppBar>
 
     <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="1" Variant="DrawerVariant.Responsive" Class="web-drawer">

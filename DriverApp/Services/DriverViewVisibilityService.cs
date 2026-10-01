@@ -90,9 +90,10 @@ public sealed class DriverViewVisibilityService
             CreateItem(View식별자.Driver.Recommendations, "추천 목록", DriverRoutes.Recommendations, "recommend", sortOrder: 20),
             CreateItem(View식별자.Driver.Reservations, "예약", "/driver/reservations", "event", sortOrder: 30),
             CreateItem(View식별자.Driver.CurrentTransport, "진행 중 운송", DriverRoutes.CurrentTransport, "local_shipping", isRequired: true, sortOrder: 40),
-            CreateItem(View식별자.Driver.Settlements, "월 정산", "/driver/settlements/current-month", "receipt_long", sortOrder: 50),
-            CreateItem(View식별자.Driver.Notifications, "알림함", "/driver/notifications", "notifications", sortOrder: 60),
-            CreateItem(View식별자.Driver.ViewSettings, "화면 설정", "/driver/settings/views", "settings", isRequired: true, sortOrder: 70)
+            CreateItem(View식별자.Driver.CommunityInquiries, "커뮤니티 개별 의뢰", DriverRoutes.CommunityInquiries, "forum", sortOrder: 50),
+            CreateItem(View식별자.Driver.Settlements, "월 정산", "/driver/settlements/current-month", "receipt_long", sortOrder: 60),
+            CreateItem(View식별자.Driver.Notifications, "알림함", "/driver/notifications", "notifications", sortOrder: 70),
+            CreateItem(View식별자.Driver.ViewSettings, "화면 설정", "/driver/settings/views", "settings", isRequired: true, sortOrder: 80)
         ];
     }
 

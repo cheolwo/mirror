@@ -1,0 +1,161 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Contracts.Common.Community
+@using Hongdal.Ui.Common.Areas.App.Services
+@inject PlatformCommunityService CommunityService
+
+<MudStack Spacing="1">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
+        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+            @($"원문 {LanguageLabel(Post.OriginalLanguageCode)}")
+        </MudChip>
+        @if (IsReportPost)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">
+                개인정보 보호로 자동 번역 제외
+            </MudChip>
+        }
+        else if (isPending)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+            <MudText Typo="Typo.caption">번역하는 중...</MudText>
+        }
+        else if (IsTranslationVisible)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">AI 번역</MudChip>
+            <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="ShowOriginal">
+                원문 보기
+            </MudButton>
+        }
+        else if (translation is not null)
+        {
+            <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="ShowTranslation">
+                번역 보기
+            </MudButton>
+        }
+        else
+        {
+            <MudButton Size="Size.Small"
+                       Variant="Variant.Outlined"
+                       Color="Color.Info"
+                       StartIcon="@Icons.Material.Filled.Translate"
+                       OnClick="TranslateAsync">
+                @TranslationButtonLabel
+            </MudButton>
+        }
+    </MudStack>
+
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <MudAlert Severity="@messageSeverity" Variant="Variant.Outlined" Dense="true">@message</MudAlert>
+    }
+
+    @if (IsTranslationVisible)
+    {
+        @if (!string.IsNullOrWhiteSpace(translation!.TranslatedTitle))
+        {
+            <MudText Typo="Typo.subtitle2">@translation.TranslatedTitle</MudText>
+        }
+        @if (!string.IsNullOrWhiteSpace(VisibleTranslatedBody))
+        {
+            <MudText Typo="Typo.body2" Class="platform-community-post-body">@VisibleTranslatedBody</MudText>
+        }
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+            AI가 만든 참고용 번역입니다. 가격·수량·통화·HS Code 및 거래 조건은 원문을 함께 확인해 주세요.
+        </MudAlert>
+    }
+    else if (!string.IsNullOrWhiteSpace(VisibleOriginalBody))
+    {
+        <MudText Typo="Typo.body2" Class="platform-community-post-body">@VisibleOriginalBody</MudText>
+    }
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired]
+    public PlatformCommunityPostResponse Post { get; set; } = default!;
+
+    [Parameter]
+    public bool IsReportPost { get; set; }
+
+    private PlatformCommunityPostTranslationResponse? translation;
+    private bool isPending;
+    private bool showOriginal;
+    private string? message;
+    private Severity messageSeverity = Severity.Info;
+
+    private bool IsTranslationVisible => translation is not null && !showOriginal;
+
+    private string VisibleOriginalBody
+        => PlatformCommunityPostPresentation.ResolveVisibleBody(Post.Body);
+
+    private string VisibleTranslatedBody
+        => PlatformCommunityPostPresentation.ResolveVisibleBody(translation?.TranslatedBody);
+
+    private string TargetLanguageCode
+        => CommunityDisplayLanguageCodes.Normalize(Post.OriginalLanguageCode) == CommunityDisplayLanguageCodes.English
+            ? CommunityDisplayLanguageCodes.Korean
+            : CommunityDisplayLanguageCodes.English;
+
+    private string TranslationButtonLabel
+        => TargetLanguageCode == CommunityDisplayLanguageCodes.English
+            ? "영어로 번역"
+            : "한국어로 번역";
+
+    private static string LanguageLabel(string? languageCode)
+        => CommunityDisplayLanguageCodes.Normalize(languageCode) == CommunityDisplayLanguageCodes.English
+            ? "English"
+            : "한국어";
+
+    private async Task TranslateAsync()
+    {
+        if (translation is not null)
+        {
+            ShowTranslation();
+            return;
+        }
+
+        if (isPending)
+        {
+            return;
+        }
+
+        isPending = true;
+        message = null;
+
+        try
+        {
+            translation = await CommunityService.TranslatePostAsync(Post.Id, TargetLanguageCode);
+            showOriginal = false;
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
+        {
+            messageSeverity = Severity.Info;
+            message = "번역 기능은 준비되어 있지만 Azure Translator 설정이 아직 비활성 상태입니다.";
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
+        {
+            messageSeverity = Severity.Warning;
+            message = "이 글은 개인정보 보호 정책에 따라 자동 번역할 수 없습니다.";
+        }
+        catch (Exception ex)
+        {
+            messageSeverity = Severity.Warning;
+            message = $"게시글을 번역하지 못했습니다: {ex.Message}";
+        }
+        finally
+        {
+            isPending = false;
+        }
+    }
+
+    private void ShowOriginal()
+    {
+        showOriginal = true;
+        message = null;
+    }
+
+    private void ShowTranslation()
+    {
+        showOriginal = false;
+        message = null;
+    }
+}

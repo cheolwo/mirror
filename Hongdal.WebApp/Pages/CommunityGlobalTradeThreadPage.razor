@@ -1,0 +1,216 @@
+@page "/community/global-trade/{ThreadId:long}"
+@inject GlobalTradeWorkspaceService Workspace
+@inject NavigationManager Navigation
+
+<PageTitle>글로벌 무역 대화</PageTitle>
+
+@if (Thread is null || Product is null)
+{
+    <MudAlert Severity="Severity.Warning">무역 커뮤니티 글을 찾을 수 없습니다.</MudAlert>
+}
+else
+{
+    <WebPageHeader Eyebrow="Community · Global Trade"
+                   Title="글로벌 무역 대화"
+                   Description="한국 사용자와 해외 공급자가 대화하다가 필요할 때 수입 주문원장과 공동 업무 다이어그램으로 전환합니다."
+                   Badge="대화 → 주문원장" />
+
+    <div class="trade-thread-shell">
+        <section class="trade-thread-main">
+            <MudPaper Elevation="0" Outlined="true" Class="trade-thread-post">
+                <div class="trade-thread-post-head">
+                    <div class="trade-author-avatar">@Initials(Thread.AuthorName)</div>
+                    <div>
+                        <MudText Typo="Typo.subtitle1"><strong>@Thread.AuthorName</strong></MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@Thread.AuthorRole · @Thread.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")</MudText>
+                    </div>
+                    <MudSpacer />
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">원문 @Thread.OriginalLanguage.ToUpperInvariant()</MudChip>
+                </div>
+
+                <MudText Typo="Typo.h5" Class="mt-4 mb-3">@Thread.Title</MudText>
+                <div class="trade-language-block trade-language-block--original">
+                    <span>ORIGINAL</span>
+                    <p>@Thread.OriginalBody</p>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Thread.TranslatedBody))
+                {
+                    <div class="trade-language-block">
+                        <span>한국어 번역</span>
+                        <p>@Thread.TranslatedBody</p>
+                    </div>
+                }
+
+                <a class="trade-linked-product" href="@GlobalTradeRoutes.Product(Product.Slug)">
+                    <span class="trade-linked-product-symbol" style="@($"--product-accent: {Product.AccentColor}")">@Product.Symbol</span>
+                    <span>
+                        <small>연결된 해외 상품</small>
+                        <strong>@Product.ProductName</strong>
+                        <em>@Product.CountryName · MOQ @Product.MinimumOrderQuantity · @Product.SupplyPrice.ToString("N2") @Product.CurrencyCode</em>
+                    </span>
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" />
+                </a>
+            </MudPaper>
+
+            <div class="trade-comments-heading">
+                <MudText Typo="Typo.h6">대화 @(Thread.Comments.Count)개</MudText>
+                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">원문 보존 · 번역 병기</MudChip>
+            </div>
+
+            <div class="trade-comment-list">
+                @foreach (var comment in Thread.Comments.OrderBy(comment => comment.CreatedAt))
+                {
+                    <article class="trade-comment-card">
+                        <div class="trade-comment-avatar">@Initials(comment.AuthorName)</div>
+                        <div class="trade-comment-body">
+                            <div class="trade-comment-meta">
+                                <strong>@comment.AuthorName</strong>
+                                <span>@comment.AuthorRole</span>
+                                <small>@comment.CreatedAt.ToLocalTime().ToString("MM-dd HH:mm")</small>
+                                @if (!string.IsNullOrWhiteSpace(comment.LedgerKey))
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">@LedgerLabel(comment.LedgerKey)</MudChip>
+                                }
+                            </div>
+                            <p>@comment.OriginalText</p>
+                            @if (!string.IsNullOrWhiteSpace(comment.TranslatedText))
+                            {
+                                <div class="trade-comment-translation">
+                                    <span>@(comment.OriginalLanguage == "ko" ? "EN" : "한국어")</span>
+                                    @comment.TranslatedText
+                                </div>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+
+            <MudPaper Elevation="0" Outlined="true" Class="trade-comment-compose">
+                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-3" Wrap="Wrap.Wrap">
+                    <MudTextField T="string" @bind-Value="CommentAuthor" Label="이름" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    <MudSelect T="string" @bind-Value="CommentLanguage" Label="작성 언어" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        <MudSelectItem T="string" Value="@("ko")">한국어</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("en")">English</MudSelectItem>
+                    </MudSelect>
+                </MudStack>
+                <MudTextField T="string" @bind-Value="CommentText" Label="댓글로 공급자 또는 수입자와 이야기해 보세요" Lines="3" Variant="Variant.Outlined" />
+                <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-3">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Send" OnClick="AddComment">댓글 작성</MudButton>
+                </MudStack>
+            </MudPaper>
+        </section>
+
+        <aside class="trade-conversion-panel">
+            <MudPaper Elevation="0" Outlined="true" Class="trade-conversion-card">
+                @if (ExistingOrder is not null)
+                {
+                    <div class="trade-order-created">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountTree" />
+                        <span>연결된 주문원장</span>
+                        <h2>@ExistingOrder.OrderCode</h2>
+                        <p>@ExistingOrder.ProductName · @ExistingOrder.OrderQuantity.ToString("N0")개</p>
+                        <MudButton Href="@GlobalTradeRoutes.ImportOrder(ExistingOrder.OrderCode)" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" EndIcon="@Icons.Material.Filled.ArrowForward">
+                            주문원장 다이어그램 열기
+                        </MudButton>
+                    </div>
+                }
+                else
+                {
+                    <span class="trade-conversion-kicker">업무 전환</span>
+                    <MudText Typo="Typo.h5" Class="mb-2"><strong>수입 주문원장 만들기</strong></MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                        대화와 상품 정보를 주문 초안의 근거로 연결합니다. 아직 계약이나 발주는 확정되지 않습니다.
+                    </MudText>
+
+                    <div class="trade-template-preview">
+                        <div class="trade-template-center">주문원장</div>
+                        <span>상품</span><span>수요</span><span>견적</span><span>통관</span><span>선적</span><span>입고</span>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(ValidationMessage))
+                    {
+                        <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">@ValidationMessage</MudAlert>
+                    }
+
+                    <MudStack Spacing="2">
+                        <MudTextField T="string" @bind-Value="OrderDraft.ImporterName" Label="한국 수입자·사업체" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudTextField T="string" @bind-Value="OrderDraft.ImporterContact" Label="담당자 연락처" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudNumericField T="int" @bind-Value="OrderDraft.OrderQuantity" Label="검토 주문수량" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudSelect T="string" @bind-Value="OrderDraft.Incoterm" Label="거래조건 초안" Variant="Variant.Outlined" Margin="Margin.Dense">
+                            @foreach (var incoterm in Incoterms)
+                            {
+                                <MudSelectItem T="string" Value="@incoterm">@incoterm</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudDatePicker @bind-Date="OrderDraft.TargetInboundDate" Label="목표 한국 입고일" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true" StartIcon="@Icons.Material.Filled.AccountTree" OnClick="CreateOrderLedger">
+                            대화를 주문원장으로 전환
+                        </MudButton>
+                    </MudStack>
+                }
+            </MudPaper>
+
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                공개 댓글은 커뮤니티에 남고, 계약서·가격표·연락처 같은 자료는 주문원장 참여자에게만 공개하는 구조로 확장합니다.
+            </MudAlert>
+        </aside>
+    </div>
+}
+
+@code {
+    [Parameter] public long ThreadId { get; set; }
+
+    private GlobalTradeCommunityThread? Thread => Workspace.FindCommunityThread(ThreadId);
+    private GlobalTradeProduct? Product => Thread is null ? null : Workspace.Products.FirstOrDefault(product => product.Id == Thread.ProductId);
+    private GlobalImportOrderLedger? ExistingOrder => Workspace.FindImportOrderByThread(ThreadId);
+    private GlobalImportOrderDraft OrderDraft { get; } = new()
+    {
+        ImporterName = "마을상점 협동조합",
+        ImporterContact = "김소연",
+        OrderQuantity = 160,
+        Incoterm = "FOB"
+    };
+
+    private string CommentAuthor = "한국 사용자";
+    private string CommentLanguage = "ko";
+    private string CommentText = string.Empty;
+    private string? ValidationMessage;
+
+    private static readonly IReadOnlyList<string> Incoterms = ["EXW", "FCA", "FOB", "CIF", "DAP"];
+
+    private void AddComment()
+    {
+        if (string.IsNullOrWhiteSpace(CommentAuthor) || string.IsNullOrWhiteSpace(CommentText))
+        {
+            return;
+        }
+
+        Workspace.AddCommunityComment(ThreadId, CommentAuthor, "커뮤니티 참여자", CommentLanguage, CommentText);
+        CommentText = string.Empty;
+    }
+
+    private void CreateOrderLedger()
+    {
+        if (string.IsNullOrWhiteSpace(OrderDraft.ImporterName)
+            || string.IsNullOrWhiteSpace(OrderDraft.ImporterContact)
+            || OrderDraft.OrderQuantity <= 0)
+        {
+            ValidationMessage = "한국 수입자, 담당자와 검토 주문수량을 입력해 주세요.";
+            return;
+        }
+
+        var order = Workspace.CreateImportOrderFromThread(ThreadId, OrderDraft);
+        Navigation.NavigateTo(GlobalTradeRoutes.ImportOrder(order.OrderCode));
+    }
+
+    private static string Initials(string name)
+        => string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(part => part[0])).ToUpperInvariant();
+
+    private static string LedgerLabel(string ledgerKey) => ledgerKey switch
+    {
+        "customs" => "HS·통관",
+        "shipment" => "해외 선적",
+        "warehouse" => "창고 입고",
+        _ => "업무 노드"
+    };
+}

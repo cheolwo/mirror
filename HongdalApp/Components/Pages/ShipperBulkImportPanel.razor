@@ -1,0 +1,235 @@
+@using Hongdal.Contracts.Shipper.Request
+@using HongdalApp.Services
+@inject IShipperBulkRequestService BulkApi
+
+<MudStack Spacing="3">
+    <MudText Typo="Typo.body2" Color="Color.Secondary">CSV를 업로드하면 서버가 행별 차량 추천과 검증 결과를 계산하고, 화주는 검토 후 선택한 차량으로만 확정 등록할 수 있다.</MudText>
+
+    <MudCard Elevation="2">
+        <MudCardContent>
+            <MudStack Spacing="2">
+                <InputFile OnChange="OnFileSelected" />
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(selectedFile is null || isBusy)" OnClick="PreviewAsync">미리보기</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" Disabled="@(previewResult is null || isBusy || !previewResult.행목록.Any(x => x.등록대상여부 && x.유효함))" OnClick="ConfirmAsync">검토결과로 등록</MudButton>
+                </MudStack>
+                <MudText Typo="Typo.body2">선택 파일: @selectedFileName</MudText>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <MudAlert Severity="@messageSeverity">@message</MudAlert>
+    }
+
+    @if (previewResult is not null)
+    {
+        <MudCard Elevation="2">
+            <MudCardContent>
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6">미리보기</MudText>
+                    <MudText>전체: @previewResult.전체행수 / 유효: @previewResult.유효행수 / 오류: @previewResult.오류행수</MudText>
+                </MudStack>
+
+                <MudTable Items="previewResult.행목록" Dense="true" Hover="true" Breakpoint="Breakpoint.Md">
+                    <HeaderContent>
+                        <MudTh>행번호</MudTh>
+                        <MudTh>검증</MudTh>
+                        <MudTh>화물요약</MudTh>
+                        <MudTh>추천차량</MudTh>
+                        <MudTh>후보차량</MudTh>
+                        <MudTh>경고/오류</MudTh>
+                        <MudTh>등록</MudTh>
+                        <MudTh>최종선택</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="행번호">@context.행번호</MudTd>
+                        <MudTd DataLabel="검증">
+                            <MudChip T="string" Color="@(context.유효함 ? Color.Success : Color.Error)" Variant="Variant.Filled" Size="Size.Small">
+                                @(context.유효함 ? "유효" : "오류")
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="화물요약">
+                            <MudStack Spacing="1">
+                                <MudText Typo="Typo.body2">@context.원본행.화물종류</MudText>
+                                <MudText Typo="Typo.caption">중량: @FormatNullable(context.원본행.화물중량Kg, "kg") / CBM: @FormatNullable(context.추천결과?.추정화물부피Cbm ?? context.원본행.화물부피Cbm, "cbm")</MudText>
+                                <MudText Typo="Typo.caption">수량: @context.원본행.화물수량 / 팔레트: @context.원본행.팔레트개수</MudText>
+                            </MudStack>
+                        </MudTd>
+                        <MudTd DataLabel="추천차량">
+                            <MudStack Spacing="1">
+                                <MudText Typo="Typo.body2">@context.추천결과?.차량종류</MudText>
+                                <MudText Typo="Typo.caption">@string.Join(" / ", context.추천결과?.추천사유목록 ?? Array.Empty<string>())</MudText>
+                            </MudStack>
+                        </MudTd>
+                        <MudTd DataLabel="후보차량">
+                            <MudStack Spacing="1">
+                                @foreach (var candidate in context.추천결과?.후보차량목록 ?? Array.Empty<차량추천후보응답>())
+                                {
+                                    <MudText Typo="Typo.caption">@candidate.우선순위. @candidate.차량종류 (@candidate.설명)</MudText>
+                                }
+                            </MudStack>
+                        </MudTd>
+                        <MudTd DataLabel="경고/오류">
+                            <MudStack Spacing="1">
+                                @foreach (var warning in context.경고목록)
+                                {
+                                    <MudAlert Dense="true" Severity="Severity.Warning">@warning</MudAlert>
+                                }
+                                @foreach (var error in context.오류목록)
+                                {
+                                    <MudAlert Dense="true" Severity="Severity.Error">@error</MudAlert>
+                                }
+                            </MudStack>
+                        </MudTd>
+                        <MudTd DataLabel="등록">
+                            <MudSwitch @bind-Value="context.등록대상여부" Disabled="@(!context.유효함)" Color="Color.Primary" />
+                        </MudTd>
+                        <MudTd DataLabel="최종선택">
+                            <MudSelect T="string" @bind-Value="context.최종선택차량종류" Dense="true" Disabled="@(!context.등록대상여부 || !context.유효함)">
+                                @foreach (var option in GetVehicleOptions(context))
+                                {
+                                    <MudSelectItem T="string" Value="@option">@option</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudCardContent>
+        </MudCard>
+    }
+
+    @if (registrationResult is not null)
+    {
+        <MudCard Elevation="2">
+            <MudCardContent>
+                <MudText Typo="Typo.h6">등록 결과</MudText>
+                <MudText>전체: @registrationResult.전체행수 / 성공: @registrationResult.성공행수 / 실패: @registrationResult.실패행수</MudText>
+                <MudTable Items="registrationResult.행결과목록" Dense="true">
+                    <HeaderContent>
+                        <MudTh>행번호</MudTh>
+                        <MudTh>성공</MudTh>
+                        <MudTh>의뢰Id</MudTh>
+                        <MudTh>최종차량</MudTh>
+                        <MudTh>오류</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="행번호">@context.행번호</MudTd>
+                        <MudTd DataLabel="성공">@context.성공</MudTd>
+                        <MudTd DataLabel="의뢰Id">@context.의뢰Id</MudTd>
+                        <MudTd DataLabel="최종차량">@context.추천결과?.차량종류</MudTd>
+                        <MudTd DataLabel="오류">@string.Join(", ", context.오류)</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudCardContent>
+        </MudCard>
+    }
+</MudStack>
+
+@code {
+    private IBrowserFile? selectedFile;
+    private string selectedFileName = "선택된 파일 없음";
+    private bool isBusy;
+    private string? message;
+    private Severity messageSeverity = Severity.Info;
+    private 화주운송의뢰일괄미리보기응답? previewResult;
+    private 화주운송의뢰일괄등록결과응답? registrationResult;
+
+    private void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+        selectedFileName = selectedFile?.Name ?? "선택된 파일 없음";
+        message = null;
+        previewResult = null;
+        registrationResult = null;
+    }
+
+    private async Task PreviewAsync() => await SendAsync(true);
+    private async Task ConfirmAsync() => await SendAsync(false);
+
+    private async Task SendAsync(bool preview)
+    {
+        if (selectedFile is null)
+        {
+            messageSeverity = Severity.Warning;
+            message = "파일을 먼저 선택해 주세요.";
+            return;
+        }
+
+        isBusy = true;
+        message = null;
+        registrationResult = null;
+
+        try
+        {
+            if (preview)
+            {
+                await using var stream = selectedFile.OpenReadStream(50_000_000);
+                previewResult = await BulkApi.미리보기Async(stream, selectedFile.Name);
+
+                if (previewResult is null)
+                {
+                    messageSeverity = Severity.Error;
+                    message = "미리보기에 실패했다.";
+                    return;
+                }
+
+                messageSeverity = Severity.Success;
+                message = "미리보기 결과를 불러왔다.";
+                return;
+            }
+
+            if (previewResult is null)
+            {
+                messageSeverity = Severity.Warning;
+                message = "먼저 미리보기를 진행해 주세요.";
+                return;
+            }
+
+            var request = new 화주운송의뢰일괄확정등록요청
+            {
+                행목록 = previewResult.행목록
+                    .Select(x => new 화주운송의뢰일괄확정등록행
+                    {
+                        행번호 = x.행번호,
+                        등록여부 = x.등록대상여부,
+                        최종선택차량종류 = x.최종선택차량종류,
+                        원본행 = x.원본행
+                    })
+                    .ToArray()
+            };
+
+            registrationResult = await BulkApi.등록Async(request);
+            if (registrationResult is null)
+            {
+                messageSeverity = Severity.Error;
+                message = "등록에 실패했다.";
+                return;
+            }
+
+            messageSeverity = Severity.Success;
+            message = "등록을 완료했다.";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private static IEnumerable<string> GetVehicleOptions(화주운송의뢰일괄미리보기행응답 row)
+    {
+        var values = row.추천결과?.후보차량목록.Select(x => x.차량종류).ToList() ?? [];
+        if (!string.IsNullOrWhiteSpace(row.최종선택차량종류) && !values.Contains(row.최종선택차량종류))
+        {
+            values.Insert(0, row.최종선택차량종류);
+        }
+
+        return values;
+    }
+
+    private static string FormatNullable(decimal? value, string suffix)
+    {
+        return value.HasValue ? $"{value.Value:0.###}{suffix}" : "-";
+    }
+}

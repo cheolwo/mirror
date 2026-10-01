@@ -1,0 +1,631 @@
+@page "/shipper/sales/orders"
+@using HongdalApp.Services.Commerce.Orders
+@using HongdalApp.Services.Warehouse.Fulfillment
+@inject ICommerceOrderFulfillmentService FulfillmentService
+@inject ICommerceOrderSampleFeedService SampleFeedService
+
+<PageTitle>주문 출고 알림</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="py-6">
+    <MudStack Spacing="3">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h4">주문 출고 알림</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">판매채널 주문을 국내/해외로 분류하고 재고가 있는 창고 담당자에게 출고 알림을 생성합니다.</MudText>
+            </MudStack>
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="LoadAsync">새로고침</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Disabled="isBusy" OnClick="ProcessSampleOrdersAsync">샘플 주문 수집</MudButton>
+            </MudStack>
+        </MudStack>
+
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <MudAlert Severity="@messageSeverity">@message</MudAlert>
+        }
+
+        <MudGrid>
+            <MudItem xs="12" md="3">
+                <MudPaper Class="pa-4" Outlined="true">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">국내 주문</MudText>
+                    <MudText Typo="Typo.h4">@DomesticCount</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudPaper Class="pa-4" Outlined="true">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">해외 주문</MudText>
+                    <MudText Typo="Typo.h4">@InternationalCount</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudPaper Class="pa-4" Outlined="true">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">출고대기 알림</MudText>
+                    <MudText Typo="Typo.h4">@ReadyCount</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudPaper Class="pa-4" Outlined="true">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">입고 필요</MudText>
+                    <MudText Typo="Typo.h4">@RestockCount</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-3">마켓 주문 가능 재고</MudText>
+                @if (marketInventory.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info">마켓에 주문 가능하도록 매핑된 입고 재고가 없습니다.</MudAlert>
+                }
+                else
+                {
+                    <MudTable Items="marketInventory.OrderBy(x => x.ProductName)" Dense="true" Hover="true">
+                        <HeaderContent>
+                            <MudTh>상품</MudTh>
+                            <MudTh>SKU</MudTh>
+                            <MudTh>계약</MudTh>
+                            <MudTh>주문 가능</MudTh>
+                            <MudTh>예약</MudTh>
+                            <MudTh>안전재고</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="상품">@context.ProductName</MudTd>
+                            <MudTd DataLabel="SKU">@context.Sku</MudTd>
+                            <MudTd DataLabel="계약">
+                                <MudText Typo="Typo.body2">@context.ContractType</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@context.ContractNo</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="주문 가능">
+                                <MudChip T="string" Size="Size.Small" Color="@(context.CanOrder ? Color.Success : Color.Error)" Variant="Variant.Outlined">@context.AvailableQuantity</MudChip>
+                                @if (!context.CanSellToMarket)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Warning">판매 불가 계약</MudText>
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="예약">@context.ReservedQuantity</MudTd>
+                            <MudTd DataLabel="안전재고">
+                                <MudChip T="string" Size="Size.Small" Color="@(context.NeedsInbound ? Color.Warning : Color.Default)" Variant="Variant.Outlined">@context.SafetyStockQuantity</MudChip>
+                                @if (context.NeedsInbound)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Warning">입고 검토</MudText>
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-3">입고 필요 알림</MudText>
+                @if (restockNotifications.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info">주문 처리 후 판매자 설정 안전재고 이하로 내려간 상품이 없습니다.</MudAlert>
+                }
+                else
+                {
+                    <MudTable Items="restockNotifications.OrderByDescending(x => x.CreatedAt)" Dense="true" Hover="true">
+                        <HeaderContent>
+                            <MudTh>채널</MudTh>
+                            <MudTh>주문번호</MudTh>
+                            <MudTh>상품</MudTh>
+                            <MudTh>가용/안전</MudTh>
+                            <MudTh>권장입고</MudTh>
+                            <MudTh>계약</MudTh>
+                            <MudTh>알림</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="채널">@context.ChannelType</MudTd>
+                            <MudTd DataLabel="주문번호">@context.ChannelOrderNo</MudTd>
+                            <MudTd DataLabel="상품">
+                                <MudText Typo="Typo.body2">@context.ProductName</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Sku</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="가용/안전">
+                                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">@context.AvailableQuantity / @context.SafetyStockQuantity</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="권장입고">@context.SuggestedInboundQuantity</MudTd>
+                            <MudTd DataLabel="계약">
+                                <MudText Typo="Typo.body2">@context.ContractPartnerName</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@context.ContractNo</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="알림">@context.Message</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-3">판매자 입고 알림 정책</MudText>
+                <MudTable Items="sellerRestockPreferences" Dense="true" Hover="true">
+                    <HeaderContent>
+                        <MudTh>판매자</MudTh>
+                        <MudTh>카카오 채널</MudTh>
+                        <MudTh>관리자 허용</MudTh>
+                        <MudTh>판매자 수신</MudTh>
+                        <MudTh>내부 알림</MudTh>
+                        <MudTh>상태</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="판매자">
+                            <MudText Typo="Typo.body2">@context.SellerName</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@context.SellerUserId</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="카카오 채널">@context.KakaoTalkChannelName</MudTd>
+                        <MudTd DataLabel="관리자 허용">
+                            <MudSwitch T="bool"
+                                       Value="@context.AdminAllowsKakaoTalk"
+                                       ValueChanged="@((bool value) => UpdateRestockPreferenceAsync(context.SellerUserId, adminAllowsKakaoTalk: value))"
+                                       Disabled="isBusy" />
+                        </MudTd>
+                        <MudTd DataLabel="판매자 수신">
+                            <MudSwitch T="bool"
+                                       Value="@context.SellerWantsKakaoTalk"
+                                       ValueChanged="@((bool value) => UpdateRestockPreferenceAsync(context.SellerUserId, sellerWantsKakaoTalk: value))"
+                                       Disabled="isBusy" />
+                        </MudTd>
+                        <MudTd DataLabel="내부 알림">
+                            <MudSwitch T="bool"
+                                       Value="@context.UseInternalNotification"
+                                       ValueChanged="@((bool value) => UpdateRestockPreferenceAsync(context.SellerUserId, useInternalNotification: value))"
+                                       Disabled="isBusy" />
+                        </MudTd>
+                        <MudTd DataLabel="상태">
+                            <MudChip T="string" Size="Size.Small" Color="@(context.CanSendKakaoTalk ? Color.Success : Color.Warning)" Variant="Variant.Outlined">@context.StatusLabel</MudChip>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudCardContent>
+        </MudCard>
+
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-3">카카오톡 발송 의도</MudText>
+                @if (kakaoTalkOutboxMessages.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info">아직 생성된 카카오톡 발송 의도가 없습니다.</MudAlert>
+                }
+                else
+                {
+                    <MudTable Items="kakaoTalkOutboxMessages.OrderByDescending(x => x.CreatedAt)" Dense="true" Hover="true">
+                        <HeaderContent>
+                            <MudTh>판매자</MudTh>
+                            <MudTh>주문번호</MudTh>
+                            <MudTh>SKU</MudTh>
+                            <MudTh>상태</MudTh>
+                            <MudTh>사유</MudTh>
+                            <MudTh>메시지</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="판매자">@context.SellerName</MudTd>
+                            <MudTd DataLabel="주문번호">@context.ChannelOrderNo</MudTd>
+                            <MudTd DataLabel="SKU">@context.Sku</MudTd>
+                            <MudTd DataLabel="상태">
+                                <MudChip T="string" Size="Size.Small" Color="@(context.Status == "Pending" ? Color.Success : Color.Warning)" Variant="Variant.Outlined">@context.Status</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="사유">@(context.SuppressedReason ?? "-")</MudTd>
+                            <MudTd DataLabel="메시지">@context.Message</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-3">창고 출고 알림</MudText>
+                @if (notifications.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info">아직 생성된 출고 알림이 없습니다. 샘플 주문 수집을 실행해 흐름을 확인해 주세요.</MudAlert>
+                }
+                else
+                {
+                    <MudTable Items="notifications.OrderByDescending(x => x.CreatedAt)" Dense="true" Hover="true">
+                        <HeaderContent>
+                            <MudTh>구분</MudTh>
+                            <MudTh>채널</MudTh>
+                            <MudTh>주문번호</MudTh>
+                            <MudTh>창고</MudTh>
+                            <MudTh>상품</MudTh>
+                            <MudTh>수량</MudTh>
+                            <MudTh>추천 적재함</MudTh>
+                            <MudTh>상태</MudTh>
+                            <MudTh>알림</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="구분">@context.OrderScope</MudTd>
+                            <MudTd DataLabel="채널">@context.ChannelType</MudTd>
+                            <MudTd DataLabel="주문번호">@context.ChannelOrderNo</MudTd>
+                            <MudTd DataLabel="창고">@context.WarehouseName</MudTd>
+                            <MudTd DataLabel="상품">
+                                <MudText Typo="Typo.body2">@context.ProductName</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Sku</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="수량">@context.RequestedQuantity</MudTd>
+                            <MudTd DataLabel="추천 적재함">@FormatPickPlan(context)</MudTd>
+                            <MudTd DataLabel="상태">@context.Status</MudTd>
+                            <MudTd DataLabel="알림">@context.Message</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+
+        <MudCard>
+            <MudCardContent>
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6">피킹 작업</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">추천 경로 순서대로 적재함 바코드와 상품 바코드를 스캔하면 모든 라인 피킹 후 포장대기로 전환됩니다.</MudText>
+
+                    @if (pickingTasks.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info">출고대기 상태의 주문을 처리하면 피킹 작업이 생성됩니다.</MudAlert>
+                    }
+                    else
+                    {
+                        <MudGrid>
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="long?" Label="피킹 작업" @bind-Value="selectedPickingTaskId" Variant="Variant.Outlined">
+                                    @foreach (var task in pickingTasks.OrderByDescending(x => x.CreatedAt))
+                                    {
+                                        <MudSelectItem T="long?" Value="@task.Id">@task.ChannelOrderNo · @task.Status · @task.PickedLineCount/@task.TotalLineCount</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="5">
+                                <MudTextField Label="바코드 입력" @bind-Value="scanBarcode" Variant="Variant.Outlined" Placeholder="BIN:A-01-03 또는 SKU:SALE-CHAIR-SET-01" />
+                            </MudItem>
+                            <MudItem xs="12" md="3" Class="d-flex align-center">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!selectedPickingTaskId.HasValue || string.IsNullOrWhiteSpace(scanBarcode) || isBusy)" OnClick="ScanPickingBarcodeAsync">
+                                    스캔 처리
+                                </MudButton>
+                            </MudItem>
+                            <MudItem xs="12" md="8">
+                                <MudTextField Label="보류/취소 사유" @bind-Value="pickingExceptionReason" Variant="Variant.Outlined" Placeholder="바코드 훼손, 적재함 위치 불일치, 상품 파손 등" />
+                            </MudItem>
+                            <MudItem xs="12" md="4" Class="d-flex align-center">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Warning" Disabled="@(!selectedPickingTaskId.HasValue || isBusy)" OnClick="HoldPickingTaskAsync">보류</MudButton>
+                                <MudButton Class="ml-2" Variant="Variant.Outlined" Color="Color.Error" Disabled="@(!selectedPickingTaskId.HasValue || isBusy)" OnClick="CancelPickingTaskAsync">취소</MudButton>
+                            </MudItem>
+                        </MudGrid>
+
+                        @if (SelectedPickingTask is not null)
+                        {
+                            @if (!string.IsNullOrWhiteSpace(SelectedPickingTask.ExceptionReason))
+                            {
+                                <MudAlert Severity="Severity.Warning">@SelectedPickingTask.ExceptionReason</MudAlert>
+                            }
+
+                            <MudTable Items="SelectedPickingTask.Lines.OrderBy(x => x.RouteSequence)" Dense="true" Hover="true" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>순서</MudTh>
+                                    <MudTh>적재함</MudTh>
+                                    <MudTh>상품</MudTh>
+                                    <MudTh>수량</MudTh>
+                                    <MudTh>스캔</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="순서">@context.RouteSequence</MudTd>
+                                    <MudTd DataLabel="적재함">
+                                        <MudText Typo="Typo.body2">@context.BinCode</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@context.BinBarcode</MudText>
+                                    </MudTd>
+                                    <MudTd DataLabel="상품">
+                                        <MudText Typo="Typo.body2">@context.ProductName</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@context.ProductBarcode</MudText>
+                                    </MudTd>
+                                    <MudTd DataLabel="수량">@context.PickQuantity</MudTd>
+                                    <MudTd DataLabel="스캔">
+                                        <MudChip T="string" Size="Size.Small" Color="@(context.BinScanned ? Color.Success : Color.Default)" Variant="Variant.Outlined">적재함</MudChip>
+                                        <MudChip T="string" Size="Size.Small" Color="@(context.ProductScanned ? Color.Success : Color.Default)" Variant="Variant.Outlined">상품</MudChip>
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        }
+                    }
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-3">포장 작업</MudText>
+                @if (packingTasks.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info">피킹이 완료되면 포장대기 작업이 생성됩니다.</MudAlert>
+                }
+                else
+                {
+                    <MudTable Items="packingTasks.OrderByDescending(x => x.CreatedAt)" Dense="true" Hover="true">
+                        <HeaderContent>
+                            <MudTh>주문번호</MudTh>
+                            <MudTh>창고</MudTh>
+                            <MudTh>수령인</MudTh>
+                            <MudTh>라인</MudTh>
+                            <MudTh>상태</MudTh>
+                            <MudTh>처리</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="주문번호">@context.ChannelOrderNo</MudTd>
+                            <MudTd DataLabel="창고">@context.WarehouseName</MudTd>
+                            <MudTd DataLabel="수령인">@context.RecipientName</MudTd>
+                            <MudTd DataLabel="라인">@context.LineCount</MudTd>
+                            <MudTd DataLabel="상태">@context.Status</MudTd>
+                            <MudTd DataLabel="처리">
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary" Disabled="@(isBusy || context.Status != WarehousePackingStatusCodes.ReadyForPacking)" OnClick="@(() => StartPackingTaskAsync(context.Id))">포장 시작</MudButton>
+                                <MudButton Class="ml-2" Variant="Variant.Outlined" Size="Size.Small" Color="Color.Success" Disabled="@(isBusy || context.Status != WarehousePackingStatusCodes.PackingInProgress)" OnClick="@(() => CompletePackingTaskAsync(context.Id))">포장 완료</MudButton>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudStack>
+</MudContainer>
+
+@code {
+    private readonly List<WarehouseOutboundNotification> notifications = [];
+    private readonly List<InboundRestockNotification> restockNotifications = [];
+    private readonly List<SellerRestockNotificationPreference> sellerRestockPreferences = [];
+    private readonly List<RestockKakaoTalkOutboxMessage> kakaoTalkOutboxMessages = [];
+    private readonly List<MarketInventorySnapshot> marketInventory = [];
+    private readonly List<WarehouseOrderPickingTask> pickingTasks = [];
+    private readonly List<WarehousePackingTask> packingTasks = [];
+    private bool isBusy;
+    private string? message;
+    private Severity messageSeverity = Severity.Info;
+    private long? selectedPickingTaskId;
+    private string scanBarcode = string.Empty;
+    private string pickingExceptionReason = string.Empty;
+
+    private int DomesticCount => notifications.Where(x => x.OrderScope == CommerceOrderScopeCodes.Domestic).Select(x => x.ChannelOrderNo).Distinct().Count();
+    private int InternationalCount => notifications.Where(x => x.OrderScope == CommerceOrderScopeCodes.International).Select(x => x.ChannelOrderNo).Distinct().Count();
+    private int ReadyCount => notifications.Count(x => x.Status == WarehouseOutboundNotificationStatusCodes.Ready);
+    private int RestockCount => restockNotifications.Count;
+    private WarehouseOrderPickingTask? SelectedPickingTask => pickingTasks.FirstOrDefault(x => x.Id == selectedPickingTaskId);
+
+    private static string FormatPickPlan(WarehouseOutboundNotification notification)
+    {
+        if (notification.PickPlan is null || notification.PickPlan.Instructions.Count == 0)
+        {
+            return "-";
+        }
+
+        var bins = notification.PickPlan.Instructions.Select(x => $"{x.BinCode} {x.PickQuantity}개");
+        var plan = string.Join(", ", bins);
+        return notification.PickPlan.IsComplete ? plan : $"{plan} / 부족 {notification.PickPlan.ShortageQuantity}개";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        notifications.Clear();
+        notifications.AddRange(await FulfillmentService.GetNotificationsAsync());
+
+        restockNotifications.Clear();
+        restockNotifications.AddRange(await FulfillmentService.GetRestockNotificationsAsync());
+
+        sellerRestockPreferences.Clear();
+        sellerRestockPreferences.AddRange(await FulfillmentService.GetSellerRestockNotificationPreferencesAsync());
+
+        kakaoTalkOutboxMessages.Clear();
+        kakaoTalkOutboxMessages.AddRange(await FulfillmentService.GetRestockKakaoTalkOutboxMessagesAsync());
+
+        marketInventory.Clear();
+        marketInventory.AddRange(await FulfillmentService.GetMarketInventoryAsync());
+
+        pickingTasks.Clear();
+        pickingTasks.AddRange(await FulfillmentService.GetPickingTasksAsync());
+        selectedPickingTaskId ??= pickingTasks.FirstOrDefault()?.Id;
+
+        packingTasks.Clear();
+        packingTasks.AddRange(await FulfillmentService.GetPackingTasksAsync());
+    }
+
+    private async Task ProcessSampleOrdersAsync()
+    {
+        if (isBusy)
+        {
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            var processedCount = 0;
+            foreach (var order in SampleFeedService.GetSampleOrders())
+            {
+                await FulfillmentService.ProcessOrderAsync(order);
+                processedCount++;
+            }
+
+            await LoadAsync();
+            messageSeverity = Severity.Success;
+            message = $"샘플 주문 {processedCount}건을 처리하고 창고 출고 알림 {notifications.Count}건, 입고 필요 알림 {restockNotifications.Count}건을 생성했습니다.";
+        }
+        catch (Exception ex)
+        {
+            messageSeverity = Severity.Error;
+            message = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task UpdateRestockPreferenceAsync(
+        string sellerUserId,
+        bool? adminAllowsKakaoTalk = null,
+        bool? sellerWantsKakaoTalk = null,
+        bool? useInternalNotification = null)
+    {
+        if (isBusy)
+        {
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            await FulfillmentService.UpdateSellerRestockNotificationPreferenceAsync(
+                sellerUserId,
+                adminAllowsKakaoTalk,
+                sellerWantsKakaoTalk,
+                useInternalNotification);
+            await LoadAsync();
+            messageSeverity = Severity.Success;
+            message = "판매자 입고 알림 정책을 저장했습니다.";
+        }
+        catch (Exception ex)
+        {
+            messageSeverity = Severity.Error;
+            message = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task ScanPickingBarcodeAsync()
+    {
+        if (isBusy || !selectedPickingTaskId.HasValue || string.IsNullOrWhiteSpace(scanBarcode))
+        {
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            var result = await FulfillmentService.ScanPickingBarcodeAsync(selectedPickingTaskId.Value, scanBarcode);
+            scanBarcode = string.Empty;
+            await LoadAsync();
+            messageSeverity = result.IsSuccess ? Severity.Success : Severity.Warning;
+            message = result.Message;
+        }
+        catch (Exception ex)
+        {
+            messageSeverity = Severity.Error;
+            message = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task HoldPickingTaskAsync()
+    {
+        if (isBusy || !selectedPickingTaskId.HasValue)
+        {
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            var result = await FulfillmentService.HoldPickingTaskAsync(selectedPickingTaskId.Value, pickingExceptionReason);
+            pickingExceptionReason = string.Empty;
+            await LoadAsync();
+            messageSeverity = result.IsSuccess ? Severity.Warning : Severity.Error;
+            message = result.Message;
+        }
+        catch (Exception ex)
+        {
+            messageSeverity = Severity.Error;
+            message = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task CancelPickingTaskAsync()
+    {
+        if (isBusy || !selectedPickingTaskId.HasValue)
+        {
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            var result = await FulfillmentService.CancelPickingTaskAsync(selectedPickingTaskId.Value, pickingExceptionReason);
+            pickingExceptionReason = string.Empty;
+            await LoadAsync();
+            messageSeverity = result.IsSuccess ? Severity.Warning : Severity.Error;
+            message = result.Message;
+        }
+        catch (Exception ex)
+        {
+            messageSeverity = Severity.Error;
+            message = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task StartPackingTaskAsync(long packingTaskId)
+    {
+        if (isBusy)
+        {
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            var result = await FulfillmentService.StartPackingTaskAsync(packingTaskId);
+            await LoadAsync();
+            messageSeverity = result.IsSuccess ? Severity.Success : Severity.Warning;
+            message = result.Message;
+        }
+        catch (Exception ex)
+        {
+            messageSeverity = Severity.Error;
+            message = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task CompletePackingTaskAsync(long packingTaskId)
+    {
+        if (isBusy)
+        {
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            var result = await FulfillmentService.CompletePackingTaskAsync(packingTaskId);
+            await LoadAsync();
+            messageSeverity = result.IsSuccess ? Severity.Success : Severity.Warning;
+            message = result.Message;
+        }
+        catch (Exception ex)
+        {
+            messageSeverity = Severity.Error;
+            message = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+}

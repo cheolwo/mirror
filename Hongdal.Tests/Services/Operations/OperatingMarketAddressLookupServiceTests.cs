@@ -90,20 +90,35 @@ public sealed class OperatingMarketAddressLookupServiceTests
     }
 
     [Fact]
-    public async Task UnitedStatesAdapter_ReportsProviderNotConfigured()
+    public async Task UnitedStatesAdapter_MapsCensusAddressRangeMatch()
     {
-        var adapter = new UnitedStatesAddressLookupAdapter();
+        var adapter = new UnitedStatesAddressLookupAdapter(
+            new StubUnitedStatesAddressGeocoder());
 
         var result = await adapter.SearchAsync(new OperatingMarketAddressSearchRequest
         {
             MarketCode = OperatingMarketCodes.UnitedStates,
-            Query = "1600 Amphitheatre Parkway"
+            Query = "1600 Pennsylvania Ave NW, Washington, DC 20500"
         });
 
-        Assert.False(result.Success);
-        Assert.False(result.ProviderConfigured);
-        Assert.Equal(OperatingMarketAddressErrorCodes.ProviderNotConfigured, result.ErrorCode);
-        Assert.Equal(OperatingAddressProviderCodes.GoogleAddressValidation, result.ProviderCode);
+        var item = Assert.Single(result.Items);
+        Assert.True(result.Success);
+        Assert.True(result.ProviderConfigured);
+        Assert.Equal(
+            OperatingAddressProviderCodes.UnitedStatesCensusGeocoder,
+            result.ProviderCode);
+        Assert.Equal("WASHINGTON", item.Locality);
+        Assert.Equal("DC", item.AdministrativeAreaCode);
+        Assert.Equal("20500", item.PostalCode);
+        Assert.Equal(OperatingAddressMatchPrecisionCodes.AddressRange, item.MatchPrecisionCode);
+        Assert.Equal("Public_AR_Current", item.ProviderDatasetVersion);
+        Assert.Equal("Current_Current", item.ProviderGeographyVintage);
+        Assert.Equal(38.89869893252d, item.Latitude);
+        Assert.Equal(-77.03518753691d, item.Longitude);
+        Assert.Contains(
+            item.GeographicAreas,
+            area => area.AreaTypeCode == OperatingGeographicAreaTypeCodes.County &&
+                    area.Code == "11001");
     }
 
     [Fact]
@@ -170,6 +185,49 @@ public sealed class OperatingMarketAddressLookupServiceTests
                         AdministrativeCode = "1114010300",
                         BuildingManagementNo = "building-1",
                         RoadNameManagementNo = "road-1"
+                    }
+                ]
+            });
+    }
+
+    private sealed class StubUnitedStatesAddressGeocoder : IUnitedStatesAddressGeocoder
+    {
+        public Task<UnitedStatesAddressGeocodeResult> GeocodeAsync(
+            string address,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult(new UnitedStatesAddressGeocodeResult
+            {
+                Success = true,
+                ProviderConfigured = true,
+                DatasetVersion = "Public_AR_Current",
+                GeographyVintage = "Current_Current",
+                Items =
+                [
+                    new UnitedStatesAddressGeocodeCandidate
+                    {
+                        MatchedAddress =
+                            "1600 PENNSYLVANIA AVE NW, WASHINGTON, DC, 20500",
+                        City = "WASHINGTON",
+                        StateCode = "DC",
+                        PostalCode = "20500",
+                        Latitude = 38.89869893252d,
+                        Longitude = -77.03518753691d,
+                        TigerLineId = "76225813",
+                        GeographicAreas =
+                        [
+                            new OperatingMarketGeographicArea
+                            {
+                                AreaTypeCode = OperatingGeographicAreaTypeCodes.State,
+                                Code = "11",
+                                Name = "District of Columbia"
+                            },
+                            new OperatingMarketGeographicArea
+                            {
+                                AreaTypeCode = OperatingGeographicAreaTypeCodes.County,
+                                Code = "11001",
+                                Name = "District of Columbia"
+                            }
+                        ]
                     }
                 ]
             });

@@ -33,6 +33,257 @@ public sealed class CommunityVoteServiceTests
     }
 
     [Fact]
+    public async Task ListAsync_HsCode_NormalizesFormattingAndMatchesHierarchyPrefix()
+    {
+        var service = new InMemoryCommunityVoteService();
+        var detergentRequest = CreateGroupPurchaseVoteRequest();
+        detergentRequest.Title = "세제 공동구매";
+        var detergent = await service.CreateAsync(detergentRequest, CancellationToken.None);
+
+        var beefRequest = CreateGroupPurchaseVoteRequest();
+        beefRequest.Title = "냉동 소고기 공동구매";
+        beefRequest.GroupPurchase!.HsCode = "0202.30";
+        await service.CreateAsync(beefRequest, CancellationToken.None);
+
+        var batteryRequest = CreateGroupPurchaseVoteRequest();
+        batteryRequest.Title = "배터리 공동구매";
+        batteryRequest.GroupPurchase!.HsCode = string.Empty;
+        batteryRequest.StructuredOptions[0].HsCode = "8507.60.0000";
+        var battery = await service.CreateAsync(batteryRequest, CancellationToken.None);
+
+        var result = await service.ListAsync(
+            "OrdererApp",
+            null,
+            "3402.5",
+            CancellationToken.None);
+
+        Assert.Equal(detergent.Id, Assert.Single(result.Items).Id);
+
+        var optionResult = await service.ListAsync(
+            "OrdererApp",
+            null,
+            "850760",
+            CancellationToken.None);
+
+        Assert.Equal(battery.Id, Assert.Single(optionResult.Items).Id);
+    }
+
+    [Fact]
+    public async Task GroupPurchaseProposal_ProducerRole_RoundTripsThroughStoredVote()
+    {
+        var service = new InMemoryCommunityVoteService();
+        var request = CreateGroupPurchaseVoteRequest();
+        request.GroupPurchase!.ProposerRoleCode = CommunityGroupPurchaseProposerRoleCodes.Producer;
+
+        var created = await service.CreateAsync(request, CancellationToken.None);
+        var reloaded = await service.GetAsync(created.Id, CancellationToken.None);
+
+        Assert.Equal(
+            CommunityGroupPurchaseProposerRoleCodes.Producer,
+            created.GroupPurchase?.ProposerRoleCode);
+        Assert.Equal(
+            CommunityGroupPurchaseProposerRoleCodes.Producer,
+            reloaded?.GroupPurchase?.ProposerRoleCode);
+        Assert.Equal(
+            CommunityGroupPurchaseAgreementPolicy.PolicyCode,
+            reloaded?.GroupPurchase?.AgreementPolicyCode);
+        Assert.Contains(
+            "제안의 선후만으로",
+            reloaded?.GroupPurchase?.ProposalOriginLegalEffectNotice);
+    }
+
+    [Fact]
+    public async Task GroupPurchaseProposal_TargetUnitPrice_RoundTripsThroughStoredVote()
+    {
+        var service = new InMemoryCommunityVoteService();
+        var request = CreateGroupPurchaseVoteRequest();
+        request.GroupPurchase!.TargetUnitPriceKrwPerKg = 8_500m;
+
+        var created = await service.CreateAsync(request, CancellationToken.None);
+        var reloaded = await service.GetAsync(created.Id, CancellationToken.None);
+
+        Assert.Equal(8_500m, created.GroupPurchase?.TargetUnitPriceKrwPerKg);
+        Assert.Equal(8_500m, reloaded?.GroupPurchase?.TargetUnitPriceKrwPerKg);
+    }
+
+    [Fact]
+    public async Task GroupPurchaseProposal_NonPositiveTargetUnitPrice_IsRejected()
+    {
+        var service = new InMemoryCommunityVoteService();
+        var request = CreateGroupPurchaseVoteRequest();
+        request.GroupPurchase!.TargetUnitPriceKrwPerKg = 0m;
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.CreateAsync(request, CancellationToken.None));
+
+        Assert.Contains("목표단가", exception.Message);
+    }
+
+    [Fact]
+    public async Task GroupPurchaseProposal_UnsupportedRole_IsRejected()
+    {
+        var service = new InMemoryCommunityVoteService();
+        var request = CreateGroupPurchaseVoteRequest();
+        request.GroupPurchase!.ProposerRoleCode = "PlatformOperator";
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.CreateAsync(request, CancellationToken.None));
+
+        Assert.Contains("생산자 또는 공동구매 대표", exception.Message);
+    }
+
+    [Fact]
+    public async Task GroupPurchaseProposal_OverseasShipmentToKorea_RoundTripsAsGroupImportCandidate()
+    {
+        var service = new InMemoryCommunityVoteService();
+        var request = CreateGroupPurchaseVoteRequest();
+        request.GroupPurchase!.SellerCountryCode = "cn";
+        request.GroupPurchase.ShipFromCountryCode = "cn";
+        request.GroupPurchase.DeliveryCountryCode = "kr";
+        request.GroupPurchase.CustomsClearanceStatusCode =
+            CommunityGroupPurchaseCustomsClearanceStatusCodes.NotCleared;
+        request.GroupPurchase.HsCode = "0202.30";
+
+        var created = await service.CreateAsync(request, CancellationToken.None);
+        var reloaded = await service.GetAsync(created.Id, CancellationToken.None);
+
+        Assert.Equal("CN", reloaded?.GroupPurchase?.SellerCountryCode);
+        Assert.Equal("CN", reloaded?.GroupPurchase?.ShipFromCountryCode);
+        Assert.Equal("KR", reloaded?.GroupPurchase?.DeliveryCountryCode);
+        Assert.Equal(
+            CommunityGroupPurchaseTradeRouteCodes.InboundGroupImportCandidate,
+            reloaded?.GroupPurchase?.TradeRouteCode);
+        Assert.True(reloaded?.GroupPurchase?.IsGroupImportCandidate);
+        Assert.False(reloaded?.GroupPurchase?.RequiresTradeRouteReview);
+        Assert.Equal(
+            CommunityLedgerTemplateKeys.GroupImport,
+            reloaded?.GroupPurchase?.RecommendedLedgerTemplateKey);
+        Assert.True(CommunityVoteWorkflowClassifier.IsGroupImport(reloaded!));
+    }
+
+    [Fact]
+    public async Task GroupPurchaseProposal_KoreaShipmentToUnitedStates_RoundTripsAsUsGroupImportCandidate()
+    {
+        var service = new InMemoryCommunityVoteService(
+            operatingMarketCountryCode: CommunityGroupPurchaseTradeRoutePolicy
+                .UnitedStatesCountryCode);
+        var request = CreateGroupPurchaseVoteRequest();
+        request.GroupPurchase!.SellerCountryCode = "KR";
+        request.GroupPurchase.ShipFromCountryCode = "KR";
+        request.GroupPurchase.DeliveryCountryCode = "US";
+        request.GroupPurchase.CustomsClearanceStatusCode =
+            CommunityGroupPurchaseCustomsClearanceStatusCodes.NotCleared;
+        request.GroupPurchase.ServiceAreaKey = "us-place:3651000";
+        request.GroupPurchase.ServiceAreaLabel = "New York city";
+
+        var created = await service.CreateAsync(request, CancellationToken.None);
+        var reloaded = await service.GetAsync(created.Id, CancellationToken.None);
+
+        Assert.Equal(
+            CommunityGroupPurchaseTradeRoutePolicy.UnitedStatesCountryCode,
+            reloaded?.GroupPurchase?.OperatingMarketCountryCode);
+        Assert.Equal(
+            CommunityGroupPurchaseTradeRouteCodes.InboundGroupImportCandidate,
+            reloaded?.GroupPurchase?.TradeRouteCode);
+        Assert.True(reloaded?.GroupPurchase?.IsGroupImportCandidate);
+        Assert.Equal(
+            CommunityLedgerTemplateKeys.GroupImport,
+            reloaded?.GroupPurchase?.RecommendedLedgerTemplateKey);
+    }
+
+    [Fact]
+    public async Task GroupPurchaseProposal_WithoutTradeRouteInputs_KeepsLegacyHsClassification()
+    {
+        var service = new InMemoryCommunityVoteService();
+        var created = await service.CreateAsync(
+            CreateGroupPurchaseVoteRequest(),
+            CancellationToken.None);
+
+        Assert.Equal(string.Empty, created.GroupPurchase?.TradeRouteCode);
+        Assert.True(CommunityVoteWorkflowClassifier.IsGroupImport(created));
+    }
+
+    [Fact]
+    public async Task GroupPurchaseProposal_OverseasSellerWithDomesticStock_RemainsDomestic()
+    {
+        var service = new InMemoryCommunityVoteService();
+        var request = CreateGroupPurchaseVoteRequest();
+        request.GroupPurchase!.SellerCountryCode = "US";
+        request.GroupPurchase.ShipFromCountryCode = "KR";
+        request.GroupPurchase.DeliveryCountryCode = "KR";
+        request.GroupPurchase.CustomsClearanceStatusCode =
+            CommunityGroupPurchaseCustomsClearanceStatusCodes.Cleared;
+
+        var created = await service.CreateAsync(request, CancellationToken.None);
+
+        Assert.Equal(
+            CommunityGroupPurchaseTradeRouteCodes.Domestic,
+            created.GroupPurchase?.TradeRouteCode);
+        Assert.False(created.GroupPurchase?.IsGroupImportCandidate);
+        Assert.False(CommunityVoteWorkflowClassifier.IsGroupImport(created));
+    }
+
+    [Fact]
+    public async Task GroupPurchaseProposal_InvalidCountryCode_IsRejected()
+    {
+        var service = new InMemoryCommunityVoteService();
+        var request = CreateGroupPurchaseVoteRequest();
+        request.GroupPurchase!.SellerCountryCode = "China";
+        request.GroupPurchase.ShipFromCountryCode = "CN";
+        request.GroupPurchase.DeliveryCountryCode = "KR";
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.CreateAsync(request, CancellationToken.None));
+
+        Assert.Contains("ISO 알파-2", exception.Message);
+    }
+
+    [Fact]
+    public async Task GroupImportCandidate_WithoutHsCode_CannotMoveFromReviewToSignature()
+    {
+        var service = new InMemoryCommunityVoteService();
+        var request = CreateGroupPurchaseVoteRequest();
+        request.ResolutionDocumentEnabled = true;
+        request.SignatureRequired = true;
+        request.GroupPurchase!.SellerCountryCode = "CN";
+        request.GroupPurchase.ShipFromCountryCode = "CN";
+        request.GroupPurchase.DeliveryCountryCode = "KR";
+        request.GroupPurchase.CustomsClearanceStatusCode =
+            CommunityGroupPurchaseCustomsClearanceStatusCodes.NotCleared;
+        request.GroupPurchase.HsCode = string.Empty;
+        var vote = await service.CreateAsync(request, CancellationToken.None);
+        await service.CastVoteAsync(
+            vote.Id,
+            CreatePickupVote("import-participant", 2),
+            CancellationToken.None);
+        await service.CloseAsync(
+            vote.Id,
+            new CommunityVoteCloseRequest { ClosedByDisplayName = "공동수입 대표" },
+            CancellationToken.None);
+        var draft = await service.CreateResolutionDraftAsync(
+            vote.Id,
+            new CommunityVoteResolutionDraftRequest
+            {
+                DocumentTitle = "공동수입 확정안",
+                ResolutionText = "해외 출발 상품을 공동수입합니다.",
+                LegalReviewRequested = true
+            },
+            CancellationToken.None);
+
+        Assert.Contains("계약 확정 전", draft?.LegalEffectNotice);
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.MarkResolutionReadyToSignAsync(
+                vote.Id,
+                new CommunityVoteResolutionReadyToSignRequest
+                {
+                    ReviewedByDisplayName = "공동수입 운영자"
+                },
+                CancellationToken.None));
+
+        Assert.Contains("HS 코드", exception.Message);
+    }
+
+    [Fact]
     public async Task CreateResolutionDraft_WithLegalReview_RequiresReadyToSignBeforeSigning()
     {
         var service = new InMemoryCommunityVoteService();
@@ -175,6 +426,8 @@ public sealed class CommunityVoteServiceTests
 
         Assert.NotNull(resolution);
         Assert.NotNull(resolution.SignaturePlan);
+        Assert.Contains("제안의 선후만으로", resolution.LegalEffectNotice);
+        Assert.Contains("합의한 최종 계약문", resolution.LegalEffectNotice);
         Assert.Equal(2, resolution.SignaturePlan.RequiredSignerCount);
         Assert.Equal(2, resolution.SignaturePlan.MissingRequiredPartyIds.Count);
         Assert.All(

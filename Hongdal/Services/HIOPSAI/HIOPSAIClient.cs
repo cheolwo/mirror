@@ -142,7 +142,8 @@ public sealed class HIOPSAIClient : IHIOPSAIClient
     private static int EstimateTokens(IReadOnlyList<HIOPSAIMessage> messages)
     {
         var chars = messages.Sum(message => (message.Content?.Length ?? 0) + (message.Role?.Length ?? 0));
-        return Math.Max(1, (int)Math.Ceiling(chars / 4m));
+        var imageTokens = messages.Sum(message => (message.Images?.Count ?? 0) * 1024);
+        return Math.Max(1, (int)Math.Ceiling(chars / 4m) + imageTokens);
     }
 
     private static ParsedOpenAIResponse ParseResponse(string rawJson)
@@ -210,9 +211,23 @@ public sealed record HIOPSAICompletionRequest(
     string? Model = null,
     int? EstimatedInputTokens = null,
     int? MaxOutputTokens = null,
-    string? CorrelationId = null);
+    string? CorrelationId = null,
+    HIOPSAIJsonSchema? OutputJsonSchema = null);
 
-public sealed record HIOPSAIMessage(string Role, string Content);
+public sealed record HIOPSAIMessage(
+    string Role,
+    string Content,
+    IReadOnlyList<HIOPSAIImageInput>? Images = null);
+
+public sealed record HIOPSAIImageInput(
+    string DataUrl,
+    string Detail = "low",
+    string? Label = null);
+
+public sealed record HIOPSAIJsonSchema(
+    string Name,
+    JsonElement Schema,
+    bool Strict = true);
 
 public sealed record HIOPSAICompletionResult(
     bool Success,
@@ -252,16 +267,43 @@ internal sealed record OpenAIResponsesRequest(
     [property: JsonPropertyName("model")] string Model,
     [property: JsonPropertyName("input")] IReadOnlyList<OpenAIInputMessage> Input,
     [property: JsonPropertyName("max_output_tokens")] int MaxOutputTokens,
-    [property: JsonPropertyName("store")] bool Store)
+    [property: JsonPropertyName("store")] bool Store,
+    [property: JsonPropertyName("text")] OpenAITextConfiguration? Text)
 {
     public static OpenAIResponsesRequest From(string model, HIOPSAICompletionRequest request, int maxOutputTokens)
         => new(
             model,
             request.Messages.Select(message => new OpenAIInputMessage(
                 message.Role,
-                [new OpenAIInputContent("input_text", message.Content)])).ToArray(),
+                BuildContent(message))).ToArray(),
             maxOutputTokens,
-            Store: false);
+            Store: false,
+            request.OutputJsonSchema is null
+                ? null
+                : new OpenAITextConfiguration(new OpenAITextFormat(
+                    "json_schema",
+                    request.OutputJsonSchema.Name,
+                    request.OutputJsonSchema.Schema,
+                    request.OutputJsonSchema.Strict)));
+
+    private static IReadOnlyList<OpenAIInputContent> BuildContent(HIOPSAIMessage message)
+    {
+        var content = new List<OpenAIInputContent>
+        {
+            OpenAIInputContent.CreateText(message.Content)
+        };
+        foreach (var image in message.Images ?? [])
+        {
+            if (!string.IsNullOrWhiteSpace(image.Label))
+            {
+                content.Add(OpenAIInputContent.CreateText(image.Label));
+            }
+
+            content.Add(OpenAIInputContent.CreateImage(image.DataUrl, image.Detail));
+        }
+
+        return content;
+    }
 }
 
 internal sealed record OpenAIInputMessage(
@@ -270,4 +312,22 @@ internal sealed record OpenAIInputMessage(
 
 internal sealed record OpenAIInputContent(
     [property: JsonPropertyName("type")] string Type,
-    [property: JsonPropertyName("text")] string Text);
+    [property: JsonPropertyName("text")] string? Text,
+    [property: JsonPropertyName("image_url")] string? ImageUrl,
+    [property: JsonPropertyName("detail")] string? Detail)
+{
+    public static OpenAIInputContent CreateText(string value)
+        => new("input_text", value, null, null);
+
+    public static OpenAIInputContent CreateImage(string dataUrl, string detail)
+        => new("input_image", null, dataUrl, detail);
+}
+
+internal sealed record OpenAITextConfiguration(
+    [property: JsonPropertyName("format")] OpenAITextFormat Format);
+
+internal sealed record OpenAITextFormat(
+    [property: JsonPropertyName("type")] string Type,
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("schema")] JsonElement Schema,
+    [property: JsonPropertyName("strict")] bool Strict);

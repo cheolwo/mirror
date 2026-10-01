@@ -106,7 +106,7 @@ public sealed class 사용자행위로그Middleware : IMiddleware
 
         if (value.StartsWith("/api/v1/shipper", StringComparison.OrdinalIgnoreCase))
         {
-            return App식별자.ShipperApp;
+            return App식별자.HongdalApp;
         }
 
         if (value.StartsWith("/api/v1/admin", StringComparison.OrdinalIgnoreCase))

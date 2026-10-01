@@ -1,0 +1,64 @@
+<div class="group-import-price-signal" aria-live="polite">
+    @if (isLoading)
+    {
+        <div class="group-import-price-signal__loading">
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Info" />
+            <span>수입 평균단가를 조회하고 있습니다.</span>
+        </div>
+    }
+    else if (result is { Success: true })
+    {
+        <div class="group-import-price-signal__result">
+            <div class="group-import-price-signal__header">
+                <span>수입 신고 평균단가</span>
+                <MudTooltip Text="평균단가 다시 조회">
+                    <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                   Size="Size.Small"
+                                   Color="Color.Info"
+                                   aria-label="평균단가 다시 조회"
+                                   OnClick="LoadAsync" />
+                </MudTooltip>
+            </div>
+            <div class="group-import-price-signal__metrics">
+                <div>
+                    <strong>@KrwPerKg(result.AverageImportUnitValueKrwPerKg)</strong>
+                    <span>@($"가정 환율 {FxRateKrwPerUsd:N0}원/USD")</span>
+                </div>
+                <div>
+                    <strong>@UsdPerKg(result.AverageImportUnitValueUsdPerKg)</strong>
+                    <span>관세청 신고금액 기준</span>
+                </div>
+            </div>
+            <div class="group-import-price-signal__meta">
+                <span>@CountryLabel(result.CountryCode)</span>
+                <span>@FormatPeriod(result.StartMonth, result.EndMonth)</span>
+                <span>@($"신고중량 {result.TotalImportWeightKg:N0}kg")</span>
+            </div>
+            <p>판매가나 견적이 아니라 신고금액을 신고중량으로 나눈 시장 참고값입니다.</p>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(message))
+    {
+        <div class="group-import-price-signal__failure">
+            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />
+            <span>@message</span>
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Info"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="LoadAsync">
+                다시 조회
+            </MudButton>
+        </div>
+    }
+    else
+    {
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Info"
+                   Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.QueryStats"
+                   OnClick="LoadAsync">
+            평균 단가 보기
+        </MudButton>
+    }
+</div>

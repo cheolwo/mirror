@@ -1,3 +1,5 @@
+using Hongdal.Contracts.Common.Versioning;
+
 namespace Hongdal.Contracts.Common.Education;
 
 public sealed class 현장체험활동생성요청
@@ -98,7 +100,7 @@ public sealed class 현장체험제출상태응답
 public static class 현장체험활동원장상수
 {
     public const string 원장템플릿Key = "education-field-experience";
-    public const string 대상OsCode = "EducationFieldExperienceOS";
+    public const string 대상OsCode = OperatingSystemIds.EducationFieldExperience;
     public const string 대상OsName = "교육 현장 체험 지원 OS";
 
     public const string 학생계획Block = "education-student-plan";

@@ -1,0 +1,83 @@
+@typeparam TItem where TItem : class
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inherits ViewModelParameterComponentBase<I비동기검색ViewModel<TItem>>
+@namespace Hongdal.Ui.Common.Areas.App.Components.Crud
+
+<MudAutocomplete T="TItem"
+                 Value="@Value"
+                 ValueChanged="HandleValueChanged"
+                 SearchFunc="SearchAsync"
+                 ToStringFunc="@ResolveText"
+                 Label="@Label"
+                 Placeholder="@Placeholder"
+                 Variant="@Variant"
+                 Margin="@Margin"
+                 Clearable="@Clearable"
+                 Strict="@Strict"
+                 Disabled="@(Disabled || ViewModel.처리중)"
+                 Required="@Required"
+                 RequiredError="@RequiredError"
+                 MinCharacters="@MinCharacters"
+                 DebounceInterval="@DebounceMilliseconds"
+                 MaxItems="@MaxItems"
+                 ShowProgressIndicator="true"
+                 Error="@(ViewModel.상태 == Api작업상태.실패)"
+                 ErrorText="@ViewModel.오류메시지" />
+
+@code {
+    [Parameter]
+    public TItem? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<TItem?> ValueChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public Func<TItem, string> ToStringFunc { get; set; } = item => item.ToString() ?? string.Empty;
+
+    [Parameter]
+    public string? Label { get; set; }
+
+    [Parameter]
+    public string? Placeholder { get; set; }
+
+    [Parameter]
+    public Variant Variant { get; set; } = Variant.Outlined;
+
+    [Parameter]
+    public Margin Margin { get; set; } = Margin.None;
+
+    [Parameter]
+    public bool Clearable { get; set; } = true;
+
+    [Parameter]
+    public bool Strict { get; set; } = true;
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public bool Required { get; set; }
+
+    [Parameter]
+    public string RequiredError { get; set; } = "항목을 선택해 주세요.";
+
+    [Parameter]
+    public int MinCharacters { get; set; }
+
+    [Parameter]
+    public int DebounceMilliseconds { get; set; } = 300;
+
+    [Parameter]
+    public int? MaxItems { get; set; } = 20;
+
+    private string ResolveText(TItem? item)
+        => item is null ? string.Empty : ToStringFunc(item);
+
+    private async Task<IEnumerable<TItem>> SearchAsync(
+        string? value,
+        CancellationToken cancellationToken)
+        => await ViewModel.검색Async(value, cancellationToken);
+
+    private Task HandleValueChanged(TItem? item)
+        => ValueChanged.InvokeAsync(item);
+}

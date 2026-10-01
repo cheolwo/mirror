@@ -15,6 +15,14 @@ public interface IHongikHakdangCardRepository
         bool includeInactive,
         CancellationToken cancellationToken);
 
+    Task<HongikHakdangCardCollection?> FindCollectionTrackedAsync(
+        long collectionId,
+        CancellationToken cancellationToken);
+
+    Task<HongikHakdangCard?> FindCardTrackedAsync(
+        long cardId,
+        CancellationToken cancellationToken);
+
     void AddCollection(HongikHakdangCardCollection collection);
 
     void AddCard(HongikHakdangCard card);
@@ -55,7 +63,7 @@ public sealed class EfHongikHakdangCardRepository : IHongikHakdangCardRepository
 
         if (!includeInactive)
         {
-            query = query.Where(x => x.IsActive);
+            query = query.Where(x => x.IsActive && x.IsAdminEnabled);
         }
 
         return await query
@@ -63,6 +71,18 @@ public sealed class EfHongikHakdangCardRepository : IHongikHakdangCardRepository
             .ThenBy(x => x.Id)
             .ToListAsync(cancellationToken);
     }
+
+    public Task<HongikHakdangCardCollection?> FindCollectionTrackedAsync(
+        long collectionId,
+        CancellationToken cancellationToken)
+        => _db.HongikHakdangCardCollections
+            .FirstOrDefaultAsync(x => x.Id == collectionId, cancellationToken);
+
+    public Task<HongikHakdangCard?> FindCardTrackedAsync(
+        long cardId,
+        CancellationToken cancellationToken)
+        => _db.HongikHakdangCards
+            .FirstOrDefaultAsync(x => x.Id == cardId, cancellationToken);
 
     public void AddCollection(HongikHakdangCardCollection collection)
         => _db.HongikHakdangCardCollections.Add(collection);

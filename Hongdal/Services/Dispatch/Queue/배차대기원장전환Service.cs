@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Hongdal;
+using Hongdal.Contracts.Common.Operations;
 using 홍달.도메인.공통;
 using 홍달.도메인.배차;
 using 홍달.Services.Dispatch.Engine;
@@ -199,13 +200,7 @@ namespace 홍달.Services.Dispatch.Queue
                 return 대기상태아님(queue);
             }
 
-            queue.배차큐단계 = 상태값.배차큐단계.공개배차;
-            queue.배차노출상태 = 상태값.배차노출상태.공개중;
-            queue.공개전환시각 = DateTime.UtcNow;
-            queue.현재추천대상기사Id = null;
-            queue.추천시작시각 = null;
-            queue.추천만료시각 = null;
-            queue.UpdatedAt = DateTime.UtcNow;
+            공개배차상태적용(queue, DateTime.UtcNow);
 
             await _db.SaveChangesAsync(cancellationToken);
 
@@ -215,18 +210,42 @@ namespace 홍달.Services.Dispatch.Queue
                 "배차대기를 공개배차 상태로 전환했습니다.");
         }
 
-        public async Task<배차대기원장전환결과> 배차확정처리Async(string requestId, string driverId, CancellationToken cancellationToken = default)
+        public async Task<배차대기원장전환결과> 실행주체확정결과동기화Async(
+            string requestId,
+            DispatchConfirmationBoundaryRequest confirmation,
+            CancellationToken cancellationToken = default)
         {
+            ArgumentNullException.ThrowIfNull(confirmation);
+
+            var boundaryDecision = CollectiveActionDispatchBoundaryPolicy.Evaluate(confirmation);
+            var driverId = confirmation.SelectedDriverParticipantId?.Trim() ?? string.Empty;
+            if (!boundaryDecision.CanConfirmDispatch)
+            {
+                return 배차대기원장전환결과.전환안됨(
+                    requestId,
+                    배차대기원장전환결과코드.실행결정권한없음,
+                    "플랫폼 후보 정보는 배차 확정 권한이 없습니다. 참여자의 실행 결정이 필요합니다.",
+                    driverId);
+            }
+
             var queue = await _db.운송원장.FirstOrDefaultAsync(x => x.의뢰Id == requestId, cancellationToken);
             if (queue is null)
             {
                 return 대상없음(requestId, driverId);
             }
 
-            queue.상태 = 상태값.배차대기상태.확정;
+            if (queue.상태 != 상태값.배차대기상태.확정
+                || !string.Equals(queue.확정기사Id, driverId, StringComparison.Ordinal))
+            {
+                return 배차대기원장전환결과.전환안됨(
+                    requestId,
+                    배차대기원장전환결과코드.실행결정불일치,
+                    "참여자의 수락 결과와 현재 배차 확정 상태가 일치하지 않습니다.",
+                    driverId);
+            }
+
             queue.배차큐단계 = 상태값.배차큐단계.확정;
             queue.배차노출상태 = 상태값.배차노출상태.확정;
-            queue.확정기사Id = driverId;
             queue.현재추천대상기사Id = null;
             queue.추천시작시각 = null;
             queue.추천만료시각 = null;
@@ -237,7 +256,7 @@ namespace 홍달.Services.Dispatch.Queue
             return 전환됨(
                 queue,
                 배차대기원장전환결과코드.확정됨,
-                "배차대기를 확정 상태로 전환했습니다.",
+                "참여자의 실행 결정을 배차 원장에 동기화했습니다.",
                 driverId);
         }
 

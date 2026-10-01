@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hongdal", "Hongdal\Hongdal.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HongdalAdmin", "HongdalAdmin\HongdalAdmin.csproj", "{D7A4C1B2-6E6A-4E7C-9F41-3C7B8A9B1002}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HongdalAdminApp", "HongdalAdminApp\HongdalAdminApp.csproj", "{A3B7E4D1-2C9F-4A61-B8D5-73E24F6C9012}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DriverApp", "DriverApp\DriverApp.csproj", "{D7A4C1B2-6E6A-4E7C-9F41-3C7B8A9B1003}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HongdalRestaurantDesktop", "HongdalRestaurantDesktop\HongdalRestaurantDesktop.csproj", "{D7A4C1B2-6E6A-4E7C-9F41-3C7B8A9B1004}"
@@ -25,7 +27,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HumanResourcesManagerApp", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FDriverApp", "FDriverApp\FDriverApp.csproj", "{4990BC08-7876-4608-8377-70852118AE77}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShipperApp", "ShipperApp\ShipperApp.csproj", "{D70EF643-3447-4079-A0B0-1B1722525A4B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HongdalApp", "HongdalApp\HongdalApp.csproj", "{D70EF643-3447-4079-A0B0-1B1722525A4B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hongdal.Client.Infrastructure", "Hongdal.Client.Infrastructure\Hongdal.Client.Infrastructure.csproj", "{D169B00C-A867-4C4C-BFAF-5B9D94002851}"
 EndProject
@@ -36,6 +38,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hongdal.BackOffice.Client", "Hongdal.BackOffice.Client\Hongdal.BackOffice.Client.csproj", "{FFD84432-CDD6-4C60-B392-C787CB93F3F3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hongdal.WebApp", "Hongdal.WebApp\Hongdal.WebApp.csproj", "{BB058F29-E52D-445B-B858-AE10D00832FB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server Modules", "Server Modules", "{348B1EE7-2E5A-F51D-4E9A-E74844BD3CCF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hongdal.Community", "Hongdal.Community\Hongdal.Community.csproj", "{5F6C0C0B-588D-483A-97A7-294DF7B2063A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -239,6 +245,30 @@ Global
 		{BB058F29-E52D-445B-B858-AE10D00832FB}.Release|x64.Build.0 = Release|Any CPU
 		{BB058F29-E52D-445B-B858-AE10D00832FB}.Release|x86.ActiveCfg = Release|Any CPU
 		{BB058F29-E52D-445B-B858-AE10D00832FB}.Release|x86.Build.0 = Release|Any CPU
+		{A3B7E4D1-2C9F-4A61-B8D5-73E24F6C9012}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3B7E4D1-2C9F-4A61-B8D5-73E24F6C9012}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3B7E4D1-2C9F-4A61-B8D5-73E24F6C9012}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A3B7E4D1-2C9F-4A61-B8D5-73E24F6C9012}.Debug|x64.Build.0 = Debug|Any CPU
+		{A3B7E4D1-2C9F-4A61-B8D5-73E24F6C9012}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A3B7E4D1-2C9F-4A61-B8D5-73E24F6C9012}.Debug|x86.Build.0 = Debug|Any CPU
+		{A3B7E4D1-2C9F-4A61-B8D5-73E24F6C9012}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3B7E4D1-2C9F-4A61-B8D5-73E24F6C9012}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3B7E4D1-2C9F-4A61-B8D5-73E24F6C9012}.Release|x64.ActiveCfg = Release|Any CPU
+		{A3B7E4D1-2C9F-4A61-B8D5-73E24F6C9012}.Release|x64.Build.0 = Release|Any CPU
+		{A3B7E4D1-2C9F-4A61-B8D5-73E24F6C9012}.Release|x86.ActiveCfg = Release|Any CPU
+		{A3B7E4D1-2C9F-4A61-B8D5-73E24F6C9012}.Release|x86.Build.0 = Release|Any CPU
+		{5F6C0C0B-588D-483A-97A7-294DF7B2063A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F6C0C0B-588D-483A-97A7-294DF7B2063A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F6C0C0B-588D-483A-97A7-294DF7B2063A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5F6C0C0B-588D-483A-97A7-294DF7B2063A}.Debug|x64.Build.0 = Debug|Any CPU
+		{5F6C0C0B-588D-483A-97A7-294DF7B2063A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5F6C0C0B-588D-483A-97A7-294DF7B2063A}.Debug|x86.Build.0 = Debug|Any CPU
+		{5F6C0C0B-588D-483A-97A7-294DF7B2063A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F6C0C0B-588D-483A-97A7-294DF7B2063A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F6C0C0B-588D-483A-97A7-294DF7B2063A}.Release|x64.ActiveCfg = Release|Any CPU
+		{5F6C0C0B-588D-483A-97A7-294DF7B2063A}.Release|x64.Build.0 = Release|Any CPU
+		{5F6C0C0B-588D-483A-97A7-294DF7B2063A}.Release|x86.ActiveCfg = Release|Any CPU
+		{5F6C0C0B-588D-483A-97A7-294DF7B2063A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -251,5 +281,7 @@ Global
 		{EE28F74E-1800-469C-9C54-2A8D0D77E11A} = {F95F473B-E98A-ACD6-1986-755F447BE36F}
 		{D2D4C501-6E64-4483-8515-B711FF654518} = {F95F473B-E98A-ACD6-1986-755F447BE36F}
 		{FFD84432-CDD6-4C60-B392-C787CB93F3F3} = {F95F473B-E98A-ACD6-1986-755F447BE36F}
+		{A3B7E4D1-2C9F-4A61-B8D5-73E24F6C9012} = {F95F473B-E98A-ACD6-1986-755F447BE36F}
+		{5F6C0C0B-588D-483A-97A7-294DF7B2063A} = {348B1EE7-2E5A-F51D-4E9A-E74844BD3CCF}
 	EndGlobalSection
 EndGlobal

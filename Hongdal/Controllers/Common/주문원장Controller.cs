@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Hongdal.Controllers.Common;
 
-[HongdalApiVersion(HongdalProductVersion.V1_0)]
+[HongdalApiVersion(HongdalProductVersion.V0_0)]
 [HongdalApiWorkflow(HongdalWorkflow.CommunityTrust)]
 [HongdalApiGrowthTrack(HongdalApiGrowthTrack.Community)]
 [ApiController]
@@ -70,11 +70,21 @@ public sealed class 주문원장Controller : ControllerBase
         string 주문원장Id,
         [FromBody] 주문하위원장연결요청 request,
         CancellationToken cancellationToken)
-        => this.ToActionResult(await _useCase.하위원장연결Async(
+    {
+        var access = await _sender.Send(
+            new 주문자주문원장조회Query(주문원장Id, CurrentUserId()),
+            cancellationToken);
+        if (access.IsFailed)
+        {
+            return this.ToActionResult(access);
+        }
+
+        return this.ToActionResult(await _useCase.하위원장연결Async(
             주문원장Id,
             request,
             CurrentUserId(),
             cancellationToken));
+    }
 
     [HttpDelete("{주문원장Id}/children/{하위원장Id}")]
     public async Task<IActionResult> 하위원장분리(
@@ -82,12 +92,22 @@ public sealed class 주문원장Controller : ControllerBase
         string 하위원장Id,
         [FromQuery] long? 기대Revision,
         CancellationToken cancellationToken)
-        => this.ToActionResult(await _useCase.하위원장분리Async(
+    {
+        var access = await _sender.Send(
+            new 주문자주문원장조회Query(주문원장Id, CurrentUserId()),
+            cancellationToken);
+        if (access.IsFailed)
+        {
+            return this.ToActionResult(access);
+        }
+
+        return this.ToActionResult(await _useCase.하위원장분리Async(
             주문원장Id,
             하위원장Id,
             기대Revision,
             CurrentUserId(),
             cancellationToken));
+    }
 
     [HttpGet("{주문원장Id}/signature")]
     public async Task<IActionResult> 서명상태조회(

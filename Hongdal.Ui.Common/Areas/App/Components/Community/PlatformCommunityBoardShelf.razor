@@ -1,0 +1,47 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<section id="community-board-list" class="platform-community-board-shelf" aria-label="커뮤니티 게시판 목록">
+    <div class="platform-community-section-heading">
+        <div>
+            <span>BOARD INDEX</span>
+            <strong>게시판</strong>
+        </div>
+        <span>@($"{Items.Count:N0}개 게시판")</span>
+    </div>
+    <div class="platform-community-board-scroll">
+        @foreach (var item in Items)
+        {
+            <button type="button"
+                    class="@BuildItemClass(item)"
+                    @onclick="@(() => ItemSelected.InvokeAsync(item.Name))">
+                <span class="platform-community-board-icon">
+                    <MudIcon Icon="@item.Icon" Size="Size.Small" />
+                </span>
+                <span class="platform-community-board-copy">
+                    <strong>@item.Name</strong>
+                    <small>@item.Description</small>
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Variant="Variant.Text"
+                             Color="@item.PostingAccessColor">
+                        @item.PostingAccessLabel
+                    </MudChip>
+                </span>
+                <span class="platform-community-board-count">@item.PostCount</span>
+            </button>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<CommunityBoardNavigationItem> Items { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<string> ItemSelected { get; set; }
+
+    private static string BuildItemClass(CommunityBoardNavigationItem item)
+        => item.IsSelected
+            ? "platform-community-board-card platform-community-board-card--selected"
+            : "platform-community-board-card";
+}

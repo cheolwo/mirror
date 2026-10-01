@@ -2,6 +2,11 @@ using System;
 
 namespace 홍달.도메인.운송
 {
+    public static class 운송이벤트유형
+    {
+        public const string 배차엔진판단감사 = "DispatchEngineDecisionAudit";
+    }
+
     public class 운송이벤트
     {
         public long Id { get; set; }

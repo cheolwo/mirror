@@ -1,0 +1,55 @@
+@page "/community/safety"
+
+<PageTitle>안전센터 · 살뜰 커뮤니티</PageTitle>
+
+<main class="community-safety">
+    <header class="community-safety__hero">
+        <span class="community-safety__icon"><MudIcon Icon="@Icons.Material.Filled.HealthAndSafety" Size="Size.Large" /></span>
+        <div>
+            <span>COMMUNITY SAFETY</span>
+            <h1>안전센터</h1>
+            <p>신고·분쟁 기록은 일반 게시판과 분리하고 필요한 범위의 사람만 원문을 확인합니다.</p>
+        </div>
+    </header>
+
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+        신고할 게시글이나 댓글의 신고 기능을 이용해 주세요. 신고 원문, 첨부와 댓글은 공개 글 목록에 나타나지 않습니다.
+    </MudAlert>
+
+    <section class="community-safety__grid" aria-label="안전센터 처리 원칙">
+        <article>
+            <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error" />
+            <strong>공개 목록에서 분리</strong>
+            <p>신고·분쟁 글은 전체 글과 게시판별 글 목록, 게시판 글 수 집계에서 제외합니다.</p>
+        </article>
+        <article>
+            <MudIcon Icon="@Icons.Material.Filled.LockPerson" Color="Color.Warning" />
+            <strong>원문과 첨부 보호</strong>
+            <p>공개 응답에는 신고 원문, 연결 주소, 원장, 첨부와 댓글 내용을 제공하지 않습니다.</p>
+        </article>
+        <article>
+            <MudIcon Icon="@Icons.Material.Filled.FactCheck" Color="Color.Primary" />
+            <strong>비식별 결과만 환류</strong>
+            <p>공유 가치가 있는 처리 결과만 개인정보를 제거해 공지나 완료 사례로 안내합니다.</p>
+        </article>
+    </section>
+
+    <section class="community-safety__notice">
+        <h2>신고할 때 공개 글에 넣지 말아야 할 정보</h2>
+        <div>
+            <MudChip T="string" Variant="Variant.Outlined">전화번호</MudChip>
+            <MudChip T="string" Variant="Variant.Outlined">상세 주소</MudChip>
+            <MudChip T="string" Variant="Variant.Outlined">계좌·결제 식별자</MudChip>
+            <MudChip T="string" Variant="Variant.Outlined">신분증·증빙 원본</MudChip>
+            <MudChip T="string" Variant="Variant.Outlined">정확한 위치 정보</MudChip>
+        </div>
+    </section>
+
+    <footer class="community-safety__actions">
+        <MudButton Href="/community"
+                   Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.ArrowBack">
+            게시판으로 돌아가기
+        </MudButton>
+    </footer>
+</main>

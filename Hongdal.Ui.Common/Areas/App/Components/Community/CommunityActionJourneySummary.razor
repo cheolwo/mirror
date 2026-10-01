@@ -1,0 +1,102 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Contracts.Common.Community
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+
+@if (Journey is { IsAvailable: true, HasStarted: true })
+{
+    <section class="community-journey-summary" aria-label="게시글에서 시작된 함께 하는 일">
+        <div class="community-journey-summary__heading">
+            <div>
+                <span>함께 하는 일</span>
+                <strong>@Journey.CurrentStageLabel</strong>
+            </div>
+            <MudButton Href="@ActionRoute"
+                       Variant="Variant.Text"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       EndIcon="@Icons.Material.Filled.ArrowForward">
+                이어서 보기
+            </MudButton>
+        </div>
+
+        <ol class="community-journey-summary__stages">
+            @foreach (var stage in Stages)
+            {
+                <li class="@BuildStageClass(stage.Code)">
+                    <span aria-hidden="true"></span>
+                    <small>@stage.Label</small>
+                </li>
+            }
+        </ol>
+
+        <div class="community-journey-summary__facts">
+            <span><MudIcon Icon="@Icons.Material.Filled.Groups" Size="Size.Small" /> @(Journey.ParticipantCount)명</span>
+            @if (Journey.RequiredRoleCount > 0)
+            {
+                <span><MudIcon Icon="@Icons.Material.Filled.Badge" Size="Size.Small" /> 역할 @Journey.FilledRequiredRoleCount/@Journey.RequiredRoleCount</span>
+            }
+            @if (Journey.Economics.HasPlan)
+            {
+                <span><MudIcon Icon="@Icons.Material.Filled.Calculate" Size="Size.Small" /> 가격·경제성 검토 있음</span>
+            }
+            @if (Journey.Diagram.IsAvailable)
+            {
+                <span><MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" /> 절차도 @(Journey.Diagram.NodeCount)단계</span>
+            }
+        </div>
+
+        <p>관심과 가원장은 비구속적 기록이며, 계약·업무 배정·운송 주선을 자동으로 확정하지 않습니다.</p>
+    </section>
+}
+
+@code {
+    private static readonly IReadOnlyList<(string Code, string Label)> Stages =
+    [
+        (CommunityActionJourneyStageCodes.Gathering, "마음"),
+        (CommunityActionJourneyStageCodes.Conditions, "조건"),
+        (CommunityActionJourneyStageCodes.Party, "역할"),
+        (CommunityActionJourneyStageCodes.Readiness, "준비"),
+        (CommunityActionJourneyStageCodes.InProgress, "실행"),
+        (CommunityActionJourneyStageCodes.Completed, "완료")
+    ];
+
+    [Parameter, EditorRequired]
+    public CommunityActionJourneyResponse Journey { get; set; } = new();
+
+    private string ActionRoute
+        => CommunityCollectiveActionRoutes.Build(
+            MapPageKey(Journey.CurrentStageCode),
+            Journey.InterestVoteId);
+
+    private string BuildStageClass(string stageCode)
+    {
+        var currentIndex = StageIndex(Journey.CurrentStageCode);
+        var stageIndex = StageIndex(stageCode);
+        return stageIndex == currentIndex
+            ? "is-current"
+            : stageIndex < currentIndex ? "is-complete" : string.Empty;
+    }
+
+    private static int StageIndex(string? stageCode)
+        => stageCode switch
+        {
+            CommunityActionJourneyStageCodes.ProvisionalLedger => 1,
+            CommunityActionJourneyStageCodes.Conditions => 1,
+            CommunityActionJourneyStageCodes.Party => 2,
+            CommunityActionJourneyStageCodes.Readiness => 3,
+            CommunityActionJourneyStageCodes.InProgress => 4,
+            CommunityActionJourneyStageCodes.Completed => 5,
+            _ => 0
+        };
+
+    private static string MapPageKey(string? stageCode)
+        => stageCode switch
+        {
+            CommunityActionJourneyStageCodes.Conditions => "conditions",
+            CommunityActionJourneyStageCodes.Party => "party",
+            CommunityActionJourneyStageCodes.Readiness => "readiness",
+            CommunityActionJourneyStageCodes.InProgress => "in-progress",
+            CommunityActionJourneyStageCodes.Completed => "completed",
+            _ => "gathering"
+        };
+}

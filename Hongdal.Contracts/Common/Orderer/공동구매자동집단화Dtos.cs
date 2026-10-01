@@ -14,6 +14,13 @@ public sealed class 공동구매자동수요등록Command
     public string 주문자표시명 { get; set; } = string.Empty;
     public string 배송권키 { get; set; } = string.Empty;
     public string 배송권명 { get; set; } = string.Empty;
+    public long? 도착창고Id { get; set; }
+    public string 도착창고유형 { get; set; } = string.Empty;
+    public string 도착창고명 { get; set; } = string.Empty;
+    public string 수령지주소참조키 { get; set; } = string.Empty;
+    public string 수령지표시명 { get; set; } = string.Empty;
+    public string 수령도로명주소 { get; set; } = string.Empty;
+    public string 수령상세주소 { get; set; } = string.Empty;
     public decimal 희망수량 { get; set; }
     public string 수량단위 { get; set; } = "kg";
     public decimal? 예약결제금액 { get; set; }
@@ -33,8 +40,18 @@ public sealed class 공동구매자동수요응답
     public string 자동집단Id { get; set; } = string.Empty;
     public string 상품키 { get; set; } = string.Empty;
     public string 상품명 { get; set; } = string.Empty;
+    public string 주문자키 { get; set; } = string.Empty;
+    public string 주문자표시명 { get; set; } = string.Empty;
     public string 배송권키 { get; set; } = string.Empty;
     public string 배송권명 { get; set; } = string.Empty;
+    public long? 도착창고Id { get; set; }
+    public string 도착창고유형 { get; set; } = string.Empty;
+    public string 도착창고명 { get; set; } = string.Empty;
+    public string 수령지주소참조키 { get; set; } = string.Empty;
+    public string 입고의미상태 { get; set; } = 공동구매개별주문입고상태코드.미지정;
+    public string 공동구매주문집계원장Id { get; set; } = string.Empty;
+    public string 개별주문원장Id { get; set; } = string.Empty;
+    public string 입고예정원장Id { get; set; } = string.Empty;
     public string 수요유형 { get; set; } = string.Empty;
     public string 결제상태 { get; set; } = string.Empty;
     public decimal 희망수량 { get; set; }
@@ -46,6 +63,7 @@ public sealed class 공동구매자동수요응답
 public sealed class 공동구매자동집단응답
 {
     public string 자동집단Id { get; set; } = string.Empty;
+    public string 공동구매주문집계원장Id { get; set; } = string.Empty;
     public string 상품키 { get; set; } = string.Empty;
     public string 상품명 { get; set; } = string.Empty;
     public string HS코드 { get; set; } = string.Empty;
@@ -99,4 +117,15 @@ public static class 공동구매자동집단상태코드
     public const string 수요수집중 = "CollectingDemand";
     public const string 확정대기 = "ReadyToConfirm";
     public const string 확정 = "Confirmed";
+}
+
+/// <summary>
+/// 주문과 입고의 관계를 구분합니다. 주문·결제 시점에는 수령 권리가 생기므로 입고 예정이며,
+/// 실제 입고 완료는 물품 도착과 검수 뒤 창고 업무에서만 확정합니다.
+/// </summary>
+public static class 공동구매개별주문입고상태코드
+{
+    public const string 미지정 = "NotSpecified";
+    public const string 입고예정 = "InboundPlanned";
+    public const string 입고완료 = "InboundCompleted";
 }

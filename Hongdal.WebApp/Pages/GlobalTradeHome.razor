@@ -1,0 +1,182 @@
+@page "/global"
+@layout GlobalTradeLayout
+@inject GlobalTradeWorkspaceService Workspace
+
+<PageTitle>Hongdal Global | Products for Korea</PageTitle>
+
+<main class="global-home">
+    <section class="global-hero">
+        <div class="global-hero-copy">
+            <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small" Class="global-eyebrow">
+                GLOBAL PRODUCTS · KOREAN DEMAND
+            </MudChip>
+            <h1>Bring the world's useful products to Korea.</h1>
+            <p>
+                Hongdal helps overseas suppliers present their products, test interest in Korea,
+                and connect with importers before a full trade process begins.
+            </p>
+            <div class="global-hero-actions">
+                <MudButton Href="#products" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" EndIcon="@Icons.Material.Filled.South">
+                    Explore products
+                </MudButton>
+                <MudButton Href="@GlobalTradeRoutes.SupplierApply" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Large" StartIcon="@Icons.Material.Filled.AddBusiness">
+                    Submit your product
+                </MudButton>
+                <MudButton Href="@GlobalTradeRoutes.CommunityThread(101)" Variant="Variant.Text" Color="Color.Primary" Size="Size.Large" StartIcon="@Icons.Material.Filled.Forum">
+                    Join a trade discussion
+                </MudButton>
+            </div>
+        </div>
+
+        <div class="global-hero-orbit" aria-label="Hongdal global trade flow">
+            <div class="global-orbit-card global-orbit-card--supplier">
+                <MudIcon Icon="@Icons.Material.Filled.Factory" />
+                <span>Overseas supplier</span>
+            </div>
+            <div class="global-orbit-line"></div>
+            <div class="global-orbit-core">
+                <span>HONGDAL</span>
+                <strong>KOREA</strong>
+            </div>
+            <div class="global-orbit-card global-orbit-card--importer">
+                <MudIcon Icon="@Icons.Material.Filled.Handshake" />
+                <span>Korean importer</span>
+            </div>
+            <div class="global-orbit-card global-orbit-card--logistics">
+                <MudIcon Icon="@Icons.Material.Filled.LocalShipping" />
+                <span>Customs & logistics</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="global-proof" aria-label="service summary">
+        <div><strong>@PublishedProducts.Count</strong><span>pilot products</span></div>
+        <div><strong>@CountriesCount</strong><span>supplier countries</span></div>
+        <div><strong>@Workspace.CommunityThreads.Count</strong><span>trade conversations</span></div>
+        <div><strong>@Workspace.ImportOrders.Count</strong><span>order ledgers</span></div>
+    </section>
+
+    <section id="products" class="global-products-section">
+        <div class="global-section-heading">
+            <div>
+                <span>CURATED FOR A PILOT</span>
+                <h2>Products looking for a Korean market</h2>
+                <p>Start with interest, samples, and a small import review before committing to scale.</p>
+            </div>
+            <MudTextField T="string"
+                          @bind-Value="SearchText"
+                          Placeholder="Search product or country"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Immediate="true"
+                          Class="global-product-search" />
+        </div>
+
+        <div class="global-category-row">
+            @foreach (var category in Categories)
+            {
+                <MudChip T="string"
+                         Color="Color.Primary"
+                         Variant="@(SelectedCategory == category ? Variant.Filled : Variant.Outlined)"
+                         OnClick="@(() => SelectedCategory = category)">
+                    @category
+                </MudChip>
+            }
+        </div>
+
+        <div class="global-product-grid">
+            @foreach (var product in FilteredProducts)
+            {
+                <article class="global-product-card">
+                    <div class="global-product-visual" style="@($"--card-accent: {product.AccentColor}")">
+                        <span class="global-country-code">@product.CountryCode</span>
+                        <strong>@product.Symbol</strong>
+                        <span>@product.CountryName</span>
+                    </div>
+                    <div class="global-product-body">
+                        <div class="global-product-meta">
+                            <span>@product.Category</span>
+                            <span>@(product.SampleAvailable ? "Sample ready" : "Sample on request")</span>
+                        </div>
+                        <h3>@product.ProductName</h3>
+                        <p>@product.Summary</p>
+                        <dl>
+                            <div><dt>From</dt><dd>@product.SupplyPrice.ToString("N2") @product.CurrencyCode</dd></div>
+                            <div><dt>MOQ</dt><dd>@product.MinimumOrderQuantity units</dd></div>
+                        </dl>
+                        <MudButton Href="@GlobalTradeRoutes.Product(product.Slug)"
+                                   Variant="Variant.Text"
+                                   Color="Color.Primary"
+                                   EndIcon="@Icons.Material.Filled.ArrowForward">
+                            View product
+                        </MudButton>
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section class="global-flow-section">
+        <div class="global-section-heading global-section-heading--light">
+            <div>
+                <span>ONE SMALL TRADE LOOP</span>
+                <h2>From discovery to an import decision</h2>
+            </div>
+        </div>
+        <div class="global-flow-grid">
+            @foreach (var step in FlowSteps)
+            {
+                <div class="global-flow-step">
+                    <span>@step.Number</span>
+                    <MudIcon Icon="@step.Icon" />
+                    <h3>@step.Title</h3>
+                    <p>@step.Description</p>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="global-affiliate-note">
+        <MudIcon Icon="@Icons.Material.Filled.Link" />
+        <div>
+            <strong>Retail links can validate early demand.</strong>
+            <span>When a product has an approved affiliate destination, Hongdal will label it clearly and track it separately from wholesale import requests.</span>
+        </div>
+    </section>
+</main>
+
+@code {
+    private string SearchText = string.Empty;
+    private string SelectedCategory = "All";
+
+    private IReadOnlyList<GlobalTradeProduct> PublishedProducts => Workspace.Products
+        .Where(product => product.ReviewStatus == GlobalTradeReviewStatus.Published)
+        .ToArray();
+
+    private int CountriesCount => PublishedProducts
+        .Select(product => product.CountryCode)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .Count();
+
+    private IReadOnlyList<string> Categories =>
+        ["All", .. PublishedProducts.Select(product => product.Category).Distinct().OrderBy(category => category)];
+
+    private IEnumerable<GlobalTradeProduct> FilteredProducts => PublishedProducts.Where(product =>
+        (SelectedCategory == "All" || string.Equals(product.Category, SelectedCategory, StringComparison.OrdinalIgnoreCase))
+        && (string.IsNullOrWhiteSpace(SearchText)
+            || product.ProductName.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
+            || product.CountryName.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
+            || product.SupplierName.Contains(SearchText, StringComparison.OrdinalIgnoreCase)));
+
+    private static readonly IReadOnlyList<TradeFlowStep> FlowSteps =
+    [
+        new("01", "Supplier starts a conversation", "A supplier shares the product, MOQ, samples, and documents with the community.", Icons.Material.Filled.Forum),
+        new("02", "Korea discusses demand", "Korean users and the supplier clarify quantity, samples, price, and import questions in comments.", Icons.Material.Filled.Translate),
+        new("03", "An importer creates the order ledger", "A Korean importer turns the conversation into a draft order with the buyer, seller, item, and quantity.", Icons.Material.Filled.ShoppingCartCheckout),
+        new("04", "Specialized ledgers join", "Customs, payment, shipment, warehouse, and distribution ledgers proceed around the central order.", Icons.Material.Filled.AccountTree)
+    ];
+
+    private sealed record TradeFlowStep(string Number, string Title, string Description, string Icon);
+}

@@ -1,0 +1,73 @@
+@using Hongdal.Contracts.Common.Community
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<section class="community-vow-template-tool" aria-label="서원 여정 틀">
+    <header>
+        <div>
+            <MudText Typo="Typo.overline" Color="Color.Primary">VOW JOURNEY</MudText>
+            <MudText Typo="Typo.subtitle1">서원 여정 틀</MudText>
+        </div>
+        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">
+            @Version.DisplayName
+        </MudChip>
+    </header>
+
+    <MudSelect T="string"
+               Label="글의 출발점"
+               Variant="Variant.Outlined"
+               Margin="Margin.Dense"
+               Value="@ViewModel.SelectedKey"
+               ValueChanged="SelectTemplate">
+        @foreach (var template in ViewModel.Templates)
+        {
+            <MudSelectItem T="string" Value="@template.Key">@template.DisplayName</MudSelectItem>
+        }
+    </MudSelect>
+
+    <MudText Typo="Typo.body2" Color="Color.Secondary">
+        @ViewModel.Selected.Purpose
+    </MudText>
+
+    <ol class="community-vow-template-tool__sections">
+        @foreach (var section in ViewModel.Selected.SectionNames)
+        {
+            <li>@section</li>
+        }
+    </ol>
+
+    <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Text">
+        주문·계약·결제·배차·보관·정산은 틀을 적용해도 실행되지 않습니다.
+    </MudAlert>
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               StartIcon="@(HasDraftContent ? Icons.Material.Filled.PlaylistAdd : Icons.Material.Filled.PostAdd)"
+               FullWidth="true"
+               OnClick="ApplyRequested">
+        @(HasDraftContent ? "현재 본문 뒤에 틀 추가" : "선택한 틀로 초안 시작")
+    </MudButton>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public CommunityVowJourneyTemplateViewModel ViewModel { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public CommunityVowVersionDefinition Version { get; set; } = default!;
+
+    [Parameter]
+    public bool HasDraftContent { get; set; }
+
+    [Parameter]
+    public EventCallback<string> TemplateChanged { get; set; }
+
+    [Parameter]
+    public EventCallback ApplyRequested { get; set; }
+
+    private async Task SelectTemplate(string key)
+    {
+        ViewModel.SelectedKey = key;
+        await TemplateChanged.InvokeAsync(key);
+    }
+}

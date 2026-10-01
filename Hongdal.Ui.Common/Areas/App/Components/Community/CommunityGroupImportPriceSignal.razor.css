@@ -1,0 +1,72 @@
+.group-import-price-signal {
+    min-width: 0;
+}
+
+.group-import-price-signal__loading,
+.group-import-price-signal__failure {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 36px;
+    color: #526579;
+    font-size: 0.78rem;
+}
+
+.group-import-price-signal__result {
+    display: grid;
+    gap: 8px;
+    padding: 10px 12px;
+    border-left: 3px solid #1c7a8c;
+    background: #f2f8fa;
+}
+
+.group-import-price-signal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #195d70;
+    font-size: 0.76rem;
+    font-weight: 800;
+}
+
+.group-import-price-signal__metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.group-import-price-signal__metrics div {
+    display: grid;
+    gap: 2px;
+}
+
+.group-import-price-signal__metrics strong {
+    color: #172033;
+    font-size: 0.96rem;
+}
+
+.group-import-price-signal__metrics span,
+.group-import-price-signal__meta,
+.group-import-price-signal__result p {
+    color: #667489;
+    font-size: 0.7rem;
+}
+
+.group-import-price-signal__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 12px;
+}
+
+.group-import-price-signal__result p {
+    margin: 0;
+}
+
+@media (max-width: 420px) {
+    .group-import-price-signal__metrics {
+        grid-template-columns: 1fr;
+        gap: 7px;
+    }
+}

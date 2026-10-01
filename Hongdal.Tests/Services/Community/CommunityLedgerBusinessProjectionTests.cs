@@ -1,6 +1,8 @@
 using Hongdal.Contracts.Common.Community;
 using Hongdal.Services.Community;
 using 홍달.도메인.공통;
+using 홍달.도메인.운송;
+using 홍달.도메인.화주;
 using 홍달.도메인.창고;
 
 namespace Hongdal.Tests.Services.Community;
@@ -8,7 +10,7 @@ namespace Hongdal.Tests.Services.Community;
 public sealed class CommunityLedgerBusinessProjectionTests
 {
     [Fact]
-    public void Transport_snapshot_maps_cargo_ledger_blocks_to_rdb_projection_input()
+    public void Transport_snapshot_maps_coordination_data_without_confirming_dispatch()
     {
         var ledger = new 커뮤니티원장Dto
         {
@@ -87,13 +89,80 @@ public sealed class CommunityLedgerBusinessProjectionTests
         Assert.Equal("transport:REQ-200", snapshot.LedgerId);
         Assert.Equal("shipper-2", snapshot.ShipperId);
         Assert.Equal("orderer-2", snapshot.OrdererUserId);
-        Assert.Equal("driver-2", snapshot.DriverId);
         Assert.Equal("생활용품", snapshot.CargoType);
         Assert.Equal("서울 중구 세종대로", snapshot.PickupAddress);
         Assert.Equal(37.5665m, snapshot.PickupLatitude);
         Assert.Equal(55000m, snapshot.Fare);
         Assert.Equal(상태값.배차업무유형.용달운송, snapshot.DispatchBusinessType);
-        Assert.Equal(상태값.배차큐단계.확정, snapshot.ResolveQueueStage());
+        Assert.True(snapshot.ContainsParticipantExecutionObservation);
+        Assert.False(snapshot.CanCreateCoordinationTransport);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            운송원장업무투영Handler.CreateCoordinationTransport(
+                snapshot,
+                new DateTime(2026, 7, 17, 0, 0, 0, DateTimeKind.Utc)));
+    }
+
+    [Fact]
+    public void Coordination_only_transport_ledger_creates_planning_state()
+    {
+        var snapshot = new 운송원장업무투영Snapshot
+        {
+            LedgerId = "transport:REQ-COORDINATION",
+            LedgerTemplateKey = CommunityLedgerTemplateKeys.CargoTransport,
+            LedgerState = 커뮤니티원장상태.진행중,
+            RequestId = "REQ-COORDINATION",
+            ShipperId = "shipper-1"
+        };
+
+        var transport = 운송원장업무투영Handler.CreateCoordinationTransport(
+            snapshot,
+            new DateTime(2026, 7, 17, 0, 0, 0, DateTimeKind.Utc));
+
+        Assert.Equal(상태값.배차대기상태.대기, transport.상태);
+        Assert.Equal(상태값.배차큐단계.계획배차, transport.배차큐단계);
+        Assert.Equal(상태값.배차노출상태.계획대기, transport.배차노출상태);
+        Assert.Null(transport.확정기사Id);
+    }
+
+    [Fact]
+    public void Transport_projection_preserves_participant_execution_state()
+    {
+        var snapshot = new 운송원장업무투영Snapshot
+        {
+            LedgerId = "transport:REQ-201",
+            LedgerTemplateKey = CommunityLedgerTemplateKeys.CargoTransport,
+            LedgerState = 커뮤니티원장상태.완료,
+            RequestId = "REQ-201",
+            ShipperId = "shipper-updated"
+        };
+        var transport = new 운송원장
+        {
+            의뢰Id = "REQ-201",
+            상태 = 상태값.배차대기상태.확정,
+            배차큐단계 = 상태값.배차큐단계.확정,
+            배차노출상태 = 상태값.배차노출상태.확정,
+            확정기사Id = "driver-accepted",
+            기사_운송자 = "driver-accepted"
+        };
+        var shipperRequest = new 화주운송의뢰
+        {
+            의뢰Id = "REQ-201",
+            배차상태 = 상태값.배차상태.배차확정
+        };
+
+        운송원장업무투영Handler.ApplyTransportProjection(
+            transport,
+            snapshot,
+            isNew: false);
+        운송원장업무투영Handler.ApplyShipperRequest(shipperRequest, snapshot);
+
+        Assert.Equal(상태값.배차대기상태.확정, transport.상태);
+        Assert.Equal(상태값.배차큐단계.확정, transport.배차큐단계);
+        Assert.Equal(상태값.배차노출상태.확정, transport.배차노출상태);
+        Assert.Equal("driver-accepted", transport.확정기사Id);
+        Assert.Equal("driver-accepted", transport.기사_운송자);
+        Assert.Equal(상태값.배차상태.배차확정, shipperRequest.배차상태);
     }
 
     [Fact]
@@ -179,7 +248,7 @@ public sealed class CommunityLedgerBusinessProjectionTests
             ]
         };
 
-        var snapshot = 창고원장업무투영Snapshot.생성(ledger);
+        var snapshot = 입출고원장업무투영Snapshot.생성(ledger);
 
         Assert.NotNull(snapshot);
         Assert.Equal(310, snapshot!.출고예정Id);
@@ -205,7 +274,7 @@ public sealed class CommunityLedgerBusinessProjectionTests
             }
         };
 
-        var snapshot = 창고원장업무투영Snapshot.생성(ledger);
+        var snapshot = 입출고원장업무투영Snapshot.생성(ledger);
 
         Assert.NotNull(snapshot);
         Assert.Equal(21, snapshot!.입고요청Id);
@@ -228,7 +297,7 @@ public sealed class CommunityLedgerBusinessProjectionTests
             }
         };
 
-        var snapshot = 창고원장업무투영Snapshot.생성(ledger);
+        var snapshot = 입출고원장업무투영Snapshot.생성(ledger);
 
         Assert.NotNull(snapshot);
         Assert.Equal("ORDER-9", snapshot!.주문참조번호);

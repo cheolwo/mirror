@@ -1,0 +1,184 @@
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inherits ViewModelParameterComponentBase<YouTubeFoodCommunityDiscoveryViewModel>
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<section class="community-food-discovery" aria-labelledby="community-food-discovery-title">
+    <header class="community-food-discovery__header">
+        <button type="button"
+                class="community-food-discovery__toggle"
+                aria-expanded="@ViewModel.IsExpanded"
+                @onclick="ToggleExpanded">
+            <span class="community-food-discovery__mark">
+                <MudIcon Icon="@Icons.Material.Filled.SmartDisplay" Size="Size.Small" />
+            </span>
+            <span>
+                <small>FOOD VIDEO</small>
+                <strong id="community-food-discovery-title">영상에서 발견한 음식</strong>
+            </span>
+            @if (ViewModel.HasItems)
+            {
+                <b>@($"{ViewModel.Items.Count:N0}건")</b>
+            }
+            <MudIcon Icon="@(ViewModel.IsExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                     Size="Size.Small" />
+        </button>
+        <MudTooltip Text="음식 영상 새로고침">
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                           Size="Size.Small"
+                           Disabled="@ViewModel.IsLoading"
+                           OnClick="RefreshAsync"
+                           aria-label="음식 영상 새로고침" />
+        </MudTooltip>
+    </header>
+
+    @if (ViewModel.IsExpanded)
+    {
+        <div class="community-food-discovery__body">
+            @if (ViewModel.IsLoading && !ViewModel.HasItems)
+            {
+                <div class="community-food-discovery__loading" aria-label="음식 영상 불러오는 중">
+                    @for (var index = 0; index < 3; index++)
+                    {
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="260px" Height="210px" />
+                    }
+                </div>
+            }
+            else if (ViewModel.HasItems)
+            {
+                <div class="community-food-discovery__filters" aria-label="음식 영상 필터">
+                    <div class="community-food-discovery__filter-group" role="group" aria-label="채널 국가">
+                        <button type="button"
+                                class="@BuildCountryFilterClass(YouTubeFoodCommunityDiscoveryViewModel.AllFilter)"
+                                aria-pressed="@(ViewModel.SelectedCountryCode == YouTubeFoodCommunityDiscoveryViewModel.AllFilter)"
+                                @onclick="@(() => ViewModel.SelectCountry(null))">
+                            전체 국가
+                        </button>
+                        @foreach (var countryCode in ViewModel.CountryCodes)
+                        {
+                            <button type="button"
+                                    class="@BuildCountryFilterClass(countryCode)"
+                                    aria-pressed="@string.Equals(ViewModel.SelectedCountryCode, countryCode, StringComparison.OrdinalIgnoreCase)"
+                                    @onclick="@(() => ViewModel.SelectCountry(countryCode))">
+                                @countryCode.ToUpperInvariant()
+                            </button>
+                        }
+                    </div>
+                    <MudSelect T="string"
+                               Value="@ViewModel.SelectedCandidateType"
+                               ValueChanged="ViewModel.SelectCandidateType"
+                               Dense="true"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Class="community-food-discovery__type-select"
+                               aria-label="음식 후보 유형">
+                        <MudSelectItem Value="@YouTubeFoodCommunityDiscoveryViewModel.AllFilter">전체 유형</MudSelectItem>
+                        @foreach (var candidateType in ViewModel.CandidateTypes)
+                        {
+                            <MudSelectItem Value="@candidateType">@CandidateTypeLabel(candidateType)</MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+
+                @if (ViewModel.VisibleItems.Count > 0)
+                {
+                    <div class="community-food-discovery__rail">
+                        @foreach (var candidate in ViewModel.VisibleItems)
+                        {
+                            <article class="community-food-discovery__card">
+                                <a class="community-food-discovery__media"
+                                   href="@candidate.YouTube시청Url"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   aria-label="@($"{candidate.영상제목} YouTube에서 보기")">
+                                    @if (!string.IsNullOrWhiteSpace(candidate.영상썸네일Url))
+                                    {
+                                        <img src="@candidate.영상썸네일Url"
+                                             alt=""
+                                             loading="lazy" />
+                                    }
+                                    else
+                                    {
+                                        <span><MudIcon Icon="@Icons.Material.Filled.Restaurant" /></span>
+                                    }
+                                    <em><MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" /></em>
+                                </a>
+                                <div class="community-food-discovery__copy">
+                                    <div class="community-food-discovery__meta">
+                                        <span>@candidate.채널국가코드.ToUpperInvariant()</span>
+                                        <span>@CandidateTypeLabel(candidate.후보유형)</span>
+                                    </div>
+                                    <strong>@candidate.상품명</strong>
+                                    <p>@candidate.영상제목</p>
+                                    <small>@candidate.채널명</small>
+                                </div>
+                                <footer>
+                                    <MudTooltip Text="YouTube에서 보기">
+                                        <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                                       Href="@candidate.YouTube시청Url"
+                                                       Target="_blank"
+                                                       Size="Size.Small"
+                                                       aria-label="YouTube에서 보기" />
+                                    </MudTooltip>
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.EditNote"
+                                               OnClick="@(() => ShareAsync(candidate))">
+                                        커뮤니티에 공유
+                                    </MudButton>
+                                </footer>
+                            </article>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="community-food-discovery__empty">선택한 조건의 음식 영상이 없습니다.</div>
+                }
+
+                <p class="community-food-discovery__boundary">
+                    영상 공유는 정보 나눔입니다. 구매·수입 검토는 게시 후 참여자가 별도로 동의할 때만 시작됩니다.
+                </p>
+            }
+            else if (!string.IsNullOrWhiteSpace(ViewModel.ErrorMessage))
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Text">
+                    @ViewModel.ErrorMessage
+                </MudAlert>
+            }
+            else
+            {
+                <div class="community-food-discovery__empty">공개할 수 있도록 검수된 음식 영상을 준비 중입니다.</div>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter]
+    public EventCallback<PlatformCommunityPostDraft> ShareRequested { get; set; }
+
+    private void ToggleExpanded()
+        => ViewModel.IsExpanded = !ViewModel.IsExpanded;
+
+    private async Task RefreshAsync()
+        => await ViewModel.LoadAsync(forceRefresh: true);
+
+    private async Task ShareAsync(YouTube음식커뮤니티공유후보Dto candidate)
+        => await ShareRequested.InvokeAsync(ViewModel.CreateShareDraft(candidate));
+
+    private string BuildCountryFilterClass(string countryCode)
+        => string.Equals(ViewModel.SelectedCountryCode, countryCode, StringComparison.OrdinalIgnoreCase)
+            ? "community-food-discovery__filter community-food-discovery__filter--selected"
+            : "community-food-discovery__filter";
+
+    private static string CandidateTypeLabel(string candidateType)
+        => candidateType switch
+        {
+            YouTube상품후보유형코드.포장상품 => "포장 상품",
+            YouTube상품후보유형코드.식재료 => "식재료",
+            YouTube상품후보유형코드.요리 => "요리",
+            YouTube상품후보유형코드.생산자공급자 => "생산자·공급자",
+            _ => candidateType
+        };
+}

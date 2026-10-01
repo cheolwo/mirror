@@ -1,0 +1,38 @@
+@using Hongdal.Contracts.Common.AgriculturalFisheries
+
+<section class="public-data-workspace__sources" aria-label="농수산물 공공데이터 출처">
+    @foreach (var source in Sources)
+    {
+        <article>
+            <div class="public-data-workspace__source-mark" aria-hidden="true">
+                <MudIcon Icon="@ResolveSourceIcon(source.Key)" Size="Size.Medium" />
+            </div>
+            <div>
+                <span>@source.Provider</span>
+                <strong>@source.DisplayName</strong>
+                <p>@source.Coverage</p>
+                <small>@source.UsageNote</small>
+            </div>
+            <span class="@BuildSourceStatusClass(source)">@source.StatusLabel</span>
+        </article>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<AgriculturalFisheriesDataSourceResponse> Sources { get; set; } = [];
+
+    private static string ResolveSourceIcon(string sourceKey)
+        => sourceKey == 미국농수산가격출처Keys.UsdaNassQuickStats
+            ? Icons.Material.Filled.Public
+            : sourceKey == 호주농수산식품가격출처Keys.AbsConsumerPriceIndex
+                ? Icons.Material.Filled.QueryStats
+                : sourceKey.Contains("customs", StringComparison.OrdinalIgnoreCase)
+                    ? Icons.Material.Filled.FactCheck
+                    : Icons.Material.Filled.Agriculture;
+
+    private static string BuildSourceStatusClass(AgriculturalFisheriesDataSourceResponse source)
+        => source.IsConfigured
+            ? "public-data-workspace__source-status public-data-workspace__source-status--ready"
+            : "public-data-workspace__source-status";
+}

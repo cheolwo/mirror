@@ -75,11 +75,16 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
 {
     private readonly HttpClient _httpClient;
     private readonly IAuthSession _authSession;
+    private readonly IDriverTransportApiService _transportApi;
 
-    public HttpDriverTransportCompletionPhotoService(HttpClient httpClient, IAuthSession authSession)
+    public HttpDriverTransportCompletionPhotoService(
+        HttpClient httpClient,
+        IAuthSession authSession,
+        IDriverTransportApiService transportApi)
     {
         _httpClient = httpClient;
         _authSession = authSession;
+        _transportApi = transportApi;
     }
 
     public async Task<DriverTransportCompletionPhotoResult> CompleteWithPhotoAsync(
@@ -161,14 +166,9 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
         FileUploadResponse upload,
         CancellationToken cancellationToken)
     {
-        var path = photo.Kind == DriverTransportCompletionPhotoKind.Pickup
-            ? $"api/v1/driver/transports/{photo.TransportId}/pickup-complete"
-            : $"api/v1/driver/transports/{photo.TransportId}/complete";
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, path);
         if (photo.Kind == DriverTransportCompletionPhotoKind.Pickup)
         {
-            request.Content = JsonContent.Create(new 기사운송상차완료요청
+            await _transportApi.상차완료Async(photo.TransportId, new 기사운송상차완료요청
             {
                 상차사진ObjectName = upload.ObjectName,
                 상차사진Url = upload.Url,
@@ -180,24 +180,15 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
                 인수증확인완료 = photo.ReceiptEvidence?.Signed == true,
                 인수증서명생략확인 = photo.ReceiptEvidence?.SignatureOmitted == true,
                 인수증서명생략사유 = photo.ReceiptEvidence?.SignatureOmissionReason
-            });
-        }
-        else
-        {
-            request.Content = JsonContent.Create(new 기사운송하차완료요청
-            {
-                하차사진ObjectName = upload.ObjectName,
-                하차사진Url = upload.Url
-            });
+            }, cancellationToken);
+            return;
         }
 
-        ApplyAuthorization(request);
-
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
-        if (!response.IsSuccessStatusCode)
+        await _transportApi.하차완료Async(photo.TransportId, new 기사운송하차완료요청
         {
-            throw new InvalidOperationException(await BuildFailureMessageAsync(response, "운송 완료", cancellationToken));
-        }
+            하차사진ObjectName = upload.ObjectName,
+            하차사진Url = upload.Url
+        }, cancellationToken);
     }
 
     private void ApplyAuthorization(HttpRequestMessage request)

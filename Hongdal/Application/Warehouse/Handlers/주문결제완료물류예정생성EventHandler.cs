@@ -34,8 +34,12 @@ public sealed class 주문결제완료물류예정생성EventHandler : INotifica
         var 주문자창고 = await EnsureDefaultWarehouseAsync(
             notification.주문자UserId,
             창고소유자유형.주문자,
-            "주문자 기본 입고창고",
-            cancellationToken);
+            string.IsNullOrWhiteSpace(notification.수령지표시명)
+                ? "자택 수령지 가상 창고"
+                : $"{notification.수령지표시명.Trim()} 가상 창고",
+            cancellationToken,
+            notification.수령창고Id,
+            주소결합(notification.수령도로명주소, notification.수령상세주소));
 
         foreach (var item in notification.상품목록.Where(x => x.수량 > 0))
         {
@@ -128,29 +132,57 @@ public sealed class 주문결제완료물류예정생성EventHandler : INotifica
         string userId,
         string ownerType,
         string defaultName,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        long? selectedWarehouseId = null,
+        string? receivingAddress = null)
     {
-        var warehouse = await _db.창고.FirstOrDefaultAsync(x =>
-            x.소유자UserId == userId &&
-            x.소유자유형 == ownerType &&
-            x.기본창고여부 &&
-            x.IsActive,
-            cancellationToken);
+        var warehouse = selectedWarehouseId is > 0
+            ? await _db.창고.FirstOrDefaultAsync(x =>
+                x.Id == selectedWarehouseId.Value
+                && x.소유자UserId == userId
+                && x.IsActive,
+                cancellationToken)
+            : null;
+
+        if (warehouse is null && !string.IsNullOrWhiteSpace(receivingAddress))
+        {
+            warehouse = await _db.창고.FirstOrDefaultAsync(x =>
+                x.소유자UserId == userId
+                && x.소유자유형 == ownerType
+                && x.창고유형 == 창고유형.가상창고
+                && x.주소 == receivingAddress
+                && x.IsActive,
+                cancellationToken);
+        }
+
+        if (warehouse is null && string.IsNullOrWhiteSpace(receivingAddress))
+        {
+            warehouse = await _db.창고.FirstOrDefaultAsync(x =>
+                x.소유자UserId == userId
+                && x.소유자유형 == ownerType
+                && x.기본창고여부
+                && x.IsActive,
+                cancellationToken);
+        }
 
         if (warehouse is not null)
         {
             return warehouse;
         }
 
+        var 기본창고존재 = await _db.창고.AnyAsync(x =>
+            x.소유자UserId == userId && x.기본창고여부 && x.IsActive,
+            cancellationToken);
         warehouse = new 창고
         {
             소유자UserId = userId,
             소유자유형 = ownerType,
             창고유형 = 창고유형.가상창고,
             창고명 = defaultName,
+            주소 = receivingAddress?.Trim() ?? string.Empty,
             국가코드 = "KR",
             담당자명 = userId,
-            기본창고여부 = true,
+            기본창고여부 = !기본창고존재,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -160,4 +192,9 @@ public sealed class 주문결제완료물류예정생성EventHandler : INotifica
         await _db.SaveChangesAsync(cancellationToken);
         return warehouse;
     }
+
+    private static string 주소결합(string? 도로명주소, string? 상세주소)
+        => string.Join(" ", new[] { 도로명주소, 상세주소 }
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x!.Trim()));
 }

@@ -1,0 +1,82 @@
+.price-result {
+    min-width: 0;
+}
+
+.price-result__empty {
+    min-height: 150px;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 8px;
+    color: #64748b;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.price-result__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.price-result__header div {
+    display: grid;
+    gap: 3px;
+}
+
+.price-result__header span,
+.price-result__header small,
+.price-result__metrics article > span,
+.price-result__metrics article > small {
+    color: #64748b;
+    font-size: 0.78rem;
+}
+
+.price-result__header strong {
+    font-size: 1.05rem;
+}
+
+.price-result__metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding-top: 12px;
+}
+
+.price-result__metrics article {
+    min-width: 0;
+    display: grid;
+    gap: 5px;
+    padding: 13px;
+    border-left: 3px solid #16865d;
+    background: #f1f8f5;
+}
+
+.price-result__metrics strong {
+    font-size: 1.18rem;
+    color: #14532d;
+}
+
+.price-result__metrics strong small {
+    margin-left: 3px;
+    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 500;
+}
+
+.price-result__notice {
+    margin: 12px 0 0;
+    color: #64748b;
+    font-size: 0.78rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 560px) {
+    .price-result__metrics {
+        grid-template-columns: 1fr;
+    }
+}

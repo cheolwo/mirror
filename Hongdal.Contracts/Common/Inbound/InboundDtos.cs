@@ -37,10 +37,21 @@ public static class 입고흐름유형코드
         => Normalize(value) == 주문자동입고예정;
 }
 
+public static class 입고상태코드
+{
+    public const string 예정 = "입고예정";
+    public const string 운송중 = "운송중";
+    public const string 완료 = "입고완료";
+    public const string 취소 = "입고취소";
+}
+
 public sealed class 입고요청항목응답
 {
     public long Id { get; set; }
     public long 창고Id { get; set; }
+    public string? 커뮤니티원장Id { get; set; }
+    public string? 커뮤니티원장템플릿Key { get; set; }
+    public string? 커뮤니티원장상태 { get; set; }
     public string 입고흐름유형 { get; set; } = 입고흐름유형코드.계약기반입고;
     public string 입고생성경로 { get; set; } = string.Empty;
     public bool 계약선행여부 { get; set; } = true;
@@ -51,7 +62,11 @@ public sealed class 입고요청항목응답
     public string 판매자UserId { get; set; } = string.Empty;
     public long? 출고예정Id { get; set; }
     public string? 운송의뢰Id { get; set; }
+    public string 공급처코드 { get; set; } = string.Empty;
     public string 공급처명 { get; set; } = string.Empty;
+    public string 예정상품명 { get; set; } = string.Empty;
+    public string 예정SKU { get; set; } = string.Empty;
+    public int? 예정수량 { get; set; }
     public string 원주문참조번호 { get; set; } = string.Empty;
     public string 상태 { get; set; } = string.Empty;
     public DateTime? 예정도착일 { get; set; }
@@ -62,6 +77,27 @@ public sealed class 입고요청항목응답
 public sealed class 입고요청목록응답
 {
     public IReadOnlyList<입고요청항목응답> Items { get; set; } = [];
+}
+
+/// <summary>입고 업무 목록의 서버 정렬·검색·페이지 조회 조건입니다. Page는 0부터 시작합니다.</summary>
+public sealed class 입고요청목록조회요청
+{
+    public int Page { get; set; }
+    public int PageSize { get; set; } = 25;
+    public string? Search { get; set; }
+    public string? SortBy { get; set; }
+    public bool SortDescending { get; set; } = true;
+    public long? WarehouseId { get; set; }
+    public string? Status { get; set; }
+    public string? FlowType { get; set; }
+}
+
+public sealed class 입고요청페이지응답
+{
+    public IReadOnlyList<입고요청항목응답> Items { get; set; } = [];
+    public int TotalCount { get; set; }
+    public int Page { get; set; }
+    public int PageSize { get; set; }
 }
 
 public sealed class 입고요청저장요청
@@ -76,6 +112,7 @@ public sealed class 입고요청저장요청
     public string 판매자UserId { get; set; } = string.Empty;
     public long? 출고예정Id { get; set; }
     public string? 운송의뢰Id { get; set; }
+    public string 공급처코드 { get; set; } = string.Empty;
     public string 공급처명 { get; set; } = string.Empty;
     public string 원주문참조번호 { get; set; } = string.Empty;
     public DateTime? 예정도착일 { get; set; }
@@ -93,6 +130,9 @@ public sealed class 입고상품항목응답
     public long Id { get; set; }
     public long 입고요청Id { get; set; }
     public long 창고Id { get; set; }
+    public string? 커뮤니티원장Id { get; set; }
+    public string? 커뮤니티원장템플릿Key { get; set; }
+    public string? 커뮤니티원장상태 { get; set; }
     public string 소유자UserId { get; set; } = string.Empty;
     public string 판매자UserId { get; set; } = string.Empty;
     public string 상품명 { get; set; } = string.Empty;

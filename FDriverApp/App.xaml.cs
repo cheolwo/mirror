@@ -11,7 +11,7 @@ namespace FDriverApp
 
         protected override Window CreateWindow(IActivationState? activationState)
         {
-            return new Window(new AppShell()) { Title = "홍달 음식 배달" };
+            return new Window(new AppShell()) { Title = "살뜰 배달" };
         }
     }
 }

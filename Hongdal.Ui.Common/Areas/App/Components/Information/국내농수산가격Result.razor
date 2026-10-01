@@ -1,0 +1,65 @@
+@using Hongdal.Contracts.Common.AgriculturalFisheries
+
+<section class="price-result" aria-label="국내 농수산물 가격 조회 결과">
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true">@ErrorMessage</MudAlert>
+    }
+    else if (Response is null)
+    {
+        <div class="price-result__empty">
+            <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" />
+            <strong>국내 가격 조회 전</strong>
+        </div>
+    }
+    else if (!Response.Success || Response.Price is null)
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true">
+            @(Response.ErrorMessage ?? Response.Summary)
+        </MudAlert>
+    }
+    else
+    {
+        <header class="price-result__header">
+            <div>
+                <span>한국농수산식품유통공사(aT)</span>
+                <strong>@(Response.Item?.ProductName ?? Response.Price.ItemName)</strong>
+            </div>
+            <small>HS @Response.HsCode</small>
+        </header>
+
+        <div class="price-result__metrics">
+            @if (Response.Price.Wholesale is { } wholesale)
+            {
+                <article>
+                    <span>@wholesale.PriceTypeLabel</span>
+                    <strong>@FormatKrw(wholesale.AverageKrwPerKg)<small>/kg</small></strong>
+                    <small>@wholesale.MinimumKrwPerKg.ToString("N0")~@wholesale.MaximumKrwPerKg.ToString("N0")원 · @wholesale.LatestSurveyDate</small>
+                </article>
+            }
+            @if (Response.Price.Retail is { } retail)
+            {
+                <article>
+                    <span>@retail.PriceTypeLabel</span>
+                    <strong>@FormatKrw(retail.AverageKrwPerKg)<small>/kg</small></strong>
+                    <small>@retail.MinimumKrwPerKg.ToString("N0")~@retail.MaximumKrwPerKg.ToString("N0")원 · @retail.LatestSurveyDate</small>
+                </article>
+            }
+        </div>
+
+        @if (Response.Notices.Count > 0)
+        {
+            <p class="price-result__notice">@Response.Notices[0]</p>
+        }
+    }
+</section>
+
+@code {
+    [Parameter]
+    public AgriculturalFisheriesDomesticPriceResponse? Response { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    private static string FormatKrw(decimal value) => $"{value:N0}원";
+}

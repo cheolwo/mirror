@@ -38,6 +38,8 @@ Thumbs.db
 *.tmp
 
 # Generated verification output (keep already-selected screenshots and capture hosts tracked)
+**/.artifacts/
+**/.codex-build/
 /artifacts/build-check/
 /artifacts/*-bin/
 /artifacts/*-build/
@@ -56,6 +58,7 @@ Thumbs.db
 /tmp/
 /.codex-remote-attachments/
 /artifacts/android-render-check/
+/artifacts/apify-amazon/
 /artifacts/page-capture-check/
 /artifacts/screenshots/
 /artifacts/ui-e2e/

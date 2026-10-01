@@ -9,7 +9,7 @@
 | 앱 | 확인한 라우트 수 | 결과 | 결과 파일 |
 | --- | ---: | --- | --- |
 | `DriverApp` | 23 | 23 OK / 0 FAIL | [`driver-route-smoke.json`](../../artifacts/android-render-check/page-smoke/driver-route-smoke.json) |
-| `ShipperApp` | 30 | 30 OK / 0 FAIL | [`shipper-route-smoke.json`](../../artifacts/android-render-check/page-smoke/shipper-route-smoke.json) |
+| `HongdalApp` | 30 | 30 OK / 0 FAIL | [`shipper-route-smoke.json`](../../artifacts/android-render-check/page-smoke/shipper-route-smoke.json) |
 | `WarehouseManagerApp` | 22 | 22 OK / 0 FAIL | [`warehouse-route-smoke.json`](../../artifacts/android-render-check/page-smoke/warehouse-route-smoke.json) |
 
 `DriverApp`의 `/driver/home`은 처음 검증 때 Blazor 오류 UI가 보였고, `MudButton.OnClick` 수동 렌더링 콜백 타입 문제를 제거한 뒤 다시 23개 라우트가 모두 통과했다.
@@ -26,7 +26,7 @@
 | --- | --- | --- |
 | `DriverApp` | [`DriverApp-after-home-fix.png`](../../artifacts/android-render-check/DriverApp-after-home-fix.png) | 기사 지도 홈에서 Blazor 업무 화면으로 진입한 뒤 홈 허브가 오류 없이 열리는지 설명 |
 | `DriverApp` | [`DriverApp-embedded.png`](../../artifacts/android-render-check/DriverApp-embedded.png) | 네이티브 지도 홈, 추천 배너, 진행 중 운송 하단 흐름의 대표 이미지 |
-| `ShipperApp` | [`ShipperApp-embedded.png`](../../artifacts/android-render-check/ShipperApp-embedded.png) | 화주 업무 진입, 운송 의뢰, 창고/판매/통관 업무로 이어지는 흐름의 대표 이미지 |
+| `HongdalApp` | [`HongdalApp-embedded.png`](../../artifacts/android-render-check/HongdalApp-embedded.png) | 화주 업무 진입, 운송 의뢰, 창고/판매/통관 업무로 이어지는 흐름의 대표 이미지 |
 | `WarehouseManagerApp` | [`WarehouseManagerApp-embedded.png`](../../artifacts/android-render-check/WarehouseManagerApp-embedded.png) | 창고 작업 보드, 입고/검수/피킹/포장 흐름의 대표 이미지 |
 
 ## 상위/하위 페이지 캡처 색인
@@ -35,11 +35,11 @@
 
 | 번호 | 화면 | 라우트 | 캡처 |
 | --- | --- | --- | --- |
-| ShipperApp-P01 | 화주 홈/업무 진입 | `/shipper` | [P01-화주홈.png](assets/v1-pages/P01-화주홈.png) |
-| ShipperApp-P02 | 운송 의뢰 작성 | `/shipper/request` | [P02-운송의뢰작성.png](assets/v1-pages/P02-운송의뢰작성.png) |
-| ShipperApp-P03 | 의뢰 상세/타임라인 | `/shipper/request/{RequestId}` | [P03-의뢰상세타임라인.png](assets/v1-pages/P03-의뢰상세타임라인.png) |
-| ShipperApp-P03-1 | 결제/입금 안내 | ShipperApp-P03 내부 섹션 | [P03-1-결제입금안내.png](assets/v1-pages/P03-1-결제입금안내.png) |
-| ShipperApp-P03-2 | 예외/분쟁 확인 | ShipperApp-P03 내부 섹션 | [P03-2-예외분쟁확인.png](assets/v1-pages/P03-2-예외분쟁확인.png) |
+| HongdalApp-P01 | 화주 홈/업무 진입 | `/shipper` | [P01-화주홈.png](assets/v1-pages/P01-화주홈.png) |
+| HongdalApp-P02 | 운송 의뢰 작성 | `/shipper/request` | [P02-운송의뢰작성.png](assets/v1-pages/P02-운송의뢰작성.png) |
+| HongdalApp-P03 | 의뢰 상세/타임라인 | `/shipper/request/{RequestId}` | [P03-의뢰상세타임라인.png](assets/v1-pages/P03-의뢰상세타임라인.png) |
+| HongdalApp-P03-1 | 결제/입금 안내 | HongdalApp-P03 내부 섹션 | [P03-1-결제입금안내.png](assets/v1-pages/P03-1-결제입금안내.png) |
+| HongdalApp-P03-2 | 예외/분쟁 확인 | HongdalApp-P03 내부 섹션 | [P03-2-예외분쟁확인.png](assets/v1-pages/P03-2-예외분쟁확인.png) |
 | DriverApp-P06 | 운행 시작 | `/driver/work/start` | [P06-운행시작.png](assets/v1-pages/P06-운행시작.png) |
 | DriverApp-P07 | 지도 홈/추천 배너 | `/driver/home` | [P07-지도홈추천배너.png](assets/v1-pages/P07-지도홈추천배너.png) |
 | DriverApp-P07-1 | 기사 업무 허브/요약 | `/driver/home/summary` | [P07-1-기사업무허브.png](assets/v1-pages/P07-1-기사업무허브.png) |
@@ -66,7 +66,7 @@
 
 1. 홍달 1.0 중심 흐름: `운송 의뢰 -> 기사 추천 -> 수락/거절 -> 상차 -> 하차 -> POD/정산 후보`
 2. 화면 검증 링크: 이 문서와 [홍달 1.0 필수 페이지 기준](hongdal-v1-required-pages.md)
-3. 현재 검증 상태: `DriverApp`, `ShipperApp`, `WarehouseManagerApp`의 렌더링 스모크가 통과했다는 요약
+3. 현재 검증 상태: `DriverApp`, `HongdalApp`, `WarehouseManagerApp`의 렌더링 스모크가 통과했다는 요약
 
 상세한 화면 번호, 캡처 예정 경로, 보안/암호화 확인, 페이지 간 상태 반영 관계는 [홍달 1.0 필수 페이지 기준](hongdal-v1-required-pages.md)에 둔다.
 
@@ -76,7 +76,7 @@
 
 | 스테이지 | 주요 앱/화면 | 문서화 목적 |
 | --- | --- | --- |
-| S01 화주 의뢰 생성 | `ShipperApp` `/shipper/request`, `/shipper/request/{RequestId}` | 화주가 의뢰를 만들고 결제, 배차, 수락, 상하차, 정산 상태를 한 화면에서 추적한다. |
+| S01 화주 의뢰 생성 | `HongdalApp` `/shipper/request`, `/shipper/request/{RequestId}` | 화주가 의뢰를 만들고 결제, 배차, 수락, 상하차, 정산 상태를 한 화면에서 추적한다. |
 | S02 기사 운행 시작 | `DriverApp` `/driver/work/start`, `/driver/home` | 운행 시작, 위치 송신, 지도 홈, 추천 수신 진입점을 보여준다. |
 | S03 추천 판단 | `DriverApp` `/driver/recommendations`, `/driver/recommendations/{의뢰Id}` | 기사에게 운임, 거리, 업무 유형, 증빙 조건, 경로 이점을 어떻게 보여주는지 설명한다. |
 | S04 수락/거절 | `DriverApp` `/driver/recommendations/{의뢰Id}/decision` | 수락, 거절, 보류, 만료 이후 서버 상태 전이를 설명한다. |
@@ -90,12 +90,12 @@
 
 | 우선순위 | 캡처 대상 | 이유 |
 | --- | --- | --- |
-| 1 | ShipperApp-P02-1/DriverApp-P06-1/DriverApp-P14-1/DriverApp-P15-1/DriverApp-P15-2 보조 화면 | 대량 등록, 운행 설정, 정산 안내, 알림/푸시 설정을 하위 페이지로 확인할 때 필요하다. |
+| 1 | HongdalApp-P02-1/DriverApp-P06-1/DriverApp-P14-1/DriverApp-P15-1/DriverApp-P15-2 보조 화면 | 대량 등록, 운행 설정, 정산 안내, 알림/푸시 설정을 하위 페이지로 확인할 때 필요하다. |
 | 2 | `WarehouseManagerApp` 피킹 배치 | 출고 배치 이후 창고 작업자에게 일이 어떻게 배정되는지 보여준다. |
 
 ## 캡처 파일명 원칙
 
-페이지 식별자는 `ShipperApp-P03`, `DriverApp-P06`, `HongdalAdmin-P22-1`처럼 실제 프로젝트명을 접두사로 붙인다. 캡처 파일명은 링크 안정성을 위해 기존 `Pxx-화면명.png` 형식을 유지할 수 있다.
+페이지 식별자는 `HongdalApp-P03`, `DriverApp-P06`, `HongdalAdmin-P22-1`처럼 실제 프로젝트명을 접두사로 붙인다. 캡처 파일명은 링크 안정성을 위해 기존 `Pxx-화면명.png` 형식을 유지할 수 있다.
 
 ```text
 docs/ProjectOverview/assets/v1-pages/P07-지도홈추천배너.png

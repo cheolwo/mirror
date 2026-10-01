@@ -41,18 +41,30 @@ public sealed class OutboundBatchEngine : IOutboundBatchEngine
             candidateMap[line.LineKey] = await 후보검색Async(request, line, cancellationToken);
         }
 
-        var allocations = TryCreateSingleWarehousePlan(request, validLines, candidateMap);
+        return CreatePlan(validLines, candidateMap);
+    }
+
+    internal static OutboundBatchPlanResult CreatePlan(
+        IReadOnlyList<OutboundBatchPlanLineRequest> lines,
+        IReadOnlyDictionary<string, IReadOnlyList<OutboundStockCandidate>> candidateMap)
+    {
+        var allocations = TryCreateSingleWarehousePlan(lines, candidateMap);
         var unallocated = new List<OutboundBatchUnallocatedLine>();
 
         if (allocations.Count == 0)
         {
-            foreach (var line in validLines)
+            var remainingStock = CreateRemainingStock(candidateMap);
+            foreach (var line in lines)
             {
-                allocations.AddRange(CreateLineAllocations(line, candidateMap[line.LineKey], unallocated));
+                allocations.AddRange(CreateLineAllocations(
+                    line,
+                    candidateMap[line.LineKey],
+                    remainingStock,
+                    unallocated));
             }
         }
 
-        foreach (var line in validLines)
+        foreach (var line in lines)
         {
             var plannedQuantity = allocations
                 .Where(x => string.Equals(x.LineKey, line.LineKey, StringComparison.OrdinalIgnoreCase))
@@ -95,21 +107,26 @@ public sealed class OutboundBatchEngine : IOutboundBatchEngine
                 where item.판매자UserId == request.SellerUserId
                       && item.SKU == normalizedSku
                       && warehouse.IsActive
-                      && item.가용수량 - item.예약수량 > 0
+                      && item.가용수량 > 0
                 select new
                 {
                     Item = item,
-                    Warehouse = warehouse,
-                    AvailableQuantity = item.가용수량 - item.예약수량
+                    Warehouse = warehouse
                 })
             .ToArrayAsync(cancellationToken);
 
         return rows
             .Where(x => 입고계약유형코드.CanSellToMarket(x.Item.계약유형))
-            .Select(x => CreateCandidate(request, line, x.Item, x.Warehouse, x.AvailableQuantity))
+            .Select(x => CreateCandidate(request, line, x.Item, x.Warehouse, GetAllocatableQuantity(x.Item)))
             .OrderByDescending(x => x.Score)
             .ThenByDescending(x => x.AvailableQuantity)
             .ToArray();
+    }
+
+    internal static int GetAllocatableQuantity(홍달.도메인.창고.입고상품 item)
+    {
+        // 예약 처리 시 WarehouseOperationService가 가용수량을 감소시키므로 예약수량을 다시 차감하지 않는다.
+        return Math.Max(0, item.가용수량);
     }
 
     private OutboundStockCandidate CreateCandidate(
@@ -187,8 +204,7 @@ public sealed class OutboundBatchEngine : IOutboundBatchEngine
         return Math.Round(score, 2, MidpointRounding.AwayFromZero);
     }
 
-    private List<OutboundBatchAllocation> TryCreateSingleWarehousePlan(
-        OutboundBatchPlanRequest request,
+    private static List<OutboundBatchAllocation> TryCreateSingleWarehousePlan(
         IReadOnlyList<OutboundBatchPlanLineRequest> lines,
         IReadOnlyDictionary<string, IReadOnlyList<OutboundStockCandidate>> candidateMap)
     {
@@ -202,48 +218,70 @@ public sealed class OutboundBatchEngine : IOutboundBatchEngine
             .Distinct()
             .ToArray();
 
-        var bestWarehouseId = warehouseIds
-            .Select(warehouseId => new
-            {
-                WarehouseId = warehouseId,
-                Candidates = lines
-                    .Select(line => candidateMap[line.LineKey]
-                        .Where(candidate => candidate.WarehouseId == warehouseId && candidate.AvailableQuantity >= line.Quantity)
-                        .OrderByDescending(candidate => candidate.Score)
-                        .FirstOrDefault())
-                    .ToArray()
-            })
-            .Where(x => x.Candidates.All(candidate => candidate is not null))
-            .Select(x => new
-            {
-                x.WarehouseId,
-                Score = x.Candidates.Sum(candidate => candidate!.Score)
-                        + (x.Candidates.Any(candidate => candidate!.IsServiceAreaMatched) ? 100m : 0m)
-            })
+        var bestPlan = warehouseIds
+            .Select(warehouseId => TryCreateSingleWarehousePlanForWarehouse(
+                warehouseId,
+                lines,
+                candidateMap))
+            .OfType<SingleWarehousePlan>()
             .OrderByDescending(x => x.Score)
             .FirstOrDefault();
 
-        if (bestWarehouseId is null)
+        if (bestPlan is null)
         {
             return [];
         }
 
-        return lines
-            .Select(line =>
-            {
-                var candidate = candidateMap[line.LineKey]
-                    .Where(x => x.WarehouseId == bestWarehouseId.WarehouseId && x.AvailableQuantity >= line.Quantity)
-                    .OrderByDescending(x => x.Score)
-                    .First();
+        return bestPlan.Allocations;
+    }
 
-                return CreateAllocation(line, candidate, line.Quantity);
-            })
-            .ToList();
+    private static SingleWarehousePlan? TryCreateSingleWarehousePlanForWarehouse(
+        long warehouseId,
+        IReadOnlyList<OutboundBatchPlanLineRequest> lines,
+        IReadOnlyDictionary<string, IReadOnlyList<OutboundStockCandidate>> candidateMap)
+    {
+        var remainingStock = CreateRemainingStock(candidateMap);
+        var allocations = new List<OutboundBatchAllocation>();
+        var selectedCandidates = new List<OutboundStockCandidate>();
+
+        foreach (var line in lines)
+        {
+            var candidate = candidateMap[line.LineKey]
+                .Where(x => x.WarehouseId == warehouseId
+                            && remainingStock.GetValueOrDefault(x.InboundProductId) >= line.Quantity)
+                .OrderByDescending(x => x.Score)
+                .FirstOrDefault();
+
+            if (candidate is null)
+            {
+                return null;
+            }
+
+            remainingStock[candidate.InboundProductId] -= line.Quantity;
+            selectedCandidates.Add(candidate);
+            allocations.Add(CreateAllocation(line, candidate, line.Quantity));
+        }
+
+        var score = selectedCandidates.Sum(candidate => candidate.Score)
+                    + (selectedCandidates.Any(candidate => candidate.IsServiceAreaMatched) ? 100m : 0m);
+        return new SingleWarehousePlan(allocations, score);
+    }
+
+    private static Dictionary<long, int> CreateRemainingStock(
+        IReadOnlyDictionary<string, IReadOnlyList<OutboundStockCandidate>> candidateMap)
+    {
+        return candidateMap.Values
+            .SelectMany(x => x)
+            .GroupBy(x => x.InboundProductId)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Min(candidate => candidate.AvailableQuantity));
     }
 
     private static List<OutboundBatchAllocation> CreateLineAllocations(
         OutboundBatchPlanLineRequest line,
         IReadOnlyList<OutboundStockCandidate> candidates,
+        Dictionary<long, int> remainingStock,
         List<OutboundBatchUnallocatedLine> unallocated)
     {
         var remaining = line.Quantity;
@@ -256,13 +294,15 @@ public sealed class OutboundBatchEngine : IOutboundBatchEngine
                 break;
             }
 
-            var quantity = Math.Min(candidate.AvailableQuantity, remaining);
+            var availableQuantity = remainingStock.GetValueOrDefault(candidate.InboundProductId);
+            var quantity = Math.Min(availableQuantity, remaining);
             if (quantity <= 0)
             {
                 continue;
             }
 
             allocations.Add(CreateAllocation(line, candidate, quantity));
+            remainingStock[candidate.InboundProductId] = availableQuantity - quantity;
             remaining -= quantity;
         }
 
@@ -357,7 +397,11 @@ public sealed class OutboundBatchEngine : IOutboundBatchEngine
             : "단일 창고 출고 배치 계획이 생성되었습니다.";
     }
 
-    private sealed record OutboundStockCandidate(
+    private sealed record SingleWarehousePlan(
+        List<OutboundBatchAllocation> Allocations,
+        decimal Score);
+
+    internal sealed record OutboundStockCandidate(
         string LineKey,
         long? SalesProductId,
         long InboundProductId,

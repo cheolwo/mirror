@@ -15,10 +15,17 @@ public interface I창고작업UseCase
 {
     Task<Result<창고목록응답>> 창고목록Async(CancellationToken cancellationToken);
     Task<Result<창고요약응답>> 창고생성Async(창고저장요청 request, 창고작업요청Context context, CancellationToken cancellationToken);
+    Task<Result<창고요약응답>> 창고수정Async(long warehouseId, 창고저장요청 request, 창고작업요청Context context, CancellationToken cancellationToken);
+    Task<Result> 창고삭제Async(long warehouseId, 창고작업요청Context context, CancellationToken cancellationToken);
     Task<Result<창고사용자목록응답>> 창고사용자목록Async(long warehouseId, CancellationToken cancellationToken);
     Task<Result<창고사용자항목응답>> 창고사용자추가Async(long warehouseId, 창고사용자저장요청 request, 창고작업요청Context context, CancellationToken cancellationToken);
+    Task<Result<창고사용자항목응답>> 창고사용자수정Async(long warehouseId, long warehouseUserId, 창고사용자저장요청 request, 창고작업요청Context context, CancellationToken cancellationToken);
+    Task<Result> 창고사용자삭제Async(long warehouseId, long warehouseUserId, 창고작업요청Context context, CancellationToken cancellationToken);
     Task<Result<입고요청목록응답>> 입고목록Async(CancellationToken cancellationToken);
+    Task<Result<입고요청페이지응답>> 입고목록조회Async(입고요청목록조회요청 request, CancellationToken cancellationToken);
     Task<Result<입고요청항목응답>> 입고생성Async(입고요청저장요청 request, 창고작업요청Context context, CancellationToken cancellationToken);
+    Task<Result<입고요청항목응답>> 입고수정Async(long inboundId, 입고요청저장요청 request, 창고작업요청Context context, CancellationToken cancellationToken);
+    Task<Result> 입고취소Async(long inboundId, 창고작업요청Context context, CancellationToken cancellationToken);
     Task<Result<입고상품목록응답>> 입고완료Async(long inboundId, 입고완료요청 request, 창고작업요청Context context, CancellationToken cancellationToken);
     Task<Result<재고목록응답>> 재고목록Async(CancellationToken cancellationToken);
     Task<Result<창고작업결과응답>> 입고검수Async(long inboundItemId, 입고검수요청 request, 창고작업요청Context context, CancellationToken cancellationToken);
@@ -68,6 +75,27 @@ public sealed class 창고작업UseCase : I창고작업UseCase
         return result;
     }
 
+    public async Task<Result<창고요약응답>> 창고수정Async(
+        long warehouseId,
+        창고저장요청 request,
+        창고작업요청Context context,
+        CancellationToken cancellationToken)
+    {
+        var result = await _warehouseOperationService.UpdateWarehouseAsync(warehouseId, request, cancellationToken);
+        await 로그Async("Warehouse", "Updated", context, cancellationToken, entityId: warehouseId);
+        return result;
+    }
+
+    public async Task<Result> 창고삭제Async(
+        long warehouseId,
+        창고작업요청Context context,
+        CancellationToken cancellationToken)
+    {
+        await _warehouseOperationService.DeleteWarehouseAsync(warehouseId, cancellationToken);
+        await 로그Async("Warehouse", "Deleted", context, cancellationToken, entityId: warehouseId);
+        return Result.Ok();
+    }
+
     public async Task<Result<창고사용자목록응답>> 창고사용자목록Async(long warehouseId, CancellationToken cancellationToken)
         => await _warehouseOperationService.GetWarehouseUsersAsync(warehouseId, cancellationToken);
 
@@ -78,14 +106,67 @@ public sealed class 창고작업UseCase : I창고작업UseCase
         return result;
     }
 
+    public async Task<Result<창고사용자항목응답>> 창고사용자수정Async(
+        long warehouseId,
+        long warehouseUserId,
+        창고사용자저장요청 request,
+        창고작업요청Context context,
+        CancellationToken cancellationToken)
+    {
+        var result = await _warehouseOperationService.UpdateWarehouseUserAsync(
+            warehouseId,
+            warehouseUserId,
+            request,
+            cancellationToken);
+        await 로그Async("WarehouseUser", "Updated", context, cancellationToken, entityId: warehouseUserId);
+        return result;
+    }
+
+    public async Task<Result> 창고사용자삭제Async(
+        long warehouseId,
+        long warehouseUserId,
+        창고작업요청Context context,
+        CancellationToken cancellationToken)
+    {
+        await _warehouseOperationService.DeleteWarehouseUserAsync(warehouseId, warehouseUserId, cancellationToken);
+        await 로그Async("WarehouseUser", "Deleted", context, cancellationToken, entityId: warehouseUserId);
+        return Result.Ok();
+    }
+
     public async Task<Result<입고요청목록응답>> 입고목록Async(CancellationToken cancellationToken)
         => await _warehouseOperationService.GetInboundsAsync(cancellationToken);
+
+    public async Task<Result<입고요청페이지응답>> 입고목록조회Async(
+        입고요청목록조회요청 request,
+        CancellationToken cancellationToken)
+        => await _warehouseOperationService.QueryInboundsAsync(request, cancellationToken);
 
     public async Task<Result<입고요청항목응답>> 입고생성Async(입고요청저장요청 request, 창고작업요청Context context, CancellationToken cancellationToken)
     {
         var result = await _warehouseOperationService.CreateInboundAsync(request, cancellationToken);
         await 로그Async("Inbound", "Created", context, cancellationToken, entityId: result.Id, metadataJson: $"{{\"warehouseId\":{result.창고Id}}}");
         return result;
+    }
+
+    public async Task<Result<입고요청항목응답>> 입고수정Async(
+        long inboundId,
+        입고요청저장요청 request,
+        창고작업요청Context context,
+        CancellationToken cancellationToken)
+    {
+        var result = await _warehouseOperationService.UpdateInboundAsync(inboundId, request, cancellationToken);
+        await 로그Async("Inbound", "Updated", context, cancellationToken, entityId: inboundId);
+        return result;
+    }
+
+    public async Task<Result> 입고취소Async(
+        long inboundId,
+        창고작업요청Context context,
+        CancellationToken cancellationToken)
+    {
+        await _warehouseOperationService.CancelInboundAsync(inboundId, cancellationToken);
+        await 로그Async("Inbound", "Cancelled", context, cancellationToken, entityId: inboundId);
+        return Result.Ok();
     }
 
     public async Task<Result<입고상품목록응답>> 입고완료Async(long inboundId, 입고완료요청 request, 창고작업요청Context context, CancellationToken cancellationToken)

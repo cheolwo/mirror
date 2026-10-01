@@ -106,6 +106,7 @@ namespace 홍달.Data
         public DbSet<Typecast음성용도> Typecast음성용도 { get; set; } = null!;
         public DbSet<YouTube감시채널> YouTube감시채널 { get; set; } = null!;
         public DbSet<YouTube채널영상> YouTube채널영상 { get; set; } = null!;
+        public DbSet<YouTube영상상품후보> YouTube영상상품후보 { get; set; } = null!;
         public DbSet<HongikHakdangCardCollection> HongikHakdangCardCollections { get; set; } = null!;
         public DbSet<HongikHakdangCard> HongikHakdangCards { get; set; } = null!;
         public DbSet<HongikHakdangCardCollectionItem> HongikHakdangCardCollectionItems { get; set; } = null!;
@@ -144,6 +145,7 @@ namespace 홍달.Data
         public DbSet<PlatformProfitReturnPolicyRecord> PlatformProfitReturnPolicies { get; set; } = null!;
         public DbSet<PlatformProfitReturnScheduleRecord> PlatformProfitReturnSchedules { get; set; } = null!;
         public DbSet<PlatformCommunityPost> PlatformCommunityPosts { get; set; } = null!;
+        public DbSet<PlatformCommunityPostTranslation> PlatformCommunityPostTranslations { get; set; } = null!;
         public DbSet<PlatformCommunityBoardRequest> PlatformCommunityBoardRequests { get; set; } = null!;
         public DbSet<PlatformCommunityPostAttachment> PlatformCommunityPostAttachments { get; set; } = null!;
         public DbSet<PlatformCommunityPostAttachmentComment> PlatformCommunityPostAttachmentComments { get; set; } = null!;
@@ -163,8 +165,54 @@ namespace 홍달.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.ApplyPersonalDataProtection(_personalDataProtector);
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(HongdalContext).Assembly);
+            modelBuilder.ApplyConfigurationsFromAssembly(
+                typeof(HongdalContext).Assembly,
+                configurationType =>
+                    !string.Equals(
+                        configurationType.Namespace,
+                        "Hongdal.Infrastructure.Persistence.AgriculturalFisheries",
+                        StringComparison.Ordinal)
+                    && !string.Equals(
+                        configurationType.Namespace,
+                        "Hongdal.Infrastructure.Persistence.TraditionalMarkets",
+                        StringComparison.Ordinal));
 
+        }
+
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        {
+            배차엔진판단감사불변성검사();
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+
+        public override Task<int> SaveChangesAsync(
+            bool acceptAllChangesOnSuccess,
+            CancellationToken cancellationToken = default)
+        {
+            배차엔진판단감사불변성검사();
+            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        private void 배차엔진판단감사불변성검사()
+        {
+            var changedAuditEntry = ChangeTracker
+                .Entries<운송이벤트>()
+                .FirstOrDefault(entry =>
+                    entry.State is EntityState.Modified or EntityState.Deleted
+                    && (string.Equals(
+                            entry.Entity.이벤트타입,
+                            운송이벤트유형.배차엔진판단감사,
+                            StringComparison.Ordinal)
+                        || string.Equals(
+                            entry.Property(x => x.이벤트타입).OriginalValue,
+                            운송이벤트유형.배차엔진판단감사,
+                            StringComparison.Ordinal)));
+
+            if (changedAuditEntry is not null)
+            {
+                throw new InvalidOperationException(
+                    $"배차 엔진 판단 감사 이벤트는 추가 후 수정하거나 삭제할 수 없습니다. EventId={changedAuditEntry.Entity.Id}");
+            }
         }
     }
 }

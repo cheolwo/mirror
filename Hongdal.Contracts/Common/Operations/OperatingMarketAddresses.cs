@@ -9,6 +9,12 @@ public static class OperatingMarketAddressErrorCodes
     public const string ProviderRequestFailed = "ProviderRequestFailed";
 }
 
+public static class OperatingAddressMatchPrecisionCodes
+{
+    public const string AddressRange = "AddressRange";
+    public const string PostalStandardized = "PostalStandardized";
+}
+
 public sealed class OperatingMarketAddressSearchRequest
 {
     public string? MarketCode { get; init; }
@@ -34,9 +40,23 @@ public sealed class OperatingMarketAddressCandidate
 
     public string? AdministrativeAreaCode { get; init; }
 
+    public string? Locality { get; init; }
+
+    public double? Latitude { get; init; }
+
+    public double? Longitude { get; init; }
+
+    public string? MatchPrecisionCode { get; init; }
+
     public string ProviderCode { get; init; } = string.Empty;
 
     public string? ProviderReference { get; init; }
+
+    public string? ProviderDatasetVersion { get; init; }
+
+    public string? ProviderGeographyVintage { get; init; }
+
+    public IReadOnlyList<OperatingMarketGeographicArea> GeographicAreas { get; init; } = [];
 }
 
 public sealed class OperatingMarketAddressSearchResult

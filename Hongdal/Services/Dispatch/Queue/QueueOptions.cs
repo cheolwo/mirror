@@ -26,6 +26,9 @@ namespace 홍달.Services.Dispatch.Queue
         // geo-index에서 먼저 가져올 최대 기사 수
         public int 기사후보최대조회수 { get; set; } = 100;
 
+        // 배차 후보로 인정할 기사 위치의 최대 수신 경과시간(분)
+        public int 기사위치유효시간분 { get; set; } = 10;
+
         // 기사님이 원거리 상차 접근 의사를 밝힌 경우 active-index에서 추가로 검토할 최대 기사 수
         public int 원거리지원후보최대조회수 { get; set; } = 300;
 

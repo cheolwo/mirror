@@ -92,6 +92,8 @@ public sealed class 차량추천요청
     public int? 팔레트개수 { get; set; }
     public string? 화물온도조건 { get; set; }
     public bool 화물파손주의여부 { get; set; }
+    public bool 화물바닥회전가능여부 { get; set; } = true;
+    public bool 화물적층가능여부 { get; set; } = true;
 }
 
 public sealed class 차량추천응답
@@ -111,6 +113,11 @@ public sealed class 차량추천후보응답
     public decimal 적재가능중량Kg { get; set; }
     public decimal? 적재가능부피Cbm { get; set; }
     public int? 적재가능팔레트개수 { get; set; }
+    public bool 단일운송가능여부 { get; set; } = true;
+    public int 권장운행횟수 { get; set; } = 1;
+    public decimal? 중량사용률Percent { get; set; }
+    public decimal? 부피사용률Percent { get; set; }
+    public decimal? 팔레트사용률Percent { get; set; }
     public string 설명 { get; set; } = string.Empty;
 }
 

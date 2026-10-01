@@ -1,0 +1,189 @@
+@page "/shipper/reconsignment/orders"
+@using Hongdal.Contracts.Common.Inventory
+@using Microsoft.AspNetCore.Components
+@using HongdalApp.Services
+@inject NavigationManager Navigation
+@inject IShipperWarehouseWorkflowService WarehouseService
+
+<PageTitle>재위탁 운송</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="py-6">
+    <MudStack Spacing="3">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h4">재위탁 운송</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">입고된 재고를 기사님에게 다시 운송위탁하는 전용 화면입니다.</MudText>
+            </MudStack>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="LoadAsync">재고 다시 불러오기</MudButton>
+        </MudStack>
+
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <MudAlert Severity="@messageSeverity">@message</MudAlert>
+        }
+
+        @if (isLoading)
+        {
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        }
+        else if (inventory.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info">재위탁 가능한 재고가 없습니다.</MudAlert>
+        }
+        else
+        {
+            <MudGrid>
+                <MudItem xs="12" md="5">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">재고 선택</MudText>
+                            <MudList T="재고항목응답" Dense="true">
+                                @foreach (var item in inventory)
+                                {
+                                    <MudListItem T="재고항목응답" Value="@item" OnClick="() => SelectInventory(item)">
+                                        <MudStack Spacing="0">
+                                            <MudText Typo="Typo.body1">@item.상품명 (@item.SKU)</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@item.창고명 · 가용 @item.가용수량 · @item.보관위치</MudText>
+                                        </MudStack>
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" md="7">
+                    @if (selectedInventory is null)
+                    {
+                        <MudAlert Severity="Severity.Info">왼쪽에서 재고를 선택하면 기사 운송위탁 정보를 입력할 수 있습니다.</MudAlert>
+                    }
+                    else
+                    {
+                        <MudCard>
+                            <MudCardContent>
+                                <MudStack Spacing="2">
+                                    <MudText Typo="Typo.h6">기사 운송위탁 - @selectedInventory.상품명</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">재고 상태를 보고 수량과 도착지를 입력한 뒤 운송의뢰를 생성합니다.</MudText>
+
+                                    <MudGrid>
+                                        <MudItem xs="12" md="4"><MudNumericField T="int" Label="위탁수량" @bind-Value="quantity" Variant="Variant.Outlined" Min="1" Max="@selectedInventory.가용수량" /></MudItem>
+                                        <MudItem xs="12" md="4"><MudTextField Label="화물종류" @bind-Value="cargoType" Variant="Variant.Outlined" /></MudItem>
+                                        <MudItem xs="12" md="4"><MudTextField Label="차량종류" @bind-Value="vehicleType" Variant="Variant.Outlined" /></MudItem>
+                                        <MudItem xs="12" md="8"><MudTextField Label="도착지 주소" @bind-Value="dropoffAddress" Variant="Variant.Outlined" /></MudItem>
+                                        <MudItem xs="12" md="4"><MudTextField Label="도착지 상세주소" @bind-Value="dropoffAddressDetail" Variant="Variant.Outlined" /></MudItem>
+                                    </MudGrid>
+
+                                    <MudStack Row="true" Spacing="2">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="isBusy" OnClick="CreateAsync">운송위탁 생성</MudButton>
+                                        <MudButton Variant="Variant.Outlined" OnClick="@(() => Navigation.NavigateTo(ShipperRoutes.WarehouseInventory))">재고 허브로 돌아가기</MudButton>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+                    }
+                </MudItem>
+            </MudGrid>
+        }
+    </MudStack>
+</MudContainer>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public long? InventoryItemId { get; set; }
+
+    private readonly List<재고항목응답> inventory = [];
+    private 재고항목응답? selectedInventory;
+    private bool isLoading;
+    private bool isBusy;
+    private string? message;
+    private Severity messageSeverity = Severity.Info;
+
+    private int quantity = 1;
+    private string cargoType = string.Empty;
+    private string vehicleType = "1톤 카고";
+    private string dropoffAddress = string.Empty;
+    private string dropoffAddressDetail = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            inventory.Clear();
+            inventory.AddRange((await WarehouseService.GetInventoryAsync())?.Items?.Where(x => x.가용수량 > 0) ?? []);
+
+            if (InventoryItemId.HasValue)
+            {
+                var matched = inventory.FirstOrDefault(x => x.입고상품Id == InventoryItemId.Value);
+                if (matched is not null)
+                {
+                    SelectInventory(matched);
+                }
+            }
+
+            messageSeverity = Severity.Info;
+            message = $"재위탁 가능한 재고 {inventory.Count}건을 불러왔습니다.";
+        }
+        catch (Exception ex)
+        {
+            messageSeverity = Severity.Error;
+            message = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void SelectInventory(재고항목응답 item)
+    {
+        selectedInventory = item;
+        quantity = Math.Max(1, Math.Min(1, item.가용수량));
+        cargoType = item.상품명;
+        vehicleType = "1톤 카고";
+        dropoffAddress = string.Empty;
+        dropoffAddressDetail = string.Empty;
+    }
+
+    private async Task CreateAsync()
+    {
+        if (selectedInventory is null || isBusy)
+        {
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            var result = await WarehouseService.CreateReconsignmentAsync(new 재고운송의뢰생성요청
+            {
+                입고상품Id = selectedInventory.입고상품Id,
+                요청수량 = quantity,
+                하차지주소 = dropoffAddress,
+                하차지상세주소 = dropoffAddressDetail,
+                화물종류 = cargoType,
+                차량종류 = vehicleType
+            });
+
+            messageSeverity = Severity.Success;
+            message = $"재위탁 운송의뢰 {result?.의뢰Id} 를 생성했습니다.";
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            messageSeverity = Severity.Error;
+            message = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+}

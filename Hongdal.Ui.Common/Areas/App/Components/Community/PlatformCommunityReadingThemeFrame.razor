@@ -1,0 +1,86 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Ui.Common.Areas.App.Services
+@implements IDisposable
+@inject PlatformCommunityDecorationStateService DecorationState
+@inject ICommunityDecorationSelectionStore SelectionStore
+
+<link rel="stylesheet" href="_content/Hongdal.Ui.Common/css/platform-community-home.css" />
+
+<section class="@RootClass" style="@Presentation.CssVariables">
+    @if (ShowToolbar)
+    {
+        <header class="platform-community-reading-theme__toolbar">
+            <span class="platform-community-reading-theme__symbol" aria-hidden="true">@Presentation.Symbol</span>
+            <span class="platform-community-reading-theme__name">
+                <small>게시판 읽기 테마</small>
+                <strong>@Presentation.Title</strong>
+            </span>
+            <a href="/community/decorations"
+               class="platform-community-reading-theme__store"
+               title="꾸미기 상점"
+               aria-label="꾸미기 상점 열기">
+                <MudIcon Icon="@Icons.Material.Filled.Palette" Size="Size.Small" />
+                <span>꾸미기</span>
+            </a>
+        </header>
+    }
+    <div class="platform-community-reading-theme__content">
+        @ChildContent
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter]
+    public bool ShowToolbar { get; set; } = true;
+
+    [Parameter]
+    public bool Compact { get; set; }
+
+    private CommunityReadingThemePresentation Presentation
+        => CommunityReadingThemePresentation.Create(DecorationState);
+
+    private string RootClass
+        => Compact
+            ? "platform-community-reading-theme platform-community-reading-theme--compact"
+            : "platform-community-reading-theme";
+
+    protected override void OnInitialized()
+        => DecorationState.Changed += HandleDecorationChanged;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        var selection = await SelectionStore.LoadAsync();
+        if (selection is null)
+        {
+            return;
+        }
+
+        DecorationState.ApplyHomeThemePack(selection.ActiveHomeThemePackKey);
+        DecorationState.SetTargetEnabled(
+            CommunityDecorationTarget.HomeNavigatorTheme,
+            selection.IsHomeThemeEnabled);
+        foreach (var (marketScopeKey, packKey) in selection.ActiveTraditionalMarketThemePackByScope
+                     ?? new Dictionary<string, string>())
+        {
+            DecorationState.ApplyTraditionalMarketThemePack(marketScopeKey, packKey);
+        }
+
+        DecorationState.SetTargetEnabled(
+            CommunityDecorationTarget.TraditionalMarketTheme,
+            selection.IsTraditionalMarketThemeEnabled);
+    }
+
+    private void HandleDecorationChanged()
+        => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+        => DecorationState.Changed -= HandleDecorationChanged;
+}

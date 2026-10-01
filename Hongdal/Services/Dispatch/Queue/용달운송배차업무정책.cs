@@ -119,7 +119,12 @@ namespace 홍달.Services.Dispatch.Queue
                 }
 
                 DriverLocationSnapshot location;
-                if (osState.Latitude.HasValue && osState.Longitude.HasValue)
+                if (osState.Latitude.HasValue
+                    && osState.Longitude.HasValue
+                    && 기사위치신선도정책.유효한가(
+                        osState.위치수신시각Utc,
+                        now,
+                        _options.기사위치유효시간분))
                 {
                     location = new DriverLocationSnapshot(
                         driver.기사Id,
@@ -127,10 +132,14 @@ namespace 홍달.Services.Dispatch.Queue
                         osState.Longitude.Value,
                         osState.AccuracyM,
                         osState.운행상태,
-                        osState.위치기록시각Utc ?? now,
-                        osState.위치수신시각Utc ?? now);
+                        osState.위치기록시각Utc ?? osState.위치수신시각Utc!.Value,
+                        osState.위치수신시각Utc!.Value);
                 }
-                else if (!_driverLocationStore.TryGetLatest(driver.기사Id, out location))
+                else if (!_driverLocationStore.TryGetLatest(driver.기사Id, out location)
+                    || !기사위치신선도정책.유효한가(
+                        location.ReceivedAtUtc,
+                        now,
+                        _options.기사위치유효시간분))
                 {
                     continue;
                 }

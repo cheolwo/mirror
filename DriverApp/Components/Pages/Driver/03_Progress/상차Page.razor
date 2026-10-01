@@ -1,10 +1,6 @@
 @page "/driver/transports/{운송Id:long}/pickup"
-@inject IDriverSampleDataService Samples
-@inject IDriverTransportCompletionPhotoService CompletionPhotoService
-@inject IDriverTransportExceptionService ExceptionService
-@inject NavigationManager NavigationManager
-@using Microsoft.Maui.ApplicationModel
-@using Microsoft.Maui.Media
+@using DriverApp.ViewModels.Driver.Transport
+@inherits MvvmComponentBase<기사상차PageViewModel>
 
 <PageTitle>상차</PageTitle>
 
@@ -19,7 +15,7 @@
 
         <MudPaper Class="pa-4" Elevation="2">
             <MudStack Spacing="2">
-                @if (운송 is null)
+                @if (ViewModel.운송 is null)
                 {
                     <MudAlert Severity="Severity.Warning">운송 정보를 찾지 못했습니다.</MudAlert>
                 }
@@ -28,35 +24,35 @@
                     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
                         <MudStack Spacing="0">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">상차지</MudText>
-                            <MudText Typo="Typo.h6">@운송.픽업지</MudText>
+                            <MudText Typo="Typo.h6">@ViewModel.운송.픽업지</MudText>
                         </MudStack>
-                        <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled">@운송.현재단계</MudChip>
+                        <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled">@ViewModel.운송.현재단계</MudChip>
                     </MudStack>
 
                     <MudGrid>
                         <MudItem xs="12" sm="4">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">화물</MudText>
-                            <MudText Typo="Typo.body1">@운송.화물종류</MudText>
+                            <MudText Typo="Typo.body1">@ViewModel.운송.화물종류</MudText>
                         </MudItem>
                         <MudItem xs="12" sm="4">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">의뢰</MudText>
-                            <MudText Typo="Typo.body1">@운송.의뢰Id</MudText>
+                            <MudText Typo="Typo.body1">@ViewModel.운송.의뢰Id</MudText>
                         </MudItem>
                         <MudItem xs="12" sm="4">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">다음 이동</MudText>
-                            <MudText Typo="Typo.body1">@운송.하차지</MudText>
+                            <MudText Typo="Typo.body1">@ViewModel.운송.하차지</MudText>
                         </MudItem>
                         <MudItem xs="12" sm="4">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">상차 유형</MudText>
-                            <MudChip T="string" Size="Size.Small" Color="@CargoLoadTypeColor" Variant="Variant.Filled">@운송.수입화물유형표시</MudChip>
+                            <MudChip T="string" Size="Size.Small" Color="@ViewModel.화물.상차유형색" Variant="Variant.Filled">@ViewModel.운송.수입화물유형표시</MudChip>
                         </MudItem>
                         <MudItem xs="12" sm="4">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">결제/증빙</MudText>
                             <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
-                                <MudText Typo="Typo.body1">@PaymentEvidenceLabel</MudText>
-                                @if (ReceiptEvidenceRequired)
+                                <MudText Typo="Typo.body1">@ViewModel.인수증.결제증빙라벨</MudText>
+                                @if (ViewModel.인수증.필요)
                                 {
-                                    <MudChip T="string" Size="Size.Small" Color="@ReceiptSignatureChipColor" Variant="Variant.Filled">@ReceiptSignatureChipLabel</MudChip>
+                                    <MudChip T="string" Size="Size.Small" Color="@ViewModel.인수증.서명칩색" Variant="Variant.Filled">@ViewModel.인수증.서명칩라벨</MudChip>
                                 }
                             </MudStack>
                         </MudItem>
@@ -69,54 +65,54 @@
                             <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
                                 <MudStack Spacing="0">
                                     <MudText Typo="Typo.subtitle1">수입화물 상차 확인</MudText>
-                                    <MudText Typo="Typo.body2" Color="Color.Secondary">@운송.상차주의사항</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">@ViewModel.운송.상차주의사항</MudText>
                                 </MudStack>
-                                <MudChip T="string" Size="Size.Small" Color="@CargoLoadTypeColor" Variant="Variant.Outlined">@운송.상차작업방식</MudChip>
+                                <MudChip T="string" Size="Size.Small" Color="@ViewModel.화물.상차유형색" Variant="Variant.Outlined">@ViewModel.운송.상차작업방식</MudChip>
                             </MudStack>
 
                             <MudGrid>
-                                @if (!string.IsNullOrWhiteSpace(운송.선하증권번호))
+                                @if (!string.IsNullOrWhiteSpace(ViewModel.운송.선하증권번호))
                                 {
                                     <MudItem xs="12" sm="4">
                                         <MudText Typo="Typo.caption" Color="Color.Secondary">BL/반출 문서</MudText>
-                                        <MudText Typo="Typo.body2">@운송.선하증권번호</MudText>
+                                        <MudText Typo="Typo.body2">@ViewModel.운송.선하증권번호</MudText>
                                     </MudItem>
                                 }
-                                @if (운송.IsFcl)
+                                @if (ViewModel.운송.IsFcl)
                                 {
                                     <MudItem xs="12" sm="4">
                                         <MudText Typo="Typo.caption" Color="Color.Secondary">컨테이너 번호</MudText>
-                                        <MudText Typo="Typo.body2">@운송.컨테이너번호</MudText>
+                                        <MudText Typo="Typo.body2">@ViewModel.운송.컨테이너번호</MudText>
                                     </MudItem>
                                     <MudItem xs="12" sm="4">
                                         <MudText Typo="Typo.caption" Color="Color.Secondary">봉인번호</MudText>
-                                        <MudText Typo="Typo.body2">@운송.봉인번호</MudText>
+                                        <MudText Typo="Typo.body2">@ViewModel.운송.봉인번호</MudText>
                                     </MudItem>
                                 }
                             </MudGrid>
 
-                            @if (운송.IsLcl)
+                            @if (ViewModel.운송.IsLcl)
                             {
                                 <MudAlert Severity="Severity.Info" Dense="true">
                                     LCL은 여러 화주의 화물이 섞여 나올 수 있으므로 문서 번호, 박스 라벨, 수량을 함께 대조합니다.
                                 </MudAlert>
                             }
-                            else if (운송.IsFcl)
+                            else if (ViewModel.운송.IsFcl)
                             {
                                 <MudAlert Severity="Severity.Warning" Dense="true">
                                     FCL은 컨테이너와 봉인 상태가 핵심입니다. 번호 불일치나 훼손 흔적은 상차 전에 사진으로 남깁니다.
                                 </MudAlert>
                             }
 
-                            @if (운송.상차체크목록.Count > 0)
+                            @if (ViewModel.운송.상차체크목록.Count > 0)
                             {
                                 <MudStack Spacing="1">
-                                    @foreach (var item in 운송.상차체크목록)
+                                    @foreach (var item in ViewModel.운송.상차체크목록)
                                     {
                                         <MudPaper Elevation="0" Class="pa-2">
                                             <MudCheckBox T="bool"
-                                                         Value="@IsLoadingCheckpointConfirmed(item.Code)"
-                                                         ValueChanged="@((bool value) => SetLoadingCheckpoint(item.Code, value))"
+                                                         Value="@ViewModel.화물.체크확인됨(item.Code)"
+                                                         ValueChanged="@((bool value) => ViewModel.화물.체크설정(item.Code, value))"
                                                          Label="@item.Label"
                                                          Color="Color.Primary" />
                                             <MudText Typo="Typo.caption" Color="Color.Secondary">@item.HelpText</MudText>
@@ -129,26 +125,60 @@
 
                     <MudDivider />
 
-                    @if (운송.상차대상화물목록.Count > 0)
+                    @if (ViewModel.운송.상차대상화물목록.Count > 0)
                     {
                         <MudPaper Elevation="0" Class="pa-3">
                             <MudStack Spacing="2">
                                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
                                     <MudStack Spacing="0">
                                         <MudText Typo="Typo.subtitle1">바코드 상차/적재 안내</MudText>
-                                        <MudText Typo="Typo.body2" Color="Color.Secondary">@운송.적재순번운영안내</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">@ViewModel.운송.적재순번운영안내</MudText>
                                     </MudStack>
                                     <MudChip T="string"
                                              Size="Size.Small"
-                                             Color="@(운송.적재순번필요 ? Color.Warning : Color.Success)"
+                                             Color="@(ViewModel.운송.적재순번필요 ? Color.Warning : Color.Success)"
                                              Variant="Variant.Filled">
-                                        @(운송.적재순번필요 ? "적재순번 적용" : "동일 규격")
+                                        @(ViewModel.운송.적재순번필요 ? "적재순번 적용" : "동일 규격")
                                     </MudChip>
                                 </MudStack>
 
+                                <DriverCargoLoadProgress CargoItems="@ViewModel.운송.상차대상화물목록"
+                                                         ConfirmedCargoCodes="@ViewModel.화물.상차완료코드" />
+
+                                @if (ViewModel.화물.다음화물 is not null)
+                                {
+                                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+                                        <MudStack Spacing="1">
+                                            <MudText Typo="Typo.subtitle2">
+                                                지금 상차: @ViewModel.화물.다음화물.적재순번표시 · @ViewModel.화물.다음화물.Label
+                                            </MudText>
+                                            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled">@ViewModel.화물.다음화물.적재순번표시 상차</MudChip>
+                                                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@ViewModel.화물.다음화물.차량적재위치</MudChip>
+                                                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">@ViewModel.화물.다음화물.하차순번표시</MudChip>
+                                            </MudStack>
+                                            <MudText Typo="Typo.body2">@ViewModel.화물.다음화물.하차위치 · @ViewModel.화물.다음화물.수량중량표시</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@ViewModel.화물.다음화물.작업메모</MudText>
+                                            <MudButton Variant="Variant.Text"
+                                                       Color="Color.Warning"
+                                                       Size="Size.Small"
+                                                       StartIcon="@Icons.Material.Filled.TouchApp"
+                                                       OnClick="ViewModel.화물.다음화물선택">
+                                                다음 화물 선택
+                                            </MudButton>
+                                        </MudStack>
+                                    </MudAlert>
+                                }
+                                else
+                                {
+                                    <MudAlert Severity="Severity.Success" Dense="true">권장 상차 순서의 모든 화물을 확인했습니다.</MudAlert>
+                                }
+
                                 <MudGrid>
                                     <MudItem xs="12" sm="8">
-                                        <MudTextField @bind-Value="loadingBarcodeInput"
+                                        <MudTextField @bind-Value="ViewModel.화물.바코드입력"
                                                       Label="상차 바코드"
                                                       Placeholder="바코드를 스캔하거나 입력"
                                                       Variant="Variant.Outlined"
@@ -159,35 +189,43 @@
                                                    Color="Color.Primary"
                                                    FullWidth="true"
                                                    StartIcon="@Icons.Material.Filled.QrCodeScanner"
-                                                   OnClick="LookupLoadingBarcode">
+                                                   OnClick="ViewModel.화물.바코드조회">
                                             바코드 조회
                                         </MudButton>
                                     </MudItem>
                                 </MudGrid>
 
                                 <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
-                                    @foreach (var item in 운송.상차대상화물목록)
+                                    @foreach (var item in ViewModel.화물.정렬화물)
                                     {
-                                        <MudButton Variant="Variant.Outlined"
-                                                   Color="Color.Secondary"
+                                        <MudButton Variant="@ViewModel.화물.화물버튼모양(item)"
+                                                   Color="@ViewModel.화물.화물버튼색(item)"
                                                    Size="Size.Small"
-                                                   OnClick="@(() => SelectLoadingCargo(item))">
-                                            @item.Barcode
+                                                   OnClick="@(() => ViewModel.화물.화물선택(item))">
+                                            @item.적재순번표시 · @item.Barcode
                                         </MudButton>
                                     }
                                 </MudStack>
 
-                                @if (SelectedLoadingCargo is not null)
+                                @if (ViewModel.화물.선택화물 is not null)
                                 {
                                     <MudPaper Elevation="0" Class="pa-3">
+                                        @if (ViewModel.화물.선택화물순서다름)
+                                        {
+                                            <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">
+                                                권장 다음 화물은 @(ViewModel.화물.다음화물?.Label)입니다. 현장 사정으로 순서를 바꿀 수는 있지만,
+                                                하차 때 화물이 막히지 않는지 먼저 확인해 주세요.
+                                            </MudAlert>
+                                        }
+
                                         <MudGrid>
                                             <MudItem xs="12" sm="4">
                                                 <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                                    @(운송.적재순번필요 ? "적재순번" : "적재 기준")
+                                                    @(ViewModel.운송.적재순번필요 ? "적재순번" : "적재 기준")
                                                 </MudText>
-                                                @if (운송.적재순번필요)
+                                                @if (ViewModel.운송.적재순번필요)
                                                 {
-                                                    <MudText Typo="Typo.h3" Color="Color.Warning">@SelectedLoadingCargo.적재순번표시</MudText>
+                                                    <MudText Typo="Typo.h3" Color="Color.Warning">@ViewModel.화물.선택화물.적재순번표시</MudText>
                                                 }
                                                 else
                                                 {
@@ -196,38 +234,40 @@
                                             </MudItem>
                                             <MudItem xs="12" sm="8">
                                                 <MudText Typo="Typo.caption" Color="Color.Secondary">조회된 화물</MudText>
-                                                <MudText Typo="Typo.subtitle1">@SelectedLoadingCargo.Label</MudText>
-                                                <MudText Typo="Typo.body2">@SelectedLoadingCargo.수량중량표시 · @SelectedLoadingCargo.하차위치</MudText>
-                                                <MudText Typo="Typo.body2">@SelectedLoadingCargo.차량적재위치 · @SelectedLoadingCargo.하차순번표시</MudText>
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary">@SelectedLoadingCargo.작업메모</MudText>
+                                                <MudText Typo="Typo.subtitle1">@ViewModel.화물.선택화물.Label</MudText>
+                                                <MudText Typo="Typo.body2">@ViewModel.화물.선택화물.수량중량표시 · @ViewModel.화물.선택화물.하차위치</MudText>
+                                                <MudText Typo="Typo.body2">@ViewModel.화물.선택화물.차량적재위치 · @ViewModel.화물.선택화물.하차순번표시</MudText>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">@ViewModel.화물.선택화물.작업메모</MudText>
                                             </MudItem>
                                         </MudGrid>
 
                                         <MudButton Variant="Variant.Filled"
                                                    Color="Color.Success"
                                                    StartIcon="@Icons.Material.Filled.CheckCircle"
-                                                   Disabled="@IsLoadingCargoConfirmed(SelectedLoadingCargo.Code)"
-                                                   OnClick="ConfirmSelectedLoadingCargo">
-                                            @(IsLoadingCargoConfirmed(SelectedLoadingCargo.Code) ? "상차 확인됨" : "이 화물 상차 확인")
+                                                   Disabled="@ViewModel.화물.상차확인됨(ViewModel.화물.선택화물.Code)"
+                                                   OnClick="ViewModel.화물.선택화물확인">
+                                            @(ViewModel.화물.상차확인됨(ViewModel.화물.선택화물.Code) ? "상차 확인됨" : "이 화물 상차 확인")
                                         </MudButton>
                                     </MudPaper>
                                 }
 
                                 <MudGrid>
-                                    @foreach (var item in 운송.상차대상화물목록)
+                                    @foreach (var item in ViewModel.화물.정렬화물)
                                     {
                                         <MudItem xs="12" sm="6">
                                             <MudPaper Elevation="0" Class="pa-2">
                                                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Wrap="Wrap.Wrap">
                                                     <MudStack Spacing="0">
-                                                        <MudText Typo="Typo.body2">@item.Label</MudText>
+                                                        <MudText Typo="Typo.body2"><strong>@item.적재순번표시 상차</strong> · @item.Label</MudText>
                                                         <MudText Typo="Typo.caption" Color="Color.Secondary">@item.Barcode · @item.수량중량표시</MudText>
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@item.차량적재위치 → @item.하차순번표시 · @item.하차위치</MudText>
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@item.작업메모</MudText>
                                                     </MudStack>
                                                     <MudChip T="string"
                                                              Size="Size.Small"
-                                                             Color="@LoadingCargoChipColor(item)"
+                                                             Color="@ViewModel.화물.화물칩색(item)"
                                                              Variant="Variant.Outlined">
-                                                        @LoadingCargoChipLabel(item)
+                                                        @ViewModel.화물.화물칩라벨(item)
                                                     </MudChip>
                                                 </MudStack>
                                             </MudPaper>
@@ -243,71 +283,71 @@
                     <MudPaper Elevation="0" Class="pa-3">
                         <MudStack Spacing="1">
                             <MudText Typo="Typo.subtitle1">현장 확인</MudText>
-                            <MudCheckBox T="bool" @bind-Value="pickupPlaceConfirmed" Label="상차지에 도착했고 주소를 확인했습니다." Color="Color.Primary" />
-                            <MudCheckBox T="bool" @bind-Value="cargoConditionConfirmed" Label="화물 수량과 외관 상태를 확인했습니다." Color="Color.Primary" />
-                            <MudCheckBox T="bool" @bind-Value="shipperContactConfirmed" Label="화주 또는 현장 담당자와 상차를 확인했습니다." Color="Color.Primary" />
+                            <MudCheckBox T="bool" @bind-Value="ViewModel.현장.상차지확인" Label="상차지에 도착했고 주소를 확인했습니다." Color="Color.Primary" />
+                            <MudCheckBox T="bool" @bind-Value="ViewModel.현장.화물상태확인" Label="화물 수량과 외관 상태를 확인했습니다." Color="Color.Primary" />
+                            <MudCheckBox T="bool" @bind-Value="ViewModel.현장.화주연락확인" Label="화주 또는 현장 담당자와 상차를 확인했습니다." Color="Color.Primary" />
                         </MudStack>
                     </MudPaper>
 
                     <DriverTransportIssuePanel Description="상차 수량 부족, 다른 화물 혼입, 바코드 훼손 같은 예외를 즉시 남깁니다."
-                                               IssueTypes="PickupIssueTypes"
-                                               @bind-Open="pickupIssuePanelOpen"
-                                               @bind-IssueType="pickupIssueType"
-                                               @bind-Memo="pickupIssueMemo"
-                                               IsReporting="@isIssueReporting"
-                                               OnSubmit="RecordPickupIssueAsync" />
+                                               IssueTypes="@ViewModel.예외.유형목록"
+                                               @bind-Open="ViewModel.예외.열림"
+                                               @bind-IssueType="ViewModel.예외.유형"
+                                               @bind-Memo="ViewModel.예외.메모"
+                                               IsReporting="@ViewModel.예외.신고중"
+                                               OnSubmit="@(() => ViewModel.예외.신고Command.ExecuteAsync(null))" />
 
-                    @if (ReceiptEvidenceRequired)
+                    @if (ViewModel.인수증.필요)
                     {
                         <MudPaper Elevation="0" Class="pa-3">
                             <MudStack Spacing="2">
                                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
                                     <MudText Typo="Typo.subtitle1">인수증 증빙</MudText>
-                                    <MudChip T="string" Size="Size.Small" Color="@ReceiptSignatureChipColor" Variant="Variant.Outlined">@ReceiptSignatureChipLabel</MudChip>
+                                    <MudChip T="string" Size="Size.Small" Color="@ViewModel.인수증.서명칩색" Variant="Variant.Outlined">@ViewModel.인수증.서명칩라벨</MudChip>
                                 </MudStack>
 
-                                <MudSelect T="string" Label="증빙 방식" @bind-Value="receiptEvidenceMethod" Variant="Variant.Outlined">
-                                    <MudSelectItem Value="@ReceiptEvidenceModeDocumentPhoto">서명 문서 사진</MudSelectItem>
-                                    <MudSelectItem Value="@ReceiptEvidenceModeDirectSignature">직접 서명 입력</MudSelectItem>
-                                    @if (!ReceiptSignatureMandatory)
+                                <MudSelect T="string" Label="증빙 방식" @bind-Value="ViewModel.인수증.증빙방식" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@기사상차인수증ViewModel.문서사진방식">서명 문서 사진</MudSelectItem>
+                                    <MudSelectItem Value="@기사상차인수증ViewModel.직접서명방식">직접 서명 입력</MudSelectItem>
+                                    @if (!ViewModel.인수증.서명필수)
                                     {
-                                        <MudSelectItem Value="@ReceiptEvidenceModeOmitted">서명 없이 진행</MudSelectItem>
+                                        <MudSelectItem Value="@기사상차인수증ViewModel.서명생략방식">서명 없이 진행</MudSelectItem>
                                     }
                                 </MudSelect>
 
-                                @if (DocumentPhotoEvidenceSelected)
+                                @if (ViewModel.인수증.문서사진선택)
                                 {
                                     <MudCheckBox T="bool"
-                                                 @bind-Value="receiptDocumentPhotoConfirmed"
+                                                 @bind-Value="ViewModel.인수증.문서사진확인"
                                                  Label="상차 사진에 서명된 인수증 또는 현장 문서가 함께 보이도록 촬영했습니다."
                                                  Color="Color.Primary" />
                                 }
-                                else if (DirectSignatureEvidenceSelected)
+                                else if (ViewModel.인수증.직접서명선택)
                                 {
                                     <MudGrid>
                                         <MudItem xs="12" sm="6">
-                                            <MudTextField @bind-Value="receiptRecipientName"
+                                            <MudTextField @bind-Value="ViewModel.인수증.인수자명"
                                                           Label="인수자명"
                                                           Variant="Variant.Outlined"
                                                           MaxLength="100"
                                                           Immediate="true" />
                                         </MudItem>
                                         <MudItem xs="12" sm="6">
-                                            <MudTextField @bind-Value="receiptRecipientOrganization"
+                                            <MudTextField @bind-Value="ViewModel.인수증.인수자소속"
                                                           Label="인수자 소속"
                                                           Variant="Variant.Outlined"
                                                           MaxLength="100"
                                                           Immediate="true" />
                                         </MudItem>
                                         <MudItem xs="12" sm="6">
-                                            <MudTextField @bind-Value="receiptRecipientSignature"
+                                            <MudTextField @bind-Value="ViewModel.인수증.인수자서명"
                                                           Label="인수자 서명"
                                                           Variant="Variant.Outlined"
                                                           MaxLength="200"
                                                           Immediate="true" />
                                         </MudItem>
                                         <MudItem xs="12" sm="6">
-                                            <MudTextField @bind-Value="driverSignature"
+                                            <MudTextField @bind-Value="ViewModel.인수증.기사서명"
                                                           Label="기사 서명"
                                                           Variant="Variant.Outlined"
                                                           MaxLength="200"
@@ -315,13 +355,13 @@
                                         </MudItem>
                                     </MudGrid>
                                     <MudCheckBox T="bool"
-                                                 @bind-Value="receiptEvidenceConfirmed"
+                                                 @bind-Value="ViewModel.인수증.인수증확인"
                                                  Label="인수자와 기사가 상차 인수 사실을 확인하고 서명했습니다."
                                                  Color="Color.Primary" />
                                 }
                                 else
                                 {
-                                    <MudTextField @bind-Value="receiptSignatureOmissionReason"
+                                    <MudTextField @bind-Value="ViewModel.인수증.서명생략사유"
                                                   Label="서명 생략 사유"
                                                   Variant="Variant.Outlined"
                                                   MaxLength="300"
@@ -333,23 +373,23 @@
 
                     <DriverTransportProofPanel Title="상차 완료 사진"
                                                Description="화물과 차량 적재 상태가 보이도록 촬영합니다. 사진 확인 후 완료 처리가 가능합니다."
-                                               PreviewUrl="@photoPreviewUrl"
+                                               PreviewUrl="@ViewModel.사진.미리보기Url"
                                                PreviewAlt="상차 완료 사진 미리보기"
-                                               FileName="@photoFileName"
-                                               StatusMessage="@statusMessage"
-                                               StatusSeverity="@statusSeverity"
-                                               HasPhoto="@HasPhoto"
-                                               IsCapturing="@isCapturing"
-                                               CanComplete="@CanComplete"
-                                               IsCompleting="@isCompleting"
-                                               CompletionGuide="@CompletionGuide"
+                                               FileName="@ViewModel.사진.파일명"
+                                               StatusMessage="@ViewModel.상태.메시지"
+                                               StatusSeverity="@ViewModel.상태.심각도"
+                                               HasPhoto="@ViewModel.사진.사진있음"
+                                               IsCapturing="@ViewModel.사진.촬영중"
+                                               CanComplete="@ViewModel.완료가능"
+                                               IsCompleting="@ViewModel.상차완료.처리중"
+                                               CompletionGuide="@ViewModel.완료안내"
                                                CaptureButtonText="상차 완료 사진 촬영"
                                                RetakeButtonText="상차 사진 다시 촬영"
                                                CompleteButtonText="상차 완료"
                                                CompletingText="상차 완료 처리 중"
-                                               OnCapture="CaptureCompletionPhotoAsync"
-                                               OnComplete="CompletePickupAsync"
-                                               OnClear="ClearPhoto" />
+                                               OnCapture="@(() => ViewModel.사진.촬영Command.ExecuteAsync(null))"
+                                               OnComplete="@(() => ViewModel.완료Command.ExecuteAsync(null))"
+                                               OnClear="ViewModel.사진.제거" />
                 }
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/driver/transports/current">진행 중 운송으로</MudButton>
             </MudStack>
@@ -361,437 +401,5 @@
     [Parameter]
     public long 운송Id { get; set; }
 
-    private 기사운송샘플항목? 운송 => Samples.운송조회(운송Id);
-
-    private static readonly string[] PickupIssueTypes =
-    [
-        "수량 부족",
-        "다른 화물 혼입",
-        "바코드 훼손",
-        "문서 번호 불일치",
-        "파손 의심"
-    ];
-
-    private bool isCapturing;
-    private string? photoFileName;
-    private string photoContentType = "image/jpeg";
-    private byte[]? photoBytes;
-    private string? photoPreviewUrl;
-    private string? uploadedObjectName;
-    private string? uploadedUrl;
-    private string? statusMessage;
-    private Severity statusSeverity = Severity.Info;
-    private bool pickupPlaceConfirmed;
-    private bool cargoConditionConfirmed;
-    private bool shipperContactConfirmed;
-    private string? receiptRecipientName;
-    private string? receiptRecipientOrganization;
-    private string? receiptRecipientSignature;
-    private string? driverSignature;
-    private bool receiptEvidenceConfirmed;
-    private bool receiptDocumentPhotoConfirmed;
-    private string? receiptSignatureOmissionReason;
-    private string receiptEvidenceMethod = ReceiptEvidenceModeDocumentPhoto;
-    private readonly HashSet<string> loadingCheckpointCodes = [];
-    private readonly HashSet<string> loadedCargoCodes = [];
-    private string? loadingBarcodeInput;
-    private string? selectedLoadingCargoCode;
-    private bool pickupIssuePanelOpen;
-    private string pickupIssueType = "수량 부족";
-    private string? pickupIssueMemo;
-    private bool isIssueReporting;
-    private bool isCompleting;
-
-    private const string ReceiptEvidenceModeDocumentPhoto = "문서사진";
-    private const string ReceiptEvidenceModeDirectSignature = "직접서명";
-    private const string ReceiptEvidenceModeOmitted = "서명생략";
-
-    private bool HasPhoto => photoBytes is { Length: > 0 };
-
-    private bool FieldChecksCompleted => pickupPlaceConfirmed && cargoConditionConfirmed && shipperContactConfirmed;
-
-    private bool LoadingChecklistCompleted
-        => 운송 is null
-           || 운송.상차체크목록.Count == 0
-           || 운송.상차체크목록.All(item => loadingCheckpointCodes.Contains(item.Code));
-
-    private bool LoadingCargoCompleted
-        => 운송 is null
-           || 운송.상차대상화물목록.Count == 0
-           || 운송.상차대상화물목록.All(item => loadedCargoCodes.Contains(item.Code));
-
-    private 기사상차대상화물? SelectedLoadingCargo
-        => 운송?.상차대상화물목록.FirstOrDefault(item => string.Equals(item.Code, selectedLoadingCargoCode, StringComparison.Ordinal));
-
-    private bool ReceiptEvidenceRequired
-        => 운송?.인수증필요 == true
-           || (운송?.결제방식.Contains("인수증", StringComparison.OrdinalIgnoreCase) ?? false);
-
-    private bool ReceiptSignatureMandatory => ReceiptEvidenceRequired && 운송?.인수증서명필수 == true;
-
-    private bool DocumentPhotoEvidenceSelected => string.Equals(receiptEvidenceMethod, ReceiptEvidenceModeDocumentPhoto, StringComparison.Ordinal);
-
-    private bool DirectSignatureEvidenceSelected => string.Equals(receiptEvidenceMethod, ReceiptEvidenceModeDirectSignature, StringComparison.Ordinal);
-
-    private bool OmittedEvidenceSelected => string.Equals(receiptEvidenceMethod, ReceiptEvidenceModeOmitted, StringComparison.Ordinal) && !ReceiptSignatureMandatory;
-
-    private bool ReceiptDocumentPhotoCompleted => DocumentPhotoEvidenceSelected && receiptDocumentPhotoConfirmed && HasPhoto;
-
-    private bool ReceiptSignatureCompleted
-        => DirectSignatureEvidenceSelected
-           && receiptEvidenceConfirmed
-           && !string.IsNullOrWhiteSpace(receiptRecipientName)
-           && !string.IsNullOrWhiteSpace(receiptRecipientSignature)
-           && !string.IsNullOrWhiteSpace(driverSignature);
-
-    private bool ReceiptSignatureSkipped => ReceiptEvidenceRequired && OmittedEvidenceSelected;
-
-    private bool ReceiptEvidenceCompleted
-        => !ReceiptEvidenceRequired
-           || ReceiptDocumentPhotoCompleted
-           || ReceiptSignatureCompleted
-           || ReceiptSignatureSkipped;
-
-    private string PaymentEvidenceLabel
-        => 운송 is null
-            ? "-"
-            : string.IsNullOrWhiteSpace(운송.결제방식)
-                ? ReceiptEvidenceRequired ? "인수증" : "확인 필요"
-                : 운송.결제방식;
-
-    private string ReceiptSignatureChipLabel => ReceiptSignatureMandatory ? "서명 필수" : "서명 선택";
-
-    private Color ReceiptSignatureChipColor => ReceiptSignatureMandatory ? Color.Warning : Color.Info;
-
-    private Color CargoLoadTypeColor
-        => 운송?.IsFcl == true
-            ? Color.Warning
-            : 운송?.IsLcl == true
-                ? Color.Info
-                : Color.Default;
-
-    private bool CanComplete => !isCapturing && LoadingChecklistCompleted && LoadingCargoCompleted && FieldChecksCompleted && ReceiptEvidenceCompleted && HasPhoto;
-
-    private string CompletionGuide
-    {
-        get
-        {
-            if (!FieldChecksCompleted && !HasPhoto)
-            {
-                return ReceiptEvidenceRequired
-                    ? ReceiptSignatureMandatory
-                        ? "현장 확인 3가지, 인수증 증빙, 상차 완료 사진을 모두 완료해야 합니다."
-                        : "현장 확인 3가지, 인수증 증빙 또는 생략 사유, 상차 완료 사진을 모두 완료해야 합니다."
-                    : "현장 확인 3가지를 체크하고 상차 완료 사진을 촬영해야 합니다.";
-            }
-
-            if (!FieldChecksCompleted)
-            {
-                return "현장 확인 체크를 모두 완료해야 합니다.";
-            }
-
-            if (!LoadingChecklistCompleted)
-            {
-                return "LCL/FCL 상차 체크 항목을 모두 확인해야 합니다.";
-            }
-
-            if (!LoadingCargoCompleted)
-            {
-                return "상차 대상 화물의 바코드 조회와 상차 확인을 완료해야 합니다.";
-            }
-
-            if (!ReceiptEvidenceCompleted)
-            {
-                return ReceiptSignatureMandatory
-                    ? "이 거래는 서명된 문서 사진 또는 직접 서명 입력이 필요합니다."
-                    : "인수증 증빙 방식을 완료하거나 현장 합의에 따른 서명 생략 사유를 남겨야 합니다.";
-            }
-
-            return "상차 완료 사진을 먼저 촬영해 주세요.";
-        }
-    }
-
-    private bool IsLoadingCheckpointConfirmed(string code)
-        => loadingCheckpointCodes.Contains(code);
-
-    private void SetLoadingCheckpoint(string code, bool value)
-    {
-        if (value)
-        {
-            loadingCheckpointCodes.Add(code);
-            return;
-        }
-
-        loadingCheckpointCodes.Remove(code);
-    }
-
-    private void LookupLoadingBarcode()
-    {
-        var barcode = loadingBarcodeInput?.Trim();
-        if (string.IsNullOrWhiteSpace(barcode))
-        {
-            SetStatus("상차 바코드를 입력하거나 스캔해 주세요.", Severity.Warning);
-            return;
-        }
-
-        var item = 운송?.상차대상화물목록.FirstOrDefault(candidate =>
-            string.Equals(candidate.Barcode, barcode, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(candidate.Code, barcode, StringComparison.OrdinalIgnoreCase));
-
-        if (item is null)
-        {
-            SetStatus("현재 운송 건에 포함되지 않은 상차 바코드입니다.", Severity.Warning);
-            return;
-        }
-
-        SelectLoadingCargo(item);
-        SetStatus($"{item.Label} 상차 정보를 불러왔습니다.", Severity.Info);
-    }
-
-    private void SelectLoadingCargo(기사상차대상화물 item)
-    {
-        selectedLoadingCargoCode = item.Code;
-        loadingBarcodeInput = item.Barcode;
-    }
-
-    private void ConfirmSelectedLoadingCargo()
-    {
-        if (SelectedLoadingCargo is null)
-        {
-            SetStatus("먼저 상차 바코드를 조회해 주세요.", Severity.Warning);
-            return;
-        }
-
-        loadedCargoCodes.Add(SelectedLoadingCargo.Code);
-        SetStatus($"{SelectedLoadingCargo.Label} 상차 확인을 기록했습니다.", Severity.Success);
-    }
-
-    private bool IsLoadingCargoConfirmed(string code)
-        => loadedCargoCodes.Contains(code);
-
-    private string LoadingCargoChipLabel(기사상차대상화물 item)
-    {
-        if (IsLoadingCargoConfirmed(item.Code))
-        {
-            return "확인";
-        }
-
-        return 운송?.적재순번필요 == true ? item.적재순번표시 : "동일 규격";
-    }
-
-    private Color LoadingCargoChipColor(기사상차대상화물 item)
-    {
-        if (IsLoadingCargoConfirmed(item.Code))
-        {
-            return Color.Success;
-        }
-
-        return 운송?.적재순번필요 == true ? Color.Warning : Color.Info;
-    }
-
-    private async Task RecordPickupIssueAsync()
-    {
-        var memo = string.IsNullOrWhiteSpace(pickupIssueMemo) ? "메모 없음" : pickupIssueMemo.Trim();
-        try
-        {
-            isIssueReporting = true;
-            SetStatus("상차 문제를 서버에 신고하는 중입니다.", Severity.Info);
-
-            var result = await ExceptionService.ReportAsync(new DriverTransportExceptionReport(
-                TransportId: 운송Id,
-                Stage: "상차",
-                ExceptionCode: ToPickupExceptionCode(pickupIssueType),
-                Reason: pickupIssueType,
-                Memo: memo,
-                RequestAdminReview: true));
-
-            SetStatus(
-                result.Reported
-                    ? $"{result.Message} {pickupIssueType} · {memo}"
-                    : result.Message,
-                result.Reported ? Severity.Warning : Severity.Error);
-        }
-        catch (Exception ex)
-        {
-            SetStatus($"상차 문제 신고 중 오류가 발생했습니다. 다시 시도해 주세요. {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isIssueReporting = false;
-        }
-    }
-
-    private async Task CaptureCompletionPhotoAsync()
-    {
-        if (!MediaPicker.Default.IsCaptureSupported)
-        {
-            SetStatus("이 기기에서는 카메라 촬영을 지원하지 않습니다.", Severity.Warning);
-            return;
-        }
-
-        try
-        {
-            isCapturing = true;
-            SetStatus("카메라를 여는 중입니다.", Severity.Info);
-
-            var photo = await MediaPicker.Default.CapturePhotoAsync(new MediaPickerOptions
-            {
-                Title = "상차 완료 사진"
-            });
-
-            if (photo is null)
-            {
-                SetStatus("사진 촬영이 취소되었습니다.", Severity.Info);
-                return;
-            }
-
-            await using var imageStream = await photo.OpenReadAsync();
-            using var memoryStream = new MemoryStream();
-            await imageStream.CopyToAsync(memoryStream);
-
-            photoBytes = memoryStream.ToArray();
-            photoFileName = photo.FileName;
-            photoContentType = string.IsNullOrWhiteSpace(photo.ContentType) ? "image/jpeg" : photo.ContentType;
-            photoPreviewUrl = $"data:{photoContentType};base64,{Convert.ToBase64String(photoBytes)}";
-            uploadedObjectName = null;
-            uploadedUrl = null;
-            SetStatus("상차 완료 사진이 첨부되었습니다. 사진을 확인한 뒤 상차 완료를 눌러 주세요.", Severity.Success);
-        }
-        catch (FeatureNotSupportedException)
-        {
-            SetStatus("이 기기에서는 카메라 촬영을 지원하지 않습니다.", Severity.Warning);
-        }
-        catch (PermissionException)
-        {
-            SetStatus("카메라 권한이 필요합니다. 앱 권한 설정에서 카메라 접근을 허용해 주세요.", Severity.Error);
-        }
-        catch (Exception ex)
-        {
-            SetStatus($"사진 촬영 중 오류가 발생했습니다: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isCapturing = false;
-        }
-    }
-
-    private async Task CompletePickupAsync()
-    {
-        if (!CanComplete)
-        {
-            SetStatus(CompletionGuide, Severity.Warning);
-            return;
-        }
-
-        try
-        {
-            isCompleting = true;
-            SetStatus("상차 완료를 처리하는 중입니다.", Severity.Info);
-
-            var result = await CompletionPhotoService.CompleteWithPhotoAsync(new DriverTransportCompletionPhoto(
-                DriverTransportCompletionPhotoKind.Pickup,
-                운송Id,
-                photoFileName ?? $"pickup-complete-{운송Id}.jpg",
-                photoContentType,
-                photoBytes!,
-                BuildReceiptEvidence(),
-                uploadedObjectName,
-                uploadedUrl));
-
-            var objectName = string.IsNullOrWhiteSpace(result.ObjectName) ? string.Empty : $" 저장 경로: {result.ObjectName}";
-            if (result.Uploaded)
-            {
-                uploadedObjectName = result.ObjectName;
-                uploadedUrl = result.Url;
-            }
-
-            SetStatus($"{result.Message}{objectName}", result.CompletionRecorded ? Severity.Success : Severity.Warning);
-            if (result.CompletionRecorded)
-            {
-                NavigationManager.NavigateTo(DriverRoutes.TransportDropoff(운송Id));
-            }
-        }
-        catch (Exception ex)
-        {
-            SetStatus($"상차 완료 처리에 실패했습니다. 다시 시도해 주세요. {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isCompleting = false;
-        }
-    }
-
-    private void SetStatus(string message, Severity severity)
-    {
-        statusMessage = message;
-        statusSeverity = severity;
-    }
-
-    private static string ToPickupExceptionCode(string issueType)
-        => issueType switch
-        {
-            "수량 부족" => "Pickup.QuantityShortage",
-            "다른 화물 혼입" => "Pickup.MixedCargo",
-            "바코드 훼손" => "Pickup.BarcodeDamaged",
-            "문서 번호 불일치" => "Pickup.DocumentMismatch",
-            "파손 의심" => "Pickup.DamageSuspected",
-            _ => "Pickup.FieldIssue"
-        };
-
-    private void ClearPhoto()
-    {
-        photoFileName = null;
-        photoBytes = null;
-        photoPreviewUrl = null;
-        photoContentType = "image/jpeg";
-        uploadedObjectName = null;
-        uploadedUrl = null;
-        SetStatus("첨부된 상차 사진을 제거했습니다.", Severity.Info);
-    }
-
-    private DriverTransportPickupReceiptEvidence? BuildReceiptEvidence()
-    {
-        if (!ReceiptEvidenceRequired)
-        {
-            return null;
-        }
-
-        if (ReceiptSignatureCompleted)
-        {
-            return new DriverTransportPickupReceiptEvidence(
-                EvidenceMethod: ReceiptEvidenceModeDirectSignature,
-                Signed: true,
-                SignatureOmitted: false,
-                SignatureOmissionReason: null,
-                RecipientName: receiptRecipientName?.Trim(),
-                RecipientOrganization: receiptRecipientOrganization?.Trim(),
-                RecipientSignature: receiptRecipientSignature?.Trim(),
-                DriverSignature: driverSignature?.Trim());
-        }
-
-        if (ReceiptDocumentPhotoCompleted)
-        {
-            return new DriverTransportPickupReceiptEvidence(
-                EvidenceMethod: ReceiptEvidenceModeDocumentPhoto,
-                Signed: true,
-                SignatureOmitted: false,
-                SignatureOmissionReason: null,
-                RecipientName: null,
-                RecipientOrganization: null,
-                RecipientSignature: null,
-                DriverSignature: null);
-        }
-
-        return new DriverTransportPickupReceiptEvidence(
-            EvidenceMethod: ReceiptEvidenceModeOmitted,
-            Signed: false,
-            SignatureOmitted: true,
-            SignatureOmissionReason: string.IsNullOrWhiteSpace(receiptSignatureOmissionReason)
-                ? "현장 합의에 따라 상차 인수 서명 없이 진행"
-                : receiptSignatureOmissionReason.Trim(),
-            RecipientName: null,
-            RecipientOrganization: null,
-            RecipientSignature: null,
-            DriverSignature: null);
-    }
+    protected override void OnParametersSet() => ViewModel.Initialize(운송Id);
 }

@@ -1,0 +1,162 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+
+@if (Model.IsApplicable)
+{
+    <section class="us-import-journey" aria-labelledby="us-import-journey-title">
+        <header class="us-import-journey__header">
+            <div>
+                <span>미국 구매자 공동수입</span>
+                <h2 id="us-import-journey-title">수요에서 참여자 주소 배송까지</h2>
+                <p>각 주체가 자신의 권한과 계약 범위 안에서 순서대로 참여합니다.</p>
+            </div>
+            <div class="us-import-journey__route" aria-label="수입 경로">
+                <strong>@Model.OriginCountryCode</strong>
+                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                <strong>@Model.DestinationCountryCode</strong>
+            </div>
+        </header>
+
+        <div class="us-import-journey__boundaries">
+            <div>
+                <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" />
+                <span>모집 배달권</span>
+                <strong>@Model.RecruitmentScopeLabel</strong>
+                <small>@(Model.RecruitmentScopeVerified ? Model.RecruitmentScopeKey : "Census 범위 확인 필요")</small>
+            </div>
+            <div>
+                <MudIcon Icon="@Icons.Material.Filled.PrivacyTip" Size="Size.Small" />
+                <span>개별 주소</span>
+                <strong>커뮤니티 비공개</strong>
+                <small>배송 동의 후 필요한 담당자에게만 전달</small>
+            </div>
+            <div>
+                <MudIcon Icon="@Icons.Material.Filled.Handshake" Size="Size.Small" />
+                <span>업체 참여</span>
+                <strong>직접 수락·별도 계약</strong>
+                <small>자동 추천·배차·예약 없음</small>
+            </div>
+        </div>
+
+        @if (Model.OriginPreparation.IsApplicable)
+        {
+            <section class="us-import-journey__origin-plan" aria-labelledby="us-import-origin-plan-title">
+                <header>
+                    <MudIcon Icon="@Icons.Material.Filled.Factory" Size="Size.Medium" />
+                    <div>
+                        <span>출발 전 비용 절감 검토</span>
+                        <h3 id="us-import-origin-plan-title">@Model.OriginPreparation.Title</h3>
+                        <p>미국 후처리를 줄이되 국제운임 증가와 재작업 위험까지 같은 리비전에서 비교합니다.</p>
+                    </div>
+                    <strong>@(Model.OriginPreparation.SavingsConfirmed ? "절감 확인" : "견적 비교 전")</strong>
+                </header>
+
+                <div class="us-import-journey__comparison">
+                    <div>
+                        <span>비교 기준</span>
+                        <strong>@Model.OriginPreparation.BaselineScenarioLabel</strong>
+                    </div>
+                    <div>
+                        <span>검토 후보</span>
+                        <strong>@Model.OriginPreparation.CandidateScenarioLabel</strong>
+                    </div>
+                    <p>@Model.OriginPreparation.ComparisonFormula</p>
+                </div>
+
+                <ul class="us-import-journey__origin-tasks">
+                    @foreach (var task in Model.OriginPreparation.Tasks)
+                    {
+                        <li>
+                            <div>
+                                <strong>@task.Label</strong>
+                                <small>@ResolvePreparationTimingLabel(task.Timing)</small>
+                            </div>
+                            <p>@task.Detail</p>
+                        </li>
+                    }
+                </ul>
+
+                @if (Model.OriginPreparation.IsChinaOrigin)
+                {
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                        중국산 화물을 참여자별로 포장해도 관세·통관 면제를 가정하지 않습니다. 신고가격, 품목분류, 추가관세와 제품별 수입요건은 수입자와 수임한 통관 담당자가 확인합니다.
+                    </MudAlert>
+                }
+            </section>
+        }
+
+        <div class="us-import-journey__progress">
+            <span>현재 확인</span>
+            <strong>@($"{Model.CompletedStageCount}/{Model.Stages.Count}단계")</strong>
+            @if (Model.CurrentStage is { } current)
+            {
+                <small>@current.Label</small>
+            }
+        </div>
+
+        <ol class="us-import-journey__stages">
+            @foreach (var stage in Model.Stages.OrderBy(stage => stage.Number))
+            {
+                <li class="@BuildStageClass(stage.State)">
+                    <div class="us-import-journey__stage-number">
+                        <span>@stage.Number</span>
+                        <MudIcon Icon="@ResolveStageIcon(stage.State)" Size="Size.Small" />
+                    </div>
+                    <strong>@stage.Label</strong>
+                    <p>@stage.Detail</p>
+                    <footer>
+                        <span>@stage.ResponsibleRoleLabel</span>
+                        <small>@ResolveStageStateLabel(stage.State)</small>
+                    </footer>
+                </li>
+            }
+        </ol>
+
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+            이 여정은 공동 조건과 담당 역할을 보여 주는 비구속 계획입니다. 통관·보세·운송·보관·배송은 권한과 계약을 별도로 확인한 뒤 담당자가 직접 실행합니다.
+        </MudAlert>
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public CommunityCollectiveImportDeliverySnapshot Model { get; set; } = new();
+
+    private static string BuildStageClass(CommunityCollectiveImportDeliveryStageState state)
+        => state switch
+        {
+            CommunityCollectiveImportDeliveryStageState.Completed => "is-complete",
+            CommunityCollectiveImportDeliveryStageState.Current => "is-current",
+            CommunityCollectiveImportDeliveryStageState.SeparateContractRequired => "requires-contract",
+            _ => "is-waiting"
+        };
+
+    private static string ResolveStageIcon(CommunityCollectiveImportDeliveryStageState state)
+        => state switch
+        {
+            CommunityCollectiveImportDeliveryStageState.Completed => Icons.Material.Filled.CheckCircle,
+            CommunityCollectiveImportDeliveryStageState.Current => Icons.Material.Filled.PlayCircle,
+            CommunityCollectiveImportDeliveryStageState.SeparateContractRequired => Icons.Material.Filled.AssignmentLate,
+            _ => Icons.Material.Filled.Schedule
+        };
+
+    private static string ResolveStageStateLabel(CommunityCollectiveImportDeliveryStageState state)
+        => state switch
+        {
+            CommunityCollectiveImportDeliveryStageState.Completed => "기록됨",
+            CommunityCollectiveImportDeliveryStageState.Current => "지금 확인",
+            CommunityCollectiveImportDeliveryStageState.SeparateContractRequired => "별도 계약 필요",
+            _ => "앞 단계 대기"
+        };
+
+    private static string ResolvePreparationTimingLabel(
+        CommunityCollectiveImportOriginPreparationTiming timing)
+        => timing switch
+        {
+            CommunityCollectiveImportOriginPreparationTiming.FinalizeBeforeExport
+                => "출항 전 확정",
+            CommunityCollectiveImportOriginPreparationTiming.PrepareBeforeExportAndFinalizeAfterRouting
+                => "공장 데이터 준비 · 경로 확정 후 발급",
+            _ => "확인 필요"
+        };
+}

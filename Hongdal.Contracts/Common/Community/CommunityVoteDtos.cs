@@ -1,5 +1,6 @@
 using Hongdal.Contracts.Common.ContractManagement;
 using Hongdal.Contracts.Common.Privacy;
+using System.Text.Json.Serialization;
 
 namespace Hongdal.Contracts.Common.Community;
 
@@ -61,6 +62,9 @@ public sealed class CommunityVoteCastRequest
 
     public string VoterKey { get; set; } = string.Empty;
 
+    [JsonIgnore]
+    public string? AuthenticatedUserId { get; set; }
+
     public IReadOnlyList<string> OptionIds { get; set; } = [];
 
     public int RequestedQuantity { get; set; } = 1;
@@ -76,8 +80,40 @@ public sealed class CommunityVoteCastRequest
     public bool AllowNearbyPickupPointFallback { get; set; }
 }
 
+public sealed class CommunityInterestVotePromotionSnapshot
+{
+    public Guid VoteId { get; set; }
+    public long SourcePostId { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string? CommunityLedgerId { get; set; }
+    public int ParticipantCount { get; set; }
+    public string EvidenceSnapshotHash { get; set; } = string.Empty;
+    public IReadOnlyList<CommunityInterestVoteParticipantSnapshot> Participants { get; set; } = [];
+    public IReadOnlyDictionary<string, int> RoleCounts { get; set; }
+        = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+}
+
+public sealed class CommunityInterestVoteParticipantSnapshot
+{
+    public string ParticipantReference { get; set; } = string.Empty;
+    public string? UserId { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
+    public IReadOnlyList<string> RoleCodes { get; set; } = [];
+}
+
 public sealed class CommunityGroupPurchaseVoteSettingsRequest
 {
+    public string ProposerRoleCode { get; set; } = CommunityGroupPurchaseProposerRoleCodes.GroupPurchaseRepresentative;
+
+    public string SellerCountryCode { get; set; } = string.Empty;
+
+    public string ShipFromCountryCode { get; set; } = string.Empty;
+
+    public string DeliveryCountryCode { get; set; } = string.Empty;
+
+    public string CustomsClearanceStatusCode { get; set; }
+        = CommunityGroupPurchaseCustomsClearanceStatusCodes.Unknown;
+
     public string ParticipationPolicyCode { get; set; } = CommunityVoteParticipationPolicyCodes.Hybrid;
 
     public string HsCode { get; set; } = string.Empty;
@@ -87,6 +123,12 @@ public sealed class CommunityGroupPurchaseVoteSettingsRequest
     public string LogisticsMode { get; set; } = "LCL";
 
     public string QuantityUnit { get; set; } = "개";
+
+    /// <summary>
+    /// 시장가격 비교에 사용하는 표준화된 공동구매 목표단가입니다.
+    /// 포장 단위 가격은 실제 중량으로 나누어 원/kg 기준으로 저장합니다.
+    /// </summary>
+    public decimal? TargetUnitPriceKrwPerKg { get; set; }
 
     public string ServiceAreaKey { get; set; } = string.Empty;
 
@@ -253,6 +295,39 @@ public sealed class CommunityVoteOptionResponse
 
 public sealed class CommunityGroupPurchaseVoteResponse
 {
+    public string ProposerRoleCode { get; set; } = CommunityGroupPurchaseProposerRoleCodes.GroupPurchaseRepresentative;
+
+    public string AgreementPolicyCode { get; set; } = CommunityGroupPurchaseAgreementPolicy.PolicyCode;
+
+    public string ProposalOriginLegalEffectNotice { get; set; }
+        = CommunityGroupPurchaseAgreementPolicy.FullLegalEffectNotice;
+
+    public string OperatingMarketCountryCode { get; set; }
+        = CommunityGroupPurchaseTradeRoutePolicy.KoreaCountryCode;
+
+    public string SellerCountryCode { get; set; } = string.Empty;
+
+    public string ShipFromCountryCode { get; set; } = string.Empty;
+
+    public string DeliveryCountryCode { get; set; } = string.Empty;
+
+    public string CustomsClearanceStatusCode { get; set; }
+        = CommunityGroupPurchaseCustomsClearanceStatusCodes.Unknown;
+
+    public string TradeRouteCode { get; set; } = string.Empty;
+
+    public bool IsGroupImportCandidate { get; set; }
+
+    public bool RequiresTradeRouteReview { get; set; }
+
+    public string RecommendedLedgerTemplateKey { get; set; } = string.Empty;
+
+    public IReadOnlyList<string> TradeRouteReasonCodes { get; set; } = [];
+
+    public IReadOnlyList<string> TradeRouteMissingFieldCodes { get; set; } = [];
+
+    public IReadOnlyList<string> TradeRouteInvalidFieldCodes { get; set; } = [];
+
     public string ParticipationPolicyCode { get; set; } = string.Empty;
 
     public string HsCode { get; set; } = string.Empty;
@@ -262,6 +337,8 @@ public sealed class CommunityGroupPurchaseVoteResponse
     public string LogisticsMode { get; set; } = string.Empty;
 
     public string QuantityUnit { get; set; } = string.Empty;
+
+    public decimal? TargetUnitPriceKrwPerKg { get; set; }
 
     public string ServiceAreaKey { get; set; } = string.Empty;
 
@@ -359,6 +436,8 @@ public static class CommunityVoteKindCodes
 {
     public const string General = "General";
 
+    public const string CollectiveActionInterest = "CollectiveActionInterest";
+
     public const string GroupPurchaseDemand = "GroupPurchaseDemand";
 }
 
@@ -371,6 +450,29 @@ public static class CommunityVoteParticipationPolicyCodes
     public const string PickupPoint = "PickupPoint";
 
     public const string Hybrid = "Hybrid";
+}
+
+public static class CommunityGroupPurchaseProposerRoleCodes
+{
+    public const string Producer = "Producer";
+
+    public const string GroupPurchaseRepresentative = "GroupPurchaseRepresentative";
+
+    public static bool IsSupported(string? value)
+        => value is Producer or GroupPurchaseRepresentative;
+}
+
+public static class CommunityGroupPurchaseAgreementPolicy
+{
+    public const string PolicyCode = "MutualAgreementIndependentOfProposalOrigin";
+
+    public const string ProposalOriginNotice =
+        "공동구매 제안 주체 정보는 협상·모집을 시작한 운영 경로를 기록하기 위한 것으로, 제안의 선후만으로 계약상 우선권·우월적 지위 또는 권리·의무가 정해지지 않습니다.";
+
+    public const string MutualAgreementNotice =
+        "이 플랫폼에서 공동구매 제안은 비구속적 협의·모집 단계로 취급합니다. 계약상의 최종 권리·의무와 플랫폼상 계약 확정은 생산자와 공동구매 대표가 합의한 최종 계약문 및 필요한 전자서명에 따릅니다. 개별 사안의 법적 효력은 실제 의사표시, 계약 내용과 관련 법령에 따라 달라질 수 있습니다.";
+
+    public const string FullLegalEffectNotice = ProposalOriginNotice + " " + MutualAgreementNotice;
 }
 
 public static class CommunityVoteParticipationMethodCodes

@@ -1,0 +1,198 @@
+@page "/page-catalog"
+@inherits MvvmComponentBase<AdminPageCatalogPageViewModel>
+@inject AdminAuthSession Session
+@inject NavigationManager Navigation
+
+<PageTitle>페이지 운영 카탈로그</PageTitle>
+
+<main class="page-catalog-page">
+    <header class="page-catalog-page__header">
+        <div>
+            <MudText Typo="Typo.overline" Color="Color.Primary">PAGE OPERATIONS</MudText>
+            <MudText Typo="Typo.h4" Class="page-catalog-page__title">페이지 운영 카탈로그</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                현재 0.0 흐름에 포함된 앱별 페이지와 검토·노출·화면 검증 상태를 함께 관리합니다.
+            </MudText>
+        </div>
+        <MudChip T="string" Variant="Variant.Outlined" Color="Color.Primary" Class="page-catalog-page__scope">0.0 핵심 경로</MudChip>
+    </header>
+
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+        이 화면은 운영 검토 메타데이터만 관리합니다. route 선언, 배포, 기능 플래그와
+        <code>HongdalExecution:Mode</code>는 변경하지 않습니다.
+    </MudAlert>
+
+    @if (!Session.IsServerAdmin)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+            카탈로그는 조회할 수 있지만 변경 저장에는 서버관리자 로그인이 필요합니다.
+            <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="OpenLogin">로그인</MudButton>
+        </MudAlert>
+    }
+
+    @if (ViewModel.처리중 && !ViewModel.초기화됨)
+    {
+        <section class="page-catalog-page__loading" aria-label="페이지 카탈로그 불러오는 중">
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="96px" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="320px" />
+        </section>
+    }
+    else if (!string.IsNullOrWhiteSpace(ViewModel.오류메시지))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+            @ViewModel.오류메시지
+            <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="RefreshAsync">다시 불러오기</MudButton>
+        </MudAlert>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(ViewModel.Message))
+        {
+            <MudAlert Severity="@MessageSeverity(ViewModel.MessageKind)" Variant="Variant.Outlined" Dense="true">
+                @ViewModel.Message
+            </MudAlert>
+        }
+
+        <section class="page-catalog-summary" aria-label="페이지 운영 현황">
+            <div><span>관리 대상</span><strong>@ViewModel.List.Summary.TotalCount.ToString("N0")</strong></div>
+            <div><span>주요 메뉴</span><strong>@ViewModel.List.Summary.PrimaryNavigationCount.ToString("N0")</strong></div>
+            <div><span>Simulation</span><strong>@ViewModel.List.Summary.SimulationCount.ToString("N0")</strong></div>
+            <div class="is-warning"><span>검토 필요</span><strong>@ViewModel.List.Summary.NeedsAttentionCount.ToString("N0")</strong></div>
+            <div class="is-success"><span>화면 검증 완료</span><strong>@ViewModel.List.Summary.FullyVerifiedCount.ToString("N0")</strong></div>
+        </section>
+
+        <section class="page-catalog-filters" aria-label="페이지 카탈로그 검색 조건">
+            <MudSelect T="string"
+                       Label="앱"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       @bind-Value="ViewModel.AppFilter">
+                <MudSelectItem T="string" Value="@AllFilter">전체 앱</MudSelectItem>
+                @foreach (var option in ViewModel.AppOptions)
+                {
+                    <MudSelectItem T="string" Value="@option.Key">@option.Label</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudSelect T="string"
+                       Label="업무 영역"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       @bind-Value="ViewModel.AreaFilter">
+                <MudSelectItem T="string" Value="@AllFilter">전체 영역</MudSelectItem>
+                @foreach (var option in ViewModel.AreaOptions)
+                {
+                    <MudSelectItem T="string" Value="@option.Key">@option.Label</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudSelect T="string"
+                       Label="검토 상태"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       @bind-Value="ViewModel.ReviewFilter">
+                <MudSelectItem T="string" Value="@AllFilter">전체 상태</MudSelectItem>
+                @foreach (var state in Enum.GetValues<AdminPageReviewState>())
+                {
+                    <MudSelectItem T="string" Value="@state.ToString()">@ReviewLabel(state)</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudSelect T="string"
+                       Label="실행 경계"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       @bind-Value="ViewModel.ExecutionFilter">
+                <MudSelectItem T="string" Value="@AllFilter">전체 모드</MudSelectItem>
+                @foreach (var mode in Enum.GetValues<AdminPageExecutionMode>())
+                {
+                    <MudSelectItem T="string" Value="@mode.ToString()">@ExecutionLabel(mode)</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudTextField T="string"
+                          Label="페이지·route·역할 검색"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Immediate="true"
+                          DebounceInterval="250"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          @bind-Value="ViewModel.SearchText" />
+
+            <div class="page-catalog-filters__commands">
+                <MudCheckBox T="bool"
+                             Label="검토 필요만"
+                             Color="Color.Warning"
+                             @bind-Value="ViewModel.NeedsAttentionOnly" />
+                <MudTooltip Text="검색 조건 초기화">
+                    <MudIconButton Icon="@Icons.Material.Filled.FilterAltOff"
+                                   OnClick="ViewModel.ResetFilters"
+                                   aria-label="검색 조건 초기화" />
+                </MudTooltip>
+                <MudTooltip Text="카탈로그 새로고침">
+                    <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                   Color="Color.Primary"
+                                   Disabled="@ViewModel.처리중"
+                                   OnClick="RefreshAsync"
+                                   aria-label="페이지 카탈로그 새로고침" />
+                </MudTooltip>
+            </div>
+        </section>
+
+        <section class="page-catalog-workspace">
+            <AdminPageCatalogTable Items="ViewModel.List.Items"
+                                   SelectedPageKey="ViewModel.Detail.SelectedPage?.PageKey"
+                                   Selected="SelectPage" />
+            <AdminPageCatalogDetail ViewModel="ViewModel.Detail"
+                                    CanManage="Session.IsServerAdmin"
+                                    Busy="ViewModel.CommandInProgress"
+                                    SaveRequested="SaveSelectedAsync" />
+        </section>
+    }
+</main>
+
+@code {
+    private const string AllFilter = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Session.RestoreAsync();
+        await ViewModel.초기화Async();
+    }
+
+    private void OpenLogin() => Navigation.NavigateTo("/login");
+
+    private Task RefreshAsync() => ViewModel.새로고침Async();
+
+    private void SelectPage(string pageKey) => ViewModel.SelectPage(pageKey);
+
+    private Task<bool> SaveSelectedAsync()
+        => ViewModel.SaveSelectedAsync(Session.IsServerAdmin, Session.UserName);
+
+    private static Severity MessageSeverity(AdminPageCatalogMessageKind kind)
+        => kind switch
+        {
+            AdminPageCatalogMessageKind.Success => Severity.Success,
+            AdminPageCatalogMessageKind.Warning => Severity.Warning,
+            AdminPageCatalogMessageKind.Error => Severity.Error,
+            _ => Severity.Info
+        };
+
+    private static string ReviewLabel(AdminPageReviewState state)
+        => state switch
+        {
+            AdminPageReviewState.Verified => "검증 완료",
+            AdminPageReviewState.Blocked => "차단",
+            _ => "검토 필요"
+        };
+
+    private static string ExecutionLabel(AdminPageExecutionMode mode)
+        => mode switch
+        {
+            AdminPageExecutionMode.ReadOnly => "조회 전용",
+            AdminPageExecutionMode.Simulation => "Simulation",
+            _ => "운영 효과"
+        };
+}

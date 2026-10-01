@@ -164,7 +164,7 @@ public sealed class 문서관리메모리Service
                 보관만료일시 = now.AddYears(5)
             };
 
-            _content[sampleId] = JsonSerializer.SerializeToUtf8Bytes(new { title = "홍달 인수증 샘플", requestId = "REQ-SAMPLE-001" });
+            _content[sampleId] = JsonSerializer.SerializeToUtf8Bytes(new { title = "살뜰 인수증 샘플", requestId = "REQ-SAMPLE-001" });
             AddLog(sampleId, "생성", "sample");
         }
     }

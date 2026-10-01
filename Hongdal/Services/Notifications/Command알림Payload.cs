@@ -12,6 +12,8 @@ public static class Command알림FeatureNames
     public const string 운송하차지도착 = "TransportArrivedDropoff";
     public const string 운송인수완료 = "TransportDropoffCompleted";
     public const string 운송현장예외신고 = "TransportFieldIssueReported";
+    public const string 공동수입원장등록 = "CommunityGroupImportRegistered";
+    public const string 공동구매원장변경 = "CommunityGroupPurchaseLedgerChanged";
 
     public static readonly string[] 발송지원목록 =
     [
@@ -22,8 +24,15 @@ public static class Command알림FeatureNames
         운송상차완료,
         운송하차지도착,
         운송인수완료,
-        운송현장예외신고
+        운송현장예외신고,
+        공동수입원장등록,
+        공동구매원장변경
     ];
+}
+
+public static class Command알림TargetNames
+{
+    public const string 공동구매원장관계자 = "CommunityLedgerStakeholder";
 }
 
 public sealed record Command알림Payload(
@@ -33,6 +42,9 @@ public sealed record Command알림Payload(
     string RequestId,
     string PaymentId,
     string OrderId,
+    string LedgerId,
+    string HsCodes,
+    string DeepLink,
     string PaymentFlow,
     int Amount,
     int ReminderDay,
@@ -63,12 +75,18 @@ public sealed record Command알림Payload(
             : $"{pickupWindowStart} ~ {pickupWindowEnd}";
 
         return new Command알림Payload(
-            ReadString(root, "알림유형", Command알림FeatureNames.배차수락),
-            ReadString(root, "targetUserId", ReadString(root, "shipperUserId")),
+            ReadString(root, "notificationType", ReadString(root, "알림유형", Command알림FeatureNames.배차수락)),
+            ReadString(
+                root,
+                "targetUserId",
+                ReadString(root, "targetBrokerParticipantId", ReadString(root, "참여자Id", ReadString(root, "shipperUserId")))),
             ReadString(root, "driverId"),
             ReadString(root, "requestId"),
             ReadString(root, "paymentId"),
             ReadString(root, "orderId"),
+            ReadString(root, "ledgerId"),
+            ReadString(root, "hsCodes"),
+            ReadString(root, "deepLink"),
             ReadString(root, "paymentFlow"),
             ReadInt(root, "amount"),
             ReadInt(root, "reminderDay"),
@@ -86,7 +104,8 @@ public sealed record Command알림Payload(
 
     private static string ReadString(JsonElement root, string propertyName, string fallback = "")
     {
-        if (!root.TryGetProperty(propertyName, out var value) || value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        if (!TryGetProperty(root, propertyName, out var value)
+            || value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
         {
             return fallback;
         }
@@ -94,6 +113,26 @@ public sealed record Command알림Payload(
         return value.ValueKind == JsonValueKind.String
             ? value.GetString() ?? fallback
             : value.ToString();
+    }
+
+    private static bool TryGetProperty(JsonElement root, string propertyName, out JsonElement value)
+    {
+        if (root.TryGetProperty(propertyName, out value))
+        {
+            return true;
+        }
+
+        foreach (var property in root.EnumerateObject())
+        {
+            if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                value = property.Value;
+                return true;
+            }
+        }
+
+        value = default;
+        return false;
     }
 
     private static IReadOnlySet<string> ReadStringSet(JsonElement root, string propertyName, IReadOnlyList<string> fallback)

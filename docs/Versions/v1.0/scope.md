@@ -2,10 +2,10 @@
 
 | 기능 | 포함 여부 | 관련 앱/모듈 | 메모 |
 | --- | --- | --- | --- |
-| 커뮤니티 홈·게시판·글쓰기 | 포함 | `Hongdal.Ui.Common`, `ShipperApp` | 1.0 제품 중심 |
-| 공동 원장·다이어그램 | 포함 | 원장 API, 다이어그램 작업공간 | 대화에서 업무 기록으로 이어지는 핵심 흐름 |
-| 익명 활동·신고·신뢰 기록 | 포함 | 커뮤니티 API, 관리자 화면 | 참여 안전과 운영 기준 |
-| 국내 화물/용달 운송 의뢰 | 제한 포함 | `ShipperApp`, `Hongdal` | 샘플 원장을 이용한 기술 검증 |
+| 커뮤니티 홈·게시판·글쓰기 | 선행 의존 | `Hongdal.Ui.Common`, 역할별 앱 홈 | 0.0 범위이며 1.0에서 재구현하지 않음 |
+| 공동 원장·다이어그램 | 선행 의존 | 원장 API, 다이어그램 작업공간 | 0.0 원장에서 운송 의뢰로 인계 |
+| 참여 동의·신고·신뢰 기록 | 선행 의존 | 커뮤니티 API, 관리자 화면 | 0.0 게이트 통과가 1.0의 전제 |
+| 국내 화물/용달 운송 의뢰 | 제한 포함 | `HongdalApp`, `Hongdal` | 샘플 원장을 이용한 기술 검증 |
 | 화물/용달 기사 배차 | 제한 포함 | `DriverApp`, `CargoYongdalDispatchEngine` | 모의 기사·샘플 데이터 전용, 실운영 비활성 |
 | 상차/하차 사진 증빙 | 제한 포함 | `DriverApp`, 파일 업로드 서비스 | 원장 상태·증빙 연동 검증 |
 | 수령자 인수 확인 | 제한 포함 | 운송 상세 DTO | 샘플 흐름과 노출 범위 검증 |
@@ -18,4 +18,4 @@
 | 음식점 일반 음식 배달 | 보류 | `FDriverApp`, `FoodDeliveryDispatchEngine` | 3.0 |
 | 알뜰살뜰 마트 즉시배송 | 보류 | `FDriverApp`, `FoodDeliveryDispatchEngine`, `WarehouseManagerApp` | 3.5 |
 
-실운영 경계와 공식 근거는 [홍달 1.0 커뮤니티 중심 제품 원칙](../../Architecture/CommunityFirstV1Policy.md)을 따릅니다.
+실운영 경계와 공식 근거는 [커뮤니티 0.0 기반 제품 원칙](../../Architecture/CommunityFoundationV0Policy.md)을 따릅니다.

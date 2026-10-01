@@ -21,7 +21,7 @@
 
 | 단계 | 화면 형태 | 현재 구현 위치 | 문서에서 확인할 것 |
 | --- | --- | --- | --- |
-| 공통 셸 | 역할 선택, 커뮤니티, 하단 내비게이션 | `ShipperApp`의 `/`, `/shipper`, `MainLayout` | 역할이 바뀔 때 세 단계의 메뉴와 문맥이 함께 바뀌는가 |
+| 공통 셸 | 역할 선택, 커뮤니티, 하단 내비게이션 | `HongdalApp`의 `/`, `/shipper`, `MainLayout` | 역할이 바뀔 때 세 단계의 메뉴와 문맥이 함께 바뀌는가 |
 | 1단계 | 후천 사방 이동판 | `PlatformCommunityHome` 내부의 `HongdalLaterHeavenBaguaNavigator` | 역할별 네 방향과 관련 다이어그램 진입 |
 | 2단계 | 원장 관계·흐름 다이어그램 | `PlatformCommunityHome` 다이어그램 모드 | 단일·연결·복합 원장 경계, 노드 요약, 상태, 진행도, 행동 메뉴 |
 | 3단계 | 목록·상세·작업 페이지 | 아래 `@page` 카탈로그 | 한 페이지가 한 가지 조회·입력·처리 책임을 갖는가 |
@@ -54,9 +54,10 @@
 
 | 코드 프로젝트 | 페이지 수 | 주 사용자 | 현재 포함 화면 |
 | --- | ---: | --- | --- |
-| `ShipperApp` | 30 | 화주, 창고 관리자, 판매자, 물류 의뢰자 | 통합 커뮤니티, 역할 전환, 운송 의뢰, 창고/입고, 꾸미기 상점 |
+| `HongdalApp` | 30 | 화주, 창고 관리자, 판매자, 물류 의뢰자 | 통합 커뮤니티, 역할 전환, 운송 의뢰, 창고/입고, 꾸미기 상점 |
 | `DriverApp` | 23 | 기사 | 운행 시작, 추천, 수락/거절, 상차/하차, 정산, 알림 |
 | `HongdalAdmin` | 42 | 관리자, 운영자 | 배차, 운송 원장, 문서/POD, 결제/정산, 정책 운영 |
+| `HongdalAdminApp` | 6 | 커뮤니티 운영자 | 공통 홈, 커뮤니티 운영, 출처 자료 검토·글쓰기, 반야 선별 운영 |
 | `WarehouseManagerApp` | 13 | 창고 관리자, 작업자 | 작업 보드, 입고 검수, 스캔, 피킹 배치, 알뜰살뜰 마트 창고 |
 | `OrdererApp` | 8 | 주문자, 공동구매 참여자 | 공동구매, 음식/마트 주문, 화물 주문, 주문 이력 |
 | `RestaurantDeskApp` | 5 | 음식점/매장 운영자 | 주변/인기 음식점, 리뷰 관리, 배차 주소 |
@@ -70,42 +71,42 @@
 | 인증 필요 | 0 | 관리자 보호 라우트도 개발용 인증 세션과 문서용 메모리 데이터로 운영 화면까지 캡처한 상태 |
 | 캡처 대기 | 4 | 운송 업무, 내 꾸미기 만들기, Admin Fake PG/정산, 마트 피킹/포장 전용 캡처 필요 |
 
-## ShipperApp
+## HongdalApp
 
 | 페이지 ID / 제목 | 라우트 | 파일 | 분류 | 화면 책임 | 필수 연결 | 캡처 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `ShipperApp-P00 - 역할 기반 통합 커뮤니티 홈` | `/` | `ShipperApp/Components/Pages/UnifiedHome.razor` | 필수 | 현재 역할에 맞는 화주 또는 창고 관리자 홈 선택 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P00.png" alt="ShipperApp-P00" width="160"> |
-| `ShipperApp-P01 - 화주 업무 홈, 운송 의뢰/상태/창고/판매 업무 진입` | `/shipper` | `ShipperApp/Components/Pages/Home.razor` | 필수 | 커뮤니티와 화주 업무 요약, 목적별 업무 진입 | `ShipperApp-P01` | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P01.png" alt="ShipperApp-P01" width="160"> |
-| `ShipperApp-P01-1 - 화주 프로필과 운영 프로필 설정` | `/shipper/settings/profile` | `ShipperApp/Components/Pages/ShipperProfileSettings.razor` | 보조 | 화주 프로필과 운영 프로필 설정 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P01-1.png" alt="ShipperApp-P01-1" width="160"> |
-| `ShipperApp-P01-2 - 화주 앱 메뉴/화면 노출 설정` | `/shipper/settings/views` | `ShipperApp/Components/Pages/ShipperViewSettings.razor` | 보조 | 화주 앱 메뉴/화면 노출 설정 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P01-2.png" alt="ShipperApp-P01-2" width="160"> |
-| `ShipperApp-P01-3 - 공개 화물 또는 공개 의뢰 확인` | `/shipper/public-cargo` | `ShipperApp/Components/Pages/PublicCargo.razor` | 확장 | 공개 화물 또는 공개 의뢰 확인 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P01-3.png" alt="ShipperApp-P01-3" width="160"> |
-| `ShipperApp-P01-4 - 탐색/제안성 업무 수신함` | `/shipper/exploration/inbox` | `ShipperApp/Components/Pages/ExplorationInbox.razor` | 확장 | 탐색/제안성 업무 수신함 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P01-4.png" alt="ShipperApp-P01-4" width="160"> |
-| `ShipperApp-P02 - 운송 의뢰 작성` | `/shipper/request` | `ShipperApp/Components/Pages/ShipperRequestWizard.razor` | 필수 | 운송 의뢰 작성 | `ShipperApp-P02` | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P02.png" alt="ShipperApp-P02" width="160"> |
-| `ShipperApp-P02-1 - 운송 의뢰 대량 등록` | `/shipper/request/bulk` | `ShipperApp/Components/Pages/ShipperBulkImport.razor` | 보조 | 운송 의뢰 대량 등록 | `ShipperApp-P02-1` | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P02-1.png" alt="ShipperApp-P02-1" width="160"> |
-| `ShipperApp-P02-2 - 배차 주소 입력/검증 폼` | `/dispatch/address-form` | `ShipperApp/Components/Pages/DispatchAddressForm.razor` | 보조 | 배차 주소 입력/검증 폼 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P02-2.png" alt="ShipperApp-P02-2" width="160"> |
-| `ShipperApp-P03 - 의뢰 상세, 결제/배차/상차/하차/정산 타임라인` | `/shipper/request/{RequestId}` | `ShipperApp/Components/Pages/ShipperRequestDetail.razor` | 필수 | 의뢰 상세, 결제/배차/상차/하차/정산 타임라인 | `ShipperApp-P03` | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P03.png" alt="ShipperApp-P03" width="160"> |
-| `ShipperApp-P04 - 화주 입고 업무 대시보드` | `/shipper/inbound/dashboard` | `ShipperApp/Components/Pages/InboundDashboard.razor` | 확장 | 화주 입고 업무 대시보드 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P04.png" alt="ShipperApp-P04" width="160"> |
-| `ShipperApp-P04-1 - 입고 요청 목록과 처리` | `/shipper/inbound/requests` | `ShipperApp/Components/Pages/InboundRequests.razor` | 확장 | 입고 요청 목록과 처리 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P04-1.png" alt="ShipperApp-P04-1" width="160"> |
-| `ShipperApp-P05 - 화주 관점 창고 업무 허브` | `/shipper/warehouse/workspace` | `ShipperApp/Components/Pages/WarehouseWorkspace.razor` | 확장 | 화주 관점 창고 업무 허브 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P05.png" alt="ShipperApp-P05" width="160"> |
-| `ShipperApp-P05-1 - 창고 재고 조회` | `/shipper/warehouse/inventory` | `ShipperApp/Components/Pages/WarehouseInventory.razor` | 확장 | 창고 재고 조회 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P05-1.png" alt="ShipperApp-P05-1" width="160"> |
-| `ShipperApp-P05-2 - 창고 스캔 작업` | `/shipper/warehouse/scan` | `ShipperApp/Components/Pages/WarehouseScanStation.razor` | 확장 | 창고 스캔 작업 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P05-2.png" alt="ShipperApp-P05-2" width="160"> |
-| `ShipperApp-P05-3 - 창고 프로세스별 작업 시작` | `/shipper/warehouse/work/{ProcessCode}` | `ShipperApp/Components/Pages/WarehouseWorkStart.razor` | 확장 | 창고 프로세스별 작업 시작 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P05-3.png" alt="ShipperApp-P05-3" width="160"> |
-| `ShipperApp-P06 - 판매채널 연결/관리` | `/shipper/sales/channels` | `ShipperApp/Components/Pages/SalesChannels.razor` | 확장 | 판매채널 연결/관리 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P06.png" alt="ShipperApp-P06" width="160"> |
-| `ShipperApp-P06-1 - 상품 등록/리스팅` | `/shipper/sales/listings` | `ShipperApp/Components/Pages/ProductListings.razor` | 확장 | 상품 등록/리스팅 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P06-1.png" alt="ShipperApp-P06-1" width="160"> |
-| `ShipperApp-P06-2 - 판매 주문 이행/출고 연결` | `/shipper/sales/orders` | `ShipperApp/Components/Pages/OrderFulfillment.razor` | 확장 | 판매 주문 이행/출고 연결 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P06-2.png" alt="ShipperApp-P06-2" width="160"> |
-| `ShipperApp-P07 - FCL/LCL 해외 물류 계획` | `/shipper/international/fcl-lcl` | `ShipperApp/Components/Pages/FclLclPlanner.razor` | 확장 | FCL/LCL 해외 물류 계획 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P07.png" alt="ShipperApp-P07" width="160"> |
-| `ShipperApp-P07-1 - HS 코드/통관 검토` | `/shipper/customs/hs-reviews` | `ShipperApp/Components/Pages/CustomsHsReviews.razor` | 확장 | HS 코드/통관 검토 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P07-1.png" alt="ShipperApp-P07-1" width="160"> |
-| `ShipperApp-P08 - 재위탁/재운송 주문` | `/shipper/reconsignment/orders` | `ShipperApp/Components/Pages/ReconsignmentOrders.razor` | 확장 | 재위탁/재운송 주문 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P08.png" alt="ShipperApp-P08" width="160"> |
-| `ShipperApp-P09 - 운송 업무 워크스페이스` | `/shipper/transport` | `ShipperApp/Components/Pages/TransportWorkspace.razor` | 필수 | 의뢰별 결제·배차·운송 진행 상태와 다음 행동 처리 | - | 캡처 대기 |
-| `ShipperApp-P10 - 꾸미기 상점` | `/community/decorations` | `ShipperApp/Components/Pages/CommunityDecorationStorePage.razor` | 확장 | 홈 테마·노드·괘상 상품 탐색 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P10.png" alt="ShipperApp-P10" width="160"> |
-| `ShipperApp-P10-1 - 꾸미기 상품 상세` | `/community/decorations/{ProductKey}` | `ShipperApp/Components/Pages/CommunityDecorationDetailPage.razor` | 확장 | 전체 테마 미리보기, 구매·적용 판단 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P10-1.png" alt="ShipperApp-P10-1" width="160"> |
-| `ShipperApp-P10-2 - 꾸미기 FakePG 결제` | `/community/decorations/{ProductKey}/checkout` | `ShipperApp/Components/Pages/CommunityDecorationCheckoutPage.razor` | 개발·확장 | 실제 청구 없는 개발용 구매 승인 흐름 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P10-2.png" alt="ShipperApp-P10-2" width="160"> |
-| `ShipperApp-P10-2-1 - 홈 테마 구매 완료와 적용 선택` | `/community/decorations/{ProductKey}/checkout` | `ShipperApp/Components/Pages/CommunityDecorationCheckoutPage.razor` | 개발·확장 | 구매 완료 확인과 명시적 전체 적용 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P10-2-1.png" alt="ShipperApp-P10-2-1" width="160"> |
-| `ShipperApp-P10-3 - 내 꾸미기 만들기` | `/community/decorations/create` | `ShipperApp/Components/Pages/CommunityDecorationCreatePage.razor` | 확장 | 개인 괘상·다이어그램 노드 이미지 제작 | - | 캡처 대기 |
-| `ShipperApp-P10-4 - 디자이너 홈 테마 패키지 등록` | `/community/decorations/themes/submit` | `ShipperApp/Components/Pages/CommunityDecorationThemeSubmitPage.razor` | 확장·제작 | 8개 시각 슬롯 패키지 제작과 미리보기 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P10-4.png" alt="ShipperApp-P10-4" width="160"> |
-| `ShipperApp-P90 - 템플릿/샘플성 날씨 화면` | `/weather` | `ShipperApp/Components/Pages/Weather.razor` | 시스템 | 템플릿/샘플성 날씨 화면 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P90.png" alt="ShipperApp-P90" width="160"> |
-| `ShipperApp-P91 - 템플릿/샘플성 카운터 화면` | `/counter` | `ShipperApp/Components/Pages/Counter.razor` | 시스템 | 템플릿/샘플성 카운터 화면 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P91.png" alt="ShipperApp-P91" width="160"> |
-| `ShipperApp-P99 - 미발견 페이지` | `/not-found` | `ShipperApp/Components/Pages/NotFound.razor` | 시스템 | 미발견 페이지 | - | 완료<br><img src="assets/app-pages/ShipperApp/ShipperApp-P99.png" alt="ShipperApp-P99" width="160"> |
+| `HongdalApp-P00 - 역할 기반 통합 커뮤니티 홈` | `/` | `HongdalApp/Components/Pages/UnifiedHome.razor` | 필수 | 현재 역할에 맞는 화주 또는 창고 관리자 홈 선택 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P00.png" alt="HongdalApp-P00" width="160"> |
+| `HongdalApp-P01 - 화주 업무 홈, 운송 의뢰/상태/창고/판매 업무 진입` | `/shipper` | `HongdalApp/Components/Pages/Home.razor` | 필수 | 커뮤니티와 화주 업무 요약, 목적별 업무 진입 | `HongdalApp-P01` | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P01.png" alt="HongdalApp-P01" width="160"> |
+| `HongdalApp-P01-1 - 화주 프로필과 운영 프로필 설정` | `/shipper/settings/profile` | `HongdalApp/Components/Pages/ShipperProfileSettings.razor` | 보조 | 화주 프로필과 운영 프로필 설정 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P01-1.png" alt="HongdalApp-P01-1" width="160"> |
+| `HongdalApp-P01-2 - 화주 앱 메뉴/화면 노출 설정` | `/shipper/settings/views` | `HongdalApp/Components/Pages/ShipperViewSettings.razor` | 보조 | 화주 앱 메뉴/화면 노출 설정 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P01-2.png" alt="HongdalApp-P01-2" width="160"> |
+| `HongdalApp-P01-3 - 공개 화물 또는 공개 의뢰 확인` | `/shipper/public-cargo` | `HongdalApp/Components/Pages/PublicCargo.razor` | 확장 | 공개 화물 또는 공개 의뢰 확인 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P01-3.png" alt="HongdalApp-P01-3" width="160"> |
+| `HongdalApp-P01-4 - 탐색/제안성 업무 수신함` | `/shipper/exploration/inbox` | `HongdalApp/Components/Pages/ExplorationInbox.razor` | 확장 | 탐색/제안성 업무 수신함 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P01-4.png" alt="HongdalApp-P01-4" width="160"> |
+| `HongdalApp-P02 - 운송 의뢰 작성` | `/shipper/request` | `HongdalApp/Components/Pages/ShipperRequestWizard.razor` | 필수 | 운송 의뢰 작성 | `HongdalApp-P02` | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P02.png" alt="HongdalApp-P02" width="160"> |
+| `HongdalApp-P02-1 - 운송 의뢰 대량 등록` | `/shipper/request/bulk` | `HongdalApp/Components/Pages/ShipperBulkImport.razor` | 보조 | 운송 의뢰 대량 등록 | `HongdalApp-P02-1` | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P02-1.png" alt="HongdalApp-P02-1" width="160"> |
+| `HongdalApp-P02-2 - 배차 주소 입력/검증 폼` | `/dispatch/address-form` | `HongdalApp/Components/Pages/DispatchAddressForm.razor` | 보조 | 배차 주소 입력/검증 폼 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P02-2.png" alt="HongdalApp-P02-2" width="160"> |
+| `HongdalApp-P03 - 의뢰 상세, 결제/배차/상차/하차/정산 타임라인` | `/shipper/request/{RequestId}` | `HongdalApp/Components/Pages/ShipperRequestDetail.razor` | 필수 | 의뢰 상세, 결제/배차/상차/하차/정산 타임라인 | `HongdalApp-P03` | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P03.png" alt="HongdalApp-P03" width="160"> |
+| `HongdalApp-P04 - 화주 입고 업무 대시보드` | `/shipper/inbound/dashboard` | `HongdalApp/Components/Pages/InboundDashboard.razor` | 확장 | 화주 입고 업무 대시보드 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P04.png" alt="HongdalApp-P04" width="160"> |
+| `HongdalApp-P04-1 - 입고 요청 목록과 처리` | `/shipper/inbound/requests` | `HongdalApp/Components/Pages/InboundRequests.razor` | 확장 | 입고 요청 목록과 처리 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P04-1.png" alt="HongdalApp-P04-1" width="160"> |
+| `HongdalApp-P05 - 화주 관점 창고 업무 허브` | `/shipper/warehouse/workspace` | `HongdalApp/Components/Pages/WarehouseWorkspace.razor` | 확장 | 화주 관점 창고 업무 허브 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P05.png" alt="HongdalApp-P05" width="160"> |
+| `HongdalApp-P05-1 - 창고 재고 조회` | `/shipper/warehouse/inventory` | `HongdalApp/Components/Pages/WarehouseInventory.razor` | 확장 | 창고 재고 조회 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P05-1.png" alt="HongdalApp-P05-1" width="160"> |
+| `HongdalApp-P05-2 - 창고 스캔 작업` | `/shipper/warehouse/scan` | `HongdalApp/Components/Pages/WarehouseScanStation.razor` | 확장 | 창고 스캔 작업 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P05-2.png" alt="HongdalApp-P05-2" width="160"> |
+| `HongdalApp-P05-3 - 창고 프로세스별 작업 시작` | `/shipper/warehouse/work/{ProcessCode}` | `HongdalApp/Components/Pages/WarehouseWorkStart.razor` | 확장 | 창고 프로세스별 작업 시작 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P05-3.png" alt="HongdalApp-P05-3" width="160"> |
+| `HongdalApp-P06 - 판매채널 연결/관리` | `/shipper/sales/channels` | `HongdalApp/Components/Pages/SalesChannels.razor` | 확장 | 판매채널 연결/관리 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P06.png" alt="HongdalApp-P06" width="160"> |
+| `HongdalApp-P06-1 - 상품 등록/리스팅` | `/shipper/sales/listings` | `HongdalApp/Components/Pages/ProductListings.razor` | 확장 | 상품 등록/리스팅 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P06-1.png" alt="HongdalApp-P06-1" width="160"> |
+| `HongdalApp-P06-2 - 판매 주문 이행/출고 연결` | `/shipper/sales/orders` | `HongdalApp/Components/Pages/OrderFulfillment.razor` | 확장 | 판매 주문 이행/출고 연결 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P06-2.png" alt="HongdalApp-P06-2" width="160"> |
+| `HongdalApp-P07 - FCL/LCL 해외 물류 계획` | `/shipper/international/fcl-lcl` | `HongdalApp/Components/Pages/FclLclPlanner.razor` | 확장 | FCL/LCL 해외 물류 계획 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P07.png" alt="HongdalApp-P07" width="160"> |
+| `HongdalApp-P07-1 - HS 코드/통관 검토` | `/shipper/customs/hs-reviews` | `HongdalApp/Components/Pages/CustomsHsReviews.razor` | 확장 | HS 코드/통관 검토 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P07-1.png" alt="HongdalApp-P07-1" width="160"> |
+| `HongdalApp-P08 - 재위탁/재운송 주문` | `/shipper/reconsignment/orders` | `HongdalApp/Components/Pages/ReconsignmentOrders.razor` | 확장 | 재위탁/재운송 주문 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P08.png" alt="HongdalApp-P08" width="160"> |
+| `HongdalApp-P09 - 운송 업무 워크스페이스` | `/shipper/transport` | `HongdalApp/Components/Pages/TransportWorkspace.razor` | 필수 | 의뢰별 결제·배차·운송 진행 상태와 다음 행동 처리 | - | 캡처 대기 |
+| `HongdalApp-P10 - 꾸미기 상점` | `/community/decorations` | `HongdalApp/Components/Pages/CommunityDecorationStorePage.razor` | 확장 | 홈 테마·노드·괘상 상품 탐색 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P10.png" alt="HongdalApp-P10" width="160"> |
+| `HongdalApp-P10-1 - 꾸미기 상품 상세` | `/community/decorations/{ProductKey}` | `HongdalApp/Components/Pages/CommunityDecorationDetailPage.razor` | 확장 | 전체 테마 미리보기, 구매·적용 판단 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P10-1.png" alt="HongdalApp-P10-1" width="160"> |
+| `HongdalApp-P10-2 - 꾸미기 FakePG 결제` | `/community/decorations/{ProductKey}/checkout` | `HongdalApp/Components/Pages/CommunityDecorationCheckoutPage.razor` | 개발·확장 | 실제 청구 없는 개발용 구매 승인 흐름 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P10-2.png" alt="HongdalApp-P10-2" width="160"> |
+| `HongdalApp-P10-2-1 - 홈 테마 구매 완료와 적용 선택` | `/community/decorations/{ProductKey}/checkout` | `HongdalApp/Components/Pages/CommunityDecorationCheckoutPage.razor` | 개발·확장 | 구매 완료 확인과 명시적 전체 적용 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P10-2-1.png" alt="HongdalApp-P10-2-1" width="160"> |
+| `HongdalApp-P10-3 - 내 꾸미기 만들기` | `/community/decorations/create` | `HongdalApp/Components/Pages/CommunityDecorationCreatePage.razor` | 확장 | 개인 괘상·다이어그램 노드 이미지 제작 | - | 캡처 대기 |
+| `HongdalApp-P10-4 - 디자이너 홈 테마 패키지 등록` | `/community/decorations/themes/submit` | `HongdalApp/Components/Pages/CommunityDecorationThemeSubmitPage.razor` | 확장·제작 | 8개 시각 슬롯 패키지 제작과 미리보기 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P10-4.png" alt="HongdalApp-P10-4" width="160"> |
+| `HongdalApp-P90 - 템플릿/샘플성 날씨 화면` | `/weather` | `HongdalApp/Components/Pages/Weather.razor` | 시스템 | 템플릿/샘플성 날씨 화면 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P90.png" alt="HongdalApp-P90" width="160"> |
+| `HongdalApp-P91 - 템플릿/샘플성 카운터 화면` | `/counter` | `HongdalApp/Components/Pages/Counter.razor` | 시스템 | 템플릿/샘플성 카운터 화면 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P91.png" alt="HongdalApp-P91" width="160"> |
+| `HongdalApp-P99 - 미발견 페이지` | `/not-found` | `HongdalApp/Components/Pages/NotFound.razor` | 시스템 | 미발견 페이지 | - | 완료<br><img src="assets/app-pages/HongdalApp/HongdalApp-P99.png" alt="HongdalApp-P99" width="160"> |
 
 ## DriverApp
 
@@ -182,6 +183,17 @@
 | `HongdalAdmin-P91 - 템플릿/샘플성 카운터 화면` | `/counter` | `HongdalAdmin/Components/Pages/Counter.razor` | 시스템 | 템플릿/샘플성 카운터 화면 | - | 완료<br><img src="assets/app-pages/HongdalAdmin/HongdalAdmin-P91.png" alt="HongdalAdmin-P91" width="160"> |
 | `HongdalAdmin-P99 - 미발견 페이지` | `/not-found` | `HongdalAdmin/Components/Pages/NotFound.razor` | 시스템 | 미발견 페이지 | - | 완료<br><img src="assets/app-pages/HongdalAdmin/HongdalAdmin-P99.png" alt="HongdalAdmin-P99" width="160"> |
 
+## HongdalAdminApp
+
+| 페이지 ID / 제목 | 라우트 | 파일 | 분류 | 화면 책임 | 필수 연결 | 캡처 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `HongdalAdminApp-P00 - 커뮤니티 운영 홈` | `/` | `HongdalAdminApp/Components/Pages/Home.razor` | 시스템 | 공통 커뮤니티 현황과 운영 진입 | - | 코드 확인 |
+| `HongdalAdminApp-P01 - 관리자 로그인` | `/login` | `HongdalAdminApp/Components/Pages/Login.razor` | 시스템 | 서버관리자 인증 | - | 코드 확인 |
+| `HongdalAdminApp-P02 - 커뮤니티 운영` | `/community-management` | `HongdalAdminApp/Components/Pages/CommunityManagement.razor` | 운영 | 커뮤니티 운영 상태와 관리 작업 | - | 코드 확인 |
+| `HongdalAdminApp-P03 - 자료 검토·글쓰기` | `/information-review` | `HongdalAdminApp/Components/Pages/CommunityInformationReview.razor` | 운영 | 수집 자료의 출처·기준 검토와 커뮤니티 글 초안 작성 | `HongdalAdminApp-P01` | 로그인 경계 확인<br><img src="../assets/changes/2026-07-18-admin-information-review/admin-information-review-mobile.png" alt="HongdalAdminApp 자료 검토 모바일 화면" width="160"> |
+| `HongdalAdminApp-P04 - 반야 운영 허브` | `/prajna` | `HongdalAdminApp/Components/Pages/PrajnaHub.razor` | 운영 | 지식·성찰 자료 선별 운영 | `HongdalAdminApp-P01` | 코드 확인 |
+| `HongdalAdminApp-P04-1 - 홍익학당 선별 운영` | `/prajna/hongik-hakdang` | `HongdalAdminApp/Components/Pages/PrajnaHongikHakdang.razor` | 운영 | 홍익학당 공개 자료 검토와 발행 | `HongdalAdminApp-P04` | 코드 확인 |
+
 ## WarehouseManagerApp
 
 | 페이지 ID / 제목 | 라우트 | 파일 | 분류 | 화면 책임 | 필수 연결 | 캡처 |
@@ -234,7 +246,7 @@
 | 항목 | 내용 |
 | --- | --- |
 | 필수 페이지와 전체 페이지의 관계 | 필수 페이지는 1.0 운송 루프를 닫는 최소 화면이고, 이 문서는 코드 프로젝트 전체 화면을 찾기 위한 색인이다. |
-| 라우트 충돌 후보 | `ShipperApp`과 `RestaurantDeskApp` 모두 `/dispatch/address-form`을 가진다. 앱이 다르므로 런타임 충돌은 아니지만 문서에서 책임을 구분해야 한다. |
+| 라우트 충돌 후보 | `HongdalApp`과 `RestaurantDeskApp` 모두 `/dispatch/address-form`을 가진다. 앱이 다르므로 런타임 충돌은 아니지만 문서에서 책임을 구분해야 한다. |
 | 템플릿성 화면 | `Counter`, `Weather`는 시스템/샘플 화면으로 분류했다. 출시 전 제거 또는 숨김 여부를 따로 판단한다. |
 | 미발견 페이지 | `NotFound`는 사용자 업무 화면이 아니지만 앱 운영에 필요한 라우트로 남긴다. |
 | 다음 문서화 단계 | 각 페이지별 상세 README는 `page-docs/{앱명}/{페이지ID}/README.md`에 두고, 캡처는 `assets/app-pages/{앱명}/` 아래 추가한다. |

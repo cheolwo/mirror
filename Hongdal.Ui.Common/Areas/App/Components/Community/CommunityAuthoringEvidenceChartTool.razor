@@ -1,0 +1,262 @@
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inherits ViewModelParameterComponentBase<CommunityAuthoringEvidenceChartViewModel>
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<section class="@RootClass" aria-label="설득 근거 그래프 작성">
+    <header class="community-author-evidence-tool__heading">
+        <div>
+            <MudText Typo="Typo.overline" Color="Color.Primary">EVIDENCE BUILDER</MudText>
+            <MudText Typo="Typo.subtitle1">설득 근거 그래프</MudText>
+        </div>
+        <div class="community-author-evidence-tool__heading-actions">
+            <MudTooltip Text="그래프 입력 초기화">
+                <MudIconButton Icon="@Icons.Material.Filled.RestartAlt"
+                               OnClick="Reset"
+                               aria-label="그래프 입력 초기화" />
+            </MudTooltip>
+            @if (CloseRequested.HasDelegate)
+            {
+                <MudTooltip Text="근거 그래프 닫기">
+                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                   OnClick="CloseRequested"
+                                   aria-label="근거 그래프 닫기" />
+                </MudTooltip>
+            }
+        </div>
+    </header>
+
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+        그래프에는 주장뿐 아니라 출처·기준일·단위·해석·한계를 함께 남깁니다. 수치가 주장을 자동으로 증명하는 것은 아닙니다.
+    </MudAlert>
+
+    <div class="community-author-evidence-tool__mode">
+        <MudToggleGroup T="string"
+                        Value="@ViewModel.ChartTypeCode"
+                        ValueChanged="ChangeChartType"
+                        SelectionMode="SelectionMode.SingleSelection"
+                        Outlined="true"
+                        Delimiters="true"
+                        Size="Size.Small"
+                        Color="Color.Primary">
+            @foreach (var option in CommunityAuthoringEvidenceChartViewModel.ChartTypes)
+            {
+                <MudToggleItem T="string"
+                               Value="@option.Code"
+                               Text="@option.DisplayName" />
+            }
+        </MudToggleGroup>
+        @if (ImportMutualBenefitRequested.HasDelegate)
+        {
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.Handshake"
+                       OnClick="ImportMutualBenefitRequested">
+                Win-Win 금액 가져오기
+            </MudButton>
+        }
+    </div>
+
+    <div class="community-author-evidence-tool__fields">
+        <MudTextField T="string"
+                      Label="그래프 제목"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Immediate="true"
+                      MaxLength="120"
+                      @bind-Value="ViewModel.Title" />
+        <MudTextField T="string"
+                      Label="이 그래프로 함께 확인할 주장"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Immediate="true"
+                      Lines="2"
+                      MaxLength="240"
+                      @bind-Value="ViewModel.Claim" />
+        <div class="community-author-evidence-tool__two-column">
+            <MudTextField T="string"
+                          Label="수치 계열 이름"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Immediate="true"
+                          MaxLength="80"
+                          @bind-Value="ViewModel.SeriesLabel" />
+            <MudTextField T="string"
+                          Label="단위"
+                          Placeholder="KRW/kg, %, 명"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Immediate="true"
+                          MaxLength="30"
+                          @bind-Value="ViewModel.Unit" />
+        </div>
+    </div>
+
+    <div class="community-author-evidence-tool__data-heading">
+        <div>
+            <MudText Typo="Typo.subtitle2">그래프 데이터</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@($"{ViewModel.Points.Count:N0}/{CommunityEvidenceChartPolicy.MaximumPointCount:N0}")</MudText>
+        </div>
+        <MudTooltip Text="데이터 행 추가">
+            <MudIconButton Icon="@Icons.Material.Filled.AddCircle"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           Disabled="@(!ViewModel.CanAddPoint)"
+                           OnClick="AddPoint"
+                           aria-label="데이터 행 추가" />
+        </MudTooltip>
+    </div>
+
+    <div class="community-author-evidence-tool__data-list">
+        @foreach (var point in ViewModel.Points)
+        {
+            <div class="community-author-evidence-point" @key="point.PointKey">
+                <MudTextField T="string"
+                              Label="항목"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Immediate="true"
+                              MaxLength="40"
+                              @bind-Value="point.Label" />
+                <MudNumericField T="decimal?"
+                                 Label="수치"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Adornment="Adornment.End"
+                                 AdornmentText="@ViewModel.Unit"
+                                 @bind-Value="point.Value" />
+                <MudTooltip Text="데이터 행 제거">
+                    <MudIconButton Icon="@Icons.Material.Filled.RemoveCircleOutline"
+                                   Color="Color.Error"
+                                   Size="Size.Small"
+                                   OnClick="@(() => RemovePoint(point))"
+                                   aria-label="데이터 행 제거" />
+                </MudTooltip>
+            </div>
+        }
+    </div>
+
+    <div class="community-author-evidence-tool__source">
+        <div class="community-author-evidence-tool__two-column">
+            <MudTextField T="string"
+                          Label="자료 출처"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Immediate="true"
+                          MaxLength="160"
+                          @bind-Value="ViewModel.SourceLabel" />
+            <MudTextField T="string"
+                          Label="자료 기준일"
+                          Placeholder="YYYY-MM-DD"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Immediate="true"
+                          MaxLength="40"
+                          @bind-Value="ViewModel.ReferenceDate" />
+        </div>
+        <MudTextField T="string"
+                      Label="자료 원문 주소"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Immediate="true"
+                      MaxLength="1000"
+                      @bind-Value="ViewModel.SourceUrl" />
+        <MudTextField T="string"
+                      Label="수치 해석"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Immediate="true"
+                      Lines="2"
+                      MaxLength="500"
+                      @bind-Value="ViewModel.Interpretation" />
+        <MudTextField T="string"
+                      Label="자료와 계산의 한계"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Immediate="true"
+                      Lines="2"
+                      MaxLength="500"
+                      @bind-Value="ViewModel.Limitation" />
+    </div>
+
+    <div class="community-author-evidence-tool__actions">
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Preview"
+                   OnClick="Evaluate">
+            미리보기 갱신
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.PostAdd"
+                   Disabled="@(!ViewModel.HasPreview)"
+                   OnClick="ApplyToDraftRequested">
+            글에 넣기
+        </MudButton>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ViewModel.StatusMessage))
+    {
+        <MudAlert Severity="@StatusSeverity" Variant="Variant.Outlined" Dense="true">
+            @ViewModel.StatusMessage
+        </MudAlert>
+    }
+
+    @if (ViewModel.ValidationErrors.Count > 0)
+    {
+        <div class="community-author-evidence-tool__errors">
+            @foreach (var error in ViewModel.ValidationErrors)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Error">@error</MudText>
+            }
+        </div>
+    }
+
+    @if (ViewModel.Preview is { } preview)
+    {
+        <CommunityEvidenceChartDisplay Model="@preview" />
+    }
+</section>
+
+@code {
+    [Parameter]
+    public EventCallback ImportMutualBenefitRequested { get; set; }
+
+    [Parameter]
+    public EventCallback ApplyToDraftRequested { get; set; }
+
+    [Parameter]
+    public EventCallback CloseRequested { get; set; }
+
+    [Parameter]
+    public bool Standalone { get; set; }
+
+    private string RootClass
+        => Standalone
+            ? "community-author-evidence-tool community-author-evidence-tool--standalone"
+            : "community-author-evidence-tool";
+
+    private Severity StatusSeverity
+        => ViewModel.StatusKind switch
+        {
+            CommunityComposerMessageKind.Success => Severity.Success,
+            CommunityComposerMessageKind.Warning => Severity.Warning,
+            CommunityComposerMessageKind.Error => Severity.Error,
+            _ => Severity.Info
+        };
+
+    private void ChangeChartType(string value)
+        => ViewModel.ChartTypeCode = value;
+
+    private void AddPoint()
+        => ViewModel.AddPoint();
+
+    private void RemovePoint(CommunityEvidenceDataPointViewModel point)
+        => ViewModel.RemovePoint(point);
+
+    private void Evaluate()
+        => ViewModel.Evaluate();
+
+    private void Reset()
+        => ViewModel.Reset();
+}

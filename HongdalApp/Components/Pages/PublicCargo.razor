@@ -1,0 +1,72 @@
+@page "/shipper/public-cargo"
+@using Hongdal.Contracts.Shipper.Request
+@using HongdalApp.Models.Shipper
+@using HongdalApp.Services
+@inject IShipperOperationsService ShipperOperations
+
+<PageTitle>공개 화물</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="py-4">
+    <MudStack Spacing="3">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h4">공개 화물</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">살뜰 서비스에서 공개 상태의 화물 목록을 조회합니다.</MudText>
+            </MudStack>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="LoadAsync">새로고침</MudButton>
+        </MudStack>
+
+        @if (!string.IsNullOrWhiteSpace(Message))
+        {
+            <MudAlert Severity="@MessageSeverity">@Message</MudAlert>
+        }
+
+        <MudGrid>
+            @foreach (var cargo in publicCargo)
+            {
+                <MudItem xs="12" md="6" lg="4">
+                    <MudCard Elevation="2">
+                        <MudCardContent>
+                            <MudStack Spacing="1">
+                                <MudText Typo="Typo.h6">@cargo.의뢰Id</MudText>
+                                <MudText Typo="Typo.body2">화물종류: @cargo.화물종류</MudText>
+                                <MudText Typo="Typo.body2">운송방식: @cargo.운송방식</MudText>
+                                <MudText Typo="Typo.body2">차량종류: @cargo.차량종류</MudText>
+                                <MudText Typo="Typo.body2">수량: @cargo.화물수량?.ToString() ?? "-"</MudText>
+                                <MudText Typo="Typo.body2">중량: @cargo.화물중량Kg?.ToString() ?? "-"</MudText>
+                                <MudText Typo="Typo.body2">등록일시: @cargo.생성일시.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</MudText>
+                            </MudStack>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudStack>
+</MudContainer>
+
+@code {
+    private List<공개화물요약응답> publicCargo = [];
+    private string? Message;
+    private Severity MessageSeverity = Severity.Info;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            publicCargo = (await ShipperOperations.GetPublicCargoAsync()).ToList();
+            MessageSeverity = Severity.Info;
+            Message = publicCargo.Count == 0 ? "공개 화물이 없습니다." : $"공개 화물 {publicCargo.Count}건을 불러왔습니다.";
+        }
+        catch (Exception ex)
+        {
+            publicCargo = [];
+            MessageSeverity = Severity.Error;
+            Message = $"서버 API 조회 실패: {ex.Message}";
+        }
+    }
+}

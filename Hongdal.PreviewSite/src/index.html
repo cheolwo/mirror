@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Hongdal의 커뮤니티, 공급, 운송, 기사, 창고 화면을 역할별로 둘러보는 읽기 전용 체험 사이트입니다.">
+  <title>Hongdal 역할별 화면 체험</title>
+  <link rel="stylesheet" href="/assets/styles.css?v=3">
+  <script src="/assets/community-sales.js?v=3" defer></script>
+  <script src="/assets/app.js?v=3" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="brand" href="/" data-route aria-label="Hongdal 체험 사이트 홈">
+        <span class="brand__mark" aria-hidden="true">H</span>
+        <span>
+          <strong>Hongdal</strong>
+          <small>역할별 화면 체험</small>
+        </span>
+      </a>
+      <nav class="site-header__nav" aria-label="바로 가기">
+        <a href="/" data-route>체험 홈</a>
+        <a href="https://github.com/cheolwo/hongdal" target="_blank" rel="noreferrer">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="app" tabindex="-1">
+    <div class="loading" role="status">화면을 준비하고 있습니다.</div>
+  </main>
+
+  <footer class="site-footer">
+    <div>
+      <strong>Hongdal</strong>
+      <span>읽기 전용 제품 체험</span>
+    </div>
+    <p>실제 주문, 배차, 결제와 데이터 변경은 실행하지 않습니다.</p>
+  </footer>
+
+  <dialog id="demo-dialog" class="demo-dialog" aria-labelledby="demo-dialog-title">
+    <div class="demo-dialog__head">
+      <div>
+        <span>READ-ONLY PREVIEW</span>
+        <h2 id="demo-dialog-title">체험 모드 안내</h2>
+      </div>
+      <button type="button" class="icon-button" data-close-dialog aria-label="안내 닫기">×</button>
+    </div>
+    <p id="demo-dialog-copy">이 화면에서는 업무 흐름과 상태 변화를 안전하게 미리 볼 수 있습니다.</p>
+    <form method="dialog">
+      <button class="primary-button" type="submit">확인</button>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

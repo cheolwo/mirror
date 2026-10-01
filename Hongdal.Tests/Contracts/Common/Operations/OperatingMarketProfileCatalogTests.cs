@@ -24,6 +24,9 @@ public sealed class OperatingMarketProfileCatalogTests
         Assert.Equal("USD", profile.CurrencyCode);
         Assert.Equal(OperatingDistanceUnitCodes.Mile, profile.DistanceUnitCode);
         Assert.Equal(OperatingWeightUnitCodes.Pound, profile.WeightUnitCode);
+        Assert.Equal(
+            OperatingAddressProviderCodes.UnitedStatesCensusGeocoder,
+            profile.AddressProviderCode);
         Assert.Equal(OperatingMapProviderCodes.GoogleMaps, profile.MapProviderCode);
         Assert.Equal(
             FreightArrangementModeCodes.UnitedStatesLicensedBrokerPartner,

@@ -1,6 +1,7 @@
 using FluentResults;
 using Hongdal.ApiMetadata;
 using Hongdal.Contracts.Common.Community;
+using Hongdal.Contracts.Common.Metadata;
 using Hongdal.Domain.Community;
 using Microsoft.EntityFrameworkCore;
 using 홍달.Data;
@@ -9,12 +10,37 @@ namespace Hongdal.Services.Community;
 
 public interface I커뮤니티게시판UseCase
 {
-    Task<Result<PlatformCommunityBoardListResponse>> 목록Async(string? appKey, string? status, CancellationToken cancellationToken);
-    Task<Result<PlatformCommunityBoardResponse>> 신청Async(PlatformCommunityBoardCreateRequest? request, CancellationToken cancellationToken);
-    Task<Result<PlatformCommunityBoardResponse>> 승인Async(long id, PlatformCommunityBoardReviewRequest? request, CancellationToken cancellationToken);
-    Task<Result<PlatformCommunityBoardResponse>> 반려Async(long id, PlatformCommunityBoardReviewRequest? request, CancellationToken cancellationToken);
+    Task<Result<PlatformCommunityBoardListResponse>> 목록Async(
+        string? appKey,
+        string? status,
+        bool includeReviewDetails,
+        CancellationToken cancellationToken);
+
+    Task<Result<PlatformCommunityBoardResponse>> 신청Async(
+        PlatformCommunityBoardCreateRequest? request,
+        string requesterUserId,
+        string requesterDisplayName,
+        CancellationToken cancellationToken);
+
+    Task<Result<PlatformCommunityBoardResponse>> 승인Async(
+        long id,
+        PlatformCommunityBoardReviewRequest? request,
+        string reviewerUserId,
+        CancellationToken cancellationToken);
+
+    Task<Result<PlatformCommunityBoardResponse>> 반려Async(
+        long id,
+        PlatformCommunityBoardReviewRequest? request,
+        string reviewerUserId,
+        CancellationToken cancellationToken);
 }
 
+[HongdalCommunityV0Module(
+    HongdalCommunityV0ModuleKeys.Content,
+    HongdalModuleKind.Application,
+    "게시판 목록과 참여자 개설 신청·운영자 승인·반려 상태를 영속 처리",
+    ReleaseStage = HongdalCommunityV0ReleaseStages.Persistence,
+    Boundary = "게시판 승인은 공개 대화 공간을 여는 운영 행위이며 거래 상대나 계약을 승인하는 행위가 아닙니다.")]
 [HongdalApiWorkflow(HongdalWorkflow.CommunityTrust)]
 [HongdalUseCase("커뮤니티 게시판 개설", Summary = "커뮤니티 참여자가 게시판 개설을 신청하고 운영자가 승인 또는 반려합니다.")]
 [HongdalUseCaseActor(HongdalActor.CommunityMember)]
@@ -36,6 +62,7 @@ public sealed class 커뮤니티게시판UseCase : I커뮤니티게시판UseCase
     public async Task<Result<PlatformCommunityBoardListResponse>> 목록Async(
         string? appKey,
         string? status,
+        bool includeReviewDetails,
         CancellationToken cancellationToken)
     {
         var normalizedAppKey = Normalize(appKey, "platform", 80);
@@ -51,18 +78,22 @@ public sealed class 커뮤니티게시판UseCase : I커뮤니티게시판UseCase
             query = query.Where(x => x.Status == normalizedStatus);
         }
 
-        var items = await query
+        var entities = await query
             .OrderBy(x => x.Status == PlatformCommunityBoardRequestStatuses.Pending ? 0 : 1)
             .ThenByDescending(x => x.UpdatedAtUtc)
             .ThenByDescending(x => x.Id)
-            .Select(x => ToResponse(x))
             .ToListAsync(cancellationToken);
+        var items = entities
+            .Select(entity => ToResponse(entity, includeReviewDetails))
+            .ToArray();
 
         return new PlatformCommunityBoardListResponse { Items = items };
     }
 
     public async Task<Result<PlatformCommunityBoardResponse>> 신청Async(
         PlatformCommunityBoardCreateRequest? request,
+        string requesterUserId,
+        string requesterDisplayName,
         CancellationToken cancellationToken)
     {
         if (request is null)
@@ -70,8 +101,14 @@ public sealed class 커뮤니티게시판UseCase : I커뮤니티게시판UseCase
             return Result.Fail<PlatformCommunityBoardResponse>("request body is required");
         }
 
+        var normalizedRequesterUserId = Normalize(requesterUserId, string.Empty, 450);
+        if (string.IsNullOrWhiteSpace(normalizedRequesterUserId))
+        {
+            return Result.Fail<PlatformCommunityBoardResponse>("로그인한 사용자만 게시판 개설을 신청할 수 있습니다.");
+        }
+
         var title = Normalize(request.Title, string.Empty, 60);
-        var requestedBy = Normalize(request.RequestedBy, string.Empty, 40);
+        var requestedBy = Normalize(request.RequestedBy, requesterDisplayName, 40);
         var reason = Normalize(request.RequestReason, string.Empty, 1000);
         if (string.IsNullOrWhiteSpace(title) ||
             string.IsNullOrWhiteSpace(requestedBy) ||
@@ -81,6 +118,21 @@ public sealed class 커뮤니티게시판UseCase : I커뮤니티게시판UseCase
         }
 
         var appKey = Normalize(request.AppKey, "platform", 80);
+        if (CommunityBoardCatalog.Find(title) is not null)
+        {
+            return Result.Fail<PlatformCommunityBoardResponse>("같은 이름의 기본 게시판이 이미 존재합니다.");
+        }
+
+        var pendingRequestCount = await _db.PlatformCommunityBoardRequests
+            .CountAsync(x => x.RequestedByUserId == normalizedRequesterUserId
+                             && x.Status == PlatformCommunityBoardRequestStatuses.Pending
+                             && !x.IsDeleted,
+                cancellationToken);
+        if (pendingRequestCount >= 3)
+        {
+            return Result.Fail<PlatformCommunityBoardResponse>("승인 대기 중인 게시판 신청은 사용자당 최대 3개까지 가능합니다.");
+        }
+
         var boardKey = CreateBoardKey(title);
         var exists = await _db.PlatformCommunityBoardRequests
             .AnyAsync(x => x.AppKey == appKey &&
@@ -100,6 +152,7 @@ public sealed class 커뮤니티게시판UseCase : I커뮤니티게시판UseCase
             BoardKey = boardKey,
             Title = title,
             Description = Normalize(request.Description, string.Empty, 500),
+            RequestedByUserId = normalizedRequesterUserId,
             RequestedBy = requestedBy,
             RequestReason = reason,
             Status = PlatformCommunityBoardRequestStatuses.Pending,
@@ -110,27 +163,46 @@ public sealed class 커뮤니티게시판UseCase : I커뮤니티게시판UseCase
         _db.PlatformCommunityBoardRequests.Add(entity);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return ToResponse(entity);
+        return ToResponse(entity, includeReviewDetails: true);
     }
 
     public Task<Result<PlatformCommunityBoardResponse>> 승인Async(
         long id,
         PlatformCommunityBoardReviewRequest? request,
+        string reviewerUserId,
         CancellationToken cancellationToken)
-        => 검토Async(id, request, PlatformCommunityBoardRequestStatuses.Approved, cancellationToken);
+        => 검토Async(
+            id,
+            request,
+            reviewerUserId,
+            PlatformCommunityBoardRequestStatuses.Approved,
+            cancellationToken);
 
     public Task<Result<PlatformCommunityBoardResponse>> 반려Async(
         long id,
         PlatformCommunityBoardReviewRequest? request,
+        string reviewerUserId,
         CancellationToken cancellationToken)
-        => 검토Async(id, request, PlatformCommunityBoardRequestStatuses.Rejected, cancellationToken);
+        => 검토Async(
+            id,
+            request,
+            reviewerUserId,
+            PlatformCommunityBoardRequestStatuses.Rejected,
+            cancellationToken);
 
     private async Task<Result<PlatformCommunityBoardResponse>> 검토Async(
         long id,
         PlatformCommunityBoardReviewRequest? request,
+        string reviewerUserId,
         string status,
         CancellationToken cancellationToken)
     {
+        var normalizedReviewerUserId = Normalize(reviewerUserId, string.Empty, 450);
+        if (string.IsNullOrWhiteSpace(normalizedReviewerUserId))
+        {
+            return Result.Fail<PlatformCommunityBoardResponse>("게시판 신청을 검토한 관리자 식별자가 필요합니다.");
+        }
+
         var entity = await _db.PlatformCommunityBoardRequests
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
         if (entity is null)
@@ -138,18 +210,29 @@ public sealed class 커뮤니티게시판UseCase : I커뮤니티게시판UseCase
             return Result.Fail<PlatformCommunityBoardResponse>("게시판 개설 신청을 찾을 수 없습니다.");
         }
 
+        if (!string.Equals(
+                entity.Status,
+                PlatformCommunityBoardRequestStatuses.Pending,
+                StringComparison.Ordinal))
+        {
+            return Result.Fail<PlatformCommunityBoardResponse>("이미 검토가 끝난 게시판 신청입니다.");
+        }
+
         var now = DateTime.UtcNow;
         entity.Status = status;
         entity.OperatorMemo = Normalize(request?.OperatorMemo, string.Empty, 1000);
+        entity.ReviewedByUserId = normalizedReviewerUserId;
         entity.ApprovedAtUtc = status == PlatformCommunityBoardRequestStatuses.Approved ? now : null;
         entity.RejectedAtUtc = status == PlatformCommunityBoardRequestStatuses.Rejected ? now : null;
         entity.UpdatedAtUtc = now;
         await _db.SaveChangesAsync(cancellationToken);
 
-        return ToResponse(entity);
+        return ToResponse(entity, includeReviewDetails: true);
     }
 
-    private static PlatformCommunityBoardResponse ToResponse(PlatformCommunityBoardRequest entity)
+    private static PlatformCommunityBoardResponse ToResponse(
+        PlatformCommunityBoardRequest entity,
+        bool includeReviewDetails)
         => new()
         {
             Id = entity.Id,
@@ -158,14 +241,14 @@ public sealed class 커뮤니티게시판UseCase : I커뮤니티게시판UseCase
             Title = entity.Title,
             Description = entity.Description,
             RequestedBy = entity.RequestedBy,
-            RequestReason = entity.RequestReason,
+            RequestReason = includeReviewDetails ? entity.RequestReason : string.Empty,
             Status = entity.Status,
             StatusName = ToStatusName(entity.Status),
-            OperatorMemo = entity.OperatorMemo,
+            OperatorMemo = includeReviewDetails ? entity.OperatorMemo : null,
             CreatedAtUtc = entity.CreatedAtUtc,
             UpdatedAtUtc = entity.UpdatedAtUtc,
             ApprovedAtUtc = entity.ApprovedAtUtc,
-            RejectedAtUtc = entity.RejectedAtUtc
+            RejectedAtUtc = includeReviewDetails ? entity.RejectedAtUtc : null
         };
 
     private static string ToStatusName(string status)

@@ -1,0 +1,148 @@
+.community-sales-offer {
+    background: #fff;
+    border: 1px solid #dce7df;
+    border-radius: 18px;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(10rem, 0.75fr) minmax(0, 1.7fr);
+    overflow: hidden;
+}
+
+.community-sales-offer.is-closed {
+    filter: saturate(0.7);
+}
+
+.community-sales-offer__media {
+    align-items: center;
+    background: linear-gradient(145deg, #edf8f1, #f9fbf9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 13rem;
+    overflow: hidden;
+    position: relative;
+}
+
+.community-sales-offer__media img {
+    height: 100%;
+    inset: 0;
+    object-fit: cover;
+    position: absolute;
+    width: 100%;
+}
+
+.community-sales-offer__media > span {
+    color: #3f7f5b;
+}
+
+.community-sales-offer__media small {
+    color: #64806d;
+    line-height: 1.35;
+    text-align: center;
+}
+
+.community-sales-offer__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem 1rem 1rem 0;
+}
+
+.community-sales-offer__body header > div,
+.community-sales-offer__methods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.community-sales-offer__body header > strong {
+    display: block;
+    font-size: 1.1rem;
+    line-height: 1.35;
+    margin-top: 0.4rem;
+}
+
+.community-sales-offer__status,
+.community-sales-offer__group,
+.community-sales-offer__methods span {
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+}
+
+.community-sales-offer__status {
+    background: #daf5e5;
+    color: #17653b;
+}
+
+.community-sales-offer__group {
+    background: #eef2ff;
+    color: #4854a3;
+}
+
+.community-sales-offer__price {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.community-sales-offer__price > strong {
+    color: #112d1e;
+    font-size: 1.35rem;
+}
+
+.community-sales-offer__price > span,
+.community-sales-offer__price > small {
+    color: #64748b;
+}
+
+.community-sales-offer__price > small {
+    margin-left: auto;
+}
+
+.community-sales-offer__methods span {
+    background: #f4f6f8;
+    color: #475569;
+}
+
+.community-sales-offer__inquiry {
+    align-items: center;
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: minmax(7rem, 0.7fr) minmax(9rem, 1fr) auto;
+}
+
+.community-sales-offer__notice {
+    background: #fff9e8;
+    border-radius: 10px;
+    color: #6f5a1e;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0.55rem 0.65rem;
+}
+
+@media (max-width: 720px) {
+    .community-sales-offer {
+        grid-template-columns: 1fr;
+    }
+
+    .community-sales-offer__media {
+        min-height: 12rem;
+    }
+
+    .community-sales-offer__body {
+        padding: 0 0.85rem 0.85rem;
+    }
+
+    .community-sales-offer__inquiry {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .community-sales-offer__inquiry .mud-button-root {
+        grid-column: 1 / -1;
+        min-height: 2.8rem;
+    }
+}

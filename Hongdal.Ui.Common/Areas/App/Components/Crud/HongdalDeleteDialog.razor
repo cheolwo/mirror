@@ -1,0 +1,26 @@
+@typeparam TDraft
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@namespace Hongdal.Ui.Common.Areas.App.Components.Crud
+
+<HongdalCommandDialog TDraft="TDraft" ViewModel="@ViewModel">
+    <Content>
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+            @if (string.IsNullOrWhiteSpace(TargetLabel))
+            {
+                <span>선택한 대상을 삭제합니다.</span>
+            }
+            else
+            {
+                <span><strong>@TargetLabel</strong> 항목을 삭제합니다.</span>
+            }
+        </MudAlert>
+    </Content>
+</HongdalCommandDialog>
+
+@code {
+    [Parameter, EditorRequired]
+    public I명령ViewModel<TDraft> ViewModel { get; set; } = default!;
+
+    [Parameter]
+    public string? TargetLabel { get; set; }
+}

@@ -1,0 +1,297 @@
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inherits ViewModelParameterComponentBase<CommunityAuthoringDiagramViewModel>
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+
+<section class="community-author-diagram-tool" aria-label="빠른 다이어그램 작성">
+    <div class="community-author-diagram-template">
+        <MudSelect T="string"
+                   Label="원장 흐름"
+                   Variant="Variant.Outlined"
+                   Margin="Margin.Dense"
+                   @bind-Value="ViewModel.SelectedTemplateKey">
+            @foreach (var template in ViewModel.Templates)
+            {
+                <MudSelectItem T="string" Value="@template.Key">@template.DisplayName</MudSelectItem>
+            }
+        </MudSelect>
+        <MudTooltip Text="선택한 기본 흐름 불러오기">
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                           Color="Color.Primary"
+                           OnClick="ViewModel.LoadSelectedTemplate"
+                           aria-label="기본 흐름 불러오기" />
+        </MudTooltip>
+        <MudTooltip Text="흐름 비우기">
+            <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                           Color="Color.Error"
+                           OnClick="ViewModel.Reset"
+                           aria-label="흐름 비우기" />
+        </MudTooltip>
+    </div>
+
+    <div class="community-author-diagram-add">
+        <MudTextField T="string"
+                      Label="새 단계"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Immediate="true"
+                      @bind-Value="ViewModel.NewStepTitle" />
+        <MudTextField T="string"
+                      Label="단계 설명"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Immediate="true"
+                      @bind-Value="ViewModel.NewStepDescription" />
+        <MudIconButton Icon="@Icons.Material.Filled.AddCircle"
+                       Color="Color.Primary"
+                       OnClick="AddStep"
+                       aria-label="단계 추가" />
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ViewModel.StatusMessage))
+    {
+        <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">@ViewModel.StatusMessage</MudAlert>
+    }
+
+    <div class="community-author-diagram-counts">
+        <span>@($"단계 {ViewModel.Steps.Count:N0}")</span>
+        <span>@($"연결 {ViewModel.EdgeCount:N0}")</span>
+    </div>
+
+    @if (!ViewModel.HasSteps)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">단계를 추가하거나 기본 흐름을 불러와 주세요.</MudAlert>
+    }
+    else
+    {
+        <div class="community-author-diagram-flow" role="list" aria-label="다이어그램 단계">
+            @for (var index = 0; index < ViewModel.Steps.Count; index++)
+            {
+                var step = ViewModel.Steps[index];
+                <article class="community-author-diagram-node" role="listitem">
+                    <span class="community-author-diagram-number">@(index + 1)</span>
+                    <div class="community-author-diagram-fields">
+                        <MudTextField T="string"
+                                      Label="단계 이름"
+                                      Variant="Variant.Text"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      @bind-Value="step.Title" />
+                        <MudTextField T="string"
+                                      Label="설명"
+                                      Variant="Variant.Text"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      Lines="2"
+                                      @bind-Value="step.Description" />
+                        @foreach (var organization in ViewModel.GetOrganizationsForStep(step.Key))
+                        {
+                            <MudChip T="string"
+                                     Size="Size.Small"
+                                     Variant="Variant.Outlined"
+                                     Color="Color.Info"
+                                     Icon="@Icons.Material.Filled.Business">
+                                @organization.OrganizationName · @organization.RoleLabel
+                            </MudChip>
+                        }
+                    </div>
+                    <div class="community-author-diagram-node-actions">
+                        <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
+                                       Size="Size.Small"
+                                       Disabled="@(index == 0)"
+                                       OnClick="@(() => ViewModel.MoveStep(step, -1))"
+                                       aria-label="단계 위로 이동" />
+                        <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
+                                       Size="Size.Small"
+                                       Disabled="@(index == ViewModel.Steps.Count - 1)"
+                                       OnClick="@(() => ViewModel.MoveStep(step, 1))"
+                                       aria-label="단계 아래로 이동" />
+                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                                       Size="Size.Small"
+                                       Color="Color.Error"
+                                       OnClick="@(() => ViewModel.RemoveStep(step))"
+                                       aria-label="단계 삭제" />
+                    </div>
+                </article>
+                @if (index < ViewModel.Steps.Count - 1)
+                {
+                    <div class="community-author-diagram-edge">
+                        <MudIcon Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" />
+                        <MudTextField T="string"
+                                      Label="연결 설명"
+                                      Variant="Variant.Text"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      @bind-Value="step.NextLabel" />
+                    </div>
+                }
+            }
+        </div>
+
+        <section class="community-author-diagram-organizations" aria-label="다이어그램 업체 후보">
+            <header>
+                <div>
+                    <MudText Typo="Typo.subtitle2">단계별 업체·기관 후보</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        공개된 업무 연락처의 근거를 남기고, 실제 연락은 나중에 업체별로 검토합니다.
+                    </MudText>
+                </div>
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Variant="Variant.Outlined"
+                         Color="@(ViewModel.OutreachReadinessLabel == "수동 이메일 초안 준비 가능" ? Color.Success : Color.Info)">
+                    @ViewModel.OutreachReadinessLabel
+                </MudChip>
+            </header>
+
+            <section class="community-author-diagram-directory" aria-label="미국 3PL 업체 디렉터리">
+                <div class="community-author-diagram-directory-search">
+                    <MudTextField T="string"
+                                  Label="미국 3PL 조사 후보"
+                                  Placeholder="업체명 또는 물류 역량"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  @bind-Value="ViewModel.OrganizationDirectorySearchText" />
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Search"
+                               Disabled="@ViewModel.IsSearchingOrganizationDirectory"
+                               OnClick="SearchOrganizationDirectoryAsync">
+                        @(ViewModel.IsSearchingOrganizationDirectory ? "조회 중" : "후보 조회")
+                    </MudButton>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(ViewModel.OrganizationDirectoryErrorMessage))
+                {
+                    <MudAlert Severity="Severity.Warning" Dense="true" Variant="Variant.Outlined">
+                        @ViewModel.OrganizationDirectoryErrorMessage
+                    </MudAlert>
+                }
+
+                @if (ViewModel.OrganizationDirectoryItems.Count > 0)
+                {
+                    <div class="community-author-diagram-directory-results" role="list">
+                        @foreach (var provider in ViewModel.OrganizationDirectoryItems)
+                        {
+                            <article role="listitem">
+                                <div>
+                                    <strong>@provider.DisplayName</strong>
+                                    <span>@provider.MarketCode · @(provider.IsPlatformPartner ? "플랫폼 제휴" : "플랫폼 제휴 없음") · @(provider.CanBeSelectedForOperations ? "업무 선택 가능" : "조사 후보")</span>
+                                    <a href="@provider.OfficialWebsiteUrl" target="_blank" rel="noopener noreferrer">공식 사이트</a>
+                                </div>
+                                <MudButton Variant="Variant.Text"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.AddLink"
+                                           OnClick="@(() => ViewModel.AttachOrganizationDirectoryItem(provider))">
+                                    노드에 연결
+                                </MudButton>
+                            </article>
+                        }
+                    </div>
+                    <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Text">
+                        디렉터리 항목은 추천이나 선정 결과가 아닙니다. 제휴·면허·보세 시설·실제 처리 역량은 연락 전에 다시 확인합니다.
+                    </MudAlert>
+                }
+            </section>
+
+            <div class="community-author-diagram-organization-form">
+                <MudSelect T="string"
+                           Label="연결 단계"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           @bind-Value="ViewModel.SelectedOrganizationNodeKey">
+                    @foreach (var step in ViewModel.Steps)
+                    {
+                        <MudSelectItem T="string" Value="@step.Key">@step.Title</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudTextField T="string" Label="업체·기관 이름" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" @bind-Value="ViewModel.NewOrganizationName" />
+                <MudTextField T="string" Label="맡길 역할" Placeholder="해외 공급자, 관세사, 3PL" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" @bind-Value="ViewModel.NewOrganizationRoleLabel" />
+                <MudTextField T="string" Label="국가" Placeholder="CN" MaxLength="2" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" @bind-Value="ViewModel.NewOrganizationCountryCode" />
+                <MudTextField T="string" Label="공식 웹사이트" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" @bind-Value="ViewModel.NewOrganizationWebsiteUrl" />
+                <MudTextField T="string" Label="공개 업무 이메일" InputType="InputType.Email" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" @bind-Value="ViewModel.NewOrganizationPublicBusinessEmail" />
+                <MudTextField T="string" Label="연락처 근거 주소" Placeholder="공식 Contact 페이지" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" @bind-Value="ViewModel.NewOrganizationContactSourceUrl" />
+                <MudCheckBox T="bool"
+                             Label="공식 공개 출처를 직접 확인함"
+                             Dense="true"
+                             @bind-Value="ViewModel.NewOrganizationContactSourceReviewed" />
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.AddBusiness"
+                           OnClick="AddOrganizationCandidate">
+                    후보 연결
+                </MudButton>
+            </div>
+
+            @if (ViewModel.HasOrganizationCandidates)
+            {
+                <div class="community-author-diagram-organization-list" role="list">
+                    @foreach (var candidate in ViewModel.OrganizationCandidates)
+                    {
+                        var linkedStep = ViewModel.Steps.FirstOrDefault(step => step.Key == candidate.DiagramNodeKey);
+                        <div role="listitem">
+                            <div>
+                                <strong>@candidate.OrganizationName</strong>
+                                <span>@(linkedStep?.Title ?? "연결 단계 미확인") · @candidate.RoleLabel · @candidate.CountryCode</span>
+                            </div>
+                            <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                                           Size="Size.Small"
+                                           Color="Color.Error"
+                                           OnClick="@(() => ViewModel.RemoveOrganizationCandidate(candidate))"
+                                           aria-label="업체 후보 삭제" />
+                        </div>
+                    }
+                </div>
+            }
+
+            <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Text">
+                연락처를 저장해도 이메일은 자동 발송되지 않습니다. 글과 여정이 충분히 쌓인 뒤 수신자별 수동 검토를 거쳐 초안을 준비합니다.
+            </MudAlert>
+        </section>
+
+        <div class="community-author-diagram-actions">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.PlaylistAdd"
+                       OnClick="ApplyToDraftRequested">
+                글 초안에 반영
+            </MudButton>
+            @if (CanSaveWorkspace)
+            {
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Save"
+                           Disabled="@IsSavingWorkspace"
+                           OnClick="SaveWorkspaceRequested">
+                    여정·업체 저장
+                </MudButton>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter]
+    public EventCallback ApplyToDraftRequested { get; set; }
+
+    [Parameter]
+    public EventCallback SaveWorkspaceRequested { get; set; }
+
+    [Parameter]
+    public bool CanSaveWorkspace { get; set; }
+
+    [Parameter]
+    public bool IsSavingWorkspace { get; set; }
+
+    private void AddStep()
+        => ViewModel.AddStep();
+
+    private void AddOrganizationCandidate()
+        => ViewModel.AddOrganizationCandidate();
+
+    private Task SearchOrganizationDirectoryAsync()
+        => ViewModel.SearchOrganizationDirectoryAsync();
+}

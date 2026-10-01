@@ -25,6 +25,19 @@
                 <MudText Typo="Typo.body1">기본 시작 위치: @Samples.근무상태.시작위치</MudText>
                 <MudText Typo="Typo.body1">복귀지: @(Samples.근무상태.복귀지 ?? "미설정")</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">위치 송신 간격: 서버 권장값 기준, 기본 5분</MudText>
+                <MudCheckBox T="bool" @bind-Value="_커뮤니티운행공개" Color="Color.Success">
+                    운행 시작을 커뮤니티에 공개하고 개별 운송 의뢰 받기
+                </MudCheckBox>
+                <MudCheckBox T="bool"
+                             @bind-Value="_커뮤니티구단위위치공개동의"
+                             Color="Color.Primary"
+                             Disabled="@(!_커뮤니티운행공개)">
+                    현재 GPS를 시·도와 시·군·구까지만 변환하여 공개하는 데 동의
+                </MudCheckBox>
+                <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">
+                    공개 목적은 인근 운송 의뢰 연결이며, 범위는 `서울특별시 중랑구` 같은 시·도+시·군·구입니다.
+                    운행 중 최대 18시간만 유효하고 운행 종료로 철회됩니다. 면목동 같은 동 단위, 실제 좌표, 도로명주소와 연락처는 공개하지 않습니다.
+                </MudAlert>
 
                 @if (!string.IsNullOrWhiteSpace(_상태문구))
                 {
@@ -44,6 +57,7 @@
                     운행 종료
                 </MudButton>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/driver/work/status">근무 상태 보기</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Forum" Href="@DriverRoutes.CommunityInquiries">커뮤니티 개별 의뢰 보기</MudButton>
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/driver/home">기사 홈으로</MudButton>
             </MudStack>
         </MudPaper>
@@ -54,6 +68,8 @@
     private bool _처리중;
     private string? _상태문구;
     private Severity _상태종류 = Severity.Info;
+    private bool _커뮤니티운행공개 = true;
+    private bool _커뮤니티구단위위치공개동의;
 
     protected override void OnInitialized()
     {
@@ -87,7 +103,9 @@
                 시작모드 = Samples.근무상태.시작모드,
                 시작시각 = DateTime.UtcNow,
                 시작위치 = 현재위치문구(location),
-                복귀지 = Samples.근무상태.복귀지
+                복귀지 = Samples.근무상태.복귀지,
+                커뮤니티운행공개 = _커뮤니티운행공개,
+                커뮤니티구단위위치공개동의 = _커뮤니티운행공개 && _커뮤니티구단위위치공개동의
             });
 
             await 위치송신.StartAsync(new 기사위치송신시작요청
@@ -97,7 +115,11 @@
                 운행상태 = startResponse?.Status ?? "운행중"
             });
 
-            SetStatus(Severity.Success, "운행을 시작했고, 백그라운드 위치 송신을 시작했습니다.");
+            SetStatus(
+                Severity.Success,
+                startResponse?.커뮤니티운행공개됨 == true
+                    ? "운행과 위치 송신을 시작했고, 연락처·정확한 위치를 제외한 운행 중 글을 커뮤니티에 공개했습니다."
+                    : $"운행과 위치 송신을 시작했습니다. {startResponse?.커뮤니티공개안내}");
         }
         catch (PermissionException)
         {

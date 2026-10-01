@@ -1,0 +1,73 @@
+@page "/warehouse/import/release"
+@inherits MvvmComponentBase<수입화물반출PageViewModel>
+@inject NavigationManager Navigation
+
+<PageTitle>수입 화물 반출</PageTitle>
+
+<WarehousePageShell Model="@ViewModel"
+                    Title="수입 화물 반출"
+                    Description="통관 완료 후 반출 가능한 재고와 보관 위치를 확인합니다."
+                    Icon="@Icons.Material.Filled.Outbox"
+                    Color="Color.Warning">
+    <Actions>
+        <MudStack Row="true" Spacing="1">
+            <MudButton Href="@WarehouseManagerRoutes.ImportCustoms"
+                       Variant="Variant.Outlined"
+                       StartIcon="@Icons.Material.Filled.FactCheck">
+                통관 상태
+            </MudButton>
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       Disabled="@ViewModel.처리중"
+                       OnClick="ReloadAsync">
+                새로고침
+            </MudButton>
+        </MudStack>
+    </Actions>
+    <ChildContent>
+        @if (!string.IsNullOrWhiteSpace(ViewModel.재고조회.오류메시지))
+        {
+            <MudAlert Severity="Severity.Error">@ViewModel.재고조회.오류메시지</MudAlert>
+        }
+
+        <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+            <MudStack Spacing="2">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.h6">반출 대상 재고</MudText>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning">
+                        @($"{ViewModel.재고조회.항목목록.Count}건")
+                    </MudChip>
+                </MudStack>
+                <WarehouseInventoryTable Items="@ViewModel.재고조회.항목목록"
+                                         Busy="@ViewModel.처리중"
+                                         EmptyText="현재 반출 가능한 수입 재고가 없습니다."
+                                         SelectLabel="운송 준비"
+                                         OnSelect="PrepareHandoff" />
+            </MudStack>
+        </MudPaper>
+    </ChildContent>
+</WarehousePageShell>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        EnsureProfile();
+        await ViewModel.초기화Async();
+    }
+
+    private Task ReloadAsync() => ViewModel.초기화Async();
+
+    private void PrepareHandoff(재고항목응답 item)
+    {
+        ViewModel.재고조회.선택(item.입고상품Id);
+        Navigation.NavigateTo(WarehouseManagerRoutes.ImportDomesticHandoff);
+    }
+
+    private void EnsureProfile()
+    {
+        if (!string.Equals(ViewModel.세션.운영ProfileCode, 창고운영ProfileCodes.보세수입, StringComparison.OrdinalIgnoreCase))
+        {
+            ViewModel.세션.운영Profile설정(창고운영ProfileCodes.보세수입);
+        }
+    }
+}

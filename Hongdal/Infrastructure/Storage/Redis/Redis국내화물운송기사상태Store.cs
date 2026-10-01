@@ -105,6 +105,10 @@ public sealed class Redis국내화물운송기사상태Store : I국내화물운�
             {
                 items.Add(snapshot);
             }
+            else
+            {
+                await RemoveIndexAsync(driverId).ConfigureAwait(false);
+            }
         }
 
         return items;
@@ -132,10 +136,15 @@ public sealed class Redis국내화물운송기사상태Store : I국내화물운�
         var items = new List<국내화물운송기사상태Snapshot>(driverIds.Length);
         foreach (var driverIdValue in driverIds)
         {
-            var snapshot = await GetAsync(driverIdValue.ToString(), cancellationToken).ConfigureAwait(false);
+            var driverId = driverIdValue.ToString();
+            var snapshot = await GetAsync(driverId, cancellationToken).ConfigureAwait(false);
             if (snapshot is not null && string.Equals(snapshot.운행상태, 상태값.기사운행상태.운행중, StringComparison.OrdinalIgnoreCase))
             {
                 items.Add(snapshot);
+            }
+            else
+            {
+                await RemoveIndexAsync(driverId).ConfigureAwait(false);
             }
         }
 

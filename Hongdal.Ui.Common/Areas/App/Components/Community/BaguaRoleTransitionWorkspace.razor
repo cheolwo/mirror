@@ -1,11 +1,14 @@
+@using Hongdal.Ui.Common.Areas.App.Components
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inherits MvvmComponentBase<BaguaRoleTransitionPageViewModel>
 @inject NavigationManager Navigation
 
-<PageTitle>@PageTitleText</PageTitle>
+<PageTitle>@ViewModel.PageTitleText</PageTitle>
 
-@if (!string.IsNullOrWhiteSpace(errorMessage))
+@if (!string.IsNullOrWhiteSpace(ViewModel.오류메시지))
 {
     <section class="bagua-transition-error">
-        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@errorMessage</MudAlert>
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@ViewModel.오류메시지</MudAlert>
         <MudButton Variant="Variant.Outlined"
                    Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.ArrowBack"
@@ -14,20 +17,20 @@
         </MudButton>
     </section>
 }
-else if (transition is not null && pageModel is null)
+else if (ViewModel.역할선택화면 && ViewModel.전환 is { } transition)
 {
     <div class="bagua-transition-page">
         <header class="bagua-transition-hero bagua-transition-hero--picker">
             <button type="button" class="bagua-transition-back" @onclick="GoToCommunity">← 커뮤니티</button>
-            <div class="bagua-transition-path" aria-label="괘 전환">
+            <div class="bagua-transition-path" aria-label="팔괘 업무 전환">
                 <span class="bagua-transition-trigram">
-                    <b>@sourceArea?.TrigramSymbol</b>
-                    <small>@sourceArea?.TrigramName · @sourceArea?.BusinessName</small>
+                    <b>@ViewModel.출발영역?.TrigramSymbol</b>
+                    <small>@ViewModel.출발영역?.TrigramName · @ViewModel.출발영역?.BusinessName</small>
                 </span>
                 <span class="bagua-transition-arrow" aria-hidden="true">→</span>
                 <span class="bagua-transition-trigram">
-                    <b>@targetArea?.TrigramSymbol</b>
-                    <small>@targetArea?.TrigramName · @targetArea?.BusinessName</small>
+                    <b>@ViewModel.도착영역?.TrigramSymbol</b>
+                    <small>@ViewModel.도착영역?.TrigramName · @ViewModel.도착영역?.BusinessName</small>
                 </span>
             </div>
             <div class="bagua-transition-hero-copy">
@@ -39,24 +42,21 @@ else if (transition is not null && pageModel is null)
 
         <section class="bagua-role-picker" aria-labelledby="bagua-role-picker-title">
             <div>
-                <span>ROLE PERSPECTIVE</span>
+                <span>역할 관점</span>
                 <h2 id="bagua-role-picker-title">이 전환을 어떤 역할의 입장에서 볼까요?</h2>
                 <p>관점은 화면의 설명과 우선 행동을 바꾸지만 실제 업무 권한을 부여하지는 않습니다.</p>
             </div>
             <div class="bagua-role-picker-grid">
-                @foreach (var role in BaguaTransitionCatalog.Roles)
+                @foreach (var rolePerspective in ViewModel.역할선택지)
                 {
-                    var perspective = BaguaTransitionCatalog.FindPerspective(
-                        role.RoleCode,
-                        transition.SourceTrigramKey,
-                        transition.TargetTrigramKey);
+                    var role = rolePerspective.역할;
                     <button type="button"
                             class="bagua-role-picker-card"
                             @onclick="@(() => SelectRole(role.RoleCode))">
-                        <span class="bagua-role-picker-icon">@GetRoleSymbol(role.RoleCode)</span>
+                        <span class="bagua-role-picker-icon">@rolePerspective.아이콘</span>
                         <strong>@role.RoleName</strong>
-                        <small>@GetModeLabel(perspective.PerspectiveMode)</small>
-                        <p>@perspective.PrimaryAction</p>
+                        <small>@rolePerspective.모드표시명</small>
+                        <p>@rolePerspective.관점.PrimaryAction</p>
                         <span class="bagua-role-picker-open">이 관점으로 열기 →</span>
                     </button>
                 }
@@ -64,13 +64,16 @@ else if (transition is not null && pageModel is null)
         </section>
     </div>
 }
-else if (pageModel is not null)
+else if (ViewModel.역할화면
+         && ViewModel.페이지 is { } pageModel
+         && ViewModel.현재역할관점 is { } currentRolePerspective
+         && ViewModel.전환흐름 is { } workflow)
 {
     <div class="bagua-transition-page">
         <header class="bagua-transition-hero">
             <button type="button" class="bagua-transition-back" @onclick="GoToCommunity">← 커뮤니티</button>
 
-            <div class="bagua-transition-path" aria-label="괘 전환">
+            <div class="bagua-transition-path" aria-label="팔괘 업무 전환">
                 <span class="bagua-transition-trigram">
                     <b>@pageModel.SourceArea.TrigramSymbol</b>
                     <small>@pageModel.SourceArea.TrigramName · @pageModel.SourceArea.BusinessName</small>
@@ -83,25 +86,26 @@ else if (pageModel is not null)
             </div>
 
             <div class="bagua-transition-hero-copy">
-                <span class="bagua-transition-eyebrow">@pageModel.Role.RoleName 관점 · @GetWorkflowLabel(pageModel.Transition.WorkflowKind)</span>
+                <span class="bagua-transition-eyebrow">@pageModel.Role.RoleName 관점 · @workflow.표시명</span>
                 <h1>@pageModel.Perspective.ViewTitle</h1>
                 <p>@pageModel.Transition.Purpose</p>
             </div>
 
-            <div class="bagua-transition-mode @BuildModeClass(pageModel.Perspective.PerspectiveMode)">
-                <span>@GetModeLabel(pageModel.Perspective.PerspectiveMode)</span>
-                <strong>@GetModeDescription(pageModel.Perspective.PerspectiveMode)</strong>
+            <div class="bagua-transition-mode @currentRolePerspective.CssClass">
+                <span>@currentRolePerspective.모드표시명</span>
+                <strong>@currentRolePerspective.모드설명</strong>
             </div>
         </header>
 
         <nav class="bagua-role-tabs" aria-label="역할 관점 바꾸기">
-            @foreach (var role in BaguaTransitionCatalog.Roles)
+            @foreach (var rolePerspective in ViewModel.역할선택지)
             {
+                var role = rolePerspective.역할;
                 <button type="button"
                         class="@(role.RoleCode == pageModel.Role.RoleCode ? "is-active" : null)"
                         aria-current="@(role.RoleCode == pageModel.Role.RoleCode ? "page" : null)"
                         @onclick="@(() => SelectRole(role.RoleCode))">
-                    <span>@GetRoleSymbol(role.RoleCode)</span>
+                    <span>@rolePerspective.아이콘</span>
                     @role.RoleName
                 </button>
             }
@@ -117,7 +121,7 @@ else if (pageModel is not null)
                 <section class="bagua-transition-panel bagua-transition-responsibility">
                     <div class="bagua-transition-section-heading">
                         <div>
-                            <span>MY RESPONSIBILITY</span>
+                            <span>내 역할</span>
                             <h2>이 역할에서는 이렇게 봅니다</h2>
                         </div>
                         <span class="bagua-transition-owner-tag">@pageModel.Role.RoleName</span>
@@ -132,8 +136,8 @@ else if (pageModel is not null)
                 <section class="bagua-transition-panel">
                     <div class="bagua-transition-section-heading">
                         <div>
-                            <span>WORKFLOW</span>
-                            <h2>@GetWorkflowHeading(pageModel.Transition.WorkflowKind)</h2>
+                            <span>업무 절차</span>
+                            <h2>@workflow.제목</h2>
                         </div>
                         <small>@($"{pageModel.Steps.Count}단계")</small>
                     </div>
@@ -153,7 +157,7 @@ else if (pageModel is not null)
 
                 <section class="bagua-transition-panel bagua-transition-handoff">
                     <div>
-                        <span>PROCESSOR HANDOFF</span>
+                        <span>업무 인계</span>
                         <h2>@pageModel.TargetWorkspaceName 화면으로 이어가기</h2>
                         <p>이 페이지는 전환의 뜻과 역할을 정리하는 입구입니다. 실제 등록·처리·확정은 대상 업무 화면과 서버 권한 안에서 진행합니다.</p>
                     </div>
@@ -177,7 +181,7 @@ else if (pageModel is not null)
             <aside class="bagua-transition-panel bagua-transition-matrix-panel">
                 <div class="bagua-transition-section-heading">
                     <div>
-                        <span>5 × 5 MATRIX</span>
+                        <span>5 × 5 업무 전환표</span>
                         <h2>@(pageModel.Role.RoleName)의 전체 전환표</h2>
                     </div>
                 </div>
@@ -187,7 +191,7 @@ else if (pageModel is not null)
                         <thead>
                             <tr>
                                 <th scope="col">출발 ↓<br />도착 →</th>
-                                @foreach (var target in BaguaTransitionCatalog.Areas)
+                                @foreach (var target in ViewModel.업무영역)
                                 {
                                     <th scope="col">
                                         <span>@target.TrigramSymbol</span>
@@ -197,27 +201,23 @@ else if (pageModel is not null)
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var source in BaguaTransitionCatalog.Areas)
+                            @foreach (var row in ViewModel.전환행)
                             {
                                 <tr>
                                     <th scope="row">
-                                        <span>@source.TrigramSymbol</span>
-                                        <small>@source.BusinessName</small>
+                                        <span>@row.SourceArea.TrigramSymbol</span>
+                                        <small>@row.SourceArea.BusinessName</small>
                                     </th>
-                                    @foreach (var target in BaguaTransitionCatalog.Areas)
+                                    @foreach (var cell in row.Cells)
                                     {
-                                        var cell = BaguaTransitionCatalog.FindPerspective(
-                                            pageModel.Role.RoleCode,
-                                            source.TrigramKey,
-                                            target.TrigramKey);
                                         <td>
                                             <button type="button"
-                                                    class="@BuildMatrixCellClass(source.TrigramKey, target.TrigramKey)"
-                                                    title="@cell.ViewTitle"
-                                                    aria-label="@cell.ViewTitle"
-                                                    @onclick="@(() => SelectTransition(source.TrigramKey, target.TrigramKey))">
-                                                <strong>@GetModeLabel(cell.PerspectiveMode)</strong>
-                                                <small>@ShortenTitle(cell.ViewTitle)</small>
+                                                    class="@cell.CssClass"
+                                                    title="@cell.역할관점.관점.ViewTitle"
+                                                    aria-label="@cell.역할관점.관점.ViewTitle"
+                                                    @onclick="@(() => SelectTransition(row.SourceArea.TrigramKey, cell.TargetArea.TrigramKey))">
+                                                <strong>@cell.역할관점.모드표시명</strong>
+                                                <small>@cell.짧은제목</small>
                                             </button>
                                         </td>
                                     }
@@ -670,140 +670,33 @@ else if (pageModel is not null)
     [Parameter]
     public string TargetTrigramKey { get; set; } = string.Empty;
 
-    private BaguaRoleTransitionPageModel? pageModel;
-    private BaguaTransitionDefinition? transition;
-    private BaguaBusinessAreaDefinition? sourceArea;
-    private BaguaBusinessAreaDefinition? targetArea;
-    private string? errorMessage;
-
-    private string PageTitleText
-        => pageModel?.Perspective.ViewTitle
-           ?? transition?.PageTitle
-           ?? "괘 전환";
-
     protected override void OnParametersSet()
     {
-        pageModel = null;
-        transition = null;
-        sourceArea = null;
-        targetArea = null;
-        errorMessage = null;
-
-        try
-        {
-            transition = BaguaTransitionCatalog.Find(SourceTrigramKey, TargetTrigramKey);
-            sourceArea = BaguaTransitionCatalog.FindArea(transition.SourceTrigramKey);
-            targetArea = BaguaTransitionCatalog.FindArea(transition.TargetTrigramKey);
-
-            if (!string.IsNullOrWhiteSpace(RoleCode))
-            {
-                pageModel = BaguaRoleTransitionPageCatalog.Build(
-                    RoleCode,
-                    SourceTrigramKey,
-                    TargetTrigramKey);
-            }
-        }
-        catch (KeyNotFoundException)
-        {
-            errorMessage = "요청한 역할 또는 괘 전환을 찾을 수 없습니다. 역할과 출발·도착 괘를 다시 선택해 주세요.";
-        }
+        base.OnParametersSet();
+        ViewModel.초기화(RoleCode, SourceTrigramKey, TargetTrigramKey);
     }
 
     private void SelectRole(string roleCode)
-        => Navigation.NavigateTo(BaguaRoleTransitionRoutes.Build(
-            roleCode,
-            SourceTrigramKey,
-            TargetTrigramKey));
+        => Navigation.NavigateTo(ViewModel.역할경로(roleCode));
 
     private void SelectTransition(string sourceTrigramKey, string targetTrigramKey)
     {
-        if (pageModel is null)
+        var route = ViewModel.전환경로(sourceTrigramKey, targetTrigramKey);
+        if (route is null)
         {
             return;
         }
 
-        Navigation.NavigateTo(BaguaRoleTransitionRoutes.Build(
-            pageModel.Role.RoleCode,
-            sourceTrigramKey,
-            targetTrigramKey));
+        Navigation.NavigateTo(route);
     }
 
     private void OpenTargetWorkspace()
     {
-        if (pageModel is not null)
+        if (ViewModel.목표업무경로 is { } route)
         {
-            Navigation.NavigateTo(pageModel.TargetWorkspaceHref);
+            Navigation.NavigateTo(route);
         }
     }
 
-    private void GoToCommunity() => Navigation.NavigateTo("/community");
-
-    private string BuildMatrixCellClass(string sourceTrigramKey, string targetTrigramKey)
-        => sourceTrigramKey == SourceTrigramKey && targetTrigramKey == TargetTrigramKey
-            ? "is-current"
-            : string.Empty;
-
-    private static string BuildModeClass(string perspectiveMode)
-        => perspectiveMode switch
-        {
-            BaguaRolePerspectiveModes.Owner => "bagua-transition-mode--owner",
-            BaguaRolePerspectiveModes.Initiator => "bagua-transition-mode--initiator",
-            BaguaRolePerspectiveModes.Receiver => "bagua-transition-mode--receiver",
-            BaguaRolePerspectiveModes.Governor => "bagua-transition-mode--governor",
-            _ => "bagua-transition-mode--observer"
-        };
-
-    private static string GetModeLabel(string perspectiveMode)
-        => perspectiveMode switch
-        {
-            BaguaRolePerspectiveModes.Owner => "주관",
-            BaguaRolePerspectiveModes.Initiator => "발신",
-            BaguaRolePerspectiveModes.Receiver => "접수",
-            BaguaRolePerspectiveModes.Governor => "의결",
-            _ => "참조"
-        };
-
-    private static string GetModeDescription(string perspectiveMode)
-        => perspectiveMode switch
-        {
-            BaguaRolePerspectiveModes.Owner => "내 업무를 직접 관리",
-            BaguaRolePerspectiveModes.Initiator => "조건을 정해 요청·인계",
-            BaguaRolePerspectiveModes.Receiver => "요청을 받아 확인·실행",
-            BaguaRolePerspectiveModes.Governor => "안건·투표·서명 관리",
-            _ => "진행과 업무 영향 확인"
-        };
-
-    private static string GetWorkflowLabel(string workflowKind)
-        => workflowKind switch
-        {
-            BaguaTransitionWorkflowKinds.Home => "업무 홈",
-            BaguaTransitionWorkflowKinds.Conversion => "업무 변환",
-            BaguaTransitionWorkflowKinds.Handoff => "업무 인계",
-            BaguaTransitionWorkflowKinds.Governance => "합의·의결",
-            BaguaTransitionWorkflowKinds.Execution => "확정안 실행",
-            BaguaTransitionWorkflowKinds.Result => "결과 반영",
-            BaguaTransitionWorkflowKinds.Return => "반품·회수",
-            _ => "업무 전환"
-        };
-
-    private static string GetWorkflowHeading(string workflowKind)
-        => workflowKind == BaguaTransitionWorkflowKinds.Governance
-            ? "제안부터 전자서명과 실행까지"
-            : $"{GetWorkflowLabel(workflowKind)} 절차";
-
-    private static string GetRoleSymbol(string roleCode)
-        => roleCode switch
-        {
-            BaguaActorRoleCodes.Orderer => "🧾",
-            BaguaActorRoleCodes.Seller => "🏪",
-            BaguaActorRoleCodes.WarehouseManager => "📦",
-            BaguaActorRoleCodes.TransportOperator => "🚚",
-            _ => "🤝"
-        };
-
-    private static string ShortenTitle(string viewTitle)
-    {
-        var separator = viewTitle.IndexOf(" · ", StringComparison.Ordinal);
-        return separator > 0 ? viewTitle[..separator] : viewTitle;
-    }
+    private void GoToCommunity() => Navigation.NavigateTo(ViewModel.커뮤니티경로);
 }

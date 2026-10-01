@@ -1,0 +1,93 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Contracts.Common.Community
+
+@if (Template.CompositionRules.Count > 0)
+{
+    <MudStack Spacing="1">
+        <MudText Typo="Typo.caption" Color="Color.Secondary">원장 구성 규칙</MudText>
+        @foreach (var rule in Template.CompositionRules)
+        {
+            <div class="platform-ledger-rule">
+                <MudStack Spacing="1">
+                    <MudText Typo="Typo.body2">@rule.Title</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@rule.Description</MudText>
+                    @if (rule.RequiredLedgerTemplateKeys.Count > 0)
+                    {
+                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">선행 원장</MudText>
+                            @foreach (var prerequisite in ResolveLedgerTemplateNames(rule.RequiredLedgerTemplateKeys))
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@prerequisite</MudChip>
+                            }
+                        </MudStack>
+                    }
+                    @if (rule.RequiredUiSectionHints.Count > 0)
+                    {
+                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">먼저 필요한 UI</MudText>
+                            @foreach (var section in rule.RequiredUiSectionHints)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">@section</MudChip>
+                            }
+                        </MudStack>
+                    }
+                    @if (rule.GatedActionHints.Count > 0)
+                    {
+                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">이후 행동</MudText>
+                            @foreach (var action in rule.GatedActionHints)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">@action</MudChip>
+                            }
+                        </MudStack>
+                    }
+                </MudStack>
+            </div>
+        }
+    </MudStack>
+}
+
+<MudStack Spacing="1">
+    <MudText Typo="Typo.caption" Color="Color.Secondary">저장/반영 방식</MudText>
+    <div class="platform-ledger-rule">
+        <MudStack Spacing="1">
+            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">
+                    @Template.PersistencePolicy.PrimaryStoreKind
+                </MudChip>
+                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">
+                    @Template.PersistencePolicy.PrimaryStoreName
+                </MudChip>
+            </MudStack>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Template.PersistencePolicy.RelationalProjectionPolicy</MudText>
+            @if (Template.PersistencePolicy.RelationalProjectionTargets.Count > 0)
+            {
+                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                    @foreach (var target in Template.PersistencePolicy.RelationalProjectionTargets)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">@target.TargetName</MudChip>
+                    }
+                </MudStack>
+            }
+        </MudStack>
+    </div>
+</MudStack>
+
+<MudStack Spacing="1">
+    <MudText Typo="Typo.caption" Color="Color.Secondary">커뮤니티 소통 질문</MudText>
+    @foreach (var prompt in Template.CommunityDiscussionPrompts.Take(2))
+    {
+        <MudText Typo="Typo.caption">· @prompt</MudText>
+    }
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired]
+    public CommunityLedgerTemplateResponse Template { get; set; } = default!;
+
+    private static IReadOnlyList<string> ResolveLedgerTemplateNames(IReadOnlyList<string> keys)
+        => keys
+            .Select(key => CommunityLedgerTemplateCatalog.Find(key).DisplayName)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+}

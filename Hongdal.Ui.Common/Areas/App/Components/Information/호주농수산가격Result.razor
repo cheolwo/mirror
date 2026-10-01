@@ -1,0 +1,88 @@
+@using Hongdal.Contracts.Common.AgriculturalFisheries
+
+<section class="price-result" aria-label="호주 농수산물 가격지수 조회 결과">
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true">@ErrorMessage</MudAlert>
+    }
+    else if (Response is null)
+    {
+        <div class="price-result__empty">
+            <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" />
+            <strong>호주 가격지수 조회 전</strong>
+        </div>
+    }
+    else if (!Response.Success)
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true">
+            @(Response.ErrorMessage ?? Response.Summary)
+        </MudAlert>
+    }
+    else if (Response.Items.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Dense="true">@Response.Summary</MudAlert>
+    }
+    else
+    {
+        <header class="price-result__header">
+            <div>
+                <span>Australian Bureau of Statistics (ABS)</span>
+                <strong>@Response.Items[0].IndexLabel</strong>
+            </div>
+            <span class="price-result__basis">가격지수</span>
+        </header>
+
+        <div class="price-result__table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>기준월</th>
+                        <th>지역</th>
+                        <th>측정</th>
+                        <th>값</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in VisibleItems)
+                    {
+                        <tr>
+                            <td>@item.ReferencePeriod</td>
+                            <td>@item.RegionLabel</td>
+                            <td>@item.MeasureLabel</td>
+                            <td class="price-result__value">@FormatValue(item)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <p class="price-result__notice">
+            실제 A$/kg 단가가 아니라 @ResolveBasePeriod() 대비 소비자가격 변동입니다.
+        </p>
+    }
+</section>
+
+@code {
+    [Parameter]
+    public 호주농수산식품가격조회응답? Response { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    private IEnumerable<호주농수산식품가격항목> VisibleItems
+        => Response?.Items
+            .OrderByDescending(item => item.ReferencePeriod, StringComparer.Ordinal)
+            .Take(12)
+            ?? [];
+
+    private static string FormatValue(호주농수산식품가격항목 item)
+        => string.IsNullOrWhiteSpace(item.UnitLabel)
+            ? item.RawValue
+            : $"{item.RawValue} {item.UnitLabel}";
+
+    private string ResolveBasePeriod()
+        => Response?.Items
+               .Select(item => item.BasePeriod)
+               .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value))
+           ?? "기준시점";
+}

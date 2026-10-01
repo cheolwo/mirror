@@ -72,7 +72,7 @@ public static class BaguaRoleTransitionPageCatalog
             roleCode,
             sourceTrigramKey,
             targetTrigramKey);
-        var workspace = ResolveTargetWorkspace(transition.TargetBusinessCode);
+        var workspace = ResolveDefaultTargetWorkspace(transition.TargetBusinessCode);
 
         return new BaguaRoleTransitionPageModel(
             role,
@@ -198,7 +198,7 @@ public static class BaguaRoleTransitionPageCatalog
             ]
         };
 
-    private static (string Name, string Href) ResolveTargetWorkspace(string businessCode)
+    internal static (string Name, string Href) ResolveDefaultTargetWorkspace(string businessCode)
         => businessCode switch
         {
             BaguaBusinessCodes.Order => ("주문 업무", "/shipper/sales/orders"),

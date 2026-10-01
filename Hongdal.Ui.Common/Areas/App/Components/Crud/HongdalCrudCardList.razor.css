@@ -1,0 +1,18 @@
+.hongdal-crud-card {
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 6px;
+    cursor: pointer;
+    min-height: 132px;
+    transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.hongdal-crud-card:hover,
+.hongdal-crud-card:focus-visible {
+    border-color: var(--mud-palette-primary);
+    outline: none;
+}
+
+.hongdal-crud-card--selected {
+    background-color: var(--mud-palette-primary-hover);
+    border-color: var(--mud-palette-primary);
+}

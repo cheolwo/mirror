@@ -1,0 +1,173 @@
+@inherits MvvmComponentBase<농수산가격비교PageViewModel>
+@using Hongdal.Ui.Common.Areas.App.Models
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+
+<section class="public-data-workspace">
+    <header class="public-data-workspace__header">
+        <div>
+            <span>공식 공공데이터</span>
+            <h1>한국·미국·호주 농수산물 가격</h1>
+            <p>각 국가의 조사값을 통화·단위·유통단계와 함께 비교합니다.</p>
+        </div>
+        <div class="public-data-workspace__market-status" aria-label="지원 시장">
+            <span>KR</span>
+            <span>US</span>
+            <span>AU</span>
+        </div>
+    </header>
+
+    <div class="public-data-workspace__layout">
+        <aside class="public-data-workspace__navigator" aria-label="공공데이터 종류 선택">
+            <HongdalLaterHeavenBaguaNavigator RoleLabel="공공데이터"
+                                               NavigationItems="InformationNavigationItems"
+                                               AccentColor="#0f766e"
+                                               CenterSymbol="ⓘ"
+                                               CenterTrigramName="정보"
+                                               CenterDestinationLabel="3개국 비교"
+                                               ShowTaegeukCenter="false"
+                                               CenterSelected="ViewModel.ShowComparisonAsync"
+                                               DestinationSelected="ViewModel.SelectSectionAsync" />
+        </aside>
+
+        <main class="public-data-workspace__content">
+            <header class="public-data-workspace__section-header">
+                <div>
+                    <span>@ViewModel.CurrentSectionEyebrow</span>
+                    <h2>@ViewModel.CurrentSectionTitle</h2>
+                </div>
+                @if (ViewModel.IsLoading)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Info" />
+                }
+            </header>
+
+            @if (!string.IsNullOrWhiteSpace(ViewModel.InitializationMessage))
+            {
+                <MudAlert Severity="Severity.Info" Dense="true">@ViewModel.InitializationMessage</MudAlert>
+            }
+
+            @switch (ViewModel.ActiveSection)
+            {
+                case 농수산가격비교Section.국내:
+                    <section class="public-data-workspace__query-section public-data-workspace__query-section--domestic">
+                        <label class="public-data-workspace__field">
+                            <span>국내 품목</span>
+                            <select @bind="ViewModel.국내.선택HsCode">
+                                @foreach (var item in ViewModel.국내.품목)
+                                {
+                                    <option value="@item.HsPrefix">@item.CategoryLabel · @item.ProductName</option>
+                                }
+                            </select>
+                        </label>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Success"
+                                   StartIcon="@Icons.Material.Filled.Search"
+                                   Disabled="ViewModel.IsLoading"
+                                   OnClick="@(() => ViewModel.LoadDomesticAsync())">
+                            한국 가격 조회
+                        </MudButton>
+                    </section>
+                    <국내농수산가격Result Response="@ViewModel.국내.응답"
+                                          ErrorMessage="@ViewModel.국내.오류메시지" />
+                    break;
+
+                case 농수산가격비교Section.미국:
+                    <section class="public-data-workspace__query-section">
+                        <label class="public-data-workspace__field">
+                            <span>미국 공식 품목명</span>
+                            <input list="usda-commodity-examples"
+                                   @bind="ViewModel.미국.품목명"
+                                   autocomplete="off" />
+                        </label>
+                        <datalist id="usda-commodity-examples">
+                            @foreach (var commodity in 미국농수산가격조회ViewModel.품목예시)
+                            {
+                                <option value="@commodity"></option>
+                            }
+                        </datalist>
+                        <label class="public-data-workspace__field public-data-workspace__field--small">
+                            <span>조사</span>
+                            <select @bind="ViewModel.미국.조사Program">
+                                <option value="SURVEY">SURVEY</option>
+                                <option value="CENSUS">CENSUS</option>
+                            </select>
+                        </label>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Error"
+                                   StartIcon="@Icons.Material.Filled.Search"
+                                   Disabled="ViewModel.IsLoading"
+                                   OnClick="@(() => ViewModel.LoadUnitedStatesAsync())">
+                            미국 가격 조회
+                        </MudButton>
+                    </section>
+                    <미국농수산가격Result Response="@ViewModel.미국.응답"
+                                          ErrorMessage="@ViewModel.미국.오류메시지" />
+                    break;
+
+                case 농수산가격비교Section.호주:
+                    <section class="public-data-workspace__query-section public-data-workspace__query-section--australia">
+                        <label class="public-data-workspace__field">
+                            <span>호주 식품 분류</span>
+                            <select @bind="ViewModel.호주.선택IndexCode">
+                                @foreach (var index in ViewModel.호주.Catalog.Indexes)
+                                {
+                                    <option value="@index.Code">@index.Label</option>
+                                }
+                            </select>
+                        </label>
+                        <label class="public-data-workspace__field">
+                            <span>측정 기준</span>
+                            <select @bind="ViewModel.호주.선택MeasureCode">
+                                @foreach (var measure in ViewModel.호주.Catalog.Measures)
+                                {
+                                    <option value="@measure.Code">@measure.Label</option>
+                                }
+                            </select>
+                        </label>
+                        <label class="public-data-workspace__field">
+                            <span>지역</span>
+                            <select @bind="ViewModel.호주.선택RegionCode">
+                                @foreach (var region in ViewModel.호주.Catalog.Regions)
+                                {
+                                    <option value="@region.Code">@region.Label</option>
+                                }
+                            </select>
+                        </label>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Info"
+                                   StartIcon="@Icons.Material.Filled.Search"
+                                   Disabled="ViewModel.IsLoading"
+                                   OnClick="@(() => ViewModel.LoadAustraliaAsync())">
+                            호주 지수 조회
+                        </MudButton>
+                    </section>
+                    <호주농수산가격Result Response="@ViewModel.호주.응답"
+                                          ErrorMessage="@ViewModel.호주.오류메시지" />
+                    break;
+
+                case 농수산가격비교Section.출처:
+                    <농수산가격SourceList Sources="ViewModel.VisibleSources" />
+                    break;
+
+                default:
+                    <농수산가격ComparisonWorkspace ViewModel="ViewModel" />
+                    break;
+            }
+        </main>
+    </div>
+</section>
+
+@code {
+    private static readonly IReadOnlyList<HongdalCardinalNavigationOption> InformationNavigationItems =
+    [
+        new("li", "리", "☲", "남", "한국 aT", "information") { BusinessLabel = "국내가격" },
+        new("dui", "태", "☱", "서", "USDA NASS", "information") { BusinessLabel = "미국가격" },
+        new("kan", "감", "☵", "북", "호주 ABS", "information") { BusinessLabel = "호주지수" },
+        new("zhen", "진", "☳", "동", "공식 원천", "information") { BusinessLabel = "데이터출처" }
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.초기화Async();
+    }
+}

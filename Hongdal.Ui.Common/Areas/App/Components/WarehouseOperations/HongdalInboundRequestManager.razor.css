@@ -1,0 +1,10 @@
+@media (max-width: 600px) {
+    .inbound-page-header-wrap ::deep .inbound-page-header {
+        align-items: stretch !important;
+        flex-direction: column !important;
+    }
+
+    .inbound-page-header-wrap ::deep .inbound-page-refresh {
+        align-self: flex-start;
+    }
+}

@@ -1,0 +1,184 @@
+.cargo-load-progress {
+    padding: 16px;
+    overflow: hidden;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 12px;
+    background: var(--mud-palette-surface);
+}
+
+.cargo-load-progress__heading,
+.cargo-load-progress__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.cargo-truck {
+    position: relative;
+    width: min(100%, 520px);
+    height: 126px;
+    margin: 18px auto 12px;
+}
+
+.cargo-truck__load-bed {
+    position: absolute;
+    top: 8px;
+    left: 2%;
+    width: 68%;
+    height: 82px;
+    overflow: hidden;
+    border: 3px solid var(--mud-palette-text-primary);
+    border-radius: 8px 4px 4px 8px;
+    background: var(--mud-palette-background-grey);
+}
+
+.cargo-truck__fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    min-width: 0;
+    background: linear-gradient(90deg, var(--mud-palette-primary), var(--mud-palette-info));
+    transition: width 420ms ease-out, background-color 220ms ease-out;
+}
+
+.cargo-load-progress--unloading .cargo-truck__fill {
+    background: linear-gradient(90deg, var(--mud-palette-info), var(--mud-palette-primary));
+}
+
+.cargo-load-progress--unloading .cargo-truck__fill[style="width: 0%"] {
+    background: var(--mud-palette-success);
+}
+
+.cargo-truck__grid {
+    position: absolute;
+    inset: 0;
+    opacity: .42;
+    background-image:
+        linear-gradient(to right, var(--mud-palette-surface) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--mud-palette-surface) 1px, transparent 1px);
+    background-size: 42px 38px;
+    pointer-events: none;
+}
+
+.cargo-truck__load-label {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 8px;
+    color: var(--mud-palette-text-primary);
+    font-size: .875rem;
+    font-weight: 700;
+    text-align: center;
+    text-shadow: 0 1px 3px var(--mud-palette-surface);
+}
+
+.cargo-truck__cab {
+    position: absolute;
+    top: 34px;
+    right: 5%;
+    width: 25%;
+    height: 58px;
+    border: 3px solid var(--mud-palette-text-primary);
+    border-radius: 8px 18px 5px 4px;
+    background: var(--mud-palette-primary);
+}
+
+.cargo-truck__window {
+    position: absolute;
+    top: 8px;
+    right: 12%;
+    width: 48%;
+    height: 21px;
+    border: 2px solid var(--mud-palette-text-primary);
+    border-radius: 4px 10px 3px 3px;
+    background: var(--mud-palette-surface);
+}
+
+.cargo-truck__bumper {
+    position: absolute;
+    right: 1%;
+    bottom: 32px;
+    width: 9%;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--mud-palette-text-primary);
+}
+
+.cargo-truck__wheel {
+    position: absolute;
+    bottom: 12px;
+    width: 28px;
+    height: 28px;
+    border: 7px solid var(--mud-palette-text-primary);
+    border-radius: 50%;
+    background: var(--mud-palette-surface);
+}
+
+.cargo-truck__wheel--rear {
+    left: 16%;
+}
+
+.cargo-truck__wheel--front {
+    right: 12%;
+}
+
+.cargo-load-progress__bar {
+    height: 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--mud-palette-background-grey);
+}
+
+.cargo-load-progress__bar-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--mud-palette-primary);
+    transition: width 420ms ease-out, background-color 220ms ease-out;
+}
+
+.cargo-load-progress--unloading .cargo-load-progress__bar-fill {
+    background: var(--mud-palette-info);
+}
+
+.cargo-load-progress__summary {
+    margin-top: 10px;
+}
+
+@media (max-width: 480px) {
+    .cargo-load-progress {
+        padding: 14px;
+    }
+
+    .cargo-truck {
+        height: 112px;
+    }
+
+    .cargo-truck__load-bed {
+        height: 70px;
+    }
+
+    .cargo-truck__cab {
+        top: 29px;
+        height: 51px;
+    }
+
+    .cargo-truck__wheel {
+        width: 25px;
+        height: 25px;
+        border-width: 6px;
+    }
+
+    .cargo-load-progress__summary {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 2px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cargo-truck__fill,
+    .cargo-load-progress__bar-fill {
+        transition: none;
+    }
+}

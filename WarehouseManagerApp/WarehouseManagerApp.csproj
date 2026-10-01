@@ -29,7 +29,7 @@
         <MauiXamlInflator>SourceGen</MauiXamlInflator>
 
         <!-- Display name -->
-        <ApplicationTitle>WarehouseManagerApp</ApplicationTitle>
+        <ApplicationTitle>살뜰 창고</ApplicationTitle>
 
         <!-- App Identifier -->
         <ApplicationId>com.companyname.warehousemanagerapp</ApplicationId>

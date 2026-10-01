@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Hongdal.Controllers.Common
 {
-    [HongdalApiVersion(HongdalProductVersion.V1_0)]
+[HongdalApiVersion(HongdalProductVersion.V0_0)]
     [ApiController]
     [Route("api/v1/files")]
     public class 파일업로드Controller : ControllerBase

@@ -1,0 +1,160 @@
+@page "/global/suppliers/apply"
+@layout GlobalTradeLayout
+@inject GlobalTradeWorkspaceService Workspace
+
+<PageTitle>Submit a product | Hongdal Global</PageTitle>
+
+<main class="supplier-apply-page">
+    <section class="supplier-apply-intro">
+        <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">SUPPLIER PILOT</MudChip>
+        <h1>Introduce your product to Korean importers.</h1>
+        <p>
+            Start with the essential facts. Hongdal reviews the product before it becomes public
+            and before any import or customs process begins.
+        </p>
+
+        <div class="supplier-apply-steps">
+            <div><span>01</span><strong>Submit</strong><small>Product, price, MOQ, and documents</small></div>
+            <div><span>02</span><strong>Review</strong><small>Basic supplier and import readiness check</small></div>
+            <div><span>03</span><strong>Discover</strong><small>Public page and Korean demand requests</small></div>
+        </div>
+    </section>
+
+    <section class="supplier-apply-form-shell">
+        @if (SubmittedProduct is not null)
+        {
+            <div class="supplier-apply-success">
+                <MudIcon Icon="@Icons.Material.Filled.TaskAlt" />
+                <span>SUBMITTED FOR REVIEW</span>
+                <h2>@SubmittedProduct.ProductName</h2>
+                <p>
+                    The product is stored in this WebApp session as a review draft.
+                    A production version will send it to the server review queue.
+                </p>
+                <div class="supplier-apply-reference">
+                    <span>Draft address</span>
+                    <strong>@GlobalTradeRoutes.Product(SubmittedProduct.Slug)</strong>
+                </div>
+                <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+                    <MudButton Href="@GlobalTradeRoutes.Home" Variant="Variant.Filled" Color="Color.Primary">Back to global home</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ResetForm">Submit another product</MudButton>
+                </MudStack>
+            </div>
+        }
+        else
+        {
+            <div class="supplier-form-heading">
+                <span>PRODUCT PROFILE</span>
+                <h2>Supplier and product details</h2>
+                <p>Fields marked as required are checked before this skeleton accepts the draft.</p>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(ValidationMessage))
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-4">@ValidationMessage</MudAlert>
+            }
+
+            <MudStack Spacing="3">
+                <div class="supplier-form-section">
+                    <h3>1. Supplier</h3>
+                    <MudGrid>
+                        <MudItem xs="12" sm="6"><MudTextField T="string" @bind-Value="Draft.SupplierName" Label="Company / supplier name *" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" sm="6"><MudTextField T="string" @bind-Value="Draft.ContactName" Label="Contact name *" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" sm="6"><MudTextField T="string" @bind-Value="Draft.Email" Label="Business email *" InputType="InputType.Email" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" sm="6"><MudTextField T="string" @bind-Value="Draft.CountryName" Label="Country *" Variant="Variant.Outlined" /></MudItem>
+                    </MudGrid>
+                </div>
+
+                <div class="supplier-form-section">
+                    <h3>2. Product</h3>
+                    <MudGrid>
+                        <MudItem xs="12" sm="8"><MudTextField T="string" @bind-Value="Draft.ProductName" Label="Product name *" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudSelect T="string" @bind-Value="Draft.Category" Label="Category" Variant="Variant.Outlined">
+                                @foreach (var category in CategoryOptions)
+                                {
+                                    <MudSelectItem T="string" Value="@category">@category</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12"><MudTextField T="string" @bind-Value="Draft.Summary" Label="Short product introduction *" Lines="3" Variant="Variant.Outlined" /></MudItem>
+                    </MudGrid>
+                </div>
+
+                <div class="supplier-form-section">
+                    <h3>3. Trade starting point</h3>
+                    <MudGrid>
+                        <MudItem xs="12" sm="4"><MudNumericField T="decimal" @bind-Value="Draft.SupplyPrice" Label="Supply unit price *" Min="0" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudSelect T="string" @bind-Value="Draft.CurrencyCode" Label="Currency" Variant="Variant.Outlined">
+                                @foreach (var currency in CurrencyOptions)
+                                {
+                                    <MudSelectItem T="string" Value="@currency">@currency</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="4"><MudNumericField T="int" @bind-Value="Draft.MinimumOrderQuantity" Label="Minimum order quantity *" Min="1" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudSelect T="string" @bind-Value="Draft.Incoterm" Label="Preferred trade term" Variant="Variant.Outlined">
+                                @foreach (var incoterm in IncotermOptions)
+                                {
+                                    <MudSelectItem T="string" Value="@incoterm">@incoterm</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="4"><MudTextField T="string" @bind-Value="Draft.SuggestedHsCode" Label="Suggested HS code" HelperText="A review hint, not a final classification" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" sm="4" Class="supplier-sample-field"><MudCheckBox T="bool" @bind-Value="Draft.SampleAvailable" Label="Sample shipment available" Color="Color.Primary" /></MudItem>
+                        <MudItem xs="12"><MudTextField T="string" @bind-Value="Draft.CertificationSummary" Label="Certificates or available documents" Lines="2" Variant="Variant.Outlined" /></MudItem>
+                    </MudGrid>
+                </div>
+
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                    Submitting this form does not create a sales contract or confirm that the product can be imported into Korea.
+                </MudAlert>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true" EndIcon="@Icons.Material.Filled.Send" OnClick="SubmitProduct">
+                    Submit for Hongdal review
+                </MudButton>
+            </MudStack>
+        }
+    </section>
+</main>
+
+@code {
+    private GlobalSupplierProductDraft Draft { get; set; } = new();
+    private GlobalTradeProduct? SubmittedProduct;
+    private string? ValidationMessage;
+
+    private static readonly IReadOnlyList<string> CategoryOptions =
+        ["Home & Living", "Interior Goods", "Office Goods", "Adult Lifestyle", "Other pilot category"];
+
+    private static readonly IReadOnlyList<string> CurrencyOptions = ["USD", "EUR", "JPY", "CNY", "KRW"];
+    private static readonly IReadOnlyList<string> IncotermOptions = ["EXW", "FCA", "FOB", "CIF", "DAP"];
+
+    private void SubmitProduct()
+    {
+        if (string.IsNullOrWhiteSpace(Draft.SupplierName)
+            || string.IsNullOrWhiteSpace(Draft.ContactName)
+            || string.IsNullOrWhiteSpace(Draft.Email)
+            || !Draft.Email.Contains('@')
+            || string.IsNullOrWhiteSpace(Draft.CountryName)
+            || string.IsNullOrWhiteSpace(Draft.ProductName)
+            || string.IsNullOrWhiteSpace(Draft.Summary)
+            || Draft.SupplyPrice <= 0
+            || Draft.MinimumOrderQuantity <= 0)
+        {
+            ValidationMessage = "Please complete the required supplier, product, price, and MOQ fields.";
+            return;
+        }
+
+        ValidationMessage = null;
+        SubmittedProduct = Workspace.SubmitSupplierProduct(Draft);
+    }
+
+    private void ResetForm()
+    {
+        Draft = new GlobalSupplierProductDraft();
+        SubmittedProduct = null;
+        ValidationMessage = null;
+    }
+}

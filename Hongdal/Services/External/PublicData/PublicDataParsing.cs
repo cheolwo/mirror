@@ -40,6 +40,12 @@ internal static class PublicDataParsing
         return TryInt(text);
     }
 
+    public static string? ReadResultCode(string body)
+        => ReadFirstDocumentValue(body, "resultCode", "returnReasonCode");
+
+    public static string? ReadResultMessage(string body)
+        => ReadFirstDocumentValue(body, "resultMsg", "resultMessage", "returnAuthMsg", "errMsg");
+
     public static string? FirstValue(Dictionary<string, string?> item, params string[] keys)
     {
         foreach (var key in keys)
@@ -187,6 +193,27 @@ internal static class PublicDataParsing
         }
 
         return null;
+    }
+
+    private static string? ReadFirstDocumentValue(string body, params string[] names)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return null;
+        }
+
+        var trimmed = body.TrimStart();
+        if (trimmed.StartsWith("{", StringComparison.Ordinal) || trimmed.StartsWith("[", StringComparison.Ordinal))
+        {
+            using var doc = JsonDocument.Parse(body);
+            return FindFirstJsonString(doc.RootElement, names);
+        }
+
+        var xml = XDocument.Parse(body);
+        return xml.Descendants()
+            .FirstOrDefault(element => names.Any(name =>
+                string.Equals(element.Name.LocalName, name, StringComparison.OrdinalIgnoreCase)))
+            ?.Value;
     }
 
     private static bool IsAny(string value, params string[] candidates)

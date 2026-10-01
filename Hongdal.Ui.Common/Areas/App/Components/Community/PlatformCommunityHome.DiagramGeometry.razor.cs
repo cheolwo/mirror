@@ -1,3 +1,5 @@
+using Hongdal.Ui.Common.Areas.App.ViewModels;
+
 namespace Hongdal.Ui.Common.Areas.App.Components.Community;
 
 public partial class PlatformCommunityHome

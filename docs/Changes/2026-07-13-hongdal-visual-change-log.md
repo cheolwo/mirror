@@ -88,7 +88,7 @@
 
 ## 검증 기록
 
-- `Hongdal`, `Hongdal.Ui.Common`, `Hongdal.WebApp`, `ShipperApp` 빌드: 경고 0, 오류 0
+- `Hongdal`, `Hongdal.Ui.Common`, `Hongdal.WebApp`, `HongdalApp` 빌드: 경고 0, 오류 0
 - 이벤트·교육·Typecast·원장·다이어그램 관련 대상 테스트: 52개 통과
 - 원장별 웹 팔레트: 2026-07-13 로컬 렌더링에서 화물 운송 원장과 홍달 1.0 네 노드 확인
 - 실시간 베스트: 기존 웹 업무 홈 아래에 목록이 렌더링되고 커뮤니티 링크가 유지되는 것을 확인

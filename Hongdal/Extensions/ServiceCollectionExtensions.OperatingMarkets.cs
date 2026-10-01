@@ -1,6 +1,7 @@
 using Hongdal.Application.Operations;
 using Hongdal.Contracts.Common.Operations;
 using Hongdal.Services.Operations;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Hongdal.Extensions;
 
@@ -13,8 +14,11 @@ public static partial class ServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        var configuredMarketCode = configuration[
-            $"{OperatingMarketDeploymentOptions.SectionName}:{nameof(OperatingMarketDeploymentOptions.MarketCode)}"];
+        var deploymentOptions = configuration
+            .GetSection(OperatingMarketDeploymentOptions.SectionName)
+            .Get<OperatingMarketDeploymentOptions>()
+            ?? new OperatingMarketDeploymentOptions();
+        var configuredMarketCode = deploymentOptions.MarketCode;
         configuredMarketCode = string.IsNullOrWhiteSpace(configuredMarketCode)
             ? OperatingMarketCodes.Korea
             : configuredMarketCode;
@@ -25,12 +29,23 @@ public static partial class ServiceCollectionExtensions
                 $"{OperatingMarketDeploymentOptions.SectionName}:MarketCode must be KR or US.");
         }
 
-        var verifiedLicensedBrokerPartnerId = configuration[
-            $"{OperatingMarketDeploymentOptions.SectionName}:" +
-            nameof(OperatingMarketDeploymentOptions.VerifiedLicensedBrokerPartnerId)];
+        deploymentOptions.FreightServiceProvider ??=
+            new OperatingMarketFreightServiceProviderOptions();
+        if (string.IsNullOrWhiteSpace(
+                deploymentOptions.FreightServiceProvider.ParticipantId))
+        {
+            deploymentOptions.FreightServiceProvider.ParticipantId =
+                deploymentOptions.VerifiedLicensedBrokerPartnerId;
+        }
+
         var deployment = new OperatingMarketDeployment(
             marketCode,
-            verifiedLicensedBrokerPartnerId);
+            deploymentOptions.FreightServiceProvider.ParticipantId,
+            deploymentOptions.TimeZoneId);
+        var freightServiceProviderRegistry =
+            new DeploymentOperatingMarketFreightServiceProviderRegistry(
+                marketCode,
+                deploymentOptions.FreightServiceProvider);
         IOperatingMarketServiceModule module = marketCode switch
         {
             OperatingMarketCodes.Korea => new KoreaOperatingMarketServiceModule(),
@@ -40,12 +55,17 @@ public static partial class ServiceCollectionExtensions
         };
 
         services.AddSingleton<IOperatingMarketDeployment>(deployment);
+        services.AddSingleton<IOperatingMarketFreightServiceProviderRegistry>(
+            freightServiceProviderRegistry);
         services.AddSingleton<IOperatingMarketServiceModule>(module);
+        services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<IOperatingMarketContextAccessor,
             DeploymentOperatingMarketContextAccessor>();
         services.AddScoped<IOperatingMarketAddressLookupService,
             OperatingMarketAddressLookupService>();
-        module.AddServices(services);
+        services.AddScoped<IOperatingMarketRuntimeProfileService,
+            OperatingMarketRuntimeProfileService>();
+        module.AddServices(services, configuration);
 
         return services;
     }

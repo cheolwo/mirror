@@ -7,7 +7,10 @@ public sealed record HongdalCardinalNavigationOption(
     string Direction,
     string DestinationLabel,
     string ActionKind,
-    string Target = "");
+    string Target = "")
+{
+    public string BusinessLabel { get; init; } = string.Empty;
+}
 
 public static class HongdalCardinalNavigationActionKinds
 {

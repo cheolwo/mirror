@@ -1,0 +1,111 @@
+@page "/warehouse/import/customs"
+@inherits MvvmComponentBase<보세통관상태PageViewModel>
+
+<PageTitle>보세·통관 상태</PageTitle>
+
+<WarehousePageShell Model="@ViewModel"
+                    Title="보세·통관 상태"
+                    Description="해외 선적과 국내 통관의 현재 단계를 조회합니다."
+                    Icon="@Icons.Material.Filled.FactCheck"
+                    Color="Color.Info">
+    <Actions>
+        <MudStack Row="true" Spacing="1">
+            <MudButton Href="@WarehouseManagerRoutes.ImportArrival"
+                       Variant="Variant.Outlined"
+                       StartIcon="@Icons.Material.Filled.ChevronLeft">
+                반입
+            </MudButton>
+            <MudButton Href="@WarehouseManagerRoutes.ImportRelease"
+                       Variant="Variant.Filled"
+                       Color="Color.Info"
+                       EndIcon="@Icons.Material.Filled.ChevronRight">
+                반출 확인
+            </MudButton>
+        </MudStack>
+    </Actions>
+    <ChildContent>
+        @if (!string.IsNullOrWhiteSpace(ViewModel.선적통관.오류메시지))
+        {
+            <MudAlert Severity="Severity.Error">@ViewModel.선적통관.오류메시지</MudAlert>
+        }
+
+        <MudAlert Severity="@GuidanceSeverity" Variant="Variant.Outlined">
+            @ViewModel.선적통관.다음작업안내
+        </MudAlert>
+
+        <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+            <MudStack Spacing="2">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.h6">선적·통관 절차</MudText>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@GuidanceColor">
+                        @CurrentStatus
+                    </MudChip>
+                </MudStack>
+                <MudGrid>
+                    @for (var index = 0; index < 공동수입선적통관ViewModel.선적단계.Count; index++)
+                    {
+                        var step = 공동수입선적통관ViewModel.선적단계[index];
+                        var active = string.Equals(step.코드, ViewModel.선적통관.현재선적?.현재상태코드, StringComparison.OrdinalIgnoreCase);
+                        <MudItem xs="12" sm="6" lg="4">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="py-1">
+                                <MudAvatar Size="Size.Small" Color="@(active ? Color.Info : Color.Default)" Variant="@(active ? Variant.Filled : Variant.Outlined)">
+                                    @(index + 1)
+                                </MudAvatar>
+                                <MudText Typo="Typo.body2" Color="@(active ? Color.Info : Color.Default)">@step.표시명</MudText>
+                            </MudStack>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudStack>
+        </MudPaper>
+
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-3 h-100" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">문서관리번호</MudText>
+                    <MudText Typo="Typo.subtitle1">@(ViewModel.선적통관.현재선적?.문서관리번호 ?? "-")</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-3 h-100" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">공동수입 원장</MudText>
+                    <MudText Typo="Typo.subtitle1">@(ViewModel.원장물류.저장된원장?.GroupImportLedgerId ?? "-")</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-3 h-100" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">통관 결과</MudText>
+                    <MudText Typo="Typo.subtitle1">@(ViewModel.선적통관.통관결과 is null ? "확인 대기" : "동기화 완료")</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </ChildContent>
+</WarehousePageShell>
+
+@code {
+    private string CurrentStatus
+    {
+        get
+        {
+            var statusCode = ViewModel.선적통관.현재선적?.현재상태코드;
+            return 공동수입선적통관ViewModel.선적단계.FirstOrDefault(step =>
+                       string.Equals(step.코드, statusCode, StringComparison.OrdinalIgnoreCase))?.표시명
+                   ?? "선적 문서 대기";
+        }
+    }
+
+    private Severity GuidanceSeverity
+        => ViewModel.선적통관.현재선적 is null ? Severity.Info : Severity.Success;
+
+    private Color GuidanceColor
+        => ViewModel.선적통관.현재선적 is null ? Color.Default : Color.Info;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (!string.Equals(ViewModel.세션.운영ProfileCode, 창고운영ProfileCodes.보세수입, StringComparison.OrdinalIgnoreCase))
+        {
+            ViewModel.세션.운영Profile설정(창고운영ProfileCodes.보세수입);
+        }
+    }
+}

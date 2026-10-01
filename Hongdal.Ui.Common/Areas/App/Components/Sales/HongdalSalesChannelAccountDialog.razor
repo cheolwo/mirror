@@ -1,0 +1,23 @@
+@using Hongdal.Contracts.Common.Sales
+@using Hongdal.Ui.Common.Areas.App.Components.Crud
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@namespace Hongdal.Ui.Common.Areas.App.Components.Sales
+
+<HongdalCommandDialog TDraft="판매채널계정저장요청" ViewModel="@ViewModel">
+    <EditorContent Context="draft">
+        <HongdalSalesChannelAccountEditor Model="@draft"
+                                          ChannelOptions="@ChannelOptions"
+                                          ChannelLocked="@ChannelLocked" />
+    </EditorContent>
+</HongdalCommandDialog>
+
+@code {
+    [Parameter, EditorRequired]
+    public I명령ViewModel<판매채널계정저장요청> ViewModel { get; set; } = default!;
+
+    [Parameter]
+    public IReadOnlyList<업무선택항목<string>> ChannelOptions { get; set; } = [];
+
+    [Parameter]
+    public bool ChannelLocked { get; set; }
+}

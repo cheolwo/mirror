@@ -22,6 +22,7 @@ public static class ShipperRoutes
     public const string DeliveryAgencyWorkStart = "/shipper/warehouse/work/delivery-agency";
     public const string ReconsignmentOrders = "/shipper/reconsignment/orders";
     public const string SalesChannels = "/shipper/sales/channels";
+    public const string SalesPageComposer = "/shipper/sales/pages/new";
     public const string ProductListings = "/shipper/sales/listings";
     public const string OrderFulfillment = "/shipper/sales/orders";
     public const string CustomsHsReviews = "/shipper/customs/hs-reviews";

@@ -5,10 +5,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Hongdal.ApiMetadata;
+using 홍달.Services.Versioning;
 
 namespace Hongdal.Controllers.Shipper.Request01
 {
-    [HongdalApiVersion(HongdalProductVersion.V1_0)]
+    [HongdalApiVersion(
+        HongdalProductVersion.V1_0,
+        FeatureKey = VersionFeatureFlagKeys.DomesticTransportWorkflow,
+        WorkflowKey = VersionFeatureFlagKeys.DomesticTransportWorkflow)]
+    [HongdalApiWorkflow(HongdalWorkflow.DomesticTransport)]
+    [HongdalApiGrowthTrack(HongdalApiGrowthTrack.CoreLogistics)]
     [ApiController]
     [Route("api/v1/shipper/requests")]
     [Authorize]

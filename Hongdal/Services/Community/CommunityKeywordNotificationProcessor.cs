@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using Hongdal.Contracts.Common.Metadata;
 using Hongdal.Domain.Community;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -15,6 +16,12 @@ public interface ICommunityKeywordNotificationProcessor
     Task<bool> ProcessNextDeliveryAsync(CancellationToken cancellationToken);
 }
 
+[HongdalCommunityV0Module(
+    HongdalCommunityV0ModuleKeys.Safety,
+    HongdalModuleKind.BackgroundProcessing,
+    "명시적으로 구독한 키워드의 게시글 scan과 알림 delivery를 lease·재시도 방식으로 처리",
+    ReleaseStage = HongdalCommunityV0ReleaseStages.SafetyAndOperations,
+    Boundary = "근접 위치나 거래 성사 가능성으로 자동 알림하지 않으며 사용자 구독과 공개 게시글 범위만 사용합니다.")]
 public sealed class CommunityKeywordNotificationProcessor : ICommunityKeywordNotificationProcessor
 {
     private readonly HongdalContext _db;

@@ -1,0 +1,399 @@
+.community-personal-shell {
+    width: min(1080px, 100%);
+    margin: 0 auto;
+    color: #1f2937;
+}
+
+.community-personal-header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 0 18px;
+    border-bottom: 1px solid #dfe3e8;
+}
+
+.community-personal-header h1,
+.community-personal-section h2,
+.community-decoration-product h3 {
+    margin: 0;
+    letter-spacing: 0;
+}
+
+.community-personal-header h1 {
+    font-size: 1.5rem;
+    line-height: 1.25;
+}
+
+.community-personal-header p,
+.community-decoration-product p,
+.community-personal-focus p {
+    margin: 4px 0 0;
+    color: #667085;
+}
+
+.community-personal-header > div > span,
+.community-personal-section-heading > div > span,
+.community-decoration-product-copy > span {
+    display: block;
+    color: #147d64;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.community-personal-avatar {
+    display: grid;
+    width: 46px;
+    height: 46px;
+    place-items: center;
+    border: 1px solid #b7dfd4;
+    border-radius: 50%;
+    background: #edf8f4;
+    color: #147d64;
+}
+
+.community-personal-tabs {
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    padding: 12px 0;
+    border-bottom: 1px solid #e4e7ec;
+}
+
+.community-personal-tab {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 12px;
+    border-bottom: 2px solid transparent;
+    color: #667085;
+    text-decoration: none;
+}
+
+.community-personal-tab:hover,
+.community-personal-tab--active {
+    color: #147d64;
+}
+
+.community-personal-tab--active {
+    border-bottom-color: #147d64;
+    font-weight: 700;
+}
+
+.community-personal-section {
+    padding: 24px 0 32px;
+}
+
+.community-personal-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.community-personal-section-heading h2 {
+    font-size: 1.3rem;
+}
+
+.community-personal-facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid #e4e7ec;
+    border-left: 1px solid #e4e7ec;
+}
+
+.community-personal-facts > div {
+    display: flex;
+    min-height: 84px;
+    flex-direction: column;
+    justify-content: center;
+    padding: 14px;
+    border-right: 1px solid #e4e7ec;
+    border-bottom: 1px solid #e4e7ec;
+    background: #fff;
+}
+
+.community-personal-facts span,
+.community-personal-list small,
+.community-personal-setting-row small,
+.community-personal-shortcuts small {
+    color: #667085;
+    font-size: 0.78rem;
+}
+
+.community-personal-facts strong {
+    margin-top: 5px;
+    overflow-wrap: anywhere;
+}
+
+.community-personal-shortcuts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.community-personal-shortcuts a {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid #dfe3e8;
+    border-radius: 6px;
+    color: #1f2937;
+    text-decoration: none;
+}
+
+.community-personal-shortcuts a:hover {
+    border-color: #72b9a6;
+    background: #f5fbf9;
+}
+
+.community-personal-shortcuts a > .mud-icon-root {
+    color: #147d64;
+}
+
+.community-personal-shortcuts span,
+.community-personal-list a > span:nth-child(2),
+.community-personal-setting-row > span {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.community-personal-list {
+    border-top: 1px solid #e4e7ec;
+}
+
+.community-personal-list a {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 64px;
+    padding: 10px 4px;
+    border-bottom: 1px solid #e4e7ec;
+    color: #1f2937;
+    text-decoration: none;
+}
+
+.community-personal-list a:hover {
+    background: #f8faf9;
+}
+
+.community-personal-list-icon {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border-radius: 6px;
+    background: #edf8f4;
+    color: #147d64;
+}
+
+.community-personal-list-count {
+    color: #667085;
+    font-size: 0.78rem;
+}
+
+.community-personal-empty {
+    display: flex;
+    min-height: 210px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+    border-top: 1px solid #e4e7ec;
+    border-bottom: 1px solid #e4e7ec;
+    color: #667085;
+    text-align: center;
+}
+
+.community-personal-empty strong {
+    color: #344054;
+}
+
+.community-personal-focus {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 0;
+    border-top: 1px solid #e4e7ec;
+    border-bottom: 1px solid #e4e7ec;
+}
+
+.community-personal-focus > .mud-icon-root {
+    color: #147d64;
+    font-size: 2rem;
+}
+
+.community-personal-setting-row {
+    display: flex;
+    min-height: 72px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    border-top: 1px solid #e4e7ec;
+}
+
+.community-personal-setting-row--stacked {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    padding: 14px 0;
+}
+
+.community-personal-setting-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 18px;
+}
+
+.community-personal-decoration-toggles {
+    display: flex;
+    gap: 12px 22px;
+    flex-wrap: wrap;
+    padding: 12px 0 18px;
+    border-top: 1px solid #e4e7ec;
+}
+
+.community-decoration-products {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.community-decoration-product {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    min-height: 128px;
+    padding: 14px;
+    border: 1px solid #dfe3e8;
+    border-radius: 6px;
+    background: #fff;
+}
+
+.community-decoration-product--active {
+    border-color: #59a58f;
+    box-shadow: inset 3px 0 0 #147d64;
+}
+
+.community-decoration-product-preview {
+    display: grid;
+    width: 70px;
+    height: 70px;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--decoration-accent) 35%, #dfe3e8);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--decoration-accent) 10%, #fff);
+    color: var(--decoration-accent);
+    font-size: 1.2rem;
+    font-weight: 800;
+    overflow: hidden;
+}
+
+.community-decoration-product--market {
+    grid-template-columns: minmax(210px, 0.9fr) minmax(0, 1.1fr) auto;
+}
+
+.community-decoration-product-market-preview {
+    min-width: 0;
+}
+
+.community-decoration-product-copy {
+    min-width: 0;
+}
+
+.community-decoration-product-copy h3 {
+    margin-top: 2px;
+    font-size: 1rem;
+}
+
+.community-decoration-product-copy p {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: 0.82rem;
+}
+
+.community-decoration-product-copy small {
+    display: block;
+    margin-top: 5px;
+    color: #98a2b3;
+}
+
+.community-decoration-product-action {
+    display: flex;
+    justify-content: flex-end;
+}
+
+@media (max-width: 760px) {
+    .community-personal-header {
+        grid-template-columns: auto minmax(0, 1fr);
+        padding-top: 8px;
+    }
+
+    .community-personal-header > .mud-chip {
+        grid-column: 2;
+        justify-self: start;
+    }
+
+    .community-personal-facts,
+    .community-personal-shortcuts,
+    .community-decoration-products {
+        grid-template-columns: 1fr;
+    }
+
+    .community-personal-focus {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .community-personal-focus .mud-button-root {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+
+    .community-decoration-product {
+        grid-template-columns: 62px minmax(0, 1fr);
+    }
+
+    .community-decoration-product--market {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .community-decoration-product--market .community-decoration-product-action {
+        grid-column: 1;
+    }
+
+    .community-decoration-product-preview {
+        width: 58px;
+        height: 58px;
+    }
+
+    .community-decoration-product-action {
+        grid-column: 2;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .community-personal-section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .community-personal-list a {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    .community-personal-list-count {
+        display: none;
+    }
+}

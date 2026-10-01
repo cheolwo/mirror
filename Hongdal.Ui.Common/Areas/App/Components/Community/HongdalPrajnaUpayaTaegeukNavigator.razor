@@ -2,19 +2,19 @@
 
 <section class="hongdal-bagua hongdal-prajna-upaya"
          style="@BuildRootStyle()"
-         aria-label="역할 미설정 상태의 반야와 방편 태극 이동">
+         aria-label="@($"역할 미설정 상태의 {PrajnaLabel}와 {UpayaLabel} 태극 이동")">
     <header>
         <div>
-            <span>般若 · 方便</span>
+            <span>@PrajnaLabel · @UpayaLabel</span>
             <strong>역할을 정하기 전의 공통 시작점</strong>
         </div>
-        <small>바깥 태극은 방편과 반야, 안쪽 태극은 커뮤니티와 상점입니다.</small>
+        <small>바깥 태극은 @(UpayaLabel)과 @PrajnaLabel, 안쪽 태극은 커뮤니티와 상점입니다.</small>
     </header>
 
     <div class="hongdal-bagua-wheel hongdal-prajna-upaya-wheel"
          role="img"
-         aria-label="바깥쪽 빨간 영역은 방편, 파란 영역은 반야인 태극과 안쪽 커뮤니티·상점 태극">
-        <div class="hongdal-prajna-upaya-outer" role="group" aria-label="방편과 반야 이동">
+         aria-label="@($"바깥쪽 빨간 영역은 {UpayaLabel}, 파란 영역은 {PrajnaLabel}인 태극과 안쪽 커뮤니티·상점 태극")">
+        <div class="hongdal-prajna-upaya-outer" role="group" aria-label="@($"{UpayaLabel}과 {PrajnaLabel} 이동")">
             <svg viewBox="-50 -50 100 100" focusable="false">
                 <defs>
                     @Pattern(OuterUpayaPatternId, Theme.OuterUpaya)
@@ -37,7 +37,7 @@
             </button>
             <button type="button"
                     class="hongdal-prajna-upaya-outer-action hongdal-prajna-upaya-outer-action--prajna"
-                    aria-label="@($"{PrajnaLabel} 강의 영상으로 이동")"
+                    aria-label="@($"{PrajnaLabel} 영역으로 이동")"
                     disabled="@(!PrajnaSelected.HasDelegate)"
                     @onclick="PrajnaSelected">
                 <span>@PrajnaLabel</span>
@@ -84,7 +84,7 @@
     </div>
 
     <footer>
-        <span>방편과 반야</span>
+        <span>@(UpayaLabel)과 @PrajnaLabel</span>
         <span>커뮤니티와 상점</span>
     </footer>
 </section>
@@ -94,7 +94,7 @@
     public string UpayaLabel { get; set; } = "방편";
 
     [Parameter]
-    public string PrajnaLabel { get; set; } = "반야";
+    public string PrajnaLabel { get; set; } = "정보";
 
     [Parameter]
     public string AccentColor { get; set; } = "#7c3aed";

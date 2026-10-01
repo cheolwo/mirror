@@ -80,12 +80,13 @@ public sealed class HongikHakdangCardDeliveryService : IHongikHakdangCardDeliver
             .Include(x => x.ImageVariants)
             .Include(x => x.Collections)
                 .ThenInclude(x => x.Collection)
-            .Where(x => x.IsActive);
+            .Where(x => x.IsActive && x.IsAdminEnabled);
         if (normalizedCollectionKey is not null)
         {
             query = query.Where(x => x.Collections.Any(item =>
                 item.IsActive
                 && item.Collection.IsActive
+                && item.Collection.IsAdminEnabled
                 && item.Collection.SourceKey == normalizedCollectionKey));
         }
 
@@ -155,7 +156,9 @@ public sealed class HongikHakdangCardDeliveryService : IHongikHakdangCardDeliver
         if (collectionKey is not null)
         {
             var exists = await _db.HongikHakdangCardCollections
-                .AnyAsync(x => x.IsActive && x.SourceKey == collectionKey, cancellationToken);
+                .AnyAsync(
+                    x => x.IsActive && x.IsAdminEnabled && x.SourceKey == collectionKey,
+                    cancellationToken);
             if (!exists)
             {
                 throw new ArgumentException("선택한 카드 모음을 찾을 수 없습니다.", nameof(request));
@@ -425,6 +428,7 @@ public sealed class HongikHakdangCardDeliveryService : IHongikHakdangCardDeliver
         var cards = await _db.HongikHakdangCards
             .AsNoTracking()
             .Where(x => x.IsActive
+                        && x.IsAdminEnabled
                         && x.ImageVariants.Any(variant =>
                             variant.VariantKind == HongikHakdangCardImageVariantKinds.Notification)
                         && x.ImageVariants.Any(variant =>
@@ -438,6 +442,7 @@ public sealed class HongikHakdangCardDeliveryService : IHongikHakdangCardDeliver
             cards = await _db.HongikHakdangCards
                 .AsNoTracking()
                 .Where(x => x.IsActive
+                            && x.IsAdminEnabled
                             && x.ImageVariants.Any(variant =>
                                 variant.VariantKind == HongikHakdangCardImageVariantKinds.Notification)
                             && x.ImageVariants.Any(variant =>
@@ -504,7 +509,7 @@ public sealed class HongikHakdangCardDeliveryService : IHongikHakdangCardDeliver
             _mediaTokenService.CreateRelativeUrl(lockScreen.Id),
             lockScreen.Sha256,
             card.Collections
-                .Where(x => x.IsActive && x.Collection.IsActive)
+                .Where(x => x.IsActive && x.Collection.IsActive && x.Collection.IsAdminEnabled)
                 .OrderBy(x => x.Collection.SortOrder)
                 .Select(x => x.Collection.SourceKey)
                 .Distinct(StringComparer.Ordinal)

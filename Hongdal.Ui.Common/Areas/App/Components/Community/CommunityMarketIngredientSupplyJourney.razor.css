@@ -1,0 +1,296 @@
+.market-ingredient-supply {
+    margin-top: 24px;
+    padding: 22px 0;
+    border-top: 2px solid var(--market-day-product);
+    border-bottom: 1px solid #d7ded9;
+}
+
+.market-ingredient-supply h3,
+.market-ingredient-supply p,
+.market-ingredient-supply dl,
+.market-ingredient-supply ol {
+    margin: 0;
+}
+
+.market-ingredient-supply h3 {
+    margin-top: 4px;
+    font-size: 1.02rem;
+    line-height: 1.4;
+}
+
+.market-ingredient-supply__header,
+.market-ingredient-supply__businesses > header,
+.market-ingredient-supply__stages > header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 22px;
+}
+
+.market-ingredient-supply__header > div > span,
+.market-ingredient-supply__businesses header span,
+.market-ingredient-supply__stages header span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--market-day-product);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.market-ingredient-supply__header p {
+    max-width: 760px;
+    margin-top: 7px;
+    color: #59655f;
+    line-height: 1.5;
+}
+
+.market-ingredient-supply__header > strong,
+.market-ingredient-supply__businesses > header > strong,
+.market-ingredient-supply__stages > header > strong {
+    flex: 0 0 auto;
+    padding: 7px 10px;
+    border: 1px solid var(--market-day-product);
+    color: var(--market-day-product);
+    font-size: 0.76rem;
+}
+
+.market-ingredient-supply__allocation {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: 16px;
+    border-top: 1px solid #d7ded9;
+    border-bottom: 1px solid #d7ded9;
+}
+
+.market-ingredient-supply__allocation > div {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    padding: 14px 12px;
+    border-top: 3px solid #aeb8b3;
+}
+
+.market-ingredient-supply__allocation > div + div {
+    border-left: 1px solid #d7ded9;
+}
+
+.market-ingredient-supply__allocation > .is-household {
+    border-top-color: var(--market-day-primary);
+}
+
+.market-ingredient-supply__allocation > .is-business {
+    border-top-color: var(--market-day-product);
+}
+
+.market-ingredient-supply__allocation dt,
+.market-ingredient-supply__allocation small {
+    color: #6b7670;
+}
+
+.market-ingredient-supply__allocation dd {
+    margin: 0;
+    color: #28342e;
+    font-size: 1.08rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.market-ingredient-supply__businesses,
+.market-ingredient-supply__stages {
+    margin-top: 22px;
+}
+
+.market-ingredient-supply__empty {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+    padding: 14px;
+    border: 1px dashed #b9c2bd;
+    color: #55615b;
+}
+
+.market-ingredient-supply__empty div {
+    display: grid;
+    gap: 4px;
+}
+
+.market-ingredient-supply__empty .mud-icon-root {
+    color: var(--market-day-product);
+}
+
+.market-ingredient-supply__business-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 12px;
+    border-top: 1px solid #d7ded9;
+}
+
+.market-ingredient-supply__business-grid > article {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    min-width: 0;
+    padding: 14px;
+    border-right: 1px solid #d7ded9;
+    border-bottom: 1px solid #d7ded9;
+}
+
+.market-ingredient-supply__business-grid > article:nth-child(2n) {
+    border-right: 0;
+}
+
+.market-ingredient-supply__business-grid article > div > span {
+    display: block;
+    margin-top: 4px;
+    color: #53605a;
+}
+
+.market-ingredient-supply__business-grid article dl {
+    display: flex;
+    gap: 14px;
+    margin-top: 9px;
+}
+
+.market-ingredient-supply__business-grid article dl > div {
+    display: flex;
+    gap: 5px;
+}
+
+.market-ingredient-supply__business-grid article dt {
+    color: #75807a;
+}
+
+.market-ingredient-supply__business-grid article dd {
+    margin: 0;
+    font-weight: 700;
+}
+
+.market-ingredient-supply__business-grid article small {
+    display: block;
+    margin-top: 6px;
+    color: #79601f;
+    line-height: 1.4;
+}
+
+.market-ingredient-supply__stages ol {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 12px;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid #d7ded9;
+    border-left: 1px solid #d7ded9;
+}
+
+.market-ingredient-supply__stages li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    min-width: 0;
+    padding: 13px;
+    border-right: 1px solid #d7ded9;
+    border-bottom: 1px solid #d7ded9;
+}
+
+.market-ingredient-supply__stages li > span {
+    display: grid;
+    place-items: center;
+    width: 23px;
+    height: 23px;
+    border: 1px solid #aeb8b3;
+    border-radius: 50%;
+    color: #67726d;
+    font-size: 0.74rem;
+}
+
+.market-ingredient-supply__stages li.is-completed > span {
+    border-color: var(--market-day-product);
+    background: var(--market-day-product);
+    color: #fff;
+}
+
+.market-ingredient-supply__stages li.is-current,
+.market-ingredient-supply__stages li.is-acceptance {
+    background: #f1f5f7;
+}
+
+.market-ingredient-supply__stages li.is-current > span,
+.market-ingredient-supply__stages li.is-acceptance > span {
+    border-color: var(--market-day-product);
+    color: var(--market-day-product);
+}
+
+.market-ingredient-supply__stages li p {
+    margin-top: 4px;
+    color: #65706b;
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+.market-ingredient-supply__stages li small {
+    display: block;
+    margin-top: 6px;
+    color: #79601f;
+}
+
+.market-ingredient-supply__policies {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    margin: 15px 0;
+}
+
+.market-ingredient-supply__policies p {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    min-width: 0;
+    padding: 10px 11px;
+    background: #f4f7f5;
+    color: #4e5b55;
+    line-height: 1.45;
+}
+
+.market-ingredient-supply__policies .mud-icon-root {
+    flex: 0 0 auto;
+    color: var(--market-day-product);
+}
+
+@media (max-width: 760px) {
+    .market-ingredient-supply {
+        padding: 19px 0;
+    }
+
+    .market-ingredient-supply__header,
+    .market-ingredient-supply__businesses > header,
+    .market-ingredient-supply__stages > header {
+        display: grid;
+        gap: 10px;
+    }
+
+    .market-ingredient-supply__header > strong,
+    .market-ingredient-supply__businesses > header > strong,
+    .market-ingredient-supply__stages > header > strong {
+        justify-self: start;
+        white-space: normal;
+    }
+
+    .market-ingredient-supply__allocation,
+    .market-ingredient-supply__business-grid,
+    .market-ingredient-supply__stages ol,
+    .market-ingredient-supply__policies {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .market-ingredient-supply__allocation > div + div {
+        border-top: 1px solid #d7ded9;
+        border-left: 0;
+    }
+
+    .market-ingredient-supply__business-grid > article,
+    .market-ingredient-supply__business-grid > article:nth-child(2n) {
+        border-right: 0;
+    }
+}

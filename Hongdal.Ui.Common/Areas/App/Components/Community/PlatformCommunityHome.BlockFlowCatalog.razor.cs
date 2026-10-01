@@ -1,4 +1,5 @@
 using Hongdal.Contracts.Common.Community;
+using Hongdal.Ui.Common.Areas.App.ViewModels;
 using MudBlazor;
 
 namespace Hongdal.Ui.Common.Areas.App.Components.Community;
@@ -43,7 +44,15 @@ public partial class PlatformCommunityHome
             ],
             CommunityLedgerTemplateKeys.GroupPurchase =>
             [
-                상품노드("수요 모집", "공동주문 수요 블록", "참여자, 희망 수량, 희망가, 비확정 의향을 모읍니다."),
+                상품노드("수요 모집", "공동구매 수요 블록", "참여자별 개별 주문, 희망 수량, 희망가와 공동 조건을 모읍니다."),
+                작업노드("구매 확정", "공동 조건·구매 결정", "모인 수요와 투표 근거를 보고 구매 수량, 가격과 구매처를 확정합니다."),
+                창고노드("수령 거점", "공동 수령·보관 거점", "구매 상품을 받을 공동 거점과 참여자별 보관·인수 조건을 정합니다."),
+                배송노드("분배", "참여자 분배 블록", "거점 수령, 참여자별 분배와 개별 수령 확인을 한 노드에서 처리합니다."),
+                확인노드("정산/수령", "정산 표시·수령 확인", "입금 표시, 수령 확인과 공동구매 마감 메모를 남깁니다.")
+            ],
+            CommunityLedgerTemplateKeys.GroupImport =>
+            [
+                상품노드("원천 공동구매", "공동구매 원장 연결", "확정된 공동구매 원장과 수량 합계를 수입의 원천 근거로 연결합니다."),
                 작업노드("수입 결정", "수량·가격·방식 결정", "모인 수요를 보고 수입 진행 여부, FCL/LCL, 공급자 조건을 정합니다."),
                 작업노드("해외 선적", "해외 발주·선적 블록", "발주, 인보이스, 패킹리스트, B/L 또는 AWB 추적을 묶습니다."),
                 작업노드("통관/반출", "통관 상태·국내 반출 블록", "HS 코드, 문서관리번호, 통관 상태, 반출 가능 조건을 한 노드에서 봅니다.", "통관과 반출 조건이 확인되어야 국내 분배가 열립니다."),
@@ -102,7 +111,13 @@ public partial class PlatformCommunityHome
 
         if (string.Equals(template.Key, CommunityLedgerTemplateKeys.GroupPurchase, StringComparison.OrdinalIgnoreCase))
         {
-            rules.Add("공동주문 수입은 수요 모집 -> 수입 결정 -> 해외 선적 -> 통관/반출 -> 3PL 입고 또는 세대 분배 순서로 배치합니다.");
+            rules.Add("공동구매는 개별 주문 연결 -> 수요·조건 확정 -> 구매 확정 -> 수령 거점 -> 참여자 분배 순서로 배치합니다.");
+            rules.Add("해외 선적이나 통관이 필요한 경우 공동구매 원장에 상태를 섞지 않고 별도의 공동수입 원장을 연결합니다.");
+        }
+
+        if (string.Equals(template.Key, CommunityLedgerTemplateKeys.GroupImport, StringComparison.OrdinalIgnoreCase))
+        {
+            rules.Add("공동수입은 원천 공동구매 연결 -> 수입 결정 -> 해외 선적 -> 통관/반출 -> 3PL 입고 또는 세대 분배 순서로 배치합니다.");
             rules.Add("통관 상태와 국내 반출 조건이 확인되기 전에는 3PL 입고, 국내 운송, 세대 분배 노드를 실제 처리 단계로 열지 않습니다.");
         }
 
@@ -173,6 +188,7 @@ public partial class PlatformCommunityHome
             or CommunityLedgerTemplateKeys.WarehouseInbound
             or CommunityLedgerTemplateKeys.LocalSale
             or CommunityLedgerTemplateKeys.GroupPurchase
+            or CommunityLedgerTemplateKeys.GroupImport
             || template.UiSectionHints.Any(상품성격섹션인가);
     }
 

@@ -12,6 +12,6 @@ public partial class App : Application
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		return new Window(new NavigationPage(_homePage)) { Title = "홍달 용달기사" };
+		return new Window(new NavigationPage(_homePage)) { Title = "살뜰 기사" };
 	}
 }

@@ -1,0 +1,20 @@
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inherits ViewModelParameterComponentBase<I업무조각ViewModel>
+@namespace Hongdal.Ui.Common.Areas.App.Components.Crud
+
+@if (ViewModel.처리중)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="my-2" />
+}
+else if (ViewModel.상태 == Api작업상태.실패)
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="my-2">
+        @(ViewModel.오류메시지 ?? "업무를 처리하지 못했습니다.")
+    </MudAlert>
+}
+else if (ViewModel.상태 == Api작업상태.취소됨)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="my-2">
+        작업이 취소되었습니다.
+    </MudAlert>
+}

@@ -1,0 +1,51 @@
+@page "/warehouse/exceptions"
+@inherits MvvmComponentBase<창고예외처리PageViewModel>
+
+<PageTitle>창고 예외 처리</PageTitle>
+
+<WarehousePageShell Model="@ViewModel"
+                    Title="창고 예외 처리"
+                    Description="수량 차이, 스캔 실패와 인계 보류 작업을 한곳에서 확인합니다."
+                    Icon="@Icons.Material.Filled.Warning"
+                    Color="Color.Warning">
+    <Actions>
+        <MudButton Href="@WarehouseManagerRoutes.Scan"
+                   Variant="Variant.Outlined"
+                   Color="Color.Warning"
+                   StartIcon="@Icons.Material.Filled.QrCodeScanner">
+            스캔 스테이션
+        </MudButton>
+    </Actions>
+    <ChildContent>
+        <MudGrid>
+            @foreach (var category in Categories)
+            {
+                <MudItem xs="12" md="4">
+                    <MudPaper Class="pa-4 h-100" Elevation="0" Outlined="true">
+                        <MudStack Spacing="1">
+                            <MudIcon Icon="@category.Icon" Color="@category.Color" />
+                            <MudText Typo="Typo.subtitle1">@category.Title</MudText>
+                            <MudText Typo="Typo.h5">0건</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">현재 처리 대기 항목 없음</MudText>
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+            }
+        </MudGrid>
+
+        <MudAlert Severity="Severity.Success" Variant="Variant.Outlined">
+            현재 선택한 창고에 처리 대기 중인 예외가 없습니다.
+        </MudAlert>
+    </ChildContent>
+</WarehousePageShell>
+
+@code {
+    private static readonly IReadOnlyList<ExceptionCategory> Categories =
+    [
+        new("입고 수량 차이", Icons.Material.Filled.MoveToInbox, Color.Warning),
+        new("스캔 실패", Icons.Material.Filled.QrCodeScanner, Color.Error),
+        new("인계 보류", Icons.Material.Filled.LocalShipping, Color.Info)
+    ];
+
+    private sealed record ExceptionCategory(string Title, string Icon, Color Color);
+}

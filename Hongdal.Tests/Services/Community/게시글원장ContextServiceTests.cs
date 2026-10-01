@@ -1,3 +1,4 @@
+using FluentResults;
 using Hongdal.Contracts.Common.Community;
 using Hongdal.Services.Community;
 using 홍달.Services.Versioning;
@@ -217,6 +218,10 @@ public sealed class 게시글원장ContextServiceTests
         var block = Assert.Single(context?.블록목록 ?? []);
         Assert.Equal("상차지", block.제목);
         Assert.Equal("확인 완료", block.상태);
+        var assignee = Assert.Single(block.담당자목록);
+        Assert.Equal("worker-1", assignee.UserId);
+        Assert.Equal("운반자", assignee.DisplayName);
+        Assert.Equal("주담당", assignee.ResponsibilityName);
         Assert.Equal("서울 중구", block.항목["주소"]);
         Assert.Equal("010-0000-0000", block.항목["연락처"]);
     }
@@ -241,6 +246,7 @@ public sealed class 게시글원장ContextServiceTests
         Assert.Equal("확인 완료", block.상태);
         Assert.Equal("서울 중구", Assert.Single(block.항목).Value);
         Assert.DoesNotContain("연락처", block.항목.Keys);
+        Assert.Empty(block.담당자목록);
     }
 
     [Fact]
@@ -347,7 +353,79 @@ public sealed class 게시글원장ContextServiceTests
         var node = Assert.Single(Assert.IsType<DiagramSnapshotDto>(saved.다이어그램스냅샷).Nodes);
         Assert.Null(node.Description);
         Assert.Empty(node.Data);
+        Assert.Empty(node.OrganizationReferences);
         Assert.Equal(source.원장Id, saved.외부참조["재사용출처원장Id"]);
+    }
+
+    [Fact]
+    public async Task 관세사_역할조회에서는_허용된_노드와_그_사이의_연결선만_서버가_반환한다()
+    {
+        var ledger = new 커뮤니티원장Dto
+        {
+            원장Id = "group-import-role-scope",
+            원장템플릿Key = CommunityLedgerTemplateKeys.GroupImport,
+            제목 = "공동수입 감귤",
+            상태 = 커뮤니티원장상태.진행중,
+            현재단계Key = "통관 상태",
+            생성자UserId = "buyer-owner",
+            블록목록 =
+            [
+                new 커뮤니티원장블록Dto { BlockId = "import-decision", Title = "수입 결정", Data = new Dictionary<string, string> { ["가격"] = "비공개" } },
+                new 커뮤니티원장블록Dto { BlockId = "customs-state", Title = "통관 상태", Data = new Dictionary<string, string> { ["문서관리번호"] = "M-100" } },
+                new 커뮤니티원장블록Dto { BlockId = "domestic-release", Title = "국내 반출", Data = new Dictionary<string, string> { ["상태"] = "대기" } }
+            ],
+            다이어그램스냅샷 = new DiagramSnapshotDto
+            {
+                DiagramId = "diagram-role-scope",
+                DiagramName = "감귤 공동수입",
+                LedgerId = "group-import-role-scope",
+                LedgerTemplateKey = CommunityLedgerTemplateKeys.GroupImport,
+                Nodes =
+                [
+                    new DiagramNodeDto { NodeId = "import-decision", Title = "수입 결정" },
+                    new DiagramNodeDto { NodeId = "customs-state", Title = "통관 상태" },
+                    new DiagramNodeDto { NodeId = "domestic-release", Title = "국내 반출" }
+                ],
+                Edges =
+                [
+                    new DiagramEdgeDto { EdgeId = "private-to-customs", FromNodeId = "import-decision", ToNodeId = "customs-state" },
+                    new DiagramEdgeDto { EdgeId = "customs-to-release", FromNodeId = "customs-state", ToNodeId = "domestic-release" }
+                ]
+            }
+        };
+        var ledgerStore = new 원장저장소Stub(ledger);
+        var featureFlag = new 기능설정Stub(true);
+        var sharingService = new 커뮤니티원장공유Service(
+            ledgerStore,
+            new 원장공유정책저장소Stub(
+                ledger,
+                커뮤니티원장공개범위.비공개,
+                allowReshare: false,
+                publicItemKeys: []),
+            featureFlag);
+        var roleAccess = new 역할접근Stub(new CommunityLedgerRoleAccessDecision(
+            HasRoleAccess: true,
+            UseRoleScope: true,
+            CanManage: false,
+            RoleCode: CommunityLedgerAccessRoleCodes.CustomsBroker,
+            RoleName: "관세사",
+            VisibleNodeIds: ["customs-state", "domestic-release"],
+            EditableNodeIds: ["customs-state"],
+            CanCoordinateTransport: true));
+        var service = new 게시글원장ContextService(ledgerStore, featureFlag, sharingService, roleAccess);
+
+        var context = await service.조회Async(ledger.원장Id, "broker", default);
+
+        Assert.NotNull(context);
+        Assert.True(context.역할범위조회여부);
+        Assert.False(context.상세조회가능여부);
+        Assert.False(context.참여요청필요여부);
+        Assert.Equal(["customs-state", "domestic-release"], context.다이어그램!.Nodes.Select(node => node.NodeId));
+        Assert.Equal("customs-to-release", Assert.Single(context.다이어그램.Edges).EdgeId);
+        Assert.Equal(["customs-state", "domestic-release"], context.블록목록.Select(block => block.블록Id));
+        Assert.DoesNotContain(context.블록목록, block => block.항목.ContainsKey("가격"));
+        Assert.Equal(["관세사 역할 노드 조회", "허용된 노드 편집", "운송 주선 제안"], context.가능한행동목록);
+        Assert.Empty(context.노드행동목록);
     }
 
     private static 게시글원장ContextService CreateService(
@@ -447,6 +525,16 @@ public sealed class 게시글원장ContextServiceTests
                     BlockType = CommunityLedgerBlockTypes.Place,
                     Title = "상차지",
                     State = "확인 완료",
+                    담당자목록 =
+                    [
+                        new 커뮤니티원장블록담당자Dto
+                        {
+                            UserId = "worker-1",
+                            DisplayName = "운반자",
+                            RoleLabel = "운반자",
+                            ResponsibilityType = CommunityLedgerBlockResponsibilityTypes.Primary
+                        }
+                    ],
                     Data = new Dictionary<string, string>
                     {
                         ["주소"] = "서울 중구",
@@ -468,6 +556,17 @@ public sealed class 게시글원장ContextServiceTests
                         Kind = "transport",
                         Title = "상차",
                         Description = "비공개 연락처가 들어 있는 설명",
+                        OrganizationReferences =
+                        [
+                            new DiagramOrganizationReferenceDto
+                            {
+                                ReferenceId = "private-provider-reference",
+                                OrganizationKey = "private-provider",
+                                DisplayName = "비공개 물류 후보",
+                                RoleLabel = "운송 후보",
+                                CountryCode = "KR"
+                            }
+                        ],
                         Data = new Dictionary<string, string> { ["phone"] = "010-0000-0000" }
                     }
                 ]
@@ -576,5 +675,34 @@ public sealed class 게시글원장ContextServiceTests
 
         public IReadOnlyDictionary<string, bool> GetAll()
             => new Dictionary<string, bool>();
+    }
+
+    private sealed class 역할접근Stub : ICommunityLedgerRoleAccessService
+    {
+        private readonly CommunityLedgerRoleAccessDecision _decision;
+
+        public 역할접근Stub(CommunityLedgerRoleAccessDecision decision)
+        {
+            _decision = decision;
+        }
+
+        public Task<Result<CommunityLedgerRoleAccessSettingsResponse>> GetSettingsAsync(
+            string ledgerId,
+            string? userId,
+            CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+
+        public Task<Result<CommunityLedgerRoleAccessSettingsResponse>> UpdateSettingsAsync(
+            string ledgerId,
+            CommunityLedgerRoleAccessUpdateRequest request,
+            string? userId,
+            CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+
+        public Task<CommunityLedgerRoleAccessDecision> EvaluateAsync(
+            커뮤니티원장Dto ledger,
+            string? userId,
+            CancellationToken cancellationToken)
+            => Task.FromResult(_decision);
     }
 }

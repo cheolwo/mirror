@@ -43,6 +43,18 @@ public sealed class HongdalProtectedApiClient
         return await httpClient.SendAsync(message, cancellationToken);
     }
 
+    public async Task<HttpResponseMessage> SendAsync(
+        HttpMethod method,
+        string requestUri,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(method);
+        ArgumentException.ThrowIfNullOrWhiteSpace(requestUri);
+        using var message = new HttpRequestMessage(method, requestUri);
+        ApplyAuthorization(message);
+        return await httpClient.SendAsync(message, cancellationToken);
+    }
+
     public async Task<HttpResponseMessage> PostAsProtectedJsonAsync<TRequest>(
         string requestUri,
         TRequest request,

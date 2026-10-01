@@ -7,7 +7,7 @@ using Hongdal.ApiMetadata;
 
 namespace Hongdal.Controllers.Orderer;
 
-[HongdalApiVersion(HongdalProductVersion.V1_0)]
+[HongdalApiVersion(HongdalProductVersion.V0_0)]
 [ApiController]
 [Route("api/v1/orderer/public-data")]
 public sealed class PublicDataLookupController : ControllerBase

@@ -1,0 +1,195 @@
+@using Hongdal.Contracts.Common.Sales
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@inherits MvvmComponentBase<판매페이지작성ViewModel>
+@namespace Hongdal.Ui.Common.Areas.App.Components.Sales
+
+<section class="sales-page-composer" aria-label="Hongdal 판매 페이지 만들기">
+    <header class="sales-page-composer__header">
+        <div>
+            <MudText Typo="Typo.overline" Color="Color.Primary">SELLER PAGE</MudText>
+            <MudText Typo="Typo.h4">판매 페이지 만들기</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary">
+                농가, 일반 판매자, 제조자와 수출업자 모두 같은 페이지에서 상품을 소개할 수 있습니다.
+            </MudText>
+        </div>
+        <MudChip T="string" Variant="Variant.Outlined" Color="Color.Primary">초안 · 실제 판매 미연결</MudChip>
+    </header>
+
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-4">
+        공동주문은 상품 종류가 아니라 주문 방식입니다. 개별주문과 공동주문을 모두 열거나 필요한 방식만 선택할 수 있습니다.
+    </MudAlert>
+
+    @if (!string.IsNullOrWhiteSpace(ViewModel.오류메시지))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-4">
+            @ViewModel.오류메시지
+        </MudAlert>
+    }
+
+    <div class="sales-page-composer__layout">
+        <MudPaper Outlined="true" Elevation="0" Class="sales-page-editor pa-4">
+            <MudStack Spacing="3">
+                <div>
+                    <MudText Typo="Typo.h6">1. 판매자와 상품</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">구매자가 누구에게서 무엇을 사는지 먼저 이해하도록 작성합니다.</MudText>
+                </div>
+
+                <MudSelect T="string" Label="판매자 유형" Variant="Variant.Outlined" Margin="Margin.Dense"
+                           @bind-Value="ViewModel.초안.판매자유형" @bind-Value:after="ViewModel.입력변경알림">
+                    @foreach (var option in SellerTypes)
+                    {
+                        <MudSelectItem T="string" Value="@option.Value">@option.Label</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudTextField T="string" Label="판매자 표시명" Placeholder="예: 햇살농원, 서울 생활상점"
+                              Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="200"
+                              @bind-Value="ViewModel.초안.판매자표시명" />
+                <MudTextField T="string" Label="상품명" Placeholder="직접 입력하거나 아래 외부 자료로 채울 수 있습니다"
+                              Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="300"
+                              @bind-Value="ViewModel.초안.상품명" />
+                <MudTextField T="string" Label="한 줄 소개" Placeholder="이 상품을 선택할 이유를 짧게 적어주세요"
+                              Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="500"
+                              @bind-Value="ViewModel.초안.한줄소개" />
+
+                <MudDivider />
+                <div>
+                    <MudText Typo="Typo.h6">2. 선택 사항 · 외부 상세 참고</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Amazon URL이 없어도 직접 작성할 수 있습니다. 불러온 가격과 재고는 참고값으로만 분리 보관됩니다.</MudText>
+                </div>
+                <MudTextField T="string" Label="Amazon 상품 상세 URL" Placeholder="https://www.amazon.com/dp/..."
+                              Variant="Variant.Outlined" Margin="Margin.Dense" InputType="InputType.Url"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Link"
+                              @bind-Value="ViewModel.초안.Amazon상품Url" />
+
+                <MudDivider />
+                <div>
+                    <MudText Typo="Typo.h6">3. 판매 조건</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">외부 사이트의 관측 가격이 자동으로 판매가가 되지 않습니다.</MudText>
+                </div>
+                <MudGrid Spacing="2">
+                    <MudItem xs="8">
+                        <MudNumericField T="decimal?" Label="Hongdal 판매가" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                         Min="0" @bind-Value="ViewModel.초안.판매가" />
+                    </MudItem>
+                    <MudItem xs="4">
+                        <MudTextField T="string" Label="통화" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                      MaxLength="10" @bind-Value="ViewModel.초안.통화코드" />
+                    </MudItem>
+                </MudGrid>
+                <div class="order-mode-grid">
+                    <label class="order-mode-card">
+                        <MudSwitch T="bool" Color="Color.Primary" @bind-Value="ViewModel.초안.개별주문허용" />
+                        <span><strong>개별주문</strong><small>한 사람도 바로 주문 가능</small></span>
+                    </label>
+                    <label class="order-mode-card">
+                        <MudSwitch T="bool" Color="Color.Primary" @bind-Value="ViewModel.초안.공동주문허용" />
+                        <span><strong>공동주문</strong><small>주문자 집단이 수량을 모아 제안</small></span>
+                    </label>
+                </div>
+                @if (ViewModel.초안.공동주문허용)
+                {
+                    <MudNumericField T="int?" Label="공동주문 최소 수량" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                     Min="2" @bind-Value="ViewModel.초안.공동주문최소수량" />
+                }
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true"
+                           Disabled="ViewModel.처리중" OnClick="CreateDraftAsync"
+                           StartIcon="@Icons.Material.Filled.AutoAwesome">
+                    @(ViewModel.처리중 ? "초안 만드는 중" : "판매 페이지 초안 만들기")
+                </MudButton>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">@ViewModel.상태메시지</MudText>
+            </MudStack>
+        </MudPaper>
+
+        <aside class="sales-page-preview" aria-label="모바일 판매 페이지 미리보기">
+            <div class="sales-page-preview__label">
+                <span>모바일 미리보기</span>
+                <strong>@(ViewModel.저장결과 is null ? "작성 중" : "초안 저장됨")</strong>
+            </div>
+            <article class="product-page-card">
+                <div class="product-page-card__media">
+                    @if (!string.IsNullOrWhiteSpace(PreviewImageUrl))
+                    {
+                        <img src="@PreviewImageUrl" alt="@PreviewProductName 대표 이미지" />
+                    }
+                    else
+                    {
+                        <div class="product-page-card__placeholder" aria-label="대표 상품 사진 자리">
+                            <MudIcon Icon="@Icons.Material.Filled.AddPhotoAlternate" Size="Size.Large" />
+                            <span>대표 상품 사진</span>
+                        </div>
+                    }
+                    <span class="product-page-card__seller-type">@SellerTypeLabel</span>
+                </div>
+                <div class="product-page-card__body">
+                    <div class="seller-line">
+                        <span class="seller-line__avatar" aria-hidden="true">@SellerInitial</span>
+                        <span><small>판매자</small><strong>@PreviewSellerName</strong></span>
+                    </div>
+                    <MudText Typo="Typo.h5">@PreviewProductName</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@PreviewTagline</MudText>
+                    <MudText Typo="Typo.h5" Class="product-page-card__price">@PreviewPrice</MudText>
+
+                    <div class="product-page-card__facts">
+                        <span><small>주문 방식</small><strong>@OrderModeLabel</strong></span>
+                        <span><small>최소 주문</small><strong>@(ViewModel.초안.최소주문수량)개</strong></span>
+                    </div>
+
+                    @if (ViewModel.초안.공동주문허용)
+                    {
+                        <div class="group-order-callout">
+                            <MudIcon Icon="@Icons.Material.Filled.Groups" />
+                            <span><strong>함께 주문할 수 있어요</strong><small>@(ViewModel.초안.공동주문최소수량 ?? 2)개부터 주문자 집단이 판매자에게 제안할 수 있습니다.</small></span>
+                        </div>
+                    }
+
+                    @if (ViewModel.저장결과?.외부참고자료 is not null)
+                    {
+                        <div class="external-reference-note">
+                            <strong>외부 상세 참고 완료</strong>
+                            <span>Amazon · @ViewModel.저장결과.외부참고자료.외부상품번호</span>
+                            <small>관측 가격과 재고는 Hongdal 판매 조건과 분리되어 있습니다.</small>
+                        </div>
+                    }
+
+                    <button class="product-page-card__primary" type="button" disabled>주문 방법 선택</button>
+                    <small class="product-page-card__safety">초안에서는 실제 주문과 결제가 실행되지 않습니다.</small>
+                </div>
+            </article>
+        </aside>
+    </div>
+</section>
+
+@code {
+    private static readonly IReadOnlyList<(string Value, string Label)> SellerTypes =
+    [
+        (판매자유형코드.일반판매자, "일반 판매자"),
+        (판매자유형코드.농가생산자, "농가·생산자"),
+        (판매자유형코드.수출업자, "수출업자"),
+        (판매자유형코드.제조자, "제조자"),
+        (판매자유형코드.협동조합, "협동조합"),
+        (판매자유형코드.기타, "기타")
+    ];
+
+    private string PreviewProductName => FirstNonEmpty(ViewModel.저장결과?.상품명, ViewModel.초안.상품명) ?? "판매할 상품 이름";
+    private string PreviewSellerName => FirstNonEmpty(ViewModel.저장결과?.판매자표시명, ViewModel.초안.판매자표시명) ?? "판매자 이름";
+    private string PreviewTagline => FirstNonEmpty(ViewModel.저장결과?.한줄소개, ViewModel.초안.한줄소개) ?? "상품의 특징과 판매자의 이야기가 여기에 표시됩니다.";
+    private string? PreviewImageUrl => ViewModel.저장결과?.이미지Url목록.FirstOrDefault();
+    private string SellerInitial => PreviewSellerName[..1];
+    private string SellerTypeLabel => SellerTypes.FirstOrDefault(x => x.Value == ViewModel.초안.판매자유형).Label ?? "판매자";
+    private string PreviewPrice => ViewModel.초안.판매가.HasValue
+        ? $"{ViewModel.초안.판매가:N0} {ViewModel.초안.통화코드}"
+        : "가격 협의";
+    private string OrderModeLabel => (ViewModel.초안.개별주문허용, ViewModel.초안.공동주문허용) switch
+    {
+        (true, true) => "개별 · 공동",
+        (true, false) => "개별주문",
+        (false, true) => "공동주문",
+        _ => "선택 필요"
+    };
+
+    private Task CreateDraftAsync() => ViewModel.초안생성Async();
+
+    private static string? FirstNonEmpty(params string?[] values)
+        => values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value))?.Trim();
+}

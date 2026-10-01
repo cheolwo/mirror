@@ -1,0 +1,253 @@
+@namespace Hongdal.Ui.Common.Areas.App.Components.Community
+@using Hongdal.Ui.Common.Areas.App.ViewModels
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<div @ref="canvasElement"
+     class="@Presentation.CssClass"
+     style="@Presentation.Style"
+     data-active-connection="@Presentation.ActiveDrag?.NodeTitle"
+     data-active-handle="@(Presentation.ActiveDrag is null ? null : BuildHandleKey(Presentation.ActiveDrag.Handle))"
+     @onpointermove="HandlePointerMoveAsync"
+     @onpointerup="HandlePointerUpAsync">
+    <svg class="platform-ledger-edge-layer"
+         viewBox="@Presentation.ViewBox"
+         preserveAspectRatio="none"
+         aria-hidden="true">
+        <defs>
+            <marker id="platform-ledger-stage-edge-arrow"
+                    viewBox="0 0 10 10"
+                    refX="8"
+                    refY="5"
+                    markerWidth="7"
+                    markerHeight="7"
+                    orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" />
+            </marker>
+        </defs>
+        @foreach (var edge in Presentation.Edges)
+        {
+            <path class="platform-ledger-edge-hit-area"
+                  d="@edge.Geometry.Path"
+                  @onclick="@(() => EdgeSelected.InvokeAsync(edge.Edge))"
+                  @onclick:stopPropagation="true" />
+            <path class="@edge.PathClass"
+                  d="@edge.Geometry.Path"
+                  marker-end="url(#platform-ledger-stage-edge-arrow)"
+                  @onclick="@(() => EdgeSelected.InvokeAsync(edge.Edge))"
+                  @onclick:stopPropagation="true" />
+        }
+        @if (!string.IsNullOrWhiteSpace(Presentation.PreviewPath))
+        {
+            <path class="platform-ledger-edge-path platform-ledger-edge-path--preview"
+                  d="@Presentation.PreviewPath"
+                  marker-end="url(#platform-ledger-stage-edge-arrow)" />
+        }
+    </svg>
+
+    @foreach (var edge in Presentation.Edges)
+    {
+        <button type="button"
+                class="@edge.LabelClass"
+                style="@edge.LabelStyle"
+                title="@edge.Edge.Label"
+                @onclick="@(() => EdgeSelected.InvokeAsync(edge.Edge))">
+            @edge.Edge.Label
+        </button>
+    }
+
+    @foreach (var node in Presentation.Nodes)
+    {
+        <div role="button"
+             tabindex="0"
+             class="@node.CssClass"
+             style="@node.Style"
+             aria-pressed="@node.IsSelected"
+             title="@node.Node.Description"
+             @onclick="@(() => NodeSelected.InvokeAsync(node.Node))"
+             @oncontextmenu="@((MouseEventArgs _) => NodeContextRequested.InvokeAsync(node.Node))"
+             @oncontextmenu:preventDefault="true">
+            @if (!string.IsNullOrWhiteSpace(node.RoleLabel))
+            {
+                <span class="platform-ledger-flow-node-role">@node.RoleLabel</span>
+            }
+            <span class="@(node.StickerUrl is null ? "platform-ledger-flow-node-icon" : "platform-ledger-flow-node-icon platform-ledger-flow-node-icon--sticker")">
+                @if (node.StickerUrl is not null)
+                {
+                    <img class="platform-ledger-flow-node-sticker"
+                         src="@node.StickerUrl"
+                         alt="@node.StickerAltText"
+                         title="@node.StickerTitle" />
+                }
+                else
+                {
+                    <MudIcon Icon="@node.Icon" Color="@node.Node.Color" />
+                }
+            </span>
+            <span class="platform-ledger-flow-node-title">@node.Node.Title</span>
+            <span class="platform-ledger-flow-node-form-summary" title="@node.FormSummaryTitle">
+                @($"{node.Readiness.Percent}% · {node.Readiness.CountLabel}")
+            </span>
+            <span class="platform-ledger-flow-node-readiness" aria-label="@($"입력 준비도 {node.Readiness.Percent}%")">
+                <i></i>
+            </span>
+            @if (node.Badges.Count > 0)
+            {
+                <span class="platform-ledger-flow-node-layer-stack" aria-label="노드 레이어 신호">
+                    @foreach (var badge in node.Badges)
+                    {
+                        <span class="@badge.CssClass" title="@badge.Description">
+                            <MudIcon Icon="@badge.Icon" Size="Size.Small" />
+                            <span>@badge.Label</span>
+                        </span>
+                    }
+                </span>
+            }
+            @if (ShowSelectionHint)
+            {
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Variant="@(node.IsSelected ? Variant.Filled : Variant.Outlined)"
+                         Color="@(node.IsSelected ? Color.Success : Color.Secondary)"
+                         Class="platform-ledger-flow-node-select-hint">
+                    @(node.IsSelected ? "선택됨" : "선택")
+                </MudChip>
+            }
+        </div>
+    }
+
+    @if (ShowHandles)
+    {
+        @foreach (var handle in Presentation.Handles)
+        {
+            <button type="button"
+                    class="@handle.CssClass"
+                    style="@handle.Style"
+                    title="@($"{handle.Node.Title} {handle.Label} 연결점")"
+                    aria-label="@($"{handle.Node.Title} {handle.Label} 연결점")"
+                    data-node-title="@handle.Node.Title"
+                    data-handle="@handle.HandleKey"
+                    draggable="false"
+                    @onpointerdown="@((PointerEventArgs eventArgs) => HandlePointerDownAsync(handle, eventArgs))"
+                    @onpointerdown:stopPropagation="true"
+                    @onpointerup="@(() => HandlePointerUpRequested.InvokeAsync(handle))"
+                    @onpointerup:stopPropagation="true"
+                    @onclick="@(() => HandleClicked.InvokeAsync(handle))"
+                    @onclick:stopPropagation="true"
+                    @ondragstart:preventDefault="true"></button>
+        }
+    }
+</div>
+
+@code {
+    private ElementReference canvasElement;
+    private IJSObjectReference? diagramJsModule;
+
+    [Parameter, EditorRequired]
+    public PlatformCommunityDiagramDesktopCanvasPresentation Presentation { get; set; } = null!;
+
+    [Parameter] public EventCallback<원장블록연결선> EdgeSelected { get; set; }
+    [Parameter] public EventCallback<원장블록노드> NodeSelected { get; set; }
+    [Parameter] public EventCallback<원장블록노드> NodeContextRequested { get; set; }
+    [Parameter] public EventCallback<PlatformCommunityDiagramDesktopHandle> HandlePointerUpRequested { get; set; }
+    [Parameter] public EventCallback<PlatformCommunityDiagramDesktopHandle> HandleClicked { get; set; }
+    [Parameter] public EventCallback<PlatformCommunityDiagramHandlePointerStart> HandlePointerStartRequested { get; set; }
+    [Parameter] public EventCallback<DiagramDragPoint> DragPointerChanged { get; set; }
+    [Parameter] public EventCallback<DiagramHandleHit?> HandleDropRequested { get; set; }
+    [Parameter] public bool ShowHandles { get; set; } = true;
+    [Parameter] public bool ShowSelectionHint { get; set; }
+
+    private async Task HandlePointerDownAsync(
+        PlatformCommunityDiagramDesktopHandle handle,
+        PointerEventArgs eventArgs)
+    {
+        var point = eventArgs.Button == 0
+            ? await ToDiagramPointAsync(eventArgs.ClientX, eventArgs.ClientY)
+            : null;
+        await HandlePointerStartRequested.InvokeAsync(new(
+            handle.Node,
+            handle.Handle,
+            eventArgs.Button,
+            point));
+    }
+
+    private async Task HandlePointerMoveAsync(PointerEventArgs eventArgs)
+    {
+        if (Presentation.ActiveDrag is null)
+        {
+            return;
+        }
+
+        var point = await ToDiagramPointAsync(eventArgs.ClientX, eventArgs.ClientY);
+        if (point is not null)
+        {
+            await DragPointerChanged.InvokeAsync(point);
+        }
+    }
+
+    private async Task HandlePointerUpAsync(PointerEventArgs eventArgs)
+    {
+        if (Presentation.ActiveDrag is null)
+        {
+            return;
+        }
+
+        var module = await GetDiagramJsModuleAsync();
+        var hit = module is null
+            ? null
+            : await module.InvokeAsync<DiagramHandleHit?>(
+                "findConnectionHandle",
+                eventArgs.ClientX,
+                eventArgs.ClientY);
+        await HandleDropRequested.InvokeAsync(hit);
+    }
+
+    private async Task<DiagramDragPoint?> ToDiagramPointAsync(double clientX, double clientY)
+    {
+        var module = await GetDiagramJsModuleAsync();
+        return module is null
+            ? null
+            : await module.InvokeAsync<DiagramDragPoint>(
+                "toDiagramPoint",
+                canvasElement,
+                clientX,
+                clientY);
+    }
+
+    private async ValueTask<IJSObjectReference?> GetDiagramJsModuleAsync()
+    {
+        if (diagramJsModule is not null)
+        {
+            return diagramJsModule;
+        }
+
+        try
+        {
+            diagramJsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "/js/platformDiagram.js");
+            return diagramJsModule;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string BuildHandleKey(DiagramConnectionHandleKind handle)
+        => handle.ToString().ToLowerInvariant();
+
+    public async ValueTask DisposeAsync()
+    {
+        if (diagramJsModule is not null)
+        {
+            try
+            {
+                await diagramJsModule.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+    }
+}

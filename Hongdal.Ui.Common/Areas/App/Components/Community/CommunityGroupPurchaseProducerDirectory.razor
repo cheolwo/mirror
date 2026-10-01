@@ -1,0 +1,876 @@
+@inject PlatformCommunityService CommunityService
+
+<section class="producer-directory" aria-label="회원 생산자 연결">
+    <div class="producer-directory__heading">
+        <div>
+            <MudText Typo="Typo.overline" Class="producer-directory__kicker">DOMESTIC PRODUCER CONNECTION</MudText>
+            <MudText Typo="Typo.h6">생산자와 공동구매 대표의 양방향 연결</MudText>
+            <MudText Typo="Typo.body2" Class="producer-directory__description">
+                공동구매 대표가 생산자를 찾을 수도 있고, 생산자가 잉여·긴급 출하 물량을 공동구매 대표에게 먼저 제안할 수도 있습니다.
+            </MudText>
+        </div>
+        <div class="producer-directory__status-list" aria-label="연결 원칙">
+            <span>연락처 비공개</span>
+            <span>상대 수락 우선</span>
+            <span>국내 공동구매 전용</span>
+        </div>
+    </div>
+
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="producer-directory__notice">
+        현재는 화면과 API 뼈대 단계입니다. 아래 카드는 실제 회원이 아닌 화면 예시이며, 운영 데이터에서는 공개·제안 수신에 동의하고 역할이 확인된 회원만 표시합니다.
+    </MudAlert>
+
+    <div class="producer-directory__mode-switch" aria-label="연락 방향 선택">
+        <button type="button"
+                class="@BuildModeClass(BuyerToProducerMode)"
+                @onclick="@(() => SetConnectionModeAsync(BuyerToProducerMode))">
+            <MudIcon Icon="@Icons.Material.Filled.Groups" />
+            <span><strong>공동구매 대표 → 생산자</strong><small>필요한 품목과 수량을 먼저 문의</small></span>
+        </button>
+        <button type="button"
+                class="@BuildModeClass(ProducerToBuyerMode)"
+                @onclick="@(() => SetConnectionModeAsync(ProducerToBuyerMode))">
+            <MudIcon Icon="@Icons.Material.Filled.Agriculture" />
+            <span><strong>생산자 → 공동구매 대표</strong><small>잉여·규격 외·긴급 출하 물량을 먼저 제안</small></span>
+        </button>
+    </div>
+
+    <details class="producer-directory__compatibility" open>
+        <summary>
+            <span><strong>상호 이행 조건표</strong><small>생산자의 규격 출하 능력과 구매 측의 물량 소화 능력을 함께 확인합니다.</small></span>
+            <MudIcon Icon="@Icons.Material.Filled.Rule" />
+        </summary>
+        <div class="producer-directory__compatibility-grid">
+            <div class="producer-directory__condition-panel">
+                <div class="producer-directory__condition-title">
+                    <MudIcon Icon="@Icons.Material.Filled.ShoppingCartCheckout" />
+                    <div><strong>공동구매 대표 조건</strong><small>어떤 형태로 얼마나 받을 수 있는가</small></div>
+                </div>
+                <MudSelect T="string" Label="필수 출하 포장" @bind-Value="buyerRequiredPackagingFormCode" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@DomesticProducePackagingFormCodes.CorrugatedBox">규격 골판지 상자</MudSelectItem>
+                    <MudSelectItem Value="@DomesticProducePackagingFormCodes.ReusableCrate">회수용 다회용 상자</MudSelectItem>
+                    <MudSelectItem Value="@DomesticProducePackagingFormCodes.Pallet">팔레트 단위</MudSelectItem>
+                    <MudSelectItem Value="@DomesticProducePackagingFormCodes.Bulk">벌크·산물</MudSelectItem>
+                    <MudSelectItem Value="@DomesticProducePackagingFormCodes.Other">기타 협의</MudSelectItem>
+                </MudSelect>
+                <MudTextField Label="상자·포장 단위" @bind-Value="buyerPackagingUnitSummary" HelperText="예: 10kg 골판지 상자" Variant="Variant.Outlined" />
+                <MudTextField Label="선별·품질 규격" @bind-Value="buyerQualityGradeSummary" HelperText="예: 혼합 크기 허용, 파손 제외" Variant="Variant.Outlined" />
+                <div class="producer-directory__number-row">
+                    <MudNumericField T="decimal" Label="확정 요청량" @bind-Value="buyerRequestedQuantity" Min="0" Variant="Variant.Outlined" />
+                    <MudNumericField T="decimal" Label="최대 소화량" @bind-Value="buyerMaximumAbsorptionQuantity" Min="0" Variant="Variant.Outlined" />
+                    <MudTextField Label="수량 단위" @bind-Value="compatibilityQuantityUnit" Variant="Variant.Outlined" />
+                </div>
+                <MudCheckBox T="bool" @bind-Value="buyerCanReceiveSplitShipments" Color="Color.Primary">
+                    여러 차례로 나누어 인수할 수 있음
+                </MudCheckBox>
+            </div>
+
+            <div class="producer-directory__condition-panel">
+                <div class="producer-directory__condition-title">
+                    <MudIcon Icon="@Icons.Material.Filled.Inventory" />
+                    <div><strong>생산자 출하 조건</strong><small>어떤 규격으로 얼마나 내보낼 수 있는가</small></div>
+                </div>
+                <MudSelect T="string" Label="지원 가능한 포장" @bind-Value="producerSupportedPackagingFormCode" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@DomesticProducePackagingFormCodes.CorrugatedBox">규격 골판지 상자</MudSelectItem>
+                    <MudSelectItem Value="@DomesticProducePackagingFormCodes.ReusableCrate">회수용 다회용 상자</MudSelectItem>
+                    <MudSelectItem Value="@DomesticProducePackagingFormCodes.Pallet">팔레트 단위</MudSelectItem>
+                    <MudSelectItem Value="@DomesticProducePackagingFormCodes.Bulk">벌크·산물</MudSelectItem>
+                    <MudSelectItem Value="@DomesticProducePackagingFormCodes.Other">기타 협의</MudSelectItem>
+                </MudSelect>
+                <div class="producer-directory__number-row producer-directory__number-row--producer">
+                    <MudNumericField T="decimal" Label="전체 출하 가능량" @bind-Value="producerAvailableQuantity" Min="0" Variant="Variant.Outlined" />
+                    <MudNumericField T="decimal" Label="최소 인수 필요량" @bind-Value="producerMinimumTakeQuantity" Min="0" Variant="Variant.Outlined" />
+                </div>
+                <MudText Typo="Typo.caption" Class="producer-directory__condition-help">
+                    최소 인수 필요량은 생산자가 이 가격과 출하 작업을 감당하려면 구매 측이 적어도 받아야 하는 물량입니다.
+                </MudText>
+                <MudCheckBox T="bool" @bind-Value="producerCanSplitShipments" Color="Color.Primary">
+                    구매 측 소화량에 맞춰 분할 출하할 수 있음
+                </MudCheckBox>
+            </div>
+        </div>
+        <div class="producer-directory__compatibility-footer">
+            <MudText Typo="Typo.caption">이 판정은 협의 시작 여부를 돕는 미리보기이며 실제 계약 확정이 아닙니다.</MudText>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.FactCheck"
+                       OnClick="PreviewCompatibilityAsync"
+                       Disabled="@isCompatibilityLoading">
+                상호 조건 맞춰보기
+            </MudButton>
+        </div>
+        @if (compatibilityResult is not null)
+        {
+            <div class="producer-directory__compatibility-result">
+                <div class="@BuildCompatibilityResultClass(compatibilityResult.ProducerCanMeetPackaging)"><strong>포장 규격</strong><span>@ReadyLabel(compatibilityResult.ProducerCanMeetPackaging)</span></div>
+                <div class="@BuildCompatibilityResultClass(compatibilityResult.ProducerCanMeetRequestedQuantity)"><strong>생산자 공급량</strong><span>@ReadyLabel(compatibilityResult.ProducerCanMeetRequestedQuantity)</span></div>
+                <div class="@BuildCompatibilityResultClass(compatibilityResult.BuyerMeetsMinimumTakeQuantity)"><strong>최소 인수량</strong><span>@ReadyLabel(compatibilityResult.BuyerMeetsMinimumTakeQuantity)</span></div>
+                <div class="@BuildCompatibilityResultClass(compatibilityResult.BuyerCanAbsorbFullOffer || compatibilityResult.SplitShipmentCanResolveVolumeGap)"><strong>구매 측 소화량</strong><span>@(compatibilityResult.BuyerCanAbsorbFullOffer ? "전체 인수 가능" : compatibilityResult.SplitShipmentCanResolveVolumeGap ? "분할 인수 가능" : "조정 필요")</span></div>
+                <div class="producer-directory__compatibility-summary">
+                    <strong>@(compatibilityResult.IsMutuallyFeasible ? "상호 협의 가능" : "조건 조정 필요")</strong>
+                    <span>@compatibilityResult.Summary</span>
+                    @foreach (var condition in compatibilityResult.UnresolvedConditions)
+                    {
+                        <small>· @condition</small>
+                    }
+                </div>
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(compatibilityMessage))
+        {
+            <div class="producer-directory__integration-state">@compatibilityMessage</div>
+        }
+    </details>
+
+    @if (connectionMode == BuyerToProducerMode)
+    {
+    <div class="producer-directory__flow" aria-label="생산자 연결 절차">
+        @foreach (var (number, title, caption) in ConnectionSteps)
+        {
+            <div class="producer-directory__flow-step">
+                <span>@number</span>
+                <div><strong>@title</strong><small>@caption</small></div>
+            </div>
+        }
+    </div>
+
+    <div class="producer-directory__toolbar">
+        <MudTextField Label="생산자·품목 검색"
+                      Placeholder="예: 고구마, 사과, 해남"
+                      @bind-Value="searchText"
+                      Immediate="true"
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search" />
+        <MudSelect T="string" Label="지역" @bind-Value="regionCode" Variant="Variant.Outlined">
+            <MudSelectItem Value="@("all")">전체 지역</MudSelectItem>
+            <MudSelectItem Value="@("jeonnam")">전남</MudSelectItem>
+            <MudSelectItem Value="@("chungbuk")">충북</MudSelectItem>
+            <MudSelectItem Value="@("gyeonggi")">경기</MudSelectItem>
+        </MudSelect>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Sync"
+                   OnClick="LoadCandidatesAsync"
+                   Disabled="@isLoading">
+            회원 데이터 다시 찾기
+        </MudButton>
+    </div>
+
+    @if (isLoading)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="producer-directory__progress" />
+    }
+    else if (!string.IsNullOrWhiteSpace(loadMessage))
+    {
+        <div class="producer-directory__integration-state">
+            <MudIcon Icon="@Icons.Material.Filled.Cable" />
+            <span>@loadMessage</span>
+        </div>
+    }
+
+    <div class="producer-directory__grid">
+        @foreach (var card in VisibleCards)
+        {
+            <article class="@BuildCardClass(card)">
+                <div class="producer-card__topline">
+                    <span class="producer-card__example">@(card.IsPreview ? "화면 예시" : "동의 확인")</span>
+                    <span>@card.Candidate.RegionLabel</span>
+                </div>
+                <MudText Typo="Typo.subtitle1">@card.Candidate.MaskedDisplayName</MudText>
+                <MudText Typo="Typo.body2" Class="producer-card__availability">@card.Candidate.AvailabilitySummary</MudText>
+                <div class="producer-card__tags">
+                    @foreach (var tag in card.Candidate.ProductTags)
+                    {
+                        <span>@tag</span>
+                    }
+                </div>
+                <MudText Typo="Typo.caption">출하 여력 · @card.Candidate.SupplyCapacitySummary</MudText>
+                <div class="producer-card__verification">
+                    <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Small" />
+                    <span>@card.Candidate.VerificationLabel</span>
+                </div>
+                <MudButton FullWidth="true"
+                           Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.MarkEmailUnread"
+                           OnClick="@(() => OpenRequestComposer(card))">
+                    @(card.IsPreview ? "연락 요청 양식 보기" : "연락 요청 작성")
+                </MudButton>
+            </article>
+        }
+    </div>
+
+    @if (!VisibleCards.Any())
+    {
+        <div class="producer-directory__empty">
+            <MudIcon Icon="@Icons.Material.Filled.PersonSearch" Size="Size.Large" />
+            <MudText Typo="Typo.body2">검색 조건에 맞는 생산자 예시가 없습니다.</MudText>
+        </div>
+    }
+
+    @if (selectedCard is not null)
+    {
+        <div class="producer-directory__composer">
+            <div class="producer-directory__composer-heading">
+                <div>
+                    <MudText Typo="Typo.subtitle1">@selectedCard.Candidate.MaskedDisplayName 님에게 보낼 연락 요청</MudText>
+                    <MudText Typo="Typo.caption">연락처를 요구하지 않고, 먼저 거래 의사와 공급 가능 여부만 묻습니다.</MudText>
+                </div>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CloseRequestComposer" />
+            </div>
+            <div class="producer-directory__form">
+                <MudTextField Label="공동구매" Value="@CampaignTitle" ReadOnly="true" Variant="Variant.Outlined" />
+                <MudTextField Label="협의 품목" @bind-Value="productSummary" Variant="Variant.Outlined" />
+                <MudTextField Label="희망 수량·시기" @bind-Value="quantitySummary" Variant="Variant.Outlined" />
+                <MudTextField Label="첫 연락 메시지" @bind-Value="requestMessage" Lines="4" Variant="Variant.Outlined" Class="producer-directory__form-wide" />
+            </div>
+            @if (draftResult is not null)
+            {
+                <MudAlert Severity="Severity.Success" Dense="true" Variant="Variant.Outlined" Class="producer-directory__draft-result">
+                    @draftResult.GuidanceMessage
+                </MudAlert>
+            }
+            <div class="producer-directory__composer-footer">
+                <MudText Typo="Typo.caption">
+                    @(selectedCard.IsPreview
+                        ? "예시 회원에는 서버 요청을 보내지 않습니다. 실제 회원 디렉터리 연결 후 버튼이 활성화됩니다."
+                        : "초안 저장은 요청 발송이 아니며 연락처도 공개되지 않습니다.")
+                </MudText>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.SaveAs"
+                           OnClick="SaveDraftAsync"
+                           Disabled="@(isSaving || selectedCard.IsPreview)">
+                    연락 요청 초안 저장
+                </MudButton>
+            </div>
+        </div>
+    }
+    }
+    else
+    {
+        <div class="producer-directory__flow" aria-label="생산자 공급 제안 절차">
+            @foreach (var (number, title, caption) in ProducerOfferSteps)
+            {
+                <div class="producer-directory__flow-step">
+                    <span>@number</span>
+                    <div><strong>@title</strong><small>@caption</small></div>
+                </div>
+            }
+        </div>
+
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="producer-directory__notice">
+            낮은 가격은 과잉생산·규격 외·출하시기 임박 같은 사유와 품질 상태를 함께 공개해야 합니다. 안전성 미확인 농산물은 제안할 수 없습니다.
+        </MudAlert>
+
+        <div class="producer-directory__toolbar">
+            <MudTextField Label="공동구매 대표·관심 품목 검색"
+                          Placeholder="예: 고구마, 서울 동북권"
+                          @bind-Value="representativeSearchText"
+                          Immediate="true"
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search" />
+            <MudSelect T="string" Label="운영 지역" @bind-Value="representativeAreaCode" Variant="Variant.Outlined">
+                <MudSelectItem Value="@("all")">전체 지역</MudSelectItem>
+                <MudSelectItem Value="@("seoul")">서울</MudSelectItem>
+                <MudSelectItem Value="@("gyeonggi")">경기</MudSelectItem>
+                <MudSelectItem Value="@("national")">전국·택배</MudSelectItem>
+            </MudSelect>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Sync"
+                       OnClick="LoadRepresentativesAsync"
+                       Disabled="@isRepresentativeLoading">
+                공동구매 대표 다시 찾기
+            </MudButton>
+        </div>
+
+        @if (isRepresentativeLoading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="producer-directory__progress" />
+        }
+        else if (!string.IsNullOrWhiteSpace(representativeLoadMessage))
+        {
+            <div class="producer-directory__integration-state">
+                <MudIcon Icon="@Icons.Material.Filled.Cable" />
+                <span>@representativeLoadMessage</span>
+            </div>
+        }
+
+        <div class="producer-directory__grid">
+            @foreach (var card in VisibleRepresentativeCards)
+            {
+                <article class="@BuildRepresentativeCardClass(card)">
+                    <div class="producer-card__topline">
+                        <span class="producer-card__example">@(card.IsPreview ? "화면 예시" : "대표 확인")</span>
+                        <span>@card.Candidate.OperatingAreaLabel</span>
+                    </div>
+                    <MudText Typo="Typo.subtitle1">@card.Candidate.MaskedDisplayName</MudText>
+                    <MudText Typo="Typo.body2" Class="producer-card__availability">@card.Candidate.CommunitySummary</MudText>
+                    <div class="producer-card__tags">
+                        @foreach (var tag in card.Candidate.InterestedProductTags)
+                        {
+                            <span>@tag</span>
+                        }
+                    </div>
+                    <MudText Typo="Typo.caption">통상 소화 물량 · @card.Candidate.TypicalAbsorptionCapacitySummary</MudText>
+                    <MudText Typo="Typo.caption">@card.Candidate.RecruitmentSummary</MudText>
+                    <div class="producer-card__verification">
+                        <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Size="Size.Small" />
+                        <span>@card.Candidate.VerificationLabel</span>
+                    </div>
+                    <MudButton FullWidth="true"
+                               Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Inventory2"
+                               OnClick="@(() => OpenSupplyOfferComposer(card))">
+                        @(card.IsPreview ? "공급 제안 양식 보기" : "공급 물량 제안")
+                    </MudButton>
+                </article>
+            }
+        </div>
+
+        @if (!VisibleRepresentativeCards.Any())
+        {
+            <div class="producer-directory__empty">
+                <MudIcon Icon="@Icons.Material.Filled.PersonSearch" Size="Size.Large" />
+                <MudText Typo="Typo.body2">검색 조건에 맞는 공동구매 대표 예시가 없습니다.</MudText>
+            </div>
+        }
+
+        @if (selectedRepresentative is not null)
+        {
+            <div class="producer-directory__composer">
+                <div class="producer-directory__composer-heading">
+                    <div>
+                        <MudText Typo="Typo.subtitle1">@selectedRepresentative.Candidate.MaskedDisplayName 님에게 보낼 공급 제안</MudText>
+                        <MudText Typo="Typo.caption">가격보다 먼저 물량·출하 기한·품질 상태를 분명하게 알립니다.</MudText>
+                    </div>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CloseSupplyOfferComposer" />
+                </div>
+                <div class="producer-directory__form producer-directory__form--offer">
+                    <MudTextField Label="생산자 표시명" @bind-Value="producerDisplayName" Variant="Variant.Outlined" />
+                    <MudTextField Label="생산 지역" @bind-Value="producerRegionSummary" Variant="Variant.Outlined" />
+                    <MudTextField Label="제안 품목" @bind-Value="offerProductSummary" Variant="Variant.Outlined" />
+                    <MudTextField Label="공급 가능 수량" @bind-Value="availableQuantitySummary" Variant="Variant.Outlined" />
+                    <MudTextField Label="희망 가격" @bind-Value="expectedPriceSummary" HelperText="협의 가능 여부 포함" Variant="Variant.Outlined" />
+                    <MudTextField Label="출하 가능 기한" @bind-Value="supplyDeadlineSummary" Variant="Variant.Outlined" />
+                    <MudSelect T="string" Label="낮은 가격 제안 사유" @bind-Value="offerReasonCode" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@DomesticProducerSupplyOfferReasonCodes.Overproduction">과잉생산</MudSelectItem>
+                        <MudSelectItem Value="@DomesticProducerSupplyOfferReasonCodes.OffGrade">규격 외·상품성 차이</MudSelectItem>
+                        <MudSelectItem Value="@DomesticProducerSupplyOfferReasonCodes.ShippingDeadline">출하시기 임박</MudSelectItem>
+                        <MudSelectItem Value="@DomesticProducerSupplyOfferReasonCodes.SalesChannelGap">기존 판로 공백</MudSelectItem>
+                        <MudSelectItem Value="@DomesticProducerSupplyOfferReasonCodes.Other">기타</MudSelectItem>
+                    </MudSelect>
+                    <MudTextField Label="품질 상태 고지" @bind-Value="qualityDisclosure" HelperText="크기·외관·선별 상태와 하자를 구체적으로 기록" Lines="3" Variant="Variant.Outlined" Class="producer-directory__form-span-2" />
+                    <MudTextField Label="대표에게 전할 메시지" @bind-Value="offerMessage" Lines="4" Variant="Variant.Outlined" Class="producer-directory__form-wide" />
+                </div>
+                <MudCheckBox T="bool" @bind-Value="foodSafetyConfirmed" Color="Color.Primary">
+                    판매 가능한 안전 기준을 확인했으며, 규격 외·저가 사유와 안전 문제를 혼동하지 않습니다.
+                </MudCheckBox>
+                @if (supplyOfferDraftResult is not null)
+                {
+                    <MudAlert Severity="Severity.Success" Dense="true" Variant="Variant.Outlined" Class="producer-directory__draft-result">
+                        @supplyOfferDraftResult.GuidanceMessage
+                    </MudAlert>
+                }
+                <div class="producer-directory__composer-footer">
+                    <MudText Typo="Typo.caption">
+                        @(selectedRepresentative.IsPreview
+                            ? "예시 대표에게는 서버 요청을 보내지 않습니다. 대표 디렉터리 연결 후 버튼이 활성화됩니다."
+                            : "대표가 제안을 수락하기 전에는 연락처와 거래 조건이 확정되지 않습니다.")
+                    </MudText>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.SaveAs"
+                               OnClick="SaveSupplyOfferDraftAsync"
+                               Disabled="@(isSupplyOfferSaving || selectedRepresentative.IsPreview || !foodSafetyConfirmed)">
+                        공급 제안 초안 저장
+                    </MudButton>
+                </div>
+            </div>
+        }
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public Guid CampaignId { get; set; }
+    [Parameter] public string CampaignTitle { get; set; } = string.Empty;
+
+    private const string BuyerToProducerMode = "buyer-to-producer";
+    private const string ProducerToBuyerMode = "producer-to-buyer";
+
+    private string buyerRequiredPackagingFormCode = DomesticProducePackagingFormCodes.CorrugatedBox;
+    private string buyerPackagingUnitSummary = "10kg 규격 골판지 상자";
+    private string buyerQualityGradeSummary = "혼합 크기 허용, 파손·부패 제외";
+    private decimal buyerRequestedQuantity = 500;
+    private decimal buyerMaximumAbsorptionQuantity = 800;
+    private bool buyerCanReceiveSplitShipments = true;
+    private string producerSupportedPackagingFormCode = DomesticProducePackagingFormCodes.CorrugatedBox;
+    private decimal producerAvailableQuantity = 1_000;
+    private decimal producerMinimumTakeQuantity = 300;
+    private bool producerCanSplitShipments = true;
+    private string compatibilityQuantityUnit = "kg";
+    private bool isCompatibilityLoading;
+    private string compatibilityMessage = string.Empty;
+    private DomesticGroupPurchaseSupplyCompatibilityPreviewResponse? compatibilityResult;
+
+    private static readonly IReadOnlyList<(string Number, string Title, string Caption)> ConnectionSteps =
+    [
+        ("1", "회원 찾기", "동의된 생산자 후보"),
+        ("2", "연락 요청", "품목·수량 먼저 제안"),
+        ("3", "상대 수락", "연락 범위 상호 확인"),
+        ("4", "협의방", "가격·수확·배송 협의"),
+        ("5", "공동구매 확정", "원장과 실행 연결")
+    ];
+
+    private static readonly IReadOnlyList<(string Number, string Title, string Caption)> ProducerOfferSteps =
+    [
+        ("1", "대표 찾기", "수신 동의된 운영자"),
+        ("2", "물량 제안", "수량·가격·사유 공개"),
+        ("3", "대표 검토", "품질·수요·배송 확인"),
+        ("4", "상호 수락", "연락 범위 함께 확인"),
+        ("5", "공동구매 전환", "모집 원장과 실행 연결")
+    ];
+
+    private static readonly IReadOnlyList<ProducerCardModel> PreviewCards =
+    [
+        Preview("preview-haenam-sweet-potato", "해남 고구마 농가 김○○", "jeonnam", "전남 해남", ["고구마", "농산물"], "가을 수확분 공급 가능 여부를 협의할 수 있습니다."),
+        Preview("preview-chungju-apple", "충주 사과 농가 박○○", "chungbuk", "충북 충주", ["사과", "과일"], "선별 규격과 공동 배송 일정을 먼저 맞춰봅니다."),
+        Preview("preview-yangpyeong-vegetable", "양평 친환경 채소 이○○", "gyeonggi", "경기 양평", ["잎채소", "친환경"], "주간 꾸러미 구성과 수확 일정을 협의할 수 있습니다.")
+    ];
+
+    private static readonly IReadOnlyList<RepresentativeCardModel> PreviewRepresentativeCards =
+    [
+        RepresentativePreview("preview-seoul-northeast", "서울 동북권 공동구매 대표 최○○", "seoul", "서울 동북권", "지역 회원의 생활 먹거리 공동구매를 운영합니다.", ["고구마", "제철 농산물"], "격주 모집·공동 수령 중심"),
+        RepresentativePreview("preview-seongnam-complex", "성남 단지 공동구매 운영팀", "gyeonggi", "경기 성남", "아파트 단지 단위 공동구매와 수령일 조정을 담당합니다.", ["과일", "채소 꾸러미"], "주말 공동 수령 협의 가능"),
+        RepresentativePreview("preview-national-delivery", "전국 택배 공동구매 운영자 정○○", "national", "전국·택배", "택배 가능한 농산물의 수요 모집을 운영합니다.", ["저장 농산물", "가공 가능 원물"], "택배 포장·최소 수량 사전 협의")
+    ];
+
+    private readonly List<ProducerCardModel> connectedCards = [];
+    private readonly List<RepresentativeCardModel> connectedRepresentativeCards = [];
+    private Guid loadedCampaignId;
+    private string connectionMode = BuyerToProducerMode;
+    private string searchText = string.Empty;
+    private string regionCode = "all";
+    private string loadMessage = string.Empty;
+    private bool isLoading;
+    private bool isSaving;
+    private ProducerCardModel? selectedCard;
+    private string productSummary = string.Empty;
+    private string quantitySummary = string.Empty;
+    private string requestMessage = string.Empty;
+    private DomesticProducerContactRequestDraftResponse? draftResult;
+    private string representativeSearchText = string.Empty;
+    private string representativeAreaCode = "all";
+    private string representativeLoadMessage = string.Empty;
+    private bool isRepresentativeLoading;
+    private bool isSupplyOfferSaving;
+    private RepresentativeCardModel? selectedRepresentative;
+    private string producerDisplayName = "회원 생산자";
+    private string producerRegionSummary = string.Empty;
+    private string offerProductSummary = string.Empty;
+    private string availableQuantitySummary = string.Empty;
+    private string expectedPriceSummary = string.Empty;
+    private string supplyDeadlineSummary = string.Empty;
+    private string offerReasonCode = DomesticProducerSupplyOfferReasonCodes.Overproduction;
+    private string qualityDisclosure = string.Empty;
+    private bool foodSafetyConfirmed;
+    private string offerMessage = string.Empty;
+    private DomesticProducerSupplyOfferDraftResponse? supplyOfferDraftResult;
+
+    private IEnumerable<ProducerCardModel> VisibleCards
+    {
+        get
+        {
+            var source = connectedCards.Count > 0 ? connectedCards : PreviewCards;
+            return source.Where(card =>
+                (regionCode == "all" || string.Equals(card.Candidate.RegionCode, regionCode, StringComparison.OrdinalIgnoreCase))
+                && MatchesSearch(card.Candidate, searchText));
+        }
+    }
+
+    private IEnumerable<RepresentativeCardModel> VisibleRepresentativeCards
+    {
+        get
+        {
+            var source = connectedRepresentativeCards.Count > 0
+                ? connectedRepresentativeCards
+                : PreviewRepresentativeCards;
+            return source.Where(card =>
+                (representativeAreaCode == "all"
+                 || string.Equals(card.Candidate.OperatingAreaCode, representativeAreaCode, StringComparison.OrdinalIgnoreCase))
+                && MatchesRepresentativeSearch(card.Candidate, representativeSearchText));
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (CampaignId != Guid.Empty && CampaignId != loadedCampaignId)
+        {
+            loadedCampaignId = CampaignId;
+            selectedCard = null;
+            selectedRepresentative = null;
+            if (connectionMode == ProducerToBuyerMode)
+            {
+                await LoadRepresentativesAsync();
+            }
+            else
+            {
+                await LoadCandidatesAsync();
+            }
+        }
+    }
+
+    private async Task SetConnectionModeAsync(string mode)
+    {
+        connectionMode = mode;
+        selectedCard = null;
+        selectedRepresentative = null;
+        draftResult = null;
+        supplyOfferDraftResult = null;
+
+        if (mode == ProducerToBuyerMode && connectedRepresentativeCards.Count == 0)
+        {
+            await LoadRepresentativesAsync();
+        }
+        else if (mode == BuyerToProducerMode && connectedCards.Count == 0)
+        {
+            await LoadCandidatesAsync();
+        }
+    }
+
+    private async Task LoadCandidatesAsync()
+    {
+        if (CampaignId == Guid.Empty)
+        {
+            return;
+        }
+
+        isLoading = true;
+        loadMessage = string.Empty;
+        connectedCards.Clear();
+        try
+        {
+            var response = await CommunityService.GetDomesticProducerCandidatesAsync(
+                CampaignId,
+                searchText,
+                regionCode == "all" ? null : regionCode,
+                searchText);
+            connectedCards.AddRange(response.Items.Select(item => new ProducerCardModel(item, false)));
+            loadMessage = response.IntegrationMessage;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException)
+        {
+            loadMessage = "회원 생산자 API 연결 전이라 화면 예시를 표시합니다.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadRepresentativesAsync()
+    {
+        if (CampaignId == Guid.Empty)
+        {
+            return;
+        }
+
+        isRepresentativeLoading = true;
+        representativeLoadMessage = string.Empty;
+        connectedRepresentativeCards.Clear();
+        try
+        {
+            var response = await CommunityService.GetDomesticGroupPurchaseRepresentativesAsync(
+                CampaignId,
+                representativeSearchText,
+                representativeAreaCode == "all" ? null : representativeAreaCode,
+                representativeSearchText);
+            connectedRepresentativeCards.AddRange(
+                response.Items.Select(item => new RepresentativeCardModel(item, false)));
+            representativeLoadMessage = response.IntegrationMessage;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException)
+        {
+            representativeLoadMessage = "공동구매 대표 API 연결 전이라 화면 예시를 표시합니다.";
+        }
+        finally
+        {
+            isRepresentativeLoading = false;
+        }
+    }
+
+    private void OpenRequestComposer(ProducerCardModel card)
+    {
+        selectedCard = card;
+        draftResult = null;
+        productSummary = string.Join(", ", card.Candidate.ProductTags);
+        quantitySummary = "희망 수량과 구매 시기를 입력하세요.";
+        requestMessage = $"안녕하세요. '{CampaignTitle}' 국내 공동구매를 준비하고 있습니다. 공급 가능한 품목과 수량을 먼저 협의하고 싶습니다.";
+    }
+
+    private void CloseRequestComposer()
+    {
+        selectedCard = null;
+        draftResult = null;
+    }
+
+    private async Task SaveDraftAsync()
+    {
+        if (selectedCard is null || selectedCard.IsPreview || CampaignId == Guid.Empty)
+        {
+            return;
+        }
+
+        isSaving = true;
+        draftResult = null;
+        try
+        {
+            draftResult = await CommunityService.CreateDomesticProducerContactDraftAsync(
+                CampaignId,
+                new DomesticProducerContactRequestDraftRequest
+                {
+                    GroupPurchaseCampaignId = CampaignId,
+                    CampaignTitle = CampaignTitle,
+                    ProducerCandidateKey = selectedCard.Candidate.CandidateKey,
+                    ProducerMaskedDisplayName = selectedCard.Candidate.MaskedDisplayName,
+                    ProductSummary = productSummary,
+                    RequestedQuantitySummary = quantitySummary,
+                    RequiredPackagingFormCode = buyerRequiredPackagingFormCode,
+                    PackagingUnitSummary = buyerPackagingUnitSummary,
+                    QualityGradeSummary = buyerQualityGradeSummary,
+                    RequestedQuantity = buyerRequestedQuantity,
+                    MaximumAbsorptionQuantity = buyerMaximumAbsorptionQuantity,
+                    QuantityUnit = compatibilityQuantityUnit,
+                    CanReceiveSplitShipments = buyerCanReceiveSplitShipments,
+                    Message = requestMessage
+                });
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException)
+        {
+            loadMessage = "연락 요청 초안 API를 아직 사용할 수 없습니다. 로그인과 서버 연결 상태를 확인해 주세요.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void OpenSupplyOfferComposer(RepresentativeCardModel card)
+    {
+        selectedRepresentative = card;
+        supplyOfferDraftResult = null;
+        producerDisplayName = "회원 생산자";
+        producerRegionSummary = string.Empty;
+        offerProductSummary = card.Candidate.InterestedProductTags.FirstOrDefault() ?? string.Empty;
+        availableQuantitySummary = "공급 가능한 수량과 포장 단위를 입력하세요.";
+        expectedPriceSummary = "희망 단가 또는 총액, 협의 가능 여부를 입력하세요.";
+        supplyDeadlineSummary = "출하 가능한 마지막 시기를 입력하세요.";
+        offerReasonCode = DomesticProducerSupplyOfferReasonCodes.Overproduction;
+        qualityDisclosure = "크기, 외관, 선별 상태와 규격 외 사유를 구체적으로 입력하세요.";
+        foodSafetyConfirmed = false;
+        offerMessage = $"안녕하세요. '{CampaignTitle}' 공동구매에 공급을 제안하고 싶습니다. 물량과 품질 상태를 확인하신 뒤 협의 부탁드립니다.";
+    }
+
+    private void CloseSupplyOfferComposer()
+    {
+        selectedRepresentative = null;
+        supplyOfferDraftResult = null;
+    }
+
+    private async Task SaveSupplyOfferDraftAsync()
+    {
+        if (selectedRepresentative is null
+            || selectedRepresentative.IsPreview
+            || !foodSafetyConfirmed
+            || CampaignId == Guid.Empty)
+        {
+            return;
+        }
+
+        isSupplyOfferSaving = true;
+        supplyOfferDraftResult = null;
+        try
+        {
+            supplyOfferDraftResult = await CommunityService.CreateDomesticProducerSupplyOfferDraftAsync(
+                CampaignId,
+                new DomesticProducerSupplyOfferDraftRequest
+                {
+                    GroupPurchaseCampaignId = CampaignId,
+                    CampaignTitle = CampaignTitle,
+                    RepresentativeCandidateKey = selectedRepresentative.Candidate.CandidateKey,
+                    RepresentativeMaskedDisplayName = selectedRepresentative.Candidate.MaskedDisplayName,
+                    ProducerMaskedDisplayName = producerDisplayName,
+                    ProducerRegionSummary = producerRegionSummary,
+                    ProductSummary = offerProductSummary,
+                    AvailableQuantitySummary = availableQuantitySummary,
+                    SupportedPackagingFormCodes = [producerSupportedPackagingFormCode],
+                    AvailableQuantity = producerAvailableQuantity,
+                    MinimumTakeQuantity = producerMinimumTakeQuantity,
+                    QuantityUnit = compatibilityQuantityUnit,
+                    CanSplitShipments = producerCanSplitShipments,
+                    ExpectedPriceSummary = expectedPriceSummary,
+                    SupplyDeadlineSummary = supplyDeadlineSummary,
+                    OfferReasonCode = offerReasonCode,
+                    QualityDisclosure = qualityDisclosure,
+                    FoodSafetyConfirmed = foodSafetyConfirmed,
+                    Message = offerMessage
+                });
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException)
+        {
+            representativeLoadMessage = "공급 제안 초안 API를 아직 사용할 수 없습니다. 로그인과 서버 연결 상태를 확인해 주세요.";
+        }
+        finally
+        {
+            isSupplyOfferSaving = false;
+        }
+    }
+
+    private async Task PreviewCompatibilityAsync()
+    {
+        if (CampaignId == Guid.Empty)
+        {
+            return;
+        }
+
+        isCompatibilityLoading = true;
+        compatibilityMessage = string.Empty;
+        compatibilityResult = null;
+        try
+        {
+            compatibilityResult = await CommunityService.PreviewDomesticSupplyCompatibilityAsync(
+                CampaignId,
+                new DomesticGroupPurchaseSupplyCompatibilityPreviewRequest
+                {
+                    BuyerRequiredPackagingFormCode = buyerRequiredPackagingFormCode,
+                    BuyerRequestedQuantity = buyerRequestedQuantity,
+                    BuyerMaximumAbsorptionQuantity = buyerMaximumAbsorptionQuantity,
+                    BuyerCanReceiveSplitShipments = buyerCanReceiveSplitShipments,
+                    ProducerSupportedPackagingFormCodes = [producerSupportedPackagingFormCode],
+                    ProducerAvailableQuantity = producerAvailableQuantity,
+                    ProducerMinimumTakeQuantity = producerMinimumTakeQuantity,
+                    ProducerCanSplitShipments = producerCanSplitShipments,
+                    QuantityUnit = compatibilityQuantityUnit
+                });
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException)
+        {
+            compatibilityMessage = "상호 조건 판정 API를 아직 사용할 수 없습니다. 로그인과 서버 연결 상태를 확인해 주세요.";
+        }
+        finally
+        {
+            isCompatibilityLoading = false;
+        }
+    }
+
+    private static bool MatchesSearch(DomesticProducerCandidateResponse candidate, string search)
+    {
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            return true;
+        }
+
+        return candidate.MaskedDisplayName.Contains(search, StringComparison.OrdinalIgnoreCase)
+               || candidate.RegionLabel.Contains(search, StringComparison.OrdinalIgnoreCase)
+               || candidate.ProductTags.Any(tag => tag.Contains(search, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool MatchesRepresentativeSearch(
+        DomesticGroupPurchaseRepresentativeCandidateResponse candidate,
+        string search)
+    {
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            return true;
+        }
+
+        return candidate.MaskedDisplayName.Contains(search, StringComparison.OrdinalIgnoreCase)
+               || candidate.OperatingAreaLabel.Contains(search, StringComparison.OrdinalIgnoreCase)
+               || candidate.CommunitySummary.Contains(search, StringComparison.OrdinalIgnoreCase)
+               || candidate.InterestedProductTags.Any(tag => tag.Contains(search, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private string BuildModeClass(string mode)
+        => connectionMode == mode
+            ? "producer-directory__mode producer-directory__mode--active"
+            : "producer-directory__mode";
+
+    private static string BuildCompatibilityResultClass(bool ready)
+        => ready
+            ? "producer-directory__compatibility-check producer-directory__compatibility-check--ready"
+            : "producer-directory__compatibility-check producer-directory__compatibility-check--pending";
+
+    private static string ReadyLabel(bool ready) => ready ? "충족" : "조정 필요";
+
+    private string BuildCardClass(ProducerCardModel card)
+        => selectedCard?.Candidate.CandidateKey == card.Candidate.CandidateKey
+            ? "producer-card producer-card--selected"
+            : "producer-card";
+
+    private string BuildRepresentativeCardClass(RepresentativeCardModel card)
+        => selectedRepresentative?.Candidate.CandidateKey == card.Candidate.CandidateKey
+            ? "producer-card producer-card--selected"
+            : "producer-card";
+
+    private static ProducerCardModel Preview(
+        string key,
+        string displayName,
+        string region,
+        string regionLabel,
+        IReadOnlyList<string> tags,
+        string availability)
+        => new(
+            new DomesticProducerCandidateResponse
+            {
+                CandidateKey = key,
+                MaskedDisplayName = displayName,
+                RegionCode = region,
+                RegionLabel = regionLabel,
+                ProductTags = tags,
+                SupportedPackagingFormCodes = [DomesticProducePackagingFormCodes.CorrugatedBox],
+                SupplyCapacitySummary = "화면 예시 · 실제 생산 가능량 연동 예정",
+                AvailabilitySummary = availability,
+                VerificationLabel = "농업경영체 확인 연동 예정",
+                ThirdPartySharingConsentConfirmed = false,
+                ContactRequestConsentConfirmed = false
+            },
+            true);
+
+    private static RepresentativeCardModel RepresentativePreview(
+        string key,
+        string displayName,
+        string areaCode,
+        string areaLabel,
+        string communitySummary,
+        IReadOnlyList<string> tags,
+        string recruitmentSummary)
+        => new(
+            new DomesticGroupPurchaseRepresentativeCandidateResponse
+            {
+                CandidateKey = key,
+                MaskedDisplayName = displayName,
+                OperatingAreaCode = areaCode,
+                OperatingAreaLabel = areaLabel,
+                CommunitySummary = communitySummary,
+                InterestedProductTags = tags,
+                TypicalAbsorptionCapacitySummary = "화면 예시 · 모집 규모 연동 예정",
+                SupportedReceiptMethods = ["공동 수령", "택배 협의"],
+                RecruitmentSummary = recruitmentSummary,
+                VerificationLabel = "공동구매 대표 역할 확인 연동 예정",
+                RepresentativeRoleConfirmed = false,
+                ContactRequestConsentConfirmed = false
+            },
+            true);
+
+    private sealed record ProducerCardModel(
+        DomesticProducerCandidateResponse Candidate,
+        bool IsPreview);
+
+    private sealed record RepresentativeCardModel(
+        DomesticGroupPurchaseRepresentativeCandidateResponse Candidate,
+        bool IsPreview);
+}

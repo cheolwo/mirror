@@ -61,7 +61,8 @@ public sealed class VersionFeatureFlagService : IVersionFeatureFlagService
     }
 
     private static bool IsDomesticTransportEnabled(VersionFeatureFlagsOptions flags)
-        => flags.DomesticTransportWorkflow || flags.CargoYongdalV1;
+        => flags.CommunityTrustWorkflow
+            && (flags.DomesticTransportWorkflow || flags.CargoYongdalV1);
 
     private static bool IsWarehouseFulfillmentEnabled(VersionFeatureFlagsOptions flags)
         => flags.WarehouseFulfillmentWorkflow || flags.WarehouseV15;
@@ -76,7 +77,7 @@ public sealed class VersionFeatureFlagService : IVersionFeatureFlagService
         => flags.SalesChannelFulfillmentWorkflow || IsWarehouseFulfillmentEnabled(flags) || IsGroupPurchaseImportEnabled(flags);
 
     private static bool IsCommunityTrustEnabled(VersionFeatureFlagsOptions flags)
-        => flags.CommunityTrustWorkflow || IsDomesticTransportEnabled(flags);
+        => flags.CommunityTrustWorkflow;
 
     private static bool IsHrParticipationEnabled(VersionFeatureFlagsOptions flags)
         => flags.HrParticipationWorkflow || IsGroupPurchaseImportEnabled(flags);

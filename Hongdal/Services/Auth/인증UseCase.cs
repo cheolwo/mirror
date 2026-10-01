@@ -369,7 +369,7 @@ public sealed class 인증UseCase : I인증UseCase
             AppKey = roleName switch
             {
                 역할명.기사 => App식별자.DriverApp,
-                역할명.화주 => App식별자.ShipperApp,
+                역할명.화주 => App식별자.HongdalApp,
                 역할명.관세사 => App식별자.HongdalAdmin,
                 역할명.서버관리자 => App식별자.HongdalAdmin,
                 _ => "Hongdal.Server"

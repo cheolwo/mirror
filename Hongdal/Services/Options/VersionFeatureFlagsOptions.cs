@@ -4,7 +4,7 @@ public sealed class VersionFeatureFlagsOptions
 {
     public const string SectionName = "VersionFeatureFlags";
 
-    public bool CargoYongdalV1 { get; set; } = true;
+    public bool CargoYongdalV1 { get; set; }
 
     public bool DomesticTransportWorkflow { get; set; }
 
@@ -24,7 +24,7 @@ public sealed class VersionFeatureFlagsOptions
 
     public bool SalesChannelFulfillmentWorkflow { get; set; }
 
-    public bool CommunityTrustWorkflow { get; set; }
+    public bool CommunityTrustWorkflow { get; set; } = true;
 
     public bool HrParticipationWorkflow { get; set; }
 
