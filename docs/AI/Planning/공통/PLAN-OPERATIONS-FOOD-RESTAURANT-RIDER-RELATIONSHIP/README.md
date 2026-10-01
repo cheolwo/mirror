@@ -1,6 +1,26 @@
-[기획 · 운영·음식점-기사 관계 · PLAN-OPERATIONS-FOOD-RESTAURANT-RIDER-RELATIONSHIP · r3]
+[기획 · 운영·음식점-기사 관계 · PLAN-OPERATIONS-FOOD-RESTAURANT-RIDER-RELATIONSHIP · r7]
 
 # 음식점과 배달 기사가 함께한 배달 관계
+
+## 현재 r7 — 본인 중심 요약과 선택 자료 추가 조회
+
+[r7 관찰 순서 확정](self-centered-on-demand-observation.decision.r7.md): r6의 초기 전체 요약→선택 지역 상세 제안을 수용했다. 본인 관련 가게·업무 중심으로 시작하고 원하는 지역·대상을 선택할 때 필요한 자료만 추가 조회한다. `SelfCenteredInitialViewConfirmed / OnDemandObservationConfirmed / ProductImplementationDeferred`. 지도 탐색과 업무 권한을 분리하며 기술 수치·새 수집·제품 구현은 별도다.
+
+## 이전 r6 — 로그인 가게 중심 지역 지도와 자기 업무
+
+[r6 지역 관찰 방향](store-centered-regional-observation.direction.r6.md): 사가정 고정이 아니라 로그인한 음식점의 위치·반경에 따라 지역 자료를 구성하고 자기 주문에 연결된 주문자·기사를 표현한다. 기존 7/10km는 주문자 탐색 정책이므로 실제 배달 허용 반경으로 동일시하지 않는다. `StoreCenteredRegionalObservationConfirmed / LoadingDesignProposed / ProductImplementationDeferred`. 전체 반경 요약→선택 지역 상세 로드와 초기 화면은 제안이며 r5 GPS 없는 단계 표현·r3 공개 경계를 유지한다.
+
+## 이전 r5 — 실시간 GPS 없이 업무 단계로 표현
+
+[r5 범위 확정](stage-based-delivery-observation.decision.r5.md): 실시간·GPS를 요구하지 않고 서버가 확인한 픽업·전달 단계를 디오라마 이동으로 표현한다. 애니메이션의 종점 도달은 실제 도착·완료가 아니며 자기 업무 권한을 유지한다. `StageBasedObservationConfirmed / LiveGpsNotRequired / ProductImplementationDeferred`. 경로·속도·조회 주기는 미정이고 기존 기사 업무 앱의 GPS 기능을 삭제하는 결정이 아니다.
+
+## 이전 r4 — 내 업무 관계 조회 제안
+
+[r4 구현 제안](role-scoped-work-observation.proposal.r4.md): 음식점의 자기 주문 관련 기사 목록, 기사의 본인 음식배달 이력, 선택적 공동 완료 관계를 분리한다. 기존 inbox/workspace/관계 기록·인증 갱신 알림을 재사용하고, 음식 완료 이력·관련 기사 묶음·양측 공개 설정·Unity의 본인 관계 범위는 보완 후보로 기록했다. `RoleScopedObservationConfirmed / ImplementationProposal / ProductImplementationDeferred`; 제품 코드·실제 실행은 변경하지 않았다.
+
+아래 r3의 완료 횟수·양측 기본 ON/OFF·원장 보존·배차 영향 금지 기준은 그대로 유지한다. r3의 최근 10건 질문은 미응답으로 보존한다. r4의 음식점 관찰 범위 질문은 r5에서 실시간·GPS 없이 업무 단계를 표현하는 방향으로 답변되었다.
+
+## r3 기준선 — 확정 사항과 미답변 보존
 
 - 기획 ID: `PLAN-OPERATIONS-FOOD-RESTAURANT-RIDER-RELATIONSHIP`
 - 기획 분야: 운영·음식점-기사 관계
