@@ -76,6 +76,8 @@ public static class MauiProgram
             client.BaseAddress = operationalApiBaseAddress;
         });
         builder.Services.AddSingleton<음식점전표DraftFactory>();
+        builder.Services.AddTransient<I음식점메뉴ApiClient>(sp =>
+            (Ssalddel음식주문Client)sp.GetRequiredService<I음식주문ApiClient>());
         builder.Services.AddSingleton<I음식점주문DeskService, 음식점주문DeskService>();
         builder.Services.AddScoped<배차주소ApiService>();
         builder.Services.AddSsalddelOperationalApiHttpClient(

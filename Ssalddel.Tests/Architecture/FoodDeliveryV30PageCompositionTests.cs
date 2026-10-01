@@ -5,11 +5,63 @@ namespace Ssalddel.Tests.Architecture;
 public sealed class FoodDeliveryV30PageCompositionTests
 {
     [Fact]
+    public void 음식점기본탐색은_주문진입과세탭_입력중이탈보호를갖는다()
+    {
+        Assert.Contains("@page \"/\"", Read("RestaurantDeskApp", "Components/Pages/OrderInbox.razor"));
+        Assert.Contains("@page \"/store\"", Read("RestaurantDeskApp", "Components/Pages/Home.razor"));
+        Assert.Contains("\"/store\"", Read("RestaurantDeskApp", "Components/Routes.razor"));
+        var navigation = Read("RestaurantDeskApp", "Components/Layout/음식점하단탐색.razor");
+        foreach (var route in new[] { "/orders", "/menus", "/store" }) Assert.Contains(route, navigation);
+        var menus = Read("RestaurantDeskApp", "Components/Pages/Menus.razor");
+        Assert.Contains("@if (!editing)", menus);
+        Assert.Contains("context.PreventNavigation()", menus);
+        Assert.Contains("editing = false;", menus);
+    }
+    [Fact]
+    public void 음식점메뉴화면은_등록수정과서버재조회를연결한다()
+    {
+        var page = Read("RestaurantDeskApp", "Components/Pages/Menus.razor");
+        var routes = Read("RestaurantDeskApp", "Components/Routes.razor");
+        var client = Read("RestaurantDeskApp", "Services/Ssalddel음식주문Client.cs");
+        Assert.Contains("\"/menus\"", routes);
+        Assert.Contains("pendingCreate ??=", page);
+        Assert.Contains("MenuClient.등록Async(pendingCreate)", page);
+        Assert.Contains("예상Revision = revision", page);
+        Assert.Contains("menus = await MenuClient.목록Async()", page);
+        Assert.Contains("catch (메뉴저장거절Exception)", page);
+        Assert.Contains("사진 파일 업로드는 아직 지원하지 않습니다", page);
+        Assert.Contains("api/v1/restaurant/menus", client);
+    }
+
+    [Fact]
+    public void 음식점수신함은_조회실패를_정상빈목록으로표시하지않는다()
+    {
+        var inbox = Read("RestaurantDeskApp", "Components/Pages/OrderInbox.razor");
+        Assert.Contains("orders.Count == 0 && hasLoaded && !reloadFailed", inbox);
+        Assert.Contains("isRefreshing && !hasLoaded", inbox);
+        Assert.Contains("if (isRefreshing || workLocked) return false", inbox);
+        Assert.Contains("lastSuccessfulRefresh = DateTimeOffset.UtcNow", inbox);
+        Assert.Contains("ReloadManuallyAsync", inbox);
+        Assert.Contains("if (reloadFailed) message = null", inbox);
+    }
+
+    [Fact]
+    public void 조리시간화면은_빠른선택과_기기저장경계를표시한다()
+    {
+        var page = Read("RestaurantDeskApp", "Components/Pages/PreparationTimeSettings.razor");
+        Assert.Contains("new[] { 5, 10, 15, 20 }", page);
+        Assert.Contains("판매 메뉴 등록이나 다른 기기와의 동기화는 아닙니다", page);
+        Assert.Contains("상품별 시간 기준 추가", page);
+        Assert.Contains("if (isSaving) return", page);
+        Assert.Contains("restaurant-order-card-row", page);
+    }
+
+    [Fact]
     public void 음식점운영홈은_주문수락구현을포함하지않는다()
     {
         var source = Read("RestaurantDeskApp", "Components/Pages/Home.razor");
 
-        Assert.Contains("@page \"/\"", source);
+        Assert.Contains("@page \"/store\"", source);
         Assert.Contains("/orders", source);
         Assert.DoesNotContain("주문수락후전표준비Async", source);
         Assert.DoesNotContain("SimulateOrderAlertAsync", source);

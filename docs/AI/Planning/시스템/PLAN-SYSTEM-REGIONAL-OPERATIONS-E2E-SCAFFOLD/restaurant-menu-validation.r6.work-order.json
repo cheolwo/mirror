@@ -1,0 +1,29 @@
+{
+  "planId": "PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD",
+  "revision": "restaurant-menu-validation.r6",
+  "designDocumentRef": "restaurant-menu-validation.r6.md",
+  "designDocumentSha256": "8E8D608A578B7DE947EF3829FB5D18582CA0107240EAC63FCECE040D682F63B0",
+  "planningStatus": "Approved",
+  "handoffStatus": "ReadyToDispatch",
+  "localAcceptance": "AcceptedInCurrentThread",
+  "approvalEvidence": "2026-09-27 메뉴 불일치 정리와 등록/저장/재조회 확인 제안 후 사용자: 어, 진행해봐",
+  "baseCommit": "ca3b6e65d742bc5c00ebfb7f316ecca706061dc9",
+  "workstream": "operations",
+  "writePaths": [
+    "Ssalddel.Contracts/Food/음식점메뉴입력Policy.cs",
+    "RestaurantDeskApp/Components/Pages/Menus.razor",
+    "Ssalddel/Application/Food/음식점메뉴관리UseCase.cs",
+    "Ssalddel.Tests/Application/Food/음식점메뉴관리UseCaseTests.cs",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-validation.r6.md",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-validation.r6.work-order.json",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-validation.r6.result.md",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/README.md",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/AI/generated/planning-app-production.json",
+    "docs/AI/generated/planning-app-production.md",
+    "docs/AI/generated/planning-app-production.html"
+  ],
+  "validationCeiling": "공유 입력 규칙과 InMemory UseCase 집중시험 및 관련 build. 실제 HTTP/DB 동시성/Android UI 검증 아님",
+  "excluded": ["migration", "operational DB", "payment", "persistent idempotency", "deployment", "commit", "push"]
+}

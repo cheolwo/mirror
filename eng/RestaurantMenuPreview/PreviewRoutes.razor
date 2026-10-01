@@ -1,0 +1,6 @@
+@namespace RestaurantDeskApp
+@using Microsoft.AspNetCore.Components.Routing
+<Router AppAssembly="typeof(Preview).Assembly">
+    <Found Context="route"><RouteView RouteData="route" /></Found>
+    <NotFound><p>이 미리보기에서는 메뉴 화면만 제공합니다. 운영 저장은 없습니다.</p><a href="/">메뉴 화면으로</a></NotFound>
+</Router>

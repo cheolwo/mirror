@@ -1,4 +1,5 @@
 @page "/orders"
+@page "/"
 @implements IAsyncDisposable
 @inject I음식점주문DeskService OrderDeskService
 @inject I음식점주문SignalRClientService RestaurantRealtimeService
@@ -9,14 +10,20 @@
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="py-4">
     <MudStack Spacing="3">
-        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="restaurant-page-header">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="restaurant-page-header restaurant-home-hero">
             <MudStack Spacing="0">
                 <MudText Typo="Typo.h4">신규 주문 수신함</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    서버의 미처리 주문을 먼저 복구한 뒤 실시간 알림과 30초 보완 조회를 주문번호로 합칩니다.
+                    플랫폼에서 들어온 주문을 확인하고, 조리시간을 정해 접수하세요.
                 </MudText>
             </MudStack>
             <MudChip T="string" Color="@RealtimeStatusColor" Variant="Variant.Outlined">@realtimeStatus</MudChip>
+        </MudStack>
+
+        <MudStack Row="true" Class="restaurant-chip-row" AlignItems="AlignItems.Center">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(isRefreshing || workLocked)" OnClick="ReloadManuallyAsync" StartIcon="@Icons.Material.Filled.Refresh">주문 새로고침</MudButton>
+            <MudButton Href="/settings/preparation-times" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Timer">기본 조리시간</MudButton>
+            <MudText Typo="Typo.caption">@(lastSuccessfulRefresh is null ? "서버 확인 대기" : $"마지막 확인 {lastSuccessfulRefresh.Value.ToLocalTime():HH:mm:ss}")</MudText>
         </MudStack>
 
         @if (!string.IsNullOrWhiteSpace(message))
@@ -24,24 +31,28 @@
             <MudAlert Severity="@messageSeverity">@message</MudAlert>
         }
 
-        @if (orders.Count == 0)
+        @if (isRefreshing && !hasLoaded)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="주문을 확인하고 있습니다" />
+        }
+        else if (orders.Count == 0 && hasLoaded && !reloadFailed)
         {
             <MudPaper Elevation="0" Outlined="true" Class="pa-5">
                 <MudStack AlignItems="AlignItems.Center" Spacing="1">
                     <MudIcon Icon="@Icons.Material.Filled.NotificationsNone" Size="Size.Large" Color="Color.Secondary" />
-                    <MudText Typo="Typo.h6">수신한 주문이 없습니다.</MudText>
+                    <MudText Typo="Typo.h6">지금은 처리할 주문이 없습니다.</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        샘플 데이터로 대체하지 않습니다. 연결 상태와 서버의 3.0 기능 플래그를 확인해 주세요.
+                        새 주문이 들어오면 알려드립니다. 주문 목록은 30초마다 다시 확인합니다.
                     </MudText>
                 </MudStack>
             </MudPaper>
         }
-        else
+        else if (orders.Count > 0)
         {
             <MudStack Spacing="2">
                 @foreach (var order in orders)
                 {
-                    <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-4 restaurant-home-card">
                         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="restaurant-order-card-row">
                             <MudStack Spacing="1">
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
@@ -81,6 +92,13 @@
     private string? message;
     private Severity messageSeverity = Severity.Info;
     private bool workLocked;
+    private bool isRefreshing;
+    private bool hasLoaded;
+    private bool reloadFailed;
+    private DateTimeOffset? lastSuccessfulRefresh;
+
+    private async Task ReloadManuallyAsync()
+        => await TryReloadAsync(음식점주문복구출처.서버재조회);
 
     private Color RealtimeStatusColor => RestaurantRealtimeService.연결상태 switch
     {
@@ -214,13 +232,20 @@
 
     private async Task<bool> TryReloadAsync(음식점주문복구출처 복구출처)
     {
+        if (isRefreshing || workLocked) return false;
+        isRefreshing = true;
         try
         {
             orders = await OrderDeskService.주문목록조회Async(복구출처);
+            hasLoaded = true;
+            lastSuccessfulRefresh = DateTimeOffset.UtcNow;
+            if (reloadFailed) message = null;
+            reloadFailed = false;
             return true;
         }
         catch (UnauthorizedAccessException ex)
         {
+            reloadFailed = true;
             workLocked = true;
             messageSeverity = Severity.Error;
             message = ex.Message;
@@ -229,6 +254,7 @@
         }
         catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
+            reloadFailed = true;
             workLocked = true;
             messageSeverity = Severity.Error;
             message = "로그인 세션을 복구하지 못했습니다. 다시 로그인해 주세요.";
@@ -237,6 +263,7 @@
         }
         catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
         {
+            reloadFailed = true;
             workLocked = true;
             messageSeverity = Severity.Error;
             message = "이 계정은 현재 음식점의 주문 수신함을 볼 수 없습니다. 음식점 소유권·운영자 역할을 확인해 주세요.";
@@ -244,9 +271,14 @@
         }
         catch (Exception ex)
         {
+            reloadFailed = true;
             messageSeverity = Severity.Warning;
             message = $"서버 수신함을 갱신하지 못했습니다. 마지막 목록을 유지하고 다음 30초 조회에서 다시 시도합니다. {ex.Message}";
             return false;
+        }
+        finally
+        {
+            isRefreshing = false;
         }
     }
 

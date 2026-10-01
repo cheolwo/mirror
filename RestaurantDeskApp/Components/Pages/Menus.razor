@@ -1,0 +1,190 @@
+@page "/menus"
+@inject I음식점메뉴ApiClient MenuClient
+@using Microsoft.AspNetCore.Components.Routing
+<NavigationLock ConfirmExternalNavigation="@editing" OnBeforeInternalNavigation="GuardNavigation" />
+
+<PageTitle>메뉴 관리</PageTitle>
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
+    <MudStack Spacing="3">
+        @if (!editing)
+        {
+        <MudStack Class="restaurant-home-hero" Spacing="1">
+            <MudText Typo="Typo.overline">우리 가게 · 메뉴 관리</MudText>
+            <MudText Typo="Typo.h4">메뉴 관리</MudText>
+            <MudText Typo="Typo.body2">메뉴를 준비하고 주문을 받을 준비를 해보세요.</MudText>
+            <MudStack Row="true" Class="restaurant-chip-row">
+                <MudButton Href="/orders" Variant="Variant.Outlined">주문함</MudButton>
+                <MudButton Href="/settings/preparation-times" Variant="Variant.Outlined">조리시간 설정</MudButton>
+            </MudStack>
+        </MudStack>
+        }
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <MudAlert Severity="@severity" role="status">@message</MudAlert>
+        }
+        @if (!editing)
+        {
+        <MudButton OnClick="NewMenu" Disabled="@(busy || !loaded)" Variant="Variant.Filled" Color="Color.Primary">메뉴 추가</MudButton>
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.h6">등록 메뉴 @(loaded ? $"{menus.Count}개" : "")</MudText>
+            <MudButton OnClick="ReloadAsync" Disabled="@busy" StartIcon="@Icons.Material.Filled.Refresh">새로고침</MudButton>
+        </MudStack>
+        @if (busy && !loaded)
+        {
+            <MudProgressLinear Indeterminate="true" aria-label="메뉴 조회 중" />
+        }
+        @if (loaded && menus.Count == 0)
+        {
+            <MudPaper Outlined="true" Elevation="0" Class="pa-4 restaurant-home-card">
+                <MudText>아직 등록된 메뉴가 없습니다. 메뉴 추가를 눌러 첫 메뉴를 준비해 보세요.</MudText>
+            </MudPaper>
+        }
+        @foreach (var menu in menus)
+        {
+            <MudPaper @key="menu.Id" Outlined="true" Elevation="0" Class="pa-4 restaurant-home-card">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="restaurant-order-card-row">
+                    <MudStack Spacing="1">
+                        <MudText Typo="Typo.h6">@menu.메뉴명</MudText>
+                        <MudText Typo="Typo.body2">@menu.설명</MudText>
+                        <MudText Typo="Typo.subtitle1">@menu.판매가.ToString("N0")원</MudText>
+                        <MudStack Row="true" Class="restaurant-chip-row">
+                            <MudChip T="string" Size="Size.Small" Color="@(menu.공개여부 ? Color.Success : Color.Default)">@(menu.공개여부 ? "공개" : "비공개")</MudChip>
+                            <MudChip T="string" Size="Size.Small" Color="@(menu.품절여부 ? Color.Warning : Color.Default)">@(menu.품절여부 ? "품절" : "품절 아님")</MudChip>
+                        </MudStack>
+                    </MudStack>
+                    <MudButton OnClick="@(() => Edit(menu))" Disabled="@(busy || pendingCreate is not null)" Variant="Variant.Outlined">수정</MudButton>
+                </MudStack>
+            </MudPaper>
+        }
+        }
+        else
+        {
+        <MudButton OnClick="CloseEditor" Disabled="@FormLocked" Variant="Variant.Outlined">목록으로 · 입력 취소</MudButton>
+        @if (pendingCreate is not null)
+        {
+            <MudAlert Severity="Severity.Warning">등록 응답 확인 전에는 화면을 떠나지 말고 동일 요청으로 재확인해 주세요.</MudAlert>
+        }
+        <MudPaper Outlined="true" Elevation="0" Class="pa-4 restaurant-home-card">
+            <MudStack Spacing="3">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.h6">@(editingId is null ? "새 메뉴 등록" : "메뉴 수정")</MudText>
+                    <MudText Typo="Typo.caption">저장 후 목록으로 돌아갑니다</MudText>
+                </MudStack>
+                <MudTextField T="string" @bind-Value="name" Label="메뉴명" Required="true" MaxLength="@음식점메뉴입력Policy.메뉴명최대길이" Variant="Variant.Outlined" Disabled="@FormLocked" />
+                <MudTextField T="string" @bind-Value="description" Label="메뉴 소개" Lines="2" MaxLength="@음식점메뉴입력Policy.설명최대길이" Variant="Variant.Outlined" Disabled="@FormLocked" />
+                <MudNumericField T="decimal" @bind-Value="price" Label="판매 가격" Min="0" Adornment="Adornment.End" AdornmentText="원" Variant="Variant.Outlined" Disabled="@FormLocked" />
+                <MudTextField T="string" @bind-Value="imageUrl" Label="대표 사진 주소 (선택)" MaxLength="@음식점메뉴입력Policy.사진주소최대길이" HelperText="HTTPS 이미지 주소를 저장합니다. 사진 파일 업로드는 아직 지원하지 않습니다." Variant="Variant.Outlined" Disabled="@FormLocked" />
+                <MudSwitch T="bool" @bind-Value="published" Color="Color.Primary" Disabled="@FormLocked">주문자에게 메뉴 공개</MudSwitch>
+                <MudSwitch T="bool" @bind-Value="soldOut" Color="Color.Warning" Disabled="@FormLocked">일시 품절</MudSwitch>
+                <MudText Typo="Typo.caption">새 메뉴는 기본 비공개입니다. 공개 여부와 가격을 확인한 뒤 저장하세요.</MudText>
+                <MudButton OnClick="SaveAsync" Disabled="@(busy || !loaded)" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true" StartIcon="@Icons.Material.Filled.Save">
+                    @(busy ? "처리 중…" : pendingCreate is not null ? "동일 요청으로 등록 재확인" : editingId is null ? "메뉴 등록" : "변경 저장")
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+        }
+    </MudStack>
+</MudContainer>
+
+@code {
+    private IReadOnlyList<음식점메뉴관리응답> menus = [];
+    private bool busy, loaded, published, soldOut, editing;
+    private long? editingId;
+    private long revision;
+    private int displayOrder;
+    private string name = "", description = "", imageUrl = "";
+    private decimal price;
+    private string? message;
+    private Severity severity = Severity.Info;
+    private 음식점메뉴등록요청? pendingCreate;
+    private bool FormLocked => busy || pendingCreate is not null;
+
+    protected override Task OnInitializedAsync() => ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        if (busy) return;
+        busy = true;
+        try
+        {
+            menus = await MenuClient.목록Async();
+            loaded = true;
+            message = pendingCreate is null ? null : "등록 결과 확인이 필요합니다. 동일 요청으로 재확인하면 중복 등록을 방지합니다.";
+            severity = Severity.Info;
+        }
+        catch (Exception) { message = "메뉴를 조회하지 못했습니다. 연결과 로그인 상태를 확인한 뒤 다시 시도하세요. 이전 목록은 유지합니다."; severity = Severity.Error; }
+        finally { busy = false; }
+    }
+
+    private void NewMenu()
+    {
+        if (FormLocked) return;
+        editing = true;
+        editingId = null; revision = 0; displayOrder = 0;
+        name = description = imageUrl = ""; price = 0; published = soldOut = false;
+    }
+
+    private void Edit(음식점메뉴관리응답 menu)
+    {
+        if (FormLocked) return;
+        editing = true;
+        editingId = menu.Id; revision = menu.Revision; displayOrder = menu.표시순서;
+        name = menu.메뉴명; description = menu.설명; imageUrl = menu.대표이미지Url ?? "";
+        price = menu.판매가; published = menu.공개여부; soldOut = menu.품절여부;
+    }
+
+    private void CloseEditor()
+    {
+        if (FormLocked) return;
+        editing = false;
+        message = null;
+    }
+
+    private void GuardNavigation(LocationChangingContext context)
+    {
+        if (!editing) return;
+        context.PreventNavigation();
+        severity = Severity.Warning;
+        message = "입력 중입니다. 저장하거나 ‘목록으로 · 입력 취소’를 누른 뒤 이동하세요.";
+    }
+
+    private async Task SaveAsync()
+    {
+        if (busy || !loaded) return;
+        if (음식점메뉴입력Policy.오류조회(name, description, price, imageUrl) is { } inputError)
+        {
+            severity = Severity.Warning; message = inputError; return;
+        }
+        busy = true;
+        try
+        {
+            if (editingId is { } id)
+                await MenuClient.수정Async(id, new 음식점메뉴수정요청 { 예상Revision = revision, 메뉴명 = name.Trim(), 설명 = description.Trim(), 판매가 = price, 대표이미지Url = string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl.Trim(), 공개여부 = published, 품절여부 = soldOut, 표시순서 = displayOrder });
+            else
+            {
+                pendingCreate ??= new 음식점메뉴등록요청 { 클라이언트요청Id = Guid.NewGuid(), 메뉴명 = name.Trim(), 설명 = description.Trim(), 판매가 = price, 대표이미지Url = string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl.Trim(), 공개여부 = published, 품절여부 = soldOut, 표시순서 = displayOrder };
+                await MenuClient.등록Async(pendingCreate);
+                pendingCreate = null;
+            }
+            editingId = null; name = description = imageUrl = ""; price = 0; published = soldOut = false;
+            severity = Severity.Success; message = "메뉴를 저장했습니다.";
+            editing = false;
+            try { menus = await MenuClient.목록Async(); }
+            catch (Exception) { severity = Severity.Warning; message = "메뉴 저장은 완료했지만 목록 갱신에 실패했습니다. 다시 등록하지 말고 새로고침해 주세요."; }
+        }
+        catch (메뉴저장거절Exception)
+        {
+            pendingCreate = null;
+            severity = Severity.Error;
+            message = "서버가 저장을 거절했습니다. 새로고침 후 같은 이름의 메뉴·최신 상태·계정 권한을 확인하세요.";
+        }
+        catch (Exception)
+        {
+            severity = Severity.Error;
+            message = pendingCreate is not null
+                ? "등록 결과를 확인하지 못했습니다. 입력값을 보존했습니다. 동일 요청으로 재확인해 주세요."
+                : "수정을 확인하지 못했습니다. 새로고침 후 해당 메뉴를 다시 선택해 최신 상태를 확인하세요.";
+        }
+        finally { busy = false; }
+    }
+}

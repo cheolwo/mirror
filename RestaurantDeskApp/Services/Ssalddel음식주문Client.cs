@@ -10,9 +10,33 @@ namespace RestaurantDeskApp.Services;
 public sealed class Ssalddel음식주문Client(
     HttpClient httpClient,
     RestaurantAuthService authService,
-    ClientAuthSession authSession) : I음식주문ApiClient
+    ClientAuthSession authSession) : I음식주문ApiClient, I음식점메뉴ApiClient
 {
     private const string BasePath = "api/v1/food-orders";
+
+    public async Task<IReadOnlyList<음식점메뉴관리응답>> 목록Async(CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Get, "api/v1/restaurant/menus", null, cancellationToken);
+        await EnsureSuccessAsync(response, "메뉴 목록 조회", cancellationToken);
+        return await response.Content.ReadFromJsonAsync<List<음식점메뉴관리응답>>(cancellationToken)
+            ?? throw new InvalidOperationException("메뉴 목록 응답이 비어 있습니다.");
+    }
+
+    public Task<음식점메뉴관리응답> 등록Async(음식점메뉴등록요청 request, CancellationToken cancellationToken = default)
+        => SaveMenuAsync(HttpMethod.Post, "api/v1/restaurant/menus", () => JsonContent.Create(request), cancellationToken);
+
+    public Task<음식점메뉴관리응답> 수정Async(long menuId, 음식점메뉴수정요청 request, CancellationToken cancellationToken = default)
+        => SaveMenuAsync(HttpMethod.Put, $"api/v1/restaurant/menus/{menuId}", () => JsonContent.Create(request), cancellationToken);
+
+    private async Task<음식점메뉴관리응답> SaveMenuAsync(HttpMethod method, string path, Func<HttpContent?> contentFactory, CancellationToken cancellationToken)
+    {
+        using var response = await SendAsync(method, path, contentFactory, cancellationToken);
+        if (response.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.Forbidden or HttpStatusCode.NotFound or HttpStatusCode.Conflict)
+            throw new 메뉴저장거절Exception();
+        await EnsureSuccessAsync(response, "메뉴 저장", cancellationToken);
+        return await response.Content.ReadFromJsonAsync<음식점메뉴관리응답>(cancellationToken)
+            ?? throw new InvalidOperationException("메뉴 저장 응답이 비어 있습니다. 목록을 다시 확인해 주세요.");
+    }
 
     public async Task<음식점주문수신함응답> 주문목록조회Async(
         음식점주문수신함조회요청 request,

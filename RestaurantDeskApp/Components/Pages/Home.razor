@@ -1,12 +1,12 @@
-@page "/"
+@page "/store"
 
-<PageTitle>음식점 주문 데스크</PageTitle>
+<PageTitle>가게 관리</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="py-4 restaurant-operations-home">
     <MudStack Spacing="3">
         <MudStack Spacing="0" Class="restaurant-home-hero">
             <MudText Typo="Typo.overline">오늘의 음식점</MudText>
-            <MudText Typo="Typo.h4">주문과 준비 시간을 한눈에</MudText>
+            <MudText Typo="Typo.h4">가게 관리</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">
                 새 주문을 확인하고, 손님에게 안내할 준비 시간을 관리하세요.
             </MudText>
@@ -34,12 +34,16 @@
                 </MudItem>
             }
         </MudGrid>
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+            영업 상태 변경과 정산 내역은 아직 연결되지 않았습니다. 표시되지 않는 금액을 0원이나 지급 완료로 해석하지 마세요.
+        </MudAlert>
     </MudStack>
 </MudContainer>
 
 @code {
     private static readonly IReadOnlyList<PlatformHomeQuickAction> QuickActions =
     [
+        new("메뉴 관리", "메뉴와 가격을 등록하고, 공개 여부와 품절 상태를 관리하세요.", "/menus", Icons.Material.Filled.RestaurantMenu, Color.Primary),
         new("신규 주문 수신함", "실시간으로 받은 주문을 조회하고 정확한 주문번호의 상세 화면으로 이동합니다.", "/orders", Icons.Material.Filled.ReceiptLong, Color.Primary),
         new("조리시간 기본값", "음식점 전체 기본시간과 상품별 조리시간을 저장해 신규 주문 추천값으로 사용합니다.", "/settings/preparation-times", Icons.Material.Filled.Timer, Color.Info)
     ];

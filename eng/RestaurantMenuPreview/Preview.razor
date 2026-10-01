@@ -1,0 +1,25 @@
+@namespace RestaurantDeskApp
+@page "/"
+@inject 메뉴미리보기Options PreviewOptions
+<MudThemeProvider Theme="theme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<div style="max-width:430px;margin:0 auto;background:#faf7f2;min-height:100vh;padding-bottom:90px">
+    <div style="padding:14px 20px;background:#8b3d2e;color:white;font-weight:700">살뜰 식당 <span style="float:right">메뉴 관리</span></div>
+    <div style="padding:8px 16px;background:#fff3c4;color:#634a00;font-size:12px" role="note">
+        @if (PreviewOptions.Api연결)
+        {
+            <span>격리 API 연결 · Development + Simulation · 합성 메뉴의 시험 DB 저장 · 실제 영업 아님</span>
+        }
+        else
+        {
+            <span>합성 화면 검토 · 메모리 자료 · API/DB 저장 없음</span>
+        }
+    </div>
+    <RestaurantDeskApp.Components.Pages.Menus />
+    <RestaurantDeskApp.Components.Layout.음식점하단탐색 />
+</div>
+@code {
+    private readonly MudTheme theme = new() { PaletteLight = new PaletteLight { Primary = "#8b3d2e", Secondary = "#756657", Background = "#faf7f2" } };
+}

@@ -37,6 +37,10 @@
             @Body
         </div>
     </MudMainContent>
+    @if (AuthService.Session.IsAuthenticated)
+    {
+        <음식점하단탐색 />
+    }
 </MudLayout>
 
 @code {

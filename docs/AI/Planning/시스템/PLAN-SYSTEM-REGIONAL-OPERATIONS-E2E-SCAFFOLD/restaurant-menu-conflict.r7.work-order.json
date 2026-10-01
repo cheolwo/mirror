@@ -1,0 +1,20 @@
+{
+  "planId": "PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD",
+  "revision": "restaurant-menu-conflict.r7",
+  "designDocumentRef": "restaurant-menu-conflict.r7.md",
+  "designDocumentSha256": "27DAE1247CCAB4A6DB44FA7F104611012BE38670A4C95D28323A33D45DA9C411",
+  "planningStatus": "Approved",
+  "handoffStatus": "ReadyToDispatch",
+  "localAcceptance": "AcceptedInCurrentThread",
+  "approvalEvidence": "2026-09-27 사용자: 새 기능보다 보완을 계속하고 개발하며 앱 제작 절차를 추출",
+  "baseCommit": "ca3b6e65d742bc5c00ebfb7f316ecca706061dc9",
+  "workstream": "operations",
+  "writePaths": [
+    "Ssalddel/Application/Food/음식점메뉴관리UseCase.cs",
+    "Ssalddel/Controllers/Food/음식점메뉴관리Controller.cs",
+    "Ssalddel.Tests/Application/Food/음식점메뉴충돌Tests.cs"
+  ],
+  "documentationScope": "r7 PLAN/result/work-order, checklist r11/entry links, PLANNING/CURRENT_WORK, generated planning-app-production index",
+  "validationCeiling": "SQLite actual UseCase/requery plus direct Controller response; not authenticated HTTP or device",
+  "excluded": ["schema migration", "operational DB", "concurrent write guarantee", "new UI", "commit", "push", "deployment"]
+}

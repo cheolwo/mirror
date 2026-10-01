@@ -38,7 +38,7 @@ public sealed class 음식점메뉴관리Controller(I음식점메뉴관리UseCas
                 : Ok(result);
         }
         catch (KeyNotFoundException) { return NotFound(); }
-        catch (InvalidOperationException ex) { return Conflict(new { message = ex.Message }); }
+        catch (음식점메뉴명충돌Exception ex) { return Conflict(new { message = ex.Message }); }
         catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
     }
 
@@ -55,6 +55,7 @@ public sealed class 음식점메뉴관리Controller(I음식점메뉴관리UseCas
             return result is null ? NotFound() : Ok(result);
         }
         catch (DbUpdateConcurrencyException ex) { return Conflict(new { message = ex.Message }); }
+        catch (음식점메뉴명충돌Exception ex) { return Conflict(new { message = ex.Message }); }
         catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
     }
 
