@@ -1,0 +1,196 @@
+{
+  "schemaVersion": "planning-app-intake.v1",
+  "workItemId": "APP-RESTAURANT-MENU",
+  "targetAppIds": [
+    "restaurant"
+  ],
+  "impactedRoles": [
+    "restaurant",
+    "orderer",
+    "driver",
+    "admin"
+  ],
+  "sections": {
+    "purpose": {
+      "status": "ExistingConfirmed",
+      "value": "기존 음식점 메뉴 목록·등록·수정의 제작 입력을 정리한다. r9에서는 입력 점검/인계만 수행하며 제품 변경·업무 시험·APK 생성은 하지 않는다. 사진 업로드·옵션 그룹·삭제·새 노출 정책은 제외한다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-mobile.r2.md",
+          "sha256": "7A86D76F6FD74894AFDB6001C81DC1675F9B5E982431A21FC1F0FDA0AF5ADC12",
+          "revision": "restaurant-mobile r2"
+        },
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-navigation.r4.md",
+          "sha256": "C2564E1AFA69E24368705B5ABE4477949164C273B87630BBECB8069CC2DFB527",
+          "revision": "restaurant-navigation r4"
+        }
+      ]
+    },
+    "information": {
+      "status": "ExistingConfirmed",
+      "value": "메뉴명·소개·판매가·선택 HTTPS 사진 URL·공개·품절·revision. 음식점 ID는 클라이언트 임의 지정이 아니라 서버 인증 범위. 합성 예: 검토 전용 메뉴 A, 합성 자료, 7500원, 사진 없음, 공개 false, 품절 false. 실명·연락처·주소 불필요.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-mobile.r2.md",
+          "sha256": "7A86D76F6FD74894AFDB6001C81DC1675F9B5E982431A21FC1F0FDA0AF5ADC12",
+          "revision": "restaurant-mobile r2"
+        },
+        {
+          "path": "RestaurantDeskApp/Components/Pages/Menus.razor",
+          "sha256": "7A95ECEC8C217FD8C506A685EA5350FA259CFFDDCC186F8BFCC6A1FC80CCC282"
+        },
+        {
+          "path": "Ssalddel/Controllers/Food/음식점메뉴관리Controller.cs",
+          "sha256": "572D9C195FC9A9D83B1FCFFC5C0E82D35DD9A1774DF5C3CF5E26BC7DAE93FD88"
+        }
+      ]
+    },
+    "workflow": {
+      "status": "ExistingConfirmed",
+      "value": "인증→서버 목록 조회→추가 또는 선택 수정→입력→기존 POST/PUT→성공 확인→목록 재조회. 저장 성공과 목록 갱신 실패를 분리한다. 서버가 상태 권위이며 실패 시 합성 자료로 대체하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-mobile.r2.md",
+          "sha256": "7A86D76F6FD74894AFDB6001C81DC1675F9B5E982431A21FC1F0FDA0AF5ADC12",
+          "revision": "restaurant-mobile r2"
+        },
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-navigation.r4.md",
+          "sha256": "C2564E1AFA69E24368705B5ABE4477949164C273B87630BBECB8069CC2DFB527",
+          "revision": "restaurant-navigation r4"
+        },
+        {
+          "path": "RestaurantDeskApp/Components/Pages/Menus.razor",
+          "sha256": "7A95ECEC8C217FD8C506A685EA5350FA259CFFDDCC186F8BFCC6A1FC80CCC282"
+        },
+        {
+          "path": "Ssalddel/Application/Food/음식점메뉴관리UseCase.cs",
+          "sha256": "38AC102A6C8318FDF21A225F046EEB442839868672BA32698CBC08D0F1F9CE5C"
+        }
+      ]
+    },
+    "uiStates": {
+      "status": "ExistingConfirmed",
+      "value": "로딩 / 빈 메뉴 / 목록 / 편집 / 입력 검증 / 저장 중 / 결과 미확인 / revision 충돌 / 저장 성공·목록 실패를 구분. 등록 결과 미확인 중 편집·취소 잠금, 입력 중 이탈 보호. 실기기 렌더 증거는 별도.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-mobile.r2.md",
+          "sha256": "7A86D76F6FD74894AFDB6001C81DC1675F9B5E982431A21FC1F0FDA0AF5ADC12",
+          "revision": "restaurant-mobile r2"
+        },
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-navigation.r4.md",
+          "sha256": "C2564E1AFA69E24368705B5ABE4477949164C273B87630BBECB8069CC2DFB527",
+          "revision": "restaurant-navigation r4"
+        },
+        {
+          "path": "RestaurantDeskApp/Components/Pages/Menus.razor",
+          "sha256": "7A95ECEC8C217FD8C506A685EA5350FA259CFFDDCC186F8BFCC6A1FC80CCC282"
+        }
+      ]
+    },
+    "recovery": {
+      "status": "ExistingConfirmed",
+      "value": "향후 요구 사례: 정상 등록·수정, 등록 응답 유실 후 동일 요청 재시도, stale revision 409, 저장 성공 뒤 목록 재조회 실패, 다른 음식점 수정 거부. 서버는 요청 ID 영속 원장이 아닌 음식점+메뉴명+동일 내용 비교이며 화면 pendingCreate는 메모리다. 앱 종료 후 복구·동시 DB 경합까지 보장됐다고 주장하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "RestaurantDeskApp/Components/Pages/Menus.razor",
+          "sha256": "7A95ECEC8C217FD8C506A685EA5350FA259CFFDDCC186F8BFCC6A1FC80CCC282"
+        },
+        {
+          "path": "Ssalddel/Application/Food/음식점메뉴관리UseCase.cs",
+          "sha256": "38AC102A6C8318FDF21A225F046EEB442839868672BA32698CBC08D0F1F9CE5C"
+        },
+        {
+          "path": "Ssalddel.Infrastructure/Persistence/Configurations/Food/음식점메뉴Configuration.cs",
+          "sha256": "123EBFD714F94AE2171C7675C1049A35243CABB76E6CD5FB173B757C2714F37E"
+        },
+        {
+          "path": "Ssalddel.Tests/Application/Food/음식점메뉴관리UseCaseTests.cs",
+          "sha256": "3D02F034370235BFE447FADA8347E0DA2EBC9C2B2130B23CA3320B15501AC681"
+        },
+        {
+          "path": "Ssalddel.Domain/음식/음식점메뉴.cs",
+          "sha256": "9ACF86DB84F74666D5D23BFF60CDF09E4C7633D0DF3E5C546DD67FDA384F0386"
+        }
+      ]
+    },
+    "deliverables": {
+      "status": "ExistingConfirmed",
+      "value": "향후 음식점 한 앱의 업무 시험·같은 제품 Razor 조작 화면·Android 시험 APK를 별개로 반환한다. API 연결 UI와 Android UI는 각 환경·실행 절차·미포함 범위를 명시한다. 정적 시안·모의 UI·APK·설치·배포를 서로 대체하지 않는다. 이번 r9에서는 요구사항만 결속한다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-intake.r9.md",
+          "revision": "app-production-intake.r9",
+          "sha256": "C4CA57A2465BDC67761846ADCD648CEF64E1CC6CBFC6161240752FEBB87F8E9D"
+        },
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-mobile.r2.md",
+          "sha256": "7A86D76F6FD74894AFDB6001C81DC1675F9B5E982431A21FC1F0FDA0AF5ADC12",
+          "revision": "restaurant-mobile r2"
+        },
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-navigation.r4.md",
+          "sha256": "C2564E1AFA69E24368705B5ABE4477949164C273B87630BBECB8069CC2DFB527",
+          "revision": "restaurant-navigation r4"
+        },
+        {
+          "path": "eng/release/publish-mobile-field-test.ps1",
+          "sha256": "940DE8C812C493175A23B9322B681F901F478976AD58C7AAFDBB1AC28E6B6C80"
+        }
+      ]
+    }
+  },
+  "questions": [],
+  "conflicts": [
+    {
+      "id": "MENU-LENGTH-LIMITS",
+      "description": "화면 메뉴명 100자/소개 2000자와 서버 메뉴명 200자/Entity 소개 1000자 제한이 다르다. 다음 제품 작업에서 기존 데이터·계약 영향을 검토해야 한다.",
+      "blocking": true
+    },
+    {
+      "id": "MENU-URL-BOUNDARY",
+      "description": "HTTPS 사진 URL 검사는 화면에 있으며 서버 UseCase는 trim만 한다. 인증 HTTP 경계 검증이 아직 필요하다.",
+      "blocking": true
+    },
+    {
+      "id": "PREVIEW-IDEMPOTENCY-SCOPE",
+      "description": "합성 미리보기는 요청 ID Dictionary를 사용하지만 실제 서버는 음식점·메뉴명·내용 비교다. 미리보기 통과는 서버 멱등성 증거가 아니다.",
+      "blocking": false
+    }
+  ],
+  "deliverables": [
+    {
+      "id": "menu-business-tests",
+      "kind": "AutomatedTest",
+      "required": true
+    },
+    {
+      "id": "menu-ui-preview",
+      "kind": "SharedUiPreview",
+      "required": true
+    },
+    {
+      "id": "menu-api-ui",
+      "kind": "ApiConnectedUi",
+      "required": false
+    },
+    {
+      "id": "menu-android-ui",
+      "kind": "AndroidUi",
+      "required": false
+    },
+    {
+      "id": "menu-android-package",
+      "kind": "AndroidPackage",
+      "required": true
+    }
+  ]
+}

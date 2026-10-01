@@ -1,4 +1,10 @@
-[기획 · 기획-코드 존재·제품 개발선 추적 · PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST · r7]
+[기획 · 기획·개발·검증 통합 관리 · PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST · r11]
+
+현행 보완 순환: [결손 보완과 조건부 제작 규칙 r11](app-production-repair-cycle.r11.md). 새 기능보다 기존 실패/복구를 보완하고 검증 근거와 한계를 함께 축적한다. 아래 r10 문답과 r9 도구 형식은 유지한다.
+
+현행 절차: [부족한 정보만 문답으로 채우는 r10](app-production-guided-intake.r10.md). AI가 먼저 기존 자료를 채우고 필요한 사용자 선택만 질문 하나씩 보완한다. 자료 형식·검사 도구는 [입력 표준 r9](app-production-intake.r9.md)와 [r8 추적 기반](app-production-tracking.r8.md)을 유지한다. [입력 안내](app-production-input-guide.md), [음식점 메뉴 초안](restaurant-menu-input-review.md), [r9 작업지시서](app-production-intake.r9.work-order.json), [r9 결과](app-production-intake.r9.result.md)를 따른다. [생성 현황표](../../../generated/planning-app-production.md)와 [로컬 상태판](../../../generated/planning-app-production.html)은 읽기 전용이다. 도구는 [사용법](../../../../../eng/planning-inquiries/app-production/README.md)을 참고한다.
+
+아래는 **2026-09-17 r7의 역사적 코드 존재 조사**다. 당시 82개·O/X 수를 현재 목록이나 시험 성공률로 읽지 않는다. r8은 이 의미를 유지하면서 별도 증거 연결을 추가한다.
 
 # 기획-코드 존재 대장
 

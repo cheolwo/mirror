@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "planning-app-intake.v1",
+  "workItemId": "REPLACE-WORK-ID",
+  "targetAppIds": ["replace-app-id"],
+  "impactedRoles": [],
+  "sections": {
+    "purpose": { "status": "Unresolved", "value": "", "critical": true, "reason": "사용자 목적·범위·제외를 정본 기획에서 연결", "sources": [] },
+    "information": { "status": "Unresolved", "value": "", "critical": true, "reason": "공동/고유 정보·권한·비식별 시험 표본을 연결", "sources": [] },
+    "workflow": { "status": "Unresolved", "value": "", "critical": true, "reason": "시작·행동·서버 처리·정본 재조회·종료를 연결", "sources": [] },
+    "uiStates": { "status": "Unresolved", "value": "", "critical": true, "reason": "진입·로딩·빈 상태·오류·성공·이탈을 연결", "sources": [] },
+    "recovery": { "status": "Unresolved", "value": "", "critical": true, "reason": "실패·중복·응답 유실·revision 충돌·취소·회복을 연결", "sources": [] },
+    "deliverables": { "status": "Unresolved", "value": "", "critical": true, "reason": "업무 검증·화면 증거·Android 시험 APK 범위를 검토. 미실행은 통과로 표시하지 않음", "sources": [] }
+  },
+  "questions": [{ "id": "scope-confirmation", "text": "AI가 조사한 목적과 작업 범위를 사람에게 확인받았는가?", "critical": true }],
+  "conflicts": [],
+  "deliverables": [
+    { "id": "business-tests", "kind": "AutomatedTest", "required": true },
+    { "id": "screen-evidence", "kind": "ApiConnectedUi", "required": true },
+    { "id": "android-test-package", "kind": "AndroidPackage", "required": true }
+  ]
+}

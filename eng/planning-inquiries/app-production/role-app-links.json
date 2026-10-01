@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "planning-app-production-links.v1",
+  "items": [
+    {
+      "id": "TOOL-APP-PRODUCTION",
+      "title": "기획·역할 앱 제작 추적 도구",
+      "planRefs": [{ "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-intake.r9.md", "revision": "app-production-intake.r9", "sha256": "c4ca57a2465bdc67761846adcd648cef64e1cc6cbfc6161240752febb87f8e9d" }],
+      "roles": [],
+      "codeRefs": [],
+      "testRefs": ["eng/planning-inquiries/app-production/catalog.test.mjs", "eng/planning-inquiries/app-production/evidence.test.mjs", "eng/planning-inquiries/app-production/cli.test.mjs", "eng/planning-inquiries/app-production/intake.test.mjs", "eng/planning-inquiries/app-production/publish.test.mjs"],
+      "roleLinks": [],
+      "workOrderRefs": ["docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-intake.r9.work-order.json"],
+      "resultRefs": ["docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-tracking.r8.result.md", "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-intake.r9.result.md"],
+      "evidenceRefs": [
+        { "path": "artifacts/local/planning-app-production/r8-20260927-03/tool-tests.json", "kind": "AutomatedTest", "format": "EvidenceManifest", "summary": "과거 r8 관리 도구 54/54. 이후 입력·도구 변경으로 재검증 대상이며 원 기록은 보존한다." },
+        { "path": "artifacts/local/planning-app-production/r9-20260927-01/tool-tests.json", "kind": "AutomatedTest", "format": "EvidenceManifest", "summary": "r9 관리 도구 93/93. 입력·hash·승인/환경 분리·순수 DOM·로컬 HTTP·APK 계획 출력 시험. 실제 브라우저·제품 업무·APK 생성·장치 실행 아님." }
+      ],
+      "remaining": ["관리 도구 검증은 음식 업무·역할 앱·실기기·출시 검증을 대체하지 않음", "나머지 기획의 업무별 코드·검증 연결은 점진적으로 확장"]
+    },
+    {
+      "id": "APP-RESTAURANT-MENU",
+      "title": "음식점 메뉴 목록·등록·수정",
+      "appProfileRef": { "path": "eng/planning-inquiries/app-production/inputs/restaurant.profile.json", "sha256": "4A9DC081A95BBEF58B514772D19A67BD339DB968F9233778D9859BC0D72EBBB6" },
+      "intakeRef": { "path": "eng/planning-inquiries/app-production/inputs/restaurant-menu.intake.json", "sha256": "7DABA732D057A9223B8C3D6DD99057DE384DADE1DB9A42DDAE595E90506B78D5" },
+      "intakeReviewRef": { "path": "eng/planning-inquiries/app-production/inputs/restaurant-menu.review.json", "sha256": "403938CFF69E59B9D487E5D4770A26D884A01986C015C184FB295E2276ADB029" },
+      "planRefs": [{ "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-mobile.r2.md", "revision": "restaurant-mobile r2", "sha256": "7a86d76f6fd74894afdb6001c81dc1675f9b5e982431a21fc1f0fda0af5adc12" }],
+      "roles": ["restaurant", "orderer", "driver", "admin"],
+      "codeRefs": ["RestaurantDeskApp/Components/Pages/Menus.razor", "RestaurantDeskApp/Services/I음식점메뉴ApiClient.cs", "RestaurantDeskApp/Services/Ssalddel음식주문Client.cs", "Ssalddel/Controllers/Food/음식점메뉴관리Controller.cs", "Ssalddel/Application/Food/음식점메뉴관리UseCase.cs"],
+      "testRefs": ["Ssalddel.Tests/Application/Food/음식점메뉴관리UseCaseTests.cs", "Ssalddel.Tests/Architecture/FoodDeliveryV30PageCompositionTests.cs"],
+      "roleLinks": [
+        { "role": "restaurant", "codeRefs": ["RestaurantDeskApp/Components/Pages/Menus.razor"], "note": "목록·등록·수정과 공개/품절 UI 및 기존 GET/POST/PUT 연결 소스 확인. 네이티브 실행 미확인." },
+        { "role": "orderer", "codeRefs": ["Ssalddel/Controllers/Orderer/음식점탐색Controller.cs"], "note": "공개 음식점 조회 API 존재. 이번 메뉴 변경과 동일 주문자 화면 종단 검증은 미확인." },
+        { "role": "driver", "codeRefs": [], "note": "메뉴 변경의 기사 화면 직접 영향 미확인. 자동으로 해당 없음이나 완료로 분류하지 않음." },
+        { "role": "admin", "codeRefs": [], "note": "메뉴 변경의 운영자 화면 연결 미확인." }
+      ],
+      "workOrderRefs": [],
+      "resultRefs": ["docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-mobile.r2.md"],
+      "evidenceRefs": [{ "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-mobile.r2.md", "kind": "BuildAndTestReport", "format": "HistoricalReport", "summary": "과거 Android build·집중시험 26/26·메서드 검사 7건 보고. 실행 당시 입력 해시 없음. 네이티브 화면·운영 DB 미검증." }],
+      "remaining": ["실제 Android 화면·터치", "격리 서버 메뉴 저장과 주문 연결", "운영자·기사 영향 대조", "신규 실행 기준선의 시험·APK 증거"]
+    },
+    {
+      "id": "APP-RESTAURANT-COOKING-TIME",
+      "title": "음식점 주문함과 기기 조리시간 기준",
+      "planRefs": [{ "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-mobile-workflow.r1.md", "revision": "restaurant-mobile-workflow r1", "sha256": "e620e7641a1302f54d50e47c63fe427b241a4394d92d4e8a74b11370207b1256" }],
+      "roles": ["restaurant", "orderer", "driver"],
+      "codeRefs": ["RestaurantDeskApp/Components/Pages/PreparationTimeSettings.razor", "RestaurantDeskApp/Services/음식점조리시간설정Service.cs", "RestaurantDeskApp/Components/Pages/OrderInbox.razor", "Ssalddel/Services/Food/음식점조리시간Service.cs", "Ssalddel/Controllers/Food/음식주문Controller.cs"],
+      "testRefs": ["Ssalddel.Tests/Architecture/FoodDeliveryV30PageCompositionTests.cs", "Ssalddel.Tests/Services/Food/음식점조리시간ServiceTests.cs", "Ssalddel.Tests/Contracts/Food/음식점조리시간정책Tests.cs"],
+      "roleLinks": [
+        { "role": "restaurant", "codeRefs": ["RestaurantDeskApp/Components/Pages/PreparationTimeSettings.razor", "RestaurantDeskApp/Components/Pages/OrderInbox.razor"], "note": "빠른 조리시간과 기기 Preferences 저장 소스 확인. 서버 조리시간 정책 저장과 구분." },
+        { "role": "orderer", "codeRefs": [], "note": "20분 초과 알림의 주문자 UI·푸시 종단 연결은 이 구간에서 미검증." },
+        { "role": "driver", "codeRefs": [], "note": "수락·픽업 준비 뒤 기사 앱까지 동일 주문 실행 미검증." }
+      ],
+      "workOrderRefs": [],
+      "resultRefs": ["docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-mobile-workflow.r1.md"],
+      "evidenceRefs": [{ "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-mobile-workflow.r1.md", "kind": "BuildAndTestReport", "format": "HistoricalReport", "summary": "과거 Android build·화면 구성 23건 통과 보고와 Task 전체 7건 실패 보고가 함께 있음. 실행 기준선 미상; 현재 통과로 승격하지 않음." }],
+      "remaining": ["기기 기준과 서버 정책의 현재 경계 검토", "동일 주문 알림·조리시간·픽업 준비 실제 조작", "현재 Task 실패 재검증"]
+    },
+    {
+      "id": "APP-FOOD-PAYMENT-APPROVAL",
+      "title": "음식 주문 결제 승인 내역과 역할별 재조회",
+      "planRefs": [{ "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-payment-approval.r5.md", "revision": "restaurant-payment-approval.r5", "sha256": "3982e1dcc7684b1e52dd691f30cce473b86d02f755a92755a2066e4c112bf565" }],
+      "roles": ["restaurant", "orderer", "driver", "admin"],
+      "codeRefs": ["Ssalddel/Services/Payments/음식주문결제승인OutboxService.cs", "Ssalddel/Application/Shipper/Payment/Handlers/음식주문결제승인완료EventHandler.cs", "Ssalddel.Contracts/Food/음식주문Dtos.cs", "Ssalddel.Contracts/Food/FoodOrderSampleData.cs"],
+      "testRefs": ["Ssalddel.Tests/Services/Payments/음식주문결제승인OutboxServiceTests.cs", "Ssalddel.Tests/Services/Payments/결제승인완료OutboxServiceTests.cs"],
+      "roleLinks": [
+        { "role": "restaurant", "codeRefs": ["Ssalddel.Contracts/Food/음식주문Dtos.cs", "Ssalddel.Contracts/Food/FoodOrderSampleData.cs"], "note": "서버 음식점 조회 계약의 nullable 승인 내역. 앱 결제 화면·실제 HTTP·DB 실행은 미검증." },
+        { "role": "orderer", "codeRefs": ["Ssalddel.Contracts/Food/음식주문Dtos.cs"], "note": "주문자 조회 계약의 승인 내역. 주문자 앱 결제 준비·승인 조작 구현 완료를 뜻하지 않음." },
+        { "role": "driver", "codeRefs": [], "note": "승인 내역과 기사 지급은 별개. 이 작업에 기사 지급 연결 증거 없음." },
+        { "role": "admin", "codeRefs": [], "note": "운영자 환불·정산 UI 연결 미확인. 승인 내역을 지급 완료로 해석하지 않음." }
+      ],
+      "workOrderRefs": ["docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-payment-approval.r5.work-order.json"],
+      "resultRefs": ["docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-payment-approval.r5.result.md"],
+      "evidenceRefs": [{ "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-payment-approval.r5.result.md", "kind": "ValidationReport", "format": "HistoricalReport", "summary": "과거 집중시험 90/90 통과·Task 전체 7건 실패·DB 모델 차이 보고. 당시 입력 manifest 없음. 모의 Provider·SQLite이며 실결제/운영 DB/앱 실행 증거가 아님." }],
+      "remaining": ["DB migration 별도 모델 차이 검토", "격리 HTTP 조회 검증", "역할 앱의 결제·환불·정산 표현", "신규 기준선 검증"]
+    },
+    {
+      "id": "APP-ORDERER-FOOD-HISTORY",
+      "title": "주문자 음식 주문 내역과 선택한 주문 상세",
+      "planRefs": [{ "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-ORDERER-ACTIVE-ORDER-HOME/README.md", "revision": "r11", "sha256": "754660568f929d2c525600830aebe5f67b9f30de0addddd95f9bd20d16abf720" }],
+      "roles": ["orderer"],
+      "codeRefs": ["OrdererApp/Components/Pages/FoodOrderHistory.razor", "Ssalddel.Ui.Common/Areas/App/Components/Food/OrdererFoodOrderWorkspace.razor", "Ssalddel.Ui.Common/Areas/App/Components/Food/OrdererFoodOrderWorkspace.razor.cs"],
+      "testRefs": ["Ssalddel.Tests/Architecture/OrdererFoodOrderWorkspaceCompositionTests.cs", "Ssalddel.Tests/Ui/Common/음식주문페이지ViewModelTests.cs"],
+      "roleLinks": [{ "role": "orderer", "codeRefs": ["OrdererApp/Components/Pages/FoodOrderHistory.razor"], "note": "/orders/food와 orderNo 선택 연결 소스 확인. 활성 주문 우선 홈 전체·지도 위치 추적·실제 모바일 실행은 별도 미확인." }],
+      "workOrderRefs": [], "resultRefs": [], "evidenceRefs": [],
+      "remaining": ["기획 전체 의미와 현 화면 차이 검토", "인증·HTTP·UI 실제 실행", "현재 시험·APK 증거"]
+    },
+    {
+      "id": "APP-DRIVER-FOOD-WORKSPACE",
+      "title": "음식 배달 기사 앱 업무 진입과 API 클라이언트",
+      "planRefs": [{ "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-MAP-HOME/README.md", "revision": "r11", "sha256": "45b6cfc29e2982a8b58ff5fb7c801791a9bd1a99e973a93ebd3b75e46bc28c45" }],
+      "roles": ["driver"],
+      "codeRefs": ["FDriverApp/Components/Pages/FDriverHome.razor", "FDriverApp/Components/Pages/FDriverWorkspaceLaunchPage.razor", "FDriverApp/Services/FoodDeliveryDriverApiService.cs", "FDriverApp/ViewModels/음식배달기사업무기능ViewModel.cs", "Ssalddel/Controllers/Driver/Food/음식배달기사업무Controller.cs"],
+      "testRefs": ["Ssalddel.Tests/Architecture/DriverFoodDeliveryWorkspacePageTests.cs", "Ssalddel.Tests/Application/Driver/Food/FoodDeliveryDriverRouteServiceTests.cs"],
+      "roleLinks": [{ "role": "driver", "codeRefs": ["FDriverApp/Components/Pages/FDriverHome.razor", "FDriverApp/Services/FoodDeliveryDriverApiService.cs"], "note": "배차 추천·지도 업무 진입과 API 소스 확인. DriverApp의 유사 화면·시험이 FDriverApp 네이티브 실행 증거를 대체하지 않음." }],
+      "workOrderRefs": [], "resultRefs": [], "evidenceRefs": [],
+      "remaining": ["지도 중심 기획과 현재 앱 진입 의미 대조", "실제 위치·수락·픽업·완료 UI", "FDriverApp 범위의 시험·APK 증거"]
+    },
+    {
+      "id": "APP-ADMIN-MOBILE-OPERATIONS",
+      "title": "운영자 모바일 운송·기사 현황과 출시 route 경계",
+      "planRefs": [{ "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/operator-app-release-completion.r2.md", "revision": "operator-app-release-completion.r2", "sha256": "d944cb7ab32a66559412d2192c5d7e6bc0897ac9bf4c905d242aca1cfeb69d9b" }],
+      "roles": ["admin"],
+      "codeRefs": ["SsalddelAdminApp/Components/Pages/Operations.razor", "SsalddelAdminApp/Components/Routes.razor", "SsalddelAdminApp/SsalddelAdminApp.csproj", "SsalddelAdmin/Components/Pages/FoodOrderOperationsTrace.razor", "Ssalddel/Controllers/Admin/Food/음식주문운영추적Controller.cs"],
+      "testRefs": ["Ssalddel.Tests/Architecture/AdminFoodOrderOperationsTraceCompositionTests.cs", "Ssalddel.Tests/Application/Admin/Food/음식주문운영추적UseCaseTests.cs"],
+      "roleLinks": [{ "role": "admin", "codeRefs": ["SsalddelAdminApp/Components/Pages/Operations.razor", "SsalddelAdminApp/Components/Routes.razor"], "note": "모바일 운송·기사 현황과 Release 허용 route 존재. SsalddelAdmin 웹의 음식 주문 추적 화면을 모바일에 연결됐다고 간주하지 않음." }],
+      "workOrderRefs": [], "resultRefs": [], "evidenceRefs": [],
+      "remaining": ["웹 음식 주문 추적과 모바일 route 연결 검토", "외부 서명·HTTPS·실기기 출시 근거", "현재 시험·APK 증거"]
+    }
+  ]
+}

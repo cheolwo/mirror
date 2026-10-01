@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "planning-app-intake-review.v1",
+  "workItemId": "APP-RESTAURANT-MENU",
+  "reviewedInputs": [
+    {
+      "path": "eng/planning-inquiries/app-production/inputs/restaurant.profile.json",
+      "sha256": "4A9DC081A95BBEF58B514772D19A67BD339DB968F9233778D9859BC0D72EBBB6"
+    },
+    {
+      "path": "eng/planning-inquiries/app-production/inputs/restaurant-menu.intake.json",
+      "sha256": "7DABA732D057A9223B8C3D6DD99057DE384DADE1DB9A42DDAE595E90506B78D5"
+    }
+  ],
+  "confirmation": {
+    "state": "Pending"
+  },
+  "executionApproval": {
+    "state": "NotGranted",
+    "workOrderRefs": []
+  },
+  "environment": [
+    {
+      "id": "isolated-menu-tests",
+      "state": "Unknown",
+      "deliverableIds": [
+        "menu-business-tests"
+      ],
+      "reason": "시험 소스 존재만 확인했다. 이번 r9는 제품 시험을 실행하지 않아 후속 작업에서 SDK·시험 환경을 점검해야 한다."
+    },
+    {
+      "id": "browser-preview",
+      "state": "Missing",
+      "deliverableIds": [
+        "menu-ui-preview"
+      ],
+      "reason": "현재 도구 세션의 실제 브라우저를 사용할 수 없다. 이전 미리보기 자료는 현재 실행 증거가 아니다."
+    },
+    {
+      "id": "isolated-api",
+      "state": "Unknown",
+      "deliverableIds": [
+        "menu-api-ui"
+      ],
+      "reason": "격리 인증 서버·DB·시험 계정 준비 미확인. 주소나 자격 증명은 입력표에 보관하지 않는다."
+    },
+    {
+      "id": "android-runtime",
+      "state": "Unknown",
+      "deliverableIds": [
+        "menu-android-ui"
+      ],
+      "reason": "에뮬레이터/실기기 실행 환경 미확인. APK 생성과 화면 실행은 별개다."
+    },
+    {
+      "id": "android-signing",
+      "state": "Unknown",
+      "deliverableIds": [
+        "menu-android-package"
+      ],
+      "reason": "음식점 한 앱만 대상. Release·HTTPS 시험 서버·저장소 밖 전용 서명키 준비 여부 미확인. 실제 경로와 비밀값은 기록하지 않는다."
+    }
+  ]
+}

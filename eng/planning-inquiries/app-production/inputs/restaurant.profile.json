@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "planning-app-profile.v1",
+  "appId": "restaurant",
+  "projectPath": "RestaurantDeskApp/RestaurantDeskApp.csproj",
+  "platforms": [
+    "Android"
+  ],
+  "fields": {
+    "navigation": {
+      "status": "ExistingConfirmed",
+      "value": "주문 /orders, 메뉴 /menus, 가게 /store. 로그인 후 주문 진입, 하단 3탭과 기존 서랍 유지. 메뉴 목록/편집은 같은 URL의 화면 상태.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-navigation.r4.md",
+          "sha256": "C2564E1AFA69E24368705B5ABE4477949164C273B87630BBECB8069CC2DFB527",
+          "revision": "restaurant-navigation r4"
+        }
+      ]
+    },
+    "presentation": {
+      "status": "ExistingConfirmed",
+      "value": "한국어·기존 음식점 카드/색상 재사용. 390px 세로 화면에서 목록→입력→저장→목록. 기존 PNG는 검토용 샘플이고 확정 디자인이 아님.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-navigation.r4.md",
+          "sha256": "C2564E1AFA69E24368705B5ABE4477949164C273B87630BBECB8069CC2DFB527",
+          "revision": "restaurant-navigation r4"
+        },
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-mobile.r2.md",
+          "sha256": "7A86D76F6FD74894AFDB6001C81DC1675F9B5E982431A21FC1F0FDA0AF5ADC12",
+          "revision": "restaurant-mobile r2"
+        }
+      ]
+    },
+    "authentication": {
+      "status": "ExistingConfirmed",
+      "value": "기존 인증 및 음식점운영자전용 정책. 음식점 claim 범위로 서버가 조회/변경 권한 판정. Client는 기존 401 갱신 경로 재사용.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "RestaurantDeskApp/Services/Ssalddel음식주문Client.cs",
+          "sha256": "4D86AB2F987897BC38B89DD55C81830B84C0CFABF5CD3F1DC94DAAD39AB3A046"
+        },
+        {
+          "path": "Ssalddel/Controllers/Food/음식점메뉴관리Controller.cs",
+          "sha256": "572D9C195FC9A9D83B1FCFFC5C0E82D35DD9A1774DF5C3CF5E26BC7DAE93FD88"
+        }
+      ]
+    },
+    "server": {
+      "status": "ExistingConfirmed",
+      "value": "기존 운영 서버의 메뉴 GET/POST/PUT 계약을 재사용한다. 향후 실행 대상은 격리 시험 서버로 제한하며 실제 주소·준비 여부는 이번에 확정하지 않음.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-mobile.r2.md",
+          "sha256": "7A86D76F6FD74894AFDB6001C81DC1675F9B5E982431A21FC1F0FDA0AF5ADC12",
+          "revision": "restaurant-mobile r2"
+        },
+        {
+          "path": "Ssalddel/Controllers/Food/음식점메뉴관리Controller.cs",
+          "sha256": "572D9C195FC9A9D83B1FCFFC5C0E82D35DD9A1774DF5C3CF5E26BC7DAE93FD88"
+        }
+      ]
+    },
+    "testEnvironment": {
+      "status": "ExistingConfirmed",
+      "value": "공유 Razor 합성 미리보기와 EF InMemory 시험 코드가 존재한다. 실제 인증 HTTP/DB 및 Android 화면·서명 환경은 별도 준비 확인 대상이다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-navigation.r4.md",
+          "sha256": "C2564E1AFA69E24368705B5ABE4477949164C273B87630BBECB8069CC2DFB527",
+          "revision": "restaurant-navigation r4"
+        },
+        {
+          "path": "Ssalddel.Tests/Application/Food/음식점메뉴관리UseCaseTests.cs",
+          "sha256": "3D02F034370235BFE447FADA8347E0DA2EBC9C2B2130B23CA3320B15501AC681"
+        },
+        {
+          "path": "eng/RestaurantMenuPreview/메뉴미리보기Client.cs",
+          "sha256": "8795B21BB4CC6C6D5CF926D90A2254E72957D3E3BE71247052F9FAA7323D3E11"
+        },
+        {
+          "path": "eng/RestaurantMenuPreview/메뉴화면검증.cs",
+          "sha256": "AAC317DC052A73BE4F8CDA950A01FCD9B8689CD3A97F82B344DBCB8B1F9BD622"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "planning-app-profile.v1",
+  "appId": "replace-app-id",
+  "projectPath": "REPLACE/project.csproj",
+  "platforms": ["Android"],
+  "fields": {
+    "navigation": { "status": "Unresolved", "value": "", "critical": true, "reason": "진입점과 기존 탐색 구조를 먼저 조사", "sources": [] },
+    "presentation": { "status": "Unresolved", "value": "", "critical": false, "reason": "기존 언어·색상·공용 UI를 먼저 조사", "sources": [] },
+    "authentication": { "status": "Unresolved", "value": "", "critical": true, "reason": "역할·권한·인증 만료 처리 조사. 토큰은 기록하지 않음", "sources": [] },
+    "server": { "status": "Unresolved", "value": "", "critical": true, "reason": "서버 설정 경계와 격리 조건만 기록. 주소의 자격증명·키는 기록하지 않음", "sources": [] },
+    "testEnvironment": { "status": "Unresolved", "value": "", "critical": true, "reason": "필요한 환경의 종류를 기록하고 실제 준비 여부는 작업 검토표로 분리", "sources": [] }
+  }
+}

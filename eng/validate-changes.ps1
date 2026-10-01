@@ -14,7 +14,11 @@ param(
 
     [switch] $NoRestore,
 
-    [switch] $PlanOnly
+    [switch] $PlanOnly,
+
+    [string] $PlanningWorkItemId,
+
+    [string] $PlanningLinksPath = "eng/planning-inquiries/app-production/role-app-links.json"
 )
 
 Set-StrictMode -Version Latest
@@ -22,6 +26,9 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $originalLocation = Get-Location
+$planningEvidence = $null
+$planningResult = "Failed"
+$planningChecks = New-Object "System.Collections.Generic.List[object]"
 
 function Add-ChangedFiles {
     param(
@@ -448,6 +455,14 @@ function Invoke-LoggedCommand {
         $ErrorActionPreference = $previousErrorActionPreference
     }
 
+    if ($null -ne $planningEvidence) {
+        $planningChecks.Add([pscustomobject]@{
+            name = $Name
+            result = $(if ($exitCode -eq 0) { "Passed" } else { "Failed" })
+            exitCode = $exitCode
+        })
+    }
+
     if ($exitCode -ne 0) {
         Write-Host "[fail] $Name (exit $exitCode)"
         Show-FailureSummary -LogPath $LogPath
@@ -593,8 +608,32 @@ try {
     }
 
     $runId = Get-Date -Format "yyyyMMdd-HHmmss"
+    if (-not [string]::IsNullOrWhiteSpace($PlanningWorkItemId)) {
+        # Fast/Task may finish in the same second. Never reuse another evidence run.
+        $runId += "-" + [Guid]::NewGuid().ToString("N")
+    }
     $runDirectory = Join-Path $repoRoot "artifacts\local\validation\$runId"
     New-Item -ItemType Directory -Path $runDirectory -Force | Out-Null
+
+    if (-not [string]::IsNullOrWhiteSpace($PlanningWorkItemId)) {
+        . (Join-Path $PSScriptRoot "common/planning-evidence.ps1")
+        $selectionJson = ConvertTo-Json -InputObject @($testPlans) -Depth 5 -Compress
+        $selectionBytes = [Text.Encoding]::UTF8.GetBytes($selectionJson)
+        $selectionHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($selectionBytes)).ToLowerInvariant()
+        $planningInputPaths = @($changedFiles + $buildTargets + @($testPlans | ForEach-Object { $_.Project }) | Sort-Object -Unique)
+        $planningInputRoots = @($planningInputPaths | Where-Object { $_ -match '\.csproj$' } | ForEach-Object {
+            (Split-Path -Parent $_) -replace '\\', '/'
+        } | Sort-Object -Unique)
+        $planningEvidence = Start-PlanningEvidenceContext -RepoRoot $repoRoot `
+            -WorkItemId $PlanningWorkItemId -LinksPath $PlanningLinksPath `
+            -StartPath "artifacts/local/validation/$runId/planning-evidence.start.json" -Kind "Validation" `
+            -InputPaths $planningInputPaths -InputRoots $planningInputRoots -ToolPaths @("eng/validate-changes.ps1") `
+            -Scope @{
+                level = $Level; configuration = $Configuration; noRestore = [bool]$NoRestore
+                buildTargets = @($buildTargets); testProjects = @($testPlans | ForEach-Object { $_.Project })
+                testModes = @($testPlans | ForEach-Object { $_.Mode }); testSelectionSha256 = $selectionHash
+            }
+    }
 
     Invoke-LoggedCommand `
         -Name "git diff --check" `
@@ -705,9 +744,21 @@ try {
             -LogPath (Join-Path $runDirectory ("tests-{0:D2}.log" -f $testIndex))
     }
 
+    $planningResult = "Passed"
     Write-Host "Validation complete"
     Write-Host "  Detailed logs: $runDirectory"
 }
 finally {
-    Set-Location -LiteralPath $originalLocation
+    try {
+        if ($null -ne $planningEvidence) {
+            $planningArtifacts = @(Get-ChildItem -LiteralPath $runDirectory -File | Where-Object {
+                $_.Extension -in @('.log', '.trx')
+            } | ForEach-Object { [IO.Path]::GetRelativePath($repoRoot, $_.FullName).Replace('\', '/') })
+            Complete-PlanningEvidenceContext -Context $planningEvidence -Result $planningResult `
+                -Checks $planningChecks.ToArray() -ArtifactPaths $planningArtifacts
+        }
+    }
+    finally {
+        Set-Location -LiteralPath $originalLocation
+    }
 }

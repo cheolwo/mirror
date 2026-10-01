@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "planning-app-intake-review.v1",
+  "workItemId": "REPLACE-WORK-ID",
+  "reviewedInputs": [],
+  "confirmation": { "state": "Pending" },
+  "executionApproval": { "state": "NotGranted", "workOrderRefs": [] },
+  "environment": [
+    { "id": "isolated-server", "state": "Unknown", "deliverableIds": ["business-tests", "screen-evidence"], "reason": "정확한 격리 서버·DB·인증 시험 준비 여부 미검토. 비밀값은 외부 보관" },
+    { "id": "screen-runtime", "state": "Unknown", "deliverableIds": ["screen-evidence"], "reason": "실제 API 연결 UI 실행 환경 미검토. 정적 시안은 별도 증거" },
+    { "id": "android-signing", "state": "Unknown", "deliverableIds": ["android-test-package"], "reason": "HTTPS 설정·저장소 밖 키·Android 도구 준비 여부 미검토. 비밀번호는 기록하지 않음" }
+  ]
+}
