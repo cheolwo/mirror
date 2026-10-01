@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "menu-ingredient-demand-scenario.v1",
+  "scenarioStableId": "scenario:franchise-menu-demand:sample:r1",
+  "authorityCode": "Simulation",
+  "autoCreatePurchaseOrder": false,
+  "orders": [
+    {
+      "requestStableId": "simulation-demand:store-gongsan:chicken-stew:r1",
+      "storeStableId": "store:delivery-observation:yeopgi-gongneung",
+      "menuStableId": "observed-menu:b090b456dc5f718cdf35142a",
+      "plannedServingCount": 200
+    },
+    {
+      "requestStableId": "simulation-demand:store-sangbong:beef-steam:r1",
+      "storeStableId": "store:delivery-observation:gyeongsangdo-sangbong",
+      "menuStableId": "observed-menu:da8f4841d74d27060b42b1e7",
+      "plannedServingCount": 80
+    },
+    {
+      "requestStableId": "simulation-demand:store-panda:risotto:r1",
+      "storeStableId": "store:delivery-observation:panda-pasta",
+      "menuStableId": "observed-menu:5d5257067db98353349001a4",
+      "plannedServingCount": 200
+    }
+  ]
+}

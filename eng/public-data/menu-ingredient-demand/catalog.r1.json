@@ -1,0 +1,266 @@
+{
+  "schemaVersion": "menu-ingredient-demand-catalog.v1",
+  "catalogStableId": "menu-ingredient-demand:delivery-observations:20260925:r1",
+  "foundation": {
+    "datasetId": "menu-ingredient-prices-20260924-r1",
+    "scopePath": "eng/public-data/menu-ingredient-prices/scope.r1.json",
+    "scopeSha256": "4dfef32ee9de1e45debe40a2c67b523cf597b679bc4d52a6ff65c35db6a6c7eb"
+  },
+  "sourceReview": {
+    "researchRevision": "1e4d757883b37eefc67903afa314f9430202800e24c7eef93b0015aa1e9eebfb",
+    "menuReviewSha256": "e428107e8418fbb595c5ada11b47eab8273bf1a34f720b39c7e2bc8f4278dd28",
+    "recipeLinksSha256": "20c827c3669548f9af090642821f97a117e294182f68cd5ddd85bde2f0418694",
+    "recipeSnapshotSha256": "bae7eff431556bbec9a8939efc4eb5a95191556d4f37b1d0973fd721058fa0ed",
+    "reviewedOn": "2026-09-24",
+    "actualBranchRecipeVerified": false
+  },
+  "estimateEvidenceStableId": "source:menu-ingredient-estimate:r1",
+  "use": "SimulationPlanningOnly;NoOperationalOrder;NotActualBranchRecipe;PendingHumanReview",
+  "menus": [
+    {
+      "menuStableId": "observed-menu:b090b456dc5f718cdf35142a",
+      "displayName": "로제메뉴 · 엽기닭볶음탕",
+      "storeDisplayName": "동대문 엽기떡볶이 공릉점",
+      "menuEvidence": {
+        "stableId": "source:delivery-menu-observation:b090b456dc5f718cdf35142a",
+        "classCode": "ObservedFact",
+        "stateCode": "RecordedDeliveryMenu",
+        "factScope": "StoreAndMenuNameOnly"
+      },
+      "recipeEvidence": {
+        "stableId": "source:mfds-recipe:2d9539bc64e2266ef5c3854487454655a3fea1ca346073c78836b153069b174a",
+        "classCode": "ReferenceCandidate",
+        "stateCode": "PendingReview",
+        "recordKey": "2d9539bc64e2266ef5c3854487454655a3fea1ca346073c78836b153069b174a",
+        "title": "토마토시금치 닭볶음탕",
+        "sourceKey": "mfds-cookrcp01",
+        "sourceContentChecksum": "cfb45815ab39304c395e79df188aae5096863113e3c4454fc490281b58ed644b",
+        "collectedAtUtc": "2026-07-21T08:16:01Z",
+        "originalUrl": "https://www.foodsafetykorea.go.kr/api/openApiInfo.do?menu_grp=MENU_GRP31&menu_no=661&show_cnt=10&start_idx=1&svc_no=COOKRCP01",
+        "matchScope": "ChickenStewCompositionOnly",
+        "actualBranchRecipeVerified": false
+      },
+      "ingredients": [
+        {
+          "ingredientId": "chicken",
+          "ingredientName": "닭고기",
+          "simulationProductStableId": "product:ingredient:chicken",
+          "referenceQuantityGrams": 55,
+          "sourceServingCount": 1,
+          "sourceServingBasisCode": "DeclaredOneServing",
+          "sourceExpression": "닭다리살 25g + 닭안심살 30g",
+          "minimumGramsPerServing": 49.5,
+          "maximumGramsPerServing": 60.5,
+          "estimateStateCode": "SimulationEstimate",
+          "confidenceCode": "Medium",
+          "rangeBasis": "공공 레시피 1인분 55g을 중심으로 ±10% 민감도 범위를 둔 Simulation 가정",
+          "purchaseUnitCode": "BOX",
+          "purchaseUnitContentQuantity": 10,
+          "contentUnitCode": "KGM"
+        },
+        {
+          "ingredientId": "tomato",
+          "ingredientName": "토마토",
+          "simulationProductStableId": "product:ingredient:tomato",
+          "referenceQuantityGrams": 50,
+          "sourceServingCount": 1,
+          "sourceServingBasisCode": "DeclaredOneServing",
+          "sourceExpression": "토마토 35g + 방울토마토 15g",
+          "minimumGramsPerServing": 45,
+          "maximumGramsPerServing": 55,
+          "estimateStateCode": "SimulationEstimate",
+          "confidenceCode": "Low",
+          "rangeBasis": "공공 변형 레시피 1인분 50g을 중심으로 ±10% 민감도 범위를 둔 Simulation 가정",
+          "purchaseUnitCode": "BOX",
+          "purchaseUnitContentQuantity": 5,
+          "contentUnitCode": "KGM"
+        },
+        {
+          "ingredientId": "onion",
+          "ingredientName": "양파",
+          "simulationProductStableId": "product:ingredient:onion",
+          "referenceQuantityGrams": 10,
+          "sourceServingCount": 1,
+          "sourceServingBasisCode": "DeclaredOneServing",
+          "sourceExpression": "양파 10g",
+          "minimumGramsPerServing": 9,
+          "maximumGramsPerServing": 11,
+          "estimateStateCode": "SimulationEstimate",
+          "confidenceCode": "Low",
+          "rangeBasis": "공공 변형 레시피 1인분 10g을 중심으로 ±10% 민감도 범위를 둔 Simulation 가정",
+          "purchaseUnitCode": "BAG",
+          "purchaseUnitContentQuantity": 10,
+          "contentUnitCode": "KGM"
+        },
+        {
+          "ingredientId": "potato",
+          "ingredientName": "감자",
+          "simulationProductStableId": "product:ingredient:potato",
+          "referenceQuantityGrams": 7,
+          "sourceServingCount": 1,
+          "sourceServingBasisCode": "DeclaredOneServing",
+          "sourceExpression": "감자 7g",
+          "minimumGramsPerServing": 6.3,
+          "maximumGramsPerServing": 7.7,
+          "estimateStateCode": "SimulationEstimate",
+          "confidenceCode": "Low",
+          "rangeBasis": "공공 변형 레시피 1인분 7g을 중심으로 ±10% 민감도 범위를 둔 Simulation 가정",
+          "purchaseUnitCode": "BOX",
+          "purchaseUnitContentQuantity": 20,
+          "contentUnitCode": "KGM"
+        },
+        {
+          "ingredientId": "garlic",
+          "ingredientName": "마늘",
+          "simulationProductStableId": "product:ingredient:garlic",
+          "referenceQuantityGrams": 3,
+          "sourceServingCount": 1,
+          "sourceServingBasisCode": "DeclaredOneServing",
+          "sourceExpression": "다진 마늘 3g",
+          "minimumGramsPerServing": 2.7,
+          "maximumGramsPerServing": 3.3,
+          "estimateStateCode": "SimulationEstimate",
+          "confidenceCode": "Low",
+          "rangeBasis": "공공 변형 레시피 1인분 3g을 중심으로 ±10% 민감도 범위를 둔 Simulation 가정",
+          "purchaseUnitCode": "BAG",
+          "purchaseUnitContentQuantity": 1,
+          "contentUnitCode": "KGM"
+        }
+      ],
+      "unresolvedRecipeComponents": [
+        "로제메뉴의 품목과 재료가 미확인",
+        "시금치·스파게티면·양념은 공공 변형 레시피 구성일 뿐 매장 사용 미확인"
+      ]
+    },
+    {
+      "menuStableId": "observed-menu:da8f4841d74d27060b42b1e7",
+      "displayName": "1인 우삼겹 야채고기찜",
+      "storeDisplayName": "갱상도 야채고기찜 상봉점",
+      "menuEvidence": {
+        "stableId": "source:delivery-menu-observation:da8f4841d74d27060b42b1e7",
+        "classCode": "ObservedFact",
+        "stateCode": "RecordedDeliveryMenu",
+        "factScope": "StoreAndMenuNameOnly"
+      },
+      "recipeEvidence": {
+        "stableId": "source:mfds-recipe:6c6b5e6a316b9957acd26adcb3d32e3a136890fc9136dc8b3f83249a078a7b67",
+        "classCode": "ReferenceCandidate",
+        "stateCode": "PendingReview",
+        "recordKey": "6c6b5e6a316b9957acd26adcb3d32e3a136890fc9136dc8b3f83249a078a7b67",
+        "title": "소고기찜과 검은콩수제비",
+        "sourceKey": "mfds-cookrcp01",
+        "sourceContentChecksum": "cc32eafc7a1a81916fa8e8fead5e7471483ea1bb0350374bd88d092535d3b576",
+        "collectedAtUtc": "2026-07-21T08:16:01Z",
+        "originalUrl": "https://www.foodsafetykorea.go.kr/api/openApiInfo.do?menu_grp=MENU_GRP31&menu_no=661&show_cnt=10&start_idx=1&svc_no=COOKRCP01",
+        "matchScope": "SteamedBeefCompositionOnly",
+        "actualBranchRecipeVerified": false
+      },
+      "ingredients": [
+        {
+          "ingredientId": "beef",
+          "ingredientName": "소고기",
+          "simulationProductStableId": "product:ingredient:beef",
+          "referenceQuantityGrams": 200,
+          "sourceServingCount": 2,
+          "sourceServingBasisCode": "DeclaredTwoServingsDivided",
+          "sourceExpression": "소고기 부채살 200g / 2인분",
+          "minimumGramsPerServing": 90,
+          "maximumGramsPerServing": 110,
+          "estimateStateCode": "SimulationEstimate",
+          "confidenceCode": "Medium",
+          "rangeBasis": "공공 레시피 환산 100g을 중심으로 ±10% 민감도 범위를 둔 Simulation 가정",
+          "purchaseUnitCode": "BOX",
+          "purchaseUnitContentQuantity": 5,
+          "contentUnitCode": "KGM"
+        }
+      ],
+      "unresolvedRecipeComponents": [
+        "공공자료의 부채살을 매장 우삼겹 부위 또는 규격으로 간주하지 않음",
+        "채소는 개·줌·봉 단위가 섞여 있어 중량 환산하지 않음",
+        "해산물·검은콩수제비는 공공 변형 레시피 구성일 뿐 매장 사용 미확인"
+      ]
+    },
+    {
+      "menuStableId": "observed-menu:5d5257067db98353349001a4",
+      "displayName": "자꾸 생각나는 스파이시 크림 리조또",
+      "storeDisplayName": "판다파스타 본점",
+      "menuEvidence": {
+        "stableId": "source:delivery-menu-observation:5d5257067db98353349001a4",
+        "classCode": "ObservedFact",
+        "stateCode": "RecordedDeliveryMenu",
+        "factScope": "StoreAndMenuNameOnly"
+      },
+      "recipeEvidence": {
+        "stableId": "source:mfds-recipe:b7192e813168bddf25c027f537b9018d5b21bc09d52d3d01d15984f691123146",
+        "classCode": "ReferenceCandidate",
+        "stateCode": "PendingReview",
+        "recordKey": "b7192e813168bddf25c027f537b9018d5b21bc09d52d3d01d15984f691123146",
+        "title": "버섯리조또",
+        "sourceKey": "mfds-cookrcp01",
+        "sourceContentChecksum": "8d54828a7030447add9edd7799ef2ced28982b1fbeb92540e3b9337903417eed",
+        "collectedAtUtc": "2026-07-21T08:15:59Z",
+        "originalUrl": "https://www.foodsafetykorea.go.kr/api/openApiInfo.do?menu_grp=MENU_GRP31&menu_no=661&show_cnt=10&start_idx=1&svc_no=COOKRCP01",
+        "matchScope": "RisottoCookingTypeOnly",
+        "actualBranchRecipeVerified": false
+      },
+      "ingredients": [
+        {
+          "ingredientId": "rice",
+          "ingredientName": "쌀",
+          "simulationProductStableId": "product:ingredient:rice",
+          "referenceQuantityGrams": 150,
+          "sourceServingCount": null,
+          "sourceServingBasisCode": "RecipeYieldUnstated_AssumedOnePlanningServing",
+          "sourceExpression": "불린 쌀 150g, 원문 인분 수 미표기",
+          "minimumGramsPerServing": 135,
+          "maximumGramsPerServing": 165,
+          "estimateStateCode": "SimulationEstimate",
+          "confidenceCode": "Low",
+          "rangeBasis": "원문 전체량을 1회 계획 단위로 둔 뒤 ±10%를 적용한 Simulation 가정; 실제 1인분 확정 아님",
+          "purchaseUnitCode": "BAG",
+          "purchaseUnitContentQuantity": 20,
+          "contentUnitCode": "KGM"
+        },
+        {
+          "ingredientId": "onion",
+          "ingredientName": "양파",
+          "simulationProductStableId": "product:ingredient:onion",
+          "referenceQuantityGrams": 20,
+          "sourceServingCount": null,
+          "sourceServingBasisCode": "RecipeYieldUnstated_AssumedOnePlanningServing",
+          "sourceExpression": "양파 20g, 원문 인분 수 미표기",
+          "minimumGramsPerServing": 18,
+          "maximumGramsPerServing": 22,
+          "estimateStateCode": "SimulationEstimate",
+          "confidenceCode": "Low",
+          "rangeBasis": "원문 전체량을 1회 계획 단위로 둔 뒤 ±10%를 적용한 Simulation 가정",
+          "purchaseUnitCode": "BAG",
+          "purchaseUnitContentQuantity": 10,
+          "contentUnitCode": "KGM"
+        },
+        {
+          "ingredientId": "garlic",
+          "ingredientName": "마늘",
+          "simulationProductStableId": "product:ingredient:garlic",
+          "referenceQuantityGrams": 10,
+          "sourceServingCount": null,
+          "sourceServingBasisCode": "RecipeYieldUnstated_AssumedOnePlanningServing",
+          "sourceExpression": "육수용 마늘 10g, 원문 인분 수 미표기",
+          "minimumGramsPerServing": 9,
+          "maximumGramsPerServing": 11,
+          "estimateStateCode": "SimulationEstimate",
+          "confidenceCode": "Low",
+          "rangeBasis": "원문 전체량을 1회 계획 단위로 둔 뒤 ±10%를 적용한 Simulation 가정",
+          "purchaseUnitCode": "BAG",
+          "purchaseUnitContentQuantity": 1,
+          "contentUnitCode": "KGM"
+        }
+      ],
+      "unresolvedRecipeComponents": [
+        "원문 인분 수가 없어 1회 계획 단위는 Simulation 가정",
+        "버섯·생크림·버터·건새우·멸치는 12개 공통 재료 기반 밖이므로 이번 계산에서 제외",
+        "매장 스파이시 양념과 실제 쌀·크림 규격 미확인"
+      ]
+    }
+  ]
+}

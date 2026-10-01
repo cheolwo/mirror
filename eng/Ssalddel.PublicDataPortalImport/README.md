@@ -1,5 +1,12 @@
 # 공공데이터 소표본 검토 반입
 
+## 주소정보 공개 도로명 소표본
+
+- `juso-road-name-preview <repo-root>`: 확보된 202608 공식 ZIP과 영수증을 검사하고 중랑구 핵심4도로·읍면동 관계11행을 선택한다. DB 접근 없음.
+- `juso-road-name-self-test`: 열·식별자·중복·상태·결손·판본 경계 검사. 실제 원본 확보와 구분한다.
+- `juso-road-name-apply` / `juso-road-name-verify`: 기존 로컬 공공자료 원장에 비공개·검토보류 반입 및 독립 재조회. 동일 입력 재반입의 신규0을 확인한다. 신규 파일 다운로드·스키마 변경 없음.
+- 자료: `artifacts/local/public-data/diorama-spatial-20260926-r1/`. 영수증의 이용조건 확인과 ZIP hash를 검증하며 원본·21열·도로명코드·법정동 관계를 보존한다. 공개/Runtime·행정동 경계·건물/출입구 결속은 없음. [r43 기록](../../docs/AI/Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/public-spatial-data-first.collection.r43.md).
+
 ## 서울 중간 공간 경계 원본
 
 - `seoul-boundaries-acquire <repo-root>`: 서울 공식 OA-22160/22161 역사적 2023-10-31 ZIP만 수집. 응답 8MiB/45초, redirect/retry 없음. 비어 있지 않은 수집 폴더 재사용 거부.

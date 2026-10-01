@@ -9,6 +9,28 @@ using 살뜰.Services.External.PublicData.Korea;
 var result = new Dictionary<string, object?> { ["databaseWriteAttempted"]=false, ["committed"]=false };
 try
 {
+    const string administrativeJurisdictionLedgerRecoveryPrefix =
+        "admin-dong-jurisdiction-ledger-recover-";
+    if (args.Length == 2
+        && args[0].StartsWith(administrativeJurisdictionLedgerRecoveryPrefix, StringComparison.Ordinal))
+    {
+        await 행정동관할원장복구.RunAsync(
+            args[0][administrativeJurisdictionLedgerRecoveryPrefix.Length..],
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])),
+            result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+        return 0;
+    }
+    if (args.Length == 2 && args[0].StartsWith("juso-road-name-", StringComparison.Ordinal))
+    {
+        await 도로명공공자료.RunAsync(args[0]["juso-road-name-".Length..], Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])), result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true })); return 0;
+    }
+    if (args.Length == 2 && args[0].StartsWith("menu-demand-", StringComparison.Ordinal))
+    {
+        await 메뉴재료수요분석.RunAsync(args[0]["menu-demand-".Length..], Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])), result);
+        Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true })); return 0;
+    }
     if (args.Length == 2 && args[0].StartsWith("menu-foundation-", StringComparison.Ordinal))
     {
         await 메뉴재료기반Query.RunAsync(args[0]["menu-foundation-".Length..], Path.TrimEndingDirectorySeparator(Path.GetFullPath(args[1])), result);

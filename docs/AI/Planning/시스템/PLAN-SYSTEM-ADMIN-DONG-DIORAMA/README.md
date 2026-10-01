@@ -1,4 +1,92 @@
-# [기획 · 월드·공간·배치 · PLAN-SYSTEM-ADMIN-DONG-DIORAMA · r22]
+# [기획 · 월드·공간·배치 · PLAN-SYSTEM-ADMIN-DONG-DIORAMA · r39]
+
+## r39 소수 지역 집중 정밀화
+
+[소수 지역 집중 정밀화 r39](focused-area-refinement.decision.r39.md)는 사용자 요청에 따라 30개 일괄 확장을 보류하고, 면목제3·8동 사가정역 주변의 교차로·연결 골목 한 구간을 현재 작업 대상으로 좁힌다. 면목제7동·면목본동은 후속 후보로만 두며 동시에 시작하지 않는다. 기존 30개 자료와 증거는 보존하고, 구간별 건물·길 관계의 구체적 개선을 완료 기준으로 삼는다.
+
+## r38 수평 등고선 흔적 Unity 검토 완료
+
+[수평 등고선 흔적 r38](thirty-admin-dong-horizontal-contour-trace.implementation.r38.md)은 높이 속성을 읽지 않은 860개 후보·184,747개 선분을 기존 Mesh에 적용했다. 실제 Play Mode·Game View 31장과 Unity 집중 시험 44/44, Scene hash 불변을 확인했다. 이는 범위 축소 전 완료한 기준선이며 높이·지형 표면의 정밀화 완료는 아니다.
+
+## r37 30개 행정동 차선표시 선형 비공개 Unity 검토
+
+[차선표시 선형 비공개 후보·Unity 검토 r37](thirty-admin-dong-lane-marking-private-generation.implementation.r37.md)은 서울 열린데이터광장 `OA-15537`의 2021 차선 SHP를 2023 역사 경계 30개로 잘라 후보 23,360개·표시 선분 60,586개를 결속했다. 공통 ENU millimeter 좌표에서 원천 절단 선분 60,646개를 표시 60,586개·1mm 이하 2개·물리 중복 58개로 닫았고, 관리번호 원문 대신 hash stable ID만 전달했다.
+
+Unity 실제 Play Mode·Game View에서 overview 30장과 면목제3·8동 detail 1장을 다시 검증했다. 차선 정점/인덱스 242,344/363,516을 기존 2×2 결합 Mesh에 추가했고, 모든 모듈은 Renderer 4·MeshFilter 4·Collider 0이다. 집중 시험 38/38, PNG 31개 hash 일치, Scene hash 불변을 확인했다. 이는 역사적 선형 윤곽이며 현재 차선·방향·통행·정지선·신호·보도 권위와 공개·Runtime·Traversal·Gameplay는 계속 `false`다.
+
+## r36 지형 높이 공식 규정 근거 심화 감사
+
+[지형 높이 공식 규정 근거 심화 감사 r36](thirty-admin-dong-terrain-official-standard-evidence.audit.r36.md)은 정확한 ZIP이 1:5,000 `N3L_F001/N3P_F002`임을 확인하고, `F001.CONT`·`F002.NUME`를 국가 속성목록·지형도 도식 규정·공간정보 법정 높이 기준과 연결했다. `CONT/NUME`는 공식 규정으로 해석한 metre 수치이고 국가 기준은 인천만 평균해수면·대한민국 수준원점이다.
+
+그러나 ZIP XML에 수직 CRS·높이 단위·필드 변환 이력이 없고 `HEIGHT` 정의도 없다. 다음 세대는 `CONT/NUME`를 읽고 `HEIGHT`를 동등성 감사에만 써야 하며, export-level 메타데이터와 전용 Unity consumer가 없으므로 전체 상태는 `PrecisionTerrainBlockedBySourceMetadataAndConsumerContract`를 유지한다.
+
+## r34 30개 행정동 Unity 검토 화면 가독성 개선
+
+[Unity 검토 화면 가독성 개선 r34](thirty-admin-dong-unity-review-readability.implementation.r34.md)은 전체 동 overview의 큰 근거·집계 패널을 82px 핵심 패널로 줄이고, 면목제3·8동 detail에는 전체 근거와 선택 건물 정보를 유지했다. 같은 v5 입력·도형·Mesh를 실제 Unity Play Mode·Game View에서 다시 검증했고 evidence v6 overview 30장+detail 1장, PNG hash 불일치 0, 집중 시험 32/32, Scene hash 불변을 확인했다.
+
+이는 검토 화면에서 도형을 더 넓게 보는 표현 개선이며 자료 권위 승격이 아니다. 역사 경계·현재성·주소·필지·통행·생태 결손과 공개·DB·Mongo·current·Runtime·Traversal·Gameplay 차단은 유지한다.
+
+## r33 30개 행정동 정밀 지형 consumer 준비도 감사
+
+[정밀 지형 consumer 준비도 감사 r33](thirty-admin-dong-terrain-consumer-readiness-audit.implementation.r33.md)은 r29의 최근접 원천 500m 초과 47개가 모두 물리 tile `x5/z6`의 단일 연결 성분이며, 신내1동 중앙 core와 30개 역사 행정동 polygon 밖 60m halo에만 있음을 확인했다. `core+30m`까지는 초과 0개지만 이 값만으로 halo를 줄이거나 자료를 삭제하지 않는다.
+
+정확한 높이 필드의 물리 단위·수직 datum·기준면과 r29 전용 Unity consumer 계약이 없으므로 상태는 `PrecisionTerrainBlockedBySourceMetadataAndConsumerContract`다. Unity 높이 Mesh·Collider·건물/도로 접지·공개·Runtime·Traversal·Gameplay에는 적용하지 않았다.
+
+## r32 30개 행정동 비오톱 외곽선 Unity 비공개 검토
+
+[비오톱 비공개 후보·Unity 검토 번들 구현 기록 r32](thirty-admin-dong-biotope-private-generation.implementation.r32.md)은 2025 비오톱을 2023 역사 경계와 교차해 후보 3,181개·polygon part 3,408개·내부 ring 108개를 만들고, 외곽·내부 ring을 채우지 않은 선으로 기존 2x2 결합 Mesh에 중첩했다. Unity Mono의 JSON zero 내용 hash 규칙을 생성기와 맞춰 30개 bundle 전체를 다시 검산했다.
+
+실제 Unity `6000.5.6f1` Play Mode·Game View에서 overview 30장과 면목제3·8동 detail 1장을 확인했다. 비오톱 정점/인덱스 408,348/612,522, 모듈별 Renderer 4·Collider 0, 집중 시험 32/32, PNG 31개 hash 일치, canonical Scene hash 불변을 기록했다. 현재 생태·종·법적·안전·통행 의미와 공개·DB·Mongo·current·Runtime·Traversal·Gameplay 권위는 성립하지 않는다.
+
+## r31 30개 역사 행정동 방향표시 비공개 Unity 검토
+
+[방향표시 비공개 후보·검토 번들 구현 기록 r31](thirty-admin-dong-road-direction-private-generation.implementation.r31.md)은 공식 방향표시 8,415개를 모두 의미 미해석 후보로 유지한 채 v4 검토 입력에 결속했다. Unity 실제 Play Mode·Game View에서 30개 동 overview와 면목제3·8동 detail 1장을 확인했고, 화살표 0개·방향표시 정점 33,660개·모듈별 Renderer 4·Collider 0, 집중 시험 26/26, canonical Scene hash 불변을 기록했다.
+
+기존 canonical Scene 오류 8건은 남아 있으며 현행 경계·공개·DB·Mongo·current pointer·Runtime·Traversal·Gameplay·E 승격은 성립하지 않는다.
+
+## r30 30개 행정동 방향표시·비오톱 공식 원본 감사
+
+[방향표시·비오톱 공식 원본 감사 r30](thirty-admin-dong-direction-biotope-source-audit.implementation.r30.md)은 `OA-15536`의 2026-09-10 방향표시 158,373점과 `OA-21145`의 2025 비오톱 42,544 polygon을 공식 최신 첨부로 확보해 hash·CRS·필드·행 수를 고정했다. 역사 경계에서 방향표시 8,415점과 비오톱 polygon 교차 3,185건이 지정 30/30개 동에 있다. 원본·페이지·영수증은 Git 제외 로컬 폴더에 보존했다.
+
+방향표시 각도와 종류는 노면 기호 표현 후보일 뿐 접근·차로·통행 권위가 아니며, 길이 단위는 미확인이다. 비오톱은 법적 효력이 없는 유형·평가 참고자료이며 생물종 현장 관찰·안전·이동 규칙이 아니다. r30 원본 감사 시점에는 private candidate generation과 Unity 검토가 미착수였고, 이후 r31·r32가 비공개 화면 검토까지만 진행했다. 현행 경계 재귀속, 공개·DB·Mongo·current·Runtime·Traversal·Gameplay는 계속 비승인 상태다.
+
+## r29 30개 행정동 지형 공통 격자 비공개 검토 세대
+
+[지형 공통 격자 비공개 검토 구현 기록 r29](thirty-admin-dong-terrain-private-generation.implementation.r29.md)은 `OA-22241`의 2025 등고선 ZIP만 사용해 30개 동·148개 물리 tile을 공통 ENU에서 한 번 보간했다. 500m tile, 60m halo, 10m 간격의 실제 union 391,619개 key를 만들고 공유 key 153,543개와 전역–tile 비교 195,793회의 bit 불일치 0을 확인했다. 사용하지 않는 사각 envelope 228,700개 key는 보간하거나 평지로 채우지 않았다.
+
+Generation `D0AAE02B...B131F`은 450개 파일·8,609,465 bytes이며 self-test 7/7·build·verify·재실행 `changedFiles=0`·completion 449/449 hash 대조를 통과했다. 수직 datum·높이 단위가 확인되지 않았고 최근접 원천 500m 초과 표본 47개가 있어 구조 검토는 통과하되 `precisionTerrainReady=false`다. 공개·DB·Mongo·current·Unity·Mesh·Collider·Runtime·Traversal·Gameplay는 모두 차단했다.
+
+## r28 30개 행정동 등고선·표고 원본 감사
+
+[등고선·표고 원본 감사와 지형판 생성 계약 r28](thirty-admin-dong-terrain-contour-audit.implementation.r28.md)은 서울 열린데이터광장 `OA-22241`의 공식 HTML과 두 ZIP을 익명 POST로 확보해 길이·SHA-256·내부 SHP·`EPSG:5174`를 검증했다. 2025-03-20 `서울시 등고선.zip`과 2023-12-26 `서울시 경사도.zip`은 범위·레코드·hash가 다른 별도 판본이므로 섞지 않는다. 첫 지형 후보는 등고선 8,570건과 표고점 45,870건을 갖는 2025 ZIP 하나만 쓴다.
+
+역사 경계와의 임시 대조에서 30/30개 동 모두 표고점과 등고선이 확인됐다. 다음 생성은 30개 동을 한 번에 보간한 scope-global 격자, 공통 수직 기준, 인접 tile의 `sharedEdgeBitEquality`를 사용해야 한다. 수직 datum과 높이 단위는 원천에 명시되지 않아 미확인으로 남겼고, 표면·Mesh, DB·Mongo, current pointer, 공개·배포, Unity 적용은 모두 `false`다.
+
+## r27 30개 행정동 역사 보행망 Unity 비공개 검토
+
+[역사 보행망 Unity 비공개 검토 구현 기록 r27](thirty-admin-dong-walk-network-unity-review.implementation.r27.md)은 r26 후보의 링크를 시작·끝점으로 줄이지 않고 54,574개 ordered path 점 전체로 결속했다. 최종 generation `29764F2B...F2972915`은 30개 동의 노드 17,267개·링크 조각 23,472개·노드와 path 점 합계 71,841개를 고정하고, 원천 길이 대비 전체 차이 0.585893m와 조각별 최대 차이 0.002409m를 검증했다. 정밀 ENU 위치가 들어가므로 산출물은 로컬 비공개로만 취급한다.
+
+Unity의 v1 geometry·v2 observation 호환을 유지하며 v3 walk 계약과 기존 2x2 결합 Mesh 표현을 추가했다. 집중 EditMode 22/22와 실제 Play Mode·Game View를 통과했고 30개 overview와 면목제3·8동 detail을 남겼다. 모든 모듈은 Renderer 4·Collider 0이고 Scene hash는 실행 전후 같으며 저장하지 않았다. 기존 canonical Scene 오류 8건은 남아 있어 Console 0이나 서버 통합을 주장하지 않는다. 2020년 보행망·역사 경계·불완전 halo의 private review일 뿐 current pointer·공개·DB·Runtime·traversal·gameplay 권위는 계속 `false`다.
+
+## r26 30개 행정동 역사 보행망 비공개 검토 세대
+
+[역사 보행망 비공개 검토 구현 기록 r26](thirty-admin-dong-walk-network-private-review.implementation.r26.md)는 `OA-21208`의 2020년 기준 WGS84 자료를 2026-09-26 단일 영수증과 현재 CSV hash에 결속한다. 원천 59,724행에서 노드 17,267개와 링크 조각 23,472개, 합계 40,739개를 30개 역사 행정동 후보로 만들었고 generation `7A0887F6...A508FA6DD`의 5개 파일을 다시 계산해 `verify PASS`를 확인했다. 과거 r1 동결 scope를 복구하거나 서로 다른 내려받기 세대를 섞지 않았다.
+
+결과는 Git 제외 로컬 비공개 후보이며 현재 통행 가능성이 아니다. 정확 좌표 공개, DB·Mongo 저장, current pointer, Unity 적용·Runtime, traversal·gameplay 권위는 모두 `false`다. 2020년 보행망·2023년 역사 경계의 판본 차이, 경계 halo, 보도 폭·연석·출입구·방향·정지선·신호 결손은 그대로 남는다.
+
+## r25 30개 행정동 비공개 관찰 오버레이
+
+[비공개 관찰 오버레이 구현 기록 r25](thirty-admin-dong-private-observation-overlay.implementation.r25.md)는 공식 포털 POST 다운로드로 복구한 `OA-23081` 2026-08-24 XLSX와 `OA-15534` 2025-08-14 ZIP을 기존 역사 경계에 다시 결속한다. 횡단보도 1,533개(보행신호 설치 관측 933개)와 교차로 554개를 원천 관리번호·명칭·주소·업체 식별 없이 hash stable ID와 공통 ENU millimeter 중심의 `privateObservationOverlays v1`으로 만들었다. r2/r3 검토 generation `4D94046D...FE3971`은 30개 bundle과 index·completion, 첫 생성 32파일을 만들고 즉시 `verify PASS`를 확인했다. 공개 `DisplayOverlays`는 계속 0이며 current pointer·DB·Mongo·public·runtime·traversal·gameplay는 사용하거나 바꾸지 않았다.
+
+과거 문서의 MySQL 저장 완료 기록과 달리 현재 `hongdal_dev`의 G2a~G4b 대상 행은 각각 0이고, Mongo는 인증 실패로 현재 상태를 재확인하지 못했다. Unity 비공개 관찰 overlay는 r25에서 실제 Play Mode·Game View까지 확인했으며, 이어진 G3c 역사 보행망의 생성·Unity 검토는 r26·r27에 별도 증거로 남겼다. 후속은 최신 `OA-15536` → `OA-22241` 지형·`OA-21145` 비오톱 → `OA-22784` 250m 생활인구 → 현행 JUSO 승인 순이다.
+
+## r24 30개 행정동 공통 깊이 슬롯 첫 구현
+
+[30개 행정동 공통 깊이 슬롯 구현 r24](thirty-admin-dong-common-depth-slots.implementation.r24.md)는 별도 Unity 저장소의 기존 행정동 상태 사본·검토 View에 역세권과 의미를 맞춘 행정동 전용 8슬롯 구조를 붙인다. 정확한 30개 scope 모두 같은 슬롯을 갖지만 현재 비공개 검토 가능 범위는 `DataEvidence / BaseSpatialPresentation / Interaction`뿐이고, 나머지는 근거에 따라 `Blocked / NotProvided`다. 역사 경계·건물·2026-08-12 NodeLink·행정동-법정동 원본을 기록 hash로 복구해 r2 30개 모듈을 다시 생성·검증했고, MySQL 관할 원장 25,739행을 멱등 적용·독립 재조회했다. Unity 검토 bundle 30개 export, 집중 EditMode 13/13, 실제 Play Mode Game View 31장과 Scene hash 불변을 확인했다. Mongo candidate는 보존 볼륨 인증 실패로 쓰기 전에 중단했고 current pointer는 바꾸지 않았다. JUSO 현행 경계·건물·건물군·출입구는 계속 신청·승인이 필요하며, 실제 마우스 입력과 나머지 결손 자료 보완은 남아 있다.
+
+## r23 30개 행정동의 사가정 참조 깊이 확장
+
+[30개 행정동 단계 계획 r23](thirty-admin-dong-sagajeong-depth-rollout.plan.r23.md)은 사용자 최신 방향에 따라 면목제3·8동만 깊게 만드는 우선순위를 30개 행정동의 단계적 깊이 확장으로 넓힌다. 30개 모두 역사 경계 기반 기초 모듈·G6 화면이 이미 있고 보존 PNG30장의 현재 hash도 일치했다. 현행 공간 정본은 r16의 경계→동일 세대 건물/건물군→출입구 순서로 30개 전체에 적용하고, 화면 Adapter의 첫 다른 동 검증은 면목본동에서 시작한다. 사가정 전용 값은 복사하지 않으며 현재 원본·출입구·통행 결손과 공개 차단을 유지한다.
 
 ## r22 진행 음식 관찰 연결 보완
 
