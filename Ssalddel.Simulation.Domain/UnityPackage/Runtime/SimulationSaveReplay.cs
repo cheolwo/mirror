@@ -148,6 +148,8 @@ namespace Ssalddel.Simulation.Domain
                     SeasonalOperationsCampaign =
                         CloneSeasonalOperationsCampaignState(
                             seasonalOperationsCampaignState),
+                    FranchiseSupply = CloneFranchiseSupplyState(
+                        franchiseSupplyState),
                 };
                 if (worldAssetPlacement != null)
                 {
@@ -197,6 +199,12 @@ namespace Ssalddel.Simulation.Domain
                     package.SeasonalOperationsCampaignBaseSchemaVersion =
                         package.SchemaVersion;
                     package.SchemaVersion = SimulationSaveSchemaVersions.V32;
+                }
+                if (package.FranchiseSupply != null)
+                {
+                    package.FranchiseSupplyBaseSchemaVersion =
+                        package.SchemaVersion;
+                    package.SchemaVersion = SimulationSaveSchemaVersions.V33;
                 }
                 package.ReplayHash = SimulationReplayHasher.Calculate(package);
                 return SimulationSaveReplayCloner.ClonePackage(package);

@@ -46,7 +46,7 @@ public sealed class SimulationServerHttpBoundaryTests
         var hash = Convert.ToHexString(SHA256.HashData(
                 Encoding.UTF8.GetBytes(string.Join("\n", manifest))))
             .ToLowerInvariant();
-        Assert.Equal(183, manifest.Length);
+        Assert.Equal(192, manifest.Length);
         Assert.Contains(
             "GET api/simulation/v1/sessions/{sessionStableId}/nature-survival/observation",
             manifest);
@@ -74,8 +74,35 @@ public sealed class SimulationServerHttpBoundaryTests
         Assert.Contains(
             "POST api/simulation/v1/sessions/{sessionStableId}/seasonal-operations-campaign/advance-commands",
             manifest);
+        Assert.Contains(
+            "GET api/simulation/v1/sessions/{sessionStableId}/franchise-supply",
+            manifest);
+        Assert.Contains(
+            "POST api/simulation/v1/sessions/{sessionStableId}/franchise-supply/initialization-previews",
+            manifest);
+        Assert.Contains(
+            "POST api/simulation/v1/sessions/{sessionStableId}/franchise-supply/initialization-commands",
+            manifest);
+        Assert.Contains(
+            "POST api/simulation/v1/sessions/{sessionStableId}/franchise-supply/sourcing-agreement-previews",
+            manifest);
+        Assert.Contains(
+            "POST api/simulation/v1/sessions/{sessionStableId}/franchise-supply/sourcing-agreement-commands",
+            manifest);
+        Assert.Contains(
+            "POST api/simulation/v1/sessions/{sessionStableId}/franchise-supply/store-supply-offer-previews",
+            manifest);
+        Assert.Contains(
+            "POST api/simulation/v1/sessions/{sessionStableId}/franchise-supply/store-supply-offer-commands",
+            manifest);
+        Assert.Contains(
+            "POST api/simulation/v1/sessions/{sessionStableId}/franchise-supply/store-order-previews",
+            manifest);
+        Assert.Contains(
+            "POST api/simulation/v1/sessions/{sessionStableId}/franchise-supply/store-order-commands",
+            manifest);
         Assert.Equal(
-            "5092c56ecf79403bdc8333f4a3ad2e50f554bf2c5027378e19c4de01443b35c6",
+            "34b3fd0d540fe5346a18e49b7609999db7f873de35bfbd129c43dffe3aab4d8f",
             hash);
     }
 

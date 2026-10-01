@@ -37,6 +37,8 @@ namespace Ssalddel.Simulation.Domain
                     source.HexagramCampaignBaseSchemaVersion,
                 SeasonalOperationsCampaignBaseSchemaVersion =
                     source.SeasonalOperationsCampaignBaseSchemaVersion,
+                FranchiseSupplyBaseSchemaVersion =
+                    source.FranchiseSupplyBaseSchemaVersion,
                 SessionCreateRequest = CloneCreateRequest(source.SessionCreateRequest),
                 Snapshot = 경영SimulationSessionAggregate.Clone(source.Snapshot),
                 WorldInventory = 경영SimulationSessionAggregate.CloneWorldInventory(
@@ -92,6 +94,8 @@ namespace Ssalddel.Simulation.Domain
                 SeasonalOperationsCampaign = 경영SimulationSessionAggregate
                     .CloneSeasonalOperationsCampaignState(
                         source.SeasonalOperationsCampaign),
+                FranchiseSupply = 경영SimulationSessionAggregate
+                    .CloneFranchiseSupplyState(source.FranchiseSupply),
             };
 
         public static Simulation행위기록LedgerSnapshot?
@@ -349,6 +353,12 @@ namespace Ssalddel.Simulation.Domain
                     경영SimulationSessionAggregate
                         .CloneSeasonalOperationsCampaignState(
                             source.SeasonalOperationsCampaignState),
+                FranchiseSupplyClientRequestId =
+                    source.FranchiseSupplyClientRequestId,
+                FranchiseSupplyCommandSignature =
+                    source.FranchiseSupplyCommandSignature,
+                FranchiseSupplyState = 경영SimulationSessionAggregate
+                    .CloneFranchiseSupplyState(source.FranchiseSupplyState),
                 WorldInteractionInvocation = source.WorldInteractionInvocation == null
                     ? null
                     : 경영SimulationSessionAggregate.CloneWorldInteractionInvocation(

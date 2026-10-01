@@ -42,6 +42,7 @@ namespace Ssalddel.Simulation.Contracts
         public const string V30 = "simulation-save.v30";
         public const string V31 = "simulation-save.v31";
         public const string V32 = "simulation-save.v32";
+        public const string V33 = "simulation-save.v33";
     }
 
     public static class SimulationReplayHashAlgorithmCodes
@@ -88,6 +89,8 @@ namespace Ssalddel.Simulation.Contracts
             "HexagramCampaignStateTransition";
         public const string SeasonalOperationsCampaignStateTransition =
             "SeasonalOperationsCampaignStateTransition";
+        public const string FranchiseSupplyChainStateTransition =
+            "FranchiseSupplyChainStateTransition";
     }
 
     [SsalddelCodeMetadata(
@@ -187,6 +190,12 @@ namespace Ssalddel.Simulation.Contracts
             SeasonalOperationsCampaignState { get; set; }
         public SimulationWorldInteractionInvocationRecord? WorldInteractionInvocation
             { get; set; }
+        public string FranchiseSupplyClientRequestId { get; set; }
+            = string.Empty;
+        public string FranchiseSupplyCommandSignature { get; set; }
+            = string.Empty;
+        public 프랜차이즈공급망StateSnapshot? FranchiseSupplyState
+            { get; set; }
     }
 
     public sealed class SimulationFacilityDamageQueueRequest
@@ -221,6 +230,8 @@ namespace Ssalddel.Simulation.Contracts
             = string.Empty;
         public string SeasonalOperationsCampaignBaseSchemaVersion { get; set; }
             = string.Empty;
+        public string FranchiseSupplyBaseSchemaVersion { get; set; }
+            = string.Empty;
         public 경영SimulationSession생성Request SessionCreateRequest { get; set; }
             = new 경영SimulationSession생성Request();
         public 경영SimulationSessionSnapshot Snapshot { get; set; }
@@ -253,6 +264,8 @@ namespace Ssalddel.Simulation.Contracts
             { get; set; }
         public Simulation절기운영CampaignStateSnapshot?
             SeasonalOperationsCampaign { get; set; }
+        public 프랜차이즈공급망StateSnapshot? FranchiseSupply
+            { get; set; }
     }
 
     public sealed class SimulationSessionRestoreResult

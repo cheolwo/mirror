@@ -13,6 +13,30 @@ namespace Ssalddel.Simulation.Domain
         public static string Calculate(SimulationSessionSavePackage package)
         {
             if (string.Equals(package.SchemaVersion,
+                    SimulationSaveSchemaVersions.V33,
+                    StringComparison.Ordinal))
+            {
+                var basePackage = SimulationSaveReplayCloner.ClonePackage(package);
+                basePackage.SchemaVersion =
+                    package.FranchiseSupplyBaseSchemaVersion;
+                basePackage.FranchiseSupplyBaseSchemaVersion = string.Empty;
+                basePackage.FranchiseSupply = null;
+                basePackage.Snapshot.FranchiseSupply = null;
+                basePackage.ReplayHash = string.Empty;
+                var baseReplayHash = Calculate(basePackage);
+                var v33Canonical = string.Join("|",
+                    SimulationSaveSchemaVersions.V33,
+                    package.FranchiseSupplyBaseSchemaVersion,
+                    baseReplayHash,
+                    경영SimulationSessionAggregate
+                        .BuildFranchiseSupplyStatePayloadKey(
+                            package.FranchiseSupply));
+                using var sha = SHA256.Create();
+                return BitConverter.ToString(sha.ComputeHash(
+                        Encoding.UTF8.GetBytes(v33Canonical)))
+                    .Replace("-", string.Empty).ToLowerInvariant();
+            }
+            if (string.Equals(package.SchemaVersion,
                     SimulationSaveSchemaVersions.V32,
                     StringComparison.Ordinal))
             {
@@ -581,6 +605,14 @@ namespace Ssalddel.Simulation.Domain
                     Add(canonical, 경영SimulationSessionAggregate
                         .BuildSeasonalOperationsCampaignStatePayloadKey(
                             entry.SeasonalOperationsCampaignState));
+                }
+                if (entry.FranchiseSupplyState != null)
+                {
+                    Add(canonical, entry.FranchiseSupplyClientRequestId);
+                    Add(canonical, entry.FranchiseSupplyCommandSignature);
+                    Add(canonical, 경영SimulationSessionAggregate
+                        .BuildFranchiseSupplyStatePayloadKey(
+                            entry.FranchiseSupplyState));
                 }
                 if (entry.DecisionConfirmRequest != null)
                 {

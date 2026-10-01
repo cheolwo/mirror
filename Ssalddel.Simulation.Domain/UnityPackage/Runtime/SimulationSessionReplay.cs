@@ -14,6 +14,32 @@ namespace Ssalddel.Simulation.Domain
         {
             if (package == null) throw new ArgumentNullException(nameof(package));
             if (string.Equals(package.SchemaVersion,
+                    SimulationSaveSchemaVersions.V33,
+                    StringComparison.Ordinal))
+            {
+                ValidatePackage(package);
+                var basePackage = SimulationSaveReplayCloner.ClonePackage(package);
+                basePackage.SchemaVersion =
+                    package.FranchiseSupplyBaseSchemaVersion;
+                basePackage.FranchiseSupplyBaseSchemaVersion = string.Empty;
+                basePackage.FranchiseSupply = null;
+                basePackage.Snapshot.FranchiseSupply = null;
+                basePackage.ReplayHash = SimulationReplayHasher.Calculate(
+                    basePackage);
+                var restored = Restore(basePackage);
+                if (!string.Equals(
+                        경영SimulationSessionAggregate
+                            .BuildFranchiseSupplyStatePayloadKey(
+                                restored.GetFranchiseSupplyState()),
+                        경영SimulationSessionAggregate
+                            .BuildFranchiseSupplyStatePayloadKey(
+                                package.FranchiseSupply),
+                        StringComparison.Ordinal))
+                    throw new SimulationConflictException(
+                        "FranchiseSupplyReplayStateMismatch");
+                return restored;
+            }
+            if (string.Equals(package.SchemaVersion,
                     SimulationSaveSchemaVersions.V32,
                     StringComparison.Ordinal))
             {
@@ -501,6 +527,14 @@ namespace Ssalddel.Simulation.Domain
                         entry.SeasonalOperationsCampaignCommandSignature,
                         entry.SeasonalOperationsCampaignState!);
                 }
+                else if (entry.CommandTypeCode == SimulationCommandTypeCodes
+                    .FranchiseSupplyChainStateTransition)
+                {
+                    aggregate.ReplayFranchiseSupplyTransition(
+                        entry.FranchiseSupplyClientRequestId,
+                        entry.FranchiseSupplyCommandSignature,
+                        entry.FranchiseSupplyState!);
+                }
                 else if (entry.CommandTypeCode == SimulationCommandTypeCodes.TickAdvance)
                 {
                     if (entry.TickRequest == null || entry.DecisionConfirmRequest != null
@@ -543,6 +577,20 @@ namespace Ssalddel.Simulation.Domain
                 SaveStableId = package.SaveStableId,
                 ExpectedRevision = aggregate.Revision,
             });
+            if (!string.Equals(package.SchemaVersion,
+                    SimulationSaveSchemaVersions.V33,
+                    StringComparison.Ordinal)
+                && string.Equals(replayed.SchemaVersion,
+                    SimulationSaveSchemaVersions.V33,
+                    StringComparison.Ordinal))
+            {
+                replayed.SchemaVersion =
+                    replayed.FranchiseSupplyBaseSchemaVersion;
+                replayed.FranchiseSupplyBaseSchemaVersion = string.Empty;
+                replayed.FranchiseSupply = null;
+                replayed.Snapshot.FranchiseSupply = null;
+                replayed.ReplayHash = SimulationReplayHasher.Calculate(replayed);
+            }
             if (!string.Equals(package.SchemaVersion,
                     SimulationSaveSchemaVersions.V32,
                     StringComparison.Ordinal)
@@ -639,6 +687,45 @@ namespace Ssalddel.Simulation.Domain
             if (package == null) throw new ArgumentNullException(nameof(package));
             if (package.TickRuleRevision != string.Empty && package.TickRuleRevision != SimulationTickRuleRevisions.SingleStep)
                 throw new SimulationContractException("SimulationTickRuleRevisionUnsupported");
+            if (string.Equals(package.SchemaVersion,
+                    SimulationSaveSchemaVersions.V33,
+                    StringComparison.Ordinal))
+            {
+                if (string.IsNullOrWhiteSpace(
+                        package.FranchiseSupplyBaseSchemaVersion)
+                    || string.Equals(package.FranchiseSupplyBaseSchemaVersion,
+                        SimulationSaveSchemaVersions.V33,
+                        StringComparison.Ordinal)
+                    || package.FranchiseSupply == null
+                    || package.Snapshot.FranchiseSupply == null
+                    || !string.Equals(
+                        경영SimulationSessionAggregate
+                            .BuildFranchiseSupplyStatePayloadKey(
+                                package.FranchiseSupply),
+                        경영SimulationSessionAggregate
+                            .BuildFranchiseSupplyStatePayloadKey(
+                                package.Snapshot.FranchiseSupply),
+                        StringComparison.Ordinal))
+                    throw new SimulationContractException(
+                        "FranchiseSupplySaveStateInvalid");
+                경영SimulationSessionAggregate.ValidateFranchiseSupplyState(
+                    package.FranchiseSupply);
+                if (!string.Equals(package.ReplayHash,
+                        SimulationReplayHasher.Calculate(package),
+                        StringComparison.Ordinal))
+                    throw new SimulationConflictException(
+                        "SimulationReplayHashMismatch");
+                var basePackage = SimulationSaveReplayCloner.ClonePackage(package);
+                basePackage.SchemaVersion =
+                    package.FranchiseSupplyBaseSchemaVersion;
+                basePackage.FranchiseSupplyBaseSchemaVersion = string.Empty;
+                basePackage.FranchiseSupply = null;
+                basePackage.Snapshot.FranchiseSupply = null;
+                basePackage.ReplayHash = SimulationReplayHasher.Calculate(
+                    basePackage);
+                ValidatePackage(basePackage);
+                return;
+            }
             if (string.Equals(package.SchemaVersion,
                     SimulationSaveSchemaVersions.V32,
                     StringComparison.Ordinal))
@@ -895,6 +982,8 @@ namespace Ssalddel.Simulation.Domain
                 && !string.Equals(package.SchemaVersion, SimulationSaveSchemaVersions.V31,
                     StringComparison.Ordinal)
                 && !string.Equals(package.SchemaVersion, SimulationSaveSchemaVersions.V32,
+                    StringComparison.Ordinal)
+                && !string.Equals(package.SchemaVersion, SimulationSaveSchemaVersions.V33,
                     StringComparison.Ordinal))
                 throw new SimulationContractException("SimulationSaveSchemaUnsupported");
             if (string.Equals(package.SchemaVersion, SimulationSaveSchemaVersions.V3,
@@ -1532,6 +1621,19 @@ namespace Ssalddel.Simulation.Domain
                         throw new SimulationConflictException(
                             "SimulationCommandLogPayloadInvalid");
                 }
+                else if (entry.CommandTypeCode == SimulationCommandTypeCodes
+                    .FranchiseSupplyChainStateTransition)
+                {
+                    if (entry.FranchiseSupplyState == null
+                        || string.IsNullOrWhiteSpace(
+                            entry.FranchiseSupplyClientRequestId)
+                        || string.IsNullOrWhiteSpace(
+                            entry.FranchiseSupplyCommandSignature))
+                        throw new SimulationConflictException(
+                            "SimulationCommandLogPayloadInvalid");
+                    경영SimulationSessionAggregate.ValidateFranchiseSupplyState(
+                        entry.FranchiseSupplyState);
+                }
                 else if (entry.CommandTypeCode == SimulationCommandTypeCodes.TickAdvance)
                 {
                     if (entry.TickRequest == null || entry.DecisionConfirmRequest != null
@@ -1657,6 +1759,7 @@ namespace Ssalddel.Simulation.Domain
             if (entry.ActorEquipmentChangeConfirmRequest != null) payloadCount++;
             if (entry.HexagramCampaignState != null) payloadCount++;
             if (entry.SeasonalOperationsCampaignState != null) payloadCount++;
+            if (entry.FranchiseSupplyState != null) payloadCount++;
             if (payloadCount != 1)
                 throw new SimulationConflictException("SimulationCommandLogPayloadInvalid");
         }

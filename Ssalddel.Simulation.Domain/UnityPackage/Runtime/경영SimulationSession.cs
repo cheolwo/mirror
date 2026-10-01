@@ -398,6 +398,8 @@ namespace Ssalddel.Simulation.Domain
                 SeasonalOperationsCampaign =
                     CloneSeasonalOperationsCampaignState(
                         seasonalOperationsCampaignState),
+                FranchiseSupply = CloneFranchiseSupplyState(
+                    franchiseSupplyState),
             };
 
         internal static 경영SimulationSessionSnapshot Clone(경영SimulationSessionSnapshot source)
@@ -522,6 +524,8 @@ namespace Ssalddel.Simulation.Domain
                 SeasonalOperationsCampaign =
                     CloneSeasonalOperationsCampaignState(
                         source.SeasonalOperationsCampaign),
+                FranchiseSupply = CloneFranchiseSupplyState(
+                    source.FranchiseSupply),
             };
 
         internal static void ValidateCreate(경영SimulationSession생성Request request)

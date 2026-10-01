@@ -33,6 +33,28 @@ public sealed class SimulationSessionDbContext(
         Set<SimulationOnlineWorld상태사본Entity>();
     public DbSet<SimulationSession접근원장Entity> SessionAccessLedgers =>
         Set<SimulationSession접근원장Entity>();
+    public DbSet<프랜차이즈공급망ProjectionEntity> FranchiseSupplyNetworkProjections =>
+        Set<프랜차이즈공급망ProjectionEntity>();
+    public DbSet<프랜차이즈본부ProjectionEntity> FranchiseHeadquartersProjections =>
+        Set<프랜차이즈본부ProjectionEntity>();
+    public DbSet<프랜차이즈매장ProjectionEntity> FranchiseStoreProjections =>
+        Set<프랜차이즈매장ProjectionEntity>();
+    public DbSet<프랜차이즈매장소속ProjectionEntity> FranchiseStoreMembershipProjections =>
+        Set<프랜차이즈매장소속ProjectionEntity>();
+    public DbSet<프랜차이즈공급자ProjectionEntity> FranchiseSupplierProjections =>
+        Set<프랜차이즈공급자ProjectionEntity>();
+    public DbSet<프랜차이즈조달계약ProjectionEntity> FranchiseSourcingAgreementProjections =>
+        Set<프랜차이즈조달계약ProjectionEntity>();
+    public DbSet<프랜차이즈조달계약품목ProjectionEntity> FranchiseSourcingItemProjections =>
+        Set<프랜차이즈조달계약품목ProjectionEntity>();
+    public DbSet<프랜차이즈매장공급안ProjectionEntity> FranchiseStoreSupplyOfferProjections =>
+        Set<프랜차이즈매장공급안ProjectionEntity>();
+    public DbSet<프랜차이즈매장공급안품목ProjectionEntity> FranchiseStoreSupplyOfferItemProjections =>
+        Set<프랜차이즈매장공급안품목ProjectionEntity>();
+    public DbSet<프랜차이즈매장발주ProjectionEntity> FranchiseStoreOrderProjections =>
+        Set<프랜차이즈매장발주ProjectionEntity>();
+    public DbSet<프랜차이즈매장발주품목ProjectionEntity> FranchiseStoreOrderLineProjections =>
+        Set<프랜차이즈매장발주품목ProjectionEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +63,7 @@ public sealed class SimulationSessionDbContext(
             new SimulationOnlineWorld상태사본Configuration());
         modelBuilder.ApplyConfiguration(
             new SimulationSession접근원장Configuration());
+        modelBuilder.ApplyFranchiseSupplyChainSimulationFoundation();
     }
 }
 
@@ -401,6 +424,8 @@ public static class SimulationSessionPersistenceRegistration
             SimulationSessionSaveStore>();
         services.AddSingleton<ISimulationOnlineWorldCheckpointStore,
             SimulationOnlineWorldCheckpointStore>();
+        services.AddSingleton<I프랜차이즈공급망ProjectionWriter,
+            프랜차이즈공급망ProjectionWriter>();
         services.AddSingleton<ISimulationDatabaseReadinessProbe,
             SimulationSessionDatabaseReadinessProbe>();
         return services;

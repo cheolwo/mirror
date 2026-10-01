@@ -290,7 +290,8 @@ namespace Ssalddel.Simulation.Domain
                 || HasAppliedCollectibleCardCommand(commandId)
                 || HasAppliedNatureSurvivalCommand(commandId)
                 || appliedRegionalIncidentResponseCommands.ContainsKey(commandId)
-                || HasAppliedTaskCancelCommand(commandId);
+                || HasAppliedTaskCancelCommand(commandId)
+                || HasAppliedFranchiseSupplyCommand(commandId);
 
         private SimulationDecisionPreviewSnapshot CreateDecisionPreview(
             SimulationDecisionPreviewRequest request)

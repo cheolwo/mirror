@@ -160,6 +160,8 @@ public static class SsalddelSimulationHostingServiceCollectionExtensions
                 InMemorySimulationOnlineWorldCheckpointStore>();
             services.AddSingleton<ISimulationSessionAccessLedger,
                 InMemorySimulationSessionAccessLedger>();
+            services.AddSingleton<I프랜차이즈공급망ProjectionWriter,
+                Disabled프랜차이즈공급망ProjectionWriter>();
         }
         services.AddScoped<SimulationSessionAccessActionFilter>();
         services.AddScoped<SimulationApiExceptionFilter>();
@@ -172,6 +174,7 @@ public static class SsalddelSimulationHostingServiceCollectionExtensions
         services.AddSingleton<ISimulationHexagramCampaignAttemptStore,
             InMemorySimulationHexagramCampaignAttemptStore>();
         services.AddSingleton<경영SimulationSession생명주기Service>();
+        services.AddSingleton<프랜차이즈공급망SimulationService>();
         services.AddSingleton<SimulationHexagramCampaignService>();
         services.AddSingleton<Simulation절기운영CampaignService>();
         services.AddSingleton<경영SimulationWorldGameplayService>();

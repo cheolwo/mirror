@@ -160,6 +160,9 @@ namespace Ssalddel.Simulation.Domain
                         throw new SimulationConflictException("SimulationCommandPayloadConflict");
                     return Clone(applied.Snapshot);
                 }
+                if (HasDifferentKindCommand(request.CommandId))
+                    throw new SimulationConflictException(
+                        "SimulationCommandKindConflict");
                 if (request.ExpectedRevision != Revision)
                     throw new SimulationConflictException("SimulationExpectedRevisionMismatch");
 
