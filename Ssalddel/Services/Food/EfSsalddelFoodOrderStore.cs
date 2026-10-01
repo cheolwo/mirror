@@ -537,6 +537,15 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
             배차상태 = order.배차상태,
             배차대기Id = order.배차대기Id,
             결제수단 = order.결제수단,
+            결제승인 = order.결제승인Id is not null && order.결제승인금액.HasValue
+                && order.결제승인통화 is not null && order.결제승인시각Utc.HasValue
+                ? new 음식주문결제승인Dto
+                {
+                    결제Id = order.결제승인Id,
+                    승인금액 = order.결제승인금액.Value,
+                    통화 = order.결제승인통화,
+                    승인시각Utc = DateTime.SpecifyKind(order.결제승인시각Utc.Value, DateTimeKind.Utc)
+                } : null,
             음식점수락시각Utc = order.음식점수락시각Utc,
             조리예상완료시각Utc = order.조리예상완료시각Utc,
             픽업준비시각Utc = order.상태이력

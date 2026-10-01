@@ -292,6 +292,15 @@ public sealed class 주문자음식주문조회UseCase(
                 })
                 .ToArray(),
             결제수단 = order.결제수단,
+            결제승인 = order.결제승인Id is not null && order.결제승인금액.HasValue
+                && order.결제승인통화 is not null && order.결제승인시각Utc.HasValue
+                ? new 음식주문결제승인Dto
+                {
+                    결제Id = order.결제승인Id,
+                    승인금액 = order.결제승인금액.Value,
+                    통화 = order.결제승인통화,
+                    승인시각Utc = DateTime.SpecifyKind(order.결제승인시각Utc.Value, DateTimeKind.Utc)
+                } : null,
             음식점수락시각Utc = order.음식점수락시각Utc,
             배차요청시각Utc = order.배차요청시각Utc,
             수락메모 = order.수락메모,

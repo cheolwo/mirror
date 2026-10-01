@@ -19,6 +19,8 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I공통결제Service, 공통결제Service>();
         services.AddScoped<I콘텐츠혜택계산Service, 콘텐츠혜택계산Service>();
         services.AddScoped<I결제승인완료OutboxService, 결제승인완료OutboxService>();
+        services.AddOptions<음식주문결제승인Options>().BindConfiguration(음식주문결제승인Options.SectionName);
+        services.AddScoped<음식주문결제승인OutboxService>();
         services.AddScoped<통관상태동기화Service>();
         services.AddSingleton<IPublicDataApiMetadataCatalog, PublicDataApiMetadataCatalog>();
         services.AddSingleton<IExternalDataSourceCatalog, ExternalDataSourceCatalog>();

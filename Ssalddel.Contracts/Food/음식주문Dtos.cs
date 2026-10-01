@@ -183,6 +183,7 @@ public sealed class 음식주문응답
     public string 배차상태 { get; set; } = 음식주문배차상태코드.미요청;
     public long? 배차대기Id { get; set; }
     public string? 결제수단 { get; set; }
+    public 음식주문결제승인Dto? 결제승인 { get; set; }
     public DateTime? 음식점수락시각Utc { get; set; }
     public DateTime? 조리예상완료시각Utc { get; set; }
     public DateTime? 픽업준비시각Utc { get; set; }
@@ -262,11 +263,24 @@ public sealed class 주문자음식주문상세응답
     public 음식주문수령인정보Dto 수령인정보 { get; set; } = new();
     public IReadOnlyList<음식주문상품Dto> 상품목록 { get; set; } = [];
     public string? 결제수단 { get; set; }
+    public 음식주문결제승인Dto? 결제승인 { get; set; }
     public DateTime? 음식점수락시각Utc { get; set; }
     public DateTime? 배차요청시각Utc { get; set; }
     public string? 수락메모 { get; set; }
     public IReadOnlyList<업무가능행동Dto> AvailableActions { get; set; } = [];
     public IReadOnlyList<음식주문상태전이기록Dto> 상태이력 { get; set; } = [];
+}
+
+/// <summary>
+/// 과거 승인 사실이며 현재 환불 잔액·정산·지급 완료를 뜻하지 않습니다.
+/// PG 키와 원본 응답은 공개하지 않습니다. 기존 주문은 이 내역이 없을 수 있습니다.
+/// </summary>
+public sealed class 음식주문결제승인Dto
+{
+    public string 결제Id { get; set; } = string.Empty;
+    public decimal 승인금액 { get; set; }
+    public string 통화 { get; set; } = "KRW";
+    public DateTime 승인시각Utc { get; set; }
 }
 
 public static class 음식배달위치추적상태코드

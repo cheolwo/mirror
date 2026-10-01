@@ -136,6 +136,13 @@ public static class FoodOrderSampleData
             배차상태 = source.배차상태,
             배차대기Id = source.배차대기Id,
             결제수단 = source.결제수단,
+            결제승인 = source.결제승인 is null ? null : new 음식주문결제승인Dto
+            {
+                결제Id = source.결제승인.결제Id,
+                승인금액 = source.결제승인.승인금액,
+                통화 = source.결제승인.통화,
+                승인시각Utc = source.결제승인.승인시각Utc
+            },
             음식점수락시각Utc = source.음식점수락시각Utc,
             조리예상완료시각Utc = source.조리예상완료시각Utc,
             배차요청시각Utc = source.배차요청시각Utc,

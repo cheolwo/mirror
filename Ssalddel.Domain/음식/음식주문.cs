@@ -83,6 +83,21 @@ public class 음식주문
     [MaxLength(50)]
     public string? 결제수단 { get; set; }
 
+    // 과거 승인 사실만 보존한다. 현재 환불 잔액·정산·지급 상태가 아니다.
+    [Column("payment_approval_id")]
+    [MaxLength(100)]
+    public string? 결제승인Id { get; set; }
+
+    [Column("payment_approved_amount", TypeName = "decimal(18,2)")]
+    public decimal? 결제승인금액 { get; set; }
+
+    [Column("payment_approved_currency")]
+    [MaxLength(3)]
+    public string? 결제승인통화 { get; set; }
+
+    [Column("payment_approved_at_utc")]
+    public DateTime? 결제승인시각Utc { get; set; }
+
     [Column("음식점수락시각_utc")]
     public DateTime? 음식점수락시각Utc { get; set; }
 
