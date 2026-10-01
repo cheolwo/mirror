@@ -27,6 +27,10 @@ public interface I음식점주문DeskService
         string 사유,
         CancellationToken cancellationToken = default);
 
+    Task<음식점주문DeskItem?> 조리시작Async(
+        string 주문번호, int 조리예상분, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("조리 시작을 지원하지 않는 음식점 서비스입니다.");
+
     Task<음식점주문DeskItem?> 조리시간변경Async(
         string 주문번호,
         int 조리예상분,

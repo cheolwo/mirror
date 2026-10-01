@@ -24,13 +24,15 @@ public sealed class InMemorySsalddelFoodOrderStoreTests
             });
 
         Assert.NotNull(accepted);
-        Assert.Equal(음식주문상태코드.조리중, accepted.상태);
+        Assert.Equal(음식주문상태코드.주문확인, accepted.상태);
         Assert.Equal("살뜰분식", accepted.음식점명);
         Assert.Equal("서울특별시 마포구 월드컵북로 1", accepted.음식점주소);
         Assert.Equal(음식주문배차상태코드.미요청, accepted.배차상태);
         Assert.NotNull(accepted.음식점수락시각Utc);
-        Assert.NotNull(accepted.조리예상완료시각Utc);
-        Assert.Contains(accepted.상태이력, x => x.다음상태 == 음식주문상태코드.조리중);
+        Assert.Null(accepted.조리예상완료시각Utc);
+        Assert.Null(accepted.조리시작시각Utc);
+        Assert.Equal(20, accepted.조리예상분);
+        Assert.Contains(accepted.상태이력, x => x.다음상태 == 음식주문상태코드.주문확인);
     }
 
     [Fact]
@@ -51,7 +53,7 @@ public sealed class InMemorySsalddelFoodOrderStoreTests
         var updated = store.배차대기반영(order.주문번호, 1234, dispatchRequestedAt);
 
         Assert.NotNull(updated);
-        Assert.Equal(음식주문상태코드.픽업대기, updated.상태);
+        Assert.Equal(음식주문상태코드.주문확인, updated.상태);
         Assert.Equal(음식주문배차상태코드.배차대기, updated.배차상태);
         Assert.Equal(1234, updated.배차대기Id);
         Assert.Equal(dispatchRequestedAt, updated.배차요청시각Utc);
@@ -119,18 +121,18 @@ public sealed class InMemorySsalddelFoodOrderStoreTests
                 조리예상분 = 35
             },
             "restaurant-user");
-        var ready = store.음식점진행변경(
+        Assert.Throws<InvalidOperationException>(() => store.음식점진행변경(
             cookingOrder.주문번호,
             new 음식점주문진행변경요청
             {
                 클라이언트요청Id = Guid.NewGuid(),
                 작업 = 음식점주문진행작업코드.픽업준비
             },
-            "restaurant-user");
+            "restaurant-user"));
 
-        Assert.Equal(음식주문상태코드.조리중, changed?.주문.상태);
+        Assert.Equal(음식주문상태코드.주문확인, changed?.주문.상태);
         Assert.Contains("35분", changed?.주문.상태이력.Last().사유);
-        Assert.Equal(음식주문상태코드.픽업대기, ready?.주문.상태);
+        Assert.Null(changed?.주문.조리예상완료시각Utc);
     }
 
     [Fact]

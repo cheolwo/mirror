@@ -113,6 +113,7 @@ public sealed class 음식점주문DeskItem
     public bool 거절가능 => Can(음식배달가능행동Ids.음식점주문거절);
 
     public bool 조리변경가능 => Can(음식배달가능행동Ids.음식점조리시간변경);
+    public bool 조리시작가능 => Can(음식배달가능행동Ids.음식점조리시작);
 
     public bool 픽업준비가능 => Can(음식배달가능행동Ids.음식점픽업준비완료);
 

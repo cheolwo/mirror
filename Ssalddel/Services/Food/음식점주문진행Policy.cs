@@ -11,7 +11,10 @@ public static class 음식점주문진행Policy
 {
     public static 음식점주문진행판정 판정(
         string? 현재상태,
-        음식점주문진행변경요청 request)
+        음식점주문진행변경요청 request,
+        bool 배차확정 = false,
+        bool 조리시작됨 = true,
+        int? 계획조리분 = null)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -24,14 +27,31 @@ public static class 음식점주문진행Policy
 
         var decision = action switch
         {
+            음식점주문진행작업코드.조리시작 => StartCooking(current, request, 배차확정, 조리시작됨, 계획조리분),
             음식점주문진행작업코드.거절 => Reject(current, request),
             음식점주문진행작업코드.조리시간변경 => ChangePreparationTime(current, request),
-            음식점주문진행작업코드.픽업준비 => MarkPickupReady(current),
+            음식점주문진행작업코드.픽업준비 => 조리시작됨
+                ? MarkPickupReady(current)
+                : throw new InvalidOperationException("조리를 시작한 뒤 픽업 준비를 완료할 수 있습니다."),
             _ => throw new ArgumentOutOfRangeException(nameof(request))
         };
 
         음식배달업무상태전이Guard.허용확인(current, decision.다음상태);
         return decision;
+    }
+
+    private static 음식점주문진행판정 StartCooking(
+        string current, 음식점주문진행변경요청 request,
+        bool assigned, bool started, int? plannedMinutes)
+    {
+        if (current != 음식주문상태코드.기사배정 || !assigned)
+            throw new InvalidOperationException("유효한 기사 배차가 확정된 뒤에만 조리를 시작할 수 있습니다.");
+        if (started)
+            throw new InvalidOperationException("이미 조리를 시작한 주문입니다.");
+        if (!request.예상Revision.HasValue)
+            throw new ArgumentException("조리 시작에는 현재 주문 revision이 필요합니다.");
+        var minutes = 음식점조리시간정책.Clamp(request.조리예상분 ?? plannedMinutes ?? 15);
+        return new 음식점주문진행판정(음식주문상태코드.조리중, minutes, "음식점 조리 시작");
     }
 
     private static 음식점주문진행판정 Reject(
@@ -55,7 +75,7 @@ public static class 음식점주문진행Policy
         string current,
         음식점주문진행변경요청 request)
     {
-        if (current is not (음식주문상태코드.조리중 or 음식주문상태코드.기사배정))
+        if (current is not (음식주문상태코드.주문확인 or 음식주문상태코드.조리중 or 음식주문상태코드.기사배정))
         {
             throw new InvalidOperationException(
                 $"{request.작업} 작업이 가능한 주문 상태가 아닙니다. 현재상태={current}, 필요상태={음식주문상태코드.조리중} 또는 {음식주문상태코드.기사배정}");

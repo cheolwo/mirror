@@ -34,7 +34,7 @@ public sealed class 음식배달가능행동ProjectorTests
     [InlineData(음식주문상태코드.기사배정)]
     public void 음식점_조리와_기사배정은_조리시간변경과_픽업준비를_제공한다(string status)
     {
-        var actions = 음식배달가능행동Projector.음식점용(status, 3);
+        var actions = 음식배달가능행동Projector.음식점용(status, 3, started: true);
 
         Assert.Equal(
             [음식배달가능행동Ids.음식점조리시간변경, 음식배달가능행동Ids.음식점픽업준비완료],

@@ -77,6 +77,34 @@ public sealed class 음식배달정상수직생명주기Tests
                 },
                 "restaurant-41"),
             default));
+        Assert.Equal(음식주문상태코드.주문확인, order.상태);
+        Assert.Null(order.조리시작시각Utc);
+        Assert.Null(order.조리예상완료시각Utc);
+
+        var driverId = "food-driver-7";
+        var offerId = $"food-dispatch:{order.주문번호}";
+        database.Context.운송원장.Add(CreateRecommendedTransport(offerId, order.주문번호, driverId));
+        await database.Context.SaveChangesAsync();
+        store.배차대기반영(order.주문번호, database.Context.운송원장.Single().Id, DateTime.UtcNow);
+
+        var driverWork = CreateDriverWork(database, store, publisher, driverId);
+
+        Assert.True((await driverWork.수락Async(driverId, offerId)).IsSuccess);
+        order = store.GetOrder(order.주문번호)!;
+        Assert.True(order.조리시작가능);
+        Assert.True((await driverWork.픽업완료Async(driverId, offerId)).IsFailed);
+        var startRequest = new 음식점주문진행변경요청
+        {
+            클라이언트요청Id = Guid.NewGuid(), 예상Revision = order.Revision,
+            작업 = 음식점주문진행작업코드.조리시작
+        };
+        order = Assert.IsType<음식주문응답>(await prepare.Handle(
+            new 음식점주문진행변경Command(order.주문번호, startRequest, "restaurant-41"), default));
+        var startedRevision = order.Revision;
+        var duplicateStart = await prepare.Handle(
+            new 음식점주문진행변경Command(order.주문번호, startRequest, "restaurant-41"), default);
+        Assert.Equal(startedRevision, duplicateStart!.Revision);
+        Assert.Single(publisher.Notifications.OfType<Ssalddel.Application.Food.Events.음식점주문진행변경됨Event>());
         order = Assert.IsType<음식주문응답>(await prepare.Handle(
             new 음식점주문진행변경Command(
                 order.주문번호,
@@ -89,27 +117,6 @@ public sealed class 음식배달정상수직생명주기Tests
                 "restaurant-41"),
             default));
 
-        var driverId = "food-driver-7";
-        var offerId = $"food-dispatch:{order.주문번호}";
-        database.Context.운송원장.Add(CreateRecommendedTransport(offerId, order.주문번호, driverId));
-        await database.Context.SaveChangesAsync();
-
-        var driverWork = new 음식배달기사업무Service(
-            database.Context,
-            new InMemoryDriverLocationStore(),
-            new NoOpRouteService(),
-            new NoOpQueueTransition(),
-            new InMemory음식배달권실행공간Store(),
-            store,
-            new NoOpFoodLedgerOutbox(),
-            new NoOpTransportSync(),
-            new NoOpRestaurantNotification(),
-            new NoOpSettlement(),
-            publisher,
-            new TestCurrentUserAccessor(driverId, "Driver"),
-            NullLogger<음식배달기사업무Service>.Instance);
-
-        Assert.True((await driverWork.수락Async(driverId, offerId)).IsSuccess);
         Assert.True((await driverWork.픽업완료Async(driverId, offerId)).IsSuccess);
         Assert.True((await driverWork.전달완료Async(driverId, offerId)).IsSuccess);
 
@@ -129,9 +136,10 @@ public sealed class 음식배달정상수직생명주기Tests
         var expectedStages = new[]
         {
             음식주문상태코드.주문대기,
+            음식주문상태코드.주문확인,
+            음식주문상태코드.기사배정,
             음식주문상태코드.조리중,
             음식주문상태코드.픽업대기,
-            음식주문상태코드.기사배정,
             음식주문상태코드.픽업완료,
             음식주문상태코드.전달완료,
             음식주문상태코드.수령확인
@@ -164,6 +172,59 @@ public sealed class 음식배달정상수직생명주기Tests
         Assert.DoesNotContain(driverId, publicJson, StringComparison.Ordinal);
         Assert.DoesNotContain("101호", publicJson, StringComparison.Ordinal);
     }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task 기사이탈은_조리전에는_확인대기_조리후에는_조리이력을_유지한다(bool started)
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var publisher = new RecordingPublisher();
+        var store = new EfSsalddelFoodOrderStore(database.Context);
+        var order = store.AddOrder(CreateOrderRequest());
+        store.음식점수락멱등(order.주문번호,
+            new 음식점주문수락요청 { 클라이언트요청Id = Guid.NewGuid(), 조리예상분 = 10 }, "restaurant-41");
+        const string driverId = "food-driver-7";
+        var offerId = $"food-dispatch:{order.주문번호}";
+        database.Context.운송원장.Add(CreateRecommendedTransport(offerId, order.주문번호, driverId));
+        await database.Context.SaveChangesAsync();
+        store.배차대기반영(order.주문번호, database.Context.운송원장.Single().Id, DateTime.UtcNow);
+        var driverWork = CreateDriverWork(database, store, publisher, driverId);
+        Assert.True((await driverWork.수락Async(driverId, offerId)).IsSuccess);
+        order = store.GetOrder(order.주문번호)!;
+        if (started)
+            order = store.음식점진행변경(order.주문번호,
+                new 음식점주문진행변경요청 { 클라이언트요청Id = Guid.NewGuid(), 예상Revision = order.Revision,
+                    작업 = 음식점주문진행작업코드.조리시작 }, "restaurant-41")!.주문;
+        var cookingStartedAt = order.조리시작시각Utc;
+        var result = await driverWork.중단Async(driverId, offerId,
+            new 음식배달중단요청 { 클라이언트요청Id = Guid.NewGuid(), 사유Code = 음식배달중단사유Code.사고 });
+        Assert.True(result.IsSuccess, string.Join(",", result.Errors.Select(x => x.Message)));
+        database.Context.ChangeTracker.Clear();
+        var after = store.GetOrder(order.주문번호)!;
+        Assert.Equal(started ? 음식주문상태코드.조리중 : 음식주문상태코드.주문확인, after.상태);
+        Assert.Equal(음식주문배차상태코드.배차대기, after.배차상태);
+        Assert.False(after.조리시작가능);
+        Assert.Equal(cookingStartedAt, after.조리시작시각Utc);
+        Assert.NotNull(database.Context.음식배달시도.Single().중단시각Utc);
+    }
+
+    private static 음식배달기사업무Service CreateDriverWork(
+        TestDatabase database, EfSsalddelFoodOrderStore store, RecordingPublisher publisher, string driverId)
+        => new 음식배달기사업무Service(
+            database.Context,
+            new InMemoryDriverLocationStore(),
+            new NoOpRouteService(),
+            new NoOpQueueTransition(),
+            new InMemory음식배달권실행공간Store(),
+            store,
+            new NoOpFoodLedgerOutbox(),
+            new NoOpTransportSync(),
+            new NoOpRestaurantNotification(),
+            new NoOpSettlement(),
+            publisher,
+            new TestCurrentUserAccessor(driverId, "Driver"),
+            NullLogger<음식배달기사업무Service>.Instance);
 
     private static 음식주문등록요청 CreateOrderRequest() => new()
     {

@@ -16,7 +16,9 @@ public static class 음식배달가능행동Projector
     public static 음식주문응답 음식점용(음식주문응답 order)
     {
         order.Revision = ResolveRevision(order);
-        order.AvailableActions = 음식점용(order.상태, order.Revision);
+        order.AvailableActions = 음식점용(order.상태, order.Revision,
+            order.조리시작가능, order.조리시작시각Utc.HasValue,
+            order.픽업준비시각Utc.HasValue);
         return order;
     }
 
@@ -28,7 +30,8 @@ public static class 음식배달가능행동Projector
             _ => []
         };
 
-    public static IReadOnlyList<업무가능행동Dto> 음식점용(string? status, long revision)
+    public static IReadOnlyList<업무가능행동Dto> 음식점용(
+        string? status, long revision, bool canStart = false, bool started = false, bool ready = false)
         => 음식주문상태코드.Normalize(status) switch
         {
             음식주문상태코드.주문대기 =>
@@ -36,7 +39,13 @@ public static class 음식배달가능행동Projector
                 Action(음식배달가능행동Ids.음식점주문수락),
                 OrderAction(음식배달가능행동Ids.음식점주문거절, revision)
             ],
-            음식주문상태코드.조리중 or 음식주문상태코드.기사배정 =>
+            음식주문상태코드.주문확인 => [OrderAction(음식배달가능행동Ids.음식점조리시간변경, revision)],
+            음식주문상태코드.기사배정 when canStart =>
+            [
+                OrderAction(음식배달가능행동Ids.음식점조리시작, revision),
+                OrderAction(음식배달가능행동Ids.음식점조리시간변경, revision)
+            ],
+            음식주문상태코드.조리중 or 음식주문상태코드.기사배정 when !ready && (started || status == 음식주문상태코드.조리중) =>
             [
                 OrderAction(음식배달가능행동Ids.음식점조리시간변경, revision),
                 OrderAction(음식배달가능행동Ids.음식점픽업준비완료, revision)

@@ -144,7 +144,11 @@ public static class FoodOrderSampleData
                 승인시각Utc = source.결제승인.승인시각Utc
             },
             음식점수락시각Utc = source.음식점수락시각Utc,
+            조리예상분 = source.조리예상분,
+            조리시작시각Utc = source.조리시작시각Utc,
+            조리시작가능 = source.조리시작가능,
             조리예상완료시각Utc = source.조리예상완료시각Utc,
+            픽업준비시각Utc = source.픽업준비시각Utc,
             배차요청시각Utc = source.배차요청시각Utc,
             수락메모 = source.수락메모,
             커뮤니티원장Id = source.커뮤니티원장Id,

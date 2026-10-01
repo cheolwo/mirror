@@ -44,7 +44,9 @@ public sealed class 음식점수락배차OutboxTests
         var accepted = await handler.Handle(CreateAcceptCommand(order.주문번호), default);
 
         Assert.NotNull(accepted);
-        Assert.Equal(음식주문상태코드.조리중, accepted!.상태);
+        Assert.Equal(음식주문상태코드.주문확인, accepted!.상태);
+        Assert.Null(accepted.조리시작시각Utc);
+        Assert.Null(accepted.조리예상완료시각Utc);
         var request = await database.Context.음식마트원장동기화Outbox.AsNoTracking().SingleAsync();
         Assert.Equal(음식마트원장동기화유형코드.음식배차요청, request.동기화유형);
         Assert.Equal(order.주문번호, request.원천Id);

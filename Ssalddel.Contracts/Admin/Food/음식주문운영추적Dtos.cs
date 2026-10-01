@@ -14,6 +14,7 @@ public static class 음식주문운영추적상태코드
 
 public static class 음식배달운영생명주기단계Codes
 {
+    public const string 기사확보대기 = "AwaitingDriverAssignment";
     public const string 음식점응답대기 = "RestaurantDecision";
     public const string 조리배차병행 = "CookingAndDispatch";
     public const string 픽업인계 = "PickupHandoff";

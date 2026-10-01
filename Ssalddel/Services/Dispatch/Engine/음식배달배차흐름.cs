@@ -38,7 +38,7 @@ public sealed class 음식배달배차흐름Resolver : I음식배달배차흐름
                 "음식점 즉시 배달",
                 창고선행작업필요: false,
                 배차시작가능: true,
-                "음식점 주문은 결제 승인과 조리 접수 후 배달기사 배차를 시작합니다.");
+                "음식점 주문은 주문 확인 후 배차하며, 기사 배정이 확정된 뒤 조리를 시작합니다.");
         }
 
         if (string.Equals(queue.원본의뢰유형, 음식배달배차원본유형.살뜰마트포장완료주문, StringComparison.OrdinalIgnoreCase))

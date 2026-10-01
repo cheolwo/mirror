@@ -29,6 +29,7 @@ namespace Ssalddel.WorkflowRules.Contracts
     public static class 음식배달상태코드
     {
         public const string 주문대기 = "주문대기";
+        public const string 주문확인 = "주문확인";
         public const string 조리중 = "조리중";
         public const string 픽업대기 = "픽업대기";
         public const string 기사배정 = "기사배정";

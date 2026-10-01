@@ -6,6 +6,7 @@ public static class 음식배달가능행동Ids
     public const string 주문수령확인 = "FoodOrder.ConfirmReceipt";
     public const string 음식점주문수락 = "FoodOrder.RestaurantAccept";
     public const string 음식점주문거절 = "FoodOrder.RestaurantReject";
+    public const string 음식점조리시작 = "FoodOrder.StartCooking";
     public const string 음식점조리시간변경 = "FoodOrder.ChangePreparationTime";
     public const string 음식점픽업준비완료 = "FoodOrder.MarkReadyForPickup";
     public const string 기사제안수락 = "FoodDelivery.AcceptOffer";

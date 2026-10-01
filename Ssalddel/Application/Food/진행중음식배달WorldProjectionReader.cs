@@ -169,7 +169,7 @@ public sealed class 진행중음식배달WorldProjectionReader(
     private static string Role(string stage)
         => stage switch
         {
-            음식주문상태코드.주문대기 or 음식주문상태코드.조리중 or 음식주문상태코드.픽업대기
+            음식주문상태코드.주문대기 or 음식주문상태코드.주문확인 or 음식주문상태코드.조리중 or 음식주문상태코드.픽업대기
                 => "RestaurantWorker",
             음식주문상태코드.기사배정 or 음식주문상태코드.픽업완료 => "DeliveryDriver",
             음식주문상태코드.전달완료 => "OrderRecipient",
@@ -179,7 +179,7 @@ public sealed class 진행중음식배달WorldProjectionReader(
     private static string SemanticPlace(string stage)
         => stage switch
         {
-            음식주문상태코드.주문대기 or 음식주문상태코드.조리중 or 음식주문상태코드.픽업대기
+            음식주문상태코드.주문대기 or 음식주문상태코드.주문확인 or 음식주문상태코드.조리중 or 음식주문상태코드.픽업대기
                 or 음식주문상태코드.기사배정 => "semantic-place:area:food-restaurant",
             음식주문상태코드.픽업완료 => "semantic-place:area:food-delivery-route",
             음식주문상태코드.전달완료 => "semantic-place:area:food-recipient-zone",

@@ -220,8 +220,13 @@ public sealed class 음식점조리시간Service(SsalddelContext db) : I음식�
             .ToArrayAsync(cancellationToken);
         var durations = samples.Select(sample =>
             {
-                var accepted = sample.음식점수락시각Utc!.Value;
-                var acceptedLocal = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(accepted, DateTimeKind.Utc), 대한민국시간대());
+                var accepted = sample.상태이력
+                    .Where(x => x.사유 == "음식점 조리 시작")
+                    .Select(x => (DateTime?)x.전이시각Utc).Min()
+                    ?? (sample.상태이력.Any(x => x.다음상태 == 음식주문상태코드.주문확인)
+                        ? (DateTime?)null : sample.음식점수락시각Utc);
+                if (!accepted.HasValue) return (double?)null;
+                var acceptedLocal = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(accepted.Value, DateTimeKind.Utc), 대한민국시간대());
                 var acceptedMinute = acceptedLocal.Hour * 60 + acceptedLocal.Minute;
                 if (acceptedMinute < rangeStart || acceptedMinute >= rangeEnd) return (double?)null;
                 var ready = sample.상태이력
@@ -231,7 +236,7 @@ public sealed class 음식점조리시간Service(SsalddelContext db) : I음식�
                     .Select(x => (DateTime?)x.전이시각Utc)
                     .FirstOrDefault();
                 if (!ready.HasValue) return null;
-                var elapsed = (ready.Value - accepted).TotalMinutes;
+                var elapsed = (ready.Value - accepted.Value).TotalMinutes;
                 return elapsed is >= 1 and <= 180 ? elapsed : null;
             })
             .Where(x => x.HasValue)

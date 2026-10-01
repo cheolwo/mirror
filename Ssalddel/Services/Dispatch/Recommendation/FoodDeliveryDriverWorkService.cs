@@ -297,7 +297,9 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
 
                     ApplyFoodOrderState(
                         order,
-                        음식주문상태코드.기사배정,
+                        order.상태 is 음식주문상태코드.조리중 or 음식주문상태코드.픽업대기
+                            && order.상태이력.Any(x => x.다음상태 == 음식주문상태코드.주문확인)
+                            ? order.상태 : 음식주문상태코드.기사배정,
                         음식주문배차상태코드.기사배정,
                         requireBundle ? "F드라이버 묶음 배차 수락" : "F드라이버 배차 수락",
                         changedAtUtc);
@@ -571,7 +573,10 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
                 ? 음식주문상태코드.조리중
                 : 픽업준비됨(order, attempt.수락시각Utc)
                     ? 음식주문상태코드.픽업대기
-                    : 음식주문상태코드.조리중;
+                    : order.상태이력.Any(x => x.사유 == "음식점 조리 시작"
+                        || (x.사유 == "음식점 주문 수락" && x.다음상태 == 음식주문상태코드.조리중))
+                        ? 음식주문상태코드.조리중
+                        : 음식주문상태코드.주문확인;
             ApplyFoodOrderState(order, nextState, 음식주문배차상태코드.배차대기,
                 postPickup ? "픽업 후 배달 중단 · 재조리·재배차" : $"픽업 전 배달 중단 · {reasonCode}", now);
             배차재추천상태Policy.적용(queue, driverId, now);
@@ -679,14 +684,13 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
             }
 
             if (nextOrderState == 음식주문상태코드.픽업완료
-                && currentOrderState != 음식주문상태코드.기사배정)
+                && currentOrderState is not (음식주문상태코드.기사배정 or 음식주문상태코드.픽업대기))
             {
                 return Result.Fail<FoodDeliveryStateChange>("기사 배정이 완료된 주문만 픽업 완료할 수 있습니다.");
             }
 
             if (nextOrderState == 음식주문상태코드.픽업완료
-                && !order.상태이력.Any(history => history.다음상태 == 음식주문상태코드.픽업대기
-                                                      || history.사유.StartsWith("음식점 픽업 준비 완료", StringComparison.Ordinal)))
+                && !픽업준비됨(order, attempt.수락시각Utc))
             {
                 return Result.Fail<FoodDeliveryStateChange>("음식점이 픽업 준비를 완료한 주문만 픽업할 수 있습니다.");
             }
@@ -946,6 +950,7 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
 
     private static bool 픽업준비됨(음식주문 order, DateTime acceptedAtUtc)
     {
+        if (order.상태이력.Any(x => x.사유 == "음식점 주문 확인 · 기존 준비 완료")) return true;
         var assignment = order.상태이력
             .Where(x => x.다음상태 == 음식주문상태코드.기사배정
                         && x.전이시각Utc >= acceptedAtUtc.AddSeconds(-1))

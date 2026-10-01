@@ -146,9 +146,7 @@ public sealed class InMemorySsalddelFoodOrderStore : ISsalddelFoodOrderStore, I�
             }
 
             var now = DateTime.UtcNow;
-            var nextStatus = request.즉시픽업가능여부
-                ? 음식주문상태코드.픽업대기
-                : 음식주문상태코드.조리중;
+            var nextStatus = 음식주문상태코드.주문확인;
             음식배달업무상태전이Guard.허용확인(currentStatus, nextStatus);
             var cookingMinutes = request.즉시픽업가능여부
                 ? 0
@@ -161,14 +159,16 @@ public sealed class InMemorySsalddelFoodOrderStore : ISsalddelFoodOrderStore, I�
             order.음식점위도 = request.음식점위도 ?? order.음식점위도;
             order.음식점경도 = request.음식점경도 ?? order.음식점경도;
             order.음식점수락시각Utc = now;
-            order.조리예상완료시각Utc = now.AddMinutes(cookingMinutes);
+            order.조리예상분 = cookingMinutes;
+            order.조리예상완료시각Utc = request.즉시픽업가능여부 ? now : null;
+            order.픽업준비시각Utc = request.즉시픽업가능여부 ? now : null;
             order.수락메모 = NormalizeOptional(request.수락메모);
             order.최근변경시각Utc = now;
             order.상태이력 = AppendHistory(
                 order,
                 currentStatus,
                 nextStatus,
-                "음식점 주문 수락",
+                request.즉시픽업가능여부 ? "음식점 주문 확인 · 기존 준비 완료" : "음식점 주문 확인 · 배차 후 조리",
                 now,
                 request.클라이언트요청Id,
                 처리UserId);
@@ -199,12 +199,21 @@ public sealed class InMemorySsalddelFoodOrderStore : ISsalddelFoodOrderStore, I�
             }
 
             var currentStatus = 음식주문상태코드.Normalize(order.상태);
-            var decision = 음식점주문진행Policy.판정(currentStatus, request);
+            if (request.예상Revision.HasValue && request.예상Revision.Value != order.상태이력.Count)
+                throw new Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException("음식 주문이 다른 요청에서 먼저 변경되었습니다.");
+            // 샘플 저장소에는 실제 기사 배차 원장이 없으므로 조리 시작을 허용하지 않습니다.
+            var started = order.조리시작시각Utc.HasValue
+                || order.상태이력.Any(x => x.사유 == "음식점 주문 수락" && x.다음상태 == 음식주문상태코드.조리중);
+            var decision = 음식점주문진행Policy.판정(currentStatus, request,
+                배차확정: false, 조리시작됨: started || order.픽업준비시각Utc.HasValue,
+                계획조리분: order.조리예상분);
             var now = DateTime.UtcNow;
             order.상태 = decision.다음상태;
             if (decision.조리예상분 is { } cookingMinutes)
             {
-                order.조리예상완료시각Utc = now.AddMinutes(cookingMinutes);
+                order.조리예상분 = cookingMinutes;
+                if (started || request.작업.Trim() == 음식점주문진행작업코드.픽업준비)
+                    order.조리예상완료시각Utc = now.AddMinutes(cookingMinutes);
             }
 
             order.최근변경시각Utc = now;

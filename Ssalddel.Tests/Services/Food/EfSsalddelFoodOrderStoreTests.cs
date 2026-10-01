@@ -11,6 +11,118 @@ namespace Ssalddel.Tests.Services.Food;
 public sealed class EfSsalddelFoodOrderStoreTests
 {
     [Fact]
+    public void 주문확인은_배차전에_조리시계와_준비완료를_시작하지_않는다()
+    {
+        using var db = CreateContext();
+        var store = new EfSsalddelFoodOrderStore(db);
+        var order = store.AddOrder(CreateRequest(Guid.NewGuid()));
+        var accepted = store.음식점수락멱등(order.주문번호,
+            new 음식점주문수락요청 { 클라이언트요청Id = Guid.NewGuid(), 조리예상분 = 20 }, "restaurant-user")!.주문;
+        Assert.Equal(음식주문상태코드.주문확인, accepted.상태);
+        Assert.Equal(20, accepted.조리예상분);
+        Assert.Null(accepted.조리시작시각Utc);
+        Assert.Null(accepted.조리예상완료시각Utc);
+        Assert.False(accepted.조리시작가능);
+        Assert.Throws<InvalidOperationException>(() => store.음식점진행변경(order.주문번호,
+            new 음식점주문진행변경요청 { 클라이언트요청Id = Guid.NewGuid(), 예상Revision = accepted.Revision,
+                작업 = 음식점주문진행작업코드.조리시작 }, "restaurant-user"));
+        Assert.Throws<InvalidOperationException>(() => store.음식점진행변경(order.주문번호,
+            new 음식점주문진행변경요청 { 클라이언트요청Id = Guid.NewGuid(), 작업 = 음식점주문진행작업코드.픽업준비 }, "restaurant-user"));
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    public void 추천뿐이거나_종료된_기사시도는_조리시작을_허용하지_않는다(bool confirmed, bool ended)
+    {
+        using var db = CreateContext();
+        var (store, orderNo) = 배차표본생성(db, confirmed, ended);
+        var order = store.GetOrder(orderNo)!;
+        Assert.False(order.조리시작가능);
+        Assert.Throws<InvalidOperationException>(() => store.음식점진행변경(orderNo,
+            new 음식점주문진행변경요청 { 클라이언트요청Id = Guid.NewGuid(), 예상Revision = order.Revision,
+                작업 = 음식점주문진행작업코드.조리시작 }, "restaurant-user"));
+        Assert.Null(store.GetOrder(orderNo)!.조리시작시각Utc);
+    }
+
+    [Fact]
+    public void 유효한배차후_조리시작은_한번저장되고_재조회와_배차해제에도_조리이력이_보존된다()
+    {
+        using var db = CreateContext();
+        var (store, orderNo) = 배차표본생성(db, true, false);
+        var assigned = store.GetOrder(orderNo)!;
+        var actions = Ssalddel.Application.Food.음식배달가능행동Projector.음식점용(assigned).AvailableActions;
+        Assert.Contains(actions, x => x.ActionId == 음식배달가능행동Ids.음식점조리시작);
+        Assert.DoesNotContain(actions, x => x.ActionId == 음식배달가능행동Ids.음식점픽업준비완료);
+        var request = new 음식점주문진행변경요청 { 클라이언트요청Id = Guid.NewGuid(),
+            예상Revision = assigned.Revision, 작업 = 음식점주문진행작업코드.조리시작 };
+        var first = store.음식점진행변경(orderNo, request, "restaurant-user")!;
+        var repeated = store.음식점진행변경(orderNo, request, "restaurant-user")!;
+        Assert.True(first.새로변경됨);
+        Assert.False(repeated.새로변경됨);
+        db.ChangeTracker.Clear();
+        var reloaded = new EfSsalddelFoodOrderStore(db).GetOrder(orderNo)!;
+        Assert.Equal(음식주문상태코드.조리중, reloaded.상태);
+        Assert.Equal(음식주문배차상태코드.기사배정, reloaded.배차상태);
+        Assert.NotNull(reloaded.조리시작시각Utc);
+        Assert.Equal(reloaded.조리시작시각Utc!.Value.AddMinutes(20), reloaded.조리예상완료시각Utc);
+        Assert.Equal(reloaded.조리예상완료시각Utc, db.음식배달시도.Single().표시준비예정시각Utc);
+        Assert.Single(db.음식주문상태이력.Where(x => x.클라이언트요청Id == request.클라이언트요청Id));
+        var queue = db.운송원장.Single();
+        queue.확정기사Id = null;
+        db.SaveChanges();
+        Assert.False(store.GetOrder(orderNo)!.조리시작가능);
+        Assert.Equal(reloaded.조리시작시각Utc, store.GetOrder(orderNo)!.조리시작시각Utc);
+    }
+
+    [Fact]
+    public void 조리시작은_누락되거나_오래된Revision과_배차해제후의_옛화면을_거부한다()
+    {
+        using var db = CreateContext();
+        var (store, orderNo) = 배차표본생성(db, true, false);
+        var order = store.GetOrder(orderNo)!;
+        var request = new 음식점주문진행변경요청 { 클라이언트요청Id = Guid.NewGuid(), 작업 = 음식점주문진행작업코드.조리시작 };
+        Assert.Throws<ArgumentException>(() => store.음식점진행변경(orderNo, request, "restaurant-user"));
+        request.예상Revision = order.Revision + 1;
+        Assert.Throws<DbUpdateConcurrencyException>(() => store.음식점진행변경(orderNo, request, "restaurant-user"));
+        request.예상Revision = order.Revision;
+        db.운송원장.Single().확정기사Id = null;
+        db.SaveChanges();
+        Assert.Throws<InvalidOperationException>(() => store.음식점진행변경(orderNo, request, "restaurant-user"));
+        Assert.Null(store.GetOrder(orderNo)!.조리시작시각Utc);
+    }
+
+    private static (EfSsalddelFoodOrderStore Store, string OrderNo) 배차표본생성(SsalddelContext db, bool confirmed, bool ended)
+    {
+        var store = new EfSsalddelFoodOrderStore(db);
+        var order = store.AddOrder(CreateRequest(Guid.NewGuid()));
+        store.음식점수락멱등(order.주문번호,
+            new 음식점주문수락요청 { 클라이언트요청Id = Guid.NewGuid(), 조리예상분 = 20 }, "restaurant-user");
+        var queue = new 살뜰.도메인.운송.운송원장
+        {
+            의뢰Id = order.주문번호, 원본의뢰Id = order.주문번호,
+            배차업무유형 = 살뜰.도메인.공통.상태값.배차업무유형.음식배달,
+            상태 = confirmed ? 살뜰.도메인.공통.상태값.배차대기상태.확정 : "추천중",
+            배차큐단계 = confirmed ? 살뜰.도메인.공통.상태값.배차큐단계.확정 : 살뜰.도메인.공통.상태값.배차큐단계.배차추천,
+            확정기사Id = confirmed ? "driver-1" : null
+        };
+        db.운송원장.Add(queue);
+        db.SaveChanges();
+        var entity = db.음식주문.Single(x => x.주문번호 == order.주문번호);
+        entity.상태 = 음식주문상태코드.기사배정;
+        entity.배차상태 = 음식주문배차상태코드.기사배정;
+        entity.배차대기Id = queue.Id;
+        db.음식배달시도.Add(new 살뜰.도메인.음식.음식배달시도
+        {
+            시도StableId = "attempt-1", 주문번호 = order.주문번호, 제안Id = queue.의뢰Id,
+            기사Id = "driver-1", 시도순번 = 1, 수락시각Utc = DateTime.UtcNow,
+            중단시각Utc = ended ? DateTime.UtcNow : null
+        });
+        db.SaveChanges();
+        return (store, order.주문번호);
+    }
+
+    [Fact]
     public void 새DB의_문자열복합인덱스가_MySql키길이를_초과하지_않는다()
     {
         using var db = CreateContext();
@@ -42,6 +154,12 @@ public sealed class EfSsalddelFoodOrderStoreTests
         entity.상태 = 음식주문상태코드.기사배정;
         entity.배차상태 = 음식주문배차상태코드.기사배정;
         entity.조리예상완료시각Utc = DateTime.UtcNow.AddMinutes(1);
+        entity.상태이력.Add(new 살뜰.도메인.음식.음식주문상태이력
+        {
+            이전상태 = 음식주문상태코드.주문대기,
+            다음상태 = 음식주문상태코드.조리중,
+            사유 = "음식점 주문 수락", 전이시각Utc = DateTime.UtcNow.AddMinutes(-1)
+        });
         await db.SaveChangesAsync();
         var request = new 음식점주문진행변경요청
             { 클라이언트요청Id = Guid.NewGuid(), 작업 = 음식점주문진행작업코드.픽업준비 };
@@ -52,7 +170,7 @@ public sealed class EfSsalddelFoodOrderStoreTests
         Assert.Equal(음식주문상태코드.기사배정, repeated.주문.상태);
         Assert.Equal(음식주문배차상태코드.기사배정, repeated.주문.배차상태);
         Assert.NotNull(repeated.주문.픽업준비시각Utc);
-        Assert.Equal(2, repeated.주문.Revision);
+        Assert.Equal(3, repeated.주문.Revision);
         Assert.Single(await db.음식주문상태이력.Where(x => x.클라이언트요청Id == request.클라이언트요청Id).ToListAsync());
     }
 

@@ -404,6 +404,11 @@ public sealed class 주문자음식주문조회UseCase(
             return "주문이 취소되어 배달이 진행되지 않습니다.";
         }
 
+        if (normalizedOrderStatus == 음식주문상태코드.주문확인)
+            return "음식점이 주문을 확인했습니다. 기사 배정이 확정될 때까지 조리를 기다립니다.";
+        if (normalizedOrderStatus == 음식주문상태코드.조리중)
+            return "음식점이 조리를 시작했습니다. 기사 배차와 준비 진행을 확인하고 있습니다.";
+
         if (normalizedOrderStatus == 음식주문상태코드.수령확인)
         {
             return "기사 전달과 주문자 수령 확인이 모두 완료되었습니다.";

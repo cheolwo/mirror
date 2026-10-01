@@ -6,6 +6,7 @@ namespace Ssalddel.Contracts.Food;
 public static class 음식주문상태코드
 {
     public const string 주문대기 = "주문대기";
+    public const string 주문확인 = "주문확인";
     public const string 조리중 = "조리중";
     public const string 픽업대기 = "픽업대기";
     public const string 기사배정 = "기사배정";
@@ -18,6 +19,7 @@ public static class 음식주문상태코드
     public static IReadOnlyList<string> 전체 { get; } =
     [
         주문대기,
+        주문확인,
         조리중,
         픽업대기,
         기사배정,
@@ -33,6 +35,7 @@ public static class 음식주문상태코드
         {
             "주문접수" => 주문대기,
             주문대기 => 주문대기,
+            주문확인 => 주문확인,
             조리중 => 조리중,
             픽업대기 => 픽업대기,
             기사배정 => 기사배정,
@@ -89,12 +92,14 @@ public static class 음식점주문수신함처리상태코드
 
 public static class 음식점주문진행작업코드
 {
+    public const string 조리시작 = "조리시작";
     public const string 거절 = "거절";
     public const string 조리시간변경 = "조리시간변경";
     public const string 픽업준비 = "픽업준비";
 
     public static IReadOnlyList<string> 전체 { get; } =
     [
+        조리시작,
         거절,
         조리시간변경,
         픽업준비
@@ -185,6 +190,10 @@ public sealed class 음식주문응답
     public string? 결제수단 { get; set; }
     public 음식주문결제승인Dto? 결제승인 { get; set; }
     public DateTime? 음식점수락시각Utc { get; set; }
+    public int? 조리예상분 { get; set; }
+    public DateTime? 조리시작시각Utc { get; set; }
+    // 조회 시점의 서버 판정이며 실행 시 현재 배차와 revision을 다시 검증합니다.
+    public bool 조리시작가능 { get; set; }
     public DateTime? 조리예상완료시각Utc { get; set; }
     public DateTime? 픽업준비시각Utc { get; set; }
     public DateTime? 배차요청시각Utc { get; set; }

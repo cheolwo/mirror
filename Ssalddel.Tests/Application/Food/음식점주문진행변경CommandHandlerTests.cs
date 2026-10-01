@@ -56,7 +56,8 @@ public sealed class 음식점주문진행변경CommandHandlerTests
             new 음식점주문진행변경요청
             {
                 클라이언트요청Id = Guid.NewGuid(),
-                작업 = 음식점주문진행작업코드.픽업준비
+                작업 = 음식점주문진행작업코드.조리시간변경,
+                조리예상분 = 30
             },
             "restaurant-user");
 

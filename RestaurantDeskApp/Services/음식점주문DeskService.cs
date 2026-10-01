@@ -288,6 +288,11 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService
             cancellationToken);
     }
 
+    public Task<음식점주문DeskItem?> 조리시작Async(
+        string 주문번호, int 조리예상분, CancellationToken cancellationToken = default)
+        => 진행변경Async(주문번호, 음식점주문진행작업코드.조리시작,
+            음식점조리시간정책.Clamp(조리예상분), string.Empty, cancellationToken);
+
     public Task<음식점주문DeskItem?> 조리시간변경Async(
         string 주문번호,
         int 조리예상분,
@@ -379,6 +384,7 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService
             item.상품목록,
             조리시간설정.상품별기본조리분,
             조리시간설정.음식점기본조리분);
+        if (detail.조리예상분 is > 0) item.선택조리예상분 = detail.조리예상분;
         item.주문금액 = detail.총주문금액;
         item.배차상태 = detail.배차상태;
         item.배차요청시각Utc = detail.배차요청시각Utc;
@@ -491,6 +497,7 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService
     {
         var actionId = operation switch
         {
+            음식점주문진행작업코드.조리시작 => 음식배달가능행동Ids.음식점조리시작,
             음식점주문진행작업코드.거절 => 음식배달가능행동Ids.음식점주문거절,
             음식점주문진행작업코드.조리시간변경 => 음식배달가능행동Ids.음식점조리시간변경,
             음식점주문진행작업코드.픽업준비 => 음식배달가능행동Ids.음식점픽업준비완료,

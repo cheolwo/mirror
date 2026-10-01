@@ -288,11 +288,11 @@ public sealed class 음식배달관찰검증Runner(
         await ExpectDeniedAsync("customer", $"api/v1/food-orders/{_orderNo}/restaurant-acceptance", acceptance, ct);
         var accepted = await PostAsync<음식주문응답>("restaurant", $"api/v1/food-orders/{_orderNo}/restaurant-acceptance", acceptance, ct);
         RequireAction(accepted.AvailableActions, 음식배달가능행동Ids.음식점조리시간변경, "음식점 조리중");
-        RequireAction(accepted.AvailableActions, 음식배달가능행동Ids.음식점픽업준비완료, "음식점 조리중");
+        Require(!accepted.AvailableActions.Any(x => x.ActionId == 음식배달가능행동Ids.음식점조리시작
+            || x.ActionId == 음식배달가능행동Ids.음식점픽업준비완료), "배차 확정 전에 조리를 시작하거나 준비 완료할 수 없습니다.");
         await PostAsync<음식주문응답>("restaurant", $"api/v1/food-orders/{_orderNo}/restaurant-acceptance", acceptance, ct);
-        var readyAt = DateTime.UtcNow.AddMinutes(1);
-        Record("restaurant", "수락·조리 시작", "수락 중복 요청 / 동일 배차대기 확인");
-        Actor("restaurant", "조리중", "픽업 준비", "기존 계약의 1분 조리 대기");
+        Record("restaurant", "주문 확인", "수락 중복 요청 / 동일 배차대기 확인 / 조리 대기");
+        Actor("restaurant", "기사 배차 대기", "조리 시작", "기사 배정 확정 후 조리");
         await RequeryAsync(ct);
         var dispatchDeadline = DateTime.UtcNow.AddSeconds(30);
         while (DateTime.UtcNow < dispatchDeadline)
@@ -324,6 +324,14 @@ public sealed class 음식배달관찰검증Runner(
         await ExpectDeniedAsync("driver-far", offerPath + "/accept", null, ct);
         await PostAsync<JsonElement>("driver-near", offerPath + "/accept", null, ct);
         Record("driver-near", "제안 수락", "서버 거리 평가·권한 확인 뒤 기사 배정");
+        var assignedOrder = await GetAsync<음식주문응답>("restaurant", $"api/v1/food-orders/restaurant/inbox/{_orderNo}", ct);
+        RequireAction(assignedOrder.AvailableActions, 음식배달가능행동Ids.음식점조리시작, "기사 배정 후 조리 대기");
+        var startedOrder = await PostAsync<음식주문응답>("restaurant", $"api/v1/food-orders/{_orderNo}/restaurant-progress",
+            new 음식점주문진행변경요청 { 클라이언트요청Id = Guid.NewGuid(), 예상Revision = assignedOrder.Revision,
+                작업 = 음식점주문진행작업코드.조리시작 }, ct);
+        var readyAt = startedOrder.조리예상완료시각Utc ?? DateTime.UtcNow.AddMinutes(1);
+        Record("restaurant", "조리 시작", "유효한 배차 확인 후 조리 시작 API");
+        Actor("restaurant", "조리중", "픽업 준비", "실제 조리 시작 뒤 1분 대기");
         Actor("driver-near", "음식점 이동", "픽업", "조리 완료와 도착 대기");
         for (var step = 1; step <= 10; step++)
         {

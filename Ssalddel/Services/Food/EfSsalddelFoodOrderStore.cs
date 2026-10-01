@@ -1,10 +1,13 @@
 using System.Text.Json;
+using System.Data;
 using Ssalddel.Contracts.Common.Participants;
 using Ssalddel.Contracts.Food;
 using Microsoft.EntityFrameworkCore;
 using 살뜰.Data;
 using 살뜰.도메인.설정;
 using 살뜰.도메인.음식;
+using 살뜰.Services.Dispatch.Common;
+using 살뜰.도메인.공통;
 
 namespace Ssalddel.Services.Food;
 
@@ -161,9 +164,7 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         }
 
         var now = DateTime.UtcNow;
-        var nextStatus = request.즉시픽업가능여부
-            ? 음식주문상태코드.픽업대기
-            : 음식주문상태코드.조리중;
+        var nextStatus = 음식주문상태코드.주문확인;
         음식배달업무상태전이Guard.허용확인(currentStatus, nextStatus);
         var cookingMinutes = request.즉시픽업가능여부
             ? 0
@@ -176,7 +177,9 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         order.음식점위도 = request.음식점위도 ?? order.음식점위도;
         order.음식점경도 = request.음식점경도 ?? order.음식점경도;
         order.음식점수락시각Utc = now;
-        order.조리예상완료시각Utc = now.AddMinutes(cookingMinutes);
+        order.적용조리분 = cookingMinutes;
+        // 준비된 음식은 조리 시작과 구별하며 새 조리는 배차 확정 뒤 시작합니다.
+        order.조리예상완료시각Utc = request.즉시픽업가능여부 ? now : null;
         order.수락메모 = Clean(request.수락메모);
         order.UpdatedAt = now;
         order.상태이력.Add(new 음식주문상태이력
@@ -187,7 +190,7 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
             처리UserId = Clean(처리UserId),
             이전상태 = currentStatus,
             다음상태 = nextStatus,
-            사유 = "음식점 주문 수락",
+            사유 = request.즉시픽업가능여부 ? "음식점 주문 확인 · 기존 준비 완료" : "음식점 주문 확인 · 배차 후 조리",
             전이시각Utc = now
         });
 
@@ -201,6 +204,18 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         string orderNo,
         음식점주문진행변경요청 request,
         string 처리UserId)
+    {
+        // 직접 저장소 호출도 배차 해제와 조리 시작의 경쟁을 같은 DB 경계에서 처리합니다.
+        using var transaction = _db.Database.IsRelational() && _db.Database.CurrentTransaction is null
+            ? _db.Database.BeginTransaction(IsolationLevel.Serializable)
+            : null;
+        var result = 진행변경Core(orderNo, request, 처리UserId);
+        transaction?.Commit();
+        return result;
+    }
+
+    private 음식주문변경결과? 진행변경Core(
+        string orderNo, 음식점주문진행변경요청 request, string 처리UserId)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -226,12 +241,26 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         {
             throw new DbUpdateConcurrencyException("음식 주문이 다른 요청에서 먼저 변경되었습니다.");
         }
-        var decision = 음식점주문진행Policy.판정(currentStatus, request);
+        var started = 조리시작시각(order).HasValue;
+        var prepared = order.상태이력.Any(x => x.사유 == "음식점 주문 확인 · 기존 준비 완료");
+        var decision = 음식점주문진행Policy.판정(currentStatus, request,
+            유효한배차확정(order) && order.상태이력.Any(x => x.다음상태 == 음식주문상태코드.주문확인),
+            started || prepared, order.적용조리분);
         var now = DateTime.UtcNow;
         order.상태 = decision.다음상태;
         if (decision.조리예상분 is { } cookingMinutes)
         {
-            order.조리예상완료시각Utc = now.AddMinutes(cookingMinutes);
+            order.적용조리분 = cookingMinutes;
+            if (started || request.작업.Trim() is 음식점주문진행작업코드.조리시작 or 음식점주문진행작업코드.픽업준비)
+                order.조리예상완료시각Utc = now.AddMinutes(cookingMinutes);
+        }
+        if (request.작업.Trim() == 음식점주문진행작업코드.조리시작)
+        {
+            var attempt = _db.음식배달시도.Where(x => x.주문번호 == order.주문번호)
+                .OrderByDescending(x => x.시도순번).ThenByDescending(x => x.Id).First();
+            attempt.표시준비예정시각Utc = order.조리예상완료시각Utc;
+            attempt.Revision++;
+            attempt.UpdatedAtUtc = now;
         }
 
         order.UpdatedAt = now;
@@ -501,7 +530,29 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         return $"FOOD-{Guid.NewGuid():N}";
     }
 
-    private static 음식주문응답 ToDto(음식주문 order)
+    private bool 유효한배차확정(음식주문 order)
+    {
+        if (order.배차대기Id is not { } id || order.배차상태 != 음식주문배차상태코드.기사배정)
+            return false;
+        var queue = _db.운송원장.AsNoTracking().SingleOrDefault(x => x.Id == id);
+        if (queue is null || queue.원본의뢰Id != order.주문번호
+            || queue.배차업무유형 != 상태값.배차업무유형.음식배달
+            || queue.상태 != 상태값.배차대기상태.확정 || queue.배차큐단계 != 상태값.배차큐단계.확정
+            || string.IsNullOrWhiteSpace(queue.확정기사Id)) return false;
+        var attempt = _db.음식배달시도.AsNoTracking()
+            .Where(x => x.주문번호 == order.주문번호)
+            .OrderByDescending(x => x.시도순번).ThenByDescending(x => x.Id).FirstOrDefault();
+        return attempt is not null && attempt.제안Id == queue.의뢰Id && attempt.기사Id == queue.확정기사Id
+            && !attempt.중단시각Utc.HasValue && !attempt.전달완료시각Utc.HasValue
+            && !attempt.픽업완료시각Utc.HasValue;
+    }
+
+    private static DateTime? 조리시작시각(음식주문 order)
+        => order.상태이력.Where(x => x.사유 == "음식점 조리 시작"
+            || (x.사유 == "음식점 주문 수락" && x.다음상태 == 음식주문상태코드.조리중))
+            .OrderBy(x => x.전이시각Utc).Select(x => (DateTime?)x.전이시각Utc).FirstOrDefault();
+
+    private 음식주문응답 ToDto(음식주문 order)
         => new()
         {
             주문번호 = order.주문번호,
@@ -547,10 +598,18 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
                     승인시각Utc = DateTime.SpecifyKind(order.결제승인시각Utc.Value, DateTimeKind.Utc)
                 } : null,
             음식점수락시각Utc = order.음식점수락시각Utc,
+            조리예상분 = order.적용조리분,
+            조리시작시각Utc = 조리시작시각(order),
+            조리시작가능 = order.상태 == 음식주문상태코드.기사배정
+                && !조리시작시각(order).HasValue && order.적용조리분 != 0
+                && order.상태이력.Any(x => x.다음상태 == 음식주문상태코드.주문확인)
+                && !order.상태이력.Any(x => x.사유 == "음식점 주문 확인 · 기존 준비 완료")
+                && 유효한배차확정(order),
             조리예상완료시각Utc = order.조리예상완료시각Utc,
             픽업준비시각Utc = order.상태이력
                 .Where(x => x.다음상태 == 음식주문상태코드.픽업대기
-                            || x.사유.StartsWith("음식점 픽업 준비 완료", StringComparison.Ordinal))
+                            || x.사유.StartsWith("음식점 픽업 준비 완료", StringComparison.Ordinal)
+                            || x.사유 == "음식점 주문 확인 · 기존 준비 완료")
                 .OrderBy(x => x.전이시각Utc)
                 .Select(x => (DateTime?)x.전이시각Utc)
                 .FirstOrDefault(),

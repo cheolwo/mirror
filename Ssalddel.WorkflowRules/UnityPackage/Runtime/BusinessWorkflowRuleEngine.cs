@@ -187,7 +187,8 @@ namespace Ssalddel.WorkflowRules
                 return string.Empty;
 
             var state = target.Length > 0 ? target : current;
-            if (string.Equals(state, 음식배달상태코드.조리중, StringComparison.Ordinal)
+            if (string.Equals(state, 음식배달상태코드.주문확인, StringComparison.Ordinal)
+                || string.Equals(state, 음식배달상태코드.조리중, StringComparison.Ordinal)
                 || string.Equals(state, 음식배달상태코드.픽업대기, StringComparison.Ordinal)
                 || string.Equals(state, 음식배달상태코드.거절, StringComparison.Ordinal))
                 return BusinessWorkflowModuleCodes.음식점;

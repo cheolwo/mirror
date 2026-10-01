@@ -19,7 +19,7 @@ public sealed class 음식점전표DraftFactory
             DocumentNo = order.주문번호,
             DocumentKind = SsalddelExpectedItemDocumentKindCode.OutboundExpectedItems,
             Title = $"주문 전표 {order.주문번호}",
-            Status = "주문수락",
+            Status = order.상태,
             WarehouseName = $"음식점 {order.음식점Id}",
             OwnerName = "주방/포장",
             CounterpartyName = $"{order.수령인정보.수령인명} / {order.수령인정보.연락처}",
@@ -59,7 +59,8 @@ public sealed class 음식점전표DraftFactory
             ProductBarcode = productBarcode,
             BundleBarcode = bundleBarcode,
             LocationCode = "KITCHEN",
-            StorageCondition = "즉시조리",
+            StorageCondition = order.픽업준비시각Utc.HasValue ? "픽업준비"
+                : order.조리시작시각Utc.HasValue || order.상태 == 음식주문상태코드.조리중 ? "조리중" : "조리대기",
             RelatedOrderNo = order.주문번호,
             Note = $"{item.단가:N0}원",
             BarcodePayload = SsalddelIdentifierCodePayloads.Create(
@@ -78,7 +79,10 @@ public sealed class 음식점전표DraftFactory
             ? "요청사항 없음"
             : order.수령인정보.요청사항;
 
-        return $"결제: {order.결제수단 ?? "미지정"} / 금액: {order.총주문금액:N0}원\n주소: {address}\n요청: {request}";
+        var preparation = order.조리시작시각Utc.HasValue || order.상태 == 음식주문상태코드.조리중
+            ? "조리 시작 기록 완료"
+            : order.픽업준비시각Utc.HasValue ? "기존 준비 완료 음식" : "기사 배정 확정 후 앱에서 조리 시작을 눌러 주세요.";
+        return $"조리: {preparation}\n결제: {order.결제수단 ?? "미지정"} / 금액: {order.총주문금액:N0}원\n주소: {address}\n요청: {request}";
     }
 
     private static DateTimeOffset ToLocalOffset(DateTime value)

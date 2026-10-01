@@ -1,4 +1,5 @@
 using MediatR;
+using System.Data;
 using Ssalddel.Application.Food.Commands;
 using Ssalddel.Application.Food.Events;
 using Ssalddel.Contracts.Food;
@@ -68,7 +69,7 @@ public sealed class 음식점주문진행변경CommandHandler(
         var strategy = db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
         {
-            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
             var changed = 진행변경(request);
             if (changed?.새로변경됨 == true)
             {
