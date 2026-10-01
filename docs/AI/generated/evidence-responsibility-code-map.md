@@ -2,8 +2,8 @@
 
 > 이 문서는 C# E 책임 Attribute와 현재 E 책임 모듈 대장에서 자동 생성된다. 직접 수정하지 않는다.
 
-- 후보 타입: `873`
-- 책임 지정: `869`
+- 후보 타입: `882`
+- 책임 지정: `878`
 - 사유 있는 제외: `4`
 - 미분류: `0`
 - 메서드 책임: `17`
@@ -13,8 +13,8 @@
 | E | G | 모듈 | 대표 | 보조 |
 | --- | --- | --- | ---: | ---: |
 | `E1` | `G1` | `E1핵심계약Module` 핵심 계약 | 133 | 0 |
-| `E2` | `G1` | `E2실행경계Module` 실행 경계 | 285 | 0 |
-| `E3` | `G1` | `E3회귀증거Module` 회귀 증거 | 301 | 1 |
+| `E2` | `G1` | `E2실행경계Module` 실행 경계 | 287 | 0 |
+| `E3` | `G1` | `E3회귀증거Module` 회귀 증거 | 316 | 1 |
 | `E4` | `G1` | `E4실행문맥결속Module` 실행 문맥 결속 | 54 | 0 |
 | `E5` | `G1` | `E5세계발현Module` 세계 발현 | 7 | 0 |
 | `E6` | `G1` | `E6세계정제Module` 세계 정제 | 21 | 0 |
@@ -35,22 +35,22 @@
 | `E1` | `E1공간계약Module` 공간 계약 | `E1.SpatialContract` | H·AreaSet·Graph·Handover의 안정 식별자와 구조 계약을 정의한다. | 18 | 0 |
 | `E1` | `E1세계상호작용계약Module` 세계 상호작용 계약 | `E1.WorldInteractionContract` | WI 목적·StableId·허용 발생원과 Preview·Confirm 계약을 정의한다. | 29 | 0 |
 | `E2` | `E2로컬권위AdapterModule` 로컬 권위 Adapter | `E2.LocalAuthorityAdapter` | Solo LocalProcess에서 공통 Simulation Core를 실행한다. | 3 | 0 |
-| `E2` | `E2원격HostAdapterModule` 원격 Host Adapter | `E2.RemoteHostAdapter` | Hosted Server에서 같은 Core를 HTTP 경계로 노출한다. | 16 | 0 |
-| `E2` | `E2세션실행Module` 세션 실행 | `E2.SessionExecution` | Session 생성·조회·Tick·Save/Load의 공통 실행 포트를 제공한다. | 5 | 0 |
+| `E2` | `E2원격HostAdapterModule` 원격 Host Adapter | `E2.RemoteHostAdapter` | Hosted Server에서 같은 Core를 HTTP 경계로 노출한다. | 17 | 0 |
+| `E2` | `E2세션실행Module` 세션 실행 | `E2.SessionExecution` | Session 생성·조회·Tick·Save/Load의 공통 실행 포트를 제공한다. | 6 | 0 |
 | `E2` | `E2공간실행Module` 공간 실행 | `E2.SpatialExecution` | H·LH·배치 계획의 준비·활성·캐시·해제 실행 경계를 제공한다. | 11 | 0 |
 | `E2` | `E2Unity권위ClientModule` Unity 권위 Client | `E2.UnityAuthorityClient` | Unity 입력을 Local 또는 Remote 권위 포트에 전달한다. | 5 | 0 |
 | `E2` | `E2세계상호작용실행Module` 세계 상호작용 실행 | `E2.WorldInteractionExecution` | Farm·Nature WI Preview·Confirm 실행 포트를 제공한다. | 51 | 0 |
-| `E3` | `E3계약회귀Module` 계약 회귀 | `E3.ContractRegression` | StableId·요청·응답·WI metadata 계약의 회귀를 검증한다. | 35 | 0 |
-| `E3` | `E3결정성검증Module` 결정성 검증 | `E3.DeterminismRegression` | 같은 Seed·명령·시간이 같은 canonical 상태를 만드는지 검증한다. | 18 | 0 |
+| `E3` | `E3계약회귀Module` 계약 회귀 | `E3.ContractRegression` | StableId·요청·응답·WI metadata 계약의 회귀를 검증한다. | 39 | 0 |
+| `E3` | `E3결정성검증Module` 결정성 검증 | `E3.DeterminismRegression` | 같은 Seed·명령·시간이 같은 canonical 상태를 만드는지 검증한다. | 23 | 0 |
 | `E3` | `E3로컬원격동등성Module` 로컬·원격 동등성 | `E3.LocalRemoteParityRegression` | LocalProcess와 RemoteHost가 같은 권위 결과를 만드는지 검증한다. | 2 | 0 |
 | `E3` | `E3저장재생검증Module` 저장·재생 검증 | `E3.SaveReplayRegression` | Save schema 호환·복원·Replay hash 회귀를 검증한다. | 6 | 1 |
-| `E3` | `E3Unity소비자회귀Module` Unity 소비자 회귀 | `E3.UnityConsumerRegression` | Unity Adapter·Projection이 권위 계약을 임의 변경하지 않는지 검증한다. | 9 | 0 |
+| `E3` | `E3Unity소비자회귀Module` Unity 소비자 회귀 | `E3.UnityConsumerRegression` | Unity Adapter·Projection이 권위 계약을 임의 변경하지 않는지 검증한다. | 12 | 0 |
 
 ### 아직 하위 모듈을 지정하지 않은 기존 책임
 
 - `E1`: `76`개
 - `E2`: `194`개
-- `E3`: `231`개
+- `E3`: `234`개
 
 ## 미분류 후보
 
@@ -276,6 +276,7 @@
 | `Ssalddel.Simulation.Application.음식배달여정SnapshotFactory` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Application.음식배달여정SnapshotValidator` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Application.음식배달여정상태Projector` | `E2` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Application.프랜차이즈공급망SimulationService` | `E2` | `E2.SessionExecution` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Contracts.ISimulationFoodOrderRuntime` | `E2` | `E2.WorldInteractionExecution` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Contracts.ISimulationLogisticsRuntime` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Contracts.ISimulationNpcPolicyRuntime` | `E2` | `E2.WorldInteractionExecution` | `` | `` | `Annotated` |
@@ -483,6 +484,7 @@
 | `Ssalddel.Simulation.Hosting.Controllers.경영Simulation수확수출Controller` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Hosting.Controllers.경영Simulation주문소비Controller` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Hosting.Controllers.경영Simulation턴결정Controller` | `E2` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Hosting.Controllers.프랜차이즈공급망SimulationController` | `E2` | `E2.RemoteHostAdapter` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Hosting.DisabledSimulationFarmRealityEvidenceStore` | `E6` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Hosting.SimulationWorldTileArtifactContentService` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Infrastructure.FileSimulationLocalSaveSlotStore` | `E3` | `` | `` | `` | `Annotated` |
@@ -691,6 +693,9 @@
 | `Ssalddel.Simulation.Tests.음식점관찰표본Tests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.음식점조리인계Tests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.지역이동망ContractsTests` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Tests.프랜차이즈공급망ProjectionWriterTests` | `E3` | `E3.ContractRegression` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Tests.프랜차이즈공급망SimulationPersistenceTests` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Tests.프랜차이즈공급망SimulationTests` | `E3` | `E3.DeterminismRegression` | `` | `` | `Annotated` |
 | `Ssalddel.Tests.UnityData.CargoJourneyPresentationTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Tests.UnityData.CommunityMarketSquareVerticalSliceTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Tests.UnityData.FarmProducerVerticalSliceTests` | `E3` | `` | `` | `` | `Annotated` |
@@ -781,7 +786,11 @@
 | `Ssalddel.Unity.Tests.UrbanMarketSupplyManagementUnityBindingTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.동네관찰Tests` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.몰입WorldLayoutTests` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Tests.방문기록JsonDecoderTests` | `E3` | `E3.ContractRegression` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Tests.방문순서재생SessionTests` | `E3` | `E3.DeterminismRegression` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Tests.방문재생준비Tests` | `E3` | `E3.DeterminismRegression` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.상품근거ItemDetailProjectionTests` | `E3` | `E3.UnityConsumerRegression` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Tests.생활관찰표현SessionTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.수출항만인수학당PreviewAdapterTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.운영역할GameObjectCatalogPolicyTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.음식배달관찰Tests` | `E3` | `E3.UnityConsumerRegression` | `` | `` | `Annotated` |
@@ -838,6 +847,14 @@
 | `Ssalddel.Unity.Data.WorldProjection.OperationalOsObservationRouter` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Data.WorldProjection.OperationalOsWorldObservationSession` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Data.WorldProjection.OperationalWorldScenePlacementPlanner` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Data.WorldProjection.방문기록JsonDecoder` | `E3` | `E3.ContractRegression` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Data.WorldProjection.방문순서재생Session` | `E3` | `E3.DeterminismRegression` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Data.WorldProjection.방문위치결속` | `E3` | `E3.ContractRegression` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Data.WorldProjection.방문재생Frame` | `E3` | `E3.UnityConsumerRegression` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Data.WorldProjection.방문재생준비` | `E3` | `E3.DeterminismRegression` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Data.WorldProjection.방문재생준비Result` | `E3` | `E3.UnityConsumerRegression` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Data.WorldProjection.생활관찰표현Session` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Data.WorldProjection.준비된방문` | `E3` | `E3.UnityConsumerRegression` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Data.농업ScenarioValidator` | `E7` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Data.시장가격관측Mapper` | `E7` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Evidence.연구근거Validator` | `E6` | `` | `` | `` | `Annotated` |

@@ -2,6 +2,26 @@
 
 # 지역 운영 생명주기 E2E·전국 확장 뼈대 제안
 
+## 2026-09-28 음식점 앱 USB 설치 준비
+
+[음식점 USB APK 준비 r1](restaurant-usb-apk-preparation.r1.md): 본인의 PC 연결 시험 요청에 따라 현 소스를 독립 설치용 Debug APK로 포장했다. 빌드 오류/경고 0·서명·정렬·앱/런타임 포함·로컬 서버 주소를 확인했다. 휴대폰과 전용 서버는 미연결이며 설치·로그인·업무 검증은 후속이다. 기존 r12의 공개 HTTPS/전용 키 Release 관문을 대체하지 않는다.
+
+## 2026-09-27 음식점 모바일 우선 후속
+
+[메뉴 수정 충돌 r7](restaurant-menu-conflict.r7.md): 동일 가게의 다른 메뉴명으로 변경할 때 저장 전 거절하고409로 안내한다. [결과](restaurant-menu-conflict.r7.result.md): 집중50/50·전체시험 기존 실패7건. SQLite 업무/직접 Controller 시험 범위와 실제 HTTP·동시성·기기를 구분한다.
+
+[메뉴 입력 정합성 r6](restaurant-menu-validation.r6.md): 기존 저장 제한을 화면과 서버에서 공유하고 선택 HTTPS 사진 주소를 양쪽에서 검사한다. [결과](restaurant-menu-validation.r6.result.md): 집중40/40·전체시험 기존 실패7건. 실제 기기·DB 검증은 별도다.
+
+[결제 승인 반영 r5](restaurant-payment-approval.r5.md): 실결제 없이 승인 Command·Outbox·음식 주문 승인 내역·역할별 재조회 경로를 연결한다. 승인 내역은 환불 잔액·정산·지급 완료가 아니며 신규 소비자는 기본 비활성이다. [로컬 작업 수용 명세](restaurant-payment-approval.r5.work-order.json), [구현·검증 결과](restaurant-payment-approval.r5.result.md).
+
+[기본 탐색 r4](restaurant-navigation.r4.md): 주문 기본 진입·하단 3탭·메뉴 입력 분리/복귀를 구현하고 합성 브라우저에서 확인했다. 결제·정산 종단은 별도 남은 작업이다.
+
+[업무·결제·정산 점검 r3](restaurant-lifecycle-audit.r3.md): 기본 탐색 합의와 현 코드 차이, 정상 시험의 정산 대체 구현, 결제·환불·음식점 정산 보완 범위를 기록했다. 자동시험 성공과 실제 지급 검증은 구분한다.
+
+[메뉴 화면 r2](restaurant-menu-mobile.r2.md): 기존 API에 메뉴 목록·등록·수정·공개/품절을 연결하고 동일 화면 코드의 합성 로컬 미리보기를 제공한다. 실제 네이티브 화면·스크린샷·운영 저장 검증과 구분한다.
+
+[음식점 모바일 업무 흐름 r1](restaurant-mobile-workflow.r1.md): 오늘의 구현 우선순위는 음식점 앱이다. 기존 서버 주문·조리시간·알림을 재사용하고 첫 변경은 주문함 조회 상태와 기기 조리시간 UI에 한정했다. 판매 메뉴 관리 화면·실제 렌더/전체 주문 조작은 후속이다. 아래 r50의 운영자 우선 이력은 보존하되 이번 작업의 우선순위로 해석하지 않는다.
+
 > 화면 이미지 경계: 이 문서에 연결된 모바일 이미지는 모두 `SampleOnly / NotApprovedVisual / NotImplementationSpec`인 탐색용 샘플이다. Git 커밋은 시안 승인이나 구현 지시를 뜻하지 않는다. [샘플 이미지 대장](../../../../assets/planning/README.md)
 
 - 기획 ID: `PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD`

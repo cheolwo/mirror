@@ -1,5 +1,211 @@
 # Mirror(거울) Current Work
 
+## 현재 작업: 기사 배차 후 조리 시작 리팩터링 (2026-10-02)
+
+- [r62 구현·검증](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/driver-first-cooking.implementation.r62.md): r61 사용자 승인 후 주문확인→유효한 기사배정→명시적 조리 시작을 기존 운영 API·EF 저장·배차·음식점 앱에 구현했다. 현재 배차 원장과 최신 시도·요청 revision을 확인하고 실제 조리 시각은 상태 이력에 보존한다. DB 열 추가는 없다.
+- 조리 전 이탈은 주문확인 대기, 조리 후 이탈은 조리 이력 보존·재배차로 구분했다. 음식점 버튼과 재조회, 주문자 안내, 통계의 조리 시작 기준, 완료 상태 사본의 새 순서를 연결했다. 준비된 음식·과거 운영 주문·Simulation 호환은 구분한다.
+- 최종 Fast 검사 통과(`20261002-001344`, 40경로): 코드 색인·Simulation 및 제품 솔루션 build·선택된 관련 시험 170/170. 마지막 전표 변경을 포함한 Android 음식점 앱 build 오류 0·경고 0. Task 전체 검사(`20261002-000811`)는 두 솔루션 build와 Simulation 2,001/2,001 통과, 서버 5,464/5,471 통과다. 전체 결과는 실패이며 이번 수정 범위 밖의 문서·API 메타데이터·재료 화면 CSS·공동체 라우트 검사 7건이 남았다. SQLite의 Handler/기사 Service/저장·재조회는 자동 시험이며 외부 원장·알림·역할 앱 HTTP/UI·실제 기기·MySQL 동시 요청은 미검증이다.
+- 배차 제한시간·주문 확인 이후 새 취소/환불/보상 정책은 미정이다. 다른 미커밋 변경은 보존했고 시작 시 차이를 `artifacts/local/driver-first-cooking-20261001/`에 남겼다. 과금 설정·운영 활성화·commit·push·기기 설치·배포는 수행하지 않았다.
+
+## 현재 작업: 음식점 앱 USB 설치용 APK 준비 (2026-09-28)
+
+- [USB APK 준비 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-usb-apk-preparation.r1.md): 휴대폰을 PC에 연결해 설치할 수 있도록 기존 음식점 앱을 Debug·어셈블리 포함으로 포장했다. 제품 코드·기존 Release 보안·서명 조건은 변경하지 않았으며 기존 미커밋 구현을 포함한 로컬 패키지다.
+- 결과: `artifacts/local/mobile-field-test/restaurant-usb-20260928/RestaurantDeskApp-usb-debug.apk`, 127,650,508바이트, SHA-256 `14349A0BC05500BA246B3004A6D88980D48E4C0DED43715D7F877F79DF7959DA`. 앱 표시명 `살뜰 식당 USB 시험`, `0.1.0 (1)`·최소 API24·목표 API36·arm64/x64.
+- 실제 빌드 오류/경고 0, 개발 서명 v2/v3·zip 정렬·앱/런타임 포함·두 ABI의 내장 loopback 주소5321·사본 hash를 확인했다. 장치0대·전용 포트 미가동으로 설치/실행/로그인/메뉴 저장/화면 검증은 하지 않았다. Release 배포·r12 전체 실행 완료와 구별한다.
+- 기기 연결 후 정확한 장치·CPU 호환·서명/판본을 확인하고 설치→격리 서버 확인→USB reverse→로그인/메뉴 재조회 순서로 진행한다. 서명 충돌 시 자동 삭제하지 않는다. 서버/DB/계정/결제/지급·commit·push·스토어 업로드 변경 없음.
+- 문서 4경로 Fast·diff 검사 통과(`20260928-202611`), 상세 안내의 로컬 링크 3개·manifest의 APK hash/크기·산출물 Git 제외를 확인했다. Fast는 문서 검사이며 위 Android 빌드와 별개다. 제품 업무시험은 이번에 실행하지 않았다.
+
+## 현재 기획: 영업이익 4% 유지·배달과 별도로 앱 완성 r60 (2026-09-28)
+
+- [r60 방향·기존 완성 기준](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/delivery-app-parallel-completion.direction.r60.md): 기존 영업이익 4% 목표 유지를 사용자가 확인했다. 건당 수수료율 변경이 아니다. 배달 활동과 앱 완성을 별도로 진행하는 방향이며 새 촬영 자료를 앱 완성의 전제 조건으로 두지 않는다. 공동 참여·정산 투명성은 유지한다.
+- 기존 음식점 우선 결정과 메뉴 대표 실행 r12를 확인했다. r12 본문 hash/작업 명세·현재 HEAD는 기준과 일치한다. Preview의 API 연결 소스는 이미 있으나 메뉴 전용 Runner·r2 입력3개·최종 결과 문서는 없다. 부분 코드 착수/전체 실행 미확인으로 구별한다. 환경·파일 소유권·입력 신선도는 개발 재개 때 확인한다.
+- 다음 개발 진입 후보는 기존 승인 r12의 남은 메뉴 연결·실행 검증이며 제안이다. r57 정산 우선을 취소하지 않고 이후 신규 기능은 정산 투명성을 우선 검토한다. 정산 API/DB 보완은 r12 허용 범위 밖이므로 별도 명세가 필요하다. 당장 반복할 기획 질문은 없고 주문자 수수료 공개 질문은 후속으로 보류한다.
+- 이번 변경은 r60·r59 포인터·해당 README·`PLANNING.md`·이 snapshot의 5문서다. 코드·DB·실결제·지급·Unity·영상·APK 생성·외부 공개·자동화·commit·push 변경 없음. 기존 dirty 구현을 보존한다.
+- 문서 5경로 Fast·`git diff --check` 통과(`20260928-201001`), r59/r60 파일 링크 13개·목차/snapshot 진입 2개를 확인했다. 제품 build/test·실제 HTTP/DB·화면·APK·지급 실행은 이번 검증에 포함하지 않았다.
+
+## 기존 메뉴 충돌 보완 r7 / 앱 제작 보완 순환 r11 (2026-09-27)
+
+- [메뉴 r7 결과](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-conflict.r7.result.md): 같은 가게의 다른 메뉴명으로 수정할 때 DB 예외가 나던 문제를 저장 전 업무 충돌/409로 처리했다. 전용 예외로 내부 오류와 구분하고 소유 범위·revision 순서·자기 이름/타 가게 이름 허용은 보존했다. 제품2파일·새 시험1파일만 보완했다.
+- 수정 전8건 중3실패를 재현했다. 최종 Task `20260927-182717`: `Ssalddel.v0.0.slnx` build 성공, 전체5464건 중5457통과·기존과 같은 이름의 실패7건. 최종 집중50/50(충돌10+입력15+화면구성25) 통과. 메모리 SQLite 저장/독립 재조회와 실제 Controller 직접 호출이며 인증 HTTP·MySQL 경합·모바일 화면 검증은 아니다.
+- [제작 보완 순환 r11](Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-repair-cycle.r11.md): 결손 하나 선정→실패 재현→작은 보완→재검증→조건·근거·한계가 있는 규칙 후보 축적을 기존 r9 입력/r10 문답에 연결했다. 새 생성기·제품 기능·공통 규칙 자동 승격은 없다.
+- 문서12경로 Fast·diff 통과(`20260927-183337`, 제품 검사 생략), 생성 현황표 Write/Validate 일치(기획106개·문서529개·업무7개·경고9개). 메뉴 입력의 출처 hash4개 변경 등 재검토 경고를 유지하며 승인 기획/작업 명세 hash는 일치한다.
+- 다음 후보는 메뉴 Client의 빈 성공 응답 처리와 실제 인증 API/DB 확인이다. DB 동시성·영속 멱등성은 여전히 별도다. r9 입력의 옛 hash·사람 검토는 보존한다. 기존 dirty 작업을 보존했고 commit·push·배포·운영 DB 변경 없음.
+
+## 음식점 메뉴 입력 정합성 r6 (2026-09-27)
+
+- [승인 범위](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-validation.r6.md)·[결과](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-validation.r6.result.md): 공유 입력 정책으로 메뉴명200자·소개1000자·선택 사진 URL1000자/HTTPS를 화면·서버에 동일 적용했다. 등록/수정 전 검사하며 기존 route/DB/권한/revision 흐름을 보존한다.
+- 최종 Task `20260927-180721`: 전체 솔루션 build 성공, 5454건 중5447 통과·기존과 같은 이름의 실패7건. 이후 최종 집중40/40(메뉴15+화면구성25) 통과. 최초 Fast의 경계값 fixture 계산 오류3건은 수정했다. 실제 HTTP/DB 동시성/Android UI·APK·실결제는 미검증이다.
+- r9 입력 근거3개는 변경으로 재검토 표시되며 이전 초안/승인 hash는 보존했다. 다음은 격리 메뉴 API/DB 확인과 입력 새 판본 결속이다. 기존 dirty 작업을 보존했고 commit·push·운영 DB 변경 없음.
+
+## 앱 제작 문답 절차 r10 / 입력 도구 r9 (2026-09-27)
+
+- [문답 절차 r10](Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-guided-intake.r10.md): 사용자가 부족한 정보만 대화로 채우는 방식을 확정했다. 앱의 정보·소유/권한·업무 순서를 기존 자료로 먼저 채운 뒤 필요한 사용자 선택만 한 번에 하나씩 질문하고 답변을 누적한다. 충분하면 문답을 종료하며 기존 확정 사항을 재질문하지 않는다. 기술 사실은 AI가 조사한다. 문서 절차만 설정했으며 자동 문답 엔진·새 UI·제품 실행 승인·기존 메뉴 초안의 일괄 확인은 아니다.
+
+- r10 검증: 문서 8경로 Fast·diff 검사 통과(`20260927-174642`, 제품 build/test 생략), 기준 절차·입력 안내·목차의 로컬 링크20개 확인, 생성 현황표 Write/Validate 일치(발견106개·문서524개·업무7개·진단5개). 기존 r9 시험 증거는 Passed/Current이며 이번 문서 변경을 제품 시험으로 해석하지 않는다. commit·push 없음.
+- [승인 r9](Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-intake.r9.md), [결과](Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-intake.r9.result.md), [입력 안내](Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-input-guide.md): r8 추적 기반 위에 공통 앱 프로필·작업 입력·사람 검토를 선택 결속했다. r9 검증 당시 등록91개·발견106개·문서523개·역할 앱6업무+도구1업무였으며 현행 목록은 생성 현황표를 따른다. 미연결은 미검토이지 미구현이 아니다. r8/r9 원문·결과와 코드·증거 기준은 보존한다.
+- [음식점 메뉴 초안](Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/restaurant-menu-input-review.md)은 기존 r2/r4를 선작성했으며 길이 제한·서버 URL 검사 차이와 미리보기/서버 중복 처리 차이를 기록했다. `NeedsInformation`, 사람 검토·제품 승인·환경 준비 대기다. 새 제품 정책을 임의로 정하지 않았다.
+- [상태판](generated/planning-app-production.html)·[현황표](generated/planning-app-production.md)에 입력/확인/승인/환경을 따로 표시하고 인계·실행 증거에 입력과 중첩 출처 hash를 연결했다. APK 도구는 대상 앱 선택을 추가하며 생략 시 기존 네 앱 전체다. 실제 포장하지 않았다.
+- 최종 도구시험93/93·실행 manifest Passed/Current. 환경 기록 오류가 Ready로 보이던 문제를 독립 검토로 찾아 수정·회귀시험했다. 범위 Fast/Task 통과(제품 build/test 생략), 생성물 재검사·인계 export·문서 링크28개·diff 검사도 통과했다. 실제 브라우저 연결 불가로 렌더·390px 조작·캡처는 미검증이며 순수 DOM/HTTP 시험으로 대체하지 않는다. r8 시험 기록은 이후 입력 변경으로 Stale, 과거 앱 보고는 Unknown을 유지한다.
+- 시작 당시 기존 변경165항목을 보존했다. 제품 코드·DB·실결제·Unity·APK 생성·장치·배포·commit·push 없음. 다음은 메뉴 입력 충돌/환경 검토와 별도 승인 후 음식 업무의 실제 실행 증거 결속이다.
+
+## 음식 주문 결제 승인 연결 r5 (2026-09-27)
+
+- [승인 기획 r5](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-payment-approval.r5.md)와 [검증 기록](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-payment-approval.r5.result.md): 기존 승인 Handler·승인 Outbox·음식 승인 EventHandler의 의도를 음식 주문 승인 내역에 연결했다. DB/의도/주문 대상·소유자·금액·통화·시각을 대조하고, 승인 반영과 의도 성공은 같은 트랜잭션으로 확정한다. 중복은 한 번만 반영하고 조리·배차·업무 이력 revision은 변경하지 않는다.
+- 변경: 음식 주문 Domain/EF Configuration·승인 DTO·음식점 공통 응답 복사·EF Store·주문자 상세 조회, 전용 내부 소비자·Quartz/DI·nullable 4필드 migration, 집중시험 30건. 신규 소비자는 `FoodOrderPaymentApproval:Enabled=false`가 기본이며 운영 설정/DB는 바꾸지 않았다.
+- 최종 Fast: 전체 앱 포함 `Ssalddel.v3.5.slnx` build·음식/결제 집중시험 90/90·diff 통과(`20260927-135000`). Task: build 성공, 전체 시험 5,441건 중 5,434 통과·7 실패(`20260927-134624`). 새 결제 30건 모두 통과, 실패 7건은 이전 `20260927-103125` 시험의 실패 이름 집합과 동일하다. Task 이후에는 migration 식별자만 실제 EF 생성 시각으로 정리했고 최종 Fast·SQL 생성으로 재검증했다. 최종 전체시험 재실행은 없다.
+- 기존 한시 수요 할증 모델 9필드의 migration snapshot 누락은 별도 결손으로 남겼다. 이번 migration과 snapshot diff에는 승인 4필드·고유 인덱스만 포함한다. 최종 MySQL SQL 생성은 성공했지만 pending-model-changes 검사는 기존 차이로 exit 1이다. 새 EF 코드를 기존 DB에서 실행하기 전 schema/선행 migration 검토가 필요하며 기본 비활성이 이를 대신하지 않는다.
+- 검증 상한: SQLite 실제 승인/Outbox/Event/조회 + 외부 PG만 모의 Provider. HTTP·MySQL/MongoDB·전체 SignalR 구독자·모바일 화면·실결제·환불·정산·지급은 미검증이다. 승인 내역은 과거 사실이며 현재 환불 잔액/지급 완료가 아니다. commit·push·배포 없음. 다음은 격리 DB 정합성 및 취소/거절→환불 상태 연결이다.
+
+## GPT 채팅 기획 인계 파일 (2026-09-27)
+
+- [기획 인계 묶음](Handoffs/2026-09-27-gpt-planning/README.md)에 [전체 진행 요약](Handoffs/2026-09-27-gpt-planning/01-프로젝트-기획인계.md)과 [역할별 정보대장 초안](Handoffs/2026-09-27-gpt-planning/02-역할별-정보대장-초안.md)을 정리했다. 음식점 최신 r4, 서버·역할 앱·Unity·공공데이터·프랜차이즈 기반과 결제/정산 등 결손을 나누고 GPT 시작 요청문·Codex 반환 양식을 포함한다.
+- 기준은 `dev/mirror-integration` / `ca3b6e65d742bc5c00ebfb7f316ecca706061dc9`와 조사 시작 시 134개 수정·미추적 항목을 가진 로컬 사본이다. HEAD만으로 미커밋 작업이 공유되지는 않는다. 인계서 자체는 개발 승인서나 출시 완료 증거가 아니다.
+- 기존 합성 메뉴 PNG 2장을 샘플 표시와 함께 전달 묶음에 포함한다. 개인정보·DB 덤프·비밀값·채팅 원문은 내보내지 않는다. 제품 코드·기획 확정·DB·Unity·실결제·commit·push·외부 업로드 변경은 없다. 제품 검증 수치는 기존 로그/기록을 다시 읽은 것이며 이번에 재실행하지 않았다.
+- 검증: 문서 4경로 Fast/Task·diff 통과, 인계 문서의 내부 링크 2개·저장소 참조 경로 38개·새 문서 공백 검사 통과. 제품 build/test는 문서 전용 범위라 생략했다. ZIP은 `artifacts/local/exports/`의 전달용 사본이며 저장소의 인계 문서·기존 PNG가 원본이다.
+
+## 음식점 기본 탐색 r4 (2026-09-27)
+
+- [r4](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-navigation.r4.md): 주문 기본 진입·가게 경로·인증 후 하단 3탭, 메뉴 입력 별도 화면 상태·저장 후 목록 복귀·입력 중 이탈 보호를 연결했다. 메뉴와 가게는 기존 API/설정을 재사용한다.
+- Android 첫 build 경고0/오류0, 집중시험29/29·컴포넌트10개·합성 브라우저 추가/수정/복귀/이탈 보호 통과. Task build 성공, 전체시험8실패 중 이번 Home 경로 시험을 수정해 집중 재통과했고 범위 밖7건은 남는다. 최종 전체시험 미재실행이다.
+- 첫 메뉴 안내·영업 상태·결제/환불/음식점 정산 종단 연결·Android 실제 조작은 미완료다. 운영 금액·지급 정책 변경, 실결제·실지급·commit·push 없음.
+- 최종 문구 반영 뒤 Android 재빌드도 경고0·오류0(18.94초). `artifacts/restaurant-navigation-build-final.log`.
+
+## 음식점 업무·결제·정산 점검 r3 (2026-09-27)
+
+- [점검 r3](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-lifecycle-audit.r3.md): 합의한 3탭·별도 등록은 미구현이다. 정상 주문 시험은 NoOpSettlement를 사용한다. 결제 승인 의도 적재와 실제 주문 반영·취소 환불·음식점 정산은 별도 보완 범위다.
+- 집중시험 43/43·69/69 통과(중복 포함). 실제 PG·지급·DB 종단·Android 실기기는 미검증. 제품 코드는 바꾸지 않고 후속 순서를 기록했다. commit·push 없음.
+
+## 음식점 메뉴 화면·로컬 미리보기 r2 (2026-09-27)
+
+- [메뉴 화면 r2](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-mobile.r2.md): `/menus` 목록·등록·수정·공개/품절을 기존 인증 메뉴 API에 연결했다. 이름·소개·가격·사진 URL 입력이며 사진 업로드는 아니다. 요청 보존/수정 revision·저장 뒤 재조회 경계를 유지했다.
+- 제품과 같은 Razor 파일을 링크한 `eng/RestaurantMenuPreview`를 localhost5387에서 실행한다. 합성 자료·메모리 저장만 사용하고 메뉴 외 업무는 호스팅하지 않는다. 후속 캡처에서 정적 자산200의 빈 응답을 발견해 미리보기의 StaticWebAssets/StaticFiles 설정을 보완했다. Headless Edge 430×900 실제 렌더 PNG 2장과 가로 넘침 없음·pageerror 0을 확인했다. [샘플 화면 기록](../Changes/2026-09-27-restaurant-menu-preview.md). 처리 메서드7개 검사는 이전 결과이며 이번 캡처를 MAUI 장치 실행·운영 메뉴 저장·전체 주문 생명주기 완료로 확대하지 않는다.
+- Android build·집중시험은 r2 종료 기록을 따른다. r1의 범위 밖 전체시험7건 실패를 수정하지 않았다. commit·push·배포 없음.
+
+## 음식점 모바일 주문함·조리시간 첫 보완 (2026-09-27)
+
+- [음식점 모바일 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-mobile-workflow.r1.md): 사용자 요청에 따라 음식점 앱을 먼저 완성하는 방향으로 전환했다. 우리 플랫폼 주문을 기준으로 하며 다른 플랫폼 연결은 추가하지 않는다.
+- 기존 주문함의 로딩·정상 빈 목록·조회 실패를 분리하고 수동 새로고침/마지막 확인 시각을 추가했다. 조리시간5/10/15/20분 선택과 저장 중 입력 잠금·모바일 줄바꿈·기존 카드 스타일을 재사용했다. 기기 조리시간 설정과 판매 메뉴 등록을 명확히 구분했다.
+- 변경은 RestaurantDeskApp 화면2개·구성시험1개와 문서에 한정한다. 서버 메뉴 API는 기존 GET/POST/PUT이 있으나 앱 메뉴 관리 연결은 아직 없다. 실제 렌더/알림/같은 주문 전체 터치 검증은 대기이며 전체 음식점 앱 완성으로 간주하지 않는다. 코드 빌드와 시험 결과는 r1에 기록한다. commit·push·배포 없음.
+- 최종 Android build 경고/오류0, 화면 구성 집중시험23/23 통과. Task는 전체 제품 build 오류0·경고69 이후 전체시험5402/5409 통과·7실패로 미통과다. 실패는 이번 변경 밖의 재료 UI·API metadata·명명 문서·WebApp route 분류에 있으며 변경 전 전체 기준선은 미실행이다. 해당 파일은 수정하지 않았다. 상세 로그와 한계는 r1에 기록했다.
+
+## 한 구간 지도 준비·순서 재생의 실제 화면 확인 r54 (2026-09-26)
+
+- [r54 구현·검증](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/visit-review-map-entry.implementation.r54.md): r53의 이미 열린 지도 의존도를 줄여 같은 `방문 순서 재생` 메뉴에서 동결 선택동 전체12타일·건물2700·도로291·6종 overlay를 직접 준비한다. 250m 범위, 반복 재사용, 실패 시 정상 View 보존, 창 종료/Play 전환/명시적 정리를 연결했다. 새 Scene이나 원본 재생성은 없다.
+- 실제7건 재대조: 사가정 focus 안0건. 역사 경계 후보는 면목7동1·면목4동2·이문1동3·범위 밖1이다. 기존 주소 링크5건은 검토 후보이며 독립 좌표/현행 경계 근거는 미확정이다. 모두 `PendingReview`, 재생 표시0을 유지한다. 다른 지역 기록을 사가정으로 옮기지 않는다.
+- 검증: Unity6000.5.6f1 EditMode70/70(신규12+r53 14+지도44), 실패/건너뜀0. 최종 격리 검증 세션 약18.88초(Scene 로드·Play 전환 포함)에서 합성 `A→B→A` 이동·정지 유지·3번 선택·표시/host 정리를 확인하고 실제 Game View4장을 남겼다. 첫 캡처 실행기의 해상도 복구 index 오류를 수정한 뒤 재실행했으며 Scene hash 불변·미저장·종료 후 clean, 프로젝트 설정도 시작 hash와 같다.
+- 제한: `scenarioChecksPassed=true`지만 최종 Console 시작0/종료1·실행 오류1·경고9로 `profilePassed=false`다. 기존 `SimulationReplayHashMismatch`는 미해결이다. root5개를 일시 격리한 표현 시험이므로 NPC·운영 Controller 연속성, 실제 HTTP/DB, 실제7건의 배달 재생, Windows 빌드 완료 증거가 아니다.
+- 변경: Hongdal 문서4개·ignored 위치 감사, Unity 기존 Editor1개+새 시험/캡처 C#2개와 meta·대표 화면 기록. 다른 dirty 작업 보존. 문서4경로 Fast/Task·상호 링크·diff, C#/meta·대표 PNG4장 hash 대조 통과. 범위 검사는 제품 build/test를 생략하므로 Unity 시험·화면을 별도로 실행했다. 다음은 실제 방문 지역의 근거 보완→인접 동 조립→DB/선택 전송이며 기존 전역 E 책임 지도 차이도 남는다. commit·push·배포·새 Goal/WI/Graph Map·E 승격 없음. 새 디오라마 규칙 후보 없음.
+
+## 본인 중심 요약·선택 자료 추가 조회 r7 (2026-09-26)
+
+- [관찰 순서 r7](Planning/공통/PLAN-OPERATIONS-FOOD-RESTAURANT-RIDER-RELATIONSHIP/self-centered-on-demand-observation.decision.r7.md): r6 초기 요약→선택 지역 확대 질문이 답변되었다. 로그인한 본인 관련 가게·업무 중심으로 시작하고 원하는 지역·대상의 자료를 추가 조회한다. 지역 확대와 업무 상세 조회를 구분하며 다른 역할의 초기 중심점·기술 수치는 아직 정하지 않는다.
+- r3 공개·r5 GPS 없는 단계 표현·r6 지도/운영/권한 분리를 유지한다. 가게별 범위 조회·다중 지역 결합·로그인 관점 필터는 여전히 구현 보완 후보이며 r46 표본을 통합 완료 근거로 사용하지 않는다. 행정동 r39 소수 구간 집중을 유지하고 r3/r47 미답변까지 승인하지 않는다. 새 질문 없음.
+- 이번 변경은 기획 문서 4개에 한정한다. 제품 코드·실제 인증 API·DB·Unity·commit·push 실행 없음. 새 디오라마 규칙 후보 없음. 기존 용마산 임시 캡처 링크 누락은 범위 밖으로 보존하며 전체 문서 링크 무결성 통과를 주장하지 않는다.
+- 검증: 관계 기획 관련 경로 링크 16개 확인, 문서 4개 범위 Fast와 `git diff --check` 통과. 제품 build·시험·Runtime은 수행하지 않았다.
+
+## 소수 지역 집중 정밀화로 범위 축소 r39 (2026-09-26)
+
+- [현재 범위 r39](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/focused-area-refinement.decision.r39.md): 사용자가 30개씩 진행하는 시간이 길어 일부만 구체화하자는 방향을 제시했다. 30개 신규 일괄 확장을 중단하고 면목제3·8동 사가정역 주변 한 구간을 작업상 첫 대상으로 삼는다. 면목제7동·면목본동은 후속 후보이며 동시에 착수하지 않는다.
+- [완료 기준선 r38](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/thirty-admin-dong-horizontal-contour-trace.implementation.r38.md): 수평 등고선 후보 860개·표시 선분 184,747개, 실제 Unity 화면 31장 hash 일치, 집중 시험 44/44, Scene 불변·미저장까지 완료했다. Console 오류 8건과 높이·현행 경계·공개·운영 권위 결손은 남아 있다.
+- r39 당시에는 문서·우선순위만 변경했다. 후속 [r52](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/visit-replay-focused-area.implementation.r52.md)에서 작은 구간 참조 목록 생성·검증을 구현했지만 거리 세부 형상은 아직 개선하지 않았다. 기존 상세 보기 건물 1개의 내부 ring 생략은 검토 후보로 남는다. 범위 축소 직전 작성된 `administrative_dong_building_interior_ring_private_review_r1.py`는 계속 미실행·미검증 초안이며 새 결합 세대와 Unity 적용은 없다. 전체 재생성·재캡처는 반복하지 않는다. commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 30개 역사 행정동 차선표시 선형 Unity 검토 r37 (2026-09-26)
+
+- [r37 구현·검증 기록](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/thirty-admin-dong-lane-marking-private-generation.implementation.r37.md): `OA-15537`의 2021 차선 SHP를 2023 역사 행정동 경계 30개로 절단해 후보 23,360개·표시 선분 60,586개를 v6 검토 입력에 결속했다. 원천 선분 60,646개는 표시 60,586개·1mm 이하 2개·물리 중복 58개로 닫힌다.
+- Unity `6000.5.6f1` 실제 Play Mode·Game View에서 overview 30장과 면목제3·8동 detail 1장을 다시 캡처했다. 차선 Mesh 정점/인덱스 242,344/363,516, 모든 모듈 Renderer 4·MeshFilter 4·Collider 0, 집중 시험 38/38, PNG 31개 hash 일치, Scene hash 불변을 확인했다.
+- 데이터셋 갱신일은 2026-09-01이지만 사용한 공간 ZIP 수정일은 2021-08-09다. 현재 차선·방향·통행·정지선·신호·보도 의미와 공개·DB·Mongo·current·Runtime·Traversal·Gameplay 권위는 모두 미승인이다. 기존 Console 오류 8건은 남아 있다. commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 음식 생활상 표본의 확대별 표현 수명 r46 (2026-09-26)
+
+- [r46 구현·검증](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/living-world-semantic-streaming.implementation.r46.md): 승인된 r45 첫 City 표본만 구현했다. `생활관찰표현Session`·Unity `생활관찰표현Layer`를 기존 Controller/두 표현기/사가정 카메라에 결속했다. 음식 업무 사본은 유지하고 상세 객체·소유 Material만 5초 유예 뒤 해제하며 최신 revision으로 재진입한다. 다른 OS 보존·TTL·Clear·지역 불일치 보류를 포함한다.
+- 패키지 집중99·전체849 시험, Unity solution build 경고/오류0, 실제 Unity EditMode37/37 통과. Material 누수·과거 Epoch 시험 오류를 재현·보완했고 다른 작업의 작성 중 컴파일 오류는 건드리지 않았다. 실제 Play/Game View의 약14.68초 명시적 표본에서 거리/동/구 요약·5초 해제·최신 복귀·만료·화물 보존을 확인했다. 최종 PNG6장 hash 일치·Scene 미저장/불변, 검토용 화면이지 확정 시안은 아니다. Console 종료 오류9건(기록 구간8건)은 기존 Replay/서버 연결 문제로 남아 있다.
+- 전역 Fast는 diff와 Simulation Unity 코드 지도 검사 통과 후 E 책임 생성 지도 불일치에서 차단되었다. 기존 변경이 있는 생성 지도는 임의 갱신하지 않았다. 구 요약은 사가정 한 지역 표본이며 구 전체 통계·전국 streaming·실제 운영 HTTP·401/403 권한 철회 경로는 미완료다.
+- 정확 소유 파일·검증 상한은 r46에 기록했다. 새 Scene·운영 Command·DB·외부 수집·commit·push·E 승격 없음. 새 디오라마 규칙 후보 없음.
+
+## 30개 행정동 지형 높이 공식 규정 근거 심화 감사 r36 (2026-09-26)
+
+- [심화 감사 r36](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/thirty-admin-dong-terrain-official-standard-evidence.audit.r36.md): 정확한 배포물이 1:5,000 `N3L_F001/N3P_F002`임을 확인하고, 동봉 정의·국가 속성목록·지형도 도식 규정·공간정보 법령을 연결했다. `CONT/NUME`는 공식 규정으로 해석한 metre 수치이며 국가 높이 기준은 인천만 평균해수면·대한민국 수준원점이다.
+- ZIP 자체에는 수직 CRS·높이 단위·필드 변환 이력이 없고 `HEIGHT` 정의도 없다. 다음 지형 세대는 `CONT/NUME`를 원본 의미 필드로 읽고 `HEIGHT`는 동등성 검사에만 써야 한다. 이번에는 generation·Unity 높이 Mesh를 바꾸지 않았고 전체 blocker·권위 경계를 유지했다. 새 디오라마 규칙 후보 없음.
+
+## 30개 행정동 Unity 검토 화면 가독성 개선 r34 (2026-09-26)
+
+- [구현 기록 r34](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/thirty-admin-dong-unity-review-readability.implementation.r34.md): 765x457 overview를 가리던 304px 상단·116px 하단 패널을 82px `CompactSourceAndCount`로 줄이고, 면목제3·8동 detail은 `FullEvidenceAndSelection`을 유지했다. 입력 generation·도형·카메라 규칙·Mesh는 바꾸지 않았다.
+- Unity `6000.5.6f1` 실제 Play Mode·Game View에서 overview 30장+detail 1장을 새 evidence v6으로 캡처했다. PNG hash 불일치 0, 집중 EditMode 32/32, 모든 모듈 Renderer/MeshFilter 4·Collider 0, Scene hash 불변·미저장·종료 뒤 clean이다. 기존 Console 오류 8건과 권위 차단은 그대로다. commit·push 없음. 새 디오라마 규칙 후보 없음.
+
+## 30개 행정동 정밀 지형 consumer 준비도 감사 r33 (2026-09-26)
+
+- [준비도 감사 r33](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/thirty-admin-dong-terrain-consumer-readiness-audit.implementation.r33.md): r29의 최근접 공식 원천 500m 초과 key 47개는 모두 물리 tile `x5/z6`의 단일 8-neighbor 연결 성분이고 신내1동 중앙 core·30개 역사 행정동 polygon 밖 60m halo에만 있다. `core+30m`까지 초과 0개, +40m 1개, +50m 13개, +60m 47개이며 5m 등고선 샘플 조밀화로도 집합은 줄지 않았다.
+- `OA-22241`과 일반 수치지형도 사양만으로 이번 `N3L_F001/N3P_F002` 높이 필드의 물리 단위·수직 datum·기준면을 확정할 수 없고, r29를 공통 높이 기준으로 읽는 Unity consumer도 없다. 상태는 `PrecisionTerrainBlockedBySourceMetadataAndConsumerContract`; 지형 Mesh·Collider·건물/도로 접지·공개·Runtime·Traversal·Gameplay는 미적용이다. 새 디오라마 규칙 후보 없음.
+
+## 30개 행정동 비오톱 외곽선 Unity 비공개 검토 r32 (2026-09-26)
+
+- [구현 기록 r32](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/thirty-admin-dong-biotope-private-generation.implementation.r32.md): `OA-21145` 2025 비오톱과 2023 역사 경계를 교차한 후보 3,181개·part 3,408개·내부 ring 108개를 v5 검토 generation `5207BA41...7C646E`에 결속했다. Unity Mono의 JSON `0.0` 내용 hash 규칙을 실제 실패로 재현해 생성기를 수정했고, 자체 시험 53개·build·verify·재생성 `changedFiles=0`, 30개 bundle과 overlay의 Mono hash 독립 대조를 통과했다.
+- 별도 Unity 저장소에서 외곽·내부 ring을 채우지 않은 선으로 기존 2x2 결합 Mesh에 추가했다. 실제 Play Mode·Game View overview 30장+면목제3·8동 detail 1장, PNG hash 불일치 0, 집중 EditMode 32/32, 모듈별 Renderer 4·MeshFilter 4·Collider 0을 확인했다. 비오톱 정점/인덱스는 408,348/612,522이고 전체 Mesh 정점/인덱스는 2,692,752/4,246,746이다. Scene hash는 실행 전후 같고 미저장·clean이다. 기존 Console 오류 8건과 첫 `SimulationReplayHashMismatch`는 남아 있다.
+- 2025 비오톱을 2023 경계로 자른 로컬 비공개 관찰 후보일 뿐 현재 생태·종·법적·안전·통행 의미가 아니다. 공개·DB·Mongo·current·Runtime·Traversal·Gameplay·E 승격·commit·push는 수행하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## 30개 행정동 방향표시 Unity 비공개 검토 r31 (2026-09-26)
+
+- [구현 기록 r31](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/thirty-admin-dong-road-direction-private-generation.implementation.r31.md): 공식 방향표시 8,415개를 모두 방향 의미 미해석 후보로 유지하고 같은 크기의 중립 마름모로 표현했다. 화살표 0개, 방향표시 정점 33,660개이며 `DRN` 각도축·회전·단위와 `LENX` 단위를 추측하지 않았다.
+- Unity 실제 Play Mode·Game View overview 30장+면목제3·8동 detail 1장, 집중 EditMode 26/26, 모듈별 Renderer 4·Collider 0, PNG 31개 hash 일치와 canonical Scene hash 불변을 확인했다. 기존 Console 오류 8건은 남았고 공개·DB·Mongo·current·Runtime·Traversal·Gameplay·E 승격은 수행하지 않았다.
+
+## 방향표시·비오톱 공식 원본 감사 r30 (2026-09-26)
+
+- [자료 감사 r30](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/thirty-admin-dong-direction-biotope-source-audit.implementation.r30.md): 공식 `OA-15536` 2026-09-10 방향표시 ZIP(6,071,161 bytes, SHA-256 `641432B0...6CCBAD`)과 정의서, `OA-21145` 2025 비오톱 ZIP(15,413,945 bytes, SHA-256 `7FF38021...57663`)을 획득해 ignored local 원본·페이지·receipt로 보존했다. SHP/DBF는 방향표시 158,373점, 비오톱 42,544 polygon이며 비오톱 유효 geometry는 42,543개다.
+- 2023 역사 경계 기준 지정 30/30개 동에 방향표시 후보 8,415점과 비오톱 polygon 교차 3,185건이 있다. 방향표시 각도·종류는 노면 기호 표현 후보일 뿐 접근·차로·통행 권위가 아니고 길이 단위는 미확인이다. 비오톱은 법적 효력 없는 유형·평가 참고자료이며 생물종 현장 관찰·안전·이동 의미가 아니다. r30 감사 당시 후보 generation과 Unity 검토는 미착수였고, 이후 r31·r32가 비공개 화면 검토까지만 진행했다. 현행 경계·공개·DB·Mongo·current·Runtime·Traversal·Gameplay는 계속 미적용이다.
+
+## 30개 행정동 지형 공통 격자 비공개 검토 r29 (2026-09-26)
+
+- [구현 기록 r29](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/thirty-admin-dong-terrain-private-generation.implementation.r29.md): 공식 `OA-22241` 2025 등고선 ZIP 하나만 사용해 30개 동의 148개 물리 tile을 공통 ENU 10m lattice로 한 번 보간했다. 500m tile+60m halo의 실제 union 391,619개 key만 출력하고 사각 envelope 밖 미사용 228,700개 key를 채우지 않았다. 공유 key 153,543개와 전역–tile 비교 195,793회의 bit 불일치는 0, 필수 표본 NaN/무한값도 0이다.
+- Generation `D0AAE02B...B131F`은 450개 파일·8,609,465 bytes다. self-test 7/7, build·독립 verify, 재실행 `changedFiles=0`, completion 449/449 hash 대조를 통과했다. 표고점 grid-fit P95 1.6142, contour P95 2.4445, 10% holdout P95 5.6421 원천 수치이며 최대 최근접 거리는 519.5099m다. 수직 datum·단위가 미확인이고 500m 초과 표본 47개가 있어 `precisionTerrainReady=false`다.
+- 구조 private review만 준비됐고 절대 고도·공개·DB·Mongo·current·Unity·Mesh·Collider·Runtime·Traversal·Gameplay는 모두 차단했다. 기존 파일·Scene·Prefab은 바꾸지 않았고 commit·push하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## 30개 행정동 역사 보행망 Unity 비공개 검토 r27 (2026-09-26)
+
+- [구현 기록 r27](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/thirty-admin-dong-walk-network-unity-review.implementation.r27.md): r26의 2020년 도보 네트워크를 기존 30개 역사 행정동 검토 bundle에 결속했다. 최종 generation `29764F2B...F2972915`은 노드 17,267개·링크 조각 23,472개와 중간 꺾임을 포함한 path 점 54,574개를 보존한다. 원천 길이와 공통 ENU 길이 차이는 전체 0.585893m, 조각별 최대 0.002409m이며 self-test 7/7·독립 verify를 통과했다. ENU millimeter와 변환 원점으로 정밀 위치를 복원할 수 있어 generation과 화면 증거는 로컬 비공개로만 취급한다.
+- 별도 Unity 저장소의 검토 Model·Mesh·View·시험·캡처 검증을 v3/r4까지 확장했다. 두 프로젝트 build 오류 0, 집중 EditMode 22/22를 통과했고 `C:\Users\user\ssalddel\Documentation\Changes\2026-09-26-administrative-dong-private-walk-network\`에 실제 Play Mode Game View overview 30장·면목제3·8동 detail 1장·manifest·README를 남겼다. 모든 모듈 Renderer 4·Collider 0, PNG hash 불일치 0, Scene hash 불변·미저장·종료 뒤 clean이다. 기존 canonical Scene 주변 오류 8건과 첫 `SimulationReplayHashMismatch`는 해결되지 않았으므로 Console 0이나 서버 통합을 주장하지 않는다.
+- 결과는 2020년 원천과 2023년 역사 경계, 불완전 halo를 쓴 `PrivateHistoricalWalkNetworkGameViewCaptured`다. current pointer·공개·DB·Mongo·Runtime·traversal·gameplay·E 승격·commit·push는 변경하지 않았다. 다음 정밀화는 r28의 2025 등고선 단독 판본으로 공통 격자와 seam을 검증하는 일이며 수직 datum·높이 단위 미확인을 유지한다. 새 디오라마 규칙 후보 없음.
+
+## 30개 행정동 비공개 관찰 오버레이 r25 (2026-09-26)
+
+- [구현 기록 r25](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/thirty-admin-dong-private-observation-overlay.implementation.r25.md): 공식 포털 POST 다운로드로 `OA-23081` 2026-08-24 XLSX(1,735,662 bytes, SHA-256 `1A5DB9EA...1541BE`)와 `OA-15534` 2025-08-14 ZIP(534,342 bytes, SHA-256 `A77B4D4F...0E0449`)을 복구했다. 새 생성기는 역사 경계에 결속한 30개 비공개 bundle에 횡단보도 1,533개(보행신호 설치 관측 933개)와 교차로 554개를 hash stable ID·공통 ENU millimeter 중심의 `privateObservationOverlays v1`으로 파생했다.
+- r2/r3 review generation `4D94046D...FE3971`은 첫 생성 `changedFiles=32` 뒤 즉시 `verify PASS`였다. 공개 `DisplayOverlays`는 계속 0이고 exact 관리번호·교차로명·주소·업체 식별을 넣지 않았다. current pointer·DB·Mongo·public·runtime·traversal·gameplay는 모두 사용·변경하지 않았다.
+- 현재 `hongdal_dev`의 G2a~G4b 대상 행은 각각 0이며 과거 MySQL 저장 완료 기록은 현재 영속 상태의 증거가 아니다. Mongo는 인증 실패로 재확인하지 못했다. Unity overlay 소비 구현은 Editor build와 집중 EditMode 18/18을 통과했고, 별도 Unity 저장소 `C:\Users\user\ssalddel\Documentation\Changes\2026-09-26-administrative-dong-private-observation-r2\`에 실제 Play Mode Game View overview 30장·면목제3·8동 detail 1장·manifest를 남겼다. manifest 합계는 횡단보도 1,533·교차로 554, 모든 모듈 Renderer 4·Collider 0이며 실제 Play/Game View가 모두 true다. Scene hash는 실행 전후 같고 저장하지 않았으며 종료 뒤 clean이다. 기존 canonical Scene의 서버·replay·local endpoint 주변 오류 8건과 첫 `SimulationReplayHashMismatch`는 그대로 남겼다. 실행 exit code 0과 전체 overlay 증거 완료에 따라 이를 overlay 실패로 분류하지 않지만 Console 0이나 주변 오류 해결을 주장하지 않는다. 후속은 G3c 역사 보행망 → 최신 `OA-15536` → `OA-22241` 지형·`OA-21145` 비오톱 → `OA-22784` 250m 생활인구 → 현행 JUSO 승인 순이다. 새 디오라마 규칙 후보 없음.
+
+## 30개 행정동 공통 깊이 슬롯 첫 구현 r24 (2026-09-26)
+
+- [구현 기록 r24](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/thirty-admin-dong-common-depth-slots.implementation.r24.md): 별도 Unity 저장소의 기존 `행정동디오라마검토Snapshot/View`에 행정동 전용 8슬롯 계획을 붙였다. 정확한 30개 scope에 같은 구조를 적용하고, 복구한 역사 경계 bootstrap의 기초 도형을 Unity 검토 입력으로 export했다. `SpatialMeaning / Mobility`와 생활·사업장·환경 placeholder는 그대로 유지한다.
+- `OA-22160` 역사 경계, `AL_D010` 건물, 2026-08-12 NodeLink, 행정안전부 행정동-법정동 원본을 기록된 길이와 SHA-256으로 복구했다. r2는 행정동 30·건물 61,897·도로 11,769·타일 297로 재생성·검증했다. MySQL에는 디오라마 후보가 아니라 관할 원장 25,739행을 적용했고 재적용 신규 0·독립 재조회 30행정동/12법정동을 확인했다. Mongo 디오라마 candidate는 인증 실패로 쓰기 전 중단되어 적용·재조회 완료 증거가 없다.
+- 현행 `TL_SCCO_GEMD`와 같은 세대 `TL_SPBD_BULD / EQB / ENTRC`는 계속 JUSO 신청·관할기관 승인이 필요한 `BlockedExternalAccess`다. 2026-09-14 최신 NodeLink는 SHA-256 `FA0392...E47140`으로 별도 보관했고, r2의 2026-08-12 세대에는 섞지 않았다.
+- Unity 검토 export는 generation `C6CD2501...A1153AC`, index SHA-256 `C8D49994...3E123`, bundle 30개를 만들었고 기초 도형 준비 30·생활 준비 0이다. 집중 EditMode 13/13과 실제 Play Mode Game View 31장, Scene hash 불변, 30개 동 Mesh 4·Collider 0을 확인했다. 캡처 중 행정동 stack이 없는 canonical Scene 주변 오류 8건은 남아 있고 실제 마우스 입력은 미검증이다. `currentPointerUsed=false`, 게시 차단·배포 미승인·운영 권한 불변을 유지하며 새 디오라마 규칙 후보 없음.
+
+## 30개 행정동을 사가정 참조 깊이로 확장 (2026-09-26)
+
+- 사용자 발화의 `삼팔동`을 기존 문맥과 고유 식별자에 따라 면목제3·8동으로 해석하고, [r23 단계 계획](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/thirty-admin-dong-sagajeong-depth-rollout.plan.r23.md)에 다른 29개 동도 같은 공통 계약·깊이 검사표로 확장하는 방향을 확정했다. 사가정역1km 창과 행정동 모듈은 별도 공간 단위로 유지한다.
+- 현재 확인: 역사 경계 기반 기초 모듈과 기존 G6 화면 기록에 더해, 기록된 동결 원본 4종과 r2 생성 세대를 복구했다. 정확 30개 bundle의 Unity 검토 export와 실제 Game View까지 재생성했으며 상태는 계속 `WaitingForAdministrativeBoundary / HistoricalBoundaryBootstrapOnly`다. 현행 정본·생활 디오라마·공개 승인으로 확대하지 않는다.
+- 실행 현황: 후속 r24에서 동결 원본 복구, 역사 bootstrap 재생성·검증, MySQL 관할 원장 적용·독립 재조회, Unity 검토 입력 export와 공통 8슬롯 코드·Game View 검증을 진행했다. 다음 단계는 승인된 현행 JUSO 경계→같은 세대 건물/건물군→출입구를 새 revision으로 적용하는 일이다. current pointer, 게시·배포, 운영 권한, Scene·Prefab, E 승격, commit·push는 변경하지 않았다. 새 디오라마 규칙 후보 없음.
+
+## 보유 자료 기반 디오라마 정밀화 제안 r44 (2026-09-26)
+
+- [r44 제안서](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/diorama-public-data-refinement.proposal.r44.md)에 사용자 최신 요청을 반영했다. 현재 자료로 한 구간의 진단표·검토 지도를 먼저 만들고, 공식 공간자료 보완→Unity 비교→촬영 기반 외관 보완으로 이어가는 실행안을 제안한다. 정확한 구간·후속 구현은 미정이며 이번 변경은 문서 범위다.
+- 현재 파일 재확인: 기존 사가정 사본은 건물602개·도로 구간2,397개이며 상징 폭·미상 높이4m·지형 없음의 한계가 있다. [r43](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/public-spatial-data-first.collection.r43.md)의 도로명 원본은 확보했고 선택11행(총괄4·법정동7)의 로컬 검사·자체검사25건 기록이 있다. DB 반입·독립 재조회는 미실행이다. 공식 현행 경계·건물·출입구 원본은 미확보다.
+- 검증: 문서5파일 범위 Fast 통과(build/test 생략), r43·r44 내부 링크8개 존재·공백 검사 통과. 로그는 `artifacts/local/validation/20260926-094844/`에 보존한다. 신규 수집·DB 쓰기·Unity·영상·MYBOX·리셋 소비·commit·push 없음. 이전 코드 변경과 다른 작업·출구 Blender 중지 상태를 보존했다. 새 디오라마 규칙 후보 없음.
+
+## 매장 내부 사실과 메뉴·재료 참고 관계를 분리 (2026-09-25)
+
+- [r40](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/ingredient-reference-unity-exploration.plan.r40.md)에 사용자 정정을 반영했다. 실제 근무·내부 확인 없이 매장별 재료 사용/납품을 추정하지 않고 첫 결과물을 메뉴 유형–참고 레시피–재료 관계표로 좁힌다.
+- 다음 명세는 기존 메뉴–레시피 색인·재료 기반의 출처/ID/결손 점검에서 시작한다. Unity 탐색은 문맥상 해석에 따른 단계 제안이며 구체 구현은 미착수다. 실제 데이터 처리·DB·Unity·영상 변경은 없다.
+
+## 메뉴 간 공통 재료 분석을 우선 (2026-09-25)
+
+- [r39](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/menu-ingredient-supply-analysis.plan.r39.md)에 사용자 선택을 기록했다. 방문 빈도보다 메뉴–재료 관계를 우선 축적해 공급망·프랜차이즈 검토로 확장한다. r38의 선택 질문은 종결했다.
+- 첫 수집 항목은 메뉴 식별, 재료 ID/역할, 근거 수준, 확인된 조달 규격, 출처·판본이다. 재료별 메뉴·매장 관계표를 제안하며, 소스·육수·반조리품 포함 범위는 미정이다. 문서만 변경했고 실제 수집·DB·분석·영상 변경은 없다.
+
+## 배달 촬영에서 자료 축적·분석·후속 콘텐츠로 연결 (2026-09-25)
+
+- [r38 기획](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/delivery-content-data-cycle.plan.r38.md)에 사용자 방향과 단계별 수집 범위, 첫 방문·매장·메뉴·근거·판본·조사 대기 항목을 기록했다. 기존 기록/공공자료 기반을 재사용하며 하루 전체 메뉴에 공통 항목을 쌓는다.
+- 단계: 하루 기록 → 공식 메뉴/참고 레시피 → 재료 연결 → 표본 범위를 밝힌 분석 → 근거를 연결한 콘텐츠 초안. 실제 매장 설명과 참고 자료를 분리하고 반복 입력 중복·사용자 정정 영향을 관리하는 방향이다.
+- 미정은 자료원·갱신 조건·첫 분석 중심·결과물 형식이다. 이번에는 기획 문서만 변경했고 새 수집·DB 쓰기·분석 실행·영상 제작·자동화 설정은 하지 않았다.
+
 ## 배달 영상 MYBOX 위치 안내 (2026-09-25)
 
 - 사용자 요청으로 [배달 영상 MYBOX 경로 안내](../ProjectOverview/배달영상-MYBOX-경로.md)를 추가했다. 공유 링크, `N:/개인/배달영상-공유용`, 출력·확정본 보관 위치, 별도 배달 편집 저장소와 최신 공유 목록의 위치를 기록했다.
