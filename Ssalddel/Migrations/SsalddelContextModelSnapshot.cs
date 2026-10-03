@@ -22,6 +22,65 @@ namespace Ssalddel.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("살뜰.도메인.음식.음식주문기사정산", b =>
+                {
+                    b.Property<long>("Id").ValueGeneratedOnAdd().HasColumnType("bigint");
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    b.Property<string>("정산StableId").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                    b.Property<long>("음식주문Id").HasColumnType("bigint");
+                    b.Property<string>("주문번호").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                    b.Property<string>("음식점명").IsRequired().HasMaxLength(200).HasColumnType("varchar(200)");
+                    b.Property<long>("배달시도Id").HasColumnType("bigint");
+                    b.Property<string>("배달시도StableId").IsRequired().HasMaxLength(220).HasColumnType("varchar(220)");
+                    b.Property<long>("운송Id").HasColumnType("bigint");
+                    b.Property<string>("기사Id").IsRequired().HasMaxLength(450).HasColumnType("varchar(450)");
+                    b.Property<decimal?>("세전대금").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                    b.Property<string>("요금정책판본").IsRequired().HasMaxLength(180).HasColumnType("varchar(180)");
+                    b.Property<string>("요금계산근거Json").IsRequired().HasColumnType("longtext");
+                    b.Property<decimal?>("공제액").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("수령액").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                    b.Property<string>("공제근거참조").IsRequired().HasMaxLength(500).HasColumnType("varchar(500)");
+                    b.Property<string>("공제근거범위Code").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                    b.Property<string>("정산상태Code").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                    b.Property<string>("지급상태Code").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                    b.Property<string>("보류사유").IsRequired().HasMaxLength(500).HasColumnType("varchar(500)");
+                    b.Property<string>("실행모드Code").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                    b.Property<DateTime>("전달완료시각Utc").HasColumnType("datetime(6)");
+                    b.Property<DateTime?>("수령확인시각Utc").HasColumnType("datetime(6)");
+                    b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                    b.Property<DateTime>("CreatedAtUtc").HasColumnType("datetime(6)");
+                    b.Property<DateTime>("UpdatedAtUtc").HasColumnType("datetime(6)");
+                    b.HasKey("Id");
+                    b.HasIndex("정산StableId").IsUnique();
+                    b.HasIndex("주문번호").IsUnique();
+                    b.HasIndex("배달시도Id").IsUnique();
+                    b.HasIndex("기사Id", "전달완료시각Utc");
+                    b.HasIndex("음식주문Id");
+                    b.HasIndex("운송Id");
+                    b.ToTable("음식주문기사정산");
+                });
+
+            modelBuilder.Entity("살뜰.도메인.음식.음식주문기사지급검증", b =>
+                {
+                    b.Property<long>("Id").ValueGeneratedOnAdd().HasColumnType("bigint");
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    b.Property<long>("정산Id").HasColumnType("bigint");
+                    b.Property<string>("지급StableId").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                    b.Property<string>("멱등키").IsRequired().HasMaxLength(128).HasColumnType("varchar(128)");
+                    b.Property<decimal>("확인세전대금").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                    b.Property<decimal>("확인공제액").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                    b.Property<decimal>("모의수령액").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                    b.Property<string>("공제근거참조").IsRequired().HasMaxLength(500).HasColumnType("varchar(500)");
+                    b.Property<string>("결과Code").IsRequired().HasMaxLength(20).HasColumnType("varchar(20)");
+                    b.Property<string>("검증관리자Id").IsRequired().HasMaxLength(450).HasColumnType("varchar(450)");
+                    b.Property<DateTime>("검증시각Utc").HasColumnType("datetime(6)");
+                    b.HasKey("Id");
+                    b.HasIndex("정산Id");
+                    b.HasIndex("지급StableId").IsUnique();
+                    b.HasIndex("멱등키").IsUnique();
+                    b.ToTable("음식주문기사지급검증");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -8937,6 +8996,10 @@ namespace Ssalddel.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("driver_weather_surcharge_applied");
 
+                    b.Property<string>("기사제안요금계산근거Json")
+                        .HasColumnType("longtext")
+                        .HasColumnName("driver_offer_calculation_json");
+
                     b.Property<string>("기사제안요금정책판본")
                         .HasMaxLength(180)
                         .HasColumnType("varchar(180)")
@@ -8950,6 +9013,15 @@ namespace Ssalddel.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("driver_expected_payout");
+
+                    b.Property<decimal?>("기사한시수요할증액")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("driver_temporary_demand_surcharge");
+
+                    b.Property<bool>("기사한시수요할증적용여부")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("driver_temporary_demand_surcharge_applied");
 
                     b.Property<DateTime?>("도착")
                         .HasColumnType("datetime(6)")
@@ -9208,6 +9280,11 @@ namespace Ssalddel.Migrations
 
             modelBuilder.Entity("살뜰.도메인.운송.운임구성", b =>
                 {
+                    b.Property<decimal?>("예상거리Km").HasPrecision(18, 2).HasColumnType("decimal(18,2)").HasColumnName("expected_distance_km");
+                    b.Property<decimal?>("Km당단가").HasPrecision(18, 2).HasColumnType("decimal(18,2)").HasColumnName("per_km_rate");
+                    b.Property<decimal?>("최소운임").HasPrecision(18, 2).HasColumnType("decimal(18,2)").HasColumnName("minimum_fare");
+                    b.Property<string>("거리계산방식").HasMaxLength(80).HasColumnType("varchar(80)").HasColumnName("distance_basis");
+                    b.Property<string>("단가출처").HasMaxLength(160).HasColumnType("varchar(160)").HasColumnName("rate_source");
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
@@ -9978,6 +10055,45 @@ namespace Ssalddel.Migrations
                     b.Property<decimal>("기사최소지급액")
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("기사최소지급액");
+
+                    b.Property<decimal?>("기사픽업지급액")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("기사픽업지급액");
+
+                    b.Property<string>("기사한시수요할증ClientRequestId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("varchar(36)")
+                        .HasColumnName("기사한시수요할증_client_request_id");
+
+                    b.Property<long>("기사한시수요할증Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("기사한시수요할증_revision");
+
+                    b.Property<string>("기사한시수요할증범위Code")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)")
+                        .HasColumnName("기사한시수요할증범위_code");
+
+                    b.Property<string>("기사한시수요할증사유Code")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)")
+                        .HasColumnName("기사한시수요할증사유_code");
+
+                    b.Property<DateTime?>("기사한시수요할증시작일시Utc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("기사한시수요할증시작일시_utc");
+
+                    b.Property<decimal>("기사한시수요할증액")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("기사한시수요할증액");
+
+                    b.Property<DateTime?>("기사한시수요할증종료일시Utc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("기사한시수요할증종료일시_utc");
 
                     b.Property<string>("수정자UserId")
                         .IsRequired()
@@ -15036,6 +15152,23 @@ namespace Ssalddel.Migrations
 
                     b.Navigation("증빙목록");
                 });
+            modelBuilder.Entity("살뜰.도메인.음식.음식주문기사정산", b =>
+                {
+                    b.HasOne("살뜰.도메인.음식.음식주문", null).WithMany()
+                        .HasForeignKey("음식주문Id").OnDelete(DeleteBehavior.Restrict).IsRequired();
+                    b.HasOne("살뜰.도메인.음식.음식배달시도", "배달시도").WithMany()
+                        .HasForeignKey("배달시도Id").OnDelete(DeleteBehavior.Restrict).IsRequired();
+                    b.HasOne("살뜰.도메인.운송.운송원장", null).WithMany()
+                        .HasForeignKey("운송Id").OnDelete(DeleteBehavior.Restrict).IsRequired();
+                    b.Navigation("배달시도");
+                });
+            modelBuilder.Entity("살뜰.도메인.음식.음식주문기사지급검증", b =>
+                {
+                    b.HasOne("살뜰.도메인.음식.음식주문기사정산", "정산").WithMany("지급검증목록")
+                        .HasForeignKey("정산Id").OnDelete(DeleteBehavior.Restrict).IsRequired();
+                    b.Navigation("정산");
+                });
+            modelBuilder.Entity("살뜰.도메인.음식.음식주문기사정산", b => b.Navigation("지급검증목록"));
 #pragma warning restore 612, 618
         }
     }

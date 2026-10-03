@@ -85,6 +85,11 @@
     <Compile Include="..\FDriverApp\Services\FDriverAppProfile.cs" Link="Clients\Driver\FDriverAppProfile.cs" />
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.cs" Link="Clients\Driver\MainPageModel.cs" />
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodExceptions.cs" Link="Clients\Driver\MainPageModel.FoodExceptions.cs" />
+    <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodDailySettlement.cs" Link="Clients\Driver\MainPageModel.FoodDailySettlement.cs" />
+    <Compile Include="..\FDriverApp\PageModels\FDriverDailySettlementItem.cs" Link="Clients\Driver\FDriverDailySettlementItem.cs" />
+    <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodNotifications.cs" Link="Clients\Driver\MainPageModel.FoodNotifications.cs" />
+    <Compile Include="..\FDriverApp\PageModels\FDriverFoodNotificationState.cs" Link="Clients\Driver\FDriverFoodNotificationState.cs" />
+    <Compile Include="..\FDriverApp\Services\IFDriverFoodNotificationService.cs" Link="Clients\Driver\IFDriverFoodNotificationService.cs" />
     <Compile Include="..\FDriverApp\PageModels\FDriverDeliveryExceptionState.cs" Link="Clients\Driver\FDriverDeliveryExceptionState.cs" />
     <Compile Include="..\FDriverApp\PageModels\FDriverWorkspaceNavigationState.cs" Link="Clients\Driver\FDriverWorkspaceNavigationState.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\RestaurantAuthService.cs" Link="Clients\Restaurant\RestaurantAuthService.cs" />
@@ -93,6 +98,12 @@
     <Compile Include="..\RestaurantDeskApp\Services\I음식점메뉴ApiClient.cs" Link="Clients\Restaurant\I음식점메뉴ApiClient.cs" />
     <Compile Include="..\RestaurantDeskApp\Models\Restaurant\음식점주문DeskModels.cs" Link="Clients\Restaurant\음식점주문DeskModels.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\I음식점주문DeskService.cs" Link="Clients\Restaurant\I음식점주문DeskService.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\IRestaurantReceiptPrinter.cs" Link="Clients\Restaurant\IRestaurantReceiptPrinter.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\RestaurantOrderNotifications.cs" Link="Clients\Restaurant\RestaurantOrderNotifications.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\I주문알림Service.cs" Link="Clients\Restaurant\I주문알림Service.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\음식점전표DraftFactory.cs" Link="Clients\Restaurant\음식점전표DraftFactory.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\음식점주문DeskService.cs" Link="Clients\Restaurant\음식점주문DeskService.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\I음식점조리시간설정Service.cs" Link="Clients\Restaurant\I음식점조리시간설정Service.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\I음식점주문SignalRClientService.cs" Link="Clients\Restaurant\I음식점주문SignalRClientService.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\음식점주문SignalRClientService.cs" Link="Clients\Restaurant\음식점주문SignalRClientService.cs" />
     <Compile Include="..\RestaurantDeskApp\Options\RestaurantDeskOptions.cs" Link="Clients\Restaurant\RestaurantDeskOptions.cs" />

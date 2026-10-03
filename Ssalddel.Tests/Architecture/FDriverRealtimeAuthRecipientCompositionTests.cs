@@ -6,13 +6,19 @@ public sealed class FDriverNotificationAuthRecipientCompositionTests
     public void 음식배달기사앱은_새추천을_지도배너로알리고_바로가기초점을_실제영역으로이동한다()
     {
         var model = Read("FDriverApp", "PageModels/MainPageModel.cs");
+        var notifications = Read("FDriverApp", "PageModels/MainPageModel.FoodNotifications.cs");
+        var state = Read("FDriverApp", "PageModels/FDriverFoodNotificationState.cs");
         var page = Read("FDriverApp", "Pages/MainPage.xaml");
         var codeBehind = Read("FDriverApp", "Pages/MainPage.xaml.cs");
 
         Assert.Contains("HasNewRecommendations", model);
-        Assert.Contains("NewRecommendationNotice", model);
+        Assert.Contains("NewRecommendationNotice", notifications);
         Assert.Contains("OpenNewRecommendations", model);
-        Assert.Contains("_knownRecommendedTicketIds", model);
+        Assert.Contains("ApplyFoodRecommendations(workspace)", model);
+        Assert.Contains("_foodNotificationState.BindAccount", notifications);
+        Assert.Contains("_service.ReadReceipt()", state);
+        Assert.Contains("RestoreFoodNotificationTargetAsync", model);
+        Assert.Contains("TakeFoodNotificationFocus", codeBehind);
         Assert.Contains("WorkspaceRefreshInterval = TimeSpan.FromSeconds(10)", model);
         Assert.Contains("await ReloadAsync(updateLocation: IsOnDuty)", model);
         Assert.Contains("다음 자동 갱신 10초 이내", model);

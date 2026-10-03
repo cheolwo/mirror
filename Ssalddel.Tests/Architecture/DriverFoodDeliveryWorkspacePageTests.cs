@@ -59,8 +59,8 @@ public sealed class DriverFoodDeliveryWorkspacePageTests
 
         Assert.Contains("DispatchStatusLabel(order.배차상태)", page);
         Assert.Contains("FormatOptionalDate(order.배차요청시각Utc)", page);
-        Assert.Contains("주문을 확인해 배차를 요청했습니다", page);
-        Assert.Contains("기사 배정 후 조리를 시작해 주세요", page);
+        Assert.Contains("주문을 확인해 배차를 요청", page);
+        Assert.Contains("조리는 배정 후 시작해 주세요", page);
         Assert.Contains("item.배차상태 = detail.배차상태", service);
         Assert.Contains("item.배차요청시각Utc = detail.배차요청시각Utc", service);
     }

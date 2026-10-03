@@ -1,5 +1,36 @@
 # Mirror 기획 목차
 
+## 음식배달 운영자 요율 설정 (2026-10-03)
+
+- [PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL r10](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL/operator-pricing-settings.implementation.r10.md): 관리자에서 픽업·전달비 독립 입력과 거리 단가 설정을 기존 저장/계산에 연결. 기존 동결 금액 유지, 실제 운영 활성화는 별도다.
+
+## 음식배달 네이버 경로 거리 연결 (2026-10-03)
+
+- [PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL r9](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL/naver-route-distance.integration.r9.md): 기존 제안요금 엔진의 거리 입력을 네이버 자동차 경로 추정으로 연결. 실패/fallback은 요금 확정 차단, 실제 외부 조회·오토바이 적용·신규 요율은 후속이다.
+
+## 기존 음식점 주문 화면 사용성 개선 (2026-10-02)
+
+- [PLAN-SYSTEM-FRANCHISE-OPERATIONS r65](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/restaurant-order-usability.implementation.r65.md): `Implemented / AndroidScopedVerificationPassed / FullTaskExistingFailures / PhysicalDevicePending`. 주문 목록·상세를 현재 상태·다음 행동 중심으로 정리하고 실제 Android와 같은 합성 주문의 서버 전이를 대조했다. 기존 업무 규칙·API·DB를 유지하며 당일 지급은 후속이다.
+
+## 주문 단위 업무·당일 정산과 입금 (2026-10-02)
+
+- [PLAN-SYSTEM-FRANCHISE-OPERATIONS r64](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/order-unit-daily-payout.direction.r64.md): `OrderUnitWorkflowConfirmed / SameDayPayoutDesignAssumptionConfirmed / FirstOrderSliceProposed / ProductImplementationPending`. r63의 당일 정산 목표를 주문번호 기준의 주문→배달→정산→입금 결과 연결로 구체화했다. 기존 주문/배달 시도·배차 계산 r8·지급 패턴·모바일 검증 r1을 재사용하며 첫 1건의 모의 검증은 후속이다.
+
+## 초기 무료 이용·당일 정산 방향 (2026-10-02)
+
+- [PLAN-SYSTEM-FRANCHISE-OPERATIONS r63](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/free-platform-daily-settlement.direction.r63.md): `InitialFreePlatformDirectionConfirmed / SameDaySettlementAndPayoutGoalConfirmed / FundingAndProviderUnresolved / RuntimeNotApplied`. 기존 앱 업무 흐름을 무료 이용 중심으로 완성하고 당일 정산·지급을 목표로 삼는다. r60·지급 상세 r8·모바일 검증 r1과 연결하며 제품 금액 정책·실송금은 변경하지 않았다.
+
+## 페이지→코드→DB 문서화·기존 결손 보완 (2026-10-02)
+
+- [승인 범위·구현 r1](../ProjectOverview/page-docs/implementation-r1.md): `InventoryUpdated / FourPageChainsDocumented / ExistingGapsRepaired / FocusedValidationPassed / OperationalExecutionNotVerified`. 전체 물리 페이지/별칭/호스트 재사용을 먼저 대조하고 배차·정산 네 화면의 기존 결손을 보완했다. 정책·새 화면·운영 DB·지급/입금은 후속이며 기존 개별 기획의 승인 범위를 확대하지 않는다.
+
+## 배달비 구성·기간 정산 계산 검토 (2026-10-02)
+
+- [실제 배차 계산 연결 r8](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL/dispatch-calculation.integration.r8.md): `DispatchCalculationIntegrated / FrozenComponentEvidence / GrossTotalOnly / SQLiteLifecycleVerified / OperationalServerAndDeviceNotVerified`. 구성 계산기를 기존 제안 계산·원장에 연결했다. 기존 요율과 Simulation 제한·기간 공제 분리를 유지한다.
+- [배차 총액 기준 r7](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL/dispatch-total-only.direction.r7.md): `DispatchGrossTotalOnlyConfirmed / ExistingCalculationAndDisplayVerifiedInSource`. 배차 전에 서버가 총액을 계산하고 제안 카드에는 공제 전 총 배달료만 표시한다. 기존 운송/지급 원장과 제안 계산을 보완하며 세부 구성은 완료 정산 상세에서 확인한다. 소스 대조·문서 반영이며 실제 배차 실행/신규 요율 적용은 아니다.
+
+- [PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL 계산 검토 r6](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL/calculation-review.implementation.r6.md): `ReviewCalculatorImplemented / AdminApiImplemented / TargetedValidationPassed / FullValidationHasBaselineFailures / OperationalLedgerDeferred`. 기존 지급 상세 r5를 이어 항목별 구성·명시적 동시 픽업·기간별 공제·보상 처리의 검토 API를 추가했다. 관련62/62 통과·전체 검사는 이전과 같은 범위 밖7실패다. 운영 가격·실제 정산 원장·월 확정·송금과 기사 화면은 후속이다.
+
 ## 기사 배차 선행·조리 시작 분리 (2026-10-01)
 
 - [PLAN-SYSTEM-FRANCHISE-OPERATIONS r62](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/driver-first-cooking.implementation.r62.md): `CoreImplemented / TargetedValidationPassed / FullValidationHasUnrelatedFailures / DeviceUiPending`. r61 승인 후 주문 확인→유효한 기사 배차→명시적 조리 시작을 운영 서버와 음식점 앱에 구현했다. 조리 전후 재배차·조리시간 통계·완료 상태 사본을 연결하며 대기 제한·새 취소/환불/보상 정책은 미정이다. 전체 검사에서는 이번 수정 범위 밖의 7건이 실패했다.
@@ -232,6 +263,7 @@
 
 관찰형 개인 세계의 신규 실행 프로필은 [관찰 중심 개인 세계 r5](Planning/시스템/PLAN-SYSTEM-OBSERVER-WORLD/README.md)을 따른다. 기존 직접 조작 시나리오와 저장 계약은 유지하며 자동 실행을 일괄 활성화하지 않는다.
 
+
 | 기획 ID | 현재 문서 | 상태 | 역할 |
 | --- | --- | --- | --- |
 | `PLAN-SYSTEM-GEOSPATIAL-TILE-SEMANTIC-ZOOM` | [공간 타일 기반 단계적 의미 확대 r2](Planning/시스템/PLAN-SYSTEM-GEOSPATIAL-TILE-SEMANTIC-ZOOM/README.md) · [행정동·역세권·사가정 디오라마 전환 r2](Planning/시스템/PLAN-SYSTEM-GEOSPATIAL-TILE-SEMANTIC-ZOOM/admin-station-diorama-transition.implementation.r2.md) | `Approved / ExistingSemanticZoomReused / ExistingStreamingLifecycleReused / AdminStationTransitionImplemented / SagajeongPreparedChildPlayModeVerified / CurrentAdministrativeBoundaryBlocked / LogicalTileStreamingNotImplemented` | 기존 한반도 거점 화면에서 권역·면목제3·8동·사가정역을 거쳐 준비된 사가정 1km 디오라마를 열고 역세권 문맥으로 복귀한다. 행정동은 과거 경계 후보임을 표시하며 현재 경계·다른 역·논리 타일 지연 적재는 열지 않았다. |
@@ -242,7 +274,7 @@
 | `PLAN-OPERATIONS-FOOD-SALES-ORDER-DESK` | [음식 판매 OS 주문 처리 화면 r5](Planning/공통/PLAN-OPERATIONS-FOOD-SALES-ORDER-DESK/README.md) | `Draft / AssignedDriverRelationshipBadgeConfirmed / CompletedDeliveryCountOnlyConfirmed / RelationshipBadgeDetailConfirmed / RestaurantVisibilityControlConfirmed / DefaultVisibleConfirmed / PreferenceFailureFailClosed / RelationshipNoDriverSelectionAuthorityConfirmed / FoodRestaurantDriverRelationshipProjectionRequired / RelationshipVisibilityPreferenceRequired / MobileProductImplementationDeferred` | 배정 기사 관계 배지에서 공동 완료 내역으로 이동하고 음식점이 기사 상대 노출을 기본 ON에서 끌 수 있다. |
 | `PLAN-OPERATIONS-ORDERER-ACTIVE-ORDER-HOME` | [주문자 지도 중심 음식점 발견·150건 활동 기사 지정 제안·진행 주문 추적 r11](Planning/공통/PLAN-OPERATIONS-ORDERER-ACTIVE-ORDER-HOME/README.md) | `Draft / MapFirstRestaurantDiscoveryConfirmed / ListSecondaryConfirmed / ActiveOrderMapOverlayConfirmed / FairMarkerBaselineConfirmed / AnonymousCourierSupplyPreviewConfirmed / PreferredDriverFirstOfferConfirmed / OrdererSubscriptionEntitlementRequiredConfirmed / Weekly150ActivityBadgeConfirmed / WednesdayTuesdayActivityCycleConfirmed / Weekly150DirectOfferEligibilityConfirmed / GeneralDispatchGateRejected / DriverActivityDisclosureOptInRequired / NotEmploymentCertification / DriverVetoConfirmed / NoPenaltyDeclineConfirmed / SeparateWorkOfferConsentRequired / DirectAssignmentRejected / DispatchEngineEligibilityAuthorityPreserved / VoluntaryDriverAcceptancePreserved / OrderBoundLocationAfterAssignmentOnly / DriverBenefitRequired / SubscriptionUnitEconomicsDefined / PriceAndIncludedUsagePending / RestaurantDistanceLimitConfirmed / ExistingSearchPolicyBound / PublicMapAnchorContractRequired / NaverMapsProviderCandidateConfirmed / ProductImplementationDeferred` | 유효한 주문자 구독과 기사 수~화 정상 완료 150건+ 배지, 기사 동의·현재 적격이 모두 맞아야 지정 제안을 연다. 일반 주문·일반 배차는 구독 없이 유지하고 가격·포함량·기사 혜택은 경제성 Preview 뒤 정한다. |
 | `PLAN-OPERATIONS-FOOD-DRIVER-MAP-HOME` | [음식 배달 기사 지도 중심 첫 화면·내 정보 r11](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-MAP-HOME/README.md) | `Draft / PayoutBreakdownDefaultExpandedCollapsible / GrossDeductionNetSeparated / PlatformContributionSecondaryDisclosureConfirmed / CurrentScreenPlanningClosed / FcmPrimaryConfirmed / SignalRClientRemoved / FirebaseConfigurationWaiting / StatutoryDeductionLedgerMissing / ProductImplementationPartial` | 기사 추천은 FCM 갱신 힌트 뒤 서버 정본을 재조회하고 10초 polling을 복구 경로로 유지한다. 실제 Android 수신에는 기사 앱 package 전용 Firebase 설정이 남아 있다. |
-| `PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL` | [음식 배달 완료 내역의 기사 지급 구성 상세 r5](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL/README.md) | `Draft / FrozenPricingBreakdownConfirmed / GrossDeductionNetSeparated / PlatformContributionSecondaryDisclosureConfirmed / CurrentScreenPlanningClosed / StatutoryDeductionLedgerMissing / OperationalLegalReviewRequired / ProductImplementationDeferred` | 현재 화면 문답은 닫았으며 법정 공제·실지급·증빙 계약과 운영 전 검토가 구현 선행 조건이다. |
+| `PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL` | [기사 지급 구성 화면 r5](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL/README.md) · [계산 검토 r6](Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL/calculation-review.implementation.r6.md) | `FrozenPricingBreakdownConfirmed / GrossDeductionNetSeparated / ReviewCalculatorImplemented / TargetedValidationPassed / FullValidationHasBaselineFailures / StatutoryDeductionLedgerMissing / OperationalLegalReviewRequired / PayoutUiDeferred` | 저장 없는 관리자 계산 검토를 구현했다. 실제 공제·실지급·증빙 원장과 기사 화면은 후속이다. |
 | `PLAN-OPERATIONS-FOOD-RESTAURANT-RIDER-RELATIONSHIP` | [음식점과 배달 기사가 함께한 배달 관계 r7](Planning/공통/PLAN-OPERATIONS-FOOD-RESTAURANT-RIDER-RELATIONSHIP/README.md) | `Draft / RoleScopedObservationConfirmed / StoreCenteredRegionalObservationConfirmed / SelfCenteredInitialViewConfirmed / OnDemandObservationConfirmed / LoadingDesignProposed / StageBasedObservationConfirmed / LiveGpsNotRequired / ImplementationProposal / CompletedDeliveryCountOnlyConfirmed / BadgeDetailNavigationConfirmed / DefaultVisibleConfirmed / BilateralVisibilityControlConfirmed / ImmediateFutureDisplayWithdrawalConfirmed / LedgerRetentionSeparated / PreferenceFailureFailClosed / DispatchInfluenceForbidden / AutomaticFriendshipForbidden / RelationshipVisibilityPreferenceRequired / FoodRelationshipProjectionRequired / ProductImplementationDeferred` | 본인 중심 요약→선택 지역·대상 추가 조회 순서를 확정했다. 탐색/운영/권한과 기존 공개·단계 표현은 분리하며 로드 기술 세부·제품 구현은 별도다. |
 | `PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES` | [하나의 운영 원장과 역할별 OS 작업공간 r26](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/README.md) · [UI 존재 여부 조사 r2](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/ui-coverage-audit.r1.md) · [OS별 운영자 모바일·현장 참여 r10](Planning/시스템/PLAN-SYSTEM-ROLE-PERSPECTIVE-OPERATING-WORKSPACES/operator-mobile-field-participation.r1.md) | `Draft / RiskThenWaitExceptionOrderingConfirmed / CanonicalRefreshBeforeActionsConfirmed / ContactChannelOrderAsked / UnityReadOnlyExcluded` | 예외 상세는 최신 서버 정본과 허용 행동을 재조회한 뒤에만 연락·재시도·후속 조작을 연다. |
 | `PLAN-OPERATIONS-SHIPPER-TRANSPORT-MANAGEMENT` | [화주 운송관리 OS r5](Planning/공통/PLAN-OPERATIONS-SHIPPER-TRANSPORT-MANAGEMENT/README.md) | `Approved / RequestHandoffImplemented / CompletionReturnReceiptAcceptanceImplemented / PartialDamageReviewImplemented / OperationalActivationDeferred` | 문제 사건의 수량·업무 통제·보류 범위와 운영자 예상 revision 결정을 구현했다. 부분 인수는 운임 잠금을 풀고 영향분을 보험 적용 가능성 검토로 남기며 귀책·배상·재배송은 확정하지 않는다. |

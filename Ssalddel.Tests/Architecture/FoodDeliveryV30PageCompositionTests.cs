@@ -134,9 +134,10 @@ public sealed class FoodDeliveryV30PageCompositionTests
             "Ssalddel.Ui.Common",
             "wwwroot/Areas/App/js/ssalddel-document-output.js");
 
-        Assert.Contains("catch (JSException)", detail);
-        Assert.Contains("주문을 확인해 배차를 요청했습니다", detail);
-        Assert.Contains("기사 배정 후 조리를 시작해 주세요", detail);
+        Assert.Contains("ex is JSException or InvalidOperationException or TimeoutException", detail);
+        Assert.Contains("주문을 확인해 배차를 요청", detail);
+        Assert.Contains("전표 출력 창을 열지 못했어요", detail);
+        Assert.Contains("조리는 배정 후 시작해 주세요", detail);
         Assert.DoesNotContain("주문은 수락되어 조리를 시작했습니다", detail);
         Assert.Contains("window.ssalddelDocumentOutput", staticAsset);
         Assert.Contains("printHtml", staticAsset);

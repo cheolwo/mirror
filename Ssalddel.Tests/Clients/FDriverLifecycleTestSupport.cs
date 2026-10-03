@@ -82,6 +82,10 @@ namespace Ssalddel.Tests.Clients
 
     internal sealed class FDriverTestWorkspaceApi : IFoodDeliveryDriverApiService
     {
+        public Func<DateOnly, CancellationToken, Task<FoodDeliveryDailySettlementDto>> DailySettlement { get; set; }
+            = (date, _) => Task.FromResult(new FoodDeliveryDailySettlementDto { DriverId = "test-driver", CompletionDateKst = date });
+        public Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync(DateOnly date, CancellationToken cancellationToken = default)
+            => DailySettlement(date, cancellationToken);
         public Func<CancellationToken, Task<운영배차수신상태Dto>> Availability { get; set; }
             = _ => Task.FromResult(new 운영배차수신상태Dto());
         public Func<운영배차수신의사변경요청, CancellationToken, Task<운영배차수신상태Dto>>? ChangeIntent { get; set; }
