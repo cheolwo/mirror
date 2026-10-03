@@ -109,6 +109,10 @@
             }
 
             <div class="order-flow-secondary-row">
+                @if (CanPrintReceipt)
+                {
+                    <MudButton Variant="Variant.Outlined" Disabled="@WorkDisabled" OnClick="PrintReceiptAsync" StartIcon="@Icons.Material.Filled.Print">전표 출력</MudButton>
+                }
                 <MudButton Variant="Variant.Outlined" Disabled="@(isBusy || isLoading || isRefreshing)" OnClick="RefreshAsync" StartIcon="@Icons.Material.Filled.Refresh">새로고침</MudButton>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">@(lastSuccessfulRefresh is null ? "확인 대기" : $"마지막 확인 {lastSuccessfulRefresh.Value.ToLocalTime():HH:mm:ss}")</MudText>
             </div>

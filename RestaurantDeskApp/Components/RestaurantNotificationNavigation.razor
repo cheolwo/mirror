@@ -1,0 +1,42 @@
+@implements IDisposable
+@inject RestaurantOrderNotificationCoordinator Notifications
+@inject RestaurantAuthService AuthService
+@inject NavigationManager Navigation
+
+@code {
+    private readonly CancellationTokenSource lifetime = new();
+    private bool disposed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Notifications.NavigationRequested += HandleActivation;
+        try
+        {
+            await Notifications.SynchronizeAsync(lifetime.Token);
+            if (!disposed) await NavigatePendingAsync();
+        }
+        catch (Exception) when (disposed || lifetime.IsCancellationRequested) { }
+        catch { /* The route authentication and page retry remain the visible owners. */ }
+    }
+
+    private void HandleActivation() => _ = InvokeAsync(NavigatePendingAsync);
+
+    private async Task NavigatePendingAsync()
+    {
+        try
+        {
+            var target = await Notifications.ResolvePendingNavigationAsync(lifetime.Token);
+            if (!disposed && !string.IsNullOrWhiteSpace(target)) Navigation.NavigateTo(target, replace: true);
+        }
+        catch (Exception) when (disposed || lifetime.IsCancellationRequested) { }
+        catch { if (!disposed && AuthService.Session.IsAuthenticated) Navigation.NavigateTo("/orders", replace: true); }
+    }
+
+    public void Dispose()
+    {
+        disposed = true;
+        lifetime.Cancel();
+        Notifications.NavigationRequested -= HandleActivation;
+        lifetime.Dispose();
+    }
+}

@@ -16,6 +16,7 @@ public sealed class RestaurantAuthService(
     ClientAuthSession session)
 {
     private readonly SemaphoreSlim _refreshGate = new(1, 1);
+    public event Action<bool>? SessionEnding;
 
     public ClientAuthSession Session => session;
 
@@ -88,11 +89,15 @@ public sealed class RestaurantAuthService(
     }
 
     public Task LogoutAsync(CancellationToken cancellationToken = default)
-        => session.ClearAsync(cancellationToken);
+    {
+        SessionEnding?.Invoke(true);
+        return session.ClearAsync(cancellationToken);
+    }
 
     internal async Task InvalidateRejectedSessionAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        SessionEnding?.Invoke(false);
         try
         {
             await session.ClearAsync(cancellationToken);

@@ -5,6 +5,7 @@
 @inject I음식점주문SignalRClientService RestaurantRealtimeService
 @inject IOptions<RestaurantDeskOptions> DeskOptions
 @inject NavigationManager NavigationManager
+@inject RestaurantOrderNotificationCoordinator Notifications
 
 <PageTitle>주문 목록</PageTitle>
 
@@ -66,6 +67,10 @@
             </MudStack>
         }
         <div class="order-flow-secondary-row">
+            @if (Notifications.SupportsSystemNotification)
+            {
+                <MudButton Variant="Variant.Outlined" Disabled="@(isRefreshing || workLocked)" OnClick="EnableSystemNotificationsAsync" StartIcon="@Icons.Material.Filled.Notifications">주문 알림 허용</MudButton>
+            }
             <MudButton Variant="Variant.Outlined" Disabled="@(isRefreshing || workLocked)" OnClick="ReloadManuallyAsync" StartIcon="@Icons.Material.Filled.Refresh">새로고침</MudButton>
             <MudText Typo="Typo.body2" Color="Color.Secondary">@(lastSuccessfulRefresh is null ? "확인 대기" : $"마지막 확인 {lastSuccessfulRefresh.Value.ToLocalTime():HH:mm:ss}")</MudText>
         </div>
@@ -102,6 +107,24 @@
     private async Task ReloadManuallyAsync()
         => await TryReloadAsync(음식점주문복구출처.서버재조회);
 
+    private async Task EnableSystemNotificationsAsync()
+    {
+        try
+        {
+            var allowed = await Notifications.RequestPermissionAsync(refreshCancellation.Token);
+            if (disposed) return;
+            messageSeverity = allowed ? Severity.Success : Severity.Warning;
+            message = allowed ? "주문 알림을 허용했습니다." : "기기 알림이 꺼져 있습니다. 기기 설정에서 주문 알림을 허용해 주세요.";
+        }
+        catch (Exception) when (disposed || refreshCancellation.IsCancellationRequested) { }
+        catch
+        {
+            if (disposed) return;
+            messageSeverity = Severity.Warning;
+            message = "기기 알림 설정을 확인하지 못했습니다. 다시 시도해 주세요.";
+        }
+    }
+
     private Color RealtimeStatusColor => RestaurantRealtimeService.연결상태 switch
     {
         음식점실시간연결상태.연결됨 => Color.Success,
@@ -116,6 +139,7 @@
         RestaurantRealtimeService.주문상태변경 += HandleOrderStatusChangedAsync;
         RestaurantRealtimeService.상태변경 += HandleRealtimeStatusChangedAsync;
         RestaurantRealtimeService.재연결후재조회요청 += HandleReconnectedRefreshAsync;
+        Notifications.CanonicalRefreshRequested += HandleReconnectedRefreshAsync;
         await TryReloadAsync(음식점주문복구출처.서버재조회);
         if (disposed) return;
 
@@ -155,19 +179,7 @@
         await InvokeAsync(async () =>
         {
             if (disposed) return;
-            await OrderDeskService.주문알림수신Async(new 음식점주문수신Payload
-            {
-                주문번호 = notification.주문번호,
-                음식점Id = notification.음식점Id,
-                고객명 = notification.고객명,
-                메뉴요약 = notification.메뉴요약,
-                상품목록 = notification.상품목록,
-                주문금액 = notification.주문금액,
-                수신시각 = notification.수신시각,
-                제목 = notification.제목,
-                본문 = notification.본문
-            }, refreshCancellation.Token);
-            if (disposed) return;
+            // 알림음/OS 알림은 페이지 밖 singleton이 인증된 정본과 대조한다.
             messageSeverity = Severity.Success;
             message = $"{notification.주문번호} 주문을 수신했습니다.";
             await TryReloadAsync(음식점주문복구출처.서버재조회);
@@ -382,6 +394,7 @@
         RestaurantRealtimeService.주문상태변경 -= HandleOrderStatusChangedAsync;
         RestaurantRealtimeService.상태변경 -= HandleRealtimeStatusChangedAsync;
         RestaurantRealtimeService.재연결후재조회요청 -= HandleReconnectedRefreshAsync;
+        Notifications.CanonicalRefreshRequested -= HandleReconnectedRefreshAsync;
         if (refreshTask is not null)
         {
             await refreshTask;

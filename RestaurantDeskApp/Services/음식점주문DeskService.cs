@@ -314,15 +314,43 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService
             사유: string.Empty,
             cancellationToken);
 
+    public async Task<음식점주문수락결과> 전표준비Async(string 주문번호, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(주문번호);
+        var item = await 주문조회Async(주문번호, cancellationToken: cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        var detail = item?.상세주문;
+        if (detail is null || !detail.음식점수락시각Utc.HasValue
+            || detail.상태 is 음식주문상태코드.취소 or 음식주문상태코드.거절)
+        {
+            return new 음식점주문수락결과
+            {
+                성공 = false, 주문 = item, 상세주문 = detail,
+                메시지 = "확인된 주문의 최신 전표를 만들 수 없습니다. 주문 상태를 다시 확인해 주세요."
+            };
+        }
+
+        return new 음식점주문수락결과
+        {
+            성공 = true, 주문 = item, 상세주문 = detail,
+            전표Draft = _slipFactory.Create주문전표Draft(detail),
+            메시지 = "최신 주문으로 전표를 준비했습니다. 주문을 다시 수락하지 않습니다."
+        };
+    }
+
+    // 기존 호출 이름의 호환성을 유지한다. 출력 장치의 완료 여부는 이 앱에서 확인할 수 없다.
+    public Task 전표출력요청기록Async(string 주문번호, CancellationToken cancellationToken = default)
+        => 전표출력완료Async(주문번호, cancellationToken);
+
     public Task 전표출력완료Async(string 주문번호, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         lock (_gate)
         {
             var item = FindLocked(주문번호);
             if (item is not null)
             {
-                item.상태 = 음식점주문Desk상태코드.전표출력됨;
-                item.전표출력시각 = DateTimeOffset.Now;
+                item.전표출력요청시각 = DateTimeOffset.Now;
                 item.최근메시지 = "전표 출력 요청 완료";
             }
         }

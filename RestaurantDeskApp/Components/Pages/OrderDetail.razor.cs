@@ -16,6 +16,9 @@ public partial class OrderDetail : ComponentBase, IDisposable
     [Inject] public ISsalddelDocumentOutputService DocumentOutputService { get; set; } = default!;
     [Inject] public IJSRuntime JS { get; set; } = default!;
     [Inject] public NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] public IRestaurantReceiptPrinter ReceiptPrinter { get; set; } = default!;
+    [Inject] public RestaurantAuthService AuthService { get; set; } = default!;
+    [Inject] public RestaurantOrderNotificationCoordinator Notifications { get; set; } = default!;
     [Parameter]
     public string OrderNo { get; set; } = string.Empty;
 
@@ -50,8 +53,20 @@ public partial class OrderDetail : ComponentBase, IDisposable
         RestaurantRealtimeService.주문상태변경 += HandleOrderChangedAsync;
         RestaurantRealtimeService.재연결후재조회요청 += HandleReconnectedAsync;
         RestaurantRealtimeService.상태변경 += HandleConnectionChangedAsync;
+        if (Notifications is not null) Notifications.CanonicalRefreshRequested += HandleReconnectedAsync;
+        if (AuthService is not null) AuthService.SessionEnding += HandleSessionEnding;
         periodicRefreshTask = RunPeriodicRefreshAsync(lifetimeCancellation.Token);
     }
+
+    private void HandleSessionEnding(bool explicitLogout) => _ = InvokeAsync(() =>
+    {
+        if (disposed) return;
+        selectionCancellation.Cancel();
+        selectionGeneration++;
+        workLocked = true;
+        order = null;
+        StateHasChanged();
+    });
 
     private Task HandleOrderReceivedAsync(음식점주문수신알림 notification)
         => RefreshNotifiedOrderAsync(notification.주문번호);
@@ -202,6 +217,8 @@ public partial class OrderDetail : ComponentBase, IDisposable
     }
 
     private bool WorkDisabled => isBusy || isLoading || readFailed || workLocked || disposed || isRefreshing;
+    private bool CanPrintReceipt => order?.상세주문?.음식점수락시각Utc.HasValue == true
+        && order.상태 is not 음식점주문Desk상태코드.취소 and not 음식점주문Desk상태코드.거절;
 
     private void ApplyServerOrder(음식점주문DeskItem? loaded)
     {
@@ -321,6 +338,10 @@ public partial class OrderDetail : ComponentBase, IDisposable
         message = null;
         var requestedOrderNo = OrderNo;
         var generation = selectionGeneration;
+        var owner = AuthService?.Session.UserId;
+        bool Current() => IsCurrentSelection(requestedOrderNo, generation)
+            && string.Equals(owner, AuthService?.Session.UserId, StringComparison.Ordinal)
+            && (AuthService is null || AuthService.Session.IsAuthenticated);
         var cancellationToken = selectionCancellation.Token;
         try
         {
@@ -330,7 +351,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
                 preparationMinutes,
                 cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            if (!IsCurrentSelection(requestedOrderNo, generation)) return;
+            if (!Current()) return;
             if (!result.성공 || result.전표Draft is null)
             {
                 readFailed = true;
@@ -342,35 +363,108 @@ public partial class OrderDetail : ComponentBase, IDisposable
             var output = DocumentOutputService.CreateOutboundExpectedItems(result.전표Draft);
             try
             {
-                await JS.InvokeVoidAsync("ssalddelDocumentOutput.printHtml", cancellationToken, output.Title, output.Html);
+                await RequestPrintDialogAsync(output.Title, output.Html, cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
-                if (!IsCurrentSelection(requestedOrderNo, generation)) return;
-                await OrderDeskService.전표출력완료Async(requestedOrderNo, cancellationToken);
+                if (!Current()) return;
+                await OrderDeskService.전표출력요청기록Async(requestedOrderNo, cancellationToken);
             }
-            catch (JSException)
+            catch (Exception ex) when (ex is JSException or InvalidOperationException or TimeoutException)
             {
                 var loaded = await OrderDeskService.주문조회Async(requestedOrderNo, cancellationToken: cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
-                if (!IsCurrentSelection(requestedOrderNo, generation)) return;
+                if (!Current()) return;
                 ApplyServerOrder(loaded);
                 messageSeverity = Severity.Warning;
-                message = $"{OrderNo} 주문을 확인해 배차를 요청했습니다. 기사 배정 후 조리를 시작해 주세요. 이 기기에서는 전표 출력 창을 열지 못했습니다.";
+                message = $"{OrderNo} 주문 확인은 완료됐습니다. 전표 출력 창을 열지 못했어요. 전표 출력으로 다시 시도할 수 있습니다.";
                 return;
             }
 
             var latest = await OrderDeskService.주문조회Async(requestedOrderNo, cancellationToken: cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            if (!IsCurrentSelection(requestedOrderNo, generation)) return;
+            if (!Current()) return;
             ApplyServerOrder(latest);
             messageSeverity = Severity.Success;
             message = $"{OrderNo} 주문을 확인해 배차를 요청하고 전표 출력 요청을 보냈습니다.";
         }
-        catch (Exception) when (cancellationToken.IsCancellationRequested || !IsCurrentSelection(requestedOrderNo, generation))
+        catch (Exception) when (cancellationToken.IsCancellationRequested || !Current())
         {
         }
         catch (Exception ex)
         {
             HandleRequestFailure(ex, "주문 확인 결과를 확인하지 못했습니다. 중복 처리하지 않도록 새로고침 후 현재 상태를 확인해 주세요.");
+        }
+        finally
+        {
+            if (Current())
+            {
+                isBusy = false;
+                await DrainQueuedRefreshAsync();
+            }
+        }
+    }
+
+    private async Task RequestPrintDialogAsync(string title, string html, CancellationToken cancellationToken)
+    {
+        if (ReceiptPrinter?.UsesNativeDialog == true)
+            await ReceiptPrinter.RequestPrintDialogAsync(title, html, cancellationToken);
+        else
+            await JS.InvokeVoidAsync("ssalddelDocumentOutput.printHtml", cancellationToken, title, html);
+    }
+
+    private static void LogPrintDiagnosticFailure(string phase, Exception exception)
+    {
+#if ANDROID
+        global::RestaurantDeskApp.Platforms.Android.AndroidRestaurantReceiptPrinter.LogDiagnosticFailure(phase, exception);
+#endif
+    }
+
+    private async Task PrintReceiptAsync()
+    {
+        if (WorkDisabled || !CanPrintReceipt) return;
+        var requestedOrderNo = OrderNo;
+        var generation = selectionGeneration;
+        var owner = AuthService?.Session.UserId;
+        var cancellationToken = selectionCancellation.Token;
+        bool Current() => IsCurrentSelection(requestedOrderNo, generation)
+            && string.Equals(owner, AuthService?.Session.UserId, StringComparison.Ordinal)
+            && (AuthService is null || AuthService.Session.IsAuthenticated);
+        isBusy = true;
+        message = null;
+        var printPhase = "prepare-receipt";
+        try
+        {
+            var prepared = await OrderDeskService.전표준비Async(requestedOrderNo, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!Current()) return;
+            ApplyServerOrder(prepared.주문);
+            if (!prepared.성공 || prepared.전표Draft is null)
+            {
+                messageSeverity = Severity.Warning;
+                message = prepared.메시지;
+                return;
+            }
+            printPhase = "create-document";
+            var output = DocumentOutputService.CreateOutboundExpectedItems(prepared.전표Draft);
+            printPhase = "request-print-dialog";
+            await RequestPrintDialogAsync(output.Title, output.Html, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!Current()) return;
+            printPhase = "record-print-request";
+            await OrderDeskService.전표출력요청기록Async(requestedOrderNo, cancellationToken);
+            messageSeverity = Severity.Success;
+            message = "전표 출력 창을 요청했습니다. 실제 인쇄 결과는 출력 장치에서 확인해 주세요.";
+        }
+        catch (Exception) when (cancellationToken.IsCancellationRequested || !Current()) { }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException or TimeoutException)
+        {
+            LogPrintDiagnosticFailure(printPhase, ex);
+            messageSeverity = Severity.Warning;
+            message = "전표 출력 창을 열지 못했습니다. 주문은 다시 수락되지 않았어요. 전표 출력으로 재시도해 주세요.";
+        }
+        catch (Exception ex)
+        {
+            LogPrintDiagnosticFailure(printPhase, ex);
+            HandleRequestFailure(ex, "최신 전표를 불러오지 못했습니다. 주문 상태를 새로고침한 뒤 다시 시도해 주세요.");
         }
         finally
         {
@@ -506,6 +600,8 @@ public partial class OrderDetail : ComponentBase, IDisposable
         RestaurantRealtimeService.주문상태변경 -= HandleOrderChangedAsync;
         RestaurantRealtimeService.재연결후재조회요청 -= HandleReconnectedAsync;
         RestaurantRealtimeService.상태변경 -= HandleConnectionChangedAsync;
+        if (Notifications is not null) Notifications.CanonicalRefreshRequested -= HandleReconnectedAsync;
+        if (AuthService is not null) AuthService.SessionEnding -= HandleSessionEnding;
         lifetimeCancellation.Cancel();
         lifetimeCancellation.Dispose();
         selectionGeneration++;

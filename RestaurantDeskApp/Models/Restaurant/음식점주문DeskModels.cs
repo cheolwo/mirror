@@ -86,6 +86,9 @@ public sealed class 음식점주문DeskItem
 
     public DateTimeOffset? 전표출력시각 { get; set; }
 
+    // 인쇄 UI 요청의 로컬 기록이다. 프린터 실제 출력 완료 원장이 아니다.
+    public DateTimeOffset? 전표출력요청시각 { get; set; }
+
     public int 추천조리예상분 { get; set; }
 
     public int? 선택조리예상분 { get; set; }

@@ -1,15 +1,18 @@
 using Ssalddel.Ui.Common.Areas.App.Services;
+using RestaurantDeskApp.Services;
 
 namespace RestaurantDeskApp;
 
 public partial class App : Application
 {
     private readonly 역할앱생명주기State _lifecycle;
+    private readonly RestaurantOrderNotificationCoordinator _notifications;
 
-    public App(역할앱생명주기State lifecycle)
+    public App(역할앱생명주기State lifecycle, RestaurantOrderNotificationCoordinator notifications)
     {
         InitializeComponent();
         _lifecycle = lifecycle;
+        _notifications = notifications;
         _lifecycle.초기화(DeviceInfo.Current.Platform.ToString(), IsConnected());
         Connectivity.Current.ConnectivityChanged += HandleConnectivityChanged;
     }
@@ -37,7 +40,12 @@ public partial class App : Application
         window.Activated += (_, _) => _lifecycle.전환(역할앱생명주기단계.활성);
         window.Deactivated += (_, _) => _lifecycle.전환(역할앱생명주기단계.일시정지);
         window.Stopped += (_, _) => _lifecycle.전환(역할앱생명주기단계.일시정지);
-        window.Resumed += async (_, _) => await _lifecycle.재개표시후활성Async();
+        window.Resumed += async (_, _) =>
+        {
+            await _lifecycle.재개표시후활성Async();
+            try { await _notifications.ResumeAsync(); }
+            catch { /* Existing page error/retry owns unavailable canonical reads. */ }
+        };
         window.Destroying += (_, _) =>
         {
             _lifecycle.전환(역할앱생명주기단계.종료중);

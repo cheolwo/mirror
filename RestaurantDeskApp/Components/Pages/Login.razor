@@ -2,6 +2,7 @@
 @layout AuthLayout
 @inject RestaurantAuthService AuthService
 @inject NavigationManager Navigation
+@inject RestaurantOrderNotificationCoordinator Notifications
 
 <PageTitle>음식점 로그인</PageTitle>
 
@@ -59,7 +60,7 @@
         var result = await AuthService.EnsureAccessTokenAsync();
         if (result.IsSuccess)
         {
-            Navigation.NavigateTo("/orders", replace: true);
+            await ReturnToOrdersAsync();
         }
     }
 
@@ -81,11 +82,18 @@
                 return;
             }
 
-            Navigation.NavigateTo("/orders", replace: true);
+            await ReturnToOrdersAsync();
         }
         finally
         {
             isBusy = false;
         }
+    }
+
+    private async Task ReturnToOrdersAsync()
+    {
+        await Notifications.SynchronizeAsync();
+        var target = await Notifications.ResolvePendingNavigationAsync();
+        Navigation.NavigateTo(target ?? "/orders", replace: true);
     }
 }

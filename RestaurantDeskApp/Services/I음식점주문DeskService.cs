@@ -41,4 +41,11 @@ public interface I음식점주문DeskService
         CancellationToken cancellationToken = default);
 
     Task 전표출력완료Async(string 주문번호, CancellationToken cancellationToken = default);
+
+    // 전표 재출력은 주문 수락/조리 명령을 다시 실행하지 않는다.
+    Task<음식점주문수락결과> 전표준비Async(string 주문번호, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("전표 재출력을 지원하지 않는 음식점 서비스입니다.");
+
+    Task 전표출력요청기록Async(string 주문번호, CancellationToken cancellationToken = default)
+        => 전표출력완료Async(주문번호, cancellationToken);
 }

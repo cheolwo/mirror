@@ -57,6 +57,14 @@ public static class MauiProgram
         builder.Services.AddSingleton<RestaurantDeskSampleService>();
         builder.Services.AddSingleton<I음식점식재료공급요청Service, RestaurantIngredientSupplySampleService>();
         builder.Services.AddSingleton<I주문알림Service, 주문알림Service>();
+#if ANDROID
+        builder.Services.AddSingleton<IRestaurantReceiptPrinter, Platforms.Android.AndroidRestaurantReceiptPrinter>();
+        builder.Services.AddSingleton<IRestaurantOrderNotificationPlatform, Platforms.Android.AndroidRestaurantOrderNotifications>();
+#else
+        builder.Services.AddSingleton<IRestaurantReceiptPrinter, BrowserRestaurantReceiptPrinter>();
+        builder.Services.AddSingleton<IRestaurantOrderNotificationPlatform, NoRestaurantOrderNotifications>();
+#endif
+        builder.Services.AddSingleton<RestaurantOrderNotificationCoordinator>();
         builder.Services.AddSingleton<I음식점주문SignalRClientService, 음식점주문SignalRClientService>();
         builder.Services.AddSingleton<I음식점조리시간설정Service, 음식점조리시간설정Service>();
         builder.Services.AddSsalddelUiCommonAppServices<RestaurantAccessTokenProvider>();
