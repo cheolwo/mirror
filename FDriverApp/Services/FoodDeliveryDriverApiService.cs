@@ -1,4 +1,5 @@
 using System.Net;
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -13,6 +14,7 @@ namespace FDriverApp.Services;
 public interface IFoodDeliveryDriverApiService
 {
     Task<FoodDeliveryDriverWorkspaceDto> GetWorkspaceAsync(CancellationToken cancellationToken = default);
+    Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync(DateOnly date, CancellationToken cancellationToken = default);
     Task<기사운행상태응답?> GetWorkStatusAsync(CancellationToken cancellationToken = default);
     Task<운영배차수신상태Dto> GetDispatchAvailabilityAsync(CancellationToken cancellationToken = default);
     Task<운영배차수신상태Dto> ChangeDispatchIntentAsync(운영배차수신의사변경요청 request, CancellationToken cancellationToken = default);
@@ -47,6 +49,11 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
 
     public Task<FoodDeliveryDriverWorkspaceDto> GetWorkspaceAsync(CancellationToken cancellationToken = default)
         => SendAsync<FoodDeliveryDriverWorkspaceDto>(HttpMethod.Get, "api/v1/driver/food-deliveries/workspace", null, cancellationToken);
+
+    public Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync(DateOnly date, CancellationToken cancellationToken = default)
+        => SendAsync<FoodDeliveryDailySettlementDto>(HttpMethod.Get,
+            "api/v1/driver/food-deliveries/settlements/daily?date="
+                + date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), null, cancellationToken);
 
     public Task<운영배차수신상태Dto> GetDispatchAvailabilityAsync(CancellationToken cancellationToken = default)
         => SendAsync<운영배차수신상태Dto>(HttpMethod.Get, "api/v1/driver/operational-dispatch/availability", null, cancellationToken);
@@ -152,7 +159,15 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
         CancellationToken cancellationToken)
     {
         using var response = await SendWithRefreshAsync(method, path, body, cancellationToken);
-        var result = await response.Content.ReadFromJsonAsync<T>(cancellationToken);
+        T? result;
+        try
+        {
+            result = await response.Content.ReadFromJsonAsync<T>(cancellationToken);
+        }
+        catch (JsonException ex)
+        {
+            throw new FDriverApiException("서버 응답을 확인하지 못했습니다. 다시 조회해 주세요.", response.StatusCode, ex);
+        }
         cancellationToken.ThrowIfCancellationRequested();
         return result ?? throw new FDriverApiException("서버 응답을 읽을 수 없습니다.", response.StatusCode);
     }

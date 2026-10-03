@@ -41,6 +41,11 @@ namespace FDriverApp.Pages
                     model.ApplyEntryFocus(focus);
                 if (model.IsAuthenticated)
                     model.Navigation.TryApplyFocus(focus);
+                if (model.IsAuthenticated && model.Navigation.IsSettlement)
+                    await model.RefreshDailySettlementAsync();
+                if (!_pageActive || appearanceRevision != _appearanceRevision
+                    || navigationRevision != _navigationRevision)
+                    return;
                 _entryFocus = null;
                 await ScrollToEntryFocusAsync(focus);
             }
@@ -113,8 +118,16 @@ namespace FDriverApp.Pages
             return base.OnBackButtonPressed();
         }
 
-        private void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs args)
+        private async void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs args)
         {
+            if (_pageActive && args.PropertyName == nameof(MainPageModel.FoodNotificationFocus)
+                && sender is MainPageModel { IsAuthenticated: true } notificationModel)
+            {
+                var focus = notificationModel.TakeFoodNotificationFocus();
+                if (focus is not null)
+                    await RestoreSectionScrollAsync(notificationModel, focus);
+                return;
+            }
             if (args.PropertyName == nameof(MainPageModel.IsAuthenticated)
                 && sender is MainPageModel { IsAuthenticated: false })
             {
@@ -160,6 +173,12 @@ namespace FDriverApp.Pages
             RememberCurrentScroll();
             _entryFocus = null;
             model.Navigation.Select(section);
+            var navigationRevision = ++_navigationRevision;
+            if (section == FDriverWorkspaceSection.Settlement)
+                await model.RefreshDailySettlementAsync();
+            if (!_pageActive || !model.IsAuthenticated || model.Navigation.Selected != section
+                || navigationRevision != _navigationRevision)
+                return;
             await RestoreSectionScrollAsync(model, focus);
         }
 

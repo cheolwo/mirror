@@ -1,4 +1,5 @@
 using FDriverApp.Pages;
+using FDriverApp.PageModels;
 using Microsoft.Extensions.DependencyInjection;
 using Ssalddel.Ui.Common.Areas.App.Services;
 
@@ -28,16 +29,28 @@ namespace FDriverApp
         private void AttachLifecycle(Window window)
         {
             window.Created += (_, _) => _lifecycle.전환(역할앱생명주기단계.시작중);
-            window.Activated += (_, _) => _lifecycle.전환(역할앱생명주기단계.활성);
+            window.Activated += async (_, _) =>
+            {
+                _lifecycle.전환(역할앱생명주기단계.활성);
+                await RefreshFoodWorkspaceAsync();
+            };
             window.Deactivated += (_, _) => _lifecycle.전환(역할앱생명주기단계.일시정지);
             window.Stopped += (_, _) => _lifecycle.전환(역할앱생명주기단계.일시정지);
-            window.Resumed += async (_, _) => await _lifecycle.재개표시후활성Async();
+            window.Resumed += async (_, _) =>
+            {
+                await _lifecycle.재개표시후활성Async();
+                await RefreshFoodWorkspaceAsync();
+            };
             window.Destroying += (_, _) =>
             {
                 _lifecycle.전환(역할앱생명주기단계.종료중);
                 Connectivity.Current.ConnectivityChanged -= HandleConnectivityChanged;
             };
         }
+
+        private Task RefreshFoodWorkspaceAsync()
+            => _mainPage.BindingContext is MainPageModel model
+                ? model.ResumeFoodNotificationWorkspaceAsync() : Task.CompletedTask;
 
         private void HandleConnectivityChanged(object? sender, ConnectivityChangedEventArgs args)
             => _lifecycle.연결상태변경(IsConnected(args.NetworkAccess));

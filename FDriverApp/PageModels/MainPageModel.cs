@@ -33,7 +33,6 @@ public sealed partial class MainPageModel : ObservableObject
     private CancellationTokenSource? _monitorCancellation;
     private Task? _monitorTask;
     private DateTime? _lastLocationSentAtUtc;
-    private readonly HashSet<string> _knownRecommendedTicketIds = new(StringComparer.Ordinal);
 
     [ObservableProperty] private bool _isRefreshing;
     [ObservableProperty] private bool _isBusy;
@@ -55,7 +54,7 @@ public sealed partial class MainPageModel : ObservableObject
     [ObservableProperty] private string _routeStatusText = "경로 조회 전";
     [ObservableProperty, NotifyPropertyChangedFor(nameof(HasWorkspaceWarning))] private string _workspaceWarningText = string.Empty;
     [ObservableProperty] private string _workspaceSyncText = "업무 자동 갱신 대기 · 10초 주기";
-    [ObservableProperty] private string _recommendationNotificationText = "FCM 추천 알림 준비 · 10초 서버 조회 복구";
+    [ObservableProperty] private string _recommendationNotificationText = "앱 복귀·10초 조회로 새 배달 요청 확인";
     [ObservableProperty] private string _locationSyncText = "기사 위치 전송 대기";
     [ObservableProperty, NotifyPropertyChangedFor(nameof(HasDispatchNotice))] private bool _dispatchAutomationEnabled;
     [ObservableProperty] private int _maxActiveDeliveries;
@@ -76,7 +75,8 @@ public sealed partial class MainPageModel : ObservableObject
         FDriverAuthApiService authApi,
         IFoodDeliveryDriverApiService api,
         IFDriverLocationService locationService,
-        역할앱생명주기State appLifecycle)
+        역할앱생명주기State appLifecycle,
+        IFDriverFoodNotificationService? notifications = null)
     {
         _profile = profile;
         _authSession = authSession;
@@ -84,6 +84,7 @@ public sealed partial class MainPageModel : ObservableObject
         _api = api;
         _locationService = locationService;
         _appLifecycle = appLifecycle;
+        InitializeFoodNotifications(notifications);
         ExceptionEditor.PropertyChanged += ExceptionEditorChanged;
     }
 
@@ -214,7 +215,7 @@ public sealed partial class MainPageModel : ObservableObject
         _monitorCancellation?.Dispose();
         _monitorCancellation = CancellationTokenSource.CreateLinkedTokenSource(workspaceCancellation.Token);
         _monitorTask = MonitorWorkspaceAsync(_monitorCancellation.Token);
-        RecommendationNotificationText = "FCM 추천 알림 준비 · 10초 서버 조회 복구";
+        RecommendationNotificationText = "앱 복귀·10초 조회로 새 배달 요청 확인";
     }
 
     public Task StopMonitoringAsync() => StopMonitoringAsync(deactivateWorkspace: true);
@@ -372,26 +373,7 @@ public sealed partial class MainPageModel : ObservableObject
     [RelayCommand]
     private async Task OpenNewRecommendations()
     {
-        var cancellationToken = _workspaceCancellation.Token;
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
-
-        HasNewRecommendations = false;
-        var ticket = RecommendedTicketItems.FirstOrDefault(x => !x.IsExpired)
-                     ?? RecommendedTicketItems.FirstOrDefault();
-        if (ticket is null)
-        {
-            StatusMessage = "확인할 새 추천 배차가 없습니다.";
-            return;
-        }
-
-        await SelectTicket(ticket);
-        if (!cancellationToken.IsCancellationRequested)
-        {
-            StatusMessage = $"{ticket.RestaurantName} 배달 요청입니다. 경로를 확인한 뒤 수락하거나 거절해 주세요.";
-        }
+        await OpenLatestFoodRecommendationAsync();
     }
 
     [RelayCommand]
@@ -612,23 +594,7 @@ public sealed partial class MainPageModel : ObservableObject
         cancellationToken.ThrowIfCancellationRequested();
         var selectedTicketId = SelectedTicket?.TicketId;
         var activeOfferId = ActiveDelivery?.OfferId;
-        var incomingRecommendationIds = workspace.Recommendations
-            .Select(x => x.OfferId)
-            .Where(x => !_knownRecommendedTicketIds.Contains(x))
-            .ToArray();
-        RecommendedTicketItems.Clear();
-        foreach (var item in workspace.Recommendations)
-        {
-            RecommendedTicketItems.Add(DeliveryTicketPreview.From(item));
-        }
-        _knownRecommendedTicketIds.UnionWith(workspace.Recommendations.Select(x => x.OfferId));
-        if (incomingRecommendationIds.Length > 0)
-        {
-            NewRecommendationNotice = incomingRecommendationIds.Length == 1
-                ? "새 추천 배차 1건이 도착했습니다."
-                : $"새 추천 배차 {incomingRecommendationIds.Length}건이 도착했습니다.";
-            HasNewRecommendations = true;
-        }
+        ApplyFoodRecommendations(workspace);
 
         ActiveDeliveryItems.Clear();
         foreach (var item in workspace.ActiveDeliveries)
@@ -673,11 +639,15 @@ public sealed partial class MainPageModel : ObservableObject
         ReconcileExceptionWorkspace();
         NotifyWorkspaceState();
         UpdateRecommendationCountdowns();
+        await RestoreFoodNotificationTargetAsync(cancellationToken);
         if (refreshRoute)
         {
             await RefreshRouteAsync(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
         }
+
+        if (Navigation.IsSettlement)
+            await RefreshDailySettlementAsync();
 
         if (string.IsNullOrWhiteSpace(StatusMessage)
             || StatusMessage == "기사 로그인 후 배달 업무를 시작할 수 있습니다."
@@ -899,6 +869,8 @@ public sealed partial class MainPageModel : ObservableObject
 
     private void ClearWorkspace()
     {
+        ClearFoodNotifications();
+        ClearDailySettlementValues();
         ClearExceptionWorkspace();
         RecommendedTicketItems.Clear();
         ActiveDeliveryItems.Clear();
@@ -922,12 +894,11 @@ public sealed partial class MainPageModel : ObservableObject
         SettlementText = "이번 달 이용료 조회 전";
         WorkspaceWarningText = string.Empty;
         WorkspaceSyncText = "업무 자동 갱신 대기 · 10초 주기";
-        RecommendationNotificationText = "FCM 추천 알림 준비 · 10초 서버 조회 복구";
+        RecommendationNotificationText = "앱 복귀·10초 조회로 새 배달 요청 확인";
         LocationSyncText = "기사 위치 전송 대기";
         DispatchAutomationEnabled = false;
         DispatchAutomationNotice = "자동 배차 상태 확인 전";
         HasNewRecommendations = false;
-        _knownRecommendedTicketIds.Clear();
         _lastLocationSentAtUtc = null;
         NotifyWorkspaceState();
     }
@@ -1066,6 +1037,8 @@ public sealed partial class MainPageModel : ObservableObject
         {
             item.UpdateCountdown(now);
         }
+
+        ReconcileFoodNotificationCountdowns(now);
 
         NotifyCommandState();
     }

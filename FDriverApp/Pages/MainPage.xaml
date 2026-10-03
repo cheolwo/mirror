@@ -360,25 +360,44 @@
                             BackgroundColor="{AppThemeBinding Light={StaticResource DriverSurface}, Dark={StaticResource DriverSurfaceDark}}">
                             <VerticalStackLayout Padding="16" x:Name="SettlementSection" Spacing="{StaticResource DriverSpaceSmall}">
                                 <Label Style="{StaticResource DriverSectionStyle}" Text="정산 내역" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource DriverText}, Dark={StaticResource DriverTextDark}}" />
-                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding OrderSettlementItems}" Spacing="{StaticResource DriverSpaceSmall}">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <DatePicker Date="{Binding SelectedSettlementDate}" Format="yyyy.MM.dd"
+                                        SemanticProperties.Description="정산 완료일 선택" MinimumHeightRequest="48" />
+                                    <Button Grid.Column="1" Text="새로고침" Command="{Binding RefreshDailySettlementCommand}"
+                                        Style="{StaticResource DriverSecondaryButtonStyle}" />
+                                </Grid>
+                                <ActivityIndicator IsVisible="{Binding IsDailySettlementLoading}" IsRunning="{Binding IsDailySettlementLoading}" />
+                                <Border Style="{StaticResource DriverCardStyle}" Padding="16">
+                                    <VerticalStackLayout Spacing="8">
+                                        <Label Text="{Binding DailySettlementCountText}" Style="{StaticResource DriverBodyStyle}" />
+                                        <Label Text="{Binding DailySettlementGrossText, StringFormat='배달료 {0}'}" Style="{StaticResource DriverValueStyle}" />
+                                        <Label Text="{Binding DailySettlementDeductionText, StringFormat='공제 {0}'}" Style="{StaticResource DriverMetadataStyle}" />
+                                        <Label Text="{Binding DailySettlementNetText, StringFormat='수령액 {0}'}" Style="{StaticResource DriverBodyStyle}" />
+                                        <Label Text="{Binding DailySettlementPaymentText}" Style="{StaticResource DriverMetadataStyle}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                                <Label Text="{Binding DailySettlementStatus}" Style="{StaticResource DriverMetadataStyle}" />
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding DailySettlementItems}" Spacing="{StaticResource DriverSpaceSmall}">
                                     <BindableLayout.EmptyView>
-                                        <Label Style="{StaticResource DriverMetadataStyle}" Text="정산할 완료 주문이 없습니다." TextColor="{AppThemeBinding Light={StaticResource DriverTextSecondary}, Dark={StaticResource DriverTextSecondaryDark}}" />
+                                        <Label Style="{StaticResource DriverMetadataStyle}" Text="해당 날짜에 완료한 배달이 없습니다." IsVisible="{Binding HasNoDailySettlementItems}" TextColor="{AppThemeBinding Light={StaticResource DriverTextSecondary}, Dark={StaticResource DriverTextSecondaryDark}}" />
                                     </BindableLayout.EmptyView>
                                     <BindableLayout.ItemTemplate>
-                                        <DataTemplate x:DataType="models:FoodDeliverySettlementDisplay">
+                                        <DataTemplate x:DataType="pageModels:FDriverDailySettlementItem">
                                             <Border Style="{StaticResource DriverCardStyle}" Stroke="{AppThemeBinding Light={StaticResource DriverBorder}, Dark={StaticResource DriverBorderDark}}" BackgroundColor="{AppThemeBinding Light={StaticResource DriverSurfaceSubtle}, Dark={StaticResource DriverSurfaceSubtleDark}}" Padding="16">
                                                 <VerticalStackLayout Spacing="4">
-                                                    <Label Style="{StaticResource DriverBodyStyle}" Text="{Binding RestaurantName}" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource DriverText}, Dark={StaticResource DriverTextDark}}" />
+                                                    <Label Style="{StaticResource DriverBodyStyle}" Text="{Binding Display.RestaurantName}" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource DriverText}, Dark={StaticResource DriverTextDark}}" />
                                                     <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding CompletedText}" TextColor="{AppThemeBinding Light={StaticResource DriverTextSecondary}, Dark={StaticResource DriverTextSecondaryDark}}" />
                                                     <Grid RowDefinitions="Auto,Auto" RowSpacing="{StaticResource DriverSpaceSmall}" Margin="0,8">
                                                         <VerticalStackLayout Spacing="4">
-                                                            <Label Style="{StaticResource DriverBodyStyle}" Text="{Binding GrossText, StringFormat='배달료 {0}'}" TextColor="{AppThemeBinding Light={StaticResource DriverText}, Dark={StaticResource DriverTextDark}}" />
-                                                            <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding DeductionText, StringFormat='공제 {0}'}" TextColor="{AppThemeBinding Light={StaticResource DriverTextSecondary}, Dark={StaticResource DriverTextSecondaryDark}}" />
+                                                            <Label Style="{StaticResource DriverBodyStyle}" Text="{Binding Display.GrossText, StringFormat='배달료 {0}'}" TextColor="{AppThemeBinding Light={StaticResource DriverText}, Dark={StaticResource DriverTextDark}}" />
+                                                            <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding Display.DeductionText, StringFormat='공제 {0}'}" TextColor="{AppThemeBinding Light={StaticResource DriverTextSecondary}, Dark={StaticResource DriverTextSecondaryDark}}" />
                                                         </VerticalStackLayout>
-                                                        <Label Grid.Row="1" Style="{StaticResource DriverValueStyle}" Text="{Binding NetText, StringFormat='수령액 {0}'}" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource DriverAccentStrong}, Dark={StaticResource DriverAccentDark}}" HorizontalTextAlignment="Start" VerticalOptions="Center" />
+                                                        <Label Grid.Row="1" Style="{StaticResource DriverValueStyle}" Text="{Binding Display.NetText, StringFormat='수령액 {0}'}" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource DriverAccentStrong}, Dark={StaticResource DriverAccentDark}}" HorizontalTextAlignment="Start" VerticalOptions="Center" />
                                                     </Grid>
-                                                    <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding ProgressText}" TextColor="{AppThemeBinding Light={StaticResource DriverInformation}, Dark={StaticResource DriverInformationDark}}" />
-                                                    <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding NoticeText}" TextColor="{AppThemeBinding Light={StaticResource DriverWarning}, Dark={StaticResource DriverWarningDark}}" />
+                                                    <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding Display.ProgressText}" TextColor="{AppThemeBinding Light={StaticResource DriverInformation}, Dark={StaticResource DriverInformationDark}}" />
+                                                    <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding Display.NoticeText}" TextColor="{AppThemeBinding Light={StaticResource DriverWarning}, Dark={StaticResource DriverWarningDark}}" />
+                                                    <Button Text="요금 구성 보기" Command="{Binding TogglePricingCommand}" Style="{StaticResource DriverSecondaryButtonStyle}" HorizontalOptions="Start" />
+                                                    <Label Text="{Binding PricingDetails}" IsVisible="{Binding IsPricingExpanded}" Style="{StaticResource DriverMetadataStyle}" />
                                                 </VerticalStackLayout>
                                             </Border>
                                         </DataTemplate>

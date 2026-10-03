@@ -86,6 +86,7 @@ namespace FDriverApp
             builder.Services.AddSingleton<FDriverAuthApiService>();
             builder.Services.AddSingleton<IFoodDeliveryDriverApiService, FoodDeliveryDriverApiService>();
             builder.Services.AddSingleton<IFDriverLocationService, FDriverLocationService>();
+            builder.Services.AddSingleton<IFDriverFoodNotificationService, FDriverFoodNotificationService>();
             builder.Services.AddSingleton<IFDriverWorkspaceNavigator, FDriverWorkspaceNavigator>();
             builder.Services.AddSingleton<MainPageModel>();
             builder.Services.AddTransient<MainPage>();
