@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Ssalddel.ApiMetadata;
 using Ssalddel.Application.Admin.Restaurants;
 using Ssalddel.Contracts.Admin.Restaurants;
+using Ssalddel.Contracts.Common.Finance;
 using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Admin;
@@ -49,6 +50,20 @@ public sealed class 음식점리뷰관리Controller(
 public sealed class 음식배달요금정책Controller(
     I음식운영관리UseCase useCase) : ControllerBase
 {
+    [HttpPost("payout-preview")]
+    [SsalddelApiContractName("PreviewDriverPayout")]
+    public IActionResult 기사지급검토(
+        [FromBody] FoodDeliveryPayoutPricingReviewRequest request,
+        [FromServices] I음식배달지급검토UseCase review)
+        => this.ToActionResult(review.건별계산(request));
+
+    [HttpPost("settlement-preview")]
+    [SsalddelApiContractName("PreviewDriverSettlement")]
+    public IActionResult 기사정산검토(
+        [FromBody] FoodDeliverySettlementReviewRequest request,
+        [FromServices] I음식배달지급검토UseCase review)
+        => this.ToActionResult(review.기간계산(request));
+
     [HttpGet]
     public async Task<IActionResult> 조회(CancellationToken cancellationToken)
         => this.ToActionResult(await useCase.배달요금정책조회Async(cancellationToken));

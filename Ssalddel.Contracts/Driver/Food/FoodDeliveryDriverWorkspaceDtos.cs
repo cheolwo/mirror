@@ -11,6 +11,7 @@ public sealed class FoodDeliveryDriverWorkspaceDto
     public IReadOnlyList<FoodDeliveryBundleCandidateDto> BundleCandidates { get; set; } = [];
     public int MaxActiveDeliveries { get; set; }
     public 배달기사월정산응답 Settlement { get; set; } = new();
+    public IReadOnlyList<Ssalddel.Contracts.Food.FoodDeliveryOrderSettlementDto> OrderSettlements { get; set; } = [];
     public bool DispatchAutomationEnabled { get; set; }
     public string DispatchAutomationNotice { get; set; } = string.Empty;
     public DateTime UpdatedAtUtc { get; set; }

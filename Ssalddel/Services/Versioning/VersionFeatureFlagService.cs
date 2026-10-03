@@ -19,6 +19,7 @@ public sealed class VersionFeatureFlagService : IVersionFeatureFlagService
         {
             VersionFeatureFlagKeys.CargoYongdalV1 => IsDomesticTransportEnabled(flags),
             VersionFeatureFlagKeys.DomesticTransportWorkflow => IsDomesticTransportEnabled(flags),
+            VersionFeatureFlagKeys.OperationalDispatchCore => IsOperationalDispatchCoreEnabled(flags),
             VersionFeatureFlagKeys.WarehouseV15 => IsWarehouseFulfillmentEnabled(flags),
             VersionFeatureFlagKeys.WarehouseFulfillmentWorkflow => IsWarehouseFulfillmentEnabled(flags),
             VersionFeatureFlagKeys.CustomsHsV20 => IsCustomsAndTradeDataEnabled(flags),
@@ -51,6 +52,7 @@ public sealed class VersionFeatureFlagService : IVersionFeatureFlagService
         return new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
         {
             [VersionFeatureFlagKeys.DomesticTransportWorkflow] = IsDomesticTransportEnabled(flags),
+            [VersionFeatureFlagKeys.OperationalDispatchCore] = IsOperationalDispatchCoreEnabled(flags),
             [VersionFeatureFlagKeys.WarehouseFulfillmentWorkflow] = IsWarehouseFulfillmentEnabled(flags),
             [VersionFeatureFlagKeys.CustomsAndTradeDataWorkflow] = IsCustomsAndTradeDataEnabled(flags),
             [VersionFeatureFlagKeys.GroupPurchaseDemandWorkflow] = IsGroupPurchaseDemandEnabled(flags),
@@ -75,6 +77,10 @@ public sealed class VersionFeatureFlagService : IVersionFeatureFlagService
             [VersionFeatureFlagKeys.SsalddelMartV35] = IsSsalddelMartEnabled(flags)
         };
     }
+
+    // 공통 수신 API만 공유한다. 화물 workflow와 자동 작업의 실행 경계는 유지한다.
+    private static bool IsOperationalDispatchCoreEnabled(VersionFeatureFlagsOptions flags)
+        => IsFoodDeliveryEnabled(flags) || IsDomesticTransportEnabled(flags);
 
     private static bool IsDomesticTransportEnabled(VersionFeatureFlagsOptions flags)
         => flags.CommunityTrustWorkflow
@@ -115,6 +121,8 @@ public sealed class VersionFeatureFlagService : IVersionFeatureFlagService
 
 public static class VersionFeatureFlagKeys
 {
+    public const string OperationalDispatchCore = nameof(OperationalDispatchCore);
+
     public const string DomesticTransportWorkflow = nameof(DomesticTransportWorkflow);
 
     public const string CargoYongdalV1 = nameof(CargoYongdalV1);

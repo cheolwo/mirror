@@ -22,8 +22,21 @@ namespace Ssalddel.Controllers.Admin.Food;
 [SsalddelApiContractName("FoodOrderOperationsTraceController")]
 public sealed class 음식주문운영추적Controller(
     I음식주문운영추적UseCase useCase,
-    I음식배달중단검토UseCase? interruptionReviewUseCase = null) : ControllerBase
+    I음식배달중단검토UseCase? interruptionReviewUseCase = null,
+    I음식주문기사정산UseCase? settlementUseCase = null) : ControllerBase
 {
+    [HttpPost("{orderNo}/simulate-driver-payout")]
+    [SsalddelApiContractName("SimulateDriverPayout")]
+    [SsalddelApiCapability(SsalddelCapability.FoodDelivery)]
+    [SsalddelApiOperation(SsalddelOperation.Execute)]
+    public async Task<IActionResult> 기사모의지급검증(
+        string orderNo,
+        [FromBody] FoodDeliverySimulatedPayoutRequest request,
+        CancellationToken cancellationToken)
+        => settlementUseCase is null
+            ? StatusCode(StatusCodes.Status503ServiceUnavailable)
+            : this.ToActionResult(await settlementUseCase.모의지급검증Async(orderNo, request, cancellationToken));
+
     [HttpGet("{orderNo}/operations-trace")]
     [SsalddelApiContractName("GetOperationsTrace")]
     public async Task<IActionResult> 조회(

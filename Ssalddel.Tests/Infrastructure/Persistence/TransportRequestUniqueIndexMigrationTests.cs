@@ -12,6 +12,31 @@ namespace Ssalddel.Tests.Infrastructure.Persistence;
 public sealed class TransportRequestUniqueIndexMigrationTests
 {
     [Fact]
+    public void 음식배달제안계산근거는_새Nullable열만추가하고_기존할증호환열은보존한다()
+    {
+        using var context = CreateContext();
+        const string migrationId = "20261002004600_음식배달제안계산근거";
+        var assembly = context.GetService<IMigrationsAssembly>();
+        var migration = assembly.CreateMigration(assembly.Migrations[migrationId], context.Database.ProviderName!);
+        var additions = migration.UpOperations.OfType<AddColumnOperation>().ToArray();
+        Assert.Equal(2, additions.Length);
+        Assert.All(additions, column => Assert.True(column.IsNullable));
+        Assert.Contains(additions, column => column.Name == "driver_offer_calculation_json" && column.ColumnType == "longtext");
+        var compatibility = migration.UpOperations.OfType<SqlOperation>().ToArray();
+        Assert.Equal(9, compatibility.Length);
+        Assert.All(compatibility, item =>
+        {
+            Assert.Contains("TABLE_SCHEMA = DATABASE()", item.Sql);
+            Assert.Contains("information_schema.COLUMNS", item.Sql);
+            Assert.Contains("'SELECT 1'", item.Sql);
+            Assert.DoesNotContain("UPDATE ", item.Sql);
+            Assert.DoesNotContain("DROP ", item.Sql);
+        });
+        Assert.Equal(2, migration.DownOperations.Count);
+        Assert.All(migration.DownOperations, operation => Assert.DoesNotContain("temporary_demand", ((DropColumnOperation)operation).Name));
+    }
+
+    [Fact]
     public void Migration_빈의뢰Id를정규화한뒤고유인덱스를만든다()
     {
         using var context = CreateContext();

@@ -122,6 +122,8 @@ public sealed class 음식배달운영생명주기조화응답
 
 public sealed class 음식주문운영추적응답
 {
+    public Ssalddel.Contracts.Food.FoodDeliveryOrderSettlementDto? DriverSettlement { get; set; }
+
     public string 주문번호 { get; set; } = string.Empty;
 
     public string 음식점명 { get; set; } = string.Empty;

@@ -122,6 +122,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I샘플이미지작업UseCase, 샘플이미지작업UseCase>();
         services.AddScoped<I배달기사월정산UseCase, 배달기사월정산UseCase>();
         services.AddScoped<IFoodDeliveryDriverWorkspaceUseCase, FoodDeliveryDriverWorkspaceUseCase>();
+        services.AddScoped<I음식주문기사정산UseCase, 음식주문기사정산UseCase>();
         services.AddScoped<IFoodDeliveryDriverRouteService, FoodDeliveryDriverRouteService>();
         services.AddScoped<I음식주문접수UseCase, 음식주문접수UseCase>();
         services.AddScoped<I주문자음식주문조회UseCase, 주문자음식주문조회UseCase>();
@@ -147,6 +148,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I음식배달완료WorldProjectionService, 음식배달완료WorldProjectionService>();
         services.AddScoped<I음식점리뷰UseCase, 음식점리뷰UseCase>();
         services.AddScoped<I음식운영관리UseCase, 음식운영관리UseCase>();
+        services.AddScoped<I음식배달지급검토UseCase, 음식배달지급검토UseCase>();
         services.AddScoped<I마트공개상품조회UseCase, 마트공개상품조회UseCase>();
         services.AddScoped<I마트공개상품구매후기UseCase, 마트공개상품구매후기UseCase>();
         services.AddScoped<I마트주문요청조회UseCase, 마트주문요청조회UseCase>();

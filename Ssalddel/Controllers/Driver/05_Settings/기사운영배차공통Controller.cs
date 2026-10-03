@@ -5,10 +5,12 @@ using Ssalddel.Controllers;
 using Ssalddel.Contracts.Common.Dispatch;
 using 살뜰.Data;
 using 살뜰.Services.Dispatch.Common;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Driver.Settings05;
 
 [SsalddelApiIntroducedIn(SsalddelProductVersion.V2_0)]
+[SsalddelApiFeature(VersionFeatureFlagKeys.OperationalDispatchCore)]
 [SsalddelApiCapability(SsalddelCapability.Dispatch)]
 [SsalddelApiAudience(SsalddelActor.Driver)]
 [SsalddelApiOperation(SsalddelOperation.Browse)]

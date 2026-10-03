@@ -99,6 +99,13 @@ public sealed class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDriverWork
         var dispatchAutomationEnabled = _executionMode.IsOperational
                                         && _featureFlags.IsEnabled(
                                             VersionFeatureFlagKeys.FoodDeliveryWorkflow);
+        var orderSettlements = await _db.음식주문기사정산
+            .AsNoTracking()
+            .Include(x => x.지급검증목록)
+            .Where(x => x.기사Id == driverId)
+            .OrderByDescending(x => x.전달완료시각Utc)
+            .Take(40)
+            .ToListAsync(cancellationToken);
 
         return new FoodDeliveryDriverWorkspaceDto
         {
@@ -108,6 +115,8 @@ public sealed class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDriverWork
             BundleCandidates = BuildBundleCandidates(offers),
             MaxActiveDeliveries = 음식배달기사활성업무Policy.MaxActiveDeliveries,
             Settlement = settlement,
+            OrderSettlements = orderSettlements.Select(x => 음식주문기사정산Recorder.ToDto(
+                x, currentExecutionModeCode: _executionMode.Mode.ToString())).ToArray(),
             DispatchAutomationEnabled = dispatchAutomationEnabled,
             DispatchAutomationNotice = ResolveDispatchAutomationNotice(dispatchAutomationEnabled),
             UpdatedAtUtc = DateTime.UtcNow

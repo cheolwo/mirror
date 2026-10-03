@@ -68,10 +68,10 @@ public sealed class 음식배달가능행동ProjectorTests
             DateTime.UtcNow);
 
         Assert.Equal(
-            [음식배달가능행동Ids.기사가게도착, 음식배달가능행동Ids.기사픽업확인],
+            [음식배달가능행동Ids.기사가게도착, 음식배달가능행동Ids.기사픽업확인, 음식배달가능행동Ids.기사배달중단],
             beforeArrival.Select(action => action.ActionId));
         Assert.Equal(2, beforeArrival[0].ExpectedRevision);
-        Assert.Equal(음식배달가능행동Ids.기사픽업확인, Assert.Single(afterArrival).ActionId);
+        Assert.Equal([음식배달가능행동Ids.기사픽업확인, 음식배달가능행동Ids.기사배달중단], afterArrival.Select(x => x.ActionId));
     }
 
     [Fact]
@@ -82,6 +82,19 @@ public sealed class 음식배달가능행동ProjectorTests
             5,
             DateTime.UtcNow);
 
-        Assert.Equal(음식배달가능행동Ids.기사전달완료, Assert.Single(actions).ActionId);
+        Assert.Equal([음식배달가능행동Ids.기사전달완료, 음식배달가능행동Ids.기사배달중단], actions.Select(x => x.ActionId));
+    }
+
+    [Theory]
+    [InlineData(DriverWorkOfferStatus.Accepted)]
+    [InlineData(DriverWorkOfferStatus.MovingToPickup)]
+    [InlineData(DriverWorkOfferStatus.MovingToDropoff)]
+    public void 기사중단은_현재시도_revision과함께제공하고_시도미확인에는제공하지않는다(string status)
+    {
+        var action = Assert.Single(음식배달가능행동Projector.기사배달용(status, 6, DateTime.UtcNow), x => x.ActionId == 음식배달가능행동Ids.기사배달중단);
+        Assert.Equal(6, action.ExpectedRevision);
+        Assert.Equal(업무Revision종류Codes.음식배달시도, action.RevisionKindCode);
+        Assert.DoesNotContain(음식배달가능행동Projector.기사배달용(status, 0, null), x => x.ActionId == 음식배달가능행동Ids.기사배달중단);
+        Assert.DoesNotContain(음식배달가능행동Projector.기사배달용(DriverWorkOfferStatus.Recommended, 6, null), x => x.ActionId == 음식배달가능행동Ids.기사배달중단);
     }
 }

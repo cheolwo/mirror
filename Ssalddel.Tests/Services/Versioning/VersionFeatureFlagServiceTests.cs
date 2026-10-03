@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Options;
+using Ssalddel.Infrastructure.BackgroundJobs;
+using Ssalddel.Services.LogisticsProcessing.SalesOrders;
 using 살뜰.Services.Options;
 using 살뜰.Services.Versioning;
 
@@ -6,6 +8,58 @@ namespace Ssalddel.Tests.Services.Versioning;
 
 public sealed class VersionFeatureFlagServiceTests
 {
+    [Theory]
+    [InlineData(false, false, false, false, false, false)]
+    [InlineData(true, false, false, false, false, true)]
+    [InlineData(false, true, false, false, false, true)]
+    [InlineData(false, false, true, false, true, true)]
+    [InlineData(false, false, false, true, true, true)]
+    [InlineData(true, false, true, false, true, true)]
+    [InlineData(false, false, true, false, false, false)]
+    [InlineData(false, false, false, true, false, false)]
+    public void 공통배차Api는_음식또는화물의기존별칭과선행조건을따르고_서로의업무를켜지않는다(
+        bool food, bool legacyFood, bool cargo, bool legacyCargo, bool community, bool expected)
+    {
+        var service = CreateService(new VersionFeatureFlagsOptions
+        {
+            FoodDeliveryWorkflow = food,
+            FoodDeliveryV30 = legacyFood,
+            DomesticTransportWorkflow = cargo,
+            CargoYongdalV1 = legacyCargo,
+            CommunityTrustWorkflow = community
+        });
+
+        Assert.Equal(expected, service.IsEnabled(VersionFeatureFlagKeys.OperationalDispatchCore));
+        Assert.Equal(expected, service.GetAll()[VersionFeatureFlagKeys.OperationalDispatchCore]);
+        Assert.Equal(food || legacyFood, service.IsEnabled(VersionFeatureFlagKeys.FoodDeliveryWorkflow));
+        Assert.Equal(food || legacyFood, service.GetAll()[VersionFeatureFlagKeys.FoodDeliveryV30]);
+        Assert.Equal(community && (cargo || legacyCargo), service.IsEnabled(VersionFeatureFlagKeys.DomesticTransportWorkflow));
+        Assert.Equal(community && (cargo || legacyCargo), service.GetAll()[VersionFeatureFlagKeys.CargoYongdalV1]);
+    }
+
+    [Theory]
+    [InlineData(false, SsalddelExecutionMode.Operational, SsalddelBackgroundWorkloadActivationCodes.FeatureDisabled)]
+    [InlineData(true, SsalddelExecutionMode.Simulation, SsalddelBackgroundWorkloadActivationCodes.OperationalModeRequired)]
+    public void 공통배차Api활성화는_자동작업의화물기능과Operational관문을우회하지않는다(
+        bool cargo, SsalddelExecutionMode mode, string expectedCode)
+    {
+        var service = CreateService(new VersionFeatureFlagsOptions
+        {
+            FoodDeliveryWorkflow = true,
+            DomesticTransportWorkflow = cargo,
+            CommunityTrustWorkflow = true
+        });
+        var policy = new SsalddelBackgroundJobActivationPolicy(
+            new StaticExecutionModePolicy(mode), service,
+            new StaticOptionsMonitor<SalesChannelOrderSyncOptions>(new SalesChannelOrderSyncOptions()));
+
+        Assert.True(service.IsEnabled(VersionFeatureFlagKeys.OperationalDispatchCore));
+        var result = policy.Evaluate(SsalddelBackgroundWorkloadKeys.DomesticTransportDispatch);
+        Assert.False(result.IsEnabled);
+        Assert.Equal(expectedCode, result.Code);
+        Assert.Equal(VersionFeatureFlagKeys.DomesticTransportWorkflow, result.FeatureKey);
+    }
+
     [Fact]
     public void 플랫폼운영통제는_다른업무Flag와분리된_명시적Flag로만연다()
     {
@@ -227,6 +281,13 @@ public sealed class VersionFeatureFlagServiceTests
 
     private static VersionFeatureFlagService CreateService(VersionFeatureFlagsOptions options)
         => new(new StaticOptionsMonitor<VersionFeatureFlagsOptions>(options));
+
+    private sealed class StaticExecutionModePolicy(SsalddelExecutionMode mode) : ISsalddelExecutionModePolicy
+    {
+        public SsalddelExecutionMode Mode { get; } = mode;
+        public bool IsSimulation => Mode == SsalddelExecutionMode.Simulation;
+        public bool IsOperational => Mode == SsalddelExecutionMode.Operational;
+    }
 
     private sealed class StaticOptionsMonitor<T>(T value) : IOptionsMonitor<T>
     {

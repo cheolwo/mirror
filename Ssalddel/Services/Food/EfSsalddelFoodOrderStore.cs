@@ -329,6 +329,14 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         });
 
         var completedRevision = order.상태이력.Count;
+        // 수령 확인과 주문별 정산 보류 상태는 같은 SaveChanges에서 확정합니다.
+        var settlement = _db.음식주문기사정산.SingleOrDefault(x => x.주문번호 == cleanOrderNo);
+        if (settlement is not null && !settlement.수령확인시각Utc.HasValue)
+        {
+            Ssalddel.Application.Food.음식주문기사정산Recorder.상태반영(settlement, order);
+            settlement.Revision++;
+            settlement.UpdatedAtUtc = now;
+        }
         _db.음식마트원장동기화Outbox.Add(new 음식마트원장동기화Outbox
         {
             멱등키 = $"food-delivery-completed-world:{cleanOrderNo}:{completedRevision}",

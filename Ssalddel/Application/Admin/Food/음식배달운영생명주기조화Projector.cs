@@ -14,7 +14,8 @@ public sealed record 음식배달운영생명주기조화입력(
     bool 기사추천만료여부 = false,
     bool 최근배달시도중단여부 = false,
     bool 공동원장동기화확인필요여부 = false,
-    bool 기사알림확인필요여부 = false);
+    bool 기사알림확인필요여부 = false,
+    bool 기사배정확정여부 = false);
 
 /// <summary>
 /// 각 역할 앱의 별도 상태기를 만들지 않고 음식 주문 원장과 배차·Outbox 진단을
@@ -28,7 +29,7 @@ public static class 음식배달운영생명주기조화Projector
         ArgumentNullException.ThrowIfNull(input);
 
         var orderState = 음식주문상태코드.Normalize(input.주문상태);
-        var (stage, normalRoles) = 정상경로(orderState);
+        var (stage, normalRoles) = 정상경로(orderState, input.기사배정확정여부);
         var workDelays = 업무지연목록(input);
         var automaticRecoveries = 자동회복목록(input);
         var technicalFailures = 기술이상목록(input);
@@ -97,7 +98,7 @@ public static class 음식배달운영생명주기조화Projector
         };
     }
 
-    private static (string Stage, IReadOnlyList<string> Roles) 정상경로(string orderState)
+    private static (string Stage, IReadOnlyList<string> Roles) 정상경로(string orderState, bool assigned)
         => orderState switch
         {
             음식주문상태코드.주문대기 => (
@@ -110,13 +111,13 @@ public static class 음식배달운영생명주기조화Projector
                 음식배달운영생명주기단계Codes.조리배차병행,
                 [
                     음식배달운영책임주체Codes.음식점,
-                    음식배달운영책임주체Codes.배차Engine
+                    assigned ? 음식배달운영책임주체Codes.음식배달기사 : 음식배달운영책임주체Codes.배차Engine
                 ]),
             음식주문상태코드.픽업대기 => (
                 음식배달운영생명주기단계Codes.픽업인계,
                 [
                     음식배달운영책임주체Codes.음식점,
-                    음식배달운영책임주체Codes.배차Engine
+                    assigned ? 음식배달운영책임주체Codes.음식배달기사 : 음식배달운영책임주체Codes.배차Engine
                 ]),
             음식주문상태코드.기사배정 => (
                 음식배달운영생명주기단계Codes.픽업인계,

@@ -24,6 +24,28 @@ namespace Ssalddel.Tests.Services.Dispatch.Queue;
 public sealed class 배차엔진판단감사Tests
 {
     [Fact]
+    public async Task 화물추천은_음식요금서비스를_호출하거나_화물금액을_덮어쓰지않는다()
+    {
+        await using var db = new SsalddelContext(new DbContextOptionsBuilder<SsalddelContext>()
+            .UseInMemoryDatabase($"cargo-pricing-boundary-{Guid.NewGuid():N}").Options,
+            new DummyPersonalDataEncryptionService());
+        var queue = CreateQueue();
+        queue.기사지급예정액 = 27000m;
+        db.운송원장.Add(queue);
+        await db.SaveChangesAsync();
+        var food = new StubFoodPricingService();
+        var service = new 배차대기원장전환Service(db, Options.Create(new 배차큐정책Options()),
+            null!, new NoOpRecommendationNotificationService(), new NoOpDriverStateService(), null!, food);
+        var result = await service.추천시작Async(queue.의뢰Id, "cargo-driver");
+        Assert.True(result.전환여부);
+        Assert.Equal(0, food.CallCount);
+        db.ChangeTracker.Clear();
+        var saved = await db.운송원장.SingleAsync();
+        Assert.Equal(27000m, saved.기사지급예정액);
+        Assert.Null(saved.기사제안요금계산근거Json);
+    }
+
+    [Fact]
     public void 감사메타데이터는_식별자와판단결과를남기고_기사개인정보는제거한다()
     {
         const string driverId = "DRIVER-PRIVATE-001";

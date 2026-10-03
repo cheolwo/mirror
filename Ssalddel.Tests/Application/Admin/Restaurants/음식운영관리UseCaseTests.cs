@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using Ssalddel.Application.Admin.Restaurants;
 using Ssalddel.Contracts.Admin.Restaurants;
 using Ssalddel.Controllers.Admin;
+using SsalddelAdmin.Services;
 using 살뜰.Data;
 using 살뜰.Infrastructure.Security;
 using 살뜰.Services.Options;
@@ -18,6 +19,60 @@ public sealed class 음식운영관리UseCaseTests
 {
     private static readonly DateTimeOffset Now =
         new(2026, 9, 17, 5, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public async Task 운영자설정의_픽업전달거리비가_재조회후_신규계산에적용되고_이전계산은유지된다()
+    {
+        await using var context = CreateContext();
+        var useCase = CreateUseCase(context);
+        var request = new 음식배달요금정책응답
+        {
+            DriverBasePayout = 1400m, DriverPickupPayout = 700m,
+            IncludedDistanceMeters = 0, DistanceUnitMeters = 100,
+            DriverDistanceUnitPayout = 100m, DriverMinimumPayout = 0m,
+            DriverWeatherSurchargeEnabled = false
+        };
+        var editor = new FoodDriverPricingEditor(request);
+        editor.PickupFee = 1000m;
+        editor.DropoffFee = 1000m;
+        Assert.True((await useCase.배달요금정책수정Async(request, "settings-admin", default)).IsSuccess);
+        context.ChangeTracker.Clear();
+        var loaded = (await useCase.배달요금정책조회Async(default)).Value;
+        Assert.Equal(1000m, new FoodDriverPricingEditor(loaded).DropoffFee);
+        Assert.Equal("settings-admin", loaded.UpdatedByUserId);
+        var oldPolicy = await context.음식운영정책.AsNoTracking().SingleAsync();
+        var frozen = 음식배달기사제안요금Policy.판정(oldPolicy, 1.5m, false, false, Now, true);
+        Assert.Equal(3500m, frozen.기사지급예정액);
+        Assert.Equal(1000m, frozen.기본요금구성!.PickupFeeKrw);
+        Assert.Equal(1000m, frozen.기본요금구성.DropoffFeeKrw);
+        loaded.DriverDistanceUnitPayout = 200m;
+        Assert.True((await useCase.배달요금정책수정Async(loaded, "settings-admin", default)).IsSuccess);
+        context.ChangeTracker.Clear();
+        var updated = await context.음식운영정책.AsNoTracking().SingleAsync();
+        Assert.Equal(5000m, 음식배달기사제안요금Policy.판정(updated, 1.5m, false, false, Now, true).기사지급예정액);
+        Assert.Equal(3500m, frozen.기사지급예정액);
+        Assert.Equal(100m, frozen.기본계산정책!.DistanceUnitFeeKrw);
+        new FoodDriverPricingEditor(loaded).DropoffFee = -1m;
+        Assert.True((await useCase.배달요금정책수정Async(loaded, "settings-admin", default)).IsFailed);
+        context.ChangeTracker.Clear();
+        Assert.Equal(2000m, (await useCase.배달요금정책조회Async(default)).Value.DriverBasePayout);
+    }
+
+    [Fact]
+    public async Task 픽업기본액배분은_총기본액안에서만저장되고_기존요청의미정도보존한다()
+    {
+        await using var context = CreateContext();
+        var useCase = CreateUseCase(context);
+        var request = new 음식배달요금정책응답 { DriverBasePayout = 1400m, DriverPickupPayout = 700m };
+        Assert.True((await useCase.배달요금정책수정Async(request, "admin", default)).IsSuccess);
+        Assert.Equal(700m, (await useCase.배달요금정책조회Async(default)).Value.DriverPickupPayout);
+        request.DriverPickupPayout = 1500m;
+        Assert.True((await useCase.배달요금정책수정Async(request, "admin", default)).IsFailed);
+        Assert.Equal(700m, context.음식운영정책.Single().기사픽업지급액);
+        request.DriverPickupPayout = null;
+        Assert.True((await useCase.배달요금정책수정Async(request, "admin", default)).IsSuccess);
+        Assert.Null((await useCase.배달요금정책조회Async(default)).Value.DriverPickupPayout);
+    }
 
     [Fact]
     public async Task 리뷰운영목록은_메인Db리뷰와음식점이름을조합한다()

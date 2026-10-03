@@ -4,20 +4,29 @@ namespace 살뜰.Services.Dispatch.Recommendation
 {
     public sealed partial class 배차추천경로Service
     {
-        public async Task<배차경로예상결과?> EstimateRouteAsync(배차경로좌표? origin, 배차경로좌표? destination)
+        public Task<배차경로예상결과?> EstimateRouteAsync(배차경로좌표? origin, 배차경로좌표? destination)
+            => EstimateRouteAsync(origin, destination, CancellationToken.None);
+
+        public async Task<배차경로예상결과?> EstimateRouteAsync(배차경로좌표? origin, 배차경로좌표? destination, CancellationToken cancellationToken)
+            => await EstimateRouteAsync(origin, destination, _routeOptions.DefaultOption, cancellationToken);
+
+        public async Task<배차경로예상결과?> EstimateRouteAsync(배차경로좌표? origin, 배차경로좌표? destination, string routeOption, CancellationToken cancellationToken)
         {
+            if (routeOption is not ("trafast" or "tracomfort" or "traoptimal" or "traavoidtoll" or "traavoidcaronly"))
+                throw new ArgumentException("FoodPricingRouteOptionInvalid");
+            cancellationToken.ThrowIfCancellationRequested();
             if (origin is null || destination is null)
             {
                 return null;
             }
 
-            var cacheKey = 배차경로CacheKey.Create(origin, destination);
+            var cacheKey = 배차경로CacheKey.Create(origin, destination, routeOption);
             if (_routeEstimateCache.TryGetValue(cacheKey, out var cachedTask))
             {
-                return await cachedTask;
+                return await cachedTask.WaitAsync(cancellationToken);
             }
 
-            var task = EstimateRouteCoreAsync(origin, destination);
+            var task = EstimateRouteCoreAsync(origin, destination, routeOption, cancellationToken);
             _routeEstimateCache[cacheKey] = task;
 
             try
@@ -31,14 +40,14 @@ namespace 살뜰.Services.Dispatch.Recommendation
             }
         }
 
-        private async Task<배차경로예상결과?> EstimateRouteCoreAsync(배차경로좌표 origin, 배차경로좌표 destination)
+        private async Task<배차경로예상결과?> EstimateRouteCoreAsync(배차경로좌표 origin, 배차경로좌표 destination, string routeOption, CancellationToken cancellationToken)
         {
             try
             {
-                var route = await _routeService.GetDrivingRouteAsync(origin.Latitude, origin.Longitude, destination.Latitude, destination.Longitude);
+                var route = await _routeService.GetDrivingRouteAsync(origin.Latitude, origin.Longitude, destination.Latitude, destination.Longitude, option: routeOption, cancellationToken: cancellationToken);
                 if (route?.Duration is not null || route?.DistanceKm is not null)
                 {
-                    return new 배차경로예상결과(route.DistanceKm, route.Duration, route.TollFare, "Directions5", true);
+                    return new 배차경로예상결과(route.DistanceKm, route.Duration, route.TollFare, "Directions5", true) { RouteOption = route.RouteType };
                 }
             }
             catch (OperationCanceledException)
@@ -71,7 +80,7 @@ namespace 살뜰.Services.Dispatch.Recommendation
 
             if (orderedStops.Count == 1)
             {
-                return await EstimateRouteAsync(origin, orderedStops[0]);
+                return await EstimateRouteAsync(origin, orderedStops[0], cancellationToken);
             }
 
             var goal = orderedStops[^1];
@@ -93,7 +102,7 @@ namespace 살뜰.Services.Dispatch.Recommendation
                         cancellationToken: cancellationToken);
                     if (route?.Duration is not null || route?.DistanceKm is not null)
                     {
-                        return new 배차경로예상결과(route.DistanceKm, route.Duration, route.TollFare, "Directions5", true);
+                        return new 배차경로예상결과(route.DistanceKm, route.Duration, route.TollFare, "Directions5", true) { RouteOption = route.RouteType };
                     }
                 }
                 catch (OperationCanceledException)
@@ -215,10 +224,10 @@ namespace 살뜰.Services.Dispatch.Recommendation
             decimal OriginLatitude,
             decimal OriginLongitude,
             decimal DestinationLatitude,
-            decimal DestinationLongitude)
+            decimal DestinationLongitude, string RouteOption)
         {
-            public static 배차경로CacheKey Create(배차경로좌표 origin, 배차경로좌표 destination)
-                => new(origin.Latitude, origin.Longitude, destination.Latitude, destination.Longitude);
+            public static 배차경로CacheKey Create(배차경로좌표 origin, 배차경로좌표 destination, string option)
+                => new(origin.Latitude, origin.Longitude, destination.Latitude, destination.Longitude, option);
         }
     }
 }

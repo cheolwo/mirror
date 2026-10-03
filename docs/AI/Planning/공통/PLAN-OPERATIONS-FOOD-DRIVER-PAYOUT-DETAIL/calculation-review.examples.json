@@ -1,0 +1,44 @@
+{
+  "description": "합성 식별자·검토용 금액 사례. 실제 사용자 정산 원장이나 승인된 미러 요율이 아니다.",
+  "payoutPreview": {
+    "policy": {
+      "revision": "observed-example-review.r1",
+      "effectiveFrom": "2026-10-01",
+      "effectiveThrough": "2026-10-07",
+      "pickupFeeKrw": 700,
+      "dropoffFeeKrw": 700,
+      "distanceUnitMeters": 100,
+      "distanceUnitFeeKrw": 80,
+      "distanceRoundingCode": "Floor",
+      "includedDistanceMeters": 0,
+      "minimumPayoutKrw": 0
+    },
+    "deliveries": [
+      { "deliveryKey": "sample-1", "serviceDate": "2026-10-01", "distanceKm": 2.914, "distanceBasisCode": "AppDisplayed", "timeBandCode": "MorningExample", "timeSurchargeKrw": 700, "storePromotionKrw": 300, "regionSurchargeKrw": 0, "simultaneousPickupKey": "sample-pickup-1" },
+      { "deliveryKey": "sample-2", "serviceDate": "2026-10-01", "distanceKm": 0, "distanceBasisCode": "AppDisplayed", "timeBandCode": "MorningExample", "timeSurchargeKrw": 700, "storePromotionKrw": 300, "regionSurchargeKrw": 0, "simultaneousPickupKey": "sample-pickup-1" },
+      { "deliveryKey": "sample-3", "serviceDate": "2026-10-01", "distanceKm": 0.608, "distanceBasisCode": "AppDisplayed", "timeBandCode": "MorningExample", "timeSurchargeKrw": 700, "storePromotionKrw": 300, "regionSurchargeKrw": 0, "simultaneousPickupKey": "sample-pickup-1" }
+    ]
+  },
+  "payoutExpectedGrossKrw": [4720, 1700, 2180],
+  "settlementPreview": {
+    "periodStart": "2026-10-01",
+    "periodEnd": "2026-10-07",
+    "deliveryGrossKrw": 1000000,
+    "missionGrossKrw": 100000,
+    "periodPromotionGrossKrw": 130000,
+    "milestoneBonusGrossKrw": 30000,
+    "policy": {
+      "revision": "synthetic-statement-review.r1",
+      "effectiveFrom": "2026-10-01",
+      "effectiveThrough": "2026-10-07",
+      "includePeriodRewardsInInsurance": false,
+      "rewardInsuranceTreatmentEvidenceRef": "synthetic-review:reward-excluded",
+      "rewardTaxTruncationUnitKrw": 1,
+      "incomeTax": { "applicabilityCode": "Applicable", "rate": 0.03, "expenseRatio": 0, "minimumKrw": 0, "truncationUnitKrw": 10, "evidenceRef": "synthetic-review:income-tax" },
+      "localIncomeTax": { "applicabilityCode": "Applicable", "rate": 0.003, "expenseRatio": 0, "minimumKrw": 0, "truncationUnitKrw": 10, "evidenceRef": "synthetic-review:local-tax" },
+      "employmentInsurance": { "applicabilityCode": "Applicable", "rate": 0.008, "expenseRatio": 0.198, "minimumKrw": 0, "truncationUnitKrw": 10, "evidenceRef": "synthetic-review:employment" },
+      "accidentInsurance": { "applicabilityCode": "Applicable", "rate": 0.0088, "expenseRatio": 0.198, "minimumKrw": 0, "truncationUnitKrw": 10, "evidenceRef": "synthetic-review:accident" }
+    }
+  },
+  "settlementExpectedNetKrw": 1203610
+}

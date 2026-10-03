@@ -40,4 +40,11 @@ public sealed record 음식배달관찰Event(long Sequence, string ActorId, stri
 public sealed record 음식배달관찰Snapshot(string SchemaVersion, string RunId, long Revision, string Status,
     double ElapsedSeconds, int DurationSeconds, string OrderNo, string OrderStatus, string DispatchStatus,
     string Message, IReadOnlyList<음식배달관찰Actor> Actors, IReadOnlyList<음식배달관찰Event> Events,
-    음식자료선택결과? MenuSelection = null);
+    음식자료선택결과? MenuSelection = null,
+    음식배달관찰RouteFixture? ConfiguredRouteFixture = null);
+
+/// <summary>등록된 검증 입력의 범위다. 실제 지도 조회 또는 실제 주행 확인 결과가 아니다.</summary>
+public sealed record 음식배달관찰RouteFixture(string ExecutionModeCode, string SourceCode, string FixtureId,
+    string PickupAddress, string DropoffAddress, decimal PickupLatitude, decimal PickupLongitude,
+    decimal DropoffLatitude, decimal DropoffLongitude, decimal DistanceKm,
+    bool IsEstimated, bool ActualMapRequest, IReadOnlyList<string> AllowedDriverIds);

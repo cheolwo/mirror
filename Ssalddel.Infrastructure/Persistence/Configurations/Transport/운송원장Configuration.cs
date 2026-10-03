@@ -65,6 +65,7 @@ public sealed class 운송원장Configuration : IEntityTypeConfiguration<운송�
         builder.Property(x => x.픽업지기상자료출처).HasColumnName("pickup_weather_source").HasMaxLength(300);
         builder.Property(x => x.픽업지기상자료Hash).HasColumnName("pickup_weather_payload_hash").HasMaxLength(64);
         builder.Property(x => x.기사제안요금정책판본).HasColumnName("driver_offer_pricing_revision").HasMaxLength(180);
+        builder.Property(x => x.기사제안요금계산근거Json).HasColumnName("driver_offer_calculation_json").HasColumnType("longtext");
         builder.Property(x => x.기사제안요금판정시각Utc).HasColumnName("driver_offer_priced_at_utc");
         builder.Property(x => x.첨부_json).HasColumnName("첨부_json").IsRequired();
         builder.Property(x => x.메모).HasColumnName("메모").IsRequired();

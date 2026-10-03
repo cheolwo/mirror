@@ -3,12 +3,16 @@ using MediatR;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Food;
 using Ssalddel.Application.Food.Commands;
 using Ssalddel.Application.Food.Handlers;
 using Ssalddel.Contracts.Common.Community;
 using Ssalddel.Contracts.Common.Operations;
+using Ssalddel.Contracts.Common.Dispatch;
+using Ssalddel.Tests.Services.Dispatch.Common;
+using 살뜰.Services.Dispatch.Common;
 using Ssalddel.Contracts.Common.Participants;
 using Ssalddel.Contracts.Common.Warehouse;
 using Ssalddel.Contracts.Food;
@@ -22,6 +26,9 @@ using 살뜰.Services.Dispatch.Coordination;
 using 살뜰.Services.Dispatch.Engine;
 using 살뜰.Services.Dispatch.Queue;
 using 살뜰.Services.Dispatch.Recommendation;
+using 살뜰.Services.Dispatch.Notification;
+using 살뜰.Services.Options;
+using 살뜰.Services.Weather;
 using 살뜰.Services.Settlement;
 using 살뜰.Services.Storage.Local;
 using 살뜰.도메인.공통;
@@ -30,6 +37,7 @@ using 살뜰.도메인.설정;
 using 살뜰.도메인.운송;
 using 살뜰.도메인.창고;
 using 살뜰.도메인.화주;
+using 살뜰.도메인.음식;
 
 namespace Ssalddel.Tests.Application.Food;
 
@@ -83,11 +91,30 @@ public sealed class 음식배달정상수직생명주기Tests
 
         var driverId = "food-driver-7";
         var offerId = $"food-dispatch:{order.주문번호}";
-        database.Context.운송원장.Add(CreateRecommendedTransport(offerId, order.주문번호, driverId));
+        var transport = CreateRecommendedTransport(offerId, order.주문번호, driverId);
+        transport.배차노출상태 = 상태값.배차노출상태.추천대기;
+        transport.현재추천대상기사Id = null;
+        transport.추천라운드 = 0;
+        database.Context.음식운영정책.Add(new 음식운영정책 { 기사픽업지급액 = 700m });
+        database.Context.Set<배달기사>().Add(new() { 기사Id = driverId, 차량 = "자동차" });
+        database.Context.운송원장.Add(transport);
+        await database.Context.SaveChangesAsync();
+        var transition = CreatePricingTransition(database.Context);
+        Assert.True((await transition.추천시작Async(offerId, driverId, 300)).전환여부);
+        database.Context.ChangeTracker.Clear();
+        var priced = await database.Context.운송원장.SingleAsync();
+        var evidence = JsonSerializer.Deserialize<음식배달기사제안요금산정결과>(priced.기사제안요금계산근거Json!)!;
+        Assert.Equal(2500m, priced.기사지급예정액);
+        Assert.Equal(700m, evidence.요금.기본요금구성!.PickupFeeKrw);
+        Assert.Equal(1800m, evidence.요금.기본요금구성.DropoffFeeKrw);
+        // 제안 이후 현재 요율이 바뀌어도 이미 제시한 금액은 바꾸지 않는다.
+        (await database.Context.음식운영정책.SingleAsync()).기사기본지급액 = 9000m;
         await database.Context.SaveChangesAsync();
         store.배차대기반영(order.주문번호, database.Context.운송원장.Single().Id, DateTime.UtcNow);
 
         var driverWork = CreateDriverWork(database, store, publisher, driverId);
+        var offer = Assert.Single(await driverWork.제안조회Async(driverId));
+        Assert.Equal(2500m, offer.DriverPayout);
 
         Assert.True((await driverWork.수락Async(driverId, offerId)).IsSuccess);
         order = store.GetOrder(order.주문번호)!;
@@ -119,6 +146,10 @@ public sealed class 음식배달정상수직생명주기Tests
 
         Assert.True((await driverWork.픽업완료Async(driverId, offerId)).IsSuccess);
         Assert.True((await driverWork.전달완료Async(driverId, offerId)).IsSuccess);
+        database.Context.ChangeTracker.Clear();
+        var completedTransport = await database.Context.운송원장.SingleAsync();
+        Assert.Equal(2500m, completedTransport.기사지급예정액);
+        Assert.Equal(priced.기사제안요금계산근거Json, completedTransport.기사제안요금계산근거Json);
 
         var receiptRequest = new 주문자음식주문수령확인요청
         {
@@ -210,7 +241,8 @@ public sealed class 음식배달정상수직생명주기Tests
     }
 
     private static 음식배달기사업무Service CreateDriverWork(
-        TestDatabase database, EfSsalddelFoodOrderStore store, RecordingPublisher publisher, string driverId)
+        TestDatabase database, EfSsalddelFoodOrderStore store, RecordingPublisher publisher, string driverId,
+        I운영배차공통UseCase? receiving = null)
         => new 음식배달기사업무Service(
             database.Context,
             new InMemoryDriverLocationStore(),
@@ -224,7 +256,168 @@ public sealed class 음식배달정상수직생명주기Tests
             new NoOpSettlement(),
             publisher,
             new TestCurrentUserAccessor(driverId, "Driver"),
-            NullLogger<음식배달기사업무Service>.Instance);
+            NullLogger<음식배달기사업무Service>.Instance,
+            receiving ?? new TestDispatchAvailability());
+
+    [Fact]
+    public async Task 수신OFF는기존추천수락을차단하지만_수락된업무와도착중단을유지한다()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var store = new EfSsalddelFoodOrderStore(database.Context);
+        var order = store.AddOrder(CreateOrderRequest());
+        store.음식점수락멱등(order.주문번호, new 음식점주문수락요청 { 클라이언트요청Id = Guid.NewGuid(), 조리예상분 = 10 }, "restaurant-41");
+        const string driverId = "intent-driver";
+        var offerId = $"food-dispatch:{order.주문번호}";
+        database.Context.운송원장.Add(CreateRecommendedTransport(offerId, order.주문번호, driverId));
+        await database.Context.SaveChangesAsync();
+        store.배차대기반영(order.주문번호, database.Context.운송원장.Single().Id, DateTime.UtcNow);
+        var intent = new 운영배차공통UseCase(new Ef운영배차활동원장Store(database.Context),
+            new InMemory운영배차판정ProjectionStore(), new 살뜰.도메인.배차.운영배차수신상태Policy(),
+            new 살뜰.도메인.배차.운영배차단기지표Calculator(), TimeProvider.System,
+            NullLogger<운영배차공통UseCase>.Instance);
+        var driver = CreateDriverWork(database, store, new RecordingPublisher(), driverId, intent);
+        Assert.Empty(await driver.제안조회Async(driverId));
+        var blocked = await driver.수락Async(driverId, offerId);
+        Assert.True(blocked.IsFailed);
+        Assert.Equal("FoodDelivery.DispatchReceivingOff", blocked.Errors[0].Metadata["ErrorCode"]);
+        Assert.Empty(database.Context.음식배달시도);
+        await intent.기사의사변경Async(driverId, new() { 클라이언트요청Id = Guid.NewGuid(), 수신의사Code = 운영배차수신의사Code.On });
+        Assert.Single(await driver.제안조회Async(driverId));
+        Assert.True((await driver.수락Async(driverId, offerId)).IsSuccess);
+        await intent.기사의사변경Async(driverId, new() { 클라이언트요청Id = Guid.NewGuid(), 수신의사Code = 운영배차수신의사Code.Off });
+        var active = Assert.Single(await driver.제안조회Async(driverId));
+        Assert.NotEqual(Ssalddel.Contracts.Common.Drivers.DriverWorkOfferStatus.Recommended, active.Status);
+        var attempt = await database.Context.음식배달시도.SingleAsync();
+        Assert.True((await driver.가게도착Async(driverId, offerId, new() { 클라이언트요청Id = Guid.NewGuid(), 예상시도Revision = attempt.Revision })).IsSuccess);
+        var interruption = new 음식배달중단요청 { 클라이언트요청Id = Guid.NewGuid(), 예상시도Revision = attempt.Revision, 사유Code = 음식배달중단사유Code.사고, 메모 = "응답 유실 검증" };
+        Assert.True((await driver.중단Async(driverId, offerId, interruption)).IsSuccess);
+        var revision = attempt.Revision;
+        var events = await database.Context.운영배차활동사건.CountAsync();
+        Assert.True((await driver.중단Async(driverId, offerId, interruption)).IsSuccess);
+        Assert.Equal(revision, attempt.Revision);
+        Assert.Equal(events, await database.Context.운영배차활동사건.CountAsync());
+        Assert.True((await driver.중단Async("another-driver", offerId, interruption)).IsFailed);
+        interruption.메모 = "다른 내용";
+        Assert.True((await driver.중단Async(driverId, offerId, interruption)).IsFailed);
+        Assert.Equal(운영배차수신의사Code.Off, (await intent.수신상태조회Async(driverId)).수신의사Code);
+        Assert.Equal(2, await database.Context.운영배차활동사건.CountAsync(x => x.사건유형Code == 운영배차사건유형Code.수신의사변경));
+    }
+
+    [Fact]
+    public async Task 새배차의거리미확인은_추천전저장과알림을차단하고_확인후재시도가가능하다()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var queue = CreateRecommendedTransport("pricing-missing", "order-test", "driver-test");
+        queue.배차노출상태 = 상태값.배차노출상태.추천대기;
+        queue.현재추천대상기사Id = null;
+        queue.추천라운드 = 0;
+        queue.하차_위도 = null;
+        database.Context.운송원장.Add(queue);
+        await database.Context.SaveChangesAsync();
+        var notification = new PricingNotification();
+        database.Context.Set<살뜰.도메인.기사.배달기사>().Add(new() { 기사Id = "driver-test", 차량 = "자동차" });
+        await database.Context.SaveChangesAsync();
+        var transition = CreatePricingTransition(database.Context, notification);
+        var blocked = await transition.추천시작Async(queue.의뢰Id, "driver-test");
+        Assert.False(blocked.전환여부);
+        Assert.Equal(배차대기원장전환결과코드.배차구성오류, blocked.결과코드);
+        database.Context.ChangeTracker.Clear();
+        var after = await database.Context.운송원장.SingleAsync();
+        Assert.Null(after.기사지급예정액);
+        Assert.Null(after.기사제안요금계산근거Json);
+        Assert.Equal(0, after.추천라운드);
+        Assert.Equal(0, notification.Count);
+        after.하차_위도 = 37.5792m;
+        await database.Context.SaveChangesAsync();
+        Assert.True((await transition.추천시작Async(queue.의뢰Id, "driver-test")).전환여부);
+        Assert.Equal(1, notification.Count);
+        var frozen = after.기사제안요금계산근거Json;
+        after.배차노출상태 = 상태값.배차노출상태.추천대기;
+        after.현재추천대상기사Id = null;
+        await database.Context.SaveChangesAsync();
+        Assert.True((await transition.추천시작Async(queue.의뢰Id, "driver-test")).전환여부);
+        Assert.Equal(frozen, after.기사제안요금계산근거Json);
+        after.배차노출상태 = 상태값.배차노출상태.추천대기;
+        after.현재추천대상기사Id = null;
+        await database.Context.SaveChangesAsync();
+        var count = notification.Count;
+        Assert.False((await transition.추천시작Async(queue.의뢰Id, "unknown-driver")).전환여부);
+        Assert.Equal(count, notification.Count);
+        Assert.Equal(frozen, after.기사제안요금계산근거Json);
+        database.Context.Set<살뜰.도메인.기사.배달기사>().Add(new() { 기사Id = "next-driver", 차량 = "오토바이" });
+        await database.Context.SaveChangesAsync();
+        Assert.True((await transition.추천시작Async(queue.의뢰Id, "next-driver")).전환여부);
+        database.Context.ChangeTracker.Clear();
+        var repriced = await database.Context.운송원장.SingleAsync();
+        var nextEvidence = JsonSerializer.Deserialize<음식배달기사제안요금산정결과>(repriced.기사제안요금계산근거Json!)!;
+        Assert.Equal("next-driver", nextEvidence.기사Id);
+        Assert.Equal("Motorcycle", nextEvidence.경로차량Code);
+        Assert.Equal("traavoidcaronly", nextEvidence.경로옵션Code);
+        Assert.Equal(3850m, repriced.기사지급예정액);
+        Assert.NotEqual(frozen, repriced.기사제안요금계산근거Json);
+    }
+
+    [Fact]
+    public async Task 네이버실패의근사거리로_배차제안이나알림을_생성하지않는다()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var queue = CreateRecommendedTransport("pricing-route-unavailable", "order-test", "driver-test");
+        queue.배차노출상태 = 상태값.배차노출상태.추천대기;
+        queue.현재추천대상기사Id = null;
+        queue.추천라운드 = 0;
+        database.Context.운송원장.Add(queue);
+        await database.Context.SaveChangesAsync();
+        var notification = new PricingNotification();
+        database.Context.Set<살뜰.도메인.기사.배달기사>().Add(new() { 기사Id = "driver-test", 차량 = "자동차" });
+        await database.Context.SaveChangesAsync();
+        var transition = CreatePricingTransition(database.Context, notification, routeAvailable: false);
+        var blocked = await transition.추천시작Async(queue.의뢰Id, "driver-test");
+        Assert.False(blocked.전환여부);
+        Assert.Equal(배차대기원장전환결과코드.배차구성오류, blocked.결과코드);
+        database.Context.ChangeTracker.Clear();
+        var after = await database.Context.운송원장.SingleAsync();
+        Assert.Null(after.기사지급예정액);
+        Assert.Null(after.기사제안요금계산근거Json);
+        Assert.Equal(0, after.추천라운드);
+        Assert.Equal(0, notification.Count);
+    }
+
+    private static 배차대기원장전환Service CreatePricingTransition(SsalddelContext db, PricingNotification? notification = null, bool routeAvailable = true)
+        => new(db, Options.Create(new 배차큐정책Options()), null!, notification ?? new PricingNotification(),
+            new PricingDriverState(), new 음식배달배차흐름Resolver(), new 음식배달기사제안요금Service(db,
+                new NoOpRouteService(routeAvailable), new PricingWeather(), TimeProvider.System,
+                new SsalddelExecutionModePolicy(Options.Create(new SsalddelExecutionOptions
+                    { Mode = SsalddelExecutionMode.Simulation }))));
+
+    private sealed class PricingWeather : I픽업지기상관측Client
+    {
+        public Task<픽업지기상관측결과> 조회Async(decimal? latitude, decimal? longitude, CancellationToken cancellationToken = default)
+            => Task.FromResult(new 픽업지기상관측결과(false, false, 픽업지기상자료상태Code.MissingServiceKey,
+                null, null, null, 픽업지기상관측결과.공식자료출처, null));
+    }
+
+    private sealed class PricingNotification : I배차추천알림Service
+    {
+        public int Count { get; private set; }
+        public Task 추천알림요청생성Async(long 배차대기Id, string 의뢰Id, string 기사Id, int 추천라운드,
+            CancellationToken cancellationToken = default) { Count++; return Task.CompletedTask; }
+        public Task<int> 대기알림발송Async(int take = 100, CancellationToken cancellationToken = default) => Task.FromResult(0);
+    }
+
+    private sealed class PricingDriverState : I국내화물운송기사상태Service
+    {
+        public Task<국내화물운송기사상태Snapshot?> 추천기록Async(string driverId, DateTime 추천시각Utc,
+            CancellationToken cancellationToken = default) => Task.FromResult<국내화물운송기사상태Snapshot?>(null);
+        public Task<국내화물운송기사상태Snapshot> 운행시작Async(string driverId, long shiftId, DateTime startedAtUtc,
+            string startMode, string startLocation, string? returnDestination, string? 복귀콜선호 = null,
+            string? appKey = null, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<국내화물운송기사상태Snapshot> 위치갱신Async(DriverLocationSnapshot location, long? shiftId = null,
+            decimal? 상차접근허용반경Km = null, string? appKey = null, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+        public Task<국내화물운송기사상태Snapshot?> 후보없음기록Async(string driverId, DateTime 기준시각Utc,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task 운행종료Async(string driverId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
 
     private static 음식주문등록요청 CreateOrderRequest() => new()
     {
@@ -301,7 +494,7 @@ public sealed class 음식배달정상수직생명주기Tests
 
     private sealed record TestCurrentUserAccessor(string? UserId, string? Role) : ICurrentUserAccessor;
 
-    private sealed class NoOpRouteService : I배차추천경로Service
+    private sealed class NoOpRouteService(bool routeAvailable = true) : I배차추천경로Service
     {
         public Task<배차경로좌표?> ResolveOriginLocationAsync(string driverId, 용달기사? driver, DriverLocationSnapshot? currentLocation, 배차추천검색조건? criteria)
             => Task.FromResult<배차경로좌표?>(null);
@@ -309,8 +502,12 @@ public sealed class 음식배달정상수직생명주기Tests
         public Task<배차경로좌표?> ResolveRouteAnchorLocationAsync(string driverId, 용달기사? driver, DriverLocationSnapshot? currentLocation)
             => Task.FromResult<배차경로좌표?>(null);
 
+        public Task<배차경로예상결과?> EstimateRouteAsync(배차경로좌표? origin, 배차경로좌표? destination, string routeOption, CancellationToken cancellationToken)
+            => Task.FromResult<배차경로예상결과?>(new(routeOption == "traavoidcaronly" ? 2.5m : 0m, TimeSpan.FromMinutes(5), 0m,
+                routeAvailable ? "Directions5" : "좌표기반도로보정", routeAvailable) { RouteOption = routeOption });
+
         public Task<배차경로예상결과?> EstimateRouteAsync(배차경로좌표? origin, 배차경로좌표? destination)
-            => Task.FromResult<배차경로예상결과?>(null);
+            => Task.FromResult<배차경로예상결과?>(routeAvailable ? new(0m, TimeSpan.Zero, 0m, "Directions5", true) : new(1m, TimeSpan.FromMinutes(5), null, "좌표기반도로보정", false));
 
         public Task<배차경로예상결과?> EstimateOrderedRouteAsync(배차경로좌표? origin, IReadOnlyList<배차경로좌표> orderedStops, CancellationToken cancellationToken = default)
             => Task.FromResult<배차경로예상결과?>(null);

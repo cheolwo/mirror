@@ -5,9 +5,12 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Data;
 using Ssalddel.Application.CommandProcessing;
+using Ssalddel.Application.Shipper.Request;
 using Ssalddel.Contracts.Common.Hr;
 using Ssalddel.Contracts.Common.Operations;
 using 살뜰.도메인.공통;
+using 살뜰.도메인.운송;
+using 살뜰.도메인.화주;
 using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.Services.Dispatch.Continuity;
 
@@ -67,44 +70,91 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         await driverGate.WaitAsync(cancellationToken);
         try
         {
-        await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+            AcceptPersistenceResult persisted;
+            var attempt = 0;
+            try
+            {
+                persisted = await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+                {
+                    // 실패한 트랜잭션의 추적 값으로 다음 시도를 확정하지 않는다.
+                    if (attempt++ > 0)
+                    {
+                        _db.ChangeTracker.Clear();
+                    }
+
+                    return await PersistAcceptanceAsync(request, cancellationToken);
+                });
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                _logger.LogWarning(ex, "배차 수락 중 동시성 충돌이 발생했습니다. RequestId={RequestId} DriverId={DriverId}", request.RequestId, request.기사Id);
+                return Result.Fail<배차수락결과>("다른 기사에 의해 이미 수락되었습니다.");
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogWarning(ex, "배차 수락 저장 중 DB 예외가 발생했습니다. RequestId={RequestId} DriverId={DriverId}", request.RequestId, request.기사Id);
+                return Result.Fail<배차수락결과>("수락 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+            }
+
+            if (persisted.Queue is null || persisted.DispatchRequest is null)
+            {
+                return persisted.Result;
+            }
+
+            await PublishAfterCommitAsync(request, persisted, cancellationToken);
+            return persisted.Result;
+        }
+        finally
+        {
+            driverGate.Release();
+        }
+    }
+
+    private async Task<AcceptPersistenceResult> PersistAcceptanceAsync(
+        배차수락Command request,
+        CancellationToken cancellationToken)
+    {
+        await using var tx = _db.Database.IsRelational()
+            ? await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
+            : null;
 
         var queue = await _db.운송원장.FirstOrDefaultAsync(x => x.의뢰Id == request.RequestId, cancellationToken);
         if (queue is null)
         {
-            return Result.Fail<배차수락결과>("배차대기 데이터를 찾을 수 없습니다.");
+            return new(Result.Fail<배차수락결과>("배차대기 데이터를 찾을 수 없습니다."));
         }
 
         var dispatchRequest = await _db.화주운송의뢰.FirstOrDefaultAsync(x => x.의뢰Id == request.RequestId, cancellationToken);
         if (dispatchRequest is null)
         {
-            return Result.Fail<배차수락결과>("운송의뢰 데이터를 찾을 수 없습니다.");
+            return new(Result.Fail<배차수락결과>("운송의뢰 데이터를 찾을 수 없습니다."));
         }
 
-        if (dispatchRequest.결제상태 != 상태값.결제상태.결제완료)
+        var settlementReadiness = 화주운송배차진입정책.판정(dispatchRequest);
+        if (!settlementReadiness.가능)
         {
-            return Result.Fail<배차수락결과>("결제완료 의뢰만 수락할 수 있습니다.");
+            return new(Conflict(화주운송배차진입정책.진입불가오류코드, settlementReadiness.사유));
         }
 
         if (queue.배차업무유형 != 상태값.배차업무유형.용달운송)
         {
-            return Conflict(
+            return new(Conflict(
                 화물배차수락오류코드.차량적합실패,
-                "화물 기사 수락 경로에서는 용달 운송 의뢰만 처리할 수 있습니다.");
+                "화물 기사 수락 경로에서는 용달 운송 의뢰만 처리할 수 있습니다."));
         }
 
         if (queue.상태 == 상태값.배차대기상태.확정
             && string.Equals(queue.확정기사Id ?? queue.기사_운송자, request.기사Id, StringComparison.Ordinal))
         {
-            return Result.Ok(new 배차수락결과(request.RequestId, "이미 수락된 운송입니다."));
+            return new(Result.Ok(new 배차수락결과(request.RequestId, "이미 수락된 운송입니다.")));
         }
 
         if (request.ExpectedRecommendationRound.HasValue
             && request.ExpectedRecommendationRound.Value != queue.추천라운드)
         {
-            return Conflict(
+            return new(Conflict(
                 화물배차수락오류코드.추천판본불일치,
-                "추천 판본이 변경되었습니다. 최신 추천을 다시 확인해 주세요.");
+                "추천 판본이 변경되었습니다. 최신 추천을 다시 확인해 주세요."));
         }
 
         var reservationValidation = await _연속배차UseCase.수락예약검증Async(
@@ -115,9 +165,9 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
             cancellationToken);
         if (!reservationValidation.유효)
         {
-            return Conflict(
+            return new(Conflict(
                 reservationValidation.오류Code ?? "FreightReservationInvalid",
-                reservationValidation.오류메시지 ?? "다음 콜 예약을 수락할 수 없습니다.");
+                reservationValidation.오류메시지 ?? "다음 콜 예약을 수락할 수 없습니다."));
         }
 
         var now = DateTime.UtcNow;
@@ -126,7 +176,7 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
 
         if (!canAcceptRecommendation && !canAcceptPublic)
         {
-            return Result.Fail<배차수락결과>("수락 가능한 배차가 아닙니다.");
+            return new(Result.Fail<배차수락결과>("수락 가능한 배차가 아닙니다."));
         }
 
         var eligibility = await _수락적격성Service.평가Async(
@@ -136,10 +186,10 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
             cancellationToken);
         if (!eligibility.수락가능)
         {
-            return Conflict(
+            return new(Conflict(
                 eligibility.오류코드 ?? 화물배차수락오류코드.일정실패,
                 eligibility.오류메시지 ?? "현재 운송 조건으로 수락할 수 없습니다.",
-                eligibility.경고코드);
+                eligibility.경고코드));
         }
 
         queue.상태 = 상태값.배차대기상태.확정;
@@ -169,22 +219,23 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         dispatchRequest.UpdatedAt = now;
         queue.UpdatedAt = now;
 
-        try
+        await _db.SaveChangesAsync(cancellationToken);
+        await _연속배차UseCase.수락완료Async(request.기사Id, request.RequestId, cancellationToken);
+        if (tx is not null)
         {
-            await _db.SaveChangesAsync(cancellationToken);
-            await _연속배차UseCase.수락완료Async(request.기사Id, request.RequestId, cancellationToken);
             await tx.CommitAsync(cancellationToken);
         }
-        catch (DbUpdateConcurrencyException ex)
-        {
-            _logger.LogWarning(ex, "배차 수락 중 동시성 충돌이 발생했습니다. RequestId={RequestId} DriverId={DriverId}", request.RequestId, request.기사Id);
-            return Result.Fail<배차수락결과>("다른 기사에 의해 이미 수락되었습니다.");
-        }
-        catch (DbUpdateException ex)
-        {
-            _logger.LogWarning(ex, "배차 수락 저장 중 DB 예외가 발생했습니다. RequestId={RequestId} DriverId={DriverId}", request.RequestId, request.기사Id);
-            return Result.Fail<배차수락결과>("수락 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-        }
+
+        return new(Result.Ok(new 배차수락결과(request.RequestId, "수락되었습니다.")), queue, dispatchRequest, now);
+    }
+
+    private async Task PublishAfterCommitAsync(
+        배차수락Command request,
+        AcceptPersistenceResult persisted,
+        CancellationToken cancellationToken)
+    {
+        var queue = persisted.Queue!;
+        var dispatchRequest = persisted.DispatchRequest!;
 
         try
         {
@@ -220,7 +271,7 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
                     queue.상태,
                     dispatchRequest.배차상태,
                     dispatchRequest.결제상태,
-                    now,
+                    persisted.AcceptedAtUtc,
                     System.Diagnostics.Activity.Current?.TraceId.ToString() ?? string.Empty),
                 cancellationToken);
         }
@@ -229,13 +280,13 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
             _logger.LogWarning(ex, "배차수락 사후처리 이벤트 발행 중 예외가 발생했습니다. RequestId={RequestId}", request.RequestId);
         }
 
-        return Result.Ok(new 배차수락결과(request.RequestId, "수락되었습니다."));
-        }
-        finally
-        {
-            driverGate.Release();
-        }
     }
+
+    private sealed record AcceptPersistenceResult(
+        Result<배차수락결과> Result,
+        운송원장? Queue = null,
+        화주운송의뢰? DispatchRequest = null,
+        DateTime AcceptedAtUtc = default);
 
     private static Result<배차수락결과> Conflict(
         string errorCode,

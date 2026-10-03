@@ -17,7 +17,9 @@ public interface I음식주문운영추적UseCase
         CancellationToken cancellationToken = default);
 }
 
-public sealed class 음식주문운영추적UseCase(SsalddelContext db) : I음식주문운영추적UseCase
+public sealed class 음식주문운영추적UseCase(
+    SsalddelContext db,
+    살뜰.Services.Options.ISsalddelExecutionModePolicy? executionMode = null) : I음식주문운영추적UseCase
 {
     public async Task<음식주문운영추적응답?> 조회Async(
         string 주문번호,
@@ -97,6 +99,9 @@ public sealed class 음식주문운영추적UseCase(SsalddelContext db) : I음�
             .ToListAsync(cancellationToken);
 
         var now = DateTime.UtcNow;
+        var driverSettlement = await db.음식주문기사정산
+            .AsNoTracking().Include(x => x.지급검증목록)
+            .SingleOrDefaultAsync(x => x.주문번호 == normalizedOrderNo, cancellationToken);
         var normalizedOrderStatus = 음식주문상태코드.Normalize(order.상태);
         var latestDeliveryAttempt = deliveryAttempts.FirstOrDefault();
         var delayEvaluation = 음식배달운영지연판정Policy.판정(
@@ -147,10 +152,24 @@ public sealed class 음식주문운영추적UseCase(SsalddelContext db) : I음�
                 공동원장동기화확인필요여부: outboxes.Any(x =>
                     x.종류 == "음식 공동 원장 동기화" && x.운영자확인필요),
                 기사알림확인필요여부: outboxes.Any(x =>
-                    x.종류 == "기사 추천 알림" && x.운영자확인필요)));
+                    x.종류 == "기사 추천 알림" && x.운영자확인필요),
+                기사배정확정여부: order.배차상태 == 음식주문배차상태코드.기사배정
+                    && !dispatchLinkMismatch
+                    && queue is not null
+                    && queue.상태 == 상태값.배차대기상태.확정
+                    && queue.배차큐단계 == 상태값.배차큐단계.확정
+                    && !string.IsNullOrWhiteSpace(queue.확정기사Id)
+                    && latestDeliveryAttempt is not null
+                    && latestDeliveryAttempt.제안Id == queue.의뢰Id
+                    && latestDeliveryAttempt.기사Id == queue.확정기사Id
+                    && latestDeliveryAttempt.중단시각Utc is null
+                    && latestDeliveryAttempt.전달완료시각Utc is null));
 
         return new 음식주문운영추적응답
         {
+            DriverSettlement = driverSettlement is null ? null
+                : Ssalddel.Application.Food.음식주문기사정산Recorder.ToDto(
+                    driverSettlement, currentExecutionModeCode: executionMode?.Mode.ToString()),
             주문번호 = order.주문번호,
             음식점명 = order.음식점명,
             주문상태 = normalizedOrderStatus,

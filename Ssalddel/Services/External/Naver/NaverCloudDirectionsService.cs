@@ -100,7 +100,7 @@ namespace 살뜰.Services.External.Naver
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             using var document = JsonDocument.Parse(content);
 
-            if (!TryGetRouteSummary(document.RootElement, out var route))
+            if (!TryGetRouteSummary(document.RootElement, routeOption, out var route))
             {
                 return null;
             }
@@ -111,16 +111,20 @@ namespace 살뜰.Services.External.Naver
         private static string FormatPosition(decimal latitude, decimal longitude)
             => FormattableString.Invariant($"{longitude},{latitude}");
 
-        private static bool TryGetRouteSummary(JsonElement root, out NaverCloudDrivingRoute route)
+        private static bool TryGetRouteSummary(JsonElement root, string requestedOptions, out NaverCloudDrivingRoute route)
         {
             route = default!;
+
+            if (root.TryGetProperty("code", out var code)
+                && (code.ValueKind != JsonValueKind.Number || !code.TryGetInt32(out var resultCode) || resultCode != 0))
+                return false;
 
             if (!root.TryGetProperty("route", out var routeElement) || routeElement.ValueKind != JsonValueKind.Object)
             {
                 return false;
             }
 
-            foreach (var routeType in new[] { "traoptimal", "trafast", "tracomfort" })
+            foreach (var routeType in requestedOptions.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             {
                 if (!routeElement.TryGetProperty(routeType, out var candidates) || candidates.ValueKind != JsonValueKind.Array || candidates.GetArrayLength() == 0)
                 {
@@ -128,15 +132,21 @@ namespace 살뜰.Services.External.Naver
                 }
 
                 var firstCandidate = candidates[0];
-                if (!firstCandidate.TryGetProperty("summary", out var summary))
+                if (firstCandidate.ValueKind != JsonValueKind.Object
+                    || !firstCandidate.TryGetProperty("summary", out var summary)
+                    || summary.ValueKind != JsonValueKind.Object)
                 {
                     continue;
                 }
 
+                var distance = GetDecimal(summary, "distance");
+                if (distance is null or < 0m)
+                    continue;
+
                 route = new NaverCloudDrivingRoute
                 {
                     RouteType = routeType,
-                    DistanceMeters = GetDecimal(summary, "distance"),
+                    DistanceMeters = distance,
                     DurationMilliseconds = GetDecimal(summary, "duration"),
                     TollFare = GetDecimal(summary, "tollFare"),
                     FuelPrice = GetDecimal(summary, "fuelPrice"),

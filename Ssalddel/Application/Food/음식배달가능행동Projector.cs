@@ -64,15 +64,21 @@ public static class 음식배달가능행동Projector
         string? workStatus,
         long attemptRevision,
         DateTime? restaurantArrivedAtUtc)
-        => workStatus switch
+    {
+        IReadOnlyList<업무가능행동Dto> actions = workStatus switch
         {
             DriverWorkOfferStatus.Accepted => BuildArrivalActions(
                 attemptRevision,
                 restaurantArrivedAtUtc),
             DriverWorkOfferStatus.MovingToPickup => BuildPickupActions(attemptRevision, restaurantArrivedAtUtc),
-            DriverWorkOfferStatus.MovingToDropoff => [Action(음식배달가능행동Ids.기사전달완료)],
-            _ => []
+            DriverWorkOfferStatus.MovingToDropoff => new 업무가능행동Dto[] { Action(음식배달가능행동Ids.기사전달완료) },
+            _ => Array.Empty<업무가능행동Dto>()
         };
+        return attemptRevision > 0 && workStatus is (DriverWorkOfferStatus.Accepted
+            or DriverWorkOfferStatus.MovingToPickup or DriverWorkOfferStatus.MovingToDropoff)
+            ? actions.Append(DeliveryAttemptAction(음식배달가능행동Ids.기사배달중단, attemptRevision)).ToArray()
+            : actions;
+    }
 
     private static IReadOnlyList<업무가능행동Dto> BuildArrivalActions(
         long attemptRevision,

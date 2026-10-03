@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Http;
 using Ssalddel.Services.Food;
+using 살뜰.Services.Dispatch.Recommendation;
 
 namespace Ssalddel.Services.Development.FoodObserver;
 
@@ -17,6 +18,8 @@ public static class 음식배달관찰검증Hosting
         builder.Services.RemoveAll<IHostedService>();
         builder.Services.AddSingleton(options);
         builder.Services.Replace(ServiceDescriptor.Scoped<IKakao좌표변환Service, 검증표본좌표Service>());
+        // 실제 경로 API 실패의 대체가 아니다. 검증 경계 통과 후 알려진 합성 경로만 명시적으로 주입한다.
+        builder.Services.Replace(ServiceDescriptor.Scoped<I음식배달기사제안요금Service, 검증표본기사제안요금Service>());
         builder.Services.AddSingleton<IHttpMessageHandlerBuilderFilter, 외부요청차단Filter>();
         builder.Services.AddSingleton<음식배달관찰검증Runner>();
         builder.Services.AddHostedService<음식배달관찰배차작업자>();

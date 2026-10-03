@@ -113,6 +113,9 @@ namespace 살뜰.도메인.운송
 
         public string? 기사제안요금정책판본 { get; set; }
 
+        // 제안 시점의 계산 정책/구성/거리/할증 근거. 과거 기록은 null로 보존한다.
+        public string? 기사제안요금계산근거Json { get; set; }
+
         public DateTime? 기사제안요금판정시각Utc { get; set; }
 
         public string 첨부_json { get; set; } = "[]";

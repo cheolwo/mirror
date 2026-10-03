@@ -57,6 +57,22 @@ public sealed class 음식배달운영생명주기조화ProjectorTests
         Assert.True(result.정상경로조화여부);
     }
 
+    [Theory]
+    [InlineData(음식주문상태코드.조리중)]
+    [InlineData(음식주문상태코드.픽업대기)]
+    public void 배정후_조리와준비완료는_확정기사의인계책임을유지한다(string orderState)
+    {
+        var assigned = 음식배달운영생명주기조화Projector.판정(
+            new 음식배달운영생명주기조화입력(orderState, 기사배정확정여부: true));
+        Assert.Contains(음식배달운영책임주체Codes.음식점, assigned.현재책임주체Codes);
+        Assert.Contains(음식배달운영책임주체Codes.음식배달기사, assigned.현재책임주체Codes);
+        Assert.DoesNotContain(음식배달운영책임주체Codes.배차Engine, assigned.현재책임주체Codes);
+
+        var unassigned = 음식배달운영생명주기조화Projector.판정(new 음식배달운영생명주기조화입력(orderState));
+        Assert.Contains(음식배달운영책임주체Codes.배차Engine, unassigned.현재책임주체Codes);
+        Assert.DoesNotContain(음식배달운영책임주체Codes.음식배달기사, unassigned.현재책임주체Codes);
+    }
+
     [Fact]
     public void 추천만료와배달중단은_관리자수동배차가아닌_배차Engine자동회복대상이다()
     {

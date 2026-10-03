@@ -33,6 +33,7 @@ public static partial class ServiceCollectionExtensions
         services.Configure<RegionalCultureImageGenerationOptions>(
             configuration.GetSection(RegionalCultureImageGenerationOptions.SectionName));
         services.Configure<HIOPSAIOptions>(configuration.GetSection(HIOPSAIOptions.SectionName));
+        services.Configure<FoodDriverRoutePricingOptions>(configuration.GetSection(FoodDriverRoutePricingOptions.SectionName));
         services.Configure<NaverCloudDirectionsOptions>(configuration.GetSection(NaverCloudDirectionsOptions.SectionName));
         services.Configure<NaverMapsOptions>(configuration.GetSection(NaverMapsOptions.SectionName));
         services.Configure<OpinetOptions>(configuration.GetSection(OpinetOptions.SectionName));

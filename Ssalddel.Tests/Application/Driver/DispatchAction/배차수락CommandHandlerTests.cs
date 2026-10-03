@@ -1,9 +1,12 @@
 using MediatR;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging.Abstractions;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Driver.DispatchAction;
+using Ssalddel.Application.Shipper.Request;
 using Ssalddel.Contracts.Common.Dispatch;
 using 살뜰.Data;
 using 살뜰.Infrastructure.Security;
@@ -150,6 +153,132 @@ public sealed class 배차수락CommandHandlerTests
             Assert.IsAssignableFrom<IReadOnlyList<string>>(result.Errors.Single().Metadata["WarningCodes"]));
     }
 
+    [Theory]
+    [InlineData("운송완료후정산", "후불승인완료")]
+    [InlineData("월말정산", "후불승인완료")]
+    [InlineData("현장지급", "현장수금예정")]
+    public async Task 후불이나현장지급조건이확인된의뢰는_수락해도실제결제상태를변경하지않는다(
+        string settlementTime,
+        string settlementStatus)
+    {
+        await using var db = CreateContext();
+        var (queue, request) = await SeedUnpaidRequestAsync(db, settlementTime, settlementStatus);
+
+        var result = await CreateHandler(db, new StubEligibilityService()).Handle(
+            new 배차수락Command("driver-1", request.의뢰Id),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        db.ChangeTracker.Clear();
+        var savedTransport = await db.운송원장.SingleAsync();
+        var savedRequest = await db.화주운송의뢰.SingleAsync();
+        Assert.Equal(상태값.배차대기상태.확정, savedTransport.상태);
+        Assert.Equal("driver-1", savedTransport.기사_운송자);
+        Assert.Equal("driver-1", savedTransport.확정기사Id);
+        Assert.Equal(queue.의뢰Id, savedTransport.의뢰Id);
+        Assert.Equal(상태값.배차상태.배차확정, savedRequest.배차상태);
+        Assert.Equal(상태값.결제상태.결제대기, savedRequest.결제상태);
+        Assert.Equal(settlementStatus, savedRequest.정산상태);
+        Assert.Empty(await db.결제.ToListAsync());
+        Assert.Empty(await db.결제승인완료Outbox.ToListAsync());
+    }
+
+    [Theory]
+    [InlineData("선결제", "결제대기")]
+    [InlineData("미등록정산시점", "후불승인완료")]
+    [InlineData("운송완료후정산", "청구대기")]
+    [InlineData("운송완료후정산", "인수증대기")]
+    [InlineData("월말정산", "후불승인대기")]
+    [InlineData("운송완료후정산", "비정상운송검토보류")]
+    public async Task 승인전이거나보류된의뢰는_수락과원장변경을409로차단한다(
+        string settlementTime,
+        string settlementStatus)
+    {
+        await using var db = CreateContext();
+        var (_, request) = await SeedUnpaidRequestAsync(db, settlementTime, settlementStatus);
+
+        var result = await CreateHandler(db, new StubEligibilityService()).Handle(
+            new 배차수락Command("driver-1", request.의뢰Id),
+            CancellationToken.None);
+
+        Assert.True(result.IsFailed);
+        Assert.Equal(409, result.Errors.Single().Metadata["StatusCode"]);
+        Assert.Equal(화주운송배차진입정책.진입불가오류코드, result.Errors.Single().Metadata["ErrorCode"]);
+        db.ChangeTracker.Clear();
+        var savedTransport = await db.운송원장.SingleAsync();
+        var savedRequest = await db.화주운송의뢰.SingleAsync();
+        Assert.Equal(상태값.배차대기상태.대기, savedTransport.상태);
+        Assert.Null(savedTransport.확정기사Id);
+        Assert.Equal(상태값.배차상태.매칭중, savedRequest.배차상태);
+        Assert.Equal(상태값.결제상태.결제대기, savedRequest.결제상태);
+        Assert.Equal(settlementStatus, savedRequest.정산상태);
+    }
+
+    [Fact]
+    public async Task 관계형저장중일시실패는_롤백후다시수락하고_같은기사재수락은사후처리하지않는다()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<SsalddelContext>()
+            .UseSqlite(connection)
+            .ReplaceService<IExecutionStrategyFactory, RetryStrategyFactory>()
+            .Options;
+        await using var db = new SsalddelContext(options, new DummyPersonalDataEncryptionService());
+        await db.Database.EnsureCreatedAsync();
+        var (_, request) = await SeedUnpaidRequestAsync(db, "운송완료후정산", "후불승인완료");
+        var continuity = new StubContinuityUseCase(failFirstCompletion: true);
+        var publisher = new RecordingPublisher();
+        var snapshots = new WorkRelationshipSnapshotCollector();
+        var handler = new 배차수락CommandHandler(
+            db, publisher, new TestCurrentUserAccessor("driver-1", "기사"), new 참여자실행권한검사(),
+            snapshots, new StubEligibilityService(), continuity, NullLogger<배차수락CommandHandler>.Instance);
+
+        var accepted = await handler.Handle(new 배차수락Command("driver-1", request.의뢰Id), CancellationToken.None);
+        var replay = await handler.Handle(new 배차수락Command("driver-1", request.의뢰Id), CancellationToken.None);
+
+        Assert.True(accepted.IsSuccess);
+        Assert.True(replay.IsSuccess);
+        Assert.Equal(2, continuity.CompletionCalls);
+        Assert.Equal(1, continuity.PromiseCalls);
+        Assert.Single(publisher.Notifications);
+        Assert.Single(snapshots.Drain());
+        await using var read = new SsalddelContext(options, new DummyPersonalDataEncryptionService());
+        Assert.Equal("driver-1", (await read.운송원장.SingleAsync()).확정기사Id);
+        var savedRequest = await read.화주운송의뢰.SingleAsync();
+        Assert.Equal(상태값.배차상태.배차확정, savedRequest.배차상태);
+        Assert.Equal(상태값.결제상태.결제대기, savedRequest.결제상태);
+    }
+
+    private static async Task<(운송원장 Queue, 화주운송의뢰 Request)> SeedUnpaidRequestAsync(
+        SsalddelContext db,
+        string settlementTime,
+        string settlementStatus)
+    {
+        var queue = new 운송원장
+        {
+            의뢰Id = "warehouse-outbound-approved",
+            상태 = 상태값.배차대기상태.대기,
+            배차큐단계 = 상태값.배차큐단계.배차추천,
+            배차노출상태 = 상태값.배차노출상태.추천중,
+            현재추천대상기사Id = "driver-1",
+            추천만료시각 = DateTime.UtcNow.AddMinutes(5)
+        };
+        var request = new 화주운송의뢰
+        {
+            의뢰Id = queue.의뢰Id,
+            화주Id = "shipper-1",
+            주문자UserId = "shipper-1",
+            결제상태 = 상태값.결제상태.결제대기,
+            배차상태 = 상태값.배차상태.매칭중,
+            정산시점 = settlementTime,
+            정산상태 = settlementStatus
+        };
+        db.운송원장.Add(queue);
+        db.화주운송의뢰.Add(request);
+        await db.SaveChangesAsync();
+        return (queue, request);
+    }
+
     private static 배차수락CommandHandler CreateHandler(
         SsalddelContext db,
         I화물배차수락적격성Service eligibility)
@@ -203,8 +332,11 @@ public sealed class 배차수락CommandHandlerTests
             => Task.FromResult(_result);
     }
 
-    private sealed class StubContinuityUseCase : I화물연속배차UseCase
+    private sealed class StubContinuityUseCase(bool failFirstCompletion = false) : I화물연속배차UseCase
     {
+        public int CompletionCalls { get; private set; }
+        public int PromiseCalls { get; private set; }
+
         public Task<화물연속배차상태Dto> 조회Async(string 기사Id, CancellationToken cancellationToken = default)
             => Task.FromResult(new 화물연속배차상태Dto { 기사Id = 기사Id });
 
@@ -226,13 +358,21 @@ public sealed class 배차수락CommandHandlerTests
             => Task.FromResult(new 화물예약검증결과(true));
 
         public Task 수락완료Async(string 기사Id, string 의뢰Id, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
+        {
+            CompletionCalls++;
+            return failFirstCompletion && CompletionCalls == 1
+                ? Task.FromException(new RetryableWriteException())
+                : Task.CompletedTask;
+        }
 
         public Task 시간약속잠금Async(
             string 기사Id,
             화주운송의뢰 의뢰,
             CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
+        {
+            PromiseCalls++;
+            return Task.CompletedTask;
+        }
 
         public Task 완료기록Async(string 기사Id, DateTime 완료시각Utc, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
@@ -244,6 +384,38 @@ public sealed class 배차수락CommandHandlerTests
 
         public Task<화물경로위험Dto> 현재위험조회Async(string 기사Id, CancellationToken cancellationToken = default)
             => Task.FromResult(new 화물경로위험Dto());
+    }
+
+    private sealed class RecordingPublisher : IPublisher
+    {
+        public List<object> Notifications { get; } = [];
+
+        public Task Publish(object notification, CancellationToken cancellationToken = default)
+        {
+            Notifications.Add(notification);
+            return Task.CompletedTask;
+        }
+
+        public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
+            where TNotification : INotification
+            => Publish((object)notification, cancellationToken);
+    }
+
+    private sealed class RetryableWriteException : Exception { }
+
+    private sealed class RetryStrategyFactory : IExecutionStrategyFactory
+    {
+        private readonly ExecutionStrategyDependencies _dependencies;
+
+        public RetryStrategyFactory(ExecutionStrategyDependencies dependencies) => _dependencies = dependencies;
+
+        public IExecutionStrategy Create() => new RetryStrategy(_dependencies);
+    }
+
+    private sealed class RetryStrategy(ExecutionStrategyDependencies dependencies)
+        : ExecutionStrategy(dependencies, 1, TimeSpan.Zero)
+    {
+        protected override bool ShouldRetryOn(Exception exception) => exception is RetryableWriteException;
     }
 
     private sealed class DummyPersonalDataEncryptionService : IPersonalDataEncryptionService

@@ -31,6 +31,10 @@ public sealed class 음식운영정책
     [Column("기사기본지급액", TypeName = "decimal(18,2)")]
     public decimal 기사기본지급액 { get; set; } = 2500m;
 
+    // null은 기존 기본 지급액의 픽업/전달 배분이 미정임을 뜻한다. 총 기본 지급액은 바꾸지 않는다.
+    [Column("기사픽업지급액", TypeName = "decimal(18,2)")]
+    public decimal? 기사픽업지급액 { get; set; }
+
     [Column("기사거리단위지급액", TypeName = "decimal(18,2)")]
     public decimal 기사거리단위지급액 { get; set; } = 90m;
 

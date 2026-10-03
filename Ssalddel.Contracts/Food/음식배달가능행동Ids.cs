@@ -12,6 +12,7 @@ public static class 음식배달가능행동Ids
     public const string 기사제안수락 = "FoodDelivery.AcceptOffer";
     public const string 기사제안거절 = "FoodDelivery.RejectOffer";
     public const string 기사가게도착 = "FoodDelivery.RecordRestaurantArrival";
+    public const string 기사배달중단 = "FoodDelivery.InterruptDelivery";
     public const string 기사픽업확인 = "FoodDelivery.ConfirmPickup";
     public const string 기사전달완료 = "FoodDelivery.CompleteDelivery";
 }

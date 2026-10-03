@@ -1,4 +1,7 @@
 using Ssalddel.Contracts.Common.Drivers;
+using Ssalddel.Contracts.Common.Dispatch;
+using Ssalddel.Tests.Services.Dispatch.Common;
+using 살뜰.Services.Dispatch.Common;
 using Ssalddel.Contracts.Food;
 using Microsoft.Extensions.Options;
 using Ssalddel.Services.Food;
@@ -14,6 +17,30 @@ namespace Ssalddel.Tests.Services.Dispatch.Queue;
 
 public sealed class 음식배달배차업무정책Tests
 {
+    [Fact]
+    public async Task 운행과최신위치가있어도_OFF기사는제외하고_ON기사만후보로선정한다()
+    {
+        var now = DateTime.UtcNow;
+        var receiving = new TestDispatchAvailability(운영배차수신의사Code.Off);
+        await receiving.기사의사변경Async("receiving-driver", new() { 수신의사Code = 운영배차수신의사Code.On });
+        var state = new FakeDriverStateStore([
+            Snapshot("off-driver", 기사앱식별자.FoodDeliveryDriverApp, 37.5001m, 127m, now, 100m),
+            Snapshot("receiving-driver", 기사앱식별자.FoodDeliveryDriverApp, 37.502m, 127m, now, 0m)]);
+        var spaces = await CreateFoodSpaceStoreAsync(("off-driver", 37.5001m, 127m), ("receiving-driver", 37.502m, 127m));
+        var policy = CreatePolicy(state, new FakeRejectedRequestStore(), spaces, receiving: receiving);
+        Assert.Equal("receiving-driver", (await policy.다음후보선정Async(Queue()))?.DriverId);
+        await receiving.기사의사변경Async("receiving-driver", new() { 수신의사Code = 운영배차수신의사Code.Off });
+        Assert.Null(await policy.다음후보선정Async(Queue()));
+    }
+
+    [Fact]
+    public async Task 수신조회실패를_ON으로간주해후보를추천하지않는다()
+    {
+        var state = new FakeDriverStateStore([Snapshot("driver", 기사앱식별자.FoodDeliveryDriverApp, 37.501m, 127m, DateTime.UtcNow, 0)]);
+        var spaces = await CreateFoodSpaceStoreAsync(("driver", 37.501m, 127m));
+        var policy = CreatePolicy(state, new FakeRejectedRequestStore(), spaces, receiving: new TestDispatchAvailability { Unavailable = true });
+        await Assert.ThrowsAsync<InvalidOperationException>(() => policy.다음후보선정Async(Queue()));
+    }
     [Fact]
     public async Task F드라이버_운행중_최신위치_후보만_선정한다()
     {
@@ -238,7 +265,8 @@ public sealed class 음식배달배차업무정책Tests
         I국내화물운송기사상태Store store,
         IDriverRejectedRequestStore rejected,
         I음식배달권실행공간Store? foodSpaceStore = null,
-        ISsalddelFoodOrderStore? foodOrderStore = null)
+        ISsalddelFoodOrderStore? foodOrderStore = null,
+        I운영배차공통UseCase? receiving = null)
     {
         var options = new 배차큐정책Options
         {
@@ -255,7 +283,8 @@ public sealed class 음식배달배차업무정책Tests
             new StraightLineRouteService(),
             foodSpaceStore ?? new InMemory음식배달권실행공간Store(),
             foodOrderStore ?? new FakeFoodOrderStore(),
-            Options.Create(options));
+            Options.Create(options),
+            receiving ?? new TestDispatchAvailability());
     }
 
     private static 운송원장 Queue()

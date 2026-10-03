@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Options;
 using Ssalddel.Contracts.Common.Drivers;
+using Ssalddel.Contracts.Common.Dispatch;
+using 살뜰.Services.Dispatch.Common;
 using Ssalddel.Services.Food;
 using 살뜰.Services.Dispatch.Coordination;
 using 살뜰.Services.Dispatch.Recommendation;
@@ -17,6 +19,7 @@ public sealed class 음식배달배차업무정책 : I배차업무정책
     private readonly I음식배달권실행공간Store _음식배달권실행공간Store;
     private readonly ISsalddelFoodOrderStore _음식주문Store;
     private readonly 배차큐정책Options _options;
+    private readonly I운영배차공통UseCase _수신의사;
 
     public 음식배달배차업무정책(
         I국내화물운송기사상태Store 기사상태Store,
@@ -24,7 +27,8 @@ public sealed class 음식배달배차업무정책 : I배차업무정책
         I배차추천경로Service 경로Service,
         I음식배달권실행공간Store 음식배달권실행공간Store,
         ISsalddelFoodOrderStore 음식주문Store,
-        IOptions<배차큐정책Options> options)
+        IOptions<배차큐정책Options> options,
+        I운영배차공통UseCase 수신의사)
     {
         _기사상태Store = 기사상태Store;
         _거절Store = 거절Store;
@@ -32,6 +36,7 @@ public sealed class 음식배달배차업무정책 : I배차업무정책
         _음식배달권실행공간Store = 음식배달권실행공간Store;
         _음식주문Store = 음식주문Store;
         _options = options.Value;
+        _수신의사 = 수신의사;
     }
 
     public int 배차업무유형 => 상태값.배차업무유형.음식배달;
@@ -164,8 +169,16 @@ public sealed class 음식배달배차업무정책 : I배차업무정책
 
         var states = await Task.WhenAll(
             uniqueIds.Select(id => _기사상태Store.GetAsync(id, cancellationToken)));
+        var receiving = new List<국내화물운송기사상태Snapshot>();
+        // 공통 원장은 같은 scoped DbContext를 사용하므로 병렬 조회하지 않는다.
+        foreach (var state in states.Where(state => state is not null))
+        {
+            var availability = await _수신의사.수신상태조회Async(state!.DriverId, cancellationToken);
+            if (살뜰.도메인.배차.운영배차수신상태Policy.신규배차수신허용(availability))
+                receiving.Add(state);
+        }
         return 평가(
-            states.Where(state => state is not null).Select(state => state!).ToArray(),
+            receiving,
             null,
             pickup,
             rejectedDriverIds,

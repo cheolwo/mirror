@@ -94,6 +94,7 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
     private readonly IPublisher _publisher;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly ILogger<음식배달기사업무Service> _logger;
+    private readonly I운영배차공통UseCase _수신의사;
 
     public 음식배달기사업무Service(
         SsalddelContext db,
@@ -108,7 +109,8 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         I기사월정산Service settlementService,
         IPublisher publisher,
         ICurrentUserAccessor currentUserAccessor,
-        ILogger<음식배달기사업무Service> logger)
+        ILogger<음식배달기사업무Service> logger,
+        I운영배차공통UseCase 수신의사)
     {
         _db = db;
         _locationStore = locationStore;
@@ -123,6 +125,7 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         _publisher = publisher;
         _currentUserAccessor = currentUserAccessor;
         _logger = logger;
+        _수신의사 = 수신의사;
     }
 
     public async Task<IReadOnlyList<DriverWorkOfferDto>> 제안조회Async(
@@ -135,11 +138,13 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         }
 
         var now = DateTime.UtcNow;
+        var receiving = 살뜰.도메인.배차.운영배차수신상태Policy.신규배차수신허용(
+            await _수신의사.수신상태조회Async(driverId, cancellationToken));
         var queues = await _db.운송원장
             .AsNoTracking()
             .Where(x => x.배차업무유형 == 상태값.배차업무유형.음식배달
                         && x.상태 != 상태값.배차상태.인수완료
-                        && ((x.상태 == 상태값.배차대기상태.대기
+                        && ((receiving && x.상태 == 상태값.배차대기상태.대기
                              && x.배차큐단계 == 상태값.배차큐단계.배차추천
                              && x.배차노출상태 == 상태값.배차노출상태.추천중
                              && x.현재추천대상기사Id == driverId
@@ -233,6 +238,14 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
                 await using var transaction = await _db.Database.BeginTransactionAsync(
                     IsolationLevel.Serializable,
                     cancellationToken);
+                if (!살뜰.도메인.배차.운영배차수신상태Policy.신규배차수신허용(
+                        await _수신의사.수신상태조회Async(driverId, cancellationToken)))
+                {
+                    return Result.Fail<List<FoodDeliveryAssignment>>(new Error(
+                        "신규 배차 수신 또는 서버의 배차 조건을 확인해 주세요. 현재 수행 중인 배달은 유지됩니다.")
+                        .WithMetadata("StatusCode", StatusCodes.Status409Conflict)
+                        .WithMetadata("ErrorCode", "FoodDelivery.DispatchReceivingOff"));
+                }
                 var currentActiveDeliveries = await _db.운송원장
                     .CountAsync(x => x.배차업무유형 == 상태값.배차업무유형.음식배달
                                      && x.상태 != 상태값.배차상태.인수완료
@@ -525,17 +538,24 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
             var loaded = await LoadForActionAsync(offerId, cancellationToken);
             if (loaded is null) return Result.Fail<FoodDeliveryStateChange>("음식 배달 업무를 찾을 수 없습니다.");
             var (queue, order) = loaded.Value;
+            // 중단 후 큐의 확정기사는 해제된다. 원래 기사·제안·요청에 결속된 완료 시도만 재전송한다.
+            var completedAttempt = await _db.음식배달시도.FirstOrDefaultAsync(x =>
+                x.기사Id == driverId && x.제안Id == offerId && x.주문번호 == order.주문번호
+                && x.마지막요청Id == request.클라이언트요청Id && x.중단시각Utc.HasValue, cancellationToken);
+            if (completedAttempt is not null)
+            {
+                var memo = string.IsNullOrWhiteSpace(request.메모) ? null : request.메모.Trim();
+                if (completedAttempt.중단사유Code != reasonCode || completedAttempt.중단메모 != memo)
+                    return Result.Fail<FoodDeliveryStateChange>("같은 요청 ID에 다른 배달 중단 내용이 있습니다.");
+                await transaction.RollbackAsync(cancellationToken);
+                return Result.Ok(new FoodDeliveryStateChange(queue, order.주문번호,
+                    Response(offerId, order.주문번호, "Interrupted", "이미 배달 중단이 처리됐습니다.", attempt: completedAttempt), false));
+            }
             if (!string.Equals(queue.확정기사Id, driverId, StringComparison.Ordinal))
                 return Result.Fail<FoodDeliveryStateChange>("확정된 배달 기사만 중단을 요청할 수 있습니다.");
 
             var now = DateTime.UtcNow;
             var attempt = await 현재시도조회또는추정Async(queue, order, driverId, cancellationToken);
-            if (attempt.마지막요청Id == request.클라이언트요청Id && attempt.중단시각Utc.HasValue)
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                return Result.Ok(new FoodDeliveryStateChange(queue, order.주문번호,
-                    Response(offerId, order.주문번호, "Interrupted", "이미 배달 중단이 처리됐습니다.", attempt: attempt), false));
-            }
             if (request.예상시도Revision.HasValue && request.예상시도Revision.Value != attempt.Revision)
                 return Result.Fail<FoodDeliveryStateChange>("배달 시도가 다른 요청에서 먼저 변경됐습니다.");
             if (attempt.중단시각Utc.HasValue || attempt.전달완료시각Utc.HasValue)
@@ -750,6 +770,8 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
                     queue.추천라운드,
                     changedAtUtc,
                     attempt.시도StableId));
+                await Ssalddel.Application.Food.음식주문기사정산Recorder.완료기록Async(
+                    _db, order, queue, attempt, cancellationToken);
             }
 
             var saveResult = await SaveTransactionAsync(transaction, cancellationToken);

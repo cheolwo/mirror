@@ -172,6 +172,8 @@ namespace 살뜰.Data
         public DbSet<음식배달완료WorldSnapshot> 음식배달완료WorldSnapshot { get; set; } = null!;
         public DbSet<음식점조리시간설정> 음식점조리시간설정 { get; set; } = null!;
         public DbSet<음식배달시도> 음식배달시도 { get; set; } = null!;
+        public DbSet<음식주문기사정산> 음식주문기사정산 { get; set; } = null!;
+        public DbSet<음식주문기사지급검증> 음식주문기사지급검증 { get; set; } = null!;
         public DbSet<음식점리뷰> 음식점리뷰 { get; set; } = null!;
         public DbSet<음식운영정책> 음식운영정책 { get; set; } = null!;
         public DbSet<마트공개상품> 마트공개상품 { get; set; } = null!;

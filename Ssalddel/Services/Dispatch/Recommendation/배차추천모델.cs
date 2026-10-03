@@ -9,7 +9,7 @@ namespace 살뜰.Services.Dispatch.Recommendation
         TimeSpan? Duration,
         decimal? TollFare,
         string 계산방식 = "좌표근사",
-        bool 실제경로여부 = false);
+        bool 실제경로여부 = false) { public string? RouteOption { get; init; } }
 
     public sealed record 배차삽입경로예상결과(
         decimal? 기존경로거리Km,

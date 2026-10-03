@@ -138,6 +138,7 @@ public sealed class 음식운영관리UseCase(
         policy.거리단위요금 = request.DistanceUnitFee;
         policy.최소요금 = request.MinimumFee;
         policy.기사기본지급액 = request.DriverBasePayout;
+        policy.기사픽업지급액 = request.DriverPickupPayout;
         policy.기사거리단위지급액 = request.DriverDistanceUnitPayout;
         policy.기사최소지급액 = request.DriverMinimumPayout;
         policy.기사기상할증활성화여부 = request.DriverWeatherSurchargeEnabled;
@@ -256,6 +257,7 @@ public sealed class 음식운영관리UseCase(
             DistanceUnitFee = policy.거리단위요금,
             MinimumFee = policy.최소요금,
             DriverBasePayout = policy.기사기본지급액,
+            DriverPickupPayout = policy.기사픽업지급액,
             DriverDistanceUnitPayout = policy.기사거리단위지급액,
             DriverMinimumPayout = policy.기사최소지급액,
             DriverWeatherSurchargeEnabled = policy.기사기상할증활성화여부,
@@ -306,6 +308,8 @@ public sealed class 음식운영관리UseCase(
 
     private static string? ValidatePricing(음식배달요금정책응답 request)
     {
+        if (request.DriverPickupPayout is < 0m || request.DriverPickupPayout > request.DriverBasePayout)
+            return "픽업 지급액은 총 기본 지급액 안에서 배분해야 합니다.";
         if (request.IncludedDistanceMeters < 0 || request.DistanceUnitMeters <= 0)
         {
             return "포함 거리는 0 이상이고 거리 계산 단위는 1m 이상이어야 합니다.";

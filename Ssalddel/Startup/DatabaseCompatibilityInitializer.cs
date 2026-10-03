@@ -225,6 +225,7 @@ ON `음식마트원장동기화_Outbox` (`status`, `updated_at_utc`);";
             var columns = new (string Table, string Column, string Definition)[]
             {
                 ("음식운영정책", "기사기상할증활성화여부", "tinyint(1) NOT NULL DEFAULT 1"),
+                ("음식운영정책", "기사픽업지급액", "decimal(18,2) NULL"),
                 ("음식운영정책", "기사기상할증액", "decimal(18,2) NOT NULL DEFAULT 1000.00"),
                 ("음식운영정책", "기사기상할증정책판본", "varchar(100) NOT NULL DEFAULT 'food-weather-surcharge.r1'"),
                 ("음식운영정책", "기사한시수요할증액", "decimal(18,2) NOT NULL DEFAULT 0.00"),
@@ -246,6 +247,7 @@ ON `음식마트원장동기화_Outbox` (`status`, `updated_at_utc`);";
                 ("운송실행투영", "pickup_weather_source", "varchar(300) NULL"),
                 ("운송실행투영", "pickup_weather_payload_hash", "char(64) NULL"),
                 ("운송실행투영", "driver_offer_pricing_revision", "varchar(180) NULL"),
+                ("운송실행투영", "driver_offer_calculation_json", "longtext NULL"),
                 ("운송실행투영", "driver_offer_priced_at_utc", "datetime(6) NULL")
             };
 

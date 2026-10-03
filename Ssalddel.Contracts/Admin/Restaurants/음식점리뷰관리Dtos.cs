@@ -55,6 +55,7 @@ public sealed class 음식배달요금정책응답
     public decimal DistanceUnitFee { get; set; } = 120m;
     public decimal MinimumFee { get; set; } = 3000m;
     public decimal DriverBasePayout { get; set; } = 2500m;
+    public decimal? DriverPickupPayout { get; set; }
     public decimal DriverDistanceUnitPayout { get; set; } = 90m;
     public decimal DriverMinimumPayout { get; set; } = 2500m;
     public bool DriverWeatherSurchargeEnabled { get; set; } = true;

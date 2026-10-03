@@ -52,7 +52,8 @@ public sealed class 음식배달관찰검증Runner(
     {
         lock (_gate) return new("food-delivery-observer.r1", _runId, _revision, _status,
             _restoredElapsed + _clock.Elapsed.TotalSeconds, options.DurationSeconds, _orderNo, _orderStatus, _dispatchStatus,
-            _message, _actors.ToArray(), _events.ToArray(), _menuSelection);
+            _message, _actors.ToArray(), _events.ToArray(), _menuSelection,
+            검증표본기사제안요금Service.ConfiguredFixture);
     }
 
     public bool Start()
@@ -190,6 +191,13 @@ public sealed class 음식배달관찰검증Runner(
                 CheckIdentity(await users.AddClaimAsync(user, new Claim(음식점접근ClaimTypes.음식점Id, restaurant.Id.ToString())));
             if (actor.Role == "driver" && !await db.용달기사.AnyAsync(x => x.기사Id == id, ct))
                 db.용달기사.Add(new 용달기사 { 기사Id = id, 기사명 = actor.Name, 차량 = "검증 오토바이", 주_활동지역 = "서울특별시 중랑구 면목동" });
+            if (actor.Role == "driver" && !await db.Set<배달기사>().AnyAsync(x => x.기사Id == id, ct))
+                db.Set<배달기사>().Add(new 배달기사
+                {
+                    기사Id = id, 기사명 = actor.Name, 차량 = "오토바이", 상태 = "활동중",
+                    주_활동지역 = "서울특별시 중랑구 면목동",
+                    메모 = "격리 음식배달 관찰 Simulation 합성 기사 · 실제 기사 등록 아님"
+                });
         }
         await db.SaveChangesAsync(ct);
     }

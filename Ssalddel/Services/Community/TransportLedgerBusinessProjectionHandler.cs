@@ -1,3 +1,4 @@
+using System.Data;
 using System.Globalization;
 using Ssalddel.Contracts.Common.Community;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,12 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
         var snapshot = 운송원장업무투영Snapshot.생성(원장);
         if (snapshot is null)
         {
+            return;
+        }
+
+        if (snapshot.IsPersistedRdbSnapshot)
+        {
+            await 동기화Rdb관찰본Async(snapshot, cancellationToken);
             return;
         }
 
@@ -98,6 +105,48 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
         }
     }
 
+    private async Task 동기화Rdb관찰본Async(운송원장업무투영Snapshot snapshot, CancellationToken cancellationToken)
+    {
+        var attempt = 0;
+        await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            if (attempt++ > 0) _db.ChangeTracker.Clear();
+            await using var tx = _db.Database.IsRelational() && _db.Database.CurrentTransaction is null
+                ? await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
+                : null;
+            // Match business writers' transport -> request order. Delayed mirrors never
+            // reapply their business values after a newer price edit or approval.
+            var transport = await _db.운송원장.FirstOrDefaultAsync(
+                x => x.의뢰Id == snapshot.RequestId || x.운송번호 == snapshot.RequestId, cancellationToken);
+            if (transport is null)
+            {
+                var current = await _db.화주운송의뢰.AsNoTracking()
+                    .SingleOrDefaultAsync(x => x.의뢰Id == snapshot.RequestId, cancellationToken);
+                if (current is null) return; // A deleted mirror cannot recreate an old request.
+                var fresh = 운송원장Mongo동기화Builder.저장요청생성(current, null);
+                var freshSnapshot = 운송원장업무투영Snapshot.생성(new 커뮤니티원장Dto
+                {
+                    원장Id = snapshot.LedgerId,
+                    원장템플릿Key = snapshot.LedgerTemplateKey,
+                    상태 = fresh.상태 ?? 커뮤니티원장상태.초안,
+                    현재단계Key = fresh.현재단계Key,
+                    블록목록 = fresh.블록목록,
+                    참여자목록 = fresh.참여자목록,
+                    외부참조 = fresh.외부참조
+                });
+                if (freshSnapshot is null || !freshSnapshot.IsTransportRequestComplete
+                    || !freshSnapshot.CanCreateCoordinationTransport) return;
+                // Initialize missing coordination transport from the locked CURRENT request.
+                transport = CreateCoordinationTransport(freshSnapshot, DateTime.UtcNow);
+                ApplyTransportProjection(transport, freshSnapshot, isNew: true);
+                _db.운송원장.Add(transport);
+            }
+            ApplyCommunityReferences(transport, snapshot);
+            await _db.SaveChangesAsync(cancellationToken);
+            if (tx is not null) await tx.CommitAsync(cancellationToken);
+        });
+    }
+
     internal static 운송원장 CreateCoordinationTransport(
         운송원장업무투영Snapshot snapshot,
         DateTime nowUtc)
@@ -134,6 +183,7 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
         운송원장업무투영Snapshot snapshot,
         bool isNew)
     {
+        if (snapshot.IsPersistedRdbSnapshot) return ApplyCommunityReferences(entity, snapshot);
         var changed = false;
 
         changed |= SetString(entity.화주Id, snapshot.ShipperId, value => entity.화주Id = value);
@@ -174,10 +224,20 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
         return changed;
     }
 
+    private static bool ApplyCommunityReferences(운송원장 entity, 운송원장업무투영Snapshot snapshot)
+    {
+        SetString(entity.커뮤니티원장Id, snapshot.LedgerId, value => entity.커뮤니티원장Id = value);
+        SetString(entity.커뮤니티원장템플릿Key, snapshot.LedgerTemplateKey, value => entity.커뮤니티원장템플릿Key = value);
+        SetString(entity.커뮤니티원장상태, snapshot.LedgerState, value => entity.커뮤니티원장상태 = value);
+        entity.커뮤니티원장동기화시각Utc = DateTime.UtcNow;
+        return true;
+    }
+
     internal static bool ApplyShipperRequest(
         화주운송의뢰 entity,
         운송원장업무투영Snapshot snapshot)
     {
+        if (snapshot.IsPersistedRdbSnapshot) return false;
         var changed = false;
 
         changed |= SetString(entity.화주Id, snapshot.ShipperId, value => entity.화주Id = value);
@@ -308,6 +368,7 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
 
 public sealed class 운송원장업무투영Snapshot
 {
+    public bool IsPersistedRdbSnapshot { get; init; }
     public string LedgerId { get; init; } = string.Empty;
     public string LedgerTemplateKey { get; init; } = string.Empty;
     public string LedgerState { get; init; } = string.Empty;
@@ -446,6 +507,7 @@ public sealed class 운송원장업무투영Snapshot
             LedgerTemplateKey = Clean(원장.원장템플릿Key) ?? CommunityLedgerTemplateKeys.CargoTransport,
             LedgerState = Clean(원장.상태) ?? 커뮤니티원장상태.초안,
             RequestId = requestId,
+            IsPersistedRdbSnapshot = 운송원장RdbSnapshotMarker.Matches(원장, requestId),
             SourceType = FirstNonEmpty(
                 TryGet(원장.외부참조, "원천유형", "SourceType"),
                 TryGet(requestBlock?.Data, "원천유형", "SourceType"),
