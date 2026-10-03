@@ -100,6 +100,7 @@ public static class 음식주문기사정산Recorder
             DeductionAmount = item.공제액,
             NetAmount = item.수령액,
             PricingPolicyRevision = item.요금정책판본,
+            PricingBreakdown = 저장요금구성조회(item),
             SettlementStatusCode = item.정산상태Code,
             PayoutStatusCode = item.지급상태Code,
             HoldReason = item.보류사유,
@@ -131,6 +132,104 @@ public static class 음식주문기사정산Recorder
 
     public static string StableId(string prefix, string value)
         => $"{prefix}:{Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant()}";
+
+    /// <summary>개인 ID·원본 JSON을 보내지 않고, 저장된 원액과 일치하는 요금 필드만 조회합니다.</summary>
+    private static FoodDeliverySettlementPricingBreakdownDto 저장요금구성조회(음식주문기사정산 item)
+    {
+        FoodDeliverySettlementPricingBreakdownDto Missing(string status) => new()
+        {
+            EvidenceStatusCode = status,
+            PricingPolicyRevision = item.요금정책판본
+        };
+        if (string.IsNullOrWhiteSpace(item.요금계산근거Json) || item.세전대금 is not > 0)
+            return Missing("MissingEvidence");
+        try
+        {
+            using var document = JsonDocument.Parse(item.요금계산근거Json);
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object
+                || !root.TryGetProperty("요금", out var pricing) || pricing.ValueKind != JsonValueKind.Object
+                || Text(root, "정책판본") != item.요금정책판본
+                || string.IsNullOrWhiteSpace(item.요금정책판본)
+                || Amount(pricing, "기사지급예정액") != item.세전대금
+                || (root.TryGetProperty("기사Id", out var driver) && driver.ValueKind != JsonValueKind.Null
+                    && (driver.ValueKind != JsonValueKind.String || driver.GetString() != item.기사Id)))
+                return Missing("InvalidEvidence");
+            var baseAndDistance = Amount(pricing, "기본거리지급액");
+            var weather = Amount(pricing, "기상할증액");
+            var demand = Amount(pricing, "한시수요할증액");
+            var time = Amount(pricing, "시간대할증액");
+            if (!baseAndDistance.HasValue || !weather.HasValue || !demand.HasValue || !time.HasValue)
+                return Missing("MissingComponents");
+            if (baseAndDistance + weather + demand + time != item.세전대금)
+                return Missing("InvalidEvidence");
+
+            DateTime? frozenAt = null;
+            if (root.TryGetProperty("판정시각Utc", out var at))
+            {
+                if (at.ValueKind != JsonValueKind.String || !at.TryGetDateTime(out var date)
+                    || date.Kind == DateTimeKind.Unspecified || !at.TryGetDateTimeOffset(out var offset))
+                    return Missing("InvalidEvidence");
+                frozenAt = offset.UtcDateTime;
+            }
+            var result = new FoodDeliverySettlementPricingBreakdownDto
+            {
+                EvidenceStatusCode = "MissingComponents",
+                PricingPolicyRevision = item.요금정책판본,
+                FrozenAtUtc = frozenAt,
+                BaseAndDistanceAmount = baseAndDistance,
+                TimeSurchargeAmount = time,
+                WeatherSurchargeAmount = weather,
+                DemandSurchargeAmount = demand,
+                DistanceKm = Amount(root, "산정거리Km"),
+                DistanceBasisCode = Text(root, "거리근거Code") is { Length: > 0 } basis ? basis : "Unknown",
+                RouteVehicleCode = Text(root, "경로차량Code") is { Length: > 0 } vehicle ? vehicle : "Unknown",
+                RouteOptionCode = Text(root, "경로옵션Code"),
+                TimeBandCode = Text(root, "시간대Code")
+            };
+            if (!pricing.TryGetProperty("기본요금구성", out var components) || components.ValueKind == JsonValueKind.Null)
+                return result;
+            if (components.ValueKind != JsonValueKind.Object) return Missing("InvalidEvidence");
+            var pickup = Amount(components, "PickupFeeKrw");
+            var dropoff = Amount(components, "DropoffFeeKrw");
+            var distance = Amount(components, "DistanceFeeKrw");
+            var minimum = Amount(components, "MinimumAdjustmentKrw");
+            var componentDistance = Amount(components, "DistanceKm");
+            if (!pickup.HasValue || !dropoff.HasValue || !distance.HasValue || !minimum.HasValue
+                || pickup + dropoff + distance + minimum != baseAndDistance
+                || Amount(components, "GrossPayoutKrw") != baseAndDistance
+                || Amount(components, "TimeSurchargeKrw") != 0m
+                || Amount(components, "StorePromotionKrw") != 0m
+                || Amount(components, "RegionSurchargeKrw") != 0m
+                || (result.DistanceKm.HasValue && componentDistance != result.DistanceKm))
+                return Missing("InvalidEvidence");
+            result.BaseSplitCode = Text(pricing, "기본지급구분Code") is { Length: > 0 } split ? split : "Unknown";
+            result.BaseAmount = pickup + dropoff;
+            result.DistanceAmount = distance;
+            result.MinimumAdjustmentAmount = minimum;
+            if (result.BaseSplitCode == "PickupDropoffSplit")
+            {
+                result.PickupAmount = pickup;
+                result.DropoffAmount = dropoff;
+                result.EvidenceStatusCode = "VerifiedComponents";
+            }
+            else
+            {
+                // LegacyUnsplit의 DropoffFeeKrw는 과거 기본액 전체입니다. 전달비로 노출하지 않습니다.
+                result.EvidenceStatusCode = result.BaseSplitCode == "LegacyUnsplit" ? "LegacyUnsplit" : "UnclassifiedBaseSplit";
+            }
+            return result;
+        }
+        catch (JsonException) { return Missing("InvalidEvidence"); }
+        catch (OverflowException) { return Missing("InvalidEvidence"); }
+
+        static decimal? Amount(JsonElement element, string name)
+            => element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Number
+               && value.TryGetDecimal(out var amount) && amount >= 0m ? amount : null;
+        static string Text(JsonElement element, string name)
+            => element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
+                ? value.GetString() ?? string.Empty : string.Empty;
+    }
 
     private static bool HasFrozenEvidence(운송원장 queue)
     {

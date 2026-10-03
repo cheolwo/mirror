@@ -53,6 +53,34 @@ public sealed class 음식배달기사업무Controller : DriverControllerBase
     public async Task<IActionResult> 업무공간조회(CancellationToken cancellationToken)
         => Ok(await _업무공간UseCase.GetAsync(CurrentDriverId(), cancellationToken));
 
+    [HttpGet("settlements/daily")]
+    [SsalddelApiContractName("GetDailySettlement")]
+    [SsalddelApiOperation(SsalddelOperation.Browse)]
+    public async Task<IActionResult> 당일정산조회(
+        [FromQuery] string? date,
+        CancellationToken cancellationToken)
+    {
+        DateOnly? completionDate = null;
+        if (!string.IsNullOrWhiteSpace(date))
+        {
+            if (!DateOnly.TryParseExact(date, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, out var parsed))
+                return BadRequest(new { code = "FoodDelivery.InvalidSettlementDate", message = "날짜는 yyyy-MM-dd 형식으로 입력해 주세요." });
+            completionDate = parsed;
+        }
+        // 요청에 기사 ID를 받지 않습니다. 현재 인증된 기사 본인 원장만 조회합니다.
+        var driverId = CurrentUserId;
+        if (string.IsNullOrWhiteSpace(driverId)) return Unauthorized();
+        try
+        {
+            return Ok(await _업무공간UseCase.GetDailySettlementAsync(driverId, completionDate, cancellationToken));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { code = "FoodDelivery.InvalidSettlementDate", message = ex.Message });
+        }
+    }
+
     [HttpGet("work/status")]
     [SsalddelApiContractName("GetWorkStatus")]
     public async Task<IActionResult> 운행상태조회(CancellationToken cancellationToken)

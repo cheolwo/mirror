@@ -1,5 +1,6 @@
 using Ssalddel.Contracts.Common.Drivers;
 using Ssalddel.Contracts.Driver.Food;
+using Ssalddel.Contracts.Food;
 using Ssalddel.Application.Food;
 using Microsoft.EntityFrameworkCore;
 using 살뜰.Data;
@@ -14,9 +15,11 @@ namespace Ssalddel.Application.Driver.Food;
 public interface IFoodDeliveryDriverWorkspaceUseCase
 {
     Task<FoodDeliveryDriverWorkspaceDto> GetAsync(string driverId, CancellationToken cancellationToken);
+    Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync(
+        string driverId, DateOnly? completionDateKst, CancellationToken cancellationToken);
 }
 
-public sealed class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDriverWorkspaceUseCase
+public sealed partial class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDriverWorkspaceUseCase
 {
     private const decimal MaxPickupSeparationKm = 1.5m;
     private const decimal MaxDropoffSeparationKm = 3m;
@@ -28,19 +31,22 @@ public sealed class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDriverWork
     private readonly I배달기사월정산UseCase _settlements;
     private readonly ISsalddelExecutionModePolicy _executionMode;
     private readonly IVersionFeatureFlagService _featureFlags;
+    private readonly TimeProvider _timeProvider;
 
     public FoodDeliveryDriverWorkspaceUseCase(
         SsalddelContext db,
         I음식배달기사업무Service driverWork,
         I배달기사월정산UseCase settlements,
         ISsalddelExecutionModePolicy executionMode,
-        IVersionFeatureFlagService featureFlags)
+        IVersionFeatureFlagService featureFlags,
+        TimeProvider? timeProvider = null)
     {
         _db = db;
         _driverWork = driverWork;
         _settlements = settlements;
         _executionMode = executionMode;
         _featureFlags = featureFlags;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public async Task<FoodDeliveryDriverWorkspaceDto> GetAsync(

@@ -13,6 +13,8 @@ public sealed class FoodDeliveryOrderSettlementDto
     public decimal? NetAmount { get; set; }
     public string CurrencyCode { get; set; } = "KRW";
     public string PricingPolicyRevision { get; set; } = string.Empty;
+    /// <summary>수락 때 저장된 요금 근거의 구성입니다. 현재 정책으로 다시 계산하지 않습니다.</summary>
+    public FoodDeliverySettlementPricingBreakdownDto PricingBreakdown { get; set; } = new();
     public string SettlementStatusCode { get; set; } = string.Empty;
     public string PayoutStatusCode { get; set; } = "NotRequested";
     public string HoldReason { get; set; } = string.Empty;
@@ -30,6 +32,30 @@ public sealed class FoodDeliveryOrderSettlementDto
     public bool IsIdempotentReplay { get; set; }
     public long Revision { get; set; }
     public IReadOnlyList<FoodDeliverySimulatedPaymentDto> SimulationPayments { get; set; } = [];
+}
+
+/// <summary>누락 또는 미분류 구성은 null이며, LegacyUnsplit 기본액을 전달비로 해석하지 않습니다.</summary>
+public sealed class FoodDeliverySettlementPricingBreakdownDto
+{
+    public string EvidenceStatusCode { get; set; } = "MissingEvidence";
+    public string EvidenceScopeCode { get; set; } = "StoredAcceptedOffer";
+    public string BaseSplitCode { get; set; } = "Unknown";
+    public string PricingPolicyRevision { get; set; } = string.Empty;
+    public DateTime? FrozenAtUtc { get; set; }
+    public decimal? BaseAndDistanceAmount { get; set; }
+    public decimal? BaseAmount { get; set; }
+    public decimal? PickupAmount { get; set; }
+    public decimal? DropoffAmount { get; set; }
+    public decimal? DistanceAmount { get; set; }
+    public decimal? MinimumAdjustmentAmount { get; set; }
+    public decimal? TimeSurchargeAmount { get; set; }
+    public decimal? WeatherSurchargeAmount { get; set; }
+    public decimal? DemandSurchargeAmount { get; set; }
+    public decimal? DistanceKm { get; set; }
+    public string DistanceBasisCode { get; set; } = "Unknown";
+    public string RouteVehicleCode { get; set; } = "Unknown";
+    public string RouteOptionCode { get; set; } = string.Empty;
+    public string TimeBandCode { get; set; } = string.Empty;
 }
 
 public sealed class FoodDeliverySimulatedPaymentDto
