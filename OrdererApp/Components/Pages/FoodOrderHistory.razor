@@ -1,35 +1,72 @@
 @page "/orders/food"
+@implements IDisposable
 @inject NavigationManager Navigation
 
-<PageTitle>음식 주문 내역</PageTitle>
+<PageTitle>@(_authenticationMode ? "주문자 로그인" : "음식 주문 내역")</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.False" Class="py-4">
+<MudContainer MaxWidth="MaxWidth.False" Class="py-4 food-order-history">
     <MudStack Spacing="3">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-            <MudStack Spacing="0">
+        @if (!_authenticationMode)
+        {
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Style="flex-wrap: wrap;">
+            <MudStack Spacing="0" Style="flex: 1 1 240px; min-width: 0;">
                 <MudText Typo="Typo.h4">음식 주문 내역</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    로그인한 계정의 실제 음식 주문 목록과 선택한 정확한 주문 상세를 확인합니다.
+                    주문과 배달 진행을 확인하세요.
                 </MudText>
             </MudStack>
             <MudButton Href="@OrdererRoutes.Food"
                        Variant="Variant.Outlined"
+                       Style="white-space: nowrap; min-width: 104px; flex: 0 0 auto; align-self: flex-start;"
                        StartIcon="@Icons.Material.Filled.ArrowBack">
-                음식 주문
+                주문하기
             </MudButton>
         </MudStack>
+        }
 
         <OrdererFoodOrderWorkspace OrderNo="@OrderNo"
+                                   AuthenticationModeChanged="OnAuthenticationModeChanged"
                                    OrderSelected="OnOrderSelectedAsync" />
     </MudStack>
 </MudContainer>
 
 @code {
+    private bool _authenticationMode = true;
+    private bool _disposed;
+    private OrdererPageDisplayContext.PageLease? _displayLease;
+
+    [CascadingParameter]
+    public OrdererPageDisplayContext? DisplayContext { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (_disposed || DisplayContext is null) return;
+        if (_displayLease?.IsFor(Navigation.Uri) != true)
+        {
+            _displayLease?.Dispose();
+            _displayLease = DisplayContext.Acquire(_authenticationMode, Navigation.Uri);
+        }
+    }
+
+    private void OnAuthenticationModeChanged(bool mode)
+    {
+        if (_disposed || _displayLease is { IsCurrent: false }) return;
+        _authenticationMode = mode;
+        _displayLease?.SetAuthenticationMode(mode);
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        _displayLease?.Dispose();
+    }
+
     [SupplyParameterFromQuery(Name = "orderNo")]
     public string? OrderNo { get; set; }
 
     private Task OnOrderSelectedAsync(string? orderNo)
     {
+        if (_disposed || _displayLease is { IsCurrent: false }) return Task.CompletedTask;
         var target = string.IsNullOrWhiteSpace(orderNo)
             ? "/orders/food"
             : $"/orders/food?orderNo={Uri.EscapeDataString(orderNo.Trim())}";

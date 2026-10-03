@@ -42,6 +42,11 @@ public sealed class FDriverAuthApiService
     public async Task<string?> EnsureAccessTokenAsync(
         bool forceRefresh = false,
         CancellationToken cancellationToken = default)
+        => (await EnsureAccessTokenResultAsync(forceRefresh, cancellationToken)).ErrorMessage;
+
+    public async Task<FDriverTokenRequestResult> EnsureAccessTokenResultAsync(
+        bool forceRefresh = false,
+        CancellationToken cancellationToken = default)
     {
         await _refreshGate.WaitAsync(cancellationToken);
         try
@@ -49,14 +54,15 @@ public sealed class FDriverAuthApiService
             var state = await _session.RestoreAsync(cancellationToken);
             if (!forceRefresh && state == ClientAuthSessionRestoreState.Authenticated)
             {
-                return null;
+                return FDriverTokenRequestResult.Success;
             }
 
             if (string.IsNullOrWhiteSpace(_session.UserId)
                 || string.IsNullOrWhiteSpace(_session.RefreshToken)
                 || _session.RefreshTokenExpiresAtUtc <= DateTime.UtcNow)
             {
-                return "로그인 세션이 만료되었습니다. 다시 로그인해 주세요.";
+                return new FDriverTokenRequestResult(false,
+                    "로그인 세션이 만료되었습니다. 다시 로그인해 주세요.", HttpStatusCode.Unauthorized);
             }
 
             var result = await SendTokenRequestAsync(
@@ -66,15 +72,24 @@ public sealed class FDriverAuthApiService
                     UserId = _session.UserId,
                     RefreshToken = _session.RefreshToken
                 },
-                "로그인 세션을 갱신하지 못했습니다. 다시 로그인해 주세요.",
+                "로그인 세션을 갱신하지 못했습니다. 다시 시도해 주세요.",
                 cancellationToken);
             if (!result.IsSuccess
                 && result.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized)
             {
-                await _session.ClearAsync(cancellationToken);
+                try
+                {
+                    await _session.ClearAsync(cancellationToken);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException
+                    && _session.CurrentState == ClientAuthSessionRestoreState.Anonymous)
+                {
+                    // SecureStorage removal must not hide a server rejection after memory was cleared.
+                }
+                return result with { StatusCode = HttpStatusCode.Unauthorized };
             }
 
-            return result.ErrorMessage;
+            return result;
         }
         finally
         {
@@ -91,12 +106,14 @@ public sealed class FDriverAuthApiService
         try
         {
             using var response = await _httpClient.PostAsJsonAsync(path, request, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             if (!response.IsSuccessStatusCode)
             {
                 return new FDriverTokenRequestResult(false, failureMessage, response.StatusCode);
             }
 
             var token = await response.Content.ReadFromJsonAsync<토큰응답>(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             if (token is null || string.IsNullOrWhiteSpace(token.AccessToken))
             {
                 return new FDriverTokenRequestResult(false, "서버 인증 응답을 읽을 수 없습니다.");
@@ -124,11 +141,12 @@ public sealed class FDriverAuthApiService
         }
     }
 
-    private sealed record FDriverTokenRequestResult(
-        bool IsSuccess,
-        string? ErrorMessage = null,
-        HttpStatusCode? StatusCode = null)
-    {
-        public static FDriverTokenRequestResult Success { get; } = new(true);
-    }
+}
+
+public sealed record FDriverTokenRequestResult(
+    bool IsSuccess,
+    string? ErrorMessage = null,
+    HttpStatusCode? StatusCode = null)
+{
+    public static FDriverTokenRequestResult Success { get; } = new(true);
 }

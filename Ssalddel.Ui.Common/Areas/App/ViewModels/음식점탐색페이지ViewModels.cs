@@ -252,6 +252,8 @@ public sealed partial class 음식주문작성ViewModel(
 {
     private readonly Dictionary<long, int> _수량목록 = [];
     private 음식점공개상세응답? _음식점;
+    private CancellationTokenSource? _등록취소;
+    private bool _등록진행;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(제출가능))]
@@ -283,6 +285,10 @@ public sealed partial class 음식주문작성ViewModel(
     [ObservableProperty]
     public partial 음식주문응답? 등록응답 { get; private set; }
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(제출가능))]
+    public partial bool 재로그인필요 { get; private set; }
+
     public IReadOnlyList<음식주문선택항목ViewModel> 선택항목목록
         => _음식점?.메뉴목록
                .Where(menu => _수량목록.GetValueOrDefault(menu.Id) > 0)
@@ -305,6 +311,8 @@ public sealed partial class 음식주문작성ViewModel(
            && !string.IsNullOrWhiteSpace(수령인명)
            && !string.IsNullOrWhiteSpace(연락처)
            && !string.IsNullOrWhiteSpace(주소)
+           && !재로그인필요
+           && !_등록진행
            && !처리중;
 
     public int 메뉴수량(long menuId) => _수량목록.GetValueOrDefault(menuId);
@@ -330,7 +338,13 @@ public sealed partial class 음식주문작성ViewModel(
             return;
         }
 
-        var next = Math.Clamp(_수량목록.GetValueOrDefault(menuId) + delta, 0, 100);
+        var current = _수량목록.GetValueOrDefault(menuId);
+        var next = Math.Clamp(current + delta, 0, 100);
+        if (next == current)
+        {
+            return;
+        }
+
         if (next == 0)
         {
             _수량목록.Remove(menuId);
@@ -340,74 +354,117 @@ public sealed partial class 음식주문작성ViewModel(
             _수량목록[menuId] = next;
         }
 
-        클라이언트요청Id = Guid.NewGuid();
-        등록응답 = null;
-        작업상태초기화();
+        요청내용변경됨();
         NotifyOrderChanged();
     }
 
-    public Task<bool> 등록Async(CancellationToken cancellationToken = default)
+    public async Task<bool> 등록Async(CancellationToken cancellationToken = default)
     {
+        if (_등록진행 || 처리중 || 재로그인필요 || cancellationToken.IsCancellationRequested)
+        {
+            return false;
+        }
+
         if (_음식점 is null || _음식점.음식점.Id <= 0)
         {
-            return Task.FromResult(유효성실패("주문할 음식점을 다시 선택해 주세요."));
+            return 유효성실패("주문할 음식점을 다시 선택해 주세요.");
         }
 
         if (!메뉴선택됨)
         {
-            return Task.FromResult(유효성실패("주문할 메뉴를 한 개 이상 선택해 주세요."));
+            return 유효성실패("주문할 메뉴를 한 개 이상 선택해 주세요.");
         }
 
         if (!최소주문충족)
         {
-            return Task.FromResult(유효성실패(
-                $"최소 주문 금액 {최소주문금액:N0}원을 충족해 주세요."));
+            return 유효성실패($"최소 주문 금액 {최소주문금액:N0}원을 충족해 주세요.");
         }
 
         if (string.IsNullOrWhiteSpace(수령인명)
             || string.IsNullOrWhiteSpace(연락처)
             || string.IsNullOrWhiteSpace(주소))
         {
-            return Task.FromResult(유효성실패("수령인 이름, 연락처와 주소를 입력해 주세요."));
+            return 유효성실패("수령인 이름, 연락처와 주소를 입력해 주세요.");
         }
 
-        return 작업실행Async(
-            async token =>
+        var requestId = 클라이언트요청Id;
+        var request = new 음식주문등록요청
+        {
+            클라이언트요청Id = requestId,
+            음식점Id = _음식점.음식점.Id,
+            주문자UserId = string.Empty,
+            수령인정보 = new()
             {
-                등록응답 = await service.등록Async(new 음식주문등록요청
-                {
-                    클라이언트요청Id = 클라이언트요청Id,
-                    음식점Id = _음식점.음식점.Id,
-                    주문자UserId = string.Empty,
-                    수령인정보 = new()
-                    {
-                        수령인명 = 수령인명.Trim(),
-                        연락처 = 연락처.Trim(),
-                        주소 = 주소.Trim(),
-                        상세주소 = 상세주소.Trim(),
-                        요청사항 = 요청사항.Trim(),
-                        주문자본인수령여부 = 주문자본인수령여부
-                    },
-                    상품목록 = 선택항목목록.Select(item => new 음식주문상품Dto
-                    {
-                        메뉴Id = item.메뉴Id,
-                        상품명 = item.메뉴명,
-                        수량 = item.수량,
-                        단가 = item.단가
-                    }).ToArray(),
-                    결제수단 = 결제수단
-                }, token);
+                수령인명 = 수령인명.Trim(),
+                연락처 = 연락처.Trim(),
+                주소 = 주소.Trim(),
+                상세주소 = 상세주소.Trim(),
+                요청사항 = 요청사항.Trim(),
+                주문자본인수령여부 = 주문자본인수령여부
             },
-            "음식 주문을 등록했습니다.",
-            cancellationToken,
-            ex => $"음식 주문을 등록하지 못했습니다. {ex.Message}");
+            상품목록 = 선택항목목록.Select(item => new 음식주문상품Dto
+            {
+                메뉴Id = item.메뉴Id,
+                상품명 = item.메뉴명,
+                수량 = item.수량,
+                단가 = item.단가
+            }).ToArray(),
+            결제수단 = 결제수단
+        };
+        using var submissionCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        _등록취소 = submissionCancellation;
+        _등록진행 = true;
+        OnPropertyChanged(nameof(제출가능));
+        try
+        {
+            var succeeded = await 작업실행Async(
+                async token =>
+                {
+                    try
+                    {
+                        token.ThrowIfCancellationRequested();
+                        var response = await service.등록Async(request, token);
+                        if (requestId != 클라이언트요청Id)
+                        {
+                            submissionCancellation.Cancel();
+                        }
+
+                        token.ThrowIfCancellationRequested();
+                        등록응답 = response;
+                    }
+                    catch (Exception) when (token.IsCancellationRequested || requestId != 클라이언트요청Id)
+                    {
+                        // 취소를 무시한 서버의 늦은 HTTP 오류도 현재 작성의 실패로 남기지 않습니다.
+                        submissionCancellation.Cancel();
+                        throw new OperationCanceledException(token);
+                    }
+                },
+                "음식 주문을 등록했습니다.",
+                submissionCancellation.Token,
+                ex => $"음식 주문을 등록하지 못했습니다. {ex.Message}");
+            return succeeded && requestId == 클라이언트요청Id;
+        }
+        finally
+        {
+            if (ReferenceEquals(_등록취소, submissionCancellation))
+            {
+                if (requestId != 클라이언트요청Id)
+                {
+                    등록응답 = null;
+                    작업상태초기화();
+                }
+
+                _등록취소 = null;
+                _등록진행 = false;
+                OnPropertyChanged(nameof(제출가능));
+            }
+        }
     }
 
     public void 새요청준비(bool clearRecipient = true)
     {
         _수량목록.Clear();
-        클라이언트요청Id = Guid.NewGuid();
-        등록응답 = null;
+        요청내용변경됨();
         if (clearRecipient)
         {
             수령인명 = string.Empty;
@@ -421,6 +478,8 @@ public sealed partial class 음식주문작성ViewModel(
         작업상태초기화();
         NotifyOrderChanged();
     }
+
+    internal void 재로그인필요설정(bool required) => 재로그인필요 = required;
 
     private void NotifyOrderChanged()
     {
@@ -442,16 +501,20 @@ public sealed partial class 음식주문작성ViewModel(
 
     private void 요청내용변경됨()
     {
-        if (!처리중 && 등록응답 is null)
-        {
-            클라이언트요청Id = Guid.NewGuid();
-        }
+        클라이언트요청Id = Guid.NewGuid();
+        등록응답 = null;
+        _등록취소?.Cancel();
+        작업취소();
+        작업상태초기화();
     }
 }
 
 /// <summary>접근·인증·탐색 기준·목록·정확한 상세·주문 작성을 조립합니다.</summary>
-public sealed class 음식점탐색PageViewModel : 조립ViewModelBase
+public sealed partial class 음식점탐색PageViewModel : 조립ViewModelBase
 {
+    private bool _disposed;
+    private long _로그인세대;
+
     public 음식점탐색PageViewModel(
         음식배달페이지접근ViewModel access,
         주문자앱인증ViewModel authentication,
@@ -474,4 +537,98 @@ public sealed class 음식점탐색PageViewModel : 조립ViewModelBase
     public 음식점공개목록ViewModel 목록 { get; }
     public 음식점공개상세ViewModel 상세 { get; }
     public 음식주문작성ViewModel 작성 { get; }
+
+    [ObservableProperty]
+    public partial bool 인증화면표시 { get; private set; }
+
+    public bool 인증화면진입()
+    {
+        if (_disposed || !접근.사용가능 || 인증.처리중 || 작성.처리중)
+        {
+            return false;
+        }
+
+        인증화면표시 = true;
+        return true;
+    }
+
+    public bool 탐색화면복귀()
+    {
+        if (_disposed || 인증.처리중)
+        {
+            return false;
+        }
+
+        // 화면만 전환합니다. 음식점 선택·메뉴·수령 정보와 요청ID는 그대로 유지합니다.
+        인증화면표시 = false;
+        return true;
+    }
+
+    public async Task<bool> 로그인Async(
+        string userNameOrEmail,
+        string password,
+        CancellationToken cancellationToken = default)
+    {
+        if (_disposed || cancellationToken.IsCancellationRequested || 인증.처리중)
+        {
+            return false;
+        }
+
+        // 새 로그인으로 넘어간 이전 제출은 취소하되 작성 내용과 재시도 요청ID는 유지합니다.
+        var loginGeneration = ++_로그인세대;
+        작성.작업취소();
+        var succeeded = await 인증.로그인Async(userNameOrEmail, password, cancellationToken);
+        if (_disposed || cancellationToken.IsCancellationRequested || loginGeneration != _로그인세대
+            || !succeeded || !인증.로그인됨)
+        {
+            return false;
+        }
+
+        작성.재로그인필요설정(false);
+        인증화면표시 = false;
+        return true;
+    }
+
+    public async Task<bool> 주문등록Async(CancellationToken cancellationToken = default)
+    {
+        if (_disposed || cancellationToken.IsCancellationRequested
+            || !접근.사용가능 || 인증화면표시 || !인증.로그인됨 || 인증.처리중 || 작성.재로그인필요)
+        {
+            return false;
+        }
+
+        var session = 인증.세션;
+        var loginGeneration = _로그인세대;
+        var requestId = 작성.클라이언트요청Id;
+        var succeeded = await 작성.등록Async(cancellationToken);
+        if (_disposed || cancellationToken.IsCancellationRequested
+            // 같은 계정의 record 값은 같을 수 있으므로 참조 비교만으로 재로그인을 판별하지 않습니다.
+            || loginGeneration != _로그인세대
+            || !ReferenceEquals(session, 인증.세션) || requestId != 작성.클라이언트요청Id)
+        {
+            return false;
+        }
+
+        if (작성.오류?.Http상태코드 == 401)
+        {
+            // 저장소 정리가 실패해도 재로그인 입력으로 복귀하고 작성 내용/요청ID는 보존합니다.
+            작성.재로그인필요설정(true);
+            인증화면표시 = true;
+            await 인증.로그아웃Async(cancellationToken);
+            return false;
+        }
+
+        return succeeded;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && !_disposed)
+        {
+            _disposed = true;
+            작성.작업취소();
+        }
+
+        base.Dispose(disposing);
+    }
 }

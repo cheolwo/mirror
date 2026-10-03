@@ -6,7 +6,7 @@
     {
         <div class="food-order-state">
             <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-            <MudText Typo="Typo.body2">정확한 주문번호의 상세를 조회하고 있습니다.</MudText>
+            <MudText Typo="Typo.body2">주문 상세를 불러오고 있습니다.</MudText>
         </div>
     }
     else if (Detail.오류발생)
@@ -14,7 +14,7 @@
         <div class="food-order-state">
             <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Color="Color.Error" Size="Size.Large" />
             <MudText Typo="Typo.subtitle2">주문 상세를 불러오지 못했습니다.</MudText>
-            <MudText Typo="Typo.body2">@OrdererFoodOrderPresentation.ErrorMessage(Detail.오류메시지)</MudText>
+            <MudText Typo="Typo.body2">@OrdererFoodOrderPresentation.ErrorMessage(Detail.오류)</MudText>
             @if (!string.IsNullOrWhiteSpace(Detail.요청OrderNo))
             {
                 <MudButton Variant="Variant.Outlined"
@@ -30,14 +30,13 @@
         <div class="food-order-state">
             <MudIcon Icon="@Icons.Material.Filled.NoAccounts" Size="Size.Large" />
             <MudText Typo="Typo.subtitle2">이 계정의 음식 주문을 찾을 수 없습니다.</MudText>
-            <MudText Typo="Typo.body2">없는 주문번호와 다른 사용자의 주문번호는 동일하게 처리하며 다른 주문으로 대체하지 않습니다.</MudText>
+            <MudText Typo="Typo.body2">주문번호와 로그인한 계정을 확인해 주세요.</MudText>
         </div>
     }
     else if (Detail.상세 is { } detail)
     {
         <div class="food-order-detail-heading">
             <div>
-                <MudText Typo="Typo.overline">EXACT ORDER</MudText>
                 <MudText Typo="Typo.h6">@detail.주문.주문번호</MudText>
                 <MudText Typo="Typo.body2">
                     @OrdererFoodOrderPresentation.RestaurantLabel(detail.주문) · @detail.주문.상품요약
@@ -55,12 +54,15 @@
                 @detail.주문.상태
             </MudChip>
             <span>@($"{detail.주문.총주문금액:N0}원")</span>
-            <span>@OrdererFoodOrderPresentation.DispatchLabel(detail.주문.배차상태)</span>
         </div>
 
+        @if (Cancellation is not null)
+        {
+            <OrdererFoodOrderCancellationPanel Cancellation="Cancellation"
+                                               CancellationRequested="CancellationRequested" />
+        }
+
         <SsalddelSensitiveDisclosureList Title="내 음식 주문 상세"
-                                         Summary="@detail.주문.상품요약"
-                                         RelatedParties="주문자 · 음식점 · 배달 업무 담당자"
                                          Icon="@Icons.Material.Filled.ReceiptLong"
                                          Color="Color.Primary"
                                          PrivacyHint="수령지와 연락처는 주문한 계정에서 필요할 때만 펼쳐 확인합니다.">
@@ -102,19 +104,12 @@
                         @OrdererFoodOrderPresentation.DeliveryRecoveryGuide(detail.배달진행)
                     </MudAlert>
                 }
-                <SsalddelSensitiveInfoRow Label="현재 운송 단계" Value="@OrdererFoodOrderPresentation.DeliveryStatusLabel(detail.배달진행)" />
-                <SsalddelSensitiveInfoRow Label="기사 배정" Value="@(detail.배달진행.기사배정됨 ? "배정됨" : "아직 배정되지 않음")" />
                 <SsalddelSensitiveInfoRow Label="최근 변경" Value="@OrdererFoodOrderPresentation.FormatOptionalDate(detail.배달진행.최근변경시각Utc)" />
-                <MudAlert Severity="@OrdererFoodOrderPresentation.DriverLocationSeverity(detail.기사위치)"
-                          Variant="Variant.Outlined"
-                          Dense="true">
-                    <strong>@detail.기사위치.상태</strong> · @detail.기사위치.안내
-                </MudAlert>
-                @if (detail.기사위치.상태 is 음식배달위치추적상태코드.추적중 or 음식배달위치추적상태코드.갱신지연)
+                @if (detail.기사위치.상태 == 음식배달위치추적상태코드.갱신지연)
                 {
-                    <SsalddelSensitiveInfoRow Label="최근 기사 위치" Value="@OrdererFoodOrderPresentation.DriverLocationCoordinates(detail.기사위치)" />
-                    <SsalddelSensitiveInfoRow Label="위치 기록 시각" Value="@OrdererFoodOrderPresentation.FormatOptionalDate(detail.기사위치.기록시각Utc)" />
-                    <SsalddelSensitiveInfoRow Label="위치 정확도" Value="@(detail.기사위치.정확도_m.HasValue ? $"약 {detail.기사위치.정확도_m.Value:N0}m" : "—")" />
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                        기사 위치 확인이 지연되고 있습니다. 배달 진행 상태를 확인해 주세요.
+                    </MudAlert>
                 }
                 <div class="food-order-receipt-steps" aria-label="전달과 수령 확인 단계">
                     <div class="food-order-receipt-step @(detail.배달진행.기사전달완료 ? "food-order-receipt-step--done" : string.Empty)">
@@ -154,7 +149,7 @@
                                       Counter="500"
                                       Lines="2" />
                         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
-                            실제 수령한 뒤 확인해 주세요. 기사 전달 완료와 주문자 수령 확인은 서로 다른 기록으로 보관됩니다.
+                            음식을 받은 뒤 수령 확인을 눌러 주세요.
                         </MudAlert>
                         <MudButton Variant="Variant.Filled"
                                    Color="Color.Success"
@@ -165,12 +160,6 @@
                         </MudButton>
                     </div>
                 }
-                else if (detail.배달진행.주문자수령확인됨)
-                {
-                    <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Dense="true">
-                        기사 전달과 주문자 수령 확인이 모두 완료되었습니다.
-                    </MudAlert>
-                }
 
                 <MudButton Variant="Variant.Text"
                            Color="Color.Primary"
@@ -179,14 +168,11 @@
                            OnClick="@(() => RefreshRequested.InvokeAsync(detail.주문.주문번호))">
                     진행 상태 새로고침
                 </MudButton>
-                <MudText Typo="Typo.caption" Color="Color.Secondary">
-                    기사 신원과 이동 이력은 노출하지 않습니다. 주문 소유자에게 배차 수락부터 전달 완료 전까지만 최근 위치 사본을 표시합니다.
-                </MudText>
             </MudExpansionPanel>
-            <MudExpansionPanel Text="상태 이력">
+            <MudExpansionPanel Text="주문 진행 기록">
                 @if (detail.상태이력.Count == 0)
                 {
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">기록된 상태 전이가 없습니다.</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">아직 진행 기록이 없습니다.</MudText>
                 }
                 else
                 {
@@ -207,8 +193,7 @@
     {
         <div class="food-order-state">
             <MudIcon Icon="@Icons.Material.Filled.TouchApp" Color="Color.Primary" Size="Size.Large" />
-            <MudText Typo="Typo.subtitle2">확인할 주문을 직접 선택해 주세요.</MudText>
-            <MudText Typo="Typo.body2">첫 주문이나 예시 주문을 자동 선택하지 않습니다.</MudText>
+            <MudText Typo="Typo.subtitle2">목록에서 주문을 선택해 주세요.</MudText>
         </div>
     }
 </MudPaper>
@@ -225,6 +210,12 @@
 
     [Parameter]
     public EventCallback ReceiptConfirmationRequested { get; set; }
+
+    [Parameter]
+    public 주문자음식주문취소ViewModel? Cancellation { get; set; }
+
+    [Parameter]
+    public EventCallback CancellationRequested { get; set; }
 
     [Parameter]
     public EventCallback CloseRequested { get; set; }

@@ -2,17 +2,18 @@
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject RestaurantAuthService AuthService
+@inject I음식점주문SignalRClientService RestaurantRealtimeService
 @using Microsoft.AspNetCore.Components.Routing
 
 <MudLayout>
-    <MudAppBar Dense="true" Elevation="1" Color="Color.Primary" Class="restaurant-appbar">
+    <MudAppBar Dense="true" Elevation="0" Color="Color.Primary" Class="restaurant-appbar">
         <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
                        Color="Color.Inherit"
                        Disabled="@(!CanGoBack)"
                        aria-label="뒤로가기"
                        OnClick="GoBack"
                        Class="back-nav-button" />
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" aria-label="탐색 메뉴" />
         <MudText Typo="Typo.h6" Class="ml-2 restaurant-appbar-title">살뜰 식당</MudText>
         <MudSpacer />
         <RoleAppLifecycleIndicator />
@@ -27,7 +28,7 @@
         <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Class="restaurant-appbar-chip">주문 수신 데스크</MudChip>
     </MudAppBar>
 
-    <MudDrawer Open="@_drawerOpen" Variant="DrawerVariant.Temporary" Elevation="1" ClipMode="DrawerClipMode.Always" @onclick="CloseDrawer">
+    <MudDrawer Open="@_drawerOpen" Variant="DrawerVariant.Temporary" Elevation="0" ClipMode="DrawerClipMode.Always" @onclick="CloseDrawer">
         <NavMenu />
     </MudDrawer>
 
@@ -94,8 +95,19 @@
 
     private async Task LogoutAsync()
     {
-        await AuthService.LogoutAsync();
-        NavigationManager.NavigateTo("/login");
+        try
+        {
+            await RestaurantRealtimeService.연결해제Async();
+        }
+        catch
+        {
+            // A hub shutdown failure must not retain the authenticated session.
+        }
+        finally
+        {
+            try { await AuthService.LogoutAsync(); }
+            finally { NavigationManager.NavigateTo("/login", replace: true); }
+        }
     }
 
     public void Dispose()

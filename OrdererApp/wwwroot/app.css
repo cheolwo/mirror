@@ -2,7 +2,21 @@ html,
 body {
     margin: 0;
     font-family: "Pretendard", "SUIT", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-    background: #eeece5;
+    background: var(--ss-canvas, #f5f7fa);
+    color: var(--ss-ink, #172b36);
+}
+
+/* Keep all page content/behavior; the host sets the common visual rhythm. */
+.food-order-history {
+    padding: 24px 16px !important;
+}
+
+.food-order-history .mud-typography-h4 {
+    overflow-wrap: anywhere;
+}
+
+.food-order-history .mud-button-root {
+    min-height: 48px;
 }
 
 #app {

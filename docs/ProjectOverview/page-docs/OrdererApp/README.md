@@ -4,6 +4,8 @@
 
 이 문서는 OrdererApp 에 속한 화면별 README를 모은 색인입니다. 각 화면 문서는 캡처 이미지, 화면 책임, 사용자와 참여자, API/서버 연계, 보안 점검을 별도로 설명합니다.
 
+인증과 업무 표시의 기준은 [로그인·업무 책임 카드](../auth-workspace-separation-r1.md)와 [페이지 원칙의 인증 경계](../../../Architecture/WholeRoadmapPagePrinciple.md#인증과-업무의-경계)를 참조합니다. 음식점 탐색·마트 요청의 상세 문서와 함께, 별도 상세 README가 없는 재료 자동집단화·수요 작성은 기존 [GroupPurchaseProducts](../../../../OrdererApp/Components/Pages/GroupPurchaseProducts.razor)와 [GroupPurchaseDemandCreate](../../../../OrdererApp/Components/Pages/GroupPurchaseDemandCreate.razor)의 인증 모드를 확인합니다. 공개 탐색과 로그인 입력을 나누며, 인증 후 기존 선택·수요 초안으로 복귀하고 저장은 사용자가 별도로 실행합니다.
+
 | 페이지 ID / 제목 | 라우트 | 분류 | 화면 책임 | 캡처 |
 | --- | --- | --- | --- | --- |
 | [OrdererApp-P01 - 주문자 홈](OrdererApp-P01/) | / | 보조 | 주문자 홈 | 완료 |

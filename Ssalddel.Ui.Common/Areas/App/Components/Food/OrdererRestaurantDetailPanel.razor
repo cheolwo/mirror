@@ -86,7 +86,7 @@
         }
         <OrdererFoodOrderComposer Authentication="Authentication"
                                    Writer="Writer"
-                                   LoginRequested="LoginRequested"
+                                   AuthenticationRequested="AuthenticationRequested"
                                    SubmitRequested="SubmitRequested" />
     }
     else
@@ -116,7 +116,7 @@
     public EventCallback ClearRequested { get; set; }
 
     [Parameter]
-    public EventCallback<공통로그인요청> LoginRequested { get; set; }
+    public EventCallback AuthenticationRequested { get; set; }
 
     [Parameter]
     public EventCallback SubmitRequested { get; set; }

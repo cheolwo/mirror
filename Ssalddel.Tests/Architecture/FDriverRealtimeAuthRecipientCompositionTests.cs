@@ -34,7 +34,6 @@ public sealed class FDriverNotificationAuthRecipientCompositionTests
         var project = Read("FDriverApp", "FDriverApp.csproj");
         var registrations = Read("FDriverApp", "MauiProgram.cs");
         var model = Read("FDriverApp", "PageModels/MainPageModel.cs");
-        var page = Read("FDriverApp", "Pages/MainPage.xaml");
 
         Assert.Contains("_fcmPushService.SendToTokenAsync", push);
         Assert.Contains("[Route(\"api/v1/driver/notifications\")]", controller);
@@ -43,8 +42,7 @@ public sealed class FDriverNotificationAuthRecipientCompositionTests
         Assert.DoesNotContain("IFDriverDispatchRealtimeService", registrations);
         Assert.DoesNotContain("IFDriverDispatchRealtimeService", model);
         Assert.Contains("WorkspaceRefreshInterval = TimeSpan.FromSeconds(10)", model);
-        Assert.Contains("FCM 추천 알림 준비 · 10초 서버 조회 복구", model);
-        Assert.Contains("RecommendationNotificationText", page);
+        Assert.Contains("await ReloadAsync(updateLocation: IsOnDuty);", model);
         Assert.False(File.Exists(Path.Combine(
             FindRepositoryRoot(),
             "FDriverApp",
@@ -108,6 +106,7 @@ public sealed class FDriverNotificationAuthRecipientCompositionTests
         var workspaceContract = Read("Ssalddel.Contracts", "Driver/Food/FoodDeliveryDriverWorkspaceDtos.cs");
         var workService = Read("Ssalddel", "Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs");
         var workspaceUseCase = Read("Ssalddel", "Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.cs");
+        var model = Read("FDriverApp", "PageModels/MainPageModel.cs");
         var page = Read("FDriverApp", "Pages/MainPage.xaml");
 
         Assert.Contains("DriverWorkRecipientDto", workContract);
@@ -118,8 +117,9 @@ public sealed class FDriverNotificationAuthRecipientCompositionTests
         Assert.Contains("order.수령인연락처", workService);
         Assert.Contains("order.수령요청사항", workService);
         Assert.Contains("Recipient = ToRecipient(offer.Recipient)", workspaceUseCase);
-        Assert.Contains("ActiveDelivery.HasRecipient", page);
-        Assert.Contains("배차가 확정된 현재 업무에서만 수령자 정보를 표시합니다.", page);
+        Assert.Contains("public bool HasActiveRecipient => ActiveDelivery?.HasRecipient == true;", model);
+        Assert.Contains("IsVisible=\"{Binding HasActiveRecipient}\"", page);
+        Assert.Contains("ActiveDelivery.RecipientContactText", page);
     }
 
     [Fact]

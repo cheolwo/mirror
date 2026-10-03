@@ -22,6 +22,11 @@
             음식 운영 정책을 불러오는 중입니다.
         </MudAlert>
     }
+    else if (!hasLoadedData)
+    {
+        <MudAlert Severity="Severity.Warning">운영 정보를 조회한 뒤 정책을 수정할 수 있습니다.</MudAlert>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="LoadAsync">다시 시도</MudButton>
+    }
     else
     {
         <MudGrid Spacing="3">
@@ -46,12 +51,26 @@
                             <MudItem xs="12" md="4"><MudNumericField T="decimal" Label="기본요금" Variant="Variant.Outlined" @bind-Value="pricingPolicy.BaseFee" /></MudItem>
                             <MudItem xs="12" md="4"><MudNumericField T="decimal" Label="최소요금" Variant="Variant.Outlined" @bind-Value="pricingPolicy.MinimumFee" /></MudItem>
                             <MudItem xs="12" md="4"><MudNumericField T="int" Label="기본 포함거리(m)" Variant="Variant.Outlined" Min="0" @bind-Value="pricingPolicy.IncludedDistanceMeters" /></MudItem>
-                            <MudItem xs="12" md="4"><MudNumericField T="int" Label="거리 단위(m)" Variant="Variant.Outlined" Min="1" @bind-Value="pricingPolicy.DistanceUnitMeters" /></MudItem>
+                            <MudItem xs="12" md="4"><MudNumericField T="int" Label="거리 계산 단위(m·플랫폼/기사 공통)" Variant="Variant.Outlined" Min="1" @bind-Value="pricingPolicy.DistanceUnitMeters" /></MudItem>
                             <MudItem xs="12" md="4"><MudNumericField T="decimal" Label="거리 단위 요금" Variant="Variant.Outlined" @bind-Value="pricingPolicy.DistanceUnitFee" /></MudItem>
-                            <MudItem xs="12" md="4"><MudNumericField T="decimal" Label="기사 기본 지급액" Variant="Variant.Outlined" @bind-Value="pricingPolicy.DriverBasePayout" /></MudItem>
+                            <MudItem xs="12">
+                                <MudSwitch T="bool" @bind-Value="driverPricing.SplitEnabled" Color="Color.Primary" Disabled="@isSaving">기사 픽업비·전달 기본비 분리 설정</MudSwitch>
+                            </MudItem>
+                            @if (driverPricing.SplitEnabled)
+                            {
+                                <MudItem xs="12" md="4"><MudNumericField T="decimal" Label="기사 픽업비(원)" Variant="Variant.Outlined" Min="0" Disabled="@isSaving" @bind-Value="driverPricing.PickupFee" /></MudItem>
+                                <MudItem xs="12" md="4"><MudNumericField T="decimal" Label="기사 전달 기본비(원)" Variant="Variant.Outlined" Min="0" Disabled="@isSaving" @bind-Value="driverPricing.DropoffFee" /></MudItem>
+                                <MudItem xs="12" md="4"><AdminInfoField Label="기사 기본 지급 합계" Value="@($"{pricingPolicy.DriverBasePayout:N0}원")" /></MudItem>
+                            }
+                            else
+                            {
+                                <MudItem xs="12" md="4"><MudNumericField T="decimal" Label="기사 기본 지급액(미분리·원)" Variant="Variant.Outlined" Min="0" Disabled="@isSaving" @bind-Value="pricingPolicy.DriverBasePayout" /></MudItem>
+                                <MudItem xs="12"><MudText Typo="Typo.body2" Color="Color.Secondary">기존 기본액의 픽업·전달 구분은 미정입니다. 분리 설정을 켜면 픽업비 0원과 나머지 전달 기본비로 입력을 시작하므로, 두 금액을 확인한 뒤 저장해 주세요.</MudText></MudItem>
+                            }
                             <MudItem xs="12" md="4"><MudNumericField T="decimal" Label="기사 최소 지급액" Variant="Variant.Outlined" @bind-Value="pricingPolicy.DriverMinimumPayout" /></MudItem>
-                            <MudItem xs="12" md="4"><MudNumericField T="decimal" Label="기사 거리 지급액" Variant="Variant.Outlined" @bind-Value="pricingPolicy.DriverDistanceUnitPayout" /></MudItem>
+                            <MudItem xs="12" md="4"><MudNumericField T="decimal" Label="@($"기사 거리 {pricingPolicy.DistanceUnitMeters}m당 지급액(원)")" Variant="Variant.Outlined" Min="0" Disabled="@isSaving" @bind-Value="pricingPolicy.DriverDistanceUnitPayout" /></MudItem>
                         </MudGrid>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">기사 기본액은 픽업비 + 전달 기본비입니다. 기본 포함거리 초과분의 거리비는 설정 단위로 올림하고 최소 지급액을 적용합니다. 저장한 값은 이후 새 제안 산정에 적용되며 이미 동결된 제안 금액은 유지됩니다.</MudText>
 
                         <MudDivider />
 
@@ -64,7 +83,8 @@
                                     <MudStack Spacing="1">
                                         <MudText Typo="Typo.body2">플랫폼 배달요금: <strong>@PreviewPlatformFee.ToString("N0")원</strong></MudText>
                                         <MudText Typo="Typo.body2">기사 지급액: <strong>@PreviewDriverPayout.ToString("N0")원</strong></MudText>
-                                        <MudText Typo="Typo.body2">플랫폼 마진: <strong>@PreviewMargin.ToString("N0")원</strong></MudText>
+                                        <MudText Typo="Typo.body2">요금 차액(기타 비용 전): <strong>@PreviewMargin.ToString("N0")원</strong></MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">견적은 기본·거리비만 계산합니다. 기상·시간대 할증은 포함하지 않습니다.</MudText>
                                     </MudStack>
                                 </MudPaper>
                             </MudItem>
@@ -119,10 +139,12 @@
 
 @code {
     private 음식배달요금정책응답 pricingPolicy = new();
+    private FoodDriverPricingEditor driverPricing = new(new());
     private 음식점리뷰관리목록응답 reviewItems = new();
     private 음식점리뷰운영정책응답 reviewPolicy = new();
     private int previewDistanceMeters = 2300;
     private bool isLoading = true;
+    private bool hasLoadedData;
     private bool isSaving;
     private string? message;
     private Severity messageSeverity = Severity.Info;
@@ -131,13 +153,23 @@
     private decimal PreviewDriverPayout => CalculateDriverPayout(previewDistanceMeters);
     private decimal PreviewMargin => PreviewPlatformFee - PreviewDriverPayout;
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
     {
+        isLoading = true;
+        hasLoadedData = false;
+        message = null;
         try
         {
-            pricingPolicy = await FoodService.배달요금정책조회Async();
-            reviewItems = await FoodService.리뷰운영목록조회Async();
-            reviewPolicy = await FoodService.운영정책조회Async();
+            var loadedPricingPolicy = await FoodService.배달요금정책조회Async();
+            var loadedReviewItems = await FoodService.리뷰운영목록조회Async();
+            var loadedReviewPolicy = await FoodService.운영정책조회Async();
+            pricingPolicy = loadedPricingPolicy;
+            driverPricing = new(pricingPolicy);
+            reviewItems = loadedReviewItems;
+            reviewPolicy = loadedReviewPolicy;
+            hasLoadedData = true;
         }
         catch (Exception ex)
         {
@@ -152,7 +184,7 @@
 
     private async Task SavePricingPolicyAsync()
     {
-        if (isSaving)
+        if (isSaving || isLoading || !hasLoadedData)
         {
             return;
         }
@@ -163,8 +195,9 @@
         try
         {
             pricingPolicy = await FoodService.배달요금정책수정Async(pricingPolicy);
+            driverPricing = new(pricingPolicy);
             messageSeverity = Severity.Success;
-            message = "배달 요금 정책을 저장했습니다.";
+            message = "배달 요금 정책을 저장했습니다. 이후 새 제안부터 적용되며 기존 제안 금액은 유지됩니다.";
         }
         catch (Exception ex)
         {

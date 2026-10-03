@@ -39,10 +39,51 @@ public sealed class FoodDeliveryV30PageCompositionTests
         var inbox = Read("RestaurantDeskApp", "Components/Pages/OrderInbox.razor");
         Assert.Contains("orders.Count == 0 && hasLoaded && !reloadFailed", inbox);
         Assert.Contains("isRefreshing && !hasLoaded", inbox);
-        Assert.Contains("if (isRefreshing || workLocked) return false", inbox);
+        Assert.Contains("if (isRefreshing || workLocked || disposed) return Task.FromResult(false)", inbox);
         Assert.Contains("lastSuccessfulRefresh = DateTimeOffset.UtcNow", inbox);
         Assert.Contains("ReloadManuallyAsync", inbox);
         Assert.Contains("if (reloadFailed) message = null", inbox);
+    }
+
+    [Fact]
+    public void 음식점실패복구는_연결실패와_인증권한실패를분리하고_명령후재조회를요구한다()
+    {
+        var route = Read("RestaurantDeskApp", "Components/RestaurantRouteView.razor");
+        var inbox = Read("RestaurantDeskApp", "Components/Pages/OrderInbox.razor");
+        var detail = Read("RestaurantDeskApp", "Components/Pages/OrderDetail.razor");
+        var realtime = Read("RestaurantDeskApp", "Services/음식점주문SignalRClientService.cs");
+        Assert.Contains("if (result.RequiresLogin)", route);
+        Assert.Contains("if (auth.RequiresLogin)", realtime);
+        Assert.Contains("Publish상태Async(음식점실시간연결상태.인증필요", realtime);
+        Assert.Contains("Publish상태Async(음식점실시간연결상태.연결끊김", realtime);
+        Assert.Contains("OnClick=\"CheckAccessAsync\"", route);
+        Assert.Contains("catch (SsalddelApiException ex) when (ex.StatusCode == 401)", inbox);
+        Assert.Contains("catch (SsalddelApiException ex) when (ex.StatusCode == 403)", inbox);
+        Assert.Contains("WorkDisabled => isBusy || isLoading || readFailed || workLocked", detail);
+        Assert.Contains("HandleRequestFailure(ex, \"주문 확인 결과", detail);
+        Assert.Contains("HandleRequestFailure(ex, \"주문 진행 결과", detail);
+        Assert.Contains("SsalddelApiException { StatusCode: 401 }", detail);
+        Assert.Contains("SsalddelApiException { StatusCode: 403 }", detail);
+        Assert.Contains("workLocked = false;", detail);
+        Assert.Contains("readFailed = false;", detail);
+    }
+
+    [Fact]
+    public void 음식점화면이탈과주문변경은_기존요청을취소하고_늦은상태반영을차단한다()
+    {
+        var inbox = Read("RestaurantDeskApp", "Components/Pages/OrderInbox.razor");
+        var detail = Read("RestaurantDeskApp", "Components/Pages/OrderDetail.razor");
+        Assert.Contains("주문목록조회Async(복구출처, cancellationToken)", inbox);
+        Assert.Contains("cancellationToken.ThrowIfCancellationRequested();", inbox);
+        Assert.Contains("await currentReloadTask;", inbox);
+        Assert.Contains("catch (Exception) when (cancellationToken.IsCancellationRequested)", inbox);
+        Assert.Contains("@implements IDisposable", detail);
+        Assert.Contains("selectionCancellation.Cancel();", detail);
+        Assert.Contains("generation == selectionGeneration", detail);
+        Assert.Contains("!IsCurrentSelection(requestedOrderNo, generation)", detail);
+        Assert.Contains("주문조회Async(requestedOrderNo, cancellationToken: cancellationToken)", detail);
+        Assert.Contains("await action(cancellationToken)", detail);
+        Assert.Contains("selectionGeneration++;", detail);
     }
 
     [Fact]
@@ -74,11 +115,11 @@ public sealed class FoodDeliveryV30PageCompositionTests
         var detail = Read("RestaurantDeskApp", "Components/Pages/OrderDetail.razor");
 
         Assert.Contains("@page \"/orders\"", inbox);
-        Assert.Contains("상세 보기", inbox);
+        Assert.Contains("주문 보기", inbox);
         Assert.DoesNotContain("주문수락후전표준비Async", inbox);
         Assert.Contains("@page \"/orders/{OrderNo}\"", detail);
         Assert.Contains("주문수락후전표준비Async", detail);
-        Assert.Contains("이 주문의 조리 대기시간", detail);
+        Assert.Contains("조리 예상시간", detail);
         Assert.Contains("preparationMinutes", detail);
         Assert.Contains("주문거절Async", detail);
         Assert.Contains("조리시간변경Async", detail);
@@ -94,7 +135,9 @@ public sealed class FoodDeliveryV30PageCompositionTests
             "wwwroot/Areas/App/js/ssalddel-document-output.js");
 
         Assert.Contains("catch (JSException)", detail);
-        Assert.Contains("주문은 수락되어 조리를 시작했습니다", detail);
+        Assert.Contains("주문을 확인해 배차를 요청했습니다", detail);
+        Assert.Contains("기사 배정 후 조리를 시작해 주세요", detail);
+        Assert.DoesNotContain("주문은 수락되어 조리를 시작했습니다", detail);
         Assert.Contains("window.ssalddelDocumentOutput", staticAsset);
         Assert.Contains("printHtml", staticAsset);
     }
@@ -334,7 +377,11 @@ public sealed class FoodDeliveryV30PageCompositionTests
     }
 
     private static string Read(string project, string relativePath)
-        => File.ReadAllText(Path.Combine(FindRepositoryRoot(), project, relativePath));
+    {
+        var path = Path.Combine(FindRepositoryRoot(), project, relativePath);
+        return File.ReadAllText(path)
+            + (File.Exists(path + ".cs") ? File.ReadAllText(path + ".cs") : string.Empty);
+    }
 
     private static void AssertAppearsBetween(
         string source,

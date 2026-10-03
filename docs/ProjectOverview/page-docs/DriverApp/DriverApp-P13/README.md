@@ -18,6 +18,21 @@
 | 2.0 운송 필수 연결 | [DriverApp-P13 - 하차 증빙, POD, 하차 예외](../../../ssalddel-v1-required-pages.md) |
 | 캡처 상태 | 완료 |
 
+## 페이지 책임 (2026-10-03 보완)
+
+| 항목 | 기록 |
+| --- | --- |
+| 주 사용자·대상 | 화물 기사, 경로로 받은 운송 ID의 하차 작업 |
+| 한 문장 목적 | 기사가 최신 운송을 조회하고 인수 확인·사진으로 하차 완료를 요청한다. |
+| 기본 정보·주 행동 | 하차지·상태·실제 수령자/연락처·한국시간 하차 시간창, 인수/결제 확인·사진. 조건 충족 후 하차 완료 |
+| 보조 정보·미지정 | 기존 화물/POD 상세 유지. 시간 미지정·연락처 미등록·거리 미확인을 임의 정상 값으로 채우지 않음 |
+| 독립 업무 | 정산·정책 변경은 다른 화면. 인수/사진 입력만 해당 운송의 화면 수명 안에서 유지 |
+| 진입·실패·복귀 | 캐시 없는 상세 조회, 오류·재시도·로그인, 다른 ID/이탈 뒤 응답 차단. 진행 중 운송으로 복귀 |
+| 코드·API·DB | 기존 PageViewModel → 기사운송상세조회Service → 기존 상세/완료 API와 서버 운송 원장. DTO/표시 mapper로 같은 의뢰의 연락처·선택 하차 시간창 전달 |
+| 책임 판정·검증 | 같은 목적의 구성. 전체 build·관련132/132; 현장 정보는 실제 소스의 mock HTTP·EF InMemory 시험 증거. 하차 현장 UI·실 HTTP/DB·운송 완주는 미검증 |
+
+[이번 현장 정보 연결](../../cargo-contact-window-r1.md) · [최신 변경 기록](../../../../Changes/2026-10-03-cargo-contact-window-r1.md) · [이전 조회 복귀](../../cargo-workflow-recovery-r1.md).
+
 ## 왜 필요한가
 
 이 화면은 하차 증빙, POD, 하차 예외을 담당하므로, 1.0 업무 흐름이 실제 사용자 행동으로 닫히기 위해 필요합니다.
@@ -52,7 +67,7 @@
 | 구분 | 메서드 | API 경로 | 클라이언트/문서 근거 | 서버 근거 |
 | --- | --- | --- | --- | --- |
 | 2.0 운송 문서 | - | `api/v1/driver/transports` | [docs/ProjectOverview/ssalddel-v1-required-pages.md](../../../ssalddel-v1-required-pages.md) | `GET api/v1/driver/transports` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs)<br>`GET api/v1/driver/transports/current` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs)<br>`GET api/v1/driver/transports/{id:long}` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs)<br>`POST api/v1/driver/transports/{id:long}/arrive-pickup` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs) |
-| 2.0 운송 문서 | - | `api/v1/files` | [docs/ProjectOverview/ssalddel-v1-required-pages.md](../../../ssalddel-v1-required-pages.md) | `POST api/v1/files/upload` [Ssalddel/Controllers/Common/파일업로드Controller.cs](../../../../../Ssalddel/Controllers/Common/파일업로드Controller.cs) |
+| 2.0 운송 문서 | - | `api/v1/files` | [docs/ProjectOverview/ssalddel-v1-required-pages.md](../../../ssalddel-v1-required-pages.md) | `POST api/v1/files/upload` [Ssalddel/Controllers/Platform/파일업로드Controller.cs](../../../../../Ssalddel/Controllers/Platform/파일업로드Controller.cs) |
 | 클라이언트 서비스 | POST | `api/v1/driver/transports/{transportId}/report-exception` | [DriverApp/Services/DriverTransportExceptionService.cs](../../../../../DriverApp/Services/DriverTransportExceptionService.cs) | `POST api/v1/driver/transports/{id:long}/report-exception` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs) |
 
 검증할 때는 이 화면이 직접 메모리 데이터만 보는지, 위 API 응답을 받아 상태를 표시하는지, 실패했을 때 사용자가 다음 행동을 알 수 있는지 확인합니다.

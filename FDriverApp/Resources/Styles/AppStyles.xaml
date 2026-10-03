@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <?xaml-comp compile="true" ?>
 <ResourceDictionary 
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -285,4 +285,88 @@
         <Setter Property="ProgressColor" Value="{StaticResource Primary}"/>
     </Style>
 
+    <!-- 기사 화면 표현만 소유한다. 업무 상태와 행동은 기존 바인딩을 유지한다. -->
+    <x:Double x:Key="DriverSpaceSmall">8</x:Double>
+    <x:Double x:Key="DriverSpaceMedium">16</x:Double>
+    <x:Double x:Key="DriverSpaceLarge">24</x:Double>
+    <x:Double x:Key="DriverControlHeight">48</x:Double>
+    <x:Double x:Key="DriverTitleSize">20</x:Double>
+    <x:Double x:Key="DriverSectionSize">16</x:Double>
+    <x:Double x:Key="DriverBodySize">16</x:Double>
+    <x:Double x:Key="DriverMetadataSize">14</x:Double>
+    <x:Double x:Key="DriverButtonSize">14</x:Double>
+    <x:Double x:Key="DriverValueSize">18</x:Double>
+
+    <Style x:Key="DriverCardStyle" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource DriverSurface}, Dark={StaticResource DriverSurfaceDark}}" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource DriverBorder}, Dark={StaticResource DriverBorderDark}}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Padding" Value="16" />
+    </Style>
+    <Style x:Key="DriverTitleStyle" TargetType="Label">
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="{StaticResource DriverTitleSize}" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource DriverText}, Dark={StaticResource DriverTextDark}}" />
+    </Style>
+    <Style x:Key="DriverSectionStyle" TargetType="Label" BasedOn="{StaticResource DriverTitleStyle}">
+        <Setter Property="FontSize" Value="{StaticResource DriverSectionSize}" />
+    </Style>
+    <Style x:Key="DriverBodyStyle" TargetType="Label">
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="{StaticResource DriverBodySize}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource DriverText}, Dark={StaticResource DriverTextDark}}" />
+    </Style>
+    <Style x:Key="DriverMetadataStyle" TargetType="Label" BasedOn="{StaticResource DriverBodyStyle}">
+        <Setter Property="FontSize" Value="{StaticResource DriverMetadataSize}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource DriverTextSecondary}, Dark={StaticResource DriverTextSecondaryDark}}" />
+    </Style>
+    <Style x:Key="DriverValueStyle" TargetType="Label" BasedOn="{StaticResource DriverTitleStyle}">
+        <Setter Property="FontSize" Value="{StaticResource DriverValueSize}" />
+    </Style>
+    <Style x:Key="DriverPrimaryButtonStyle" TargetType="Button">
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="BackgroundColor" Value="{StaticResource DriverAccent}" />
+        <Setter Property="TextColor" Value="{StaticResource White}" />
+        <Setter Property="FontSize" Value="{StaticResource DriverButtonSize}" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="BorderWidth" Value="0" />
+        <Setter Property="Padding" Value="16,12" />
+        <Setter Property="MinimumHeightRequest" Value="{StaticResource DriverControlHeight}" />
+        <Setter Property="MinimumWidthRequest" Value="{StaticResource DriverControlHeight}" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal" />
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource DriverTextSecondary}, Dark={StaticResource DriverTextSecondaryDark}}" />
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource DriverDisabled}, Dark={StaticResource DriverSurfaceSubtleDark}}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+    <Style x:Key="DriverSecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource DriverPrimaryButtonStyle}">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource DriverSurface}, Dark={StaticResource DriverSurfaceDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource DriverAccentStrong}, Dark={StaticResource DriverAccentDark}}" />
+        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource DriverBorder}, Dark={StaticResource DriverBorderDark}}" />
+        <Setter Property="BorderWidth" Value="1" />
+        <Setter Property="FontAttributes" Value="None" />
+    </Style>
+    <Style x:Key="DriverDangerButtonStyle" TargetType="Button" BasedOn="{StaticResource DriverSecondaryButtonStyle}">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource DriverDanger}, Dark={StaticResource DriverDangerDark}}" />
+    </Style>
+    <Style x:Key="DriverFieldStyle" TargetType="Entry">
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource DriverText}, Dark={StaticResource DriverTextDark}}" />
+        <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource DriverTextSecondary}, Dark={StaticResource DriverTextSecondaryDark}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource DriverSurfaceSubtle}, Dark={StaticResource DriverSurfaceSubtleDark}}" />
+        <Setter Property="MinimumHeightRequest" Value="56" />
+        <Setter Property="MinimumWidthRequest" Value="{StaticResource DriverControlHeight}" />
+    </Style>
 </ResourceDictionary>

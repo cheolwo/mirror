@@ -1,0 +1,7 @@
+.food-order-cancellation { display: grid; gap: 12px; min-width: 0; }
+.food-order-cancellation-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.food-order-cancellation-actions ::deep .mud-button-root { min-height: 48px; }
+.food-order-cancellation ::deep .mud-input-control { min-width: 0; }
+@media (max-width: 720px) {
+    .food-order-cancellation-actions { flex-direction: column; align-items: stretch; }
+}

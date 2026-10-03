@@ -8,11 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="coverlet.collector">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="MongoDB.Driver" />
@@ -33,12 +35,68 @@
     <ProjectReference Include="..\Ssalddel.Client.Infrastructure\Ssalddel.Client.Infrastructure.csproj" />
     <ProjectReference Include="..\Ssalddel.Ui.Common\Ssalddel.Ui.Common.csproj" />
     <ProjectReference Include="..\Ssalddel.WebApp\Ssalddel.WebApp.csproj" />
+    <ProjectReference Include="..\SsalddelAdmin\SsalddelAdmin.csproj" />
     <ProjectReference Include="..\Ssalddel.WorkflowRules.Contracts\Ssalddel.WorkflowRules.Contracts.csproj" />
     <ProjectReference Include="..\Ssalddel.WorkflowRules\Ssalddel.WorkflowRules.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\FDriverApp\Controls\NaverMapReadiness.cs" Link="Clients\NaverMapReadiness.cs" />
+    <Compile Include="..\OrdererApp\Components\Layout\OrdererPageDisplayContext.cs" Link="Clients\OrdererPageDisplayContext.cs" />
+    <Compile Include="..\WarehouseManagerApp\Components\Layout\WarehousePageDisplayContext.cs" Link="Clients\WarehousePageDisplayContext.cs" />
+    <Compile Include="..\DriverApp\Services\IAuthSession.cs" Link="Clients\Cargo\IAuthSession.cs" />
+    <Compile Include="..\DriverApp\Services\DriverRoutes.cs" Link="Clients\Cargo\DriverRoutes.cs" />
+    <Compile Include="..\DriverApp\Services\DriverTransportCompletionPhotoService.cs" Link="Clients\Cargo\DriverTransportCompletionPhotoService.cs" />
+    <Compile Include="..\DriverApp\Services\DriverTransportExceptionService.cs" Link="Clients\Cargo\DriverTransportExceptionService.cs" />
+    <Compile Include="..\DriverApp\ViewModels\Driver\기사PageViewModelBase.cs" Link="Clients\Cargo\기사PageViewModelBase.cs" />
+    <Compile Include="..\DriverApp\ViewModels\Driver\Transport\*.cs" Link="Clients\Cargo\Transport\%(Filename)%(Extension)" />
+    <Compile Include="..\SsalddelApp\Services\IAuthSession.cs" Link="Clients\Shipper\IAuthSession.cs" />
+    <Compile Include="..\SsalddelApp\Services\AuthSession.cs" Link="Clients\Shipper\AuthSession.cs" />
+    <Compile Include="..\SsalddelApp\Services\AuthApiService.cs" Link="Clients\Shipper\AuthApiService.cs" />
+    <Compile Include="..\SsalddelApp\Services\IShipperOperationsService.cs" Link="Clients\Shipper\IShipperOperationsService.cs" />
+    <Compile Include="..\SsalddelApp\Services\FakeShipperPaymentService.cs" Link="Clients\Shipper\FakeShipperPaymentService.cs" />
+    <Compile Include="..\SsalddelApp\Services\꾸미기보유권동기화Service.cs" Link="Clients\Shipper\꾸미기보유권동기화Service.cs" />
+    <Compile Include="..\SsalddelApp\Models\Shipper\ShipperRequestItem.cs" Link="Clients\Shipper\ShipperRequestItem.cs" />
+    <Compile Include="..\SsalddelApp\ViewModels\Shipper\ShipperRequestDetailPageViewModel.cs" Link="Clients\Shipper\ShipperRequestDetailPageViewModel.cs" />
+    <Compile Include="..\SsalddelApp\ViewModels\Shipper\ShipperQueryLifetime.cs" Link="Clients\Shipper\ShipperQueryLifetime.cs" />
+    <Compile Include="..\DriverApp\Services\AuthSession.cs" Link="Clients\Cargo\AuthSession.cs" />
+    <Compile Include="..\DriverApp\Services\AuthApiService.cs" Link="Clients\Cargo\AuthApiService.cs" />
+    <Compile Include="..\DriverApp\Services\DriverApiClient.cs" Link="Clients\Cargo\DriverApiClient.cs" />
+    <Compile Include="..\DriverApp\Services\DriverOperatingProfileService.cs" Link="Clients\Cargo\DriverOperatingProfileService.cs" />
+    <Compile Include="..\DriverApp\Services\IApiClient.cs" Link="Clients\Cargo\IApiClient.cs" />
+    <Compile Include="..\DriverApp\Services\IDriverTransportApiService.cs" Link="Clients\Cargo\IDriverTransportApiService.cs" />
+    <Compile Include="..\DriverApp\Services\기사운송상세조회Service.cs" Link="Clients\Cargo\기사운송상세조회Service.cs" />
+    <Compile Include="..\DriverApp\Services\기사운송표시Mapper.cs" Link="Clients\Cargo\기사운송표시Mapper.cs" />
+    <Compile Include="..\DriverApp\Services\DriverHomeRoutePlanningService.cs" Link="Clients\Cargo\DriverHomeRoutePlanningService.cs" />
+    <Compile Include="..\DriverApp\Models\Driver\Samples\기사샘플모델.cs" Link="Clients\Cargo\기사샘플모델.cs" />
+    <Compile Include="..\DriverApp\Models\Driver\DriverRequestItem.cs" Link="Clients\Cargo\DriverRequestItem.cs" />
+    <Compile Include="..\SsalddelApp\Models\Shipper\ShipperRequestHandoffMapper.cs" Link="Clients\Shipper\ShipperRequestHandoffMapper.cs" />
+    <Compile Include="..\SsalddelApp\ViewModels\Shipper\ShipperRequestAuthoringPageViewModel.cs" Link="Clients\Shipper\ShipperRequestAuthoringPageViewModel.cs" />
+    <Compile Include="..\SsalddelApp\ViewModels\Shipper\화주운송의뢰CrudViewModels.cs" Link="Clients\Shipper\화주운송의뢰CrudViewModels.cs" />
+    <Compile Include="..\SsalddelApp\Services\ServerBackedShipperOperationsService.cs" Link="Clients\Shipper\ServerBackedShipperOperationsService.cs" />
+    <Compile Include="..\SsalddelApp\Services\ShipperRoutes.cs" Link="Clients\Shipper\ShipperRoutes.cs" />
+    <Compile Include="..\FDriverApp\Services\FDriverAuthSession.cs" Link="Clients\Driver\FDriverAuthSession.cs" />
+    <Compile Include="..\FDriverApp\Services\FDriverAuthApiService.cs" Link="Clients\Driver\FDriverAuthApiService.cs" />
+    <Compile Include="..\FDriverApp\Services\FoodDeliveryDriverApiService.cs" Link="Clients\Driver\FoodDeliveryDriverApiService.cs" />
+    <Compile Include="..\FDriverApp\Services\FDriverAppProfile.cs" Link="Clients\Driver\FDriverAppProfile.cs" />
+    <Compile Include="..\FDriverApp\PageModels\MainPageModel.cs" Link="Clients\Driver\MainPageModel.cs" />
+    <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodExceptions.cs" Link="Clients\Driver\MainPageModel.FoodExceptions.cs" />
+    <Compile Include="..\FDriverApp\PageModels\FDriverDeliveryExceptionState.cs" Link="Clients\Driver\FDriverDeliveryExceptionState.cs" />
+    <Compile Include="..\FDriverApp\PageModels\FDriverWorkspaceNavigationState.cs" Link="Clients\Driver\FDriverWorkspaceNavigationState.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\RestaurantAuthService.cs" Link="Clients\Restaurant\RestaurantAuthService.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\Ssalddel음식주문Client.cs" Link="Clients\Restaurant\Ssalddel음식주문Client.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\I음식주문ApiClient.cs" Link="Clients\Restaurant\I음식주문ApiClient.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\I음식점메뉴ApiClient.cs" Link="Clients\Restaurant\I음식점메뉴ApiClient.cs" />
+    <Compile Include="..\RestaurantDeskApp\Models\Restaurant\음식점주문DeskModels.cs" Link="Clients\Restaurant\음식점주문DeskModels.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\I음식점주문DeskService.cs" Link="Clients\Restaurant\I음식점주문DeskService.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\I음식점주문SignalRClientService.cs" Link="Clients\Restaurant\I음식점주문SignalRClientService.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\음식점주문SignalRClientService.cs" Link="Clients\Restaurant\음식점주문SignalRClientService.cs" />
+    <Compile Include="..\RestaurantDeskApp\Options\RestaurantDeskOptions.cs" Link="Clients\Restaurant\RestaurantDeskOptions.cs" />
+    <Compile Include="..\RestaurantDeskApp\Components\Pages\OrderDetail.razor.cs" Link="Clients\Restaurant\OrderDetail.razor.cs" />
   </ItemGroup>
 
 </Project>

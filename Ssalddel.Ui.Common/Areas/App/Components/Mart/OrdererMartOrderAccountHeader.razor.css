@@ -1,0 +1,13 @@
+.mart-order-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+
+@media (max-width: 720px) {
+    .mart-order-toolbar {
+        justify-content: stretch;
+    }
+}

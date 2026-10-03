@@ -27,14 +27,6 @@
     gap: .75rem;
 }
 
-.mart-order-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-    gap: .75rem;
-}
-
 @media (max-width: 720px) {
     .mart-order-login-layout {
         grid-template-columns: 1fr;
@@ -48,7 +40,4 @@
         min-height: 48px;
     }
 
-    .mart-order-toolbar {
-        justify-content: stretch;
-    }
 }

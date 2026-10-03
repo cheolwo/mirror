@@ -1,17 +1,27 @@
 @inherits MvvmComponentBase<마트주문작성PageViewModel>
 @using Ssalddel.Ui.Common.Areas.App.ViewModels
 
-<section class="mart-order-request" aria-label="알뜰살뜰 마트 주문 요청 작성">
-    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mart-order-boundary">
-        이 페이지는 상품 한 건의 비구속 주문 요청만 플랫폼에 저장합니다. 재고 차감·예약, 결제, 주문 확정, 피킹·포장과 배송은 실행하지 않습니다.
-    </MudAlert>
-
+<section class="mart-order-request" aria-label="@(AuthenticationStage ? "주문 요청 로그인" : "알뜰살뜰 마트 주문 요청 작성")"
+         data-mart-stage="@(AuthenticationStage ? "authentication" : "workspace")">
     @if (RequestId is null && ProductId is null)
     {
         <OrdererMartOrderSelectionPrompt CatalogHref="@CatalogHref" />
     }
+    else if (AuthenticationStage)
+    {
+        <OrdererMartOrderAuthenticationPanel Authentication="@Authentication"
+                                              CatalogHref="@CatalogHref"
+                                              LoginRequested="LoginAsync" />
+    }
     else
     {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mart-order-boundary">
+            이 페이지는 상품 한 건의 비구속 주문 요청만 플랫폼에 저장합니다. 재고 차감·예약, 결제, 주문 확정, 피킹·포장과 배송은 실행하지 않습니다.
+        </MudAlert>
+
+        <OrdererMartOrderAccountHeader Authentication="@Authentication"
+                                       LogoutRequested="LogoutAsync" />
+
         @if (ProductId is long productId)
         {
             <OrdererMartOrderProductPanel ProductId="@productId"
@@ -20,27 +30,19 @@
                                           RetryRequested="RetryProductAsync" />
         }
 
-        <OrdererMartOrderAuthenticationPanel Authentication="@Authentication"
-                                              CatalogHref="@CatalogHref"
-                                              LoginRequested="LoginAsync"
-                                              LogoutRequested="LogoutAsync" />
-
-        @if (Authentication.로그인됨)
+        @if (RequestId is Guid requestId)
         {
-            @if (RequestId is Guid requestId)
-            {
-                <OrdererMartOrderRequestDetailPanel RequestId="@requestId"
-                                                    RequestDetail="@RequestDetail"
-                                                    CatalogHref="@CatalogHref"
-                                                    RetryRequested="RetryRequestAsync" />
-            }
-            else if (Product.상세 is { 판매가능여부: true } product)
-            {
-                <OrdererMartOrderRequestForm Product="@product"
-                                             Writer="@Writer"
-                                             CatalogHref="@CatalogHref"
-                                             SubmitRequested="SubmitAsync" />
-            }
+            <OrdererMartOrderRequestDetailPanel RequestId="@requestId"
+                                                RequestDetail="@RequestDetail"
+                                                CatalogHref="@CatalogHref"
+                                                RetryRequested="RetryRequestAsync" />
+        }
+        else if (Product.상세 is { 판매가능여부: true } product)
+        {
+            <OrdererMartOrderRequestForm Product="@product"
+                                         Writer="@Writer"
+                                         CatalogHref="@CatalogHref"
+                                         SubmitRequested="SubmitAsync" />
         }
     }
 </section>

@@ -18,6 +18,12 @@
 | 2.0 운송 필수 연결 | [DriverApp-P11 - 진행 중 운송과 다음 행동](../../../ssalddel-v1-required-pages.md) |
 | 캡처 상태 | 완료 |
 
+## 페이지 책임 (2026-10-03 조회 복귀)
+
+기사가 현재 세션의 진행 운송을 확인하고 같은 운송 ID의 상차·하차 업무로 이동한다. 기존 상태·주소·수익·다음 행동과 정상 빈 상태의 추천/운행 시작을 유지한다. 실패는 재조회, 인증 종료는 현재 운송 returnUrl로 로그인한다. 초기 조회부터 페이지 취소를 전달하고 이탈 뒤 폴링·렌더를 시작하지 않는다. 다른 사용자 또는 같은 사용자 재로그인 뒤 캐시를 숨기고 강제 조회하며 정상 토큰 갱신은 같은 문맥으로 둔다. 완료·원장 권위는 기존 서버에 있고 월 이용료와 지급 수령액을 합치지 않는다. [구현·검증 범위](../../cargo-workflow-recovery-r1.md).
+
+[이번 화물 보완·검증 범위](../../cargo-workflow-recovery-r1.md) · [최신 변경 기록](../../../../Changes/2026-10-03-cargo-workflow-recovery-r1.md).
+
 ## 왜 필요한가
 
 이 화면은 진행 중 운송과 다음 행동을 담당하므로, 1.0 업무 흐름이 실제 사용자 행동으로 닫히기 위해 필요합니다.
@@ -53,7 +59,7 @@
 | --- | --- | --- | --- | --- |
 | 2.0 운송 문서 | - | `api/v1/driver/transports` | [docs/ProjectOverview/ssalddel-v1-required-pages.md](../../../ssalddel-v1-required-pages.md) | `GET api/v1/driver/transports` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs)<br>`GET api/v1/driver/transports/current` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs)<br>`GET api/v1/driver/transports/{id:long}` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs)<br>`POST api/v1/driver/transports/{id:long}/arrive-pickup` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs) |
 | 워크플로우 문서 | - | `api/v1/driver/transports` | [docs/ProjectOverview/workflow-app-screen-map.md](../../../workflow-app-screen-map.md) | `GET api/v1/driver/transports` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs)<br>`GET api/v1/driver/transports/current` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs)<br>`GET api/v1/driver/transports/{id:long}` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs)<br>`POST api/v1/driver/transports/{id:long}/arrive-pickup` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs) |
-| 워크플로우 문서 | - | `api/v1/files` | [docs/ProjectOverview/workflow-app-screen-map.md](../../../workflow-app-screen-map.md) | `POST api/v1/files/upload` [Ssalddel/Controllers/Common/파일업로드Controller.cs](../../../../../Ssalddel/Controllers/Common/파일업로드Controller.cs) |
+| 워크플로우 문서 | - | `api/v1/files` | [docs/ProjectOverview/workflow-app-screen-map.md](../../../workflow-app-screen-map.md) | `POST api/v1/files/upload` [Ssalddel/Controllers/Platform/파일업로드Controller.cs](../../../../../Ssalddel/Controllers/Platform/파일업로드Controller.cs) |
 
 검증할 때는 이 화면이 직접 메모리 데이터만 보는지, 위 API 응답을 받아 상태를 표시하는지, 실패했을 때 사용자가 다음 행동을 알 수 있는지 확인합니다.
 

@@ -42,6 +42,7 @@ Unity 개발 순서는 제품 릴리스 버전 순서와 별개다. Unity는 전
 | `Ssalddel/Controllers/Common/`, `Ssalddel.Community/`, `Ssalddel.Contracts/Common/Community/` | `Ssalddel/AGENTS.md`, `Ssalddel.Community/AGENTS.md` | Common에 포함되는 커뮤니티 API·contract·규칙 경계 |
 | `Ssalddel/Controllers/Platform/` | `Ssalddel/Controllers/Platform/AGENTS.md` | 업무 공통과 구분되는 플랫폼 기술 API |
 | `Ssalddel.Ui.Common/` 공통 UI | `Ssalddel.Ui.Common/AGENTS.md` | 3단계 navigation, MVVM, render 검증 |
+| Web·MAUI·네이티브 페이지 신설 또는 UI·UX 구조/정보 리팩토링 | `docs/Architecture/WholeRoadmapPagePrinciple.md`, 대상 상세 README의 페이지 책임 카드. 역할 앱 시각 변경은 `docs/Architecture/RoleAppVisualDesignStandard.md` | 사용자의 한 가지 업무 질문·결과, 기본/보조 정보와 독립 업무 분리, 상태별 주 행동·복귀. 색·글자·여백은 공통 기준, 기존 내용/기능 보존 |
 | `Ssalddel.Tests/` test | `Ssalddel.Tests/AGENTS.md` | filter 우선, 영향 project build |
 | `docs/` 문서·변경 기록 | `docs/AGENTS.md` | 기준 문서 단일화, link·diff 검증 |
 | 여러 project를 통과하는 기능 | `SsalddelCodeMetadataAttribute`, `SsalddelCodeFeatureKeys` 검색 | `StepKey`, `FlowOrder`, `Layer`, `ExecutionStage`, `ReadsFrom/WritesTo`, `Effects`, `Boundary` |

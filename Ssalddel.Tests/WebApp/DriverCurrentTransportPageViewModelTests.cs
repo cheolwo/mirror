@@ -101,8 +101,10 @@ public sealed class DriverCurrentTransportPageViewModelTests
     }
 
     [Theory]
+    [InlineData("확정", 1, "상차 증빙으로")]
     [InlineData("배차확정", 1, "상차 증빙으로")]
     [InlineData("상차지 도착", 2, "상차 증빙으로")]
+    [InlineData("상차완료", 3, "하차 증빙으로")]
     [InlineData("운송중", 3, "하차 증빙으로")]
     [InlineData("하차지 도착", 4, "하차 증빙으로")]
     [InlineData("인수완료", 5, "하차 증빙으로")]
@@ -118,6 +120,7 @@ public sealed class DriverCurrentTransportPageViewModelTests
 
         Assert.Equal(expectedOrder, DriverCurrentTransportPresentation.ResolveStageOrder(status));
         Assert.Equal(expectedButtonLabel, nextAction.ButtonLabel);
+        Assert.Equal($"/driver/transports/30/{(expectedOrder <= 2 ? "pickup" : "dropoff")}", nextAction.Href);
         Assert.Equal("현재", timeline[expectedOrder].Status);
         Assert.All(timeline.Take(expectedOrder), step => Assert.Equal("완료", step.Status));
         Assert.All(timeline.Skip(expectedOrder + 1), step => Assert.Equal("대기", step.Status));

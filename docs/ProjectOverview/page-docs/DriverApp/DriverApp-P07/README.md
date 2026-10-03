@@ -18,6 +18,22 @@
 | 2.0 운송 필수 연결 | [DriverApp-P07 - 지도 홈, 추천 배너, 현재 운송 진입](../../../ssalddel-v1-required-pages.md) |
 | 캡처 상태 | 완료 |
 
+## 페이지 책임 (2026-10-03 국내 운행·현장 정보 연결)
+
+| 항목 | 기록 |
+| --- | --- |
+| 주 사용자·소스 | 화물 기사, 기존 `/driver/home`과 NativeDriverHomePage |
+| 대상·진입 문맥 | 현재 로그인에 따른 국내 운행과 추천/현재 운송 요약 |
+| 한 문장 목적 | 기사가 국내 운행 상태를 보고 현재 운송 또는 메뉴로 들어간다. |
+| 완료 결과·주 행동 | 현재 운송은 `/driver/transports/current`, 메뉴는 `/driver/menu`로 인계 |
+| 기본·보조 정보 | 대한민국 운행·NAVER provider와 기존 지도/추천/현재 운송. 연락처·시간창 상세는 상하차 화면에서 확인 |
+| 독립 업무·제외 정보 | 상하차·정산은 기존 업무 화면이 소유. 국내만 지원하므로 한국/미국 선택 버튼은 두지 않음 |
+| 진입·실패·복귀 | 기존 MainPage가 있으면 먼저 PopAsync로 복원한 뒤 목적 경로 전달. 새 화면은 StartPath. 익명 하단 요약의 미확인/정상 빈 상태 혼동은 이전 결손으로 남음 |
+| 코드·API·DB | NativeDriverHomePage → DriverOperatingProfileService의 Korea 고정·저장 KR 정규화. 기존 추천/운송 서버 조회와 stable ID 유지 |
+| 책임 판정·검증 | 같은 목적의 진입 허브. 전체 build·관련132/132, 최종 APK의 실제 국내 운행/NAVER 표시·선택 버튼 부재 확인. 지도 타일/경로·연락처/시간창 UI·운송 완주는 미검증 |
+
+[이번 현장 연결·국내 운행](../../cargo-contact-window-r1.md) · [최신 변경 기록](../../../../Changes/2026-10-03-cargo-contact-window-r1.md) · [이전 조회 복귀](../../cargo-workflow-recovery-r1.md).
+
 ## 왜 필요한가
 
 이 화면은 지도 홈, 추천 배너, 현재 운송 진입을 담당하므로, 1.0 업무 흐름이 실제 사용자 행동으로 닫히기 위해 필요합니다.

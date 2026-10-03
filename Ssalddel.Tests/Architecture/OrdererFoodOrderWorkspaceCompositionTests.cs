@@ -46,12 +46,21 @@ public sealed class OrdererFoodOrderWorkspaceCompositionTests
     }
 
     [Fact]
-    public void 음식주문_루트는_목록ViewModel메서드를_명시적callback으로연결한다()
+    public void 음식주문_루트는_목록callback을_취소와직렬화가있는Controller로연결한다()
     {
         var source = File.ReadAllText(Path.Combine(FindComponentDirectory(), "OrdererFoodOrderWorkspace.razor"));
+        var code = File.ReadAllText(Path.Combine(FindComponentDirectory(), "OrdererFoodOrderWorkspace.razor.cs"));
 
-        Assert.Contains("SearchRequested=\"@(() => ViewModel.목록검색Async())\"", source);
-        Assert.Contains("PageChanged=\"@(page => ViewModel.페이지변경Async(page))\"", source);
+        Assert.Contains("SearchRequested=\"SearchListAsync\"", source);
+        Assert.Contains("ReloadRequested=\"ReloadListAsync\"", source);
+        Assert.Contains("ResetRequested=\"ResetListAsync\"", source);
+        Assert.Contains("PageChanged=\"ChangeListPageAsync\"", source);
+        Assert.Contains("RefreshController.목록작업실행Async(token => ViewModel.목록검색Async(token))", code);
+        Assert.Contains("RefreshController.목록작업실행Async(token => ViewModel.목록새로고침Async(token))", code);
+        Assert.Contains("RefreshController.목록작업실행Async(token => ViewModel.검색조건초기화Async(token))", code);
+        Assert.Contains("RefreshController.목록작업실행Async(token => ViewModel.페이지변경Async(page, token))", code);
+        Assert.DoesNotContain("@(() => ViewModel.", source);
+        Assert.DoesNotContain("@(page => ViewModel.", source);
         Assert.DoesNotContain("SearchRequested=\"ViewModel.", source);
         Assert.DoesNotContain("PageChanged=\"ViewModel.", source);
     }
@@ -75,17 +84,36 @@ public sealed class OrdererFoodOrderWorkspaceCompositionTests
     }
 
     [Fact]
-    public void 음식주문_화면은_개인원장과_비실행경계를명시한다()
+    public void 음식주문_만료상태는_개인화면대신_기존로그인폼과복구안내로연결한다()
+    {
+        var directory = FindComponentDirectory();
+        var source = File.ReadAllText(Path.Combine(directory, "OrdererFoodOrderWorkspace.razor"));
+        var code = File.ReadAllText(Path.Combine(directory, "OrdererFoodOrderWorkspace.razor.cs"));
+        var login = File.ReadAllText(Path.Combine(directory, "OrdererFoodOrderLoginPanel.razor"));
+
+        Assert.Contains("!Authentication.로그인됨 || ViewModel.재로그인필요", source);
+        Assert.Contains("SessionExpired=\"ViewModel.재로그인필요\"", source);
+        Assert.Contains("ViewModel.개인주문조회가능 && OrderSelected.HasDelegate", code);
+        Assert.Contains("SessionExpired ? \"로그인이 만료되었습니다. 다시 로그인해 주세요.\"", login);
+    }
+
+    [Fact]
+    public void 음식주문_화면은_수령안내를유지하고_사용자에게불필요한기술설명을제외한다()
     {
         var componentDirectory = FindComponentDirectory();
         var header = File.ReadAllText(Path.Combine(componentDirectory, "OrdererFoodOrderHeader.razor"));
         var detail = File.ReadAllText(Path.Combine(componentDirectory, "OrdererFoodOrderDetailPanel.razor"));
 
-        Assert.Contains("로그인한 계정이 소유한 영속 음식 주문만 조회", header);
-        Assert.Contains("주문 생성·음식점 수락·결제 승인·배차 확정은 이 화면에서 실행하지 않", header);
-        Assert.Contains("기사 전달 완료 뒤 실제 수령 확인만 소유 주문에 기록", header);
+        Assert.Contains("@Authentication.현재사용자표시", header);
+        Assert.Contains("OnClick=\"LogoutRequested\"", header);
+        Assert.DoesNotContain("영속", header);
+        Assert.DoesNotContain("샘플", header);
         Assert.Contains("SsalddelSensitiveDisclosureList", detail);
         Assert.Contains("수령지와 연락처는 주문한 계정에서 필요할 때만 펼쳐 확인", detail);
+        Assert.Contains("음식을 받은 뒤 수령 확인을 눌러 주세요", detail);
+        Assert.DoesNotContain("DriverLocationCoordinates", detail);
+        Assert.DoesNotContain("위치 정확도", detail);
+        Assert.DoesNotContain("EXACT ORDER", detail);
     }
 
     [Fact]
@@ -134,7 +162,7 @@ public sealed class OrdererFoodOrderWorkspaceCompositionTests
         Assert.Contains("grid-template-columns: 1fr", workspaceCss);
         Assert.Contains("@media (max-width: 720px)", loginCss);
         Assert.Contains("grid-template-columns: 1fr", loginCss);
-        Assert.Contains("min-height: 44px", loginCss);
+        Assert.Contains("min-height: 48px", loginCss);
         Assert.Contains("@media (max-width: 720px)", searchCss);
         Assert.Contains("grid-template-columns: 1fr", searchCss);
         Assert.Contains("@media (max-width: 720px)", listCss);

@@ -6,6 +6,29 @@ body {
     font-family: "Segoe UI", system-ui, sans-serif;
 }
 
+.admin-auth-layout {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--role-canvas, #f5f7fa);
+}
+
+.admin-auth-content {
+    box-sizing: border-box;
+    display: flex;
+    flex: 1;
+    align-items: center;
+    min-width: 0;
+    padding: 16px;
+}
+
+.admin-auth-content .admin-login-shell {
+    min-height: 0;
+    width: min(960px, 100%);
+}
+
 .admin-login-shell {
     display: grid;
     grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr);

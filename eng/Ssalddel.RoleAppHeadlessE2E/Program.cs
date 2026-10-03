@@ -18,7 +18,8 @@ using Ssalddel.WorkflowRules.Contracts;
 
 var baseUrl = RequireEnvironment("FOOD_OBSERVER_BASE_URL");
 var password = RequireEnvironment("FOOD_OBSERVER_ACCOUNT_PASSWORD");
-const string observationAreaStableId = "region:kr:bjd:1126010100";
+// 검증 전용 합성 주소에는 법정동 결속 근거가 없으므로 실제 면목동으로 승격하지 않는다.
+const string observationAreaStableId = "region:kr:bjd:unclassified";
 var endpoint = new Uri(baseUrl.EndsWith('/') ? baseUrl : baseUrl + "/");
 
 using var ordererHttp = CreateHttpClient(endpoint);
@@ -58,6 +59,31 @@ var adminSession = new AdminAuthSession();
 var adminAuth = new AdminAuthService(adminHttp, adminSession);
 Require((await adminAuth.LoginAsync("food-observer-admin", password)).Succeeded, "운영자 앱 Client 로그인 실패");
 var adminApi = new AdminAuthenticatedApiClient(adminHttp, adminSession, adminAuth);
+if (args.Length == 2 && args[0] == "--confirm-ui-receipt")
+{
+    var uiOrderNo = args[1];
+    var uiDelivered = await ordererApi.상세Async(uiOrderNo)
+        ?? throw new InvalidOperationException("Android 표본 주문 재조회 없음");
+    Require(uiDelivered.주문.음식점Id == restaurantId, "Android 표본 음식점 불일치");
+    Require(uiDelivered.주문.상태 == 음식주문상태코드.전달완료, "Android 전달 완료가 서버에 기록되지 않음");
+    await ordererApi.수령확인Async(uiOrderNo, new 주문자음식주문수령확인요청
+    {
+        클라이언트요청Id = Guid.NewGuid(), 확인메모 = "Android 화면 검증 뒤 합성 주문 수령 확인"
+    });
+    var uiCompleted = await ordererApi.상세Async(uiOrderNo)
+        ?? throw new InvalidOperationException("Android 표본 수령 확인 재조회 없음");
+    Require(uiCompleted.주문.상태 == 음식주문상태코드.수령확인, "Android 표본 종료 상태 불일치");
+    var uiTrace = await ReadAdminTraceAsync(adminApi, uiOrderNo,
+        음식주문상태코드.수령확인, 음식배달운영생명주기단계Codes.종료);
+    Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new
+    {
+        schemaVersion = "role-app-headless-e2e.ui-receipt.r1", status = "Completed",
+        orderNo = uiOrderNo, orderStatus = uiCompleted.주문.상태,
+        lifecycleStage = uiTrace.생명주기조화.현재단계Code,
+        serverRuntimeProof = true, databaseRoundTripProof = true, deviceUiProof = false
+    }));
+    return;
+}
 var adminLifecycleStages = new List<string>();
 var projectionBaseline = await ReadProjectionIdsAsync(unitySession, observationAreaStableId);
 await driverApi.StartWorkAsync("사가정 합성 기사 대기점");
@@ -80,7 +106,7 @@ var created = await ordererApi.등록Async(new 음식주문등록요청
     {
         수령인명 = "합성 주문자",
         연락처 = "000-0000-0000",
-        주소 = "서울특별시 중랑구 면목동 사가정로 332",
+        주소 = "검증 표본 주택",
         주문자본인수령여부 = true
     },
     상품목록 = [new 음식주문상품Dto { 메뉴Id = menuId, 수량 = 1 }]
@@ -97,27 +123,47 @@ var projectionWorkId = (await ReadActiveProjectionAsync(
     음식주문상태코드.주문대기,
     excludedWorkIds: projectionBaseline)).WorkStableId;
 
+// Android 검증은 같은 앱 Client로 주문만 준비하고 실제 화면에서 이후 행동을 수행한다.
+if (args.Contains("--prepare-ui", StringComparer.Ordinal))
+{
+    Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new
+    {
+        schemaVersion = "role-app-headless-e2e.ui-preparation.r1",
+        status = "Prepared",
+        orderNo = created.주문번호,
+        restaurantId,
+        menuId,
+        workStableId = projectionWorkId,
+        synthetic = true,
+        deviceUiProof = false
+    }));
+    return;
+}
+
 var inbox = await restaurantApi.주문목록조회Async(new 음식점주문수신함조회요청 { Page = 1, PageSize = 20 });
 Require(inbox.Items.Any(x => x.주문번호 == created.주문번호), "음식점 앱 Client 수신함에 주문 없음");
 var accepted = await restaurantApi.음식점수락Async(created.주문번호, new 음식점주문수락요청
 {
     클라이언트요청Id = Guid.NewGuid(),
     음식점명 = "관찰 검증 음식점",
-    음식점주소 = "서울특별시 중랑구 사가정로 332",
+    음식점주소 = "검증 표본 음식점",
     음식점위도 = 37.588m,
     음식점경도 = 127.085m,
     조리예상분 = 1
 }) ?? throw new InvalidOperationException("음식점 앱 Client 수락 응답 없음");
-RequireAction(accepted.AvailableActions, 음식배달가능행동Ids.음식점픽업준비완료, "음식점 조리중");
+Require(accepted.상태 == 음식주문상태코드.주문확인, "음식점 확인 뒤 배차 대기 상태 불일치");
+Require(!업무가능행동목록.포함(accepted.AvailableActions, 음식배달가능행동Ids.음식점조리시작)
+    && !업무가능행동목록.포함(accepted.AvailableActions, 음식배달가능행동Ids.음식점픽업준비완료),
+    "기사 배정 전에 조리 또는 준비 완료 행동이 열렸음");
 adminLifecycleStages.Add((await ReadAdminTraceAsync(
     adminApi,
     created.주문번호,
-    음식주문상태코드.조리중,
-    음식배달운영생명주기단계Codes.조리배차병행)).생명주기조화.현재단계Code);
+    음식주문상태코드.주문확인,
+    음식배달운영생명주기단계Codes.기사확보대기)).생명주기조화.현재단계Code);
 RequireSameProjection(await ReadActiveProjectionAsync(
     unitySession,
     observationAreaStableId,
-    음식주문상태코드.조리중,
+    음식주문상태코드.주문확인,
     expectedWorkStableId: projectionWorkId), projectionWorkId);
 
 var recommendation = await PollAsync(
@@ -126,6 +172,9 @@ var recommendation = await PollAsync(
     TimeSpan.FromSeconds(30),
     "기사 앱 Client 추천 대기 초과");
 RequireAction(recommendation!.AvailableActions, 음식배달가능행동Ids.기사제안수락, "기사 추천");
+const string routeFixtureSource = "FoodObserverSimulationRouteFixture";
+Require(recommendation.PricingPolicyRevision.Contains($"distance:{routeFixtureSource}:r1", StringComparison.Ordinal),
+    "격리 검증의 명시적 합성 거리 판본 누락");
 await driverApi.AcceptAsync(created.주문번호);
 adminLifecycleStages.Add((await ReadAdminTraceAsync(
     adminApi,
@@ -140,11 +189,26 @@ RequireSameProjection(await ReadActiveProjectionAsync(
 
 var restaurantCurrent = await restaurantApi.주문상세조회Async(created.주문번호)
     ?? throw new InvalidOperationException("음식점 앱 Client 기사 수락 뒤 재조회 없음");
+RequireAction(restaurantCurrent.AvailableActions, 음식배달가능행동Ids.음식점조리시작, "기사 배정 뒤 조리 대기");
+var cooking = await restaurantApi.음식점진행변경Async(created.주문번호, new 음식점주문진행변경요청
+{
+    클라이언트요청Id = Guid.NewGuid(),
+    예상Revision = restaurantCurrent.Revision,
+    작업 = 음식점주문진행작업코드.조리시작
+}) ?? throw new InvalidOperationException("음식점 앱 Client 조리 시작 응답 없음");
+Require(cooking.조리시작시각Utc is not null, "조리 시작 시각 미기록");
+RequireAction(cooking.AvailableActions, 음식배달가능행동Ids.음식점픽업준비완료, "조리 시작 뒤 준비 완료");
+adminLifecycleStages.Add((await ReadAdminTraceAsync(
+    adminApi, created.주문번호, 음식주문상태코드.조리중,
+    음식배달운영생명주기단계Codes.조리배차병행)).생명주기조화.현재단계Code);
+RequireSameProjection(await ReadActiveProjectionAsync(
+    unitySession, observationAreaStableId, 음식주문상태코드.조리중,
+    expectedWorkStableId: projectionWorkId), projectionWorkId);
 
 var ready = await restaurantApi.음식점진행변경Async(created.주문번호, new 음식점주문진행변경요청
 {
     클라이언트요청Id = Guid.NewGuid(),
-    예상Revision = restaurantCurrent.Revision,
+    예상Revision = cooking.Revision,
     작업 = 음식점주문진행작업코드.픽업준비
 }) ?? throw new InvalidOperationException("음식점 앱 Client 픽업 준비 응답 없음");
 Require(
@@ -155,6 +219,9 @@ var readyTrace = await ReadAdminTraceAsync(
     created.주문번호,
     ready.상태,
     음식배달운영생명주기단계Codes.픽업인계);
+RequireSameProjection(await ReadActiveProjectionAsync(
+    unitySession, observationAreaStableId, ready.상태,
+    expectedWorkStableId: projectionWorkId), projectionWorkId);
 Require(
     readyTrace.생명주기조화.현재책임주체Codes.Contains(
         음식배달운영책임주체Codes.음식배달기사,
@@ -178,6 +245,13 @@ RequireAction(
     음식배달가능행동Ids.기사전달완료,
     "기사 픽업완료");
 await driverApi.CompleteAsync(created.주문번호);
+var awaitingReceiptSettlement = (await driverApi.GetWorkspaceAsync()).OrderSettlements
+    .Single(x => x.OrderNo == created.주문번호);
+Require(awaitingReceiptSettlement.SettlementStatusCode == "AwaitingReceipt"
+    && awaitingReceiptSettlement.GrossAmount == recommendation.DriverPayout
+    && awaitingReceiptSettlement.NetAmount is null
+    && !awaitingReceiptSettlement.IsActualTransferCompleted,
+    "전달 완료 정산의 동결 금액 또는 수령 확인 대기 불일치");
 adminLifecycleStages.Add((await ReadAdminTraceAsync(
     adminApi,
     created.주문번호,
@@ -208,6 +282,67 @@ var completedTrace = await ReadAdminTraceAsync(
     음식배달운영생명주기단계Codes.종료);
 adminLifecycleStages.Add(completedTrace.생명주기조화.현재단계Code);
 Require(completedTrace.전체상태 == 음식주문운영추적상태코드.완료, "운영자 앱 완료 판정 불일치");
+var settlementBeforePayout = await PollAsync(
+    async () => (await adminApi.GetAsync<음식주문운영추적응답>(
+        $"api/v1/admin/food-orders/{created.주문번호}/operations-trace")).DriverSettlement,
+    value => value?.ReceiptConfirmedAtUtc is not null,
+    TimeSpan.FromSeconds(20), "수령 확인 정산 투영 대기 초과");
+Require(settlementBeforePayout!.SettlementStatusCode == "AwaitingDeductions"
+    && settlementBeforePayout.DeductionAmount is null && settlementBeforePayout.NetAmount is null,
+    "공제 근거 없이 수령액을 확정함");
+var payoutPath = $"api/v1/admin/food-orders/{created.주문번호}/simulate-driver-payout";
+using (var anonymousHttp = CreateHttpClient(endpoint))
+using (var anonymousResponse = await anonymousHttp.PostAsJsonAsync(payoutPath, new FoodDeliverySimulatedPayoutRequest()))
+{
+    Require(anonymousResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized, "익명 모의 지급 요청이 차단되지 않음");
+}
+using (var forbiddenRequest = new HttpRequestMessage(HttpMethod.Post, payoutPath))
+{
+    forbiddenRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", ordererSession.AccessToken);
+    forbiddenRequest.Content = JsonContent.Create(new FoodDeliverySimulatedPayoutRequest());
+    using var forbiddenResponse = await ordererHttp.SendAsync(forbiddenRequest);
+    Require(forbiddenResponse.StatusCode == System.Net.HttpStatusCode.Forbidden, "주문자 모의 지급 요청이 차단되지 않음");
+}
+try
+{
+    await adminApi.PostAsync<FoodDeliverySimulatedPayoutRequest, FoodDeliveryOrderSettlementDto>(payoutPath, new()
+    {
+        IdempotencyKey = Guid.NewGuid().ToString("N"), ExpectedSettlementRevision = settlementBeforePayout.Revision,
+        ConfirmedGrossAmount = settlementBeforePayout.GrossAmount!.Value
+    });
+    throw new InvalidOperationException("공제 근거 없는 모의 지급이 허용됨");
+}
+catch (SsalddelAdminApp.Services.AdminApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict) { }
+// 아래 100원은 이 실행 전용 시험 입력이며 법정 공제액을 계산하거나 확정한 값이 아니다.
+var failedPayout = await adminApi.PostAsync<FoodDeliverySimulatedPayoutRequest, FoodDeliveryOrderSettlementDto>(payoutPath, new()
+{
+    IdempotencyKey = Guid.NewGuid().ToString("N"), ExpectedSettlementRevision = settlementBeforePayout.Revision,
+    ConfirmedGrossAmount = settlementBeforePayout.GrossAmount!.Value, ConfirmedDeductionAmount = 100m,
+    DeductionEvidenceReference = $"role-app-headless-e2e:{created.주문번호}:simulation-fixture", OutcomeCode = "Failed"
+});
+Require(failedPayout.PayoutStatusCode == "SimulationFailed" && !failedPayout.IsActualTransferCompleted,
+    "모의 지급 실패를 실입금 완료로 표시함");
+var retryRequest = new FoodDeliverySimulatedPayoutRequest
+{
+    IdempotencyKey = Guid.NewGuid().ToString("N"), ExpectedSettlementRevision = failedPayout.Revision,
+    ConfirmedGrossAmount = failedPayout.GrossAmount!.Value, ConfirmedDeductionAmount = 100m,
+    DeductionEvidenceReference = failedPayout.DeductionEvidenceReference
+};
+var successfulPayout = await adminApi.PostAsync<FoodDeliverySimulatedPayoutRequest, FoodDeliveryOrderSettlementDto>(payoutPath, retryRequest);
+var replayPayout = await adminApi.PostAsync<FoodDeliverySimulatedPayoutRequest, FoodDeliveryOrderSettlementDto>(payoutPath, retryRequest);
+var driverSettlement = (await driverApi.GetWorkspaceAsync()).OrderSettlements.Single(x => x.OrderNo == created.주문번호);
+var adminSettlement = (await adminApi.GetAsync<음식주문운영추적응답>(
+    $"api/v1/admin/food-orders/{created.주문번호}/operations-trace")).DriverSettlement;
+Require(successfulPayout.PayoutStatusCode == "SimulationSucceeded"
+    && replayPayout.IsIdempotentReplay
+    && successfulPayout.SimulationPaymentId == replayPayout.SimulationPaymentId
+    && driverSettlement.SimulationPayments.Count == 2
+    && adminSettlement?.SimulationPaymentId == driverSettlement.SimulationPaymentId
+    && driverSettlement.NetAmount == recommendation.DriverPayout - 100m
+    && driverSettlement.ServerExecutionModeCode == "Simulation"
+    && adminSettlement.ServerExecutionModeCode == "Simulation"
+    && !driverSettlement.IsActualTransferCompleted && !adminSettlement.IsActualTransferCompleted,
+    "모의 지급 재시도·멱등성 또는 기사/관리자 재조회 불일치");
 var finalScene = await unitySession.RefreshAsync(observationAreaStableId, 0, DateTime.UtcNow);
 Require(finalScene.SceneResult.Accepted, "Unity Interpreter가 완료 뒤 장면 사본을 거절함");
 Require(finalScene.OsObservationResult.Accepted, "Unity OS Router가 완료 뒤 장면 사본을 거절함");
@@ -218,7 +353,7 @@ await driverApi.StopWorkAsync();
 
 Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new
 {
-    schemaVersion = "role-app-headless-e2e.r2",
+    schemaVersion = "role-app-headless-e2e.r4",
     status = "Completed",
     orderNo = created.주문번호,
     orderStatus = completed.주문.상태,
@@ -229,8 +364,10 @@ Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new
         stagesVerified = new[]
         {
             음식주문상태코드.주문대기,
-            음식주문상태코드.조리중,
+            음식주문상태코드.주문확인,
             음식주문상태코드.기사배정,
+            음식주문상태코드.조리중,
+            음식주문상태코드.픽업대기,
             음식주문상태코드.픽업완료,
             음식주문상태코드.전달완료
         },
@@ -241,7 +378,7 @@ Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new
     osLifecycles = new
     {
         order = new[] { 음식주문상태코드.주문대기, 음식주문상태코드.전달완료, 음식주문상태코드.수령확인 },
-        restaurantSales = new[] { 음식주문상태코드.조리중, ready.상태 },
+        restaurantSales = new[] { 음식주문상태코드.주문확인, cooking.상태, ready.상태 },
         foodDelivery = new[] { 음식주문상태코드.기사배정, 음식주문상태코드.픽업완료, 음식주문상태코드.전달완료 },
         platformOperations = adminLifecycleStages
     },
@@ -253,6 +390,23 @@ Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new
         "SsalddelAdminApp.AdminAuthenticatedApiClient"
     },
     sampleData = new { restaurantId, menuId, synthetic = true },
+    routePricing = new
+    {
+        sourceCode = routeFixtureSource, fixtureId = "observer-restaurant-to-customer.r1",
+        fixtureInputDistanceKm = 0.250m, actualMapRequest = false, isEstimated = true,
+        pricingPolicyRevision = recommendation.PricingPolicyRevision
+    },
+    driverBeforeCookingVerified = true,
+    orderSettlement = new
+    {
+        grossAmount = driverSettlement.GrossAmount, simulatedDeductionAmount = driverSettlement.DeductionAmount,
+        simulatedNetAmount = driverSettlement.NetAmount, missingDeductionsBlocked = true,
+        failedPayoutThenRetryVerified = true, idempotentReplayVerified = true,
+        driverAdminReadbackVerified = true, actualTransferCompleted = false,
+        anonymousAndNonAdminBlocked = true,
+        currentServerMode = driverSettlement.ServerExecutionModeCode,
+        deductionEvidenceScope = driverSettlement.DeductionEvidenceScopeCode
+    },
     serverRuntimeProof = true,
     databaseRoundTripProof = true,
     deviceUiProof = false

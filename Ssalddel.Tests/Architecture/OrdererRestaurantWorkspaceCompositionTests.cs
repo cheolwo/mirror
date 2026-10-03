@@ -16,6 +16,8 @@ public sealed class OrdererRestaurantWorkspaceCompositionTests
         Assert.Contains("<OrdererRestaurantSearchPanel", source);
         Assert.Contains("<OrdererRestaurantResultList", source);
         Assert.Contains("<OrdererRestaurantDetailPanel", source);
+        Assert.Contains("else if (ViewModel.인증화면표시)", source);
+        Assert.Contains("<OrdererRestaurantAuthenticationWorkspace", source);
         Assert.DoesNotContain("<MudSelect", source);
         Assert.DoesNotContain("<MudTextField", source);
         Assert.DoesNotContain("<MudPagination", source);
@@ -34,6 +36,8 @@ public sealed class OrdererRestaurantWorkspaceCompositionTests
     [InlineData("OrdererRestaurantDetailPanel.razor.css")]
     [InlineData("OrdererFoodOrderComposer.razor")]
     [InlineData("OrdererFoodOrderComposer.razor.css")]
+    [InlineData("OrdererRestaurantAuthenticationWorkspace.razor")]
+    [InlineData("OrdererRestaurantAuthenticationWorkspace.razor.css")]
     [InlineData("OrdererRestaurantPresentation.cs")]
     public void 음식점_화면과_표현책임은_전용파일로_존재한다(string fileName)
     {

@@ -1,10 +1,29 @@
 @page "/group-purchase/products"
+@inject NavigationManager Navigation
 @using Ssalddel.Contracts.Common.Orderer
 @inherits MvvmComponentBase<주문자재료후보PageViewModel>
 
-<PageTitle>같이 주문 재료 후보</PageTitle>
+<PageTitle>@(_authenticationMode ? "카드 집단화 로그인" : "같이 주문 재료 후보")</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-0">
+    @if (_authenticationMode)
+    {
+        <Ssalddel공통로그인Panel 제목="카드 집단화 로그인"
+                             설명="재료 탐색은 공개입니다. 비구속 수요를 내 이름으로 저장하고 철회할 때만 로그인합니다."
+                             상태메시지="@ViewModel.Authentication.오류메시지"
+                             상태Severity="@ViewModel.AuthenticationSeverity"
+                             일반로그인표시="true"
+                             소셜로그인표시="false"
+                             일반로그인버튼텍스트="로그인하고 재료 탐색으로 돌아가기"
+                             IsBusy="@ViewModel.Authentication.처리중"
+                             Elevation="0"
+                             Class="pa-3"
+                             OnPasswordLogin="LoginAsync">
+            <MudButton FullWidth="true" Variant="Variant.Outlined" Disabled="@ViewModel.Authentication.처리중" OnClick="ReturnToCatalog">재료 탐색으로 돌아가기</MudButton>
+        </Ssalddel공통로그인Panel>
+    }
+    else
+    {
     <GroupPurchaseScreenFrame CurrentScreen="GroupPurchaseScreenKind.ProductList"
                               Eyebrow="02 ORDERER · 02A2.01"
                               Title="재료 후보 목록"
@@ -20,17 +39,12 @@
         }
         else if (!ViewModel.Authentication.로그인됨)
         {
-            <Ssalddel공통로그인Panel 제목="카드 집단화 로그인"
-                                 설명="재료 탐색은 공개입니다. 비구속 수요를 내 이름으로 저장하고 철회할 때만 로그인합니다."
-                                 상태메시지="@ViewModel.Authentication.오류메시지"
-                                 상태Severity="@ViewModel.AuthenticationSeverity"
-                                 일반로그인표시="true"
-                                 소셜로그인표시="false"
-                                 일반로그인버튼텍스트="로그인하고 카드에서 집단화"
-                                 IsBusy="@ViewModel.Authentication.처리중"
-                                 Elevation="0"
-                                 Class="pa-3 mb-3"
-                                 OnPasswordLogin="ViewModel.LoginAsync" />
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">재료는 로그인 없이 탐색할 수 있습니다.</MudAlert>
+            @if (!string.IsNullOrWhiteSpace(ViewModel.Authentication.오류메시지))
+            {
+                <MudAlert Severity="@ViewModel.AuthenticationSeverity" Class="mb-3">@ViewModel.Authentication.오류메시지</MudAlert>
+            }
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mb-3" OnClick="OpenAuthentication">로그인하고 카드에서 집단화</MudButton>
         }
         else if (ViewModel.AutoGrouping.DeliveryScope is null)
         {
@@ -55,9 +69,5 @@
                                           GroupWithdrawRequested="ViewModel.WithdrawGroupAsync"
                                           ProductSelected="ViewModel.OpenProductAsync" />
     </GroupPurchaseScreenFrame>
+    }
 </MudContainer>
-
-@code {
-    protected override Task OnInitializedAsync()
-        => ViewModel.초기화Async();
-}

@@ -22,10 +22,12 @@ public sealed class DriverAuthAndRecipientCompositionTests
     public void 진행중운송화면은_고정전화번호대신_서버수령자정보를사용한다()
     {
         var contract = Read("Ssalddel.Contracts/Driver/Transport/기사운송Dtos.cs");
-        var mapper = Read("DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs");
+        var adapter = Read("DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs");
+        var mapper = Read("DriverApp/Services/기사운송표시Mapper.cs");
         var page = Read("DriverApp/Components/Pages/Driver/03_Progress/진행중운송Page.razor");
 
         Assert.Contains("수령자연락처", contract);
+        Assert.Contains("기사운송표시Mapper.Map(source)", adapter);
         Assert.Contains("수령자연락처 = source.수령자연락처", mapper);
         Assert.Contains("MaskPhone(현재운송?.수령자연락처)", page);
         Assert.DoesNotContain("010-****-2401", page);

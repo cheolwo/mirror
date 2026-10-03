@@ -1,77 +1,48 @@
 # DriverApp-P05 - 운송/배달 이력 조회
 
-[전체 화면 문서](../../README.md) / [DriverApp 화면 목록](../README.md) / [앱 전체 카탈로그](../../../app-page-catalog.md)
+[전체 화면 문서](../../README.md) / [DriverApp 화면 목록](../README.md) / [전체 route](../../current-pages.md) / [이번 보완 결과](../../implementation-r1.md)
 
-## 화면 캡처
+## 기존 화면 캡처
 
-<img src="../../../assets/app-pages/DriverApp/DriverApp-P05.png" alt="DriverApp-P05 화면 캡처" width="720">
+<img src="../../../assets/app-pages/DriverApp/DriverApp-P05.png" alt="DriverApp-P05 이전 화면 캡처" width="720">
 
-## 기본 정보
+이전 캡처를 보존했다. 2026-10-02 소스 검토·수정 결과를 새 캡처로 확인한 것은 아니다.
 
-| 항목 | 내용 |
+## 1. 페이지: 인증 기사의 화물 기록과 원장 운임
+
+| 항목 | 현재 연결 |
 | --- | --- |
-| 앱 | DriverApp |
-| 페이지 ID / 제목 | DriverApp-P05 - 운송/배달 이력 조회 |
-| 라우트 | /driver/transports/history |
-| 소스 파일 | [DriverApp/Components/Pages/Driver/03_Progress/배달내역Page.razor](../../../../../DriverApp/Components/Pages/Driver/03_Progress/배달내역Page.razor) |
-| 분류 | 보조 |
-| 2.0 운송 필수 연결 | 직접 연결 없음 |
-| 캡처 상태 | 완료 |
+| route / 소스 | `/driver/transports/history` / [배달내역Page](../../../../../DriverApp/Components/Pages/Driver/03_Progress/배달내역Page.razor) |
+| 사용자/단계 | 기사 / 조회 데이터 페이지. 메뉴·추천 운송으로 이동 |
+| 상태 | 로그인 필요, 로딩, 오류+재시도, 기록 없음, 기록 목록 구별 |
+| 표시 | 수정 시각 역순의 진행·완료 운송, 출발/도착지·상태·원장 운임. 운임 null은 미확인 |
+| 권한/효과 | 읽기 전용. 상하차 Command/지급 확정 없음. token에서 기사 ID 결정 |
 
-## 왜 필요한가
+이 route의 실제 API는 **용달 화물**만 반환한다. 음식 배달 완료 이력까지 포함하는 통합 기록 페이지는 아직 아니다. 거리 필드가 없는 현재 계약에서 0km를 만들어 표시하지 않으며 `거리 자료 없음`으로 표시한다. 원장 운임은 공제 후 실수령액이 아니다.
 
-이 화면은 운송/배달 이력 조회을 담당하므로, 주 업무 화면을 보조하고 사용자가 다음 행동으로 이동할 수 있게 합니다.
+## 2. 코드: 전용 목록 API로 완료 기록까지 조회
 
-## 사용자와 참여자
+| 단계 | 코드와 책임 |
+| --- | --- |
+| 페이지 인증 | [IAuthSession](../../../../../DriverApp/Services/IAuthSession.cs) RestoreAsync 후 인증 여부 확인, 미인증 시 기존 LoginFor 복귀 경로 |
+| Client | [DriverTransportApiService](../../../../../DriverApp/Services/DriverTransportApiService.cs) `목록조회Async` → GET `api/v1/driver/transports` |
+| 인증 전송 | [DriverApiClient](../../../../../DriverApp/Services/DriverApiClient.cs): token 갱신·HTTP 오류 전달 |
+| Controller | [기사운송진행Controller](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs): 기사 역할, V2.0 운송, 현재기사Id → `운송목록조회Query` |
+| Handler | [운송목록조회QueryHandler](../../../../../Ssalddel/Application/Driver/Transport/Handlers/운송목록조회QueryHandler.cs): 본인 용달 운송 전체 조회·필요한 증빙 조건 연결 |
+| 계약 | [기사운송Dtos](../../../../../Ssalddel.Contracts/Driver/Transport/기사운송Dtos.cs): 운임 nullable, 거리 없음, 운송번호·시각·상태 |
 
-주 사용자: 기사 / 보조 참여자: 화주, 관리자, 창고 또는 현장 담당자
+기존 `IDriverSampleDataService`는 추천/예약/정산/운행 전체를 함께 갱신하고 작업공간의 **활성운송목록**만 옮겼다. 완료된 `인수완료`가 이 화면에서 사라지고 관련 없는 API 오류에도 기록 조회가 실패했다. 이제 기존 전용 목록 API를 직접 호출하므로 완료 기록과 독립적인 실패/재조회 경계를 유지한다. 다른 화면의 Sample 인터페이스·캐시는 변경하지 않았다.
 
-이 화면은 보조 또는 확장 업무 워크플로우 안에서 운송/배달 이력 조회 책임을 갖습니다. 화면 하나가 너무 많은 결정을 떠안지 않도록, 이 문서에서는 이 화면의 주 책임과 다른 화면으로 넘겨야 할 책임을 구분해 관리합니다.
+## 3. DB·원장: 기사와 업무 유형으로 분리
 
-## 화면에서 다루는 일
+| 자료 | 키/관계 | 이 화면의 사용 |
+| --- | --- | --- |
+| [운송실행투영 Configuration](../../../../../Ssalddel.Infrastructure/Persistence/Configurations/Transport/운송원장Configuration.cs) | Id PK, 의뢰Id unique, 기사_운송자=`기사_운송자`, 배차업무유형=`business_type` | 기사_운송자=token 기사 AND 업무 유형=용달운송. 상태로 완료 건을 제외하지 않음, AsNoTracking |
+| 화주운송의뢰 | 운송번호 ↔ 의뢰Id 논리 연결 | 증빙/결제수단/수령자 조건 조합. 이 화면은 연락처나 서명을 표시하지 않음 |
+| 운임·출발_픽업·도착·UpdatedAt | 투영에 저장한 값 | 미확인 값과 실제 0원 구별. 지도 거리·소득세·보험료 역산 없음 |
 
-- 주 책임: 운송/배달 이력 조회
-- 사용자가 확인해야 하는 것: 이 화면에서 상태, 입력값, 다음 행동이 명확히 보이는지 확인합니다.
-- 사용자가 조작해야 하는 것: 버튼, 입력, 선택, 업로드, 조회 같은 조작이 이 화면의 책임 안에 머무는지 확인합니다.
-- 화면 밖으로 넘길 일: 다른 앱이나 관리자 화면에서 처리해야 하는 상태 변경은 이 화면에 과하게 넣지 않습니다.
+목록 GET은 영속 상태를 수정하거나 Event/Outbox를 만들지 않는다. 운송 상태 변경의 저장·Mongo 원장 동기화는 기존 Command 소유이며 수동 새로고침/재진입은 서버를 다시 읽는다. 고객 주소는 인증 기사의 관련 운송 범위에서만 노출된다. Web 역할 host의 [별도 이력 페이지](../../../../../Ssalddel.WebApp/Pages/DriverTransportHistoryPage.razor)는 과거 상태만 분류하며 이 MAUI 파일과 다른 소스다.
 
-## 다른 화면과의 관계
+## 결손과 검증
 
-- 이전 화면: [DriverApp-P04 - 탐색 캠페인/추천 확장](../DriverApp-P04/)
-- 다음 화면: [DriverApp-P06 - 운행 시작, 위치 송신 시작](../DriverApp-P06/)
-- 상위 화면: 없음
-- 하위 화면: 없음
-
-상호작용 관점에서는 다음 흐름을 우선 봅니다. 기사의 수락, 거절, 상차, 하차, 증빙, 정산 관련 조작은 화주 상세와 관리자 원장에 상태 변경으로 반영됩니다.
-
-## API 경로와 코드 연결
-
-- 화면 소스: [DriverApp/Components/Pages/Driver/03_Progress/배달내역Page.razor](../../../../../DriverApp/Components/Pages/Driver/03_Progress/배달내역Page.razor)
-- 클라이언트 서비스/계약: [DriverApp/Services/IDriverSampleDataService.cs](../../../../../DriverApp/Services/IDriverSampleDataService.cs), [DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs](../../../../../DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs), [DriverApp/Services/Samples/기사샘플데이터Service.cs](../../../../../DriverApp/Services/Samples/기사샘플데이터Service.cs)
-
-| 구분 | 메서드 | API 경로 | 클라이언트/문서 근거 | 서버 근거 |
-| --- | --- | --- | --- | --- |
-| 클라이언트 서비스 | - | `api/v1/driver/recommendations` | [DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs](../../../../../DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs) | `GET api/v1/driver/recommendations` [Ssalddel/Controllers/Driver/02_Recommendation/기사배차추천Controller.cs](../../../../../Ssalddel/Controllers/Driver/02_Recommendation/기사배차추천Controller.cs)<br>`GET api/v1/driver/recommendations/idle` [Ssalddel/Controllers/Driver/02_Recommendation/기사배차추천Controller.cs](../../../../../Ssalddel/Controllers/Driver/02_Recommendation/기사배차추천Controller.cs)<br>`GET api/v1/driver/recommendations/driving` [Ssalddel/Controllers/Driver/02_Recommendation/기사배차추천Controller.cs](../../../../../Ssalddel/Controllers/Driver/02_Recommendation/기사배차추천Controller.cs)<br>`GET api/v1/driver/recommendations/search` [Ssalddel/Controllers/Driver/02_Recommendation/기사배차추천Controller.cs](../../../../../Ssalddel/Controllers/Driver/02_Recommendation/기사배차추천Controller.cs) |
-| 클라이언트 서비스 | - | `api/v1/driver/reservations` | [DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs](../../../../../DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs) | `GET api/v1/driver/reservations` [Ssalddel/Controllers/Driver/04_Reservation/기사예약Controller.cs](../../../../../Ssalddel/Controllers/Driver/04_Reservation/기사예약Controller.cs)<br>`POST api/v1/driver/reservations` [Ssalddel/Controllers/Driver/04_Reservation/기사예약Controller.cs](../../../../../Ssalddel/Controllers/Driver/04_Reservation/기사예약Controller.cs)<br>`POST api/v1/driver/reservations/{id:long}/cancel` [Ssalddel/Controllers/Driver/04_Reservation/기사예약Controller.cs](../../../../../Ssalddel/Controllers/Driver/04_Reservation/기사예약Controller.cs)<br>`GET api/v1/driver/reservations/{id:long}` [Ssalddel/Controllers/Driver/04_Reservation/기사예약Controller.cs](../../../../../Ssalddel/Controllers/Driver/04_Reservation/기사예약Controller.cs) |
-| 클라이언트 서비스 | - | `api/v1/driver/settlements/current-month` | [DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs](../../../../../DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs) | `GET api/v1/driver/settlements` [Ssalddel/Controllers/Driver/06_Settlement/기사정산Controller.cs](../../../../../Ssalddel/Controllers/Driver/06_Settlement/기사정산Controller.cs)<br>`GET api/v1/driver/settlements/current-month` [Ssalddel/Controllers/Driver/06_Settlement/기사정산Controller.cs](../../../../../Ssalddel/Controllers/Driver/06_Settlement/기사정산Controller.cs) |
-| 클라이언트 서비스 | - | `api/v1/driver/transports` | [DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs](../../../../../DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs) | `GET api/v1/driver/transports` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs)<br>`GET api/v1/driver/transports/current` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs)<br>`GET api/v1/driver/transports/{id:long}` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs)<br>`POST api/v1/driver/transports/{id:long}/arrive-pickup` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs) |
-| 클라이언트 서비스 | - | `api/v1/driver/work/current` | [DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs](../../../../../DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs) | `GET api/v1/driver/work/current` [Ssalddel/Controllers/Driver/01_Work/기사운행Controller.cs](../../../../../Ssalddel/Controllers/Driver/01_Work/기사운행Controller.cs) |
-| 클라이언트 서비스 | - | `api/v1/driver/work/status` | [DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs](../../../../../DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs) | `GET api/v1/driver/work/status` [Ssalddel/Controllers/Driver/01_Work/기사운행Controller.cs](../../../../../Ssalddel/Controllers/Driver/01_Work/기사운행Controller.cs) |
-
-검증할 때는 이 화면이 직접 메모리 데이터만 보는지, 위 API 응답을 받아 상태를 표시하는지, 실패했을 때 사용자가 다음 행동을 알 수 있는지 확인합니다.
-
-## 보안과 개인정보 점검
-
-기사 개인정보, 위치, 운행 상태, 추천 수락/거절 기록은 필요한 범위 안에서만 노출해야 합니다.
-
-## 캡처와 문서 상태
-
-현재 캡처는 문서용 캡처 호스트 또는 기존 캡처 파일 기준으로 확인한 화면입니다.
-
-이미지 파일을 다시 생성하면 이 README는 같은 경로의 이미지를 참조하므로 자동으로 최신 캡처를 보여줍니다.
-
-## 보완 메모
-
-- 화면 설명이 실제 구현과 달라지면 이 문서와 app-page-catalog.md를 함께 갱신합니다.
-- 화면이 2.0 운송 필수 워크플로우에 포함되면 ssalddel-v1-required-pages.md에도 반영합니다.
-- 렌더링이 깨지거나 내용이 잘리면 캡처 스크립트와 실제 화면 레이아웃을 같이 확인합니다.
+완료 이력 누락·관련 없는 조회 의존성·미확인 운임/거리의 0 대체 표시를 보완했다. SQLite 저장→추적 해제→본인 전체 목록 조회에서 .NET/EF의 배열 Contains 식 평가 오류도 재현하여 명시적 Enumerable.Contains로 수정했다. 완료/활성 포함과 다른 기사/음식배달 제외를 다시 확인한다. API/DB 계약에 음식 이력이나 거리 필드를 새로 만들지는 않았다. 실제 기기·제품 로그인·MySQL은 미검증이며 [결과 문서](../../implementation-r1.md)를 따른다.

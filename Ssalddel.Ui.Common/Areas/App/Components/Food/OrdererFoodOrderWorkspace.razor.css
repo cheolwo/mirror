@@ -1,18 +1,18 @@
 .food-order-workspace {
     display: grid;
-    gap: 1rem;
+    gap: 24px;
 }
 
 .food-order-layout {
     display: grid;
     grid-template-columns: minmax(0, 1.45fr) minmax(320px, .85fr);
-    gap: 1rem;
+    gap: 24px;
     align-items: start;
 }
 
 .food-order-main {
     display: grid;
-    gap: 1rem;
+    gap: 24px;
     min-width: 0;
 }
 

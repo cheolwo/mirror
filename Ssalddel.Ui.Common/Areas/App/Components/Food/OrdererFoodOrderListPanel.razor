@@ -3,7 +3,6 @@
 <MudPaper Elevation="0" Outlined="true" Class="food-order-panel">
     <div class="food-order-panel-heading">
         <div>
-            <MudText Typo="Typo.overline">PERSISTENT LEDGER</MudText>
             <MudText Typo="Typo.h6">내 음식 주문</MudText>
         </div>
         @if (List.초기화됨)
@@ -16,7 +15,7 @@
     {
         <div class="food-order-state">
             <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-            <MudText Typo="Typo.body2">내 음식 주문 원장을 조회하고 있습니다.</MudText>
+            <MudText Typo="Typo.body2">주문 내역을 불러오고 있습니다.</MudText>
         </div>
     }
     else if (List.오류발생)
@@ -24,7 +23,7 @@
         <div class="food-order-state">
             <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Color="Color.Error" Size="Size.Large" />
             <MudText Typo="Typo.subtitle2">주문 목록을 불러오지 못했습니다.</MudText>
-            <MudText Typo="Typo.body2">@OrdererFoodOrderPresentation.ErrorMessage(List.오류메시지)</MudText>
+            <MudText Typo="Typo.body2">@OrdererFoodOrderPresentation.ErrorMessage(List.오류)</MudText>
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ReloadRequested">다시 시도</MudButton>
         </div>
     }
@@ -32,8 +31,7 @@
     {
         <div class="food-order-state">
             <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Color="Color.Secondary" Size="Size.Large" />
-            <MudText Typo="Typo.subtitle2">저장된 음식 주문이 없습니다.</MudText>
-            <MudText Typo="Typo.body2">실제 주문 원장이 생기면 이 계정의 내역만 표시됩니다.</MudText>
+            <MudText Typo="Typo.subtitle2">주문 내역이 없습니다.</MudText>
             <MudButton Href="/food/restaurants" Variant="Variant.Outlined" Color="Color.Primary">음식점과 메뉴 보기</MudButton>
         </div>
     }
@@ -67,14 +65,14 @@
                     <MudText Typo="Typo.body2">@order.상품요약</MudText>
                     <div class="food-order-card-meta">
                         <span>@($"{order.상품종류수:N0}종 · {order.총수량:N0}개")</span>
-                        <span>@($"{order.총주문금액:N0}원")</span>
+                        <span class="food-order-card-amount">@($"{order.총주문금액:N0}원")</span>
                         <span>@OrdererFoodOrderPresentation.DispatchLabel(order.배차상태)</span>
                     </div>
                     <MudButton Variant="@(SelectedOrderNo == order.주문번호 ? Variant.Filled : Variant.Outlined)"
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.ReceiptLong"
                                OnClick="@(() => OrderSelected.InvokeAsync(order.주문번호))">
-                        정확한 주문 상세
+                        주문 상세
                     </MudButton>
                 </article>
             }

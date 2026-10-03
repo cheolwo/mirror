@@ -2,15 +2,16 @@
 @using Ssalddel.Ui.Common.Areas.App.ViewModels
 
 <section class="food-order-workspace" aria-label="내 음식 주문 내역">
-    @if (!Access.사용가능 || (Authentication.처리중 && !Authentication.초기화됨))
+    @if (!Access.사용가능 || !Authentication.초기화됨)
     {
         <OrdererFoodOrderAccessState Access="Access"
                                      Authentication="Authentication"
                                      RetryRequested="InitializeAsync" />
     }
-    else if (Access.사용가능 && !Authentication.로그인됨)
+    else if (Access.사용가능 && (!Authentication.로그인됨 || ViewModel.재로그인필요))
     {
         <OrdererFoodOrderLoginPanel Authentication="Authentication"
+                                    SessionExpired="ViewModel.재로그인필요"
                                     LoginRequested="LoginAsync" />
     }
     else if (Access.사용가능)
@@ -21,18 +22,20 @@
         <div class="food-order-layout">
             <div class="food-order-main">
                 <OrdererFoodOrderSearchPanel List="List"
-                                             SearchRequested="@(() => ViewModel.목록검색Async())"
-                                             ReloadRequested="@(() => ViewModel.목록새로고침Async())"
-                                             ResetRequested="@(() => ViewModel.검색조건초기화Async())" />
+                                             SearchRequested="SearchListAsync"
+                                             ReloadRequested="ReloadListAsync"
+                                             ResetRequested="ResetListAsync" />
                 <OrdererFoodOrderListPanel List="List"
                                            SelectedOrderNo="Detail.요청OrderNo"
                                            OrderSelected="SelectOrderAsync"
-                                           PageChanged="@(page => ViewModel.페이지변경Async(page))"
-                                           ReloadRequested="@(() => ViewModel.목록새로고침Async())"
-                                           ResetRequested="@(() => ViewModel.검색조건초기화Async())" />
+                                           PageChanged="ChangeListPageAsync"
+                                           ReloadRequested="ReloadListAsync"
+                                           ResetRequested="ResetListAsync" />
             </div>
 
             <OrdererFoodOrderDetailPanel Detail="Detail"
+                                         Cancellation="ViewModel.취소"
+                                         CancellationRequested="CancelOrderAsync"
                                          RetryRequested="RetryOrderAsync"
                                          RefreshRequested="RefreshOrderAsync"
                                          ReceiptConfirmationRequested="ConfirmReceiptAsync"

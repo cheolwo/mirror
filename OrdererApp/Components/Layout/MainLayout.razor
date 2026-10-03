@@ -4,26 +4,32 @@
 
 <div class="orderer-mobile-shell">
     <header class="orderer-mobile-shell__appbar">
-        <button type="button"
-                class="orderer-mobile-shell__icon-button"
-                aria-label="주문자 메뉴 열기"
-                aria-expanded="@_drawerOpen"
-                @onclick="ToggleDrawer">
-            <MudIcon Icon="@Icons.Material.Filled.Menu" />
-        </button>
+        @if (!_displayContext.AuthenticationOnly)
+        {
+            <button type="button"
+                    class="orderer-mobile-shell__icon-button"
+                    aria-label="주문자 메뉴 열기"
+                    aria-expanded="@_drawerOpen"
+                    @onclick="ToggleDrawer">
+                <MudIcon Icon="@Icons.Material.Filled.Menu" />
+            </button>
+        }
         <a class="orderer-mobile-shell__brand" href="@OrdererRoutes.Home">
             <span class="orderer-mobile-shell__brand-mark">ㅅ</span>
             <span>살뜰</span>
         </a>
         <span class="orderer-mobile-shell__spacer"></span>
-        <span class="orderer-mobile-shell__scope">음식 · 마트 · 화물 주문</span>
+        @if (!_displayContext.AuthenticationOnly)
+        {
+            <span class="orderer-mobile-shell__scope">음식 · 마트 · 화물 주문</span>
+        }
         <RoleAppLifecycleIndicator />
         <span class="orderer-mobile-shell__avatar" aria-label="주문자">O</span>
     </header>
 
     <MobileFieldTestBanner AppVersion="0.1.0" />
 
-    @if (_drawerOpen)
+    @if (_drawerOpen && !_displayContext.AuthenticationOnly)
     {
         <button type="button"
                 class="orderer-mobile-shell__backdrop"
@@ -90,11 +96,13 @@
         </aside>
     }
 
-    <section class="orderer-mobile-shell__content">
-        @Body
-    </section>
+    <CascadingValue Value="@_displayContext" IsFixed="true">
+        <section class="orderer-mobile-shell__content">
+            @Body
+        </section>
+    </CascadingValue>
 
-    @if (EnforceFieldTestRoutes)
+    @if (EnforceFieldTestRoutes && !_displayContext.AuthenticationOnly)
     {
         <footer class="orderer-mobile-shell__bottom-nav">
             <a class="orderer-mobile-shell__bottom-link" href="@OrdererRoutes.Food">
@@ -111,7 +119,7 @@
             </a>
         </footer>
     }
-    else
+    else if (!_displayContext.AuthenticationOnly)
     {
     <footer class="orderer-mobile-shell__bottom-nav">
         <a class="@BuildBottomLinkClass(BottomDestination.Home)"
@@ -144,6 +152,8 @@
 
 @code {
     private bool _drawerOpen;
+    private bool _disposed;
+    private readonly OrdererPageDisplayContext _displayContext = new();
 
     private static bool EnforceFieldTestRoutes
     {
@@ -158,14 +168,20 @@
     }
 
     protected override void OnInitialized()
-        => Navigation.LocationChanged += HandleLocationChanged;
+    {
+        Navigation.LocationChanged += HandleLocationChanged;
+        _displayContext.Changed += HandleDisplayChanged;
+    }
 
     private string CurrentPath
         => new Uri(Navigation.Uri).AbsolutePath.TrimEnd('/') is { Length: > 0 } path
             ? path
             : "/";
 
-    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+    private void ToggleDrawer()
+    {
+        if (!_disposed && !_displayContext.AuthenticationOnly) _drawerOpen = !_drawerOpen;
+    }
     private void CloseDrawer() => _drawerOpen = false;
 
     private bool IsBottomDestinationActive(BottomDestination destination)
@@ -188,12 +204,33 @@
 
     private void HandleLocationChanged(object? sender, LocationChangedEventArgs args)
     {
+        if (_disposed) return;
         _drawerOpen = false;
-        _ = InvokeAsync(StateHasChanged);
+        _displayContext.ResetForNavigation(args.Location);
+        RefreshShell();
     }
 
+    private void HandleDisplayChanged()
+    {
+        if (_disposed) return;
+        if (_displayContext.AuthenticationOnly) _drawerOpen = false;
+        RefreshShell();
+    }
+
+    private void RefreshShell()
+        => _ = InvokeAsync(() =>
+        {
+            if (!_disposed) StateHasChanged();
+        });
+
     public void Dispose()
-        => Navigation.LocationChanged -= HandleLocationChanged;
+    {
+        if (_disposed) return;
+        _disposed = true;
+        Navigation.LocationChanged -= HandleLocationChanged;
+        _displayContext.Changed -= HandleDisplayChanged;
+        _displayContext.Stop();
+    }
 
     private enum BottomDestination
     {

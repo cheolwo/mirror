@@ -23,7 +23,7 @@ public sealed class 음식운영Service
         using var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<음식점리뷰관리목록응답>(cancellationToken: cancellationToken)
-               ?? new 음식점리뷰관리목록응답();
+               ?? throw new InvalidOperationException("리뷰 목록 응답이 비어 있습니다.");
     }
 
     public async Task<음식점리뷰운영정책응답> 운영정책조회Async(CancellationToken cancellationToken = default)
@@ -32,7 +32,7 @@ public sealed class 음식운영Service
         using var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<음식점리뷰운영정책응답>(cancellationToken: cancellationToken)
-               ?? new 음식점리뷰운영정책응답();
+               ?? throw new InvalidOperationException("리뷰 정책 응답이 비어 있습니다.");
     }
 
     public async Task<음식배달요금정책응답> 배달요금정책조회Async(CancellationToken cancellationToken = default)
@@ -41,7 +41,7 @@ public sealed class 음식운영Service
         using var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<음식배달요금정책응답>(cancellationToken: cancellationToken)
-               ?? new 음식배달요금정책응답();
+               ?? throw new InvalidOperationException("배달 요금 정책 응답이 비어 있습니다.");
     }
 
     public async Task<음식배달요금정책응답> 배달요금정책수정Async(음식배달요금정책응답 policy, CancellationToken cancellationToken = default)
@@ -51,7 +51,7 @@ public sealed class 음식운영Service
         using var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<음식배달요금정책응답>(cancellationToken: cancellationToken)
-               ?? policy;
+               ?? throw new InvalidOperationException("저장된 배달 요금 정책 응답이 비어 있습니다. 다시 조회해 확인해 주세요.");
     }
 
     private HttpRequestMessage CreateRequest(HttpMethod method, string path)

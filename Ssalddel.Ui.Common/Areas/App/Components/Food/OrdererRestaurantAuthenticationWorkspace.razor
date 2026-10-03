@@ -1,0 +1,44 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Food
+@using Ssalddel.Ui.Common.Areas.App.Models.Auth
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+
+<section class="restaurant-authentication-workspace" aria-label="주문자 로그인">
+    @if (RequiresLoginAgain)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+            로그인 정보를 다시 확인해 주세요. 선택한 메뉴와 수령 정보는 유지됩니다.
+        </MudAlert>
+    }
+
+    <Ssalddel공통로그인Panel 제목="주문자 로그인"
+                             설명="로그인 후 선택한 음식점과 작성 중인 주문으로 돌아갑니다."
+                             상태메시지="@Authentication.오류메시지"
+                             상태Severity="@(Authentication.오류발생 ? Severity.Error : Severity.Info)"
+                             일반로그인표시="true"
+                             소셜로그인표시="false"
+                             일반로그인버튼텍스트="로그인하고 주문 계속"
+                             IsBusy="@Authentication.처리중"
+                             Elevation="0"
+                             OnPasswordLogin="LoginRequested" />
+
+    <MudButton Variant="Variant.Text"
+               Color="Color.Secondary"
+               Disabled="@Authentication.처리중"
+               OnClick="BackRequested">
+        음식점과 메뉴로 돌아가기
+    </MudButton>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public 주문자앱인증ViewModel Authentication { get; set; } = null!;
+
+    [Parameter]
+    public bool RequiresLoginAgain { get; set; }
+
+    [Parameter]
+    public EventCallback<공통로그인요청> LoginRequested { get; set; }
+
+    [Parameter]
+    public EventCallback BackRequested { get; set; }
+}

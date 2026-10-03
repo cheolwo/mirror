@@ -6,87 +6,89 @@
 @inject IOptions<RestaurantDeskOptions> DeskOptions
 @inject NavigationManager NavigationManager
 
-<PageTitle>신규 주문 수신함</PageTitle>
+<PageTitle>주문 목록</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="py-4">
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-4 restaurant-order-flow">
     <MudStack Spacing="3">
-        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="restaurant-page-header restaurant-home-hero">
-            <MudStack Spacing="0">
-                <MudText Typo="Typo.h4">신규 주문 수신함</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    플랫폼에서 들어온 주문을 확인하고, 조리시간을 정해 접수하세요.
-                </MudText>
-            </MudStack>
-            <MudChip T="string" Color="@RealtimeStatusColor" Variant="Variant.Outlined">@realtimeStatus</MudChip>
-        </MudStack>
-
-        <MudStack Row="true" Class="restaurant-chip-row" AlignItems="AlignItems.Center">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(isRefreshing || workLocked)" OnClick="ReloadManuallyAsync" StartIcon="@Icons.Material.Filled.Refresh">주문 새로고침</MudButton>
-            <MudButton Href="/settings/preparation-times" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Timer">기본 조리시간</MudButton>
-            <MudText Typo="Typo.caption">@(lastSuccessfulRefresh is null ? "서버 확인 대기" : $"마지막 확인 {lastSuccessfulRefresh.Value.ToLocalTime():HH:mm:ss}")</MudText>
-        </MudStack>
-
-        @if (!string.IsNullOrWhiteSpace(message))
+        <div class="order-flow-heading">
+            <MudText Typo="Typo.h4">주문 목록</MudText>
+            <MudChip T="string" Color="@RealtimeStatusColor" Variant="Variant.Outlined" Size="Size.Small">@RealtimeStatusLabel</MudChip>
+        </div>
+        <MudText Typo="Typo.body1" Class="order-page-guide">주문을 열어 확인하고 다음 작업을 진행하세요.</MudText>
+        @if (!string.IsNullOrWhiteSpace(message) && (messageSeverity == Severity.Warning || messageSeverity == Severity.Error))
         {
-            <MudAlert Severity="@messageSeverity">@message</MudAlert>
+            <MudAlert Severity="@messageSeverity" Class="order-flow-message">@message</MudAlert>
         }
-
         @if (isRefreshing && !hasLoaded)
         {
             <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="주문을 확인하고 있습니다" />
         }
         else if (orders.Count == 0 && hasLoaded && !reloadFailed)
         {
-            <MudPaper Elevation="0" Outlined="true" Class="pa-5">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-5 order-empty-state">
                 <MudStack AlignItems="AlignItems.Center" Spacing="1">
                     <MudIcon Icon="@Icons.Material.Filled.NotificationsNone" Size="Size.Large" Color="Color.Secondary" />
                     <MudText Typo="Typo.h6">지금은 처리할 주문이 없습니다.</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        새 주문이 들어오면 알려드립니다. 주문 목록은 30초마다 다시 확인합니다.
-                    </MudText>
+                    <MudText Typo="Typo.body1" Color="Color.Secondary">새 주문이 들어오면 알려드립니다.</MudText>
                 </MudStack>
             </MudPaper>
         }
         else if (orders.Count > 0)
         {
-            <MudStack Spacing="2">
+            <MudStack Spacing="2" Class="order-inbox-list">
                 @foreach (var order in orders)
                 {
-                    <MudPaper Elevation="0" Outlined="true" Class="pa-4 restaurant-home-card">
-                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="restaurant-order-card-row">
-                            <MudStack Spacing="1">
-                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                    <MudText Typo="Typo.subtitle1">@order.주문번호</MudText>
-                                    <MudChip T="string" Size="Size.Small" Color="@StatusColor(order.상태)">@order.상태</MudChip>
-                                </MudStack>
-                                <MudText Typo="Typo.body2">@order.고객명 · @order.메뉴요약</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                    @order.접수시각.ToLocalTime().ToString("yyyy-MM-dd HH:mm") · @order.주문금액.ToString("N0")원
-                                </MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Primary">
-                                    상품 기본값 기준 조리 예상 @(order.추천조리예상분)분
-                                </MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                    @RecoveryLabel(order.복구출처) · @order.최근복구시각.ToLocalTime().ToString("HH:mm:ss")
-                                </MudText>
-                            </MudStack>
-                            <MudButton Href="@($"/orders/{Uri.EscapeDataString(order.주문번호)}")"
-                                       Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       EndIcon="@Icons.Material.Filled.ChevronRight">
-                                상세 보기
-                            </MudButton>
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-4 order-inbox-card">
+                        <MudStack Spacing="2">
+                            <div class="order-flow-summary-row order-card-meta">
+                                <MudChip T="string" Color="@StatusColor(order.상태)" Size="Size.Small">@OrderStatusLabel(order.상태)</MudChip>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">@order.접수시각.ToLocalTime().ToString("HH:mm") 접수</MudText>
+                            </div>
+                            <MudText Typo="Typo.h6" Class="order-inbox-menu">@order.메뉴요약</MudText>
+                            <div class="order-flow-summary-row order-card-total">
+                                <MudText Typo="Typo.body1">@order.고객명</MudText>
+                                <MudText Typo="Typo.h6" Class="order-amount">@order.주문금액.ToString("N0")원</MudText>
+                            </div>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">조리 예상 @(order.추천조리예상분)분</MudText>
+                            <MudButton Href="@($"/orders/{Uri.EscapeDataString(order.주문번호)}")" Variant="Variant.Filled" Color="Color.Primary"
+                                       FullWidth="true" Class="order-primary-action" EndIcon="@Icons.Material.Filled.ChevronRight">주문 보기</MudButton>
+                            <details class="order-flow-details order-card-details">
+                                <summary>상세 정보</summary>
+                                <div class="order-details-content">
+                                    <MudText Typo="Typo.body2">주문번호 · @order.주문번호</MudText>
+                                    <MudText Typo="Typo.body2">접수 · @order.접수시각.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</MudText>
+                                    <MudText Typo="Typo.body2">@RecoveryLabel(order.복구출처) · @order.최근복구시각.ToLocalTime().ToString("HH:mm:ss")</MudText>
+                                </div>
+                            </details>
                         </MudStack>
                     </MudPaper>
                 }
             </MudStack>
         }
+        <div class="order-flow-secondary-row">
+            <MudButton Variant="Variant.Outlined" Disabled="@(isRefreshing || workLocked)" OnClick="ReloadManuallyAsync" StartIcon="@Icons.Material.Filled.Refresh">새로고침</MudButton>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@(lastSuccessfulRefresh is null ? "확인 대기" : $"마지막 확인 {lastSuccessfulRefresh.Value.ToLocalTime():HH:mm:ss}")</MudText>
+        </div>
+        <details class="order-flow-details">
+            <summary>상세 정보</summary>
+            <div class="order-details-content">
+                <MudText Typo="Typo.body2">@realtimeStatus</MudText>
+                <MudText Typo="Typo.body2">주문 목록은 30초마다 다시 확인합니다.</MudText>
+                @if (!string.IsNullOrWhiteSpace(message) && messageSeverity != Severity.Warning && messageSeverity != Severity.Error)
+                {
+                    <MudText Typo="Typo.body2">@message</MudText>
+                }
+                <MudButton Href="/settings/preparation-times" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Timer">기본 조리시간</MudButton>
+            </div>
+        </details>
     </MudStack>
 </MudContainer>
 
 @code {
     private readonly CancellationTokenSource refreshCancellation = new();
     private Task? refreshTask;
+    private Task<bool>? currentReloadTask;
+    private bool disposed;
     private IReadOnlyList<음식점주문DeskItem> orders = [];
     private string realtimeStatus = "실시간 연결 대기";
     private string? message;
@@ -115,13 +117,19 @@
         RestaurantRealtimeService.상태변경 += HandleRealtimeStatusChangedAsync;
         RestaurantRealtimeService.재연결후재조회요청 += HandleReconnectedRefreshAsync;
         await TryReloadAsync(음식점주문복구출처.서버재조회);
+        if (disposed) return;
 
         if (!workLocked)
         {
             try
             {
-                await RestaurantRealtimeService.연결Async();
+                await RestaurantRealtimeService.연결Async(refreshCancellation.Token);
+                refreshCancellation.Token.ThrowIfCancellationRequested();
                 realtimeStatus = $"실시간 연결됨 · {DeskOptions.Value.RestaurantName}";
+            }
+            catch (Exception) when (refreshCancellation.IsCancellationRequested)
+            {
+                return;
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -139,13 +147,14 @@
             }
         }
 
-        refreshTask = RunPeriodicRefreshAsync(refreshCancellation.Token);
+        if (!disposed) refreshTask = RunPeriodicRefreshAsync(refreshCancellation.Token);
     }
 
     private async Task HandleRealtimeOrderReceivedAsync(음식점주문수신알림 notification)
     {
         await InvokeAsync(async () =>
         {
+            if (disposed) return;
             await OrderDeskService.주문알림수신Async(new 음식점주문수신Payload
             {
                 주문번호 = notification.주문번호,
@@ -157,11 +166,12 @@
                 수신시각 = notification.수신시각,
                 제목 = notification.제목,
                 본문 = notification.본문
-            });
+            }, refreshCancellation.Token);
+            if (disposed) return;
             messageSeverity = Severity.Success;
             message = $"{notification.주문번호} 주문을 수신했습니다.";
             await TryReloadAsync(음식점주문복구출처.서버재조회);
-            StateHasChanged();
+            if (!disposed) StateHasChanged();
         });
     }
 
@@ -169,6 +179,7 @@
     {
         await InvokeAsync(() =>
         {
+            if (disposed) return;
             realtimeStatus = change.안내;
             if (change.상태 == 음식점실시간연결상태.인증필요)
             {
@@ -185,13 +196,14 @@
     {
         await InvokeAsync(async () =>
         {
+            if (disposed) return;
             var recovered = await TryReloadAsync(음식점주문복구출처.재연결재조회);
             if (recovered)
             {
                 messageSeverity = Severity.Success;
                 message = "실시간 재연결 직후 서버 수신함을 다시 확인했습니다.";
             }
-            StateHasChanged();
+            if (!disposed) StateHasChanged();
         });
     }
 
@@ -199,12 +211,13 @@
     {
         await InvokeAsync(async () =>
         {
+            if (disposed) return;
             if (await TryReloadAsync(음식점주문복구출처.서버재조회))
             {
                 messageSeverity = Severity.Info;
                 message = $"{notification.주문번호} · {notification.주문상태} / {notification.배차상태} ({notification.변경사유})";
             }
-            StateHasChanged();
+            if (!disposed) StateHasChanged();
         });
     }
 
@@ -217,11 +230,11 @@
             {
                 await InvokeAsync(async () =>
                 {
-                    if (!workLocked)
+                    if (!workLocked && !disposed)
                     {
                         await TryReloadAsync(음식점주문복구출처.서버재조회);
                     }
-                    StateHasChanged();
+                    if (!disposed) StateHasChanged();
                 });
             }
         }
@@ -230,23 +243,36 @@
         }
     }
 
-    private async Task<bool> TryReloadAsync(음식점주문복구출처 복구출처)
+    private Task<bool> TryReloadAsync(음식점주문복구출처 복구출처)
     {
-        if (isRefreshing || workLocked) return false;
+        if (isRefreshing || workLocked || disposed) return Task.FromResult(false);
+        return currentReloadTask = ReloadInboxAsync(복구출처);
+    }
+
+    private async Task<bool> ReloadInboxAsync(음식점주문복구출처 복구출처)
+    {
         isRefreshing = true;
+        var cancellationToken = refreshCancellation.Token;
         try
         {
-            orders = await OrderDeskService.주문목록조회Async(복구출처);
+            var loaded = await OrderDeskService.주문목록조회Async(복구출처, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            orders = loaded;
             hasLoaded = true;
             lastSuccessfulRefresh = DateTimeOffset.UtcNow;
             if (reloadFailed) message = null;
             reloadFailed = false;
             return true;
         }
+        catch (Exception) when (cancellationToken.IsCancellationRequested)
+        {
+            return false;
+        }
         catch (UnauthorizedAccessException ex)
         {
             reloadFailed = true;
             workLocked = true;
+            orders = [];
             messageSeverity = Severity.Error;
             message = ex.Message;
             NavigationManager.NavigateTo("/login", replace: true);
@@ -256,6 +282,7 @@
         {
             reloadFailed = true;
             workLocked = true;
+            orders = [];
             messageSeverity = Severity.Error;
             message = "로그인 세션을 복구하지 못했습니다. 다시 로그인해 주세요.";
             NavigationManager.NavigateTo("/login", replace: true);
@@ -265,22 +292,66 @@
         {
             reloadFailed = true;
             workLocked = true;
+            orders = [];
             messageSeverity = Severity.Error;
-            message = "이 계정은 현재 음식점의 주문 수신함을 볼 수 없습니다. 음식점 소유권·운영자 역할을 확인해 주세요.";
+            message = "이 계정은 현재 음식점 주문을 볼 수 없습니다. 음식점 운영 권한을 확인해 주세요.";
             return false;
         }
-        catch (Exception ex)
+        catch (SsalddelApiException ex) when (ex.StatusCode == 401)
+        {
+            reloadFailed = true;
+            workLocked = true;
+            orders = [];
+            messageSeverity = Severity.Error;
+            message = "로그인이 만료되었습니다. 다시 로그인해 주세요.";
+            NavigationManager.NavigateTo("/login", replace: true);
+            return false;
+        }
+        catch (SsalddelApiException ex) when (ex.StatusCode == 403)
+        {
+            reloadFailed = true;
+            workLocked = true;
+            orders = [];
+            messageSeverity = Severity.Error;
+            message = "이 계정은 현재 음식점 주문을 볼 수 없습니다. 음식점 운영 권한을 확인해 주세요.";
+            return false;
+        }
+        catch (Exception)
         {
             reloadFailed = true;
             messageSeverity = Severity.Warning;
-            message = $"서버 수신함을 갱신하지 못했습니다. 마지막 목록을 유지하고 다음 30초 조회에서 다시 시도합니다. {ex.Message}";
+            message = "주문 목록을 갱신하지 못했습니다. 이전 목록을 표시하며 다음 30초 조회에서 다시 시도합니다. 새로고침으로도 다시 시도할 수 있습니다.";
             return false;
         }
         finally
         {
-            isRefreshing = false;
+            if (!disposed) isRefreshing = false;
         }
     }
+
+    private string RealtimeStatusLabel => RestaurantRealtimeService.연결상태 switch
+    {
+        음식점실시간연결상태.연결됨 => "주문 알림 켜짐",
+        음식점실시간연결상태.재연결중 => "다시 연결 중",
+        음식점실시간연결상태.인증필요 => "로그인 필요",
+        _ => "알림 연결 확인"
+    };
+
+    private static string OrderStatusLabel(string status) => status switch
+    {
+        음식점주문Desk상태코드.주문대기 => "주문 확인 필요",
+        "주문확인" => "기사 배정 대기",
+        음식점주문Desk상태코드.수락처리중 => "주문 확인 중",
+        음식점주문Desk상태코드.기사배정 => "기사 배정 완료",
+        음식점주문Desk상태코드.조리중 => "조리 중",
+        음식점주문Desk상태코드.픽업대기 => "픽업 대기",
+        음식점주문Desk상태코드.픽업완료 => "배달 중",
+        음식점주문Desk상태코드.전달완료 => "수령 확인 대기",
+        음식점주문Desk상태코드.수령확인 => "주문 완료",
+        음식점주문Desk상태코드.거절 => "주문 거절",
+        음식점주문Desk상태코드.취소 => "주문 취소",
+        _ => status
+    };
 
     private static string RecoveryLabel(음식점주문복구출처 source) => source switch
     {
@@ -305,6 +376,7 @@
 
     public async ValueTask DisposeAsync()
     {
+        disposed = true;
         refreshCancellation.Cancel();
         RestaurantRealtimeService.주문수신 -= HandleRealtimeOrderReceivedAsync;
         RestaurantRealtimeService.주문상태변경 -= HandleOrderStatusChangedAsync;
@@ -313,6 +385,10 @@
         if (refreshTask is not null)
         {
             await refreshTask;
+        }
+        if (currentReloadTask is not null)
+        {
+            await currentReloadTask;
         }
 
         refreshCancellation.Dispose();

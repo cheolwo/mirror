@@ -1,0 +1,81 @@
+@using Ssalddel.Contracts.Admin.Food
+@using Ssalddel.Contracts.Common.Dispatch
+@using Ssalddel.Contracts.Food
+@implements IDisposable
+@inject FoodOrderOperationsTraceAdminService TraceService
+@inject 관리자인증세션Service Session
+@inject NavigationManager Navigation
+
+<MudStack Spacing="3" Class="food-review-workspace">
+    <MudStack Spacing="1">
+        <MudText Typo="Typo.h4">배달 중단 검토</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@OrderNo · 중단 근거를 확인하고 사람 검토 결과를 기록합니다.</MudText>
+        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="BackAsync">주문 추적으로 돌아가기</MudButton>
+    </MudStack>
+    @if (state.RequiresLogin || !state.AuthenticationCurrent)
+    {
+        <MudAlert Severity="Severity.Warning">@(state.Message ?? "계정이 변경되었습니다. 다시 로그인하고 최신 주문을 조회해 주세요.")</MudAlert>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@LoginUrl">로그인하고 최신 주문 조회</MudButton>
+    }
+    else
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@state.IsBusy" OnClick="RefreshAsync">@(state.IsBusy ? "최신 상태 확인 중" : "최신 시도 조회")</MudButton>
+        @if (!string.IsNullOrWhiteSpace(state.Message))
+        {
+            <MudAlert Severity="@(state.Saved ? Severity.Success : Severity.Warning)">@state.Message</MudAlert>
+        }
+        @if (state.IsBusy) { <MudProgressLinear Indeterminate="true" Color="Color.Primary" /> }
+        @if (state.Trace is { } trace)
+        {
+            <MudPaper Elevation="0" Class="pa-4 food-trace-surface">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6">배달 시도</MudText>
+                    @if (trace.배달시도목록.Count == 0)
+                    { <MudText Typo="Typo.body2">연결된 배달 시도가 없습니다.</MudText> }
+                    @foreach (var attempt in trace.배달시도목록.OrderByDescending(x => x.시도순번))
+                    {
+                        <div class="food-review-attempt">
+                            <MudText Typo="Typo.subtitle2">시도 @attempt.시도순번 · @AttemptStatus(attempt.상태Code) @(IsLatest(attempt) ? "· 최근 시도" : string.Empty)</MudText>
+                            <MudText Typo="Typo.body2">수락 @DateText(attempt.수락시각Utc) · 중단 @DateText(attempt.중단시각Utc)</MudText>
+                            <MudText Typo="Typo.body2">중단 사유: @ReasonText(attempt.중단사유Code) · 현재 판정: @ResponsibilityText(attempt.책임Code)</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@attempt.시도StableId · 판본 @attempt.Revision</MudText>
+                            @if (attempt.상태Code == 음식배달시도상태Code.중단)
+                            {
+                                <MudButton Variant="@(state.SelectedAttemptId == attempt.시도StableId ? Variant.Filled : Variant.Outlined)" Color="Color.Primary"
+                                           Disabled="@(state.IsBusy || state.RequiresRefresh)" OnClick="@(() => SelectAttempt(attempt.시도StableId))">
+                                    @(state.SelectedAttemptId == attempt.시도StableId ? "검토 대상" : "이 시도 검토")
+                                </MudButton>
+                            }
+                        </div>
+                    }
+                </MudStack>
+            </MudPaper>
+            @if (state.SelectedAttempt is { } selected)
+            {
+                <MudPaper Elevation="0" Class="pa-4 food-trace-surface">
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.h6">시도 @selected.시도순번 검토 · 판본 @selected.Revision</MudText>
+                        <MudText Typo="Typo.body2">가게 도착 @DateText(selected.가게도착시각Utc) · 현장 대기 @(selected.현장대기초.HasValue ? $"{selected.현장대기초}초" : "미확인")</MudText>
+                        <MudText Typo="Typo.body2">재조리 요청 @DateText(selected.재조리요청시각Utc) · 조리 지연 재배차 @(selected.조리지연재배차여부 ? "있음" : "없음")</MudText>
+                        @if (selected.책임Code == 운영배차책임Code.보호대상)
+                        { <MudAlert Severity="Severity.Info" Dense="true">현재 보호 대상 중단입니다. 기사 책임으로 바꾸려면 사람 검토로 악용을 확정해야 합니다.</MudAlert> }
+                        @if (selected.유산추정여부)
+                        { <MudAlert Severity="Severity.Warning" Dense="true">이전 기록에서 추정된 시도입니다. 확인된 근거와 추정을 구별해 검토해 주세요.</MudAlert> }
+                        <MudText Typo="Typo.body2">현재 검토 사유: @(string.IsNullOrWhiteSpace(selected.검토사유) ? "기록 없음" : selected.검토사유)</MudText>
+                        <MudText Typo="Typo.body2">악용 확정 기록: @(selected.악용확정여부 ? "있음" : "없음")</MudText>
+                        <MudSelect T="string" Label="검토 판정" Variant="Variant.Outlined" Disabled="@InputLocked" @bind-Value="state.DecisionCode">
+                            <MudSelectItem T="string" Value="@음식배달중단검토판정Code.보호">보호 대상</MudSelectItem>
+                            <MudSelectItem T="string" Value="@음식배달중단검토판정Code.기사책임">기사 책임</MudSelectItem>
+                            <MudSelectItem T="string" Value="@음식배달중단검토판정Code.음식점책임">음식점 책임</MudSelectItem>
+                            <MudSelectItem T="string" Value="@음식배달중단검토판정Code.플랫폼책임">플랫폼 책임</MudSelectItem>
+                        </MudSelect>
+                        <MudTextField T="string" Label="판정 사유와 확인 근거" Variant="Variant.Outlined" Lines="4" MaxLength="1000" Immediate="true" Disabled="@InputLocked" @bind-Value="state.Reason" />
+                        <MudCheckBox T="bool" Label="사람 검토로 악용을 확인했습니다" Disabled="@InputLocked" @bind-Value="state.AbuseConfirmed" />
+                        <MudCheckBox T="bool" Label="선택 시도·최신 판본·판정 근거를 확인했습니다" Disabled="@InputLocked" @bind-Value="state.Confirmed" />
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Disabled="@(!state.CanSubmit)" OnClick="SubmitAsync">@(state.IsBusy ? "검토 처리 중" : "검토 기록 저장")</MudButton>
+                    </MudStack>
+                </MudPaper>
+            }
+        }
+    }
+</MudStack>

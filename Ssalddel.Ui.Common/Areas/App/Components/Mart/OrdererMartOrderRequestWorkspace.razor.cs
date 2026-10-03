@@ -8,6 +8,7 @@ namespace Ssalddel.Ui.Common.Areas.App.Components.Mart;
 public partial class OrdererMartOrderRequestWorkspace
 {
     private bool _initialized;
+    private bool? _lastAuthenticationStage;
 
     [Parameter]
     public long? ProductId { get; set; }
@@ -28,12 +29,29 @@ public partial class OrdererMartOrderRequestWorkspace
     public EventCallback<Guid?> RequestSelected { get; set; }
 
     [Parameter]
+    public EventCallback<bool> AuthenticationModeChanged { get; set; }
+
+    [Parameter]
     public Func<Task<bool>>? BeforeSubmit { get; set; }
 
     private 주문자앱인증ViewModel Authentication => ViewModel.인증;
     private 마트공개상품상세ViewModel Product => ViewModel.상품;
     private 마트주문작성ViewModel Writer => ViewModel.작성;
     private 마트주문요청상세ViewModel RequestDetail => ViewModel.요청상세;
+
+    private bool AuthenticationStage
+        => (ProductId.HasValue || RequestId.HasValue)
+           && (Authentication.처리중 || !Authentication.초기화됨 || !Authentication.로그인됨);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var stage = AuthenticationStage;
+        if (_lastAuthenticationStage != stage)
+        {
+            _lastAuthenticationStage = stage;
+            await AuthenticationModeChanged.InvokeAsync(stage);
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {

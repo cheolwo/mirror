@@ -7,6 +7,8 @@
             <h1>@Title</h1>
             <p>@Description</p>
         </div>
+        @if (!AuthenticationOnly)
+        {
         <div class="group-purchase-screen__actions">
             @if (!string.IsNullOrWhiteSpace(BackHref))
             {
@@ -27,11 +29,15 @@
                 </MudButton>
             }
         </div>
+        }
     </header>
 
+    @if (!AuthenticationOnly)
+    {
     <MudAlert Severity="@BoundarySeverity" Variant="Variant.Outlined" Dense="true" Class="group-purchase-screen__boundary">
         @BoundaryMessage
     </MudAlert>
+    }
 
     <main class="group-purchase-screen__body">
         @ChildContent
@@ -44,6 +50,7 @@
     [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
     [Parameter, EditorRequired] public string Description { get; set; } = string.Empty;
     [Parameter] public string? BackHref { get; set; }
+    [Parameter] public bool AuthenticationOnly { get; set; }
     [Parameter] public Severity BoundarySeverity { get; set; } = Severity.Info;
     [Parameter] public string BoundaryMessage { get; set; }
         = "1.0 공동구매 화면은 비구속 수요와 공개 모집까지만 다룹니다. 결제·계약·수입 신고·배차는 실행하지 않습니다.";

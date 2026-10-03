@@ -20,6 +20,10 @@
 
 기능 접근은 목록·상세·후기와 같은 `MartProductAccessFrame`이 담당하며, 주문 요청 Workspace는 상품·인증·작성·정확한 저장 영수증만 조립합니다.
 
+## 인증과 업무 표시
+
+[OrdererMartOrderRequestWorkspace](../../../../../Ssalddel.Ui.Common/Areas/App/Components/Mart/OrdererMartOrderRequestWorkspace.razor)는 복원·로그인 단계에서 상품·작성 폼·영수증을 함께 표시하지 않습니다. [인증 패널](../../../../../Ssalddel.Ui.Common/Areas/App/Components/Mart/OrdererMartOrderAuthenticationPanel.razor)과 [로그인된 계정 표시](../../../../../Ssalddel.Ui.Common/Areas/App/Components/Mart/OrdererMartOrderAccountHeader.razor)를 분리하며, 기존 수량·동의·멱등 ID와 로그아웃 초기화는 유지합니다. 표시·복귀 및 검증 범위는 [로그인·업무 책임 카드](../../auth-workspace-separation-r1.md), [페이지 원칙의 인증 경계](../../../../Architecture/WholeRoadmapPagePrinciple.md#인증과-업무의-경계)를 참조합니다.
+
 ## API와 검증
 
 - `GET /api/v1/orderer/mart/products/{productId}`

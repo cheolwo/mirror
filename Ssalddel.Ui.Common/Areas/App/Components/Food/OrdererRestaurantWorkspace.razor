@@ -1,11 +1,18 @@
 @inherits MvvmComponentBase<음식점탐색PageViewModel>
 @using Ssalddel.Ui.Common.Areas.App.ViewModels
 
-<section class="restaurant-workspace" aria-label="공개 음식점과 메뉴 탐색">
+<section class="restaurant-workspace" aria-label="@(ViewModel.인증화면표시 ? "주문자 인증" : "공개 음식점과 메뉴 탐색")">
     @if (!Access.사용가능)
     {
         <OrdererRestaurantAccessState Access="@Access"
                                       RetryRequested="InitializeAsync" />
+    }
+    else if (ViewModel.인증화면표시)
+    {
+        <OrdererRestaurantAuthenticationWorkspace Authentication="@Authentication"
+                                                  RequiresLoginAgain="@Writer.재로그인필요"
+                                                  LoginRequested="LoginAsync"
+                                                  BackRequested="ReturnToBusinessAsync" />
     }
     else
     {
@@ -32,7 +39,7 @@
                                           Writer="@Writer"
                                           RetryRequested="RetryRestaurantAsync"
                                           ClearRequested="ClearSelectionAsync"
-                                          LoginRequested="LoginAsync"
+                                          AuthenticationRequested="OpenAuthenticationAsync"
                                           SubmitRequested="SubmitOrderAsync" />
         </div>
     }

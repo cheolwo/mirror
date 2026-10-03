@@ -2,14 +2,14 @@
 @using Ssalddel.Ui.Common.Areas.App.Models.Auth
 @using Ssalddel.Ui.Common.Areas.App.ViewModels
 
-@if (Authentication.처리중 && !Authentication.초기화됨)
+@if (Authentication.처리중)
 {
     <MudPaper Elevation="0" Outlined="true" Class="mart-order-state">
         <MudProgressCircular Indeterminate="true" Color="Color.Success" />
         <MudText Typo="Typo.body1">저장된 주문자 로그인 세션을 확인하고 있습니다.</MudText>
     </MudPaper>
 }
-else if (!Authentication.로그인됨)
+else if (!Authentication.초기화됨 || !Authentication.로그인됨)
 {
     <div class="mart-order-login-layout">
         <Ssalddel공통로그인Panel 제목="주문 요청 로그인"
@@ -34,15 +34,6 @@ else if (!Authentication.로그인됨)
         </MudPaper>
     </div>
 }
-else
-{
-    <div class="mart-order-toolbar">
-        <MudChip T="string" Variant="Variant.Outlined" Color="Color.Success" Icon="@Icons.Material.Filled.VerifiedUser">
-            @Authentication.현재사용자표시
-        </MudChip>
-        <MudButton Variant="Variant.Text" Color="Color.Secondary" Disabled="@Authentication.처리중" OnClick="LogoutRequested">로그아웃</MudButton>
-    </div>
-}
 
 @code {
     [Parameter, EditorRequired]
@@ -53,9 +44,6 @@ else
 
     [Parameter]
     public EventCallback<공통로그인요청> LoginRequested { get; set; }
-
-    [Parameter]
-    public EventCallback LogoutRequested { get; set; }
 
     private Severity AuthenticationSeverity
         => Authentication.오류발생 ? Severity.Error : Severity.Info;

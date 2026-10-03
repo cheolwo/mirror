@@ -35,13 +35,14 @@
     flex-wrap: wrap;
     margin-bottom: 1rem;
     color: var(--mud-palette-text-secondary);
-    font-size: .85rem;
+    font-size: .875rem;
+    font-variant-numeric: tabular-nums;
 }
 
 .food-order-line-item,
 .food-order-history-item {
     align-items: flex-start;
-    padding: .55rem 0;
+    padding: 12px 0;
     border-bottom: 1px solid var(--mud-palette-lines-default);
 }
 
@@ -57,7 +58,7 @@
 
 .food-order-history-item span:last-child {
     color: var(--mud-palette-text-secondary);
-    font-size: .78rem;
+    font-size: .875rem;
 }
 
 .food-order-receipt-steps,
@@ -72,14 +73,14 @@
     align-items: flex-start;
     gap: .65rem;
     padding: .75rem;
-    border: 1px solid var(--mud-palette-lines-default);
+    border-inline-start: 3px solid var(--mud-palette-lines-default);
     border-radius: 12px;
     background: var(--mud-palette-background-gray);
 }
 
 .food-order-receipt-step--done {
     border-color: var(--mud-palette-success);
-    background: color-mix(in srgb, var(--mud-palette-success) 8%, transparent);
+    background: var(--mud-palette-surface);
 }
 
 .food-order-receipt-step span {
@@ -104,3 +105,12 @@
         flex-direction: column;
     }
 }
+
+.food-order-panel { overflow-wrap: anywhere; }
+.food-order-detail-heading > div,
+.food-order-receipt-step span { min-width: 0; }
+.food-order-detail-heading ::deep .mud-icon-button { flex-shrink: 0; min-width: 48px; min-height: 48px; }
+.food-order-detail-summary > span {
+    font-size: 1.125rem; font-weight: 700; color: var(--mud-palette-text-primary);
+}
+.food-order-receipt-step small { font-size: .875rem; line-height: 1.5; }

@@ -1,5 +1,4 @@
 @namespace Ssalddel.Ui.Common.Areas.App.Components.Food
-@using Ssalddel.Ui.Common.Areas.App.Models.Auth
 @using Ssalddel.Ui.Common.Areas.App.ViewModels
 
 <MudPaper Elevation="0" Outlined="true" Class="food-order-composer">
@@ -43,25 +42,27 @@
         </strong>
     </div>
 
-    @if (!Authentication.초기화됨 || Authentication.처리중)
+    @if (Authentication.처리중)
     {
         <div class="food-order-composer__state">
             <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Small" />
             <MudText Typo="Typo.body2">주문자 로그인 상태를 확인하고 있습니다.</MudText>
         </div>
     }
-    else if (!Authentication.로그인됨)
+    else if (!Authentication.초기화됨 || !Authentication.로그인됨 || Writer.재로그인필요)
     {
-        <Ssalddel공통로그인Panel 제목="주문 제출 로그인"
-                                 설명="공개 메뉴는 누구나 볼 수 있지만 수령 정보가 포함된 주문은 로그인한 주문자만 제출할 수 있습니다."
-                                 상태메시지="@Authentication.오류메시지"
-                                 상태Severity="@(Authentication.오류발생 ? Severity.Error : Severity.Info)"
-                                 일반로그인표시="true"
-                                 소셜로그인표시="false"
-                                 일반로그인버튼텍스트="로그인하고 주문 계속"
-                                 IsBusy="@Authentication.처리중"
-                                 Elevation="0"
-                                 OnPasswordLogin="LoginRequested" />
+        @if (Authentication.오류발생)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true">
+                @Authentication.오류메시지
+            </MudAlert>
+        }
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Login"
+                   OnClick="AuthenticationRequested">
+            로그인하고 주문 계속
+        </MudButton>
     }
     else
     {
@@ -144,7 +145,7 @@
     public 음식주문작성ViewModel Writer { get; set; } = null!;
 
     [Parameter]
-    public EventCallback<공통로그인요청> LoginRequested { get; set; }
+    public EventCallback AuthenticationRequested { get; set; }
 
     [Parameter]
     public EventCallback SubmitRequested { get; set; }

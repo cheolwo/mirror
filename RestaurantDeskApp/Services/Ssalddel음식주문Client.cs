@@ -134,7 +134,8 @@ public sealed class Ssalddel음식주문Client(
             cancellationToken: cancellationToken);
         if (!auth.IsSuccess)
         {
-            throw new UnauthorizedAccessException(auth.ErrorMessage);
+            if (auth.RequiresLogin) throw new UnauthorizedAccessException(auth.ErrorMessage);
+            throw new HttpRequestException(auth.ErrorMessage);
         }
 
         var response = await SendOnceAsync(
@@ -142,6 +143,11 @@ public sealed class Ssalddel음식주문Client(
             path,
             contentFactory,
             cancellationToken);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            response.Dispose();
+            cancellationToken.ThrowIfCancellationRequested();
+        }
         if (response.StatusCode != HttpStatusCode.Unauthorized)
         {
             return response;
@@ -153,14 +159,34 @@ public sealed class Ssalddel음식주문Client(
             cancellationToken: cancellationToken);
         if (!auth.IsSuccess)
         {
-            throw new UnauthorizedAccessException(auth.ErrorMessage);
+            if (auth.RequiresLogin) throw new UnauthorizedAccessException(auth.ErrorMessage);
+            throw new HttpRequestException(auth.ErrorMessage);
         }
 
-        return await SendOnceAsync(
+        response = await SendOnceAsync(
             method,
             path,
             contentFactory,
             cancellationToken);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            response.Dispose();
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            try
+            {
+                await authService.InvalidateRejectedSessionAsync(cancellationToken);
+            }
+            catch
+            {
+                response.Dispose();
+                throw;
+            }
+        }
+
+        return response;
     }
 
     private async Task<HttpResponseMessage> SendOnceAsync(

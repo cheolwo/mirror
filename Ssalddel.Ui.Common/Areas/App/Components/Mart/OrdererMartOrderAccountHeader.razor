@@ -1,0 +1,17 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Mart
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+
+<div class="mart-order-toolbar">
+    <MudChip T="string" Variant="Variant.Outlined" Color="Color.Success" Icon="@Icons.Material.Filled.VerifiedUser">
+        @Authentication.현재사용자표시
+    </MudChip>
+    <MudButton Variant="Variant.Text" Color="Color.Secondary" Disabled="@Authentication.처리중" OnClick="LogoutRequested">로그아웃</MudButton>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public 주문자앱인증ViewModel Authentication { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback LogoutRequested { get; set; }
+}

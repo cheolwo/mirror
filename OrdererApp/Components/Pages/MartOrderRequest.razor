@@ -1,26 +1,43 @@
 @page "/food/mart/order"
 @page "/food/mart/order/{ProductId:long}"
+@implements IDisposable
 @inject NavigationManager Navigation
 @using Ssalddel.Contracts.Common.Mart
 
-<PageTitle>알뜰살뜰 마트 주문 요청</PageTitle>
+<PageTitle>@(_authenticationMode ? "주문 요청 로그인" : "알뜰살뜰 마트 주문 요청")</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.False" Class="py-4">
     <MartProductAccessFrame Context="@Context"
                             CurrentScreen="MartProductScreenKind.Order"
                             ProductId="@EffectiveProductId"
-                            Eyebrow="ORDER REQUEST"
-                            Title="알뜰살뜰 마트 주문 요청"
-                            Description="선택한 공개 상품 한 건의 비구속 주문 의향만 저장하고 같은 요청 ID를 다시 확인합니다."
+                            Eyebrow="@(_authenticationMode ? "LOGIN" : "ORDER REQUEST")"
+                            Title="@(_authenticationMode ? "주문 요청 로그인" : "알뜰살뜰 마트 주문 요청")"
+                            Description="@(_authenticationMode ? "로그인하면 선택한 상품의 주문 요청을 이어갈 수 있습니다." : "선택한 공개 상품 한 건의 비구속 주문 의향만 저장하고 같은 요청 ID를 다시 확인합니다.")"
+                            AuthenticationOnly="@_authenticationMode"
                             HomeHref="@OrdererRoutes.Food">
         <OrdererMartOrderRequestWorkspace ProductId="@EffectiveProductId"
                                           RequestId="@RequestId"
                                           CatalogHref="@Context.PathFor(MartProductScreenKind.List)"
+                                          AuthenticationModeChanged="OnAuthenticationModeChanged"
                                           RequestSelected="OnRequestSelectedAsync" />
     </MartProductAccessFrame>
 </MudContainer>
 
 @code {
+    private bool _authenticationMode = true;
+    private bool _disposed;
+    private OrdererPageDisplayContext.PageLease? _displayLease;
+
+    [CascadingParameter]
+    public OrdererPageDisplayContext? DisplayContext { get; set; }
+
+    private void OnAuthenticationModeChanged(bool authenticationMode)
+    {
+        if (_disposed || _displayLease is { IsCurrent: false }) return;
+        _authenticationMode = authenticationMode;
+        _displayLease?.SetAuthenticationMode(authenticationMode);
+    }
+
     [Parameter] public long? ProductId { get; set; }
 
     [SupplyParameterFromQuery(Name = "productId")]
@@ -36,6 +53,12 @@
 
     protected override void OnParametersSet()
     {
+        if (_disposed) return;
+        if (DisplayContext is not null && _displayLease?.IsFor(Navigation.Uri) != true)
+        {
+            _displayLease?.Dispose();
+            _displayLease = DisplayContext.Acquire(_authenticationMode, Navigation.Uri);
+        }
         if (ProductId is not > 0 && LegacyProductId is > 0)
         {
             var target = Context.PathFor(MartProductScreenKind.Order, LegacyProductId);
@@ -43,8 +66,19 @@
         }
     }
 
+    public void Dispose()
+    {
+        _disposed = true;
+        _displayLease?.Dispose();
+    }
+
     private Task OnRequestSelectedAsync(Guid? requestId)
     {
+        if (_disposed || _displayLease is { IsCurrent: false })
+        {
+            return Task.CompletedTask;
+        }
+
         var target = EffectiveProductId is > 0
             ? Context.PathFor(MartProductScreenKind.Order, EffectiveProductId)
             : MartProductPageRoutes.OrderRoot;

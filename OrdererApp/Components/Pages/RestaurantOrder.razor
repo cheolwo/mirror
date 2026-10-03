@@ -1,24 +1,59 @@
 @page "/food/restaurants"
+@implements IDisposable
 @inject NavigationManager Navigation
 
-<PageTitle>음식점과 메뉴</PageTitle>
+<PageTitle>@(_authenticationMode ? "주문자 로그인" : "음식점과 메뉴")</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.False" Class="py-4">
     <MudStack Spacing="3">
-        <MudStack Spacing="0">
-            <MudText Typo="Typo.h4">음식점과 메뉴</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">
-                공개 행정권역 기준으로 음식점을 찾고, 선택한 정확한 음식점의 공개 메뉴를 확인합니다.
-            </MudText>
-        </MudStack>
+        @if (!_authenticationMode)
+        {
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h4">음식점과 메뉴</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    공개 행정권역 기준으로 음식점을 찾고, 선택한 정확한 음식점의 공개 메뉴를 확인합니다.
+                </MudText>
+            </MudStack>
+        }
 
         <OrdererRestaurantWorkspace RestaurantId="@RestaurantId"
                                     RestaurantSelected="OnRestaurantSelectedAsync"
-                                    OrderSubmitted="OnOrderSubmittedAsync" />
+                                    OrderSubmitted="OnOrderSubmittedAsync"
+                                    AuthenticationModeChanged="OnAuthenticationModeChanged" />
     </MudStack>
 </MudContainer>
 
 @code {
+    private bool _authenticationMode;
+    private bool _disposed;
+    private OrdererPageDisplayContext.PageLease? _displayLease;
+
+    [CascadingParameter]
+    public OrdererPageDisplayContext? DisplayContext { get; set; }
+
+    private void OnAuthenticationModeChanged(bool authenticationMode)
+    {
+        if (_disposed || _displayLease is { IsCurrent: false }) return;
+        _authenticationMode = authenticationMode;
+        _displayLease?.SetAuthenticationMode(authenticationMode);
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (_disposed || DisplayContext is null) return;
+        if (_displayLease?.IsFor(Navigation.Uri) != true)
+        {
+            _displayLease?.Dispose();
+            _displayLease = DisplayContext.Acquire(_authenticationMode, Navigation.Uri);
+        }
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        _displayLease?.Dispose();
+    }
+
     [SupplyParameterFromQuery(Name = "restaurantId")]
     public long? RestaurantId { get; set; }
 

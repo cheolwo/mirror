@@ -54,6 +54,22 @@
 		<PackageReference Include="Square.OkIO.JVM" />
 	</ItemGroup>
 
+	<!-- SDK ID is provided by the developer environment; it is never stored in source. -->
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
+		<NaverMapSdkNcpKeyId Condition="'$(NaverMapSdkNcpKeyId)' == ''">$(SSALDDEL_NAVER_MAP_SDK_NCP_KEY_ID)</NaverMapSdkNcpKeyId>
+	</PropertyGroup>
+	<Target Name="GenerateNaverMapSdkResources" BeforeTargets="_ComputeAndroidResourcePaths" Condition="'$(TargetFramework)' == 'net10.0-android'">
+		<PropertyGroup>
+			<_NaverSdkResourcePath>$(IntermediateOutputPath)naver-map-sdk/values/naver_map_sdk.xml</_NaverSdkResourcePath>
+			<_EscapedNaverSdkKeyId>$(NaverMapSdkNcpKeyId.Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</_EscapedNaverSdkKeyId>
+		</PropertyGroup>
+		<Warning Condition="'$(NaverMapSdkNcpKeyId)' == ''" Text="Naver Map SDK ID is not configured. The app will show a map configuration message. Set SSALDDEL_NAVER_MAP_SDK_NCP_KEY_ID or NaverMapSdkNcpKeyId before building." />
+		<WriteLinesToFile File="$(_NaverSdkResourcePath)" Lines="&lt;resources&gt;&lt;string name=&quot;naver_map_sdk_ncp_key_id&quot; translatable=&quot;false&quot;&gt;$(_EscapedNaverSdkKeyId)&lt;/string&gt;&lt;/resources&gt;" Overwrite="true" WriteOnlyWhenDifferent="true" Encoding="UTF-8" />
+		<ItemGroup>
+			<AndroidResource Include="$(_NaverSdkResourcePath)" Link="Resources/values/naver_map_sdk.xml" />
+		</ItemGroup>
+	</Target>
+
 	<ItemGroup>
 		<ProjectReference Include="..\Ssalddel.Contracts\Ssalddel.Contracts.csproj" />
 		<ProjectReference Include="..\Ssalddel.Client.Infrastructure\Ssalddel.Client.Infrastructure.csproj" />

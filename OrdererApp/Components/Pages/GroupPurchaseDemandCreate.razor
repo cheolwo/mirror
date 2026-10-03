@@ -1,14 +1,17 @@
 @page "/group-purchase/demands/new/{ProductId}"
+@implements IDisposable
+@inject NavigationManager Navigation
 @using Ssalddel.Contracts.Common.Orderer
 @inject GroupPurchaseCatalogViewModel Catalog
 
-<PageTitle>비구속 공동구매 수요 등록</PageTitle>
+<PageTitle>@(_authenticationMode ? "수요 원장 로그인" : "비구속 공동구매 수요 등록")</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-0">
     <GroupPurchaseScreenFrame CurrentScreen="GroupPurchaseScreenKind.DemandCreate"
-                              Eyebrow="GROUP PURCHASE · ACTION"
-                              Title="비구속 수요 등록"
-                              Description="선택한 상품 한 건의 모집권과 희망 수량을 확인해 사용자 소유 수요 원장에 저장합니다."
+                              Eyebrow="@(_authenticationMode ? "LOGIN" : "GROUP PURCHASE · ACTION")"
+                              Title="@(_authenticationMode ? "수요 원장 로그인" : "비구속 수요 등록")"
+                              Description="@(_authenticationMode ? "로그인 후 작성하던 수요로 돌아갑니다. 수요 저장은 별도로 확인합니다." : "선택한 상품 한 건의 모집권과 희망 수량을 확인해 사용자 소유 수요 원장에 저장합니다.")"
+                              AuthenticationOnly="@_authenticationMode"
                               BackHref="@BackHref">
         @if (!_productFound)
         {
@@ -23,7 +26,8 @@
                                       DesiredQuantityKgChanged="UpdateDesiredQuantityAsync"
                                       DesiredUnitPrice="Catalog.DesiredUnitPrice"
                                       DesiredUnitPriceChanged="UpdateDesiredUnitPriceAsync"
-                                      ShowFlowSummary="false" />
+                                      ShowFlowSummary="false"
+                                      AuthenticationModeChanged="OnAuthenticationModeChanged" />
         }
     </GroupPurchaseScreenFrame>
 </MudContainer>
@@ -32,14 +36,39 @@
     [Parameter] public string ProductId { get; set; } = string.Empty;
 
     private bool _productFound;
+    private bool _authenticationMode;
+    private bool _disposed;
+    private OrdererPageDisplayContext.PageLease? _displayLease;
+
+    [CascadingParameter]
+    public OrdererPageDisplayContext? DisplayContext { get; set; }
+
+    private void OnAuthenticationModeChanged(bool authenticationMode)
+    {
+        if (_disposed || _displayLease is { IsCurrent: false }) return;
+        _authenticationMode = authenticationMode;
+        _displayLease?.SetAuthenticationMode(authenticationMode);
+    }
     private string BackHref => _productFound
         ? GroupPurchasePageRoutes.ProductDetailFor(Catalog.SelectedProduct.상품카드Id)
         : GroupPurchasePageRoutes.ProductsRoot;
 
     protected override async Task OnParametersSetAsync()
     {
+        if (_disposed) return;
+        if (DisplayContext is not null && _displayLease?.IsFor(Navigation.Uri) != true)
+        {
+            _displayLease?.Dispose();
+            _displayLease = DisplayContext.Acquire(_authenticationMode, Navigation.Uri);
+        }
         _productFound = await Catalog.LoadAsync()
                         && Catalog.TrySelectProduct(ProductId);
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        _displayLease?.Dispose();
     }
 
     private Task UpdateDesiredQuantityAsync(decimal quantityKg)

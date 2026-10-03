@@ -80,7 +80,8 @@ public sealed class DriverMobileFigma04PresentationTests
 
         Assert.Contains("private readonly MainPage _mainPage", app);
         Assert.Contains("new NavigationPage(_mainPage)", app);
-        Assert.Contains("네이티브 운행 지도", layout);
+        Assert.Contains("<span>운행 지도</span>", layout);
+        Assert.Contains("@onclick=\"OpenNativeMapAsync\"", layout);
         Assert.Contains("GetRequiredService<NativeDriverHomePage>()", navigator);
     }
 

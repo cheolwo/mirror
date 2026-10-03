@@ -1,4 +1,5 @@
 using FDriverApp.Pages;
+using Microsoft.Extensions.DependencyInjection;
 using Ssalddel.Ui.Common.Areas.App.Services;
 
 namespace FDriverApp
@@ -8,10 +9,10 @@ namespace FDriverApp
         private readonly MainPage _mainPage;
         private readonly 역할앱생명주기State _lifecycle;
 
-        public App(MainPage mainPage, 역할앱생명주기State lifecycle)
+        public App(IServiceProvider services, 역할앱생명주기State lifecycle)
         {
             InitializeComponent();
-            _mainPage = mainPage;
+            _mainPage = services.GetRequiredService<MainPage>();
             _lifecycle = lifecycle;
             _lifecycle.초기화(DeviceInfo.Current.Platform.ToString(), IsConnected());
             Connectivity.Current.ConnectivityChanged += HandleConnectivityChanged;

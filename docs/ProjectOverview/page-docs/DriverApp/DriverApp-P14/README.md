@@ -1,78 +1,46 @@
 # DriverApp-P14 - 월정산 확인
 
-[전체 화면 문서](../../README.md) / [DriverApp 화면 목록](../README.md) / [앱 전체 카탈로그](../../../app-page-catalog.md)
+[전체 화면 문서](../../README.md) / [DriverApp 화면 목록](../README.md) / [전체 route](../../current-pages.md) / [이번 보완 결과](../../implementation-r1.md)
 
-## 화면 캡처
+## 기존 화면 캡처
 
-<img src="../../../assets/app-pages/DriverApp/DriverApp-P14.png" alt="DriverApp-P14 화면 캡처" width="720">
+<img src="../../../assets/app-pages/DriverApp/DriverApp-P14.png" alt="DriverApp-P14 이전 화면 캡처" width="720">
 
-## 기본 정보
+이전 캡처를 보존했다. 2026-10-02 소스 검토·수정 결과를 새 캡처로 확인한 것은 아니다.
 
-| 항목 | 내용 |
+## 1. 페이지: 이번 달 플랫폼 이용료 조회
+
+| 항목 | 현재 연결 |
 | --- | --- |
-| 앱 | DriverApp |
-| 페이지 ID / 제목 | DriverApp-P14 - 월정산 확인 |
-| 라우트 | /driver/settlements/current-month |
-| 소스 파일 | [DriverApp/Components/Pages/Driver/05_Settlement/월정산Page.razor](../../../../../DriverApp/Components/Pages/Driver/05_Settlement/월정산Page.razor) |
-| 분류 | 필수 |
-| 2.0 운송 필수 연결 | [DriverApp-P14 - 월정산 확인](../../../ssalddel-v1-required-pages.md) |
-| 캡처 상태 | 완료 |
+| route / 소스 | `/driver/settlements/current-month` / [월정산Page](../../../../../DriverApp/Components/Pages/Driver/05_Settlement/월정산Page.razor) |
+| 역할/단계 | 기사 / 이용료 조회 데이터 페이지. [이용료 안내](../DriverApp-P14-1/), [계좌 정보](../DriverApp-P14-2/)는 별도 책임 |
+| 표시 | 년·월, 배차건수, 이용료, 월 상한·잔여, 이용료 결제 상태 |
+| 로딩/실패 | ViewModel 처리중·초기화됨·오류를 구분. 실패/취소/미초기화 때 기본 0원/0년/결제 안내를 숨기고 재시도 |
+| 새로고침 | 현재 월 API 재호출. API 실패 후 이전 값도 현재 확정액으로 표시하지 않음 |
 
-## 왜 필요한가
+`IsPaid`는 **이용료 결제** 상태다. 기사에게 소득/보험 공제 후 대금이 지급됐다는 의미가 아니다. 이번에는 문구를 `이번 달 이용료 결제가 완료되었습니다`로 명확히 했다. 공제/미션/지사 프로모션·기간별 순수령액을 이 화면에 새로 넣지 않았다.
 
-이 화면은 월정산 확인을 담당하므로, 1.0 업무 흐름이 실제 사용자 행동으로 닫히기 위해 필요합니다.
+## 2. 코드: PageViewModel → Feature → Client → Query
 
-## 사용자와 참여자
+| 단계 | 실제 코드 |
+| --- | --- |
+| PageViewModel | [기사정산PageViewModels](../../../../../DriverApp/ViewModels/Driver/Settlement/기사정산PageViewModels.cs): 조회 결과 없거나 하위 오류이면 실패, [공통 PageViewModelBase](../../../../../Ssalddel.Ui.Common/Areas/App/ViewModels/PageViewModelBase.cs)가 로딩/오류/재시도 수명 관리 |
+| Feature/Client | [기사정산기능ViewModel](../../../../../DriverApp/ViewModels/Driver/Features/기사정산기능ViewModel.cs) → [DriverSettlementApiService](../../../../../DriverApp/Services/DriverSettlementApiService.cs) → 기존 인증 DriverApiClient |
+| Controller | [기사정산Controller](../../../../../Ssalddel/Controllers/Driver/06_Settlement/기사정산Controller.cs): 기사 역할, V2.0 Settlement/Browse, token의 기사Id |
+| Query | GET `api/v1/driver/settlements/current-month` → [현재월 Handler](../../../../../Ssalddel/Application/Driver/Settlement/Handlers/기사정산현재월조회QueryHandler.cs) → [공통 매퍼](../../../../../Ssalddel/Application/Driver/Settlement/Handlers/기사정산공통매퍼.cs) |
 
-주 사용자: 기사 / 보조 참여자: 화주, 관리자, 창고 또는 현장 담당자
+이 페이지는 SampleDataService나 음식 배달용 `api/v1/drivers/{driverId}/monthly-settlements/current`를 직접 호출하지 않는다. 기존 문서에 Client 전체 API를 펼치던 설명을 실제 호출 한 개로 좁혔다. 목록/월별 조회는 같은 Client의 별도 기능이며 현재 페이지 실행 증거로 합산하지 않는다.
 
-이 화면은 살뜰 2.0 국내 화물 운송 워크플로우 안에서 월정산 확인 책임을 갖습니다. 화면 하나가 너무 많은 결정을 떠안지 않도록, 이 문서에서는 이 화면의 주 책임과 다른 화면으로 넘겨야 할 책임을 구분해 관리합니다.
+## 3. DB·원장: 이용료 월별 행과 소득 정산 경계
 
-## 화면에서 다루는 일
+| 자료 | 키·열/관계 | 읽기·쓰기 |
+| --- | --- | --- |
+| [기사월정산 Configuration](../../../../../Ssalddel.Infrastructure/Persistence/Configurations/Driver/기사월정산Configuration.cs) | 테이블 기사월정산, id PK; `driver_id`, `year`, `month`, `dispatch_count`, `usage_fee`, `is_paid`, 시각 | 조회는 기사Id·UTC 현재 년/월. 없으면 해당 월 0건/0원·미결제 DTO를 반환하며 DB에 새 행을 저장하지 않음 |
+| [기사월정산Service](../../../../../Ssalddel/Services/Settlement/기사월정산Service.cs) | 기사/년/월 논리 식별. [기사이용료정책Options](../../../../../Ssalddel/Services/Options/기사이용료정책Options.cs)의 현행 계산·월 상한 | 배차확정반영 때 건수 증가/이용료 저장. 월마감은 기존 결제완료 처리. 이 조회 페이지는 쓰기/결제 API를 호출하지 않음 |
+| 기사 지급·법정 공제·지사 지급 원장 | 이용료 행과 별도 업무 의미 | [지급 상세 기획](../../../../AI/Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL/README.md)의 후속 범위. 행 존재/IsPaid를 입금 증거로 해석하지 않음 |
 
-- 주 책임: 월정산 확인
-- 사용자가 확인해야 하는 것: 이 화면에서 상태, 입력값, 다음 행동이 명확히 보이는지 확인합니다.
-- 사용자가 조작해야 하는 것: 버튼, 입력, 선택, 업로드, 조회 같은 조작이 이 화면의 책임 안에 머무는지 확인합니다.
-- 화면 밖으로 넘길 일: 다른 앱이나 관리자 화면에서 처리해야 하는 상태 변경은 이 화면에 과하게 넣지 않습니다.
+현재 Configuration에는 기사/년/월 복합 unique index와 월확정 revision이 없다. 동시 반영·중복 배차 과금·월마감과 실제 PG 결과의 결속은 기존 보완 필요 사항이다. 이 문서 작업에서 운영 schema/청구 정책을 임의로 바꾸지 않는다. 월 경계는 현행 UTC이며 한국 정산일과의 차이는 정책 결정·고정시각 시험이 필요한 후속 항목이다.
 
-## 다른 화면과의 관계
+## 결손과 검증
 
-- 이전 화면: [DriverApp-P13 - 하차 증빙, POD, 하차 예외](../DriverApp-P13/)
-- 다음 화면: [DriverApp-P14-1 - 이용료/정산 정책 안내](../DriverApp-P14-1/)
-- 상위 화면: 없음
-- 하위 화면: [DriverApp-P14-1 - 이용료/정산 정책 안내](../DriverApp-P14-1/), [DriverApp-P14-2 - 기사 정산 계좌 정보](../DriverApp-P14-2/)
-
-상호작용 관점에서는 다음 흐름을 우선 봅니다. 기사의 수락, 거절, 상차, 하차, 증빙, 정산 관련 조작은 화주 상세와 관리자 원장에 상태 변경으로 반영됩니다.
-
-## API 경로와 코드 연결
-
-- 화면 소스: [DriverApp/Components/Pages/Driver/05_Settlement/월정산Page.razor](../../../../../DriverApp/Components/Pages/Driver/05_Settlement/월정산Page.razor)
-- 클라이언트 서비스/계약: [DriverApp/Services/IDriverSampleDataService.cs](../../../../../DriverApp/Services/IDriverSampleDataService.cs), [DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs](../../../../../DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs), [DriverApp/Services/Samples/기사샘플데이터Service.cs](../../../../../DriverApp/Services/Samples/기사샘플데이터Service.cs)
-
-| 구분 | 메서드 | API 경로 | 클라이언트/문서 근거 | 서버 근거 |
-| --- | --- | --- | --- | --- |
-| 2.0 운송 문서 | - | `api/v1/driver/settlements` | [docs/ProjectOverview/ssalddel-v1-required-pages.md](../../../ssalddel-v1-required-pages.md) | `GET api/v1/driver/settlements` [Ssalddel/Controllers/Driver/06_Settlement/기사정산Controller.cs](../../../../../Ssalddel/Controllers/Driver/06_Settlement/기사정산Controller.cs)<br>`GET api/v1/driver/settlements/{year:int}/{month:int}` [Ssalddel/Controllers/Driver/06_Settlement/기사정산Controller.cs](../../../../../Ssalddel/Controllers/Driver/06_Settlement/기사정산Controller.cs)<br>`GET api/v1/driver/settlements/current-month` [Ssalddel/Controllers/Driver/06_Settlement/기사정산Controller.cs](../../../../../Ssalddel/Controllers/Driver/06_Settlement/기사정산Controller.cs) |
-| 클라이언트 서비스 | - | `api/v1/driver/recommendations` | [DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs](../../../../../DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs) | `GET api/v1/driver/recommendations` [Ssalddel/Controllers/Driver/02_Recommendation/기사배차추천Controller.cs](../../../../../Ssalddel/Controllers/Driver/02_Recommendation/기사배차추천Controller.cs)<br>`GET api/v1/driver/recommendations/idle` [Ssalddel/Controllers/Driver/02_Recommendation/기사배차추천Controller.cs](../../../../../Ssalddel/Controllers/Driver/02_Recommendation/기사배차추천Controller.cs)<br>`GET api/v1/driver/recommendations/driving` [Ssalddel/Controllers/Driver/02_Recommendation/기사배차추천Controller.cs](../../../../../Ssalddel/Controllers/Driver/02_Recommendation/기사배차추천Controller.cs)<br>`GET api/v1/driver/recommendations/search` [Ssalddel/Controllers/Driver/02_Recommendation/기사배차추천Controller.cs](../../../../../Ssalddel/Controllers/Driver/02_Recommendation/기사배차추천Controller.cs) |
-| 클라이언트 서비스 | - | `api/v1/driver/reservations` | [DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs](../../../../../DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs) | `GET api/v1/driver/reservations` [Ssalddel/Controllers/Driver/04_Reservation/기사예약Controller.cs](../../../../../Ssalddel/Controllers/Driver/04_Reservation/기사예약Controller.cs)<br>`POST api/v1/driver/reservations` [Ssalddel/Controllers/Driver/04_Reservation/기사예약Controller.cs](../../../../../Ssalddel/Controllers/Driver/04_Reservation/기사예약Controller.cs)<br>`POST api/v1/driver/reservations/{id:long}/cancel` [Ssalddel/Controllers/Driver/04_Reservation/기사예약Controller.cs](../../../../../Ssalddel/Controllers/Driver/04_Reservation/기사예약Controller.cs)<br>`GET api/v1/driver/reservations/{id:long}` [Ssalddel/Controllers/Driver/04_Reservation/기사예약Controller.cs](../../../../../Ssalddel/Controllers/Driver/04_Reservation/기사예약Controller.cs) |
-| 클라이언트 서비스 | - | `api/v1/driver/settlements/current-month` | [DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs](../../../../../DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs) | `GET api/v1/driver/settlements` [Ssalddel/Controllers/Driver/06_Settlement/기사정산Controller.cs](../../../../../Ssalddel/Controllers/Driver/06_Settlement/기사정산Controller.cs)<br>`GET api/v1/driver/settlements/current-month` [Ssalddel/Controllers/Driver/06_Settlement/기사정산Controller.cs](../../../../../Ssalddel/Controllers/Driver/06_Settlement/기사정산Controller.cs) |
-| 클라이언트 서비스 | - | `api/v1/driver/transports` | [DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs](../../../../../DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs) | `GET api/v1/driver/transports` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs)<br>`GET api/v1/driver/transports/current` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs)<br>`GET api/v1/driver/transports/{id:long}` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs)<br>`POST api/v1/driver/transports/{id:long}/arrive-pickup` [Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs](../../../../../Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs) |
-| 클라이언트 서비스 | - | `api/v1/driver/work/current` | [DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs](../../../../../DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs) | `GET api/v1/driver/work/current` [Ssalddel/Controllers/Driver/01_Work/기사운행Controller.cs](../../../../../Ssalddel/Controllers/Driver/01_Work/기사운행Controller.cs) |
-| 클라이언트 서비스 | - | `api/v1/driver/work/status` | [DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs](../../../../../DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs) | `GET api/v1/driver/work/status` [Ssalddel/Controllers/Driver/01_Work/기사운행Controller.cs](../../../../../Ssalddel/Controllers/Driver/01_Work/기사운행Controller.cs) |
-
-검증할 때는 이 화면이 직접 메모리 데이터만 보는지, 위 API 응답을 받아 상태를 표시하는지, 실패했을 때 사용자가 다음 행동을 알 수 있는지 확인합니다.
-
-## 보안과 개인정보 점검
-
-금액, 계좌, 결제 식별자, 정산 예정일은 마스킹과 권한 검사가 필요합니다.
-
-## 캡처와 문서 상태
-
-현재 캡처는 문서용 캡처 호스트 또는 기존 캡처 파일 기준으로 확인한 화면입니다.
-
-이미지 파일을 다시 생성하면 이 README는 같은 경로의 이미지를 참조하므로 자동으로 최신 캡처를 보여줍니다.
-
-## 보완 메모
-
-- 화면 설명이 실제 구현과 달라지면 이 문서와 app-page-catalog.md를 함께 갱신합니다.
-- 화면이 2.0 운송 필수 워크플로우에 포함되면 ssalddel-v1-required-pages.md에도 반영합니다.
-- 렌더링이 깨지거나 내용이 잘리면 캡처 스크립트와 실제 화면 레이아웃을 같이 확인합니다.
+기존 ViewModel은 오류를 보유하지만 화면은 기본 0원 값을 항상 표시했다. 이번에 로딩·실패·성공을 실제 ViewModel 상태와 결속하고 재시도/새로고침을 추가했다. 이용료·상한·금액 계산식은 그대로다. 실제 PG·은행 입금·운영 MySQL·기기 실행은 미검증이다. 자동 시험/렌더 상한은 [보완 결과](../../implementation-r1.md)에 기록한다.

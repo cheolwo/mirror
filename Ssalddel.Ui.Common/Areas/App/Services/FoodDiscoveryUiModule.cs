@@ -16,6 +16,7 @@ internal static class FoodDiscoveryUiModule
         services.TryAddScoped<I주문자음식주문읽기Service, 주문자음식주문Client>();
         services.TryAddScoped<I주문자음식주문쓰기Service, 주문자음식주문Client>();
         services.TryAddScoped<I주문자음식주문수령확인Service, 주문자음식주문Client>();
+        services.TryAddScoped<I주문자음식주문취소Service, 주문자음식주문Client>();
         services.TryAddTransient<음식배달페이지접근ViewModel>();
         services.TryAddTransient<음식점탐색기준ViewModel>();
         services.TryAddTransient<음식점공개목록ViewModel>();
@@ -24,6 +25,7 @@ internal static class FoodDiscoveryUiModule
         services.TryAddTransient<음식점탐색PageViewModel>();
         services.TryAddTransient<주문자음식주문목록ViewModel>();
         services.TryAddTransient<주문자음식주문상세ViewModel>();
+        services.TryAddTransient<주문자음식주문취소ViewModel>();
         services.TryAddTransient<주문자음식주문PageViewModel>();
 
         return services;

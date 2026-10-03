@@ -18,6 +18,10 @@
 | 2.0 운송 필수 연결 | [DriverApp-P08 - 추천 목록](../../../ssalddel-v1-required-pages.md) |
 | 캡처 상태 | 완료 |
 
+## 인증과 업무 표시
+
+기존 [추천목록Page](../../../../../DriverApp/Components/Pages/Driver/02_Recommendation/추천목록Page.razor)는 로딩·미인증 안내·오류·업무를 배타적으로 표시합니다. 미인증 상태에서는 캐시 위치·반경·필터를 표시하지 않고 [로그인 화면](../DriverApp-P01/)으로 이동해 기존 추천 목록 경로로 복귀합니다. 기준과 검증 범위는 [로그인·업무 책임 카드](../../auth-workspace-separation-r1.md), [페이지 원칙의 인증 경계](../../../../Architecture/WholeRoadmapPagePrinciple.md#인증과-업무의-경계)를 참조합니다.
+
 ## 왜 필요한가
 
 이 화면은 추천 목록을 담당하므로, 1.0 업무 흐름이 실제 사용자 행동으로 닫히기 위해 필요합니다.

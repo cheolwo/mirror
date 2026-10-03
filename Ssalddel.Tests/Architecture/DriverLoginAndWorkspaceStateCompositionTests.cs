@@ -34,8 +34,11 @@ public sealed class DriverLoginAndWorkspaceStateCompositionTests
             $"Components/Pages/Driver/{relativePath.Replace('/', Path.DirectorySeparatorChar)}");
 
         Assert.Contains("@inject IAuthSession AuthSession", source);
-        Assert.Contains("await AuthSession.RestoreAsync()", source);
-        Assert.Contains("await Samples.RefreshAsync(force: force)", source);
+        var currentTransport = relativePath.EndsWith("진행중운송Page.razor", StringComparison.Ordinal);
+        Assert.Contains(currentTransport ? "await AuthSession.RestoreAsync(_갱신토큰)" : "await AuthSession.RestoreAsync()", source);
+        Assert.Contains(relativePath.EndsWith("배달내역Page.razor", StringComparison.Ordinal)
+            ? "await TransportApi.목록조회Async()"
+            : currentTransport ? "await Samples.RefreshAsync(_갱신토큰, force: force)" : "await Samples.RefreshAsync(force: force)", source);
         Assert.Contains($"DriverRoutes.LoginFor({expectedReturnRoute})", source);
         Assert.Contains("다시 시도", source);
         Assert.Contains("_데이터로딩중", source);

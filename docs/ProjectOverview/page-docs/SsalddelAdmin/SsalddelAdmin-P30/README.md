@@ -1,75 +1,56 @@
 # SsalddelAdmin-P30 - 음식 주문/배달 운영
 
-[전체 화면 문서](../../README.md) / [SsalddelAdmin 화면 목록](../README.md) / [앱 전체 카탈로그](../../../app-page-catalog.md)
+[전체 화면 문서](../../README.md) / [SsalddelAdmin 화면 목록](../README.md) / [전체 route](../../current-pages.md) / [이번 보완 결과](../../implementation-r1.md)
 
-## 화면 캡처
+## 기존 화면 캡처
 
-<img src="../../../assets/app-pages/SsalddelAdmin/SsalddelAdmin-P30.png" alt="SsalddelAdmin-P30 화면 캡처" width="720">
+<img src="../../../assets/app-pages/SsalddelAdmin/SsalddelAdmin-P30.png" alt="SsalddelAdmin-P30 이전 화면 캡처" width="720">
 
-## 기본 정보
+이전 캡처를 보존했다. 2026-10-02 소스 검토·수정 결과를 새 캡처로 확인한 것은 아니다.
 
-| 항목 | 내용 |
+## 1. 페이지: 요금 정책 수정과 리뷰 운영 조회
+
+| 항목 | 현재 연결 |
 | --- | --- |
-| 앱 | SsalddelAdmin |
-| 페이지 ID / 제목 | SsalddelAdmin-P30 - 음식 주문/배달 운영 |
-| 라우트 | /food/operations |
-| 소스 파일 | [SsalddelAdmin/Components/Pages/FoodOperations.razor](../../../../../SsalddelAdmin/Components/Pages/FoodOperations.razor) |
-| 분류 | 운영 |
-| 2.0 운송 필수 연결 | 직접 연결 없음 |
-| 캡처 상태 | 완료 |
+| route | `/food/operations`, 별칭 `/admin/food-delivery/operations` (같은 페이지) |
+| 소스 | [FoodOperations.razor](../../../../../SsalddelAdmin/Components/Pages/FoodOperations.razor) |
+| 주 사용자/단계 | 서버관리자 / 운영 데이터 페이지. 사방괘·다이어그램 문맥 전달은 이번 검토 대상 아님 |
+| 입력 | 플랫폼 기본/최소/거리 요금, 기사 기본/최소/거리 지급액, 기본 포함 거리·거리 단위 |
+| 조회 | 리뷰 검토 대상 수·연속 저평점 수·최대 5개 목록과 리뷰 정책 |
+| 초기화/실패 | 세 조회가 모두 성공해야 편집 가능. 실패는 오류·재시도 표시, 기본 객체를 저장하지 않음 |
+| 저장 | 중복 클릭 차단 → PUT → 서버 응답으로 정책 교체. 실패는 성공 문구를 표시하지 않음 |
 
-## 왜 필요한가
+견적 거리 테스트는 현재 화면의 기본·거리 요금만 계산한다. 기상/한시 수요 할증과 실제 주문 상태를 반영하는 배차 견적은 아니다. `플랫폼 마진`은 이 단순 비교의 차액이며 회계상 순이익으로 확정하지 않는다. UI에서 편집하지 않는 `DriverPickupPayout`·기상 정책은 조회 객체를 그대로 PUT하여 보존한다. 새 요율·기간 프로모션·공제 정책을 만들지 않았다.
 
-이 화면은 음식 주문/배달 운영을 담당하므로, 운영자가 막힌 상태와 정책 변경 지점을 확인하기 위해 필요합니다.
+## 2. 코드: 화면 → 인증 Client → Controller → UseCase
 
-## 사용자와 참여자
+| 단계 | 코드와 책임 |
+| --- | --- |
+| Client | [음식운영Service](../../../../../SsalddelAdmin/Services/음식운영Service.cs): 세 GET과 정책 PUT. [관리자인증세션Service](../../../../../SsalddelAdmin/Services/관리자인증세션Service.cs)의 Bearer token 사용, HTTP 실패/빈 JSON 응답은 오류 |
+| 계약 | [음식점리뷰관리Dtos](../../../../../Ssalddel.Contracts/Admin/Restaurants/음식점리뷰관리Dtos.cs): 단위는 원·m, 선택 픽업 배분은 null 보존 |
+| 서버 | [음식운영관리Controller](../../../../../Ssalddel/Controllers/Admin/음식운영관리Controller.cs): 서버관리자 전용 정책과 V3.0 음식배달 기능/업무 메타데이터. 이전 `Ssalddel.FoodApi` 경로에서 단일 서버로 이관됨 |
+| Application | [음식운영관리UseCase](../../../../../Ssalddel/Application/Admin/Restaurants/음식운영관리UseCase.cs): 수치 검증, DB 정책 조회·저장, 수정자/시각 기록 |
+| 별도 계산 검토 | [음식배달지급검토UseCase](../../../../../Ssalddel/Application/Admin/Restaurants/음식배달지급검토UseCase.cs): `/payout-preview`, `/settlement-preview`는 이 페이지에서 호출하지 않으며 저장 없는 검토 API |
 
-주 사용자: 관리자, 운영자 / 보조 참여자: 화주, 기사, 파트너, 문서 담당자
+| 실제 호출 | 요청 | 읽기/쓰기 |
+| --- | --- | --- |
+| GET/PUT | `api/v1/admin/food-delivery-pricing-policy` | 정책 조회/수정 |
+| GET | `api/v1/admin/restaurant-reviews` | 검토 대상 최신 최대 500개, 페이지는 그중 최대 5개 표시 |
+| GET | `api/v1/admin/restaurant-reviews/policy` | 리뷰 정책 조회 |
 
-이 화면은 음식/마트 주문 및 배달 워크플로우 안에서 음식 주문/배달 운영 책임을 갖습니다. 화면 하나가 너무 많은 결정을 떠안지 않도록, 이 문서에서는 이 화면의 주 책임과 다른 화면으로 넘겨야 할 책임을 구분해 관리합니다.
+서버 권한이 최종 경계다. 페이지 URL만 알거나 Client에 token이 있다는 것으로 수정 권한을 부여하지 않는다. 리뷰 정책 변경/조치 API와 한시 수요 할증 API는 별도 화면·Simulation 검증 범위다.
 
-## 화면에서 다루는 일
+## 3. DB·원장: 정책과 동결된 배차는 별도
 
-- 주 책임: 음식 주문/배달 운영
-- 사용자가 확인해야 하는 것: 이 화면에서 상태, 입력값, 다음 행동이 명확히 보이는지 확인합니다.
-- 사용자가 조작해야 하는 것: 버튼, 입력, 선택, 업로드, 조회 같은 조작이 이 화면의 책임 안에 머무는지 확인합니다.
-- 화면 밖으로 넘길 일: 다른 앱이나 관리자 화면에서 처리해야 하는 상태 변경은 이 화면에 과하게 넣지 않습니다.
+| 자료 | 키/관계·조회 조건 | 이 페이지의 효과 |
+| --- | --- | --- |
+| [음식운영정책](../../../../../Ssalddel.Domain/음식/음식운영정책.cs) / [Configuration](../../../../../Ssalddel.Infrastructure/Persistence/Configurations/Food/음식운영정책Configuration.cs) | 기본 정책 Id=1, 기본/거리/최소 요금·기사 지급액·리뷰 정책. Id 자동 생성 안 함. 한시 수요 revision은 concurrency token |
+| 음식운영정책 수정 | 서버 검증 후 수치와 수정자·UTC 시각 저장 | 기존 제안에 소급 반영하지 않음. 별도 Outbox/송금 생성 없음 |
+| 음식점리뷰 → 음식점공개프로필 | 리뷰의 음식점Id와 공개프로필 Id를 논리적으로 연결, 관리자검토필요여부 필터 | 읽기 전용. 주문자 ID·내용은 필요한 관리자 권한 안에서만 취급 |
+| 운송실행투영 | 별도 배차 Service가 제안 시 총액·정책 판본·계산 근거를 동결 | 이 페이지는 해당 행을 수정하지 않음 |
 
-## 다른 화면과의 관계
+정책 행이 없는 경우 조회는 기본 정책 객체를 반환하며 실제 수정 때 생성·저장한다. 저장 응답은 저장한 행의 DTO이며, 재진입 GET으로 다시 확인한다. nullable 픽업 배분/계산 근거 schema와 MySQL 미적용 상태는 [배차 연결 r8](../../../../AI/Planning/공통/PLAN-OPERATIONS-FOOD-DRIVER-PAYOUT-DETAIL/dispatch-calculation.integration.r8.md)를 따른다.
 
-- 이전 화면: [SsalddelAdmin-P29 - HS 코드/통관 운영](../SsalddelAdmin-P29/)
-- 다음 화면: [SsalddelAdmin-P30-1 - 음식점 검색 정책](../SsalddelAdmin-P30-1/)
-- 상위 화면: 없음
-- 하위 화면: [SsalddelAdmin-P30-1 - 음식점 검색 정책](../SsalddelAdmin-P30-1/)
+## 결손과 검증
 
-상호작용 관점에서는 다음 흐름을 우선 봅니다. 관리자는 여러 앱에서 발생한 상태 변경을 모아 보고, 막힌 배차·증빙·정산·문서 문제에 개입합니다.
-
-## API 경로와 코드 연결
-
-- 화면 소스: [SsalddelAdmin/Components/Pages/FoodOperations.razor](../../../../../SsalddelAdmin/Components/Pages/FoodOperations.razor)
-- 클라이언트 서비스/계약: [SsalddelAdmin/Services/음식운영Service.cs](../../../../../SsalddelAdmin/Services/음식운영Service.cs)
-
-| 구분 | 메서드 | API 경로 | 클라이언트/문서 근거 | 서버 근거 |
-| --- | --- | --- | --- | --- |
-| 클라이언트 서비스 | GET | `api/v1/admin/food-delivery-pricing-policy` | [SsalddelAdmin/Services/음식운영Service.cs](../../../../../SsalddelAdmin/Services/음식운영Service.cs) | `GET api/v1/admin/food-delivery-pricing-policy` [Ssalddel.FoodApi/Controllers/Admin/음식배달요금정책Controller.cs](../../../../../Ssalddel.FoodApi/Controllers/Admin/음식배달요금정책Controller.cs) |
-| 클라이언트 서비스 | GET | `api/v1/admin/restaurant-reviews` | [SsalddelAdmin/Services/음식운영Service.cs](../../../../../SsalddelAdmin/Services/음식운영Service.cs) | `GET api/v1/admin/restaurant-reviews` [Ssalddel.FoodApi/Controllers/Admin/음식점리뷰관리Controller.cs](../../../../../Ssalddel.FoodApi/Controllers/Admin/음식점리뷰관리Controller.cs)<br>`GET api/v1/admin/restaurant-reviews/policy` [Ssalddel.FoodApi/Controllers/Admin/음식점리뷰관리Controller.cs](../../../../../Ssalddel.FoodApi/Controllers/Admin/음식점리뷰관리Controller.cs) |
-| 클라이언트 서비스 | GET | `api/v1/admin/restaurant-reviews/policy` | [SsalddelAdmin/Services/음식운영Service.cs](../../../../../SsalddelAdmin/Services/음식운영Service.cs) | `GET api/v1/admin/restaurant-reviews` [Ssalddel.FoodApi/Controllers/Admin/음식점리뷰관리Controller.cs](../../../../../Ssalddel.FoodApi/Controllers/Admin/음식점리뷰관리Controller.cs)<br>`GET api/v1/admin/restaurant-reviews/policy` [Ssalddel.FoodApi/Controllers/Admin/음식점리뷰관리Controller.cs](../../../../../Ssalddel.FoodApi/Controllers/Admin/음식점리뷰관리Controller.cs) |
-| 클라이언트 서비스 | PUT | `api/v1/admin/food-delivery-pricing-policy` | [SsalddelAdmin/Services/음식운영Service.cs](../../../../../SsalddelAdmin/Services/음식운영Service.cs) | `PUT api/v1/admin/food-delivery-pricing-policy` [Ssalddel.FoodApi/Controllers/Admin/음식배달요금정책Controller.cs](../../../../../Ssalddel.FoodApi/Controllers/Admin/음식배달요금정책Controller.cs) |
-
-검증할 때는 이 화면이 직접 메모리 데이터만 보는지, 위 API 응답을 받아 상태를 표시하는지, 실패했을 때 사용자가 다음 행동을 알 수 있는지 확인합니다.
-
-## 보안과 개인정보 점검
-
-관리자 권한, 감사 로그, 민감 운영 정보 접근 통제가 필요합니다. 인증 필요 화면은 현재 로그인 장벽 캡처로 남겨 둡니다.
-
-## 캡처와 문서 상태
-
-현재 캡처는 문서용 캡처 호스트 또는 기존 캡처 파일 기준으로 확인한 화면입니다.
-
-이미지 파일을 다시 생성하면 이 README는 같은 경로의 이미지를 참조하므로 자동으로 최신 캡처를 보여줍니다.
-
-## 보완 메모
-
-- 화면 설명이 실제 구현과 달라지면 이 문서와 app-page-catalog.md를 함께 갱신합니다.
-- 화면이 2.0 운송 필수 워크플로우에 포함되면 ssalddel-v1-required-pages.md에도 반영합니다.
-- 렌더링이 깨지거나 내용이 잘리면 캡처 스크립트와 실제 화면 레이아웃을 같이 확인합니다.
+기존 조회 실패 후 기본 객체의 폼과 저장 버튼이 노출되던 결손, null 응답을 정상 기본값/저장 성공으로 취급하던 결손을 보완했다. 상세 오류는 서버 응답이며 사용자 입력을 성공 데이터로 대체하지 않는다. 실제 제품 로그인·운영 MySQL·브라우저 연속 조작은 미검증이다. 재현/시험 결과는 [이번 보완 결과](../../implementation-r1.md)에 기록한다.

@@ -4,6 +4,24 @@
 @inject IGroupPurchaseShipmentTrackingService ShipmentTrackingService
 @inject 주문자앱인증ViewModel Authentication
 
+@if (_authenticationMode)
+{
+    <Ssalddel공통로그인Panel 제목="수요 원장 로그인"
+                         설명="로그인 후 작성하던 모집권과 수요로 돌아갑니다. 수요 저장은 별도로 확인합니다."
+                         상태메시지="@(Authentication.오류메시지 ?? (_authenticationRequired ? _statusMessage : null))"
+                         상태Severity="@(_authenticationRequired ? Severity.Error : AuthenticationSeverity)"
+                         일반로그인표시="true"
+                         소셜로그인표시="false"
+                         일반로그인버튼텍스트="로그인하고 수요 작성으로 돌아가기"
+                         IsBusy="@Authentication.처리중"
+                         Elevation="0"
+                         Class="pa-3 group-demand-login"
+                         OnPasswordLogin="LoginAsync">
+        <MudButton FullWidth="true" Variant="Variant.Outlined" Disabled="@Authentication.처리중" OnClick="ReturnToDemandAsync">수요 작성으로 돌아가기</MudButton>
+    </Ssalddel공통로그인Panel>
+}
+else
+{
 <MudStack Spacing="3">
     @if (!string.IsNullOrWhiteSpace(_statusMessage))
     {
@@ -117,7 +135,7 @@
                                      Min="1"
                                      Step="100M"
                                      Variant="Variant.Outlined" />
-                    <MudTextField T="string" Label="개설 신청 메모" @bind-Value="_requestMemo" Lines="3" Variant="Variant.Outlined" />
+                    <MudTextField T="string" Label="개설 신청 메모" @bind-Value="_requestMemo" Immediate="true" Lines="3" Variant="Variant.Outlined" />
                     <MudCheckBox T="bool"
                                  @bind-Value="_deliveryScopeConfirmed"
                                  Disabled="@string.IsNullOrWhiteSpace(_groupScopeKey)"
@@ -135,19 +153,10 @@
                             <MudText Typo="Typo.body2">저장된 주문자 로그인 세션을 확인하고 있습니다.</MudText>
                         </MudStack>
                     }
-                    else if (!Authentication.로그인됨)
+                    else if (!Authentication.로그인됨 || _authenticationRequired)
                     {
-                        <Ssalddel공통로그인Panel 제목="4. 수요 원장 로그인"
-                                             설명="모집권 확인은 익명으로 할 수 있고, 수요를 본인 원장에 저장할 때만 로그인합니다."
-                                             상태메시지="@Authentication.오류메시지"
-                                             상태Severity="@AuthenticationSeverity"
-                                             일반로그인표시="true"
-                                             소셜로그인표시="false"
-                                             일반로그인버튼텍스트="로그인하고 수요 등록 준비"
-                                             IsBusy="@Authentication.처리중"
-                                             Elevation="0"
-                                             Class="pa-3 group-demand-login"
-                                             OnPasswordLogin="LoginAsync" />
+                        <MudText Typo="Typo.body2">모집권 확인은 익명으로 할 수 있고, 수요를 본인 원장에 저장할 때만 로그인합니다.</MudText>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(Authentication.처리중 || _isSubmitting)" OnClick="OpenAuthenticationAsync">로그인하고 수요 등록 준비</MudButton>
                     }
                     else
                     {
@@ -171,7 +180,7 @@
                     {
                         <MudButton Variant="Variant.Outlined"
                                    Color="Color.Warning"
-                                   Disabled="@_isSubmitting"
+                                   Disabled="@(_isSubmitting || _authenticationRequired || !Authentication.로그인됨)"
                                    OnClick="WithdrawDemandAsync">
                             내 비구속 수요 철회
                         </MudButton>
@@ -209,8 +218,11 @@
     </MudGrid>
 
 </MudStack>
+}
 
 @code {
+    private bool _authenticationMode;
+    private bool _authenticationRequired;
     private string? _currentProductId;
     private string _groupScopeKey = string.Empty;
     private string _groupScopeName = string.Empty;
@@ -247,11 +259,15 @@
     [Parameter]
     public bool ShowFlowSummary { get; set; } = true;
 
+    [Parameter]
+    public EventCallback<bool> AuthenticationModeChanged { get; set; }
+
     private 주문자집단개설신청계획 CurrentApplicationPlan
         => 주문자집단개설신청계획기.계획(CreateApplicationDraft());
 
     private bool CanSubmitDemand
         => Authentication.로그인됨
+           && !_authenticationRequired
            && _deliveryScopeConfirmed
            && !string.IsNullOrWhiteSpace(_groupScopeKey)
            && CurrentApplicationPlan.CanSubmit;
@@ -378,9 +394,21 @@
     {
         if (await Authentication.로그인Async(request.UserNameOrEmail, request.Password))
         {
+            _authenticationRequired = false;
             _statusSeverity = Severity.Success;
             _statusMessage = "주문자 계정으로 로그인했습니다. 모집권 동의를 확인하면 수요를 등록할 수 있습니다.";
+            await SetAuthenticationModeAsync(false);
         }
+    }
+
+    private Task OpenAuthenticationAsync() => SetAuthenticationModeAsync(true);
+    private Task ReturnToDemandAsync() => SetAuthenticationModeAsync(false);
+
+    private async Task SetAuthenticationModeAsync(bool authenticationMode)
+    {
+        if (Authentication.처리중) return;
+        _authenticationMode = authenticationMode;
+        await AuthenticationModeChanged.InvokeAsync(authenticationMode);
     }
 
     private async Task LogoutAsync()
@@ -392,10 +420,11 @@
 
     private async Task SubmitDemandAsync()
     {
-        if (!Authentication.로그인됨)
+        if (!Authentication.로그인됨 || _authenticationRequired)
         {
             _statusSeverity = Severity.Warning;
             _statusMessage = "수요를 본인 원장에 저장하려면 먼저 로그인해 주세요.";
+            await OpenAuthenticationAsync();
             return;
         }
 
@@ -474,6 +503,11 @@
             _statusMessage = ex.StatusCode == 401
                 ? "로그인 세션이 만료되었습니다. 다시 로그인해 주세요."
                 : "공동주문 수요 원장을 저장하거나 다시 읽지 못했습니다. 잠시 후 다시 시도해 주세요.";
+            if (ex.StatusCode == 401)
+            {
+                _authenticationRequired = true;
+                await OpenAuthenticationAsync();
+            }
         }
         catch (InvalidOperationException)
         {
@@ -490,6 +524,12 @@
     {
         if (string.IsNullOrWhiteSpace(_registeredDemandSourceKey) || _isSubmitting)
         {
+            return;
+        }
+
+        if (!Authentication.로그인됨 || _authenticationRequired)
+        {
+            await OpenAuthenticationAsync();
             return;
         }
 
@@ -537,6 +577,11 @@
             _statusMessage = ex.StatusCode == 401
                 ? "로그인 세션이 만료되었습니다. 다시 로그인해 주세요."
                 : "비구속 수요를 철회하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+            if (ex.StatusCode == 401)
+            {
+                _authenticationRequired = true;
+                await OpenAuthenticationAsync();
+            }
         }
         catch (InvalidOperationException)
         {

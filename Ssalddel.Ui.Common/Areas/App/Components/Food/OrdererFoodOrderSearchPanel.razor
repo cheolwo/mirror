@@ -4,7 +4,6 @@
 <MudPaper Elevation="0" Outlined="true" Class="food-order-panel">
     <div class="food-order-panel-heading">
         <div>
-            <MudText Typo="Typo.overline">MY FOOD ORDERS</MudText>
             <MudText Typo="Typo.h6">음식 주문 검색</MudText>
         </div>
         @if (List.초기화됨)
@@ -23,7 +22,7 @@
         <MudTextField T="string"
                       @bind-Value="List.검색어"
                       Label="주문번호·음식점·상품"
-                      Placeholder="예: FOOD-, 김밥"
+                      Placeholder="음식점 이름이나 메뉴를 입력하세요"
                       Variant="Variant.Outlined"
                       Margin="Margin.Dense"
                       Immediate="true"

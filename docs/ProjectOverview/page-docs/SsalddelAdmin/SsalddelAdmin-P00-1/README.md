@@ -18,6 +18,10 @@
 | 2.0 운송 필수 연결 | 직접 연결 없음 |
 | 캡처 상태 | 완료 |
 
+## 인증과 업무 표시
+
+기존 [AdminLogin](../../../../../SsalddelAdmin/Components/Pages/AdminLogin.razor)은 [AuthLayout](../../../../../SsalddelAdmin/Components/Layout/AuthLayout.razor)에서 계정 인증만 담당하며 업무 drawer·하단 메뉴를 함께 표시하지 않습니다. 기존 로그인 API·세션·성공 후 복귀는 유지합니다. 역할별 표시 책임과 최신 검증은 [로그인·업무 책임 카드](../../auth-workspace-separation-r1.md), [페이지 원칙의 인증 경계](../../../../Architecture/WholeRoadmapPagePrinciple.md#인증과-업무의-경계)를 참조합니다.
+
 ## 왜 필요한가
 
 이 화면은 관리자 로그인을 담당하므로, 라우팅, 오류, 샘플 화면 정리처럼 앱 운영 품질을 확인하기 위해 필요합니다.

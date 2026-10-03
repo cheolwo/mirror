@@ -1,43 +1,56 @@
 @page "/food/order-trace"
 @page "/admin/food-delivery/order-trace"
 @using Ssalddel.Contracts.Admin.Food
+@using Ssalddel.Contracts.Food
 @inject FoodOrderOperationsTraceAdminService TraceService
+@inject 관리자인증세션Service Session
+@inject NavigationManager Navigation
+@implements IDisposable
 
 <PageTitle>음식 주문 운영 추적</PageTitle>
 
-<MudStack Spacing="3">
+@if (reviewMode && reviewOrderNo is not null)
+{
+    <FoodDeliveryInterruptionReviewWorkspace OrderNo="@reviewOrderNo" OnBack="ReturnFromReviewAsync" />
+}
+else
+{
+<MudStack Spacing="4" Class="food-trace-workspace">
     <MudStack Spacing="0">
         <MudText Typo="Typo.h4">음식 주문 운영 추적</MudText>
         <MudText Typo="Typo.body2" Color="Color.Secondary">
-            주문번호 하나로 음식 주문, 배차·추천, 기사 전달, 주문자 수령 확인과 Outbox 상태를 확인합니다.
+            주문번호로 배달 진행과 기사 정산을 확인합니다.
         </MudText>
     </MudStack>
 
-    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-        수령지 주소·연락처·Outbox payload는 이 화면에 표시하지 않습니다. 원장을 직접 수정하지 않고 복구 경로만 안내합니다.
-    </MudAlert>
-
-    <MudPaper Elevation="1" Class="pa-4">
+    <MudPaper Elevation="0" Class="pa-4 food-trace-surface">
         <MudStack Row="true" AlignItems="AlignItems.End" Spacing="2" Style="flex-wrap: wrap;">
             <MudTextField T="string"
                           Label="음식 주문번호"
                           Variant="Variant.Outlined"
                           Placeholder="예: FOOD-20260728-001"
-                          Style="min-width: 280px; flex: 1;"
+                          Style="min-width: min(280px, 100%); flex: 1;"
                           Immediate="true"
-                          @bind-Value="orderNo"
+                          Disabled="@(isLoading || isSimulatingPayout)"
+                          Value="@orderNo"
+                          ValueChanged="ChangeOrderNo"
                           OnKeyDown="HandleKeyDown" />
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.ManageSearch"
-                       Disabled="@isLoading"
+                       Disabled="@(isLoading || isSimulatingPayout)"
                        OnClick="LoadAsync">
                 @(isLoading ? "조회 중" : "운영 상태 조회")
             </MudButton>
         </MudStack>
     </MudPaper>
 
-    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    @if (requiresLogin || !Session.로그인됨 || !Session.서버관리자인가)
+    {
+        <MudAlert Severity="Severity.Warning">로그인한 서버관리자 계정으로 최신 주문을 조회해 주세요.</MudAlert>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@LoginUrl">운영자 로그인</MudButton>
+    }
+    else if (!string.IsNullOrWhiteSpace(errorMessage))
     {
         <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
     }
@@ -50,9 +63,13 @@
     {
         <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
     }
-    else if (trace is not null)
+    else if (!requiresLogin && Session.로그인됨 && Session.서버관리자인가 && trace is not null)
     {
-        <MudPaper Elevation="1" Class="pa-4">
+        @if (!string.Equals(orderNo.Trim(), trace.주문번호, StringComparison.Ordinal))
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true">입력한 주문번호가 바뀌었습니다. 다시 조회해 주세요.</MudAlert>
+        }
+        <MudPaper Elevation="0" Class="pa-4 food-trace-surface">
             <MudStack Spacing="3">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Style="flex-wrap: wrap;">
                     <MudText Typo="Typo.h5">@trace.주문번호</MudText>
@@ -75,39 +92,50 @@
                         <MudText Typo="Typo.subtitle2">@trace.배차상태</MudText>
                     </MudItem>
                     <MudItem xs="6" md="3">
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">추천 상태</MudText>
-                        <MudText Typo="Typo.subtitle2">@trace.추천상태 · @trace.추천라운드 회차</MudText>
-                    </MudItem>
-                    <MudItem xs="6" md="3">
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">운송 상태</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">전달 상태</MudText>
                         <MudText Typo="Typo.subtitle2">@DisplayOrDash(trace.운송상태)</MudText>
                     </MudItem>
-                </MudGrid>
-
-                <MudDivider />
-
-                <MudGrid Spacing="2">
-                    <MudItem xs="12" md="4">
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">배차대기 ID</MudText>
-                        <MudText Typo="Typo.body2">@DisplayId(trace.배차대기Id)</MudText>
-                    </MudItem>
-                    <MudItem xs="12" md="4">
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">운송번호</MudText>
-                        <MudText Typo="Typo.body2">@DisplayOrDash(trace.운송번호)</MudText>
-                    </MudItem>
-                    <MudItem xs="12" md="4">
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">원본 의뢰</MudText>
-                        <MudText Typo="Typo.body2">@DisplayCorrelation(trace.원본의뢰유형, trace.원본의뢰Id)</MudText>
-                    </MudItem>
-                    <MudItem xs="12" md="6">
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">공동 원장</MudText>
-                        <MudText Typo="Typo.body2">@DisplayCorrelation(trace.커뮤니티원장상태, trace.커뮤니티원장Id)</MudText>
-                    </MudItem>
-                    <MudItem xs="12" md="6">
+                    <MudItem xs="6" md="3">
                         <MudText Typo="Typo.caption" Color="Color.Secondary">최근 변경</MudText>
                         <MudText Typo="Typo.body2">@FormatDate(trace.최근변경시각Utc)</MudText>
                     </MudItem>
                 </MudGrid>
+            </MudStack>
+        </MudPaper>
+
+        @if (trace.배달시도목록.Any(x => x.상태Code == 음식배달시도상태Code.중단))
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.RateReview"
+                       Disabled="@(isLoading || isSimulatingPayout || !string.Equals(orderNo.Trim(), trace.주문번호, StringComparison.Ordinal))"
+                       OnClick="EnterReview">배달 중단 검토</MudButton>
+        }
+
+        <MudPaper Elevation="0" Class="pa-4 food-trace-surface">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.h6">기사 정산</MudText>
+                @if (trace.DriverSettlement is not { } settlement)
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">전달 완료 후 정산이 생성됩니다.</MudText>
+                }
+                else
+                {
+                    var display = FoodDeliverySettlementDisplay.From(settlement);
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="4"><AdminInfoField Label="배달료" Value="@display.GrossText" /></MudItem>
+                        <MudItem xs="12" sm="4"><AdminInfoField Label="공제" Value="@display.DeductionText" /></MudItem>
+                        <MudItem xs="12" sm="4"><AdminInfoField Label="수령액" Value="@display.NetText" /></MudItem>
+                    </MudGrid>
+                    <MudText Typo="Typo.body2">@display.ProgressText</MudText>
+                    <MudAlert Severity="Severity.Info" Dense="true">@display.NoticeText</MudAlert>
+                    @if (!string.IsNullOrWhiteSpace(settlement.HoldReason))
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Warning">@settlement.HoldReason</MudText>
+                    }
+                }
+                @if (!string.IsNullOrWhiteSpace(payoutError))
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true">@payoutError</MudAlert>
+                }
             </MudStack>
         </MudPaper>
 
@@ -122,17 +150,16 @@
         }
 
         <MudGrid Spacing="3">
-            <MudItem xs="12" lg="7">
-                <MudPaper Elevation="1" Class="pa-4" Style="height: 100%;">
+            <MudItem xs="12" lg="@(trace.복구안내목록.Count > 0 ? 7 : 12)">
+                <MudPaper Elevation="0" Class="pa-4 food-trace-surface" Style="height: 100%;">
                     <MudStack Spacing="2">
-                        <MudText Typo="Typo.h6">업무 체크포인트</MudText>
-                        @foreach (var checkpoint in trace.체크포인트)
+                        <MudText Typo="Typo.h6">주문 진행</MudText>
+                        @foreach (var checkpoint in trace.체크포인트.Where(x => x.단계Key != "ledger-sync"))
                         {
-                            <MudPaper Elevation="0" Outlined="true" Class="pa-3">
+                            <MudPaper Elevation="0" Outlined="true" Class="pa-3 food-trace-checkpoint">
                                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Spacing="2">
                                     <MudStack Spacing="0">
                                         <MudText Typo="Typo.subtitle2">@checkpoint.단계명</MudText>
-                                        <MudText Typo="Typo.body2" Color="Color.Secondary">@checkpoint.설명</MudText>
                                         @if (checkpoint.변경시각Utc.HasValue)
                                         {
                                             <MudText Typo="Typo.caption" Color="Color.Secondary">
@@ -153,99 +180,144 @@
                 </MudPaper>
             </MudItem>
 
-            <MudItem xs="12" lg="5">
-                <MudPaper Elevation="1" Class="pa-4" Style="height: 100%;">
-                    <MudStack Spacing="2">
-                        <MudText Typo="Typo.h6">복구 안내</MudText>
-                        @if (trace.복구안내목록.Count == 0)
-                        {
-                            <MudAlert Severity="Severity.Success" Dense="true">
-                                현재 운영자가 개입해야 할 복구 안내가 없습니다.
-                            </MudAlert>
-                        }
-                        else
-                        {
+            @if (trace.복구안내목록.Count > 0)
+            {
+                <MudItem xs="12" lg="5">
+                    <MudPaper Elevation="0" Class="pa-4 food-trace-surface" Style="height: 100%;">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.h6">복구 안내</MudText>
                             @foreach (var guide in trace.복구안내목록)
                             {
                                 <MudAlert Severity="Severity.Info" Dense="true">@guide</MudAlert>
                             }
-                        }
-
-                        @if (trace.추천만료시각Utc.HasValue)
-                        {
-                            <MudDivider />
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">추천 만료 시각</MudText>
-                            <MudText Typo="Typo.body2">@FormatDate(trace.추천만료시각Utc.Value)</MudText>
-                        }
-                    </MudStack>
-                </MudPaper>
-            </MudItem>
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+            }
         </MudGrid>
 
-        <MudPaper Elevation="1" Class="pa-4">
-            <MudStack Spacing="2">
-                <MudText Typo="Typo.h6">Outbox 상태</MudText>
-                @if (trace.Outbox목록.Count == 0)
-                {
-                    <MudAlert Severity="Severity.Warning" Dense="true">연결된 Outbox 기록이 없습니다.</MudAlert>
-                }
-                else
-                {
-                    <MudTable Items="@trace.Outbox목록" Dense="true" Hover="true" Elevation="0">
-                        <HeaderContent>
-                            <MudTh>종류</MudTh>
-                            <MudTh>ID</MudTh>
-                            <MudTh>상태</MudTh>
-                            <MudTh>시도</MudTh>
-                            <MudTh>갱신</MudTh>
-                            <MudTh>판정</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="종류">@context.종류</MudTd>
-                            <MudTd DataLabel="ID">@context.OutboxId</MudTd>
-                            <MudTd DataLabel="상태">@context.상태</MudTd>
-                            <MudTd DataLabel="시도">@context.시도횟수</MudTd>
-                            <MudTd DataLabel="갱신">@FormatDate(context.갱신시각Utc)</MudTd>
-                            <MudTd DataLabel="판정">
-                                <MudChip T="string"
-                                         Size="Size.Small"
-                                         Color="@(context.운영자확인필요 ? Color.Error : context.재시도예정 ? Color.Warning : Color.Success)"
-                                         Variant="Variant.Outlined">
-                                    @(context.운영자확인필요 ? "확인 필요" : context.재시도예정 ? "재시도 예정" : "정상")
-                                </MudChip>
-                            </MudTd>
-                        </RowTemplate>
-                    </MudTable>
-                }
-            </MudStack>
-        </MudPaper>
+        <MudExpansionPanels MultiExpansion="true" Elevation="1">
+            <MudExpansionPanel Text="상세 정보" Expanded="false">
+                <MudStack Spacing="3">
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">수령지 주소·연락처·Outbox payload는 이 화면에 표시하지 않습니다.</MudText>
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" md="4"><AdminInfoField Label="배차대기 ID" Value="@DisplayId(trace.배차대기Id)" /></MudItem>
+                        <MudItem xs="12" md="4"><AdminInfoField Label="운송번호" Value="@DisplayOrDash(trace.운송번호)" /></MudItem>
+                        <MudItem xs="12" md="4"><AdminInfoField Label="원본 의뢰" Value="@DisplayCorrelation(trace.원본의뢰유형, trace.원본의뢰Id)" /></MudItem>
+                        <MudItem xs="12" md="6"><AdminInfoField Label="공동 원장" Value="@DisplayCorrelation(trace.커뮤니티원장상태, trace.커뮤니티원장Id)" /></MudItem>
+                        <MudItem xs="12" md="6"><AdminInfoField Label="추천 상태" Value="@($"{trace.추천상태} · {trace.추천라운드} 회차")" /></MudItem>
+                        @if (trace.추천만료시각Utc.HasValue)
+                        {
+                            <MudItem xs="12" md="6"><AdminInfoField Label="추천 만료 시각" Value="@FormatDate(trace.추천만료시각Utc.Value)" /></MudItem>
+                        }
+                    </MudGrid>
+                    <MudStack Spacing="1">
+                        <MudText Typo="Typo.subtitle2">단계별 상세</MudText>
+                        @foreach (var checkpoint in trace.체크포인트)
+                        {
+                            <MudText Typo="Typo.body2">@checkpoint.단계명 · @checkpoint.상태</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@checkpoint.설명</MudText>
+                        }
+                    </MudStack>
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.h6">Outbox 상태</MudText>
+                            @if (trace.Outbox목록.Count == 0)
+                            {
+                                <MudAlert Severity="Severity.Warning" Dense="true">연결된 Outbox 기록이 없습니다.</MudAlert>
+                            }
+                            else
+                            {
+                                <MudTable Items="@trace.Outbox목록" Dense="true" Hover="true" Elevation="0">
+                                    <HeaderContent>
+                                        <MudTh>종류</MudTh>
+                                        <MudTh>ID</MudTh>
+                                        <MudTh>상태</MudTh>
+                                        <MudTh>시도</MudTh>
+                                        <MudTh>갱신</MudTh>
+                                        <MudTh>판정</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd DataLabel="종류">@context.종류</MudTd>
+                                        <MudTd DataLabel="ID">@context.OutboxId</MudTd>
+                                        <MudTd DataLabel="상태">@context.상태</MudTd>
+                                        <MudTd DataLabel="시도">@context.시도횟수</MudTd>
+                                        <MudTd DataLabel="갱신">@FormatDate(context.갱신시각Utc)</MudTd>
+                                        <MudTd DataLabel="판정">
+                                            <MudChip T="string"
+                                                     Size="Size.Small"
+                                                     Color="@(context.운영자확인필요 ? Color.Error : context.재시도예정 ? Color.Warning : Color.Success)"
+                                                     Variant="Variant.Outlined">
+                                                @(context.운영자확인필요 ? "확인 필요" : context.재시도예정 ? "재시도 예정" : "정상")
+                                            </MudChip>
+                                        </MudTd>
+                                    </RowTemplate>
+                                </MudTable>
+                            }
+                        </MudStack>
+                    </MudPaper>
 
-        <MudPaper Elevation="1" Class="pa-4">
-            <MudStack Spacing="2">
-                <MudText Typo="Typo.h6">운송 감사 이벤트</MudText>
-                @if (trace.운송이벤트목록.Count == 0)
-                {
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">연결된 운송 이벤트가 없습니다.</MudText>
-                }
-                else
-                {
-                    <MudTable Items="@trace.운송이벤트목록" Dense="true" Hover="true" Elevation="0">
-                        <HeaderContent>
-                            <MudTh>이벤트 ID</MudTh>
-                            <MudTh>유형</MudTh>
-                            <MudTh>시각</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="이벤트 ID">@context.이벤트Id</MudTd>
-                            <MudTd DataLabel="유형">@context.이벤트유형</MudTd>
-                            <MudTd DataLabel="시각">@FormatDate(context.이벤트시각Utc)</MudTd>
-                        </RowTemplate>
-                    </MudTable>
-                }
-            </MudStack>
-        </MudPaper>
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.h6">운송 감사 이벤트</MudText>
+                            @if (trace.운송이벤트목록.Count == 0)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">연결된 운송 이벤트가 없습니다.</MudText>
+                            }
+                            else
+                            {
+                                <MudTable Items="@trace.운송이벤트목록" Dense="true" Hover="true" Elevation="0">
+                                    <HeaderContent>
+                                        <MudTh>이벤트 ID</MudTh>
+                                        <MudTh>유형</MudTh>
+                                        <MudTh>시각</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd DataLabel="이벤트 ID">@context.이벤트Id</MudTd>
+                                        <MudTd DataLabel="유형">@context.이벤트유형</MudTd>
+                                        <MudTd DataLabel="시각">@FormatDate(context.이벤트시각Utc)</MudTd>
+                                    </RowTemplate>
+                                </MudTable>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                </MudStack>
+            </MudExpansionPanel>
+            @if (trace.DriverSettlement is { } testSettlement)
+            {
+                <MudExpansionPanel Text="지급 테스트" Expanded="false">
+                    <MudStack Spacing="2">
+                        <MudAlert Severity="Severity.Info" Dense="true">시험 입력으로 모의 지급 결과만 확인합니다. 실제 송금은 하지 않습니다.</MudAlert>
+                        @if (CanSimulatePayout(testSettlement))
+                        {
+                            <MudNumericField T="decimal?" Label="시험 공제액(원)" Min="0" Max="@testSettlement.GrossAmount" Variant="Variant.Outlined"
+                                             Disabled="@isSimulatingPayout" @bind-Value="fixtureDeduction" />
+                            <MudTextField T="string" Label="시험 공제 근거" Placeholder="검증 표본 식별자" Variant="Variant.Outlined"
+                                          Disabled="@isSimulatingPayout" @bind-Value="fixtureEvidence" />
+                            <MudButton Color="Color.Primary" Variant="Variant.Outlined" Disabled="@(isSimulatingPayout || !fixtureDeduction.HasValue || string.IsNullOrWhiteSpace(fixtureEvidence))"
+                                       OnClick="SimulatePayoutAsync">@(isSimulatingPayout ? "검증 중" : "모의 지급 검증 · 실송금 없음")</MudButton>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">현재 주문은 지급 테스트를 실행할 수 없습니다.</MudText>
+                        }
+                        @if (testSettlement.SimulationPayments.Count > 0)
+                        {
+                            <MudText Typo="Typo.subtitle2">테스트 기록</MudText>
+                            @foreach (var payment in testSettlement.SimulationPayments)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    @FormatDate(payment.VerifiedAtUtc) · @(payment.OutcomeCode == "Succeeded" ? "모의 성공" : "모의 실패") · @payment.Amount.ToString("#,0.##")원
+                                </MudText>
+                            }
+                        }
+                    </MudStack>
+                </MudExpansionPanel>
+            }
+        </MudExpansionPanels>
     }
 </MudStack>
+}
 
 @code {
     private string orderNo = string.Empty;
@@ -253,24 +325,178 @@
     private bool isLoading;
     private bool notFound;
     private string? errorMessage;
+    private bool isSimulatingPayout;
+    private decimal? fixtureDeduction;
+    private string fixtureEvidence = string.Empty;
+    private string? payoutError;
+    private FoodDeliverySimulatedPayoutRequest? payoutRequest;
+    private bool reviewMode;
+    private string? reviewOrderNo;
+    private bool requiresLogin;
+    private bool disposed;
+    private long generation;
+    private CancellationTokenSource lifetime = new();
+    private string? appliedQueryOrderNo;
+    private string pagePath = string.Empty;
+
+    [Parameter, SupplyParameterFromQuery(Name = "orderNo")] public string? QueryOrderNo { get; set; }
+    private string LoginUrl => "/login?returnUrl=" + Uri.EscapeDataString("/food/order-trace?orderNo=" + Uri.EscapeDataString(orderNo.Trim()));
+    private string AuthenticationIdentity => Session.로그인됨 && Session.서버관리자인가 ? Session.UserId + "\u001f" + Session.AccessToken : string.Empty;
+
+    protected override void OnInitialized()
+    {
+        pagePath = new Uri(Navigation.Uri).AbsolutePath;
+        Navigation.LocationChanged += LocationChanged;
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        if (QueryOrderNo is not null && appliedQueryOrderNo != QueryOrderNo)
+        {
+            appliedQueryOrderNo = QueryOrderNo;
+            ChangeOrderNo(QueryOrderNo);
+            await LoadAsync();
+        }
+    }
+
+    private void ChangeOrderNo(string value)
+    {
+        if (orderNo == value) return;
+        Invalidate();
+        orderNo = value;
+        reviewMode = false;
+        reviewOrderNo = null;
+        trace = null;
+        errorMessage = payoutError = null;
+        notFound = false;
+        payoutRequest = null;
+    }
+
+    private void EnterReview()
+    {
+        if (disposed || isLoading || isSimulatingPayout || trace is null
+            || !Session.로그인됨 || !Session.서버관리자인가 || trace.주문번호 != orderNo.Trim()) return;
+        Invalidate();
+        reviewOrderNo = trace.주문번호;
+        reviewMode = true;
+    }
+
+    private async Task ReturnFromReviewAsync()
+    {
+        if (disposed) return;
+        reviewMode = false;
+        reviewOrderNo = null;
+        await LoadAsync();
+    }
+
+    private bool IsCurrent(long owner, string identity, string requestedOrderNo)
+        => !disposed && owner == generation && !string.IsNullOrWhiteSpace(identity)
+           && identity == AuthenticationIdentity && orderNo.Trim() == requestedOrderNo;
+
+    private void Invalidate()
+    {
+        generation++;
+        lifetime.Cancel();
+        lifetime.Dispose();
+        lifetime = new();
+        isLoading = isSimulatingPayout = false;
+    }
+    private void LocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        if (new Uri(args.Location).AbsolutePath != pagePath) Dispose();
+        else Invalidate();
+    }
+    public void Dispose()
+    {
+        if (disposed) return;
+        disposed = true;
+        generation++;
+        Navigation.LocationChanged -= LocationChanged;
+        lifetime.Cancel();
+        lifetime.Dispose();
+    }
+
+    private bool CanSimulatePayout(FoodDeliveryOrderSettlementDto settlement)
+        => string.Equals(orderNo.Trim(), trace?.주문번호, StringComparison.Ordinal)
+           && settlement.ServerExecutionModeCode == "Simulation"
+           && settlement.GrossAmount.HasValue
+           && settlement.ReceiptConfirmedAtUtc.HasValue
+           && settlement.PayoutStatusCode != "SimulationSucceeded"
+           && settlement.SettlementStatusCode != "BlockedMissingQuote";
+
+    private async Task SimulatePayoutAsync()
+    {
+        if (disposed || reviewMode || isLoading || isSimulatingPayout || trace?.DriverSettlement is not { } settlement || !CanSimulatePayout(settlement)) return;
+        var requestedOrderNo = trace.주문번호;
+        var owner = generation;
+        var identity = AuthenticationIdentity;
+        if (string.IsNullOrWhiteSpace(identity)) return;
+        var token = lifetime.Token;
+        isSimulatingPayout = true;
+        payoutError = null;
+        try
+        {
+            if (payoutRequest is null || payoutRequest.ExpectedSettlementRevision != settlement.Revision
+                || payoutRequest.ConfirmedDeductionAmount != fixtureDeduction || payoutRequest.DeductionEvidenceReference != fixtureEvidence.Trim())
+            {
+                payoutRequest = new()
+                {
+                    IdempotencyKey = Guid.NewGuid().ToString("N"), ExpectedSettlementRevision = settlement.Revision,
+                    ConfirmedGrossAmount = settlement.GrossAmount!.Value, ConfirmedDeductionAmount = fixtureDeduction,
+                    DeductionEvidenceReference = fixtureEvidence.Trim()
+                };
+            }
+            var result = await TraceService.모의지급검증Async(requestedOrderNo, payoutRequest, token);
+            if (IsCurrent(owner, identity, requestedOrderNo)) trace.DriverSettlement = result;
+        }
+        catch (Exception) when (!IsCurrent(owner, identity, requestedOrderNo) || token.IsCancellationRequested) { }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        { requiresLogin = true; trace = null; payoutError = "로그인이 만료되었습니다. 다시 로그인해 주세요."; }
+        catch (Exception ex)
+        {
+            payoutError = ex.Message;
+        }
+        finally { if (!disposed && owner == generation) isSimulatingPayout = false; }
+    }
 
     private async Task LoadAsync()
     {
-        if (isLoading)
+        if (disposed || reviewMode || isLoading || isSimulatingPayout)
         {
             return;
         }
 
+        var requestedOrderNo = orderNo.Trim();
+        var identity = AuthenticationIdentity;
+        if (string.IsNullOrWhiteSpace(identity)) { requiresLogin = true; trace = null; return; }
+        requiresLogin = false;
+        var owner = generation;
+        var token = lifetime.Token;
         isLoading = true;
         notFound = false;
         errorMessage = null;
         trace = null;
+        payoutError = null;
+        payoutRequest = null;
+        fixtureDeduction = null;
+        fixtureEvidence = string.Empty;
 
         try
         {
-            trace = await TraceService.조회Async(orderNo);
+            var result = await TraceService.조회Async(requestedOrderNo, token);
+            if (!IsCurrent(owner, identity, requestedOrderNo)) return;
+            if (result is not null && result.주문번호 != requestedOrderNo)
+                throw new InvalidOperationException("조회한 주문번호가 요청과 다릅니다.");
+            trace = result;
             notFound = trace is null;
+            if (trace?.DriverSettlement is { DeductionEvidenceScopeCode: "SimulationFixture" } storedFixture)
+            {
+                fixtureDeduction = storedFixture.DeductionAmount;
+                fixtureEvidence = storedFixture.DeductionEvidenceReference;
+            }
         }
+        catch (Exception) when (!IsCurrent(owner, identity, requestedOrderNo) || token.IsCancellationRequested) { }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        { requiresLogin = true; trace = null; errorMessage = "로그인이 만료되었습니다. 다시 로그인해 주세요."; }
         catch (ArgumentException ex)
         {
             errorMessage = ex.Message;
@@ -281,7 +507,7 @@
         }
         finally
         {
-            isLoading = false;
+            if (!disposed && owner == generation) isLoading = false;
         }
     }
 

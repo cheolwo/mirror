@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.ComponentModel;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Ui.Common.Areas.App.Models.Auth;
@@ -11,6 +12,7 @@ public sealed partial class 주문자음식주문목록ViewModel(
     I주문자음식주문읽기Service service) : 업무작업ViewModelBase
 {
     private const int DefaultPageSize = 12;
+    private long _sessionGeneration;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(검색조건있음))]
@@ -50,21 +52,27 @@ public sealed partial class 주문자음식주문목록ViewModel(
         => 페이지조회Async(1, cancellationToken);
 
     public Task<bool> 페이지조회Async(int page, CancellationToken cancellationToken = default)
-        => 작업실행Async(
+    {
+        var generation = _sessionGeneration;
+        return 작업실행Async(
             async token =>
             {
-                응답 = await service.목록Async(new 주문자음식주문목록조회요청
+                var response = await service.목록Async(new 주문자음식주문목록조회요청
                 {
                     검색어 = 검색어,
                     상태 = 상태필터,
                     Page = Math.Max(1, page),
                     PageSize = DefaultPageSize
                 }, token);
+                token.ThrowIfCancellationRequested();
+                if (generation != _sessionGeneration) throw new OperationCanceledException(token);
+                응답 = response;
                 초기화됨 = true;
             },
             "내 음식 주문 목록을 불러왔습니다.",
             cancellationToken,
             ex => $"내 음식 주문 목록을 불러오지 못했습니다. {ex.Message}");
+    }
 
     public void 필터초기화()
     {
@@ -74,6 +82,8 @@ public sealed partial class 주문자음식주문목록ViewModel(
 
     public void 세션초기화()
     {
+        _sessionGeneration++;
+        작업취소();
         응답 = new 주문자음식주문목록응답();
         초기화됨 = false;
         필터초기화();
@@ -87,6 +97,7 @@ public sealed partial class 주문자음식주문상세ViewModel(
     I주문자음식주문수령확인Service receiptConfirmationService) : 업무작업ViewModelBase
 {
     private Guid? _수령확인요청Id;
+    private long _selectionGeneration;
 
     [ObservableProperty]
     public partial string? 요청OrderNo { get; private set; }
@@ -112,13 +123,27 @@ public sealed partial class 주문자음식주문상세ViewModel(
             return Task.FromResult(유효성실패("조회할 음식 주문번호를 확인해 주세요."));
         }
 
-        요청OrderNo = orderNo.Trim();
+        var normalizedOrderNo = orderNo.Trim();
+        if (!string.Equals(요청OrderNo, normalizedOrderNo, StringComparison.Ordinal))
+        {
+            _selectionGeneration++;
+            작업취소();
+            // 같은 주문의 실패 재시도는 보존하고, 다른 주문에는 입력과 멱등 키를 넘기지 않습니다.
+            _수령확인요청Id = null;
+            수령확인메모 = string.Empty;
+        }
+
+        요청OrderNo = normalizedOrderNo;
+        var generation = _selectionGeneration;
         상세 = null;
         찾을수없음 = false;
         return 작업실행Async(
             async token =>
             {
-                상세 = await service.상세Async(요청OrderNo, token);
+                var response = await service.상세Async(normalizedOrderNo, token);
+                token.ThrowIfCancellationRequested();
+                if (generation != _selectionGeneration) throw new OperationCanceledException(token);
+                상세 = response;
                 찾을수없음 = 상세 is null;
             },
             "음식 주문 상세를 불러왔습니다.",
@@ -143,19 +168,29 @@ public sealed partial class 주문자음식주문상세ViewModel(
             _수령확인요청Id = Guid.NewGuid();
         }
 
+        var orderNo = 요청OrderNo;
+        var requestId = _수령확인요청Id.Value;
+        var memo = 수령확인메모?.Trim() ?? string.Empty;
+        var generation = _selectionGeneration;
+
         return 작업실행Async(
             async token =>
             {
                 await receiptConfirmationService.수령확인Async(
-                    요청OrderNo,
+                    orderNo,
                     new 주문자음식주문수령확인요청
                     {
-                        클라이언트요청Id = _수령확인요청Id.Value,
-                        확인메모 = 수령확인메모?.Trim() ?? string.Empty
+                        클라이언트요청Id = requestId,
+                        확인메모 = memo
                     },
                     token);
-                상세 = await service.상세Async(요청OrderNo, token)
+                token.ThrowIfCancellationRequested();
+                if (generation != _selectionGeneration) throw new OperationCanceledException(token);
+                var response = await service.상세Async(orderNo, token)
                     ?? throw new InvalidOperationException("수령 확인한 음식 주문을 다시 조회할 수 없습니다.");
+                token.ThrowIfCancellationRequested();
+                if (generation != _selectionGeneration) throw new OperationCanceledException(token);
+                상세 = response;
                 찾을수없음 = false;
                 _수령확인요청Id = null;
                 수령확인메모 = string.Empty;
@@ -167,6 +202,8 @@ public sealed partial class 주문자음식주문상세ViewModel(
 
     public void 선택해제()
     {
+        _selectionGeneration++;
+        작업취소();
         요청OrderNo = null;
         상세 = null;
         찾을수없음 = false;
@@ -179,66 +216,97 @@ public sealed partial class 주문자음식주문상세ViewModel(
 /// <summary>기능 접근, 인증, 목록과 정확한 상세를 조립하고 음식 주문 내역 페이지 흐름만 조율합니다.</summary>
 public sealed class 주문자음식주문PageViewModel : 조립ViewModelBase
 {
+    private bool _재로그인필요;
+    private bool _인증복구중;
+    private string? _콘텐츠UserId;
+    private string? _복구UserId;
+    private bool _disposed;
+
     public 주문자음식주문PageViewModel(
         음식배달페이지접근ViewModel access,
         주문자앱인증ViewModel authentication,
         주문자음식주문목록ViewModel list,
-        주문자음식주문상세ViewModel detail)
+        주문자음식주문상세ViewModel detail,
+        주문자음식주문취소ViewModel? cancellation = null)
     {
         접근 = 하위ViewModel등록(access);
         인증 = 하위ViewModel등록(authentication);
         목록 = 하위ViewModel등록(list);
         상세 = 하위ViewModel등록(detail);
+        취소 = cancellation is null ? null : 하위ViewModel등록(cancellation, 수명소유: true);
+        인증.PropertyChanged += 인증변경;
     }
 
     public 음식배달페이지접근ViewModel 접근 { get; }
     public 주문자앱인증ViewModel 인증 { get; }
     public 주문자음식주문목록ViewModel 목록 { get; }
     public 주문자음식주문상세ViewModel 상세 { get; }
+    public 주문자음식주문취소ViewModel? 취소 { get; }
+    public bool 인증화면표시 => 접근.사용가능 && (!인증.초기화됨 || !인증.로그인됨 || 재로그인필요);
+
+    public bool 재로그인필요
+    {
+        get => _재로그인필요;
+        private set
+        {
+            if (SetProperty(ref _재로그인필요, value))
+            {
+                OnPropertyChanged(nameof(개인주문조회가능));
+            }
+        }
+    }
+
+    public bool 개인주문조회가능 => !_disposed && 접근.사용가능 && 인증.로그인됨 && !재로그인필요;
 
     public async Task 초기화Async(
         string? orderNo,
         CancellationToken cancellationToken = default)
     {
+        if (_disposed) return;
         if (!await 접근.확인Async(cancellationToken) || !접근.사용가능)
         {
             return;
         }
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_disposed) return;
 
         if (!인증.초기화됨 && !await 인증.복원Async(cancellationToken))
         {
             return;
         }
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_disposed) return;
 
-        if (인증.로그인됨)
+        if (개인주문조회가능)
         {
             await 인증콘텐츠조회Async(orderNo, cancellationToken);
         }
     }
 
-    public Task 경로선택반영Async(
+    public async Task 경로선택반영Async(
         string? orderNo,
         CancellationToken cancellationToken = default)
     {
-        if (!접근.사용가능 || !인증.로그인됨)
+        if (!개인주문조회가능)
         {
-            return Task.CompletedTask;
+            return;
         }
 
         if (!string.IsNullOrWhiteSpace(orderNo))
         {
             var normalizedOrderNo = orderNo.Trim();
-            return string.Equals(상세.요청OrderNo, normalizedOrderNo, StringComparison.Ordinal)
-                ? Task.CompletedTask
-                : 상세.조회Async(normalizedOrderNo, cancellationToken);
+            if (!string.Equals(상세.요청OrderNo, normalizedOrderNo, StringComparison.Ordinal))
+                await 상세.조회Async(normalizedOrderNo, cancellationToken);
+            취소문맥반영();
+            return;
         }
 
         if (!string.IsNullOrWhiteSpace(상세.요청OrderNo))
         {
             상세.선택해제();
+            취소?.세션초기화();
         }
 
-        return Task.CompletedTask;
     }
 
     public async Task<bool> 로그인Async(
@@ -246,6 +314,7 @@ public sealed class 주문자음식주문PageViewModel : 조립ViewModelBase
         string? orderNo,
         CancellationToken cancellationToken = default)
     {
+        if (_disposed) return false;
         if (!await 인증.로그인Async(
                 request.UserNameOrEmail,
                 request.Password,
@@ -254,7 +323,11 @@ public sealed class 주문자음식주문PageViewModel : 조립ViewModelBase
             return false;
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_disposed) return false;
+        재로그인필요 = false;
         await 인증콘텐츠조회Async(orderNo, cancellationToken);
+        _복구UserId = null;
         return true;
     }
 
@@ -267,7 +340,29 @@ public sealed class 주문자음식주문PageViewModel : 조립ViewModelBase
 
         목록.세션초기화();
         상세.선택해제();
+        취소?.세션초기화();
+        _복구UserId = null;
+        재로그인필요 = false;
         return true;
+    }
+
+    public async Task 인증오류복구Async(CancellationToken cancellationToken = default)
+    {
+        if (목록.오류?.Http상태코드 != 401 && 상세.오류?.Http상태코드 != 401
+            && 취소?.오류?.Http상태코드 != 401)
+        {
+            return;
+        }
+
+        // 최종 401만 로그인 복구로 보냅니다. 저장소 정리 실패에도 개인 화면과 대기 작업을 차단합니다.
+        재로그인필요 = true;
+        _복구UserId = 인증.세션.UserId;
+        취소?.인증대기();
+        목록.세션초기화();
+        상세.선택해제();
+        _인증복구중 = true;
+        try { await 인증.로그아웃Async(cancellationToken); }
+        finally { _인증복구중 = false; }
     }
 
     public Task 목록검색Async(CancellationToken cancellationToken = default)
@@ -285,12 +380,31 @@ public sealed class 주문자음식주문PageViewModel : 조립ViewModelBase
         await 목록.조회Async(cancellationToken);
     }
 
-    public Task 주문선택Async(string orderNo, CancellationToken cancellationToken = default)
-        => 상세.조회Async(orderNo, cancellationToken);
+    public async Task 주문선택Async(string orderNo, CancellationToken cancellationToken = default)
+    {
+        if (!개인주문조회가능) return;
+        취소?.문맥반영(orderNo, 인증.세션.UserId, null);
+        await 상세.조회Async(orderNo, cancellationToken);
+        취소문맥반영();
+    }
+
+    public async Task<bool> 주문취소Async(CancellationToken cancellationToken = default)
+    {
+        if (!개인주문조회가능 || 취소 is null) return false;
+        var owner = 인증.세션.UserId;
+        var orderNo = 상세.요청OrderNo;
+        var cancelled = await 취소.취소Async(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!개인주문조회가능 || owner != 인증.세션.UserId || orderNo != 상세.요청OrderNo)
+            return false;
+        if (취소.오류?.Http상태코드 == 401) return false;
+        await 주문진행새로고침Async(cancellationToken);
+        return cancelled;
+    }
 
     public async Task<bool> 주문수령확인Async(CancellationToken cancellationToken = default)
     {
-        if (!await 상세.수령확인Async(cancellationToken))
+        if (!개인주문조회가능 || !await 상세.수령확인Async(cancellationToken))
         {
             return false;
         }
@@ -302,7 +416,7 @@ public sealed class 주문자음식주문PageViewModel : 조립ViewModelBase
     public async Task 주문진행새로고침Async(CancellationToken cancellationToken = default)
     {
         var orderNo = 상세.요청OrderNo;
-        if (string.IsNullOrWhiteSpace(orderNo))
+        if (!개인주문조회가능 || string.IsNullOrWhiteSpace(orderNo))
         {
             return;
         }
@@ -310,9 +424,14 @@ public sealed class 주문자음식주문PageViewModel : 조립ViewModelBase
         await Task.WhenAll(
             상세.조회Async(orderNo, cancellationToken),
             목록.페이지조회Async(Math.Max(1, 목록.현재페이지), cancellationToken));
+        취소문맥반영();
     }
 
-    public void 주문선택해제() => 상세.선택해제();
+    public void 주문선택해제()
+    {
+        상세.선택해제();
+        취소?.세션초기화();
+    }
 
     private async Task 인증콘텐츠조회Async(
         string? orderNo,
@@ -323,5 +442,35 @@ public sealed class 주문자음식주문PageViewModel : 조립ViewModelBase
             ? Task.FromResult(true)
             : 상세.조회Async(orderNo.Trim(), cancellationToken);
         await Task.WhenAll(listTask, detailTask);
+        취소문맥반영();
+    }
+
+    private void 취소문맥반영()
+        => 취소?.문맥반영(상세.요청OrderNo, 인증.세션.UserId, 상세.상세);
+
+    private void 인증변경(object? sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName != nameof(주문자앱인증ViewModel.세션)) return;
+        var userId = 인증.세션.UserId;
+        if (_콘텐츠UserId != userId)
+        {
+            목록.세션초기화();
+            상세.선택해제();
+            if (!_인증복구중 && (_복구UserId is null || _복구UserId != userId))
+                취소?.세션초기화();
+        }
+        _콘텐츠UserId = userId;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && !_disposed)
+        {
+            _disposed = true;
+            인증.PropertyChanged -= 인증변경;
+            목록.세션초기화();
+            상세.선택해제();
+        }
+        base.Dispose(disposing);
     }
 }

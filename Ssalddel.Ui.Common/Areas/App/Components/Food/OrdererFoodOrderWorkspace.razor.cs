@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using Ssalddel.Contracts.Food;
 using Ssalddel.Ui.Common.Areas.App.Models.Auth;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
 
@@ -8,8 +7,8 @@ namespace Ssalddel.Ui.Common.Areas.App.Components.Food;
 public partial class OrdererFoodOrderWorkspace : IAsyncDisposable
 {
     private bool _initialized;
-    private readonly CancellationTokenSource _locationRefreshCancellation = new();
-    private Task? _locationRefreshTask;
+    private bool? _reportedAuthenticationMode;
+    private 주문자음식주문새로고침Controller? _refreshController;
 
     [Parameter]
     public string? OrderNo { get; set; }
@@ -17,31 +16,61 @@ public partial class OrdererFoodOrderWorkspace : IAsyncDisposable
     [Parameter]
     public EventCallback<string?> OrderSelected { get; set; }
 
+    [Parameter]
+    public EventCallback<bool> AuthenticationModeChanged { get; set; }
+
     private 음식배달페이지접근ViewModel Access => ViewModel.접근;
     private 주문자앱인증ViewModel Authentication => ViewModel.인증;
     private 주문자음식주문목록ViewModel List => ViewModel.목록;
     private 주문자음식주문상세ViewModel Detail => ViewModel.상세;
+    private 주문자음식주문새로고침Controller RefreshController
+        => _refreshController ??= new(ViewModel);
 
     protected override async Task OnInitializedAsync()
     {
         await InitializeAsync();
         _initialized = true;
-        _locationRefreshTask = RefreshDriverLocationLoopAsync(_locationRefreshCancellation.Token);
+        RefreshController.시작(action => InvokeAsync(action));
     }
 
     protected override Task OnParametersSetAsync()
         => !_initialized
             ? Task.CompletedTask
-            : ViewModel.경로선택반영Async(OrderNo);
+            : RefreshController.작업실행Async(token => ViewModel.경로선택반영Async(OrderNo, token));
 
-    private Task InitializeAsync() => ViewModel.초기화Async(OrderNo);
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var mode = ViewModel.인증화면표시;
+        if (!RefreshController.중지됨 && _reportedAuthenticationMode != mode)
+        {
+            _reportedAuthenticationMode = mode;
+            await AuthenticationModeChanged.InvokeAsync(mode);
+        }
+    }
+
+    private Task InitializeAsync()
+        => RefreshController.작업실행Async(token => ViewModel.초기화Async(OrderNo, token));
 
     private Task LoginAsync(공통로그인요청 request)
-        => ViewModel.로그인Async(request, OrderNo);
+        => RefreshController.작업실행Async(token => ViewModel.로그인Async(request, OrderNo, token));
+
+    private Task SearchListAsync()
+        => RefreshController.목록작업실행Async(token => ViewModel.목록검색Async(token));
+
+    private Task ReloadListAsync()
+        => RefreshController.목록작업실행Async(token => ViewModel.목록새로고침Async(token));
+
+    private Task ResetListAsync()
+        => RefreshController.목록작업실행Async(token => ViewModel.검색조건초기화Async(token));
+
+    private Task ChangeListPageAsync(int page)
+        => RefreshController.목록작업실행Async(token => ViewModel.페이지변경Async(page, token));
 
     private async Task LogoutAsync()
     {
-        if (await ViewModel.로그아웃Async() && OrderSelected.HasDelegate)
+        var loggedOut = false;
+        await RefreshController.작업실행Async(async token => loggedOut = await ViewModel.로그아웃Async(token));
+        if (loggedOut && !RefreshController.중지됨 && OrderSelected.HasDelegate)
         {
             await OrderSelected.InvokeAsync(null);
         }
@@ -49,68 +78,53 @@ public partial class OrdererFoodOrderWorkspace : IAsyncDisposable
 
     private async Task SelectOrderAsync(string orderNo)
     {
-        await ViewModel.주문선택Async(orderNo);
-        if (OrderSelected.HasDelegate)
+        await RefreshController.작업실행Async(token => ViewModel.주문선택Async(orderNo, token));
+        if (!RefreshController.중지됨 && ViewModel.개인주문조회가능 && OrderSelected.HasDelegate)
         {
             await OrderSelected.InvokeAsync(orderNo);
         }
     }
 
     private Task RetryOrderAsync(string orderNo)
-        => ViewModel.주문선택Async(orderNo);
+        => RefreshController.작업실행Async(token => ViewModel.주문선택Async(orderNo, token));
 
     private Task RefreshOrderAsync(string orderNo)
-        => ViewModel.주문진행새로고침Async();
+        => RefreshController.작업실행Async(token => ViewModel.주문진행새로고침Async(token));
 
     private Task ConfirmReceiptAsync()
-        => ViewModel.주문수령확인Async();
+        => RefreshController.작업실행Async(token => ViewModel.주문수령확인Async(token));
+
+    private Task CancelOrderAsync()
+        => RefreshController.작업실행Async(token => ViewModel.주문취소Async(token));
 
     private async Task ClearSelectionAsync()
     {
-        ViewModel.주문선택해제();
-        if (OrderSelected.HasDelegate)
+        await RefreshController.작업실행Async(_ =>
+        {
+            ViewModel.주문선택해제();
+            return Task.CompletedTask;
+        });
+        if (!RefreshController.중지됨 && OrderSelected.HasDelegate)
         {
             await OrderSelected.InvokeAsync(null);
         }
     }
 
-    private async Task RefreshDriverLocationLoopAsync(CancellationToken cancellationToken)
+    protected override void Dispose(bool disposing)
     {
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
-        try
+        base.Dispose(disposing);
+        if (disposing)
         {
-            while (await timer.WaitForNextTickAsync(cancellationToken))
-            {
-                var locationState = Detail.상세?.기사위치.상태;
-                if (!Authentication.로그인됨
-                    || string.IsNullOrWhiteSpace(Detail.요청OrderNo)
-                    || locationState is not (음식배달위치추적상태코드.추적중 or 음식배달위치추적상태코드.갱신지연))
-                {
-                    continue;
-                }
-
-                await InvokeAsync(() => ViewModel.주문진행새로고침Async(cancellationToken));
-            }
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
+            _refreshController?.중지();
         }
     }
 
     public async ValueTask DisposeAsync()
     {
-        await _locationRefreshCancellation.CancelAsync();
-        if (_locationRefreshTask is not null)
+        Dispose();
+        if (_refreshController is not null)
         {
-            try
-            {
-                await _locationRefreshTask;
-            }
-            catch (OperationCanceledException)
-            {
-            }
+            await _refreshController.DisposeAsync();
         }
-
-        _locationRefreshCancellation.Dispose();
     }
 }

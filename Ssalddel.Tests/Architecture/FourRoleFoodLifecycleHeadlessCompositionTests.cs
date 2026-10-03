@@ -18,6 +18,8 @@ public sealed class FourRoleFoodLifecycleHeadlessCompositionTests
         Assert.DoesNotContain("FOOD_OBSERVER_RESTAURANT_ID", program);
         Assert.DoesNotContain("FOOD_OBSERVER_MENU_ID", program);
         Assert.Contains("음식배달운영생명주기단계Codes.음식점응답대기", program);
+        Assert.Contains("음식배달운영생명주기단계Codes.기사확보대기", program);
+        Assert.Contains("음식점주문진행작업코드.조리시작", program);
         Assert.Contains("음식배달운영생명주기단계Codes.조리배차병행", program);
         Assert.Contains("음식배달운영생명주기단계Codes.픽업인계", program);
         Assert.Contains("음식배달운영생명주기단계Codes.배송", program);

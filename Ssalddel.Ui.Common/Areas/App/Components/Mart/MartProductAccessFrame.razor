@@ -43,7 +43,7 @@
                            StartIcon="@Icons.Material.Filled.ArrowBack">
                     돌아가기
                 </MudButton>
-                @if (!CompactCatalog)
+                @if (!CompactCatalog && !AuthenticationOnly)
                 {
                     <MudButton Href="@Context.PathFor(MartProductScreenKind.List)"
                                Variant="Variant.Outlined"
@@ -72,7 +72,7 @@
             }
         }
 
-        @if (!CompactCatalog)
+        @if (!CompactCatalog && !AuthenticationOnly)
         {
             <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mart-product-screen__boundary">
                 공개 상품과 마지막 투영 시각 기준의 판매 가능 수량만 표시합니다. 목록·상세 조회는 상태를 바꾸지 않으며,
@@ -101,6 +101,7 @@
     [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
     [Parameter] public bool SamplePreview { get; set; }
     [Parameter] public bool CompactCatalog { get; set; }
+    [Parameter] public bool AuthenticationOnly { get; set; }
 
     protected override Task OnInitializedAsync()
         => SamplePreview ? Task.CompletedTask : CheckAccessAsync();

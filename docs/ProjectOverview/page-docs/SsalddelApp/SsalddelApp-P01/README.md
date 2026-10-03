@@ -19,6 +19,10 @@
 | 2.0 운송 필수 연결 | [SsalddelApp-P01 - 화주 업무 홈, 운송 의뢰/상태/창고/판매 업무 진입](../../../ssalddel-v1-required-pages.md) |
 | 캡처 상태 | 완료 |
 
+## 인증과 업무 표시
+
+[ShipperHomeAppShell](../../../../../SsalddelApp/Components/Shared/ShipperHomeAppShell.razor)이 현재 세션을 전달하고, [ShipperHomeScreen](../../../../../Ssalddel.Ui.Common/Areas/App/Components/Shipper/ShipperHomeScreen.razor)은 앱에서 계정 입력을 제공하는 경우 로그인과 업무 요약·업무 진입·캐시 경고를 배타적으로 표시합니다. 공개 커뮤니티 이동은 유지하고 인증 성공 후 기존 업무 홈으로 복귀합니다. 공용 화면을 쓰는 공개 웹의 기본 동작은 유지하며, 역할별 책임과 검증은 [로그인·업무 책임 카드](../../auth-workspace-separation-r1.md), [페이지 원칙의 인증 경계](../../../../Architecture/WholeRoadmapPagePrinciple.md#인증과-업무의-경계)를 참조합니다.
+
 ## 왜 필요한가
 
 이 화면은 화주 역할의 커뮤니티와 업무 요약을 조합하고 운송·창고·판매 화면으로 연결하므로, 1.0 업무 흐름이 실제 사용자 행동으로 닫히기 위해 필요합니다. 역할 선택 자체는 [SsalddelApp-P00 통합 홈](../SsalddelApp-P00/)이 담당합니다.

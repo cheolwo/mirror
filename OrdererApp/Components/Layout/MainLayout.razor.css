@@ -1,27 +1,27 @@
 .orderer-mobile-shell {
     --orderer-accent: #0f766e;
-    --orderer-accent-dark: #115e59;
+    --orderer-accent-dark: #0b5c56;
     --orderer-surface: #fff;
-    --orderer-background: #f7f6f1;
-    --orderer-border: #e5e2d8;
-    --orderer-muted: #6f746f;
+    --orderer-background: var(--ss-canvas, #f5f7fa);
+    --orderer-border: var(--ss-border, #dce5e9);
+    --orderer-muted: var(--ss-muted, #586b78);
     --role-purpose-accent: #0f766e;
     --role-purpose-soft: #e9f5f2;
     --role-purpose-border: #c8e3dc;
     --mud-palette-primary: #0f766e;
-    --mud-palette-primary-darken: #115e59;
+    --mud-palette-primary-darken: #0b5c56;
     --mud-palette-primary-text: #fff;
     position: relative;
     display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
     width: min(100%, 520px);
     height: 100dvh;
     margin: 0 auto;
     overflow: hidden;
-    border-inline: 1px solid #e6e3da;
+    border-inline: 1px solid var(--orderer-border);
     background: var(--orderer-background);
-    color: #18302e;
-    box-shadow: 0 18px 60px rgba(39, 49, 45, .12);
+    color: var(--ss-ink, #172b36);
+    box-shadow: 0 8px 32px rgba(23, 43, 54, .05);
 }
 
 .orderer-mobile-shell__appbar {
@@ -37,8 +37,8 @@
         4px
         max(12px, env(safe-area-inset-left));
     border-bottom: 1px solid rgba(30, 66, 62, .08);
-    background: rgba(255, 255, 252, .94);
-    color: #18302e;
+    background: #fff;
+    color: var(--ss-ink, #172b36);
     backdrop-filter: blur(16px);
 }
 
@@ -47,8 +47,8 @@
     appearance: none;
     display: inline-grid;
     place-items: center;
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     padding: 0;
     border: 0;
     border-radius: 50%;
@@ -61,9 +61,9 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #18302e;
+    color: var(--ss-ink, #172b36);
     font-size: 1.04rem;
-    font-weight: 900;
+    font-weight: 600;
     text-decoration: none;
     letter-spacing: -.035em;
 }
@@ -74,10 +74,10 @@
     width: 30px;
     height: 30px;
     border-radius: 10px;
-    background: linear-gradient(145deg, #15978d, #0f766e);
+    background: var(--orderer-accent);
     color: #fff;
     font-size: .76rem;
-    box-shadow: 0 7px 18px rgba(15, 118, 110, .24);
+    box-shadow: none;
 }
 
 .orderer-mobile-shell__scope {
@@ -85,8 +85,8 @@
     border-radius: 999px;
     background: #edf5ef;
     color: #40625a;
-    font-size: .62rem;
-    font-weight: 850;
+    font-size: .875rem;
+    font-weight: 600;
     white-space: nowrap;
 }
 
@@ -100,7 +100,7 @@
     background: #f4f8f6;
     color: var(--orderer-accent);
     font-size: .68rem;
-    font-weight: 900;
+    font-weight: 600;
 }
 
 .orderer-mobile-shell__content {
@@ -132,6 +132,7 @@
     align-content: start;
     gap: 14px;
     width: min(84%, 360px);
+    overflow-y: auto;
     padding:
         max(16px, env(safe-area-inset-top))
         14px
@@ -146,7 +147,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 44px;
+    min-height: 48px;
 }
 
 .orderer-mobile-shell__drawer > header > div {
@@ -173,12 +174,12 @@
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
     gap: 11px;
-    min-height: 46px;
+    min-height: 48px;
     padding: 7px 10px;
     border-radius: 8px;
     color: #384052;
-    font-size: .78rem;
-    font-weight: 750;
+    font-size: 1rem;
+    font-weight: 600;
     text-decoration: none;
 }
 
@@ -203,7 +204,7 @@
 }
 
 .orderer-mobile-shell__bottom-nav {
-    position: absolute;
+    position: relative;
     z-index: 250;
     right: 0;
     bottom: 0;
@@ -217,8 +218,8 @@
         max(6px, env(safe-area-inset-bottom))
         max(8px, env(safe-area-inset-left));
     border-top: 1px solid rgba(31, 73, 67, .09);
-    background: rgba(255, 255, 252, .96);
-    box-shadow: 0 -10px 30px rgba(39, 49, 45, .06);
+    background: #fff;
+    box-shadow: none;
     backdrop-filter: blur(16px);
 }
 
@@ -228,14 +229,14 @@
     align-content: center;
     gap: 3px;
     min-height: 52px;
-    color: #8b928e;
-    font-size: .62rem;
+    color: var(--orderer-muted);
+    font-size: .875rem;
     text-decoration: none;
 }
 
 .orderer-mobile-shell__bottom-link--active {
     color: var(--orderer-accent);
-    font-weight: 850;
+    font-weight: 600;
 }
 
 .orderer-mobile-shell ::deep .mud-container {
@@ -304,8 +305,8 @@
 
 .orderer-mobile-shell ::deep .mud-paper {
     border-color: var(--orderer-border);
-    border-radius: 18px;
-    box-shadow: 0 10px 30px rgba(40, 54, 50, .06);
+    border-radius: 16px;
+    box-shadow: none;
 }
 
 .orderer-mobile-shell ::deep .mud-grid {
@@ -318,7 +319,7 @@
 }
 
 .orderer-mobile-shell ::deep .mud-button-root {
-    min-height: 42px;
+    min-height: 48px;
     border-radius: 12px;
     text-transform: none;
 }
@@ -333,13 +334,14 @@
 }
 
 .orderer-mobile-shell ::deep .mud-input-outlined-border {
-    border-color: #cfd5e1;
+    border-color: var(--ss-control-border, #788c97);
     border-radius: 12px;
 }
 
 .orderer-mobile-shell ::deep .mud-alert {
     border-radius: 12px;
-    font-size: .7rem;
+    font-size: .875rem;
+    line-height: 1.5;
 }
 
 .orderer-mobile-shell ::deep .role-purpose-journey {
@@ -375,4 +377,27 @@
     .orderer-mobile-shell__scope {
         display: none;
     }
+}
+
+/* Keep the food workspace clear of the fixed navigation. */
+.orderer-mobile-shell ::deep .food-order-history {
+    padding: 24px 16px !important;
+}
+.orderer-mobile-shell ::deep .food-order-workspace .food-order-panel {
+    padding: 16px;
+    border-radius: 16px;
+}
+.orderer-mobile-shell ::deep .food-order-card-heading > div {
+    flex: 1 1 160px;
+    min-width: 0;
+}
+.orderer-mobile-shell ::deep .food-order-workspace .mud-chip {
+    font-size: .875rem;
+}
+.orderer-mobile-shell__icon-button:focus-visible,
+.orderer-mobile-shell__drawer button:focus-visible,
+.orderer-mobile-shell__drawer a:focus-visible,
+.orderer-mobile-shell__bottom-link:focus-visible {
+    outline: 3px solid var(--orderer-accent-dark);
+    outline-offset: 2px;
 }

@@ -1,4 +1,22 @@
 :root {
+    /* RoleAppVisualDesignStandard.md: host adapters consume these semantic values. */
+    --ss-accent: #0f766e;
+    --ss-accent-strong: #0b5c56;
+    --ss-accent-soft: #eaf5f3;
+    --ss-canvas: #f5f7fa;
+    --ss-surface: #fff;
+    --ss-ink: #172b36;
+    --ss-muted: #586B78;
+    --ss-border: #dce5e9;
+    --ss-control-border: #788c97;
+    --ss-space-1: 4px;
+    --ss-space-2: 8px;
+    --ss-space-3: 12px;
+    --ss-space-4: 16px;
+    --ss-space-6: 24px;
+    --ss-space-8: 32px;
+    --ss-radius-control: 12px;
+    --ss-radius-surface: 16px;
     color-scheme: light;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -12,21 +30,21 @@ body.role-app {
 }
 
 body.role-app--orderer {
-    --role-accent: #0f766e;
-    --role-surface: #fcfffd;
-    --role-canvas: #eeece5;
+    --role-accent: var(--ss-accent);
+    --role-surface: var(--ss-surface);
+    --role-canvas: var(--ss-canvas);
 }
 
 body.role-app--restaurant {
-    --role-accent: #9a4d22;
-    --role-surface: #fffdf9;
-    --role-canvas: #f7f2ea;
+    --role-accent: var(--ss-accent);
+    --role-surface: var(--ss-surface);
+    --role-canvas: var(--ss-canvas);
 }
 
 body.role-app--admin {
-    --role-accent: #173b57;
-    --role-surface: #fcfffd;
-    --role-canvas: #f3f7f5;
+    --role-accent: var(--ss-accent);
+    --role-surface: var(--ss-surface);
+    --role-canvas: var(--ss-canvas);
 }
 
 body.role-app button,
@@ -38,7 +56,7 @@ body.role-app textarea {
 }
 
 body.role-app :focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--role-accent) 32%, transparent);
+    outline: 3px solid var(--ss-accent-strong);
     outline-offset: 2px;
 }
 
@@ -51,8 +69,8 @@ body.role-app h1:focus-visible {
     body.role-app [role="button"],
     body.role-app .mud-button-root,
     body.role-app .mud-icon-button {
-        min-width: 44px;
-        min-height: 44px;
+        min-width: 48px;
+        min-height: 48px;
     }
 }
 

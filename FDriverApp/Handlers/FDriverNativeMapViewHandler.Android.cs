@@ -1,6 +1,7 @@
 #if ANDROID
 using Android.OS;
 using Android.Views;
+using Android.Widget;
 using Com.Naver.Maps.Geometry;
 using Com.Naver.Maps.Map;
 using Com.Naver.Maps.Map.Overlay;
@@ -8,48 +9,196 @@ using Com.Naver.Maps.Map.Util;
 using FDriverApp.Controls;
 using Ssalddel.Contracts.Common.Drivers;
 using Microsoft.Maui.Handlers;
+using Microsoft.Maui.Networking;
 using AndroidColor = Android.Graphics.Color;
 
 namespace FDriverApp.Handlers;
 
-public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapView, MapView>
+public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapView, FrameLayout>
 {
     private static readonly int PickupMarkerTintColor = AndroidColor.Rgb(245, 124, 0);
     private static readonly int DropoffMarkerTintColor = AndroidColor.Rgb(37, 99, 235);
     private readonly List<Marker> _nativeMarkers = [];
     private readonly List<PathOverlay> _nativeRouteOverlays = [];
     private NaverMap? _naverMap;
+    private MapView? _mapView;
+    private FrameLayout? _container;
+    private TextView? _statusView;
+    private NaverMapSdk? _sdk;
+    private NaverMapReadiness? _readiness;
+    private CancellationTokenSource? _loadTimeout;
+    private bool _disconnected;
 
-    protected override MapView CreatePlatformView()
+    protected override FrameLayout CreatePlatformView()
     {
         var context = MauiContext?.Context ?? throw new InvalidOperationException("Android context is not available.");
+        _disconnected = false;
+        _container = new FrameLayout(context);
+        _statusView = new TextView(context)
+        {
+            Gravity = GravityFlags.Center,
+            TextSize = 14f
+        };
+        _statusView.SetPadding(24, 24, 24, 24);
+        _statusView.SetTextColor(AndroidColor.Black);
+        _statusView.SetBackgroundColor(AndroidColor.Argb(235, 255, 255, 255));
+        _container.AddView(_statusView, new FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent, GravityFlags.Center));
+
+        var keyResource = context.Resources?.GetIdentifier("naver_map_sdk_ncp_key_id", "string", context.PackageName) ?? 0;
+        var keyId = keyResource == 0 ? null : context.GetString(keyResource);
+        _readiness = new NaverMapReadiness(keyId);
+        UpdateStatus();
+        if (!_readiness.IsConfigured)
+        {
+            // Do not initialize the SDK or request tiles using a missing/example credential.
+            return _container;
+        }
+
+        _sdk = NaverMapSdk.GetInstance(context);
+        _sdk.AuthFailed += OnAuthenticationFailed;
+        Connectivity.Current.ConnectivityChanged += OnConnectivityChanged;
+        _readiness.SetInternetAvailable(Connectivity.Current.NetworkAccess == NetworkAccess.Internet);
+        UpdateStatus();
+
         var mapView = new MapView(context);
+        _mapView = mapView;
         mapView.LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
+        _container.AddView(mapView, 0);
         mapView.OnCreate((Bundle?)null);
         mapView.OnStart();
         mapView.OnResume();
         mapView.GetMapAsync(new MapReadyCallback(this));
-        return mapView;
+        StartLoadTimeout();
+        return _container;
     }
 
-    protected override void DisconnectHandler(MapView platformView)
+    protected override void DisconnectHandler(FrameLayout platformView)
     {
+        _disconnected = true;
+        _loadTimeout?.Cancel();
+        _loadTimeout?.Dispose();
+        _loadTimeout = null;
+        Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
+        if (_sdk is not null)
+        {
+            _sdk.AuthFailed -= OnAuthenticationFailed;
+            _sdk = null;
+        }
+        if (_naverMap is not null)
+        {
+            _naverMap.Load -= OnMapTilesLoaded;
+        }
         ClearMarkers();
         ClearRouteOverlays();
-        platformView.OnPause();
-        platformView.OnStop();
-        platformView.OnDestroy();
+        _mapView?.OnPause();
+        _mapView?.OnStop();
+        _mapView?.OnDestroy();
+        _mapView = null;
+        _naverMap = null;
+        _statusView = null;
+        _container = null;
         base.DisconnectHandler(platformView);
     }
 
     private void OnMapReady(NaverMap naverMap)
     {
+        if (_disconnected)
+        {
+            return;
+        }
+
         _naverMap = naverMap;
+        // The native map object being ready does not prove that background tiles loaded.
+        _naverMap.Load += OnMapTilesLoaded;
         ApplyKoreanMapLocale();
         ApplyMapOptions();
         ApplyCamera();
         ApplyMarkers();
         ApplyRouteOverlays();
+    }
+
+    private void OnMapTilesLoaded(object? sender, EventArgs args)
+    {
+        if (_disconnected)
+        {
+            return;
+        }
+        _readiness?.OnTilesLoaded();
+        _loadTimeout?.Cancel();
+        UpdateStatus();
+    }
+
+    private void OnAuthenticationFailed(object? sender, NaverMapSdk.AuthFailedEventArgs args)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (_disconnected)
+            {
+                return;
+            }
+            // Raw SDK exceptions may contain configuration information and are not displayed/logged.
+            _readiness?.OnAuthenticationFailed(args.P0.ErrorCode);
+            _loadTimeout?.Cancel();
+            UpdateStatus();
+        });
+    }
+
+    private void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs args)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (_disconnected)
+            {
+                return;
+            }
+            _readiness?.SetInternetAvailable(args.NetworkAccess == NetworkAccess.Internet);
+            UpdateStatus();
+            if (_readiness?.Status == NaverMapReadinessStatus.Loading)
+            {
+                StartLoadTimeout();
+            }
+        });
+    }
+
+    private void StartLoadTimeout()
+    {
+        _loadTimeout?.Cancel();
+        _loadTimeout?.Dispose();
+        _loadTimeout = new CancellationTokenSource();
+        _ = CheckLoadTimeoutAsync(_loadTimeout.Token);
+    }
+
+    private async Task CheckLoadTimeoutAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(20), cancellationToken).ConfigureAwait(false);
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                if (!_disconnected && !cancellationToken.IsCancellationRequested)
+                {
+                    _readiness?.OnLoadTimeout();
+                    UpdateStatus();
+                }
+            });
+        }
+        catch (System.OperationCanceledException)
+        {
+            // Map loaded or handler was disconnected.
+        }
+    }
+
+    private void UpdateStatus()
+    {
+        if (_statusView is null)
+        {
+            return;
+        }
+
+        var message = _readiness?.Message;
+        _statusView.Text = message;
+        _statusView.Visibility = message is null ? ViewStates.Gone : ViewStates.Visible;
     }
 
     public static void MapCamera(FDriverNativeMapViewHandler handler, FDriverNativeMapView view)

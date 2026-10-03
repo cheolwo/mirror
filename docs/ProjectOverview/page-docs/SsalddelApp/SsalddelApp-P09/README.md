@@ -25,6 +25,10 @@
 
 주 사용자는 화주다. 로그인된 사용자의 운송 의뢰를 조회하고, 상태별 다음 확인 행동, 타임라인, 새 의뢰 등록으로 연결한다. 창고·판매·통관 처리는 각각의 전용 워크스페이스로 넘긴다.
 
+### 조회·복귀 책임 (2026-10-03)
+
+목록의 초기·수동·SignalR·주기 갱신은 [ShipperQueryLifetime](../../../../../SsalddelApp/ViewModels/Shipper/ShipperQueryLifetime.cs)으로 직렬화한다. 최신 요청·현재 로그인 수명·화면 수명이 모두 맞는 결과만 표시한다. 로그아웃 시 이전 의뢰 목록을 비우고 로그인 안내로 돌아간다. 의뢰별 입력·모의 결제 안내·운송 상태의 상세 책임은 [의뢰 상세](../SsalddelApp-P03/)에 남긴다. [보완 범위·시험 경계](../../cargo-workflow-recovery-r1.md).
+
 ## API와 보안
 
 `IShipperOperationsService`로 의뢰 목록을 읽고 `ShipperRequestDetail`로 이동한다. 비로그인 사용자는 데이터 대신 홈 로그인 안내를 본다. 주소, 연락처, 결제 정보는 필요한 확장 영역에서만 노출해야 한다.

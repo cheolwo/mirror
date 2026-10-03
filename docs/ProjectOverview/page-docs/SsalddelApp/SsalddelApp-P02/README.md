@@ -18,11 +18,28 @@
 | 2.0 운송 필수 연결 | [SsalddelApp-P02 - 운송 의뢰 작성](../../../ssalddel-v1-required-pages.md) |
 | 캡처 상태 | 완료 |
 
+## 페이지 책임 (2026-10-03 현장 정보 연결)
+
+| 항목 | 기록 |
+| --- | --- |
+| 주 사용자·소스 | MAUI 화주, 기존 `/shipper/request` 작성 시작과 공통 운송 입력 단계 |
+| 대상·진입 문맥 | 같은 운송 의뢰 Draft의 화물·상하차 주소·담당자·시간 조건 |
+| 한 문장 목적 | 화주가 실제 현장 조건을 검토해 운송 의뢰를 등록한다. |
+| 완료 결과·주 행동 | 기존 최종 검토에서 명시적으로 서버 등록. 작성 시작만으로 배차/결제 실행하지 않음 |
+| 기본 정보 | 상하차 담당자/연락처와 시간창의 네 시각. 상차 시작/종료 필수, 하차 둘 다 미지정 가능. 한국시간 입력 |
+| 보조 정보 | 같은 Draft의 화물·차량·운임 조건과 검토 안내. 공개 커뮤니티 초안에는 상세주소/담당자/전화번호 제외 |
+| 독립 업무 | 대량 등록·서버 의뢰 상세·배차·창고 인계·정산은 기존 별도 업무로 인계 |
+| 진입·실패·복귀 | 기존 단계/초안 수명 유지. 시간창 한쪽 누락·역전은 오류. 임의 전화번호나 현재 시각으로 미입력을 대체하지 않음 |
+| 코드·API·DB | ShipperRequestTransportScreen → 공통 작성 ViewModel/Draft → 등록 서비스 → 기존 POST api/v1/shipper/requests의 LocationContactDTO/TimeWindowDTO. 한국시간을 UTC로 전달하고 기존 의뢰 원장에 기록 |
+| 책임 판정·검증 | 같은 목적의 작성 단계. 전체 build·관련132/132; 화주 신규23건은 실제 소스의 입력/mapper/API 시험. 실제 모바일 날짜 입력·작성 UI·실 HTTP/DB 등록·동일 ID 완주는 미검증 |
+
+[이번 현장 연결·검증](../../cargo-contact-window-r1.md) · [변경 기록](../../../../Changes/2026-10-03-cargo-contact-window-r1.md).
+
 ## 왜 필요한가
 
 이 화면은 운송 의뢰 작성을 담당하므로, 1.0 업무 흐름이 실제 사용자 행동으로 닫히기 위해 필요합니다.
 
-현재 단건 등록 입력부는 화주 전용 화면 안에 직접 박아 두지 않고, 공통 운송 컴포넌트인 `Ssalddel운송모델작성Panel`을 사용합니다. 이 컴포넌트는 화주 운송 의뢰뿐 아니라 주문자 집단, 공동주문, 창고 출고품처럼 “운송이 필요해지는 대상”이 생겼을 때 같은 운송 모델 초안을 만들 수 있도록 분리한 것입니다.
+현재 작성 시작은 기존 단계별 작성 화면으로 이동합니다. 현장 정보는 공통 `ShipperRequestTransportScreen`과 `운송의뢰작성ViewModel`에서 같은 `운송모델작성Draft`에 담습니다. 초안 작성과 최종 서버 등록은 구별합니다.
 
 요금이나 차량 선택이 애매한 사용자는 작성 중인 운송 조건을 바탕으로 커뮤니티 상담 글을 바로 등록할 수 있습니다. 이때 글에는 상세주소, 담당자 이름, 전화번호를 넣지 않고 화물, 차량 후보, 상하차 지역, 예상거리, 결제예정금액, 기준운임 같은 판단 정보만 요약합니다.
 
@@ -53,7 +70,7 @@
 ## API 경로와 코드 연결
 
 - 화면 소스: [SsalddelApp/Components/Pages/ShipperRequestWizard.razor](../../../../../SsalddelApp/Components/Pages/ShipperRequestWizard.razor)
-- 공통 컴포넌트: [Ssalddel.Ui.Common/Areas/App/Components/Transport/Ssalddel운송모델작성Panel.razor](../../../../../Ssalddel.Ui.Common/Areas/App/Components/Transport/Ssalddel운송모델작성Panel.razor)
+- 공통 컴포넌트: [ShipperRequestTransportScreen](../../../../../Ssalddel.Ui.Common/Areas/App/Components/Transport/ShipperRequestTransportScreen.razor), [운송의뢰작성ViewModel](../../../../../Ssalddel.Ui.Common/Areas/App/ViewModels/운송의뢰작성ViewModel.cs)
 - 공통 Draft: [Ssalddel.Ui.Common/Areas/App/Models/운송모델작성Draft.cs](../../../../../Ssalddel.Ui.Common/Areas/App/Models/운송모델작성Draft.cs)
 - 클라이언트 서비스/계약: [SsalddelApp/Services/IShipperOperationsService.cs](../../../../../SsalddelApp/Services/IShipperOperationsService.cs), [SsalddelApp/Services/Samples/SampleShipperOperationsService.cs](../../../../../SsalddelApp/Services/Samples/SampleShipperOperationsService.cs), [SsalddelApp/Services/ServerBackedShipperOperationsService.cs](../../../../../SsalddelApp/Services/ServerBackedShipperOperationsService.cs)
 

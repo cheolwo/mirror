@@ -5,6 +5,13 @@
 {
     <RouteView RouteData="RouteData" DefaultLayout="DefaultLayout" />
 }
+else if (!string.IsNullOrWhiteSpace(_connectionMessage))
+{
+    <LayoutView Layout="DefaultLayout">
+        <MudAlert Severity="Severity.Warning">@_connectionMessage</MudAlert>
+        <MudButton Variant="Variant.Outlined" Disabled="@_checking" OnClick="CheckAccessAsync">다시 확인</MudButton>
+    </LayoutView>
+}
 
 @code {
     [Parameter, EditorRequired]
@@ -14,24 +21,44 @@
     public Type? DefaultLayout { get; set; }
 
     private bool _canRender;
+    private bool _checking;
+    private string? _connectionMessage;
 
     protected override async Task OnParametersSetAsync()
+        => await CheckAccessAsync();
+
+    private async Task CheckAccessAsync()
     {
+        if (_checking) return;
+        _checking = true;
         _canRender = false;
-
-        if (RouteData.PageType == typeof(Pages.Login))
+        _connectionMessage = null;
+        try
         {
-            _canRender = true;
-            return;
-        }
+            if (RouteData.PageType == typeof(Pages.Login))
+            {
+                _canRender = true;
+                return;
+            }
 
-        var result = await AuthService.EnsureAccessTokenAsync();
-        if (result.IsSuccess)
+            var result = await AuthService.EnsureAccessTokenAsync();
+            if (result.IsSuccess)
+            {
+                _canRender = true;
+                return;
+            }
+
+            if (result.RequiresLogin)
+            {
+                NavigationManager.NavigateTo("/login", replace: true);
+                return;
+            }
+
+            _connectionMessage = "연결 상태를 확인하지 못했습니다. 연결이 돌아오면 다시 확인해 주세요.";
+        }
+        finally
         {
-            _canRender = true;
-            return;
+            _checking = false;
         }
-
-        NavigationManager.NavigateTo("/login", replace: true);
     }
 }

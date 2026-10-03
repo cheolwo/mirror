@@ -3,6 +3,8 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Ssalddel.Contracts.Common.Drivers;
+using Ssalddel.Contracts.Common.Dispatch;
+using Ssalddel.Contracts.Food;
 using Ssalddel.Contracts.Driver.Food;
 using Ssalddel.Contracts.Driver.Work;
 
@@ -12,6 +14,8 @@ public interface IFoodDeliveryDriverApiService
 {
     Task<FoodDeliveryDriverWorkspaceDto> GetWorkspaceAsync(CancellationToken cancellationToken = default);
     Task<기사운행상태응답?> GetWorkStatusAsync(CancellationToken cancellationToken = default);
+    Task<운영배차수신상태Dto> GetDispatchAvailabilityAsync(CancellationToken cancellationToken = default);
+    Task<운영배차수신상태Dto> ChangeDispatchIntentAsync(운영배차수신의사변경요청 request, CancellationToken cancellationToken = default);
     Task StartWorkAsync(string startLocation, CancellationToken cancellationToken = default);
     Task StopWorkAsync(CancellationToken cancellationToken = default);
     Task<기사위치갱신응답?> UpdateLocationAsync(기사위치갱신요청 request, CancellationToken cancellationToken = default);
@@ -19,6 +23,8 @@ public interface IFoodDeliveryDriverApiService
     Task<FoodDeliveryDriverActionResponse> RejectAsync(string offerId, CancellationToken cancellationToken = default);
     Task<FoodDeliveryDriverActionResponse> AcceptBundleAsync(IReadOnlyList<string> offerIds, CancellationToken cancellationToken = default);
     Task<FoodDeliveryDriverActionResponse> ConfirmPickupAsync(string offerId, CancellationToken cancellationToken = default);
+    Task<FoodDeliveryDriverActionResponse> RecordRestaurantArrivalAsync(string offerId, 음식배달가게도착요청 request, CancellationToken cancellationToken = default);
+    Task<FoodDeliveryDriverActionResponse> InterruptAsync(string offerId, 음식배달중단요청 request, CancellationToken cancellationToken = default);
     Task<FoodDeliveryDriverActionResponse> CompleteAsync(string offerId, CancellationToken cancellationToken = default);
     Task<FoodDeliveryDriverRouteResponseDto> GetRouteAsync(FoodDeliveryDriverRouteRequestDto request, CancellationToken cancellationToken = default);
 }
@@ -41,6 +47,12 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
 
     public Task<FoodDeliveryDriverWorkspaceDto> GetWorkspaceAsync(CancellationToken cancellationToken = default)
         => SendAsync<FoodDeliveryDriverWorkspaceDto>(HttpMethod.Get, "api/v1/driver/food-deliveries/workspace", null, cancellationToken);
+
+    public Task<운영배차수신상태Dto> GetDispatchAvailabilityAsync(CancellationToken cancellationToken = default)
+        => SendAsync<운영배차수신상태Dto>(HttpMethod.Get, "api/v1/driver/operational-dispatch/availability", null, cancellationToken);
+
+    public Task<운영배차수신상태Dto> ChangeDispatchIntentAsync(운영배차수신의사변경요청 request, CancellationToken cancellationToken = default)
+        => SendAsync<운영배차수신상태Dto>(HttpMethod.Put, "api/v1/driver/operational-dispatch/availability/intent", request, cancellationToken);
 
     public async Task<기사운행상태응답?> GetWorkStatusAsync(CancellationToken cancellationToken = default)
         => await SendAsync<기사운행상태응답>(
@@ -116,6 +128,14 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
             null,
             cancellationToken);
 
+    public Task<FoodDeliveryDriverActionResponse> RecordRestaurantArrivalAsync(string offerId, 음식배달가게도착요청 request, CancellationToken cancellationToken = default)
+        => SendAsync<FoodDeliveryDriverActionResponse>(HttpMethod.Post,
+            $"api/v1/driver/food-deliveries/offers/{Uri.EscapeDataString(offerId)}/restaurant-arrival", request, cancellationToken);
+
+    public Task<FoodDeliveryDriverActionResponse> InterruptAsync(string offerId, 음식배달중단요청 request, CancellationToken cancellationToken = default)
+        => SendAsync<FoodDeliveryDriverActionResponse>(HttpMethod.Post,
+            $"api/v1/driver/food-deliveries/offers/{Uri.EscapeDataString(offerId)}/interruption", request, cancellationToken);
+
     public Task<FoodDeliveryDriverRouteResponseDto> GetRouteAsync(
         FoodDeliveryDriverRouteRequestDto request,
         CancellationToken cancellationToken = default)
@@ -133,6 +153,7 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
     {
         using var response = await SendWithRefreshAsync(method, path, body, cancellationToken);
         var result = await response.Content.ReadFromJsonAsync<T>(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
         return result ?? throw new FDriverApiException("서버 응답을 읽을 수 없습니다.", response.StatusCode);
     }
 
@@ -151,22 +172,22 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
         object? body,
         CancellationToken cancellationToken)
     {
-        var authenticationError = await _authApi.EnsureAccessTokenAsync(cancellationToken: cancellationToken);
-        if (authenticationError is not null)
+        var authentication = await _authApi.EnsureAccessTokenResultAsync(cancellationToken: cancellationToken);
+        if (!authentication.IsSuccess)
         {
-            throw new FDriverApiException(authenticationError, HttpStatusCode.Unauthorized);
+            throw new FDriverApiException(authentication.ErrorMessage!, authentication.StatusCode);
         }
 
         var response = await SendOnceAsync(method, path, body, cancellationToken);
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
             response.Dispose();
-            authenticationError = await _authApi.EnsureAccessTokenAsync(
+            authentication = await _authApi.EnsureAccessTokenResultAsync(
                 forceRefresh: true,
                 cancellationToken: cancellationToken);
-            if (authenticationError is not null)
+            if (!authentication.IsSuccess)
             {
-                throw new FDriverApiException(authenticationError, HttpStatusCode.Unauthorized);
+                throw new FDriverApiException(authentication.ErrorMessage!, authentication.StatusCode);
             }
 
             response = await SendOnceAsync(method, path, body, cancellationToken);
@@ -189,7 +210,13 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
         using var request = CreateRequest(method, path, body);
         try
         {
-            return await _httpClient.SendAsync(request, cancellationToken);
+            var response = await _httpClient.SendAsync(request, cancellationToken);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                response.Dispose();
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+            return response;
         }
         catch (HttpRequestException ex)
         {

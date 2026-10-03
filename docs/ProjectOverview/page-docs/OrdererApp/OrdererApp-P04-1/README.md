@@ -18,6 +18,10 @@
 | 2.0 운송 필수 연결 | 직접 연결 없음 |
 | 캡처 상태 | 완료 |
 
+## 인증과 업무 표시
+
+공개 음식점 탐색·주문 작성과 계정 입력은 배타적으로 표시합니다. 기존 [RestaurantOrder](../../../../../OrdererApp/Components/Pages/RestaurantOrder.razor)가 표시 문맥을 소유하고, [OrdererRestaurantAuthenticationWorkspace](../../../../../Ssalddel.Ui.Common/Areas/App/Components/Food/OrdererRestaurantAuthenticationWorkspace.razor)가 인증 입력·오류·복귀를 담당합니다. 로그인 성공 또는 취소 후 같은 주문 초안·요청 ID로 돌아오는 경계와 최신 검증은 [로그인·업무 책임 카드](../../auth-workspace-separation-r1.md), [페이지 원칙의 인증 경계](../../../../Architecture/WholeRoadmapPagePrinciple.md#인증과-업무의-경계)를 참조합니다.
+
 ## 왜 필요한가
 
 이 화면은 음식점 주문을 담당하므로, 1.0 이후의 해외 물류, 창고, 주문자 집단, 판매채널 확장을 화면 단위로 검증하기 위해 필요합니다.

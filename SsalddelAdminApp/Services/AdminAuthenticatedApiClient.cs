@@ -30,6 +30,16 @@ public sealed class AdminAuthenticatedApiClient
                ?? throw new AdminApiException("서버 응답을 읽을 수 없습니다.", response.StatusCode);
     }
 
+    public async Task<TResponse> PostAsync<TRequest, TResponse>(
+        string path,
+        TRequest body,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await SendWithRefreshAsync(HttpMethod.Post, path, cancellationToken, body);
+        return await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken)
+               ?? throw new AdminApiException("서버 응답을 읽을 수 없습니다.", response.StatusCode);
+    }
+
     public async Task<TResponse> PutAsync<TRequest, TResponse>(
         string path,
         TRequest body,

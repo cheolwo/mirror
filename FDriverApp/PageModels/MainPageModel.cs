@@ -11,6 +11,7 @@ using Ssalddel.Contracts.Food;
 using Ssalddel.Contracts.Driver.Food;
 using Ssalddel.Contracts.Driver.Work;
 using Ssalddel.Ui.Common.Areas.App.Services;
+using Ssalddel.Ui.Common.Areas.App.Models;
 
 namespace FDriverApp.PageModels;
 
@@ -26,7 +27,9 @@ public sealed partial class MainPageModel : ObservableObject
     private readonly IFDriverLocationService _locationService;
     private readonly 역할앱생명주기State _appLifecycle;
     private bool _initialized;
+    private bool _workspaceActive;
     private bool _monitorRefreshInProgress;
+    private CancellationTokenSource _workspaceCancellation = new();
     private CancellationTokenSource? _monitorCancellation;
     private Task? _monitorTask;
     private DateTime? _lastLocationSentAtUtc;
@@ -35,7 +38,7 @@ public sealed partial class MainPageModel : ObservableObject
     [ObservableProperty] private bool _isRefreshing;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private bool _isAuthenticated;
-    [ObservableProperty] private bool _isOnDuty;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(HasLocationWarning))] private bool _isOnDuty;
     [ObservableProperty] private string _loginId = string.Empty;
     [ObservableProperty] private string _password = string.Empty;
     [ObservableProperty] private string _today = DateTime.Now.ToString("M월 d일 dddd");
@@ -48,21 +51,22 @@ public sealed partial class MainPageModel : ObservableObject
     [ObservableProperty] private ActiveDeliveryPreview? _activeDelivery;
     [ObservableProperty] private string _workStage = "추천 대기";
     [ObservableProperty] private string _nextActionGuide = "운행을 시작하면 현재 위치 기준 추천을 확인합니다.";
-    [ObservableProperty] private string _settlementText = "이번 달 정산 조회 전";
+    [ObservableProperty] private string _settlementText = "이번 달 이용료 조회 전";
     [ObservableProperty] private string _routeStatusText = "경로 조회 전";
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(HasWorkspaceWarning))] private string _workspaceWarningText = string.Empty;
     [ObservableProperty] private string _workspaceSyncText = "업무 자동 갱신 대기 · 10초 주기";
     [ObservableProperty] private string _recommendationNotificationText = "FCM 추천 알림 준비 · 10초 서버 조회 복구";
     [ObservableProperty] private string _locationSyncText = "기사 위치 전송 대기";
-    [ObservableProperty] private bool _dispatchAutomationEnabled;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(HasDispatchNotice))] private bool _dispatchAutomationEnabled;
     [ObservableProperty] private int _maxActiveDeliveries;
-    [ObservableProperty] private string _dispatchAutomationNotice = "자동 배차 상태 확인 전";
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(HasDispatchNotice))] private string _dispatchAutomationNotice = "자동 배차 상태 확인 전";
     [ObservableProperty] private IReadOnlyList<DriverMapMarkerItem> _mapMarkers = [];
     [ObservableProperty] private IReadOnlyList<DriverMapRouteOverlay> _selectedRouteOverlays = [];
     [ObservableProperty] private double _mapCenterLatitude = 37.5665d;
     [ObservableProperty] private double _mapCenterLongitude = 126.9780d;
     [ObservableProperty] private double _currentLocationLatitude;
     [ObservableProperty] private double _currentLocationLongitude;
-    [ObservableProperty] private bool _hasCurrentLocation;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(HasLocationWarning))] private bool _hasCurrentLocation;
     [ObservableProperty] private bool _hasNewRecommendations;
     [ObservableProperty] private string _newRecommendationNotice = "새 추천 배차가 도착했습니다.";
 
@@ -80,20 +84,23 @@ public sealed partial class MainPageModel : ObservableObject
         _api = api;
         _locationService = locationService;
         _appLifecycle = appLifecycle;
+        ExceptionEditor.PropertyChanged += ExceptionEditorChanged;
     }
 
     public string AppName => _profile.DisplayName;
     public string DriverRole => _profile.DriverRole;
     public 역할앱생명주기State 앱생명주기 => _appLifecycle;
+    public FDriverWorkspaceNavigationState Navigation { get; } = new();
     public bool IsSignedOut => !IsAuthenticated;
     public string SignedInUserText => string.IsNullOrWhiteSpace(_authSession.UserName)
         ? DriverRole
         : $"{_authSession.UserName} · {DriverRole}";
-    public string WorkToggleText => IsOnDuty ? "추천 대기 종료" : "운행 시작";
+    public string WorkToggleText => IsOnDuty ? "운행 종료" : "운행 시작";
     public string WorkToggleColor => IsOnDuty ? "#B91C1C" : "#0F766E";
     public ObservableCollection<DeliveryTicketPreview> RecommendedTicketItems { get; } = [];
     public ObservableCollection<ActiveDeliveryPreview> ActiveDeliveryItems { get; } = [];
     public ObservableCollection<FoodDeliveryBundlePreview> BundleCandidateItems { get; } = [];
+    public ObservableCollection<FoodDeliverySettlementDisplay> OrderSettlementItems { get; } = [];
 
     public string PickupPointText => CurrentRouteOffer is null
         ? "음식점 픽업지 없음"
@@ -117,9 +124,20 @@ public sealed partial class MainPageModel : ObservableObject
         ? "정산 예정 없음"
         : $"{ActiveDeliveryItems.Sum(x => x.DriverPayout).ToString("N0", CultureInfo.CurrentCulture)}원";
     public bool HasActiveWork => ActiveDelivery is not null;
-    public bool CanConfirmPickup => !IsBusy && ActiveDelivery?.Can(음식배달가능행동Ids.기사픽업확인) == true;
-    public bool CanCompleteDelivery => !IsBusy && ActiveDelivery?.Can(음식배달가능행동Ids.기사전달완료) == true;
+    public bool HasRouteSelection => CurrentRouteOffer is not null;
+    public bool HasRecommendationContent => RecommendedTicketItems.Count > 0 || HasBundleCandidates;
+    public bool HasLocationWarning => IsOnDuty && !HasCurrentLocation;
+    public bool HasDispatchNotice => !DispatchAutomationEnabled
+        && DispatchAutomationNotice != "자동 배차 상태 확인 전";
+    public bool HasWorkspaceWarning => !string.IsNullOrWhiteSpace(WorkspaceWarningText);
+    public bool HasActiveRecipient => ActiveDelivery?.HasRecipient == true;
+    public bool CanConfirmPickup => IsAuthenticated && !IsBusy && !ExceptionEditor.IsOpen && !ExceptionEditor.HasPendingRequest
+        && ActiveDelivery?.Can(음식배달가능행동Ids.기사픽업확인) == true;
+    public bool CanCompleteDelivery => IsAuthenticated && !IsBusy && !ExceptionEditor.IsOpen && !ExceptionEditor.HasPendingRequest
+        && ActiveDelivery?.Can(음식배달가능행동Ids.기사전달완료) == true;
     public bool CanAcceptSelectedTicket => !IsBusy
+                                           && IsAuthenticated && DispatchIntentKnown && ReceivesNewDispatches
+                                           && !ExceptionEditor.IsOpen && !ExceptionEditor.HasPendingRequest
                                            && SelectedTicket?.CanAccept == true
                                            && MaxActiveDeliveries > 0
                                            && ActiveDeliveryItems.Count < MaxActiveDeliveries;
@@ -131,59 +149,112 @@ public sealed partial class MainPageModel : ObservableObject
 
     public async Task InitializeAsync()
     {
-        if (_initialized)
+        _workspaceActive = true;
+        EnsureWorkspaceLifetime();
+        var cancellationToken = _workspaceCancellation.Token;
+        try
         {
-            if (IsAuthenticated)
+            if (_initialized && IsAuthenticated)
             {
                 await ReloadAsync(updateLocation: IsOnDuty);
+                return;
             }
 
+            var restoreState = await _authSession.RestoreAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            _initialized = true;
+            if (restoreState == Ssalddel.Client.Infrastructure.Security.ClientAuthSessionRestoreState.RefreshRequired)
+            {
+                var refresh = await _authApi.EnsureAccessTokenResultAsync(cancellationToken: cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!refresh.IsSuccess)
+                {
+                    StatusMessage = refresh.ErrorMessage!;
+                }
+            }
+
+            // A recoverable refresh session remains visible during a temporary connection failure.
+            // Protected API requests still require a successfully refreshed access token.
+            IsAuthenticated = _authSession.CurrentState != Ssalddel.Client.Infrastructure.Security.ClientAuthSessionRestoreState.Anonymous;
+            if (IsAuthenticated)
+            {
+                await ReloadAsync(updateLocation: true);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+    }
+
+    public async Task StartMonitoringAsync()
+    {
+        if (!_workspaceActive || !IsAuthenticated)
+        {
             return;
         }
 
-        _initialized = true;
-        var restoreState = await _authSession.RestoreAsync();
-        if (restoreState == Ssalddel.Client.Infrastructure.Security.ClientAuthSessionRestoreState.RefreshRequired)
+        EnsureWorkspaceLifetime();
+        var workspaceCancellation = _workspaceCancellation;
+        if (_monitorTask is { IsCompleted: false })
         {
-            var refreshError = await _authApi.EnsureAccessTokenAsync();
-            if (refreshError is not null)
+            if (_monitorCancellation?.IsCancellationRequested != true)
             {
-                StatusMessage = refreshError;
+                return;
             }
+            await _monitorTask;
         }
 
-        IsAuthenticated = _authSession.IsAuthenticated;
-        if (IsAuthenticated)
+        if (!_workspaceActive || !IsAuthenticated
+            || workspaceCancellation.IsCancellationRequested
+            || !ReferenceEquals(_workspaceCancellation, workspaceCancellation))
         {
-            await ReloadAsync(updateLocation: true);
-        }
-    }
-
-    public Task StartMonitoringAsync()
-    {
-        if (!IsAuthenticated)
-        {
-            return Task.CompletedTask;
+            return;
         }
 
-        if (_monitorTask is not { IsCompleted: false })
-        {
-            _monitorCancellation?.Dispose();
-            _monitorCancellation = new CancellationTokenSource();
-            _monitorTask = MonitorWorkspaceAsync(_monitorCancellation.Token);
-        }
-
-        RecommendationNotificationText = "FCM 추천 알림 준비 · 10초 서버 조회 복구";
-        return Task.CompletedTask;
-    }
-
-    public Task StopMonitoringAsync()
-    {
-        _monitorCancellation?.Cancel();
         _monitorCancellation?.Dispose();
-        _monitorCancellation = null;
-        _monitorTask = null;
-        return Task.CompletedTask;
+        _monitorCancellation = CancellationTokenSource.CreateLinkedTokenSource(workspaceCancellation.Token);
+        _monitorTask = MonitorWorkspaceAsync(_monitorCancellation.Token);
+        RecommendationNotificationText = "FCM 추천 알림 준비 · 10초 서버 조회 복구";
+    }
+
+    public Task StopMonitoringAsync() => StopMonitoringAsync(deactivateWorkspace: true);
+
+    private async Task StopMonitoringAsync(bool deactivateWorkspace)
+    {
+        if (deactivateWorkspace)
+        {
+            _workspaceActive = false;
+            ExceptionEditor.Hide();
+        }
+        var monitorTask = _monitorTask;
+        var monitorCancellation = _monitorCancellation;
+        CancelWorkspaceLifetime();
+        if (monitorTask is not null)
+        {
+            await monitorTask;
+        }
+
+        if (ReferenceEquals(_monitorTask, monitorTask))
+        {
+            _monitorTask = null;
+            _monitorCancellation = null;
+            monitorCancellation?.Dispose();
+        }
+    }
+
+    private void EnsureWorkspaceLifetime()
+    {
+        if (_workspaceCancellation.IsCancellationRequested)
+        {
+            _workspaceCancellation.Dispose();
+            _workspaceCancellation = new CancellationTokenSource();
+        }
+    }
+
+    private void CancelWorkspaceLifetime()
+    {
+        _workspaceCancellation.Cancel();
+        _monitorCancellation?.Cancel();
     }
 
     public void ApplyEntryFocus(string? focus)
@@ -196,7 +267,7 @@ public sealed partial class MainPageModel : ObservableObject
             "customer" => "주문자 전달 정보를 확인하세요. 선택한 배달권의 전달 위치와 도착 경로를 지도에 표시합니다.",
             "bundle" => "묶음 배달 후보를 확인하세요. 동선과 예상 정산을 비교한 뒤 한 묶음만 선택할 수 있습니다.",
             "route" => "현재 위치와 픽업·전달 경로를 확인하세요. 선택한 배달권의 실제 도로 경로를 우선 표시합니다.",
-            "settlement" => $"정산 현황을 확인하세요. {SettlementText}",
+            "settlement" => "완료한 배달의 정산 내역을 확인하세요.",
             "workspace" => "음식 배달 업무 공간을 열었습니다. 배차부터 전달 완료까지 한 흐름으로 처리합니다.",
             _ => StatusMessage
         };
@@ -205,26 +276,40 @@ public sealed partial class MainPageModel : ObservableObject
     [RelayCommand]
     private async Task Login()
     {
-        if (IsBusy)
+        if (!_workspaceActive || IsBusy)
         {
             return;
         }
 
+        EnsureWorkspaceLifetime();
+        var cancellationToken = _workspaceCancellation.Token;
         IsBusy = true;
         StatusMessage = "기사 계정을 확인하고 있습니다.";
-        var error = await _authApi.LoginAsync(LoginId, Password);
-        if (error is not null)
+        try
         {
-            StatusMessage = error;
-            IsBusy = false;
-            return;
-        }
+            var error = await _authApi.LoginAsync(LoginId, Password, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (error is not null)
+            {
+                StatusMessage = error;
+                return;
+            }
 
-        Password = string.Empty;
-        IsAuthenticated = true;
-        IsBusy = false;
-        await ReloadAsync(updateLocation: true);
-        await StartMonitoringAsync();
+            Password = string.Empty;
+            IsAuthenticated = true;
+            IsBusy = false;
+            StatusMessage = "배달 업무를 불러오고 있습니다.";
+            await ReloadAsync(updateLocation: true);
+            await StartMonitoringAsync();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        finally
+        {
+            IsBusy = false;
+            NotifyCommandState();
+        }
     }
 
     [RelayCommand]
@@ -235,25 +320,33 @@ public sealed partial class MainPageModel : ObservableObject
             return;
         }
 
+        if (HasActiveWork)
+        {
+            StatusMessage = "진행 중 배달을 완료하거나 현장 중단을 요청한 뒤 로그아웃해 주세요.";
+            return;
+        }
+
+        var cancellationToken = _workspaceCancellation.Token;
         IsBusy = true;
         NotifyCommandState();
         try
         {
             if (IsOnDuty)
             {
-                await _api.StopWorkAsync();
+                await _api.StopWorkAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
             }
 
-            await StopMonitoringAsync();
-            await _authSession.ClearAsync();
-            IsAuthenticated = false;
-            IsOnDuty = false;
-            ClearWorkspace();
-            StatusMessage = "추천 대기를 종료하고 로그아웃했습니다.";
+            await StopMonitoringAsync(deactivateWorkspace: false);
+            await ClearAuthenticationAsync();
+            StatusMessage = "운행을 종료하고 로그아웃했습니다.";
         }
-        catch (FDriverApiException ex)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            StatusMessage = $"추천 대기를 종료하지 못해 로그아웃을 보류했습니다. {ShortMessage(ex.Message)}";
+        }
+        catch (FDriverApiException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            StatusMessage = $"운행을 종료하지 못해 로그아웃을 보류했습니다. {ShortMessage(ex.Message)}";
         }
         finally
         {
@@ -279,6 +372,12 @@ public sealed partial class MainPageModel : ObservableObject
     [RelayCommand]
     private async Task OpenNewRecommendations()
     {
+        var cancellationToken = _workspaceCancellation.Token;
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
         HasNewRecommendations = false;
         var ticket = RecommendedTicketItems.FirstOrDefault(x => !x.IsExpired)
                      ?? RecommendedTicketItems.FirstOrDefault();
@@ -289,46 +388,51 @@ public sealed partial class MainPageModel : ObservableObject
         }
 
         await SelectTicket(ticket);
-        StatusMessage = $"{ticket.TicketId} 새 추천 배차를 지도에 표시했습니다. 경로를 확인한 뒤 수락하거나 거절해 주세요.";
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            StatusMessage = $"{ticket.RestaurantName} 배달 요청입니다. 경로를 확인한 뒤 수락하거나 거절해 주세요.";
+        }
     }
 
     [RelayCommand]
     private async Task ToggleWork()
     {
-        if (!IsAuthenticated || IsBusy)
+        if (!CanToggleWork)
         {
             return;
         }
 
-        await RunApiAsync(async () =>
+        await RunApiAsync(async cancellationToken =>
         {
             if (IsOnDuty)
             {
-                await _api.StopWorkAsync();
+                await _api.StopWorkAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
                 IsOnDuty = false;
                 StatusMessage = "운행을 종료했습니다. 진행 중 배달은 계속 확인할 수 있습니다.";
             }
             else
             {
-                var location = await CaptureLocationAsync(sendToServer: false);
+                var location = await CaptureLocationAsync(sendToServer: false, cancellationToken);
                 var startLocation = location is null
                     ? "음식 배달 앱 운행 시작"
                     : FormattableString.Invariant($"{location.Latitude:0.000000},{location.Longitude:0.000000}");
-                await _api.StartWorkAsync(startLocation);
+                await _api.StartWorkAsync(startLocation, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
                 IsOnDuty = true;
-                await CaptureLocationAsync(sendToServer: true);
-                StatusMessage = "운행을 시작했습니다. 현재 위치 기준 추천을 불러왔습니다.";
+                await CaptureLocationAsync(sendToServer: true, cancellationToken);
+                StatusMessage = "운행을 시작했습니다. 신규 배차 수신은 별도로 선택해 주세요.";
             }
 
             NotifyWorkState();
-            await LoadWorkspaceAsync();
+            await LoadWorkspaceAsync(cancellationToken: cancellationToken);
         });
     }
 
     [RelayCommand]
     private async Task Refresh()
     {
-        if (!IsAuthenticated || IsRefreshing)
+        if (!IsAuthenticated || IsRefreshing || IsBusy)
         {
             return;
         }
@@ -342,7 +446,7 @@ public sealed partial class MainPageModel : ObservableObject
     private async Task SelectTicket(DeliveryTicketPreview ticket)
     {
         SelectedTicket = ticket;
-        StatusMessage = $"{ticket.TicketId} 배달권을 선택했습니다.";
+        StatusMessage = $"{ticket.RestaurantName} 배달 요청을 선택했습니다.";
         await RefreshRouteAsync();
     }
 
@@ -362,6 +466,8 @@ public sealed partial class MainPageModel : ObservableObject
     [RelayCommand]
     private async Task AcceptTicket(DeliveryTicketPreview ticket)
     {
+        if (!IsAuthenticated || IsBusy || !DispatchIntentKnown || !ReceivesNewDispatches
+            || ExceptionEditor.IsOpen || ExceptionEditor.HasPendingRequest) return;
         if (!ticket.CanAccept)
         {
             StatusMessage = "현재 상태에서는 이 배달권을 수락할 수 없습니다. 새 추천을 확인해 주세요.";
@@ -381,17 +487,19 @@ public sealed partial class MainPageModel : ObservableObject
             return;
         }
 
-        await RunApiAsync(async () =>
+        await RunApiAsync(async cancellationToken =>
         {
-            var result = await _api.RejectAsync(ticket.TicketId);
+            var result = await _api.RejectAsync(ticket.TicketId, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             StatusMessage = result.Message;
-            await LoadWorkspaceAsync();
+            await LoadWorkspaceAsync(cancellationToken: cancellationToken);
         });
     }
 
     [RelayCommand]
     private async Task SelectActiveDelivery(ActiveDeliveryPreview delivery)
     {
+        if (!IsAuthenticated || IsBusy || ExceptionEditor.IsOpen || ExceptionEditor.HasPendingRequest) return;
         ActiveDelivery = delivery;
         StatusMessage = $"{delivery.OrderSummary} 진행 배달을 선택했습니다.";
         SetWorkStage();
@@ -401,6 +509,7 @@ public sealed partial class MainPageModel : ObservableObject
     [RelayCommand]
     private async Task AcceptSelectedTicket()
     {
+        if (!CanAcceptSelectedTicket) return;
         if (SelectedTicket is null)
         {
             StatusMessage = "선택된 배달권이 없습니다.";
@@ -413,45 +522,50 @@ public sealed partial class MainPageModel : ObservableObject
     [RelayCommand]
     private async Task AcceptBundle(FoodDeliveryBundlePreview bundle)
     {
-        await RunApiAsync(async () =>
+        if (!IsAuthenticated || IsBusy || !DispatchIntentKnown || !ReceivesNewDispatches
+            || ExceptionEditor.IsOpen || ExceptionEditor.HasPendingRequest) return;
+        await RunApiAsync(async cancellationToken =>
         {
-            var result = await _api.AcceptBundleAsync(bundle.OfferIds);
+            var result = await _api.AcceptBundleAsync(bundle.OfferIds, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             StatusMessage = result.Message;
-            await LoadWorkspaceAsync();
+            await LoadWorkspaceAsync(cancellationToken: cancellationToken);
         });
     }
 
     [RelayCommand]
     private async Task ConfirmPickup()
     {
-        if (ActiveDelivery is null)
+        if (!CanConfirmPickup || ActiveDelivery is null)
         {
             StatusMessage = "진행 중인 배달이 없습니다.";
             return;
         }
 
-        await RunApiAsync(async () =>
+        await RunApiAsync(async cancellationToken =>
         {
-            var result = await _api.ConfirmPickupAsync(ActiveDelivery.OfferId);
+            var result = await _api.ConfirmPickupAsync(ActiveDelivery.OfferId, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             StatusMessage = result.Message;
-            await LoadWorkspaceAsync();
+            await LoadWorkspaceAsync(cancellationToken: cancellationToken);
         });
     }
 
     [RelayCommand]
     private async Task CompleteDelivery()
     {
-        if (ActiveDelivery is null)
+        if (!CanCompleteDelivery || ActiveDelivery is null)
         {
             StatusMessage = "진행 중인 배달이 없습니다.";
             return;
         }
 
-        await RunApiAsync(async () =>
+        await RunApiAsync(async cancellationToken =>
         {
-            var result = await _api.CompleteAsync(ActiveDelivery.OfferId);
+            var result = await _api.CompleteAsync(ActiveDelivery.OfferId, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             StatusMessage = result.Message;
-            await LoadWorkspaceAsync();
+            await LoadWorkspaceAsync(cancellationToken: cancellationToken);
         });
     }
 
@@ -464,33 +578,38 @@ public sealed partial class MainPageModel : ObservableObject
             return;
         }
 
-        await RunApiAsync(async () =>
+        await RunApiAsync(async cancellationToken =>
         {
-            var result = await _api.AcceptAsync(offerId);
+            var result = await _api.AcceptAsync(offerId, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             StatusMessage = result.Message;
-            await LoadWorkspaceAsync();
+            await LoadWorkspaceAsync(cancellationToken: cancellationToken);
         });
     }
 
     private async Task ReloadAsync(bool updateLocation)
     {
-        await RunApiAsync(async () =>
+        await RunApiAsync(async cancellationToken =>
         {
-            var workStatus = await _api.GetWorkStatusAsync();
+            var workStatus = await _api.GetWorkStatusAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             IsOnDuty = string.Equals(workStatus?.Status, DrivingStatus, StringComparison.OrdinalIgnoreCase);
             NotifyWorkState();
             if (updateLocation && IsOnDuty)
             {
-                await CaptureLocationAsync(sendToServer: true);
+                await CaptureLocationAsync(sendToServer: true, cancellationToken);
             }
 
-            await LoadWorkspaceAsync();
+            await LoadWorkspaceAsync(cancellationToken: cancellationToken);
         });
     }
 
-    private async Task LoadWorkspaceAsync(bool refreshRoute = true)
+    private async Task LoadWorkspaceAsync(bool refreshRoute = true, CancellationToken cancellationToken = default)
     {
-        var workspace = await _api.GetWorkspaceAsync();
+        var workspace = await _api.GetWorkspaceAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        await LoadDispatchAvailabilityAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
         var selectedTicketId = SelectedTicket?.TicketId;
         var activeOfferId = ActiveDelivery?.OfferId;
         var incomingRecommendationIds = workspace.Recommendations
@@ -534,35 +653,50 @@ public sealed partial class MainPageModel : ObservableObject
         PendingDeliveryTickets = RecommendedTicketItems.Count + ActiveDeliveryItems.Count;
         RecommendedTickets = RecommendedTicketItems.Count;
         TodayExpectedPayout = RecommendedTicketItems.Sum(x => x.DriverPayout);
-        SettlementText = $"{workspace.Settlement.년도}년 {workspace.Settlement.월}월 · "
+        OrderSettlementItems.Clear();
+        foreach (var item in workspace.OrderSettlements)
+        {
+            OrderSettlementItems.Add(FoodDeliverySettlementDisplay.From(item));
+        }
+        SettlementText = $"월 이용료 · {workspace.Settlement.년도}년 {workspace.Settlement.월}월 · "
                          + $"배차 {workspace.Settlement.배차건수:N0}건 · 이용료 {workspace.Settlement.이용료:N0}원"
                           + (workspace.Settlement.결제완료 ? " · 납부 완료" : string.Empty);
         DispatchAutomationEnabled = workspace.DispatchAutomationEnabled;
         MaxActiveDeliveries = workspace.MaxActiveDeliveries;
         DispatchAutomationNotice = workspace.DispatchAutomationNotice;
+        WorkspaceWarningText = string.Empty;
         WorkspaceSyncText = $"업무 동기화 {workspace.UpdatedAtUtc.ToLocalTime():HH:mm:ss} · 다음 자동 갱신 10초 이내";
         MapMarkers = RecommendedTicketItems.Select(ToMapMarker)
             .Concat(ActiveDeliveryItems.Select(ToMapMarker))
             .ToArray();
         SetWorkStage();
+        ReconcileExceptionWorkspace();
         NotifyWorkspaceState();
         UpdateRecommendationCountdowns();
         if (refreshRoute)
         {
-            await RefreshRouteAsync();
+            await RefreshRouteAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
-        if (string.IsNullOrWhiteSpace(StatusMessage) || StatusMessage.Contains("불러오", StringComparison.Ordinal))
+        if (string.IsNullOrWhiteSpace(StatusMessage)
+            || StatusMessage == "기사 로그인 후 배달 업무를 시작할 수 있습니다."
+            || StatusMessage.Contains("불러오", StringComparison.Ordinal))
         {
-            StatusMessage = $"추천 {RecommendedTicketItems.Count}건, 진행 {ActiveDeliveryItems.Count}건을 확인했습니다.";
+            StatusMessage = HasActiveWork ? "현재 배달을 확인해 주세요."
+                : HasRecommendationContent ? "배달 요청을 확인해 주세요."
+                : IsOnDuty ? "배달 요청을 기다리고 있습니다." : "운행 시작을 눌러 배달을 시작하세요.";
         }
     }
 
-    private async Task<FDriverLocationSnapshot?> CaptureLocationAsync(bool sendToServer)
+    private async Task<FDriverLocationSnapshot?> CaptureLocationAsync(bool sendToServer, CancellationToken cancellationToken = default)
     {
-        var location = await _locationService.GetCurrentAsync();
+        cancellationToken = cancellationToken == default ? _workspaceCancellation.Token : cancellationToken;
+        var location = await _locationService.GetCurrentAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
         if (location is null)
         {
+            HasCurrentLocation = false;
             CurrentArea = "위치 권한 또는 GPS 확인 필요";
             return null;
         }
@@ -584,7 +718,8 @@ public sealed partial class MainPageModel : ObservableObject
                 상차접근허용반경Km = 3m,
                 운행상태 = DrivingStatus,
                 기록시각 = location.RecordedAtUtc
-            });
+            }, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             _lastLocationSentAtUtc = DateTime.UtcNow;
             LocationSyncText = $"기사 위치 전송 {_lastLocationSentAtUtc.Value.ToLocalTime():HH:mm:ss}";
         }
@@ -592,8 +727,13 @@ public sealed partial class MainPageModel : ObservableObject
         return location;
     }
 
-    private async Task RefreshRouteAsync()
+    private async Task RefreshRouteAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken = cancellationToken == default ? _workspaceCancellation.Token : cancellationToken;
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
         var routeStops = BuildRouteStops();
         if (routeStops.Count == 0)
         {
@@ -623,7 +763,8 @@ public sealed partial class MainPageModel : ObservableObject
                 StartLatitude = startLatitude,
                 StartLongitude = startLongitude,
                 Stops = stops
-            });
+            }, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             SelectedRouteOverlays = route.Points.Count < 2
                 ? []
                 :
@@ -639,7 +780,11 @@ public sealed partial class MainPageModel : ObservableObject
                 ];
             RouteStatusText = $"{(route.IsEstimated ? "추정 경로" : "실시간 도로 경로")} · {route.DistanceKm:0.0}km · 약 {route.DurationMinutes}분";
         }
-        catch (FDriverApiException ex)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+        catch (FDriverApiException ex) when (!cancellationToken.IsCancellationRequested)
         {
             RouteStatusText = $"경로 조회 실패 · {ShortMessage(ex.Message)}";
             SelectedRouteOverlays = [];
@@ -675,9 +820,15 @@ public sealed partial class MainPageModel : ObservableObject
             .ToArray();
     }
 
-    private async Task RunApiAsync(Func<Task> action)
+    private async Task RunApiAsync(Func<CancellationToken, Task> action)
     {
-        if (IsBusy)
+        if (!_workspaceActive || IsBusy)
+        {
+            return;
+        }
+
+        var cancellationToken = _workspaceCancellation.Token;
+        if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
@@ -686,17 +837,18 @@ public sealed partial class MainPageModel : ObservableObject
         NotifyCommandState();
         try
         {
-            await action();
+            await action(cancellationToken);
         }
-        catch (FDriverApiException ex)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (FDriverApiException ex) when (!cancellationToken.IsCancellationRequested)
         {
             StatusMessage = ShortMessage(ex.Message);
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                await StopMonitoringAsync();
-                await _authSession.ClearAsync();
-                IsAuthenticated = false;
-                ClearWorkspace();
+                await StopMonitoringAsync(deactivateWorkspace: false);
+                await ClearAuthenticationAsync();
             }
         }
         finally
@@ -725,19 +877,50 @@ public sealed partial class MainPageModel : ObservableObject
         };
     }
 
+    private async Task ClearAuthenticationAsync()
+    {
+        try
+        {
+            await _authSession.ClearAsync();
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException
+            && _authSession.CurrentState == Ssalddel.Client.Infrastructure.Security.ClientAuthSessionRestoreState.Anonymous)
+        {
+            // The session clears memory before removing device storage. Never retain private UI on removal failure.
+        }
+        finally
+        {
+            IsAuthenticated = false;
+            IsOnDuty = false;
+            Password = string.Empty;
+            ClearWorkspace();
+        }
+    }
+
     private void ClearWorkspace()
     {
+        ClearExceptionWorkspace();
         RecommendedTicketItems.Clear();
         ActiveDeliveryItems.Clear();
         BundleCandidateItems.Clear();
+        OrderSettlementItems.Clear();
         SelectedTicket = null;
         ActiveDelivery = null;
         MapMarkers = [];
         SelectedRouteOverlays = [];
         PendingDeliveryTickets = 0;
         RecommendedTickets = 0;
+        MaxActiveDeliveries = 0;
         TodayExpectedPayout = 0m;
-        SettlementText = "이번 달 정산 조회 전";
+        HasCurrentLocation = false;
+        CurrentLocationLatitude = 0d;
+        CurrentLocationLongitude = 0d;
+        CurrentArea = "현재 위치 확인 전";
+        MapCenterLatitude = 37.5665d;
+        MapCenterLongitude = 126.9780d;
+        RouteStatusText = "경로 조회 전";
+        SettlementText = "이번 달 이용료 조회 전";
+        WorkspaceWarningText = string.Empty;
         WorkspaceSyncText = "업무 자동 갱신 대기 · 10초 주기";
         RecommendationNotificationText = "FCM 추천 알림 준비 · 10초 서버 조회 복구";
         LocationSyncText = "기사 위치 전송 대기";
@@ -751,8 +934,13 @@ public sealed partial class MainPageModel : ObservableObject
 
     partial void OnIsAuthenticatedChanged(bool value)
     {
+        if (!value)
+        {
+            Navigation.Reset();
+        }
         OnPropertyChanged(nameof(IsSignedOut));
         OnPropertyChanged(nameof(SignedInUserText));
+        NotifyExceptionState();
     }
 
     partial void OnIsOnDutyChanged(bool value) => NotifyWorkState();
@@ -769,6 +957,7 @@ public sealed partial class MainPageModel : ObservableObject
     {
         OnPropertyChanged(nameof(WorkToggleText));
         OnPropertyChanged(nameof(WorkToggleColor));
+        NotifyExceptionState();
     }
 
     private void NotifyWorkspaceState()
@@ -777,6 +966,8 @@ public sealed partial class MainPageModel : ObservableObject
         OnPropertyChanged(nameof(ActiveWorkRouteText));
         OnPropertyChanged(nameof(ActiveWorkPayoutText));
         OnPropertyChanged(nameof(HasActiveWork));
+        OnPropertyChanged(nameof(HasRecommendationContent));
+        OnPropertyChanged(nameof(HasActiveRecipient));
         OnPropertyChanged(nameof(HasBundleCandidates));
         OnPropertyChanged(nameof(HasMultipleActiveDeliveries));
         NotifyCommandState();
@@ -787,10 +978,12 @@ public sealed partial class MainPageModel : ObservableObject
         OnPropertyChanged(nameof(CanConfirmPickup));
         OnPropertyChanged(nameof(CanCompleteDelivery));
         OnPropertyChanged(nameof(CanAcceptSelectedTicket));
+        NotifyExceptionState();
     }
 
     private void RefreshRouteLabels()
     {
+        OnPropertyChanged(nameof(HasRouteSelection));
         OnPropertyChanged(nameof(PickupPointText));
         OnPropertyChanged(nameof(DropoffPointText));
         OnPropertyChanged(nameof(SelectedRouteText));
@@ -805,7 +998,13 @@ public sealed partial class MainPageModel : ObservableObject
             while (await timer.WaitForNextTickAsync(cancellationToken))
             {
                 networkElapsed += TimeSpan.FromSeconds(1);
-                await MainThread.InvokeOnMainThreadAsync(UpdateRecommendationCountdowns);
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        UpdateRecommendationCountdowns();
+                    }
+                });
                 if (networkElapsed < WorkspaceRefreshInterval)
                 {
                     continue;
@@ -813,7 +1012,7 @@ public sealed partial class MainPageModel : ObservableObject
 
                 networkElapsed = TimeSpan.Zero;
                 await MainThread.InvokeOnMainThreadAsync(
-                    () => RefreshWorkspaceFromBackgroundAsync("10초 자동 갱신"));
+                    () => RefreshWorkspaceFromBackgroundAsync("10초 자동 갱신", cancellationToken));
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -821,9 +1020,9 @@ public sealed partial class MainPageModel : ObservableObject
         }
     }
 
-    private async Task RefreshWorkspaceFromBackgroundAsync(string sourceLabel)
+    private async Task RefreshWorkspaceFromBackgroundAsync(string sourceLabel, CancellationToken cancellationToken)
     {
-        if (!IsAuthenticated || IsBusy || _monitorRefreshInProgress)
+        if (cancellationToken.IsCancellationRequested || !IsAuthenticated || IsBusy || _monitorRefreshInProgress)
         {
             return;
         }
@@ -835,21 +1034,22 @@ public sealed partial class MainPageModel : ObservableObject
                 && (!_lastLocationSentAtUtc.HasValue
                     || DateTime.UtcNow - _lastLocationSentAtUtc.Value >= LocationHeartbeatInterval))
             {
-                await CaptureLocationAsync(sendToServer: true);
+                await CaptureLocationAsync(sendToServer: true, cancellationToken);
             }
 
-            await LoadWorkspaceAsync(refreshRoute: false);
+            await LoadWorkspaceAsync(refreshRoute: false, cancellationToken: cancellationToken);
         }
-        catch (FDriverApiException ex)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+        }
+        catch (FDriverApiException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            WorkspaceWarningText = "갱신하지 못했습니다. 이전 정보일 수 있으니 화면을 아래로 당겨 새로고침해 주세요.";
             WorkspaceSyncText = $"{sourceLabel} 지연 · {ShortMessage(ex.Message)}";
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
-                await StopMonitoringAsync();
-                await _authSession.ClearAsync();
-                IsAuthenticated = false;
-                IsOnDuty = false;
-                ClearWorkspace();
+                CancelWorkspaceLifetime();
+                await ClearAuthenticationAsync();
                 StatusMessage = "로그인이 만료되었습니다. 다시 로그인해 주세요.";
             }
         }
@@ -1074,6 +1274,12 @@ public sealed record ActiveDeliveryPreview(
     FoodDeliveryDriverRecipientDto Recipient,
     IReadOnlyList<업무가능행동Dto> AvailableActions)
 {
+    public string DeliveryAttemptId { get; init; } = string.Empty;
+    public long AttemptRevision { get; init; }
+    public DateTime? RestaurantArrivedAtUtc { get; init; }
+    public DateTime? DisplayedPreparationReadyAtUtc { get; init; }
+    public DateTime? PreparationDelayEligibleAtUtc { get; init; }
+    public bool IsPreparationDelayRedispatch { get; init; }
     public string PickupActionLabel => DeliveryTicketPreview.ActionLabel(ExecutionProfile.픽업행동명, "음식점 픽업");
     public string CompletionActionLabel => DeliveryTicketPreview.ActionLabel(ExecutionProfile.완료행동명, "고객 전달");
     public bool IsWeatherSurchargeApplied => WeatherSurchargeApplied;
@@ -1110,7 +1316,14 @@ public sealed record ActiveDeliveryPreview(
             item.WorkStatus,
             item.ExecutionProfile,
             item.Recipient,
-            item.AvailableActions);
+            item.AvailableActions)
+        {
+            DeliveryAttemptId = item.DeliveryAttemptId, AttemptRevision = item.AttemptRevision,
+            RestaurantArrivedAtUtc = item.RestaurantArrivedAtUtc,
+            DisplayedPreparationReadyAtUtc = item.DisplayedPreparationReadyAtUtc,
+            PreparationDelayEligibleAtUtc = item.PreparationDelayEligibleAtUtc,
+            IsPreparationDelayRedispatch = item.IsPreparationDelayRedispatch
+        };
 
     public DriverWorkOfferDto ToDriverWorkOffer(FDriverAppProfile profile)
         => new(

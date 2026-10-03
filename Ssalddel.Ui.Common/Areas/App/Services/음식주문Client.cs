@@ -29,12 +29,21 @@ public interface I주문자음식주문수령확인Service
         CancellationToken cancellationToken = default);
 }
 
+public interface I주문자음식주문취소Service
+{
+    Task<음식주문응답> 취소Async(
+        string orderNo,
+        주문자음식주문취소요청 request,
+        CancellationToken cancellationToken = default);
+}
+
 /// <summary>로그인 주문자의 음식 주문 목록과 정확한 주문번호 상세만 보호 API에서 읽습니다.</summary>
 public sealed class 주문자음식주문Client(
     ISsalddelJsonApiClient client) :
     I주문자음식주문읽기Service,
     I주문자음식주문쓰기Service,
-    I주문자음식주문수령확인Service
+    I주문자음식주문수령확인Service,
+    I주문자음식주문취소Service
 {
     private const string BasePath = "api/v1/food-orders";
 
@@ -90,6 +99,23 @@ public sealed class 주문자음식주문Client(
                    allowNotFound: false,
                    cancellationToken)
                ?? throw new InvalidOperationException("음식 주문 수령 확인 응답이 비어 있습니다.");
+    }
+
+    public async Task<음식주문응답> 취소Async(
+        string orderNo,
+        주문자음식주문취소요청 request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderNo);
+        ArgumentNullException.ThrowIfNull(request);
+        return await client.SendAsync<주문자음식주문취소요청, 음식주문응답>(
+                   HttpMethod.Post,
+                   $"{BasePath}/{Uri.EscapeDataString(orderNo.Trim())}/cancellation",
+                   request,
+                   "음식 주문 취소",
+                   allowNotFound: false,
+                   cancellationToken)
+               ?? throw new InvalidOperationException("음식 주문 취소 응답이 비어 있습니다.");
     }
 
     private static string BuildListPath(주문자음식주문목록조회요청 request)

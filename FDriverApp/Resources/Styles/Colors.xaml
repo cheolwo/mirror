@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <ResourceDictionary 
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
@@ -34,6 +34,33 @@
     <Color x:Key="Gray600">#404040</Color>
     <Color x:Key="Gray900">#212121</Color>
     <Color x:Key="Gray950">#141414</Color>
+
+    <!-- 기사 화면의 의미 색상. 공통 UI 디자인 기준과 같은 역할로 사용한다. -->
+    <Color x:Key="DriverCanvas">#F5F7FA</Color>
+    <Color x:Key="DriverSurface">#FFFFFF</Color>
+    <Color x:Key="DriverSurfaceSubtle">#F5F7FA</Color>
+    <Color x:Key="DriverBorder">#DCE5E9</Color>
+    <Color x:Key="DriverText">#172B36</Color>
+    <Color x:Key="DriverTextSecondary">#586B78</Color>
+    <Color x:Key="DriverAccent">#0F766E</Color>
+    <Color x:Key="DriverAccentStrong">#0B5C56</Color>
+    <Color x:Key="DriverAccentSubtle">#EAF5F3</Color>
+    <Color x:Key="DriverAccentBorder">#BDDCD5</Color>
+    <Color x:Key="DriverInformation">#1D4ED8</Color>
+    <Color x:Key="DriverWarning">#92400E</Color>
+    <Color x:Key="DriverDanger">#B42318</Color>
+    <Color x:Key="DriverDisabled">#E4EBEF</Color>
+    <Color x:Key="DriverCanvasDark">#142128</Color>
+    <Color x:Key="DriverSurfaceDark">#1C2C34</Color>
+    <Color x:Key="DriverSurfaceSubtleDark">#243740</Color>
+    <Color x:Key="DriverBorderDark">#425860</Color>
+    <Color x:Key="DriverTextDark">#EEF5F7</Color>
+    <Color x:Key="DriverTextSecondaryDark">#B7C9D1</Color>
+    <Color x:Key="DriverAccentDark">#7ADCC9</Color>
+    <Color x:Key="DriverAccentSubtleDark">#173E3B</Color>
+    <Color x:Key="DriverInformationDark">#A6C5FF</Color>
+    <Color x:Key="DriverWarningDark">#FFD19A</Color>
+    <Color x:Key="DriverDangerDark">#FFB4AC</Color>
 
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
     <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>

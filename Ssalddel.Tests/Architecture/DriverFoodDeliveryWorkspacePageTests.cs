@@ -49,17 +49,18 @@ public sealed class DriverFoodDeliveryWorkspacePageTests
             "RestaurantDeskApp",
             "Components",
             "Pages",
-            "OrderDetail.razor"));
+            "OrderDetail.razor")) + File.ReadAllText(Path.Combine(
+            root, "RestaurantDeskApp", "Components", "Pages", "OrderDetail.razor.cs"));
         var service = File.ReadAllText(Path.Combine(
             root,
             "RestaurantDeskApp",
             "Services",
             "음식점주문DeskService.cs"));
 
-        Assert.Contains("배달 인계", page);
-        Assert.Contains("배차 요청 접수", page);
-        Assert.Contains("기사 제안·수락", page);
-        Assert.Contains("주문 수락 응답 기준", page);
+        Assert.Contains("DispatchStatusLabel(order.배차상태)", page);
+        Assert.Contains("FormatOptionalDate(order.배차요청시각Utc)", page);
+        Assert.Contains("주문을 확인해 배차를 요청했습니다", page);
+        Assert.Contains("기사 배정 후 조리를 시작해 주세요", page);
         Assert.Contains("item.배차상태 = detail.배차상태", service);
         Assert.Contains("item.배차요청시각Utc = detail.배차요청시각Utc", service);
     }

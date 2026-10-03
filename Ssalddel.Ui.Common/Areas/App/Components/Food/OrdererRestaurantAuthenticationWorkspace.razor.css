@@ -1,0 +1,12 @@
+.restaurant-authentication-workspace {
+    display: grid;
+    gap: 1rem;
+    width: 100%;
+    max-width: 30rem;
+    min-width: 0;
+    margin-inline: auto;
+}
+
+.restaurant-authentication-workspace ::deep .mud-button-root {
+    min-height: 48px;
+}

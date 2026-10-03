@@ -1,11 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Contracts.Common;
 
 namespace RestaurantDeskApp.Services;
 
-public sealed record RestaurantAuthResult(bool IsSuccess, string ErrorMessage)
+public sealed record RestaurantAuthResult(bool IsSuccess, string ErrorMessage, bool RequiresLogin = false)
 {
     public static RestaurantAuthResult Success { get; } = new(true, string.Empty);
 }
@@ -57,9 +58,11 @@ public sealed class RestaurantAuthService(
                 || string.IsNullOrWhiteSpace(session.RefreshToken)
                 || session.RefreshTokenExpiresAtUtc <= DateTime.UtcNow)
             {
+                await InvalidateRejectedSessionAsync(cancellationToken);
                 return new RestaurantAuthResult(
                     false,
-                    "로그인 세션이 없습니다. 음식점 계정으로 로그인해 주세요.");
+                    "로그인 세션이 없습니다. 음식점 계정으로 로그인해 주세요.",
+                    RequiresLogin: true);
             }
 
             var result = await SendTokenRequestAsync(
@@ -71,9 +74,9 @@ public sealed class RestaurantAuthService(
                 },
                 "로그인 세션을 갱신하지 못했습니다. 다시 로그인해 주세요.",
                 cancellationToken);
-            if (!result.IsSuccess)
+            if (!result.IsSuccess && result.RequiresLogin)
             {
-                await session.ClearAsync(cancellationToken);
+                await InvalidateRejectedSessionAsync(cancellationToken);
             }
 
             return result;
@@ -87,6 +90,20 @@ public sealed class RestaurantAuthService(
     public Task LogoutAsync(CancellationToken cancellationToken = default)
         => session.ClearAsync(cancellationToken);
 
+    internal async Task InvalidateRejectedSessionAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        try
+        {
+            await session.ClearAsync(cancellationToken);
+        }
+        catch (Exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            // ClearAsync has already made this in-memory session anonymous.
+            // A secure-store failure must not hide the definitive authentication rejection.
+        }
+    }
+
     private async Task<RestaurantAuthResult> SendTokenRequestAsync<TRequest>(
         string path,
         TRequest request,
@@ -98,11 +115,19 @@ public sealed class RestaurantAuthService(
             using var response = await httpClient.PostAsJsonAsync(path, request, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
-                return new RestaurantAuthResult(false, failureMessage);
+                var requiresLogin = response.StatusCode is HttpStatusCode.BadRequest
+                    or HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden;
+                return new RestaurantAuthResult(false,
+                    requiresLogin ? failureMessage : "인증 서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+                    requiresLogin);
             }
 
             var token = await response.Content.ReadFromJsonAsync<토큰응답>(cancellationToken);
-            if (token is null || string.IsNullOrWhiteSpace(token.AccessToken))
+            if (token is null || string.IsNullOrWhiteSpace(token.AccessToken)
+                || string.IsNullOrWhiteSpace(token.UserId) || token.Roles is null
+                || token.AccessTokenExpiresAtUtc <= DateTime.UtcNow
+                || string.IsNullOrWhiteSpace(token.RefreshToken)
+                || token.RefreshTokenExpiresAtUtc <= DateTime.UtcNow)
             {
                 return new RestaurantAuthResult(false, "서버 인증 응답을 읽을 수 없습니다.");
             }
@@ -111,7 +136,8 @@ public sealed class RestaurantAuthService(
             {
                 return new RestaurantAuthResult(
                     false,
-                    "음식점 권한이 있는 계정으로 로그인해 주세요.");
+                    "음식점 권한이 있는 계정으로 로그인해 주세요.",
+                    RequiresLogin: true);
             }
 
             await session.ApplyAsync(token.ToClientAuthTokenSnapshot(), cancellationToken);
@@ -124,6 +150,10 @@ public sealed class RestaurantAuthService(
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             return new RestaurantAuthResult(false, "인증 서버 응답 시간이 초과되었습니다.");
+        }
+        catch (JsonException)
+        {
+            return new RestaurantAuthResult(false, "서버 인증 응답을 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.");
         }
     }
 }

@@ -119,6 +119,52 @@ public sealed class 음식주문페이지ViewModelTests
     }
 
     [Fact]
+    public async Task 같은주문_수령확인실패후재조회는_입력과멱등요청을보존한다()
+    {
+        var service = new FakeFoodOrderService
+        {
+            DetailResponse = ReceiptReadyDetail("FOOD-A"),
+            ReceiptFailure = new HttpRequestException("응답을 받지 못했습니다.")
+        };
+        var viewModel = new 주문자음식주문상세ViewModel(service, service);
+        await viewModel.조회Async("FOOD-A");
+        viewModel.수령확인메모 = "A 수령 확인";
+
+        Assert.False(await viewModel.수령확인Async());
+        var firstRequestId = service.ReceiptRequest!.클라이언트요청Id;
+        await viewModel.조회Async(" FOOD-A ");
+        Assert.Equal("A 수령 확인", viewModel.수령확인메모);
+        Assert.False(await viewModel.수령확인Async());
+
+        Assert.Equal(firstRequestId, service.ReceiptRequest!.클라이언트요청Id);
+        Assert.Equal("A 수령 확인", service.ReceiptRequest.확인메모);
+    }
+
+    [Fact]
+    public async Task 다른주문선택은_이전수령메모와멱등요청을넘기지않는다()
+    {
+        var service = new FakeFoodOrderService
+        {
+            DetailResponse = ReceiptReadyDetail("FOOD-A"),
+            ReceiptFailure = new HttpRequestException("응답을 받지 못했습니다.")
+        };
+        var viewModel = new 주문자음식주문상세ViewModel(service, service);
+        await viewModel.조회Async("FOOD-A");
+        viewModel.수령확인메모 = "A의 메모";
+        Assert.False(await viewModel.수령확인Async());
+        var firstRequestId = service.ReceiptRequest!.클라이언트요청Id;
+
+        service.DetailResponse = ReceiptReadyDetail("FOOD-B");
+        await viewModel.조회Async("FOOD-B");
+        Assert.Empty(viewModel.수령확인메모);
+        Assert.False(await viewModel.수령확인Async());
+
+        Assert.Equal("FOOD-B", service.ReceiptOrderNo);
+        Assert.Empty(service.ReceiptRequest!.확인메모);
+        Assert.NotEqual(firstRequestId, service.ReceiptRequest.클라이언트요청Id);
+    }
+
+    [Fact]
     public async Task 기능비활성은_인증과개인주문API를호출하지않는다()
     {
         var accessService = new FakeFoodAccessService(false);
@@ -248,6 +294,13 @@ public sealed class 음식주문페이지ViewModelTests
     private static 주문자앱인증결과 SignedInResult()
         => new(new 주문자앱세션상태(true, "user-1", "주문자"));
 
+    private static 주문자음식주문상세응답 ReceiptReadyDetail(string orderNo)
+        => new()
+        {
+            주문 = new 주문자음식주문요약응답 { 주문번호 = orderNo, 상태 = 음식주문상태코드.전달완료 },
+            AvailableActions = [new 업무가능행동Dto { ActionId = 음식배달가능행동Ids.주문수령확인 }]
+        };
+
     private sealed class FakeFoodAccessService(bool enabled) : I음식배달페이지접근Service
     {
         public int Calls { get; private set; }
@@ -298,6 +351,7 @@ public sealed class 음식주문페이지ViewModelTests
         public List<string> DetailOrderNos { get; } = [];
         public string? ReceiptOrderNo { get; private set; }
         public 주문자음식주문수령확인요청? ReceiptRequest { get; private set; }
+        public Exception? ReceiptFailure { get; set; }
 
         public Task<주문자음식주문목록응답> 목록Async(주문자음식주문목록조회요청 request, CancellationToken cancellationToken = default)
         {
@@ -319,6 +373,11 @@ public sealed class 음식주문페이지ViewModelTests
         {
             ReceiptOrderNo = orderNo;
             ReceiptRequest = request;
+            if (ReceiptFailure is not null)
+            {
+                throw ReceiptFailure;
+            }
+
             DetailResponse = DetailAfterReceipt ?? DetailResponse;
             return Task.FromResult(new 음식주문응답
             {

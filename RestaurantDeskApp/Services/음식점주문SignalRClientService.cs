@@ -14,7 +14,11 @@ public sealed class 음식점주문SignalRClientService(
 {
     private const string ReceiveRestaurantOrderNotificationMethod = "ReceiveRestaurantOrderNotification";
     private const string ReceiveRestaurantOrderStatusChangedMethod = "ReceiveRestaurantOrderStatusChanged";
+    private readonly SemaphoreSlim _connectionGate = new(1, 1);
     private HubConnection? _connection;
+    private string? _connectionUserId;
+    private long _connectionGeneration;
+    private long _statePublication;
 
     public event Func<음식점주문수신알림, Task>? 주문수신;
 
@@ -28,36 +32,122 @@ public sealed class 음식점주문SignalRClientService(
 
     public async Task 연결Async(CancellationToken cancellationToken = default)
     {
+        HubConnection? observedConnection;
+        long observedGeneration;
+        await _connectionGate.WaitAsync(cancellationToken);
+        try
+        {
+            observedConnection = _connection;
+            observedGeneration = _connectionGeneration;
+        }
+        finally { _connectionGate.Release(); }
         var auth = await authService.EnsureAccessTokenAsync(
             cancellationToken: cancellationToken);
         if (!auth.IsSuccess)
         {
-            await Publish상태Async(
-                음식점실시간연결상태.인증필요,
-                auth.ErrorMessage ?? "음식점 주문 허브 인증을 복구할 수 없습니다.");
-            throw new UnauthorizedAccessException(auth.ErrorMessage);
+            if (auth.RequiresLogin)
+            {
+                var detachedGeneration = await DisconnectConnectionAsync(
+                    observedConnection, observedGeneration, suppressDisposeFailure: true);
+                if (detachedGeneration is null) return;
+                if (!await Publish상태Async(음식점실시간연결상태.인증필요,
+                    auth.ErrorMessage ?? "음식점 주문 허브 인증을 복구할 수 없습니다.",
+                    () => _connectionGeneration == detachedGeneration && !authSession.IsAuthenticated)) return;
+                throw new UnauthorizedAccessException(auth.ErrorMessage);
+            }
+            if (!await Publish상태Async(음식점실시간연결상태.연결끊김,
+                auth.ErrorMessage ?? "음식점 주문 허브 인증을 복구할 수 없습니다.",
+                () => _connectionGeneration == observedGeneration)) return;
+            throw new HttpRequestException(auth.ErrorMessage);
         }
 
-        await Publish상태Async(
-            음식점실시간연결상태.연결중,
-            "음식점 주문 허브에 연결하고 있습니다.");
-
-        if (_connection is not null)
+        var userId = authSession.UserId!;
+        HubConnection? previous = null;
+        HubConnection connection;
+        bool reused;
+        await _connectionGate.WaitAsync(cancellationToken);
+        try
         {
-            if (_connection.State == HubConnectionState.Connected)
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!IsCurrentSession(userId))
             {
-                await JoinRestaurantGroupAsync(cancellationToken);
-                await Publish상태Async(
-                    음식점실시간연결상태.연결됨,
-                    "음식점 주문 허브에 이미 연결되어 있습니다.");
-                return;
+                throw new OperationCanceledException("음식점 허브 연결 중 인증 상태가 변경되었습니다.");
             }
 
-            await _connection.DisposeAsync();
-            _connection = null;
+            reused = _connection is { State: HubConnectionState.Connected }
+                && string.Equals(_connectionUserId, userId, StringComparison.Ordinal);
+            if (reused)
+            {
+                connection = _connection!;
+            }
+            else
+            {
+                connection = CreateConnection(userId);
+                previous = _connection;
+                _connection = connection;
+                _connectionUserId = userId;
+                _connectionGeneration++;
+            }
+        }
+        finally
+        {
+            _connectionGate.Release();
         }
 
-        _connection = new HubConnectionBuilder()
+        try
+        {
+            // Network lifecycle and subscribers may re-enter this service; never await them under the gate.
+            if (previous is not null) await previous.DisposeAsync();
+            if (!IsCurrentConnection(connection, userId))
+            {
+                await DisconnectConnectionAsync(connection);
+                return;
+            }
+            if (!await Publish상태Async(음식점실시간연결상태.연결중,
+                "음식점 주문 허브에 연결하고 있습니다.",
+                () => IsCurrentConnection(connection, userId)))
+            {
+                await DisconnectConnectionAsync(connection);
+                return;
+            }
+            if (!IsCurrentConnection(connection, userId))
+            {
+                await DisconnectConnectionAsync(connection);
+                return;
+            }
+            if (!reused) await connection.StartAsync(cancellationToken);
+            await JoinRestaurantGroupAsync(connection, userId, cancellationToken);
+            if (!IsCurrentConnection(connection, userId))
+            {
+                await DisconnectConnectionAsync(connection);
+                return;
+            }
+            await Publish상태Async(
+                음식점실시간연결상태.연결됨,
+                reused ? "음식점 주문 허브에 이미 연결되어 있습니다." : "음식점 주문 허브에 연결되었습니다.",
+                () => IsCurrentConnection(connection, userId) && connection.State == HubConnectionState.Connected);
+        }
+        catch
+        {
+            try { await DisconnectConnectionAsync(connection); }
+            catch { /* Preserve the original connection/authentication failure. */ }
+            throw;
+        }
+    }
+
+    private bool IsCurrentSession(string userId)
+        => authSession.IsAuthenticated
+            && !string.IsNullOrWhiteSpace(userId)
+            && string.Equals(authSession.UserId, userId, StringComparison.Ordinal);
+
+    private bool IsCurrentConnection(HubConnection connection, string userId)
+        => ReferenceEquals(_connection, connection)
+            && string.Equals(_connectionUserId, userId, StringComparison.Ordinal)
+            && IsCurrentSession(userId);
+
+    private HubConnection CreateConnection(string userId)
+    {
+        var connection = new HubConnectionBuilder()
             .WithUrl(
                 BuildHubUri(),
                 connectionOptions =>
@@ -65,76 +155,106 @@ public sealed class 음식점주문SignalRClientService(
                     connectionOptions.AccessTokenProvider = async () =>
                     {
                         var result = await authService.EnsureAccessTokenAsync();
-                        return result.IsSuccess ? authSession.AccessToken : null;
+                        return result.IsSuccess && IsCurrentSession(userId) ? authSession.AccessToken : null;
                     };
                 })
             .WithAutomaticReconnect()
             .Build();
 
-        _connection.On<음식점주문수신알림>(
+        connection.On<음식점주문수신알림>(
             ReceiveRestaurantOrderNotificationMethod,
-            async notification => await Publish주문수신Async(notification));
-        _connection.On<음식점주문상태변경알림>(
+            async notification => await Publish주문수신Async(connection, userId, notification));
+        connection.On<음식점주문상태변경알림>(
             ReceiveRestaurantOrderStatusChangedMethod,
-            async notification => await Publish주문상태변경Async(notification));
+            async notification => await Publish주문상태변경Async(connection, userId, notification));
 
-        _connection.Reconnecting += async error =>
+        connection.Reconnecting += async error =>
         {
+            if (!IsCurrentConnection(connection, userId)) return;
             await Publish상태Async(
                 음식점실시간연결상태.재연결중,
                 error is null
                 ? "음식점 주문 허브 재연결을 시도합니다."
-                : $"음식점 주문 허브 연결이 끊겼습니다. 재연결을 시도합니다. {error.Message}");
+                : $"음식점 주문 허브 연결이 끊겼습니다. 재연결을 시도합니다. {error.Message}",
+                () => IsCurrentConnection(connection, userId));
         };
 
-        _connection.Reconnected += async _ =>
+        connection.Reconnected += async _ =>
         {
+            if (!IsCurrentConnection(connection, userId)) return;
             try
             {
-                await JoinRestaurantGroupAsync(CancellationToken.None);
+                await JoinRestaurantGroupAsync(connection, userId, CancellationToken.None);
+                if (!IsCurrentConnection(connection, userId)) return;
                 await Publish상태Async(
                     음식점실시간연결상태.연결됨,
-                    "음식점 주문 허브에 다시 연결되었습니다. 서버 수신함을 즉시 확인합니다.");
-                await Publish재연결후재조회Async();
+                    "음식점 주문 허브에 다시 연결되었습니다. 서버 수신함을 즉시 확인합니다.",
+                    () => IsCurrentConnection(connection, userId) && connection.State == HubConnectionState.Connected);
+                await Publish재연결후재조회Async(connection, userId);
             }
             catch (UnauthorizedAccessException ex)
             {
-                await Publish상태Async(음식점실시간연결상태.인증필요, ex.Message);
+                if (!IsCurrentConnection(connection, userId)) return;
+                await Publish상태Async(음식점실시간연결상태.인증필요, ex.Message,
+                    () => IsCurrentConnection(connection, userId));
             }
             catch (Exception ex)
             {
+                if (!IsCurrentConnection(connection, userId)) return;
                 await Publish상태Async(
                     음식점실시간연결상태.연결끊김,
-                    $"음식점 주문 허브 그룹 재가입에 실패했습니다. {ex.Message}");
+                    $"음식점 주문 허브 그룹 재가입에 실패했습니다. {ex.Message}",
+                    () => IsCurrentConnection(connection, userId));
             }
         };
 
-        _connection.Closed += async error =>
+        connection.Closed += async error =>
         {
+            if (!IsCurrentConnection(connection, userId)) return;
             await Publish상태Async(
                 음식점실시간연결상태.연결끊김,
                 error is null
                 ? "음식점 주문 허브 연결이 종료되었습니다."
-                : $"음식점 주문 허브 연결이 종료되었습니다. {error.Message}");
+                : $"음식점 주문 허브 연결이 종료되었습니다. {error.Message}",
+                () => IsCurrentConnection(connection, userId));
         };
 
-        await _connection.StartAsync(cancellationToken);
-        await JoinRestaurantGroupAsync(cancellationToken);
-        await Publish상태Async(
-            음식점실시간연결상태.연결됨,
-            "음식점 주문 허브에 연결되었습니다.");
+        return connection;
     }
 
-    public async Task 연결해제Async()
+    public Task 연결해제Async() => DisconnectConnectionAsync(expected: null);
+
+    private async Task<long?> DisconnectConnectionAsync(HubConnection? expected,
+        long? expectedGeneration = null, bool suppressDisposeFailure = false)
     {
-        if (_connection is null)
+        HubConnection? connection;
+        long detachedGeneration;
+        await _connectionGate.WaitAsync();
+        try
         {
-            return;
+            if (expectedGeneration is not null && expectedGeneration != _connectionGeneration) return null;
+            if (expected is not null && !ReferenceEquals(_connection, expected)) return null;
+            connection = _connection;
+            _connection = null;
+            _connectionUserId = null;
+            detachedGeneration = ++_connectionGeneration;
+            _statePublication++;
+            연결상태 = 음식점실시간연결상태.연결끊김;
+        }
+        finally
+        {
+            _connectionGate.Release();
         }
 
-        await _connection.DisposeAsync();
-        _connection = null;
-        연결상태 = 음식점실시간연결상태.연결끊김;
+        try
+        {
+            if (connection is not null) await connection.DisposeAsync();
+        }
+        catch when (suppressDisposeFailure)
+        {
+            // An authentication rejection must still be reported after local ownership is revoked.
+        }
+        return detachedGeneration;
     }
 
     public async ValueTask DisposeAsync()
@@ -142,20 +262,20 @@ public sealed class 음식점주문SignalRClientService(
         await 연결해제Async();
     }
 
-    private async Task JoinRestaurantGroupAsync(CancellationToken cancellationToken)
+    private async Task JoinRestaurantGroupAsync(HubConnection connection, string userId, CancellationToken cancellationToken)
     {
-        if (_connection?.State != HubConnectionState.Connected)
+        if (!IsCurrentConnection(connection, userId) || connection.State != HubConnectionState.Connected)
         {
             return;
         }
 
-        await _connection.InvokeAsync("JoinRestaurantOrders", cancellationToken);
+        await connection.InvokeAsync("JoinRestaurantOrders", cancellationToken);
     }
 
     private Uri BuildHubUri()
         => new(options.Value.GetServerBaseAddress(), "hubs/restaurant-orders");
 
-    private async Task Publish주문수신Async(음식점주문수신알림 notification)
+    private async Task Publish주문수신Async(HubConnection connection, string userId, 음식점주문수신알림 notification)
     {
         var handler = 주문수신;
         if (handler is null)
@@ -165,29 +285,46 @@ public sealed class 음식점주문SignalRClientService(
 
         foreach (Func<음식점주문수신알림, Task> callback in handler.GetInvocationList())
         {
+            if (!IsCurrentConnection(connection, userId)) return;
             await callback(notification);
         }
     }
 
-    private async Task Publish상태Async(
+    private async Task<bool> Publish상태Async(
         음식점실시간연결상태 상태,
-        string message)
+        string message,
+        Func<bool> isCurrent)
     {
-        연결상태 = 상태;
-        var handler = 상태변경;
-        if (handler is null)
+        Func<음식점실시간연결상태변경, Task>? handler;
+        long publication;
+        await _connectionGate.WaitAsync();
+        try
         {
-            return;
+            if (!isCurrent()) return false;
+            연결상태 = 상태;
+            publication = ++_statePublication;
+            handler = 상태변경;
         }
+        finally { _connectionGate.Release(); }
+        if (handler is null) return true;
 
         var change = new 음식점실시간연결상태변경(상태, message);
         foreach (Func<음식점실시간연결상태변경, Task> callback in handler.GetInvocationList())
         {
+            await _connectionGate.WaitAsync();
+            try
+            {
+                if (publication != _statePublication || !isCurrent()) return false;
+            }
+            finally { _connectionGate.Release(); }
             await callback(change);
         }
+        await _connectionGate.WaitAsync();
+        try { return publication == _statePublication && isCurrent(); }
+        finally { _connectionGate.Release(); }
     }
 
-    private async Task Publish재연결후재조회Async()
+    private async Task Publish재연결후재조회Async(HubConnection connection, string userId)
     {
         var handler = 재연결후재조회요청;
         if (handler is null)
@@ -197,11 +334,12 @@ public sealed class 음식점주문SignalRClientService(
 
         foreach (Func<Task> callback in handler.GetInvocationList())
         {
+            if (!IsCurrentConnection(connection, userId)) return;
             await callback();
         }
     }
 
-    private async Task Publish주문상태변경Async(음식점주문상태변경알림 notification)
+    private async Task Publish주문상태변경Async(HubConnection connection, string userId, 음식점주문상태변경알림 notification)
     {
         var handler = 주문상태변경;
         if (handler is null)
@@ -211,6 +349,7 @@ public sealed class 음식점주문SignalRClientService(
 
         foreach (Func<음식점주문상태변경알림, Task> callback in handler.GetInvocationList())
         {
+            if (!IsCurrentConnection(connection, userId)) return;
             await callback(notification);
         }
     }
