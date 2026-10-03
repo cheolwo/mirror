@@ -1,0 +1,42 @@
+name: ssalddel-cargo-journey-r1
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ssalddel_cargo_journey
+      MYSQL_USER: cargo_journey
+      MYSQL_PASSWORD: ${CARGO_JOURNEY_MYSQL_PASSWORD:?prepare isolated credentials}
+      MYSQL_ROOT_PASSWORD: ${CARGO_JOURNEY_MYSQL_ROOT_PASSWORD:?prepare isolated credentials}
+    volumes: [cargo_mysql:/var/lib/mysql]
+    networks: [isolated]
+    healthcheck:
+      test: [CMD, mysqladmin, ping, -h, 127.0.0.1]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  mongo:
+    image: mongo:8.0
+    volumes: [cargo_mongo:/data/db]
+    networks: [isolated]
+    healthcheck:
+      test: [CMD, mongosh, --quiet, --eval, "db.runCommand({ping:1}).ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  gateway:
+    image: haproxy:3.2-alpine
+    volumes: ["./cargo-journey.haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro"]
+    ports: ["127.0.0.1:13308:3306", "127.0.0.1:27019:27017"]
+    networks: [access, isolated]
+    depends_on:
+      mysql: {condition: service_healthy}
+      mongo: {condition: service_healthy}
+networks:
+  access:
+  isolated:
+    internal: true
+volumes:
+  cargo_mysql:
+    name: ssalddel-cargo-journey-r1_mysql_${CARGO_JOURNEY_SAMPLE_SUFFIX:-r2}
+  cargo_mongo:
+    name: ssalddel-cargo-journey-r1_mongo_${CARGO_JOURNEY_SAMPLE_SUFFIX:-r2}

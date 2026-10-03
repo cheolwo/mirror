@@ -1,0 +1,159 @@
+{
+  "schema": "explicit-page-review.r1",
+  "pages": [
+    {
+      "source": "RestaurantDeskApp/Components/Pages/Login.razor",
+      "recommendation": "유지",
+      "reviewLevel": "Android 에뮬레이터 검증",
+      "reviewReason": "음식점 계정 인증과 세션 복원을 담당한다. Android 빈 입력·연결 실패·로그인·재로그인을 확인했다.",
+      "evidenceRefs": [
+        "docs/ProjectOverview/page-docs/mobile-polish-r1.md",
+        "docs/Changes/2026-10-02-mobile-page-polish-r1.md"
+      ],
+      "sourceSha256": "922a68419766a61c29bb5c118115d6655e2d1bbd7f1367a3847ecf7465d378cb",
+      "runtimeVerified": true,
+      "runtimeScope": "Android 빈 입력·연결 실패·정상 로그인·세션 만료 후 재로그인",
+      "checkedAt": "2026-10-02T03:48:55.105064+00:00"
+    },
+    {
+      "source": "RestaurantDeskApp/Components/Pages/Menus.razor",
+      "recommendation": "유지",
+      "reviewLevel": "Android 에뮬레이터 검증",
+      "reviewReason": "음식점 메뉴 등록·수정·공개·품절과 revision 재조회의 독립 업무다. 주문 수신함과 합쳐 쓰기 권한을 섞지 않는다.",
+      "evidenceRefs": [
+        "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATIONS-E2E-SCAFFOLD/restaurant-menu-validation.r6.md",
+        "docs/ProjectOverview/page-docs/mobile-polish-r1.md",
+        "docs/Changes/2026-10-02-mobile-page-polish-r1.md"
+      ],
+      "sourceSha256": "7e3ca08122ebd7e2746cd460bd62ff5b5811faac2889e3f50382dfaca7e58d6a",
+      "runtimeVerified": true,
+      "runtimeScope": "Android 비공개 합성 메뉴 등록·저장·서버 목록 재조회; 전체 수정/품절 상태 미검증",
+      "checkedAt": "2026-10-02T03:48:55.105064+00:00"
+    },
+    {
+      "source": "RestaurantDeskApp/Components/Pages/OrderInbox.razor",
+      "recommendation": "유지",
+      "reviewLevel": "Android 에뮬레이터 검증",
+      "reviewReason": "주문 목록·필터·알림과 선택을 담당한다. 상세 처리로 동일 주문번호를 인계한다.",
+      "evidenceRefs": [
+        "docs/ProjectOverview/page-docs/mobile-polish-r1.md",
+        "docs/Changes/2026-10-02-mobile-page-polish-r1.md",
+        "docs/ProjectOverview/page-docs/restaurant-order-usability-r1.md",
+        "docs/Changes/2026-10-02-restaurant-order-usability-r1.md"
+      ],
+      "sourceSha256": "c62579d2327c7076b4ec0e05bdf57f8b15f9747afc8b11ccecfbf387ae2ae393",
+      "runtimeVerified": true,
+      "runtimeScope": "최종 Android APK360px/412px 목록·상세 이동·기본 접기·버튼 높이. 빈 목록/모든 알림 예외는 미검증",
+      "checkedAt": "2026-10-02T06:26:29.020984+00:00"
+    },
+    {
+      "source": "RestaurantDeskApp/Components/Pages/OrderDetail.razor",
+      "recommendation": "유지",
+      "reviewLevel": "Android 에뮬레이터 검증",
+      "reviewReason": "선택 주문의 확인·조리·준비 상태를 서버 권한과 AvailableActions에 따라 처리한다. 목록은 탐색 책임을 유지한다.",
+      "evidenceRefs": [
+        "docs/AI/Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/driver-first-cooking.implementation.r62.md",
+        "docs/ProjectOverview/page-docs/mobile-polish-r1.md",
+        "docs/Changes/2026-10-02-mobile-page-polish-r1.md",
+        "docs/ProjectOverview/page-docs/restaurant-order-usability-r1.md",
+        "docs/Changes/2026-10-02-restaurant-order-usability-r1.md"
+      ],
+      "sourceSha256": "85e589fec9ebe7ff321245675765eb6dfd0ab996dda9a4d4629edb84043f4a02",
+      "runtimeVerified": true,
+      "runtimeScope": "Android 같은 합성 주문의 확인·배정·조리·준비, 최종 APK 종료 재조회·360px/412px·읽기 실패/복구·거절 입력 접기. 전표 출력 실패 유지; 실제 거절 제출 미검증",
+      "checkedAt": "2026-10-02T06:26:29.020984+00:00"
+    },
+    {
+      "source": "RestaurantDeskApp/Components/Pages/PreparationTimeSettings.razor",
+      "recommendation": "통합 후보",
+      "reviewLevel": "소스 검토",
+      "reviewReason": "가게 관리 메뉴 아래 조리 설정으로 묶을 후보다. 주문별 조리 시작과 기본 조리시간 저장의 책임은 유지한다.",
+      "evidenceRefs": [],
+      "sourceSha256": "851c781dd23fab5d4890c5782aaf4c2c288f8079a3afeb598697f07f0d3b6670"
+    },
+    {
+      "source": "FDriverApp/Pages/MainPage.xaml",
+      "recommendation": "유지",
+      "reviewLevel": "Android 에뮬레이터 검증",
+      "reviewReason": "App.CreateWindow가 여는 실제 네이티브 로그인·지도·배달 화면이다. Android 특정 업무 상태를 확인했고 지도 바탕 타일은 추가 설정이 필요하다.",
+      "evidenceRefs": [
+        "docs/ProjectOverview/page-docs/mobile-polish-r1.md",
+        "docs/Changes/2026-10-02-mobile-page-polish-r1.md"
+      ],
+      "sourceSha256": "d64adc1a3149ca41b677eb8f6b925bd022df9b82485aa7cf71550ad1365db30f",
+      "runtimeVerified": true,
+      "runtimeScope": "Android 로그인·권한·합성 제안/수락/픽업/전달; 최종 APK 빈 상태·안내 갱신 확인; 지도 타일 미검증",
+      "checkedAt": "2026-10-02T03:48:55.106064+00:00"
+    },
+    {
+      "source": "FDriverApp/Pages/ProjectListPage.xaml",
+      "recommendation": "보류",
+      "reviewLevel": "소스 검토",
+      "reviewReason": "기존 프로젝트 관리 화면이다. 현재 배달 MainPage 진입과 직접 사용 경로를 확인하기 전에는 폐기하지 않는다.",
+      "evidenceRefs": [],
+      "sourceSha256": "0ff67d0a423204a9d82f37e0ef64c6b5c0bc7022a5dd3d119477417a91a7ca97"
+    },
+    {
+      "source": "DriverApp/Components/Pages/Driver/03_Progress/배달내역Page.razor",
+      "recommendation": "유지",
+      "reviewLevel": "코드·DB 시험",
+      "reviewReason": "본인 화물 운송의 완료/활성 이력 재조회를 담당한다. 음식 배달 통합 이력은 별도 결손이고 Android 확인은 미완료다.",
+      "evidenceRefs": [
+        "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P05/README.md"
+      ],
+      "sourceSha256": "ece7da7472927e6f0918509b63945a8bde4032efb96a0b37ec9b0e085c60a4ec"
+    },
+    {
+      "source": "DriverApp/Components/Pages/Driver/05_Settlement/월정산Page.razor",
+      "recommendation": "유지",
+      "reviewLevel": "코드·합성 렌더 시험",
+      "reviewReason": "기사의 월 플랫폼 이용료 조회다. 기사 배달대금 실제 지급과 동일한 정산 화면으로 합치지 않는다.",
+      "evidenceRefs": [
+        "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P14/README.md"
+      ],
+      "sourceSha256": "ecff4cd9d87e0b7f918c48f4b89b47a1f7a61b18ac029022af3c42fd91f81c3d"
+    },
+    {
+      "source": "DriverApp/Components/Pages/Driver/03_Progress/음식배달업무Page.razor",
+      "recommendation": "유지",
+      "reviewLevel": "소스 검토",
+      "reviewReason": "기존 DriverApp의 음식 배달 업무 조회·수락·픽업·전달 연결이다. FDriverApp 네이티브 표시와 서버 계약은 비교하되 자동으로 동일 구현으로 집계하지 않는다.",
+      "evidenceRefs": [
+        "docs/ProjectOverview/page-docs/DriverApp/DriverApp-FoodDeliveries/README.md"
+      ],
+      "sourceSha256": "d9e1ef71a3be41b179158d30d05a8ee49c35b8eb2d809cc3c44490190c0fdf8b"
+    },
+    {
+      "source": "SsalddelAdmin/Components/Pages/FoodOperations.razor",
+      "recommendation": "유지",
+      "reviewLevel": "코드·합성 렌더 시험",
+      "reviewReason": "운영자 정책·리뷰 관리 권한은 음식점·기사의 수행 권한과 구별한다. 조회 실패 시 편집을 차단한다.",
+      "evidenceRefs": [
+        "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P30/README.md"
+      ],
+      "sourceSha256": "4dec566729e761e924e6b91299ab34847f26fe7555f2400cf9909d530b2d27b6"
+    }
+  ],
+  "integrationCandidates": [
+    {
+      "name": "기사 운행·추천·진행",
+      "proposal": "현재 업무의 상태와 다음 행동을 홈에서 요약하고 기존 상세로 연결",
+      "preserve": "배차 결정·픽업·전달 Command와 역할 권한"
+    },
+    {
+      "name": "기사 정산·계좌·이용료",
+      "proposal": "동일한 메뉴 묶음에서 목적별 상세를 찾도록 정리",
+      "preserve": "배달 수행 대금·플랫폼 이용료·계좌·실지급 증빙"
+    },
+    {
+      "name": "음식점 가게·조리 설정",
+      "proposal": "가게 관리 아래 조리시간 기본값 설정을 연결",
+      "preserve": "메뉴 revision·주문별 조리 시작·가게 기본 설정"
+    },
+    {
+      "name": "음식점 주문 목록·상세",
+      "proposal": "선택 주문과 필터/스크롤 문맥을 유지하는 목록→상세 여정",
+      "preserve": "목록 탐색과 특정 주문 상태 전이"
+    }
+  ]
+}

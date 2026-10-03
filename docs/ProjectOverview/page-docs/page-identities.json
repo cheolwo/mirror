@@ -1,0 +1,1886 @@
+{
+  "DriverApp/Components/Pages/RootRedirect.razor": {
+    "id": "DriverApp-P00",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P00/README.md"
+  },
+  "DriverApp/Components/Pages/Login.razor": {
+    "id": "DriverApp-P01",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P01/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/04_Settings/메뉴Page.razor": {
+    "id": "DriverApp-P02",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P02/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/04_Settings/화면설정Page.razor": {
+    "id": "DriverApp-P02-1",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P02-1/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/04_Reservation/예약Page.razor": {
+    "id": "DriverApp-P03",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P03/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/02_Recommendation/탐색캠페인Page.razor": {
+    "id": "DriverApp-P04",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P04/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/03_Progress/배달내역Page.razor": {
+    "id": "DriverApp-P05",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P05/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/01_Work/운행시작Page.razor": {
+    "id": "DriverApp-P06",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P06/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/04_Settings/운행설정Page.razor": {
+    "id": "DriverApp-P06-1",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P06-1/README.md"
+  },
+  "DriverApp/Components/Pages/Home.razor": {
+    "id": "DriverApp-P07",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P07/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/Home/기사홈Page.razor": {
+    "id": "DriverApp-P07-1",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P07-1/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/02_Recommendation/추천목록Page.razor": {
+    "id": "DriverApp-P08",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P08/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/02_Recommendation/추천상세Page.razor": {
+    "id": "DriverApp-P09",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P09/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/02_Recommendation/배차처리Page.razor": {
+    "id": "DriverApp-P10",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P10/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/03_Progress/진행중운송Page.razor": {
+    "id": "DriverApp-P11",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P11/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/03_Progress/상차Page.razor": {
+    "id": "DriverApp-P12",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P12/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/03_Progress/하차Page.razor": {
+    "id": "DriverApp-P13",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P13/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/05_Settlement/월정산Page.razor": {
+    "id": "DriverApp-P14",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P14/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/05_Settlement/이용료안내Page.razor": {
+    "id": "DriverApp-P14-1",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P14-1/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/05_Settlement/계좌정보Page.razor": {
+    "id": "DriverApp-P14-2",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P14-2/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/06_Notification/알림함Page.razor": {
+    "id": "DriverApp-P15",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P15/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/04_Settings/알림설정Page.razor": {
+    "id": "DriverApp-P15-1",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P15-1/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/06_Notification/푸시설정Page.razor": {
+    "id": "DriverApp-P15-2",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P15-2/README.md"
+  },
+  "HumanResourcesManagerApp/Components/Pages/Home.razor": {
+    "id": "HumanResourcesManagerApp-P01",
+    "detail": "docs/ProjectOverview/page-docs/HumanResourcesManagerApp/HumanResourcesManagerApp-P01/README.md"
+  },
+  "OrdererApp/Components/Pages/Home.razor": {
+    "id": "OrdererApp-P01",
+    "detail": "docs/ProjectOverview/page-docs/OrdererApp/OrdererApp-P01/README.md"
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseHome.razor": {
+    "id": "OrdererApp-P02",
+    "detail": "docs/ProjectOverview/page-docs/OrdererApp/OrdererApp-P02/README.md"
+  },
+  "Ssalddel.Ui.Common/Areas/App/Components/Orderer/GroupPurchaseScreenFrame.razor": {
+    "id": "OrdererApp-P02",
+    "detail": "docs/ProjectOverview/page-docs/OrdererApp/OrdererApp-P02/README.md"
+  },
+  "OrdererApp/Components/Pages/CargoOrder.razor": {
+    "id": "OrdererApp-P03",
+    "detail": "docs/ProjectOverview/page-docs/OrdererApp/OrdererApp-P03/README.md"
+  },
+  "OrdererApp/Components/Pages/FoodOrderHome.razor": {
+    "id": "OrdererApp-P04",
+    "detail": "docs/ProjectOverview/page-docs/OrdererApp/OrdererApp-P04/README.md"
+  },
+  "OrdererApp/Components/Pages/RestaurantOrder.razor": {
+    "id": "OrdererApp-P04-1",
+    "detail": "docs/ProjectOverview/page-docs/OrdererApp/OrdererApp-P04-1/README.md"
+  },
+  "OrdererApp/Components/Pages/OrderHistory.razor": {
+    "id": "OrdererApp-P05",
+    "detail": "docs/ProjectOverview/page-docs/OrdererApp/OrdererApp-P05/README.md"
+  },
+  "OrdererApp/Components/Pages/NotFound.razor": {
+    "id": "OrdererApp-P99",
+    "detail": "docs/ProjectOverview/page-docs/OrdererApp/OrdererApp-P99/README.md"
+  },
+  "RestaurantDeskApp/Components/Pages/Home.razor": {
+    "id": "RestaurantDeskApp-P01",
+    "detail": "docs/ProjectOverview/page-docs/RestaurantDeskApp/RestaurantDeskApp-P01/README.md"
+  },
+  "RestaurantDeskApp/Components/Pages/NearbyRestaurants.razor": {
+    "id": "RestaurantDeskApp-P02",
+    "detail": "docs/ProjectOverview/page-docs/RestaurantDeskApp/RestaurantDeskApp-P02/README.md"
+  },
+  "RestaurantDeskApp/Components/Pages/PopularRestaurants.razor": {
+    "id": "RestaurantDeskApp-P02-1",
+    "detail": "docs/ProjectOverview/page-docs/RestaurantDeskApp/RestaurantDeskApp-P02-1/README.md"
+  },
+  "RestaurantDeskApp/Components/Pages/ReviewModeration.razor": {
+    "id": "RestaurantDeskApp-P03",
+    "detail": "docs/ProjectOverview/page-docs/RestaurantDeskApp/RestaurantDeskApp-P03/README.md"
+  },
+  "RestaurantDeskApp/Components/Pages/DispatchAddressForm.razor": {
+    "id": "RestaurantDeskApp-P04",
+    "detail": "docs/ProjectOverview/page-docs/RestaurantDeskApp/RestaurantDeskApp-P04/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/Home.razor": {
+    "id": "SsalddelAdmin-P00",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P00/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/AdminLogin.razor": {
+    "id": "SsalddelAdmin-P00-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P00-1/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/Error.razor": {
+    "id": "SsalddelAdmin-P00-2",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P00-2/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/Dashboard.razor": {
+    "id": "SsalddelAdmin-P16",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P16/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/Requests.razor": {
+    "id": "SsalddelAdmin-P17",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P17/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/RequestDetail.razor": {
+    "id": "SsalddelAdmin-P18",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P18/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/DispatchWait.razor": {
+    "id": "SsalddelAdmin-P19",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P19/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/DriverOperatingView.razor": {
+    "id": "SsalddelAdmin-P20",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P20/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/Transports.razor": {
+    "id": "SsalddelAdmin-P21",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P21/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/TransportWorkflowDetail.razor": {
+    "id": "SsalddelAdmin-P22",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P22/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/TransportWorkflowEvents.razor": {
+    "id": "SsalddelAdmin-P22-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P22-1/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/TransportWorkflowProofs.razor": {
+    "id": "SsalddelAdmin-P22-2",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P22-2/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/TransportWorkflowSettlement.razor": {
+    "id": "SsalddelAdmin-P22-3",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P22-3/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/ActivityLogs.razor": {
+    "id": "SsalddelAdmin-P23",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P23/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/ViewPolicies.razor": {
+    "id": "SsalddelAdmin-P24",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P24/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/CommonContents.razor": {
+    "id": "SsalddelAdmin-P25",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P25/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/Payments.razor": {
+    "id": "SsalddelAdmin-P26",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P26/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/Settlements.razor": {
+    "id": "SsalddelAdmin-P26-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P26-1/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/Documents.razor": {
+    "id": "SsalddelAdmin-P27",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P27/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/DocumentUpload.razor": {
+    "id": "SsalddelAdmin-P27-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P27-1/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/DocumentPolicies.razor": {
+    "id": "SsalddelAdmin-P27-2",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P27-2/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/DocumentPolicyDetail.razor": {
+    "id": "SsalddelAdmin-P27-3",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P27-3/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/DocumentLogs.razor": {
+    "id": "SsalddelAdmin-P27-4",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P27-4/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/FilesPod.razor": {
+    "id": "SsalddelAdmin-P27-5",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P27-5/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/PublicCargo.razor": {
+    "id": "SsalddelAdmin-P28",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P28/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/HsCodeOperations.razor": {
+    "id": "SsalddelAdmin-P29",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P29/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/FoodOperations.razor": {
+    "id": "SsalddelAdmin-P30",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P30/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/RestaurantSearchPolicySettings.razor": {
+    "id": "SsalddelAdmin-P30-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P30-1/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/ExplorationCampaigns.razor": {
+    "id": "SsalddelAdmin-P31",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P31/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/Drivers.razor": {
+    "id": "SsalddelAdmin-P32",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P32/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/VehicleManagement.razor": {
+    "id": "SsalddelAdmin-P32-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P32-1/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/Partners.razor": {
+    "id": "SsalddelAdmin-P33",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P33/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/RevenuePolicies.razor": {
+    "id": "SsalddelAdmin-P34",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P34/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/AuxiliaryFeatureSettings.razor": {
+    "id": "SsalddelAdmin-P35",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P35/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/ContactSearch.razor": {
+    "id": "SsalddelAdmin-P36",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P36/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/DomesticCargoDispatchAIReview.razor": {
+    "id": "SsalddelAdmin-P37",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P37/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/FoodDeliveryDispatchAIReview.razor": {
+    "id": "SsalddelAdmin-P38",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P38/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/DispatchAIJudgmentCases.razor": {
+    "id": "SsalddelAdmin-P39",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P39/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/FakePaymentSettlementConsole.razor": {
+    "id": "SsalddelAdmin-P40",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P40/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/Weather.razor": {
+    "id": "SsalddelAdmin-P90",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P90/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/Counter.razor": {
+    "id": "SsalddelAdmin-P91",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P91/README.md"
+  },
+  "SsalddelAdmin/Components/Pages/NotFound.razor": {
+    "id": "SsalddelAdmin-P99",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P99/README.md"
+  },
+  "SsalddelApp/Components/Pages/UnifiedHome.razor": {
+    "id": "SsalddelApp-P00",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P00/README.md"
+  },
+  "SsalddelApp/Components/Pages/Home.razor": {
+    "id": "SsalddelApp-P01",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P01/README.md"
+  },
+  "SsalddelApp/Components/Pages/ShipperProfileSettings.razor": {
+    "id": "SsalddelApp-P01-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P01-1/README.md"
+  },
+  "SsalddelApp/Components/Pages/ShipperViewSettings.razor": {
+    "id": "SsalddelApp-P01-2",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P01-2/README.md"
+  },
+  "SsalddelApp/Components/Pages/PublicCargo.razor": {
+    "id": "SsalddelApp-P01-3",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P01-3/README.md"
+  },
+  "SsalddelApp/Components/Pages/ExplorationInbox.razor": {
+    "id": "SsalddelApp-P01-4",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P01-4/README.md"
+  },
+  "SsalddelApp/Components/Pages/ShipperRequestWizard.razor": {
+    "id": "SsalddelApp-P02",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P02/README.md"
+  },
+  "SsalddelApp/Components/Pages/ShipperBulkImport.razor": {
+    "id": "SsalddelApp-P02-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P02-1/README.md"
+  },
+  "SsalddelApp/Components/Pages/DispatchAddressForm.razor": {
+    "id": "SsalddelApp-P02-2",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P02-2/README.md"
+  },
+  "SsalddelApp/Components/Pages/ShipperRequestDetail.razor": {
+    "id": "SsalddelApp-P03",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P03/README.md"
+  },
+  "SsalddelApp/Components/Pages/InboundDashboard.razor": {
+    "id": "SsalddelApp-P04",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P04/README.md"
+  },
+  "SsalddelApp/Components/Pages/InboundRequests.razor": {
+    "id": "SsalddelApp-P04-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P04-1/README.md"
+  },
+  "SsalddelApp/Components/Pages/WarehouseWorkspace.razor": {
+    "id": "SsalddelApp-P05",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P05/README.md"
+  },
+  "SsalddelApp/Components/Pages/WarehouseInventory.razor": {
+    "id": "SsalddelApp-P05-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P05-1/README.md"
+  },
+  "SsalddelApp/Components/Pages/WarehouseScanStation.razor": {
+    "id": "SsalddelApp-P05-2",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P05-2/README.md"
+  },
+  "SsalddelApp/Components/Pages/WarehouseWorkStart.razor": {
+    "id": "SsalddelApp-P05-3",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P05-3/README.md"
+  },
+  "SsalddelApp/Components/Pages/SalesChannels.razor": {
+    "id": "SsalddelApp-P06",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P06/README.md"
+  },
+  "SsalddelApp/Components/Pages/ProductListings.razor": {
+    "id": "SsalddelApp-P06-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P06-1/README.md"
+  },
+  "SsalddelApp/Components/Pages/OrderFulfillment.razor": {
+    "id": "SsalddelApp-P06-2",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P06-2/README.md"
+  },
+  "SsalddelApp/Components/Pages/OrderFulfillmentSamples.razor": {
+    "id": "SsalddelApp-P06-2-3",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P06-2-3/README.md"
+  },
+  "SsalddelApp/Components/Pages/OrderFulfillmentOrders.razor": {
+    "id": "SsalddelApp-P06-2-4",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P06-2-4/README.md"
+  },
+  "SsalddelApp/Components/Pages/OrderFulfillmentOrderDetail.razor": {
+    "id": "SsalddelApp-P06-2-4-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P06-2-4-1/README.md"
+  },
+  "SsalddelApp/Components/Pages/OrderFulfillmentInventory.razor": {
+    "id": "SsalddelApp-P06-2-5",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P06-2-5/README.md"
+  },
+  "SsalddelApp/Components/Pages/OrderFulfillmentPicking.razor": {
+    "id": "SsalddelApp-P06-2-6",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P06-2-6/README.md"
+  },
+  "SsalddelApp/Components/Pages/OrderFulfillmentPickingTask.razor": {
+    "id": "SsalddelApp-P06-2-6-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P06-2-6-1/README.md"
+  },
+  "SsalddelApp/Components/Pages/OrderFulfillmentPacking.razor": {
+    "id": "SsalddelApp-P06-2-7",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P06-2-7/README.md"
+  },
+  "SsalddelApp/Components/Pages/OrderFulfillmentPackingTask.razor": {
+    "id": "SsalddelApp-P06-2-7-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P06-2-7-1/README.md"
+  },
+  "SsalddelApp/Components/Pages/OrderFulfillmentRestockPolicy.razor": {
+    "id": "SsalddelApp-P06-2-8",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P06-2-8/README.md"
+  },
+  "SsalddelApp/Components/Pages/FclLclPlanner.razor": {
+    "id": "SsalddelApp-P07",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P07/README.md"
+  },
+  "SsalddelApp/Components/Pages/CustomsHsReviews.razor": {
+    "id": "SsalddelApp-P07-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P07-1/README.md"
+  },
+  "SsalddelApp/Components/Pages/ReconsignmentOrders.razor": {
+    "id": "SsalddelApp-P08",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P08/README.md"
+  },
+  "SsalddelApp/Components/Pages/TransportWorkspace.razor": {
+    "id": "SsalddelApp-P09",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P09/README.md"
+  },
+  "SsalddelApp/Components/Pages/CommunityDecorationStorePage.razor": {
+    "id": "SsalddelApp-P10",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P10/README.md"
+  },
+  "SsalddelApp/Components/Pages/CommunityDecorationDetailPage.razor": {
+    "id": "SsalddelApp-P10-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P10-1/README.md"
+  },
+  "SsalddelApp/Components/Pages/CommunityDecorationCheckoutPage.razor": {
+    "id": "SsalddelApp-P10-2-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P10-2-1/README.md"
+  },
+  "SsalddelApp/Components/Pages/CommunityDecorationCreatePage.razor": {
+    "id": "SsalddelApp-P10-3",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P10-3/README.md"
+  },
+  "SsalddelApp/Components/Pages/CommunityDecorationThemeSubmitPage.razor": {
+    "id": "SsalddelApp-P10-4",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P10-4/README.md"
+  },
+  "SsalddelApp/Components/Pages/Weather.razor": {
+    "id": "SsalddelApp-P90",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P90/README.md"
+  },
+  "SsalddelApp/Components/Pages/Counter.razor": {
+    "id": "SsalddelApp-P91",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P91/README.md"
+  },
+  "SsalddelApp/Components/Pages/NotFound.razor": {
+    "id": "SsalddelApp-P99",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P99/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/Home.razor": {
+    "id": "WarehouseManagerApp-P01",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P01/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/WorkBoard.razor": {
+    "id": "WarehouseManagerApp-P02",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P02/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/WorkStart.razor": {
+    "id": "WarehouseManagerApp-P02-1",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P02-1/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/WorkbenchScan.razor": {
+    "id": "WarehouseManagerApp-P02-2",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P02-2/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/ScanStation.razor": {
+    "id": "WarehouseManagerApp-P02-3",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P02-3/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/InboundProductScan.razor": {
+    "id": "WarehouseManagerApp-P03-1",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P03-1/README.md"
+  },
+  "Ssalddel.WebApp/Pages/WarehouseInboundProductScanPage.razor": {
+    "id": "WarehouseManagerApp-P03-1",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P03-1/README.md"
+  },
+  "Ssalddel.Ui.Common/Areas/App/Components/WarehouseOperations/SsalddelInboundReceivingWorkspace.razor": {
+    "id": "WarehouseManagerApp-P03-1",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P03-1/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/MartHome.razor": {
+    "id": "WarehouseManagerApp-P05",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P05/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/MartWorkBoard.razor": {
+    "id": "WarehouseManagerApp-P05-1",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P05-1/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/MartWorkStart.razor": {
+    "id": "WarehouseManagerApp-P05-2",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P05-2/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/MartPickingPacking.razor": {
+    "id": "WarehouseManagerApp-P05-3",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P05-3/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/NotFound.razor": {
+    "id": "WarehouseManagerApp-P99",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P99/README.md"
+  },
+  "SsalddelApp/Components/Pages/CommunityHomePage.razor": {
+    "id": "SsalddelApp-P00-C",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityGroupPurchaseDemandPage.razor": {
+    "id": "SsalddelApp-P00-C1",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityIndividualOrdersPage.razor": {
+    "id": "SsalddelApp-P00-C2",
+    "detail": null
+  },
+  "SsalddelApp/Components/Shared/ShipperHomeAppShell.razor": {
+    "id": "SsalddelApp-P01",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P01/README.md"
+  },
+  "SsalddelApp/Components/Pages/ShipperRequestCargoPage.razor": {
+    "id": "SsalddelApp-P02",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P02/README.md"
+  },
+  "SsalddelApp/Components/Pages/ShipperRequestPaymentPage.razor": {
+    "id": "SsalddelApp-P02",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P02/README.md"
+  },
+  "SsalddelApp/Components/Pages/ShipperRequestProcedurePage.razor": {
+    "id": "SsalddelApp-P02",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P02/README.md"
+  },
+  "SsalddelApp/Components/Pages/ShipperRequestProofsPage.razor": {
+    "id": "SsalddelApp-P02",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P02/README.md"
+  },
+  "SsalddelApp/Components/Pages/ShipperRequestReviewPage.razor": {
+    "id": "SsalddelApp-P02",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P02/README.md"
+  },
+  "SsalddelApp/Components/Pages/ShipperRequestTimelinePage.razor": {
+    "id": "SsalddelApp-P02",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P02/README.md"
+  },
+  "SsalddelApp/Components/Pages/ShipperRequestTransportPage.razor": {
+    "id": "SsalddelApp-P02",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P02/README.md"
+  },
+  "SsalddelApp/Components/Pages/SalesOrders.razor": {
+    "id": "SsalddelApp-P06-2-1",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P06-2-1/README.md"
+  },
+  "SsalddelApp/Components/Pages/SalesOrderDetail.razor": {
+    "id": "SsalddelApp-P06-2-2",
+    "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P06-2-2/README.md"
+  },
+  "SsalddelAdminApp/Components/Pages/Home.razor": {
+    "id": "SsalddelAdminApp-P00",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/Login.razor": {
+    "id": "SsalddelAdminApp-P01",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/CommunityManagement.razor": {
+    "id": "SsalddelAdminApp-P02",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/CommunityInformationReview.razor": {
+    "id": "SsalddelAdminApp-P03",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/PrajnaHub.razor": {
+    "id": "SsalddelAdminApp-P04",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/PrajnaHongikHakdang.razor": {
+    "id": "SsalddelAdminApp-P04-1",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/InboundInspection.razor": {
+    "id": "WarehouseManagerApp-P03",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P03/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/InboundInspectionAccessFrame.razor": {
+    "id": "WarehouseManagerApp-P03",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P03/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/InboundInspectionDetail.razor": {
+    "id": "WarehouseManagerApp-P03",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P03/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/InboundInspectionRecord.razor": {
+    "id": "WarehouseManagerApp-P03",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P03/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/GeneralInventory.razor": {
+    "id": "WarehouseManagerApp-P03-2",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P03-2/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/PutAwayTask.razor": {
+    "id": "WarehouseManagerApp-P03-3",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P03-3/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/PickingBatch.razor": {
+    "id": "WarehouseManagerApp-P04",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P04/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/PickingBatchAccessFrame.razor": {
+    "id": "WarehouseManagerApp-P04",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P04/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/PickingBatchDetail.razor": {
+    "id": "WarehouseManagerApp-P04",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P04/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/PickingBatchExecute.razor": {
+    "id": "WarehouseManagerApp-P04",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P04/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/PackingTask.razor": {
+    "id": "WarehouseManagerApp-P04-1",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P04-1/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/GeneralTransportHandoff.razor": {
+    "id": "WarehouseManagerApp-P04-2",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P04-2/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/OutboundPlanReview.razor": {
+    "id": "WarehouseManagerApp-P04-3",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P04-3/README.md"
+  },
+  "WarehouseManagerApp/Components/Pages/TransportRequestDraft.razor": {
+    "id": "WarehouseManagerApp-P04-4",
+    "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P04-4/README.md"
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseProducts.razor": {
+    "id": "OrdererApp-P02-1",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseWishes.razor": {
+    "id": "OrdererApp-P02-1-1",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseWishCreate.razor": {
+    "id": "OrdererApp-P02-1-2",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseProductDetail.razor": {
+    "id": "OrdererApp-P02-2",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseDemandCreate.razor": {
+    "id": "OrdererApp-P02-3",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseImportReview.razor": {
+    "id": "OrdererApp-P02-4",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseShipments.razor": {
+    "id": "OrdererApp-P02-5",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/MartOrder.razor": {
+    "id": "OrdererApp-P04-2",
+    "detail": "docs/ProjectOverview/page-docs/OrdererApp/OrdererApp-P04-2/README.md"
+  },
+  "OrdererApp/Components/Pages/MartProductDetail.razor": {
+    "id": "OrdererApp-P04-2-1",
+    "detail": "docs/ProjectOverview/page-docs/OrdererApp/OrdererApp-P04-2-1/README.md"
+  },
+  "OrdererApp/Components/Pages/MartProductReview.razor": {
+    "id": "OrdererApp-P04-2-2",
+    "detail": "docs/ProjectOverview/page-docs/OrdererApp/OrdererApp-P04-2-2/README.md"
+  },
+  "OrdererApp/Components/Pages/MartOrderRequest.razor": {
+    "id": "OrdererApp-P04-3",
+    "detail": "docs/ProjectOverview/page-docs/OrdererApp/OrdererApp-P04-3/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/03_Progress/음식배달업무Page.razor": {
+    "id": "DriverApp-FoodDeliveries",
+    "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-FoodDeliveries/README.md"
+  },
+  "DriverApp/Components/Pages/Driver/01_Work/커뮤니티개별의뢰Page.razor": {
+    "id": "DriverApp-Components-Pages-Driver-01_Work-커뮤니티개별의뢰Page",
+    "detail": null
+  },
+  "eng/web-role-app/Pages/RoleNotFound.razor": {
+    "id": "eng-web-role-app-Pages-RoleNotFound",
+    "detail": null
+  },
+  "eng/web-role-app/Pages/RoleRoot.razor": {
+    "id": "eng-web-role-app-Pages-RoleRoot",
+    "detail": null
+  },
+  "FDriverApp/Components/Pages/FDriverHome.razor": {
+    "id": "FDriverApp-Components-Pages-FDriverHome",
+    "detail": null
+  },
+  "FDriverApp/Components/Pages/FDriverWorkspaceLaunchPage.razor": {
+    "id": "FDriverApp-Components-Pages-FDriverWorkspaceLaunchPage",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/FoodOrderHistory.razor": {
+    "id": "OrdererApp-Components-Pages-FoodOrderHistory",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupExportLedger.razor": {
+    "id": "OrdererApp-Components-Pages-GroupExportLedger",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupImportReadinessClassification.razor": {
+    "id": "OrdererApp-Components-Pages-GroupImportReadinessClassification",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupImportReadinessConsent.razor": {
+    "id": "OrdererApp-Components-Pages-GroupImportReadinessConsent",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupImportReadinessCosts.razor": {
+    "id": "OrdererApp-Components-Pages-GroupImportReadinessCosts",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupImportReadinessHandoff.razor": {
+    "id": "OrdererApp-Components-Pages-GroupImportReadinessHandoff",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupImportReadinessLogisticsReview.razor": {
+    "id": "OrdererApp-Components-Pages-GroupImportReadinessLogisticsReview",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupImportReadinessOverview.razor": {
+    "id": "OrdererApp-Components-Pages-GroupImportReadinessOverview",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupImportReadinessSuppliers.razor": {
+    "id": "OrdererApp-Components-Pages-GroupImportReadinessSuppliers",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseDeliveryScopeDetail.razor": {
+    "id": "OrdererApp-Components-Pages-GroupPurchaseDeliveryScopeDetail",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseDeliveryScopes.razor": {
+    "id": "OrdererApp-Components-Pages-GroupPurchaseDeliveryScopes",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseGroupDetail.razor": {
+    "id": "OrdererApp-Components-Pages-GroupPurchaseGroupDetail",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseGroups.razor": {
+    "id": "OrdererApp-Components-Pages-GroupPurchaseGroups",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseOrderModeComparison.razor": {
+    "id": "OrdererApp-Components-Pages-GroupPurchaseOrderModeComparison",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchasePractice.razor": {
+    "id": "OrdererApp-Components-Pages-GroupPurchasePractice",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseRecipeUse.razor": {
+    "id": "OrdererApp-Components-Pages-GroupPurchaseRecipeUse",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseSupplierMembership.razor": {
+    "id": "OrdererApp-Components-Pages-GroupPurchaseSupplierMembership",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseSupplierRelationship.razor": {
+    "id": "OrdererApp-Components-Pages-GroupPurchaseSupplierRelationship",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseTogetherOrderDetail.razor": {
+    "id": "OrdererApp-Components-Pages-GroupPurchaseTogetherOrderDetail",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseTogetherOrders.razor": {
+    "id": "OrdererApp-Components-Pages-GroupPurchaseTogetherOrders",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseUrgentHarvestOffer.razor": {
+    "id": "OrdererApp-Components-Pages-GroupPurchaseUrgentHarvestOffer",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseUrgentHarvestReview.razor": {
+    "id": "OrdererApp-Components-Pages-GroupPurchaseUrgentHarvestReview",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseWishDetail.razor": {
+    "id": "OrdererApp-Components-Pages-GroupPurchaseWishDetail",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/GroupPurchaseWishEdit.razor": {
+    "id": "OrdererApp-Components-Pages-GroupPurchaseWishEdit",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/IndividualExportLedger.razor": {
+    "id": "OrdererApp-Components-Pages-IndividualExportLedger",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/IndividualImportLedger.razor": {
+    "id": "OrdererApp-Components-Pages-IndividualImportLedger",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/OrderDetail.razor": {
+    "id": "OrdererApp-Components-Pages-OrderDetail",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/ProducePriceComparison.razor": {
+    "id": "OrdererApp-Components-Pages-ProducePriceComparison",
+    "detail": null
+  },
+  "RestaurantDeskApp/Components/Pages/IngredientSupplyRequest.razor": {
+    "id": "RestaurantDeskApp-Components-Pages-IngredientSupplyRequest",
+    "detail": null
+  },
+  "RestaurantDeskApp/Components/Pages/Login.razor": {
+    "id": "RestaurantDeskApp-Components-Pages-Login",
+    "detail": null
+  },
+  "RestaurantDeskApp/Components/Pages/Menus.razor": {
+    "id": "RestaurantDeskApp-Components-Pages-Menus",
+    "detail": null
+  },
+  "RestaurantDeskApp/Components/Pages/NotFound.razor": {
+    "id": "RestaurantDeskApp-Components-Pages-NotFound",
+    "detail": null
+  },
+  "RestaurantDeskApp/Components/Pages/OrderDetail.razor": {
+    "id": "RestaurantDeskApp-Components-Pages-OrderDetail",
+    "detail": null
+  },
+  "RestaurantDeskApp/Components/Pages/OrderInbox.razor": {
+    "id": "RestaurantDeskApp-Components-Pages-OrderInbox",
+    "detail": null
+  },
+  "RestaurantDeskApp/Components/Pages/PreparationTimeSettings.razor": {
+    "id": "RestaurantDeskApp-Components-Pages-PreparationTimeSettings",
+    "detail": null
+  },
+  "SellerApp/Components/Pages/ForeignFoodFacilities.razor": {
+    "id": "SellerApp-Components-Pages-ForeignFoodFacilities",
+    "detail": null
+  },
+  "SellerApp/Components/Pages/Home.razor": {
+    "id": "SellerApp-Components-Pages-Home",
+    "detail": null
+  },
+  "SellerApp/Components/Pages/Inventory.razor": {
+    "id": "SellerApp-Components-Pages-Inventory",
+    "detail": null
+  },
+  "SellerApp/Components/Pages/ListingCreate.razor": {
+    "id": "SellerApp-Components-Pages-ListingCreate",
+    "detail": null
+  },
+  "SellerApp/Components/Pages/Listings.razor": {
+    "id": "SellerApp-Components-Pages-Listings",
+    "detail": null
+  },
+  "SellerApp/Components/Pages/Login.razor": {
+    "id": "SellerApp-Components-Pages-Login",
+    "detail": null
+  },
+  "SellerApp/Components/Pages/OrderDetail.razor": {
+    "id": "SellerApp-Components-Pages-OrderDetail",
+    "detail": null
+  },
+  "SellerApp/Components/Pages/OrdererDemand.razor": {
+    "id": "SellerApp-Components-Pages-OrdererDemand",
+    "detail": null
+  },
+  "SellerApp/Components/Pages/Orders.razor": {
+    "id": "SellerApp-Components-Pages-Orders",
+    "detail": null
+  },
+  "SellerApp/Components/Pages/ProductCreate.razor": {
+    "id": "SellerApp-Components-Pages-ProductCreate",
+    "detail": null
+  },
+  "SellerApp/Components/Pages/Products.razor": {
+    "id": "SellerApp-Components-Pages-Products",
+    "detail": null
+  },
+  "SellerApp/Components/Pages/SalesChannels.razor": {
+    "id": "SellerApp-Components-Pages-SalesChannels",
+    "detail": null
+  },
+  "SellerApp/Components/Pages/SalesPageComposer.razor": {
+    "id": "SellerApp-Components-Pages-SalesPageComposer",
+    "detail": null
+  },
+  "Ssalddel.Web.UnityReviewApp/Pages/LoginPage.razor": {
+    "id": "Ssalddel.Web.UnityReviewApp-Pages-LoginPage",
+    "detail": null
+  },
+  "Ssalddel.Web.UnityReviewApp/Pages/NotFound.razor": {
+    "id": "Ssalddel.Web.UnityReviewApp-Pages-NotFound",
+    "detail": null
+  },
+  "Ssalddel.Web.UnityReviewApp/Pages/Synty공간조립Web검토Page.razor": {
+    "id": "Ssalddel.Web.UnityReviewApp-Pages-Synty공간조립Web검토Page",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityBaguaTransitionPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityBaguaTransitionPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityBoardManagementPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityBoardManagementPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityBoardPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityBoardPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityCollectiveActionsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityCollectiveActionsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityDecorationCheckoutPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityDecorationCheckoutPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityDecorationLegacyCheckoutPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityDecorationLegacyCheckoutPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityDecorationLegacyProductPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityDecorationLegacyProductPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityDecorationProductPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityDecorationProductPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityDecorationStorePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityDecorationStorePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityDirectoryPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityDirectoryPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityFoodDiscoveryPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityFoodDiscoveryPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityGlobalTradeThreadPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityGlobalTradeThreadPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityGroupImportPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityGroupImportPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityGroupPurchaseCreatePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityGroupPurchaseCreatePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityGroupPurchaseDeliveryOptionsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityGroupPurchaseDeliveryOptionsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityGroupPurchaseDemandPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityGroupPurchaseDemandPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityGroupPurchaseDetailPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityGroupPurchaseDetailPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityGroupPurchaseFulfillmentDraftPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityGroupPurchaseFulfillmentDraftPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityGroupPurchaseNegotiationPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityGroupPurchaseNegotiationPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityGroupPurchaseObjectionsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityGroupPurchaseObjectionsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityGroupPurchasePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityGroupPurchasePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityGroupPurchaseParticipationPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityGroupPurchaseParticipationPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityGroupPurchasePracticePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityGroupPurchasePracticePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityGroupPurchaseResolutionPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityGroupPurchaseResolutionPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityGroupPurchaseSignaturePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityGroupPurchaseSignaturePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityGroupPurchaseSuppliersPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityGroupPurchaseSuppliersPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityLedgerDraftPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityLedgerDraftPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityMapApplicationChooserPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityMapApplicationChooserPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityPersonalPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityPersonalPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityPostComposePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityPostComposePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityPostDetailPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityPostDetailPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityRecommendedPostDetailPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityRecommendedPostDetailPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityRecommendedPostsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityRecommendedPostsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityRoleApplicationPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityRoleApplicationPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityRoleHomePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityRoleHomePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunitySafetyCenterPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunitySafetyCenterPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityWorkspacePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityWorkspacePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DiagramWorkbenchPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DiagramWorkbenchPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverBankAccountPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverBankAccountPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverCommunityRequestsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverCommunityRequestsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverCurrentMonthSettlementPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverCurrentMonthSettlementPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverCurrentTransportPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverCurrentTransportPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverExplorationCampaignsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverExplorationCampaignsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverHome.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverHome",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverMyInfoPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverMyInfoPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverNotificationSettingsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverNotificationSettingsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverNotificationsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverNotificationsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverRecommendationDecisionPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverRecommendationDecisionPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverRecommendationMapPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverRecommendationMapPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverRecommendations.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverRecommendations",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverReservationsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverReservationsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverTransportDropoffPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverTransportDropoffPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverTransportHistoryPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverTransportHistoryPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverTransportPickupPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverTransportPickupPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverTransportProofPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverTransportProofPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverViewSettingsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverViewSettingsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverWorkSettingsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverWorkSettingsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverWorkStartPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverWorkStartPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ExpectedItemDocumentWorkbenchPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ExpectedItemDocumentWorkbenchPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/GlobalImportOrderLedgerPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-GlobalImportOrderLedgerPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/GlobalImportRequestsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-GlobalImportRequestsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/GlobalProductDetailPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-GlobalProductDetailPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/GlobalSupplierApplyPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-GlobalSupplierApplyPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/GlobalTradeHome.razor": {
+    "id": "Ssalddel.WebApp-Pages-GlobalTradeHome",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/GroupExportLedgerPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-GroupExportLedgerPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/Home.razor": {
+    "id": "Ssalddel.WebApp-Pages-Home",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/IdentifierCodeWorkbenchPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-IdentifierCodeWorkbenchPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/IndividualExportLedgerPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-IndividualExportLedgerPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/IndividualImportLedgerPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-IndividualImportLedgerPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/KamisDomesticPriceComparisonPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-KamisDomesticPriceComparisonPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/KoreaAgriculturalMapPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-KoreaAgriculturalMapPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/LoginPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-LoginPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/NotFound.razor": {
+    "id": "Ssalddel.WebApp-Pages-NotFound",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/OfficialFoodIngredientPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-OfficialFoodIngredientPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/OrdererFclSharedGoalPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-OrdererFclSharedGoalPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/OrdererHome.razor": {
+    "id": "Ssalddel.WebApp-Pages-OrdererHome",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/OrdererMartCatalogPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-OrdererMartCatalogPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/OrdererMartOrderRequestPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-OrdererMartOrderRequestPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/OrdererMartProductDetailPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-OrdererMartProductDetailPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/OrdererMartProductReviewPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-OrdererMartProductReviewPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/OrdererWorkspacePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-OrdererWorkspacePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ProduceRegionalPriceComparisonPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ProduceRegionalPriceComparisonPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/PublicDataInformationPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-PublicDataInformationPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/RegionalCultureSpecialtyDetailPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-RegionalCultureSpecialtyDetailPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/RegionalCultureSpecialtyPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-RegionalCultureSpecialtyPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/RegionalProductCandidatesPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-RegionalProductCandidatesPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperBulkImportPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperBulkImportPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperCustomsHsReviewsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperCustomsHsReviewsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperDispatchAddressFormPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperDispatchAddressFormPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperExplorationInboxPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperExplorationInboxPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperFclLclPlannerPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperFclLclPlannerPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperHome.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperHome",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperInboundDashboardPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperInboundDashboardPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperInboundRequestCompletePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperInboundRequestCompletePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperInboundRequestCreatePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperInboundRequestCreatePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperInboundRequestDetailPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperInboundRequestDetailPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperInboundRequestsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperInboundRequestsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperProductListingsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperProductListingsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperProfileSettingsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperProfileSettingsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperPublicCargoPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperPublicCargoPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperReconsignmentOrdersPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperReconsignmentOrdersPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperRequestCargoPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperRequestCargoPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperRequestDetailPreview.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperRequestDetailPreview",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperRequestPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperRequestPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperRequestPaymentPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperRequestPaymentPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperRequestProcedurePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperRequestProcedurePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperRequestProofsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperRequestProofsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperRequestReviewPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperRequestReviewPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperRequestTimelinePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperRequestTimelinePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperRequestTransportPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperRequestTransportPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperSalesChannelsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperSalesChannelsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperSalesListingCreatePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperSalesListingCreatePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperSalesOrderDetailPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperSalesOrderDetailPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperSalesOrdersPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperSalesOrdersPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperSalesPageComposerPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperSalesPageComposerPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperSalesProductCreatePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperSalesProductCreatePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperSalesProductsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperSalesProductsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperSettlementStatusPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperSettlementStatusPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperViewSettingsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperViewSettingsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperWarehouseInventoryPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperWarehouseInventoryPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperWarehouseRegistrationPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperWarehouseRegistrationPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperWarehouseScanPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperWarehouseScanPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperWarehouseWorkspacePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperWarehouseWorkspacePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperWarehouseWorkStartPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperWarehouseWorkStartPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperWorkspacePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperWorkspacePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/UsdaUnitedStatesPriceComparisonPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-UsdaUnitedStatesPriceComparisonPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseBondedCustomsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseBondedCustomsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseExceptionsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseExceptionsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseExpectedInboundsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseExpectedInboundsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseHistoryPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseHistoryPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseHome.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseHome",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseInboundInspectionDetailPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseInboundInspectionDetailPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseInboundInspectionPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseInboundInspectionPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseInboundInspectionRecordPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseInboundInspectionRecordPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseInventoryPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseInventoryPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseMartHomePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseMartHomePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseMartPickingOrderDetailPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseMartPickingOrderDetailPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseMartPickingPackingPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseMartPickingPackingPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseMartWorkBoardPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseMartWorkBoardPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseMartWorkStartPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseMartWorkStartPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseOutboundHandoffPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseOutboundHandoffPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseOutboundPlanReviewPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseOutboundPlanReviewPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehousePackingTaskPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehousePackingTaskPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehousePickingBatchDetailPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehousePickingBatchDetailPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehousePickingBatchExecutePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehousePickingBatchExecutePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehousePickingBatchPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehousePickingBatchPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehousePutAwayTaskPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehousePutAwayTaskPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseScanPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseScanPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseSettingsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseSettingsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseTransportRequestDraftPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseTransportRequestDraftPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseWorkbenchScanPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseWorkbenchScanPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseWorkBoardPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseWorkBoardPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseWorkspaceCatalogPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseWorkspaceCatalogPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/WarehouseWorkStartPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-WarehouseWorkStartPage",
+    "detail": null
+  },
+  "SsalddelAdmin/Components/Pages/BusinessPackageAdmin.razor": {
+    "id": "SsalddelAdmin-Components-Pages-BusinessPackageAdmin",
+    "detail": null
+  },
+  "SsalddelAdmin/Components/Pages/CommunityAdminDashboard.razor": {
+    "id": "SsalddelAdmin-Components-Pages-CommunityAdminDashboard",
+    "detail": null
+  },
+  "SsalddelAdmin/Components/Pages/CommunityUserManagement.razor": {
+    "id": "SsalddelAdmin-Components-Pages-CommunityUserManagement",
+    "detail": null
+  },
+  "SsalddelAdmin/Components/Pages/DocumentRelationships.razor": {
+    "id": "SsalddelAdmin-Components-Pages-DocumentRelationships",
+    "detail": null
+  },
+  "SsalddelAdmin/Components/Pages/FollowUpRecovery.razor": {
+    "id": "SsalddelAdmin-Components-Pages-FollowUpRecovery",
+    "detail": null
+  },
+  "SsalddelAdmin/Components/Pages/FoodOrderOperationsTrace.razor": {
+    "id": "SsalddelAdmin-Components-Pages-FoodOrderOperationsTrace",
+    "detail": null
+  },
+  "SsalddelAdmin/Components/Pages/GroupImportTradeReadiness.razor": {
+    "id": "SsalddelAdmin-Components-Pages-GroupImportTradeReadiness",
+    "detail": null
+  },
+  "SsalddelAdmin/Components/Pages/SpatialCatalog.razor": {
+    "id": "SsalddelAdmin-Components-Pages-SpatialCatalog",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/Finance.razor": {
+    "id": "SsalddelAdminApp-Components-Pages-Finance",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/FollowUpRecovery.razor": {
+    "id": "SsalddelAdminApp-Components-Pages-FollowUpRecovery",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/GroupImportTradeReadiness.razor": {
+    "id": "SsalddelAdminApp-Components-Pages-GroupImportTradeReadiness",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/Operations.razor": {
+    "id": "SsalddelAdminApp-Components-Pages-Operations",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/PageCatalog.razor": {
+    "id": "SsalddelAdminApp-Components-Pages-PageCatalog",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityBaguaTransition.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityBaguaTransition",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityBoardDirectoryPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityBoardDirectoryPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityBoardManagementPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityBoardManagementPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityBoardPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityBoardPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityCollectiveActions.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityCollectiveActions",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityDecorationLegacyCheckoutPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityDecorationLegacyCheckoutPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityDecorationLegacyProductPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityDecorationLegacyProductPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityGroupImport.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityGroupImport",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityGroupPurchase.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityGroupPurchase",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityGroupPurchaseCreatePage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityGroupPurchaseCreatePage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityGroupPurchaseDeliveryOptionsPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityGroupPurchaseDeliveryOptionsPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityGroupPurchaseDetailPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityGroupPurchaseDetailPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityGroupPurchaseFulfillmentDraftPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityGroupPurchaseFulfillmentDraftPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityGroupPurchaseNegotiationPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityGroupPurchaseNegotiationPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityGroupPurchaseObjectionsPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityGroupPurchaseObjectionsPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityGroupPurchaseParticipationPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityGroupPurchaseParticipationPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityGroupPurchaseResolutionPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityGroupPurchaseResolutionPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityGroupPurchaseSignaturePage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityGroupPurchaseSignaturePage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityGroupPurchaseSuppliersPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityGroupPurchaseSuppliersPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityLedgerDraftPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityLedgerDraftPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityPersonalPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityPersonalPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityPostComposePage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityPostComposePage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityPostDetailPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityPostDetailPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityRecommendedPostDetailPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityRecommendedPostDetailPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityRecommendedPostsPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityRecommendedPostsPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityWorkBoardPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityWorkBoardPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityWorkRelationshipsPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityWorkRelationshipsPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityWorkspacePage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityWorkspacePage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/DiagramWorkbench.razor": {
+    "id": "SsalddelApp-Components-Pages-DiagramWorkbench",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/InboundRequestCompletePage.razor": {
+    "id": "SsalddelApp-Components-Pages-InboundRequestCompletePage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/InboundRequestCreatePage.razor": {
+    "id": "SsalddelApp-Components-Pages-InboundRequestCreatePage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/InboundRequestDetailPage.razor": {
+    "id": "SsalddelApp-Components-Pages-InboundRequestDetailPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/KamisDomesticPriceComparison.razor": {
+    "id": "SsalddelApp-Components-Pages-KamisDomesticPriceComparison",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/KoreaAgriculturalMapPage.razor": {
+    "id": "SsalddelApp-Components-Pages-KoreaAgriculturalMapPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/LogisticsServiceContract.razor": {
+    "id": "SsalddelApp-Components-Pages-LogisticsServiceContract",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/OfficialFoodIngredients.razor": {
+    "id": "SsalddelApp-Components-Pages-OfficialFoodIngredients",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/ProduceRegionalPriceComparison.razor": {
+    "id": "SsalddelApp-Components-Pages-ProduceRegionalPriceComparison",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/PublicDataInformation.razor": {
+    "id": "SsalddelApp-Components-Pages-PublicDataInformation",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/RegionalCultureSpecialtyDetailPage.razor": {
+    "id": "SsalddelApp-Components-Pages-RegionalCultureSpecialtyDetailPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/RegionalCultureSpecialtyPage.razor": {
+    "id": "SsalddelApp-Components-Pages-RegionalCultureSpecialtyPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/RegionalProductCandidatesPage.razor": {
+    "id": "SsalddelApp-Components-Pages-RegionalProductCandidatesPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/SalesPageComposer.razor": {
+    "id": "SsalddelApp-Components-Pages-SalesPageComposer",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/UnitedStatesKoreanFoodGroupBuyPage.razor": {
+    "id": "SsalddelApp-Components-Pages-UnitedStatesKoreanFoodGroupBuyPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/UsdaUnitedStatesPriceComparison.razor": {
+    "id": "SsalddelApp-Components-Pages-UsdaUnitedStatesPriceComparison",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/WarehouseRegistrationPage.razor": {
+    "id": "SsalddelApp-Components-Pages-WarehouseRegistrationPage",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/ApartmentAllocation.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-ApartmentAllocation",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/ApartmentArrivals.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-ApartmentArrivals",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/ApartmentHandoff.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-ApartmentHandoff",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/ApartmentInbound.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-ApartmentInbound",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/ApartmentUnclaimed.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-ApartmentUnclaimed",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/CommunityBoardManagementPage.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-CommunityBoardManagementPage",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/CommunityBoardPage.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-CommunityBoardPage",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/CommunityHomePage.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-CommunityHomePage",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/CommunityLedgerDraftPage.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-CommunityLedgerDraftPage",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/CommunityPostComposePage.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-CommunityPostComposePage",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/CommunityPostDetailPage.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-CommunityPostDetailPage",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/CommunityRecommendedPostDetailPage.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-CommunityRecommendedPostDetailPage",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/CommunityRecommendedPostsPage.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-CommunityRecommendedPostsPage",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/CommunityWorkspacePage.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-CommunityWorkspacePage",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/DiagramWorkbench.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-DiagramWorkbench",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/ExpectedInbounds.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-ExpectedInbounds",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/ImportArrival.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-ImportArrival",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/ImportCustoms.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-ImportCustoms",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/ImportDomesticHandoff.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-ImportDomesticHandoff",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/ImportRelease.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-ImportRelease",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/MartPickingPackingDetail.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-MartPickingPackingDetail",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/WarehouseExceptions.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-WarehouseExceptions",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/WarehouseHistory.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-WarehouseHistory",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/WarehouseSettings.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-WarehouseSettings",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/WarehouseWorkspace.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-WarehouseWorkspace",
+    "detail": null
+  }
+}
