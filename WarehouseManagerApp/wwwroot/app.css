@@ -99,3 +99,7 @@ h1:focus {
         padding-left: env(safe-area-inset-left);
     }
 }
+
+.warehouse-mobile-shell.warehouse-mobile-shell--authentication {
+    grid-template-rows: minmax(0, 1fr);
+}

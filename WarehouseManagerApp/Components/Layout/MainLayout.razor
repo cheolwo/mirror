@@ -2,7 +2,10 @@
 @implements IDisposable
 @inject NavigationManager Navigation
 
-<div class="warehouse-mobile-shell">
+<CascadingValue Value="_displayContext" IsFixed="true">
+<div class="@(_displayContext.AuthenticationOnly ? "warehouse-mobile-shell warehouse-mobile-shell--authentication" : "warehouse-mobile-shell")">
+    @if (!_displayContext.AuthenticationOnly)
+    {
     <header class="warehouse-mobile-shell__appbar">
         <button type="button"
                 class="warehouse-mobile-shell__icon-button"
@@ -20,7 +23,9 @@
         <span class="warehouse-mobile-shell__avatar" aria-label="창고 관리자">W</span>
     </header>
 
-    @if (_drawerOpen)
+    }
+
+    @if (!_displayContext.AuthenticationOnly && _drawerOpen)
     {
         <button type="button"
                 class="warehouse-mobile-shell__backdrop"
@@ -55,7 +60,7 @@
     }
 
     <main class="warehouse-mobile-shell__content">
-        @if (CurrentScreen is not null)
+        @if (!_displayContext.AuthenticationOnly && CurrentScreen is not null)
         {
             <header class="warehouse-mobile-shell__screen-header">
                 <span>창고 업무 · @CurrentScreen.ScreenCode</span>
@@ -72,6 +77,8 @@
         </section>
     </main>
 
+    @if (!_displayContext.AuthenticationOnly)
+    {
     <footer class="warehouse-mobile-shell__bottom-nav" aria-label="창고 주요 메뉴">
         <a class="@BuildBottomLinkClass(BottomDestination.Home)"
            href="@WarehouseManagerRoutes.Warehouse"
@@ -98,10 +105,14 @@
             <span>출고</span>
         </a>
     </footer>
+    }
 </div>
+</CascadingValue>
 
 @code {
     private bool _drawerOpen;
+    private bool _disposed;
+    private readonly WarehousePageDisplayContext _displayContext = new();
 
     private string CurrentPath
         => new Uri(Navigation.Uri).AbsolutePath.TrimEnd('/') is { Length: > 0 } path
@@ -132,9 +143,15 @@
     ];
 
     protected override void OnInitialized()
-        => Navigation.LocationChanged += HandleLocationChanged;
+    {
+        Navigation.LocationChanged += HandleLocationChanged;
+        _displayContext.Changed += HandleDisplayChanged;
+    }
 
-    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+    private void ToggleDrawer()
+    {
+        if (!_disposed && !_displayContext.AuthenticationOnly) _drawerOpen = !_drawerOpen;
+    }
     private void CloseDrawer() => _drawerOpen = false;
 
     private bool IsBottomDestinationActive(BottomDestination destination)
@@ -167,12 +184,33 @@
 
     private void HandleLocationChanged(object? sender, LocationChangedEventArgs args)
     {
+        if (_disposed) return;
         _drawerOpen = false;
-        _ = InvokeAsync(StateHasChanged);
+        _displayContext.ResetForNavigation(args.Location);
+        RefreshShell();
     }
 
+    private void HandleDisplayChanged()
+    {
+        if (_disposed) return;
+        if (_displayContext.AuthenticationOnly) _drawerOpen = false;
+        RefreshShell();
+    }
+
+    private void RefreshShell()
+        => _ = InvokeAsync(() =>
+        {
+            if (!_disposed) StateHasChanged();
+        });
+
     public void Dispose()
-        => Navigation.LocationChanged -= HandleLocationChanged;
+    {
+        if (_disposed) return;
+        _disposed = true;
+        Navigation.LocationChanged -= HandleLocationChanged;
+        _displayContext.Changed -= HandleDisplayChanged;
+        _displayContext.Stop();
+    }
 
     private sealed record WarehouseDrawerItem(string Label, string Route, string Icon);
 

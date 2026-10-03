@@ -1,0 +1,28 @@
+.driver-menu-page {
+    display: grid;
+    gap: 24px;
+}
+
+.driver-menu-heading h1 {
+    margin: 0;
+    color: var(--role-text, #172b36);
+    font-size: 24px;
+    line-height: 32px;
+}
+
+.driver-menu-heading p {
+    margin: 8px 0 0;
+    color: var(--role-muted, #586b78);
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.driver-menu-return {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.driver-menu-return ::deep .mud-button-root {
+    min-height: 48px;
+    white-space: normal;
+}

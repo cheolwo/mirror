@@ -4,6 +4,10 @@
 
 이 문서는 WarehouseManagerApp 에 속한 화면별 README를 모은 색인입니다. 각 화면 문서는 캡처 이미지, 화면 책임, 사용자와 참여자, API/서버 연계, 보안 점검을 별도로 설명합니다.
 
+[창고 하차 연락처 연결](../cargo-menu-handoff-r1.md)은 실제 선택 연락처와 한국시간 입력을 기존 운송 원장에 전달한다. 시험과 실제 역할 앱 확인의 범위는 [변경 기록](../../../Changes/2026-10-03-cargo-menu-handoff-r1.md)에 구분한다.
+
+[창고 출고예정부터 운송 완료까지](../cargo-warehouse-journey-r1.md)는 출고 인계가 서버 `배차확정` 또는 `상차지도착`을 허용하는 조건과 기사 상차 완료의 별도 선행 조건을 정리한다. 서버 HTTP 흐름과 창고 앱 UI 확인은 별도로 판정한다.
+
 | 페이지 ID / 제목 | 라우트 | 분류 | 화면 책임 | 캡처 |
 | --- | --- | --- | --- | --- |
 | [WarehouseManagerApp-P01 - 창고 관리자 홈](WarehouseManagerApp-P01/) | / | 보조 | 창고 관리자 홈 | 완료 |
@@ -19,7 +23,7 @@
 | [WarehouseManagerApp-P04-1 - 포장 작업](WarehouseManagerApp-P04-1/) | /work/outbound/packing | 확장 | 적재 완료 재고의 전체 가용수량 포장·같은 ID 재조회 | 실제 캡처 |
 | [WarehouseManagerApp-P04-2 - 출고 인계 준비](WarehouseManagerApp-P04-2/) | /warehouse/general/transport-handoff | 확장 | 포장 완료 재고의 출고예정 원장 준비·같은 ID 재조회 | 실제 캡처 |
 | [WarehouseManagerApp-P04-3 - 출고예정 운송 전 검토](WarehouseManagerApp-P04-3/) | /warehouse/general/outbound-plan-review | 확장 | 준비된 출고예정의 포장·수량·출발 창고 근거와 운송 전 입력 필요 항목 확인 | 실제 캡처 |
-| [WarehouseManagerApp-P04-4 - 운송의뢰 로컬 초안](WarehouseManagerApp-P04-4/) | /warehouse/general/transport-request-draft | 확장 | 정확한 출고예정의 하차지·희망 일정·차량 조건 로컬 검토 | 실제 캡처 |
+| [WarehouseManagerApp-P04-4 - 출고 운송의뢰 작성과 인계](WarehouseManagerApp-P04-4/) | /warehouse/general/transport-request-draft | 확장 | 정확한 출고예정의 현장 조건 검토·명시 저장·같은 ID 인계 조회 | 기존 캡처; 연락처 보완의 실제 UI 확인은 별도 |
 | [WarehouseManagerApp-P05 - 알뜰살뜰 마트 창고 홈](WarehouseManagerApp-P05/) | /mart | 확장 | 알뜰살뜰 마트 창고 홈 | 완료 |
 | [WarehouseManagerApp-P05-1 - 알뜰살뜰 마트 작업 보드](WarehouseManagerApp-P05-1/) | /mart/work-board | 확장 | 알뜰살뜰 마트 작업 보드 | 완료 |
 | [WarehouseManagerApp-P05-2 - 알뜰살뜰 마트 프로세스별 작업 시작](WarehouseManagerApp-P05-2/) | /mart/work/{ProcessCode} | 확장 | 알뜰살뜰 마트 프로세스별 작업 시작 | 완료 |

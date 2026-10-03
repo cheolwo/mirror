@@ -7,6 +7,7 @@ using Ssalddel.Contracts.Common.Inventory;
 using Ssalddel.Contracts.Common.Warehouse;
 using Ssalddel.Contracts.Shipper.Request;
 using Ssalddel.Ui.Common.Areas.App.Services;
+using Ssalddel.Ui.Common.Areas.App.Models;
 
 namespace Ssalddel.Ui.Common.Areas.App.ViewModels;
 
@@ -573,6 +574,7 @@ public partial class 출고ViewModel : 업무작업ViewModelBase, IDisposable
 {
     private readonly I입출고작업Service _service;
     private readonly bool _세부업무수명소유;
+    private long? _selectedInventoryId;
     protected 입출고화면상태ViewModel 창고상태 { get; }
 
     public 출고ViewModel(
@@ -586,6 +588,7 @@ public partial class 출고ViewModel : 업무작업ViewModelBase, IDisposable
     {
         _service = service;
         this.창고상태 = 창고상태;
+        _selectedInventoryId = 창고상태.선택된재고?.입고상품Id;
         현재사용자Context연결(창고상태.현재사용자Context);
         this.원장 = 원장 ?? new 출고원장ViewModel(new 입출고원장상태ViewModel());
         _세부업무수명소유 = 재고조회 is null || 포장 is null || 운송인계 is null;
@@ -681,6 +684,8 @@ public partial class 출고ViewModel : 업무작업ViewModelBase, IDisposable
             return 유효성실패("운송에 인계할 출고 대상 재고를 먼저 선택해 주세요.");
         }
 
+        if (운송인계초안.입고상품Id > 0 && 운송인계초안.입고상품Id != inventory.입고상품Id)
+            return 유효성실패("선택한 재고의 운송 인계 정보를 다시 입력해 주세요.");
         운송인계초안.입고상품Id = inventory.입고상품Id;
         if (운송인계초안.요청수량 <= 0
             || 운송인계초안.요청수량 > inventory.가용수량
@@ -689,13 +694,17 @@ public partial class 출고ViewModel : 업무작업ViewModelBase, IDisposable
             return 유효성실패("가용 수량 이하의 요청 수량과 하차지 주소를 입력해 주세요.");
         }
 
+        var request = WarehouseTransportHandoffDraft.Copy(운송인계초안);
         return await 작업실행Async(
             async token =>
             {
-                var result = await _service.운송인계Async(운송인계초안, token)
+                var result = await _service.운송인계Async(request, token)
                     ?? throw new InvalidOperationException("출고 운송 인계 응답이 비어 있습니다.");
-                창고상태.운송의뢰적용(result);
-                운송인계초안 = new 재고운송의뢰생성요청();
+                if (선택된재고?.입고상품Id == request.입고상품Id)
+                {
+                    창고상태.운송의뢰적용(result);
+                    운송인계초안적용(new 재고운송의뢰생성요청());
+                }
             },
             "출고 대상 재고를 운송 원장으로 인계했습니다.",
             cancellationToken);
@@ -715,7 +724,7 @@ public partial class 출고ViewModel : 업무작업ViewModelBase, IDisposable
 
     protected void 운송인계초안적용(재고운송의뢰생성요청 request)
     {
-        운송인계초안 = request;
+        운송인계초안 = WarehouseTransportHandoffDraft.Copy(request);
         운송인계.초안적용(request);
     }
 
@@ -739,6 +748,12 @@ public partial class 출고ViewModel : 업무작업ViewModelBase, IDisposable
 
     private void 창고상태변경(object? sender, PropertyChangedEventArgs e)
     {
+        var selectedId = 선택된재고?.입고상품Id;
+        if (_selectedInventoryId != selectedId)
+        {
+            _selectedInventoryId = selectedId;
+            운송인계초안적용(new 재고운송의뢰생성요청());
+        }
         OnPropertyChanged(nameof(출고가능재고목록));
         OnPropertyChanged(nameof(선택된재고));
         OnPropertyChanged(nameof(최근포장결과));

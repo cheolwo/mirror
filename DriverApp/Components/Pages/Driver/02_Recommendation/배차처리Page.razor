@@ -49,7 +49,7 @@
                     <MudText Typo="Typo.h6">@의뢰.요약설명</MudText>
                     <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">의뢰 @의뢰Id</MudChip>
                     <MudText Typo="Typo.body1">@의뢰.경로표시</MudText>
-                    <MudText Typo="Typo.body2">예상수익 @((의뢰.예상수익 ?? 0m).ToString("0"))원 / 추천점수 @((의뢰.추천점수 ?? 0m).ToString("0"))점</MudText>
+                    <MudText Typo="Typo.body2">예상수익 @의뢰.운임표시 / 추천점수 @((의뢰.추천점수 ?? 0m).ToString("0"))점</MudText>
                     <MudAlert Severity="Severity.Info">서버 배차 처리 API로 수락, 보류, 거절 상태를 갱신합니다.</MudAlert>
                 }
                 @if (_인증됨 && string.IsNullOrWhiteSpace(_데이터오류) && !_데이터로딩중)

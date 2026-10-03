@@ -7,10 +7,12 @@ using Ssalddel.Application.Driver.Transport;
 using 살뜰.도메인.공통;
 using Ssalddel.Contracts.Driver.Transport;
 using Ssalddel.ApiMetadata;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Driver.Progress05
 {
     [SsalddelApiVersion(SsalddelProductVersion.V2_0)]
+    [SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
     [SsalddelApiCapability(SsalddelCapability.TransportExecution)]
     [SsalddelApiOperation(SsalddelOperation.Execute)]
     [ApiController]

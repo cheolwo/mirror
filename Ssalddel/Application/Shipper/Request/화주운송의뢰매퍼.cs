@@ -14,7 +14,8 @@ internal static class 화주운송의뢰매퍼
         기사위치기록? driverLocation = null,
         운영체제업무인계Dto? operatingSystemHandoff = null,
         운영체제업무인계Dto? completionHandoff = null,
-        IReadOnlyList<ShipRequest.비정상운송사건Dto>? abnormalTransportIncidents = null)
+        IReadOnlyList<ShipRequest.비정상운송사건Dto>? abnormalTransportIncidents = null,
+        운임구성? fareComposition = null)
     {
         ShipRequest.정산시점? settlementTime = Enum.TryParse<ShipRequest.정산시점>(entity.정산시점, ignoreCase: false, out var parsedSettlementTime)
             ? parsedSettlementTime
@@ -73,22 +74,69 @@ internal static class 화주운송의뢰매퍼
             팔레트개수 = entity.화물팔레트개수,
             픽업지 = entity.픽업_도로명주소,
             픽업상세지 = entity.픽업_상세주소,
+            픽업 = To위치연락처(
+                entity.픽업_도로명주소, entity.픽업_상세주소, entity.픽업_위도, entity.픽업_경도,
+                entity.픽업_연락처_이름, entity.픽업_연락처_전화번호,
+                entity.픽업_시간창_시작일시, entity.픽업_시간창_종료일시),
             픽업위도 = entity.픽업_위도,
             픽업경도 = entity.픽업_경도,
             하차지 = entity.하차_도로명주소,
             하차상세지 = entity.하차_상세주소,
+            하차 = To위치연락처(
+                entity.하차_도로명주소, entity.하차_상세주소, entity.하차_위도, entity.하차_경도,
+                entity.하차_연락처_이름, entity.하차_연락처_전화번호,
+                entity.하차_시간창_시작일시, entity.하차_시간창_종료일시),
             하차위도 = entity.하차_위도,
             하차경도 = entity.하차_경도,
             대기료 = entity.대기료,
             수작업비 = entity.수작업비,
             할증 = entity.할증,
             최종운임 = entity.최종운임,
+            요금옵션 = fareComposition is null ? null : new ShipRequest.PricingDTO
+            {
+                예상거리Km = fareComposition.예상거리Km, Km당단가 = fareComposition.Km당단가,
+                기본운임 = fareComposition.기본운임, 거리운임 = fareComposition.거리운임,
+                최소운임 = fareComposition.최소운임, 최종운임 = fareComposition.최종운임,
+                대기료 = fareComposition.대기료, 수작업비 = fareComposition.수작업비, 할증 = fareComposition.할증,
+                기사지급예정운임 = fareComposition.기사지급예정운임,
+                거리계산방식 = fareComposition.거리계산방식, 단가출처 = fareComposition.단가출처
+            },
             요약 = new ShipRequest.화주운송의뢰응답.요약DTO
             {
                 화물종류 = entity.화물종류,
                 픽업지 = entity.픽업_도로명주소,
                 하차지 = entity.하차_도로명주소
             }
+        };
+    }
+
+    private static ShipRequest.LocationContactDTO? To위치연락처(
+        string roadAddress, string detailedAddress, decimal? latitude, decimal? longitude,
+        string contactName, string contactPhone, DateTime? windowStart, DateTime? windowEnd)
+    {
+        var hasWindow = windowStart.HasValue && windowStart.Value != default
+                        && windowEnd.HasValue && windowEnd.Value != default;
+        if (string.IsNullOrWhiteSpace(roadAddress) && string.IsNullOrWhiteSpace(detailedAddress)
+            && !latitude.HasValue && !longitude.HasValue
+            && string.IsNullOrWhiteSpace(contactName) && string.IsNullOrWhiteSpace(contactPhone)
+            && !hasWindow)
+        {
+            return null;
+        }
+
+        return new ShipRequest.LocationContactDTO
+        {
+            주소 = new ShipRequest.AddressDTO
+            {
+                도로명주소 = roadAddress,
+                상세주소 = detailedAddress,
+                위도 = latitude,
+                경도 = longitude
+            },
+            연락처 = new ShipRequest.ContactDTO { 이름 = contactName, 전화번호 = contactPhone },
+            시간창 = hasWindow
+                ? new ShipRequest.TimeWindowDTO { 시작일시 = windowStart!.Value, 종료일시 = windowEnd!.Value }
+                : null
         };
     }
 

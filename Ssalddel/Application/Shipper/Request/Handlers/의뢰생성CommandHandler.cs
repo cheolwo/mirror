@@ -195,9 +195,10 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
         await 화주운송의뢰매퍼.UpsertCargoRequirementAsync(_db, entity, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
+        운임구성? fareComposition = null;
         if (ShouldCreateFareComposition(request))
         {
-            var fareComposition = new 운임구성
+            fareComposition = new 운임구성
             {
                 의뢰Id = entity.의뢰Id,
                 기본운임 = request.기본운임 ?? 0m,
@@ -207,6 +208,11 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
                 수작업비 = request.수작업비 ?? 0m,
                 최종운임 = entity.최종운임 ?? 0m,
                 기사지급예정운임 = request.기사지급예정운임,
+                예상거리Km = request.예상거리Km,
+                Km당단가 = request.Km당단가,
+                최소운임 = request.최소운임,
+                거리계산방식 = request.거리계산방식,
+                단가출처 = request.단가출처,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -216,12 +222,15 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
 
             entity.운임구성Id = fareComposition.Id;
             await _db.SaveChangesAsync(cancellationToken);
+            if (await _원장동기화Service.화주운송의뢰동기화Async(entity, currentUserId, cancellationToken) is null)
+                return Result.Fail<화주운송의뢰응답>("의뢰와 견적은 저장됐지만 원장 동기화를 확인하지 못했습니다. 같은 의뢰를 다시 조회해 주세요.");
         }
 
         var handoff = await _operatingSystemHandoffService.인계Async(entity.의뢰Id, cancellationToken);
         return Result.Ok(화주운송의뢰매퍼.To응답(
             entity,
-            operatingSystemHandoff: handoff));
+            operatingSystemHandoff: handoff,
+            fareComposition: fareComposition));
     }
 
     private static bool ShouldCreateFareComposition(의뢰생성Command request)

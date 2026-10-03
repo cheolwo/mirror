@@ -75,6 +75,9 @@ public sealed class 의뢰목록조회QueryHandler : IRequestHandler<의뢰목�
             _db,
             items.Select(x => x.의뢰Id).ToList(),
             cancellationToken);
+        var ids = items.Where(x => x.운임구성Id.HasValue).Select(x => x.운임구성Id!.Value).ToArray();
+        var fares = await _db.운임구성.AsNoTracking().Where(x => Enumerable.Contains(ids, x.Id))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
 
         return items.Select(item =>
         {
@@ -86,7 +89,9 @@ public sealed class 의뢰목록조회QueryHandler : IRequestHandler<의뢰목�
                 execution?.최근위치,
                 execution?.운영체제인계,
                 execution?.운송완료화주인계,
-                execution?.비정상운송사건목록);
+                execution?.비정상운송사건목록,
+                item.운임구성Id.HasValue && fares.TryGetValue(item.운임구성Id.Value, out var fare)
+                    && fare.의뢰Id == item.의뢰Id ? fare : null);
         }).ToList();
     }
 }

@@ -3,60 +3,16 @@
 <PageTitle>메뉴</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="py-4">
-    <MudStack Spacing="3">
-        <MudPaper Class="pa-4" Elevation="1">
-            <MudStack Spacing="1">
-                <MudText Typo="Typo.h4">사용자 메뉴</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">배달 내역, 계좌 정보, 정산 정보를 먼저 확인합니다.</MudText>
-            </MudStack>
-        </MudPaper>
+    <div class="driver-menu-page">
+        <header class="driver-menu-heading">
+            <h1>전체 메뉴</h1>
+            <p>운행 준비부터 내 정보까지 필요한 메뉴를 선택합니다.</p>
+        </header>
 
-        <MudGrid Spacing="2">
-            @foreach (var item in AccountMenuItems)
-            {
-                <MudItem xs="12" sm="6">
-                    <MudPaper Class="driver-account-menu-card pa-4 h-100" Elevation="0" @onclick="@(() => NavigateTo(item.Route))">
-                        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
-                            <MudAvatar Color="@item.Color" Size="Size.Medium">
-                                <MudIcon Icon="@item.Icon" />
-                            </MudAvatar>
-                            <MudStack Spacing="0">
-                                <MudText Typo="Typo.subtitle1">@item.Title</MudText>
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">@item.Description</MudText>
-                            </MudStack>
-                        </MudStack>
-                    </MudPaper>
-                </MudItem>
-            }
-        </MudGrid>
+        <NavMenu />
 
-        <MudPaper Class="pa-2" Elevation="1">
-            <MudText Typo="Typo.subtitle2" Class="px-3 pt-2">전체 메뉴</MudText>
-            <NavMenu />
-        </MudPaper>
-
-        <MudStack Row="true" Justify="Justify.FlexEnd">
-            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/driver/home">기사 홈으로 돌아가기</MudButton>
-        </MudStack>
-    </MudStack>
+        <div class="driver-menu-return">
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="@DriverRoutes.Home">기사 홈으로 돌아가기</MudButton>
+        </div>
+    </div>
 </MudContainer>
-
-@code {
-    [Inject]
-    private NavigationManager Navigation { get; set; } = default!;
-
-    private static IReadOnlyList<AccountMenuItem> AccountMenuItems =>
-    [
-        new("배달 내역", "완료/진행 운송 기록", DriverRoutes.DeliveryHistory, Icons.Material.Filled.History, Color.Primary),
-        new("계좌 정보", "정산 받을 계좌 확인", DriverRoutes.BankAccount, Icons.Material.Filled.AccountBalance, Color.Info),
-        new("정산 정보", "이번 달 정산과 이용료", DriverRoutes.CurrentMonthSettlement, Icons.Material.Filled.ReceiptLong, Color.Success),
-        new("알림 설정", "추천콜과 운송 알림", DriverRoutes.NotificationSettings, Icons.Material.Filled.Notifications, Color.Warning)
-    ];
-
-    private void NavigateTo(string route)
-    {
-        Navigation.NavigateTo(route);
-    }
-
-    private sealed record AccountMenuItem(string Title, string Description, string Route, string Icon, Color Color);
-}

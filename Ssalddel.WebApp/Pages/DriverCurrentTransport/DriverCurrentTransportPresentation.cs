@@ -73,6 +73,11 @@ public static class DriverCurrentTransportPresentation
 
     public static int ResolveStageOrder(string? status)
     {
+        if (ContainsAny(status, "상차완료", "운송중"))
+        {
+            return 3;
+        }
+
         if (ContainsAny(status, "인수", "하차완료", "완료"))
         {
             return 5;
@@ -83,17 +88,13 @@ public static class DriverCurrentTransportPresentation
             return 4;
         }
 
-        if (ContainsAny(status, "상차완료", "운송중"))
-        {
-            return 3;
-        }
-
         if (ContainsAny(status, "상차지", "상차"))
         {
             return 2;
         }
 
-        if (ContainsAny(status, "배차", "매칭"))
+        if (string.Equals(status, "확정", StringComparison.Ordinal)
+            || ContainsAny(status, "배차", "매칭"))
         {
             return 1;
         }

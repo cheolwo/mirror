@@ -62,31 +62,59 @@ public sealed class 출고운송인계완료UseCase(
             return Unauthorized();
         }
 
+        var attempt = 0;
+        var persisted = await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            if (attempt++ > 0)
+            {
+                db.ChangeTracker.Clear();
+            }
+
+            return await PersistHandoffAsync(outboundPlanId, memo, userId, cancellationToken);
+        });
+        if (persisted.Plan is null)
+        {
+            return persisted.Result;
+        }
+
+        if (persisted.NewlyCommitted)
+        {
+            await PublishAfterCommitAsync(persisted, context, cancellationToken);
+        }
+        await SyncLedgerAsync(persisted.Plan, userId, cancellationToken);
+        return persisted.Result;
+    }
+
+    private async Task<HandoffPersistenceResult> PersistHandoffAsync(
+        long outboundPlanId,
+        string memo,
+        string userId,
+        CancellationToken cancellationToken)
+    {
         var plan = await 접근가능출고Query(userId)
             .AsNoTracking()
             .SingleOrDefaultAsync(x => x.Id == outboundPlanId && x.상태 != 출고상태.취소, cancellationToken);
         if (plan is null)
         {
-            return NotFound();
+            return new(NotFound());
         }
 
         var assignment = await ResolveAssignmentAsync(plan, cancellationToken);
         if (plan.상태 == 출고상태.출고완료)
         {
             await operatingSystemHandoff.인계Async(plan, cancellationToken);
-            await SyncLedgerAsync(plan, userId, cancellationToken);
-            return Result.Ok(ToResult(plan, assignment.DriverId, assignment.Vehicle, true));
+            return new(Result.Ok(ToResult(plan, assignment.DriverId, assignment.Vehicle, true)), plan);
         }
 
         if (plan.상태 != 출고상태.준비중)
         {
-            return Conflict($"출고 준비 중 원장만 운송 인계를 완료할 수 있습니다. 현재 상태: {plan.상태}");
+            return new(Conflict($"출고 준비 중 원장만 운송 인계를 완료할 수 있습니다. 현재 상태: {plan.상태}"));
         }
 
         if (string.IsNullOrWhiteSpace(plan.운송의뢰Id)
             || plan.입고상품Id is not > 0)
         {
-            return Conflict("출고예정에 운송의뢰와 입고상품이 모두 연결되어야 합니다.");
+            return new(Conflict("출고예정에 운송의뢰와 입고상품이 모두 연결되어야 합니다."));
         }
 
         var transportRequest = await db.화주운송의뢰
@@ -97,22 +125,21 @@ public sealed class 출고운송인계완료UseCase(
             .SingleOrDefaultAsync(x => x.의뢰Id == plan.운송의뢰Id, cancellationToken);
         if (transportRequest is null || transportLedger is null)
         {
-            return Conflict("같은 의뢰 ID의 운송의뢰와 운송 실행 원장을 모두 확인할 수 없습니다.");
+            return new(Conflict("같은 의뢰 ID의 운송의뢰와 운송 실행 원장을 모두 확인할 수 없습니다."));
         }
 
-        if (!string.Equals(
-                transportRequest.배차상태,
-                상태값.배차상태.배차확정,
-                StringComparison.Ordinal)
+        var acceptedBeforePickup = string.Equals(transportRequest.배차상태, 상태값.배차상태.배차확정, StringComparison.Ordinal)
+                                   || string.Equals(transportRequest.배차상태, "상차지도착", StringComparison.Ordinal);
+        if (!acceptedBeforePickup
             || string.IsNullOrWhiteSpace(transportLedger.확정기사Id))
         {
-            return Conflict("기사 본인의 배차 수락이 서버 원장에 확정되기 전에는 출고할 수 없습니다.");
+            return new(Conflict("기사 본인의 배차 수락과 상차 전 상태를 서버 원장에서 확인해야 출고할 수 있습니다."));
         }
 
         if (string.IsNullOrWhiteSpace(assignment.DriverId)
             || string.IsNullOrWhiteSpace(assignment.Vehicle))
         {
-            return Conflict("수락한 기사의 등록 차량을 확인할 수 없어 출고할 수 없습니다.");
+            return new(Conflict("수락한 기사의 등록 차량을 확인할 수 없어 출고할 수 없습니다."));
         }
         if (string.IsNullOrWhiteSpace(transportRequest.차량종류)
             || !string.Equals(
@@ -120,8 +147,8 @@ public sealed class 출고운송인계완료UseCase(
                 assignment.Vehicle,
                 StringComparison.OrdinalIgnoreCase))
         {
-            return Conflict(
-                $"요청 차량({transportRequest.차량종류})과 수락 기사 등록 차량({assignment.Vehicle})이 일치하지 않습니다.");
+            return new(Conflict(
+                $"요청 차량({transportRequest.차량종류})과 수락 기사 등록 차량({assignment.Vehicle})이 일치하지 않습니다."));
         }
 
         var allocation = await db.운송의뢰상품연결
@@ -132,7 +159,7 @@ public sealed class 출고운송인계완료UseCase(
                 cancellationToken);
         if (allocation is null || allocation.할당수량 != plan.수량)
         {
-            return Conflict("출고예정 수량과 운송의뢰 상품 할당 수량이 일치하지 않습니다.");
+            return new(Conflict("출고예정 수량과 운송의뢰 상품 할당 수량이 일치하지 않습니다."));
         }
 
         var inventorySnapshot = await db.입고상품
@@ -142,7 +169,7 @@ public sealed class 출고운송인계완료UseCase(
             || inventorySnapshot.창고Id != plan.출고창고Id
             || inventorySnapshot.예약수량 < plan.수량)
         {
-            return Conflict("출고 창고의 예약 재고가 인계 수량과 일치하지 않습니다.");
+            return new(Conflict("출고 창고의 예약 재고가 인계 수량과 일치하지 않습니다."));
         }
 
         var now = DateTime.UtcNow;
@@ -162,16 +189,18 @@ public sealed class 출고운송인계완료UseCase(
                     cancellationToken);
             if (changed == 0)
             {
+                await transaction!.RollbackAsync(cancellationToken);
+                await transaction.DisposeAsync();
                 var current = await db.출고예정
                     .AsNoTracking()
                     .SingleOrDefaultAsync(x => x.Id == plan.Id, cancellationToken);
                 if (current?.상태 == 출고상태.출고완료)
                 {
-                    await transaction!.RollbackAsync(cancellationToken);
-                    return Result.Ok(ToResult(current, assignment.DriverId, assignment.Vehicle, true));
+                    await operatingSystemHandoff.인계Async(current, cancellationToken);
+                    return new(Result.Ok(ToResult(current, assignment.DriverId, assignment.Vehicle, true)), current);
                 }
 
-                return Conflict("다른 작업자가 출고예정 상태를 변경했습니다. 최신 원장을 다시 조회해 주세요.");
+                return new(Conflict("다른 작업자가 출고예정 상태를 변경했습니다. 최신 원장을 다시 조회해 주세요."));
             }
         }
         else
@@ -179,32 +208,61 @@ public sealed class 출고운송인계완료UseCase(
             var trackedPlan = await db.출고예정.SingleAsync(x => x.Id == plan.Id, cancellationToken);
             if (trackedPlan.상태 == 출고상태.출고완료)
             {
-                await SyncLedgerAsync(trackedPlan, userId, cancellationToken);
-                return Result.Ok(ToResult(trackedPlan, assignment.DriverId, assignment.Vehicle, true));
+                await operatingSystemHandoff.인계Async(trackedPlan, cancellationToken);
+                return new(Result.Ok(ToResult(trackedPlan, assignment.DriverId, assignment.Vehicle, true)), trackedPlan);
             }
 
             trackedPlan.상태 = 출고상태.출고완료;
             trackedPlan.출고처리일시 = now;
             trackedPlan.UpdatedAt = now;
+            plan = trackedPlan;
         }
 
-        var inventory = await db.입고상품
-            .SingleAsync(x => x.Id == plan.입고상품Id.Value, cancellationToken);
-        if (inventory.예약수량 < plan.수량)
+        입고상품 inventory;
+        if (db.Database.IsRelational())
         {
-            if (transaction is not null)
+            // 다른 출고예정도 같은 재고를 사용할 수 있으므로 읽은 수량을 덮어쓰지 않는다.
+            var changed = await db.입고상품
+                .Where(x => x.Id == plan.입고상품Id.Value
+                            && x.창고Id == plan.출고창고Id
+                            && x.예약수량 >= plan.수량)
+                .ExecuteUpdateAsync(
+                    setters => setters
+                        .SetProperty(x => x.예약수량, x => x.예약수량 - plan.수량)
+                        .SetProperty(x => x.UpdatedAt, now),
+                    cancellationToken);
+            if (changed == 0)
             {
-                await transaction.RollbackAsync(cancellationToken);
+                await transaction!.RollbackAsync(cancellationToken);
+                return new(Conflict("출고 처리 중 예약 재고가 변경되었습니다. 최신 원장을 다시 조회해 주세요."));
             }
-            return Conflict("출고 처리 중 예약 재고가 변경되었습니다. 최신 원장을 다시 조회해 주세요.");
-        }
 
-        inventory.예약수량 -= plan.수량;
-        if (inventory.가용수량 == 0 && inventory.예약수량 == 0)
-        {
-            inventory.상태 = 출고상태.출고완료;
+            inventory = await db.입고상품.AsNoTracking()
+                .SingleAsync(x => x.Id == plan.입고상품Id.Value, cancellationToken);
+            if (inventory.가용수량 == 0 && inventory.예약수량 == 0)
+            {
+                await db.입고상품.Where(x => x.Id == inventory.Id && x.가용수량 == 0 && x.예약수량 == 0)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.상태, 출고상태.출고완료), cancellationToken);
+                inventory.상태 = 출고상태.출고완료;
+            }
+
+            // DB의 datetime 정밀도로 고정된 시각으로 OS revision과 snapshot을 만든다.
+            plan = await db.출고예정.AsNoTracking().SingleAsync(x => x.Id == plan.Id, cancellationToken);
         }
-        inventory.UpdatedAt = now;
+        else
+        {
+            inventory = await db.입고상품.SingleAsync(x => x.Id == plan.입고상품Id.Value, cancellationToken);
+            if (inventory.예약수량 < plan.수량)
+            {
+                return new(Conflict("출고 처리 중 예약 재고가 변경되었습니다. 최신 원장을 다시 조회해 주세요."));
+            }
+            inventory.예약수량 -= plan.수량;
+            if (inventory.가용수량 == 0 && inventory.예약수량 == 0)
+            {
+                inventory.상태 = 출고상태.출고완료;
+            }
+            inventory.UpdatedAt = now;
+        }
 
         var historyMemo = string.IsNullOrWhiteSpace(memo)
             ? $"기사 {assignment.DriverId} · 차량 {assignment.Vehicle}에 {plan.수량:N0}개 인계"
@@ -242,9 +300,6 @@ public sealed class 출고운송인계완료UseCase(
 
         await db.SaveChangesAsync(cancellationToken);
 
-        plan.상태 = 출고상태.출고완료;
-        plan.출고처리일시 = now;
-        plan.UpdatedAt = now;
         await operatingSystemHandoff.인계Async(plan, cancellationToken);
 
         if (transaction is not null)
@@ -252,6 +307,22 @@ public sealed class 출고운송인계완료UseCase(
             await transaction.CommitAsync(cancellationToken);
         }
 
+        return new(
+            Result.Ok(ToResult(plan, assignment.DriverId, assignment.Vehicle, false)),
+            plan,
+            inventory.Id,
+            assignment.DriverId,
+            assignment.Vehicle,
+            true);
+    }
+
+    private async Task PublishAfterCommitAsync(
+        HandoffPersistenceResult persisted,
+        창고작업요청Context context,
+        CancellationToken cancellationToken)
+    {
+        var plan = persisted.Plan!;
+        var now = AsUtc(plan.출고처리일시!.Value);
         await activityLogService.기록Async(new 사용자행위로그기록
         {
             AppKey = context.AppKey,
@@ -269,10 +340,10 @@ public sealed class 출고운송인계완료UseCase(
             MetadataJson = JsonSerializer.Serialize(new
             {
                 outboundPlanId = plan.Id,
-                inventoryItemId = inventory.Id,
+                inventoryItemId = persisted.InventoryId,
                 transportRequestId = plan.운송의뢰Id,
-                driverId = assignment.DriverId,
-                vehicle = assignment.Vehicle,
+                driverId = persisted.DriverId,
+                vehicle = persisted.Vehicle,
                 quantity = plan.수량
             })
         }, cancellationToken);
@@ -281,10 +352,10 @@ public sealed class 출고운송인계완료UseCase(
                 context.UserId,
                 context.RoleName,
                 plan.Id,
-                inventory.Id,
+                persisted.InventoryId,
                 plan.운송의뢰Id,
-                assignment.DriverId,
-                assignment.Vehicle,
+                persisted.DriverId,
+                persisted.Vehicle,
                 plan.수량,
                 context.Route,
                 context.TraceId,
@@ -294,10 +365,15 @@ public sealed class 출고운송인계완료UseCase(
                 plan.입고요청Id,
                 plan.커뮤니티원장Id ?? string.Empty),
             cancellationToken);
-        await SyncLedgerAsync(plan, userId, cancellationToken);
-
-        return Result.Ok(ToResult(plan, assignment.DriverId, assignment.Vehicle, false));
     }
+
+    private sealed record HandoffPersistenceResult(
+        Result<출고운송인계완료응답> Result,
+        출고예정? Plan = null,
+        long InventoryId = 0,
+        string DriverId = "",
+        string Vehicle = "",
+        bool NewlyCommitted = false);
 
     private IQueryable<출고예정> 접근가능출고Query(string userId)
     {

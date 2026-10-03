@@ -25,7 +25,7 @@
                     </MudStack>
                     <MudStack Spacing="0" AlignItems="AlignItems.End" Class="driver-recommendation-card__fare">
                         <MudText Typo="Typo.caption" Color="Color.Secondary">예상 수익</MudText>
-                        <MudText Typo="Typo.h6" Color="Color.Error">@((의뢰.예상수익 ?? 0m).ToString("0"))원</MudText>
+                        <MudText Typo="Typo.h6" Color="Color.Error">@의뢰.운임표시</MudText>
                     </MudStack>
                 </MudStack>
 
@@ -55,12 +55,12 @@
                     <MudItem xs="12" sm="6"><MudText>의뢰번호: @의뢰.의뢰Id</MudText></MudItem>
                     <MudItem xs="12" sm="6"><MudText>정산: @의뢰.하차정산표시</MudText></MudItem>
                     <MudItem xs="12" sm="6"><MudText>거리: @의뢰.거리표시</MudText></MudItem>
-                    <MudItem xs="12" sm="6"><MudText>총공차거리: @((의뢰.총공차거리Km?.ToString("0.0") ?? "-") + "km")</MudText></MudItem>
+                    <MudItem xs="12" sm="6"><MudText>총공차거리: @의뢰.총공차거리표시</MudText></MudItem>
                     <MudItem xs="12" sm="6"><MudText>배차상태: @의뢰.배차상태</MudText></MudItem>
                     <MudItem xs="12" sm="6"><MudText>복귀기준: @(의뢰.복귀지출처 ?? "미적용")</MudText></MudItem>
-                    <MudItem xs="12" sm="6"><MudText>복귀예상거리: @((의뢰.복귀예상거리Km?.ToString("0.0") ?? "-") + "km")</MudText></MudItem>
-                    <MudItem xs="12" sm="6"><MudText>바로복귀거리: @((의뢰.지금바로복귀거리Km?.ToString("0.0") ?? "-") + "km")</MudText></MudItem>
-                    <MudItem xs="12" sm="6"><MudText>복귀우회증가: @((의뢰.복귀우회증가거리Km?.ToString("+0.0;-0.0;0.0") ?? "-") + "km")</MudText></MudItem>
+                    <MudItem xs="12" sm="6"><MudText>복귀예상거리: @의뢰.복귀예상거리표시</MudText></MudItem>
+                    <MudItem xs="12" sm="6"><MudText>바로복귀거리: @의뢰.지금바로복귀거리표시</MudText></MudItem>
+                    <MudItem xs="12" sm="6"><MudText>복귀우회증가: @의뢰.복귀우회증가거리표시</MudText></MudItem>
                 </MudGrid>
 
                 <MudAlert Severity="Severity.Info">@의뢰.추천사유</MudAlert>
@@ -221,10 +221,10 @@
     };
 
     private static string PickupDistanceText(DriverRequestItem request)
-        => $"상차지까지 {(request.픽업거리Km ?? 0m):0.0}km";
+        => request.픽업거리Km.HasValue ? $"상차지까지 {request.픽업거리표시}" : request.픽업거리표시;
 
     private static string TransportDistanceText(DriverRequestItem request)
-        => $"운송 {(request.운송거리Km ?? 0m):0.0}km";
+        => request.운송거리Km.HasValue ? $"예상 운송 {request.운송거리표시}" : request.운송거리표시;
 
     private static IReadOnlyList<string> PickupMeta(DriverRequestItem request)
         => [request.운송조건표시, request.차량조건표시, request.상차시간표시];

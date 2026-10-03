@@ -1,4 +1,4 @@
-using DriverApp.Services.CommonContents;
+﻿using DriverApp.Services.CommonContents;
 using DriverApp.Services.Samples;
 using DriverApp.Services.Security;
 using DriverApp.ViewModels.Driver.Features;
@@ -125,6 +125,7 @@ public static class DriverServiceCollectionExtensions
         services.AddTransient<기사푸시설정PageViewModel>();
         services.AddTransient<기사상차완료ViewModel>();
         services.AddTransient<기사하차완료ViewModel>();
+        services.AddTransient<기사운송상세조회Service>();
         services.AddTransient<기사상차PageViewModel>();
         services.AddTransient<기사하차PageViewModel>();
 

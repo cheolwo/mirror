@@ -284,9 +284,6 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
     {
         var amount = source.결제예정금액
             ?? (source.기준운임.HasValue ? decimal.ToInt32(source.기준운임.Value) : null);
-        var pickupAddress = string.IsNullOrWhiteSpace(source.픽업지) ? "상차지 미정" : source.픽업지!;
-        var dropoffAddress = string.IsNullOrWhiteSpace(source.하차지) ? "하차지 미정" : source.하차지!;
-        var now = DateTime.UtcNow;
 
         return new 화주운송의뢰생성요청
         {
@@ -308,8 +305,8 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
                 화물종류 = string.IsNullOrWhiteSpace(source.화물종류) ? "일반화물" : source.화물종류,
                 수량 = 1
             },
-            픽업 = CreateLocation(pickupAddress, now.AddHours(1), now.AddHours(3)),
-            하차 = CreateLocation(dropoffAddress, now.AddHours(4), now.AddHours(8)),
+            픽업 = ShipperRequestHandoffMapper.Copy(source.픽업정보, source.픽업지),
+            하차 = ShipperRequestHandoffMapper.Copy(source.하차정보, source.하차지),
             요금옵션 = new PricingDTO
             {
                 서비스레벨 = "standard",
@@ -325,27 +322,6 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
             },
             클라이언트요청Id = string.IsNullOrWhiteSpace(source.의뢰Id) ? $"shipper-app-{Guid.NewGuid():N}" : source.의뢰Id,
             결제상태 = string.IsNullOrWhiteSpace(source.결제상태) ? "결제대기" : source.결제상태
-        };
-    }
-
-    private static LocationContactDTO CreateLocation(string address, DateTime start, DateTime end)
-    {
-        return new LocationContactDTO
-        {
-            주소 = new AddressDTO
-            {
-                도로명주소 = address
-            },
-            연락처 = new ContactDTO
-            {
-                이름 = "살뜰 앱 담당자",
-                전화번호 = "010-0000-0000"
-            },
-            시간창 = new TimeWindowDTO
-            {
-                시작일시 = start,
-                종료일시 = end
-            }
         };
     }
 
@@ -371,8 +347,9 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
             차량종류 = source.차량종류,
             결제수단 = source.결제수단,
             결제예정금액 = source.결제예정금액,
+            예상거리Km = source.요금옵션?.예상거리Km,
             기준운임 = source.최종운임,
-            기사지급예정운임 = source.최종운임,
+            기사지급예정운임 = source.요금옵션?.기사지급예정운임,
             정산시점 = source.정산시점?.ToString() ?? string.Empty,
             증빙방식 = source.증빙방식?.ToString() ?? string.Empty,
             수납주체 = source.수납주체?.ToString() ?? string.Empty,
@@ -389,29 +366,80 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
             팔레트개수 = source.팔레트개수,
             생성일시 = source.생성일시,
             픽업지 = source.픽업지,
-            하차지 = source.하차지
+            하차지 = source.하차지,
+            픽업정보 = ShipperRequestHandoffMapper.Copy(source.픽업),
+            하차정보 = ShipperRequestHandoffMapper.Copy(source.하차)
         };
     }
 
-    private 화주운송의뢰수정요청 ToUpdateRequest(ShipperRequestItem source)
+    private static 화주운송의뢰수정요청 ToUpdateRequest(ShipperRequestItem source)
     {
-        var create = ToCreateRequest(source);
         return new 화주운송의뢰수정요청
         {
-            운송방식 = create.운송방식,
-            차량종류 = create.차량종류,
-            결제수단 = create.결제수단,
-            결제예정금액 = create.결제예정금액,
-            정산조건 = create.정산조건,
-            화물 = create.화물,
-            픽업 = create.픽업,
-            하차 = create.하차,
-            요금옵션 = create.요금옵션,
-            결제상태 = source.결제상태,
-            상태 = source.의뢰상태,
-            배차상태 = source.배차상태
+            운송방식 = SuppliedText(source.운송방식),
+            차량종류 = SuppliedText(source.차량종류),
+            결제수단 = TryReadNamedEnum(source.결제수단, out 결제수단 _) ? source.결제수단 : null,
+            결제예정금액 = source.결제예정금액,
+            정산조건 = ToUpdateSettlement(source),
+            화물 = new CargoDTO
+            {
+                화물종류 = string.IsNullOrWhiteSpace(source.화물종류) ? "일반화물" : source.화물종류,
+                수량 = 1
+            },
+            픽업 = ToUpdateLocation(source.픽업정보, source.픽업지),
+            하차 = ToUpdateLocation(source.하차정보, source.하차지),
+            요금옵션 = source.예상거리Km.HasValue || source.기준운임.HasValue || source.기사지급예정운임.HasValue
+                ? new PricingDTO
+                {
+                    예상거리Km = source.예상거리Km,
+                    최종운임 = source.기준운임,
+                    기사지급예정운임 = source.기사지급예정운임
+                }
+                : null,
+            결제상태 = SuppliedText(source.결제상태),
+            상태 = SuppliedText(source.의뢰상태),
+            배차상태 = SuppliedText(source.배차상태)
         };
     }
+
+    private static 화주운송정산조건DTO? ToUpdateSettlement(ShipperRequestItem source)
+    {
+        // 계약의 enum 필드는 nullable이 아니므로 일부 조건이 없으면 전체를 생략해 서버 원값을 보존합니다.
+        if (!TryReadNamedEnum(source.정산시점, out 정산시점 timing)
+            || !TryReadNamedEnum(source.결제수단, out 결제수단 payment)
+            || !TryReadNamedEnum(source.증빙방식, out 증빙방식 evidence)
+            || !TryReadNamedEnum(source.수납주체, out 수납주체 collector))
+        {
+            return null;
+        }
+
+        return new 화주운송정산조건DTO
+        {
+            정산시점 = timing,
+            결제수단 = payment,
+            증빙방식 = evidence,
+            수납주체 = collector,
+            세금계산서필요 = source.세금계산서필요,
+            현금영수증필요 = source.현금영수증필요,
+            정산메모 = SuppliedText(source.정산메모)
+        };
+    }
+
+    private static bool TryReadNamedEnum<T>(string? value, out T result) where T : struct, Enum
+    {
+        result = default;
+        return !string.IsNullOrWhiteSpace(value)
+            && Enum.GetNames<T>().Contains(value, StringComparer.Ordinal)
+            && Enum.TryParse(value, out result);
+    }
+
+    private static string? SuppliedText(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value;
+
+    private static LocationContactDTO? ToUpdateLocation(LocationContactDTO? location, string? address)
+        => location is null && string.IsNullOrWhiteSpace(address)
+            ? null
+            : ShipperRequestHandoffMapper.Copy(location, address);
 
     private void Observe(ShipperRequestItem item, string source)
     {

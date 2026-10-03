@@ -67,6 +67,8 @@ public sealed class ShipperRequestAuthoringViewModelTests
             화물중량Kg = 180m,
             상차도로명주소 = "서울시 공개 상차지",
             하차도로명주소 = "서울시 공개 하차지",
+            상차시간창시작일시 = new DateTime(2026, 10, 3, 9, 0, 0),
+            상차시간창종료일시 = new DateTime(2026, 10, 3, 10, 0, 0),
             차량종류 = "1톤 카고",
             결제수단 = "카드",
             결제예정금액 = 180_000,

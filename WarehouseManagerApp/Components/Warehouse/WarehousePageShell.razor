@@ -1,5 +1,9 @@
+@implements IDisposable
+
 <MudContainer MaxWidth="MaxWidth.False" Class="py-4 warehouse-page-shell">
     <MudStack Spacing="3">
+        @if (DisplayContext?.AuthenticationOnly != true)
+        {
         <MudStack Row="true"
                   Justify="Justify.SpaceBetween"
                   AlignItems="AlignItems.Center"
@@ -32,12 +36,36 @@
                 현재 창고 운영 유형에서는 이 화면을 사용할 수 없습니다. 창고 운영 홈에서 유형을 전환해 주세요.
             </MudAlert>
         }
+        }
 
         @ChildContent
     </MudStack>
 </MudContainer>
 
 @code {
+    private bool _disposed;
+
+    [CascadingParameter]
+    public WarehousePageDisplayContext? DisplayContext { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (DisplayContext is not null) DisplayContext.Changed += HandleDisplayChanged;
+    }
+
+    private void HandleDisplayChanged()
+        => _ = InvokeAsync(() =>
+        {
+            if (!_disposed) StateHasChanged();
+        });
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        if (DisplayContext is not null) DisplayContext.Changed -= HandleDisplayChanged;
+    }
+
     [Parameter, EditorRequired]
     public 창고PageViewModelBase Model { get; set; } = default!;
 

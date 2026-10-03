@@ -1,4 +1,4 @@
-using DriverApp.Models.Driver;
+﻿using DriverApp.Models.Driver;
 using DriverApp.Models.Driver.Samples;
 using DriverApp.Services.Geo;
 using Ssalddel.Client.Infrastructure;
@@ -280,31 +280,7 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
     }
 
     private static 기사운송샘플항목 ToTransportItem(기사운송요약응답 source)
-    {
-        return new 기사운송샘플항목(
-            source.Id,
-            source.운송번호,
-            "서버 운송",
-            source.출발지,
-            source.도착지,
-            null,
-            null,
-            null,
-            null,
-            string.IsNullOrWhiteSpace(source.상태) ? "진행중" : source.상태,
-            source.출발_픽업 ?? source.도착 ?? source.UpdatedAt,
-            0m,
-            source.운임 ?? 0m,
-            source.인수증필요,
-            source.인수증서명필수,
-            string.IsNullOrWhiteSpace(source.결제방식) ? "서버 정산" : source.결제방식,
-            ResolveNextTransportAction(source.상태))
-        {
-            수령자명 = source.수령자명,
-            수령자연락처 = source.수령자연락처,
-            전달요청 = source.전달요청
-        };
-    }
+        => 기사운송표시Mapper.Map(source);
 
     private static 기사예약샘플항목 ToReservationItem(기사예약목록응답 source)
     {
@@ -332,21 +308,6 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
                 new("월 상한", "정책상 월 이용료 상한", source.MonthlyFeeCap),
                 new("상한 잔여", "월 상한까지 남은 금액", source.RemainingUntilCap)
             ]);
-    }
-
-    private static string ResolveNextTransportAction(string status)
-    {
-        return status switch
-        {
-            "배차확정" => "상차지 도착",
-            "매칭중" => "상차지 도착",
-            "상차지도착" => "상차 완료",
-            "상차완료" => "하차지 도착",
-            "하차지도착" => "하차 완료",
-            "인수완료" => "운송 완료",
-            "하차완료" => "운송 완료",
-            _ => "상태 갱신"
-        };
     }
 
     private void ApplyEmptyState()

@@ -1,8 +1,42 @@
-.driver-assist-nav {
-    gap: 6px;
+.driver-assist-menu {
+    display: grid;
+    gap: 24px;
 }
 
-.driver-assist-nav .mud-nav-link {
+.driver-assist-group {
+    min-width: 0;
+}
+
+.driver-assist-group h2 {
+    margin: 0 0 8px;
+    color: var(--role-muted, #586b78);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+}
+
+.driver-assist-group ::deep .driver-assist-nav {
+    padding: 4px;
+    border: 1px solid var(--role-border, #dce5e9);
+    border-radius: 16px;
+    background: var(--role-surface, #fff);
+}
+
+.driver-assist-group ::deep .mud-nav-link {
+    min-height: 48px;
+    padding: 12px;
     border-radius: 12px;
-    margin-bottom: 4px;
+    color: var(--role-text, #172b36);
+    font-size: 16px;
+    line-height: 24px;
+}
+
+.driver-assist-group ::deep .mud-nav-link-text {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.driver-assist-group ::deep .mud-nav-link:focus-visible {
+    outline: 3px solid var(--role-primary, #0f766e);
+    outline-offset: 1px;
 }

@@ -3,6 +3,7 @@ using Ssalddel.Contracts.Common.Inbound;
 using Ssalddel.Contracts.Common.Inventory;
 using Ssalddel.Contracts.Shipper.Request;
 using Ssalddel.Ui.Common.Areas.App.Services;
+using Ssalddel.Ui.Common.Areas.App.Models;
 
 namespace Ssalddel.Ui.Common.Areas.App.ViewModels;
 
@@ -587,10 +588,12 @@ public sealed class 출고포장ViewModel : 입출고업무조각ViewModelBase, 
 public sealed class 출고운송인계ViewModel : 입출고업무조각ViewModelBase, I명령ViewModel<재고운송의뢰생성요청>
 {
     private 재고운송의뢰생성요청 _초안 = new();
+    private long? _selectedInventoryId;
 
     public 출고운송인계ViewModel(I입출고작업Service service, 입출고화면상태ViewModel 상태)
         : base(service, 상태, "outbound-transport-handoff", "출고 운송 인계", 업무조각유형.처리)
     {
+        _selectedInventoryId = 상태.선택된재고?.입고상품Id;
     }
 
     public 재고운송의뢰생성요청 초안
@@ -607,6 +610,8 @@ public sealed class 출고운송인계ViewModel : 입출고업무조각ViewModel
             return 유효성실패("운송에 인계할 출고 재고를 먼저 선택해 주세요.");
         }
 
+        if (초안.입고상품Id > 0 && 초안.입고상품Id != inventory.입고상품Id)
+            return 유효성실패("선택한 재고의 운송 인계 정보를 다시 입력해 주세요.");
         초안.입고상품Id = inventory.입고상품Id;
         if (초안.요청수량 <= 0
             || 초안.요청수량 > inventory.가용수량
@@ -615,18 +620,33 @@ public sealed class 출고운송인계ViewModel : 입출고업무조각ViewModel
             return 유효성실패("가용 수량 이하의 요청 수량과 하차지 주소를 입력해 주세요.");
         }
 
+        var request = WarehouseTransportHandoffDraft.Copy(초안);
         return await 작업실행Async(
             async token =>
             {
-                var result = await Service.운송인계Async(초안, token)
+                var result = await Service.운송인계Async(request, token)
                     ?? throw new InvalidOperationException("출고 운송 인계 응답이 비어 있습니다.");
-                화면상태.운송의뢰적용(result);
-                초안 = new 재고운송의뢰생성요청();
+                if (화면상태.선택된재고?.입고상품Id == request.입고상품Id)
+                {
+                    화면상태.운송의뢰적용(result);
+                    초안 = new 재고운송의뢰생성요청();
+                }
             },
             "출고 재고를 운송 업무에 인계했습니다.",
             cancellationToken);
     }
 
-    public void 초안적용(재고운송의뢰생성요청 request) => 초안 = request;
+    public void 초안적용(재고운송의뢰생성요청 request) => 초안 = WarehouseTransportHandoffDraft.Copy(request);
     public void 입력변경알림() => OnPropertyChanged(nameof(초안));
+
+    protected override void 상태변경(PropertyChangedEventArgs e)
+    {
+        var selectedId = 화면상태.선택된재고?.입고상품Id;
+        if (_selectedInventoryId != selectedId)
+        {
+            _selectedInventoryId = selectedId;
+            초안 = new 재고운송의뢰생성요청();
+        }
+        base.상태변경(e);
+    }
 }

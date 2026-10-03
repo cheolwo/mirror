@@ -35,7 +35,7 @@
             <header>
                 <div>
                     <strong>살뜰 기사</strong>
-                    <span>추천에서 정산까지</span>
+                    <span>운행 도구와 내 정보</span>
                 </div>
                 <button type="button" aria-label="메뉴 닫기" @onclick="CloseDrawer">
                     <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
@@ -43,18 +43,23 @@
             </header>
 
             <nav>
-                @foreach (var item in DrawerItems)
-                {
-                    <a href="@item.Route" @onclick="CloseDrawer">
-                        <MudIcon Icon="@item.Icon" Size="Size.Small" />
-                        <span>@item.Label</span>
-                    </a>
-                }
-
-                <button type="button" class="driver-mobile-shell__map-link" @onclick="OpenNativeMapAsync">
-                    <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Small" />
-                    <span>네이티브 운행 지도</span>
-                </button>
+                <div class="driver-drawer-group">
+                    <h2>운행 도구</h2>
+                    <button type="button" class="driver-mobile-shell__map-link" @onclick="OpenNativeMapAsync">
+                        <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Small" />
+                        <span>운행 지도</span>
+                    </button>
+                </div>
+                <div class="driver-drawer-group">
+                    <h2>내 정보와 설정</h2>
+                    @foreach (var item in DrawerItems)
+                    {
+                        <a href="@item.Route" @onclick="CloseDrawer">
+                            <MudIcon Icon="@item.Icon" Size="Size.Small" />
+                            <span>@item.Label</span>
+                        </a>
+                    }
+                </div>
             </nav>
 
             <aside>
@@ -129,20 +134,8 @@
 
     private static IReadOnlyList<DriverDrawerItem> DrawerItems =>
     [
-        new("기사 홈 요약", DriverRoutes.HomeSummary, Icons.Material.Filled.Home),
-        new("로그인 및 계정", DriverRoutes.Login, Icons.Material.Filled.AccountCircle),
-        new("운행 시작", DriverRoutes.WorkStart, Icons.Material.Filled.PlayCircle),
-        new("커뮤니티 개별 의뢰", DriverRoutes.CommunityInquiries, Icons.Material.Filled.Forum),
-        new("운송 추천", DriverRoutes.Recommendations, Icons.Material.Filled.Recommend),
-        new("보낸 탐색 문의함", DriverRoutes.ExplorationCampaigns, Icons.Material.Filled.Outbox),
-        new("음식 배달 업무", DriverRoutes.FoodDeliveries, Icons.Material.Filled.DeliveryDining),
-        new("진행 중 운송", DriverRoutes.CurrentTransport, Icons.Material.Filled.LocalShipping),
-        new("배달 내역", DriverRoutes.DeliveryHistory, Icons.Material.Filled.ReceiptLong),
-        new("운행 예약", DriverRoutes.Reservations, Icons.Material.Filled.Event),
-        new("월 정산", DriverRoutes.CurrentMonthSettlement, Icons.Material.Filled.Payments),
-        new("계좌 정보", DriverRoutes.BankAccount, Icons.Material.Filled.AccountBalance),
-        new("알림함", DriverRoutes.Notifications, Icons.Material.Filled.Notifications),
-        new("전체 메뉴", DriverRoutes.Menu, Icons.Material.Filled.Settings)
+        new("전체 메뉴", DriverRoutes.Menu, Icons.Material.Filled.Settings),
+        new("로그인 및 계정", DriverRoutes.Login, Icons.Material.Filled.AccountCircle)
     ];
 
     protected override void OnInitialized()

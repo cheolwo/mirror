@@ -1093,8 +1093,12 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
         var userId = RequireUserId();
         var dropoffAddress = (request.하차지주소 ?? string.Empty).Trim();
         var dropoffAddressDetail = (request.하차지상세주소 ?? string.Empty).Trim();
+        var dropoffContactName = (request.하차담당자명 ?? string.Empty).Trim();
+        var dropoffContactPhone = (request.하차연락처 ?? string.Empty).Trim();
         var vehicleType = (request.차량종류 ?? string.Empty).Trim();
         var handlingNote = (request.취급메모 ?? string.Empty).Trim();
+        var requestedPickupAtUtc = ReconsignmentTimeUtc(request.희망상차일시);
+        var requestedArrivalAtUtc = ReconsignmentTimeUtc(request.희망도착일시);
 
         if (dropoffAddress.Length < 5
             || dropoffAddress.StartsWith("주문자:", StringComparison.OrdinalIgnoreCase))
@@ -1112,9 +1116,14 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
             throw new InvalidOperationException("취급 메모는 300자 이하로 입력해 주세요.");
         }
 
-        if (request.희망상차일시.HasValue != request.희망도착일시.HasValue
-            || request.희망상차일시.HasValue
-            && request.희망도착일시 <= request.희망상차일시)
+        if (dropoffContactName.Length > 100 || dropoffContactPhone.Length > 50)
+        {
+            throw new InvalidOperationException("하차 담당자명은 100자, 연락처는 50자 이하로 입력해 주세요.");
+        }
+
+        if (requestedPickupAtUtc.HasValue != requestedArrivalAtUtc.HasValue
+            || requestedPickupAtUtc.HasValue
+            && requestedArrivalAtUtc <= requestedPickupAtUtc)
         {
             throw new InvalidOperationException("희망 상차·도착 일시를 모두 입력하고 도착 일시를 상차 일시보다 뒤로 지정해 주세요.");
         }
@@ -1154,6 +1163,10 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
                 if (existingLink.할당수량 != request.요청수량
                     || !string.Equals(existing.하차_도로명주소, dropoffAddress, StringComparison.Ordinal)
                     || !string.Equals(existing.하차_상세주소, dropoffAddressDetail, StringComparison.Ordinal)
+                    || request.하차담당자명 is not null
+                       && !string.Equals(existing.하차_연락처_이름, dropoffContactName, StringComparison.Ordinal)
+                    || request.하차연락처 is not null
+                       && !string.Equals(existing.하차_연락처_전화번호, dropoffContactPhone, StringComparison.Ordinal)
                     || !string.Equals(existing.차량종류, vehicleType, StringComparison.Ordinal))
                 {
                     throw new InvalidOperationException("이미 운송의뢰가 연결된 출고예정입니다. 기존 의뢰와 다른 내용으로 다시 생성할 수 없습니다.");
@@ -1190,8 +1203,8 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
         }
 
         var now = DateTime.UtcNow;
-        var pickupAt = request.희망상차일시 ?? now;
-        var arrivalAt = request.희망도착일시 ?? pickupAt.AddDays(1);
+        var pickupAt = requestedPickupAtUtc ?? now;
+        var arrivalAt = requestedArrivalAtUtc ?? pickupAt.AddDays(1);
         var storageCondition = await _db.입고요청.AsNoTracking()
             .Where(x => x.Id == item.입고요청Id)
             .Select(x => x.보관조건)
@@ -1237,8 +1250,8 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
             픽업_시간창_종료일시 = pickupAt.AddHours(1),
             하차_도로명주소 = dropoffAddress,
             하차_상세주소 = dropoffAddressDetail,
-            하차_연락처_이름 = userId,
-            하차_연락처_전화번호 = warehouse.연락처,
+            하차_연락처_이름 = dropoffContactName,
+            하차_연락처_전화번호 = dropoffContactPhone,
             하차_시간창_시작일시 = arrivalAt,
             하차_시간창_종료일시 = arrivalAt.AddHours(1),
             서비스레벨 = "일반",
@@ -1728,6 +1741,15 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
             멱등재시도여부 = idempotentReplay
         };
     }
+
+    // 오프셋 JSON은 Local DateTime으로 역직렬화될 수 있으므로 저장 전에 UTC 시각으로 복원한다.
+    // 오프셋 없는 기존 입력은 시계값을 유지하며 서버의 UTC 시간창 계약으로 해석한다.
+    private static DateTime? ReconsignmentTimeUtc(DateTime? value)
+        => value is { } time
+            ? time.Kind == DateTimeKind.Local
+                ? time.ToUniversalTime()
+                : DateTime.SpecifyKind(time, DateTimeKind.Utc)
+            : null;
 
     private static DateTime AsUtc(DateTime value)
         => value.Kind == DateTimeKind.Utc

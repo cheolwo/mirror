@@ -209,31 +209,61 @@ public sealed class DriverApiClient : IDriverApiClient
             cancellationToken: cancellationToken);
         if (authenticationError is not null)
         {
-            throw new UnauthorizedAccessException(authenticationError);
+            ThrowAuthenticationFailure(authenticationError);
         }
 
+        var requestSessionVersion = _authSession.Version;
+        var requestSessionRevision = _authSession.SessionRevision;
         ApplyRequestHeaders(request);
+        EnsureSameSession(requestSessionVersion);
         using var retryRequest = await CloneRequestAsync(request, cancellationToken);
 
         try
         {
-            var response = await _httpClient.SendAsync(request, cancellationToken);
+            var response = ValidateResponse(
+                await _httpClient.SendAsync(request, cancellationToken), requestSessionRevision, cancellationToken);
             if (response.StatusCode != HttpStatusCode.Unauthorized)
             {
                 return response;
             }
 
             response.Dispose();
+            EnsureSameSession(requestSessionVersion);
             authenticationError = await _authApiService.EnsureAccessTokenAsync(
                 forceRefresh: true,
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken,
+                expectedSessionVersion: requestSessionVersion);
             if (authenticationError is not null)
             {
-                throw new UnauthorizedAccessException(authenticationError);
+                ThrowAuthenticationFailure(authenticationError);
             }
 
+            // A successful refresh advances exactly this session. A newer login must not
+            // receive the old request or be cleared by its delayed unauthorized response.
+            var retrySessionVersion = requestSessionVersion + 1;
+            EnsureSameSession(retrySessionVersion);
             ApplyRequestHeaders(retryRequest);
-            return await _httpClient.SendAsync(retryRequest, cancellationToken);
+            EnsureSameSession(retrySessionVersion);
+            var retryResponse = ValidateResponse(
+                await _httpClient.SendAsync(retryRequest, cancellationToken), requestSessionRevision, cancellationToken);
+            if (retryResponse.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                retryResponse.Dispose();
+                bool cleared;
+                try
+                {
+                    cleared = await _authSession.TryClearAsync(retrySessionVersion, cancellationToken);
+                }
+                catch when (!_authSession.IsAuthenticated && _authSession.Version == retrySessionVersion + 1
+                    && !cancellationToken.IsCancellationRequested)
+                {
+                    cleared = true;
+                }
+                if (!cleared)
+                    ThrowAuthenticationFailure("로그인 정보가 변경되었습니다. 현재 업무를 다시 확인해 주세요.");
+                throw new UnauthorizedAccessException("로그인 세션이 만료되었습니다. 다시 로그인해 주세요.");
+            }
+            return retryResponse;
         }
         catch (HttpRequestException ex)
         {
@@ -243,6 +273,35 @@ public sealed class DriverApiClient : IDriverApiClient
         {
             throw new InvalidOperationException($"{operationName} API 응답 시간이 초과되었습니다.", ex);
         }
+    }
+
+    private HttpResponseMessage ValidateResponse(HttpResponseMessage response, long expectedSessionRevision, CancellationToken cancellationToken)
+    {
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (_authSession.SessionRevision != expectedSessionRevision)
+                throw new InvalidOperationException("로그인 정보가 변경되었습니다. 현재 업무를 다시 확인해 주세요.");
+            return response;
+        }
+        catch
+        {
+            response.Dispose();
+            throw;
+        }
+    }
+
+    private void ThrowAuthenticationFailure(string message)
+    {
+        if (_authSession.IsAuthenticated)
+            throw new InvalidOperationException(message);
+        throw new UnauthorizedAccessException(message);
+    }
+
+    private void EnsureSameSession(long expectedVersion)
+    {
+        if (_authSession.Version != expectedVersion)
+            throw new InvalidOperationException("로그인 정보가 변경되었습니다. 현재 업무를 다시 확인해 주세요.");
     }
 
     private void ApplyRequestHeaders(HttpRequestMessage request)

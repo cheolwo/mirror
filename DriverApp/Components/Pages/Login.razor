@@ -1,4 +1,5 @@
 @page "/login"
+@layout AuthLayout
 @inject IAuthSession AuthSession
 @inject AuthApiService AuthApi
 @inject I기사푸시토큰등록Service 푸시토큰등록Service
@@ -83,8 +84,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await AuthSession.RestoreAsync();
-        _isLoggedIn = !string.IsNullOrWhiteSpace(AuthSession.UserId);
+        try
+        {
+            await AuthSession.RestoreAsync();
+        }
+        catch
+        {
+            _statusSeverity = Severity.Warning;
+            _statusMessage = "저장된 로그인 정보를 확인하지 못했습니다. 다시 로그인해 주세요.";
+        }
+        _isLoggedIn = AuthSession.IsAuthenticated;
         _loginId = AuthSession.UserName ?? string.Empty;
     }
 
@@ -107,6 +116,28 @@
                 _statusMessage = result.ErrorMessage;
                 return;
             }
+
+            _isLoggedIn = AuthSession.IsAuthenticated;
+            try
+            {
+                await 푸시토큰등록Service.저장토큰등록Async();
+            }
+            catch
+            {
+                // Notification registration is auxiliary to the successful login.
+                // The requested transport can still be loaded and retried independently.
+            }
+
+            _isLoggedIn = AuthSession.IsAuthenticated;
+            if (!_isLoggedIn)
+            {
+                _statusSeverity = Severity.Warning;
+                _statusMessage = "로그인 세션이 만료되었습니다. 다시 로그인해 주세요.";
+                return;
+            }
+            _statusSeverity = Severity.Success;
+            _statusMessage = $"{AuthSession.UserName ?? _loginId} 님, 서버 로그인되었습니다.";
+            NavigationManager.NavigateTo(안전한복귀경로 ?? DriverRoutes.HomeSummary);
         }
         catch
         {
@@ -119,11 +150,6 @@
             _isBusy = false;
         }
 
-        _isLoggedIn = true;
-        await 푸시토큰등록Service.저장토큰등록Async();
-        _statusSeverity = Severity.Success;
-        _statusMessage = $"{AuthSession.UserName ?? _loginId} 님, 서버 로그인되었습니다.";
-        NavigationManager.NavigateTo(안전한복귀경로 ?? DriverRoutes.HomeSummary);
     }
 
     private Task SocialLoginAsync(공통소셜로그인요청 request)
@@ -135,10 +161,21 @@
 
     private async Task Logout()
     {
-        await AuthSession.ClearAsync();
-        _isLoggedIn = false;
-        _statusSeverity = Severity.Info;
-        _statusMessage = "로그아웃했습니다.";
+        try
+        {
+            await AuthSession.ClearAsync();
+            _statusSeverity = Severity.Info;
+            _statusMessage = "로그아웃했습니다.";
+        }
+        catch
+        {
+            _statusSeverity = Severity.Warning;
+            _statusMessage = "현재 로그인은 종료했습니다. 기기의 저장된 로그인 정보 삭제를 확인하지 못했습니다.";
+        }
+        finally
+        {
+            _isLoggedIn = AuthSession.IsAuthenticated;
+        }
     }
 
     private void GoBackOrHome()

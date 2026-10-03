@@ -103,12 +103,6 @@ public partial class NativeDriverHomePage : ContentPage
         TransportFooterBar.ShowMarker(marker);
     }
 
-    private void OnKoreaDriverClicked(object? sender, EventArgs e)
-        => _operatingProfileService.SetMarket(Ssalddel.Contracts.Common.Operations.OperatingMarketCodes.Korea);
-
-    private void OnUnitedStatesDriverClicked(object? sender, EventArgs e)
-        => _operatingProfileService.SetMarket(Ssalddel.Contracts.Common.Operations.OperatingMarketCodes.UnitedStates);
-
     private void OnOperatingProfileChanged()
         => MainThread.BeginInvokeOnMainThread(ApplyOperatingProfile);
 
@@ -116,19 +110,8 @@ public partial class NativeDriverHomePage : ContentPage
     {
         var profile = _operatingProfileService.Current;
         MapView.MapProviderCode = profile.MapProviderCode;
-        OperatingMarketLabel.Text = profile.IsKorea ? "대한민국 운행" : "미국 운행";
-        MapProviderLabel.Text = profile.IsKorea
-            ? "NAVER 지도 · Directions"
-            : "Google 지도 · Routes";
-
-        ApplyProfileButtonState(KoreaDriverButton, profile.IsKorea, "#03c75a");
-        ApplyProfileButtonState(UnitedStatesDriverButton, profile.IsUnitedStates, "#4285f4");
-    }
-
-    private static void ApplyProfileButtonState(Button button, bool isSelected, string selectedColor)
-    {
-        button.BackgroundColor = Color.FromArgb(isSelected ? selectedColor : "#f1f5f9");
-        button.TextColor = Color.FromArgb(isSelected ? "#ffffff" : "#475569");
+        OperatingMarketLabel.Text = "대한민국 운행";
+        MapProviderLabel.Text = "NAVER 지도 · Directions";
     }
 
     private async Task RegisterStoredPushTokenQuietlyAsync()
@@ -458,12 +441,12 @@ public partial class NativeDriverHomePage : ContentPage
 
         var fare = request.예상수익.HasValue
             ? $"예상수익 {request.예상수익.Value.ToString("N0", CultureInfo.CurrentCulture)}원"
-            : "예상수익 미정";
+            : "운임 미확인";
         var distance = request.주행거리Km.HasValue
             ? $"주행 {request.주행거리Km.Value.ToString("0.0", CultureInfo.CurrentCulture)}km"
             : request.직선거리Km.HasValue
                 ? $"직선 {request.직선거리Km.Value.ToString("0.0", CultureInfo.CurrentCulture)}km"
-                : "거리 미정";
+                : "거리 미확인";
 
         return $"{request.추천업무유형표시} · {request.차량조건표시} · {request.시간조건표시} · {fare} · {distance}";
     }
@@ -559,22 +542,26 @@ public partial class NativeDriverHomePage : ContentPage
 
     private async void OnOpenLegacyMenuClicked(object? sender, EventArgs e)
     {
-        await OpenBlazorWorkspaceAsync();
+        await OpenBlazorWorkspaceAsync(DriverRoutes.Menu);
     }
 
     private async void OnOpenCurrentTransportClicked(object? sender, EventArgs e)
     {
-        await OpenBlazorWorkspaceAsync();
+        await OpenBlazorWorkspaceAsync(DriverRoutes.CurrentTransport);
     }
 
-    private async Task OpenBlazorWorkspaceAsync()
+    private async Task OpenBlazorWorkspaceAsync(string route)
     {
-        if (Navigation.NavigationStack.Count > 1)
+        if (Navigation.NavigationStack.Count > 1
+            && Navigation.NavigationStack[^2] is MainPage workspace)
         {
             await Navigation.PopAsync();
+            // Android의 숨겨진 WebView는 dispatch를 처리하지 않을 수 있습니다.
+            // 먼저 기존 업무 화면을 복원한 다음 살아 있는 Blazor 범위에 전달합니다.
+            await workspace.OpenRouteAsync(route);
             return;
         }
 
-        await Navigation.PushAsync(new MainPage());
+        await Navigation.PushAsync(new MainPage(route));
     }
 }

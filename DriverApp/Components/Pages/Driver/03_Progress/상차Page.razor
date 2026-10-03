@@ -1,4 +1,4 @@
-@page "/driver/transports/{운송Id:long}/pickup"
+﻿@page "/driver/transports/{운송Id:long}/pickup"
 @using DriverApp.ViewModels.Driver.Transport
 @inherits MvvmComponentBase<기사상차PageViewModel>
 
@@ -15,9 +15,25 @@
 
         <MudPaper Class="pa-4" Elevation="2">
             <MudStack Spacing="2">
-                @if (ViewModel.운송 is null)
+                @if (ViewModel.처리중)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                    <MudText>운송 정보를 불러오는 중입니다.</MudText>
+                }
+                else if (ViewModel.로그인필요)
+                {
+                    <MudAlert Severity="Severity.Warning">로그인 후 운송을 다시 확인해 주세요.</MudAlert>
+                    <MudButton Href="@DriverRoutes.LoginFor(DriverRoutes.TransportPickup(운송Id))" Color="Color.Primary">로그인</MudButton>
+                }
+                else if (!string.IsNullOrWhiteSpace(ViewModel.오류메시지))
+                {
+                    <MudAlert Severity="Severity.Error">@ViewModel.오류메시지</MudAlert>
+                    <MudButton OnClick="@(() => ViewModel.InitializeAsync(운송Id))" Color="Color.Primary">다시 불러오기</MudButton>
+                }
+                else if (ViewModel.운송 is null)
                 {
                     <MudAlert Severity="Severity.Warning">운송 정보를 찾지 못했습니다.</MudAlert>
+                    <MudButton OnClick="@(() => ViewModel.InitializeAsync(운송Id))" Color="Color.Primary">다시 불러오기</MudButton>
                 }
                 else
                 {
@@ -59,6 +75,16 @@
                     </MudGrid>
 
                     <MudDivider />
+
+                    <MudStack Spacing="1">
+                        <MudText Typo="Typo.subtitle2">상차 시간 · @ViewModel.운송.상차시간창표시</MudText>
+                        <MudExpansionPanels @key="ViewModel.운송" Elevation="0">
+                            <MudExpansionPanel Text="상차 담당자 연락처">
+                                <SsalddelSensitiveInfoRow Label="담당자" Value="@(string.IsNullOrWhiteSpace(ViewModel.운송.상차담당자명) ? "담당자 미등록" : ViewModel.운송.상차담당자명)" />
+                                <SsalddelSensitiveInfoRow Label="연락처" Value="@(string.IsNullOrWhiteSpace(ViewModel.운송.상차연락처) ? "연락처 미등록" : ViewModel.운송.상차연락처)" />
+                            </MudExpansionPanel>
+                        </MudExpansionPanels>
+                    </MudStack>
 
                     <MudPaper Elevation="0" Class="pa-3">
                         <MudStack Spacing="2">
@@ -283,6 +309,10 @@
                     <MudPaper Elevation="0" Class="pa-3">
                         <MudStack Spacing="1">
                             <MudText Typo="Typo.subtitle1">현장 확인</MudText>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Place"
+                                       Disabled="@(!ViewModel.도착가능)" OnClick="@(() => ViewModel.도착Command.ExecuteAsync(null))">
+                                @(ViewModel.도착처리중 ? "상차지 도착 기록 중" : "상차지 도착")
+                            </MudButton>
                             <MudCheckBox T="bool" @bind-Value="ViewModel.현장.상차지확인" Label="상차지에 도착했고 주소를 확인했습니다." Color="Color.Primary" />
                             <MudCheckBox T="bool" @bind-Value="ViewModel.현장.화물상태확인" Label="화물 수량과 외관 상태를 확인했습니다." Color="Color.Primary" />
                             <MudCheckBox T="bool" @bind-Value="ViewModel.현장.화주연락확인" Label="화주 또는 현장 담당자와 상차를 확인했습니다." Color="Color.Primary" />
@@ -403,7 +433,6 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        ViewModel.Initialize(운송Id);
-        await ViewModel.초기화Async();
+        await ViewModel.InitializeAsync(운송Id);
     }
 }

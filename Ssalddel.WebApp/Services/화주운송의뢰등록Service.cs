@@ -90,7 +90,6 @@ public sealed class 화주운송의뢰등록Service
         Guid? applicationPrivacyConsentEvidenceId,
         string applicationSourceCode)
     {
-        var now = DateTime.UtcNow;
         var 결제수단값 = Map결제수단(source.결제수단);
         var 증빙방식값 = source.결제수단.Contains("인수증", StringComparison.OrdinalIgnoreCase)
             ? 증빙방식.인수증
@@ -124,8 +123,8 @@ public sealed class 화주운송의뢰등록Service
                 부피Cbm = source.화물부피Cbm,
                 온도조건 = source.온도조건
             },
-            픽업 = CreateLocation(source.상차도로명주소, source.상차상세주소, source.상차연락처이름, source.상차연락처전화번호, now.AddHours(1), now.AddHours(3)),
-            하차 = CreateLocation(source.하차도로명주소, source.하차상세주소, source.하차연락처이름, source.하차연락처전화번호, now.AddHours(4), now.AddHours(8)),
+            픽업 = CreateLocation(source.상차도로명주소, source.상차상세주소, source.상차연락처이름, source.상차연락처전화번호, source.상차시간창시작일시, source.상차시간창종료일시),
+            하차 = CreateLocation(source.하차도로명주소, source.하차상세주소, source.하차연락처이름, source.하차연락처전화번호, source.하차시간창시작일시, source.하차시간창종료일시),
             요금옵션 = new PricingDTO
             {
                 서비스레벨 = source.서비스레벨,
@@ -154,8 +153,8 @@ public sealed class 화주운송의뢰등록Service
         string? detailAddress,
         string contactName,
         string contactPhone,
-        DateTime start,
-        DateTime end)
+        DateTime? start,
+        DateTime? end)
     {
         return new LocationContactDTO
         {
@@ -166,14 +165,14 @@ public sealed class 화주운송의뢰등록Service
             },
             연락처 = new ContactDTO
             {
-                이름 = string.IsNullOrWhiteSpace(contactName) ? "담당자 미입력" : contactName,
-                전화번호 = string.IsNullOrWhiteSpace(contactPhone) ? "010-0000-0000" : contactPhone
+                이름 = contactName,
+                전화번호 = contactPhone
             },
-            시간창 = new TimeWindowDTO
+            시간창 = start.HasValue && end.HasValue ? new TimeWindowDTO
             {
-                시작일시 = start,
-                종료일시 = end
-            }
+                시작일시 = new DateTimeOffset(DateTime.SpecifyKind(start.Value, DateTimeKind.Unspecified), TimeSpan.FromHours(9)).UtcDateTime,
+                종료일시 = new DateTimeOffset(DateTime.SpecifyKind(end.Value, DateTimeKind.Unspecified), TimeSpan.FromHours(9)).UtcDateTime
+            } : null
         };
     }
 

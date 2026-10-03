@@ -1,6 +1,5 @@
 using DriverApp.Models.Driver.Samples;
 using Ssalddel.Contracts.Common.Drivers;
-using System.Globalization;
 
 namespace DriverApp.Controls;
 
@@ -36,14 +35,14 @@ public partial class DriverTransportFooterBar : ContentView
         NextActionLabel.Text = $"다음 행동: {transport.다음행동}";
         CollapsedPickupLabel.Text = $"상차: {transport.픽업지}";
         CollapsedDropoffLabel.Text = $"하차: {transport.하차지}";
-        CollapsedFareLabel.Text = $"운임: {transport.예상수익.ToString("N0", CultureInfo.CurrentCulture)}원";
+        CollapsedFareLabel.Text = transport.예상수익.HasValue ? $"운임: {transport.운임표시}" : transport.운임표시;
 
         SetDetails(
             $"상차지: {transport.픽업지}",
             $"하차지: {transport.하차지}",
             $"화물: {transport.화물종류}",
-            $"거리: {transport.운송거리Km:0.0}km · 예정 {transport.예정시각:HH:mm}",
-            $"결제/운임: {transport.예상수익.ToString("N0", CultureInfo.CurrentCulture)}원",
+            $"거리: {transport.운송거리표시} · 예정 {transport.예정시각:HH:mm}",
+            $"결제/운임: {transport.운임표시}",
             $"전달받는 자: {transport.하차지} 담당자",
             $"요청사항: {transport.다음행동}");
     }

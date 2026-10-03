@@ -1,4 +1,5 @@
 using FluentResults;
+using System.Data;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Contracts.Common.Operations;
 using Ssalddel.Services.Community;
@@ -31,11 +32,36 @@ public sealed class 화주운송의뢰후불승인CommandHandler : IRequestHandl
 
     public async Task<Result<ShipRequest.화주운송의뢰응답>> Handle(화주운송의뢰후불승인Command request, CancellationToken cancellationToken)
     {
+        var attempt = 0;
+        var result = await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            if (attempt++ > 0) _db.ChangeTracker.Clear();
+            await using var tx = _db.Database.IsRelational()
+                ? await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
+                : null;
+            var saved = await PersistAsync(request, cancellationToken);
+            if (saved.IsSuccess && tx is not null) await tx.CommitAsync(cancellationToken);
+            return saved;
+        });
+        if (result.IsSuccess)
+        {
+            var current = await _db.화주운송의뢰.AsNoTracking()
+                .SingleAsync(x => x.의뢰Id == request.RequestId, cancellationToken);
+            if (await _transportLedgerSync.화주운송의뢰동기화Async(current, _currentUserAccessor.UserId ?? "system", cancellationToken) is null)
+                return Result.Fail<ShipRequest.화주운송의뢰응답>("승인은 저장됐지만 운송 원장 동기화를 확인하지 못했습니다. 같은 의뢰를 다시 조회해 주세요.");
+        }
+        return result;
+    }
+
+    private async Task<Result<ShipRequest.화주운송의뢰응답>> PersistAsync(화주운송의뢰후불승인Command request, CancellationToken cancellationToken)
+    {
         if (string.IsNullOrWhiteSpace(request.RequestId))
         {
             return Result.Fail<ShipRequest.화주운송의뢰응답>("RequestId is required");
         }
 
+        await _db.운송원장.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.의뢰Id == request.RequestId || x.운송번호 == request.RequestId, cancellationToken);
         var entity = await _db.화주운송의뢰.FirstOrDefaultAsync(x => x.의뢰Id == request.RequestId, cancellationToken);
         if (entity == null)
         {
@@ -74,7 +100,7 @@ public sealed class 화주운송의뢰후불승인CommandHandler : IRequestHandl
         entity.배차상태 = 상태값.배차상태.매칭중;
         entity.UpdatedAt = DateTime.UtcNow;
 
-        await _dispatchQueueService.생성또는조회Async(
+        var queued = await _dispatchQueueService.생성또는조회Async(
             화주운송의뢰출고예정정규화.To출고예정운송대상(entity),
             new 운송의뢰배차대기생성옵션
             {
@@ -82,10 +108,15 @@ public sealed class 화주운송의뢰후불승인CommandHandler : IRequestHandl
                 하차상세주소 = entity.하차_상세주소
             },
             cancellationToken);
+        if (queued.상태 == 상태값.배차대기상태.대기
+            && string.IsNullOrWhiteSpace(queued.확정기사Id) && string.IsNullOrWhiteSpace(queued.기사_운송자))
+            queued.운임 = entity.최종운임;
         await _db.SaveChangesAsync(cancellationToken);
-        await _transportLedgerSync.화주운송의뢰동기화Async(entity, _currentUserAccessor.UserId ?? entity.화주Id, cancellationToken);
 
-        return Result.Ok(화주운송의뢰매퍼.To응답(entity));
+        var fare = entity.운임구성Id.HasValue
+            ? await _db.운임구성.AsNoTracking().SingleOrDefaultAsync(x => x.Id == entity.운임구성Id.Value && x.의뢰Id == entity.의뢰Id, cancellationToken)
+            : null;
+        return Result.Ok(화주운송의뢰매퍼.To응답(entity, fareComposition: fare));
     }
 
     private static string MergeMemo(string? origin, string? memo)

@@ -86,6 +86,8 @@ public sealed class ShipperRequestAuthoringPageViewModel
 
     public async Task SubmitAsync()
     {
+        if (IsBusy) return;
+
         if (RegistrationEnabled != true)
         {
             StatusSeverity = Severity.Warning;
@@ -129,7 +131,9 @@ public sealed class ShipperRequestAuthoringPageViewModel
                 정책경고목록 = draft.정책경고목록,
                 생성일시 = DateTime.Now,
                 픽업지 = draft.픽업도로명주소,
-                하차지 = draft.하차도로명주소
+                하차지 = draft.하차도로명주소,
+                픽업정보 = ShipperRequestHandoffMapper.CreatePickup(draft),
+                하차정보 = ShipperRequestHandoffMapper.CreateDropoff(draft)
             };
 
             var created = await _operations.AddRequestAsync(request);

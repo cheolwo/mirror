@@ -4,14 +4,19 @@
 @using Ssalddel.Contracts.Shipper.Request
 @inject ShipperHomePageViewModel ViewModel
 
-<PageTitle>@HomeTitle · Ssalddel</PageTitle>
+<PageTitle>@(AuthenticationStage ? "화주 로그인" : HomeTitle) · Ssalddel</PageTitle>
 
-<main class="@HomeClass">
+<main class="@HomeClass" data-display-mode="@(AuthenticationStage ? "authentication" : "workspace")">
     <header class="shipper-home__hero">
         <div class="shipper-home__hero-copy">
-            <span>@HomeEyebrow</span>
-            <h1>@HomeTitle</h1>
-            <p>@HomeDescription</p>
+            @if (!AuthenticationStage)
+            {
+                <span>@HomeEyebrow</span>
+            }
+            <h1>@(AuthenticationStage ? "화주 로그인" : HomeTitle)</h1>
+            <p>@(AuthenticationStage
+                ? "공개 커뮤니티 이용에는 가입이 필요하지 않습니다. 개인 의뢰·입고·재고를 조회할 때만 인증합니다."
+                : HomeDescription)</p>
         </div>
         <div class="shipper-home__hero-actions">
             <MudButton Href="@CommunityPageRoutes.Home"
@@ -20,7 +25,7 @@
                        StartIcon="@Icons.Material.Filled.Forum">
                 공개 커뮤니티
             </MudButton>
-            @if (CanOpen(TransportArea))
+            @if (!AuthenticationStage && CanOpen(TransportArea))
             {
                 <MudButton Href="@ShipperRequestPageRoutes.Root"
                            Variant="Variant.Outlined"
@@ -36,11 +41,26 @@
     {
         <section class="shipper-home__state" aria-live="polite">
             <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-            <div><strong>업무 경계를 확인하고 있습니다.</strong><span>로그인 상태와 0.0 기능 플래그를 먼저 읽습니다.</span></div>
+            @if (AuthenticationStage)
+            {
+                <div><strong>로그인 화면을 준비하고 있습니다.</strong></div>
+            }
+            else
+            {
+                <div><strong>업무 경계를 확인하고 있습니다.</strong><span>로그인 상태와 0.0 기능 플래그를 먼저 읽습니다.</span></div>
+            }
         </section>
     }
     else
     {
+        @if (AuthenticationStage)
+        {
+            <section class="shipper-home__login" aria-label="화주 로그인">
+                @AnonymousContent
+            </section>
+        }
+        else
+        {
         @if (!string.IsNullOrWhiteSpace(ViewModel.ErrorMessage))
         {
             <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
@@ -54,6 +74,11 @@
         @foreach (var warning in Snapshot.Warnings)
         {
             <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">@warning</MudAlert>
+        }
+
+        @if (Snapshot.IsAuthenticated && AuthenticatedIntro is not null)
+        {
+            @AuthenticatedIntro
         }
 
         <section class="shipper-home__status" aria-labelledby="shipper-home-status-title">
@@ -183,6 +208,7 @@
                 @AdditionalTools
             </section>
         }
+        }
     }
 </main>
 
@@ -219,6 +245,15 @@
     public RenderFragment? AnonymousContent { get; set; }
 
     [Parameter]
+    public bool SeparateAnonymousAuthentication { get; set; }
+
+    [Parameter]
+    public bool? SessionAuthenticated { get; set; }
+
+    [Parameter]
+    public RenderFragment? AuthenticatedIntro { get; set; }
+
+    [Parameter]
     public RenderFragment? AdditionalTools { get; set; }
 
     private string HomeClass
@@ -232,6 +267,13 @@
             : "COMMUNITY-FIRST SHIPPER HUB";
 
     private ShipperHomeDashboardSnapshot Snapshot => ViewModel.Snapshot;
+
+    // Credential content is a separate mode only for consumers that opt in.
+    // A logged-out host session takes precedence over a previously loaded dashboard.
+    private bool AuthenticationStage
+        => SeparateAnonymousAuthentication
+           && AnonymousContent is not null
+           && (!Snapshot.IsAuthenticated || SessionAuthenticated == false);
 
     private ShipperHomeWorkflowArea TransportArea
         => new(

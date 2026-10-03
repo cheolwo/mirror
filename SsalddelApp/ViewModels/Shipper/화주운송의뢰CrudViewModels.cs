@@ -96,6 +96,12 @@ public abstract class 화주운송의뢰Crud업무ViewModelBase(
             예상거리Km = source.예상거리Km,
             기준운임 = source.기준운임,
             기사지급예정운임 = source.기사지급예정운임,
+            정산시점 = source.정산시점,
+            증빙방식 = source.증빙방식,
+            수납주체 = source.수납주체,
+            세금계산서필요 = source.세금계산서필요,
+            현금영수증필요 = source.현금영수증필요,
+            정산메모 = source.정산메모,
             알선단계 = source.알선단계,
             재알선금지 = source.재알선금지,
             정책위반 = source.정책위반,
@@ -103,7 +109,9 @@ public abstract class 화주운송의뢰Crud업무ViewModelBase(
             정책경고목록 = source.정책경고목록.ToArray(),
             생성일시 = source.생성일시,
             픽업지 = source.픽업지,
-            하차지 = source.하차지
+            하차지 = source.하차지,
+            픽업정보 = ShipperRequestHandoffMapper.Copy(source.픽업정보),
+            하차정보 = ShipperRequestHandoffMapper.Copy(source.하차정보)
         };
 
     protected bool 유효한초안(ShipperRequestItem draft)

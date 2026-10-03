@@ -49,4 +49,6 @@ public sealed record 의뢰생성Command(
     decimal? 최종운임,
     decimal? 기사지급예정운임,
     string? 클라이언트요청Id,
-    string? 결제상태) : IRequest<Result<Ssalddel.Contracts.Shipper.Request.화주운송의뢰응답>>;
+    string? 결제상태,
+    string? 거리계산방식 = null,
+    string? 단가출처 = null) : IRequest<Result<Ssalddel.Contracts.Shipper.Request.화주운송의뢰응답>>;

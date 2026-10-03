@@ -5,7 +5,7 @@
              x:Class="DriverApp.MainPage"
              BackgroundColor="White">
 
-    <BlazorWebView HostPage="wwwroot/index.html">
+    <BlazorWebView x:Name="WorkspaceWebView" HostPage="wwwroot/index.html">
         <BlazorWebView.RootComponents>
             <RootComponent Selector="#app" ComponentType="{x:Type components:Routes}" />
         </BlazorWebView.RootComponents>

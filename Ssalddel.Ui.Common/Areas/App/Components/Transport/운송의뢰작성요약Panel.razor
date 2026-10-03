@@ -29,6 +29,10 @@
             <MudText Typo="Typo.body2">화물: @Display(ViewModel.화물종류)</MudText>
             <MudText Typo="Typo.body2">적재: @Display(ViewModel.화물적재형태)</MudText>
             <MudText Typo="Typo.body2">구간: @Display(ViewModel.상차도로명주소) → @Display(ViewModel.하차도로명주소)</MudText>
+            <MudText Typo="Typo.body2">상차 담당자: @Display(ViewModel.상차연락처이름) · @MaskedPhone(ViewModel.상차연락처전화번호)</MudText>
+            <MudText Typo="Typo.body2">상차 시간창: @Window(ViewModel.상차시간창시작일시, ViewModel.상차시간창종료일시) (한국시간)</MudText>
+            <MudText Typo="Typo.body2">하차 담당자: @Display(ViewModel.하차연락처이름) · @MaskedPhone(ViewModel.하차연락처전화번호)</MudText>
+            <MudText Typo="Typo.body2">하차 시간창: @Window(ViewModel.하차시간창시작일시, ViewModel.하차시간창종료일시) (한국시간)</MudText>
             <MudText Typo="Typo.body2">차량/결제: @Display(ViewModel.차량종류) · @ViewModel.결제수단</MudText>
             <MudText Typo="Typo.body2">추천 차량: @(string.Join(", ", ViewModel.추천차량종류목록))</MudText>
             <MudText Typo="Typo.body2">부가비용: @ViewModel.부가비용합계.ToString("N0")원</MudText>
@@ -51,4 +55,15 @@
         단계.완료 ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.RadioButtonUnchecked;
 
     private static string Display(string? value) => string.IsNullOrWhiteSpace(value) ? "미입력" : value;
+
+    private static string MaskedPhone(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return "미입력";
+        var digits = new string(value.Where(char.IsDigit).ToArray());
+        return digits.Length > 4 ? $"***-****-{digits[^4..]}" : "****";
+    }
+
+    private static string Window(DateTime? start, DateTime? end)
+        => !start.HasValue && !end.HasValue ? "미입력"
+            : $"{(start.HasValue ? start.Value.ToString("MM.dd HH:mm") : "시작 미입력")} ~ {(end.HasValue ? end.Value.ToString("MM.dd HH:mm") : "종료 미입력")}";
 }

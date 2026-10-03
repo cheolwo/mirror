@@ -1,5 +1,7 @@
 using FluentResults;
+using Microsoft.AspNetCore.Http;
 using Ssalddel.Contracts.Driver.Transport;
+using 살뜰.도메인.창고;
 
 namespace Ssalddel.Application.Driver.Transport;
 
@@ -29,6 +31,19 @@ public sealed class 운송상차완료CommandHandler : IRequestHandler<운송상
             return Result.Fail<기사운송상태변경응답>("운송을 찾을 수 없습니다.");
         }
 
+        var requestId = string.IsNullOrWhiteSpace(transport.의뢰Id) ? transport.운송번호 : transport.의뢰Id;
+        // 창고의 출고 확정이 재고를 차감한다. 기사는 그 사실을 확인하며 재고를 다시 차감하지 않는다.
+        if (!string.IsNullOrWhiteSpace(requestId)
+            && await _db.출고예정.AsNoTracking().AnyAsync(
+                x => x.운송의뢰Id == requestId && x.출고창고Id > 0
+                     && x.상태 != 출고상태.취소 && x.상태 != 출고상태.출고완료,
+                cancellationToken))
+        {
+            return Result.Fail<기사운송상태변경응답>(
+                new Error("창고의 상품 인계 완료가 확인되어야 상차 완료 처리할 수 있습니다.")
+                    .WithMetadata("StatusCode", StatusCodes.Status409Conflict));
+        }
+
         if (string.IsNullOrWhiteSpace(request.상차사진ObjectName))
         {
             return Result.Fail<기사운송상태변경응답>("상차 완료 사진 업로드가 확인되어야 상차 완료 처리할 수 있습니다.");
@@ -36,7 +51,7 @@ public sealed class 운송상차완료CommandHandler : IRequestHandler<운송상
 
         var receiptRequired = await _db.화주운송의뢰
             .AsNoTracking()
-            .Where(x => x.의뢰Id == transport.운송번호)
+            .Where(x => x.의뢰Id == requestId)
             .Select(x => new
             {
                 필요 = x.증빙방식 == "인수증" || x.결제수단.Contains("인수증"),

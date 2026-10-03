@@ -21,6 +21,11 @@ public sealed class 운임구성Configuration : IEntityTypeConfiguration<운임�
         builder.Property(x => x.수작업비).HasColumnName("수작업비");
         builder.Property(x => x.최종운임).HasColumnName("최종운임");
         builder.Property(x => x.기사지급예정운임).HasColumnName("driver_expected_payout");
+        builder.Property(x => x.예상거리Km).HasColumnName("expected_distance_km").HasPrecision(18, 2);
+        builder.Property(x => x.Km당단가).HasColumnName("per_km_rate").HasPrecision(18, 2);
+        builder.Property(x => x.최소운임).HasColumnName("minimum_fare").HasPrecision(18, 2);
+        builder.Property(x => x.거리계산방식).HasColumnName("distance_basis").HasMaxLength(80);
+        builder.Property(x => x.단가출처).HasColumnName("rate_source").HasMaxLength(160);
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");
     }

@@ -1,4 +1,4 @@
-@page "/driver/transports/{운송Id:long}/dropoff"
+﻿@page "/driver/transports/{운송Id:long}/dropoff"
 @using DriverApp.ViewModels.Driver.Transport
 @inherits MvvmComponentBase<기사하차PageViewModel>
 
@@ -15,9 +15,25 @@
 
         <MudPaper Class="pa-4" Elevation="2">
             <MudStack Spacing="2">
-                @if (ViewModel.운송 is null)
+                @if (ViewModel.처리중)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                    <MudText>운송 정보를 불러오는 중입니다.</MudText>
+                }
+                else if (ViewModel.로그인필요)
+                {
+                    <MudAlert Severity="Severity.Warning">로그인 후 운송을 다시 확인해 주세요.</MudAlert>
+                    <MudButton Href="@DriverRoutes.LoginFor(DriverRoutes.TransportDropoff(운송Id))" Color="Color.Primary">로그인</MudButton>
+                }
+                else if (!string.IsNullOrWhiteSpace(ViewModel.오류메시지))
+                {
+                    <MudAlert Severity="Severity.Error">@ViewModel.오류메시지</MudAlert>
+                    <MudButton OnClick="@(() => ViewModel.InitializeAsync(운송Id))" Color="Color.Primary">다시 불러오기</MudButton>
+                }
+                else if (ViewModel.운송 is null)
                 {
                     <MudAlert Severity="Severity.Warning">운송 정보를 찾지 못했습니다.</MudAlert>
+                    <MudButton OnClick="@(() => ViewModel.InitializeAsync(운송Id))" Color="Color.Primary">다시 불러오기</MudButton>
                 }
                 else
                 {
@@ -36,15 +52,25 @@
                         </MudItem>
                         <MudItem xs="12" sm="4">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">운송거리</MudText>
-                            <MudText Typo="Typo.body1">@ViewModel.운송.운송거리Km.ToString("0.0")km</MudText>
+                            <MudText Typo="Typo.body1">@ViewModel.운송.운송거리표시</MudText>
                         </MudItem>
                         <MudItem xs="12" sm="4">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">예상수익</MudText>
-                            <MudText Typo="Typo.body1">@ViewModel.운송.예상수익.ToString("N0")원</MudText>
+                            <MudText Typo="Typo.body1">@ViewModel.운송.운임표시</MudText>
                         </MudItem>
                     </MudGrid>
 
                     <MudDivider />
+
+                    <MudStack Spacing="1">
+                        <MudText Typo="Typo.subtitle2">하차 시간 · @ViewModel.운송.하차시간창표시</MudText>
+                        <MudExpansionPanels @key="ViewModel.운송" Elevation="0">
+                            <MudExpansionPanel Text="수령자 연락처">
+                                <SsalddelSensitiveInfoRow Label="담당자" Value="@(string.IsNullOrWhiteSpace(ViewModel.운송.수령자명) ? "수령자 미등록" : ViewModel.운송.수령자명)" />
+                                <SsalddelSensitiveInfoRow Label="연락처" Value="@(string.IsNullOrWhiteSpace(ViewModel.운송.수령자연락처) ? "연락처 미등록" : ViewModel.운송.수령자연락처)" />
+                            </MudExpansionPanel>
+                        </MudExpansionPanels>
+                    </MudStack>
 
                     @if (ViewModel.운송.상차대상화물목록.Count > 0)
                     {
@@ -174,6 +200,10 @@
                     <MudPaper Elevation="0" Class="pa-3">
                         <MudStack Spacing="2">
                             <MudText Typo="Typo.subtitle1">인수/결제 확인</MudText>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Place"
+                                       Disabled="@(!ViewModel.도착가능)" OnClick="@(() => ViewModel.도착Command.ExecuteAsync(null))">
+                                @(ViewModel.도착처리중 ? "하차지 도착 기록 중" : "하차지 도착")
+                            </MudButton>
                             <MudCheckBox T="bool" @bind-Value="ViewModel.인계.하차지확인" Label="하차지에 도착했고 주소를 확인했습니다." Color="Color.Info" />
                             <MudCheckBox T="bool" @bind-Value="ViewModel.인계.수령자확인" Label="수령자 또는 현장 담당자에게 화물을 인계했습니다." Color="Color.Info" />
                             <MudSelect T="string" Label="현장 결제/증빙 방식" @bind-Value="ViewModel.인계.결제증빙방식" Variant="Variant.Outlined">
@@ -227,7 +257,6 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        ViewModel.Initialize(운송Id);
-        await ViewModel.초기화Async();
+        await ViewModel.InitializeAsync(운송Id);
     }
 }

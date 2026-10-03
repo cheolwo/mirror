@@ -2,36 +2,111 @@
 @implements IDisposable
 @inject DriverViewVisibilityService ViewVisibilityService
 
-<MudStack Class="pa-4" Spacing="2">
-    <MudStack Spacing="0">
-        <MudText Typo="Typo.h6">빠른 이동</MudText>
-        <MudText Typo="Typo.body2" Color="Color.Secondary">알림, 설정, 진행 화면처럼 홈에서 바로 펼치지 않는 항목을 여기서 연다.</MudText>
-    </MudStack>
-
-    <MudDivider />
-
+<div class="driver-assist-menu">
     @if (!ViewVisibilityService.IsLoaded)
     {
         <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mx-2 my-2" />
     }
     else
     {
-        <MudNavMenu Class="driver-assist-nav">
-            @foreach (var item in 지원메뉴항목)
-            {
-                <MudNavLink Href="@item.Route" Match="NavLinkMatch.Prefix" Icon="@ResolveIcon(item.IconKey)">
-                    @item.DisplayName
-                </MudNavLink>
-            }
-        </MudNavMenu>
+        @foreach (var group in MenuGroups)
+        {
+            <section class="driver-assist-group" aria-labelledby="@group.Id">
+                <h2 id="@group.Id">@group.Title</h2>
+                <MudNavMenu Class="driver-assist-nav">
+                    @foreach (var item in group.Items)
+                    {
+                        <MudNavLink Href="@item.Route" Match="NavLinkMatch.Prefix" Icon="@ResolveIcon(item.IconKey)">
+                            @item.Label
+                        </MudNavLink>
+                    }
+                </MudNavMenu>
+            </section>
+        }
     }
-</MudStack>
+</div>
 
 @code {
-    private IReadOnlyList<Ssalddel.Contracts.Common.ViewSettings.View가시성항목응답> 지원메뉴항목 => ViewVisibilityService.VisibleItems
-            .Where(x => !string.Equals(x.Route, DriverRoutes.Home, StringComparison.OrdinalIgnoreCase)
-                 && !string.Equals(x.Route, "/driver/menu", StringComparison.OrdinalIgnoreCase))
-        .ToArray();
+    private static readonly HashSet<string> MainRoutes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        DriverRoutes.Home,
+        DriverRoutes.HomeSummary,
+        DriverRoutes.Menu,
+        DriverRoutes.Recommendations,
+        DriverRoutes.CurrentTransport,
+        DriverRoutes.CurrentMonthSettlement
+    };
+
+    private static IReadOnlyList<DriverMenuItem> SupplementaryItems =>
+    [
+        new("운행 시작", DriverRoutes.WorkStart, "work"),
+        new("보낸 탐색 문의함", DriverRoutes.ExplorationCampaigns, "outbox"),
+        new("음식 배달 업무", DriverRoutes.FoodDeliveries, "food"),
+        new("배달 내역", DriverRoutes.DeliveryHistory, "history"),
+        new("계좌 정보", DriverRoutes.BankAccount, "account"),
+        new("알림 설정", DriverRoutes.NotificationSettings, "notifications"),
+        new("로그인 및 계정", DriverRoutes.Login, "login")
+    ];
+
+    private IReadOnlyList<DriverMenuGroup> MenuGroups
+    {
+        get
+        {
+            var items = ViewVisibilityService.VisibleItems
+                .Where(item => !MainRoutes.Contains(item.Route))
+                .Select(item => new DriverMenuItem(item.DisplayName, item.Route, item.IconKey))
+                .Concat(SupplementaryItems.Where(item => ViewVisibilityService.GetBlockingItem(item.Route) is null))
+                .DistinctBy(item => item.Route, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            return GroupDefinitions
+                .Select(group => new DriverMenuGroup(group.Id, group.Title,
+                    items.Where(item => GetGroupId(item.Route) == group.Id).ToArray()))
+                .Where(group => group.Items.Count > 0)
+                .ToArray();
+        }
+    }
+
+    private static IReadOnlyList<(string Id, string Title)> GroupDefinitions =>
+    [
+        ("driver-menu-prepare", "운행 준비 · 일정"),
+        ("driver-menu-inquiries", "문의 · 배달"),
+        ("driver-menu-records", "기록 · 계좌"),
+        ("driver-menu-settings", "알림 · 설정"),
+        ("driver-menu-other", "기타 메뉴")
+    ];
+
+    private static string GetGroupId(string route)
+    {
+        if (route.Equals(DriverRoutes.WorkStart, StringComparison.OrdinalIgnoreCase)
+            || route.Equals(DriverRoutes.Reservations, StringComparison.OrdinalIgnoreCase))
+        {
+            return "driver-menu-prepare";
+        }
+
+        if (route.Equals(DriverRoutes.CommunityInquiries, StringComparison.OrdinalIgnoreCase)
+            || route.Equals(DriverRoutes.ExplorationCampaigns, StringComparison.OrdinalIgnoreCase)
+            || route.Equals(DriverRoutes.FoodDeliveries, StringComparison.OrdinalIgnoreCase))
+        {
+            return "driver-menu-inquiries";
+        }
+
+        if (route.Equals(DriverRoutes.DeliveryHistory, StringComparison.OrdinalIgnoreCase)
+            || route.Equals(DriverRoutes.BankAccount, StringComparison.OrdinalIgnoreCase))
+        {
+            return "driver-menu-records";
+        }
+
+        if (route.Equals(DriverRoutes.Login, StringComparison.OrdinalIgnoreCase)
+            || route.Equals(DriverRoutes.Notifications, StringComparison.OrdinalIgnoreCase)
+            || route.Equals(DriverRoutes.NotificationSettings, StringComparison.OrdinalIgnoreCase)
+            || route.Equals("/driver/settings/views", StringComparison.OrdinalIgnoreCase))
+        {
+            return "driver-menu-settings";
+        }
+
+        return "driver-menu-other";
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -57,6 +132,10 @@
         "receipt_long" => Icons.Material.Filled.ReceiptLong,
         "notifications" => Icons.Material.Filled.Notifications,
         "forum" => Icons.Material.Filled.Forum,
+        "food" => Icons.Material.Filled.DeliveryDining,
+        "history" => Icons.Material.Filled.History,
+        "account" => Icons.Material.Filled.AccountBalance,
+        "login" => Icons.Material.Filled.AccountCircle,
         _ => Icons.Material.Filled.ChevronRight
     };
 
@@ -64,4 +143,7 @@
     {
         ViewVisibilityService.Changed -= HandleChanged;
     }
+
+    private sealed record DriverMenuItem(string Label, string Route, string IconKey);
+    private sealed record DriverMenuGroup(string Id, string Title, IReadOnlyList<DriverMenuItem> Items);
 }

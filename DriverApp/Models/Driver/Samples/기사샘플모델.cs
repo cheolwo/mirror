@@ -15,8 +15,8 @@ public sealed record 추천의뢰표시항목(
 {
     public string 상차지까지거리표시 => $"{상차지까지거리Km:0.0}km";
     public string 추천점수표시 => $"{의뢰.추천점수 ?? 0m:0}점";
-    public string 예상수익표시 => $"{의뢰.예상수익 ?? 0m:0}원";
-    public string 운송거리표시 => $"{의뢰.운송거리Km ?? 0m:0.0}km";
+    public string 예상수익표시 => 의뢰.운임표시;
+    public string 운송거리표시 => 의뢰.운송거리Km.HasValue ? $"예상 {의뢰.운송거리표시}" : 의뢰.운송거리표시;
 }
 
 public sealed record 기사근무샘플상태(
@@ -50,13 +50,19 @@ public sealed record 기사운송샘플항목(
     decimal? 하차경도,
     string 현재단계,
     DateTime 예정시각,
-    decimal 운송거리Km,
-    decimal 예상수익,
+    decimal? 운송거리Km,
+    decimal? 예상수익,
     bool 인수증필요,
     bool 인수증서명필수,
     string 결제방식,
     string 다음행동)
 {
+    public string 운임표시 => 예상수익 is { } fare ? $"{fare:N0}원" : "운임 미확인";
+
+    public string 운송거리표시 => 운송거리Km is { } distance ? $"예상 {distance:0.0}km" : "거리 미확인";
+
+    public string 거리계산방식 { get; init; } = string.Empty;
+
     public string 수입화물유형 { get; init; } = "일반";
 
     public string 선하증권번호 { get; init; } = string.Empty;
@@ -70,6 +76,33 @@ public sealed record 기사운송샘플항목(
     public string 상차주의사항 { get; init; } = "상차지, 화물 수량, 외관 상태를 확인합니다.";
 
     public string 수령자명 { get; init; } = string.Empty;
+
+    public string 상차담당자명 { get; init; } = string.Empty;
+
+    public string 상차연락처 { get; init; } = string.Empty;
+
+    public DateTime? 상차시간창시작일시 { get; init; }
+
+    public DateTime? 상차시간창종료일시 { get; init; }
+
+    public DateTime? 하차시간창시작일시 { get; init; }
+
+    public DateTime? 하차시간창종료일시 { get; init; }
+
+    public string 상차시간창표시 => 시간창표시(상차시간창시작일시, 상차시간창종료일시);
+
+    public string 하차시간창표시 => 시간창표시(하차시간창시작일시, 하차시간창종료일시);
+
+    private static string 시간창표시(DateTime? 시작, DateTime? 종료)
+    {
+        if (시작 is null || 종료 is null || 종료 <= 시작)
+            return "시간 미지정";
+
+        // 서버 시간창은 UTC로 저장하며 국내 운행 화면은 한국시간으로 표시한다.
+        var 시작한국시간 = new DateTimeOffset(DateTime.SpecifyKind(시작.Value, DateTimeKind.Utc)).ToOffset(TimeSpan.FromHours(9));
+        var 종료한국시간 = new DateTimeOffset(DateTime.SpecifyKind(종료.Value, DateTimeKind.Utc)).ToOffset(TimeSpan.FromHours(9));
+        return $"{시작한국시간:MM.dd HH:mm} ~ {종료한국시간:MM.dd HH:mm} (한국시간)";
+    }
 
     public string 수령자연락처 { get; init; } = string.Empty;
 

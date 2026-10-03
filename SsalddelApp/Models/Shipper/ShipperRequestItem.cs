@@ -1,3 +1,5 @@
+using Ssalddel.Contracts.Shipper.Request;
+
 namespace SsalddelApp.Models.Shipper;
 
 public sealed class ShipperRequestItem
@@ -46,6 +48,8 @@ public sealed class ShipperRequestItem
     public DateTime 생성일시 { get; set; }
     public string? 픽업지 { get; set; }
     public string? 하차지 { get; set; }
+    public LocationContactDTO? 픽업정보 { get; set; }
+    public LocationContactDTO? 하차정보 { get; set; }
 
     public bool CanPay => ContainsAny(배차상태, "상차완료", "운송중", "하차지도착", "하차완료", "인수완료")
         && !IsPaymentSecured(결제상태);

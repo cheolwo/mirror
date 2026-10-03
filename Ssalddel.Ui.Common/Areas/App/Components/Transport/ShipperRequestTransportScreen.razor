@@ -35,6 +35,17 @@
                 <MudItem xs="12" md="6">
                     <MudTextField @bind-Value="ViewModel.상차연락처전화번호" Label="상차 담당자 연락처" Variant="Variant.Outlined" Immediate="true" />
                 </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="DateTime?" @bind-Value="ViewModel.상차시간창시작일시" Label="상차 시작 (한국시간)"
+                                  InputType="InputType.DateTimeLocal" Format="yyyy-MM-ddTHH:mm" Culture="@System.Globalization.CultureInfo.InvariantCulture"
+                                  Variant="Variant.Outlined" Required="true" Immediate="true" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="DateTime?" @bind-Value="ViewModel.상차시간창종료일시" Label="상차 종료 (한국시간)"
+                                  InputType="InputType.DateTimeLocal" Format="yyyy-MM-ddTHH:mm" Culture="@System.Globalization.CultureInfo.InvariantCulture"
+                                  Variant="Variant.Outlined" Required="true" Immediate="true"
+                                  Error="@(ViewModel.상차시간창오류 is not null)" ErrorText="@ViewModel.상차시간창오류" />
+                </MudItem>
             </MudGrid>
         </MudStack>
     </MudPaper>
@@ -57,6 +68,17 @@
                 </MudItem>
                 <MudItem xs="12" md="6">
                     <MudTextField @bind-Value="ViewModel.하차연락처전화번호" Label="하차 담당자 연락처" Variant="Variant.Outlined" Immediate="true" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="DateTime?" @bind-Value="ViewModel.하차시간창시작일시" Label="하차 시작 (한국시간 · 선택)"
+                                  InputType="InputType.DateTimeLocal" Format="yyyy-MM-ddTHH:mm" Culture="@System.Globalization.CultureInfo.InvariantCulture"
+                                  Variant="Variant.Outlined" Immediate="true" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="DateTime?" @bind-Value="ViewModel.하차시간창종료일시" Label="하차 종료 (한국시간 · 선택)"
+                                  InputType="InputType.DateTimeLocal" Format="yyyy-MM-ddTHH:mm" Culture="@System.Globalization.CultureInfo.InvariantCulture"
+                                  Variant="Variant.Outlined" Immediate="true"
+                                  Error="@(ViewModel.하차시간창오류 is not null)" ErrorText="@ViewModel.하차시간창오류" />
                 </MudItem>
             </MudGrid>
         </MudStack>

@@ -1,6 +1,7 @@
 namespace Ssalddel.Contracts.Driver.Transport;
 
 using Ssalddel.Contracts.Common.Dispatch;
+using Ssalddel.Contracts.Common.Privacy;
 
 public class 기사운송요약응답
 {
@@ -13,7 +14,21 @@ public class 기사운송요약응답
     public DateTime? 출발_픽업 { get; set; }
     public DateTime? 도착 { get; set; }
     public decimal? 운임 { get; set; }
+    public decimal? 예상거리Km { get; set; }
+    public string? 거리계산방식 { get; set; }
     public string 결제방식 { get; set; } = string.Empty;
+    [IsmsPProtectedData(PersonalDataFieldKey.DisplayName,
+        "배정된 화물 운송의 상차 담당자 식별",
+        ProtectionNote = "배정 기사 업무 조회로 제한하며 공개 화물 요약에는 포함하지 않음")]
+    public string 상차담당자명 { get; set; } = string.Empty;
+    [IsmsPProtectedData(PersonalDataFieldKey.PhoneNumber,
+        "배정된 화물 운송의 상차 담당자 연락",
+        ProtectionNote = "배정 기사 업무 조회로 제한하며 공개 화물 요약에는 포함하지 않음")]
+    public string 상차연락처 { get; set; } = string.Empty;
+    public DateTime? 상차시간창시작일시 { get; set; }
+    public DateTime? 상차시간창종료일시 { get; set; }
+    public DateTime? 하차시간창시작일시 { get; set; }
+    public DateTime? 하차시간창종료일시 { get; set; }
     public string 수령자명 { get; set; } = string.Empty;
     public string 수령자연락처 { get; set; } = string.Empty;
     public string 전달요청 { get; set; } = string.Empty;

@@ -20,40 +20,40 @@ public sealed class 운송목록조회QueryHandler : IRequestHandler<운송목�
             .OrderByDescending(x => x.UpdatedAt)
             .ToListAsync(cancellationToken);
 
-        var requestIds = transports.Select(x => x.운송번호).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToArray();
-        var requestMap = requestIds.Length == 0
-            ? new Dictionary<string, 기사운송증빙조건>(StringComparer.Ordinal)
-            : await _db.화주운송의뢰
+        var requestIds = transports
+            .Select(x => string.IsNullOrWhiteSpace(x.의뢰Id) ? x.운송번호 : x.의뢰Id)
+            .Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToArray();
+        var requestMap = await _db.화주운송의뢰
                 .AsNoTracking()
-                .Where(x => requestIds.Contains(x.의뢰Id))
+                .Where(x => Enumerable.Contains(requestIds, x.의뢰Id))
                 .Select(x => new
                 {
                     x.의뢰Id,
                     x.결제수단,
+                    예상거리Km = _db.운임구성.Where(f => f.Id == x.운임구성Id && f.의뢰Id == x.의뢰Id).Select(f => f.예상거리Km).FirstOrDefault(),
+                    거리계산방식 = _db.운임구성.Where(f => f.Id == x.운임구성Id && f.의뢰Id == x.의뢰Id).Select(f => f.거리계산방식).FirstOrDefault(),
                     x.증빙방식,
                     x.요청사항,
                     x.정산메모,
+                    x.픽업_연락처_이름,
+                    x.픽업_연락처_전화번호,
+                    x.픽업_시간창_시작일시,
+                    x.픽업_시간창_종료일시,
+                    x.하차_시간창_시작일시,
+                    x.하차_시간창_종료일시,
                     x.하차_연락처_이름,
                     x.하차_연락처_전화번호
                 })
                 .ToDictionaryAsync(
                     x => x.의뢰Id,
-                    x => new 기사운송증빙조건(
-                        x.결제수단,
-                        x.증빙방식,
-                        x.요청사항,
-                        x.정산메모,
-                        x.하차_연락처_이름,
-                        x.하차_연락처_전화번호),
+                    x => x,
                     StringComparer.Ordinal,
                     cancellationToken);
 
         return transports.Select(x =>
         {
-            if (!requestMap.TryGetValue(x.운송번호, out var shipperRequest))
-            {
-                shipperRequest = 기사운송증빙조건.Empty;
-            }
+            var requestId = string.IsNullOrWhiteSpace(x.의뢰Id) ? x.운송번호 : x.의뢰Id;
+            requestMap.TryGetValue(requestId, out var shipperRequest);
 
             return new 기사운송요약응답
             {
@@ -66,12 +66,20 @@ public sealed class 운송목록조회QueryHandler : IRequestHandler<운송목�
                 출발_픽업 = x.출발_픽업,
                 도착 = x.도착,
                 운임 = x.운임,
-                결제방식 = shipperRequest.결제수단,
-                수령자명 = shipperRequest.수령자명,
-                수령자연락처 = shipperRequest.수령자연락처,
-                전달요청 = shipperRequest.요청사항,
-                인수증필요 = 기사운송증빙조건정책.인수증필요(shipperRequest),
-                인수증서명필수 = 기사운송증빙조건정책.인수증서명필수(shipperRequest),
+                예상거리Km = shipperRequest?.예상거리Km,
+                거리계산방식 = shipperRequest?.거리계산방식,
+                결제방식 = shipperRequest?.결제수단 ?? string.Empty,
+                상차담당자명 = shipperRequest?.픽업_연락처_이름 ?? string.Empty,
+                상차연락처 = shipperRequest?.픽업_연락처_전화번호 ?? string.Empty,
+                상차시간창시작일시 = shipperRequest?.픽업_시간창_시작일시 is { } pickupStart && pickupStart != default ? pickupStart : null,
+                상차시간창종료일시 = shipperRequest?.픽업_시간창_종료일시 is { } pickupEnd && pickupEnd != default ? pickupEnd : null,
+                하차시간창시작일시 = shipperRequest?.하차_시간창_시작일시 is { } dropoffStart && dropoffStart != default ? dropoffStart : null,
+                하차시간창종료일시 = shipperRequest?.하차_시간창_종료일시 is { } dropoffEnd && dropoffEnd != default ? dropoffEnd : null,
+                수령자명 = shipperRequest?.하차_연락처_이름 ?? string.Empty,
+                수령자연락처 = shipperRequest?.하차_연락처_전화번호 ?? string.Empty,
+                전달요청 = shipperRequest?.요청사항 ?? string.Empty,
+                인수증필요 = 기사운송증빙조건정책.인수증필요(shipperRequest?.증빙방식, shipperRequest?.결제수단),
+                인수증서명필수 = 기사운송증빙조건정책.인수증서명필수(shipperRequest?.요청사항, shipperRequest?.정산메모),
                 UpdatedAt = x.UpdatedAt
             };
         }).ToArray();

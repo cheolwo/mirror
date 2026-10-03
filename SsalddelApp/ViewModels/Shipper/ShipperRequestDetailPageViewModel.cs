@@ -17,7 +17,12 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
     private readonly IShipperOperationsService _operations;
     private readonly ITransportRequestLedgerObserver _ledgerObserver;
     private readonly FakeShipperPaymentService _fakePayments;
+    private readonly IAuthSession _authSession;
+    private readonly ShipperQueryLifetime _queryLifetime;
     private CancellationTokenSource? _pollingCts;
+    private CancellationTokenSource? _paymentCts;
+    private bool _disposed;
+    private long _loadRevision;
     private ShipperRequestItem? _source;
     private FakeShipperPaymentReceipt? _receipt;
 
@@ -25,11 +30,15 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
         IShipperOperationsService operations,
         ITransportRequestLedgerObserver ledgerObserver,
         FakeShipperPaymentService fakePayments,
-        IOptions<ClientDataModeOptions> dataModeOptions)
+        IOptions<ClientDataModeOptions> dataModeOptions,
+        IAuthSession authSession)
     {
         _operations = operations;
         _ledgerObserver = ledgerObserver;
         _fakePayments = fakePayments;
+        _authSession = authSession;
+        _queryLifetime = new ShipperQueryLifetime(authSession);
+        _queryLifetime.SessionInvalidated += OnSessionInvalidated;
         State.SourceBoundaryMessage = dataModeOptions.Value.CanUseSampleFallback
             ? "서버 원장을 먼저 조회하며 개발 설정에서는 실패 시 sample adapter를 명시적으로 사용할 수 있습니다."
             : "Web과 모바일이 같은 서버 운송 의뢰 endpoint와 ID를 다시 조회합니다.";
@@ -80,6 +89,7 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
         bool showMessage = true,
         CancellationToken cancellationToken = default)
     {
+        if (_disposed) return;
         EnsureObserverStarted();
         await LoadAsync(requestId, created, showMessage, cancellationToken);
     }
@@ -90,22 +100,49 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
         bool showMessage = true,
         CancellationToken cancellationToken = default)
     {
-        if (State.IsBusy)
-        {
-            return;
-        }
-
+        if (_disposed) return;
+        var loadRevision = Interlocked.Increment(ref _loadRevision);
         var normalized = string.IsNullOrWhiteSpace(requestId) ? null : requestId.Trim();
+        if (!string.Equals(State.LookupRequestId, normalized, StringComparison.OrdinalIgnoreCase))
+        {
+            ClearPrivateState();
+        }
         State.LookupRequestId = normalized ?? string.Empty;
         State.Created = created;
         State.IsWorkflowEnabled = true;
-        State.RequiresLogin = false;
+        try
+        {
+            await _authSession.RestoreAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { return; }
+        catch (Exception ex)
+        {
+            if (_disposed || loadRevision != Interlocked.Read(ref _loadRevision)) return;
+            _queryLifetime.CancelPending();
+            ClearPrivateState();
+            State.RequiresLogin = !_authSession.IsLoggedIn;
+            SetStatus($"로그인 세션 조회 실패: {ex.Message}", ShipperRequestDetailMessageTone.Error);
+            NotifyStateChanged();
+            return;
+        }
+        if (_disposed || loadRevision != Interlocked.Read(ref _loadRevision)) return;
+        State.RequiresLogin = !_authSession.IsLoggedIn;
+
+        if (State.RequiresLogin)
+        {
+            _queryLifetime.CancelPending();
+            ClearPrivateState();
+            SetStatus("운송 의뢰를 확인하려면 먼저 로그인해 주세요.", ShipperRequestDetailMessageTone.Warning);
+            NotifyStateChanged();
+            return;
+        }
 
         if (normalized is null)
         {
-            _source = null;
-            State.Request = null;
+            _queryLifetime.CancelPending();
+            ClearPrivateState();
             SetStatus("조회할 운송 의뢰 ID가 없습니다.", ShipperRequestDetailMessageTone.Warning);
+            NotifyStateChanged();
             return;
         }
 
@@ -115,36 +152,34 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
             SetStatus("운송 의뢰 원장을 조회하는 중입니다.", ShipperRequestDetailMessageTone.Info);
         }
 
-        try
-        {
-            _source = await _operations.GetRequestAsync(normalized, cancellationToken);
-            ApplyReceipt();
-            State.Request = _source is null ? null : Map(_source);
-            if (showMessage)
+        await _queryLifetime.RunAsync(
+            token => _operations.GetRequestAsync(normalized, token),
+            result =>
             {
-                SetStatus(
-                    _source is null
-                        ? "운송 의뢰 정보를 찾지 못했습니다."
-                        : $"{_source.의뢰Id} 원장을 adapter에서 다시 조회했습니다.",
-                    _source is null ? ShipperRequestDetailMessageTone.Warning : ShipperRequestDetailMessageTone.Success);
-            }
-        }
-        catch (Exception ex)
-        {
-            _source = null;
-            State.Request = null;
-            SetStatus($"운송 의뢰 원장 조회 실패: {ex.Message}", ShipperRequestDetailMessageTone.Error);
-        }
-        finally
-        {
-            State.IsBusy = false;
-            NotifyStateChanged();
-        }
+                _source = result;
+                ApplyReceipt();
+                State.Request = _source is null ? null : Map(_source);
+                if (showMessage)
+                {
+                    SetStatus(
+                        _source is null ? "운송 의뢰 정보를 찾지 못했습니다."
+                            : $"{_source.의뢰Id} 원장을 adapter에서 다시 조회했습니다.",
+                        _source is null ? ShipperRequestDetailMessageTone.Warning : ShipperRequestDetailMessageTone.Success);
+                }
+            },
+            ex =>
+            {
+                _source = null;
+                State.Request = null;
+                SetStatus($"운송 의뢰 원장 조회 실패: {ex.Message}", ShipperRequestDetailMessageTone.Error);
+            },
+            () => { State.IsBusy = false; NotifyStateChanged(); },
+            cancellationToken);
     }
 
     public void OpenPaymentWindow()
     {
-        if (_source?.CanPay != true || PaymentAmount <= 0)
+        if (_disposed || !_authSession.IsLoggedIn || State.IsBusy || _source?.CanPay != true || PaymentAmount <= 0)
         {
             return;
         }
@@ -175,30 +210,43 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
 
     public async Task CompletePaymentAsync(PaymentRequestPlan plan, CancellationToken cancellationToken = default)
     {
-        if (_source is null)
+        if (_disposed || !_authSession.IsLoggedIn || _source is null || State.IsBusy || PaymentCompleting)
         {
             return;
         }
 
+        var source = _source;
+        var sessionRevision = _authSession.SessionRevision;
+        var paymentCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        _paymentCts = paymentCts;
         PaymentCompleting = true;
         NotifyStateChanged();
         try
         {
-            _receipt = await _fakePayments.ConfirmAsync(_source, plan, PaymentMemo, cancellationToken);
+            var receipt = await _fakePayments.ConfirmAsync(source, plan, PaymentMemo, paymentCts.Token);
+            if (!IsCurrentPayment(source.의뢰Id, sessionRevision) || paymentCts.IsCancellationRequested) return;
+            _receipt = receipt;
             PaymentWindowOpen = false;
             SetStatus(
-                $"{_source.의뢰Id} FakePG 개발 승인이 기록되었습니다. 같은 원장을 다시 조회합니다.",
+                $"{source.의뢰Id} FakePG 개발 승인이 기록되었습니다. 같은 원장을 다시 조회합니다.",
                 ShipperRequestDetailMessageTone.Success);
-            await LoadAsync(_source.의뢰Id, showMessage: false, cancellationToken: cancellationToken);
+            await LoadAsync(source.의뢰Id, showMessage: false, cancellationToken: paymentCts.Token);
         }
+        catch (OperationCanceledException) when (paymentCts.IsCancellationRequested) { }
         catch (Exception ex)
         {
-            SetStatus($"FakePG 개발 승인 실패: {ex.Message}", ShipperRequestDetailMessageTone.Error);
+            if (IsCurrentPayment(source.의뢰Id, sessionRevision))
+                SetStatus($"FakePG 개발 승인 실패: {ex.Message}", ShipperRequestDetailMessageTone.Error);
         }
         finally
         {
-            PaymentCompleting = false;
-            NotifyStateChanged();
+            if (IsCurrentPayment(source.의뢰Id, sessionRevision))
+            {
+                PaymentCompleting = false;
+                NotifyStateChanged();
+            }
+            if (ReferenceEquals(_paymentCts, paymentCts)) _paymentCts = null;
+            paymentCts.Dispose();
         }
     }
 
@@ -274,7 +322,7 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
 
     private void EnsureObserverStarted()
     {
-        if (_pollingCts is not null)
+        if (_disposed || _pollingCts is not null)
         {
             return;
         }
@@ -321,7 +369,7 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
     }
 
     private bool IsCurrentRequest(string requestId)
-        => !string.IsNullOrWhiteSpace(State.LookupRequestId)
+        => !_disposed && _authSession.IsLoggedIn && !string.IsNullOrWhiteSpace(State.LookupRequestId)
            && string.Equals(State.LookupRequestId, requestId?.Trim(), StringComparison.OrdinalIgnoreCase);
 
     private void SetStatus(string message, ShipperRequestDetailMessageTone tone)
@@ -332,8 +380,42 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
 
     private void NotifyStateChanged() => StateChanged?.Invoke();
 
+    private bool IsCurrentPayment(string requestId, long sessionRevision)
+        => IsCurrentRequest(requestId) && _authSession.SessionRevision == sessionRevision;
+
+    private void OnSessionInvalidated()
+    {
+        if (_disposed) return;
+        if (!_authSession.IsLoggedIn) Interlocked.Increment(ref _loadRevision);
+        ClearPrivateState();
+        State.RequiresLogin = !_authSession.IsLoggedIn;
+        SetStatus(State.RequiresLogin ? "운송 의뢰를 확인하려면 먼저 로그인해 주세요."
+            : "로그인 세션이 변경되었습니다. 운송 의뢰를 다시 확인해 주세요.", ShipperRequestDetailMessageTone.Warning);
+        NotifyStateChanged();
+    }
+
+    private void ClearPrivateState()
+    {
+        _source = null;
+        _receipt = null;
+        State.Request = null;
+        State.IsBusy = false;
+        PaymentWindowOpen = false;
+        PaymentCompleting = false;
+        PaymentMemo = null;
+        PaymentMethod = PaymentMethodCode.TossCard;
+        SettlementMode = SettlementModeCode.Prepaid;
+        _paymentCts?.Cancel();
+    }
+
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
+        Interlocked.Increment(ref _loadRevision);
+        _queryLifetime.SessionInvalidated -= OnSessionInvalidated;
+        _queryLifetime.Dispose();
+        ClearPrivateState();
         _ledgerObserver.Changed -= OnLedgerChanged;
         _ledgerObserver.RefreshRequested -= OnLedgerRefreshRequested;
         _pollingCts?.Cancel();

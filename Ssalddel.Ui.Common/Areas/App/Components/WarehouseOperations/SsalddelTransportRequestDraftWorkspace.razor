@@ -123,28 +123,33 @@
                 </MudStack></MudPaper>
             </MudItem>
             <MudItem xs="12" lg="8">
-                <MudPaper Class="pa-4 draft-panel" Elevation="0" Outlined="true"><MudStack Spacing="3">
+                <MudPaper Class="pa-4 draft-panel" Elevation="0" Outlined="true"><MudForm Disabled="@ViewModel.저장.처리중"><MudStack Spacing="3">
                     <MudText Typo="Typo.h6">운송의뢰 입력</MudText>
                     <MudTextField T="string" Label="실제 하차지 도로명 주소" HelperText="주문자 ID나 권역명이 아닌 실제 차량 도착 주소를 입력합니다." Value="@ViewModel.초안.하차지주소" ValueChanged="SetDestinationAddress" Immediate="true" MaxLength="200" Variant="Variant.Outlined" />
                     <MudTextField T="string" Label="하차지 상세 위치 (선택)" HelperText="동·층·상차장 입구처럼 기사에게 필요한 위치만 입력합니다." Value="@ViewModel.초안.하차지상세주소" ValueChanged="SetDestinationAddressDetail" Immediate="true" MaxLength="200" Variant="Variant.Outlined" />
                     <MudGrid>
-                        <MudItem xs="12" sm="6"><MudDatePicker Label="희망 상차일" Date="@ViewModel.초안.희망상차일" DateChanged="SetPickupDate" Variant="Variant.Outlined" /></MudItem>
-                        <MudItem xs="12" sm="6"><MudTimePicker Label="희망 상차시각" Time="@ViewModel.초안.희망상차시각" TimeChanged="SetPickupTime" Variant="Variant.Outlined" /></MudItem>
-                        <MudItem xs="12" sm="6"><MudDatePicker Label="희망 도착일" Date="@ViewModel.초안.희망도착일" DateChanged="SetArrivalDate" Variant="Variant.Outlined" /></MudItem>
-                        <MudItem xs="12" sm="6"><MudTimePicker Label="희망 도착시각" Time="@ViewModel.초안.희망도착시각" TimeChanged="SetArrivalTime" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" sm="6"><MudTextField T="string" Label="하차 담당자 (선택)" Value="@ViewModel.초안.하차담당자명" ValueChanged="SetDestinationContactName" MaxLength="100" Immediate="true" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" sm="6"><MudTextField T="string" Label="하차 연락처 (선택)" HelperText="기사에게 전달할 실제 연락처만 입력합니다." Value="@ViewModel.초안.하차연락처" ValueChanged="SetDestinationContactPhone" InputType="InputType.Telephone" MaxLength="50" Immediate="true" Variant="Variant.Outlined" /></MudItem>
+                    </MudGrid>
+                    <MudGrid>
+                        <MudItem xs="12" sm="6"><MudDatePicker Label="희망 상차일 (한국시간)" Date="@ViewModel.초안.희망상차일" DateChanged="SetPickupDate" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" sm="6"><MudTimePicker Label="희망 상차시각 (한국시간)" Time="@ViewModel.초안.희망상차시각" TimeChanged="SetPickupTime" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" sm="6"><MudDatePicker Label="희망 도착일 (한국시간)" Date="@ViewModel.초안.희망도착일" DateChanged="SetArrivalDate" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" sm="6"><MudTimePicker Label="희망 도착시각 (한국시간)" Time="@ViewModel.초안.희망도착시각" TimeChanged="SetArrivalTime" Variant="Variant.Outlined" /></MudItem>
                     </MudGrid>
                     <MudSelect T="string" Label="차량 유형" Value="@ViewModel.초안.차량유형" ValueChanged="SetVehicleType" Variant="Variant.Outlined">@foreach(var type in 운송의뢰초안작성ViewModel.차량유형목록){<MudSelectItem T="string" Value="@type">@type</MudSelectItem>}</MudSelect>
                     <MudTextField T="string" Label="취급 메모 (선택)" HelperText="연락처·계좌 등 개인정보는 입력하지 마세요." Value="@ViewModel.초안.취급메모" ValueChanged="SetHandlingNote" Immediate="true" Lines="3" MaxLength="300" Variant="Variant.Outlined" />
                     <MudCheckBox T="bool" Value="@ViewModel.초안.상품수량확인" ValueChanged="SetCargoConfirmed" Label="표시된 상품·포장·출고 수량을 확인했습니다." />
                     @if(!string.IsNullOrWhiteSpace(ViewModel.초안.검증오류)){<MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@ViewModel.초안.검증오류</MudAlert>}
-                    <MudButton FullWidth="true" Size="Size.Large" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Rule" OnClick="ReviewDraft">주소·수량·일정 검토</MudButton>
+                    <MudButton FullWidth="true" Size="Size.Large" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@ViewModel.저장.처리중" StartIcon="@Icons.Material.Filled.Rule" OnClick="ReviewDraft">주소·수량·일정 검토</MudButton>
                     @if(ViewModel.초안.검토결과 is{} result)
                     {
                         <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.TaskAlt">
                             <MudText Typo="Typo.subtitle2">저장 전 검토 완료</MudText>
                             <MudText Typo="Typo.body2">@result.ReviewReference · @result.VehicleType</MudText>
                             <MudText Typo="Typo.body2">@result.DestinationAddress @result.DestinationAddressDetail</MudText>
-                            <MudText Typo="Typo.body2">@result.PickupAt.ToString("yyyy-MM-dd HH:mm") → @result.ArrivalAt.ToString("yyyy-MM-dd HH:mm")</MudText>
+                            <MudText Typo="Typo.body2">하차 담당자: @ContactName(result.DestinationContactName) · @MaskedPhone(result.DestinationContactPhone)</MudText>
+                            <MudText Typo="Typo.body2">@result.PickupAt.ToString("yyyy-MM-dd HH:mm") → @result.ArrivalAt.ToString("yyyy-MM-dd HH:mm") (한국시간)</MudText>
                             <MudText Typo="Typo.caption">아직 서버에 저장하지 않았습니다. 아래 버튼을 누르면 출고 수량 예약과 운송의뢰 생성이 함께 실행됩니다.</MudText>
                             <MudStack Row="true" Spacing="2" Class="mt-2">
                                 <MudButton Variant="Variant.Text" Disabled="@ViewModel.저장.처리중" OnClick="EditAgain">다시 수정</MudButton>
@@ -158,7 +163,7 @@
                     {
                         <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@ViewModel.저장.오류메시지</MudAlert>
                     }
-                </MudStack></MudPaper>
+                </MudStack></MudForm></MudPaper>
             </MudItem>
         </MudGrid>
     }
@@ -171,6 +176,8 @@
     protected override async Task OnParametersSetAsync(){var id=OutboundPlanId is>0?OutboundPlanId:null;if(!_initialized||id!=_loadedId){_initialized=true;_loadedId=id;await ViewModel.초기화Async(id);}}
     private void SetDestinationAddress(string value)=>ViewModel.초안.하차지주소=value??string.Empty;
     private void SetDestinationAddressDetail(string value)=>ViewModel.초안.하차지상세주소=value??string.Empty;
+    private void SetDestinationContactName(string value)=>ViewModel.초안.하차담당자명=value??string.Empty;
+    private void SetDestinationContactPhone(string value)=>ViewModel.초안.하차연락처=value??string.Empty;
     private void SetPickupDate(DateTime? value)=>ViewModel.초안.희망상차일=value;
     private void SetPickupTime(TimeSpan? value)=>ViewModel.초안.희망상차시각=value;
     private void SetArrivalDate(DateTime? value)=>ViewModel.초안.희망도착일=value;
@@ -192,5 +199,12 @@
             await ViewModel.초기화Async(ViewModel.원장.조회대상Id);
     }
     private static string Display(string? value)=>string.IsNullOrWhiteSpace(value)?"-":value;
+    private static string ContactName(string? value)=>string.IsNullOrWhiteSpace(value)?"미입력":value;
+    private static string MaskedPhone(string? value)
+    {
+        if(string.IsNullOrWhiteSpace(value)) return "연락처 미입력";
+        var digits=new string(value.Where(char.IsDigit).ToArray());
+        return digits.Length>4?$"***-****-{digits[^4..]}":"****";
+    }
     private static string FormatDateTime(DateTime? value)=>value.HasValue?value.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm"):"-";
 }

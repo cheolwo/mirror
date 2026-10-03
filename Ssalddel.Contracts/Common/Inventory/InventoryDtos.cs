@@ -1,6 +1,7 @@
 namespace Ssalddel.Contracts.Common.Inventory;
 
 using Ssalddel.Contracts.Common.Inbound;
+using Ssalddel.Contracts.Common.Privacy;
 
 public sealed class 재고항목응답
 {
@@ -77,6 +78,14 @@ public sealed class 재고운송의뢰생성요청
     public int 요청수량 { get; set; }
     public string 하차지주소 { get; set; } = string.Empty;
     public string 하차지상세주소 { get; set; } = string.Empty;
+    [IsmsPProtectedData(PersonalDataFieldKey.DisplayName,
+        "재위탁 화물의 실제 하차 담당자 식별",
+        ProtectionNote = "입력된 담당자만 저장하며 사용자 ID나 상차 창고 담당자로 대체하지 않음")]
+    public string? 하차담당자명 { get; set; }
+    [IsmsPProtectedData(PersonalDataFieldKey.PhoneNumber,
+        "재위탁 화물의 실제 하차 담당자 연락",
+        ProtectionNote = "입력된 연락처만 저장하며 상차 창고 연락처로 대체하지 않음")]
+    public string? 하차연락처 { get; set; }
     public string 화물종류 { get; set; } = string.Empty;
     public string 차량종류 { get; set; } = string.Empty;
     public DateTime? 희망상차일시 { get; set; }

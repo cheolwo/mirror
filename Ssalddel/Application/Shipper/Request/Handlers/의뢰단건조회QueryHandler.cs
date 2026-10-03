@@ -39,6 +39,10 @@ public sealed class 의뢰단건조회QueryHandler : IRequestHandler<의뢰단�
             [entity.의뢰Id],
             cancellationToken);
         executionByRequestId.TryGetValue(entity.의뢰Id, out var execution);
+        var fare = entity.운임구성Id.HasValue
+            ? await _db.운임구성.AsNoTracking().SingleOrDefaultAsync(x => x.Id == entity.운임구성Id.Value
+                && x.의뢰Id == entity.의뢰Id, cancellationToken)
+            : null;
 
         return 화주운송의뢰매퍼.To응답(
             entity,
@@ -47,6 +51,7 @@ public sealed class 의뢰단건조회QueryHandler : IRequestHandler<의뢰단�
             execution?.최근위치,
             execution?.운영체제인계,
             execution?.운송완료화주인계,
-            execution?.비정상운송사건목록);
+            execution?.비정상운송사건목록,
+            fare);
     }
 }

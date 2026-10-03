@@ -13,6 +13,18 @@
             </MudStack>
         </MudPaper>
 
+        @if (ViewModel.처리중)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+            <MudText>이번 달 이용료를 불러오고 있습니다.</MudText>
+        }
+        else if (!ViewModel.초기화됨)
+        {
+            <MudAlert Severity="Severity.Error">@(ViewModel.오류메시지 ?? "이번 달 이용료를 확인하지 못했습니다.")</MudAlert>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="재조회Async">다시 시도</MudButton>
+        }
+        else
+        {
         <MudPaper Class="pa-4" Elevation="2">
             <MudGrid Spacing="3">
                 <MudItem xs="12" sm="3"><MudText Typo="Typo.h6">@정산월표시</MudText></MudItem>
@@ -38,13 +50,15 @@
             </MudStack>
 
             <MudAlert Class="mt-3" Severity="@(ViewModel.정산.IsPaid ? Severity.Success : Severity.Warning)">
-                @(ViewModel.정산.IsPaid ? "이번 달 정산이 완료되었습니다." : "이번 달 이용료 확인이 필요합니다.")
+                @(ViewModel.정산.IsPaid ? "이번 달 이용료 결제가 완료되었습니다." : "이번 달 이용료 확인이 필요합니다.")
             </MudAlert>
             <MudStack Row="true" Spacing="2" Class="mt-3">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/driver/settlements/info">이용료 안내</MudButton>
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/driver/home">기사 홈으로</MudButton>
             </MudStack>
         </MudPaper>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="재조회Async">이용료 새로고침</MudButton>
+        }
     </MudStack>
 </MudContainer>
 
@@ -60,6 +74,8 @@
     ];
 
     protected override Task OnInitializedAsync() => ViewModel.초기화Async();
+
+    private Task 재조회Async() => ViewModel.새로고침Async();
 
     private static string 금액표시(decimal amount)
     {

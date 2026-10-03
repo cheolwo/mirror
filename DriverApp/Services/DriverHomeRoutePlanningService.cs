@@ -144,6 +144,7 @@ public sealed class DriverHomeRoutePlanningService
         var stage = currentTransport.현재단계 ?? string.Empty;
         var nextAction = currentTransport.다음행동 ?? string.Empty;
         return nextAction.Contains("상차", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(stage, "확정", StringComparison.Ordinal)
             || stage.Contains("상차 대기", StringComparison.OrdinalIgnoreCase)
             || stage.Contains("상차지 도착", StringComparison.OrdinalIgnoreCase)
             || stage.Contains("배차확정", StringComparison.OrdinalIgnoreCase);

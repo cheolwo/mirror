@@ -238,7 +238,9 @@ public sealed class 화주운송의뢰UseCase : I화주운송의뢰UseCase
             new 위치정보입력값(request.픽업?.주소?.도로명주소, request.픽업?.주소?.상세주소, request.픽업?.주소?.위도, request.픽업?.주소?.경도, request.픽업?.연락처?.이름, request.픽업?.연락처?.전화번호, request.픽업?.시간창?.시작일시, request.픽업?.시간창?.종료일시),
             new 위치정보입력값(request.하차?.주소?.도로명주소, request.하차?.주소?.상세주소, request.하차?.주소?.위도, request.하차?.주소?.경도, request.하차?.연락처?.이름, request.하차?.연락처?.전화번호, request.하차?.시간창?.시작일시, request.하차?.시간창?.종료일시),
             new 요청조건입력값(request.요금옵션?.요청사항),
-            request.정산조건 is null ? null : new 정산조건입력값(request.결제수단, request.정산조건)), cancellationToken);
+            request.정산조건 is null ? null : new 정산조건입력값(request.결제수단, request.정산조건),
+            request.요금옵션,
+            request.결제예정금액), cancellationToken);
 
     public async Task<Result<화주운송의뢰응답>> 관리자취소환불Async(
         string requestId,
@@ -374,7 +376,9 @@ public sealed class 화주운송의뢰UseCase : I화주운송의뢰UseCase
             pricing?.최종운임,
             pricing?.기사지급예정운임,
             request.클라이언트요청Id,
-            request.결제상태);
+            request.결제상태,
+            pricing?.거리계산방식,
+            pricing?.단가출처);
     }
 
     private async Task<Result<PricingDTO?>> BuildServerPricingAsync(
@@ -382,8 +386,19 @@ public sealed class 화주운송의뢰UseCase : I화주운송의뢰UseCase
         CancellationToken cancellationToken)
     {
         var pricing = request.요금옵션;
+        if (pricing?.예상거리Km is <= 0m)
+            return Result.Fail<PricingDTO?>("예상 거리는 0보다 커야 합니다. 거리 자료가 없으면 값을 생략해 주세요.");
         if (!ShouldEstimateFare(request, pricing))
         {
+            // 견적을 계산하지 않은 기존 금액 입력에는 서버 계산 근거를 부여하지 않습니다.
+            if (pricing is not null)
+            {
+                pricing.예상거리Km = null;
+                pricing.거리계산방식 = null;
+                pricing.단가출처 = null;
+                pricing.Km당단가 = null;
+                pricing.최소운임 = null;
+            }
             return Result.Ok(pricing);
         }
 
@@ -411,6 +426,8 @@ public sealed class 화주운송의뢰UseCase : I화주운송의뢰UseCase
             서비스레벨 = pricing?.서비스레벨,
             요청사항 = pricing?.요청사항,
             예상거리Km = estimate.예상거리Km,
+            거리계산방식 = estimate.거리계산방식,
+            단가출처 = estimate.단가출처,
             기본운임 = estimate.기본운임,
             Km당단가 = estimate.Km당단가,
             거리운임 = estimate.거리운임,

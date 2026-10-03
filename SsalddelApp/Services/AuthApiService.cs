@@ -80,10 +80,14 @@ public sealed class AuthApiService
                 return null;
             }
 
+            var sessionRevision = _authSession.SessionRevision;
+            var userId = _authSession.UserId;
+            var refreshToken = _authSession.RefreshToken;
             if (string.IsNullOrWhiteSpace(_authSession.UserId)
                 || string.IsNullOrWhiteSpace(_authSession.RefreshToken)
                 || _authSession.RefreshTokenExpiresAtUtc <= DateTime.UtcNow)
             {
+                await _authSession.TryClearAsync(sessionRevision, refreshToken, cancellationToken);
                 return "로그인 세션이 만료되었습니다. 다시 로그인해 주세요.";
             }
 
@@ -91,27 +95,38 @@ public sealed class AuthApiService
                 "api/v1/auth/refresh",
                 new 토큰갱신요청
                 {
-                    UserId = _authSession.UserId,
-                    RefreshToken = _authSession.RefreshToken
+                    UserId = userId,
+                    RefreshToken = refreshToken
                 },
                 cancellationToken);
+            if (!IsCurrentRefreshSession(sessionRevision, userId, refreshToken))
+            {
+                return "로그인 세션이 변경되었습니다. 다시 확인해 주세요.";
+            }
             if (!response.IsSuccessStatusCode)
             {
                 if (response.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized)
                 {
-                    await _authSession.ClearAsync(cancellationToken);
+                    await _authSession.TryClearAsync(sessionRevision, refreshToken, cancellationToken);
                 }
 
                 return "로그인 세션을 갱신하지 못했습니다. 다시 로그인해 주세요.";
             }
 
             var token = await response.Content.ReadFromJsonAsync<토큰응답>(cancellationToken);
+            if (!IsCurrentRefreshSession(sessionRevision, userId, refreshToken))
+            {
+                return "로그인 세션이 변경되었습니다. 다시 확인해 주세요.";
+            }
             if (token is null || string.IsNullOrWhiteSpace(token.AccessToken))
             {
                 return "서버 인증 응답을 읽을 수 없습니다.";
             }
 
-            await _authSession.ApplyAsync(token.ToClientAuthTokenSnapshot(), cancellationToken);
+            if (!await _authSession.TryRefreshAsync(token.ToClientAuthTokenSnapshot(), sessionRevision, refreshToken, cancellationToken))
+            {
+                return "로그인 세션이 변경되었습니다. 다시 확인해 주세요.";
+            }
             await _mobilePushInstallationClient.EnsureRegisteredAsync(cancellationToken);
             return null;
         }
@@ -120,4 +135,9 @@ public sealed class AuthApiService
             _refreshGate.Release();
         }
     }
+
+    private bool IsCurrentRefreshSession(long revision, string? userId, string? refreshToken)
+        => _authSession.SessionRevision == revision
+           && string.Equals(_authSession.UserId, userId, StringComparison.Ordinal)
+           && string.Equals(_authSession.RefreshToken, refreshToken, StringComparison.Ordinal);
 }

@@ -3,8 +3,11 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using MediatR;
+using System.Text.Json;
 using Ssalddel.Application.CommandProcessing;
+using Ssalddel.Application.Driver.Transport;
 using Ssalddel.Application.Warehouse;
+using Ssalddel.Controllers;
 using Ssalddel.Contracts.Common.Community;
 using Ssalddel.Contracts.Common.Inbound;
 using Ssalddel.Contracts.Common.Inventory;
@@ -358,6 +361,267 @@ public sealed class WarehouseOperationDetailTests
         Assert.Contains("실제 하차지", error.Message);
         Assert.Empty(await db.화주운송의뢰.ToArrayAsync());
     }
+
+    [Fact]
+    public async Task 재위탁의실제하차연락처는_저장재조회기사전달되고_같은입력재시도는중복예약하지않는다()
+    {
+        await using var db = CreateContext();
+        await SeedReconsignmentAsync(db);
+        var service = CreateReconsignmentService(db);
+        var request = BuildReconsignmentRequest();
+        request.하차담당자명 = "  실제 수령자  ";
+        request.하차연락처 = "  010-0000-2002  ";
+
+        var created = await service.CreateReconsignmentRequestAsync(request, default);
+        var replay = await service.CreateReconsignmentRequestAsync(request, default);
+        var stored = await db.화주운송의뢰.AsNoTracking().SingleAsync();
+        Assert.Equal("실제 수령자", stored.하차_연락처_이름);
+        Assert.Equal("010-0000-2002", stored.하차_연락처_전화번호);
+        Assert.Equal("출고 창고 담당자", stored.픽업_연락처_이름);
+        Assert.Equal("010-0000-1001", stored.픽업_연락처_전화번호);
+        Assert.Equal(request.희망상차일시, stored.픽업_시간창_시작일시);
+        Assert.Equal(request.희망도착일시, stored.하차_시간창_시작일시);
+        Assert.Equal("실제 수령자", created.하차?.연락처.이름);
+        Assert.Equal("010-0000-2002", replay.하차?.연락처.전화번호);
+        Assert.Equal(created.의뢰Id, replay.의뢰Id);
+        Assert.True(replay.멱등재시도여부);
+        Assert.Equal(12, (await db.입고상품.SingleAsync(x => x.Id == 71)).예약수량);
+        Assert.Single(await db.운송의뢰상품연결.ToArrayAsync());
+        Assert.Single(await db.재고이동.Where(x => x.출고예정Id == 51).ToArrayAsync());
+
+        var transport = await db.운송원장.SingleAsync();
+        transport.기사_운송자 = "driver-contact";
+        await db.SaveChangesAsync();
+        var driver = await new 운송상세조회QueryHandler(db).Handle(
+            new 운송상세조회Query("driver-contact", transport.Id), default);
+        Assert.NotNull(driver);
+        Assert.Equal("실제 수령자", driver.수령자명);
+        Assert.Equal("010-0000-2002", driver.수령자연락처);
+        Assert.Equal("010-0000-1001", driver.상차연락처);
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("  ", "  ")]
+    public async Task 재위탁하차연락처가미입력이면_사용자Id나출고창고연락처를대입하지않는다(string? name, string? phone)
+    {
+        await using var db = CreateContext();
+        await SeedReconsignmentAsync(db);
+        var request = BuildReconsignmentRequest();
+        request.하차담당자명 = name;
+        request.하차연락처 = phone;
+        await CreateReconsignmentService(db).CreateReconsignmentRequestAsync(request, default);
+
+        var stored = await db.화주운송의뢰.SingleAsync();
+        Assert.Equal(string.Empty, stored.하차_연락처_이름);
+        Assert.Equal(string.Empty, stored.하차_연락처_전화번호);
+        Assert.Equal("출고 창고 담당자", stored.픽업_연락처_이름);
+        Assert.Equal("010-0000-1001", stored.픽업_연락처_전화번호);
+    }
+
+    [Fact]
+    public async Task 연락처필드를미전송한_기존클라이언트재호출은_기존값과동일의뢰Id를보존한다()
+    {
+        await using var db = CreateContext();
+        await SeedReconsignmentAsync(db);
+        var service = CreateReconsignmentService(db);
+        var original = BuildReconsignmentRequest();
+        original.하차담당자명 = "기존 수령자";
+        original.하차연락처 = "010-0000-2002";
+        var created = await service.CreateReconsignmentRequestAsync(original, default);
+
+        var replay = await service.CreateReconsignmentRequestAsync(BuildReconsignmentRequest(), default);
+
+        Assert.True(replay.멱등재시도여부);
+        Assert.Equal(created.의뢰Id, replay.의뢰Id);
+        Assert.Equal("기존 수령자", replay.하차?.연락처.이름);
+        Assert.Equal("010-0000-2002", replay.하차?.연락처.전화번호);
+        Assert.Single(await db.화주운송의뢰.ToArrayAsync());
+        Assert.Single(await db.재고이동.Where(x => x.출고예정Id == 51).ToArrayAsync());
+        Assert.Equal(12, (await db.입고상품.SingleAsync(x => x.Id == 71)).예약수량);
+    }
+
+    [Theory]
+    [InlineData("다른 수령자", null)]
+    [InlineData(null, "010-0000-9999")]
+    [InlineData("  ", null)]
+    [InlineData(null, "  ")]
+    public async Task 이미연결된의뢰의_명시적연락처변경은409로분류하고_기존값과예약재고를덮어쓰지않는다(string? name, string? phone)
+    {
+        await using var db = CreateContext();
+        await SeedReconsignmentAsync(db);
+        var service = CreateReconsignmentService(db);
+        var request = BuildReconsignmentRequest();
+        request.하차담당자명 = "기존 수령자";
+        request.하차연락처 = "010-0000-2002";
+        var created = await service.CreateReconsignmentRequestAsync(request, default);
+        var changed = BuildReconsignmentRequest();
+        changed.하차담당자명 = name;
+        changed.하차연락처 = phone;
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.CreateReconsignmentRequestAsync(changed, default));
+
+        Assert.Equal(StatusCodes.Status409Conflict, Result응답확장.실패분류(error.Message).StatusCode);
+        var stored = await db.화주운송의뢰.SingleAsync();
+        Assert.Equal("기존 수령자", stored.하차_연락처_이름);
+        Assert.Equal("010-0000-2002", stored.하차_연락처_전화번호);
+        Assert.Equal(created.의뢰Id, (await db.출고예정.SingleAsync(x => x.Id == 51)).운송의뢰Id);
+        Assert.Equal(12, (await db.입고상품.SingleAsync(x => x.Id == 71)).예약수량);
+        Assert.Single(await db.재고이동.Where(x => x.출고예정Id == 51).ToArrayAsync());
+    }
+
+    [Fact]
+    public async Task 다른창고사용자는_연락처를넣어도_재위탁의뢰와예약재고를만들수없다()
+    {
+        await using var db = CreateContext();
+        await SeedReconsignmentAsync(db);
+        var request = BuildReconsignmentRequest();
+        request.하차담당자명 = "입력 담당자";
+        request.하차연락처 = "010-0000-2002";
+        var service = new WarehouseOperationService(db, new TestCurrentUserAccessor("other-user"), new NoOpTransportLedgerSync());
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateReconsignmentRequestAsync(request, default));
+
+        Assert.Empty(await db.화주운송의뢰.ToArrayAsync());
+        Assert.Empty(await db.재고이동.ToArrayAsync());
+        var inventory = await db.입고상품.SingleAsync(x => x.Id == 71);
+        Assert.Equal(12, inventory.가용수량);
+        Assert.Equal(0, inventory.예약수량);
+    }
+
+    [Theory]
+    [InlineData(101, 4)]
+    [InlineData(4, 51)]
+    public async Task 과도한하차연락처입력은_의뢰와재고변경전에거절한다(int nameLength, int phoneLength)
+    {
+        await using var db = CreateContext();
+        await SeedReconsignmentAsync(db);
+        var request = BuildReconsignmentRequest();
+        request.하차담당자명 = new string('가', nameLength);
+        request.하차연락처 = new string('1', phoneLength);
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            CreateReconsignmentService(db).CreateReconsignmentRequestAsync(request, default));
+
+        Assert.Equal(StatusCodes.Status400BadRequest, Result응답확장.실패분류(error.Message).StatusCode);
+        Assert.Empty(await db.화주운송의뢰.ToArrayAsync());
+        Assert.Equal(0, (await db.입고상품.SingleAsync(x => x.Id == 71)).예약수량);
+    }
+
+    [Theory]
+    [InlineData("2026-10-03T08:02:00Z", "2026-10-03T09:32:00Z")]
+    [InlineData("2026-10-03T08:02:00+00:00", "2026-10-03T09:32:00Z")]
+    [InlineData("2026-10-03T17:02:00+09:00", "2026-10-03T18:32:00+09:00")]
+    [InlineData("2026-10-03T04:02:00-04:00", "2026-10-03T05:32:00-04:00")]
+    [InlineData("2026-10-03T08:02:00", "2026-10-03T09:32:00")]
+    public async Task 재위탁시간창은_JSON오프셋을UTC로저장하고_새컨텍스트기사조회와재시도에서도동일시각을유지한다(
+        string pickupJson, string arrivalJson)
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<SsalddelContext>().UseSqlite(connection).Options;
+        var expectedPickup = new DateTime(2026, 10, 3, 8, 2, 0, DateTimeKind.Utc);
+        var expectedArrival = new DateTime(2026, 10, 3, 9, 32, 0, DateTimeKind.Utc);
+        string requestId;
+        long transportId;
+
+        await using (var db = new SsalddelContext(options, new DummyPersonalDataEncryptionService()))
+        {
+            await db.Database.EnsureCreatedAsync();
+            await SeedReconsignmentAsync(db);
+            var parsed = JsonSerializer.Deserialize<재고운송의뢰생성요청>(JsonSerializer.Serialize(new
+            {
+                희망상차일시 = pickupJson,
+                희망도착일시 = arrivalJson
+            }))!;
+            var request = BuildReconsignmentRequest();
+            request.희망상차일시 = parsed.희망상차일시;
+            request.희망도착일시 = parsed.희망도착일시;
+            var created = await CreateReconsignmentService(db).CreateReconsignmentRequestAsync(request, default);
+            requestId = created.의뢰Id;
+
+            var stored = await db.화주운송의뢰.SingleAsync();
+            Assert.Equal(expectedPickup, stored.픽업_시간창_시작일시);
+            Assert.Equal(DateTimeKind.Utc, stored.픽업_시간창_시작일시.Kind);
+            Assert.Equal(expectedArrival, stored.하차_시간창_시작일시);
+            Assert.Equal(DateTimeKind.Utc, stored.하차_시간창_시작일시!.Value.Kind);
+            var transport = await db.운송원장.SingleAsync();
+            transport.기사_운송자 = "driver-time";
+            transportId = transport.Id;
+            await db.SaveChangesAsync();
+        }
+
+        await using var verification = new SsalddelContext(options, new DummyPersonalDataEncryptionService());
+        var driver = await new 운송상세조회QueryHandler(verification).Handle(
+            new 운송상세조회Query("driver-time", transportId), default);
+        Assert.NotNull(driver);
+        Assert.Equal(expectedPickup, driver.상차시간창시작일시);
+        Assert.Equal(expectedPickup.AddHours(1), driver.상차시간창종료일시);
+        Assert.Equal(expectedArrival, driver.하차시간창시작일시);
+        Assert.Equal(expectedArrival.AddHours(1), driver.하차시간창종료일시);
+
+        var replayRequest = BuildReconsignmentRequest();
+        replayRequest.희망상차일시 = expectedPickup;
+        replayRequest.희망도착일시 = expectedArrival;
+        var replay = await CreateReconsignmentService(verification).CreateReconsignmentRequestAsync(replayRequest, default);
+        Assert.Equal(requestId, replay.의뢰Id);
+        Assert.True(replay.멱등재시도여부);
+        Assert.Single(await verification.화주운송의뢰.ToArrayAsync());
+        Assert.Single(await verification.재고이동.Where(x => x.출고예정Id == 51).ToArrayAsync());
+        Assert.Equal(12, (await verification.입고상품.SingleAsync(x => x.Id == 71)).예약수량);
+    }
+
+    [Fact]
+    public async Task 재위탁시간창은_혼합JSON오프셋의실제도착시각이상차보다이르면_재고변경전에거절한다()
+    {
+        await using var db = CreateContext();
+        await SeedReconsignmentAsync(db);
+        var parsed = JsonSerializer.Deserialize<재고운송의뢰생성요청>(JsonSerializer.Serialize(new
+        {
+            희망상차일시 = "2026-10-03T08:00:00Z",
+            희망도착일시 = "2026-10-03T07:30:00+00:00"
+        }))!;
+        var request = BuildReconsignmentRequest();
+        request.희망상차일시 = parsed.희망상차일시;
+        request.희망도착일시 = parsed.희망도착일시;
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            CreateReconsignmentService(db).CreateReconsignmentRequestAsync(request, default));
+
+        Assert.Contains("도착 일시를 상차 일시보다 뒤로", error.Message);
+        Assert.Empty(await db.화주운송의뢰.ToArrayAsync());
+        Assert.Empty(await db.재고이동.ToArrayAsync());
+        var inventory = await db.입고상품.SingleAsync(x => x.Id == 71);
+        Assert.Equal(12, inventory.가용수량);
+        Assert.Equal(0, inventory.예약수량);
+    }
+
+    private static WarehouseOperationService CreateReconsignmentService(SsalddelContext db)
+        => new(db, new TestCurrentUserAccessor("warehouse-owner"), new NoOpTransportLedgerSync());
+
+    private static async Task SeedReconsignmentAsync(SsalddelContext db)
+    {
+        await SeedAsync(db);
+        await SeedInspectionItemAsync(db);
+        var warehouse = await db.창고.SingleAsync(x => x.Id == 7);
+        warehouse.담당자명 = "출고 창고 담당자";
+        warehouse.연락처 = "010-0000-1001";
+        var outbound = await db.출고예정.SingleAsync(x => x.Id == 51);
+        outbound.입고상품Id = 71;
+        outbound.상태 = 출고상태.준비중;
+        await db.SaveChangesAsync();
+    }
+
+    private static 재고운송의뢰생성요청 BuildReconsignmentRequest()
+        => new()
+        {
+            출고예정Id = 51, 입고상품Id = 71, 요청수량 = 12,
+            하차지주소 = "서울특별시 송파구 올림픽로 300", 하차지상세주소 = "동문 상차장",
+            화물종류 = "냉장 감자", 차량종류 = "1톤 냉장탑차",
+            희망상차일시 = new DateTime(2026, 10, 3, 1, 0, 0, DateTimeKind.Utc),
+            희망도착일시 = new DateTime(2026, 10, 3, 3, 0, 0, DateTimeKind.Utc), 취급메모 = "냉장 유지"
+        };
 
     [Fact]
     public async Task 입고완료는_재고이력저장실패시_상태와재고를함께롤백한다()

@@ -1,5 +1,7 @@
 @using Ssalddel.Ui.Common.Areas.App.Models.Auth
 @using Ssalddel.Ui.Common.Areas.App.Components.Auth
+@implements IDisposable
+@inject NavigationManager Navigation
 
 <Ssalddel공통로그인Panel 제목="창고 업무 로그인"
                          설명="창고 업무 정보는 관계자에게만 공개됩니다. 서버가 창고관리자 역할과 HR 세부 역할을 최종 확인합니다."
@@ -26,6 +28,29 @@
 </Ssalddel공통로그인Panel>
 
 @code {
+    private bool _disposed;
+    private WarehousePageDisplayContext.PageLease? _displayLease;
+
+    [CascadingParameter]
+    public WarehousePageDisplayContext? DisplayContext { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (_disposed || DisplayContext is null) return;
+        if (_displayLease?.IsFor(Navigation.Uri) != true)
+        {
+            _displayLease?.Dispose();
+            _displayLease = DisplayContext.Acquire(Navigation.Uri);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _displayLease?.Dispose();
+    }
+
     [Parameter, EditorRequired]
     public 창고로그인ViewModel ViewModel { get; set; } = default!;
 

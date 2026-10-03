@@ -32,37 +32,19 @@
                             Opacity="0.18" />
                 </Border.Shadow>
 
-                <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="5">
-                    <Button x:Name="KoreaDriverButton"
-                            Text="한국 기사용"
-                            Padding="12,7"
-                            FontSize="12"
-                            FontAttributes="Bold"
-                            CornerRadius="9"
-                            Clicked="OnKoreaDriverClicked" />
-                    <Button x:Name="UnitedStatesDriverButton"
-                            Grid.Column="1"
-                            Text="미국 기사용"
-                            Padding="12,7"
-                            FontSize="12"
-                            FontAttributes="Bold"
-                            CornerRadius="9"
-                            Clicked="OnUnitedStatesDriverClicked" />
-                    <VerticalStackLayout Grid.Column="2"
-                                         Spacing="0"
-                                         HorizontalOptions="End"
+                    <VerticalStackLayout Spacing="0"
+                                         Padding="7,2"
                                          VerticalOptions="Center">
                         <Label x:Name="OperatingMarketLabel"
                                FontSize="11"
                                FontAttributes="Bold"
                                TextColor="#0f172a"
-                               HorizontalTextAlignment="End" />
+                               HorizontalTextAlignment="Start" />
                         <Label x:Name="MapProviderLabel"
                                FontSize="10"
                                TextColor="#64748b"
-                               HorizontalTextAlignment="End" />
+                               HorizontalTextAlignment="Start" />
                     </VerticalStackLayout>
-                </Grid>
             </Border>
 
             <Border x:Name="RecommendationBanner"

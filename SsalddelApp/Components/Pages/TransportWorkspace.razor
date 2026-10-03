@@ -2,6 +2,7 @@
 @using SsalddelApp.Models.Shipper
 @using SsalddelApp.Services
 @using Ssalddel.Client.Infrastructure.Transport
+@using SsalddelApp.ViewModels.Shipper
 @inject IAuthSession AuthSession
 @inject IShipperOperationsService ShipperOperations
 @inject ITransportRequestLedgerObserver LedgerObserver
@@ -153,6 +154,8 @@
     private string? message;
     private Severity messageSeverity = Severity.Info;
     private CancellationTokenSource? refreshCancellation;
+    private ShipperQueryLifetime? queryLifetime;
+    private bool disposed;
 
     private IEnumerable<ShipperRequestItem> OrderedRequests => requests.OrderByDescending(x => x.생성일시);
 
@@ -165,25 +168,44 @@
 
     protected override async Task OnInitializedAsync()
     {
+        queryLifetime = new ShipperQueryLifetime(AuthSession);
+        queryLifetime.SessionInvalidated += OnSessionInvalidated;
         LedgerObserver.RefreshRequested += OnLedgerRefreshRequested;
         await AuthSession.RestoreAsync();
+        if (disposed) return;
         await LoadAsync();
+        if (disposed) return;
         refreshCancellation = new CancellationTokenSource();
         _ = RunFallbackPollingAsync(refreshCancellation.Token);
     }
 
     public void Dispose()
     {
+        disposed = true;
         LedgerObserver.RefreshRequested -= OnLedgerRefreshRequested;
+        if (queryLifetime is not null)
+        {
+            queryLifetime.SessionInvalidated -= OnSessionInvalidated;
+            queryLifetime.Dispose();
+        }
         refreshCancellation?.Cancel();
         refreshCancellation?.Dispose();
     }
 
+    private void OnSessionInvalidated()
+        => _ = InvokeAsync(() =>
+        {
+            if (disposed) return;
+            requests = [];
+            message = null;
+            StateHasChanged();
+        });
+
     private void OnLedgerRefreshRequested(TransportRequestLedgerRefreshRequest request)
         => _ = InvokeAsync(async () =>
         {
+            if (disposed) return;
             await LoadAsync();
-            StateHasChanged();
         });
 
     private async Task RunFallbackPollingAsync(CancellationToken cancellationToken)
@@ -196,8 +218,8 @@
             {
                 await InvokeAsync(async () =>
                 {
+                    if (disposed) return;
                     await LoadAsync();
-                    StateHasChanged();
                 });
             }
         }
@@ -208,24 +230,24 @@
 
     private async Task LoadAsync()
     {
+        if (disposed || queryLifetime is null) return;
         if (!AuthSession.IsLoggedIn)
         {
             requests = [];
             return;
         }
 
-        try
-        {
-            requests = (await ShipperOperations.GetRequestsAsync()).ToList();
-            message = null;
-        }
-        catch (Exception ex)
-        {
-            messageSeverity = requests.Count == 0 ? Severity.Error : Severity.Warning;
-            message = requests.Count == 0
-                ? $"서버 API 조회 실패: {ex.Message}"
-                : $"최신 상태를 확인하지 못해 마지막 조회 결과를 표시합니다: {ex.Message}";
-        }
+        await queryLifetime.RunAsync(
+            cancellationToken => ShipperOperations.GetRequestsAsync(cancellationToken),
+            result => { requests = result.ToList(); message = null; },
+            ex =>
+            {
+                messageSeverity = requests.Count == 0 ? Severity.Error : Severity.Warning;
+                message = requests.Count == 0
+                    ? $"서버 API 조회 실패: {ex.Message}"
+                    : $"최신 상태를 확인하지 못해 마지막 조회 결과를 표시합니다: {ex.Message}";
+            },
+            StateHasChanged);
     }
 
     private static bool IsMatch(string? value, params string[] keywords)

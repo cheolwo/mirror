@@ -1,6 +1,10 @@
 using MediatR;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging.Abstractions;
 using Ssalddel.Application.CommandProcessing;
+using Ssalddel.Application.Driver.Transport;
 using Ssalddel.Application.Warehouse;
 using Ssalddel.Application.Warehouse.Events;
 using Ssalddel.Contracts.Common.Inventory;
@@ -19,6 +23,111 @@ namespace Ssalddel.Tests.Application.Warehouse;
 
 public sealed class 출고운송인계완료UseCaseTests
 {
+    [Fact]
+    public async Task 기사도착후_창고인계가선행되면_상차완료되고재출고하지않는다()
+    {
+        await using var db = CreateContext();
+        var planId = await SeedAsync(db);
+        var transport = await db.운송원장.SingleAsync();
+        transport.기사_운송자 = "driver-7";
+        transport.운송번호 = "display-transport-31";
+        var shipperRequest = await db.화주운송의뢰.SingleAsync();
+        shipperRequest.증빙방식 = "인수증";
+        shipperRequest.정산메모 = "서명 필수";
+        await db.SaveChangesAsync();
+        var executor = CreateDriverExecutor(db);
+
+        var arrived = await new 운송상차지도착CommandHandler(executor)
+            .Handle(new 운송상차지도착Command("driver-7", transport.Id), CancellationToken.None);
+        Assert.True(arrived.IsSuccess);
+        Assert.Equal("상차지도착", (await db.화주운송의뢰.SingleAsync()).배차상태);
+
+        var warehouse = CreateUseCase(db);
+        var released = await warehouse.완료Async(planId, Request(), RequestContext(), CancellationToken.None);
+        Assert.True(released.IsSuccess);
+        var unsigned = await new 운송상차완료CommandHandler(db, executor, new 운송증빙첨부JsonWriter())
+            .Handle(new 운송상차완료Command("driver-7", transport.Id)
+            { 상차사진ObjectName = "private/test/pickup.jpg" }, CancellationToken.None);
+        Assert.True(unsigned.IsFailed);
+        Assert.Contains("서명", unsigned.Errors.Single().Message, StringComparison.Ordinal);
+        Assert.Equal("상차지도착", transport.상태);
+        var pickup = await new 운송상차완료CommandHandler(db, executor, new 운송증빙첨부JsonWriter())
+            .Handle(new 운송상차완료Command("driver-7", transport.Id)
+            {
+                상차사진ObjectName = "private/test/pickup.jpg", 인수증확인완료 = true,
+                인수자명 = "인수자", 인수자서명 = "test-recipient-signature", 기사서명 = "test-driver-signature"
+            }, CancellationToken.None);
+        Assert.True(pickup.IsSuccess);
+        Assert.Equal("상차완료", (await db.운송원장.SingleAsync()).상태);
+        Assert.Equal("상차완료", (await db.화주운송의뢰.SingleAsync()).배차상태);
+
+        var replay = await warehouse.완료Async(planId, Request(), RequestContext(), CancellationToken.None);
+        Assert.True(replay.IsSuccess);
+        Assert.True(replay.Value.IdempotentReplay);
+        Assert.Equal(0, (await db.입고상품.SingleAsync()).예약수량);
+        Assert.Single(await db.재고이동.Where(x => x.이동유형 == 재고이동유형.출고).ToArrayAsync());
+        Assert.Single(await db.재고이력.Where(x => x.이력유형 == 재고이동유형.출고).ToArrayAsync());
+    }
+
+    [Fact]
+    public async Task 창고인계전의_기사상차완료는409이고_사진상태재고를변경하지않는다()
+    {
+        await using var db = CreateContext();
+        await SeedAsync(db, dispatchStatus: "상차지도착");
+        var transport = await db.운송원장.SingleAsync();
+        transport.기사_운송자 = "driver-7";
+        transport.상태 = "상차지도착";
+        await db.SaveChangesAsync();
+
+        var result = await new 운송상차완료CommandHandler(db, CreateDriverExecutor(db), new 운송증빙첨부JsonWriter())
+            .Handle(new 운송상차완료Command("driver-7", transport.Id)
+            { 상차사진ObjectName = "private/test/pickup.jpg" }, CancellationToken.None);
+
+        Assert.True(result.IsFailed);
+        Assert.Equal(409, result.Errors.Single().Metadata["StatusCode"]);
+        Assert.Contains("창고의 상품 인계 완료", result.Errors.Single().Message, StringComparison.Ordinal);
+        Assert.Equal("상차지도착", transport.상태);
+        Assert.Equal("상차지도착", (await db.화주운송의뢰.SingleAsync()).배차상태);
+        Assert.Equal(출고상태.준비중, (await db.출고예정.SingleAsync()).상태);
+        Assert.Equal(9, (await db.입고상품.SingleAsync()).예약수량);
+        Assert.Equal("[]", transport.첨부_json);
+        Assert.Empty(db.운송이벤트);
+        Assert.Empty(db.재고이동);
+    }
+
+    [Fact]
+    public async Task 창고출고가없는_일반화주의_기사상차완료흐름은유지한다()
+    {
+        await using var db = CreateContext();
+        await SeedAsync(db, dispatchStatus: "상차지도착");
+        db.출고예정.Remove(await db.출고예정.SingleAsync());
+        var transport = await db.운송원장.SingleAsync();
+        transport.기사_운송자 = "driver-7";
+        transport.상태 = "상차지도착";
+        await db.SaveChangesAsync();
+
+        var result = await new 운송상차완료CommandHandler(db, CreateDriverExecutor(db), new 운송증빙첨부JsonWriter())
+            .Handle(new 운송상차완료Command("driver-7", transport.Id)
+            { 상차사진ObjectName = "private/test/pickup.jpg" }, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("상차완료", transport.상태);
+    }
+
+    [Theory]
+    [InlineData("상차완료")]
+    [InlineData("하차지도착")]
+    [InlineData("인수완료")]
+    public async Task 이미상차이후의_미완료창고출고는_뒤늦게인계확정하지않는다(string state)
+    {
+        await using var db = CreateContext();
+        var id = await SeedAsync(db, dispatchStatus: state);
+        var result = await CreateUseCase(db).완료Async(id, Request(), RequestContext(), CancellationToken.None);
+        Assert.True(result.IsFailed);
+        Assert.Equal(9, (await db.입고상품.SingleAsync()).예약수량);
+        Assert.Empty(db.재고이동);
+    }
+
     [Fact]
     public async Task 기사수락전에는_예약재고와출고원장을변경하지않는다()
     {
@@ -110,6 +219,80 @@ public sealed class 출고운송인계완료UseCaseTests
         Assert.Equal(2, await db.운영체제업무인계Outbox.CountAsync());
     }
 
+    [Fact]
+    public async Task 관계형인계저장중일시실패는_재시도해도재고이력과OS인계를한번만저장한다()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<SsalddelContext>()
+            .UseSqlite(connection)
+            .ReplaceService<IExecutionStrategyFactory, RetryStrategyFactory>()
+            .Options;
+        await using var db = new SsalddelContext(options, new DummyEncryption());
+        await db.Database.EnsureCreatedAsync();
+        var planId = await SeedAsync(db);
+        var logs = new RecordingLog();
+        var outbox = new RecordingOutbox();
+        var publisher = new RecordingPublisher();
+        var handoff = new FailOnceHandoff(new 출고화물운송운영체제인계Service(
+            new 살뜰.Services.Operations.운영체제업무인계Coordinator(db, TimeProvider.System)));
+
+        var first = await CreateUseCase(db, logs, outbox, publisher, handoff)
+            .완료Async(planId, Request(), RequestContext(), CancellationToken.None);
+        await using var read = new SsalddelContext(options, new DummyEncryption());
+        var replay = await CreateUseCase(read, logs, outbox, publisher)
+            .완료Async(planId, Request(), RequestContext(), CancellationToken.None);
+
+        Assert.True(first.IsSuccess);
+        Assert.False(first.Value.IdempotentReplay);
+        Assert.True(replay.IsSuccess);
+        Assert.True(replay.Value.IdempotentReplay);
+        Assert.Equal(first.Value.HandoffCompletedAtUtc, replay.Value.HandoffCompletedAtUtc);
+        Assert.Equal(2, handoff.Calls);
+        Assert.Equal(0, (await read.입고상품.AsNoTracking().SingleAsync()).예약수량);
+        Assert.Equal(출고상태.출고완료, (await read.출고예정.AsNoTracking().SingleAsync()).상태);
+        Assert.Single(await read.재고이력.ToArrayAsync());
+        Assert.Single(await read.재고이동.ToArrayAsync());
+        Assert.Single(await read.운영체제업무인계.ToArrayAsync());
+        Assert.Equal(2, await read.운영체제업무인계Outbox.CountAsync());
+        Assert.Single(logs.Entries);
+        Assert.Single(publisher.Notifications);
+        Assert.Equal(2, outbox.Calls.Count);
+    }
+
+    [Fact]
+    public async Task 관계형인계의OS저장실패는_출고상태와SQL재고차감및이력을함께롤백한다()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<SsalddelContext>().UseSqlite(connection).Options;
+        await using var db = new SsalddelContext(options, new DummyEncryption());
+        await db.Database.EnsureCreatedAsync();
+        var planId = await SeedAsync(db);
+        var logs = new RecordingLog();
+        var outbox = new RecordingOutbox();
+        var publisher = new RecordingPublisher();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            CreateUseCase(db, logs, outbox, publisher, new ThrowingHandoff())
+                .완료Async(planId, Request(), RequestContext(), CancellationToken.None));
+
+        await using var read = new SsalddelContext(options, new DummyEncryption());
+        Assert.Equal(출고상태.준비중, (await read.출고예정.SingleAsync()).상태);
+        Assert.Equal(9, (await read.입고상품.SingleAsync()).예약수량);
+        Assert.Empty(await read.재고이력.ToArrayAsync());
+        Assert.Empty(await read.재고이동.ToArrayAsync());
+        Assert.Empty(await read.운영체제업무인계.ToArrayAsync());
+        Assert.Empty(logs.Entries);
+        Assert.Empty(publisher.Notifications);
+        Assert.Empty(outbox.Calls);
+    }
+
+    private static 기사운송상태변경CommandExecutor CreateDriverExecutor(SsalddelContext db)
+        => new(db, new 기사운송상태전이Service(), new RecordingPublisher(),
+            new FakeCurrentUserAccessor("driver-7", 역할명.기사), new 참여자실행권한검사(),
+            NullLogger<기사운송상태변경CommandExecutor>.Instance);
+
     private static 출고운송인계완료요청 Request()
         => new()
         {
@@ -123,13 +306,14 @@ public sealed class 출고운송인계완료UseCaseTests
         SsalddelContext db,
         RecordingLog? logs = null,
         RecordingOutbox? outbox = null,
-        RecordingPublisher? publisher = null)
+        RecordingPublisher? publisher = null,
+        I출고화물운송운영체제인계Service? operatingHandoff = null)
         => new(
             db,
             new FakeCurrentUserAccessor("worker-a", 역할명.창고관리자),
             logs ?? new RecordingLog(),
             outbox ?? new RecordingOutbox(),
-            new 출고화물운송운영체제인계Service(
+            operatingHandoff ?? new 출고화물운송운영체제인계Service(
                 new 살뜰.Services.Operations.운영체제업무인계Coordinator(db, TimeProvider.System)),
             publisher ?? new RecordingPublisher());
 
@@ -253,6 +437,47 @@ public sealed class 출고운송인계완료UseCaseTests
         });
         await db.SaveChangesAsync();
         return plan.Id;
+    }
+
+    private sealed class FailOnceHandoff(I출고화물운송운영체제인계Service inner) : I출고화물운송운영체제인계Service
+    {
+        public int Calls { get; private set; }
+
+        public Task<Ssalddel.Contracts.Common.Operations.운영체제업무인계Dto> 인계Async(
+            출고예정 plan,
+            CancellationToken cancellationToken)
+        {
+            Calls++;
+            return Calls == 1
+                ? Task.FromException<Ssalddel.Contracts.Common.Operations.운영체제업무인계Dto>(new RetryableWriteException())
+                : inner.인계Async(plan, cancellationToken);
+        }
+    }
+
+    private sealed class ThrowingHandoff : I출고화물운송운영체제인계Service
+    {
+        public Task<Ssalddel.Contracts.Common.Operations.운영체제업무인계Dto> 인계Async(
+            출고예정 plan,
+            CancellationToken cancellationToken)
+            => Task.FromException<Ssalddel.Contracts.Common.Operations.운영체제업무인계Dto>(
+                new InvalidOperationException("Synthetic handoff failure"));
+    }
+
+    private sealed class RetryableWriteException : Exception { }
+
+    private sealed class RetryStrategyFactory : IExecutionStrategyFactory
+    {
+        private readonly ExecutionStrategyDependencies _dependencies;
+
+        public RetryStrategyFactory(ExecutionStrategyDependencies dependencies) => _dependencies = dependencies;
+
+        public IExecutionStrategy Create() => new RetryStrategy(_dependencies);
+    }
+
+    private sealed class RetryStrategy(ExecutionStrategyDependencies dependencies)
+        : ExecutionStrategy(dependencies, 1, TimeSpan.Zero)
+    {
+        protected override bool ShouldRetryOn(Exception exception) => exception is RetryableWriteException;
     }
 
     private sealed class FakeCurrentUserAccessor(string? userId, string? role) : ICurrentUserAccessor

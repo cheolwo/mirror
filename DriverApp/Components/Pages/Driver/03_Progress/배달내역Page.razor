@@ -1,5 +1,6 @@
 @page "/driver/transports/history"
-@inject IDriverSampleDataService Samples
+@using Ssalddel.Contracts.Driver.Transport
+@inject IDriverTransportApiService TransportApi
 @inject IAuthSession AuthSession
 
 <PageTitle>배달 내역</PageTitle>
@@ -9,7 +10,7 @@
         <MudPaper Class="driver-page-legacy-header pa-4" Elevation="1">
             <MudStack Spacing="1">
                 <MudText Typo="Typo.h4">배달 내역</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">최근 운송 기록과 예상 수익을 확인합니다.</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">화물 운송 기록과 원장 운임을 확인합니다.</MudText>
             </MudStack>
         </MudPaper>
 
@@ -37,7 +38,7 @@
                 <MudButton Class="ml-2" Variant="Variant.Outlined" Color="Color.Error" OnClick="재조회Async">다시 시도</MudButton>
             </MudAlert>
         }
-        else if (Samples.운송목록.Count == 0)
+        else if (_운송목록.Count == 0)
         {
             <MudPaper Class="pa-4" Elevation="1">
                 <MudStack Spacing="2" AlignItems="AlignItems.Start">
@@ -54,24 +55,24 @@
                 <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="재조회Async">내역 새로고침</MudButton>
             </MudStack>
             <MudGrid Spacing="2">
-                @foreach (var item in Samples.운송목록.OrderByDescending(x => x.예정시각))
+                @foreach (var item in _운송목록.OrderByDescending(x => x.UpdatedAt))
                 {
                     <MudItem xs="12" md="6">
                         <MudPaper Class="driver-recommendation-card pa-4 h-100" Elevation="0">
                             <MudStack Spacing="2">
                                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Wrap="Wrap.Wrap">
                                     <MudStack Spacing="0">
-                                        <MudText Typo="Typo.subtitle1">@item.화물종류 운송</MudText>
-                                        <MudText Typo="Typo.body2" Color="Color.Secondary">@item.의뢰Id</MudText>
+                                        <MudText Typo="Typo.subtitle1">화물 운송</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">@item.운송번호</MudText>
                                     </MudStack>
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@item.현재단계</MudChip>
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@item.상태</MudChip>
                                 </MudStack>
 
-                                <DriverRoutePaymentSummary PickupTitle="@item.픽업지"
+                                <DriverRoutePaymentSummary PickupTitle="@item.출발지"
                                                            PickupSubtitle="@PickupScheduleText(item)"
-                                                           DropoffTitle="@item.하차지"
-                                                           DropoffSubtitle="@TransportDistanceText(item)"
-                                                           PaymentLabel="수익"
+                                                           DropoffTitle="@item.도착지"
+                                                           DropoffSubtitle="@HistoryDistanceText(item)"
+                                                           PaymentLabel="원장 운임"
                                                            PaymentItems="@HistoryPaymentItems(item)" />
                             </MudStack>
                         </MudPaper>
@@ -88,17 +89,19 @@
     private bool _데이터로딩중 = true;
     private bool _인증됨;
     private string? _데이터오류;
+    private IReadOnlyList<기사운송요약응답> _운송목록 = [];
 
     protected override Task OnInitializedAsync()
-        => 데이터조회Async(force: false);
+        => 데이터조회Async();
 
     private Task 재조회Async()
-        => 데이터조회Async(force: true);
+        => 데이터조회Async();
 
-    private async Task 데이터조회Async(bool force)
+    private async Task 데이터조회Async()
     {
         _데이터로딩중 = true;
         _데이터오류 = null;
+        _운송목록 = [];
 
         try
         {
@@ -106,7 +109,7 @@
             _인증됨 = AuthSession.IsAuthenticated;
             if (_인증됨)
             {
-                await Samples.RefreshAsync(force: force);
+                _운송목록 = await TransportApi.목록조회Async();
             }
         }
         catch
@@ -119,12 +122,12 @@
         }
     }
 
-    private static string PickupScheduleText(기사운송샘플항목 item)
-        => $"예정 {item.예정시각:MM-dd HH:mm}";
+    private static string PickupScheduleText(기사운송요약응답 item)
+        => item.출발_픽업 is { } pickup ? $"출발 {pickup:MM-dd HH:mm}" : "출발 시각 미확인";
 
-    private static string TransportDistanceText(기사운송샘플항목 item)
-        => $"운송 {item.운송거리Km:0.0}km";
+    private static string HistoryDistanceText(기사운송요약응답 item)
+        => item.예상거리Km.HasValue ? 기사운송표시Mapper.Map(item).운송거리표시 : "거리 자료 없음";
 
-    private static IReadOnlyList<string> HistoryPaymentItems(기사운송샘플항목 item)
-        => [$"{item.예상수익:N0}원", $"다음 처리 {item.다음행동}"];
+    private static IReadOnlyList<string> HistoryPaymentItems(기사운송요약응답 item)
+        => [item.운임 is { } fare ? $"{fare:N0}원" : "운임 미확인", "실수령액은 별도 정산 확인"];
 }

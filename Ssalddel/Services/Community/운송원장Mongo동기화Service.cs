@@ -1,4 +1,7 @@
+using System.Data;
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text.Json;
 using Ssalddel.Contracts.Common.Community;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -43,7 +46,7 @@ public sealed class 운송원장Mongo동기화Service : I운송원장Mongo동기
         _logger = logger;
     }
 
-    public async Task<커뮤니티원장Dto?> 화주운송의뢰동기화Async(
+    public Task<커뮤니티원장Dto?> 화주운송의뢰동기화Async(
         화주운송의뢰 의뢰,
         string updatedBy,
         CancellationToken cancellationToken = default)
@@ -51,31 +54,21 @@ public sealed class 운송원장Mongo동기화Service : I운송원장Mongo동기
         var requestId = Clean(의뢰.의뢰Id);
         if (requestId is null)
         {
-            return null;
+            return Task.FromResult<커뮤니티원장Dto?>(null);
         }
 
-        var 운송실행투영 = await _db.운송원장
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.의뢰Id == requestId || x.운송번호 == requestId, cancellationToken);
-
-        return await 저장Async(의뢰, 운송실행투영, updatedBy, cancellationToken);
+        return 저장Async(requestId, 의뢰, null, updatedBy, cancellationToken);
     }
 
-    public async Task<커뮤니티원장Dto?> 운송실행투영동기화Async(
+    public Task<커뮤니티원장Dto?> 운송실행투영동기화Async(
         운송원장 운송실행투영,
         string updatedBy,
         CancellationToken cancellationToken = default)
     {
         var requestId = FirstNonEmpty(운송실행투영.의뢰Id, 운송실행투영.운송번호);
-        화주운송의뢰? 의뢰 = null;
-        if (requestId is not null)
-        {
-            의뢰 = await _db.화주운송의뢰
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.의뢰Id == requestId, cancellationToken);
-        }
-
-        return await 저장Async(의뢰, 운송실행투영, updatedBy, cancellationToken);
+        return requestId is null
+            ? Task.FromResult<커뮤니티원장Dto?>(null)
+            : 저장Async(requestId, null, 운송실행투영, updatedBy, cancellationToken);
     }
 
     public async Task<운송원장Mongo동기화상태> 상태조회Async(
@@ -115,6 +108,7 @@ public sealed class 운송원장Mongo동기화Service : I운송원장Mongo동기
     }
 
     private async Task<커뮤니티원장Dto?> 저장Async(
+        string requestId,
         화주운송의뢰? 의뢰,
         운송원장? 운송실행투영,
         string updatedBy,
@@ -122,22 +116,140 @@ public sealed class 운송원장Mongo동기화Service : I운송원장Mongo동기
     {
         try
         {
-            var 저장요청 = 운송원장Mongo동기화Builder.저장요청생성(의뢰, 운송실행투영);
-            return await _원장저장소.원장저장Async(저장요청, updatedBy, cancellationToken);
+            // The anchor only chooses a linked ledger. Its business values are never published.
+            var anchor = await _db.운송원장.AsNoTracking()
+                .FirstOrDefaultAsync(x => x.의뢰Id == requestId || x.운송번호 == requestId, cancellationToken);
+            var ledgerId = FirstNonEmpty(anchor?.커뮤니티원장Id, 운송실행투영?.커뮤니티원장Id,
+                운송원장Mongo동기화Builder.원장Id생성(requestId))!;
+            for (var attempt = 0; attempt < 3; attempt++)
+            {
+                // Read the Mongo revision BEFORE opening the RDB snapshot. Reading it afterwards
+                // would let an older tuple claim the revision of a newer business publication.
+                var existing = await _원장저장소.원장조회Async(ledgerId, cancellationToken);
+                var expectedRevision = existing?.Revision ?? 0;
+                var callerTransactionOpen = _db.Database.CurrentTransaction is not null;
+                var tuple = callerTransactionOpen
+                    ? await 읽기TupleAsync(requestId, cancellationToken)
+                    : await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+                    {
+                        await using var tx = _db.Database.IsRelational()
+                            ? await _db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, cancellationToken)
+                            : null;
+                        var read = await 읽기TupleAsync(requestId, cancellationToken);
+                        if (tx is not null) await tx.CommitAsync(cancellationToken);
+                        return read;
+                    });
+                var persisted = tuple.Request is not null || tuple.Transport is not null;
+                if (persisted && callerTransactionOpen)
+                {
+                    _logger.LogWarning("열린 RDB transaction의 운송 snapshot 발행을 보류합니다. Commit 뒤 다시 동기화해야 합니다. RequestId={RequestId}", requestId);
+                    return null;
+                }
+                // Only the first Mongo-first creation can use caller input. All persisted
+                // snapshots and all CAS retries are regenerated from freshly read RDB rows.
+                var save = 운송원장Mongo동기화Builder.저장요청생성(
+                    persisted ? tuple.Request : 의뢰,
+                    persisted ? tuple.Transport : 운송실행투영,
+                    tuple.Fare);
+                if (!string.Equals(save.원장Id, ledgerId, StringComparison.Ordinal))
+                {
+                    ledgerId = save.원장Id!;
+                    continue;
+                }
+                save.기대Revision = expectedRevision;
+                if (persisted) 운송원장RdbSnapshotMarker.Attach(save, requestId);
+                try
+                {
+                    return await _원장저장소.원장저장Async(save, updatedBy, cancellationToken);
+                }
+                catch (InvalidOperationException ex) when (attempt < 2 && IsRevisionConflict(ex))
+                {
+                    // Mongo커뮤니티원장저장소 reports expected-revision/CAS conflicts as this
+                    // InvalidOperationException; unrelated validation failures are not retried.
+                    if (callerTransactionOpen) throw;
+                }
+            }
+            _logger.LogWarning("운송 원장의 연결 또는 revision 경합이 계속되어 발행을 보류합니다. RequestId={RequestId}", requestId);
+            return null;
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
-            var requestId = FirstNonEmpty(의뢰?.의뢰Id, 운송실행투영?.의뢰Id, 운송실행투영?.운송번호) ?? string.Empty;
             _logger.LogWarning(ex, "운송 원장 Mongo 동기화에 실패했습니다. RequestId={RequestId}", requestId);
             return null;
         }
     }
+
+    private async Task<(운송원장? Transport, 화주운송의뢰? Request, 운임구성? Fare)> 읽기TupleAsync(
+        string requestId, CancellationToken cancellationToken)
+    {
+        var transport = await _db.운송원장.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.의뢰Id == requestId || x.운송번호 == requestId, cancellationToken);
+        var request = await _db.화주운송의뢰.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.의뢰Id == requestId, cancellationToken);
+        var fare = request?.운임구성Id is { } pricingId
+            ? await _db.운임구성.AsNoTracking().SingleOrDefaultAsync(
+                x => x.Id == pricingId && x.의뢰Id == requestId, cancellationToken)
+            : null;
+        return (transport, request, fare);
+    }
+
+    private static bool IsRevisionConflict(InvalidOperationException exception)
+        => exception.Message.StartsWith("원장의 현재 상태가 다른 요청에서 먼저 변경되었습니다.", StringComparison.Ordinal);
 
     private static string? FirstNonEmpty(params string?[] values)
         => values.Select(Clean).FirstOrDefault(value => value is not null);
 
     private static string? Clean(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+}
+
+// A mirror of already persisted RDB business state must not become a new business command.
+// The digest binds the marker to this publication. A community-origin block edit changes
+// the digest, retaining the existing editable coordination-ledger projection behavior.
+internal static class 운송원장RdbSnapshotMarker
+{
+    internal const string SourceKey = "RdbBusinessSnapshotSource";
+    internal const string SourceValue = "persisted-rdb-v1";
+    internal const string DigestKey = "RdbBusinessSnapshotDigest";
+    internal const string RequestIdKey = "RdbBusinessSnapshotRequestId";
+
+    internal static void Attach(커뮤니티원장저장요청 request, string requestId)
+    {
+        var attributes = request.확장속성.ToDictionary(x => x.Key, x => x.Value, StringComparer.Ordinal);
+        attributes[SourceKey] = SourceValue;
+        attributes[RequestIdKey] = requestId;
+        attributes[DigestKey] = Digest(request.원장Id!, request.블록목록, request.외부참조);
+        request.확장속성 = attributes;
+    }
+
+    internal static bool Matches(커뮤니티원장Dto ledger, string requestId)
+        => ledger.확장속성.TryGetValue(SourceKey, out var source) && source == SourceValue
+            && ledger.확장속성.TryGetValue(RequestIdKey, out var boundId) && boundId == requestId
+            && ledger.확장속성.TryGetValue(DigestKey, out var digest)
+            && digest == Digest(ledger.원장Id, ledger.블록목록, ledger.외부참조);
+
+    private static string Digest(string ledgerId, IReadOnlyList<커뮤니티원장블록Dto> blocks,
+        IReadOnlyDictionary<string, string> references)
+    {
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            LedgerId = ledgerId.Trim(),
+            References = Normalize(references),
+            Blocks = blocks.OrderBy(x => x.BlockId.Trim(), StringComparer.Ordinal).Select(x => new
+            {
+                BlockId = x.BlockId.Trim(),
+                State = string.IsNullOrWhiteSpace(x.State) ? null : x.State.Trim(),
+                Data = Normalize(x.Data)
+            }).ToArray()
+        });
+        return Convert.ToHexString(SHA256.HashData(bytes));
+    }
+
+    // Mirror Mongo커뮤니티원장저장소's key/value trimming and empty-entry removal.
+    private static KeyValuePair<string, string>[] Normalize(IReadOnlyDictionary<string, string> values)
+        => values.Where(x => !string.IsNullOrWhiteSpace(x.Key) && !string.IsNullOrWhiteSpace(x.Value))
+            .Select(x => new KeyValuePair<string, string>(x.Key.Trim(), x.Value.Trim()))
+            .OrderBy(x => x.Key, StringComparer.Ordinal).ToArray();
 }
 
 public sealed record 운송원장Mongo동기화상태(
@@ -162,7 +274,8 @@ public static class 운송원장Mongo동기화Builder
 
     public static 커뮤니티원장저장요청 저장요청생성(
         화주운송의뢰? 의뢰,
-        운송원장? 운송실행투영)
+        운송원장? 운송실행투영,
+        운임구성? fare = null)
     {
         var requestId = FirstNonEmpty(의뢰?.의뢰Id, 운송실행투영?.의뢰Id, 운송실행투영?.운송번호)
                         ?? throw new InvalidOperationException("운송 Mongo 원장을 만들려면 의뢰Id 또는 운송번호가 필요합니다.");
@@ -185,7 +298,7 @@ public static class 운송원장Mongo동기화Builder
             대상OsName = ResolveOsName(운송실행투영),
             생성자UserId = FirstNonEmpty(의뢰?.화주Id, 의뢰?.주문자UserId, 운송실행투영?.화주Id),
             생성자표시명 = "운송 요청자",
-            블록목록 = BuildBlocks(의뢰, 운송실행투영),
+            블록목록 = BuildBlocks(의뢰, 운송실행투영, fare),
             참여자목록 = BuildParticipants(의뢰, 운송실행투영),
             다이어그램스냅샷 = BuildDiagram(원장Id, 원장템플릿Key),
             외부참조 = BuildReferences(의뢰, 운송실행투영, requestId),
@@ -195,7 +308,8 @@ public static class 운송원장Mongo동기화Builder
 
     private static IReadOnlyList<커뮤니티원장블록Dto> BuildBlocks(
         화주운송의뢰? 의뢰,
-        운송원장? 운송실행투영)
+        운송원장? 운송실행투영,
+        운임구성? fare)
         =>
         [
             new()
@@ -286,6 +400,11 @@ public static class 운송원장Mongo동기화Builder
                     ("결제상태", 의뢰?.결제상태),
                     ("결제예정금액", Format(의뢰?.결제예정금액)),
                     ("최종운임", Format(의뢰?.최종운임 ?? 운송실행투영?.운임)),
+                    ("예상거리Km", Format(fare?.예상거리Km)),
+                    ("거리계산방식", fare?.거리계산방식),
+                    ("Km당단가", Format(fare?.Km당단가)),
+                    ("최소운임", Format(fare?.최소운임)),
+                    ("단가출처", fare?.단가출처),
                     ("대기료", Format(의뢰?.대기료)),
                     ("수작업비", Format(의뢰?.수작업비)),
                     ("할증", Format(의뢰?.할증)),

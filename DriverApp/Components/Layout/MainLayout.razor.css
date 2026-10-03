@@ -1,0 +1,33 @@
+.driver-drawer-group + .driver-drawer-group {
+    margin-top: 24px;
+}
+
+.driver-drawer-group h2 {
+    margin: 12px 12px 8px;
+    color: var(--role-muted, #586b78);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+}
+
+.driver-drawer-group a,
+.driver-drawer-group .driver-mobile-shell__map-link {
+    min-height: 48px;
+    padding: 12px;
+    border-radius: 12px;
+    color: var(--role-text, #172b36);
+    font-size: 16px;
+    line-height: 24px;
+}
+
+.driver-drawer-group a:focus-visible,
+.driver-drawer-group button:focus-visible {
+    outline: 3px solid var(--role-primary, #0f766e);
+    outline-offset: 2px;
+}
+
+.driver-mobile-shell__drawer > aside,
+.driver-mobile-shell__map-error {
+    font-size: 14px;
+    line-height: 20px;
+}

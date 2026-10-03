@@ -1,13 +1,8 @@
 @using Ssalddel.Ui.Common.Areas.App.Components.Shipper
+@implements IDisposable
 @inject IAuthSession AuthSession
 @inject 꾸미기보유권동기화Service 꾸미기보유권동기화Service
 @inject ShipperViewVisibilityService ViewVisibilityService
-
-<RolePurposeJourney RoleName="화주·판매자"
-                    Title="운송 의뢰를 입고와 판매 이행까지 연결합니다"
-                    Description="운송 조건을 작성하고 진행 상태·입고 준비·판매 결과를 같은 업무 흐름에서 확인합니다."
-                    Steps="@PurposeSteps"
-                    BoundaryNote="의뢰 작성과 조회만으로 배차·계약·결제·통관·출고가 자동 확정되지는 않습니다." />
 
 @if (isInitializing)
 {
@@ -27,6 +22,8 @@ else
 
     <ShipperHomeScreen @ref="homeScreen"
                        CompactPresentation="true"
+                       SeparateAnonymousAuthentication="true"
+                       SessionAuthenticated="@AuthSession.IsLoggedIn"
                        ScreenCode="@ScreenCode"
                        HomeTitle="화주 홈"
                        HomeDescription="의뢰와 입고·판매 상태를 요약하고 다음 확인 업무로 이동합니다."
@@ -34,6 +31,13 @@ else
                        WarehouseHref="@ShipperRoutes.WarehouseWorkspace"
                        SalesHref="@ShipperRoutes.SalesOrders"
                        InternationalHref="@ShipperRoutes.FclLclPlanner">
+        <AuthenticatedIntro>
+            <RolePurposeJourney RoleName="화주·판매자"
+                                Title="운송 의뢰를 입고와 판매 이행까지 연결합니다"
+                                Description="운송 조건을 작성하고 진행 상태·입고 준비·판매 결과를 같은 업무 흐름에서 확인합니다."
+                                Steps="@PurposeSteps"
+                                BoundaryNote="의뢰 작성과 조회만으로 배차·계약·결제·통관·출고가 자동 확정되지는 않습니다." />
+        </AuthenticatedIntro>
         <AnonymousContent>
             <ShipperHomeAppLoginPanel OnAuthenticated="HandleAuthenticatedAsync" />
         </AnonymousContent>
@@ -46,6 +50,7 @@ else
 
     private ShipperHomeScreen? homeScreen;
     private bool isInitializing = true;
+    private bool disposed;
     private string? initializationWarning;
     private static readonly IReadOnlyList<RolePurposeJourneyStep> PurposeSteps =
     [
@@ -57,6 +62,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        AuthSession.Changed += HandleSessionChanged;
         try
         {
             await AuthSession.RestoreAsync();
@@ -75,9 +81,29 @@ else
 
     private async Task HandleAuthenticatedAsync()
     {
-        if (homeScreen is not null)
+        if (!disposed && homeScreen is not null)
         {
             await homeScreen.RefreshAsync();
         }
+    }
+
+    private void HandleSessionChanged()
+    {
+        if (!disposed)
+        {
+            _ = InvokeAsync(() =>
+            {
+                if (!disposed)
+                {
+                    StateHasChanged();
+                }
+            });
+        }
+    }
+
+    public void Dispose()
+    {
+        disposed = true;
+        AuthSession.Changed -= HandleSessionChanged;
     }
 }

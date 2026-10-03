@@ -70,11 +70,11 @@
                         </MudItem>
                         <MudItem xs="6" sm="4">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">운송거리</MudText>
-                            <MudText Typo="Typo.body1">@현재운송.운송거리Km.ToString("0.0")km</MudText>
+                            <MudText Typo="Typo.body1">@현재운송.운송거리표시</MudText>
                         </MudItem>
                         <MudItem xs="12" sm="4">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">예상수익</MudText>
-                            <MudText Typo="Typo.body1">@현재운송.예상수익.ToString("N0")원</MudText>
+                            <MudText Typo="Typo.body1">@현재운송.운임표시</MudText>
                         </MudItem>
                         <MudItem xs="12" sm="4">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">상차 유형</MudText>
@@ -153,11 +153,11 @@
                             <SsalddelSensitiveInfoRow Label="하차지" Value="@현재운송.하차지" />
                             <SsalddelSensitiveInfoRow Label="현재 단계" Value="@현재운송.현재단계" />
                             <SsalddelSensitiveInfoRow Label="예정 시각" Value='@현재운송.예정시각.ToString("HH:mm")' />
-                            <SsalddelSensitiveInfoRow Label="운송 거리" Value='@($"{현재운송.운송거리Km:0.0}km")' />
+                            <SsalddelSensitiveInfoRow Label="운송 거리" Value="@현재운송.운송거리표시" />
                         </MudExpansionPanel>
 
                         <MudExpansionPanel Text="결제 정보">
-                            <SsalddelSensitiveInfoRow Label="예상 수익" Value='@($"{현재운송.예상수익:0}원")' />
+                            <SsalddelSensitiveInfoRow Label="예상 수익" Value="@현재운송.운임표시" />
                             <SsalddelSensitiveInfoRow Label="정산 기준" Value="하차 완료 후 정산 확인" />
                             <SsalddelSensitiveInfoRow Label="인수증" Value="하차 현장에서 필요 여부 확인" />
                         </MudExpansionPanel>
@@ -196,21 +196,70 @@
     private bool _데이터로딩중 = true;
     private bool _인증됨;
     private string? _데이터오류;
-    private CancellationTokenSource? _갱신취소;
+    private readonly CancellationTokenSource _갱신취소 = new();
+    private CancellationToken _갱신토큰;
+    private bool _폐기됨;
+    private bool _초기조회완료;
+    private int _조회판본;
+    private long _관찰세션;
+    private long? _조회세션;
 
-    private 기사운송샘플항목? 현재운송 => Samples.현재운송조회();
+    private 기사운송샘플항목? 현재운송
+        => !_폐기됨 && AuthSession.IsAuthenticated && _조회세션 == AuthSession.SessionRevision
+            ? Samples.현재운송조회()
+            : null;
 
     protected override async Task OnInitializedAsync()
     {
+        _갱신토큰 = _갱신취소.Token;
+        AuthSession.Changed += 인증변경;
         await 데이터조회Async(force: false);
-        _갱신취소 = new CancellationTokenSource();
-        _ = 보완조회Async(_갱신취소.Token);
+        _초기조회완료 = true;
+        if (_폐기됨 || _갱신토큰.IsCancellationRequested)
+            return;
+        _ = 보완조회Async(_갱신토큰);
     }
 
     public void Dispose()
     {
-        _갱신취소?.Cancel();
-        _갱신취소?.Dispose();
+        if (_폐기됨)
+            return;
+        _폐기됨 = true;
+        Interlocked.Increment(ref _조회판본);
+        AuthSession.Changed -= 인증변경;
+        _갱신취소.Cancel();
+        _갱신취소.Dispose();
+    }
+
+    private void 인증변경()
+    {
+        if (!_폐기됨 && _초기조회완료)
+            _ = 인증변경반영Async();
+    }
+
+    private async Task 인증변경반영Async()
+    {
+        try
+        {
+            await InvokeAsync(async () =>
+            {
+                if (_폐기됨 || _관찰세션 == AuthSession.SessionRevision)
+                    return;
+                _관찰세션 = AuthSession.SessionRevision;
+                Interlocked.Increment(ref _조회판본);
+                _조회세션 = null;
+                _인증됨 = AuthSession.IsAuthenticated;
+                _데이터오류 = null;
+                _데이터로딩중 = false;
+                if (_인증됨)
+                    await 데이터조회Async(force: true);
+                if (!_폐기됨)
+                    StateHasChanged();
+            });
+        }
+        catch (OperationCanceledException) when (_갱신토큰.IsCancellationRequested) { }
+        catch (ObjectDisposedException) when (_폐기됨) { }
+        catch (InvalidOperationException) when (_폐기됨) { }
     }
 
     private async Task 보완조회Async(CancellationToken cancellationToken)
@@ -223,14 +272,19 @@
             {
                 await InvokeAsync(async () =>
                 {
+                    if (_폐기됨 || cancellationToken.IsCancellationRequested)
+                        return;
                     await 데이터조회Async(force: true);
-                    StateHasChanged();
+                    if (!_폐기됨 && !cancellationToken.IsCancellationRequested)
+                        StateHasChanged();
                 });
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
         }
+        catch (ObjectDisposedException) when (_폐기됨) { }
+        catch (InvalidOperationException) when (_폐기됨) { }
     }
 
     private Task 재조회Async()
@@ -238,29 +292,55 @@
 
     private async Task 데이터조회Async(bool force)
     {
+        if (_폐기됨 || _갱신토큰.IsCancellationRequested)
+            return;
+        var 판본 = Interlocked.Increment(ref _조회판본);
         _데이터로딩중 = true;
         _데이터오류 = null;
 
         try
         {
-            await AuthSession.RestoreAsync();
+            await AuthSession.RestoreAsync(_갱신토큰);
+            if (_폐기됨 || 판본 != _조회판본)
+                return;
+            var 세션 = AuthSession.SessionRevision;
+            _관찰세션 = 세션;
             _인증됨 = AuthSession.IsAuthenticated;
             if (_인증됨)
             {
-                await Samples.RefreshAsync(force: force);
+                await Samples.RefreshAsync(_갱신토큰, force: force);
+                if (_폐기됨 || 판본 != _조회판본)
+                    return;
+                if (세션 != AuthSession.SessionRevision)
+                {
+                    if (AuthSession.IsAuthenticated)
+                        _데이터오류 = "로그인 정보가 변경되었습니다. 다시 시도해 현재 운송을 확인해 주세요.";
+                    return;
+                }
+                _조회세션 = 세션;
             }
+        }
+        catch (OperationCanceledException) when (_갱신토큰.IsCancellationRequested)
+        {
         }
         catch
         {
-            _데이터오류 = "진행 중 운송을 불러오지 못했습니다. 네트워크와 서버 연결을 확인한 뒤 다시 시도해 주세요.";
+            if (!_폐기됨 && 판본 == _조회판본 && AuthSession.IsAuthenticated)
+                _데이터오류 = "진행 중 운송을 불러오지 못했습니다. 네트워크와 서버 연결을 확인한 뒤 다시 시도해 주세요.";
         }
         finally
         {
-            _데이터로딩중 = false;
+            if (!_폐기됨 && 판본 == _조회판본)
+            {
+                _인증됨 = AuthSession.IsAuthenticated;
+                _데이터로딩중 = false;
+            }
         }
     }
 
-    private bool ShouldPickup => 현재운송?.다음행동.Contains("상차", StringComparison.OrdinalIgnoreCase) == true;
+    private bool ShouldPickup
+        => 현재운송?.현재단계 is "확정" or "배차확정"
+           || 현재운송?.다음행동.Contains("상차", StringComparison.OrdinalIgnoreCase) == true;
 
     private string NextActionLabel => ShouldPickup ? "상차 처리하기" : "하차 처리하기";
 

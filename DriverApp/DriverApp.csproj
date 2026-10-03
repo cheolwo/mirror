@@ -16,6 +16,8 @@
 		<RootNamespace>DriverApp</RootNamespace>
 		<UseMaui>true</UseMaui>
 		<SingleProject>true</SingleProject>
+		<!-- Razor 전용 CSS를 MAUI native StyleSheet로 수집하지 않는다. -->
+		<EnableDefaultCssItems>false</EnableDefaultCssItems>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GoogleMapsAndroidApiKey Condition="'$(GoogleMapsAndroidApiKey)' == ''">GOOGLE_MAPS_API_KEY_NOT_CONFIGURED</GoogleMapsAndroidApiKey>

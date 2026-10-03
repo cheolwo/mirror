@@ -15,10 +15,15 @@ public sealed class 운송모델작성Draft
     public string? 픽업상세주소 { get; set; }
     public string 픽업연락처이름 { get; set; } = string.Empty;
     public string 픽업연락처전화번호 { get; set; } = string.Empty;
+    // 작성 화면의 한국시간(UTC+9). API adapter에서 UTC로 변환합니다.
+    public DateTime? 픽업시간창시작일시 { get; set; }
+    public DateTime? 픽업시간창종료일시 { get; set; }
     public string 하차도로명주소 { get; set; } = string.Empty;
     public string? 하차상세주소 { get; set; }
     public string 하차연락처이름 { get; set; } = string.Empty;
     public string 하차연락처전화번호 { get; set; } = string.Empty;
+    public DateTime? 하차시간창시작일시 { get; set; }
+    public DateTime? 하차시간창종료일시 { get; set; }
     public string? 서비스레벨 { get; set; }
     public string? 요청사항 { get; set; }
     public string? 차량종류 { get; set; }

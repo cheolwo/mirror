@@ -20,10 +20,14 @@ public sealed class 운송의뢰작성ViewModel
     public string? 상차상세주소 { get; set; }
     public string 상차연락처이름 { get; set; } = string.Empty;
     public string 상차연락처전화번호 { get; set; } = string.Empty;
+    public DateTime? 상차시간창시작일시 { get; set; }
+    public DateTime? 상차시간창종료일시 { get; set; }
     public string 하차도로명주소 { get; set; } = string.Empty;
     public string? 하차상세주소 { get; set; }
     public string 하차연락처이름 { get; set; } = string.Empty;
     public string 하차연락처전화번호 { get; set; } = string.Empty;
+    public DateTime? 하차시간창시작일시 { get; set; }
+    public DateTime? 하차시간창종료일시 { get; set; }
     public string? 서비스레벨 { get; set; }
     public string? 요청사항 { get; set; }
 
@@ -50,7 +54,14 @@ public sealed class 운송의뢰작성ViewModel
 
     public bool 운송정보입력됨 =>
         !string.IsNullOrWhiteSpace(상차도로명주소)
-        && !string.IsNullOrWhiteSpace(하차도로명주소);
+        && !string.IsNullOrWhiteSpace(하차도로명주소)
+        && 상차시간창오류 is null
+        && 하차시간창오류 is null;
+
+    public string? 상차시간창오류 => !상차시간창시작일시.HasValue && !상차시간창종료일시.HasValue
+        ? "상차 시간창의 시작과 종료 일시를 입력해 주세요."
+        : 시간창오류("상차", 상차시간창시작일시, 상차시간창종료일시);
+    public string? 하차시간창오류 => 시간창오류("하차", 하차시간창시작일시, 하차시간창종료일시);
 
     public bool 절차정보입력됨 =>
         !string.IsNullOrWhiteSpace(차량종류)
@@ -128,10 +139,14 @@ public sealed class 운송의뢰작성ViewModel
             픽업상세주소 = 상차상세주소,
             픽업연락처이름 = 상차연락처이름,
             픽업연락처전화번호 = 상차연락처전화번호,
+            픽업시간창시작일시 = 상차시간창시작일시,
+            픽업시간창종료일시 = 상차시간창종료일시,
             하차도로명주소 = 하차도로명주소,
             하차상세주소 = 하차상세주소,
             하차연락처이름 = 하차연락처이름,
             하차연락처전화번호 = 하차연락처전화번호,
+            하차시간창시작일시 = 하차시간창시작일시,
+            하차시간창종료일시 = 하차시간창종료일시,
             서비스레벨 = 서비스레벨,
             요청사항 = 요청사항,
             차량종류 = 차량종류,
@@ -166,10 +181,14 @@ public sealed class 운송의뢰작성ViewModel
         상차상세주소 = draft.픽업상세주소;
         상차연락처이름 = draft.픽업연락처이름;
         상차연락처전화번호 = draft.픽업연락처전화번호;
+        상차시간창시작일시 = draft.픽업시간창시작일시;
+        상차시간창종료일시 = draft.픽업시간창종료일시;
         하차도로명주소 = draft.하차도로명주소;
         하차상세주소 = draft.하차상세주소;
         하차연락처이름 = draft.하차연락처이름;
         하차연락처전화번호 = draft.하차연락처전화번호;
+        하차시간창시작일시 = draft.하차시간창시작일시;
+        하차시간창종료일시 = draft.하차시간창종료일시;
         서비스레벨 = draft.서비스레벨;
         요청사항 = draft.요청사항;
         차량종류 = draft.차량종류;
@@ -202,10 +221,14 @@ public sealed class 운송의뢰작성ViewModel
         상차상세주소 = null;
         상차연락처이름 = string.Empty;
         상차연락처전화번호 = string.Empty;
+        상차시간창시작일시 = null;
+        상차시간창종료일시 = null;
         하차도로명주소 = string.Empty;
         하차상세주소 = null;
         하차연락처이름 = string.Empty;
         하차연락처전화번호 = string.Empty;
+        하차시간창시작일시 = null;
+        하차시간창종료일시 = null;
         서비스레벨 = null;
         요청사항 = null;
         차량종류 = null;
@@ -341,6 +364,16 @@ public sealed class 운송의뢰작성ViewModel
             messages.Add(new("운송 정보", "하차 담당자 연락처가 있으면 부재/예외 상황 대응이 쉬워집니다.", ShipperRequestAuthoringStep.Transport, false));
         }
 
+        if (상차시간창오류 is { } pickupWindowError)
+        {
+            messages.Add(new("운송 정보", pickupWindowError, ShipperRequestAuthoringStep.Transport, true));
+        }
+
+        if (하차시간창오류 is { } dropoffWindowError)
+        {
+            messages.Add(new("운송 정보", dropoffWindowError, ShipperRequestAuthoringStep.Transport, true));
+        }
+
         if (string.IsNullOrWhiteSpace(차량종류))
         {
             messages.Add(new("절차/결제 정보", "차량 종류를 선택해야 합니다.", ShipperRequestAuthoringStep.Procedure, true));
@@ -367,6 +400,15 @@ public sealed class 운송의뢰작성ViewModel
         }
 
         return messages;
+    }
+
+    private static string? 시간창오류(string label, DateTime? start, DateTime? end)
+    {
+        if (!start.HasValue && !end.HasValue) return null;
+        if (!start.HasValue || !end.HasValue) return $"{label} 시간창의 시작과 종료 일시를 함께 입력해 주세요.";
+        if (start.Value < DateTime.MinValue.AddHours(9) || end.Value < DateTime.MinValue.AddHours(9))
+            return $"{label} 시간창에 올바른 날짜와 시간을 입력해 주세요.";
+        return end.Value <= start.Value ? $"{label} 종료 일시는 시작 일시보다 늦어야 합니다." : null;
     }
 
     private IReadOnlyList<string> Build요금정책경고목록()

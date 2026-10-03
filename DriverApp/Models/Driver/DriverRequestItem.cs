@@ -98,9 +98,28 @@ public sealed class DriverRequestItem
     public string 차량조건표시 => string.IsNullOrWhiteSpace(차량톤수) && string.IsNullOrWhiteSpace(차량형태)
         ? "차량조건 미정"
         : $"{차량톤수}/{차량형태}".Trim('/');
+    public string 운임표시 => 예상수익 is { } fare ? $"{fare:N0}원" : "운임 미확인";
+
+    public string 픽업거리표시 => 거리값표시(픽업거리Km);
+
+    public string 운송거리표시 => 거리값표시(운송거리Km);
+
+    public string 총공차거리표시 => 거리값표시(총공차거리Km);
+
+    public string 복귀예상거리표시 => 거리값표시(복귀예상거리Km);
+
+    public string 지금바로복귀거리표시 => 거리값표시(지금바로복귀거리Km);
+
+    public string 복귀우회증가거리표시 => 거리값표시(복귀우회증가거리Km, "+0.0;-0.0;0.0");
+
+    private static string 거리값표시(decimal? value, string format = "0.0")
+        => value is { } distance ? $"{distance.ToString(format)}km" : "거리 미확인";
+
+    public bool 운송장출력가능 => 예상수익.HasValue;
+
     public string 거리표시 => 직선거리Km.HasValue || 주행거리Km.HasValue
-        ? $"직선 {직선거리Km?.ToString("0.0") ?? "-"}km / 주행 {주행거리Km?.ToString("0.0") ?? "-"}km"
-        : "거리 미정";
+        ? $"직선 {거리값표시(직선거리Km)} / 주행 {거리값표시(주행거리Km)}"
+        : "거리 미확인";
 
     public string 인수증표시 => 인수증필요 ? "인수증 필요" : "인수증 없음";
 
@@ -112,7 +131,7 @@ public sealed class DriverRequestItem
 
     public string 복귀표시 => !복귀지기준추천여부
         ? "복귀 기준 미적용"
-        : $"복귀 {복귀예상거리Km?.ToString("0.0") ?? "-"}km / 우회 {복귀우회증가거리Km?.ToString("+0.0;-0.0;0.0") ?? "-"}km";
+        : $"복귀 {복귀예상거리표시} / 우회 {복귀우회증가거리표시}";
 
     public double 픽업위도
     {

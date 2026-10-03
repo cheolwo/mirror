@@ -57,7 +57,7 @@
                         </MudStack>
                         <MudStack Spacing="0" AlignItems="AlignItems.End" Class="driver-recommendation-card__fare">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">예상 수익</MudText>
-                            <MudText Typo="Typo.h6" Color="Color.Error">@((의뢰.예상수익 ?? 0m).ToString("0"))원</MudText>
+                            <MudText Typo="Typo.h6" Color="Color.Error">@의뢰.운임표시</MudText>
                         </MudStack>
                     </MudStack>
 
@@ -120,10 +120,17 @@
                 </MudStack>
             </MudPaper>
 
-            <SsalddelDocumentOutputPanel Draft="@CreateWaybillDraft(의뢰)"
-                                        Title="운송장 출력"
-                                        Subtitle="추천 의뢰 정보를 인쇄 가능한 운송장으로 변환합니다."
-                                        PanelClass="driver-recommendation-card pa-4" />
+            @if (의뢰.운송장출력가능)
+            {
+                <SsalddelDocumentOutputPanel Draft="@CreateWaybillDraft(의뢰)"
+                                            Title="운송장 출력"
+                                            Subtitle="추천 의뢰 정보를 인쇄 가능한 운송장으로 변환합니다."
+                                            PanelClass="driver-recommendation-card pa-4" />
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">운임 미확인 · 운임 확인 후 운송장을 출력할 수 있습니다.</MudAlert>
+            }
         }
     </MudStack>
 </MudContainer>
@@ -258,7 +265,7 @@
 
     private static SsalddelWaybillDocumentDraft CreateWaybillDraft(DriverRequestItem item)
     {
-        var fare = item.예상수익 ?? 0m;
+        var fare = item.예상수익 ?? throw new InvalidOperationException("운임 확인 후 운송장을 출력할 수 있습니다.");
         var cost = item.예상총비용 ?? 0m;
 
         return new SsalddelWaybillDocumentDraft(
@@ -281,10 +288,10 @@
     }
 
     private static string PickupDistanceText(DriverRequestItem request)
-        => $"상차지까지 {(request.픽업거리Km ?? 0m):0.0}km";
+        => request.픽업거리Km.HasValue ? $"상차지까지 {request.픽업거리표시}" : request.픽업거리표시;
 
     private static string TransportDistanceText(DriverRequestItem request)
-        => $"운송 {(request.운송거리Km ?? 0m):0.0}km";
+        => request.운송거리Km.HasValue ? $"예상 운송 {request.운송거리표시}" : request.운송거리표시;
 
     private static IReadOnlyList<string> PickupMeta(DriverRequestItem request)
         => [request.운송조건표시, request.차량조건표시, request.상차시간표시];

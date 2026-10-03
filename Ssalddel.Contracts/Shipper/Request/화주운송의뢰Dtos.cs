@@ -227,6 +227,8 @@ public sealed class TimeWindowDTO
 
 public sealed class PricingDTO
 {
+    public string? 거리계산방식 { get; set; }
+    public string? 단가출처 { get; set; }
     public string? 서비스레벨 { get; set; }
     public string? 요청사항 { get; set; }
     public decimal? 예상거리Km { get; set; }
@@ -355,10 +357,12 @@ public sealed class 화주운송의뢰응답
     public int? 팔레트개수 { get; set; }
     public string 픽업지 { get; set; } = string.Empty;
     public string 픽업상세지 { get; set; } = string.Empty;
+    public LocationContactDTO? 픽업 { get; set; }
     public decimal? 픽업위도 { get; set; }
     public decimal? 픽업경도 { get; set; }
     public string 하차지 { get; set; } = string.Empty;
     public string 하차상세지 { get; set; } = string.Empty;
+    public LocationContactDTO? 하차 { get; set; }
     public decimal? 하차위도 { get; set; }
     public decimal? 하차경도 { get; set; }
     public decimal? 대기료 { get; set; }
@@ -366,6 +370,7 @@ public sealed class 화주운송의뢰응답
     public decimal? 할증 { get; set; }
     public decimal? 최종운임 { get; set; }
     public 요약DTO? 요약 { get; set; }
+    public PricingDTO? 요금옵션 { get; set; }
 
     public sealed class 요약DTO
     {

@@ -9,7 +9,7 @@
     </MudItem>
     <MudItem xs="12" lg="4">
         <MudPaper Class="pa-4" Elevation="0" Outlined="true">
-            <MudForm @ref="_form" @bind-IsValid="_formValid">
+            <MudForm @key="_draft" @ref="_form" @bind-IsValid="_formValid" Disabled="@Handoff.처리중">
                 <MudStack Spacing="2">
                     <MudStack Spacing="0">
                         <MudText Typo="Typo.subtitle1">운송 인계 정보</MudText>
@@ -40,6 +40,16 @@
                     <MudTextField Label="상세 주소"
                                   Variant="Variant.Outlined"
                                   @bind-Value="_draft.하차지상세주소" />
+                    <MudTextField Label="하차 담당자 (선택)"
+                                  Variant="Variant.Outlined"
+                                  MaxLength="100"
+                                  @bind-Value="_draft.하차담당자명" />
+                    <MudTextField Label="하차 연락처 (선택)"
+                                  HelperText="기사에게 전달할 실제 연락처만 입력합니다."
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Telephone"
+                                  MaxLength="50"
+                                  @bind-Value="_draft.하차연락처" />
                     <MudTextField Label="화물 종류"
                                   Variant="Variant.Outlined"
                                   @bind-Value="_draft.화물종류" />
@@ -64,6 +74,7 @@
     private MudForm? _form;
     private bool _formValid;
     private 재고운송의뢰생성요청 _draft = new();
+    private long? _selectedId;
 
     [Parameter, EditorRequired]
     public 출고재고조회ViewModel Inventory { get; set; } = default!;
@@ -86,18 +97,34 @@
 
     private void SelectInventory(재고항목응답 item)
     {
-        Inventory.선택(item.입고상품Id);
+        if (Handoff.처리중 || !Inventory.선택(item.입고상품Id)) return;
+        if (_draft.입고상품Id == item.입고상품Id) return;
+        _selectedId = item.입고상품Id;
+        ResetDraft(item);
+    }
+
+    protected override void OnParametersSet()
+    {
+        var selected = Inventory.선택된항목;
+        if (_selectedId == selected?.입고상품Id) return;
+        _selectedId = selected?.입고상품Id;
+        ResetDraft(selected);
+    }
+
+    private void ResetDraft(재고항목응답? item)
+    {
+        _formValid = false;
         _draft = new 재고운송의뢰생성요청
         {
-            입고상품Id = item.입고상품Id,
-            요청수량 = item.가용수량 > 0 ? 1 : 0,
-            화물종류 = item.상품명
+            입고상품Id = item?.입고상품Id ?? 0,
+            요청수량 = item?.가용수량 > 0 ? 1 : 0,
+            화물종류 = item?.상품명 ?? string.Empty
         };
     }
 
     private async Task SubmitAsync()
     {
-        if (_form is null)
+        if (_form is null || Handoff.처리중)
         {
             return;
         }
