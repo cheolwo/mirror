@@ -6,7 +6,7 @@ using Ssalddel.Contracts.Common.Metadata;
 
 namespace Ssalddel.Unity.Observation
 {
-    public enum 동네휴대폰App { 홈, 운영지도, 동네, 주문, NPC, 창고, 정책 }
+    public enum 동네휴대폰App { 홈, 운영지도, 동네, 주문, NPC, 창고, 정책, 방문기록 }
 
     /// <summary>실제 E5 AreaSet 관찰 준비 상태만 표시하며 Simulation 상태를 소유하지 않는다.</summary>
     [SsalddelEvidenceResponsibility(
@@ -52,6 +52,9 @@ namespace Ssalddel.Unity.Observation
 
     public sealed class 동네관찰ScreenModel
     {
+        public bool ObservationOnly { get; set; }
+        public string PlaceName { get; set; } = "";
+        public 동네관찰Row[] VisitHistory { get; set; } = Array.Empty<동네관찰Row>();
         public long Revision { get; set; }
         public string Time { get; set; } = "";
         public string Summary { get; set; } = "";

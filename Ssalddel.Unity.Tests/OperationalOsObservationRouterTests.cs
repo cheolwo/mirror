@@ -91,6 +91,25 @@ public sealed class OperationalOsObservationRouterTests
     }
 
     [Fact]
+    public void 배차전_주문확인사본을_조리로승격하지않고_같은업무에이어받는다()
+    {
+        var module = new OperationalOsObservationModule(new FoodDeliveryOsObservationAdapter());
+        var router = new OperationalOsObservationRouter(new OperationalOsModuleRegistry([module]));
+        var waiting = ActiveFoodItem("주문대기", 1);
+        router.Route(Accepted(waiting));
+
+        var confirmed = router.Route(Accepted(ActiveFoodItem("주문확인", 2)));
+        Assert.Empty(confirmed.Diagnostics);
+        var state = Assert.Single(confirmed.CurrentStates);
+        Assert.Equal(waiting.WorkStableId, state.WorkStableId);
+        Assert.Equal("주문확인", state.LifecycleStageId);
+
+        var assigned = router.Route(Accepted(ActiveFoodItem("기사배정", 3)));
+        Assert.Empty(assigned.Diagnostics);
+        Assert.Equal("기사배정", Assert.Single(assigned.CurrentStates).LifecycleStageId);
+    }
+
+    [Fact]
     public void 거부된Interpreter결과는_기존OS메모리를변경하지않는다()
     {
         var module = new OperationalOsObservationModule(new FoodDeliveryOsObservationAdapter());

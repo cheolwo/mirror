@@ -78,6 +78,7 @@ namespace Ssalddel.Unity.Data.WorldProjection
         private static readonly HashSet<string> ActiveStageCodes = new HashSet<string>(StringComparer.Ordinal)
         {
             "주문대기",
+            "주문확인",
             "조리중",
             "픽업대기",
             "기사배정",
