@@ -7,6 +7,7 @@ using 살뜰.Services.Options;
 using 살뜰.Services.Dispatch.Common;
 using 살뜰.Services.Dispatch.Continuity;
 using 살뜰.Services.Storage.Local;
+using 살뜰.Data;
 
 namespace Ssalddel.Extensions;
 
@@ -35,7 +36,9 @@ public static partial class ServiceCollectionExtensions
         services.AddSingleton<IDriverWorkQueueStore, InMemoryDriverWorkQueueStore>();
         services.AddSingleton<I국내화물운송기사상태Store, InMemory국내화물운송기사상태Store>();
         services.AddSingleton<IDriverRejectedRequestStore, InMemoryDriverRejectedRequestStore>();
-        services.AddSingleton<IDriverPushTokenStore, InMemoryDriverPushTokenStore>();
+        services.AddSingleton<InMemoryDriverPushTokenStore>();
+        services.AddScoped<IDriverPushTokenStore>(provider => new AppScopedDriverPushTokenStore(
+            provider.GetRequiredService<SsalddelContext>(), provider.GetRequiredService<InMemoryDriverPushTokenStore>()));
         services.AddSingleton<I사용자PushTokenStore, InMemory사용자PushTokenStore>();
         services.AddSingleton<IDriverRecommendationPushStateStore, InMemoryDriverRecommendationPushStateStore>();
         services.AddSingleton<IDriverCallScopeStore, InMemoryDriverCallScopeStore>();
@@ -69,7 +72,9 @@ public static partial class ServiceCollectionExtensions
         services.AddSingleton<IDriverWorkQueueStore, RedisDriverWorkQueueStore>();
         services.AddSingleton<I국내화물운송기사상태Store, Redis국내화물운송기사상태Store>();
         services.AddSingleton<IDriverRejectedRequestStore, RedisDriverRejectedRequestStore>();
-        services.AddSingleton<IDriverPushTokenStore, RedisDriverPushTokenStore>();
+        services.AddSingleton<RedisDriverPushTokenStore>();
+        services.AddScoped<IDriverPushTokenStore>(provider => new AppScopedDriverPushTokenStore(
+            provider.GetRequiredService<SsalddelContext>(), provider.GetRequiredService<RedisDriverPushTokenStore>()));
         services.AddSingleton<I사용자PushTokenStore, Redis사용자PushTokenStore>();
         services.AddSingleton<IDriverRecommendationPushStateStore, RedisDriverRecommendationPushStateStore>();
         services.AddSingleton<IDriverCallScopeStore, RedisDriverCallScopeStore>();

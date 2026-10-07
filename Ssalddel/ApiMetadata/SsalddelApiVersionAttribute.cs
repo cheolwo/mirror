@@ -694,6 +694,12 @@ public static class SsalddelWorkflowParticipants
             "HS 코드, 통관 단계, 수출입 검토, 서류 보정 의견을 제공합니다."),
         new(
             SsalddelWorkflow.CustomsAndTradeData,
+            "ShipperOrSeller",
+            "화주·판매자",
+            true,
+            "HS 코드의 출처와 공개 공식 사례, 공개 동의된 대행 경험을 조회하여 수출입 검토 근거를 확인합니다."),
+        new(
+            SsalddelWorkflow.CustomsAndTradeData,
             "PlatformOperator",
             "플랫폼 운영자",
             false,
@@ -789,11 +795,23 @@ public static class SsalddelWorkflowParticipants
             true,
             "픽업, 이동, 고객 전달, 완료 증빙을 수행합니다."),
         new(
+            SsalddelWorkflow.FoodDelivery,
+            "PlatformOperator",
+            "플랫폼 운영자",
+            false,
+            "음식 주문의 배차·중단·회복과 취소·보상 예외를 검토합니다."),
+        new(
             SsalddelWorkflow.SsalddelMart,
             "MartOperator",
             "알뜰살뜰 마트 운영자",
             true,
             "상품, 도심 재고, 피킹·포장 기준을 관리합니다."),
+        new(
+            SsalddelWorkflow.SsalddelMart,
+            "Orderer",
+            "주문자",
+            true,
+            "공개 상품과 본인의 비구속 주문 의향을 조회하고 주문 확정 전 수량 변경·철회를 요청합니다."),
         new(
             SsalddelWorkflow.SsalddelMart,
             "Driver",

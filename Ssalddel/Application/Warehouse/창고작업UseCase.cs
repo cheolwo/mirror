@@ -288,6 +288,7 @@ public sealed class 창고작업UseCase : I창고작업UseCase
     public async Task<Result<창고작업결과응답>> 적재위치배정Async(long inboundItemId, 적재위치배정요청 request, 창고작업요청Context context, CancellationToken cancellationToken)
     {
         var result = await _warehouseOperationService.PutAwayInventoryItemAsync(inboundItemId, request, cancellationToken);
+        if (result.멱등재시도여부) return result;
         await 로그Async("WarehouseWork", "PutAwayCompleted", context, cancellationToken, entityId: inboundItemId, metadataJson: $"{{\"location\":\"{result.보관위치}\"}}");
         await _publisher.Publish(
             new 창고적재위치배정됨Event(
@@ -306,6 +307,7 @@ public sealed class 창고작업UseCase : I창고작업UseCase
     public async Task<Result<창고작업결과응답>> 포장작업Async(long inboundItemId, 포장작업요청 request, 창고작업요청Context context, CancellationToken cancellationToken)
     {
         var result = await _warehouseOperationService.PackInventoryItemAsync(inboundItemId, request, cancellationToken);
+        if (result.멱등재시도여부) return result;
         await 로그Async("WarehouseWork", "Packed", context, cancellationToken, entityId: inboundItemId, metadataJson: $"{{\"quantity\":{request.포장수량}}}");
         await _publisher.Publish(
             new 창고포장완료됨Event(

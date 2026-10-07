@@ -9,6 +9,7 @@ namespace Ssalddel.Controllers.Orderer;
 
 [SsalddelApiVersion(SsalddelProductVersion.V3_5)]
 [SsalddelApiAudience(SsalddelActor.Orderer)]
+[SsalddelApiCapability(SsalddelCapability.OrderParticipation)]
 [SsalddelApiOperation(SsalddelOperation.Browse)]
 [SsalddelCodeMetadata(
     SsalddelCodeFeatureKeys.WorldRolePerspective,

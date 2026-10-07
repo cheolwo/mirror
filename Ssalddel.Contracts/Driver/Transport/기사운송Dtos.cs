@@ -5,6 +5,7 @@ using Ssalddel.Contracts.Common.Privacy;
 
 public class 기사운송요약응답
 {
+    public bool 개인정보제공보류 { get; set; }
     public long Id { get; set; }
     public string 운송번호 { get; set; } = string.Empty;
     public string 상태 { get; set; } = string.Empty;
@@ -40,8 +41,19 @@ public class 기사운송요약응답
     public string 최근예외메시지 { get; set; } = string.Empty;
     public string 다음행동안내 { get; set; } = string.Empty;
     public bool 관리자확인필요 { get; set; }
+    /// <summary>관리자 검토나 정산 보류와 별개인 현재 전체 운송 보류입니다.</summary>
+    public bool 운송진행보류 { get; set; }
+    public bool 정산보류 { get; set; }
+    public IReadOnlyList<기사운송예외검토응답> 예외검토목록 { get; set; } = [];
+    /// <summary>null은 구판 응답입니다. 빈 목록은 서버가 현재 수행 행동을 허용하지 않는다는 뜻입니다.</summary>
+    public IReadOnlyList<string>? 가능한행동 { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
+
+public sealed record 기사운송예외검토응답(
+    string 사건StableId, string 단계Code, string 예외Code, string 상태Code,
+    string 현재담당Code, string 업무통제상태Code, string 보류범위Code, bool 정산보류,
+    long Revision, DateTime UpdatedAt);
 
 public sealed class 기사화물운송작업공간응답
 {
@@ -74,6 +86,22 @@ public sealed class 기사화물경로정차응답
 
 public sealed class 기사운송상세응답 : 기사운송요약응답
 {
+    [IsmsPProtectedData(PersonalDataFieldKey.LocationCoordinate,
+        "배정된 화물 운송의 상차 장소 확인",
+        ProtectionNote = "기사 소유 운송과 명시적으로 연결된 의뢰만 제공하며 생활배송 동의 보류 시 비공개")]
+    public decimal? 픽업위도 { get; set; }
+    [IsmsPProtectedData(PersonalDataFieldKey.LocationCoordinate,
+        "배정된 화물 운송의 상차 장소 확인",
+        ProtectionNote = "기사 소유 운송과 명시적으로 연결된 의뢰만 제공하며 생활배송 동의 보류 시 비공개")]
+    public decimal? 픽업경도 { get; set; }
+    [IsmsPProtectedData(PersonalDataFieldKey.LocationCoordinate,
+        "배정된 화물 운송의 하차 장소 확인",
+        ProtectionNote = "기사 소유 운송과 명시적으로 연결된 의뢰만 제공하며 생활배송 동의 보류 시 비공개")]
+    public decimal? 하차위도 { get; set; }
+    [IsmsPProtectedData(PersonalDataFieldKey.LocationCoordinate,
+        "배정된 화물 운송의 하차 장소 확인",
+        ProtectionNote = "기사 소유 운송과 명시적으로 연결된 의뢰만 제공하며 생활배송 동의 보류 시 비공개")]
+    public decimal? 하차경도 { get; set; }
     public string 첨부Json { get; set; } = string.Empty;
     public string 메모 { get; set; } = string.Empty;
 }

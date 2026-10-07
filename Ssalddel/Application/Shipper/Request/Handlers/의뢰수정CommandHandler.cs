@@ -93,6 +93,11 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
             || request.하차지.위도.HasValue != request.하차지.경도.HasValue)
             return Result.Fail<화주운송의뢰응답>("좌표는 위도와 경도를 함께 제공해야 합니다.");
 
+        // 핵심 조건의 재동의 실행 경로가 준비되기 전에는 기존 합의를 직접 덮어쓰지 않습니다.
+        // 견적 변경은 아래의 기존 FreightPricingLocked 관문을 그대로 사용합니다.
+        if (!pricingChanged && HasCoreConditionChanges(request, entity) && !CanChangeCoreConditions(entity, transport))
+            return Conflict("FreightCoreConditionsLocked", "승인·결제·배차 후 핵심 운송 조건은 직접 변경할 수 없습니다. 변경 조건은 새 의뢰로 등록하고 다시 합의해 주세요.");
+
         화주운송기준운임견적응답? estimate = null;
         if (pricingChanged)
         {
@@ -314,6 +319,34 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
             || input.정산조건 is { } s && (s.정산시점.ToString() != e.정산시점 || s.증빙방식.ToString() != e.증빙방식
                 || s.수납주체.ToString() != e.수납주체 || (s.정산메모 ?? string.Empty) != e.정산메모
                 || s.세금계산서필요 != e.세금계산서필요 || s.현금영수증필요 != e.현금영수증필요));
+
+    private static bool CanChangeCoreConditions(화주운송의뢰 entity, 운송원장? transport)
+        => entity.상태 == 상태값.의뢰상태.생성됨
+            && entity.결제상태 == 상태값.결제상태.결제대기
+            && entity.배차상태 == 상태값.배차상태.미시작
+            && (entity.정산상태 is "결제대기" or "청구대기" or "후불승인대기" or "인수증대기" or "현장수금예정")
+            && (transport is null || transport.상태 == "대기"
+                && string.IsNullOrWhiteSpace(transport.확정기사Id) && string.IsNullOrWhiteSpace(transport.기사_운송자));
+
+    private static bool HasCoreConditionChanges(의뢰수정Command r, 화주운송의뢰 e)
+        => HasRouteChanges(r, e)
+            || r.운송조건.운송방식 is not null && r.운송조건.운송방식 != e.운송방식
+            || r.운송조건.서비스레벨 is not null && r.운송조건.서비스레벨 != e.서비스레벨
+            || r.요청조건.요청사항 is not null && r.요청조건.요청사항 != e.요청사항
+            || r.화물정보.화물종류 is not null && r.화물정보.화물종류 != e.화물종류
+            || r.화물정보.화물설명 is not null && r.화물정보.화물설명 != e.화물설명
+            || r.화물정보.화물수량.HasValue && r.화물정보.화물수량 != e.화물수량
+            || r.화물정보.화물중량Kg.HasValue && r.화물정보.화물중량Kg != e.화물중량Kg
+            || r.화물정보.화물부피Cbm.HasValue && r.화물정보.화물부피Cbm != e.화물부피Cbm
+            || r.화물정보.화물파손주의여부.HasValue && r.화물정보.화물파손주의여부 != e.화물파손주의여부
+            || r.화물정보.화물온도조건 is not null && r.화물정보.화물온도조건 != e.화물온도조건
+            || r.픽업지.상세주소 is not null && r.픽업지.상세주소 != e.픽업_상세주소
+            || r.하차지.상세주소 is not null && r.하차지.상세주소 != e.하차_상세주소
+            || r.픽업지.시간창시작일시.HasValue && r.픽업지.시간창시작일시 != e.픽업_시간창_시작일시
+            || r.픽업지.시간창종료일시.HasValue && r.픽업지.시간창종료일시 != e.픽업_시간창_종료일시
+            || r.하차지.시간창시작일시.HasValue && r.하차지.시간창시작일시 != e.하차_시간창_시작일시
+            || r.하차지.시간창종료일시.HasValue && r.하차지.시간창종료일시 != e.하차_시간창_종료일시
+            || HasSettlementChanges(r.정산조건, e);
 
     private static bool HasRouteChanges(의뢰수정Command r, 화주운송의뢰 e)
         => r.운송조건.차량종류 is not null && r.운송조건.차량종류 != e.차량종류

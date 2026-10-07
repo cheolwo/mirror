@@ -16,6 +16,7 @@ public sealed class PlatformCommunityPostConfiguration : IEntityTypeConfiguratio
         builder.Property(x => x.Category).HasMaxLength(60).IsRequired();
         builder.Property(x => x.WorkflowTag).HasMaxLength(60).IsRequired();
         builder.Property(x => x.RoleTag).HasMaxLength(40).IsRequired();
+        builder.Property(x => x.PublicNeighborhoodRegionKey).HasMaxLength(80);
         builder.Property(x => x.Title).HasMaxLength(160).IsRequired();
         builder.Property(x => x.Body).HasMaxLength(4000).IsRequired();
         builder.Property(x => x.OriginalLanguageCode).HasMaxLength(16);
@@ -49,6 +50,8 @@ public sealed class PlatformCommunityPostConfiguration : IEntityTypeConfiguratio
         builder.HasIndex(x => new { x.AppKey, x.IsDeleted, x.IsOperatorPinned, x.OperatorPinnedAtUtc, x.RecommendationCount, x.LastEngagedAtUtc, x.CreatedAtUtc });
         builder.HasIndex(x => new { x.Category, x.IsDeleted, x.CreatedAtUtc });
         builder.HasIndex(x => new { x.WorkflowTag, x.RoleTag, x.IsDeleted, x.CreatedAtUtc });
+        builder.HasIndex(x => new { x.WorkflowTag, x.PublicNeighborhoodRegionKey, x.IsDeleted, x.PublicationStatusCode })
+            .HasDatabaseName("IX_platform_community_posts_public_neighborhood");
         builder.HasIndex(x => new { x.IsReportBoardPost, x.IsDeleted, x.CreatedAtUtc });
         builder.HasIndex(x => x.커뮤니티원장Id);
         builder.HasIndex(x => x.AuthorUserId);

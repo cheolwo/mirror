@@ -58,6 +58,8 @@ namespace 살뜰.도메인.화주
         public decimal? 수작업비 { get; set; }
         public decimal? 할증 { get; set; }
         public decimal? 최종운임 { get; set; }
+        public string? 생활배송접수키 { get; set; }
+
         public string 클라이언트요청Id { get; set; } = string.Empty;
         public string 상태 { get; set; } = 상태값.의뢰상태.생성됨;
         public string 결제상태 { get; set; } = 상태값.결제상태.결제대기;

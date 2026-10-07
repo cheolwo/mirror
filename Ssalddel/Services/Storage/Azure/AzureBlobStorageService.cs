@@ -133,6 +133,18 @@ public sealed class AzureBlobStorageService : IObjectStorageService
         return response.Value.Content.ToArray();
     }
 
+    public async Task<ObjectStorageDeleteResult> DeleteAsync(string containerName, string objectName, string expectedOwnedPrefix,
+        CancellationToken cancellationToken = default)
+    {
+        EnsureKnownContainer(containerName);
+        var name = ObjectStorageObjectName.RequireOwnedDeletionName(objectName, expectedOwnedPrefix);
+        var blob = _client.Value.GetBlobContainerClient(containerName).GetBlobClient(name);
+        await blob.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: cancellationToken);
+        var exists = await blob.ExistsAsync(cancellationToken);
+        // Storage-account soft deletion, previous versions and backups require a separately verified lifecycle policy.
+        return new ObjectStorageDeleteResult(!exists.Value, false, "AzureHistoricalCopiesRequireLifecycleVerification");
+    }
+
     private BlobServiceClient CreateClient()
     {
         if (!Uri.TryCreate(_options.ServiceUri, UriKind.Absolute, out var serviceUri))

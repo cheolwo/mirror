@@ -2,13 +2,18 @@ using Ssalddel.Contracts.Driver.Transport;
 
 namespace Ssalddel.Application.Driver.Transport;
 
+using Ssalddel.Application.Driver.Recommendation;
+using Ssalddel.Services.Community;
+
 public sealed class 운송목록조회QueryHandler : IRequestHandler<운송목록조회Query, IReadOnlyList<기사운송요약응답>>
 {
     private readonly SsalddelContext _db;
+    private readonly I생활배송기사정보제공동의Service? _disclosure;
 
-    public 운송목록조회QueryHandler(SsalddelContext db)
+    public 운송목록조회QueryHandler(SsalddelContext db, I생활배송기사정보제공동의Service? disclosure = null)
     {
         _db = db;
+        _disclosure = disclosure;
     }
 
     public async Task<IReadOnlyList<기사운송요약응답>> Handle(운송목록조회Query request, CancellationToken cancellationToken)
@@ -29,6 +34,8 @@ public sealed class 운송목록조회QueryHandler : IRequestHandler<운송목�
                 .Select(x => new
                 {
                     x.의뢰Id,
+                    x.클라이언트요청Id,
+                    x.주문자UserId,
                     x.결제수단,
                     예상거리Km = _db.운임구성.Where(f => f.Id == x.운임구성Id && f.의뢰Id == x.의뢰Id).Select(f => f.예상거리Km).FirstOrDefault(),
                     거리계산방식 = _db.운임구성.Where(f => f.Id == x.운임구성Id && f.의뢰Id == x.의뢰Id).Select(f => f.거리계산방식).FirstOrDefault(),
@@ -50,12 +57,14 @@ public sealed class 운송목록조회QueryHandler : IRequestHandler<운송목�
                     StringComparer.Ordinal,
                     cancellationToken);
 
-        return transports.Select(x =>
+        var responses = new List<기사운송요약응답>(transports.Count);
+        var incidents = await 기사운송업무상태Projector.사건조회Async(_db, transports.Select(item => item.Id).ToArray(), cancellationToken);
+        foreach (var x in transports)
         {
             var requestId = string.IsNullOrWhiteSpace(x.의뢰Id) ? x.운송번호 : x.의뢰Id;
             requestMap.TryGetValue(requestId, out var shipperRequest);
 
-            return new 기사운송요약응답
+            var response = new 기사운송요약응답
             {
                 Id = x.Id,
                 운송번호 = x.운송번호,
@@ -82,6 +91,12 @@ public sealed class 운송목록조회QueryHandler : IRequestHandler<운송목�
                 인수증서명필수 = 기사운송증빙조건정책.인수증서명필수(shipperRequest?.요청사항, shipperRequest?.정산메모),
                 UpdatedAt = x.UpdatedAt
             };
-        }).ToArray();
+            기사운송업무상태Projector.투영(response, x, incidents);
+            if (!await 생활배송기사정보공개Policy.정보제공가능인가Async(shipperRequest?.클라이언트요청Id,
+                    requestId, shipperRequest?.주문자UserId ?? string.Empty, request.기사Id, _disclosure, cancellationToken))
+                생활배송기사정보공개Policy.운송정보가림(response);
+            responses.Add(response);
+        }
+        return responses;
     }
 }

@@ -1,5 +1,6 @@
 using Quartz;
 using Ssalddel.Infrastructure.BackgroundJobs;
+using 살뜰.도메인.공통;
 using 살뜰.Services.Dispatch.Notification;
 
 namespace 살뜰.Infrastructure.BackgroundJobs.DispatchQueue
@@ -38,7 +39,8 @@ namespace 살뜰.Infrastructure.BackgroundJobs.DispatchQueue
                 return;
             }
 
-            var processed = await _notificationService.대기알림발송Async(_options.처리배치크기, context.CancellationToken);
+            var processed = await _notificationService.업무유형별대기알림발송Async(
+                상태값.배차업무유형.용달운송, _options.처리배치크기, context.CancellationToken);
             _logger.LogDebug("Action={Action} ProcessedCount={ProcessedCount} OccurredAt={OccurredAt}",
                 "DispatchRecommendationPushSent",
                 processed,

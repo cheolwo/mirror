@@ -124,12 +124,16 @@ public sealed class 음식주문상품Dto
 
 public sealed class 음식주문등록요청
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public Ssalddel.Contracts.Common.Commerce.거래보호확인Request? CommerceProtection { get; set; }
     public Guid 클라이언트요청Id { get; set; }
     public long 음식점Id { get; set; }
     public string 주문자UserId { get; set; } = string.Empty;
     public 음식주문수령인정보Dto 수령인정보 { get; set; } = new();
     public IReadOnlyList<음식주문상품Dto> 상품목록 { get; set; } = [];
     public string? 결제수단 { get; set; }
+    /// <summary>선택한 메뉴 가격과 최신 서버 가격이 다르면 등록 전에 재확인을 요구합니다.</summary>
+    public bool 메뉴가격확인필요 { get; set; }
 }
 
 public sealed class 음식점주문수락요청
@@ -196,6 +200,11 @@ public sealed class 음식주문응답
     public bool 조리시작가능 { get; set; }
     public DateTime? 조리예상완료시각Utc { get; set; }
     public DateTime? 픽업준비시각Utc { get; set; }
+    // 첫 조리/준비 이력은 위 시각에 보존하고, 현재 음식의 준비는 별도로 판정합니다.
+    public int CurrentPreparationRound { get; set; } = 1;
+    public DateTime? CurrentCookingStartedAtUtc { get; set; }
+    public DateTime? CurrentPickupReadyAtUtc { get; set; }
+    public DateTime? RecookingRequestedAtUtc { get; set; }
     public DateTime? 배차요청시각Utc { get; set; }
     public string? 수락메모 { get; set; }
     public string? 커뮤니티원장Id { get; set; }

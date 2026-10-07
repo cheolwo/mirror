@@ -7,7 +7,7 @@ using 살뜰.Data;
 
 namespace Ssalddel.Tests.Services.Education;
 
-public sealed class 현장체험활동UseCaseTests
+public sealed partial class 현장체험활동UseCaseTests
 {
     [Fact]
     public void 선생님과_현장체험지도자의_API권한은_겹치지_않는다()
@@ -221,6 +221,8 @@ public sealed class 현장체험활동UseCaseTests
     private sealed class FakeLedgerStore : I커뮤니티원장저장소
     {
         public Dictionary<string, 커뮤니티원장Dto> Items { get; } = new(StringComparer.Ordinal);
+        public Action? BeforeSave { get; set; }
+        public bool FailProjectionOnce { get; set; }
 
         public Task<커뮤니티원장Dto> 원장저장Async(
             커뮤니티원장저장요청 request,
@@ -228,9 +230,13 @@ public sealed class 현장체험활동UseCaseTests
             CancellationToken cancellationToken = default)
         {
             var id = string.IsNullOrWhiteSpace(request.원장Id) ? $"ledger-{Guid.NewGuid():N}" : request.원장Id;
+            BeforeSave?.Invoke();
             var createdAt = Items.TryGetValue(id, out var existing) ? existing.생성시각Utc : DateTime.UtcNow;
+            if (request.기대Revision.HasValue && request.기대Revision != (existing?.Revision ?? 0))
+                throw new InvalidOperationException("원장의 현재 상태가 다른 요청에서 먼저 변경되었습니다.");
             var item = new 커뮤니티원장Dto
             {
+                Revision = (existing?.Revision ?? 0) + 1,
                 원장Id = id,
                 커뮤니티Id = request.커뮤니티Id,
                 원장템플릿Key = request.원장템플릿Key,
@@ -272,6 +278,10 @@ public sealed class 현장체험활동UseCaseTests
                 return Task.FromResult<커뮤니티원장Dto?>(null);
             }
 
+            if (FailProjectionOnce) { FailProjectionOnce = false; throw new InvalidOperationException("injected projection failure"); }
+            if (request.기대Revision != item.Revision || request.이전상태 != item.상태)
+                throw new InvalidOperationException("원장의 현재 상태가 다른 요청에서 먼저 변경되었습니다.");
+            item.Revision++;
             item.상태 = request.상태;
             item.현재단계Key = request.현재단계Key;
             item.수정시각Utc = DateTime.UtcNow;
@@ -282,6 +292,9 @@ public sealed class 현장체험활동UseCaseTests
     private sealed class FakeSubmissionQueue : I교육기관제출대기열
     {
         public Dictionary<string, 현장체험제출상태응답> Items { get; } = new(StringComparer.Ordinal);
+        public Queue<교육기관제출작업> Work { get; } = new();
+        public HashSet<string> Projected { get; } = new();
+        public bool FailReservationOnce { get; set; }
 
         public Task<현장체험제출상태응답> 예약Async(
             string 제출Id,
@@ -291,6 +304,8 @@ public sealed class 현장체험활동UseCaseTests
             string? 담당이메일,
             CancellationToken cancellationToken)
         {
+            if (FailReservationOnce) { FailReservationOnce = false; throw new InvalidOperationException("injected reservation failure"); }
+            if (Items.TryGetValue(제출Id, out var existing)) return Task.FromResult(existing);
             var item = new 현장체험제출상태응답
             {
                 제출Id = 제출Id,
@@ -305,7 +320,13 @@ public sealed class 현장체험활동UseCaseTests
         }
 
         public Task<교육기관제출작업?> 다음작업확보Async(CancellationToken cancellationToken)
-            => Task.FromResult<교육기관제출작업?>(null);
+            => Task.FromResult<교육기관제출작업?>(Work.Count == 0 ? null : Work.Dequeue());
+
+        public Task 원장반영완료Async(string 제출Id, CancellationToken cancellationToken)
+        {
+            Projected.Add(제출Id);
+            return Task.CompletedTask;
+        }
 
         public Task 완료Async(string 제출Id, string 상태, CancellationToken cancellationToken)
         {
@@ -321,7 +342,9 @@ public sealed class 현장체험활동UseCaseTests
             int 최대시도횟수,
             CancellationToken cancellationToken)
         {
-            Items[제출Id].상태 = 설정대기 ? 교육기관제출상태.설정대기 : 교육기관제출상태.전송실패;
+            Items[제출Id].상태 = Items[제출Id].전송완료시각Utc.HasValue
+                ? 교육기관제출상태.전송완료
+                : 설정대기 ? 교육기관제출상태.설정대기 : 교육기관제출상태.전송실패;
             Items[제출Id].마지막오류 = 오류;
             return Task.CompletedTask;
         }

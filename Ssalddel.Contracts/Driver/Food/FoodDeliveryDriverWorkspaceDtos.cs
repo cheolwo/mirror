@@ -48,6 +48,8 @@ public sealed class FoodDeliveryDriverOfferDto
 public sealed class FoodDeliveryDriverActiveDeliveryDto
 {
     public long TransportId { get; set; }
+    /// <summary>현재 수행 원장의 주문번호입니다. 표시 제목이나 배차 제안 ID로 추론하지 않습니다.</summary>
+    public string OrderNo { get; set; } = string.Empty;
     public string OfferId { get; set; } = string.Empty;
     public string OrderSummary { get; set; } = string.Empty;
     public string RestaurantName { get; set; } = string.Empty;
@@ -64,6 +66,9 @@ public sealed class FoodDeliveryDriverActiveDeliveryDto
     public long AttemptRevision { get; set; }
     public DateTime? RestaurantArrivedAtUtc { get; set; }
     public DateTime? DisplayedPreparationReadyAtUtc { get; set; }
+    public int CurrentPreparationRound { get; set; } = 1;
+    public DateTime? CurrentPickupReadyAtUtc { get; set; }
+    public DateTime? RecookingRequestedAtUtc { get; set; }
     public DateTime? PreparationDelayEligibleAtUtc { get; set; }
     public bool IsPreparationDelayRedispatch { get; set; }
     public 운송실행프로필Dto ExecutionProfile { get; set; } = new();

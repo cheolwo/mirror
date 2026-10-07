@@ -67,7 +67,7 @@ public sealed class 신청개인정보동의증적Service(
             throw new InvalidOperationException("현재 개인정보 동의문 버전을 다시 확인해 주세요.");
         }
 
-        if (!string.Equals(request.출처Code, 신청개인정보출처Codes.커뮤니티지도, StringComparison.Ordinal))
+        if (!신청개인정보출처Codes.지원하는출처인가(request.출처Code))
         {
             throw new InvalidOperationException("지원하지 않는 신청 출처입니다.");
         }
@@ -158,7 +158,7 @@ public sealed class 신청개인정보동의증적Service(
         string userId,
         CancellationToken cancellationToken = default)
     {
-        if (!string.Equals(sourceCode, 신청개인정보출처Codes.커뮤니티지도, StringComparison.Ordinal))
+        if (!신청개인정보출처Codes.지원하는출처인가(sourceCode))
         {
             return;
         }
@@ -166,7 +166,7 @@ public sealed class 신청개인정보동의증적Service(
         var actor = RequireUser(userId);
         if (!evidenceId.HasValue || evidenceId == Guid.Empty)
         {
-            throw new InvalidOperationException("지도에서 시작한 신청에는 개인정보 동의 증적이 필요합니다.");
+            throw new InvalidOperationException("해당 출처에서 시작한 신청에는 개인정보 동의 증적이 필요합니다.");
         }
 
         var record = await store.조회Async(evidenceId.Value, cancellationToken);
@@ -297,7 +297,7 @@ public sealed class InMemory신청개인정보동의증적Store : I신청개인�
 
 public sealed class 신청개인정보동의증적Record
 {
-    [BsonId]
+    [BsonId, BsonGuidRepresentation(MongoDB.Bson.GuidRepresentation.Standard)]
     public Guid Id { get; set; }
     public long Revision { get; set; } = 1;
     public string UserId { get; set; } = string.Empty;

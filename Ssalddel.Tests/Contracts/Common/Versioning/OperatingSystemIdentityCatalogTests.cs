@@ -139,6 +139,72 @@ public sealed class OperatingSystemIdentityCatalogTests
     }
 
     [Fact]
+    public void EveryRegisteredOperatingSystem_HasUniqueDeclaredResponsibilityStages()
+    {
+        var lifecycles = OperatingSystemLifecycleCatalog.GetAll();
+        var stages = lifecycles.SelectMany(item => item.Stages).ToArray();
+
+        Assert.Equal(
+            OperatingSystemIds.All.OrderBy(id => id, StringComparer.Ordinal),
+            lifecycles.Select(item => item.OperatingSystemId));
+        Assert.Equal(stages.Length, stages.Select(stage => stage.StageId).Distinct(StringComparer.Ordinal).Count());
+        Assert.All(lifecycles, lifecycle =>
+        {
+            Assert.NotEmpty(lifecycle.Stages);
+            Assert.Equal(lifecycle.Stages.OrderBy(stage => stage.Sequence), lifecycle.Stages);
+            Assert.Equal(lifecycle.Stages.Count, lifecycle.Stages.Select(stage => stage.Sequence).Distinct().Count());
+            Assert.All(lifecycle.Stages, stage =>
+            {
+                Assert.False(string.IsNullOrWhiteSpace(stage.Name));
+                Assert.False(string.IsNullOrWhiteSpace(stage.Responsibility));
+            });
+        });
+    }
+
+    [Fact]
+    public void DemandImportTrustPlatformAndEducation_DeclareExistingProcedureResponsibilities()
+    {
+        var demand = OperatingSystemLifecycleCatalog.Get(OperatingSystemIds.GroupPurchaseDemand);
+        var import = OperatingSystemLifecycleCatalog.Get(OperatingSystemIds.GroupPurchaseImport);
+        var trust = OperatingSystemLifecycleCatalog.Get(OperatingSystemIds.CommunityTrust);
+        var platform = OperatingSystemLifecycleCatalog.Get(OperatingSystemIds.PlatformOperations);
+        var education = OperatingSystemLifecycleCatalog.Get(OperatingSystemIds.EducationFieldExperience);
+
+        Assert.Equal(
+            [OperatingSystemLifecycleStageIds.DemandIntent, OperatingSystemLifecycleStageIds.DemandClusteringReview,
+                OperatingSystemLifecycleStageIds.DemandHandoffApproval, OperatingSystemLifecycleStageIds.DemandDownstreamLink],
+            demand.Stages.Select(stage => stage.StageId));
+        Assert.Equal(
+            [OperatingSystemLifecycleStageIds.ImportReadinessLedger, OperatingSystemLifecycleStageIds.ImportEvidenceReview,
+                OperatingSystemLifecycleStageIds.ImportForwarderHandoff, OperatingSystemLifecycleStageIds.ImportQualifiedReview,
+                OperatingSystemLifecycleStageIds.ImportShipmentTracking],
+            import.Stages.Select(stage => stage.StageId));
+        Assert.Equal(
+            [OperatingSystemLifecycleStageIds.CommunityDiscoveryParticipation, OperatingSystemLifecycleStageIds.CommunityAgreementConsent,
+                OperatingSystemLifecycleStageIds.CommunityWorkCompletion, OperatingSystemLifecycleStageIds.CommunityRelationshipDisclosure],
+            trust.Stages.Select(stage => stage.StageId));
+        Assert.Equal(
+            [OperatingSystemLifecycleStageIds.PlatformLedgerReview, OperatingSystemLifecycleStageIds.PlatformEconomicsEvaluation,
+                OperatingSystemLifecycleStageIds.PlatformFollowupRecovery],
+            platform.Stages.Select(stage => stage.StageId));
+        Assert.Equal(
+            [OperatingSystemLifecycleStageIds.EducationActivityPlan, OperatingSystemLifecycleStageIds.EducationActivityVerification,
+                OperatingSystemLifecycleStageIds.EducationGuardianApproval, OperatingSystemLifecycleStageIds.EducationSchoolSubmission,
+                OperatingSystemLifecycleStageIds.EducationSchoolDecision],
+            education.Stages.Select(stage => stage.StageId));
+        Assert.Contains(demand.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.DemandHandoffApproval
+            && stage.Responsibility.Contains("자동 확정하지 않습니다", StringComparison.Ordinal));
+        Assert.Contains(import.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.ImportForwarderHandoff
+            && stage.Responsibility.Contains("명시적 동의", StringComparison.Ordinal));
+        Assert.Contains(trust.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.CommunityRelationshipDisclosure
+            && stage.Responsibility.Contains("본인의 연락처 공개 동의", StringComparison.Ordinal));
+        Assert.Contains(platform.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.PlatformEconomicsEvaluation
+            && stage.Responsibility.Contains("시뮬레이션", StringComparison.Ordinal));
+        Assert.Contains(education.Stages, stage => stage.StageId == OperatingSystemLifecycleStageIds.EducationSchoolDecision
+            && stage.Responsibility.Contains("플랫폼이 교육기관의 판단을 대신하지 않습니다", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void WarehouseValidationCases_DefineNormalAndInspectionReentryRecoveryOnly()
     {
         var normal = WarehouseLifecycleValidationCatalog.Get(WarehouseLifecycleValidationCaseCodes.Normal);

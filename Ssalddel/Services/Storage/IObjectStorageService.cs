@@ -31,7 +31,14 @@ public interface IObjectStorageService
         string containerName,
         string objectName,
         CancellationToken cancellationToken = default);
+
+    Task<ObjectStorageDeleteResult> DeleteAsync(
+        string containerName, string objectName, string expectedOwnedPrefix,
+        CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("This object storage adapter does not support verified deletion.");
 }
+
+public sealed record ObjectStorageDeleteResult(bool ActiveObjectAbsent, bool HistoricalCopiesVerifiedAbsent, string LimitationCode = "");
 
 public sealed record ObjectStorageUploadResult(
     string ContainerName,
@@ -41,6 +48,18 @@ public sealed record ObjectStorageUploadResult(
 
 internal static class ObjectStorageObjectName
 {
+    public static string RequireOwnedDeletionName(string objectName, string expectedOwnedPrefix)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(objectName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(expectedOwnedPrefix);
+        var name = objectName.Replace('\\', '/');
+        var prefix = expectedOwnedPrefix.Replace('\\', '/').TrimEnd('/') + "/";
+        if (name.StartsWith('/') || name.Contains(':') || name.Split('/').Any(x => x is "" or "." or "..")
+            || prefix.StartsWith('/') || prefix.Contains(':') || prefix.Split('/').SkipLast(1).Any(x => x is "" or "." or "..")
+            || !name.StartsWith(prefix, StringComparison.Ordinal) || name.Length > 1024)
+            throw new InvalidOperationException("Object deletion requires an exact object inside the server-owned prefix.");
+        return name;
+    }
     public static string Create(string originalFileName, string? folder)
     {
         var extension = Path.GetExtension(Path.GetFileName(originalFileName));

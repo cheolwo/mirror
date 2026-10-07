@@ -68,6 +68,20 @@ internal static class 화주운송의뢰매퍼
             현장수금확인일시 = entity.현장수금확인일시,
             현장지급메모 = entity.현장지급메모,
             생성일시 = entity.CreatedAt,
+            화물 = new ShipRequest.CargoDTO
+            {
+                화물종류 = entity.화물종류,
+                설명 = entity.화물설명,
+                수량 = entity.화물수량,
+                길이Mm = entity.화물길이Mm,
+                폭Mm = entity.화물폭Mm,
+                높이Mm = entity.화물높이Mm,
+                중량Kg = entity.화물중량Kg,
+                부피Cbm = entity.화물부피Cbm,
+                팔레트개수 = entity.화물팔레트개수,
+                화물파손주의여부 = entity.화물파손주의여부,
+                온도조건 = entity.화물온도조건
+            },
             화물길이Mm = entity.화물길이Mm,
             화물폭Mm = entity.화물폭Mm,
             화물높이Mm = entity.화물높이Mm,

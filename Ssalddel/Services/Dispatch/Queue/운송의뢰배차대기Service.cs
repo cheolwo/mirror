@@ -1,4 +1,4 @@
-﻿using Ssalddel.Contracts.Common.Warehouse;
+using Ssalddel.Contracts.Common.Warehouse;
 using Microsoft.EntityFrameworkCore;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.배차;
@@ -113,6 +113,9 @@ public sealed class 운송의뢰배차대기Service : I운송의뢰배차대기S
             UpdatedAt = now
         };
 
+        var sourceMemo = await _db.화주운송의뢰.AsNoTracking().Where(x => x.의뢰Id == requestId)
+            .Select(x => x.정산메모).SingleOrDefaultAsync(cancellationToken);
+        Ssalddel.Services.Community.생활배송배차Policy.큐초기화(entity, sourceMemo);
         var source = _sourceClassifier.분류(entity);
         entity.배차업무유형 = options?.배차업무유형 ?? source.배차업무유형;
 

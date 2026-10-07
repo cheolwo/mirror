@@ -118,9 +118,8 @@ public sealed class 포장작업UseCase(
                 return Conflict<포장작업결과응답>("이미 포장 완료된 재고의 수량·유형 변경은 별도 재포장 작업에서 처리해 주세요.");
             return Result.Ok(ToResult(item, request.PackagingQuantity, type, existing.처리일시, true));
         }
-        if (item.상태 != "적재완료") return Conflict<포장작업결과응답>("적재 완료 상태의 재고만 포장할 수 있습니다.");
-        if (request.PackagingQuantity <= 0 || request.PackagingQuantity != item.가용수량)
-            return Conflict<포장작업결과응답>("부분 포장 상태를 만들지 않도록 현재 전체 가용수량과 같은 수량을 확인해 주세요.");
+        if (창고재고공정Policy.포장차단사유(item.상태, request.PackagingQuantity, item.가용수량) is { } blocked)
+            return Conflict<포장작업결과응답>(blocked);
 
         var inbound = await db.입고요청.AsNoTracking()
             .FirstOrDefaultAsync(candidate => candidate.Id == item.입고요청Id, cancellationToken);

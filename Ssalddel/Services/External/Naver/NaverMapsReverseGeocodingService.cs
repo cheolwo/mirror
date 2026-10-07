@@ -19,10 +19,12 @@ public sealed class NaverMapsReverseGeocodingService : INaverMapsReverseGeocodin
 {
     private readonly HttpClient httpClient;
     private readonly NaverMapsOptions options;
+    private readonly Ssalddel.Services.Commerce.I외부개인정보처리Guard? privacy;
 
-    public NaverMapsReverseGeocodingService(HttpClient httpClient, IOptions<NaverMapsOptions> options)
+    public NaverMapsReverseGeocodingService(HttpClient httpClient, IOptions<NaverMapsOptions> options, Ssalddel.Services.Commerce.I외부개인정보처리Guard? privacy = null)
     {
         this.httpClient = httpClient;
+        this.privacy = privacy;
         this.options = options.Value;
     }
 
@@ -36,6 +38,7 @@ public sealed class NaverMapsReverseGeocodingService : INaverMapsReverseGeocodin
             return null;
         }
 
+        if (privacy is not null && !privacy.허용("NaverReverseGeocoding")) return null;
         var coordinates = string.Create(
             CultureInfo.InvariantCulture,
             $"{longitude},{latitude}");

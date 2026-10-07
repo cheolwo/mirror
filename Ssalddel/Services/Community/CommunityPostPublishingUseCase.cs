@@ -22,6 +22,8 @@ public sealed class 커뮤니티게시글발행UseCase : I커뮤니티게시글�
     private readonly I게시글원장표시ContextService _ledgerContextService;
     private readonly ICommunityBoardWritePolicy _boardWritePolicy;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly I생활교류공개지역Source? _publicRegions;
+    private readonly Ssalddel.Services.Commerce.I통신판매거래Guard? _commerce;
 
     public 커뮤니티게시글발행UseCase(
         커뮤니티게시글생성Service creationService,
@@ -29,7 +31,9 @@ public sealed class 커뮤니티게시글발행UseCase : I커뮤니티게시글�
         I게시글원장선택조회Service ledgerSelectionService,
         I게시글원장표시ContextService ledgerContextService,
         ICommunityBoardWritePolicy boardWritePolicy,
-        ICurrentUserAccessor currentUserAccessor)
+        ICurrentUserAccessor currentUserAccessor,
+        I생활교류공개지역Source? publicRegions = null,
+        Ssalddel.Services.Commerce.I통신판매거래Guard? commerce = null)
     {
         _creationService = creationService;
         _db = db;
@@ -37,6 +41,8 @@ public sealed class 커뮤니티게시글발행UseCase : I커뮤니티게시글�
         _ledgerContextService = ledgerContextService;
         _boardWritePolicy = boardWritePolicy;
         _currentUserAccessor = currentUserAccessor;
+        _publicRegions = publicRegions;
+        _commerce = commerce;
     }
 
     public Task<Result<PlatformCommunityPostResponse>> 생성Async(
@@ -109,6 +115,14 @@ public sealed class 커뮤니티게시글발행UseCase : I커뮤니티게시글�
             return Forbidden<PlatformCommunityPostResponse>("게시글 비밀번호가 일치하지 않습니다.");
         }
 
+        var regionValidation = await NeighborhoodExchangeRegionSelectionPolicy.ValidateAsync(
+            request.PublicNeighborhoodRegionKey, category, request.WorkflowTag, request.RoleTag,
+            request.IsReportBoardPost, _publicRegions, cancellationToken);
+        if (regionValidation is not null)
+        {
+            return BadRequest<PlatformCommunityPostResponse>(regionValidation);
+        }
+
         커뮤니티원장Dto? linkedLedger = null;
         if (!string.IsNullOrWhiteSpace(request.커뮤니티원장Id))
         {
@@ -136,6 +150,14 @@ public sealed class 커뮤니티게시글발행UseCase : I커뮤니티게시글�
                 _currentUserAccessor.UserId);
         }
 
+        // 기존 게시글의 판매 종료·철회는 새 거래 자격과 무관하게 처리합니다.
+        if (request.SalesOffer is not null && request.SalesOffer.Status == PlatformCommunitySalesOfferStatuses.Open && _commerce is not null)
+        {
+            try { await _commerce.요구Async(_currentUserAccessor.UserId ?? string.Empty, entity.AuthorUserId,
+                request.CommerceProtection, "sales-offer-update", Guid.NewGuid().ToString("N"), cancellationToken); }
+            catch (Ssalddel.Services.Commerce.거래보호Exception ex)
+            { return Result.Fail<PlatformCommunityPostResponse>(new Error(ex.Message).WithMetadata("errorCode", ex.Code).WithMetadata("statusCode", ex.Status)); }
+        }
         entity.Category = category;
         var isReportPost = request.SalesOffer is null
                            && (request.IsReportBoardPost
@@ -145,6 +167,7 @@ public sealed class 커뮤니티게시글발행UseCase : I커뮤니티게시글�
             "국내 화물 운송",
             60);
         entity.RoleTag = CommunityPostWritePolicy.Normalize(request.RoleTag, "플랫폼 구성원", 40);
+        entity.PublicNeighborhoodRegionKey = NeighborhoodExchangeRegionSelectionPolicy.Normalize(request.PublicNeighborhoodRegionKey);
         entity.Title = CommunityPostWritePolicy.Normalize(request.Title, string.Empty, 160);
         entity.Body = CommunityPostWritePolicy.Normalize(request.Body, string.Empty, 4000);
         entity.OriginalLanguageCode = CommunityPostLanguageResolver.Resolve(

@@ -14,6 +14,10 @@ namespace Ssalddel.Application.Food;
 
 public interface I주문자음식주문조회UseCase
 {
+    Task<Result<음식주문접수결과응답>> 접수결과Async(
+        Guid requestId, string? ordererUserId, CancellationToken cancellationToken)
+        => Task.FromResult(Result.Fail<음식주문접수결과응답>("접수 결과 조회가 연결되지 않았습니다."));
+
     Task<Result<주문자음식주문목록응답>> 목록Async(
         주문자음식주문목록조회요청 request,
         string? ordererUserId,
@@ -33,6 +37,19 @@ public interface I주문자음식주문조회UseCase
 public sealed class 주문자음식주문조회UseCase(
     SsalddelContext db) : I주문자음식주문조회UseCase
 {
+    public async Task<Result<음식주문접수결과응답>> 접수결과Async(
+        Guid requestId, string? ordererUserId, CancellationToken cancellationToken)
+    {
+        var userId = Clean(ordererUserId);
+        if (userId is null) return Unauthorized<음식주문접수결과응답>();
+        if (requestId == Guid.Empty) return Result.Fail<음식주문접수결과응답>("제출 요청을 확인해 주세요.");
+        var orderNo = await db.음식주문.AsNoTracking()
+            .Where(x => x.주문자UserId == userId && x.클라이언트요청Id == requestId)
+            .Select(x => x.주문번호).SingleOrDefaultAsync(cancellationToken);
+        return orderNo is null ? NotFound<음식주문접수결과응답>()
+            : Result.Ok(new 음식주문접수결과응답 { 주문번호 = orderNo });
+    }
+
     public async Task<Result<주문자음식주문목록응답>> 목록Async(
         주문자음식주문목록조회요청 request,
         string? ordererUserId,

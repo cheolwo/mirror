@@ -65,6 +65,8 @@ public sealed class 화주운송의뢰Configuration : IEntityTypeConfiguration<�
         builder.Property(x => x.수작업비).HasColumnName("manual_fee");
         builder.Property(x => x.할증).HasColumnName("surcharge");
         builder.Property(x => x.최종운임).HasColumnName("final_fare");
+        builder.Property(x => x.생활배송접수키).HasColumnName("neighborhood_registration_key").HasMaxLength(64);
+        builder.HasIndex(x => x.생활배송접수키).IsUnique().HasDatabaseName("ux_neighborhood_registration_key");
         builder.Property(x => x.클라이언트요청Id).HasColumnName("client_request_id").IsRequired();
         builder.Property(x => x.상태).HasColumnName("status").IsRequired();
         builder.Property(x => x.결제상태).HasColumnName("payment_status").IsRequired();

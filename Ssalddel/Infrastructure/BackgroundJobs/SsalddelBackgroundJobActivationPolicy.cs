@@ -7,6 +7,7 @@ namespace Ssalddel.Infrastructure.BackgroundJobs;
 
 public static class SsalddelBackgroundWorkloadKeys
 {
+    public const string FoodDeliveryDispatch = nameof(FoodDeliveryDispatch);
     public const string DomesticTransportDispatch = nameof(DomesticTransportDispatch);
     public const string CustomsStatusSync = nameof(CustomsStatusSync);
     public const string SalesChannelOrderSync = nameof(SalesChannelOrderSync);
@@ -99,6 +100,8 @@ public sealed class SsalddelBackgroundJobActivationPolicy : ISsalddelBackgroundJ
     private static string ResolveFeatureKey(string workloadKey)
         => workloadKey switch
         {
+            SsalddelBackgroundWorkloadKeys.FoodDeliveryDispatch =>
+                VersionFeatureFlagKeys.FoodDeliveryWorkflow,
             SsalddelBackgroundWorkloadKeys.DomesticTransportDispatch =>
                 VersionFeatureFlagKeys.DomesticTransportWorkflow,
             SsalddelBackgroundWorkloadKeys.CustomsStatusSync =>

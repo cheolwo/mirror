@@ -2,13 +2,18 @@ using Ssalddel.Contracts.Driver.Transport;
 
 namespace Ssalddel.Application.Driver.Transport;
 
+using Ssalddel.Application.Driver.Recommendation;
+using Ssalddel.Services.Community;
+
 public sealed class 운송현재조회QueryHandler : IRequestHandler<운송현재조회Query, 기사운송요약응답?>
 {
     private readonly SsalddelContext _db;
+    private readonly I생활배송기사정보제공동의Service? _disclosure;
 
-    public 운송현재조회QueryHandler(SsalddelContext db)
+    public 운송현재조회QueryHandler(SsalddelContext db, I생활배송기사정보제공동의Service? disclosure = null)
     {
         _db = db;
+        _disclosure = disclosure;
     }
 
     public async Task<기사운송요약응답?> Handle(운송현재조회Query request, CancellationToken cancellationToken)
@@ -38,6 +43,8 @@ public sealed class 운송현재조회QueryHandler : IRequestHandler<운송현�
             .Where(x => x.의뢰Id == requestId)
             .Select(x => new
             {
+                x.클라이언트요청Id,
+                x.주문자UserId,
                 x.결제수단,
                 예상거리Km = _db.운임구성.Where(f => f.Id == x.운임구성Id && f.의뢰Id == x.의뢰Id).Select(f => f.예상거리Km).FirstOrDefault(),
                 거리계산방식 = _db.운임구성.Where(f => f.Id == x.운임구성Id && f.의뢰Id == x.의뢰Id).Select(f => f.거리계산방식).FirstOrDefault(),
@@ -55,7 +62,7 @@ public sealed class 운송현재조회QueryHandler : IRequestHandler<운송현�
             })
             .FirstOrDefaultAsync(cancellationToken);
 
-        return new 기사운송요약응답
+        var response = new 기사운송요약응답
         {
             Id = entity.Id,
             운송번호 = entity.운송번호,
@@ -82,5 +89,11 @@ public sealed class 운송현재조회QueryHandler : IRequestHandler<운송현�
             인수증서명필수 = 기사운송증빙조건정책.인수증서명필수(shipperRequest?.요청사항, shipperRequest?.정산메모),
             UpdatedAt = entity.UpdatedAt
         };
+        기사운송업무상태Projector.투영(response, entity,
+            await 기사운송업무상태Projector.사건조회Async(_db, [entity.Id], cancellationToken));
+        if (!await 생활배송기사정보공개Policy.정보제공가능인가Async(shipperRequest?.클라이언트요청Id,
+                requestId, shipperRequest?.주문자UserId ?? string.Empty, request.기사Id, _disclosure, cancellationToken))
+            생활배송기사정보공개Policy.운송정보가림(response);
+        return response;
     }
 }

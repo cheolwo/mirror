@@ -12,12 +12,15 @@ namespace Ssalddel.Application.Admin.Food;
 
 public interface I음식주문운영추적UseCase
 {
+    Task<AdminFoodOrderListDto> 조회목록Async(string? query = null, int page = 1, int pageSize = 20,
+        CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
     Task<음식주문운영추적응답?> 조회Async(
         string 주문번호,
         CancellationToken cancellationToken = default);
 }
 
-public sealed class 음식주문운영추적UseCase(
+public sealed partial class 음식주문운영추적UseCase(
     SsalddelContext db,
     살뜰.Services.Options.ISsalddelExecutionModePolicy? executionMode = null) : I음식주문운영추적UseCase
 {

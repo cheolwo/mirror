@@ -1,5 +1,6 @@
 using FluentResults;
 using MediatR;
+using System.Data;
 using System.Text.Json;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Connections.Commands;
@@ -21,6 +22,25 @@ public sealed class 친구요청응답CommandHandler : IRequestHandler<친구요
 
     public async Task<Result<Unit>> Handle(친구요청응답Command request, CancellationToken cancellationToken)
     {
+        var attempt = 0;
+        return await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            if (attempt++ > 0) _db.ChangeTracker.Clear();
+            await using var transaction = _db.Database.IsRelational()
+                ? await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
+                : null;
+            var result = await PersistAsync(request, cancellationToken);
+            if (result.IsSuccess && transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+
+            return result;
+        });
+    }
+
+    private async Task<Result<Unit>> PersistAsync(친구요청응답Command request, CancellationToken cancellationToken)
+    {
         var entity = await _db.친구요청
             .FirstOrDefaultAsync(x => x.Id == request.친구요청Id, cancellationToken);
 
@@ -39,6 +59,13 @@ public sealed class 친구요청응답CommandHandler : IRequestHandler<친구요
             return Result.Fail<Unit>("이미 처리된 친구 요청입니다.");
         }
 
+        var actorUserId = _currentUserAccessor.UserId!;
+        if (request.수락 && request.공개동의 is not null
+            && !string.Equals(request.공개동의.동의자참여자Id, actorUserId, StringComparison.Ordinal))
+        {
+            return Result.Fail<Unit>("연락처 공개 동의는 본인 명의로만 기록할 수 있습니다.");
+        }
+
         var now = DateTimeOffset.UtcNow;
 
         if (request.수락)
@@ -49,14 +76,14 @@ public sealed class 친구요청응답CommandHandler : IRequestHandler<친구요
             if (request.공개동의 is not null)
             {
                 var consent = await _db.연락처공개동의
-                    .FirstOrDefaultAsync(x => x.친구요청Id == entity.Id && x.동의자참여자Id == request.공개동의.동의자참여자Id, cancellationToken);
+                    .FirstOrDefaultAsync(x => x.친구요청Id == entity.Id && x.동의자참여자Id == actorUserId, cancellationToken);
 
                 if (consent is null)
                 {
                     consent = new 연락처공개동의
                     {
                         친구요청Id = entity.Id,
-                        동의자참여자Id = request.공개동의.동의자참여자Id,
+                        동의자참여자Id = actorUserId,
                         동의일시 = now
                     };
                     _db.연락처공개동의.Add(consent);
@@ -78,8 +105,6 @@ public sealed class 친구요청응답CommandHandler : IRequestHandler<친구요
             entity.응답일시 = now;
             entity.거절사유 = request.거절사유?.Trim();
         }
-
-        await _db.SaveChangesAsync(cancellationToken);
 
         _db.Command알림Outbox.Add(new Command알림Outbox
         {

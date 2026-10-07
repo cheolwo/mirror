@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +23,7 @@ namespace 살뜰.Services.Dispatch.Queue
         private readonly I국내화물운송기사상태Service _국내화물운송기사상태Service;
         private readonly I음식배달배차흐름Resolver _음식배달배차흐름Resolver;
         private readonly I음식배달기사제안요금Service? _음식배달기사제안요금Service;
+        private readonly I음식배달기사추천기록Service? _음식배달기사추천기록Service;
 
         public 배차대기원장전환Service(
             SsalddelContext db,
@@ -31,7 +32,8 @@ namespace 살뜰.Services.Dispatch.Queue
             I배차추천알림Service recommendationNotificationService,
             I국내화물운송기사상태Service 국내화물운송기사상태Service,
             I음식배달배차흐름Resolver 음식배달배차흐름Resolver,
-            I음식배달기사제안요금Service? 음식배달기사제안요금Service = null)
+            I음식배달기사제안요금Service? 음식배달기사제안요금Service = null,
+            I음식배달기사추천기록Service? 음식배달기사추천기록Service = null)
         {
             _db = db;
             _options = options.Value;
@@ -40,6 +42,7 @@ namespace 살뜰.Services.Dispatch.Queue
             _국내화물운송기사상태Service = 국내화물운송기사상태Service;
             _음식배달배차흐름Resolver = 음식배달배차흐름Resolver;
             _음식배달기사제안요금Service = 음식배달기사제안요금Service;
+            _음식배달기사추천기록Service = 음식배달기사추천기록Service;
         }
 
         public async Task<배차대기원장전환결과> 계획배차에서추천으로전환Async(string requestId, CancellationToken cancellationToken = default)
@@ -60,6 +63,8 @@ namespace 살뜰.Services.Dispatch.Queue
                 return blocked;
             }
 
+            if (!Ssalddel.Services.Community.생활배송배차Policy.자동추천가능(queue))
+                return 전환안됨(queue, 배차대기원장전환결과코드.추천준비안됨, "선택한 방식에서는 자동 추천을 시작할 수 없습니다.");
             queue.배차큐단계 = 상태값.배차큐단계.배차추천;
             queue.배차노출상태 = 상태값.배차노출상태.추천대기;
             queue.계획배차시도횟수++;
@@ -89,7 +94,7 @@ namespace 살뜰.Services.Dispatch.Queue
             }
 
             var 음식배달재탐색대기 =
-                queue.배차업무유형 == 상태값.배차업무유형.음식배달
+                (queue.배차업무유형 == 상태값.배차업무유형.음식배달 || queue.생활배송배차방식 is Ssalddel.Contracts.Common.Community.NeighborhoodDispatchModes.Automatic or Ssalddel.Contracts.Common.Community.NeighborhoodDispatchModes.Hybrid)
                 && queue.배차노출상태 == 상태값.배차노출상태.추천후보없음;
             if (queue.배차큐단계 != 상태값.배차큐단계.배차추천
                 || (queue.배차노출상태 != 상태값.배차노출상태.추천대기
@@ -225,6 +230,16 @@ namespace 살뜰.Services.Dispatch.Queue
                 return 대기상태아님(queue);
             }
 
+            if (queue.배차업무유형 == 상태값.배차업무유형.음식배달)
+            {
+                return 전환안됨(
+                    queue,
+                    배차대기원장전환결과코드.단계불일치,
+                    "음식 배달은 화물 공개배차로 전환하지 않습니다. 음식 배달 후보 재탐색을 사용해 주세요.");
+            }
+
+            if (!Ssalddel.Services.Community.생활배송배차Policy.공개허용(queue))
+                return 전환안됨(queue, 배차대기원장전환결과코드.단계불일치, "현재 선택에서 공개 콜을 허용하지 않았습니다.");
             공개배차상태적용(queue, DateTime.UtcNow);
 
             await _db.SaveChangesAsync(cancellationToken);
@@ -312,9 +327,14 @@ namespace 살뜰.Services.Dispatch.Queue
             }
 
             배차재추천상태Policy.적용(queue, driverId, DateTime.UtcNow);
-
+            if (queue.생활배송배차방식 is not null)
+            {
+                queue.생활배송선택판본++;
+                Ssalddel.Services.Community.생활배송배차Policy.대기적용(queue);
+            }
             await _db.SaveChangesAsync(cancellationToken);
-
+            if (queue.생활배송배차방식 == Ssalddel.Contracts.Common.Community.NeighborhoodDispatchModes.PublicCall)
+                return 전환됨(queue, 배차대기원장전환결과코드.공개배차전환됨, "기사 수락 취소 뒤 공개 콜 선택으로 다시 대기합니다.", driverId);
             return await 추천거절후다음후보로진행Async(queue, driverId, cancellationToken);
         }
 

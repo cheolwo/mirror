@@ -227,6 +227,7 @@ public sealed class 음식점수락배차OutboxTests
                 운송번호 = target.운송의뢰Id ?? throw new InvalidOperationException("운송 의뢰 ID 누락"),
                 의뢰Id = target.운송의뢰Id ?? throw new InvalidOperationException("운송 의뢰 ID 누락"),
                 화주Id = target.판매자UserId,
+                배차업무유형 = 상태값.배차업무유형.음식배달,
                 원본의뢰유형 = 운송의뢰배차원천유형.음식점주문,
                 원본의뢰Id = target.원천참조번호
             });

@@ -25,6 +25,11 @@ public sealed class 음식주문Controller(
     I음식점음식주문조회UseCase restaurantReadUseCase,
     I음식점조리시간Service? preparationTimeService = null) : ControllerBase
 {
+    [HttpGet("client-requests/{requestId:guid}")]
+    [Authorize]
+    public async Task<IActionResult> 접수결과조회(Guid requestId, CancellationToken cancellationToken)
+        => this.ToActionResult(await readUseCase.접수결과Async(requestId, 현재사용자Id(), cancellationToken));
+
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> 목록조회(
@@ -43,8 +48,39 @@ public sealed class 음식주문Controller(
     {
         request.주문자UserId = 현재사용자Id()
             ?? throw new InvalidOperationException("로그인 사용자 식별자를 확인할 수 없습니다.");
-        return Ok(음식배달가능행동Projector.주문자용(
-            await commandUseCase.등록Async(request, cancellationToken)));
+        try
+        {
+            return Ok(음식배달가능행동Projector.주문자용(
+                await commandUseCase.등록Async(request, cancellationToken)));
+        }
+        catch (Ssalddel.Services.Commerce.거래보호Exception ex)
+        {
+            var problem = new ProblemDetails { Title = ex.Message, Status = ex.Status };
+            problem.Extensions["errorCode"] = ex.Code;
+            return StatusCode(ex.Status, problem);
+        }
+        catch (음식주문메뉴가격변경Exception ex)
+        {
+            return 주문입력실패(ex.Message, FoodOrderSubmissionErrorCodes.MenuPriceChanged);
+        }
+        catch (음식주문입력확인Exception ex)
+        {
+            return 주문입력실패(ex.Message, ex.ErrorCode);
+        }
+    }
+
+    private BadRequestObjectResult 주문입력실패(string message, string errorCode)
+    {
+        var problem = new ProblemDetails
+        {
+            Title = message,
+            Status = StatusCodes.Status400BadRequest,
+            Type = "https://httpstatuses.com/400",
+            Instance = HttpContext?.Request.Path.Value
+        };
+        problem.Extensions["errorCode"] = errorCode;
+        problem.Extensions["traceId"] = HttpContext?.TraceIdentifier ?? string.Empty;
+        return BadRequest(problem);
     }
 
     [HttpPost("{orderNo}/receipt-confirmation")]

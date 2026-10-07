@@ -1,5 +1,6 @@
 using Ssalddel.Infrastructure.Persistence.AgriculturalFisheries;
 using Ssalddel.Infrastructure.Persistence.TraditionalMarkets;
+using Ssalddel.Infrastructure.Persistence.PublicData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
@@ -62,6 +63,13 @@ public sealed class PersistenceReadinessHealthCheck : IHealthCheck
             await CheckDbContextAsync(
                 "mysql-agricultural-fisheries",
                 scope.ServiceProvider.GetRequiredService<AgriculturalFisheriesDbContext>(),
+                failures,
+                data,
+                CaptureException,
+                cancellationToken);
+            await CheckDbContextAsync(
+                "mysql-public-data-ingestion",
+                scope.ServiceProvider.GetRequiredService<PublicDataIngestionDbContext>(),
                 failures,
                 data,
                 CaptureException,

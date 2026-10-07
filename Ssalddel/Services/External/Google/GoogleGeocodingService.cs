@@ -15,10 +15,12 @@ namespace 살뜰.Services.External.Google
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
+        private readonly Ssalddel.Services.Commerce.I외부개인정보처리Guard? _privacy;
 
-        public GoogleGeocodingService(HttpClient httpClient, IConfiguration configuration)
+        public GoogleGeocodingService(HttpClient httpClient, IConfiguration configuration, Ssalddel.Services.Commerce.I외부개인정보처리Guard? privacy = null)
         {
             _httpClient = httpClient;
+            _privacy = privacy;
             _apiKey = configuration["GoogleGeocodingApiKey"] ?? string.Empty;
         }
 
@@ -26,6 +28,7 @@ namespace 살뜰.Services.External.Google
         {
             if (string.IsNullOrWhiteSpace(address)) return null;
             if (string.IsNullOrWhiteSpace(_apiKey)) return null;
+            if (_privacy is not null && !_privacy.허용("GoogleGeocoding")) return null;
 
             var encoded = Uri.EscapeDataString(address);
             var response = await _httpClient.GetAsync($"https://maps.googleapis.com/maps/api/geocode/json?address={encoded}&key={_apiKey}");

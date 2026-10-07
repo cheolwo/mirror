@@ -28,6 +28,8 @@ public sealed class 커뮤니티게시글생성Service
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IPublisher _publisher;
     private readonly ILogger<커뮤니티게시글생성Service> _logger;
+    private readonly I생활교류공개지역Source? _publicRegions;
+    private readonly Ssalddel.Services.Commerce.I통신판매거래Guard? _commerce;
 
     public 커뮤니티게시글생성Service(
         SsalddelContext db,
@@ -38,7 +40,9 @@ public sealed class 커뮤니티게시글생성Service
         ICommunityBoardWritePolicy boardWritePolicy,
         ICurrentUserAccessor currentUserAccessor,
         IPublisher publisher,
-        ILogger<커뮤니티게시글생성Service> logger)
+        ILogger<커뮤니티게시글생성Service> logger,
+        I생활교류공개지역Source? publicRegions = null,
+        Ssalddel.Services.Commerce.I통신판매거래Guard? commerce = null)
     {
         _db = db;
         _audioQueue = audioQueue;
@@ -49,6 +53,8 @@ public sealed class 커뮤니티게시글생성Service
         _currentUserAccessor = currentUserAccessor;
         _publisher = publisher;
         _logger = logger;
+        _publicRegions = publicRegions;
+        _commerce = commerce;
     }
 
     public async Task<Result<PlatformCommunityPostResponse>> CreateAsync(
@@ -100,6 +106,21 @@ public sealed class 커뮤니티게시글생성Service
             return Result.Fail<PlatformCommunityPostResponse>(countryValidation);
         }
 
+        var regionValidation = await NeighborhoodExchangeRegionSelectionPolicy.ValidateAsync(
+            request.PublicNeighborhoodRegionKey, category, request.WorkflowTag, request.RoleTag,
+            request.IsReportBoardPost, _publicRegions, cancellationToken);
+        if (regionValidation is not null)
+        {
+            return Result.Fail<PlatformCommunityPostResponse>(regionValidation);
+        }
+
+        if (request.SalesOffer is not null && request.SalesOffer.Status == PlatformCommunitySalesOfferStatuses.Open && _commerce is not null)
+        {
+            try { await _commerce.요구Async(_currentUserAccessor.UserId ?? string.Empty, _currentUserAccessor.UserId,
+                request.CommerceProtection, "sales-offer-publication", Guid.NewGuid().ToString("N"), cancellationToken); }
+            catch (Ssalddel.Services.Commerce.거래보호Exception ex)
+            { return Result.Fail<PlatformCommunityPostResponse>(new Error(ex.Message).WithMetadata("errorCode", ex.Code).WithMetadata("statusCode", ex.Status)); }
+        }
         커뮤니티원장Dto? linkedLedger = null;
         if (!string.IsNullOrWhiteSpace(request.커뮤니티원장Id))
         {
@@ -148,6 +169,7 @@ public sealed class 커뮤니티게시글생성Service
                 "국내 화물 운송",
                 60),
             RoleTag = CommunityPostWritePolicy.Normalize(request.RoleTag, "플랫폼 구성원", 40),
+            PublicNeighborhoodRegionKey = NeighborhoodExchangeRegionSelectionPolicy.Normalize(request.PublicNeighborhoodRegionKey),
             Title = title,
             Body = body,
             OriginalLanguageCode = CommunityPostLanguageResolver.Resolve(

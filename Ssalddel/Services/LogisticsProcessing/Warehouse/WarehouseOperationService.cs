@@ -1027,9 +1027,21 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
             throw new InvalidOperationException("보관위치는 필수입니다.");
         }
 
+        var location = request.보관위치.Trim();
+        if (item.상태 == "적재완료")
+        {
+            if (!string.Equals(item.보관위치, location, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("이미 적재 완료된 재고의 위치 변경은 별도 재고 이동 작업에서 처리해 주세요.");
+            var replay = ToWarehouseWorkResult(item, "적재", userId, item.UpdatedAt, request.적재메모);
+            replay.멱등재시도여부 = true;
+            return replay;
+        }
+        if (창고재고공정Policy.적재차단사유(item.상태) is { } blocked)
+            throw new InvalidOperationException(blocked);
+
         var now = DateTime.UtcNow;
         var previousLocation = item.보관위치;
-        item.보관위치 = request.보관위치.Trim();
+        item.보관위치 = location;
         item.상태 = "적재완료";
         item.UpdatedAt = now;
 
@@ -1059,13 +1071,26 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
             .FirstOrDefaultAsync(x => x.Id == inboundItemId, cancellationToken)
             ?? throw new InvalidOperationException("입고상품을 찾을 수 없거나 접근할 수 없습니다.");
 
-        if (request.포장수량 <= 0 || request.포장수량 > item.가용수량 + item.예약수량)
+        var packageType = string.IsNullOrWhiteSpace(request.포장유형) ? "일반포장" : request.포장유형.Trim();
+        if (!포장유형코드.IsValid(packageType))
+            throw new InvalidOperationException("지원하는 포장 유형을 선택해 주세요.");
+        if (item.상태.StartsWith("포장완료-", StringComparison.Ordinal))
         {
-            throw new InvalidOperationException("포장수량이 재고 수량 범위를 벗어났습니다.");
+            var existing = await _db.재고이력.AsNoTracking()
+                .Where(history => history.입고상품Id == item.Id && history.이력유형 == "포장")
+                .OrderByDescending(history => history.처리일시).ThenByDescending(history => history.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (!string.Equals(item.상태, $"포장완료-{packageType}", StringComparison.Ordinal)
+                || existing?.변경후수량 != request.포장수량)
+                throw new InvalidOperationException("이미 포장 완료된 재고의 수량·유형 변경은 별도 재포장 작업에서 처리해 주세요.");
+            var replay = ToWarehouseWorkResult(item, "포장", userId, existing.처리일시, request.포장메모);
+            replay.멱등재시도여부 = true;
+            return replay;
         }
+        if (창고재고공정Policy.포장차단사유(item.상태, request.포장수량, item.가용수량) is { } blocked)
+            throw new InvalidOperationException(blocked);
 
         var now = DateTime.UtcNow;
-        var packageType = string.IsNullOrWhiteSpace(request.포장유형) ? "일반포장" : request.포장유형.Trim();
         item.상태 = $"포장완료-{packageType}";
         item.UpdatedAt = now;
 
@@ -1075,7 +1100,7 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
             입고상품Id = item.Id,
             이력유형 = "포장",
             변경수량 = 0,
-            변경후수량 = item.가용수량,
+            변경후수량 = request.포장수량,
             원인유형 = "포장작업",
             원인Id = item.입고요청Id,
             처리UserId = userId,

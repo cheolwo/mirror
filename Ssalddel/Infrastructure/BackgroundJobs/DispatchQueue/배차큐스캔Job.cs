@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Quartz;
 using Ssalddel.Infrastructure.BackgroundJobs;
 using 살뜰.Data;
@@ -49,12 +49,12 @@ namespace 살뜰.Infrastructure.BackgroundJobs.DispatchQueue
             }
 
             var cancellationToken = context.CancellationToken;
-            var 음식배달재탐색기준시각 = DateTime.UtcNow.AddSeconds(
-                -Math.Max(1, _queuePolicyOptions.음식배달후보재탐색간격초));
             var 자동공개전환Count = await 공개전환기한초과처리Async(cancellationToken);
 
             var plannedIds = await _db.운송원장.AsNoTracking()
                 .Where(x => x.상태 == 상태값.배차대기상태.대기
+                            && x.배차업무유형 == 상태값.배차업무유형.용달운송
+                            && x.생활배송수락준비완료
                             && x.배차큐단계 == 상태값.배차큐단계.계획배차
                             && x.배차노출상태 == 상태값.배차노출상태.계획대기
                             && x.원본의뢰유형 != 운송의뢰배차원천유형.살뜰마트주문
@@ -69,16 +69,19 @@ namespace 살뜰.Infrastructure.BackgroundJobs.DispatchQueue
                 await _원장전환Service.계획배차에서추천으로전환Async(requestId, cancellationToken);
             }
 
+            var retryBefore = DateTime.UtcNow.AddSeconds(-Math.Max(1, _queuePolicyOptions.음식배달후보재탐색간격초));
             var recommendWaitingIds = await _db.운송원장.AsNoTracking()
                 .Where(x => x.상태 == 상태값.배차대기상태.대기
+                            && x.배차업무유형 == 상태값.배차업무유형.용달운송
                             && x.배차큐단계 == 상태값.배차큐단계.배차추천
                             && x.현재추천대상기사Id == null
-                            && ((x.배차노출상태 == 상태값.배차노출상태.추천대기
-                                 && x.원본의뢰유형 != 운송의뢰배차원천유형.살뜰마트주문
-                                 && x.원본의뢰유형 != 운송의뢰배차원천유형.살뜰마트음식주문)
-                                || (x.배차업무유형 == 상태값.배차업무유형.음식배달
-                                    && x.배차노출상태 == 상태값.배차노출상태.추천후보없음
-                                    && x.UpdatedAt <= 음식배달재탐색기준시각)))
+                            && (x.배차노출상태 == 상태값.배차노출상태.추천대기
+                                || ((x.생활배송배차방식 == Ssalddel.Contracts.Common.Community.NeighborhoodDispatchModes.Automatic
+                                        || x.생활배송배차방식 == Ssalddel.Contracts.Common.Community.NeighborhoodDispatchModes.Hybrid)
+                                    && x.배차노출상태 == 상태값.배차노출상태.추천후보없음 && x.UpdatedAt <= retryBefore))
+                            && x.생활배송수락준비완료
+                            && x.원본의뢰유형 != 운송의뢰배차원천유형.살뜰마트주문
+                            && x.원본의뢰유형 != 운송의뢰배차원천유형.살뜰마트음식주문)
                 .OrderBy(x => x.UpdatedAt)
                 .Select(x => x.의뢰Id)
                 .Take(_options.처리배치크기)
@@ -96,21 +99,12 @@ namespace 살뜰.Infrastructure.BackgroundJobs.DispatchQueue
                                  && x.배차노출상태 == 상태값.배차노출상태.추천대기,
                     cancellationToken);
 
-            var foodWaitingCount = await _db.운송원장.AsNoTracking()
-                .CountAsync(x => x.상태 == 상태값.배차대기상태.대기
-                                 && x.배차업무유형 == 상태값.배차업무유형.음식배달
-                                 && x.배차큐단계 == 상태값.배차큐단계.배차추천
-                                 && (x.배차노출상태 == 상태값.배차노출상태.추천대기
-                                     || x.배차노출상태 == 상태값.배차노출상태.추천후보없음),
-                    cancellationToken);
-
-            _logger.LogDebug("Action={Action} AutoPublicCount={AutoPublicCount} PlannedCount={PlannedCount} RecommendWaitingCount={RecommendWaitingCount} CargoWaitingCount={CargoWaitingCount} FoodWaitingCount={FoodWaitingCount} OccurredAt={OccurredAt}",
+            _logger.LogDebug("Action={Action} AutoPublicCount={AutoPublicCount} PlannedCount={PlannedCount} RecommendWaitingCount={RecommendWaitingCount} CargoWaitingCount={CargoWaitingCount} OccurredAt={OccurredAt}",
                 "DispatchQueueScanned",
                 자동공개전환Count,
                 plannedIds.Count,
                 recommendWaitingIds.Count,
                 cargoWaitingCount,
-                foodWaitingCount,
                 DateTime.UtcNow);
         }
 
@@ -136,6 +130,8 @@ namespace 살뜰.Infrastructure.BackgroundJobs.DispatchQueue
                       && queue.배차큐단계 != 상태값.배차큐단계.확정
                       && queue.배차큐단계 != 상태값.배차큐단계.종료
                       && queue.배차노출상태 != 상태값.배차노출상태.공개중
+                      && queue.생활배송수락준비완료
+                      && queue.생활배송배차방식 == null
                       && queue.확정기사Id == null
                       && queue.CreatedAt <= immediateDeadline
                 orderby queue.CreatedAt

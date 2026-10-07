@@ -167,7 +167,7 @@ public sealed class 농수산정보Controller : ControllerBase
     [HttpGet("items/{hsCode}/country-price-card")]
     [SsalddelApiContractName("GetHsFoodCountryPriceCard")]
     public async Task<ActionResult<Hs식품국가가격Card응답>>
-        Hs식품국가가격Card조회(
+        식품국가가격Card조회(
             string hsCode,
             [FromQuery] Hs식품국가가격CardQuery query,
             CancellationToken cancellationToken = default)

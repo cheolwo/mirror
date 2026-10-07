@@ -902,6 +902,128 @@ public sealed class WarehouseOperationDetailTests
         Assert.Equal(1, await db.재고이력.CountAsync(x => x.입고상품Id == 71 && x.이력유형 == "입고검수"));
     }
 
+    [Theory]
+    [InlineData("보관중")]
+    [InlineData("포장완료-일반포장")]
+    [InlineData("재위탁대기")]
+    public async Task 기존적재API도_검수전과후속공정의재고를적재완료로덮어쓰지않는다(string state)
+    {
+        await using var db = CreateContext();
+        await SeedAsync(db);
+        await SeedInspectionItemAsync(db);
+        var item = await db.입고상품.SingleAsync(x => x.Id == 71);
+        item.상태 = state;
+        await db.SaveChangesAsync();
+        var service = new WarehouseOperationService(db, new TestCurrentUserAccessor("warehouse-owner"), null!);
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.PutAwayInventoryItemAsync(71, new() { 보관위치 = "RACK-A" }, default));
+
+        Assert.Contains("검수 완료", error.Message);
+        db.ChangeTracker.Clear();
+        var stored = await db.입고상품.SingleAsync(x => x.Id == 71);
+        Assert.Equal(state, stored.상태);
+        Assert.Equal("검수 대기 구역", stored.보관위치);
+        Assert.Empty(await db.재고이력.ToListAsync());
+        Assert.Empty(await db.재고이동.ToListAsync());
+    }
+
+    [Theory]
+    [InlineData("보관중")]
+    [InlineData("검수완료")]
+    [InlineData("검수완료-불량포함")]
+    [InlineData("재위탁대기")]
+    public async Task 기존포장API도_적재완료를거치지않은재고를포장하지않는다(string state)
+    {
+        await using var db = CreateContext();
+        await SeedAsync(db);
+        await SeedInspectionItemAsync(db);
+        var item = await db.입고상품.SingleAsync(x => x.Id == 71);
+        item.상태 = state;
+        await db.SaveChangesAsync();
+        var service = new WarehouseOperationService(db, new TestCurrentUserAccessor("warehouse-owner"), null!);
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.PackInventoryItemAsync(71, new() { 포장수량 = 12 }, default));
+
+        Assert.Contains("적재 완료", error.Message);
+        db.ChangeTracker.Clear();
+        Assert.Equal(state, (await db.입고상품.SingleAsync(x => x.Id == 71)).상태);
+        Assert.Empty(await db.재고이력.ToListAsync());
+        Assert.Empty(await db.재고이동.ToListAsync());
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(7)]
+    [InlineData(9)]
+    [InlineData(12)]
+    public async Task 기존포장API는_부분수량이나예약수량을전체가용수량포장으로표시하지않는다(int quantity)
+    {
+        await using var db = CreateContext();
+        await SeedAsync(db);
+        await SeedInspectionItemAsync(db);
+        var item = await db.입고상품.SingleAsync(x => x.Id == 71);
+        item.상태 = "적재완료";
+        item.가용수량 = 8;
+        item.예약수량 = 4;
+        await db.SaveChangesAsync();
+        var service = new WarehouseOperationService(db, new TestCurrentUserAccessor("warehouse-owner"), null!);
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.PackInventoryItemAsync(71, new() { 포장수량 = quantity }, default));
+
+        Assert.Contains("전체 가용수량", error.Message);
+        db.ChangeTracker.Clear();
+        var stored = await db.입고상품.SingleAsync(x => x.Id == 71);
+        Assert.Equal("적재완료", stored.상태);
+        Assert.Equal(8, stored.가용수량);
+        Assert.Equal(4, stored.예약수량);
+        Assert.Empty(await db.재고이력.ToListAsync());
+        Assert.Empty(await db.재고이동.ToListAsync());
+    }
+
+    [Fact]
+    public async Task 기존적재포장API는_정상단계를유지하고_동일완료재시도에이력감사Event를중복생성하지않는다()
+    {
+        await using var db = CreateContext();
+        await SeedAsync(db);
+        await SeedInspectionItemAsync(db);
+        var service = new WarehouseOperationService(db, new TestCurrentUserAccessor("warehouse-owner"), null!);
+        await service.InspectInboundItemAsync(71, new() { 검수수량 = 12 }, default);
+        var log = new RecordingActivityLogService();
+        var publisher = new RecordingPublisher();
+        var useCase = new 창고작업UseCase(service, log, publisher);
+        var context = new 창고작업요청Context("warehouse-manager", "warehouse-owner", "창고 관리자", "WarehouseManager",
+            "/api/v1/warehouse-operations/inventory/71", "trace-legacy-work", "127.0.0.1", "test");
+        var putAway = new 적재위치배정요청 { 보관위치 = "RACK-A" };
+        var pack = new 포장작업요청 { 포장수량 = 12 };
+
+        var placed = await useCase.적재위치배정Async(71, putAway, context, default);
+        var placedAgain = await useCase.적재위치배정Async(71, putAway, context, default);
+        var packed = await useCase.포장작업Async(71, pack, context, default);
+        var packedAgain = await useCase.포장작업Async(71, pack, context, default);
+
+        Assert.True(placed.IsSuccess);
+        Assert.False(placed.Value.멱등재시도여부);
+        Assert.True(placedAgain.Value.멱등재시도여부);
+        Assert.True(packed.IsSuccess);
+        Assert.Equal("포장완료-일반포장", packed.Value.상태);
+        Assert.False(packed.Value.멱등재시도여부);
+        Assert.True(packedAgain.Value.멱등재시도여부);
+        Assert.Equal(2, log.Entries.Count);
+        Assert.Equal(2, publisher.Notifications.Count);
+        Assert.Equal(1, await db.재고이력.CountAsync(x => x.이력유형 == "적재"));
+        Assert.Equal(1, await db.재고이력.CountAsync(x => x.이력유형 == "포장"));
+        Assert.Equal(12, (await db.재고이력.SingleAsync(x => x.이력유형 == "포장")).변경후수량);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.PutAwayInventoryItemAsync(71, new() { 보관위치 = "RACK-B" }, default));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.PackInventoryItemAsync(71, new() { 포장수량 = 11 }, default));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.PackInventoryItemAsync(71, new() { 포장수량 = 12, 포장유형 = "냉장포장" }, default));
+        Assert.Equal(2, log.Entries.Count);
+        Assert.Equal(2, publisher.Notifications.Count);
+    }
+
     private static SsalddelContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<SsalddelContext>()

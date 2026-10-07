@@ -57,16 +57,16 @@ public sealed class OperatingSystemInteractionCatalogTests
     }
 
     [Fact]
-    public void LifecycleCoverage_ExposesDefinedAndPendingOperatingSystemsWithoutInventingStages()
+    public void LifecycleCoverage_ExposesDeclaredStagesForEveryRegisteredOperatingSystem()
     {
         var coverage = OperatingSystemInteractionCatalog.GetLifecycleCoverage();
 
         Assert.Equal(OperatingSystemIds.All.Count, coverage.Count);
-        Assert.Equal(5, coverage.Count(item => item.HasLifecycle));
-        Assert.All(
-            coverage.Where(item => item.HasLifecycle
-                                   && item.OperatingSystemId != OperatingSystemIds.WarehouseCommerceFulfillment),
-            item => Assert.Equal(8, item.DefinedStageCount));
+        Assert.All(coverage, item =>
+        {
+            Assert.True(item.HasLifecycle);
+            Assert.Equal(OperatingSystemLifecycleCatalog.Get(item.OperatingSystemId).Stages.Count, item.DefinedStageCount);
+        });
         Assert.Contains(coverage, item =>
             item.OperatingSystemId == OperatingSystemIds.WarehouseCommerceFulfillment
             && item.HasLifecycle
@@ -83,8 +83,10 @@ public sealed class OperatingSystemInteractionCatalogTests
             OperatingSystemIds.All.OrderBy(x => x),
             structures.Select(x => x.OperatingSystemId).OrderBy(x => x));
         Assert.All(
-            structures.Where(x => x.HasLifecycle
-                                  && x.OperatingSystemId != OperatingSystemIds.WarehouseCommerceFulfillment),
+            structures.Where(x => x.OperatingSystemId is OperatingSystemIds.ShipperTransportManagement
+                or OperatingSystemIds.DomesticCargoTransport
+                or OperatingSystemIds.FoodDelivery
+                or OperatingSystemIds.SsalddelMartUrbanLogistics),
             item =>
             {
                 Assert.Equal(OperatingSystemCurrentStructureStatuses.VerifiedFromLifecycle, item.Status);
@@ -92,12 +94,17 @@ public sealed class OperatingSystemInteractionCatalogTests
                 Assert.True(item.DefinedStageCount > 0);
             });
         Assert.All(
-            structures.Where(x => !x.HasLifecycle),
+            structures.Where(x => x.OperatingSystemId is OperatingSystemIds.GroupPurchaseDemand
+                or OperatingSystemIds.GroupPurchaseImport
+                or OperatingSystemIds.CommunityTrust
+                or OperatingSystemIds.PlatformOperations
+                or OperatingSystemIds.EducationFieldExperience),
             item =>
             {
-                Assert.Equal(OperatingSystemCurrentStructureStatuses.LifecyclePending, item.Status);
+                Assert.True(item.HasLifecycle);
+                Assert.Equal(OperatingSystemCurrentStructureStatuses.VerifiedFromLifecycle, item.Status);
                 Assert.Empty(item.OrderSegments);
-                Assert.Equal(0, item.DefinedStageCount);
+                Assert.True(item.DefinedStageCount > 0);
             });
         Assert.Contains(structures, item =>
             item.OperatingSystemId == OperatingSystemIds.WarehouseCommerceFulfillment

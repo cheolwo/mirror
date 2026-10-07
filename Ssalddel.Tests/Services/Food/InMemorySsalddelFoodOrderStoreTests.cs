@@ -6,6 +6,82 @@ namespace Ssalddel.Tests.Services.Food;
 
 public sealed class InMemorySsalddelFoodOrderStoreTests
 {
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("unsupported-food-status")]
+    public void 잘못된저장상태는_수락거절취소배차연결을_변경하지않는다(string raw)
+    {
+        var store = new InMemorySsalddelFoodOrderStore();
+        var order = store.AddOrder(CreateOrderRequest());
+        var entity = StoredOrder(store, order.주문번호);
+        entity.상태 = raw;
+        var historyCount = entity.상태이력.Count;
+        Assert.Throws<InvalidOperationException>(() => store.음식점수락멱등(order.주문번호,
+            new 음식점주문수락요청 { 클라이언트요청Id = Guid.NewGuid() }, "restaurant-user"));
+        Assert.Throws<InvalidOperationException>(() => store.음식점진행변경(order.주문번호,
+            new 음식점주문진행변경요청 { 클라이언트요청Id = Guid.NewGuid(), 작업 = 음식점주문진행작업코드.거절, 사유 = "재료 품절" }, "restaurant-user"));
+        Assert.Throws<InvalidOperationException>(() => store.주문자취소(order.주문번호,
+            new 주문자음식주문취소요청 { 클라이언트요청Id = Guid.NewGuid(), 사유Code = "ChangedMind" }, "orderer-1"));
+        Assert.Throws<InvalidOperationException>(() => store.배차대기반영(order.주문번호, 41, DateTime.UtcNow));
+        Assert.Equal(raw, entity.상태);
+        Assert.Equal(음식주문배차상태코드.미요청, entity.배차상태);
+        Assert.Null(entity.배차대기Id);
+        Assert.Equal(historyCount, entity.상태이력.Count);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("unsupported-food-status")]
+    public void 음식점진행Policy는_미지원raw상태를_주문대기로처리하지않는다(string? raw)
+        => Assert.Throws<InvalidOperationException>(() => 음식점주문진행Policy.판정(raw,
+            new 음식점주문진행변경요청 { 작업 = 음식점주문진행작업코드.거절, 사유 = "재료 품절" }));
+
+    [Fact]
+    public void 과거주문접수별칭의_정상수락은_유지한다()
+    {
+        var store = new InMemorySsalddelFoodOrderStore();
+        var order = store.AddOrder(CreateOrderRequest());
+        StoredOrder(store, order.주문번호).상태 = " 주문접수 ";
+        Assert.Equal(음식주문상태코드.주문확인, store.음식점수락멱등(order.주문번호,
+            new 음식점주문수락요청 { 클라이언트요청Id = Guid.NewGuid() }, "restaurant-user")!.주문.상태);
+    }
+
+    [Theory]
+    [InlineData(음식주문상태코드.기사배정, 음식주문배차상태코드.기사배정)]
+    [InlineData(음식주문상태코드.조리중, 음식주문배차상태코드.기사배정)]
+    [InlineData(음식주문상태코드.픽업완료, 음식주문배차상태코드.기사배정)]
+    [InlineData(음식주문상태코드.전달완료, 음식주문배차상태코드.배달완료)]
+    [InlineData(음식주문상태코드.수령확인, 음식주문배차상태코드.배달완료)]
+    [InlineData(음식주문상태코드.취소, 음식주문배차상태코드.배차대기)]
+    public void 같은배차결속은_진행과최초시각을보존하고_다른큐로바꾸지않는다(string status, string dispatchStatus)
+    {
+        var store = new InMemorySsalddelFoodOrderStore();
+        var order = store.AddOrder(CreateOrderRequest());
+        store.음식점수락멱등(order.주문번호, new 음식점주문수락요청 { 클라이언트요청Id = Guid.NewGuid() }, "restaurant-user");
+        var requestedAt = DateTime.UtcNow.AddMinutes(-10);
+        store.배차대기반영(order.주문번호, 41, requestedAt);
+        var entity = StoredOrder(store, order.주문번호);
+        entity.상태 = status;
+        entity.배차상태 = dispatchStatus;
+        var changedAt = entity.최근변경시각Utc;
+        var historyCount = entity.상태이력.Count;
+        var same = store.배차대기반영(order.주문번호, 41, DateTime.UtcNow)!;
+        Assert.Equal(status, same.상태);
+        Assert.Equal(dispatchStatus, same.배차상태);
+        Assert.Equal(requestedAt, same.배차요청시각Utc);
+        Assert.Throws<InvalidOperationException>(() => store.배차대기반영(order.주문번호, 42, DateTime.UtcNow));
+        Assert.Equal(changedAt, entity.최근변경시각Utc);
+        Assert.Equal(historyCount, entity.상태이력.Count);
+        Assert.Equal(41, entity.배차대기Id);
+    }
+
+    private static 음식주문응답 StoredOrder(InMemorySsalddelFoodOrderStore store, string orderNo)
+        => Assert.IsType<List<음식주문응답>>(typeof(InMemorySsalddelFoodOrderStore)
+            .GetField("_orders", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .GetValue(store)).Single(x => x.주문번호 == orderNo);
+
     [Fact]
     public void 음식점수락은_주문상태와_음식점정보를_갱신한다()
     {

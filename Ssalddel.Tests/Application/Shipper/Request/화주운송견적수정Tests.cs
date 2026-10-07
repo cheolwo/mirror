@@ -261,6 +261,161 @@ public sealed class 화주운송견적수정Tests
         Assert.Equal(added.Select(x => x.Name).OrderBy(x => x), migration.DownOperations.Cast<DropColumnOperation>().Select(x => x.Name).OrderBy(x => x));
     }
 
+    [Theory]
+    [InlineData("dispatch", "quantity")]
+    [InlineData("dispatch", "pickupWindow")]
+    [InlineData("dispatch", "dropoffWindow")]
+    [InlineData("dispatch", "route")]
+    [InlineData("dispatch", "transport")]
+    [InlineData("approval", "weight")]
+    [InlineData("approval", "settlement")]
+    [InlineData("payment", "temperature")]
+    [InlineData("driver", "quantity")]
+    [InlineData("cancel", "quantity")]
+    [InlineData("unknown", "quantity")]
+    public async Task 숫자견적이없어도_확정후핵심조건변경은409이며_기존합의를덮어쓰지않는다(string lifecycle, string field)
+    {
+        await using var db = Context();
+        await Seed(db);
+        var entity = await db.화주운송의뢰.SingleAsync();
+        entity.화물수량 = 2;
+        entity.화물중량Kg = 10m;
+        entity.화물온도조건 = "상온";
+        switch (lifecycle)
+        {
+            case "dispatch": entity.배차상태 = "배차확정"; break;
+            case "approval": entity.정산상태 = "후불승인완료"; break;
+            case "payment": entity.결제상태 = "결제완료"; break;
+            case "driver": db.운송원장.Add(new() { 의뢰Id = "quote-request", 운송번호 = "quote-request", 상태 = "대기", 확정기사Id = "driver-a" }); break;
+            case "cancel": entity.상태 = "취소"; break;
+            case "unknown": entity.정산상태 = "새로운상태"; break;
+        }
+        await db.SaveChangesAsync();
+        var before = entity.UpdatedAt;
+        var settlement = entity.정산상태;
+        var paymentMethod = entity.결제수단;
+        var transportMode = entity.운송방식;
+        var pickupWindowStart = entity.픽업_시간창_시작일시;
+        var pickupWindowEnd = entity.픽업_시간창_종료일시;
+        var dropoffWindowStart = entity.하차_시간창_시작일시;
+        var dropoffWindowEnd = entity.하차_시간창_종료일시;
+        var sync = Sync();
+
+        var result = await Handler(db, sync).Handle(CoreChange(field), default);
+
+        Assert.True(result.IsFailed);
+        Assert.Contains(result.Errors, error => error.Metadata.TryGetValue("StatusCode", out var status) && Equals(status, 409)
+            && error.Metadata.TryGetValue("ErrorCode", out var code) && Equals(code, "FreightCoreConditionsLocked"));
+        db.ChangeTracker.Clear();
+        var stored = await db.화주운송의뢰.SingleAsync();
+        Assert.Equal(2, stored.화물수량);
+        Assert.Equal(10m, stored.화물중량Kg);
+        Assert.Equal("상온", stored.화물온도조건);
+        Assert.Equal("합성 하차지", stored.하차_도로명주소);
+        Assert.Equal(pickupWindowStart, stored.픽업_시간창_시작일시);
+        Assert.Equal(pickupWindowEnd, stored.픽업_시간창_종료일시);
+        Assert.Equal(dropoffWindowStart, stored.하차_시간창_시작일시);
+        Assert.Equal(dropoffWindowEnd, stored.하차_시간창_종료일시);
+        Assert.Equal(paymentMethod, stored.결제수단);
+        Assert.Equal(transportMode, stored.운송방식);
+        Assert.Equal(settlement, stored.정산상태);
+        Assert.Equal(before, stored.UpdatedAt);
+        Assert.Empty(await db.운임구성.ToListAsync());
+        Assert.Empty(sync.Calls);
+    }
+
+    [Theory]
+    [InlineData("quantity")]
+    [InlineData("weight")]
+    [InlineData("temperature")]
+    [InlineData("pickupWindow")]
+    [InlineData("dropoffWindow")]
+    [InlineData("route")]
+    [InlineData("transport")]
+    [InlineData("settlement")]
+    public async Task 숫자견적없는사전등록의뢰는_핵심조건을계속수정할수있다(string field)
+    {
+        await using var db = Context();
+        await Seed(db);
+        var result = await Handler(db, Sync()).Handle(CoreChange(field), default);
+
+        Assert.True(result.IsSuccess);
+        var stored = await db.화주운송의뢰.SingleAsync();
+        switch (field)
+        {
+            case "quantity": Assert.Equal(7, stored.화물수량); break;
+            case "weight": Assert.Equal(15m, stored.화물중량Kg); break;
+            case "temperature": Assert.Equal("냉장", stored.화물온도조건); break;
+            case "pickupWindow": Assert.Equal(new DateTime(2030, 1, 1, 9, 0, 0), stored.픽업_시간창_시작일시); break;
+            case "dropoffWindow": Assert.Equal(new DateTime(2030, 1, 1, 11, 0, 0), stored.하차_시간창_시작일시); break;
+            case "route": Assert.Equal("새 합성 하차지", stored.하차_도로명주소); break;
+            case "transport": Assert.Equal("예약운송", stored.운송방식); break;
+            case "settlement": Assert.Equal("현금", stored.결제수단); break;
+        }
+        Assert.Equal("미시작", stored.배차상태);
+        Assert.Null(stored.최종운임);
+    }
+
+    [Fact]
+    public async Task 현장지급예정의미배정초안도_화물수량수정을유지한다()
+    {
+        await using var db = Context();
+        await Seed(db);
+        var entity = await db.화주운송의뢰.SingleAsync();
+        entity.정산상태 = "현장수금예정";
+        db.운송원장.Add(new() { 의뢰Id = "quote-request", 운송번호 = "quote-request", 상태 = "대기" });
+        await db.SaveChangesAsync();
+
+        Assert.True((await Handler(db, Sync()).Handle(CoreChange("quantity"), default)).IsSuccess);
+        Assert.Equal(7, entity.화물수량);
+        Assert.Equal("현장수금예정", entity.정산상태);
+        Assert.Equal("대기", (await db.운송원장.SingleAsync()).상태);
+    }
+
+    [Fact]
+    public async Task 배차후같은핵심조건재전송과연락처수정은_다시합의한것으로오인하지않는다()
+    {
+        await using var db = Context();
+        await Seed(db);
+        var entity = await db.화주운송의뢰.SingleAsync();
+        entity.배차상태 = "배차확정";
+        entity.정산상태 = "후불승인완료";
+        entity.화물수량 = 7;
+        entity.화물중량Kg = 15m;
+        entity.화물온도조건 = "냉장";
+        entity.픽업_시간창_시작일시 = new DateTime(2030, 1, 1, 9, 0, 0);
+        entity.픽업_시간창_종료일시 = new DateTime(2030, 1, 1, 10, 0, 0);
+        await db.SaveChangesAsync();
+        var request = Command(null) with
+        {
+            화물정보 = new(null, null, 7, 15m, null, null, "냉장"),
+            픽업지 = new(null, null, null, null, "새 연락처", "010-1234-5678",
+                entity.픽업_시간창_시작일시, entity.픽업_시간창_종료일시)
+        };
+
+        var result = await Handler(db, Sync()).Handle(request, default);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("새 연락처", entity.픽업_연락처_이름);
+        Assert.Equal("배차확정", entity.배차상태);
+        Assert.Equal("후불승인완료", entity.정산상태);
+        Assert.Equal(7, entity.화물수량);
+    }
+
+    private static 의뢰수정Command CoreChange(string field)
+        => field switch
+        {
+            "quantity" => Command(null) with { 화물정보 = new(null, null, 7, null, null, null, null) },
+            "weight" => Command(null) with { 화물정보 = new(null, null, null, 15m, null, null, null) },
+            "temperature" => Command(null) with { 화물정보 = new(null, null, null, null, null, null, "냉장") },
+            "pickupWindow" => Command(null) with { 픽업지 = new(null, null, null, null, null, null, new DateTime(2030, 1, 1, 9, 0, 0), new DateTime(2030, 1, 1, 10, 0, 0)) },
+            "dropoffWindow" => Command(null) with { 하차지 = new(null, null, null, null, null, null, new DateTime(2030, 1, 1, 11, 0, 0), new DateTime(2030, 1, 1, 12, 0, 0)) },
+            "route" => Command(null) with { 하차지 = new("새 합성 하차지", null, null, null, null, null, null, null) },
+            "transport" => Command(null) with { 운송조건 = new("예약운송", null, null) },
+            "settlement" => Command(null) with { 정산조건 = new("현금", null) },
+            _ => throw new ArgumentOutOfRangeException(nameof(field))
+        };
+
     private static 의뢰수정Command Command(PricingDTO? pricing)
         => new("quote-request", new(null, null, null), new(null, null, null, null, null, null, null),
             new(null, null, null, null, null, null, null, null), new(null, null, null, null, null, null, null, null), new(null), null, pricing);

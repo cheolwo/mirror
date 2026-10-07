@@ -49,6 +49,7 @@ namespace 살뜰.Infrastructure.BackgroundJobs.DispatchQueue
 
             var expiredRequestIds = await _db.운송원장.AsNoTracking()
                 .Where(x => x.상태 == 상태값.배차대기상태.대기
+                            && x.배차업무유형 == 상태값.배차업무유형.용달운송
                             && x.배차큐단계 == 상태값.배차큐단계.배차추천
                             && x.배차노출상태 == 상태값.배차노출상태.추천중
                             && x.추천만료시각.HasValue

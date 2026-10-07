@@ -38,6 +38,11 @@ public sealed class 운송원장Configuration : IEntityTypeConfiguration<운송�
         builder.Property(x => x.계획배차시도횟수).HasColumnName("plan_attempts");
         builder.Property(x => x.마지막거절기사Id).HasColumnName("last_rejected_driver_id");
         builder.Property(x => x.공개전환시각).HasColumnName("public_transition_at");
+        builder.Property(x => x.생활배송배차방식).HasColumnName("neighborhood_dispatch_mode").HasMaxLength(30);
+        builder.Property(x => x.생활배송선택판본).HasColumnName("neighborhood_dispatch_revision").IsConcurrencyToken();
+        builder.Property(x => x.생활배송수락준비완료).HasColumnName("neighborhood_dispatch_ready");
+        builder.Property(x => x.생활배송협업Id).HasColumnName("neighborhood_collaboration_id").HasMaxLength(100);
+        builder.Property(x => x.생활배송조건판본).HasColumnName("neighborhood_terms_revision");
         builder.Property(x => x.확정기사Id).HasColumnName("confirmed_driver_id");
         builder.Property(x => x.픽업_도로명주소).HasColumnName("pickup_address").IsRequired();
         builder.Property(x => x.픽업_상세주소).HasColumnName("pickup_address_detail").IsRequired();

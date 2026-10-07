@@ -157,8 +157,39 @@ public static class OperatingSystemLifecycleStageIds
     public const string MartPickingPacking = "mart.picking-packing";
     public const string MartLastMileHandoff = "mart.last-mile-handoff";
     public const string MartCompletionRecovery = "mart.completion-recovery";
+
+    public const string DemandIntent = "demand.intent";
+    public const string DemandClusteringReview = "demand.clustering-review";
+    public const string DemandHandoffApproval = "demand.handoff-approval";
+    public const string DemandDownstreamLink = "demand.downstream-link";
+
+    public const string ImportReadinessLedger = "import.readiness-ledger";
+    public const string ImportEvidenceReview = "import.evidence-review";
+    public const string ImportForwarderHandoff = "import.forwarder-handoff";
+    public const string ImportQualifiedReview = "import.qualified-review";
+    public const string ImportShipmentTracking = "import.shipment-tracking";
+
+    public const string CommunityDiscoveryParticipation = "community.discovery-participation";
+    public const string CommunityAgreementConsent = "community.agreement-consent";
+    public const string CommunityWorkCompletion = "community.work-completion";
+    public const string CommunityRelationshipDisclosure = "community.relationship-disclosure";
+
+    public const string PlatformLedgerReview = "platform.ledger-review";
+    public const string PlatformEconomicsEvaluation = "platform.economics-evaluation";
+    public const string PlatformFollowupRecovery = "platform.followup-recovery";
+
+    public const string EducationActivityPlan = "education.activity-plan";
+    public const string EducationActivityVerification = "education.activity-verification";
+    public const string EducationGuardianApproval = "education.guardian-approval";
+    public const string EducationSchoolSubmission = "education.school-submission";
+    public const string EducationSchoolDecision = "education.school-decision";
 }
 
+/// <summary>
+/// Sequence는 책임을 설명하는 표시 순서이며 실행 선후 DAG나 필수 절차 목록이 아닙니다.
+/// 단계의 등록은 상태 전이·권한·외부 실행 완료를 뜻하지 않으며 실제 조건은 해당 UseCase가 검증합니다.
+/// 선택·병행·재진입 가능한 업무는 각 업무의 현재 절차와 동의 조건을 따릅니다.
+/// </summary>
 public sealed record OperatingSystemLifecycleStageDefinition(
     string StageId,
     int Sequence,
@@ -240,6 +271,52 @@ public static class OperatingSystemLifecycleCatalog
                     new(OperatingSystemLifecycleStageIds.MartPickingPacking, 60, "피킹·포장", "적재 위치에 근거한 피킹과 포장, 픽업 준비 시각을 관리합니다."),
                     new(OperatingSystemLifecycleStageIds.MartLastMileHandoff, 70, "라스트마일 인계", "마트 주문과 분리된 배송 자식 업무를 음식배달 OS에 명시적으로 인계합니다."),
                     new(OperatingSystemLifecycleStageIds.MartCompletionRecovery, 80, "완료·회복", "배송 증거를 주문에 반영하고 품절·지연·재배차·취소 복구를 관리합니다.")
+                ]),
+            [OperatingSystemIds.GroupPurchaseDemand] = new(
+                OperatingSystemIds.GroupPurchaseDemand,
+                "공동구매 수요·모집 OS",
+                [
+                    new(OperatingSystemLifecycleStageIds.DemandIntent, 10, "수요 등록·철회", "본인의 비구속 구매 의사와 수량·수령 조건을 등록하고 허용된 상태에서 변경·철회합니다."),
+                    new(OperatingSystemLifecycleStageIds.DemandClusteringReview, 20, "집단화·모집 점검", "수요 집단을 조율하고 목표 충족·모집 마감·장기 정체와 검토 대기 상태를 점검합니다."),
+                    new(OperatingSystemLifecycleStageIds.DemandHandoffApproval, 30, "사람의 인계 승인", "운영자가 확인 가능한 집단과 모집 조건을 검토하여 수입 준비 인계를 승인합니다. 주문·결제나 수입 실행을 자동 확정하지 않습니다."),
+                    new(OperatingSystemLifecycleStageIds.DemandDownstreamLink, 40, "후속 준비 원장 결속", "승인된 집단에 명시적으로 작성된 수입 준비 원장 참조를 결속하고 중복 연결을 검증합니다.")
+                ]),
+            [OperatingSystemIds.GroupPurchaseImport] = new(
+                OperatingSystemIds.GroupPurchaseImport,
+                "같이 주문 수입 OS",
+                [
+                    new(OperatingSystemLifecycleStageIds.ImportReadinessLedger, 10, "수입 준비 원장", "승인된 수요 집단과 기존 준비 원장의 판본·참여 조건을 결속합니다. 계약·결제·신고·운송 실행을 확정하지 않습니다."),
+                    new(OperatingSystemLifecycleStageIds.ImportEvidenceReview, 20, "근거 점검·갱신", "견적·분류·규제·책임 근거와 유효기간을 점검하고 준비 상태와 보완 작업을 기록합니다."),
+                    new(OperatingSystemLifecycleStageIds.ImportForwarderHandoff, 30, "사람의 포워더 전달·회신 기록", "사람이 선택한 전달 범위와 포워더 회신을 기록하며 개인정보 제공은 명시적 동의와 철회 가능한 근거를 확인합니다."),
+                    new(OperatingSystemLifecycleStageIds.ImportQualifiedReview, 40, "전문검토 인계", "사람이 정한 검토자·범위·접수 근거를 검증하여 전문검토 인계를 기록합니다. 전문 판단이나 자동 신고를 대신하지 않습니다."),
+                    new(OperatingSystemLifecycleStageIds.ImportShipmentTracking, 50, "선적·통관 추적", "해외 선적 사건과 통관 조회 결과·예외를 추적 원장에 기록합니다. 실제 통관 허가나 국내 운송 완료를 확정하지 않습니다.")
+                ]),
+            [OperatingSystemIds.CommunityTrust] = new(
+                OperatingSystemIds.CommunityTrust,
+                "커뮤니티·신뢰 OS",
+                [
+                    new(OperatingSystemLifecycleStageIds.CommunityDiscoveryParticipation, 10, "탐색·관심·비구속 참가", "글과 협업 기회를 탐색하고 관심·투표·비구속 참가를 기록합니다. 구매나 유료 계약을 확정하지 않습니다."),
+                    new(OperatingSystemLifecycleStageIds.CommunityAgreementConsent, 20, "협업 조건·동의·가원장", "명시적 승격 의사와 협업 조건을 원장에 결속하고 현재 조건에 대한 당사자 동의와 공개·전달 동의를 구분합니다."),
+                    new(OperatingSystemLifecycleStageIds.CommunityWorkCompletion, 30, "협업 수행·완료 확인", "생활 협업·보관·전달의 허용된 수행과 당사자 확인을 기록하며 선택한 전달 방식과 실제 완료 권위를 검증합니다."),
+                    new(OperatingSystemLifecycleStageIds.CommunityRelationshipDisclosure, 40, "관계·공개 동의·신뢰 신호", "선택한 친구 관계 응답과 본인의 연락처 공개 동의를 기록하고 완료 이력의 개인정보와 공개 범위를 관리합니다.")
+                ]),
+            [OperatingSystemIds.PlatformOperations] = new(
+                OperatingSystemIds.PlatformOperations,
+                "플랫폼 운영 OS",
+                [
+                    new(OperatingSystemLifecycleStageIds.PlatformLedgerReview, 10, "운영 재무 사건·대사 조회", "운영 재무 사건·잔액·대사·현금흐름과 경제성 원장을 읽어 상태를 검토합니다. 조회가 지급·전표 반영·세금 신고를 수행하지 않습니다."),
+                    new(OperatingSystemLifecycleStageIds.PlatformEconomicsEvaluation, 20, "경영 시뮬레이션 검토", "운영 경제성의 가정과 시뮬레이션 후보를 평가합니다. 실제 정산이나 운영 조건을 자동 변경하지 않습니다."),
+                    new(OperatingSystemLifecycleStageIds.PlatformFollowupRecovery, 30, "후속 처리 복구", "허용된 원장 동기화와 OS 인계 Outbox의 실패·대기 상태를 조회하고 조건을 충족한 후속 작업을 재시도합니다. 원 업무 완료를 되돌리지 않습니다.")
+                ]),
+            [OperatingSystemIds.EducationFieldExperience] = new(
+                OperatingSystemIds.EducationFieldExperience,
+                "현장 체험 교육 OS",
+                [
+                    new(OperatingSystemLifecycleStageIds.EducationActivityPlan, 10, "비공개 활동 계획", "학생·학교·기간·장소와 담당자를 결속한 비공개 현장 체험 계획 원장을 작성합니다."),
+                    new(OperatingSystemLifecycleStageIds.EducationActivityVerification, 20, "활동 기록·지도자 확인", "활동 근거를 기록하고 지도자가 배정된 경우 해당 지도자의 확인을 받습니다."),
+                    new(OperatingSystemLifecycleStageIds.EducationGuardianApproval, 30, "보호자 확인", "해당 학생의 보호자 권한을 확인하여 활동 계획과 기록의 확인 결과를 보존합니다."),
+                    new(OperatingSystemLifecycleStageIds.EducationSchoolSubmission, 40, "학교 제출·전송 재시도", "활동·보호자·조건부 지도자 확인을 검증하고 선택한 제출 방식과 접수·전송·재시도 상태를 기록합니다."),
+                    new(OperatingSystemLifecycleStageIds.EducationSchoolDecision, 50, "교육기관 결정 기록", "해당 학교의 권한 있는 주체가 출석 인정·미인정 결정을 기록합니다. 플랫폼이 교육기관의 판단을 대신하지 않습니다.")
                 ])
         };
 

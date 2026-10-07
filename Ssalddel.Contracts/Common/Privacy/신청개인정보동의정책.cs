@@ -10,6 +10,11 @@ public static class 신청개인정보업무Codes
 public static class 신청개인정보출처Codes
 {
     public const string 커뮤니티지도 = "community-map";
+    public const string 생활교류 = "neighborhood-exchange";
+
+    public static bool 지원하는출처인가(string? code)
+        => string.Equals(code, 커뮤니티지도, StringComparison.Ordinal)
+           || string.Equals(code, 생활교류, StringComparison.Ordinal);
 }
 
 public static class 신청개인정보동의상태Codes

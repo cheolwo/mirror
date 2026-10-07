@@ -59,6 +59,7 @@ public sealed class PlatformCommunityPostResponse
     public string Category { get; set; } = string.Empty;
     public string WorkflowTag { get; set; } = string.Empty;
     public string RoleTag { get; set; } = string.Empty;
+    public string? PublicNeighborhoodRegionKey { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
     public string OriginalLanguageCode { get; set; } = CommunityDisplayLanguageCodes.Korean;
@@ -161,10 +162,13 @@ public static class PlatformCommunityPostCategoryPolicy
 
 public sealed class PlatformCommunityPostCreateRequest
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public Ssalddel.Contracts.Common.Commerce.거래보호확인Request? CommerceProtection { get; set; }
     public string AppKey { get; set; } = "platform";
     public string Category { get; set; } = PlatformCommunityPostCategories.General;
     public string WorkflowTag { get; set; } = "국내 화물 운송";
     public string RoleTag { get; set; } = "플랫폼 구성원";
+    public string? PublicNeighborhoodRegionKey { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
     public string? OriginalLanguageCode { get; set; }
@@ -230,9 +234,12 @@ public sealed class PlatformCommunityPostAudioSegmentResponse
 
 public sealed class PlatformCommunityPostUpdateRequest
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public Ssalddel.Contracts.Common.Commerce.거래보호확인Request? CommerceProtection { get; set; }
     public string Category { get; set; } = PlatformCommunityPostCategories.General;
     public string WorkflowTag { get; set; } = "국내 화물 운송";
     public string RoleTag { get; set; } = "플랫폼 구성원";
+    public string? PublicNeighborhoodRegionKey { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
     public string? OriginalLanguageCode { get; set; }

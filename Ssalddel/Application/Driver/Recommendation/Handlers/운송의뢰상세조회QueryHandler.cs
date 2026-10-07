@@ -1,16 +1,21 @@
 ﻿using Request = Ssalddel.Contracts.Shipper.Request;
 
+using Ssalddel.Services.Community;
+
 namespace Ssalddel.Application.Driver.Recommendation;
 
 public sealed class 운송의뢰상세조회QueryHandler : IRequestHandler<운송의뢰상세조회Query, Ssalddel.Contracts.Driver.Recommendation.기사운송의뢰상세응답>
 {
     private readonly SsalddelContext _db;
     private readonly I차량화물적합성Service _compatibilityService;
+    private readonly I생활배송기사정보제공동의Service? _disclosure;
 
-    public 운송의뢰상세조회QueryHandler(SsalddelContext db, I차량화물적합성Service compatibilityService)
+    public 운송의뢰상세조회QueryHandler(SsalddelContext db, I차량화물적합성Service compatibilityService,
+        I생활배송기사정보제공동의Service? disclosure = null)
     {
         _db = db;
         _compatibilityService = compatibilityService;
+        _disclosure = disclosure;
     }
 
     public async Task<Ssalddel.Contracts.Driver.Recommendation.기사운송의뢰상세응답> Handle(운송의뢰상세조회Query request, CancellationToken cancellationToken)
@@ -19,6 +24,11 @@ public sealed class 운송의뢰상세조회QueryHandler : IRequestHandler<운�
             ?? throw new InvalidOperationException("의뢰를 찾을 수 없습니다.");
 
         var queue = await _db.운송원장.AsNoTracking().FirstOrDefaultAsync(x => x.의뢰Id == request.RequestId, cancellationToken);
+        if (생활배송기사정보공개Policy.생활배송인가(dispatchRequest.클라이언트요청Id)
+            && !생활배송기사정보공개Policy.현재관계있는기사인가(queue, request.기사Id, DateTime.UtcNow))
+        {
+            throw new UnauthorizedAccessException("현재 배송에 배정되거나 제안받은 기사만 조회할 수 있습니다.");
+        }
         var cargoRequirement = await _db.화물요구조건.AsNoTracking().FirstOrDefaultAsync(x => x.의뢰Id == request.RequestId, cancellationToken);
         var driver = await _db.용달기사.AsNoTracking().FirstOrDefaultAsync(x => x.기사Id == request.기사Id, cancellationToken);
         var vehicle = driver is null
@@ -26,7 +36,7 @@ public sealed class 운송의뢰상세조회QueryHandler : IRequestHandler<운�
             : await _db.차량제원.AsNoTracking().FirstOrDefaultAsync(x => x.차량코드 == driver.차량 || x.차량명 == driver.차량, cancellationToken);
         var fit = _compatibilityService.판정(vehicle, dispatchRequest, cargoRequirement);
 
-        return new Ssalddel.Contracts.Driver.Recommendation.기사운송의뢰상세응답
+        var response = new Ssalddel.Contracts.Driver.Recommendation.기사운송의뢰상세응답
         {
             의뢰Id = dispatchRequest.의뢰Id,
             화주Id = dispatchRequest.화주Id,
@@ -63,5 +73,12 @@ public sealed class 운송의뢰상세조회QueryHandler : IRequestHandler<운�
             생성일시 = dispatchRequest.CreatedAt,
             수정일시 = dispatchRequest.UpdatedAt
         };
+        if (생활배송기사정보공개Policy.생활배송인가(dispatchRequest.클라이언트요청Id))
+            생활배송기사정보공개Policy.의뢰내부정보가림(response);
+        if (생활배송기사정보공개Policy.생활배송인가(dispatchRequest.클라이언트요청Id)
+            && (queue?.확정기사Id != request.기사Id
+                || !await 생활배송기사정보공개Policy.정보제공가능인가Async(dispatchRequest, request.기사Id, _disclosure, cancellationToken)))
+            생활배송기사정보공개Policy.의뢰상세가림(response);
+        return response;
     }
 }

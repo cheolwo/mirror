@@ -148,8 +148,8 @@ public sealed class 적재작업UseCase(
                 .OrderByDescending(history => history.처리일시).FirstOrDefaultAsync(cancellationToken);
             return Result.Ok(ToResult(item, existing?.처리일시 ?? item.UpdatedAt, true));
         }
-        if (!item.상태.StartsWith("검수완료", StringComparison.Ordinal))
-            return Conflict<적재작업결과응답>("검수 완료 상태의 재고만 적재할 수 있습니다.");
+        if (창고재고공정Policy.적재차단사유(item.상태) is { } blocked)
+            return Conflict<적재작업결과응답>(blocked);
 
         var now = DateTime.UtcNow;
         item.보관위치 = location;

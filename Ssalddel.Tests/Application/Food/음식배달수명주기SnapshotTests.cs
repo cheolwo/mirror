@@ -14,6 +14,33 @@ namespace Ssalddel.Tests.Application.Food;
 public sealed class 음식배달수명주기SnapshotTests
 {
     [Fact]
+    public void 재조리사본은_이전음식의준비와픽업을_현재진행으로표시하지않는다()
+    {
+        var oldReady = DateTime.UtcNow.AddMinutes(-10);
+        var recook = oldReady.AddMinutes(5);
+        var order = new 음식주문응답
+        {
+            주문번호 = "FOOD-RECOOK", Revision = 7, 상태 = 음식주문상태코드.조리중,
+            픽업준비시각Utc = oldReady, CurrentPreparationRound = 2,
+            RecookingRequestedAtUtc = recook, CurrentCookingStartedAtUtc = recook,
+            상태이력 = [new() { 다음상태 = 음식주문상태코드.픽업완료, 전이시각Utc = oldReady.AddMinutes(1) }]
+        };
+        var waiting = 음식배달수명주기SnapshotFactory.FromOperationalOrder(order, "r7");
+        Assert.Null(waiting.ReadyForPickupAtUtc);
+        Assert.Null(waiting.PickedUpAtUtc);
+        Assert.Equal(oldReady, order.픽업준비시각Utc);
+
+        order.CurrentPickupReadyAtUtc = recook.AddMinutes(2);
+        order.상태이력 = order.상태이력.Append(new 음식주문상태전이기록Dto
+        {
+            다음상태 = 음식주문상태코드.픽업완료, 전이시각Utc = recook.AddMinutes(3)
+        }).ToArray();
+        var pickedUp = 음식배달수명주기SnapshotFactory.FromOperationalOrder(order, "r9");
+        Assert.Equal(order.CurrentPickupReadyAtUtc, pickedUp.ReadyForPickupAtUtc);
+        Assert.Equal(recook.AddMinutes(3), pickedUp.PickedUpAtUtc);
+    }
+
+    [Fact]
     public void 운영서버사본은_상태이력시각과출처를보존한다()
     {
         var ready = DateTime.UtcNow.AddMinutes(-2);

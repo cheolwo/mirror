@@ -1,8 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Ssalddel;
 using Ssalddel.Hubs;
 using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.도메인.공통;
+using Ssalddel.Application.Driver.Recommendation;
 
 namespace 살뜰.Services.Dispatch.Queue
 {
@@ -20,8 +21,10 @@ namespace 살뜰.Services.Dispatch.Queue
             var items = await _db.운송원장
                 .AsNoTracking()
                 .Where(q => q.배차업무유형 == 상태값.배차업무유형.용달운송
-                            && q.배차큐단계 == 상태값.배차큐단계.공개배차
-                            && q.배차노출상태 == 상태값.배차노출상태.공개중
+                            && q.상태 == 상태값.배차대기상태.대기 && q.생활배송수락준비완료
+                            && ((q.배차큐단계 == 상태값.배차큐단계.공개배차 && q.배차노출상태 == 상태값.배차노출상태.공개중)
+                                || q.생활배송배차방식 == Ssalddel.Contracts.Common.Community.NeighborhoodDispatchModes.Hybrid && q.배차큐단계 != 상태값.배차큐단계.종료)
+                            && (q.생활배송배차방식 == null || q.생활배송배차방식 == Ssalddel.Contracts.Common.Community.NeighborhoodDispatchModes.PublicCall || q.생활배송배차방식 == Ssalddel.Contracts.Common.Community.NeighborhoodDispatchModes.Hybrid)
                             && q.확정기사Id == null)
                 .OrderBy(q => q.CreatedAt)
                 .ToListAsync(cancellationToken);
@@ -34,12 +37,12 @@ namespace 살뜰.Services.Dispatch.Queue
             var requestIds = items.Select(x => x.의뢰Id).Distinct().ToArray();
             var requestMap = await _db.화주운송의뢰
                 .AsNoTracking()
-                .Where(x => requestIds.Contains(x.의뢰Id))
+                .Where(x => Enumerable.Contains(requestIds, x.의뢰Id))
                 .ToDictionaryAsync(x => x.의뢰Id, cancellationToken);
 
             var cargoMap = await _db.화물요구조건
                 .AsNoTracking()
-                .Where(x => requestIds.Contains(x.의뢰Id))
+                .Where(x => Enumerable.Contains(requestIds, x.의뢰Id))
                 .ToDictionaryAsync(x => x.의뢰Id, cancellationToken);
 
             return items.Select(item =>
@@ -57,6 +60,7 @@ namespace 살뜰.Services.Dispatch.Queue
                     픽업_경도 = item.픽업_경도,
                     하차_위도 = item.하차_위도,
                     하차_경도 = item.하차_경도,
+                    추천라운드 = item.추천라운드,
                     추천유형 = "public",
                     추천사유 = "공개배차",
                     추천점수 = 0m,
@@ -75,6 +79,8 @@ namespace 살뜰.Services.Dispatch.Queue
                     item.공동구매도착지유형코드,
                     item.공동구매기사세대배송여부,
                     item.공동구매세대배송건수);
+                if (생활배송기사정보공개Policy.생활배송인가(request?.클라이언트요청Id))
+                    생활배송기사정보공개Policy.추천정보가림(recommendation);
                 return recommendation;
             }).ToArray();
         }

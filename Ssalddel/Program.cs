@@ -153,6 +153,7 @@ builder.Services.AddSsalddelOperatingMarketServices(builder.Configuration);
 builder.Services.AddScoped<I가입온보딩친구후보Service, 가입온보딩친구후보Service>();
 
 var dispatchQueueJobOptions = builder.Configuration.GetSection(배차큐배치작업Options.SectionName).Get<배차큐배치작업Options>() ?? new 배차큐배치작업Options();
+var foodDeliveryJobOptions = builder.Configuration.GetFoodDeliveryDispatchJobOptions();
 var salesOrderSyncOptions = builder.Configuration.GetSection(SalesChannelOrderSyncOptions.SectionName).Get<SalesChannelOrderSyncOptions>() ?? new SalesChannelOrderSyncOptions();
 var youTubeOptions = builder.Configuration.GetSection(YouTubeOptions.SectionName).Get<YouTubeOptions>() ?? new YouTubeOptions();
 var hongikHakdangCardOptions = builder.Configuration.GetSection(HongikHakdangCardOptions.SectionName).Get<HongikHakdangCardOptions>() ?? new HongikHakdangCardOptions();
@@ -162,7 +163,7 @@ var databaseInitializationOptions = builder.Configuration.GetSection(DatabaseIni
 var initializeDatabaseOnly = args.Any(argument =>
     string.Equals(argument, "--initialize-database", StringComparison.OrdinalIgnoreCase));
 
-builder.Services.AddSsalddelBackgroundJobs(dispatchQueueJobOptions, salesOrderSyncOptions, youTubeOptions, hongikHakdangCardOptions, agriculturalFisheriesBatchOptions, communityEditorialBatchOptions, executionOptions);
+builder.Services.AddSsalddelBackgroundJobs(dispatchQueueJobOptions, salesOrderSyncOptions, youTubeOptions, hongikHakdangCardOptions, agriculturalFisheriesBatchOptions, communityEditorialBatchOptions, executionOptions, foodDeliveryJobOptions);
 builder.Services.AddSsalddelPersistence(builder.Configuration);
 builder.Services.AddSpatialCatalog();
 builder.Services.AddSsalddelHealthChecks();
@@ -250,6 +251,9 @@ builder.Services.AddFreeSocialMediaResearch(builder.Configuration);
 builder.Services.AddOfficialNewsRss(builder.Configuration);
 builder.Services.AddYouTubeSocialContextWorkspace(builder.Configuration);
 builder.Services.AddSsalddelDomainServices();
+builder.Services.Add통신판매보호Services(builder.Configuration);
+Ssalddel.Services.PrivacyRetention.개인정보보존ServiceRegistration.Add개인정보보존Services(builder.Services, builder.Configuration);
+Ssalddel.Services.PrivacySupport.보호지원ServiceCollectionExtensions.Add거래개인정보지원Services(builder.Services, builder.Configuration);
 var developmentReadOnly = builder.Environment.IsDevelopment()
                           && executionOptions.Mode == SsalddelExecutionMode.Simulation
                           && executionOptions.DevelopmentReadOnly;

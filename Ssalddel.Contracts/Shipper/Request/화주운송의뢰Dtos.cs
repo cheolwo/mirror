@@ -351,6 +351,8 @@ public sealed class 화주운송의뢰응답
     public DateTime? 현장수금확인일시 { get; set; }
     public string? 현장지급메모 { get; set; }
     public DateTime 생성일시 { get; set; }
+    // 구판 응답의 누락은 미확인으로 유지한다. 수정 시 생성 기본값으로 대신하지 않는다.
+    public CargoDTO? 화물 { get; set; }
     public int? 화물길이Mm { get; set; }
     public int? 화물폭Mm { get; set; }
     public int? 화물높이Mm { get; set; }

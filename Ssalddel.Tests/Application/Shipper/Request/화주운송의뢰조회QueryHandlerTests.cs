@@ -16,6 +16,45 @@ namespace Ssalddel.Tests.Application.Shipper.Request;
 
 public sealed class 화주운송의뢰조회QueryHandlerTests
 {
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task 소유자단건조회는_수정에필요한화물원값을누락없이반환한다(bool fragile)
+    {
+        await using var db = CreateContext();
+        var request = CreateRequest();
+        request.화물종류 = "식품";
+        request.화물설명 = "기존 취급 조건";
+        request.화물수량 = 7;
+        request.화물길이Mm = null;
+        request.화물폭Mm = 800;
+        request.화물높이Mm = 600;
+        request.화물중량Kg = 0m;
+        request.화물부피Cbm = .48m;
+        request.화물팔레트개수 = 2;
+        request.화물파손주의여부 = fragile;
+        request.화물온도조건 = "냉장";
+        db.화주운송의뢰.Add(request);
+        await db.SaveChangesAsync();
+        var handler = new 의뢰단건조회QueryHandler(db, CreateOperatorUseCase(db, "shipper-1", "화주"));
+
+        var response = await handler.Handle(new 의뢰단건조회Query("request-1"), CancellationToken.None);
+
+        Assert.NotNull(response);
+        var cargo = Assert.IsType<Ssalddel.Contracts.Shipper.Request.CargoDTO>(response.화물);
+        Assert.Equal("식품", cargo.화물종류);
+        Assert.Equal("기존 취급 조건", cargo.설명);
+        Assert.Equal(7, cargo.수량);
+        Assert.Null(cargo.길이Mm);
+        Assert.Equal(800, cargo.폭Mm);
+        Assert.Equal(600, cargo.높이Mm);
+        Assert.Equal(0m, cargo.중량Kg);
+        Assert.Equal(.48m, cargo.부피Cbm);
+        Assert.Equal(2, cargo.팔레트개수);
+        Assert.Equal(fragile, cargo.화물파손주의여부);
+        Assert.Equal("냉장", cargo.온도조건);
+    }
+
     [Fact]
     public async Task 소유자단건조회는_확정기사와진행중최근위치를_같이반환한다()
     {

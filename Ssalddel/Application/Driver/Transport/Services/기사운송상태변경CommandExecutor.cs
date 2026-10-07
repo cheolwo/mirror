@@ -77,6 +77,14 @@ public sealed class 기사운송상태변경CommandExecutor : I기사운송상�
         }
 
         var 이전상태 = entity.상태;
+        if (!string.Equals(이전상태, request.목표상태, StringComparison.Ordinal))
+        {
+            var workflow = new 기사운송요약응답();
+            기사운송업무상태Projector.투영(workflow, entity,
+                await 기사운송업무상태Projector.사건조회Async(_db, [entity.Id], cancellationToken));
+            if (workflow.운송진행보류)
+                return Result.Fail<기사운송상태변경응답>("전체 운송이 보류되었습니다. 현재 예외 처리 상태를 확인해 주세요.");
+        }
         var now = DateTime.UtcNow;
         var 상태변경 = _상태전이Service.상태변경(entity, request.목표상태, now);
         if (상태변경.IsFailed)

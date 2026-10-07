@@ -131,6 +131,24 @@ namespace 살뜰.Services.External.Google
             return stream.ToArray();
         }
 
+        public async Task<ObjectStorageDeleteResult> DeleteAsync(string bucketName, string objectName, string expectedOwnedPrefix,
+            CancellationToken cancellationToken = default)
+        {
+            EnsureKnownBucket(bucketName);
+            var name = ObjectStorageObjectName.RequireOwnedDeletionName(objectName, expectedOwnedPrefix);
+            try { await _storageClient.Value.DeleteObjectAsync(bucketName, name, cancellationToken: cancellationToken); }
+            catch (global::Google.GoogleApiException exception) when (exception.HttpStatusCode == HttpStatusCode.NotFound) { }
+            try
+            {
+                await _storageClient.Value.GetObjectAsync(bucketName, name, cancellationToken: cancellationToken);
+                return new ObjectStorageDeleteResult(false, false, "ActiveObjectStillExists");
+            }
+            catch (global::Google.GoogleApiException exception) when (exception.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                return new ObjectStorageDeleteResult(true, false, "GoogleHistoricalCopiesRequireLifecycleVerification");
+            }
+        }
+
         private static StorageClient CreateStorageClient(GoogleCloudStorageOptions options)
         {
             if (!string.IsNullOrWhiteSpace(options.ServiceAccountJsonPath))

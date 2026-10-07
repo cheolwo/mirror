@@ -10,6 +10,9 @@ public sealed class SsalddelBackgroundJobActivationPolicyTests
 {
     [Theory]
     [InlineData(
+        SsalddelBackgroundWorkloadKeys.FoodDeliveryDispatch,
+        VersionFeatureFlagKeys.FoodDeliveryWorkflow)]
+    [InlineData(
         SsalddelBackgroundWorkloadKeys.DomesticTransportDispatch,
         VersionFeatureFlagKeys.DomesticTransportWorkflow)]
     [InlineData(
@@ -49,6 +52,41 @@ public sealed class SsalddelBackgroundJobActivationPolicyTests
         Assert.Equal(
             SsalddelBackgroundWorkloadActivationCodes.OperationalModeRequired,
             result.Code);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public void 음식과화물은_각자Workflow로만_활성화된다(bool foodEnabled, bool cargoEnabled)
+    {
+        var features = new List<string>();
+        if (foodEnabled) features.Add(VersionFeatureFlagKeys.FoodDeliveryWorkflow);
+        if (cargoEnabled) features.Add(VersionFeatureFlagKeys.DomesticTransportWorkflow);
+        var policy = CreatePolicy(SsalddelExecutionMode.Operational, features, true);
+
+        var food = policy.Evaluate(SsalddelBackgroundWorkloadKeys.FoodDeliveryDispatch);
+        var cargo = policy.Evaluate(SsalddelBackgroundWorkloadKeys.DomesticTransportDispatch);
+
+        Assert.Equal(foodEnabled, food.IsEnabled);
+        Assert.Equal(cargoEnabled, cargo.IsEnabled);
+        Assert.Equal(VersionFeatureFlagKeys.FoodDeliveryWorkflow, food.FeatureKey);
+        Assert.Equal(VersionFeatureFlagKeys.DomesticTransportWorkflow, cargo.FeatureKey);
+    }
+
+    [Fact]
+    public void Simulation에서는_음식과화물모두켜도_두배치를차단한다()
+    {
+        var policy = CreatePolicy(SsalddelExecutionMode.Simulation,
+            [VersionFeatureFlagKeys.FoodDeliveryWorkflow, VersionFeatureFlagKeys.DomesticTransportWorkflow], true);
+        foreach (var workload in new[] { SsalddelBackgroundWorkloadKeys.FoodDeliveryDispatch,
+                     SsalddelBackgroundWorkloadKeys.DomesticTransportDispatch })
+        {
+            var result = policy.Evaluate(workload);
+            Assert.False(result.IsEnabled);
+            Assert.Equal(SsalddelBackgroundWorkloadActivationCodes.OperationalModeRequired, result.Code);
+        }
     }
 
     [Fact]

@@ -7,6 +7,7 @@ public sealed class PlatformCommunityPost
     public string Category { get; set; } = "자유";
     public string WorkflowTag { get; set; } = "국내 화물 운송";
     public string RoleTag { get; set; } = "플랫폼 구성원";
+    public string? PublicNeighborhoodRegionKey { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
     public string? OriginalLanguageCode { get; set; }

@@ -5,6 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using 살뜰.Data;
 using 살뜰.도메인.설정;
 using 살뜰.도메인.창고;
+using Ssalddel.Services.PrivacyRetention;
+using Ssalddel.Contracts.Common.PrivacyRetention;
+using Ssalddel.Services.Food;
 
 namespace Ssalddel.Services.Community;
 
@@ -42,7 +45,9 @@ public interface I음식마트원장동기화복구Service
 public sealed class 음식마트원장동기화OutboxService(
     SsalddelContext db,
     I음식마트원장Mongo동기화Service ledgerSync,
-    ILogger<음식마트원장동기화OutboxService> logger)
+    ILogger<음식마트원장동기화OutboxService> logger,
+    I개인정보복원차단Service? privacyBarrier = null,
+    ISsalddelFoodOrderStore? foodOrderStore = null)
     : I음식마트원장동기화OutboxService, I음식마트원장동기화복구Service
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -54,12 +59,14 @@ public sealed class 음식마트원장동기화OutboxService(
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(order);
+        if (privacyBarrier is not null && !await privacyBarrier.복원허용Async(개인정보파기원천Codes.FoodOrder, order.주문번호, cancellationToken))
+            throw new InvalidOperationException("PrivacyDeletionRestoreBlocked");
         var item = await EnqueueAsync(
             음식마트원장동기화유형코드.음식주문,
             order.주문번호,
             updatedBy,
             idempotencyKey,
-            JsonSerializer.Serialize(order, JsonOptions),
+            JsonSerializer.Serialize(음식개인정보OutboxPolicy.Minimized(order), JsonOptions),
             cancellationToken);
         await ProcessItemsAsync([item.Id], 1, cancellationToken);
     }
@@ -120,6 +127,9 @@ public sealed class 음식마트원장동기화OutboxService(
         {
             return false;
         }
+        if (item.동기화유형 == 음식마트원장동기화유형코드.음식주문 && privacyBarrier is not null
+            && !await privacyBarrier.복원허용Async(개인정보파기원천Codes.FoodOrder, item.원천Id, cancellationToken))
+            throw new InvalidOperationException("PrivacyDeletionRestoreBlocked");
 
         if (item.시도횟수 != expectedAttemptCount)
         {
@@ -225,7 +235,7 @@ public sealed class 음식마트원장동기화OutboxService(
             try
             {
                 await ProcessItemAsync(item, cancellationToken);
-                item.처리상태 = OutboxProcessingStatuses.Succeeded;
+                if (item.처리상태 != 음식개인정보OutboxPolicy.PrivacyExpired) item.처리상태 = OutboxProcessingStatuses.Succeeded;
                 item.마지막오류 = string.Empty;
             }
             catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
@@ -259,8 +269,18 @@ public sealed class 음식마트원장동기화OutboxService(
     {
         if (item.동기화유형 == 음식마트원장동기화유형코드.음식주문)
         {
-            var order = JsonSerializer.Deserialize<음식주문응답>(item.PayloadJson, JsonOptions)
+            if (privacyBarrier is not null && !await privacyBarrier.복원허용Async(개인정보파기원천Codes.FoodOrder, item.원천Id, cancellationToken))
+            {
+                item.PayloadJson = "{}"; item.처리상태 = 음식개인정보OutboxPolicy.PrivacyExpired;
+                return;
+            }
+            var snapshot = JsonSerializer.Deserialize<음식주문응답>(item.PayloadJson, JsonOptions)
                         ?? throw new InvalidOperationException("음식 주문 원장 동기화 payload가 비어 있습니다.");
+            if (!string.Equals(snapshot.주문번호, item.원천Id, StringComparison.Ordinal))
+                throw new InvalidOperationException("FoodOutboxSourceMismatch");
+            // Operational DI supplies the authoritative store. The outbox only retains a minimal intent copy.
+            var order = foodOrderStore is null ? snapshot : foodOrderStore.GetOrder(item.원천Id)
+                ?? throw new InvalidOperationException("FoodOutboxSourceUnavailable");
             var ledger = await ledgerSync.음식주문동기화Async(order, item.변경자, cancellationToken);
             if (ledger is null)
             {

@@ -25,6 +25,19 @@ public sealed class 음식주문운영추적Controller(
     I음식배달중단검토UseCase? interruptionReviewUseCase = null,
     I음식주문기사정산UseCase? settlementUseCase = null) : ControllerBase
 {
+    [HttpGet("operations")]
+    [SsalddelApiContractName("GetOperationsList")]
+    [SsalddelApiCapability(SsalddelCapability.FoodDelivery)]
+    [SsalddelApiOperation(SsalddelOperation.Browse)]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> 조회목록(
+        [FromQuery] string? query, [FromQuery] int page = 1, [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        try { return Ok(await useCase.조회목록Async(query, page, pageSize, cancellationToken)); }
+        catch (ArgumentException ex) { return this.ToProblemActionResult(ex.Message, StatusCodes.Status400BadRequest); }
+    }
+
     [HttpPost("{orderNo}/simulate-driver-payout")]
     [SsalddelApiContractName("SimulateDriverPayout")]
     [SsalddelApiCapability(SsalddelCapability.FoodDelivery)]

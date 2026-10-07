@@ -1,4 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.DependencyInjection;
 using Ssalddel.Contracts.Common.Participants;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Services.Food;
@@ -10,6 +14,180 @@ namespace Ssalddel.Tests.Services.Food;
 
 public sealed class EfSsalddelFoodOrderStoreTests
 {
+    // 이 세 관계형 검증은 전용 provider 하나를 공유하여 전체 suite의 EF provider cache를 늘리지 않습니다.
+    private static readonly ServiceProvider RetryingSqliteProvider = new ServiceCollection()
+        .AddEntityFrameworkSqlite()
+        .AddScoped<IExecutionStrategyFactory, RetryStrategyFactory>()
+        .BuildServiceProvider(validateScopes: true);
+
+    [Fact]
+    public void 재시도전략의_관계형배차결속은_현재진행과최초시각을보존한다()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        connection.Open();
+        var options = RetryingSqliteOptions(connection);
+        using var db = new SsalddelContext(options, new PassThroughEncryptionService());
+        db.Database.EnsureCreated();
+        var store = new EfSsalddelFoodOrderStore(db);
+        var order = store.AddOrder(CreateRequest(Guid.NewGuid()));
+        store.음식점수락멱등(order.주문번호, new 음식점주문수락요청 { 클라이언트요청Id = Guid.NewGuid() }, "restaurant-user");
+        var firstTime = DateTime.UtcNow.AddMinutes(-10);
+
+        // EF의 실제 transaction guard가 실행됩니다. 전략 밖에서 시작한 transaction의 조회/저장은 실패합니다.
+        var first = store.배차대기반영(order.주문번호, 41, firstTime)!;
+        Assert.Equal(41, first.배차대기Id);
+        using (var writer = new SsalddelContext(options, new PassThroughEncryptionService()))
+        {
+            var saved = writer.음식주문.Single(x => x.주문번호 == order.주문번호);
+            saved.상태 = 음식주문상태코드.수령확인;
+            saved.배차상태 = 음식주문배차상태코드.배달완료;
+            writer.SaveChanges();
+        }
+        var replay = store.배차대기반영(order.주문번호, 41, DateTime.UtcNow)!;
+        Assert.Equal(음식주문상태코드.수령확인, replay.상태);
+        Assert.Equal(음식주문배차상태코드.배달완료, replay.배차상태);
+        Assert.Equal(firstTime, replay.배차요청시각Utc);
+        Assert.Throws<InvalidOperationException>(() => store.배차대기반영(order.주문번호, 42, DateTime.UtcNow));
+        using var read = new SsalddelContext(options, new PassThroughEncryptionService());
+        var actual = read.음식주문.AsNoTracking().Single();
+        Assert.Equal(41, actual.배차대기Id);
+        Assert.Equal(firstTime, actual.배차요청시각Utc);
+        Assert.Equal(음식주문상태코드.수령확인, actual.상태);
+    }
+
+    [Fact]
+    public void 배차결속의_일시저장실패후_Modified사본은_정본재조회후다시저장한다()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        connection.Open();
+        var failure = new FailOnceBindingSave();
+        var options = RetryingSqliteOptions(connection, failure);
+        using var db = new SsalddelContext(options, new PassThroughEncryptionService());
+        db.Database.EnsureCreated();
+        var store = new EfSsalddelFoodOrderStore(db);
+        var order = store.AddOrder(CreateRequest(Guid.NewGuid()));
+        store.음식점수락멱등(order.주문번호, new 음식점주문수락요청 { 클라이언트요청Id = Guid.NewGuid() }, "restaurant-user");
+        var firstTime = DateTime.UtcNow.AddMinutes(-10);
+        failure.Armed = true;
+
+        var bound = store.배차대기반영(order.주문번호, 41, firstTime)!;
+
+        Assert.Equal(2, failure.BindingSaveAttempts);
+        Assert.Equal(41, bound.배차대기Id);
+        Assert.Equal(firstTime, bound.배차요청시각Utc);
+        using var read = new SsalddelContext(options, new PassThroughEncryptionService());
+        var actual = read.음식주문.AsNoTracking().Single();
+        Assert.Equal(41, actual.배차대기Id);
+        Assert.Equal(firstTime, actual.배차요청시각Utc);
+        Assert.Equal(음식주문상태코드.주문확인, actual.상태);
+        Assert.Equal(음식주문배차상태코드.배차대기, actual.배차상태);
+    }
+
+    [Fact]
+    public void 배차결속은_호출자의기존트랜잭션을_commit하지않아_롤백가능하다()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        connection.Open();
+        var options = RetryingSqliteOptions(connection);
+        using var db = new SsalddelContext(options, new PassThroughEncryptionService());
+        db.Database.EnsureCreated();
+        var store = new EfSsalddelFoodOrderStore(db);
+        var order = store.AddOrder(CreateRequest(Guid.NewGuid()));
+        store.음식점수락멱등(order.주문번호, new 음식점주문수락요청 { 클라이언트요청Id = Guid.NewGuid() }, "restaurant-user");
+
+        db.Database.CreateExecutionStrategy().Execute(() =>
+        {
+            using var callerTransaction = db.Database.BeginTransaction();
+            var pending = db.음식주문.Single(x => x.주문번호 == order.주문번호);
+            pending.상태 = 음식주문상태코드.기사배정;
+            pending.배차상태 = 음식주문배차상태코드.기사배정;
+            db.ChangeTracker.DetectChanges();
+            var bound = store.배차대기반영(order.주문번호, 41, DateTime.UtcNow)!;
+            Assert.Equal(41, bound.배차대기Id);
+            Assert.Equal(음식주문상태코드.기사배정, bound.상태);
+            Assert.Equal(음식주문배차상태코드.기사배정, bound.배차상태);
+            Assert.Same(callerTransaction, db.Database.CurrentTransaction);
+            callerTransaction.Rollback();
+        });
+        using var read = new SsalddelContext(options, new PassThroughEncryptionService());
+        var actual = read.음식주문.AsNoTracking().Single();
+        Assert.Null(actual.배차대기Id);
+        Assert.Null(actual.배차요청시각Utc);
+        Assert.Equal(음식주문상태코드.주문확인, actual.상태);
+        Assert.Equal(음식주문배차상태코드.미요청, actual.배차상태);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("unsupported-food-status")]
+    public void 잘못된저장상태는_수락거절취소배차연결을_변경하지않는다(string raw)
+    {
+        using var db = CreateContext();
+        var store = new EfSsalddelFoodOrderStore(db);
+        var order = store.AddOrder(CreateRequest(Guid.NewGuid()));
+        var entity = db.음식주문.Single(x => x.주문번호 == order.주문번호);
+        entity.상태 = raw;
+        db.SaveChanges();
+        var historyCount = entity.상태이력.Count;
+        Assert.Throws<InvalidOperationException>(() => store.음식점수락멱등(order.주문번호,
+            new 음식점주문수락요청 { 클라이언트요청Id = Guid.NewGuid() }, "restaurant-user"));
+        Assert.Throws<InvalidOperationException>(() => store.음식점진행변경(order.주문번호,
+            new 음식점주문진행변경요청 { 클라이언트요청Id = Guid.NewGuid(), 작업 = 음식점주문진행작업코드.거절, 사유 = "재료 품절" }, "restaurant-user"));
+        Assert.Throws<InvalidOperationException>(() => store.주문자취소(order.주문번호,
+            new 주문자음식주문취소요청 { 클라이언트요청Id = Guid.NewGuid(), 사유Code = "ChangedMind" }, "orderer-1"));
+        Assert.Throws<InvalidOperationException>(() => store.배차대기반영(order.주문번호, 41, DateTime.UtcNow));
+        db.ChangeTracker.Clear();
+        var preserved = db.음식주문.Include(x => x.상태이력).Single(x => x.주문번호 == order.주문번호);
+        Assert.Equal(raw, preserved.상태);
+        Assert.Equal(음식주문배차상태코드.미요청, preserved.배차상태);
+        Assert.Null(preserved.배차대기Id);
+        Assert.Equal(historyCount, preserved.상태이력.Count);
+    }
+
+    [Fact]
+    public void 과거주문접수별칭의_정상수락은_유지한다()
+    {
+        using var db = CreateContext();
+        var store = new EfSsalddelFoodOrderStore(db);
+        var order = store.AddOrder(CreateRequest(Guid.NewGuid()));
+        db.음식주문.Single(x => x.주문번호 == order.주문번호).상태 = " 주문접수 ";
+        db.SaveChanges();
+        Assert.Equal(음식주문상태코드.주문확인, store.음식점수락멱등(order.주문번호,
+            new 음식점주문수락요청 { 클라이언트요청Id = Guid.NewGuid() }, "restaurant-user")!.주문.상태);
+    }
+
+    [Theory]
+    [InlineData(음식주문상태코드.기사배정, 음식주문배차상태코드.기사배정)]
+    [InlineData(음식주문상태코드.조리중, 음식주문배차상태코드.기사배정)]
+    [InlineData(음식주문상태코드.픽업완료, 음식주문배차상태코드.기사배정)]
+    [InlineData(음식주문상태코드.전달완료, 음식주문배차상태코드.배달완료)]
+    [InlineData(음식주문상태코드.수령확인, 음식주문배차상태코드.배달완료)]
+    [InlineData(음식주문상태코드.취소, 음식주문배차상태코드.배차대기)]
+    public void 같은배차결속은_진행과최초시각을보존하고_다른큐로바꾸지않는다(string status, string dispatchStatus)
+    {
+        using var db = CreateContext();
+        var store = new EfSsalddelFoodOrderStore(db);
+        var order = store.AddOrder(CreateRequest(Guid.NewGuid()));
+        store.음식점수락멱등(order.주문번호, new 음식점주문수락요청 { 클라이언트요청Id = Guid.NewGuid() }, "restaurant-user");
+        var requestedAt = DateTime.UtcNow.AddMinutes(-10);
+        store.배차대기반영(order.주문번호, 41, requestedAt);
+        var entity = db.음식주문.Single(x => x.주문번호 == order.주문번호);
+        entity.상태 = status;
+        entity.배차상태 = dispatchStatus;
+        db.SaveChanges();
+        var changedAt = entity.UpdatedAt;
+        var historyCount = entity.상태이력.Count;
+        var same = store.배차대기반영(order.주문번호, 41, DateTime.UtcNow)!;
+        Assert.Equal(status, same.상태);
+        Assert.Equal(dispatchStatus, same.배차상태);
+        Assert.Equal(requestedAt, same.배차요청시각Utc);
+        Assert.Throws<InvalidOperationException>(() => store.배차대기반영(order.주문번호, 42, DateTime.UtcNow));
+        Assert.Equal(changedAt, entity.UpdatedAt);
+        Assert.Equal(historyCount, entity.상태이력.Count);
+        Assert.Equal(41, entity.배차대기Id);
+    }
+
     [Fact]
     public void 주문확인은_배차전에_조리시계와_준비완료를_시작하지_않는다()
     {
@@ -325,6 +503,47 @@ public sealed class EfSsalddelFoodOrderStoreTests
                 .UseInMemoryDatabase($"food-order-idempotency-{Guid.NewGuid():N}")
                 .Options,
             new PassThroughEncryptionService());
+
+    private static DbContextOptions<SsalddelContext> RetryingSqliteOptions(SqliteConnection connection, SaveChangesInterceptor? interceptor = null)
+    {
+        var builder = new DbContextOptionsBuilder<SsalddelContext>()
+            .UseSqlite(connection)
+            .UseInternalServiceProvider(RetryingSqliteProvider);
+        if (interceptor is not null) builder.AddInterceptors(interceptor);
+        return builder.Options;
+    }
+
+    private sealed class RetryStrategyFactory(ExecutionStrategyDependencies dependencies) : IExecutionStrategyFactory
+    {
+        public IExecutionStrategy Create() => new RetryStrategy(dependencies);
+    }
+
+    private sealed class RetryStrategy(ExecutionStrategyDependencies dependencies)
+        : ExecutionStrategy(dependencies, 1, TimeSpan.Zero)
+    {
+        protected override bool ShouldRetryOn(Exception exception) => exception is RetryableBindingWriteException;
+    }
+
+    private sealed class RetryableBindingWriteException : Exception { }
+
+    private sealed class FailOnceBindingSave : SaveChangesInterceptor
+    {
+        public bool Armed { get; set; }
+        public int BindingSaveAttempts { get; private set; }
+
+        public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
+        {
+            if (!Armed) return result;
+            var db = eventData.Context!;
+            db.ChangeTracker.DetectChanges();
+            var changed = db.ChangeTracker.Entries<살뜰.도메인.음식.음식주문>()
+                .Any(x => x.State == EntityState.Modified && x.Entity.배차대기Id.HasValue);
+            if (!changed) return result;
+            BindingSaveAttempts++;
+            if (BindingSaveAttempts == 1) throw new RetryableBindingWriteException();
+            return result;
+        }
+    }
 
     private sealed class PassThroughEncryptionService : IPersonalDataEncryptionService
     {

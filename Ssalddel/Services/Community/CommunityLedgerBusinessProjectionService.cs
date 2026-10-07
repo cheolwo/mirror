@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Ssalddel.Contracts.Common.Community;
+using Ssalddel.Contracts.Common.PrivacyRetention;
+using Ssalddel.Services.PrivacyRetention;
 
 namespace Ssalddel.Services.Community;
 
@@ -19,13 +21,16 @@ public sealed class 커뮤니티원장업무투영동기화Service : I커뮤니�
 {
     private readonly IEnumerable<I원장업무투영동기화Handler> _handlers;
     private readonly ILogger<커뮤니티원장업무투영동기화Service> _logger;
+    private readonly I개인정보복원차단Service? _privacyBarrier;
 
     public 커뮤니티원장업무투영동기화Service(
         IEnumerable<I원장업무투영동기화Handler> handlers,
-        ILogger<커뮤니티원장업무투영동기화Service> logger)
+        ILogger<커뮤니티원장업무투영동기화Service> logger,
+        I개인정보복원차단Service? privacyBarrier = null)
     {
         _handlers = handlers;
         _logger = logger;
+        _privacyBarrier = privacyBarrier;
     }
 
     public async Task 갱신Async(커뮤니티원장Dto 원장, CancellationToken cancellationToken = default)
@@ -33,6 +38,17 @@ public sealed class 커뮤니티원장업무투영동기화Service : I커뮤니�
         if (!업무투영허용(원장))
         {
             return;
+        }
+        if (원장.확장속성.ContainsKey(배송원장개인정보파기Service.Marker)) return;
+        if (_privacyBarrier is not null)
+        {
+            var foodNo = 원장.외부참조.GetValueOrDefault("음식주문번호");
+            var requestNo = 원장.외부참조.GetValueOrDefault("화주운송의뢰Id");
+            var sourceNo = 원장.외부참조.GetValueOrDefault("원천Id");
+            if (!string.IsNullOrWhiteSpace(foodNo) && !await _privacyBarrier.복원허용Async(개인정보파기원천Codes.FoodOrder, foodNo, cancellationToken)) return;
+            if (!string.IsNullOrWhiteSpace(requestNo) && !await _privacyBarrier.복원허용Async(개인정보파기원천Codes.NeighborhoodDelivery, requestNo, cancellationToken)) return;
+            if (원장.외부참조.GetValueOrDefault("원천유형") is "FoodOrder" or "RestaurantFoodOrder" or "음식주문" or "음식점주문"
+                && !string.IsNullOrWhiteSpace(sourceNo) && !await _privacyBarrier.복원허용Async(개인정보파기원천Codes.FoodOrder, sourceNo, cancellationToken)) return;
         }
 
         var failures = new List<Exception>();

@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Net.Mail;
 using System.Text.Json;
+using System.Security.Cryptography;
+using System.Text;
 using FluentResults;
 using Ssalddel.ApiMetadata;
 using Ssalddel.Contracts.Common.Community;
@@ -227,7 +229,9 @@ public sealed class 현장체험활동UseCase : I현장체험활동UseCase
             "activity-record",
             actorUserId,
             cancellationToken);
-        return Result.Ok(await ToResponseAsync(updated, cancellationToken));
+        return updated.IsFailed
+            ? Result.Fail<현장체험활동응답>(updated.Errors)
+            : Result.Ok(await ToResponseAsync(updated.Value, cancellationToken));
     }
 
     public async Task<Result<현장체험활동응답>> 현장지도자확인Async(
@@ -292,7 +296,9 @@ public sealed class 현장체험활동UseCase : I현장체험활동UseCase
             "field-verification",
             actorUserId,
             cancellationToken);
-        return Result.Ok(await ToResponseAsync(updated, cancellationToken));
+        return updated.IsFailed
+            ? Result.Fail<현장체험활동응답>(updated.Errors)
+            : Result.Ok(await ToResponseAsync(updated.Value, cancellationToken));
     }
 
     public async Task<Result<현장체험활동응답>> 보호자승인Async(
@@ -343,7 +349,9 @@ public sealed class 현장체험활동UseCase : I현장체험활동UseCase
             "guardian-approval",
             actorUserId,
             cancellationToken);
-        return Result.Ok(await ToResponseAsync(updated, cancellationToken));
+        return updated.IsFailed
+            ? Result.Fail<현장체험활동응답>(updated.Errors)
+            : Result.Ok(await ToResponseAsync(updated.Value, cancellationToken));
     }
 
     public async Task<Result<현장체험활동응답>> 학교제출Async(
@@ -391,6 +399,24 @@ public sealed class 현장체험활동UseCase : I현장체험활동UseCase
             return BadRequest("이메일 제출에는 올바른 학교 담당 이메일이 필요합니다.");
         }
 
+        if (ledger.상태 is 현장체험활동상태.출석인정 or 현장체험활동상태.출석미인정)
+            return BadRequest("학교 결정이 완료된 활동은 다시 제출할 수 없습니다.");
+
+        var submissionDigest = SubmissionDigest(ledger);
+        var previous = ledger.블록목록.LastOrDefault(x =>
+            x.BlockType == 현장체험활동원장상수.학교제출Block
+            && x.Data.GetValueOrDefault("제출내용Digest") == submissionDigest
+            && x.Data.GetValueOrDefault("전송방식") == request.전송방식
+            && Clean(x.Data.GetValueOrDefault("제출처Key")) == destinationKey
+            && Clean(x.Data.GetValueOrDefault("담당이메일")) == recipientEmail);
+        if (previous is not null)
+        {
+            var response = await ToResponseAsync(ledger, cancellationToken);
+            var priorId = previous.Data.GetValueOrDefault("제출Id");
+            if (response.제출목록.Any(x => x.제출Id == priorId && x.상태 != 교육기관제출상태.전송실패))
+                return Result.Ok(response);
+        }
+
         var submissionId = $"edu-submission-{Guid.NewGuid():N}";
         var blocks = ledger.블록목록.Append(Block(
             submissionId,
@@ -398,6 +424,8 @@ public sealed class 현장체험활동UseCase : I현장체험활동UseCase
             "학교 제출 요청",
             교육기관제출상태.전송대기,
             ("제출Id", submissionId),
+            ("제출내용Digest", submissionDigest),
+            ("제출원장Revision", ledger.Revision.ToString(CultureInfo.InvariantCulture)),
             ("전송방식", request.전송방식),
             ("제출처Key", destinationKey),
             ("담당이메일", recipientEmail),
@@ -411,6 +439,8 @@ public sealed class 현장체험활동UseCase : I현장체험활동UseCase
             "school-submission",
             actorUserId,
             cancellationToken);
+
+        if (updated.IsFailed) return Result.Fail<현장체험활동응답>(updated.Errors);
 
         await _제출대기열.예약Async(
             submissionId,
@@ -427,7 +457,9 @@ public sealed class 현장체험활동UseCase : I현장체험활동UseCase
                 cancellationToken);
         }
 
-        return Result.Ok(await ToResponseAsync(updated, cancellationToken));
+        return updated.IsFailed
+            ? Result.Fail<현장체험활동응답>(updated.Errors)
+            : Result.Ok(await ToResponseAsync(updated.Value, cancellationToken));
     }
 
     public async Task<Result<현장체험활동응답>> 학교결정Async(
@@ -483,7 +515,9 @@ public sealed class 현장체험활동UseCase : I현장체험활동UseCase
 
         var state = request.출석인정여부 ? 현장체험활동상태.출석인정 : 현장체험활동상태.출석미인정;
         var updated = await SaveAsync(ledger, blocks, state, "school-decision", actorUserId, cancellationToken);
-        return Result.Ok(await ToResponseAsync(updated, cancellationToken));
+        return updated.IsFailed
+            ? Result.Fail<현장체험활동응답>(updated.Errors)
+            : Result.Ok(await ToResponseAsync(updated.Value, cancellationToken));
     }
 
     private async Task<Result<커뮤니티원장Dto>> FindLedgerAsync(string ledgerId, CancellationToken cancellationToken)
@@ -502,35 +536,60 @@ public sealed class 현장체험활동UseCase : I현장체험활동UseCase
         return Result.Ok(ledger);
     }
 
-    private Task<커뮤니티원장Dto> SaveAsync(
+    private async Task<Result<커뮤니티원장Dto>> SaveAsync(
         커뮤니티원장Dto ledger,
         IReadOnlyList<커뮤니티원장블록Dto> blocks,
         string state,
         string step,
         string actorUserId,
         CancellationToken cancellationToken)
-        => _원장저장소.원장저장Async(
-            new 커뮤니티원장저장요청
-            {
-                원장Id = ledger.원장Id,
-                커뮤니티Id = ledger.커뮤니티Id,
-                원장템플릿Key = ledger.원장템플릿Key,
-                제목 = ledger.제목,
-                원함 = ledger.원함,
-                상태 = state,
-                현재단계Key = step,
-                대상OsCode = ledger.대상OsCode,
-                대상OsName = ledger.대상OsName,
-                생성자UserId = ledger.생성자UserId,
-                생성자표시명 = ledger.생성자표시명,
-                블록목록 = blocks,
-                참여자목록 = ledger.참여자목록,
-                다이어그램스냅샷 = ledger.다이어그램스냅샷,
-                외부참조 = ledger.외부참조,
-                확장속성 = ledger.확장속성
-            },
-            actorUserId,
-            cancellationToken);
+    {
+        if (ledger.상태 is 현장체험활동상태.출석인정 or 현장체험활동상태.출석미인정
+            && step != "school-decision")
+            return Result.Fail<커뮤니티원장Dto>(new Error("학교 결정이 완료된 활동은 변경할 수 없습니다.")
+                .WithMetadata("StatusCode", StatusCodes.Status409Conflict));
+        try
+        {
+            return Result.Ok(await _원장저장소.원장저장Async(
+                new 커뮤니티원장저장요청
+                {
+                    원장Id = ledger.원장Id,
+                    기대Revision = ledger.Revision,
+                    커뮤니티Id = ledger.커뮤니티Id,
+                    원장템플릿Key = ledger.원장템플릿Key,
+                    제목 = ledger.제목,
+                    원함 = ledger.원함,
+                    상태 = state,
+                    현재단계Key = step,
+                    대상OsCode = ledger.대상OsCode,
+                    대상OsName = ledger.대상OsName,
+                    생성자UserId = ledger.생성자UserId,
+                    생성자표시명 = ledger.생성자표시명,
+                    블록목록 = blocks,
+                    참여자목록 = ledger.참여자목록,
+                    다이어그램스냅샷 = ledger.다이어그램스냅샷,
+                    외부참조 = ledger.외부참조,
+                    확장속성 = ledger.확장속성
+                },
+                actorUserId,
+                cancellationToken));
+        }
+        catch (InvalidOperationException ex) when (ex.Message.StartsWith("원장의 현재 상태가 다른 요청에서 먼저 변경되었습니다.", StringComparison.Ordinal))
+        {
+            return Result.Fail<커뮤니티원장Dto>(new Error("다른 요청이 먼저 처리되었습니다. 최신 활동을 다시 조회한 뒤 재시도해 주세요.")
+                .WithMetadata("StatusCode", StatusCodes.Status409Conflict));
+        }
+    }
+
+    private static string SubmissionDigest(커뮤니티원장Dto ledger)
+        => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
+        {
+            ledger.제목,
+            Blocks = ledger.블록목록.Where(x => x.BlockType != 현장체험활동원장상수.학교제출Block)
+                .OrderBy(x => x.BlockId, StringComparer.Ordinal)
+                .Select(x => new { x.BlockId, x.BlockType, x.Title, x.State,
+                    Data = x.Data.OrderBy(pair => pair.Key, StringComparer.Ordinal).ToArray() })
+        }))));
 
     private async Task<현장체험활동응답> ToResponseAsync(
         커뮤니티원장Dto ledger,
@@ -541,6 +600,19 @@ public sealed class 현장체험활동UseCase : I현장체험활동UseCase
             .ToArray();
         var evidenceCount = activityBlocks.Sum(block => DeserializeList(block.Data, "증빙파일Url목록").Count);
         var submissions = await _제출대기열.원장별조회Async(ledger.원장Id, cancellationToken);
+        // Mongo 원장에 확정된 제출 의도가 대기열 예약 전에 중단됐다면 같은 ID로 복구한다.
+        foreach (var block in ledger.블록목록.Where(x => x.BlockType == 현장체험활동원장상수.학교제출Block))
+        {
+            var id = block.Data.GetValueOrDefault("제출Id");
+            var way = block.Data.GetValueOrDefault("전송방식");
+            if (string.IsNullOrWhiteSpace(id) || !교육기관제출방식.지원여부(way)
+                || submissions.Any(x => x.제출Id == id)) continue;
+            await _제출대기열.예약Async(id, ledger.원장Id, way!,
+                block.Data.GetValueOrDefault("제출처Key"), block.Data.GetValueOrDefault("담당이메일"), cancellationToken);
+            if (way == 교육기관제출방식.문서)
+                await _제출대기열.완료Async(id, 교육기관제출상태.수동제출준비, cancellationToken);
+        }
+        submissions = await _제출대기열.원장별조회Async(ledger.원장Id, cancellationToken);
         var decisionValue = GetData(ledger, 현장체험활동원장상수.학교결정Block, "출석인정여부");
 
         return new 현장체험활동응답

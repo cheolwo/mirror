@@ -28,10 +28,12 @@ namespace 살뜰.Services.External.Naver
     {
         private readonly HttpClient _httpClient;
         private readonly NaverCloudDirectionsOptions _options;
+        private readonly Ssalddel.Services.Commerce.I외부개인정보처리Guard? _privacy;
 
-        public NaverCloudDirectionsService(HttpClient httpClient, IOptions<NaverCloudDirectionsOptions> options)
+        public NaverCloudDirectionsService(HttpClient httpClient, IOptions<NaverCloudDirectionsOptions> options, Ssalddel.Services.Commerce.I외부개인정보처리Guard? privacy = null)
         {
             _httpClient = httpClient;
+            _privacy = privacy;
             _options = options.Value;
         }
 
@@ -67,6 +69,7 @@ namespace 살뜰.Services.External.Naver
                 return null;
             }
 
+            if (_privacy is not null && !_privacy.허용("NaverDirections")) return null;
             if (waypoints.Count > 5)
             {
                 throw new ArgumentOutOfRangeException(nameof(waypoints), waypoints.Count, "Directions5는 경유지를 최대 5개까지 허용합니다.");

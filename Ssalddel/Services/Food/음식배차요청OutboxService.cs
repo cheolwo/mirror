@@ -10,6 +10,9 @@ using 살뜰.Services.Dispatch.Queue;
 using 살뜰.Services.Transport;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.설정;
+using 살뜰.도메인.운송;
+using Ssalddel.Services.PrivacyRetention;
+using Ssalddel.Contracts.Common.PrivacyRetention;
 
 namespace Ssalddel.Services.Food;
 
@@ -33,7 +36,8 @@ public sealed class 음식배차요청OutboxService(
     I음식점주문실시간알림Service restaurantNotification,
     ISsalddelFoodOrderStore orderStore,
     IKakao좌표변환Service kakaoGeoService,
-    ILogger<음식배차요청OutboxService> logger) : I음식배차요청OutboxService
+    ILogger<음식배차요청OutboxService> logger,
+    I개인정보복원차단Service? privacyBarrier = null) : I음식배차요청OutboxService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -44,6 +48,8 @@ public sealed class 음식배차요청OutboxService(
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(order);
+        if (privacyBarrier is not null && !await privacyBarrier.복원허용Async(개인정보파기원천Codes.FoodOrder, order.주문번호, cancellationToken))
+            throw new InvalidOperationException("PrivacyDeletionRestoreBlocked");
         var idempotencyKey = Key(eventId);
         if (await db.음식마트원장동기화Outbox.AnyAsync(x => x.멱등키 == idempotencyKey, cancellationToken))
         {
@@ -60,7 +66,7 @@ public sealed class 음식배차요청OutboxService(
             PayloadJson = JsonSerializer.Serialize(new 음식배차요청Payload
             {
                 EventId = eventId,
-                Order = order
+                Order = 음식개인정보OutboxPolicy.Minimized(order)
             }, JsonOptions),
             처리상태 = OutboxProcessingStatuses.Pending,
             CreatedAtUtc = now,
@@ -121,7 +127,7 @@ public sealed class 음식배차요청OutboxService(
             try
             {
                 await ProcessItemAsync(item, cancellationToken);
-                item.처리상태 = OutboxProcessingStatuses.Succeeded;
+                if (item.처리상태 != 음식개인정보OutboxPolicy.PrivacyExpired) item.처리상태 = OutboxProcessingStatuses.Succeeded;
                 item.마지막오류 = string.Empty;
             }
             catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
@@ -129,10 +135,8 @@ public sealed class 음식배차요청OutboxService(
                 item.처리상태 = OutboxProcessingPolicy.CanRetry(item.시도횟수)
                     ? OutboxProcessingStatuses.Pending
                     : OutboxProcessingStatuses.Failed;
-                item.마지막오류 = ex.GetBaseException().Message is { Length: > 2000 } message
-                    ? message[..2000]
-                    : ex.GetBaseException().Message;
-                logger.LogWarning(ex,
+                item.마지막오류 = ex.GetBaseException().GetType().Name;
+                logger.LogWarning(
                     "음식 배차 요청 Outbox 처리 실패. OutboxId={OutboxId}, OrderNo={OrderNo}, Attempt={Attempt}",
                     item.Id, item.원천Id, item.시도횟수);
             }
@@ -146,9 +150,60 @@ public sealed class 음식배차요청OutboxService(
 
     private async Task ProcessItemAsync(음식마트원장동기화Outbox item, CancellationToken cancellationToken)
     {
+        if (privacyBarrier is not null && !await privacyBarrier.복원허용Async(개인정보파기원천Codes.FoodOrder, item.원천Id, cancellationToken))
+        {
+            item.PayloadJson = "{}"; item.처리상태 = 음식개인정보OutboxPolicy.PrivacyExpired;
+            return;
+        }
         var payload = JsonSerializer.Deserialize<음식배차요청Payload>(item.PayloadJson, JsonOptions)
                       ?? throw new InvalidOperationException("음식 배차 요청 payload가 비어 있습니다.");
-        var order = payload.Order ?? throw new InvalidOperationException("음식 배차 요청에 주문 사본이 없습니다.");
+        var snapshot = payload.Order ?? throw new InvalidOperationException("음식 배차 요청에 주문 사본이 없습니다.");
+        if (!string.Equals(snapshot.주문번호, item.원천Id, StringComparison.Ordinal))
+            throw new InvalidOperationException("음식 배차 요청의 원천 주문이 일치하지 않습니다.");
+        // payload는 수락 의도의 과거 사본입니다. 재시도는 현재 주문·현재 큐를 투영합니다.
+        var order = orderStore.GetOrder(snapshot.주문번호)
+                    ?? throw new InvalidOperationException("배차대기를 연결할 음식 주문을 찾을 수 없습니다.");
+        var current = 음식배달업무상태전이Guard.정본상태확인(order.상태);
+        운송원장 queue;
+        if (order.배차대기Id is { } dispatchWaitId)
+        {
+            queue = await db.운송원장.AsNoTracking().SingleOrDefaultAsync(x => x.Id == dispatchWaitId, cancellationToken)
+                    ?? throw new InvalidOperationException("음식 주문에 연결된 배차대기를 찾을 수 없습니다.");
+        }
+        else
+        {
+            if (current is 음식주문상태코드.주문대기 or 음식주문상태코드.거절 or 음식주문상태코드.취소)
+                throw new InvalidOperationException("음식점 수락 뒤의 주문에만 배차대기를 연결할 수 있습니다.");
+            queue = await CreateDispatchQueueAsync(order, cancellationToken);
+        }
+        if (queue.배차업무유형 != 상태값.배차업무유형.음식배달
+            || queue.원본의뢰유형 != 운송의뢰배차원천유형.음식점주문
+            || !string.Equals(queue.원본의뢰Id, order.주문번호, StringComparison.Ordinal))
+            throw new InvalidOperationException("음식 주문과 배차대기의 업무 출처가 일치하지 않습니다.");
+
+        var updated = orderStore.배차대기반영(order.주문번호, queue.Id, DateTime.UtcNow)
+                      ?? throw new InvalidOperationException("배차대기를 연결할 음식 주문을 찾을 수 없습니다.");
+        queue = await db.운송원장.AsNoTracking().SingleOrDefaultAsync(x => x.Id == queue.Id, cancellationToken) ?? queue;
+        await transportLedgerSync.운송실행투영동기화Async(queue, item.변경자, cancellationToken);
+        await foodLedgerOutbox.음식주문예약후즉시처리Async(
+            updated,
+            item.변경자,
+            $"food-dispatch-ledger:{payload.EventId}",
+            cancellationToken);
+        await BestEffortAsync(
+            () => transportLedgerRealtime.PublishAsync(order.주문번호, "FoodDispatchRequested", cancellationToken),
+            "운송 실시간 투영",
+            order.주문번호,
+            cancellationToken);
+        await BestEffortAsync(
+            () => restaurantNotification.주문상태변경알림발송Async(updated, "음식점 수락 후 기사 배차를 시작했습니다.", cancellationToken),
+            "음식점 알림",
+            order.주문번호,
+            cancellationToken);
+    }
+
+    private async Task<운송원장> CreateDispatchQueueAsync(음식주문응답 order, CancellationToken cancellationToken)
+    {
         var pickupAddress = JoinAddress(order.음식점주소, order.음식점상세주소);
         var dropoffAddress = order.수령인정보.주소;
         var pickup = await ResolveCoordinateAsync(order.음식점위도, order.음식점경도, pickupAddress, cancellationToken);
@@ -189,25 +244,7 @@ public sealed class 음식배차요청OutboxService(
             상태 = 상태값.배차대기상태.대기
         }, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-
-        var updated = orderStore.배차대기반영(order.주문번호, queue.Id, DateTime.UtcNow)
-                      ?? throw new InvalidOperationException("배차대기를 연결할 음식 주문을 찾을 수 없습니다.");
-        await transportLedgerSync.운송실행투영동기화Async(queue, item.변경자, cancellationToken);
-        await foodLedgerOutbox.음식주문예약후즉시처리Async(
-            updated,
-            item.변경자,
-            $"food-dispatch-ledger:{payload.EventId}",
-            cancellationToken);
-        await BestEffortAsync(
-            () => transportLedgerRealtime.PublishAsync(order.주문번호, "FoodDispatchRequested", cancellationToken),
-            "운송 실시간 투영",
-            order.주문번호,
-            cancellationToken);
-        await BestEffortAsync(
-            () => restaurantNotification.주문상태변경알림발송Async(updated, "음식점 수락 후 기사 배차를 시작했습니다.", cancellationToken),
-            "음식점 알림",
-            order.주문번호,
-            cancellationToken);
+        return queue;
     }
 
     private async Task<(decimal 위도, decimal 경도)?> ResolveCoordinateAsync(
@@ -224,7 +261,7 @@ public sealed class 음식배차요청OutboxService(
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
-            logger.LogWarning(ex, "음식 배차 주소 좌표 조회 실패. Address={Address}", address);
+            logger.LogWarning("음식 배차 주소 좌표 조회 실패. ErrorType={ErrorType}", ex.GetBaseException().GetType().Name);
             return null;
         }
     }

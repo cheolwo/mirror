@@ -35,17 +35,19 @@ public sealed class 음식주문메뉴검증ServiceTests
         await SeedRestaurantAsync(db);
         var service = new 음식주문메뉴검증Service(db);
 
-        var wrongRestaurant = await Assert.ThrowsAsync<ArgumentException>(() =>
+        var wrongRestaurant = await Assert.ThrowsAsync<음식주문입력확인Exception>(() =>
             service.서버기준요청생성Async(
                 CreateRequest(101, 2001, quantity: 1),
                 CancellationToken.None));
-        var soldOut = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var soldOut = await Assert.ThrowsAsync<음식주문입력확인Exception>(() =>
             service.서버기준요청생성Async(
                 CreateRequest(101, 1002, quantity: 1),
                 CancellationToken.None));
 
         Assert.Contains("선택한 음식점", wrongRestaurant.Message);
         Assert.Contains("품절", soldOut.Message);
+        Assert.Equal(FoodOrderSubmissionErrorCodes.MenuUnavailable, wrongRestaurant.ErrorCode);
+        Assert.Equal(FoodOrderSubmissionErrorCodes.MenuUnavailable, soldOut.ErrorCode);
     }
 
     [Fact]
@@ -55,13 +57,41 @@ public sealed class 음식주문메뉴검증ServiceTests
         await SeedRestaurantAsync(db);
         var service = new 음식주문메뉴검증Service(db);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var exception = await Assert.ThrowsAsync<음식주문입력확인Exception>(() =>
             service.서버기준요청생성Async(
                 CreateRequest(101, 1001, quantity: 1, price: 99_999),
                 CancellationToken.None));
 
         Assert.Contains("최소 주문 금액", exception.Message);
         Assert.Contains("4,500", exception.Message);
+        Assert.Equal(FoodOrderSubmissionErrorCodes.InputInvalid, exception.ErrorCode);
+    }
+
+    [Theory]
+    [InlineData(4_000)]
+    [InlineData(5_000)]
+    public async Task 선택가격확인이필요하면_가격인상과인하모두_등록전에재확인을요구한다(int selectedPrice)
+    {
+        await using var db = CreateContext();
+        await SeedRestaurantAsync(db);
+        var request = CreateRequest(101, 1001, 2, price: selectedPrice);
+        request.메뉴가격확인필요 = true;
+        await Assert.ThrowsAsync<음식주문메뉴가격변경Exception>(() =>
+            new 음식주문메뉴검증Service(db).서버기준요청생성Async(request, default));
+        Assert.Empty(db.음식주문);
+    }
+
+    [Fact]
+    public async Task 확인한가격이최신과같으면_서버메뉴명으로요청을만든다()
+    {
+        await using var db = CreateContext();
+        await SeedRestaurantAsync(db);
+        var request = CreateRequest(101, 1001, 2, name: "오래된 표시명");
+        request.메뉴가격확인필요 = true;
+        var canonical = await new 음식주문메뉴검증Service(db).서버기준요청생성Async(request, default);
+        Assert.True(canonical.메뉴가격확인필요);
+        Assert.Equal("살뜰김밥", Assert.Single(canonical.상품목록).상품명);
+        Assert.Equal(4_500m, Assert.Single(canonical.상품목록).단가);
     }
 
     private static 음식주문등록요청 CreateRequest(

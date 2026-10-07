@@ -33,6 +33,33 @@ public sealed class 음식주문등록CommandHandlerTests
         Assert.IsType<음식주문등록됨Event>(publisher.Notifications[0]);
     }
 
+    [Fact]
+    public async Task 거래자격거절시주문과음식점제안Event를만들지않는다()
+    {
+        var store = new InMemorySsalddelFoodOrderStore(); var publisher = new RecordingPublisher();
+        var handler = new 음식주문등록CommandHandler(store, new PassThroughMenuValidationService(), publisher, commerce: new DeniedCommerceGuard());
+        var request = CreateRequest();
+        await Assert.ThrowsAsync<Ssalddel.Services.Commerce.거래보호Exception>(() => handler.Handle(new 음식주문등록Command(request), default));
+        Assert.Null(store.접수주문조회(request.주문자UserId, request.클라이언트요청Id)); Assert.Empty(publisher.Notifications);
+    }
+
+    [Fact]
+    public async Task 이미접수된주문은이후거래차단에서도원래접수결과를조회한다()
+    {
+        var store = new InMemorySsalddelFoodOrderStore(); var publisher = new RecordingPublisher(); var request = CreateRequest();
+        var first = await new 음식주문등록CommandHandler(store, new PassThroughMenuValidationService(), publisher).Handle(new 음식주문등록Command(request), default);
+        var replay = await new 음식주문등록CommandHandler(store, new PassThroughMenuValidationService(), publisher, commerce: new DeniedCommerceGuard()).Handle(new 음식주문등록Command(request), default);
+        Assert.Equal(first.주문번호, replay.주문번호); Assert.Single(publisher.Notifications);
+    }
+
+    private sealed class DeniedCommerceGuard : Ssalddel.Services.Commerce.I통신판매거래Guard
+    {
+        public Task 요구Async(string actorId, string? sellerId, Ssalddel.Contracts.Common.Commerce.거래보호확인Request? notice, string sourceCode, string requestId, CancellationToken cancellationToken)
+            => throw new Ssalddel.Services.Commerce.거래보호Exception("CommerceOperationsNotReady", "운영 준비 필요");
+        public Task 음식주문요구Async(string actorId, long restaurantId, Ssalddel.Contracts.Common.Commerce.거래보호확인Request? notice, string requestId, CancellationToken cancellationToken)
+            => 요구Async(actorId, null, notice, "food-order", requestId, cancellationToken);
+    }
+
     private static 음식주문등록요청 CreateRequest()
         => new()
         {

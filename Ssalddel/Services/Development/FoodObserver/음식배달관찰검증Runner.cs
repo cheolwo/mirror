@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Ssalddel.Contracts.Admin.Food;
 using Ssalddel.Contracts.Common;
+using Ssalddel.Contracts.Common.Dispatch;
 using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Contracts.Driver.Food;
 using Ssalddel.Contracts.Food;
@@ -275,6 +276,13 @@ public sealed class 음식배달관찰검증Runner(
         foreach (var id in new[] { "driver-near", "driver-far" })
         {
             await PostAsync<JsonElement>(id, "api/v1/driver/food-deliveries/work/start", 운행시작입력(), ct);
+            // 운행 시작은 수신 의사 ON이 아닙니다. 가상 기사도 정상 API로 명시하고 원장을 다시 조회합니다.
+            await PutAsync<운영배차수신상태Dto>(id, "api/v1/driver/operational-dispatch/availability/intent",
+                new 운영배차수신의사변경요청 { 클라이언트요청Id = Guid.NewGuid(), 수신의사Code = 운영배차수신의사Code.On }, ct);
+            var availability = await GetAsync<운영배차수신상태Dto>(id, "api/v1/driver/operational-dispatch/availability", ct);
+            Require(availability.수신의사Code == 운영배차수신의사Code.On && availability.수신의사변경시각Utc.HasValue,
+                "가상 기사의 명시적 수신 의사와 변경 시각을 확인하지 못했습니다.");
+            Record(id, "수신 의사 On", "정상 기사 API · 명시 의사/시각 재조회 확인");
             await LocationAsync(id, id == "driver-near" ? 127.084m : 127.075m, ct);
             Actor(id, "콜 대기", "제안 조회", "음식점 수락 후 서버 추천 대기");
         }
@@ -437,6 +445,11 @@ public sealed class 음식배달관찰검증Runner(
     private async Task<T> PostAsync<T>(string role, string path, object? payload, CancellationToken ct)
     {
         using var response = await _roles[role].PostAsJsonAsync(path, payload, _json, ct);
+        return await DecodeAsync<T>(response, path, ct);
+    }
+    private async Task<T> PutAsync<T>(string role, string path, object payload, CancellationToken ct)
+    {
+        using var response = await _roles[role].PutAsJsonAsync(path, payload, _json, ct);
         return await DecodeAsync<T>(response, path, ct);
     }
     private async Task<T> DecodeAsync<T>(HttpResponseMessage response, string path, CancellationToken ct)

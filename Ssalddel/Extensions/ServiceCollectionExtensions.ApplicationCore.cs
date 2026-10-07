@@ -122,6 +122,8 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I샘플이미지작업UseCase, 샘플이미지작업UseCase>();
         services.AddScoped<I배달기사월정산UseCase, 배달기사월정산UseCase>();
         services.AddScoped<IFoodDeliveryDriverWorkspaceUseCase, FoodDeliveryDriverWorkspaceUseCase>();
+        services.AddOptions<FoodDeliveryCompletedDetailAccessOptions>()
+            .BindConfiguration(FoodDeliveryCompletedDetailAccessOptions.SectionName);
         services.AddScoped<I음식주문기사정산UseCase, 음식주문기사정산UseCase>();
         services.AddScoped<IFoodDeliveryDriverRouteService, FoodDeliveryDriverRouteService>();
         services.AddScoped<I음식주문접수UseCase, 음식주문접수UseCase>();

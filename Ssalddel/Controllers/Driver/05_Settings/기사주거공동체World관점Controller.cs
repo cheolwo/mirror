@@ -10,6 +10,7 @@ namespace Ssalddel.Controllers.Driver.Progress05;
 
 [SsalddelApiVersion(SsalddelProductVersion.V3_5)]
 [SsalddelApiAudience(SsalddelActor.Driver)]
+[SsalddelApiCapability(SsalddelCapability.TransportExecution)]
 [SsalddelApiOperation(SsalddelOperation.Browse)]
 [SsalddelCodeMetadata(
     SsalddelCodeFeatureKeys.WorldRolePerspective,

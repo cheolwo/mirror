@@ -89,6 +89,9 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
         if (shipperRequest is not null)
         {
             changed |= ApplyShipperRequest(shipperRequest, snapshot);
+            // Mongo-first neighborhood registration must fence the first SQL queue before it is visible.
+            if (isNew && shipperRequest.클라이언트요청Id.StartsWith(Ssalddel.Contracts.Common.Community.NeighborhoodDeliveryRoutes.ClientRequestPrefix, StringComparison.Ordinal))
+                생활배송배차Policy.큐초기화(transport, shipperRequest.정산메모);
         }
         else if (!isNew)
         {
@@ -282,6 +285,11 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
         changed |= SetString(entity.수납주체, snapshot.Collector, value => entity.수납주체 = value);
         changed |= SetString(entity.정산상태, snapshot.SettlementState, value => entity.정산상태 = value);
         changed |= SetString(entity.정산메모, snapshot.SettlementNotes, value => entity.정산메모 = value);
+        if (entity.생활배송접수키 is null && !string.IsNullOrWhiteSpace(entity.주문자UserId)
+            && entity.클라이언트요청Id.StartsWith(Ssalddel.Contracts.Common.Community.NeighborhoodDeliveryRoutes.ClientRequestPrefix, StringComparison.Ordinal))
+        {
+            entity.생활배송접수키 = 생활배송배차Policy.접수키(entity.주문자UserId, entity.클라이언트요청Id); changed = true;
+        }
         changed |= SetInt(entity.결제예정금액, snapshot.EstimatedPaymentAmount, value => entity.결제예정금액 = value);
         changed |= SetDecimal(entity.대기료, snapshot.WaitingFee, value => entity.대기료 = value);
         changed |= SetDecimal(entity.수작업비, snapshot.ManualHandlingFee, value => entity.수작업비 = value);

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Ssalddel;
 using 살뜰.Services.Dispatch.Engine;
 
@@ -30,6 +30,8 @@ namespace 살뜰.Services.Dispatch.Queue
                 return 배차추천후보선정결과.잘못된입력($"배차대기 원장을 찾을 수 없습니다. RequestId={requestId}");
             }
 
+            if (!Ssalddel.Services.Community.생활배송배차Policy.자동추천가능(queue))
+                return 배차추천후보선정결과.준비안됨("생활 배송 합의 연결 대기 또는 공개 콜 전용 의뢰입니다.");
             if (!_engineCatalog.TryResolve(queue, out var enginePlan, out var catalogReason))
             {
                 return 배차추천후보선정결과.구성오류(

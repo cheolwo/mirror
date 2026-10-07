@@ -14,6 +14,36 @@ namespace Ssalddel.Tests.Application.Food;
 public sealed class 주문자음식주문조회UseCaseTests
 {
     [Fact]
+    public async Task 접수결과는_같은요청Id를사용한_다른계정과분리하고_주문번호만읽는다()
+    {
+        await using var context = CreateContext();
+        await SeedAsync(context);
+        var requestId = Guid.NewGuid();
+        foreach (var order in context.음식주문.Where(x => x.주문번호 == "FOOD-A-001" || x.주문번호 == "FOOD-B-001"))
+            order.클라이언트요청Id = requestId;
+        await context.SaveChangesAsync();
+        var count = context.음식주문.Count();
+        var useCase = new 주문자음식주문조회UseCase(context);
+        Assert.Equal("FOOD-A-001", (await useCase.접수결과Async(requestId, "user-a", default)).Value.주문번호);
+        Assert.Equal("FOOD-B-001", (await useCase.접수결과Async(requestId, "user-b", default)).Value.주문번호);
+        var other = await useCase.접수결과Async(requestId, "user-c", default);
+        Assert.True(other.IsFailed);
+        Assert.Equal(404, Assert.Single(other.Errors).Metadata["StatusCode"]);
+        Assert.Equal(count, context.음식주문.Count());
+        Assert.False(context.ChangeTracker.HasChanges());
+    }
+
+    [Fact]
+    public async Task 접수결과_익명은401_빈요청Id는거부한다()
+    {
+        await using var context = CreateContext();
+        var useCase = new 주문자음식주문조회UseCase(context);
+        var anonymous = await useCase.접수결과Async(Guid.NewGuid(), null, default);
+        Assert.Equal(401, Assert.Single(anonymous.Errors).Metadata["StatusCode"]);
+        Assert.True((await useCase.접수결과Async(Guid.Empty, "user-a", default)).IsFailed);
+    }
+
+    [Fact]
     public async Task 목록은_로그인주문자소유범위에서검색상태와페이징을적용한다()
     {
         await using var context = CreateContext();

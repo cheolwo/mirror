@@ -1,10 +1,13 @@
 using System.Text.Json;
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Ssalddel.Contracts.Common.Drivers;
 using 살뜰.Data;
+using 살뜰.도메인.공통;
 using 살뜰.도메인.설정;
 using 살뜰.Services.Notifications;
 using 살뜰.Services.Storage.Local;
+using 살뜰.도메인.운송;
 
 namespace 살뜰.Services.Dispatch.Notification
 {
@@ -50,7 +53,12 @@ namespace 살뜰.Services.Dispatch.Notification
             }
 
             var now = DateTime.UtcNow;
-            var dataJson = JsonSerializer.Serialize(new Dictionary<string, string>
+            var queue = await _db.운송원장.AsNoTracking().SingleOrDefaultAsync(
+                x => x.Id == 배차대기Id && x.의뢰Id == 의뢰Id, cancellationToken);
+            var isFood = queue?.배차업무유형 == 상태값.배차업무유형.음식배달;
+            var dataJson = JsonSerializer.Serialize(isFood && queue!.추천만료시각.HasValue
+                ? FoodRecommendationData(queue, 기사Id)
+                : new Dictionary<string, string>
             {
                 ["type"] = 기사배차추천알림계약.현재유형,
                 ["dispatchWaitingId"] = 배차대기Id.ToString(),
@@ -65,7 +73,7 @@ namespace 살뜰.Services.Dispatch.Notification
                 기사Id = 기사Id,
                 추천라운드 = 추천라운드,
                 제목 = "새로운 배차 추천",
-                본문 = "근처 운송의뢰가 도착했습니다.",
+                본문 = isFood ? "새 음식 배달 추천을 확인해 주세요." : "근처 운송의뢰가 도착했습니다.",
                 DataJson = dataJson,
                 발송상태 = 상태_대기,
                 CreatedAt = now,
@@ -75,10 +83,21 @@ namespace 살뜰.Services.Dispatch.Notification
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<int> 대기알림발송Async(int take = 100, CancellationToken cancellationToken = default)
+        public Task<int> 대기알림발송Async(int take = 100, CancellationToken cancellationToken = default)
+            => 업무유형별대기알림발송Async(상태값.배차업무유형.용달운송, take, cancellationToken);
+
+        public async Task<int> 업무유형별대기알림발송Async(int 배차업무유형, int take = 100, CancellationToken cancellationToken = default)
         {
+            if (배차업무유형 is not (상태값.배차업무유형.용달운송 or 상태값.배차업무유형.음식배달))
+                throw new ArgumentOutOfRangeException(nameof(배차업무유형), "음식 배달 또는 용달 운송 유형이 필요합니다.");
+
+            var appKey = 배차업무유형 == 상태값.배차업무유형.용달운송
+                ? 기사앱식별자.CargoYongdalDriverApp : 기사앱식별자.FoodDeliveryDriverApp;
+
             var pendingItems = await _db.배차추천알림Outbox
-                .Where(x => x.발송상태 == 상태_대기)
+                .Where(x => x.발송상태 == 상태_대기
+                            && _db.운송원장.Any(queue => queue.Id == x.배차대기Id
+                                && queue.의뢰Id == x.의뢰Id && queue.배차업무유형 == 배차업무유형))
                 .OrderBy(x => x.CreatedAt)
                 .Take(take)
                 .ToListAsync(cancellationToken);
@@ -101,7 +120,7 @@ namespace 살뜰.Services.Dispatch.Notification
 
                 try
                 {
-                    var token = await _pushTokenStore.GetAsync(item.기사Id, cancellationToken);
+                    var token = await _pushTokenStore.GetForAppAsync(item.기사Id, appKey, cancellationToken);
                     if (string.IsNullOrWhiteSpace(token))
                     {
                         item.발송상태 = 상태_실패;
@@ -114,15 +133,31 @@ namespace 살뜰.Services.Dispatch.Notification
                         continue;
                     }
 
-                    var data = JsonSerializer.Deserialize<Dictionary<string, string>>(item.DataJson, JsonOptions)
-                               ?? new Dictionary<string, string>();
-
-                    var sent = await _fcmPushService.SendToTokenAsync(
-                        token,
-                        item.제목,
-                        item.본문,
-                        data,
-                        cancellationToken);
+                    bool sent;
+                    if (배차업무유형 == 상태값.배차업무유형.음식배달)
+                    {
+                        // A delayed outbox cannot advertise an expired, accepted,
+                        // superseded, or reassigned recommendation as current.
+                        var queue = await _db.운송원장.AsNoTracking().SingleOrDefaultAsync(
+                            x => x.Id == item.배차대기Id && x.의뢰Id == item.의뢰Id
+                                && x.배차업무유형 == 상태값.배차업무유형.음식배달
+                                && x.상태 == 상태값.배차대기상태.대기
+                                && x.배차큐단계 == 상태값.배차큐단계.배차추천
+                                && x.배차노출상태 == 상태값.배차노출상태.추천중
+                                && x.현재추천대상기사Id == item.기사Id && x.추천라운드 == item.추천라운드
+                                && x.추천만료시각.HasValue && x.추천만료시각 > DateTime.UtcNow,
+                            cancellationToken);
+                        if (queue is null) { item.발송상태 = 상태_실패; continue; }
+                        sent = await _fcmPushService.SendAsync(new FcmPushMessage(token, string.Empty, string.Empty,
+                            FoodRecommendationData(queue, item.기사Id), HighPriority: true, DataOnly: true), cancellationToken);
+                    }
+                    else
+                    {
+                        // Keep the existing cargo event type and external payload.
+                        var data = JsonSerializer.Deserialize<Dictionary<string, string>>(item.DataJson, JsonOptions)
+                                   ?? new Dictionary<string, string>();
+                        sent = await _fcmPushService.SendToTokenAsync(token, item.제목, item.본문, data, cancellationToken);
+                    }
 
                     item.발송상태 = sent ? 상태_성공 : 상태_실패;
                 }
@@ -136,5 +171,16 @@ namespace 살뜰.Services.Dispatch.Notification
             await _db.SaveChangesAsync(cancellationToken);
             return processed;
         }
+
+        private static Dictionary<string, string> FoodRecommendationData(운송원장 queue, string driverId)
+            => new()
+            {
+                ["type"] = "FoodDeliveryRecommendation",
+                ["appKey"] = 기사앱식별자.FoodDeliveryDriverApp,
+                ["userId"] = driverId,
+                ["offerId"] = queue.의뢰Id,
+                ["expiresAtUtc"] = DateTime.SpecifyKind(queue.추천만료시각!.Value, DateTimeKind.Utc)
+                    .ToString("O", CultureInfo.InvariantCulture)
+            };
     }
 }

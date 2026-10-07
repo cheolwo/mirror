@@ -9,6 +9,8 @@ namespace Ssalddel.Controllers.Shipper;
 
 [SsalddelApiVersion(SsalddelProductVersion.V3_5)]
 [SsalddelApiAudience(SsalddelActor.ShipperOrSeller)]
+[SsalddelApiAudience(SsalddelActor.Shipper)]
+[SsalddelApiCapability(SsalddelCapability.SalesFulfillment)]
 [SsalddelApiOperation(SsalddelOperation.Browse)]
 [SsalddelCodeMetadata(
     SsalddelCodeFeatureKeys.WorldRolePerspective,

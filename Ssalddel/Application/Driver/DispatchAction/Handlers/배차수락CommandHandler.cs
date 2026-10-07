@@ -149,6 +149,8 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
             return new(Result.Ok(new 배차수락결과(request.RequestId, "이미 수락된 운송입니다.")));
         }
 
+        if (queue.생활배송배차방식 is not null && (!queue.생활배송수락준비완료 || request.ExpectedRecommendationRound is null))
+            return new(Conflict("DispatchChoiceNotReady", "현재 배송 연결과 배차 판본을 확인해 주세요."));
         if (request.ExpectedRecommendationRound.HasValue
             && request.ExpectedRecommendationRound.Value != queue.추천라운드)
         {
@@ -192,6 +194,7 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
                 eligibility.경고코드));
         }
 
+        if (queue.생활배송배차방식 is not null) queue.생활배송선택판본++;
         queue.상태 = 상태값.배차대기상태.확정;
         queue.배차큐단계 = 상태값.배차큐단계.확정;
         queue.배차노출상태 = 상태값.배차노출상태.확정;
@@ -219,6 +222,9 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         dispatchRequest.UpdatedAt = now;
         queue.UpdatedAt = now;
 
+        // 생활 배송 지도는 후처리 알림/Mongo 로그 대신 같은 SQL 저장의 현재 배정 근거를 사용합니다.
+        var assignmentEvent = Ssalddel.Services.Community.NeighborhoodDeliveryLocationPolicy.CreateAssignmentEvent(dispatchRequest, queue, now);
+        if (assignmentEvent is not null) _db.운송이벤트.Add(assignmentEvent);
         await _db.SaveChangesAsync(cancellationToken);
         await _연속배차UseCase.수락완료Async(request.기사Id, request.RequestId, cancellationToken);
         if (tx is not null)

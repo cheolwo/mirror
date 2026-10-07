@@ -95,12 +95,11 @@ public sealed class Mongo공동구매해외선적추적저장소 : I공동구매
         var trackingId = string.IsNullOrWhiteSpace(request.추적Id)
             ? existing?.추적Id ?? ObjectId.GenerateNewId().ToString()
             : request.추적Id.Trim();
-        var events = request.이벤트목록.Count == 0 && existing is not null
-            ? existing.이벤트목록.OrderBy(x => x.발생시각Utc).ToArray()
-            : request.이벤트목록
-                .Select(ToDocument)
-                .OrderBy(x => x.발생시각Utc)
-                .ToArray();
+        var events = (existing?.이벤트목록 ?? [])
+            .Concat(request.이벤트목록.Select(ToDocument))
+            .DistinctBy(x => (x.이벤트코드, x.발생시각Utc, x.출처주체코드, x.증빙참조,
+                x.위치요약, x.표시명, x.메모, x.주문자공개여부))
+            .OrderBy(x => x.발생시각Utc).ToArray();
 
         var document = new 공동구매해외선적추적문서
         {
@@ -139,11 +138,29 @@ public sealed class Mongo공동구매해외선적추적저장소 : I공동구매
             수정시각Utc = now
         };
 
-        await _collection.ReplaceOneAsync(
-            x => x.문서관리번호정규화 == documentManagementNumberNormalized,
+        var lastNormal = existing is null ? null : 공동구매선적진행Policy.LastNormalState(existing.현재상태코드,
+            existing.마지막정상상태코드, existing.이벤트목록.Select(x => x.이벤트코드));
+        if (existing is not null && !공동구매선적진행Policy.CanAdvance(existing.현재상태코드,
+                existing.마지막단계시각Utc, document.현재상태코드, document.마지막단계시각Utc ?? DateTime.MinValue, lastNormal))
+        {
+            document.현재상태코드 = existing.현재상태코드;
+            document.현재위치요약 = existing.현재위치요약;
+            document.마지막단계시각Utc = existing.마지막단계시각Utc;
+        }
+        document.마지막정상상태코드 = 공동구매선적진행Policy.LastNormalState(document.현재상태코드, lastNormal,
+            events.Select(x => x.이벤트코드));
+
+        var filter = Builders<공동구매해외선적추적문서>.Filter.Eq(x => x.문서관리번호정규화, documentManagementNumberNormalized);
+        if (existing is not null)
+            filter &= Builders<공동구매해외선적추적문서>.Filter.Eq(x => x.수정시각Utc, existing.수정시각Utc)
+                & Builders<공동구매해외선적추적문서>.Filter.Size(x => x.이벤트목록, existing.이벤트목록.Count);
+        var saved = await _collection.ReplaceOneAsync(
+            filter,
             document,
-            new ReplaceOptions { IsUpsert = true },
+            new ReplaceOptions { IsUpsert = existing is null },
             cancellationToken);
+        if (existing is not null && saved.MatchedCount == 0)
+            throw new InvalidOperationException("선적 상태가 다른 요청에서 변경되었습니다. 최신 추적 정보를 다시 조회한 뒤 재시도해 주세요.");
 
         return ToDto(document);
     }
@@ -161,24 +178,37 @@ public sealed class Mongo공동구매해외선적추적저장소 : I공동구매
         var eventDocument = ToDocument(request);
         var now = DateTime.UtcNow;
 
-        var update = Builders<공동구매해외선적추적문서>.Update
-            .Push(x => x.이벤트목록, eventDocument)
-            .Set(x => x.현재상태코드, eventDocument.이벤트코드)
-            .Set(x => x.현재위치요약, eventDocument.위치요약)
-            .Set(x => x.마지막단계시각Utc, eventDocument.발생시각Utc)
-            .Set(x => x.수정자, string.IsNullOrWhiteSpace(updatedBy) ? "system" : updatedBy.Trim())
-            .Set(x => x.수정시각Utc, now);
-
-        var item = await _collection.FindOneAndUpdateAsync(
-            x => x.문서관리번호정규화 == normalized,
-            update,
-            new FindOneAndUpdateOptions<공동구매해외선적추적문서>
+        for (var attempt = 0; attempt < 10; attempt++)
+        {
+            var current = await _collection.Find(x => x.문서관리번호정규화 == normalized)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (current is null) return null;
+            var update = Builders<공동구매해외선적추적문서>.Update
+                .Push(x => x.이벤트목록, eventDocument)
+                .Set(x => x.수정자, string.IsNullOrWhiteSpace(updatedBy) ? "system" : updatedBy.Trim())
+                .Set(x => x.수정시각Utc, now);
+            var lastNormal = 공동구매선적진행Policy.LastNormalState(current.현재상태코드,
+                current.마지막정상상태코드, current.이벤트목록.Select(x => x.이벤트코드));
+            if (공동구매선적진행Policy.CanAdvance(current.현재상태코드, current.마지막단계시각Utc,
+                    eventDocument.이벤트코드, eventDocument.발생시각Utc, lastNormal))
             {
-                ReturnDocument = ReturnDocument.After
-            },
-            cancellationToken);
+                update = update.Set(x => x.현재상태코드, eventDocument.이벤트코드)
+                    .Set(x => x.마지막정상상태코드, 공동구매선적진행Policy.LastNormalState(eventDocument.이벤트코드, lastNormal, []))
+                    .Set(x => x.현재위치요약, eventDocument.위치요약)
+                    .Set(x => x.마지막단계시각Utc, eventDocument.발생시각Utc);
+            }
+            // 투영 판단 이후 다른 이벤트가 진행했다면 재조회한다. 이력 추가와 투영은 한 쓰기다.
+            var item = await _collection.FindOneAndUpdateAsync(
+                x => x.문서관리번호정규화 == normalized
+                    && x.현재상태코드 == current.현재상태코드
+                    && x.마지막단계시각Utc == current.마지막단계시각Utc,
+                update,
+                new FindOneAndUpdateOptions<공동구매해외선적추적문서> { ReturnDocument = ReturnDocument.After },
+                cancellationToken);
+            if (item is not null) return ToDto(item);
+        }
 
-        return item is null ? null : ToDto(item);
+        throw new InvalidOperationException("선적 상태가 다른 요청에서 변경되었습니다. 최신 추적 정보를 다시 조회한 뒤 재시도해 주세요.");
     }
 
     private FilterDefinition<공동구매해외선적추적문서> BuildFilter(
@@ -390,6 +420,7 @@ public sealed class Mongo공동구매해외선적추적저장소 : I공동구매
 
 public sealed class 공동구매해외선적추적문서
 {
+    public string? 마지막정상상태코드 { get; set; }
     [BsonId]
     public ObjectId Id { get; set; }
     public string 추적Id { get; set; } = string.Empty;

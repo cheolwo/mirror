@@ -6,7 +6,8 @@ namespace 살뜰.Services.Notifications
         string Body,
         IReadOnlyDictionary<string, string> Data,
         string? ImageUrl = null,
-        bool HighPriority = false);
+        bool HighPriority = false,
+        bool DataOnly = false);
 
     public interface IFcmPushService
     {

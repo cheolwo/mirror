@@ -176,6 +176,31 @@ public sealed class CommunityPostReadUseCaseTests
             generalResponse.TopicClassificationCode);
     }
 
+    [Fact]
+    public async Task 생활교류_제공필터는_페이지_처리전_적용하고_다른글과_삭제글을_제외한다()
+    {
+        await using var db = CreateContext();
+        foreach (var n in Enumerable.Range(1, 23))
+        {
+            var post = CreatePost($"제공 {n}", CommunityBoardCatalog.FreeLife.DisplayName);
+            post.WorkflowTag = NeighborhoodExchange.WorkflowTag; post.RoleTag = NeighborhoodExchange.Offer;
+            db.PlatformCommunityPosts.Add(post);
+        }
+        var need = CreatePost("필요 글", CommunityBoardCatalog.FreeLife.DisplayName);
+        need.WorkflowTag = NeighborhoodExchange.WorkflowTag; need.RoleTag = NeighborhoodExchange.Need;
+        var deleted = CreatePost("삭제 글", CommunityBoardCatalog.FreeLife.DisplayName);
+        deleted.WorkflowTag = NeighborhoodExchange.WorkflowTag; deleted.RoleTag = NeighborhoodExchange.Offer; deleted.IsDeleted = true;
+        db.PlatformCommunityPosts.AddRange(need, deleted, CreatePost("일반 글", CommunityBoardCatalog.FreeLife.DisplayName));
+        await db.SaveChangesAsync();
+        var page = await CreateUseCase(db).목록Async("platform", PlatformCommunityPostCategories.General,
+            null, NeighborhoodExchange.WorkflowTag, NeighborhoodExchange.Offer, 2, NeighborhoodExchange.PageSize, CancellationToken.None);
+        Assert.True(page.IsSuccess);
+        Assert.Equal(23, page.Value.TotalCount);
+        Assert.Equal(3, page.Value.Items.Count);
+        Assert.All(page.Value.Items, p => Assert.True(NeighborhoodExchange.IsExchange(p)));
+        Assert.All(page.Value.Items, p => Assert.Equal(NeighborhoodExchange.Offer, p.RoleTag));
+    }
+
     private static 커뮤니티게시글조회UseCase CreateUseCase(
         SsalddelContext db,
         ICurrentUserAccessor? currentUserAccessor = null)

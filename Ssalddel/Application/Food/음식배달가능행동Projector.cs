@@ -17,8 +17,9 @@ public static class 음식배달가능행동Projector
     {
         order.Revision = ResolveRevision(order);
         order.AvailableActions = 음식점용(order.상태, order.Revision,
-            order.조리시작가능, order.조리시작시각Utc.HasValue,
-            order.픽업준비시각Utc.HasValue);
+            order.조리시작가능,
+            order.CurrentCookingStartedAtUtc.HasValue || (order.CurrentPreparationRound == 1 && order.조리시작시각Utc.HasValue),
+            order.CurrentPickupReadyAtUtc.HasValue || (order.CurrentPreparationRound == 1 && order.픽업준비시각Utc.HasValue));
         return order;
     }
 
@@ -63,14 +64,15 @@ public static class 음식배달가능행동Projector
     public static IReadOnlyList<업무가능행동Dto> 기사배달용(
         string? workStatus,
         long attemptRevision,
-        DateTime? restaurantArrivedAtUtc)
+        DateTime? restaurantArrivedAtUtc,
+        bool pickupReady = true)
     {
         IReadOnlyList<업무가능행동Dto> actions = workStatus switch
         {
             DriverWorkOfferStatus.Accepted => BuildArrivalActions(
                 attemptRevision,
                 restaurantArrivedAtUtc),
-            DriverWorkOfferStatus.MovingToPickup => BuildPickupActions(attemptRevision, restaurantArrivedAtUtc),
+            DriverWorkOfferStatus.MovingToPickup => BuildPickupActions(attemptRevision, restaurantArrivedAtUtc, pickupReady),
             DriverWorkOfferStatus.MovingToDropoff => new 업무가능행동Dto[] { Action(음식배달가능행동Ids.기사전달완료) },
             _ => Array.Empty<업무가능행동Dto>()
         };
@@ -89,7 +91,8 @@ public static class 음식배달가능행동Projector
 
     private static IReadOnlyList<업무가능행동Dto> BuildPickupActions(
         long attemptRevision,
-        DateTime? restaurantArrivedAtUtc)
+        DateTime? restaurantArrivedAtUtc,
+        bool pickupReady)
     {
         var actions = new List<업무가능행동Dto>();
         if (!restaurantArrivedAtUtc.HasValue)
@@ -97,7 +100,10 @@ public static class 음식배달가능행동Projector
             actions.Add(DeliveryAttemptAction(음식배달가능행동Ids.기사가게도착, attemptRevision));
         }
 
-        actions.Add(Action(음식배달가능행동Ids.기사픽업확인));
+        if (pickupReady)
+        {
+            actions.Add(Action(음식배달가능행동Ids.기사픽업확인));
+        }
         return actions;
     }
 

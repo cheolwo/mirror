@@ -11,6 +11,7 @@ using Ssalddel.Services.Orderer;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using 살뜰.Infrastructure.BackgroundJobs.Customs;
 using 살뜰.Infrastructure.BackgroundJobs.DispatchQueue;
+using 살뜰.Infrastructure.BackgroundJobs.FoodDeliveryDispatch;
 using 살뜰.Infrastructure.BackgroundJobs.Documents;
 using 살뜰.Infrastructure.BackgroundJobs.Notifications;
 using 살뜰.Infrastructure.BackgroundJobs.Payments;
@@ -28,8 +29,10 @@ public static partial class ServiceCollectionExtensions
         HongikHakdangCardOptions hongikHakdangCardOptions,
         AgriculturalFisheriesBatchOptions agriculturalFisheriesBatchOptions,
         CommunityEditorialBatchOptions communityEditorialBatchOptions,
-        SsalddelExecutionOptions executionOptions)
+        SsalddelExecutionOptions executionOptions,
+        음식배달배차배치작업Options? foodDeliveryJobOptions = null)
     {
+        foodDeliveryJobOptions ??= new 음식배달배차배치작업Options();
         var 공동구매BatchRegistrationPlan = 공동구매수요모집BatchRegistrationPlan.생성(
             agriculturalFisheriesBatchOptions);
         var communityEditorialBatchRegistrationPlan =
@@ -49,6 +52,27 @@ public static partial class ServiceCollectionExtensions
         {
             if (executionOptions.Mode == SsalddelExecutionMode.Operational)
             {
+                var foodScanJobKey = new JobKey("FoodDeliveryDispatchQueueScan");
+                q.AddJob<음식배달배차큐스캔Job>(opts => opts.WithIdentity(foodScanJobKey));
+                q.AddTrigger(opts => opts
+                    .ForJob(foodScanJobKey)
+                    .WithIdentity("FoodDeliveryDispatchQueueScan-trigger")
+                    .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromSeconds(Math.Max(5, foodDeliveryJobOptions.큐스캔주기초))).RepeatForever()));
+
+                var foodExpireJobKey = new JobKey("FoodDeliveryRecommendationExpire");
+                q.AddJob<음식배달추천만료정리Job>(opts => opts.WithIdentity(foodExpireJobKey));
+                q.AddTrigger(opts => opts
+                    .ForJob(foodExpireJobKey)
+                    .WithIdentity("FoodDeliveryRecommendationExpire-trigger")
+                    .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromSeconds(Math.Max(5, foodDeliveryJobOptions.추천만료정리주기초))).RepeatForever()));
+
+                var foodPushJobKey = new JobKey("FoodDeliveryRecommendationPush");
+                q.AddJob<음식배달추천알림발송Job>(opts => opts.WithIdentity(foodPushJobKey));
+                q.AddTrigger(opts => opts
+                    .ForJob(foodPushJobKey)
+                    .WithIdentity("FoodDeliveryRecommendationPush-trigger")
+                    .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromSeconds(Math.Max(5, foodDeliveryJobOptions.알림발송주기초))).RepeatForever()));
+
                 var scanJobKey = new JobKey("DispatchQueueScan");
                 q.AddJob<배차큐스캔Job>(opts => opts.WithIdentity(scanJobKey));
                 q.AddTrigger(opts => opts

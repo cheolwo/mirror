@@ -272,7 +272,8 @@ public sealed class 배차엔진판단감사Tests
             new NoOpRecommendationNotificationService(),
             new NoOpDriverStateService(),
             null!,
-            pricing);
+            pricing,
+            new NoOpFoodRecommendationRecordService());
 
         var method = typeof(배차대기원장전환Service).GetMethod(
             "추천거절후다음후보로진행Async",
@@ -489,6 +490,12 @@ public sealed class 배차엔진판단감사Tests
             int take = 100,
             CancellationToken cancellationToken = default)
             => Task.FromResult(0);
+    }
+
+    private sealed class NoOpFoodRecommendationRecordService : I음식배달기사추천기록Service
+    {
+        public Task 추천기록Async(string driverId, DateTime 추천시각Utc, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
     }
 
     private sealed class StubFoodPricingService : I음식배달기사제안요금Service

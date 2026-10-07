@@ -8,6 +8,43 @@ namespace Ssalddel.Tests.Application.Food;
 public sealed class 음식배달가능행동ProjectorTests
 {
     [Fact]
+    public void 재조리는_첫준비이력이있어도_이번준비완료를제공하고_완료뒤닫는다()
+    {
+        var oldReady = DateTime.UtcNow.AddMinutes(-10);
+        var recook = DateTime.UtcNow;
+        var order = new 음식주문응답
+        {
+            상태 = 음식주문상태코드.기사배정, Revision = 8,
+            조리시작시각Utc = oldReady.AddMinutes(-5), 픽업준비시각Utc = oldReady,
+            CurrentPreparationRound = 2, CurrentCookingStartedAtUtc = recook,
+            RecookingRequestedAtUtc = recook
+        };
+
+        음식배달가능행동Projector.음식점용(order);
+        var readyAction = Assert.Single(order.AvailableActions, x => x.ActionId == 음식배달가능행동Ids.음식점픽업준비완료);
+        Assert.Equal(8, readyAction.ExpectedRevision);
+        Assert.Equal(oldReady, order.픽업준비시각Utc);
+
+        order.CurrentPickupReadyAtUtc = recook.AddMinutes(3);
+        음식배달가능행동Projector.음식점용(order);
+        Assert.DoesNotContain(order.AvailableActions, x => x.ActionId == 음식배달가능행동Ids.음식점픽업준비완료);
+    }
+
+    [Fact]
+    public void 기사_이번음식준비전에는_도착과중단만_제공한다()
+    {
+        var beforeArrival = 음식배달가능행동Projector.기사배달용(
+            DriverWorkOfferStatus.MovingToPickup, 2, null, pickupReady: false);
+        var afterArrival = 음식배달가능행동Projector.기사배달용(
+            DriverWorkOfferStatus.MovingToPickup, 3, DateTime.UtcNow, pickupReady: false);
+        Assert.Equal([음식배달가능행동Ids.기사가게도착, 음식배달가능행동Ids.기사배달중단], beforeArrival.Select(x => x.ActionId));
+        Assert.Equal([음식배달가능행동Ids.기사배달중단], afterArrival.Select(x => x.ActionId));
+        var ready = 음식배달가능행동Projector.기사배달용(
+            DriverWorkOfferStatus.MovingToPickup, 3, DateTime.UtcNow, pickupReady: true);
+        Assert.Contains(ready, x => x.ActionId == 음식배달가능행동Ids.기사픽업확인);
+    }
+
+    [Fact]
     public void 주문자_주문대기는_현재_revision의_취소만_제공한다()
     {
         var actions = 음식배달가능행동Projector.주문자용(음식주문상태코드.주문대기, 4);

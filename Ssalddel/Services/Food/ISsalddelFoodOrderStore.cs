@@ -16,6 +16,10 @@ public interface ISsalddelFoodOrderStore
 
     음식주문응답? GetOrder(string orderNo);
 
+    /// <summary>동일 주문자의 제출 요청으로 이미 접수된 원장을 조회합니다.</summary>
+    음식주문응답? 접수주문조회(string 주문자UserId, Guid 클라이언트요청Id)
+        => null;
+
     음식주문응답 AddOrder(음식주문등록요청 request);
 
     음식주문저장결과 멱등등록(음식주문등록요청 request)

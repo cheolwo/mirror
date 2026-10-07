@@ -20,6 +20,8 @@ public interface I교육기관제출대기열
 
     Task 완료Async(string 제출Id, string 상태, CancellationToken cancellationToken);
 
+    Task 원장반영완료Async(string 제출Id, CancellationToken cancellationToken);
+
     Task 실패Async(
         string 제출Id,
         string 오류,
@@ -38,7 +40,8 @@ public sealed record 교육기관제출작업(
     string 전송방식,
     string? 제출처Key,
     string? 담당이메일,
-    int 시도횟수);
+    int 시도횟수,
+    bool 전송완료 = false);
 
 public sealed class Mongo교육기관제출대기열 : I교육기관제출대기열
 {
@@ -82,13 +85,24 @@ public sealed class Mongo교육기관제출대기열 : I교육기관제출대기
             수정시각Utc = now
         };
 
-        await _collection.ReplaceOneAsync(
+        var saved = await _collection.FindOneAndUpdateAsync(
             x => x.제출Id == 제출Id,
-            document,
-            new ReplaceOptions { IsUpsert = true },
+            Builders<교육기관제출문서>.Update
+                .SetOnInsert(x => x.원장Id, document.원장Id)
+                .SetOnInsert(x => x.전송방식, document.전송방식)
+                .SetOnInsert(x => x.제출처Key, document.제출처Key)
+                .SetOnInsert(x => x.담당이메일, document.담당이메일)
+                .SetOnInsert(x => x.상태, document.상태)
+                .SetOnInsert(x => x.다음시도시각Utc, now)
+                .SetOnInsert(x => x.생성시각Utc, now)
+                .SetOnInsert(x => x.수정시각Utc, now),
+            new FindOneAndUpdateOptions<교육기관제출문서> { IsUpsert = true, ReturnDocument = ReturnDocument.After },
             cancellationToken);
 
-        return ToResponse(document);
+        if (saved.원장Id != document.원장Id || saved.전송방식 != document.전송방식
+            || saved.제출처Key != document.제출처Key || saved.담당이메일 != document.담당이메일)
+            throw new InvalidOperationException("같은 제출Id에 다른 제출 내용을 예약할 수 없습니다.");
+        return ToResponse(saved);
     }
 
     public async Task<교육기관제출작업?> 다음작업확보Async(CancellationToken cancellationToken)
@@ -96,10 +110,14 @@ public sealed class Mongo교육기관제출대기열 : I교육기관제출대기
         await EnsureIndexesAsync(cancellationToken);
         var now = DateTime.UtcNow;
         var expiredLease = now.AddMinutes(-5);
+        var filter = Builders<교육기관제출문서>.Filter;
         var document = await _collection.FindOneAndUpdateAsync(
-            x => ((x.상태 == 교육기관제출상태.전송대기 || x.상태 == 교육기관제출상태.설정대기)
+            filter.Where(x => ((x.상태 == 교육기관제출상태.전송대기 || x.상태 == 교육기관제출상태.설정대기)
                   && x.다음시도시각Utc <= now)
-                 || (x.상태 == 교육기관제출상태.전송중 && x.수정시각Utc <= expiredLease),
+                 || (x.상태 == 교육기관제출상태.전송중 && x.수정시각Utc <= expiredLease))
+                | (filter.Eq(x => x.상태, 교육기관제출상태.전송완료)
+                    & filter.Ne(x => x.원장반영완료, true)
+                    & filter.Lte(x => x.다음시도시각Utc, now)),
             Builders<교육기관제출문서>.Update
                 .Set(x => x.상태, 교육기관제출상태.전송중)
                 .Set(x => x.수정시각Utc, now)
@@ -119,21 +137,34 @@ public sealed class Mongo교육기관제출대기열 : I교육기관제출대기
                 document.전송방식,
                 document.제출처Key,
                 document.담당이메일,
-                document.시도횟수);
+                document.시도횟수,
+                document.전송완료시각Utc.HasValue);
     }
 
     public async Task 완료Async(string 제출Id, string 상태, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
         await _collection.UpdateOneAsync(
-            x => x.제출Id == 제출Id,
+            x => x.제출Id == 제출Id && x.전송완료시각Utc == null,
             Builders<교육기관제출문서>.Update
                 .Set(x => x.상태, 상태)
                 .Set(x => x.전송완료시각Utc, now)
+                .Set(x => x.원장반영완료, 상태 != 교육기관제출상태.전송완료)
+                .Set(x => x.다음시도시각Utc, now.AddMinutes(5))
                 .Set(x => x.수정시각Utc, now)
                 .Unset(x => x.마지막오류),
             cancellationToken: cancellationToken);
     }
+
+    public Task 원장반영완료Async(string 제출Id, CancellationToken cancellationToken)
+        => _collection.UpdateOneAsync(
+            x => x.제출Id == 제출Id && x.전송완료시각Utc != null,
+            Builders<교육기관제출문서>.Update
+                .Set(x => x.원장반영완료, true)
+                .Set(x => x.상태, 교육기관제출상태.전송완료)
+                .Set(x => x.수정시각Utc, DateTime.UtcNow)
+                .Unset(x => x.마지막오류),
+            cancellationToken: cancellationToken);
 
     public async Task 실패Async(
         string 제출Id,
@@ -147,10 +178,13 @@ public sealed class Mongo교육기관제출대기열 : I교육기관제출대기
         {
             return;
         }
+        if (document.원장반영완료) return;
 
         var now = DateTime.UtcNow;
         var 재시도가능 = !설정대기 && document.시도횟수 < Math.Max(1, 최대시도횟수);
-        var 상태 = 설정대기
+        var 상태 = document.전송완료시각Utc.HasValue
+            ? 교육기관제출상태.전송완료
+            : 설정대기
             ? 교육기관제출상태.설정대기
             : 재시도가능 ? 교육기관제출상태.전송대기 : 교육기관제출상태.전송실패;
         var delayMinutes = 설정대기
@@ -158,7 +192,9 @@ public sealed class Mongo교육기관제출대기열 : I교육기관제출대기
             : Math.Min(60, Math.Pow(2, Math.Max(0, document.시도횟수 - 1)));
 
         await _collection.UpdateOneAsync(
-            x => x.제출Id == 제출Id,
+            Builders<교육기관제출문서>.Filter.Eq(x => x.제출Id, 제출Id)
+                & Builders<교육기관제출문서>.Filter.Ne(x => x.원장반영완료, true)
+                & Builders<교육기관제출문서>.Filter.Eq(x => x.전송완료시각Utc, document.전송완료시각Utc),
             Builders<교육기관제출문서>.Update
                 .Set(x => x.상태, 상태)
                 .Set(x => x.마지막오류, 오류)
@@ -196,9 +232,8 @@ public sealed class Mongo교육기관제출대기열 : I교육기관제출대기
 
             await _collection.Indexes.CreateManyAsync(
             [
-                new CreateIndexModel<교육기관제출문서>(
-                    Builders<교육기관제출문서>.IndexKeys.Ascending(x => x.제출Id),
-                    new CreateIndexOptions { Unique = true, Name = "ux_education_submission_id" }),
+                // 제출Id는 BsonId로 Mongo의 고유 _id 인덱스를 사용합니다.
+                // _id에 unique 옵션을 붙여 별도 이름으로 만들면 Mongo 8이 거절합니다.
                 new CreateIndexModel<교육기관제출문서>(
                     Builders<교육기관제출문서>.IndexKeys
                         .Ascending(x => x.상태)
@@ -249,4 +284,5 @@ internal sealed class 교육기관제출문서
     public DateTime 생성시각Utc { get; set; }
     public DateTime 수정시각Utc { get; set; }
     public DateTime? 전송완료시각Utc { get; set; }
+    public bool 원장반영완료 { get; set; }
 }

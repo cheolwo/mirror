@@ -126,7 +126,9 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
 
         var entity = new 화주운송의뢰
         {
-            의뢰Id = Guid.NewGuid().ToString(),
+            의뢰Id = clientRequestId.StartsWith(Ssalddel.Contracts.Common.Community.NeighborhoodDeliveryRoutes.ClientRequestPrefix, StringComparison.Ordinal)
+                ? new Guid(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(currentUserId + ":" + clientRequestId)).AsSpan(0, 16)).ToString()
+                : Guid.NewGuid().ToString(),
             화주Id = shipperId,
             주문자UserId = currentUserId,
             화물종류 = request.화물종류,
@@ -170,6 +172,8 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
             할증 = request.할증,
             최종운임 = finalFare,
             클라이언트요청Id = clientRequestId,
+            생활배송접수키 = clientRequestId.StartsWith(Ssalddel.Contracts.Common.Community.NeighborhoodDeliveryRoutes.ClientRequestPrefix, StringComparison.Ordinal)
+                ? Ssalddel.Services.Community.생활배송배차Policy.접수키(currentUserId, clientRequestId) : null,
             상태 = 상태값.의뢰상태.생성됨,
             결제상태 = paymentStatus,
             배차상태 = 상태값.배차상태.미시작,

@@ -18,7 +18,7 @@ public static class 음식점주문진행Policy
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var current = 음식주문상태코드.Normalize(현재상태);
+        var current = 음식배달업무상태전이Guard.정본상태확인(현재상태);
         var action = request.작업?.Trim();
         if (!음식점주문진행작업코드.지원여부(action))
         {

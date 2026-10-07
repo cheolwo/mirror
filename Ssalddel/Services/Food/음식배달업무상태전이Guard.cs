@@ -6,6 +6,14 @@ namespace Ssalddel.Services.Food;
 
 internal static class 음식배달업무상태전이Guard
 {
+    internal static string 정본상태확인(string? 상태)
+    {
+        // 과거 저장 별칭은 보존하되 미지원 raw 상태를 주문대기로 복구하지 않습니다.
+        if (!음식주문상태코드.지원여부(상태) && 상태?.Trim() != "주문접수")
+            throw new InvalidOperationException("지원하지 않는 음식 주문 상태에서는 업무를 변경할 수 없습니다.");
+        return 음식주문상태코드.Normalize(상태);
+    }
+
     internal static 업무상태전이판정 판정(
         string? 현재상태,
         string? 목표상태,
@@ -15,8 +23,8 @@ internal static class 음식배달업무상태전이Guard
             new BusinessWorkflowTransitionRequest
             {
                 업무흐름코드 = 업무흐름코드.음식배달,
-                현재상태코드 = 음식주문상태코드.Normalize(현재상태),
-                목표상태코드 = 음식주문상태코드.Normalize(목표상태),
+                현재상태코드 = 정본상태확인(현재상태),
+                목표상태코드 = 정본상태확인(목표상태),
             });
         return new 업무상태전이판정
         {

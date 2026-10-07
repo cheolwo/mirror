@@ -28,6 +28,9 @@ public static partial class ServiceCollectionExtensions
 {
     private static IServiceCollection AddSsalddelOperationsDomainServices(this IServiceCollection services)
     {
+        services.AddOptions<Ssalddel.Services.Commerce.외부개인정보처리Options>();
+        Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddSingleton<Ssalddel.Services.Commerce.I외부개인정보처리Guard,
+            Ssalddel.Services.Commerce.외부개인정보처리Guard>(services);
         services.AddSingleton<AzureBlobStorageService>();
         services.AddSingleton<GoogleCloudStorageService>();
         services.AddSingleton<DevelopmentLocalStorageService>();
@@ -37,16 +40,22 @@ public static partial class ServiceCollectionExtensions
                 .GetRequiredService<Microsoft.Extensions.Options.IOptions<ObjectStorageOptions>>()
                 .Value.Provider?
                 .Trim() ?? string.Empty;
-            return provider switch
+            IObjectStorageService adapter = provider switch
             {
                 ObjectStorageProviderNames.AzureBlob => serviceProvider.GetRequiredService<AzureBlobStorageService>(),
                 ObjectStorageProviderNames.GoogleCloud => serviceProvider.GetRequiredService<GoogleCloudStorageService>(),
                 ObjectStorageProviderNames.Local => serviceProvider.GetRequiredService<DevelopmentLocalStorageService>(),
                 _ => throw new InvalidOperationException($"Unsupported ObjectStorage provider: {provider}")
             };
+            return new Ssalddel.Services.Commerce.검토된ObjectStorageService(adapter,
+                serviceProvider.GetRequiredService<Ssalddel.Services.Commerce.I외부개인정보처리Guard>(), provider);
         });
         services.AddScoped<I앱문맥이미지자산조회UseCase, 앱문맥이미지자산조회UseCase>();
+        services.AddScoped<Ssalddel.Services.Community.I생활배송의뢰UseCase, Ssalddel.Services.Community.생활배송의뢰UseCase>();
+        services.AddScoped<Ssalddel.Services.Community.I생활배송기사정보제공동의Service, Ssalddel.Services.Community.생활배송기사정보제공동의Service>();
+        services.AddScoped<Ssalddel.Services.Community.I생활배송지도Service, Ssalddel.Services.Community.생활배송지도Service>();
         services.AddScoped<I국내화물운송기사상태Service, 국내화물운송기사상태Service>();
+        services.AddScoped<I음식배달기사추천기록Service, 음식배달기사추천기록Service>();
         services.AddSingleton<ICommandFileStoragePathResolver, CommandFileStoragePathResolver>();
         services.AddSingleton<IDispatchRecommendationLogStore, DispatchRecommendationLogStore>();
         services.AddSingleton<IDispatchAcceptanceLogStore, DispatchAcceptanceLogStore>();
@@ -56,6 +65,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I피킹포장작업투영Service, 피킹포장작업투영Service>();
         services.AddScoped<I출고피킹작업생성Service, 출고피킹작업생성Service>();
         services.AddSingleton<살뜰.도메인.운영.살뜰마트라스트마일배차Policy>();
+        services.AddScoped<IMartLastMileDispatchReadinessPolicy, MartLastMileDispatchReadinessPolicy>();
         services.AddScoped<I살뜰마트라스트마일배차인계Service, 살뜰마트라스트마일배차인계Service>();
         services.AddScoped<I알뜰살뜰마트배차대기Service, 알뜰살뜰마트배차대기Service>();
         services.AddScoped<I배차추천알림Service, 배차추천알림Service>();

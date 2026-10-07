@@ -5,6 +5,8 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using 살뜰.Services.Options;
+using Ssalddel.Services.PrivacyRetention;
+using Ssalddel.Contracts.Common.PrivacyRetention;
 
 namespace Ssalddel.Services.Community;
 
@@ -25,10 +27,12 @@ public sealed class Mongo커뮤니티원장저장소 : I커뮤니티원장저장
     private readonly IMongoCollection<커뮤니티원장문서> _collection;
     private readonly SemaphoreSlim _indexLock = new(1, 1);
     private bool _indexesReady;
+    private readonly I개인정보복원차단Service? _privacyBarrier;
 
-    public Mongo커뮤니티원장저장소(IMongoClient mongoClient, IOptions<MongoDbOptions> options)
+    public Mongo커뮤니티원장저장소(IMongoClient mongoClient, IOptions<MongoDbOptions> options, I개인정보복원차단Service? privacyBarrier = null)
     {
         _collection = 커뮤니티원장MongoCollectionFactory.Create(mongoClient, options);
+        _privacyBarrier = privacyBarrier;
     }
 
     public async Task<커뮤니티원장Dto> 원장저장Async(
@@ -46,6 +50,21 @@ public sealed class Mongo커뮤니티원장저장소 : I커뮤니티원장저장
         var existing = await _collection
             .Find(x => x.원장Id == 원장Id)
             .FirstOrDefaultAsync(cancellationToken);
+        if (existing?.확장속성.ContainsKey(배송원장개인정보파기Service.Marker) == true)
+            throw new InvalidOperationException("PrivacyDeletionRestoreBlocked");
+        if (_privacyBarrier is not null)
+        {
+            var foodNo = request.외부참조.GetValueOrDefault("음식주문번호");
+            if (!string.IsNullOrWhiteSpace(foodNo) && !await _privacyBarrier.복원허용Async(개인정보파기원천Codes.FoodOrder, foodNo, cancellationToken))
+                throw new InvalidOperationException("PrivacyDeletionRestoreBlocked");
+            var transportNo = request.외부참조.GetValueOrDefault("화주운송의뢰Id");
+            if (!string.IsNullOrWhiteSpace(transportNo) && !await _privacyBarrier.복원허용Async(개인정보파기원천Codes.NeighborhoodDelivery, transportNo, cancellationToken))
+                throw new InvalidOperationException("PrivacyDeletionRestoreBlocked");
+            var sourceNo = request.외부참조.GetValueOrDefault("원천Id");
+            if (request.외부참조.GetValueOrDefault("원천유형") is "FoodOrder" or "RestaurantFoodOrder" or "음식주문" or "음식점주문"
+                && !string.IsNullOrWhiteSpace(sourceNo) && !await _privacyBarrier.복원허용Async(개인정보파기원천Codes.FoodOrder, sourceNo, cancellationToken))
+                throw new InvalidOperationException("PrivacyDeletionRestoreBlocked");
+        }
         EnsureExpectedRevision(request.기대Revision, existing?.Revision ?? 0, 원장Id);
 
         var revision = (existing?.Revision ?? 0) + 1;
@@ -181,6 +200,9 @@ public sealed class Mongo커뮤니티원장저장소 : I커뮤니티원장저장
         {
             return null;
         }
+
+        if (existing.확장속성.ContainsKey(배송원장개인정보파기Service.Marker))
+            throw new InvalidOperationException("PrivacyDeletionRestoreBlocked");
 
         EnsureExpectedRevision(request.기대Revision, existing.Revision, 원장Id);
         if (!string.IsNullOrWhiteSpace(request.이전상태)

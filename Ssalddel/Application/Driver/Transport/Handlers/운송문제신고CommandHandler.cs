@@ -4,6 +4,8 @@ using FluentResults;
 using Ssalddel.Application.CommandProcessing;
 using MediatR;
 using Ssalddel.Services.Operations;
+using Ssalddel.Services.Community;
+using Ssalddel.Application.Driver.Recommendation;
 
 namespace Ssalddel.Application.Driver.Transport;
 
@@ -16,6 +18,7 @@ public sealed class 운송문제신고CommandHandler : IRequestHandler<운송문
     private readonly I운송증빙첨부JsonWriter _attachmentWriter;
     private readonly I비정상운송사건Service _비정상운송사건Service;
     private readonly ILogger<운송문제신고CommandHandler> _logger;
+    private readonly I생활배송기사정보제공동의Service? _disclosure;
 
     public 운송문제신고CommandHandler(
         SsalddelContext db,
@@ -24,7 +27,8 @@ public sealed class 운송문제신고CommandHandler : IRequestHandler<운송문
         I참여자실행권한검사 권한검사,
         I운송증빙첨부JsonWriter attachmentWriter,
         I비정상운송사건Service 비정상운송사건Service,
-        ILogger<운송문제신고CommandHandler> logger)
+        ILogger<운송문제신고CommandHandler> logger,
+        I생활배송기사정보제공동의Service? disclosure = null)
     {
         _db = db;
         _publisher = publisher;
@@ -33,6 +37,7 @@ public sealed class 운송문제신고CommandHandler : IRequestHandler<운송문
         _attachmentWriter = attachmentWriter;
         _비정상운송사건Service = 비정상운송사건Service;
         _logger = logger;
+        _disclosure = disclosure;
     }
 
     public async Task<Result<기사운송요약응답>> Handle(운송문제신고Command request, CancellationToken cancellationToken)
@@ -76,6 +81,7 @@ public sealed class 운송문제신고CommandHandler : IRequestHandler<운송문
                     ["adminReviewRequired"] = 예외.관리자확인필요,
                     ["adminReviewRequested"] = request.관리자확인요청,
                     ["transportStatus"] = entity.상태,
+                    ["workCannotContinue"] = request.현장진행불가,
                     ["traceId"] = Activity.Current?.TraceId.ToString()
                 }));
         entity.UpdatedAt = now;
@@ -108,7 +114,7 @@ public sealed class 운송문제신고CommandHandler : IRequestHandler<운송문
         await _db.SaveChangesAsync(cancellationToken);
         await PublishAfterCommitAsync(entity, 예외, request, incidentResult.사건, now, cancellationToken);
 
-        return Result.Ok(new 기사운송요약응답
+        var response = new 기사운송요약응답
         {
             Id = entity.Id,
             운송번호 = entity.운송번호,
@@ -126,7 +132,15 @@ public sealed class 운송문제신고CommandHandler : IRequestHandler<운송문
             다음행동안내 = 예외.다음행동안내,
             관리자확인필요 = 예외.관리자확인필요,
             UpdatedAt = entity.UpdatedAt
-        });
+        };
+        var shipperRequest = await _db.화주운송의뢰.AsNoTracking().Where(x => x.의뢰Id == requestId)
+            .Select(x => new { x.클라이언트요청Id, x.주문자UserId }).FirstOrDefaultAsync(cancellationToken);
+        기사운송업무상태Projector.투영(response, entity,
+            await 기사운송업무상태Projector.사건조회Async(_db, [entity.Id], cancellationToken));
+        if (!await 생활배송기사정보공개Policy.정보제공가능인가Async(shipperRequest?.클라이언트요청Id,
+                requestId, shipperRequest?.주문자UserId ?? string.Empty, request.기사Id, _disclosure, cancellationToken))
+            생활배송기사정보공개Policy.운송정보가림(response);
+        return Result.Ok(response);
     }
 
     private static string BuildMemoLine(운송현장예외정리결과 예외, string? requestMemo)

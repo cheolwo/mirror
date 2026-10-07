@@ -106,6 +106,26 @@ public sealed class DevelopmentLocalStorageService : IObjectStorageService
         CancellationToken cancellationToken = default)
         => File.ReadAllBytesAsync(ResolveStoragePath(containerName, objectName), cancellationToken);
 
+    public Task<ObjectStorageDeleteResult> DeleteAsync(string containerName, string objectName, string expectedOwnedPrefix,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var name = ObjectStorageObjectName.RequireOwnedDeletionName(objectName, expectedOwnedPrefix);
+        var path = ResolveStoragePath(containerName, name);
+        // Reparse points can escape the lexical root. Never follow a link during deletion.
+        var current = new FileInfo(path);
+        if (current.Exists && current.Attributes.HasFlag(FileAttributes.ReparsePoint))
+            throw new InvalidOperationException("Linked storage objects cannot be deleted through this adapter.");
+        for (var parent = current.Directory; parent is not null; parent = parent.Parent)
+        {
+            if (parent.Exists && parent.Attributes.HasFlag(FileAttributes.ReparsePoint))
+                throw new InvalidOperationException("Linked storage directories cannot be deleted through this adapter.");
+            if (parent.FullName == _publicStorageRoot || parent.FullName == _privateStorageRoot) break;
+        }
+        File.Delete(path);
+        return Task.FromResult(new ObjectStorageDeleteResult(!File.Exists(path), true));
+    }
+
     private string BuildPublicUrl(string objectName)
     {
         var encodedObjectName = EncodeObjectName(objectName);

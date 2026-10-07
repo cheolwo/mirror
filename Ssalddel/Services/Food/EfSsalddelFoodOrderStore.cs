@@ -51,6 +51,18 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         return order is null ? null : ToDto(order);
     }
 
+    public 음식주문응답? 접수주문조회(string 주문자UserId, Guid 클라이언트요청Id)
+    {
+        var owner = Clean(주문자UserId);
+        if (owner is null || 클라이언트요청Id == Guid.Empty) return null;
+        var order = FindByClientRequest(new 음식주문등록요청
+        {
+            주문자UserId = owner,
+            클라이언트요청Id = 클라이언트요청Id
+        });
+        return order is null ? null : ToDto(order);
+    }
+
     public 음식주문응답 AddOrder(음식주문등록요청 request)
         => 멱등등록(request).주문;
 
@@ -157,7 +169,7 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
             return new 음식주문변경결과(ToDto(order), false);
         }
 
-        var currentStatus = 음식주문상태코드.Normalize(order.상태);
+        var currentStatus = 음식배달업무상태전이Guard.정본상태확인(order.상태);
         if (!음식주문상태코드.CanRestaurantAccept(currentStatus))
         {
             throw new InvalidOperationException($"음식점 수락이 가능한 주문 상태가 아닙니다. 현재상태={order.상태}");
@@ -236,13 +248,14 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
             return new 음식주문변경결과(ToDto(order), false);
         }
 
-        var currentStatus = 음식주문상태코드.Normalize(order.상태);
+        var currentStatus = 음식배달업무상태전이Guard.정본상태확인(order.상태);
         if (request.예상Revision.HasValue && request.예상Revision.Value != order.상태이력.Count)
         {
             throw new DbUpdateConcurrencyException("음식 주문이 다른 요청에서 먼저 변경되었습니다.");
         }
-        var started = 조리시작시각(order).HasValue;
-        var prepared = order.상태이력.Any(x => x.사유 == "음식점 주문 확인 · 기존 준비 완료");
+        var preparation = 음식주문현재조리Policy.계산(order);
+        var started = preparation.CookingStartedAtUtc.HasValue;
+        var prepared = preparation.ReadyAtUtc.HasValue;
         var decision = 음식점주문진행Policy.판정(currentStatus, request,
             유효한배차확정(order) && order.상태이력.Any(x => x.다음상태 == 음식주문상태코드.주문확인),
             started || prepared, order.적용조리분);
@@ -307,7 +320,7 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
             return new 음식주문변경결과(ToDto(order), false);
         }
 
-        var currentStatus = 음식주문상태코드.Normalize(order.상태);
+        var currentStatus = 음식배달업무상태전이Guard.정본상태확인(order.상태);
         if (currentStatus != 음식주문상태코드.전달완료)
         {
             throw new InvalidOperationException(
@@ -381,7 +394,7 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
             return new 음식주문변경결과(ToDto(order), false);
         }
 
-        var currentStatus = 음식주문상태코드.Normalize(order.상태);
+        var currentStatus = 음식배달업무상태전이Guard.정본상태확인(order.상태);
         if (currentStatus != 음식주문상태코드.주문대기)
         {
             throw new InvalidOperationException(
@@ -414,25 +427,56 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
 
     public 음식주문응답? 배차대기반영(string orderNo, long dispatchWaitId, DateTime dispatchRequestedAtUtc)
     {
+        if (dispatchWaitId <= 0) throw new ArgumentOutOfRangeException(nameof(dispatchWaitId));
         var cleanOrderNo = Clean(orderNo);
         if (cleanOrderNo is null)
         {
             return null;
         }
 
-        var order = LoadOrderForUpdate(cleanOrderNo);
-        if (order is null)
+        var ownsTransaction = _db.Database.IsRelational() && _db.Database.CurrentTransaction is null;
+        // MySQL의 재시도 전략 안에서 시작·읽기·저장·commit을 하나의 단위로 실행합니다.
+        // 호출자가 이미 가진 transaction은 이 메서드가 재시도하거나 commit하지 않습니다.
+        return ownsTransaction
+            ? _db.Database.CreateExecutionStrategy().Execute(ApplyBinding)
+            : ApplyBinding();
+
+        음식주문응답? ApplyBinding()
         {
-            return null;
+            // 최초 결속도 기사 수락과 경쟁할 수 있으므로 현재 주문을 같은 DB 경계에서 읽습니다.
+            using var transaction = ownsTransaction
+                ? _db.Database.BeginTransaction(IsolationLevel.Serializable)
+                : null;
+            var order = LoadOrderForUpdate(cleanOrderNo);
+            if (order is null)
+            {
+                return null;
+            }
+
+            // 실패한 SaveChanges가 Modified 값을 남겨도 재시도는 영속된 현재 결속을 다시 읽습니다.
+            // 외부 transaction에서 아직 저장하지 않은 호출자 변경은 덮어쓰지 않습니다.
+            if (ownsTransaction || _db.Entry(order).State == EntityState.Unchanged) _db.Entry(order).Reload();
+            var current = 음식배달업무상태전이Guard.정본상태확인(order.상태);
+            if (order.배차대기Id.HasValue)
+            {
+                if (order.배차대기Id != dispatchWaitId)
+                    throw new InvalidOperationException("음식 주문에 이미 다른 배차대기가 연결되어 있습니다.");
+                // 같은 큐의 후속 투영 재시도는 진행 상태와 최초 요청시각을 다시 쓰지 않습니다.
+                return GetOrder(cleanOrderNo);
+            }
+            if (current is 음식주문상태코드.주문대기 or 음식주문상태코드.거절 or 음식주문상태코드.취소)
+                throw new InvalidOperationException("음식점 수락 뒤의 주문에만 배차대기를 연결할 수 있습니다.");
+
+            if (order.배차상태 == 음식주문배차상태코드.미요청)
+                order.배차상태 = 음식주문배차상태코드.배차대기;
+            order.배차대기Id = dispatchWaitId;
+            order.배차요청시각Utc ??= dispatchRequestedAtUtc;
+            order.UpdatedAt = DateTime.UtcNow;
+
+            _db.SaveChanges();
+            transaction?.Commit();
+            return GetOrder(cleanOrderNo);
         }
-
-        order.배차상태 = 음식주문배차상태코드.배차대기;
-        order.배차대기Id = dispatchWaitId;
-        order.배차요청시각Utc = dispatchRequestedAtUtc;
-        order.UpdatedAt = DateTime.UtcNow;
-
-        _db.SaveChanges();
-        return ToDto(order);
     }
 
     public 음식주문응답? 커뮤니티원장반영(
@@ -561,7 +605,9 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
             .OrderBy(x => x.전이시각Utc).Select(x => (DateTime?)x.전이시각Utc).FirstOrDefault();
 
     private 음식주문응답 ToDto(음식주문 order)
-        => new()
+    {
+        var preparation = 음식주문현재조리Policy.계산(order);
+        return new()
         {
             주문번호 = order.주문번호,
             클라이언트요청Id = order.클라이언트요청Id,
@@ -609,9 +655,9 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
             조리예상분 = order.적용조리분,
             조리시작시각Utc = 조리시작시각(order),
             조리시작가능 = order.상태 == 음식주문상태코드.기사배정
-                && !조리시작시각(order).HasValue && order.적용조리분 != 0
+                && !preparation.CookingStartedAtUtc.HasValue && order.적용조리분 != 0
                 && order.상태이력.Any(x => x.다음상태 == 음식주문상태코드.주문확인)
-                && !order.상태이력.Any(x => x.사유 == "음식점 주문 확인 · 기존 준비 완료")
+                && !preparation.ReadyAtUtc.HasValue
                 && 유효한배차확정(order),
             조리예상완료시각Utc = order.조리예상완료시각Utc,
             픽업준비시각Utc = order.상태이력
@@ -621,6 +667,10 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
                 .OrderBy(x => x.전이시각Utc)
                 .Select(x => (DateTime?)x.전이시각Utc)
                 .FirstOrDefault(),
+            CurrentPreparationRound = preparation.Round,
+            CurrentCookingStartedAtUtc = preparation.CookingStartedAtUtc,
+            CurrentPickupReadyAtUtc = preparation.ReadyAtUtc,
+            RecookingRequestedAtUtc = preparation.RecookingRequestedAtUtc,
             배차요청시각Utc = order.배차요청시각Utc,
             수락메모 = order.수락메모,
             커뮤니티원장Id = order.커뮤니티원장Id,
@@ -632,6 +682,7 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
             Revision = order.상태이력.Count,
             상태이력 = order.상태이력
                 .OrderBy(x => x.전이시각Utc)
+                .ThenBy(x => x.Id)
                 .Select(x => new 음식주문상태전이기록Dto
                 {
                     클라이언트요청Id = x.클라이언트요청Id,
@@ -643,6 +694,7 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
                 })
                 .ToArray()
         };
+    }
 
     private static string? Clean(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

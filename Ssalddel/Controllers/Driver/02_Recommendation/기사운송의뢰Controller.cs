@@ -26,8 +26,15 @@ namespace Ssalddel.Controllers.Driver.Recommendation02
         public async Task<IActionResult> 상세조회(string requestId)
         {
             var driverId = 현재기사Id();
-            var result = await _useCase.운송의뢰상세조회Async(driverId, requestId);
-            return Ok(result);
+            try
+            {
+                var result = await _useCase.운송의뢰상세조회Async(driverId, requestId);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return this.ToForbiddenProblem("현재 배송에 배정되거나 제안받은 기사만 조회할 수 있습니다.");
+            }
         }
 
     }

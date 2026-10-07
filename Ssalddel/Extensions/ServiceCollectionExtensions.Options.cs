@@ -4,6 +4,7 @@ using Ssalddel.Services.LogisticsProcessing.Warehouse;
 using Ssalddel.Security;
 using Ssalddel.Services.Security;
 using 살뜰.Infrastructure.BackgroundJobs.DispatchQueue;
+using 살뜰.Infrastructure.BackgroundJobs.FoodDeliveryDispatch;
 using 살뜰.Services.Dispatch.Queue;
 using 살뜰.Services.Documents;
 using 살뜰.Services.External.Customs;
@@ -112,6 +113,8 @@ public static partial class ServiceCollectionExtensions
         services.Configure<국내화물배차AI정책Options>(configuration.GetSection(국내화물배차AI정책Options.SectionName));
         services.Configure<화물연속배차Options>(configuration.GetSection(화물연속배차Options.SectionName));
         services.Configure<배차큐배치작업Options>(configuration.GetSection(배차큐배치작업Options.SectionName));
+        services.Configure<음식배달배차배치작업Options>(options =>
+            BindFoodDeliveryDispatchJobOptions(configuration, options));
         services.Configure<교육기관제출Options>(configuration.GetSection(교육기관제출Options.SectionName));
         services.Configure<TypecastOptions>(configuration.GetSection(TypecastOptions.SectionName));
         services.Configure<YouTubeOptions>(configuration.GetSection(YouTubeOptions.SectionName));
@@ -142,5 +145,28 @@ public static partial class ServiceCollectionExtensions
             configuration.GetSection(GroupImportReadinessProcessManagerOptions.SectionName));
 
         return services;
+    }
+
+    public static 음식배달배차배치작업Options GetFoodDeliveryDispatchJobOptions(
+        this IConfiguration configuration)
+    {
+        var options = new 음식배달배차배치작업Options();
+        BindFoodDeliveryDispatchJobOptions(configuration, options);
+        return options;
+    }
+
+    private static void BindFoodDeliveryDispatchJobOptions(
+        IConfiguration configuration,
+        음식배달배차배치작업Options options)
+    {
+        var section = configuration.GetSection(음식배달배차배치작업Options.SectionName);
+        // 과거의 음식 전용 재탐색 값만 호환한다. 화물 배치 주기/크기는 가져오지 않는다.
+        if (section[nameof(options.후보재탐색간격초)] is null
+            && configuration.GetValue<int?>("DispatchQueue:음식배달후보재탐색간격초") is { } legacyRetrySeconds)
+        {
+            options.후보재탐색간격초 = legacyRetrySeconds;
+        }
+
+        section.Bind(options);
     }
 }

@@ -27,7 +27,8 @@ public interface I살뜰마트라스트마일배차인계Service
 public sealed class 살뜰마트라스트마일배차인계Service(
     I운영체제업무인계Coordinator handoffCoordinator,
     I운송의뢰배차대기Service dispatchQueueService,
-    살뜰마트라스트마일배차Policy policy) : I살뜰마트라스트마일배차인계Service
+    살뜰마트라스트마일배차Policy policy,
+    IMartLastMileDispatchReadinessPolicy readinessPolicy) : I살뜰마트라스트마일배차인계Service
 {
     public async Task<살뜰마트라스트마일배차인계결과> 인계Async(
         살뜰마트라스트마일배차인계요청 요청,
@@ -51,6 +52,10 @@ public sealed class 살뜰마트라스트마일배차인계Service(
         {
             throw new InvalidOperationException("피킹 시작 전에는 마트 라스트마일 인계 후보를 등록할 수 없습니다.");
         }
+
+        var readiness = await readinessPolicy.EvaluateAsync(orderRef, cancellationToken);
+        if (!readiness.IsReady)
+            return new 살뜰마트라스트마일배차인계결과(null, null, decision, readiness.Code, readiness.Message);
 
         var requestId = DeterministicGuid($"mart-last-mile:{orderRef}:handoff:v1");
         var handoffStableId = $"os-handoff:{requestId:N}";
@@ -167,6 +172,8 @@ public sealed record 살뜰마트라스트마일배차인계요청(
     살뜰마트라스트마일배차입력 정책입력);
 
 public sealed record 살뜰마트라스트마일배차인계결과(
-    운영체제업무인계Dto 인계,
+    운영체제업무인계Dto? 인계,
     운송원장? 배차대기,
-    살뜰마트라스트마일배차판정 정책판정);
+    살뜰마트라스트마일배차판정 정책판정,
+    string 보류사유Code = "",
+    string 보류메시지 = "");

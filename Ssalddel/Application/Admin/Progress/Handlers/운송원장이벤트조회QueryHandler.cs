@@ -122,6 +122,8 @@ public sealed class 운송원장이벤트조회QueryHandler : IRequestHandler<�
             || string.Equals(role, 역할명.용달기사, StringComparison.OrdinalIgnoreCase))
         {
             return transport is not null
+                   // 음식 배달은 전용 API에서 상태·열람 기한을 검사합니다. 감사 메타데이터의 고객 좌표를 우회 공개하지 않습니다.
+                   && transport.배차업무유형 != 상태값.배차업무유형.음식배달
                    && string.Equals(transport.기사_운송자, userId, StringComparison.OrdinalIgnoreCase);
         }
 

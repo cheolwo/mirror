@@ -65,6 +65,22 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I게시글원장ContextService>(provider =>
             provider.GetRequiredService<게시글원장ContextService>());
         services.AddSingleton<IAzureTranslatorAccessTokenProvider, AzureTranslatorAccessTokenProvider>();
+        services.AddSingleton<I생활교류공개지역Source, Official생활교류공개지역Source>();
+        services.AddScoped<I생활교류지도조회UseCase, 생활교류지도조회UseCase>();
+        services.AddScoped<I생활협업Store, Mongo생활협업Store>();
+        services.AddScoped<I생활배송협업Guard, 생활배송협업Guard>();
+        services.AddScoped<I생활배송배차선택Service, 생활배송배차선택Service>();
+        services.AddScoped<I생활협업보관예약Guard, 생활협업보관예약Guard>();
+        services.AddScoped<생활협업UseCase>();
+        services.AddScoped<I생활협업UseCase>(sp => sp.GetRequiredService<생활협업UseCase>());
+        services.AddScoped<I생활협업연결Query>(sp => sp.GetRequiredService<생활협업UseCase>());
+        services.AddScoped<I생활협업배송Source, Ef생활협업배송Source>();
+        services.AddScoped<I생활협업공간Source, 생활협업공간Source>();
+        services.AddScoped<I생활협업보관상태Source, 생활협업보관상태Source>();
+        services.AddScoped<I생활보관공간Store, Mongo생활보관공간Store>();
+        services.AddScoped<생활보관인계정보Protection>();
+        services.AddScoped<I생활보관공간Service, 생활보관공간Service>();
+        services.AddScoped<I생활보관협업ContextSource, 생활보관협업ContextSource>();
         services.AddScoped<ICommunityPostTranslationService, CommunityPostTranslationService>();
         services.AddSingleton<ICommunityPostOpportunityAnalyzer, CommunityPostOpportunityAnalyzer>();
         services.AddSingleton<ICommunityDynamicTopicClassifier, CommunityDynamicTopicClassifier>();

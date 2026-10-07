@@ -32,6 +32,11 @@ internal static class CommunityPostResponseMapper
             Category = entity.Category,
             WorkflowTag = isReportBoardPost ? "안전센터" : entity.WorkflowTag,
             RoleTag = isReportBoardPost ? "보호 기록" : entity.RoleTag,
+            PublicNeighborhoodRegionKey = !isReportBoardPost
+                && entity.Category == PlatformCommunityPostCategories.General
+                && entity.WorkflowTag == NeighborhoodExchange.WorkflowTag
+                && NeighborhoodExchange.IsIntent(entity.RoleTag)
+                    ? entity.PublicNeighborhoodRegionKey : null,
             Title = isReportBoardPost ? "보호된 신고·분쟁 기록" : entity.Title,
             Body = isReportBoardPost
                 ? "신고 원문과 첨부·댓글은 공개 게시판에서 제공하지 않습니다."

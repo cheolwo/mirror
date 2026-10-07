@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
-using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Contracts.Common.ViewSettings;
@@ -17,19 +17,22 @@ public sealed class 사용자행위로그Middleware : IMiddleware
     private readonly IHostEnvironment _environment;
     private readonly ISsalddelExecutionModePolicy _executionMode;
     private readonly SsalddelExecutionOptions _executionOptions;
+    private readonly ILogger<사용자행위로그Middleware>? _logger;
 
     public 사용자행위로그Middleware(
         ICurrentUserAccessor currentUserAccessor,
         I사용자행위로그Service activityLogService,
         IHostEnvironment environment,
         ISsalddelExecutionModePolicy executionMode,
-        IOptions<SsalddelExecutionOptions> executionOptions)
+        IOptions<SsalddelExecutionOptions> executionOptions,
+        ILogger<사용자행위로그Middleware>? logger = null)
     {
         _currentUserAccessor = currentUserAccessor;
         _activityLogService = activityLogService;
         _environment = environment;
         _executionMode = executionMode;
         _executionOptions = executionOptions.Value;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
@@ -67,14 +70,14 @@ public sealed class 사용자행위로그Middleware : IMiddleware
             try
             {
                 var actionType = ResolveActionType(context.Request.Method, context.Request.Path);
-                var actionName = context.GetEndpoint()?.DisplayName ?? context.Request.Path.Value ?? string.Empty;
+                var routeTemplate = (context.GetEndpoint() as RouteEndpoint)?.RoutePattern.RawText ?? "/api/v1/unmatched";
+                var actionName = context.GetEndpoint()?.DisplayName ?? routeTemplate;
                 var metadata = JsonSerializer.Serialize(new
                 {
                     Method = context.Request.Method,
-                    QueryString = context.Request.QueryString.Value ?? string.Empty,
+                    Query = 사용자행위로그보호Policy.SafeQuery(context.Request.Query),
                     StatusCode = context.Response.StatusCode,
-                    Endpoint = context.GetEndpoint()?.DisplayName ?? string.Empty,
-                    Url = context.Request.GetDisplayUrl()
+                    RouteTemplate = routeTemplate
                 }, JsonOptions);
 
                 await _activityLogService.기록Async(new 사용자행위로그기록
@@ -84,20 +87,22 @@ public sealed class 사용자행위로그Middleware : IMiddleware
                     RoleName = _currentUserAccessor.Role ?? string.Empty,
                     ActionType = actionType,
                     ActionName = actionName,
-                    Route = context.Request.Path.Value ?? string.Empty,
+                    Route = routeTemplate,
                     TraceId = Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier,
                     IsSuccess = capturedException is null && context.Response.StatusCode < 400,
                     ErrorCode = capturedException?.GetType().Name ?? string.Empty,
-                    ErrorMessage = capturedException?.Message ?? string.Empty,
+                    ErrorMessage = 사용자행위로그보호Policy.SafeError(capturedException?.Message),
                     ClientIp = context.Connection.RemoteIpAddress?.ToString() ?? string.Empty,
                     UserAgent = context.Request.Headers.UserAgent.ToString(),
                     OccurredAtUtc = DateTime.UtcNow,
                     MetadataJson = metadata
                 });
             }
-            catch
+            catch (Exception auditException)
             {
-                // activity log failure must not break main request pipeline
+                // Keep the request result, but alert without exception text, URL values or personal data.
+                _logger?.LogError("SecurityAuditPersistenceFailure Method={Method} ErrorType={ErrorType}",
+                    context.Request.Method, auditException.GetType().Name);
             }
         }
     }

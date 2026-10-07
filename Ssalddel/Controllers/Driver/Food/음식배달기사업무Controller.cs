@@ -27,6 +27,7 @@ namespace Ssalddel.Controllers.Driver.Food;
 [SsalddelApiOperation(SsalddelOperation.Execute)]
 [ApiController]
 [Authorize(Roles = 역할명.기사)]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 [Route("api/v1/driver/food-deliveries")]
 [SsalddelApiContractName("FoodDeliveryDriverController")]
 public sealed class 음식배달기사업무Controller : DriverControllerBase
@@ -79,6 +80,21 @@ public sealed class 음식배달기사업무Controller : DriverControllerBase
         {
             return BadRequest(new { code = "FoodDelivery.InvalidSettlementDate", message = ex.Message });
         }
+    }
+
+    [HttpGet("settlements/{settlementId}/detail")]
+    [SsalddelApiContractName("GetCompletedDeliveryDetail")]
+    [SsalddelApiOperation(SsalddelOperation.Browse)]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> 완료배달상세조회(
+        [FromRoute] string settlementId, CancellationToken cancellationToken)
+    {
+        // 브라우저·중간 proxy에 완료 고객 정보를 보관하지 않습니다. 실패 응답에도 동일하게 적용합니다.
+        Response.Headers.CacheControl = "no-store";
+        var driverId = CurrentUserId;
+        if (string.IsNullOrWhiteSpace(driverId)) return Unauthorized();
+        var result = await _업무공간UseCase.GetCompletedDeliveryDetailAsync(driverId, settlementId, cancellationToken);
+        return result is null ? NotFound() : Ok(result);
     }
 
     [HttpGet("work/status")]

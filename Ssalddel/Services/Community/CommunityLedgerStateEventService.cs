@@ -114,7 +114,7 @@ public sealed class 커뮤니티원장상태이벤트Service : I커뮤니티원�
             이전상태 = CleanNullable(이전상태),
             상태 = Clean(상태),
             현재단계Key = CleanNullable(현재단계Key),
-            변경사유 = CleanNullable(변경사유),
+            변경사유 = IsDeliveryLedger(원장) ? null : CleanNullable(변경사유),
             UpdatedBy = Clean(updatedBy),
             CorrelationId = CleanNullable(원장.외부참조.TryGetValue("CorrelationId", out var correlationId) ? correlationId : null),
             SnapshotJson = JsonSerializer.Serialize(snapshot, JsonOptions),
@@ -127,7 +127,7 @@ public sealed class 커뮤니티원장상태이벤트Service : I커뮤니티원�
 
     private static object BuildSnapshot(커뮤니티원장Dto ledger, string state, string? currentStep)
     {
-        if (string.Equals(
+        if (IsDeliveryLedger(ledger) || string.Equals(
                 ledger.원장템플릿Key,
                 현장체험활동원장상수.원장템플릿Key,
                 StringComparison.OrdinalIgnoreCase))
@@ -164,6 +164,11 @@ public sealed class 커뮤니티원장상태이벤트Service : I커뮤니티원�
             ledger.수정시각Utc
         };
     }
+
+    // State events need lifecycle facts, not private delivery instructions or arbitrary ledger extensions.
+    // Applying this before persistence also prevents a delayed state-event writer from restoring a purged snapshot.
+    private static bool IsDeliveryLedger(커뮤니티원장Dto ledger)
+        => ledger.원장템플릿Key is "food-order" or "food-delivery" or "cargo-transport";
 
     private static string Clean(string? value)
         => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();

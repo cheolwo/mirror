@@ -34,10 +34,10 @@ public sealed class 사용자행위로그Service : I사용자행위로그Service
             TraceId = entry.TraceId ?? string.Empty,
             IsSuccess = entry.IsSuccess,
             ErrorCode = entry.ErrorCode ?? string.Empty,
-            ErrorMessage = Trim(entry.ErrorMessage, 2000),
+            ErrorMessage = 사용자행위로그보호Policy.SafeError(entry.ErrorMessage),
             ClientIp = Trim(entry.ClientIp, 100),
             UserAgent = Trim(entry.UserAgent, 1000),
-            MetadataJson = entry.MetadataJson ?? string.Empty,
+            MetadataJson = 사용자행위로그보호Policy.SafeMetadata(entry.MetadataJson),
             OccurredAtUtc = entry.OccurredAtUtc == default ? DateTime.UtcNow : entry.OccurredAtUtc
         };
 

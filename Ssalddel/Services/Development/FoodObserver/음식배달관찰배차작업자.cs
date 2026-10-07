@@ -42,6 +42,24 @@ public sealed class 음식배달관찰배차작업자(
         using var scope = scopes.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<SsalddelContext>();
         var transition = scope.ServiceProvider.GetRequiredService<I배차대기원장전환Service>();
+        var now = DateTime.UtcNow;
+        var expired = await db.운송원장.AsNoTracking()
+            .Where(item => item.상태 == 상태값.배차대기상태.대기
+                           && item.배차업무유형 == 상태값.배차업무유형.음식배달
+                           && item.배차큐단계 == 상태값.배차큐단계.배차추천
+                           && item.배차노출상태 == 상태값.배차노출상태.추천중
+                           && item.추천만료시각.HasValue
+                           && item.추천만료시각 <= now)
+            .OrderBy(item => item.추천만료시각)
+            .ThenBy(item => item.Id)
+            .Select(item => item.의뢰Id)
+            .Take(20)
+            .ToArrayAsync(cancellationToken);
+        foreach (var requestId in expired)
+        {
+            await transition.추천만료처리Async(requestId, cancellationToken);
+        }
+
         var planned = await db.운송원장.AsNoTracking()
             .Where(item => item.상태 == 상태값.배차대기상태.대기
                            && item.배차업무유형 == 상태값.배차업무유형.음식배달
@@ -61,7 +79,8 @@ public sealed class 음식배달관찰배차작업자(
                            && item.배차업무유형 == 상태값.배차업무유형.음식배달
                            && item.배차큐단계 == 상태값.배차큐단계.배차추천
                            && item.현재추천대상기사Id == null
-                           && item.배차노출상태 == 상태값.배차노출상태.추천대기)
+                           && (item.배차노출상태 == 상태값.배차노출상태.추천대기
+                               || item.배차노출상태 == 상태값.배차노출상태.추천후보없음))
             .OrderBy(item => item.UpdatedAt)
             .Select(item => item.의뢰Id)
             .Take(20)
@@ -71,6 +90,6 @@ public sealed class 음식배달관찰배차작업자(
             await transition.추천대기처리Async(requestId, cancellationToken);
         }
 
-        return planned.Length + waiting.Length;
+        return expired.Length + planned.Length + waiting.Length;
     }
 }

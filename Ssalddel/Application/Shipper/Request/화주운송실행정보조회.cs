@@ -3,6 +3,7 @@ using Ssalddel.Contracts.Common.Operations;
 using Ssalddel.Contracts.Common.Versioning;
 using Ssalddel.Contracts.Shipper.Request;
 using Ssalddel.Services.Operations;
+using Ssalddel.Services.Community;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.기사;
 using 살뜰.도메인.운송;
@@ -118,6 +119,20 @@ internal static class 화주운송실행정보조회
                 .ToListAsync(cancellationToken))
                 .ToDictionary(x => x.기사Id, x => x, StringComparer.OrdinalIgnoreCase);
 
+        // 기존 화물 조회는 유지하되 생활 배송은 현재 배정 이후의 최근 GPS만 본인 상세에도 제공합니다.
+        var neighborhoodRequests = await db.화주운송의뢰.AsNoTracking()
+            .Where(x => requestIds.Contains(x.의뢰Id)
+                && x.클라이언트요청Id.StartsWith(Ssalddel.Contracts.Common.Community.NeighborhoodDeliveryRoutes.ClientRequestPrefix))
+            .ToListAsync(cancellationToken);
+        var neighborhoodLocations = new Dictionary<string, 기사위치기록?>(StringComparer.OrdinalIgnoreCase);
+        var nowUtc = DateTime.UtcNow;
+        foreach (var neighborhoodRequest in neighborhoodRequests)
+        {
+            latestLedgers.TryGetValue(neighborhoodRequest.의뢰Id, out var neighborhoodLedger);
+            var recent = await NeighborhoodDeliveryLocationPolicy.ReadAsync(db, neighborhoodRequest, neighborhoodLedger, nowUtc, cancellationToken);
+            neighborhoodLocations[neighborhoodRequest.의뢰Id] = recent.Location;
+        }
+
         return requestIds
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToDictionary(
@@ -131,6 +146,7 @@ internal static class 화주운송실행정보조회
 
                     drivers.TryGetValue(driverId ?? string.Empty, out var driver);
                     locations.TryGetValue(driverId ?? string.Empty, out var location);
+                    if (neighborhoodLocations.TryGetValue(requestId, out var neighborhoodLocation)) location = neighborhoodLocation;
                     handoffByRequestId.TryGetValue(requestId, out var handoff);
                     incidentsByRequestId.TryGetValue(requestId, out var requestIncidents);
                     운영체제업무인계Dto? completionHandoff = null;

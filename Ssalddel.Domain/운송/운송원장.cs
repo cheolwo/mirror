@@ -59,6 +59,12 @@ namespace 살뜰.도메인.운송
 
         public DateTime? 공개전환시각 { get; set; }
 
+        // 생활 배송만 사용하는 선택·쓰기 fence. 과거 운송은 null/0으로 보존합니다.
+        public string? 생활배송배차방식 { get; set; }
+        public long 생활배송선택판본 { get; set; }
+        public bool 생활배송수락준비완료 { get; set; } = true;
+        public string? 생활배송협업Id { get; set; }
+        public long? 생활배송조건판본 { get; set; }
         public string? 확정기사Id { get; set; }
 
         public string 픽업_도로명주소 { get; set; } = string.Empty;

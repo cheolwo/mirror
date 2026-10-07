@@ -569,7 +569,7 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
                     return Result.Fail<FoodDeliveryStateChange>("조리 지연 중단은 픽업 전에 가게 도착을 기록한 경우만 가능합니다.");
                 if (!attempt.표시준비예정시각Utc.HasValue || now < attempt.표시준비예정시각Utc.Value.AddMinutes(10))
                     return Result.Fail<FoodDeliveryStateChange>("표시된 준비 예정 시각을 10분 초과한 뒤 조리 지연으로 중단할 수 있습니다.");
-                if (픽업준비됨(order, attempt.수락시각Utc))
+                if (픽업준비됨(order))
                     return Result.Fail<FoodDeliveryStateChange>("이미 픽업 준비가 완료된 주문은 조리 지연으로 중단할 수 없습니다.");
             }
 
@@ -586,19 +586,22 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
             {
                 attempt.재조리요청StableId = $"recook:{attempt.시도StableId}";
                 attempt.재조리요청시각Utc = now;
-                order.조리예상완료시각Utc = now.AddMinutes(order.적용조리분 ?? order.플랫폼참고조리분 ?? 20);
+                var cookingMinutes = order.적용조리분 is > 0
+                    ? order.적용조리분.Value
+                    : order.플랫폼참고조리분 is > 0 ? order.플랫폼참고조리분.Value : 20;
+                order.적용조리분 = cookingMinutes;
+                order.조리예상완료시각Utc = now.AddMinutes(cookingMinutes);
             }
 
             var nextState = postPickup
                 ? 음식주문상태코드.조리중
-                : 픽업준비됨(order, attempt.수락시각Utc)
+                : 픽업준비됨(order)
                     ? 음식주문상태코드.픽업대기
-                    : order.상태이력.Any(x => x.사유 == "음식점 조리 시작"
-                        || (x.사유 == "음식점 주문 수락" && x.다음상태 == 음식주문상태코드.조리중))
+                    : 음식주문현재조리Policy.계산(order).CookingStartedAtUtc.HasValue
                         ? 음식주문상태코드.조리중
                         : 음식주문상태코드.주문확인;
             ApplyFoodOrderState(order, nextState, 음식주문배차상태코드.배차대기,
-                postPickup ? "픽업 후 배달 중단 · 재조리·재배차" : $"픽업 전 배달 중단 · {reasonCode}", now);
+                postPickup ? 음식주문현재조리Policy.재조리요청이력사유 : $"픽업 전 배달 중단 · {reasonCode}", now);
             배차재추천상태Policy.적용(queue, driverId, now);
             _db.운영배차활동사건.Add(운영배차활동사건Factory.중단(driverId, offerId, order.주문번호, queue.추천라운드, now, attempt.시도StableId, reasonCode, responsibility));
             _db.운영배차활동사건.Add(운영배차활동사건Factory.균형반환(driverId, offerId, order.주문번호, queue.추천라운드, now, attempt.시도StableId, responsibility));
@@ -710,7 +713,7 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
             }
 
             if (nextOrderState == 음식주문상태코드.픽업완료
-                && !픽업준비됨(order, attempt.수락시각Utc))
+                && !픽업준비됨(order))
             {
                 return Result.Fail<FoodDeliveryStateChange>("음식점이 픽업 준비를 완료한 주문만 픽업할 수 있습니다.");
             }
@@ -970,24 +973,8 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         return alreadyProtectedToday ? 운영배차책임Code.미확정 : 운영배차책임Code.보호대상;
     }
 
-    private static bool 픽업준비됨(음식주문 order, DateTime acceptedAtUtc)
-    {
-        if (order.상태이력.Any(x => x.사유 == "음식점 주문 확인 · 기존 준비 완료")) return true;
-        var assignment = order.상태이력
-            .Where(x => x.다음상태 == 음식주문상태코드.기사배정
-                        && x.전이시각Utc >= acceptedAtUtc.AddSeconds(-1))
-            .OrderBy(x => x.전이시각Utc)
-            .FirstOrDefault();
-        if (assignment?.이전상태 == 음식주문상태코드.픽업대기)
-        {
-            return true;
-        }
-
-        return order.상태이력.Any(x =>
-            x.전이시각Utc >= acceptedAtUtc
-            && (x.다음상태 == 음식주문상태코드.픽업대기
-                || x.사유.StartsWith("음식점 픽업 준비 완료", StringComparison.Ordinal)));
-    }
+    private static bool 픽업준비됨(음식주문 order)
+        => 음식주문현재조리Policy.계산(order).ReadyAtUtc.HasValue;
 
     private static 운송이벤트 위치감사사건(
         운송원장 queue,

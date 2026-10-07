@@ -10,7 +10,6 @@ namespace 살뜰.Services.Notifications
     public sealed class FirebaseFcmPushService : IFcmPushService
     {
         private const string FirebaseMessagingScope = "https://www.googleapis.com/auth/firebase.messaging";
-        private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
         private readonly HttpClient _httpClient;
         private readonly PushNotificationsOptions _options;
@@ -100,48 +99,7 @@ namespace 살뜰.Services.Notifications
             }
 
             var accessToken = await CreateAccessTokenAsync(serviceAccountJsonPath, cancellationToken).ConfigureAwait(false);
-            object? androidNotification = null;
-            object? apns = null;
-            if (!string.IsNullOrWhiteSpace(message.ImageUrl))
-            {
-                androidNotification = new { image = message.ImageUrl };
-                apns = new
-                {
-                    payload = new
-                    {
-                        aps = new Dictionary<string, object>
-                        {
-                            ["mutable-content"] = 1
-                        }
-                    },
-                    fcm_options = new
-                    {
-                        image = message.ImageUrl
-                    }
-                };
-            }
-
-            var payload = new
-            {
-                message = new
-                {
-                    token = message.Token,
-                    notification = new
-                    {
-                        title = message.Title,
-                        body = message.Body
-                    },
-                    data = message.Data,
-                    android = new
-                    {
-                        priority = message.HighPriority ? "HIGH" : "NORMAL",
-                        notification = androidNotification
-                    },
-                    apns
-                }
-            };
-
-            var json = JsonSerializer.Serialize(payload, JsonOptions);
+            var json = FcmPushPayloadSerializer.SerializeHttpV1(message);
             using var request = new HttpRequestMessage(
                 HttpMethod.Post,
                 $"https://fcm.googleapis.com/v1/projects/{projectId}/messages:send")
@@ -157,20 +115,7 @@ namespace 살뜰.Services.Notifications
             FcmPushMessage message,
             CancellationToken cancellationToken)
         {
-            var payload = new
-            {
-                to = message.Token,
-                priority = message.HighPriority ? "high" : "normal",
-                notification = new
-                {
-                    title = message.Title,
-                    body = message.Body,
-                    image = message.ImageUrl
-                },
-                data = message.Data
-            };
-
-            var json = JsonSerializer.Serialize(payload, JsonOptions);
+            var json = FcmPushPayloadSerializer.SerializeLegacy(message);
             using var request = new HttpRequestMessage(HttpMethod.Post, "https://fcm.googleapis.com/fcm/send")
             {
                 Content = new StringContent(json, Encoding.UTF8, "application/json")
@@ -188,12 +133,11 @@ namespace 살뜰.Services.Notifications
                 return true;
             }
 
-            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogWarning(
                 "Action={Action} Result={Result} Reason={Reason} StatusCode={StatusCode} TraceId={TraceId} OccurredAt={OccurredAt}",
                 "FcmSend",
                 "Failed",
-                errorBody,
+                "FCM provider rejected the message",
                 response.StatusCode,
                 System.Diagnostics.Activity.Current?.TraceId.ToString() ?? string.Empty,
                 DateTime.UtcNow);

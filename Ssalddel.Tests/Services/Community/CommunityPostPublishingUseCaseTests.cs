@@ -205,6 +205,47 @@ public sealed class CommunityPostPublishingUseCaseTests
         Assert.True(post.IsDeleted);
     }
 
+    [Fact]
+    public async Task 생활교류_익명글과_공개문의는_기존_DB에_저장되며_비밀번호로_철회한다()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var request = CreateRequest("이번 주말 동네 배송을 도와드려요");
+        request.WorkflowTag = NeighborhoodExchange.WorkflowTag;
+        request.RoleTag = NeighborhoodExchange.Offer;
+        var created = await CreateCreationService(database.Context, new RecordingPublisher())
+            .CreateAsync(request, null, CancellationToken.None);
+        Assert.True(created.IsSuccess);
+        var id = created.Value.Id;
+        database.Context.ChangeTracker.Clear();
+        var stored = await database.Context.PlatformCommunityPosts.SingleAsync(p => p.Id == id);
+        Assert.Equal(NeighborhoodExchange.WorkflowTag, stored.WorkflowTag);
+        Assert.Null(stored.AuthorUserId);
+        Assert.Null(stored.커뮤니티원장Id);
+        Assert.Null(stored.SalesOfferJson);
+
+        var participation = new 커뮤니티게시글참여UseCase(database.Context, new AnonymousUserAccessor());
+        var comment = await participation.댓글작성Async(id, new()
+        { Body = "토요일 오전에도 가능한가요?", Nickname = "이웃", Password = "comment-password" }, CancellationToken.None);
+        Assert.True(comment.IsSuccess);
+        database.Context.ChangeTracker.Clear();
+        var comments = await participation.댓글목록Async(id, CancellationToken.None);
+        Assert.True(comments.IsSuccess);
+        Assert.Equal(comment.Value.Id, Assert.Single(comments.Value).Id);
+        Assert.True((await participation.댓글삭제Async(id, comment.Value.Id, new()
+        { Password = "comment-password" }, CancellationToken.None)).IsSuccess);
+
+        var publisher = CreatePublishingUseCase(database.Context, new AnonymousUserAccessor());
+        Assert.True((await publisher.삭제Async(id, new()
+        { Password = request.Password }, CancellationToken.None)).IsSuccess);
+        database.Context.ChangeTracker.Clear();
+        Assert.True((await database.Context.PlatformCommunityPosts.SingleAsync(p => p.Id == id)).IsDeleted);
+        var reader = new 커뮤니티게시글조회UseCase(database.Context, new EmptyLedgerDisplayService(), new AnonymousUserAccessor());
+        Assert.True((await reader.상세Async(id, CancellationToken.None)).IsFailed);
+        var publicList = await reader.목록Async("platform", PlatformCommunityPostCategories.General, null,
+            NeighborhoodExchange.WorkflowTag, null, 1, 20, CancellationToken.None);
+        Assert.DoesNotContain(publicList.Value.Items, p => p.Id == id);
+    }
+
     private static 커뮤니티게시글생성Service CreateCreationService(
         SsalddelContext db,
         IPublisher publisher)

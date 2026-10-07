@@ -2,6 +2,7 @@ using Ssalddel.Contracts.Common.Drivers;
 using Ssalddel.Contracts.Driver.Food;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Application.Food;
+using Ssalddel.Services.Food;
 using Microsoft.EntityFrameworkCore;
 using 살뜰.Data;
 using 살뜰.Services.Dispatch.Recommendation;
@@ -17,6 +18,8 @@ public interface IFoodDeliveryDriverWorkspaceUseCase
     Task<FoodDeliveryDriverWorkspaceDto> GetAsync(string driverId, CancellationToken cancellationToken);
     Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync(
         string driverId, DateOnly? completionDateKst, CancellationToken cancellationToken);
+    Task<FoodDeliveryCompletedDeliveryDetailDto?> GetCompletedDeliveryDetailAsync(
+        string driverId, string settlementId, CancellationToken cancellationToken);
 }
 
 public sealed partial class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDriverWorkspaceUseCase
@@ -32,6 +35,7 @@ public sealed partial class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDr
     private readonly ISsalddelExecutionModePolicy _executionMode;
     private readonly IVersionFeatureFlagService _featureFlags;
     private readonly TimeProvider _timeProvider;
+    private readonly FoodDeliveryCompletedDetailAccessOptions _completedDetailAccessOptions;
 
     public FoodDeliveryDriverWorkspaceUseCase(
         SsalddelContext db,
@@ -39,7 +43,8 @@ public sealed partial class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDr
         I배달기사월정산UseCase settlements,
         ISsalddelExecutionModePolicy executionMode,
         IVersionFeatureFlagService featureFlags,
-        TimeProvider? timeProvider = null)
+        TimeProvider? timeProvider = null,
+        Microsoft.Extensions.Options.IOptions<FoodDeliveryCompletedDetailAccessOptions>? completedDetailAccessOptions = null)
     {
         _db = db;
         _driverWork = driverWork;
@@ -47,6 +52,7 @@ public sealed partial class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDr
         _executionMode = executionMode;
         _featureFlags = featureFlags;
         _timeProvider = timeProvider ?? TimeProvider.System;
+        _completedDetailAccessOptions = completedDetailAccessOptions?.Value ?? new FoodDeliveryCompletedDetailAccessOptions();
     }
 
     public async Task<FoodDeliveryDriverWorkspaceDto> GetAsync(
@@ -85,12 +91,20 @@ public sealed partial class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDr
                 .ToListAsync(cancellationToken))
                 .GroupBy(x => x.제안Id, StringComparer.Ordinal)
                 .ToDictionary(x => x.Key, x => x.First(), StringComparer.Ordinal);
+        var activeOrderNumbers = activeQueues.Select(ResolveOrderNo).Distinct().ToArray();
+        var preparationByOrder = activeOrderNumbers.Length == 0
+            ? new Dictionary<string, 음식주문현재조리상태>(StringComparer.Ordinal)
+            : (await _db.음식주문.AsNoTracking().Include(x => x.상태이력)
+                .Where(x => Enumerable.Contains(activeOrderNumbers, x.주문번호))
+                .ToListAsync(cancellationToken))
+                .ToDictionary(x => x.주문번호, 음식주문현재조리Policy.계산, StringComparer.Ordinal);
         var active = activeQueues
             .Where(x => activeWork.ContainsKey(x.의뢰Id))
             .Select(x => ToActiveDelivery(
                 x,
                 activeWork[x.의뢰Id],
-                activeAttempts.GetValueOrDefault(x.의뢰Id)))
+                activeAttempts.GetValueOrDefault(x.의뢰Id),
+                preparationByOrder.GetValueOrDefault(ResolveOrderNo(x))))
             .ToArray();
 
         var settlementResult = await _settlements.당월조회Async(driverId, driverId, cancellationToken);
@@ -167,10 +181,12 @@ public sealed partial class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDr
     private static FoodDeliveryDriverActiveDeliveryDto ToActiveDelivery(
         살뜰.도메인.운송.운송원장 transport,
         DriverWorkOfferDto offer,
-        살뜰.도메인.음식.음식배달시도? attempt)
+        살뜰.도메인.음식.음식배달시도? attempt,
+        음식주문현재조리상태? preparation)
         => new()
         {
             TransportId = transport.Id,
+            OrderNo = !string.IsNullOrWhiteSpace(attempt?.주문번호) ? attempt.주문번호 : ResolveOrderNo(transport),
             OfferId = offer.OfferId,
             OrderSummary = offer.Title,
             RestaurantName = offer.Pickup.Label,
@@ -189,14 +205,21 @@ public sealed partial class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDr
             DisplayedPreparationReadyAtUtc = attempt?.표시준비예정시각Utc,
             PreparationDelayEligibleAtUtc = attempt?.표시준비예정시각Utc?.AddMinutes(10),
             IsPreparationDelayRedispatch = attempt?.조리지연재배차여부 ?? false,
+            CurrentPreparationRound = preparation?.Round ?? 1,
+            CurrentPickupReadyAtUtc = preparation?.ReadyAtUtc,
+            RecookingRequestedAtUtc = preparation?.RecookingRequestedAtUtc,
             ExecutionProfile = offer.ExecutionProfile ?? 운송실행프로필Factory.Create(transport),
             Recipient = ToRecipient(offer.Recipient),
             AvailableActions = 음식배달가능행동Projector.기사배달용(
                 offer.Status,
                 attempt?.Revision ?? 0,
-                attempt?.가게도착시각Utc),
+                attempt?.가게도착시각Utc,
+                pickupReady: preparation?.ReadyAtUtc.HasValue == true),
             UpdatedAtUtc = transport.UpdatedAt
         };
+
+    private static string ResolveOrderNo(살뜰.도메인.운송.운송원장 transport)
+        => string.IsNullOrWhiteSpace(transport.원본의뢰Id) ? transport.의뢰Id : transport.원본의뢰Id;
 
     private static FoodDeliveryDriverRecipientDto ToRecipient(DriverWorkRecipientDto? recipient)
         => recipient is null

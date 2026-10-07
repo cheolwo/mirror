@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Text.Json.Nodes;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Driver.Transport;
 using Ssalddel.Contracts.Shipper.Request;
@@ -16,6 +17,52 @@ namespace Ssalddel.Tests.Application.Driver.Transport;
 
 public sealed class 기사운송원장상호작용Tests
 {
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task 완료응답유실뒤동일사진재시도는_완료상태를유지하며원장증빙을중복하지않는다(bool pickup)
+    {
+        await using var db = CreateContext();
+        var transport = new 운송원장
+        {
+            운송번호 = "completion-retry", 의뢰Id = "completion-retry", 화주Id = "shipper-1",
+            기사_운송자 = "driver-1", 확정기사Id = "driver-1",
+            상태 = pickup ? 기사운송상태코드.상차지도착 : 기사운송상태코드.하차지도착
+        };
+        db.운송원장.Add(transport);
+        db.화주운송의뢰.Add(new 화주운송의뢰
+        {
+            의뢰Id = "completion-retry", 화주Id = "shipper-1", 주문자UserId = "shipper-1"
+        });
+        await db.SaveChangesAsync();
+        var executor = new 기사운송상태변경CommandExecutor(db, new 기사운송상태전이Service(),
+            new ThrowingPublisher(), new TestCurrentUserAccessor("driver-1", "기사"),
+            new 참여자실행권한검사(), NullLogger<기사운송상태변경CommandExecutor>.Instance);
+        var writer = new 운송증빙첨부JsonWriter();
+        var pickupHandler = new 운송상차완료CommandHandler(db, executor, writer);
+        var dropoffHandler = new 운송인수완료CommandHandler(executor, writer);
+
+        async Task<bool> CompleteAsync(string objectName)
+        {
+            if (pickup)
+                return (await pickupHandler.Handle(new 운송상차완료Command("driver-1", transport.Id)
+                { 상차사진ObjectName = objectName, 상차사진Url = "https://test.invalid/proof" }, CancellationToken.None)).IsSuccess;
+            return (await dropoffHandler.Handle(new 운송인수완료Command("driver-1", transport.Id)
+            { 하차사진ObjectName = objectName, 하차사진Url = "https://test.invalid/proof" }, CancellationToken.None)).IsSuccess;
+        }
+
+        Assert.True(await CompleteAsync("proof/photo.jpg"));
+        var firstJson = transport.첨부_json;
+        Assert.True(await CompleteAsync(" proof/photo.jpg "));
+
+        Assert.Equal(pickup ? 기사운송상태코드.상차완료 : 기사운송상태코드.인수완료, transport.상태);
+        Assert.Equal(firstJson, transport.첨부_json);
+        var photo = Assert.Single(JsonNode.Parse(transport.첨부_json)!.AsArray())!;
+        Assert.Equal(pickup ? "pickup-complete-photo" : "dropoff-complete-photo", photo["kind"]!.GetValue<string>());
+        Assert.Equal("proof/photo.jpg", photo["objectName"]!.GetValue<string>());
+        Assert.Single(await db.운송이벤트.ToListAsync());
+    }
+
     [Fact]
     public async Task 수량불일치신고는_기존운송메모와함께_비정상사건과정산보류를저장한다()
     {

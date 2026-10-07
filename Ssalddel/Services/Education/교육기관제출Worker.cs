@@ -45,7 +45,7 @@ public sealed class 교육기관제출Worker : BackgroundService
         }
     }
 
-    private async Task ProcessPendingAsync(교육기관제출Options options, CancellationToken cancellationToken)
+    internal async Task ProcessPendingAsync(교육기관제출Options options, CancellationToken cancellationToken)
     {
         for (var processed = 0; processed < 20 && !cancellationToken.IsCancellationRequested; processed++)
         {
@@ -70,21 +70,41 @@ public sealed class 교육기관제출Worker : BackgroundService
                 continue;
             }
 
-            var result = await sender.전송Async(work, ledger, cancellationToken);
+            var result = work.전송완료
+                ? 교육기관제출전송결과.완료()
+                : await sender.전송Async(work, ledger, cancellationToken);
             if (result.성공)
             {
-                await _대기열.완료Async(work.제출Id, 교육기관제출상태.전송완료, cancellationToken);
-                await ledgerStore.원장상태변경Async(
-                    new 커뮤니티원장상태변경요청
+                if (!work.전송완료)
+                    await _대기열.완료Async(work.제출Id, 교육기관제출상태.전송완료, cancellationToken);
+                try
+                {
+                    // 이미 내려진 학교 결정과 다른 최신 상태는 보존한다.
+                    if (ledger.상태 == 현장체험활동상태.제출대기)
                     {
-                        원장Id = ledger.원장Id,
-                        이전상태 = ledger.상태,
-                        상태 = 현장체험활동상태.학교심사중,
-                        현재단계Key = "school-review",
-                        메모 = $"교육기관 {work.전송방식} 제출 완료"
-                    },
-                    "education-submission-worker",
-                    cancellationToken);
+                        var projected = await ledgerStore.원장상태변경Async(
+                            new 커뮤니티원장상태변경요청
+                            {
+                                원장Id = ledger.원장Id,
+                                기대Revision = ledger.Revision,
+                                이전상태 = 현장체험활동상태.제출대기,
+                                상태 = 현장체험활동상태.학교심사중,
+                                현재단계Key = "school-review",
+                                메모 = $"교육기관 {work.전송방식} 제출 완료"
+                            },
+                            "education-submission-worker",
+                            cancellationToken);
+                        if (projected is null)
+                            throw new InvalidOperationException("제출 원장 반영 중 원장을 찾을 수 없습니다.");
+                    }
+                    await _대기열.원장반영완료Async(work.제출Id, cancellationToken);
+                }
+                catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+                {
+                    // 영수증이 남아 있으므로 다음 처리에서는 외부 전송을 생략한다.
+                    await _대기열.실패Async(work.제출Id, ex.Message, false, options.최대시도횟수, cancellationToken);
+                    _logger.LogWarning(ex, "교육기관 전송 완료 후 원장 반영을 재시도합니다. 제출Id={SubmissionId}", work.제출Id);
+                }
                 continue;
             }
 

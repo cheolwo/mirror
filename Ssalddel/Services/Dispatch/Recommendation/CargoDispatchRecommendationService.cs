@@ -5,6 +5,7 @@ using 살뜰.도메인.공통;
 using 살뜰.도메인.화물;
 using 살뜰.도메인.화주;
 using 살뜰.도메인.차량;
+using Ssalddel.Application.Driver.Recommendation;
 
 namespace 살뜰.Services.Dispatch.Recommendation
 {
@@ -262,6 +263,8 @@ namespace 살뜰.Services.Dispatch.Recommendation
                     x.Item.공동구매도착지유형코드,
                     x.Item.공동구매기사세대배송여부,
                     x.Item.공동구매세대배송건수);
+                if (생활배송기사정보공개Policy.생활배송인가(request?.클라이언트요청Id))
+                    생활배송기사정보공개Policy.추천정보가림(recommendation);
                 result.Add(recommendation);
             }
 

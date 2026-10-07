@@ -5,6 +5,7 @@ using 살뜰.도메인.배차;
 using 살뜰.도메인.화주;
 using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.Services.Storage.Local;
+using Ssalddel.Application.Driver.Recommendation;
 
 namespace 살뜰.Services.Dispatch.Request
 {
@@ -67,6 +68,8 @@ namespace 살뜰.Services.Dispatch.Request
                         q.공동구매도착지유형코드,
                         q.공동구매기사세대배송여부,
                         q.공동구매세대배송건수);
+                    if (생활배송기사정보공개Policy.생활배송인가(request?.클라이언트요청Id))
+                        생활배송기사정보공개Policy.추천정보가림(recommendation);
                     return recommendation;
                 })
                 .ToList();
