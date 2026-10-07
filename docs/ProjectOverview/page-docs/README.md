@@ -1,5 +1,12 @@
 # 화면별 상세 README
 
+- [역할 선택 홈·역할별 지도 책임 카드](role-map-workspace-r11.md) · 여덟 역할과 기존 API, 공통 지도·상세 카드, 입력·인증 분리.
+
+- [주문 작성·조리시간 변경 복구](order-workflow-polish-r2.md) · 메뉴·가격 재확인과 원래 조리시간 요청의 재조회·재시도.
+
+- [역할 앱 기존 페이지 보완](role-app-polish-r1.md) · 승인한 일곱 항목의 페이지·코드/API·원장 연결과 복구 범위.
+
+- [기사 완료 배달 목록·상세와 열람 기한](driver-completed-delivery-detail-r1.md) · 날짜별20건 목록·독립 상세·완료 후72시간·내역 조회 중 업무/위치 유지·현재 지도 인증 확인 상태.
 - [음식 알림·전표·당일 정산의 페이지/코드/DB](food-notification-daily-settlement-r1.md) · 신규94건·실제 Android 검증, 기존 전체시험7실패 구별.
 
 [첨부 문서 README](../README.md) / [코드 프로젝트별 전체 페이지 카탈로그](../app-page-catalog.md)

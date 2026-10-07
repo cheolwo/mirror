@@ -34,6 +34,12 @@ GPT Chat과 Codex에서 프로젝트 전체와 Unity World Projection 작업을 
 
 ## 먼저 볼 화면 문서
 
+[OS 생명주기와 상태 카드 조사](page-docs/os-state-card-audit-r17.md)는 실제 업무 상태·허용 행동과 카드 배치를 대조한 결과입니다. 이미 맞는 정상 흐름과 검수·예외·일부 안내의 결손을 구분하고, 후속 카드 결정 순서를 정리합니다.
+
+[역할·상태별 카드 검토표](page-docs/role-state-card-review-r16.md)는 기본 카드와 상세·주행동을 비교하는 초안입니다. [위치·갱신·기본 카드 구현과 화면](../Changes/2026-10-05-role-map-reliability-r16.md)에서 이번 보완과 실제 예시 화면을 확인합니다.
+
+[역할 앱의 지도 중심 구성 조사](role-map-coverage-audit-r15.md)에서 통합 지도와 전용 앱의 차이, 다른 역할의 지도·기본 카드 조정, 현재 위치와 정보 갱신 문제의 보완 순서를 확인합니다.
+
 | 번호 | 문서 | 내용 |
 | --- | --- | --- |
 | 마무리 | [SsalddelProjectClosureProposal.md](SsalddelProjectClosureProposal.md) | 커뮤니티·공공데이터 공개 프리뷰와 0.5~3.5 시제품 자산을 구분해 프로젝트를 마무리하는 범위·순서·종료 기준 |

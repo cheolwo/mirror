@@ -16,7 +16,7 @@
       "managementSystem": "G1",
       "koreanName": "\uC2E4\uD589 \uACBD\uACC4",
       "technicalName": "E2\uC2E4\uD589\uACBD\uACC4Module",
-      "primaryCount": 287,
+      "primaryCount": 288,
       "secondaryCount": 0
     },
     {
@@ -24,7 +24,7 @@
       "managementSystem": "G1",
       "koreanName": "\uD68C\uADC0 \uC99D\uAC70",
       "technicalName": "E3\uD68C\uADC0\uC99D\uAC70Module",
-      "primaryCount": 316,
+      "primaryCount": 317,
       "secondaryCount": 1
     },
     {
@@ -15005,6 +15005,25 @@
       "stepKeys": []
     },
     {
+      "componentId": "Ssalddel.Unity.Tests:Ssalddel.Unity.Tests.\uC0AC\uAC00\uC815\uC74C\uC2DD\uC0DD\uD65C\uAD00\uCC30Tests",
+      "isCoverageCandidate": true,
+      "assemblyName": "Ssalddel.Unity.Tests",
+      "componentName": "Ssalddel.Unity.Tests.\uC0AC\uAC00\uC815\uC74C\uC2DD\uC0DD\uD65C\uAD00\uCC30Tests",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Unity.Tests/\uC0AC\uAC00\uC815\uC74C\uC2DD\uC0DD\uD65C\uAD00\uCC30Tests.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E3",
+      "responsibility": "\uC0AC\uAC00\uC815 \uAD00\uCC30 \uD504\uB85C\uD544\uC758 \uBA85\uB839 \uC81C\uD55C\u00B7\uC5ED\uC0AC \uC124\uBA85\u00B7\uC6D0\uC7A5 \uBD88\uBCC0\uC131\uACFC \uC2AC\uB86F \uBD84\uB9AC\uB97C \uC2DC\uD5D8\uD55C\uB2E4.",
+      "boundary": "\uB2E8\uC704 \uC2DC\uD5D8\uC774\uBA70 Unity \uC2E4\uC81C \uC785\uB825\u00B7\uD654\uBA74\u00B7\uD1B5\uD589 \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+      "primarySubmoduleKey": "",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
+      "workOrderIds": [],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
       "componentId": "Ssalddel.Unity.Tests:Ssalddel.Unity.Tests.\uC0C1\uD488\uADFC\uAC70ItemDetailProjectionTests",
       "isCoverageCandidate": true,
       "assemblyName": "Ssalddel.Unity.Tests",
@@ -17500,6 +17519,25 @@
       "stepKeys": []
     },
     {
+      "componentId": "Ssalddel.Unity:Ssalddel.Unity.Observation.\uC0AC\uAC00\uC815\uC74C\uC2DD\uC0DD\uD65C\uAD00\uCC30Profile",
+      "isCoverageCandidate": false,
+      "assemblyName": "Ssalddel.Unity",
+      "componentName": "Ssalddel.Unity.Observation.\uC0AC\uAC00\uC815\uC74C\uC2DD\uC0DD\uD65C\uAD00\uCC30Profile",
+      "memberKind": "Type",
+      "sourcePath": "Ssalddel.Unity/Runtime/Observation/\uC0AC\uAC00\uC815\uC74C\uC2DD\uC0DD\uD65C\uAD00\uCC30Profile.cs",
+      "coverageState": "Annotated",
+      "primaryEvidenceStage": "E2",
+      "responsibility": "\uAE30\uC874 \uC74C\uC2DD \uC0DD\uD65C Core\uC640 \uBCC4\uB3C4 \uC800\uC7A5\u00B7\uAD00\uCC30 \uC804\uC6A9 \uD45C\uC2DC \uBB38\uB9E5\uC744 \uACB0\uC18D\uD55C\uB2E4.",
+      "boundary": "\uC2E4\uC81C \uC8FC\uBB38/\uBC30\uCC28/\uD1B5\uD589 \uAD8C\uC704\uC640 \uC2E4\uC81C \uC9C1\uC6D0\u00B7\uACE0\uAC1D \uC815\uBCF4\uAC00 \uC544\uB2C8\uB2E4.",
+      "primarySubmoduleKey": "",
+      "secondaryEvidenceStages": [],
+      "secondarySubmoduleKeys": [],
+      "worldInteractionIds": [],
+      "workOrderIds": [],
+      "featureKeys": [],
+      "stepKeys": []
+    },
+    {
       "componentId": "Ssalddel.Unity:Ssalddel.Unity.Observation.\uC6B4\uC601\uC9C0\uB3C4AreaViewModel",
       "isCoverageCandidate": true,
       "assemblyName": "Ssalddel.Unity",
@@ -19974,8 +20012,8 @@
     }
   ],
   "coverage": {
-    "candidateTypeCount": 882,
-    "annotatedTypeCount": 878,
+    "candidateTypeCount": 883,
+    "annotatedTypeCount": 879,
     "excludedTypeCount": 4,
     "uncoveredTypeCount": 0,
     "annotatedMethodCount": 17

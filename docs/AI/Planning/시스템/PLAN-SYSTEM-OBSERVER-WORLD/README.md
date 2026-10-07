@@ -7,6 +7,8 @@
 - 상위: [게임 상위 목적](../../../게임상위목적-오행순환과광복기-기획-2026-09-02.md)
 - 관련: [업무 위임](../../../../Architecture/PlayableLoops/PlanningSessions/솔로업무위임/solo-work-delegation.inquiry.r1.md), [운영 이관](../PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001/README.md)
 - 구현 명세: [관찰 세계 기반 명세](implementation.md)
+- 승인된 좁은 후속: [사가정 샐러리아 음식 생활 r6](sagajeong-food-life.implementation.r6.md) — 실제 지도 참고 안에서 기존 6인 가상 음식 생활을 관찰한다. 별도 저장·게임용 접근/주거·관찰 전용 입력이며 일반 r5의 제어 정책과 저장 계약을 대체하지 않는다. [Graph 검토 반환](graph-map-review.r6.md)은 기존 전역 맵/인계 검사의 차단을 제품 구현과 분리한다.
+- 좁은 후속 결과: [구현·검증·실제 Game View](../../../../Changes/2026-10-02-sagajeong-food-life-r1.md). 승인 원문은 hash를 고정해 보존하고 현재 실행 증거는 이 결과에 기록한다.
 
 ## 승인된 경험
 

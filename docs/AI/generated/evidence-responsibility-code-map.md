@@ -2,8 +2,8 @@
 
 > 이 문서는 C# E 책임 Attribute와 현재 E 책임 모듈 대장에서 자동 생성된다. 직접 수정하지 않는다.
 
-- 후보 타입: `882`
-- 책임 지정: `878`
+- 후보 타입: `883`
+- 책임 지정: `879`
 - 사유 있는 제외: `4`
 - 미분류: `0`
 - 메서드 책임: `17`
@@ -13,8 +13,8 @@
 | E | G | 모듈 | 대표 | 보조 |
 | --- | --- | --- | ---: | ---: |
 | `E1` | `G1` | `E1핵심계약Module` 핵심 계약 | 133 | 0 |
-| `E2` | `G1` | `E2실행경계Module` 실행 경계 | 287 | 0 |
-| `E3` | `G1` | `E3회귀증거Module` 회귀 증거 | 316 | 1 |
+| `E2` | `G1` | `E2실행경계Module` 실행 경계 | 288 | 0 |
+| `E3` | `G1` | `E3회귀증거Module` 회귀 증거 | 317 | 1 |
 | `E4` | `G1` | `E4실행문맥결속Module` 실행 문맥 결속 | 54 | 0 |
 | `E5` | `G1` | `E5세계발현Module` 세계 발현 | 7 | 0 |
 | `E6` | `G1` | `E6세계정제Module` 세계 정제 | 21 | 0 |
@@ -49,8 +49,8 @@
 ### 아직 하위 모듈을 지정하지 않은 기존 책임
 
 - `E1`: `76`개
-- `E2`: `194`개
-- `E3`: `234`개
+- `E2`: `195`개
+- `E3`: `235`개
 
 ## 미분류 후보
 
@@ -789,6 +789,7 @@
 | `Ssalddel.Unity.Tests.방문기록JsonDecoderTests` | `E3` | `E3.ContractRegression` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.방문순서재생SessionTests` | `E3` | `E3.DeterminismRegression` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.방문재생준비Tests` | `E3` | `E3.DeterminismRegression` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Tests.사가정음식생활관찰Tests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.상품근거ItemDetailProjectionTests` | `E3` | `E3.UnityConsumerRegression` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.생활관찰표현SessionTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.수출항만인수학당PreviewAdapterTests` | `E3` | `` | `` | `` | `Annotated` |
@@ -918,6 +919,7 @@
 | `Ssalddel.Unity.Npcs.NpcMovementQueryUseCase` | `E8` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Observation.동네관찰Presenter` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Observation.동네관찰SessionController` | `E2` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Observation.사가정음식생활관찰Profile` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Observation.운영지도AreaViewModel` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Perspectives.IRolePerspectiveApiClient` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Perspectives.I역할관점Repository` | `E7` | `` | `` | `` | `Annotated` |

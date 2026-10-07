@@ -8,6 +8,10 @@
 
 Ssalddel은 출처가 있는 정보와 커뮤니티 대화가 명시적 동의를 거쳐 공동 원장과 역할 협업으로 이어지는 서버 중심 플랫폼이다. Unity는 운영 서버 상태를 탑다운 공간·센서·업무 오브젝트로 체험하게 하는 연구 근거 기반 **World Projection Client**이며, 게임 Simulation은 Solo에서 Unity 내부 공통 Local Runtime, Hosted에서 단일 `Ssalddel` 호스트의 Simulation Hosting 모듈이 같은 Core를 실행한다.
 
+사업 방향은 **일상의 공간과 사람의 능력을 자유롭게 제공하고 필요한 것을 서로 찾아 교류하는 장**이다. 고정 사업 역할·전용 시설·플랫폼 결제나 주소 등록을 첫 이용의 전제로 삼지 않는다. [생활 교류 최소판 r6](../AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/exchange-mvp.r6.md)의 제공/필요 글·공개 문의·본인 삭제를 기존 게시글 API/DB로 구현했다. [생활 배송 r7](../AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/server-dispatch.r7.md)은 공개 글과 분리된 본인 의뢰를 서버 견적·기존 화물 원장/큐에 연결하고 선정 기사 정보 제공 동의/철회를 추가했다. 배송 접수·기사 수락·직접 수금 예정과 실수금을 구별한다. 대금·교환·나눔은 당사자 협의이며 게시/댓글을 실제 거래 인증이나 신뢰 점수로 취급하지 않는다. 공간·재고·구매의 [r4 확장](../AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/residential-goods-quick-delivery.design.r4.md)은 후속 후보로 보존하며, 기존 음식·화물 업무의 분리와 운영/지급 경계는 유지한다. 로컬 검증과 실제 자동 배차·외부 공개 운영은 구별한다.
+
+중개 수수료보다 참여자의 자율적 교류와 생활 개선을 우선하는 최신 방향과 선택적 후원·광고의 미정 범위는 [현재 결정](../AI/DECISIONS.md#2026-10-05-수수료-중개보다-참여자의-교류와-생활-개선을-우선)에 연결한다.
+
 Unity는 독립 농장 게임도 아니고 기존 Web 페이지를 3D로 복제한 클라이언트도 아니다.
 
 ## 2. 제품 릴리스와 Unity 개발 순서
