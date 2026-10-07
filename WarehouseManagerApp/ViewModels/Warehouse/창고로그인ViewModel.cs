@@ -51,6 +51,7 @@ public sealed class 창고로그인ViewModel : ObservableObject
     }
 
     public bool 로그인됨 => _session.IsAuthenticated;
+    public string? 현재사용자Id => _session.UserId;
     public bool 창고업무접근가능 => _accessPolicy.CanAccessWarehouseOperations(_session);
     public string 현재사용자표시 => _session.UserName ?? "미로그인";
 
@@ -74,7 +75,7 @@ public sealed class 창고로그인ViewModel : ObservableObject
                     cancellationToken);
                 if (!refreshResult.IsSuccess)
                 {
-                    await _session.ClearAsync(cancellationToken);
+                    // 갱신 HTTP 경계가 원 revision만 정리하며 뒤늦은 실패는 새 계정을 지우지 않습니다.
                     안내수준 = 창고인증안내수준.주의;
                     안내메시지 = refreshResult.ErrorMessage;
                 }
@@ -198,6 +199,7 @@ public sealed class 창고로그인ViewModel : ObservableObject
     private void 세션속성변경알림()
     {
         OnPropertyChanged(nameof(로그인됨));
+        OnPropertyChanged(nameof(현재사용자Id));
         OnPropertyChanged(nameof(창고업무접근가능));
         OnPropertyChanged(nameof(현재사용자표시));
     }

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:FDriverApp.PageModels"
+    x:Class="FDriverApp.Pages.CompletedDeliveryListPage" x:DataType="models:FDriverCompletedDeliveryListPageModel"
+    Title="배달 내역" Shell.NavBarIsVisible="False"
+    BackgroundColor="{AppThemeBinding Light={StaticResource DriverCanvas}, Dark={StaticResource DriverCanvasDark}}">
+    <Grid RowDefinitions="Auto,*,Auto">
+        <VerticalStackLayout Grid.Row="0" Padding="16" Spacing="12"
+            BackgroundColor="{AppThemeBinding Light={StaticResource DriverSurface}, Dark={StaticResource DriverSurfaceDark}}">
+            <Button Text="배달로 돌아가기" Clicked="OnBackClicked" HorizontalOptions="Start"
+                Style="{StaticResource DriverSecondaryButtonStyle}" />
+            <Label Text="배달 내역" Style="{StaticResource DriverTitleStyle}" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <DatePicker Date="{Binding SelectedDate}" Format="yyyy.MM.dd" FontSize="16"
+                    FontAutoScalingEnabled="False" MinimumHeightRequest="48" SemanticProperties.Description="배달 완료일 선택" />
+                <Button Grid.Column="1" Text="새로고침" Command="{Binding RefreshCommand}"
+                    Style="{StaticResource DriverSecondaryButtonStyle}" />
+            </Grid>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <Label Text="{Binding TotalCountText}" Style="{StaticResource DriverBodyStyle}" />
+                <Label Grid.Column="1" Text="{Binding GrossTotalText}" Style="{StaticResource DriverMetadataStyle}" />
+            </Grid>
+            <Label Text="{Binding StatusText}" Style="{StaticResource DriverMetadataStyle}" />
+            <Button Text="로그인하기" IsVisible="{Binding IsAuthenticationRequired}" Clicked="OnLoginClicked"
+                HorizontalOptions="Start" Style="{StaticResource DriverPrimaryButtonStyle}" />
+        </VerticalStackLayout>
+        <Grid Grid.Row="1">
+            <CollectionView x:Name="DeliveryList" ItemsSource="{Binding Items}" SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:FDriverDailySettlementItem">
+                        <VerticalStackLayout Padding="16,12,16,0" Spacing="12"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource DriverSurface}, Dark={StaticResource DriverSurfaceDark}}">
+                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="4" ColumnSpacing="12">
+                                <Label Text="{Binding Display.RestaurantName}" Style="{StaticResource DriverBodyStyle}" FontAttributes="Bold" />
+                                <Label Grid.Column="1" Text="{Binding Display.GrossText}" Style="{StaticResource DriverValueStyle}" HorizontalTextAlignment="End" />
+                                <Label Grid.Row="1" Text="{Binding CompletedText}" Style="{StaticResource DriverMetadataStyle}" />
+                                <Label Grid.Row="2" Text="{Binding DistanceText}" Style="{StaticResource DriverMetadataStyle}" />
+                                <Button Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Text="상세 보기"
+                                    Command="{Binding OpenDetailsCommand}" Style="{StaticResource DriverSecondaryButtonStyle}" />
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource DriverBorder}, Dark={StaticResource DriverBorderDark}}" />
+                        </VerticalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" HorizontalOptions="Center" VerticalOptions="Center" />
+            <Label Text="이 날짜에 완료한 배달이 없습니다." IsVisible="{Binding HasNoItems}" Style="{StaticResource DriverBodyStyle}"
+                HorizontalOptions="Center" VerticalOptions="Center" Margin="16" />
+        </Grid>
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" Padding="16,12" ColumnSpacing="12"
+            BackgroundColor="{AppThemeBinding Light={StaticResource DriverSurface}, Dark={StaticResource DriverSurfaceDark}}">
+            <Button Text="이전" Command="{Binding PreviousPageCommand}" IsEnabled="{Binding HasPreviousPage}" Style="{StaticResource DriverSecondaryButtonStyle}" />
+            <Label Grid.Column="1" Text="{Binding PageText}" Style="{StaticResource DriverBodyStyle}" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+            <Button Grid.Column="2" Text="다음" Command="{Binding NextPageCommand}" IsEnabled="{Binding HasNextPage}" Style="{StaticResource DriverSecondaryButtonStyle}" />
+        </Grid>
+    </Grid>
+</ContentPage>

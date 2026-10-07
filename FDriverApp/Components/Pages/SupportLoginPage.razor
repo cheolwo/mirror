@@ -1,0 +1,4 @@
+@page "/driver-support-login"
+@inject IFDriverProtectionSupportNavigator Navigator
+<h1>기사 로그인</h1><p>같은 기사 계정으로 로그인하면 이 배달의 문제 접수로 돌아옵니다. 새 요청은 자동 접수되지 않습니다.</p>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Navigator.LoginAsync">로그인 화면으로</MudButton>

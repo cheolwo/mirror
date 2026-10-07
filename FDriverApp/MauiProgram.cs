@@ -70,6 +70,7 @@ namespace FDriverApp
             builder.Services.AddSingleton<FDriverAppProfile>();
             builder.Services.AddSingleton<IClientSessionGuard, ClientSessionGuard>();
             builder.Services.AddSingleton<IFDriverAuthSession, FDriverAuthSession>();
+            builder.Services.AddSingleton<IFDriverPendingOperationStore, FDriverSecurePendingOperationStore>();
 #if DEBUG || SSALDDEL_USB_FIELD_TEST
             const bool allowInsecureDebugEndpoint = true;
 #else
@@ -87,9 +88,21 @@ namespace FDriverApp
             builder.Services.AddSingleton<IFoodDeliveryDriverApiService, FoodDeliveryDriverApiService>();
             builder.Services.AddSingleton<IFDriverLocationService, FDriverLocationService>();
             builder.Services.AddSingleton<IFDriverFoodNotificationService, FDriverFoodNotificationService>();
+            builder.Services.AddSingleton<IFDriverPushDeviceStore, FDriverSecurePushDeviceStore>();
+            builder.Services.AddSingleton<FDriverPushRegistrationService>();
+            builder.Services.AddSingleton<FDriverFoodPushReceiver>();
             builder.Services.AddSingleton<IFDriverWorkspaceNavigator, FDriverWorkspaceNavigator>();
             builder.Services.AddSingleton<MainPageModel>();
-            builder.Services.AddTransient<MainPage>();
+            builder.Services.AddSingleton<MainPage>();
+            builder.Services.AddSingleton<AppShell>();
+            builder.Services.AddSingleton<IFDriverCompletedDeliveryNavigator, FDriverCompletedDeliveryNavigator>();
+            builder.Services.AddTransient<FDriverCompletedDeliveryListPageModel>();
+            builder.Services.AddTransient<FDriverCompletedDeliveryDetailPageModel>();
+            builder.Services.AddTransient<CompletedDeliveryListPage>();
+            builder.Services.AddTransient<CompletedDeliveryDetailPage>();
+            builder.Services.AddSingleton<IFDriverProtectionSupportNavigator, FDriverProtectionSupportNavigator>();
+            builder.Services.AddSingleton<FDriverSupportReturnContext>();
+            builder.Services.AddTransient<ProtectionSupportPage>();
             builder.Services.AddSingleton<ProjectListPageModel>();
             builder.Services.AddSingleton<ManageMetaPageModel>();
 

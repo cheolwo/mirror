@@ -10,8 +10,8 @@
                            ScreenCode="03.03"
                            Title="화물 조건 입력"
                            Description="품목·수량·취급 조건을 운송 검토용 초안으로 기록합니다."
-                           RootBackHref="@ShipperRoutes.ShipperHome"
-                           RootBackLabel="화주 홈"
+                           RootBackHref="@(RouteContext.ReturnPath ?? ShipperRoutes.ShipperHome)"
+                           RootBackLabel="돌아가기"
                            BulkHref="@ShipperRequestPageRoutes.Bulk"
                            Changed="PageModel.AutoSaveAsync" />
 

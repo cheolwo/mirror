@@ -24,6 +24,7 @@ public sealed class AuthSession : IAuthSession
     public DateTime AccessTokenExpiresAtUtc { get; private set; }
     public DateTime RefreshTokenExpiresAtUtc { get; private set; }
     public string? UserId { get; private set; }
+    public string? AuthenticationOwnerId => UserId;
     public string? UserName { get; private set; }
     public IReadOnlyList<string> Roles { get; private set; } = Array.Empty<string>();
     public bool IsLoggedIn => !string.IsNullOrWhiteSpace(AccessToken);

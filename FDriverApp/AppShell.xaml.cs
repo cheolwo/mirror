@@ -7,10 +7,13 @@ namespace FDriverApp
 {
     public partial class AppShell : Shell
     {
-        public AppShell()
+        public AppShell(MainPage mainPage)
         {
             InitializeComponent();
-            Routing.RegisterRoute(FDriverWorkspaceNavigator.WorkspaceRoute, typeof(MainPage));
+            WorkspaceContent.Content = mainPage;
+            Routing.RegisterRoute(FDriverCompletedDeliveryNavigator.ListRoute, typeof(CompletedDeliveryListPage));
+            Routing.RegisterRoute(FDriverCompletedDeliveryNavigator.DetailRoute, typeof(CompletedDeliveryDetailPage));
+            Routing.RegisterRoute(FDriverProtectionSupportNavigator.RouteName, typeof(ProtectionSupportPage));
             var currentTheme = Application.Current!.RequestedTheme;
             ThemeSegmentedControl.SelectedIndex = currentTheme == AppTheme.Light ? 0 : 1;
         }

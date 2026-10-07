@@ -128,6 +128,7 @@ public static class DriverServiceCollectionExtensions
         services.AddTransient<기사운송상세조회Service>();
         services.AddTransient<기사상차PageViewModel>();
         services.AddTransient<기사하차PageViewModel>();
+        services.AddTransient<기사운송내역PageViewModel>();
 
         return services;
     }

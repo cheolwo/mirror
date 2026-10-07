@@ -27,6 +27,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<AdminAuthSession>();
         builder.Services.AddSingleton<ITransportRequestLedgerObserver, TransportRequestLedgerObserver>();
         builder.Services.AddSsalddelUiCommonAppServices<AdminAuthSession>();
+        builder.Services.Add보호지원관리Ui();
         builder.Services.AddTransient<관리자Controller기능모음ViewModel>();
         builder.Services.AddTransient<관리자전체Api기능모음ViewModel>();
 #if DEBUG || SSALDDEL_USB_FIELD_TEST
@@ -54,6 +55,7 @@ public static class MauiProgram
         builder.Services.AddScoped<AdminAuthenticatedApiClient>();
         builder.Services.AddScoped<AdminDashboardService>();
         builder.Services.AddScoped<AdminOperationsService>();
+        builder.Services.AddScoped<AdminFoodOperationsService>();
         builder.Services.AddScoped<AdminFinanceService>();
         builder.Services.AddScoped<FollowUpRecoveryMobileService>();
         builder.Services.AddScoped<CommunityManagementAdminService>();

@@ -1,0 +1,28 @@
+@page "/privacy-support"
+@page "/privacy-support/{CaseId}"
+@using Ssalddel.Ui.Common.Areas.BackOffice.Components.PrivacySupport
+@inject AdminAuthSession Session
+@inject AdminAuthService AuthService
+@implements IDisposable
+
+<PageTitle>거래·개인정보 처리 요청</PageTitle>
+@if (restoring) { <p role="status">로그인 상태를 확인하고 있습니다.</p> }
+else { <보호지원관리Page CaseId="@CaseId" AdminOwnerProvider="AdminOwner" LoginHref="@LoginHref" /> }
+
+@code {
+    [Parameter] public string? CaseId { get; set; }
+    private bool restoring = true;
+    private bool disposed;
+    private string? AdminOwner() => Session.IsServerAdmin ? Session.UserId : null;
+    private string LoginHref => "/login?returnUrl=" + Uri.EscapeDataString(string.IsNullOrWhiteSpace(CaseId)
+        ? "/privacy-support" : "/privacy-support/" + Uri.EscapeDataString(CaseId));
+    protected override async Task OnInitializedAsync()
+    {
+        Session.Changed += SessionChanged;
+        await Session.RestoreAsync();
+        if (!string.IsNullOrWhiteSpace(Session.RefreshToken)) await AuthService.EnsureAccessTokenAsync();
+        if (!disposed) restoring = false;
+    }
+    private void SessionChanged() => _ = InvokeAsync(() => { if (!disposed) StateHasChanged(); });
+    public void Dispose() { disposed = true; Session.Changed -= SessionChanged; }
+}

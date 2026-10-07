@@ -1,5 +1,6 @@
 using DriverApp.Models.Driver.Samples;
 using Ssalddel.Contracts.Driver.Transport;
+using DriverApp.ViewModels.Driver.Transport;
 
 namespace DriverApp.Services;
 
@@ -7,9 +8,12 @@ internal static class 기사운송표시Mapper
 {
     public static 기사운송샘플항목 Map(기사운송요약응답 source)
         => new(source.Id, source.운송번호, "서버 운송", source.출발지, source.도착지,
-            null, null, null, null,
+            source is 기사운송상세응답 { 개인정보제공보류: false } pickup ? pickup.픽업위도 : null,
+            source is 기사운송상세응답 { 개인정보제공보류: false } pickupLongitude ? pickupLongitude.픽업경도 : null,
+            source is 기사운송상세응답 { 개인정보제공보류: false } dropoff ? dropoff.하차위도 : null,
+            source is 기사운송상세응답 { 개인정보제공보류: false } dropoffLongitude ? dropoffLongitude.하차경도 : null,
             string.IsNullOrWhiteSpace(source.상태) ? "진행중" : source.상태,
-            source.출발_픽업 ?? source.도착 ?? source.UpdatedAt,
+            기사국내시각표시.한국시간(source.출발_픽업 ?? source.도착 ?? source.UpdatedAt).DateTime,
             source.예상거리Km, source.운임, source.인수증필요, source.인수증서명필수,
             string.IsNullOrWhiteSpace(source.결제방식) ? "서버 정산" : source.결제방식,
             source.상태 switch

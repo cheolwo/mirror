@@ -1,0 +1,8 @@
+@page "/community/exchange"
+@layout CommunityMobileLayout
+<PageTitle>생활 교류 · 살뜰</PageTitle>
+<Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.ExchangeList Intent="@Intent" Page="@Page" />
+@code {
+    [Parameter, SupplyParameterFromQuery(Name = "intent")] public string? Intent { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "page")] public int Page { get; set; } = 1;
+}

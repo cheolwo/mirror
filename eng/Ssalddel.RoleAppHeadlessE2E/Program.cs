@@ -8,6 +8,7 @@ using SsalddelAdminApp.Services;
 using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Contracts.Admin.Food;
 using Ssalddel.Contracts.Common.Participants;
+using Ssalddel.Contracts.Common.Dispatch;
 using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Contracts.Driver.Work;
 using Ssalddel.Contracts.Food;
@@ -59,6 +60,29 @@ var adminSession = new AdminAuthSession();
 var adminAuth = new AdminAuthService(adminHttp, adminSession);
 Require((await adminAuth.LoginAsync("food-observer-admin", password)).Succeeded, "운영자 앱 Client 로그인 실패");
 var adminApi = new AdminAuthenticatedApiClient(adminHttp, adminSession, adminAuth);
+// r26 개발 호스트가 같은 합성 로그인 세션을 재사용할 때만 비공유 위치에 전달합니다.
+// 비밀 토큰은 결과 JSON이나 콘솔에 기록하지 않습니다.
+var privateUiTokens = Environment.GetEnvironmentVariable("FOOD_OBSERVER_PRIVATE_UI_TOKENS");
+if (!string.IsNullOrWhiteSpace(privateUiTokens))
+{
+    var privateRoot = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory,
+        "artifacts/local/apk-completion-r26/server/.private"));
+    var target = Path.GetFullPath(privateUiTokens);
+    Require(endpoint.IsLoopback && endpoint.Port == 5362 &&
+        target.StartsWith(privateRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase),
+        "r26 비공유 합성 세션 전달 경로가 아닙니다.");
+    await File.WriteAllTextAsync(target, System.Text.Json.JsonSerializer.Serialize(new
+    {
+        baseUrl = endpoint.ToString(),
+        accounts = new[]
+        {
+            new { role = "orderer", accessToken = ordererSession.AccessToken },
+            new { role = "restaurant", accessToken = restaurantSession.AccessToken },
+            new { role = "food-driver", accessToken = driverSession.AccessToken },
+            new { role = "operator", accessToken = adminSession.AccessToken }
+        }
+    }));
+}
 if (args.Length == 2 && args[0] == "--confirm-ui-receipt")
 {
     var uiOrderNo = args[1];
@@ -87,6 +111,15 @@ if (args.Length == 2 && args[0] == "--confirm-ui-receipt")
 var adminLifecycleStages = new List<string>();
 var projectionBaseline = await ReadProjectionIdsAsync(unitySession, observationAreaStableId);
 await driverApi.StartWorkAsync("사가정 합성 기사 대기점");
+// 운행 시작과 신규 배차를 받겠다는 의사는 독립 상태입니다.
+// 격리 검증 기사도 실제 앱과 같은 역할 API로 명시적으로 수신을 켭니다.
+var dispatchAvailability = await driverApi.ChangeDispatchIntentAsync(new 운영배차수신의사변경요청
+{
+    클라이언트요청Id = Guid.NewGuid(),
+    수신의사Code = 운영배차수신의사Code.On
+});
+Require(dispatchAvailability.수신의사Code == 운영배차수신의사Code.On,
+    "기사 앱 Client 신규 배차 수신 의사 확인 실패");
 await driverApi.UpdateLocationAsync(new 기사위치갱신요청
 {
     AppKey = "FoodDeliveryDriverApp",
@@ -244,6 +277,123 @@ RequireAction(
     pickup.ActiveDeliveries.Single(x => x.OfferId == created.주문번호).AvailableActions,
     음식배달가능행동Ids.기사전달완료,
     "기사 픽업완료");
+if (args.Contains("--recook", StringComparer.Ordinal)
+    || args.Contains("--prepare-recook-ui", StringComparer.Ordinal))
+{
+    var firstAttempt = pickup.ActiveDeliveries.Single(x => x.OfferId == created.주문번호);
+    await driverApi.ChangeDispatchIntentAsync(new 운영배차수신의사변경요청
+    {
+        클라이언트요청Id = Guid.NewGuid(), 수신의사Code = 운영배차수신의사Code.Off
+    });
+    using var replacementHttp = CreateHttpClient(endpoint);
+    var replacementSession = new MemoryFDriverSession(guard);
+    var replacementAuth = new FDriverAuthApiService(replacementHttp, replacementSession);
+    Require(await replacementAuth.LoginAsync("food-observer-driver-far", password) is null,
+        "새 기사 앱 Client 로그인 실패");
+    var replacementApi = new FoodDeliveryDriverApiService(replacementHttp, replacementSession, replacementAuth);
+    await replacementApi.StartWorkAsync("재조리 검증 기사 대기점");
+    await replacementApi.ChangeDispatchIntentAsync(new 운영배차수신의사변경요청
+    {
+        클라이언트요청Id = Guid.NewGuid(), 수신의사Code = 운영배차수신의사Code.On
+    });
+    await replacementApi.UpdateLocationAsync(new 기사위치갱신요청
+    {
+        AppKey = "FoodDeliveryDriverApp", 위도 = 37.588m, 경도 = 127.084m,
+        정확도_m = 1, 상차접근허용반경Km = 5, 운행상태 = "운행중", 기록시각 = DateTime.UtcNow
+    });
+    var interruptionRequest = new 음식배달중단요청
+    {
+        클라이언트요청Id = Guid.NewGuid(), 예상시도Revision = firstAttempt.AttemptRevision,
+        사유Code = 음식배달중단사유Code.배달수단고장, 메모 = "격리 재조리·새 기사 인계 검증"
+    };
+    await driverApi.InterruptAsync(created.주문번호, interruptionRequest);
+    await driverApi.InterruptAsync(created.주문번호, interruptionRequest);
+    var interruptedWorkspace = await driverApi.GetWorkspaceAsync();
+    Require(interruptedWorkspace.ActiveDeliveries.All(x => x.OfferId != created.주문번호),
+        "중단 기사에게 현재 업무가 남음");
+    var recooking = await restaurantApi.주문상세조회Async(created.주문번호)
+        ?? throw new InvalidOperationException("재조리 음식점 재조회 없음");
+    Require(recooking.CurrentPreparationRound == 2 && recooking.CurrentPickupReadyAtUtc is null
+        && recooking.픽업준비시각Utc == ready.픽업준비시각Utc,
+        "재조리 차수 또는 첫 준비 이력 보존 불일치");
+    RequireAction(recooking.AvailableActions, 음식배달가능행동Ids.음식점픽업준비완료, "재조리 준비");
+    var replacementOffer = await PollAsync(
+        async () => (await replacementApi.GetWorkspaceAsync()).Recommendations.SingleOrDefault(x => x.OfferId == created.주문번호),
+        value => value is not null, TimeSpan.FromSeconds(30), "새 기사 추천 대기 초과");
+    await replacementApi.AcceptAsync(created.주문번호);
+    var nextAttempt = (await replacementApi.GetWorkspaceAsync()).ActiveDeliveries.Single(x => x.OfferId == created.주문번호);
+    Require(nextAttempt.DeliveryAttemptId != firstAttempt.DeliveryAttemptId
+        && nextAttempt.CurrentPreparationRound == 2 && nextAttempt.CurrentPickupReadyAtUtc is null,
+        "새 기사 시도/차수 정본 불일치");
+    await replacementApi.RecordRestaurantArrivalAsync(created.주문번호, new 음식배달가게도착요청
+    {
+        클라이언트요청Id = Guid.NewGuid(), 예상시도Revision = nextAttempt.AttemptRevision
+    });
+    nextAttempt = (await replacementApi.GetWorkspaceAsync()).ActiveDeliveries.Single(x => x.OfferId == created.주문번호);
+    Require(!업무가능행동목록.포함(nextAttempt.AvailableActions, 음식배달가능행동Ids.기사픽업확인),
+        "새 음식 준비 전 픽업 행동이 열림");
+    try
+    {
+        await replacementApi.ConfirmPickupAsync(created.주문번호);
+        throw new InvalidOperationException("새 음식 준비 전 서버 픽업 허용");
+    }
+    catch (FDriverApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.BadRequest
+        || ex.StatusCode == System.Net.HttpStatusCode.Conflict) { }
+    if (args.Contains("--prepare-recook-ui", StringComparer.Ordinal))
+    {
+        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new
+        {
+            schemaVersion = "role-app-headless-e2e.recook-ui.r1", status = "Prepared",
+            orderNo = created.주문번호, firstAttemptId = firstAttempt.DeliveryAttemptId,
+            currentAttemptId = nextAttempt.DeliveryAttemptId, preparationRound = 2,
+            historicalReadyAtUtc = recooking.픽업준비시각Utc, currentReadyAtUtc = recooking.CurrentPickupReadyAtUtc,
+            replacementDriver = "food-observer-driver-far", synthetic = true,
+            serverRuntimeProof = true, databaseRoundTripProof = true, deviceUiProof = false
+        }));
+        return;
+    }
+    var latest = await restaurantApi.주문상세조회Async(created.주문번호)
+        ?? throw new InvalidOperationException("이번 조리 정본 없음");
+    await restaurantApi.음식점진행변경Async(created.주문번호, new 음식점주문진행변경요청
+    {
+        클라이언트요청Id = Guid.NewGuid(), 예상Revision = latest.Revision,
+        작업 = 음식점주문진행작업코드.픽업준비
+    });
+    var secondReady = await restaurantApi.주문상세조회Async(created.주문번호)
+        ?? throw new InvalidOperationException("새 음식 준비 재조회 없음");
+    Require(secondReady.CurrentPickupReadyAtUtc > ready.픽업준비시각Utc
+        && secondReady.픽업준비시각Utc == ready.픽업준비시각Utc,
+        "이번 준비 또는 최초 준비 보존 불일치");
+    await replacementApi.ConfirmPickupAsync(created.주문번호);
+    await replacementApi.CompleteAsync(created.주문번호);
+    await ordererApi.수령확인Async(created.주문번호, new 주문자음식주문수령확인요청
+    {
+        클라이언트요청Id = Guid.NewGuid(), 확인메모 = "재조리 인계 검증 수령"
+    });
+    var finalOrder = await ordererApi.상세Async(created.주문번호)
+        ?? throw new InvalidOperationException("재조리 종료 재조회 없음");
+    Require(finalOrder.주문.상태 == 음식주문상태코드.수령확인, "재조리 종료 상태 불일치");
+    var finalTrace = await ReadAdminTraceAsync(adminApi, created.주문번호,
+        음식주문상태코드.수령확인, 음식배달운영생명주기단계Codes.종료);
+    Require((await driverApi.GetWorkspaceAsync()).OrderSettlements.All(x => x.OrderNo != created.주문번호),
+        "중단 기사의 완료 정산 생성");
+    var replacementSettlement = (await replacementApi.GetWorkspaceAsync()).OrderSettlements.Single(x => x.OrderNo == created.주문번호);
+    Require(replacementSettlement.DeliveryAttemptId == nextAttempt.DeliveryAttemptId,
+        "새 기사 정산 시도 불일치");
+    await driverApi.StopWorkAsync();
+    await replacementApi.StopWorkAsync();
+    Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new
+    {
+        schemaVersion = "role-app-headless-e2e.recook.r1", status = "Completed", orderNo = created.주문번호,
+        orderStatus = finalOrder.주문.상태, preparationRound = secondReady.CurrentPreparationRound,
+        firstAttemptId = firstAttempt.DeliveryAttemptId, replacementAttemptId = nextAttempt.DeliveryAttemptId,
+        historicalReadyAtUtc = ready.픽업준비시각Utc, currentReadyAtUtc = secondReady.CurrentPickupReadyAtUtc,
+        interruptedRequestReplayVerified = true, pickupBeforeCurrentReadyBlocked = true,
+        replacementSettlementOnly = true, serverRuntimeProof = true, databaseRoundTripProof = true,
+        deviceUiProof = false, cloudDeploymentProof = false, actualTransferCompleted = false
+    }));
+    return;
+}
 await driverApi.CompleteAsync(created.주문번호);
 var awaitingReceiptSettlement = (await driverApi.GetWorkspaceAsync()).OrderSettlements
     .Single(x => x.OrderNo == created.주문번호);
@@ -558,12 +708,15 @@ sealed class MemoryTokenStore : IClientSecureTokenStore
 sealed class SessionTokenProvider(ClientAuthSession session) : ISsalddelAccessTokenProvider
 {
     public string? AccessToken => session.AccessToken;
+    public string? AuthenticationOwnerId => session.UserId;
 }
 
 namespace FDriverApp.Services
 {
     public interface IFDriverAuthSession : ISsalddelAccessTokenProvider
     {
+        event EventHandler? SessionChanged;
+        long SessionRevision { get; }
         DateTime AccessTokenExpiresAtUtc { get; }
         string? RefreshToken { get; }
         DateTime RefreshTokenExpiresAtUtc { get; }
@@ -575,17 +728,24 @@ namespace FDriverApp.Services
         Task<ClientAuthSessionRestoreState> RestoreAsync(CancellationToken cancellationToken = default);
         Task ApplyAsync(ClientAuthTokenSnapshot snapshot, CancellationToken cancellationToken = default);
         Task ClearAsync(CancellationToken cancellationToken = default);
+        Task<bool> TryApplyAsync(ClientAuthTokenSnapshot snapshot, long expectedRevision, CancellationToken cancellationToken = default);
+        Task<bool> TryClearAsync(long expectedRevision, CancellationToken cancellationToken = default);
     }
 }
 
 sealed class MemoryFDriverSession(IClientSessionGuard guard) : IFDriverAuthSession
 {
     private ClientAuthTokenSnapshot? _snapshot;
+    private readonly object _mutationGate = new();
+    private long _revision;
+    public event EventHandler? SessionChanged;
+    public long SessionRevision => Interlocked.Read(ref _revision);
     public string? AccessToken => _snapshot?.AccessToken;
     public DateTime AccessTokenExpiresAtUtc => _snapshot?.AccessTokenExpiresAtUtc ?? default;
     public string? RefreshToken => _snapshot?.RefreshToken;
     public DateTime RefreshTokenExpiresAtUtc => _snapshot?.RefreshTokenExpiresAtUtc ?? default;
     public string? UserId => _snapshot?.UserId;
+    public string? AuthenticationOwnerId => UserId;
     public string? UserName => _snapshot?.UserName;
     public IReadOnlyList<string> Roles => _snapshot?.Roles ?? [];
     public ClientAuthSessionRestoreState CurrentState => guard.IsAccessTokenUsable(_snapshot, DateTime.UtcNow)
@@ -595,8 +755,26 @@ sealed class MemoryFDriverSession(IClientSessionGuard guard) : IFDriverAuthSessi
             : ClientAuthSessionRestoreState.Anonymous;
     public bool IsAuthenticated => CurrentState == ClientAuthSessionRestoreState.Authenticated;
     public Task<ClientAuthSessionRestoreState> RestoreAsync(CancellationToken cancellationToken = default) => Task.FromResult(CurrentState);
-    public Task ApplyAsync(ClientAuthTokenSnapshot snapshot, CancellationToken cancellationToken = default) { _snapshot = snapshot; return Task.CompletedTask; }
-    public Task ClearAsync(CancellationToken cancellationToken = default) { _snapshot = null; return Task.CompletedTask; }
+    public Task ApplyAsync(ClientAuthTokenSnapshot snapshot, CancellationToken cancellationToken = default)
+    { SetSnapshot(snapshot, null, cancellationToken); return Task.CompletedTask; }
+    public Task ClearAsync(CancellationToken cancellationToken = default)
+    { SetSnapshot(null, null, cancellationToken); return Task.CompletedTask; }
+    public Task<bool> TryApplyAsync(ClientAuthTokenSnapshot snapshot, long expectedRevision, CancellationToken cancellationToken = default)
+        => Task.FromResult(SetSnapshot(snapshot, expectedRevision, cancellationToken));
+    public Task<bool> TryClearAsync(long expectedRevision, CancellationToken cancellationToken = default)
+        => Task.FromResult(SetSnapshot(null, expectedRevision, cancellationToken));
+    private bool SetSnapshot(ClientAuthTokenSnapshot? snapshot, long? expectedRevision, CancellationToken cancellationToken)
+    {
+        lock (_mutationGate)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (expectedRevision.HasValue && expectedRevision.Value != SessionRevision) return false;
+            _snapshot = snapshot;
+            Interlocked.Increment(ref _revision);
+            SessionChanged?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+    }
 }
 
 sealed class NoopJsRuntime : IJSRuntime

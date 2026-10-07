@@ -6,7 +6,8 @@ namespace OrdererApp.Services;
 /// <summary>주문자 앱의 저장 세션 복원·갱신과 공용 인증 계약 연결만 담당합니다.</summary>
 public sealed class OrdererSessionService(
     ClientAuthSession session,
-    OrdererAuthApiService authApi) : I주문자앱인증Service
+    OrdererAuthApiService authApi,
+    IFoodOrderPendingSubmissionStore pendingStore) : I주문자앱인증Service
 {
     public async Task<주문자앱인증결과> 복원Async(
         CancellationToken cancellationToken = default)
@@ -20,8 +21,8 @@ public sealed class OrdererSessionService(
                 cancellationToken);
             if (!refresh.성공)
             {
-                await session.ClearAsync(cancellationToken);
-                return new 주문자앱인증결과(주문자앱세션상태.익명, refresh.오류메시지);
+                // HTTP 경계가 원래 revision만 조건부 정리합니다. 늦은 실패로 새 계정을 지우지 않습니다.
+                return new 주문자앱인증결과(CurrentSession(), refresh.오류메시지);
             }
         }
 
@@ -36,11 +37,19 @@ public sealed class OrdererSessionService(
         var result = await authApi.로그인Async(userNameOrEmail, password, cancellationToken);
         return result.성공
             ? new 주문자앱인증결과(CurrentSession())
-            : new 주문자앱인증결과(주문자앱세션상태.익명, result.오류메시지);
+            : new 주문자앱인증결과(CurrentSession(), result.오류메시지);
     }
 
-    public Task 로그아웃Async(CancellationToken cancellationToken = default)
-        => session.ClearAsync(cancellationToken);
+    public async Task 로그아웃Async(CancellationToken cancellationToken = default)
+    {
+        var (owner, revision) = session.CaptureIdentity();
+        await session.TryClearAsync(revision, cancellationToken);
+        var pending = await pendingStore.LoadAsync(cancellationToken);
+        if (pending is not null && string.Equals(pending.OwnerId, owner, StringComparison.Ordinal))
+            await pendingStore.ClearAsync(pending.Request.클라이언트요청Id, cancellationToken);
+    }
+
+    public Task 세션만료Async(CancellationToken cancellationToken = default) => session.ClearAsync(cancellationToken);
 
     private 주문자앱세션상태 CurrentSession()
         => session.IsAuthenticated

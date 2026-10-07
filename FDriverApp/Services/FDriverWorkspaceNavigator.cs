@@ -13,8 +13,8 @@ public sealed class FDriverWorkspaceNavigator : IFDriverWorkspaceNavigator
     public Task OpenAsync(string? focus = null)
     {
         var target = string.IsNullOrWhiteSpace(focus)
-            ? WorkspaceRoute
-            : $"{WorkspaceRoute}?{FocusQueryKey}={Uri.EscapeDataString(focus.Trim())}";
+                ? "//" + WorkspaceRoute
+                : $"//{WorkspaceRoute}?{FocusQueryKey}={Uri.EscapeDataString(focus.Trim())}";
 
         return MainThread.InvokeOnMainThreadAsync(async () =>
         {

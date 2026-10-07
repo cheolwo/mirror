@@ -23,11 +23,17 @@ public static class MauiProgram
         builder.Services.AddSingleton<IPlatformCommunityNodeNavigationResolver, WarehousePlatformCommunityNodeNavigationResolver>();
         builder.Services.AddSingleton<IPlatformHomeWorkspaceNavigationResolver, WarehousePlatformHomeWorkspaceNavigationResolver>();
         builder.Services.AddSsalddelUiCommonAppServices<WarehouseAccessTokenProvider>();
+#if DEBUG || SSALDDEL_USB_FIELD_TEST
+        const bool allowInsecureDebugEndpoint = true;
+#else
+        const bool allowInsecureDebugEndpoint = false;
+#endif
         builder.Services.AddSsalddelOperationalApiHttpClient(
-            SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+            SsalddelServerEndpoint.ResolveMobileBaseAddress(
+                typeof(MauiProgram).Assembly,
                 builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
                 builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey],
-                new Uri(SsalddelServerEndpoint.LocalDevelopmentBaseAddress)));
+                allowInsecureDebugEndpoint));
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();

@@ -163,15 +163,17 @@ public sealed class FDriverWorkspaceNavigationTests
                 return Task.FromResult(new FoodDeliveryDriverRouteResponseDto
                 {
                     DistanceKm = 2m,
+                    Source = "NaverDirections5",
                     DurationMinutes = 8,
                     Points = [new() { Latitude = 37.5m, Longitude = 127m }, new() { Latitude = 37.6m, Longitude = 127.1m }]
                 });
             }
         };
-        var model = FDriverLifecycleTestSupport.Model(session, api);
+        var model = FDriverLifecycleTestSupport.Model(session, api, new FDriverFixedTestLocationService());
         try
         {
             await model.InitializeAsync();
+            await model.ResumeFoodMapAsync();
             await model.SelectTicketCommand.ExecuteAsync(Assert.Single(model.RecommendedTicketItems));
             var selectedTicket = model.SelectedTicket;
             var routeOverlays = model.SelectedRouteOverlays;

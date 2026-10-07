@@ -145,10 +145,11 @@ public sealed partial class MainPageModel
         // MainPage의 최초 초기화가 인증을 복원하므로 시작 조회를 중복 실행하지 않는다.
         if (!_initialized || !_workspaceActive || !IsAuthenticated || IsBusy || _notificationResumeInProgress) return;
         _notificationResumeInProgress = true;
+        var lifetime = _workspaceCancellation;
         try
         {
             await ReloadAsync(updateLocation: false);
-            await StartMonitoringAsync();
+            if (IsWorkspaceLifetimeCurrent(lifetime)) await StartMonitoringAsync();
         }
         finally { _notificationResumeInProgress = false; }
     }

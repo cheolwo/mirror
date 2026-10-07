@@ -1,0 +1,5 @@
+.food-mobile-detail { max-width: 960px; margin-inline: auto; min-width: 0; overflow-wrap: anywhere; }
+.food-progress-row { padding-block: 12px; border-bottom: 1px solid var(--role-border, #dce5e9); }
+.food-mobile-detail ::deep .mud-button-root { min-height: 48px; white-space: normal; }
+.food-mobile-detail ::deep .mud-chip { max-width: 100%; height: auto; }
+.food-mobile-detail ::deep .mud-chip-content { white-space: normal; }

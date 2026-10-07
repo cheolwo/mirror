@@ -1,0 +1,6 @@
+@page "/community/exchange/posts/{PostId:long}"
+@using Ssalddel.Ui.Common.Areas.App.Services
+@layout CommunityMobileLayout
+<PageTitle>교류 글 · 살뜰</PageTitle>
+<Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.ExchangeDetail PostId="@PostId" ReturnUrl="@ReturnUrl" LoginHref="@NeighborhoodExchangeAuthenticationRoutes.LoginHref(NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? NeighborhoodMapNavigation.WithReturn(NeighborhoodExchange.Detail(PostId), home) : NeighborhoodExchange.Detail(PostId))" @key="PostId" />
+@code { [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; } [Parameter] public long PostId { get; set; } }

@@ -1,0 +1,14 @@
+@page "/community/exchange/spaces/{SpaceId}"
+@layout CommunityMobileLayout
+@inject NavigationManager Navigation
+<PageTitle>공간 상세 · 살뜰</PageTitle>
+<SsalddelApp.Components.Shared.NeighborhoodAuthenticationBoundary AuthenticationChanged="@AuthenticationChanged">
+    <Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodStorageDetail @ref="_page" SpaceId="@SpaceId" CollaborationId="@CollaborationId" LoginHref="@LoginHref" @key="SpaceId" />
+</SsalddelApp.Components.Shared.NeighborhoodAuthenticationBoundary>
+@code {
+    [Parameter] public string SpaceId { get; set; } = "";
+    [SupplyParameterFromQuery(Name = "collaborationId")] public string? CollaborationId { get; set; }
+    private Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodStorageDetail? _page;
+    private string LoginHref => NeighborhoodExchangeAuthenticationRoutes.LoginHref(new Uri(Navigation.Uri).PathAndQuery);
+    private Task AuthenticationChanged() => _page?.NotifyAuthenticationChangedAsync() ?? Task.CompletedTask;
+}

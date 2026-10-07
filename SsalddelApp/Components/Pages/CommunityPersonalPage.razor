@@ -16,6 +16,8 @@
         <a class="@(!ShowsPosts ? "active" : null)" href="@CommunityPageRoutes.Personal">내 정보</a>
         <a class="@(ShowsPosts ? "active" : null)" href="@($"{CommunityPageRoutes.Personal}?tab=posts")">내 글</a>
         <a href="@CommunityPageRoutes.WorkRelationships">친구 요청</a>
+        <a href="/commerce/privacy">내 정보 관리</a>
+        <a href="/commerce/seller">판매자 확인</a>
     </nav>
 
     @if (ShowsPosts)

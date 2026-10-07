@@ -1,0 +1,10 @@
+@page "/login"
+@layout AuthenticationLayout
+@using Ssalddel.Ui.Common.Areas.App.Components.Commerce
+
+<PageTitle>로그인</PageTitle>
+<OrdererCommerceAuthenticationPage ReturnUrl="@ReturnUrl" />
+
+@code {
+    [Parameter, SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+}

@@ -1,7 +1,7 @@
 @page "/driver/transports/history"
 @using Ssalddel.Contracts.Driver.Transport
-@inject IDriverTransportApiService TransportApi
-@inject IAuthSession AuthSession
+@using DriverApp.ViewModels.Driver.Transport
+@inherits DriverApp.Components.MvvmComponentBase<기사운송내역PageViewModel>
 
 <PageTitle>배달 내역</PageTitle>
 
@@ -14,12 +14,12 @@
             </MudStack>
         </MudPaper>
 
-        @if (_데이터로딩중)
+        @if (ViewModel.불러오는중)
         {
             <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
             <MudText Typo="Typo.body2" Color="Color.Secondary">배달 내역을 불러오고 있습니다.</MudText>
         }
-        else if (!_인증됨)
+        else if (ViewModel.로그인필요)
         {
             <MudAlert Severity="Severity.Warning">
                 배달 내역은 기사 로그인 후 확인할 수 있습니다.
@@ -31,14 +31,14 @@
                 </MudButton>
             </MudAlert>
         }
-        else if (!string.IsNullOrWhiteSpace(_데이터오류))
+        else if (!string.IsNullOrWhiteSpace(ViewModel.오류메시지))
         {
             <MudAlert Severity="Severity.Error">
-                @_데이터오류
+                @ViewModel.오류메시지
                 <MudButton Class="ml-2" Variant="Variant.Outlined" Color="Color.Error" OnClick="재조회Async">다시 시도</MudButton>
             </MudAlert>
         }
-        else if (_운송목록.Count == 0)
+        else if (ViewModel.운송목록.Count == 0)
         {
             <MudPaper Class="pa-4" Elevation="1">
                 <MudStack Spacing="2" AlignItems="AlignItems.Start">
@@ -55,7 +55,7 @@
                 <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="재조회Async">내역 새로고침</MudButton>
             </MudStack>
             <MudGrid Spacing="2">
-                @foreach (var item in _운송목록.OrderByDescending(x => x.UpdatedAt))
+                @foreach (var item in ViewModel.운송목록.OrderByDescending(x => x.UpdatedAt))
                 {
                     <MudItem xs="12" md="6">
                         <MudPaper Class="driver-recommendation-card pa-4 h-100" Elevation="0">
@@ -86,44 +86,14 @@
 </MudContainer>
 
 @code {
-    private bool _데이터로딩중 = true;
-    private bool _인증됨;
-    private string? _데이터오류;
-    private IReadOnlyList<기사운송요약응답> _운송목록 = [];
-
     protected override Task OnInitializedAsync()
-        => 데이터조회Async();
+        => ViewModel.InitializeAsync();
 
     private Task 재조회Async()
-        => 데이터조회Async();
-
-    private async Task 데이터조회Async()
-    {
-        _데이터로딩중 = true;
-        _데이터오류 = null;
-        _운송목록 = [];
-
-        try
-        {
-            await AuthSession.RestoreAsync();
-            _인증됨 = AuthSession.IsAuthenticated;
-            if (_인증됨)
-            {
-                _운송목록 = await TransportApi.목록조회Async();
-            }
-        }
-        catch
-        {
-            _데이터오류 = "배달 내역을 불러오지 못했습니다. 네트워크와 서버 연결을 확인한 뒤 다시 시도해 주세요.";
-        }
-        finally
-        {
-            _데이터로딩중 = false;
-        }
-    }
+        => ViewModel.RefreshAsync();
 
     private static string PickupScheduleText(기사운송요약응답 item)
-        => item.출발_픽업 is { } pickup ? $"출발 {pickup:MM-dd HH:mm}" : "출발 시각 미확인";
+        => $"출발 {기사국내시각표시.표시(item.출발_픽업)}";
 
     private static string HistoryDistanceText(기사운송요약응답 item)
         => item.예상거리Km.HasValue ? 기사운송표시Mapper.Map(item).운송거리표시 : "거리 자료 없음";

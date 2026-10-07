@@ -1,0 +1,215 @@
+@page "/food-operations/demand-surcharge"
+@using System.Net
+@using Ssalddel.Contracts.Admin.Restaurants
+@implements IDisposable
+@inject AdminFoodOperationsService FoodService
+@inject AdminAuthSession Session
+@inject AdminAuthService AuthService
+
+<PageTitle>음식 배달 한시 할증</PageTitle>
+<MudStack Spacing="3">
+    <MudText Typo="Typo.h4">음식 배달 한시 할증</MudText>
+    @if (restoring) { <MudProgressLinear Indeterminate="true" /> }
+    else if (!Session.IsServerAdmin)
+    {
+        <MudAlert Severity="Severity.Warning">운영자 로그인이 필요합니다.</MudAlert>
+        <MudButton Href="/login?returnUrl=%2Ffood-operations%2Fdemand-surcharge" Color="Color.Primary" Variant="Variant.Filled">로그인</MudButton>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(errorMessage)) { <MudAlert Severity="Severity.Warning">@errorMessage</MudAlert> }
+        @if (isBusy) { <MudProgressLinear Indeterminate="true" /> }
+        <MudButton OnClick="LoadAsync" Disabled="@isBusy">최신 조건 확인</MudButton>
+        @if (policy is not null)
+        {
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.subtitle1">한시 수요 할증</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                기사를 호출하거나 지시하지 않고, 새 배차 제안의 지급 조건만 일정 시간 높입니다.
+                            </MudText>
+                        </MudStack>
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Color="@(policy.IsActive ? Color.Warning : Color.Default)"
+                                 Variant="Variant.Outlined">
+                            @(policy.IsActive ? "적용 중" : "미적용")
+                        </MudChip>
+                    </MudStack>
+
+                    @if (policy.IsActive)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                            새 음식 배달 제안에 @policy.SurchargeAmount.ToString("N0")원 추가 ·
+                            @TemporarySurchargeRemaining(policy)
+                        </MudAlert>
+                    }
+
+                    @if (!policy.CanApply)
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+                            현재 환경에서는 한시 수요 할증을 변경할 수 없습니다.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2">1. 적용시간</MudText>
+                        <MudGrid Spacing="1">
+                            @foreach (var duration in policy.AllowedDurationMinutes)
+                            {
+                                <MudItem xs="4">
+                                    <MudButton Variant="@(selectedDurationMinutes == duration ? Variant.Filled : Variant.Outlined)"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               FullWidth="true"
+                                               Disabled="@(isBusy || pending is not null)"
+                                               OnClick="@(() => selectedDurationMinutes = duration)">
+                                        @duration 분
+                                    </MudButton>
+                                </MudItem>
+                            }
+                        </MudGrid>
+
+                        <MudText Typo="Typo.body2">2. 추가 지급액</MudText>
+                        <MudGrid Spacing="1">
+                            @foreach (var amount in policy.AllowedAmounts)
+                            {
+                                <MudItem xs="4">
+                                    <MudButton Variant="@(selectedSurchargeAmount == amount ? Variant.Filled : Variant.Outlined)"
+                                               Color="Color.Warning"
+                                               Size="Size.Small"
+                                               FullWidth="true"
+                                               Disabled="@(isBusy || pending is not null)"
+                                               OnClick="@(() => selectedSurchargeAmount = amount)">
+                                        +@amount.ToString("N0")원
+                                    </MudButton>
+                                </MudItem>
+                            }
+                        </MudGrid>
+
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Warning"
+                                   StartIcon="@Icons.Material.Filled.PriceChange"
+                                   Disabled="@(isBusy || requiresRefresh || (!selectedSurchargeAmount.HasValue && pending is null))"
+                                   OnClick="ApplyTemporaryDemandSurchargeAsync">
+                            @(pending is null ? "선택한 조건 적용" : "같은 적용 요청 확인")
+                        </MudButton>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(successMessage))
+                    {
+                        <MudAlert Severity="Severity.Success" Variant="Variant.Outlined">@successMessage</MudAlert>
+                    }
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        범위: 전체 음식 배달 · 사유: 제안 가능 기사 부족
+                    </MudText>
+                </MudStack>
+            </MudPaper>
+
+
+        }
+    }
+    <MudButton Href="/food-operations" Variant="Variant.Text">음식 주문 목록으로</MudButton>
+</MudStack>
+@code {
+    private 음식배달한시수요할증응답? policy;
+    private 음식배달한시수요할증적용요청? pending;
+    private int selectedDurationMinutes = 30;
+    private decimal? selectedSurchargeAmount;
+    private bool isBusy, restoring = true, disposed, requiresRefresh = true;
+    private long generation;
+    private string identity = string.Empty;
+    private string? errorMessage, successMessage;
+    private readonly CancellationTokenSource lifetime = new();
+    protected override async Task OnInitializedAsync()
+    {
+        Session.Changed += SessionChanged;
+        await Session.RestoreAsync();
+        if (!string.IsNullOrWhiteSpace(Session.RefreshToken)) await AuthService.EnsureAccessTokenAsync();
+        if (disposed) return;
+        restoring = false; identity = Session.IsServerAdmin ? Session.UserId : string.Empty;
+        await LoadAsync();
+    }
+    private bool IsCurrent(long owner) => !disposed && owner == generation && Session.IsServerAdmin && identity == Session.UserId;
+    private async Task LoadAsync()
+    {
+        if (isBusy || !Session.IsServerAdmin || disposed) return;
+        var owner = generation; isBusy = true; requiresRefresh = true; errorMessage = null;
+        try
+        {
+            var result = await FoodService.GetTemporaryDemandSurchargeAsync(lifetime.Token);
+            if (!IsCurrent(owner)) return;
+            policy = result; requiresRefresh = false;
+        }
+        catch (OperationCanceledException) when (disposed) { }
+        catch (Exception) { if (IsCurrent(owner)) errorMessage = "최신 조건을 확인하지 못했습니다. 다시 조회해 주세요."; }
+        finally { if (IsCurrent(owner)) isBusy = false; }
+    }
+    private async Task ApplyTemporaryDemandSurchargeAsync()
+    {
+        if (isBusy || requiresRefresh || policy is null || !policy.CanApply || !Session.IsServerAdmin || disposed) return;
+        if (pending is null)
+        {
+            if (!selectedSurchargeAmount.HasValue) return;
+            pending = new()
+            {
+                SurchargeAmount = selectedSurchargeAmount.Value, DurationMinutes = selectedDurationMinutes,
+                ReasonCode = 음식배달한시수요할증사유Codes.제안가능기사부족,
+                ScopeCode = 음식배달한시수요할증범위Codes.전체음식배달,
+                ExpectedRevision = policy.Revision, ClientRequestId = Guid.NewGuid()
+            };
+        }
+        var owner = generation; isBusy = true; requiresRefresh = true;
+        errorMessage = successMessage = null;
+        var confirmed = false;
+        try
+        {
+            var result = await FoodService.ApplyTemporaryDemandSurchargeAsync(pending, lifetime.Token);
+            if (!IsCurrent(owner)) return;
+            confirmed = true; pending = null; selectedSurchargeAmount = null;
+            var currentPolicy = await FoodService.GetTemporaryDemandSurchargeAsync(lifetime.Token);
+            if (!IsCurrent(owner)) return;
+            policy = currentPolicy;
+            requiresRefresh = false;
+            successMessage = $"{result.SurchargeAmount:N0}원 한시 할증을 {result.DurationMinutes}분 동안 적용했습니다.";
+        }
+        catch (OperationCanceledException) when (disposed) { }
+        catch (AdminApiException ex)
+        {
+            if (!IsCurrent(owner)) return;
+            if (ex.StatusCode == HttpStatusCode.Conflict) pending = null;
+            errorMessage = confirmed ? "적용 응답은 받았지만 최신 조건을 확인하지 못했습니다. 다시 조회해 주세요."
+                : "적용 결과를 확인하지 못했습니다. 최신 조건을 조회한 뒤 같은 요청을 확인해 주세요.";
+        }
+        catch (Exception) { if (IsCurrent(owner)) errorMessage = "최신 조건을 확인하지 못했습니다. 다시 조회해 주세요."; }
+        finally { if (IsCurrent(owner)) isBusy = false; }
+    }
+    private void SessionChanged() => _ = InvokeAsync(() =>
+    {
+        if (disposed) return;
+        var actor = Session.IsServerAdmin ? Session.UserId : string.Empty;
+        if (actor != identity)
+        {
+            identity = actor; generation++; policy = null; pending = null;
+            selectedSurchargeAmount = null; requiresRefresh = true; isBusy = false; errorMessage = successMessage = null;
+        }
+        StateHasChanged();
+    });
+    private static string TemporarySurchargeRemaining(음식배달한시수요할증응답 state)
+    {
+        if (!state.ExpiresAtUtc.HasValue)
+        {
+            return "종료 시각 미정";
+        }
+
+        var remaining = state.ExpiresAtUtc.Value - state.ServerNowUtc;
+        return remaining <= TimeSpan.Zero
+            ? "종료됨"
+            : $"약 {Math.Max(1, (int)Math.Ceiling(remaining.TotalMinutes))}분 남음";
+    }
+
+
+    public void Dispose() { if (disposed) return; disposed = true; generation++; lifetime.Cancel(); lifetime.Dispose(); Session.Changed -= SessionChanged; }
+}

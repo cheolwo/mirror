@@ -1,0 +1,15 @@
+@page "/community/exchange/spaces"
+@layout CommunityMobileLayout
+@inject NavigationManager Navigation
+<PageTitle>보관공간 · 살뜰</PageTitle>
+<SsalddelApp.Components.Shared.NeighborhoodAuthenticationBoundary AuthenticationChanged="@AuthenticationChanged">
+    <Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodStorageList @ref="_page" Region="@Region" Mine="@Mine" LoginHref="@LoginHref" ReturnUrl="@ReturnUrl" />
+</SsalddelApp.Components.Shared.NeighborhoodAuthenticationBoundary>
+@code {
+    [SupplyParameterFromQuery(Name = "region")] public string? Region { get; set; }
+    [SupplyParameterFromQuery(Name = "mine")] public bool Mine { get; set; }
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+    private Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodStorageList? _page;
+    private string LoginHref => NeighborhoodExchangeAuthenticationRoutes.LoginHref(new Uri(Navigation.Uri).PathAndQuery);
+    private Task AuthenticationChanged() => _page?.NotifyAuthenticationChangedAsync() ?? Task.CompletedTask;
+}

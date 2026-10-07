@@ -1,0 +1,11 @@
+@page "/workspace/orderer/new"
+@layout SsalddelApp.Components.Layout.RoleWorkspaceLayout
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food
+@inject NavigationManager Navigation
+<PageTitle>음식 주문 · 살뜰</PageTitle>
+<RoleOrdererNewOrderWorkspace RestaurantId="@RestaurantId" ReturnHref="@ReturnUrl" OrderSubmitted="Submitted" />
+@code {
+    [SupplyParameterFromQuery(Name = "restaurantId")] public long? RestaurantId { get; set; }
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+    private void Submitted(string id) => Navigation.NavigateTo("/workspace/orderer?selected=" + Uri.EscapeDataString(id));
+}

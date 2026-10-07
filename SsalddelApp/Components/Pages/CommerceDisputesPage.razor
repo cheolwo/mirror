@@ -1,0 +1,12 @@
+@page "/commerce/disputes"
+@page "/commerce/disputes/{CaseId}"
+@layout CommunityMobileLayout
+<PageTitle>거래 문제 신고 · Mirror</PageTitle>
+<Ssalddel.Ui.Common.Areas.App.Components.Commerce.보호지원Page CaseId="@CaseId" SourceKind="@SourceKind" SourceId="@SourceId" LoginHref="@LoginHref" />
+@code {
+    [Parameter] public string? CaseId { get; set; }
+    [SupplyParameterFromQuery(Name = "sourceKind")] public string? SourceKind { get; set; }
+    [SupplyParameterFromQuery(Name = "sourceId")] public string? SourceId { get; set; }
+    private string ReturnHref => Ssalddel.Contracts.Common.Commerce.CommerceAuthenticationRoutes.DisputeRoute(CaseId, SourceKind, SourceId);
+    private string LoginHref => Ssalddel.Contracts.Common.Commerce.CommerceAuthenticationRoutes.LoginHref("/community/login", ReturnHref);
+}

@@ -58,6 +58,7 @@
 
     private bool IsVisible(AdminV1NavigationItem item)
         => (!item.ServerAdminOnly || !관리자인증세션Service.로그인됨 || 관리자인증세션Service.서버관리자인가)
+           && (item.Route != "/privacy-support" || 관리자인증세션Service.로그인됨 && 관리자인증세션Service.서버관리자인가)
            && ViewPolicyService.GetBlockingItem(item.Route) is null;
 
     private static string ResolveIcon(string iconKey) => iconKey switch

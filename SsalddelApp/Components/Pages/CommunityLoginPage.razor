@@ -1,0 +1,109 @@
+@page "/community/login"
+@layout CommunityAuthenticationLayout
+@implements IDisposable
+@inject AuthApiService AuthApi
+@inject IAuthSession AuthSession
+@inject NavigationManager Navigation
+
+<PageTitle>로그인 · 생활 교류</PageTitle>
+<section class="community-authentication__content" aria-label="생활 교류 로그인">
+    <h1>로그인</h1>
+    @if (_restoring)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        <p role="status">로그인 상태를 확인하고 있습니다.</p>
+    }
+    else
+    {
+        <Ssalddel공통로그인Panel 제목="계정으로 계속하기"
+                             설명="계정을 확인한 뒤 이전 화면으로 돌아갑니다. 요청을 자동으로 제출하지 않습니다."
+                             소셜로그인표시="false"
+                             상태메시지="@_statusMessage"
+                             상태Severity="Severity.Error"
+                             IsBusy="@_busy"
+                             일반로그인Color="Color.Primary"
+                             Elevation="0"
+                             OnPasswordLogin="LoginAsync" />
+    }
+    <nav class="community-authentication__links" aria-label="로그인 복귀">
+        <a href="@ReturnRoute">이전 화면으로</a>
+        <a href="@NeighborhoodExchange.Home">생활 교류 둘러보기</a>
+    </nav>
+</section>
+
+@code {
+    [Parameter, SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
+    private readonly CancellationTokenSource _lifetime = new();
+    private bool _restoring = true;
+    private bool _busy;
+    private bool _disposed;
+    private string? _statusMessage;
+    private string ReturnRoute => NeighborhoodExchangeAuthenticationRoutes.ReturnRoute(ReturnUrl);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await AuthSession.RestoreAsync(_lifetime.Token);
+            if (!_disposed && AuthSession.IsLoggedIn)
+            {
+                var error = await AuthApi.EnsureAccessTokenAsync(cancellationToken: _lifetime.Token);
+                if (!_disposed && error is null && AuthSession.IsLoggedIn)
+                {
+                    Navigation.NavigateTo(ReturnRoute);
+                }
+                else if (!_disposed)
+                {
+                    _statusMessage = "로그인 상태를 확인하지 못했습니다. 다시 로그인해 주세요.";
+                }
+            }
+        }
+        catch (OperationCanceledException) when (_disposed) { }
+        catch
+        {
+            _statusMessage = "로그인 상태를 불러오지 못했습니다. 다시 로그인해 주세요.";
+        }
+        finally
+        {
+            _restoring = false;
+        }
+    }
+
+    private async Task LoginAsync(공통로그인요청 request)
+    {
+        if (_busy || _disposed) return;
+        _busy = true;
+        _statusMessage = null;
+        try
+        {
+            var result = await AuthApi.LoginAsync(request.UserNameOrEmail, request.Password, _lifetime.Token);
+            if (_disposed) return;
+            if (!result.IsSuccess)
+            {
+                _statusMessage = result.ErrorMessage;
+                return;
+            }
+
+            Navigation.NavigateTo(ReturnRoute);
+        }
+        catch (OperationCanceledException) when (_disposed) { }
+        catch
+        {
+            _statusMessage = "로그인을 완료하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _lifetime.Cancel();
+        _lifetime.Dispose();
+    }
+}

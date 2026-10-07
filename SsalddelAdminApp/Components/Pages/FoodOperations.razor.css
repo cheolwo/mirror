@@ -1,0 +1,4 @@
+.food-mobile-workspace { max-width: 960px; margin-inline: auto; min-width: 0; }
+.food-order-row { overflow-wrap: anywhere; }
+.food-mobile-workspace ::deep .mud-button-root { min-height: 48px; white-space: normal; }
+.food-mobile-workspace ::deep .mud-input-control { min-width: 0; }

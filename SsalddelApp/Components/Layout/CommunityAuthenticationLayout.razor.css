@@ -1,0 +1,32 @@
+.community-authentication {
+    min-height: 100dvh;
+    padding: 24px 16px;
+    background: var(--ss-canvas, #f5f7fa);
+    color: var(--ss-ink, #172b36);
+}
+
+.community-authentication ::deep .community-authentication__content {
+    width: 100%;
+    max-width: 440px;
+    margin: 0 auto;
+}
+
+.community-authentication ::deep .community-authentication__content h1 {
+    font-size: 24px;
+    line-height: 32px;
+    margin: 0 0 16px;
+}
+
+.community-authentication ::deep .community-authentication__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-top: 16px;
+}
+
+.community-authentication ::deep .community-authentication__links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    color: var(--ss-accent, #0f766e);
+}

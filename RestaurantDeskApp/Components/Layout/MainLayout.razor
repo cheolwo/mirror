@@ -106,6 +106,10 @@
         finally
         {
             try { await AuthService.LogoutAsync(); }
+            catch (RestaurantPendingStorageException)
+            {
+                // The login screen displays the cleanup failure after the private workspace closes.
+            }
             finally { NavigationManager.NavigateTo("/login", replace: true); }
         }
     }

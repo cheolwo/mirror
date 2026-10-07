@@ -5,6 +5,39 @@
 
 <PageTitle>창고 운영 홈</PageTitle>
 
+@if (!ViewModel.초기화됨 || ViewModel.초기화중)
+{
+    <MudStack Class="pa-4" Spacing="2" AlignItems="AlignItems.Center">
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        <MudText>창고 업무를 준비하고 있습니다.</MudText>
+    </MudStack>
+}
+else if (!string.IsNullOrWhiteSpace(ViewModel.페이지오류메시지))
+{
+    <MudStack Class="pa-4" Spacing="2">
+        <MudAlert Severity="Severity.Error">@ViewModel.페이지오류메시지</MudAlert>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ReloadAsync">
+            다시 확인
+        </MudButton>
+    </MudStack>
+}
+else if (!ViewModel.기능사용가능)
+{
+    <MudStack Class="pa-4" Spacing="2">
+        <MudAlert Severity="Severity.Info">@ViewModel.기능안내</MudAlert>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ReloadAsync">
+            상태 다시 확인
+        </MudButton>
+    </MudStack>
+}
+else if (!ViewModel.인증.창고업무접근가능)
+{
+    <WarehouseAuthenticationPanel ViewModel="@ViewModel.인증"
+                                  OnAuthenticated="HandleAuthenticatedAsync"
+                                  OnLoggedOut="HandleLoggedOut" />
+}
+else if (ViewModel.업무사용가능)
+{
 <WarehousePageShell Model="@ViewModel"
                     Title="창고 운영 홈"
                     Description="창고 유형을 선택하고 해당 업무 흐름으로 진입합니다."
@@ -38,6 +71,7 @@
                                Variant="Variant.Outlined"
                                Dense="true"
                                Clearable="true"
+                               Disabled="@ViewModel.처리중"
                                @bind-Value="_selectedWarehouseId">
                         @foreach (var warehouse in ViewModel.창고조회.항목목록)
                         {
@@ -78,6 +112,7 @@
                             <MudButton Variant="Variant.Filled"
                                        Color="@ProfileColor(profile.코드)"
                                        EndIcon="@Icons.Material.Filled.ChevronRight"
+                                       Disabled="@(!ViewModel.업무사용가능)"
                                        OnClick="@(() => OpenProfile(profile.코드))">
                                 업무 화면 열기
                             </MudButton>
@@ -116,6 +151,7 @@
 
 <AppContextImageWall AppPackId="warehouse"
                      Title="입고에서 출고까지" />
+}
 
 @code {
     private long? _selectedWarehouseId;
@@ -139,8 +175,25 @@
         _selectedWarehouseId = ViewModel.세션.선택된창고?.Id;
     }
 
+    private async Task HandleAuthenticatedAsync()
+    {
+        await ViewModel.인증후조회Async();
+        _selectedWarehouseId = ViewModel.세션.선택된창고?.Id;
+    }
+
+    private void HandleLoggedOut()
+    {
+        ViewModel.인증해제적용();
+        _selectedWarehouseId = null;
+    }
+
     private void OpenProfile(string profileCode)
     {
+        if (!ViewModel.업무사용가능)
+        {
+            return;
+        }
+
         if (_selectedWarehouseId is { } warehouseId)
         {
             ViewModel.세션.창고선택(warehouseId, profileCode);

@@ -1,0 +1,75 @@
+@page "/food-operations"
+@using Ssalddel.Ui.Common.Areas.BackOffice.ViewModels
+@implements IDisposable
+@inject AdminFoodOperationsService FoodService
+@inject AdminAuthSession Session
+@inject AdminAuthService AuthService
+
+<PageTitle>음식 주문</PageTitle>
+
+<MudStack Spacing="3" Class="food-mobile-workspace">
+    <MudText Typo="Typo.h4">음식 주문</MudText>
+    <MudButton Href="/food-operations/demand-surcharge" Variant="Variant.Text">음식 배달 한시 할증</MudButton>
+    @if (restoring || state is null)
+    { <MudProgressLinear Indeterminate="true" Color="Color.Primary" /> }
+    else if (!Session.IsServerAdmin || state.RequiresLogin || !state.AuthenticationCurrent)
+    {
+        <MudAlert Severity="Severity.Warning">운영자 로그인이 필요합니다.</MudAlert>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/login?returnUrl=%2Ffood-operations">로그인</MudButton>
+    }
+    else
+    {
+        <MudTextField T="string" @bind-Value="search" Label="주문번호·음식점 검색" Variant="Variant.Outlined" MaxLength="100" Disabled="@state.IsBusy" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@state.IsBusy" OnClick="SearchAsync">조회</MudButton>
+        @if (!string.IsNullOrWhiteSpace(state.Message))
+        { <MudAlert Severity="@(state.RequiresRefresh ? Severity.Warning : Severity.Info)">@state.Message</MudAlert> }
+        @if (state.IsBusy) { <MudProgressLinear Indeterminate="true" Color="Color.Primary" /> }
+        @if (state.List is { } list)
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary">전체 @list.TotalCount 건 · @list.Page 페이지</MudText>
+            @foreach (var item in list.Items)
+            {
+                <MudPaper Elevation="0" Outlined="true" Class="pa-4 food-order-row">
+                    <MudStack Spacing="1">
+                        <MudText Typo="Typo.subtitle1">@item.RestaurantName</MudText>
+                        <MudText Typo="Typo.body2">@item.OrderStatus · @item.DispatchStatus</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@item.OrderNo · @AdminFoodOperationsState.DateText(item.UpdatedAtUtc)</MudText>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(state.IsBusy || state.RequiresRefresh)" Href="@DetailUrl(item.OrderNo)">주문 확인</MudButton>
+                    </MudStack>
+                </MudPaper>
+            }
+            <MudStack Row="true" Style="flex-wrap:wrap">
+                <MudButton Disabled="@(state.IsBusy || list.Page <= 1)" OnClick="@(() => LoadPageAsync(list.Page - 1))">이전</MudButton>
+                <MudButton Disabled="@(state.IsBusy || list.Page * list.PageSize >= list.TotalCount)" OnClick="@(() => LoadPageAsync(list.Page + 1))">다음</MudButton>
+            </MudStack>
+        }
+        <MudButton Variant="Variant.Text" Disabled="@state.IsBusy" OnClick="@(() => LoadPageAsync(state.Page))">다시 조회</MudButton>
+    }
+    <MudButton Href="/overview" Variant="Variant.Text">운영 개요로</MudButton>
+</MudStack>
+
+@code {
+    private AdminFoodOperationsState? state;
+    private string search = string.Empty;
+    private bool restoring = true;
+    private bool disposed;
+    protected override async Task OnInitializedAsync()
+    {
+        state = new(FoodService, () => Session.IsServerAdmin ? Session.UserId : string.Empty);
+        Session.Changed += SessionChanged;
+        await Session.RestoreAsync();
+        if (!string.IsNullOrWhiteSpace(Session.RefreshToken)) await AuthService.EnsureAccessTokenAsync();
+        if (disposed) return;
+        restoring = false;
+        await state.RefreshListAsync(search);
+    }
+    private Task SearchAsync() => state!.RefreshListAsync(search, 1);
+    private Task LoadPageAsync(int page) => state!.RefreshListAsync(state.Query, page);
+    private static string DetailUrl(string orderNo) => "/food-operations/orders/" + Uri.EscapeDataString(orderNo);
+    private void SessionChanged() => _ = InvokeAsync(() =>
+    {
+        if (disposed || state is null) return;
+        state.SynchronizeAuthentication(); StateHasChanged();
+    });
+    public void Dispose() { if (disposed) return; disposed = true; Session.Changed -= SessionChanged; state?.Dispose(); }
+}

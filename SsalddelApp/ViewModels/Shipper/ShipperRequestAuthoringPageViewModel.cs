@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using Ssalddel.Contracts.Common.Community;
+using Ssalddel.Contracts.Shipper.Request;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
 using SsalddelApp.Models.Shipper;
 using SsalddelApp.Services;
@@ -139,7 +141,9 @@ public sealed class ShipperRequestAuthoringPageViewModel
             var created = await _operations.AddRequestAsync(request);
             StatusSeverity = Severity.Success;
             StatusMessage = "운송 의뢰 원장을 등록했습니다.";
-            _navigation.NavigateTo(ShipperRoutes.RequestDetailFor(created.의뢰Id));
+            var context = ShipperRequestNavigationContext.Parse(_navigation.Uri);
+            _navigation.NavigateTo(PageNavigationContext.WithReturnPath(
+                ShipperRoutes.RequestDetailFor(created.의뢰Id), context.ReturnPath));
         }
         catch (Exception ex)
         {

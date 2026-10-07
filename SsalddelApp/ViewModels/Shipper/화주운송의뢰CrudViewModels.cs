@@ -84,6 +84,8 @@ public abstract class 화주운송의뢰Crud업무ViewModelBase(
         {
             의뢰Id = source.의뢰Id,
             화물종류 = source.화물종류,
+            화물원본 = ShipperRequestItem.화물복사(source.화물원본),
+            원본화물종류 = source.원본화물종류,
             화물적재형태 = source.화물적재형태,
             의뢰상태 = source.의뢰상태,
             결제상태 = source.결제상태,

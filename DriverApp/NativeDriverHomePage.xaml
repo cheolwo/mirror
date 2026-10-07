@@ -16,7 +16,18 @@
             <Label x:Name="TitleLabel"
                    IsVisible="False" />
             <Label x:Name="StatusLabel"
+                   FontSize="14"
+                   TextColor="#334155"
+                   BackgroundColor="#EFFFFFFF"
+                   Padding="12"
                    IsVisible="False" />
+            <Button x:Name="RetryWorkspaceButton"
+                    Text="다시 시도"
+                    BackgroundColor="#2563eb"
+                    TextColor="#ffffff"
+                    CornerRadius="8"
+                    Clicked="OnRetryWorkspaceClicked"
+                    IsVisible="False" />
 
             <Border Padding="5"
                     BackgroundColor="#EFFFFFFF"

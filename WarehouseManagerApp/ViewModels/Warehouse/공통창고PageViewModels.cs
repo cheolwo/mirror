@@ -6,51 +6,6 @@ using WarehouseManagerApp.Services;
 
 namespace WarehouseManagerApp.ViewModels.Warehouse;
 
-public sealed class 창고홈PageViewModel : 창고PageViewModelBase
-{
-    private readonly I창고작업구성Resolver _구성Resolver;
-
-    public 창고홈PageViewModel(
-        창고작업세션상태ViewModel 세션,
-        I창고작업구성Resolver 구성Resolver,
-        창고목록조회ViewModel 창고조회,
-        입고조회ViewModel 입고조회,
-        출고재고조회ViewModel 재고조회)
-        : base(세션, 창고PageCodes.홈, "창고 홈")
-    {
-        _구성Resolver = 구성Resolver;
-        this.창고조회 = 구성요소등록(창고조회);
-        this.입고조회 = 구성요소등록(입고조회);
-        this.재고조회 = 구성요소등록(재고조회);
-    }
-
-    public 창고목록조회ViewModel 창고조회 { get; }
-    public 입고조회ViewModel 입고조회 { get; }
-    public 출고재고조회ViewModel 재고조회 { get; }
-    public IReadOnlyList<창고PageDefinition> 페이지목록
-        => _구성Resolver.페이지목록조회(세션.운영ProfileCode);
-    public IReadOnlyList<창고PageDefinition> 연결된페이지목록
-        => 페이지목록.Where(page => page.화면연결됨).ToArray();
-    public bool 처리중 => 창고조회.처리중 || 입고조회.처리중 || 재고조회.처리중;
-
-    public async Task<bool> 초기화Async(CancellationToken cancellationToken = default)
-    {
-        if (!await 창고조회.조회Async(cancellationToken))
-        {
-            return false;
-        }
-
-        if (세션.선택된창고 is null)
-        {
-            return true;
-        }
-
-        var inboundLoaded = await 입고조회.조회Async(cancellationToken);
-        var inventoryLoaded = await 재고조회.조회Async(cancellationToken);
-        return inboundLoaded && inventoryLoaded;
-    }
-}
-
 public sealed class 창고작업보드PageViewModel : 창고PageViewModelBase
 {
     private readonly I창고작업구성Resolver _구성Resolver;

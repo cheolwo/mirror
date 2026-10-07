@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:FDriverApp.PageModels"
+    x:Class="FDriverApp.Pages.CompletedDeliveryDetailPage" x:DataType="models:FDriverCompletedDeliveryDetailPageModel"
+    Title="배달 상세" Shell.NavBarIsVisible="False"
+    BackgroundColor="{AppThemeBinding Light={StaticResource DriverCanvas}, Dark={StaticResource DriverCanvasDark}}">
+    <ContentPage.Resources>
+        <Style x:Key="DetailDividerStyle" TargetType="BoxView">
+            <Setter Property="HeightRequest" Value="1" />
+            <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource DriverBorder}, Dark={StaticResource DriverBorderDark}}" />
+        </Style>
+    </ContentPage.Resources>
+    <Grid RowDefinitions="Auto,*">
+        <VerticalStackLayout Grid.Row="0" Padding="16" Spacing="12"
+            BackgroundColor="{AppThemeBinding Light={StaticResource DriverSurface}, Dark={StaticResource DriverSurfaceDark}}">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <Button Text="목록으로" Clicked="OnBackClicked" Style="{StaticResource DriverSecondaryButtonStyle}" HorizontalOptions="Start" />
+                <Button Grid.Column="1" Text="새로고침" Command="{Binding RefreshCommand}" Style="{StaticResource DriverSecondaryButtonStyle}" />
+            </Grid>
+            <Label Text="배달 상세" Style="{StaticResource DriverTitleStyle}" />
+            <Label Text="{Binding StatusText}" Style="{StaticResource DriverMetadataStyle}" />
+            <Label Text="{Binding AccessNotice}" Style="{StaticResource DriverMetadataStyle}" />
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
+            <Button Text="로그인하기" IsVisible="{Binding IsAuthenticationRequired}" Clicked="OnLoginClicked"
+                HorizontalOptions="Start" Style="{StaticResource DriverPrimaryButtonStyle}" />
+        </VerticalStackLayout>
+        <ScrollView Grid.Row="1" IsVisible="{Binding HasDetail}">
+            <VerticalStackLayout Padding="16" Spacing="16" BindingContext="{Binding Detail}" x:DataType="models:FDriverCompletedDeliveryDetailItem">
+                <Button Text="이 배달 문제 접수" Clicked="OnProblemClicked" Style="{StaticResource DriverSecondaryButtonStyle}" HorizontalOptions="Start" />
+                <Border Style="{StaticResource DriverCardStyle}" Padding="16">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="정산·요금 구성" Style="{StaticResource DriverSectionStyle}" />
+                        <Label Text="{Binding Settlement.Display.RestaurantName}" Style="{StaticResource DriverBodyStyle}" FontAttributes="Bold" />
+                        <Label Text="{Binding Settlement.CompletedText}" Style="{StaticResource DriverMetadataStyle}" />
+                        <BoxView Style="{StaticResource DetailDividerStyle}" />
+                        <Label Text="{Binding Settlement.Display.GrossText, StringFormat='배달료 {0}'}" Style="{StaticResource DriverValueStyle}" />
+                        <Label Text="{Binding Settlement.DeductionSummaryText}" Style="{StaticResource DriverMetadataStyle}" />
+                        <Label Text="{Binding Settlement.NetSummaryText}" Style="{StaticResource DriverBodyStyle}" />
+                        <Label Text="{Binding Settlement.Display.StatusText}" Style="{StaticResource DriverMetadataStyle}" />
+                        <Label Text="{Binding Settlement.Display.PaymentText}" Style="{StaticResource DriverMetadataStyle}" />
+                        <BoxView Style="{StaticResource DetailDividerStyle}" />
+                        <Label Text="요금 구성" Style="{StaticResource DriverBodyStyle}" />
+                        <Label Text="{Binding Settlement.PricingDetails}" Style="{StaticResource DriverMetadataStyle}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Style="{StaticResource DriverCardStyle}" Padding="16" IsVisible="{Binding HasOrderDetails}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="주문 정보" Style="{StaticResource DriverSectionStyle}" />
+                        <Label Text="음식점 주소" Style="{StaticResource DriverMetadataStyle}" />
+                        <Label Text="{Binding RestaurantAddress}" Style="{StaticResource DriverBodyStyle}" />
+                        <BoxView Style="{StaticResource DetailDividerStyle}" />
+                        <Label Text="주문 메뉴" Style="{StaticResource DriverBodyStyle}" />
+                        <Label Text="{Binding MenuText}" Style="{StaticResource DriverBodyStyle}" />
+                        <Label Text="{Binding TotalOrderAmountText, StringFormat='주문금액 {0}'}" Style="{StaticResource DriverMetadataStyle}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Style="{StaticResource DriverCardStyle}" Padding="16" IsVisible="{Binding HasCustomerDetails}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="고객 정보" Style="{StaticResource DriverSectionStyle}" />
+                        <Label Text="전달 주소" Style="{StaticResource DriverMetadataStyle}" />
+                        <Label Text="{Binding CustomerAddress}" Style="{StaticResource DriverBodyStyle}" />
+                        <BoxView Style="{StaticResource DetailDividerStyle}" />
+                        <Label Text="수령인" Style="{StaticResource DriverBodyStyle}" />
+                        <Label Text="{Binding CustomerName}" Style="{StaticResource DriverBodyStyle}" />
+                        <Label Text="{Binding CustomerPhone}" Style="{StaticResource DriverMetadataStyle}" />
+                        <BoxView Style="{StaticResource DetailDividerStyle}" />
+                        <Label Text="전달 요청" Style="{StaticResource DriverBodyStyle}" />
+                        <Label Text="{Binding DeliveryInstructions}" Style="{StaticResource DriverBodyStyle}" />
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

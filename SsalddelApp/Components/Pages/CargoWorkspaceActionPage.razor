@@ -1,0 +1,8 @@
+@page "/workspace/cargo-driver/transports/{ItemId:long}/{ActionKey}"
+@layout RoleWorkspaceLayout
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
+<CargoTransportActionScreen @key="(ItemId, ActionKey)" ItemId="@ItemId" ActionKey="@ActionKey" />
+@code {
+    [Parameter] public long ItemId { get; set; }
+    [Parameter] public string ActionKey { get; set; } = "";
+}

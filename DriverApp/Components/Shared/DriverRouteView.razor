@@ -1,7 +1,36 @@
 @inject DriverViewVisibilityService ViewVisibilityService
 @inject NavigationManager NavigationManager
+@inject IAuthSession AuthSession
+@implements IDisposable
 
-@if (!ViewVisibilityService.IsLoaded)
+@if (AuthenticationStatus == DriverRouteAuthenticationStatus.Checking)
+{
+    <LayoutView Layout="typeof(Layout.AuthLayout)">
+        <MudStack Class="pa-4" AlignItems="AlignItems.Center" Justify="Justify.Center">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            <MudText>로그인 정보를 확인하고 있습니다.</MudText>
+        </MudStack>
+    </LayoutView>
+}
+else if (AuthenticationStatus == DriverRouteAuthenticationStatus.Unavailable)
+{
+    <LayoutView Layout="typeof(Layout.AuthLayout)">
+        <MudStack Class="pa-4" Spacing="2">
+            <MudAlert Severity="Severity.Warning">@_authentication?.ErrorMessage</MudAlert>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="RetryAuthenticationAsync">다시 시도</MudButton>
+        </MudStack>
+    </LayoutView>
+}
+else if (AuthenticationStatus == DriverRouteAuthenticationStatus.LoginRequired)
+{
+    <LayoutView Layout="typeof(Layout.AuthLayout)">
+        <MudStack Class="pa-4" Spacing="2">
+            <MudText>기사 로그인 후 업무를 확인할 수 있습니다.</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@_authentication?.LoginRoute">로그인하고 업무 확인</MudButton>
+        </MudStack>
+    </LayoutView>
+}
+else if (!ViewVisibilityService.IsLoaded)
 {
     <MudStack Class="pa-4" AlignItems="AlignItems.Center" Justify="Justify.Center">
         <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
@@ -13,7 +42,7 @@ else if (blockedItem is not null)
 }
 else
 {
-    <RouteView RouteData="RouteData" DefaultLayout="typeof(Layout.MainLayout)" />
+    <RouteView @key="WorkspaceKey" RouteData="RouteData" DefaultLayout="typeof(Layout.MainLayout)" />
     <FocusOnNavigate RouteData="RouteData" Selector="h1" />
 }
 
@@ -21,10 +50,75 @@ else
     [Parameter, EditorRequired] public RouteData RouteData { get; set; } = default!;
 
     private Ssalddel.Contracts.Common.ViewSettings.View가시성항목응답? blockedItem;
+    private DriverRouteAuthenticationState? _authentication;
+    private bool _disposed;
+
+    private DriverRouteAuthenticationStatus AuthenticationStatus
+        => _authentication?.Status ?? DriverRouteAuthenticationStatus.Checking;
+    private long WorkspaceKey => _authentication?.RequiresAuthentication == true
+        ? _authentication.WorkspaceSessionRevision ?? -1
+        : -1;
+
+    protected override void OnInitialized()
+    {
+        _authentication = new DriverRouteAuthenticationState(AuthSession);
+        _authentication.Changed += AuthenticationChanged;
+    }
 
     protected override async Task OnParametersSetAsync()
     {
+        blockedItem = null;
+        _authentication!.SetRoute(NavigationManager.ToBaseRelativePath(NavigationManager.Uri));
         await ViewVisibilityService.EnsureLoadedAsync();
+        if (_disposed)
+            return;
         blockedItem = ViewVisibilityService.GetBlockingItem(NavigationManager.ToBaseRelativePath(NavigationManager.Uri));
+        await _authentication.CheckAsync();
+        NavigateToLoginIfRequired();
+    }
+
+    private async Task RetryAuthenticationAsync()
+    {
+        if (_disposed)
+            return;
+        await _authentication!.CheckAsync();
+        NavigateToLoginIfRequired();
+    }
+
+    private void AuthenticationChanged()
+        => _ = ApplyAuthenticationChangedAsync();
+
+    private async Task ApplyAuthenticationChangedAsync()
+    {
+        try
+        {
+            await InvokeAsync(() =>
+            {
+                if (_disposed)
+                    return;
+                NavigateToLoginIfRequired();
+                StateHasChanged();
+            });
+        }
+        catch (ObjectDisposedException) when (_disposed) { }
+        catch (InvalidOperationException) when (_disposed) { }
+    }
+
+    private void NavigateToLoginIfRequired()
+    {
+        if (!_disposed && AuthenticationStatus == DriverRouteAuthenticationStatus.LoginRequired)
+            NavigationManager.NavigateTo(_authentication!.LoginRoute, replace: true);
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+        _disposed = true;
+        if (_authentication is not null)
+        {
+            _authentication.Changed -= AuthenticationChanged;
+            _authentication.Dispose();
+        }
     }
 }

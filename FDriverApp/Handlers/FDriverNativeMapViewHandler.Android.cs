@@ -18,6 +18,7 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
 {
     private static readonly int PickupMarkerTintColor = AndroidColor.Rgb(245, 124, 0);
     private static readonly int DropoffMarkerTintColor = AndroidColor.Rgb(37, 99, 235);
+    private static readonly int UnselectedMarkerTintColor = AndroidColor.Rgb(100, 116, 139);
     private readonly List<Marker> _nativeMarkers = [];
     private readonly List<PathOverlay> _nativeRouteOverlays = [];
     private NaverMap? _naverMap;
@@ -27,18 +28,22 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
     private NaverMapSdk? _sdk;
     private NaverMapReadiness? _readiness;
     private CancellationTokenSource? _loadTimeout;
+    private FDriverMapCameraState CameraState => VirtualView.CameraState;
+    private bool _updatingCameraBindings;
     private bool _disconnected;
+    private int _mapGeneration;
 
     protected override FrameLayout CreatePlatformView()
     {
         var context = MauiContext?.Context ?? throw new InvalidOperationException("Android context is not available.");
         _disconnected = false;
+        var generation = ++_mapGeneration;
         _container = new FrameLayout(context);
         _statusView = new TextView(context)
         {
-            Gravity = GravityFlags.Center,
-            TextSize = 14f
+            Gravity = GravityFlags.Center
         };
+        _statusView.SetTextSize(Android.Util.ComplexUnitType.Dip, 14f);
         _statusView.SetPadding(24, 24, 24, 24);
         _statusView.SetTextColor(AndroidColor.Black);
         _statusView.SetBackgroundColor(AndroidColor.Argb(235, 255, 255, 255));
@@ -63,12 +68,13 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
 
         var mapView = new MapView(context);
         _mapView = mapView;
+        mapView.LayoutChange += OnMapLayoutChanged;
         mapView.LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
         _container.AddView(mapView, 0);
         mapView.OnCreate((Bundle?)null);
         mapView.OnStart();
         mapView.OnResume();
-        mapView.GetMapAsync(new MapReadyCallback(this));
+        mapView.GetMapAsync(new MapReadyCallback(this, generation));
         StartLoadTimeout();
         return _container;
     }
@@ -76,6 +82,8 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
     protected override void DisconnectHandler(FrameLayout platformView)
     {
         _disconnected = true;
+        _mapGeneration++;
+        VirtualView?.SetMapReady(false);
         _loadTimeout?.Cancel();
         _loadTimeout?.Dispose();
         _loadTimeout = null;
@@ -88,9 +96,14 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
         if (_naverMap is not null)
         {
             _naverMap.Load -= OnMapTilesLoaded;
+            _naverMap.CameraChange -= OnCameraChanged;
         }
         ClearMarkers();
         ClearRouteOverlays();
+        if (_mapView is not null)
+        {
+            _mapView.LayoutChange -= OnMapLayoutChanged;
+        }
         _mapView?.OnPause();
         _mapView?.OnStop();
         _mapView?.OnDestroy();
@@ -101,9 +114,9 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
         base.DisconnectHandler(platformView);
     }
 
-    private void OnMapReady(NaverMap naverMap)
+    private void OnMapReady(NaverMap naverMap, int generation)
     {
-        if (_disconnected)
+        if (_disconnected || generation != _mapGeneration)
         {
             return;
         }
@@ -111,11 +124,42 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
         _naverMap = naverMap;
         // The native map object being ready does not prove that background tiles loaded.
         _naverMap.Load += OnMapTilesLoaded;
+        _naverMap.CameraChange += OnCameraChanged;
         ApplyKoreanMapLocale();
         ApplyMapOptions();
+        if (CameraState.CurrentCamera is { } previous)
+        {
+            _naverMap.MoveCamera(CameraUpdate.ScrollAndZoomTo(
+                new LatLng(previous.Latitude, previous.Longitude), previous.Zoom));
+        }
         ApplyCamera();
         ApplyMarkers();
         ApplyRouteOverlays();
+    }
+
+    private void OnCameraChanged(object? sender, NaverMap.CameraChangeEventArgs args)
+    {
+        if (_disconnected || _naverMap is null || VirtualView is null)
+        {
+            return;
+        }
+
+        var camera = _naverMap.CameraPosition;
+        CameraState.ObserveNativeCamera(camera.Target.Latitude, camera.Target.Longitude, camera.Zoom);
+        _updatingCameraBindings = true;
+        try
+        {
+            // SDK 카메라 값을 되돌려 보내면서 같은 카메라를 다시 이동하지 않습니다.
+            VirtualView.Zoom = camera.Zoom;
+            if (args.P0 == CameraUpdate.ReasonGesture)
+            {
+                VirtualView.IsFollowingCurrentLocation = false;
+            }
+        }
+        finally
+        {
+            _updatingCameraBindings = false;
+        }
     }
 
     private void OnMapTilesLoaded(object? sender, EventArgs args)
@@ -131,13 +175,18 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
 
     private void OnAuthenticationFailed(object? sender, NaverMapSdk.AuthFailedEventArgs args)
     {
+        var generation = _mapGeneration;
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            if (_disconnected)
+            if (_disconnected || generation != _mapGeneration)
             {
                 return;
             }
             // Raw SDK exceptions may contain configuration information and are not displayed/logged.
+#if DEBUG
+            var safeCode = args.P0.ErrorCode is "401" or "429" or "800" ? args.P0.ErrorCode : "unknown";
+            Android.Util.Log.Warn("FDriverMap", $"Naver SDK authentication failed: {safeCode}");
+#endif
             _readiness?.OnAuthenticationFailed(args.P0.ErrorCode);
             _loadTimeout?.Cancel();
             UpdateStatus();
@@ -191,11 +240,17 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
 
     private void UpdateStatus()
     {
-        if (_statusView is null)
+        if (!MainThread.IsMainThread)
+        {
+            MainThread.BeginInvokeOnMainThread(UpdateStatus);
+            return;
+        }
+        if (_disconnected || _statusView is null)
         {
             return;
         }
 
+        VirtualView?.SetMapReady(_readiness?.Status == NaverMapReadinessStatus.Ready);
         var message = _readiness?.Message;
         _statusView.Text = message;
         _statusView.Visibility = message is null ? ViewStates.Gone : ViewStates.Visible;
@@ -237,8 +292,9 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
         uiSettings.CompassEnabled = true;
         uiSettings.ScaleBarEnabled = true;
         uiSettings.ZoomControlEnabled = true;
-        uiSettings.LocationButtonEnabled = VirtualView.ShowLocationButton;
-        uiSettings.SetLogoMargin(16, 16, 16, 120);
+        // 앱의 GPS 소유자와 재중앙 버튼을 사용합니다. SDK LocationSource는 연결하지 않습니다.
+        uiSettings.LocationButtonEnabled = false;
+        uiSettings.SetLogoMargin(ToPixels(8), ToPixels(8), ToPixels(8), ToPixels(8));
 
         ApplyLocationOverlay();
     }
@@ -253,13 +309,39 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
 
     private void ApplyCamera()
     {
-        if (_naverMap is null || VirtualView is null)
+        if (_naverMap is null || VirtualView is null || _updatingCameraBindings)
         {
             return;
         }
 
-        var target = new LatLng(VirtualView.CenterLatitude, VirtualView.CenterLongitude);
-        var update = CameraUpdate.ScrollAndZoomTo(target, VirtualView.Zoom);
+        var camera = CameraState.ResolveUpdate(
+            VirtualView.CenterLatitude,
+            VirtualView.CenterLongitude,
+            VirtualView.HasCurrentLocation,
+            VirtualView.CurrentLocationLatitude,
+            VirtualView.CurrentLocationLongitude,
+            VirtualView.IsFollowingCurrentLocation,
+            VirtualView.Zoom,
+            VirtualView.RecenterRequestVersion);
+        if (camera is null)
+        {
+            return;
+        }
+
+        if (camera.ResumeFollowing)
+        {
+            _updatingCameraBindings = true;
+            try
+            {
+                VirtualView.IsFollowingCurrentLocation = true;
+            }
+            finally
+            {
+                _updatingCameraBindings = false;
+            }
+        }
+        var target = new LatLng(camera.Latitude, camera.Longitude);
+        var update = CameraUpdate.ScrollAndZoomTo(target, camera.Zoom);
         _naverMap.MoveCamera(update);
         ApplyLocationOverlay();
     }
@@ -274,12 +356,14 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
         ClearMarkers();
         foreach (var item in VirtualView.Markers)
         {
-            AddMarker(item, item.PickupLatitude, item.PickupLongitude, item.PickupLabel, item.Title, PickupMarkerTintColor);
-            if (item.DropoffLatitude != 0d && item.DropoffLongitude != 0d)
-            {
-                AddMarker(item, item.DropoffLatitude, item.DropoffLongitude, item.DropoffLabel, item.DropoffAddress, DropoffMarkerTintColor);
-            }
+            var selected = !string.IsNullOrWhiteSpace(VirtualView.SelectedRequestId)
+                && string.Equals(item.RequestId, VirtualView.SelectedRequestId, StringComparison.Ordinal);
+            AddMarker(item, item.PickupLatitude, item.PickupLongitude, item.PickupLabel, item.Title,
+                selected ? PickupMarkerTintColor : UnselectedMarkerTintColor, selected);
+            AddMarker(item, item.DropoffLatitude, item.DropoffLongitude, item.DropoffLabel, item.DropoffAddress,
+                selected ? DropoffMarkerTintColor : UnselectedMarkerTintColor, selected);
         }
+        ApplyRouteFrame();
     }
 
     private void ApplyRouteOverlays()
@@ -292,7 +376,7 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
         ClearRouteOverlays();
         foreach (var item in VirtualView.RouteOverlays)
         {
-            if (item.Points.Count < 2)
+            if (item.Points.Count < 2 || item.Points.Any(x => !FDriverMapCameraState.IsValidCoordinate(x.Latitude, x.Longitude)))
             {
                 continue;
             }
@@ -305,11 +389,88 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
                 Coords = coords,
                 Width = item.Width,
                 Color = ParseColor(item.StrokeColor, AndroidColor.Rgb(37, 99, 235)),
-                OutlineColor = ParseColor(item.OutlineColor, AndroidColor.White)
+                OutlineColor = ParseColor(item.OutlineColor, AndroidColor.White),
+                ZIndex = _nativeRouteOverlays.Count
             };
 
             overlay.Map = _naverMap;
             _nativeRouteOverlays.Add(overlay);
+        }
+        ApplyRouteFrame();
+    }
+
+    private void OnMapLayoutChanged(object? sender, Android.Views.View.LayoutChangeEventArgs args)
+        => ApplyRouteFrame();
+
+    private int ToPixels(double dip)
+        => (int)Math.Ceiling(dip * (_mapView?.Resources?.DisplayMetrics?.Density ?? 1f));
+
+    private void ApplyRouteFrame()
+    {
+        if (_disconnected || _naverMap is null || VirtualView is null || _mapView is null
+            || _mapView.Width <= 0 || _mapView.Height <= 0)
+        {
+            return;
+        }
+
+        var route = VirtualView.RouteOverlays.FirstOrDefault(x =>
+            string.Equals(x.RouteId, VirtualView.SelectedRequestId, StringComparison.Ordinal));
+        if (route is null || route.Points.Count < 2
+            || route.Points.Any(x => !FDriverMapCameraState.IsValidCoordinate(x.Latitude, x.Longitude)))
+        {
+            return;
+        }
+
+        var points = route.Points.Select(x => (x.Latitude, x.Longitude)).ToList();
+        var selected = VirtualView.Markers.FirstOrDefault(x =>
+            string.Equals(x.RequestId, VirtualView.SelectedRequestId, StringComparison.Ordinal));
+        if (selected is null)
+        {
+            // Do not consume the first frame before the selected pins arrive.
+            return;
+        }
+        points.Add((selected.PickupLatitude, selected.PickupLongitude));
+        points.Add((selected.DropoffLatitude, selected.DropoffLongitude));
+        if (VirtualView.HasCurrentLocation)
+        {
+            points.Add((VirtualView.CurrentLocationLatitude, VirtualView.CurrentLocationLongitude));
+        }
+
+        // Only the current route and its pickup/dropoff pins determine the initial frame.
+        // GPS updates and refreshed geometry for the same step preserve user exploration.
+        var frame = CameraState.ResolveRouteFrame($"{route.RouteId}:{route.StrokeColor}", points);
+        if (frame is null)
+        {
+            return;
+        }
+
+        var bounds = LatLngBounds.From(
+            new LatLng(frame.SouthLatitude, frame.WestLongitude),
+            new LatLng(frame.NorthLatitude, frame.EastLongitude));
+        var horizontal = Math.Min(ToPixels(32), _mapView.Width / 5);
+        var top = Math.Min(ToPixels(72), _mapView.Height / 4);
+        var bottom = Math.Min(ToPixels(64), _mapView.Height / 4);
+        _updatingCameraBindings = true;
+        try
+        {
+            VirtualView.IsFollowingCurrentLocation = false;
+        }
+        finally
+        {
+            _updatingCameraBindings = false;
+        }
+        _naverMap.MoveCamera(CameraUpdate.FitBounds(bounds, horizontal, top, horizontal, bottom));
+        // Also record synchronously so an intervening binding update cannot restore GPS-only framing.
+        var camera = _naverMap.CameraPosition;
+        CameraState.ObserveNativeCamera(camera.Target.Latitude, camera.Target.Longitude, camera.Zoom);
+        _updatingCameraBindings = true;
+        try
+        {
+            VirtualView.Zoom = camera.Zoom;
+        }
+        finally
+        {
+            _updatingCameraBindings = false;
         }
     }
 
@@ -321,19 +482,18 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
         }
 
         var overlay = _naverMap.LocationOverlay;
-        var latitude = VirtualView.CurrentLocationLatitude != 0d
-            ? VirtualView.CurrentLocationLatitude
-            : VirtualView.CenterLatitude;
-        var longitude = VirtualView.CurrentLocationLongitude != 0d
-            ? VirtualView.CurrentLocationLongitude
-            : VirtualView.CenterLongitude;
-        overlay.Position = new LatLng(latitude, longitude);
+        var hasLocation = VirtualView.HasCurrentLocation
+            && FDriverMapCameraState.IsValidCoordinate(VirtualView.CurrentLocationLatitude, VirtualView.CurrentLocationLongitude);
+        if (hasLocation)
+        {
+            overlay.Position = new LatLng(VirtualView.CurrentLocationLatitude, VirtualView.CurrentLocationLongitude);
+        }
         overlay.CircleColor = AndroidColor.Argb(40, 25, 118, 210);
         overlay.CircleOutlineColor = AndroidColor.Argb(120, 25, 118, 210);
         overlay.CircleOutlineWidth = 2;
-        overlay.Visible = VirtualView.ShowCurrentLocationOverlay;
+        overlay.Visible = VirtualView.ShowCurrentLocationOverlay && hasLocation;
 
-        _naverMap.LocationTrackingMode = VirtualView.ShowCurrentLocationOverlay
+        _naverMap.LocationTrackingMode = VirtualView.ShowCurrentLocationOverlay && hasLocation
             ? LocationTrackingMode.NoFollow!
             : LocationTrackingMode.None!;
     }
@@ -344,9 +504,10 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
         double longitude,
         string caption,
         string subCaption,
-        int iconTintColor)
+        int iconTintColor,
+        bool selected)
     {
-        if (_naverMap is null || VirtualView is null)
+        if (_naverMap is null || VirtualView is null || !FDriverMapCameraState.IsValidCoordinate(latitude, longitude))
         {
             return;
         }
@@ -357,7 +518,8 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
             Icon = MarkerIcons.Black,
             IconTintColor = iconTintColor,
             CaptionText = caption,
-            SubCaptionText = subCaption
+            SubCaptionText = subCaption,
+            ZIndex = selected ? 1000 : 0
         };
 
         marker.Click += (_, _) =>
@@ -407,11 +569,11 @@ public partial class FDriverNativeMapViewHandler : ViewHandler<FDriverNativeMapV
         }
     }
 
-    private sealed class MapReadyCallback(FDriverNativeMapViewHandler handler) : Java.Lang.Object, IOnMapReadyCallback
+    private sealed class MapReadyCallback(FDriverNativeMapViewHandler handler, int generation) : Java.Lang.Object, IOnMapReadyCallback
     {
         public void OnMapReady(NaverMap naverMap)
         {
-            handler.OnMapReady(naverMap);
+            handler.OnMapReady(naverMap, generation);
         }
     }
 }

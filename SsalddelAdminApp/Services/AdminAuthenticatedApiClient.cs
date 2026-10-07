@@ -124,7 +124,19 @@ public sealed class AdminAuthenticatedApiClient
         response.Dispose();
         throw new AdminApiException(
             string.IsNullOrWhiteSpace(message) ? "관리자 요청을 처리하지 못했습니다." : message,
-            statusCode);
+            statusCode, errorCode: ReadProblemErrorCode(content));
+    }
+
+    private static string? ReadProblemErrorCode(string content)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(content);
+            return document.RootElement.ValueKind == JsonValueKind.Object
+                && document.RootElement.TryGetProperty("errorCode", out var code)
+                && code.ValueKind == JsonValueKind.String ? code.GetString() : null;
+        }
+        catch (JsonException) { return null; }
     }
 
     private static string ReadProblemMessage(string content)
@@ -137,6 +149,7 @@ public sealed class AdminAuthenticatedApiClient
         try
         {
             using var document = JsonDocument.Parse(content);
+            if (document.RootElement.ValueKind != JsonValueKind.Object) return string.Empty;
             foreach (var name in new[] { "detail", "message", "title" })
             {
                 if (document.RootElement.TryGetProperty(name, out var value)
@@ -160,11 +173,14 @@ public sealed class AdminApiException : Exception
     public AdminApiException(
         string message,
         HttpStatusCode? statusCode,
-        Exception? innerException = null)
+        Exception? innerException = null,
+        string? errorCode = null)
         : base(message, innerException)
     {
         StatusCode = statusCode;
+        ErrorCode = errorCode;
     }
 
     public HttpStatusCode? StatusCode { get; }
+    public string? ErrorCode { get; }
 }

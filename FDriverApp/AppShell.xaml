@@ -5,14 +5,14 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:sf="clr-namespace:Syncfusion.Maui.Toolkit.SegmentedControl;assembly=Syncfusion.Maui.Toolkit"
     xmlns:pages="clr-namespace:FDriverApp.Pages"
-    Shell.FlyoutBehavior="Flyout"
+    Shell.FlyoutBehavior="Disabled"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False"
     Title="살뜰 배달">
 
-    <ShellContent
-        Title="홈"
-        Icon="{StaticResource IconDashboard}"
-        ContentTemplate="{DataTemplate pages:SsalddelHomePage}"
-        Route="home" />
+    <ShellContent x:Name="WorkspaceContent" Title="배달" Route="food-delivery-workspace" />
+    <ShellContent Title="홈" FlyoutItemIsVisible="False"
+        ContentTemplate="{DataTemplate pages:SsalddelHomePage}" Route="home" />
 
     <Shell.FlyoutFooter>
         <Grid Padding="15">

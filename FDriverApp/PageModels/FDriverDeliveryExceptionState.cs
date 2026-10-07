@@ -41,6 +41,19 @@ public sealed partial class FDriverDeliveryExceptionState : ObservableObject
 
     public void Hide() => IsOpen = false;
 
+    public 음식배달중단요청? CapturePending() => _pending is null ? null : Copy(_pending);
+
+    public void RestorePending(ActiveDeliveryPreview delivery, 음식배달중단요청 request)
+    {
+        Delivery = delivery;
+        _pending = Copy(request);
+        SelectedReason = Reasons.FirstOrDefault(x => x.Code == request.사유Code);
+        Memo = request.메모 ?? string.Empty;
+        HasPendingRequest = true;
+        IsOpen = true;
+        Notice = "이전 중단 요청의 결과를 확인했습니다. 필요하면 같은 요청을 다시 확인해 주세요.";
+    }
+
     public 음식배달중단요청? Prepare(DateTime utcNow)
     {
         if (_pending is not null) return Copy(_pending);
@@ -79,11 +92,9 @@ public sealed partial class FDriverDeliveryExceptionState : ObservableObject
             Reset();
             return;
         }
-        if (current.AttemptRevision != Delivery.AttemptRevision)
+        if (current.AttemptRevision != Delivery.AttemptRevision && _pending is not null)
         {
-            _pending = null;
-            HasPendingRequest = false;
-            Notice = "배달 상태가 변경되었습니다. 새 상태와 사유를 확인한 뒤 다시 요청해 주세요.";
+            Notice = "배달 상태가 변경되었습니다. 이전 요청의 결과를 확인할 때까지 입력을 유지합니다.";
         }
         Delivery = current;
     }

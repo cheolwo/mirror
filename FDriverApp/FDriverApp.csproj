@@ -54,6 +54,16 @@
 		<PackageReference Include="Square.OkIO.JVM" />
 	</ItemGroup>
 
+	<!-- 음식 앱용 Firebase 설정을 별도로 지정합니다. 화물 앱 설정을 재사용하지 않습니다. -->
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
+		<FDriverFirebaseGoogleServicesJson Condition="'$(FDriverFirebaseGoogleServicesJson)' == ''">$(SSALDDEL_FDRIVER_FIREBASE_GOOGLE_SERVICES_JSON)</FDriverFirebaseGoogleServicesJson>
+		<DefineConstants Condition="'$(FDriverFirebaseGoogleServicesJson)' != '' and Exists('$(FDriverFirebaseGoogleServicesJson)')">$(DefineConstants);FDRIVER_FIREBASE</DefineConstants>
+	</PropertyGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android' and '$(FDriverFirebaseGoogleServicesJson)' != '' and Exists('$(FDriverFirebaseGoogleServicesJson)')">
+		<PackageReference Include="Xamarin.Firebase.Messaging" />
+		<GoogleServicesJson Include="$(FDriverFirebaseGoogleServicesJson)" />
+	</ItemGroup>
+
 	<!-- SDK ID is provided by the developer environment; it is never stored in source. -->
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
 		<NaverMapSdkNcpKeyId Condition="'$(NaverMapSdkNcpKeyId)' == ''">$(SSALDDEL_NAVER_MAP_SDK_NCP_KEY_ID)</NaverMapSdkNcpKeyId>

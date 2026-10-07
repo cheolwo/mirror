@@ -8,13 +8,21 @@ namespace FDriverApp.PageModels;
 
 public sealed partial class FDriverDailySettlementItem : ObservableObject
 {
+    public string SettlementId { get; init; } = string.Empty;
+    public string DriverId { get; init; } = string.Empty;
+    public string DeliveryAttemptId { get; init; } = string.Empty;
     public required FoodDeliverySettlementDisplay Display { get; init; }
+    public string DeductionSummaryText { get; init; } = "공제 미확정";
+    public string NetSummaryText { get; init; } = "수령액 미확정";
     public string CompletedText { get; init; } = string.Empty;
     public string PricingDetails { get; init; } = string.Empty;
+    public string DistanceText { get; init; } = "요금 기준 거리 확인 전";
+    public IAsyncRelayCommand? OpenDetailsCommand { get; private set; }
     [ObservableProperty] private bool _isPricingExpanded;
     [RelayCommand] private void TogglePricing() => IsPricingExpanded = !IsPricingExpanded;
 
-    public static FDriverDailySettlementItem From(FoodDeliveryOrderSettlementDto row)
+    public static FDriverDailySettlementItem From(FoodDeliveryOrderSettlementDto row,
+        Func<FDriverDailySettlementItem, Task>? openDetails = null)
     {
         var pricing = row.PricingBreakdown;
         var lines = new List<string>();
@@ -34,13 +42,22 @@ public sealed partial class FDriverDailySettlementItem : ObservableObject
                 ? $"요금 기준 거리 {pricing.DistanceKm.Value:0.###}km"
                 : "요금 기준 거리 확인 전");
         }
-        return new()
+        var item = new FDriverDailySettlementItem
         {
+            SettlementId = row.SettlementId,
+            DriverId = row.DriverId,
+            DeliveryAttemptId = row.DeliveryAttemptId,
             Display = FoodDeliverySettlementDisplay.From(row),
+            DeductionSummaryText = row.DeductionAmount.HasValue ? $"공제 {Money(row.DeductionAmount)}" : "공제 미확정",
+            NetSummaryText = row.NetAmount.HasValue ? $"수령액 {Money(row.NetAmount)}" : "수령액 미확정",
             CompletedText = row.CompletedAtUtc == default ? "완료 시각 확인 전"
                 : row.CompletedAtUtc.AddHours(9).ToString("M/d HH:mm", CultureInfo.InvariantCulture) + " 전달 완료",
-            PricingDetails = string.Join(Environment.NewLine, lines)
+            PricingDetails = string.Join(Environment.NewLine, lines),
+            DistanceText = pricing.DistanceKm.HasValue
+                ? $"요금 기준 거리 {pricing.DistanceKm.Value:0.###}km" : "요금 기준 거리 확인 전"
         };
+        if (openDetails is not null) item.OpenDetailsCommand = new AsyncRelayCommand(() => openDetails(item));
+        return item;
     }
 
     private static string Money(decimal? amount) => amount.HasValue ? $"{amount.Value:#,0.##}원" : "확인 전";

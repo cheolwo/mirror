@@ -9,33 +9,21 @@
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="py-6">
     <MudStack Spacing="3">
-        <MudPaper Class="pa-4" Elevation="1">
-            <MudStack Spacing="1">
-                <MudText Typo="Typo.h4">기사 로그인</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">배차 추천과 운송 정보를 안전하게 불러오려면 로그인해 주세요.</MudText>
-                @if (!string.IsNullOrWhiteSpace(복귀화면안내))
-                {
-                    <MudText Typo="Typo.caption" Color="Color.Primary">로그인 후 @복귀화면안내 화면으로 돌아갑니다.</MudText>
-                }
-            </MudStack>
-        </MudPaper>
-
-        @if (!string.IsNullOrWhiteSpace(_statusMessage))
-        {
-            <MudAlert Severity="@_statusSeverity">@_statusMessage</MudAlert>
-        }
-
         <Ssalddel공통로그인Panel 제목="기사 로그인"
-                         설명="기사 앱은 카카오, 구글, 네이버 로그인 버튼을 같은 위치에 두고, 실제 OAuth 연결은 서버 설정이 준비된 뒤 활성화합니다."
+                         설명="로그인하고 배차 추천과 운송 정보를 확인하세요."
                          초기아이디="@_loginId"
                          현재사용자표시="@CurrentUserLabel"
                          상태메시지="@_statusMessage"
                          상태Severity="@_statusSeverity"
                          일반로그인버튼텍스트="@(_isLoggedIn ? "세션 갱신" : "로그인")"
-                         개발힌트목록="DriverLoginHints"
                          IsBusy="@_isBusy"
                          OnPasswordLogin="LoginAsync"
                          OnSocialLogin="SocialLoginAsync">
+            @if (!string.IsNullOrWhiteSpace(복귀화면안내))
+            {
+                <MudText Typo="Typo.caption" Color="Color.Primary">로그인 후 @복귀화면안내 화면으로 돌아갑니다.</MudText>
+            }
+
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Secondary"
                        FullWidth="true"
@@ -65,11 +53,6 @@
     private bool _isLoggedIn;
     private string? _statusMessage = "로그인하면 배차 추천, 진행 중 운송, 배달 내역을 서버 상태와 동기화합니다.";
     private Severity _statusSeverity = Severity.Info;
-    private static readonly IReadOnlyList<string> DriverLoginHints =
-    [
-        "개발용 계정은 서버의 로컬 IdentitySeed 설정에서 명시적으로 활성화해야 합니다."
-    ];
-
     private string CurrentUserLabel => AuthSession.UserName ?? "미로그인";
     private string? 안전한복귀경로 => 내부기사경로인가(ReturnUrl) ? ReturnUrl : null;
     private string? 복귀화면안내 => 안전한복귀경로 switch

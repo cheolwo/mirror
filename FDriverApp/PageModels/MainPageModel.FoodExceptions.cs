@@ -19,20 +19,22 @@ public sealed partial class MainPageModel
 
     public bool IsRegularWorkspaceVisible => IsAuthenticated && !ExceptionEditor.IsOpen;
     public bool IsExceptionWorkspaceVisible => IsAuthenticated && ExceptionEditor.IsOpen;
-    public bool CanToggleWork => IsAuthenticated && !IsBusy && !(IsOnDuty && HasActiveWork);
-    public bool CanToggleDispatchIntent => IsAuthenticated && !IsBusy && !ExceptionEditor.IsOpen
+    public bool CanToggleWork => IsAuthenticated && _pendingRecoveryReady && !IsBusy && !(IsOnDuty && HasActiveWork);
+    public bool CanToggleDispatchIntent => IsAuthenticated && _pendingRecoveryReady && !IsBusy && !ExceptionEditor.IsOpen
         && (DispatchIntentKnown || _pendingDispatchIntent is not null);
     public string DispatchIntentButtonText => _pendingDispatchIntent is not null ? "수신 변경 다시 확인"
         : !DispatchIntentKnown ? "신규 배차 상태 확인 중"
         : ReceivesNewDispatches ? "신규 배차 받기 ON" : "신규 배차 받기 OFF";
-    public bool CanRecordArrival => IsAuthenticated && !IsBusy && !ExceptionEditor.IsOpen
+    public bool CanRecordArrival => IsAuthenticated && _pendingRecoveryReady && !IsBusy && !ExceptionEditor.IsOpen
         && !ExceptionEditor.HasPendingRequest
+        && IsArrivalPrimaryAction
         && ActiveDelivery?.Can(음식배달가능행동Ids.기사가게도착) == true
+        && (_pendingArrival is null || _pendingArrivalAttemptId == ActiveDelivery.DeliveryAttemptId)
         && !string.IsNullOrWhiteSpace(ActiveDelivery.DeliveryAttemptId);
-    public bool CanOpenInterruption => IsAuthenticated && !IsBusy && !ExceptionEditor.IsOpen
+    public bool CanOpenInterruption => IsAuthenticated && _pendingRecoveryReady && !IsBusy && !ExceptionEditor.IsOpen
         && ActiveDelivery?.Can(음식배달가능행동Ids.기사배달중단) == true
         && !string.IsNullOrWhiteSpace(ActiveDelivery.DeliveryAttemptId);
-    public bool CanSubmitInterruption => IsAuthenticated && !IsBusy && ExceptionEditor.IsOpen
+    public bool CanSubmitInterruption => IsAuthenticated && _pendingRecoveryReady && !IsBusy && ExceptionEditor.IsOpen
         && ExceptionEditor.Delivery?.Can(음식배달가능행동Ids.기사배달중단) == true;
     public bool CanEditInterruption => CanSubmitInterruption && ExceptionEditor.IsInputUnlocked;
 
@@ -52,20 +54,29 @@ public sealed partial class MainPageModel
     partial void OnDispatchIntentKnownChanged(bool value) => NotifyExceptionState();
     partial void OnReceivesNewDispatchesChanged(bool value) => NotifyExceptionState();
 
-    private async Task LoadDispatchAvailabilityAsync(CancellationToken cancellationToken)
+    private async Task LoadDispatchAvailabilityAsync(CancellationToken cancellationToken, long? workspaceGeneration = null)
     {
         try
         {
             var status = await _api.GetDispatchAvailabilityAsync(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
+            if (workspaceGeneration is { } generation
+                && generation != Interlocked.Read(ref _workspaceSnapshotGeneration)) return;
             ReceivesNewDispatches = status.수신의사Code == 운영배차수신의사Code.On;
             DispatchIntentKnown = true;
+            ApplyWaitingDispatchAvailability(status);
             DispatchIntentNotice = ReceivesNewDispatches ? "신규 배차를 받습니다." : "신규 배차를 받지 않습니다. 현재 배달과 위치 갱신은 유지합니다.";
             if (ReceivesNewDispatches && status.실효상태Code != 운영배차실효상태Code.배차가능)
                 DispatchIntentNotice += " 운행·배차 조건을 확인해 주세요.";
             if (_pendingDispatchIntent?.수신의사Code == status.수신의사Code)
                 _pendingDispatchIntent = null;
             NotifyExceptionState();
+        }
+        catch (Exception) when (workspaceGeneration is { } generation
+            && generation != Interlocked.Read(ref _workspaceSnapshotGeneration)
+            && !cancellationToken.IsCancellationRequested)
+        {
+            // A newer command/read already owns both the work card and the dispatch intent.
         }
         catch (FDriverApiException ex) when (ex.StatusCode != HttpStatusCode.Unauthorized && !cancellationToken.IsCancellationRequested)
         {
@@ -79,15 +90,20 @@ public sealed partial class MainPageModel
     private async Task ToggleDispatchIntent()
     {
         if (!CanToggleDispatchIntent || !_workspaceActive) return;
-        _pendingDispatchIntent ??= new()
-        {
-            클라이언트요청Id = Guid.NewGuid(),
-            수신의사Code = ReceivesNewDispatches ? 운영배차수신의사Code.Off : 운영배차수신의사Code.On
-        };
-        var request = new 운영배차수신의사변경요청
-        { 클라이언트요청Id = _pendingDispatchIntent.클라이언트요청Id, 수신의사Code = _pendingDispatchIntent.수신의사Code };
         await RunApiAsync(async cancellationToken =>
         {
+            if (_pendingDispatchIntent is not null)
+            {
+                await LoadWorkspaceAsync(cancellationToken: cancellationToken);
+                if (!DispatchIntentKnown || _pendingDispatchIntent is null) return;
+            }
+            _pendingDispatchIntent ??= new()
+            {
+                클라이언트요청Id = Guid.NewGuid(),
+                수신의사Code = ReceivesNewDispatches ? 운영배차수신의사Code.Off : 운영배차수신의사Code.On
+            };
+            await PersistPendingOperationsAsync(cancellationToken);
+            var request = CopyIntent(_pendingDispatchIntent);
             try { await _api.ChangeDispatchIntentAsync(request, cancellationToken); }
             catch (FDriverApiException ex) when (ex.StatusCode != HttpStatusCode.Unauthorized && !cancellationToken.IsCancellationRequested)
             {
@@ -118,15 +134,23 @@ public sealed partial class MainPageModel
     {
         if (!CanRecordArrival || !_workspaceActive || ActiveDelivery is null) return;
         var delivery = ActiveDelivery;
-        if (_pendingArrivalAttemptId != delivery.DeliveryAttemptId)
-        {
-            _pendingArrival = new() { 클라이언트요청Id = Guid.NewGuid(), 예상시도Revision = delivery.AttemptRevision };
-            _pendingArrivalAttemptId = delivery.DeliveryAttemptId;
-        }
-        var request = new 음식배달가게도착요청
-        { 클라이언트요청Id = _pendingArrival!.클라이언트요청Id, 예상시도Revision = _pendingArrival.예상시도Revision };
         await RunApiAsync(async cancellationToken =>
         {
+            if (_pendingArrival is not null)
+            {
+                await LoadWorkspaceAsync(cancellationToken: cancellationToken);
+                if (_pendingArrival is null || !ActiveDeliveryItems.Any(x => x.DeliveryAttemptId == delivery.DeliveryAttemptId)) return;
+                if (!ActiveDeliveryItems.Any(x => x.DeliveryAttemptId == delivery.DeliveryAttemptId && x.Can(음식배달가능행동Ids.기사가게도착))) return;
+            }
+            if (_pendingArrivalAttemptId != delivery.DeliveryAttemptId)
+            {
+                _pendingArrival = new() { 클라이언트요청Id = Guid.NewGuid(), 예상시도Revision = delivery.AttemptRevision };
+                _pendingArrivalAttemptId = delivery.DeliveryAttemptId;
+                _pendingArrivalOfferId = delivery.OfferId;
+            }
+            await PersistPendingOperationsAsync(cancellationToken);
+            var request = CopyArrival(_pendingArrival!);
+            var rejected = false;
             try
             {
                 var result = await _api.RecordRestaurantArrivalAsync(delivery.OfferId, request, cancellationToken);
@@ -135,9 +159,15 @@ public sealed partial class MainPageModel
             }
             catch (FDriverApiException ex) when (ex.StatusCode != HttpStatusCode.Unauthorized && !cancellationToken.IsCancellationRequested)
             {
+                rejected = ex.StatusCode is HttpStatusCode.Conflict or HttpStatusCode.BadRequest;
                 StatusMessage = $"가게 도착 결과를 다시 조회합니다. {ShortMessage(ex.Message)}";
             }
             await LoadWorkspaceAsync(cancellationToken: cancellationToken);
+            if (rejected)
+            {
+                _pendingArrival = null; _pendingArrivalAttemptId = null; _pendingArrivalOfferId = null;
+                await PersistPendingOperationsAsync(cancellationToken);
+            }
         });
     }
 
@@ -145,11 +175,19 @@ public sealed partial class MainPageModel
     private async Task SubmitInterruption()
     {
         if (!CanSubmitInterruption || !_workspaceActive || ExceptionEditor.Delivery is not { } delivery) return;
-        var request = ExceptionEditor.Prepare(DateTime.UtcNow);
-        if (request is null) return;
         await RunApiAsync(async cancellationToken =>
         {
+            if (ExceptionEditor.HasPendingRequest)
+            {
+                await LoadWorkspaceAsync(cancellationToken: cancellationToken);
+                if (!ExceptionEditor.HasPendingRequest || ExceptionEditor.Delivery?.DeliveryAttemptId != delivery.DeliveryAttemptId) return;
+                if (ExceptionEditor.Delivery.Can(음식배달가능행동Ids.기사배달중단) != true) return;
+            }
+            var request = ExceptionEditor.Prepare(DateTime.UtcNow);
+            if (request is null) return;
+            await PersistPendingOperationsAsync(cancellationToken);
             var acknowledged = false;
+            var rejected = false;
             try
             {
                 var result = await _api.InterruptAsync(delivery.OfferId, request, cancellationToken);
@@ -159,28 +197,42 @@ public sealed partial class MainPageModel
             }
             catch (FDriverApiException ex) when (ex.StatusCode != HttpStatusCode.Unauthorized && !cancellationToken.IsCancellationRequested)
             {
+                rejected = ex.StatusCode is HttpStatusCode.Conflict or HttpStatusCode.BadRequest;
                 ExceptionEditor.ConfirmFailure($"{ShortMessage(ex.Message)} 상태를 다시 조회합니다.",
-                    ex.StatusCode is HttpStatusCode.Conflict or HttpStatusCode.BadRequest);
+                    allowEdit: false);
             }
             await LoadWorkspaceAsync(cancellationToken: cancellationToken);
+            if (rejected) ExceptionEditor.ConfirmFailure("요청이 적용되지 않았습니다. 현재 상태와 입력을 확인한 뒤 다시 요청해 주세요.", allowEdit: true);
             if (acknowledged) ExceptionEditor.Reset();
+            await PersistPendingOperationsAsync(cancellationToken);
         });
     }
 
-    private void ReconcileExceptionWorkspace()
+    private async Task ReconcileExceptionWorkspaceAsync(CancellationToken cancellationToken)
     {
+        if (_restoredInterruption is { } saved)
+        {
+            var restored = ActiveDeliveryItems.FirstOrDefault(x => x.OfferId == saved.OfferId && x.DeliveryAttemptId == saved.AttemptId);
+            if (restored is not null) ExceptionEditor.RestorePending(restored, saved.Request);
+            else StatusMessage = "이전 중단 요청 이후 배달 상태가 변경되었습니다. 현재 배달을 확인해 주세요.";
+            _restoredInterruption = null;
+        }
         var current = ActiveDeliveryItems.FirstOrDefault(x => x.OfferId == ExceptionEditor.Delivery?.OfferId);
         ExceptionEditor.Reconcile(current);
         var arrival = ActiveDeliveryItems.FirstOrDefault(x => x.DeliveryAttemptId == _pendingArrivalAttemptId);
-        if (arrival is null || arrival.RestaurantArrivedAtUtc.HasValue || arrival.AttemptRevision != _pendingArrival?.예상시도Revision)
-        { _pendingArrival = null; _pendingArrivalAttemptId = null; }
+        if (arrival is null || arrival.RestaurantArrivedAtUtc.HasValue)
+        { _pendingArrival = null; _pendingArrivalAttemptId = null; _pendingArrivalOfferId = null; }
+        await PersistPendingOperationsAsync(cancellationToken);
         NotifyExceptionState();
     }
 
     private void ClearExceptionWorkspace()
     {
         ExceptionEditor.Reset(); _pendingArrival = null; _pendingArrivalAttemptId = null; _pendingDispatchIntent = null;
+        _pendingArrivalOfferId = null; _restoredInterruption = null; _pendingLoadedOwner = null; _pendingMemoryOwner = null;
+        _pendingPersistedFingerprint = null; _pendingRecoveryReady = false;
         DispatchIntentKnown = false; ReceivesNewDispatches = false;
+        ApplyWaitingDispatchAvailability(null);
         DispatchIntentNotice = "신규 배차 수신 상태 확인 전";
         NotifyExceptionState();
     }

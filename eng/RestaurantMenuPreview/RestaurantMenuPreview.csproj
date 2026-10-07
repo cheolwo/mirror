@@ -12,6 +12,8 @@
     <ProjectReference Include="../../Ssalddel.Ui.Common/Ssalddel.Ui.Common.csproj" />
     <Compile Include="../../RestaurantDeskApp/Services/I음식주문ApiClient.cs" Link="Services/I음식주문ApiClient.cs" />
     <Compile Include="../../RestaurantDeskApp/Services/RestaurantAuthService.cs" Link="Services/RestaurantAuthService.cs" />
+    <Compile Include="../../RestaurantDeskApp/Services/RestaurantMenuDraftStore.cs" Link="Services/RestaurantMenuDraftStore.cs" />
+    <Compile Include="../../RestaurantDeskApp/Components/Pages/Menus.razor.cs" Link="Components/Pages/Menus.razor.cs" />
     <Compile Include="../../RestaurantDeskApp/Services/Ssalddel음식주문Client.cs" Link="Services/Ssalddel음식주문Client.cs" />
     <Compile Include="../../RestaurantDeskApp/Services/I음식점메뉴ApiClient.cs" Link="Services/I음식점메뉴ApiClient.cs" />
     <Content Include="../../RestaurantDeskApp/Components/Pages/Menus.razor" Link="Components/Pages/Menus.razor" />

@@ -1,5 +1,6 @@
 using Ssalddel.Contracts.Common.Drivers;
 using Ssalddel.Contracts.Common.Operations;
+using DriverApp.Models.Driver.Samples;
 
 namespace DriverApp.Controls;
 
@@ -16,6 +17,12 @@ public sealed class DriverNativeMapView : View
         typeof(double),
         typeof(DriverNativeMapView),
         37.5665d);
+
+    public static readonly BindableProperty CurrentLocationProperty = BindableProperty.Create(
+        nameof(CurrentLocation),
+        typeof(기사현재위치샘플),
+        typeof(DriverNativeMapView),
+        null);
 
     public static readonly BindableProperty CenterLongitudeProperty = BindableProperty.Create(
         nameof(CenterLongitude),
@@ -76,6 +83,17 @@ public sealed class DriverNativeMapView : View
         get => (double)GetValue(CenterLatitudeProperty);
         set => SetValue(CenterLatitudeProperty, value);
     }
+
+    public 기사현재위치샘플? CurrentLocation
+    {
+        get => (기사현재위치샘플?)GetValue(CurrentLocationProperty);
+        set => SetValue(CurrentLocationProperty, value);
+    }
+
+    public event EventHandler<DriverNativeLocationPresentation>? LocationPresentationChanged;
+
+    internal void SendLocationPresentationChanged(DriverNativeLocationPresentation presentation)
+        => LocationPresentationChanged?.Invoke(this, presentation);
 
     public string MapProviderCode
     {

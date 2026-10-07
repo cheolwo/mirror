@@ -10,10 +10,14 @@ public partial class FDriverNativeMapViewHandler
         {
             [nameof(FDriverNativeMapView.CenterLatitude)] = MapCamera,
             [nameof(FDriverNativeMapView.CenterLongitude)] = MapCamera,
-            [nameof(FDriverNativeMapView.CurrentLocationLatitude)] = MapOptions,
-            [nameof(FDriverNativeMapView.CurrentLocationLongitude)] = MapOptions,
+            [nameof(FDriverNativeMapView.CurrentLocationLatitude)] = MapLocation,
+            [nameof(FDriverNativeMapView.CurrentLocationLongitude)] = MapLocation,
+            [nameof(FDriverNativeMapView.HasCurrentLocation)] = MapLocation,
+            [nameof(FDriverNativeMapView.IsFollowingCurrentLocation)] = MapCamera,
+            [nameof(FDriverNativeMapView.RecenterRequestVersion)] = MapCamera,
             [nameof(FDriverNativeMapView.Zoom)] = MapCamera,
             [nameof(FDriverNativeMapView.Markers)] = MapMarkers,
+            [nameof(FDriverNativeMapView.SelectedRequestId)] = MapMarkers,
             [nameof(FDriverNativeMapView.RouteOverlays)] = MapRouteOverlays,
             [nameof(FDriverNativeMapView.ShowTrafficLayer)] = MapOptions,
             [nameof(FDriverNativeMapView.ShowLocationButton)] = MapOptions,
@@ -24,5 +28,11 @@ public partial class FDriverNativeMapViewHandler
 
     public FDriverNativeMapViewHandler() : base(Mapper)
     {
+    }
+
+    public static void MapLocation(FDriverNativeMapViewHandler handler, FDriverNativeMapView view)
+    {
+        MapOptions(handler, view);
+        MapCamera(handler, view);
     }
 }

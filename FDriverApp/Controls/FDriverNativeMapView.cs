@@ -4,6 +4,17 @@ namespace FDriverApp.Controls;
 
 public sealed class FDriverNativeMapView : View
 {
+    // The View survives native handler recreation while this workspace remains open.
+    internal FDriverMapCameraState CameraState { get; } = new();
+
+    private static readonly BindablePropertyKey IsMapReadyPropertyKey = BindableProperty.CreateReadOnly(
+        nameof(IsMapReady), typeof(bool), typeof(FDriverNativeMapView), false);
+
+    public static readonly BindableProperty IsMapReadyProperty = IsMapReadyPropertyKey.BindableProperty;
+    public bool IsMapReady => (bool)GetValue(IsMapReadyProperty);
+
+    internal void SetMapReady(bool ready) => SetValue(IsMapReadyPropertyKey, ready);
+
     public static readonly BindableProperty CenterLatitudeProperty = BindableProperty.Create(
         nameof(CenterLatitude),
         typeof(double),
@@ -32,7 +43,33 @@ public sealed class FDriverNativeMapView : View
         nameof(Zoom),
         typeof(double),
         typeof(FDriverNativeMapView),
-        13d);
+        13d,
+        BindingMode.TwoWay);
+
+    public static readonly BindableProperty SelectedRequestIdProperty = BindableProperty.Create(
+        nameof(SelectedRequestId),
+        typeof(string),
+        typeof(FDriverNativeMapView),
+        string.Empty);
+
+    public static readonly BindableProperty HasCurrentLocationProperty = BindableProperty.Create(
+        nameof(HasCurrentLocation),
+        typeof(bool),
+        typeof(FDriverNativeMapView),
+        false);
+
+    public static readonly BindableProperty IsFollowingCurrentLocationProperty = BindableProperty.Create(
+        nameof(IsFollowingCurrentLocation),
+        typeof(bool),
+        typeof(FDriverNativeMapView),
+        true,
+        BindingMode.TwoWay);
+
+    public static readonly BindableProperty RecenterRequestVersionProperty = BindableProperty.Create(
+        nameof(RecenterRequestVersion),
+        typeof(int),
+        typeof(FDriverNativeMapView),
+        0);
 
     public static readonly BindableProperty MarkersProperty = BindableProperty.Create(
         nameof(Markers),
@@ -104,6 +141,30 @@ public sealed class FDriverNativeMapView : View
     {
         get => (double)GetValue(ZoomProperty);
         set => SetValue(ZoomProperty, value);
+    }
+
+    public string SelectedRequestId
+    {
+        get => (string)GetValue(SelectedRequestIdProperty);
+        set => SetValue(SelectedRequestIdProperty, value);
+    }
+
+    public bool HasCurrentLocation
+    {
+        get => (bool)GetValue(HasCurrentLocationProperty);
+        set => SetValue(HasCurrentLocationProperty, value);
+    }
+
+    public bool IsFollowingCurrentLocation
+    {
+        get => (bool)GetValue(IsFollowingCurrentLocationProperty);
+        set => SetValue(IsFollowingCurrentLocationProperty, value);
+    }
+
+    public int RecenterRequestVersion
+    {
+        get => (int)GetValue(RecenterRequestVersionProperty);
+        set => SetValue(RecenterRequestVersionProperty, value);
     }
 
     public IReadOnlyList<DriverMapMarkerItem> Markers

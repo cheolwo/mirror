@@ -11,6 +11,9 @@ public partial class DriverNativeMapViewHandler
             [nameof(DriverNativeMapView.MapProviderCode)] = MapOptions,
             [nameof(DriverNativeMapView.CenterLatitude)] = MapCamera,
             [nameof(DriverNativeMapView.CenterLongitude)] = MapCamera,
+#if ANDROID
+            [nameof(DriverNativeMapView.CurrentLocation)] = MapCurrentLocation,
+#endif
             [nameof(DriverNativeMapView.Zoom)] = MapCamera,
             [nameof(DriverNativeMapView.Markers)] = MapMarkers,
             [nameof(DriverNativeMapView.RouteOverlays)] = MapRouteOverlays,

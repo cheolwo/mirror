@@ -22,11 +22,17 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
 			});
 
+#if DEBUG || SSALDDEL_USB_FIELD_TEST
+		const bool allowInsecureDebugEndpoint = true;
+#else
+		const bool allowInsecureDebugEndpoint = false;
+#endif
 		builder.Services.AddSsalddelOperationalApiHttpClient(
-			SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
+			SsalddelServerEndpoint.ResolveMobileBaseAddress(
+				typeof(MauiProgram).Assembly,
 				builder.Configuration[SsalddelServerEndpoint.ConfigurationKey],
 				builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey],
-				new Uri(SsalddelServerEndpoint.LocalDevelopmentBaseAddress)));
+				allowInsecureDebugEndpoint));
 		builder.Services.AddSsalddelAppServices(builder.Configuration);
 		builder.Services.AddSingleton<IPlatformCommunityNodeNavigationResolver, SsalddelAppPlatformCommunityNodeNavigationResolver>();
 		builder.Services.AddSingleton<IPlatformHomeWorkspaceNavigationResolver, SsalddelAppPlatformHomeWorkspaceNavigationResolver>();
@@ -34,6 +40,16 @@ public static class MauiProgram
 		builder.Services.AddSsalddelDocumentOutputServices();
 		builder.Services.AddMudServices();
 		builder.Services.AddMauiBlazorWebView();
+        builder.Services.AddSingleton<NeighborhoodNativeMapBridge>();
+        builder.Services.AddScoped<INeighborhoodMapHost, MauiNeighborhoodMapHost>();
+        builder.Services.AddScoped<INeighborhoodMapPreferenceStore, NeighborhoodMapPreferenceStore>();
+        builder.Services.AddScoped<Ssalddel.Client.RoleWorkspace.IRoleWorkspacePrimaryAuth, MauiRoleWorkspacePrimaryAuth>();
+        builder.Services.AddScoped<Ssalddel.Client.RoleWorkspace.IRoleWorkspaceTokenStoreFactory, MauiRoleWorkspaceTokenStoreFactory>();
+        builder.Services.AddScoped<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.IRoleWorkspaceLocationProvider, MauiRoleWorkspaceLocationProvider>();
+        Ssalddel.Client.RoleWorkspace.RoleWorkspaceRegistration.AddUnifiedRoleWorkspaces(builder.Services);
+#if ANDROID
+        builder.ConfigureMauiHandlers(handlers => handlers.AddHandler<Controls.NeighborhoodNativeMapView, Handlers.NeighborhoodNativeMapViewHandler>());
+#endif
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();

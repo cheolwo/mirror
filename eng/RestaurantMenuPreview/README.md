@@ -32,6 +32,6 @@ dotnet run --project eng/RestaurantMenuPreview --no-launch-profile -- --api
 dotnet run --project eng/RestaurantMenuPreview --no-launch-profile -- --verify
 ```
 
-기존10개 검사는 실제 Razor 처리 메서드를 인메모리 Client로 실행한다. 최초 조회, 빈 이름/HTTP 사진 주소 차단, 등록 응답 유실·같은 요청 재시도, 명시적 저장 거절 후 잠금 해제, 저장 성공 뒤 조회 실패 구분이다. 추가 API 연결 검사는 모의 HttpMessageHandler만 사용해 주소 거부, 명시 선택/환경 결손, 제품 인증/메뉴 Client 연결, Circuit별 메모리 독립, 단절·폐기 시 소거/요청 취소, 재인증, 실패 시 fallback 없음과409 전달을 확인한다. 실제 서버·DB·브라우저를 실행하지 않는다.
+11개 검사는 실제 Razor 처리 메서드를 인메모리 Client로 실행한다. 실제 초기화의 계정·초안 결속과 기존10개인 최초 조회, 빈 이름/HTTP 사진 주소 차단, 등록 응답 유실·같은 요청 재시도, 명시적 저장 거절 후 잠금 해제, 저장 성공 뒤 조회 실패 구분이다. 추가 API 연결 검사는 모의 HttpMessageHandler만 사용해 주소 거부, 명시 선택/환경 결손, 제품 인증/메뉴 Client 연결, Circuit별 메모리 독립, 단절·폐기 시 소거/요청 취소, 재인증, 실패 시 fallback 없음과409 전달을 확인한다. 실제 서버·DB·브라우저를 실행하지 않는다.
 
 브라우저 클릭 시험이나 운영 DB 멱등성 증거로 해석하지 않는다. 서버는 요청 ID 존재를 검사하지만 현재 등록 중복 판정은 음식점·메뉴명·동일 내용에 기반한다. 실제 API/DB·390px 브라우저·APK/Android는 같은 기준선의 별도 실행 증거로 남긴다.

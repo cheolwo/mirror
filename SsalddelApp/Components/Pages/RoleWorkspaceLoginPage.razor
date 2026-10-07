@@ -1,0 +1,7 @@
+@page "/workspace-login/{RoleKey}"
+@layout RoleWorkspaceLayout
+<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.RoleWorkspaceLogin RoleKey="@RoleKey" ReturnUrl="@ReturnUrl" />
+@code {
+    [Parameter] public string RoleKey { get; set; } = "community";
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+}

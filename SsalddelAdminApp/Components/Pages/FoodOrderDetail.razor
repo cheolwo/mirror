@@ -1,0 +1,110 @@
+@page "/food-operations/orders/{OrderNo}"
+@using Ssalddel.Contracts.Admin.Food
+@using Ssalddel.Contracts.Food
+@using Ssalddel.Ui.Common.Areas.BackOffice.ViewModels
+@implements IDisposable
+@inject AdminFoodOperationsService FoodService
+@inject AdminAuthSession Session
+@inject AdminAuthService AuthService
+
+<PageTitle>음식 주문 확인</PageTitle>
+
+<MudStack Spacing="3" Class="food-mobile-detail">
+    <MudText Typo="Typo.h4">음식 주문 확인</MudText>
+    @if (restoring || state is null) { <MudProgressLinear Indeterminate="true" /> }
+    else if (!Session.IsServerAdmin || state.RequiresLogin || !state.AuthenticationCurrent)
+    {
+        <MudAlert Severity="Severity.Warning">운영자 로그인이 필요합니다.</MudAlert>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Href="@LoginUrl">로그인하고 주문 확인</MudButton>
+    }
+    else
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@state.IsBusy" OnClick="RefreshAsync">최신 상태 확인</MudButton>
+        @if (!string.IsNullOrWhiteSpace(state.Message)) { <MudAlert Severity="Severity.Warning">@state.Message</MudAlert> }
+        @if (state.IsBusy) { <MudProgressLinear Indeterminate="true" /> }
+        @if (state.Trace is { } trace)
+        {
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6">@trace.음식점명</MudText>
+                    <MudText Typo="Typo.body2">@trace.주문번호</MudText>
+                    <MudChip T="string" Color="@(trace.생명주기조화.운영자확인필요여부 ? Color.Warning : Color.Primary)">@AdminFoodOperationsState.StageText(trace.생명주기조화.현재단계Code)</MudChip>
+                    <MudText Typo="Typo.body2">주문 @trace.주문상태 · 배차 @trace.배차상태</MudText>
+                    <MudDivider />
+                    <MudText Typo="Typo.body2">다음 담당: @string.Join(" · ", trace.생명주기조화.현재책임주체Codes.Select(AdminFoodOperationsState.ActorText))</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">최근 변경 @AdminFoodOperationsState.DateText(trace.최근변경시각Utc)</MudText>
+                </MudStack>
+            </MudPaper>
+            @foreach (var warning in trace.경고목록) { <MudAlert Severity="Severity.Warning">@warning</MudAlert> }
+            @foreach (var guide in trace.복구안내목록) { <MudAlert Severity="Severity.Info">@guide</MudAlert> }
+            @if (trace.배달시도목록.Any(x => x.상태Code == 음식배달시도상태Code.중단))
+            { <MudButton Href="@ReviewUrl" Color="Color.Primary" Variant="Variant.Filled" Disabled="@(!state.CanReview)">배달 중단 검토</MudButton> }
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6">주문 진행</MudText>
+                    @foreach (var point in trace.체크포인트.Where(x => x.단계Key != "ledger-sync"))
+                    {
+                        <div class="food-progress-row">
+                            <MudText Typo="Typo.subtitle2">@point.단계명 · @point.상태</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@AdminFoodOperationsState.DateText(point.변경시각Utc)</MudText>
+                        </div>
+                    }
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6">기사 정산</MudText>
+                    @if (trace.DriverSettlement is { } settlement)
+                    {
+                        var display = FoodDeliverySettlementDisplay.From(settlement);
+                        <MudText Typo="Typo.body2">배달료 @display.GrossText · 공제 @display.DeductionText</MudText>
+                        <MudText Typo="Typo.h6">수령액 @display.NetText</MudText>
+                        <MudText Typo="Typo.body2">@display.ProgressText</MudText>
+                        <MudAlert Severity="Severity.Info">@display.NoticeText</MudAlert>
+                        @if (!string.IsNullOrWhiteSpace(settlement.HoldReason)) { <MudAlert Severity="Severity.Warning">@settlement.HoldReason</MudAlert> }
+                    }
+                    else { <MudText Typo="Typo.body2">전달 완료 후 정산이 생성됩니다.</MudText> }
+                </MudStack>
+            </MudPaper>
+            <MudExpansionPanels>
+                <MudExpansionPanel Text="배달 이력">
+                    @foreach (var attempt in trace.배달시도목록.OrderByDescending(x => x.시도순번))
+                    {
+                        <div class="food-progress-row">
+                            <MudText Typo="Typo.subtitle2">시도 @attempt.시도순번 · @attempt.상태Code</MudText>
+                            <MudText Typo="Typo.body2">도착 @AdminFoodOperationsState.DateText(attempt.가게도착시각Utc) · 픽업 @AdminFoodOperationsState.DateText(attempt.픽업완료시각Utc)</MudText>
+                            <MudText Typo="Typo.body2">중단 @AdminFoodOperationsState.DateText(attempt.중단시각Utc) · 전달 @AdminFoodOperationsState.DateText(attempt.전달완료시각Utc)</MudText>
+                        </div>
+                    }
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+        }
+    }
+    <MudButton Variant="Variant.Text" Href="/food-operations">음식 주문 목록으로</MudButton>
+</MudStack>
+
+@code {
+    [Parameter] public string OrderNo { get; set; } = string.Empty;
+    private AdminFoodOperationsState? state;
+    private bool restoring = true;
+    private bool disposed;
+    private string DetailUrl => "/food-operations/orders/" + Uri.EscapeDataString(OrderNo);
+    private string ReviewUrl => "/food-operations/reviews/" + Uri.EscapeDataString(OrderNo);
+    private string LoginUrl => "/login?returnUrl=" + Uri.EscapeDataString(DetailUrl);
+    protected override async Task OnInitializedAsync()
+    {
+        state = new(FoodService, () => Session.IsServerAdmin ? Session.UserId : string.Empty);
+        Session.Changed += SessionChanged;
+        await Session.RestoreAsync();
+        if (!string.IsNullOrWhiteSpace(Session.RefreshToken)) await AuthService.EnsureAccessTokenAsync();
+        if (!disposed) restoring = false;
+    }
+    protected override Task OnParametersSetAsync() => disposed || restoring || state is null ? Task.CompletedTask : state.RefreshTraceAsync(OrderNo);
+    private Task RefreshAsync() => state!.RefreshTraceAsync(OrderNo);
+    private void SessionChanged() => _ = InvokeAsync(() =>
+    {
+        if (disposed || state is null) return;
+        state.SynchronizeAuthentication(); StateHasChanged();
+    });
+    public void Dispose() { if (disposed) return; disposed = true; Session.Changed -= SessionChanged; state?.Dispose(); }
+}

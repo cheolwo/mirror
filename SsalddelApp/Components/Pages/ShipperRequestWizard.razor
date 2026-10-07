@@ -31,7 +31,7 @@
             </div>
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Primary"
-                       Href="@ShipperRoutes.RequestBulk">
+                       Href="@PageNavigationContext.WithReturnPath(ShipperRoutes.RequestBulk, RouteContext.ReturnPath)">
                 열기
             </MudButton>
         </article>

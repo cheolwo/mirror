@@ -30,6 +30,7 @@ public sealed class AdminAuthSession : ISsalddelAccessTokenProvider
     public DateTime AccessTokenExpiresAtUtc { get; private set; }
     public DateTime RefreshTokenExpiresAtUtc { get; private set; }
     public string UserId { get; private set; } = string.Empty;
+    public string? AuthenticationOwnerId => string.IsNullOrWhiteSpace(UserId) ? null : UserId;
     public string UserName { get; private set; } = string.Empty;
     public IReadOnlyList<string> Roles { get; private set; } = [];
 

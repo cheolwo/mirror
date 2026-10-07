@@ -122,7 +122,8 @@ public sealed class RestaurantAuthRecoveryTests
             kind == "missing-refresh" ? "" : "cached-refresh",
             DateTime.UtcNow.AddDays(kind == "expired-refresh" ? -1 : 1),
             kind == "missing-user" ? "" : "synthetic-restaurant-id", "synthetic-restaurant", ["음식점"]));
-        Assert.Equal(ClientAuthSessionRestoreState.Authenticated, await fixture.Session.RestoreAsync());
+        Assert.Equal(kind == "missing-user" ? ClientAuthSessionRestoreState.Anonymous
+            : ClientAuthSessionRestoreState.Authenticated, await fixture.Session.RestoreAsync());
         Assert.Equal(kind != "missing-user", fixture.Session.IsAuthenticated);
         fixture.Store.ClearFails = clearFails;
         using var handler = new RecordingHandler((_, _) => throw new InvalidOperationException("No HTTP request is expected."));
@@ -138,6 +139,48 @@ public sealed class RestaurantAuthRecoveryTests
         Assert.Equal(1, fixture.Store.ClearCount);
         Assert.True((await auth.EnsureAccessTokenAsync()).RequiresLogin);
         Assert.Empty(handler.Paths);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ConfirmedRejectionCompletesCleanupWhenPageCancelsItsLifetime(bool clearFails)
+    {
+        var fixture = new SessionFixture();
+        fixture.Store.ClearFails = clearFails;
+        using var cancellation = new CancellationTokenSource();
+        using var handler = new RecordingHandler((_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Unauthorized)));
+        using var http = CreateHttp(handler);
+        var auth = new RestaurantAuthService(http, fixture.Session);
+        auth.SessionEnding += _ => cancellation.Cancel();
+
+        var result = await auth.EnsureAccessTokenAsync(cancellationToken: cancellation.Token);
+
+        Assert.True(cancellation.IsCancellationRequested);
+        Assert.True(result.RequiresLogin);
+        Assert.False(fixture.Session.IsAuthenticated);
+        Assert.Null(fixture.Session.AccessToken);
+        Assert.Equal(1, fixture.Store.ClearCount);
+    }
+
+    [Fact]
+    public async Task ConfirmedRejectionDoesNotClearNewOwnerAppliedBySessionEndListener()
+    {
+        var fixture = new SessionFixture();
+        using var handler = new RecordingHandler((_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Unauthorized)));
+        using var http = CreateHttp(handler);
+        var auth = new RestaurantAuthService(http, fixture.Session);
+        auth.SessionEnding += _ => fixture.Session.ApplyAsync(new ClientAuthTokenSnapshot(
+            "new-owner-access", DateTime.UtcNow.AddHours(1), "new-owner-refresh", DateTime.UtcNow.AddDays(1),
+            "owner-b", "owner-b", ["음식점"])).GetAwaiter().GetResult();
+
+        var result = await auth.EnsureAccessTokenAsync();
+
+        Assert.True(result.RequiresLogin);
+        Assert.True(fixture.Session.IsAuthenticated);
+        Assert.Equal("owner-b", fixture.Session.UserId);
+        Assert.Equal("new-owner-access", fixture.Session.AccessToken);
+        Assert.Equal(0, fixture.Store.ClearCount);
     }
 
     [Fact]

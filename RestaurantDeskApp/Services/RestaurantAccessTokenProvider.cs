@@ -7,4 +7,5 @@ public sealed class RestaurantAccessTokenProvider(ClientAuthSession session)
     : ISsalddelAccessTokenProvider
 {
     public string? AccessToken => session.AccessToken;
+    public string? AuthenticationOwnerId => session.UserId;
 }

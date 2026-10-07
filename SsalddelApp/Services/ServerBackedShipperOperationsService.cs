@@ -330,7 +330,9 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
         return new ShipperRequestItem
         {
             의뢰Id = source.의뢰Id,
-            화물종류 = source.요약?.화물종류 ?? string.Empty,
+            화물종류 = source.화물?.화물종류 ?? source.요약?.화물종류 ?? string.Empty,
+            화물원본 = ShipperRequestItem.화물복사(source.화물),
+            원본화물종류 = source.화물?.화물종류 ?? source.요약?.화물종류,
             의뢰상태 = source.의뢰상태,
             결제상태 = source.결제상태,
             배차상태 = source.배차상태,
@@ -381,11 +383,7 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
             결제수단 = TryReadNamedEnum(source.결제수단, out 결제수단 _) ? source.결제수단 : null,
             결제예정금액 = source.결제예정금액,
             정산조건 = ToUpdateSettlement(source),
-            화물 = new CargoDTO
-            {
-                화물종류 = string.IsNullOrWhiteSpace(source.화물종류) ? "일반화물" : source.화물종류,
-                수량 = 1
-            },
+            화물 = ToUpdateCargo(source),
             픽업 = ToUpdateLocation(source.픽업정보, source.픽업지),
             하차 = ToUpdateLocation(source.하차정보, source.하차지),
             요금옵션 = source.예상거리Km.HasValue || source.기준운임.HasValue || source.기사지급예정운임.HasValue
@@ -400,6 +398,23 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
             상태 = SuppliedText(source.의뢰상태),
             배차상태 = SuppliedText(source.배차상태)
         };
+    }
+
+    private static CargoDTO? ToUpdateCargo(ShipperRequestItem source)
+    {
+        var originalType = source.원본화물종류 ?? source.화물원본?.화물종류;
+        if (string.IsNullOrWhiteSpace(source.화물종류)
+            || string.Equals(source.화물종류, originalType, StringComparison.Ordinal))
+            return null;
+        var cargo = ShipperRequestItem.화물복사(source.화물원본);
+        if (cargo is null)
+        {
+            if (originalType is not null)
+                throw new InvalidOperationException("화물 원본 정보를 확인하지 못했습니다. 의뢰를 다시 조회한 뒤 화물종류를 수정해 주세요.");
+            return null;
+        }
+        cargo.화물종류 = source.화물종류;
+        return cargo;
     }
 
     private static 화주운송정산조건DTO? ToUpdateSettlement(ShipperRequestItem source)

@@ -1,0 +1,16 @@
+@page "/privacy-support"
+@page "/privacy-support/{CaseId}"
+@rendermode InteractiveServer
+@using Ssalddel.Ui.Common.Areas.BackOffice.Components.PrivacySupport
+@inject 관리자인증세션Service Session
+
+<PageTitle>거래·개인정보 처리 요청</PageTitle>
+<보호지원관리Page CaseId="@CaseId" AdminOwnerProvider="AdminOwner" LoginHref="@LoginHref" />
+
+@code {
+    [Parameter] public string? CaseId { get; set; }
+    private string? AdminOwner() => Session.로그인됨 && Session.서버관리자인가
+        && Session.AccessTokenExpiresAtUtc > DateTime.UtcNow ? Session.UserId : null;
+    private string LoginHref => "/login?returnUrl=" + Uri.EscapeDataString(string.IsNullOrWhiteSpace(CaseId)
+        ? "/privacy-support" : "/privacy-support/" + Uri.EscapeDataString(CaseId));
+}

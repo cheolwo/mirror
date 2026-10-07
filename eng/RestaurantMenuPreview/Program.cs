@@ -21,12 +21,15 @@ if (options.Api연결)
 {
     builder.Services.AddScoped<메뉴Api연결>();
     builder.Services.AddScoped<I음식점메뉴ApiClient>(sp => sp.GetRequiredService<메뉴Api연결>());
+    builder.Services.AddScoped(sp => sp.GetRequiredService<메뉴Api연결>().AuthService);
     builder.Services.AddScoped<CircuitHandler, 메뉴ApiCircuitHandler>();
 }
 else
 {
     builder.Services.AddScoped<I음식점메뉴ApiClient, 메뉴미리보기Client>();
+    builder.Services.AddScoped(_ => 메뉴미리보기인증.Create());
 }
+builder.Services.AddScoped<RestaurantMenuDraftStore>();
 var app = builder.Build();
 app.UseStaticFiles();
 app.UseAntiforgery();

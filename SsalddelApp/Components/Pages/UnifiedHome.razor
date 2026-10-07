@@ -1,35 +1,4 @@
 @page "/"
-@implements IDisposable
-@inject SsalddelClientRoleService RoleService
-
-<PageTitle>살뜰</PageTitle>
-
-@if (RoleService.IsWarehouseManager)
-{
-    <WarehouseManagerRoleHome />
-}
-else if (RoleService.IsShipper)
-{
-    <Home />
-}
-else
-{
-    <RoleNeutralHome />
-}
-
-@code {
-    protected override void OnInitialized()
-    {
-        RoleService.Changed += HandleRoleChanged;
-    }
-
-    private void HandleRoleChanged()
-    {
-        InvokeAsync(StateHasChanged);
-    }
-
-    public void Dispose()
-    {
-        RoleService.Changed -= HandleRoleChanged;
-    }
-}
+@layout RoleWorkspaceLayout
+<PageTitle>Mirror · 역할 선택</PageTitle>
+<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.RoleSelectionHome />

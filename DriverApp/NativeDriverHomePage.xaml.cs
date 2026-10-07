@@ -15,14 +15,16 @@ public partial class NativeDriverHomePage : ContentPage
     private readonly DriverHomeRoutePlanningService _routePlanningService;
     private readonly I기사푸시토큰등록Service _pushTokenRegistrationService;
     private readonly DriverOperatingProfileService _operatingProfileService;
+    private readonly DriverNativeHomeWorkspaceState _workspaceState;
+    private long _pageRefreshGeneration;
     private bool _isSubscribed;
     private DriverMapMarkerItem? _incomingRecommendation;
     private DriverRequestItem? _incomingRecommendationRequest;
     private DriverRequestItem? _acceptedRecommendationRequest;
     private 기사운송샘플항목? _currentTransport;
     private IReadOnlyList<DriverMapMarkerItem> _defaultRecommendationMarkers = [];
-    private double _defaultCenterLatitude;
-    private double _defaultCenterLongitude;
+    private double _defaultCenterLatitude = (double)DriverNativeLocationPolicy.DefaultCameraCenter.Latitude;
+    private double _defaultCenterLongitude = (double)DriverNativeLocationPolicy.DefaultCameraCenter.Longitude;
     private const double DefaultMapZoom = 11d;
     private IDispatcherTimer? _recommendationCountdownTimer;
     private bool _autoRejectingRecommendation;
@@ -34,7 +36,8 @@ public partial class NativeDriverHomePage : ContentPage
         IDriverRecommendationNotificationService recommendationNotificationService,
         DriverHomeRoutePlanningService routePlanningService,
         I기사푸시토큰등록Service pushTokenRegistrationService,
-        DriverOperatingProfileService operatingProfileService)
+        DriverOperatingProfileService operatingProfileService,
+        IAuthSession authSession)
     {
         InitializeComponent();
         _sampleDataService = sampleDataService;
@@ -44,6 +47,7 @@ public partial class NativeDriverHomePage : ContentPage
         _routePlanningService = routePlanningService;
         _pushTokenRegistrationService = pushTokenRegistrationService;
         _operatingProfileService = operatingProfileService;
+        _workspaceState = new(sampleDataService, authSession);
         ApplyOperatingProfile();
     }
 
@@ -52,31 +56,42 @@ public partial class NativeDriverHomePage : ContentPage
         base.OnAppearing();
         SubscribeEvents();
         ApplyOperatingProfile();
-        try
+        await RefreshCurrentWorkspaceAsync();
+    }
+
+    private async Task RefreshCurrentWorkspaceAsync()
+    {
+        var generation = ++_pageRefreshGeneration;
+        ClearCurrentWorkspaceDisplay();
+        StatusLabel.Text = "현재 운송을 확인하고 있습니다.";
+        StatusLabel.IsVisible = true;
+        RetryWorkspaceButton.IsVisible = false;
+        await _workspaceState.ActivateAsync();
+        if (!_isSubscribed || generation != _pageRefreshGeneration) return;
+        if (!_workspaceState.IsReady)
         {
-            await _sampleDataService.RefreshAsync();
-        }
-        catch (Exception ex)
-        {
-            StatusLabel.Text = $"서버 API 조회 실패: {ex.Message}";
+            StatusLabel.Text = _workspaceState.ErrorMessage;
+            RetryWorkspaceButton.IsVisible = true;
+            return;
         }
 
         var currentLocation = _sampleDataService.기사현재위치;
         var markers = _mapService.BuildMarkers(_sampleDataService.추천의뢰목록);
         _defaultRecommendationMarkers = markers;
-        _defaultCenterLatitude = (double)currentLocation.위도;
-        _defaultCenterLongitude = (double)currentLocation.경도;
+        var cameraCenter = DriverNativeLocationPolicy.CameraCenter(currentLocation, DateTime.UtcNow);
+        _defaultCenterLatitude = (double)cameraCenter.Latitude;
+        _defaultCenterLongitude = (double)cameraCenter.Longitude;
+        MapView.CurrentLocation = currentLocation;
+        ShowLocationNotice(DriverNativeLocationPolicy.Present(currentLocation, DateTime.UtcNow));
         var incoming = _recommendationNotificationService.GetCurrent();
         _incomingRecommendation = incoming?.Marker;
         _incomingRecommendationRequest = incoming?.Request;
-        _currentTransport = _sampleDataService.현재운송조회();
+        _currentTransport = _workspaceState.CurrentTransport;
 
         RestoreDefaultMapState();
 
-        if (string.IsNullOrWhiteSpace(StatusLabel.Text) || !StatusLabel.Text.StartsWith("서버 API 조회 실패:", StringComparison.Ordinal))
-        {
-            StatusLabel.Text = $"{currentLocation.위치명} 기준 추천 운송 {markers.Count}건을 네이티브 지도에 표시합니다.";
-        }
+        StatusLabel.IsVisible = false;
+        StatusLabel.Text = string.Empty;
         TransportFooterBar.ShowTransport(_currentTransport);
         ShowIncomingRecommendation(incoming);
         RecommendationDetailBanner.IsVisible = false;
@@ -87,13 +102,55 @@ public partial class NativeDriverHomePage : ContentPage
 
     protected override void OnDisappearing()
     {
+        ++_pageRefreshGeneration;
+        _workspaceState.Deactivate();
+        ClearCurrentWorkspaceDisplay();
         StopRecommendationCountdown();
         UnsubscribeEvents();
         base.OnDisappearing();
     }
 
+    private async void OnRetryWorkspaceClicked(object? sender, EventArgs e)
+        => await RefreshCurrentWorkspaceAsync();
+
+    private void OnWorkspaceInvalidated()
+        => MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (!_isSubscribed || _workspaceState.IsReady) return;
+            ++_pageRefreshGeneration;
+            ClearCurrentWorkspaceDisplay();
+            StatusLabel.Text = _workspaceState.ErrorMessage;
+            StatusLabel.IsVisible = true;
+            RetryWorkspaceButton.IsVisible = true;
+        });
+
+    private void ClearCurrentWorkspaceDisplay()
+    {
+        StopRecommendationCountdown();
+        _currentTransport = null;
+        _incomingRecommendation = null;
+        _incomingRecommendationRequest = null;
+        _acceptedRecommendationRequest = null;
+        _defaultRecommendationMarkers = [];
+        MapView.CurrentLocation = null;
+        _defaultCenterLatitude = (double)DriverNativeLocationPolicy.DefaultCameraCenter.Latitude;
+        _defaultCenterLongitude = (double)DriverNativeLocationPolicy.DefaultCameraCenter.Longitude;
+        MapView.CenterLatitude = _defaultCenterLatitude;
+        MapView.CenterLongitude = _defaultCenterLongitude;
+        MapProviderLabel.Text = "NAVER 지도 · Directions";
+        MapView.Markers = [];
+        MapView.RouteOverlays = [];
+        TransportFooterBar.ShowTransport(null);
+        TransportFooterBar.IsVisible = false;
+        RecommendationBanner.IsVisible = false;
+        RecommendationDetailBanner.IsVisible = false;
+        LinkedRouteCard.IsVisible = false;
+        RecommendationDecisionButtons.IsEnabled = false;
+    }
+
     private void OnMarkerSelected(object? sender, DriverMapMarkerItem marker)
     {
+        if (!_workspaceState.IsReady) return;
         if (LinkedRouteCard.IsVisible)
         {
             return;
@@ -112,7 +169,20 @@ public partial class NativeDriverHomePage : ContentPage
         MapView.MapProviderCode = profile.MapProviderCode;
         OperatingMarketLabel.Text = "대한민국 운행";
         MapProviderLabel.Text = "NAVER 지도 · Directions";
+        if (_workspaceState.IsReady)
+            ShowLocationNotice(DriverNativeLocationPolicy.Present(MapView.CurrentLocation, DateTime.UtcNow));
     }
+
+    private void OnLocationPresentationChanged(object? sender, DriverNativeLocationPresentation presentation)
+    {
+        if (_isSubscribed && _workspaceState.IsReady) ShowLocationNotice(presentation);
+    }
+
+    private void ShowLocationNotice(DriverNativeLocationPresentation presentation)
+        => MapProviderLabel.Text = $"NAVER 지도 · Directions\n{presentation.Notice}";
+
+    private 기사현재위치샘플 RouteCurrentLocation()
+        => DriverNativeLocationPolicy.ForCurrentRoute(_sampleDataService.기사현재위치, DateTime.UtcNow);
 
     private async Task RegisterStoredPushTokenQuietlyAsync()
     {
@@ -234,13 +304,13 @@ public partial class NativeDriverHomePage : ContentPage
             return;
         }
 
-        var routeOverlays = _routePlanningService.BuildLinkedRouteOverlays(_sampleDataService.기사현재위치, _currentTransport, _incomingRecommendation, "#16a34a", "연계 추천 경로");
+        var routeOverlays = _routePlanningService.BuildLinkedRouteOverlays(RouteCurrentLocation(), _currentTransport, _incomingRecommendation, "#16a34a", "연계 추천 경로");
         FocusMapOnRoute(routeOverlays, _incomingRecommendation, reserveBottomSpace: true);
         MapView.Markers = [_incomingRecommendation];
         MapView.RouteOverlays = routeOverlays;
         TransportFooterBar.IsVisible = false;
         RecommendationDetailBanner.IsVisible = false;
-        ShowLinkedRouteCard(_sampleDataService.기사현재위치, _currentTransport, _incomingRecommendation, _incomingRecommendationRequest);
+        ShowLinkedRouteCard(RouteCurrentLocation(), _currentTransport, _incomingRecommendation, _incomingRecommendationRequest);
         TitleLabel.Text = "배차 추천 확인";
         StatusLabel.Text = "현재 이동 단계와 추천 운송 의뢰의 상차/하차 경로를 함께 표시했습니다.";
         RecommendationBanner.IsVisible = false;
@@ -423,10 +493,10 @@ public partial class NativeDriverHomePage : ContentPage
         }
 
         MapView.Markers = [_incomingRecommendation];
-        var acceptedRoute = _routePlanningService.BuildAcceptedRouteOverlays(_sampleDataService.기사현재위치, _currentTransport, _incomingRecommendation);
+        var acceptedRoute = _routePlanningService.BuildAcceptedRouteOverlays(RouteCurrentLocation(), _currentTransport, _incomingRecommendation);
         var routeOverlays = acceptedRoute.Count > 0
             ? acceptedRoute
-            : _routePlanningService.BuildLinkedRouteOverlays(_sampleDataService.기사현재위치, _currentTransport, _incomingRecommendation);
+            : _routePlanningService.BuildLinkedRouteOverlays(RouteCurrentLocation(), _currentTransport, _incomingRecommendation);
         FocusMapOnRoute(routeOverlays, _incomingRecommendation, reserveBottomSpace: true);
         MapView.RouteOverlays = routeOverlays;
         TransportFooterBar.IsVisible = false;
@@ -502,6 +572,7 @@ public partial class NativeDriverHomePage : ContentPage
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
+            if (!_isSubscribed || !_workspaceState.IsReady) return;
             _incomingRecommendation = incoming?.Marker;
             _incomingRecommendationRequest = incoming?.Request;
             ShowIncomingRecommendation(incoming);
@@ -522,8 +593,10 @@ public partial class NativeDriverHomePage : ContentPage
         }
 
         MapView.MarkerSelected += OnMarkerSelected;
+        MapView.LocationPresentationChanged += OnLocationPresentationChanged;
         _recommendationNotificationService.Changed += OnIncomingRecommendationChanged;
         _operatingProfileService.Changed += OnOperatingProfileChanged;
+        _workspaceState.Invalidated += OnWorkspaceInvalidated;
         _isSubscribed = true;
     }
 
@@ -535,8 +608,10 @@ public partial class NativeDriverHomePage : ContentPage
         }
 
         MapView.MarkerSelected -= OnMarkerSelected;
+        MapView.LocationPresentationChanged -= OnLocationPresentationChanged;
         _recommendationNotificationService.Changed -= OnIncomingRecommendationChanged;
         _operatingProfileService.Changed -= OnOperatingProfileChanged;
+        _workspaceState.Invalidated -= OnWorkspaceInvalidated;
         _isSubscribed = false;
     }
 

@@ -11,6 +11,10 @@ public sealed class WarehousePageAvailabilityService(ICommunityProcurementClient
     private const string WarehouseFeatureKey = "WarehouseFulfillmentWorkflow";
     private const string MartFeatureKey = "SsalddelMartWorkflow";
 
+    public async Task<WarehousePageAvailability> GetHomeAsync(
+        CancellationToken cancellationToken = default)
+        => await GetAsync(WarehouseManagerRoutes.Warehouse, WarehouseFeatureKey, cancellationToken);
+
     public async Task<WarehousePageAvailability> GetExpectedInboundsAsync(
         CancellationToken cancellationToken = default)
         => await GetAsync(WarehouseManagerRoutes.ExpectedInbounds, WarehouseFeatureKey, cancellationToken);

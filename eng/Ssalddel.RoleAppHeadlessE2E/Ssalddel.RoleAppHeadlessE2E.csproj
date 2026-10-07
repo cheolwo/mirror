@@ -18,6 +18,8 @@
     <Compile Include="..\..\RestaurantDeskApp\Services\I음식주문ApiClient.cs" Link="RoleClients\I음식주문ApiClient.cs" />
     <Compile Include="..\..\RestaurantDeskApp\Services\I음식점메뉴ApiClient.cs" Link="RoleClients\I음식점메뉴ApiClient.cs" />
     <Compile Include="..\..\RestaurantDeskApp\Services\RestaurantAuthService.cs" Link="RoleClients\RestaurantAuthService.cs" />
+    <Compile Include="..\..\RestaurantDeskApp\Services\RestaurantProgressPendingStore.cs" Link="RoleClients\RestaurantProgressPendingStore.cs" />
+    <Compile Include="..\..\RestaurantDeskApp\Services\RestaurantOrderReturnContext.cs" Link="RoleClients\RestaurantOrderReturnContext.cs" />
     <Compile Include="..\..\RestaurantDeskApp\Services\Ssalddel음식주문Client.cs" Link="RoleClients\Ssalddel음식주문Client.cs" />
     <Compile Include="..\..\FDriverApp\Services\FDriverAuthApiService.cs" Link="RoleClients\FDriverAuthApiService.cs" />
     <Compile Include="..\..\FDriverApp\Services\FoodDeliveryDriverApiService.cs" Link="RoleClients\FoodDeliveryDriverApiService.cs" />

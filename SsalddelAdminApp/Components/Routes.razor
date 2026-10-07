@@ -29,7 +29,10 @@
 @code {
     private static readonly string[] AllowedRoutes =
     [
-        "/", "/overview", "/login", "/operations",
+        "/", "/overview", "/overview/cargo", "/login", "/operations",
+        "/food-operations", "/food-operations/orders/{OrderNo}",
+        "/food-operations/reviews/{OrderNo}", "/food-operations/demand-surcharge",
+        "/privacy-support", "/privacy-support/{CaseId}",
         "/operations/follow-up-recovery", "/operations/finance"
     ];
 

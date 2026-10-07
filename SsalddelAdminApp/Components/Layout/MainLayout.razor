@@ -26,6 +26,10 @@
     <MudDrawer @bind-Open="drawerOpen" Variant="DrawerVariant.Responsive" Elevation="1" ClipMode="DrawerClipMode.Always">
         <MudNavMenu Class="pa-3">
             <MudNavLink Href="/overview" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">운영 개요</MudNavLink>
+            <MudNavLink Href="/food-operations" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Restaurant">음식 주문</MudNavLink>
+            @if (Session.IsServerAdmin)
+            { <MudNavLink Href="/privacy-support" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FactCheck">거래·개인정보 처리 요청</MudNavLink> }
+            <MudNavLink Href="/overview/cargo" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.LocalShipping">화물 개요</MudNavLink>
             <MudNavLink Href="/operations" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.MonitorHeart">운송·기사 현황</MudNavLink>
             <MudNavLink Href="/operations/follow-up-recovery" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Healing">후속 처리 복구</MudNavLink>
             <MudNavLink Href="/operations/finance" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AccountBalanceWallet">현금 흐름</MudNavLink>

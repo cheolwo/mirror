@@ -1,11 +1,23 @@
 @page "/menus"
-@inject I음식점메뉴ApiClient MenuClient
+@implements IDisposable
 @using Microsoft.AspNetCore.Components.Routing
-<NavigationLock ConfirmExternalNavigation="@editing" OnBeforeInternalNavigation="GuardNavigation" />
+<NavigationLock ConfirmExternalNavigation="@(editing && !requiresLogin)" OnBeforeInternalNavigation="GuardNavigation" />
 
 <PageTitle>메뉴 관리</PageTitle>
 <MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
     <MudStack Spacing="3">
+        @if (scopeChanged)
+        {
+            <MudAlert Severity="Severity.Info">계정이 변경되었습니다. 주문함에서 다시 진행해 주세요.</MudAlert>
+            <MudButton Href="/orders" Variant="Variant.Filled" Color="Color.Primary">주문함으로</MudButton>
+        }
+        else if (requiresLogin)
+        {
+            <MudAlert Severity="Severity.Warning">로그인 확인이 필요합니다. 같은 계정으로 로그인하면 작성 중인 메뉴를 이어서 확인할 수 있습니다.</MudAlert>
+            <MudButton Href="/login" Variant="Variant.Filled" Color="Color.Primary">로그인하기</MudButton>
+        }
+        else
+        {
         @if (!editing)
         {
         <MudStack Class="restaurant-home-hero" Spacing="1">
@@ -83,108 +95,6 @@
             </MudStack>
         </MudPaper>
         }
+        }
     </MudStack>
 </MudContainer>
-
-@code {
-    private IReadOnlyList<음식점메뉴관리응답> menus = [];
-    private bool busy, loaded, published, soldOut, editing;
-    private long? editingId;
-    private long revision;
-    private int displayOrder;
-    private string name = "", description = "", imageUrl = "";
-    private decimal price;
-    private string? message;
-    private Severity severity = Severity.Info;
-    private 음식점메뉴등록요청? pendingCreate;
-    private bool FormLocked => busy || pendingCreate is not null;
-
-    protected override Task OnInitializedAsync() => ReloadAsync();
-
-    private async Task ReloadAsync()
-    {
-        if (busy) return;
-        busy = true;
-        try
-        {
-            menus = await MenuClient.목록Async();
-            loaded = true;
-            message = pendingCreate is null ? null : "등록 결과 확인이 필요합니다. 동일 요청으로 재확인하면 중복 등록을 방지합니다.";
-            severity = Severity.Info;
-        }
-        catch (Exception) { message = "메뉴를 조회하지 못했습니다. 연결과 로그인 상태를 확인한 뒤 다시 시도하세요. 이전 목록은 유지합니다."; severity = Severity.Error; }
-        finally { busy = false; }
-    }
-
-    private void NewMenu()
-    {
-        if (FormLocked) return;
-        editing = true;
-        editingId = null; revision = 0; displayOrder = 0;
-        name = description = imageUrl = ""; price = 0; published = soldOut = false;
-    }
-
-    private void Edit(음식점메뉴관리응답 menu)
-    {
-        if (FormLocked) return;
-        editing = true;
-        editingId = menu.Id; revision = menu.Revision; displayOrder = menu.표시순서;
-        name = menu.메뉴명; description = menu.설명; imageUrl = menu.대표이미지Url ?? "";
-        price = menu.판매가; published = menu.공개여부; soldOut = menu.품절여부;
-    }
-
-    private void CloseEditor()
-    {
-        if (FormLocked) return;
-        editing = false;
-        message = null;
-    }
-
-    private void GuardNavigation(LocationChangingContext context)
-    {
-        if (!editing) return;
-        context.PreventNavigation();
-        severity = Severity.Warning;
-        message = "입력 중입니다. 저장하거나 ‘목록으로 · 입력 취소’를 누른 뒤 이동하세요.";
-    }
-
-    private async Task SaveAsync()
-    {
-        if (busy || !loaded) return;
-        if (음식점메뉴입력Policy.오류조회(name, description, price, imageUrl) is { } inputError)
-        {
-            severity = Severity.Warning; message = inputError; return;
-        }
-        busy = true;
-        try
-        {
-            if (editingId is { } id)
-                await MenuClient.수정Async(id, new 음식점메뉴수정요청 { 예상Revision = revision, 메뉴명 = name.Trim(), 설명 = description.Trim(), 판매가 = price, 대표이미지Url = string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl.Trim(), 공개여부 = published, 품절여부 = soldOut, 표시순서 = displayOrder });
-            else
-            {
-                pendingCreate ??= new 음식점메뉴등록요청 { 클라이언트요청Id = Guid.NewGuid(), 메뉴명 = name.Trim(), 설명 = description.Trim(), 판매가 = price, 대표이미지Url = string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl.Trim(), 공개여부 = published, 품절여부 = soldOut, 표시순서 = displayOrder };
-                await MenuClient.등록Async(pendingCreate);
-                pendingCreate = null;
-            }
-            editingId = null; name = description = imageUrl = ""; price = 0; published = soldOut = false;
-            severity = Severity.Success; message = "메뉴를 저장했습니다.";
-            editing = false;
-            try { menus = await MenuClient.목록Async(); }
-            catch (Exception) { severity = Severity.Warning; message = "메뉴 저장은 완료했지만 목록 갱신에 실패했습니다. 다시 등록하지 말고 새로고침해 주세요."; }
-        }
-        catch (메뉴저장거절Exception)
-        {
-            pendingCreate = null;
-            severity = Severity.Error;
-            message = "서버가 저장을 거절했습니다. 새로고침 후 같은 이름의 메뉴·최신 상태·계정 권한을 확인하세요.";
-        }
-        catch (Exception)
-        {
-            severity = Severity.Error;
-            message = pendingCreate is not null
-                ? "등록 결과를 확인하지 못했습니다. 입력값을 보존했습니다. 동일 요청으로 재확인해 주세요."
-                : "수정을 확인하지 못했습니다. 새로고침 후 해당 메뉴를 다시 선택해 최신 상태를 확인하세요.";
-        }
-        finally { busy = false; }
-    }
-}

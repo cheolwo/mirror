@@ -1,5 +1,6 @@
 ﻿@page "/driver/reservations"
 @using DriverApp.ViewModels.Driver.Reservation
+@using DriverApp.ViewModels.Driver.Transport
 @inherits DriverApp.Components.MvvmComponentBase<기사예약PageViewModel>
 
 <PageTitle>예약</PageTitle>
@@ -20,7 +21,7 @@
                     <MudPaper Class="pa-4 h-100" Elevation="2">
                         <MudStack Spacing="1">
                             <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-                                <MudText Typo="Typo.h6">@item.StartTime?.ToString("HH:mm")</MudText>
+                                <MudText Typo="Typo.h6">@기사국내시각표시.표시(item.StartTime, "MM-dd HH:mm", "예약 시각 미확인")</MudText>
                                 <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">@(item.IsFuture ? "예약" : "지난 예약")</MudChip>
                             </MudStack>
                             <MudText Typo="Typo.body2">시작 모드: @item.StartMode</MudText>

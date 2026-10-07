@@ -50,10 +50,16 @@ public static class MauiProgram
         builder.Services.AddSingleton<IClientSessionGuard, ClientSessionGuard>();
         builder.Services.AddSingleton<ClientAuthSession>();
         builder.Services.AddSingleton<RestaurantAccessTokenProvider>();
-        builder.Services.AddHttpClient<RestaurantAuthService>((sp, client) =>
+        builder.Services.AddHttpClient("RestaurantAuthentication", (sp, client) =>
         {
             client.BaseAddress = operationalApiBaseAddress;
         });
+        // Logout and definitive 401 must reach the same subscribers in all pages and API clients.
+        builder.Services.AddSingleton(sp => new RestaurantAuthService(
+            sp.GetRequiredService<IHttpClientFactory>().CreateClient("RestaurantAuthentication"),
+            sp.GetRequiredService<ClientAuthSession>()));
+        builder.Services.AddSingleton<RestaurantMenuDraftStore>();
+        builder.Services.AddSingleton<IRestaurantProgressPendingStore, RestaurantSecureProgressPendingStore>();
         builder.Services.AddSingleton<RestaurantDeskSampleService>();
         builder.Services.AddSingleton<I음식점식재료공급요청Service, RestaurantIngredientSupplySampleService>();
         builder.Services.AddSingleton<I주문알림Service, 주문알림Service>();

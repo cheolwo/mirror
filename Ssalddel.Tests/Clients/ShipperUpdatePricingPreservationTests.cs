@@ -56,7 +56,8 @@ public sealed class ShipperUpdatePricingPreservationTests
         Assert.Null(payload.요금옵션?.서비스레벨);
         Assert.Null(payload.요금옵션?.요청사항);
         Assert.Null(payload.요금옵션?.알선정책);
-        Assert.Equal("식품", payload.화물?.화물종류);
+        Assert.Null(payload.화물);
+        Assert.NotSame(loaded.화물원본, model.초안.화물원본);
         Assert.Equal(Fixture.RequestId, state.선택된의뢰?.의뢰Id);
         Assert.Equal("월말정산", model.초안.정산시점);
         Assert.Equal(81000m, model.초안.기사지급예정운임);
@@ -66,7 +67,59 @@ public sealed class ShipperUpdatePricingPreservationTests
         Assert.Equal("010-5555-6666", reloaded?.하차정보?.연락처.전화번호);
         Assert.Equal(12.3m, reloaded?.예상거리Km);
         Assert.Equal("기존 월말 정산 메모", reloaded?.정산메모);
+        AssertCargoPreserved(KnownResponse().화물!, reloaded!.화물원본!);
         Assert.Equal(["GET", "PUT", "GET"], fixture.Handler.Methods);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task 화물종류를실제수정하면_원본의수량파손주의와모든화물조건을유지한다(bool fragile)
+    {
+        var response = KnownResponse();
+        response.화물!.화물파손주의여부 = fragile;
+        response.화물.길이Mm = null;
+        response.화물.중량Kg = 0m;
+        await using var fixture = await Fixture.CreateAsync(response);
+        var loaded = (await fixture.Service.GetRequestAsync(Fixture.RequestId))!;
+        var state = new 화주운송의뢰상태ViewModel();
+        state.목록적용([loaded]);
+        var model = new 화주운송의뢰수정ViewModel(fixture.Service, state);
+        Assert.True(model.선택항목적용());
+        Assert.NotSame(loaded.화물원본, model.초안.화물원본);
+        model.초안.화물종류 = "냉장 식품";
+
+        Assert.True(await model.실행Async());
+
+        var cargo = Assert.IsType<CargoDTO>(fixture.Handler.UpdatedPayload!.화물);
+        Assert.Equal("냉장 식품", cargo.화물종류);
+        AssertCargoPreserved(loaded.화물원본!, cargo);
+        Assert.Equal("식품", loaded.화물종류);
+        Assert.Equal("식품", loaded.화물원본!.화물종류);
+        Assert.Equal("냉장 식품", model.초안.화물종류);
+        AssertCargoPreserved(loaded.화물원본, model.초안.화물원본!);
+        Assert.Null(cargo.길이Mm);
+        Assert.Equal(0m, cargo.중량Kg);
+    }
+
+    [Fact]
+    public async Task 구판응답은_연락처수정을지원하되_원본없는종류수정은명시적으로차단한다()
+    {
+        var response = KnownResponse();
+        response.화물 = null;
+        await using var fixture = await Fixture.CreateAsync(response);
+        var loaded = (await fixture.Service.GetRequestAsync(Fixture.RequestId))!;
+        loaded.픽업정보!.연락처.전화번호 = "010-5555-6666";
+        await fixture.Service.UpdateRequestAsync(loaded);
+        Assert.Null(fixture.Handler.UpdatedPayload!.화물);
+        Assert.Equal("010-5555-6666", fixture.Handler.UpdatedPayload.픽업?.연락처.전화번호);
+        var putCount = fixture.Handler.Methods.Count(x => x == "PUT");
+
+        loaded.화물종류 = "냉장 식품";
+        var failure = await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Service.UpdateRequestAsync(loaded));
+
+        Assert.Contains("원본", failure.Message);
+        Assert.Equal(putCount, fixture.Handler.Methods.Count(x => x == "PUT"));
     }
 
     [Theory]
@@ -224,6 +277,7 @@ public sealed class ShipperUpdatePricingPreservationTests
         Assert.Null(payload.결제상태);
         Assert.Null(payload.상태);
         Assert.Null(payload.배차상태);
+        Assert.Null(payload.화물);
     }
 
     [Fact]
@@ -258,6 +312,20 @@ public sealed class ShipperUpdatePricingPreservationTests
 
     private static decimal? ToDecimal(double? value) => value.HasValue ? (decimal)value.Value : null;
 
+    private static void AssertCargoPreserved(CargoDTO original, CargoDTO actual)
+    {
+        Assert.Equal(original.설명, actual.설명);
+        Assert.Equal(original.수량, actual.수량);
+        Assert.Equal(original.길이Mm, actual.길이Mm);
+        Assert.Equal(original.폭Mm, actual.폭Mm);
+        Assert.Equal(original.높이Mm, actual.높이Mm);
+        Assert.Equal(original.중량Kg, actual.중량Kg);
+        Assert.Equal(original.부피Cbm, actual.부피Cbm);
+        Assert.Equal(original.팔레트개수, actual.팔레트개수);
+        Assert.Equal(original.화물파손주의여부, actual.화물파손주의여부);
+        Assert.Equal(original.온도조건, actual.온도조건);
+    }
+
     private static 화주운송의뢰응답 KnownResponse()
         => new()
         {
@@ -273,6 +341,12 @@ public sealed class ShipperUpdatePricingPreservationTests
                 서비스레벨 = "기존 특약 서비스", 요청사항 = "기존 상차 요청", 알선정책 = new() { 알선단계 = 2 }
             },
             요약 = new() { 화물종류 = "식품" },
+            화물 = new()
+            {
+                화물종류 = "식품", 설명 = "기존 취급 조건", 수량 = 7,
+                길이Mm = 1000, 폭Mm = 800, 높이Mm = 600, 중량Kg = 12.5m,
+                부피Cbm = .48m, 팔레트개수 = 2, 화물파손주의여부 = true, 온도조건 = "냉장"
+            },
             픽업지 = "기존 상차 주소", 하차지 = "기존 하차 주소",
             픽업 = new() { 주소 = new() { 도로명주소 = "기존 상차 주소" }, 연락처 = new() { 이름 = "상차 담당", 전화번호 = "010-1111-2222" } },
             하차 = new() { 주소 = new() { 도로명주소 = "기존 하차 주소" }, 연락처 = new() { 이름 = "하차 담당", 전화번호 = "010-3333-4444" } }
@@ -336,6 +410,11 @@ public sealed class ShipperUpdatePricingPreservationTests
                     UpdatedPayload = await request.Content!.ReadFromJsonAsync<화주운송의뢰수정요청>(cancellationToken);
                     if (UpdatedPayload!.픽업 is not null) ledger.픽업 = UpdatedPayload.픽업;
                     if (UpdatedPayload.하차 is not null) ledger.하차 = UpdatedPayload.하차;
+                    if (UpdatedPayload.화물 is not null)
+                    {
+                        ledger.화물 = UpdatedPayload.화물;
+                        ledger.요약!.화물종류 = UpdatedPayload.화물.화물종류;
+                    }
                 }
                 else Assert.Equal(HttpMethod.Get, request.Method);
             }

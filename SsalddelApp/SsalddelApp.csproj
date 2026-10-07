@@ -20,6 +20,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <EnableDefaultCssItems>false</EnableDefaultCssItems>
         <Nullable>enable</Nullable>
+        <GoogleMapsAndroidApiKey Condition="'$(GoogleMapsAndroidApiKey)' == ''">GOOGLE_MAPS_API_KEY_NOT_CONFIGURED</GoogleMapsAndroidApiKey>
+        <AndroidManifestPlaceholders Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">$(AndroidManifestPlaceholders);googleMapsApiKey=$(GoogleMapsAndroidApiKey)</AndroidManifestPlaceholders>
 
         <!-- Display name -->
         <ApplicationTitle>살뜰</ApplicationTitle>
@@ -41,7 +43,15 @@
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
     </PropertyGroup>
 
+    <ItemGroup Condition="'$(SsalddelServerBaseAddress)' != ''">
+        <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+            <_Parameter1>SsalddelServerBaseAddress</_Parameter1>
+            <_Parameter2>$(SsalddelServerBaseAddress)</_Parameter2>
+        </AssemblyAttribute>
+    </ItemGroup>
+
     <ItemGroup>
+        <Compile Include="../eng/role-workspace/*.cs" Link="Services/%(Filename)%(Extension)" />
         <ProjectReference Include="..\Ssalddel.Contracts\Ssalddel.Contracts.csproj" />
         <ProjectReference Include="..\Ssalddel.Client.Infrastructure\Ssalddel.Client.Infrastructure.csproj" />
         <ProjectReference Include="..\Ssalddel.Ui.Common\Ssalddel.Ui.Common.csproj" />

@@ -69,7 +69,7 @@ public sealed class FDriverFoodExceptionIntentTests
     }
 
     [Fact]
-    public void CanonicalRevisionChange_UnlocksDraft_AndRemovedAttemptClearsPrivateInput()
+    public void CanonicalRevisionChange_KeepsOriginalRequestLocked_AndRemovedAttemptClearsPrivateInput()
     {
         var state = new FDriverDeliveryExceptionState();
         var delivery = Active();
@@ -78,7 +78,8 @@ public sealed class FDriverFoodExceptionIntentTests
         Assert.NotNull(state.Prepare(DateTime.UtcNow));
         delivery.AttemptRevision++;
         state.Reconcile(ActiveDeliveryPreview.From(delivery));
-        Assert.True(state.IsInputUnlocked);
+        Assert.False(state.IsInputUnlocked);
+        Assert.Equal(7, state.Prepare(DateTime.UtcNow)!.예상시도Revision);
         Assert.Contains("상태가 변경", state.Notice);
         state.Reconcile(null);
         Assert.False(state.IsOpen);
@@ -309,6 +310,12 @@ public sealed class FDriverFoodExceptionIntentTests
     { Workspace = _ => Task.FromResult(new FoodDeliveryDriverWorkspaceDto { ActiveDeliveries = [active], UpdatedAtUtc = DateTime.UtcNow }) };
     private sealed class Location : IFDriverLocationService
     {
+        public bool IsListening => false;
+        public FDriverLocationSnapshot? LatestLocation => null;
+        public event EventHandler<FDriverLocationSnapshot>? LocationChanged { add { } remove { } }
+        public event EventHandler<string>? ListeningFailed { add { } remove { } }
+        public Task<bool> StartListeningAsync(CancellationToken cancellationToken = default, bool requestPermission = false) => Task.FromResult(false);
+        public void StopListening() { }
         public Task<FDriverLocationSnapshot?> GetCurrentAsync(CancellationToken cancellationToken = default)
             => Task.FromResult<FDriverLocationSnapshot?>(new(37.5m, 127m, 10, DateTime.UtcNow));
     }

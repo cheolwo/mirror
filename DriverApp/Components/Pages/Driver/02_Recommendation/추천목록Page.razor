@@ -56,8 +56,8 @@
             <MudStack Spacing="2">
                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
                     <MudStack Spacing="0">
-                        <MudText Typo="Typo.subtitle1">현재 위치</MudText>
-                        <MudText Typo="Typo.body2">@Samples.기사현재위치.위치명</MudText>
+                        <MudText Typo="Typo.subtitle1">최근 확인 위치</MudText>
+                        <MudText Typo="Typo.body2">@(최근위치확인됨 ? Samples.기사현재위치.위치명 : "위치 미확인")</MudText>
                         <MudText Typo="Typo.caption" Color="Color.Secondary">@현재위치갱신문구</MudText>
                     </MudStack>
                     <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled">@추천건수문구</MudChip>
@@ -70,7 +70,7 @@
                     <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
                         @foreach (var option in 반경옵션)
                         {
-                            <MudButton Size="Size.Small" Variant="@반경버튼Variant(option.Km)" Color="Color.Primary" OnClick="@(() => 반경선택(option.Km))">@option.Label</MudButton>
+                            <MudButton Size="Size.Small" Variant="@반경버튼Variant(option.Km)" Color="Color.Primary" Disabled="@(option.Km.HasValue && !최근위치확인됨)" OnClick="@(() => 반경선택(option.Km))">@option.Label</MudButton>
                         }
                     </MudStack>
                 </MudStack>
@@ -78,7 +78,7 @@
                 <MudStack Spacing="1">
                     <MudText Typo="Typo.caption" Color="Color.Secondary">정렬</MudText>
                     <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
-                        <MudButton Size="Size.Small" Variant="@정렬버튼Variant("거리")" Color="Color.Secondary" OnClick="@(() => 정렬선택("거리"))">가까운순</MudButton>
+                        <MudButton Size="Size.Small" Variant="@정렬버튼Variant("거리")" Color="Color.Secondary" Disabled="@(!최근위치확인됨)" OnClick="@(() => 정렬선택("거리"))">가까운순</MudButton>
                         <MudButton Size="Size.Small" Variant="@정렬버튼Variant("수익")" Color="Color.Secondary" OnClick="@(() => 정렬선택("수익"))">수익순</MudButton>
                     </MudStack>
                 </MudStack>
@@ -213,38 +213,41 @@
     ];
 
     private IReadOnlyList<추천의뢰표시항목> 표시목록
+        => DriverNativeLocationPolicy.SelectRecommendations(
+            Samples.거리포함추천의뢰목록조회(), Samples.기사현재위치, DateTime.UtcNow, _선택반경Km, _정렬기준 == "수익");
+
+    private bool 최근위치확인됨 => DriverNativeLocationPolicy.Present(Samples.기사현재위치, DateTime.UtcNow).IsAvailable;
+
+    private string 현재위치갱신문구
     {
         get
         {
-            var items = Samples.거리포함추천의뢰목록조회().AsEnumerable();
-            if (_선택반경Km.HasValue)
+            var location = DriverNativeLocationPolicy.Present(Samples.기사현재위치, DateTime.UtcNow);
+            return location.StateCode switch
             {
-                items = items.Where(x => x.상차지까지거리Km <= _선택반경Km.Value);
-            }
-
-            items = _정렬기준 switch
-            {
-                "수익" => items.OrderByDescending(x => x.의뢰.예상수익 ?? 0m).ThenBy(x => x.상차지까지거리Km),
-                _ => items.OrderBy(x => x.상차지까지거리Km)
+                "available" => $"{location.Notice} · 상차지까지 직선거리 기준",
+                "stale" => $"{location.Notice} · 상차지 거리 미확인",
+                "sample" => "예시 위치 · 실제 상차지 거리 미확인",
+                _ => "위치 미확인 · 새 추천 확인으로 다시 조회해 주세요."
             };
-
-            return items.ToList();
         }
     }
-
-    private string 현재위치갱신문구 => string.Format("{0:HH:mm} 갱신 · 상차지까지 직선거리 기준", Samples.기사현재위치.갱신시각);
     private string 추천건수문구 => string.Format("추천 {0}건", 표시목록.Count);
 
-    private static string 간단부제(추천의뢰표시항목 item) => string.Format("{0}. {1} · {2}", item.가까운순위, item.의뢰.화물종류, item.의뢰.상태);
+    private static string 간단부제(추천의뢰표시항목 item) => item.가까운순위 is { } rank
+        ? $"{rank}. {item.의뢰.화물종류} · {item.의뢰.상태}"
+        : $"{item.의뢰.화물종류} · {item.의뢰.상태}";
     private static string 자세히부제(추천의뢰표시항목 item) => string.Format("{0} · 추천점수 {1}", item.의뢰.화물종류, item.추천점수표시);
-    private static string 상차지거리문구(추천의뢰표시항목 item) => string.Format("현재 위치에서 상차지까지 {0}", item.상차지까지거리표시);
+    private static string 상차지거리문구(추천의뢰표시항목 item) => item.상차지까지거리Km.HasValue
+        ? $"최근 확인 위치에서 상차지까지 {item.상차지까지거리표시}"
+        : "상차지까지 거리 미확인";
     private static string 운송거리문구(추천의뢰표시항목 item) => string.Format("운송 {0}", item.운송거리표시);
     private static string 예상수익문구(추천의뢰표시항목 item) => string.Format("예상수익 {0}", item.예상수익표시);
 
     private void 반경선택(decimal? 반경Km) => _선택반경Km = 반경Km;
     private void 정렬선택(string 정렬기준) => _정렬기준 = 정렬기준;
 
-    private Variant 반경버튼Variant(decimal? 반경Km) => _선택반경Km == 반경Km ? Variant.Filled : Variant.Outlined;
+    private Variant 반경버튼Variant(decimal? 반경Km) => (최근위치확인됨 ? _선택반경Km : null) == 반경Km ? Variant.Filled : Variant.Outlined;
     private Variant 정렬버튼Variant(string 정렬기준) => _정렬기준 == 정렬기준 ? Variant.Filled : Variant.Outlined;
     private Variant 보기버튼Variant(string 보기모드) => CardPreferenceService.GetSettings().표시모드 switch
     {

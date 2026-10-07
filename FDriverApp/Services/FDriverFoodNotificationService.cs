@@ -11,7 +11,7 @@ public sealed class FDriverFoodNotificationService : IFDriverFoodNotificationSer
     private const string ReceiptKey = "ssalddel.fdriver.foodNotification.receipt.v1";
     private const string TargetKey = "ssalddel.fdriver.foodNotification.target.v1";
     private const int NotificationId = 31081;
-    private const string ChannelId = "food_dispatch_recommendations";
+    internal const string ChannelId = "food_dispatch_recommendations";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public FDriverFoodNotificationReceipt? ReadReceipt() => Read<FDriverFoodNotificationReceipt>(ReceiptKey);

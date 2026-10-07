@@ -3,15 +3,18 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:SsalddelApp"
              xmlns:components="clr-namespace:SsalddelApp.Components"
-             x:Class="SsalddelApp.MainPage">
+             x:Class="SsalddelApp.MainPage"
+             SafeAreaEdges="Container">
 
+    <Grid>
     <BlazorWebView x:Name="blazorWebView"
                    HostPage="wwwroot/index.html"
-                   StartPath="/community">
+                   StartPath="/">
         <BlazorWebView.RootComponents>
             <RootComponent Selector="#app"
                            ComponentType="{x:Type components:Routes}" />
         </BlazorWebView.RootComponents>
     </BlazorWebView>
-
+    <AbsoluteLayout x:Name="mapOverlay" InputTransparent="True" CascadeInputTransparent="False" />
+    </Grid>
 </ContentPage>

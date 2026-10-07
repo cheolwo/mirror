@@ -11,7 +11,7 @@
                 @onclick="ToggleDrawer">
             <MudIcon Icon="@Icons.Material.Filled.Menu" />
         </button>
-        <a class="community-mobile-shell__brand" href="@CommunityPageRoutes.Home">
+        <a class="community-mobile-shell__brand" href="/community/map">
             <strong>살뜰</strong>
             <small>공개 커뮤니티</small>
         </a>
@@ -38,6 +38,8 @@
             </header>
             <p>생활·지역·재료·시세 정보를 편하게 둘러보고, 관심이 생긴 이야기만 더 확인합니다.</p>
             <nav>
+                <a href="/community/map" @onclick="CloseDrawer">생활 지도</a>
+                <a href="@NeighborhoodExchange.Home" @onclick="CloseDrawer">생활 교류</a>
                 <a href="@CommunityPageRoutes.Home" @onclick="CloseDrawer">
                     <MudIcon Icon="@Icons.Material.Filled.GridView" />
                     게시판 모음
@@ -68,7 +70,7 @@
 
     <footer class="community-mobile-shell__bottom-nav">
         <a class="@BuildBottomLinkClass(BottomDestination.Community)"
-           href="@CommunityPageRoutes.Home"
+           href="/community/map"
            aria-current="@(IsBottomDestinationActive(BottomDestination.Community) ? "page" : null)">
             <MudIcon Icon="@Icons.Material.Filled.GridView" Size="Size.Small" />
             <span>둘러보기</span>

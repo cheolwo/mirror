@@ -1,0 +1,9 @@
+@page "/community/exchange/deliveries"
+@using Ssalddel.Ui.Common.Areas.App.Services
+@layout CommunityMobileLayout
+<PageTitle>내 배송 의뢰 · 살뜰</PageTitle>
+<Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodDeliveryList LoginHref="@NeighborhoodExchangeAuthenticationRoutes.LoginHref(ListHref)" ReturnUrl="@ReturnUrl" />
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+    private string ListHref => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? NeighborhoodMapNavigation.WithReturn(NeighborhoodDeliveryRoutes.Home, home) : NeighborhoodDeliveryRoutes.Home;
+}

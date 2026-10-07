@@ -1,0 +1,16 @@
+@page "/community/exchange/work/new"
+@layout CommunityMobileLayout
+@inject NavigationManager Navigation
+<PageTitle>협업 신청 · 살뜰</PageTitle>
+<SsalddelApp.Components.Shared.NeighborhoodAuthenticationBoundary AuthenticationChanged="@AuthenticationChanged">
+    <Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodCollaborationCreate @ref="_page" PostId="@PostId" SpaceId="@SpaceId" WorkId="@WorkId" ReturnUrl="@ReturnUrl" LoginHref="@LoginHref"  />
+</SsalddelApp.Components.Shared.NeighborhoodAuthenticationBoundary>
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+    [SupplyParameterFromQuery(Name = "postId")] public long? PostId { get; set; }
+    [SupplyParameterFromQuery(Name = "spaceId")] public string? SpaceId { get; set; }
+    [SupplyParameterFromQuery(Name = "workId")] public string? WorkId { get; set; }
+    private Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodCollaborationCreate? _page;
+    private string LoginHref => NeighborhoodExchangeAuthenticationRoutes.LoginHref(new Uri(Navigation.Uri).PathAndQuery);
+    private Task AuthenticationChanged() => _page?.NotifyAuthenticationChangedAsync() ?? Task.CompletedTask;
+}

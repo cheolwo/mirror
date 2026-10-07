@@ -35,11 +35,17 @@ else if (!string.IsNullOrWhiteSpace(_connectionMessage))
         _connectionMessage = null;
         try
         {
-            if (RouteData.PageType == typeof(Pages.Login))
+            if (RouteData.PageType == typeof(Pages.Login) || RouteData.PageType == typeof(Pages.CommerceNoticesPage))
             {
                 _canRender = true;
                 return;
             }
+
+            if (RouteData.PageType == typeof(Pages.OrderDetail)
+                && RouteData.RouteValues.TryGetValue(nameof(Pages.OrderDetail.OrderNo), out var orderNo))
+                AuthService.OrderReturn.TrackOrder(AuthService.Session.UserId, orderNo?.ToString());
+            else
+                AuthService.OrderReturn.Clear();
 
             var result = await AuthService.EnsureAccessTokenAsync();
             if (result.IsSuccess)
@@ -50,7 +56,11 @@ else if (!string.IsNullOrWhiteSpace(_connectionMessage))
 
             if (result.RequiresLogin)
             {
-                NavigationManager.NavigateTo("/login", replace: true);
+                var relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+                var loginHref = Ssalddel.Contracts.Common.Commerce.CommerceAuthenticationRoutes.TryReturnRoute("/" + relative, out var commerceReturn)
+                    ? Ssalddel.Contracts.Common.Commerce.CommerceAuthenticationRoutes.LoginHref("/login", commerceReturn)
+                    : "/login";
+                NavigationManager.NavigateTo(loginHref, replace: true);
                 return;
             }
 

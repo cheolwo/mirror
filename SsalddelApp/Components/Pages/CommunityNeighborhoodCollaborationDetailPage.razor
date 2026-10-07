@@ -1,0 +1,13 @@
+@page "/community/exchange/work/{WorkId}"
+@layout CommunityMobileLayout
+@inject NavigationManager Navigation
+<PageTitle>협업 진행 · 살뜰</PageTitle>
+<SsalddelApp.Components.Shared.NeighborhoodAuthenticationBoundary AuthenticationChanged="@AuthenticationChanged">
+    <Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodCollaborationDetail @ref="_page" WorkId="@WorkId" LoginHref="@LoginHref" @key="WorkId" />
+</SsalddelApp.Components.Shared.NeighborhoodAuthenticationBoundary>
+@code {
+    [Parameter] public string WorkId { get; set; } = "";
+    private Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodCollaborationDetail? _page;
+    private string LoginHref => NeighborhoodExchangeAuthenticationRoutes.LoginHref(new Uri(Navigation.Uri).PathAndQuery);
+    private Task AuthenticationChanged() => _page?.NotifyAuthenticationChangedAsync() ?? Task.CompletedTask;
+}

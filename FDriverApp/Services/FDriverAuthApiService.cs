@@ -10,11 +10,13 @@ public sealed class FDriverAuthApiService
     private readonly HttpClient _httpClient;
     private readonly IFDriverAuthSession _session;
     private readonly SemaphoreSlim _refreshGate = new(1, 1);
+    private long _sessionEpoch;
 
     public FDriverAuthApiService(HttpClient httpClient, IFDriverAuthSession session)
     {
         _httpClient = httpClient;
         _session = session;
+        _session.SessionChanged += (_, _) => Interlocked.Increment(ref _sessionEpoch);
     }
 
     public async Task<string?> LoginAsync(
@@ -65,6 +67,9 @@ public sealed class FDriverAuthApiService
                     "로그인 세션이 만료되었습니다. 다시 로그인해 주세요.", HttpStatusCode.Unauthorized);
             }
 
+            var rejectedRevision = _session.SessionRevision;
+            var rejectedEpoch = Interlocked.Read(ref _sessionEpoch);
+            var rejectedOwner = _session.UserId;
             var result = await SendTokenRequestAsync(
                 "api/v1/auth/refresh",
                 new 토큰갱신요청
@@ -79,7 +84,9 @@ public sealed class FDriverAuthApiService
             {
                 try
                 {
-                    await _session.ClearAsync(cancellationToken);
+                    if (rejectedEpoch != Interlocked.Read(ref _sessionEpoch) || rejectedOwner != _session.UserId
+                        || !await _session.TryClearAsync(rejectedRevision, cancellationToken))
+                        throw new OperationCanceledException("계정이 변경되어 이전 인증 거절을 적용하지 않습니다.", cancellationToken);
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException
                     && _session.CurrentState == ClientAuthSessionRestoreState.Anonymous)
@@ -103,17 +110,21 @@ public sealed class FDriverAuthApiService
         string failureMessage,
         CancellationToken cancellationToken)
     {
+        var epoch = Interlocked.Read(ref _sessionEpoch);
+        var revision = _session.SessionRevision;
+        var owner = _session.UserId;
+        var accessToken = _session.AccessToken;
         try
         {
             using var response = await _httpClient.PostAsJsonAsync(path, request, cancellationToken);
-            cancellationToken.ThrowIfCancellationRequested();
+            EnsureCurrentRequest();
             if (!response.IsSuccessStatusCode)
             {
                 return new FDriverTokenRequestResult(false, failureMessage, response.StatusCode);
             }
 
             var token = await response.Content.ReadFromJsonAsync<토큰응답>(cancellationToken);
-            cancellationToken.ThrowIfCancellationRequested();
+            EnsureCurrentRequest();
             if (token is null || string.IsNullOrWhiteSpace(token.AccessToken))
             {
                 return new FDriverTokenRequestResult(false, "서버 인증 응답을 읽을 수 없습니다.");
@@ -128,16 +139,27 @@ public sealed class FDriverAuthApiService
                     HttpStatusCode.Unauthorized);
             }
 
-            await _session.ApplyAsync(token.ToClientAuthTokenSnapshot(), cancellationToken);
+            if (!await _session.TryApplyAsync(token.ToClientAuthTokenSnapshot(), revision, cancellationToken))
+                throw new OperationCanceledException("계정이 변경되어 이전 인증 응답을 적용하지 않습니다.", cancellationToken);
             return FDriverTokenRequestResult.Success;
         }
         catch (HttpRequestException)
         {
+            EnsureCurrentRequest();
             return new FDriverTokenRequestResult(false, "살뜰 서비스에 연결할 수 없습니다.");
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
+            EnsureCurrentRequest();
             return new FDriverTokenRequestResult(false, "로그인 응답 시간이 초과되었습니다.");
+        }
+
+        void EnsureCurrentRequest()
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (epoch != Interlocked.Read(ref _sessionEpoch) || revision != _session.SessionRevision
+                || owner != _session.UserId || accessToken != _session.AccessToken)
+                throw new OperationCanceledException("계정이 변경되어 이전 인증 응답을 적용하지 않습니다.", cancellationToken);
         }
     }
 

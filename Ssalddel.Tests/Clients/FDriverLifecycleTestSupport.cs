@@ -16,6 +16,7 @@ namespace Ssalddel.Tests.Clients
 {
     internal sealed class FDriverTestSession : IFDriverAuthSession
     {
+        public event EventHandler? SessionChanged;
         private ClientAuthTokenSnapshot? snapshot;
         private readonly ClientSessionGuard guard = new();
         public FDriverTestSession(bool expired = false) => snapshot = Snapshot(expired);
@@ -42,6 +43,7 @@ namespace Ssalddel.Tests.Clients
         {
             cancellationToken.ThrowIfCancellationRequested();
             snapshot = value;
+            SessionChanged?.Invoke(this, EventArgs.Empty);
             ApplyCount++;
             return Task.CompletedTask;
         }
@@ -49,6 +51,7 @@ namespace Ssalddel.Tests.Clients
         {
             cancellationToken.ThrowIfCancellationRequested();
             snapshot = null;
+            SessionChanged?.Invoke(this, EventArgs.Empty);
             ClearCount++;
             if (ClearFailure is not null) throw ClearFailure;
             return Task.CompletedTask;
@@ -82,6 +85,10 @@ namespace Ssalddel.Tests.Clients
 
     internal sealed class FDriverTestWorkspaceApi : IFoodDeliveryDriverApiService
     {
+        public Func<string, CancellationToken, Task<FoodDeliveryCompletedDeliveryDetailDto>> CompletedDetail { get; set; }
+            = (_, _) => throw new FDriverApiException("상세 조회 결과가 없습니다.", HttpStatusCode.NotFound);
+        public Task<FoodDeliveryCompletedDeliveryDetailDto> GetCompletedDeliveryDetailAsync(string settlementId, CancellationToken cancellationToken = default)
+            => CompletedDetail(settlementId, cancellationToken);
         public Func<DateOnly, CancellationToken, Task<FoodDeliveryDailySettlementDto>> DailySettlement { get; set; }
             = (date, _) => Task.FromResult(new FoodDeliveryDailySettlementDto { DriverId = "test-driver", CompletionDateKst = date });
         public Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync(DateOnly date, CancellationToken cancellationToken = default)
@@ -98,12 +105,14 @@ namespace Ssalddel.Tests.Clients
         public Func<CancellationToken, Task<FoodDeliveryDriverRouteResponseDto>> Route { get; set; }
             = _ => Task.FromResult(new FoodDeliveryDriverRouteResponseDto());
         public int WorkStatusCalls { get; private set; }
+        public string WorkStatus { get; set; } = "운행종료";
+        public List<FoodDeliveryDriverRouteRequestDto> RouteRequests { get; } = [];
         public Task<FoodDeliveryDriverWorkspaceDto> GetWorkspaceAsync(CancellationToken cancellationToken = default)
             => Workspace(cancellationToken);
         public Task<기사운행상태응답?> GetWorkStatusAsync(CancellationToken cancellationToken = default)
         {
             WorkStatusCalls++;
-            return Task.FromResult<기사운행상태응답?>(new() { Status = "운행종료" });
+            return Task.FromResult<기사운행상태응답?>(new() { Status = WorkStatus });
         }
         public Task StartWorkAsync(string startLocation, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task StopWorkAsync(CancellationToken cancellationToken = default) { StopWorkCalls++; return Task.CompletedTask; }
@@ -123,7 +132,10 @@ namespace Ssalddel.Tests.Clients
         public Task<FoodDeliveryDriverActionResponse> ConfirmPickupAsync(string offerId, CancellationToken cancellationToken = default) => Action();
         public Task<FoodDeliveryDriverActionResponse> CompleteAsync(string offerId, CancellationToken cancellationToken = default) => Action();
         public Task<FoodDeliveryDriverRouteResponseDto> GetRouteAsync(FoodDeliveryDriverRouteRequestDto request, CancellationToken cancellationToken = default)
-            => Route(cancellationToken);
+        {
+            RouteRequests.Add(request);
+            return Route(cancellationToken);
+        }
         private static Task<FoodDeliveryDriverActionResponse> Action() => Task.FromResult(new FoodDeliveryDriverActionResponse());
         public static FoodDeliveryDriverWorkspaceDto Data(string id, bool coordinates = false) => new()
         {
@@ -139,17 +151,34 @@ namespace Ssalddel.Tests.Clients
 
     internal sealed class FDriverTestLocationService : IFDriverLocationService
     {
+        public bool IsListening => false;
+        public FDriverLocationSnapshot? LatestLocation => null;
+        public event EventHandler<FDriverLocationSnapshot>? LocationChanged { add { } remove { } }
+        public event EventHandler<string>? ListeningFailed { add { } remove { } }
+        public Task<bool> StartListeningAsync(CancellationToken cancellationToken = default, bool requestPermission = false) => Task.FromResult(false);
+        public void StopListening() { }
         public Task<FDriverLocationSnapshot?> GetCurrentAsync(CancellationToken cancellationToken = default)
             => Task.FromResult<FDriverLocationSnapshot?>(null);
     }
 
+    internal sealed class FDriverFixedTestLocationService : IFDriverLocationService
+    {
+        public bool IsListening => true;
+        public FDriverLocationSnapshot? LatestLocation => new(37.49m, 127m, 5, DateTime.UtcNow);
+        public event EventHandler<FDriverLocationSnapshot>? LocationChanged { add { } remove { } }
+        public event EventHandler<string>? ListeningFailed { add { } remove { } }
+        public Task<bool> StartListeningAsync(CancellationToken cancellationToken = default, bool requestPermission = false) => Task.FromResult(true);
+        public void StopListening() { }
+        public Task<FDriverLocationSnapshot?> GetCurrentAsync(CancellationToken cancellationToken = default) => Task.FromResult(LatestLocation);
+    }
+
     internal static class FDriverLifecycleTestSupport
     {
-        public static MainPageModel Model(FDriverTestSession session, FDriverTestWorkspaceApi api)
+        public static MainPageModel Model(FDriverTestSession session, FDriverTestWorkspaceApi api, IFDriverLocationService? location = null)
         {
             var http = new HttpClient(new FDriverTestHttpHandler((_, _) => Task.FromResult(FDriverTestHttpHandler.TokenResponse())))
                 { BaseAddress = new Uri("http://localhost/") };
-            return new MainPageModel(new(), session, new(http, session), api, new FDriverTestLocationService(), new());
+            return new MainPageModel(new(), session, new(http, session), api, location ?? new FDriverTestLocationService(), new());
         }
         public static CancellationToken WorkspaceToken(MainPageModel model)
             => ((CancellationTokenSource)typeof(MainPageModel).GetField("_workspaceCancellation", BindingFlags.Instance | BindingFlags.NonPublic)!
@@ -168,11 +197,6 @@ namespace Ssalddel.Tests.Clients
 // provide evidence for Android dispatching, GPS, SecureStorage, or UI rendering.
 namespace FDriverApp.Services
 {
-    public sealed record FDriverLocationSnapshot(decimal Latitude, decimal Longitude, decimal? AccuracyMeters, DateTime RecordedAtUtc);
-    public interface IFDriverLocationService
-    {
-        Task<FDriverLocationSnapshot?> GetCurrentAsync(CancellationToken cancellationToken = default);
-    }
     internal static class SecureStorage
     {
         public static UnavailableStorage Default { get; } = new();

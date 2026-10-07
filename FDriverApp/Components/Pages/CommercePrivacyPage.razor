@@ -1,0 +1,6 @@
+@page "/commerce/privacy"
+@page "/commerce/privacy/{CaseId}"
+@using Ssalddel.Ui.Common.Areas.App.Components.Commerce
+<PageTitle>내 정보 관리</PageTitle>
+<보호지원Page Privacy="true" CaseId="@CaseId" LoginHref="/driver-support-login" />
+@code { [Parameter] public string? CaseId { get; set; } }

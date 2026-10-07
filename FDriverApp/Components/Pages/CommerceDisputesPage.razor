@@ -1,0 +1,25 @@
+@page "/commerce/disputes"
+@page "/commerce/disputes/{CaseId}"
+@using Ssalddel.Ui.Common.Areas.App.Components.Commerce
+@inject IFDriverAuthSession Session
+@inject FDriverAuthApiService Auth
+@implements IDisposable
+<PageTitle>배달 문제 접수</PageTitle>
+@if (restoring) { <p role="status">로그인 상태를 확인하고 있습니다.</p> }
+else { <보호지원Page CaseId="@CaseId" SourceKind="@SourceKind" SourceId="@SourceId" LoginHref="/driver-support-login" /> }
+@code {
+    [Parameter] public string? CaseId { get; set; }
+    [SupplyParameterFromQuery] public string? SourceKind { get; set; }
+    [SupplyParameterFromQuery] public string? SourceId { get; set; }
+    private bool restoring = true;
+    private bool disposed;
+    protected override async Task OnInitializedAsync()
+    {
+        Session.SessionChanged += SessionChanged;
+        await Session.RestoreAsync();
+        if (!string.IsNullOrWhiteSpace(Session.RefreshToken)) await Auth.EnsureAccessTokenAsync();
+        if (!disposed) restoring = false;
+    }
+    private void SessionChanged(object? sender, EventArgs args) => _ = InvokeAsync(() => { if (!disposed) StateHasChanged(); });
+    public void Dispose() { disposed = true; Session.SessionChanged -= SessionChanged; }
+}

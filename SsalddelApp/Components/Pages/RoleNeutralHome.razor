@@ -8,9 +8,9 @@
         <p>
             가입 없이 지역과 생활 이야기를 둘러보고, 필요할 때만 역할을 골라 공동행동과 업무를 이어갑니다.
         </p>
-        <a href="@CommunityPageRoutes.Home">
+        <a href="/community/map">
             <MudIcon Icon="@Icons.Material.Filled.Forum" Size="Size.Small" />
-            공개 커뮤니티 시작
+            생활 지도 시작
             <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
         </a>
     </header>
@@ -22,6 +22,11 @@
         </header>
 
         <nav class="common-mobile-home__destinations" aria-label="살뜰 공통 탐색">
+            <a href="@NeighborhoodExchange.Home">
+                <span class="common-mobile-home__icon common-mobile-home__icon--community"><MudIcon Icon="@Icons.Material.Filled.Handshake" /></span>
+                <span><strong>생활 교류</strong><small>제공할 수 있는 것과 필요한 것을 나눠요</small></span>
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+            </a>
             <a href="@CommunityPageRoutes.Home">
                 <span class="common-mobile-home__icon common-mobile-home__icon--community">
                     <MudIcon Icon="@Icons.Material.Filled.GridView" />

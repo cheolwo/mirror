@@ -46,7 +46,19 @@
 
   <ItemGroup>
     <Compile Include="..\FDriverApp\Controls\NaverMapReadiness.cs" Link="Clients\NaverMapReadiness.cs" />
+    <Compile Include="..\SsalddelAdminApp\Services\AdminAuthSession.cs" Link="Clients\Admin\AdminAuthSession.cs" />
+    <Compile Include="..\SsalddelAdminApp\Services\AdminAuthService.cs" Link="Clients\Admin\AdminAuthService.cs" />
+    <Compile Include="..\SsalddelAdminApp\Services\AdminAuthenticatedApiClient.cs" Link="Clients\Admin\AdminAuthenticatedApiClient.cs" />
+    <Compile Include="..\SsalddelAdminApp\Services\AdminFoodOperationsService.cs" Link="Clients\Admin\AdminFoodOperationsService.cs" />
+    <Compile Include="..\FDriverApp\Controls\FDriverMapCameraState.cs" Link="Clients\FDriverMapCameraState.cs" />
+    <Compile Include="..\FDriverApp\Services\IFDriverLocationService.cs" Link="Clients\Driver\IFDriverLocationService.cs" />
     <Compile Include="..\OrdererApp\Components\Layout\OrdererPageDisplayContext.cs" Link="Clients\OrdererPageDisplayContext.cs" />
+    <Compile Include="..\OrdererApp\Services\OrdererSessionService.cs" Link="Clients\OrdererSessionService.cs" />
+    <Compile Include="..\OrdererApp\Services\OrdererAuthApiService.cs" Link="Clients\OrdererAuthApiService.cs" />
+    <Compile Include="..\OrdererApp\Services\OrdererAccessTokenProvider.cs" Link="Clients\OrdererAccessTokenProvider.cs" />
+    <Compile Include="..\Ssalddel.WebApp\Services\WebOrdererAuthenticationService.cs" Link="Clients\WebOrdererAuthenticationService.cs" />
+    <Compile Include="..\Ssalddel.WebApp\Services\WebAuthSessionService.cs" Link="Clients\WebAuthSessionService.cs" />
+    <Compile Include="..\Ssalddel.WebApp\Services\WebRoleTheme.cs" Link="Clients\WebRoleTheme.cs" />
     <Compile Include="..\WarehouseManagerApp\Components\Layout\WarehousePageDisplayContext.cs" Link="Clients\WarehousePageDisplayContext.cs" />
     <Compile Include="..\DriverApp\Services\IAuthSession.cs" Link="Clients\Cargo\IAuthSession.cs" />
     <Compile Include="..\DriverApp\Services\DriverRoutes.cs" Link="Clients\Cargo\DriverRoutes.cs" />
@@ -72,7 +84,21 @@
     <Compile Include="..\DriverApp\Services\기사운송상세조회Service.cs" Link="Clients\Cargo\기사운송상세조회Service.cs" />
     <Compile Include="..\DriverApp\Services\기사운송표시Mapper.cs" Link="Clients\Cargo\기사운송표시Mapper.cs" />
     <Compile Include="..\DriverApp\Services\DriverHomeRoutePlanningService.cs" Link="Clients\Cargo\DriverHomeRoutePlanningService.cs" />
+    <Compile Include="..\DriverApp\Services\IDriverSampleDataService.cs" Link="Clients\Cargo\IDriverSampleDataService.cs" />
+    <Compile Include="..\DriverApp\Services\DriverNativeHomeWorkspaceState.cs" Link="Clients\Cargo\DriverNativeHomeWorkspaceState.cs" />
+    <Compile Include="..\DriverApp\Services\DriverRouteAuthenticationState.cs" Link="Clients\Cargo\DriverRouteAuthenticationState.cs" />
+    <Compile Include="..\WarehouseManagerApp\ViewModels\Warehouse\창고홈PageViewModel.cs" Link="Clients\Warehouse\창고홈PageViewModel.cs" />
+    <Compile Include="..\WarehouseManagerApp\ViewModels\Warehouse\창고PageViewModelBase.cs" Link="Clients\Warehouse\창고PageViewModelBase.cs" />
+    <Compile Include="..\WarehouseManagerApp\ViewModels\Warehouse\창고작업세션상태ViewModel.cs" Link="Clients\Warehouse\창고작업세션상태ViewModel.cs" />
+    <Compile Include="..\WarehouseManagerApp\ViewModels\Warehouse\창고운영Profile.cs" Link="Clients\Warehouse\창고운영Profile.cs" />
+    <Compile Include="..\WarehouseManagerApp\ViewModels\Warehouse\창고로그인ViewModel.cs" Link="Clients\Warehouse\창고로그인ViewModel.cs" />
+    <Compile Include="..\WarehouseManagerApp\Services\WarehousePageAvailabilityService.cs" Link="Clients\Warehouse\WarehousePageAvailabilityService.cs" />
+    <Compile Include="..\WarehouseManagerApp\Services\WarehouseAuthApiService.cs" Link="Clients\Warehouse\WarehouseAuthApiService.cs" />
+    <Compile Include="..\WarehouseManagerApp\Services\WarehouseAccessTokenProvider.cs" Link="Clients\Warehouse\WarehouseAccessTokenProvider.cs" />
+    <Compile Include="..\WarehouseManagerApp\Services\WarehouseAccessPolicyService.cs" Link="Clients\Warehouse\WarehouseAccessPolicyService.cs" />
+    <Compile Include="..\WarehouseManagerApp\Services\WarehouseManagerRoutes.cs" Link="Clients\Warehouse\WarehouseManagerRoutes.cs" />
     <Compile Include="..\DriverApp\Models\Driver\Samples\기사샘플모델.cs" Link="Clients\Cargo\기사샘플모델.cs" />
+    <Compile Include="..\DriverApp\Models\Driver\Samples\DriverNativeLocationPolicy.cs" Link="Clients\Cargo\DriverNativeLocationPolicy.cs" />
     <Compile Include="..\DriverApp\Models\Driver\DriverRequestItem.cs" Link="Clients\Cargo\DriverRequestItem.cs" />
     <Compile Include="..\SsalddelApp\Models\Shipper\ShipperRequestHandoffMapper.cs" Link="Clients\Shipper\ShipperRequestHandoffMapper.cs" />
     <Compile Include="..\SsalddelApp\ViewModels\Shipper\ShipperRequestAuthoringPageViewModel.cs" Link="Clients\Shipper\ShipperRequestAuthoringPageViewModel.cs" />
@@ -80,6 +106,13 @@
     <Compile Include="..\SsalddelApp\Services\ServerBackedShipperOperationsService.cs" Link="Clients\Shipper\ServerBackedShipperOperationsService.cs" />
     <Compile Include="..\SsalddelApp\Services\ShipperRoutes.cs" Link="Clients\Shipper\ShipperRoutes.cs" />
     <Compile Include="..\FDriverApp\Services\FDriverAuthSession.cs" Link="Clients\Driver\FDriverAuthSession.cs" />
+    <Compile Include="..\FDriverApp\Services\FDriverSupportReturnContext.cs" Link="Clients\Driver\FDriverSupportReturnContext.cs" />
+    <Compile Include="..\FDriverApp\Services\FDriverPushRegistrationService.cs" Link="Clients\Driver\FDriverPushRegistrationService.cs" />
+    <Compile Include="..\FDriverApp\Services\IFDriverPushDeviceStore.cs" Link="Clients\Driver\IFDriverPushDeviceStore.cs" />
+    <Compile Include="..\FDriverApp\Services\FDriverFoodPushReceiver.cs" Link="Clients\Driver\FDriverFoodPushReceiver.cs" />
+    <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodPush.cs" Link="Clients\Driver\MainPageModel.FoodPush.cs" />
+    <Compile Include="..\FDriverApp\Services\FDriverPendingOperationStore.cs" Link="Clients\Driver\FDriverPendingOperationStore.cs" />
+    <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodPending.cs" Link="Clients\Driver\MainPageModel.FoodPending.cs" />
     <Compile Include="..\FDriverApp\Services\FDriverAuthApiService.cs" Link="Clients\Driver\FDriverAuthApiService.cs" />
     <Compile Include="..\FDriverApp\Services\FoodDeliveryDriverApiService.cs" Link="Clients\Driver\FoodDeliveryDriverApiService.cs" />
     <Compile Include="..\FDriverApp\Services\FDriverAppProfile.cs" Link="Clients\Driver\FDriverAppProfile.cs" />
@@ -87,12 +120,23 @@
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodExceptions.cs" Link="Clients\Driver\MainPageModel.FoodExceptions.cs" />
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodDailySettlement.cs" Link="Clients\Driver\MainPageModel.FoodDailySettlement.cs" />
     <Compile Include="..\FDriverApp\PageModels\FDriverDailySettlementItem.cs" Link="Clients\Driver\FDriverDailySettlementItem.cs" />
+    <Compile Include="..\FDriverApp\PageModels\FDriverCompletedDeliveryDetailPageModel.cs" Link="Clients\Driver\FDriverCompletedDeliveryDetailPageModel.cs" />
+    <Compile Include="..\FDriverApp\PageModels\FDriverCompletedDeliveryListPageModel.cs" Link="Clients\Driver\FDriverCompletedDeliveryListPageModel.cs" />
+    <Compile Include="..\FDriverApp\Services\IFDriverCompletedDeliveryNavigator.cs" Link="Clients\Driver\IFDriverCompletedDeliveryNavigator.cs" />
+    <Compile Include="..\FDriverApp\PageModels\FDriverCompletedDeliveryDetailItem.cs" Link="Clients\Driver\FDriverCompletedDeliveryDetailItem.cs" />
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodNotifications.cs" Link="Clients\Driver\MainPageModel.FoodNotifications.cs" />
+    <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodMap.cs" Link="Clients\Driver\MainPageModel.FoodMap.cs" />
+    <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodPresentation.cs" Link="Clients\Driver\MainPageModel.FoodPresentation.cs" />
+    <Compile Include="..\FDriverApp\PageModels\FDriverMapRouteState.cs" Link="Clients\Driver\FDriverMapRouteState.cs" />
     <Compile Include="..\FDriverApp\PageModels\FDriverFoodNotificationState.cs" Link="Clients\Driver\FDriverFoodNotificationState.cs" />
     <Compile Include="..\FDriverApp\Services\IFDriverFoodNotificationService.cs" Link="Clients\Driver\IFDriverFoodNotificationService.cs" />
     <Compile Include="..\FDriverApp\PageModels\FDriverDeliveryExceptionState.cs" Link="Clients\Driver\FDriverDeliveryExceptionState.cs" />
     <Compile Include="..\FDriverApp\PageModels\FDriverWorkspaceNavigationState.cs" Link="Clients\Driver\FDriverWorkspaceNavigationState.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\RestaurantAuthService.cs" Link="Clients\Restaurant\RestaurantAuthService.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\RestaurantProgressPendingStore.cs" Link="Clients\Restaurant\RestaurantProgressPendingStore.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\RestaurantOrderReturnContext.cs" Link="Clients\Restaurant\RestaurantOrderReturnContext.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\RestaurantMenuDraftStore.cs" Link="Clients\Restaurant\RestaurantMenuDraftStore.cs" />
+    <Compile Include="..\RestaurantDeskApp\Components\Pages\Menus.razor.cs" Link="Clients\Restaurant\Menus.razor.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\Ssalddel음식주문Client.cs" Link="Clients\Restaurant\Ssalddel음식주문Client.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\I음식주문ApiClient.cs" Link="Clients\Restaurant\I음식주문ApiClient.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\I음식점메뉴ApiClient.cs" Link="Clients\Restaurant\I음식점메뉴ApiClient.cs" />

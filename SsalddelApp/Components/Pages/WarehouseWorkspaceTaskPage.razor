@@ -1,0 +1,4 @@
+@page "/workspace/warehouse/tasks/{Kind}/{ItemId}"
+@layout RoleWorkspaceLayout
+<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo.WarehouseTaskActionScreen @key="(Kind, ItemId)" Kind="@Kind" ItemId="@ItemId" />
+@code { [Parameter] public string Kind { get; set; } = ""; [Parameter] public string ItemId { get; set; } = ""; }

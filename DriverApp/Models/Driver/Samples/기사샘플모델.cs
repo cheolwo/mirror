@@ -6,14 +6,22 @@ public sealed record 기사현재위치샘플(
     string 위치명,
     decimal 위도,
     decimal 경도,
-    DateTime 갱신시각);
+    DateTime 갱신시각)
+{
+    // 기존 네 인수 예시 자료의 갱신 시각은 실제 위치 관측 근거가 아니다.
+    public string SourceCode { get; init; } = DriverNativeLocationSources.Sample;
+    public DateTime? 관측시각Utc { get; init; }
+    public decimal? 복귀지위도 { get; init; }
+    public decimal? 복귀지경도 { get; init; }
+    public string? 복귀지명 { get; init; }
+}
 
 public sealed record 추천의뢰표시항목(
     DriverRequestItem 의뢰,
-    decimal 상차지까지거리Km,
-    int 가까운순위)
+    decimal? 상차지까지거리Km,
+    int? 가까운순위)
 {
-    public string 상차지까지거리표시 => $"{상차지까지거리Km:0.0}km";
+    public string 상차지까지거리표시 => 상차지까지거리Km is { } distance ? $"{distance:0.0}km" : "거리 미확인";
     public string 추천점수표시 => $"{의뢰.추천점수 ?? 0m:0}점";
     public string 예상수익표시 => 의뢰.운임표시;
     public string 운송거리표시 => 의뢰.운송거리Km.HasValue ? $"예상 {의뢰.운송거리표시}" : 의뢰.운송거리표시;

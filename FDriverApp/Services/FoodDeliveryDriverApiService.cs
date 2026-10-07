@@ -15,6 +15,7 @@ public interface IFoodDeliveryDriverApiService
 {
     Task<FoodDeliveryDriverWorkspaceDto> GetWorkspaceAsync(CancellationToken cancellationToken = default);
     Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync(DateOnly date, CancellationToken cancellationToken = default);
+    Task<FoodDeliveryCompletedDeliveryDetailDto> GetCompletedDeliveryDetailAsync(string settlementId, CancellationToken cancellationToken = default);
     Task<기사운행상태응답?> GetWorkStatusAsync(CancellationToken cancellationToken = default);
     Task<운영배차수신상태Dto> GetDispatchAvailabilityAsync(CancellationToken cancellationToken = default);
     Task<운영배차수신상태Dto> ChangeDispatchIntentAsync(운영배차수신의사변경요청 request, CancellationToken cancellationToken = default);
@@ -57,6 +58,10 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
 
     public Task<운영배차수신상태Dto> GetDispatchAvailabilityAsync(CancellationToken cancellationToken = default)
         => SendAsync<운영배차수신상태Dto>(HttpMethod.Get, "api/v1/driver/operational-dispatch/availability", null, cancellationToken);
+
+    public Task<FoodDeliveryCompletedDeliveryDetailDto> GetCompletedDeliveryDetailAsync(string settlementId, CancellationToken cancellationToken = default)
+        => SendAsync<FoodDeliveryCompletedDeliveryDetailDto>(HttpMethod.Get,
+            $"api/v1/driver/food-deliveries/settlements/{Uri.EscapeDataString(settlementId)}/detail", null, cancellationToken);
 
     public Task<운영배차수신상태Dto> ChangeDispatchIntentAsync(운영배차수신의사변경요청 request, CancellationToken cancellationToken = default)
         => SendAsync<운영배차수신상태Dto>(HttpMethod.Put, "api/v1/driver/operational-dispatch/availability/intent", request, cancellationToken);
@@ -187,7 +192,10 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
         object? body,
         CancellationToken cancellationToken)
     {
+        var owner = _session.UserId;
         var authentication = await _authApi.EnsureAccessTokenResultAsync(cancellationToken: cancellationToken);
+        EnsureOwner();
+        owner ??= _session.UserId;
         if (!authentication.IsSuccess)
         {
             throw new FDriverApiException(authentication.ErrorMessage!, authentication.StatusCode);
@@ -200,6 +208,7 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
             authentication = await _authApi.EnsureAccessTokenResultAsync(
                 forceRefresh: true,
                 cancellationToken: cancellationToken);
+            EnsureOwner();
             if (!authentication.IsSuccess)
             {
                 throw new FDriverApiException(authentication.ErrorMessage!, authentication.StatusCode);
@@ -210,10 +219,22 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
 
         if (!response.IsSuccessStatusCode)
         {
-            await ThrowApiExceptionAsync(response, cancellationToken);
+            var responseRevision = _session.SessionRevision;
+            var responseToken = _session.AccessToken;
+            try { await ThrowApiExceptionAsync(response, cancellationToken); }
+            catch (FDriverApiException) when (owner != _session.UserId || responseRevision != _session.SessionRevision
+                || responseToken != _session.AccessToken)
+            { throw new OperationCanceledException("기사 계정이 변경되어 이전 업무 오류를 적용하지 않습니다.", cancellationToken); }
         }
 
         return response;
+
+        void EnsureOwner()
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (owner is not null && _session.UserId is { } currentOwner && owner != currentOwner)
+                throw new OperationCanceledException("기사 계정이 변경되었습니다.", cancellationToken);
+        }
     }
 
     private async Task<HttpResponseMessage> SendOnceAsync(
@@ -222,14 +243,19 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
         object? body,
         CancellationToken cancellationToken)
     {
+        var owner = _session.UserId;
+        var revision = _session.SessionRevision;
+        var accessToken = _session.AccessToken;
         using var request = CreateRequest(method, path, body);
         try
         {
             var response = await _httpClient.SendAsync(request, cancellationToken);
-            if (cancellationToken.IsCancellationRequested)
+            if (cancellationToken.IsCancellationRequested || owner != _session.UserId
+                || revision != _session.SessionRevision || accessToken != _session.AccessToken)
             {
                 response.Dispose();
                 cancellationToken.ThrowIfCancellationRequested();
+                throw new OperationCanceledException("기사 계정이 변경되어 이전 업무 응답을 적용하지 않습니다.", cancellationToken);
             }
             return response;
         }

@@ -1,0 +1,7 @@
+.food-review-workspace { max-width: 960px; margin-inline: auto; }
+.food-review-attempt { display: grid; gap: 8px; padding-block: 16px; border-bottom: 1px solid var(--role-border, #dce5e9); overflow-wrap: anywhere; }
+.food-review-attempt:last-child { border-bottom: 0; }
+.food-review-attempt ::deep .mud-button-root { justify-self: start; min-height: 48px; }
+.food-review-workspace ::deep .mud-paper { border-radius: 16px; }
+.food-review-workspace ::deep .mud-button-root { min-height: 48px; }
+@media (max-width: 600px) { .food-review-workspace { width: 100%; } }

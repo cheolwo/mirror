@@ -172,6 +172,33 @@ public sealed class RestaurantOrderDetailRefreshTests
     }
 
     [Fact]
+    public async Task CookingTimeResultUsesServerAppliedMinutesInsteadOfChangedInput()
+    {
+        await using var fixture = new Fixture();
+        await fixture.MountAsync();
+        fixture.Set("preparationMinutes", 30);
+        fixture.Desk.Current.선택조리예상분 = 20;
+        fixture.Desk.Current.상세주문 = new() { 주문번호 = "A", 조리예상분 = 20 };
+        await fixture.CallAsync("UpdateCookingTimeAsync");
+
+        Assert.Equal(20, fixture.Get<int>("preparationMinutes"));
+        Assert.Contains("서버에 적용된 조리 예상 시간은 20분", fixture.Get<string>("message"));
+        Assert.DoesNotContain("30분", fixture.Get<string>("message"));
+    }
+
+    [Fact]
+    public async Task MissingAppliedMinutesDoesNotClaimTheDraftWasStored()
+    {
+        await using var fixture = new Fixture();
+        await fixture.MountAsync();
+        fixture.Set("preparationMinutes", 30);
+        await fixture.CallAsync("UpdateCookingTimeAsync");
+
+        Assert.Contains("적용 시간은 새로고침으로 확인", fixture.Get<string>("message"));
+        Assert.DoesNotContain("30분", fixture.Get<string>("message"));
+    }
+
+    [Fact]
     public async Task NotificationDuringACommandIsReadAfterTheCommandFinishes()
     {
         await using var fixture = new Fixture();

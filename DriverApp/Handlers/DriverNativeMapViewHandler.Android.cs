@@ -4,9 +4,11 @@ using Android.Views;
 using Android.Widget;
 using Com.Naver.Maps.Map.Util;
 using DriverApp.Controls;
+using DriverApp.Models.Driver.Samples;
 using Ssalddel.Contracts.Common.Drivers;
 using Ssalddel.Contracts.Common.Operations;
 using Microsoft.Maui.Handlers;
+using Microsoft.Maui.Dispatching;
 using GoogleBitmapDescriptorFactory = Android.Gms.Maps.Model.BitmapDescriptorFactory;
 using GoogleCameraUpdateFactory = Android.Gms.Maps.CameraUpdateFactory;
 using GoogleLatLng = Android.Gms.Maps.Model.LatLng;
@@ -40,11 +42,15 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
     private readonly List<GooglePolyline> _googleRouteOverlays = [];
     private readonly Dictionary<string, DriverMapMarkerItem> _googleMarkerItems = new(StringComparer.Ordinal);
     private GoogleMarker? _googleCurrentLocationMarker;
+    private IDispatcherTimer? _locationFreshnessTimer;
+    private DriverNativeLocationPresentation? _locationPresentation;
+    private long _mapLifecycleGeneration;
     private static readonly int PickupMarkerTintColor = AndroidColor.Rgb(245, 124, 0);
     private static readonly int DropoffMarkerTintColor = AndroidColor.Rgb(37, 99, 235);
 
     protected override FrameLayout CreatePlatformView()
     {
+        ++_mapLifecycleGeneration;
         var context = MauiContext?.Context ?? throw new InvalidOperationException("Android context is not available.");
         var layoutParameters = new ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MatchParent,
@@ -75,7 +81,7 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         _naverMapView.OnCreate((Bundle?)null);
         _naverMapView.OnStart();
         _naverMapView.OnResume();
-        _naverMapView.GetMapAsync(new NaverMapReadyCallback(this));
+        _naverMapView.GetMapAsync(new NaverMapReadyCallback(this, _mapLifecycleGeneration));
         _container.AddView(_naverMapView);
     }
 
@@ -96,12 +102,15 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         _googleMapView.OnCreate((Bundle?)null);
         _googleMapView.OnStart();
         _googleMapView.OnResume();
-        _googleMapView.GetMapAsync(new GoogleMapReadyCallback(this));
+        _googleMapView.GetMapAsync(new GoogleMapReadyCallback(this, _mapLifecycleGeneration));
         _container.AddView(_googleMapView);
     }
 
     protected override void DisconnectHandler(FrameLayout platformView)
     {
+        ++_mapLifecycleGeneration;
+        StopLocationFreshnessTimer();
+        _locationPresentation = null;
         ClearNaverMarkers();
         ClearNaverRouteOverlays();
         ClearGoogleMarkers();
@@ -140,18 +149,22 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
             OperatingMapProviderCodes.GoogleMaps,
             StringComparison.OrdinalIgnoreCase);
 
-    private void OnNaverMapReady(NaverMap naverMap)
+    private void OnNaverMapReady(NaverMap naverMap, long generation)
     {
+        if (_container is null || generation != _mapLifecycleGeneration) return;
         _naverMap = naverMap;
         _naverMap.Locale = Java.Util.Locale.ForLanguageTag("ko-KR");
         ApplyNaverMapOptions();
         ApplyNaverCamera();
         ApplyNaverMarkers();
         ApplyNaverRouteOverlays();
+        RefreshLocationPresentation(force: true);
+        StartLocationFreshnessTimer();
     }
 
-    private void OnGoogleMapReady(GoogleMap googleMap)
+    private void OnGoogleMapReady(GoogleMap googleMap, long generation)
     {
+        if (_container is null || generation != _mapLifecycleGeneration) return;
         _googleMap = googleMap;
         _googleMarkerClickListener = new GoogleMarkerClickListener(this);
         _googleMap.SetOnMarkerClickListener(_googleMarkerClickListener);
@@ -159,6 +172,8 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         ApplyGoogleCamera();
         ApplyGoogleMarkers();
         ApplyGoogleRouteOverlays();
+        RefreshLocationPresentation(force: true);
+        StartLocationFreshnessTimer();
     }
 
     public static void MapCamera(DriverNativeMapViewHandler handler, DriverNativeMapView view)
@@ -172,6 +187,13 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
 
     public static void MapOptions(DriverNativeMapViewHandler handler, DriverNativeMapView view)
         => handler.ApplyMapOptions();
+
+    public static void MapCurrentLocation(DriverNativeMapViewHandler handler, DriverNativeMapView view)
+    {
+        handler.RefreshLocationPresentation(force: true);
+        if (view.CurrentLocation is null) handler.StopLocationFreshnessTimer();
+        else handler.StartLocationFreshnessTimer();
+    }
 
     private void ApplyProviderVisibility()
     {
@@ -203,6 +225,7 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         ApplyCamera();
         ApplyMarkers();
         ApplyRouteOverlays();
+        RefreshLocationPresentation(force: true);
     }
 
     private void ApplyCamera()
@@ -239,10 +262,10 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         uiSettings.CompassEnabled = true;
         uiSettings.ScaleBarEnabled = true;
         uiSettings.ZoomControlEnabled = true;
-        uiSettings.LocationButtonEnabled = VirtualView.ShowLocationButton;
+        uiSettings.LocationButtonEnabled = VirtualView.ShowLocationButton
+            && DriverNativeLocationPolicy.Present(VirtualView.CurrentLocation, DateTime.UtcNow).IsAvailable;
         uiSettings.SetLogoMargin(16, 16, 16, 120);
 
-        ApplyNaverLocationOverlay();
     }
 
     private void ApplyGoogleMapOptions()
@@ -258,7 +281,6 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         _googleMap.UiSettings.CompassEnabled = true;
         _googleMap.UiSettings.ZoomControlsEnabled = true;
         _googleMap.UiSettings.MyLocationButtonEnabled = false;
-        ApplyGoogleLocationOverlay();
     }
 
     private void ApplyNaverCamera()
@@ -271,7 +293,6 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         var target = new NaverLatLng(VirtualView.CenterLatitude, VirtualView.CenterLongitude);
         var update = Com.Naver.Maps.Map.CameraUpdate.ScrollAndZoomTo(target, VirtualView.Zoom);
         _naverMap.MoveCamera(update);
-        ApplyNaverLocationOverlay();
     }
 
     private void ApplyGoogleCamera()
@@ -283,7 +304,6 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
 
         var target = new GoogleLatLng(VirtualView.CenterLatitude, VirtualView.CenterLongitude);
         _googleMap.MoveCamera(GoogleCameraUpdateFactory.NewLatLngZoom(target, (float)VirtualView.Zoom));
-        ApplyGoogleLocationOverlay();
     }
 
     private void ApplyNaverMarkers()
@@ -330,7 +350,7 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         }
 
         ClearNaverRouteOverlays();
-        foreach (var item in VirtualView.RouteOverlays)
+        foreach (var item in DriverNativeLocationPolicy.RoutesForDisplay(VirtualView.RouteOverlays, VirtualView.CurrentLocation, DateTime.UtcNow))
         {
             if (item.Points.Count < 2)
             {
@@ -357,7 +377,7 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         }
 
         ClearGoogleRouteOverlays();
-        foreach (var item in VirtualView.RouteOverlays)
+        foreach (var item in DriverNativeLocationPolicy.RoutesForDisplay(VirtualView.RouteOverlays, VirtualView.CurrentLocation, DateTime.UtcNow))
         {
             if (item.Points.Count < 2)
             {
@@ -388,29 +408,65 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         }
 
         var overlay = _naverMap.LocationOverlay;
-        overlay.Position = new NaverLatLng(VirtualView.CenterLatitude, VirtualView.CenterLongitude);
+        var point = _locationPresentation?.Point;
+        _naverMap.LocationTrackingMode = Com.Naver.Maps.Map.LocationTrackingMode.None!;
+        if (point is not null)
+            overlay.Position = new NaverLatLng((double)point.Latitude, (double)point.Longitude);
         overlay.CircleColor = AndroidColor.Argb(40, 25, 118, 210);
         overlay.CircleOutlineColor = AndroidColor.Argb(120, 25, 118, 210);
         overlay.CircleOutlineWidth = 2;
-        overlay.Visible = VirtualView.ShowCurrentLocationOverlay;
-        _naverMap.LocationTrackingMode = VirtualView.ShowCurrentLocationOverlay
-            ? Com.Naver.Maps.Map.LocationTrackingMode.NoFollow!
-            : Com.Naver.Maps.Map.LocationTrackingMode.None!;
+        overlay.Visible = VirtualView.ShowCurrentLocationOverlay && point is not null;
     }
 
     private void ApplyGoogleLocationOverlay()
     {
         ClearGoogleCurrentLocationMarker();
-        if (_googleMap is null || VirtualView is null || !VirtualView.ShowCurrentLocationOverlay)
+        var point = _locationPresentation?.Point;
+        if (_googleMap is null || VirtualView is null || !VirtualView.ShowCurrentLocationOverlay || point is null)
         {
             return;
         }
 
         var options = new GoogleMarkerOptions()
-            .SetPosition(new GoogleLatLng(VirtualView.CenterLatitude, VirtualView.CenterLongitude))
-            .SetTitle("현재 위치")
+            .SetPosition(new GoogleLatLng((double)point.Latitude, (double)point.Longitude))
+            .SetTitle("최근 확인 위치")
+            .SetSnippet(_locationPresentation!.Notice)
             .SetIcon(GoogleBitmapDescriptorFactory.DefaultMarker(210f));
         _googleCurrentLocationMarker = _googleMap.AddMarker(options);
+    }
+
+    private void RefreshLocationPresentation(bool force = false)
+    {
+        if (VirtualView is null || _container is null) return;
+        var presentation = DriverNativeLocationPolicy.Present(VirtualView.CurrentLocation, DateTime.UtcNow);
+        if (!force && presentation == _locationPresentation) return;
+        _locationPresentation = presentation;
+        ApplyNaverMapOptions();
+        ApplyNaverLocationOverlay();
+        ApplyGoogleLocationOverlay();
+        ApplyRouteOverlays();
+        VirtualView.SendLocationPresentationChanged(presentation);
+    }
+
+    private void StartLocationFreshnessTimer()
+    {
+        if (_locationFreshnessTimer is not null || VirtualView?.CurrentLocation is null
+            || (_naverMap is null && _googleMap is null)) return;
+        _locationFreshnessTimer = VirtualView.Dispatcher.CreateTimer();
+        _locationFreshnessTimer.Interval = TimeSpan.FromSeconds(1);
+        _locationFreshnessTimer.Tick += OnLocationFreshnessTick;
+        _locationFreshnessTimer.Start();
+    }
+
+    private void OnLocationFreshnessTick(object? sender, EventArgs e)
+        => RefreshLocationPresentation();
+
+    private void StopLocationFreshnessTimer()
+    {
+        if (_locationFreshnessTimer is null) return;
+        _locationFreshnessTimer.Stop();
+        _locationFreshnessTimer.Tick -= OnLocationFreshnessTick;
+        _locationFreshnessTimer = null;
     }
 
     private void AddNaverMarker(
@@ -546,16 +602,16 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         }
     }
 
-    private sealed class NaverMapReadyCallback(DriverNativeMapViewHandler handler)
+    private sealed class NaverMapReadyCallback(DriverNativeMapViewHandler handler, long generation)
         : Java.Lang.Object, Com.Naver.Maps.Map.IOnMapReadyCallback
     {
-        public void OnMapReady(NaverMap naverMap) => handler.OnNaverMapReady(naverMap);
+        public void OnMapReady(NaverMap naverMap) => handler.OnNaverMapReady(naverMap, generation);
     }
 
-    private sealed class GoogleMapReadyCallback(DriverNativeMapViewHandler handler)
+    private sealed class GoogleMapReadyCallback(DriverNativeMapViewHandler handler, long generation)
         : Java.Lang.Object, Android.Gms.Maps.IOnMapReadyCallback
     {
-        public void OnMapReady(GoogleMap googleMap) => handler.OnGoogleMapReady(googleMap);
+        public void OnMapReady(GoogleMap googleMap) => handler.OnGoogleMapReady(googleMap, generation);
     }
 
     private sealed class GoogleMarkerClickListener(DriverNativeMapViewHandler handler)

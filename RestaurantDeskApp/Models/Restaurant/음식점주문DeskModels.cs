@@ -120,6 +120,15 @@ public sealed class 음식점주문DeskItem
 
     public bool 픽업준비가능 => Can(음식배달가능행동Ids.음식점픽업준비완료);
 
+    public bool 재조리주문 => 상세주문?.CurrentPreparationRound > 1
+        || 상세주문?.RecookingRequestedAtUtc.HasValue == true;
+
+    public bool 현재조리시작확인 => 상세주문?.CurrentCookingStartedAtUtc.HasValue == true
+        || (!재조리주문 && 상세주문?.조리시작시각Utc.HasValue == true);
+
+    public bool 현재픽업준비완료 => 상세주문?.CurrentPickupReadyAtUtc.HasValue == true
+        || (!재조리주문 && 상세주문?.픽업준비시각Utc.HasValue == true);
+
     private bool Can(string actionId) => 업무가능행동목록.포함(AvailableActions, actionId);
 }
 

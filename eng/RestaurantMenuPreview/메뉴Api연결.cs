@@ -46,6 +46,8 @@ public sealed class 메뉴Api연결 : I음식점메뉴ApiClient, IAsyncDisposabl
     private int _disposed;
     private bool _healthChecked;
 
+    public RestaurantAuthService AuthService => _auth;
+
     public 메뉴Api연결(메뉴미리보기Options options) : this(options, new HttpClientHandler
     {
         AllowAutoRedirect = false,

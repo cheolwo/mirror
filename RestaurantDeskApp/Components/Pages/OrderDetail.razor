@@ -34,6 +34,20 @@
                         <MudChip T="string" Color="@StatusColor(order.상태)" Size="Size.Small">@OrderStatusLabel(order.상태)</MudChip>
                     </div>
                     <MudText Typo="Typo.body1" Class="order-page-guide">@NextStepGuide</MudText>
+                    @if (ShowCurrentRecooking && !readFailed)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">@CurrentPreparationText</MudText>
+                    }
+                    @if (ShowDispatchAttention)
+                    {
+                        <MudAlert Severity="@(order.배차상태 == 음식주문배차상태코드.배차불가 ? Severity.Error : Severity.Warning)">
+                            <MudText Typo="Typo.body2">배차 · @DispatchStatusLabel(order.배차상태)</MudText>
+                            @if (!string.IsNullOrWhiteSpace(order.최근메시지))
+                            {
+                                <MudText Typo="Typo.body2">최근 안내 · @order.최근메시지</MudText>
+                            }
+                        </MudAlert>
+                    }
                     @if (order.수락가능 || order.조리시작가능)
                     {
                         @PreparationControls()
@@ -82,6 +96,9 @@
                         <MudText Typo="Typo.body1">@order.메뉴요약</MudText>
                     }
                     <MudText Typo="Typo.body2" Color="Color.Secondary">@order.고객명 · @order.접수시각.ToLocalTime().ToString("HH:mm") 접수</MudText>
+                    <MudDivider />
+                    <MudText Typo="Typo.h6">요청사항</MudText>
+                    <MudText Typo="Typo.body1" Style="white-space: pre-wrap; overflow-wrap: anywhere;">@CustomerRequestText</MudText>
                 </MudStack>
             </MudPaper>
 

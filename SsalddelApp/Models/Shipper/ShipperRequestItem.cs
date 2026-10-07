@@ -6,6 +6,8 @@ public sealed class ShipperRequestItem
 {
     public string 의뢰Id { get; set; } = string.Empty;
     public string 화물종류 { get; set; } = string.Empty;
+    public CargoDTO? 화물원본 { get; set; }
+    public string? 원본화물종류 { get; set; }
     public string 화물적재형태 { get; set; } = string.Empty;
     public string 의뢰상태 { get; set; } = string.Empty;
     public string 결제상태 { get; set; } = string.Empty;
@@ -53,6 +55,14 @@ public sealed class ShipperRequestItem
 
     public bool CanPay => ContainsAny(배차상태, "상차완료", "운송중", "하차지도착", "하차완료", "인수완료")
         && !IsPaymentSecured(결제상태);
+
+    internal static CargoDTO? 화물복사(CargoDTO? source) => source is null ? null : new()
+    {
+        화물종류 = source.화물종류, 설명 = source.설명, 수량 = source.수량,
+        길이Mm = source.길이Mm, 폭Mm = source.폭Mm, 높이Mm = source.높이Mm,
+        중량Kg = source.중량Kg, 부피Cbm = source.부피Cbm, 팔레트개수 = source.팔레트개수,
+        화물파손주의여부 = source.화물파손주의여부, 온도조건 = source.온도조건
+    };
 
     private static bool IsPaymentSecured(string? paymentStatus)
         => ContainsAny(paymentStatus, "결제완료", "결제확보", "입금확인", "승인완료");

@@ -1,5 +1,8 @@
 @page "/shipper/request/bulk"
 @layout ShipperMobileLayout
+@inject NavigationManager Navigation
+
+<a href="@ReturnHref">운송 업무로 돌아가기</a>
 
 <PageTitle>운송의뢰 일괄등록</PageTitle>
 
@@ -10,3 +13,7 @@
                          BoundaryMessage="파일 선택과 미리보기는 등록이 아닙니다. 검토 결과로 등록 버튼을 눌러야 서버 요청이 발생합니다.">
     <ShipperBulkImportPanel />
 </ShipperMobileRouteFrame>
+
+@code {
+    private string ReturnHref => ShipperRequestNavigationContext.Parse(Navigation.Uri).ReturnPath ?? "/shipper/request";
+}

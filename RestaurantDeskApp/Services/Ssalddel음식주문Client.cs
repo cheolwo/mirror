@@ -130,54 +130,67 @@ public sealed class Ssalddel음식주문Client(
         Func<HttpContent?>? contentFactory,
         CancellationToken cancellationToken)
     {
-        var auth = await authService.EnsureAccessTokenAsync(
-            cancellationToken: cancellationToken);
+        var requestedOwner = authSession.UserId;
+        var requestedGeneration = authService.SessionGeneration;
+        var auth = string.IsNullOrWhiteSpace(requestedOwner)
+            ? await authService.EnsureAccessTokenAsync(cancellationToken: cancellationToken)
+            : await authService.EnsureAccessTokenForRequestAsync(requestedOwner, requestedGeneration, false, cancellationToken);
         if (!auth.IsSuccess)
         {
             if (auth.RequiresLogin) throw new UnauthorizedAccessException(auth.ErrorMessage);
             throw new HttpRequestException(auth.ErrorMessage);
         }
 
+        var credentials = await authService.CaptureRequestCredentialsAsync(requestedOwner,
+            string.IsNullOrWhiteSpace(requestedOwner) ? null : requestedGeneration, cancellationToken);
+        var owner = credentials.Owner;
+        var generation = credentials.Generation;
+        var accessToken = credentials.AccessToken;
         var response = await SendOnceAsync(
             method,
             path,
             contentFactory,
-            cancellationToken);
+            cancellationToken, accessToken);
         if (cancellationToken.IsCancellationRequested)
         {
             response.Dispose();
             cancellationToken.ThrowIfCancellationRequested();
         }
+        EnsureResponseActor(response, owner, generation);
         if (response.StatusCode != HttpStatusCode.Unauthorized)
         {
             return response;
         }
 
         response.Dispose();
-        auth = await authService.EnsureAccessTokenAsync(
-            forceRefresh: true,
-            cancellationToken: cancellationToken);
+        // Another request may already have refreshed this same actor's token.
+        auth = string.Equals(accessToken, authSession.AccessToken, StringComparison.Ordinal)
+            ? await authService.EnsureAccessTokenForRequestAsync(owner!, generation, true, cancellationToken)
+            : RestaurantAuthResult.Success;
         if (!auth.IsSuccess)
         {
             if (auth.RequiresLogin) throw new UnauthorizedAccessException(auth.ErrorMessage);
             throw new HttpRequestException(auth.ErrorMessage);
         }
 
+        credentials = await authService.CaptureRequestCredentialsAsync(owner, generation, cancellationToken);
+        accessToken = credentials.AccessToken;
         response = await SendOnceAsync(
             method,
             path,
             contentFactory,
-            cancellationToken);
+            cancellationToken, accessToken);
         if (cancellationToken.IsCancellationRequested)
         {
             response.Dispose();
             cancellationToken.ThrowIfCancellationRequested();
         }
+        EnsureResponseActor(response, owner, generation);
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
             try
             {
-                await authService.InvalidateRejectedSessionAsync(cancellationToken);
+                await authService.InvalidateRejectedSessionForRequestAsync(owner, accessToken, generation, cancellationToken);
             }
             catch
             {
@@ -189,11 +202,17 @@ public sealed class Ssalddel음식주문Client(
         return response;
     }
 
+    private void EnsureResponseActor(HttpResponseMessage response, string? owner, long generation)
+    {
+        try { authService.ThrowIfActorChanged(owner, generation); }
+        catch { response.Dispose(); throw; }
+    }
+
     private async Task<HttpResponseMessage> SendOnceAsync(
         HttpMethod method,
         string path,
         Func<HttpContent?>? contentFactory,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, string? accessToken)
     {
         using var request = new HttpRequestMessage(method, path)
         {
@@ -201,7 +220,7 @@ public sealed class Ssalddel음식주문Client(
         };
         request.Headers.Authorization = new AuthenticationHeaderValue(
             "Bearer",
-            authSession.AccessToken);
+            accessToken);
         return await httpClient.SendAsync(request, cancellationToken);
     }
 

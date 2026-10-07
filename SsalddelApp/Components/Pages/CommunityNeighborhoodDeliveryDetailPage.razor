@@ -1,0 +1,5 @@
+@page "/community/exchange/deliveries/{RequestId}"
+@layout CommunityMobileLayout
+<PageTitle>배송 진행 · 살뜰</PageTitle>
+<Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodDeliveryDetail RequestId="@RequestId" LoginHref="@NeighborhoodExchangeAuthenticationRoutes.LoginHref(NeighborhoodDeliveryRoutes.Detail(RequestId))" @key="RequestId" />
+@code { [Parameter] public string RequestId { get; set; } = ""; }

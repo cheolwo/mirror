@@ -48,6 +48,13 @@
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
     </PropertyGroup>
 
+    <ItemGroup Condition="'$(SsalddelServerBaseAddress)' != ''">
+        <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+            <_Parameter1>SsalddelServerBaseAddress</_Parameter1>
+            <_Parameter2>$(SsalddelServerBaseAddress)</_Parameter2>
+        </AssemblyAttribute>
+    </ItemGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\Ssalddel.Client.Infrastructure\Ssalddel.Client.Infrastructure.csproj" />
         <ProjectReference Include="..\Ssalddel.Contracts\Ssalddel.Contracts.csproj" />

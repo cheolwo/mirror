@@ -16,9 +16,37 @@ public sealed class RestaurantAuthService(
     ClientAuthSession session)
 {
     private readonly SemaphoreSlim _refreshGate = new(1, 1);
+    private readonly SemaphoreSlim _sessionWriteGate = new(1, 1);
+    private long _sessionGeneration;
     public event Action<bool>? SessionEnding;
+    internal event Func<bool, CancellationToken, Task>? SessionEndingAsync;
 
     public ClientAuthSession Session => session;
+    public RestaurantOrderReturnContext OrderReturn { get; } = new();
+    private string? _sessionCleanupNotice;
+    public string? ConsumeSessionCleanupNotice()
+        => Interlocked.Exchange(ref _sessionCleanupNotice, null);
+    internal long SessionGeneration => Volatile.Read(ref _sessionGeneration);
+
+    internal void ThrowIfActorChanged(string? ownerId, long generation)
+    {
+        if (generation != SessionGeneration || !string.Equals(ownerId, session.UserId, StringComparison.Ordinal))
+            throw new OperationCanceledException("계정이 변경되어 이전 인증 요청을 적용하지 않습니다.");
+    }
+
+    internal async Task<(string Owner, long Generation, string AccessToken)> CaptureRequestCredentialsAsync(
+        string? expectedOwner, long? expectedGeneration, CancellationToken cancellationToken)
+    {
+        await _sessionWriteGate.WaitAsync(cancellationToken);
+        try
+        {
+            if (expectedGeneration is { } generation) ThrowIfActorChanged(expectedOwner, generation);
+            if (!session.IsAuthenticated || string.IsNullOrWhiteSpace(session.UserId) || string.IsNullOrWhiteSpace(session.AccessToken))
+                throw new UnauthorizedAccessException("로그인 확인이 필요합니다.");
+            return (session.UserId, SessionGeneration, session.AccessToken);
+        }
+        finally { _sessionWriteGate.Release(); }
+    }
 
     public async Task<RestaurantAuthResult> LoginAsync(
         string userNameOrEmail,
@@ -31,6 +59,7 @@ public sealed class RestaurantAuthService(
             return new RestaurantAuthResult(false, "아이디와 비밀번호를 입력해 주세요.");
         }
 
+        var generation = Interlocked.Increment(ref _sessionGeneration);
         return await SendTokenRequestAsync(
             "api/v1/auth/login",
             new 로그인요청
@@ -39,17 +68,40 @@ public sealed class RestaurantAuthService(
                 Password = password
             },
             "로그인에 실패했습니다. 음식점 계정과 비밀번호를 확인해 주세요.",
-            cancellationToken);
+            cancellationToken, generation);
     }
 
-    public async Task<RestaurantAuthResult> EnsureAccessTokenAsync(
+    public Task<RestaurantAuthResult> EnsureAccessTokenAsync(
         bool forceRefresh = false,
         CancellationToken cancellationToken = default)
+        => EnsureAccessTokenCoreAsync(forceRefresh, cancellationToken);
+
+    internal Task<RestaurantAuthResult> EnsureAccessTokenForRequestAsync(
+        string ownerId, long generation, bool forceRefresh, CancellationToken cancellationToken)
+        => EnsureAccessTokenCoreAsync(forceRefresh, cancellationToken, ownerId, generation);
+
+    private async Task<RestaurantAuthResult> EnsureAccessTokenCoreAsync(
+        bool forceRefresh, CancellationToken cancellationToken, string? requestedOwner = null, long? requestedGeneration = null)
     {
         await _refreshGate.WaitAsync(cancellationToken);
         try
         {
-            var state = await session.RestoreAsync(cancellationToken);
+            if (requestedGeneration is { } expected) ThrowIfActorChanged(requestedOwner, expected);
+            var generation = SessionGeneration;
+            ClientAuthSessionRestoreState state;
+            await _sessionWriteGate.WaitAsync(cancellationToken);
+            try
+            {
+                if (generation != SessionGeneration) throw new OperationCanceledException("새 인증 요청이 시작되었습니다.");
+                state = await session.RestoreAsync(cancellationToken);
+                if (generation != SessionGeneration)
+                    throw new OperationCanceledException("계정이 변경되어 이전 세션 복원을 적용하지 않습니다.");
+            }
+            finally { _sessionWriteGate.Release(); }
+            if (requestedGeneration is { } restoredExpected) ThrowIfActorChanged(requestedOwner, restoredExpected);
+            var owner = session.UserId;
+            var accessToken = session.AccessToken;
+            var refreshToken = session.RefreshToken;
             if (!forceRefresh && state == ClientAuthSessionRestoreState.Authenticated)
             {
                 return RestaurantAuthResult.Success;
@@ -59,7 +111,7 @@ public sealed class RestaurantAuthService(
                 || string.IsNullOrWhiteSpace(session.RefreshToken)
                 || session.RefreshTokenExpiresAtUtc <= DateTime.UtcNow)
             {
-                await InvalidateRejectedSessionAsync(cancellationToken);
+                await InvalidateRejectedSessionForRequestAsync(owner, accessToken, generation, cancellationToken);
                 return new RestaurantAuthResult(
                     false,
                     "로그인 세션이 없습니다. 음식점 계정으로 로그인해 주세요.",
@@ -74,10 +126,10 @@ public sealed class RestaurantAuthService(
                     RefreshToken = session.RefreshToken
                 },
                 "로그인 세션을 갱신하지 못했습니다. 다시 로그인해 주세요.",
-                cancellationToken);
+                cancellationToken, generation, owner, refreshToken);
             if (!result.IsSuccess && result.RequiresLogin)
             {
-                await InvalidateRejectedSessionAsync(cancellationToken);
+                await InvalidateRejectedSessionForRequestAsync(owner, accessToken, generation, cancellationToken);
             }
 
             return result;
@@ -88,36 +140,74 @@ public sealed class RestaurantAuthService(
         }
     }
 
-    public Task LogoutAsync(CancellationToken cancellationToken = default)
+    public async Task LogoutAsync(CancellationToken cancellationToken = default)
     {
-        SessionEnding?.Invoke(true);
-        return session.ClearAsync(cancellationToken);
-    }
-
-    internal async Task InvalidateRejectedSessionAsync(CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        SessionEnding?.Invoke(false);
+        var generation = Interlocked.Increment(ref _sessionGeneration);
+        await _sessionWriteGate.WaitAsync(cancellationToken);
         try
         {
-            await session.ClearAsync(cancellationToken);
+            if (generation != SessionGeneration) throw new OperationCanceledException("새 인증 요청이 시작되었습니다.");
+            OrderReturn.EndSession(explicitLogout: true, session.UserId);
+            SessionEnding?.Invoke(true);
+            try { await NotifySessionEndingAsync(true, cancellationToken); }
+            catch (RestaurantPendingStorageException ex)
+            {
+                _sessionCleanupNotice = ex.Message;
+                throw;
+            }
+            finally { await session.ClearAsync(cancellationToken); }
         }
-        catch (Exception) when (!cancellationToken.IsCancellationRequested)
+        finally { _sessionWriteGate.Release(); }
+    }
+
+    internal Task InvalidateRejectedSessionAsync(CancellationToken cancellationToken)
+        => InvalidateRejectedSessionForRequestAsync(session.UserId, session.AccessToken, SessionGeneration, cancellationToken);
+
+    private async Task NotifySessionEndingAsync(bool explicitLogout, CancellationToken cancellationToken)
+    {
+        if (SessionEndingAsync is not { } handlers) return;
+        foreach (Func<bool, CancellationToken, Task> handler in handlers.GetInvocationList())
+            await handler(explicitLogout, cancellationToken);
+    }
+
+    internal async Task InvalidateRejectedSessionForRequestAsync(
+        string? ownerId, string? rejectedAccessToken, long generation, CancellationToken cancellationToken)
+    {
+        await _sessionWriteGate.WaitAsync(cancellationToken);
+        try
         {
-            // ClearAsync has already made this in-memory session anonymous.
-            // A secure-store failure must not hide the definitive authentication rejection.
+            cancellationToken.ThrowIfCancellationRequested();
+            ThrowIfActorChanged(ownerId, generation);
+            if (!string.Equals(rejectedAccessToken, session.AccessToken, StringComparison.Ordinal)
+                || Interlocked.CompareExchange(ref _sessionGeneration, generation + 1, generation) != generation)
+                throw new OperationCanceledException("새 인증 상태를 이전 거절 응답으로 종료하지 않습니다.");
+            var rejectedRevision = session.Revision;
+            OrderReturn.EndSession(explicitLogout: false, session.UserId);
+            SessionEnding?.Invoke(false);
+            // A page may cancel its own requests when the confirmed session end is announced.
+            // Complete this cleanup independently, without clearing a newer account's session.
+            try { await session.TryClearAsync(rejectedRevision, CancellationToken.None); }
+            catch (Exception)
+            {
+                // Memory is already anonymous; a secure-store failure must not hide rejection.
+            }
         }
+        finally { _sessionWriteGate.Release(); }
     }
 
     private async Task<RestaurantAuthResult> SendTokenRequestAsync<TRequest>(
         string path,
         TRequest request,
         string failureMessage,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, long generation, string? refreshOwner = null, string? expectedRefreshToken = null)
     {
         try
         {
             using var response = await httpClient.PostAsJsonAsync(path, request, cancellationToken);
+            if (generation != SessionGeneration
+                || (expectedRefreshToken is not null && (!string.Equals(refreshOwner, session.UserId, StringComparison.Ordinal)
+                    || !string.Equals(expectedRefreshToken, session.RefreshToken, StringComparison.Ordinal))))
+                throw new OperationCanceledException("계정이 변경되어 이전 인증 응답을 적용하지 않습니다.");
             if (!response.IsSuccessStatusCode)
             {
                 var requiresLogin = response.StatusCode is HttpStatusCode.BadRequest
@@ -145,7 +235,19 @@ public sealed class RestaurantAuthService(
                     RequiresLogin: true);
             }
 
-            await session.ApplyAsync(token.ToClientAuthTokenSnapshot(), cancellationToken);
+            if (expectedRefreshToken is not null && !string.Equals(token.UserId, refreshOwner, StringComparison.Ordinal))
+                return new RestaurantAuthResult(false, "서버 인증 응답을 읽을 수 없습니다.");
+
+            await _sessionWriteGate.WaitAsync(cancellationToken);
+            try
+            {
+                if (generation != SessionGeneration
+                    || (expectedRefreshToken is not null && (!string.Equals(refreshOwner, session.UserId, StringComparison.Ordinal)
+                        || !string.Equals(expectedRefreshToken, session.RefreshToken, StringComparison.Ordinal))))
+                    throw new OperationCanceledException("계정이 변경되어 이전 인증 응답을 적용하지 않습니다.");
+                await session.ApplyAsync(token.ToClientAuthTokenSnapshot(), cancellationToken);
+            }
+            finally { _sessionWriteGate.Release(); }
             return RestaurantAuthResult.Success;
         }
         catch (HttpRequestException)

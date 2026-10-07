@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Components;
 using Ssalddel.Contracts.Common;
 using RestaurantDeskApp.Components.Pages;
 using RestaurantDeskApp.Services;
@@ -14,14 +15,17 @@ public static class 메뉴화면검증
     public static async Task RunAsync()
     {
         var client = new FaultClient();
-        var page = new Menus();
-        typeof(Menus).GetProperty("MenuClient", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(page, client);
+        var auth = 메뉴미리보기인증.Create();
+        using var drafts = new RestaurantMenuDraftStore(auth);
+        using var page = new Menus { MenuClient = client, AuthService = auth, Drafts = drafts, Navigation = new SyntheticNavigation() };
         void Set(string key, object value) => typeof(Menus).GetField(key, BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(page, value);
         object? Get(string key) => typeof(Menus).GetField(key, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(page);
         async Task Call(string key) => await (Task)typeof(Menus).GetMethod(key, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(page, null)!;
         void Assert(bool value, string reason) { if (!value) throw new InvalidOperationException(reason); }
-        await Call("ReloadAsync");
+        await Call("OnInitializedAsync");
         Assert((bool)Get("loaded")!, "initial load");
+        Assert(Get("owner") as string == auth.Session.UserId
+            && drafts.IsCurrent(auth.Session.UserId!, (long)Get("draftGeneration")!), "initialization must bind the current actor and draft generation");
         typeof(Menus).GetMethod("NewMenu", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(page, null);
         Assert((bool)Get("editing")!, "new menu opens editor");
         Set("name", ""); await Call("SaveAsync"); Assert(client.Writes == 0, "blank menu must not write");
@@ -38,7 +42,7 @@ public static class 메뉴화면검증
         await Call("SaveAsync"); Assert(Get("pendingCreate") is null && client.Items.Count == 3, "definite rejection unlocks editing");
         client.Reject = false; Set("name", "목록 갱신 실패 검증"); client.FailReadAfterSave = true;
         await Call("SaveAsync"); Assert(client.Items.Count == 4 && Get("pendingCreate") is null && ((string)Get("message")!).Contains("저장은 완료"), "save success separate from read failure");
-        Console.WriteLine("PASS: 10 menu component behavior checks (in-memory client, no DB or UI clicks)");
+        Console.WriteLine("PASS: 11 menu component behavior checks (in-memory client, no DB or UI clicks)");
     }
 
     public static async Task Api안전검증Async()
@@ -165,6 +169,13 @@ public static class 메뉴화면검증
             }
             throw new InvalidOperationException("Unexpected endpoint in API preview test");
         }
+    }
+
+    private sealed class SyntheticNavigation : NavigationManager
+    {
+        public SyntheticNavigation() => Initialize("http://localhost/", "http://localhost/menus");
+        protected override void NavigateToCore(string uri, bool forceLoad) => Uri = ToAbsoluteUri(uri).ToString();
+        protected override void NavigateToCore(string uri, NavigationOptions options) => Uri = ToAbsoluteUri(uri).ToString();
     }
 
     private sealed class FaultClient : I음식점메뉴ApiClient

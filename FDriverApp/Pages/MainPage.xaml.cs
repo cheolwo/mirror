@@ -12,11 +12,55 @@ namespace FDriverApp.Pages
         private int _appearanceRevision;
         private int _navigationRevision;
         private int? _restoringScrollRevision;
+        private bool _foodLayoutUpdateQueued;
+        private readonly IFDriverCompletedDeliveryNavigator _completedDeliveryNavigator;
+        private readonly IFDriverProtectionSupportNavigator _supportNavigator;
 
-        public MainPage(MainPageModel model)
+        public MainPage(MainPageModel model, IFDriverCompletedDeliveryNavigator completedDeliveryNavigator,
+            IFDriverProtectionSupportNavigator supportNavigator)
         {
             InitializeComponent();
             BindingContext = model;
+            _completedDeliveryNavigator = completedDeliveryNavigator;
+            _supportNavigator = supportNavigator;
+        }
+
+        private void OnFoodLayoutSizeChanged(object? sender, EventArgs args) => QueueFoodLayoutUpdate();
+
+        private void OnFoodMapPropertyChanged(object? sender, PropertyChangedEventArgs args)
+        {
+            if (args.PropertyName == nameof(global::FDriverApp.Controls.FDriverNativeMapView.IsMapReady))
+                QueueFoodLayoutUpdate();
+        }
+
+        private void QueueFoodLayoutUpdate()
+        {
+            if (_foodLayoutUpdateQueued) return;
+            _foodLayoutUpdateQueued = true;
+            Dispatcher.Dispatch(() =>
+            {
+                _foodLayoutUpdateQueued = false;
+                if (BindingContext is not MainPageModel model || WorkspaceAreas.Height <= 0 || WorkspaceAreas.Width <= 0) return;
+                var footerHeight = DeliveryPrimaryFooter.IsVisible
+                    ? Math.Max(48, DeliveryPrimaryFooter.Height) : 0;
+                var mapReserve = MeasuredMapOverlayHeight(FoodMapLegend, WorkspaceAreas.Width)
+                    + MeasuredMapOverlayHeight(FoodMapRecenterButton, WorkspaceAreas.Width);
+                var height = FDriverFoodPresentationLayout.CardHeight(WorkspaceAreas.Height,
+                    DeliveryCardBodyContent.Height, footerHeight, model.IsFoodCardExpanded, mapReserve);
+                if (Math.Abs(DeliveryCard.HeightRequest - height) > 0.5)
+                    DeliveryCard.HeightRequest = height;
+            });
+        }
+
+        private static double MeasuredMapOverlayHeight(View overlay, double availableWidth)
+        {
+            if (!overlay.IsVisible) return 0;
+            // Unconstrained height preserves the scaled text/control's natural
+            // size instead of measuring it inside the already shortened map.
+            // The flags-free Size already includes margins; do not add them again.
+            var measured = overlay.Measure(availableWidth, double.PositiveInfinity).Height;
+            var arranged = Math.Max(0, overlay.Height) + overlay.Margin.Top + overlay.Margin.Bottom;
+            return Math.Max(Math.Max(0, double.IsFinite(measured) ? measured : 0), arranged);
         }
 
         protected override async void OnAppearing()
@@ -29,10 +73,10 @@ namespace FDriverApp.Pages
             {
                 model.PropertyChanged -= OnModelPropertyChanged;
                 model.PropertyChanged += OnModelPropertyChanged;
-                await model.InitializeAsync();
+                await model.ActivateWorkspacePageAsync();
                 if (!_pageActive || appearanceRevision != _appearanceRevision)
                     return;
-                await model.StartMonitoringAsync();
+                if (model.IsAuthenticated && !model.IsBusy && await _supportNavigator.ResumeAfterLoginAsync()) return;
                 if (!_pageActive || appearanceRevision != _appearanceRevision
                     || navigationRevision != _navigationRevision)
                     return;
@@ -42,7 +86,12 @@ namespace FDriverApp.Pages
                 if (model.IsAuthenticated)
                     model.Navigation.TryApplyFocus(focus);
                 if (model.IsAuthenticated && model.Navigation.IsSettlement)
-                    await model.RefreshDailySettlementAsync();
+                {
+                    _entryFocus = null;
+                    model.Navigation.Select(FDriverWorkspaceSection.Delivery);
+                    await _completedDeliveryNavigator.OpenListAsync(DateOnly.FromDateTime(model.SelectedSettlementDate));
+                    return;
+                }
                 if (!_pageActive || appearanceRevision != _appearanceRevision
                     || navigationRevision != _navigationRevision)
                     return;
@@ -51,7 +100,7 @@ namespace FDriverApp.Pages
             }
         }
 
-        protected override async void OnDisappearing()
+        protected override void OnDisappearing()
         {
             RememberCurrentScroll();
             _pageActive = false;
@@ -61,7 +110,7 @@ namespace FDriverApp.Pages
             if (BindingContext is MainPageModel model)
             {
                 model.PropertyChanged -= OnModelPropertyChanged;
-                await model.StopMonitoringAsync();
+                model.SetWorkspacePageVisible(false);
             }
 
             base.OnDisappearing();
@@ -86,7 +135,10 @@ namespace FDriverApp.Pages
             => await ShowSectionAsync(FDriverWorkspaceSection.Profile);
 
         private async void OnSettlementClicked(object? sender, EventArgs args)
-            => await ShowSectionAsync(FDriverWorkspaceSection.Settlement);
+        {
+            if (_pageActive && BindingContext is MainPageModel { IsAuthenticated: true } model)
+                await _completedDeliveryNavigator.OpenListAsync(DateOnly.FromDateTime(model.SelectedSettlementDate));
+        }
 
         private async void OnDeliveryClicked(object? sender, EventArgs args)
             => await ShowSectionAsync(FDriverWorkspaceSection.Delivery);
@@ -96,6 +148,11 @@ namespace FDriverApp.Pages
 
         private async void OnCurrentDeliveryClicked(object? sender, EventArgs args)
             => await ShowSectionAsync(FDriverWorkspaceSection.Delivery, "delivery");
+        private async void OnProblemClicked(object? sender, EventArgs args)
+        {
+            if (BindingContext is MainPageModel { IsAuthenticated: true, IsBusy: false, ActiveDelivery: { HasSupportSource: true } delivery })
+                await _supportNavigator.OpenAsync(delivery.OrderNo);
+        }
 
         protected override bool OnBackButtonPressed()
         {
@@ -120,6 +177,19 @@ namespace FDriverApp.Pages
 
         private async void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs args)
         {
+            if (_pageActive && args.PropertyName is nameof(MainPageModel.IsAuthenticated) or nameof(MainPageModel.IsBusy)
+                && sender is MainPageModel { IsAuthenticated: true, IsBusy: false }
+                && await _supportNavigator.ResumeAfterLoginAsync()) return;
+            if (args.PropertyName is nameof(MainPageModel.IsFoodCardExpanded)
+                or nameof(MainPageModel.HasDeliveryFooter) or nameof(MainPageModel.HasRouteSelection))
+                QueueFoodLayoutUpdate();
+            if (_pageActive && args.PropertyName == nameof(MainPageModel.CurrentDeliveryPresentationKey)
+                && sender is MainPageModel { IsAuthenticated: true, HasActiveWork: true } currentModel
+                && currentModel.Navigation.IsDelivery && !currentModel.ExceptionEditor.IsOpen)
+            {
+                await RestoreSectionScrollAsync(currentModel, "delivery");
+                return;
+            }
             if (_pageActive && args.PropertyName == nameof(MainPageModel.FoodNotificationFocus)
                 && sender is MainPageModel { IsAuthenticated: true } notificationModel)
             {
@@ -139,10 +209,31 @@ namespace FDriverApp.Pages
 
         private ScrollView ScrollFor(FDriverWorkspaceSection section) => section switch
         {
-            FDriverWorkspaceSection.Settlement => SettlementScroll,
             FDriverWorkspaceSection.Profile => ProfileScroll,
             _ => WorkspaceScroll
         };
+
+        private async void OnCurrentDeliveryCardToggleClicked(object? sender, EventArgs args)
+        {
+            if (!_pageActive || BindingContext is not MainPageModel { IsAuthenticated: true, HasActiveWork: true } model
+                || !model.Navigation.IsDelivery) return;
+            model.ToggleCurrentDeliveryCardCommand.Execute(null);
+            QueueFoodLayoutUpdate();
+            var revision = ++_navigationRevision;
+            var appearance = _appearanceRevision;
+            _restoringScrollRevision = revision;
+            try
+            {
+                await Dispatcher.DispatchAsync(() => { });
+                if (_pageActive && model.IsAuthenticated && model.Navigation.IsDelivery
+                    && revision == _navigationRevision && appearance == _appearanceRevision)
+                    await WorkspaceScroll.ScrollToAsync(ActiveDeliverySection, ScrollToPosition.Start, false);
+            }
+            finally
+            {
+                if (_restoringScrollRevision == revision) _restoringScrollRevision = null;
+            }
+        }
 
         private void RememberCurrentScroll()
         {
@@ -170,12 +261,16 @@ namespace FDriverApp.Pages
             if (!_pageActive || BindingContext is not MainPageModel { IsAuthenticated: true } model)
                 return;
 
+            if (section == FDriverWorkspaceSection.Settlement)
+            {
+                await _completedDeliveryNavigator.OpenListAsync(DateOnly.FromDateTime(model.SelectedSettlementDate));
+                return;
+            }
+
             RememberCurrentScroll();
             _entryFocus = null;
             model.Navigation.Select(section);
             var navigationRevision = ++_navigationRevision;
-            if (section == FDriverWorkspaceSection.Settlement)
-                await model.RefreshDailySettlementAsync();
             if (!_pageActive || !model.IsAuthenticated || model.Navigation.Selected != section
                 || navigationRevision != _navigationRevision)
                 return;
@@ -207,17 +302,35 @@ namespace FDriverApp.Pages
             });
         }
 
-        private Task ScrollToEntryFocusAsync(string? focus)
+        private async Task ScrollToEntryFocusAsync(string? focus)
         {
             if (BindingContext is not MainPageModel { IsAuthenticated: true } model)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             if (!model.Navigation.IsDelivery || string.IsNullOrWhiteSpace(focus))
-                return RestoreSectionScrollAsync(model, null);
+            {
+                await RestoreSectionScrollAsync(model, null);
+                return;
+            }
 
-            VisualElement? target = focus?.Trim().ToLowerInvariant() switch
+            var normalizedFocus = focus.Trim().ToLowerInvariant();
+            var navigationRevision = _navigationRevision;
+            var appearanceRevision = _appearanceRevision;
+            if (normalizedFocus is "dispatch" or "bundle" or "delivery")
+            {
+                if (normalizedFocus == "delivery") model.IsCurrentDeliveryExpanded = model.HasActiveWork;
+                else model.IsDeliveryDetailsExpanded = true;
+                QueueFoodLayoutUpdate();
+                await Dispatcher.DispatchAsync(() => { });
+            }
+
+            if (!_pageActive || !model.IsAuthenticated || !model.Navigation.IsDelivery
+                || navigationRevision != _navigationRevision || appearanceRevision != _appearanceRevision)
+                return;
+
+            VisualElement? target = normalizedFocus switch
             {
                 "dispatch" or "bundle" => RecommendationSection.IsVisible ? RecommendationSection : WorkspaceSummarySection,
                 "delivery" => ActiveDeliverySection.IsVisible ? ActiveDeliverySection : WorkspaceSummarySection,
@@ -225,9 +338,8 @@ namespace FDriverApp.Pages
                 _ => null
             };
 
-            return target is null
-                ? Task.CompletedTask
-                : WorkspaceScroll.ScrollToAsync(target, ScrollToPosition.Start, false);
+            if (target is not null)
+                await WorkspaceScroll.ScrollToAsync(target, ScrollToPosition.Start, false);
         }
     }
 }

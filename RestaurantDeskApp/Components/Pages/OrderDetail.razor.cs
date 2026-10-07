@@ -65,6 +65,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
         selectionGeneration++;
         workLocked = true;
         order = null;
+        if (!explicitLogout) NavigationManager.NavigateTo("/login", replace: true);
         StateHasChanged();
     });
 
@@ -170,6 +171,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
         var cancellationToken = selectionCancellation.Token;
         var generation = ++selectionGeneration;
         var requestedOrderNo = OrderNo;
+        AuthService?.OrderReturn.TrackOrder(AuthService.Session.UserId, requestedOrderNo);
         if (!string.Equals(selectionOrderNo, OrderNo, StringComparison.Ordinal))
         {
             order = null;
@@ -239,17 +241,40 @@ public partial class OrderDetail : ComponentBase, IDisposable
         : order is null ? "주문 확인 중"
         : order.배차상태 == 음식주문배차상태코드.배차불가 ? "배차 확인이 필요해요"
         : order.수락가능 ? "주문 확인이 필요해요"
+        : ShowCurrentRecooking ? order.현재픽업준비완료 ? "재조리 음식이 준비됐어요" : "다시 조리 중이에요"
         : order.조리시작가능 ? "조리를 시작해 주세요"
         : order.픽업준비가능 ? "조리 중이에요"
         : OrderStatusLabel(order.상태);
 
+    private string CustomerRequestText => order?.상세주문?.수령인정보 is not { } recipient
+        ? "요청사항 확인이 필요합니다. 새로고침해 주세요."
+        : string.IsNullOrWhiteSpace(recipient.요청사항) ? "요청사항 없음" : recipient.요청사항.Trim();
+
+    private bool ShowCurrentRecooking => order?.재조리주문 == true
+        && order.상태 is 음식주문상태코드.주문확인 or 음식점주문Desk상태코드.기사배정
+            or 음식점주문Desk상태코드.조리중 or 음식점주문Desk상태코드.픽업대기;
+
+    private string CurrentPreparationText => order?.현재픽업준비완료 == true
+        ? $"이번 음식 · 준비 완료 {FormatOptionalDate(order.상세주문?.CurrentPickupReadyAtUtc)}"
+        : "이번 음식 · 준비 중";
+
+    private bool ShowDispatchAttention => order is not null && !readFailed
+        && order.상태 is not (음식점주문Desk상태코드.거절 or 음식점주문Desk상태코드.취소 or 음식점주문Desk상태코드.수령확인)
+        && (order.배차상태 == 음식주문배차상태코드.배차불가
+            || (!order.수락가능 && !order.조리시작가능 && !order.픽업준비가능
+                && order.조리변경가능 && order.현재조리시작확인));
+
     private string NextStepGuide => readFailed ? "상태를 다시 확인한 뒤 진행해 주세요."
         : order is null ? "주문을 불러오고 있어요."
-        : order.배차상태 == 음식주문배차상태코드.배차불가 ? "기사 배정에 문제가 있어요. 상세 정보의 배차 상태와 최근 안내를 확인해 주세요."
+        : order.배차상태 == 음식주문배차상태코드.배차불가 ? "기사 배정에 문제가 있어요. 아래 배차 안내를 확인해 주세요."
         : order.수락가능 ? "메뉴와 조리 예상시간을 확인하고 주문을 접수해 주세요."
+        : ShowCurrentRecooking ? order.현재픽업준비완료
+            ? "이번 음식이 준비됐어요. 새 기사가 픽업할 때까지 기다려 주세요."
+            : order.픽업준비가능 ? "다시 조리하고 있어요. 이번 음식이 완성되면 픽업 준비 완료를 눌러 주세요."
+                : "다시 조리하고 있어요. 최신 배차와 준비 상태를 확인해 주세요."
         : order.조리시작가능 ? "기사가 배정됐어요. 조리를 시작할 수 있습니다."
         : order.픽업준비가능 ? "조리가 끝나면 픽업 준비 완료를 눌러 주세요."
-        : order.조리변경가능 && order.상세주문?.조리시작시각Utc.HasValue == true ? "조리는 시작됐어요. 기사 재배정을 기다리고 있습니다."
+        : order.조리변경가능 && order.현재조리시작확인 ? "조리는 시작됐어요. 기사 재배정을 기다리고 있습니다."
         : order.조리변경가능 ? "기사 배정을 기다리고 있어요. 조리는 배정 후 시작해 주세요."
         : order.상태 == 음식점주문Desk상태코드.픽업대기 ? "기사가 음식을 픽업할 때까지 기다려 주세요."
         : order.상태 == 음식점주문Desk상태코드.픽업완료 ? "기사가 음식을 전달하고 있어요."
@@ -506,7 +531,10 @@ public partial class OrderDetail : ComponentBase, IDisposable
         preparationMinutes = 음식점조리시간정책.Clamp(preparationMinutes);
         await RunProgressAsync(
             token => OrderDeskService.조리시간변경Async(order.주문번호, preparationMinutes, token),
-            $"조리 예상 시간을 {preparationMinutes}분으로 변경했습니다.");
+            "조리 예상 시간의 적용 결과를 확인했습니다.",
+            updated => updated.상세주문?.조리예상분 is > 0
+                ? $"서버에 적용된 조리 예상 시간은 {updated.상세주문.조리예상분}분입니다."
+                : "조리 예상 시간의 적용 결과를 확인했습니다. 적용 시간은 새로고침으로 확인해 주세요.");
     }
 
     private async Task MarkPickupReadyAsync()
@@ -523,18 +551,23 @@ public partial class OrderDetail : ComponentBase, IDisposable
 
     private async Task RunProgressAsync(
         Func<CancellationToken, Task<음식점주문DeskItem?>> action,
-        string successMessage)
+        string successMessage,
+        Func<음식점주문DeskItem, string>? confirmedMessage = null)
     {
         isBusy = true;
         message = null;
         var requestedOrderNo = OrderNo;
         var generation = selectionGeneration;
+        var owner = AuthService?.Session.UserId;
+        bool Current() => IsCurrentSelection(requestedOrderNo, generation)
+            && string.Equals(owner, AuthService?.Session.UserId, StringComparison.Ordinal)
+            && (AuthService is null || AuthService.Session.IsAuthenticated);
         var cancellationToken = selectionCancellation.Token;
         try
         {
             var updated = await action(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            if (!IsCurrentSelection(requestedOrderNo, generation)) return;
+            if (!Current()) return;
             if (updated is null)
             {
                 readFailed = true;
@@ -544,10 +577,12 @@ public partial class OrderDetail : ComponentBase, IDisposable
             }
 
             ApplyServerOrder(updated);
+            if (confirmedMessage is not null && updated.상세주문?.조리예상분 is > 0)
+                preparationMinutes = updated.상세주문.조리예상분.Value;
             messageSeverity = Severity.Success;
-            message = successMessage;
+            message = confirmedMessage?.Invoke(updated) ?? successMessage;
         }
-        catch (Exception) when (cancellationToken.IsCancellationRequested || !IsCurrentSelection(requestedOrderNo, generation))
+        catch (Exception) when (cancellationToken.IsCancellationRequested || !Current())
         {
         }
         catch (Exception ex)
@@ -556,7 +591,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
         }
         finally
         {
-            if (IsCurrentSelection(requestedOrderNo, generation))
+            if (Current())
             {
                 isBusy = false;
                 await DrainQueuedRefreshAsync();
@@ -575,6 +610,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
             workLocked = true;
             order = null;
             message = "로그인이 만료되었습니다. 다시 로그인해 주세요.";
+            AuthService?.OrderReturn.SuspendForLogin(AuthService.Session.UserId, OrderNo);
             NavigationManager.NavigateTo("/login", replace: true);
         }
         else if (exception is SsalddelApiException { StatusCode: 403 }
@@ -583,6 +619,11 @@ public partial class OrderDetail : ComponentBase, IDisposable
             workLocked = true;
             order = null;
             message = "이 계정은 현재 음식점 주문을 처리할 수 없습니다. 음식점 운영 권한을 확인해 주세요.";
+        }
+        else if (exception is RestaurantPendingStorageException)
+        {
+            workLocked = true;
+            message = exception.Message;
         }
         else
         {
