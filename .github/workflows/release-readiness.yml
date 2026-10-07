@@ -181,6 +181,10 @@ jobs:
       - name: Build server container
         run: docker build --file Ssalddel/Dockerfile --tag ssalddel-server:azure-preview .
 
+      - name: Verify deployment and APK guard fixtures without external services
+        shell: pwsh
+        run: ./eng/staging/Test-AzureMobileHardening.ps1
+
       - name: Validate Azure 3.5 Compose profile
         env:
           SSALDDEL_MYSQL_ROOT_PASSWORD: readiness-root-password
@@ -204,6 +208,27 @@ jobs:
           name: release-readiness-${{ github.run_number }}
           path: artifacts/release-readiness
 
+      - name: Validate isolated food mobile Compose profile
+        env:
+          SSALDDEL_MYSQL_ROOT_PASSWORD: readiness-root-password
+          SSALDDEL_MYSQL_PASSWORD: readiness-app-password
+          SSALDDEL_MONGO_PASSWORD: readiness-mongo-password
+          SSALDDEL_SITE_HOST: readiness.example.test
+          SSALDDEL_JWT_SECRET_KEY: readiness-jwt-secret-key-with-at-least-32-bytes
+          SSALDDEL_DATA_PROTECTION_CERTIFICATE_PASSWORD: readiness-certificate-password
+          SSALDDEL_ISMS_P_AES_KEY_BASE64: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+          SSALDDEL_ISMS_P_HASH_SALT: readiness-hash-salt
+          SSALDDEL_STORAGE_ACCOUNT_NAME: readinessstorage
+          SSALDDEL_FIELD_ADMIN_PASSWORD: readiness-admin-password
+          SSALDDEL_FIELD_ORDERER_PASSWORD: readiness-orderer-password
+          SSALDDEL_FIELD_RESTAURANT_PASSWORD: readiness-restaurant-password
+          SSALDDEL_FIELD_DRIVER_PASSWORD: readiness-driver-password
+        run: >-
+          docker compose -p ssalddel-mobile-field-test
+          -f deploy/azure-vm/compose.yaml
+          -f deploy/azure-vm/compose.food-mobile-field-test.override.yaml
+          config --quiet
+
       - name: Package Azure 3.5 deployment bundle
         run: |
           set -euo pipefail
@@ -220,6 +245,22 @@ jobs:
           chmod +x "$bundle/deploy-preview-profile.sh" "$bundle/deploy-mart-v35.sh"
           test -s "$bundle/ssalddel-server.tar"
           test -s "$bundle/web.tar.gz"
+
+      - name: Package isolated food mobile field-test bundle
+        shell: pwsh
+        run: >-
+          ./deploy/azure-vm/package-mobile-field-test.ps1
+          -ServerImageArchive artifacts/mart-v35/ssalddel-server.tar
+          -WebArchive artifacts/mart-v35/web.tar.gz
+          -OutputDirectory artifacts/food-mobile-field-test
+
+      - name: Upload isolated food mobile field-test bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: food-mobile-field-test-deployment-${{ github.run_number }}
+          path: artifacts/food-mobile-field-test/
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Upload Azure 3.5 deployment bundle
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

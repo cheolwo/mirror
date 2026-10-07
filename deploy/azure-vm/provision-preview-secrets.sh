@@ -10,11 +10,19 @@ if [[ ! -f "$environment_file" ]]; then
   exit 1
 fi
 
-if grep -q '^SSALDDEL_ISMS_P_AES_KEY_BASE64=.' "$environment_file" \
-  && grep -q '^SSALDDEL_ISMS_P_HASH_SALT=.' "$environment_file"; then
+aes_present=false
+salt_present=false
+grep -q '^SSALDDEL_ISMS_P_AES_KEY_BASE64=.' "$environment_file" && aes_present=true
+grep -q '^SSALDDEL_ISMS_P_HASH_SALT=.' "$environment_file" && salt_present=true
+if [[ "$aes_present" == true && "$salt_present" == true ]]; then
   chmod 600 "$environment_file"
   echo "Protected-data secrets are already configured."
   exit 0
+fi
+
+if [[ "$aes_present" == true || "$salt_present" == true ]]; then
+  echo "Protected-data secrets are partially configured. Existing keys were preserved; restore the missing secret from its secure backup." >&2
+  exit 1
 fi
 
 cp "$environment_file" "$environment_directory/.env.before-ismp-$timestamp"

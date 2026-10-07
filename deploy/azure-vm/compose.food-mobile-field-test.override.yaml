@@ -3,7 +3,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
       SsalddelExecution__Mode: Simulation
-      DatabaseInitialization__RunAtStartup: "true"
+      DatabaseInitialization__RunAtStartup: "false"
       DatabaseInitialization__FailOnError: "true"
       VersionFeatureFlags__DomesticTransportWorkflow: "true"
       VersionFeatureFlags__FoodDeliveryWorkflow: "true"

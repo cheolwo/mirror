@@ -50,7 +50,7 @@ docker compose --profile redis run --rm --no-deps app --initialize-database
 
 Redis 없이 확인할 때는 `.env`의 Provider를 `Memory`로 바꾸고 `docker compose up -d mysql mongo`를 실행한다.
 
-초기화 명령이 실패하면 웹 서버를 시작하지 말고 누락된 EF Core 마이그레이션이나 연결 정보를 먼저 수정한다.
+초기화 명령은 기본·전통시장·농수산·공공데이터 수집의 네 DbContext를 대상으로 한다. 실패하면 웹 서버를 시작하지 말고 누락된 EF Core 마이그레이션이나 연결 정보를 먼저 수정한다. 기존 DB를 변경하기 전에 백업을 남기며, 이미지 교체를 되돌리는 것만으로 변경된 스키마가 복구되지는 않는다.
 
 ## 4. 서버 실행과 확인
 
@@ -62,7 +62,7 @@ curl.exe --fail http://localhost:8080/health/ready
 ```
 
 - `/health/live`: ASP.NET Core 프로세스가 요청을 처리할 수 있는지 확인한다.
-- `/health/ready`: 기본·전통시장·농수산 MySQL DbContext의 연결과 미적용 마이그레이션, MongoDB, 선택한 실행 상태 저장소를 확인한다. Provider가 `Memory`이면 Redis 검사를 생략한다.
+- `/health/ready`: 기본·전통시장·농수산·공공데이터 수집 MySQL DbContext의 연결과 미적용 마이그레이션, MongoDB, 선택한 실행 상태 저장소를 확인한다. Provider가 `Memory`이면 Redis 검사를 생략한다.
 - 농수산물 배치는 `SSALDDEL_AGRICULTURAL_FISHERIES_BATCH_ENABLED=true`일 때만 등록된다.
 
 `docker compose ps`의 app 상태가 `healthy`가 아니면 다음 순서로 확인한다.

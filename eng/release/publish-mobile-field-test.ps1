@@ -15,8 +15,10 @@ param(
     [string]$OutputRoot = "artifacts/local/mobile-field-test",
 
     [ValidateNotNullOrEmpty()]
-    [ValidateSet("orderer", "restaurant", "driver", "admin")]
-    [string[]]$AppNames = @("orderer", "restaurant", "driver", "admin"),
+    [ValidateSet("orderer", "restaurant", "driver", "admin", "shipper", "cargo-driver", "warehouse")]
+    [string[]]$AppNames = @("orderer", "restaurant", "driver", "admin", "shipper", "cargo-driver", "warehouse"),
+
+    [string]$AndroidSdkDirectory,
 
     [switch]$PlanOnly,
 
@@ -27,6 +29,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "../..")).Path
+. (Join-Path $PSScriptRoot 'MobileFieldTest.Common.ps1')
 $serverUri = $null
 if (-not [Uri]::TryCreate($ServerBaseAddress, [UriKind]::Absolute, [ref]$serverUri) -or
     $serverUri.Scheme -ne "https" -or
@@ -46,16 +49,11 @@ if ($AppNames.Count -eq 0 -or @($AppNames | Sort-Object -Unique).Count -ne $AppN
     throw "AppNames must contain one or more distinct supported apps."
 }
 
-$apps = @(@(
-    [pscustomobject]@{ Name = "orderer"; Project = "OrdererApp/OrdererApp.csproj"; PackageId = "com.ssalddel.ordererapp" },
-    [pscustomobject]@{ Name = "restaurant"; Project = "RestaurantDeskApp/RestaurantDeskApp.csproj"; PackageId = "com.ssalddel.restaurantdeskapp" },
-    [pscustomobject]@{ Name = "driver"; Project = "FDriverApp/FDriverApp.csproj"; PackageId = "kr.ssalddel.fdriver" },
-    [pscustomobject]@{ Name = "admin"; Project = "SsalddelAdminApp/SsalddelAdminApp.csproj"; PackageId = "com.ssalddel.adminapp" }
-) | Where-Object { $_.Name -in $AppNames })
+$apps = @(Get-MobileFieldTestApps | Where-Object { $_.Name -in $AppNames })
 
 if ($PlanOnly) {
     $apps | Select-Object Name, Project, PackageId
-    Write-Host "Release plan: version=$Version ($VersionCode), server=$($serverUri.AbsoluteUri), formats=APK+AAB"
+    Write-Host "Release plan: version=$Version ($VersionCode), server=$($serverUri.AbsoluteUri), format=APK, signed APK verification required"
     exit 0
 }
 
@@ -87,6 +85,12 @@ if ([string]::IsNullOrWhiteSpace($storePassword) -or [string]::IsNullOrWhiteSpac
 }
 
 $releaseRoot = Join-Path $repoRoot (Join-Path $OutputRoot "$Version-$VersionCode")
+$runId = [Guid]::NewGuid().ToString('N')
+if (Test-Path -LiteralPath (Join-Path $releaseRoot 'release-manifest.json')) {
+    throw 'A completed release already exists. Use a new VersionCode or OutputRoot to preserve its handoff.'
+}
+$apkTools = Resolve-MobileAndroidBuildTools -AndroidSdkDirectory $AndroidSdkDirectory
+$signingCertificate = Get-MobileSigningCertificateFingerprint -KeystorePath $resolvedKeystore -Alias $KeyAlias
 $planningEvidence = $null
 $planningResult = "Failed"
 $planningChecks = New-Object "System.Collections.Generic.List[object]"
@@ -99,7 +103,7 @@ if (-not [string]::IsNullOrWhiteSpace($PlanningWorkItemId)) {
         -StartPath "artifacts/local/planning-evidence/apk-$evidenceRunId.start.json" -Kind "ApkPackaging" `
         -InputPaths @($apps | ForEach-Object { $_.Project }) `
         -InputRoots @($apps | ForEach-Object { (Split-Path -Parent $_.Project) -replace '\\', '/' }) `
-        -ToolPaths @("eng/release/publish-mobile-field-test.ps1") -TargetFramework "net10.0-android" `
+        -ToolPaths @("eng/release/publish-mobile-field-test.ps1", "eng/release/MobileFieldTest.Common.ps1") -TargetFramework "net10.0-android" `
         -Scope @{ configuration = "Release"; roles = @($apps.Name); buildTargets = @($apps.Project) }
 }
 try {
@@ -107,24 +111,11 @@ New-Item -ItemType Directory -Path $releaseRoot -Force | Out-Null
 $artifacts = @()
 foreach ($app in $apps) {
     $project = Join-Path $repoRoot $app.Project
-    $destination = Join-Path $releaseRoot $app.Name
+    $destination = Join-Path $releaseRoot ("build-$runId/" + $app.Name)
     New-Item -ItemType Directory -Path $destination -Force | Out-Null
-    $arguments = @(
-        "publish", $project,
-        "-f", "net10.0-android",
-        "-c", "Release",
-        "-o", $destination,
-        "-p:UseSharedCompilation=false",
-        "-p:ApplicationDisplayVersion=$Version",
-        "-p:ApplicationVersion=$VersionCode",
-        "-p:SsalddelServerBaseAddress=$($serverUri.AbsoluteUri)",
-        "-p:AndroidPackageFormats=apk;aab",
-        "-p:AndroidKeyStore=true",
-        "-p:AndroidSigningKeyStore=$resolvedKeystore",
-        "-p:AndroidSigningKeyAlias=$KeyAlias",
-        "-p:AndroidSigningStorePass=env:SSALDDEL_ANDROID_KEYSTORE_PASSWORD",
-        "-p:AndroidSigningKeyPass=env:SSALDDEL_ANDROID_KEY_PASSWORD"
-    )
+    $argumentParameters = @{ Project = $project; Destination = $destination; Version = $Version; VersionCode = $VersionCode
+        Server = $serverUri.AbsoluteUri; Keystore = $resolvedKeystore; Alias = $KeyAlias }
+    $arguments = @(Get-MobileFieldTestPublishArguments @argumentParameters)
     & dotnet @arguments
     $publishExitCode = $LASTEXITCODE
     $planningChecks.Add([pscustomobject]@{
@@ -134,12 +125,13 @@ foreach ($app in $apps) {
         throw "Android publish failed for $($app.Name)."
     }
 
-    $packages = Get-ChildItem -LiteralPath $destination -Recurse -File |
-        Where-Object { $_.Extension -in ".apk", ".aab" }
-    if (-not $packages) {
-        throw "No APK or AAB was produced for $($app.Name)."
-    }
+    $packages = @(Get-ChildItem -LiteralPath $destination -Recurse -File |
+        Where-Object { $_.Name -like '*-Signed.apk' })
+    if ($packages.Count -ne 1) { throw "Exactly one final signed APK is required for $($app.Name)." }
     foreach ($package in $packages) {
+        $verificationParameters = @{ Path = $package.FullName; ExpectedApp = $app; Version = $Version; VersionCode = $VersionCode
+            Tools = $apkTools; ExpectedCertificateSha256 = $signingCertificate }
+        $verification = Confirm-MobileSignedApk @verificationParameters
         if ($null -ne $planningEvidence) {
             $planningArtifactPaths.Add([IO.Path]::GetRelativePath($repoRoot, $package.FullName).Replace('\', '/'))
         }
@@ -152,14 +144,27 @@ foreach ($app in $apps) {
             file = [IO.Path]::GetRelativePath($releaseRoot, $package.FullName).Replace('\', '/')
             sha256 = (Get-FileHash -LiteralPath $package.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
             bytes = $package.Length
+            verification = $verification
+            downloadPath = "downloads/mobile/$Version-$VersionCode/$($app.Name).apk"
         }
     }
 }
 
 $manifestPath = Join-Path $releaseRoot "release-manifest.json"
+# Only after all requested APKs pass do we expose a handoff directory/manifest.
+$handoff = Join-Path $releaseRoot "handoff/downloads/mobile/$Version-$VersionCode"
+New-Item -ItemType Directory -Path $handoff -Force | Out-Null
+foreach ($artifact in $artifacts) {
+    $copyPath = Join-Path $handoff "$($artifact.app).apk"
+    Copy-Item -LiteralPath (Join-Path $releaseRoot $artifact.file) -Destination $copyPath
+    if ((Get-FileHash -LiteralPath $copyPath -Algorithm SHA256).Hash -ne $artifact.sha256) {
+        throw 'Download handoff bytes changed after APK verification.'
+    }
+}
 $artifacts | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $manifestPath -Encoding utf8
+$artifacts | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $handoff 'release-manifest.json') -Encoding utf8
 $planningResult = "Passed"
-Write-Host "Created signed mobile field-test packages and manifest: $manifestPath"
+Write-Host "Created verified APKs and local download handoff: $manifestPath (not uploaded; phone/server verification pending)"
 }
 finally {
     if ($null -ne $planningEvidence) {

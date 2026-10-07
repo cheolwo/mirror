@@ -15,9 +15,12 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'AzureMobileHardening.Common.ps1')
 $startedAtUtc = [DateTimeOffset]::UtcNow
 $runId = $startedAtUtc.ToString("yyyyMMddHHmmss")
-$evidencePath = [IO.Path]::GetFullPath((Join-Path (Get-Location) $EvidenceDirectory))
+$evidencePath = [IO.Path]::GetFullPath($(if ([IO.Path]::IsPathRooted($EvidenceDirectory)) {
+    $EvidenceDirectory
+} else { Join-Path (Get-Location) $EvidenceDirectory }))
 $redisContainerName = "ssalddel-redis-restore-$runId"
 $redisContainerStarted = $false
 $mysqlPasswordBefore = $env:MYSQL_PWD
@@ -31,12 +34,6 @@ function Get-RequiredEnvironmentValue([string]$Name) {
     }
 
     return $value
-}
-
-function Assert-RestoreDatabaseName([string]$Name, [string]$VariableName) {
-    if ($Name -notmatch "^[A-Za-z0-9_]+_restore_verify$") {
-        throw "$VariableName must be an isolated database name ending in '_restore_verify'."
-    }
 }
 
 function Invoke-Checked([string]$FilePath, [string[]]$Arguments) {
@@ -60,12 +57,13 @@ try {
     $mysqlDatabase = Get-RequiredEnvironmentValue "SSALDDEL_STAGING_MYSQL_DATABASE"
     $mysqlRestoreDatabase = Get-RequiredEnvironmentValue "SSALDDEL_STAGING_MYSQL_RESTORE_DATABASE"
     $mysqlConnectionString = Get-RequiredEnvironmentValue "SSALDDEL_STAGING_MYSQL_CONNECTION"
-    Assert-RestoreDatabaseName $mysqlRestoreDatabase "SSALDDEL_STAGING_MYSQL_RESTORE_DATABASE"
+    Assert-RecoveryDatabaseTargets -Source $mysqlDatabase -Restore $mysqlRestoreDatabase -Engine 'MySQL'
 
     $mongoUri = Get-RequiredEnvironmentValue "SSALDDEL_STAGING_MONGODB_URI"
     $mongoDatabase = Get-RequiredEnvironmentValue "SSALDDEL_STAGING_MONGODB_DATABASE"
     $mongoRestoreDatabase = Get-RequiredEnvironmentValue "SSALDDEL_STAGING_MONGODB_RESTORE_DATABASE"
-    Assert-RestoreDatabaseName $mongoRestoreDatabase "SSALDDEL_STAGING_MONGODB_RESTORE_DATABASE"
+    Assert-RecoveryDatabaseTargets -Source $mongoDatabase -Restore $mongoRestoreDatabase -Engine 'MongoDB'
+    Assert-StagingMySqlMigrationTarget -ConnectionString $mysqlConnectionString -Database $mysqlDatabase -Server $mysqlHost -Port $mysqlPort -User $mysqlUser
 
     $redisHost = Get-RequiredEnvironmentValue "SSALDDEL_STAGING_REDIS_HOST"
     $redisPort = Get-RequiredEnvironmentValue "SSALDDEL_STAGING_REDIS_PORT"
@@ -73,16 +71,24 @@ try {
 
     Get-Command dotnet, mysqldump, mysql, mongodump, mongorestore, redis-cli, docker -ErrorAction Stop | Out-Null
 
-    $env:ConnectionStrings__DefaultConnection = $mysqlConnectionString
-    Invoke-Checked "dotnet" @(
-        "ef", "database", "update",
-        "--project", "Ssalddel/Ssalddel.csproj",
-        "--startup-project", "Ssalddel/Ssalddel.csproj",
-        "--context", "SsalddelContext",
-        "--configuration", $Configuration,
-        "--no-build"
+    # Retain a pre-migration backup before changing any source schema.
+    $mysqlPreMigrationBackup = Join-Path $evidencePath "mysql-before-migration.sql"
+    $env:MYSQL_PWD = $mysqlPassword
+    Invoke-Checked "mysqldump" @(
+        "--host=$mysqlHost", "--port=$mysqlPort", "--user=$mysqlUser",
+        "--single-transaction", "--routines", "--events",
+        "--result-file=$mysqlPreMigrationBackup", $mysqlDatabase
     )
-
+    $env:ConnectionStrings__DefaultConnection = $mysqlConnectionString
+    $migrationContexts = @(Get-StagingMigrationContextNames)
+    foreach ($contextName in $migrationContexts) {
+        Invoke-Checked "dotnet" @(
+            "ef", "database", "update",
+            "--project", "Ssalddel/Ssalddel.csproj",
+            "--startup-project", "Ssalddel/Ssalddel.csproj",
+            "--context", $contextName, "--configuration", $Configuration, "--no-build"
+        )
+    }
     $mysqlBackup = Join-Path $evidencePath "mysql.sql"
     $env:MYSQL_PWD = $mysqlPassword
     Invoke-Checked "mysqldump" @(
@@ -113,7 +119,7 @@ try {
         "--port=$mysqlPort",
         "--user=$mysqlUser",
         "--database=$mysqlRestoreDatabase",
-        "--execute=SELECT COUNT(*) FROM community_post_email_notification_outbox;"
+        "--execute=SELECT COUNT(*) FROM community_post_email_notification_outbox; SELECT COUNT(*) FROM public_data_ingestion_runs;"
     )
 
     $mongoBackupRoot = Join-Path $evidencePath "mongo"
@@ -149,6 +155,8 @@ try {
         startedAtUtc = $startedAtUtc
         completedAtUtc = [DateTimeOffset]::UtcNow
         migration = "applied"
+        migrationContexts = $migrationContexts
+        mysqlPreMigrationBackupSha256 = (Get-FileHash -LiteralPath $mysqlPreMigrationBackup -Algorithm SHA256).Hash
         mysqlRestoreDatabase = $mysqlRestoreDatabase
         mongoRestoreDatabase = $mongoRestoreDatabase
         redisRestoreContainer = $redisContainerName

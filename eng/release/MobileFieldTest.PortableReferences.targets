@@ -1,0 +1,41 @@
+<Project>
+  <!-- Opt-in only through the signed Android release helper. The globally
+       supplied ABI list otherwise makes portable shared libraries look
+       RID-specific during Android's compiler-skipping inner packaging builds.
+       This import runs after Common.targets and before the .NET SDK's default
+       IsRidAgnostic evaluation, so capture only a pre-existing explicit policy.
+       Items are inspected later inside a metadata target, not in evaluation
+       PropertyGroup conditions where MSBuild does not allow item lists. -->
+  <PropertyGroup Condition="'$(SsalddelMobileFieldTestPortableReferences)' == 'true'">
+    <_SsalddelMobileDeclaredRidPolicy>$(IsRidAgnostic)</_SsalddelMobileDeclaredRidPolicy>
+  </PropertyGroup>
+  <!-- These four current net10.0 projects cover the reviewed seven-app reference
+       closure and have only portable managed assets.
+       Do not generalize this policy to arbitrary .NET, executable or platform
+       libraries. An added package outside this reviewed managed set opts out. -->
+  <Target Name="SsalddelMobileFieldTestClassifyPortableReference"
+          BeforeTargets="GetTargetFrameworksWithPlatformForSingleTargetFramework"
+          Condition="'$(SsalddelMobileFieldTestPortableReferences)' == 'true' and '$(_SsalddelMobileDeclaredRidPolicy)' == '' and '$(OutputType)' == 'Library' and '$(UseMaui)' != 'true' and ('$(TargetFrameworkIdentifier)' == '.NETStandard' or ('$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(TargetFramework)' == 'net10.0' and '$(TargetPlatformIdentifier)' == '' and ('$(MSBuildProjectName)' == 'Ssalddel.Contracts' or '$(MSBuildProjectName)' == 'Ssalddel.Client.Infrastructure' or '$(MSBuildProjectName)' == 'Ssalddel.Ui.Common' or '$(MSBuildProjectName)' == 'Ssalddel.BackOffice.Client')))">
+    <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
+      <_SsalddelMobileUnsupportedPortablePackage Include="@(PackageReference)" Exclude="Microsoft.AspNetCore.SignalR.Client;Microsoft.Extensions.DependencyInjection.Abstractions;Microsoft.Extensions.Http;CommunityToolkit.Mvvm;Microsoft.AspNetCore.Components.Web;MudBlazor;ZXing.Net;Microsoft.Extensions.Logging.Abstractions" />
+    </ItemGroup>
+    <PropertyGroup Condition="'@(NativeReference)' == '' and '@(NativeLibrary)' == '' and '@(_SsalddelMobileUnsupportedPortablePackage)' == ''">
+      <IsRidAgnostic>true</IsRidAgnostic>
+    </PropertyGroup>
+  </Target>
+  <!-- This reviewed Android binding generates one managed DLL and copies Maven
+       AAR sidecars containing all supported JNI ABIs. Only the managed project
+       reference is RID agnostic; the app still selects and packages native ABIs.
+       Keep this exception separate from the portable managed-library policy. -->
+  <Target Name="SsalddelMobileFieldTestClassifyNaverBindingReference"
+          BeforeTargets="GetTargetFrameworksWithPlatformForSingleTargetFramework"
+          Condition="'$(SsalddelMobileFieldTestPortableReferences)' == 'true' and '$(_SsalddelMobileDeclaredRidPolicy)' == '' and '$(MSBuildProjectName)' == 'DriverApp.NaverMaps.Android' and '$(TargetFramework)' == 'net10.0-android' and '$(TargetPlatformIdentifier)' == 'Android' and '$(OutputType)' == 'Library' and '$(AndroidApplication)' == 'false' and '$(UseMaui)' != 'true'">
+    <ItemGroup>
+      <_SsalddelMobileUnreviewedNaverMaven Include="@(AndroidMavenLibrary)"
+          Condition="!(('%(AndroidMavenLibrary.Identity)' == 'com.naver.maps:map-sdk' and '%(AndroidMavenLibrary.Version)' == '3.23.2') or ('%(AndroidMavenLibrary.Identity)' == 'com.naver.maps:geometry' and '%(AndroidMavenLibrary.Version)' == '1.3.0') or ('%(AndroidMavenLibrary.Identity)' == 'com.getkeepsafe.relinker:relinker' and '%(AndroidMavenLibrary.Version)' == '1.4.4') or ('%(AndroidMavenLibrary.Identity)' == 'com.squareup.okhttp3:okhttp' and '%(AndroidMavenLibrary.Version)' == '4.10.0') or ('%(AndroidMavenLibrary.Identity)' == 'com.squareup.okhttp3:okhttp-brotli' and '%(AndroidMavenLibrary.Version)' == '4.10.0') or ('%(AndroidMavenLibrary.Identity)' == 'org.brotli:dec' and '%(AndroidMavenLibrary.Version)' == '0.1.2'))" />
+    </ItemGroup>
+    <PropertyGroup Condition="'@(PackageReference)' == '' and '@(NativeReference)' == '' and '@(NativeLibrary)' == '' and '@(AndroidNativeLibrary)' == '' and '@(EmbeddedNativeLibrary)' == '' and '@(_SsalddelMobileUnreviewedNaverMaven)' == '' and '@(AndroidMavenLibrary->Count())' == '6' and '@(AndroidMavenLibrary->Distinct()->Count())' == '6'">
+      <IsRidAgnostic>true</IsRidAgnostic>
+    </PropertyGroup>
+  </Target>
+</Project>

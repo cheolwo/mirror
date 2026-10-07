@@ -31,6 +31,10 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - name: Verify recovery target and deployment guard fixtures
+        shell: pwsh
+        run: ./eng/staging/Test-AzureMobileHardening.ps1
+
       - name: Install EF migration tool
         run: dotnet tool install --global dotnet-ef --version 9.0.0
 
