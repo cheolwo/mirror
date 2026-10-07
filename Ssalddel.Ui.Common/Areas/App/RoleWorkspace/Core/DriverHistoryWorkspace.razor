@@ -1,0 +1,77 @@
+@inject IRoleWorkspaceApi Api
+@inject IRoleWorkspaceAccess Access
+@implements IDisposable
+
+@if (Model is null)
+{ <RoleSecondaryFrame Title="기사 내역" ReturnHref="/"><p role="alert">기사 역할을 선택해 주세요.</p></RoleSecondaryFrame> }
+else
+{
+<RoleSecondaryFrame Title="@(RecordId is null ? Model.IsFood ? "완료 배달 내역" : "운송 내역" : "내역 상세")"
+    ReturnHref="@BackHref" ReturnLabel="@(RecordId is null ? "현재 업무" : "내역 목록")" LoginHref="@LoginHref" Lifetime="@Model.Lifetime">
+    @if (!Model.Lifetime.RequiresLogin)
+    {
+        @if (RecordId is null && Model.IsFood)
+        {
+            <fieldset disabled="@Model.Lifetime.IsBusy"><label>전달 완료일(한국)<input type="date" @bind="Model.Date" /></label>
+                <button @onclick="Reload">날짜 조회</button></fieldset>
+        }
+        @if (Model.Loaded && RecordId is null)
+        {
+            <p class="rw-muted">@(Model.IsFood ? "선택한 날짜의 전달 완료 정산 기록입니다. 실제 입금과는 별도로 확인합니다." : "완료·취소·중단된 운송 기록입니다.")</p>
+            @if (Model.Items.Count == 0) { <section class="rw-card"><h2>표시할 내역이 없습니다</h2></section> }
+            <ul class="rw-list">@foreach (var item in Model.Items)
+            { <li class="rw-card"><a class="rw-row" href="@DetailHref(item.Id)"><strong>@item.Title</strong><span>@item.Status · @item.Subtitle</span><span>@item.Summary?.DestinationLabel @item.Summary?.Destination</span><span class="rw-muted">@item.Summary?.Request?.Value</span><span>상세 보기 →</span></a></li> }</ul>
+        }
+        else if (Model.Loaded && Model.Detail is { } detail)
+        {
+            <section class="rw-card"><h2>@detail.Title</h2><p>@detail.Status · @detail.Subtitle</p></section>
+            @foreach (var section in detail.Sections ?? [])
+            { <section class="rw-card"><h2>@section.Title</h2><dl class="rw-fields">@foreach (var field in section.Fields) { <div><dt>@field.Label</dt><dd>@field.Value</dd></div> }</dl></section> }
+            <p class="rw-warning" role="status">@Model.DetailAccessNotice</p>
+            @if (Model.OrderDetails is { } order)
+            {
+                <section class="rw-card"><h2>주문 정보</h2><p>@order.RestaurantAddress</p><ul>@foreach (var menu in order.Items) { <li>@menu.MenuName · @menu.Quantity 개</li> }</ul><p>주문금액 @order.TotalOrderAmount.ToString("N0")원</p></section>
+            }
+            @if (Model.CustomerDetails is { } customer)
+            { <section class="rw-card"><h2>고객 정보</h2><dl class="rw-fields"><div><dt>수령인</dt><dd>@customer.DisplayName</dd></div><div><dt>연락처</dt><dd>@customer.ContactPhone</dd></div><div><dt>전달지</dt><dd>@customer.Address</dd></div><div><dt>요청</dt><dd>@customer.DeliveryInstructions</dd></div></dl></section> }
+        }
+        @if (RecordId is not null || !Model.IsFood || Model.Lifetime.HasError)
+        { <div class="rw-actions"><button disabled="@Model.Lifetime.IsBusy" @onclick="Reload">다시 불러오기</button></div> }
+    }
+</RoleSecondaryFrame>
+}
+@code {
+    [Parameter] public string RoleKey { get; set; } = "";
+    [Parameter] public string? RecordId { get; set; }
+    [Parameter] public string? Date { get; set; }
+    [Parameter] public string? ReturnUrl { get; set; }
+    private DriverHistoryViewModel? Model;
+    private readonly CancellationTokenSource privacyLifetime = new();
+    private Task? privacyLoop;
+    private string WorkspaceReturn => RoleWorkspaceNavigation.LocalRoute(ReturnUrl) ?? RoleWorkspaceNavigation.Href(RoleKey);
+    private string DateQuery => Model?.IsFood == true ? "?date=" + Model.Date.ToString("yyyy-MM-dd") : "";
+    private string ListHref => RoleWorkspaceNavigation.WithReturn("/workspace/" + RoleKey + "/history" + DateQuery, WorkspaceReturn)!;
+    private string BackHref => RecordId is null ? WorkspaceReturn : ListHref;
+    private string LoginHref => RoleWorkspaceNavigation.WithReturn("/workspace-login/" + RoleKey, RecordId is null ? ListHref : DetailHref(RecordId))!;
+    private string DetailHref(string id) => RoleWorkspaceNavigation.WithReturn("/workspace/" + RoleKey + "/history/" + Uri.EscapeDataString(id) + DateQuery, WorkspaceReturn)!;
+    protected override void OnInitialized()
+    {
+        if (RoleKey is not (RoleWorkspaceCatalog.FoodDriver or RoleWorkspaceCatalog.CargoDriver)) return;
+        Model = new(RoleKey, Api, Access); Model.Lifetime.Changed += Changed;
+        if (DateOnly.TryParseExact(Date, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var date)) Model.Date = date;
+        privacyLoop = ExpirePrivateDetailsAsync();
+    }
+    protected override Task OnParametersSetAsync() => Reload();
+    private Task Reload() => Model?.LoadAsync(RecordId) ?? Task.CompletedTask;
+    private async Task ExpirePrivateDetailsAsync()
+    {
+        try { while (!privacyLifetime.IsCancellationRequested) { await Task.Delay(TimeSpan.FromSeconds(1), privacyLifetime.Token); await InvokeAsync(() => Model?.ExpirePrivateDetails()); } }
+        catch (OperationCanceledException) { }
+    }
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose()
+    {
+        privacyLifetime.Cancel(); privacyLifetime.Dispose();
+        if (Model is not null) { Model.Lifetime.Changed -= Changed; Model.Dispose(); }
+    }
+}

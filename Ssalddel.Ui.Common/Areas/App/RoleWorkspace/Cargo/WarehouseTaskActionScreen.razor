@@ -1,0 +1,82 @@
+@using Ssalddel.Contracts.Common.Inventory
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@implements IDisposable
+@inject WarehouseWorkspaceApiClient Client
+@inject IRoleWorkspaceAccess Access
+
+@if (Kind is "inspection" or "outbound" or "transport-draft")
+{
+    <WarehouseSpecialistTaskScreen @key="(Kind, ItemId)" Kind="@Kind" ItemId="@ItemId" />
+}
+else
+{
+<section class="cargo-action-screen" aria-label="@Model.Title">
+    <header><a href="@Model.ReturnHref">지도 업무로 돌아가기</a><h1>@Model.Title</h1></header>
+    @if (Model.Lifetime.RequiresLogin)
+    {
+        <MudAlert Severity="Severity.Warning">로그인 후 이 업무로 돌아와 주세요.</MudAlert>
+        <MudButton Href="@LoginHref" Variant="Variant.Filled" Color="Color.Primary">로그인</MudButton>
+    }
+    else
+    {
+        @if (Model.Lifetime.Message is { } message)
+        { <MudAlert Severity="@(Model.Lifetime.HasError ? Severity.Error : Severity.Success)">@message</MudAlert> }
+        @if (Model.Lifetime.IsBusy) { <MudProgressLinear Indeterminate="true" aria-label="작업 처리 중" /> }
+        @if (Model.Loaded)
+        {
+            <article class="cargo-action-card">
+                <h2>@Model.ProductName</h2><p>@Model.Status</p>
+                @if (Kind == "handoff")
+                { <MudAlert Severity="Severity.Info">포장·수량·운송 조건을 확인해 출고예정을 준비합니다. 실제 기사 인계는 배차와 기사 확인 이후 별도 화면에서 처리합니다.</MudAlert> }
+                @if (!Model.ServerAllows && !Model.Saved)
+                { <MudAlert Severity="Severity.Warning">현재 상태에서는 이 업무를 처리할 수 없습니다. 지도로 돌아가 현재 작업을 확인해 주세요.</MudAlert> }
+                @if (Model.ServerAllows && !Model.Saved)
+                {
+                    @if (Kind == "inbound")
+                    {
+                        <MudTextField T="string" Label="실제 반입 상품명" @bind-Value="Model.ProductName" Disabled="Model.Lifetime.IsBusy" />
+                        <MudTextField T="string" Label="SKU" @bind-Value="Model.Sku" Disabled="Model.Lifetime.IsBusy" />
+                    }
+                    @if (Kind is "inbound" or "packing" or "handoff")
+                    { <MudNumericField T="int" Label="처리 수량" Min="1" @bind-Value="Model.Quantity" Disabled="Model.Lifetime.IsBusy" /> }
+                    @if (Kind == "inbound")
+                    { <MudNumericField T="int" Label="불량 수량" Min="0" @bind-Value="Model.DefectQuantity" Disabled="Model.Lifetime.IsBusy" /> }
+                    @if (Kind is "inbound" or "put-away" or "picking")
+                    { <MudTextField T="string" Label="@(Kind == "picking" ? "확인한 랙 위치" : "보관 위치")" @bind-Value="Model.StorageLocation" Disabled="Model.Lifetime.IsBusy" /> }
+                    @if (Kind == "packing")
+                    {
+                        <MudSelect T="string" Label="포장 방식" @bind-Value="Model.PackagingType" Disabled="Model.Lifetime.IsBusy">
+                            @foreach (var type in 포장유형코드.전체목록) { <MudSelectItem T="string" Value="@type">@type</MudSelectItem> }
+                        </MudSelect>
+                    }
+                    @if (Kind is "put-away" or "packing" or "handoff")
+                    { <MudTextField T="string" Label="작업 메모" Lines="2" @bind-Value="Model.Memo" Disabled="Model.Lifetime.IsBusy" /> }
+                    @if (!Model.CanStartPicking)
+                    {
+                        <MudCheckBox T="bool" Label="@Model.FirstLabel" @bind-Value="Model.FirstConfirmed" Disabled="Model.Lifetime.IsBusy" />
+                        <MudCheckBox T="bool" Label="@Model.SecondLabel" @bind-Value="Model.SecondConfirmed" Disabled="Model.Lifetime.IsBusy" />
+                    }
+                    <hr />
+                    <MudCheckBox T="bool" Label="확인한 내용으로 저장하겠습니다" @bind-Value="Model.SaveConfirmed" Disabled="Model.Lifetime.IsBusy" />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!Model.CanSubmit)" OnClick="Model.SubmitAsync">@Model.PrimaryLabel</MudButton>
+                }
+            </article>
+        }
+        @foreach (var next in Model.NextActions)
+        { <MudButton Href="@next.Route" Variant="Variant.Filled" Color="Color.Primary">@next.Label</MudButton> }
+        @if (!Model.Lifetime.IsBusy && !Model.Saved) { <MudButton Variant="Variant.Outlined" OnClick="Reload">현재 상태 다시 확인</MudButton> }
+    }
+</section>
+}
+
+@code {
+    [Parameter] public string Kind { get; set; } = "";
+    [Parameter] public string ItemId { get; set; } = "";
+    private WarehouseTaskActionViewModel Model = default!;
+    private string LoginHref => CargoWorkspaceRoutes.WarehouseLogin(Kind, ItemId);
+    protected override void OnInitialized() { Model = new(Client, Access); Model.Lifetime.Changed += Refresh; }
+    protected override Task OnParametersSetAsync() => Reload();
+    private Task Reload() => Kind is "inspection" or "outbound" or "transport-draft" ? Task.CompletedTask : Model.LoadAsync(Kind, ItemId);
+    private void Refresh() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() { Model.Lifetime.Changed -= Refresh; Model.Dispose(); }
+}

@@ -1,0 +1,41 @@
+@inherits ExchangePageBase
+
+<ExchangeFrame><main class="exchange-page">
+    <a class="exchange-back" href="@Href(BackHref)">← @(NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is null ? "생활 교류" : "생활 지도")</a>
+    <header><span class="exchange-eyebrow">새 글</span><h1>어떤 교류를 원하세요?</h1><p>내용과 조건을 자유롭게 적어 주세요. 정확한 주소나 연락처는 공개 글에 적지 마세요.</p></header>
+    <form @onsubmit="Publish" @onsubmit:preventDefault>
+        <fieldset disabled="@Model.IsSending">
+            <legend>글 내용</legend>
+            <label for="exchange-intent">구분</label>
+            <select id="exchange-intent" @bind="Model.Intent"><option value="@NeighborhoodExchange.Offer">제공해요</option><option value="@NeighborhoodExchange.Need">필요해요</option></select>
+            <label for="exchange-public-region">공개할 동네</label>
+            <select id="exchange-public-region" @bind="Model.PublicNeighborhoodRegionKey" disabled="@Model.RegionsLoading"><option value="">동네 선택 안 함</option>@foreach (var region in Model.WriteRegions) { <option value="@region.RegionKey">@region.DisplayName</option> }</select>
+            <small>지도에는 동네 기준 위치만 표시됩니다. 실제 물품 위치와 집 주소를 공개하지 않습니다.</small>
+            @if (Model.RegionsLoading) { <p role="status">동네 목록을 불러오는 중입니다.</p> }
+            @if (Model.RegionsError is not null) { <p class="exchange-note" role="status">@Model.RegionsError <button type="button" @onclick="LoadRegions">다시 시도</button></p> }
+            <label for="exchange-title">제목</label><input id="exchange-title" @bind="Model.Title" @bind:event="oninput" maxlength="160" required placeholder="예: 이번 주말에 동네 배송을 도와드려요" />
+            <label for="exchange-body">설명</label><textarea id="exchange-body" @bind="Model.Body" @bind:event="oninput" maxlength="4000" required rows="7" placeholder="무엇을 제공하거나 필요로 하는지, 가능한 동네와 시간, 조건을 적어 주세요."></textarea>
+            <label for="exchange-password">글 관리 비밀번호</label><input id="exchange-password" type="password" @bind="Model.Password" maxlength="100" minlength="4" required autocomplete="new-password" />
+            <small>4~100자. 나중에 글을 삭제할 때 사용합니다. 계정 비밀번호와 다른 값을 정해 주세요.</small>
+            <p class="exchange-note">글과 댓글은 공개됩니다. 교환·나눔·대금과 전달 방법은 서로 협의할 수 있습니다.</p>
+            @if (Model.Error is not null) { <p class="exchange-error" role="alert">@Model.Error</p> }
+            <button class="exchange-primary" type="submit">@(Model.IsSending ? "올리는 중…" : "글 올리기")</button>
+        </fieldset>
+    </form>
+    @if (Model.Error is not null) { <a href="@Href(ReviewHref)">목록에서 등록 여부 확인하기</a> }
+</main></ExchangeFrame>
+
+@code {
+    [Parameter] public string? InitialRegionKey { get; set; }
+    [Parameter] public string? ReturnUrl { get; set; }
+    private bool _regionInitialized;
+    private string BackHref => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) ?? NeighborhoodExchange.Home;
+    private string ReviewHref => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? NeighborhoodMapNavigation.PanelHref(home, null) : NeighborhoodExchange.Home;
+    protected override async Task OnParametersSetAsync() { if (!_regionInitialized) { _regionInitialized = true; await LoadRegions(); } }
+    private Task LoadRegions() => Model.InitializeWriteRegionAsync(Model.PublicNeighborhoodRegionKey ?? InitialRegionKey);
+    private async Task Publish()
+    {
+        var id = await Model.PublishAsync();
+        if (id.HasValue) Navigation.NavigateTo(Href(NeighborhoodMapNavigation.ReturnToPanel(ReturnUrl, "post", id.Value.ToString()) ?? NeighborhoodExchange.Detail(id.Value)));
+    }
+}

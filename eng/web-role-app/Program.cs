@@ -24,13 +24,23 @@ var apiBaseAddress = SsalddelServerEndpoint.ResolveConfiguredBaseAddress(
     builder.Configuration[SsalddelServerEndpoint.LegacyConfigurationKey],
     originBaseAddress);
 
-builder.Services.AddSingleton(RoleWebAppDescriptor.FromAssembly(typeof(App).Assembly.GetName().Name));
+var role = RoleWebAppDescriptor.FromAssembly(typeof(App).Assembly.GetName().Name);
+builder.Services.AddSingleton(role);
 builder.Services.AddSsalddelOperationalApiHttpClient(apiBaseAddress);
 builder.Services.Configure<ClientDataModeOptions>(builder.Configuration.GetSection(ClientDataModeOptions.SectionName));
 builder.Services.AddScoped<ITransportRequestLedgerObserver, TransportRequestLedgerObserver>();
 builder.Services.AddSingleton<IPlatformCommunityNodeNavigationResolver, WebPlatformCommunityNodeNavigationResolver>();
 builder.Services.AddSingleton<IPlatformHomeWorkspaceNavigationResolver, WebPlatformHomeWorkspaceNavigationResolver>();
 builder.Services.AddSsalddelUiCommonAppServices<WebAuthSessionService>();
+if (role.Code == "01")
+{
+    // 커뮤니티 지도는 통합 Web과 같은 어댑터를 사용하며 API는 역할 base path의 상위 origin을 사용합니다.
+    builder.Services.AddScoped<GoogleMapsBrowserRuntimeClient>();
+    builder.Services.AddScoped<INeighborhoodMapHost, NeighborhoodGoogleMapHost>();
+    builder.Services.AddScoped<INeighborhoodMapPreferenceStore, NeighborhoodMapPreferenceStore>();
+    builder.Services.AddScoped<커뮤니티세계지도Client>();
+    builder.Services.AddScoped<지역문화이미지Client>();
+}
 builder.Services.AddTransient<화주Controller기능모음ViewModel>();
 builder.Services.AddSsalddelDocumentOutputServices();
 builder.Services.AddSingleton<IClientSessionGuard, ClientSessionGuard>();

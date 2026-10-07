@@ -1,0 +1,9 @@
+@page "/community/exchange/deliveries"
+@inject NavigationManager Navigation
+<PageTitle>내 배송 의뢰 · 살뜰</PageTitle>
+<Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodDeliveryList LoginHref="@LoginHref" ReturnUrl="@ReturnUrl" />
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+    private string ListHref => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? NeighborhoodMapNavigation.WithReturn(NeighborhoodDeliveryRoutes.Home, home) : NeighborhoodDeliveryRoutes.Home;
+    private string LoginHref => Navigation.ToAbsoluteUri($"login?returnUrl={Uri.EscapeDataString(Navigation.ToAbsoluteUri(ListHref.TrimStart('/')).PathAndQuery)}").ToString();
+}

@@ -208,7 +208,10 @@ public sealed class 음식주문페이지ViewModelTests
         };
         var orderService = new FakeFoodOrderService
         {
-            DetailResponse = new 주문자음식주문상세응답()
+            DetailResponse = new 주문자음식주문상세응답
+            {
+                주문 = new() { 주문번호 = "FOOD-EXACT-9" }
+            }
         };
         var page = CreatePage(accessService, authenticationService, orderService);
 

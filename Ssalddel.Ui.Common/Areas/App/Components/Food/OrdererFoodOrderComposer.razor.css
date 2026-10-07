@@ -29,6 +29,17 @@
     gap: 0.45rem;
 }
 
+.food-order-composer__price-change {
+    margin-top: 0.5rem;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+}
+
+.food-order-composer__menu-check button {
+    margin-top: 0.75rem;
+    min-height: 48px;
+}
+
 .food-order-composer__items > div {
     padding: 0.65rem 0.75rem;
     border-radius: 0.75rem;

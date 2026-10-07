@@ -1,0 +1,17 @@
+@implements IDisposable
+@inject Ssalddel.WebApp.Services.WebAuthSessionService Auth
+@ChildContent
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public EventCallback AuthenticationChanged { get; set; }
+    private bool _disposed;
+    protected override void OnInitialized() => Auth.Changed += Changed;
+    private void Changed() { if (!_disposed) _ = NotifyAsync(); }
+    private async Task NotifyAsync()
+    {
+        try { await InvokeAsync(async () => { if (!_disposed) await AuthenticationChanged.InvokeAsync(); }); }
+        catch (InvalidOperationException) when (_disposed) { }
+        catch (Exception) { /* 인증 변경은 다음 렌더에서도 계정 경계를 재확인합니다. */ }
+    }
+    public void Dispose() { _disposed = true; Auth.Changed -= Changed; }
+}

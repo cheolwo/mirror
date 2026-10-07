@@ -1,0 +1,79 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Commerce
+@using Ssalddel.Ui.Common.Areas.App.ViewModels.Commerce
+@inject 보호지원ViewModel Model
+@inject NavigationManager Navigation
+@implements IDisposable
+@{ Model.SynchronizeOwner(); }
+<CommercePageFrame Title="@(Privacy ? "내 정보 관리" : "거래 문제 신고")" Description="@(Privacy ? "개인정보에 관한 요청을 접수하고 처리 경과를 확인하세요." : "거래에 문제가 생겼다면 해당 거래를 연결해 알려주세요.")">
+    @if (!Model.IsAuthenticated) { <section><h2>로그인이 필요해요</h2><p>본인의 요청과 참여한 거래의 문제만 확인합니다.</p><a href="@LoginHref">로그인하기</a></section> }
+    else
+    {
+        @if (Model.IsLoading) { <p role="status">처리 요청을 불러오고 있습니다.</p> }
+        @if (Model.Error is not null) { <div class="commerce-error" role="alert">@Model.Error<button disabled="@Model.IsSending" @onclick="Reload">다시 불러오기</button></div> }
+        @if (Model.Notice is not null) { <p role="status">@Model.Notice</p> }
+        @if (Model.HasPending) { <section><h2>접수 결과 확인</h2><p>같은 요청으로 결과를 다시 확인합니다. 입력과 요청 번호를 유지했습니다.</p><button class="commerce-primary" disabled="@Model.IsSending" @onclick="Model.RetryAsync">같은 요청 다시 확인</button></section> }
+        @if (Model.Detail is { } detail)
+        {
+            <section><h2>@Status(detail.StatusCode)</h2><p>@detail.Summary</p><p class="commerce-note">접수 @Time(detail.CreatedAtUtc) · 최근 처리 @Time(detail.UpdatedAtUtc)</p>
+                @if (Privacy) { <p>요청 종류: @RequestLabel(detail.RequestKind)</p> }
+                @if (detail.RetentionPending) { <p role="status">보존 상태를 확인하고 있습니다. 확인이 끝나면 필요한 처리를 이어갈 수 있습니다.</p> }
+                @if (detail.ProgressDueAtUtc is { } progress) { <p>진행 경과 안내 기한: @Time(progress)</p> }
+                @if (detail.ResultDueAtUtc is { } result) { <p>@(Privacy ? "처리 결과 안내 목표" : "조사 결과·처리방안 안내 기한"): @Time(result)</p> }
+                @if (!Privacy && (detail.ProgressDueAtUtc is not null || detail.ResultDueAtUtc is not null) && !detail.BusinessCalendarVerified) { <p class="commerce-warning">주말 기준 잠정 기한입니다. 공휴일 달력 확인이 필요합니다.</p> }
+                @if (detail.ProgressOverdue || detail.ResultOverdue) { <p class="commerce-warning" role="status">안내 기한이 지났습니다. 담당자가 처리 경과를 확인해야 합니다.</p> }
+                @if (!string.IsNullOrWhiteSpace(detail.LegalBasis)) { <p>처리·보존 근거: @detail.LegalBasis</p> }
+                @if (!string.IsNullOrWhiteSpace(detail.LegalReasonCode)) { <p>처리 제한 사유: @LegalReason(detail.LegalReasonCode)</p> }
+                @if (detail.RetainUntilUtc is { } retained) { <p>보존 기한: @Time(retained)</p> }
+                @if (detail.History.Count > 0) { <details><summary>처리 이력</summary>@foreach (var entry in detail.History) { <p>@Time(entry.RecordedAtUtc) · @Action(entry.Action)</p> }</details> }
+                @if (!detail.RetentionPending && detail.AllowedActions.Any(a => a is "add-evidence" or "appeal"))
+                { <label for="case-additional">추가로 알릴 내용</label><textarea id="case-additional" @bind="Model.AdditionalSummary" @bind:event="oninput" maxlength="2000" rows="3" disabled="@(Model.IsSending || Model.HasPending)"></textarea>@foreach (var action in detail.AllowedActions.Where(a => a is "add-evidence" or "appeal")) { <button disabled="@(Model.IsSending || Model.HasPending || string.IsNullOrWhiteSpace(Model.AdditionalSummary))" @onclick="() => Model.CommandAsync(action)">@(action == "appeal" ? "이의제기 접수" : "내용 추가")</button> } }
+            </section>
+            <nav><a href="@Href">내 요청 목록으로</a></nav>
+        }
+        else if (!string.IsNullOrWhiteSpace(CaseId))
+        {
+            <section><h2>선택한 요청 확인</h2><p>@(Model.IsLoading ? "요청의 처리 상태를 확인하고 있습니다." : "선택한 요청을 확인하지 못했습니다. 다시 불러오거나 내 요청 목록에서 선택해 주세요.")</p></section>
+            <nav><a href="@Href">내 요청 목록으로</a></nav>
+        }
+        else
+        {
+            <section><h2>새 요청 접수</h2>
+                @if (!Privacy && (string.IsNullOrWhiteSpace(SourceKind) || string.IsNullOrWhiteSpace(SourceId))) { <p>신고할 거래의 상세 화면에서 ‘거래 문제 신고’를 선택해 주세요.</p> }
+                else
+                {
+                    <form @onsubmit="Model.SubmitAsync" @onsubmit:preventDefault><fieldset disabled="@(Model.IsSending || Model.HasPending)">
+                        @if (Privacy) { <label for="rights-kind">요청 종류</label><select id="rights-kind" @bind="Model.RequestKind"><option value="access">열람</option><option value="correction">정정</option><option value="deletion">삭제·탈퇴 검토</option><option value="suspend">처리정지</option><option value="withdrawal">동의 철회</option></select> }
+                        else { <p>연결된 거래: @SourceLabel(SourceKind)</p> }
+                        <label for="case-summary">@(Privacy ? "요청할 내용" : "문제 내용")</label><textarea id="case-summary" @bind="Model.Summary" @bind:event="oninput" maxlength="2000" required rows="4"></textarea>
+                        <p class="commerce-note">비밀번호·주민등록번호·계좌번호와 타인의 상세주소·연락처를 입력하지 마세요.</p>
+                        @if (Privacy) { <p class="commerce-note">법정 보존 대상은 즉시 삭제되지 않을 수 있습니다. 담당자가 근거와 처리 결과를 안내합니다.</p> }
+                        <button class="commerce-primary" type="submit" disabled="@string.IsNullOrWhiteSpace(Model.Summary)">@(Model.IsSending ? "접수 중…" : "요청 접수")</button>
+                    </fieldset></form>
+                }
+            </section>
+            <section><h2>내 처리 요청</h2>@if (Model.Loaded && Model.Items.Count == 0) { <p>접수한 요청이 없습니다.</p> }@foreach (var item in Model.Items) { <a class="commerce-row" href="@CaseHref(item.CaseId)"><strong>@(Privacy ? RequestLabel(item.RequestKind) + " · " : "")@Status(item.StatusCode)</strong><span>@item.Summary</span><span class="commerce-note">@Time(item.CreatedAtUtc)</span></a> }@if (Model.Page > 1) { <button disabled="@Model.IsLoading" @onclick="() => Model.LoadAsync(page: Model.Page - 1)">이전 목록</button> }@if (Model.HasMore) { <button disabled="@Model.IsLoading" @onclick="() => Model.LoadAsync(page: Model.Page + 1)">다음 목록</button> }</section>
+        }
+        <nav><a href="@Navigation.ToAbsoluteUri("commerce/notices")">처리 기준·개인정보 안내</a></nav>
+    }
+</CommercePageFrame>
+@code {
+    [Parameter] public bool Privacy { get; set; }
+    [Parameter] public string? CaseId { get; set; }
+    [Parameter] public string? SourceKind { get; set; }
+    [Parameter] public string? SourceId { get; set; }
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    private string Href => Navigation.ToAbsoluteUri(Privacy ? "commerce/privacy" : "commerce/disputes").ToString();
+    private string CaseHref(string id) => Href + "/" + Uri.EscapeDataString(id);
+    private static string Time(DateTime value) => value.ToLocalTime().ToString("yyyy.MM.dd HH:mm");
+    private static string SourceLabel(string? kind) => kind switch { "food-order" => "음식 주문", "neighborhood-delivery" => "생활 배송", "neighborhood-collaboration" => "생활 협업", "cargo-request" => "화물 의뢰", _ => "거래" };
+    private static string LegalReason(string? code) => code switch { "statutory-retention" => "법정 보존 의무", "ongoing-dispute" => "진행 중인 분쟁", "rights-exemption" => "권리 행사 제한 사유 검토", _ => "담당자의 처리 근거 확인 필요" };
+    private static string RequestLabel(string? code) => code switch { "access" => "열람", "correction" => "정정", "deletion" => "삭제", "suspend" => "처리정지", "withdrawal" => "동의 철회", _ => "개인정보 처리 요청" };
+    private static string Action(string action) => action switch { "submit" => "접수", "assign-self" => "담당자 배정", "start-review" => "검토 시작", "add-evidence" => "내용 추가", "appeal" => "이의제기", "prepare-progress" => "진행 안내 준비", "prepare-result" => "처리방안 준비", "record-progress-notified" => "진행 안내 기록", "record-result-notified" => "처리방안 안내 기록", "complete-rights" => "요청 실행 기록", "close" => "처리 종결", "deny" => "처리 제한 검토", _ => "처리 기록" };
+    private static string Status(string code) => code switch { "received" => "접수됨", "assigned" => "담당자 배정", "reviewing" => "확인 중", "progress-prepared" => "진행 안내 준비", "progress-notified" => "진행 안내 완료", "result-prepared" => "처리방안 준비", "result-notified" => "처리방안 안내 완료", "closed" => "처리 종결", "execution-completed" => "요청 실행 완료", "denied" or "denial-prepared" => "처리 제한 안내", "reopened" => "이의제기 접수", _ => "처리 경과 확인" };
+    protected override void OnInitialized() => Model.PropertyChanged += Changed;
+    protected override async Task OnParametersSetAsync() { Model.Initialize(Privacy, SourceKind, SourceId, CaseId); await Reload(); }
+    protected override async Task OnAfterRenderAsync(bool firstRender) { Model.SynchronizeOwner(); if (Model.IsAuthenticated && !Model.Loaded && !Model.IsLoading && !Model.IsSending && Model.Error is null) await Reload(); }
+    private Task Reload() => Model.LoadAsync(CaseId);
+    private void Changed(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() { Model.PropertyChanged -= Changed; Model.Dispose(); }
+}

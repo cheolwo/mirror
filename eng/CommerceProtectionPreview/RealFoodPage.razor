@@ -1,0 +1,32 @@
+@page "/workspace/{RoleKey}"
+@page "/workspace/{RoleKey}/action"
+@page "/workspace/{RoleKey}/history"
+@page "/workspace/{RoleKey}/history/{RecordId}"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food
+@inject RealApiSession Real
+@inject NavigationManager Navigation
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside class="preview-context">기존 공유 UI · 실제 격리 HTTP/DB · 합성 계정/0.250km 거리 · GPS·외부 운영·단말 증거 아님</aside>
+@if (_failure is not null) { <p role="alert">격리 업무 연결 실패: @_failure</p> }
+else if (!_ready) { <p role="status">격리 업무 연결 중</p> }
+else if (Navigation.Uri.Contains("/history")) { <DriverHistoryWorkspace RoleKey="@RoleKey" RecordId="@RecordId" Date="@Date" ReturnUrl="@ReturnUrl" /> }
+else if (!string.IsNullOrWhiteSpace(ActionKey)) { <FoodRoleActionForm RoleKey="@RoleKey" ActionKey="@ActionKey" ItemId="@(ItemId ?? SelectedId ?? "")" /> }
+else { <RoleMapWorkspace RoleKey="@RoleKey" SelectedId="@SelectedId" HomeHref="/commerce/notices" /> }
+@code {
+    [Parameter] public string RoleKey { get; set; } = "";
+    [SupplyParameterFromQuery(Name="actionKey")] public string? ActionKey { get; set; }
+    [SupplyParameterFromQuery(Name="itemId")] public string? ItemId { get; set; }
+    [Parameter] public string? RecordId { get; set; }
+    [SupplyParameterFromQuery(Name="selected")] public string? SelectedId { get; set; }
+    [SupplyParameterFromQuery(Name="date")] public string? Date { get; set; }
+    [SupplyParameterFromQuery(Name="returnUrl")] public string? ReturnUrl { get; set; }
+    private bool _ready;
+    private string? _failure;
+    protected override async Task OnParametersSetAsync()
+    {
+        _ready=false;_failure=null;
+        try { await Real.EnsureInitializedAsync(RoleKey); _ready=true; }
+        catch(Exception ex) { _failure=ex.GetType().Name; }
+    }
+}

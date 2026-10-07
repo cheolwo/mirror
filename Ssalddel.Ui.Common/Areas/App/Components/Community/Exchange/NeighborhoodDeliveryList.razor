@@ -1,0 +1,52 @@
+@inject NeighborhoodDeliveryQueryViewModel Model
+@inject NavigationManager Navigation
+@implements IDisposable
+@{ Model.SynchronizeOwner(); }
+<NeighborhoodDeliveryFrame><main class="exchange-page">
+    @if (!Embedded) { <a class="exchange-back" href="@Href(NeighborhoodMapNavigation.SafeReturn(ReturnUrl) ?? NeighborhoodExchange.Home)">← @(NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is null ? "생활 교류" : "생활 지도")</a> }
+    <header><span class="exchange-eyebrow">생활 교류 · 배송</span><h1>내 배송 의뢰</h1><p>내가 접수한 물건의 기사 제안과 배송 진행을 확인해요.</p></header>
+    @if (!Model.IsAuthenticated)
+    { <section class="exchange-empty"><h2>로그인이 필요해요</h2><p>본인의 배송 의뢰만 확인할 수 있습니다.</p><a class="exchange-primary" href="@LoginHref">로그인하기</a></section> }
+    else
+    {
+        <a class="exchange-primary" href="@Href(InputHref(NeighborhoodDeliveryRoutes.Create))">물건 배송 요청</a>
+        @if (Model.IsLoading) { <p role="status">배송 의뢰를 불러오고 있습니다.</p> }
+        else if (Model.Error is not null) { <div class="exchange-error" role="alert">@Model.Error<button @onclick="Reload">다시 불러오기</button></div> }
+        else if (Model.Loaded && Model.Items.Count == 0) { <section class="exchange-empty"><h2>@(Model.Page == 1 ? "접수한 배송 의뢰가 없어요" : "이 페이지에 배송 의뢰가 없어요")</h2><p>@(Model.Page == 1 ? "배송이 필요한 물건과 픽업·전달 조건을 등록해 보세요." : "이전 페이지에서 배송 의뢰를 확인해 주세요.")</p></section> }
+        else if (Model.Items.Count > 0)
+        {
+            <section class="exchange-list" aria-label="내 배송 의뢰 목록">
+                @foreach (var item in Model.Items)
+                { <a class="exchange-row" href="@Href(NeighborhoodMapNavigation.ReturnToPanel(ReturnUrl, "delivery", item.RequestId) ?? NeighborhoodDeliveryRoutes.Detail(item.RequestId))"><span class="exchange-kind">@NeighborhoodDeliveryPresentation.Stage(item)</span><h2>@item.CargoName</h2><p>@NeighborhoodDeliveryPresentation.Money(item.FareKrw) · @NeighborhoodDeliveryPresentation.Distance(item.DistanceKm)</p><small>@item.CreatedAtUtc.ToLocalTime().ToString("yyyy.MM.dd HH:mm")</small></a> }
+            </section>
+            <button @onclick="Reload">새로고침</button>
+        }
+        @if (!Model.IsLoading && Model.Error is null && (Model.Page > 1 || Model.HasNext))
+        {
+            <nav class="exchange-pagination" aria-label="배송 의뢰 페이지">
+                @if (Model.Page > 1) { <button @onclick="() => LoadList(Model.Page - 1)">이전</button> }
+                <span>@Model.Page 페이지</span>
+                @if (Model.HasNext) { <button @onclick="() => LoadList(Model.Page + 1)">다음</button> }
+            </nav>
+        }
+    }
+</main></NeighborhoodDeliveryFrame>
+@code {
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    [Parameter] public bool Embedded { get; set; }
+    [Parameter] public string? ReturnUrl { get; set; }
+    private string Href(string route) => Navigation.ToAbsoluteUri(route.TrimStart('/')).ToString();
+    private string InputHref(string route) => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? NeighborhoodMapNavigation.WithReturn(route, home) : route;
+    [Parameter] public int InitialPage { get; set; } = 1;
+    [Parameter] public EventCallback<NeighborhoodMapListContext> ListContextChanged { get; set; }
+    protected override async Task OnInitializedAsync() { Model.PropertyChanged += Changed; await LoadList(InitialPage); }
+    private async Task LoadList(int page) { await Model.LoadMinePageAsync(page); await ListContextChanged.InvokeAsync(new("delivery", Model.Page)); }
+    private Task Reload() => LoadList(Model.Page);
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Model.SynchronizeOwner();
+        if (Model.IsAuthenticated && !Model.Loaded && !Model.IsLoading && Model.Error is null) await LoadList(InitialPage);
+    }
+    private void Changed(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() { Model.PropertyChanged -= Changed; Model.Dispose(); }
+}

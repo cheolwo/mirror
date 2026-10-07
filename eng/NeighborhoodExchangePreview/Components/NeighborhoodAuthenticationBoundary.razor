@@ -1,0 +1,7 @@
+@namespace Ssalddel.WebApp.Components.Community
+@ChildContent
+@code {
+    // 루프백 가상 계정은 전체 페이지를 다시 열어 교체합니다. 운영 인증 이벤트의 대역입니다.
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public EventCallback AuthenticationChanged { get; set; }
+}

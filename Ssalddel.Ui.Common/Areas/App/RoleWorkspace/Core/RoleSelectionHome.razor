@@ -1,0 +1,30 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@inject NavigationManager Navigation
+
+<main class="role-selection-home">
+    <header class="role-selection-home__header">
+        <span>Mirror · 거울</span>
+        <h1>오늘 무엇을 할까요?</h1>
+        <p>지금 하려는 일을 골라보세요. 역할은 언제든 바꿀 수 있어요.</p>
+        <p class="role-selection-home__commerce">Mirror는 통신판매중개자이며 상품·서비스 거래의 당사자가 아닙니다. 거래 전 계약 당사자와 조건을 확인하세요. <a href="@Href("/commerce/notices")">거래·개인정보 안내</a></p>
+    </header>
+    <nav class="role-selection-home__roles" aria-label="활동 역할 선택">
+        @foreach (var role in RoleWorkspaceCatalog.Roles)
+        {
+            <a class="role-selection-home__role @(role.Key == SelectedRoleKey ? "is-selected" : "")"
+               href="@Href(role.Href)" data-role="@role.Key">
+                <span class="role-selection-home__icon"><MudIcon Icon="@role.Icon" /></span>
+                <span class="role-selection-home__copy"><strong>@role.Label</strong><small>@role.Description</small></span>
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+            </a>
+        }
+    </nav>
+</main>
+
+@code {
+    [Parameter] public string? SelectedRoleKey { get; set; }
+    [Parameter] public bool IntegratedRoot { get; set; }
+    private string Href(string route) => IntegratedRoot
+        ? new Uri(new Uri(new Uri(Navigation.BaseUri).GetLeftPart(UriPartial.Authority) + "/"), route.TrimStart('/')).ToString()
+        : Navigation.ToAbsoluteUri(route.TrimStart('/')).ToString();
+}

@@ -104,7 +104,12 @@ public sealed partial class 주문자음식주문상세ViewModel(
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(수령확인가능))]
+    [NotifyPropertyChangedFor(nameof(수령확인표시))]
     public partial 주문자음식주문상세응답? 상세 { get; private set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(수령확인가능))]
+    public partial bool 최신상태확인됨 { get; private set; }
 
     [ObservableProperty]
     public partial bool 찾을수없음 { get; private set; }
@@ -112,9 +117,17 @@ public sealed partial class 주문자음식주문상세ViewModel(
     [ObservableProperty]
     public partial string 수령확인메모 { get; set; } = string.Empty;
 
-    public bool 수령확인가능 => 업무가능행동목록.포함(
+    public bool 수령확인표시 => 업무가능행동목록.포함(
         상세?.AvailableActions,
         음식배달가능행동Ids.주문수령확인);
+
+    public bool 수령확인가능 => 최신상태확인됨 && !처리중 && 수령확인표시;
+
+    public void 조회상태무효화()
+    {
+        작업취소();
+        최신상태확인됨 = false;
+    }
 
     public Task<bool> 조회Async(string orderNo, CancellationToken cancellationToken = default)
     {
@@ -131,11 +144,13 @@ public sealed partial class 주문자음식주문상세ViewModel(
             // 같은 주문의 실패 재시도는 보존하고, 다른 주문에는 입력과 멱등 키를 넘기지 않습니다.
             _수령확인요청Id = null;
             수령확인메모 = string.Empty;
+            상세 = null;
         }
 
         요청OrderNo = normalizedOrderNo;
         var generation = _selectionGeneration;
-        상세 = null;
+        // 같은 주문의 이전 성공 정보는 읽을 수 있지만 정본 확인 전 변경 행동은 잠급니다.
+        최신상태확인됨 = false;
         찾을수없음 = false;
         return 작업실행Async(
             async token =>
@@ -143,12 +158,19 @@ public sealed partial class 주문자음식주문상세ViewModel(
                 var response = await service.상세Async(normalizedOrderNo, token);
                 token.ThrowIfCancellationRequested();
                 if (generation != _selectionGeneration) throw new OperationCanceledException(token);
+                if (response is not null && response.주문.주문번호 != normalizedOrderNo)
+                    throw new InvalidOperationException("선택한 음식 주문과 상세 응답이 일치하지 않습니다.");
                 상세 = response;
                 찾을수없음 = 상세 is null;
+                최신상태확인됨 = 상세 is not null;
             },
             "음식 주문 상세를 불러왔습니다.",
             cancellationToken,
-            ex => $"음식 주문 상세를 불러오지 못했습니다. {ex.Message}");
+            ex =>
+            {
+                접근오류상세제거(ex);
+                return $"음식 주문 상세를 불러오지 못했습니다. {ex.Message}";
+            });
     }
 
     public Task<bool> 수령확인Async(CancellationToken cancellationToken = default)
@@ -172,6 +194,7 @@ public sealed partial class 주문자음식주문상세ViewModel(
         var requestId = _수령확인요청Id.Value;
         var memo = 수령확인메모?.Trim() ?? string.Empty;
         var generation = _selectionGeneration;
+        최신상태확인됨 = false;
 
         return 작업실행Async(
             async token =>
@@ -190,14 +213,27 @@ public sealed partial class 주문자음식주문상세ViewModel(
                     ?? throw new InvalidOperationException("수령 확인한 음식 주문을 다시 조회할 수 없습니다.");
                 token.ThrowIfCancellationRequested();
                 if (generation != _selectionGeneration) throw new OperationCanceledException(token);
+                if (response.주문.주문번호 != orderNo)
+                    throw new InvalidOperationException("수령 확인한 음식 주문과 상세 응답이 일치하지 않습니다.");
                 상세 = response;
                 찾을수없음 = false;
+                최신상태확인됨 = true;
                 _수령확인요청Id = null;
                 수령확인메모 = string.Empty;
             },
             "음식 수령을 확인했습니다.",
             cancellationToken,
-            ex => $"음식 수령을 확인하지 못했습니다. {ex.Message}");
+            ex =>
+            {
+                접근오류상세제거(ex);
+                return $"음식 수령을 확인하지 못했습니다. {ex.Message}";
+            });
+    }
+
+    private void 접근오류상세제거(Exception exception)
+    {
+        // 만료·소유권 거절은 일시적 연결 실패와 달리 이전 개인정보도 남기지 않습니다.
+        if (Api작업오류.변환(exception).Http상태코드 is 401 or 403) 상세 = null;
     }
 
     public void 선택해제()
@@ -206,6 +242,7 @@ public sealed partial class 주문자음식주문상세ViewModel(
         작업취소();
         요청OrderNo = null;
         상세 = null;
+        최신상태확인됨 = false;
         찾을수없음 = false;
         _수령확인요청Id = null;
         수령확인메모 = string.Empty;
@@ -235,6 +272,7 @@ public sealed class 주문자음식주문PageViewModel : 조립ViewModelBase
         상세 = 하위ViewModel등록(detail);
         취소 = cancellation is null ? null : 하위ViewModel등록(cancellation, 수명소유: true);
         인증.PropertyChanged += 인증변경;
+        상세.PropertyChanged += 상세변경;
     }
 
     public 음식배달페이지접근ViewModel 접근 { get; }
@@ -361,7 +399,7 @@ public sealed class 주문자음식주문PageViewModel : 조립ViewModelBase
         목록.세션초기화();
         상세.선택해제();
         _인증복구중 = true;
-        try { await 인증.로그아웃Async(cancellationToken); }
+        try { await 인증.세션만료Async(cancellationToken); }
         finally { _인증복구중 = false; }
     }
 
@@ -390,7 +428,7 @@ public sealed class 주문자음식주문PageViewModel : 조립ViewModelBase
 
     public async Task<bool> 주문취소Async(CancellationToken cancellationToken = default)
     {
-        if (!개인주문조회가능 || 취소 is null) return false;
+        if (!개인주문조회가능 || 취소 is null || !상세.최신상태확인됨 || 상세.처리중) return false;
         var owner = 인증.세션.UserId;
         var orderNo = 상세.요청OrderNo;
         var cancelled = await 취소.취소Async(cancellationToken);
@@ -446,7 +484,21 @@ public sealed class 주문자음식주문PageViewModel : 조립ViewModelBase
     }
 
     private void 취소문맥반영()
-        => 취소?.문맥반영(상세.요청OrderNo, 인증.세션.UserId, 상세.상세);
+    {
+        // 만료·로그인 중의 익명/선택 비움은 실제 주문 전환이 아닙니다.
+        // 동일 계정의 미확정 시도는 로그인 후 정확한 정본에서 다시 결속합니다.
+        if (재로그인필요 || _인증복구중) return;
+        취소?.문맥반영(상세.요청OrderNo, 인증.세션.UserId,
+            상세.최신상태확인됨 && !상세.처리중 ? 상세.상세 : null);
+    }
+
+    private void 상세변경(object? sender, PropertyChangedEventArgs args)
+    {
+        if (!_disposed && args.PropertyName is nameof(주문자음식주문상세ViewModel.최신상태확인됨)
+            or nameof(주문자음식주문상세ViewModel.처리중)
+            or nameof(주문자음식주문상세ViewModel.상세))
+            취소문맥반영();
+    }
 
     private void 인증변경(object? sender, PropertyChangedEventArgs args)
     {
@@ -468,6 +520,7 @@ public sealed class 주문자음식주문PageViewModel : 조립ViewModelBase
         {
             _disposed = true;
             인증.PropertyChanged -= 인증변경;
+            상세.PropertyChanged -= 상세변경;
             목록.세션초기화();
             상세.선택해제();
         }

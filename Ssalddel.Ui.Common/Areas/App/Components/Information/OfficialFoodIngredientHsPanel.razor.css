@@ -24,6 +24,10 @@
     align-items: start;
 }
 
+.ingredient-hs ::deep .mud-button-root {
+    min-height: 44px;
+}
+
 .ingredient-hs__header span,
 .ingredient-hs__candidates header span {
     color: var(--mud-palette-info);

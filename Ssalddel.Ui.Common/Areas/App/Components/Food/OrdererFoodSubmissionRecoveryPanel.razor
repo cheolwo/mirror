@@ -1,0 +1,43 @@
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+<MudPaper Elevation="0" Outlined="true" Class="pa-4">
+    <MudStack Spacing="2">
+        <MudText Typo="Typo.h6">주문 접수 확인</MudText>
+        @if (Recovery.처리중 || Recovery.제출중)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+            <MudText Typo="Typo.body2">이전에 제출한 주문을 확인하고 있습니다.</MudText>
+        }
+        else if (Recovery.접수주문번호 is { } orderNo)
+        {
+            <MudText Typo="Typo.body1">주문이 접수됐습니다.</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => OpenOrderRequested.InvokeAsync(orderNo))">주문 상세 보기</MudButton>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2">이전 제출 결과를 확인한 뒤 주문을 계속할 수 있습니다.</MudText>
+            @if (Recovery.Pending is { } pending)
+            {
+                @foreach (var item in pending.Request.상품목록)
+                {
+                    <MudText Typo="Typo.body2">@item.상품명 · @(item.수량)개</MudText>
+                }
+            }
+            @if (Recovery.오류발생)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true">@Recovery.오류메시지</MudAlert>
+            }
+            @if (Recovery.미접수확인됨)
+            {
+                <MudText Typo="Typo.body2">현재 접수된 주문을 찾지 못했습니다. 같은 내용으로 제출 결과를 다시 확인할 수 있습니다.</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ResubmitRequested">같은 주문 다시 제출</MudButton>
+            }
+            <MudButton Variant="Variant.Outlined" OnClick="CheckRequested">접수 결과 확인</MudButton>
+        }
+    </MudStack>
+</MudPaper>
+@code {
+    [Parameter, EditorRequired] public FoodOrderSubmissionRecoveryViewModel Recovery { get; set; } = null!;
+    [Parameter] public EventCallback CheckRequested { get; set; }
+    [Parameter] public EventCallback ResubmitRequested { get; set; }
+    [Parameter] public EventCallback<string> OpenOrderRequested { get; set; }
+}

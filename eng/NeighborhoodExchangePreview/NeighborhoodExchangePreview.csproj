@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Ssalddel.WebApp/Services/GoogleMapsBrowserRuntimeClient.cs" Link="Services/GoogleMapsBrowserRuntimeClient.cs" />
+    <Compile Include="../../Ssalddel.WebApp/Services/NeighborhoodGoogleMapHost.cs" Link="Services/NeighborhoodGoogleMapHost.cs" />
+    <Compile Include="../../Ssalddel.WebApp/Services/NeighborhoodMapPreferenceStore.cs" Link="Services/NeighborhoodMapPreferenceStore.cs" />
+    <ProjectReference Include="../../Ssalddel/Ssalddel.csproj" />
+    <ProjectReference Include="../../Ssalddel.Ui.Common/Ssalddel.Ui.Common.csproj" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
+    <Content Include="../../Ssalddel.WebApp/Pages/CommunityExchange*.razor" Link="Pages/%(Filename)%(Extension)" />
+    <Content Include="../../Ssalddel.WebApp/Pages/CommunityNeighborhoodDelivery*.razor" Link="Pages/%(Filename)%(Extension)" />
+    <Content Include="../../Ssalddel.WebApp/Pages/CommunityNeighborhoodCollaboration*.razor" Link="Pages/%(Filename)%(Extension)" />
+    <Content Include="../../Ssalddel.WebApp/Pages/CommunityNeighborhoodStorage*.razor" Link="Pages/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

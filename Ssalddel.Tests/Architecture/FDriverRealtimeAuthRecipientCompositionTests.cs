@@ -1,3 +1,5 @@
+using System.Xml.Linq;
+
 namespace Ssalddel.Tests.Architecture;
 
 public sealed class FDriverNotificationAuthRecipientCompositionTests
@@ -22,14 +24,22 @@ public sealed class FDriverNotificationAuthRecipientCompositionTests
         Assert.Contains("WorkspaceRefreshInterval = TimeSpan.FromSeconds(10)", model);
         Assert.Contains("await ReloadAsync(updateLocation: IsOnDuty)", model);
         Assert.Contains("다음 자동 갱신 10초 이내", model);
-        Assert.Contains("OpenNewRecommendationsCommand", page);
-        Assert.Contains("눌러서 음식점·전달지와 예상 경로를 확인하세요.", page);
+        var banner = XDocument.Parse(page).Descendants()
+            .Single(element => (string?)element.Attribute("IsVisible") == "{Binding HasNewRecommendations}");
+        Assert.Contains(banner.Descendants(), element => element.Name.LocalName == "Label"
+            && (string?)element.Attribute("Text") == "{Binding NewRecommendationNotice}");
+        Assert.Contains(banner.Descendants(), element => element.Name.LocalName == "Button"
+            && (string?)element.Attribute("Command") == "{Binding OpenNewRecommendationsCommand}"
+            && (string?)element.Attribute("Clicked") == "OnRecommendationsClicked");
+        Assert.DoesNotContain(banner.Descendants(), element =>
+            ((string?)element.Attribute("Command"))?.Contains("Accept", StringComparison.Ordinal) == true);
         Assert.Contains("x:Name=\"WorkspaceScroll\"", page);
         Assert.Contains("x:Name=\"ActiveDeliverySection\"", page);
         Assert.Contains("x:Name=\"RecommendationSection\"", page);
         Assert.Contains("ScrollToEntryFocusAsync", codeBehind);
         Assert.Contains("\"dispatch\" or \"bundle\" => RecommendationSection", codeBehind);
         Assert.Contains("\"delivery\" => ActiveDeliverySection", codeBehind);
+        Assert.Contains("model.IsDeliveryDetailsExpanded = true;", codeBehind);
     }
 
     [Fact]
@@ -124,7 +134,11 @@ public sealed class FDriverNotificationAuthRecipientCompositionTests
         Assert.Contains("order.수령요청사항", workService);
         Assert.Contains("Recipient = ToRecipient(offer.Recipient)", workspaceUseCase);
         Assert.Contains("public bool HasActiveRecipient => ActiveDelivery?.HasRecipient == true;", model);
-        Assert.Contains("IsVisible=\"{Binding HasActiveRecipient}\"", page);
+        var recipientCard = XDocument.Parse(page).Descendants().Single(element =>
+            (string?)element.Attribute(XName.Get("Name", "http://schemas.microsoft.com/winfx/2009/xaml")) == "CustomerRequestCard");
+        Assert.Equal("{Binding HasDeliveryRecipient}", (string?)recipientCard.Attribute("IsVisible"));
+        Assert.Contains("public bool HasDeliveryRecipient => HasDeliveryStage && HasActiveRecipient;",
+            Read("FDriverApp", "PageModels/MainPageModel.FoodPresentation.cs"));
         Assert.Contains("ActiveDelivery.RecipientContactText", page);
     }
 

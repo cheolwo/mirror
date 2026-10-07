@@ -20,4 +20,8 @@
     .food-order-layout {
         grid-template-columns: 1fr;
     }
+
+    .food-order-layout--detail .food-order-main {
+        display: none;
+    }
 }

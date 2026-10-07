@@ -1,0 +1,43 @@
+.exchange-frame { background:var(--ss-canvas,#f5f7fa); color:var(--ss-ink,#172b36); min-height:70vh; font:400 16px/1.5 system-ui,sans-serif; }
+.exchange-frame * { box-sizing:border-box; }
+.exchange-page { width:100%; max-width:640px; margin:0 auto; padding:24px 16px 40px; overflow-wrap:anywhere; }
+.exchange-page header { margin-bottom:24px; }
+.exchange-page h1 { font-size:24px; line-height:1.35; font-weight:600; margin:8px 0 12px; }
+.exchange-page h2 { font-size:18px; line-height:1.45; font-weight:600; margin:8px 0; }
+.exchange-page h1,.exchange-page h2 { word-break:keep-all; overflow-wrap:anywhere; }
+.exchange-page p { margin:8px 0 16px; }
+.exchange-page small,.exchange-eyebrow { color:var(--ss-muted,#586b78); font-size:14px; }
+.exchange-page a { color:var(--ss-accent,#0f766e); }
+.exchange-page .exchange-primary { display:flex; align-items:center; justify-content:center; min-height:48px; width:100%; border:0; border-radius:12px; padding:12px 16px; background:var(--ss-accent,#0f766e); color:white; text-decoration:none; font:inherit; font-weight:600; }
+.exchange-page button { min-height:48px; padding:8px 14px; border:1px solid var(--ss-control-border,#788c97); border-radius:12px; background:var(--ss-surface,white); color:var(--ss-ink,#172b36); cursor:pointer; font-size:16px; }
+.exchange-page button:disabled { opacity:.6; cursor:wait; }
+.exchange-tabs { display:flex; gap:8px; margin:24px 0 16px; border-bottom:1px solid var(--ss-border,#dce5e9); }
+.exchange-tabs a { flex:1; min-height:48px; display:flex; align-items:center; justify-content:center; color:var(--ss-muted,#586b78); text-decoration:none; }
+.exchange-tabs .selected { color:var(--ss-accent,#0f766e); border-bottom:3px solid var(--ss-accent,#0f766e); font-weight:600; }
+.exchange-list,.exchange-surface,.exchange-empty { background:var(--ss-surface,white); border:1px solid var(--ss-border,#dce5e9); border-radius:16px; }
+.exchange-surface,.exchange-empty { padding:20px; margin:16px 0; }
+.exchange-row { display:block; padding:20px; color:var(--ss-ink,#172b36)!important; text-decoration:none; }
+.exchange-row + .exchange-row { border-top:1px solid var(--ss-border,#dce5e9); }
+.exchange-row p { color:var(--ss-muted,#586b78); margin:8px 0; }
+.exchange-kind { display:inline-block; padding:3px 10px; border-radius:8px; background:var(--ss-accent-soft,#eaf5f3); color:var(--ss-accent-strong,#0b5c56); font-size:14px; }
+.exchange-page fieldset { border:0; margin:0; padding:0; min-width:0; }
+.exchange-page legend { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.exchange-page label { display:block; font-weight:600; margin:20px 0 8px; }
+.exchange-page input,.exchange-page textarea,.exchange-page select { width:100%; border:1px solid var(--ss-control-border,#788c97); border-radius:12px; padding:12px; min-height:48px; color:var(--ss-ink,#172b36); background:white; font:inherit; }
+.exchange-page textarea { resize:vertical; }
+.exchange-note { color:var(--ss-muted,#586b78); font-size:14px; margin-top:20px!important; }
+.exchange-error { color:#b42318; border-left:3px solid #b42318; padding:12px; margin:16px 0; background:#fff5f5; }
+.exchange-error button { margin-top:8px; display:block; }
+.exchange-body { white-space:pre-wrap; overflow-wrap:anywhere; }
+.exchange-facts { display:grid; grid-template-columns:112px minmax(0,1fr); gap:12px 16px; margin:16px 0; }
+.exchange-facts dt { color:var(--ss-muted,#586b78); }
+.exchange-facts dd { margin:0; min-width:0; word-break:keep-all; font-variant-numeric:tabular-nums; }
+.exchange-page [data-neighborhood-recovery] { margin:12px 8px 0 0; }
+.exchange-comment { border-bottom:1px solid var(--ss-border,#dce5e9); padding:16px 0; }
+.exchange-comment details { font-size:14px; }
+.exchange-page summary { min-height:48px; display:flex; align-items:center; cursor:pointer; color:var(--ss-accent,#0f766e); }
+.exchange-comment button { margin:12px 8px 0 0; }
+.exchange-pagination { display:flex; gap:16px; align-items:center; justify-content:center; margin:24px 0; }
+.exchange-pagination a,.exchange-back { display:inline-flex; min-height:48px; align-items:center; }
+.exchange-page :is(a,button,input,select,textarea,summary):focus-visible { outline:3px solid var(--ss-accent-strong,#0b5c56); outline-offset:3px; }
+@media(max-width:380px) { .exchange-surface,.exchange-row { padding:16px; } }

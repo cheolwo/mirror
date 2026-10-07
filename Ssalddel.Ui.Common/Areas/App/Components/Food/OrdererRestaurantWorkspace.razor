@@ -16,6 +16,14 @@
     }
     else
     {
+        @if (ViewModel.접수복구 is { } recovery && Authentication.로그인됨
+            && (!recovery.초기확인완료 || recovery.Pending is not null || recovery.접수주문번호 is not null))
+        {
+            <OrdererFoodSubmissionRecoveryPanel Recovery="recovery" CheckRequested="CheckSubmissionAsync"
+                ResubmitRequested="ResubmitAsync" OpenOrderRequested="OpenRecoveredOrderAsync" />
+        }
+        else
+        {
         <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="restaurant-boundary">
             사용자가 고른 공개 행정권역 기준점으로만 거리를 계산합니다. 현재 위치와 주소를 자동 수집하지 않으며, 공개 탐색 뒤 로그인한 주문자가 선택 메뉴와 수령 정보를 확인해야 주문이 등록됩니다.
         </MudAlert>
@@ -37,10 +45,14 @@
             <OrdererRestaurantDetailPanel Detail="@Detail"
                                           Authentication="@Authentication"
                                           Writer="@Writer"
+                                          SubmissionError="@ViewModel.접수복구?.오류메시지"
                                           RetryRequested="RetryRestaurantAsync"
                                           ClearRequested="ClearSelectionAsync"
                                           AuthenticationRequested="OpenAuthenticationAsync"
-                                          SubmitRequested="SubmitOrderAsync" />
+                                          SubmitRequested="SubmitOrderAsync"
+                                          RecheckMenusRequested="RecheckMenusAsync"
+                                          ConfirmPriceChangeRequested="ConfirmPriceAndSubmitAsync" />
         </div>
+        }
     }
 </section>

@@ -4,7 +4,8 @@ namespace Ssalddel.WebApp.Services;
 
 /// <summary>웹 인증 세션을 공용 주문자 인증 계약으로 변환하는 host adapter입니다.</summary>
 public sealed class WebOrdererAuthenticationService(
-    WebAuthSessionService session) : I주문자앱인증Service
+    WebAuthSessionService session,
+    IFoodOrderPendingSubmissionStore pendingStore) : I주문자앱인증Service
 {
     public async Task<주문자앱인증결과> 복원Async(CancellationToken cancellationToken = default)
     {
@@ -35,7 +36,14 @@ public sealed class WebOrdererAuthenticationService(
         }
     }
 
-    public Task 로그아웃Async(CancellationToken cancellationToken = default)
+    public async Task 로그아웃Async(CancellationToken cancellationToken = default)
+    {
+        await session.ClearAsync(cancellationToken);
+        var pending = await pendingStore.LoadAsync(cancellationToken);
+        if (pending is not null) await pendingStore.ClearAsync(pending.Request.클라이언트요청Id, cancellationToken);
+    }
+
+    public Task 세션만료Async(CancellationToken cancellationToken = default)
         => session.ClearAsync(cancellationToken);
 
     private 주문자앱세션상태 CurrentSession()

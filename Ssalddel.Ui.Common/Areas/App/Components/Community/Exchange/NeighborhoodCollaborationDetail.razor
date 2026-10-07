@@ -1,0 +1,105 @@
+@inherits NeighborhoodWorkflowPageBase<NeighborhoodCollaborationQueryViewModel>
+@{ Model.SynchronizeOwner(); }
+<NeighborhoodDeliveryFrame><main class="exchange-page">
+    @if (!Embedded) { <a class="exchange-back" href="@Href(NeighborhoodMapNavigation.SafeReturn(ReturnUrl) ?? NeighborhoodCollaborationRoutes.Home)">← 내 할 일</a> }<header><span class="exchange-eyebrow">생활 교류</span><h1>약속 진행</h1></header>
+    @if (!Model.IsAuthenticated) { <section class="exchange-empty"><h2>로그인이 필요해요</h2><a class="exchange-primary" href="@LoginHref">로그인하기</a></section> }
+    else
+    {
+        @if (Model.IsLoading) { <p role="status">협업을 확인하는 중입니다.</p> }
+        @if (Model.Error is not null) { <div class="exchange-error" role="alert">@Model.Error<button disabled="@Model.IsSending" @onclick="Reload">새로고침</button></div> }
+        @if (Model.Notice is not null) { <p role="status" class="exchange-note">@Model.Notice</p> }
+        @if (Model.HasPending) { <section class="exchange-surface"><h2>처리 결과 확인이 필요해요</h2><button disabled="@Model.IsSending" @onclick="Recover">처리 결과 확인</button>@if (Model.PendingTarget == WorkId) { <button disabled="@Model.IsSending" @onclick="Model.SendPendingAsync">같은 요청 직접 다시 보내기</button> }</section> }
+        @if (Model.Detail is { } detail)
+        {
+            <section class="exchange-surface" data-neighborhood-current><span class="exchange-kind">@NeighborhoodCollaborationPresentation.Stage(detail.StatusCode)</span><h2>@(detail.Terms?.Summary ?? detail.SourceTitle)</h2><p>@NeighborhoodCollaborationPresentation.Kind(detail.Kind) · @(detail.IsRequester ? "내가 신청한 일" : detail.IsSourceOwner ? "받은 요청·맡은 일" : "참여한 일")</p>
+                <p class="exchange-note">조건 동의: 글·공간 작성자 @(detail.OwnerAgreed ? "완료" : "대기") · 신청자 @(detail.RequesterAgreed ? "완료" : "대기")</p>
+                @if (Model.PrimaryAction is { } primary)
+                {
+                    @if (primary == NeighborhoodCollaborationActions.Agree)
+                    {
+                        @if (detail.Kind is NeighborhoodCollaborationKinds.Goods or NeighborhoodCollaborationKinds.Food) { <Ssalddel.Ui.Common.Areas.App.Components.Commerce.판매자공개정보Panel CollaborationId="detail.StableId" ValueChanged="SellerChanged" Disabled="@(Model.IsSending || Model.HasPending)" /> }
+                        <Ssalddel.Ui.Common.Areas.App.Components.Commerce.거래보호Notice RequireAcknowledgment="true" RequireSeller="@(detail.Kind is NeighborhoodCollaborationKinds.Goods or NeighborhoodCollaborationKinds.Food)" SellerRevision="@(detail.Kind is NeighborhoodCollaborationKinds.Goods or NeighborhoodCollaborationKinds.Food ? _sellerRevision : null)" Disabled="@(Model.IsSending || Model.HasPending)" @bind-Confirmation="Model.CommerceProtection" />
+                    }
+                    @if (primary == NeighborhoodCollaborationActions.HandoverInfoConsent)
+                    { <p class="exchange-note">@NeighborhoodGoodsHandoverNotice.Text</p><label class="delivery-check"><input type="checkbox" @bind="Model.HandoverPrivacyConfirmed" disabled="@(Model.IsSending || Model.HasPending)" /><span>상대방과 인계 정보를 확인하는 데 동의합니다.</span></label> }
+                    @if (primary == NeighborhoodCollaborationActions.Agree && detail.Terms?.StorageSpaceId is not null)
+                    { <p class="exchange-note">@NeighborhoodCollaborationAgreementNotice.Text</p><label class="delivery-check"><input type="checkbox" @bind="Model.HandoverPrivacyConfirmed" disabled="@(Model.IsSending || Model.HasPending)" /><span>현재 보관 조건과 위 정보 제공에 동의합니다.</span></label> }
+                    <button class="exchange-primary" disabled="@(Model.IsSending || Model.HasPending || (primary == NeighborhoodCollaborationActions.HandoverInfoConsent && !Model.HandoverPrivacyConfirmed) || (primary == NeighborhoodCollaborationActions.Agree && (Model.CommerceProtection?.NoticeAccepted != true || detail.Terms?.StorageSpaceId is not null && !Model.HandoverPrivacyConfirmed)))" @onclick="() => Model.ExecuteAsync(primary)">@NeighborhoodCollaborationPresentation.Action(primary)</button>
+                }
+                else { <p class="exchange-note" role="status">@NeighborhoodCollaborationPresentation.NextStep(detail)</p> }
+                @foreach (var action in new[] { NeighborhoodCollaborationActions.WithdrawHandoverConsent, NeighborhoodCollaborationActions.Cancel, NeighborhoodCollaborationActions.Reject, NeighborhoodCollaborationActions.WithdrawParticipation }.Where(action => detail.AllowedActions.Contains(action) && action != Model.PrimaryAction))
+                { <button data-neighborhood-recovery disabled="@(Model.IsSending || Model.HasPending)" @onclick="() => Model.ExecuteAsync(action)">@NeighborhoodCollaborationPresentation.Action(action)</button> }
+            </section>
+            @if (detail.Terms is { } terms)
+            {
+                <section class="exchange-surface" data-neighborhood-terms><h2>약속 내용</h2>
+                    <dl class="exchange-facts"><dt>수량</dt><dd>@terms.Quantity @terms.Unit</dd><dt>기간</dt><dd>@terms.FromUtc.ToLocalTime().ToString("MM.dd HH:mm") ~ @terms.UntilUtc.ToLocalTime().ToString("MM.dd HH:mm")</dd></dl>
+                    @if (!string.IsNullOrWhiteSpace(terms.Notes)) { <p class="exchange-body">@terms.Notes</p> }
+                </section>
+                @if (terms.TransferMethod is { } method)
+                {
+                    <section class="exchange-surface"><h2>전달 방법</h2>
+                        <dl class="exchange-facts"><dt>방법</dt><dd>@NeighborhoodTransferMethods.Label(method)</dd><dt>제공자</dt><dd>@(detail.ProviderRoleCode == "owner" ? "글 작성자" : "신청자")</dd><dt>인계 장소·방법</dt><dd>@(terms.HandoverPlace ?? "양측 정보 제공 동의 후 인계 장소를 확인할 수 있습니다.")</dd></dl>
+                    </section>
+                }
+            }
+            <section class="exchange-surface"><h2>금액과 지급 안내</h2>
+                <dl class="exchange-facts"><dt>@(detail.Terms?.TransferMethod is not null ? "물품 거래 금액" : "직접 부담 금액")</dt><dd>@NeighborhoodCollaborationPresentation.AgreedCost(detail.Terms?.AgreedCostKrw)</dd><dt>지급 확인</dt><dd>플랫폼 입금 미확인</dd></dl>
+                @if (NeighborhoodCollaborationPresentation.HasDriverDelivery(detail.Terms)) { <p class="exchange-note">기사 배송비는 물품 거래 금액과 별도로 확인합니다.</p> }
+                <p class="exchange-note">약속 완료는 지급 완료를 뜻하지 않습니다. 금액과 지급 방법은 당사자끼리 확인해 주세요.</p>
+            </section>
+            @if (detail.DeliveryRegistrationPending) { <section class="exchange-surface"><h2>배송 접수 결과 확인</h2><p>원 요청으로 접수 결과를 확인합니다. 협업 연결 전에는 기사 수락이 차단됩니다.</p>@if (detail.MyPendingDeliveryRequest is not null) { <a href="@Href(InputHref(DeliveryCreateHref(detail)))">원 배송 요청 이어서 확인</a> }</section> }
+            @if (detail.LinkedDeliveryRequestId is { } deliveryId) { <section class="exchange-surface"><h2>물건 배송</h2><a href="@Href(PanelHref("delivery", deliveryId, NeighborhoodDeliveryRoutes.Detail(deliveryId)))">배송 진행 상세 보기</a></section> }
+            else if (detail.CanRequestDelivery || detail.AllowedActions.Contains(NeighborhoodCollaborationActions.LinkDelivery)) { <section class="exchange-surface"><h2>물건 배송이 필요하다면</h2><p>협업 합의와 별도로 배송 조건을 확인하고 접수합니다.</p><a href="@Href(InputHref(DeliveryCreateHref(detail)))">배송 요청으로 이동</a></section> }
+            @if (detail.Terms?.StorageSpaceId is { } spaceId) { <section class="exchange-surface"><h2>보관과 인계</h2>@if (detail.StorageReservationPending) { <p role="status">@(detail.MyPendingStorageRequestId is not null ? "보관 예약 결과 확인이 필요합니다. 공간에서 원래 요청 결과를 먼저 조회해 주세요." : "보관 예약 결과를 확인 중입니다. 예약한 상대방이 원래 요청 결과를 확인해야 합니다.")</p> }<a href="@Href(NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? NeighborhoodMapNavigation.RelatedHref(home, spaceId, detail.StableId) : NeighborhoodStorageRoutes.DetailPage(spaceId) + "?collaborationId=" + Uri.EscapeDataString(detail.StableId))">보관공간에서 예약·인계 확인</a></section> }
+            @if (detail.AllowedActions.Contains(NeighborhoodCollaborationActions.PublicHistoryConsent))
+            { <details class="exchange-surface"><summary>완료 기록 공개</summary><p>완료 확인과 별도의 선택입니다. 양측과 수락한 참여자가 모두 동의한 완료 기록의 종류·동네·날짜만 공개합니다.</p><label class="delivery-check"><input type="checkbox" @bind="Model.PublicRecordConsent" disabled="@(Model.IsSending || Model.HasPending)" /><span>내 완료 기록 공개에 동의합니다.</span></label><button disabled="@(Model.IsSending || Model.HasPending)" @onclick="SavePublicConsent">공개 선택 저장</button><p class="exchange-note">현재 기록 공개: @(detail.PublicHistoryVisible ? "공개 중" : "비공개")</p></details> }
+            @if (detail.Participants.Count > 0)
+            {
+                <details class="exchange-surface"><summary>함께하는 사람</summary>
+                    @foreach (var participant in detail.Participants)
+                    {
+                        <div class="exchange-comment"><p>@(participant.IsMe ? "내 참여" : "참여 신청") · @(participant.StatusCode == "accepted" ? "참여 수락 완료" : participant.StatusCode == "requested" ? "수락 대기" : "참여 종료")</p>
+                            @if (participant.StatusCode == "requested" && !participant.IsMe)
+                            {
+                                @if (detail.AllowedActions.Contains(NeighborhoodCollaborationActions.AcceptParticipation)) { <button disabled="@(Model.IsSending || Model.HasPending)" @onclick="() => Model.ExecuteAsync(NeighborhoodCollaborationActions.AcceptParticipation, participant.ApplicantUserId)">참여 수락</button> }
+                                @if (detail.AllowedActions.Contains(NeighborhoodCollaborationActions.RejectParticipation)) { <button disabled="@(Model.IsSending || Model.HasPending)" @onclick="() => Model.ExecuteAsync(NeighborhoodCollaborationActions.RejectParticipation, participant.ApplicantUserId)">참여 거절</button> }
+                            }
+                        </div>
+                    }
+                </details>
+            }
+            <Ssalddel.Ui.Common.Areas.App.Components.Commerce.거래보호Notice SourceKind="neighborhood-collaboration" SourceId="@WorkId" />
+            <details class="exchange-surface"><summary>약속 관리</summary>
+                @if (detail.AllowedActions.Contains(NeighborhoodCollaborationActions.UpdateTerms)) { <a href="@Href(InputHref(NeighborhoodCollaborationRoutes.Home + "/new?workId=" + Uri.EscapeDataString(detail.StableId)))">조건 수정</a><p class="exchange-note">수정 후에는 양쪽이 다시 동의해야 합니다.</p> }
+                @if (detail.SourcePostId is { } postId) { <a href="@Href(PanelHref("post", postId.ToString(), NeighborhoodExchange.Detail(postId)))">원래 교류 글</a> }
+                <p class="exchange-note">@detail.Boundary</p>
+                @foreach (var item in detail.History.OrderByDescending(item => item.Revision).Take(10)) { <p class="exchange-note">@item.RecordedAtUtc.ToLocalTime().ToString("MM.dd HH:mm") · @NeighborhoodCollaborationPresentation.Stage(item.StatusCode)</p> }
+            </details>
+        }
+    }
+</main></NeighborhoodDeliveryFrame>
+@code {
+    private long? _sellerRevision;
+    private void SellerChanged(Ssalddel.Contracts.Common.Commerce.판매자공개정보Response? value) { _sellerRevision = value?.Revision; Model.CommerceProtection = null; }
+    [Parameter] public string WorkId { get; set; } = "";
+    [Parameter] public bool Embedded { get; set; }
+    [Parameter] public string? ReturnUrl { get; set; }
+    private string InputHref(string route) => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? NeighborhoodMapNavigation.WithReturn(route, home) : route;
+    private string PanelHref(string kind, string? id, string fallback) => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? NeighborhoodMapNavigation.PanelHref(home, kind, id) : fallback;
+
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    private string? _loadedWorkId;
+    protected override Task OnParametersSetAsync()
+    {
+        if (_loadedWorkId == WorkId) return Task.CompletedTask;
+        _loadedWorkId = WorkId;
+        return Reload();
+    }
+    private Task Reload() => Model.LoadDetailAsync(WorkId);
+    protected override async Task OnAfterRenderAsync(bool firstRender) { Model.SynchronizeOwner(); if (Model.IsAuthenticated && !Model.Loaded && !Model.IsLoading && !Model.IsSending && Model.Error is null) await Reload(); }
+    private Task SavePublicConsent() => Model.ExecuteAsync(NeighborhoodCollaborationActions.PublicHistoryConsent, consented: Model.PublicRecordConsent);
+    private async Task Recover() { if (await Model.RecoverAsync() is { } id && id != WorkId) Navigation.NavigateTo(Href(PanelHref("work", id, NeighborhoodCollaborationRoutes.Detail(id)))); }
+    private static string DeliveryCreateHref(NeighborhoodCollaborationResponse detail) => NeighborhoodDeliveryRoutes.Create
+        + "?collaborationId=" + Uri.EscapeDataString(detail.StableId) + (detail.SourcePostId is { } postId ? "&sourcePostId=" + postId : "");
+}

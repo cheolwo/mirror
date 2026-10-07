@@ -1,0 +1,63 @@
+@inherits NeighborhoodWorkflowPageBase<NeighborhoodCollaborationAuthoringViewModel>
+@{ Model.SynchronizeOwner(); }
+<NeighborhoodDeliveryFrame><main class="exchange-page">
+    <a class="exchange-back" href="@Href(BackHref)">← @(NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is null ? "내 할 일" : "생활 지도")</a>
+    <header><span class="exchange-eyebrow">생활 교류</span><h1>@(Model.IsEditing ? "약속 조건 수정" : "약속 제안")</h1><p>@Model.SourceTitle</p></header>
+    @if (!Model.IsAuthenticated) { <section class="exchange-empty"><h2>로그인이 필요해요</h2><p>로그인 후 조건을 입력하고 직접 신청해 주세요.</p><a class="exchange-primary" href="@LoginHref">로그인하기</a></section> }
+    else
+    {
+        @if (Model.IsLoading) { <p role="status">신청할 대상을 확인하는 중입니다.</p> }
+        @if (Model.Error is not null) { <div class="exchange-error" role="alert">@Model.Error @if (!Model.NeedsReview) { <button disabled="@Model.IsSending" @onclick="Reload">대상 다시 확인</button> }</div> }
+        @if (Model.Notice is not null) { <p class="exchange-note" role="status">@Model.Notice</p> }
+        @if (Model.NeedsReview) { <section class="exchange-surface"><h2>이전 요청 결과 확인</h2><p>입력과 요청 번호를 유지했습니다. 결과 확인은 다시 신청하는 동작이 아닙니다.</p><button disabled="@Model.IsSending" @onclick="Recover">처리 결과 확인</button><button disabled="@Model.IsSending" @onclick="Submit">같은 요청 직접 다시 보내기</button></section> }
+        else if (Model.Loaded)
+        {
+            <form @onsubmit="Submit" @onsubmit:preventDefault><fieldset disabled="@Model.IsSending"><legend>약속 조건</legend>
+                <section class="exchange-surface" data-neighborhood-terms><h2>약속 내용</h2><label for="work-kind">종류</label><select id="work-kind" @bind="Model.Form.Draft.Kind" disabled="@(Model.Form.SpaceId is not null)"><option value="goods">물품 교류</option><option value="food">음식 교류</option><option value="transport">배송 도움</option><option value="storage">물품 보관</option></select>
+                    <label for="work-summary">할 일 요약</label><input id="work-summary" @bind="Model.Form.Draft.Terms.Summary" @bind:event="oninput" maxlength="120" required />
+                    <label for="work-quantity">수량</label><input id="work-quantity" type="number" @bind="Model.Form.Draft.Terms.Quantity" min="1" required /><label for="work-unit">단위</label><input id="work-unit" @bind="Model.Form.Draft.Terms.Unit" maxlength="30" required />
+                    <label for="work-from">시작</label><input id="work-from" type="datetime-local" @bind="Model.Form.From" /><label for="work-until">종료</label><input id="work-until" type="datetime-local" @bind="Model.Form.Until" />
+                    @if (Model.Form.Draft.Kind == "storage") { <p>위 수량을 정한 기간에 맡기는 조건입니다. 양쪽 동의 후 보관공간에서 인계를 따로 확인해요.</p> }
+                    <label for="work-notes">함께 확인할 조건 <small>선택</small></label><textarea id="work-notes" @bind="Model.Form.Draft.Terms.Notes" @bind:event="oninput" maxlength="1000" rows="3"></textarea>
+                </section>
+                @if (Model.Form.Draft.Kind == NeighborhoodCollaborationKinds.Goods)
+                {
+                    <section class="exchange-surface"><h2>물건을 전달하는 방법</h2>
+                        <label for="work-transfer">전달 방식</label><select id="work-transfer" @bind="Model.Form.Draft.Terms.TransferMethod" required>
+                            <option value="">방식을 선택하세요</option><option value="recipient-pickup">받는 사람이 직접 수령</option><option value="provider-delivery">제공하는 사람이 직접 전달</option><option value="driver-delivery">기사에게 배송 요청</option>
+                        </select>
+                        <label for="work-handover">인계 장소·방법</label><textarea id="work-handover" @bind="Model.Form.Draft.Terms.HandoverPlace" @bind:event="oninput" maxlength="500" required rows="2"></textarea>
+                        <p class="exchange-note">직접 수령·직접 전달에는 기사 배차가 생기지 않습니다. 이동과 준비에 드는 부담도 함께 확인하세요.</p>
+                        <p class="exchange-note">@NeighborhoodGoodsHandoverNotice.Text</p>
+                    </section>
+                }
+                <section class="exchange-surface"><h2>금액과 지급 안내</h2>
+                    <label for="work-cost">직접 부담하기로 정한 금액(원) <small>선택</small></label><input id="work-cost" type="number" @bind="Model.Form.Draft.Terms.AgreedCostKrw" min="0" /><p class="exchange-note">비워 두면 미정이고, 0을 입력하면 0원입니다.</p>
+                    @if (NeighborhoodCollaborationPresentation.HasDriverDelivery(Model.Form.Draft.Terms)) { <p class="exchange-note">기사 배송비는 물품 거래 금액과 별도로 확인합니다.</p> }
+                    <p class="exchange-note">플랫폼에서 결제하거나 입금을 확인하지 않습니다. 약속 완료와 지급은 별개입니다.</p>
+                </section>
+                @if (RequiresSeller) { <Ssalddel.Ui.Common.Areas.App.Components.Commerce.판매자공개정보Panel PostId="Model.Form.Draft.SourcePostId" CollaborationId="WorkId" ValueChanged="SellerChanged" Disabled="@(Model.IsSending || Model.NeedsReview)" /> }
+                <Ssalddel.Ui.Common.Areas.App.Components.Commerce.거래보호Notice RequireAcknowledgment="true" RequireSeller="RequiresSeller" SellerRevision="@(RequiresSeller ? _sellerRevision : null)" Disabled="@Model.IsSending" @bind-Confirmation="Model.Form.Draft.CommerceProtection" />
+                <label class="delivery-check"><input type="checkbox" @bind="Model.Form.ConditionsConfirmed" /><span>위 조건으로 협업을 신청합니다. 신청만으로 상대 동의나 배송이 완료되지는 않습니다.</span></label>
+                <button class="exchange-primary" type="submit" disabled="@(!Model.Form.ConditionsConfirmed || Model.Form.Draft.CommerceProtection?.NoticeAccepted != true)">@(Model.IsSending ? "처리 중…" : Model.IsEditing ? "조건 수정 요청" : "협업 신청하기")</button>
+            </fieldset></form>
+        }
+    }
+</main></NeighborhoodDeliveryFrame>
+@code {
+    private long? _sellerRevision;
+    private bool RequiresSeller => Model.Form.Draft.Kind is NeighborhoodCollaborationKinds.Goods or NeighborhoodCollaborationKinds.Food;
+    private void SellerChanged(Ssalddel.Contracts.Common.Commerce.판매자공개정보Response? value) { _sellerRevision = value?.Revision; Model.Form.Draft.CommerceProtection = null; }
+    [Parameter] public long? PostId { get; set; }
+    [Parameter] public string? SpaceId { get; set; }
+    [Parameter] public string? WorkId { get; set; }
+    [Parameter] public string? ReturnUrl { get; set; }
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    private string BackHref => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) ?? NeighborhoodCollaborationRoutes.Home;
+    protected override Task OnParametersSetAsync() => Reload();
+    private Task Reload() => Model.InitializeAsync(PostId, SpaceId, WorkId);
+    protected override async Task OnAfterRenderAsync(bool firstRender) { Model.SynchronizeOwner(); if (Model.IsAuthenticated && !Model.Loaded && !Model.IsLoading && !Model.IsSending && !Model.NeedsReview && Model.Error is null) await Reload(); }
+    private async Task Submit() { if (await Model.SubmitAsync() is { } id) Navigation.NavigateTo(Href(ResultHref(id))); }
+    private async Task Recover() { if (await Model.RecoverAsync() is { } id) Navigation.NavigateTo(Href(ResultHref(id))); }
+    private string ResultHref(string id) => NeighborhoodMapNavigation.ReturnToPanel(ReturnUrl, "work", id) ?? NeighborhoodCollaborationRoutes.Detail(id);
+}

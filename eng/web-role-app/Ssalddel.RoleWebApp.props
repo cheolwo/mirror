@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\eng\role-workspace\*.cs" Link="Services\%(Filename)%(Extension)" />
     <Compile Include="..\eng\web-role-app\Program.cs" Link="Program.cs" />
     <Compile Include="..\eng\web-role-app\Services\**\*.cs">
       <Link>Services\%(RecursiveDir)%(Filename)%(Extension)</Link>

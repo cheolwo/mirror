@@ -7,6 +7,10 @@
                Description="계정이 필요한 기능은 로그인하고, 익명 허용 게시판은 회원가입 없이 이용할 수 있습니다."
                Badge="0.0 커뮤니티" />
 
+<nav aria-label="로그인 복귀" class="mb-4">
+    <a href="@ReturnHref">이전 화면으로</a>
+</nav>
+
 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-4">
     <MudStack Spacing="1">
         <MudText Typo="Typo.body2">
@@ -15,7 +19,7 @@
         <MudText Typo="Typo.caption" Color="Color.Secondary">
             로그인 전용 게시판, 내 글 관리 또는 관리자 기능처럼 계정 식별이 필요한 기능을 사용할 때만 가입해 주세요.
         </MudText>
-        <MudButton Href="/community"
+        <MudButton Href="@CommunityHref"
                    Variant="Variant.Text"
                    Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.Forum">
@@ -62,6 +66,36 @@
     private string? RegistrationStatusMessage { get; set; }
     private Severity RegistrationStatusSeverity { get; set; } = Severity.Info;
     private bool RegistrationBusy { get; set; }
+    private string CommunityHref => Navigation.ToAbsoluteUri("community").ToString();
+    private string ReturnHref => SafeReturnHref() ?? Navigation.ToAbsoluteUri("community/map").ToString();
+
+    private string? SafeReturnHref()
+    {
+        var returnUrl = ReturnUrl?.Trim();
+        if (string.IsNullOrWhiteSpace(returnUrl)
+            || !returnUrl.StartsWith("/", StringComparison.Ordinal)
+            || returnUrl.StartsWith("//", StringComparison.Ordinal)
+            || returnUrl.Contains('\\')
+            || returnUrl.Any(char.IsControl)
+            || !Uri.TryCreate(returnUrl, UriKind.Relative, out _)) return null;
+        var encodedPath = returnUrl.Split('?', '#')[0];
+        var decodedPath = Uri.UnescapeDataString(encodedPath);
+        if (decodedPath.Contains('%') || decodedPath.Contains('\\') || decodedPath.Contains('?') || decodedPath.Contains('#')
+            || decodedPath.Any(char.IsControl) || decodedPath.Count(c => c == '/') != encodedPath.Count(c => c == '/')
+            || decodedPath.Split('/').Any(segment => segment is "." or "..")) return null;
+        if (decodedPath.StartsWith("/commerce", StringComparison.Ordinal))
+        {
+            if (!Ssalddel.Contracts.Common.Commerce.CommerceAuthenticationRoutes.TryReturnRoute(returnUrl, out var commerceRoute)) return null;
+            returnUrl = commerceRoute;
+        }
+        var baseUri = new Uri(Navigation.BaseUri);
+        var absolute = Navigation.ToAbsoluteUri(returnUrl);
+        if (baseUri.IsBaseOf(absolute)) return absolute.ToString();
+        // 기존 역할 앱의 절대 경로는 유지하고, 공통 canonical route는 현재 앱 안에서 해석합니다.
+        if (returnUrl.StartsWith("/roles/", StringComparison.OrdinalIgnoreCase)) return null;
+        var withinApp = Navigation.ToAbsoluteUri(returnUrl.TrimStart('/'));
+        return baseUri.IsBaseOf(withinApp) ? withinApp.ToString() : null;
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -138,17 +172,6 @@
 
     private void NavigateToReturnUrl()
     {
-        var returnUrl = ReturnUrl?.Trim();
-        if (string.IsNullOrWhiteSpace(returnUrl)
-            || !returnUrl.StartsWith("/", StringComparison.Ordinal)
-            || returnUrl.StartsWith("//", StringComparison.Ordinal)
-            || returnUrl.Contains('\\')
-            || returnUrl.Contains('\r')
-            || returnUrl.Contains('\n'))
-        {
-            return;
-        }
-
-        Navigation.NavigateTo(returnUrl);
+        if (SafeReturnHref() is { } href) Navigation.NavigateTo(href);
     }
 }

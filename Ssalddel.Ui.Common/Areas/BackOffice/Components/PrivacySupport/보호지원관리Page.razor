@@ -1,0 +1,109 @@
+@namespace Ssalddel.Ui.Common.Areas.BackOffice.Components.PrivacySupport
+@using Ssalddel.Ui.Common.Areas.BackOffice.Services
+@using Ssalddel.Ui.Common.Areas.BackOffice.ViewModels
+@using Ssalddel.Contracts.Common.PrivacySupport
+@inject I보호지원관리Client Client
+@implements IDisposable
+
+@{ Model?.SynchronizeOwner(); }
+<main class="support-workspace">
+    <header><p class="support-eyebrow">거래·개인정보 보호</p><h1>@(string.IsNullOrWhiteSpace(CaseId) ? "처리 요청" : "사건 처리")</h1><p>접수 경과와 필요한 안내를 확인하세요.</p></header>
+    @if (Model is null || !Model.IsAuthenticated || Model.RequiresLogin)
+    {
+        <section><h2>운영자 로그인이 필요해요</h2><p>운영자 권한으로 접수와 담당 업무를 확인합니다.</p><a class="support-primary" href="@LoginHref">로그인하기</a></section>
+    }
+    else
+    {
+        @if (Model.IsBusy) { <p role="status">처리 정보를 확인하고 있습니다.</p> }
+        @if (Model.Error is not null) { <section role="alert" class="support-warning"><p>@Model.Error</p>@if (!Model.HasPending) { <button disabled="@Model.IsBusy" @onclick="ReloadAsync">다시 조회</button> }</section> }
+        @if (Model.Notice is not null) { <p role="status" class="support-notice">@Model.Notice</p> }
+        @if (Model.HasPending) { <section><h2>처리 결과 확인</h2><p>결과가 확인되지 않았습니다. 같은 입력과 요청 번호로 재확인합니다.</p><button class="support-primary" disabled="@Model.IsBusy" @onclick="Model.RetryAsync">같은 요청 다시 확인</button></section> }
+        @if (string.IsNullOrWhiteSpace(CaseId))
+        {
+            <section><h2>요청 목록</h2><label for="support-kind">업무 종류</label><select id="support-kind" value="@Model.Kind" @onchange="ChangeKind" disabled="@Model.IsBusy"><option value="transaction-dispute">거래 문제</option><option value="privacy-rights">개인정보 요청</option><option value="privacy-incident">개인정보 사고</option></select>
+                @if (Model.Loaded && Model.Items.Count == 0) { <p class="support-muted">접수된 요청이 없습니다.</p> }
+                <div class="support-list">@foreach (var item in Model.Items) { <a class="support-row" href="@DetailHref(item.CaseId)"><strong>@KindLabel(item.Kind) · @Status(item.StatusCode)</strong><span>@Time(item.CreatedAtUtc)</span>@if (item.ProgressOverdue || item.ResultOverdue || item.IncidentOverdue) { <span class="support-danger">안내 기한 확인 필요</span> }<span class="support-muted">사건 확인 →</span></a> }</div>
+                <nav>@if (Model.Page > 1) { <button disabled="@Model.IsBusy" @onclick="() => Model.LoadAsync(kind: Model.Kind, page: Model.Page - 1)">이전 목록</button> }@if (Model.HasMore) { <button disabled="@Model.IsBusy" @onclick="() => Model.LoadAsync(kind: Model.Kind, page: Model.Page + 1)">다음 목록</button> }<button disabled="@Model.IsBusy" @onclick="ReloadAsync">새로고침</button></nav>
+            </section>
+        }
+        else if (Model.Detail is { } row)
+        {
+            <section><div class="support-heading"><h2>@KindLabel(row.Kind)</h2><span class="support-status">@Status(row.StatusCode)</span></div><dl><div><dt>접수</dt><dd>@Time(row.CreatedAtUtc)</dd></div><div><dt>최근 처리</dt><dd>@Time(row.UpdatedAtUtc)</dd></div>@if (row.ProgressDueAtUtc is { } progress) { <div><dt>진행 안내 기한</dt><dd>@Time(progress)</dd></div> }@if (row.ResultDueAtUtc is { } result) { <div><dt>결과 안내 기한</dt><dd>@Time(result)</dd></div> }@if (row.IncidentDeadlineAtUtc is { } incident) { <div><dt>사고 통지 검토 기한</dt><dd>@Time(incident)</dd></div> }</dl>
+                @if (row.SourceKind.Length > 0) { <p class="support-muted">연결된 거래: @SourceLabel(row.SourceKind)</p> }
+                @if (row.Kind == "privacy-rights") { <p>개인정보 요청: @RequestLabel(row.RequestKind)</p> }
+                @if (row.RetentionPending) { <p role="status" class="support-warning">보존 상태를 확인하고 있습니다. 확인 후 처리를 이어가세요.</p> }
+                @if (row.ProgressOverdue || row.ResultOverdue || row.IncidentOverdue) { <p class="support-warning">안내 기한이 지났습니다. 실제 안내와 후속 처리를 확인하세요.</p> }
+                @if (row.Kind == "transaction-dispute" && !row.BusinessCalendarVerified) { <p class="support-warning">공휴일 달력 미확인으로 기한은 잠정 계산입니다.</p> }
+                @if (row.PreparedProgress is not null) { <p>진행 안내문이 준비되어 있습니다.</p> }@if (row.PreparedResult is not null) { <p>처리방안 안내문이 준비되어 있습니다.</p> }
+                @if (row.Kind == "privacy-rights" && !row.AllowedActions.Contains("complete-rights") && row.StatusCode != "execution-completed") { <p class="support-muted">개인정보 실제 처리 연결이 확인되기 전에는 실행 완료로 변경할 수 없습니다.</p> }
+                @if (row.Kind == "privacy-incident" && !row.IncidentNoticeCoverageVerified) { <p class="support-warning">개별 통지 기록은 전체 영향 대상의 안내 완료를 의미하지 않습니다.</p> }
+            </section>
+            @if (Model.Actions.Any(action => action != "assign-self"))
+            {
+                <section><h2>담당자 전용 기록</h2><p class="support-muted">개인정보가 포함될 수 있습니다. 담당 업무에 필요한 경우에만 열람하세요. 열람 사실은 감사 기록으로 남습니다.</p>
+                    <button disabled="@(Model.IsBusy || Model.HasPending)" @onclick="Model.VerifyRecipientsAsync">비공개 기록 확인</button>
+                    @if (Model.PrivateRecords.Count > 0)
+                    { <button @onclick="Model.ClearPrivateRecords">비공개 기록 닫기</button><div class="support-private" aria-label="담당자 비공개 기록">@foreach (var evidence in Model.PrivateRecords) { <article><p class="support-muted">@Time(evidence.RecordedAtUtc)</p><p class="support-private-text">@evidence.Text</p></article> }</div> }
+                </section>
+            }
+            <section><h2>담당 처리</h2>
+                @if (Model.Actions.Count == 0) { <p class="support-muted">현재 계정과 사건 상태에서 처리할 수 있는 업무가 없습니다.</p> }
+                else
+                {
+                    <form @onsubmit="Model.SubmitAsync" @onsubmit:preventDefault><fieldset disabled="@(Model.IsBusy || Model.HasPending || Model.RequiresRefresh)">
+                        <label for="support-action">이번 처리</label><select id="support-action" @bind="Model.Action">@foreach (var action in Model.Actions) { <option value="@action">@ActionLabel(action)</option> }</select>
+                        @if (Model.NeedsSummary) { <label for="support-summary">안내할 내용</label><textarea id="support-summary" @bind="Model.Summary" @bind:event="oninput" rows="4" maxlength="2000"></textarea><p class="support-muted">안내문 준비는 실제 발송과 구분됩니다. 당사자의 비공개 정보를 안내문에 포함하지 마세요.</p> }
+                        @if (Model.NeedsPrivateEvidence) { <label for="support-evidence">비공개 처리 기록</label><textarea id="support-evidence" @bind="Model.PrivateEvidence" @bind:event="oninput" rows="4" maxlength="8000"></textarea><p class="support-muted">비밀번호·주민등록번호·계좌번호를 입력하지 마세요.</p> }
+                        @if (Model.Action == "deny") { <label for="support-denial">법적 제한 사유</label><select id="support-denial" @bind="Model.LegalReasonCode"><option value="statutory-retention">법정 보존 의무</option><option value="ongoing-dispute">진행 중인 분쟁</option><option value="rights-exemption">권리 행사 제한 요건</option></select> }
+                        @if (Model.NeedsLegalBasis) { <label for="support-basis">검토 근거</label><textarea id="support-basis" @bind="Model.LegalBasis" @bind:event="oninput" rows="3" maxlength="1000"></textarea> }
+                        @if (Model.NeedsReviewAt) { <label for="support-review">보존 종료·재검토 시각 (한국 시간)</label><input id="support-review" type="datetime-local" value="@Model.LocalReviewAt" @onchange="args => Model.LocalReviewAt = Convert.ToString(args.Value) ?? string.Empty" /><p class="support-muted">보존 정지는 현재부터 90일 이내의 재검토 시각을 입력합니다.</p> }
+                        @if (Model.Action == "assess-incident")
+                        {
+                            <label for="support-occurrence">발생 판단</label><select id="support-occurrence" @bind="Model.OccurrenceCode"><option value="unknown">미확인</option><option value="possible">가능성 확인</option><option value="actual">실제 유출 확인</option><option value="false-alarm">오탐 정정</option></select>
+                            <label for="support-person-count">영향 인원 (미확인은 비워 두세요)</label><input id="support-person-count" type="number" min="0" value="@Model.AffectedPersonCount" @onchange="args => Model.AffectedPersonCount = Convert.ToString(args.Value) ?? string.Empty" />
+                            <label class="support-check"><input type="checkbox" @bind="Model.SensitiveAffected" />민감정보·고유식별정보 영향</label><label class="support-check"><input type="checkbox" @bind="Model.ExternalIllegalAccess" />외부 불법 접근</label>
+                            <label for="support-individual-required">정보주체 통지 필요</label><select id="support-individual-required" @bind="Model.IndividualNoticeRequired"><option value="unknown">검토 중</option><option value="yes">필요</option><option value="no">불필요 근거 검토</option></select>
+                            <label for="support-authority-required">기관 신고 필요</label><select id="support-authority-required" @bind="Model.AuthorityReportRequired"><option value="unknown">검토 중</option><option value="yes">필요</option><option value="no">불필요 근거 검토</option></select>
+                        }
+                        @if (Model.IsNoticeAction)
+                        {
+                            @if (Model.Action is "record-progress-notified" or "record-result-notified") { <button type="button" @onclick="Model.VerifyRecipientsAsync">담당자 권한으로 통지 대상 확인</button><p class="support-muted">확인한 비공개 기록 @Model.EvidenceCount 건 · 통지 대상 @Model.RecipientCount 명. 개인 식별자는 담당자 전용 선택 영역에서 확인합니다.</p><label for="support-recipient">실제로 안내한 당사자</label><select id="support-recipient" @bind="Model.RecipientIndex"><option value="-1">대상 선택</option>@for (var index = 0; index < Model.RecipientCount; index++) { <option value="@index">당사자 @(index + 1) · @Model.PrivateRecipientIds[index]</option> }</select> }
+                            <label for="support-delivery-ref">실제 전달 증빙 참조</label><input id="support-delivery-ref" @bind="Model.DeliveryEvidenceRef" @bind:event="oninput" maxlength="200" placeholder="발송 기록·접수 증빙의 참조번호" />
+                            <label for="support-occurred">실제 전달 시각 (한국 시간)</label><input id="support-occurred" type="datetime-local" value="@Model.LocalOccurredAt" @onchange="args => Model.LocalOccurredAt = Convert.ToString(args.Value) ?? string.Empty" />
+                            <label class="support-check"><input type="checkbox" @bind="Model.ActualDeliveryConfirmed" />실제 전달 또는 기관 접수를 증빙으로 확인했습니다.</label><p class="support-muted">이 화면은 외부 발송을 실행하지 않습니다. 준비된 문안만으로 전달 완료를 기록하지 마세요.</p>
+                        }
+                        @if (Model.Action == "complete-rights") { <label for="support-execution-ref">실제 처리 결과 참조</label><input id="support-execution-ref" @bind="Model.DeliveryEvidenceRef" @bind:event="oninput" maxlength="200" /><p class="support-muted">실제 처리 확인을 통과한 결과만 완료로 기록됩니다.</p> }
+                        @if (Model.Action == "close") { <p class="support-muted">모든 당사자에게 최신 결과를 안내한 뒤 종결할 수 있습니다.</p> }
+                        <button class="support-primary" type="submit" disabled="@(!Model.CanSubmit)">@ActionLabel(Model.Action)</button>
+                    </fieldset></form>
+                }
+            </section>
+            <section><h2>처리 이력</h2>@if (row.History.Count == 0) { <p class="support-muted">추가 처리 기록이 없습니다.</p> }@foreach (var entry in row.History) { <p>@ActionLabel(entry.Action) <span class="support-muted">· @Time(entry.RecordedAtUtc)</span></p> }@if (row.Notifications.Count > 0) { <hr /><h3>안내 증빙 기록</h3>@foreach (var entry in row.Notifications) { <p>@NoticeLabel(entry.Kind) · @RecipientLabel(entry.RecipientRoleCode)<span class="support-muted"> · @(entry.RecordedDeliveredAtUtc is { } time ? Time(time) : "시각 미확인")</span></p> } }</section>
+            <nav><a href="@ListHref">요청 목록으로</a><button disabled="@(Model.IsBusy || Model.HasPending)" @onclick="ReloadAsync">최신 상태 조회</button></nav>
+        }
+        else if (!Model.IsBusy) { <section><h2>사건을 확인하지 못했습니다</h2><a href="@ListHref">요청 목록으로</a></section> }
+    }
+</main>
+
+@code {
+    [Parameter] public string? CaseId { get; set; }
+    [Parameter] public Func<string?>? AdminOwnerProvider { get; set; }
+    [Parameter] public string ListHref { get; set; } = "/privacy-support";
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    private 보호지원관리ViewModel? Model;
+    protected override void OnInitialized() { Model = new(Client, () => AdminOwnerProvider?.Invoke()); Model.PropertyChanged += Changed; }
+    protected override Task OnParametersSetAsync() => ReloadAsync();
+    private Task ReloadAsync() => Model!.LoadAsync(CaseId);
+    private Task ChangeKind(ChangeEventArgs args) => Model!.LoadAsync(kind: Convert.ToString(args.Value), page: 1);
+    private string DetailHref(string id) => ListHref.TrimEnd('/') + "/" + Uri.EscapeDataString(id);
+    private void Changed(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => _ = InvokeAsync(StateHasChanged);
+    private static string Time(DateTime value) => value.AddHours(9).ToString("yyyy.MM.dd HH:mm") + " (한국 시간)";
+    private static string KindLabel(string code) => code switch { "transaction-dispute" => "거래 문제", "privacy-rights" => "개인정보 요청", "privacy-incident" => "개인정보 사고", _ => "처리 요청" };
+    private static string SourceLabel(string code) => code switch { "food-order" => "음식 주문", "neighborhood-delivery" => "생활 배송", "neighborhood-collaboration" => "생활 협업", "cargo-request" => "화물 의뢰", _ => "거래" };
+    private static string RequestLabel(string code) => code switch { "access" => "열람", "correction" => "정정", "deletion" => "삭제", "suspend" => "처리정지", "withdrawal" => "동의 철회", _ => "권리 요청" };
+    private static string Status(string code) => code switch { "received" => "접수됨", "assigned" => "담당 배정", "reviewing" => "검토 중", "reopened" => "재검토 접수", "progress-notified" => "진행 안내 기록", "result-prepared" => "결과 안내 준비", "result-notified" => "결과 안내 기록", "denial-prepared" => "제한 안내 준비", "closed" or "denied" => "종결", "execution-completed" => "실제 처리 확인", "false-alarm" => "오탐 정정", _ => "진행 상태 확인" };
+    private static string NoticeLabel(string code) => code switch { "progress" => "진행 안내", "result" => "결과 안내", "incident-authority" => "기관 신고", "incident-individual" => "정보주체 통지", _ => "안내 기록" };
+    private static string RecipientLabel(string code) => code switch { "requester" => "접수자", "counterparty" => "거래 당사자", "authority" => "기관", "individual-notice-record" => "정보주체 통지 기록", _ => "통지 대상" };
+    private static string ActionLabel(string code) => code switch { "submit" => "접수", "assign-self" => "내 담당으로 배정", "start-review" => "검토 시작", "add-evidence" => "비공개 기록 추가", "appeal" => "이의제기 접수", "prepare-progress" => "진행 안내문 준비", "prepare-result" => "처리방안 안내문 준비", "record-progress-notified" => "진행 안내 전달 증빙 기록", "record-result-notified" => "결과 안내 전달 증빙 기록", "deny" => "법적 제한 사유 기록", "complete-rights" => "실제 처리 결과 확인", "close" => "사건 종결", "hold-record" => "분쟁 원장 보존 정지", "release-hold" => "원장 보존 정지 해제", "assess-incident" => "사고 판단 기록", "prepare-incident-notice" => "사고 안내문 준비", "record-individual-notified" => "정보주체 통지 증빙 기록", "record-authority-reported" => "기관 신고 증빙 기록", "record-followup" => "후속 처리 기록", "read-evidence" => "담당자 기록 확인", _ => "처리 기록" };
+    public void Dispose() { if (Model is not null) { Model.PropertyChanged -= Changed; Model.Dispose(); } }
+}

@@ -1,0 +1,38 @@
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+
+<section class="food-role-detail" aria-label="@Label" data-role="@RoleKey">
+    <header><h2>@Item.Title</h2><p>@Item.Status</p></header>
+    @if (!string.IsNullOrWhiteSpace(Item.Subtitle)) { <p>@Item.Subtitle</p> }
+    <div class="food-role-detail__body">
+        @foreach (var section in Item.Sections ?? [])
+        {
+            <section class="food-role-detail__section">
+                <h3>@section.Title</h3>
+                <dl>@foreach (var field in section.Fields) { <div><dt>@field.Label</dt><dd>@field.Value</dd></div> }</dl>
+            </section>
+        }
+    </div>
+    <footer>
+        @foreach (var action in Item.Actions ?? [])
+        {
+            @if (action.Route is not null && action.Enabled && !IsBusy)
+            {
+                <a class="@(action.IsPrimary ? "food-role-detail__primary" : string.Empty)" href="@action.Route">@action.Label</a>
+            }
+            else
+            {
+                <button type="button" class="@(action.IsPrimary ? "food-role-detail__primary" : string.Empty)" disabled="@(IsBusy || !action.Enabled)"
+                    @onclick="() => ActionRequested.InvokeAsync(action)">@action.Label</button>
+            }
+            @if (!action.Enabled && !string.IsNullOrWhiteSpace(action.DisabledReason)) { <p role="status">@action.DisabledReason</p> }
+        }
+    </footer>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public string RoleKey { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public RoleWorkspaceItem Item { get; set; } = null!;
+    [Parameter] public bool IsBusy { get; set; }
+    [Parameter] public EventCallback<RoleWorkspaceAction> ActionRequested { get; set; }
+    private string Label => RoleKey switch { "orderer" => "선택한 음식 주문", "restaurant" => "음식점 선택 주문", "food-driver" => "현재 음식 배달", "operator" => "음식 운영 선택 주문", _ => "선택 업무" };
+}

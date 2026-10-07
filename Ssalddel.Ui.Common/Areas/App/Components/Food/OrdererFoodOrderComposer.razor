@@ -67,8 +67,25 @@
     else
     {
         <MudAlert Severity="Severity.Info" Variant="Variant.Text" Dense="true">
-            @Authentication.현재사용자표시 계정으로 주문합니다. 메뉴명과 금액은 제출 시 서버의 최신 공개 메뉴를 기준으로 다시 계산합니다.
+            @Authentication.현재사용자표시 계정으로 주문합니다. 메뉴 가격이 변경되면 다시 확인한 뒤 주문합니다.
         </MudAlert>
+
+        @if (!string.IsNullOrWhiteSpace(Writer.메뉴확인안내))
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="food-order-composer__menu-check" role="status">
+                @Writer.메뉴확인안내
+                @foreach (var change in Writer.가격변경목록)
+                {
+                    <div class="food-order-composer__price-change">@change.메뉴명: @change.이전단가.ToString("N0")원 → @change.현재단가.ToString("N0")원</div>
+                }
+                @if (Writer.메뉴재확인필요)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@Writer.메뉴확인중" OnClick="RecheckMenusRequested">
+                        @(Writer.메뉴확인중 ? "메뉴 확인 중" : "최신 메뉴 다시 확인")
+                    </MudButton>
+                }
+            </MudAlert>
+        }
 
         <div class="food-order-composer__form">
             <MudTextField @bind-Value="Writer.수령인명"
@@ -119,6 +136,8 @@
             </MudAlert>
         }
 
+        <Ssalddel.Ui.Common.Areas.App.Components.Commerce.판매자공개정보Panel RestaurantId="Writer.음식점Id" ValueChanged="SellerChanged" Disabled="@(Writer.처리중 || Writer.입력잠금)" />
+        <Ssalddel.Ui.Common.Areas.App.Components.Commerce.거래보호Notice RequireAcknowledgment="true" RequireSeller="true" SellerRevision="_sellerRevision" Disabled="@(Writer.처리중 || Writer.입력잠금)" @bind-Confirmation="Writer.거래보호확인" />
         <div class="food-order-composer__actions">
             <MudButton Variant="Variant.Text"
                        Color="Color.Secondary"
@@ -129,15 +148,17 @@
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.ReceiptLong"
-                       Disabled="@(!Writer.제출가능)"
-                       OnClick="SubmitRequested">
-                @(Writer.처리중 ? "서버 확인 중" : "주문 제출")
+                       Disabled="@(Writer.거래보호확인?.NoticeAccepted != true || (Writer.가격변경확인대기 ? !Writer.가격확인후제출가능 : !Writer.제출가능))"
+                       OnClick="@(Writer.가격변경확인대기 ? ConfirmPriceChangeRequested : SubmitRequested)">
+                @(Writer.처리중 ? "서버 확인 중" : Writer.가격변경확인대기 ? "변경 금액 확인하고 주문" : "주문 제출")
             </MudButton>
         </div>
     }
 </MudPaper>
 
 @code {
+    private long? _sellerRevision;
+    private void SellerChanged(Ssalddel.Contracts.Common.Commerce.판매자공개정보Response? value) { _sellerRevision = value?.Revision; Writer.거래보호확인 = null; }
     [Parameter, EditorRequired]
     public 주문자앱인증ViewModel Authentication { get; set; } = null!;
 
@@ -149,4 +170,10 @@
 
     [Parameter]
     public EventCallback SubmitRequested { get; set; }
+
+    [Parameter]
+    public EventCallback RecheckMenusRequested { get; set; }
+
+    [Parameter]
+    public EventCallback ConfirmPriceChangeRequested { get; set; }
 }

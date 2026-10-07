@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 using Ssalddel.Ui.Common.Areas.App.Models.Auth;
+using Ssalddel.Ui.Common.Areas.App.Services;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
 
 namespace Ssalddel.Ui.Common.Areas.App.Components.Food;
@@ -9,6 +11,7 @@ public partial class OrdererFoodOrderWorkspace : IAsyncDisposable
     private bool _initialized;
     private bool? _reportedAuthenticationMode;
     private 주문자음식주문새로고침Controller? _refreshController;
+    private 역할앱생명주기State? _lifecycle;
 
     [Parameter]
     public string? OrderNo { get; set; }
@@ -24,7 +27,24 @@ public partial class OrdererFoodOrderWorkspace : IAsyncDisposable
     private 주문자음식주문목록ViewModel List => ViewModel.목록;
     private 주문자음식주문상세ViewModel Detail => ViewModel.상세;
     private 주문자음식주문새로고침Controller RefreshController
-        => _refreshController ??= new(ViewModel);
+        => _refreshController ??= new(ViewModel, AppQueryEnabled);
+
+    private bool AppQueryEnabled => _lifecycle is null
+        || (_lifecycle.단계 == 역할앱생명주기단계.활성 && _lifecycle.연결가능);
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _lifecycle = Services.GetService<역할앱생명주기State>();
+        if (_lifecycle is not null) _lifecycle.Changed += HandleLifecycleChanged;
+    }
+
+    private void HandleLifecycleChanged()
+    {
+        // 신호 발생 시 상태를 캡처하여 연속된 pause/resume을 UI 큐에서 합쳐 버리지 않습니다.
+        var enabled = AppQueryEnabled;
+        _ = InvokeAsync(() => RefreshController.앱조회상태변경Async(enabled));
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -112,11 +132,12 @@ public partial class OrdererFoodOrderWorkspace : IAsyncDisposable
 
     protected override void Dispose(bool disposing)
     {
-        base.Dispose(disposing);
         if (disposing)
         {
+            if (_lifecycle is not null) _lifecycle.Changed -= HandleLifecycleChanged;
             _refreshController?.중지();
         }
+        base.Dispose(disposing);
     }
 
     public async ValueTask DisposeAsync()

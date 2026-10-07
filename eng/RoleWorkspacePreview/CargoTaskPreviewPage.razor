@@ -1,0 +1,9 @@
+@page "/workspace/warehouse/tasks/{Kind}/{ItemId}"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside style="padding:6px 16px;background:#eaf5f3;color:#0f766e;font-size:12px" aria-label="미리보기 안내">화면 배치 미리보기 · 예시 자료</aside>
+<WarehouseTaskActionScreen Kind="@Kind" ItemId="@ItemId" />
+@code {
+    [Parameter] public string Kind { get; set; } = "";
+    [Parameter] public string ItemId { get; set; } = "";
+}

@@ -1,0 +1,53 @@
+@using Ssalddel.Contracts.Common.Inventory
+@using Ssalddel.Ui.Common.Areas.App.Components.WarehouseOperations
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@implements IDisposable
+@inject IRoleWorkspaceApi Api
+@inject IRoleWorkspaceAccess Access
+
+<section class="warehouse-specialist-task" aria-label="@Model.Title">
+    <header><a href="@Model.ReturnHref">지도 업무로 돌아가기</a><h1>@Model.Title</h1></header>
+    @if (Model.RequiresLogin)
+    {
+        <MudAlert Severity="Severity.Warning">로그인 후 선택한 창고 업무로 돌아와 주세요.</MudAlert>
+        <MudButton Href="@CargoWorkspaceRoutes.WarehouseLogin(Kind, ItemId)" Variant="Variant.Filled" Color="Color.Primary">창고 업무 로그인</MudButton>
+    }
+    else if (Model.DeniedStatus == 403)
+    { <MudAlert Severity="Severity.Warning">현재 계정으로 이 창고 업무를 처리할 수 없습니다.</MudAlert> }
+    else
+    {
+        @if (Model.Lifetime.HasError)
+        { <MudAlert Severity="Severity.Error">@Model.Lifetime.Message</MudAlert> }
+        @if (Model.Lifetime.IsBusy) { <MudProgressLinear Indeterminate="true" aria-label="창고 업무 확인 중" /> }
+        @if (Model.Loaded && Model.Inspection is { } inspection)
+        {
+            <InboundInspectionRecordScreen @key="inspection" InboundItemId="@Target" Context="@InspectionContext"
+                HomeHref="@Model.ReturnHref" PutAwayHref="@Model.PutAwayHref" ExternalViewModel="@inspection" TaskOnly="true" OnInspectionSaved="Model.Lifetime.Notify" />
+        }
+        @if (Model.Loaded && Model.Review is { } review)
+        {
+            <SsalddelOutboundPlanReviewWorkspace @key="review" OutboundPlanId="@Target" ExternalViewModel="@review"
+                SingleTask="true" DraftHref="@Model.DraftHref" />
+        }
+        @if (Model.Loaded && Model.Draft is { } draft)
+        {
+            <SsalddelTransportRequestDraftWorkspace @key="draft" OutboundPlanId="@Target" ExternalViewModel="@draft"
+                ReviewHref="@Model.ReviewHref" TaskOnly="true" />
+        }
+        @if (!Model.Lifetime.IsBusy && !Model.Loaded)
+        { <MudButton Variant="Variant.Outlined" OnClick="Reload">다시 확인</MudButton> }
+    }
+</section>
+
+@code {
+    [Parameter] public string Kind { get; set; } = "";
+    [Parameter] public string ItemId { get; set; } = "";
+    private WarehouseSpecialistTaskViewModel Model = default!;
+    private long Target => long.TryParse(ItemId, out var value) ? value : 0;
+    private InboundInspectionNavigationContext InspectionContext => new() { From = Model.ReturnHref };
+    protected override void OnInitialized() { Model = new(Api, Access); Model.Lifetime.Changed += Refresh; }
+    protected override Task OnParametersSetAsync() => Reload();
+    private Task Reload() => Model.LoadAsync(Kind, ItemId);
+    private void Refresh() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() { Model.Lifetime.Changed -= Refresh; Model.Dispose(); }
+}

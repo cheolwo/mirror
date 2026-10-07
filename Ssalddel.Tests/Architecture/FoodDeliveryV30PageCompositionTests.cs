@@ -12,7 +12,8 @@ public sealed class FoodDeliveryV30PageCompositionTests
         Assert.Contains("\"/store\"", Read("RestaurantDeskApp", "Components/Routes.razor"));
         var navigation = Read("RestaurantDeskApp", "Components/Layout/음식점하단탐색.razor");
         foreach (var route in new[] { "/orders", "/menus", "/store" }) Assert.Contains(route, navigation);
-        var menus = Read("RestaurantDeskApp", "Components/Pages/Menus.razor");
+        var menus = Read("RestaurantDeskApp", "Components/Pages/Menus.razor")
+            + Read("RestaurantDeskApp", "Components/Pages/Menus.razor.cs");
         Assert.Contains("@if (!editing)", menus);
         Assert.Contains("context.PreventNavigation()", menus);
         Assert.Contains("editing = false;", menus);
@@ -20,14 +21,15 @@ public sealed class FoodDeliveryV30PageCompositionTests
     [Fact]
     public void 음식점메뉴화면은_등록수정과서버재조회를연결한다()
     {
-        var page = Read("RestaurantDeskApp", "Components/Pages/Menus.razor");
+        var page = Read("RestaurantDeskApp", "Components/Pages/Menus.razor")
+            + Read("RestaurantDeskApp", "Components/Pages/Menus.razor.cs");
         var routes = Read("RestaurantDeskApp", "Components/Routes.razor");
         var client = Read("RestaurantDeskApp", "Services/Ssalddel음식주문Client.cs");
         Assert.Contains("\"/menus\"", routes);
         Assert.Contains("pendingCreate ??=", page);
-        Assert.Contains("MenuClient.등록Async(pendingCreate)", page);
+        Assert.Contains("MenuClient.등록Async(pendingCreate, lifetime.Token)", page);
         Assert.Contains("예상Revision = revision", page);
-        Assert.Contains("menus = await MenuClient.목록Async()", page);
+        Assert.Contains("await MenuClient.목록Async(lifetime.Token)", page);
         Assert.Contains("catch (메뉴저장거절Exception)", page);
         Assert.Contains("사진 파일 업로드는 아직 지원하지 않습니다", page);
         Assert.Contains("api/v1/restaurant/menus", client);
@@ -200,12 +202,14 @@ public sealed class FoodDeliveryV30PageCompositionTests
 
         Assert.Contains("RestaurantMauiSecureTokenStore", startup);
         Assert.Contains("ClientAuthSession", startup);
-        Assert.Contains("AddHttpClient<RestaurantAuthService>", startup);
+        Assert.Contains("AddHttpClient(\"RestaurantAuthentication\"", startup);
+        Assert.Contains("AddSingleton(sp => new RestaurantAuthService(", startup);
         Assert.DoesNotContain("AddScoped<RestaurantAuthService>", startup);
         Assert.Contains("api/v1/auth/refresh", auth);
         Assert.Contains("AuthenticationHeaderValue", client);
         Assert.Contains("/restaurant/inbox", client);
-        Assert.Contains("forceRefresh: true", client);
+        Assert.Contains("EnsureAccessTokenForRequestAsync(owner!, generation, true, cancellationToken)", client);
+        Assert.Contains("CaptureRequestCredentialsAsync(owner, generation, cancellationToken)", client);
         Assert.Contains("response.StatusCode != HttpStatusCode.Unauthorized", client);
         Assert.Contains("AccessTokenProvider", realtime);
         Assert.Contains("JoinRestaurantOrders\", cancellationToken", realtime);
@@ -216,14 +220,22 @@ public sealed class FoodDeliveryV30PageCompositionTests
     }
 
     [Fact]
-    public void 음식점진행변경은_같은멱등요청을한번재시도하고_판본충돌시정본을재조회한다()
+    public void 음식점진행변경은_원본요청을보존하고_명시재시도전에정본을재조회한다()
     {
         var client = Read("RestaurantDeskApp", "Services/Ssalddel음식주문Client.cs");
         var desk = Read("RestaurantDeskApp", "Services/음식점주문DeskService.cs");
 
         Assert.Contains("SsalddelApiProblemParser.Parse", client);
-        Assert.Contains("var request = new 음식점주문진행변경요청", desk);
-        Assert.Contains("업무멱등재시도실행기.한번Async", desk);
+        Assert.Contains("var request = snapshot.ToRequest()", desk);
+        Assert.Contains("RestaurantProgressPendingRequest", desk);
+        Assert.Contains("await SavePendingProgressAsync(actor, next, cancellationToken)", desk);
+        Assert.Contains("if (recovering)", desk);
+        Assert.Contains("ResolveConfirmedProgressAsync(canonical, actor, cancellationToken)", desk);
+        Assert.Contains("history.클라이언트요청Id == snapshot.RequestId", desk);
+        Assert.DoesNotContain("업무멱등재시도실행기.한번Async", desk);
+        Assert.Equal(1, desk.Split("_foodOrderClient.음식점진행변경Async(").Length - 1);
+        Assert.True(desk.IndexOf("if (recovering)", StringComparison.Ordinal)
+            < desk.IndexOf("_foodOrderClient.음식점진행변경Async(", StringComparison.Ordinal));
         Assert.Contains("RetryIdempotent", Read("Ssalddel.Contracts", "Common/Workflow/업무실패복구Dtos.cs"));
         Assert.Contains("TryRefreshCanonicalOrderAsync", desk);
         Assert.Contains("_foodOrderClient.주문상세조회Async(orderNo", desk);
@@ -249,7 +261,14 @@ public sealed class FoodDeliveryV30PageCompositionTests
         Assert.Contains("<RestaurantRouteView", routes);
         Assert.Contains("RouteData.PageType == typeof(Pages.Login)", routeView);
         Assert.Contains("AuthService.EnsureAccessTokenAsync", routeView);
-        Assert.Contains("NavigationManager.NavigateTo(\"/login\", replace: true)", routeView);
+        Assert.Contains("AuthService.OrderReturn.TrackOrder", routeView);
+        AssertAppearsBetween(routeView,
+            "if (result.RequiresLogin)",
+            "CommerceAuthenticationRoutes.TryReturnRoute(\"/\" + relative, out var commerceReturn)",
+            "NavigationManager.NavigateTo(loginHref, replace: true)");
+        Assert.Contains("NavigationManager.ToBaseRelativePath(NavigationManager.Uri)", routeView);
+        Assert.Contains("CommerceAuthenticationRoutes.LoginHref(\"/login\", commerceReturn)", routeView);
+        Assert.Contains(": \"/login\";", routeView);
         Assert.Contains(".restaurant-navmenu", styles);
         Assert.Contains("width: 100%;", styles);
         Assert.DoesNotContain("width: 280px;", styles);

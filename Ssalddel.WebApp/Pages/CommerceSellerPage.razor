@@ -1,0 +1,5 @@
+@page "/commerce/seller"
+@inject NavigationManager Navigation
+<PageTitle>판매자 확인 · Mirror</PageTitle>
+<Ssalddel.Ui.Common.Areas.App.Components.Commerce.판매자확인Page LoginHref="@LoginHref" />
+@code { private string LoginHref => Navigation.ToAbsoluteUri(Ssalddel.Contracts.Common.Commerce.CommerceAuthenticationRoutes.LoginHref("/login", Ssalddel.Contracts.Common.Commerce.CommerceAuthenticationRoutes.Seller).TrimStart('/')).ToString(); }

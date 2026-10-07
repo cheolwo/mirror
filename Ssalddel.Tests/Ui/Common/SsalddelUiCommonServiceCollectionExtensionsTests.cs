@@ -330,7 +330,7 @@ public sealed class SsalddelUiCommonServiceCollectionExtensionsTests
             && x.Lifetime == ServiceLifetime.Scoped);
         Assert.Contains(services, x =>
             x.ServiceType == typeof(음식점탐색PageViewModel)
-            && x.ImplementationType == typeof(음식점탐색PageViewModel)
+            && x.ImplementationFactory is not null
             && x.Lifetime == ServiceLifetime.Transient);
         Assert.Contains(services, x =>
             x.ServiceType == typeof(I주문자앱인증Service)
@@ -596,6 +596,28 @@ public sealed class SsalddelUiCommonServiceCollectionExtensionsTests
             x.ServiceType == typeof(공동구매화면ViewModel)
             && x.ImplementationType == typeof(공동구매화면ViewModel)
             && x.Lifetime == ServiceLifetime.Transient);
+    }
+
+    [Fact]
+    public async Task 음식주문작성과접수복구는_페이지안에서함께동작하고_다음페이지와수명을공유하지않는다()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(new HttpClient { BaseAddress = new Uri("https://api.ssalddel.test/") });
+        services.AddSingleton<IJSRuntime, TestJsRuntime>();
+        services.AddSsalddelUiCommonAppServices();
+        await using var provider = services.BuildServiceProvider(validateScopes: true);
+        await using var scope = provider.CreateAsyncScope();
+        using var first = scope.ServiceProvider.GetRequiredService<음식점탐색PageViewModel>();
+        using var second = scope.ServiceProvider.GetRequiredService<음식점탐색PageViewModel>();
+        Assert.NotSame(first.접수복구, second.접수복구);
+        Assert.True(first.작성.입력잠금);
+        Assert.True(second.작성.입력잠금);
+        await first.접수복구!.계정설정Async("synthetic-owner");
+        Assert.False(first.작성.입력잠금);
+        Assert.True(second.작성.입력잠금);
+        first.Dispose();
+        await second.접수복구!.계정설정Async("synthetic-owner");
+        Assert.False(second.작성.입력잠금);
     }
 
     [Fact]

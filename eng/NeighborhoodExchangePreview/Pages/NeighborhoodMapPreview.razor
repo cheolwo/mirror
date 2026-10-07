@@ -1,0 +1,11 @@
+@page "/community/map"
+<PageTitle>생활 지도 검토</PageTitle>
+<Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodExchangeMapPage Layers="@Layers" View="@View" Region="@Region" Panel="@Panel" Target="@Target" Related="@Related" />
+@code {
+    [SupplyParameterFromQuery(Name = "layers")] public string? Layers { get; set; }
+    [SupplyParameterFromQuery(Name = "view")] public string? View { get; set; }
+    [SupplyParameterFromQuery(Name = "region")] public string? Region { get; set; }
+    [SupplyParameterFromQuery(Name = "panel")] public string? Panel { get; set; }
+    [SupplyParameterFromQuery(Name = "target")] public string? Target { get; set; }
+    [SupplyParameterFromQuery(Name = "related")] public string? Related { get; set; }
+}

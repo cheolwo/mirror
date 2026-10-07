@@ -1,0 +1,17 @@
+.food-role-detail { color: var(--ss-ink, #172b36); background: white; }
+.food-role-detail header { padding: 1rem 1rem .5rem; }
+.food-role-detail h2 { margin: 0; font-size: 1.1rem; }
+.food-role-detail header p { color: var(--ss-muted, #586b78); margin: .35rem 0; }
+.food-role-detail > p { padding: 0 1rem; }
+.food-role-detail__body { display: grid; gap: .75rem; padding: 0 1rem 1rem; }
+.food-role-detail__section { border-top: 1px solid var(--ss-border, #dce5e9); padding-top: .75rem; }
+.food-role-detail h3 { font-size: 1rem; margin: 0 0 .5rem; }
+.food-role-detail dl { margin: 0; display: grid; gap: .45rem; }
+.food-role-detail dl div { display: grid; grid-template-columns: minmax(5.5rem, 30%) minmax(0, 1fr); gap: .7rem; }
+.food-role-detail dt { color: var(--ss-muted, #586b78); }
+.food-role-detail dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.food-role-detail footer { display: flex; flex-wrap: wrap; gap: .5rem; border-top: 1px solid var(--ss-border, #dce5e9); padding: .75rem 1rem; }
+.food-role-detail footer button, .food-role-detail footer a { display: inline-flex; align-items: center; justify-content: center; min-height: 2.75rem; border: 1px solid var(--ss-border, #dce5e9); border-radius: .5rem; padding: .5rem .8rem; font: inherit; background: white; color: inherit; text-decoration: none; }
+.food-role-detail footer .food-role-detail__primary { background: var(--ss-accent, #0f766e); border-color: var(--ss-accent, #0f766e); color: white; }
+.food-role-detail button:disabled { opacity: .6; }
+.food-role-detail footer p { flex-basis: 100%; margin: .25rem 0; }

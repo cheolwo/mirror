@@ -119,7 +119,28 @@ public static class SsalddelUiCommonServiceCollectionExtensions
 
     private static IServiceCollection AddSsalddelUiCommonModules(IServiceCollection services)
     {
+        Ssalddel.Ui.Common.Areas.App.Services.Commerce.통신판매보호UiModule.AddCommerceProtectionUi(services);
         ArgumentNullException.ThrowIfNull(services);
+
+        services.TryAddScoped<INeighborhoodExchangeClient, NeighborhoodExchangeClient>();
+        services.TryAddScoped<INeighborhoodCollaborationClient, NeighborhoodCollaborationClient>();
+        services.TryAddScoped<INeighborhoodStorageClient, NeighborhoodStorageClient>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodCollaborationAuthoringViewModel>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodCollaborationQueryViewModel>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodCollaborationSourceViewModel>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodStorageAuthoringViewModel>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodStorageQueryViewModel>();
+        services.TryAddScoped<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodCollaborationDraftSession>();
+        services.TryAddScoped<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodStorageDraftSession>();
+        services.TryAddScoped<INeighborhoodExchangeMapClient, NeighborhoodExchangeMapClient>();
+        services.TryAddScoped<INeighborhoodMapHost, UnsupportedNeighborhoodMapHost>();
+        services.TryAddScoped<INeighborhoodMapPreferenceStore, VolatileNeighborhoodMapPreferenceStore>();
+        services.TryAddScoped<Ssalddel.Ui.Common.Areas.App.Services.NeighborhoodMapWorkspaceSession>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodExchangeMapViewModel>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodExchangeViewModel>();
+        services.TryAddScoped<INeighborhoodDeliveryClient, NeighborhoodDeliveryClient>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodDeliveryAuthoringViewModel>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodDeliveryQueryViewModel>();
 
         services.TryAddSingleton<역할앱생명주기State>();
         services.AddSsalddelUiCoreModule();

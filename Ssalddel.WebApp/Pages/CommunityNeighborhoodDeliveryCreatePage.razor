@@ -1,0 +1,11 @@
+@page "/community/exchange/deliveries/new"
+@inject NavigationManager Navigation
+<PageTitle>물건 배송 요청 · 살뜰</PageTitle>
+<Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodDeliveryCreate SourcePostId="@SourcePostId" CollaborationId="@CollaborationId" ReturnUrl="@ReturnUrl" LoginHref="@LoginHref" />
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "sourcePostId")] public long? SourcePostId { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "collaborationId")] public string? CollaborationId { get; set; }
+    private string ReturnRoute => NeighborhoodDeliveryRoutes.Create + "?sourcePostId=" + SourcePostId + "&collaborationId=" + Uri.EscapeDataString(CollaborationId ?? "") + (NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? "&returnUrl=" + Uri.EscapeDataString(home) : "");
+    private string LoginHref => Navigation.ToAbsoluteUri($"login?returnUrl={Uri.EscapeDataString(Navigation.ToAbsoluteUri(ReturnRoute.TrimStart('/')).PathAndQuery)}").ToString();
+}

@@ -1,0 +1,41 @@
+@page "/community/map"
+@page "/community/exchange/write"
+@page "/community/exchange/spaces/new"
+@page "/community/exchange/deliveries/new"
+@page "/community/exchange/deliveries"
+@page "/community/exchange/spaces"
+@using Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange
+@inject NavigationManager Navigation
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside style="padding:6px 16px;background:#eaf5f3;color:#0f766e;font-size:12px">화면 배치 미리보기 · 예시 자료 · 실제 저장/입금 없음</aside>
+@switch (new Uri(Navigation.Uri).AbsolutePath)
+{
+    case "/community/exchange/write":
+        <ExchangeWrite InitialRegionKey="@Region" ReturnUrl="@ReturnUrl" />
+        break;
+    case "/community/exchange/spaces/new":
+        <NeighborhoodStorageCreate ReturnUrl="@ReturnUrl" />
+        break;
+    case "/community/exchange/deliveries/new":
+        <NeighborhoodDeliveryCreate ReturnUrl="@ReturnUrl" />
+        break;
+    case "/community/exchange/deliveries":
+        <NeighborhoodDeliveryList ReturnUrl="@ReturnUrl" />
+        break;
+    case "/community/exchange/spaces":
+        <NeighborhoodStorageList Mine="@Mine" Region="@Region" ReturnUrl="@ReturnUrl" />
+        break;
+    default:
+        <NeighborhoodExchangeMapPage Layers="@Layers" View="@View" Region="@Region" Panel="@Panel" Target="@Target" Related="@Related" />
+        break;
+}
+@code {
+    [SupplyParameterFromQuery(Name = "layers")] public string? Layers { get; set; }
+    [SupplyParameterFromQuery(Name = "view")] public string? View { get; set; }
+    [SupplyParameterFromQuery(Name = "region")] public string? Region { get; set; }
+    [SupplyParameterFromQuery(Name = "panel")] public string? Panel { get; set; }
+    [SupplyParameterFromQuery(Name = "target")] public string? Target { get; set; }
+    [SupplyParameterFromQuery(Name = "related")] public string? Related { get; set; }
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+    [SupplyParameterFromQuery(Name = "mine")] public bool Mine { get; set; }
+}

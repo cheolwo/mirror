@@ -4,6 +4,15 @@ let googleMapsLoadPromise;
 let transportSimulationModulePromise;
 
 const dayMapStyle = [];
+// 생활 지도는 이 파일의 기존 키·출처 확인과 로더만 공유합니다.
+export async function ensureGoogleMapsRuntime(suppliedRuntimeConfig) {
+    const runtimeConfig = suppliedRuntimeConfig ?? globalThis.ssalddelRuntimeConfig;
+    if (!isRuntimeOriginAllowed(runtimeConfig)) return "blocked-origin";
+    const loaded = Boolean(globalThis.google?.maps?.importLibrary);
+    const apiKey = loaded ? "" : consumeRuntimeValue(runtimeConfig, "browserApiKey", "googleMapsBrowserApiKey");
+    if (!loaded && !apiKey) return "unconfigured";
+    try { await loadGoogleMaps(apiKey); return "ready"; } catch { return "failed"; }
+}
 const nightMapStyle = [
     { elementType: "geometry", stylers: [{ color: "#202536" }] },
     { elementType: "labels.icon", stylers: [{ visibility: "simplified" }, { saturation: -35 }, { lightness: -18 }] },

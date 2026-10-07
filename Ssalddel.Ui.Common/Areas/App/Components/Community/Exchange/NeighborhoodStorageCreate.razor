@@ -1,0 +1,48 @@
+@inherits NeighborhoodWorkflowPageBase<NeighborhoodStorageAuthoringViewModel>
+@{ Model.SynchronizeOwner(); }
+<NeighborhoodDeliveryFrame><main class="exchange-page">
+    <a class="exchange-back" href="@Href(BackHref)">← @(NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is null ? "내 공간" : "생활 지도")</a>
+    <header><span class="exchange-eyebrow">생활 교류</span><h1>@(SpaceId is null ? "보관공간 등록" : "보관공간 수정")</h1></header>
+    @if (!Model.IsAuthenticated) { <section class="exchange-empty"><h2>로그인이 필요해요</h2><a class="exchange-primary" href="@LoginHref">로그인하기</a></section> }
+    else
+    {
+        @if (Model.IsLoading) { <p role="status">공간 정보를 확인하는 중입니다.</p> }
+        @if (Model.Error is not null) { <div class="exchange-error" role="alert">@Model.Error @if (!Model.NeedsReview) { <button @onclick="Reload">다시 불러오기</button> }</div> }
+        @if (Model.Notice is not null) { <p role="status" class="exchange-note">@Model.Notice</p> }
+        @if (Model.NeedsReview) { <section class="exchange-surface"><h2>이전 요청 결과 확인</h2><p>입력과 요청 번호를 유지했습니다. 결과 조회는 재등록이 아닙니다.</p><button disabled="@Model.IsSending" @onclick="Recover">처리 결과 확인</button><button disabled="@Model.IsSending" @onclick="Save">같은 요청 직접 다시 보내기</button></section> }
+        else if (Model.Loaded)
+        {
+            <form @onsubmit="Save" @onsubmit:preventDefault><fieldset disabled="@Model.IsSending"><legend>보관공간 정보</legend>
+                <section class="exchange-surface"><h2>공개할 소개</h2><p class="exchange-note">@NeighborhoodStorageRoutes.PrivacyNotice</p>
+                    <label for="space-title">이름</label><input id="space-title" @bind="Model.Form.Title" @bind:event="oninput" maxlength="120" required />
+                    <label for="space-region">동네</label><select id="space-region" @bind="Model.Form.RegionKey" required><option value="">동네 선택</option>@foreach (var region in Model.Regions) { <option value="@region.RegionKey">@region.DisplayName</option> }</select>
+                    <label for="space-goods">맡길 수 있는 물건</label><input id="space-goods" @bind="Model.Form.GoodsKind" maxlength="100" required />
+                    <label for="space-description">이용 조건</label><textarea id="space-description" @bind="Model.Form.Description" @bind:event="oninput" maxlength="1000" rows="3"></textarea>
+                    <label for="space-capacity">최대 상자 수</label><input id="space-capacity" type="number" @bind="Model.Form.Capacity" min="1" required />
+                    <label for="space-from">제공 시작</label><input id="space-from" type="datetime-local" @bind="Model.Form.From" />
+                    <label for="space-until">제공 종료</label><input id="space-until" type="datetime-local" @bind="Model.Form.Until" />
+                </section>
+                <section class="exchange-surface"><h2>비공개 인계 정보</h2><p>공개 지도와 목록에는 표시하지 않습니다. 현재 보관 조건과 정보 제공에 동의한 상대방에게만 안내합니다.</p>
+                    <label for="space-address">인계 주소</label><input id="space-address" @bind="Model.Form.Address" @bind:event="oninput" maxlength="500" required />
+                    <label for="space-contact">인계 연락처</label><input id="space-contact" type="tel" @bind="Model.Form.Contact" maxlength="100" required />
+                    <label for="space-instructions">인계 방법</label><textarea id="space-instructions" @bind="Model.Form.Instructions" maxlength="1000" rows="3"></textarea>
+                </section>
+                <label class="delivery-check"><input type="checkbox" @bind="Model.Form.PrivacyConfirmed" /><span>공개 소개와 비공개 인계 정보를 구분해 입력했습니다.</span></label>
+                @if (SpaceId is null) { <label class="delivery-check"><input type="checkbox" @bind="Model.Form.Publish" /><span>저장하면서 공개 목록에 제공을 시작합니다.</span></label><p class="exchange-note">선택하지 않으면 내 공간에 초안으로 저장됩니다.</p> }
+                <button type="submit" class="exchange-primary" disabled="@(!Model.Form.PrivacyConfirmed)">@(Model.IsSending ? "처리 중…" : "공간 저장")</button>
+            </fieldset></form>
+        }
+    }
+</main></NeighborhoodDeliveryFrame>
+@code {
+    [Parameter] public string? SpaceId { get; set; }
+    [Parameter] public string? ReturnUrl { get; set; }
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    private string BackHref => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) ?? NeighborhoodStorageRoutes.ListPage + "?mine=true";
+    protected override Task OnParametersSetAsync() => Reload();
+    protected override async Task OnAfterRenderAsync(bool firstRender) { Model.SynchronizeOwner(); if (Model.IsAuthenticated && !Model.Loaded && !Model.IsLoading && !Model.IsSending && !Model.NeedsReview && Model.Error is null) await Reload(); }
+    private Task Reload() => Model.InitializeAsync(SpaceId);
+    private async Task Save() { if (await Model.SaveAsync() is { } id) Navigation.NavigateTo(Href(ResultHref(id))); }
+    private async Task Recover() { if (await Model.RecoverAsync() is { } id) Navigation.NavigateTo(Href(ResultHref(id))); }
+    private string ResultHref(string id) => NeighborhoodMapNavigation.ReturnToPanel(ReturnUrl, "space", id) ?? NeighborhoodStorageRoutes.DetailPage(id);
+}

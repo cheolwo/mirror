@@ -28,7 +28,9 @@ public sealed class ShipperRequestAuthoringCompositionTests
         Assert.DoesNotContain("ICommunityPostClient", source);
         if (project == "Ssalddel.WebApp")
         {
-            Assert.Contains("RootBackHref=\"@RouteContext.RootPath\"", source);
+            Assert.Contains(route == "/shipper/request/cargo"
+                ? "RootBackHref=\"@(RouteContext.ReturnPath ?? RouteContext.RootPath)\""
+                : "RootBackHref=\"@RouteContext.RootPath\"", source);
         }
     }
 

@@ -1,0 +1,37 @@
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@implements IDisposable
+@inject IRoleWorkspaceAccess Access
+@inject NavigationManager Navigation
+
+<main class="role-login" style="max-width:420px;margin:48px auto;padding:20px">
+    <h1>@(RoleWorkspaceCatalog.Find(RoleKey)?.Label ?? "활동") 로그인</h1>
+    <form @onsubmit="SignIn" @onsubmit:preventDefault="true">
+        <label>아이디<input autocomplete="username" @bind="_name" disabled="@_busy" style="display:block;width:100%;min-height:48px" /></label>
+        <label>비밀번호<input type="password" autocomplete="current-password" @bind="_password" disabled="@_busy" style="display:block;width:100%;min-height:48px" /></label>
+        @if (_error is not null) { <p role="alert">@_error</p> }
+        <button type="submit" disabled="@_busy" style="min-height:48px">@(_busy ? "로그인 중" : "로그인")</button>
+        <button type="button" @onclick="Cancel" style="min-height:48px">취소</button>
+    </form>
+</main>
+@code {
+    [Parameter] public string RoleKey { get; set; } = "community";
+    [Parameter] public string? ReturnUrl { get; set; }
+    private string _name = "", _password = "";
+    private string? _error;
+    private bool _busy, _disposed;
+    private readonly CancellationTokenSource _lifetime = new();
+    private string ReturnPath => SafeReturn(ReturnUrl) ?? $"/workspace/{RoleWorkspaceCatalog.Find(RoleKey)?.Key ?? "community"}";
+    private static string? SafeReturn(string? path) => path is not null && path.StartsWith("/workspace/", StringComparison.Ordinal)
+        && !path.Contains("//", StringComparison.Ordinal) && !path.Contains('\\') && !path.Any(char.IsControl) ? path : null;
+    private async Task SignIn()
+    {
+        if (_busy || _disposed) return;
+        _busy = true; _error = null;
+        try { await Access.SignInAsync(RoleKey, _name, _password, _lifetime.Token); if (!_disposed) Navigation.NavigateTo(ReturnPath); }
+        catch (OperationCanceledException) { }
+        catch (Exception) { if (!_disposed) _error = "로그인하지 못했습니다. 아이디와 비밀번호를 확인한 뒤 다시 시도해 주세요."; }
+        finally { _password = ""; _busy = false; }
+    }
+    private void Cancel() { _lifetime.Cancel(); _password = ""; Navigation.NavigateTo(ReturnPath); }
+    public void Dispose() { _disposed = true; _lifetime.Cancel(); _lifetime.Dispose(); _password = ""; }
+}

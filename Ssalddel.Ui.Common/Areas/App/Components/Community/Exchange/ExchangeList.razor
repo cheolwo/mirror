@@ -1,0 +1,49 @@
+@inherits ExchangePageBase
+
+<ExchangeFrame><main class="exchange-page">
+    <header><span class="exchange-eyebrow">살뜰 · 생활 교류</span><h1>일상에서 서로 돕기</h1><p>물건, 공간, 시간과 재능. 제공할 수 있는 것과 필요한 것을 나눠 보세요.</p></header>
+    <a class="exchange-primary" href="@Href(NeighborhoodExchange.Write)">글 올리기</a>
+    <nav class="exchange-tabs" aria-label="글 구분">
+        @foreach (var choice in Choices)
+        {
+            <a class="@(Model.IntentFilter == choice.Value ? "selected" : null)" aria-current="@(Model.IntentFilter == choice.Value ? "page" : null)" href="@Href(ListHref(choice.Value, 1))">@choice.Label</a>
+        }
+    </nav>
+    @if (Model.IsLoading) { <p role="status">글을 불러오고 있습니다.</p> }
+    else if (Model.Error is not null)
+    { <div class="exchange-error" role="alert">@Model.Error <button @onclick="Reload">다시 불러오기</button></div> }
+    else if (Model.Items.Count == 0)
+    { <section class="exchange-empty"><h2>아직 올라온 글이 없어요</h2><p>작은 도움이나 필요한 것부터 올려 보세요.</p></section> }
+    else
+    {
+        <section class="exchange-list" aria-label="교류 글 목록">
+        @foreach (var post in Model.Items)
+        {
+            <a class="exchange-row" href="@Href(NeighborhoodExchange.Detail(post.Id))">
+                <span class="exchange-kind">@post.RoleTag</span><h2>@post.Title</h2>
+                <p>@Excerpt(post.Body)</p><small>@post.Nickname · @post.CreatedAtUtc.ToLocalTime().ToString("MM.dd")</small>
+            </a>
+        }
+        </section>
+    }
+    @if (!Model.IsLoading && Model.Error is null && (Model.Page > 1 || Model.HasNext))
+    {
+        <nav class="exchange-pagination" aria-label="목록 페이지">
+            @if (Model.Page > 1) { <a href="@Href(ListHref(Model.IntentFilter, Model.Page - 1))">이전</a> }
+            <span>@Model.Page 페이지</span>
+            @if (Model.HasNext) { <a href="@Href(ListHref(Model.IntentFilter, Model.Page + 1))">다음</a> }
+        </nav>
+    }
+    <a class="exchange-back" href="@Href("/community")">공개 커뮤니티로</a>
+    <a class="exchange-back" href="@Href(NeighborhoodDeliveryRoutes.Home)">내 배송 의뢰</a>
+</main></ExchangeFrame>
+
+@code {
+    [Parameter] public string? Intent { get; set; }
+    [Parameter] public int Page { get; set; } = 1;
+    private static readonly (string Label, string? Value)[] Choices = [("전체", null), ("제공해요", NeighborhoodExchange.Offer), ("필요해요", NeighborhoodExchange.Need)];
+    protected override Task OnParametersSetAsync() => Model.LoadListAsync(Intent, Page);
+    private Task Reload() => Model.LoadListAsync(Intent, Page);
+    public static string ListHref(string? intent, int page) => $"{NeighborhoodExchange.Home}?page={Math.Max(1, page)}" + (NeighborhoodExchange.IsIntent(intent) ? $"&intent={Uri.EscapeDataString(intent!)}" : "");
+    private static string Excerpt(string body) => body.Length <= 100 ? body : body[..100] + "…";
+}

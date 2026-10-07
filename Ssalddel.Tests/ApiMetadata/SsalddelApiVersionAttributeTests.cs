@@ -188,6 +188,20 @@ public sealed class SsalddelApiVersionAttributeTests
     }
 
     [Fact]
+    public void WorkflowParticipants_IncludeExistingUseCaseActorPairsWithoutDuplicates()
+    {
+        var participants = SsalddelWorkflowParticipants.GetAll();
+
+        Assert.Equal(participants.Count, participants.Select(item => (item.Workflow, item.ActorCode)).Distinct().Count());
+        Assert.Contains(participants, participant => participant.Workflow == SsalddelWorkflow.CustomsAndTradeData
+            && participant.ActorCode == nameof(SsalddelActor.ShipperOrSeller) && participant.IsPrimary);
+        Assert.Contains(participants, participant => participant.Workflow == SsalddelWorkflow.FoodDelivery
+            && participant.ActorCode == nameof(SsalddelActor.PlatformOperator) && !participant.IsPrimary);
+        Assert.Contains(participants, participant => participant.Workflow == SsalddelWorkflow.SsalddelMart
+            && participant.ActorCode == nameof(SsalddelActor.Orderer) && participant.IsPrimary);
+    }
+
+    [Fact]
     public void CoreUseCases_RecordPrimaryActorMetadata()
     {
         AssertUseCaseHasPrimaryActor(typeof(화주운송의뢰UseCase), SsalddelActor.Shipper);
@@ -354,6 +368,9 @@ public sealed class SsalddelApiVersionAttributeTests
             operatingSystem.CanonicalOperatingSystemId == OperatingSystemIds.GroupPurchaseDemand &&
             operatingSystem.FeatureKey == VersionFeatureFlagKeys.GroupPurchaseDemandWorkflow &&
             !operatingSystem.IsEnabled &&
+            operatingSystem.LifecycleStages.Count == 4 &&
+            operatingSystem.LifecycleStages.Any(stage =>
+                stage.StageId == OperatingSystemLifecycleStageIds.DemandHandoffApproval) &&
             operatingSystem.Engines.Any(engine =>
                 engine.EngineCode == EngineFamilyIds.GroupPurchaseClustering &&
                 engine.RuntimeStatus == RuntimeCapabilityStatuses.Active &&
@@ -371,13 +388,46 @@ public sealed class SsalddelApiVersionAttributeTests
             operatingSystem.OperatingSystemCode == nameof(SsalddelOperatingSystem.PlatformOperations) &&
             operatingSystem.FeatureKey == VersionFeatureFlagKeys.PlatformOperationsControl &&
             !operatingSystem.IsEnabled &&
+            operatingSystem.LifecycleStages.Count == 3 &&
+            operatingSystem.LifecycleStages.Any(stage =>
+                stage.StageId == OperatingSystemLifecycleStageIds.PlatformFollowupRecovery) &&
             operatingSystem.Engines.All(engine => engine.RuntimeStatus == RuntimeCapabilityStatuses.Declared));
+        Assert.Contains(response.OperatingSystems, operatingSystem =>
+            operatingSystem.CanonicalOperatingSystemId == OperatingSystemIds.GroupPurchaseImport &&
+            operatingSystem.LifecycleStages.Count == 5 &&
+            operatingSystem.LifecycleStages.Any(stage =>
+                stage.StageId == OperatingSystemLifecycleStageIds.ImportQualifiedReview));
+        Assert.Contains(response.OperatingSystems, operatingSystem =>
+            operatingSystem.CanonicalOperatingSystemId == OperatingSystemIds.CommunityTrust &&
+            operatingSystem.LifecycleStages.Count == 4 &&
+            operatingSystem.LifecycleStages.Any(stage =>
+                stage.StageId == OperatingSystemLifecycleStageIds.CommunityAgreementConsent));
+        Assert.Contains(response.Workflows, workflow =>
+            workflow.WorkflowCode == nameof(SsalddelWorkflow.CustomsAndTradeData) &&
+            workflow.Participants.Any(participant =>
+                participant.ActorCode == nameof(SsalddelActor.ShipperOrSeller) && participant.IsPrimary));
+        Assert.Contains(response.Workflows, workflow =>
+            workflow.WorkflowCode == nameof(SsalddelWorkflow.FoodDelivery) &&
+            workflow.Participants.Any(participant =>
+                participant.ActorCode == nameof(SsalddelActor.PlatformOperator) && !participant.IsPrimary));
+        Assert.Contains(response.Workflows, workflow =>
+            workflow.WorkflowCode == nameof(SsalddelWorkflow.SsalddelMart) &&
+            workflow.Participants.Any(participant =>
+                participant.ActorCode == nameof(SsalddelActor.Orderer) && participant.IsPrimary));
         Assert.Equal(OperatingSystemIds.All.Count, response.OperatingSystemCurrentStructures.Count);
         Assert.Contains(response.OperatingSystemCurrentStructures, structure =>
             structure.OperatingSystemId == OperatingSystemIds.ShipperTransportManagement &&
             structure.HasLifecycle &&
             structure.OrderSegments.Contains(OperatingSystemOrderSegments.OrderCommitment) &&
             structure.Status == OperatingSystemCurrentStructureStatuses.VerifiedFromLifecycle);
+        Assert.Contains(response.OperatingSystemCurrentStructures, structure =>
+            structure.OperatingSystemId == OperatingSystemIds.EducationFieldExperience &&
+            structure.HasLifecycle &&
+            structure.DefinedStageCount == 5 &&
+            structure.OrderSegments.Count == 0 &&
+            structure.Status == OperatingSystemCurrentStructureStatuses.VerifiedFromLifecycle);
+        Assert.DoesNotContain(response.OperatingSystems, operatingSystem =>
+            operatingSystem.CanonicalOperatingSystemId == OperatingSystemIds.EducationFieldExperience);
         Assert.Contains(response.OperatingSystemCurrentStructures, structure =>
             structure.OperatingSystemId == OperatingSystemIds.WarehouseCommerceFulfillment &&
             structure.HasLifecycle &&

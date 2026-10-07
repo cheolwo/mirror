@@ -1,0 +1,208 @@
+@using Ssalddel.Ui.Common.Areas.App.Models
+@inject NeighborhoodExchangeMapViewModel Model
+@inject INeighborhoodMapHost MapHost
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+<link rel="stylesheet" href="@Href("_content/Ssalddel.Ui.Common/Areas/App/css/neighborhood-map.css")" />
+@{ Model.SynchronizeOwner(); }
+<main class="neighborhood-map-page">
+    <header class="neighborhood-map-header"><div><span>우리 동네</span><h1>생활 지도</h1></div><details class="neighborhood-map-more"><summary>더 보기</summary><a href="@Href("/information/regional-agricultural-map")">공공자료</a><a href="@Href(AppsHref)">업무 앱</a></details></header>
+    <nav class="neighborhood-map-navigation @(HasSelectedWork ? "has-current-work" : "")" aria-label="생활 화면">
+        <button type="button" aria-pressed="@(Model.PanelKind is null or "post" or "spaces" or "space" ? "true" : "false")" @onclick="ShowNearby">주변 보기</button>
+        <button type="button" aria-pressed="@(Model.PanelKind is "mine" or "work" or "delivery" ? "true" : "false")" @onclick="ShowMine">내 할 일</button>
+        @if (!HasSelectedWork)
+        { <button type="button" data-neighborhood-start aria-pressed="@(Model.PanelKind == "register" ? "true" : "false")" @onclick="ShowRegistration">등록</button> }
+    </nav>
+    <details class="neighborhood-map-work-tools" data-neighborhood-work-tools>
+        <summary>업무 도구</summary>
+        <nav aria-label="생활 업무 도구">
+            <a href="@Href(Model.WriteHref)">교류 글 올리기</a>
+            <a href="@Href(NeighborhoodMapNavigation.WithReturn(NeighborhoodStorageRoutes.WritePage, Model.HomeHref))">보관공간 등록</a>
+            <a href="@Href(NeighborhoodMapNavigation.WithReturn(NeighborhoodDeliveryRoutes.Create, Model.HomeHref))">물건 배송 요청</a>
+            <a href="@Href(NeighborhoodMapNavigation.WithReturn(NeighborhoodDeliveryRoutes.Home, Model.HomeHref))">내 배송 목록</a>
+            <a href="@Href(NeighborhoodMapNavigation.WithReturn(NeighborhoodStorageRoutes.ListPage + "?mine=true", Model.HomeHref))">내 보관공간</a>
+        </nav>
+    </details>
+    @if (!Model.IsAuthenticated) { <p class="neighborhood-map-note">내 배송은 <a href="@LoginHref">로그인</a> 후 확인할 수 있어요.</p> }
+    <details class="neighborhood-map-settings">
+        <summary>표시 설정</summary>
+        <section class="neighborhood-map-tools" aria-label="지도 표시 설정">
+            <div class="neighborhood-map-layers">@foreach (var layer in LayerOptions) { <button type="button" aria-pressed="@(Model.HasLayer(layer.Code) ? "true" : "false")" disabled="@(layer.Code == NeighborhoodMapNavigation.Mine && !Model.IsAuthenticated)" @onclick="() => Toggle(layer.Code)">@layer.Label</button> }</div>
+            <div class="neighborhood-map-selectors"><label for="neighborhood-region">동네<select id="neighborhood-region" value="@Model.RegionKey" @onchange="SelectRegion"><option value="">전체 동네</option>@foreach (var region in Model.Regions) { <option value="@region.RegionKey">@region.DisplayName</option> }</select></label><div class="neighborhood-map-view-switch" aria-label="표시 방식"><button aria-pressed="@(Model.ViewMode == "map" ? "true" : "false")" @onclick="SetMapView">지도</button><button aria-pressed="@(Model.ViewMode == "list" ? "true" : "false")" @onclick="SetListView">목록</button></div></div>
+        </section>
+    </details>
+    @if (Model.PreferenceError is not null) { <p class="neighborhood-map-note" role="status">@Model.PreferenceError</p> }
+    @if (Model.Error is not null) { <div class="neighborhood-map-error" role="alert">@Model.Error<button @onclick="Refresh">다시 불러오기</button></div> }
+    <div class="neighborhood-map-workspace @(Model.ViewMode == "list" ? "is-list" : "")">
+        @if (Model.ViewMode == "map")
+        {
+            <section class="neighborhood-map-geography" aria-label="동네 지도">
+                <div class="neighborhood-map-surface"><div id="neighborhood-life-map-canvas" class="neighborhood-map-canvas" aria-label="동네와 선택 배송 지도"></div></div>
+                @if (_hostStatus.Code != "ready") { <div class="neighborhood-map-provider" role="status"><span>@(_hostStatus.Message ?? "지도 대신 목록으로 확인할 수 있습니다.")</span><button @onclick="RetryMap">지도 다시 시도</button><button @onclick="SetListView">목록 보기</button></div> }
+                <p class="neighborhood-map-note">공개 핀은 동네 기준 위치입니다. 실제 물품·집 주소가 아닙니다.</p>
+                @if (Model.Delivery is { } delivery)
+                {
+                    <details class="neighborhood-map-note"><summary>선택 배송의 지도 정보</summary><p>픽업은 주황색, 전달은 파란색 핀입니다.</p>
+                        @if (delivery.PlannedRoute is { } route) { <p>예정 거리 @(route.DistanceKm?.ToString("0.###") ?? "미확인") km · @(route.DurationMinutes?.ToString("0.#") ?? "미확인")분</p><p>@route.Notice · @(route.SourceCode == "NaverCloudDirections" ? "NAVER Directions" : "경로 제공 자료") · @route.CalculatedAtUtc.ToLocalTime().ToString("HH:mm")</p> }
+                        else { <p>@delivery.RouteNotice</p> }
+                        <p>@delivery.DriverLocationNotice</p>
+                        @if (Model.HasRecentDriverLocation && delivery.DriverLocation is { } driver) { <p>위치 측정 @driver.MeasuredAtUtc.ToLocalTime().ToString("HH:mm") · 수신 @driver.ReceivedAtUtc.ToLocalTime().ToString("HH:mm")</p> }
+                        else if (delivery.DriverLocation is not null) { <p>기사 위치 갱신을 기다리고 있습니다.</p> }
+                        <button disabled="@Model.DeliveryLoading" @onclick="RefreshDelivery">지도 진행 새로고침</button>
+                    </details>
+                }
+                @if (AnchorSource is { } anchor) { <details class="neighborhood-map-note"><summary>동네 대표점 출처</summary><p><a href="@anchor.AnchorSourceUrl" target="_blank" rel="noopener noreferrer">@anchor.AnchorSourceName</a> · @anchor.AnchorSourceVintage 판</p></details> }
+            </section>
+        }
+        <section class="neighborhood-map-panel" aria-label="선택 대상과 현재 할 일" data-neighborhood-map-occlusion>
+            @if (_suspended)
+            { <div class="neighborhood-map-empty" role="status"><h2>화면을 다시 확인하는 중입니다</h2><p>돌아오면 선택한 대상의 최신 정보를 확인합니다.</p></div> }
+            else if (Model.PanelKind is { } kind)
+            {
+                <header class="neighborhood-map-panel-heading"><span>@PanelLabel(kind)</span>@if (kind is "post" or "work" or "space" or "delivery") { <button @onclick="CloseDetail">목록으로</button> }</header>
+                <div class="neighborhood-map-panel-content">
+                    <NeighborhoodMapWorkspacePanel @ref="_panel" Kind="@kind" Target="@Model.PanelTarget" Related="@Model.PanelRelated" Region="@Model.RegionKey" ReturnUrl="@Model.HomeHref" LoginHref="@LoginHref" Scope="@Model.PanelScope" WorkListPage="@Model.WorkListPage" WorkListScope="@Model.WorkListScope" DeliveryListPage="@Model.DeliveryListPage" SpaceListPage="@Model.SpaceListPage" SpaceListMine="@Model.SpaceListMine" ScopeChanged="ChangeScope" ListContextChanged="RememberList" @key="@(kind + "|" + Model.PanelTarget + "|" + _authenticationRevision)" />
+                </div>
+            }
+            else if (Model.SelectedPublicData is { } publicData)
+            {
+                <header><h2>@publicData.DisplayNameKo 공공자료</h2><button @onclick="ClearSelection">목록으로</button></header><p>지역별 농수산물 관측 @publicData.ObservationCount 건</p><p class="neighborhood-map-note">공공자료의 시도 대표점이며 동네 물품 위치와 별개입니다. 출처 판본 @publicData.AnchorSourceVintage</p><a href="@publicData.AnchorSourceUrl" target="_blank" rel="noopener noreferrer">대표점 출처</a><span> · </span><a href="@Href("/information/regional-agricultural-map?country=KR")">공공자료 자세히</a>
+            }
+            else
+            {
+                <header><h2>@(Model.SelectedRegion?.DisplayName ?? "주변") 교류</h2><span>@Model.TotalCount 개</span></header>
+                @if (Model.IsLoading) { <p role="status">동네 정보를 불러오는 중입니다.</p> }
+                @if (Model.PublicDataLoading) { <p role="status">공공자료를 불러오는 중입니다.</p> }
+                @if (Model.PublicDataError is not null) { <p class="neighborhood-map-note" role="status">@Model.PublicDataError <button @onclick="Model.LoadPublicDataAsync">다시 시도</button></p> }
+                @if (Model.StorageLoading) { <p role="status">보관공간을 불러오는 중입니다.</p> }
+                @if (Model.StorageError is not null) { <p class="neighborhood-map-note" role="status">@Model.StorageError<button @onclick="Model.LoadStorageAsync">다시 시도</button></p> }
+                @if (Model.HasLayer(NeighborhoodMapNavigation.Storage)) { <a class="neighborhood-map-space-link" href="@Href(NeighborhoodMapNavigation.PanelHref(Model.HomeHref, "spaces"))">@(Model.SelectedRegion?.DisplayName ?? "동네") 보관공간 보기 @(Model.SelectedRegion is null ? "" : $"· {Model.SelectedStorageCount}개")</a> }
+                @if (Model.HasLayer(NeighborhoodMapNavigation.Offer) || Model.HasLayer(NeighborhoodMapNavigation.Need))
+                {
+                    @if (Model.PostsLoading) { <p role="status">글을 불러오는 중입니다.</p> }
+                    else if (Model.PostsError is not null) { <div class="neighborhood-map-error" role="alert">@Model.PostsError<button @onclick="() => Model.LoadPostsAsync(Model.Page)">다시 불러오기</button></div> }
+                    else if (Model.Posts.Count == 0) { <p>현재 선택한 동네와 구분에 해당하는 글이 없습니다.</p> }
+                    else { <ul class="neighborhood-map-rows">@foreach (var post in Model.Posts) { <li><a href="@Href(NeighborhoodMapNavigation.PanelHref(Model.HomeHref, "post", post.Id.ToString()))"><span>@(post.RoleTag == NeighborhoodExchange.Offer ? "제공해요" : "필요해요")</span><strong>@post.Title</strong><small>@(Model.Regions.FirstOrDefault(region => region.RegionKey == post.PublicNeighborhoodRegionKey)?.DisplayName ?? "동네 미지정")</small></a></li> }</ul> }
+                    <nav class="neighborhood-map-pager" aria-label="글 목록 페이지"><button disabled="@(Model.Page <= 1 || Model.PostsLoading)" @onclick="() => Model.LoadPostsAsync(Model.Page - 1)">이전</button><span>@Model.Page 페이지</span><button disabled="@(!Model.HasNext || Model.PostsLoading)" @onclick="() => Model.LoadPostsAsync(Model.Page + 1)">다음</button></nav>
+                }
+                @if (Model.UnlocatedCount + Model.UnsupportedCount > 0) { <p class="neighborhood-map-note">동네가 확인되지 않은 글 @(Model.UnlocatedCount + Model.UnsupportedCount)개 · <a href="@Href(NeighborhoodExchange.Home)">전체 글에서 확인</a></p> }
+                @if (Model.SelectedLayers.Count == 0) { <h2>표시할 정보가 꺼져 있어요</h2><p>표시 설정에서 제공해요 또는 필요해요를 켜 주세요.</p> }
+            }
+            @if (Model.DeliveryLoading) { <p role="status">선택한 배송 위치를 확인하는 중입니다.</p> }
+            @if (Model.DeliveryError is not null) { <div class="neighborhood-map-error" role="alert">@Model.DeliveryError<button @onclick="RefreshDelivery">다시 조회</button><button @onclick="ClearSelection">다른 대상 선택</button></div> }
+        </section>
+    </div>
+</main>
+@code {
+    [Parameter] public string? Layers { get; set; }
+    [Parameter] public string? View { get; set; }
+    [Parameter] public string? Region { get; set; }
+    [Parameter] public string? Panel { get; set; }
+    [Parameter] public string? Target { get; set; }
+    [Parameter] public string? Related { get; set; }
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    [Parameter] public string AppsHref { get; set; } = "/apps";
+    private static readonly (string Code, string Label)[] LayerOptions = [(NeighborhoodMapNavigation.Offer,"제공해요"),(NeighborhoodMapNavigation.Need,"필요해요"),(NeighborhoodMapNavigation.Mine,"내 진행 배송"),(NeighborhoodMapNavigation.Storage,"보관공간"),(NeighborhoodMapNavigation.PublicData,"공공자료")];
+    private NeighborhoodMapHostStatus _hostStatus = NeighborhoodMapHostStatus.Loading;
+    private long _renderedRevision = -1, _authenticationRevision, _lifecycleRevision;
+    private bool _disposed, _rendering, _suspended;
+    private bool HasSelectedWork => Model.IsAuthenticated && Model.PanelKind is "work" or "delivery" or "space";
+    private NeighborhoodMapWorkspacePanel? _panel;
+    private readonly CancellationTokenSource _lifetime = new();
+    private Task? _poll;
+    private string Href(string route) => Navigation.ToAbsoluteUri(route.TrimStart('/')).ToString();
+    private NeighborhoodPublicRegionDto? AnchorSource => Model.Regions.FirstOrDefault(region => !string.IsNullOrWhiteSpace(region.AnchorSourceName) && Uri.TryCreate(region.AnchorSourceUrl, UriKind.Absolute, out var source) && source.Scheme == "https");
+    protected override void OnInitialized()
+    {
+        Model.PropertyChanged += Changed; _poll = PollAsync();
+        if (MapHost is INeighborhoodMapInteractionHost interaction) { interaction.ViewportChanged += ViewportChanged; interaction.Suspended += Suspended; interaction.Invalidated += Invalidated; }
+    }
+    protected override Task OnParametersSetAsync() => _suspended ? Task.CompletedTask : Model.InitializeAsync(Layers, View, Region, Panel, Target, Related);
+    public async Task NotifyAuthenticationChangedAsync()
+    {
+        if (_disposed) return;
+        ++_authenticationRevision; Model.ResetAuthentication();
+        if (_suspended) { _renderedRevision = -1; await InvokeAsync(StateHasChanged); return; }
+        await MapHost.HideAsync(); _renderedRevision = -1;
+        await InvokeAsync(StateHasChanged);
+        await Model.InitializeAsync(Layers, View, Region, Panel, Target, Related);
+    }
+    public async Task NotifyDeliveryRefreshAsync(string requestId)
+    {
+        if (_disposed || _suspended || Model.PanelKind != "delivery" || Model.PanelTarget != requestId) return;
+        await Model.RefreshDeliveryAsync(false);
+        if (_panel is not null) await _panel.RefreshDeliveryAsync();
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_disposed || _rendering || _suspended) return;
+        if (Model.ViewMode != "map") { await MapHost.HideAsync(); _renderedRevision = -1; return; }
+        var state = Model.RenderState;
+        if (_renderedRevision == state.Revision) return;
+        _rendering = true;
+        try { _hostStatus = await MapHost.RenderAsync("neighborhood-life-map-canvas", state, id => InvokeAsync(() => SelectMarker(id)), _lifetime.Token); _renderedRevision = state.Revision; }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+        catch (Exception) { _hostStatus = NeighborhoodMapHostStatus.Unavailable; _renderedRevision = state.Revision; }
+        finally { _rendering = false; if (!_disposed) await InvokeAsync(StateHasChanged); }
+    }
+    private async Task SelectMarker(string id) { await Model.SelectMarkerAsync(id); SyncUrl(); }
+    private async Task Toggle(string code) { await Model.ToggleLayerAsync(code); SyncUrl(); }
+    private async Task SetView(string view) { await Model.SetViewAsync(view); SyncUrl(); }
+    private Task SetMapView() => SetView("map");
+    private Task SetListView() => SetView("list");
+    private async Task SelectRegion(ChangeEventArgs args) { await Model.SelectRegionAsync(args.Value?.ToString()); SyncUrl(); }
+    private void SyncUrl() { if (!_disposed) Navigation.NavigateTo(Href(Model.HomeHref), replace: true); }
+    private void ShowNearby() { Model.SelectPanel(null); SyncUrl(); }
+    private void ShowMine() { Model.SelectPanel("mine"); SyncUrl(); }
+    private void ShowRegistration() { Model.SelectPanel("register"); SyncUrl(); }
+    private void CloseDetail() { Model.SelectPanel(Model.PanelKind is "work" or "delivery" ? "mine" : Model.PanelKind == "space" ? "spaces" : null); SyncUrl(); }
+    private void ClearSelection() { Model.ClearSelection(); Model.SelectPanel(null); SyncUrl(); }
+    private void ChangeScope(string scope) => Model.SetPanelScope(scope);
+    private void RememberList(NeighborhoodMapListContext context) => Model.RecordListContext(context.Kind, context.Page, context.Scope);
+    private static string PanelLabel(string kind) => kind switch { "post" => "교류 글", "work" => "협업 진행", "space" => "보관공간", "delivery" => "배송 진행", "spaces" => "보관공간", "mine" => "내 할 일", "register" => "등록", _ => "선택 대상" };
+    private Task Refresh() => Model.RefreshPublicAsync();
+    private async Task RefreshDelivery() { await Model.RefreshDeliveryAsync(true); if (_panel is not null) await _panel.RefreshDeliveryAsync(); }
+    private async Task RetryMap() { await MapHost.HideAsync(); _renderedRevision = -1; _hostStatus = NeighborhoodMapHostStatus.Loading; await InvokeAsync(StateHasChanged); }
+    private void ViewportChanged(NeighborhoodMapViewport viewport) { if (!_disposed) _ = InvokeAsync(() => Model.SetViewport(viewport)); }
+    private void Suspended()
+    {
+        if (!_disposed) _ = InvokeAsync(() =>
+        {
+            if (_disposed) return;
+            ++_lifecycleRevision; _suspended = true; _panel = null;
+            Model.SuspendPrivate(); StateHasChanged();
+        });
+    }
+    private void Invalidated()
+    {
+        if (_disposed) return;
+        _ = InvokeAsync(async () =>
+        {
+            if (_disposed) return;
+            var lifecycle = ++_lifecycleRevision;
+            if (_suspended) await Model.InitializeAsync(Layers, View, Region, Panel, Target, Related);
+            if (_disposed || lifecycle != _lifecycleRevision) return;
+            var selected = Model.SelectedRequestId;
+            Model.InvalidateMap(); _renderedRevision = -1;
+            await Model.RefreshPublicAsync();
+            if (!_disposed && lifecycle == _lifecycleRevision && selected is not null && Model.SelectedRequestId == selected
+                && Model.PanelKind == "delivery" && Model.PanelTarget == selected)
+                await Model.SelectDeliveryAsync(selected, requireKnown: false);
+            if (!_disposed && lifecycle == _lifecycleRevision) { _suspended = false; StateHasChanged(); }
+        });
+    }
+    private void Changed(object? sender, System.ComponentModel.PropertyChangedEventArgs args) { if (!_disposed) _ = InvokeAsync(StateHasChanged); }
+    private async Task PollAsync()
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        try { while (await timer.WaitForNextTickAsync(_lifetime.Token)) await InvokeAsync(async () => { Model.SynchronizeOwner(); if (!_suspended) await Model.RefreshDeliveryAsync(false); StateHasChanged(); }); }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+    }
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed) return; _disposed = true; _lifetime.Cancel(); Model.PropertyChanged -= Changed; Model.Dispose();
+        if (MapHost is INeighborhoodMapInteractionHost interaction) { interaction.ViewportChanged -= ViewportChanged; interaction.Suspended -= Suspended; interaction.Invalidated -= Invalidated; }
+        try { await MapHost.HideAsync(); } catch (Exception) { }
+        if (_poll is not null) await _poll; _lifetime.Dispose();
+    }
+}

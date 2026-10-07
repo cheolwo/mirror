@@ -1,0 +1,15 @@
+@page "/"
+@page "/apps"
+@page "/workspace/{RoleKey}"
+@page "/workspace-login/{RoleKey}"
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside style="padding:6px 16px;background:#eaf5f3;color:#0f766e;font-size:12px" aria-label="미리보기 안내">화면 배치 미리보기 · 예시 자료</aside>
+@if (RoleKey is null) { <RoleSelectionHome /> }
+else if (new Uri(Navigation.Uri).AbsolutePath.StartsWith("/workspace-login/")) { <Ssalddel.Ui.Common.Areas.App.RoleWorkspace.RoleWorkspaceLogin RoleKey="@RoleKey" /> }
+else { <RoleMapWorkspace @key="(RoleKey, Scenario)" RoleKey="@RoleKey" SelectedId="@SelectedId" HomeHref="/" LoginHref="@($"/workspace-login/{RoleKey}")" /> }
+@code {
+    [Inject] public NavigationManager Navigation { get; set; } = default!;
+    [Parameter] public string? RoleKey { get; set; }
+    [SupplyParameterFromQuery(Name = "selected")] public string? SelectedId { get; set; }
+    [SupplyParameterFromQuery(Name = "scenario")] public string? Scenario { get; set; }
+}

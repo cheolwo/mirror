@@ -1,0 +1,16 @@
+.food-role-action { max-width: 44rem; margin: 0 auto; padding: 1.25rem; color: var(--ss-ink, #172b36); }
+.food-role-action h1 { font-size: 1.5rem; margin: 1rem 0; }
+.food-role-action h2 { font-size: 1.1rem; }
+.food-role-action fieldset { border: 0; padding: 0; display: grid; gap: 1rem; }
+.food-role-action label { display: grid; gap: .35rem; font-weight: 600; }
+.food-role-action input, .food-role-action select, .food-role-action textarea { min-height: 2.75rem; border: 1px solid var(--ss-border, #dce5e9); border-radius: .5rem; padding: .65rem; font: inherit; width: 100%; box-sizing: border-box; }
+.food-role-action .food-role-action__check { display: flex; align-items: center; gap: .65rem; font-weight: 400; }
+.food-role-action__check input { width: 1.3rem; min-height: 1.3rem; }
+.food-role-action button { min-height: 2.75rem; border: 1px solid var(--ss-border, #dce5e9); background: white; color: inherit; border-radius: .5rem; padding: .65rem 1rem; font: inherit; cursor: pointer; }
+.food-role-action .food-role-action__primary { color: white; background: var(--ss-accent, #0f766e); border-color: var(--ss-accent, #0f766e); }
+.food-role-action__confirmation { margin-top: 1.25rem; border-top: 1px solid var(--ss-border, #dce5e9); padding-top: 1rem; }
+.food-role-action__buttons { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+.food-role-action__error { border-left: .25rem solid var(--role-danger, #b42318); padding: .75rem; background: #fff5f5; }
+.food-role-action__pending { border-left: .25rem solid var(--ss-accent, #0f766e); padding: .75rem; background: #eef7f5; }
+.food-role-action__result { margin-top: 1.25rem; padding: 1rem; border: 1px solid var(--ss-border, #dce5e9); border-radius: .5rem; }
+.food-role-action button:disabled, .food-role-action fieldset:disabled { opacity: .65; }

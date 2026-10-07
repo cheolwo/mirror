@@ -1,0 +1,84 @@
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@inject IRoleWorkspaceApi Api
+@inject IRoleWorkspaceAccess Access
+@implements IDisposable
+
+<RoleSecondaryFrame Title="@(IncidentId is null ? "화물 예외 검토" : "화물 사건 검토")" ReturnHref="@BackHref"
+    ReturnLabel="@(IncidentId is null ? "운영 업무" : "사건 목록")" LoginHref="@LoginHref" Lifetime="@Model.Lifetime">
+    @if (Model.Message is { } message) { <p class="rw-warning" role="status">@message</p> }
+    @if (!Model.Lifetime.RequiresLogin && !Model.Lifetime.IsBusy)
+    {
+        @if (Model.Loaded && IncidentId is null)
+        {
+            <p class="rw-muted">화물 신고와 조치를 확인합니다. 음식 배달 중단 검토는 운영 업무에서 진행합니다.</p>
+            @if (Model.Items.Count == 0) { <section class="rw-card"><h2>검토할 화물 사건이 없습니다</h2></section> }
+            <ul class="rw-list">
+                @foreach (var item in Model.Items)
+                {
+                    <li class="rw-card"><a class="rw-row" href="@ReviewHref(item.사건StableId)">
+                        <strong>@CargoIncidentPresentation.Type(item.사건유형Code)</strong>
+                        <span>@CargoIncidentPresentation.State(item.상태Code) · @CargoIncidentPresentation.Actor(item.현재담당Code)</span>
+                        <span>@CargoIncidentPresentation.Control(item.업무통제상태Code) · 정산 @(item.정산보류적용여부 ? "보류" : "보류 없음")</span>
+                        <span class="rw-muted">운송 @item.운송Id · @item.운송의뢰Id</span>
+                        <span>상세·검토 →</span>
+                    </a></li>
+                }
+            </ul>
+        }
+        else if (Model.Loaded && Model.Source is { } source)
+        {
+            <section class="rw-card"><h2>@CargoIncidentPresentation.Type(source.사건유형Code)</h2><dl class="rw-fields">
+                <div><dt>진행</dt><dd>@CargoIncidentPresentation.State(source.상태Code)</dd></div>
+                <div><dt>담당</dt><dd>@CargoIncidentPresentation.Actor(source.현재담당Code)</dd></div>
+                <div><dt>운송</dt><dd>@CargoIncidentPresentation.Control(source.업무통제상태Code)</dd></div>
+                <div><dt>보류 범위</dt><dd>@CargoIncidentPresentation.Scope(source.보류범위Code)</dd></div>
+                <div><dt>정산</dt><dd>@(source.정산보류적용여부 ? "보류 중" : "보류 없음")</dd></div>
+                <div><dt>전체 수량</dt><dd>@(source.전체수량?.ToString() ?? "미확인")</dd></div>
+                <div><dt>증빙</dt><dd>@(source.증빙참조있음 ? "등록된 증빙 참조 있음" : "등록 참조 없음")</dd></div>
+                <div><dt>운송·의뢰</dt><dd>@source.운송Id · @source.운송의뢰Id</dd></div>
+            </dl></section>
+            @if (Model.Saved) { <a class="rw-link rw-primary" href="@BackHref">사건 목록으로</a> }
+            else if (Model.AwaitingResult)
+            { <button class="rw-primary" @onclick="Model.CheckResultAsync">저장 결과 다시 확인</button> }
+            else if (source.상태Code != "Closed")
+            {
+                <section class="rw-card"><h2>검토 결정</h2>
+                    <fieldset disabled="@Model.IsConfirming">
+                        <label>조치<select @bind="Model.Decision"><option value="">선택해 주세요</option>@foreach (var option in CargoIncidentReviewViewModel.Decisions) { <option value="@option.Key">@option.Value</option> }</select></label>
+                        @if (Model.Decision == "NormalAcceptedAffectedHeld")
+                        { <label>정상 수량<input type="number" min="1" @bind="Model.NormalQuantity" /></label><label>영향 수량<input type="number" min="1" @bind="Model.AffectedQuantity" /></label> }
+                        <label>검토 사유<textarea maxlength="1000" rows="4" @bind="Model.Reason"></textarea></label>
+                        <label class="rw-check"><input type="checkbox" @bind="Model.ReviewInsurance" />보험 적용 가능성 검토 요청</label>
+                        <button class="rw-primary" @onclick="Model.Prepare">결정 내용 확인</button>
+                    </fieldset>
+                    @if (Model.IsConfirming)
+                    {
+                        <div class="rw-warning"><h3>@Model.PendingDecision</h3><p>@Model.PendingReason</p>
+                            @if (Model.PendingNormalQuantity is not null) { <p>정상 @Model.PendingNormalQuantity 개 · 영향 @Model.PendingAffectedQuantity 개</p> }
+                            <p>보험 검토 @(Model.PendingInsuranceReview ? "요청" : "요청하지 않음")</p>
+                            <label class="rw-check"><input type="checkbox" @bind="Model.Confirmed" />이 결정과 근거를 기록합니다.</label>
+                            <div class="rw-actions"><button class="rw-primary" disabled="@(!Model.Confirmed)" @onclick="Model.SubmitAsync">@(Model.Lifetime.HasError ? "같은 내용으로 다시 시도" : "결정 저장")</button><button @onclick="Model.CancelConfirmation">입력으로 돌아가기</button></div>
+                        </div>
+                    }
+                </section>
+            }
+        }
+        @if (!Model.IsConfirming || !Model.Loaded)
+        { <button @onclick="Reload">@(Model.Loaded ? "새로고침" : "다시 불러오기")</button> }
+    }
+</RoleSecondaryFrame>
+@code {
+    [Parameter] public string? IncidentId { get; set; }
+    [Parameter] public string? ReturnUrl { get; set; }
+    private CargoIncidentReviewViewModel Model = default!;
+    private string WorkspaceReturn => RoleWorkspaceNavigation.LocalRoute(ReturnUrl) ?? "/workspace/operator";
+    private string ListHref => RoleWorkspaceNavigation.WithReturn("/workspace/operator/cargo-incidents", WorkspaceReturn)!;
+    private string BackHref => IncidentId is null ? WorkspaceReturn : ListHref;
+    private string LoginHref => RoleWorkspaceNavigation.WithReturn("/workspace-login/operator", IncidentId is null ? ListHref : ReviewHref(IncidentId))!;
+    private string ReviewHref(string id) => RoleWorkspaceNavigation.WithReturn("/workspace/operator/cargo-incidents/" + Uri.EscapeDataString(id) + "/review", WorkspaceReturn)!;
+    protected override void OnInitialized() { Model = new(Api, Access); Model.Lifetime.Changed += Changed; }
+    protected override Task OnParametersSetAsync() => Reload();
+    private Task Reload() => Model.LoadAsync(IncidentId);
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() { Model.Lifetime.Changed -= Changed; Model.Dispose(); }
+}

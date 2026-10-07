@@ -7,6 +7,9 @@ namespace Ssalddel.Ui.Common.Areas.App.Components.Food;
 /// <summary>음식 주문 내역 하위 컴포넌트가 공유하는 표시 형식만 제공합니다.</summary>
 internal static class OrdererFoodOrderPresentation
 {
+    public static bool IsStopped(string? status)
+        => 음식주문상태코드.Normalize(status) is 음식주문상태코드.취소 or 음식주문상태코드.거절;
+
     public static string RestaurantLabel(주문자음식주문요약응답 order)
         => string.IsNullOrWhiteSpace(order.음식점명)
             ? "음식점 이름 확인 필요"

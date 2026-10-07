@@ -1,0 +1,6 @@
+@inject NavigationManager Navigation
+<ExchangeFrame>
+    <link rel="stylesheet" href="@Navigation.ToAbsoluteUri("_content/Ssalddel.Ui.Common/Areas/App/css/neighborhood-delivery.css")" />
+    @ChildContent
+</ExchangeFrame>
+@code { [Parameter] public RenderFragment? ChildContent { get; set; } }

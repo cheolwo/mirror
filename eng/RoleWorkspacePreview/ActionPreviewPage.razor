@@ -1,0 +1,20 @@
+@page "/action-preview/{Scenario}"
+@using Ssalddel.Contracts.Food
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food
+@implements IDisposable
+@inject PreviewActionApi Api
+
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside style="padding:6px 16px;background:#eaf5f3;color:#0f766e;font-size:12px">화면 배치 미리보기 · 예시 자료</aside>
+<FoodRoleActionForm @key="Scenario" RoleKey="orderer" ItemId="order-preview" ActionKey="@음식배달가능행동Ids.주문취소" Completed="Completed" />
+<output hidden data-preview-writes="@Api.Writes" data-preview-reads="@Api.Reads" data-preview-completed="@(_completed ? "true" : "false")"></output>
+
+@code {
+    [Parameter] public string Scenario { get; set; } = "after-read-failure";
+    private bool _completed;
+    protected override void OnInitialized() => Api.Changed += Changed;
+    protected override void OnParametersSet() { _completed = false; Api.Reset(Scenario); }
+    private void Completed() => _completed = true;
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() => Api.Changed -= Changed;
+}

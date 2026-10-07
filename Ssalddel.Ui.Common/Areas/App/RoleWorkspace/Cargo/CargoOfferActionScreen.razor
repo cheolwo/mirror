@@ -1,0 +1,47 @@
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@implements IDisposable
+@inject CargoDriverWorkspaceApiClient Client
+@inject IRoleWorkspaceAccess Access
+
+<section class="cargo-action-screen" aria-label="추천 운송 참여">
+    <header><a href="@Model.ReturnHref">지도 업무로 돌아가기</a><h1>추천 운송 참여</h1></header>
+    @if (Model.Lifetime.RequiresLogin)
+    {
+        <MudAlert Severity="Severity.Warning">로그인 후 추천 운송을 확인해 주세요.</MudAlert>
+        <MudButton Href="@LoginHref" Variant="Variant.Filled" Color="Color.Primary">로그인</MudButton>
+    }
+    else
+    {
+        @if (Model.Lifetime.Message is { } message) { <MudAlert Severity="@(Model.Lifetime.HasError ? Severity.Error : Severity.Success)">@message</MudAlert> }
+        @if (Model.Lifetime.IsBusy) { <MudProgressLinear Indeterminate="true" aria-label="추천 운송 확인 중" /> }
+        @if (Model.Source is { } source && Model.Offer is { } offer)
+        {
+            <article class="cargo-action-card">
+                <h2>@source.화물종류</h2>
+                <dl><dt>상차지</dt><dd>@source.픽업지</dd><dt>하차지</dt><dd>@source.하차지</dd><dt>운임</dt><dd>@CargoWorkspacePresentation.Money(source.결제예정금액)</dd></dl>
+                <p>지도에 표시한 선은 직선 후보선이며 실제 주행 경로가 아닙니다.</p>
+                @foreach (var warning in Model.Warnings) { <MudAlert Severity="Severity.Warning">@warning</MudAlert> }
+                @if (!Model.ServerCandidateAvailable && !Model.Saved)
+                { <MudAlert Severity="Severity.Warning">현재 운송 조건이나 추천 유효기간을 확인해 주세요. 지금은 참여할 수 없습니다.</MudAlert> }
+                @if (!Model.Saved)
+                {
+                    <MudCheckBox T="bool" Label="차량·화물·일정 조건과 주의사항을 확인했습니다" @bind-Value="Model.ConditionsConfirmed" Disabled="Model.Lifetime.IsBusy" />
+                    <MudCheckBox T="bool" Label="확인한 운송에 참여하겠습니다" @bind-Value="Model.AcceptConfirmed" Disabled="Model.Lifetime.IsBusy" />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!Model.CanSubmit)" OnClick="Model.SubmitAsync">운송 참여</MudButton>
+                }
+            </article>
+        }
+        @if (!Model.Lifetime.IsBusy && !Model.Saved) { <MudButton Variant="Variant.Outlined" OnClick="Reload">추천 조건 다시 확인</MudButton> }
+    }
+</section>
+
+@code {
+    [Parameter] public string ItemId { get; set; } = "";
+    private CargoOfferActionViewModel Model = default!;
+    private string LoginHref => CargoWorkspaceRoutes.OfferLogin(ItemId);
+    protected override void OnInitialized() { Model = new(Client, Access); Model.Lifetime.Changed += Refresh; }
+    protected override Task OnParametersSetAsync() => Reload();
+    private Task Reload() => Model.LoadAsync(ItemId);
+    private void Refresh() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() { Model.Lifetime.Changed -= Refresh; Model.Dispose(); }
+}

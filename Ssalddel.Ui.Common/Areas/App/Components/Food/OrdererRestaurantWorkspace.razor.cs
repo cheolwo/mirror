@@ -9,6 +9,7 @@ public partial class OrdererRestaurantWorkspace
 {
     private bool _initialized;
     private bool _stopped;
+    private string? _recoveryAttemptedOwner;
     private readonly CancellationTokenSource _lifetimeCancellation = new();
 
     [Parameter]
@@ -76,6 +77,25 @@ public partial class OrdererRestaurantWorkspace
         await InitializeAsync();
         _initialized = !_stopped;
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        var owner = Authentication.세션.UserId;
+        if (_initialized && BusinessActive && Access.사용가능 && Authentication.로그인됨
+            && ViewModel.접수복구?.초기확인완료 == false && _recoveryAttemptedOwner != owner)
+        {
+            _recoveryAttemptedOwner = owner;
+            await ViewModel.접수결과재확인Async(false, _lifetimeCancellation.Token);
+        }
+    }
+
+    private Task CheckSubmissionAsync() => !BusinessActive ? Task.CompletedTask
+        : ViewModel.접수결과재확인Async(false, _lifetimeCancellation.Token);
+    private Task ResubmitAsync() => !BusinessActive ? Task.CompletedTask
+        : ViewModel.접수결과재확인Async(true, _lifetimeCancellation.Token);
+    private Task OpenRecoveredOrderAsync(string orderNo) => !BusinessActive ? Task.CompletedTask
+        : OrderSubmitted.InvokeAsync(orderNo);
 
     protected override async Task OnParametersSetAsync()
     {
@@ -172,10 +192,11 @@ public partial class OrdererRestaurantWorkspace
             return;
         }
 
-        await Detail.조회Async(restaurantId, _lifetimeCancellation.Token);
-        if (!_stopped)
+        var success = await Detail.조회Async(restaurantId, _lifetimeCancellation.Token);
+        if (!_stopped && success && Detail.상세 is not null)
         {
             Writer.음식점설정(Detail.상세);
+            ViewModel.접수복구?.거절안내초기화();
         }
     }
 
@@ -209,6 +230,29 @@ public partial class OrdererRestaurantWorkspace
         {
             await OrderSubmitted.InvokeAsync(orderNo);
         }
+    }
+
+    private async Task ConfirmPriceAndSubmitAsync()
+    {
+        if (BusinessActive && Authentication.로그인됨 && Writer.변경금액확인())
+            await SubmitOrderAsync();
+    }
+
+    private async Task RecheckMenusAsync()
+    {
+        if (!BusinessActive || !Authentication.로그인됨 || Detail.요청RestaurantId is not long restaurantId
+            || !Writer.메뉴확인시작()) return;
+        var session = Authentication.세션;
+        var requestId = Writer.클라이언트요청Id;
+        var success = await Detail.조회Async(restaurantId, _lifetimeCancellation.Token);
+        if (!BusinessActive || !ReferenceEquals(session, Authentication.세션)
+            || requestId != Writer.클라이언트요청Id || Detail.요청RestaurantId != restaurantId) return;
+        if (success && Detail.상세 is { } detail)
+        {
+            Writer.최신메뉴확인적용(detail);
+            ViewModel.접수복구?.거절안내초기화();
+        }
+        else Writer.메뉴확인실패(Detail.오류메시지);
     }
 
     private async Task ClearSelectionAsync()

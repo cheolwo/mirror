@@ -1,0 +1,10 @@
+@page "/commerce/privacy"
+@page "/commerce/privacy/{CaseId}"
+@inject NavigationManager Navigation
+<PageTitle>내 정보 관리 · Mirror</PageTitle>
+<Ssalddel.Ui.Common.Areas.App.Components.Commerce.보호지원Page Privacy="true" CaseId="@CaseId" LoginHref="@LoginHref" />
+@code {
+    [Parameter] public string? CaseId { get; set; }
+    private string ReturnHref => Ssalddel.Contracts.Common.Commerce.CommerceAuthenticationRoutes.PrivacyRoute(CaseId);
+    private string LoginHref => Navigation.ToAbsoluteUri(Ssalddel.Contracts.Common.Commerce.CommerceAuthenticationRoutes.LoginHref("/login", ReturnHref).TrimStart('/')).ToString();
+}

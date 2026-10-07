@@ -90,7 +90,7 @@ public sealed record RoleWebAppDescriptor(
         {
             "01" =>
             [
-                new("커뮤니티", "/community/home", Icons.Material.Filled.Forum),
+                new("지도", "/community/map", Icons.Material.Filled.Map),
                 new("내 정보", "/community/me", Icons.Material.Filled.PersonOutline),
                 new("내 글", "/community/me/posts", Icons.Material.Filled.Article)
             ],
@@ -135,10 +135,11 @@ public sealed record RoleWebAppDescriptor(
                 "01",
                 "커뮤니티",
                 "지역 이야기와 공공정보에서 공동행동을 시작합니다.",
-                "/community/home",
+                "/community/map",
                 "role-shell--community",
                 [
-                    new("세계 지도", "/community/home"),
+                    new("생활 지도", "/community/map"),
+                    new("생활 교류", "/community/exchange"),
                     new("게시판 전체", "/community/boards/directory"),
                     new("지역 문화·특산물", "/community/regions"),
                     new("공동행동", "/community/actions"),

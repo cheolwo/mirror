@@ -1,0 +1,47 @@
+@page "/"
+@page "/commerce/notices"
+@page "/commerce/seller"
+@page "/commerce/privacy"
+@page "/commerce/privacy/{CaseId}"
+@page "/commerce/disputes"
+@page "/commerce/disputes/{CaseId}"
+@page "/commerce/confirmation"
+@inject CommercePreviewClient Client
+@inject NavigationManager Navigation
+@inject RealApiSession Real
+<div class="preview-context">로컬 화면 검토 · @(Real.Enabled ? "격리 서버 API·합성 계정" : "예시 데이터") · <a href="/commerce/notices">안내</a> · <a href="/commerce/seller">판매자</a> · <a href="/commerce/privacy">내 정보</a></div>
+@if (_failure is not null) { <p role="alert">격리 계정 연결 실패: @_failure</p> }
+else if (!_ready) { <p role="status">격리 계정을 연결하고 있습니다.</p> }
+else if (Navigation.Uri.Contains("/commerce/confirmation"))
+{
+    <CommercePageFrame Title="거래 확인" Description="개발 예시 · 판매자 정보를 확인한 판본에 동의를 결속합니다.">
+        <판매자공개정보Panel RestaurantId="_restaurantId" ValueChanged="SellerChanged" />
+        <거래보호Notice RequireAcknowledgment="true" RequireSeller="true" SellerRevision="_sellerRevision" @bind-Confirmation="_confirmation" />
+        <p role="status">확인한 판매자 판본: @(_confirmation?.SellerRevision.ToString() ?? "없음")</p>
+        <button @onclick="() => _restaurantId++">다른 판매자 확인</button>
+    </CommercePageFrame>
+}
+else if (Navigation.Uri.Contains("/commerce/seller")) { <판매자확인Page /> }
+else if (Navigation.Uri.Contains("/commerce/privacy")) { <보호지원Page Privacy="true" CaseId="@CaseId" /> }
+else if (Navigation.Uri.Contains("/commerce/disputes")) { <보호지원Page CaseId="@CaseId" SourceKind="@SourceKind" SourceId="@SourceId" /> }
+else { <통신판매안내Page /> }
+@code {
+    private long _restaurantId=1;
+    private long? _sellerRevision;
+    private Ssalddel.Contracts.Common.Commerce.거래보호확인Request? _confirmation;
+    private void SellerChanged(Ssalddel.Contracts.Common.Commerce.판매자공개정보Response? value) { _sellerRevision=value?.Revision; _confirmation=null; }
+    [Parameter] public string? CaseId { get; set; }
+    [SupplyParameterFromQuery(Name="sourceKind")] public string? SourceKind { get; set; }
+    [SupplyParameterFromQuery(Name="sourceId")] public string? SourceId { get; set; }
+    [SupplyParameterFromQuery(Name="state")] public string? State { get; set; }
+    [SupplyParameterFromQuery(Name="role")] public string? Role { get; set; }
+    private bool _ready;
+    private string? _failure;
+    protected override async Task OnParametersSetAsync()
+    {
+        Client.State = State ?? "normal";
+        _ready=false; _failure=null;
+        try { if (Real.Enabled) await Real.EnsureInitializedAsync(Role ?? "orderer"); _ready=true; }
+        catch (Exception ex) { _failure=ex.GetType().Name; }
+    }
+}

@@ -1,0 +1,74 @@
+@using Ssalddel.Ui.Common.Areas.App.Models
+@inject NavigationManager Navigation
+@if (Kind == "register")
+{
+    <section class="neighborhood-map-registration" aria-labelledby="map-register-title">
+        <h2 id="map-register-title">무엇을 등록할까요?</h2>
+        <p>내용을 작성하는 화면에서 조건을 확인하고 저장해 주세요.</p>
+        <ul class="neighborhood-map-rows">
+            <li><a href="@Href(NeighborhoodMapNavigation.WriteHref(Region, ReturnUrl))"><strong>교류 글 올리기</strong><small>제공할 것과 필요한 것을 동네에 알려요.</small></a></li>
+            <li><a href="@Href(NeighborhoodMapNavigation.WithReturn(NeighborhoodStorageRoutes.WritePage, ReturnUrl))"><strong>보관공간 등록</strong><small>공개 소개와 비공개 인계 정보를 따로 정해요.</small></a></li>
+            <li><a href="@Href(NeighborhoodMapNavigation.WithReturn(NeighborhoodDeliveryRoutes.Create, ReturnUrl))"><strong>물건 배송 요청</strong><small>물건과 픽업·전달 조건을 확인해요.</small></a></li>
+        </ul>
+    </section>
+}
+else if (Kind == "post" && long.TryParse(Target, out var postId) && postId > 0)
+{
+    <ExchangeDetail PostId="@postId" Embedded="true" ReturnUrl="@ReturnUrl" LoginHref="@LoginHref" @key="postId" />
+}
+else if (Kind == "work" && Target is not null)
+{
+    <NeighborhoodCollaborationDetail WorkId="@Target" Embedded="true" ReturnUrl="@ReturnUrl" LoginHref="@LoginHref" @key="Target" />
+}
+else if (Kind == "space" && Target is not null)
+{
+    <NeighborhoodStorageDetail SpaceId="@Target" CollaborationId="@Related" Embedded="true" ReturnUrl="@ReturnUrl" LoginHref="@LoginHref" @key="@(Target + "|" + Related)" />
+}
+else if (Kind == "delivery" && Target is not null)
+{
+    <NeighborhoodDeliveryDetail @ref="_delivery" RequestId="@Target" Embedded="true" ReturnUrl="@ReturnUrl" LoginHref="@LoginHref" @key="Target" />
+}
+else if (Kind == "spaces")
+{
+    <NeighborhoodStorageList Region="@Region" Mine="@SpaceListMine" InitialPage="@SpaceListPage" Embedded="true" ReturnUrl="@ReturnUrl" LoginHref="@LoginHref" ListContextChanged="@ListContextChanged" />
+}
+else if (Kind == "mine")
+{
+    <nav class="neighborhood-map-panel-tabs" aria-label="내 업무 구분">
+        <button aria-pressed="@(Scope == "work" ? "true" : "false")" @onclick="ShowWork">내 할 일</button>
+        <button aria-pressed="@(Scope == "delivery" ? "true" : "false")" @onclick="ShowDelivery">내 배송</button>
+        <button aria-pressed="@(Scope == "space" ? "true" : "false")" @onclick="ShowSpace">내 공간</button>
+    </nav>
+    @if (Scope == "delivery")
+    { <NeighborhoodDeliveryList InitialPage="@DeliveryListPage" Embedded="true" ReturnUrl="@ReturnUrl" LoginHref="@LoginHref" ListContextChanged="@ListContextChanged" /> }
+    else if (Scope == "space")
+    { <NeighborhoodStorageList Mine="true" InitialPage="@SpaceListPage" Embedded="true" ReturnUrl="@ReturnUrl" LoginHref="@LoginHref" ListContextChanged="@ListContextChanged" /> }
+    else
+    { <NeighborhoodCollaborationList InitialPage="@WorkListPage" InitialScope="@WorkListScope" Embedded="true" ReturnUrl="@ReturnUrl" LoginHref="@LoginHref" ListContextChanged="@ListContextChanged" /> }
+}
+else
+{
+    <section class="neighborhood-map-empty"><h2>대상을 다시 선택해 주세요</h2><p>주변 보기나 내 할 일에서 확인할 대상을 찾을 수 있어요.</p></section>
+}
+@code {
+    [Parameter] public string? Kind { get; set; }
+    [Parameter] public string? Target { get; set; }
+    [Parameter] public string? Related { get; set; }
+    [Parameter] public string? Region { get; set; }
+    [Parameter] public string ReturnUrl { get; set; } = NeighborhoodMapNavigation.Home;
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    [Parameter] public string Scope { get; set; } = "work";
+    [Parameter] public int WorkListPage { get; set; } = 1;
+    [Parameter] public string WorkListScope { get; set; } = "requested";
+    [Parameter] public int DeliveryListPage { get; set; } = 1;
+    [Parameter] public int SpaceListPage { get; set; } = 1;
+    [Parameter] public bool SpaceListMine { get; set; }
+    [Parameter] public EventCallback<string> ScopeChanged { get; set; }
+    [Parameter] public EventCallback<NeighborhoodMapListContext> ListContextChanged { get; set; }
+    private NeighborhoodDeliveryDetail? _delivery;
+    private Task ShowWork() => ScopeChanged.InvokeAsync("work");
+    private Task ShowDelivery() => ScopeChanged.InvokeAsync("delivery");
+    private Task ShowSpace() => ScopeChanged.InvokeAsync("space");
+    private string Href(string route) => Navigation.ToAbsoluteUri(route.TrimStart('/')).ToString();
+    public Task RefreshDeliveryAsync() => _delivery?.RefreshAsync() ?? Task.CompletedTask;
+}

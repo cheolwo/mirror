@@ -1,0 +1,34 @@
+@page "/community/map"
+@layout MapOnlyLayout
+@implements IDisposable
+@inject NavigationManager Navigation
+@inject WebAuthSessionService Auth
+@inject Ssalddel.Client.Infrastructure.Transport.ITransportRequestLedgerObserver Ledger
+<PageTitle>생활 지도 · 살뜰</PageTitle>
+@if (_restoreError is not null) { <p role="status">@_restoreError <button @onclick="RestoreAuthentication">다시 확인</button></p> }
+<Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodExchangeMapPage @ref="_page" Layers="@Layers" View="@View" Region="@Region" Panel="@Panel" Target="@Target" Related="@Related" LoginHref="@LoginHref" AppsHref="/apps" />
+@code {
+    [SupplyParameterFromQuery(Name = "panel")] public string? Panel { get; set; }
+    [SupplyParameterFromQuery(Name = "target")] public string? Target { get; set; }
+    [SupplyParameterFromQuery(Name = "related")] public string? Related { get; set; }
+    [SupplyParameterFromQuery(Name = "layers")] public string? Layers { get; set; }
+    [SupplyParameterFromQuery(Name = "view")] public string? View { get; set; }
+    [SupplyParameterFromQuery(Name = "region")] public string? Region { get; set; }
+    private Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodExchangeMapPage? _page;
+    private bool _disposed;
+    private string? _restoreError;
+    protected override async Task OnAfterRenderAsync(bool firstRender) { if (firstRender) await RestoreAuthentication(); }
+    private async Task RestoreAuthentication()
+    {
+        if (_disposed) return;
+        _restoreError = null;
+        try { await Auth.RestoreAsync(); }
+        catch (Exception) { if (!_disposed) _restoreError = "저장한 로그인 정보를 확인하지 못했습니다. 다시 시도하거나 로그인해 주세요."; }
+        if (!_disposed) StateHasChanged();
+    }
+    private string LoginHref => Navigation.ToAbsoluteUri("login?returnUrl=" + Uri.EscapeDataString(new Uri(Navigation.Uri).PathAndQuery)).ToString();
+    protected override void OnInitialized() { Auth.Changed += AuthenticationChanged; Ledger.RefreshRequested += DeliveryRefresh; }
+    private void DeliveryRefresh(Ssalddel.Client.Infrastructure.Transport.TransportRequestLedgerRefreshRequest request) { if (!_disposed) _ = InvokeAsync(async () => { if (!_disposed && _page is not null) await _page.NotifyDeliveryRefreshAsync(request.RequestId); }); }
+    private void AuthenticationChanged() { if (!_disposed) _ = InvokeAsync(async () => { if (!_disposed && _page is not null) await _page.NotifyAuthenticationChangedAsync(); }); }
+    public void Dispose() { _disposed = true; Auth.Changed -= AuthenticationChanged; Ledger.RefreshRequested -= DeliveryRefresh; }
+}

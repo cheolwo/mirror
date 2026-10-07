@@ -9,7 +9,7 @@
     }
     @if (Cancellation.취소가능 && !Cancellation.작성열림)
     {
-        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Cancellation.작성시작">
+        <MudButton Variant="Variant.Text" Color="Color.Default" Disabled="Disabled" OnClick="Cancellation.작성시작">
             주문 취소 검토
         </MudButton>
     }
@@ -20,7 +20,7 @@
             선택한 주문과 사유를 확인해 주세요. 취소 확인은 환불 완료를 의미하지 않습니다.
         </MudText>
         <MudSelect T="string" @bind-Value="Cancellation.사유Code" Label="취소 사유"
-                   Variant="Variant.Outlined" Disabled="@Cancellation.입력잠김">
+                   Variant="Variant.Outlined" Disabled="@(Disabled || Cancellation.입력잠김)">
             <MudSelectItem Value="@운영배차주문자취소사유Code.단순변심">단순 변심</MudSelectItem>
             <MudSelectItem Value="@운영배차주문자취소사유Code.중복주문">중복 주문</MudSelectItem>
             <MudSelectItem Value="@운영배차주문자취소사유Code.주소문제">배달 주소 문제</MudSelectItem>
@@ -28,10 +28,10 @@
         </MudSelect>
         <MudTextField T="string" @bind-Value="Cancellation.사유" Label="상세 사유 (기타 선택 시 필수)"
                       Variant="Variant.Outlined" MaxLength="500" Counter="500" Lines="2"
-                      Disabled="@Cancellation.입력잠김" />
+                      Disabled="@(Disabled || Cancellation.입력잠김)" />
         <MudCheckBox T="bool" @bind-Value="Cancellation.검토확인" Color="Color.Primary"
                      Label="선택한 주문과 취소 사유를 확인했습니다."
-                     Disabled="@Cancellation.입력잠김" />
+                     Disabled="@(Disabled || Cancellation.입력잠김)" />
         @if (Cancellation.오류 is { } error)
         {
             <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true">
@@ -40,7 +40,7 @@
         }
         <div class="food-order-cancellation-actions">
             <MudButton Variant="Variant.Outlined" Color="Color.Error"
-                       Disabled="@(!Cancellation.제출가능)" OnClick="CancellationRequested">
+                       Disabled="@(Disabled || !Cancellation.제출가능)" OnClick="CancellationRequested">
                 @(Cancellation.처리중 ? "취소 결과 확인 중" : Cancellation.재확인필요 ? "취소 결과 다시 확인" : "주문 취소 확인")
             </MudButton>
             <MudButton Variant="Variant.Text" Disabled="@Cancellation.처리중" OnClick="Cancellation.작성닫기">
@@ -53,6 +53,9 @@
 @code {
     [Parameter, EditorRequired]
     public 주문자음식주문취소ViewModel Cancellation { get; set; } = default!;
+
+    [Parameter]
+    public bool Disabled { get; set; }
 
     [Parameter]
     public EventCallback CancellationRequested { get; set; }

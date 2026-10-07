@@ -1,0 +1,5 @@
+.exchange-page .delivery-check { display:flex; align-items:flex-start; gap:12px; margin:20px 0; font-weight:400; }
+.exchange-page .delivery-check input { width:24px; min-width:24px; height:24px; min-height:24px; margin:0; padding:0; accent-color:var(--ss-accent,#0f766e); }
+.exchange-page .delivery-check span { flex:1; }
+.delivery-fare { display:block; font-size:24px; font-weight:700; font-variant-numeric:tabular-nums; margin:12px 0; }
+.delivery-warning { color:var(--ss-warning,#92400e); border-left:3px solid currentColor; padding-left:12px; }

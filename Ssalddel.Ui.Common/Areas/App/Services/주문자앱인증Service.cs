@@ -29,6 +29,8 @@ public interface I주문자앱인증Service
         CancellationToken cancellationToken = default);
 
     Task 로그아웃Async(CancellationToken cancellationToken = default);
+
+    Task 세션만료Async(CancellationToken cancellationToken = default) => 로그아웃Async(cancellationToken);
 }
 
 internal sealed class 미구성주문자앱인증Service : I주문자앱인증Service

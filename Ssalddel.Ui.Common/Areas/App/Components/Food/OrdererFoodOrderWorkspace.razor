@@ -19,7 +19,7 @@
         <OrdererFoodOrderHeader Authentication="Authentication"
                                 LogoutRequested="LogoutAsync" />
 
-        <div class="food-order-layout">
+        <div class="food-order-layout @(!string.IsNullOrWhiteSpace(Detail.요청OrderNo) ? "food-order-layout--detail" : null)">
             <div class="food-order-main">
                 <OrdererFoodOrderSearchPanel List="List"
                                              SearchRequested="SearchListAsync"

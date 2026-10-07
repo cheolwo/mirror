@@ -1,0 +1,34 @@
+@inherits NeighborhoodWorkflowPageBase<NeighborhoodCollaborationSourceViewModel>
+@{ Model.SynchronizeOwner(); }
+<section class="exchange-surface" aria-label="이 글의 협업과 완료 기록">
+    <h2>이 글의 협업</h2><p class="exchange-note">공개 문의와 별도의 약속입니다. 참여 신청은 당사자 동의나 수행 완료가 아닙니다.</p>
+    @if (Model.IsLoading) { <p role="status">공개 협업을 확인하는 중입니다.</p> }
+    @if (Model.Error is not null) { <div class="exchange-error" role="alert">@Model.Error<button disabled="@Model.IsSending" @onclick="Reload">다시 확인</button></div> }
+    @if (Model.Notice is not null) { <p role="status">@Model.Notice</p> }
+    @if (Model.IsAuthenticated && Model.HasPending) { <p>이전 요청 결과를 먼저 확인해 주세요.</p><button disabled="@Model.IsSending" @onclick="Recover">처리 결과 확인</button>@if (Model.CanRetryParticipation) { <button disabled="@Model.IsSending" @onclick="RetryParticipation">같은 참여 요청 직접 다시 보내기</button> } }
+    @foreach (var item in Model.Opportunities)
+    {
+        <div class="exchange-comment"><p>@NeighborhoodCollaborationPresentation.Kind(item.Kind) · @NeighborhoodCollaborationPresentation.Stage(item.StatusCode)</p>
+            @if (Model.IsAuthenticated) { <button disabled="@(Model.IsSending || Model.HasPending)" @onclick="() => Participate(item.StableId)">함께 참여 신청</button> }
+            else { <a href="@LoginHref">로그인 후 참여 신청</a> }
+        </div>
+    }
+    @if (Model.Loaded && Model.Opportunities.Count == 0) { <p>현재 공개된 진행 협업이 없습니다.</p> }
+    <a href="@Href(NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? NeighborhoodMapNavigation.PanelHref(home, "mine") : NeighborhoodCollaborationRoutes.Home)">내가 참여한 일 확인</a>
+    <details><summary>동의한 완료 기록 @Model.PublicHistory.Count 건</summary><p class="exchange-note">양측과 수락한 참여자가 모두 공개에 동의한 완료 기록의 종류·동네·날짜만 표시합니다.</p>
+        @foreach (var item in Model.PublicHistory) { <p>@NeighborhoodCollaborationPresentation.Kind(item.Kind) · @Model.RegionLabel(item.PublicNeighborhoodRegionKey) · @item.CompletedOnUtc.ToLocalTime().ToString("yyyy.MM.dd")</p> }
+        @if (Model.Loaded && Model.PublicHistory.Count == 0) { <p>현재 공개에 동의한 완료 기록이 없습니다.</p> }
+    </details>
+</section>
+@code {
+    [Parameter] public long PostId { get; set; }
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    [Parameter] public string? ReturnUrl { get; set; }
+    private string ResultHref(string id) => NeighborhoodMapNavigation.ReturnToPanel(ReturnUrl, "work", id) ?? NeighborhoodCollaborationRoutes.Detail(id);
+    protected override Task OnParametersSetAsync() => Reload();
+    protected override async Task OnAfterRenderAsync(bool firstRender) { Model.SynchronizeOwner(); if (!Model.Loaded && !Model.IsLoading && !Model.IsSending && Model.Error is null) await Reload(); }
+    private Task Reload() => Model.LoadAsync(PostId);
+    private async Task Participate(string id) { if (await Model.ParticipateAsync(id) is { } result) Navigation.NavigateTo(Href(ResultHref(result))); }
+    private async Task RetryParticipation() { if (await Model.RetryParticipationAsync() is { } result) Navigation.NavigateTo(Href(ResultHref(result))); }
+    private async Task Recover() { if (await Model.RecoverAsync() is { } result) Navigation.NavigateTo(Href(ResultHref(result))); }
+}

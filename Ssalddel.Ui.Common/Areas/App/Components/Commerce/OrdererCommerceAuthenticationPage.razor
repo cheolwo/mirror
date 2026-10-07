@@ -1,0 +1,63 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Commerce
+@inherits MvvmComponentBase<주문자앱인증ViewModel>
+@using Ssalddel.Contracts.Common.Commerce
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+@using Ssalddel.Ui.Common.Areas.App.Components.Auth
+@using Ssalddel.Ui.Common.Areas.App.Models.Auth
+@inject NavigationManager Navigation
+
+<CommercePageFrame Title="로그인" Description="계정을 확인한 뒤 이전 화면으로 돌아갑니다.">
+    <section>
+        @if (_restoring)
+        {
+            <p role="status">로그인 상태를 확인하고 있습니다.</p>
+        }
+        else
+        {
+            <Ssalddel공통로그인Panel 제목="계정으로 계속하기"
+                                  설명="로그인은 요청을 자동으로 제출하지 않습니다."
+                                  소셜로그인표시="false"
+                                  상태메시지="@ViewModel.오류메시지"
+                                  상태Severity="Severity.Error"
+                                  IsBusy="@ViewModel.처리중"
+                                  Elevation="0"
+                                  OnPasswordLogin="LoginAsync" />
+        }
+    </section>
+    <nav aria-label="로그인 복귀">
+        <a href="@ReturnHref">이전 화면으로</a>
+        <a href="/food">음식점 둘러보기</a>
+    </nav>
+</CommercePageFrame>
+
+@code {
+    [Parameter] public string? ReturnUrl { get; set; }
+    private readonly CancellationTokenSource _lifetime = new();
+    private bool _restoring = true;
+    private bool _disposed;
+    private string ReturnHref => Navigation.ToAbsoluteUri(CommerceAuthenticationRoutes.ReturnRoute(ReturnUrl).TrimStart('/')).ToString();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (await ViewModel.복원Async(_lifetime.Token) && ViewModel.로그인됨 && !_disposed)
+                Navigation.NavigateTo(ReturnHref, replace: true);
+        }
+        finally { _restoring = false; }
+    }
+
+    private async Task LoginAsync(공통로그인요청 request)
+    {
+        if (_disposed || ViewModel.처리중) return;
+        if (await ViewModel.로그인Async(request.UserNameOrEmail, request.Password, _lifetime.Token)
+            && ViewModel.로그인됨 && !_disposed)
+            Navigation.NavigateTo(ReturnHref, replace: true);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && !_disposed) { _disposed = true; _lifetime.Cancel(); _lifetime.Dispose(); }
+        base.Dispose(disposing);
+    }
+}

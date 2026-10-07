@@ -1,0 +1,55 @@
+@inherits ExchangePageBase
+
+<ExchangeFrame><main class="exchange-page">
+    @if (!Embedded) { <a class="exchange-back" href="@Href(NeighborhoodMapNavigation.SafeReturn(ReturnUrl) ?? NeighborhoodExchange.Home)">← 생활 교류</a> }
+    @if (Model.IsLoading) { <p role="status">글과 댓글을 불러오고 있습니다.</p> }
+    @if (Model.Error is not null) { <div class="exchange-error" role="alert">@Model.Error <button disabled="@Model.IsSending" @onclick="Reload">다시 불러오기</button></div> }
+    @if (Model.Notice is not null) { <p role="status" class="exchange-note">@Model.Notice</p> }
+    @if (!Model.IsLoading && Model.Post is { } post)
+    {
+        <article class="exchange-surface"><span class="exchange-kind">@post.RoleTag</span><h1>@post.Title</h1><small>@post.Nickname · @post.CreatedAtUtc.ToLocalTime().ToString("yyyy.MM.dd")</small><p class="exchange-body">@post.Body</p></article>
+        <section class="exchange-surface"><h2>함께할 일 정하기</h2><p>공개 문의와 별도로 조건을 신청하고 서로 동의해 진행합니다. 댓글은 협업 합의가 아닙니다.</p><a class="exchange-primary" href="@Href(InputHref(NeighborhoodCollaborationRoutes.New(post.Id)))">협업 신청</a><a href="@Href(PanelHref("mine", null, NeighborhoodCollaborationRoutes.Home))">내 할 일 확인</a></section>
+        <NeighborhoodCollaborationSourceSummary PostId="@post.Id" LoginHref="@LoginHref" ReturnUrl="@ReturnUrl" @key="post.Id" />
+        <section class="exchange-surface"><h2>물건 배송이 필요한가요?</h2><p>서로 조건을 정한 뒤 배송 의뢰를 따로 등록하세요. 이 글과 댓글만으로 배송이 접수되지는 않습니다.</p><a class="exchange-primary" href="@Href(InputHref($"{NeighborhoodDeliveryRoutes.Create}?sourcePostId={post.Id}"))">물건 배송 요청</a></section>
+        <section class="exchange-surface" aria-labelledby="exchange-comments-title">
+            <h2 id="exchange-comments-title">공개 문의</h2><p class="exchange-note">댓글은 누구나 볼 수 있어요. 자세한 주소·연락처·계좌는 남기지 마세요.</p>
+            @if (Model.CommentsLoaded)
+            {
+                @if (Model.Comments.Count == 0) { <p>아직 문의가 없어요. 궁금한 점을 남겨 보세요.</p> }
+                @foreach (var comment in Model.Comments)
+                {
+                    <div class="exchange-comment" @key="comment.Id"><small>@comment.Nickname · @comment.CreatedAtUtc.ToLocalTime().ToString("MM.dd HH:mm")</small><p class="exchange-body">@comment.Body</p>
+                        @if (!Embedded) { <details><summary>댓글 관리</summary><label for="@($"comment-password-{comment.Id}")">작성 때 정한 삭제 비밀번호</label><input id="@($"comment-password-{comment.Id}")" type="password" value="@Model.GetCommentDeletePassword(comment.Id)" @oninput="@(args => Model.SetCommentDeletePassword(comment.Id, args.Value?.ToString()))" maxlength="100" autocomplete="off" disabled="@Model.IsSending" />
+                            <button disabled="@Model.IsSending" @onclick="@(() => Model.DeleteCommentAsync(comment.Id))">댓글 삭제</button><button disabled="@Model.IsSending" @onclick="@(() => Model.ReportCommentAsync(comment.Id))">댓글 신고</button>
+                        </details> }
+                    </div>
+                }
+                @if (!Embedded) { <form @onsubmit="Model.CommentAsync" @onsubmit:preventDefault><fieldset disabled="@Model.IsSending"><legend>문의 남기기</legend>
+                    <label for="exchange-comment-body">문의 내용</label><textarea id="exchange-comment-body" @bind="Model.CommentBody" @bind:event="oninput" maxlength="1000" required rows="3"></textarea>
+                    <label for="exchange-comment-password">댓글 삭제 비밀번호</label><input id="exchange-comment-password" type="password" @bind="Model.CommentPassword" minlength="4" maxlength="100" required autocomplete="new-password" />
+                    <button type="submit" class="exchange-primary">@(Model.IsSending ? "처리 중…" : "공개 문의 남기기")</button>
+                </fieldset></form> }
+                else { <a href="@Href(InputHref(NeighborhoodExchange.Detail(post.Id)))">공개 문의 남기기·관리</a> }
+            }
+        </section>
+        @if (post.CanDelete && !Embedded)
+        {
+            <details class="exchange-surface"><summary>내 글 삭제</summary><p>삭제하면 공개 목록에서 글이 내려갑니다.</p>
+                @if (post.DeleteRequiresPassword) { <label for="exchange-delete-password">글 관리 비밀번호</label><input id="exchange-delete-password" type="password" @bind="Model.DeletePassword" maxlength="100" autocomplete="off" disabled="@Model.IsSending" /> }
+                <button disabled="@Model.IsSending" @onclick="Delete">글 삭제</button>
+            </details>
+        }
+    }
+</main></ExchangeFrame>
+
+@code {
+    [Parameter] public long PostId { get; set; }
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    [Parameter] public bool Embedded { get; set; }
+    [Parameter] public string? ReturnUrl { get; set; }
+    private string InputHref(string route) => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? NeighborhoodMapNavigation.WithReturn(route, home) : route;
+    private string PanelHref(string kind, string? id, string fallback) => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? NeighborhoodMapNavigation.PanelHref(home, kind, id) : fallback;
+    protected override Task OnParametersSetAsync() => Model.LoadDetailAsync(PostId);
+    private Task Reload() => Model.LoadDetailAsync(PostId);
+    private async Task Delete() { if (await Model.DeleteAsync()) Navigation.NavigateTo(Href(NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? NeighborhoodMapNavigation.PanelHref(home, null) : NeighborhoodExchange.Home)); }
+}

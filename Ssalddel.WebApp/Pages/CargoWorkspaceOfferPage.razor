@@ -1,0 +1,4 @@
+@page "/workspace/cargo-driver/offers/{ItemId}"
+@layout MapOnlyLayout
+<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo.CargoOfferActionScreen @key="ItemId" ItemId="@ItemId" />
+@code { [Parameter] public string ItemId { get; set; } = ""; }

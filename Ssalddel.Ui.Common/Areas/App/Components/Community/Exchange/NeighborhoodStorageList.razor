@@ -1,0 +1,41 @@
+@inherits NeighborhoodWorkflowPageBase<NeighborhoodStorageQueryViewModel>
+@{ Model.SynchronizeOwner(); }
+<NeighborhoodDeliveryFrame><main class="exchange-page">
+    @if (!Embedded) { <a class="exchange-back" href="@Href(NeighborhoodMapNavigation.SafeReturn(ReturnUrl) ?? NeighborhoodMapNavigation.Home)">← 생활 지도</a> }
+    <header><span class="exchange-eyebrow">생활 교류</span><h1>보관공간</h1><p>동네에서 잠시 물건을 맡길 공간을 찾아요.</p></header>
+    <nav class="exchange-tabs" aria-label="보관공간 구분"><button aria-pressed="@(!Model.MineOnly)" @onclick="PublicList">공개 공간</button><button aria-pressed="@Model.MineOnly" @onclick="MineList">내 공간</button><a href="@Href(InputHref(NeighborhoodStorageRoutes.WritePage))">공간 등록</a></nav>
+    @if (Model.MineOnly && !Model.IsAuthenticated) { <section class="exchange-empty"><h2>내 공간은 로그인 후 확인해요</h2><a class="exchange-primary" href="@LoginHref">로그인하기</a></section> }
+    else
+    {
+        @if (Model.HasPending) { <section class="exchange-surface"><h2>이전 처리 결과 확인</h2><p>요청 번호를 유지하고 있습니다. 자동으로 다시 보내지 않습니다.</p><button disabled="@Model.IsSending" @onclick="Recover">처리 결과 확인</button></section> }
+        @if (Model.Notice is not null) { <p role="status" class="exchange-note">@Model.Notice</p> }
+        @if (Model.IsLoading) { <p role="status">보관공간을 불러오는 중입니다.</p> }
+        else if (Model.Error is not null) { <div class="exchange-error" role="alert">@Model.Error<button @onclick="Reload">다시 불러오기</button></div> }
+        else if (Model.Loaded && Model.Items.Count == 0) { <section class="exchange-empty"><h2>현재 확인되는 공간이 없어요</h2><p>내 공간을 등록하거나 다른 동네를 둘러볼 수 있어요.</p></section> }
+        else { <section class="exchange-list">@foreach (var space in Model.Items) { <a class="exchange-row" href="@Href(PanelHref("space", space.SpaceId, NeighborhoodStorageRoutes.DetailPage(space.SpaceId)))"><span class="exchange-kind">@(Model.Mine.FirstOrDefault(item => item.SpaceId == space.SpaceId) is { } mine ? NeighborhoodCollaborationPresentation.SpaceStage(mine.Status) : "제공 중")</span><h2>@space.PublicTitle</h2><p>@space.Region.DisplayName · @space.CapacityQuantity @space.CapacityUnit</p><small>@space.AvailableFromUtc.LocalDateTime.ToString("MM.dd") ~ @space.AvailableUntilUtc.LocalDateTime.ToString("MM.dd")</small></a> }</section> }
+        @if (!Model.IsLoading && (Model.Page > 1 || Model.HasMore)) { <nav class="exchange-pagination"><button disabled="@(Model.Page <= 1)" @onclick="Previous">이전</button><span>@Model.Page 페이지</span><button disabled="@(!Model.HasMore)" @onclick="Next">다음</button></nav> }
+        <p class="exchange-note">공개 위치는 동네 대표점입니다. 자세한 인계 정보는 현재 조건에 동의한 당사자만 확인합니다.</p>
+    }
+</main></NeighborhoodDeliveryFrame>
+@code {
+    [Parameter] public string? Region { get; set; }
+    [Parameter] public bool Embedded { get; set; }
+    [Parameter] public string? ReturnUrl { get; set; }
+    private string InputHref(string route) => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? NeighborhoodMapNavigation.WithReturn(route, home) : route;
+    private string PanelHref(string kind, string? id, string fallback) => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? NeighborhoodMapNavigation.PanelHref(home, kind, id) : fallback;
+
+    [Parameter] public bool Mine { get; set; }
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    [Parameter] public int InitialPage { get; set; } = 1;
+    [Parameter] public EventCallback<NeighborhoodMapListContext> ListContextChanged { get; set; }
+    private string? _context;
+    protected override async Task OnParametersSetAsync() { var context = $"{Region}|{Mine}"; if (_context != context) { _context = context; await LoadList(Mine, InitialPage); } }
+    private async Task LoadList(bool mine, int page = 1) { await Model.LoadListAsync(mine, Region, page); await ListContextChanged.InvokeAsync(new("space", Model.Page, Model.MineOnly ? "mine" : "public")); }
+    protected override async Task OnAfterRenderAsync(bool firstRender) { Model.SynchronizeOwner(); if (!Model.Loaded && !Model.IsLoading && !Model.IsSending && Model.Error is null) await LoadList(Model.MineOnly, InitialPage); }
+    private Task PublicList() => LoadList(false);
+    private Task MineList() => LoadList(true);
+    private Task Reload() => LoadList(Model.MineOnly, Model.Page);
+    private Task Previous() => LoadList(Model.MineOnly, Model.Page - 1);
+    private Task Next() => LoadList(Model.MineOnly, Model.Page + 1);
+    private async Task Recover() { if (await Model.RecoverAsync() is { } id) Navigation.NavigateTo(Href(PanelHref("space", id, NeighborhoodStorageRoutes.DetailPage(id)))); }
+}

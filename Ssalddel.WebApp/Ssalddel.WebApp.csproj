@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="../eng/role-workspace/*.cs" Link="Services/%(Filename)%(Extension)" />
     <ProjectReference Include="..\Ssalddel.Contracts\Ssalddel.Contracts.csproj" />
     <ProjectReference Include="..\Ssalddel.Client.Infrastructure\Ssalddel.Client.Infrastructure.csproj" />
     <ProjectReference Include="..\Ssalddel.Ui.Common\Ssalddel.Ui.Common.csproj" />

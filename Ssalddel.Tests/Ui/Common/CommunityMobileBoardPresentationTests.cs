@@ -1,5 +1,6 @@
 using Ssalddel.Contracts.Common.Community;
 using Ssalddel.Ui.Common.Areas.App.Models;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
 
 namespace Ssalddel.Tests.Ui.Common;
 
@@ -126,10 +127,14 @@ public sealed class CommunityMobileBoardPresentationTests
     }
 
     [Fact]
-    public void MauiApp은_커뮤니티로시작하고_개별주문에서_주문자App원장으로이어진다()
+    public void MauiApp은_역할선택홈에서_여덟역할로진입하고_개별주문에서_주문자App원장으로이어진다()
     {
         var root = FindRepositoryRoot();
         var mainPageSource = File.ReadAllText(Path.Combine(root, "SsalddelApp", "MainPage.xaml"));
+        var unifiedHomeSource = File.ReadAllText(Path.Combine(
+            root, "SsalddelApp", "Components", "Pages", "UnifiedHome.razor"));
+        var roleWorkspaceSource = File.ReadAllText(Path.Combine(
+            root, "SsalddelApp", "Components", "Pages", "RoleWorkspacePage.razor"));
         var communityHomeSource = File.ReadAllText(Path.Combine(
             root,
             "SsalddelApp",
@@ -151,7 +156,14 @@ public sealed class CommunityMobileBoardPresentationTests
             "Community",
             "CommunityIndividualOrderJourneyPanel.razor"));
 
-        Assert.Contains("StartPath=\"/community\"", mainPageSource);
+        Assert.Contains("StartPath=\"/\"", mainPageSource);
+        Assert.Contains("@page \"/\"", unifiedHomeSource);
+        Assert.Contains("<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.RoleSelectionHome", unifiedHomeSource);
+        Assert.Contains("@page \"/workspace/{RoleKey}\"", roleWorkspaceSource);
+        Assert.Equal(
+            ["community", "orderer", "restaurant", "food-driver", "shipper", "cargo-driver", "warehouse", "operator"],
+            RoleWorkspaceCatalog.Roles.Select(role => role.Key).ToArray());
+        Assert.All(RoleWorkspaceCatalog.Roles, role => Assert.Equal("/workspace/" + role.Key, role.Href));
         Assert.Contains("<CommunityIndividualOrderJourneyPanel", communityHomeSource);
         Assert.Contains("<CommunityIndividualOrderListScreen", individualOrdersSource);
         Assert.Contains("0.0 둘러보기 → 0.5 내 주문 → 1.0 함께 주문", journeySource);

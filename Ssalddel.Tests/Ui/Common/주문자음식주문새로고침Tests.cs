@@ -78,7 +78,7 @@ public sealed class 주문자음식주문새로고침Tests
     }
 
     [Fact]
-    public async Task 일시적조회실패로상세가비어도_다음자동갱신에서같은주문을다시조회한다()
+    public async Task 일시적조회실패에는이전상세를유지하고_다음자동갱신에서같은주문을다시조회한다()
     {
         var service = new FakeOrderService { Response = Detail(음식주문상태코드.주문확인) };
         var page = await CreatePageAsync(service);
@@ -87,7 +87,8 @@ public sealed class 주문자음식주문새로고침Tests
 
         Assert.True(await controller.자동새로고침Async());
         Assert.True(page.상세.오류발생);
-        Assert.Null(page.상세.상세);
+        Assert.Equal(음식주문상태코드.주문확인, page.상세.상세?.주문.상태);
+        Assert.False(page.상세.최신상태확인됨);
 
         service.ReadDetail = null;
         service.Response = Detail(음식주문상태코드.조리중);

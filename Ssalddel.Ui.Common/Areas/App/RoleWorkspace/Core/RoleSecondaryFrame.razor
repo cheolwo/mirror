@@ -1,0 +1,19 @@
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
+<main class="role-secondary">
+    <header><a href="@ReturnHref">← @ReturnLabel</a><h1>@Title</h1></header>
+    @if (Lifetime is { Message: { Length: > 0 } message })
+    { <p class="role-secondary__notice" role="@(Lifetime.HasError ? "alert" : "status")">@message</p> }
+    @if (Lifetime?.RequiresLogin == true)
+    { <a class="role-secondary__login" href="@LoginHref">역할 계정 로그인</a> }
+    else if (Lifetime?.IsBusy == true)
+    { <p role="status">최신 정보를 확인하고 있습니다.</p> }
+    @ChildContent
+</main>
+@code {
+    [Parameter] public string Title { get; set; } = "업무";
+    [Parameter] public string ReturnHref { get; set; } = "/";
+    [Parameter] public string ReturnLabel { get; set; } = "현재 업무";
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    [Parameter] public CargoInputLifetime? Lifetime { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

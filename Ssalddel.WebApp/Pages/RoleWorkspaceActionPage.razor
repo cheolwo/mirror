@@ -1,0 +1,15 @@
+@page "/workspace/{RoleKey}/action/{ActionKey}"
+@page "/workspace/{RoleKey}/action"
+@layout MapOnlyLayout
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food
+<FoodRoleActionForm @key="(RoleKey, ItemId, EffectiveActionKey, AttemptId)" RoleKey="@RoleKey" ItemId="@ItemId" ActionKey="@EffectiveActionKey" AttemptId="@AttemptId" Completed="Return" />
+@code {
+    [Parameter] public string RoleKey { get; set; } = "";
+    [Parameter] public string ActionKey { get; set; } = "";
+    [SupplyParameterFromQuery(Name = "actionKey")] public string? QueryActionKey { get; set; }
+    private string EffectiveActionKey => QueryActionKey ?? ActionKey;
+    [SupplyParameterFromQuery] public string ItemId { get; set; } = "";
+    [SupplyParameterFromQuery] public string? AttemptId { get; set; }
+    [Inject] public NavigationManager Navigation { get; set; } = default!;
+    private void Return() => Navigation.NavigateTo($"/workspace/{RoleKey}?selected=" + Uri.EscapeDataString(ItemId));
+}

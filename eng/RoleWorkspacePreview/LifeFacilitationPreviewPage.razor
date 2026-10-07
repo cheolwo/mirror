@@ -1,0 +1,25 @@
+@page "/life-facilitation-preview"
+@page "/life-facilitation-preview/{Kind}/{Scenario}"
+@using Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside data-life-preview-ready data-life-preview-kind="@Kind" data-life-preview-scenario="@Scenario" style="padding:8px 16px;background:#eaf5f3;color:#0f766e;font-size:12px">화면 배치 미리보기 · 예시 자료 · 실제 저장·배차·지급 없음</aside>
+@if (Kind == "work" && LifeFacilitationPreviewFixture.WorkScenarios.Contains(Scenario))
+{
+    <NeighborhoodCollaborationDetail WorkId="@("preview-work-" + Scenario)" @key="@(Kind + Scenario)" />
+}
+else if (Kind == "delivery" && LifeFacilitationPreviewFixture.DeliveryScenarios.Contains(Scenario))
+{
+    <NeighborhoodDeliveryDetail RequestId="@("preview-delivery-" + Scenario)" @key="@(Kind + Scenario)" />
+}
+else
+{
+    <main style="padding:16px"><h1>생활 교류 화면 검토</h1>
+        @if (Kind is not null) { <p role="alert">등록된 검토 장면을 선택해 주세요.</p> }
+        <h2>약속과 전달</h2><ul>@foreach (var value in LifeFacilitationPreviewFixture.WorkScenarios) { <li><a href="@("/life-facilitation-preview/work/" + value)">@value</a></li> }</ul>
+        <h2>기사 배송</h2><ul>@foreach (var value in LifeFacilitationPreviewFixture.DeliveryScenarios) { <li><a href="@("/life-facilitation-preview/delivery/" + value)">@value</a></li> }</ul>
+    </main>
+}
+@code {
+    [Parameter] public string? Kind { get; set; }
+    [Parameter] public string Scenario { get; set; } = "";
+}

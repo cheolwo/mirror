@@ -1,0 +1,14 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Commerce
+@inject NavigationManager Navigation
+<main class="commerce-page">
+    <a class="commerce-back" href="@Navigation.ToAbsoluteUri(BackHref.TrimStart('/'))">← @BackLabel</a>
+    <header><span>거래와 개인정보 보호</span><h1>@Title</h1>@if (!string.IsNullOrWhiteSpace(Description)) { <p>@Description</p> }</header>
+    @ChildContent
+</main>
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public string BackHref { get; set; } = "/";
+    [Parameter] public string BackLabel { get; set; } = "홈";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

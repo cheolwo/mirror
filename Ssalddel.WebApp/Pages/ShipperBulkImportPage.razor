@@ -1,4 +1,7 @@
 @page "/shipper/request/bulk"
+@inject NavigationManager Navigation
+
+<a href="@ReturnHref">운송 업무로 돌아가기</a>
 
 <WebPageHeader Eyebrow="Shipper Web"
                Title="CSV 일괄등록 미리보기"
@@ -53,6 +56,7 @@
 </MudGrid>
 
 @code {
+    private string ReturnHref => ShipperRequestNavigationContext.Parse(Navigation.Uri).ReturnPath ?? "/shipper/request";
     private readonly List<BulkPreviewRow> PreviewRows = [];
     private string CsvText = string.Empty;
 

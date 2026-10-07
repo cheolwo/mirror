@@ -106,6 +106,7 @@ public sealed class OrdererFoodOrderCancellationRenderTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMudServices();
+        services.AddCommerceUiFixture();
         services.AddSingleton<IJSRuntime, NoopJs>();
         services.AddSingleton<NavigationManager, TestNavigation>();
         services.AddSingleton(page);

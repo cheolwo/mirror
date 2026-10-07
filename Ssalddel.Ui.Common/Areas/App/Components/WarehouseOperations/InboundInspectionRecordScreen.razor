@@ -9,21 +9,22 @@
                                  Title="입고 검수 결과 기록"
                                  Description="한 입고상품의 실제 수량과 네 가지 현장 확인을 검토한 뒤 명시적으로 저장합니다."
                                  HomeHref="@HomeHref"
+                                 TaskOnly="@TaskOnly"
                                  Busy="@ViewModel.처리중"
                                  RefreshRequested="ReloadAsync">
     @if (ViewModel.상태 is PageViewModel상태.대기 or PageViewModel상태.불러오는중)
     {
         <MudPaper Elevation="0" Outlined="true" Class="pa-6 inbound-inspection-record__state">
             <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-            <MudText Typo="Typo.body2" Color="Color.Secondary">입고상품 #@(InboundItemId)의 검수 가능 상태를 확인하고 있습니다.</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@(TaskOnly ? "검수할 물품을 확인하고 있습니다." : $"입고상품 #{InboundItemId}의 검수 가능 상태를 확인하고 있습니다.")</MudText>
         </MudPaper>
     }
     else if (ViewModel.상태 == PageViewModel상태.실패 || ViewModel.상세.항목 is null)
     {
         <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
             <MudStack Spacing="2">
-                <MudText>@(ViewModel.오류메시지 ?? "검수 대상을 찾을 수 없거나 현재 계정의 조회 범위에 없습니다.")</MudText>
-                <MudButton Variant="Variant.Text" Color="Color.Error" Disabled="@ViewModel.처리중" OnClick="ReloadAsync">같은 ID 다시 조회</MudButton>
+                <MudText>@(TaskOnly ? "검수 상태를 확인하지 못했습니다. 다시 확인해 주세요." : ViewModel.오류메시지 ?? "검수 대상을 찾을 수 없거나 현재 계정의 조회 범위에 없습니다.")</MudText>
+                <MudButton Variant="Variant.Text" Color="Color.Error" Disabled="@ViewModel.처리중" OnClick="ReloadAsync">@(TaskOnly ? "다시 확인" : "같은 ID 다시 조회")</MudButton>
             </MudStack>
         </MudAlert>
     }
@@ -34,7 +35,7 @@
             <MudPaper Elevation="0" Outlined="true" Class="pa-4 inbound-inspection-record__form">
                 <header>
                     <div>
-                        <span>INBOUND ITEM #@selected.InboundItemId</span>
+                        @if (!TaskOnly) { <span>INBOUND ITEM #@selected.InboundItemId</span> }
                         <h2>@Display(selected.ProductName)</h2>
                         <p>@Display(selected.Sku) · @Display(selected.WarehouseName)</p>
                     </div>
@@ -46,7 +47,8 @@
                 @if (selected.CanInspect)
                 {
                     <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
-                        입고 수량 @selected.ReceivedQuantity.ToString("N0")개를 기준으로 실제 검수 수량과 불량 수량을 확인합니다.
+                        @if (TaskOnly) { <span>수령 @selected.ReceivedQuantity.ToString("N0")개 · 실제 수량과 불량 수량을 확인해 주세요.</span> }
+                        else { <span>입고 수량 @selected.ReceivedQuantity.ToString("N0")개를 기준으로 실제 검수 수량과 불량 수량을 확인합니다.</span> }
                     </MudAlert>
 
                     <MudGrid>
@@ -92,7 +94,7 @@
 
                     @if (ViewModel.작성.오류발생)
                     {
-                        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@ViewModel.작성.오류메시지</MudAlert>
+                        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@(TaskOnly ? "검수 결과를 저장하지 못했습니다. 수량과 확인 항목을 살펴본 뒤 다시 시도해 주세요." : ViewModel.작성.오류메시지)</MudAlert>
                     }
 
                     <MudButton Variant="Variant.Filled"
@@ -109,10 +111,10 @@
                 {
                     <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.TaskAlt">
                         <MudStack Spacing="1">
-                            <MudText Typo="Typo.subtitle2">같은 ID로 검수 완료 원장을 다시 조회했습니다.</MudText>
+                            <MudText Typo="Typo.subtitle2">@(TaskOnly ? "검수 기록" : "같은 ID로 검수 완료 원장을 다시 조회했습니다.")</MudText>
                             <MudText Typo="Typo.body2">가용 @selected.AvailableQuantity.ToString("N0")개 · 불량 @selected.DefectiveQuantity.ToString("N0")개</MudText>
                             <MudText Typo="Typo.body2">검수 기록: @Display(selected.InspectionMemo)</MudText>
-                            <MudText Typo="Typo.caption">현재 상태에서는 검수 Command를 다시 실행할 수 없습니다.</MudText>
+                            @if (!TaskOnly) { <MudText Typo="Typo.caption">현재 상태에서는 검수 Command를 다시 실행할 수 없습니다.</MudText> }
                         </MudStack>
                     </MudAlert>
                     @if (!string.IsNullOrWhiteSpace(PutAwayHref))
@@ -121,20 +123,23 @@
                                    Variant="Variant.Filled"
                                    Color="Color.Success"
                                    EndIcon="@Icons.Material.Filled.ChevronRight">
-                            이 입고상품 적재로 이동
+                            @(TaskOnly ? "물품 적재로 이동" : "이 입고상품 적재로 이동")
                         </MudButton>
                     }
                 }
 
+                @if (!TaskOnly)
+                {
                 <MudButton Href="@Context.PathFor(InboundInspectionScreenKind.Detail, selected.InboundItemId)"
                            Variant="Variant.Text"
                            StartIcon="@Icons.Material.Filled.Description">
                     읽기 전용 상세로 돌아가기
                 </MudButton>
+                }
             </MudPaper>
 
             <aside class="inbound-inspection-record__summary">
-                <span>INSPECTION CHECK</span>
+                <span>@(TaskOnly ? "검수 요약" : "INSPECTION CHECK")</span>
                 <h2>@Display(selected.ProductName)</h2>
                 <dl>
                     <div><dt>입고 수량</dt><dd>@selected.ReceivedQuantity.ToString("N0")개</dd></div>
@@ -152,6 +157,21 @@
     [Parameter, EditorRequired] public InboundInspectionNavigationContext Context { get; set; } = new();
     [Parameter, EditorRequired] public string HomeHref { get; set; } = string.Empty;
     [Parameter] public string? PutAwayHref { get; set; }
+    [Parameter] public bool TaskOnly { get; set; }
+    [Parameter] public 입고검수실행ViewModel? ExternalViewModel { get; set; }
+    [Parameter] public EventCallback OnInspectionSaved { get; set; }
+    protected new 입고검수실행ViewModel ViewModel => ExternalViewModel ?? base.ViewModel;
+    protected override void OnInitialized()
+    {
+        if (ExternalViewModel is null) base.OnInitialized();
+        else ExternalViewModel.PropertyChanged += ExternalChanged;
+    }
+    private void ExternalChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => _ = InvokeAsync(StateHasChanged);
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && ExternalViewModel is not null) ExternalViewModel.PropertyChanged -= ExternalChanged;
+        base.Dispose(disposing);
+    }
 
     private long _loadedInboundItemId;
 
@@ -163,11 +183,14 @@
         }
 
         _loadedInboundItemId = InboundItemId;
-        await ViewModel.초기화Async(InboundItemId);
+        if (ExternalViewModel is null) await ViewModel.초기화Async(InboundItemId);
     }
 
     private Task ReloadAsync() => ViewModel.경로대상변경Async(InboundItemId);
-    private Task SubmitInspectionAsync() => ViewModel.검수후재조회Async();
+    private async Task SubmitInspectionAsync()
+    {
+        if (await ViewModel.검수후재조회Async()) await OnInspectionSaved.InvokeAsync();
+    }
     private void SetInspectedQuantity(int value) => ViewModel.작성.검수수량 = value;
     private void SetDefectiveQuantity(int value) => ViewModel.작성.불량수량 = value;
     private void SetInspectionMemo(string value) => ViewModel.작성.검수메모 = value ?? string.Empty;

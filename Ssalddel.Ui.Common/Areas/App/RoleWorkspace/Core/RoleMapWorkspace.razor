@@ -1,0 +1,457 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@inject RoleWorkspaceViewModel Model
+@inject INeighborhoodMapHost MapHost
+@inject NavigationManager Navigation
+@inject Microsoft.JSInterop.IJSRuntime JS
+@implements IAsyncDisposable
+
+<main class="role-map-workspace">
+    <header class="role-map-workspace__header">
+        <a href="@Href(HomeHref)" class="role-map-workspace__back" aria-label="역할 선택으로"><MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" /></a>
+        <h1>@(Model.Role?.Label ?? "업무")</h1>
+        <a href="@Href(HomeHref)" class="role-map-workspace__switch">역할 바꾸기</a>
+    </header>
+    @if (CanShowWorkspace)
+    {
+    <div class="role-map-workspace__mode" role="group" aria-label="업무 보기 방식">
+        <button type="button" aria-pressed="@(!Model.ListOnly ? "true" : "false")" @onclick="() => SetListOnly(false)">지도</button>
+        <button type="button" aria-pressed="@(Model.ListOnly ? "true" : "false")" @onclick="() => SetListOnly(true)">목록</button>
+    </div>
+    <details class="role-map-workspace__settings">
+        <summary>표시 설정</summary>
+        <div><label><input type="checkbox" checked="@Model.ShowMarkers" @onchange="MarkersChanged" />위치 핀</label><label><input type="checkbox" checked="@Model.ShowRoutes" @onchange="RoutesChanged" />이동 경로</label></div>
+    </details>
+    @if (!Model.ListOnly)
+    {
+    <section class="role-map-workspace__geography" aria-label="현재 업무 지도">
+        <div id="role-workspace-map-canvas" class="role-map-workspace__canvas" aria-label="업무 위치와 이동 경로"></div>
+        @if (_hostStatus.Code != "ready")
+        {
+            <div class="role-map-workspace__map-notice" role="status"><span>@(_hostStatus.Message ?? "지도를 확인하지 못했습니다. 아래 업무 목록을 이용해 주세요.")</span><button type="button" @onclick="RetryMap">지도 다시 시도</button><button type="button" @onclick="() => SetListOnly(true)">목록으로 보기</button></div>
+        }
+        else if (!Model.ShowMarkers)
+        { <p class="role-map-workspace__map-notice">위치 핀 표시가 꺼져 있어요.</p> }
+        else if (!Model.IsLoading && Model.RenderState().Markers.Count == 0)
+        { <p class="role-map-workspace__map-notice">표시할 위치 정보가 없습니다. 아래에서 업무를 확인할 수 있어요.</p> }
+        @foreach (var notice in Model.RenderState().Routes.Select(route => route.Notice).OfType<string>().Distinct())
+        { <p class="role-map-workspace__map-notice">@notice</p> }
+    </section>
+    }
+    <section class="role-map-workspace__panel" data-neighborhood-map-occlusion aria-label="현재 업무">
+        @if (_suspended || Model.IsSuspended)
+        { <div class="role-map-workspace__empty" role="status"><h2>업무를 다시 확인하는 중입니다</h2><p>돌아오면 최신 정보를 확인합니다.</p></div> }
+        else
+        {
+            @if (Model.Error is { } error)
+            {
+                <div class="role-map-workspace__error" role="alert"><p>@error</p>
+                    @if (Model.RequiresLogin) { <a href="@ActionHref(LoginHref)">로그인</a> }
+                    else if (Model.AccessDenied) { <a href="@Href(HomeHref)">역할 선택으로</a> }
+                    else { <button type="button" disabled="@Model.IsLoading" @onclick="Refresh">다시 불러오기</button> }
+                </div>
+            }
+            @if (Model.CommandError is { } commandError) { <p class="role-map-workspace__error" role="alert">@commandError</p> }
+            @if (Model.RefreshError is { } refreshError) { <p class="role-map-workspace__error" role="alert">@refreshError</p> }
+            @if (Model.LocationMessage is { } locationMessage) { <p class="role-map-workspace__hint" role="status">@locationMessage</p> }
+            @if (Model.Items.Count > 0 && Model.Message is { Length: > 0 } notice) { <p class="role-map-workspace__hint" role="status">@notice</p> }
+            @if (Model.IsLoading) { <p class="role-map-workspace__loading" role="status">현재 업무를 불러오는 중입니다.</p> }
+            else if (Model.SelectedItem is { } item)
+            {
+                <article class="role-map-workspace__card">
+                    <header class="role-map-workspace__card-header">
+                        <div><span class="role-map-workspace__status">@item.Status</span><h2>@item.Title</h2>@if (item.Summary is null && item.Subtitle is { Length: > 0 } subtitle) { <p>@subtitle</p> }</div>
+                        <button type="button" class="role-map-workspace__expand" aria-expanded="@(Model.DetailsExpanded ? "true" : "false")" aria-controls="role-workspace-details" @onclick="ToggleDetails">@(Model.DetailsExpanded ? "접기" : "상세")<MudIcon Icon="@(Model.DetailsExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" /></button>
+                    </header>
+                    @if (item.Summary is { } summary)
+                    {
+                        <section class="role-map-workspace__summary" aria-label="현재 업무 핵심 정보">
+                            <div class="role-map-workspace__destination"><h3>@summary.DestinationLabel</h3><p>@summary.Destination</p></div>
+                            @if (summary.Metrics is { Count: > 0 } metrics)
+                            { <dl class="role-map-workspace__metrics">@foreach (var metric in metrics) { <div><dt>@metric.Label</dt><dd>@metric.Value</dd></div> }</dl> }
+                            @if (summary.Request is { } request)
+                            { <div class="role-map-workspace__required-request"><h3>@request.Label</h3><p>@request.Value</p></div> }
+                        </section>
+                    }
+                    @if (Model.DetailsExpanded)
+                    {
+                        <div id="role-workspace-details" class="role-map-workspace__details">
+                            @if (item.Summary is not null && item.Subtitle is { Length: > 0 } orderSummary)
+                            { <p class="role-map-workspace__detail-subtitle">@orderSummary</p> }
+                            @foreach (var section in item.Sections ?? [])
+                            {
+                                @if (section.Fields.Count > 0)
+                                {
+                                    <section class="role-map-workspace__section"><h3>@section.Title</h3><dl>@foreach (var field in section.Fields) { <div><dt>@field.Label</dt><dd>@field.Value</dd></div> }</dl></section>
+                                }
+                            }
+                            @if (DetailContent is not null) { @DetailContent(item) }
+                        </div>
+                    }
+                    <div class="role-map-workspace__actions">
+                        @foreach (var action in item.Actions ?? [])
+                        {
+                            @if (RoleWorkspaceActionPolicy.KeepVisible(Model.Role?.Key, action, Model.DetailsExpanded))
+                            {
+                                @if (action.Enabled && !Model.CommandBusy && !Model.AccountBusy && !Model.IsRefreshing && Model.RefreshError is null && action.Route is not null && ActionHref(action.Route) is { } href)
+                                { <a href="@href" class="@(action.IsPrimary ? "is-primary" : "")">@action.Label</a> }
+                                else
+                                { <button type="button" class="@(action.IsPrimary ? "is-primary" : "")" disabled="@(!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null || action.Route is not null)" @onclick="() => RequestAction(item.Id, action)">@action.Label</button> }
+                                @if (!action.Enabled && action.DisabledReason is { Length: > 0 } reason) { <p class="role-map-workspace__hint">@reason</p> }
+                            }
+                        }
+                    </div>
+                    @if (Model.CommandBusy) { <p role="status" class="role-map-workspace__hint">처리 결과를 확인하고 있습니다.</p> }
+                </article>
+            }
+            else if (Model.Error is null)
+            {
+                <div class="role-map-workspace__empty"><h2>현재 확인할 업무가 없습니다</h2>@if (Model.Message is { Length: > 0 } message) { <p>@message</p> }
+                </div>
+            }
+            @if (!Model.IsLoading && Model.Error is null && DirectWorkspaceActions.Count > 0)
+            {
+                <section class="role-map-workspace__list role-map-workspace__workspace-actions">
+                    <h2 class="role-map-workspace__action-heading">@(!HasCurrentWork ? "시작할 작업" : "업무 설정")</h2>
+                    <nav class="role-map-workspace__actions" aria-label="역할 업무 설정">
+                        @foreach (var action in DirectWorkspaceActions)
+                        {
+                            @if (action.Enabled && !Model.CommandBusy && !Model.AccountBusy && !Model.IsRefreshing && Model.RefreshError is null && action.Route is not null && ActionHref(action.Route) is { } href)
+                            { <a href="@href" class="@(action.IsPrimary ? "is-primary" : "")">@action.Label</a> }
+                            else
+                            { <button type="button" class="@(action.IsPrimary ? "is-primary" : "")" disabled="@(!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null || action.Route is not null)" @onclick="() => RequestAction(string.Empty, action)">@action.Label</button> }
+                            @if (!action.Enabled && action.DisabledReason is { Length: > 0 } reason) { <p class="role-map-workspace__hint">@reason</p> }
+                        }
+                    </nav>
+                </section>
+            }
+            @if (!Model.IsLoading && Model.Error is null && UnclassifiedWorkspaceActions.Count > 0)
+            {
+                <details class="role-map-workspace__list role-map-workspace__workspace-actions">
+                    <summary>추가 작업</summary>
+                    <nav class="role-map-workspace__actions" aria-label="추가 작업">
+                        @foreach (var action in UnclassifiedWorkspaceActions)
+                        {
+                            @if (action.Enabled && !Model.CommandBusy && !Model.AccountBusy && !Model.IsRefreshing && Model.RefreshError is null && action.Route is not null && ActionHref(action.Route) is { } href)
+                            { <a href="@href" class="@(action.IsPrimary ? "is-primary" : "")">@action.Label</a> }
+                            else
+                            { <button type="button" class="@(action.IsPrimary ? "is-primary" : "")" disabled="@(!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null || action.Route is not null)" @onclick="() => RequestAction(string.Empty, action)">@action.Label</button> }
+                            @if (!action.Enabled && action.DisabledReason is { Length: > 0 } reason) { <p class="role-map-workspace__hint">@reason</p> }
+                        }
+                    </nav>
+                </details>
+            }
+            @if (ToolActions.Count > 0)
+            {
+                <details class="role-map-workspace__list role-map-workspace__workspace-actions role-map-workspace__tools" @key="Model.WorkspaceHref">
+                    <summary>업무 도구</summary>
+                    <nav class="role-map-workspace__actions" aria-label="업무 도구">
+                        @foreach (var tool in ToolActions)
+                        {
+                            var action = tool.Action;
+                            @if (action.Enabled && !Model.CommandBusy && !Model.AccountBusy && !Model.IsRefreshing && Model.RefreshError is null && action.Route is not null && ActionHref(action.Route) is { } href)
+                            { <a href="@href">@action.Label</a> }
+                            else
+                            { <button type="button" disabled="@(!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null || action.Route is not null)" @onclick="() => RequestAction(tool.ItemId, action)">@action.Label</button> }
+                            @if (!action.Enabled && action.DisabledReason is { Length: > 0 } reason) { <p class="role-map-workspace__hint">@reason</p> }
+                        }
+                    </nav>
+                </details>
+            }
+            @if (_confirmation is { } confirmation)
+            {
+                <div class="role-map-workspace__confirmation" data-neighborhood-map-occlusion>
+                    <p>@confirmation.Label 하시겠어요?</p><div><button type="button" disabled="@Model.CommandBusy" @onclick="ConfirmAction">확인</button><button type="button" disabled="@Model.CommandBusy" @onclick="CancelAction">취소</button></div>
+                </div>
+            }
+            @if (Model.CommandBusy && Model.SelectedItem is null && !Model.IsLoading)
+            { <p role="status" class="role-map-workspace__hint">처리 결과를 확인하고 있습니다.</p> }
+            @if (Model.Items.Count > 1 || Model.ListOnly && Model.Items.Count > 0)
+            {
+                <details class="role-map-workspace__list" open="@Model.ListOnly"><summary>업무 목록 · @Model.Items.Count 건</summary><ul>@foreach (var row in Model.Items) { <li><button type="button" disabled="@(Model.CommandBusy || Model.IsRefreshing)" aria-pressed="@(row.Id == Model.SelectedId ? "true" : "false")" @onclick="() => SelectItem(row.Id)"><span><strong>@row.Title</strong><small>@row.Status</small></span><MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" /></button></li> }</ul></details>
+            }
+            <button type="button" class="role-map-workspace__refresh" disabled="@(Model.IsLoading || Model.IsRefreshing || Model.CommandBusy)" @onclick="Refresh">@(Model.IsRefreshing ? "최신 정보 확인 중" : "새로고침")</button>
+            @if (Model.IsAuthenticated)
+            {
+                <details class="role-map-workspace__list role-map-workspace__workspace-actions">
+                    <summary>계정</summary>
+                    <div class="role-map-workspace__actions"><button type="button" disabled="@(Model.CommandBusy || Model.AccountBusy)" @onclick="Model.SignOutAsync">@(Model.AccountBusy ? "로그아웃 중" : "로그아웃")</button></div>
+                    @if (Model.AccountError is { } accountError) { <p class="role-map-workspace__error" role="alert">@accountError</p> }
+                </details>
+            }
+        }
+    </section>
+    }
+    else
+    {
+        <section class="role-map-workspace__panel" aria-label="로그인 안내">
+            @if (Model.AccessDenied)
+            {
+                <div class="role-map-workspace__error" role="alert"><p>@Model.Error</p><a href="@Href(HomeHref)">역할 선택으로</a></div>
+            }
+            else if (Model.IsLoading && !Model.RequiresLogin)
+            {
+                <p class="role-map-workspace__loading" role="status">로그인 상태를 확인하고 있습니다.</p>
+            }
+            else
+            {
+                <div class="role-map-workspace__empty">
+                    <h2>로그인이 필요합니다</h2>
+                    <p>@(Model.Error ?? "로그인한 뒤 업무를 확인해 주세요.")</p>
+                    <div class="role-map-workspace__actions"><a href="@ActionHref(LoginHref)" class="is-primary">로그인</a></div>
+                </div>
+            }
+        </section>
+    }
+</main>
+
+@code {
+    private bool CanShowWorkspace => Model.IsAuthenticated && !Model.RequiresLogin && !Model.AccessDenied;
+    // 표시 분류는 권한·실행 조건을 바꾸지 않습니다. 기존 adapter와 가능 행동이 실행을 소유합니다.
+    private bool HasCurrentWork => Model.Items.Any(item => item.IsCurrent);
+    private IReadOnlyList<RoleWorkspaceAction> DirectWorkspaceActions => Model.EmptyActions
+        .Where(action => RoleWorkspaceActionPolicy.GetUsage(Model.Role?.Key, action) switch
+        {
+            RoleWorkspaceActionUsage.Required or RoleWorkspaceActionUsage.Conditional => true,
+            RoleWorkspaceActionUsage.OptionalTool => !HasCurrentWork,
+            _ => Model.SelectedItem is null
+        }).ToArray();
+    private IReadOnlyList<RoleWorkspaceAction> UnclassifiedWorkspaceActions => Model.SelectedItem is null ? []
+        : Model.EmptyActions.Where(action => RoleWorkspaceActionPolicy.GetUsage(Model.Role?.Key, action)
+            == RoleWorkspaceActionUsage.Unclassified).ToArray();
+
+    private IReadOnlyList<(string ItemId, RoleWorkspaceAction Action)> ToolActions
+    {
+        get
+        {
+            var actions = new List<(string, RoleWorkspaceAction)>();
+            if (!Model.IsLoading && Model.Error is null)
+            {
+                if (Model.SelectedItem is { } item)
+                {
+                    actions.AddRange((item.Actions ?? []).Where(action => RoleWorkspaceActionPolicy.GetUsage(Model.Role?.Key, action)
+                        == RoleWorkspaceActionUsage.OptionalTool).Select(action => (item.Id, action)));
+                }
+                if (HasCurrentWork)
+                    actions.AddRange(Model.EmptyActions.Where(action => RoleWorkspaceActionPolicy.GetUsage(Model.Role?.Key, action)
+                        == RoleWorkspaceActionUsage.OptionalTool).Select(action => (string.Empty, action)));
+            }
+            if (Model.IsAuthenticated)
+            {
+                var related = Model.Role?.Key switch
+                {
+                    "food-driver" => new RoleWorkspaceAction("history", "완료 배달 내역", "/workspace/food-driver/history", RequiresConfirmation: false),
+                    "cargo-driver" => new RoleWorkspaceAction("history", "운송 내역", "/workspace/cargo-driver/history", RequiresConfirmation: false),
+                    "operator" => new RoleWorkspaceAction("cargo-incidents", "화물 예외 검토", "/workspace/operator/cargo-incidents", RequiresConfirmation: false),
+                    _ => null
+                };
+                if (related is not null) actions.Add((string.Empty, related));
+            }
+            return actions;
+        }
+    }
+    [Parameter] public string? RoleKey { get; set; }
+    [Parameter] public string? SelectedId { get; set; }
+    [Parameter] public string HomeHref { get; set; } = "/";
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    [Parameter] public RenderFragment<RoleWorkspaceItem>? DetailContent { get; set; }
+    private NeighborhoodMapHostStatus _hostStatus = NeighborhoodMapHostStatus.Loading;
+    private long _renderedRevision = -1, _lifecycle, _observedGeneration = -1;
+    private bool _disposed, _rendering, _suspended, _switchingRole;
+    private RoleWorkspaceAction? _confirmation;
+    private string? _confirmationItem;
+    private long _confirmationGeneration;
+    private readonly CancellationTokenSource _lifetime = new();
+    private CancellationTokenSource? _renderRequest;
+    private Task? _refreshLoop;
+    private Microsoft.JSInterop.IJSObjectReference? _visibilityModule;
+    private Microsoft.JSInterop.DotNetObjectReference<RoleMapWorkspace>? _visibilityReference;
+    private int? _visibilitySubscription;
+    private string Href(string route) => Navigation.ToAbsoluteUri(route.TrimStart('/')).ToString();
+    private string? ActionHref(string? route) => RoleWorkspaceNavigation.WithReturn(route, Model.WorkspaceHref) is { } local ? Href(local) : null;
+
+    protected override void OnInitialized()
+    {
+        Model.PropertyChanged += Changed;
+        if (MapHost is INeighborhoodMapInteractionHost interaction)
+        { interaction.ViewportChanged += ViewportChanged; interaction.Suspended += Suspended; interaction.Invalidated += Invalidated; }
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_disposed) return;
+        if (RoleWorkspaceCatalog.Normalize(RoleKey) == Model.Role?.Key)
+        { await Model.InitializeAsync(RoleKey, SelectedId); return; }
+        CancelAction(); _renderRequest?.Cancel(); _renderedRevision = -1; _switchingRole = true; ++_lifecycle;
+        // 지도 호스트를 기다리기 전에 이전 역할의 비공개 카드와 늦은 응답을 무효화합니다.
+        var initialization = Model.InitializeAsync(RoleKey, SelectedId);
+        try
+        {
+            try { await MapHost.HideAsync(_lifetime.Token); }
+            catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+            catch (Exception) { _hostStatus = NeighborhoodMapHostStatus.Unavailable; }
+            await initialization;
+        }
+        finally { _switchingRole = false; }
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                _visibilityModule = await JS.InvokeAsync<Microsoft.JSInterop.IJSObjectReference>("import", _lifetime.Token,
+                    "./_content/Ssalddel.Ui.Common/Areas/App/js/role-workspace-visibility.js");
+                _visibilityReference = Microsoft.JSInterop.DotNetObjectReference.Create(this);
+                _visibilitySubscription = await _visibilityModule.InvokeAsync<int>("watch", _lifetime.Token, _visibilityReference);
+            }
+            catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+            catch (Microsoft.JSInterop.JSException) { }
+            _refreshLoop = RefreshWhileVisibleAsync();
+        }
+        if (!CanShowWorkspace)
+        {
+            CancelAction(); _renderRequest?.Cancel(); _renderedRevision = -1;
+            try { await MapHost.HideAsync(_lifetime.Token); }
+            catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+            catch (Exception) { _hostStatus = NeighborhoodMapHostStatus.Unavailable; }
+            return;
+        }
+        if (Model.ListOnly) return;
+        if (_disposed || _suspended || Model.IsSuspended || _rendering || _switchingRole) return;
+        var state = Model.RenderState();
+        if (state.Revision == _renderedRevision) return;
+        _rendering = true;
+        var generation = Model.Generation;
+        var request = _renderRequest = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+        try
+        {
+            var status = await MapHost.RenderAsync("role-workspace-map-canvas", state,
+                id => InvokeAsync(() => generation == Model.Generation && !_suspended ? SelectMarker(id) : Task.CompletedTask), request.Token);
+            if (!_disposed && !request.IsCancellationRequested && generation == Model.Generation)
+            { _hostStatus = status; _renderedRevision = state.Revision; }
+        }
+        catch (OperationCanceledException) when (request.IsCancellationRequested) { }
+        catch (Exception) { if (!_disposed && generation == Model.Generation) { _hostStatus = NeighborhoodMapHostStatus.Unavailable; _renderedRevision = state.Revision; } }
+        finally
+        {
+            if (ReferenceEquals(_renderRequest, request)) _renderRequest = null;
+            request.Dispose(); _rendering = false;
+            if (!_disposed) StateHasChanged();
+        }
+    }
+    private void Changed(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (_disposed) return;
+        _ = InvokeAsync(() =>
+        {
+            if (_observedGeneration != Model.Generation)
+            { _observedGeneration = Model.Generation; _renderRequest?.Cancel(); _renderedRevision = -1; _hostStatus = NeighborhoodMapHostStatus.Loading; }
+            if (_confirmationGeneration != Model.Generation) CancelAction();
+            StateHasChanged();
+        });
+    }
+    private void ViewportChanged(NeighborhoodMapViewport viewport)
+    { if (!_disposed && !_suspended) _ = InvokeAsync(() => Model.SetViewport(viewport)); }
+    private void Suspended()
+    {
+        if (_disposed) return;
+        _ = InvokeAsync(() =>
+        { if (_suspended) return; ++_lifecycle; _suspended = true; _renderRequest?.Cancel(); CancelAction(); Model.Suspend(); _renderedRevision = -1; StateHasChanged(); });
+    }
+    private void Invalidated()
+    {
+        if (_disposed) return;
+        _ = InvokeAsync(async () =>
+        {
+            var lifecycle = ++_lifecycle;
+            _renderedRevision = -1;
+            if (_suspended || Model.IsSuspended) await Model.ResumeAsync();
+            else await Model.RefreshAsync();
+            if (!_disposed && lifecycle == _lifecycle) { _suspended = false; StateHasChanged(); }
+        });
+    }
+    private async Task SelectMarker(string markerId)
+    {
+        var generation = Model.Generation;
+        CancelAction(); await Model.SelectMarkerAsync(markerId); SyncSelection(generation);
+    }
+    private async Task SelectItem(string itemId)
+    {
+        var generation = Model.Generation;
+        CancelAction(); await Model.SelectAsync(itemId); SyncSelection(generation);
+    }
+    private void SyncSelection(long generation)
+    {
+        if (!_disposed && !_suspended && generation == Model.Generation && Model.SelectedId is not null && !Model.IsLoading && Model.Error is null)
+            Navigation.NavigateTo(Href(Model.WorkspaceHref), replace: true);
+    }
+    private Task Refresh() { CancelAction(); return Model.RefreshAsync(); }
+    private async Task SetListOnly(bool listOnly)
+    {
+        if (Model.ListOnly == listOnly) return;
+        _renderRequest?.Cancel();
+        Model.SetListOnly(listOnly);
+        _renderedRevision = -1;
+        if (listOnly) { try { await MapHost.HideAsync(_lifetime.Token); } catch (Exception) { } }
+        else _hostStatus = NeighborhoodMapHostStatus.Loading;
+    }
+    [Microsoft.JSInterop.JSInvokable]
+    public Task SetWorkspaceVisibility(bool visible)
+    {
+        if (_disposed) return Task.CompletedTask;
+        if (!visible) Suspended();
+        else if (_suspended || Model.IsSuspended) Invalidated();
+        return Task.CompletedTask;
+    }
+    private async Task RefreshWhileVisibleAsync()
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(_lifetime.Token))
+                await InvokeAsync(() => { if (!_disposed && !_suspended) _ = Model.TickAsync(_confirmation is null && _visibilitySubscription is not null); });
+        }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+    }
+    private void ToggleDetails() => Model.SetDetailsExpanded(!Model.DetailsExpanded);
+    private void MarkersChanged(ChangeEventArgs args) => Model.SetMapVisibility(args.Value is true, Model.ShowRoutes);
+    private void RoutesChanged(ChangeEventArgs args) => Model.SetMapVisibility(Model.ShowMarkers, args.Value is true);
+    private void RetryMap() { _renderedRevision = -1; _hostStatus = NeighborhoodMapHostStatus.Loading; }
+    private Task RequestAction(string itemId, RoleWorkspaceAction action)
+    {
+        if (!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null) return Task.CompletedTask;
+        if (!action.RequiresConfirmation) return PerformAction(itemId, action.Key);
+        _confirmation = action; _confirmationItem = itemId; _confirmationGeneration = Model.Generation;
+        return Task.CompletedTask;
+    }
+    private async Task ConfirmAction()
+    {
+        var action = _confirmation; var item = _confirmationItem; var generation = _confirmationGeneration;
+        CancelAction();
+        if (action is not null && item is not null && generation == Model.Generation) await PerformAction(item, action.Key);
+    }
+    private async Task PerformAction(string item, string actionKey)
+    {
+        var generation = Model.Generation;
+        await Model.PerformAsync(item, actionKey);
+        SyncSelection(generation);
+    }
+    private void CancelAction() { _confirmation = null; _confirmationItem = null; }
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed) return;
+        _disposed = true; ++_lifecycle;
+        Model.PropertyChanged -= Changed;
+        if (MapHost is INeighborhoodMapInteractionHost interaction)
+        { interaction.ViewportChanged -= ViewportChanged; interaction.Suspended -= Suspended; interaction.Invalidated -= Invalidated; }
+        _lifetime.Cancel(); _renderRequest?.Cancel(); Model.Dispose();
+        if (_visibilityModule is not null)
+        {
+            try { if (_visibilitySubscription is { } subscription) await _visibilityModule.InvokeVoidAsync("stop", subscription); await _visibilityModule.DisposeAsync(); }
+            catch (Microsoft.JSInterop.JSDisconnectedException) { }
+            catch (ObjectDisposedException) { }
+        }
+        _visibilityReference?.Dispose();
+        try { await MapHost.HideAsync(); } catch (Exception) { }
+        _lifetime.Dispose();
+    }
+}

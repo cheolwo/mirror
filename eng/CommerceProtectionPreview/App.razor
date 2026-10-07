@@ -1,0 +1,6 @@
+@inject IConfiguration Configuration
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><base href="/" /><link rel="icon" href="data:," /><link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" /><link rel="stylesheet" href="CommerceProtectionPreview.styles.css" /><style>body{margin:0;background:#f5f7fa;font-family:system-ui,sans-serif}*{box-sizing:border-box}.preview-context{padding:8px 16px;background:#eaf5f3;color:#0b5c56;font-size:14px}.preview-context a{color:inherit}</style><HeadOutlet @rendermode="InteractiveServer" /></head>
+<body>
+@if (!string.IsNullOrWhiteSpace(Configuration["COMMERCE_PREVIEW_REAL_ACCOUNTS"])) { <link rel="stylesheet" href="verification/shared-ui.css" /> }
+<Routes @rendermode="new InteractiveServerRenderMode(prerender: false)" /><script src="_content/MudBlazor/MudBlazor.min.js"></script><script src="_framework/blazor.web.js"></script></body></html>

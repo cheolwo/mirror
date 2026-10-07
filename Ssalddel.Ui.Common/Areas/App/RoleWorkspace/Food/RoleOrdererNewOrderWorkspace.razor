@@ -1,0 +1,25 @@
+@using Ssalddel.Ui.Common.Areas.App.Components.Food
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@implements IDisposable
+@inject IRoleWorkspaceAccess Access
+
+<section aria-label="음식 주문 작성">
+    <a href="@FoodWorkspacePresentation.OrdererReturnHref(ReturnHref)">내 음식 주문으로 돌아가기</a>
+    <OrdererRestaurantWorkspace @key="identity" RestaurantId="RestaurantId" RestaurantSelected="SelectedAsync" OrderSubmitted="OrderSubmitted" />
+</section>
+
+@code {
+    [Parameter] public long? RestaurantId { get; set; }
+    [Parameter] public string? ReturnHref { get; set; } = "/workspace/orderer";
+    [Parameter] public EventCallback<string> OrderSubmitted { get; set; }
+    private RoleWorkspaceIdentity? identity;
+    protected override void OnInitialized() { identity = Access.GetIdentity("orderer"); Access.Changed += Changed; }
+    private Task SelectedAsync(long? restaurantId) { RestaurantId = restaurantId; return Task.CompletedTask; }
+    private void Changed()
+    {
+        var current = Access.GetIdentity("orderer");
+        if (identity == current) return;
+        identity = current; _ = InvokeAsync(StateHasChanged);
+    }
+    public void Dispose() => Access.Changed -= Changed;
+}

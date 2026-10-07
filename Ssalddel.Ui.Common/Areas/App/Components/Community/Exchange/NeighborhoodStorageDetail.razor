@@ -1,0 +1,66 @@
+@inherits NeighborhoodWorkflowPageBase<NeighborhoodStorageQueryViewModel>
+@{ Model.SynchronizeOwner(); }
+<NeighborhoodDeliveryFrame><main class="exchange-page">
+    @if (!Embedded) { <a class="exchange-back" href="@Href(NeighborhoodMapNavigation.SafeReturn(ReturnUrl) ?? NeighborhoodStorageRoutes.ListPage)">← 보관공간</a> }
+    @if (Model.IsLoading) { <p role="status">공간을 확인하는 중입니다.</p> }
+    @if (Model.Error is not null) { <div class="exchange-error" role="alert">@Model.Error<button @onclick="Reload">다시 불러오기</button></div> }
+    @if (Model.Notice is not null) { <p role="status" class="exchange-note">@Model.Notice</p> }
+    @if (Model.IsAuthenticated && Model.HasPending) { <section class="exchange-surface"><h2>이전 요청 결과 확인</h2><button disabled="@Model.IsSending" @onclick="Recover">처리 결과 확인</button>@if (Model.PendingTarget == SpaceId && Model.CanRetryMutation) { <button disabled="@Model.IsSending" @onclick="Model.SendPendingAsync">같은 요청 직접 다시 보내기</button> } else if (!Model.CanRetryMutation && !Model.IsPendingReservation) { <a href="@Href(InputHref(Model.PendingAuthoringHref))">작성 화면에서 이전 저장 확인</a> }</section> }
+    @if (Model.Public is { } space)
+    {
+        <article class="exchange-surface"><span class="exchange-kind">보관공간 · @space.Region.DisplayName</span><h1>@space.PublicTitle</h1><p class="exchange-body">@space.PublicDescription</p>
+            <dl><dt>물건</dt><dd>@space.GoodsKind</dd><dt>용량</dt><dd>@space.CapacityQuantity @space.CapacityUnit</dd><dt>제공 기간</dt><dd>@space.AvailableFromUtc.LocalDateTime.ToString("MM.dd HH:mm") ~ @space.AvailableUntilUtc.LocalDateTime.ToString("MM.dd HH:mm")</dd></dl><p class="exchange-note">@space.LocationBoundary</p>
+        </article>
+        @if (Model.IsAuthenticated && Model.Private is { IsOwner: true } owner)
+        {
+            <section class="exchange-surface"><h2>내 공간 제공 상태</h2><p>@NeighborhoodCollaborationPresentation.SpaceStage(owner.Status)</p>
+                @if (owner.Status is NeighborhoodStorageStatus.Draft or NeighborhoodStorageStatus.Paused) { <button class="exchange-primary" disabled="@(Model.IsSending || Model.HasPending)" @onclick="Publish">제공 시작</button> }
+                @if (owner.Status == NeighborhoodStorageStatus.Published) { <button class="exchange-primary" disabled="@(Model.IsSending || Model.HasPending)" @onclick="Pause">새 신청 일시 중단</button> }
+                @if (owner.Status != NeighborhoodStorageStatus.Closed) { <details><summary>공간 관리</summary><a href="@Href(InputHref(NeighborhoodStorageRoutes.WritePage + "?spaceId=" + Uri.EscapeDataString(SpaceId)))">정보 수정</a><button disabled="@(Model.IsSending || Model.HasPending)" @onclick="Close">제공 종료</button></details> }
+                <p class="exchange-note">일시 중단하거나 종료해도 기존 보관 기록과 반환 확인은 유지됩니다.</p>
+            </section>
+        }
+        else if (Model.Collaboration is { } collaboration && Model.IsAuthenticated)
+        {
+            <section class="exchange-surface"><h2>이번 보관 약속</h2><p>@NeighborhoodCollaborationPresentation.Stage(collaboration.StatusCode)</p><a href="@Href(PanelHref("work", collaboration.StableId, NeighborhoodCollaborationRoutes.Detail(collaboration.StableId)))">협업 조건·양쪽 동의 확인</a>
+                @if (Model.CanReserve) { <button class="exchange-primary" disabled="@(Model.IsSending || Model.HasPending)" @onclick="Model.ReserveAsync">합의한 조건으로 보관 예약</button> }
+            </section>
+        }
+        else { <section class="exchange-surface"><h2>공간 이용하기</h2><p>수량과 기간을 신청하고 양쪽이 같은 조건에 동의해야 인계할 수 있어요.</p><a class="exchange-primary" href="@Href(InputHref(NeighborhoodCollaborationRoutes.Home + "/new?spaceId=" + Uri.EscapeDataString(SpaceId)))">보관 협업 신청</a><a href="@Href(PanelHref("mine", null, NeighborhoodCollaborationRoutes.Home))">내 할 일 확인</a></section> }
+        @if (Model.IsAuthenticated && Model.Private is { } detail)
+        {
+            @if (!string.IsNullOrWhiteSpace(detail.PrivateAddress)) { <details class="exchange-surface"><summary>인계 정보</summary><dl><dt>인계 주소</dt><dd>@detail.PrivateAddress</dd><dt>연락처</dt><dd>@detail.PrivateContact</dd><dt>인계 방법</dt><dd class="exchange-body">@detail.PrivateHandoverInstructions</dd></dl><p class="exchange-note">현재 동의한 보관 당사자에게만 제공되는 정보입니다.</p></details> }
+            @foreach (var reservation in detail.Reservations)
+            {
+                <section class="exchange-surface"><h2>보관·반환 확인</h2><p>@NeighborhoodCollaborationPresentation.ReservationStage(reservation.Status) · @reservation.Quantity @reservation.Unit</p><p>@reservation.FromUtc.LocalDateTime.ToString("MM.dd HH:mm") ~ @reservation.UntilUtc.LocalDateTime.ToString("MM.dd HH:mm")</p>
+                    <p class="exchange-note">인수: 제공자 @(reservation.OwnerIntakeConfirmed ? "확인" : "대기") · 신청자 @(reservation.RequesterIntakeConfirmed ? "확인" : "대기")</p><p class="exchange-note">반환: 제공자 @(reservation.OwnerReturnConfirmed ? "확인" : "대기") · 신청자 @(reservation.RequesterReturnConfirmed ? "확인" : "대기")</p>
+                    @foreach (var action in reservation.AllowedActions.Where(value => value is "confirm-intake" or "confirm-return" or "cancel")) { <button class="@(action == "cancel" ? "" : "exchange-primary")" disabled="@(Model.IsSending || Model.HasPending)" @onclick="() => Model.HandoverAsync(reservation.CollaborationId, action)">@NeighborhoodCollaborationPresentation.HandoverAction(action)</button> }
+                    <a href="@Href(PanelHref("work", reservation.CollaborationId, NeighborhoodCollaborationRoutes.Detail(reservation.CollaborationId)))">협업 상세</a>
+                </section>
+            }
+        }
+    }
+</main></NeighborhoodDeliveryFrame>
+@code {
+    [Parameter] public string SpaceId { get; set; } = "";
+    [Parameter] public bool Embedded { get; set; }
+    [Parameter] public string? ReturnUrl { get; set; }
+    private string InputHref(string route) => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? NeighborhoodMapNavigation.WithReturn(route, home) : route;
+    private string PanelHref(string kind, string? id, string fallback) => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is { } home ? NeighborhoodMapNavigation.PanelHref(home, kind, id) : fallback;
+
+    [Parameter] public string? CollaborationId { get; set; }
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    private string? _loadedSpaceId, _loadedCollaborationId;
+    protected override Task OnParametersSetAsync()
+    {
+        if (_loadedSpaceId == SpaceId && _loadedCollaborationId == CollaborationId) return Task.CompletedTask;
+        _loadedSpaceId = SpaceId; _loadedCollaborationId = CollaborationId;
+        return Reload();
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender) { Model.SynchronizeOwner(); if (!Model.Loaded && !Model.IsLoading && !Model.IsSending && Model.Error is null) await Reload(); }
+    private Task Reload() => Model.LoadDetailAsync(SpaceId, CollaborationId);
+    private Task Publish() => Model.ChangeStateAsync("publish");
+    private Task Pause() => Model.ChangeStateAsync("pause");
+    private Task Close() => Model.ChangeStateAsync("close");
+    private async Task Recover() { if (await Model.RecoverAsync() is { } id && id != SpaceId) Navigation.NavigateTo(Href(PanelHref("space", id, NeighborhoodStorageRoutes.DetailPage(id)))); }
+}

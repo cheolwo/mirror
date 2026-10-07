@@ -1,0 +1,103 @@
+@using Ssalddel.Contracts.Common.Privacy
+@inject NeighborhoodDeliveryAuthoringViewModel Model
+@inject NavigationManager Navigation
+@implements IDisposable
+@{ Model.Initialize(SourcePostId); }
+
+<NeighborhoodDeliveryFrame><main class="exchange-page">
+    <a class="exchange-back" href="@Href(BackHref)">← @(NeighborhoodMapNavigation.SafeReturn(ReturnUrl) is null ? "내 배송 의뢰" : "생활 지도")</a>
+    <header><span class="exchange-eyebrow">생활 교류 · 배송</span><h1>물건 배송 요청</h1><p>픽업지와 전달지를 정하고 배송을 요청하세요. 교류 글과 별도로 접수합니다.</p></header>
+    @if (!Model.IsAuthenticated)
+    {
+        <section class="exchange-empty"><h2>로그인이 필요해요</h2><p>주소와 연락처는 공개 글에 남기지 않고, 본인 배송 의뢰에서 관리합니다.</p><a class="exchange-primary" href="@LoginHref">로그인하기</a></section>
+    }
+    else
+    {
+        @if (Model.Error is not null) { <div class="exchange-error" role="alert">@Model.Error</div> }
+        @if (Model.Submitted is { } submitted && Model.CollaborationId is not null)
+        {
+            <section class="exchange-surface"><h2>배송 접수 완료</h2><p>같은 배송 의뢰를 보존하고 협업 연결만 확인합니다.</p>
+                <a href="@Href(ResultHref(submitted.RequestId))">접수한 배송 보기</a>
+                <button class="exchange-primary" disabled="@Model.IsSending" @onclick="RetryLink">협업 연결 다시 확인</button>
+                <a href="@Href(NeighborhoodMapNavigation.ReturnToPanel(ReturnUrl, "work", Model.CollaborationId) ?? NeighborhoodCollaborationRoutes.Detail(Model.CollaborationId))">협업 진행으로</a>
+            </section>
+        }
+        else if (!Model.CanWriteCollaboration)
+        {
+            <section class="exchange-empty"><h2>@(Model.IsLoadingCollaboration ? "협업 확인 중…" : "협업 조건 확인이 필요해요")</h2>
+                <button class="exchange-primary" disabled="@Model.IsLoadingCollaboration" @onclick="ReloadCollaboration">다시 확인하기</button>
+            </section>
+        }
+        else if (Model.ConsentEvidenceId is null)
+        {
+            <section class="exchange-surface" aria-labelledby="delivery-consent-title"><h2 id="delivery-consent-title">배송 정보 이용 안내</h2>
+                <p>@Privacy.수집이용목적</p><p><strong>수집 항목</strong><br />@string.Join(", ", Privacy.수집항목)</p><p><strong>보유 기간</strong><br />@Privacy.보유이용기간</p><p>@Privacy.동의거부안내</p><p>@Privacy.제3자제공안내</p><p>@Privacy.국외이전안내</p>
+                <label class="delivery-check"><input type="checkbox" @bind="Model.CollectionConsent" disabled="@Model.IsSending" /><span>위 수집·이용 안내를 확인하고 동의합니다.</span></label>
+                <label class="delivery-check"><input type="checkbox" @bind="Model.AgeConfirmed" disabled="@Model.IsSending" /><span>만 14세 이상입니다.</span></label>
+                <button class="exchange-primary" disabled="@(Model.IsSending || !Model.CollectionConsent || !Model.AgeConfirmed)" @onclick="Model.AcceptConsentAsync">@(Model.IsSending ? "확인 중…" : "동의하고 작성하기")</button>
+            </section>
+        }
+        else
+        {
+            <form @onsubmit="Submit" @onsubmit:preventDefault>
+                <fieldset disabled="@(Model.IsSending || Model.NeedsSubmissionReview)"><legend>배송할 물건과 위치</legend>
+                    <section class="exchange-surface"><h2>배송할 물건</h2><p class="exchange-note">생활 화물 배송용입니다. 음식 주문은 기존 음식 배달 화면을 이용해 주세요.</p>
+                        <label for="delivery-cargo">물건 이름</label><input id="delivery-cargo" @bind="Model.Draft.CargoName" @bind:event="oninput" maxlength="120" required />
+                        <label for="delivery-quantity">수량</label><input id="delivery-quantity" type="number" @bind="Model.Draft.Quantity" min="1" max="1000" required />
+                        <label for="delivery-weight">전체 중량(kg)</label><input id="delivery-weight" type="number" @bind="Model.Draft.WeightKg" min="0.001" max="10000" step="0.001" required />
+                        <label for="delivery-vehicle">배송 차량</label><select id="delivery-vehicle" @bind="Model.Draft.VehicleType"><option>오토바이</option><option>다마스</option><option>라보</option><option>1톤</option></select>
+                    </section>
+                    <section class="exchange-surface"><h2>기사를 찾는 방식</h2><label for="delivery-mode">배차 방식</label><select id="delivery-mode" @bind="Model.Draft.DispatchMode" disabled="@(Model.IsSending || Model.NeedsSubmissionReview)"><option value="automatic">자동 추천</option><option value="public-call">공개 콜 · 기사 자율 수락</option><option value="hybrid">자동 추천과 공개 콜 함께</option></select><p class="exchange-note">@NeighborhoodDeliveryPresentation.배차선택안내(Model.Draft.DispatchMode)</p></section>
+
+                    <NeighborhoodDeliveryLocationEditor Id="delivery-pickup" Title="픽업지" Value="Model.Draft.Pickup" @bind-Start="Model.PickupStart" @bind-End="Model.PickupEnd" Changed="StateHasChanged" />
+                    <NeighborhoodDeliveryLocationEditor Id="delivery-dropoff" Title="전달지" Value="Model.Draft.Dropoff" @bind-Start="Model.DropoffStart" @bind-End="Model.DropoffEnd" Changed="StateHasChanged" />
+                    <section class="exchange-surface"><h2>배송 요청 사항</h2><label for="delivery-notes">요청 사항 <small>선택</small></label><textarea id="delivery-notes" @bind="Model.Draft.Notes" @bind:event="oninput" maxlength="1000" rows="3"></textarea></section>
+                    <Ssalddel.Ui.Common.Areas.App.Components.Commerce.거래보호Notice RequireAcknowledgment="true" Disabled="@(Model.IsSending || Model.NeedsSubmissionReview)" @bind-Confirmation="Model.Draft.CommerceProtection" />
+                    <button type="button" class="exchange-primary" @onclick="Model.QuoteAsync">@(Model.IsSending ? "확인 중…" : "배송비 확인하기")</button>
+                </fieldset>
+                @if (Model.NeedsSubmissionReview && Model.Quote is null)
+                { <section class="exchange-surface"><h2>원 배송 요청 이어서 확인</h2><p>이전에 확인한 배송비 @NeighborhoodDeliveryPresentation.Money(Model.Draft.AgreedFareKrw)를 포함한 원 입력으로 결과를 확인합니다.</p><button type="submit" class="exchange-primary" disabled="@Model.IsSending">같은 요청 다시 확인하기</button></section> }
+                @if (Model.Quote is { } quote)
+                {
+                    <section class="exchange-surface" aria-labelledby="delivery-quote-title"><h2 id="delivery-quote-title">배송비 확인</h2>
+                        @if (!Model.HasCurrentQuote) { <p role="status">입력이 바뀌었습니다. 배송비를 다시 확인해 주세요.</p> }
+                        else
+                        {
+                            <strong class="delivery-fare">@NeighborhoodDeliveryPresentation.Money(quote.Fare.최종운임)</strong>
+                            <p>@NeighborhoodDeliveryPresentation.Distance(quote.Fare.예상거리Km) · @quote.Fare.거리계산방식</p>
+                            @foreach (var warning in quote.Fare.경고목록) { <p class="exchange-note">@warning</p> }
+                            <p>@quote.SettlementNotice</p>
+                            @if (NeighborhoodDeliveryPresentation.자동추천준비안내(Model.Draft.DispatchMode, quote.AutomaticDispatchEnabled) is { } dispatchNotice)
+                            { <p class="delivery-warning">@dispatchNotice</p> }
+                            <label class="delivery-check"><input type="checkbox" @bind="Model.DirectPaymentAgreed" disabled="@(Model.IsSending || Model.NeedsSubmissionReview)" /><span>이 배송비를 기사에게 직접 현장 지급하기로 합의합니다.</span></label>
+                            <label class="delivery-check"><input type="checkbox" @bind="Model.DispatchRequested" disabled="@(Model.IsSending || Model.NeedsSubmissionReview)" /><span>위 조건으로 배송을 요청합니다. 접수와 기사 수락은 별도입니다.</span></label>
+                            @if (Model.NeedsSubmissionReview) { <p role="status">접수 결과 확인이 필요합니다. 내 배송 의뢰를 먼저 확인해 주세요. 다시 제출하면 같은 요청 번호와 입력을 사용합니다.</p> }
+                            <button type="submit" class="exchange-primary" disabled="@(Model.IsSending || !Model.DirectPaymentAgreed || !Model.DispatchRequested || Model.Draft.CommerceProtection?.NoticeAccepted != true)">@(Model.IsSending ? "접수 중…" : Model.NeedsSubmissionReview ? "같은 요청 다시 확인하기" : "배송 요청 접수하기")</button>
+                        }
+                    </section>
+                }
+            </form>
+            <p class="exchange-note">주소와 연락처는 공개 교류 글에 표시되지 않습니다. 동의·접수·기사 수락·물건 전달·수금은 각각 따로 확인합니다.</p>
+        }
+    }
+    <a class="exchange-back" href="@Href(BackHref)">돌아가기</a>
+</main></NeighborhoodDeliveryFrame>
+
+@code {
+    [Parameter] public long? SourcePostId { get; set; }
+    [Parameter] public string? CollaborationId { get; set; }
+    [Parameter] public string? ReturnUrl { get; set; }
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    private static readonly 신청개인정보동의안내 Privacy = 신청개인정보동의정책.For(신청개인정보업무Codes.운송대행);
+    private string Href(string route) => Navigation.ToAbsoluteUri(route.TrimStart('/')).ToString();
+    private string BackHref => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) ?? NeighborhoodDeliveryRoutes.Home;
+    private string ResultHref(string id) => NeighborhoodMapNavigation.ReturnToPanel(ReturnUrl, "delivery", id) ?? NeighborhoodDeliveryRoutes.Detail(id);
+    protected override void OnInitialized() => Model.PropertyChanged += Changed;
+    protected override async Task OnParametersSetAsync() { Model.Initialize(SourcePostId); await Model.LoadCollaborationAsync(CollaborationId); }
+    protected override void OnAfterRender(bool firstRender) => Model.SynchronizeOwner();
+    private void Changed(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => _ = InvokeAsync(StateHasChanged);
+    private async Task Submit() { if (await Model.SubmitAsync() is { } requestId) Navigation.NavigateTo(Href(ResultHref(requestId))); }
+    private async Task RetryLink() { if (await Model.RetryLinkAsync() is { } requestId) Navigation.NavigateTo(Href(ResultHref(requestId))); }
+    private Task ReloadCollaboration() => Model.LoadCollaborationAsync(CollaborationId);
+    public void Dispose() { Model.PropertyChanged -= Changed; Model.Dispose(); }
+}

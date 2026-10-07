@@ -1,0 +1,29 @@
+@using Ssalddel.Contracts.Shipper.Request
+<section class="exchange-surface" aria-labelledby="@(Id + "-title")">
+    <h2 id="@(Id + "-title")">@Title</h2>
+    <label for="@(Id + "-address")">도로명 주소</label>
+    <input id="@(Id + "-address")" @bind="Value.주소.도로명주소" @bind:event="oninput" @bind:after="Notify" maxlength="300" autocomplete="off" required />
+    <label for="@(Id + "-detail")">상세주소 <small>선택</small></label>
+    <input id="@(Id + "-detail")" @bind="Value.주소.상세주소" @bind:event="oninput" @bind:after="Notify" maxlength="300" autocomplete="off" />
+    <label for="@(Id + "-name")">담당자 이름</label>
+    <input id="@(Id + "-name")" @bind="Value.연락처.이름" @bind:event="oninput" @bind:after="Notify" maxlength="100" autocomplete="off" required />
+    <label for="@(Id + "-phone")">담당자 전화번호</label>
+    <input id="@(Id + "-phone")" type="tel" @bind="Value.연락처.전화번호" @bind:event="oninput" @bind:after="Notify" maxlength="40" autocomplete="off" required />
+    <label for="@(Id + "-start")">가능한 시작 시각</label>
+    <input id="@(Id + "-start")" type="datetime-local" @bind="Start" @bind:after="ChangedStart" required />
+    <label for="@(Id + "-end")">가능한 종료 시각</label>
+    <input id="@(Id + "-end")" type="datetime-local" @bind="End" @bind:after="ChangedEnd" required />
+</section>
+@code {
+    [Parameter] public string Id { get; set; } = "pickup";
+    [Parameter] public string Title { get; set; } = "픽업지";
+    [Parameter] public LocationContactDTO Value { get; set; } = new();
+    [Parameter] public DateTime Start { get; set; }
+    [Parameter] public DateTime End { get; set; }
+    [Parameter] public EventCallback<DateTime> StartChanged { get; set; }
+    [Parameter] public EventCallback<DateTime> EndChanged { get; set; }
+    [Parameter] public EventCallback Changed { get; set; }
+    private Task Notify() => Changed.InvokeAsync();
+    private async Task ChangedStart() { await StartChanged.InvokeAsync(Start); await Notify(); }
+    private async Task ChangedEnd() { await EndChanged.InvokeAsync(End); await Notify(); }
+}

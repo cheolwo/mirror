@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../../Ssalddel.Ui.Common/Ssalddel.Ui.Common.csproj" /></ItemGroup>
+  <ItemGroup><Compile Include="../CommerceProtectionPreview/CommercePreviewClient.cs" Link="Commerce/CommercePreviewClient.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../Ssalddel.WebApp/Services/NeighborhoodGoogleMapHost.cs" Link="Map/NeighborhoodGoogleMapHost.cs" />
+    <Compile Include="../../Ssalddel.WebApp/Services/GoogleMapsBrowserRuntimeClient.cs" Link="Map/GoogleMapsBrowserRuntimeClient.cs" />
+    <None Include="../../Ssalddel.WebApp/wwwroot/js/neighborhood-life-google-map.js" Link="wwwroot/js/neighborhood-life-google-map.js" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../Ssalddel.WebApp/wwwroot/js/community-world-google-map.js" Link="wwwroot/js/community-world-google-map.js" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

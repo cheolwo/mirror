@@ -39,6 +39,26 @@
     font-variant-numeric: tabular-nums;
 }
 
+.food-order-detail-navigation {
+    margin-bottom: .75rem;
+}
+
+.food-order-detail-navigation ::deep .mud-button-root {
+    min-height: 48px;
+}
+
+.food-order-refresh-status {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 8px 0;
+    border-block: 1px solid var(--mud-palette-lines-default);
+}
+
+.food-order-refresh-status > div { min-width: 0; }
+.food-order-refresh-status ::deep .mud-icon-root { flex-shrink: 0; }
+
 .food-order-line-item,
 .food-order-history-item {
     align-items: flex-start;

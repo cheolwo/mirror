@@ -1,0 +1,4 @@
+@inject IConfiguration Configuration
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><base href="/" /><HeadOutlet @rendermode="InteractiveServer" /></head>
+<body><link rel="stylesheet" href="preview.css" /><div class="preview-banner">@(Configuration.GetValue<bool>("FlexibleDeliveryPreview") ? "격리 실행 r22 · MySQL/Mongo 실저장 · 가상 계정·주소·경로·운임·알림 · 실운송·송금 아님" : "로컬 확인 · 글: SQLite · 협업/보관: 보호된 Mongo 기록 · 계정/배송: 검토용 · 공개 운영 아님")</div><PreviewRoutes @rendermode="new InteractiveServerRenderMode(prerender: false)" /><script src="_framework/blazor.web.js"></script></body></html>

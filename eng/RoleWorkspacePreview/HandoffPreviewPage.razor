@@ -1,0 +1,18 @@
+@page "/workspace/operator/cargo-incidents"
+@page "/workspace/operator/cargo-incidents/{IncidentId}/review"
+@page "/workspace/{RoleKey}/history"
+@page "/workspace/{RoleKey}/history/{RecordId}"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@inject NavigationManager Navigation
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside style="padding:6px 16px;background:#eaf5f3;color:#0f766e;font-size:12px" aria-label="미리보기 안내">화면 배치 미리보기 · 예시 자료 · 실제 저장/입금 없음</aside>
+@if (new Uri(Navigation.Uri).AbsolutePath.StartsWith("/workspace/operator/cargo-incidents", StringComparison.Ordinal)) { <CargoIncidentWorkspace @key="IncidentId" IncidentId="@IncidentId" ReturnUrl="@ReturnUrl" /> }
+else { <DriverHistoryWorkspace @key="(RoleKey, RecordId)" RoleKey="@RoleKey" RecordId="@RecordId" Date="@Date" ReturnUrl="@ReturnUrl" /> }
+@code {
+    [Parameter] public string? IncidentId { get; set; }
+    [Parameter] public string? RoleKey { get; set; }
+    [Parameter] public string? RecordId { get; set; }
+    [SupplyParameterFromQuery] public string? Date { get; set; }
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+}

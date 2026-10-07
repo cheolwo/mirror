@@ -1,0 +1,9 @@
+@page "/workspace/operator/cargo-incidents"
+@page "/workspace/operator/cargo-incidents/{IncidentId}/review"
+@layout MapOnlyLayout
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
+<CargoIncidentWorkspace @key="IncidentId" IncidentId="@IncidentId" ReturnUrl="@ReturnUrl" />
+@code {
+    [Parameter] public string? IncidentId { get; set; }
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+}

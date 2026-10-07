@@ -1,0 +1,28 @@
+.role-secondary { max-width: 760px; margin: 0 auto; padding: 16px; min-height: 100dvh; background: var(--ss-canvas, #f5f7fa); color: var(--ss-ink, #172b36); box-sizing: border-box; }
+.role-secondary header { margin-bottom: 20px; }
+.role-secondary header a, .role-secondary__login { display: inline-flex; align-items: center; min-height: 48px; color: var(--ss-accent, #0f766e); }
+.role-secondary h1 { font-size: 22px; line-height: 1.4; margin: 8px 0; }
+.role-secondary__notice { padding: 14px; border: 1px solid var(--ss-border, #dce5e9); border-radius: 12px; background: var(--ss-surface, #fff); }
+.role-secondary ::deep .rw-card { margin: 12px 0; padding: 16px; border: 1px solid var(--ss-border, #dce5e9); border-radius: 16px; background: var(--ss-surface, #fff); }
+.role-secondary ::deep h2 { margin: 0 0 12px; font-size: 18px; line-height: 1.4; }
+.role-secondary ::deep h3 { margin: 0 0 10px; font-size: 16px; }
+.role-secondary ::deep p { line-height: 1.6; overflow-wrap: anywhere; }
+.role-secondary ::deep .rw-muted { color: var(--ss-muted, #586b78); font-size: 14px; }
+.role-secondary ::deep .rw-fields { margin: 0; }
+.role-secondary ::deep .rw-fields > div { display: grid; grid-template-columns: minmax(88px, 32%) minmax(0, 1fr); gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--ss-border, #dce5e9); }
+.role-secondary ::deep dt { color: var(--ss-muted, #586b78); font-size: 14px; }
+.role-secondary ::deep dd { margin: 0; overflow-wrap: anywhere; }
+.role-secondary ::deep .rw-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.role-secondary ::deep :is(button, .rw-link) { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--ss-control-border, #788c97); border-radius: 12px; font: inherit; font-size: 14px; background: var(--ss-surface, #fff); color: inherit; box-sizing: border-box; text-decoration: none; cursor: pointer; }
+.role-secondary ::deep .rw-primary { background: var(--ss-accent, #0f766e); color: #fff; border-color: var(--ss-accent, #0f766e); }
+.role-secondary ::deep button:disabled { opacity: .55; cursor: default; }
+.role-secondary ::deep :is(a, button, input, select, textarea):focus-visible { outline: 3px solid var(--ss-accent-strong, #0b5c56); outline-offset: 3px; }
+.role-secondary ::deep fieldset { padding: 0; border: 0; min-width: 0; }
+.role-secondary ::deep label { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; font-size: 14px; }
+.role-secondary ::deep :is(input:not([type=checkbox]), select, textarea) { min-height: 48px; width: 100%; padding: 10px; border: 1px solid var(--ss-control-border, #788c97); border-radius: 10px; box-sizing: border-box; font: inherit; background: var(--ss-surface, #fff); color: inherit; }
+.role-secondary ::deep .rw-check { flex-direction: row; align-items: center; min-height: 48px; }
+.role-secondary ::deep .rw-list { margin: 0; padding: 0; list-style: none; }
+.role-secondary ::deep .rw-row { display: block; color: inherit; text-decoration: none; }
+.role-secondary ::deep .rw-row strong { display: block; font-size: 17px; margin-bottom: 8px; overflow-wrap: anywhere; }
+.role-secondary ::deep .rw-row span { display: block; margin-top: 4px; line-height: 1.5; overflow-wrap: anywhere; }
+.role-secondary ::deep .rw-warning { padding: 14px; border-left: 3px solid var(--ss-accent, #0f766e); background: var(--ss-accent-soft, #eaf5f3); border-radius: 0 12px 12px 0; }

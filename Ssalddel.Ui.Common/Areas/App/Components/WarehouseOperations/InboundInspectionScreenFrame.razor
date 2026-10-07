@@ -1,6 +1,8 @@
 @using Ssalddel.Contracts.Common.Inventory
 
 <section class="inbound-inspection-screen" data-inbound-inspection-screen="@CurrentScreen.ToString().ToLowerInvariant()">
+    @if (!TaskOnly)
+    {
     <header class="inbound-inspection-screen__header">
         <div class="inbound-inspection-screen__title">
             <span>WAREHOUSE INBOUND · @Eyebrow</span>
@@ -15,12 +17,15 @@
                        StartIcon="@Icons.Material.Filled.ArrowBack">
                 돌아가기
             </MudButton>
+            @if (!TaskOnly)
+            {
             <MudButton Href="@Context.PathFor(InboundInspectionScreenKind.List)"
                        Variant="Variant.Outlined"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.ListAlt">
                 검수 목록
             </MudButton>
+            }
             @if (RefreshRequested.HasDelegate)
             {
                 <MudButton Variant="Variant.Filled"
@@ -38,10 +43,24 @@
         목록과 상세는 읽기 전용입니다. 검수 결과 저장은 별도 실행 route에서만 가능하며,
         저장 뒤 같은 입고상품 ID를 서버에서 다시 조회합니다. 적재·출고·운송·결제·정산은 실행하지 않습니다.
     </MudAlert>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+            수량·포장·품질·보관 조건을 확인해 주세요.
+        </MudAlert>
+        @if (RefreshRequested.HasDelegate)
+        {
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@Busy" OnClick="RefreshRequested">다시 확인</MudButton>
+        }
+    }
 
+    @if (!TaskOnly)
+    {
     <InboundInspectionNavigation Context="@Context"
                                  CurrentScreen="@CurrentScreen"
                                  InboundItemId="@InboundItemId" />
+    }
 
     @if (Busy)
     {
@@ -62,6 +81,7 @@
     [Parameter, EditorRequired] public string Description { get; set; } = string.Empty;
     [Parameter, EditorRequired] public string HomeHref { get; set; } = string.Empty;
     [Parameter] public bool Busy { get; set; }
+    [Parameter] public bool TaskOnly { get; set; }
     [Parameter] public EventCallback RefreshRequested { get; set; }
     [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
 }

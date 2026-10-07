@@ -155,8 +155,8 @@ public sealed class WebAuthSessionService : ISsalddelAccessTokenProvider
     public async Task ClearAsync(CancellationToken cancellationToken = default)
     {
         _snapshot = null;
-        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", cancellationToken, StorageKey);
         NotifyChanged();
+        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", cancellationToken, StorageKey);
     }
 
     public async Task<string> SetPreferredLanguageAsync(

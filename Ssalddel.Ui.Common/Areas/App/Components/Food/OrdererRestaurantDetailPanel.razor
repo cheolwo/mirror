@@ -2,6 +2,10 @@
 @using Ssalddel.Ui.Common.Areas.App.ViewModels
 
 <MudPaper Elevation="0" Outlined="true" Class="restaurant-panel restaurant-detail-panel">
+    @if (!string.IsNullOrWhiteSpace(SubmissionError))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" role="alert">@SubmissionError</MudAlert>
+    }
     @if (Detail.처리중)
     {
         <div class="restaurant-state restaurant-state--detail">
@@ -27,6 +31,7 @@
             <MudIcon Icon="@Icons.Material.Filled.Storefront" Size="Size.Large" />
             <MudText Typo="Typo.subtitle2">공개된 음식점을 찾을 수 없습니다.</MudText>
             <MudText Typo="Typo.body2">비공개·삭제된 ID를 다른 음식점으로 대체하지 않습니다.</MudText>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ClearRequested">다른 음식점 선택</MudButton>
         </div>
     }
     else if (Detail.상세 is { } detail)
@@ -87,7 +92,9 @@
         <OrdererFoodOrderComposer Authentication="Authentication"
                                    Writer="Writer"
                                    AuthenticationRequested="AuthenticationRequested"
-                                   SubmitRequested="SubmitRequested" />
+                                   SubmitRequested="SubmitRequested"
+                                   RecheckMenusRequested="RecheckMenusRequested"
+                                   ConfirmPriceChangeRequested="ConfirmPriceChangeRequested" />
     }
     else
     {
@@ -110,6 +117,9 @@
     public 음식주문작성ViewModel Writer { get; set; } = null!;
 
     [Parameter]
+    public string? SubmissionError { get; set; }
+
+    [Parameter]
     public EventCallback<long> RetryRequested { get; set; }
 
     [Parameter]
@@ -120,4 +130,10 @@
 
     [Parameter]
     public EventCallback SubmitRequested { get; set; }
+
+    [Parameter]
+    public EventCallback RecheckMenusRequested { get; set; }
+
+    [Parameter]
+    public EventCallback ConfirmPriceChangeRequested { get; set; }
 }

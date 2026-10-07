@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Net.Http.Headers;
+using System.Net;
 using Ssalddel.Contracts.Common.Privacy;
 
 namespace Ssalddel.Ui.Common.Areas.App.Services;
@@ -7,6 +8,7 @@ namespace Ssalddel.Ui.Common.Areas.App.Services;
 public sealed class SsalddelProtectedApiClient
 {
     private const string PublicKeyPath = "api/v1/security/isms-p/transport/public-key";
+    private static readonly HttpRequestOptionsKey<string> OwnerKey = new("Ssalddel.AuthenticationOwner");
 
     private readonly HttpClient httpClient;
     private readonly SsalddelIsmsPClientEncryptionService encryptionService;
@@ -28,9 +30,7 @@ public sealed class SsalddelProtectedApiClient
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(requestUri);
-        using var message = new HttpRequestMessage(HttpMethod.Get, requestUri);
-        ApplyAuthorization(message);
-        return await httpClient.SendAsync(message, cancellationToken);
+        return await SendAsync(HttpMethod.Get, requestUri, cancellationToken);
     }
 
     public async Task<HttpResponseMessage> DeleteAsync(
@@ -39,7 +39,7 @@ public sealed class SsalddelProtectedApiClient
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(requestUri);
         using var message = new HttpRequestMessage(HttpMethod.Delete, requestUri);
-        ApplyAuthorization(message);
+        await ApplyAuthorizationAsync(message, cancellationToken);
         return await httpClient.SendAsync(message, cancellationToken);
     }
 
@@ -58,9 +58,23 @@ public sealed class SsalddelProtectedApiClient
         ArgumentNullException.ThrowIfNull(method);
         ArgumentException.ThrowIfNullOrWhiteSpace(requestUri);
         using var message = new HttpRequestMessage(method, requestUri);
-        ApplyAuthorization(message);
+        await ApplyAuthorizationAsync(message, cancellationToken);
         ApplyHeaders(message, headers);
-        return await httpClient.SendAsync(message, cancellationToken);
+        var response = await httpClient.SendAsync(message, cancellationToken);
+        if (method != HttpMethod.Get || response.StatusCode != HttpStatusCode.Unauthorized)
+            return response;
+        message.Options.TryGetValue(OwnerKey, out var owner);
+        if (owner is not null && !string.Equals(owner, accessTokenProvider.AuthenticationOwnerId, StringComparison.Ordinal)) return response;
+        string? refreshed;
+        try { refreshed = await accessTokenProvider.RefreshAccessTokenAsync(message.Headers.Authorization?.Parameter, owner, cancellationToken); }
+        catch { response.Dispose(); throw; }
+        if (string.IsNullOrWhiteSpace(refreshed)
+            || (owner is not null && !string.Equals(owner, accessTokenProvider.AuthenticationOwnerId, StringComparison.Ordinal))) return response;
+        response.Dispose();
+        using var retry = new HttpRequestMessage(method, requestUri);
+        retry.Headers.Authorization = new AuthenticationHeaderValue("Bearer", refreshed.Trim());
+        ApplyHeaders(retry, headers);
+        return await httpClient.SendAsync(retry, cancellationToken);
     }
 
     public async Task<HttpResponseMessage> PostAsProtectedJsonAsync<TRequest>(
@@ -97,7 +111,7 @@ public sealed class SsalddelProtectedApiClient
         {
             Content = content
         };
-        ApplyAuthorization(message);
+        await ApplyAuthorizationAsync(message, cancellationToken);
         return await httpClient.SendAsync(message, cancellationToken);
     }
 
@@ -134,15 +148,28 @@ public sealed class SsalddelProtectedApiClient
         ArgumentException.ThrowIfNullOrWhiteSpace(requestUri);
 
         using var message = new HttpRequestMessage(method, requestUri);
-        ApplyAuthorization(message);
+        await ApplyAuthorizationAsync(message, cancellationToken);
         ApplyHeaders(message, headers);
         message.Content = await CreateProtectedJsonContentAsync(requestUri, request, cancellationToken);
+        EnsureRequestOwner(message);
         return await httpClient.SendAsync(message, cancellationToken);
     }
 
-    private void ApplyAuthorization(HttpRequestMessage message)
+    private void EnsureRequestOwner(HttpRequestMessage message)
     {
-        var token = accessTokenProvider.AccessToken?.Trim();
+        if (message.Options.TryGetValue(OwnerKey, out var owner)
+            && !string.Equals(owner, accessTokenProvider.AuthenticationOwnerId, StringComparison.Ordinal))
+            throw new HttpRequestException("계정이 변경되어 이전 요청을 중단했습니다.");
+    }
+
+    private async Task ApplyAuthorizationAsync(HttpRequestMessage message, CancellationToken cancellationToken)
+    {
+        var originalOwner = accessTokenProvider.AuthenticationOwnerId;
+        var token = (await accessTokenProvider.GetAccessTokenAsync(cancellationToken))?.Trim();
+        var currentOwner = accessTokenProvider.AuthenticationOwnerId;
+        if (originalOwner is not null && !string.Equals(originalOwner, currentOwner, StringComparison.Ordinal))
+            throw new HttpRequestException("계정이 변경되어 이전 요청을 중단했습니다.");
+        if (currentOwner is not null) message.Options.Set(OwnerKey, currentOwner);
         if (!string.IsNullOrWhiteSpace(token))
         {
             message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);

@@ -1,0 +1,145 @@
+@using Ssalddel.Contracts.Common.Dispatch
+@using Ssalddel.Contracts.Food
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@implements IDisposable
+@inject IRoleWorkspaceApi Api
+@inject IRoleWorkspaceAccess Access
+
+<section class="food-role-action" aria-label="@Model.Title">
+    <a href="@RoleWorkspaceNavigation.Href(RoleKey, ItemId)">업무로 돌아가기</a>
+    <h1>@Model.Title</h1>
+    @if (Model.IsBusy && !Model.IsLoaded)
+    {
+        <p role="status">최신 업무를 확인하고 있습니다.</p>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.Message))
+    {
+        <p class="@(Model.IsAwaitingResult ? "food-role-action__pending" : "food-role-action__error")" role="@(Model.IsAwaitingResult ? "status" : "alert")">@Model.Message</p>
+    }
+    @if (Model.RequiresLogin)
+    {
+        <a href="@LoginHref">역할 계정 로그인</a>
+    }
+    else if (Model.IsCompleted)
+    {
+        <p role="status">요청이 반영된 업무 상태를 확인했습니다.</p>
+    }
+    else if (Model.IsAwaitingResult)
+    {
+        <section class="food-role-action__result" aria-label="요청 결과 확인">
+            <h2>결과 확인 대기</h2>
+            <p>대상: @ItemId</p>
+            <p>요청 응답을 받았습니다. 최신 업무 상태를 다시 확인합니다.</p>
+            <button class="food-role-action__primary" type="button" disabled="@Model.IsBusy" @onclick="CheckResultAsync">@(Model.IsBusy ? "결과 확인 중" : "결과 다시 확인")</button>
+        </section>
+    }
+    else if (!Model.IsLoaded && !Model.IsBusy)
+    {
+        <button type="button" @onclick="ReloadAsync">다시 조회</button>
+    }
+    else if (Model.IsLoaded)
+    {
+        <p>대상: @ItemId</p>
+        <fieldset disabled="@(Model.IsBusy || Model.IsConfirming)">
+            @if (RoleKey == "restaurant" && ActionKey == 음식배달가능행동Ids.음식점주문수락)
+            {
+                <label>음식점 이름<input @bind="Model.RestaurantName" maxlength="200" /></label>
+                <label>픽업 주소<input @bind="Model.RestaurantAddress" maxlength="500" /></label>
+                <label>상세 주소<input @bind="Model.RestaurantDetailAddress" maxlength="500" /></label>
+                <label class="food-role-action__check"><input type="checkbox" @bind="Model.ImmediatePickup" />지금 픽업할 수 있습니다.</label>
+            }
+            @if (RoleKey == "restaurant" && ActionKey is 음식배달가능행동Ids.음식점주문수락 or 음식배달가능행동Ids.음식점조리시간변경)
+            {
+                @if (!Model.ImmediatePickup)
+                {
+                    <label>조리 예상 시간(분)<input type="number" min="1" max="240" @bind="Model.PreparationMinutes" /></label>
+                }
+            }
+            @if (RoleKey == "orderer")
+            {
+                <label>취소 사유<select @bind="Model.ReasonCode">
+                    <option value="">선택해 주세요.</option>
+                    <option value="@운영배차주문자취소사유Code.단순변심">단순 변심</option>
+                    <option value="@운영배차주문자취소사유Code.중복주문">중복 주문</option>
+                    <option value="@운영배차주문자취소사유Code.주소문제">주소 문제</option>
+                    <option value="@운영배차주문자취소사유Code.기타">기타</option>
+                </select></label>
+            }
+            @if (RoleKey == "food-driver")
+            {
+                <label>중단 사유<select @bind="Model.ReasonCode">
+                    <option value="">선택해 주세요.</option>
+                    <option value="@음식배달중단사유Code.사고">사고</option>
+                    <option value="@음식배달중단사유Code.조리지연">음식점 조리 지연</option>
+                    <option value="@음식배달중단사유Code.배터리부족">배터리 부족</option>
+                    <option value="@음식배달중단사유Code.배달수단고장">배달 수단 고장</option>
+                    <option value="@음식배달중단사유Code.위험기상">위험 기상</option>
+                    <option value="@음식배달중단사유Code.개인긴급">개인 긴급 상황</option>
+                    <option value="@음식배달중단사유Code.기타">기타</option>
+                </select></label>
+            }
+            @if (RoleKey == "operator")
+            {
+                <label>검토할 중단 배달<select @bind="Model.AttemptId">
+                    @foreach (var attempt in Model.InterruptedAttempts)
+                    {
+                        <option value="@attempt.시도StableId">@attempt.시도순번 회차 · @attempt.중단사유Code · @FoodWorkspacePresentation.Time(attempt.중단시각Utc)</option>
+                    }
+                </select></label>
+                <label>책임 판정<select @bind="Model.DecisionCode">
+                    <option value="">선택해 주세요.</option>
+                    <option value="@음식배달중단검토판정Code.보호">보호 사유</option>
+                    <option value="@음식배달중단검토판정Code.기사책임">기사 책임</option>
+                    <option value="@음식배달중단검토판정Code.음식점책임">음식점 책임</option>
+                    <option value="@음식배달중단검토판정Code.플랫폼책임">플랫폼 책임</option>
+                </select></label>
+                <label class="food-role-action__check"><input type="checkbox" @bind="Model.AbuseConfirmed" />검토 근거에 따라 악용이 확정되었습니다.</label>
+            }
+            <label>@(RoleKey == "operator" ? "판정 근거" : "사유·메모")<textarea @bind="Model.Reason" maxlength="1000" rows="3"></textarea></label>
+        </fieldset>
+        @if (Model.IsConfirming)
+        {
+            <section class="food-role-action__confirmation" aria-label="요청 내용 확인">
+                <h2>이 내용으로 요청합니다.</h2>
+                @if (RoleKey == "restaurant" && ActionKey is 음식배달가능행동Ids.음식점주문수락 or 음식배달가능행동Ids.음식점조리시간변경)
+                {
+                    <p>@(Model.ImmediatePickup ? "즉시 픽업 가능" : $"조리 예상 {Model.PreparationMinutes}분")</p>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.Reason)) { <p>@Model.Reason</p> }
+                <label class="food-role-action__check"><input type="checkbox" disabled="@Model.IsBusy" @bind="Model.Confirmed" />대상과 요청 내용을 확인했습니다.</label>
+                <div class="food-role-action__buttons">
+                    <button type="button" disabled="@Model.IsBusy" @onclick="Model.Edit">입력으로 돌아가기</button>
+                    <button class="food-role-action__primary" type="button" disabled="@(Model.IsBusy || !Model.Confirmed)" @onclick="SubmitAsync">@(Model.IsBusy ? "처리 중" : "확인하고 요청")</button>
+                </div>
+            </section>
+        }
+        else
+        {
+            <button class="food-role-action__primary" type="button" disabled="@Model.IsBusy" @onclick="Model.Prepare">요청 내용 확인</button>
+        }
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public string RoleKey { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string ItemId { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string ActionKey { get; set; } = string.Empty;
+    [Parameter] public string? AttemptId { get; set; }
+    [Parameter] public EventCallback Completed { get; set; }
+    private FoodRoleActionViewModel Model = null!;
+    private string? context;
+    private string LoginHref => $"/workspace-login/{Uri.EscapeDataString(RoleKey)}?returnUrl=" + Uri.EscapeDataString(
+        FoodWorkspacePresentation.ActionRoute(RoleKey, ActionKey, ItemId) + (string.IsNullOrWhiteSpace(AttemptId) ? "" : "&attemptId=" + Uri.EscapeDataString(AttemptId)));
+    protected override void OnInitialized() { Model = new(Api, Access); Model.Changed += Changed; }
+    protected override async Task OnParametersSetAsync()
+    {
+        var next = $"{RoleKey}|{ItemId}|{ActionKey}|{AttemptId}";
+        if (next == context) return;
+        context = next; await ReloadAsync();
+    }
+    private Task ReloadAsync() => Model.InitializeAsync(RoleKey, ItemId, ActionKey, AttemptId);
+    private async Task SubmitAsync() { if (await Model.SubmitAsync()) await Completed.InvokeAsync(); }
+    private async Task CheckResultAsync() { if (await Model.CheckResultAsync()) await Completed.InvokeAsync(); }
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() { Model.Changed -= Changed; Model.Dispose(); }
+}

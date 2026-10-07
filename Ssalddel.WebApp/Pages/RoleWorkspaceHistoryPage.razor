@@ -1,0 +1,11 @@
+@page "/workspace/{RoleKey}/history"
+@page "/workspace/{RoleKey}/history/{RecordId}"
+@layout MapOnlyLayout
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+<DriverHistoryWorkspace @key="(RoleKey, RecordId)" RoleKey="@RoleKey" RecordId="@RecordId" Date="@Date" ReturnUrl="@ReturnUrl" />
+@code {
+    [Parameter] public string RoleKey { get; set; } = "";
+    [Parameter] public string? RecordId { get; set; }
+    [SupplyParameterFromQuery] public string? Date { get; set; }
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+}

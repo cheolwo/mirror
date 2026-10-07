@@ -1,0 +1,98 @@
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@implements IDisposable
+@inject CargoDriverWorkspaceApiClient Client
+@inject IRoleWorkspaceApi Api
+@inject IRoleWorkspaceAccess Access
+
+<section class="cargo-action-screen" aria-label="@Model.Title">
+    <header><a href="@Model.ReturnHref">지도 업무로 돌아가기</a><h1>@Model.Title</h1></header>
+    @if (Model.Lifetime.RequiresLogin)
+    {
+        <MudAlert Severity="Severity.Warning">로그인 후 이 업무로 돌아와 주세요.</MudAlert>
+        <MudButton Href="@LoginHref" Variant="Variant.Filled" Color="Color.Primary">로그인</MudButton>
+    }
+    else
+    {
+        @if (Model.Lifetime.Message is { } message)
+        {
+            <MudAlert Severity="@(Model.Lifetime.HasError ? Severity.Error : Severity.Success)">@message</MudAlert>
+        }
+        @if (Model.Lifetime.IsBusy) { <MudProgressLinear Indeterminate="true" aria-label="업무 처리 중" /> }
+        @if (Model.Source is { } source)
+        {
+            <article class="cargo-action-card">
+                <h2>@source.상태</h2>
+                <p>@(ActionKey == "pickup" ? source.출발지 : source.도착지)</p>
+                @if (!Model.StageAllowsInput && !Model.Saved)
+                {
+                    <MudAlert Severity="Severity.Warning">현재 단계에서는 이 입력을 저장할 수 없습니다. 지도로 돌아가 현재 업무를 확인해 주세요.</MudAlert>
+                }
+                @if (Model.StageAllowsInput && !Model.Saved)
+                {
+                    @if (ActionKey == "issue")
+                    {
+                        <MudTextField T="string" Label="문제 사유" MaxLength="500" Lines="3" @bind-Value="Model.IssueReason" Disabled="Model.Lifetime.IsBusy" />
+                        <MudTextField T="string" Label="추가 설명" MaxLength="500" Lines="2" @bind-Value="Model.IssueMemo" Disabled="Model.Lifetime.IsBusy" />
+                        <MudCheckBox T="bool" Label="현장에서 업무를 계속하기 어렵습니다" @bind-Value="Model.WorkCannotContinue" Disabled="Model.Lifetime.IsBusy" />
+                    }
+                    else
+                    {
+                        <MudCheckBox T="bool" Label="화물과 수량을 확인했습니다" @bind-Value="Model.CargoConfirmed" Disabled="Model.Lifetime.IsBusy" />
+                        <MudCheckBox T="bool" Label="작업 장소를 확인했습니다" @bind-Value="Model.LocationConfirmed" Disabled="Model.Lifetime.IsBusy" />
+                        <MudCheckBox T="bool" Label="인계 담당자를 확인했습니다" @bind-Value="Model.RecipientConfirmed" Disabled="Model.Lifetime.IsBusy" />
+                        <h2>현장 사진</h2>
+                        <label class="cargo-photo-label">현장 사진 선택 <InputFile OnChange="PhotoChanged" accept="image/jpeg,image/png,image/webp" disabled="@Model.Lifetime.IsBusy" /></label>
+                        <p>8MB 이하 JPG·PNG·WebP 사진을 선택해 주세요.</p>
+                        @if (Model.PhotoName is { } photo) { <p>선택한 사진: @photo</p> }
+                        @if (_photoError is not null) { <MudAlert Severity="Severity.Error">@_photoError</MudAlert> }
+                        @if (ActionKey == "pickup" && source.인수증필요)
+                        {
+                            <h2>인수증 확인</h2>
+                            <MudCheckBox T="bool" Label="선택한 사진에 서명된 인수증이 포함되어 있습니다" @bind-Value="Model.DocumentPhotoConfirmed" Disabled="Model.Lifetime.IsBusy" />
+                            @if (!Model.DocumentPhotoConfirmed)
+                            {
+                                <MudTextField T="string" Label="인수자명" MaxLength="100" @bind-Value="Model.RecipientName" Disabled="Model.Lifetime.IsBusy" />
+                                <MudTextField T="string" Label="인수자가 직접 남긴 서명" MaxLength="200" @bind-Value="Model.RecipientSignature" Disabled="Model.Lifetime.IsBusy" />
+                                <MudTextField T="string" Label="기사 서명" MaxLength="200" @bind-Value="Model.DriverSignature" Disabled="Model.Lifetime.IsBusy" />
+                                @if (!source.인수증서명필수)
+                                {
+                                    <MudCheckBox T="bool" Label="서명을 생략하기로 현장에서 확인했습니다" @bind-Value="Model.ReceiptOmissionConfirmed" Disabled="Model.Lifetime.IsBusy" />
+                                    <MudTextField T="string" Label="서명 생략 사유" MaxLength="500" @bind-Value="Model.ReceiptOmissionReason" Disabled="Model.Lifetime.IsBusy" />
+                                }
+                            }
+                        }
+                        @if (ActionKey == "dropoff")
+                        {
+                            <MudCheckBox T="bool" Label="인수와 결제·증빙 조건을 확인했습니다" @bind-Value="Model.PaymentConfirmed" Disabled="Model.Lifetime.IsBusy" />
+                        }
+                    }
+                    <hr />
+                    <MudCheckBox T="bool" Label="확인한 내용으로 저장하겠습니다" @bind-Value="Model.SaveConfirmed" Disabled="Model.Lifetime.IsBusy" />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!Model.CanSubmit)" OnClick="Model.SubmitAsync">@Model.Title 저장</MudButton>
+                }
+            </article>
+        }
+        @if (!Model.Lifetime.IsBusy && !Model.Saved)
+        {
+            <MudButton Variant="Variant.Outlined" OnClick="Reload">현재 상태 다시 확인</MudButton>
+        }
+    }
+</section>
+
+@code {
+    [Parameter] public long ItemId { get; set; }
+    [Parameter] public string ActionKey { get; set; } = "";
+    private CargoTransportActionViewModel Model = default!;
+    private string? _photoError;
+    private string LoginHref => CargoWorkspaceRoutes.DriverLogin(ItemId, ActionKey);
+    protected override void OnInitialized() { Model = new(Client, Api, Access); Model.Lifetime.Changed += Refresh; }
+    protected override Task OnParametersSetAsync() => Reload();
+    private Task Reload() => Model.LoadAsync(ItemId, ActionKey);
+    private void Refresh() { if (Model.Source is null) _photoError = null; _ = InvokeAsync(StateHasChanged); }
+    private void PhotoChanged(InputFileChangeEventArgs args)
+    {
+        try { Model.SetPhoto(args.File); _photoError = null; }
+        catch (ArgumentException ex) { _photoError = ex.Message.Split(" (Parameter", StringSplitOptions.None)[0]; }
+    }
+    public void Dispose() { Model.Lifetime.Changed -= Refresh; Model.Dispose(); }
+}

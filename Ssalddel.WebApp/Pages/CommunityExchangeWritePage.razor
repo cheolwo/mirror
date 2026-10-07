@@ -1,0 +1,7 @@
+@page "/community/exchange/write"
+<PageTitle>교류 글 올리기 · 살뜰</PageTitle>
+<Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.ExchangeWrite InitialRegionKey="@Region" ReturnUrl="@ReturnUrl" />
+@code {
+    [SupplyParameterFromQuery(Name = "region")] public string? Region { get; set; }
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+}

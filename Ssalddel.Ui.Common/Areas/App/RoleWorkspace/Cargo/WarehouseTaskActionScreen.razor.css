@@ -1,0 +1,8 @@
+.cargo-action-screen { max-width: 680px; margin: 0 auto; padding: 16px; color: #172b36; display: grid; gap: 16px; }
+.cargo-action-screen header a { color: #0f766e; display: inline-flex; align-items: center; min-height: 48px; }
+.cargo-action-screen h1 { margin: 8px 0 0; font-size: 24px; line-height: 32px; }
+.cargo-action-card { padding: 20px; background: #fff; border: 1px solid #dce5e9; border-radius: 16px; display: grid; gap: 12px; }
+.cargo-action-card h2 { margin: 0; font-size: 18px; line-height: 26px; }
+.cargo-action-card p { margin: 0; overflow-wrap: anywhere; }
+.cargo-action-card hr { width: 100%; border: 0; border-top: 1px solid #dce5e9; margin: 8px 0; }
+.cargo-action-screen ::deep .mud-button-root { min-height: 48px; }

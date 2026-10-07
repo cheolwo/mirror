@@ -3,44 +3,53 @@ namespace Ssalddel.Tests.Architecture;
 public sealed class AdminMobileOperationsCompositionTests
 {
     [Fact]
-    public void 모바일관리앱의_기본화면은_실제운영요약과_핵심관리동선을_제공한다()
+    public void 모바일관리홈은_음식과화물의독립진입만제공한다()
     {
         var home = Read("SsalddelAdminApp", "Components/Pages/Home.razor");
-        var formerHome = Read(
-            "SsalddelAdminApp",
-            "Components/Pages/CommunityInformationReview.razor");
-        var dashboardService = Read(
-            "SsalddelAdminApp",
-            "Services/AdminDashboardService.cs");
-        var dashboardController = Read(
-            "Ssalddel",
-            "Controllers/Admin/01_안내/관리자대시보드Controller.cs");
-        var dashboardHandler = Read(
-            "Ssalddel",
-            "Application/Admin/Dashboard/Handlers/관리자대시보드요약조회QueryHandler.cs");
-        var fieldTestCompose = Read(
-            "deploy",
-            "azure-vm/compose.food-mobile-field-test.override.yaml");
-
+        var cargo = Read("SsalddelAdminApp", "Components/Pages/CargoOverview.razor");
+        var formerHome = Read("SsalddelAdminApp", "Components/Pages/CommunityInformationReview.razor");
         Assert.Contains("@page \"/\"", home);
         Assert.Contains("@page \"/overview\"", home);
-        Assert.Contains("@inject AdminDashboardService DashboardService", home);
-        Assert.Contains("RefreshInterval = TimeSpan.FromSeconds(30)", home);
-        Assert.Contains("관리자확인필요수", home);
-        Assert.Contains("운송예외수", home);
-        Assert.Contains("배차대기수", home);
-        Assert.Contains("Href=\"/operations\"", home);
-        Assert.Contains("Href=\"/operations/follow-up-recovery\"", home);
-        Assert.Contains("Href=\"/operations/finance\"", home);
-        Assert.DoesNotContain("Href=\"/community-management\"", home);
-        Assert.DoesNotContain("Href=\"/trade-readiness\"", home);
+        Assert.Contains("Href=\"/food-operations\"", home);
+        Assert.Contains("Href=\"/overview/cargo\"", home);
+        Assert.DoesNotContain("AdminDashboardService", home);
+        Assert.DoesNotContain("AdminOperationsService", home);
+        Assert.DoesNotContain("GetAsync", home);
+        Assert.Contains("@page \"/overview/cargo\"", cargo);
+        Assert.DoesNotContain("@page \"/overview\"", cargo);
+        Assert.Contains("@inject AdminDashboardService DashboardService", cargo);
+        Assert.Contains("관리자확인필요수", cargo);
+        Assert.Contains("운송예외수", cargo);
+        Assert.Contains("배차대기수", cargo);
+        Assert.Contains("RefreshInterval = TimeSpan.FromSeconds(30)", cargo);
+        Assert.Contains("Href=\"/operations\"", cargo);
+        Assert.Contains("Href=\"/operations/follow-up-recovery\"", cargo);
+        Assert.Contains("Href=\"/operations/finance\"", cargo);
         Assert.DoesNotContain("@page \"/\"", formerHome);
-        Assert.Contains("\"api/v1/admin/dashboard\"", dashboardService);
-        Assert.Contains("FeatureKey = VersionFeatureFlagKeys.DomesticTransportWorkflow", dashboardController);
-        Assert.Contains("WorkflowKey = VersionFeatureFlagKeys.DomesticTransportWorkflow", dashboardController);
-        Assert.Contains("await _db", dashboardHandler);
-        Assert.DoesNotContain("Task.WhenAll(", dashboardHandler);
-        Assert.Contains("VersionFeatureFlags__DomesticTransportWorkflow: \"true\"", fieldTestCompose);
+    }
+
+    [Fact]
+    public void 음식모바일목록추적검토는_화물조회없이_출시라우트와연결된다()
+    {
+        var service = Read("SsalddelAdminApp", "Services/AdminFoodOperationsService.cs");
+        var cargo = Read("SsalddelAdminApp", "Services/AdminOperationsService.cs");
+        var routes = Read("SsalddelAdminApp", "Components/Routes.razor");
+        var detail = Read("SsalddelAdminApp", "Components/Pages/FoodOrderDetail.razor");
+        var review = Read("SsalddelAdminApp", "Components/Pages/FoodInterruptionReview.razor");
+        Assert.Contains("api/v1/admin/food-orders/operations?", service);
+        Assert.Contains("/operations-trace", service);
+        Assert.Contains("/interruption-review", service);
+        Assert.DoesNotContain("api/v1/admin/transports", service);
+        Assert.DoesNotContain("api/v1/admin/drivers/operating", service);
+        Assert.DoesNotContain("food-delivery-pricing-policy", cargo);
+        Assert.Contains("\"/food-operations\"", routes);
+        Assert.Contains("\"/food-operations/orders/{OrderNo}\"", routes);
+        Assert.Contains("\"/food-operations/reviews/{OrderNo}\"", routes);
+        Assert.Contains("FoodDeliverySettlementDisplay.From", detail);
+        Assert.DoesNotContain("simulate-driver-payout", detail);
+        Assert.Contains("FoodDeliveryInterruptionReviewState", review);
+        Assert.Contains("Session.Changed", review);
+        Assert.Contains("state.SubmitAsync()", review);
     }
 
     [Fact]

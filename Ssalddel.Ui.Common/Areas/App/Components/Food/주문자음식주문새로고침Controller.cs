@@ -4,10 +4,16 @@ using Ssalddel.Ui.Common.Areas.App.ViewModels;
 namespace Ssalddel.Ui.Common.Areas.App.Components.Food;
 
 /// <summary>선택한 주문의 자동 조회를 위치 공유와 분리하고, 선택·인증 작업과 겹치지 않게 조율합니다.</summary>
-public sealed class 주문자음식주문새로고침Controller(주문자음식주문PageViewModel viewModel) : IAsyncDisposable
+public sealed class 주문자음식주문새로고침Controller(
+    주문자음식주문PageViewModel viewModel,
+    bool appQueryEnabled = true) : IAsyncDisposable
 {
     private readonly CancellationTokenSource _lifetimeCancellation = new();
     private readonly SemaphoreSlim _operationGate = new(1, 1);
+    private readonly object _appGate = new();
+    private readonly List<CancellationTokenSource> _retiredAppCancellations = [];
+    private CancellationTokenSource _appCancellation = new();
+    private bool _appQueryEnabled = appQueryEnabled;
     private Task? _refreshTask;
     private int _stopped;
     private int _disposed;
@@ -24,7 +30,41 @@ public sealed class 주문자음식주문새로고침Controller(주문자음식�
     }
 
     public Task<bool> 자동새로고침Async(CancellationToken cancellationToken = default)
-        => ExecuteAsync(viewModel.주문진행새로고침Async, automatic: true, cancellationToken);
+        => ExecuteAsync(viewModel.주문진행새로고침Async, automatic: true, cancellationToken, requireActiveApp: true);
+
+    /// <summary>비활성/연결 없음은 현재 자동 조회를 취소하고, 전경 복귀는 대기 중인 명령 뒤 정본을 읽습니다.</summary>
+    public async Task 앱조회상태변경Async(bool enabled, CancellationToken cancellationToken = default)
+    {
+        CancellationTokenSource? cancel = null;
+        lock (_appGate)
+        {
+            if (중지됨 || _appQueryEnabled == enabled) return;
+            _appQueryEnabled = enabled;
+            if (!enabled)
+            {
+                cancel = _appCancellation;
+            }
+            else
+            {
+                _retiredAppCancellations.Add(_appCancellation);
+                _appCancellation = new();
+            }
+        }
+
+        if (!enabled)
+        {
+            cancel!.Cancel();
+            viewModel.상세.조회상태무효화();
+            return;
+        }
+
+        await ExecuteAsync(token => !viewModel.개인주문조회가능
+            ? Task.CompletedTask
+            : string.IsNullOrWhiteSpace(viewModel.상세.요청OrderNo)
+                ? viewModel.목록새로고침Async(token)
+                : viewModel.주문진행새로고침Async(token),
+            automatic: false, cancellationToken, requireActiveApp: true);
+    }
 
     public async Task 작업실행Async(
         Func<CancellationToken, Task> action,
@@ -57,7 +97,8 @@ public sealed class 주문자음식주문새로고침Controller(주문자음식�
     private async Task<bool> ExecuteAsync(
         Func<CancellationToken, Task> action,
         bool automatic,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool requireActiveApp = false)
     {
         ArgumentNullException.ThrowIfNull(action);
         if (중지됨)
@@ -65,8 +106,14 @@ public sealed class 주문자음식주문새로고침Controller(주문자음식�
             return false;
         }
 
+        CancellationToken appToken;
+        lock (_appGate)
+        {
+            if (requireActiveApp && !_appQueryEnabled) return false;
+            appToken = requireActiveApp ? _appCancellation.Token : CancellationToken.None;
+        }
         using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(
-            cancellationToken, _lifetimeCancellation.Token);
+            cancellationToken, _lifetimeCancellation.Token, appToken);
         var token = linkedCancellation.Token;
         var entered = false;
         try
@@ -86,6 +133,7 @@ public sealed class 주문자음식주문새로고침Controller(주문자음식�
                 return false;
             }
 
+            token.ThrowIfCancellationRequested();
             await action(token);
             token.ThrowIfCancellationRequested();
             await viewModel.인증오류복구Async(token);
@@ -125,6 +173,7 @@ public sealed class 주문자음식주문새로고침Controller(주문자음식�
         if (Interlocked.Exchange(ref _stopped, 1) == 0)
         {
             _lifetimeCancellation.Cancel();
+            lock (_appGate) _appCancellation.Cancel();
         }
     }
 
@@ -145,5 +194,11 @@ public sealed class 주문자음식주문새로고침Controller(주문자음식�
         await _operationGate.WaitAsync();
         _operationGate.Release();
         _lifetimeCancellation.Dispose();
+        lock (_appGate)
+        {
+            _appCancellation.Dispose();
+            foreach (var cancellation in _retiredAppCancellations) cancellation.Dispose();
+            _retiredAppCancellations.Clear();
+        }
     }
 }

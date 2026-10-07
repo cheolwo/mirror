@@ -1,0 +1,37 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Commerce
+@using Ssalddel.Contracts.Common.Commerce
+@using Ssalddel.Ui.Common.Areas.App.ViewModels.Commerce
+@inject 통신판매안내ViewModel Model
+@inject NavigationManager Navigation
+@implements IDisposable
+<aside class="commerce-notice" aria-label="거래 중개 안내">
+    @if (Model.Value is { } value)
+    {
+        <p>@value.IntermediaryNotice</p>
+        @if (RequireAcknowledgment) { <label><input type="checkbox" checked="@(Confirmation?.NoticeAccepted == true && Confirmation.NoticeVersion == value.Version && Confirmation.SellerRevision == SellerRevision)" disabled="@(Disabled || RequireSeller && SellerRevision is null)" @onchange="ChangedAcceptance" /><span>거래 당사자와 거래·개인정보 안내를 확인했습니다.</span></label> }
+        @if (RequireAcknowledgment) { <button type="button" disabled="@Disabled" @onclick="ReloadNotice">안내 다시 확인</button> }
+    }
+    else if (Model.Error is not null) { <p role="alert">@Model.Error</p><button type="button" @onclick="Model.LoadAsync">안내 다시 확인</button> }
+    else { <p role="status">거래 안내를 확인하고 있습니다.</p> }
+    <a href="@Navigation.ToAbsoluteUri("commerce/notices")">거래·개인정보 안내</a>
+    @if (!string.IsNullOrWhiteSpace(SourceId)) { <a href="@DisputeHref">거래 문제 신고</a> }
+</aside>
+@code {
+    [Parameter] public bool RequireAcknowledgment { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public bool RequireSeller { get; set; }
+    [Parameter] public long? SellerRevision { get; set; }
+    [Parameter] public 거래보호확인Request? Confirmation { get; set; }
+    [Parameter] public EventCallback<거래보호확인Request?> ConfirmationChanged { get; set; }
+    [Parameter] public string? SourceKind { get; set; }
+    [Parameter] public string? SourceId { get; set; }
+    private string DisputeHref => Navigation.ToAbsoluteUri("commerce/disputes?sourceKind=" + Uri.EscapeDataString(SourceKind ?? "") + "&sourceId=" + Uri.EscapeDataString(SourceId ?? "")).ToString();
+    protected override async Task OnInitializedAsync() { Model.PropertyChanged += Changed; await Model.LoadAsync(); await ClearStaleAsync(); }
+    protected override Task OnParametersSetAsync() => ClearStaleAsync();
+    private Task ClearStaleAsync() => RequireAcknowledgment && Confirmation is not null && ((RequireSeller && SellerRevision is null) || Confirmation.SellerRevision != SellerRevision || Model.Value is { } policy && Confirmation.NoticeVersion != policy.Version)
+        ? ConfirmationChanged.InvokeAsync(null) : Task.CompletedTask;
+    private Task ChangedAcceptance(ChangeEventArgs args) => ConfirmationChanged.InvokeAsync(Model.Value is { } value && (!RequireSeller || SellerRevision is not null) ? new 거래보호확인Request { NoticeVersion = value.Version, NoticeAccepted = args.Value is true, SellerRevision = SellerRevision } : null);
+    private async Task ReloadNotice() { await ConfirmationChanged.InvokeAsync(null); await Model.LoadAsync(); await ClearStaleAsync(); }
+    private void Changed(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() { Model.PropertyChanged -= Changed; Model.Dispose(); }
+}

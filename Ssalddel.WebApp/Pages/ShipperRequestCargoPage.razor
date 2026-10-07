@@ -6,7 +6,7 @@
 
 <ShipperRequestCargoScreen ViewModel="PageModel.State"
                            NavigationContext="RouteContext"
-                           RootBackHref="@RouteContext.RootPath"
+                           RootBackHref="@(RouteContext.ReturnPath ?? RouteContext.RootPath)"
                            BulkHref="@ShipperRequestPageRoutes.Bulk"
                            Changed="PageModel.AutoSaveAsync">
     <BeforeContent>

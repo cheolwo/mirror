@@ -3,6 +3,11 @@ using Ssalddel.Contracts.Food;
 
 namespace Ssalddel.Ui.Common.Areas.App.Services;
 
+public interface I주문자음식주문접수결과Service
+{
+    Task<음식주문접수결과응답?> 접수결과Async(Guid requestId, CancellationToken cancellationToken = default);
+}
+
 public interface I주문자음식주문읽기Service
 {
     Task<주문자음식주문목록응답> 목록Async(
@@ -40,12 +45,20 @@ public interface I주문자음식주문취소Service
 /// <summary>로그인 주문자의 음식 주문 목록과 정확한 주문번호 상세만 보호 API에서 읽습니다.</summary>
 public sealed class 주문자음식주문Client(
     ISsalddelJsonApiClient client) :
+    I주문자음식주문접수결과Service,
     I주문자음식주문읽기Service,
     I주문자음식주문쓰기Service,
     I주문자음식주문수령확인Service,
     I주문자음식주문취소Service
 {
     private const string BasePath = "api/v1/food-orders";
+
+    public Task<음식주문접수결과응답?> 접수결과Async(Guid requestId, CancellationToken cancellationToken = default)
+    {
+        if (requestId == Guid.Empty) throw new ArgumentException("제출 요청을 확인해 주세요.", nameof(requestId));
+        return client.GetAsync<음식주문접수결과응답>($"{BasePath}/client-requests/{requestId:D}",
+            "음식 주문 접수 결과 조회", allowNotFound: true, cancellationToken);
+    }
 
     public async Task<주문자음식주문목록응답> 목록Async(
         주문자음식주문목록조회요청 request,

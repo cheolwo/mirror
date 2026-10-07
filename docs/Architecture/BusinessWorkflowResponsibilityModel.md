@@ -158,6 +158,10 @@ Process Manager는 다른 Process Manager의 상위·하위 계층이 아니다.
 
 현재 서버 조립에서는 `AddSsalddelGroupPurchaseDemandProcessModule`과 `AddSsalddelGroupImportReadinessProcessModule`로 핵심 모듈을 선택한다. 정기 실행은 각각의 `BackgroundProcessing` 등록 메서드로 별도 선택하고, 단일 서버 호환 구성은 같이 수입 준비 Port를 `AddSsalddelGroupImportReadinessLocalAdapters`로 연결한다.
 
+음식 배달과 화물 운송의 자동 배차는 서로 다른 업무다. 음식의 큐 스캔·추천 만료·추천 알림은 `FoodDeliveryDispatch` workload와 `FoodDeliveryWorkflow`, `FoodDeliveryDispatchJobs` 설정만 사용한다. 기존 화물 작업은 `DomesticTransportDispatch` workload와 `DomesticTransportWorkflow`, `DispatchQueueJobs`를 유지한다. 각 작업은 자기 업무유형을 DB 선택 조건에 넣고 배치 한도를 적용한다. 한쪽 기능·대기 건·알림 실패를 다른 쪽 실행 조건으로 사용하지 않는다.
+
+음식은 후보가 없으면 음식 정책으로 재탐색을 기다리고 화물의 공개배차 상태로 들어가지 않는다. 음식 기사 추천의 대기 점수 기록은 `I음식배달기사추천기록Service`가 소유하며 음식 AppKey를 확인한 기존 실행 인덱스 Local Adapter로 연결한다. 화물의 추천 기록 Service를 음식에서 호출하지 않는다. 공용 저장 형태와 기존 API/식별자는 호환을 위해 유지되므로 이 경계를 별도 서버·DB 배포 완료로 해석하지 않는다. 설정·시험·푸시 기기 등록의 적용 한계는 [분리 변경 기록](../Changes/2026-10-04-food-cargo-separation-r1.md)을 따른다.
+
 ## 판단 데이터 흐름
 
 ```mermaid
@@ -191,4 +195,4 @@ sequenceDiagram
 5. Engine은 순수 계산에만 사용하고 결과를 후보·점수·사유와 함께 반환한다.
 6. 실제 변경은 API·UseCase·Command·ApplicationService가 권한과 현재 상태를 검증한 뒤 수행한다.
 7. 성공 뒤 같은 Business Case를 다시 조회하고 Event·Outbox·Projection의 멱등성을 검증한다.
-8. 새 코드에는 HIOPS나 모호한 하위 OS를 기술 역할명으로 추가하지 않는다. 업무 전체의 소속은 기존 OS 안정 식별자로 표시하고 실제 type은 ProcessManager·Coordinator·Engine·UseCase·Store 중 책임에 맞게 이름 짓는다. 기존 식별자 변경은 별도 migration과 호환 기간을 둔다.
+8. 새 코드에는 HIOPS나 OS를 기술 역할명으로 추가하지 않는다. 업무 전체의 소속은 기존 OS 안정 식별자로 표시하고 실제 type은 ProcessManager·Coordinator·Engine·UseCase·Store 중 책임에 맞게 이름 짓는다. 기존 식별자 변경은 별도 migration과 호환 기간을 둔다.

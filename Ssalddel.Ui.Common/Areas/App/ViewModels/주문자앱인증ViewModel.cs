@@ -7,6 +7,8 @@ namespace Ssalddel.Ui.Common.Areas.App.ViewModels;
 public sealed partial class 주문자앱인증ViewModel(
     I주문자앱인증Service service) : 업무작업ViewModelBase
 {
+    private long _세션세대;
+    private Task<bool>? _인증작업;
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(로그인됨))]
     [NotifyPropertyChangedFor(nameof(현재사용자표시))]
@@ -43,26 +45,41 @@ public sealed partial class 주문자앱인증ViewModel(
     }
 
     public Task<bool> 로그아웃Async(CancellationToken cancellationToken = default)
-        => 작업실행Async(
-            async token =>
-            {
-                await service.로그아웃Async(token);
-                세션 = 주문자앱세션상태.익명;
-                초기화됨 = true;
-            },
-            "로그아웃했습니다.",
+        => 인증종료Async(false, cancellationToken);
+
+    public Task<bool> 세션만료Async(CancellationToken cancellationToken = default)
+        => 인증종료Async(true, cancellationToken);
+
+    private async Task<bool> 인증종료Async(bool expired, CancellationToken cancellationToken)
+    {
+        var generation = ++_세션세대;
+        작업취소();
+        // 저장소 삭제가 실패하거나 늦어도 개인 화면은 즉시 숨깁니다.
+        세션 = 주문자앱세션상태.익명;
+        초기화됨 = true;
+        if (_인증작업 is { } pending) await pending;
+        if (generation != _세션세대) return false;
+        return await 작업실행Async(
+            token => expired ? service.세션만료Async(token) : service.로그아웃Async(token),
+            expired ? "다시 로그인해 주세요." : "로그아웃했습니다.",
             cancellationToken,
-            ex => $"로그아웃을 완료하지 못했습니다. {ex.Message}");
+            _ => expired ? "로그인 상태를 정리하지 못했습니다. 다시 로그인해 주세요."
+                : "로그아웃 저장 정보를 정리하지 못했습니다. 다시 시도해 주세요.");
+    }
 
     private Task<bool> 인증실행Async(
         Func<CancellationToken, Task<주문자앱인증결과>> action,
         string successMessage,
         CancellationToken cancellationToken,
         bool markInitialized)
-        => 작업실행Async(
+    {
+        var generation = ++_세션세대;
+        return _인증작업 = 작업실행Async(
             async token =>
             {
                 var result = await action(token);
+                token.ThrowIfCancellationRequested();
+                if (generation != _세션세대) return;
                 if (!result.성공)
                 {
                     throw new InvalidOperationException(
@@ -80,4 +97,5 @@ public sealed partial class 주문자앱인증ViewModel(
             ex => string.IsNullOrWhiteSpace(ex.Message)
                 ? "주문자 로그인 상태를 확인하지 못했습니다."
                 : ex.Message);
+    }
 }

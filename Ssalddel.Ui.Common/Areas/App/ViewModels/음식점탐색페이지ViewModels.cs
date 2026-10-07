@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Ssalddel.Contracts.Common.Orderer;
+using Ssalddel.Contracts.Common.Commerce;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Contracts.Restaurants;
 using Ssalddel.Ui.Common.Areas.App.Services;
@@ -248,7 +249,8 @@ public sealed record 음식주문선택항목ViewModel(
 /// 등록 API 한 건만 실행합니다.
 /// </summary>
 public sealed partial class 음식주문작성ViewModel(
-    I주문자음식주문쓰기Service service) : 업무작업ViewModelBase
+    I주문자음식주문쓰기Service service,
+    FoodOrderSubmissionRecoveryViewModel? recovery = null) : 업무작업ViewModelBase
 {
     private readonly Dictionary<long, int> _수량목록 = [];
     private 음식점공개상세응답? _음식점;
@@ -280,6 +282,9 @@ public sealed partial class 음식주문작성ViewModel(
     public partial string 결제수단 { get; set; } = "현장결제";
 
     [ObservableProperty]
+    public partial 거래보호확인Request? 거래보호확인 { get; set; }
+
+    [ObservableProperty]
     public partial Guid 클라이언트요청Id { get; private set; } = Guid.NewGuid();
 
     [ObservableProperty]
@@ -301,10 +306,11 @@ public sealed partial class 음식주문작성ViewModel(
            ?? [];
 
     public decimal 주문금액 => 선택항목목록.Sum(item => item.합계);
+    public long? 음식점Id => _음식점?.음식점.Id;
     public decimal 최소주문금액 => _음식점?.음식점.최소주문금액 ?? 0;
     public bool 최소주문충족 => 주문금액 >= 최소주문금액;
     public bool 메뉴선택됨 => 선택항목목록.Count > 0;
-    public bool 제출가능
+    public bool 가격확인후제출가능
         => _음식점?.음식점.주문가능여부 == true
            && 메뉴선택됨
            && 최소주문충족
@@ -312,8 +318,15 @@ public sealed partial class 음식주문작성ViewModel(
            && !string.IsNullOrWhiteSpace(연락처)
            && !string.IsNullOrWhiteSpace(주소)
            && !재로그인필요
+           && !입력잠금
+           && !메뉴재확인필요
+           && !메뉴확인중
            && !_등록진행
            && !처리중;
+
+    public bool 제출가능 => 가격확인후제출가능 && !가격변경확인대기;
+
+    public bool 입력잠금 => recovery?.입력잠금 == true;
 
     public int 메뉴수량(long menuId) => _수량목록.GetValueOrDefault(menuId);
 
@@ -321,6 +334,11 @@ public sealed partial class 음식주문작성ViewModel(
     {
         if (_음식점?.음식점.Id == detail?.음식점.Id)
         {
+            if (메뉴재확인필요 && detail is not null)
+            {
+                최신메뉴확인적용(detail);
+                return;
+            }
             _음식점 = detail;
             NotifyOrderChanged();
             return;
@@ -333,7 +351,7 @@ public sealed partial class 음식주문작성ViewModel(
     public void 메뉴수량변경(long menuId, int delta)
     {
         var menu = _음식점?.메뉴목록.FirstOrDefault(item => item.Id == menuId);
-        if (menu is null || menu.품절여부 || delta == 0)
+        if (menu is null || menu.품절여부 || delta == 0 || 메뉴확인중 || 입력잠금)
         {
             return;
         }
@@ -360,7 +378,8 @@ public sealed partial class 음식주문작성ViewModel(
 
     public async Task<bool> 등록Async(CancellationToken cancellationToken = default)
     {
-        if (_등록진행 || 처리중 || 재로그인필요 || cancellationToken.IsCancellationRequested)
+        if (_등록진행 || 처리중 || 재로그인필요 || 입력잠금 || 메뉴재확인필요
+            || 메뉴확인중 || 가격변경확인대기 || cancellationToken.IsCancellationRequested)
         {
             return false;
         }
@@ -409,7 +428,10 @@ public sealed partial class 음식주문작성ViewModel(
                 수량 = item.수량,
                 단가 = item.단가
             }).ToArray(),
-            결제수단 = 결제수단
+            메뉴가격확인필요 = true,
+            결제수단 = 결제수단,
+            CommerceProtection = 거래보호확인 is null ? null : new 거래보호확인Request
+            { NoticeVersion = 거래보호확인.NoticeVersion, NoticeAccepted = 거래보호확인.NoticeAccepted, SellerRevision = 거래보호확인.SellerRevision }
         };
         using var submissionCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _등록취소 = submissionCancellation;
@@ -423,7 +445,8 @@ public sealed partial class 음식주문작성ViewModel(
                     try
                     {
                         token.ThrowIfCancellationRequested();
-                        var response = await service.등록Async(request, token);
+                        var response = recovery is null ? await service.등록Async(request, token)
+                            : await recovery.등록Async(request, token);
                         if (requestId != 클라이언트요청Id)
                         {
                             submissionCancellation.Cancel();
@@ -431,6 +454,14 @@ public sealed partial class 음식주문작성ViewModel(
 
                         token.ThrowIfCancellationRequested();
                         등록응답 = response;
+                    }
+                    catch (SsalddelApiException ex) when (!token.IsCancellationRequested
+                        && requestId == 클라이언트요청Id
+                        && ex.StatusCode == 400
+                        && ex.ErrorCode is FoodOrderSubmissionErrorCodes.MenuPriceChanged or FoodOrderSubmissionErrorCodes.MenuUnavailable)
+                    {
+                        메뉴변경거절처리();
+                        throw;
                     }
                     catch (Exception) when (token.IsCancellationRequested || requestId != 클라이언트요청Id)
                     {
@@ -463,7 +494,9 @@ public sealed partial class 음식주문작성ViewModel(
 
     public void 새요청준비(bool clearRecipient = true)
     {
+        거래보호확인 = null;
         _수량목록.Clear();
+        메뉴확인상태초기화();
         요청내용변경됨();
         if (clearRecipient)
         {
@@ -489,6 +522,7 @@ public sealed partial class 음식주문작성ViewModel(
         OnPropertyChanged(nameof(최소주문충족));
         OnPropertyChanged(nameof(메뉴선택됨));
         OnPropertyChanged(nameof(제출가능));
+        OnPropertyChanged(nameof(가격확인후제출가능));
     }
 
     partial void On수령인명Changed(string value) => 요청내용변경됨();
@@ -498,6 +532,7 @@ public sealed partial class 음식주문작성ViewModel(
     partial void On요청사항Changed(string value) => 요청내용변경됨();
     partial void On주문자본인수령여부Changed(bool value) => 요청내용변경됨();
     partial void On결제수단Changed(string value) => 요청내용변경됨();
+    partial void On거래보호확인Changed(거래보호확인Request? value) => 요청내용변경됨();
 
     private void 요청내용변경됨()
     {
@@ -514,6 +549,7 @@ public sealed partial class 음식점탐색PageViewModel : 조립ViewModelBase
 {
     private bool _disposed;
     private long _로그인세대;
+    private string? _draftOwnerId;
 
     public 음식점탐색PageViewModel(
         음식배달페이지접근ViewModel access,
@@ -521,7 +557,8 @@ public sealed partial class 음식점탐색PageViewModel : 조립ViewModelBase
         음식점탐색기준ViewModel criteria,
         음식점공개목록ViewModel list,
         음식점공개상세ViewModel detail,
-        음식주문작성ViewModel writer)
+        음식주문작성ViewModel writer,
+        FoodOrderSubmissionRecoveryViewModel? recovery = null)
     {
         접근 = 하위ViewModel등록(access);
         인증 = 하위ViewModel등록(authentication);
@@ -529,6 +566,8 @@ public sealed partial class 음식점탐색PageViewModel : 조립ViewModelBase
         목록 = 하위ViewModel등록(list);
         상세 = 하위ViewModel등록(detail);
         작성 = 하위ViewModel등록(writer);
+        접수복구 = recovery is null ? null : 하위ViewModel등록(recovery, 수명소유: true);
+        인증.PropertyChanged += 인증변경;
     }
 
     public 음식배달페이지접근ViewModel 접근 { get; }
@@ -537,6 +576,42 @@ public sealed partial class 음식점탐색PageViewModel : 조립ViewModelBase
     public 음식점공개목록ViewModel 목록 { get; }
     public 음식점공개상세ViewModel 상세 { get; }
     public 음식주문작성ViewModel 작성 { get; }
+    public FoodOrderSubmissionRecoveryViewModel? 접수복구 { get; }
+
+    private void 인증변경(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName != nameof(주문자앱인증ViewModel.세션)) return;
+        작성.메뉴확인취소();
+        var owner = 인증.로그인됨 ? 인증.세션.UserId : null;
+        if (owner is not null)
+        {
+            if (_draftOwnerId is not null && _draftOwnerId != owner) 작성.새요청준비();
+            _draftOwnerId = owner;
+        }
+        접수복구?.계정숨김();
+    }
+
+    public Task 접수복구확인Async(CancellationToken cancellationToken = default)
+        => 접수복구?.계정설정Async(인증.로그인됨 ? 인증.세션.UserId : null, cancellationToken) ?? Task.CompletedTask;
+
+    public async Task 접수결과재확인Async(bool resubmit, CancellationToken cancellationToken = default)
+    {
+        if (_disposed || 접수복구 is null || !인증.로그인됨) return;
+        var session = 인증.세션;
+        var loginGeneration = _로그인세대;
+        if (!접수복구.초기확인완료) await 접수복구확인Async(cancellationToken);
+        else if (resubmit) await 접수복구.동일주문재제출Async(cancellationToken);
+        else await 접수복구.결과확인Async(cancellationToken);
+        if (_disposed || loginGeneration != _로그인세대 || !ReferenceEquals(session, 인증.세션)) return;
+        if (resubmit && 접수복구.Pending is null)
+            작성.메뉴확인거절반영(접수복구.오류);
+        if (접수복구.오류?.Http상태코드 == 401)
+        {
+            작성.재로그인필요설정(true);
+            인증화면표시 = true;
+            await 인증.세션만료Async(cancellationToken);
+        }
+    }
 
     [ObservableProperty]
     public partial bool 인증화면표시 { get; private set; }
@@ -586,6 +661,7 @@ public sealed partial class 음식점탐색PageViewModel : 조립ViewModelBase
 
         작성.재로그인필요설정(false);
         인증화면표시 = false;
+        await 접수복구확인Async(cancellationToken);
         return true;
     }
 
@@ -600,6 +676,8 @@ public sealed partial class 음식점탐색PageViewModel : 조립ViewModelBase
         var session = 인증.세션;
         var loginGeneration = _로그인세대;
         var requestId = 작성.클라이언트요청Id;
+        await 접수복구확인Async(cancellationToken);
+        if (_disposed || loginGeneration != _로그인세대 || !ReferenceEquals(session, 인증.세션)) return false;
         var succeeded = await 작성.등록Async(cancellationToken);
         if (_disposed || cancellationToken.IsCancellationRequested
             // 같은 계정의 record 값은 같을 수 있으므로 참조 비교만으로 재로그인을 판별하지 않습니다.
@@ -614,7 +692,7 @@ public sealed partial class 음식점탐색PageViewModel : 조립ViewModelBase
             // 저장소 정리가 실패해도 재로그인 입력으로 복귀하고 작성 내용/요청ID는 보존합니다.
             작성.재로그인필요설정(true);
             인증화면표시 = true;
-            await 인증.로그아웃Async(cancellationToken);
+            await 인증.세션만료Async(cancellationToken);
             return false;
         }
 
@@ -626,6 +704,7 @@ public sealed partial class 음식점탐색PageViewModel : 조립ViewModelBase
         if (disposing && !_disposed)
         {
             _disposed = true;
+            인증.PropertyChanged -= 인증변경;
             작성.작업취소();
         }
 

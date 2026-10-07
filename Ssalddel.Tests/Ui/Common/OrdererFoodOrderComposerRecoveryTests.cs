@@ -17,7 +17,7 @@ using Ssalddel.Ui.Common.Areas.App.ViewModels;
 
 namespace Ssalddel.Tests.Ui.Common;
 
-public sealed class OrdererFoodOrderComposerRecoveryTests
+public sealed partial class OrdererFoodOrderComposerRecoveryTests
 {
     [Theory]
     [InlineData(false)]
@@ -676,6 +676,7 @@ public sealed class OrdererFoodOrderComposerRecoveryTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMudServices();
+        services.AddCommerceUiFixture();
         services.AddSingleton<IJSRuntime, NoopJsRuntime>();
         services.AddSingleton<NavigationManager, TestNavigationManager>();
         services.AddSingleton(page);
@@ -698,9 +699,11 @@ public sealed class OrdererFoodOrderComposerRecoveryTests
         });
     }
 
-    private static async Task<음식점탐색PageViewModel> CreatePageAsync(FoodServices services, AuthenticationService auth)
+    private static async Task<음식점탐색PageViewModel> CreatePageAsync(FoodServices services, AuthenticationService auth,
+        FoodOrderSubmissionRecoveryViewModel? recovery = null)
     {
-        var writer = new 음식주문작성ViewModel(services);
+        if (recovery is not null) await recovery.계정설정Async("orderer-1");
+        var writer = new 음식주문작성ViewModel(services, recovery);
         writer.음식점설정(CreateRestaurant());
         writer.메뉴수량변경(1001, 2);
         writer.수령인명 = "수령인";
@@ -714,7 +717,7 @@ public sealed class OrdererFoodOrderComposerRecoveryTests
             new 음식점탐색기준ViewModel(services, services),
             new 음식점공개목록ViewModel(services),
             new 음식점공개상세ViewModel(services),
-            writer);
+            writer, recovery);
         await page.접근.확인Async();
         await page.인증.복원Async();
         return page;
@@ -751,6 +754,7 @@ public sealed class OrdererFoodOrderComposerRecoveryTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMudServices();
+        services.AddCommerceUiFixture();
         services.AddSingleton<IJSRuntime, NoopJsRuntime>();
         services.AddSingleton<NavigationManager, TestNavigationManager>();
         await using var provider = services.BuildServiceProvider();
@@ -801,6 +805,14 @@ public sealed class OrdererFoodOrderComposerRecoveryTests
             => (Task)typeof(OrdererRestaurantWorkspace)
                 .GetMethod("SelectRestaurantAsync", BindingFlags.Instance | BindingFlags.NonPublic)!
                 .Invoke(this, [restaurantId, true])!;
+
+        public Task RecheckMenusAsync()
+            => (Task)typeof(OrdererRestaurantWorkspace).GetMethod("RecheckMenusAsync", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .Invoke(this, null)!;
+
+        public Task ConfirmPriceAsync()
+            => (Task)typeof(OrdererRestaurantWorkspace).GetMethod("ConfirmPriceAndSubmitAsync", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .Invoke(this, null)!;
     }
 
     private sealed class PageServiceProvider(음식점탐색PageViewModel page) : IServiceProvider
@@ -844,6 +856,9 @@ public sealed class OrdererFoodOrderComposerRecoveryTests
         public bool Enabled { get; init; } = true;
         public List<음식주문등록요청> Requests { get; } = [];
         public CancellationToken LastWriteToken { get; private set; }
+        public int MenuReads { get; private set; }
+        public Func<long, CancellationToken, Task<음식점공개상세응답?>> ReadDetail { get; set; }
+            = (id, _) => Task.FromResult<음식점공개상세응답?>(CreateRestaurant(id));
         public Func<음식주문등록요청, CancellationToken, Task<음식주문응답>> Write { get; set; }
             = (_, _) => Task.FromResult(new 음식주문응답 { 주문번호 = "FOOD-TEST-1" });
 
@@ -860,7 +875,10 @@ public sealed class OrdererFoodOrderComposerRecoveryTests
             => Task.FromResult(new 음식점공개목록응답());
 
         public Task<음식점공개상세응답?> 상세Async(long restaurantId, CancellationToken cancellationToken = default)
-            => Task.FromResult<음식점공개상세응답?>(CreateRestaurant(restaurantId));
+        {
+            MenuReads++;
+            return ReadDetail(restaurantId, cancellationToken);
+        }
 
         public Task<음식주문응답> 등록Async(음식주문등록요청 request, CancellationToken cancellationToken = default)
         {
