@@ -55,14 +55,16 @@ public sealed class 픽업하차경로최적화Service(I배차추천경로Servic
             request.피크시간대배달완료허용초과분);
         search.Visit(
             currentStopIndex: -1,
-            pickedMask: 0,
+            pickedMask: jobs.Select((job, index) => job.이미픽업완료 ? 1 << index : 0).Aggregate(0, (mask, bit) => mask | bit),
             deliveredMask: 0,
             now: request.기준시각,
             totalMinutes: 0m,
             totalDistanceKm: 0m,
             maxViolationMinutes: null,
             violations: [],
-            pickupCompletedAtMap: new Dictionary<int, DateTime>(),
+            pickupCompletedAtMap: jobs.Select((job, index) => (job, index))
+                .Where(x => x.job.이미픽업완료 && x.job.픽업완료시각Utc.HasValue)
+                .ToDictionary(x => x.index, x => x.job.픽업완료시각Utc!.Value),
             arrivals: [],
             route: []);
 
@@ -136,6 +138,10 @@ public sealed class 픽업하차경로최적화Service(I배차추천경로Servic
         픽업하차경로최적화결과 approximateResult,
         CancellationToken cancellationToken)
     {
+        // 차량 옵션을 지정한 음식 일정은 총시간 비례 추정 대신 모든 남은 구간을 검증한다.
+        // 기존 호출의 경로와 결과는 유지한다.
+        if (request.RouteOption is not null)
+            return await VerifyVehicleRouteAsync(request, approximateResult, cancellationToken);
         if (!approximateResult.최적화가능여부
             || request.시작좌표 is null
             || approximateResult.방문순서.Count == 0
@@ -204,6 +210,51 @@ public sealed class 픽업하차경로최적화Service(I배차추천경로Servic
         };
     }
 
+    private async Task<픽업하차경로최적화결과> VerifyVehicleRouteAsync(
+        픽업하차경로최적화요청 request, 픽업하차경로최적화결과 result, CancellationToken cancellationToken)
+    {
+        if (!result.최적화가능여부 || request.시작좌표 is null || result.방문순서.Count == 0
+            || result.방문순서.Any(x => x.좌표 is null)) return result with { 실제경로검증여부 = false };
+        if (request.작업목록.Any(x => x.이미픽업완료 && (!x.픽업완료시각Utc.HasValue
+            || (!x.하차시간창종료일시.HasValue && x.배달완료제한분 is not > 0m))))
+            return result with { 최적화가능여부 = false, 전체완수가능여부 = false, 실제경로검증여부 = false,
+                위반사유 = ["이미 픽업한 작업의 픽업 시각 또는 전달 마감을 확인하지 못했습니다."] };
+        var jobs = request.작업목록.ToDictionary(x => x.의뢰Id, StringComparer.Ordinal);
+        var point = request.시작좌표;
+        var now = request.기준시각;
+        decimal distance = 0m;
+        var visits = new List<픽업하차경로방문순서>();
+        var violations = new List<string>();
+        foreach (var stop in result.방문순서.OrderBy(x => x.순서))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            배차경로예상결과? route;
+            try { route = await routeService.EstimateRouteAsync(point, stop.좌표, request.RouteOption!, cancellationToken); }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception) { route = null; }
+            if (route is not { 실제경로여부: true, DistanceKm: >= 0m, Duration: not null }
+                || route.Duration.Value < TimeSpan.Zero || route.RouteOption != request.RouteOption)
+                return result with { 최적화가능여부 = false, 전체완수가능여부 = false, 실제경로검증여부 = false,
+                    위반사유 = ["차량별 전체 일정의 실제 경로를 확인하지 못했습니다."] };
+            var job = jobs[stop.의뢰Id];
+            now = now.Add(route.Duration.Value);
+            if (stop.단계유형 == PickupStage && job.픽업가능시각Utc is { } ready && now < ready) now = ready;
+            var deadline = stop.단계유형 == PickupStage ? job.픽업시간창종료일시
+                : ResolveDropoffDeadline(job, request.일반시간대배달완료허용초과분, request.피크시간대배달완료허용초과분);
+            if (deadline is { } end && now > end) violations.Add($"{stop.의뢰Id} {stop.단계유형} 실제 경로가 시간창을 초과합니다.");
+            distance += route.DistanceKm.Value;
+            visits.Add(stop with { 예상도착시각Utc = now });
+            point = stop.좌표;
+        }
+        violations.AddRange(ValidateDeliveryCompletionLimits(request, visits));
+        if (request.최대총거리Km is { } max && distance > max) violations.Add("실제 경로가 총거리 상한을 초과합니다.");
+        return result with { 최적화가능여부 = violations.Count == 0, 전체완수가능여부 = violations.Count == 0,
+            실제경로검증여부 = true, 비용계산방식 = "Directions5VehicleSegments", 방문순서 = visits,
+            총거리Km = distance, 총소요시간분 = (decimal)(now - request.기준시각).TotalMinutes,
+            위반사유 = violations.Distinct(StringComparer.Ordinal).ToArray(),
+            좌표근사총소요시간분 = result.총소요시간분, 좌표근사총거리Km = result.총거리Km };
+    }
+
     private static IReadOnlyList<픽업하차경로방문순서> ScaleVisitArrivalTimes(
         DateTime 기준시각,
         IReadOnlyList<픽업하차경로방문순서> visitOrder,
@@ -244,7 +295,8 @@ public sealed class 픽업하차경로최적화Service(I배차추천경로Servic
             .Where(x => !string.IsNullOrWhiteSpace(x.의뢰Id))
             .GroupBy(x => x.의뢰Id, StringComparer.Ordinal)
             .ToDictionary(x => x.Key, x => x.First(), StringComparer.Ordinal);
-        var pickupCompletedAt = new Dictionary<string, DateTime>(StringComparer.Ordinal);
+        var pickupCompletedAt = jobs.Values.Where(x => x.이미픽업완료 && x.픽업완료시각Utc.HasValue)
+            .ToDictionary(x => x.의뢰Id, x => x.픽업완료시각Utc!.Value, StringComparer.Ordinal);
         var violations = new List<string>();
 
         foreach (var stop in visitOrder.OrderBy(x => x.순서))
@@ -370,7 +422,7 @@ public sealed class 픽업하차경로최적화Service(I배차추천경로Servic
         for (var i = 0; i < jobs.Count; i++)
         {
             var job = jobs[i];
-            stops.Add(new 픽업하차경로정류장(
+            if (!job.이미픽업완료) stops.Add(new 픽업하차경로정류장(
                 i,
                 PickupStage,
                 job.의뢰Id,
@@ -712,7 +764,8 @@ public sealed record 픽업하차경로최적화요청(
     decimal 좌표기반평균속도KmH = 35m,
     decimal? 최대총거리Km = null,
     decimal 일반시간대배달완료허용초과분 = 0m,
-    decimal 피크시간대배달완료허용초과분 = 20m)
+    decimal 피크시간대배달완료허용초과분 = 20m,
+    string? RouteOption = null)
 {
     public 배차경로좌표? 기사현재좌표 => 시작좌표;
 
@@ -730,7 +783,9 @@ public sealed record 픽업하차경로작업(
     DateTime? 픽업가능시각Utc = null,
     decimal? 배달완료제한분 = null,
     string? 픽업배달권키 = null,
-    string? 하차배달권키 = null);
+    string? 하차배달권키 = null,
+    bool 이미픽업완료 = false,
+    DateTime? 픽업완료시각Utc = null);
 
 public sealed record 픽업하차경로방문순서(
     int 순서,

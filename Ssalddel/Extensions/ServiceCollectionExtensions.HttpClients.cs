@@ -59,7 +59,7 @@ public static partial class ServiceCollectionExtensions
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NaverCloudDirectionsOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl);
-        });
+        }).RemoveAllLoggers(); // 경로 URI에는 기사 비공개 기준점과 고객 좌표가 포함된다.
         services.AddHttpClient<IOpinetAveragePriceService, OpinetAveragePriceService>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<OpinetOptions>>().Value;

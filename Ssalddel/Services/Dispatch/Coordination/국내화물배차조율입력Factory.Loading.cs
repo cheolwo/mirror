@@ -25,7 +25,7 @@ public sealed partial class 국내화물배차조율입력Factory
         if (request.의뢰Ids is { Count: > 0 })
         {
             var ids = request.의뢰Ids.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).ToArray();
-            query = query.Where(x => ids.Contains(x.의뢰Id));
+            query = query.Where(x => Enumerable.Contains(ids, x.의뢰Id));
         }
 
         return await query
@@ -44,7 +44,7 @@ public sealed partial class 국내화물배차조율입력Factory
 
         return await _db.화주운송의뢰
             .AsNoTracking()
-            .Where(x => ids.Contains(x.의뢰Id))
+            .Where(x => Enumerable.Contains(ids, x.의뢰Id))
             .ToDictionaryAsync(x => x.의뢰Id, StringComparer.Ordinal, cancellationToken);
     }
 
@@ -58,7 +58,7 @@ public sealed partial class 국내화물배차조율입력Factory
 
         return await _db.화물요구조건
             .AsNoTracking()
-            .Where(x => ids.Contains(x.의뢰Id))
+            .Where(x => Enumerable.Contains(ids, x.의뢰Id))
             .ToDictionaryAsync(x => x.의뢰Id, StringComparer.Ordinal, cancellationToken);
     }
 
@@ -103,7 +103,7 @@ public sealed partial class 국내화물배차조율입력Factory
 
         return await _db.용달기사
             .AsNoTracking()
-            .Where(x => ids.Contains(x.기사Id) && x.상태 == "활동중")
+            .Where(x => Enumerable.Contains(ids, x.기사Id) && x.상태 == "활동중")
             .Take(Math.Max(1, request.최대기사수))
             .ToDictionaryAsync(x => x.기사Id, StringComparer.Ordinal, cancellationToken);
     }
@@ -124,7 +124,7 @@ public sealed partial class 국내화물배차조율입력Factory
 
         var specs = await _db.차량제원
             .AsNoTracking()
-            .Where(x => vehicles.Contains(x.차량코드) || vehicles.Contains(x.차량명))
+            .Where(x => Enumerable.Contains(vehicles, x.차량코드) || Enumerable.Contains(vehicles, x.차량명))
             .ToListAsync(cancellationToken);
 
         var result = new Dictionary<string, 차량제원>(StringComparer.Ordinal);
@@ -159,7 +159,7 @@ public sealed partial class 국내화물배차조율입력Factory
 
         return await _db.운송원장
             .AsNoTracking()
-            .Where(x => ids.Contains(x.기사_운송자) && x.상태 != "인수완료")
+            .Where(x => Enumerable.Contains(ids, x.기사_운송자) && x.상태 != "인수완료")
             .GroupBy(x => x.기사_운송자)
             .Select(x => new { 기사Id = x.Key, Count = x.Count() })
             .ToDictionaryAsync(x => x.기사Id, x => x.Count, StringComparer.Ordinal, cancellationToken);
@@ -181,7 +181,7 @@ public sealed partial class 국내화물배차조율입력Factory
 
         var shifts = await _db.기사근무
             .AsNoTracking()
-            .Where(x => ids.Contains(x.기사Id))
+            .Where(x => Enumerable.Contains(ids, x.기사Id))
             .Where(x => !x.시작시각.HasValue || x.시작시각 <= now)
             .OrderByDescending(x => x.시작시각 ?? x.CreatedAt)
             .ToListAsync(cancellationToken);

@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using 살뜰.도메인.공통;
 using 살뜰.도메인.배차;
 using 살뜰.도메인.기사;
 using 살뜰.도메인.차량;
@@ -31,6 +33,22 @@ public sealed partial class 국내화물배차조율입력Factory
         var pickupPoint = CreatePoint(queue.픽업_위도, queue.픽업_경도);
         var dropoffPoint = CreatePoint(queue.하차_위도, queue.하차_경도);
         var driverPoint = CreatePoint(state.Latitude, state.Longitude);
+        if (!_권역복귀상태Cache.TryGetValue(driver.기사Id, out var returnArea))
+        {
+            returnArea = await _권역복귀Service.상태조회Async(driver.기사Id, driverPoint,
+                state.위치기록시각Utc ?? state.위치수신시각Utc, state.AccuracyM);
+            _권역복귀상태Cache[driver.기사Id] = returnArea;
+        }
+        var otherWorkActive = false;
+        if (returnArea.정책선택됨 && !_다른업무Cache.TryGetValue(driver.기사Id, out otherWorkActive))
+        {
+            otherWorkActive = await _db.운송원장.AsNoTracking()
+                .AnyAsync(q => q.배차업무유형 != 상태값.배차업무유형.용달운송
+                               && q.배차큐단계 == 상태값.배차큐단계.확정
+                               && q.상태 != 상태값.배차상태.인수완료
+                               && (q.기사_운송자 == driver.기사Id || q.확정기사Id == driver.기사Id));
+            _다른업무Cache[driver.기사Id] = otherWorkActive;
+        }
         if (pickupPoint is null)
         {
             excluded.Add("상차지 좌표가 없습니다.");
@@ -85,7 +103,7 @@ public sealed partial class 국내화물배차조율입력Factory
                 returnDistanceKm = returnRoute?.DistanceKm ?? _경로Service.CalculateDistanceKm(dropoffPoint, returnPoint);
             }
 
-            if (acceptedTransportCount > 0)
+            if (acceptedTransportCount > 0 || returnArea.정책선택됨)
             {
                 var schedulePlan = await _기사운송일정구성Service.구성Async(driver.기사Id, driverPoint);
                 scheduleEvaluation = await _운송일정삽입평가Service.평가Async(schedulePlan, request);
@@ -109,7 +127,26 @@ public sealed partial class 국내화물배차조율입력Factory
         var estimatedProfit = estimatedRevenue.HasValue && estimatedCost.HasValue
             ? estimatedRevenue.Value - estimatedCost.Value
             : (decimal?)null;
-        var returnBurden = 시간대별복귀부담정책.평가(now, returnDistanceKm, state.복귀콜선호);
+        var returnBurden = returnArea.정책선택됨
+            ? new 복귀부담평가(0m, 0m, false, 기사복귀선호코드.Normalize(state.복귀콜선호), null)
+            : 시간대별복귀부담정책.평가(now, returnDistanceKm, state.복귀콜선호);
+        var returnEvaluation = returnArea.정책선택됨
+            ? await _권역복귀Service.평가Async(returnArea,
+                scheduleEvaluation?.기존일정종료좌표,
+                scheduleEvaluation?.후보포함종료좌표,
+                !otherWorkActive && scheduleEvaluation is
+                {
+                    기존일정실제경로확인됨: true,
+                    후보포함실제경로확인됨: true
+                },
+                // 다른 적재 가능 시도의 끝점으로 바꾸지 않고, 선택 경로의 구간 적재 근거가 없으면 가점을 보류한다.
+                화물권역복귀적재근거Policy.단독후보확인됨(vehicleSpec, request, cargoRequirement)
+                    && acceptedTransportCount == 0
+                    && excluded.Count == 0 && fit.적합여부 && decision.차량적합여부
+                    && scheduleEvaluation is { 삽입가능여부: true, 전체완수가능여부: true }
+                    && (!pickupWindowSlackMinutes.HasValue || pickupWindowSlackMinutes.Value >= 0m),
+                scheduleEvaluation?.복귀비교경로옵션)
+            : null;
         var evaluation = _평가Service.평가(
             request,
             decision,
@@ -123,7 +160,7 @@ public sealed partial class 국내화물배차조율입력Factory
             false,
             null);
 
-        var score = (evaluation.추천점수 ?? 0m) + state.Aging점수;
+        var score = (evaluation.추천점수 ?? 0m) + state.Aging점수 + (returnEvaluation?.가점 ?? 0m);
         if (estimatedCost.HasValue)
         {
             score -= Math.Clamp(estimatedCost.Value / 5000m, 0m, 20m);
@@ -156,8 +193,11 @@ public sealed partial class 국내화물배차조율입력Factory
         {
             reason = $"{reason} · {returnBurden.사유}";
         }
+        if (returnEvaluation is not null)
+            reason = $"{reason} · {returnEvaluation.사유}";
 
         var badges = evaluation.배지.ToList();
+        if (returnEvaluation is { 가점: > 0m }) badges.Add("권역 복귀 방향");
         if (returnBurden.퇴근시간대부담여부)
         {
             badges.Add("퇴근복귀부담");

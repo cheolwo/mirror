@@ -4,7 +4,7 @@ using 살뜰.도메인.기사;
 
 namespace Ssalddel.Tests.Services.Dispatch.Recommendation;
 
-public sealed class 픽업하차경로최적화ServiceTests
+public sealed partial class 픽업하차경로최적화ServiceTests
 {
     [Fact]
     public async Task 최적화는_각_의뢰의_상차전_하차를_금지하면서_최소경로를_선택한다()

@@ -33,6 +33,9 @@ public sealed partial class 국내화물배차조율입력Factory : I국내화�
     private readonly I운송의뢰수익묶음Service _수익묶음Service;
     private readonly 배차큐정책Options _options;
     private readonly 국내화물배차AI정책Options _aiPolicyOptions;
+    private readonly I기사권역복귀Service _권역복귀Service;
+    private readonly Dictionary<string, 기사권역복귀상태> _권역복귀상태Cache = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, bool> _다른업무Cache = new(StringComparer.Ordinal);
 
     public 국내화물배차조율입력Factory(
         SsalddelContext db,
@@ -46,7 +49,8 @@ public sealed partial class 국내화물배차조율입력Factory : I국내화�
         I운송일정삽입평가Service 운송일정삽입평가Service,
         I운송의뢰수익묶음Service 수익묶음Service,
         IOptions<배차큐정책Options> options,
-        IOptions<국내화물배차AI정책Options> aiPolicyOptions)
+        IOptions<국내화물배차AI정책Options> aiPolicyOptions,
+        I기사권역복귀Service 권역복귀Service)
     {
         _db = db;
         _기사상태Store = 기사상태Store;
@@ -60,6 +64,7 @@ public sealed partial class 국내화물배차조율입력Factory : I국내화�
         _수익묶음Service = 수익묶음Service;
         _options = options.Value;
         _aiPolicyOptions = aiPolicyOptions.Value;
+        _권역복귀Service = 권역복귀Service;
     }
 
     public async Task<국내화물배차조율입력> 생성Async(
@@ -67,6 +72,8 @@ public sealed partial class 국내화물배차조율입력Factory : I국내화�
         CancellationToken cancellationToken = default)
     {
         var now = DateTime.UtcNow;
+        _권역복귀상태Cache.Clear();
+        _다른업무Cache.Clear();
         var queues = await LoadQueuesAsync(request, now, cancellationToken);
         var requestMap = await LoadRequestMapAsync(queues.Select(x => x.의뢰Id), cancellationToken);
         var cargoMap = await LoadCargoMapAsync(queues.Select(x => x.의뢰Id), cancellationToken);

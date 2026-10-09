@@ -155,7 +155,11 @@ public sealed class PrivacyRetentionTests
         Assert.Equal(4000, savedTransport.기사지급예정액); Assert.Equal("공개매장주소", savedTransport.픽업_도로명주소);
         Assert.Null(savedTransport.하차_위도);
         Assert.Equal("untouched", (await fixture.Db.음식주문.SingleAsync(x => x.주문번호 == "other")).수령인연락처);
-        Assert.DoesNotContain("010", Assert.Single(store.Evidence)); Assert.DoesNotContain("주거주소", Assert.Single(store.Evidence));
+        // UTC 소수점 시각에도 010이 생긴다. 삭제한 실제 연락처의 두 표현을 검사한다.
+        var evidence = Assert.Single(store.Evidence);
+        Assert.DoesNotContain("010-1234-5678", evidence);
+        Assert.DoesNotContain("01012345678", evidence);
+        Assert.DoesNotContain("주거주소", evidence);
         Assert.Contains("Mongo.community_ledgers", result.VerifiedStorageCodes);
     }
 

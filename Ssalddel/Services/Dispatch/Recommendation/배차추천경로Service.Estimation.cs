@@ -57,12 +57,8 @@ namespace 살뜰.Services.Dispatch.Recommendation
             catch (Exception ex)
             {
                 _logger.LogWarning(
-                    ex,
-                    "네이버 경로 API 호출에 실패해 fallback 경로 추정을 사용합니다. Origin={OriginLat},{OriginLng} Destination={DestinationLat},{DestinationLng}",
-                    origin.Latitude,
-                    origin.Longitude,
-                    destination.Latitude,
-                    destination.Longitude);
+                    "네이버 경로 API 호출에 실패해 fallback 경로 추정을 사용합니다. RouteOption={RouteOption} ErrorType={ErrorType}",
+                    routeOption, ex.GetType().Name);
             }
 
             return EstimateFallbackRoute(origin, destination);

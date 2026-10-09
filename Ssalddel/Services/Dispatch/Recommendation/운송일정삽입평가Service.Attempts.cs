@@ -57,7 +57,12 @@ namespace 살뜰.Services.Dispatch.Recommendation
                         simulation.최대시간위반분,
                         simulation.위반사유,
                         BuildRouteOrder(reordered),
-                        simulation.도착예상목록));
+                        simulation.도착예상목록)
+                    {
+                        종료좌표 = simulation.종료좌표,
+                        전체실제경로확인됨 = simulation.전체실제경로확인됨,
+                        경로옵션 = simulation.경로옵션
+                    });
                 }
             }
 

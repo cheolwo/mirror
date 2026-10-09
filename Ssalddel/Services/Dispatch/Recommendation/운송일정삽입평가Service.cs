@@ -52,7 +52,12 @@ namespace 살뜰.Services.Dispatch.Recommendation
                     simulation.최대시간위반분,
                     simulation.위반사유,
                     BuildRouteOrder(reordered),
-                    simulation.도착예상목록);
+                    simulation.도착예상목록)
+                {
+                    종료좌표 = simulation.종료좌표,
+                    전체실제경로확인됨 = simulation.전체실제경로확인됨,
+                    경로옵션 = simulation.경로옵션
+                };
                 attempts.Add(attempt);
 
                 if (insertIndex == 계획.항목목록.Count)
@@ -108,7 +113,11 @@ namespace 살뜰.Services.Dispatch.Recommendation
             var selected = beneficialRouteChange ?? feasible ?? fallback;
             if (selected is null)
             {
-                return new 운송삽입평가결과(false, false, null, false, null, null, null, null, null, ["삽입 시뮬레이션 결과가 없습니다."], [], [], attempts);
+                return new 운송삽입평가결과(false, false, null, false, null, null, null, null, null, ["삽입 시뮬레이션 결과가 없습니다."], [], [], attempts)
+                {
+                    기존일정종료좌표 = baseline.종료좌표,
+                    기존일정실제경로확인됨 = baseline.전체실제경로확인됨
+                };
             }
 
             return new 운송삽입평가결과(
@@ -124,7 +133,16 @@ namespace 살뜰.Services.Dispatch.Recommendation
                 selected.위반사유,
                 selected.경로순서,
                 selected.도착예상목록,
-                attempts);
+                attempts)
+            {
+                기존일정종료좌표 = baseline.종료좌표,
+                후보포함종료좌표 = selected.종료좌표,
+                기존일정실제경로확인됨 = baseline.전체실제경로확인됨,
+                후보포함실제경로확인됨 = selected.전체실제경로확인됨
+                    && (baseline.경로옵션 is null || selected.경로옵션 is null
+                        || string.Equals(baseline.경로옵션, selected.경로옵션, StringComparison.Ordinal)),
+                복귀비교경로옵션 = selected.경로옵션 ?? baseline.경로옵션
+            };
         }
 
     }

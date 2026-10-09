@@ -30,10 +30,19 @@
 
                 <MudGrid>
                     <MudItem xs="12" sm="6">
-                        <MudNumericField T="decimal?" @bind-Value="Latitude" Label="위도" Variant="Variant.Outlined" />
+                        <MudNumericField T="decimal?" @bind-Value="Latitude" Label="현재 위도" Variant="Variant.Outlined" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudNumericField T="decimal?" @bind-Value="Longitude" Label="경도" Variant="Variant.Outlined" />
+                        <MudNumericField T="decimal?" @bind-Value="Longitude" Label="현재 경도" Variant="Variant.Outlined" />
+                    </MudItem>
+                </MudGrid>
+
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField T="decimal?" @bind-Value="ReturnLatitude" Label="복귀지 위도 (선택)" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField T="decimal?" @bind-Value="ReturnLongitude" Label="복귀지 경도 (선택)" Variant="Variant.Outlined" />
                     </MudItem>
                 </MudGrid>
 
@@ -154,15 +163,17 @@
 </MudGrid>
 
 @code {
-    private const string StartModeImmediate = "일반 운행";
-    private const string StartModeReserved = "예약 운행";
-    private const string StartModeReturn = "복귀 운행";
+    private const string StartModeImmediate = "바로시작";
+    private const string StartModeReserved = "예약대기";
+    private const string StartModeReturn = "복귀콜찾기";
 
     private string StartMode { get; set; } = StartModeImmediate;
     private string StartLocation { get; set; } = string.Empty;
     private string? ReturnDestination { get; set; }
     private decimal? Latitude { get; set; }
     private decimal? Longitude { get; set; }
+    private decimal? ReturnLatitude { get; set; }
+    private decimal? ReturnLongitude { get; set; }
     private bool IsBusy { get; set; }
     private string? StatusMessage { get; set; }
     private Severity StatusSeverity { get; set; } = Severity.Info;
@@ -178,7 +189,9 @@
            && Longitude is >= -180 and <= 180;
     private bool CanStartWork
         => !string.IsNullOrWhiteSpace(StartLocation)
-           && HasValidCoordinates;
+           && HasValidCoordinates
+           && (!ReturnLatitude.HasValue && !ReturnLongitude.HasValue
+               || ReturnLatitude is >= -90 and <= 90 && ReturnLongitude is >= -180 and <= 180 && !string.IsNullOrWhiteSpace(ReturnDestination));
 
     protected override async Task OnInitializedAsync()
     {
@@ -202,7 +215,7 @@
     {
         if (!CanStartWork)
         {
-            SetStatus("시작 위치와 유효한 위도·경도를 직접 확인해 주세요.", Severity.Warning);
+            SetStatus("시작 위치와 현재 좌표를 확인하고, 복귀지 좌표는 위도·경도를 함께 입력해 주세요.", Severity.Warning);
             return;
         }
 
@@ -215,11 +228,11 @@
                 시작위치 = StartLocation,
                 복귀지 = ReturnDestination,
                 오늘의복귀지주소 = ReturnDestination,
-                오늘의복귀지위도 = Latitude!.Value,
-                오늘의복귀지경도 = Longitude!.Value,
-                기본복귀지사용 = !string.IsNullOrWhiteSpace(ReturnDestination),
+                오늘의복귀지위도 = ReturnLatitude,
+                오늘의복귀지경도 = ReturnLongitude,
+                기본복귀지사용 = false,
                 복귀지출처 = "WebApp",
-                복귀콜선호 = StartMode == StartModeReturn ? "복귀 우선" : "일반"
+                복귀콜선호 = StartMode == StartModeReturn ? "복귀우선" : "균형"
             });
 
             await LoadWorkStateCoreAsync();
@@ -299,8 +312,8 @@
 
     private string DisplayLocation()
     {
-        var lat = LastLocation?.현재위도 ?? WorkStatus?.현재위도 ?? CurrentWork?.오늘의복귀지위도 ?? Latitude;
-        var lng = LastLocation?.현재경도 ?? WorkStatus?.현재경도 ?? CurrentWork?.오늘의복귀지경도 ?? Longitude;
+        var lat = LastLocation?.현재위도 ?? WorkStatus?.현재위도 ?? Latitude;
+        var lng = LastLocation?.현재경도 ?? WorkStatus?.현재경도 ?? Longitude;
         if (!lat.HasValue || !lng.HasValue)
         {
             return "아직 수신되지 않음";

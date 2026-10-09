@@ -13,6 +13,7 @@ namespace 살뜰.Services.Dispatch.Recommendation
     {
         private readonly I차량화물적합성Service _적합성Service;
         private readonly 살뜰.Services.Dispatch.Queue.I배차대기원장전환Service _원장전환Service;
+        private readonly I기사권역복귀Service _권역복귀Service;
 
         public 화물배차추천Service(
             SsalddelContext db,
@@ -29,7 +30,8 @@ namespace 살뜰.Services.Dispatch.Recommendation
             I운송일정삽입평가Service 운송일정삽입평가Service,
             IOpinetAveragePriceService averagePriceService,
             IGeocodingService geocodingService,
-            살뜰.Services.Dispatch.Queue.I배차대기원장전환Service 원장전환Service)
+            살뜰.Services.Dispatch.Queue.I배차대기원장전환Service 원장전환Service,
+            I기사권역복귀Service 권역복귀Service)
             : base(
                 db,
                 driverLocationStore,
@@ -46,6 +48,7 @@ namespace 살뜰.Services.Dispatch.Recommendation
         {
             _적합성Service = 적합성Service;
             _원장전환Service = 원장전환Service;
+            _권역복귀Service = 권역복귀Service;
         }
 
         protected override async Task<bool> IsDrivingAsync(string driverId)
@@ -70,6 +73,16 @@ namespace 살뜰.Services.Dispatch.Recommendation
 
             var driver = await _db.용달기사.AsNoTracking().FirstOrDefaultAsync(x => x.기사Id == driverId);
             _driverLocationStore.TryGetLatest(driverId, out DriverLocationSnapshot? currentLocation);
+            var actualLocation = currentLocation is null ? null
+                : new 배차경로좌표(currentLocation.Latitude, currentLocation.Longitude);
+            var returnArea = await _권역복귀Service.상태조회Async(driverId, actualLocation,
+                currentLocation?.RecordedAtUtc, currentLocation?.AccuracyM);
+            // 화물 일정에 포함되지 않은 다른 업무가 있으면 전체 수행 끝점으로 인증하지 않는다.
+            var otherWorkActive = returnArea.정책선택됨 && await _db.운송원장.AsNoTracking()
+                .AnyAsync(q => q.배차업무유형 != 상태값.배차업무유형.용달운송
+                               && q.배차큐단계 == 상태값.배차큐단계.확정
+                               && q.상태 != 상태값.배차상태.인수완료
+                               && (q.기사_운송자 == driverId || q.확정기사Id == driverId));
             var rejectedRequestIds = await _rejectedRequestStore.GetRejectedRequestIdsAsync(driverId);
             var rejectedRequestIdSet = rejectedRequestIds.Count > 0
                 ? new HashSet<string>(rejectedRequestIds, StringComparer.Ordinal)
@@ -79,8 +92,9 @@ namespace 살뜰.Services.Dispatch.Recommendation
                 ? await _routeService.ResolveRouteAnchorLocationAsync(driverId, driver, currentLocation)
                 : await _routeService.ResolveOriginLocationAsync(driverId, driver, currentLocation, criteria);
             var routeAnchorLocation = isDriving ? originLocation : null;
-            var currentSchedulePlan = isDriving
-                ? await _기사운송일정구성Service.구성Async(driverId, originLocation)
+            var currentSchedulePlan = isDriving || returnArea.정책선택됨
+                ? await _기사운송일정구성Service.구성Async(driverId,
+                    returnArea.정책선택됨 ? actualLocation : originLocation)
                 : null;
             var returnDestination = await ResolveReturnDestinationAsync(driverId, driver);
             var fuelPricePerLiter = await ResolveFuelPricePerLiterAsync();
@@ -121,7 +135,7 @@ namespace 살뜰.Services.Dispatch.Recommendation
                 .ThenBy(x => x.CandidateDistanceKm ?? double.MaxValue)
                 .ThenBy(x => x.Item.CreatedAt)
                 .Where(x => !radiusKm.HasValue || !x.CandidateDistanceKm.HasValue || x.CandidateDistanceKm.Value <= (double)radiusKm.Value)
-                .Take(10)
+                .Take(returnArea.활성여부 ? 40 : 10)
                 .ToList();
 
             var result = new List<DispatchRecommendationDto>(filtered.Count);
@@ -132,7 +146,7 @@ namespace 살뜰.Services.Dispatch.Recommendation
                 var pickupPoint = CreatePoint(x.Item.픽업_위도, x.Item.픽업_경도);
                 var dropoffPoint = CreatePoint(x.Item.하차_위도, x.Item.하차_경도);
                 var fit = request is null ? null : _적합성Service.판정(vehicleSpec, request, cargo);
-                var scheduleEvaluation = isDriving && request is not null && currentSchedulePlan is not null
+                var scheduleEvaluation = request is not null && currentSchedulePlan is not null
                     ? await _운송일정삽입평가Service.평가Async(currentSchedulePlan, request)
                     : null;
                 var insertionResult = await _routeService.EstimateInsertionDelayAsync(originLocation, routeAnchorLocation, pickupPoint, dropoffPoint);
@@ -193,9 +207,26 @@ namespace 살뜰.Services.Dispatch.Recommendation
                     routeAnchorDistanceKm,
                     candidateDurationMinutes,
                     pickupWindowSlackMinutes,
-                    returnDetourDistanceKm,
-                    returnDestination.복귀지기준사용됨,
-                    returnDestination.출처);
+                    returnArea.정책선택됨 ? null : returnDetourDistanceKm,
+                    !returnArea.정책선택됨 && returnDestination.복귀지기준사용됨,
+                    returnArea.정책선택됨 ? null : returnDestination.출처);
+                var returnEvaluation = returnArea.정책선택됨
+                    ? await _권역복귀Service.평가Async(returnArea,
+                        scheduleEvaluation?.기존일정종료좌표,
+                        scheduleEvaluation?.후보포함종료좌표,
+                        !otherWorkActive && scheduleEvaluation is
+                        {
+                            기존일정실제경로확인됨: true,
+                            후보포함실제경로확인됨: true
+                        },
+                        // 선택 경로의 구간 적재 검증이 연결되기 전에는 기존 화물이 없는 단독 후보만 인증한다.
+                        화물권역복귀적재근거Policy.단독후보확인됨(vehicleSpec, request, cargo)
+                            && currentSchedulePlan is { 항목목록.Count: 0 }
+                            && request is not null && fit?.적합여부 == true && 판단결과.차량적합여부
+                            && scheduleEvaluation is { 삽입가능여부: true, 전체완수가능여부: true }
+                            && (!pickupWindowSlackMinutes.HasValue || pickupWindowSlackMinutes.Value >= 0m),
+                        scheduleEvaluation?.복귀비교경로옵션)
+                    : null;
 
                 var recommendation = new DispatchRecommendationDto
                 {
@@ -232,8 +263,9 @@ namespace 살뜰.Services.Dispatch.Recommendation
                     기존경로소요시간분 = insertionResult?.기존경로소요시간분,
                     삽입경로소요시간분 = insertionResult?.삽입경로소요시간분,
                     삽입추가톨비 = insertionResult?.삽입추가톨비,
-                    추천점수 = 평가결과.추천점수,
-                    추천사유 = 평가결과.추천사유,
+                    추천점수 = 평가결과.추천점수 + (returnEvaluation?.가점 ?? 0m),
+                    추천사유 = returnEvaluation is null ? 평가결과.추천사유
+                        : $"{평가결과.추천사유} · {returnEvaluation.사유}",
                     일정삽입가능여부 = scheduleEvaluation?.삽입가능여부 ?? !isDriving,
                     전체일정완수가능여부 = scheduleEvaluation?.전체완수가능여부 ?? true,
                     최적삽입인덱스 = scheduleEvaluation?.최적삽입인덱스,
@@ -242,10 +274,17 @@ namespace 살뜰.Services.Dispatch.Recommendation
                     권장경로순서 = scheduleEvaluation?.권장경로순서.ToArray() ?? Array.Empty<string>(),
                     최대시간위반분 = scheduleEvaluation?.최대시간위반분,
                     일정위반사유 = scheduleEvaluation?.위반사유 ?? Array.Empty<string>(),
-                    복귀지기준추천여부 = returnDestination.복귀지기준사용됨,
-                    복귀지출처 = returnDestination.출처,
-                    복귀추천사유 = 평가결과.복귀추천사유,
-                    배지 = 평가결과.배지,
+                    복귀지기준추천여부 = !returnArea.정책선택됨 && returnDestination.복귀지기준사용됨,
+                    복귀지출처 = returnArea.정책선택됨 ? null : returnDestination.출처,
+                    복귀추천사유 = returnEvaluation?.사유 ?? 평가결과.복귀추천사유,
+                    권역복귀정책선택됨 = returnArea.정책선택됨 ? true : null,
+                    권역복귀활성여부 = returnArea.정책선택됨 ? returnArea.활성여부 : null,
+                    권역복귀확인됨 = returnEvaluation?.확인됨,
+                    권역복귀가점 = returnEvaluation?.가점,
+                    전체일정기존복귀거리Km = returnEvaluation?.기존복귀거리Km,
+                    전체일정후보복귀거리Km = returnEvaluation?.후보복귀거리Km,
+                    배지 = returnEvaluation is { 가점: > 0m }
+                        ? 평가결과.배지.Append("권역 복귀 방향").ToArray() : 평가결과.배지,
                     경고 = fit is null ? 평가결과.경고 : 평가결과.경고.Concat(fit.경고).ToArray(),
                     차량적합여부 = fit?.적합여부 ?? true,
                     차량부적합사유 = fit?.부적합사유 ?? Array.Empty<string>(),
@@ -268,7 +307,10 @@ namespace 살뜰.Services.Dispatch.Recommendation
                 result.Add(recommendation);
             }
 
-            return result;
+            return returnArea.활성여부
+                ? result.OrderByDescending(x => x.추천점수 ?? decimal.MinValue)
+                    .ThenBy(x => x.픽업거리Km ?? decimal.MaxValue).Take(10).ToArray()
+                : result;
         }
 
     }

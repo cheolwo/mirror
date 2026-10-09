@@ -217,6 +217,12 @@ namespace Ssalddel.Hubs
         public bool 복귀지기준추천여부 { get; set; }
         public string? 복귀지출처 { get; set; }
         public string? 복귀추천사유 { get; set; }
+        public bool? 권역복귀정책선택됨 { get; set; }
+        public bool? 권역복귀활성여부 { get; set; }
+        public bool? 권역복귀확인됨 { get; set; }
+        public decimal? 권역복귀가점 { get; set; }
+        public decimal? 전체일정기존복귀거리Km { get; set; }
+        public decimal? 전체일정후보복귀거리Km { get; set; }
         public string[] 배지 { get; set; } = Array.Empty<string>();
         public string[] 경고 { get; set; } = Array.Empty<string>();
         public bool 차량적합여부 { get; set; } = true;

@@ -1,4 +1,7 @@
 using 살뜰.도메인.화주;
+using 살뜰.도메인.차량;
+using 살뜰.도메인.화물;
+using Ssalddel.Services.LogisticsProcessing.VehicleLoading;
 
 namespace 살뜰.Services.Dispatch.Recommendation
 {
@@ -83,7 +86,12 @@ namespace 살뜰.Services.Dispatch.Recommendation
         decimal? 최대시간위반분,
         string[] 위반사유,
         IReadOnlyList<string> 경로순서,
-        IReadOnlyList<운송일정도착예상항목> 도착예상목록);
+        IReadOnlyList<운송일정도착예상항목> 도착예상목록)
+    {
+        public 배차경로좌표? 종료좌표 { get; init; }
+        public bool 전체실제경로확인됨 { get; init; }
+        public string? 경로옵션 { get; init; }
+    }
 
     public sealed record 운송삽입평가결과(
         bool 삽입가능여부,
@@ -98,5 +106,30 @@ namespace 살뜰.Services.Dispatch.Recommendation
         string[] 위반사유,
         IReadOnlyList<string> 권장경로순서,
         IReadOnlyList<운송일정도착예상항목> 도착예상목록,
-        IReadOnlyList<운송삽입시도결과> 시도목록);
+        IReadOnlyList<운송삽입시도결과> 시도목록)
+    {
+        public 배차경로좌표? 기존일정종료좌표 { get; init; }
+        public 배차경로좌표? 후보포함종료좌표 { get; init; }
+        public bool 기존일정실제경로확인됨 { get; init; }
+        public bool 후보포함실제경로확인됨 { get; init; }
+        public string? 복귀비교경로옵션 { get; init; }
+    }
+
+    internal static class 화물권역복귀적재근거Policy
+    {
+        public static bool 단독후보확인됨(차량제원? vehicle, 화주운송의뢰? request, 화물요구조건? cargo)
+        {
+            if (vehicle is null || request is null) return false;
+            var weight = cargo?.화물무게Kg ?? request.화물중량Kg;
+            var volume = request.화물부피Cbm;
+            var pallets = cargo?.팔레트개수 ?? request.화물팔레트개수;
+            if (weight is < 0m || volume is < 0m || pallets is < 0) return false;
+            if (weight is not > 0m && volume is not > 0m && pallets is not > 0) return false;
+            var weightLimit = vehicle.운영권장중량Kg ?? vehicle.최대적재중량Kg;
+            var volumeLimit = 차량적재추천Engine.ResolveAllowedCbm(vehicle);
+            return (weight is not > 0m || weightLimit > 0 && weight.Value <= weightLimit)
+                   && (volume is not > 0m || volumeLimit is > 0m && volume.Value <= volumeLimit.Value)
+                   && (pallets is not > 0 || vehicle.팔레트적재개수 is > 0 && pallets.Value <= vehicle.팔레트적재개수.Value);
+        }
+    }
 }
