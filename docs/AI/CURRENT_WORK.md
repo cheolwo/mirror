@@ -1,5 +1,139 @@
 # Mirror(거울) Current Work
 
+## 일반 회원 생활 배송 참여 구현 r43 (2026-10-09)
+
+- [승인 r39](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/member-delivery.implementation.r39.md)에 따라 일반 계정의 선택 참여·비공개 활동 기준점·근처 동시 제안·건별 수행 권한·사진 완료·앱 알림 복구를 연결한다. 기존 의뢰/운송원장·확정 요금·수수료 0원과 음식/화물 독립 상태를 유지한다.
+- 구현과 최종 로컬 검증·APK 빌드를 완료했다. Fast 369개·Task 실행 9,331개가 통과했고 환경 의존 기존 시험 14개는 실행되지 않았다. 모의 자료로 제품 화면 30개와 네 단계 클릭 흐름을 확인했다. [r43 변경 기록](../Changes/2026-10-09-neighborhood-member-delivery-r43.md)에 로그·APK·화면과 Firebase/단말/Azure 미검증 범위를 결속한다. 기능/Operational 기본 OFF이며 미성년 배차·혼합 다건 수행·실지급을 활성화하지 않는다.
+
+## 기사 기준 위치·권역 복귀 우대 구현 r42 (2026-10-08)
+
+- [승인 r38](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/driver-return-area.implementation.r38.md)에 따라 기사 비공개 기준점·자동 7/6km·수동 선택·판본 저장/재조회와 실제 음식 큐·화물 추천/조율의 전체 일정 복귀 가점을 구현했다. 새 정책 선택 시 기존 복귀 가산을 중복하지 않고 현재 음식 최대 3건과 차량·시간·수락 조건을 유지한다. 공동 음식/화물 일정은 r36 후속으로 남기며 해당 진행 업무가 있으면 가점을 보류한다.
+- 집중 184개·최종 Fast 157개 통과, 최종 Task 9,235개 통과·실패 0개·기존 환경 의존 Mongo 시험 13개 미실행이다. 새 설정의 실제 격리 Mongo 시험과 음식 기사 Android 빌드는 통과했다. 기존 화물 일정은 선택 경로의 구간 적재 근거를 연결하기 전까지 가점을 보류한다. [r42 변경 기록](../Changes/2026-10-08-driver-return-area-r42.md)에 이번 실행 결과를 기록하며 이전 시험 수와 실제 단말 검증을 혼용하지 않는다.
+
+## 기사 기준 위치·권역 복귀 배차 제안 r37 (2026-10-08)
+
+- [권역 복귀 설계 r37](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/driver-return-area.design.r37.md)에 오늘/기본 복귀지·화물 개인 추천/시간대 조율의 차이와 음식 실제 큐 미연결을 소스 대조로 정리했다. Web의 현재/복귀 좌표 재사용·선호 코드 불일치, 음식 앱 미전달, 화물 선제 10개/음식 정렬 앞단을 우선 보완점으로 남겼다. 기사 선택 기준점·7km 예시 반경과 해제 조건·전체 일정 종료 후 복귀 개선·중복 가산 방지·후보 탐색/화면의 순서를 제안했다.
+- 현재는 읽기 조사와 문서 정리다. 제품 소스·배차 정책·DB·APK·실행 환경을 바꾸지 않았고 정적 확인을 실제 화면/업무 검증으로 표현하지 않는다. 수치/가점은 미확정 후보이며 구현·시험·휴대폰은 후속 범위다. 이번 문서 경로의 차이/링크 검증을 별도 수행하고 이전 구현의 시험 수는 재사용하지 않는다.
+
+## 기사 선택에 따른 음식·생활 물품 다건 수행 설계 r36 (2026-10-08)
+
+- 사용자는 기사 본인의 적재량과 수행 수준에 맞춰 3·4건 등 여러 배차를 선택해 수입을 챙길 수 있는 방향을 요청했다. [설계 r36](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/driver-flexible-multi-work.design.r36.md)에 현재 음식 고정 3건·화물의 기존 용달 일정/적재 검사·분산의 다른 업무 차단을 대조하고 기사 개인 선호 → 공동 여력/영속 수락 보호 → 지도 추가 후보·혼합 순서의 보완 순서를 정리했다.
+- 음식/화물의 독립 원장·상태·정산을 유지하며 공통 여력과 선택 화면을 연결하는 제안이다. 현재 읽기 조사·문서 반영만 진행했고 제품 소스·정책·DB·APK·단말·실운영·수입 변화·Unity·영상·commit/push는 변경/실행하지 않았다. 문서 검증은 이번 소유 경로에 한정하며 r41 전체 시험 결과를 이 설계의 실행 검증으로 재사용하지 않는다.
+
+## 원주문 선택·관계 동시 변경 보호 r41 (2026-10-08)
+
+- [승인 r35](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/root-order-selection-concurrency.implementation.r35.md)에 따라 기존 분산 작성 화면의 보호된 원주문 선택과 Mongo 관계 변경의 다문서 동시 보호를 구현했다. 최종 Fast 308개·Task 9,147개 통과, 실패·건너뜀 0개. 실제 격리 Mongo 관계 보호 시험 19개와 제품 화면 예시 호스트의 선택·실패/재조회·빈 후보를 확인했다. [화면 책임](../ProjectOverview/page-docs/distributed-fulfillment-r36.md)·[반환 기록](../Changes/2026-10-08-root-order-selection-concurrency-r41.md)에 근거를 남긴다. 다른 조사 항목·APK·Unity·공용 DB·운영 활성화·commit/push는 제외한다.
+
+## 주문 한 건의 역할·조건·다음 행동 리팩토링 r40 (2026-10-08)
+
+- [승인 r34](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/order-ledger-role-refactor.implementation.r34.md)에 따라 기존 주문 루트와 분산 출고/운송 연결, 진행된 연결의 변경 제한, 음식 조건 갱신의 표시/실행 판정, 주문 상세의 현재 업무 안내와 문제 접수를 보완했다. 새 테이블·상태 복제 없이 독립 수령·정산·지급과 기존 OFF/Simulation 경계를 유지한다.
+- Fast 323개·Task 9,078개 통과, 실제 격리 MongoDB 환경 시험 2개 미실행. 제품 Razor/공유 ViewModel 검토 호스트에서 주문 상세 4상황·두 폭과 일시 조회 실패 후 재시도를 확인했다. [주문 상세 책임](../ProjectOverview/page-docs/OrdererApp/OrdererApp-P05/README.md)·[분산 상세 책임](../ProjectOverview/page-docs/distributed-fulfillment-r36.md)·[검증 반환](../Changes/2026-10-08-order-ledger-role-refactor-r40.md)을 따른다. 당시 남은 원주문 선택 양식과 하위 상태 동시 변경의 원자적 보호는 위 r41에서 구현·로컬 검증했다. 실제 업무 HTTP/공용 DB·APK·단말·Azure·금전·Unity·영상·commit/push는 r40에서 진행하지 않았다.
+
+## 건별 계약 정책 준비 서버 r39 (2026-10-08)
+
+- [승인 r33](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/task-contract-policy-preparation.implementation.r33.md)에 따라 새 건별 의뢰의 프리랜서 계약 준비 기본값과 미성년 참여 OFF 설정 후보를 서버에 마련하고 로컬 검증했다. 인증된 정책 조회는 실행 허가를 반환하지 않으며 활성화 설정은 서버 시작과 직접 호출에서 거부한다. 전용22개를 포함한 Fast101개·Task9,008개 통과, MongoDB 환경 시험2개 미실행. 기존 정산 DB 시험의 내부 provider 격리를 보완했고 원 검증 항목을 보존했다. 소스8개는 시험 전후 동일하며 다른 기존 변경15,131개와 기존 공용 문서 본문을 보존했다. [서버·DB 책임](../ProjectOverview/page-docs/neighborhood-task-contract-policy-r39.md)·[검증 반환](../Changes/2026-10-08-neighborhood-task-contract-policy-r39.md)에 연결한다. 실제 계약·대리인 확인·미성년 배차·앱·APK·운영 전환은 이번 범위가 아니다.
+
+## 생활 거래 정산 서버·원장 r38 (2026-10-08)
+
+- [승인 r32](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/neighborhood-settlement.implementation.r32.md)의 음식·보관 상품·운송 약정/실제 비용/지급 신고/수령 확인을 서버·보호 원장·인증 API에 구현하고 로컬 검증했다. 공동 배송비 부담, 실물 보관 기간, 부분 지급·환급, 중복 청구와 기존 기사 지급 중복 생성을 구별한다. Fast 48개·Task 8,986개 통과, 기존 환경 의존 MongoDB 시험 2개 건너뜀. 컴파일 대상 22개 소스가 시험 전후 동일하고 기존 다른 변경 15,105개를 보존했다. [서버·DB 책임](../ProjectOverview/page-docs/neighborhood-settlement-r38.md)·[실제 검증](../Changes/2026-10-08-neighborhood-settlement-r38.md)에 연결한다. 앱 화면·APK는 사용자 요청으로 보류하며 실제 송금·공용 DB·휴대폰·Azure·Unity·영상·commit/push는 이번에 진행하지 않았다.
+
+## 분산 보관 합의·사진 완료 r37 (2026-10-08)
+
+- [r31 보관 합의·사진 완료](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/storage-agreement-photo-proof.implementation.r31.md)의 모바일·서버 구현과 로컬 검증을 완료했다. 공간/실제 물품 소유자의 같은 조건 판본 동의, 입고·피킹·전달·반품 사진 촬영/미리보기/전송과 정확한 업무·수량 결속, 비공개 열람·보존 보호를 연결했다.
+- 최종 Fast 313개·Task 8,938개 통과, Mongo 환경 시험은 각 1개·2개 건너뛰었다. 최종 컴파일 대상 90개 파일의 시험 전후 소스가 같고, 작은 화면 31종·두 폭 62조합의 넘침·오류가 없었다. [페이지·코드·DB 책임](../ProjectOverview/page-docs/distributed-storage-photo-proof-r37.md), [실행·설치 파일 기록](../Changes/2026-10-08-distributed-storage-photo-proof-r37.md)을 따른다. 후속 사용자 요청으로 APK 추가 제작은 보류했으며 네 앱 최종 manifest 완료는 미확인이다. 기존 r36 default OFF·Simulation 경계와 Unity·배달 영상·다른 dirty 작업을 보존하며 공용 DB·휴대폰·Azure 검증은 별도다.
+
+## 생활 공간의 분산 물류 모바일·서버 연결 r36 (2026-10-08)
+
+- [승인 구현 r30](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/distributed-warehouse.implementation.r30.md)의 공간 동의·분할 입고·재고 예약·기사 직접 피킹·다거점 순회를 모바일·서버에 구현하고 로컬 검증했다. 최신 사용자 정정으로 Unity는 제외하고 기존 변경을 보존했다.
+- [페이지·코드·원장 책임](../ProjectOverview/page-docs/distributed-fulfillment-r36.md), [변경·검증](../Changes/2026-10-08-distributed-fulfillment-r36.md)을 따른다. 기본 OFF·정확한 Simulation profile이며 기존 DB 적용·휴대폰·Azure·실운영·실금전·commit/push는 이번에 하지 않는다. Fast 181개·Task 8,868개 통과, 기존 Mongo 환경 시험 2개 건너뜀. 공통 UI 20화면·두 폭 40조합과 네 역할 Debug APK 0.1.36/36을 확인했다. APK 설치·실행은 미확인이다.
+
+## 합의 요금표와 배차·주문 알림 r35 (2026-10-08)
+
+- 사용자가 우선순위 3·4번과 메시지/소리 알림을 승인했다. [구현 범위 r4](Planning/시스템/PLAN-SYSTEM-ROLE-BUSINESS-OPTIONS/agreements-alerts.implementation.r4.md), [페이지 책임](../ProjectOverview/page-docs/agreed-rates-notification-settings-r1.md), [변경·검증](../Changes/2026-10-08-agreed-rates-native-alerts-r35.md)을 따른다.
+- 음식점·음식기사·화주·화물기사의 요금표 제안/응답과 실제 업무의 명시 선택, 기존 음식/화물 계산·배차·정산 근거 연결을 구현했다. 합의 기사의 기존 적격 조건과 직접 배차 수락, 음식 조리 순서, 원 금액 동결과 SQL/Mongo 보류 재시도를 유지한다.
+- 음식 기사와 음식점 Android에 ‘살뜰 배달’·‘살뜰 주문’ 메시지와 짧은 자체 기계음을 연결했다. 기사 내 정보에서 서버 설정을 저장/재조회하고 음식점은 계정별 기기 설정을 저장한다. 중복 발행·계정 변경·야간 무음·OS 차단/무음을 구분한다. 다른 역할의 새 알림 사건과 음식점 강제 종료 뒤 원격 푸시는 추가하지 않았다.
+- 최종 Fast217개·Task8,708개 통과, 실패0·격리 Mongo 환경 시험2개 미실행이다. 전체 빌드와 소스77개 전후/인계 지문, 공통 UI42개·예시16시나리오를 확인했다. 요금표 EF snapshot과 기존 금액을 보존하는 격리 migration3개 시험도 포함한다. 두 개인 Debug APK는 `0.1.35/35`이며 실제 내장 화면/음원/계약·양 ABI와 지도/카드/아이콘·기존 서명을 대조했다. 고정 소스2,718개·현재 모바일 패치31개/기반89개와 이전 r34 소스/APK를 결속했다. 기사 APK에 Firebase 수신기가 없어 현재는 앱 열린 상태의 조회 알림이고, 식당은 실행 중 SignalR/재조회다. 백그라운드 푸시 설정·실폰 소리/업무·기존 DB 적용·Azure·실금전·commit/push는 미실행이며 다른 dirty 작업은 보존한다.
+
+## 기사 전체 화면 지도와 독립 하단 카드 r34 (2026-10-08)
+
+- 사용자는 지도/카드 보완 1·2번 승인 뒤 카드 높이에 맞춰 지도 크기·중심·줌을 바꾸지 않도록 정정했다. [책임 r10](../ProjectOverview/page-docs/driver-workspace-sections-r1.md#전체-화면-지도와-독립-하단-카드-r10--최신-사용자-정정), [이번 변경과 검증](../Changes/2026-10-08-driver-fullscreen-independent-card-r34.md)을 따른다.
+- 수행 지도는 같은 인스턴스로 전체 영역을 채우고 하단 카드만 겹쳐 접기/펼치기한다. 지도 공간 예약 계산은 제거했으며, header·도구의 투명한 빈 공간은 입력을 통과시키는 설정을 적용했다. 내 정보/내역·현장 중단·수명·상태별 주 행동·r33 아이콘·API/DB/GPS·경로 handler는 보존한다.
+- 독립 읽기 대조에서 기존 Binding/명령/가시·권한/이벤트와 주요 subtree 보존을 확인했다. Fast 187개·Task 8,608개 통과, 실패 0·격리 Mongo 조건 2개 미실행이며 소스 4파일은 전후 지문이 일치한다. 기사 Android·전체 솔루션 빌드는 오류 0개다. 최신 개인 Debug APK는 r34(`0.1.34/34`)이며 승인 제품 3파일만 별도 보존 소스에 반영했다. 양 ABI의 전체지도/독립 카드·카드 배치의 카메라 무접촉·기존 아이콘/GPS/교통 OFF·지도 입력/서명과 Fast/Task 소스 결속을 확인했다. 실제 화면·지도 입력·카드 조작 중 native 카메라/크기·테마/좁은 폭은 다음 USB 검증이다. 기기·에뮬레이터·애저·실운행·실지급·commit/push는 실행하지 않았다.
+
+## 내 정보·배달 내역과 상태 카드 행동 아이콘 (2026-10-08)
+
+- 배달 내역을 내 정보 안으로 옮기고 사람 아이콘을 붙였다. 기존 목록·상세·복귀 경로와 3일 고객 정보 열람 기준을 유지한다. 상태 카드 아이콘까지 포함한 최신 개인 Debug APK는 r33(`0.1.33/33`)이며 포장·양 ABI의 내장 XAML/helper/공통 UI/폰트/CSS와 검증된 제품 10파일 지문 대조를 완료했다. 실폰 설치는 하지 않았다.
+- 후속 요청으로 상태별 카드 버튼에 문구와 행동 아이콘을 함께 표시한다. 네이티브 버튼은 기존 글자 색과 확장/운행/결과 대기 상태를 따르고, 공통 역할 카드는 안정적인 행동 키의 보조 아이콘만 선택한다. API/DB·명령·허용 행동·확인 절차는 보존한다. [변경·검증과 APK 판본](../Changes/2026-10-08-driver-profile-state-action-icons.md)을 참조한다.
+- Fast 관련 254개·Task 전체 8,597개 통과, 실패 0·Mongo 환경 조건 2개 건너뜀이다. 검증 전후 12파일 지문이 일치한다. 첫 HTML 구조 시험 실패는 기존 허용/차단 조건을 유지하며 실제 control에 결속했고, 이후 CLR 시험 호스트 중단은 부분 결과로 보존한 뒤 동일 설정의 새 실행에서 완주했다. 실제 휴대폰 배치·터치·테마 검증은 별도다.
+- 사용자의 후속 요청으로 에뮬레이터 화면 검증을 중지했다. 소유한 에뮬레이터만 종료했고 기존 자료는 보존했다. 다음 휴대폰 USB 연결 때 최신 APK·실제 카드/아이콘·탐색을 검증하고 설치한다. 로컬 빌드/시험, APK 준비, 실제 기기 화면 검증을 구분한다.
+
+## 실제 휴대폰 조회·메뉴 저장·연결 복구와 위치 진단 (2026-10-08)
+
+- 잠금 해제 후 기사 r30의 네이버 지도 교통정보 선 숨김, 완료 목록→상세→복귀·새로고침, 음식점 메뉴 저장·재조회·원복, 네 음식 역할의 동일 완료 주문 표시를 실폰에서 확인했다. USB 연결 제거 후 종료/재실행의 실패 안내와 복구 후 세션/배차 대기도 확인했다. [실제 결과와 화면](../Changes/2026-10-08-physical-phone-runtime-r31.md)에 기록했다.
+- SQL/Mongo 완료 주문 보존 비교 10항목·메뉴 원복 7항목이 통과했다. 정산 공제/수령액 미확정·지급 NotRequested를 유지하고 기존 서버/DB를 초기화하지 않았다. 일반 음식 원장 읽기 보완은 현재 실행 서버에 미적용이다.
+- Android Debug의 위치 서비스 한 파일에 좌표 없는 단계 진단을 추가했다. Fast 68/68·Task 8,589개 통과(Mongo 환경 2개 건너뜀), r30 대비 그 1파일만 포함한 기사 `0.1.31/31`의 포장·내장 설정·단말 설치 바이트를 대조했다. 실제 단발 위치 수신 7회와 중단 조회의 취소/세대 차단·앱 복귀 재시작을 확인했다. 연속 리스너 수신·실주행/GPS 안정성은 미확인이다.
+- 새 휴대폰 주문 작성/수락 전 취소·3일 만료 경계·지원 사건 처리·실제 도로 경로·애저·실지급·다른 네 역할과 commit/push는 이번 완료 범위가 아니다. 원시 단말/위치/계정 자료는 Git 제외 영역에 유지한다.
+
+## 음식 기사 지도 교통정보 표시 끄기 (2026-10-08)
+
+- 도로를 따라 보이는 주황색·초록색 교통정보 레이어를 숨기도록 지도 페이지와 공통 속성 기본값을 변경했다. 픽업 주황·전달 파랑·대기 회색 업무 경로/핀과 위치 복구는 유지한다. [변경과 확인 수준](../Changes/2026-10-08-driver-map-traffic-off.md)을 참조한다.
+- Fast 기사 빌드·Task 전체 3.5 빌드 통과, 전체 8,589개 통과·실패 0·Mongo 환경 조건 2개 건너뜀. 소스 두 파일은 검증 전후 지문 일치다. r29 소스·APK를 보존한 별도 r30 사본의 양 ABI에서 실제 내장 교통정보 기본값/XAML false를 대조했다. 같은 서명의 `0.1.30/30`을 단말에 덮어 설치하고 판본·설치 바이트 해시 일치를 확인했다. 설치 후 기록 도구의 변수 충돌은 재설치 없이 고쳤으며 앱 자료를 초기화하지 않았다. 후속 실폰 지도/통신과 r31 위치 진단 결과는 위 최신 기록을 따른다.
+
+## 실제 휴대폰 USB 후속 검증·위치 복구 (2026-10-08)
+
+- USB 인증·5363 연결·격리 서버 준비 상태를 재확인했다. 기존 완료 주문의 SQL/Mongo 상태·식별 검사 12개 통과, 정산 `AwaitingDeductions`·지급 `NotRequested`·공제/수령액 null을 유지한다. [이번 변경·완료 경계](../Changes/2026-10-08-physical-usb-followup.md)는 전날 수락 이후 실폰 시험과 구별한다.
+- 기사 위치 원인별 안내·조용한 리스너 재취득·단일 공유 조회·60초 실패 재시도·늦은 응답/센서 시작 정리를 보완했다. Fast 206/206 통과. frozen r27에 승인한 제품 6개만 추가한 기사 `0.1.29/29`를 기존 서명으로 덮어 설치하고 실제 설치 바이트/판본을 대조했다. 계정 자료·원본 소스는 보존했으며 새 APK의 실행·GPS·서버 통신까지 완료한 것으로 보지 않는다.
+- 일반 음식 원장 목록/상세는 권한 뒤 음식 블록 상태로 표시하는 읽기 보완을 소스에 반영했다. 전달/수령을 구분하고 DB·업무 상태·Revision·시각·JSON 구조를 보존한다. Fast 35/35·독립 검토 통과. 최종 Task 전체 3.5 빌드 오류 0·8,589개 통과·Mongo 환경 조건 2개 건너뜀, 소스 13파일 전후 지문 일치. 이 서버 보완은 현재 r27 컨테이너에 아직 미적용이다.
+- r29 기록 당시 휴대폰은 잠금 해제 대기였다. 이후 완료 내역·메뉴 저장/원복·앱 복귀/통신 복구를 확인한 위 최신 기록을 현재 상태로 참조한다. r29 당시 근거는 Git 제외 `artifacts/local/physical-usb-r29-20261008/`에 보존한다. Azure·실제 도로 경로·실운행·실결제/입금·다른 역할 시험 준비·commit/push는 이번에 실행하지 않았다.
+
+## 실제 휴대폰 네이버 지도 연결·USB 시험 (2026-10-07)
+
+- 최신 사용자 승인으로 기존 네이버 클라우드 `hongdal` 앱에 `kr.ssalddel.fdriver`를 추가하고 기존 패키지/API/한도는 보존했다. 음식 기사 Debug `0.1.28/28`을 기존 서명으로 덮어 설치했으며 실제 Samsung Android 13에서 네이버 지도 타일·현재 위치·배차 대기를 확인했다. 키는 저장소 밖에 두고 Client Secret은 모바일에 복사하지 않았다.
+- 음식점의 USB 시험 설정 누락은 기본 OFF·정확한 판본·Android Debug·HTTP 루프백 5363 한정으로 보완했다. Fast 79·Task 8,540개 통과(Mongo 환경 조건 2개 건너뜀), 음식점 후속 APK도 `0.1.28/28`로 설치·해시 대조했다. 기존 PC 생성 주문 한 건을 실제 휴대폰에서 음식점 수락→기사 수락→조리/픽업/전달→주문자 수령 확인하고 운영자 완료 조회까지 대조했다. 신규 주문 작성·실운행·금융 검증과 구별하며 [변경·검증과 한계](../Changes/2026-10-07-physical-phone-naver-maps.md)를 참조한다.
+- `mirror-r27-food-mobile-check`의 기존 격리 DB를 보존했다. 마지막 주문은 수령 확인·정산 `AwaitingDeductions`·지급 `NotRequested`다. 주황/파랑 핀과 카드 전환은 확인했지만 실제 도로 경로는 대기 상태이며 Azure·실운행·실지급·다른 역할 지도·commit/push는 포함하지 않는다. 원시 단말 캡처는 현재 위치를 포함하므로 Git 제외 `artifacts/local/physical-usb-r27-20261007/`에 보관한다.
+
+## 생활 배송 간편 작성·엑셀 입력 r29 로컬 검증 완료 (2026-10-07)
+
+- 사용자의 `어` 승인으로 생활 배송 간편 작성·엑셀을 먼저 구현했다. [승인 r29](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/simple-input.implementation.r29.md) SHA256 `1D6D6CA37CDBEC26B5D5050B968C66F461E1F45AE82D7A2BACD5B0FAB0434BDE`·[수용/반환](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/development-work-order.r29.md)·[페이지 책임](../ProjectOverview/page-docs/neighborhood-simple-input-r29.md)·[실제 결과와 샘플](../Changes/2026-10-07-neighborhood-simple-input-r29.md)을 연결한다. r28과 다른 dirty 변경은 보존하며 상태는 `Implemented / LocalInputValidated / OperationalE2ePending / VoiceDeferred`다.
+- 기존 한 페이지에 물품→장소→시간→확인과 상세 작성 복귀를 연결했다. 고정 판본의 빈 `.xlsx` 양식과 한 행 미리보기/적용을 추가했으며 누락값은 임의 보완하지 않는다. 인증/동의 뒤 메모리로만 파싱하고 업로드/선택은 견적·접수가 아니다. 기존 견적·동의·접수/재조회, 불명확 결과의 원 요청을 유지한다. 전달 시간창은 선택 null, 행 ID 없는 재업로드의 중복 보장은 세션 안으로 한정한다. 신규 입력 route만 4 MiB 메모리 버퍼를 사용해 디스크 임시 저장을 막는다.
+- 신규 70·Fast 453·Task 8,540개 통과, 환경 조건 Mongo 2개 건너뜀. 소비 앱 포함 build 오류 0·기존 Android 패키지 경고 55, 검토 호스트 오류/경고 0. 실제 파서·공통 Razor/VM 320/390px 36장면·6흐름에서 오류·가로 넘침·외부/API 요청 시도 0을 확인했다. 화면은 합성 검토 샘플이지 확정 시안이 아니다. 검토 호스트 종료와 5400 listener 없음도 확인했다. 실제 인증 HTTP/실DB 종단·APK·휴대폰·음성/마이크·외부 업체·실금전·Unity·commit/push·배포는 실행하지 않았다.
+
+## 생활 앱 외부 배송 가정 연결 r28 로컬 구현·검증 완료 (2026-10-07)
+
+- [승인 r28](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/assumed-providers.implementation.r28.md)·[소유권/수용·반환](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/development-work-order.r28.md)·[페이지 책임](../ProjectOverview/page-docs/neighborhood-fulfillment-r28.md)·[변경과 샘플](../Changes/2026-10-07-assumed-fulfillment-r28.md)을 따른다. 기존 r25 수행처에 카카오 문서 기반/배민·쿠팡이츠 가정 모의를 추가했고, 선택 크기를 원 의뢰·원장·SQL 재구성에 보존했다. 실제 endpoint·업체 가격은 추정하지 않았다.
+- 후보 목록은 서버의 원천별 활성 목록으로 표시한다. 가정 후보는 별도 opt-in 기본 OFF·Simulation 생활 배송 한정이다. 현재 원천·동의·시도·모의 job이 일치하는 전달 증거로 완료 확인만 열며 내부 기사/큐·양측 완료·공개 이력·지급을 자동 확정하지 않는다. 기존 직접 전달·자체/음식 배송과 다른 dirty 변경을 보존한다.
+- 신규 73·Fast 701·Task 8,470개 통과, 환경 조건 Mongo 2개 건너뜀. 전체 3.5 build 오류 0·경고 102, 실제 공통 UI 320/390px 22장면·4흐름·외부 요청/가로 넘침/page error 0을 확인했다. 샘플 PNG는 확정 시안이 아니다. 전용 preview는 종료했다. 상태는 `Implemented / LocalSimulationValidated / RealProviderPending`이며 공용 DB schema·현재 인증 HTTP/실DB 종단·실제 업체·APK/단말·실금전·Unity·commit/push/배포는 미실행이다.
+
+## 첫 수평 보완 완료: 기존 역할 옵션의 적용 범위 r3 (2026-10-07)
+
+- 사용자가 전반적인 보완을 먼저 진행하고 후속에 한 업무를 정해 수직 검증하는 순서를 수용했다. [승인 r3](Planning/시스템/PLAN-SYSTEM-ROLE-BUSINESS-OPTIONS/horizontal-hardening.implementation.r3.md)와 [현 작업트리 수용·소유권](Planning/시스템/PLAN-SYSTEM-ROLE-BUSINESS-OPTIONS/development-work-order.r3.md)에 기존 비금전 표시 범위·정확 경로·검증 상한을 결속했다. 현재 결과는 `FirstSliceImplemented / LocalPreviewValidated / LocalOnly`이며 승인 기획 본문/hash는 유지한다.
+- 공통 역할 화면에서 조회 반경/주문 범위, 이번 주문 조리시간/기본값, 건별 사유·판정, 의뢰 예정액/실지급, 이번 현장 작업/개인 설정을 구별한다. 기존 서버 행동·금액·권한·원장과 동시 r26/r27 변경은 보존한다. 알림 소비·기본값 영속화·실제 요금표 합의 연결은 이번 표시 보완의 완료 주장이 아니다.
+- [재조사 r2](Planning/시스템/PLAN-SYSTEM-ROLE-BUSINESS-OPTIONS/role-options.review.r2.md)와 승인 r1 본문/hash는 보존한다. 신규 회귀 9개·Fast 집중 187개·Task 8,397개 통과(Mongo 2개 건너뜀), 전체 솔루션 오류 0·경고 111, preview 오류/경고 0. 실제 공통 Razor 320/390px 12개 장면과 입력/확인/복귀/미리보기 저장 차단 6개 흐름을 확인하고 [변경 기록](../Changes/2026-10-07-role-option-scope-r3.md)에 반환했다. 화면은 합성 예시이며 확정 시안이 아니다. 전용 preview는 종료했고 실제 업무 DB/API·APK 배포/휴대폰·실금전·Unity·운영·commit/push는 실행하지 않았다.
+
+## 로컬 검증 완료: 음식 배달 네 역할과 USB 시험 APK r27 (2026-10-07)
+
+- [페이지 책임](../ProjectOverview/page-docs/food-mobile-four-role-r27.md), [변경·검증](../Changes/2026-10-07-food-mobile-four-role-r27.md)을 따른다. 주문 작성 → 음식점 수락 → 서버 제안·기사 직접 수락 → 조리·픽업·전달 → 수령 확인을 격리 MySQL/Mongo와 실제 공통 화면으로 확인한다.
+- r27 완료 당시 범위는 로컬 검증까지였다. 해당 기록에서 애저·실제 휴대폰·GPS/외부 경로·결제/입금·commit/push는 제외하며, 이후 사용자 승인으로 진행한 실제 휴대폰·네이버 지도는 위 후속 기록과 구별한다. 같은 checkout의 다른 r26 배송비 변경은 보존한다. 최종 검증 현황은 변경 기록을 참조한다.
+- 마지막 표시 보완을 포함한 동결 소스의 Task 8,397개 통과·Mongo 환경 시험 2개 건너뜀, 공통 UI 42화면·14검사와 같은 새 주문의 SQL/Mongo 상태·식별자 검사 11개 통과. Mongo 요약 단계 일치 검증은 별도 한계로 유지한다.
+- Debug 0.1.27/27 네 APK의 서명·소스 전후·사본 해시와 에뮬레이터 설치 바이트를 확인했다. 실제 로그인·역할 첫 화면 4개 성공, 원래 AVD/registry 해시 불변을 확인한 뒤 에뮬레이터를 종료했다. 네이티브 전체 업무·실폰·Azure·지도/GPS·실지급의 증거로 확대하지 않는다.
+
+## 음식 배송비 선택 옵션과 부담 확인 r26 구현·로컬 검증 완료 (2026-10-07)
+
+- [승인 계획](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/delivery-cost-sharing.implementation.r26.md), [페이지 책임](../ProjectOverview/page-docs/delivery-cost-sharing-r26.md), [변경 기록](../Changes/2026-10-07-delivery-cost-sharing-r26.md)을 따른다. 음식점의 주문자 전액/정액/비율/음식점 전액과 주문자의 잔여 부담 상한을 연결한다.
+- 원 주문 정책 전체 동결·공통 누적 배분·전액 한도 초과 보류·구형 정액과 진행 주문 보존을 구현했다. 집중 249·Fast 190·Task 8,388 통과(Task 실제 Mongo 2개 건너뜀), 공통 UI 새 40·기존 26장면과 소비 앱 포함 빌드를 확인했다. 기본 OFF Simulation이며 실제 업체·운영 DB·청구/지급·단말/Azure·외부 공유·commit/push는 별도다. 로컬 기준선은 `artifacts/local/fulfillment-cost-sharing-r26/`다.
+
+## 현재 구현: 생활·음식 배달 자동 수행처 선정 r25 (2026-10-07)
+
+- [승인 계획](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/fulfillment-routing.implementation.r25.md), [페이지 책임](../ProjectOverview/page-docs/fulfillment-routing-r25.md), [변경 기록](../Changes/2026-10-07-fulfillment-routing-r25.md)을 따른다. 기존 생활 배송 비교를 음식 배달로 확장하고 플랫폼 자동 선정·조건 내 접수/재선정을 연결한다.
+- 음식점 정액 지원은 주문 전체에서 한 번만 적용하며 주문자 잔여 상한·시간·동의·유효 기사 확보와 조리 순서를 검증한다. Unknown/취소 미확정·비용 미확인은 새 수행을 막는다. 구형 경로와 다른 dirty 변경을 보존한다.
+- `Implemented / LocalSimulationValidated / SimulationOnly / RealProviderPending`. 집중 138개·Fast 344개·Task 8,234개 통과(환경 조건 Mongo 2개 건너뜀), 전체 3.5 제품/소비 앱 빌드와 실제 공통 Razor 26개 모바일 장면을 확인했다. SQLite 서비스·대역 인증/경로·공용 MySQL 미적용을 구분하며 실제 업체·운영 DB·결제/지급·단말/Azure·커밋/푸시는 별도다. 원시 근거는 `artifacts/local/fulfillment-routing-r25/`다.
+
+## 현재 구현: 생활 배송 수행 방식 선택 r24 (2026-10-07)
+
+- [승인 계획](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/fulfillment.implementation.r24.md), [페이지 책임](../ProjectOverview/page-docs/neighborhood-fulfillment-r24.md), [변경·검증](../Changes/2026-10-07-neighborhood-fulfillment-r24.md)을 따른다. 우리 앱 접수의 자체 배차 또는 모의 외부 위탁 선택을 기존 작성·상세·사유 지도에 연결한다.
+- 후보의 비용·시간 조건을 비교하고 사용자가 확정한다. 외부 선택은 자체 큐를 생성하지 않으며 접수·취소 결과 미확정에서 다른 수행을 자동 접수하지 않는다. 기본 비활성화된 Simulation 기능이며 실제 플랫폼/결제·Unity·커밋/푸시·배포는 이번 범위에서 제외한다.
+- `Implemented / LocalSimulationValidated / RealProviderPending`. 최종 Fast 536개·Task 8,162개 통과(환경 조건 Mongo 2개 건너뜀), 전체 3.5 소비 앱 빌드 오류 0. SQLite 영속·동시 확정/재시작·실제 Mongo builder→SQL projector·loopback HTTP와 실제 공통 UI 22개 모바일 흐름을 확인했다. 실제 MySQL migration/동시성·업체 API·운영 로그인·휴대폰·Azure·지급은 별도다. 새 서버 연결 전에 원 의뢰 두 열과 세 수행 테이블의 migration이 필요하며 기본 플래그 꺼짐도 스키마 요건을 생략하지 않는다.
+
 ## 현재 보완: 생활 교류 약속과 선택 배송 r23 (2026-10-07)
 
 - [승인 계획](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/life-exchange-facilitation.implementation.r23.md), [페이지 책임](../ProjectOverview/page-docs/neighborhood-collaboration-r1.md#생활-교류-약속과-선택-배송-보완-r23), [변경·검증·화면](../Changes/2026-10-07-life-exchange-facilitation-r23.md)을 따른다. 기존 생활 지도의 선택 패널과 독립 작성 화면을 재사용하고 약속 상세의 상태/행동·조건·전달·금액을 분리했다.

@@ -10,9 +10,19 @@ Ssalddel은 출처가 있는 정보와 커뮤니티 대화가 명시적 동의�
 
 사업 방향은 **일상의 공간과 사람의 능력을 자유롭게 제공하고 필요한 것을 서로 찾아 교류하는 장**이다. 고정 사업 역할·전용 시설·플랫폼 결제나 주소 등록을 첫 이용의 전제로 삼지 않는다. [생활 교류 최소판 r6](../AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/exchange-mvp.r6.md)의 제공/필요 글·공개 문의·본인 삭제를 기존 게시글 API/DB로 구현했다. [생활 배송 r7](../AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/server-dispatch.r7.md)은 공개 글과 분리된 본인 의뢰를 서버 견적·기존 화물 원장/큐에 연결하고 선정 기사 정보 제공 동의/철회를 추가했다. 배송 접수·기사 수락·직접 수금 예정과 실수금을 구별한다. 대금·교환·나눔은 당사자 협의이며 게시/댓글을 실제 거래 인증이나 신뢰 점수로 취급하지 않는다. 공간·재고·구매의 [r4 확장](../AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/residential-goods-quick-delivery.design.r4.md)은 후속 후보로 보존하며, 기존 음식·화물 업무의 분리와 운영/지급 경계는 유지한다. 로컬 검증과 실제 자동 배차·외부 공개 운영은 구별한다.
 
+[생활 배송 수행 방식 선택 r24](../AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/fulfillment.implementation.r24.md)는 우리 앱의 접수에서 자체 배차와 모의 위탁의 비용·시간을 비교하고 사용자가 확정하는 후속 구현이다. 견적·선택·실행을 영속 기록하고 결과가 불명확하면 같은 실행을 확인한다. 기본 비활성화된 Simulation 기능이며 실제 플랫폼 계약·접수·결제·운영 준비와 구분한다.
+
+[생활 배송·음식 배달 자동 수행처 선정 r25](../AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/fulfillment-routing.implementation.r25.md)는 사전 동의한 비용·시간·정보 제공 조건 안에서 플랫폼이 수행처를 선정한다. 음식점 정액 지원은 주문 전체에 한 번 적용하며 외부 접수와 기사 배정·조리 시작을 구분한다. `FulfillmentRouting:Enabled` 기본값 꺼짐과 Simulation 전용 경계를 유지한다. `Implemented / LocalSimulationValidated / RealProviderPending`이며 집중 138·Fast 344·Task 8,234 통과 및 모바일 26장면의 실제 범위는 [변경 기록](../Changes/2026-10-07-fulfillment-routing-r25.md)을 따른다. 실제 업체 접수·공용 DB 적용·청구·지급 완료를 의미하지 않는다.
+
 중개 수수료보다 참여자의 자율적 교류와 생활 개선을 우선하는 최신 방향과 선택적 후원·광고의 미정 범위는 [현재 결정](../AI/DECISIONS.md#2026-10-05-수수료-중개보다-참여자의-교류와-생활-개선을-우선)에 연결한다.
 
+[음식 배송비 선택 옵션 r26](../AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/delivery-cost-sharing.implementation.r26.md)은 정액 하나에서 음식점별 네 부담 방식으로 확장하는 후속 구현이다. 양측 조건·원 주문 정책 동결·전액 한도 초과 보류와 기존 정액/진행 주문 보존을 따른다. 집중 249·Fast 190·Task 8,388 통과(Task 실제 Mongo 2개 건너뜀), 공통 UI 새 40·기존 26장면과 소비 앱 포함 빌드를 확인했다. `LocalSimulationValidated / RealProviderPending`이며 실제 업체·지원금 출금·청구·입금 완료는 아니다.
+
 Unity는 독립 농장 게임도 아니고 기존 Web 페이지를 3D로 복제한 클라이언트도 아니다.
+
+[생활 앱 외부 배송 가정 연결 r28](../AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/assumed-providers.implementation.r28.md)은 카카오 문서 기반 모의·배민/쿠팡이츠 API 존재 가정을 기존 수행처 경로로 검증했다. 선택 크기와 서버 활성 목록, 원천/동의/현재 시도의 모의 전달 증거를 양측 완료 확인에 연결하며 내부 기사·큐·실업체 요금·지급을 만들지 않는다. 별도 opt-in 기본 OFF·Simulation 생활 배송 한정이다. 신규 73·Fast 701·Task 8,470 통과와 환경 조건 2건 건너뜀, 공통 UI 22장면의 범위는 [변경 기록](../Changes/2026-10-07-assumed-fulfillment-r28.md)을 따른다. 실제 업체·공용 DB·현재 인증 HTTP/실DB 종단·APK·지급·운영 증거가 아니다.
+
+[생활 배송 간편 작성·엑셀 입력 r29](../AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/simple-input.implementation.r29.md)는 물품·장소·시간·확인과 고정 `.xlsx`의 한 행 검토/보완을 기존 견적·동의·접수에 연결한다. 파일은 인증/동의 뒤 메모리로만 파싱하며 업로드/선택은 접수·배차가 아니다. 누락값은 추정하지 않고 행 ID 없는 중복 보호는 작성 세션 안으로 한정한다. `Implemented / LocalInputValidated / OperationalE2ePending / VoiceDeferred`이며 신규 70·Fast 453·Task 8,540 통과(Mongo 2개 건너뜀)와 공통 UI 36장면의 범위는 [검증·샘플](../Changes/2026-10-07-neighborhood-simple-input-r29.md)을 따른다. 음성·인증 운영 HTTP/실DB·APK/휴대폰·실제 업체·실금전·운영 공개는 별도다.
 
 ## 2. 제품 릴리스와 Unity 개발 순서
 

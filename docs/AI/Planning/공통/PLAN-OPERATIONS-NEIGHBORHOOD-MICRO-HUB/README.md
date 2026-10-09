@@ -1,4 +1,42 @@
-# [기획 · 생활 교류·생활권 물류 · PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB · r23]
+# [기획 · 생활 교류·생활권 물류 · PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB · r32]
+
+## 현재 구현: 일반 회원 생활 배송 참여 r39
+
+[일반 회원 참여 r39](member-delivery.implementation.r39.md)는 일반 계정의 선택 참여·비공개 고정 활동 위치·주변 동시 제안·건별 수행 권한을 기존 생활 의뢰와 연결하는 승인된 최소판이다. 플랫폼/배차 수수료 0원과 기존 배송 보수를 구분하고 사진 업로드·원자적 수락·일반 앱 알림 복구를 구현한다. [변경·검증](../../../../Changes/2026-10-09-neighborhood-member-delivery-r43.md)에서 이번 로컬 실행·APK와 외부 구성 대기 상태를 확인한다.
+
+## 현재 구현: 투명한 생활 거래 정산 r32
+
+[승인 r32](neighborhood-settlement.implementation.r32.md)의 음식/보관 상품/운송 구분과 약정→작업비→지급 신고→수령 확인을 서버와 보호 원장에 연결한다. [서버·DB 책임](../../../../ProjectOverview/page-docs/neighborhood-settlement-r38.md)·[검증 반환](../../../../Changes/2026-10-08-neighborhood-settlement-r38.md). 앱은 보류하며 기존 음식/화물 지급 원장은 참조만 한다. 서버·원장 구현과 Fast 48개·Task 8,986개 로컬 시험을 완료했다(MongoDB 환경 시험 2개 건너뜀). 실제 금전·공용 DB·휴대폰·Azure는 이번 범위가 아니다.
+
+## 현재 구현: 보관 합의·사진 완료 r31
+
+[승인 기준 r31](storage-agreement-photo-proof.implementation.r31.md)에 따라 공간 제공자와 실제 물품 소유자의 같은 판본 동의, 실제 입고·피킹·전달·반품 촬영/전송과 업무 완료를 모바일·서버에 연결한다. 정책 본문은 r31을 따르고 [페이지·코드·DB](../../../../ProjectOverview/page-docs/distributed-storage-photo-proof-r37.md), [검증 반환](../../../../Changes/2026-10-08-distributed-storage-photo-proof-r37.md)에 실제 결과를 기록한다. 모바일·서버 구현과 로컬 검증을 완료했다. 최종 Fast 313개·Task 8,938개가 통과했고 작은 화면 31종·두 폭 62조합을 확인했다. 후속 사용자 요청으로 APK 추가 제작은 보류했고 네 앱 최종 manifest 완료는 미확인이다. 휴대폰·Azure·공용 DB 적용은 별도다. default OFF·Simulation과 r30의 기존 물류 관계를 보존한다.
+
+## 현재 구현: 생활 공간 분산 입고·기사 피킹·다거점 배송 r30
+
+[승인 구현 r30](distributed-warehouse.implementation.r30.md)에 따라 처음부터 다거점의 공간 동의·분할 입고·소유자별 재고 예약·기사 직접 피킹·시간대 배송 묶음을 모바일 앱과 서버에 연결한다. 피킹과 전달을 섞은 유효 순서를 비교하고, 기존 화물 원장·요금·배차를 소비한다. [페이지·코드·원장 책임](../../../../ProjectOverview/page-docs/distributed-fulfillment-r36.md)과 [변경·검증](../../../../Changes/2026-10-08-distributed-fulfillment-r36.md)에 실제 결과를 연결한다. 모바일·서버 구현과 로컬 DB/API·화면 검증, 네 역할 APK 준비를 완료했다. 기본 OFF·Simulation 전용이며 휴대폰·Azure·실운영 검증은 별도다. 사용자 최신 정정에 따라 Unity 변경은 제외하고 기존 주소 자료만 읽기 후보로 재사용한다. 아래 r29와 이전 승인·검증 이력은 보존한다.
+
+## 최신 구현: 간편 작성·엑셀 입력 r29와 후속 음성
+
+[기획 제안 r29](simple-input.design.r29.md)의 생활 배송 간편 작성·엑셀 우선 순서를 사용자가 승인했다. [승인 구현 r29](simple-input.implementation.r29.md)·[수용/반환](development-work-order.r29.md)·[페이지 책임](../../../../ProjectOverview/page-docs/neighborhood-simple-input-r29.md)·[실제 검증과 샘플](../../../../Changes/2026-10-07-neighborhood-simple-input-r29.md)을 연결한다. 물품→장소→시간→확인, 고정 `.xlsx`의 한 행 선택·필수 보완과 메모리 전용 검토를 기존 견적/동의/접수로 연결했다. 업로드는 배송·결제가 아니며 누락 개인정보·수량·중량·시간을 임의 확정하지 않는다.
+
+상태는 `Implemented / LocalInputValidated / OperationalE2ePending / VoiceDeferred`; 신규 70·Fast 453·Task 8,540 통과와 환경 조건 Mongo 2개 건너뜀, 실제 공통 UI 36장면·6흐름은 로컬 입력 증거다. 음성·실제 인증 운영 HTTP/DB·APK/휴대폰·외부 업체·지급·Unity·배포는 이번에 검증하지 않았다. 아래 r28의 승인/hash·구현과 검증 증거는 유지한다.
+
+## 이전 구현: 생활 앱 외부 배송 가정 연결 r28
+
+[승인 r28](assumed-providers.implementation.r28.md)과 [수용 작업지시서](development-work-order.r28.md)에 따라 기존 수행처 경로에 카카오 문서 기반 모의·배민/쿠팡이츠 API 가정 모의를 연결했다. 선택 포장 크기·서버 활성 목록·현재 시도의 전달 증거와 양측 완료 확인을 결속하며 내부 기사/큐·실제 요금·지급은 만들지 않는다. 별도 opt-in 기본 OFF·Simulation 생활 배송 한정이다. [페이지 책임](../../../../ProjectOverview/page-docs/neighborhood-fulfillment-r28.md)과 [변경·검증·샘플](../../../../Changes/2026-10-07-assumed-fulfillment-r28.md)에 신규 73·Fast 701·Task 8,470 통과, 환경 조건 2건 건너뜀과 공통 UI 22장면을 기록한다. `Implemented / LocalSimulationValidated / SimulationOnly / RealProviderPending`; 실제 업체 API/제휴·공용 DB schema 적용·인증 HTTP/실DB 종단·APK·지급·배포는 별도다. 아래 음식 옵션·자동 수행·직접 전달 결정은 보존한다.
+
+## 최신 로컬 구현: 음식 배송비 선택 옵션과 부담 확인 r26
+
+[음식 배송비 선택 r26](delivery-cost-sharing.implementation.r26.md)은 음식점의 주문자 전액/정액/비율/음식점 전액과 주문자의 잔여 부담 상한을 옵션으로 설정한다. 전액 한도 초과는 자동 고객 전가 없이 보류하며 최초 정책 전체를 원 주문에 동결한다. 기존 정액 데이터·진행 주문·생활/화물 비용 구조는 유지한다. [페이지 책임](../../../../ProjectOverview/page-docs/delivery-cost-sharing-r26.md), [변경·검증](../../../../Changes/2026-10-07-delivery-cost-sharing-r26.md)에 최종 근거를 연결한다. `Implemented / LocalSimulationValidated / SimulationOnly / RealProviderPending`이며 집중 249·Fast 190·Task 8,388 통과 및 공통 UI 66장면을 확인했다. 실제 Mongo 연동 시험 2개는 환경 미설정으로 건너뛰었으며 실제 업체·청구·지급과 구별한다.
+
+## 현재 구현: 생활·음식 배달 자동 수행처 선정 r25
+
+[자동 수행 r25](fulfillment-routing.implementation.r25.md)는 생활·음식 모두 플랫폼이 사전 조건 안에서 수행처를 선정·접수하도록 확장한 구현이다. 음식점 정액 지원과 주문자 잔여 부담, 유효 기사 배정 뒤 조리 시작을 연결하고 원 요청당 활성 수행 하나와 불명 결과 재확인을 유지한다. 기본 OFF Simulation이며 실제 업체·청구/지급과 구별한다. 현재 `Implemented / LocalSimulationValidated / RealProviderPending`; [페이지 책임](../../../../ProjectOverview/page-docs/fulfillment-routing-r25.md)과 [변경 기록](../../../../Changes/2026-10-07-fulfillment-routing-r25.md)에 집중 138·Fast 344·Task 8,234 통과와 모바일 26장면 근거를 연결한다. 아래 r24 구현과 구형 요청의 호환은 보존한다.
+
+## 현재 구현: 생활 배송 수행 방식 선택 r24
+
+[수행 방식 선택 r24](fulfillment.implementation.r24.md)은 사용자가 승인한 자체 배차·모의 외부 위탁 비교와 확정이다. 비용·시간 조건을 비교해 사용자가 하나의 수행을 선택하고, 영속 실행 기록으로 응답 유실·취소 확인·중복 접수를 보호한다. 기존 자체 배차 모드·원장·권한·사유 지도는 유지한다. 기본 비활성화된 Simulation 공급자 두 개만 다루며 실제 플랫폼·결제·Unity 연결은 이번 범위에서 제외한다. [페이지 책임](../../../../ProjectOverview/page-docs/neighborhood-fulfillment-r24.md)과 [변경·검증](../../../../Changes/2026-10-07-neighborhood-fulfillment-r24.md)을 따른다. 현재 `Implemented / LocalSimulationValidated / RealProviderPending`이며 실제 업체 연결·MySQL schema 적용은 별도다.
 
 ## 현재 보완: 생활 교류 약속과 선택 배송 r23
 

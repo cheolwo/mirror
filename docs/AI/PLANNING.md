@@ -1,8 +1,72 @@
 # Mirror 기획 목차
 
+## 일반 회원의 근처 생활 배송 참여 (2026-10-09)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r39](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/member-delivery.implementation.r39.md): `Implemented / LocalValidated / DeviceAndOperationalDeferred`. 일반 회원·기존 요금·등록 활동 위치·동시 제안을 사용자 선택으로 확정했다. 본인 수락 건만 수행하고 사진 업로드·상태 전이·앱 알림을 연결했다. 사용자 선택에 따라 로컬 검증·APK까지 완료했다. [실행 결과](../Changes/2026-10-09-neighborhood-member-delivery-r43.md).
+
+## 기사 기준 위치·권역 복귀 우대 구현 (2026-10-08)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r38](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/driver-return-area.implementation.r38.md): `Implemented / LocalValidated / DeviceAndOperationalDeferred`. 승인된 r37 기준점·반경·전체 수행 후 복귀 개선을 기사 비공개 설정과 실제 음식/화물 추천에 연결한다. 음식/화물 공동 여력 r36은 별도 후속이며 확인 불가 시 가점을 보류한다. [변경·검증 기록](../Changes/2026-10-08-driver-return-area-r42.md).
+
+## 기사 기준 위치와 권역 복귀를 배려하는 배차 (2026-10-08)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r37](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/driver-return-area.design.r37.md): `AcceptedDirection / ProposedDesign / ImplementationPending`. 기존 오늘/기본 복귀지·화물 개인/조율 점수를 대조하고 음식의 실제 큐 미연결·입력 오류·선제 후보 제한을 확인했다. 기사 선택 기준점과 반경(7km는 예), 전체 수행 후 복귀 이익, 단일 가점 반영을 제안한다. r36 다건 수행의 후속 설계이며 제품 정책은 아직 바꾸지 않는다.
+
+## 기사 자율 다건 수행과 공동 적재·일정 (2026-10-08)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r36](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/driver-flexible-multi-work.design.r36.md): `AcceptedDirection / ProposedDesign / ImplementationPending`. 기사 개인의 희망 건수·배달통 여력으로 음식/생활 물품 제안을 선택하고, 기존 독립 원장을 참조해 같은 기사·차량의 적재량/시간을 공동 검사하는 후속 설계다. 기존 음식 최대 3건·화물 추가 수락·분산 순회의 차이를 소스에서 확인했다. 제품 코드·배차 정책은 아직 바꾸지 않는다.
+
+## 원주문 선택·관계 동시 변경 보호 (2026-10-08)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r35](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/root-order-selection-concurrency.implementation.r35.md): `Implemented / LocalValidated / DeviceAndOperationalDeferred`. r40에서 남은 원주문 선택 양식과 하위원장 진행/관계 변경의 저장 단계 동시 보호를 구현했다. 최종 Fast 308개·Task 9,147개 통과, 격리 Mongo 경합과 제품 예시 화면 확인 완료. [화면 책임](../ProjectOverview/page-docs/distributed-fulfillment-r36.md)·[검증 반환](../Changes/2026-10-08-root-order-selection-concurrency-r41.md).
+
+## 주문 한 건의 역할·조건·현재 업무 (2026-10-08)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r34](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/order-ledger-role-refactor.implementation.r34.md): r40에서 분산 주문의 원주문 연결과 조건 잠금/재동의, 현재 업무 안내·기존 문제 접수를 보완했다. 당시 Fast 323개·Task 9,078개 통과, 환경 의존 MongoDB 시험 2개 미실행이다. 당시 남은 원주문 선택 UI·동시 보호는 r35/r41에서 구현·로컬 검증했으며 실제 운영은 별도다. [주문 상세 책임](../ProjectOverview/page-docs/OrdererApp/OrdererApp-P05/README.md)·[검증 반환](../Changes/2026-10-08-order-ledger-role-refactor-r40.md)에 판본별 근거를 보존한다.
+
+## 건별 프리랜서 계약 기본·꺼진 미성년 정책 준비 (2026-10-08)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r33](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/task-contract-policy-preparation.implementation.r33.md): `Implemented / LocalValidated / ServerPolicyOnly / MinorParticipationDisabled`. 사용자의 서버 옵션 준비 승인을 수용했다. 새 의뢰의 계약 준비 기본값과 비활성 후보를 추가하며 실제 계약·참여 허가를 만들지 않는다. 전용22개·Fast101개·Task9,008개 통과, MongoDB 환경 시험2개 미실행. [서버·DB 책임](../ProjectOverview/page-docs/neighborhood-task-contract-policy-r39.md)·[검증 반환](../Changes/2026-10-08-neighborhood-task-contract-policy-r39.md).
+
+## 생활 거래의 투명한 정산 (2026-10-08)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r32](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/neighborhood-settlement.implementation.r32.md): `Implemented / LocalValidated / ServerAndLedgerOnly / AppAndOperationalDeferred`. 음식·보관 상품·운송의 약정·실제 작업비·지급 신고·수령 확인을 구현하고 Fast 48개·Task 8,986개를 통과했다(MongoDB 환경 시험 2개 건너뜀). [서버·DB 책임](../ProjectOverview/page-docs/neighborhood-settlement-r38.md)·[검증 반환](../Changes/2026-10-08-neighborhood-settlement-r38.md). 앱은 보류하고 기존 r31 업무 원장을 보존한다.
+
+## 분산 보관 합의·사진 완료 (2026-10-08)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r31](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/storage-agreement-photo-proof.implementation.r31.md): `Implemented / LocalValidated / ApkDeferred / DeviceAndOperationalPending`. 사용자 승인에 따라 공간 제공자↔실제 물품 소유자 합의와 입고/피킹/전달/반품 사진 완료를 모바일·서버에 구현하고 로컬 검증했다. [페이지·코드·DB](../ProjectOverview/page-docs/distributed-storage-photo-proof-r37.md), [검증 반환](../Changes/2026-10-08-distributed-storage-photo-proof-r37.md). r30과 기존 Unity·영상 작업은 보존한다.
+
+## 생활 공간의 분산 입고·기사 피킹·다거점 배송 (2026-10-08)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r30](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/distributed-warehouse.implementation.r30.md): `Implemented / LocalValidated / ApkPrepared / DeviceAndOperationalPending`. 다거점 공간 동의·소유자/판매자별 재고·시간대 주문 묶음·기사 직접 피킹을 기존 화물 배차와 연결한다. 피킹/전달 혼합 순서와 총 예상 소요 시간을 비교하며 최신 정정에 따라 모바일·서버만 구현한다. [페이지 책임](../ProjectOverview/page-docs/distributed-fulfillment-r36.md)과 [변경·검증](../Changes/2026-10-08-distributed-fulfillment-r36.md)에 결과를 결속한다. 기존 r29·Unity 작업은 보존한다.
+
+## 사전 합의 요금표와 음식 역할 알림 연결 (2026-10-08)
+
+- [PLAN-SYSTEM-ROLE-BUSINESS-OPTIONS r4](Planning/시스템/PLAN-SYSTEM-ROLE-BUSINESS-OPTIONS/agreements-alerts.implementation.r4.md): `Implemented / LocalValidated / ApkPrepared / DeviceAndBackgroundPushPending`. 우선순위3·4의 현재 사용자 승인을 수용했다. 요금표 제안/수락과 실제 업무 선택을 기존 산정·배차·정산 근거에 연결하고, 음식 기사/음식점의 알림 메시지·기계음과 독립 설정 화면을 구현했다. [페이지 책임](../ProjectOverview/page-docs/agreed-rates-notification-settings-r1.md)과 [Fast217·Task8,708 및 APK 검증 결과](../Changes/2026-10-08-agreed-rates-native-alerts-r35.md)를 따른다. r1/r3·r34와 다른 작업은 보존하며 기존 DB 적용·실기기 소리·백그라운드 푸시·실금전·Azure는 별도다.
+
+## 생활 배송 간편 작성·엑셀 입력과 후속 음성 (2026-10-07)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB 승인 r29](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/simple-input.implementation.r29.md): `Implemented / LocalInputValidated / OperationalE2ePending / VoiceDeferred`. XML이 아니라 엑셀로 정정한 간편 입력의 첫 slice를 승인·구현했다. 직접 작성·선택행을 같은 초안으로 가져와 부족 정보를 보완하고 기존 견적·동의·접수로 합류한다. [수용/반환](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/development-work-order.r29.md)과 [검증·샘플](../Changes/2026-10-07-neighborhood-simple-input-r29.md)을 연결하며 r28 승인/hash와 이전 증거를 보존한다. 음성·실제 인증 HTTP/DB·단말은 후속이다.
+
+## 생활 앱 외부 배송 가정 연결 (2026-10-07)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r28](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/assumed-providers.implementation.r28.md): `Implemented / LocalSimulationValidated / SimulationOnly / RealProviderPending`. 기존 수행처의 서버 활성 목록·선택 포장 크기·현재 모의 전달 증거를 양측 완료 확인에 연결한다. 별도 opt-in 기본 OFF·생활 배송 한정이며 실제 업체 API/제휴·요금·공용 DB 적용·지급은 확인하지 않았다. 승인 hash·[수용/반환](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/development-work-order.r28.md)과 [실제 검증](../Changes/2026-10-07-assumed-fulfillment-r28.md)을 구별한다.
+
+## 역할별 선택 옵션과 사전 합의 요금표 (2026-10-07)
+
+- [PLAN-SYSTEM-ROLE-BUSINESS-OPTIONS r3](Planning/시스템/PLAN-SYSTEM-ROLE-BUSINESS-OPTIONS/horizontal-hardening.implementation.r3.md): `Approved / FirstSliceImplemented / LocalPreviewValidated / LocalOnly`. 전반적 수평 보완 후 한 업무의 수직 검증 순서를 확정하고 기존 공통 역할 화면의 옵션 적용 범위 첫 보완을 구현·검증했다. [r2 재조사](Planning/시스템/PLAN-SYSTEM-ROLE-BUSINESS-OPTIONS/role-options.review.r2.md)·[승인 r1](Planning/시스템/PLAN-SYSTEM-ROLE-BUSINESS-OPTIONS/README.md)·승인 r3 hash를 보존하며 신규 옵션 전부의 구현·금액 정책 활성화로 확대하지 않는다. [수용 작업지시서](Planning/시스템/PLAN-SYSTEM-ROLE-BUSINESS-OPTIONS/development-work-order.r3.md)와 [검증 반환](../Changes/2026-10-07-role-option-scope-r3.md)을 따른다.
+
+## 음식 배송비 선택 옵션과 부담 확인 (2026-10-07)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r26](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/delivery-cost-sharing.implementation.r26.md): `Implemented / LocalSimulationValidated / SimulationOnly / RealProviderPending`. 음식점별 네 부담 방식과 고객 상한을 설정하고 정책 전체를 원 주문에 동결한다. 기존 정액/생활 배송은 보존하며 실제 검증 결과는 [변경 기록](../Changes/2026-10-07-delivery-cost-sharing-r26.md)에 연결한다.
+
+## 생활·음식 배달 자동 수행처 선정 (2026-10-07)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r25](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/fulfillment-routing.implementation.r25.md): `Implemented / LocalSimulationValidated / SimulationOnly / RealProviderPending`. 생활·음식 모두 사전 비용·시간·동의 조건 안에서 플랫폼이 수행처를 선정·접수한다. 음식점 정액 지원과 주문자 잔여 부담, 기사 배정 뒤 조리 시작·단일 수행·응답 유실/취소 확인을 유지한다. 집중 138·Fast 344·Task 8,234 통과와 모바일 26장면, 실제 업체/운영 DB 미연결 경계는 [변경 기록](../Changes/2026-10-07-fulfillment-routing-r25.md)을 따른다.
+
 ## 생활 물품 전달·유연한 배차 (2026-10-06)
 
-- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r22](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/flexible-delivery.implementation.r22.md): `Approved / Implemented / ValidatedLocal / FieldRuntimePending`. 직접 수령/전달과 건별 자동 추천/공개 콜/병행, 대기 변경·동의 철회·부분 실패 복구. 기존 r1~r21의 지역·역할 앱·운송 권위를 유지하며 실제 격리 MySQL/Mongo/공통 UI와 현장 운행을 구분한다.
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r24](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/fulfillment.implementation.r24.md): `Implemented / LocalSimulationValidated / RealProviderPending`. 우리 앱 생활 배송의 자체 배차·모의 위탁 후보 비교와 사용자 확정, 영속 중복 방지·취소/결과 확인. 기존 r22 전달/배차·r23 약속 화면과 운영 경계를 유지하며 실제 플랫폼·지급·현장 운영은 구분한다.
 
 
 ## 역할 선택 홈·같은 앱의 역할별 지도 (2026-10-05)
@@ -285,7 +349,7 @@
 | 기획 ID | 현재 문서 | 상태 | 역할 |
 | --- | --- | --- | --- |
 | `PLAN-SYSTEM-GEOSPATIAL-TILE-SEMANTIC-ZOOM` | [공간 타일 기반 단계적 의미 확대 r2](Planning/시스템/PLAN-SYSTEM-GEOSPATIAL-TILE-SEMANTIC-ZOOM/README.md) · [행정동·역세권·사가정 디오라마 전환 r2](Planning/시스템/PLAN-SYSTEM-GEOSPATIAL-TILE-SEMANTIC-ZOOM/admin-station-diorama-transition.implementation.r2.md) | `Approved / ExistingSemanticZoomReused / ExistingStreamingLifecycleReused / AdminStationTransitionImplemented / SagajeongPreparedChildPlayModeVerified / CurrentAdministrativeBoundaryBlocked / LogicalTileStreamingNotImplemented` | 기존 한반도 거점 화면에서 권역·면목제3·8동·사가정역을 거쳐 준비된 사가정 1km 디오라마를 열고 역세권 문맥으로 복귀한다. 행정동은 과거 경계 후보임을 표시하며 현재 경계·다른 역·논리 타일 지연 적재는 열지 않았다. |
-| `PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB` | [생활 교류 약속·선택 배송 r23](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md) | `r23 Implemented / ValidatedLocal / FieldRuntimePending` | r9 협업·보관과 r22 전달·배차를 재사용. 현재 상태/다음 행동 우선, 직접 전달의 기사 비용 제외, 미정/0원·추천/수락·완료/지급 구분과 원 선택 복구. r22 실제 서버/DB 이력은 보존하고 이번 읽기 전용 공통 UI 검증과 구분. 현장 운행·휴대폰·Azure·입금은 별도. |
+| `PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB` | [간편 작성·엑셀 입력 r29와 후속 음성](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md) | `r29 Implemented / LocalInputValidated / OperationalE2ePending / VoiceDeferred; r28 LocalSimulationValidated / RealProviderPending` | r29는 고정 엑셀의 선택행·필수 보완·메모리 입력을 기존 견적/동의/접수에 연결한다. 신규 70·Fast 453·Task 8,540 통과(Mongo 2건 건너뜀), 실제 공통 UI 36장면은 로컬 입력 증거다. r28 서버 후보·모의 수행 경계와 이전 증거는 보존하며 실제 운영/단말·음성으로 확대하지 않는다. |
 | `PLAN-OPERATIONS-ABNORMAL-WORK-RECOVERY` | [비정상 업무 처리·회복 r5](Planning/공통/PLAN-OPERATIONS-ABNORMAL-WORK-RECOVERY/README.md) | `Approved / FirstPartialDamageSliceImplemented / OperationalActivationDeferred / FifthDecisionAsked` | 정상 8개 인수·파손 2개 영향분 보류, 운영자 revision 결정과 보험 적용 가능성 검토 상태를 구현했다. 다음 문답은 수령인 부재의 재연락·대기·운영자 선택이다. |
 | `PLAN-OPERATIONS-ORDER-CENTERED-WORK-NETWORK` | [주문 중심 운영체제 업무망 r6](Planning/공통/PLAN-OPERATIONS-ORDER-CENTERED-WORK-NETWORK/README.md) | `Draft / Priorities1To5FirstSliceImplemented / Priority6Partial / RootAuthorityPending / ImplementationInProgress` | 개인 주문자는 본인, 공동주문은 대표를 기본 화주로 둔다. 운송 건의 판본화된 주·보조 담당자 권한과 화주→화물→화주 읽기 전용 업무망을 구현했으며, 원천 공동주문·비용 귀속 결속은 아직 만들지 않았다. |
 | `PLAN-OPERATIONS-LOGISTICS-OS` | [화물운송 OS와 음식배달 OS r12](Planning/공통/PLAN-OPERATIONS-LOGISTICS-OS/README.md) | `Draft / FoodSalesRoleViewConfirmed / BackendFoundationImplemented / DisposableMySqlValidated / HandoffOutboxProcessorImplemented / ShipperToCargoHandoffImplemented / CargoCompletionToShipperAcceptanceImplemented / AbnormalTransportIncidentHoldImplemented / WarehouseOutboundToPickingPackingImplemented / WarehouseOutboundToCargoHandoffImplemented / CompletionProjectionCoreImplemented / OtherConcreteWorkflowAdoptionPending / OperationalActivationDeferred` | 음식 판매 OS는 별도 서버 권위를 즉시 만들지 않고 기존 음식 주문·음식점 응답·조리·픽업 준비를 묶은 역할 화면으로 둔다. 기존 인계·완료 투영 기반은 유지한다. |

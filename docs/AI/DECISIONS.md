@@ -1,5 +1,29 @@
 # Ssalddel AI Shared Decisions
 
+## 2026-10-09 일반 회원의 선택 배송 참여와 수수료 없는 제안
+
+상태: `Implemented / LocalValidated / DeviceAndOperationalDeferred`. 사용자 선택에 따라 [로컬 검증·APK](../Changes/2026-10-09-neighborhood-member-delivery-r43.md)까지 완료했다. Firebase 실제 설정·푸시 수신·단말 설치·Azure·운영 검증은 보류한다.
+
+사용자는 일반 회원부터 배송 참여를 선택하고 기존 요금 계산을 사용하며, 등록 활동 위치 주변 여러 명에게 동시에 제안하는 최소판을 승인했다. 상품/글 등록과 배송 요청을 분리하고 일반 계정에 광범위한 기사 역할을 부여하지 않는다. 플랫폼/배차 수수료는 0원, 배송 보수·당사자 거래대금·실제 입금은 독립이다. 기능/Operational 기본 OFF와 미성년 정책 OFF를 유지하며 상세 범위·초기 수치는 [r39](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/member-delivery.implementation.r39.md)를 따른다.
+
+## 2026-10-08 기사 선택 기준점으로의 권역 복귀 배려
+
+상태: `AcceptedDirection / ImplementedLocally / DeviceAndOperationalDeferred`. 사용자는 기사 본인의 기준 위치에서 멀어졌을 때 돌아오는 방향의 콜을 우대해 권역 복귀를 돕는 방향을 요청했다. 기준점은 기사 선택이고 7km는 반경의 예다. 복귀 우대는 이미 수락한 업무의 변경이나 강제 수락·운행 종료가 아니며, 적격·시간/적재 약속과 기사 선택을 유지한다.
+
+음식과 화물의 독립 업무·정산을 보존하며 기존 복귀 목적과 별도로 기사 기준점·반경 조건을 선택하도록 보완했다. 정확한 집 주소를 공개하거나 모든 기사의 필수 등록으로 만들지 않는다. 최초 조사·설계는 [권역 복귀 r37](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/driver-return-area.design.r37.md), 승인된 구현과 확인 불가 시 가점 보류 범위는 [r38](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/driver-return-area.implementation.r38.md)이 소유한다. 로컬 검증은 운영 활성화·실운행 효과 확인과 구별한다.
+
+## 2026-10-08 기사 본인의 여력과 선택에 따른 다건 수행
+
+상태: `AcceptedDirection / DetailedDesignPending`. 기사가 차량·배달통에 실제 실을 수 있고 약속한 시간 안에 수행할 여력이 있으면 음식 또는 생활 물품 여러 건을 자율 선택하는 방향을 따른다. 3·4건은 예이며 일률적인 강제 배차나 기사 수준 점수의 등급 기준으로 삼지 않는다. 추가 제안 중단·거절·단건 선택과 기존 수행 책임은 구별한다.
+
+음식과 화물은 독립 업무·원장·완료·운임·정산을 유지하며 같은 기사·차량의 미완료 약속, 구간별 적재량·시간을 공동 검증하는 연결을 설계한다. 유형 선택만으로 역할 권한이나 모든 물품의 혼적을 허용하지 않는다. 세부 기준·현재 구현 차이·순서는 [자율 다건 수행 r36](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/driver-flexible-multi-work.design.r36.md)이 소유한다. 이번 방향 기록으로 기존 최대 3건·배차 조건·계약/미성년 OFF·운영 활성화를 자동 변경하지 않는다.
+
+## 2026-10-08 건별 계약 기본 방향과 미성년 정책 준비·운영 분리
+
+상태: `AcceptedDirection / ServerPreparationAuthorized`. 새 건별 의뢰는 프리랜서 계약을 기본 방향으로 준비한다. 계약 명칭만으로 근로자성·보험·세무를 확정하거나 기존 HR 고용계약을 변경하지 않는다. 사용자는 미성년 참여의 향후 가능성을 열어 두되 현재는 **서버의 꺼진 정책 옵션까지만** 승인했다.
+
+비활성 후보의 기록, 실제 참여자/대리인 확인과 건별 동의, 시행 법령에 따른 업무·시간·수단 허용, 실제 운영 전환을 각각 구분한다. 법 개정이나 설정 변경만으로 자동 배차·참여 허가를 만들지 않는다. 기준과 후속 요건은 [건별 계약 정책 준비 r33](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/task-contract-policy-preparation.implementation.r33.md)이 소유한다.
+
 ## 2026-10-05 수수료 중개보다 참여자의 교류와 생활 개선을 우선
 
 상태: `AcceptedDirection`. 사용자는 플랫폼 중개 수수료를 수익 목표로 삼기보다, 기존 사람·음식점·기사·공간 제공자가 기능을 이용해 자율적으로 협업하고 생활을 개선하는 장을 지향한다. 기존 참여자를 배제하거나 편리함의 비용을 특정 사람의 무급 노동·과도한 부담으로 넘기지 않는지 함께 검토한다. 역할은 고정 직업이 아니라 현재 활동 화면의 선택이며 역할 선택만으로 권한을 부여하지 않는다.
