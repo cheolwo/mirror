@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +28,9 @@ public sealed class RoleWorkspaceToolsRenderTests
         Assert.DoesNotMatch("role-map-workspace__tools[^>]*\\bopen(?:=|[ >])", html);
         Assert.Contains("인수증·증빙", tools);
         Assert.Contains("returnUrl=%2Fworkspace%2Fshipper%3Fselected%3Dwork-a", tools);
+        foreach (var (label, route) in new[] { ("운송 내역", "timeline"), ("결제·정산 확인", "payment"), ("인수증·증빙", "proofs") })
+            Assert.Equal($"http://localhost/shipper/request/work-a/{route}?returnUrl=%2Fworkspace%2Fshipper%3Fselected%3Dwork-a",
+                ControlAttribute(ControlWithText(tools, "a", label), "href"));
         Assert.Equal(0, adapter.PerformCalls);
     }
 
@@ -37,10 +41,13 @@ public sealed class RoleWorkspaceToolsRenderTests
             new("issue", "문제 신고", "/issue", IsPrimary: false)]);
         var html = await RenderAsync(adapter);
         var beforeTools = html[..html.IndexOf("role-map-workspace__tools", StringComparison.Ordinal)];
-        Assert.Contains("상차 완료</button>", beforeTools);
-        Assert.Matches("<button[^>]*disabled[^>]*>상차 완료</button>", beforeTools);
+        var pickup = ControlWithText(beforeTools, "button", "상차 완료");
+        Assert.NotNull(ControlAttribute(pickup, "disabled"));
+        Assert.Null(ControlAttribute(pickup, "href"));
+        Assert.Empty(Controls(html, "a").Where(control => ControlText(control) == "상차 완료"));
         Assert.Contains("필수 증빙을 확인해 주세요.", beforeTools);
-        Assert.Contains("문제 신고</a>", beforeTools);
+        Assert.Equal("http://localhost/issue?returnUrl=%2Fworkspace%2Fcargo-driver%3Fselected%3Dwork-a",
+            ControlAttribute(ControlWithText(beforeTools, "a", "문제 신고"), "href"));
         Assert.DoesNotContain("href=\"http://localhost/pickup", html);
         Assert.Equal(0, adapter.PerformCalls);
     }
@@ -53,8 +60,23 @@ public sealed class RoleWorkspaceToolsRenderTests
         var adapter = new Adapter(role, [], empty: true, [new(key, label, route, IsPrimary: true)]);
         var html = await RenderAsync(adapter);
         Assert.Contains("시작할 작업", html);
-        Assert.Contains(label + "</a>", html);
-        Assert.DoesNotContain("role-map-workspace__tools", html);
+        var directActions = NavigationWithLabel(html, "역할 업무 설정");
+        Assert.Equal($"http://localhost{route}?returnUrl=%2Fworkspace%2F{role}",
+            ControlAttribute(ControlWithText(directActions, "a", label), "href"));
+        Assert.Equal("is-primary", ControlAttribute(ControlWithText(directActions, "a", label), "class"));
+        var tools = NavigationWithLabel(html, "업무 도구");
+        Assert.Empty(Controls(tools, "a").Where(control => ControlText(control) == label));
+        Assert.DoesNotMatch("role-map-workspace__tools[^>]*\\bopen(?:=|[ >])", html);
+        if (role == "shipper")
+        {
+            Assert.Equal(new[] { "합의 요금표", "분산 보관·배송 업무" }, Controls(tools, "a").Select(ControlText).ToArray());
+            Assert.Equal("http://localhost/workspace/shipper/agreed-rates?returnUrl=%2Fworkspace%2Fshipper",
+                ControlAttribute(ControlWithText(tools, "a", "합의 요금표"), "href"));
+        }
+        else Assert.Equal(new[] { "분산 보관·배송 업무" }, Controls(tools, "a").Select(ControlText).ToArray());
+        var distributedScreen = role == "shipper" ? "inventory" : "orders";
+        Assert.Equal($"http://localhost/workspace/{role}/distributed/{distributedScreen}?returnUrl=%2Fworkspace%2F{role}",
+            ControlAttribute(ControlWithText(tools, "a", "분산 보관·배송 업무"), "href"));
         Assert.Equal(0, adapter.PerformCalls);
     }
 
@@ -64,8 +86,15 @@ public sealed class RoleWorkspaceToolsRenderTests
         var adapter = new Adapter("orderer", [], emptyActions: [new("food.new-order", "음식 주문", "/workspace/orderer/new")], current: false);
         var html = await RenderAsync(adapter);
         Assert.Contains("시작할 작업", html);
-        Assert.Contains("음식 주문</a>", html);
-        Assert.DoesNotContain("role-map-workspace__tools", html);
+        var directActions = NavigationWithLabel(html, "역할 업무 설정");
+        Assert.Equal("http://localhost/workspace/orderer/new?returnUrl=%2Fworkspace%2Forderer%3Fselected%3Dwork-a",
+            ControlAttribute(ControlWithText(directActions, "a", "음식 주문"), "href"));
+        var tools = NavigationWithLabel(html, "업무 도구");
+        Assert.Equal(new[] { "분산 보관·배송 업무" }, Controls(tools, "a").Select(ControlText).ToArray());
+        Assert.Empty(Controls(tools, "a").Where(control => ControlText(control) == "음식 주문"));
+        Assert.DoesNotMatch("role-map-workspace__tools[^>]*\\bopen(?:=|[ >])", html);
+        Assert.Equal("http://localhost/workspace/orderer/distributed/orders?returnUrl=%2Fworkspace%2Forderer%3Fselected%3Dwork-a",
+            ControlAttribute(ControlWithText(tools, "a", "분산 보관·배송 업무"), "href"));
         Assert.Equal(0, adapter.PerformCalls);
     }
 
@@ -76,8 +105,16 @@ public sealed class RoleWorkspaceToolsRenderTests
         var html = await RenderAsync(adapter);
         Assert.Contains("추가 작업</summary>", html);
         Assert.Contains("class=\"is-primary\"", html);
-        Assert.Contains("기존 추가 작업</a>", html);
-        Assert.DoesNotContain("role-map-workspace__tools", html);
+        var additional = ControlWithText(NavigationWithLabel(html, "추가 작업"), "a", "기존 추가 작업");
+        Assert.Equal("http://localhost/existing/tool?returnUrl=%2Fworkspace%2Frestaurant%3Fselected%3Dwork-a",
+            ControlAttribute(additional, "href"));
+        Assert.Equal("is-primary", ControlAttribute(additional, "class"));
+        var tools = NavigationWithLabel(html, "업무 도구");
+        Assert.Equal(new[] { "합의 요금표", "이 업무의 합의 요금표" }, Controls(tools, "a").Select(ControlText).ToArray());
+        Assert.Equal("http://localhost/workspace/restaurant/agreed-rates?returnUrl=%2Fworkspace%2Frestaurant%3Fselected%3Dwork-a",
+            ControlAttribute(ControlWithText(tools, "a", "합의 요금표"), "href"));
+        Assert.Equal("http://localhost/workspace/restaurant/agreed-rates?workId=work-a&returnUrl=%2Fworkspace%2Frestaurant%3Fselected%3Dwork-a",
+            ControlAttribute(ControlWithText(tools, "a", "이 업무의 합의 요금표"), "href"));
         Assert.Equal(0, adapter.PerformCalls);
     }
 
@@ -87,8 +124,42 @@ public sealed class RoleWorkspaceToolsRenderTests
         var adapter = new Adapter("shipper", [new("timeline", "운송 내역", "https://example.invalid/untrusted")]);
         var html = await RenderAsync(adapter);
         Assert.DoesNotContain("example.invalid", html);
-        Assert.Matches("<button[^>]*disabled[^>]*>운송 내역</button>", html);
+        var tools = html[html.IndexOf("role-map-workspace__tools", StringComparison.Ordinal)..];
+        var timeline = ControlWithText(tools, "button", "운송 내역");
+        Assert.NotNull(ControlAttribute(timeline, "disabled"));
+        Assert.Null(ControlAttribute(timeline, "href"));
+        Assert.Empty(Controls(html, "a").Where(control => ControlText(control) == "운송 내역"));
         Assert.Equal(0, adapter.PerformCalls);
+    }
+
+    private static string NavigationWithLabel(string html, string label)
+        => Assert.Single(Regex.Matches(html,
+                $"<nav\\b[^>]*\\baria-label=\"{Regex.Escape(label)}\"[^>]*>(?<content>.*?)</nav>", RegexOptions.Singleline)
+            .Cast<Match>()).Groups["content"].Value;
+
+    private static IEnumerable<Match> Controls(string html, string tag)
+        => Regex.Matches(html, $"<{tag}\\b(?<attributes>[^>]*)>(?<content>.*?)</{tag}>", RegexOptions.Singleline)
+            .Cast<Match>();
+
+    private static Match ControlWithText(string html, string tag, string label)
+        => Assert.Single(Controls(html, tag).Where(control => ControlText(control) == label));
+
+    private static string ControlText(Match control)
+    {
+        var content = Regex.Replace(control.Groups["content"].Value, "<svg\\b[^>]*>.*?</svg>", "", RegexOptions.Singleline);
+        var text = WebUtility.HtmlDecode(Regex.Replace(content, "<[^>]*>", ""));
+        return Regex.Replace(text, "\\s+", " ").Trim();
+    }
+
+    private static string? ControlAttribute(Match control, string name)
+    {
+        var attribute = Regex.Matches(control.Groups["attributes"].Value,
+                @"(?<name>[^\s=/>]+)(?:\s*=\s*(?:""(?<double>[^""]*)""|'(?<single>[^']*)'|(?<unquoted>[^\s>]+)))?")
+            .Cast<Match>().SingleOrDefault(match => match.Groups["name"].Value.Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (attribute is null) return null;
+        if (attribute.Groups["double"].Success) return WebUtility.HtmlDecode(attribute.Groups["double"].Value);
+        if (attribute.Groups["single"].Success) return WebUtility.HtmlDecode(attribute.Groups["single"].Value);
+        return attribute.Groups["unquoted"].Success ? WebUtility.HtmlDecode(attribute.Groups["unquoted"].Value) : string.Empty;
     }
 
     private static async Task<string> RenderAsync(Adapter adapter)

@@ -32,6 +32,8 @@ else
                 { <MudAlert Severity="Severity.Warning">현재 상태에서는 이 업무를 처리할 수 없습니다. 지도로 돌아가 현재 작업을 확인해 주세요.</MudAlert> }
                 @if (Model.ServerAllows && !Model.Saved)
                 {
+                    <h3>이번 작업 확인</h3>
+                    <p>아래 입력은 이번 작업에만 적용됩니다. 개인 기본 설정이나 계약 단가를 변경하지 않습니다.</p>
                     @if (Kind == "inbound")
                     {
                         <MudTextField T="string" Label="실제 반입 상품명" @bind-Value="Model.ProductName" Disabled="Model.Lifetime.IsBusy" />

@@ -18,7 +18,8 @@
         {
             <article class="cargo-action-card">
                 <h2>@source.화물종류</h2>
-                <dl><dt>상차지</dt><dd>@source.픽업지</dd><dt>하차지</dt><dd>@source.하차지</dd><dt>운임</dt><dd>@CargoWorkspacePresentation.Money(source.결제예정금액)</dd></dl>
+                <dl><dt>상차지</dt><dd>@source.픽업지</dd><dt>하차지</dt><dd>@source.하차지</dd><dt>의뢰 결제 예정액</dt><dd>@CargoWorkspacePresentation.Money(source.결제예정금액)</dd></dl>
+                <p>의뢰 결제 예정액은 기사 실지급액을 뜻하지 않습니다. 참여 확인은 이번 추천 운송 한 건에 적용됩니다.</p>
                 <p>지도에 표시한 선은 직선 후보선이며 실제 주행 경로가 아닙니다.</p>
                 @foreach (var warning in Model.Warnings) { <MudAlert Severity="Severity.Warning">@warning</MudAlert> }
                 @if (!Model.ServerCandidateAvailable && !Model.Saved)

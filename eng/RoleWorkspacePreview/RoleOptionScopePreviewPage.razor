@@ -1,0 +1,38 @@
+@page "/role-option-scope-preview/{Scenario}"
+@using Ssalddel.Contracts.Food
+@using Ssalddel.Contracts.Shipper.Request
+@using Ssalddel.Ui.Common.Areas.App.Components.Transport
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food
+
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside style="padding:6px 16px;background:#eaf5f3;color:#0f766e;font-size:12px" aria-label="미리보기 안내">화면 배치 미리보기 · 예시 자료 · 저장하지 않음</aside>
+@switch (Scenario)
+{
+    case "shipper":
+        <ShipperRequestProcedureScreen ViewModel="Draft" NavigationContext="Navigation" ShowNavigation="false" />
+        break;
+    case "restaurant":
+        <FoodRoleActionForm RoleKey="restaurant" ItemId="preview-order-1" ActionKey="@음식배달가능행동Ids.음식점조리시간변경" />
+        break;
+    case "cargo-offer":
+        <CargoOfferActionScreen ItemId="option-preview-request" />
+        break;
+    case "warehouse":
+        <WarehouseTaskActionScreen Kind="inbound" ItemId="501" />
+        break;
+    default:
+        <p>지원하는 예시 화면을 선택해 주세요.</p>
+        break;
+}
+
+@code {
+    [Parameter] public string Scenario { get; set; } = "";
+    private readonly ShipperRequestNavigationContext Navigation = new();
+    private readonly 운송의뢰작성ViewModel Draft = new()
+    {
+        화물종류 = "상온 보관 물품", 화물수량 = 12, 차량종류 = "1톤 카고",
+        예상거리Km = 3.2m, 기준운임 = 34000m, 결제예정금액 = 34000, 기사지급예정운임 = 30000
+    };
+}

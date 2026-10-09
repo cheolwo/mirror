@@ -52,7 +52,8 @@
             {
                 @if (!Model.ImmediatePickup)
                 {
-                    <label>조리 예상 시간(분)<input type="number" min="1" max="240" @bind="Model.PreparationMinutes" /></label>
+                    <label>이번 주문 조리 예상 시간(분)<input type="number" min="1" max="240" @bind="Model.PreparationMinutes" /></label>
+                    <p>이 시간은 이번 주문에 적용합니다. 가게나 기기의 기본 조리시간은 바뀌지 않습니다.</p>
                 }
             }
             @if (RoleKey == "orderer")
@@ -67,7 +68,7 @@
             }
             @if (RoleKey == "food-driver")
             {
-                <label>중단 사유<select @bind="Model.ReasonCode">
+                <label>이번 배달 중단 사유<select @bind="Model.ReasonCode">
                     <option value="">선택해 주세요.</option>
                     <option value="@음식배달중단사유Code.사고">사고</option>
                     <option value="@음식배달중단사유Code.조리지연">음식점 조리 지연</option>
@@ -86,7 +87,7 @@
                         <option value="@attempt.시도StableId">@attempt.시도순번 회차 · @attempt.중단사유Code · @FoodWorkspacePresentation.Time(attempt.중단시각Utc)</option>
                     }
                 </select></label>
-                <label>책임 판정<select @bind="Model.DecisionCode">
+                <label>이번 중단 건 책임 판정<select @bind="Model.DecisionCode">
                     <option value="">선택해 주세요.</option>
                     <option value="@음식배달중단검토판정Code.보호">보호 사유</option>
                     <option value="@음식배달중단검토판정Code.기사책임">기사 책임</option>

@@ -12,11 +12,16 @@ public sealed class PreviewInputApi(PreviewActionApi actions, IRoleWorkspaceAcce
     public Task<T> GetAsync<T>(string role, string path, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
+        if (RoleOptionScopePreviewApi.Read(role, path, access, navigation.Uri) is { } optionFixture) return Task.FromResult((T)optionFixture);
         if (PreviewHandoffFixtures.Read(role, path, access, navigation.Uri) is { } fixture) return Task.FromResult((T)fixture);
         return ActionSample(role, path) ? actions.GetAsync<T>(role, path, ct) : For(role).GetAsync<T>(role, path, ct);
     }
-    public Task<T?> PostAsync<T>(string role, string path, object body, CancellationToken ct) => ActionSample(role, path)
-        ? actions.PostAsync<T>(role, path, body, ct) : For(role).PostAsync<T>(role, path, body, ct);
+    public Task<T?> PostAsync<T>(string role, string path, object body, CancellationToken ct)
+    {
+        if (RoleOptionScopePreviewApi.IsPreview(navigation.Uri))
+            throw new InvalidOperationException("범위 표시 미리보기에서는 업무를 저장하지 않습니다.");
+        return ActionSample(role, path) ? actions.PostAsync<T>(role, path, body, ct) : For(role).PostAsync<T>(role, path, body, ct);
+    }
     public Task<T?> PutAsync<T>(string role, string path, object body, CancellationToken ct)
         => throw new InvalidOperationException("미리보기에서는 업무를 저장하지 않습니다.");
     public Task<T?> UploadAsync<T>(string role, string path, HttpContent body, CancellationToken ct)

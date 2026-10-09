@@ -40,6 +40,11 @@
                 }
             </div>
 
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.subtitle1">이번 의뢰의 금액·추가 작업 조건</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">기준 운임은 참고 견적입니다. 예정액은 이번 의뢰의 조건이며, 확정 기사 대가나 결제·실지급 완료를 뜻하지 않습니다.</MudText>
+            </MudStack>
+
             <MudGrid>
                 <MudItem xs="12" md="6">
                     <MudNumericField T="decimal?" @bind-Value="ViewModel.예상거리Km" Label="예상 거리 km" Variant="Variant.Outlined" Immediate="true" />
