@@ -11,10 +11,16 @@ public static class 생활배송배차Policy
 {
     public static string 접수키(string actor, string clientId) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(actor + ":" + clientId)));
     public const string Marker = ":dispatch-policy:";
+    public const string MemberMarker = ":member-delivery:v1:";
     public static string 신청메모(NeighborhoodDeliveryRequest request) => request.DispatchMode is null ? string.Empty
         : Marker + Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new 선택근거(request.DispatchMode, request.CollaborationId, request.ExpectedTermsRevision))));
     public static void 큐초기화(운송원장 queue, string? memo)
     {
+        if (memo?.Contains(MemberMarker, StringComparison.Ordinal) == true)
+        {
+            queue.일반회원배송전용 = true;
+            queue.생활배송수락준비완료 = false;
+        }
         var index = memo?.IndexOf(Marker, StringComparison.Ordinal) ?? -1;
         if (index < 0) return;
         var evidence = JsonSerializer.Deserialize<선택근거>(Encoding.UTF8.GetString(Convert.FromBase64String(memo![(index + Marker.Length)..])))
@@ -25,11 +31,11 @@ public static class 생활배송배차Policy
         queue.생활배송수락준비완료 = false;
         대기적용(queue);
     }
-    public static bool 자동추천가능(운송원장 queue) => queue.생활배송배차방식 is null
-        || queue.생활배송수락준비완료 && queue.생활배송배차방식 is NeighborhoodDispatchModes.Automatic or NeighborhoodDispatchModes.Hybrid;
-    public static bool 공개허용(운송원장 queue) => queue.생활배송배차방식 is null
-        || queue.생활배송수락준비완료 && queue.생활배송배차방식 is NeighborhoodDispatchModes.PublicCall or NeighborhoodDispatchModes.Hybrid;
-    public static bool 병행공개가능(운송원장 queue) => queue.생활배송수락준비완료 && queue.생활배송배차방식 == NeighborhoodDispatchModes.Hybrid
+    public static bool 자동추천가능(운송원장 queue) => !queue.일반회원배송전용 && (queue.생활배송배차방식 is null
+        || queue.생활배송수락준비완료 && queue.생활배송배차방식 is NeighborhoodDispatchModes.Automatic or NeighborhoodDispatchModes.Hybrid);
+    public static bool 공개허용(운송원장 queue) => !queue.일반회원배송전용 && (queue.생활배송배차방식 is null
+        || queue.생활배송수락준비완료 && queue.생활배송배차방식 is NeighborhoodDispatchModes.PublicCall or NeighborhoodDispatchModes.Hybrid);
+    public static bool 병행공개가능(운송원장 queue) => !queue.일반회원배송전용 && queue.생활배송수락준비완료 && queue.생활배송배차방식 == NeighborhoodDispatchModes.Hybrid
         && queue.상태 == 상태값.배차대기상태.대기 && queue.확정기사Id is null && queue.배차큐단계 != 상태값.배차큐단계.종료;
     public static void 대기적용(운송원장 queue)
     {

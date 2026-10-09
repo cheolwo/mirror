@@ -1,0 +1,109 @@
+@using Ssalddel.Contracts.Shipper.Request
+@using Ssalddel.Ui.Common.Areas.App.Models
+@inject NeighborhoodMemberWorkViewModel Model
+@inject INeighborhoodMapHost MapHost
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+<link rel="stylesheet" href="@Href("_content/Ssalddel.Ui.Common/Areas/App/css/neighborhood-delivery.css")" />
+<main class="member-delivery-map" data-member-delivery-work>
+    <div id="member-delivery-map-canvas" class="member-delivery-map__canvas" aria-label="현재 배송 지도"></div>
+    <header class="member-delivery-map__header"><a href="@Href(NeighborhoodMemberDeliveryRoutes.Work)">← 내 생활 배송</a><h1>현재 배송</h1><button @onclick="Reload" disabled="@(Model.IsLoading || Model.IsSending)">새로고침</button></header>
+    <div class="member-delivery-map__panel">
+        <NeighborhoodMemberStateNotice Model="Model" LoginHref="@LoginHref" />
+        @if (_mapStatus.Message is not null && Model.IsAuthenticated) { <p class="exchange-note" role="status">@_mapStatus.Message</p> }
+        @if (Model.IsAuthenticated && Model.Work is { } work)
+        {
+            <details class="member-delivery-map__card" open><summary>@(Model.Stage == "Pickup" ? "픽업 장소" : Model.Stage == "Delivery" ? "전달 장소" : "배송 상태")</summary>
+                <div class="member-delivery-map__section"><p class="exchange-note">@NeighborhoodMemberDeliveryPresentation.State(work.StateCode)</p>
+                    @if (Model.Stage == "Pickup" && work.Pickup is { } pickup) { @Place(pickup) }
+                    else if (Model.Stage == "Delivery" && work.Dropoff is { } dropoff) { @Place(dropoff) }
+                    else { <p>@(work.StateCode == "Delivered" ? "전달 기록을 확인했습니다. 수령자의 확인을 기다려 주세요." : work.StateCode == "Issue" ? "문제 접수 상태입니다. 운영자의 안내를 기다려 주세요." : "현재 업무 상태를 다시 확인해 주세요.")</p> }
+                    @if (work.StateCode == "Issue" && work.SupportCaseId is { Length: > 0 } caseId) { <p class="exchange-note">지원 접수 번호 @caseId<br />운영자가 확인한 뒤 배송 재개 또는 픽업 전 취소를 안내합니다. 전달 완료·비용 지급과 별도로 처리합니다.</p> }
+                </div>
+                @if (Model.Stage.Length > 0)
+                {
+                    <div class="member-delivery-map__section"><h2>@(Model.Stage == "Pickup" ? "픽업 사진" : "전달 사진")</h2><p class="exchange-note">물품과 인계 장소를 확인할 수 있게 촬영하세요. 사람의 얼굴이나 불필요한 연락처는 담지 마세요.</p>
+                        @if (Model.Photo is { } photo) { <img class="member-delivery-map__photo" src="@photo.PreviewUrl" alt="완료 전에 확인할 사진" /> }
+                        @if ((Model.Stage == "Pickup" ? work.PickupEvidenceId : work.DeliveryEvidenceId) is not null) { <p role="status">이 단계의 사진 저장을 확인했습니다.</p> }
+                        else if (Model.PhotoUploadPending) { <p class="delivery-warning">사진 전송 결과 확인이 필요합니다. 같은 사진으로 다시 확인해 주세요.</p> }
+                        else { <button disabled="@(Model.InputsLocked || !Model.CaptureSupported)" @onclick="Model.CaptureAsync">@(Model.Photo is null ? "사진 촬영" : "다시 촬영")</button> }
+                        @if (!Model.CaptureSupported) { <p>모바일 앱에서 카메라로 촬영해 주세요.</p> }
+                        <button class="exchange-primary" disabled="@(!Model.CanComplete)" @onclick="Model.CompleteAsync">@(Model.IsSending ? "처리 결과 확인 중…" : Model.PrimaryLabel)</button>
+                    </div>
+                }
+            </details>
+            <details class="member-delivery-map__card"><summary>요청 사항</summary><div class="member-delivery-map__section">
+                @if (work.RequestNotes is { Length: > 0 } note) { <p class="exchange-body">@note</p> }
+                else { <p>별도 요청 사항이 없습니다.</p> }
+            </div></details>
+            <details class="member-delivery-map__card"><summary>물품·배송비</summary><div class="member-delivery-map__section"><h2>@work.CargoName</h2><p>@work.Quantity 개 · @work.WeightKg kg</p><strong class="delivery-fare">@NeighborhoodDeliveryPresentation.Money(work.FareKrw)</strong><p>@NeighborhoodDeliveryPresentation.Distance(work.DistanceKm)</p><p class="exchange-note">플랫폼 이용료 @NeighborhoodDeliveryPresentation.Money(work.PlatformFeeKrw) · 배차 수수료 @NeighborhoodDeliveryPresentation.Money(work.DispatchFeeKrw)<br />배송비 지급 확인은 전달 완료와 별도입니다.</p></div></details>
+            @if (work.StateCode is "Assigned" or "PickedUp")
+            {
+                <details class="member-delivery-map__card"><summary>배송에 문제가 생겼어요</summary><div class="member-delivery-map__section"><label for="member-issue">문제 내용</label><textarea id="member-issue" @bind="Model.IssueReason" maxlength="1000" rows="3" disabled="@Model.InputsLocked"></textarea><button @onclick="Model.IssueAsync" disabled="@(Model.IsSending || Model.IsLoading || Model.PhotoUploadPending || string.IsNullOrWhiteSpace(Model.IssueReason) || Model.Pending is not null && Model.Pending.Kind != "issue")">문제 접수하기</button></div></details>
+            }
+        }
+        else if (Model.IsAuthenticated && !Model.IsLoading) { <button class="exchange-primary" @onclick="Reload">다시 불러오기</button> }
+    </div>
+</main>
+@code {
+    [Parameter] public string RequestId { get; set; } = "";
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    private string? _loaded;
+    private bool _disposed, _rendering;
+    private long _mapRevision;
+    private long _mapGeneration;
+    private CancellationTokenSource? _mapUpdate;
+    private string? _renderedFingerprint;
+    private NeighborhoodMapHostStatus _mapStatus = NeighborhoodMapHostStatus.Loading;
+    private readonly CancellationTokenSource _lifetime = new();
+    private string Href(string route) => Navigation.ToAbsoluteUri(route.TrimStart('/')).ToString();
+    protected override void OnInitialized() => Model.PropertyChanged += Changed;
+    protected override Task OnParametersSetAsync() { if (_loaded == RequestId) return Task.CompletedTask; _loaded = RequestId; return Reload(); }
+    private Task Reload() => Model.LoadAsync(RequestId);
+    public Task RefreshAsync() => Reload();
+    public async Task NotifyAuthenticationChangedAsync() { ++_mapGeneration; _mapUpdate?.Cancel(); Model.ResetAuthentication(); _renderedFingerprint = null; await MapHost.HideAsync(); if (!_disposed) await InvokeAsync(StateHasChanged); }
+    private RenderFragment Place(LocationContactDTO location) => builder =>
+    {
+        builder.OpenElement(0, "p"); builder.AddAttribute(1, "class", "member-delivery-map__address"); builder.AddContent(2, location.주소.도로명주소); builder.CloseElement();
+        builder.OpenElement(3, "p"); builder.AddContent(4, location.주소.상세주소); builder.CloseElement();
+        builder.OpenElement(5, "p"); builder.AddContent(6, location.연락처.이름); builder.AddContent(7, " · "); builder.AddContent(8, location.연락처.전화번호); builder.CloseElement();
+    };
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Model.SynchronizeOwner();
+        if (_disposed || _rendering) return;
+        if (Model.IsAuthenticated && !Model.Loaded && !Model.IsLoading && Model.Error is null) await Reload();
+        var work = Model.IsAuthenticated ? Model.Work : null;
+        var fingerprint = work is null ? "none" : work.RequestId + ":" + work.Revision + ":" + work.StateCode;
+        if (_renderedFingerprint == fingerprint) return;
+        _rendering = true;
+        var generation = _mapGeneration;
+        using var update = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+        _mapUpdate = update;
+        try
+        {
+            var markers = new List<NeighborhoodMapMarker>();
+            if (work is not null) { AddMarker(markers, "pickup", "픽업 장소", work.Pickup, NeighborhoodMapMarkerKinds.Pickup); AddMarker(markers, "dropoff", "전달 장소", work.Dropoff, NeighborhoodMapMarkerKinds.Dropoff); }
+            NeighborhoodMapHostStatus status;
+            if (markers.Count == 0) { await MapHost.HideAsync(update.Token); status = new("unavailable", work is null ? null : "표시할 위치가 없습니다. 현재 배송 카드에서 확인해 주세요."); }
+            else status = await MapHost.RenderAsync("member-delivery-map-canvas", new(++_mapRevision, markers, [], PreserveViewport: true), _ => Task.CompletedTask, update.Token);
+            if (_disposed || generation != _mapGeneration || !ReferenceEquals(work, Model.IsAuthenticated ? Model.Work : null)) { await MapHost.HideAsync(); return; }
+            _mapStatus = status;
+            _renderedFingerprint = fingerprint;
+        }
+        catch (OperationCanceledException) when (update.IsCancellationRequested) { }
+        catch { _mapStatus = NeighborhoodMapHostStatus.Unavailable; }
+        finally { if (ReferenceEquals(_mapUpdate, update)) _mapUpdate = null; _rendering = false; if (!_disposed) await InvokeAsync(StateHasChanged); }
+    }
+    private static void AddMarker(List<NeighborhoodMapMarker> markers, string id, string label, LocationContactDTO? location, string kind)
+    {
+        if (location?.주소 is { 위도: { } latitude, 경도: { } longitude } && latitude is >= -90 and <= 90 && longitude is >= -180 and <= 180)
+            markers.Add(new(id, label, kind, (double)latitude, (double)longitude));
+    }
+    private void Changed(object? sender, System.ComponentModel.PropertyChangedEventArgs args) { if (!_disposed) _ = InvokeAsync(StateHasChanged); }
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed) return; _disposed = true; Model.PropertyChanged -= Changed; Model.Dispose(); _lifetime.Cancel();
+        try { await MapHost.HideAsync(); } catch { } _lifetime.Dispose();
+    }
+}

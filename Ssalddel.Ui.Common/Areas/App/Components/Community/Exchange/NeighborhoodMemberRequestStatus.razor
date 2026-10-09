@@ -1,0 +1,27 @@
+@inherits NeighborhoodWorkflowPageBase<NeighborhoodMemberRequestViewModel>
+<section class="exchange-surface" data-member-request-status>
+    <h2>생활 회원 배송</h2>
+    <NeighborhoodMemberStateNotice Model="Model" />
+    @if (Model.IsAuthenticated && Model.Source is { } source)
+    {
+        <p>@NeighborhoodMemberDeliveryPresentation.State(source.MemberWorkStateCode)</p>
+        <p class="exchange-note">플랫폼 이용료 0원 · 배차 수수료 0원<br />배송 완료, 실제 수령, 배송비 지급은 각각 확인합니다.</p>
+        @if (source.MemberSupportCaseId is { Length: > 0 } caseId) { <p role="status">지원 접수 번호 @caseId · 운영자의 안내를 기다려 주세요.</p> }
+        @if (source.CanCancelMemberDelivery || Model.Pending?.Kind == "request-cancel")
+        {
+            @if (Model.Pending is null) { <label class="delivery-check"><input type="checkbox" @bind="Model.CancellationAgreed" /><span>물품 픽업 전 배송을 취소합니다.</span></label> }
+            <button disabled="@(!Model.CanCancel)" @onclick="Cancel">@(Model.IsSending ? "취소 결과 확인 중…" : Model.Pending?.Kind == "request-cancel" ? "같은 취소 요청 결과 확인" : "픽업 전 배송 취소")</button>
+        }
+        else if (source.MemberWorkStateCode is "PickedUp" or "Issue") { <p class="exchange-note">픽업 뒤에는 자동 취소할 수 없습니다. 물품 반환·재전달이 필요하면 배송 문제를 접수해 주세요.</p> }
+    }
+    <button disabled="@(Model.IsLoading || Model.IsSending)" @onclick="Reload">최신 배송 상태 확인</button>
+</section>
+@code {
+    [Parameter, EditorRequired] public string RequestId { get; set; } = "";
+    [Parameter] public long Revision { get; set; }
+    [Parameter] public EventCallback Refreshed { get; set; }
+    private string? _loaded;
+    protected override Task OnParametersSetAsync() { var key = RequestId + ":" + Revision; if (_loaded == key) return Task.CompletedTask; _loaded = key; return Reload(); }
+    private Task Reload() => Model.LoadAsync(RequestId);
+    private async Task Cancel() { if (await Model.CancelAsync()) await Refreshed.InvokeAsync(); }
+}

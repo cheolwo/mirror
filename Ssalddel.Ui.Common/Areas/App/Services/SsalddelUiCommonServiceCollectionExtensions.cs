@@ -141,6 +141,14 @@ public static class SsalddelUiCommonServiceCollectionExtensions
         services.TryAddScoped<INeighborhoodDeliveryClient, NeighborhoodDeliveryClient>();
         services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodDeliveryAuthoringViewModel>();
         services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodDeliveryQueryViewModel>();
+        services.TryAddScoped<INeighborhoodMemberDeliveryClient, NeighborhoodMemberDeliveryClient>();
+        services.TryAddScoped<Ssalddel.Ui.Common.Areas.App.ViewModels.INeighborhoodMemberPendingStore,
+            Ssalddel.Ui.Common.Areas.App.ViewModels.VolatileNeighborhoodMemberPendingStore>();
+        services.TryAddScoped<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodMemberDeliverySession>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodMemberParticipationViewModel>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodMemberOffersViewModel>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodMemberWorkViewModel>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodMemberRequestViewModel>();
 
         services.TryAddSingleton<역할앱생명주기State>();
         services.AddSsalddelUiCoreModule();

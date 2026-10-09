@@ -1,0 +1,35 @@
+@inherits NeighborhoodWorkflowPageBase<NeighborhoodMemberParticipationViewModel>
+<NeighborhoodDeliveryFrame><main class="exchange-page">
+    <a class="exchange-back" href="@Href(BackHref)">← 내 정보</a>
+    <header><span class="exchange-eyebrow">내 정보 · 생활 배송</span><h1>배송 참여</h1><p>가능할 때 주변 배송 제안을 받아 보세요. 수락한 배송만 수행합니다.</p></header>
+    <NeighborhoodMemberStateNotice Model="Model" LoginHref="@LoginHref" />
+    @if (Model.IsAuthenticated)
+    {
+        @if (Model.Loaded && Model.Settings is { } settings)
+        {
+            @if (!settings.Enabled) { <p class="delivery-warning">@NeighborhoodMemberDeliveryPresentation.Block(settings.BlockCode)</p> }
+            <form @onsubmit="Model.SaveAsync" @onsubmit:preventDefault>
+                <fieldset disabled="@Model.InputsLocked"><legend>배송 제안 설정</legend>
+                    <section class="exchange-surface"><h2>알림 수신</h2><label class="delivery-check"><input type="checkbox" @bind="Model.Draft.ReceiveOffers" /><span>배송 제안 받기</span></label><p class="exchange-note">끄면 새 제안을 받지 않습니다. 이미 수락한 배송은 계속 확인할 수 있습니다.</p></section>
+                    <section class="exchange-surface"><h2>활동 지역</h2><label for="member-activity-label">내가 알아볼 이름</label><input id="member-activity-label" @bind="Model.Draft.ActivityLabel" maxlength="80" placeholder="예: 사가정 주변" />
+                        <button type="button" @onclick="Model.SelectCurrentLocationAsync">현재 위치를 활동 기준점으로 선택</button><p role="status">@(Model.HasActivityPoint ? "활동 기준점이 선택되어 있습니다." : "활동 기준점을 선택해 주세요.")</p><p class="exchange-note">기준점은 비공개입니다. 계속 위치를 추적하지 않으며 배송 중 위치로 표시하지 않습니다.</p>
+                        <label for="member-radius">제안 받을 반경(km)</label><input id="member-radius" type="number" @bind="Model.Draft.RadiusKm" min="0.5" max="20" step="0.5" />
+                    </section>
+                    <section class="exchange-surface"><h2>운반 조건</h2><label for="member-vehicle">이동수단</label><select id="member-vehicle" @bind="Model.Draft.VehicleType"><option>오토바이</option><option>자동차</option></select><label for="member-weight">운반 가능한 전체 중량(kg)</label><input id="member-weight" type="number" @bind="Model.Draft.MaxWeightKg" min="0.1" max="1000" step="0.1" /></section>
+                </fieldset>
+                <button type="submit" class="exchange-primary" disabled="@(!Model.CanSave)">@(Model.IsSending ? "저장 확인 중…" : Model.Pending is null ? "참여 설정 저장" : "같은 저장 요청 다시 확인")</button>
+            </form>
+            @NativePreferences?.Invoke(settings)
+            <a href="@Href(NeighborhoodMemberDeliveryRoutes.Offers)">받은 배송 제안</a><span> · </span><a href="@Href(NeighborhoodMemberDeliveryRoutes.Work)">내 생활 배송</a>
+        }
+        else if (!Model.IsLoading) { <button class="exchange-primary" @onclick="Model.LoadAsync">다시 불러오기</button> }
+    }
+</main></NeighborhoodDeliveryFrame>
+@code {
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    [Parameter] public string BackHref { get; set; } = "/community/map";
+    [Parameter] public RenderFragment<NeighborhoodMemberParticipationResponse>? NativePreferences { get; set; }
+    protected override Task OnInitializedAsync() => Model.LoadAsync();
+    public Task RefreshAsync() => Model.LoadAsync();
+    protected override async Task OnAfterRenderAsync(bool firstRender) { Model.SynchronizeOwner(); if (Model.IsAuthenticated && !Model.Loaded && !Model.IsLoading && Model.Error is null) await Model.LoadAsync(); }
+}

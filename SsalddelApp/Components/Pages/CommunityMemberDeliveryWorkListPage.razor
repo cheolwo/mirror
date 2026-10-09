@@ -1,0 +1,19 @@
+@page "/community/exchange/deliveries/work"
+@layout CommunityMobileLayout
+@using Ssalddel.Ui.Common.Areas.App.Services
+@inject IAuthSession Auth
+@inject MemberDeliveryPushService Push
+@implements IDisposable
+<PageTitle>생활 배송 · 살뜰</PageTitle>
+<Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodMemberWorkList @ref="_page"  LoginHref="@LoginHref" />
+@code {
+    private Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodMemberWorkList? _page;
+    private bool _disposed;
+    protected override void OnInitialized() { Auth.Changed += AuthenticationChanged; Push.Changed += RefreshRequested; }
+    private void AuthenticationChanged() { if (!_disposed) _ = InvokeAsync(async () => { if (_page is null || _disposed) return; await _page.NotifyAuthenticationChangedAsync(); await _page.RefreshAsync(); }); }
+    private void RefreshRequested() { if (!_disposed) _ = InvokeAsync(async () => { if (_page is not null && !_disposed) await _page.RefreshAsync(); }); }
+    public void Dispose() { _disposed = true; Auth.Changed -= AuthenticationChanged; Push.Changed -= RefreshRequested; }
+
+    private string ReturnRoute => NeighborhoodMemberDeliveryRoutes.Work;
+    private string LoginHref => NeighborhoodExchangeAuthenticationRoutes.LoginHref(ReturnRoute);
+}

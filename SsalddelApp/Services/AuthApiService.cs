@@ -53,6 +53,8 @@ public sealed class AuthApiService
             return (false, "서버 로그인 응답을 읽을 수 없습니다.");
         }
 
+        if (_authSession.IsLoggedIn)
+            await _mobilePushInstallationClient.DeactivateCurrentOwnerAsync(cancellationToken);
         await _authSession.ApplyAsync(token.ToClientAuthTokenSnapshot(), cancellationToken);
         await _mobilePushInstallationClient.EnsureRegisteredAsync(cancellationToken);
         await _꾸미기보유권동기화Service.RestoreAndSynchronizeAsync(cancellationToken);
@@ -62,7 +64,8 @@ public sealed class AuthApiService
     public async Task LogoutAsync(CancellationToken cancellationToken = default)
     {
         _꾸미기보유권동기화Service.ClearVisibleEntitlements();
-        await _authSession.ClearAsync(cancellationToken);
+        try { await _mobilePushInstallationClient.DeactivateCurrentOwnerAsync(cancellationToken); }
+        finally { await _authSession.ClearAsync(CancellationToken.None); }
     }
 
     public async Task<string?> EnsureAccessTokenAsync(

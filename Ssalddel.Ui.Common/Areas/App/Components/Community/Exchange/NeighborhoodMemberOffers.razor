@@ -1,0 +1,22 @@
+@inherits NeighborhoodWorkflowPageBase<NeighborhoodMemberOffersViewModel>
+<NeighborhoodDeliveryFrame><main class="exchange-page">
+    <a class="exchange-back" href="@Href(NeighborhoodMapNavigation.SafeReturn(ReturnUrl) ?? NeighborhoodMapNavigation.Home)">← 생활 지도</a>
+    <header><span class="exchange-eyebrow">생활 배송</span><h1>받은 배송 제안</h1><p>조건을 확인하고 가능한 배송을 선택하세요.</p></header>
+    <NeighborhoodMemberStateNotice Model="Model" LoginHref="@LoginHref" />
+    @if (Model.IsAuthenticated)
+    {
+        <nav class="exchange-actions"><a href="@Href(NeighborhoodMemberDeliveryRoutes.Home)">배송 참여 설정</a><a href="@Href(NeighborhoodMemberDeliveryRoutes.Work)">내 생활 배송</a></nav>
+        @if (Model.Loaded && Model.Offers.Count == 0) { <section class="exchange-empty"><h2>받은 제안이 없어요</h2><p>배송 참여와 활동 지역을 확인해 주세요.</p></section> }
+        else if (Model.Loaded)
+        { <ul class="exchange-list">@foreach (var value in Model.Offers) { <li class="exchange-surface"><a href="@Href(NeighborhoodMemberDeliveryRoutes.Offer(value.OfferId))"><span>@NeighborhoodMemberDeliveryPresentation.State(value.StateCode)</span><h2>@value.CargoName</h2><p>@value.PickupArea → @value.DropoffArea</p><strong>@NeighborhoodDeliveryPresentation.Money(value.FareKrw)</strong><p>@NeighborhoodDeliveryPresentation.Distance(value.DistanceKm)</p></a></li> }</ul> }
+        <button disabled="@(Model.IsLoading || Model.IsSending)" @onclick="Reload">새로고침</button>
+    }
+</main></NeighborhoodDeliveryFrame>
+@code {
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    [Parameter] public string? ReturnUrl { get; set; }
+    protected override Task OnInitializedAsync() => Reload();
+    private Task Reload() => Model.LoadAsync();
+    public Task RefreshAsync() => Reload();
+    protected override async Task OnAfterRenderAsync(bool firstRender) { Model.SynchronizeOwner(); if (Model.IsAuthenticated && !Model.Loaded && !Model.IsLoading && Model.Error is null) await Reload(); }
+}

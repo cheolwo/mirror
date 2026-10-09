@@ -1,0 +1,29 @@
+@inherits NeighborhoodWorkflowPageBase<NeighborhoodMemberOffersViewModel>
+<NeighborhoodDeliveryFrame><main class="exchange-page">
+    <a class="exchange-back" href="@Href(NeighborhoodMemberDeliveryRoutes.Offers)">← 받은 배송 제안</a><header><span class="exchange-eyebrow">생활 배송</span><h1>배송 제안</h1></header>
+    <NeighborhoodMemberStateNotice Model="Model" LoginHref="@LoginHref" />
+    @if (Model.IsAuthenticated && Model.Selected is { } value)
+    {
+        <section class="exchange-surface"><p>@NeighborhoodMemberDeliveryPresentation.State(value.StateCode)</p><h2>@value.CargoName</h2><p>@value.Quantity 개 · @value.WeightKg kg</p><p><strong>픽업 지역</strong><br />@value.PickupArea</p><p><strong>전달 지역</strong><br />@value.DropoffArea</p><p class="exchange-note">상세 주소와 연락처는 수락이 확정된 회원에게만 제공합니다.</p></section>
+        <section class="exchange-surface"><h2>배송비</h2><strong class="delivery-fare">@NeighborhoodDeliveryPresentation.Money(value.FareKrw)</strong><p>@NeighborhoodDeliveryPresentation.Distance(value.DistanceKm)</p><p>플랫폼 이용료 @NeighborhoodDeliveryPresentation.Money(value.PlatformFeeKrw) · 배차 수수료 @NeighborhoodDeliveryPresentation.Money(value.DispatchFeeKrw)</p><p class="exchange-note">배송비는 당사자가 직접 지급합니다. 배송 완료와 실제 지급 확인은 별도입니다.</p></section>
+        @if (Model.AcceptedRequestId is { } accepted) { <a class="exchange-primary" href="@Href(NeighborhoodMemberDeliveryRoutes.WorkDetail(accepted))">수락한 배송 보기</a> }
+        else if (value.CanAccept && value.ExpiresAtUtc > DateTime.UtcNow || Model.Pending is not null && Model.Pending.Target == value.OfferId)
+        {
+            <p>수락 기한 @value.ExpiresAtUtc.ToLocalTime().ToString("HH:mm")</p>
+            @if (Model.Pending?.Kind != "decline") { <button class="exchange-primary" disabled="@(Model.IsSending || Model.IsLoading || !Model.CanAccept && Model.Pending?.Kind != "accept")" @onclick="Accept">@(Model.Pending?.Kind == "accept" ? "같은 수락 요청 결과 확인" : "현재 위치 확인하고 수락")</button> }
+            @if (Model.Pending?.Kind != "accept") { <button disabled="@(Model.IsSending || Model.IsLoading)" @onclick="Model.DeclineAsync">@(Model.Pending?.Kind == "decline" ? "같은 거절 요청 결과 확인" : "이번 제안 거절")</button> }
+        }
+        else { <p role="status">지금은 수락할 수 없습니다. 최신 상태를 확인해 주세요.</p> }
+    }
+    @if (Model.IsAuthenticated) { <button disabled="@(Model.IsLoading || Model.IsSending)" @onclick="Reload">최신 상태 확인</button> }
+</main></NeighborhoodDeliveryFrame>
+@code {
+    [Parameter] public string OfferId { get; set; } = "";
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    private string? _loaded;
+    protected override Task OnParametersSetAsync() { if (_loaded == OfferId) return Task.CompletedTask; _loaded = OfferId; return Reload(); }
+    private Task Reload() => Model.LoadAsync(OfferId);
+    public Task RefreshAsync() => Reload();
+    private async Task Accept() { if (await Model.AcceptAsync() is { } id) Navigation.NavigateTo(Href(NeighborhoodMemberDeliveryRoutes.WorkDetail(id))); }
+    protected override async Task OnAfterRenderAsync(bool firstRender) { Model.SynchronizeOwner(); if (Model.IsAuthenticated && !Model.Loaded && !Model.IsLoading && Model.Error is null) await Reload(); }
+}

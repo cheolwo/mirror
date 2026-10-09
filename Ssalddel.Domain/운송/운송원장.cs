@@ -66,6 +66,9 @@ namespace 살뜰.도메인.운송
         public string? 생활배송협업Id { get; set; }
         public long? 생활배송조건판본 { get; set; }
         public string? 확정기사Id { get; set; }
+        public bool 일반회원배송전용 { get; set; }
+        public string? 일반회원수행자UserId { get; set; }
+        public string? 수행자종류 { get; set; }
 
         public string 픽업_도로명주소 { get; set; } = string.Empty;
 

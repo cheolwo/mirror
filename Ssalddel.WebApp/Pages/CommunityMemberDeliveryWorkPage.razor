@@ -1,0 +1,10 @@
+@page "/community/exchange/deliveries/work/{RequestId}"
+@using Ssalddel.Ui.Common.Areas.App.Services
+@inject NavigationManager Navigation
+<PageTitle>생활 배송 · 살뜰</PageTitle>
+<Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange.NeighborhoodMemberWork RequestId="@RequestId" LoginHref="@LoginHref" />
+@code {
+    [Parameter] public string RequestId { get; set; } = "";
+    private string ReturnRoute => NeighborhoodMemberDeliveryRoutes.WorkDetail(RequestId);
+    private string LoginHref => Navigation.ToAbsoluteUri($"login?returnUrl={Uri.EscapeDataString(Navigation.ToAbsoluteUri(ReturnRoute.TrimStart('/')).PathAndQuery)}").ToString();
+}

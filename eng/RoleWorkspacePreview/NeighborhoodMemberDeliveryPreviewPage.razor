@@ -1,0 +1,25 @@
+@page "/neighborhood-member-delivery-preview"
+@page "/neighborhood-member-delivery-preview/{Scenario}"
+@page "/community/exchange/deliveries/work/preview-member-work"
+@using Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange
+@inject NeighborhoodMemberDeliveryPreviewFixture Fixture
+@inject NavigationManager Navigation
+@implements IDisposable
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside data-member-delivery-preview-ready data-scenario="@Scenario" style="padding:8px 16px;background:#eaf5f3;color:#0f766e;font-size:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center"><span style="flex:1 1 220px">생활 배송 화면 검토 · 모의 자료 · 실제 배차·GPS·사진 저장·지급 없음</span><output data-member-delivery-preview-calls data-mutations="@Fixture.Mutations">모의 변경 @Fixture.Mutations</output></aside>
+@if (Scenario.StartsWith("settings") || Scenario == "feature-off") { <NeighborhoodMemberParticipation @key="Scenario" /> }
+else if (Scenario == "offers-empty") { <NeighborhoodMemberOffers @key="Scenario" /> }
+else if (Scenario.StartsWith("offer-")) { <NeighborhoodMemberOfferDetail OfferId="preview-member-offer" @key="Scenario" /> }
+else if (Scenario == "request-cancel") { <NeighborhoodDeliveryFrame><main class="exchange-page"><NeighborhoodMemberRequestStatus RequestId="preview-member-work" /></main></NeighborhoodDeliveryFrame> }
+else if (Scenario is "assigned" or "evidence-ready" or "picked" or "delivered" or "issue" or "anonymous" or "error" || Scenario == "") { <NeighborhoodMemberWork RequestId="preview-member-work" @key="Scenario" /> }
+else { <main><h1>생활 배송 화면 검토</h1><ul>@foreach (var value in NeighborhoodMemberDeliveryPreviewFixture.Scenarios) { <li><a href="@("/neighborhood-member-delivery-preview/" + value)">@value</a></li> }</ul></main> }
+@code {
+    [Parameter] public string Scenario { get; set; } = "index";
+    protected override void OnParametersSet()
+    {
+        if (Navigation.Uri.EndsWith("/community/exchange/deliveries/work/preview-member-work", StringComparison.Ordinal)) Scenario = "";
+    }
+    protected override void OnInitialized() => Fixture.Changed += Changed;
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() => Fixture.Changed -= Changed;
+}

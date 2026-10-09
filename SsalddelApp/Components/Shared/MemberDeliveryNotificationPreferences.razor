@@ -1,0 +1,64 @@
+@using Ssalddel.Client.Infrastructure.Notifications
+@using Ssalddel.Contracts.Common.Notifications
+@inject IMemberDeliveryPushPreferencesClient Push
+@inject IAuthSession Auth
+@implements IDisposable
+<section class="exchange-surface"><h2>휴대폰 알림</h2><p role="status">@Push.GetStatus().Message</p>
+    @if (Error is not null) { <p role="alert">@Error</p> }
+    <button type="button" disabled="@Busy" @onclick="EnablePermission">알림 권한 확인</button>
+    <fieldset disabled="@(Busy || !Auth.IsLoggedIn)"><legend>알림 방식</legend><label class="delivery-check"><input type="checkbox" @bind="Sound" /><span>소리</span></label><label class="delivery-check"><input type="checkbox" @bind="Vibrate" /><span>진동</span></label><label class="delivery-check"><input type="checkbox" @bind="QuietAtNight" /><span>야간 무음 · 밤 10시부터 오전 7시</span></label><button type="button" @onclick="SavePreferences">알림 방식 저장</button></fieldset>
+    <p class="exchange-note">휴대폰 알림을 사용할 수 없어도 받은 배송 제안 목록에서 최신 상태를 확인할 수 있습니다.</p>
+</section>
+@code {
+    [Parameter, EditorRequired] public NeighborhoodMemberParticipationResponse Settings { get; set; } = null!;
+    private string? _applied;
+    private bool _disposed;
+    private bool Busy;
+    private string? Error;
+    private bool Sound = true, Vibrate = true, QuietAtNight = true;
+    private string? _preferenceOwner;
+    protected override void OnInitialized() => Auth.Changed += Changed;
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_disposed || !Auth.IsLoggedIn || Auth.UserId is not { } owner) return;
+        var key = owner + ":" + Auth.SessionRevision + ":" + Settings.Revision + ":" + Settings.Enabled + ":" + Settings.ReceiveOffers;
+        if (_applied == key) return;
+        var revision = Auth.SessionRevision;
+        try
+        {
+            if (_preferenceOwner != owner)
+            {
+                var stored = await Push.ReadPreferencesAsync(owner);
+                if (_disposed || !Auth.IsLoggedIn || Auth.UserId != owner || Auth.SessionRevision != revision) return;
+                Sound = stored?.Sound ?? true; Vibrate = stored?.Vibrate ?? true; QuietAtNight = stored?.QuietAtNight ?? true;
+                _preferenceOwner = owner;
+            }
+            await Push.ApplyPreferencesAsync(owner, new(Settings.Enabled && Settings.ReceiveOffers, Sound, Vibrate, QuietAtNight));
+            if (_disposed || !Auth.IsLoggedIn || Auth.UserId != owner || Auth.SessionRevision != revision) return;
+            _applied = key; Error = null;
+        }
+        catch { if (!_disposed && Auth.UserId == owner && Auth.SessionRevision == revision) Error = "휴대폰 알림 설정을 확인하지 못했습니다. 배송 제안 목록에서 확인해 주세요."; }
+    }
+    private async Task SavePreferences()
+    {
+        if (Busy || _disposed || !Auth.IsLoggedIn || Auth.UserId is not { } owner) return;
+        var revision = Auth.SessionRevision; Busy = true; Error = null;
+        try
+        {
+            await Push.ApplyPreferencesAsync(owner, new(Settings.Enabled && Settings.ReceiveOffers, Sound, Vibrate, QuietAtNight));
+            if (_disposed || Auth.UserId != owner || Auth.SessionRevision != revision) return;
+        }
+        catch { if (!_disposed && Auth.UserId == owner && Auth.SessionRevision == revision) Error = "알림 방식 저장을 확인하지 못했습니다."; }
+        finally { if (!_disposed) Busy = false; }
+    }
+    private async Task EnablePermission()
+    {
+        if (Busy || _disposed) return;
+        Busy = true; Error = null;
+        try { await Push.RequestPermissionAsync(); await Push.EnsureRegisteredAsync(); }
+        catch { if (!_disposed) Error = "알림 연결을 확인하지 못했습니다. 기기 설정을 확인해 주세요."; }
+        finally { if (!_disposed) Busy = false; }
+    }
+    private void Changed() { if (!_disposed) { _applied = null; _preferenceOwner = null; Sound = Vibrate = QuietAtNight = true; _ = InvokeAsync(StateHasChanged); } }
+    public void Dispose() { _disposed = true; Auth.Changed -= Changed; }
+}

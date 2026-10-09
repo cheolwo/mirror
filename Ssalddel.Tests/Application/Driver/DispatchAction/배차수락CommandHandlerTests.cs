@@ -21,6 +21,22 @@ namespace Ssalddel.Tests.Application.Driver.DispatchAction;
 public sealed class 배차수락CommandHandlerTests
 {
     [Fact]
+    public async Task 일반회원전용SQL의뢰는권한있는기사도구형수락경로로확정할수없다()
+    {
+        await using var fixture = await Ssalddel.Tests.Services.Community.NeighborhoodMemberDeliveryTests.Fixture.CreateAsync();
+        await fixture.Ready();
+        var handler = CreateHandler(fixture.Db, new StubEligibilityService());
+        var result = await handler.Handle(new 배차수락Command("driver-1", "request-1"), CancellationToken.None);
+        Assert.True(result.IsFailed);
+        Assert.Equal("MemberDeliveryDedicatedRouteRequired", Assert.Single(result.Errors).Metadata["ErrorCode"]);
+        Assert.Equal(409, Assert.Single(result.Errors).Metadata["StatusCode"]);
+        await using var fresh = fixture.OpenDb();
+        var queue = await fresh.운송원장.SingleAsync();
+        Assert.Null(queue.확정기사Id); Assert.Null(queue.일반회원수행자UserId);
+        Assert.Equal(상태값.배차대기상태.대기, queue.상태);
+        Assert.Equal("Pending", (await fresh.Set<Ssalddel.Domain.Community.NeighborhoodMemberDelivery>().SingleAsync()).StateCode);
+    }
+    [Fact]
     public async Task 사후처리Event가실패해도_기사운송진행정보는_배차확정과같이저장된다()
     {
         await using var db = CreateContext();

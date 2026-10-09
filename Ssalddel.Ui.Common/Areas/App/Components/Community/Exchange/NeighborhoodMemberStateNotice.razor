@@ -1,0 +1,17 @@
+@if (!Model.IsAuthenticated)
+{
+    <section class="exchange-empty"><h2>로그인이 필요해요</h2><a class="exchange-primary" href="@LoginHref">로그인하기</a></section>
+}
+else
+{
+    @if (Model.Error is not null) { <div class="exchange-error" role="alert">@Model.Error</div> }
+    @if (Model.Notice is not null) { <p class="exchange-note" role="status">@Model.Notice</p> }
+    @if (Model.IsLoading) { <p role="status">정보를 확인하는 중입니다.</p> }
+    @if (Model.PendingHref is { } pendingHref)
+    { <p class="delivery-warning">원 요청의 결과를 확인해야 합니다. <a href="@Navigation.ToAbsoluteUri(pendingHref.TrimStart('/'))">요청한 업무로 돌아가기</a></p> }
+}
+@code {
+    [Inject] public NavigationManager Navigation { get; set; } = null!;
+    [Parameter, EditorRequired] public NeighborhoodMemberPageViewModel Model { get; set; } = null!;
+    [Parameter] public string LoginHref { get; set; } = "/login";
+}

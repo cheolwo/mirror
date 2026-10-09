@@ -1,0 +1,20 @@
+.member-delivery-map { position:relative; height:100dvh; min-height:480px; color:var(--ss-ink,#172b36); background:var(--ss-canvas,#f5f7fa); overflow:hidden; }
+.member-delivery-map__canvas { position:absolute; inset:0; width:100%; height:100%; background:#e8eeee; }
+.member-delivery-map__header { position:absolute; top:0; left:0; right:0; z-index:2; display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--ss-surface,#fff); }
+.member-delivery-map__header h1 { flex:1; margin:0; font-size:18px; }
+.member-delivery-map__header a { min-height:48px; display:flex; align-items:center; color:var(--ss-accent,#0f766e); font-size:14px; }
+.member-delivery-map__panel { position:absolute; bottom:0; left:0; right:0; z-index:2; max-height:75%; overflow-y:auto; padding:12px; display:grid; gap:8px; pointer-events:none; }
+.member-delivery-map__panel > * { pointer-events:auto; }
+.member-delivery-map__card { background:var(--ss-surface,#fff); border:1px solid var(--ss-border,#dce5e9); border-radius:16px; box-shadow:0 3px 12px #172b3614; }
+.member-delivery-map__card summary { padding:14px 16px; min-height:48px; box-sizing:border-box; cursor:pointer; font-weight:600; }
+.member-delivery-map__section { padding:12px 16px; border-top:1px solid var(--ss-border,#dce5e9); }
+.member-delivery-map__section h2 { margin:0 0 12px; font-size:16px; }
+.member-delivery-map__section p { margin:6px 0; line-height:1.5; overflow-wrap:anywhere; }
+.member-delivery-map__address { font-size:19px; font-weight:600; }
+.member-delivery-map__photo { width:100%; max-height:200px; object-fit:contain; border-radius:8px; }
+.member-delivery-map button { min-height:48px; padding:10px 14px; border:1px solid var(--ss-control-border,#788c97); border-radius:12px; background:var(--ss-surface,#fff); font:inherit; font-size:14px; cursor:pointer; }
+.member-delivery-map button:disabled { opacity:.55; cursor:default; }
+.member-delivery-map button.exchange-primary { width:100%; margin-top:12px; background:var(--ss-accent,#0f766e); border-color:var(--ss-accent,#0f766e); color:#fff; }
+.member-delivery-map textarea { width:100%; box-sizing:border-box; margin:8px 0; font:inherit; }
+.member-delivery-map :is(a,button,summary):focus-visible { outline:3px solid var(--ss-accent,#0f766e); outline-offset:2px; }
+.member-delivery-map__panel > :is(p,div) { background:var(--ss-surface,#fff); padding:12px; border-radius:12px; }

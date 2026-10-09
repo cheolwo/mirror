@@ -1,0 +1,24 @@
+@inject MemberDeliveryPushService Push
+@inject NavigationManager Navigation
+@implements IDisposable
+@code {
+    private bool _disposed, _reading;
+    protected override void OnInitialized() => Push.Changed += Changed;
+    protected override Task OnAfterRenderAsync(bool firstRender) => firstRender ? OpenAsync() : Task.CompletedTask;
+    private void Changed() { if (!_disposed) _ = InvokeAsync(OpenAsync); }
+    private async Task OpenAsync()
+    {
+        if (_disposed || _reading) return;
+        _reading = true;
+        try
+        {
+            var hint = await Push.TakeOpenTargetAsync();
+            if (!_disposed && hint is not null) Navigation.NavigateTo(hint.Route);
+            else if (!_disposed && await Push.IsSignInRequiredAsync())
+                Navigation.NavigateTo(NeighborhoodExchangeAuthenticationRoutes.LoginHref(NeighborhoodMemberDeliveryRoutes.Offers));
+        }
+        catch { /* 알림함과 제안 상세의 명시적 재조회로 복구합니다. */ }
+        finally { _reading = false; }
+    }
+    public void Dispose() { _disposed = true; Push.Changed -= Changed; }
+}

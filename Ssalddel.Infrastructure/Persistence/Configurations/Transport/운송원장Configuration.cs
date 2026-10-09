@@ -44,6 +44,9 @@ public sealed class 운송원장Configuration : IEntityTypeConfiguration<운송�
         builder.Property(x => x.생활배송협업Id).HasColumnName("neighborhood_collaboration_id").HasMaxLength(100);
         builder.Property(x => x.생활배송조건판본).HasColumnName("neighborhood_terms_revision");
         builder.Property(x => x.확정기사Id).HasColumnName("confirmed_driver_id");
+        builder.Property(x => x.일반회원배송전용).HasColumnName("neighborhood_member_only");
+        builder.Property(x => x.일반회원수행자UserId).HasColumnName("assigned_member_user_id").HasMaxLength(191);
+        builder.Property(x => x.수행자종류).HasColumnName("performer_kind").HasMaxLength(40);
         builder.Property(x => x.픽업_도로명주소).HasColumnName("pickup_address").IsRequired();
         builder.Property(x => x.픽업_상세주소).HasColumnName("pickup_address_detail").IsRequired();
         builder.Property(x => x.픽업_위도).HasColumnName("pickup_latitude");

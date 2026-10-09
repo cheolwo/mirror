@@ -8,6 +8,7 @@ public static partial class SsalddelPageCapabilityCatalog
         =>
         [
             .. CreateNeighborhoodCollaborationItems(),
+            .. CreateNeighborhoodMemberDeliveryItems(),
             Exact("community-neighborhood-map", SsalddelPageAppCodes.IntegratedWeb, "/community/map",
                 PageCapabilityStage.Live, PageInteractionBoundary.ReadOnly, false, "0.0",
                 "공개 동네의 제공·필요 글을 지도 또는 목록으로 탐색합니다. 본인 생활 배송은 기존 인증·운송 기능 경계를 통과한 경우만 조회합니다.",

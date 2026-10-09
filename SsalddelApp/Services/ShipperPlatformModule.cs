@@ -17,12 +17,20 @@ internal static class ShipperPlatformModule
         services.AddSingleton<IClientSecureTokenStore, MauiSecureTokenStore>();
         services.AddSingleton<IClientSessionGuard, ClientSessionGuard>();
         services.AddSingleton<IAuthSession, AuthSession>();
-        services.AddSingleton<ISsalddelMobilePushTokenProvider, NullSsalddelMobilePushTokenProvider>();
+        services.AddSingleton<IMemberDeliveryPushStateStore, MemberDeliveryPushStore>();
+        services.AddSingleton<MauiMemberPushTokenProvider>();
+        services.AddSingleton<ISsalddelMobilePushTokenProvider>(provider => provider.GetRequiredService<MauiMemberPushTokenProvider>());
         services.AddSingleton(provider =>
             new SsalddelMobilePushInstallationClient(
                 provider.GetRequiredService<HttpClient>(),
                 provider.GetRequiredService<ISsalddelMobilePushTokenProvider>(),
-                () => provider.GetRequiredService<IAuthSession>().AccessToken));
+                () => provider.GetRequiredService<IAuthSession>().AccessToken,
+                provider.GetRequiredService<IMemberDeliveryPushStateStore>(),
+                () => provider.GetRequiredService<IAuthSession>().UserId,
+                () => provider.GetRequiredService<IAuthSession>().SessionRevision));
+        services.AddSingleton<MemberDeliveryPushService>();
+        services.AddSingleton<IMemberDeliveryPushPreferencesClient>(provider => provider.GetRequiredService<MemberDeliveryPushService>());
+        services.AddSingleton<Ssalddel.Ui.Common.Areas.App.ViewModels.INeighborhoodMemberPendingStore, MauiNeighborhoodMemberPendingStore>();
         services.AddScoped<AuthApiService>();
         services.AddScoped<LogisticsServiceContractClient>();
         services.AddSingleton<I꾸미기보유권LocalStore, Maui꾸미기보유권LocalStore>();
