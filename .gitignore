@@ -104,3 +104,12 @@ Thumbs.db
 *.[lL][rR][vV]
 *.[iI][nN][sS][vV]
 *.360
+
+# Local package installations, verification runs and mobile credentials.
+**/node_modules/
+/outputs/
+*.[aA][pP][kK]
+*.[aA][aA][bB]
+*.jks
+*.keystore
+**/google-services.json
