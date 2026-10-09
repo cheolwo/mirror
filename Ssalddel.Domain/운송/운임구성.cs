@@ -29,6 +29,7 @@ namespace 살뜰.도메인.운송
         public decimal? 최소운임 { get; set; }
         public string? 거리계산방식 { get; set; }
         public string? 단가출처 { get; set; }
+        public string? 합의요금표SnapshotJson { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

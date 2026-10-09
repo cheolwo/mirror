@@ -1,0 +1,8 @@
+@page "/settings/agreed-rates"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Pricing
+<PageTitle>합의 요금표</PageTitle>
+<AgreedRateTableScreen RoleKey="restaurant" WorkId="@WorkId" ReturnHref="@ReturnHref" LoginReturnHref="/login" />
+@code {
+    [SupplyParameterFromQuery(Name = "workId")] public string? WorkId { get; set; }
+    private string ReturnHref => string.IsNullOrWhiteSpace(WorkId) ? "/orders" : "/orders/" + Uri.EscapeDataString(WorkId);
+}

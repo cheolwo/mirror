@@ -26,6 +26,7 @@ public sealed class 운임구성Configuration : IEntityTypeConfiguration<운임�
         builder.Property(x => x.최소운임).HasColumnName("minimum_fare").HasPrecision(18, 2);
         builder.Property(x => x.거리계산방식).HasColumnName("distance_basis").HasMaxLength(80);
         builder.Property(x => x.단가출처).HasColumnName("rate_source").HasMaxLength(160);
+        builder.Property(x => x.합의요금표SnapshotJson).HasColumnName("agreed_rate_table_snapshot_json").HasColumnType("longtext");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");
     }

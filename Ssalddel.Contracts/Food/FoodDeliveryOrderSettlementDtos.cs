@@ -56,6 +56,8 @@ public sealed class FoodDeliverySettlementPricingBreakdownDto
     public string RouteVehicleCode { get; set; } = "Unknown";
     public string RouteOptionCode { get; set; } = string.Empty;
     public string TimeBandCode { get; set; } = string.Empty;
+    /// <summary>수락 시 저장된 당사자 합의. 현재 합의나 요율로 소급 재계산하지 않습니다.</summary>
+    public Ssalddel.Contracts.Common.Pricing.AgreedRateTableSnapshotDto? AgreedRateTable { get; set; }
 }
 
 public sealed class FoodDeliverySimulatedPaymentDto

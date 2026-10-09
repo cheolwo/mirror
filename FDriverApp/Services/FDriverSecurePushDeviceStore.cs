@@ -23,7 +23,9 @@ public sealed class FDriverSecurePushDeviceStore : IFDriverPushDeviceStore
             var manager = (global::Android.App.NotificationManager?)context.GetSystemService(global::Android.Content.Context.NotificationService);
             if (manager is null || !manager.AreNotificationsEnabled()) return false;
             if (global::Android.OS.Build.VERSION.SdkInt >= global::Android.OS.BuildVersionCodes.O
-                && manager.GetNotificationChannel(FDriverFoodNotificationService.ChannelId)?.Importance == global::Android.App.NotificationImportance.None)
+                && (manager.GetNotificationChannel(FDriverFoodNotificationService.ChannelId)?.Importance == global::Android.App.NotificationImportance.None
+                    || (manager.NotificationChannels ?? []).Any(x => x.Id?.StartsWith(FDriverFoodNotificationService.ChannelPrefix, StringComparison.Ordinal) == true
+                        && x.Importance == global::Android.App.NotificationImportance.None)))
                 return false;
             return true;
 #else

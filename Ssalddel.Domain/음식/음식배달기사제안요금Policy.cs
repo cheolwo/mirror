@@ -28,15 +28,16 @@ public static class 음식배달기사제안요금Policy
         DateTimeOffset 판정시각Utc,
         bool 한시수요할증허용,
         string deliveryKey = "offer",
-        decimal 시간대할증액 = 0m)
+        decimal 시간대할증액 = 0m,
+        FoodDeliveryPayoutPricingPolicy? 합의계산정책 = null)
     {
         ArgumentNullException.ThrowIfNull(policy);
         if (시간대할증액 < 0m) throw new ArgumentException("FoodPricingTimeSurchargeInvalid", nameof(시간대할증액));
 
-        if (policy.기사픽업지급액 is < 0m || policy.기사픽업지급액 > policy.기사기본지급액)
+        if (합의계산정책 is null && (policy.기사픽업지급액 is < 0m || policy.기사픽업지급액 > policy.기사기본지급액))
             throw new ArgumentException("픽업 지급액은 총 기본 지급액 안에서 배분해야 합니다.", nameof(policy));
         var date = DateOnly.FromDateTime(판정시각Utc.UtcDateTime);
-        var calculationPolicy = new FoodDeliveryPayoutPricingPolicy(
+        var calculationPolicy = 합의계산정책 ?? new FoodDeliveryPayoutPricingPolicy(
             기본판본, date, date, policy.기사픽업지급액 ?? 0m,
             policy.기사기본지급액 - (policy.기사픽업지급액 ?? 0m), policy.거리단위Meters,
             policy.기사거리단위지급액, "Ceiling", policy.포함거리Meters, policy.기사최소지급액);
@@ -77,7 +78,7 @@ public static class 음식배달기사제안요금Policy
             시간대할증액 = 시간대할증액,
             기본계산정책 = calculationPolicy,
             기본요금구성 = components,
-            기본지급구분Code = policy.기사픽업지급액.HasValue ? "PickupDropoffSplit" : "LegacyUnsplit"
+            기본지급구분Code = 합의계산정책 is not null || policy.기사픽업지급액.HasValue ? "PickupDropoffSplit" : "LegacyUnsplit"
         };
     }
 }

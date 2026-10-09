@@ -1,6 +1,7 @@
 using RestaurantDeskApp.Models.Restaurant;
 using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Contracts.Food;
+using Ssalddel.Contracts.Common.Notifications;
 
 namespace RestaurantDeskApp.Services;
 
@@ -14,6 +15,8 @@ public interface IRestaurantOrderNotificationPlatform
     Task<bool> RequestPermissionAsync(CancellationToken cancellationToken);
     Task ShowAsync(string orderNo, string ownerId, CancellationToken cancellationToken);
     void Clear();
+    NotificationAlertPreferences GetAlertPreferences(string ownerId) => new();
+    void SetAlertPreferences(string ownerId, NotificationAlertPreferences preferences) { }
 }
 
 public sealed class NoRestaurantOrderNotifications : IRestaurantOrderNotificationPlatform

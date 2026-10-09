@@ -1,0 +1,9 @@
+@page "/workspace/{RoleKey}/agreed-rates"
+@layout RoleWorkspaceLayout
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Pricing
+<AgreedRateTableScreen RoleKey="@RoleKey" WorkId="@WorkId" ReturnHref="@ReturnUrl" />
+@code {
+    [Parameter] public string RoleKey { get; set; } = "";
+    [SupplyParameterFromQuery] public string? WorkId { get; set; }
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+}

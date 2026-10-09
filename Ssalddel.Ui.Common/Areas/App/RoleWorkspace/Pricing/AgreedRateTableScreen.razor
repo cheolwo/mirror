@@ -1,0 +1,202 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Pricing
+@using System.Globalization
+@using Ssalddel.Contracts.Common.Pricing
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@inject IRoleWorkspaceApi Api
+@inject IRoleWorkspaceAccess Access
+@implements IDisposable
+
+<main class="agreed-rates" aria-label="관계별 합의 요금표">
+    <header><a href="@SafeReturn">업무로 돌아가기</a><h1>합의 요금표</h1></header>
+    @if (Model is null)
+    { <p role="alert">이 역할에서는 합의 요금표를 사용할 수 없습니다.</p> }
+    else if (Model.RequiresLogin)
+    {
+        <p role="alert">로그인한 뒤 합의 요금표를 확인해 주세요.</p>
+        <a class="agreed-rates__primary" href="@LoginHref">로그인</a>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(WorkId) && RoleWorkspaceNavigation.StableId(WorkId) is null)
+        { <p class="agreed-rates__error" role="alert">대상 업무 번호를 확인하지 못했습니다. 원래 업무에서 다시 들어와 주세요.</p> }
+        @if (Model.Error is { } error) { <p class="agreed-rates__error" role="alert">@error</p> }
+        @if (Model.Message is { } message) { <p role="status">@message</p> }
+        @if (Model.IsBusy) { <p role="status">요금표와 처리 결과를 확인하고 있습니다.</p> }
+        @if (Model.HasPendingCommand)
+        {
+            <p>아직 확인되지 않은 요청이 있습니다. 입력을 바꾸기 전에 같은 요청의 결과를 확인해 주세요.</p>
+            <button type="button" class="agreed-rates__primary" disabled="@Model.IsBusy" @onclick="Model.RetryPendingAsync">같은 요청 결과 다시 확인</button>
+        }
+        else
+        { <button type="button" disabled="@Model.IsBusy" @onclick="Reload">최신 요금표 다시 조회</button> }
+        @if (Model.IsLoaded)
+        {
+            <div class="agreed-rates__lists">
+                @foreach (var group in new[] { (Title: "받은 제안", Items: Model.Received), (Title: "내가 보낸 제안", Items: Model.Sent) })
+                {
+                    <section aria-label="@group.Title"><h2>@group.Title</h2>
+                        @if (group.Items.Count == 0) { <p>현재 확인할 요금표가 없습니다.</p> }
+                        <ul>
+                            @foreach (var table in group.Items)
+                            {
+                                <li><button type="button" disabled="@(!Model.CanEdit)" aria-pressed="@(Model.Selected?.AgreementId == table.AgreementId ? "true" : "false")" @onclick="() => Model.ChooseAsync(table.AgreementId)">
+                                    <strong>@table.VehicleCode · @AgreedRateTableViewModel.Status(table.StatusCode)</strong>
+                                    <span>합의 판본 @table.Revision · @AgreedRateTableViewModel.EffectiveStatus(table.EffectiveStatusCode)</span>
+                                    <small>@PartySummary(table)</small>
+                                </button></li>
+                            }
+                        </ul>
+                    </section>
+                }
+            </div>
+        }
+        @if (Model.Selected is { } selected)
+        {
+            <section class="agreed-rates__detail" aria-label="선택 요금표">
+                <h2>선택한 요금표</h2>
+                <p><strong>@AgreedRateTableViewModel.Status(selected.StatusCode)</strong> · @AgreedRateTableViewModel.EffectiveStatus(selected.EffectiveStatusCode)</p>
+                <dl><div><dt>요금표 번호</dt><dd>@selected.AgreementId</dd></div><div><dt>합의 판본</dt><dd>@selected.Revision</dd></div>
+                    <div><dt>차량 구분</dt><dd>@selected.VehicleCode</dd></div><div><dt>당사자</dt><dd>@PartySummary(selected)</dd></div>
+                    <div><dt>적용 기간</dt><dd>@LocalTime(selected.EffectiveFromUtc) ~ @LocalTime(selected.EffectiveUntilUtc)</dd></div>
+                </dl>
+                @if (selected.FoodPricing is { } food)
+                {
+                    <dl><div><dt>단가 판본</dt><dd>@food.Revision</dd></div><div><dt>픽업비</dt><dd>@Money(food.PickupFeeKrw)</dd></div><div><dt>전달비</dt><dd>@Money(food.DropoffFeeKrw)</dd></div>
+                        <div><dt>거리 단가</dt><dd>@food.DistanceUnitMeters m당 @Money(food.DistanceUnitFeeKrw) · @(food.DistanceRoundingCode == "Floor" ? "절사" : food.DistanceRoundingCode == "Ceiling" ? "올림" : "계산 방식 확인 필요")</dd></div>
+                        <div><dt>포함 거리</dt><dd>@food.IncludedDistanceMeters m</dd></div><div><dt>최소 지급 예정액</dt><dd>@Money(food.MinimumPayoutKrw)</dd></div></dl>
+                }
+                @if (selected.CargoPricing is { } cargo)
+                { <dl><div><dt>기본 운임</dt><dd>@Money(cargo.BaseFareKrw)</dd></div><div><dt>거리 단가</dt><dd>1km당 @Money(cargo.PerKmKrw)</dd></div><div><dt>최소 운임</dt><dd>@Money(cargo.MinimumFareKrw)</dd></div></dl> }
+                <p>요금표 합의는 개별 배차 수락이나 지급 완료를 뜻하지 않습니다. 이미 확정된 업무 금액은 바뀌지 않습니다.</p>
+                <div class="agreed-rates__actions">
+                    @if (selected.CanAccept || selected.CanReject || selected.CanWithdraw)
+                    {
+                        <label class="agreed-rates__check"><input type="checkbox" @bind="Model.Confirmed" disabled="@(!Model.CanEdit)" />당사자·단가·기간·합의 판본을 확인했습니다</label>
+                        @if (selected.CanAccept) { <button type="button" class="agreed-rates__primary" disabled="@(!Model.CanAct("Accept") || !Model.Confirmed)" @onclick="Accept">요금표 수락</button> }
+                        @if (selected.CanReject) { <button type="button" disabled="@(!Model.CanAct("Reject") || !Model.Confirmed)" @onclick="Reject">요금표 거절</button> }
+                        @if (selected.CanWithdraw) { <button type="button" disabled="@(!Model.CanAct("Withdraw") || !Model.Confirmed)" @onclick="Withdraw">이후 적용 철회</button> }
+                    }
+                </div>
+                @if (selected.CanPreview)
+                {
+                    <section class="agreed-rates__preview" aria-label="요금 계산 미리보기">
+                        <h3>계산 미리보기</h3><p>입력한 거리로 계산합니다. 실제 접수·청구·지급 결과가 아닙니다.</p>
+                        <fieldset disabled="@(!Model.CanEdit)"><legend class="agreed-rates__sr-only">계산 입력</legend>
+                            <label>거리(km)<input type="number" min="0" step="0.001" @bind="Model.DistanceKm" /></label>
+                            <label>거리 기준<select @bind="Model.DistanceBasisCode"><option value="">선택해 주세요</option><option value="AppDisplayed">앱 표시 거리</option><option value="RouteEstimate">경로 추정 거리</option><option value="ConfirmedRoute">확인한 경로 거리</option></select></label>
+                            @if (!Model.IsFood)
+                            {
+                                <label>대기료(원)<input type="number" min="0" step="1" @bind="Model.WaitingFeeKrw" /></label>
+                                <label>수작업료(원)<input type="number" min="0" step="1" @bind="Model.ManualWorkFeeKrw" /></label>
+                                <label>할증(원)<input type="number" min="0" step="1" @bind="Model.SurchargeKrw" /></label>
+                            }
+                            else
+                            {
+                                <label class="agreed-rates__check"><input type="checkbox" @bind="Model.IncludeCostSharing" />비용 분담 조건도 검토</label>
+                                @if (Model.IncludeCostSharing)
+                                {
+                                    <label>비용 분담<select @bind="Model.CostSharingMode"><option value="">선택해 주세요</option><option value="CustomerPays">고객 부담</option><option value="FixedContribution">음식점 정액 지원</option><option value="PercentageShare">음식점 비율 지원</option><option value="RestaurantPays">음식점 전액 부담</option></select></label>
+                                    @if (Model.CostSharingMode == "FixedContribution") { <label>음식점 지원액(원)<input type="number" min="0" step="1" @bind="Model.FixedAmountKrw" /></label> }
+                                    @if (Model.CostSharingMode == "PercentageShare") { <label>음식점 부담 비율(%)<input type="number" min="0" max="100" step="0.01" @bind="Model.RestaurantSharePercent" /></label> }
+                                    @if (Model.CostSharingMode is "PercentageShare" or "RestaurantPays") { <label>음식점 부담 상한(원, 선택)<input type="number" min="0" step="1" @bind="Model.MaximumRestaurantChargeKrw" /></label> }
+                                    <label>고객 부담 상한(원, 선택)<input type="number" min="0" step="1" @bind="Model.MaxUserChargeKrw" /></label>
+                                    <p>이 입력은 계산 검토에만 사용합니다. 음식점의 기존 분담 설정을 저장하거나 바꾸지 않습니다.</p>
+                                }
+                            }
+                        </fieldset>
+                        <button type="button" disabled="@(!Model.CanPreview)" @onclick="Model.PreviewAsync">입력 조건으로 계산</button>
+                        @if (Model.Preview is { } preview)
+                        {
+                            <div class="agreed-rates__result" role="status"><strong>계산 검토액 @Money(preview.TotalAmountKrw)</strong><p>합의 판본 @preview.Agreement.Revision · 단가 판본 @(preview.Agreement.FoodPricing?.Revision ?? "화물 단가")</p>
+                                @if (preview.FoodBreakdown is { } line)
+                                { <dl><div><dt>픽업비</dt><dd>@Money(line.PickupFeeKrw)</dd></div><div><dt>전달비</dt><dd>@Money(line.DropoffFeeKrw)</dd></div><div><dt>거리비</dt><dd>@Money(line.DistanceFeeKrw)</dd></div><div><dt>최소액 보정</dt><dd>@Money(line.MinimumAdjustmentKrw)</dd></div></dl> }
+                                @if (preview.RestaurantContributionKrw.HasValue || preview.UserChargeKrw.HasValue)
+                                { <dl><div><dt>음식점 부담 검토액</dt><dd>@Money(preview.RestaurantContributionKrw)</dd></div><div><dt>고객 부담 검토액</dt><dd>@Money(preview.UserChargeKrw)</dd></div></dl> }
+                            </div>
+                        }
+                    </section>
+                    @if (selected.CanSelect && Model.WorkId is { } work)
+                    {
+                        <section aria-label="이 업무에 요금표 선택"><h3>이 업무에 합의 요금표 선택</h3><p>@(Model.IsFood ? "음식 주문번호" : "화물 의뢰번호") @work · 합의 판본 @selected.Revision</p>
+                            <label class="agreed-rates__check"><input type="checkbox" @bind="Model.SelectionConfirmed" disabled="@(!Model.CanEdit)" />이 업무에 위 요금표와 판본을 적용하도록 선택합니다</label>
+                            <button type="button" class="agreed-rates__primary" disabled="@(!Model.CanSelect || !Model.SelectionConfirmed)" @onclick="Model.SelectAsync">이 업무에 요금표 선택</button>
+                        </section>
+                    }
+                }
+                @if (Model.Selection is { } chosen)
+                {
+                    <div class="agreed-rates__result" role="status"><p>@AgreedRateTableViewModel.SelectionStatus(chosen.StatusCode)</p>
+                        <p>업무 @chosen.WorkId · 요금표 @chosen.Agreement.AgreementId · 동결 합의 판본 @chosen.Agreement.Revision</p>
+                        @if (chosen.AgreedAmountKrw.HasValue) { <p>합의 수행대가 @Money(chosen.AgreedAmountKrw) · 실제 청구·수금·지급 완료와 별개입니다.</p> }
+                        <p>이미 확정된 업무 금액은 소급 변경하지 않습니다.</p>
+                        @if (chosen.CanRetrySynchronization)
+                        { <button type="button" disabled="@(!Model.CanRetrySynchronization)" @onclick="Model.RetrySynchronizationAsync">원장 동기화 다시 확인</button> }
+                    </div>
+                }
+                @if (selected.History.Count > 0)
+                { <details><summary>제안·확인 이력</summary><ul>@foreach (var entry in selected.History) { <li>@HistoryLabel(entry.ActionCode) · 판본 @entry.Revision · @LocalTime(entry.OccurredAtUtc)</li> }</ul></details> }
+            </section>
+        }
+        @if (Model.IsLoaded)
+        {
+            <details class="agreed-rates__proposal"><summary>새 요금표 제안</summary>
+                <p>입력한 단가를 상대에게 제안합니다. 상대의 수락 전에는 합의되지 않습니다.</p>
+                <fieldset disabled="@(!Model.CanEdit)"><legend class="agreed-rates__sr-only">새 요금표 조건</legend>
+                    <label>상대 계정 번호<input type="text" maxlength="256" autocomplete="off" @bind="Model.Draft.CounterpartyId" /></label>
+                    <label>차량 구분<input type="text" maxlength="64" @bind="Model.Draft.VehicleCode" /></label>
+                    <label>적용 시각의 시간대<select @bind="Model.Draft.UtcOffsetMinutes"><option value="540">한국 시간(UTC+09:00)</option><option value="0">UTC</option></select></label>
+                    <label>적용 시작<input type="datetime-local" @bind="Model.Draft.EffectiveFromLocal" /></label>
+                    <label>적용 종료<input type="datetime-local" @bind="Model.Draft.EffectiveUntilLocal" /></label>
+                    @if (Model.IsFood)
+                    {
+                        <label>단가 판본 이름<input type="text" maxlength="128" @bind="Model.Draft.PricingRevision" /></label>
+                        <label>픽업비(원)<input type="number" min="0" step="1" @bind="Model.Draft.PickupFeeKrw" /></label>
+                        <label>전달비(원)<input type="number" min="0" step="1" @bind="Model.Draft.DropoffFeeKrw" /></label>
+                        <label>거리 단위(m)<input type="number" min="1" step="1" @bind="Model.Draft.DistanceUnitMeters" /></label>
+                        <label>거리 단위당 금액(원)<input type="number" min="0" step="1" @bind="Model.Draft.DistanceUnitFeeKrw" /></label>
+                        <label>거리 계산<select @bind="Model.Draft.DistanceRoundingCode"><option value="">선택해 주세요</option><option value="Floor">절사</option><option value="Ceiling">올림</option></select></label>
+                        <label>포함 거리(m)<input type="number" min="0" step="1" @bind="Model.Draft.IncludedDistanceMeters" /></label>
+                    }
+                    else
+                    {
+                        <label>기본 운임(원)<input type="number" min="0" step="1" @bind="Model.Draft.BaseFareKrw" /></label>
+                        <label>1km당 운임(원)<input type="number" min="0" step="1" @bind="Model.Draft.PerKmKrw" /></label>
+                    }
+                    <label>@(Model.IsFood ? "최소 지급 예정액(원)" : "최소 운임(원)")<input type="number" min="0" step="1" @bind="Model.Draft.MinimumFareKrw" /></label>
+                    <label class="agreed-rates__check"><input type="checkbox" @bind="Model.ProposalConfirmed" />상대·단가·기간을 확인하고 이 조건을 제안합니다</label>
+                </fieldset>
+                <button type="button" class="agreed-rates__primary" disabled="@(!Model.CanEdit || !Model.ProposalConfirmed)" @onclick="Model.ProposeAsync">요금표 제안 보내기</button>
+            </details>
+        }
+    }
+</main>
+
+@code {
+    [Parameter] public string RoleKey { get; set; } = "";
+    [Parameter] public string? WorkId { get; set; }
+    [Parameter] public string? ReturnHref { get; set; }
+    [Parameter] public string? LoginReturnHref { get; set; }
+    private AgreedRateTableViewModel? Model;
+    private string SafeReturn => RoleWorkspaceNavigation.LocalRoute(ReturnHref) ?? RoleWorkspaceNavigation.Href(RoleKey);
+    private string LoginHref => RoleWorkspaceNavigation.LocalRoute(LoginReturnHref) ?? RoleWorkspaceNavigation.WithReturn($"/workspace/{RoleKey}/login", $"/workspace/{RoleKey}/agreed-rates" + (WorkId is null ? "" : "?workId=" + Uri.EscapeDataString(WorkId)))!;
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!AgreedRateTableClient.Supports(RoleKey)) { Release(); return; }
+        if (Model?.RoleKey != RoleKey) { Release(); Model = new(Api, Access, RoleKey); Model.Changed += Refresh; }
+        Model.SetWork(WorkId);
+        await Model.LoadAsync();
+    }
+    private Task Reload() => Model!.LoadAsync();
+    private Task Accept() => Model!.ActAsync("Accept");
+    private Task Reject() => Model!.ActAsync("Reject");
+    private Task Withdraw() => Model!.ActAsync("Withdraw");
+    private void Refresh() => _ = InvokeAsync(StateHasChanged);
+    private void Release() { if (Model is null) return; Model.Changed -= Refresh; Model.Dispose(); Model = null; }
+    public void Dispose() => Release();
+    private static string Money(decimal? amount) => AgreedRateTableViewModel.Money(amount);
+    private static string LocalTime(DateTime utc) => new DateTimeOffset(DateTime.SpecifyKind(utc, DateTimeKind.Utc)).ToOffset(TimeSpan.FromHours(9)).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) + " (한국 시간)";
+    private static string PartySummary(AgreedRateTableDto table) => $"{PartyLabel(table.Proposer.PartyKind)} {ShortId(table.Proposer.PartyId)} → {PartyLabel(table.Counterparty.PartyKind)} {ShortId(table.Counterparty.PartyId)}";
+    private static string ShortId(string id) => id.Length <= 8 ? id : id[..4] + "…" + id[^4..];
+    private static string PartyLabel(string kind) => kind switch { "Restaurant" => "음식점", "FoodDriver" => "음식기사", "Shipper" => "화주", "CargoDriver" => "화물기사", _ => "당사자" };
+    private static string HistoryLabel(string code) => code switch { "Propose" => "제안", "Accept" => "수락", "Reject" => "거절", "Withdraw" => "철회", _ => "상태 변경" };
+}

@@ -7,12 +7,16 @@ using Android.OS;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
 using RestaurantDeskApp.Services;
+using Ssalddel.Contracts.Common.Notifications;
+using System.Text.Json;
 
 namespace RestaurantDeskApp.Platforms.Android;
 
 public sealed class AndroidRestaurantOrderNotifications : IRestaurantOrderNotificationPlatform
 {
     private const string ChannelId = "restaurant-orders";
+    private const string ChannelPrefix = "restaurant-orders-alert.v2";
+    private const string PreferencesPrefix = "restaurant.notification.preferences.";
     private const string OrderExtra = "ssalddel.restaurant.order";
     private const string TicketExtra = "ssalddel.restaurant.ticket";
     private const string OwnerPrefix = "restaurant.notification.owner.";
@@ -21,6 +25,23 @@ public sealed class AndroidRestaurantOrderNotifications : IRestaurantOrderNotifi
     private static RestaurantNotificationActivation? _pending;
     public AndroidRestaurantOrderNotifications() => _instance = this;
     public bool IsSupported => true;
+    public NotificationAlertPreferences GetAlertPreferences(string ownerId)
+    {
+        try
+        {
+            var text = Preferences.Default.Get(PreferencesKey(ownerId), string.Empty);
+            return string.IsNullOrWhiteSpace(text) ? new() : JsonSerializer.Deserialize<NotificationAlertPreferences>(text) ?? new();
+        }
+        catch (JsonException) { return new(false, false, false); }
+    }
+    public void SetAlertPreferences(string ownerId, NotificationAlertPreferences preferences)
+    {
+        if (string.IsNullOrWhiteSpace(ownerId)) return;
+        Preferences.Default.Set(PreferencesKey(ownerId), JsonSerializer.Serialize(preferences));
+        if (!preferences.Enabled) Clear();
+    }
+    private static string PreferencesKey(string ownerId)
+        => PreferencesPrefix + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(ownerId)));
     public event Action<RestaurantNotificationActivation>? Activated;
     public RestaurantNotificationActivation? TakePendingActivation()
     {
@@ -54,7 +75,7 @@ public sealed class AndroidRestaurantOrderNotifications : IRestaurantOrderNotifi
                 cancellationToken.ThrowIfCancellationRequested();
                 if (result != PermissionStatus.Granted) return false;
             }
-            return NotificationManagerCompat.From(global::Android.App.Application.Context).AreNotificationsEnabled();
+            return NotificationManagerCompat.From(global::Android.App.Application.Context)?.AreNotificationsEnabled() == true;
         });
 
     public Task ShowAsync(string orderNo, string ownerId, CancellationToken cancellationToken)
@@ -65,12 +86,23 @@ public sealed class AndroidRestaurantOrderNotifications : IRestaurantOrderNotifi
             if (Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu
                 && ContextCompat.CheckSelfPermission(context, global::Android.Manifest.Permission.PostNotifications) != Permission.Granted) return;
             var manager = NotificationManagerCompat.From(context);
-            if (!manager.AreNotificationsEnabled()) return;
+            if (manager is null || !manager.AreNotificationsEnabled()) return;
+            var plan = NotificationAlertPolicy.Evaluate(GetAlertPreferences(ownerId), DateTimeOffset.UtcNow);
+            if (!plan.Enabled) return;
             if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
             {
-                var nativeManager = (NotificationManager)context.GetSystemService(Context.NotificationService)!;
-                using var channel = new NotificationChannel(ChannelId, "음식점 새 주문", NotificationImportance.High)
+                var nativeManager = context.GetSystemService(Context.NotificationService) as NotificationManager;
+                if (nativeManager is null) return;
+                var legacy = nativeManager.GetNotificationChannel(ChannelId);
+                var modes = (nativeManager.NotificationChannels ?? []).Where(x => x.Id?.StartsWith(ChannelPrefix, StringComparison.Ordinal) == true).ToArray();
+                plan = NotificationAlertPolicy.PreserveLegacy(plan, ToState(legacy), modes.Select(x => ToState(x)!));
+                if (!plan.Enabled) return;
+                using var channel = new NotificationChannel(NotificationAlertPolicy.ChannelId(ChannelPrefix, plan), "살뜰 새 주문", NotificationImportance.High)
                 { LockscreenVisibility = NotificationVisibility.Private };
+                using var attributes = new global::Android.Media.AudioAttributes.Builder()
+                    .SetUsage(global::Android.Media.AudioUsageKind.Notification)!.SetContentType(global::Android.Media.AudioContentType.Sonification)!.Build();
+                channel.SetSound(plan.Sound ? global::Android.Net.Uri.Parse($"android.resource://{context.PackageName}/raw/ssalddel_order") : null, attributes);
+                channel.EnableVibration(plan.Vibrate);
                 nativeManager.CreateNotificationChannel(channel);
             }
             var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(ownerId + "::" + orderNo));
@@ -93,22 +125,33 @@ public sealed class AndroidRestaurantOrderNotifications : IRestaurantOrderNotifi
             intent.AddFlags(ActivityFlags.SingleTop | ActivityFlags.ClearTop);
             using var pending = PendingIntent.GetActivity(context, id, intent,
                 PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
-            using var notification = new NotificationCompat.Builder(context, ChannelId)
-                .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)
-                .SetContentTitle("새 주문이 도착했어요")
-                .SetContentText("앱에서 주문을 확인해 주세요.")
-                .SetVisibility((int)NotificationVisibility.Private)
-                .SetPriority((int)NotificationPriority.High)
-                .SetContentIntent(pending)
-                .SetAutoCancel(true)
-                .SetOnlyAlertOnce(true)
-                .Build();
+            using var builder = new NotificationCompat.Builder(context, NotificationAlertPolicy.ChannelId(ChannelPrefix, plan));
+            builder.SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo);
+            builder.SetContentTitle("살뜰 주문 · 새 주문");
+            builder.SetContentText("앱에서 주문을 확인해 주세요.");
+            builder.SetVisibility((int)NotificationVisibility.Private);
+            builder.SetPriority((int)NotificationPriority.High);
+            builder.SetContentIntent(pending);
+            builder.SetAutoCancel(true);
+            builder.SetOnlyAlertOnce(true);
+            if (Build.VERSION.SdkInt < BuildVersionCodes.O)
+            {
+                builder.SetSound(plan.Sound ? global::Android.Net.Uri.Parse($"android.resource://{context.PackageName}/raw/ssalddel_order") : null);
+                if (plan.Vibrate) builder.SetVibrate([0L, 180L]);
+            }
+            using var notification = builder.Build();
+            if (notification is null) return;
             manager.Notify(id, notification);
         });
 
+    private static NotificationChannelState? ToState(NotificationChannel? channel)
+        => channel is null ? null : new(channel.Id!, channel.Importance == NotificationImportance.None,
+            (int)channel.Importance >= (int)NotificationImportance.Default && channel.Sound is not null,
+            (int)channel.Importance >= (int)NotificationImportance.Default && channel.ShouldVibrate());
+
     public void Clear() => MainThread.BeginInvokeOnMainThread(() =>
     {
-        NotificationManagerCompat.From(global::Android.App.Application.Context).CancelAll();
+        NotificationManagerCompat.From(global::Android.App.Application.Context)?.CancelAll();
         foreach (var ticket in Preferences.Default.Get(TicketIndex, string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries))
             Preferences.Default.Remove(OwnerPrefix + ticket);
         Preferences.Default.Remove(TicketIndex);

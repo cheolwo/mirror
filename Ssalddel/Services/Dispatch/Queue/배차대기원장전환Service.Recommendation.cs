@@ -60,7 +60,7 @@ namespace 살뜰.Services.Dispatch.Queue
             {
                 await 음식배달제안요금동결Async(queue, driverId, cancellationToken);
             }
-            catch (ArgumentException)
+            catch (Exception ex) when (ex is ArgumentException or Ssalddel.Application.Pricing.AgreedRateTableException)
             {
                 var blocked = 전환안됨(queue, 배차대기원장전환결과코드.배차구성오류,
                     "배달료 계산에 필요한 거리 또는 요금 정책이 유효하지 않아 제안을 생성하지 않았습니다.", driverId);

@@ -1,0 +1,78 @@
+@page "/settings/notifications"
+@implements IDisposable
+@inject RestaurantAuthService Auth
+@inject Ssalddel.Client.Infrastructure.Security.ClientAuthSession Session
+@inject IRestaurantOrderNotificationPlatform Platform
+
+<PageTitle>주문 알림</PageTitle>
+<MudContainer MaxWidth="MaxWidth.Small" Class="py-4">
+    <MudStack Spacing="3">
+        <MudButton Href="/orders" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">주문 목록으로</MudButton>
+        <MudText Typo="Typo.h5">주문 알림</MudText>
+        @if (loading) { <MudProgressLinear Indeterminate="true" /> }
+        else if (owner is null) { <MudAlert Severity="Severity.Warning">로그인한 뒤 설정을 확인해 주세요.</MudAlert> }
+        else if (!Platform.IsSupported) { <MudAlert Severity="Severity.Info">기기 알림 설정은 Android 앱에서 이용할 수 있습니다.</MudAlert> }
+        else
+        {
+            <MudText>새 주문을 메시지와 짧은 알림음으로 알려드립니다.</MudText>
+            <MudSwitch T="bool" @bind-Value="enabled" Color="Color.Primary">주문 알림</MudSwitch>
+            <MudSwitch T="bool" @bind-Value="sound" Color="Color.Primary">알림음</MudSwitch>
+            <MudSwitch T="bool" @bind-Value="vibrate" Color="Color.Primary">진동</MudSwitch>
+            <MudSwitch T="bool" @bind-Value="quiet" Color="Color.Primary">야간 무음</MudSwitch>
+            <MudText Typo="Typo.body2">한국 시각 22:00~07:00에는 소리·진동 없이 표시합니다. 기기 무음·알림 설정을 따릅니다.</MudText>
+            <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Primary">저장</MudButton>
+            <MudButton OnClick="AllowAsync" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Notifications">기기 알림 허용</MudButton>
+        }
+        @if (!string.IsNullOrWhiteSpace(message)) { <MudAlert Severity="Severity.Info">@message</MudAlert> }
+    </MudStack>
+</MudContainer>
+
+@code {
+    private string? owner;
+    private bool loading = true, enabled, sound, vibrate, quiet, disposed;
+    private string? message;
+    private readonly CancellationTokenSource lifetime = new();
+    protected override async Task OnInitializedAsync()
+    {
+        Auth.SessionEnding += End;
+        try
+        {
+            var auth = await Auth.EnsureAccessTokenAsync(cancellationToken: lifetime.Token);
+            if (disposed || !auth.IsSuccess || !Session.IsAuthenticated || string.IsNullOrWhiteSpace(Session.UserId)) return;
+            owner = Session.UserId;
+            Read();
+        }
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
+        catch { if (!disposed) message = "설정을 확인하지 못했습니다. 이 화면을 다시 열어 주세요."; }
+        finally { if (!disposed) loading = false; }
+    }
+    private void Read()
+    {
+        var settings = Platform.GetAlertPreferences(owner!);
+        enabled = settings.Enabled; sound = settings.Sound; vibrate = settings.Vibrate; quiet = settings.QuietAtNight;
+    }
+    private bool Current => !disposed && owner is not null && owner == Session.UserId && Session.IsAuthenticated;
+    private void Save()
+    {
+        if (!Current) return;
+        try
+        {
+            Platform.SetAlertPreferences(owner!, new(enabled, sound, vibrate, quiet)); Read();
+            message = "이 계정의 기기 알림 설정을 저장했습니다.";
+        }
+        catch { message = "설정을 저장하지 못했습니다. 다시 확인해 주세요."; }
+    }
+    private async Task AllowAsync()
+    {
+        if (!Current) return;
+        try
+        {
+            var allowed = await Platform.RequestPermissionAsync(lifetime.Token);
+            if (Current) message = allowed ? "기기 알림을 허용했습니다." : "기기 설정에서 알림 허용을 확인해 주세요.";
+        }
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
+        catch { if (Current) message = "기기 알림 설정을 확인하지 못했습니다. 다시 시도해 주세요."; }
+    }
+    private void End(bool explicitLogout) { owner = null; enabled = sound = vibrate = quiet = false; lifetime.Cancel(); _ = InvokeAsync(StateHasChanged); }
+    public void Dispose() { disposed = true; Auth.SessionEnding -= End; lifetime.Cancel(); lifetime.Dispose(); }
+}

@@ -108,6 +108,9 @@ internal static class 화주운송의뢰매퍼
             최종운임 = entity.최종운임,
             요금옵션 = fareComposition is null ? null : new ShipRequest.PricingDTO
             {
+                AgreedRateTable = ReadAgreement(fareComposition.합의요금표SnapshotJson),
+                AgreedRateTableEvidenceStatusCode = string.IsNullOrEmpty(fareComposition.합의요금표SnapshotJson) ? "NotSelected"
+                    : ReadAgreement(fareComposition.합의요금표SnapshotJson) is null ? "InvalidEvidence" : "StoredAcceptedAgreement",
                 예상거리Km = fareComposition.예상거리Km, Km당단가 = fareComposition.Km당단가,
                 기본운임 = fareComposition.기본운임, 거리운임 = fareComposition.거리운임,
                 최소운임 = fareComposition.최소운임, 최종운임 = fareComposition.최종운임,
@@ -203,5 +206,17 @@ internal static class 화주운송의뢰매퍼
         entity.화물폭Mm = cargo.화물폭Mm;
         entity.화물높이Mm = cargo.화물높이Mm;
         entity.화물팔레트개수 = cargo.팔레트개수;
+    }
+    private static Ssalddel.Contracts.Common.Pricing.AgreedRateTableSnapshotDto? ReadAgreement(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return null;
+        try
+        {
+            var snapshot = System.Text.Json.JsonSerializer.Deserialize<Ssalddel.Contracts.Common.Pricing.AgreedRateTableSnapshotDto>(json,
+                new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
+            return Ssalddel.Domain.Pricing.AgreedRateTableEvidencePolicy.IsValid(snapshot)
+                && snapshot!.BusinessKind == Ssalddel.Contracts.Common.Pricing.AgreedRateBusinessKinds.CargoTransport ? snapshot : null;
+        }
+        catch (System.Text.Json.JsonException) { return null; }
     }
 }

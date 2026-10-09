@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:FDriverApp.Controls" xmlns:fonts="clr-namespace:Fonts"
+    xmlns:models="clr-namespace:FDriverApp.PageModels" x:Class="FDriverApp.Pages.NotificationSettingsPage"
+    x:DataType="models:FDriverNotificationSettingsPageModel" Title="알림 설정" Shell.NavBarIsVisible="False"
+    BackgroundColor="{AppThemeBinding Light={StaticResource DriverCanvas}, Dark={StaticResource DriverCanvasDark}}">
+    <ScrollView><VerticalStackLayout Padding="16" Spacing="16">
+        <Button Text="내 정보로 돌아가기" controls:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_left_24_regular}" Clicked="OnBackClicked" Style="{StaticResource DriverSecondaryButtonStyle}" />
+        <Label Text="알림 설정" Style="{StaticResource DriverTitleStyle}" />
+        <Label Text="새 배달 요청을 메시지와 짧은 알림음으로 알려드립니다." Style="{StaticResource DriverBodyStyle}" />
+        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+        <VerticalStackLayout IsEnabled="{Binding CanEdit}" Spacing="12">
+            <Grid ColumnDefinitions="*,Auto"><Label Text="배차 알림" Style="{StaticResource DriverBodyStyle}" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding Enabled}" /></Grid>
+            <Grid ColumnDefinitions="*,Auto"><Label Text="알림음" Style="{StaticResource DriverBodyStyle}" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding Sound}" /></Grid>
+            <Grid ColumnDefinitions="*,Auto"><Label Text="진동" Style="{StaticResource DriverBodyStyle}" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding Vibrate}" /></Grid>
+            <Grid ColumnDefinitions="*,Auto"><Label Text="야간 무음" Style="{StaticResource DriverBodyStyle}" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding QuietAtNight}" /></Grid>
+            <Label Text="한국 시각 22:00~07:00에는 소리·진동 없이 알림을 표시합니다." Style="{StaticResource DriverMetadataStyle}" />
+            <Button Text="저장" Command="{Binding SaveCommand}" Style="{StaticResource DriverPrimaryButtonStyle}" />
+        </VerticalStackLayout>
+        <Label Text="{Binding Status}" Style="{StaticResource DriverBodyStyle}" />
+        <Button Text="다시 조회" Command="{Binding LoadCommand}" Style="{StaticResource DriverSecondaryButtonStyle}" />
+        <Button Text="기기 알림 설정" Clicked="OnDeviceSettingsClicked" Style="{StaticResource DriverSecondaryButtonStyle}" />
+    </VerticalStackLayout></ScrollView>
+</ContentPage>

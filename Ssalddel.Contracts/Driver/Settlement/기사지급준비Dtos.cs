@@ -33,6 +33,10 @@ public sealed class 기사지급준비항목응답
 
     public decimal? ExpectedPayoutAmount { get; set; }
 
+    public Ssalddel.Contracts.Common.Pricing.AgreedRateTableSnapshotDto? AgreedRateTable { get; set; }
+
+    public string AgreedRateTableEvidenceStatusCode { get; set; } = "NotSelected";
+
     public string CurrencyCode { get; set; } = "KRW";
 
     public string AmountSource { get; set; } = string.Empty;

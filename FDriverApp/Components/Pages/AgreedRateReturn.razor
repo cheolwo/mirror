@@ -1,0 +1,6 @@
+@page "/rates-return"
+<p>내 정보로 돌아갑니다.</p>
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    { if (firstRender) await FDriverApp.Pages.AgreedRateTablePage.ReturnAsync(); }
+}

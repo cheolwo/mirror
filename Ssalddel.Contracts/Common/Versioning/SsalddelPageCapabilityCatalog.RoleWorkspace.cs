@@ -23,7 +23,25 @@ public static partial class SsalddelPageCapabilityCatalog
                     PageInteractionBoundary.PlatformPersistence, false, "3.5",
                     "기존 음식 주문·배달의 현재 상태와 허용 행동을 사용합니다. 관리자 인증과 음식 수행 권한은 별도로 확인합니다.",
                     featureKeys: [Food], workflowCodes: ["FoodDelivery"]));
+            foreach (var role in new[] { "restaurant", "food-driver", "shipper", "cargo-driver" })
+            {
+                var food = role is "restaurant" or "food-driver";
+                rules.Add(Exact(prefix + "-agreed-rates-" + role, app, "/workspace/" + role + "/agreed-rates", PageCapabilityStage.Beta,
+                    PageInteractionBoundary.PlatformPersistence, false, "3.0",
+                    "인증한 당사자가 사전 요금표를 제안·응답하고 실제 업무에서 명시 선택합니다. 합의와 배차 수락·지급 완료는 별개입니다.", true,
+                    [food ? Food : DomesticTransport], [food ? "FoodDelivery" : "DomesticTransport"]));
+            }
         }
+        rules.Add(Exact("food-driver-agreed-rates", SsalddelPageAppCodes.FoodDeliveryDriver, "/agreed-rates", PageCapabilityStage.Beta,
+            PageInteractionBoundary.PlatformPersistence, false, "3.0", "본인 음식 배달 요금표를 제안·응답합니다. 배차 자동 수락이나 지급 처리를 하지 않습니다.", true,
+            [Food], ["FoodDelivery"]));
+        rules.Add(Exact("food-driver-rates-return", SsalddelPageAppCodes.FoodDeliveryDriver, "/rates-return", PageCapabilityStage.Beta,
+            PageInteractionBoundary.ReadOnly, false, "3.0", "네이티브 내 정보 화면으로 돌아갑니다.", featureKeys: [Food], workflowCodes: ["FoodDelivery"]));
+        rules.Add(Exact("restaurant-agreed-rates", SsalddelPageAppCodes.RestaurantDesk, "/settings/agreed-rates", PageCapabilityStage.Beta,
+            PageInteractionBoundary.PlatformPersistence, false, "3.0", "본인 음식점 요금표와 특정 주문의 적용 근거를 확인하고 변경 결과를 재조회합니다.", true,
+            [Food], ["FoodDelivery"]));
+        rules.Add(Exact("restaurant-order-alert-settings", SsalddelPageAppCodes.RestaurantDesk, "/settings/notifications", PageCapabilityStage.Beta,
+            PageInteractionBoundary.PlatformPersistence, false, "0.0", "현재 계정의 기기 주문 알림 방식과 OS 권한을 확인합니다. 주문 상태를 변경하지 않습니다."));
         return rules;
     }
 }

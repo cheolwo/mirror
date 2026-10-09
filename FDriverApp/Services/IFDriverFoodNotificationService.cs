@@ -14,6 +14,7 @@ public interface IFDriverFoodNotificationService
     bool Publish(string userId, string offerId, DateTime expiresAtUtc);
     void Cancel();
     void ClearAccount();
+    void ApplySettings(string ownerId, Ssalddel.Contracts.Driver.Notification.기사알림설정응답 settings, DateTime checkedAtUtc) { }
 }
 
 public sealed class NullFDriverFoodNotificationService : IFDriverFoodNotificationService
