@@ -28,7 +28,7 @@ public sealed class 개체시각대응SchemaTests
         Assert.Contains("CREATE UNIQUE INDEX", generated);
         Assert.Contains("ON `world_visual_inventory_classifications` (`SnapshotId`, `TaxonomyHash`, `TaxonomyPath`)", generated);
         Assert.Contains("REFERENCES `world_visual_inventory_snapshots` (`SnapshotId`) ON DELETE RESTRICT", generated);
-        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../.."));
+        var root = TestRepositoryRoot.Find();
         Assert.True(File.Exists(Path.Combine(root, "Ssalddel.Tests/Ssalddel.Tests.csproj")));
         var folder = Path.Combine(root, "artifacts/local/validation/refactor-commit-20260831/development-schema", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);

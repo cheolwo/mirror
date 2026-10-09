@@ -25,7 +25,7 @@ public sealed class DriverExpectedPayoutPersistenceCompositionTests
 
     private static string ProjectFile(params string[] paths)
     {
-        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        var root = TestRepositoryRoot.Find();
         return Path.Combine(new[] { root }.Concat(paths).ToArray());
     }
 }

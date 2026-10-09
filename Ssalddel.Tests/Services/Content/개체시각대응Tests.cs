@@ -132,7 +132,7 @@ public sealed class 개체시각대응Tests
         Assert.DoesNotContain("DROP TABLE", sql);
         Assert.DoesNotContain("ALTER DATABASE", sql);
         Assert.DoesNotContain("__EFMigrationsHistory", sql);
-        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../.."));
+        var root = TestRepositoryRoot.Find();
         Assert.True(File.Exists(Path.Combine(root, "Ssalddel.Tests/Ssalddel.Tests.csproj")));
         var output = Path.Combine(root, "artifacts/local/validation/game-object-auto-assignment-d440/schema-test", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(output);
