@@ -63,6 +63,9 @@ public sealed record 보호지원보존적용(long Sequence, bool Hold, DateTime
 
 public interface I보호지원Store
 {
+    // null means the source index/protection state is unknown; callers must defer photo deletion.
+    Task<bool?> HasOpenCaseAsync(string sourceKind, string sourceId, CancellationToken cancellationToken = default)
+        => Task.FromResult<bool?>(null);
     Task<보호지원Record?> 조회Async(string caseId, CancellationToken cancellationToken = default);
     Task<bool> 생성Async(보호지원Record record, CancellationToken cancellationToken = default);
     Task<bool> 교체Async(보호지원Record record, long expectedRevision, CancellationToken cancellationToken = default);

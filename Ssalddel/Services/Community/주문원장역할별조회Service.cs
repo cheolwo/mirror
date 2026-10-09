@@ -1,6 +1,7 @@
 using FluentResults;
 using Ssalddel.ApiMetadata;
 using Ssalddel.Contracts.Common.Community;
+using Ssalddel.Application.Warehouse;
 
 namespace Ssalddel.Services.Community;
 
@@ -44,13 +45,16 @@ public sealed class 주문원장역할별조회Service : I주문원장역할별�
 {
     private readonly I커뮤니티원장저장소 _원장저장소;
     private readonly I주문원장공개요청저장소 _공개요청저장소;
+    private readonly I분산주문원장연결Adapter? _분산연결;
 
     public 주문원장역할별조회Service(
         I커뮤니티원장저장소 원장저장소,
-        I주문원장공개요청저장소 공개요청저장소)
+        I주문원장공개요청저장소 공개요청저장소,
+        I분산주문원장연결Adapter? 분산연결 = null)
     {
         _원장저장소 = 원장저장소;
         _공개요청저장소 = 공개요청저장소;
+        _분산연결 = 분산연결;
     }
 
     public async Task<Result<주문원장역할별조회Dto>> 조회Async(
@@ -127,6 +131,7 @@ public sealed class 주문원장역할별조회Service : I주문원장역할별�
                 원장템플릿Key = reference.원장템플릿Key,
                 주문안역할 = reference.역할,
                 필수여부 = reference.필수여부,
+                표시순서 = reference.표시순서,
                 조회근거 = accessBasis,
                 상세조회가능여부 = direct || granted,
                 공개요청가능여부 = child is not null && !direct && !granted && !string.IsNullOrWhiteSpace(child.생성자UserId),
@@ -134,17 +139,44 @@ public sealed class 주문원장역할별조회Service : I주문원장역할별�
             };
         }).ToArray();
 
+        var readRoot = rootFullAccess ? FoodOrderLedgerReadPresentation.Normalize(root) : root;
+        var guide = 주문원장업무안내Projector.생성(rootFullAccess ? readRoot : null, items);
+        if (_분산연결 is not null && 조회역할 == 주문원장조회역할.주문자 && guide.업무종류 is null)
+        {
+            foreach (var item in items.Where(x => x.상세조회가능여부))
+            {
+                var connection = await _분산연결.FindForChildAsync(현재UserId, root.원장Id, item.원장Id, cancellationToken);
+                if (connection is null) continue;
+                if (connection.OrderLedgerConnectionStatusCode is not ("Connected" or "Pending"))
+                {
+                    guide.현재단계 = "업무 연결 권한 확인 필요";
+                    guide.대기이유 = "업무 연결을 진행할 수 없습니다. 현재 참여 권한과 주문 조건을 담당자에게 확인해 주세요.";
+                    break;
+                }
+                guide.업무종류 = "DistributedOrder";
+                // 기존 분산 상세 화면은 주문이 속한 순회를 선택합니다. 영구 OrderId와 표시 선택키를 섞지 않습니다.
+                guide.원천Id = connection.WaveId;
+                guide.다음행동안내 = "배송·수령 상세 보기";
+                if (connection.OrderLedgerConnectionStatusCode == "Pending")
+                {
+                    guide.현재단계 = "업무 연결 확인 필요";
+                    guide.대기이유 = "일부 업무 기록의 연결을 확인하고 있습니다. 배송 상세에서 연결 상태와 재시도를 확인해 주세요.";
+                }
+                break;
+            }
+        }
         return Result.Ok(new 주문원장역할별조회Dto
         {
             주문원장Id = root.원장Id,
             조회역할 = 조회역할,
-            주문원장상태 = root.상태,
-            주문원장상세 = rootFullAccess ? root : null,
+            주문원장상태 = readRoot.상태,
+            주문원장상세 = rootFullAccess ? readRoot : null,
             주문원장조회근거 = rootFullAccess
                 ? rootDirect ? 직접접근근거(root, 현재UserId) : 원장조회근거.승인공개
                 : 원장조회근거.공개요청필요,
             관련원장목록 = items,
-            상세공개요청필요수 = items.Count(x => x.조회근거 == 원장조회근거.공개요청필요)
+            상세공개요청필요수 = items.Count(x => x.조회근거 == 원장조회근거.공개요청필요),
+            업무안내 = guide
         });
     }
 
@@ -210,6 +242,7 @@ public sealed class 주문원장역할별조회Dto
     public 커뮤니티원장Dto? 주문원장상세 { get; set; }
     public IReadOnlyList<주문역할별원장항목Dto> 관련원장목록 { get; set; } = [];
     public int 상세공개요청필요수 { get; set; }
+    public 주문원장업무안내Dto? 업무안내 { get; set; }
 }
 
 public sealed class 주문역할별원장항목Dto
@@ -218,6 +251,7 @@ public sealed class 주문역할별원장항목Dto
     public string 원장템플릿Key { get; set; } = string.Empty;
     public string 주문안역할 { get; set; } = string.Empty;
     public bool 필수여부 { get; set; }
+    public int 표시순서 { get; set; }
     public string 조회근거 { get; set; } = 원장조회근거.공개요청필요;
     public bool 상세조회가능여부 { get; set; }
     public bool 공개요청가능여부 { get; set; }

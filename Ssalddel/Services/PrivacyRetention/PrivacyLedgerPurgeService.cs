@@ -36,8 +36,9 @@ public sealed class 배송원장개인정보파기Service : I배송원장개인�
             doc.투영상태 = 커뮤니티원장투영상태.완료;
             doc.투영처리Token = null; doc.투영다음시도시각Utc = null; doc.투영마지막오류 = null;
             doc.수정시각Utc = DateTime.UtcNow;
-            var result = await _collection.ReplaceOneAsync(x => x.원장Id == ledgerId && x.Revision == revision
-                && x.투영상태 != 커뮤니티원장투영상태.처리중 && x.투영처리Token == null, doc, cancellationToken: ct);
+            var filter = Mongo커뮤니티원장저장소.BuildRevisionFilter(ledgerId, revision, isNew: false, doc.관계편집Revision)
+                & Builders<커뮤니티원장문서>.Filter.Where(x => x.투영상태 != 커뮤니티원장투영상태.처리중 && x.투영처리Token == null);
+            var result = await _collection.ReplaceOneAsync(filter, doc, cancellationToken: ct);
             if (result.MatchedCount == 1) return true;
         }
         return false;

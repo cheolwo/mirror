@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- MAUI 플랫폼 어댑터는 소비 앱에서 같은 소스를 연결해 컴파일합니다. -->
+    <Compile Remove="Native/**/*.cs" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Http" />

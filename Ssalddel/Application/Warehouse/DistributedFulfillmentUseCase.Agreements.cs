@@ -1,0 +1,90 @@
+using Microsoft.EntityFrameworkCore;
+using Ssalddel.Contracts.Common.Warehouse;
+using 살뜰.도메인.창고;
+
+namespace Ssalddel.Application.Warehouse;
+
+public sealed partial class 분산물류UseCase
+{
+    public Task<DistributedCommandResponse> AgreementAsync(DistributedActor actor, string siteId, DistributedStorageAgreementRequest r, CancellationToken ct)
+        => Execute(actor, "CreateAgreement", siteId, r, async () =>
+        {
+            var site = await Site(siteId, ct);
+            Require(actor.UserId == site.OwnerUserId || actor.UserId == r.GoodsOwnerUserId
+                || await db.입고상품.AnyAsync(x => x.소유자UserId == r.GoodsOwnerUserId && x.판매자UserId == actor.UserId, ct), "DistributedAgreementPartyRequired", 403);
+            Require(r.ExpectedRevision == 0, "DistributedRevisionConflict");
+            Require(await Query<분산적재위치Record>().AnyAsync(x => x.LocationId == r.LocationId && x.SiteId == siteId, ct), "DistributedLocationMismatch");
+            var goodsOwner = Text(r.GoodsOwnerUserId, 191); ValidateTerms(r.Terms);
+            Require(!await Query<분산보관합의Record>().AnyAsync(x => x.LocationId == r.LocationId && x.GoodsOwnerUserId == goodsOwner, ct), "DistributedAgreementAlreadyExists");
+            var agreement = new 분산보관합의Record { AgreementId = Id("agreement"), SiteId = siteId, LocationId = r.LocationId,
+                SpaceOwnerUserId = site.OwnerUserId, GoodsOwnerUserId = goodsOwner, CreatorUserId = actor.UserId, TermsJson = Serialize(r.Terms), StartsAtUtc = r.Terms.StartsAtUtc, EndsAtUtc = r.Terms.EndsAtUtc };
+            AddAgreementHistory(agreement, actor.UserId, "Draft"); db.Add(agreement);
+            return (agreement.AgreementId, agreement.Revision, agreement.StatusCode, (string?)null, 0);
+        }, ct);
+    public Task<DistributedCommandResponse> AgreementTermsAsync(DistributedActor actor, string id, DistributedStorageAgreementRequest r, CancellationToken ct)
+        => Execute(actor, "AgreementTerms", id, r, async () =>
+        {
+            var agreement = await Agreement(id, ct); RequireAgreementParty(actor, agreement); Revision(agreement.Revision, r);
+            Require(r.LocationId == agreement.LocationId && r.GoodsOwnerUserId == agreement.GoodsOwnerUserId, "DistributedAgreementPartiesImmutable");
+            ValidateTerms(r.Terms); AddAgreementHistory(agreement, actor.UserId, "Superseded");
+            agreement.TermsVersion++; agreement.TermsJson = Serialize(r.Terms); agreement.StartsAtUtc = r.Terms.StartsAtUtc; agreement.EndsAtUtc = r.Terms.EndsAtUtc;
+            agreement.SpaceOwnerConsented = false; agreement.GoodsOwnerConsented = false; agreement.StatusCode = "Draft"; agreement.Revision++;
+            AddAgreementHistory(agreement, actor.UserId, "Draft"); return (id, agreement.Revision, agreement.StatusCode, (string?)null, 0);
+        }, ct);
+    public Task<DistributedCommandResponse> AgreementConsentAsync(DistributedActor actor, string id, DistributedStorageAgreementConsentRequest r, CancellationToken ct)
+        => Execute(actor, "AgreementConsent", id, r, async () =>
+        {
+            var agreement = await Agreement(id, ct); RequireAgreementParty(actor, agreement); Revision(agreement.Revision, r);
+            Require(r.TermsVersion == agreement.TermsVersion, "DistributedAgreementTermsVersionMismatch");
+            if (r.Granted) Require(Now < agreement.EndsAtUtc, "DistributedAgreementExpired");
+            if (actor.UserId == agreement.SpaceOwnerUserId) agreement.SpaceOwnerConsented = r.Granted;
+            if (actor.UserId == agreement.GoodsOwnerUserId) agreement.GoodsOwnerConsented = r.Granted;
+            agreement.StatusCode = !r.Granted ? "Revoked" : agreement.SpaceOwnerConsented && agreement.GoodsOwnerConsented ? "Active" : "AwaitingOtherParty";
+            agreement.Revision++; AddAgreementHistory(agreement, actor.UserId, r.Granted ? "Granted" : "Revoked");
+            return (id, agreement.Revision, AgreementStatus(agreement), (string?)null, 0);
+        }, ct);
+    private async Task<분산보관합의Record> Agreement(string id, CancellationToken ct)
+        => await Query<분산보관합의Record>().SingleOrDefaultAsync(x => x.AgreementId == id, ct)
+            ?? throw new DistributedFulfillmentException("DistributedAgreementNotFound", 404);
+    private static void RequireAgreementParty(DistributedActor actor, 분산보관합의Record agreement)
+        => Require(actor.UserId == agreement.SpaceOwnerUserId || actor.UserId == agreement.GoodsOwnerUserId, "DistributedAgreementPartyRequired", 403);
+    private static void ValidateTerms(DistributedStorageTerms terms)
+    {
+        Require(terms is not null && terms.AllowedSkus is { Count: > 0 and <= 30 } && terms.AllowedSkus.All(x => !string.IsNullOrWhiteSpace(x) && x.Length <= 100)
+            && terms.AllowedSkus.Distinct(StringComparer.Ordinal).Count() == terms.AllowedSkus.Count && terms.MaximumStoredQuantity is > 0 and <= 1000000
+            && terms.StartsAtUtc.Kind == DateTimeKind.Utc && terms.EndsAtUtc.Kind == DateTimeKind.Utc && terms.StartsAtUtc < terms.EndsAtUtc,
+            "DistributedAgreementTermsInvalid", 400);
+        Text(terms!.AccessHours, 200); Text(terms.PriceOrFreeTerms, 500); Text(terms.CustodianAndCare, 500); Text(terms.LossDamageAndReturnTerms, 1000);
+    }
+    private string AgreementStatus(분산보관합의Record a) => a.StatusCode == "Active" ? Now >= a.EndsAtUtc ? "Expired" : Now < a.StartsAtUtc ? "NotStarted" : "Active" : a.StatusCode;
+    private void AddAgreementHistory(분산보관합의Record agreement, string actorId, string action)
+    {
+        var history = Deserialize<List<DistributedAgreementHistory>>(agreement.HistoryJson);
+        history.Add(new(agreement.TermsVersion, actorId, action, agreement.SpaceOwnerConsented, agreement.GoodsOwnerConsented, agreement.TermsJson, Now));
+        agreement.HistoryJson = Serialize(history);
+    }
+    private async Task<분산보관합의Record> ActiveAgreement(분산재고LotRecord lot, CancellationToken ct)
+    {
+        var agreement = await Query<분산보관합의Record>().SingleOrDefaultAsync(x => x.LocationId == lot.LocationId && x.GoodsOwnerUserId == lot.OwnerUserId, ct);
+        Require(agreement is not null && AgreementStatus(agreement) == "Active" && agreement.SpaceOwnerConsented && agreement.GoodsOwnerConsented
+            && agreement.SiteId == lot.SiteId && Enumerable.Contains(Deserialize<DistributedStorageTerms>(agreement.TermsJson).AllowedSkus, lot.Sku), "DistributedStorageAgreementRequired");
+        return agreement!;
+    }
+    private void SnapshotAgreement(분산재고LotRecord lot, 분산보관합의Record agreement, int quantity)
+    {
+        lot.StorageAgreementId = agreement.AgreementId;
+        var history = Deserialize<List<DistributedLotAgreementSnapshot>>(lot.StorageAgreementSnapshotJson);
+        history.Add(new(agreement.AgreementId, agreement.TermsVersion, agreement.SpaceOwnerUserId, agreement.GoodsOwnerUserId, agreement.TermsJson, quantity, Now));
+        lot.StorageAgreementSnapshotJson = Serialize(history);
+    }
+    private async Task AgreementCapacity(분산보관합의Record agreement, int addingQuantity, CancellationToken ct)
+    {
+        var relatedLots = await Query<분산재고LotRecord>().Where(x => x.LocationId == agreement.LocationId && x.OwnerUserId == agreement.GoodsOwnerUserId).ToArrayAsync(ct);
+        var ids = relatedLots.Select(x => x.LotId).ToArray();
+        var custody = await Query<분산재고예약Record>().Where(x => Enumerable.Contains(ids, x.LotId)).ToArrayAsync(ct);
+        var stored = relatedLots.Sum(x => x.ReceivedQuantity) - custody.Sum(x => x.PickedQuantity - x.ReturnedQuantity);
+        Require(stored + addingQuantity <= Deserialize<DistributedStorageTerms>(agreement.TermsJson).MaximumStoredQuantity, "DistributedStorageAgreementCapacityExceeded");
+    }
+}
+internal sealed record DistributedAgreementHistory(int TermsVersion, string ActorUserId, string Action, bool SpaceConsented, bool GoodsConsented, string TermsJson, DateTime AtUtc);
+internal sealed record DistributedLotAgreementSnapshot(string AgreementId, int TermsVersion, string SpaceOwnerUserId, string GoodsOwnerUserId, string TermsJson, int Quantity, DateTime AtUtc);

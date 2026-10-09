@@ -1,0 +1,119 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Contracts.Common.Warehouse
+<section aria-label="허용된 시간대 출고 묶음"><h2>시간대별 출고 묶음</h2>
+    <p>허용된 거점의 운영 담당자만 접수를 마감하고 기사·방문 순회를 계획합니다.</p>
+    @if (Model.Workspace?.Waves.Count == 0) { <p>현재 조회한 출고 묶음이 없습니다.</p> }
+    <ul class="items">@foreach (var wave in Model.Workspace!.Waves)
+    { <li><button type="button" disabled="@(!Model.CanEdit)" @onclick="() => Choose(wave.WaveId)"><strong>@wave.Label · @분산이행표시.Status(wave.StatusCode)</strong><span>접수 마감 @분산이행표시.Time(wave.CutoffUtc)</span></button></li> }</ul>
+</section>
+@if (Model.CanManageWaves && Model.Allows("create-wave"))
+{
+    <section aria-label="새 시간대 출고 묶음"><h2>출고 묶음 만들기</h2>
+        <fieldset disabled="@(!Model.CanEdit)"><legend>시간대와 작업 시간</legend>
+            <label>묶음 이름<input @bind="label" /></label>
+            <label>주문 접수 마감<input type="datetime-local" @bind="cutoff" /></label>
+            <label>거점 피킹 시작<input type="datetime-local" @bind="pickupStart" /></label>
+            <label>거점 피킹 종료<input type="datetime-local" @bind="pickupEnd" /></label>
+            <label>고객 배송 시작<input type="datetime-local" @bind="deliveryStart" /></label>
+            <label>고객 배송 종료<input type="datetime-local" @bind="deliveryEnd" /></label>
+            <label>거점당 작업 시간(분)<input type="number" min="0" step="0.5" @bind="pickupMinutes" /></label>
+            <label>고객당 작업 시간(분)<input type="number" min="0" step="0.5" @bind="deliveryMinutes" /></label>
+            <label class="check"><input type="checkbox" @bind="confirmed" />입력한 시간대와 작업 시간을 확인했습니다</label>
+        </fieldset>
+        <button class="primary" type="button" disabled="@(!confirmed || !Model.CanEdit)" @onclick="Create">시간대 출고 묶음 생성</button>
+    </section>
+}
+@if (Model.SelectedWave is { } selected)
+{
+    <section aria-label="선택 출고 묶음"><h2>@selected.Label</h2><p>@분산이행표시.Status(selected.StatusCode)</p>
+        <p>피킹 @분산이행표시.Time(selected.PickupStartUtc) ~ @분산이행표시.Time(selected.PickupEndUtc)</p>
+        <p>배송 @분산이행표시.Time(selected.DeliveryStartUtc) ~ @분산이행표시.Time(selected.DeliveryEndUtc)</p>
+        @if (selected.OfferedDriverFareKrw is { } fare) { <p>서버 제안 운임 @fare.ToString("N0") 원 · 지급 완료와 별도</p> }
+        <ol>@foreach (var stop in selected.Stops) { <li>@(stop.Kind == DistributedFulfillmentCodes.Pickup ? "거점 피킹" : "고객 배송") · @분산이행표시.Time(stop.ExpectedArrivalUtc) · @분산이행표시.Status(stop.StatusCode)</li> }</ol>
+        @if (selected.BlockCodes.Count > 0) { <p class="notice">진행 조건: @string.Join(" · ", selected.BlockCodes.Select(분산이행표시.Condition))</p> }
+        @if (Model.CanManageWaves && Model.Allows("close", selected.AllowedActions))
+        {
+            <label class="check"><input type="checkbox" @bind="confirmed" />이 시간대의 주문 접수를 마감합니다</label>
+            <button class="primary" type="button" disabled="@(!confirmed || !Model.CanEdit)" @onclick="Close">접수 마감</button>
+        }
+        @if (Model.CanManageWaves && Model.Allows("plan", selected.AllowedActions))
+        {
+            @if (Model.Workspace!.DriverCandidates.Count == 0) { <p>현재 계획할 수 있는 등록 기사가 없습니다. 기사 등록과 운행 근거를 먼저 확인해 주세요.</p> }
+            else
+            {
+                <label>등록 기사<select @bind="driverId"><option value="">기사 선택</option>@foreach (var driver in Model.Workspace.DriverCandidates) { <option value="@driver.UserId">@driver.Label</option> }</select></label>
+                <label class="check"><input type="checkbox" @bind="confirmed" />접수된 물품·시간창·기사를 확인하고 서버 순회 계획을 요청합니다</label>
+                <button class="primary" type="button" disabled="@(!confirmed || string.IsNullOrWhiteSpace(driverId) || !Model.CanEdit)" @onclick="Plan">여러 거점·고객 순회 계획</button>
+            }
+        }
+        @if (selected.Orders.Any(Model.CanCancel))
+        {
+            <h3>주문 취소</h3>
+            <label>취소할 주문<select @bind="cancelOrderId" @bind:after="ResetCancelConfirmation"><option value="">주문을 선택해 주세요</option>@foreach (var order in selected.Orders.Where(Model.CanCancel)) { <option value="@order.OrderId">@order.OrderReference · 미피킹 @order.ReservedQuantity 개</option> }</select></label>
+            @if (CancelOrder is { } cancelOrder)
+            {
+                <label>@cancelOrder.OrderReference 취소 사유<input @bind="cancelReason" disabled="@(!Model.CanEdit)" /></label>
+                <label class="check"><input type="checkbox" @bind="cancelConfirmed" disabled="@(!Model.CanEdit)" />@cancelOrder.OrderReference 의 아직 피킹하지 않은 수량에 대한 취소 조건을 확인했습니다</label>
+                <button type="button" disabled="@(!cancelConfirmed || string.IsNullOrWhiteSpace(cancelReason) || !Model.CanEdit)" @onclick="Cancel">선택 주문 취소 요청</button>
+            }
+        }
+        @if (selected.Reservations.Any(line => Model.Allows("return", line.AllowedActions)))
+        {
+            <h3>돌아온 물품 확인</h3><fieldset disabled="@(!Model.CanEdit)">
+                <label>반품 물품<select @bind="returnReservation"><option value="">물품 선택</option>@foreach (var line in selected.Reservations.Where(line => Model.Allows("return", line.AllowedActions))) { <option value="@line.ReservationId">@분산이행표시.Owner(line.OwnerLabel) · @분산이행표시.Product(line.ProductLabel, line.Sku) · 돌아올 수량 @(line.PickedQuantity - line.DeliveredQuantity - line.ReturnedQuantity) 개</option> }</select></label>
+                <label>적재 위치 바코드<input @bind="returnBarcode" /></label><label>돌아온 수량<input type="number" min="1" @bind="returnQuantity" /></label><label>확인 근거<input @bind="returnEvidence" /></label>
+                <label class="check"><input type="checkbox" @bind="confirmed" />물품과 위치·수량을 직접 확인했습니다</label>
+            </fieldset><button type="button" disabled="@(!confirmed || !Model.CanEdit)" @onclick="Return">반품 수량 확인</button>
+        }
+    </section>
+}
+@code {
+    [Parameter, EditorRequired] public 분산이행PageViewModel Model { get; set; } = default!;
+    private string label = "", returnReservation = "", returnBarcode = "", returnEvidence = "", driverId = "";
+    private DateTime? cutoff, pickupStart, pickupEnd, deliveryStart, deliveryEnd;
+    private decimal pickupMinutes, deliveryMinutes;
+    private int returnQuantity;
+    private bool confirmed;
+    private string cancelOrderId = "", cancelReason = "";
+    private bool cancelConfirmed;
+    private string? cancelVersion;
+    private DistributedOrderDto? CancelOrder => Model.SelectedWave?.Orders.FirstOrDefault(order => order.OrderId == cancelOrderId && Model.CanCancel(order));
+    protected override void OnParametersSet()
+    {
+        var version = $"{Model.CurrentUserId}|{Model.SelectedWave?.WaveId}|{Model.SelectedWave?.Revision}";
+        if (version != cancelVersion) { cancelVersion = version; cancelOrderId = ""; ResetCancelConfirmation(); }
+    }
+    private void ResetCancelConfirmation() { cancelReason = ""; cancelConfirmed = false; }
+    private async Task Cancel() { await Model.CancelAsync(cancelOrderId, cancelReason, cancelConfirmed); ResetCancelConfirmation(); }
+    private async Task Choose(string id) { confirmed = false; cancelOrderId = ""; ResetCancelConfirmation(); await Model.ChooseAsync(id); }
+    private Task Create()
+    {
+        if (string.IsNullOrWhiteSpace(label) || cutoff is null || pickupStart is null || pickupEnd is null || deliveryStart is null || deliveryEnd is null
+            || cutoff > pickupStart || pickupStart >= pickupEnd || deliveryStart >= deliveryEnd || pickupMinutes < 0 || deliveryMinutes < 0)
+            return Model.InvalidInputAsync("이름·접수 마감·피킹과 배송 시간대를 직접 입력하고 시간 순서를 확인해 주세요.");
+        return Model.ExecuteAsync("create-wave", "waves", new DistributedWaveCreateRequest { Label = label.Trim(), CutoffUtc = Utc(cutoff.Value),
+            PickupStartUtc = Utc(pickupStart.Value), PickupEndUtc = Utc(pickupEnd.Value), DeliveryStartUtc = Utc(deliveryStart.Value),
+            DeliveryEndUtc = Utc(deliveryEnd.Value), PickupServiceMinutes = pickupMinutes, DeliveryServiceMinutes = deliveryMinutes }, confirmed: confirmed);
+    }
+    private static DateTime Utc(DateTime time) => DateTime.SpecifyKind(time, DateTimeKind.Local).ToUniversalTime();
+    private Task Close() => Model.SelectedWave is { } wave ? Model.ExecuteAsync("close", $"waves/{분산이행Client.Segment(wave.WaveId)}/close",
+        new DistributedCommandRequest { ExpectedRevision = wave.Revision }, wave.WaveId, wave.AllowedActions, confirmed) : Task.CompletedTask;
+    private Task Plan()
+    {
+        var wave = Model.SelectedWave; var driver = Model.Workspace?.DriverCandidates.FirstOrDefault(item => item.UserId == driverId);
+        if (wave is null || driver is null) return Model.InvalidInputAsync("조회한 등록 기사를 선택해 주세요.");
+        return Model.ExecuteAsync("plan", $"waves/{분산이행Client.Segment(wave.WaveId)}/plan", new DistributedRoundPlanRequest
+            { ExpectedRevision = wave.Revision, DriverId = driver.UserId }, wave.WaveId, wave.AllowedActions, confirmed);
+    }
+    private Task Return()
+    {
+        var wave = Model.SelectedWave; var line = wave?.Reservations.FirstOrDefault(item => item.ReservationId == returnReservation);
+        var location = Model.Workspace?.Sites.SelectMany(site => site.Locations).FirstOrDefault(item => item.LocationId == line?.LocationId);
+        if (wave is null || line is null || location?.Barcode != returnBarcode.Trim() || returnQuantity < 1
+            || returnQuantity > line.PickedQuantity - line.DeliveredQuantity - line.ReturnedQuantity || string.IsNullOrWhiteSpace(returnEvidence))
+            return Model.InvalidInputAsync("돌아온 물품의 적재 위치·남은 반품 수량·확인 근거를 확인해 주세요.");
+        return Model.ExecuteAsync("return", $"waves/{분산이행Client.Segment(wave.WaveId)}/returns", new DistributedReturnRequest
+            { ExpectedRevision = wave.Revision, ReservationId = line.ReservationId, LocationBarcode = returnBarcode.Trim(), Quantity = returnQuantity,
+                EvidenceReference = returnEvidence.Trim() }, wave.WaveId, line.AllowedActions, confirmed, returnQuantity, line.ReservationId);
+    }
+}

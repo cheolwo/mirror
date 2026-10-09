@@ -27,6 +27,7 @@ public sealed class DevelopmentLocalStorageService : IObjectStorageService
     }
 
     public bool IsConfigured(ObjectStorageAccess access) => true;
+    public string? GetContainerName(ObjectStorageAccess access) => ResolveContainerName(access);
 
     public async Task<ObjectStorageUploadResult> UploadAsync(
         Stream stream,

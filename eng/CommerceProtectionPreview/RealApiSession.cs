@@ -7,7 +7,7 @@ using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
 
 namespace CommerceProtectionPreview;
 
-/// <summary>Development 루프백 검증 서버의 합성 계정만 사용합니다. 제품 로그인 UI·단말 증거가 아닙니다.</summary>
+/// <summary>명시한 r26/r27 격리 루프백 서버의 합성 계정만 사용합니다. 제품 로그인 UI·단말 증거가 아닙니다.</summary>
 public sealed class RealApiSession : ISsalddelAccessTokenProvider, ISsalddel현재사용자Context, IRoleWorkspaceAccess, IRoleWorkspaceApi, IAsyncDisposable
 {
     private readonly IConfiguration configuration;
@@ -18,7 +18,7 @@ public sealed class RealApiSession : ISsalddelAccessTokenProvider, ISsalddel현�
     private string? token;
     private string[] roles = [];
     private long revision;
-    public RealApiSession(IConfiguration configuration, IJSRuntime js, RealApiEvidence evidence)
+    public RealApiSession(IConfiguration configuration, IJSRuntime js, RealApiEvidence evidence, RealUiTransportFaults faults)
     {
         this.configuration = configuration;
         var file = configuration["COMMERCE_PREVIEW_REAL_ACCOUNTS"];
@@ -27,10 +27,12 @@ public sealed class RealApiSession : ISsalddelAccessTokenProvider, ISsalddel현�
         {
             using var accounts = JsonDocument.Parse(File.ReadAllText(file!));
             Endpoint = new(accounts.RootElement.GetProperty("baseUrl").GetString()!);
-            if (!Endpoint.IsLoopback || Endpoint.Scheme != "http" || Endpoint.Port != 5362)
-                throw new InvalidOperationException("r26 전용 루프백 서버만 연결할 수 있습니다.");
+            var expectedPort = configuration["COMMERCE_PREVIEW_FOUR_ROLE_R27"] == "1" ? 5363 : 5362;
+            if (!Endpoint.IsLoopback || Endpoint.Scheme != "http" || Endpoint.Port != expectedPort || Endpoint.AbsolutePath != "/")
+                throw new InvalidOperationException("명시한 판본의 전용 루프백 서버만 연결할 수 있습니다.");
+            evidence.Configure(Endpoint, expectedPort == 5363 ? "r27" : "r26");
         }
-        http = new(new RealApiEvidenceHandler(evidence) { InnerHandler = new HttpClientHandler { UseProxy = false, AllowAutoRedirect = false } })
+        http = new(new RealApiEvidenceHandler(evidence, faults) { InnerHandler = new HttpClientHandler { UseProxy = false, AllowAutoRedirect = false } })
         { BaseAddress = Endpoint, Timeout = TimeSpan.FromSeconds(20) };
         encryption = new(js);
         JsonApi = new SsalddelJsonApiClient(new SsalddelProtectedApiClient(http, encryption, this));
@@ -38,6 +40,7 @@ public sealed class RealApiSession : ISsalddelAccessTokenProvider, ISsalddel현�
     public bool Enabled { get; }
     public Uri Endpoint { get; } = new("http://127.0.0.1:5362/");
     public ISsalddelJsonApiClient JsonApi { get; }
+    public HttpClient HttpClient => http;
     public string? AccessToken => token;
     public string? AuthenticationOwnerId => owner;
     public 현재사용자Snapshot 현재사용자 => owner is null ? 현재사용자Snapshot.익명 : new(owner, "격리 검증 계정", roles);
@@ -101,14 +104,30 @@ public sealed class RealApiEvidence
 {
     private readonly object gate = new();
     private readonly List<object> rows = [];
+    private string endpoint = "http://127.0.0.1:5362/";
+    private string revision = "r26";
+    public void Configure(Uri server, string version) { lock(gate) { endpoint = server.ToString(); revision = version; } }
     public void Add(string method,string path,int? status,string? error = null)
     { lock(gate) rows.Add(new { method,path,status,error,atUtc=DateTime.UtcNow }); }
-    public object Snapshot() { lock(gate) return new { schemaVersion="commerce-preview-real-http.r26",serverEndpoint="http://127.0.0.1:5362/",credentialBodiesRecorded=false,rows=rows.ToArray() }; }
+    public object Snapshot() { lock(gate) return new { schemaVersion="commerce-preview-real-http." + revision,serverEndpoint=endpoint,credentialBodiesRecorded=false,rows=rows.ToArray() }; }
 }
-sealed class RealApiEvidenceHandler(RealApiEvidence evidence) : DelegatingHandler
+/// <summary>r27 로컬 검증 호스트의 단 한 번의 조회 실패입니다. 제품 서버/API에는 주입하지 않습니다.</summary>
+public sealed class RealUiTransportFaults
+{
+    private int adminTraceFailures;
+    public void FailNextAdminTrace() => Interlocked.Exchange(ref adminTraceFailures, 1);
+    public bool Consume(HttpRequestMessage request) => request.Method == HttpMethod.Get
+        && request.RequestUri!.AbsolutePath.StartsWith("/api/v1/admin/food-orders/", StringComparison.Ordinal)
+        && request.RequestUri.AbsolutePath.EndsWith("/operations-trace", StringComparison.Ordinal)
+        && Interlocked.Exchange(ref adminTraceFailures, 0) == 1;
+}
+sealed class RealApiEvidenceHandler(RealApiEvidence evidence, RealUiTransportFaults faults) : DelegatingHandler
 {
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken ct)
-    { try { var response=await base.SendAsync(request,ct); evidence.Add(request.Method.Method,request.RequestUri!.AbsolutePath,(int)response.StatusCode); return response; } catch(Exception ex) { evidence.Add(request.Method.Method,request.RequestUri!.AbsolutePath,null,ex.GetType().Name); throw; } }
+    { try { var response = faults.Consume(request)
+        ? new HttpResponseMessage(HttpStatusCode.ServiceUnavailable) { Content = JsonContent.Create(new { detail = "로컬 시험에서 주입한 일시 조회 실패" }), RequestMessage = request }
+        : await base.SendAsync(request,ct);
+        evidence.Add(request.Method.Method,request.RequestUri!.AbsolutePath,(int)response.StatusCode); return response; } catch(Exception ex) { evidence.Add(request.Method.Method,request.RequestUri!.AbsolutePath,null,ex.GetType().Name); throw; } }
 }
 public sealed class RealFixtureLocationProvider : IRoleWorkspaceLocationProvider
 {

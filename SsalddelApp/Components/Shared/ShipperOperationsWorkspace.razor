@@ -20,6 +20,10 @@
                 새로고침
             </MudButton>
         </MudStack>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2">
+            <MudButton Href="/workspace/shipper/distributed/inventory" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Inventory2">내 분산 보관 재고</MudButton>
+            <MudButton Href="/workspace/shipper/distributed/orders" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.LocalShipping">내 분산 배송 주문</MudButton>
+        </MudStack>
 
         @if (!string.IsNullOrWhiteSpace(message))
         {

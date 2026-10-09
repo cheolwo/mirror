@@ -1,0 +1,34 @@
+@page "/workspace/orderer/new"
+@page "/verification/four-role/orderer/orders/{OrderNo}"
+@using Ssalddel.Ui.Common.Areas.App.Components.Food
+@inject RealApiSession Real
+@inject IConfiguration Configuration
+@inject NavigationManager Navigation
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside class="preview-context">음식 배달 시험 · 기존 주문 화면과 실제 격리 서버 연결 · 실제 결제·지도·휴대폰 검증은 별도</aside>
+@if (_failure is not null) { <p role="alert">시험 연결 실패: @_failure</p> }
+else if (!_ready) { <p role="status">시험 연결 중</p> }
+else if (string.IsNullOrWhiteSpace(OrderNo))
+{
+    <OrdererRestaurantWorkspace RestaurantId="101" OrderSubmitted="Submitted" />
+}
+else
+{
+    <OrdererFoodOrderWorkspace OrderNo="@OrderNo" />
+}
+@code {
+    [Parameter] public string? OrderNo { get; set; }
+    private bool _ready;
+    private string? _failure;
+    protected override async Task OnParametersSetAsync()
+    {
+        _ready=false; _failure=null;
+        try
+        {
+            if (Configuration["COMMERCE_PREVIEW_FOUR_ROLE_R27"] != "1") throw new InvalidOperationException("r27 opt-in required");
+            await Real.EnsureInitializedAsync("orderer"); _ready=true;
+        }
+        catch(Exception ex) { _failure=ex.GetType().Name; }
+    }
+    private void Submitted(string orderNo) => Navigation.NavigateTo("/verification/four-role/orderer/orders/" + Uri.EscapeDataString(orderNo));
+}

@@ -1,4 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
   <ItemGroup><ProjectReference Include="../../Ssalddel.Ui.Common/Ssalddel.Ui.Common.csproj" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../SsalddelAdminApp/Services/AdminAuthenticatedApiClient.cs" Link="RoleClients/AdminAuthenticatedApiClient.cs" />
+    <Compile Include="../../SsalddelAdminApp/Services/AdminFoodOperationsService.cs" Link="RoleClients/AdminFoodOperationsService.cs" />
+    <Content Include="../../SsalddelAdminApp/Components/Pages/FoodOrderDetail.razor" Link="LinkedAdmin/FoodOrderDetail.razor" />
+    <Content Include="../../SsalddelAdminApp/Components/Pages/FoodOrderDetail.razor.css" Link="LinkedAdmin/FoodOrderDetail.razor.css" />
+    <Content Include="../../SsalddelAdminApp/wwwroot/app.css" Link="verification-admin-app.css" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

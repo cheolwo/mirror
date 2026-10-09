@@ -4,11 +4,13 @@ using Ssalddel.Contracts.Common.Privacy;
 using Ssalddel.Services.Security;
 using Microsoft.AspNetCore.Mvc;
 using 살뜰.Infrastructure.Security;
+using Ssalddel.Contracts.Common.Community;
 
 namespace Ssalddel.Middleware;
 
 public sealed class IsmsPEncryptedTransportMiddleware
 {
+    private const int InputPreviewEnvelopeLimit = 4 * 1024 * 1024;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true
@@ -36,18 +38,32 @@ public sealed class IsmsPEncryptedTransportMiddleware
             return;
         }
 
-        context.Request.EnableBuffering();
+        // Only the new private Excel intake has a bounded memory-only transport body.
+        // The 2 MiB file expands twice as base64 (JSON, then encrypted envelope).
+        var isInputPreview = string.Equals(context.Request.Path.Value?.TrimEnd('/'),
+            "/" + NeighborhoodDeliveryRoutes.Api + "/input-preview", StringComparison.OrdinalIgnoreCase);
+        if (isInputPreview && context.Request.ContentLength > InputPreviewEnvelopeLimit)
+        {
+            await WriteInputTooLargeAsync(context);
+            return;
+        }
+        if (isInputPreview)
+            context.Request.EnableBuffering(bufferThreshold: InputPreviewEnvelopeLimit, bufferLimit: InputPreviewEnvelopeLimit);
+        else
+            context.Request.EnableBuffering();
 
         var originalBody = context.Request.Body;
         string body;
-        using (var reader = new StreamReader(
-            originalBody,
-            Encoding.UTF8,
-            detectEncodingFromByteOrderMarks: false,
-            bufferSize: 4096,
-            leaveOpen: true))
+        try
         {
+            using var reader = new StreamReader(originalBody, Encoding.UTF8,
+                detectEncodingFromByteOrderMarks: false, bufferSize: 4096, leaveOpen: true);
             body = await reader.ReadToEndAsync(context.RequestAborted);
+        }
+        catch (IOException) when (isInputPreview)
+        {
+            await WriteInputTooLargeAsync(context);
+            return;
         }
 
         originalBody.Position = 0;
@@ -119,6 +135,16 @@ public sealed class IsmsPEncryptedTransportMiddleware
         }
 
         return request.HasJsonContentType();
+    }
+
+    private static Task WriteInputTooLargeAsync(HttpContext context)
+    {
+        context.Response.StatusCode = StatusCodes.Status413PayloadTooLarge;
+        return context.Response.WriteAsJsonAsync(new ProblemDetails
+        {
+            Title = "배송 입력 자료가 전송 크기 제한을 넘었습니다.",
+            Status = StatusCodes.Status413PayloadTooLarge
+        });
     }
 
     private static bool LooksLikeEnvelope(string body)

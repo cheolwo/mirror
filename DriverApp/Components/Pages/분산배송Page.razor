@@ -1,0 +1,23 @@
+@page "/workspace/cargo-driver/distributed/{Screen}"
+@page "/driver/distributed/{Screen}"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@using Ssalddel.Ui.Common.Areas.App.Services
+@inject ISsalddelJsonApiClient Api
+@inject IAuthSession Session
+@implements IDisposable
+<PageTitle>직접 피킹·배송 순회</PageTitle>
+@if (transport is not null)
+{ <분산이행Screen RoleKey="cargo-driver" Screen="@Screen" SelectedId="@SelectedId" RecoveryRequestId="RequestId" Transport="transport" ReturnHref="@(ReturnUrl ?? DriverRoutes.CurrentTransport)" LoginHref="@DriverRoutes.LoginFor(ResumeHref)" /> }
+@code {
+    [Parameter] public string Screen { get; set; } = "round";
+    [SupplyParameterFromQuery(Name = "selected")] public string? SelectedId { get; set; }
+    [SupplyParameterFromQuery(Name = "requestId")] public Guid? RequestId { get; set; }
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+    private 분산이행JsonTransport? transport;
+    private string ResumeHref => 분산이행Navigation.ResumeHref("cargo-driver", Screen, SelectedId, RequestId, ReturnUrl ?? DriverRoutes.CurrentTransport, driverAlias: true);
+    protected override void OnInitialized()
+    { transport = new(Api, () => new RoleWorkspaceIdentity(Session.UserId, Session.SessionRevision, Session.IsAuthenticated), Session.RestoreAsync); Session.Changed += Changed; }
+    private void Changed() => transport?.NotifyAuthenticationChanged();
+    public void Dispose() { Session.Changed -= Changed; transport?.Dispose(); }
+}

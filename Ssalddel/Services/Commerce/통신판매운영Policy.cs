@@ -23,7 +23,8 @@ public sealed class 통신판매안내Service(IOptions<통신판매운영Options
     IOptions<Ssalddel.Services.PrivacyRetention.개인정보보존Options>? retention = null,
     Ssalddel.Services.PrivacySupport.한국영업일Calendar? calendar = null, TimeProvider? clock = null,
     Ssalddel.Services.PrivacySupport.I보호지원권리실행확인? rightsExecution = null,
-    IOptions<Ssalddel.Services.PrivacySupport.보호지원Options>? support = null)
+    IOptions<Ssalddel.Services.PrivacySupport.보호지원Options>? support = null,
+    살뜰.Services.Options.ISsalddelExecutionModePolicy? execution = null)
 {
     public const string Version = "commerce-privacy-2026-10-06-r25";
     public const string IntermediaryNotice = "미러는 판매자와 이용자의 거래를 연결합니다. 상품 판매·공급의 계약 당사자는 거래 화면의 판매자입니다. 미러는 법령과 이용약관에 따른 정보 확인·제공 및 분쟁 처리 책임을 이행합니다.";
@@ -33,7 +34,8 @@ public sealed class 통신판매안내Service(IOptions<통신판매운영Options
         var missing = 운영부족();
         return new()
         {
-            Version = Version, IntermediaryNotice = IntermediaryNotice, OperatorInfo = options.Value.Operator,
+            Version = Version, ExecutionModeCode = execution?.Mode.ToString() ?? "Unknown",
+            IntermediaryNotice = IntermediaryNotice, OperatorInfo = options.Value.Operator,
             MissingRequirements = missing, IsOperationalReady = missing.Count == 0,
             Documents =
             [

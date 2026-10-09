@@ -238,6 +238,7 @@ public sealed class CommerceProtectionUiTests
 
 internal sealed class CommerceUiFixture : I통신판매보호Client
 {
+    public Func<CancellationToken, Task<통신판매안내Response?>>? Notice;
     public int PrivateReads,Commands,DisputeCalls; public bool FailRights,FailSeller,FailCommand;
     public Exception? RightsError {get;set;} public Exception? DisputeError {get;set;}
     public List<보호지원CommandRequest> CommandRequests {get;}=[];
@@ -248,7 +249,7 @@ internal sealed class CommerceUiFixture : I통신판매보호Client
     public Func<long?,string?,Task<판매자공개정보Response?>>? SourceSeller {get;set;}
     public Func<string,Task<보호지원CaseResponse?>>? Detail {get;set;}
     public Func<Task<보호지원CaseResponse?>>? Command {get;set;}
-    public Task<통신판매안내Response?> 안내Async(CancellationToken ct)=>Task.FromResult<통신판매안내Response?>(new(){Version="test-policy",IntermediaryNotice="중개 안내",Documents=[]});
+    public Task<통신판매안내Response?> 안내Async(CancellationToken ct)=>Notice?.Invoke(ct)??Task.FromResult<통신판매안내Response?>(new(){Version="test-policy",IntermediaryNotice="중개 안내",Documents=[]});
     public Task<판매자확인Response?> 판매자Async(CancellationToken ct){PrivateReads++;return Task.FromResult<판매자확인Response?>(new(){Revision=1});}
     public Task<판매자확인Response?> 등록Async(판매자등록Request r,CancellationToken ct){Sellers.Add(r);return FailSeller?Task.FromException<판매자확인Response?>(new InvalidOperationException("private error")):Task.FromResult<판매자확인Response?>(new(){StatusCode="Unverified",Revision=2});}
     public Task<판매자확인Response?> 확인Async(판매자확인Request r,CancellationToken ct)=>판매자Async(ct);

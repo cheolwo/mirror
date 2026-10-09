@@ -1,0 +1,135 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Contracts.Common.Warehouse
+<section aria-label="입고 계획과 확인"><h2>입고 계획·실물 확인</h2><p>입고 예정 수량과 실제 확인 수량을 구분합니다. 일부만 확인한 수량도 근거와 함께 보존됩니다.</p>
+    @if (Model.Workspace?.InboundPlans.Count == 0) { <p>현재 확인할 입고 계획이 없습니다.</p> }
+    <ul class="items">@foreach (var plan in Model.Workspace!.InboundPlans)
+    { <li><button type="button" disabled="@(!Model.CanEdit)" @onclick="() => Choose(plan.PlanId)"><strong>@plan.SourceReference · @분산이행표시.Status(plan.StatusCode)</strong><span>예정 @plan.Lines.Sum(line => line.ExpectedQuantity) 개 · 확인 @plan.Lines.Sum(line => line.ReceivedQuantity) 개</span></button></li> }</ul>
+</section>
+@if (Model.Allows("plan-inbound"))
+{
+    <section aria-label="내 입고 예정 상품 분할 계획"><h2>상품을 보관 거점에 나누어 계획</h2>
+        @if (Model.Workspace!.Sites.All(site => site.StatusCode != "Active" || site.Locations.Count == 0))
+        { <p>사용 가능한 적재 위치가 없습니다. 실제 보관 거점의 동의와 적재 위치를 먼저 확인해 주세요.</p> }
+        else
+        {
+            @if (Model.Workspace.InboundSourceCandidates.Count == 0) { <p>첫 상품을 본인 소유·본인 판매 상품으로 직접 선언하고 거점별 예정 수량을 나눌 수 있습니다.</p> }
+            <fieldset disabled="@(!Model.CanEdit)"><legend>조회한 내 예정 입고 상품 선택</legend>
+                <label>계획 이름<input @bind="sourceReference" /></label>
+                <label class="check"><input type="checkbox" @bind="declareNew" disabled="@(draftLines.Count > 0)" />새 본인 상품을 직접 선언</label>
+                @if (declareNew)
+                {
+                    <label>상품명<input @bind="newProductName" disabled="@(draftLines.Count > 0)" /></label><label>상품 코드(SKU)<input @bind="newSku" disabled="@(draftLines.Count > 0)" /></label>
+                    <label>전체 예정 수량<input type="number" min="1" @bind="newExpectedQuantity" disabled="@(draftLines.Count > 0)" /></label>
+                    <label class="check"><input type="checkbox" @bind="newOwnerConfirmed" disabled="@(draftLines.Count > 0)" />본인 소유이며 본인이 판매하는 상품임을 직접 확인했습니다</label>
+                    <label>본인 상품 소유 근거<input @bind="newOwnershipEvidence" disabled="@(draftLines.Count > 0)" /></label>
+                    <p>예정 계획을 저장해도 실재고가 늘지 않습니다. 거점 담당자의 실제 수령 확인으로 입고 수량을 기록합니다.</p>
+                }
+                else
+                { <label>내 예정 입고 상품<select @bind="sourceId"><option value="0">상품을 선택해 주세요</option>@foreach (var source in Model.Workspace.InboundSourceCandidates) { <option value="@source.SourceInboundId">@source.Label · @source.Sku · 예정 @source.ExpectedQuantity 개</option> }</select></label> }
+                <label>적재 위치<select @bind="locationId"><option value="">거점·위치를 선택해 주세요</option>@foreach (var site in Model.Workspace.Sites.Where(site => site.StatusCode == "Active")) { @foreach (var location in site.Locations) { <option value="@location.LocationId">@site.PublicLabel · @location.Label</option> } }</select></label>
+                <label>로트 구분<input @bind="lotCode" /></label><label>이 위치의 예정 수량<input type="number" min="1" @bind="plannedQuantity" /></label>
+                @if (!declareNew && Source is { OwnerUserId: null })
+                {
+                    <label class="check"><input type="checkbox" @bind="ownerConfirmed" />소유 근거가 없는 신규 상품은 본인 소유이며 본인이 판매하는 상품임을 확인합니다</label>
+                    <label>본인 소유 근거<input @bind="ownershipEvidence" /></label>
+                }
+            </fieldset><button type="button" disabled="@(!Model.CanEdit)" @onclick="StageLine">이 위치의 계획 항목 추가</button>
+            <p>아래 항목은 아직 서버에 저장되지 않은 입력입니다.</p>
+            <ul>@foreach (var line in draftLines) { <li>@line.ProductName · @LocationLabel(line.LocationId) · @line.ExpectedQuantity 개 <button type="button" disabled="@(!Model.CanEdit)" @onclick="() => RemoveLine(line)">입력 항목 제거</button></li> }</ul>
+            <label class="check"><input type="checkbox" @bind="confirmed" />기업·소유 근거·거점별 예정 수량을 확인했습니다</label>
+            <button class="primary" type="button" disabled="@(!confirmed || draftLines.Count == 0 || !Model.CanEdit)" @onclick="Plan">분할 입고 계획 저장</button>
+        }
+    </section>
+}
+@if (Model.SelectedInbound is { } selected)
+{
+    <section aria-label="실제 입고 수량 확인"><h2>@selected.SourceReference</h2>
+        @foreach (var line in selected.Lines) { <p>@line.Sku · @LocationLabel(line.LocationId) · 예정 @line.ExpectedQuantity 개 · 확인 @line.ReceivedQuantity 개</p> }
+        @if (selected.AllowedActions.Contains("receive"))
+        {
+            <fieldset disabled="@(!Model.CanEdit || Model.PhotoInputsLocked)"><legend>현장 위치·상품·수량 확인</legend>
+                <label>입고 확인 위치와 상품 소유자<select @bind="receiveGroup" @bind:after="ResetReceive"><option value="">위치·상품 소유자 선택</option>@foreach (var group in ReceiveGroups) { <option value="@GroupKey(group.Key.LocationId, group.Key.OwnerUserId)">@LocationLabel(group.Key.LocationId) · 등록된 상품 소유자 · 남은 @group.Sum(line => line.ExpectedQuantity - line.ReceivedQuantity) 개</option> }</select></label>
+                <label>1. 적재 위치 바코드<input @bind="barcode" autocomplete="off" /></label>
+                @foreach (var line in ReceiptLines)
+                {
+                    var input = ReceiveInput(line.LineKey);
+                    <div class="batch-line"><label class="check"><input type="checkbox" @bind="input.Selected" />@line.Sku · 예정 @line.ExpectedQuantity 개 · 확인 @line.ReceivedQuantity 개</label>
+                        @if (input.Selected) { <label>2. 상품 코드<input @bind="input.Sku" disabled="@(!LocationMatches)" autocomplete="off" /></label><label>3. 실물 확인 수량<input type="number" min="1" max="@(line.ExpectedQuantity - line.ReceivedQuantity)" @bind="input.Quantity" disabled="@(!LocationMatches || input.Sku.Trim() != line.Sku)" /></label> }
+                    </div>
+                }
+                <label class="check"><input type="checkbox" @bind="confirmed" />선택한 위치·상품·수량을 실제로 확인하고 적재했습니다</label>
+            </fieldset>
+            <분산사진업무Screen Model="Model" Work="ReceiveWork" Title="입고·적재" Action="receive" Suffix="@($"inbound-plans/{분산이행Client.Segment(selected.PlanId)}/receipt-batches")" AllowedActions="selected.AllowedActions" Quantity="ReceiveTotal" Confirmed="confirmed" />
+        }
+    </section>
+}
+@code {
+    [Parameter, EditorRequired] public 분산이행PageViewModel Model { get; set; } = default!;
+    private long sourceId;
+    private string sourceReference = "", locationId = "", lotCode = "", ownershipEvidence = "", receiveGroup = "", barcode = "";
+    private int plannedQuantity;
+    private string? receiptVersion;
+    private readonly Dictionary<string, ReceiptInput> receiveInputs = [];
+    private bool ownerConfirmed, confirmed;
+    private bool declareNew, initializedMode, newOwnerConfirmed;
+    private string newProductName = "", newSku = "", newOwnershipEvidence = "";
+    private int? newExpectedQuantity;
+    private DistributedNewInboundSourceRequest? declaredSource;
+    private readonly List<DistributedInboundLineRequest> draftLines = [];
+    private DistributedInboundSourceCandidateDto? Source => Model.Workspace?.InboundSourceCandidates.FirstOrDefault(source => source.SourceInboundId == sourceId);
+    private static string GroupKey(string location, string owner) => location + "|" + owner;
+    private IEnumerable<IGrouping<(string LocationId, string OwnerUserId), DistributedInboundLineDto>> ReceiveGroups => (Model.SelectedInbound?.Lines ?? []).Where(line => line.ReceivedQuantity < line.ExpectedQuantity).GroupBy(line => (line.LocationId, line.OwnerUserId));
+    private IReadOnlyList<DistributedInboundLineDto> ReceiptLines => Model.SelectedInbound?.Lines.Where(line => GroupKey(line.LocationId, line.OwnerUserId) == receiveGroup && line.ReceivedQuantity < line.ExpectedQuantity).ToArray() ?? [];
+    private DistributedLocationDto? ReceiptLocation => Model.Workspace?.Sites.SelectMany(site => site.Locations).FirstOrDefault(location => location.LocationId == ReceiptLines.FirstOrDefault()?.LocationId);
+    private bool LocationMatches => ReceiptLines.Count > 0 && ReceiptLocation?.Barcode == barcode.Trim();
+    private ReceiptInput ReceiveInput(string id) { if (!receiveInputs.TryGetValue(id, out var value)) receiveInputs[id] = value = new(); return value; }
+    private int ReceiveTotal => ReceiptLines.Where(line => ReceiveInput(line.LineKey).Selected).Sum(line => ReceiveInput(line.LineKey).Quantity);
+    private DistributedEvidenceWorkRequest? ReceiveWork
+    {
+        get
+        {
+            var lines = ReceiptLines.Where(line => ReceiveInput(line.LineKey).Selected).ToArray();
+            if (!LocationMatches || lines.Length == 0 || Model.SelectedInbound is not { } plan || lines.Any(line => ReceiveInput(line.LineKey).Sku.Trim() != line.Sku || ReceiveInput(line.LineKey).Quantity < 1 || ReceiveInput(line.LineKey).Quantity > line.ExpectedQuantity - line.ReceivedQuantity)) return null;
+            return new() { Kind = "Receive", AggregateId = plan.PlanId, Receive = new() { ExpectedRevision = plan.Revision, LocationBarcode = barcode.Trim(),
+                Lines = lines.Select(line => new DistributedInboundReceiptLineRequest { LineKey = line.LineKey, Sku = line.Sku, Quantity = ReceiveInput(line.LineKey).Quantity }).ToArray() } };
+        }
+    }
+    private string LocationLabel(string id) => Model.Workspace?.Sites.SelectMany(site => site.Locations).FirstOrDefault(location => location.LocationId == id)?.Label ?? "위치 확인 대기";
+    protected override void OnParametersSet()
+    { if (!initializedMode) { initializedMode = true; declareNew = Model.Workspace?.InboundSourceCandidates.Count == 0; }
+        var version = $"{Model.CurrentUserId}|{Model.SelectedInbound?.PlanId}|{Model.SelectedInbound?.Revision}"; if (receiptVersion != version) { receiptVersion = version; receiveGroup = ""; ResetReceive(); } }
+    private void RemoveLine(DistributedInboundLineRequest line) { draftLines.Remove(line); confirmed = false; if (draftLines.Count == 0) declaredSource = null; }
+    private Task StageLine()
+    {
+        var source = Source; var location = Model.Workspace?.Sites.Where(site => site.StatusCode == "Active").SelectMany(site => site.Locations).FirstOrDefault(item => item.LocationId == locationId);
+        if (declareNew)
+        {
+            if (location is null || string.IsNullOrWhiteSpace(newProductName) || string.IsNullOrWhiteSpace(newSku) || newExpectedQuantity is null or < 1
+                || !newOwnerConfirmed || string.IsNullOrWhiteSpace(newOwnershipEvidence) || plannedQuantity < 1 || string.IsNullOrWhiteSpace(lotCode)
+                || draftLines.Sum(line => line.ExpectedQuantity) + plannedQuantity > newExpectedQuantity.Value)
+                return Model.InvalidInputAsync("본인 상품명·상품 코드·전체 예정 수량·소유 확인 근거와 실제 적재 위치별 수량을 확인해 주세요.");
+            declaredSource ??= new() { ProductName = newProductName.Trim(), Sku = newSku.Trim(), ExpectedQuantity = newExpectedQuantity.Value,
+                StockOwnerIsCurrentSellerConfirmed = newOwnerConfirmed, OwnershipEvidenceReference = newOwnershipEvidence.Trim() };
+            draftLines.Add(new() { LineKey = Guid.NewGuid().ToString("N"), SourceInboundId = 0, SiteId = location.SiteId, LocationId = location.LocationId,
+                Sku = declaredSource.Sku, ProductName = declaredSource.ProductName, LotCode = lotCode.Trim(), ExpectedQuantity = plannedQuantity });
+            plannedQuantity = 0; confirmed = false; return Task.CompletedTask;
+        }
+        if (source is null || location is null || string.IsNullOrWhiteSpace(lotCode) || plannedQuantity < 1
+            || plannedQuantity + draftLines.Where(line => line.SourceInboundId == source.SourceInboundId).Sum(line => line.ExpectedQuantity) > source.ExpectedQuantity
+            || source.OwnerUserId is null && (!ownerConfirmed || string.IsNullOrWhiteSpace(ownershipEvidence)))
+            return Model.InvalidInputAsync("조회한 상품·적재 위치·예정 수량과 필요한 본인 소유 근거를 확인해 주세요.");
+        draftLines.Add(new() { LineKey = Guid.NewGuid().ToString("N"), SourceInboundId = source.SourceInboundId, SiteId = location.SiteId, LocationId = location.LocationId,
+            Sku = source.Sku, ProductName = source.Label, LotCode = lotCode.Trim(), ExpectedQuantity = plannedQuantity,
+            StockOwnerIsCurrentSellerConfirmed = source.OwnerUserId is null && ownerConfirmed, OwnershipEvidenceReference = source.OwnerUserId is null ? ownershipEvidence.Trim() : "" });
+        plannedQuantity = 0; ownerConfirmed = false; ownershipEvidence = ""; confirmed = false; return Task.CompletedTask;
+    }
+    private async Task Plan()
+    {
+        if (string.IsNullOrWhiteSpace(sourceReference) || draftLines.Count == 0) { await Model.InvalidInputAsync("계획 이름과 저장할 항목을 확인해 주세요."); return; }
+        await Model.ExecuteAsync("plan-inbound", "inbound-plans", new DistributedInboundPlanRequest { SourceReference = sourceReference.Trim(), Lines = draftLines.ToArray(), NewSource = declareNew ? declaredSource : null }, confirmed: confirmed);
+        if (!Model.HasPendingCommand && Model.Message is not null) { draftLines.Clear(); declaredSource = null; confirmed = newOwnerConfirmed = false; }
+    }
+    private void ResetReceive() { barcode = ""; receiveInputs.Clear(); confirmed = false; Model.ClearPhotos(); }
+    private async Task Choose(string id) { receiveGroup = ""; ResetReceive(); await Model.ChooseAsync(id); }
+    private sealed class ReceiptInput { public bool Selected { get; set; } public string Sku { get; set; } = ""; public int Quantity { get; set; } }
+}

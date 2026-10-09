@@ -1,0 +1,133 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Contracts.Common.Warehouse
+@if (Model.SelectedWave is { } selected)
+{
+    @if (HasCurrentWork && Model.CurrentStop is { } current)
+    {
+        <section aria-label="현재 방문 작업"><h2>@(current.Kind == DistributedFulfillmentCodes.Pickup ? "현재 거점에서 직접 피킹" : "현재 고객에게 전달")</h2>
+            <p>@current.Address</p><p>방문 시간 @분산이행표시.Time(current.WindowStartUtc) ~ @분산이행표시.Time(current.WindowEndUtc)</p>
+            @if (current.Kind == DistributedFulfillmentCodes.Pickup)
+            {
+                <p>같은 적재 위치·같은 상품 소유자의 물품을 수량 목록과 사진으로 함께 확인합니다.</p>
+                <fieldset disabled="@(!Model.CanEdit || Model.PhotoInputsLocked)"><legend>현재 거점 물품 확인</legend>
+                    <label>확인할 적재 위치와 상품 소유자<select @bind="pickGroup" @bind:after="ResetPickSelection"><option value="">위치·상품 소유자 선택</option>@foreach (var group in PickGroups) { <option value="@GroupKey(group.Key.LocationId, group.Key.OwnerUserId)">@Location(group.Key.LocationId) · @분산이행표시.Owner(group.First().OwnerLabel)</option> }</select></label>
+                    <label>1. 적재 위치 바코드<input autocomplete="off" @bind="locationBarcode" placeholder="위치의 바코드를 읽거나 입력해 주세요" /></label>
+                    @foreach (var line in PickLines)
+                    {
+                        var input = PickInput(line.ReservationId);
+                        <div class="batch-line"><label class="check"><input type="checkbox" @bind="input.Selected" />@분산이행표시.Product(line.ProductLabel, line.Sku) · 남은 @(line.Quantity - line.PickedQuantity - line.ReleasedQuantity) 개</label>
+                            @if (input.Selected) { <label>2. 상품 코드<input autocomplete="off" @bind="input.Sku" disabled="@(!LocationMatches)" /></label><label>3. 확인 수량<input type="number" min="1" max="@(line.Quantity - line.PickedQuantity - line.ReleasedQuantity)" @bind="input.Quantity" disabled="@(!LocationMatches || input.Sku.Trim() != line.Sku)" /></label> }
+                        </div>
+                    }
+                    <label class="check"><input type="checkbox" @bind="workConfirmed" />선택한 물품과 수량을 현재 거점에서 직접 확인했습니다</label>
+                </fieldset>
+                <분산사진업무Screen Model="Model" Work="PickWork" Title="피킹" Action="pick" Suffix="@($"waves/{분산이행Client.Segment(selected.WaveId)}/pick-batches")" AllowedActions="selected.AllowedActions" Quantity="PickTotal" Confirmed="workConfirmed" />
+            }
+            else if (current.Kind == DistributedFulfillmentCodes.Delivery)
+            {
+                <fieldset disabled="@(!Model.CanEdit || Model.PhotoInputsLocked)"><legend>현재 고객 전달 물품</legend>
+                    @foreach (var line in DeliveryLines)
+                    {
+                        var input = DeliveryInput(line.ReservationId); var order = Model.CurrentDeliveryOrders.Single(item => item.OrderId == line.OrderId);
+                        <div class="batch-line"><label class="check"><input type="checkbox" @bind="input.Selected" />@order.OrderReference · @분산이행표시.Product(line.ProductLabel, line.Sku) · 남은 @(line.PickedQuantity - line.DeliveredQuantity - line.ReturnedQuantity) 개</label>
+                            @if (input.Selected) { <label>전달 수량<input type="number" min="1" max="@(line.PickedQuantity - line.DeliveredQuantity - line.ReturnedQuantity)" @bind="input.Quantity" /></label> }
+                        </div>
+                    }
+                    <label class="check"><input type="checkbox" @bind="workConfirmed" />선택한 물품과 수량을 현재 고객에게 실제로 전달했습니다</label>
+                </fieldset>
+                <분산사진업무Screen Model="Model" Work="DeliveryWork" Title="전달" Action="deliver" Suffix="@($"waves/{분산이행Client.Segment(selected.WaveId)}/delivery-batches")" AllowedActions="selected.AllowedActions" Quantity="DeliveryTotal" Confirmed="workConfirmed" />
+                <p>고객의 수령 확인은 고객이 별도로 기록합니다.</p>
+            }        </section>
+    }
+    else
+    { <p class="notice">현재 허용된 피킹·전달 작업이 없습니다. 최신 배정·시간창과 아래 조건을 다시 확인해 주세요.</p> }
+    <details open="@(!HasCurrentWork)"><summary>방문 순서·시간창·제안 운임</summary>
+        <section aria-label="순회 조건"><h2>@selected.Label</h2>
+            <p>서버가 저장한 방문 순서</p>
+            <dl class="metrics"><div><dt>제안 운임</dt><dd>@(selected.OfferedDriverFareKrw?.ToString("N0") ?? "미확정") 원</dd></div><div><dt>계획 거리</dt><dd>@(selected.TotalDistanceKm?.ToString("0.###") ?? "미확정") km</dd></div><div><dt>계획 소요</dt><dd>@(selected.TotalElapsedMinutes?.ToString("0.#") ?? "미확정") 분</dd></div></dl>
+            <p>제안 운임은 입금·실지급 완료를 뜻하지 않습니다.</p>
+            <ol>@foreach (var stop in selected.Stops)
+            { <li aria-current="@(stop.StopId == selected.CurrentStopId ? "step" : null)">@(stop.Kind == DistributedFulfillmentCodes.Pickup ? "거점 피킹" : "고객 전달") · @분산이행표시.Time(stop.ExpectedArrivalUtc) · @분산이행표시.Status(stop.StatusCode)</li> }</ol>
+            @if (selected.BlockCodes.Count > 0) { <p class="notice">확인할 조건: @string.Join(" · ", selected.BlockCodes.Select(분산이행표시.Condition))</p> }
+            @if (!string.IsNullOrWhiteSpace(selected.AcceptanceErrorMessage)) { <p class="notice">@selected.AcceptanceErrorMessage</p> }
+            @foreach (var warning in selected.AcceptanceWarnings)
+            {
+                var input = WarningInput(warning);
+                <label class="check"><input type="checkbox" @bind="input.Confirmed" disabled="@(!Model.Allows("accept", selected.AllowedActions))" />@warning.Message</label>
+            }
+            @if (Model.Allows("accept", selected.AllowedActions))
+            {
+                <label class="check"><input type="checkbox" @bind="acceptConfirmed" />방문 순서·시간창·제안 운임과 표시된 조건을 확인했습니다</label>
+                <button class="primary" type="button" disabled="@(!CanSubmitAccept)" @onclick="Accept">이 배송 순회 수락</button>
+            }
+        </section>
+    </details>
+}
+<details open="@(Model.SelectedWave is null)"><summary>배송 순회 선택</summary>
+    <section aria-label="내 배송 순회"><h2>내 배송 순회</h2>
+        @if (Model.Workspace?.Waves.Count == 0) { <p>본인에게 제안되거나 수락한 배송 순회가 없습니다.</p> }
+        <ul class="items">@foreach (var wave in Model.Workspace!.Waves)
+        { <li><button type="button" disabled="@(!Model.CanEdit)" @onclick="() => Choose(wave.WaveId)"><strong>@wave.Label · @분산이행표시.Status(wave.StatusCode)</strong><span>배송 @분산이행표시.Time(wave.DeliveryStartUtc) ~ @분산이행표시.Time(wave.DeliveryEndUtc)</span></button></li> }</ul>
+    </section>
+</details>
+@code {
+    [Parameter, EditorRequired] public 분산이행PageViewModel Model { get; set; } = default!;
+    private string pickGroup = "", locationBarcode = "";
+    private readonly Dictionary<string, LineInput> pickInputs = [], deliveryInputs = [];
+    private bool workConfirmed, acceptConfirmed;
+    private string? selectedVersion;
+    private readonly Dictionary<string, WarningConfirmation> warnings = [];
+    private bool HasCurrentWork => Model.CurrentStop is not null && Model.SelectedWave is { } wave
+        && (wave.AllowedActions.Contains("pick") || wave.AllowedActions.Contains("deliver"));
+    private static string GroupKey(string location, string owner) => location + "|" + owner;
+    private IEnumerable<IGrouping<(string LocationId, string OwnerUserId), DistributedReservationDto>> PickGroups => Model.CurrentPickLines.Where(line => line.AllowedActions.Contains("pick")).GroupBy(line => (line.LocationId, line.OwnerUserId));
+    private IReadOnlyList<DistributedReservationDto> PickLines => Model.CurrentPickLines.Where(line => GroupKey(line.LocationId, line.OwnerUserId) == pickGroup && line.AllowedActions.Contains("pick")).ToArray();
+    private IReadOnlyList<DistributedReservationDto> DeliveryLines => Model.SelectedWave?.Reservations.Where(line => Model.CurrentDeliveryOrders.Any(order => order.OrderId == line.OrderId) && line.PickedQuantity - line.DeliveredQuantity - line.ReturnedQuantity > 0 && line.AllowedActions.Contains("deliver")).ToArray() ?? [];
+    private DistributedLocationDto? SelectedLocation => Model.Workspace?.Sites.SelectMany(site => site.Locations).FirstOrDefault(location => location.LocationId == PickLines.FirstOrDefault()?.LocationId);
+    private bool LocationMatches => PickLines.Count > 0 && SelectedLocation?.Barcode == locationBarcode.Trim();
+    private int PickTotal => PickLines.Where(line => PickInput(line.ReservationId).Selected).Sum(line => PickInput(line.ReservationId).Quantity);
+    private int DeliveryTotal => DeliveryLines.Where(line => DeliveryInput(line.ReservationId).Selected).Sum(line => DeliveryInput(line.ReservationId).Quantity);
+    private LineInput PickInput(string id) { if (!pickInputs.TryGetValue(id, out var value)) pickInputs[id] = value = new(); return value; }
+    private LineInput DeliveryInput(string id) { if (!deliveryInputs.TryGetValue(id, out var value)) deliveryInputs[id] = value = new(); return value; }
+    private DistributedEvidenceWorkRequest? PickWork
+    {
+        get
+        {
+            var lines = PickLines.Where(line => PickInput(line.ReservationId).Selected).ToArray();
+            if (!LocationMatches || lines.Length == 0 || Model.SelectedWave is not { } wave || Model.CurrentStop is not { } stop
+                || lines.Any(line => PickInput(line.ReservationId).Sku.Trim() != line.Sku || PickInput(line.ReservationId).Quantity < 1 || PickInput(line.ReservationId).Quantity > line.Quantity - line.PickedQuantity - line.ReleasedQuantity)) return null;
+            return new() { Kind = "Pick", AggregateId = wave.WaveId, Pick = new() { ExpectedRevision = wave.Revision, StopId = stop.StopId, LocationBarcode = locationBarcode.Trim(),
+                Lines = lines.Select(line => new DistributedPickLineRequest { ReservationId = line.ReservationId, OwnerUserId = line.OwnerUserId, Sku = line.Sku, Quantity = PickInput(line.ReservationId).Quantity }).ToArray() } };
+        }
+    }
+    private DistributedEvidenceWorkRequest? DeliveryWork
+    {
+        get
+        {
+            var lines = DeliveryLines.Where(line => DeliveryInput(line.ReservationId).Selected).ToArray();
+            if (lines.Length == 0 || Model.SelectedWave is not { } wave || Model.CurrentStop is not { } stop
+                || lines.Any(line => DeliveryInput(line.ReservationId).Quantity < 1 || DeliveryInput(line.ReservationId).Quantity > line.PickedQuantity - line.DeliveredQuantity - line.ReturnedQuantity)) return null;
+            return new() { Kind = "Deliver", AggregateId = wave.WaveId, Deliver = new() { ExpectedRevision = wave.Revision, StopId = stop.StopId,
+                Lines = lines.Select(line => new DistributedDeliveryLineRequest { ReservationId = line.ReservationId, Quantity = DeliveryInput(line.ReservationId).Quantity }).ToArray() } };
+        }
+    }
+    private bool CanSubmitAccept => acceptConfirmed && Model.SelectedWave is { } wave && Model.Allows("accept", wave.AllowedActions) && wave.AcceptanceWarnings.All(warning => WarningInput(warning).Confirmed);
+    private WarningConfirmation WarningInput(DistributedAcceptanceWarningDto warning)
+    { var key = warning.CargoRequestId + "|" + warning.Code; if (!warnings.TryGetValue(key, out var input)) warnings[key] = input = new(); return input; }
+    protected override void OnParametersSet()
+    {
+        var version = $"{Model.CurrentUserId}|{Model.SelectedWave?.WaveId}|{Model.SelectedWave?.Revision}|{Model.CurrentStop?.StopId}";
+        if (version != selectedVersion) { selectedVersion = version; Reset(); }
+    }
+    private string Location(string id) => Model.Workspace?.Sites.SelectMany(site => site.Locations).FirstOrDefault(location => location.LocationId == id)?.Label ?? "적재 위치 확인 대기";
+    private void Reset() { pickGroup = ""; ResetPickSelection(); deliveryInputs.Clear(); acceptConfirmed = false; warnings.Clear(); }
+    private void ResetPickSelection() { locationBarcode = ""; pickInputs.Clear(); workConfirmed = false; Model.ClearPhotos(); }
+    private async Task Choose(string id) { Reset(); await Model.ChooseAsync(id); }
+    private async Task Accept()
+    {
+        if (!CanSubmitAccept || Model.SelectedWave is not { } wave) return;
+        await Model.AcceptAsync(wave.AcceptanceWarnings.Where(warning => WarningInput(warning).Confirmed).Select(warning => warning.Code).Distinct(StringComparer.Ordinal).ToArray(), acceptConfirmed); Reset();
+    }
+    private sealed class WarningConfirmation { public bool Confirmed { get; set; } }
+    private sealed class LineInput { public bool Selected { get; set; } public string Sku { get; set; } = ""; public int Quantity { get; set; } }
+}

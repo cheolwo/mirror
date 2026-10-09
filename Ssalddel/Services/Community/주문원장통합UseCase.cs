@@ -185,6 +185,22 @@ public sealed class 주문원장통합UseCase : I주문원장통합UseCase
         var 포함원장목록 = 주문원장.포함원장목록.ToList();
         var 기존Index = 포함원장목록.FindIndex(x =>
             string.Equals(x.원장Id, 하위원장.원장Id, StringComparison.OrdinalIgnoreCase));
+        if (기존Index >= 0)
+        {
+            var 기존참조 = 포함원장목록[기존Index];
+            var 역할변경 = !string.Equals(기존참조.역할, request.역할.Trim(), StringComparison.OrdinalIgnoreCase);
+            if (역할변경 || (기존참조.필수여부 && !request.필수여부))
+            {
+                var 잠금사유 = 주문원장연결변경Policy.잠금사유(주문원장, 하위원장);
+                if (잠금사유 is not null) return Conflict(잠금사유);
+            }
+            if (!역할변경 && 기존참조.필수여부 == request.필수여부
+                && (!request.표시순서.HasValue || request.표시순서 == 기존참조.표시순서))
+            {
+                // 같은 관계를 재연결해도 판본을 올리거나 원장을 다시 저장하지 않습니다.
+                return Result.Ok(await 통합Dto생성Async(주문원장, cancellationToken));
+            }
+        }
         var 표시순서 = request.표시순서
             ?? (기존Index >= 0
                 ? 포함원장목록[기존Index].표시순서
@@ -239,6 +255,13 @@ public sealed class 주문원장통합UseCase : I주문원장통합UseCase
         {
             return Conflict("주문 원장이 다른 요청에서 먼저 변경되었습니다. 최신 원장을 다시 조회한 뒤 재시도해야 합니다.");
         }
+
+        var 분리대상 = 주문원장.포함원장목록.FirstOrDefault(x =>
+            string.Equals(x.원장Id, 하위원장Id.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (분리대상 is null) return NotFound("주문 원장에 연결된 하위 원장을 찾을 수 없습니다.");
+        var 하위원장 = await _원장저장소.원장조회Async(분리대상.원장Id, cancellationToken);
+        var 분리잠금사유 = 주문원장연결변경Policy.잠금사유(주문원장, 하위원장);
+        if (분리잠금사유 is not null) return Conflict(분리잠금사유);
 
         var 포함원장목록 = 주문원장.포함원장목록
             .Where(x => !string.Equals(x.원장Id, 하위원장Id.Trim(), StringComparison.OrdinalIgnoreCase))
@@ -365,9 +388,13 @@ public sealed class 주문원장통합UseCase : I주문원장통합UseCase
             포함원장목록 = 포함항목목록,
             전체하위원장수 = 포함항목목록.Length,
             완료하위원장수 = 포함항목목록.Count(x => x.원장?.상태 == 커뮤니티원장상태.완료),
-            필수하위원장완료여부 = 포함항목목록
+            필수하위원장완료여부 = 포함항목목록.Any(x => x.필수여부) && 포함항목목록
                 .Where(x => x.필수여부)
                 .All(x => x.원장?.상태 == 커뮤니티원장상태.완료),
+            필수하위원장판정 = !포함항목목록.Any(x => x.필수여부) ? "필수업무미지정"
+                : 포함항목목록.Any(x => x.필수여부 && x.원장 is null) ? "원장누락"
+                : 포함항목목록.Where(x => x.필수여부).All(x => x.원장?.상태 == 커뮤니티원장상태.완료)
+                    ? "필수업무완료" : "필수업무진행중",
             서명대상주문수 = 개별주문항목목록.Length,
             서명완료주문수 = 서명완료주문수,
             미서명주문Ids = 개별주문항목목록
@@ -476,6 +503,7 @@ public sealed class 주문원장통합Dto
     public int 전체하위원장수 { get; set; }
     public int 완료하위원장수 { get; set; }
     public bool 필수하위원장완료여부 { get; set; }
+    public string 필수하위원장판정 { get; set; } = "필수업무미지정";
     public int 서명대상주문수 { get; set; }
     public int 서명완료주문수 { get; set; }
     public IReadOnlyList<string> 미서명주문Ids { get; set; } = [];

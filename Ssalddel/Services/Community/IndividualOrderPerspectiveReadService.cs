@@ -74,7 +74,7 @@ public sealed class IndividualOrderPerspectiveReadService(
         var page = Math.Max(0, request.Page);
         var pageSize = Math.Clamp(request.PageSize, 1, 100);
         var items = candidatesResult.Value
-            .Select(ToResponse)
+            .Select(candidate => ToResponse(candidate, userId))
             .Where(item => Matches(item, request))
             .ToArray();
         var ordered = Order(items, request.SortBy, request.SortDescending);
@@ -223,13 +223,16 @@ public sealed class IndividualOrderPerspectiveReadService(
         }
     }
 
-    private static 개별주문관점항목응답 ToResponse(OrderCandidate candidate)
+    private static 개별주문관점항목응답 ToResponse(OrderCandidate candidate, string userId)
     {
         var fullRoot = candidate.RoleView?.주문원장상세;
         var communityView = string.Equals(
             candidate.Perspective,
             개별주문관점코드.공동원장,
             StringComparison.OrdinalIgnoreCase);
+        var readRoot = communityView && 주문원장역할별조회Service.직접접근가능(candidate.Root, userId)
+            ? FoodOrderLedgerReadPresentation.Normalize(candidate.Root)
+            : candidate.Root;
         var roles = candidate.RoleView?.관련원장목록
             .Select(item => item.주문안역할)
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -246,8 +249,8 @@ public sealed class IndividualOrderPerspectiveReadService(
             원장템플릿Key = candidate.Root.원장템플릿Key,
             제목 = fullRoot?.제목
                  ?? (communityView ? candidate.Root.제목 : $"개별 주문 {candidate.Root.원장Id}"),
-            상태 = candidate.RoleView?.주문원장상태 ?? candidate.Root.상태,
-            현재단계Key = fullRoot?.현재단계Key ?? (communityView ? candidate.Root.현재단계Key : null),
+            상태 = candidate.RoleView?.주문원장상태 ?? readRoot.상태,
+            현재단계Key = fullRoot?.현재단계Key ?? (communityView ? readRoot.현재단계Key : null),
             주문자표시명 = fullRoot?.생성자표시명,
             관계코드 = candidate.Perspective,
             조회근거 = communityView ? "공동원장참여" : candidate.RoleView?.주문원장조회근거 ?? string.Empty,

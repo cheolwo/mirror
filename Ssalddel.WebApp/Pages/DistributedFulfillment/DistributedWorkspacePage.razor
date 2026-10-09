@@ -1,0 +1,12 @@
+@page "/workspace/{RoleKey}/distributed/{Screen}"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+<PageTitle>@분산이행Navigation.Title(Screen) · 살뜰</PageTitle>
+<분산이행Screen RoleKey="@RoleKey" Screen="@Screen" SelectedId="@SelectedId" RecoveryRequestId="RequestId" ReturnHref="@(ReturnUrl ?? (RoleKey == "shipper" ? "/shipper/workspace" : $"/workspace/{RoleKey}"))" LoginHref="@($"/roles/01/login?returnUrl={Uri.EscapeDataString(ResumeHref)}")" />
+@code {
+    [Parameter] public string RoleKey { get; set; } = "";
+    [Parameter] public string Screen { get; set; } = "";
+    [SupplyParameterFromQuery(Name = "selected")] public string? SelectedId { get; set; }
+    [SupplyParameterFromQuery(Name = "requestId")] public Guid? RequestId { get; set; }
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+    private string ResumeHref => 분산이행Navigation.ResumeHref(RoleKey, Screen, SelectedId, RequestId, ReturnUrl ?? (RoleKey == "shipper" ? "/shipper/workspace" : $"/workspace/{RoleKey}"));
+}

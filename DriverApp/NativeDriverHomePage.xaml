@@ -258,6 +258,12 @@
             <controls:DriverTransportFooterBar x:Name="TransportFooterBar"
                                                OpenMenuRequested="OnOpenLegacyMenuClicked"
                                                OpenTransportRequested="OnOpenCurrentTransportClicked" />
+            <Button Text="직접 피킹·배송 순회"
+                    HeightRequest="48"
+                    BackgroundColor="#0F766E"
+                    TextColor="#ffffff"
+                    CornerRadius="8"
+                    Clicked="OnOpenDistributedRoundClicked" />
         </VerticalStackLayout>
     </Grid>
 </ContentPage>

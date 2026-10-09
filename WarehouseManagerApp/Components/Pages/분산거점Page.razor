@@ -1,0 +1,23 @@
+@page "/workspace/warehouse/distributed/{Screen}"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@using Ssalddel.Ui.Common.Areas.App.Services
+@using Ssalddel.Client.Infrastructure.Security
+@inject ISsalddelJsonApiClient Api
+@inject ISsalddelAccessTokenProvider TokenProvider
+@inject ClientAuthSession Session
+@implements IDisposable
+<PageTitle>분산 보관 거점</PageTitle>
+@if (transport is not null)
+{ <분산이행Screen RoleKey="warehouse" Screen="@Screen" SelectedId="@SelectedId" RecoveryRequestId="RequestId" Transport="transport" ReturnHref="@(ReturnUrl ?? "/warehouse")" LoginHref="@($"/distributed-login?returnUrl={Uri.EscapeDataString(ResumeHref)}")" /> }
+@code {
+    [Parameter] public string Screen { get; set; } = "sites";
+    [SupplyParameterFromQuery(Name = "selected")] public string? SelectedId { get; set; }
+    [SupplyParameterFromQuery(Name = "requestId")] public Guid? RequestId { get; set; }
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+    private 분산이행JsonTransport? transport;
+    private string ResumeHref => 분산이행Navigation.ResumeHref("warehouse", Screen, SelectedId, RequestId, ReturnUrl ?? "/warehouse");
+    protected override void OnInitialized() => transport = new(Api, Identity, async ct => { await TokenProvider.GetAccessTokenAsync(ct); });
+    private RoleWorkspaceIdentity Identity() { var current = Session.CaptureIdentity(); return new(current.OwnerId, current.Revision, Session.IsAuthenticated); }
+    public void Dispose() => transport?.Dispose();
+}

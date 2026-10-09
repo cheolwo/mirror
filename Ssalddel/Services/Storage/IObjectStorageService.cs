@@ -9,6 +9,8 @@ public enum ObjectStorageAccess
 public interface IObjectStorageService
 {
     bool IsConfigured(ObjectStorageAccess access);
+    // Server-side identity allows crash-safe tracking before an immutable write. Never return this to the client.
+    string? GetContainerName(ObjectStorageAccess access) => null;
 
     Task<ObjectStorageUploadResult> UploadAsync(
         Stream stream,

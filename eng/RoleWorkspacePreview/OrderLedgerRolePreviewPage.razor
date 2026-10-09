@@ -1,0 +1,14 @@
+@page "/order-ledger-role-preview/{Scenario}"
+@using RoleWorkspacePreview.LinkedOrderer
+@using Ssalddel.Ui.Common.Areas.App.Components
+@inject OrderLedgerRolePreviewFixture Fixture
+<RoleAppProviders />
+<aside style="padding:12px;background:#eaf5f3;color:#0f766e">주문 상세 화면 검토 · 예시 자료 · 실제 업무 접수 없음</aside>
+<main style="max-width:760px;margin:auto;padding:16px;display:flex;flex-direction:column;gap:16px" data-order-preview="@Scenario">
+    <MudText Typo="Typo.h4">주문 상세</MudText>
+    <OrdererIndividualOrderLedgerDetail @key="Scenario" OrderLedgerId="preview-root" />
+</main>
+@code {
+    [Parameter] public string Scenario { get; set; } = "food";
+    protected override void OnParametersSet() => Fixture.Scenario = Scenario;
+}

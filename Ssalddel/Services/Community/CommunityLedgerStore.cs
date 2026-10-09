@@ -22,8 +22,9 @@ internal static class 커뮤니티원장변경유형값
     "MongoDB community_ledgers 원장 원본의 조회·저장과 명시적 상태 전이를 담당",
     ReleaseStage = SsalddelCommunityV0ReleaseStages.ClosedLoop,
     Boundary = "원장은 참여자가 직접 합의한 진행 상태를 기록하며 투영 lease·재시도와 플랫폼 계약 성립은 이 저장소의 책임이 아닙니다.")]
-public sealed class Mongo커뮤니티원장저장소 : I커뮤니티원장저장소
+public sealed partial class Mongo커뮤니티원장저장소 : I커뮤니티원장저장소
 {
+    private readonly IMongoClient _mongoClient;
     private readonly IMongoCollection<커뮤니티원장문서> _collection;
     private readonly SemaphoreSlim _indexLock = new(1, 1);
     private bool _indexesReady;
@@ -31,6 +32,7 @@ public sealed class Mongo커뮤니티원장저장소 : I커뮤니티원장저장
 
     public Mongo커뮤니티원장저장소(IMongoClient mongoClient, IOptions<MongoDbOptions> options, I개인정보복원차단Service? privacyBarrier = null)
     {
+        _mongoClient = mongoClient;
         _collection = 커뮤니티원장MongoCollectionFactory.Create(mongoClient, options);
         _privacyBarrier = privacyBarrier;
     }
@@ -96,6 +98,7 @@ public sealed class Mongo커뮤니티원장저장소 : I커뮤니티원장저장
             수정시각Utc = now,
             수정자 = string.IsNullOrWhiteSpace(updatedBy) ? "system" : updatedBy.Trim(),
             Revision = revision,
+            관계편집Revision = existing?.관계편집Revision ?? 0,
             투영완료Revision = existing?.투영완료Revision ?? 0,
             투영상태 = 커뮤니티원장투영상태.대기,
             투영EventId = eventId,
@@ -123,16 +126,7 @@ public sealed class Mongo커뮤니티원장저장소 : I커뮤니티원장저장
 
         try
         {
-            var result = await _collection.ReplaceOneAsync(
-                BuildRevisionFilter(원장Id, existing?.Revision ?? 0, existing is null),
-                문서,
-                new ReplaceOptions { IsUpsert = existing is null },
-                cancellationToken);
-
-            if (existing is not null && result.MatchedCount == 0)
-            {
-                throw CreateConcurrencyException(원장Id);
-            }
+            await SaveWithRelationProtectionAsync(existing, 문서, cancellationToken);
         }
         catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
         {
@@ -244,7 +238,7 @@ public sealed class Mongo커뮤니티원장저장소 : I커뮤니티원장저장
             .Push(x => x.상태이력, 상태이력);
 
         var updated = await _collection.FindOneAndUpdateAsync(
-            BuildRevisionFilter(원장Id, existing.Revision, isNew: false),
+            BuildRevisionFilter(원장Id, existing.Revision, isNew: false, existing.관계편집Revision),
             update,
             new FindOneAndUpdateOptions<커뮤니티원장문서>
             {
@@ -535,10 +529,11 @@ public sealed class Mongo커뮤니티원장저장소 : I커뮤니티원장저장
             .ToDictionary(pair => pair.Key.Trim(), pair => pair.Value.Trim(), StringComparer.OrdinalIgnoreCase)
            ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-    private static FilterDefinition<커뮤니티원장문서> BuildRevisionFilter(
+    internal static FilterDefinition<커뮤니티원장문서> BuildRevisionFilter(
         string 원장Id,
         long revision,
-        bool isNew)
+        bool isNew,
+        long relationRevision = 0)
     {
         var builder = Builders<커뮤니티원장문서>.Filter;
         if (isNew)
@@ -551,7 +546,12 @@ public sealed class Mongo커뮤니티원장저장소 : I커뮤니티원장저장
                 builder.Eq(x => x.Revision, 0),
                 builder.Exists(x => x.Revision, false))
             : builder.Eq(x => x.Revision, revision);
-        return builder.And(builder.Eq(x => x.원장Id, 원장Id), revisionFilter);
+        var relationFilter = relationRevision == 0
+            ? builder.Or(
+                builder.Eq(x => x.관계편집Revision, 0),
+                builder.Exists(x => x.관계편집Revision, false))
+            : builder.Eq(x => x.관계편집Revision, relationRevision);
+        return builder.And(builder.Eq(x => x.원장Id, 원장Id), revisionFilter, relationFilter);
     }
 
     private static void EnsureExpectedRevision(long? expectedRevision, long actualRevision, string 원장Id)
@@ -598,6 +598,8 @@ public sealed class 커뮤니티원장문서
     public Dictionary<string, string> 확장속성 { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public List<커뮤니티원장상태이력문서> 상태이력 { get; set; } = [];
     public long Revision { get; set; }
+    /// <summary>관계 편집과 독립 업무 쓰기의 경합을 검출하는 저장소 전용 판본. 업무·투영 판본은 바꾸지 않습니다.</summary>
+    public long 관계편집Revision { get; set; }
     public long 투영완료Revision { get; set; }
     public string 투영상태 { get; set; } = 커뮤니티원장투영상태.대기;
     public string? 투영EventId { get; set; }

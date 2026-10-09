@@ -624,6 +624,10 @@ public partial class NativeDriverHomePage : ContentPage
     {
         await OpenBlazorWorkspaceAsync(DriverRoutes.CurrentTransport);
     }
+    private async void OnOpenDistributedRoundClicked(object? sender, EventArgs e)
+    {
+        await OpenBlazorWorkspaceAsync("/driver/distributed/round");
+    }
 
     private async Task OpenBlazorWorkspaceAsync(string route)
     {

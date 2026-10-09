@@ -42,7 +42,7 @@ namespace 살뜰.Services.Dispatch.Recommendation
                 ? new Dictionary<string, 화주운송의뢰>(StringComparer.Ordinal)
                 : await _db.화주운송의뢰
                     .AsNoTracking()
-                    .Where(x => requestIds.Contains(x.의뢰Id))
+                    .Where(x => Enumerable.Contains(requestIds, x.의뢰Id))
                     .ToDictionaryAsync(x => x.의뢰Id, StringComparer.Ordinal, cancellationToken);
 
             var items = new List<기사운송일정항목>();

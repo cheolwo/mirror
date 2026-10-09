@@ -1,0 +1,107 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Contracts.Common.Warehouse
+<section aria-label="보관 거점과 독립 동의"><h2>내 보관 거점</h2>
+    <p>소유자와 관리자의 동의는 각각 확인합니다. 동의 철회 뒤 새 예약·피킹의 허용 여부는 서버의 최신 상태로 확인합니다.</p>
+    @if (Model.Workspace?.Sites.Count == 0) { <p>조회한 보관 거점이 없습니다.</p> }
+    <ul class="items">@foreach (var site in Model.Workspace!.Sites)
+    { <li><button type="button" disabled="@(!Model.CanEdit)" @onclick="() => Choose(site.SiteId)"><strong>@site.PublicLabel · @분산이행표시.Status(site.StatusCode)</strong><span>소유자 @(site.OwnerConsented ? "동의" : "미동의") · 관리자 @(site.ManagerConsented ? "동의" : "미동의")</span></button></li> }</ul>
+</section>
+@if (Model.Allows("create-site"))
+{
+    <section aria-label="기존 내 창고를 보관 거점으로 등록"><h2>보관 거점 등록</h2>
+        @if (Model.Workspace!.WarehouseCandidates.Count == 0) { <p>첫 보관 공간을 본인 소유·본인 관리로 등록할 수 있습니다. 소유자와 관리자 동의는 등록 뒤 각각 확인합니다.</p> }
+        <label class="check"><input type="checkbox" @bind="registerNew" disabled="@(!Model.CanEdit)" />새 보관 공간을 직접 등록</label>
+            <fieldset disabled="@(!Model.CanEdit)"><legend>내 창고와 공개 건물 후보 선택</legend>
+                @if (registerNew)
+                {
+                    <label>보관 공간 이름<input @bind="newName" /></label>
+                    <label>본인이 확인한 도로명주소<input @bind="roadAddress" autocomplete="street-address" /></label>
+                    <label>확인한 위도<input type="number" step="0.000001" min="-90" max="90" @bind="latitude" /></label>
+                    <label>확인한 경도<input type="number" step="0.000001" min="-180" max="180" @bind="longitude" /></label>
+                    <label class="check"><input type="checkbox" @bind="addressConfirmed" />이 공간의 도로명주소를 직접 확인했습니다</label>
+                    <label class="check"><input type="checkbox" @bind="coordinatesConfirmed" />이 공간의 위도·경도를 직접 확인했습니다</label>
+                    <p>등록한 본인이 소유자와 관리자입니다. 주소·좌표를 자동 추정하지 않으며 공개 건물 자료와의 연결은 별도로 확인합니다.</p>
+                }
+                else
+                {
+                    <label>내 창고<select @bind="warehouseId"><option value="0">창고를 선택해 주세요</option>@foreach (var candidate in Model.Workspace.WarehouseCandidates) { <option value="@candidate.WarehouseId">@candidate.Label</option> }</select></label>
+                    @if (Warehouse is { } warehouse)
+                    {
+                        @if (warehouse.BuildingCandidates.Count > 0)
+                        { <label>공개 건물 후보<select @bind="placeId"><option value="">건물을 확인해 주세요</option>@foreach (var building in warehouse.BuildingCandidates) { <option value="@building.PlaceId">@building.PublicLabel</option> }</select></label> }
+                        else { <p class="notice">공개 건물 자료와 아직 연결되지 않은 기존 창고입니다. 실제 공간을 확인해도 건물 주소가 새로 인증되지는 않습니다.</p> }
+                        <label>이 창고의 관리자<select @bind="managerId"><option value="">등록된 관리자를 선택해 주세요</option>@foreach (var manager in warehouse.ManagerCandidates) { <option value="@manager.UserId">@manager.Label</option> }</select></label>
+                    }
+                }
+                <label>거점 표시명<input @bind="publicLabel" /><small>공개 표시명에 상세주소·호수·연락처를 넣지 마세요.</small></label><label>층<input @bind="floor" /></label><label>보관 공간<input @bind="subspace" /></label><label>현장 피킹 안내<textarea @bind="instructions"></textarea></label>
+                <label class="check"><input type="checkbox" @bind="spaceConfirmed" />본인이 소유하는 실제 보관 공간과 사용 관계를 확인했습니다</label>
+                <label class="check"><input type="checkbox" @bind="pickupConfirmed" />현장에서 기사가 물품을 받을 지점을 확인했습니다</label>
+            </fieldset>
+            <button class="primary" type="button" disabled="@(!Model.CanEdit || !spaceConfirmed || !pickupConfirmed)" @onclick="Create">확인한 보관 거점 등록</button>
+            <p>등록은 소유자·관리자의 별도 동의를 대신하지 않습니다.</p>
+    </section>
+}
+@if (Model.SelectedSite is { } selected)
+{
+    <section aria-label="선택 공간 동의와 적재 위치"><h2>@selected.PublicLabel</h2>
+        <p>@분산이행표시.Status(selected.StatusCode)</p><p>@selected.Floor · @selected.Subspace</p><p>@selected.PickupInstructions</p>
+        @if (new[] { "consent-owner", "consent-manager", "revoke-owner", "revoke-manager" }.Any(action => Model.Allows(action, selected.AllowedActions)))
+        {
+            <label>동의·철회 근거<input @bind="consentEvidence" disabled="@(!Model.CanEdit)" placeholder="본인이 확인한 동의 또는 철회 기록" /></label>
+            <label class="check"><input type="checkbox" @bind="consentConfirmed" />본인의 관계와 처리 내용을 확인했습니다</label>
+            <div class="actions">@foreach (var action in new[] { "consent-owner", "consent-manager", "revoke-owner", "revoke-manager" }.Where(action => Model.Allows(action, selected.AllowedActions)))
+            { <button type="button" disabled="@(!consentConfirmed || string.IsNullOrWhiteSpace(consentEvidence) || !Model.CanEdit)" @onclick="() => Consent(action)">@ConsentLabel(action)</button> }</div>
+        }
+        <h3>적재 위치</h3>@foreach (var location in selected.Locations) { <p>@location.Label · 바코드 @location.Barcode</p> }
+        @if (selected.Locations.Count == 0) { <p>등록된 적재 위치가 없습니다.</p> }
+        @if (Model.Allows("create-location", selected.AllowedActions))
+        {
+            <label>적재 위치 이름<input @bind="locationLabel" disabled="@(!Model.CanEdit)" placeholder="현장에서 구분할 수 있는 위치" /></label>
+            <label class="check"><input type="checkbox" @bind="locationConfirmed" />실제 적재 위치를 확인했습니다</label>
+            <button type="button" disabled="@(!locationConfirmed || string.IsNullOrWhiteSpace(locationLabel) || !Model.CanEdit)" @onclick="CreateLocation">확인한 적재 위치 등록</button>
+        }
+    </section>
+}
+@code {
+    [Parameter, EditorRequired] public 분산이행PageViewModel Model { get; set; } = default!;
+    private long warehouseId;
+    private string placeId = "", managerId = "", publicLabel = "", floor = "", subspace = "", instructions = "", consentEvidence = "", locationLabel = "";
+    private bool spaceConfirmed, pickupConfirmed, consentConfirmed, locationConfirmed;
+    private bool registerNew, initializedMode, addressConfirmed, coordinatesConfirmed;
+    private string newName = "", roadAddress = "";
+    private decimal? latitude, longitude;
+    private DistributedWarehouseCandidateDto? Warehouse => Model.Workspace?.WarehouseCandidates.FirstOrDefault(item => item.WarehouseId == warehouseId);
+    protected override void OnParametersSet()
+    { if (!initializedMode) { initializedMode = true; registerNew = Model.Workspace?.WarehouseCandidates.Count == 0; } }
+    private Task Create()
+    {
+        if (string.IsNullOrWhiteSpace(publicLabel) || string.IsNullOrWhiteSpace(floor) || string.IsNullOrWhiteSpace(subspace) || string.IsNullOrWhiteSpace(instructions))
+            return Model.InvalidInputAsync("거점 표시명과 실제 층·공간·피킹 안내를 입력해 주세요.");
+        if (registerNew)
+        {
+            if (string.IsNullOrWhiteSpace(newName) || string.IsNullOrWhiteSpace(roadAddress) || latitude is null or < -90 or > 90 || longitude is null or < -180 or > 180
+                || !addressConfirmed || !coordinatesConfirmed || string.IsNullOrWhiteSpace(Model.CurrentUserId))
+                return Model.InvalidInputAsync("본인이 확인한 공간 이름·도로명주소·위도·경도를 입력하고 주소·좌표 확인을 각각 선택해 주세요.");
+            return Model.ExecuteAsync("create-site", "sites", new DistributedSiteCreateRequest { PublicLabel = publicLabel.Trim(), ManagerUserId = Model.CurrentUserId,
+                Floor = floor.Trim(), Subspace = subspace.Trim(), PickupInstructions = instructions.Trim(), SpaceConfirmed = spaceConfirmed, PickupPointConfirmed = pickupConfirmed,
+                NewWarehouse = new DistributedNewWarehouseRequest { Name = newName.Trim(), ConfirmedRoadAddress = roadAddress.Trim(), Latitude = latitude.Value,
+                    Longitude = longitude.Value, AddressConfirmed = addressConfirmed, CoordinatesConfirmed = coordinatesConfirmed } }, confirmed: spaceConfirmed && pickupConfirmed);
+        }
+        var warehouse = Warehouse; var building = warehouse?.BuildingCandidates.FirstOrDefault(item => item.PlaceId == placeId);
+        if (warehouse is null || warehouse.BuildingCandidates.Count > 0 && building is null
+            || !warehouse.ManagerCandidates.Any(item => item.UserId == managerId) || string.IsNullOrWhiteSpace(publicLabel)
+            || string.IsNullOrWhiteSpace(floor) || string.IsNullOrWhiteSpace(subspace) || string.IsNullOrWhiteSpace(instructions))
+            return Model.InvalidInputAsync("조회한 내 창고·관리자·건물 후보를 선택하고 실제 층·공간·피킹 안내를 입력해 주세요.");
+        return Model.ExecuteAsync("create-site", "sites", new DistributedSiteCreateRequest { WarehouseId = warehouse.WarehouseId,
+            PlaceId = building?.PlaceId ?? $"warehouse:{warehouse.WarehouseId}", PublicCandidateRef = building?.PublicCandidateRef ?? "",
+            PublicLabel = publicLabel.Trim(), ManagerUserId = managerId, Floor = floor.Trim(), Subspace = subspace.Trim(), PickupInstructions = instructions.Trim(),
+            SpaceConfirmed = spaceConfirmed, PickupPointConfirmed = pickupConfirmed }, confirmed: spaceConfirmed && pickupConfirmed);
+    }
+    private async Task Choose(string id) { consentConfirmed = locationConfirmed = false; consentEvidence = locationLabel = ""; await Model.ChooseAsync(id); }
+    private Task Consent(string action) => Model.SelectedSite is { } site ? Model.ExecuteAsync(action, $"sites/{분산이행Client.Segment(site.SiteId)}/consents",
+        new DistributedConsentRequest { ExpectedRevision = site.Revision, ConsentKind = action.EndsWith("owner", StringComparison.Ordinal) ? "Owner" : "Manager",
+            Granted = action.StartsWith("consent", StringComparison.Ordinal), EvidenceReference = consentEvidence.Trim() }, site.SiteId, site.AllowedActions, consentConfirmed) : Task.CompletedTask;
+    private Task CreateLocation() => Model.SelectedSite is { } site ? Model.ExecuteAsync("create-location", $"sites/{분산이행Client.Segment(site.SiteId)}/locations",
+        new DistributedLocationCreateRequest { ExpectedRevision = site.Revision, LocationLabel = locationLabel.Trim() }, site.SiteId, site.AllowedActions, locationConfirmed) : Task.CompletedTask;
+    private static string ConsentLabel(string action) => action switch { "consent-owner" => "소유자로서 동의", "consent-manager" => "관리자로서 동의", "revoke-owner" => "소유자 동의 철회", _ => "관리자 동의 철회" };
+}

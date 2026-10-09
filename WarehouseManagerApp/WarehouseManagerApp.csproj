@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
     <PropertyGroup>
         <TargetFrameworks>net10.0-android</TargetFrameworks>
@@ -57,6 +57,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Ssalddel.Client.Infrastructure\Ssalddel.Client.Infrastructure.csproj" />
+        <Compile Include="..\Ssalddel.Client.Infrastructure\Native\Maui업무사진촬영Adapter.cs" Link="Services\Maui업무사진촬영Adapter.cs" />
         <ProjectReference Include="..\Ssalddel.Contracts\Ssalddel.Contracts.csproj" />
         <ProjectReference Include="..\Ssalddel.Ui.Common\Ssalddel.Ui.Common.csproj" />
 

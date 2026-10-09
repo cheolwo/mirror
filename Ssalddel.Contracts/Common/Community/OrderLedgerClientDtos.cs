@@ -49,6 +49,7 @@ public sealed class 주문원장통합공개Dto
     public int 전체하위원장수 { get; set; }
     public int 완료하위원장수 { get; set; }
     public bool 필수하위원장완료여부 { get; set; }
+    public string 필수하위원장판정 { get; set; } = "필수업무미지정";
     public int 서명대상주문수 { get; set; }
     public int 서명완료주문수 { get; set; }
     public IReadOnlyList<string> 미서명주문Ids { get; set; } = [];
@@ -76,6 +77,7 @@ public sealed class 주문원장역할별조회공개Dto
     public 주문원장원장요약Dto? 주문원장상세 { get; set; }
     public IReadOnlyList<주문역할별원장항목공개Dto> 관련원장목록 { get; set; } = [];
     public int 상세공개요청필요수 { get; set; }
+    public 주문원장업무안내Dto? 업무안내 { get; set; }
 }
 
 public static class 주문자원장실행경계코드
@@ -162,6 +164,7 @@ public sealed class 주문역할별원장항목공개Dto
     public string 원장템플릿Key { get; set; } = string.Empty;
     public string 주문안역할 { get; set; } = string.Empty;
     public bool 필수여부 { get; set; }
+    public int 표시순서 { get; set; }
     public string 조회근거 { get; set; } = string.Empty;
     public bool 상세조회가능여부 { get; set; }
     public bool 공개요청가능여부 { get; set; }

@@ -165,6 +165,8 @@ public sealed class 출고운송인계완료UseCase(
         var inventorySnapshot = await db.입고상품
             .AsNoTracking()
             .SingleOrDefaultAsync(x => x.Id == plan.입고상품Id.Value, cancellationToken);
+        if (inventorySnapshot?.보관위치.StartsWith("DLOC-", StringComparison.Ordinal) == true)
+            return new(Conflict("분산 적재 재고는 배정된 기사의 예약별 부분 피킹 영수증으로 인계해 주세요."));
         if (inventorySnapshot is null
             || inventorySnapshot.창고Id != plan.출고창고Id
             || inventorySnapshot.예약수량 < plan.수량)

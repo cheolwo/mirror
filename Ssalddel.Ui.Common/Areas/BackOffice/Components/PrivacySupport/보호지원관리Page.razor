@@ -99,7 +99,7 @@
     private void Changed(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => _ = InvokeAsync(StateHasChanged);
     private static string Time(DateTime value) => value.AddHours(9).ToString("yyyy.MM.dd HH:mm") + " (한국 시간)";
     private static string KindLabel(string code) => code switch { "transaction-dispute" => "거래 문제", "privacy-rights" => "개인정보 요청", "privacy-incident" => "개인정보 사고", _ => "처리 요청" };
-    private static string SourceLabel(string code) => code switch { "food-order" => "음식 주문", "neighborhood-delivery" => "생활 배송", "neighborhood-collaboration" => "생활 협업", "cargo-request" => "화물 의뢰", _ => "거래" };
+    private static string SourceLabel(string code) => code switch { "food-order" => "음식 주문", "neighborhood-delivery" => "생활 배송", "neighborhood-collaboration" => "생활 협업", "cargo-request" => "화물 의뢰", "distributed-inbound" => "공간 입고·보관", "distributed-wave" => "공간 배송", _ => "거래" };
     private static string RequestLabel(string code) => code switch { "access" => "열람", "correction" => "정정", "deletion" => "삭제", "suspend" => "처리정지", "withdrawal" => "동의 철회", _ => "권리 요청" };
     private static string Status(string code) => code switch { "received" => "접수됨", "assigned" => "담당 배정", "reviewing" => "검토 중", "reopened" => "재검토 접수", "progress-notified" => "진행 안내 기록", "result-prepared" => "결과 안내 준비", "result-notified" => "결과 안내 기록", "denial-prepared" => "제한 안내 준비", "closed" or "denied" => "종결", "execution-completed" => "실제 처리 확인", "false-alarm" => "오탐 정정", _ => "진행 상태 확인" };
     private static string NoticeLabel(string code) => code switch { "progress" => "진행 안내", "result" => "결과 안내", "incident-authority" => "기관 신고", "incident-individual" => "정보주체 통지", _ => "안내 기록" };

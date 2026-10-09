@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using Ssalddel.Extensions;
+using Ssalddel.Application.Warehouse;
 using Ssalddel.Services.Commerce;
 using Ssalddel.Services.Community;
 using Ssalddel.Services.PrivacyRetention;
@@ -27,7 +28,21 @@ public sealed class 통신판매보호ServiceRegistrationTests
         Assert.Equal(typeof(Mongo보호지원Store), services.Single(x => x.ServiceType == typeof(I보호지원Store)).ImplementationType);
         Assert.Equal(typeof(보호지원SourceResolver), services.Single(x => x.ServiceType == typeof(I보호지원SourceResolver)).ImplementationType);
         Assert.Equal(typeof(Mongo개인정보보존Store), services.Single(x => x.ServiceType == typeof(I개인정보보존Store)).ImplementationType);
+        Assert.Equal(typeof(DistributedPhotoHoldService), services.Single(x => x.ServiceType == typeof(I분산사진보존연결)).ImplementationType);
         Assert.DoesNotContain(services, x => x.ServiceType == typeof(I보호지원권리실행확인));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void 공통지원과분산물류의등록순서가달라도_사진보존서비스는하나의Scope에등록된다(bool supportFirst)
+    {
+        var services = new ServiceCollection(); var configuration = new ConfigurationBuilder().Build();
+        if (supportFirst) services.Add거래개인정보지원Services(configuration).AddDistributedFulfillment(configuration);
+        else services.AddDistributedFulfillment(configuration).Add거래개인정보지원Services(configuration);
+        var descriptor = Assert.Single(services.Where(x => x.ServiceType == typeof(I분산사진보존연결)));
+        Assert.Equal(typeof(DistributedPhotoHoldService), descriptor.ImplementationType);
+        Assert.Equal(ServiceLifetime.Scoped, descriptor.Lifetime);
     }
 
     [Fact]
@@ -57,6 +72,7 @@ public sealed class 통신판매보호ServiceRegistrationTests
         Assert.IsType<Mongo보호지원Store>(scoped.GetRequiredService<I보호지원Store>());
         Assert.IsType<보호지원SourceResolver>(scoped.GetRequiredService<I보호지원SourceResolver>());
         Assert.NotNull(scoped.GetRequiredService<보호지원UseCase>());
+        Assert.IsType<DistributedPhotoHoldService>(scoped.GetRequiredService<I분산사진보존연결>());
         Assert.False(scoped.GetRequiredService<I거래신원확인Gateway>().IsConfigured);
         Assert.Contains(scoped.GetRequiredService<통신판매안내Service>().운영부족(), x => x.Contains("권리 요청"));
         var failure = await Assert.ThrowsAsync<거래보호Exception>(() => scoped.GetRequiredService<I통신판매거래Guard>()

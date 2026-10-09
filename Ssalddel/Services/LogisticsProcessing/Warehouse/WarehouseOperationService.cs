@@ -579,6 +579,10 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
             .FirstOrDefaultAsync(x => x.Id == inboundId, cancellationToken)
             ?? throw new InvalidOperationException("입고요청을 찾을 수 없거나 접근할 수 없습니다.");
 
+        if (inbound.입고생성경로 == "DistributedSplitInbound"
+            || await _db.입고상품.AnyAsync(x => x.입고요청Id == inbound.Id && x.상태 == "분할계획원천", cancellationToken))
+            throw new InvalidOperationException("분할 입고는 해당 계획의 위치별 실수령 영수증으로 처리해 주세요.");
+
         if (inbound.상태 == 입고상태.입고완료)
         {
             var existingItems = await _db.입고상품
@@ -1156,6 +1160,9 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
         var item = await 접근가능재고Query(userId)
             .FirstOrDefaultAsync(x => x.Id == request.입고상품Id, cancellationToken)
             ?? throw new InvalidOperationException("입고상품을 찾을 수 없거나 접근할 수 없습니다.");
+
+        if (item.보관위치.StartsWith("DLOC-", StringComparison.Ordinal))
+            throw new InvalidOperationException("분산 적재 재고는 시간대 주문의 예약별 운송 연결을 이용해 주세요.");
 
         출고예정? outboundPlan = null;
         if (request.출고예정Id is > 0)

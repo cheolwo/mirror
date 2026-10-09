@@ -1,0 +1,57 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Contracts.Common.Warehouse
+<section aria-label="거점별 재고"><h2>@(Model.RoleKey == "shipper" ? "내 판매 재고" : "허용된 거점 재고")</h2>
+    <p>입고 확인·예약·가용 수량을 구분합니다. 이 조회로 재고를 새로 만들거나 다른 기업의 소유권을 바꾸지 않습니다.</p>
+    @if (Model.Workspace?.Lots.Count == 0)
+    { <p>조회한 재고가 없습니다. 실제 입고를 확인하거나 기존 입고 상품을 적재 위치에 연결해 주세요.</p> }
+    @foreach (var site in Model.Workspace!.Lots.GroupBy(lot => lot.SiteId))
+    {
+        <h3>@SiteLabel(site.Key)</h3>
+        @foreach (var lot in site)
+        {
+            <article><h3>@분산이행표시.Product(lot.ProductLabel, lot.Sku) · @lot.Sku · @lot.LotCode</h3><p>@분산이행표시.Owner(lot.OwnerLabel) · 적재 위치 @LocationLabel(lot.LocationId)</p>
+                <dl class="metrics"><div><dt>입고 확인</dt><dd>@lot.ReceivedQuantity 개</dd></div><div><dt>가용</dt><dd>@lot.AvailableQuantity 개</dd></div><div><dt>예약</dt><dd>@lot.ReservedQuantity 개</dd></div></dl>
+            </article>
+        }
+    }
+    <div class="actions"><a href="@Href("inbound")">입고 계획·실물 확인</a>
+        @if (Model.RoleKey == "warehouse") { <a href="@Href("sites")">거점·적재 위치 관리</a> }
+    </div>
+</section>
+@if (Model.Workspace!.ExistingStockCandidates.Count > 0)
+{
+    <section aria-label="기존 입고 상품의 실제 적재 위치 연결"><h2>기존 입고 상품 연결</h2>
+        <p>실제 입고 상품을 현재 적재 위치에 연결합니다. 기존 재고 수량을 복제하지 않습니다.</p>
+        <fieldset disabled="@(!Model.CanEdit || Model.PhotoInputsLocked)"><legend>기존 상품과 적재 위치</legend>
+            <label>기존 입고 상품<select @bind="stockId"><option value="0">상품 선택</option>@foreach (var stock in Model.Workspace.ExistingStockCandidates.Where(stock => Model.RoleKey != "shipper" || stock.SellerUserId == Model.CurrentUserId)) { <option value="@stock.InboundItemId">@stock.Label · @stock.Sku · 가용 @stock.AvailableQuantity 개</option> }</select></label>
+            <label>같은 거점의 적재 위치<select @bind="locationId"><option value="">적재 위치 선택</option>@foreach (var location in Locations) { <option value="@location.LocationId">@location.Label</option> }</select></label>
+            <label>로트 구분<input @bind="lotCode" /></label><label>위치 바코드<input @bind="barcode" autocomplete="off" /></label>
+            <label class="check"><input type="checkbox" @bind="confirmed" />이 상품이 선택한 적재 위치에 실제로 보관되어 있음을 확인했습니다</label>
+        </fieldset>
+        @if (Site is { } site) { <분산사진업무Screen Model="Model" Work="ImportWork" Title="기존 상품 적재 확인" Action="import-lot" Suffix="@($"sites/{분산이행Client.Segment(site.SiteId)}/lots")" AllowedActions="site.AllowedActions" Confirmed="confirmed" /> }
+    </section>
+}
+@code {
+    [Parameter, EditorRequired] public 분산이행PageViewModel Model { get; set; } = default!;
+    [Parameter] public string? ReturnHref { get; set; }
+    private string Href(string screen) => Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.RoleWorkspaceNavigation.WithReturn(분산이행Navigation.Href(Model.RoleKey, screen), ReturnHref ?? $"/workspace/{Model.RoleKey}")!;
+    private string SiteLabel(string id) => Model.Workspace?.Sites.FirstOrDefault(site => site.SiteId == id)?.PublicLabel ?? "허용된 보관 거점";
+    private string LocationLabel(string id) => Model.Workspace?.Sites.SelectMany(site => site.Locations).FirstOrDefault(location => location.LocationId == id)?.Label ?? "위치 조회 대기";
+    private long stockId;
+    private string locationId = "", lotCode = "", barcode = "";
+    private bool confirmed;
+    private DistributedExistingStockCandidateDto? Stock => Model.Workspace?.ExistingStockCandidates.FirstOrDefault(stock => stock.InboundItemId == stockId);
+    private DistributedSiteDto? Site => Model.Workspace?.Sites.FirstOrDefault(site => site.SiteId == Stock?.SiteId);
+    private IReadOnlyList<DistributedLocationDto> Locations => Site?.Locations ?? [];
+    private DistributedEvidenceWorkRequest? ImportWork
+    {
+        get
+        {
+            var stock = Stock; var site = Site; var location = Locations.FirstOrDefault(item => item.LocationId == locationId);
+            if (stock is null || site is null || Model.RoleKey == "shipper" && stock.SellerUserId != Model.CurrentUserId
+                || location?.Barcode != barcode.Trim() || string.IsNullOrWhiteSpace(lotCode) || !confirmed) return null;
+            return new() { Kind = "ImportLot", AggregateId = site.SiteId, ImportLot = new() { ExpectedRevision = site.Revision, InboundItemId = stock.InboundItemId, LocationId = location.LocationId,
+                LotCode = lotCode.Trim(), LocationBarcode = barcode.Trim(), ActualLocationConfirmed = true } };
+        }
+    }
+}

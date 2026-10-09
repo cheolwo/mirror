@@ -1,4 +1,6 @@
 @using Ssalddel.Contracts.Common.Community
+@using Ssalddel.Ui.Common.Areas.App.Components.Community
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
 @inject 주문조회ViewModel OrderLedger
 
 @if (_loading)
@@ -6,7 +8,7 @@
     <MudPaper Elevation="0" Outlined="true" Class="pa-6">
         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="2">
             <MudProgressCircular Indeterminate="true" Size="Size.Small" />
-            <MudText Typo="Typo.body2">정확한 주문 원장을 불러오고 있습니다.</MudText>
+            <MudText Typo="Typo.body2">주문 진행 정보를 불러오고 있습니다.</MudText>
         </MudStack>
     </MudPaper>
 }
@@ -23,14 +25,13 @@ else if (_order is not null)
 {
     var ledger = _order.주문원장상세;
 
+    <주문원장업무안내Panel Guide="@_order.업무안내" OrderLedgerId="@OrderLedgerId" Busy="@_loading" Refresh="ReloadAsync" />
+
     <MudPaper Elevation="0" Outlined="true" Class="pa-4">
         <MudStack Spacing="3">
             <MudStack Row="true" AlignItems="AlignItems.Start" Justify="Justify.SpaceBetween">
                 <MudStack Spacing="0">
                     <MudText Typo="Typo.h5">@Display(ledger?.제목, "개별주문")</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        @Display(_order.주문원장조회근거, "주문 당사자 보호형 조회")
-                    </MudText>
                 </MudStack>
                 <MudChip T="string" Color="@StatusColor(_order.주문원장상태)" Variant="Variant.Outlined">
                     @Display(_order.주문원장상태, "상태 확인 중")
@@ -51,10 +52,6 @@ else if (_order is not null)
                         <MudText Typo="Typo.body1">@Display(ledger.현재단계Key)</MudText>
                     </MudItem>
                     <MudItem xs="12" sm="6" md="3">
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">Revision</MudText>
-                        <MudText Typo="Typo.body1">@ledger.Revision.ToString("N0")</MudText>
-                    </MudItem>
-                    <MudItem xs="12" sm="6" md="3">
                         <MudText Typo="Typo.caption" Color="Color.Secondary">주문자</MudText>
                         <MudText Typo="Typo.body1">@Display(ledger.생성자표시명, "본인")</MudText>
                     </MudItem>
@@ -67,10 +64,12 @@ else if (_order is not null)
         </MudStack>
     </MudPaper>
 
+    <details class="mt-4" data-order-linked-ledgers>
+    <summary>연결된 업무 기록 (@_order.관련원장목록.Count)</summary>
     <MudPaper Elevation="0" Outlined="true" Class="pa-4">
         <MudStack Spacing="2">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                <MudText Typo="Typo.h6">연결된 이행 원장</MudText>
+                <MudText Typo="Typo.h6">연결된 업무 기록</MudText>
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
                     @_order.관련원장목록.Count.ToString("N0")개
                 </MudChip>
@@ -84,7 +83,7 @@ else if (_order is not null)
             }
             else
             {
-                @foreach (var related in _order.관련원장목록.OrderBy(item => item.주문안역할))
+                @foreach (var related in _order.관련원장목록.OrderBy(item => item.표시순서))
                 {
                     <MudPaper Elevation="0" Outlined="true" Class="pa-3" @key="related.원장Id">
                         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
@@ -115,6 +114,11 @@ else if (_order is not null)
                     </MudPaper>
                 }
             }
+            @if (ledger is not null)
+            {
+                <MudDivider />
+                <MudText Typo="Typo.caption" Color="Color.Secondary">기록 판본 @ledger.Revision · @Display(_order.주문원장조회근거)</MudText>
+            }
 
             @if (_order.상세공개요청필요수 > 0)
             {
@@ -124,12 +128,20 @@ else if (_order is not null)
             }
         </MudStack>
     </MudPaper>
+    </details>
+
+    @if (_order.관련원장목록.Any(item => item.필수여부 && !item.상세조회가능여부))
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-3">
+            일부 필수 업무의 상태를 확인할 수 없습니다. 조회 권한과 연결 상태를 확인해 주세요.
+        </MudAlert>
+    }
 
     <MudButton Variant="Variant.Outlined"
                StartIcon="@Icons.Material.Filled.Refresh"
                Disabled="@_loading"
                OnClick="ReloadAsync">
-        원장 새로고침
+        주문 정보 새로고침
     </MudButton>
 }
 

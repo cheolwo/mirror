@@ -1,6 +1,7 @@
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Contracts.Common.Community;
 using Ssalddel.Contracts.Common.Orderer;
+using Ssalddel.Contracts.Food;
 using Ssalddel.Services.Community;
 using Microsoft.AspNetCore.Http;
 
@@ -97,6 +98,74 @@ public sealed class IndividualOrderPerspectiveReadServiceTests
         Assert.True(result.IsSuccess);
         Assert.Single(result.Value.Items);
         Assert.Equal(100, result.Value.PageSize);
+    }
+
+    [Theory]
+    [InlineData(음식주문상태코드.기사배정, 커뮤니티원장상태.진행중)]
+    [InlineData(음식주문상태코드.조리중, 커뮤니티원장상태.진행중)]
+    [InlineData(음식주문상태코드.전달완료, 커뮤니티원장상태.진행중)]
+    [InlineData(음식주문상태코드.수령확인, 커뮤니티원장상태.완료)]
+    public async Task Food_list_filters_on_read_state_and_preserves_source_identity_and_times(
+        string foodState, string expectedStatus)
+    {
+        var root = FoodRoot(foodState);
+        var service = CreateService(new FakeLedgerStore(root), "orderer-1");
+
+        var result = await service.QueryAsync(개별주문관점코드.주문자, null,
+            new 개별주문관점목록조회요청 { Status = expectedStatus });
+
+        Assert.True(result.IsSuccess);
+        var item = Assert.Single(result.Value.Items);
+        Assert.Equal(expectedStatus, item.상태);
+        Assert.Equal(foodState, item.현재단계Key);
+        Assert.Equal(root.원장Id, item.주문원장Id);
+        Assert.Equal(root.Revision, item.Revision);
+        Assert.Equal(root.생성시각Utc, item.생성시각Utc);
+        Assert.Equal(root.수정시각Utc, item.수정시각Utc);
+        Assert.Equal(커뮤니티원장상태.완료, root.상태);
+        Assert.Equal(음식주문상태코드.픽업대기, root.현재단계Key);
+    }
+
+    [Theory]
+    [InlineData("orderer-1", 음식주문상태코드.수령확인)]
+    [InlineData("coordinator-1", 음식주문상태코드.픽업대기)]
+    public async Task Community_food_list_normalizes_only_an_individually_accessible_root(
+        string userId, string expectedStage)
+    {
+        var root = FoodRoot(음식주문상태코드.수령확인);
+        var group = Ledger("group-1", CommunityLedgerTemplateKeys.GroupOrder, "coordinator-1", "대표", "공동 주문");
+        group.참여자목록 = [Participant("orderer-1", "주문자", "참여자")];
+        group.포함원장목록 = [Reference(root.원장Id, CommunityLedgerTemplateKeys.FoodOrder, 주문원장포함역할.개별주문, 0)];
+        var service = CreateService(new FakeLedgerStore(root, group), userId);
+
+        var result = await service.QueryAsync(개별주문관점코드.공동원장, group.원장Id,
+            new 개별주문관점목록조회요청());
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(expectedStage, Assert.Single(result.Value.Items).현재단계Key);
+        Assert.Equal(음식주문상태코드.픽업대기, root.현재단계Key);
+    }
+
+    [Fact]
+    public async Task Food_list_does_not_expose_an_unrelated_users_order()
+    {
+        var service = CreateService(new FakeLedgerStore(FoodRoot(음식주문상태코드.수령확인)), "stranger-1");
+
+        var result = await service.QueryAsync(개별주문관점코드.주문자, null,
+            new 개별주문관점목록조회요청());
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Value.Items);
+    }
+
+    private static 커뮤니티원장Dto FoodRoot(string state)
+    {
+        var root = Ledger("food-order:existing-order", CommunityLedgerTemplateKeys.FoodOrder, "orderer-1", "주문자", "음식 주문");
+        root.상태 = 커뮤니티원장상태.완료;
+        root.현재단계Key = 음식주문상태코드.픽업대기;
+        root.Revision = 9;
+        root.블록목록 = [new() { BlockId = "food-order", BlockType = CommunityLedgerBlockTypes.Order, State = state }];
+        return root;
     }
 
     private static IndividualOrderPerspectiveReadService CreateService(FakeLedgerStore store, string userId)

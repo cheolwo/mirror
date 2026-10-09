@@ -1,0 +1,49 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Contracts.Common.Warehouse
+<section aria-label="반품이 필요한 배송"><h2>반품 입고 확인</h2><p>돌아온 물품의 수량과 실제 재적재 위치를 사진과 함께 확인한 뒤 재고를 복원합니다.</p>
+    <ul class="items">@foreach (var wave in Model.Workspace!.Waves.Where(wave => wave.Reservations.Any(line => line.AllowedActions.Contains("return"))))
+    { <li><button type="button" disabled="@(!Model.CanEdit)" @onclick="() => Model.ChooseAsync(wave.WaveId)">@wave.Label · 반품 확인 필요</button></li> }</ul>
+    @if (!Model.Workspace.Waves.Any(wave => wave.Reservations.Any(line => line.AllowedActions.Contains("return")))) { <p>현재 확인할 반품이 없습니다.</p> }
+</section>
+@if (Model.SelectedWave is { } selected && ReturnGroups.Any())
+{
+    <section aria-label="실제 반환 물품과 적재 위치"><h2>@selected.Label</h2>
+        <fieldset disabled="@(!Model.CanEdit || Model.PhotoInputsLocked)"><legend>같은 위치·같은 상품 소유자의 반환 물품</legend>
+            <label>재적재할 위치와 상품 소유자<select @bind="groupKey" @bind:after="Reset"><option value="">위치·상품 소유자 선택</option>@foreach (var group in ReturnGroups) { <option value="@Key(group.Key.LocationId, group.Key.OwnerUserId)">@LocationLabel(group.Key.LocationId) · @분산이행표시.Owner(group.First().OwnerLabel)</option> }</select></label>
+            <label>적재 위치 바코드<input @bind="barcode" autocomplete="off" /></label>
+            @foreach (var line in ReturnLines)
+            { var input = Input(line.ReservationId); <label class="check"><input type="checkbox" @bind="input.Selected" />@분산이행표시.Product(line.ProductLabel, line.Sku) · 반환 대기 @(line.PickedQuantity - line.DeliveredQuantity - line.ReturnedQuantity) 개</label>
+                @if (input.Selected) { <label>실제 반품 수량<input type="number" min="1" max="@(line.PickedQuantity - line.DeliveredQuantity - line.ReturnedQuantity)" @bind="input.Quantity" /></label> } }
+            <label class="check"><input type="checkbox" @bind="confirmed" />돌아온 물품을 확인하고 이 위치에 다시 적재했습니다</label>
+        </fieldset>
+        <분산사진업무Screen Model="Model" Work="ReturnWork" Title="반품 입고" Action="return" Suffix="@($"waves/{분산이행Client.Segment(selected.WaveId)}/return-batches")" AllowedActions="ReturnActions" Quantity="Total" Confirmed="confirmed" />
+    </section>
+}
+@code {
+    [Parameter, EditorRequired] public 분산이행PageViewModel Model { get; set; } = default!;
+    private string groupKey = "", barcode = "";
+    private bool confirmed;
+    private string? version;
+    private readonly Dictionary<string, ReturnInput> inputs = [];
+    private static string Key(string location, string owner) => location + "|" + owner;
+    private IEnumerable<IGrouping<(string LocationId, string OwnerUserId), DistributedReservationDto>> ReturnGroups => (Model.SelectedWave?.Reservations ?? []).Where(line => line.AllowedActions.Contains("return")).GroupBy(line => (line.LocationId, line.OwnerUserId));
+    private IReadOnlyList<DistributedReservationDto> ReturnLines => Model.SelectedWave?.Reservations.Where(line => line.AllowedActions.Contains("return") && Key(line.LocationId, line.OwnerUserId) == groupKey).ToArray() ?? [];
+    private IReadOnlyList<string> ReturnActions => ReturnLines.Any() ? ["return"] : [];
+    private int Total => ReturnLines.Where(line => Input(line.ReservationId).Selected).Sum(line => Input(line.ReservationId).Quantity);
+    private ReturnInput Input(string id) { if (!inputs.TryGetValue(id, out var value)) inputs[id] = value = new(); return value; }
+    private string LocationLabel(string id) => Model.Workspace?.Sites.SelectMany(site => site.Locations).FirstOrDefault(location => location.LocationId == id)?.Label ?? "원래 적재 위치";
+    protected override void OnParametersSet() { var current = $"{Model.CurrentUserId}|{Model.SelectedWave?.WaveId}|{Model.SelectedWave?.Revision}"; if (current != version) { version = current; groupKey = ""; Reset(); } }
+    private void Reset() { barcode = ""; confirmed = false; inputs.Clear(); Model.ClearPhotos(); }
+    private DistributedEvidenceWorkRequest? ReturnWork
+    {
+        get
+        {
+            var lines = ReturnLines.Where(line => Input(line.ReservationId).Selected).ToArray();
+            var location = Model.Workspace?.Sites.SelectMany(site => site.Locations).SingleOrDefault(item => item.LocationId == lines.FirstOrDefault()?.LocationId);
+            if (lines.Length == 0 || location?.Barcode != barcode.Trim() || Model.SelectedWave is not { } wave || lines.Any(line => Input(line.ReservationId).Quantity < 1 || Input(line.ReservationId).Quantity > line.PickedQuantity - line.DeliveredQuantity - line.ReturnedQuantity)) return null;
+            return new() { Kind = "Return", AggregateId = wave.WaveId, Return = new() { ExpectedRevision = wave.Revision, LocationBarcode = barcode.Trim(),
+                Lines = lines.Select(line => new DistributedDeliveryLineRequest { ReservationId = line.ReservationId, Quantity = Input(line.ReservationId).Quantity }).ToArray() } };
+        }
+    }
+    private sealed class ReturnInput { public bool Selected { get; set; } public int Quantity { get; set; } }
+}

@@ -7,6 +7,7 @@ public static partial class ServiceCollectionExtensions
 {
     public static IServiceCollection Add통신판매보호Services(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddNeighborhoodTaskContractPolicy(configuration);
         services.Configure<통신판매운영Options>(configuration.GetSection(통신판매운영Options.SectionName));
         services.Configure<외부개인정보처리Options>(configuration.GetSection(외부개인정보처리Options.SectionName));
         services.TryAddSingleton<I외부개인정보처리Guard, 외부개인정보처리Guard>();

@@ -23,6 +23,7 @@ public sealed class AzureBlobStorageService : IObjectStorageService
     public bool IsConfigured(ObjectStorageAccess access)
         => Uri.TryCreate(_options.ServiceUri, UriKind.Absolute, out _)
            && !string.IsNullOrWhiteSpace(ResolveContainerName(access));
+    public string? GetContainerName(ObjectStorageAccess access) => ResolveContainerName(access);
 
     public async Task<ObjectStorageUploadResult> UploadAsync(
         Stream stream,

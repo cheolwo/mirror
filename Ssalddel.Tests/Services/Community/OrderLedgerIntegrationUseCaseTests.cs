@@ -513,6 +513,73 @@ public sealed class OrderLedgerIntegrationUseCaseTests
         Assert.Contains("개별 주문 원장에만", result.Errors.Single().Message);
     }
 
+    [Theory]
+    [InlineData(커뮤니티원장상태.진행중)]
+    [InlineData(커뮤니티원장상태.보류)]
+    [InlineData(커뮤니티원장상태.완료)]
+    [InlineData(커뮤니티원장상태.닫힘)]
+    [InlineData("알수없는상태")]
+    public async Task Started_child_cannot_be_detached_or_made_optional(string state)
+    {
+        var root = Ledger("root", CommunityLedgerTemplateKeys.Order, revision: 7);
+        root.포함원장목록 = [new() { 원장Id = "child", 원장템플릿Key = CommunityLedgerTemplateKeys.CargoTransport,
+            역할 = 주문원장포함역할.운송, 필수여부 = true }];
+        var store = new FakeLedgerStore(root, Ledger("child", CommunityLedgerTemplateKeys.CargoTransport, state));
+        var useCase = new 주문원장통합UseCase(store);
+        var detach = await useCase.하위원장분리Async("root", "child", 7, "user-1");
+        var downgrade = await useCase.하위원장연결Async("root", new()
+            { 하위원장Id = "child", 역할 = 주문원장포함역할.운송, 필수여부 = false, 기대Revision = 7 }, "user-1");
+        Assert.True(detach.IsFailed);
+        Assert.True(downgrade.IsFailed);
+        Assert.Equal(409, detach.Errors.Single().Metadata["StatusCode"]);
+        Assert.Equal(7, root.Revision);
+        Assert.True(Assert.Single(root.포함원장목록).필수여부);
+        Assert.Null(store.LastUpdatedBy);
+    }
+
+    [Fact]
+    public async Task Same_connection_replay_does_not_save_or_increment_revision()
+    {
+        var root = Ledger("root", CommunityLedgerTemplateKeys.Order, 커뮤니티원장상태.진행중, 7);
+        root.포함원장목록 = [new() { 원장Id = "child", 원장템플릿Key = CommunityLedgerTemplateKeys.CargoTransport,
+            역할 = 주문원장포함역할.운송, 필수여부 = true, 표시순서 = 3 }];
+        var store = new FakeLedgerStore(root, Ledger("child", CommunityLedgerTemplateKeys.CargoTransport, 커뮤니티원장상태.진행중));
+        var result = await new 주문원장통합UseCase(store).하위원장연결Async("root", new()
+            { 하위원장Id = "child", 역할 = 주문원장포함역할.운송, 필수여부 = true, 기대Revision = 7 }, "user-1");
+        Assert.True(result.IsSuccess);
+        Assert.Equal(7, result.Value.주문원장.Revision);
+        Assert.Null(store.LastUpdatedBy);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Absent_required_work_cannot_be_reported_as_complete(bool missingChild)
+    {
+        var root = Ledger("root", CommunityLedgerTemplateKeys.Order);
+        if (missingChild) root.포함원장목록 = [new() { 원장Id = "missing", 원장템플릿Key = CommunityLedgerTemplateKeys.CargoTransport,
+            역할 = 주문원장포함역할.운송, 필수여부 = true }];
+        var result = await new 주문원장통합UseCase(new FakeLedgerStore(root)).조회Async("root");
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value.필수하위원장완료여부);
+        Assert.Equal(missingChild ? "원장누락" : "필수업무미지정", result.Value.필수하위원장판정);
+        Assert.Equal(커뮤니티원장상태.초안, root.상태);
+    }
+
+    [Fact]
+    public async Task Draft_child_can_be_removed_but_missing_child_requires_reconciliation()
+    {
+        var root = Ledger("root", CommunityLedgerTemplateKeys.Order);
+        root.포함원장목록 = [new() { 원장Id = "child", 원장템플릿Key = CommunityLedgerTemplateKeys.CargoTransport, 역할 = 주문원장포함역할.운송 }];
+        var store = new FakeLedgerStore(root, Ledger("child", CommunityLedgerTemplateKeys.CargoTransport));
+        var result = await new 주문원장통합UseCase(store).하위원장분리Async("root", "child", 1, "user-1");
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Value.주문원장.포함원장목록);
+        var missing = new 주문원장통합UseCase(new FakeLedgerStore(root));
+        var rejected = await missing.하위원장분리Async("root", "child", 1, "user-1");
+        Assert.True(rejected.IsFailed);
+    }
+
     private static 커뮤니티포함원장참조Dto Reference(string ledgerId, int order)
         => new()
         {

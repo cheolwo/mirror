@@ -1,0 +1,20 @@
+@page "/root-order-selection-preview/{Scenario}"
+@using Ssalddel.Ui.Common.Areas.App.Components
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@implements IDisposable
+<RoleAppProviders />
+<aside style="padding:12px;background:#eaf5f3;color:#0f766e">원주문 선택 화면 검토 · 예시 자료 · 실제 업무 접수 없음</aside>
+<분산이행Screen @key="Scenario" RoleKey="shipper" Screen="orders" SelectedId="preview-wave" Transport="transport" />
+<output style="display:block;padding:16px" data-preview-post-count="@transport.PostCount" data-preview-root="@transport.LastRootId" data-preview-revision="@transport.LastRootRevision">접수 확인 @transport.PostCount</output>
+@code {
+    [Parameter] public string Scenario { get; set; } = "ready";
+    private RootOrderSelectionPreviewTransport transport = new("ready");
+    protected override void OnParametersSet()
+    {
+        transport.Posted -= Changed;
+        transport = new(Scenario);
+        transport.Posted += Changed;
+    }
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() => transport.Posted -= Changed;
+}

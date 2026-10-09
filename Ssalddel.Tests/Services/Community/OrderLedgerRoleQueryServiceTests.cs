@@ -1,5 +1,9 @@
 using Ssalddel.Contracts.Common.Community;
+using Ssalddel.Contracts.Food;
 using Ssalddel.Services.Community;
+using System.Text.Json;
+using Ssalddel.Application.Warehouse;
+using Ssalddel.Contracts.Common.Warehouse;
 
 namespace Ssalddel.Tests.Services.Community;
 
@@ -95,6 +99,238 @@ public sealed class OrderLedgerRoleQueryServiceTests
 
         Assert.True(result.IsFailed);
         Assert.Equal(403, result.Errors.Single().Metadata["StatusCode"]);
+    }
+
+    [Theory]
+    [InlineData(음식주문상태코드.주문대기, 커뮤니티원장상태.진행중)]
+    [InlineData(음식주문상태코드.주문확인, 커뮤니티원장상태.진행중)]
+    [InlineData(음식주문상태코드.기사배정, 커뮤니티원장상태.진행중)]
+    [InlineData(음식주문상태코드.조리중, 커뮤니티원장상태.진행중)]
+    [InlineData(음식주문상태코드.픽업대기, 커뮤니티원장상태.진행중)]
+    [InlineData(음식주문상태코드.픽업완료, 커뮤니티원장상태.진행중)]
+    [InlineData(음식주문상태코드.전달완료, 커뮤니티원장상태.진행중)]
+    [InlineData(음식주문상태코드.수령확인, 커뮤니티원장상태.완료)]
+    [InlineData(음식주문상태코드.거절, 커뮤니티원장상태.닫힘)]
+    [InlineData(음식주문상태코드.취소, 커뮤니티원장상태.닫힘)]
+    public async Task Food_role_read_uses_same_revision_block_without_changing_stored_summary(
+        string foodState, string expectedStatus)
+    {
+        var root = FoodLedger(foodState);
+        var storedJson = JsonSerializer.Serialize(root);
+        var service = new 주문원장역할별조회Service(new FakeLedgerStore(root), new FakeDisclosureStore());
+
+        var result = await service.조회Async(root.원장Id, "orderer-1", 주문원장조회역할.주문자);
+
+        Assert.True(result.IsSuccess);
+        var readRoot = Assert.IsType<커뮤니티원장Dto>(result.Value.주문원장상세);
+        Assert.NotSame(root, readRoot);
+        Assert.Equal(expectedStatus, result.Value.주문원장상태);
+        Assert.Equal(expectedStatus, readRoot.상태);
+        Assert.Equal(foodState, readRoot.현재단계Key);
+        Assert.Equal(storedJson, JsonSerializer.Serialize(root));
+        foreach (var property in typeof(커뮤니티원장Dto).GetProperties())
+        {
+            if (property.Name is not nameof(커뮤니티원장Dto.상태) and not nameof(커뮤니티원장Dto.현재단계Key))
+            {
+                Assert.Equal(property.GetValue(root), property.GetValue(readRoot));
+            }
+        }
+        using var stored = JsonDocument.Parse(storedJson);
+        using var read = JsonDocument.Parse(JsonSerializer.Serialize(readRoot));
+        Assert.Equal(stored.RootElement.EnumerateObject().Select(x => x.Name),
+            read.RootElement.EnumerateObject().Select(x => x.Name));
+    }
+
+    [Theory]
+    [InlineData("missing")]
+    [InlineData("unknown")]
+    [InlineData("blank")]
+    [InlineData("duplicate")]
+    [InlineData("wrong-block-type")]
+    [InlineData("other-template")]
+    public async Task Ambiguous_or_unrelated_food_summary_remains_unchanged(string caseName)
+    {
+        var root = FoodLedger(음식주문상태코드.수령확인);
+        switch (caseName)
+        {
+            case "missing": root.블록목록 = []; break;
+            case "unknown": root.블록목록[0].State = "미확인 상태"; break;
+            case "blank": root.블록목록[0].State = null; break;
+            case "duplicate": root.블록목록 = [root.블록목록[0], root.블록목록[0]]; break;
+            case "wrong-block-type": root.블록목록[0].BlockType = CommunityLedgerBlockTypes.Generic; break;
+            case "other-template": root.원장템플릿Key = CommunityLedgerTemplateKeys.Order; break;
+        }
+        var storedJson = JsonSerializer.Serialize(root);
+        var service = new 주문원장역할별조회Service(new FakeLedgerStore(root), new FakeDisclosureStore());
+
+        var result = await service.조회Async(root.원장Id, "orderer-1", 주문원장조회역할.주문자);
+
+        Assert.True(result.IsSuccess);
+        Assert.Same(root, result.Value.주문원장상세);
+        Assert.Equal(root.상태, result.Value.주문원장상태);
+        Assert.Equal(storedJson, JsonSerializer.Serialize(root));
+    }
+
+    [Fact]
+    public async Task Food_block_does_not_reveal_state_to_a_child_only_role_or_unrelated_user()
+    {
+        var root = FoodLedger(음식주문상태코드.수령확인);
+        root.상태 = 커뮤니티원장상태.진행중;
+        root.포함원장목록 = [Reference("sale-1", CommunityLedgerTemplateKeys.LocalSale, 주문원장포함역할.판매, 0)];
+        var store = new FakeLedgerStore(root,
+            Ledger("sale-1", CommunityLedgerTemplateKeys.LocalSale, "seller-1", "판매자"));
+        var service = new 주문원장역할별조회Service(store, new FakeDisclosureStore());
+
+        var seller = await service.조회Async(root.원장Id, "seller-1", 주문원장조회역할.판매자);
+        var stranger = await service.조회Async(root.원장Id, "stranger-1", 주문원장조회역할.주문자);
+
+        Assert.True(seller.IsSuccess);
+        Assert.Null(seller.Value.주문원장상세);
+        Assert.Equal(커뮤니티원장상태.진행중, seller.Value.주문원장상태);
+        Assert.NotNull(Assert.Single(seller.Value.관련원장목록).원장상세);
+        Assert.True(stranger.IsFailed);
+        Assert.Equal(403, stranger.Errors.Single().Metadata["StatusCode"]);
+        Assert.Equal("픽업대기", root.현재단계Key);
+    }
+
+    [Theory]
+    [InlineData(음식주문상태코드.주문대기, "음식점")]
+    [InlineData(음식주문상태코드.조리중, "음식점")]
+    [InlineData(음식주문상태코드.픽업완료, "기사")]
+    [InlineData(음식주문상태코드.전달완료, "주문자")]
+    [InlineData(음식주문상태코드.수령확인, "주문자")]
+    public async Task Order_guidance_uses_protected_current_food_stage_without_completing_payment(string state, string actor)
+    {
+        var root = FoodLedger(state);
+        root.외부참조 = new Dictionary<string, string> { ["음식주문번호"] = "FOOD / 1" };
+        var original = JsonSerializer.Serialize(root);
+        var result = await new 주문원장역할별조회Service(new FakeLedgerStore(root), new FakeDisclosureStore())
+            .조회Async(root.원장Id, "orderer-1", 주문원장조회역할.주문자);
+        Assert.True(result.IsSuccess);
+        var guide = Assert.IsType<주문원장업무안내Dto>(result.Value.업무안내);
+        Assert.Equal(actor, guide.담당역할);
+        Assert.Equal("FoodOrder", guide.업무종류);
+        Assert.Equal("FOOD / 1", guide.원천Id);
+        Assert.Contains("각각", guide.완료구분안내);
+        Assert.Equal(original, JsonSerializer.Serialize(root));
+    }
+
+    [Theory]
+    [InlineData("FoodOrderNo")]
+    [InlineData("orderNo")]
+    [InlineData("block")]
+    [InlineData("canonical-id")]
+    public async Task Food_navigation_preserves_existing_source_identity_aliases(string source)
+    {
+        var root = FoodLedger(음식주문상태코드.전달완료);
+        root.외부참조 = source is "block" or "canonical-id" ? new Dictionary<string, string>() : new Dictionary<string, string> { [source] = "existing-order" };
+        if (source == "block") root.블록목록[0].Data = new Dictionary<string, string> { ["FoodOrderNo"] = "existing-order" };
+        var result = await new 주문원장역할별조회Service(new FakeLedgerStore(root), new FakeDisclosureStore())
+            .조회Async(root.원장Id, "orderer-1", 주문원장조회역할.주문자);
+        Assert.Equal("FoodOrder", result.Value.업무안내!.업무종류);
+        Assert.Equal("existing-order", result.Value.업무안내.원천Id);
+    }
+
+    [Fact]
+    public async Task Hidden_child_state_and_personal_details_are_not_used_in_task_guidance()
+    {
+        var root = Ledger("root", CommunityLedgerTemplateKeys.Order, "orderer-1", "주문자");
+        root.포함원장목록 = [Reference("private-child", CommunityLedgerTemplateKeys.CargoTransport, 주문원장포함역할.운송, 4)];
+        var child = Ledger("private-child", CommunityLedgerTemplateKeys.CargoTransport, "private-driver", "개인 기사 이름");
+        child.상태 = 커뮤니티원장상태.완료;
+        child.현재단계Key = "개인 배송 위치";
+        var result = await new 주문원장역할별조회Service(new FakeLedgerStore(root, child), new FakeDisclosureStore())
+            .조회Async("root", "orderer-1", 주문원장조회역할.주문자);
+        var guide = Assert.IsType<주문원장업무안내Dto>(result.Value.업무안내);
+        Assert.Equal("업무 상태 확인 필요", guide.현재단계);
+        Assert.Null(guide.원천Id);
+        Assert.DoesNotContain("개인", JsonSerializer.Serialize(guide));
+        Assert.Null(Assert.Single(result.Value.관련원장목록).원장상세);
+        Assert.Equal(4, Assert.Single(result.Value.관련원장목록).표시순서);
+    }
+
+    [Fact]
+    public async Task No_fulfillment_reference_is_not_shown_as_completed_order()
+    {
+        var root = Ledger("root", CommunityLedgerTemplateKeys.Order, "orderer-1", "주문자");
+        var result = await new 주문원장역할별조회Service(new FakeLedgerStore(root), new FakeDisclosureStore())
+            .조회Async("root", "orderer-1", 주문원장조회역할.주문자);
+        Assert.Equal("이행 업무 연결 확인", result.Value.업무안내!.현재단계);
+        Assert.Equal(root.상태, result.Value.주문원장상태);
+        Assert.Null(result.Value.업무안내.업무종류);
+    }
+
+    [Theory]
+    [InlineData(true, "Connected")]
+    [InlineData(true, "Pending")]
+    [InlineData(true, "Blocked")]
+    [InlineData(false, "Connected")]
+    public async Task Distributed_navigation_requires_an_accessible_child_and_verified_connection(bool accessible, string status)
+    {
+        var root = Ledger("root", CommunityLedgerTemplateKeys.Order, "orderer-1", "주문자");
+        root.포함원장목록 = [Reference("transport-1", CommunityLedgerTemplateKeys.CargoTransport, 주문원장포함역할.운송, 0)];
+        var child = Ledger("transport-1", CommunityLedgerTemplateKeys.CargoTransport,
+            accessible ? "orderer-1" : "driver-1", "담당자");
+        var adapter = new QueryOnlyConnectionAdapter(status);
+        var result = await new 주문원장역할별조회Service(new FakeLedgerStore(root, child), new FakeDisclosureStore(), adapter)
+            .조회Async("root", "orderer-1", 주문원장조회역할.주문자);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(accessible ? 1 : 0, adapter.Reads);
+        var guide = Assert.IsType<주문원장업무안내Dto>(result.Value.업무안내);
+        if (accessible && status != "Blocked")
+        {
+            Assert.Equal("DistributedOrder", guide.업무종류);
+            Assert.Equal("wave-1", guide.원천Id);
+            if (status == "Pending") Assert.Equal("업무 연결 확인 필요", guide.현재단계);
+        }
+        else
+        {
+            Assert.Null(guide.업무종류);
+            Assert.Null(guide.원천Id);
+            if (accessible) Assert.Equal("업무 연결 권한 확인 필요", guide.현재단계);
+        }
+    }
+
+    private sealed class QueryOnlyConnectionAdapter(string status) : I분산주문원장연결Adapter
+    {
+        public int Reads { get; private set; }
+        public Task<DistributedOrderLedgerReferenceDto?> FindForChildAsync(string actorUserId, string rootOrderLedgerId, string childLedgerId, CancellationToken ct)
+        {
+            Assert.Equal("orderer-1", actorUserId); Assert.Equal("root", rootOrderLedgerId); Assert.Equal("transport-1", childLedgerId);
+            Reads++;
+            return Task.FromResult<DistributedOrderLedgerReferenceDto?>(new("wave-1", "order-1", rootOrderLedgerId, status));
+        }
+        public Task<DistributedRootOrderSnapshot> ValidateAsync(string actorUserId, string rootId, long expectedRevision, string sellerUserId, string customerUserId, CancellationToken ct)
+            => throw new InvalidOperationException("Read must not validate or change the connection.");
+        public Task<DistributedOrderLedgerConnectionState> SynchronizeAsync(string actorUserId, DistributedOrderLedgerConnection connection, CancellationToken ct)
+            => throw new InvalidOperationException("Read must not synchronize the connection.");
+        public Task<DistributedOrderLedgerConnectionState> ReadAsync(string actorUserId, DistributedOrderLedgerConnection connection, CancellationToken ct)
+            => throw new InvalidOperationException("Only the narrow child read is allowed.");
+    }
+
+    private static 커뮤니티원장Dto FoodLedger(string foodState)
+    {
+        var root = Ledger("food-order:existing-order", CommunityLedgerTemplateKeys.FoodOrder, "orderer-1", "주문자");
+        root.상태 = 커뮤니티원장상태.완료;
+        root.현재단계Key = "픽업대기";
+        root.Revision = 9;
+        root.투영완료Revision = 9;
+        root.투영상태 = 커뮤니티원장투영상태.완료;
+        root.투영EventId = "projection-event";
+        root.투영마지막오류 = "previous diagnostic";
+        root.원함 = "주문 이행";
+        root.대상OsCode = "Food";
+        root.대상OsName = "음식 주문";
+        root.생성시각Utc = new DateTime(2026, 10, 7, 6, 30, 23, DateTimeKind.Utc);
+        root.수정시각Utc = new DateTime(2026, 10, 7, 15, 13, 18, DateTimeKind.Utc);
+        root.블록목록 = [new() { BlockId = "food-order", BlockType = CommunityLedgerBlockTypes.Order, State = foodState }];
+        root.참여자목록 = [new() { UserId = "orderer-1", RoleLabel = "주문자" }];
+        root.포함원장목록 = [Reference("transport-1", CommunityLedgerTemplateKeys.FoodDelivery, 주문원장포함역할.배송, 0)];
+        root.다이어그램스냅샷 = new() { DiagramId = "diagram-existing" };
+        root.외부참조 = new Dictionary<string, string> { ["원천종류"] = "FoodOrder", ["원천주문번호"] = "existing-order" };
+        root.확장속성 = new Dictionary<string, string> { ["표시설정"] = "keep" };
+        root.상태이력 = [new() { 상태 = 커뮤니티원장상태.완료, 현재단계Key = "픽업대기" }];
+        return root;
     }
 
     private static FakeLedgerStore CreateLedgers()

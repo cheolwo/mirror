@@ -12,6 +12,40 @@ namespace 살뜰.Infrastructure.Persistence
     {
         public static void ApplyPersonalDataProtection(this ModelBuilder modelBuilder, IPersonalDataEncryptionService protector)
         {
+            modelBuilder.Entity<살뜰.도메인.창고.분산거점Record>().Property(x => x.PrivateDetailsJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<살뜰.도메인.창고.분산배송WaveRecord>().Property(x => x.RouteJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<살뜰.도메인.창고.분산보관합의Record>().Property(x => x.TermsJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<살뜰.도메인.창고.분산보관합의Record>().Property(x => x.HistoryJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<살뜰.도메인.창고.분산재고LotRecord>().Property(x => x.StorageAgreementSnapshotJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<살뜰.도메인.창고.분산사진증빙Record>().Property(x => x.PrivateDetailsJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<살뜰.도메인.창고.분산사진보존정지Record>().Property(x => x.LegalBasisJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<살뜰.도메인.정산.NeighborhoodSettlementAgreementRecord>().Property(x => x.TermsJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<살뜰.도메인.정산.NeighborhoodSettlementAgreementRecord>().Property(x => x.SourceSnapshotJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<살뜰.도메인.정산.NeighborhoodSettlementAgreementRecord>().Property(x => x.ConsentsJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<살뜰.도메인.정산.NeighborhoodSettlementAgreementRecord>().Property(x => x.HistoryJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<살뜰.도메인.정산.NeighborhoodSettlementAgreementVersionRecord>().Property(x => x.TermsJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<살뜰.도메인.정산.NeighborhoodSettlementAgreementVersionRecord>().Property(x => x.SourceSnapshotJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<살뜰.도메인.정산.NeighborhoodSettlementAgreementVersionRecord>().Property(x => x.ConsentsJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<살뜰.도메인.정산.NeighborhoodSettlementEntryRecord>().Property(x => x.DetailsJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<살뜰.도메인.정산.NeighborhoodSettlementPaymentRecord>().Property(x => x.DetailsJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<살뜰.도메인.정산.NeighborhoodSettlementCommandReceiptRecord>().Property(x => x.ResponseJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
             ArgumentNullException.ThrowIfNull(modelBuilder);
             ArgumentNullException.ThrowIfNull(protector);
 

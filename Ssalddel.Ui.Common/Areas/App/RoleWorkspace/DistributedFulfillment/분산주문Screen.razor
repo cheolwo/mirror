@@ -1,0 +1,165 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Contracts.Common.Warehouse
+<section aria-label="내 배송 주문"><h2>@(Model.RoleKey == "orderer" ? "내 주문 배송 상태" : "내 판매 주문")</h2>
+    @if (Model.Workspace?.Waves.Count == 0)
+    { <p>현재 확인할 배송 주문이 없습니다.</p> }
+    <ul class="items">@foreach (var wave in Model.Workspace!.Waves)
+    { <li><button type="button" disabled="@(!Model.CanEdit)" @onclick="() => Choose(wave.WaveId)"><strong>@wave.Label</strong><span>@분산이행표시.Status(wave.StatusCode) · 배송 @분산이행표시.Time(wave.DeliveryStartUtc) ~ @분산이행표시.Time(wave.DeliveryEndUtc)</span></button></li> }</ul>
+</section>
+@if (Model.SelectedWave is { } selected)
+{
+    <section aria-label="선택 주문 상태"><h2>@selected.Label</h2>
+        @foreach (var order in selected.Orders)
+        {
+            var input = OrderInput(order.OrderId);
+            <article><h3>@order.OrderReference</h3><p>@분산이행표시.Status(order.StatusCode)</p>
+                <p>배송 시간 @분산이행표시.Time(order.DeliveryStartUtc) ~ @분산이행표시.Time(order.DeliveryEndUtc)</p>
+                <dl class="metrics"><div><dt>남은 예약</dt><dd>@order.ReservedQuantity 개</dd></div><div><dt>기사 피킹</dt><dd>@order.PickedQuantity 개</dd></div><div><dt>기사 전달 기록</dt><dd>@order.DeliveredQuantity 개</dd></div><div><dt>반품 확인</dt><dd>@order.ReturnedQuantity 개</dd></div></dl>
+                <p>본인 수령 확인: @(order.CustomerAcknowledged ? "확인됨" : "아직 확인되지 않음")</p>
+                @if (order.OrderLedgerConnectionStatusCode == "Connected" && RootHref(order) is { } rootHref)
+                {
+                    <a href="@rootHref">원주문 진행 보기</a>
+                }
+                else if (order.OrderLedgerConnectionStatusCode == "Pending")
+                {
+                    <p role="status">배송 업무는 저장되어 있으며 원주문 연결을 확인 중입니다.</p>
+                    @if (Model.CanRetryOrderLedger(order))
+                    { <button type="button" @onclick="() => Model.RetryOrderLedgerAsync(order.OrderId)">원주문 연결 다시 확인</button> }
+                    else { <p>최신 업무를 다시 조회한 뒤 현재 권한과 조건을 확인해 주세요.</p> }
+                }
+                else if (order.OrderLedgerConnectionStatusCode == "Blocked")
+                { <p role="alert">원주문 연결을 진행할 수 없습니다. 현재 참여 권한과 주문 조건을 담당자에게 확인해 주세요.</p> }
+                @if (Model.CanAcknowledge(order))
+                {
+                    <label>@order.OrderReference 수령 확인 근거<input @bind="input.AcknowledgementEvidence" disabled="@(!Model.CanEdit)" placeholder="본인이 수령한 확인 기록" /></label>
+                    <label class="check"><input type="checkbox" @bind="input.AcknowledgementConfirmed" disabled="@(!Model.CanEdit)" />@order.OrderReference 물품을 본인이 실제로 수령했습니다</label>
+                    <button class="primary" type="button" disabled="@(!input.AcknowledgementConfirmed || string.IsNullOrWhiteSpace(input.AcknowledgementEvidence) || !Model.CanEdit)" @onclick="() => Acknowledge(order.OrderId)">본인 수령 확인</button>
+                }
+                @if (Model.CanCancel(order))
+                {
+                    <label>@order.OrderReference 취소 사유<input @bind="input.CancelReason" disabled="@(!Model.CanEdit)" /></label>
+                    <label class="check"><input type="checkbox" @bind="input.CancelConfirmed" disabled="@(!Model.CanEdit)" />@order.OrderReference 의 아직 피킹하지 않은 수량에 대한 취소 조건을 확인했습니다</label>
+                    <button type="button" disabled="@(!input.CancelConfirmed || string.IsNullOrWhiteSpace(input.CancelReason) || !Model.CanEdit)" @onclick="() => Cancel(order.OrderId)">주문 취소 요청</button>
+                }
+            </article>
+        }
+        @if (selected.Orders.Count == 0) { <p>선택한 묶음에서 본인이 확인할 주문이 없습니다.</p> }
+        <p>기사 전달 기록·본인 수령 확인·결제·정산은 별도 상태로 확인합니다.</p>
+        @if (Model.RoleKey == "shipper" && Model.Allows("add-order", selected.AllowedActions))
+        {
+            <h3>내 화물 의뢰를 배송 주문에 연결</h3>
+            @if (Model.Workspace!.CargoCandidates.Count == 0 || Model.Workspace.Lots.Count == 0 && Model.Workspace.ExistingOutboundCandidates.Count == 0)
+            { <p>선택할 내 화물 의뢰 또는 가용 재고가 없습니다. 기존 화물 의뢰 작성과 입고 확인을 먼저 완료해 주세요.</p> }
+            else
+            {
+                <fieldset disabled="@(!Model.CanEdit)"><legend>실제 내 의뢰와 내 판매 재고 선택</legend>
+                    <label>내 화물 의뢰<select @bind="cargoId" @bind:after="ClearDraft"><option value="">의뢰 선택</option>@foreach (var cargo in Model.Workspace.CargoCandidates) { <option value="@cargo.CargoRequestId">@cargo.Label · 배송 @분산이행표시.Time(cargo.DeliveryStartUtc) ~ @분산이행표시.Time(cargo.DeliveryEndUtc)</option> }</select></label>
+                    <label class="check"><input type="checkbox" @bind="connectRootOrder" @bind:after="RootConnectionChanged" disabled="@string.IsNullOrWhiteSpace(cargoId)" />기존 원주문에 이 배송 업무 연결</label>
+                    @if (connectRootOrder)
+                    {
+                        @if (Model.IsLoadingRootOrders) { <p role="status">현재 화물 의뢰에 연결할 원주문을 확인하고 있습니다.</p> }
+                        else if (Model.RootOrdersError is { } rootError) { <p role="alert">@rootError</p> }
+                        else if (Model.RootOrdersLoaded && Model.RootOrderCandidates.Count == 0) { <p>현재 판매자와 수령인이 함께 참여한 열린 원주문이 없습니다.</p> }
+                        @if (Model.RootOrdersLoaded && Model.RootOrderCandidates.Count > 0)
+                        {
+                            <label>연결할 원주문<select value="@Model.SelectedRootOrderId" @onchange="RootSelected"><option value="">원주문 선택</option>@foreach (var candidate in Model.RootOrderCandidates) { <option value="@candidate.RootOrderLedgerId">@candidate.Label · @candidate.StatusCode</option> }</select></label>
+                            @if (Model.SelectedRootOrderId is { } selectedRoot)
+                            { <a href="@($"/orders/{Uri.EscapeDataString(selectedRoot)}")">선택한 원주문 내용 보기</a> }
+                        }
+                        <button type="button" disabled="@(Model.IsLoadingRootOrders || !Model.CanEdit)" @onclick="ReloadRootOrders">연결할 원주문 다시 조회</button>
+                        <p>목록에서 선택한 원주문의 현재 조건을 확인합니다. 주문이나 참여 권한이 바뀌면 다시 선택해야 합니다.</p>
+                    }
+                    <label>주문 표시명<input @bind="orderReference" /></label>
+                    <label class="check"><input type="checkbox" @bind="existingReservationMode" @bind:after="ClearDraft" />이 의뢰에 이미 예약된 출고 물품 편입</label>
+                    @if (existingReservationMode)
+                    {
+                        <p>기존 예약을 이 묶음에 연결합니다. 가용 재고를 다시 차감하거나 예약 수량을 바꾸지 않습니다.</p>
+                        <label>내 기존 출고 예약<select @bind="existingOutboundId"><option value="0">기존 예약 선택</option>@foreach (var candidate in ExistingReservations) { <option value="@candidate.ExistingOutboundPlanId">@분산이행표시.Owner(candidate.OwnerLabel) · @분산이행표시.Product(candidate.ProductLabel, candidate.Sku) · @SiteLabel(candidate.SiteId) · 예약 @candidate.Quantity 개</option> }</select></label>
+                        @if (ExistingReservations.Count == 0) { <p>선택한 내 의뢰에 편입할 수 있는 기존 예약이 없습니다.</p> }
+                    }
+                    else
+                    {
+                        <label>내 판매 상품<select @bind="lotId"><option value="">상품 선택</option>@foreach (var lot in Model.Workspace.Lots.Where(lot => lot.SellerUserId == Model.CurrentUserId && lot.AvailableQuantity > 0)) { <option value="@lot.LotId">@분산이행표시.Owner(lot.OwnerLabel) · @분산이행표시.Product(lot.ProductLabel, lot.Sku) · @lot.LotCode · 가용 @lot.AvailableQuantity 개</option> }</select></label>
+                        <label>새 예약 수량<input type="number" min="1" @bind="quantity" /></label>
+                    }
+                </fieldset><button type="button" disabled="@(!Model.CanEdit)" @onclick="AddLine">주문 물품 추가</button>
+                <p>@(existingReservationMode ? "아래 기존 예약은 아직 이 묶음에 편입되지 않은 입력입니다." : "아래 물품은 아직 서버에 예약되지 않은 입력입니다.")</p><ul>@foreach (var line in draftLines) { <li>@Sku(line.LotId) · @line.Quantity 개 <button type="button" disabled="@(!Model.CanEdit)" @onclick="() => draftLines.Remove(line)">입력 물품 제거</button></li> }</ul>
+                <label class="check"><input type="checkbox" @bind="confirmed" />실제 의뢰의 배송지·시간창과 내 재고 수량을 확인했습니다</label>
+                <button class="primary" type="button" disabled="@(!confirmed || draftLines.Count == 0 || !Model.CanEdit || connectRootOrder && !Model.HasSelectedRootOrder)" @onclick="AddOrder">이 묶음에 내 주문 추가</button>
+                <p>배송 주소·시간창·요금은 선택한 기존 화물 의뢰의 서버 자료를 사용합니다.</p>
+            }
+        }
+    </section>
+}
+@code {
+    [Parameter, EditorRequired] public 분산이행PageViewModel Model { get; set; } = default!;
+    private bool confirmed;
+    private bool connectRootOrder;
+    private static string? RootHref(DistributedOrderDto order)
+        => string.IsNullOrWhiteSpace(order.RootOrderLedgerId) ? null : $"/orders/{Uri.EscapeDataString(order.RootOrderLedgerId)}";
+    private readonly Dictionary<string, OrderConfirmation> orderInputs = [];
+    private string? orderInputsVersion;
+    protected override void OnParametersSet()
+    {
+        var version = $"{Model.CurrentUserId}|{Model.SelectedWave?.WaveId}|{Model.SelectedWave?.Revision}";
+        if (orderInputsVersion != version) { orderInputsVersion = version; orderInputs.Clear(); connectRootOrder = false; }
+    }
+    private OrderConfirmation OrderInput(string id)
+    { if (!orderInputs.TryGetValue(id, out var value)) orderInputs[id] = value = new(); return value; }
+    private string cargoId = "", orderReference = "", lotId = "";
+    private int quantity;
+    private bool existingReservationMode;
+    private long existingOutboundId;
+    private IReadOnlyList<DistributedExistingOutboundCandidateDto> ExistingReservations => Model.Workspace?.ExistingOutboundCandidates.Where(candidate => candidate.CargoRequestId == cargoId && candidate.SellerUserId == Model.CurrentUserId).ToArray() ?? [];
+    private string SiteLabel(string id) => Model.Workspace?.Sites.FirstOrDefault(site => site.SiteId == id)?.PublicLabel ?? "허용된 보관 거점";
+    private void ClearDraft() { draftLines.Clear(); existingOutboundId = 0; lotId = ""; quantity = 0; confirmed = false; connectRootOrder = false; Model.ClearRootOrderCandidates(); }
+    private Task RootConnectionChanged()
+    {
+        confirmed = false;
+        if (connectRootOrder) return Model.LoadRootOrderCandidatesAsync(cargoId);
+        Model.ClearRootOrderCandidates(); return Task.CompletedTask;
+    }
+    private void RootSelected(ChangeEventArgs args) { confirmed = false; Model.SelectRootOrder(args.Value?.ToString()); }
+    private Task ReloadRootOrders() { confirmed = false; return Model.LoadRootOrderCandidatesAsync(cargoId); }
+    private readonly List<DistributedOrderLineRequest> draftLines = [];
+    private string Sku(string id) => Model.Workspace?.Lots.FirstOrDefault(lot => lot.LotId == id)?.Sku ?? "조회한 물품";
+    private Task AddLine()
+    {
+        if (existingReservationMode)
+        {
+            var candidate = ExistingReservations.FirstOrDefault(item => item.ExistingOutboundPlanId == existingOutboundId);
+            if (candidate is null || candidate.Quantity < 1 || draftLines.Any(line => line.ExistingOutboundPlanId == candidate.ExistingOutboundPlanId))
+                return Model.InvalidInputAsync("조회한 같은 내 의뢰의 기존 예약을 한 번씩 선택해 주세요.");
+            draftLines.Add(new() { LotId = candidate.LotId, Quantity = candidate.Quantity, ExistingOutboundPlanId = candidate.ExistingOutboundPlanId }); confirmed = false; return Task.CompletedTask;
+        }
+        var lot = Model.Workspace?.Lots.FirstOrDefault(item => item.LotId == lotId);
+        if (lot is null || lot.SellerUserId != Model.CurrentUserId || quantity < 1 || quantity + draftLines.Where(line => line.LotId == lotId).Sum(line => line.Quantity) > lot.AvailableQuantity)
+            return Model.InvalidInputAsync("조회한 본인 판매 재고와 가용 수량 안에서 물품을 선택해 주세요.");
+        var existing = draftLines.FirstOrDefault(line => line.LotId == lotId);
+        if (existing is not null) existing.Quantity += quantity; else draftLines.Add(new() { LotId = lot.LotId, Quantity = quantity });
+        quantity = 0; confirmed = false; return Task.CompletedTask;
+    }
+    private async Task AddOrder()
+    {
+        var wave = Model.SelectedWave; var cargo = Model.Workspace?.CargoCandidates.FirstOrDefault(item => item.CargoRequestId == cargoId);
+        if (wave is null || cargo is null || draftLines.Count == 0 || string.IsNullOrWhiteSpace(orderReference))
+        { await Model.InvalidInputAsync("조회한 내 화물 의뢰·주문 표시명·물품을 확인해 주세요."); return; }
+        await Model.AddOrderAsync(cargo.CargoRequestId, orderReference, draftLines.ToArray(), confirmed, connectRootOrder);
+        if (!Model.HasPendingCommand && Model.Message is not null) draftLines.Clear(); confirmed = false;
+    }
+    private async Task Choose(string id) { orderInputs.Clear(); confirmed = false; await Model.ChooseAsync(id); }
+    private async Task Acknowledge(string id)
+    {
+        var input = OrderInput(id); await Model.AcknowledgeAsync(id, input.AcknowledgementEvidence, input.AcknowledgementConfirmed);
+        input.AcknowledgementEvidence = ""; input.AcknowledgementConfirmed = false;
+    }
+    private async Task Cancel(string id)
+    { var input = OrderInput(id); await Model.CancelAsync(id, input.CancelReason, input.CancelConfirmed); input.CancelReason = ""; input.CancelConfirmed = false; }
+    private sealed class OrderConfirmation
+    {
+        public string AcknowledgementEvidence { get; set; } = "";
+        public bool AcknowledgementConfirmed { get; set; }
+        public string CancelReason { get; set; } = "";
+        public bool CancelConfirmed { get; set; }
+    }
+}

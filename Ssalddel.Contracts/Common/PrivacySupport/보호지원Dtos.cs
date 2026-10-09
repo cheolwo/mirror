@@ -13,6 +13,8 @@ public static class 보호지원출처Codes
     public const string 생활배송 = "neighborhood-delivery";
     public const string 생활협업 = "neighborhood-collaboration";
     public const string 화물의뢰 = "cargo-request";
+    public const string 분산입고 = "distributed-inbound";
+    public const string 분산배송 = "distributed-wave";
 }
 
 public sealed class 거래분쟁접수Request

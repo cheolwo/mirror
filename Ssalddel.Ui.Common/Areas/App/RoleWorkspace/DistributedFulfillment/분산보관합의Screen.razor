@@ -1,0 +1,92 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Contracts.Common.Warehouse
+<section aria-label="내 공간 보관 합의"><h2>공간 제공자와 상품 소유자의 보관 합의</h2>
+    <p>같은 조건에 양측이 동의해야 실제 입고·새 예약을 진행할 수 있습니다. 공간 관리자 동의는 별도로 유지됩니다.</p>
+    @if (Model.Workspace!.StorageAgreements.Count == 0) { <p>아직 기록한 보관 합의가 없습니다.</p> }
+    <ul class="items">@foreach (var agreement in Model.Workspace.StorageAgreements)
+    { <li><button type="button" disabled="@(!Model.CanEdit)" @onclick="() => Choose(agreement.AgreementId)"><strong>@LocationLabel(agreement.LocationId) · @OwnerLabel(agreement.GoodsOwnerUserId)</strong><span>@AgreementStatus(agreement.StatusCode) · 공간 제공자 @(agreement.SpaceOwnerConsented ? "동의" : "미동의") · 상품 소유자 @(agreement.GoodsOwnerConsented ? "동의" : "미동의")</span></button></li> }</ul>
+</section>
+@if (Model.SelectedAgreement is { } selected)
+{
+    <section aria-label="선택한 보관 조건"><h2>@LocationLabel(selected.LocationId)</h2><p>@OwnerLabel(selected.GoodsOwnerUserId)의 상품 보관 · 조건 @selected.TermsVersion 차</p>
+        <dl class="terms"><dt>허용 상품</dt><dd>@string.Join(" · ", selected.Terms.AllowedSkus)</dd><dt>허용 수량</dt><dd>@selected.Terms.MaximumStoredQuantity 개</dd>
+            <dt>보관 기간</dt><dd>@분산이행표시.Time(selected.Terms.StartsAtUtc) ~ @분산이행표시.Time(selected.Terms.EndsAtUtc)</dd>
+            <dt>출입 시간</dt><dd>@selected.Terms.AccessHours</dd><dt>비용·무상 조건</dt><dd>@selected.Terms.PriceOrFreeTerms</dd>
+            <dt>관리 담당·관리 방법</dt><dd>@selected.Terms.CustodianAndCare</dd><dt>분실·파손·반환 조건</dt><dd>@selected.Terms.LossDamageAndReturnTerms</dd></dl>
+        @if (selected.StatusCode is "Expired" or "Revoked") { <p class="notice">새 입고·예약은 진행할 수 없습니다. 보관 중인 물품의 반환·정리 절차는 계속 확인합니다.</p> }
+        @if (Model.Allows("consent", selected.AllowedActions) || Model.Allows("revoke", selected.AllowedActions))
+        {
+            <label class="check"><input type="checkbox" @bind="consentConfirmed" disabled="@(!Model.CanEdit)" />현재 표시된 보관 조건과 본인의 관계를 확인했습니다</label>
+            <div class="actions">
+                @if (Model.Allows("consent", selected.AllowedActions)) { <button class="primary" type="button" disabled="@(!consentConfirmed)" @onclick="() => Consent(true)">이 보관 조건에 동의</button> }
+                @if (Model.Allows("revoke", selected.AllowedActions)) { <button type="button" disabled="@(!consentConfirmed)" @onclick="() => Consent(false)">본인 보관 동의 철회</button> }
+            </div>
+        }
+        @if (Model.Allows("change-terms", selected.AllowedActions))
+        { <button type="button" @onclick="EditTerms">이 조건을 바탕으로 변경안 작성</button> }
+    </section>
+}
+@if (CanDraft)
+{
+    <details open="@(editingAgreementId is not null)"><summary>@(editingAgreementId is null ? "새 보관 합의 작성" : "변경할 보관 조건")</summary>
+        <section aria-label="보관 합의 작성"><fieldset disabled="@(!Model.CanEdit)"><legend>함께 확인할 보관 조건</legend>
+            @if (editingAgreementId is null)
+            {
+                <label>보관 위치<select @bind="locationId"><option value="">거점·적재 위치 선택</option>@foreach (var site in Model.Workspace.Sites.Where(site => site.AllowedActions.Contains("create-agreement"))) { @foreach (var location in site.Locations) { <option value="@location.LocationId">@site.PublicLabel · @location.Label</option> } }</select></label>
+                <label>상품 소유자<select @bind="goodsOwnerId"><option value="">상품 소유자 선택</option>@foreach (var party in Model.Workspace.GoodsOwnerCandidates) { <option value="@party.UserId">@party.Label</option> }</select></label>
+            }
+            <label>보관할 상품 코드<textarea @bind="skus" placeholder="한 줄에 하나씩 입력해 주세요"></textarea></label><label>최대 보관 수량<input type="number" min="1" @bind="maximumQuantity" /></label>
+            <label>보관 시작<input type="datetime-local" @bind="starts" /></label><label>보관 종료<input type="datetime-local" @bind="ends" /></label>
+            <label>출입 가능 시간<input @bind="accessHours" /></label><label>비용 또는 무상 조건<textarea @bind="priceTerms"></textarea></label>
+            <label>관리 담당자와 관리 방법<textarea @bind="careTerms"></textarea></label><label>분실·파손·반환 조건<textarea @bind="returnTerms"></textarea></label>
+            <label class="check"><input type="checkbox" @bind="draftConfirmed" />공간·상품 소유자와 위 조건을 확인했습니다</label>
+        </fieldset>
+        <button class="primary" type="button" disabled="@(!Model.CanEdit || !draftConfirmed)" @onclick="SaveTerms">보관 조건 저장</button>
+        @if (editingAgreementId is not null) { <button type="button" disabled="@(!Model.CanEdit)" @onclick="ResetDraft">변경안 닫기</button> }
+        <p>저장은 양측 동의를 대신하지 않습니다. 조건 변경 뒤에는 양측이 다시 동의합니다. 플랫폼은 보관료를 수금하지 않습니다.</p>
+        </section>
+    </details>
+}
+@code {
+    [Parameter, EditorRequired] public 분산이행PageViewModel Model { get; set; } = default!;
+    private string locationId = "", goodsOwnerId = "", skus = "", accessHours = "", priceTerms = "", careTerms = "", returnTerms = "";
+    private int maximumQuantity;
+    private DateTime starts = DateTime.Now, ends = DateTime.Now.AddDays(30);
+    private bool draftConfirmed, consentConfirmed;
+    private string? editingAgreementId, viewVersion;
+    private bool CanDraft => Model.CanEdit && (editingAgreementId is not null && Model.SelectedAgreement is { } a && Model.Allows("change-terms", a.AllowedActions)
+        || Model.Workspace!.Sites.Any(site => site.AllowedActions.Contains("create-agreement")));
+    protected override void OnParametersSet()
+    { var version = $"{Model.CurrentUserId}|{Model.SelectedAgreement?.AgreementId}|{Model.SelectedAgreement?.Revision}"; if (viewVersion != version) { viewVersion = version; consentConfirmed = false; ResetDraft(); } }
+    private string LocationLabel(string id) => Model.Workspace?.Sites.SelectMany(site => site.Locations).FirstOrDefault(location => location.LocationId == id)?.Label ?? "허용된 적재 위치";
+    private string OwnerLabel(string id) => id == Model.CurrentUserId ? "본인" : Model.Workspace?.GoodsOwnerCandidates.FirstOrDefault(party => party.UserId == id)?.Label ?? "등록된 상품 소유자";
+    private static string AgreementStatus(string code) => code switch { "Active" => "보관 가능", "Expired" => "기간 종료", "Revoked" => "동의 철회", _ => "양측 동의 대기" };
+    private async Task Choose(string id) { ResetDraft(); consentConfirmed = false; await Model.ChooseAsync(id); }
+    private Task Consent(bool granted) => Model.SelectedAgreement is { } a ? Model.ExecuteAsync(granted ? "consent" : "revoke", $"storage-agreements/{분산이행Client.Segment(a.AgreementId)}/consents",
+        new DistributedStorageAgreementConsentRequest { ExpectedRevision = a.Revision, TermsVersion = a.TermsVersion, Granted = granted }, a.AgreementId, a.AllowedActions, consentConfirmed) : Task.CompletedTask;
+    private void EditTerms()
+    {
+        if (Model.SelectedAgreement is not { } a || !Model.Allows("change-terms", a.AllowedActions)) return;
+        editingAgreementId = a.AgreementId; locationId = a.LocationId; goodsOwnerId = a.GoodsOwnerUserId; skus = string.Join('\n', a.Terms.AllowedSkus); maximumQuantity = a.Terms.MaximumStoredQuantity;
+        starts = DateTime.SpecifyKind(a.Terms.StartsAtUtc, DateTimeKind.Utc).ToLocalTime(); ends = DateTime.SpecifyKind(a.Terms.EndsAtUtc, DateTimeKind.Utc).ToLocalTime();
+        accessHours = a.Terms.AccessHours; priceTerms = a.Terms.PriceOrFreeTerms; careTerms = a.Terms.CustodianAndCare; returnTerms = a.Terms.LossDamageAndReturnTerms; draftConfirmed = false;
+    }
+    private void ResetDraft() { editingAgreementId = null; locationId = goodsOwnerId = skus = accessHours = priceTerms = careTerms = returnTerms = ""; maximumQuantity = 0; draftConfirmed = false; }
+    private async Task SaveTerms()
+    {
+        var allowedSkus = skus.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct(StringComparer.Ordinal).ToArray();
+        var site = Model.Workspace!.Sites.SingleOrDefault(site => site.Locations.Any(location => location.LocationId == locationId));
+        var agreement = Model.SelectedAgreement;
+        var targetValid = editingAgreementId is null ? site is not null && Model.Workspace.GoodsOwnerCandidates.Any(party => party.UserId == goodsOwnerId)
+            : agreement is not null && agreement.AgreementId == editingAgreementId && agreement.LocationId == locationId && agreement.GoodsOwnerUserId == goodsOwnerId;
+        if (!targetValid || allowedSkus.Length == 0 || maximumQuantity < 1 || ends <= starts
+            || new[] { accessHours, priceTerms, careTerms, returnTerms }.Any(string.IsNullOrWhiteSpace)) { await Model.InvalidInputAsync("보관 위치·상품 소유자·상품·허용 수량·기간과 모든 보관 조건을 확인해 주세요."); return; }
+        var body = new DistributedStorageAgreementRequest { LocationId = locationId, GoodsOwnerUserId = goodsOwnerId,
+            ExpectedRevision = editingAgreementId is not null ? agreement!.Revision : 0,
+            Terms = new() { AllowedSkus = allowedSkus, MaximumStoredQuantity = maximumQuantity, StartsAtUtc = DateTime.SpecifyKind(starts, DateTimeKind.Local).ToUniversalTime(), EndsAtUtc = DateTime.SpecifyKind(ends, DateTimeKind.Local).ToUniversalTime(),
+                AccessHours = accessHours.Trim(), PriceOrFreeTerms = priceTerms.Trim(), CustodianAndCare = careTerms.Trim(), LossDamageAndReturnTerms = returnTerms.Trim() } };
+        await Model.ExecuteAsync(editingAgreementId is null ? "create-agreement" : "change-terms", editingAgreementId is null ? $"sites/{분산이행Client.Segment(site!.SiteId)}/storage-agreements" : $"storage-agreements/{분산이행Client.Segment(editingAgreementId)}/terms",
+            body, editingAgreementId, editingAgreementId is null ? site!.AllowedActions : agreement!.AllowedActions, draftConfirmed);
+        if (!Model.HasPendingCommand && Model.Message is not null) ResetDraft();
+    }
+}

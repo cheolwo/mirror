@@ -20,6 +20,11 @@ public sealed class 통신판매보호Controller(통신판매안내Service notic
     Microsoft.Extensions.Options.IOptions<통신판매운영Options>? options = null,
     살뜰.Data.SsalddelContext? db = null, Ssalddel.Services.Community.I생활협업Store? collaborations = null) : CommunityControllerBase
 {
+    [HttpGet("task-contract-policy")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public ActionResult<NeighborhoodTaskContractPolicyDto> 건별의뢰정책([FromServices] NeighborhoodTaskContractPolicyService policy)
+        => string.IsNullOrWhiteSpace(Actor()) ? Unauthorized() : Ok(policy.GetPolicy());
+
     [AllowAnonymous, HttpGet("notices")]
     public ActionResult<통신판매안내Response> 안내()
     {

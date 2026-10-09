@@ -1,0 +1,100 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@inject IServiceProvider Services
+@implements IDisposable
+
+<main class="distributed-work" aria-label="@분산이행Navigation.Title(Screen)">
+    <header><a href="@SafeReturn">업무로 돌아가기</a><h1>@분산이행Navigation.Title(Screen)</h1></header>
+    @if (Model is null)
+    { <p role="alert">이 역할의 업무 화면을 확인해 주세요.</p> }
+    else if (Model.RequiresLogin)
+    { <p role="alert">로그인한 뒤 본인에게 허용된 업무를 확인해 주세요.</p><a class="primary" href="@SafeLogin">로그인</a> }
+    else
+    {
+        @if (Model.IsBusy) { <p role="status">현재 업무와 처리 결과를 확인하고 있습니다.</p> }
+        @if (Model.Error is { } error) { <p class="error" role="alert">@error</p> }
+        @if (Model.ValidationError is { } invalid) { <p class="error" role="alert">@invalid</p> }
+        @if (Model.Message is { } message) { <p role="status">@message</p> }
+        @if (Model.HasPendingCommand)
+        {
+            <p>처리 결과가 아직 확인되지 않았습니다. 입력을 바꾸기 전에 같은 요청을 확인해 주세요.</p>
+            <button class="primary" type="button" disabled="@Model.IsBusy" @onclick="Model.RetryPendingAsync">같은 요청 결과 확인</button>
+            <p><a href="@RecoveryHref">이 요청 다시 확인하기</a></p>
+        }
+        else if (Model.HasPendingPhoto)
+        {
+            <p>사진 전송 결과를 아직 확인하지 못했습니다. 원래 사진과 같은 요청을 다시 확인합니다.</p>
+            <button class="primary" type="button" disabled="@Model.IsBusy" @onclick="Model.RetryPhotoAsync">같은 사진 전송 결과 확인</button>
+            <button type="button" disabled="@Model.IsBusy" @onclick="Model.CancelPhotoWorkAsync">이 사진 작업 닫고 최신 업무 조회</button>
+            <p>사진 작업을 닫아도 이미 저장된 입고·피킹·전달 기록이 취소되지는 않습니다.</p>
+        }
+        else { <button type="button" disabled="@Model.IsBusy" @onclick="Reload">최신 업무 다시 조회</button> }
+        @if (Model.IsLoaded && Model.Workspace is { } workspace)
+        {
+            @if (workspace.IsSimulation) { <p class="notice">연습 환경입니다. 실제 보관·운송·정산 완료를 뜻하지 않습니다.</p> }
+            <nav aria-label="연결 업무">
+                @foreach (var screen in new[] { "sites", "agreements", "inventory", "inbound", "orders", "round", "returns", "waves" }.Where(value => 분산이행Navigation.AllowsScreen(RoleKey, value)))
+                { <a href="@ScreenHref(screen)" aria-current="@(screen == Screen ? "page" : null)">@분산이행Navigation.Title(screen)</a> }
+            </nav>
+            <div @key="Model.CurrentUserId">
+                @switch (Screen)
+                {
+                    case "sites": <분산공간Screen Model="Model" /> break;
+                    case "agreements": <분산보관합의Screen Model="Model" /> break;
+                    case "returns": <분산반품Screen Model="Model" /> break;
+                    case "inventory": <분산재고Screen Model="Model" ReturnHref="@SafeReturn" /> break;
+                    case "inbound": <분산입고Screen Model="Model" /> break;
+                    case "orders": <분산주문Screen Model="Model" /> break;
+                    case "round": <분산순회Screen Model="Model" /> break;
+                    case "waves": <분산출고묶음Screen Model="Model" /> break;
+                }
+            </div>
+            <section aria-label="내 처리 근거"><h2>내 처리 근거</h2>
+                @if (workspace.Receipts.Count == 0) { <p>확인할 처리 근거가 없습니다.</p> }
+                @foreach (var receipt in workspace.Receipts.Take(10))
+                { <p>@분산이행표시.Action(receipt.Kind) · @receipt.Quantity 개 · @분산이행표시.Time(receipt.RecordedAtUtc)</p> }
+            </section>
+        }
+    }
+</main>
+
+@code {
+    [Parameter] public string RoleKey { get; set; } = "";
+    [Parameter] public string Screen { get; set; } = "";
+    [Parameter] public string? SelectedId { get; set; }
+    [Parameter] public string? ReturnHref { get; set; }
+    [Parameter] public string? LoginHref { get; set; }
+    [Parameter] public Guid? RecoveryRequestId { get; set; }
+    [Parameter] public I분산이행Transport? Transport { get; set; }
+    private 분산이행PageViewModel? Model;
+    private I분산이행Transport? ownedTransport;
+    private string? signature;
+    private bool disposed;
+    private string SafeReturn => RoleWorkspaceNavigation.LocalRoute(ReturnHref) ?? $"/workspace/{RoleKey}";
+    private string SafeLogin => RoleWorkspaceNavigation.LocalRoute(LoginHref) ?? $"/workspace-login/{RoleKey}";
+    private string ScreenHref(string screen) => RoleWorkspaceNavigation.WithReturn(분산이행Navigation.Href(RoleKey, screen), SafeReturn)!;
+    private string RecoveryHref => 분산이행Navigation.ResumeHref(RoleKey, Screen, Model?.SelectedId ?? SelectedId, Model?.RequestId, SafeReturn);
+    protected override async Task OnParametersSetAsync()
+    {
+        var next = $"{RoleKey}|{Screen}|{SelectedId}|{RecoveryRequestId}";
+        if (signature == next) { Model?.VerifyAuthentication(); return; }
+        signature = next; Release();
+        if (!분산이행Navigation.AllowsScreen(RoleKey, Screen)) return;
+        var actualTransport = Transport;
+        if (actualTransport is null)
+        {
+            var api = Services.GetService(typeof(IRoleWorkspaceApi)) as IRoleWorkspaceApi;
+            var access = Services.GetService(typeof(IRoleWorkspaceAccess)) as IRoleWorkspaceAccess;
+            if (api is null || access is null) return;
+            actualTransport = ownedTransport = new 분산이행RoleTransport(api, access);
+        }
+        Model = new(new 분산이행Client(actualTransport, RoleKey), Screen, Services.GetService(typeof(I업무사진촬영Adapter)) as I업무사진촬영Adapter); Model.Changed += Changed;
+        if (RecoveryRequestId is { } request && request != Guid.Empty) await Model.RecoverReceiptAsync(request);
+        else await Model.LoadAsync(SelectedId);
+    }
+    private Task Reload() => Model?.LoadAsync(Model.SelectedId ?? SelectedId) ?? Task.CompletedTask;
+    private void Changed() { if (!disposed) _ = InvokeAsync(StateHasChanged); }
+    private void Release()
+    { if (Model is not null) { Model.Changed -= Changed; Model.Dispose(); Model = null; } ownedTransport?.Dispose(); ownedTransport = null; }
+    public void Dispose() { disposed = true; Release(); }
+}

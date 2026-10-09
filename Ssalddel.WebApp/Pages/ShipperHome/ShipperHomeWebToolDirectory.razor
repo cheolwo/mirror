@@ -45,6 +45,8 @@
 
     private static readonly IReadOnlyList<WebAppPageLink> WarehouseLinks =
     [
+        new("내 분산 보관 재고", "본인 판매 권한의 상품과 거점별 입고·예약·가용 수량을 확인합니다.", "/workspace/shipper/distributed/inventory", Icons.Material.Filled.Inventory2, "창고"),
+        new("내 분산 배송 주문", "기존 내 화물 의뢰와 재고를 명시적으로 연결하고 배송 상태를 확인합니다.", "/workspace/shipper/distributed/orders", Icons.Material.Filled.LocalShipping, "창고"),
         new("입고 대시보드", "창고와 입고 예정·완료·보관 재고 요약을 확인합니다.", ShipperRoutes.InboundDashboard, Icons.Material.Filled.Dashboard, "창고"),
         new("입고 요청 원장", "목록·신규 신청·stable-ID 상세·완료 화면으로 이동합니다.", ShipperRoutes.InboundRequests, Icons.Material.Filled.MoveToInbox, "창고"),
         new("창고 작업대", "입고, 재고, 재위탁과 주문 출고 목적지를 확인합니다.", ShipperRoutes.WarehouseWorkspace, Icons.Material.Filled.Warehouse, "창고"),

@@ -39,6 +39,8 @@ public sealed class 보호지원MongoIntegrationTests
             await database.RunCommandAsync<BsonDocument>(new BsonDocument("ping", 1));
             Assert.True(await first.생성Async(record));
             Assert.False(await reloaded.생성Async(record));
+            Assert.True(await reloaded.HasOpenCaseAsync(record.SourceKind, record.SourceId));
+            Assert.False(await reloaded.HasOpenCaseAsync(record.SourceKind, "other-order"));
             var raw = await database.GetCollection<BsonDocument>(Mongo보호지원Store.CollectionName).Find(new BsonDocument("_id", record.CaseId)).SingleAsync();
             var rawJson = raw.ToJson();
             Assert.DoesNotContain("010-0000-1111", rawJson);
@@ -71,9 +73,11 @@ public sealed class 보호지원MongoIntegrationTests
             }), TimeProvider.System);
             Assert.Equal(0, await purge.실행Async());
             Assert.NotNull(await reloaded.조회Async(record.CaseId));
+            Assert.True(await reloaded.HasOpenCaseAsync(record.SourceKind, record.SourceId));
             expired = (await reloaded.조회Async(record.CaseId))!;
             expired.RetentionIntent = null; expired.Revision++;
             Assert.True(await reloaded.교체Async(expired, 3));
+            Assert.False(await reloaded.HasOpenCaseAsync(record.SourceKind, record.SourceId));
             Assert.Equal(1, await purge.실행Async());
             Assert.Null(await reloaded.조회Async(record.CaseId));
             var manifest = await database.GetCollection<Mongo보호지원Store.보호지원파기Document>("commerce_privacy_support_deletion_manifest")
@@ -110,6 +114,14 @@ public sealed class 보호지원MongoIntegrationTests
             Assert.True(await coordinator.보존정지해제확인Async("FoodOrder", "only-isolated-retention-source", "only-isolated-case"));
             var finalReceipt = await coordinator.보존적용조회Async("FoodOrder", "only-isolated-retention-source", "only-isolated-case");
             Assert.Equal(11, finalReceipt!.Sequence); Assert.False(finalReceipt.Hold);
+
+            var legacy = new 보호지원Record { CaseId = "only-isolated-legacy-index", Kind = 보호지원종류Codes.분쟁,
+                SourceKind = 보호지원출처Codes.분산배송, SourceId = "only-isolated-private-order", PartyUserIds = ["only-test-owner"],
+                Revision = 1, StatusCode = "closed", CreatedAtUtc = DateTime.UtcNow, UpdatedAtUtc = DateTime.UtcNow };
+            Assert.True(await reloaded.생성Async(legacy));
+            await database.GetCollection<BsonDocument>(Mongo보호지원Store.CollectionName).UpdateOneAsync(
+                new BsonDocument("_id", legacy.CaseId), new BsonDocument("$unset", new BsonDocument("SourceHash", 1)));
+            Assert.Null(await reloaded.HasOpenCaseAsync(보호지원출처Codes.분산배송, "other-order"));
         }
         finally
         {

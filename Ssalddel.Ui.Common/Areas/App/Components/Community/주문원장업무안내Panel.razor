@@ -1,0 +1,56 @@
+@using Ssalddel.Contracts.Common.Community
+
+<MudPaper Elevation="0" Outlined="true" Class="pa-4" data-order-current-task>
+    <MudStack Spacing="2">
+        <MudText Typo="Typo.h6">@(Guide?.현재단계 ?? "주문 진행 확인")</MudText>
+        @if (Guide is not null)
+        {
+            <MudText Typo="Typo.body2">담당: @Guide.담당역할</MudText>
+            <MudText Typo="Typo.body1">@Guide.대기이유</MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.body1">현재 주문의 업무 안내를 다시 확인해 주세요.</MudText>
+        }
+
+        @if (업무경로 is { } href)
+        {
+            <MudButton Href="@href" Variant="Variant.Filled" Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.ArrowForward" Disabled="@Busy">
+                @Guide!.다음행동안내
+            </MudButton>
+        }
+        else
+        {
+            <MudButton OnClick="Refresh" Variant="Variant.Filled" Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Refresh" Disabled="@Busy">
+                주문 정보 새로고침
+            </MudButton>
+        }
+
+        @if (Guide is not null)
+        {
+            <MudDivider />
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@Guide.완료구분안내</MudText>
+            <details class="mt-2" data-order-condition-guidance>
+                <summary>이번 주문의 조건 변경</summary>
+                <p class="mt-2">@Guide.조건변경안내</p>
+            </details>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter] public 주문원장업무안내Dto? Guide { get; set; }
+    [Parameter] public string OrderLedgerId { get; set; } = string.Empty;
+    [Parameter] public bool Busy { get; set; }
+    [Parameter] public EventCallback Refresh { get; set; }
+
+    // 서버가 확인한 업무 종류만 기존 내부 route로 연결합니다. 이 링크가 업무 명령을 실행하지 않습니다.
+    private string? 업무경로 => string.IsNullOrWhiteSpace(Guide?.원천Id) ? null : Guide.업무종류 switch
+    {
+        "FoodOrder" => $"/orders/food?orderNo={Uri.EscapeDataString(Guide.원천Id)}",
+        "DistributedOrder" => $"/workspace/orderer/distributed/orders?selected={Uri.EscapeDataString(Guide.원천Id)}&returnUrl={Uri.EscapeDataString($"/orders/{Uri.EscapeDataString(OrderLedgerId)}")}",
+        _ => null
+    };
+}

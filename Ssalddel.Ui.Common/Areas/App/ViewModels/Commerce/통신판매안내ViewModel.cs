@@ -11,6 +11,10 @@ public sealed class 통신판매안내ViewModel(I통신판매보호Client client
     public 통신판매안내Response? Value { get; private set; }
     public bool IsLoading { get; private set; }
     public string? Error { get; private set; }
+    public bool IsSimulation => Value?.ExecutionModeCode == "Simulation";
+    public bool CanAcknowledge(bool requireSeller, long? sellerRevision, bool disabled = false)
+        => !_disposed && !IsLoading && Error is null && Value is not null && !disabled
+           && (!requireSeller || sellerRevision is not null || IsSimulation);
     public async Task LoadAsync()
     {
         if (_disposed || IsLoading) return;

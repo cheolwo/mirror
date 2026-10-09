@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
+using Ssalddel.Application.Warehouse;
 using Ssalddel.Contracts.Common.PrivacySupport;
 
 namespace Ssalddel.Services.PrivacySupport;
@@ -17,7 +18,8 @@ public sealed class 보호지원Exception(string code, string message, int statu
 public sealed class 보호지원UseCase(I보호지원Store store, I보호지원SourceResolver source,
     한국영업일Calendar calendar, IOptions<보호지원Options> options, TimeProvider clock,
     IHttpContextAccessor http, IAuthorizationService authorization,
-    I보호지원권리실행확인? rightsExecution = null, I보호지원보존연결? retention = null)
+    I보호지원권리실행확인? rightsExecution = null, I보호지원보존연결? retention = null,
+    I분산사진보존연결? distributedRetention = null)
 {
     public const string AdminPolicy = "서버관리자전용";
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -38,6 +40,7 @@ public sealed class 보호지원UseCase(I보호지원Store store, I보호지원S
         record.SourceKind = request.SourceKind;
         record.SourceId = request.SourceId;
         record.PartyUserIds = context.PartyUserIds;
+        await ProtectDistributedCaseAsync(record, ct);
         var progress = calendar.기한(record.CreatedAtUtc, 3);
         var result = calendar.기한(record.CreatedAtUtc, 10);
         record.ProgressDueAtUtc = progress.DueAtUtc;
@@ -170,6 +173,10 @@ public sealed class 보호지원UseCase(I보호지원Store store, I보호지원S
             if (!await store.교체Async(row, intentRevision, ct)) throw Error("RevisionConflict", "보존 요청 판본이 먼저 변경되었습니다.", 409);
             return ToResponse(await ReconcileRetentionAsync(row.CaseId, ct), actor, admin);
         }
+        // A new/reopened source problem is fenced in SQL before its Mongo state becomes visible.
+        // An uncertain insert/CAS leaves the conservative hold in place for explicit review.
+        if (request.Action == "appeal" || row.StatusCode is not ("closed" or "denied"))
+            await ProtectDistributedCaseAsync(row, ct);
         await ApplyAsync(row, request, actor, admin, ct);
         AddEvidence(row, actor, request.PrivateEvidence);
         if (admin && !string.IsNullOrWhiteSpace(request.Summary)) AddEvidence(row, actor, "[" + request.Action + "] " + request.Summary);
@@ -274,7 +281,23 @@ public sealed class 보호지원UseCase(I보호지원Store store, I보호지원S
         if (retention is null) throw Error("RetentionUnavailable", "보존 작업 연결을 확인할 수 없습니다.", 409);
         try { return await new 보호지원보존Service(store, retention, clock).조정Async(id, ct); }
         catch (InvalidOperationException) { throw Error("RetentionPending", "보존 결과가 미확인입니다. 같은 요청으로 다시 확인해 주세요.", 409); }
+        catch (DistributedFulfillmentException) { throw Error("RetentionPending", "공간 업무 증빙의 보존 판본을 확인하지 못했습니다. 같은 요청으로 다시 확인해 주세요.", 409); }
         catch (KeyNotFoundException) { throw Error("RetentionSourceNotFound", "보존 대상 원장을 확인하지 못했습니다. 보존 요청은 검토 대기 중입니다.", 409); }
+    }
+
+    private async Task ProtectDistributedCaseAsync(보호지원Record row, CancellationToken ct)
+    {
+        if (row.Kind != 보호지원종류Codes.분쟁 || row.SourceKind is not (보호지원출처Codes.분산입고 or 보호지원출처Codes.분산배송)) return;
+        if (distributedRetention is null) throw Error("RetentionUnavailable", "공간 업무 증빙의 보존 연결을 확인할 수 없습니다.", 409);
+        try { await distributedRetention.AcquireOpenCaseAsync(row.CaseId, row.SourceKind, row.SourceId, ct); }
+        catch (InvalidOperationException) { throw Error("RetentionPending", "증빙 보존을 확인하지 못했습니다. 같은 요청으로 다시 확인해 주세요.", 409); }
+        catch (DistributedFulfillmentException ex) { throw Error(ex.Code, "공간 업무 증빙 보존 상태를 다시 확인해 주세요.", ex.Status); }
+        if (!row.SourceHoldActive)
+        {
+            row.SourceHoldActive = true;
+            row.SourceHoldReviewAtUtc = null;
+            row.SourceHoldLegalBasis = "진행 중인 공간 업무 문제 검토";
+        }
     }
 
     private void RecordNotice(보호지원Record row, 보호지원CommandRequest request, string kind)
@@ -305,12 +328,12 @@ public sealed class 보호지원UseCase(I보호지원Store store, I보호지원S
             if (row.Kind == 보호지원종류Codes.사고)
                 return ["assess-incident", "prepare-incident-notice", "record-individual-notified", "record-authority-reported", "record-followup", "add-evidence"];
             if (row.StatusCode is "closed" or "denied") return row.Kind == 보호지원종류Codes.분쟁 && retention is not null
-                && row.SourceKind is 보호지원출처Codes.음식주문 or 보호지원출처Codes.생활배송
+                && row.SourceKind is 보호지원출처Codes.음식주문 or 보호지원출처Codes.생활배송 or 보호지원출처Codes.분산입고 or 보호지원출처Codes.분산배송
                 ? row.SourceHoldActive ? ["hold-record", "release-hold"] : ["hold-record"] : [];
             var result = new List<string> { "start-review", "add-evidence", "prepare-progress", "record-progress-notified", "prepare-result", "record-result-notified", "close" };
             if (row.Kind == 보호지원종류Codes.권리) { result.Add("deny"); if (rightsExecution is not null) result.Add("complete-rights"); }
             if (row.Kind == 보호지원종류Codes.분쟁 && retention is not null
-                && row.SourceKind is 보호지원출처Codes.음식주문 or 보호지원출처Codes.생활배송)
+                && row.SourceKind is 보호지원출처Codes.음식주문 or 보호지원출처Codes.생활배송 or 보호지원출처Codes.분산입고 or 보호지원출처Codes.분산배송)
             {
                 result.Add("hold-record");
                 if (row.SourceHoldActive) result.Add("release-hold");

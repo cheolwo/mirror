@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Ssalddel.Application.Warehouse;
 using Ssalddel.Contracts.Common.PrivacySupport;
 using Ssalddel.Services.PrivacySupport;
 using 살뜰.Services.Options;
@@ -13,6 +14,34 @@ namespace Ssalddel.Tests.Services.PrivacySupport;
 
 public sealed class 보호지원보존조정Tests
 {
+    [Theory]
+    [InlineData(보호지원출처Codes.분산입고, "lot-a")]
+    [InlineData(보호지원출처Codes.분산배송, "order-a")]
+    public async Task 분산증빙사건도동일한보존의도확인후해제절차를제공한다(string kind, string sourceId)
+    {
+        var f = new Fixture(); f.Store.Row.SourceKind = kind; f.Store.Row.SourceId = sourceId;
+        Assert.Contains("hold-record", (await f.UseCase.상세Async("case", true)).AllowedActions);
+        await f.UseCase.변경Async("case", f.Hold(), true);
+        Assert.True(f.Store.Row.SourceHoldActive);
+        Assert.Contains("release-hold", (await f.UseCase.상세Async("case", true)).AllowedActions);
+        var release = f.Hold(); release.Action = "release-hold";
+        await f.UseCase.변경Async("case", release, true);
+        Assert.False(f.Store.Row.SourceHoldActive);
+        Assert.Null(f.Store.Row.RetentionIntent);
+    }
+
+    [Fact]
+    public async Task 분산보존순번충돌은일반서버오류가아니라미확인보존의도를유지한다()
+    {
+        var f = new Fixture(); f.Store.Row.SourceKind = 보호지원출처Codes.분산입고; f.Store.Row.SourceId = "lot-a";
+        f.Retention.FailDistributedSequence = true;
+        var error = await Assert.ThrowsAsync<보호지원Exception>(() => f.UseCase.변경Async("case", f.Hold(), true));
+        Assert.Equal("RetentionPending", error.Code);
+        Assert.Equal(409, error.StatusCode);
+        Assert.NotNull(f.Store.Row.RetentionIntent);
+        Assert.Empty(f.Store.Row.Receipts);
+    }
+
     [Fact]
     public async Task 의도CAS가실패하면다른원장에는보존변경을쓰지않는다()
     {
@@ -156,6 +185,7 @@ public sealed class 보호지원보존조정Tests
     {
         public DateTime? HeldReview { get; set; }
         public bool FailHold { get; set; }
+        public bool FailDistributedSequence { get; set; }
         public bool ReleaseVerified { get; set; } = true;
         public int HoldCalls { get; set; }
         public 보호지원보존적용? Applied { get; set; }
@@ -170,6 +200,7 @@ public sealed class 보호지원보존조정Tests
         public async Task 보존상태적용Async(string id, string kind, string source, long sequence, bool hold, string legal,
             DateTime? review, CancellationToken ct = default)
         {
+            if (FailDistributedSequence) throw new DistributedFulfillmentException("DistributedPhotoHoldSequenceConflict");
             if (Applied is { } prior)
             {
                 if (sequence < prior.Sequence) throw new InvalidOperationException("RetentionIntentStale");

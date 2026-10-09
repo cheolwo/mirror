@@ -104,11 +104,39 @@ public sealed class Mongo보호지원Store : I보호지원Store
         return rows.Select(Read).ToArray();
     }
 
+    public async Task<bool?> HasOpenCaseAsync(string sourceKind, string sourceId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sourceKind);
+        ArgumentException.ThrowIfNullOrWhiteSpace(sourceId);
+        await IndexesAsync(cancellationToken);
+        // Older encrypted records cannot be excluded by an absent exact-source index. Do not silently
+        // turn a partial scan into permission to delete proof; an explicit reindex is separate work.
+        if (await collection.Find(x => x.Kind == "transaction-dispute" && (x.SourceHash == null || x.SourceHash == ""))
+            .AnyAsync(cancellationToken)) return null;
+        var digest = SourceHash(sourceKind, sourceId);
+        using var cursor = await collection.Find(x => x.Kind == "transaction-dispute" && x.SourceHash == digest)
+            .ToCursorAsync(cancellationToken);
+        while (await cursor.MoveNextAsync(cancellationToken))
+            foreach (var document in cursor.Current)
+            {
+                var record = Read(document);
+                if (record.SourceKind != sourceKind || record.SourceId != sourceId)
+                    throw new InvalidDataException("Support source index binding does not match.");
+                if (RequiresSourcePreservation(record)) return true;
+            }
+        return false;
+    }
+
+    private static bool RequiresSourcePreservation(보호지원Record record)
+        => record.StatusCode is not ("closed" or "denied") || record.SourceHoldActive || record.RetentionIntent is not null;
+    private static string SourceHash(string kind, string id) => Hash(JsonSerializer.Serialize(new[] { kind, id }, Json));
+
     private 보호지원Document Write(보호지원Record row) => new()
     {
         CaseId = row.CaseId, Revision = row.Revision, Kind = row.Kind, StatusCode = row.StatusCode,
         PartyHashes = row.PartyUserIds.Select(Hash).ToArray(), UpdatedAtUtc = row.UpdatedAtUtc,
         SourceHoldActive = row.SourceHoldActive, RetentionPending = row.RetentionIntent is not null,
+        SourceHash = SourceHash(row.SourceKind, row.SourceId),
         PurgeAfterAtUtc = row.PurgeAfterAtUtc, PurgeStateCode = row.PurgeStateCode,
         ProtectedPayload = protector.Protect(JsonSerializer.Serialize(row, Json))
     };
@@ -120,6 +148,7 @@ public sealed class Mongo보호지원Store : I보호지원Store
         if (record.CaseId != row.CaseId || record.Revision != row.Revision || record.Kind != row.Kind || record.StatusCode != row.StatusCode
             || MongoTime(record.PurgeAfterAtUtc) != MongoTime(row.PurgeAfterAtUtc) || record.SourceHoldActive != row.SourceHoldActive
             || (record.RetentionIntent is not null) != row.RetentionPending || record.PurgeStateCode != row.PurgeStateCode
+            || row.SourceHash is not null && row.SourceHash != SourceHash(record.SourceKind, record.SourceId)
             || !record.PartyUserIds.Select(Hash).Order(StringComparer.Ordinal).SequenceEqual(row.PartyHashes.Order(StringComparer.Ordinal)))
             throw new InvalidDataException("Support case protected payload binding does not match.");
         return record;
@@ -137,7 +166,8 @@ public sealed class Mongo보호지원Store : I보호지원Store
                 new(keys.Ascending(x => x.PartyHashes).Descending(x => x.UpdatedAtUtc)),
                 new(keys.Ascending(x => x.Kind).Ascending(x => x.StatusCode).Descending(x => x.UpdatedAtUtc)),
                 new(keys.Ascending(x => x.PurgeAfterAtUtc).Ascending(x => x.SourceHoldActive).Ascending(x => x.RetentionPending)),
-                new(keys.Ascending(x => x.RetentionPending).Ascending(x => x.UpdatedAtUtc))
+                new(keys.Ascending(x => x.RetentionPending).Ascending(x => x.UpdatedAtUtc)),
+                new(keys.Ascending(x => x.SourceHash).Ascending(x => x.Kind).Ascending(x => x.StatusCode))
             ], cancellationToken);
             indexesReady = true;
         }
@@ -157,6 +187,7 @@ public sealed class Mongo보호지원Store : I보호지원Store
         public string ProtectedPayload { get; set; } = string.Empty;
         public bool SourceHoldActive { get; set; }
         public bool RetentionPending { get; set; }
+        [BsonIgnoreIfNull] public string? SourceHash { get; set; }
         public DateTime? PurgeAfterAtUtc { get; set; }
         public string PurgeStateCode { get; set; } = string.Empty;
     }

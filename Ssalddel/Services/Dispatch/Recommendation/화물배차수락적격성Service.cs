@@ -138,10 +138,10 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
 
             var activeIds = activeTransports.Select(x => x.운송번호).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToArray();
             var activeRequests = await _db.화주운송의뢰.AsNoTracking()
-                .Where(x => activeIds.Contains(x.의뢰Id))
+                .Where(x => Enumerable.Contains(activeIds, x.의뢰Id))
                 .ToDictionaryAsync(x => x.의뢰Id, StringComparer.Ordinal, cancellationToken);
             var activeCargo = await _db.화물요구조건.AsNoTracking()
-                .Where(x => activeIds.Contains(x.의뢰Id))
+                .Where(x => Enumerable.Contains(activeIds, x.의뢰Id))
                 .ToDictionaryAsync(x => x.의뢰Id, StringComparer.Ordinal, cancellationToken);
 
             if (activeTransports.Any(x => activeRequests.TryGetValue(x.운송번호, out var request)

@@ -26,6 +26,8 @@ public sealed record 법적안내문서(string Code, string Title, IReadOnlyList
 public sealed class 통신판매안내Response
 {
     public string Version { get; set; } = string.Empty;
+    /// <summary>서버의 실행 모드다. 누락된 구형 응답은 운영 자격 예외를 허용하지 않는다.</summary>
+    public string ExecutionModeCode { get; set; } = "Unknown";
     public string IntermediaryNotice { get; set; } = string.Empty;
     public 운영주체정보 OperatorInfo { get; set; } = new();
     public IReadOnlyList<법적안내문서> Documents { get; set; } = [];

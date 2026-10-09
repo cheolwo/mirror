@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using Ssalddel.Application.Warehouse;
 using Ssalddel.Contracts.Common.PrivacySupport;
 using Ssalddel.Services.PrivacySupport;
 
@@ -10,6 +11,52 @@ namespace Ssalddel.Tests.Services.PrivacySupport;
 
 public sealed class 보호지원UseCaseTests
 {
+    [Theory]
+    [InlineData(보호지원출처Codes.분산입고, "lot-a")]
+    [InlineData(보호지원출처Codes.분산배송, "order-a")]
+    public async Task 분산문제접수는사진보존을먼저확정하며실패시사건을생성하지않고같은접수로복구한다(string kind, string sourceId)
+    {
+        var f = new Fixture(); var request = Dispute(); request.SourceKind = kind; request.SourceId = sourceId;
+        f.Distributed.Fail = true;
+        Assert.Equal("RetentionPending", (await Assert.ThrowsAsync<보호지원Exception>(() => f.Service.분쟁접수Async(request))).Code);
+        Assert.Empty(f.Store.Rows);
+        f.Distributed.Fail = false;
+        f.Store.BeforeCreate = () => Assert.Equal(2, f.Distributed.Calls);
+        var created = await f.Service.분쟁접수Async(request);
+        Assert.True(f.Store.Rows[created.CaseId].SourceHoldActive);
+        Assert.Null(f.Store.Rows[created.CaseId].SourceHoldReviewAtUtc);
+        Assert.Equal(sourceId, f.Distributed.LastSourceId);
+        Assert.Equal(kind, f.Distributed.LastSourceKind);
+        Assert.True((await f.Service.분쟁접수Async(request)).Replay);
+        Assert.Equal(2, f.Distributed.Calls);
+    }
+
+    [Fact]
+    public async Task 분산문제재개는해제된증빙을먼저재보호하고미확인시종결사건을그대로보존한다()
+    {
+        var f = new Fixture(); var request = Dispute(); request.SourceKind = 보호지원출처Codes.분산배송; request.SourceId = "order-a";
+        var created = await f.Service.분쟁접수Async(request);
+        var stored = f.Store.Rows[created.CaseId]; stored.StatusCode = "closed"; stored.SourceHoldActive = false;
+        var current = await f.Service.상세Async(created.CaseId);
+        var command = Command(current, "appeal", evidence: "미수령 확인");
+        f.Distributed.Fail = true;
+        Assert.Equal("RetentionPending", (await Assert.ThrowsAsync<보호지원Exception>(() => f.Service.변경Async(created.CaseId, command))).Code);
+        Assert.Equal("closed", f.Store.Rows[created.CaseId].StatusCode);
+        Assert.False(f.Store.Rows[created.CaseId].SourceHoldActive);
+        f.Distributed.Fail = false;
+        Assert.Equal("reopened", (await f.Service.변경Async(created.CaseId, command)).StatusCode);
+        Assert.True(f.Store.Rows[created.CaseId].SourceHoldActive);
+    }
+
+    [Fact]
+    public async Task 분산보존연결이없으면성공처럼대체하지않고접수를차단한다()
+    {
+        var f = new Fixture(includeDistributedProtection: false); var request = Dispute();
+        request.SourceKind = 보호지원출처Codes.분산입고; request.SourceId = "lot-a";
+        Assert.Equal("RetentionUnavailable", (await Assert.ThrowsAsync<보호지원Exception>(() => f.Service.분쟁접수Async(request))).Code);
+        Assert.Empty(f.Store.Rows);
+    }
+
     [Fact]
     public async Task 본인원장으로확인되지않은ID는분쟁접수에쓸수없다()
     {
@@ -307,12 +354,14 @@ public sealed class 보호지원UseCaseTests
         public Source Source { get; } = new();
         public Clock Clock { get; } = new();
         public HttpContextAccessor Http { get; } = new() { HttpContext = new DefaultHttpContext() };
+        public DistributedProtection Distributed { get; } = new();
         public 보호지원UseCase Service { get; }
-        public Fixture()
+        public Fixture(bool includeDistributedProtection = true)
         {
             SetActor("buyer");
             var options = Options.Create(new 보호지원Options());
-            Service = new(Store, Source, new(options), options, Clock, Http, new Authorization());
+            Service = new(Store, Source, new(options), options, Clock, Http, new Authorization(),
+                distributedRetention: includeDistributedProtection ? Distributed : null);
         }
         public void SetActor(string id, bool admin = false) => Http.HttpContext!.User = new ClaimsPrincipal(new ClaimsIdentity([
             new(ClaimTypes.NameIdentifier, id), new(ClaimTypes.Role, admin ? "actual-test-admin" : "normal-user")], "test"));
@@ -337,12 +386,13 @@ public sealed class 보호지원UseCaseTests
     }
     private sealed class Store : I보호지원Store
     {
+        public Action? BeforeCreate { get; set; }
         public Dictionary<string, 보호지원Record> Rows { get; } = new(StringComparer.Ordinal);
         public bool AlwaysConflict { get; set; }
         public Task<보호지원Record?> 조회Async(string id, CancellationToken ct = default)
             => Task.FromResult(Rows.TryGetValue(id, out var row) ? Clone(row) : null);
         public Task<bool> 생성Async(보호지원Record row, CancellationToken ct = default)
-            => Task.FromResult(Rows.TryAdd(row.CaseId, Clone(row)));
+        { BeforeCreate?.Invoke(); return Task.FromResult(Rows.TryAdd(row.CaseId, Clone(row))); }
         public Task<bool> 교체Async(보호지원Record row, long expected, CancellationToken ct = default)
         {
             if (AlwaysConflict || !Rows.TryGetValue(row.CaseId, out var prior) || prior.Revision != expected) return Task.FromResult(false);
@@ -358,5 +408,25 @@ public sealed class 보호지원UseCaseTests
         public Task<bool> 파기Async(보호지원Record row, DateTime now, CancellationToken ct = default)
             => Task.FromResult(Rows.TryGetValue(row.CaseId, out var prior) && prior.Revision == row.Revision && Rows.Remove(row.CaseId));
         private static 보호지원Record Clone(보호지원Record row) => JsonSerializer.Deserialize<보호지원Record>(JsonSerializer.Serialize(row))!;
+    }
+
+    private sealed class DistributedProtection : I분산사진보존연결
+    {
+        public bool Fail { get; set; }
+        public int Calls { get; private set; }
+        public string LastSourceKind { get; private set; } = "";
+        public string LastSourceId { get; private set; } = "";
+        public Task AcquireOpenCaseAsync(string caseId, string sourceKind, string sourceId, CancellationToken ct = default)
+        {
+            Calls++; LastSourceKind = sourceKind; LastSourceId = sourceId;
+            if (Fail) throw new InvalidOperationException("SQL preservation unavailable.");
+            return Task.CompletedTask;
+        }
+        public Task 보존정지Async(string caseId, string sourceKind, string sourceId, string legalBasis, DateTime reviewAtUtc, CancellationToken ct = default) => throw new NotSupportedException();
+        public Task 보존정지해제Async(string caseId, string sourceKind, string sourceId, CancellationToken ct = default) => throw new NotSupportedException();
+        public Task<DateTime?> 보존정지조회Async(string caseId, string sourceKind, string sourceId, CancellationToken ct = default) => throw new NotSupportedException();
+        public Task<bool> 보존정지해제확인Async(string caseId, string sourceKind, string sourceId, CancellationToken ct = default) => throw new NotSupportedException();
+        public Task 보존상태적용Async(string caseId, string sourceKind, string sourceId, long sequence, bool hold, string legalBasis, DateTime? reviewAtUtc, CancellationToken ct = default) => throw new NotSupportedException();
+        public Task<보호지원보존적용?> 보존적용조회Async(string caseId, string sourceKind, string sourceId, CancellationToken ct = default) => throw new NotSupportedException();
     }
 }

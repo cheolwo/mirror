@@ -4,6 +4,7 @@ using FluentResults;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Contracts.Driver.Transport;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using 살뜰.Data;
@@ -27,7 +28,8 @@ public sealed record 기사운송상태변경요청(
     string 목표상태,
     string 이벤트명,
     Func<기사운송상태변경Context, INotification> 이벤트생성,
-    Action<운송원장, DateTime>? 상태변경전처리 = null);
+    Action<운송원장, DateTime>? 상태변경전처리 = null,
+    Action<INotification>? Commit이후발행수집 = null);
 
 public sealed record 기사운송상태변경Context(
     운송원장 운송,
@@ -76,6 +78,23 @@ public sealed class 기사운송상태변경CommandExecutor : I기사운송상�
             return Result.Fail<기사운송상태변경응답>("운송을 찾을 수 없습니다.");
         }
 
+        var requestId = !string.IsNullOrWhiteSpace(entity.의뢰Id) ? entity.의뢰Id : entity.운송번호;
+        // Completed outbound rows still bind distributed custody. Use only legacy tables so unmigrated cargo databases remain compatible.
+        if (!string.Equals(request.이벤트명, "DistributedCargoCustody", StringComparison.Ordinal)
+            && (request.목표상태 is 기사운송상태코드.상차지도착 or 기사운송상태코드.상차완료
+                or 기사운송상태코드.하차지도착 or 기사운송상태코드.인수완료)
+            && !string.IsNullOrWhiteSpace(requestId)
+            && await _db.출고예정.AsNoTracking()
+                .Where(x => x.운송의뢰Id == requestId && x.입고상품Id != null)
+                .Join(_db.입고상품.AsNoTracking(), x => x.입고상품Id!.Value, x => x.Id, (_, item) => item)
+                .AnyAsync(x => x.보관위치.StartsWith("DLOC-"), cancellationToken))
+        {
+            return Result.Fail<기사운송상태변경응답>(new Error("분산 물품은 현재 분산 순회 화면에서 피킹·전달을 확인해 주세요.")
+                .WithMetadata("Code", "DistributedCargoCustodyRequired")
+                .WithMetadata("ErrorCode", "DistributedCargoCustodyRequired")
+                .WithMetadata("StatusCode", StatusCodes.Status409Conflict));
+        }
+
         var 이전상태 = entity.상태;
         if (!string.Equals(이전상태, request.목표상태, StringComparison.Ordinal))
         {
@@ -95,9 +114,6 @@ public sealed class 기사운송상태변경CommandExecutor : I기사운송상�
         request.상태변경전처리?.Invoke(entity, now);
         await 화주원장상태반영Async(entity, now, cancellationToken);
 
-        var requestId = !string.IsNullOrWhiteSpace(entity.의뢰Id)
-            ? entity.의뢰Id
-            : entity.운송번호;
         if (!string.IsNullOrWhiteSpace(requestId)
             && !string.Equals(이전상태, entity.상태, StringComparison.Ordinal))
         {
@@ -121,7 +137,9 @@ public sealed class 기사운송상태변경CommandExecutor : I기사운송상�
         }
 
         await _db.SaveChangesAsync(cancellationToken);
-        await PublishAfterCommitAsync(request, entity, 이전상태, now, cancellationToken);
+        if (request.Commit이후발행수집 is { } collect)
+            collect(request.이벤트생성(new(entity, 이전상태, now, Activity.Current?.TraceId.ToString() ?? string.Empty)));
+        else await PublishAfterCommitAsync(request, entity, 이전상태, now, cancellationToken);
 
         return Result.Ok(new 기사운송상태변경응답
         {
