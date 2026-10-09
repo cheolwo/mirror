@@ -9,6 +9,9 @@ public sealed partial class MainPageModel
     private FDriverFoodNotificationState _foodNotificationState = new(NullFDriverFoodNotificationService.Instance);
     private bool _notificationResumeInProgress;
     private string? _foodNotificationFocus;
+    private DateTime _settingsCheckedAtUtc;
+    private string _notificationSettingsNotice = "알림 설정 확인 전";
+    public string NotificationSettingsNotice => _notificationSettingsNotice;
     public string? FoodNotificationFocus => _foodNotificationFocus;
 
     public string? TakeFoodNotificationFocus()
@@ -73,6 +76,41 @@ public sealed partial class MainPageModel
         _foodNotificationFocus = null;
         HasNewRecommendations = false;
         NewRecommendationNotice = "확인할 새 추천 배차가 없습니다.";
+        _settingsCheckedAtUtc = default;
+        _notificationSettingsNotice = "알림 설정 확인 전";
+        OnPropertyChanged(nameof(NotificationSettingsNotice));
+    }
+
+    private async Task RefreshNotificationSettingsAsync(CancellationToken token)
+    {
+        var owner = _authSession.UserId;
+        if (!IsAuthenticated || string.IsNullOrWhiteSpace(owner) || DateTime.UtcNow - _settingsCheckedAtUtc < TimeSpan.FromMinutes(1)) return;
+        try
+        {
+            using var bounded = CancellationTokenSource.CreateLinkedTokenSource(token);
+            bounded.CancelAfter(TimeSpan.FromSeconds(3));
+            var requestedAtUtc = DateTime.UtcNow;
+            var settings = await _api.GetNotificationSettingsAsync(bounded.Token);
+            token.ThrowIfCancellationRequested();
+            if (!IsAuthenticated || _authSession.UserId != owner) return;
+            if (settings is null || settings.DriverId != owner)
+            {
+                _notificationSettingsNotice = "알림 설정을 확인하지 못했습니다. 내 정보에서 다시 확인해 주세요.";
+            }
+            else
+            {
+                _settingsCheckedAtUtc = requestedAtUtc;
+                _foodNotifications.ApplySettings(owner, settings, _settingsCheckedAtUtc);
+                _notificationSettingsNotice = settings.배차추천알림사용 ? "배차 알림 켜짐 · 기기 알림 설정을 따릅니다." : "배차 알림 꺼짐 · 내 정보에서 설정할 수 있습니다.";
+            }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
+        catch
+        {
+            if (_authSession.UserId != owner) return;
+            _notificationSettingsNotice = "알림 설정 재조회 실패 · 마지막 확인 설정을 유지합니다.";
+        }
+        OnPropertyChanged(nameof(NotificationSettingsNotice));
     }
 
     private async Task OpenLatestFoodRecommendationAsync()

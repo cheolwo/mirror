@@ -43,24 +43,14 @@ namespace FDriverApp.Pages
                 if (BindingContext is not MainPageModel model || WorkspaceAreas.Height <= 0 || WorkspaceAreas.Width <= 0) return;
                 var footerHeight = DeliveryPrimaryFooter.IsVisible
                     ? Math.Max(48, DeliveryPrimaryFooter.Height) : 0;
-                var mapReserve = MeasuredMapOverlayHeight(FoodMapLegend, WorkspaceAreas.Width)
-                    + MeasuredMapOverlayHeight(FoodMapRecenterButton, WorkspaceAreas.Width);
+                // Only overlay layout changes here. The map keeps the same full viewport
+                // and camera while the task card opens or closes.
+                FoodMapTools.Margin = new Thickness(8, Math.Max(8, WorkspaceHeader.Height + 8), 8, 8);
                 var height = FDriverFoodPresentationLayout.CardHeight(WorkspaceAreas.Height,
-                    DeliveryCardBodyContent.Height, footerHeight, model.IsFoodCardExpanded, mapReserve);
+                    DeliveryCardBodyContent.Height, footerHeight, model.IsFoodCardExpanded);
                 if (Math.Abs(DeliveryCard.HeightRequest - height) > 0.5)
                     DeliveryCard.HeightRequest = height;
             });
-        }
-
-        private static double MeasuredMapOverlayHeight(View overlay, double availableWidth)
-        {
-            if (!overlay.IsVisible) return 0;
-            // Unconstrained height preserves the scaled text/control's natural
-            // size instead of measuring it inside the already shortened map.
-            // The flags-free Size already includes margins; do not add them again.
-            var measured = overlay.Measure(availableWidth, double.PositiveInfinity).Height;
-            var arranged = Math.Max(0, overlay.Height) + overlay.Margin.Top + overlay.Margin.Bottom;
-            return Math.Max(Math.Max(0, double.IsFinite(measured) ? measured : 0), arranged);
         }
 
         protected override async void OnAppearing()
@@ -88,7 +78,7 @@ namespace FDriverApp.Pages
                 if (model.IsAuthenticated && model.Navigation.IsSettlement)
                 {
                     _entryFocus = null;
-                    model.Navigation.Select(FDriverWorkspaceSection.Delivery);
+                    model.Navigation.Select(FDriverWorkspaceSection.Profile);
                     await _completedDeliveryNavigator.OpenListAsync(DateOnly.FromDateTime(model.SelectedSettlementDate));
                     return;
                 }
@@ -138,6 +128,18 @@ namespace FDriverApp.Pages
         {
             if (_pageActive && BindingContext is MainPageModel { IsAuthenticated: true } model)
                 await _completedDeliveryNavigator.OpenListAsync(DateOnly.FromDateTime(model.SelectedSettlementDate));
+        }
+
+        private async void OnAgreedRatesClicked(object? sender, EventArgs args)
+        {
+            if (BindingContext is MainPageModel { IsAuthenticated: true } && Shell.Current is { } shell)
+                await shell.GoToAsync(AgreedRateTablePage.RouteName);
+        }
+
+        private async void OnNotificationSettingsClicked(object? sender, EventArgs args)
+        {
+            if (_pageActive && BindingContext is MainPageModel { IsAuthenticated: true } && Shell.Current is { } shell)
+                await shell.GoToAsync(NotificationSettingsPage.RouteName);
         }
 
         private async void OnDeliveryClicked(object? sender, EventArgs args)

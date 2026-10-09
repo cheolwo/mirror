@@ -1,0 +1,14 @@
+.role-workspace-action-content {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    min-width: 0;
+    max-width: 100%;
+    vertical-align: middle;
+    white-space: normal;
+}
+
+.role-workspace-action-content__label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}

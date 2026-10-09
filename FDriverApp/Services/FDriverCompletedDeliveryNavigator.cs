@@ -10,6 +10,8 @@ public sealed class FDriverCompletedDeliveryNavigator : IFDriverCompletedDeliver
     public const string DateQueryKey = "date";
     public const string SettlementQueryKey = "settlementId";
     public const string SelectionQueryKey = "selection";
+    private const string ProfileWorkspaceRoute = "//" + FDriverWorkspaceNavigator.WorkspaceRoute
+        + "?" + FDriverWorkspaceNavigator.FocusQueryKey + "=profile";
     private bool _navigating;
 
     public Task OpenListAsync(DateOnly? date = null) => NavigateAsync(async shell =>
@@ -30,11 +32,11 @@ public sealed class FDriverCompletedDeliveryNavigator : IFDriverCompletedDeliver
     public Task BackAsync() => NavigateAsync(async shell =>
     {
         if (shell.Navigation.NavigationStack.Count > 1) await shell.GoToAsync("..");
-        else await shell.GoToAsync("//" + FDriverWorkspaceNavigator.WorkspaceRoute);
+        else await shell.GoToAsync(ProfileWorkspaceRoute);
     });
 
     public Task ReturnToWorkspaceAsync() => NavigateAsync(
-        shell => shell.GoToAsync("//" + FDriverWorkspaceNavigator.WorkspaceRoute));
+        shell => shell.GoToAsync(ProfileWorkspaceRoute));
 
     private Task NavigateAsync(Func<Shell, Task> navigate)
         => MainThread.InvokeOnMainThreadAsync(async () =>

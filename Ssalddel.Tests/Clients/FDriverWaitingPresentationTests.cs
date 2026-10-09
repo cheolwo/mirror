@@ -65,7 +65,7 @@ public sealed class FDriverWaitingPresentationTests
         Assert.True(model.IsOnDuty);
         Assert.False(model.IsStartWorkPrimaryAction);
         Assert.True(model.IsWaitingLocationPrimaryAction);
-        Assert.Contains("위치 권한과 GPS", model.WaitingNotice);
+        Assert.Equal(model.LocationNotice, model.WaitingNotice);
         Assert.False(model.HasDeliveryStatusNotice);
     }
 
@@ -151,7 +151,8 @@ public sealed class FDriverWaitingPresentationTests
         model.HasCurrentLocation = hasLocation;
         Assert.False(model.HasServerDispatchRestriction);
         Assert.Equal(!hasLocation, model.IsWaitingLocationPrimaryAction);
-        Assert.Contains(hasLocation ? "가능 여부를 확인" : "위치 권한과 GPS", model.WaitingNotice);
+        if (hasLocation) Assert.Contains("가능 여부를 확인", model.WaitingNotice);
+        else Assert.Equal(model.LocationNotice, model.WaitingNotice);
         Assert.DoesNotContain("새로운 배달 요청을 기다리고", model.WaitingNotice);
     }
 

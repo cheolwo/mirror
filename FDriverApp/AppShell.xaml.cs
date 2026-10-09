@@ -14,6 +14,8 @@ namespace FDriverApp
             Routing.RegisterRoute(FDriverCompletedDeliveryNavigator.ListRoute, typeof(CompletedDeliveryListPage));
             Routing.RegisterRoute(FDriverCompletedDeliveryNavigator.DetailRoute, typeof(CompletedDeliveryDetailPage));
             Routing.RegisterRoute(FDriverProtectionSupportNavigator.RouteName, typeof(ProtectionSupportPage));
+            Routing.RegisterRoute(NotificationSettingsPage.RouteName, typeof(NotificationSettingsPage));
+            Routing.RegisterRoute(AgreedRateTablePage.RouteName, typeof(AgreedRateTablePage));
             var currentTheme = Application.Current!.RequestedTheme;
             ThemeSegmentedControl.SelectedIndex = currentTheme == AppTheme.Light ? 0 : 1;
         }

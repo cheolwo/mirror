@@ -15,6 +15,8 @@ public sealed partial class MainPageModel
     private CancellationTokenSource? _foodMapCancellation;
     private Task? _foodMapTask;
     private Task? _foodMapListenerTask;
+    private Task<FDriverLocationSnapshot?>? _foodMapFixTask;
+    private DateTime _foodMapFixRetryAtUtc;
     private DateTime _foodMapListenerRetryAtUtc;
     private long _foodMapLifetime;
     private bool _foodMapForeground = true;
@@ -22,6 +24,24 @@ public sealed partial class MainPageModel
     private FDriverLocationSnapshot? _foodMapLocation;
     private EventHandler<FDriverLocationSnapshot>? _foodMapLocationHandler;
     private EventHandler<string>? _foodMapFailureHandler;
+
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(LocationNotice), nameof(WaitingNotice))]
+    private FDriverLocationStatus _locationStatus = FDriverLocationStatus.Stopped;
+
+    public string LocationNotice => LocationStatus switch
+    {
+        FDriverLocationStatus.PermissionRequired => "위치 사용을 허용해 주세요.",
+        FDriverLocationStatus.ServicesDisabled => "휴대폰의 위치 기능을 켜 주세요.",
+        FDriverLocationStatus.Unsupported => "이 기기에서 위치 기능을 사용할 수 없습니다.",
+        FDriverLocationStatus.Acquiring => "현재 위치를 확인하고 있습니다.",
+        FDriverLocationStatus.Stale => "최근 위치가 오래되었습니다. 새 위치를 확인하고 있습니다.",
+        FDriverLocationStatus.SignalUnavailable or FDriverLocationStatus.TimedOut =>
+            "새 위치를 기다리고 있습니다. 잠시 후 다시 확인해 주세요.",
+        FDriverLocationStatus.SensorFailure or FDriverLocationStatus.InvalidReading =>
+            "위치 정보를 받지 못했습니다. 다시 확인해 주세요.",
+        FDriverLocationStatus.Ready => "현재 위치 확인됨",
+        _ => "현재 위치를 확인해 주세요."
+    };
 
     [ObservableProperty] private bool _isFollowingCurrentLocation = true;
     [ObservableProperty] private int _mapRecenterRequestVersion;
@@ -91,7 +111,8 @@ public sealed partial class MainPageModel
 
     private void ScheduleFoodMapListener(long lifetime, CancellationToken token)
     {
-        if (_locationService.IsListening || _foodMapListenerTask is { IsCompleted: false }
+        if ((_locationService.IsListening && IsFreshFoodMapLocation(_foodMapLocation))
+            || _foodMapListenerTask is { IsCompleted: false }
             || DateTime.UtcNow < _foodMapListenerRetryAtUtc) return;
         _foodMapListenerTask = SeedFoodMapLocationAsync(lifetime, token);
     }
@@ -99,20 +120,26 @@ public sealed partial class MainPageModel
     private async Task SeedFoodMapLocationAsync(long lifetime, CancellationToken token, bool requestPermission = false)
     {
         _foodMapListenerRetryAtUtc = DateTime.UtcNow.AddSeconds(60);
+        if (requestPermission) _foodMapFixRetryAtUtc = DateTime.MinValue;
         try
         {
+            if (IsFoodMapLifetimeCurrent(lifetime) && !IsFreshFoodMapLocation(_foodMapLocation))
+                LocationStatus = FDriverLocationStatus.Acquiring;
             var started = await _locationService.StartListeningAsync(token, requestPermission);
             if (!IsFoodMapLifetimeCurrent(lifetime)) return;
-            if (!started) CurrentArea = "위치 권한 또는 GPS 확인 필요";
-            var location = _locationService.LatestLocation ?? (started ? await _locationService.GetCurrentAsync(token) : null);
+            var latest = _locationService.LatestLocation;
+            var location = IsFreshFoodMapLocation(latest) ? latest
+                : started ? await AcquireFoodMapLocationAsync(token) : null;
             token.ThrowIfCancellationRequested();
-            if (IsFoodMapLifetimeCurrent(lifetime) && location is not null) ApplyFoodMapLocation(location);
+            if (!IsFoodMapLifetimeCurrent(lifetime)) return;
+            if (location is not null) ApplyFoodMapLocation(location);
+            else if (!IsFreshFoodMapLocation(_foodMapLocation)) MarkFoodMapLocationUnavailable();
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch (Exception)
         {
             if (IsFoodMapLifetimeCurrent(lifetime))
-                QueueFoodMapFailure("위치 정보를 받지 못했습니다. GPS와 위치 권한을 확인해 주세요.", lifetime);
+                QueueFoodMapFailure("위치 정보를 받지 못했습니다. 다시 확인해 주세요.", lifetime);
         }
     }
 
@@ -131,8 +158,11 @@ public sealed partial class MainPageModel
         _foodMapLocationHandler = null;
         _foodMapFailureHandler = null;
         _locationService.StopListening();
+        _foodMapFixTask = null;
+        _foodMapFixRetryAtUtc = DateTime.MinValue;
         _foodMapLocation = null;
         HasCurrentLocation = false;
+        LocationStatus = FDriverLocationStatus.Stopped;
         _foodMapRoutes.Clear();
         SelectedRouteOverlays = [];
     }
@@ -153,6 +183,8 @@ public sealed partial class MainPageModel
                     {
                         _foodMapRoutes.ForgetLocation();
                         HasCurrentLocation = false;
+                        if (LocationStatus != FDriverLocationStatus.Acquiring)
+                            MarkFoodMapLocationUnavailable();
                         SelectedRouteOverlays = [];
                         RouteStatusText = "현재 위치 확인 후 경로를 표시합니다.";
                     }
@@ -179,7 +211,10 @@ public sealed partial class MainPageModel
             _foodMapRoutes.ForgetLocation();
             _foodMapListenerRetryAtUtc = DateTime.UtcNow.AddSeconds(60);
             HasCurrentLocation = false;
-            CurrentArea = message;
+            LocationStatus = _locationService.Status is FDriverLocationStatus.Unknown or FDriverLocationStatus.Ready
+                or FDriverLocationStatus.Stopped or FDriverLocationStatus.Acquiring
+                ? FDriverLocationStatus.SensorFailure : _locationService.Status;
+            CurrentArea = LocationNotice;
             SelectedRouteOverlays = [];
             RouteStatusText = "현재 위치 확인 후 경로를 표시합니다.";
         });
@@ -192,7 +227,9 @@ public sealed partial class MainPageModel
         CurrentLocationLatitude = (double)location.Latitude;
         CurrentLocationLongitude = (double)location.Longitude;
         HasCurrentLocation = true;
-        CurrentArea = "현재 위치 확인됨";
+        LocationStatus = FDriverLocationStatus.Ready;
+        CurrentArea = LocationNotice;
+        _foodMapListenerRetryAtUtc = DateTime.MinValue;
         if (_workspacePageVisible)
         {
             _foodMapRoutes.ObserveLocation(new(location.Latitude, location.Longitude, location.AccuracyMeters,
@@ -202,13 +239,43 @@ public sealed partial class MainPageModel
         return true;
     }
 
-    private static bool IsFreshFoodMapLocation(FDriverLocationSnapshot? location)
+    private async Task<FDriverLocationSnapshot?> AcquireFoodMapLocationAsync(CancellationToken token)
     {
-        if (location is null || location.Latitude is < -90 or > 90 or 0
-            || location.Longitude is < -180 or > 180 or 0 || location.AccuracyMeters is < 0) return false;
-        var age = DateTime.UtcNow - DateTime.SpecifyKind(location.RecordedAtUtc, DateTimeKind.Utc);
-        return age >= TimeSpan.FromSeconds(-5) && age <= TimeSpan.FromSeconds(30);
+        var lifetime = _foodMapLifetime;
+        if (IsFreshFoodMapLocation(_foodMapLocation)) return _foodMapLocation;
+        if (_foodMapFixTask is not { IsCompleted: false })
+        {
+            if (DateTime.UtcNow < _foodMapFixRetryAtUtc) return null;
+            LocationStatus = FDriverLocationStatus.Acquiring;
+            var ownerToken = _foodMapCancellation is { IsCancellationRequested: false } owner
+                ? owner.Token : token;
+            _foodMapFixTask = _locationService.GetCurrentAsync(ownerToken);
+        }
+        var request = _foodMapFixTask;
+        var result = await request.WaitAsync(token);
+        if (lifetime != _foodMapLifetime || !_foodMapForeground) return null;
+        if (IsFreshFoodMapLocation(_foodMapLocation) && (!IsFreshFoodMapLocation(result)
+            || _foodMapLocation!.RecordedAtUtc >= result!.RecordedAtUtc)) result = _foodMapLocation;
+        _foodMapFixRetryAtUtc = IsFreshFoodMapLocation(result) ? DateTime.MinValue : DateTime.UtcNow.AddSeconds(60);
+        return result;
     }
+
+    private void MarkFoodMapLocationUnavailable()
+    {
+        HasCurrentLocation = false;
+        var status = _locationService.Status;
+        var observed = FDriverLocationFreshness.Assess(_foodMapLocation ?? _locationService.LatestLocation, DateTime.UtcNow);
+        LocationStatus = status is FDriverLocationStatus.PermissionRequired or FDriverLocationStatus.ServicesDisabled
+            or FDriverLocationStatus.Unsupported or FDriverLocationStatus.SignalUnavailable
+            or FDriverLocationStatus.TimedOut or FDriverLocationStatus.SensorFailure or FDriverLocationStatus.InvalidReading
+            ? status : observed;
+        // A fresh provider cache is not itself an observed/applied workspace fix.
+        if (LocationStatus == FDriverLocationStatus.Ready) LocationStatus = FDriverLocationStatus.SignalUnavailable;
+        CurrentArea = LocationNotice;
+    }
+
+    private static bool IsFreshFoodMapLocation(FDriverLocationSnapshot? location)
+        => FDriverLocationFreshness.Assess(location, DateTime.UtcNow) == FDriverLocationStatus.Ready;
 
     private void UpdateFoodMapContext()
     {

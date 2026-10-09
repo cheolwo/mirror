@@ -756,6 +756,9 @@ public sealed partial class MainPageModel : ObservableObject
             if (generation != Interlocked.Read(ref _workspaceSnapshotGeneration)) return;
             var selectedTicketId = SelectedTicket?.TicketId;
             var activeOfferId = ActiveDelivery?.OfferId ?? _pendingArrivalOfferId ?? _restoredInterruption?.OfferId;
+            await RefreshNotificationSettingsAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (generation != Interlocked.Read(ref _workspaceSnapshotGeneration) || owner != _authSession.UserId) return;
             ApplyFoodRecommendations(workspace);
 
             ActiveDeliveryItems.Clear();
@@ -858,14 +861,19 @@ public sealed partial class MainPageModel : ObservableObject
 
     private async Task<FDriverLocationSnapshot?> CaptureLocationAsync(bool sendToServer, CancellationToken cancellationToken = default)
     {
+        var mapLifetime = _foodMapLifetime;
         cancellationToken = cancellationToken == default ? _workspaceCancellation.Token : cancellationToken;
-        var location = _foodMapForeground ? await _locationService.GetCurrentAsync(cancellationToken) : null;
+        var location = _foodMapForeground ? await AcquireFoodMapLocationAsync(cancellationToken) : null;
         cancellationToken.ThrowIfCancellationRequested();
+        if (!_foodMapForeground || mapLifetime != _foodMapLifetime) return null;
         if (location is null || !IsFreshFoodMapLocation(location))
         {
-            HasCurrentLocation = false;
-            CurrentArea = "위치 권한 또는 GPS 확인 필요";
-            return null;
+            if (IsFreshFoodMapLocation(_foodMapLocation)) location = _foodMapLocation!;
+            else
+            {
+                MarkFoodMapLocationUnavailable();
+                return null;
+            }
         }
 
         if (!ApplyFoodMapLocation(location)) return null;

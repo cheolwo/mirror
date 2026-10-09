@@ -105,7 +105,7 @@ public sealed partial class MainPageModel
             운영배차실효상태Code.연결확인불가 => "배차 연결 상태를 확인할 수 없습니다. 연결을 확인한 뒤 새로고침해 주세요.",
             _ => "신규 배차 조건을 충족하지 못했습니다. 운행·배차 조건을 확인해 주세요."
         }
-        : !HasCurrentLocation ? "배차를 받으려면 위치 권한과 GPS를 확인해 주세요."
+        : !HasCurrentLocation ? LocationNotice
         : HasDispatchNotice ? "현재 자동 배차가 중지되어 있습니다. 운영자에게 문의해 주세요."
         : _waitingEffectiveDispatchState != 운영배차실효상태Code.배차가능 ? "신규 배차 가능 여부를 확인하고 있습니다."
         : "새로운 배달 요청을 기다리고 있습니다.";
@@ -246,18 +246,15 @@ public sealed partial class MainPageModel
 
 public enum FDriverFoodStage { Waiting, PickupTravel, PickupWaiting, Delivery }
 
-// The measured content may grow with font scaling. Cap the whole card, including
-// its fixed action footer, so the remaining workspace still contains the map.
+// Cap the overlay card, including its fixed action footer. The map always fills
+// the workspace independently; covered markers are not a reason to resize it.
 public static class FDriverFoodPresentationLayout
 {
-    public static double CardHeight(double usableHeight, double bodyHeight, double footerHeight, bool expanded,
-        double minimumMapHeight = 0)
+    public static double CardHeight(double usableHeight, double bodyHeight, double footerHeight, bool expanded)
     {
         if (!double.IsFinite(usableHeight) || usableHeight <= 0) return 0;
         var contentHeight = Math.Max(0, double.IsFinite(bodyHeight) ? bodyHeight : 0)
             + Math.Max(0, double.IsFinite(footerHeight) ? footerHeight : 0) + 40;
-        var mapReserve = Math.Max(0, double.IsFinite(minimumMapHeight) ? minimumMapHeight : 0);
-        var remainingHeight = Math.Max(0, usableHeight - mapReserve);
-        return Math.Min(contentHeight, Math.Min(usableHeight * (expanded ? 0.70 : 0.40), remainingHeight));
+        return Math.Min(contentHeight, usableHeight * (expanded ? 0.70 : 0.40));
     }
 }

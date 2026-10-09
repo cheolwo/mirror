@@ -290,6 +290,88 @@ public sealed class FDriverFoodPresentationTests
         Assert.Same(delivery, model.ActiveDelivery);
     }
 
+    [Theory]
+    [InlineData(FDriverFoodStage.PickupTravel, false)]
+    [InlineData(FDriverFoodStage.PickupTravel, true)]
+    [InlineData(FDriverFoodStage.PickupWaiting, false)]
+    [InlineData(FDriverFoodStage.PickupWaiting, true)]
+    [InlineData(FDriverFoodStage.Delivery, false)]
+    [InlineData(FDriverFoodStage.Delivery, true)]
+    public void CurrentCardToggle_PreservesSelectedMapCameraRoutesAndLocation(FDriverFoodStage stage, bool following)
+    {
+        var model = Model();
+        model.IsAuthenticated = true;
+        var source = DeliveryData(4700, stage == FDriverFoodStage.Delivery ? Actions(true, false, false)
+            : stage == FDriverFoodStage.PickupWaiting ? Actions(false, true, false) : Actions(false, false, true));
+        source.Pickup.Latitude = 37.51m;
+        source.Pickup.Longitude = 127.01m;
+        source.Dropoff.Latitude = 37.52m;
+        source.Dropoff.Longitude = 127.02m;
+        if (stage == FDriverFoodStage.PickupWaiting) source.RestaurantArrivedAtUtc = DateTime.UtcNow;
+        if (stage == FDriverFoodStage.Delivery) source.WorkStatus = DriverWorkOfferStatus.MovingToDropoff;
+        var delivery = ActiveDeliveryPreview.From(source);
+        model.ActiveDeliveryItems.Add(delivery);
+        model.ActiveDelivery = delivery;
+        IReadOnlyList<DriverMapMarkerItem> markers = [new("active", 37.51, 127.01, 37.52, 127.02,
+            "선택 배달", "현재 업무", "검증 픽업 주소", "검증 전달 주소")];
+        IReadOnlyList<DriverMapRouteOverlay> routes = [new("active", "현재 경로",
+            [new(37.50, 127.00, "현재 위치"), new(stage == FDriverFoodStage.Delivery ? 37.52 : 37.51,
+                stage == FDriverFoodStage.Delivery ? 127.02 : 127.01, "현재 목적지")],
+            stage == FDriverFoodStage.Delivery ? "#2563EB" : "#F57C00")];
+        model.MapMarkers = markers;
+        model.SelectedRouteOverlays = routes;
+        model.MapCenterLatitude = 37.55;
+        model.MapCenterLongitude = 127.05;
+        model.MapZoom = 16.5;
+        model.IsFollowingCurrentLocation = following;
+        model.MapRecenterRequestVersion = 7;
+        model.HasCurrentLocation = true;
+        model.CurrentLocationLatitude = 37.50;
+        model.CurrentLocationLongitude = 127.00;
+        model.RouteStatusText = "현재 목적지 경로 표시 중";
+        var presentationKey = model.CurrentDeliveryPresentationKey;
+        var mapProperties = new HashSet<string>
+        {
+            nameof(MainPageModel.FocusedMapRequestId), nameof(MainPageModel.MapMarkers), nameof(MainPageModel.SelectedRouteOverlays),
+            nameof(MainPageModel.MapCenterLatitude), nameof(MainPageModel.MapCenterLongitude), nameof(MainPageModel.MapZoom),
+            nameof(MainPageModel.IsFollowingCurrentLocation), nameof(MainPageModel.MapRecenterRequestVersion),
+            nameof(MainPageModel.HasCurrentLocation), nameof(MainPageModel.CurrentLocationLatitude),
+            nameof(MainPageModel.CurrentLocationLongitude), nameof(MainPageModel.RouteStatusText)
+        };
+        var mapChanges = new List<string>();
+        model.PropertyChanged += (_, change) =>
+        {
+            if (change.PropertyName is { } name && mapProperties.Contains(name)) mapChanges.Add(name);
+        };
+
+        Assert.Equal(stage, model.CurrentDeliveryStage);
+        Assert.True(model.IsCurrentDeliveryExpanded);
+        foreach (var expanded in new[] { false, true })
+        {
+            model.ToggleCurrentDeliveryCardCommand.Execute(null);
+            Assert.Equal(expanded, model.IsCurrentDeliveryExpanded);
+            Assert.Equal(expanded, model.IsCurrentDeliveryContentVisible);
+            Assert.Equal(!expanded, model.IsCurrentDeliverySummaryVisible);
+            Assert.Same(delivery, model.ActiveDelivery);
+            Assert.Same(delivery, Assert.Single(model.ActiveDeliveryItems));
+            Assert.Equal("active", model.FocusedMapRequestId);
+            Assert.Equal(stage, model.CurrentDeliveryStage);
+            Assert.Equal(presentationKey, model.CurrentDeliveryPresentationKey);
+            Assert.Same(markers, model.MapMarkers);
+            Assert.Same(routes, model.SelectedRouteOverlays);
+            Assert.Equal(37.55, model.MapCenterLatitude);
+            Assert.Equal(127.05, model.MapCenterLongitude);
+            Assert.Equal(16.5, model.MapZoom);
+            Assert.Equal(following, model.IsFollowingCurrentLocation);
+            Assert.Equal(7, model.MapRecenterRequestVersion);
+            Assert.True(model.HasCurrentLocation);
+            Assert.Equal(37.50, model.CurrentLocationLatitude);
+            Assert.Equal(127.00, model.CurrentLocationLongitude);
+            Assert.Equal("현재 목적지 경로 표시 중", model.RouteStatusText);
+        }
+        Assert.Empty(mapChanges);
+    }
+
     [Fact]
     public void ArrivalWithoutAttempt_CannotBecomeAnAction()
     {
@@ -394,28 +476,31 @@ public sealed class FDriverFoodPresentationTests
     [InlineData(480, 1200, 72, true, 336)]
     [InlineData(600, 100, 48, false, 188)]
     [InlineData(0, 100, 48, false, 0)]
-    public void MeasuredCard_ReservesMapSpaceEvenWhenTextContentGrows(double usable, double body,
+    public void MeasuredCard_UsesContentHeightAndExpandedOrCollapsedCap(double usable, double body,
         double footer, bool expanded, double expected)
         => Assert.Equal(expected, FDriverFoodPresentationLayout.CardHeight(usable, body, footer, expanded), 6);
 
     [Theory]
-    [InlineData(true, 775)]
+    [InlineData(true, 849.8)]
     [InlineData(false, 485.6)]
-    public void MeasuredCard_ReservesBothMapOverlaysBeyondPercentageMinimum(bool expanded, double expected)
+    public void MeasuredCard_LargeContentsUsePercentageCapIncludingFooter(bool expanded, double expected)
     {
-        // The 320 DIP/font-scale 2.0 capture had 365px of map, while its
-        // legend and recenter occupied 210+45 and 163+21px respectively.
         const double usable = 1214;
-        const double overlaysWithMargins = 210 + 45 + 163 + 21;
-        var height = FDriverFoodPresentationLayout.CardHeight(usable, 2000, 163, expanded, overlaysWithMargins);
+        var height = FDriverFoodPresentationLayout.CardHeight(usable, 2000, 163, expanded);
         Assert.Equal(expected, height, 6);
-        Assert.True(usable - height >= overlaysWithMargins);
         Assert.True(height <= usable * (expanded ? 0.70 : 0.40));
     }
 
-    [Fact]
-    public void MeasuredCard_SufficientMapSpaceKeepsExistingExpandedHeight()
-        => Assert.Equal(336, FDriverFoodPresentationLayout.CardHeight(480, 1200, 72, true, 100), 6);
+    [Theory]
+    [InlineData(double.NaN, 100, 48, false, 0)]
+    [InlineData(double.PositiveInfinity, 100, 48, true, 0)]
+    [InlineData(-1, 100, 48, true, 0)]
+    [InlineData(480, double.NaN, 72, true, 112)]
+    [InlineData(480, 100, double.PositiveInfinity, true, 140)]
+    [InlineData(480, -100, -72, false, 40)]
+    public void MeasuredCard_InvalidMeasurementsCannotCreateInvalidHeight(double usable, double body,
+        double footer, bool expanded, double expected)
+        => Assert.Equal(expected, FDriverFoodPresentationLayout.CardHeight(usable, body, footer, expanded), 6);
 
     private static MainPageModel Model() => FDriverLifecycleTestSupport.Model(new(), new());
 

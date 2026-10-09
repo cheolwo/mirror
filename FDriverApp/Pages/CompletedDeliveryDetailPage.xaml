@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:FDriverApp.Controls"
+    xmlns:fonts="clr-namespace:Fonts"
     xmlns:models="clr-namespace:FDriverApp.PageModels"
     x:Class="FDriverApp.Pages.CompletedDeliveryDetailPage" x:DataType="models:FDriverCompletedDeliveryDetailPageModel"
     Title="배달 상세" Shell.NavBarIsVisible="False"
@@ -15,8 +17,8 @@
         <VerticalStackLayout Grid.Row="0" Padding="16" Spacing="12"
             BackgroundColor="{AppThemeBinding Light={StaticResource DriverSurface}, Dark={StaticResource DriverSurfaceDark}}">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                <Button Text="목록으로" Clicked="OnBackClicked" Style="{StaticResource DriverSecondaryButtonStyle}" HorizontalOptions="Start" />
-                <Button Grid.Column="1" Text="새로고침" Command="{Binding RefreshCommand}" Style="{StaticResource DriverSecondaryButtonStyle}" />
+                <Button controls:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_left_24_regular}" Text="목록으로" Clicked="OnBackClicked" Style="{StaticResource DriverSecondaryButtonStyle}" HorizontalOptions="Start" />
+                <Button controls:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_clockwise_24_regular}" Grid.Column="1" Text="새로고침" Command="{Binding RefreshCommand}" Style="{StaticResource DriverSecondaryButtonStyle}" />
             </Grid>
             <Label Text="배달 상세" Style="{StaticResource DriverTitleStyle}" />
             <Label Text="{Binding StatusText}" Style="{StaticResource DriverMetadataStyle}" />
@@ -27,7 +29,7 @@
         </VerticalStackLayout>
         <ScrollView Grid.Row="1" IsVisible="{Binding HasDetail}">
             <VerticalStackLayout Padding="16" Spacing="16" BindingContext="{Binding Detail}" x:DataType="models:FDriverCompletedDeliveryDetailItem">
-                <Button Text="이 배달 문제 접수" Clicked="OnProblemClicked" Style="{StaticResource DriverSecondaryButtonStyle}" HorizontalOptions="Start" />
+                <Button controls:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.warning_24_regular}" Text="이 배달 문제 접수" Clicked="OnProblemClicked" Style="{StaticResource DriverSecondaryButtonStyle}" HorizontalOptions="Start" />
                 <Border Style="{StaticResource DriverCardStyle}" Padding="16">
                     <VerticalStackLayout Spacing="12">
                         <Label Text="정산·요금 구성" Style="{StaticResource DriverSectionStyle}" />
