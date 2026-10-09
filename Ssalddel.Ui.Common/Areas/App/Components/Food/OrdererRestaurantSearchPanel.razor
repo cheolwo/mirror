@@ -55,7 +55,7 @@
         <div class="restaurant-radius-row">
             <div>
                 <MudText Typo="Typo.subtitle2">조회 반경 @($"{Criteria.반경Km:0.#}km")</MudText>
-                <MudText Typo="Typo.caption">선택한 행정기관 공개 기준점으로부터의 직선거리입니다.</MudText>
+                <MudText Typo="Typo.caption">선택한 행정기관 공개 기준점으로부터의 직선거리입니다. 조회 범위이며 주문 가능 지역이나 배달료를 변경하지 않습니다.</MudText>
             </div>
             <MudSlider T="double"
                        @bind-Value="Criteria.반경Km"

@@ -1,6 +1,7 @@
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Shipper.Request;
 using Ssalddel.Contracts.Common.Community;
@@ -9,6 +10,7 @@ using Ssalddel.Contracts.Common.Privacy;
 using Ssalddel.Contracts.Shipper.Request;
 using Ssalddel.Infrastructure.BackgroundJobs;
 using Ssalddel.Services.Community;
+using Ssalddel.Services.Fulfillment;
 using Ssalddel.Services.Operations;
 using Ssalddel.Services.Privacy;
 using 살뜰.Data;
@@ -30,6 +32,76 @@ namespace Ssalddel.Tests.Services.Community;
 /// </summary>
 public sealed class NeighborhoodDeliveryTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task 자동기능이꺼져도자동원천은읽기전용상태를남기고구형배차선택을노출하지않는다(bool automaticSource)
+    {
+        await using var f = new Fixture();
+        var input = Input(); input.DispatchMode = NeighborhoodDispatchModes.Hybrid;
+        var created = await f.UseCase().등록Async(input); Assert.True(created.IsSuccess);
+        var source = await f.Db.화주운송의뢰.SingleAsync();
+        source.자동처리처수행 = automaticSource; source.모의처리처수행 = automaticSource;
+        await f.Db.SaveChangesAsync();
+        // 실제 disabled coordinator를 넘긴다. 새 수행표가 없는 SQLite에서는 그 자체의 조회도 별도 시험한다.
+        await using var core = await AutoFulfillmentCoordinatorTests.Fixture.CreateAsync(false);
+        var observed = await f.UseCase(automatic: core.NewService(core.Db, false)).내상세Async(created.Value.RequestId);
+        Assert.NotNull(observed);
+        Assert.Equal(!automaticSource, observed.CanChangeDispatchMode);
+        if (!automaticSource) { Assert.Null(observed.AutoFulfillment); return; }
+        var paused = Assert.IsType<Ssalddel.Contracts.Common.Fulfillment.AutoFulfillmentSnapshot>(observed.AutoFulfillment);
+        Assert.True(paused.ExecutionPaused); Assert.Equal("FulfillmentRoutingDisabled", paused.ReviewCode);
+        Assert.Null(paused.MaxUserChargeKrw); Assert.Null(paused.TotalCostKrw); Assert.Null(paused.UserChargeKrw);
+        Assert.False(paused.CanCancel); Assert.False(paused.CanRenewConsent);
+        Assert.Equal(created.Value.RequestId, paused.SourceId);
+    }
+    [Fact]
+    public async Task 모의외부위탁은기존생성Command로보험정산제외표식을먼저저장하고_현장지급우회로큐를만들수없다()
+    {
+        await using var f = new Fixture();
+        var providers = new IFulfillmentProvider[] { new InternalNeighborhoodFulfillmentProvider(f.Db, f.Transport, TimeProvider.System),
+            new MockNeighborhoodFulfillmentProvider("mock-local", "모의 생활 배송", 10, 10, .85m, 60, TimeProvider.System) };
+        var fulfillment = new 생활배송처리처Service(f.Db, f.Current, providers,
+            Microsoft.Extensions.Options.Options.Create(new NeighborhoodFulfillmentOptions { Enabled = true }),
+            new 살뜰.Services.Options.SsalddelExecutionModePolicy(Microsoft.Extensions.Options.Options.Create(new 살뜰.Services.Options.SsalddelExecutionOptions
+            { Mode = 살뜰.Services.Options.SsalddelExecutionMode.Simulation })), TimeProvider.System, f.Transport);
+        var useCase = f.UseCase(fulfillment); var input = Input(); input.DispatchMode = NeighborhoodDispatchModes.Hybrid;
+        var quote = await useCase.견적Async(input); Assert.True(quote.IsSuccess);
+        var option = quote.Value.FulfillmentOptions.Single(x => x.ProviderId == "mock-local");
+        input.FulfillmentSelection = new() { ProviderId = option.ProviderId, QuoteId = option.QuoteId, ConfirmedCostKrw = option.TotalCostKrw!.Value,
+            ProviderInformationSharingAgreed = true }; input.DirectPaymentAgreed = false; input.AgreedFareKrw = null;
+        var created = await useCase.등록Async(input); Assert.True(created.IsSuccess, string.Join(";", created.Errors));
+        Assert.True(Assert.Single(await f.Db.화주운송의뢰.ToListAsync()).모의처리처수행);
+        Assert.Null(Assert.Single(await f.Db.운임구성.ToListAsync()).기사지급예정운임);
+        Assert.Empty(await f.Db.운송원장.ToListAsync());
+        var bypass = await f.Transport.현장지급처리Async(created.Value.RequestId, new()); Assert.True(bypass.IsFailed);
+        Assert.Empty(await f.Db.운송원장.ToListAsync());
+        Assert.Equal("mock-local", created.Value.Fulfillment!.ProviderId);
+        Assert.False(created.Value.Fulfillment.IsOperationalSettlementEligible);
+    }
+
+    [Fact]
+    public async Task 자체처리처확정은기존배차방식을유지해수락준비큐를만들고기사확정후취소를잠근다()
+    {
+        await using var f = new Fixture();
+        var fulfillment = new 생활배송처리처Service(f.Db, f.Current,
+            [new InternalNeighborhoodFulfillmentProvider(f.Db, f.Transport, TimeProvider.System)],
+            Microsoft.Extensions.Options.Options.Create(new NeighborhoodFulfillmentOptions { Enabled = true }),
+            new 살뜰.Services.Options.SsalddelExecutionModePolicy(Microsoft.Extensions.Options.Options.Create(new 살뜰.Services.Options.SsalddelExecutionOptions
+            { Mode = 살뜰.Services.Options.SsalddelExecutionMode.Simulation })), TimeProvider.System, f.Transport);
+        var useCase = f.UseCase(fulfillment); var input = Input(); input.DispatchMode = NeighborhoodDispatchModes.Hybrid;
+        var quote = await useCase.견적Async(input); var option = Assert.Single(quote.Value.FulfillmentOptions);
+        input.FulfillmentSelection = new() { ProviderId = option.ProviderId, QuoteId = option.QuoteId, ConfirmedCostKrw = option.TotalCostKrw!.Value, DirectPaymentAgreed = true };
+        var result = await useCase.등록Async(input); Assert.True(result.IsSuccess, string.Join(";", result.Errors));
+        var queue = Assert.Single(await f.Db.운송원장.ToListAsync());
+        Assert.Equal(NeighborhoodDispatchModes.Hybrid, queue.생활배송배차방식); Assert.True(queue.생활배송수락준비완료);
+        queue.확정기사Id = "촬영용 기사";
+        var source = await f.Db.화주운송의뢰.SingleAsync(); source.배차상태 = 상태값.배차상태.배차확정; await f.Db.SaveChangesAsync();
+        Assert.False((await fulfillment.내상태Async(result.Value.RequestId, default))!.CanCancel);
+        source.배차상태 = 상태값.배차상태.인수완료; await f.Db.SaveChangesAsync();
+        var observed = await fulfillment.새로고침Async(result.Value.RequestId, new() { ClientRequestId = Guid.NewGuid(), ExpectedRevision = result.Value.Fulfillment!.Revision }, default);
+        Assert.Equal(NeighborhoodFulfillmentStates.Completed, observed.Value.StateCode);
+    }
     [Fact]
     public async Task 일반회원의_명시의뢰는_화물큐에한번저장하고_입금과기사수락을만들지않는다()
     {
@@ -272,7 +344,7 @@ public sealed class NeighborhoodDeliveryTests
                 new 의뢰단건조회QueryHandler(Db, operators));
             Transport = new 화주운송의뢰UseCase(sender, null!, null!, Fare, new 화주운송요금정책검토Service(), operators, null!);
         }
-        public 생활배송의뢰UseCase UseCase() => new(Db, Current, Transport, Consent, Geo, new Activation());
+        public 생활배송의뢰UseCase UseCase(I생활배송처리처Service? fulfillment = null, I자동수행Coordinator? automatic = null) => new(Db, Current, Transport, Consent, Geo, new Activation(), fulfillment: fulfillment, automatic: automatic);
         public ValueTask DisposeAsync() => Db.DisposeAsync();
     }
 
@@ -339,6 +411,18 @@ public sealed class NeighborhoodDeliveryTests
     {
         public async Task<커뮤니티원장Dto?> 화주운송의뢰동기화Async(화주운송의뢰 request, string user, CancellationToken cancellationToken = default)
         {
+            if (request.모의처리처수행)
+            {
+                // 모의 처리처의 두 orchestration 시험은 실제 Mongo-first snapshot→생산용 SQL 투영을 통과합니다.
+                var save = 운송원장Mongo동기화Builder.저장요청생성(request, null);
+                if (await db.화주운송의뢰.AnyAsync(x => x.의뢰Id == request.의뢰Id, cancellationToken))
+                    운송원장RdbSnapshotMarker.Attach(save, request.의뢰Id);
+                var ledger = new 커뮤니티원장Dto { 원장Id = save.원장Id!, 원장템플릿Key = save.원장템플릿Key,
+                    상태 = save.상태!, 현재단계Key = save.현재단계Key, 블록목록 = save.블록목록,
+                    참여자목록 = save.참여자목록, 외부참조 = save.외부참조, 확장속성 = save.확장속성 };
+                await new 운송원장업무투영Handler(db, NullLogger<운송원장업무투영Handler>.Instance).동기화Async(ledger, cancellationToken);
+                return ledger;
+            }
             if (!await db.화주운송의뢰.AnyAsync(x => x.의뢰Id == request.의뢰Id, cancellationToken)) db.화주운송의뢰.Add(request);
             await db.SaveChangesAsync(cancellationToken);
             return new 커뮤니티원장Dto { 원장Id = request.의뢰Id };

@@ -28,6 +28,44 @@ namespace Ssalddel.Tests.Services.Payments;
 public sealed class 음식주문결제승인OutboxServiceTests
 {
     [Fact]
+    public async Task 자동모의음식수행은_PG호출전차단되고_지연승인Outbox도반영하지않는다()
+    {
+        await using var fixture = await DatabaseFixture.CreateAsync();
+        await using var db = fixture.Context();
+        var payment = await SeedAsync(db, approved: true);
+        await EnqueueAsync(db, payment);
+        var order = await db.음식주문.SingleAsync();
+        order.모의처리처수행 = true;
+        await db.SaveChangesAsync();
+        var provider = new TestPaymentProvider();
+        var blocked = await 승인Handler(db, provider).Handle(new("test-key", payment.OrderId, 18000), default);
+        Assert.True(blocked.IsFailed);
+        Assert.Equal(0, provider.Calls);
+        Assert.Empty(await db.결제승인완료Outbox.ToListAsync());
+
+        // 오래된 승인 이벤트가 이미 영속되어 있는 경우도 모의 주문을 지급 사실로 승격하지 않습니다.
+        await Consumer(db, fixture.Clock).대기승인반영Async();
+        await using var restarted = fixture.Context();
+        Assert.Null((await restarted.음식주문.SingleAsync()).결제승인Id);
+        Assert.Equal("Failed", (await restarted.Command알림Outbox.SingleAsync()).Status);
+    }
+
+    [Fact]
+    public async Task 자동모의음식수행의_새PG승인은_provider를호출하지않는다()
+    {
+        await using var fixture = await DatabaseFixture.CreateAsync();
+        await using var db = fixture.Context();
+        var payment = await SeedAsync(db);
+        (await db.음식주문.SingleAsync()).모의처리처수행 = true;
+        await db.SaveChangesAsync();
+        var provider = new TestPaymentProvider();
+        Assert.True((await 승인Handler(db, provider).Handle(new("test-key", payment.OrderId, 18000), default)).IsFailed);
+        Assert.Equal(0, provider.Calls);
+        Assert.Empty(await db.결제승인완료Outbox.ToListAsync());
+        Assert.Null((await db.음식주문.AsNoTracking().SingleAsync()).결제승인Id);
+    }
+
+    [Fact]
     public async Task 모의PG승인부터_Outbox_Event_음식주문_두역할재조회까지_연결된다()
     {
         await using var fixture = await DatabaseFixture.CreateAsync();

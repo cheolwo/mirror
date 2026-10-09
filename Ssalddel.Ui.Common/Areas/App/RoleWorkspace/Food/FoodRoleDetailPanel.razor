@@ -17,12 +17,12 @@
         {
             @if (action.Route is not null && action.Enabled && !IsBusy)
             {
-                <a class="@(action.IsPrimary ? "food-role-detail__primary" : string.Empty)" href="@action.Route">@action.Label</a>
+                <a class="@(action.IsPrimary ? "food-role-detail__primary" : string.Empty)" href="@action.Route"><RoleWorkspaceActionContent ActionKey="@action.Key" Label="@action.Label" /></a>
             }
             else
             {
                 <button type="button" class="@(action.IsPrimary ? "food-role-detail__primary" : string.Empty)" disabled="@(IsBusy || !action.Enabled)"
-                    @onclick="() => ActionRequested.InvokeAsync(action)">@action.Label</button>
+                    @onclick="() => ActionRequested.InvokeAsync(action)"><RoleWorkspaceActionContent ActionKey="@action.Key" Label="@action.Label" /></button>
             }
             @if (!action.Enabled && !string.IsNullOrWhiteSpace(action.DisabledReason)) { <p role="status">@action.DisabledReason</p> }
         }

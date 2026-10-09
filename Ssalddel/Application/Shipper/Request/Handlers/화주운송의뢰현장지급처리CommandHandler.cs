@@ -50,6 +50,14 @@ public sealed class 화주운송의뢰현장지급처리CommandHandler : IReques
             return Result.Fail<ShipRequest.화주운송의뢰응답>("의뢰를 찾을 수 없습니다.");
         }
 
+        if (entity.모의처리처수행)
+        {
+            var current = await _db.NeighborhoodFulfillments.AsNoTracking().SingleOrDefaultAsync(x => x.SourceKind == "NeighborhoodDelivery" && x.RequestId == entity.의뢰Id, cancellationToken);
+            var attempt = current is null ? null : await _db.NeighborhoodFulfillmentAttempts.AsNoTracking().SingleOrDefaultAsync(x => x.AttemptId == current.AttemptId, cancellationToken);
+            if (attempt?.ProviderId != "internal" || attempt.StateCode != Ssalddel.Contracts.Common.Community.NeighborhoodFulfillmentStates.Submitting)
+                return Result.Fail<ShipRequest.화주운송의뢰응답>("모의 외부 위탁 또는 미확정 의뢰를 자체 배차 큐에 중복 접수할 수 없습니다.");
+        }
+
         if (await 열린비정상운송사건존재Async(entity.의뢰Id, cancellationToken))
         {
             return Result.Fail<ShipRequest.화주운송의뢰응답>(
@@ -59,7 +67,7 @@ public sealed class 화주운송의뢰현장지급처리CommandHandler : IReques
         entity.정산시점 = ShipRequest.정산시점.현장지급.ToString();
         entity.결제수단 = ShipRequest.결제수단.현금.ToString();
         entity.수납주체 = ShipRequest.수납주체.기사.ToString();
-        entity.정산상태 = ShipRequest.운임정산상태.현장수금예정.ToString();
+        entity.정산상태 = entity.모의처리처수행 ? "모의 수행·정산 제외" : ShipRequest.운임정산상태.현장수금예정.ToString();
         entity.현장지급메모 = MergeMemo(entity.현장지급메모, request.현장지급메모);
         entity.배차상태 = 상태값.배차상태.매칭중;
         entity.UpdatedAt = DateTime.UtcNow;

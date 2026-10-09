@@ -36,19 +36,24 @@ public sealed class 생활배송지도Service(
         var request = await db.화주운송의뢰.AsNoTracking().SingleOrDefaultAsync(x => x.의뢰Id == requestId
             && x.주문자UserId == actor && x.클라이언트요청Id.StartsWith(NeighborhoodDeliveryRoutes.ClientRequestPrefix), cancellationToken);
         // 같은 기존 본인 상세의 운송 진행 조회 권한을 통과해야 외부 경로 API도 호출할 수 있습니다.
-        if (request is null || await deliveries.내상세Async(requestId, cancellationToken) is null) return null;
+        if (request is null) return null;
+        var detail = await deliveries.내상세Async(requestId, cancellationToken);
+        if (detail is null) return null;
         var queue = await db.운송원장.AsNoTracking().SingleOrDefaultAsync(x => x.의뢰Id == requestId, cancellationToken);
         var observedAt = clock.GetUtcNow().UtcDateTime;
         var recent = await NeighborhoodDeliveryLocationPolicy.ReadAsync(db, request, queue, observedAt, cancellationToken);
         var response = new NeighborhoodDeliveryMapResponse
         {
             RequestId = requestId, RequestStatusCode = request.상태,
+            Fulfillment = detail.Fulfillment,
+            AutoFulfillment = detail.AutoFulfillment,
             StageCode = Stage(request, queue), TransportStatusCode = queue?.상태 ?? string.Empty,
             Pickup = Point(request.픽업_위도, request.픽업_경도, "픽업지"),
             Dropoff = Point(request.하차_위도, request.하차_경도, "전달지"),
-            RouteRevision = Revision(request, queue, recent.AssignedAtUtc)
+            RouteRevision = Revision(request, queue, recent.AssignedAtUtc, detail.Fulfillment) + (detail.AutoFulfillment is { } initialAutomatic ? ":auto:" + initialAutomatic.Revision : string.Empty)
         };
         PopulateLocation(response, recent);
+        PopulateFulfillment(response);
         if (includeRoute) await PopulateRouteAsync(response, cancellationToken);
 
         // 외부 조회를 기다리는 사이의 기사 변경·종료도 최신 원장에서 다시 판정합니다.
@@ -56,9 +61,13 @@ public sealed class 생활배송지도Service(
         var currentRequest = await db.화주운송의뢰.AsNoTracking().SingleOrDefaultAsync(x => x.의뢰Id == requestId
             && x.주문자UserId == actor && x.클라이언트요청Id.StartsWith(NeighborhoodDeliveryRoutes.ClientRequestPrefix), cancellationToken);
         if (currentRequest is null || !string.Equals(actor, currentUser.UserId, StringComparison.Ordinal)) return null;
+        var currentDetail = await deliveries.내상세Async(requestId, cancellationToken);
+        if (currentDetail is null) return null;
+        response.Fulfillment = currentDetail.Fulfillment;
+        response.AutoFulfillment = currentDetail.AutoFulfillment;
         response.ObservedAtUtc = clock.GetUtcNow().UtcDateTime;
         recent = await NeighborhoodDeliveryLocationPolicy.ReadAsync(db, currentRequest, queue, response.ObservedAtUtc, cancellationToken);
-        var currentRevision = Revision(currentRequest, queue, recent.AssignedAtUtc);
+        var currentRevision = Revision(currentRequest, queue, recent.AssignedAtUtc, response.Fulfillment) + (response.AutoFulfillment is { } automatic ? ":auto:" + automatic.Revision : string.Empty);
         if (response.RouteRevision != currentRevision
             || (response.PlannedRoute?.FromPointRoleCode == "Driver" && recent.Location is null))
         {
@@ -72,7 +81,38 @@ public sealed class 생활배송지도Service(
         response.TransportStatusCode = queue?.상태 ?? string.Empty;
         response.StageCode = Stage(currentRequest, queue);
         PopulateLocation(response, recent);
+        PopulateFulfillment(response);
         return response;
+    }
+
+    private static void PopulateFulfillment(NeighborhoodDeliveryMapResponse response)
+    {
+        if (response.AutoFulfillment is { ProviderId: not "internal" } automatic)
+        {
+            response.DriverLocation = null; response.DriverLocationStateCode = NeighborhoodDeliveryMapStates.NoRecentLocation;
+            response.DriverLocationNotice = "모의 자동 수행은 실제 기사 GPS를 제공하지 않습니다.";
+            response.StageCode = response.StageCode == NeighborhoodDeliveryMapStages.Closed || automatic.SourceClosed || automatic.StateCode == Ssalddel.Contracts.Common.Fulfillment.AutoFulfillmentStates.Completed
+                ? NeighborhoodDeliveryMapStages.Closed : NeighborhoodDeliveryMapStages.Overview;
+            if (response.StageCode == NeighborhoodDeliveryMapStages.Closed)
+            {
+                response.PlannedRoute = null; response.RouteStateCode = NeighborhoodDeliveryMapStates.Closed;
+                response.RouteNotice = "원 요청 또는 수행이 종료되어 진행 경로를 표시하지 않습니다.";
+            }
+        }
+        if (response.Fulfillment is { ProviderId: not "internal" } fulfillment)
+        {
+            response.DriverLocation = null;
+            response.DriverLocationStateCode = NeighborhoodDeliveryMapStates.NoRecentLocation;
+            response.DriverLocationNotice = "모의 처리처는 기사 위치를 제공하지 않습니다.";
+            response.StageCode = response.StageCode == NeighborhoodDeliveryMapStages.Closed
+                || fulfillment.StateCode is NeighborhoodFulfillmentStates.Completed or NeighborhoodFulfillmentStates.Cancelled
+                ? NeighborhoodDeliveryMapStages.Closed : NeighborhoodDeliveryMapStages.Overview;
+            if (response.StageCode == NeighborhoodDeliveryMapStages.Closed)
+            {
+                response.PlannedRoute = null; response.RouteStateCode = NeighborhoodDeliveryMapStates.Closed;
+                response.RouteNotice = "배송이 종료되어 진행 경로를 표시하지 않습니다.";
+            }
+        }
     }
 
     private static void PopulateLocation(NeighborhoodDeliveryMapResponse response, NeighborhoodDeliveryLocationResult recent)
@@ -154,11 +194,12 @@ public sealed class 생활배송지도Service(
                 _ => NeighborhoodDeliveryMapStages.Overview
             };
 
-    private static string Revision(화주운송의뢰 request, 운송원장? queue, DateTime? assignedAtUtc)
+    private static string Revision(화주운송의뢰 request, 운송원장? queue, DateTime? assignedAtUtc, NeighborhoodFulfillmentSnapshot? fulfillment)
     {
         var coordinates = new[] { request.픽업_위도, request.픽업_경도, request.하차_위도, request.하차_경도 };
         var source = string.Join("|", coordinates.Select(x => x?.ToString(CultureInfo.InvariantCulture) ?? "missing"))
-            + $"|{Stage(request, queue)}|{queue?.확정기사Id}|{queue?.추천라운드}|{assignedAtUtc?.Ticks}";
+            + $"|{Stage(request, queue)}|{queue?.확정기사Id}|{queue?.추천라운드}|{assignedAtUtc?.Ticks}"
+            + (fulfillment is null ? "" : $"|{fulfillment.ProviderId}|{fulfillment.StateCode}|{fulfillment.Revision}");
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source)));
     }
 }

@@ -17,7 +17,7 @@
         {
             <section class="exchange-list" aria-label="내 배송 의뢰 목록">
                 @foreach (var item in Model.Items)
-                { <a class="exchange-row" href="@Href(NeighborhoodMapNavigation.ReturnToPanel(ReturnUrl, "delivery", item.RequestId) ?? NeighborhoodDeliveryRoutes.Detail(item.RequestId))"><span class="exchange-kind">@NeighborhoodDeliveryPresentation.Stage(item)</span><h2>@item.CargoName</h2><p>@NeighborhoodDeliveryPresentation.Money(item.FareKrw) · @NeighborhoodDeliveryPresentation.Distance(item.DistanceKm)</p><small>@item.CreatedAtUtc.ToLocalTime().ToString("yyyy.MM.dd HH:mm")</small></a> }
+                { <a class="exchange-row" href="@Href(NeighborhoodMapNavigation.ReturnToPanel(ReturnUrl, "delivery", item.RequestId) ?? NeighborhoodDeliveryRoutes.Detail(item.RequestId))"><span class="exchange-kind">@NeighborhoodDeliveryPresentation.Stage(item)</span><h2>@item.CargoName</h2>@if (item.AutoFulfillment is { } automatic) { <p>@(automatic.ProviderName ?? "플랫폼 선정 대기") @(automatic.IsSimulation ? "· 모의 서비스" : "")</p> } else if (item.Fulfillment is { } fulfillment) { <p>@fulfillment.ProviderName @(fulfillment.IsSimulation ? "· 모의 서비스" : "")</p> }<p>@NeighborhoodDeliveryPresentation.Money(item.AutoFulfillment is { } autoCost ? autoCost.UserChargeKrw : item.Fulfillment is { } cost ? cost.CostKrw : item.FareKrw) · @NeighborhoodDeliveryPresentation.Distance(item.DistanceKm)</p><small>@item.CreatedAtUtc.ToLocalTime().ToString("yyyy.MM.dd HH:mm")</small></a> }
             </section>
             <button @onclick="Reload">새로고침</button>
         }

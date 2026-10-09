@@ -5,6 +5,8 @@ namespace Ssalddel.Contracts.Common.Community;
 /// <summary>로그인한 본인의 한 생활 배송 지도입니다. 공개 글·추천 지도·실제 이동 이력과 분리합니다.</summary>
 public sealed class NeighborhoodDeliveryMapResponse
 {
+    public Ssalddel.Contracts.Common.Fulfillment.AutoFulfillmentSnapshot? AutoFulfillment { get; set; }
+    public NeighborhoodFulfillmentSnapshot? Fulfillment { get; set; }
     public string RequestId { get; set; } = string.Empty;
     public string RequestStatusCode { get; set; } = string.Empty;
     public string TransportStatusCode { get; set; } = string.Empty;

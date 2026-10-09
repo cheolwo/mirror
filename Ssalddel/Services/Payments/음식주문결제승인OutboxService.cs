@@ -139,6 +139,8 @@ public sealed class 음식주문결제승인OutboxService(
         }
 
         var order = await db.음식주문.AsNoTracking().SingleOrDefaultAsync(x => x.주문번호 == intent.대상Id, ct);
+        if (order?.모의처리처수행 == true)
+            throw new 승인거절Exception("SimulatedFulfillmentNotPayable");
         if (order is null || order.주문번호 != intent.대상Id
             || string.IsNullOrWhiteSpace(order.주문자UserId) || order.주문자UserId != payment.화주Id
             || order.총주문금액 != payment.결제금액)
@@ -166,7 +168,7 @@ public sealed class 음식주문결제승인OutboxService(
 
         var now = clock.GetUtcNow().UtcDateTime;
         var updated = await db.음식주문
-            .Where(x => x.Id == order.Id && x.결제승인Id == null && x.상태 == order.상태)
+            .Where(x => x.Id == order.Id && !x.모의처리처수행 && x.결제승인Id == null && x.상태 == order.상태)
             .ExecuteUpdateAsync(setters => setters
                 .SetProperty(x => x.결제승인Id, payment.결제Id)
                 .SetProperty(x => x.결제승인금액, (decimal?)payment.결제금액)

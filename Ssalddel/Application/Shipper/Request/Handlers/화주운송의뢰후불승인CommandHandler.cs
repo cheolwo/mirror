@@ -75,6 +75,8 @@ public sealed class 화주운송의뢰후불승인CommandHandler : IRequestHandl
         {
             return Result.Fail<ShipRequest.화주운송의뢰응답>("의뢰를 찾을 수 없습니다.");
         }
+        if (entity.모의처리처수행)
+            return Result.Fail<ShipRequest.화주운송의뢰응답>("모의 처리처 수행 기록은 후불 수금·정산 대상이 아닙니다.");
 
         var hasOpenAbnormalTransportIncident = await _db.비정상운송사건
             .AsNoTracking()

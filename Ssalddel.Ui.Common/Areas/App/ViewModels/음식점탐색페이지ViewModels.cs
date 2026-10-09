@@ -321,6 +321,7 @@ public sealed partial class 음식주문작성ViewModel(
            && !입력잠금
            && !메뉴재확인필요
            && !메뉴확인중
+           && 자동배송제출가능
            && !_등록진행
            && !처리중;
 
@@ -406,33 +407,9 @@ public sealed partial class 음식주문작성ViewModel(
             return 유효성실패("수령인 이름, 연락처와 주소를 입력해 주세요.");
         }
 
+        if (!자동배송제출가능) return 유효성실패("자동 배송 조건과 동의를 확인해 주세요.");
         var requestId = 클라이언트요청Id;
-        var request = new 음식주문등록요청
-        {
-            클라이언트요청Id = requestId,
-            음식점Id = _음식점.음식점.Id,
-            주문자UserId = string.Empty,
-            수령인정보 = new()
-            {
-                수령인명 = 수령인명.Trim(),
-                연락처 = 연락처.Trim(),
-                주소 = 주소.Trim(),
-                상세주소 = 상세주소.Trim(),
-                요청사항 = 요청사항.Trim(),
-                주문자본인수령여부 = 주문자본인수령여부
-            },
-            상품목록 = 선택항목목록.Select(item => new 음식주문상품Dto
-            {
-                메뉴Id = item.메뉴Id,
-                상품명 = item.메뉴명,
-                수량 = item.수량,
-                단가 = item.단가
-            }).ToArray(),
-            메뉴가격확인필요 = true,
-            결제수단 = 결제수단,
-            CommerceProtection = 거래보호확인 is null ? null : new 거래보호확인Request
-            { NoticeVersion = 거래보호확인.NoticeVersion, NoticeAccepted = 거래보호확인.NoticeAccepted, SellerRevision = 거래보호확인.SellerRevision }
-        };
+        var request = 현재주문요청();
         using var submissionCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _등록취소 = submissionCancellation;
         _등록진행 = true;
@@ -494,6 +471,7 @@ public sealed partial class 음식주문작성ViewModel(
 
     public void 새요청준비(bool clearRecipient = true)
     {
+        자동배송초기화();
         거래보호확인 = null;
         _수량목록.Clear();
         메뉴확인상태초기화();
@@ -534,8 +512,9 @@ public sealed partial class 음식주문작성ViewModel(
     partial void On결제수단Changed(string value) => 요청내용변경됨();
     partial void On거래보호확인Changed(거래보호확인Request? value) => 요청내용변경됨();
 
-    private void 요청내용변경됨()
+    private void 요청내용변경됨(bool preserveAutomaticAuthorization = false)
     {
+        if (!preserveAutomaticAuthorization) _autoConditions?.InvalidateAcknowledgment();
         클라이언트요청Id = Guid.NewGuid();
         등록응답 = null;
         _등록취소?.Cancel();

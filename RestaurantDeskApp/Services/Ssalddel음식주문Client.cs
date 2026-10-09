@@ -124,6 +124,20 @@ public sealed class Ssalddel음식주문Client(
         return await response.Content.ReadFromJsonAsync<음식주문응답>(cancellationToken);
     }
 
+    internal async Task<T> SendPricingAsync<T>(HttpMethod method, string path, object? body, CancellationToken token)
+    {
+        using var response = await SendAsync(method, path, body is null ? null : () => JsonContent.Create(body), token);
+        if (!response.IsSuccessStatusCode)
+        {
+            var problem = SsalddelApiProblemParser.Parse(await response.Content.ReadAsStringAsync(token));
+            throw new Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.RoleWorkspaceAccessException(
+                (int)response.StatusCode, problem.Message ?? "요금표 요청을 처리하지 못했습니다.");
+        }
+        var result = await response.Content.ReadFromJsonAsync<T>(token);
+        token.ThrowIfCancellationRequested();
+        return result ?? throw new InvalidDataException("요금표 응답을 확인해 주세요.");
+    }
+
     private async Task<HttpResponseMessage> SendAsync(
         HttpMethod method,
         string path,

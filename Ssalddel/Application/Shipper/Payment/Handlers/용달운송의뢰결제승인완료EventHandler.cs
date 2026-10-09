@@ -39,6 +39,12 @@ public sealed class 용달운송의뢰결제승인완료EventHandler : INotifica
             return;
         }
 
+        if (shipperRequest.모의처리처수행)
+        {
+            // 지연된 결제 이벤트로 모의 수행의 정산 상태나 자체 배차 큐를 만들지 않습니다.
+            return;
+        }
+
         shipperRequest.결제상태 = 상태값.결제상태.결제완료;
         var hasOpenAbnormalTransportIncident = await _db.비정상운송사건
             .AsNoTracking()

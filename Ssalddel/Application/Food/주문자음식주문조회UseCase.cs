@@ -35,7 +35,8 @@ public interface I주문자음식주문조회UseCase
     Summary = "로그인한 주문자가 소유한 영속 음식 주문의 목록과 정확한 주문번호 상세만 조회합니다.")]
 [SsalddelUseCaseActor(SsalddelActor.Orderer)]
 public sealed class 주문자음식주문조회UseCase(
-    SsalddelContext db) : I주문자음식주문조회UseCase
+    SsalddelContext db,
+    Ssalddel.Services.Fulfillment.I자동수행Coordinator? fulfillment = null) : I주문자음식주문조회UseCase
 {
     public async Task<Result<음식주문접수결과응답>> 접수결과Async(
         Guid requestId, string? ordererUserId, CancellationToken cancellationToken)
@@ -143,7 +144,14 @@ public sealed class 주문자음식주문조회UseCase(
 
         var transport = await LoadLatestTransportAsync(cleanOrderNo, cancellationToken);
         var driverLocation = await LoadDriverLocationAsync(order, transport, cancellationToken);
-        return Result.Ok(ToDetail(order, transport, driverLocation));
+        var detail = ToDetail(order, transport, driverLocation);
+        if (order.모의처리처수행)
+            detail.AutoFulfillment = fulfillment?.Enabled != true
+                ? Ssalddel.Services.Fulfillment.AutoFulfillmentSnapshotProjection.Paused(
+                    new(Ssalddel.Contracts.Common.Fulfillment.FulfillmentSourceKinds.FoodOrder, cleanOrderNo),
+                    order.상태 is 음식주문상태코드.취소 or 음식주문상태코드.거절 or 음식주문상태코드.전달완료 or 음식주문상태코드.수령확인)
+                : await fulfillment.상태Async(new(Ssalddel.Contracts.Common.Fulfillment.FulfillmentSourceKinds.FoodOrder, cleanOrderNo), cancellationToken);
+        return Result.Ok(detail);
     }
 
     private async Task<IReadOnlyDictionary<string, 운송원장>> LoadLatestTransportsAsync(

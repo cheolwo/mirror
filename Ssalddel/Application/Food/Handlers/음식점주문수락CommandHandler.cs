@@ -6,6 +6,8 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using 살뜰.Data;
 using 살뜰.Services.Dispatch.Common;
+using Ssalddel.Contracts.Common.Fulfillment;
+using Ssalddel.Services.Fulfillment;
 
 namespace Ssalddel.Application.Food.Handlers;
 
@@ -14,7 +16,8 @@ public sealed class 음식점주문수락CommandHandler(
     IPublisher publisher,
     SsalddelContext? db = null,
     I음식배차요청OutboxService? dispatchOutbox = null,
-    I음식점조리시간Service? preparationTimeService = null) : IRequestHandler<음식점주문수락Command, 음식주문응답?>
+    I음식점조리시간Service? preparationTimeService = null,
+    I자동수행Coordinator? fulfillment = null) : IRequestHandler<음식점주문수락Command, 음식주문응답?>
 {
     public async Task<음식주문응답?> Handle(음식점주문수락Command request, CancellationToken cancellationToken)
     {
@@ -23,6 +26,9 @@ public sealed class 음식점주문수락CommandHandler(
         var actorUserId = NormalizeUserId(request.처리UserId)
             ?? throw new ArgumentException("인증된 음식점 처리 사용자 ID가 필요합니다.");
         var before = orderStore.GetOrder(request.주문번호);
+        if (db is not null && fulfillment?.Enabled != true
+            && await db.음식주문.AsNoTracking().AnyAsync(x => x.주문번호 == request.주문번호 && x.모의처리처수행, cancellationToken))
+            throw new InvalidOperationException("자동 수행 기능이 중지되어 식당 확인과 수행 예약을 시작할 수 없습니다. 기존 주문 기록은 유지합니다.");
         var preparationDecision = preparationTimeService is null || before is null
             ? null
             : await preparationTimeService.주문수락값결정Async(
@@ -56,7 +62,10 @@ public sealed class 음식점주문수락CommandHandler(
                 cancellationToken);
         }
 
-        return orderStore.GetOrder(request.주문번호) ?? accepted.주문;
+        var response = orderStore.GetOrder(request.주문번호) ?? accepted.주문;
+        if (fulfillment is not null && response.AutoFulfillment is not null && !response.AutoFulfillment.ExecutionPaused)
+            response.AutoFulfillment = await fulfillment.상태Async(new(FulfillmentSourceKinds.FoodOrder, request.주문번호), cancellationToken);
+        return response;
     }
 
     private async Task<음식주문변경결과?> AcceptAndRecordAsync(
@@ -95,7 +104,15 @@ public sealed class 음식점주문수락CommandHandler(
             var accepted = orderStore.음식점수락멱등(request.주문번호, request.Payload, actorUserId);
             if (accepted?.새로변경됨 == true)
             {
-                if (dispatchOutbox is not null)
+                var automatic = await db.음식주문.AsNoTracking().AnyAsync(x => x.주문번호 == request.주문번호
+                    && x.모의처리처수행, cancellationToken);
+                if (automatic)
+                {
+                    if (fulfillment is null) throw new InvalidOperationException("자동 수행 요청의 Coordinator를 사용할 수 없습니다.");
+                    await fulfillment.예약Async(new(FulfillmentSourceKinds.FoodOrder, request.주문번호),
+                        request.Payload.클라이언트요청Id, cancellationToken);
+                }
+                else if (dispatchOutbox is not null)
                 {
                     await dispatchOutbox.예약Async(accepted.주문, actorUserId, eventId, cancellationToken);
                 }

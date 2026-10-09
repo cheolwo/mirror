@@ -3,21 +3,29 @@ using System.Data;
 using Ssalddel.Contracts.Common.Participants;
 using Ssalddel.Contracts.Food;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using 살뜰.Data;
 using 살뜰.도메인.설정;
 using 살뜰.도메인.음식;
 using 살뜰.Services.Dispatch.Common;
 using 살뜰.도메인.공통;
+using Ssalddel.Contracts.Common.Fulfillment;
+using Ssalddel.Services.Fulfillment;
+using 살뜰.Services.Options;
 
 namespace Ssalddel.Services.Food;
 
 public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤니티원장반영가능음식주문Store
 {
     private readonly SsalddelContext _db;
+    private readonly IOptions<FulfillmentRoutingOptions>? _routingOptions;
+    private readonly ISsalddelExecutionModePolicy? _execution;
 
-    public EfSsalddelFoodOrderStore(SsalddelContext db)
+    public EfSsalddelFoodOrderStore(SsalddelContext db, IOptions<FulfillmentRoutingOptions>? routingOptions = null,
+        ISsalddelExecutionModePolicy? execution = null)
     {
         _db = db;
+        _routingOptions = routingOptions; _execution = execution;
     }
 
     public 음식주문목록응답 GetOrders()
@@ -80,6 +88,7 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         var orderNo = GenerateOrderNo(now);
         var order = new 음식주문
         {
+            모의처리처수행 = request.모의처리처수행,
             주문번호 = orderNo,
             클라이언트요청Id = request.클라이언트요청Id == Guid.Empty
                 ? null
@@ -270,10 +279,13 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         if (request.작업.Trim() == 음식점주문진행작업코드.조리시작)
         {
             var attempt = _db.음식배달시도.Where(x => x.주문번호 == order.주문번호)
-                .OrderByDescending(x => x.시도순번).ThenByDescending(x => x.Id).First();
-            attempt.표시준비예정시각Utc = order.조리예상완료시각Utc;
-            attempt.Revision++;
-            attempt.UpdatedAtUtc = now;
+                .OrderByDescending(x => x.시도순번).ThenByDescending(x => x.Id).FirstOrDefault();
+            if (order.배차대기Id.HasValue && attempt is not null)
+            {
+                attempt.표시준비예정시각Utc = order.조리예상완료시각Utc;
+                attempt.Revision++;
+                attempt.UpdatedAtUtc = now;
+            }
         }
 
         order.UpdatedAt = now;
@@ -457,6 +469,8 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
             // 외부 transaction에서 아직 저장하지 않은 호출자 변경은 덮어쓰지 않습니다.
             if (ownsTransaction || _db.Entry(order).State == EntityState.Unchanged) _db.Entry(order).Reload();
             var current = 음식배달업무상태전이Guard.정본상태확인(order.상태);
+            if (order.모의처리처수행 && 자동수행중지 || !음식수행권위Policy.내부허용(_db, order))
+                throw new InvalidOperationException("FoodFulfillmentInternalAuthorityRequired");
             if (order.배차대기Id.HasValue)
             {
                 if (order.배차대기Id != dispatchWaitId)
@@ -509,10 +523,18 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
     }
 
     private 음식주문? LoadOrderForUpdate(string orderNo)
-        => _db.음식주문
+    {
+        var order = _db.음식주문
             .Include(x => x.상품목록)
             .Include(x => x.상태이력)
             .FirstOrDefault(x => x.주문번호 == orderNo);
+        if (order is not null && _db.Entry(order).State == EntityState.Unchanged)
+        {
+            _db.Entry(order).Reload();
+            _db.Entry(order).Collection(x => x.상태이력).Query().Load();
+        }
+        return order;
+    }
 
     private 음식주문? FindByClientRequest(음식주문등록요청 request)
         => request.클라이언트요청Id == Guid.Empty
@@ -584,6 +606,10 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
 
     private bool 유효한배차확정(음식주문 order)
     {
+        if (order.모의처리처수행 && 자동수행중지) return false;
+        if (order.모의처리처수행 && order.배차대기Id is null)
+            return 음식수행권위Policy.외부배정유효(_db, order);
+        if (!음식수행권위Policy.내부허용(_db, order)) return false;
         if (order.배차대기Id is not { } id || order.배차상태 != 음식주문배차상태코드.기사배정)
             return false;
         var queue = _db.운송원장.AsNoTracking().SingleOrDefault(x => x.Id == id);
@@ -610,6 +636,7 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         return new()
         {
             주문번호 = order.주문번호,
+            AutoFulfillment = 자동수행표시(order),
             클라이언트요청Id = order.클라이언트요청Id,
             음식점Id = order.음식점Id,
             음식점명 = order.음식점명,
@@ -698,4 +725,23 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
 
     private static string? Clean(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private AutoFulfillmentSnapshot? 자동수행표시(음식주문 order)
+    {
+        if (!order.모의처리처수행) return null;
+        var closed = order.상태 is 음식주문상태코드.취소 or 음식주문상태코드.거절 or 음식주문상태코드.전달완료 or 음식주문상태코드.수령확인;
+        if (자동수행중지) return AutoFulfillmentSnapshotProjection.Paused(new(FulfillmentSourceKinds.FoodOrder, order.주문번호), closed);
+        var current = _db.NeighborhoodFulfillments.AsNoTracking().SingleOrDefault(x => x.SourceKind == FulfillmentSourceKinds.FoodOrder && x.RequestId == order.주문번호);
+        var consent = _db.AutoFulfillmentConsents.AsNoTracking().SingleOrDefault(x => x.SourceKind == FulfillmentSourceKinds.FoodOrder && x.RequestId == order.주문번호);
+        if (current is not { IsAutomatic: true } || consent is null) return null;
+        var attempts = _db.NeighborhoodFulfillmentAttempts.AsNoTracking().Where(x => x.SourceKind == FulfillmentSourceKinds.FoodOrder
+            && x.RequestId == order.주문번호 && x.ConsentRevision != null).ToList();
+        var attempt = attempts.SingleOrDefault(x => x.AttemptId == current.AttemptId);
+        var started = order.상태이력.Any(x => x.사유 == "음식점 조리 시작" || x.사유 == 음식주문현재조리Policy.재조리요청이력사유);
+        var internalAssigned = order.배차대기Id is { } queueId && _db.운송원장.AsNoTracking().Any(x => x.Id == queueId && x.확정기사Id != null && x.확정기사Id != "");
+        return AutoFulfillmentSnapshotProjection.Create(current, consent, attempt, attempts, closed,
+            !closed && !started && !internalAssigned && order.상태 != 음식주문상태코드.픽업완료, started);
+    }
+
+    private bool 자동수행중지 => _routingOptions?.Value.Enabled == false || _execution?.IsSimulation == false;
 }

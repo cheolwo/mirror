@@ -49,6 +49,11 @@ public sealed class 음식주문기사정산UseCase(
             || request.DeductionEvidenceReference.Trim().Length > 500)
             return Fail("공제액은 세전 금액 미만의 유효한 금액이어야 하며 근거는 500자 이하여야 합니다.", StatusCodes.Status400BadRequest);
 
+        // 과거 멱등 응답도 모의 수행을 지급 사실로 승격하지 않습니다.
+        if (await db.음식주문.AsNoTracking().AnyAsync(x => x.주문번호 == cleanOrderNo
+                && x.모의처리처수행, cancellationToken))
+            return Fail("모의 수행은 기사 지급·정산 대상이 아닙니다.", StatusCodes.Status409Conflict);
+
         var key = request.IdempotencyKey.Trim();
         var evidence = request.DeductionEvidenceReference.Trim();
         var previous = await db.음식주문기사지급검증.AsNoTracking()

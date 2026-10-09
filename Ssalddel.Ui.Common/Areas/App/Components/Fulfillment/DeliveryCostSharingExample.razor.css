@@ -1,0 +1,6 @@
+.cost-sharing-example { margin:12px 0;padding:12px;border:1px dashed #788c97;border-radius:12px;background:#fff;color:#172b36;min-width:0;font-size:14px;line-height:1.5; }
+.cost-sharing-example p { margin:8px 0;overflow-wrap:anywhere; }
+.cost-sharing-example dl { margin:8px 0; }
+.cost-sharing-example dl div { display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:6px 0; }
+.cost-sharing-example dd { margin:0;font-weight:600;font-variant-numeric:tabular-nums; }
+.cost-sharing-example-warning { color:#92400e; }

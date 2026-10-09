@@ -51,4 +51,9 @@ public sealed record 의뢰생성Command(
     string? 클라이언트요청Id,
     string? 결제상태,
     string? 거리계산방식 = null,
-    string? 단가출처 = null) : IRequest<Result<Ssalddel.Contracts.Shipper.Request.화주운송의뢰응답>>;
+    string? 단가출처 = null) : IRequest<Result<Ssalddel.Contracts.Shipper.Request.화주운송의뢰응답>>
+{
+    public bool SimulationFulfillment { get; init; }
+    public bool SimulationAutomaticFulfillment { get; init; }
+    public DateTime? SimulationDesiredCompletionUtc { get; init; }
+}

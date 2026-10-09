@@ -105,6 +105,7 @@ public sealed class 음식주문메뉴검증Service(
 
         return new 음식주문등록요청
         {
+            AutoFulfillment = request.AutoFulfillment,
             클라이언트요청Id = request.클라이언트요청Id,
             음식점Id = restaurant.Id,
             주문자UserId = request.주문자UserId,

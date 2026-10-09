@@ -121,7 +121,7 @@ public sealed partial class 주문자음식주문상세ViewModel(
         상세?.AvailableActions,
         음식배달가능행동Ids.주문수령확인);
 
-    public bool 수령확인가능 => 최신상태확인됨 && !처리중 && 수령확인표시;
+    public bool 수령확인가능 => 최신상태확인됨 && !처리중 && !AutoRouting.IsSending && !AutoRouting.HasPending && 수령확인표시;
 
     public void 조회상태무효화()
     {
@@ -139,6 +139,7 @@ public sealed partial class 주문자음식주문상세ViewModel(
         var normalizedOrderNo = orderNo.Trim();
         if (!string.Equals(요청OrderNo, normalizedOrderNo, StringComparison.Ordinal))
         {
+            _autoRouting?.Clear();
             _selectionGeneration++;
             작업취소();
             // 같은 주문의 실패 재시도는 보존하고, 다른 주문에는 입력과 멱등 키를 넘기지 않습니다.
@@ -161,6 +162,7 @@ public sealed partial class 주문자음식주문상세ViewModel(
                 if (response is not null && response.주문.주문번호 != normalizedOrderNo)
                     throw new InvalidOperationException("선택한 음식 주문과 상세 응답이 일치하지 않습니다.");
                 상세 = response;
+                자동배송결속();
                 찾을수없음 = 상세 is null;
                 최신상태확인됨 = 상세 is not null;
             },
@@ -216,6 +218,7 @@ public sealed partial class 주문자음식주문상세ViewModel(
                 if (response.주문.주문번호 != orderNo)
                     throw new InvalidOperationException("수령 확인한 음식 주문과 상세 응답이 일치하지 않습니다.");
                 상세 = response;
+                자동배송결속();
                 찾을수없음 = false;
                 최신상태확인됨 = true;
                 _수령확인요청Id = null;
@@ -233,11 +236,12 @@ public sealed partial class 주문자음식주문상세ViewModel(
     private void 접근오류상세제거(Exception exception)
     {
         // 만료·소유권 거절은 일시적 연결 실패와 달리 이전 개인정보도 남기지 않습니다.
-        if (Api작업오류.변환(exception).Http상태코드 is 401 or 403) 상세 = null;
+        if (Api작업오류.변환(exception).Http상태코드 is 401 or 403) { 상세 = null; _autoRouting?.Clear(); }
     }
 
     public void 선택해제()
     {
+        _autoRouting?.Clear();
         _selectionGeneration++;
         작업취소();
         요청OrderNo = null;

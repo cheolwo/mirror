@@ -33,9 +33,12 @@ public sealed class NeighborhoodExchangeMapClient(ISsalddelJsonApiClient api, IN
     public async Task<NeighborhoodMapDeliveryPage> MineAsync(int page, CancellationToken ct)
     {
         var result = await delivery.MineAsync(page, ct);
-        return new(result.Where(value => value.ProposalStateCode != NeighborhoodDeliveryProposalStates.Closed)
+        return new(result.Where(value => value.AutoFulfillment is { } automatic
+                ? automatic.StateCode != Ssalddel.Contracts.Common.Fulfillment.AutoFulfillmentStates.Completed
+                : value.Fulfillment is { } fulfillment
+                ? fulfillment.StateCode != NeighborhoodFulfillmentStates.Completed : value.ProposalStateCode != NeighborhoodDeliveryProposalStates.Closed)
             .Select(value => new NeighborhoodMapDeliverySummary(value.RequestId, value.CargoName,
-                ViewModels.NeighborhoodDeliveryPresentation.Stage(value), value.CreatedAtUtc,
+                ViewModels.NeighborhoodDeliveryPresentation.Stage(value) + (value.AutoFulfillment is { } routed ? $" · {routed.ProviderName ?? "선정 대기"}{(routed.IsSimulation ? " · 모의" : "")}" : value.Fulfillment is { } current ? $" · {current.ProviderName}{(current.IsSimulation ? " · 모의" : "")}" : ""), value.CreatedAtUtc,
                 Point(value.Request.픽업위도 ?? value.Request.픽업?.주소.위도, value.Request.픽업경도 ?? value.Request.픽업?.주소.경도),
                 Point(value.Request.하차위도 ?? value.Request.하차?.주소.위도, value.Request.하차경도 ?? value.Request.하차?.주소.경도))).ToArray(), result.Count == 20);
     }

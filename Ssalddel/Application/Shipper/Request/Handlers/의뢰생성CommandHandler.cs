@@ -126,6 +126,9 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
 
         var entity = new 화주운송의뢰
         {
+            모의처리처수행 = request.SimulationFulfillment,
+            자동처리처수행 = request.SimulationFulfillment && request.SimulationAutomaticFulfillment,
+            모의처리희망완료Utc = request.SimulationFulfillment ? request.SimulationDesiredCompletionUtc : null,
             의뢰Id = clientRequestId.StartsWith(Ssalddel.Contracts.Common.Community.NeighborhoodDeliveryRoutes.ClientRequestPrefix, StringComparison.Ordinal)
                 ? new Guid(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(currentUserId + ":" + clientRequestId)).AsSpan(0, 16)).ToString()
                 : Guid.NewGuid().ToString(),
@@ -144,7 +147,7 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
             정산시점 = settlementTime.ToString(),
             증빙방식 = evidenceMethod,
             수납주체 = collector,
-            정산상태 = settlementStatus,
+            정산상태 = request.SimulationFulfillment ? "모의 수행·정산 제외" : settlementStatus,
             정산메모 = settlementCondition?.정산메모 ?? string.Empty,
             세금계산서필요 = settlementCondition?.세금계산서필요 ?? false,
             현금영수증필요 = settlementCondition?.현금영수증필요 ?? false,
@@ -221,6 +224,8 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
                 UpdatedAt = DateTime.UtcNow
             };
 
+            // 모의 수행의 참고 비용을 실제 기사 지급 예정액으로 영속하지 않습니다.
+            if (request.SimulationFulfillment) fareComposition.기사지급예정운임 = null;
             await _db.운임구성.AddAsync(fareComposition, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
 

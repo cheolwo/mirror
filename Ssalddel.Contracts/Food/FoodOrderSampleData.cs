@@ -107,6 +107,9 @@ public static class FoodOrderSampleData
         return new 음식주문응답
         {
             주문번호 = source.주문번호,
+            AutoFulfillment = source.AutoFulfillment is null ? null
+                : System.Text.Json.JsonSerializer.Deserialize<Ssalddel.Contracts.Common.Fulfillment.AutoFulfillmentSnapshot>(
+                    System.Text.Json.JsonSerializer.Serialize(source.AutoFulfillment)),
             클라이언트요청Id = source.클라이언트요청Id,
             음식점Id = source.음식점Id,
             음식점명 = source.음식점명,

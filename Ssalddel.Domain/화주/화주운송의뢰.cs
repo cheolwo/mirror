@@ -59,6 +59,12 @@ namespace 살뜰.도메인.화주
         public decimal? 할증 { get; set; }
         public decimal? 최종운임 { get; set; }
         public string? 생활배송접수키 { get; set; }
+        /// <summary>생활 배송의 선택적 공통 포장 범주. 실제 업체 규격은 별도로 확인합니다.</summary>
+        public string? 생활배송포장크기Code { get; set; }
+        /// <summary>처리처 통합 v1 Simulation 검증 기록. 실제 수금·보험·기사 정산 대상이 아닙니다.</summary>
+        public bool 모의처리처수행 { get; set; }
+        public bool 자동처리처수행 { get; set; }
+        public DateTime? 모의처리희망완료Utc { get; set; }
 
         public string 클라이언트요청Id { get; set; } = string.Empty;
         public string 상태 { get; set; } = 상태값.의뢰상태.생성됨;

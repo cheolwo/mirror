@@ -54,8 +54,15 @@ public sealed class 토스결제승인CommandHandler : IRequestHandler<토스결
         }
 
         var targetId = string.IsNullOrWhiteSpace(payment.대상Id) ? payment.의뢰Id : payment.대상Id;
-        var shipperRequest = await _db.화주운송의뢰
-            .FirstOrDefaultAsync(x => x.의뢰Id == targetId, cancellationToken);
+        var shipperRequest = payment.결제대상유형 == 결제공통정의.결제대상유형.용달운송의뢰
+            ? await _db.화주운송의뢰.FirstOrDefaultAsync(x => x.의뢰Id == targetId, cancellationToken)
+            : null;
+        // 원천 종류가 다른 같은 문자열 의뢰를 결제 권한·모의 여부의 근거로 사용하지 않습니다.
+        if (!화주결제권한정책.결제승인권한있음(payment, shipperRequest, _currentUserAccessor.UserId, _currentUserAccessor.Role))
+            return Result.Fail<토스결제승인응답>("결제 요청을 찾을 수 없습니다.");
+        if (payment.결제대상유형 == 결제공통정의.결제대상유형.음식주문
+            && await _db.음식주문.AsNoTracking().AnyAsync(x => x.주문번호 == targetId && x.모의처리처수행, cancellationToken))
+            return Result.Fail<토스결제승인응답>("모의 처리처 수행은 결제·지급·정산 대상이 아닙니다.");
         var 진행검증 = 화주운송결제진행정책.결제승인요청검증(
             payment,
             shipperRequest,

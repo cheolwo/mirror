@@ -138,6 +138,20 @@
 
         <Ssalddel.Ui.Common.Areas.App.Components.Commerce.판매자공개정보Panel RestaurantId="Writer.음식점Id" ValueChanged="SellerChanged" Disabled="@(Writer.처리중 || Writer.입력잠금)" />
         <Ssalddel.Ui.Common.Areas.App.Components.Commerce.거래보호Notice RequireAcknowledgment="true" RequireSeller="true" SellerRevision="_sellerRevision" Disabled="@(Writer.처리중 || Writer.입력잠금)" @bind-Confirmation="Writer.거래보호확인" />
+        @if (Writer.자동배송확인중)
+        {
+            <p role="status">음식점의 배송 지원 조건을 확인하고 있습니다.</p>
+        }
+        else if (Writer.자동배송오류 is { } autoError)
+        {
+            <p role="alert">@autoError</p>
+            <MudButton Variant="Variant.Outlined" OnClick="@(() => Writer.자동배송조건확인Async(force: true))">배송 조건 다시 확인</MudButton>
+        }
+        @if (Writer.자동배송사용)
+        {
+            <Ssalddel.Ui.Common.Areas.App.Components.Fulfillment.AutoFulfillmentConditions Model="Writer.AutoConditions" FoodOrder="true" Disabled="@(Writer.처리중 || Writer.입력잠금 || Writer.자동배송확인중)" />
+            <MudButton Variant="Variant.Outlined" Disabled="@(Writer.처리중 || Writer.입력잠금 || Writer.자동배송확인중)" OnClick="@(() => Writer.자동배송조건확인Async(force: true))">배송 지원 조건 다시 확인</MudButton>
+        }
         <div class="food-order-composer__actions">
             <MudButton Variant="Variant.Text"
                        Color="Color.Secondary"
@@ -157,6 +171,10 @@
 </MudPaper>
 
 @code {
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Authentication.로그인됨 && !Writer.재로그인필요) await Writer.자동배송조건확인Async();
+    }
     private long? _sellerRevision;
     private void SellerChanged(Ssalddel.Contracts.Common.Commerce.판매자공개정보Response? value) { _sellerRevision = value?.Revision; Writer.거래보호확인 = null; }
     [Parameter, EditorRequired]

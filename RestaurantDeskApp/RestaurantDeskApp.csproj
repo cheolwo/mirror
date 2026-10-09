@@ -27,6 +27,13 @@
 	</AssemblyAttribute>
   </ItemGroup>
 
+  <ItemGroup Condition="'$(Configuration)' == 'Debug' and '$(TargetFramework)' == 'net10.0-android' and '$(SsalddelUsbFoodTestFixture)' == 'sagajeong-food-mobile-dispatch.r1'">
+	<AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+	  <_Parameter1>SsalddelUsbFoodTestFixture</_Parameter1>
+	  <_Parameter2>$(SsalddelUsbFoodTestFixture)</_Parameter2>
+	</AssemblyAttribute>
+  </ItemGroup>
+
   <ItemGroup>
 	<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#8B3D2E" />
 	<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#8B3D2E" BaseSize="128,128" />

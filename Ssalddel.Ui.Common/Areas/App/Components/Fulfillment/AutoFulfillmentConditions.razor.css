@@ -1,0 +1,12 @@
+.auto-fulfillment-conditions { padding:16px; border:1px solid #788c97; border-radius:16px; background:#f5f7fa; color:#172b36; min-width:0; margin:16px 0; font-size:16px; line-height:1.5; }
+.auto-fulfillment-conditions h3 { font-size:18px; margin:0 0 8px; }
+.auto-fulfillment-conditions p { margin:8px 0; overflow-wrap:anywhere; }
+.auto-fulfillment-conditions label { display:block; margin:12px 0; }
+.auto-fulfillment-conditions input[type=number], .auto-fulfillment-conditions input[type=datetime-local] { display:block; width:100%; box-sizing:border-box; min-width:0; min-height:48px; border:1px solid #788c97; border-radius:12px; padding:8px; background:#fff; color:#172b36; font:inherit; }
+.auto-fulfillment-conditions fieldset { min-width:0; border:1px solid #788c97; padding:8px 12px; border-radius:12px; }
+.auto-fulfillment-conditions .auto-fulfillment-check { display:flex; align-items:flex-start; gap:12px; min-height:48px; }
+.auto-fulfillment-check input { flex:none; width:20px; height:20px; margin-top:4px; accent-color:#0f766e; }
+.auto-fulfillment-note { font-size:14px; color:#586b78; }
+.auto-fulfillment-conditions input:focus-visible { outline:3px solid #0f766e; outline-offset:2px; }
+.auto-fulfillment-conditions h4 { margin:16px 0 8px;font-size:16px; }
+.auto-fulfillment-cost-conditions { padding-bottom:8px;border-bottom:1px solid #cbd5df;min-width:0; }

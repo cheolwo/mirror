@@ -1,6 +1,7 @@
 using Ssalddel.Application.Shipper.Payment.Events;
 using 살뜰.도메인.결제;
 using 살뜰.도메인.설정;
+using Microsoft.EntityFrameworkCore;
 
 namespace Ssalddel.Application.Shipper.Payment.Handlers;
 
@@ -21,6 +22,9 @@ public sealed class 음식주문결제승인완료EventHandler : INotificationHa
         {
             return;
         }
+        if (await _db.음식주문.AsNoTracking().AnyAsync(x => x.주문번호 == notification.대상Id
+                && x.모의처리처수행, cancellationToken))
+            return;
 
         var payloadJson = System.Text.Json.JsonSerializer.Serialize(new
         {

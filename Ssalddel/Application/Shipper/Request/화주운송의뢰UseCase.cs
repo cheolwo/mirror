@@ -378,7 +378,7 @@ public sealed class 화주운송의뢰UseCase : I화주운송의뢰UseCase
             request.클라이언트요청Id,
             request.결제상태,
             pricing?.거리계산방식,
-            pricing?.단가출처);
+            pricing?.단가출처) { SimulationFulfillment = request.SimulationFulfillment, SimulationAutomaticFulfillment = request.SimulationAutomaticFulfillment, SimulationDesiredCompletionUtc = request.SimulationDesiredCompletionUtc };
     }
 
     private async Task<Result<PricingDTO?>> BuildServerPricingAsync(

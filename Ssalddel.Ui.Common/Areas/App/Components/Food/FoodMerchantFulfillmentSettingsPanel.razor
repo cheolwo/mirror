@@ -1,0 +1,67 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Food
+@using Ssalddel.Ui.Common.Areas.App.Services
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+@using Ssalddel.Contracts.Common.Fulfillment
+@inject ISsalddelJsonApiClient Api
+@implements IDisposable
+<section class="merchant-fulfillment-settings" aria-label="음식점 배송 지원 설정">
+    <h3>음식점 배송비 부담 정책</h3>
+    <p>누가 얼마를 부담할지 정합니다. 주문 전체 누적 배송비에 한 번 적용하며, 기존 주문에서 확인한 정책과 판본은 바뀌지 않습니다.</p>
+    @if (Model.IsLoading) { <p role="status">배송 지원 설정을 확인하고 있습니다.</p> }
+    @if (Model.Error is { } error) { <p role="alert">@error</p> }
+    @if (Model.Value is not null)
+    {
+        @if (Model.Value.Revision == 0 && Model.Value.CostSharingPolicy is null)
+        { <p>현재 저장된 배송비 부담 정책이 없습니다.</p> }
+        else if ((Model.Value.CostSharingPolicy?.Mode ?? "FixedContribution") == "FixedContribution")
+        { <p>현재 지원액 @Model.Value.FixedContributionKrw.ToString("N0")원 · @(Model.Value.Enabled ? "지원 사용" : "지원 중지")</p> }
+        else { <p>현재 정책 @DeliveryCostSharingPresentation.Summary(Model.Value.CostSharingPolicy, Model.Value.FixedContributionKrw)</p> }
+        <fieldset class="merchant-policy-options" disabled="@(Model.IsSending || Model.HasPending || Model.IsLoading)"><legend>배송비를 나누는 방식</legend>
+            @foreach (var option in PolicyOptions)
+            {
+                <label class="merchant-policy-card"><input type="radio" name="merchant-cost-sharing" checked="@(Model.PolicyMode == option.Mode)" @onchange="() => Model.SelectPolicy(option.Mode)" />
+                    <span><strong>@DeliveryCostSharingPresentation.Name(option.Mode)</strong><small>@option.Description</small></span></label>
+            }
+        </fieldset>
+        @if (Model.PolicyMode == "FixedContribution")
+        { <label>주문당 정액 지원 (원)<input type="number" min="0" max="1000000" step="1" @bind="Model.FixedContributionKrw" disabled="@(Model.IsSending || Model.HasPending || Model.IsLoading)" /></label> }
+        @if (Model.PolicyMode == "PercentageShare")
+        { <label>음식점 부담 비율 (%)<input type="number" min="0" max="100" step="0.01" @bind="Model.RestaurantSharePercent" disabled="@(Model.IsSending || Model.HasPending || Model.IsLoading)" /></label> }
+        @if (Model.RequiresLimitChoice)
+        {
+            <fieldset disabled="@(Model.IsSending || Model.HasPending || Model.IsLoading)"><legend>음식점 부담 한도</legend>
+                <label><input type="radio" name="merchant-charge-limit" checked="@(Model.UsesRestaurantLimit == true)" @onchange="() => Model.UsesRestaurantLimit = true" />한도 설정</label>
+                <label><input type="radio" name="merchant-charge-limit" checked="@(Model.UsesRestaurantLimit == false)" @onchange="() => Model.UsesRestaurantLimit = false" />한도 없음</label>
+                @if (Model.UsesRestaurantLimit == true)
+                { <label>음식점 최대 부담 (원)<input type="number" min="0" max="1000000" step="1" @bind="Model.MaximumRestaurantChargeKrw" /></label> }
+            </fieldset>
+            <p>@(Model.PolicyMode == "RestaurantPays" ? "전액 부담 한도를 넘으면 접수를 보류합니다. 주문자에게 초과분을 자동으로 넘기지 않습니다." : "비율로 계산한 음식점 부담에 한도를 적용하고 나머지는 주문자가 부담합니다.")</p>
+        }
+        @if (Model.PolicyComplete)
+        { <Ssalddel.Ui.Common.Areas.App.Components.Fulfillment.DeliveryCostSharingExample Policy="Model.DraftPolicy" /> }
+        else { <p role="status">부담 방식을 선택하고 필요한 금액·비율·한도 선택을 완료해 주세요.</p> }
+        <label><input type="checkbox" @bind="Model.Enabled" disabled="@(Model.IsSending || Model.HasPending || Model.IsLoading)" />신규 주문에 자동 배송 사용</label>
+        <p>주문자 부담을 선택해 음식점 지원이 없어도 자동 배송을 사용할 수 있습니다. 실제 처리처는 주문자의 상한과 완료 조건 안에서 플랫폼이 정합니다.</p>
+        <label><input type="checkbox" @bind="Model.Agreed" disabled="@(Model.IsSending || Model.HasPending || Model.IsLoading)" />@(Model.PolicyMode == "FixedContribution" ? "위 금액의 주문 전체 정액 지원 조건을 확인했습니다." : "위 배송비 부담 정책과 한도 조건을 확인했습니다.")</label>
+        <button type="button" disabled="@(Model.IsSending || (!Model.HasPending && !Model.CanSave))" @onclick="() => Model.SaveAsync()">@(Model.IsSending ? "저장 확인 중…" : Model.HasPending ? "원 설정 변경 결과 확인" : "지원 설정 저장")</button>
+        <p>모의 수행용 지원 설정입니다. 이 저장만으로 실제 청구·결제·지급이 발생하지 않습니다.</p>
+    }
+    else if (Model.Loaded && Model.Error is null) { <p>현재 계정에서는 자동 배송 지원 설정을 이용할 수 없습니다.</p> }
+    <button type="button" disabled="@(Model.IsLoading || Model.IsSending || Model.HasPending)" @onclick="() => Model.LoadAsync()">설정 다시 불러오기</button>
+</section>
+@code {
+    [Parameter] public FoodMerchantFulfillmentSettingsViewModel? ViewModel { get; set; }
+    private FoodMerchantFulfillmentSettingsViewModel Model = null!;
+    private static readonly (string Mode, string Description)[] PolicyOptions =
+        [("CustomerPays", "음식점 지원 없이 주문자가 배송비를 부담합니다."), ("FixedContribution", "정한 금액까지 음식점이 지원하고 나머지는 주문자가 부담합니다."),
+         ("PercentageShare", "음식점이 정한 비율을 부담합니다. 음식점 한도를 함께 정할 수 있습니다."), ("RestaurantPays", "음식점이 전액 부담합니다. 한도를 넘으면 접수가 보류됩니다.")];
+    protected override async Task OnInitializedAsync()
+    {
+        Model = ViewModel ?? new(ct => Api.GetAsync<RestaurantFulfillmentSupportResponse>("api/v1/food-orders/restaurant/fulfillment-settings", "배송 지원 설정", cancellationToken: ct),
+            (request, ct) => Api.SendAsync<RestaurantFulfillmentSupportRequest, RestaurantFulfillmentSupportResponse>(HttpMethod.Put,
+                "api/v1/food-orders/restaurant/fulfillment-settings", request, "배송 지원 설정 변경", cancellationToken: ct));
+        Model.PropertyChanged += Changed; await Model.LoadAsync();
+    }
+    private void Changed(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() => Model.PropertyChanged -= Changed;
+}

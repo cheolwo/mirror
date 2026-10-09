@@ -1,0 +1,29 @@
+<fieldset class="delivery-provider-options" disabled="@Disabled">
+    <legend>배송 처리처 선택</legend>
+    <p class="exchange-note">추천은 선택을 돕는 정보입니다. 처리처와 비용은 직접 확정해 주세요.</p>
+    @foreach (var option in Options)
+    {
+        var available = NeighborhoodDeliveryPresentation.FulfillmentOptionSelectable(option);
+        <label class="delivery-provider-option @(SelectedQuoteId == option.QuoteId ? "is-selected" : "")">
+            <input type="radio" name="fulfillment-provider" value="@option.QuoteId" checked="@(SelectedQuoteId == option.QuoteId)" disabled="@(!available || Disabled)" @onchange="() => SelectionChanged.InvokeAsync(option.QuoteId)" />
+            <span>
+                <strong>@option.ProviderName</strong>
+                @if (option.IsSimulation) { <span class="delivery-provider-tag">모의 서비스</span> }
+                @if (available && option.IsRecommended) { <span class="delivery-provider-tag">조건 충족 · 비용 추천</span> }
+                <span class="delivery-provider-value">@NeighborhoodDeliveryPresentation.Money(option.TotalCostKrw)</span>
+                <span>예상 완료 @NeighborhoodDeliveryPresentation.Time(option.EstimatedCompletionUtc)</span>
+                <small>견적 유효 기한 @NeighborhoodDeliveryPresentation.Time(option.ExpiresAtUtc)</small>
+                @if (!available)
+                {
+                    <span class="delivery-warning">@(option.ExpiresAtUtc <= DateTime.UtcNow ? "견적이 만료됐습니다. 다시 확인해 주세요." : string.IsNullOrWhiteSpace(option.UnavailableReason) ? "지원 조건·비용·완료 시각 확인이 필요합니다." : option.UnavailableReason)</span>
+                }
+            </span>
+        </label>
+    }
+</fieldset>
+@code {
+    [Parameter] public IReadOnlyList<NeighborhoodFulfillmentOption> Options { get; set; } = [];
+    [Parameter] public string? SelectedQuoteId { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public EventCallback<string> SelectionChanged { get; set; }
+}

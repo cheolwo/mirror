@@ -40,6 +40,7 @@
                     }
                     @if (ShowDispatchAttention)
                     {
+                        <MudButton Href="@("/settings/agreed-rates?workId=" + Uri.EscapeDataString(order.주문번호))" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ReceiptLong">이 주문의 합의 요금표</MudButton>
                         <MudAlert Severity="@(order.배차상태 == 음식주문배차상태코드.배차불가 ? Severity.Error : Severity.Warning)">
                             <MudText Typo="Typo.body2">배차 · @DispatchStatusLabel(order.배차상태)</MudText>
                             @if (!string.IsNullOrWhiteSpace(order.최근메시지))

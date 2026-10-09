@@ -1,0 +1,24 @@
+@page "/neighborhood-fulfillment-preview"
+@page "/neighborhood-fulfillment-preview/{Scenario}"
+@using Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange
+@inject NeighborhoodFulfillmentPreviewFixture Fixture
+@implements IDisposable
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside data-fulfillment-preview-ready data-fulfillment-scenario="@Scenario" style="padding:8px 16px;background:#eaf5f3;color:#0f766e;font-size:12px">공통 배송 화면 검토 · 합성 자료 · 업무 HTTP·DB·실제 배차·지급 없음</aside>
+@if (NeighborhoodFulfillmentPreviewFixture.Scenarios.Contains(Scenario))
+{
+    @if (Fixture.IsAuthoring) { <NeighborhoodDeliveryCreate @key="@Scenario" /> }
+    else { <NeighborhoodDeliveryDetail RequestId="preview-fulfillment" @key="@Scenario" /> }
+    <output data-fulfillment-preview-calls data-create-calls="@Fixture.CreateCalls" data-choice-calls="@Fixture.ChoiceCalls" data-cancel-calls="@Fixture.CancelCalls" data-create-id="@Fixture.LastCreateId" data-action-id="@Fixture.LastActionId" style="padding:16px;display:block">접수 @Fixture.CreateCalls · 취소 @Fixture.CancelCalls · 재선택 @Fixture.ChoiceCalls</output>
+}
+else
+{
+    <main style="padding:16px"><h1>생활 배송 처리처 화면 검토</h1><ul>@foreach (var value in NeighborhoodFulfillmentPreviewFixture.Scenarios) { <li><a href="@("/neighborhood-fulfillment-preview/" + value)">@value</a></li> }</ul></main>
+}
+@code {
+    [Parameter] public string Scenario { get; set; } = "";
+    protected override void OnInitialized() => Fixture.Changed += Changed;
+    protected override Task OnParametersSetAsync() => Fixture.PrepareAsync();
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() => Fixture.Changed -= Changed;
+}

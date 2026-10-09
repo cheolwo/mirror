@@ -1,0 +1,24 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Fulfillment
+@using Ssalddel.Contracts.Common.Fulfillment
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+@if (Policy is not null && DeliveryCostSharingCalculator.ValidationError(Policy) is null)
+{
+    var calculation = DeliveryCostSharingCalculator.Calculate(6000, Policy);
+    <section class="cost-sharing-example" aria-label="배송비 분담 계산 예시">
+        <strong>계산 예시 · 배송비 6,000원 가정</strong>
+        <p>실제 견적이나 청구 금액이 아닙니다. 실제 처리처 선정 때 주문 전체 비용을 다시 확인합니다.</p>
+        <dl>
+            <div><dt>총 배송비 (가정)</dt><dd>6,000원</dd></div>
+            <div><dt>음식점 부담 (예시)</dt><dd>@AutoFulfillmentPresentation.Money(calculation.RestaurantChargeKrw)</dd></div>
+            <div><dt>내 부담 (예시)</dt><dd>@AutoFulfillmentPresentation.Money(calculation.CustomerChargeKrw)</dd></div>
+        </dl>
+        @if (!calculation.IsAllowed)
+        { <p class="cost-sharing-example-warning">음식점 전액 부담 한도를 넘어 이 조건의 접수는 보류됩니다. 초과분을 주문자에게 자동으로 넘기지 않습니다.</p> }
+        else if (CustomerMaximumKrw is { } maximum && calculation.CustomerChargeKrw > maximum)
+        { <p class="cost-sharing-example-warning">이 예시의 내 부담이 선택한 상한을 넘습니다. 실제로 상한을 충족하는 처리처가 없으면 접수가 보류됩니다.</p> }
+    </section>
+}
+@code {
+    [Parameter] public DeliveryCostSharingPolicy? Policy { get; set; }
+    [Parameter] public decimal? CustomerMaximumKrw { get; set; }
+}

@@ -99,6 +99,14 @@ public sealed class 음식배달완료WorldProjectionService(
         음식마트원장동기화Outbox item,
         CancellationToken cancellationToken)
     {
+        if (await db.음식주문.AsNoTracking().AnyAsync(x => x.주문번호 == item.원천Id && x.모의처리처수행, cancellationToken))
+        {
+            item.처리상태 = OutboxProcessingStatuses.Succeeded;
+            item.마지막오류 = "SimulatedFulfillmentNotOperationalProof";
+            item.UpdatedAtUtc = DateTime.UtcNow;
+            await db.SaveChangesAsync(cancellationToken);
+            return;
+        }
         var existing = await db.음식배달완료WorldSnapshot
             .SingleOrDefaultAsync(x => x.원천OutboxId == item.Id, cancellationToken);
         if (existing is null)

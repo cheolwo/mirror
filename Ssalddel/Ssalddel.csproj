@@ -55,6 +55,7 @@
   <ItemGroup>
     <Content Update="appsettings.Local.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
     <Content Update="appsettings.Local.example.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+    <EmbeddedResource Include="Resources\NeighborhoodDelivery\생활배송입력.r29.xlsx" LogicalName="NeighborhoodDelivery.InputTemplate.r29.xlsx" />
   </ItemGroup>
 
   <ItemGroup>

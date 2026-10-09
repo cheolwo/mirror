@@ -1,6 +1,7 @@
 using Ssalddel.Contracts.Food;
 using Ssalddel.Ui.Common.Areas.App.Models;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
+using Ssalddel.Ui.Common.Areas.App.ViewModels;
 
 namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food;
 
@@ -61,7 +62,7 @@ public sealed class RestaurantRoleWorkspaceAdapter(IRoleWorkspaceApi api) : IRol
             or 음식배달가능행동Ids.음식점조리시작 or 음식배달가능행동Ids.음식점픽업준비완료))?.Key;
         actions = actions.Select(value => value with { IsPrimary = value.Key == primary }).ToArray();
         var recooking = order.CurrentPreparationRound > 1 || order.RecookingRequestedAtUtc.HasValue;
-        var sections = new[]
+        var sections = new List<RoleWorkspaceSection>
         {
             FoodWorkspacePresentation.Section("주문 정보", ("주문번호", order.주문번호), ("주문 금액", FoodWorkspacePresentation.Money(order.총주문금액)), ("배차", order.배차상태),
                 ("요청사항", FoodWorkspacePresentation.Value(order.수령인정보.요청사항, "별도 요청사항 없음"))),
@@ -71,6 +72,16 @@ public sealed class RestaurantRoleWorkspaceAdapter(IRoleWorkspaceApi api) : IRol
                 ("현재 음식 준비 완료", FoodWorkspacePresentation.Time(order.CurrentPickupReadyAtUtc))),
             FoodWorkspacePresentation.Section("주문 메뉴", order.상품목록.Select(value => (value.상품명, (string?)$"{value.수량}개")).ToArray())
         };
+        if (order.AutoFulfillment is { } automatic)
+            sections.Add(FoodWorkspacePresentation.Section("자동 배송 처리", ("처리처", automatic.ProviderName ?? "선정 대기"),
+                ("진행", AutoFulfillmentPresentation.State(automatic.StateCode)), ("선정 이유", automatic.SelectionReason),
+                ("배송비 조건", automatic.ExecutionPaused ? "확인 필요" : DeliveryCostSharingPresentation.Summary(automatic.CostSharingPolicy, automatic.FrozenRestaurantSupportKrw)),
+                ("조건 판본", automatic.ExecutionPaused ? "확인 필요" : automatic.RestaurantSupportRevision?.ToString() ?? "확인 필요"),
+                ("주문 전체 배송 비용", DeliveryCostSharingPresentation.Total(automatic)),
+                ("음식점 부담", DeliveryCostSharingPresentation.Merchant(automatic)),
+                ("주문자 부담", DeliveryCostSharingPresentation.Customer(automatic)),
+                ("부담 조건 확인", automatic.ExecutionPaused ? "자동 배송 처리가 중지되어 원 요청을 조회만 할 수 있습니다." : automatic.CostSharingAllowed == false ? DeliveryCostSharingPresentation.HeldReason : "선정 비용과 실제 결제·지급은 별도입니다."),
+                ("모의 수행", "실제 업체 접수·결제·지급 없음")));
         return new(order.주문번호, "주문 " + order.주문번호, FoodWorkspacePresentation.Value(order.상태, "상태 확인 필요"),
             order.음식점명, sections, actions, FoodWorkspacePresentation.Marker(order.주문번호 + ":pickup", "음식점", NeighborhoodMapMarkerKinds.Pickup,
                 order.음식점위도, order.음식점경도), IsCurrent: 음식점주문수신함처리상태코드.미처리여부(order.상태),

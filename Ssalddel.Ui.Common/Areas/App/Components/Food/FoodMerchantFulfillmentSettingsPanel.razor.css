@@ -1,0 +1,16 @@
+.merchant-fulfillment-settings { padding:16px;border:1px solid #cbd5df;border-radius:12px;color:#172b36;display:grid;gap:12px;min-width:0; }
+.merchant-fulfillment-settings h3,.merchant-fulfillment-settings p { margin:0;overflow-wrap:anywhere; }
+.merchant-fulfillment-settings label { display:flex;align-items:center;gap:10px;min-height:48px;flex-wrap:wrap; }
+.merchant-fulfillment-settings input[type=number] { width:100%;min-width:0;min-height:48px;box-sizing:border-box;border:1px solid #8395a7;border-radius:8px;padding:8px; }
+.merchant-fulfillment-settings input[type=checkbox] { width:22px;height:22px;flex-shrink:0; }
+.merchant-fulfillment-settings button { min-height:48px;padding:8px 12px;background:#0f766e;color:white;border:0;border-radius:8px;white-space:normal; }
+.merchant-fulfillment-settings button:disabled { opacity:.5; }
+.merchant-fulfillment-settings fieldset { min-width:0;border:1px solid #8395a7;border-radius:12px;padding:8px 12px; }
+.merchant-policy-options { display:grid;gap:10px; }
+.merchant-fulfillment-settings .merchant-policy-card { align-items:flex-start;flex-wrap:nowrap;padding:12px;border:1px solid #cbd5df;border-radius:12px;margin:0;cursor:pointer; }
+.merchant-policy-card:has(input:checked) { border-color:#0f766e;background:#eaf5f3; }
+.merchant-policy-card input[type=radio],.merchant-fulfillment-settings input[type=radio] { width:22px;height:22px;flex-shrink:0;accent-color:#0f766e; }
+.merchant-policy-card span { min-width:0;overflow-wrap:anywhere; }
+.merchant-policy-card strong,.merchant-policy-card small { display:block; }
+.merchant-policy-card small { margin-top:4px;color:#586b78;font-size:14px; }
+.merchant-fulfillment-settings input:focus-visible,.merchant-fulfillment-settings button:focus-visible { outline:3px solid #0f766e;outline-offset:2px; }

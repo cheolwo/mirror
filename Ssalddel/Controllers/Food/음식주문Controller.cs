@@ -2,6 +2,7 @@ using Ssalddel.ApiMetadata;
 using Ssalddel.Application.Food;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Contracts.Common.Workflow;
+using Ssalddel.Contracts.Common.Fulfillment;
 using Ssalddel.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,8 +24,80 @@ public sealed class 음식주문Controller(
     I음식주문접수UseCase commandUseCase,
     I주문자음식주문조회UseCase readUseCase,
     I음식점음식주문조회UseCase restaurantReadUseCase,
-    I음식점조리시간Service? preparationTimeService = null) : ControllerBase
+    I음식점조리시간Service? preparationTimeService = null,
+    I음식자동수행UseCase? autoFulfillment = null) : ControllerBase
 {
+    [HttpPost("fulfillment-quote")]
+    [Authorize]
+    public async Task<IActionResult> 자동수행조건조회([FromBody] 음식주문등록요청 request, CancellationToken ct)
+    {
+        NoStore();
+        if (string.IsNullOrWhiteSpace(현재사용자Id())) return Forbid();
+        return autoFulfillment is null ? StatusCode(503) : this.ToActionResult(await autoFulfillment.조건조회Async(request.음식점Id, ct));
+    }
+
+    [HttpGet("{orderNo}/fulfillment")]
+    [Authorize]
+    public async Task<IActionResult> 자동수행조회(string orderNo, CancellationToken ct)
+    {
+        NoStore();
+        var owner = 현재사용자Id();
+        if (string.IsNullOrWhiteSpace(owner)) return Forbid();
+        return autoFulfillment is null ? StatusCode(503) : this.ToActionResult(await autoFulfillment.상태Async(orderNo, owner, ct));
+    }
+
+    [HttpPost("{orderNo}/fulfillment-authorization")]
+    [Authorize]
+    public async Task<IActionResult> 자동수행동의(string orderNo, [FromBody] AutoFulfillmentConsent request, CancellationToken ct)
+    {
+        NoStore();
+        var owner = 현재사용자Id();
+        if (string.IsNullOrWhiteSpace(owner)) return Forbid();
+        return autoFulfillment is null ? StatusCode(503) : this.ToActionResult(await autoFulfillment.동의Async(orderNo, owner, request, ct));
+    }
+
+    [HttpPost("{orderNo}/fulfillment-refresh")]
+    [Authorize]
+    public async Task<IActionResult> 자동수행재확인(string orderNo, [FromBody] AutoFulfillmentActionRequest request, CancellationToken ct)
+    {
+        NoStore();
+        var owner = 현재사용자Id();
+        if (string.IsNullOrWhiteSpace(owner)) return Forbid();
+        return autoFulfillment is null ? StatusCode(503) : this.ToActionResult(await autoFulfillment.재확인Async(orderNo, owner, request, ct));
+    }
+
+    [HttpPost("{orderNo}/fulfillment-cancellation")]
+    [Authorize]
+    public async Task<IActionResult> 자동수행취소(string orderNo, [FromBody] AutoFulfillmentActionRequest request, CancellationToken ct)
+    {
+        NoStore();
+        var owner = 현재사용자Id();
+        if (string.IsNullOrWhiteSpace(owner)) return Forbid();
+        return autoFulfillment is null ? StatusCode(503) : this.ToActionResult(await autoFulfillment.수행취소Async(orderNo, owner, request, ct));
+    }
+
+    [HttpGet("restaurant/fulfillment-settings")]
+    [Authorize(Policy = "음식점운영자전용")]
+    public async Task<IActionResult> 자동수행식당설정조회(CancellationToken ct)
+    {
+        NoStore();
+        var restaurant = 현재음식점Id();
+        if (restaurant is null) return Forbid();
+        return autoFulfillment is null ? StatusCode(503) : this.ToActionResult(await autoFulfillment.식당설정조회Async(restaurant.Value, ct));
+    }
+
+    [HttpPut("restaurant/fulfillment-settings")]
+    [Authorize(Policy = "음식점운영자전용")]
+    public async Task<IActionResult> 자동수행식당설정저장([FromBody] RestaurantFulfillmentSupportRequest request, CancellationToken ct)
+    {
+        NoStore();
+        var restaurant = 현재음식점Id(); var actor = 현재사용자Id();
+        if (restaurant is null || string.IsNullOrWhiteSpace(actor)) return Forbid();
+        return autoFulfillment is null ? StatusCode(503) : this.ToActionResult(await autoFulfillment.식당설정저장Async(restaurant.Value, actor, request, ct));
+    }
+
+    private void NoStore() => Response.Headers.CacheControl = "private, no-store";
+
     [HttpGet("client-requests/{requestId:guid}")]
     [Authorize]
     public async Task<IActionResult> 접수결과조회(Guid requestId, CancellationToken cancellationToken)

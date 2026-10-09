@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../Ssalddel.Ui.Common/Ssalddel.Ui.Common.csproj" />
+    <ProjectReference Include="../../Ssalddel/Ssalddel.csproj" />
+  </ItemGroup>
+</Project>

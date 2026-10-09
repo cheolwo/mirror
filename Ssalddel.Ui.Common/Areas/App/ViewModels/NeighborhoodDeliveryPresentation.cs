@@ -5,7 +5,7 @@ namespace Ssalddel.Ui.Common.Areas.App.ViewModels;
 
 public static class NeighborhoodDeliveryPresentation
 {
-    public static string Stage(NeighborhoodDeliveryResponse value) => value.DispatchStatusCode == "인수완료" ? "전달 완료" : value.ProposalStateCode switch
+    public static string Stage(NeighborhoodDeliveryResponse value) => value.AutoFulfillment is { } automatic ? AutoFulfillmentPresentation.State(automatic.StateCode) : value.Fulfillment is { } fulfillment ? FulfillmentStage(fulfillment.StateCode) : value.DispatchStatusCode == "인수완료" ? "전달 완료" : value.ProposalStateCode switch
     {
         NeighborhoodDeliveryProposalStates.RegistrationPending => "배차 접수 확인 필요",
         NeighborhoodDeliveryProposalStates.Queued => "기사 제안 대기",
@@ -37,6 +37,8 @@ public static class NeighborhoodDeliveryPresentation
 
     public static string 다음행동안내(NeighborhoodDeliveryResponse value, bool 원배차선택확인필요 = false)
     {
+        if (value.AutoFulfillment is { } automatic) return automatic.Notice;
+        if (value.Fulfillment is { } fulfillment) return FulfillmentNext(fulfillment);
         if (원배차선택확인필요) return "이전에 선택한 배차 방식의 처리 결과를 먼저 확인해 주세요.";
         if (value.DispatchStatusCode == "인수완료") return "물건 전달이 완료되었습니다. 지급 여부는 지급 기록에서 따로 확인하세요.";
         if (value.ProposalStateCode == NeighborhoodDeliveryProposalStates.Closed || value.DispatchStatusCode is "취소됨" or "취소")
@@ -55,6 +57,30 @@ public static class NeighborhoodDeliveryPresentation
             _ => "진행을 새로고침해 현재 배송 상태를 확인해 주세요."
         };
     }
+
+    public static string FulfillmentStage(string? state) => state switch
+    {
+        "AwaitingSelection" => "배송 처리처 선택 필요", "Submitting" => "처리처 접수 중",
+        "ResultUnknown" => "접수 결과 확인 중", "Accepted" => "처리처 접수 확인",
+        "InTransit" => "배송 수행 중", "Completed" => "배송 완료",
+        "CancelPending" => "취소 결과 확인 중", "Cancelled" => "처리처 취소 확인",
+        "Failed" => "배송 접수 실패", _ => "처리 상태 확인 필요"
+    };
+    public static string FulfillmentNext(NeighborhoodFulfillmentSnapshot value) => value.StateCode switch
+    {
+        "Submitting" or "ResultUnknown" => "이 처리처의 접수 결과를 먼저 확인하세요. 다른 곳에 다시 접수하지 않습니다.",
+        "CancelPending" => "취소 확인 전에는 다른 처리처로 바꿀 수 없습니다. 결과를 다시 확인하세요.",
+        "Cancelled" when !value.CanChangeProvider => "종료된 배송 기록입니다. 취소된 의뢰는 다른 처리처에 다시 접수하지 않습니다.",
+        "Cancelled" or "Failed" => "새 견적을 확인하고 처리처와 비용을 다시 확정할 수 있습니다.",
+        "Completed" => "배송 완료와 비용 확정·실제 지급은 따로 확인합니다.",
+        "Accepted" or "InTransit" => "진행 새로고침으로 선택한 처리처의 최신 상태를 확인하세요.",
+        "AwaitingSelection" => "가능한 처리처의 견적과 조건을 확인하고 직접 선택하세요.",
+        _ => "진행을 다시 조회하여 처리 상태를 확인하세요."
+    };
+    public static bool FulfillmentOptionSelectable(NeighborhoodFulfillmentOption option)
+        => option.IsAvailable && !string.IsNullOrWhiteSpace(option.ProviderId) && !string.IsNullOrWhiteSpace(option.QuoteId)
+           && option.TotalCostKrw is >= 0 && option.EstimatedCompletionUtc is not null && option.ExpiresAtUtc > DateTime.UtcNow;
+    public static string Time(DateTime? utc) => utc is { } value ? value.ToLocalTime().ToString("MM.dd HH:mm") : "시각 확인 필요";
 
     public static string 배차선택안내(string? mode) => mode switch
     {
@@ -88,6 +114,8 @@ public static class NeighborhoodDeliveryPresentation
             SsalddelApiException { StatusCode: 403 } => "현재 계정이나 서비스 설정에서는 이 배송 기능을 이용할 수 없습니다.",
             SsalddelApiException { StatusCode: 404 } => "배송 의뢰를 찾을 수 없거나 아직 이 기능이 준비되지 않았습니다.",
             SsalddelApiException { ErrorCode: "QuoteChanged" } => "배송 요금이 바뀌었습니다. 새 견적을 확인한 뒤 다시 요청해 주세요.",
+            SsalddelApiException { ErrorCode: "FulfillmentQuoteExpired" or "FulfillmentQuoteChanged" or "FulfillmentQuoteMismatch" or "FulfillmentCostChanged" } => "처리처 견적이 만료되었거나 바뀌었습니다. 새 견적을 확인하고 다시 선택해 주세요.",
+            SsalddelApiException { ErrorCode: "FulfillmentResultUnknown" or "FulfillmentCancellationPending" } => "이전 처리 결과를 먼저 확인해 주세요. 다른 처리처에 다시 접수하지 않습니다.",
             SsalddelApiException { ErrorCode: "GeocodingFailed" or "AddressNotResolved" } => "주소 위치를 확인하지 못했습니다. 도로명 주소를 확인해 주세요.",
             SsalddelApiException { StatusCode: 409 } => "현재 의뢰 상태나 이전 입력과 맞지 않습니다. 내 배송 의뢰를 먼저 확인해 주세요.",
             SsalddelApiException { StatusCode: 400 or 422 } => "입력 내용이나 동의 상태를 확인하지 못했습니다. 주소·연락처·시간과 견적을 다시 확인해 주세요.",

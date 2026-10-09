@@ -1,0 +1,36 @@
+@page "/delivery-cost-sharing-preview/{Scenario}"
+@using Ssalddel.Ui.Common.Areas.App.Components.Food
+@using Ssalddel.Ui.Common.Areas.App.Components.Fulfillment
+@inject DeliveryCostSharingPreviewFixture Fixture
+@implements IDisposable
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside data-cost-sharing-ready data-cost-sharing-scenario="@Scenario" style="padding:12px;background:#eaf5f3;color:#0f766e">배송비 분담 화면 검토 · 합성 자료 · 업무 HTTP·DB·실제 업체·청구·지급 없음</aside>
+<main style="padding:16px;min-width:0">
+    @if (Fixture.MerchantScene) { <FoodMerchantFulfillmentSettingsPanel ViewModel="Fixture.Merchant" /> }
+    else if (Fixture.FoodScene)
+    {
+        @if (Scenario == "food-policy-change") { <button type="button" @onclick="Fixture.ChangePolicyAsync">합성 식당 정책 변경 사건</button> }
+        <OrdererFoodOrderComposer Authentication="Fixture.Authentication" Writer="Fixture.Writer" SubmitRequested="SubmitFood" />
+    }
+    else if (Fixture.RoleScene) { <RoleMapWorkspace RoleKey="restaurant" HomeHref="/" /> }
+    else
+    {
+        <AutoFulfillmentStatus Value="@(Fixture.Query.Value ?? Fixture.Current)" Pending="Fixture.Query.HasPending" Disabled="Fixture.Query.IsSending" Error="@Fixture.Query.Error" RefreshRequested="() => Fixture.Query.RefreshAsync()">
+            <Renewal><AutoFulfillmentConditions Model="Fixture.Query.Conditions" FoodOrder="true" Disabled="Fixture.Query.IsSending" />
+                <button type="button" disabled="@(!Fixture.Query.CanRenew || !Fixture.Query.Conditions.IsComplete)" @onclick="() => Fixture.Query.RenewAsync()">자동 접수 조건 다시 확인</button></Renewal>
+        </AutoFulfillmentStatus>
+    }
+</main>
+<output data-cost-sharing-calls data-save-calls="@Fixture.SaveCalls" data-submit-calls="@Fixture.SubmitCalls" data-consent-calls="@Fixture.ConsentCalls"
+    data-save-id="@Fixture.LastSave?.ClientRequestId" data-consent-id="@Fixture.LastConsent?.ClientRequestId" data-save-mode="@Fixture.LastSave?.CostSharingPolicy?.Mode"
+    data-save-percent="@Fixture.LastSave?.CostSharingPolicy?.RestaurantSharePercent" data-save-cap="@Fixture.LastSave?.CostSharingPolicy?.MaximumRestaurantChargeKrw"
+    data-auto-enabled="@Fixture.LastSave?.Enabled.ToString().ToLowerInvariant()" data-confirmed-mode="@Fixture.LastConsent?.ConfirmedCostSharingPolicy?.Mode"
+    data-confirmed-revision="@Fixture.LastConsent?.ConfirmedRestaurantSupportRevision" style="display:block;padding:16px;overflow-wrap:anywhere">합성 설정 저장 @Fixture.SaveCalls · 주문 제출 @Fixture.SubmitCalls · 동의 @Fixture.ConsentCalls</output>
+@code {
+    [Parameter] public string Scenario { get; set; } = "";
+    protected override void OnInitialized() => Fixture.Changed += Changed;
+    protected override Task OnParametersSetAsync() => Fixture.PrepareAsync();
+    private async Task SubmitFood() => await Fixture.Writer.등록Async();
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() => Fixture.Changed -= Changed;
+}

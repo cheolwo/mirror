@@ -52,6 +52,12 @@ public sealed class 페이크결제승인CommandHandler : IRequestHandler<페이
             return Result.Fail<페이크결제승인응답>("의뢰를 찾을 수 없습니다.");
         }
 
+        // 기존 완료 결제의 Outbox 재생 경로에서도 모의 배송을 운영 정산으로 승격하지 않습니다.
+        if (shipperRequest.모의처리처수행)
+        {
+            return Result.Fail<페이크결제승인응답>("모의 처리처 수행은 결제·지급·정산 대상이 아닙니다.");
+        }
+
         var alreadyCompletedPayment = await FindCompletedFakePaymentAsync(requestId, cancellationToken);
         if (shipperRequest.결제상태 == 상태값.결제상태.결제완료 && alreadyCompletedPayment is not null)
         {

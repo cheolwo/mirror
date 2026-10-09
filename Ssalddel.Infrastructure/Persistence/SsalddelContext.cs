@@ -68,6 +68,13 @@ namespace 살뜰.Data
         public DbSet<배달운영권역변경Outbox> 배달운영권역변경Outbox { get; set; } = null!;
 
         public DbSet<화주운송의뢰> 화주운송의뢰 { get; set; } = null!;
+        public DbSet<NeighborhoodFulfillmentQuoteRecord> NeighborhoodFulfillmentQuotes { get; set; } = null!;
+        public DbSet<NeighborhoodFulfillmentRecord> NeighborhoodFulfillments { get; set; } = null!;
+        public DbSet<NeighborhoodFulfillmentAttemptRecord> NeighborhoodFulfillmentAttempts { get; set; } = null!;
+        public DbSet<AutoFulfillmentConsentRecord> AutoFulfillmentConsents { get; set; } = null!;
+        public DbSet<RestaurantFulfillmentSupportRecord> RestaurantFulfillmentSupports { get; set; } = null!;
+        public DbSet<AutoFulfillmentOutboxRecord> AutoFulfillmentOutbox { get; set; } = null!;
+        public DbSet<FulfillmentMockJobRecord> FulfillmentMockJobs { get; set; } = null!;
         public DbSet<화물요구조건> 화물요구조건 { get; set; } = null!;
         public DbSet<운송원장> 운송원장 { get; set; } = null!;
         public DbSet<운송이벤트> 운송이벤트 { get; set; } = null!;

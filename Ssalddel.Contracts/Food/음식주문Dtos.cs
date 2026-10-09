@@ -1,5 +1,6 @@
 using Ssalddel.Contracts.Common.Participants;
 using Ssalddel.Contracts.Common.Workflow;
+using Ssalddel.Contracts.Common.Fulfillment;
 
 namespace Ssalddel.Contracts.Food;
 
@@ -125,6 +126,11 @@ public sealed class 음식주문상품Dto
 public sealed class 음식주문등록요청
 {
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public AutoFulfillmentConsent? AutoFulfillment { get; set; }
+    // 등록 Handler가 검증한 서버 값입니다. 클라이언트 JSON으로 모의 수행 표식을 설정할 수 없습니다.
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool 모의처리처수행 { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public Ssalddel.Contracts.Common.Commerce.거래보호확인Request? CommerceProtection { get; set; }
     public Guid 클라이언트요청Id { get; set; }
     public long 음식점Id { get; set; }
@@ -176,6 +182,8 @@ public sealed class 주문자음식주문취소요청
 
 public sealed class 음식주문응답
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public AutoFulfillmentSnapshot? AutoFulfillment { get; set; }
     public string 주문번호 { get; set; } = string.Empty;
     public Guid? 클라이언트요청Id { get; set; }
     public long 음식점Id { get; set; }
@@ -273,6 +281,8 @@ public sealed class 주문자음식주문목록응답
 
 public sealed class 주문자음식주문상세응답
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public AutoFulfillmentSnapshot? AutoFulfillment { get; set; }
     public 주문자음식주문요약응답 주문 { get; set; } = new();
     public 주문자음식배달진행응답 배달진행 { get; set; } = new();
     public 주문자음식배달위치추적응답 기사위치 { get; set; } = new();

@@ -1,0 +1,24 @@
+@page "/auto-fulfillment-preview/{Scenario}"
+@using Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange
+@using Ssalddel.Ui.Common.Areas.App.Components.Food
+@inject AutoFulfillmentPreviewFixture Fixture
+@implements IDisposable
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside data-auto-preview-ready data-auto-scenario="@Scenario" style="padding:12px;background:#eaf5f3;color:#0f766e">플랫폼 자동 배송 화면 검토 · 합성 자료 · 업무 HTTP·DB·실제 접수·지급 없음</aside>
+@if (Fixture.IsLivingCreate) { <NeighborhoodDeliveryCreate /> }
+else if (Scenario.StartsWith("living-")) { <NeighborhoodDeliveryDetail RequestId="preview-auto" /> }
+else if (Fixture.IsFoodCreate) { <div style="padding:16px;min-width:0"><OrdererFoodOrderComposer Authentication="Fixture.Authentication" Writer="Fixture.Writer" SubmitRequested="SubmitFood" /></div> }
+else if (Scenario.StartsWith("food-")) { <div style="padding:16px;min-width:0"><OrdererFoodOrderDetailPanel Detail="Fixture.FoodDetail" /></div> }
+else if (Scenario == "merchant-support") { <div style="padding:16px"><FoodMerchantFulfillmentSettingsPanel ViewModel="Fixture.Merchant" /></div> }
+<output data-auto-preview-calls data-create-calls="@Fixture.CreateCalls" data-consent-calls="@Fixture.ConsentCalls" data-cancel-calls="@Fixture.CancelCalls"
+    data-refresh-calls="@Fixture.RefreshCalls" data-create-id="@Fixture.LastCreateId" data-action-id="@Fixture.LastActionId"
+    data-support-confirmed="@Fixture.LastConsent?.ConfirmedRestaurantSupportKrw" data-direct-payment="@Fixture.LastConsent?.DirectPaymentAgreed.ToString().ToLowerInvariant()"
+    style="display:block;padding:16px;overflow-wrap:anywhere">합성 접수 @Fixture.CreateCalls · 취소 @Fixture.CancelCalls · 조건 갱신 @Fixture.ConsentCalls</output>
+@code {
+    [Parameter] public string Scenario { get; set; } = "";
+    protected override void OnInitialized() => Fixture.Changed += Changed;
+    protected override Task OnParametersSetAsync() => Fixture.PrepareAsync();
+    private async Task SubmitFood() => await Fixture.Writer.등록Async();
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() => Fixture.Changed -= Changed;
+}

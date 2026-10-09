@@ -48,6 +48,9 @@ public sealed class 음식배차요청OutboxService(
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(order);
+        // 새 자동 주문은 식당 확인 transaction의 공통 수행 Outbox만 사용합니다.
+        if (await db.음식주문.AsNoTracking().AnyAsync(x => x.주문번호 == order.주문번호
+                && x.모의처리처수행, cancellationToken)) return;
         if (privacyBarrier is not null && !await privacyBarrier.복원허용Async(개인정보파기원천Codes.FoodOrder, order.주문번호, cancellationToken))
             throw new InvalidOperationException("PrivacyDeletionRestoreBlocked");
         var idempotencyKey = Key(eventId);
@@ -160,6 +163,9 @@ public sealed class 음식배차요청OutboxService(
         var snapshot = payload.Order ?? throw new InvalidOperationException("음식 배차 요청에 주문 사본이 없습니다.");
         if (!string.Equals(snapshot.주문번호, item.원천Id, StringComparison.Ordinal))
             throw new InvalidOperationException("음식 배차 요청의 원천 주문이 일치하지 않습니다.");
+        // 예전 수락 이벤트의 사본도 자동 수행 선정 뒤 자체 큐를 부활시키지 못합니다.
+        if (await db.음식주문.AsNoTracking().AnyAsync(x => x.주문번호 == item.원천Id
+                && x.모의처리처수행, cancellationToken)) return;
         // payload는 수락 의도의 과거 사본입니다. 재시도는 현재 주문·현재 큐를 투영합니다.
         var order = orderStore.GetOrder(snapshot.주문번호)
                     ?? throw new InvalidOperationException("배차대기를 연결할 음식 주문을 찾을 수 없습니다.");

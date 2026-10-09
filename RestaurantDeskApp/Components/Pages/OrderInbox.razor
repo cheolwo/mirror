@@ -16,6 +16,11 @@
             <MudChip T="string" Color="@RealtimeStatusColor" Variant="Variant.Outlined" Size="Size.Small">@RealtimeStatusLabel</MudChip>
         </div>
         <MudText Typo="Typo.body1" Class="order-page-guide">주문을 열어 확인하고 다음 작업을 진행하세요.</MudText>
+        <MudButton Variant="Variant.Outlined" OnClick="@(() => showFulfillmentSupport = !showFulfillmentSupport)">음식점 배송 지원 설정</MudButton>
+        @if (showFulfillmentSupport)
+        {
+            <Ssalddel.Ui.Common.Areas.App.Components.Food.FoodMerchantFulfillmentSettingsPanel />
+        }
         @if (!string.IsNullOrWhiteSpace(message) && (messageSeverity == Severity.Warning || messageSeverity == Severity.Error))
         {
             <MudAlert Severity="@messageSeverity" Class="order-flow-message">@message</MudAlert>
@@ -67,8 +72,10 @@
             </MudStack>
         }
         <div class="order-flow-secondary-row">
+            <MudButton Href="/settings/agreed-rates" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.ReceiptLong">합의 요금표</MudButton>
             @if (Notifications.SupportsSystemNotification)
             {
+                <MudButton Href="/settings/notifications" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Notifications">주문 알림 설정</MudButton>
                 <MudButton Variant="Variant.Outlined" Disabled="@(isRefreshing || workLocked)" OnClick="EnableSystemNotificationsAsync" StartIcon="@Icons.Material.Filled.Notifications">주문 알림 허용</MudButton>
             }
             <MudButton Variant="Variant.Outlined" Disabled="@(isRefreshing || workLocked)" OnClick="ReloadManuallyAsync" StartIcon="@Icons.Material.Filled.Refresh">새로고침</MudButton>
@@ -90,6 +97,7 @@
 </MudContainer>
 
 @code {
+    private bool showFulfillmentSupport;
     private readonly CancellationTokenSource refreshCancellation = new();
     private Task? refreshTask;
     private Task<bool>? currentReloadTask;

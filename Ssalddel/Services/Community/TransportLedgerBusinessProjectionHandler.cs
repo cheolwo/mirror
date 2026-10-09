@@ -33,6 +33,14 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
         {
             return;
         }
+        if (snapshot.DispatchBusinessType == 상태값.배차업무유형.음식배달
+            && await _db.음식주문.AsNoTracking().AnyAsync(x => (x.주문번호 == snapshot.RequestId || x.주문번호 == snapshot.SourceId) && x.모의처리처수행, cancellationToken))
+        {
+            // 자동 음식 주문의 늦은 Mongo 사본은 배차 큐를 새로 만들거나 재개하지 않습니다.
+            var existingFoodQueue = await _db.운송원장.SingleOrDefaultAsync(x => x.의뢰Id == snapshot.RequestId || x.운송번호 == snapshot.RequestId, cancellationToken);
+            if (existingFoodQueue is not null && ApplyCommunityReferences(existingFoodQueue, snapshot)) await _db.SaveChangesAsync(cancellationToken);
+            return;
+        }
 
         if (snapshot.IsPersistedRdbSnapshot)
         {
@@ -52,6 +60,24 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
         var transport = await _db.운송원장
             .FirstOrDefaultAsync(x => x.의뢰Id == snapshot.RequestId || x.운송번호 == snapshot.RequestId, cancellationToken);
 
+        var shipperRequest = await _db.화주운송의뢰
+            .FirstOrDefaultAsync(x => x.의뢰Id == snapshot.RequestId, cancellationToken);
+        if (snapshot.SimulationFulfillment == true || shipperRequest?.모의처리처수행 == true)
+        {
+            // Mongo-first 생성은 처리처 선택 전에 의뢰만 저장합니다. 자체 큐는 확정된 internal 시도의 Command만 생성합니다.
+            // 오래된 사본에서 simulation 표식이 빠졌어도 현재 서버 의뢰의 표식을 우선합니다.
+            var sourceChanged = false;
+            if (shipperRequest is null && snapshot.IsCargoRequest)
+            {
+                shipperRequest = new() { 의뢰Id = snapshot.RequestId, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+                _db.화주운송의뢰.Add(shipperRequest); sourceChanged = true;
+            }
+            if (shipperRequest is not null) sourceChanged |= ApplyShipperRequest(shipperRequest, snapshot);
+            if (transport is not null) sourceChanged |= ApplyCommunityReferences(transport, snapshot);
+            if (sourceChanged) await _db.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
         var isNew = transport is null;
         if (transport is null)
         {
@@ -70,9 +96,6 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
 
         var changed = isNew;
         changed |= ApplyTransportProjection(transport, snapshot, isNew);
-
-        var shipperRequest = await _db.화주운송의뢰
-            .FirstOrDefaultAsync(x => x.의뢰Id == snapshot.RequestId, cancellationToken);
 
         if (shipperRequest is null && snapshot.IsCargoRequest)
         {
@@ -126,6 +149,7 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
                 var current = await _db.화주운송의뢰.AsNoTracking()
                     .SingleOrDefaultAsync(x => x.의뢰Id == snapshot.RequestId, cancellationToken);
                 if (current is null) return; // A deleted mirror cannot recreate an old request.
+                if (current.모의처리처수행 || snapshot.SimulationFulfillment == true) return;
                 var fresh = 운송원장Mongo동기화Builder.저장요청생성(current, null);
                 var freshSnapshot = 운송원장업무투영Snapshot.생성(new 커뮤니티원장Dto
                 {
@@ -248,6 +272,9 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
         changed |= SetString(entity.화물종류, snapshot.CargoType, value => entity.화물종류 = value);
         changed |= SetString(entity.화물설명, snapshot.CargoDescription, value => entity.화물설명 = value);
         changed |= SetInt(entity.화물수량, snapshot.CargoQuantity, value => entity.화물수량 = value);
+        // 선택 크기는 최초 입력 근거입니다. 구형/알 수 없는 사본이나 늦은 다른 값으로 이미 저장한 근거를 지우지 않습니다.
+        if (entity.생활배송포장크기Code is null && NeighborhoodPackageSizes.IsKnown(snapshot.PackageSizeCode))
+        { entity.생활배송포장크기Code = snapshot.PackageSizeCode; changed = true; }
         changed |= SetInt(entity.화물길이Mm, snapshot.CargoLengthMm, value => entity.화물길이Mm = value);
         changed |= SetInt(entity.화물폭Mm, snapshot.CargoWidthMm, value => entity.화물폭Mm = value);
         changed |= SetInt(entity.화물높이Mm, snapshot.CargoHeightMm, value => entity.화물높이Mm = value);
@@ -261,7 +288,10 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
         changed |= SetString(entity.서비스레벨, snapshot.ServiceLevel, value => entity.서비스레벨 = value);
         changed |= SetString(entity.요청사항, snapshot.RequestNotes, value => entity.요청사항 = value);
         changed |= SetString(entity.클라이언트요청Id, snapshot.ClientRequestId, value => entity.클라이언트요청Id = value);
-        changed |= SetString(entity.상태, snapshot.RequestState, value => entity.상태 = value);
+        // 모의 처리처 접수 전의 취소도 서버의 종료 결정입니다. 지연된 원장 사본으로 새 접수를 다시 열지 않습니다.
+        // 기존 운송 의뢰의 투영 규칙은 유지합니다.
+        if (!entity.모의처리처수행 || entity.상태 != 상태값.의뢰상태.취소)
+            changed |= SetString(entity.상태, snapshot.RequestState, value => entity.상태 = value);
         changed |= SetString(entity.결제상태, snapshot.PaymentState, value => entity.결제상태 = value);
         changed |= SetString(entity.픽업_도로명주소, snapshot.PickupAddress, value => entity.픽업_도로명주소 = value);
         changed |= SetString(entity.픽업_상세주소, snapshot.PickupAddressDetail, value => entity.픽업_상세주소 = value);
@@ -285,6 +315,12 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
         changed |= SetString(entity.수납주체, snapshot.Collector, value => entity.수납주체 = value);
         changed |= SetString(entity.정산상태, snapshot.SettlementState, value => entity.정산상태 = value);
         changed |= SetString(entity.정산메모, snapshot.SettlementNotes, value => entity.정산메모 = value);
+        if (snapshot.SimulationFulfillment == true && !entity.모의처리처수행)
+        { entity.모의처리처수행 = true; changed = true; }
+        if (snapshot.SimulationAutomaticFulfillment == true && !entity.자동처리처수행)
+        { entity.자동처리처수행 = true; changed = true; }
+        if (snapshot.SimulationFulfillment == true && entity.모의처리희망완료Utc is null && snapshot.SimulationDesiredCompletionUtc is not null)
+        { entity.모의처리희망완료Utc = snapshot.SimulationDesiredCompletionUtc; changed = true; }
         if (entity.생활배송접수키 is null && !string.IsNullOrWhiteSpace(entity.주문자UserId)
             && entity.클라이언트요청Id.StartsWith(Ssalddel.Contracts.Common.Community.NeighborhoodDeliveryRoutes.ClientRequestPrefix, StringComparison.Ordinal))
         {
@@ -389,6 +425,7 @@ public sealed class 운송원장업무투영Snapshot
     public string? CargoType { get; init; }
     public string? CargoDescription { get; init; }
     public int? CargoQuantity { get; init; }
+    public string? PackageSizeCode { get; init; }
     public int? CargoLengthMm { get; init; }
     public int? CargoWidthMm { get; init; }
     public int? CargoHeightMm { get; init; }
@@ -426,6 +463,9 @@ public sealed class 운송원장업무투영Snapshot
     public string? Collector { get; init; }
     public string? SettlementState { get; init; }
     public string? SettlementNotes { get; init; }
+    public bool? SimulationFulfillment { get; init; }
+    public bool? SimulationAutomaticFulfillment { get; init; }
+    public DateTime? SimulationDesiredCompletionUtc { get; init; }
     public int? EstimatedPaymentAmount { get; init; }
     public decimal? WaitingFee { get; init; }
     public decimal? ManualHandlingFee { get; init; }
@@ -442,7 +482,7 @@ public sealed class 운송원장업무투영Snapshot
     public bool IsTransportRequestComplete => MissingRequiredFields.Count == 0;
 
     public bool CanCreateCoordinationTransport =>
-        !ContainsParticipantExecutionObservation;
+        !ContainsParticipantExecutionObservation && SimulationFulfillment != true;
 
     public int DispatchBusinessType
         => string.Equals(LedgerTemplateKey, CommunityLedgerTemplateKeys.FoodDelivery, StringComparison.OrdinalIgnoreCase)
@@ -538,6 +578,7 @@ public sealed class 운송원장업무투영Snapshot
                 TryGet(requestBlock?.Data, "화물설명", "CargoDescription", "cargoDescription"),
                 원장.원함),
             CargoQuantity = ParseInt(TryGet(requestBlock?.Data, "화물수량", "CargoQuantity", "cargoQuantity")),
+            PackageSizeCode = TryGet(requestBlock?.Data, "생활배송포장크기Code", "PackageSizeCode"),
             CargoLengthMm = ParseInt(TryGet(requestBlock?.Data, "화물길이Mm", "CargoLengthMm", "cargoLengthMm")),
             CargoWidthMm = ParseInt(TryGet(requestBlock?.Data, "화물폭Mm", "CargoWidthMm", "cargoWidthMm")),
             CargoHeightMm = ParseInt(TryGet(requestBlock?.Data, "화물높이Mm", "CargoHeightMm", "cargoHeightMm")),
@@ -577,6 +618,9 @@ public sealed class 운송원장업무투영Snapshot
             Collector = TryGet(settlementBlock?.Data, "수납주체", "Collector", "collector"),
             SettlementState = TryGet(settlementBlock?.Data, "정산상태", "SettlementState", "settlementState"),
             SettlementNotes = TryGet(settlementBlock?.Data, "정산메모", "SettlementNotes", "settlementNotes"),
+            SimulationFulfillment = ParseBool(TryGet(settlementBlock?.Data, "모의처리처수행", "SimulationFulfillment")),
+            SimulationAutomaticFulfillment = ParseBool(TryGet(settlementBlock?.Data, "자동처리처수행", "SimulationAutomaticFulfillment")),
+            SimulationDesiredCompletionUtc = ParseDateTime(TryGet(settlementBlock?.Data, "모의처리희망완료Utc", "SimulationDesiredCompletionUtc")),
             EstimatedPaymentAmount = ParseInt(TryGet(settlementBlock?.Data, "결제예정금액", "EstimatedPaymentAmount")),
             WaitingFee = ParseDecimal(TryGet(settlementBlock?.Data, "대기료", "WaitingFee", "waitingFee")),
             ManualHandlingFee = ParseDecimal(TryGet(settlementBlock?.Data, "수작업비", "ManualHandlingFee", "manualHandlingFee")),

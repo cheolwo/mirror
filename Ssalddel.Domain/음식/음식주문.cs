@@ -6,6 +6,9 @@ namespace 살뜰.도메인.음식;
 [Table("음식주문")]
 public class 음식주문
 {
+    [Column("simulation_fulfillment_routing")]
+    public bool 모의처리처수행 { get; set; }
+
     [Key]
     [Column("id")]
     public long Id { get; set; }

@@ -4,6 +4,7 @@ using Ssalddel.Infrastructure.BackgroundJobs;
 using Ssalddel.Infrastructure.BackgroundJobs.AgriculturalFisheries;
 using Ssalddel.Infrastructure.BackgroundJobs.Community;
 using Ssalddel.Infrastructure.BackgroundJobs.Content;
+using Ssalddel.Infrastructure.BackgroundJobs.Fulfillment;
 using Ssalddel.Infrastructure.BackgroundJobs.SalesOrders;
 using Ssalddel.Services.Community;
 using Ssalddel.Services.LogisticsProcessing.SalesOrders;
@@ -50,6 +51,18 @@ public static partial class ServiceCollectionExtensions
             SsalddelBackgroundJobActivationPolicy>();
         services.AddQuartz(q =>
         {
+            // 자동 수행은 별도 동의를 받은 Simulation 원천만 처리합니다.
+            // 기본 OFF 관문은 job/Coordinator가 실행 시점에도 재검증합니다.
+            if (executionOptions.Mode == SsalddelExecutionMode.Simulation)
+            {
+                var autoFulfillmentJobKey = new JobKey("AutoFulfillmentOutboxProcess");
+                q.AddJob<자동수행Outbox처리Job>(opts => opts.WithIdentity(autoFulfillmentJobKey));
+                q.AddTrigger(opts => opts
+                    .ForJob(autoFulfillmentJobKey)
+                    .WithIdentity("AutoFulfillmentOutboxProcess-trigger")
+                    .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromSeconds(10)).RepeatForever()));
+            }
+
             if (executionOptions.Mode == SsalddelExecutionMode.Operational)
             {
                 var foodScanJobKey = new JobKey("FoodDeliveryDispatchQueueScan");

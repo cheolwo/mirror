@@ -1,0 +1,39 @@
+@namespace AssumedFulfillmentPreview
+@using Microsoft.AspNetCore.Components.Web
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <base href="/" />
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="_content/Ssalddel.Ui.Common/Areas/App/css/role-app-foundation.css" />
+    <link rel="stylesheet" href="_content/Ssalddel.Ui.Common/Areas/App/css/neighborhood-exchange.css" />
+    <link rel="stylesheet" href="_content/Ssalddel.Ui.Common/Areas/App/css/neighborhood-delivery.css" />
+    <link rel="stylesheet" href="AssumedFulfillmentPreview.styles.css" />
+    <style>
+        body{margin:0;background:#f7faf9;font-family:system-ui,sans-serif;color:#213930}*{box-sizing:border-box}
+        .preview-notice{padding:12px 16px;background:#fff5d6;color:#624b10;font-size:13px;line-height:1.6}
+        .preview-nav{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;background:#fff;border-bottom:1px solid #dce8e3}
+        .preview-nav a{font-size:13px;color:#23634e;text-decoration:none;padding:8px 10px;border:1px solid #c9ddd3;border-radius:8px}
+        .preview-state{max-width:700px;margin:0 auto;padding:20px 16px}.preview-state h1{font-size:24px;margin:0 0 8px}
+        .preview-state small{display:block;color:#577263;line-height:1.6;margin-bottom:16px}
+        .preview-state .auto-fulfillment-status,.preview-state .auto-fulfillment-conditions{padding:18px;background:white;border:1px solid #dce8e3;border-radius:16px}
+    </style>
+    <HeadOutlet @rendermode="InteractiveServer" />
+</head>
+<body>
+    <div class="preview-notice">r28/r29 모바일 화면 검토용 샘플 · 확정 시안 아님 · 합성 계정·주소·요금·시간 · 엑셀은 실제 순수 파서 · 동의·견적·등록은 대역 · 실제 업체 호출·실결제·실배송 없음</div>
+    <nav class="preview-nav" data-enhance-nav="false" aria-label="검토 상태">
+        <a href="/?state=consent">정보 동의</a><a href="/?state=create">작성·후보</a><a href="/?state=missing-size">크기 미입력</a>
+        <a href="/?state=empty">서버 후보 없음</a><a href="/?state=accepted">접수됨</a><a href="/?state=unknown">결과 불명확</a>
+        <a href="/?state=assigned">배정</a><a href="/?state=in-transit">배송 중</a><a href="/?state=completed">전달 완료</a>
+        <a href="/?state=paused">기능 중지</a><a href="/?state=logout">로그아웃</a>
+        <a href="/?state=input-goods">간편 물품</a><a href="/?state=input-places">간편 장소</a>
+        <a href="/?state=input-time">간편 시간</a><a href="/?state=input-confirm">간편 확인</a><a href="/?state=input-blank">새 작성</a>
+    </nav>
+    <AssumedPreviewPanel @rendermode="new InteractiveServerRenderMode(prerender: false)" />
+    <script src="_framework/blazor.web.js"></script>
+</body>
+</html>

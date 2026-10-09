@@ -6,6 +6,8 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using 살뜰.Data;
 using 살뜰.Services.Dispatch.Common;
+using Ssalddel.Contracts.Common.Fulfillment;
+using Ssalddel.Services.Fulfillment;
 
 namespace Ssalddel.Application.Food.Handlers;
 
@@ -14,7 +16,8 @@ public sealed class 음식주문등록CommandHandler(
     I음식주문메뉴검증Service menuValidationService,
     IPublisher publisher,
     SsalddelContext? db = null,
-    Ssalddel.Services.Commerce.I통신판매거래Guard? commerce = null) : IRequestHandler<음식주문등록Command, 음식주문응답>
+    Ssalddel.Services.Commerce.I통신판매거래Guard? commerce = null,
+    I자동수행Coordinator? fulfillment = null) : IRequestHandler<음식주문등록Command, 음식주문응답>
 {
     public async Task<음식주문응답> Handle(음식주문등록Command request, CancellationToken cancellationToken)
     {
@@ -23,11 +26,15 @@ public sealed class 음식주문등록CommandHandler(
         ValidateIdentity(request.Payload);
         // 접수된 동일 요청은 이후의 메뉴 변경과 무관하게 원래 원장으로 응답합니다.
         var existing = orderStore.접수주문조회(request.Payload.주문자UserId, request.Payload.클라이언트요청Id);
-        if (existing is not null) return existing;
+        if (existing is not null) return await 현재수행반영Async(existing, cancellationToken);
         Validate(request.Payload);
         var canonicalRequest = await menuValidationService.서버기준요청생성Async(
             request.Payload,
             cancellationToken);
+        if (canonicalRequest.AutoFulfillment is not null
+            && (fulfillment?.Enabled != true || db?.Database.IsRelational() != true))
+            throw new 음식주문입력확인Exception("자동 수행은 활성화된 Simulation의 영속 저장소에서만 사용할 수 있습니다.", "FulfillmentRoutingDisabled");
+        canonicalRequest.모의처리처수행 = canonicalRequest.AutoFulfillment is not null;
 
         if (commerce is not null)
             await commerce.음식주문요구Async(canonicalRequest.주문자UserId, canonicalRequest.음식점Id,
@@ -42,7 +49,7 @@ public sealed class 음식주문등록CommandHandler(
                 cancellationToken);
         }
 
-        return orderStore.GetOrder(order.주문번호) ?? order;
+        return await 현재수행반영Async(orderStore.GetOrder(order.주문번호) ?? order, cancellationToken);
     }
 
     private async Task<음식주문저장결과> 등록과음식점제안기록Async(
@@ -73,6 +80,15 @@ public sealed class 음식주문등록CommandHandler(
         {
             await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
             var saved = orderStore.멱등등록(request);
+            if (saved.새로생성됨 && request.AutoFulfillment is not null)
+            {
+                var consent = await fulfillment!.사전동의저장Async(
+                    new(FulfillmentSourceKinds.FoodOrder, saved.주문.주문번호), request.주문자UserId,
+                    request.AutoFulfillment, cancellationToken);
+                if (consent.IsFailed)
+                    throw new 음식주문입력확인Exception(consent.Errors[0].Message,
+                        consent.Errors[0].Metadata.TryGetValue("ErrorCode", out var code) ? code.ToString()! : "FulfillmentConsentInvalid");
+            }
             if (saved.새로생성됨)
             {
                 db.운영배차활동사건.Add(운영배차활동사건Factory.음식점유효주문제안(
@@ -84,6 +100,13 @@ public sealed class 음식주문등록CommandHandler(
             await transaction.CommitAsync(cancellationToken);
             return saved;
         });
+    }
+
+    private async Task<음식주문응답> 현재수행반영Async(음식주문응답 order, CancellationToken ct)
+    {
+        if (fulfillment is not null && order.AutoFulfillment is not null && !order.AutoFulfillment.ExecutionPaused)
+            order.AutoFulfillment = await fulfillment.상태Async(new(FulfillmentSourceKinds.FoodOrder, order.주문번호), ct);
+        return order;
     }
 
     private static void ValidateIdentity(음식주문등록요청 request)

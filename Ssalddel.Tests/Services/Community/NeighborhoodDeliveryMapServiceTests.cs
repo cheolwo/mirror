@@ -145,6 +145,58 @@ public sealed class NeighborhoodDeliveryMapServiceTests
         Assert.Equal(37.51m, detail!.Request.기사최근위도);
     }
 
+    [Fact]
+    public async Task 외부모의처리처의지도는기존기사GPS를사용하지않고픽업전달참고경로만조회한다()
+    {
+        await using var f = await Fixture.Create();
+        f.Deliveries.Fulfillment = new() { RequestId = "delivery-1", ProviderId = "mock-local",
+            StateCode = NeighborhoodFulfillmentStates.Accepted, Revision = 2, IsSimulation = true };
+        await f.AddLocation(f.Clock.Now.AddMinutes(-1), f.Clock.Now.AddSeconds(-30));
+        var map = await f.Service.내지도Async("delivery-1", true);
+        Assert.Null(map!.DriverLocation);
+        Assert.Equal(NeighborhoodDeliveryMapStates.NoRecentLocation, map.DriverLocationStateCode);
+        Assert.Contains("모의 처리처", map.DriverLocationNotice);
+        Assert.Equal(NeighborhoodDeliveryMapStages.Overview, map.StageCode);
+        Assert.Equal("mock-local", map.Fulfillment!.ProviderId);
+        Assert.Equal("Pickup", map.PlannedRoute!.FromPointRoleCode);
+        Assert.Equal((37.5m, 127m, 37.6m, 127.1m), f.Directions.LastInput);
+    }
+
+    [Theory]
+    [InlineData(NeighborhoodFulfillmentStates.Completed, false)]
+    [InlineData(NeighborhoodFulfillmentStates.Cancelled, false)]
+    [InlineData(NeighborhoodFulfillmentStates.Completed, true)]
+    [InlineData(NeighborhoodFulfillmentStates.Cancelled, true)]
+    public async Task 모의수행이종료되면경로를제거하고외부조회중바뀐최신상태도반영한다(string state, bool duringLookup)
+    {
+        await using var f = await Fixture.Create();
+        f.Deliveries.Fulfillment = new() { RequestId = "delivery-1", ProviderId = "mock-local", Revision = 2,
+            StateCode = duringLookup ? NeighborhoodFulfillmentStates.Accepted : state, IsSimulation = true };
+        if (duringLookup) f.Directions.OnLookup = () => f.Deliveries.Fulfillment = new()
+            { RequestId = "delivery-1", ProviderId = "mock-local", Revision = 3, StateCode = state, IsSimulation = true };
+        var map = await f.Service.내지도Async("delivery-1", true);
+        Assert.Equal(state, map!.Fulfillment!.StateCode);
+        Assert.Equal(NeighborhoodDeliveryMapStages.Closed, map.StageCode);
+        Assert.Equal(NeighborhoodDeliveryMapStates.Closed, map.RouteStateCode);
+        Assert.Null(map.PlannedRoute); Assert.Null(map.DriverLocation);
+        Assert.Equal(duringLookup ? 1 : 0, f.Directions.Calls);
+    }
+
+    [Fact]
+    public async Task 원의뢰가취소됐으면모의처리처의이전접수상태가지도진행을다시열지않는다()
+    {
+        await using var f = await Fixture.Create();
+        f.Request.상태 = 상태값.의뢰상태.취소; f.Request.배차상태 = 상태값.배차상태.취소;
+        await f.Db.SaveChangesAsync();
+        f.Deliveries.Fulfillment = new() { RequestId = "delivery-1", ProviderId = "mock-local",
+            StateCode = NeighborhoodFulfillmentStates.Accepted, Revision = 2, IsSimulation = true };
+        var map = await f.Service.내지도Async("delivery-1", true);
+        Assert.Equal(상태값.의뢰상태.취소, map!.RequestStatusCode);
+        Assert.Equal(NeighborhoodDeliveryMapStages.Closed, map.StageCode);
+        Assert.Equal(NeighborhoodDeliveryMapStates.Closed, map.RouteStateCode);
+        Assert.Null(map.PlannedRoute); Assert.Null(map.DriverLocation); Assert.Equal(0, f.Directions.Calls);
+    }
+
     [Theory]
     [InlineData("배차확정", "Pickup", "Pickup")]
     [InlineData("상차지도착", "Pickup", "Pickup")]
@@ -280,12 +332,13 @@ public sealed class NeighborhoodDeliveryMapServiceTests
     private sealed class Deliveries(SsalddelContext db, Current current, Clock clock) : I생활배송의뢰UseCase
     {
         public bool Deny { get; set; }
+        public NeighborhoodFulfillmentSnapshot? Fulfillment { get; set; }
         public async Task<NeighborhoodDeliveryResponse?> 내상세Async(string id, CancellationToken cancellationToken = default)
         {
             if (Deny) return null;
             var result = await new 의뢰단건조회QueryHandler(db, new 화주운송업무담당자UseCase(db, current, clock))
                 .Handle(new 의뢰단건조회Query(id), cancellationToken);
-            return result is null ? null : new NeighborhoodDeliveryResponse { RequestId = id, Request = result };
+            return result is null ? null : new NeighborhoodDeliveryResponse { RequestId = id, Request = result, Fulfillment = Fulfillment };
         }
         public Task<IReadOnlyList<NeighborhoodDeliveryResponse>> 내목록Async(int page = 1, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<Result<NeighborhoodDeliveryQuoteResponse>> 견적Async(NeighborhoodDeliveryRequest request, CancellationToken cancellationToken = default) => throw new NotSupportedException();

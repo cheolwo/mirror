@@ -1,5 +1,6 @@
 using System.Globalization;
 using Ssalddel.Contracts.Food;
+using Ssalddel.Contracts.Common.Fulfillment;
 
 namespace Ssalddel.Ui.Common.Areas.App.Services;
 
@@ -10,6 +11,12 @@ public interface I주문자음식주문접수결과Service
 
 public interface I주문자음식주문읽기Service
 {
+    Task<AutoFulfillmentSnapshot?> 자동동의Async(string orderNo, AutoFulfillmentConsent request, CancellationToken ct = default)
+        => Task.FromException<AutoFulfillmentSnapshot?>(new NotSupportedException());
+    Task<AutoFulfillmentSnapshot?> 자동진행확인Async(string orderNo, AutoFulfillmentActionRequest request, CancellationToken ct = default)
+        => Task.FromException<AutoFulfillmentSnapshot?>(new NotSupportedException());
+    Task<AutoFulfillmentSnapshot?> 자동수행취소Async(string orderNo, AutoFulfillmentActionRequest request, CancellationToken ct = default)
+        => Task.FromException<AutoFulfillmentSnapshot?>(new NotSupportedException());
     Task<주문자음식주문목록응답> 목록Async(
         주문자음식주문목록조회요청 request,
         CancellationToken cancellationToken = default);
@@ -21,6 +28,8 @@ public interface I주문자음식주문읽기Service
 
 public interface I주문자음식주문쓰기Service
 {
+    Task<FoodAutoFulfillmentQuoteResponse> 자동배송조건Async(음식주문등록요청 request, CancellationToken ct = default)
+        => Task.FromResult(new FoodAutoFulfillmentQuoteResponse());
     Task<음식주문응답> 등록Async(
         음식주문등록요청 request,
         CancellationToken cancellationToken = default);
@@ -52,6 +61,15 @@ public sealed class 주문자음식주문Client(
     I주문자음식주문취소Service
 {
     private const string BasePath = "api/v1/food-orders";
+    public async Task<FoodAutoFulfillmentQuoteResponse> 자동배송조건Async(음식주문등록요청 request, CancellationToken ct = default)
+        => await client.SendAsync<음식주문등록요청, FoodAutoFulfillmentQuoteResponse>(HttpMethod.Post, $"{BasePath}/fulfillment-quote", request, "음식 배송 조건 확인", cancellationToken: ct)
+            ?? throw new InvalidOperationException("음식 배송 조건을 확인하지 못했습니다.");
+    public Task<AutoFulfillmentSnapshot?> 자동동의Async(string orderNo, AutoFulfillmentConsent request, CancellationToken ct = default)
+        => client.SendAsync<AutoFulfillmentConsent, AutoFulfillmentSnapshot>(HttpMethod.Post, $"{BasePath}/{Uri.EscapeDataString(orderNo)}/fulfillment-authorization", request, "음식 자동 배송 조건", cancellationToken: ct);
+    public Task<AutoFulfillmentSnapshot?> 자동진행확인Async(string orderNo, AutoFulfillmentActionRequest request, CancellationToken ct = default)
+        => client.SendAsync<AutoFulfillmentActionRequest, AutoFulfillmentSnapshot>(HttpMethod.Post, $"{BasePath}/{Uri.EscapeDataString(orderNo)}/fulfillment-refresh", request, "음식 배송 진행 확인", cancellationToken: ct);
+    public Task<AutoFulfillmentSnapshot?> 자동수행취소Async(string orderNo, AutoFulfillmentActionRequest request, CancellationToken ct = default)
+        => client.SendAsync<AutoFulfillmentActionRequest, AutoFulfillmentSnapshot>(HttpMethod.Post, $"{BasePath}/{Uri.EscapeDataString(orderNo)}/fulfillment-cancellation", request, "음식 배송 수행 취소", cancellationToken: ct);
 
     public Task<음식주문접수결과응답?> 접수결과Async(Guid requestId, CancellationToken cancellationToken = default)
     {

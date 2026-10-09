@@ -14,6 +14,9 @@ public sealed class 화주운송의뢰Configuration : IEntityTypeConfiguration<�
 
         builder.Property(x => x.Id).HasColumnName("id");
         builder.Property(x => x.의뢰Id).HasColumnName("request_id").IsRequired();
+        builder.Property(x => x.모의처리처수행).HasColumnName("neighborhood_simulation_fulfillment").HasDefaultValue(false);
+        builder.Property(x => x.자동처리처수행).HasDefaultValue(false);
+        builder.Property(x => x.모의처리희망완료Utc).HasColumnName("neighborhood_simulation_deadline_utc");
         builder.Property(x => x.화주Id).HasColumnName("shipper_id").IsRequired();
         builder.Property(x => x.주문자UserId).HasColumnName("orderer_user_id").IsRequired();
         builder.Property(x => x.화물종류).HasColumnName("cargo_type").IsRequired();
@@ -66,6 +69,7 @@ public sealed class 화주운송의뢰Configuration : IEntityTypeConfiguration<�
         builder.Property(x => x.할증).HasColumnName("surcharge");
         builder.Property(x => x.최종운임).HasColumnName("final_fare");
         builder.Property(x => x.생활배송접수키).HasColumnName("neighborhood_registration_key").HasMaxLength(64);
+        builder.Property(x => x.생활배송포장크기Code).HasColumnName("neighborhood_package_size_code").HasMaxLength(16);
         builder.HasIndex(x => x.생활배송접수키).IsUnique().HasDatabaseName("ux_neighborhood_registration_key");
         builder.Property(x => x.클라이언트요청Id).HasColumnName("client_request_id").IsRequired();
         builder.Property(x => x.상태).HasColumnName("status").IsRequired();
