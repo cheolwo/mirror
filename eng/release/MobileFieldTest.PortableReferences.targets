@@ -9,6 +9,20 @@
   <PropertyGroup Condition="'$(SsalddelMobileFieldTestPortableReferences)' == 'true'">
     <_SsalddelMobileDeclaredRidPolicy>$(IsRidAgnostic)</_SsalddelMobileDeclaredRidPolicy>
   </PropertyGroup>
+  <!-- Android's ABI-specific assembly-resolution pass skips the app compiler.
+       That global property must not suppress compilation of changed portable
+       references: otherwise a new shared UI can consume an older contract DLL.
+       Change reference metadata only in the reviewed apps' inner packaging
+       context; never build from this hook or change the Android binding/app. -->
+  <Target Name="SsalddelMobileFieldTestIsolatePortableCompilerContext"
+          BeforeTargets="AssignProjectConfiguration"
+          Condition="'$(SsalddelMobileFieldTestPortableReferences)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' and '$(SkipCompilerExecution)' == 'true' and '$(DesignTimeBuild)' != 'true' and '$(TargetPlatformIdentifier)' == 'Android' and '$(UseMaui)' == 'true' and '$(AndroidApplication)' == 'true' and ('$(MSBuildProjectName)' == 'OrdererApp' or '$(MSBuildProjectName)' == 'RestaurantDeskApp' or '$(MSBuildProjectName)' == 'FDriverApp' or '$(MSBuildProjectName)' == 'SsalddelAdminApp' or '$(MSBuildProjectName)' == 'SsalddelApp' or '$(MSBuildProjectName)' == 'DriverApp' or '$(MSBuildProjectName)' == 'WarehouseManagerApp')">
+    <ItemGroup>
+      <ProjectReference Condition="'%(ProjectReference.Filename)' == 'Ssalddel.Contracts' or '%(ProjectReference.Filename)' == 'Ssalddel.Client.Infrastructure' or '%(ProjectReference.Filename)' == 'Ssalddel.Ui.Common' or '%(ProjectReference.Filename)' == 'Ssalddel.BackOffice.Client'">
+        <GlobalPropertiesToRemove>%(ProjectReference.GlobalPropertiesToRemove);SkipCompilerExecution;_ComputeFilesToPublishForRuntimeIdentifiers</GlobalPropertiesToRemove>
+      </ProjectReference>
+    </ItemGroup>
+  </Target>
   <!-- These four current net10.0 projects cover the reviewed seven-app reference
        closure and have only portable managed assets.
        Do not generalize this policy to arbitrary .NET, executable or platform

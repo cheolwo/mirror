@@ -1,0 +1,109 @@
+name: mirror-food-mobile-test
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ssalddel_food_mobile_test
+      MYSQL_USER: mobile_test
+      MYSQL_PASSWORD: ${FOOD_MOBILE_DB_PASSWORD:?prepare the private environment}
+      MYSQL_ROOT_PASSWORD: ${FOOD_MOBILE_ROOT_PASSWORD:?prepare the private environment}
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes: ["mobile_mysql:/var/lib/mysql"]
+    networks: [isolated]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  mongo:
+    image: mongo:8.0
+    volumes: ["mobile_mongo:/data/db"]
+    networks: [isolated]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping:1}).ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  app:
+    image: ${FOOD_MOBILE_IMAGE:?prepare and build the image}
+    pull_policy: never
+    environment:
+      ASPNETCORE_ENVIRONMENT: Staging
+      ASPNETCORE_URLS: http://+:8080
+      DOTNET_RUNNING_IN_CONTAINER: "true"
+      AllowedHosts: "localhost;127.0.0.1;app"
+      SsalddelExecution__Mode: Simulation
+      ConnectionStrings__DefaultConnection: "server=mysql;database=ssalddel_food_mobile_test;user=mobile_test;password=${FOOD_MOBILE_DB_PASSWORD};SslMode=None;AllowPublicKeyRetrieval=True;"
+      MongoDb__ConnectionString: mongodb://mongo:27017
+      MongoDb__Database: ssalddel_food_mobile_test
+      TransientState__Provider: Memory
+      DatabaseInitialization__RunAtStartup: "false"
+      DatabaseInitialization__FailOnError: "true"
+      VersionFeatureFlags__DomesticTransportWorkflow: "true"
+      VersionFeatureFlags__FoodDeliveryWorkflow: "true"
+      VersionFeatureFlags__PlatformOperationsControl: "true"
+      VersionFeatureFlags__SsalddelMartWorkflow: "false"
+      MobileFieldTest__Enabled: "true"
+      MobileFieldTest__FoodDispatch__Enabled: "true"
+      MobileFieldTest__FoodDispatch__BootstrapSyntheticDriverState: "true"
+      MobileFieldTest__FoodDispatch__RefreshSyntheticDriverLocation: "true"
+      MobileFieldTest__FoodDispatch__FixtureRevision: sagajeong-food-mobile-dispatch.r1
+      IdentitySeed__BootstrapAdmin__Enabled: "false"
+      IdentitySeed__DevelopmentAccounts__Enabled: "true"
+      IdentitySeed__DevelopmentAccounts__AllowInSimulation: "true"
+      IdentitySeed__DevelopmentAccounts__AdminPassword: ${FOOD_MOBILE_ACCOUNT_PASSWORD}
+      IdentitySeed__DevelopmentAccounts__OrdererPassword: ${FOOD_MOBILE_ACCOUNT_PASSWORD}
+      IdentitySeed__DevelopmentAccounts__DriverPassword: ${FOOD_MOBILE_ACCOUNT_PASSWORD}
+      IdentitySeed__DevelopmentAccounts__ShipperPassword: ${FOOD_MOBILE_ACCOUNT_PASSWORD}
+      Jwt__Issuer: FoodMobileTest.Local
+      Jwt__Audience: FoodMobileTest.Local
+      Jwt__SecretKey: ${FOOD_MOBILE_JWT_KEY}
+      IsmsPProtectedData__Aes256GcmKeyBase64: ${FOOD_MOBILE_AES_KEY}
+      IsmsPProtectedData__HashSalt: ${FOOD_MOBILE_HASH_SALT}
+      IsmsPProtectedData__FailWhenKeyMissing: "true"
+      PersonalDataProtection__ApplicationName: FoodMobileTest.Local
+      PersonalDataProtection__KeyRingPath: /app/App_Data/DataProtection-Keys
+      PersonalDataProtection__RequireCertificate: "true"
+      PersonalDataProtection__CertificatePath: /run/secrets/data-protection.pfx
+      PersonalDataProtection__CertificatePassword: ${FOOD_MOBILE_CERT_PASSWORD}
+      ObjectStorage__Provider: Local
+      TossPayments__ClientKey: ""
+      TossPayments__SecretKey: ""
+      AgriculturalFisheriesBatch__Enabled: "false"
+      CommunityEditorialBatch__Enabled: "false"
+      CommunityPostEmailNotifications__Enabled: "false"
+      CommunityPostTranslation__Enabled: "false"
+      SalesChannelOrderSync__Enabled: "false"
+      WorkRelationshipSnapshots__Enabled: "false"
+      FoodObserverVerification__Enabled: "false"
+      Logging__LogLevel__Default: Warning
+      Serilog__MinimumLevel__Default: Warning
+    volumes:
+      - mobile_app:/app/App_Data
+      - type: bind
+        source: ${FOOD_MOBILE_CERT_PATH:?prepare the certificate}
+        target: /run/secrets/data-protection.pfx
+        read_only: true
+        bind: {create_host_path: false}
+    networks: [isolated]
+    depends_on:
+      mysql: {condition: service_healthy}
+      mongo: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+  gateway:
+    image: caddy:2.10-alpine
+    command: ["caddy", "reverse-proxy", "--from", "http://:8080", "--to", "http://app:8080"]
+    ports: ["127.0.0.1:5363:8080"]
+    networks: [access, isolated]
+    depends_on: [app]
+networks:
+  access:
+  isolated: {internal: true}
+volumes:
+  mobile_mysql: {name: "${FOOD_MOBILE_MYSQL_VOLUME}"}
+  mobile_mongo: {name: "${FOOD_MOBILE_MONGO_VOLUME}"}
+  mobile_app: {name: "${FOOD_MOBILE_APP_VOLUME}"}

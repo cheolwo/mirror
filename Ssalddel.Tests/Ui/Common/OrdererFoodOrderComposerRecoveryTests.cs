@@ -602,6 +602,30 @@ public sealed partial class OrdererFoodOrderComposerRecoveryTests
     }
 
     [Fact]
+    public async Task 전송중반복제출은_같은작성요청한건만보내고_첫응답으로완료한다()
+    {
+        var completion = new TaskCompletionSource<음식주문응답>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var services = new FoodServices { Write = (_, _) => completion.Task };
+        var page = await CreatePageAsync(services, new AuthenticationService());
+        var requestId = page.작성.클라이언트요청Id;
+        var first = page.주문등록Async();
+        try
+        {
+            Assert.Equal(requestId, Assert.Single(services.Requests).클라이언트요청Id);
+            Assert.False(page.작성.제출가능);
+            Assert.False(await page.주문등록Async());
+            Assert.False(await page.주문등록Async());
+            Assert.Equal(requestId, Assert.Single(services.Requests).클라이언트요청Id);
+            Assert.Equal(requestId, page.작성.클라이언트요청Id);
+        }
+        finally { completion.TrySetResult(new 음식주문응답 { 주문번호 = "FOOD-SINGLE-SUBMISSION" }); }
+
+        Assert.True(await first);
+        Assert.Single(services.Requests);
+        Assert.Equal("FOOD-SINGLE-SUBMISSION", page.작성.등록응답?.주문번호);
+    }
+
+    [Fact]
     public async Task 주문전송중에는_독립인증업무로진입하지않는다()
     {
         var completion = new TaskCompletionSource<음식주문응답>(TaskCreationOptions.RunContinuationsAsynchronously);

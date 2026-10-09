@@ -71,7 +71,7 @@ public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleW
         FoodDeliveryDriverWorkspaceDto value, CancellationToken token)
     {
         if (selected is null) return ([], null);
-        if (currentLocation is not { } location || !Fresh(location)) return ([], "현재 위치를 갱신하면 실제 이동 경로를 확인할 수 있습니다.");
+        if (currentLocation is not { } location || !Fresh(location)) return ([], "현재 위치를 갱신해 주세요.");
         var active = value.ActiveDeliveries.FirstOrDefault(item => item.OfferId == selected);
         var offer = value.Recommendations.FirstOrDefault(item => item.OfferId == selected);
         if (active is null && offer is null) return ([], null);

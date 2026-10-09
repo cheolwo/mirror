@@ -23,6 +23,7 @@ public sealed class AdminFoodOperationsState(IAdminFoodOperationsClient client, 
 
     public AdminFoodOrderListDto? List { get; private set; }
     public 음식주문운영추적응답? Trace { get; private set; }
+    public DateTime? TraceLastConfirmedAtUtc { get; private set; }
     public string Query { get; private set; } = string.Empty;
     public int Page { get; private set; } = 1;
     public string OrderNo { get; private set; } = string.Empty;
@@ -32,6 +33,7 @@ public sealed class AdminFoodOperationsState(IAdminFoodOperationsClient client, 
     public bool Unavailable { get; private set; }
     public string? Message { get; private set; }
     public bool AuthenticationCurrent => !disposed && !string.IsNullOrWhiteSpace(identity) && identity == authenticationIdentity();
+    public bool TraceIsStale => Trace is not null && RequiresRefresh;
     public bool CanReview => AuthenticationCurrent && !IsBusy && !RequiresRefresh
         && Trace?.배달시도목록.Any(x => x.상태Code == 음식배달시도상태Code.중단) == true;
 
@@ -41,7 +43,7 @@ public sealed class AdminFoodOperationsState(IAdminFoodOperationsClient client, 
         if (disposed || actor == identity) return false;
         Invalidate();
         identity = actor;
-        List = null; Trace = null;
+        List = null; Trace = null; TraceLastConfirmedAtUtc = null;
         RequiresLogin = string.IsNullOrWhiteSpace(actor);
         RequiresRefresh = true; Unavailable = false; Message = null;
         return true;
@@ -54,7 +56,7 @@ public sealed class AdminFoodOperationsState(IAdminFoodOperationsClient client, 
         if (clean.Length > 100 || page < 1) { Message = "검색어와 페이지를 확인해 주세요."; return Task.CompletedTask; }
         if (Query != clean || Page != page || !string.IsNullOrEmpty(OrderNo))
         {
-            Invalidate(); List = null; Trace = null; Query = clean; Page = page; OrderNo = string.Empty;
+            Invalidate(); List = null; Trace = null; TraceLastConfirmedAtUtc = null; Query = clean; Page = page; OrderNo = string.Empty;
         }
         return ReadAsync(token => client.ListAsync(Query, Page, token), value =>
         {
@@ -68,14 +70,14 @@ public sealed class AdminFoodOperationsState(IAdminFoodOperationsClient client, 
         SynchronizeAuthentication();
         var clean = orderNo.Trim();
         if (clean.Length == 0) { Message = "주문번호를 확인해 주세요."; return Task.CompletedTask; }
-        if (OrderNo != clean) { Invalidate(); List = null; Trace = null; OrderNo = clean; }
+        if (OrderNo != clean) { Invalidate(); List = null; Trace = null; TraceLastConfirmedAtUtc = null; OrderNo = clean; }
         return ReadAsync(token => client.조회Async(OrderNo, token), value =>
         {
             if (value is null || value.주문번호 != OrderNo)
             {
-                Trace = null; Message = "해당 음식 주문을 찾지 못했습니다."; return;
+                Trace = null; TraceLastConfirmedAtUtc = null; Message = "해당 음식 주문을 찾지 못했습니다."; return;
             }
-            Trace = value; RequiresRefresh = false;
+            Trace = value; TraceLastConfirmedAtUtc = DateTime.UtcNow; RequiresRefresh = false;
         });
     }
 
@@ -83,7 +85,7 @@ public sealed class AdminFoodOperationsState(IAdminFoodOperationsClient client, 
     {
         if (disposed || IsBusy || !AuthenticationCurrent)
         {
-            if (!disposed && !AuthenticationCurrent) { List = null; Trace = null; RequiresLogin = true; }
+            if (!disposed && !AuthenticationCurrent) { List = null; Trace = null; TraceLastConfirmedAtUtc = null; RequiresLogin = true; }
             return;
         }
         IsBusy = true; RequiresRefresh = true; Unavailable = false; Message = null;
@@ -96,11 +98,11 @@ public sealed class AdminFoodOperationsState(IAdminFoodOperationsClient client, 
         catch (Exception) when (!IsCurrent(owner) || token.IsCancellationRequested) { }
         catch (AdminFoodWorkflowUnavailableException)
         {
-            List = null; Trace = null; Unavailable = true; Message = "현재 음식 운영을 사용할 수 없습니다. 다시 확인해 주세요.";
+            List = null; Trace = null; TraceLastConfirmedAtUtc = null; Unavailable = true; Message = "현재 음식 운영을 사용할 수 없습니다. 다시 확인해 주세요.";
         }
         catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
         {
-            List = null; Trace = null; RequiresLogin = true; Message = "운영자 계정을 확인하고 다시 로그인해 주세요.";
+            List = null; Trace = null; TraceLastConfirmedAtUtc = null; RequiresLogin = true; Message = "운영자 계정을 확인하고 다시 로그인해 주세요.";
         }
         catch
         {

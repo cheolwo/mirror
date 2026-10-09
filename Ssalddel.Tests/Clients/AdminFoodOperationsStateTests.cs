@@ -35,10 +35,57 @@ public sealed class AdminFoodOperationsStateTests
         var client = new Client();
         using var state = new AdminFoodOperationsState(client, () => "admin");
         await state.RefreshTraceAsync("FOOD-ONE");
+        var previous = state.Trace;
+        var confirmedAt = state.TraceLastConfirmedAtUtc;
+        Assert.NotNull(confirmedAt); Assert.False(state.TraceIsStale);
         client.TraceRead = (_, _) => throw new HttpRequestException("offline");
         await state.RefreshTraceAsync("FOOD-ONE");
-        Assert.NotNull(state.Trace); Assert.True(state.RequiresRefresh); Assert.False(state.CanReview);
+        Assert.Same(previous, state.Trace); Assert.True(state.RequiresRefresh); Assert.False(state.CanReview);
+        Assert.True(state.TraceIsStale); Assert.Equal(confirmedAt, state.TraceLastConfirmedAtUtc);
         Assert.Contains("다시 조회", state.Message);
+
+        client.TraceRead = (_, _) => Task.FromResult<음식주문운영추적응답?>(Trace("FOOD-ONE"));
+        await state.RefreshTraceAsync("FOOD-ONE");
+        Assert.False(state.TraceIsStale); Assert.False(state.RequiresRefresh); Assert.True(state.CanReview);
+        Assert.True(state.TraceLastConfirmedAtUtc >= confirmedAt); Assert.Null(state.Message);
+        Assert.Equal(0, client.ReviewCount);
+    }
+
+    [Fact]
+    public async Task 재조회중에는_이전조회시각을유지하고_현재행동을막는다()
+    {
+        var client = new Client();
+        using var state = new AdminFoodOperationsState(client, () => "admin");
+        await state.RefreshTraceAsync("FOOD-ONE");
+        var confirmedAt = state.TraceLastConfirmedAtUtc;
+        var pending = new TaskCompletionSource<음식주문운영추적응답?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        client.TraceRead = (_, _) => pending.Task;
+
+        var refreshing = state.RefreshTraceAsync("FOOD-ONE");
+        Assert.True(state.IsBusy); Assert.True(state.TraceIsStale); Assert.False(state.CanReview);
+        Assert.Equal(confirmedAt, state.TraceLastConfirmedAtUtc);
+
+        pending.SetResult(Trace("FOOD-ONE")); await refreshing;
+        Assert.False(state.IsBusy); Assert.False(state.TraceIsStale); Assert.True(state.CanReview);
+        Assert.Equal(0, client.ReviewCount);
+    }
+
+    [Fact]
+    public async Task 주문전환뒤에는_전주문의조회확인시각을표시하지않는다()
+    {
+        var client = new Client();
+        using var state = new AdminFoodOperationsState(client, () => "admin");
+        await state.RefreshTraceAsync("FOOD-ONE");
+        Assert.NotNull(state.TraceLastConfirmedAtUtc);
+        var pending = new TaskCompletionSource<음식주문운영추적응답?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        client.TraceRead = (_, _) => pending.Task;
+
+        var changing = state.RefreshTraceAsync("FOOD-TWO");
+        Assert.Null(state.Trace); Assert.Null(state.TraceLastConfirmedAtUtc); Assert.False(state.TraceIsStale);
+        Assert.False(state.CanReview);
+
+        pending.SetResult(Trace("FOOD-TWO")); await changing;
+        Assert.Equal("FOOD-TWO", state.Trace!.주문번호); Assert.NotNull(state.TraceLastConfirmedAtUtc);
     }
 
     [Theory]
@@ -52,6 +99,7 @@ public sealed class AdminFoodOperationsStateTests
         client.TraceRead = (_, _) => throw new HttpRequestException("denied", null, (HttpStatusCode)status);
         await state.RefreshTraceAsync("FOOD-ONE");
         Assert.True(state.RequiresLogin); Assert.Null(state.Trace); Assert.False(state.CanReview);
+        Assert.Null(state.TraceLastConfirmedAtUtc); Assert.False(state.TraceIsStale);
     }
 
     [Fact]

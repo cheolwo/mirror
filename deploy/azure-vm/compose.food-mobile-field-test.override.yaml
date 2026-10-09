@@ -1,4 +1,11 @@
+name: ssalddel-food-mobile-field-test
 services:
+  mysql:
+    environment:
+      MYSQL_DATABASE: ssalddel_food_mobile_test
+  mongo:
+    environment:
+      MONGO_INITDB_DATABASE: ssalddel_food_mobile_test
   app:
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
@@ -10,6 +17,14 @@ services:
       VersionFeatureFlags__PlatformOperationsControl: "true"
       VersionFeatureFlags__SsalddelMartWorkflow: "false"
       MobileFieldTest__Enabled: "true"
+      MobileFieldTest__FoodDispatch__Enabled: "true"
+      MobileFieldTest__FoodDispatch__BootstrapSyntheticDriverState: "true"
+      MobileFieldTest__FoodDispatch__RefreshSyntheticDriverLocation: "true"
+      MobileFieldTest__FoodDispatch__FixtureRevision: sagajeong-food-mobile-dispatch.r1
+      ConnectionStrings__DefaultConnection: "server=mysql;port=3306;database=ssalddel_food_mobile_test;user=ssalddel;password=${SSALDDEL_MYSQL_PASSWORD};SslMode=None;AllowPublicKeyRetrieval=True;"
+      MongoDb__Database: ssalddel_food_mobile_test
+      FoodObserverVerification__Enabled: "false"
+      ObservableOperationsVerification__Enabled: "false"
       IdentitySeed__BootstrapAdmin__Enabled: "false"
       IdentitySeed__DevelopmentAccounts__Enabled: "true"
       IdentitySeed__DevelopmentAccounts__AllowInSimulation: "true"

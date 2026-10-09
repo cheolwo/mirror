@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,47 @@ namespace Ssalddel.Tests.Ui.Common;
 
 public sealed class OrdererFoodOrderStateFocusTests
 {
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    public async Task ReceiptConfirmationComesBeforeSupportingDetailsOnlyWhenServerAllowsIt(bool allowed, bool stale)
+    {
+        var service = new FoodService { Detail = new()
+        {
+            주문 = new() { 주문번호 = "FOOD-A", 상태 = 음식주문상태코드.전달완료 },
+            배달진행 = new() { 배차요청됨 = true, 기사전달완료 = true, 안내 = "음식 수령을 확인해 주세요." },
+            AvailableActions = allowed ? [new() { ActionId = 음식배달가능행동Ids.주문수령확인 }] : []
+        }};
+        var detail = new 주문자음식주문상세ViewModel(service, service);
+        Assert.True(await detail.조회Async("FOOD-A"));
+        if (stale) detail.조회상태무효화();
+
+        var html = await RenderDetailAsync(detail);
+        var buttons = Regex.Matches(html, "<button\\b[^>]*>(?:(?!</button>).)*음식 수령 확인(?:(?!</button>).)*</button>", RegexOptions.Singleline);
+
+        Assert.Equal(allowed ? 1 : 0, buttons.Count);
+        Assert.Equal(allowed, html.Contains("data-food-order-current-task", StringComparison.Ordinal));
+        Assert.Equal(allowed && !stale, detail.수령확인가능);
+        Assert.Equal(1, Regex.Matches(html, "aria-label=\"전달과 수령 확인 단계\"").Count);
+        Assert.Contains("기사가 전달 완료를 기록했습니다.", html);
+        Assert.Contains("실제 음식을 받은 뒤 주문자가 직접 확인합니다.", html);
+        if (allowed)
+        {
+            Assert.True(html.IndexOf("data-food-order-current-task", StringComparison.Ordinal)
+                < html.IndexOf("내 음식 주문 상세", StringComparison.Ordinal));
+            Assert.True(html.IndexOf("음식 수령 확인", StringComparison.Ordinal)
+                < html.IndexOf("주문 상품", StringComparison.Ordinal));
+            Assert.Equal(stale, buttons[0].Value.Contains("disabled", StringComparison.Ordinal));
+            var memo = Regex.Match(html, "<details\\b[^>]*class=\"food-order-receipt-memo\"[^>]*>");
+            Assert.True(memo.Success);
+            Assert.DoesNotMatch("\\bopen(?:\\s|=|>)", memo.Value);
+            Assert.Contains("수령 확인 메모 (선택)", html);
+            if (stale) Assert.Contains("마지막으로 확인한 주문 정보입니다.", html);
+        }
+        Assert.Empty(service.Requests);
+    }
+
     [Theory]
     [InlineData(음식주문상태코드.주문확인, false, false)]
     [InlineData(음식주문상태코드.픽업완료, false, false)]

@@ -78,7 +78,8 @@ function Get-MobileSigningCertificateFingerprint {
 function Confirm-MobileSignedApk {
     param([string]$Path, $ExpectedApp, [string]$Version, [int]$VersionCode, $Tools,
         [Parameter(Mandatory = $true)][string]$ExpectedCertificateSha256,
-        [scriptblock]$ToolInvoker = { param($Tool, $ToolArguments) Invoke-MobileApkTool $Tool $ToolArguments })
+        [scriptblock]$ToolInvoker = { param($Tool, $ToolArguments) Invoke-MobileApkTool $Tool $ToolArguments },
+        [ValidateSet('Release', 'Debug')][string]$Configuration = 'Release')
     if ([IO.Path]::GetExtension($Path) -ne '.apk' -or -not (Test-Path -LiteralPath $Path -PathType Leaf)) {
         throw 'Only an existing APK can be handed over.'
     }
@@ -94,11 +95,12 @@ function Confirm-MobileSignedApk {
     if ($alignment.ExitCode -ne 0) { throw 'Final APK alignment verification failed.' }
     $badging = & $ToolInvoker $Tools.aapt @('dump', 'badging', $Path)
     $package = [regex]::Match($badging.Output, "package:\s+name='([^']+)'\s+versionCode='([^']+)'\s+versionName='([^']+)'")
+    $debuggable = $badging.Output -match '(?m)^application-debuggable'
     if ($badging.ExitCode -ne 0 -or -not $package.Success -or
         $package.Groups[1].Value -ne $ExpectedApp.PackageId -or
         $package.Groups[2].Value -ne [string]$VersionCode -or $package.Groups[3].Value -ne $Version -or
-        $badging.Output -match '(?m)^application-debuggable') {
-        throw 'Final APK package/version/Release metadata did not match the requested app.'
+        ($Configuration -eq 'Release' -and $debuggable) -or ($Configuration -eq 'Debug' -and -not $debuggable)) {
+        throw "Final APK package/version/$Configuration metadata did not match the requested app."
     }
     $archive = [IO.Compression.ZipFile]::OpenRead($Path)
     try {
@@ -110,7 +112,8 @@ function Confirm-MobileSignedApk {
         }
     } finally { $archive.Dispose() }
     [pscustomobject]@{
-        signatureVerified = $true; alignmentVerified = $true; releaseMetadataVerified = $true
+        signatureVerified = $true; alignmentVerified = $true; releaseMetadataVerified = $Configuration -eq 'Release'
+        debugMetadataVerified = $Configuration -eq 'Debug'; configuration = $Configuration
         certificateSha256 = $certificate.Groups[1].Value.ToLowerInvariant()
         abis = @('arm64-v8a', 'x86_64'); physicalDeviceVerified = $false; serverCommunicationVerified = $false
     }
