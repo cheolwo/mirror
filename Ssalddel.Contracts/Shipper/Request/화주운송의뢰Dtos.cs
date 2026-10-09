@@ -68,6 +68,13 @@ public sealed class 화주운송정산조건DTO
 
 public sealed class 화주운송의뢰생성요청
 {
+    /// <summary>서버의 Simulation 처리처 서비스만 지정합니다. HTTP 입력·출력에는 포함하지 않습니다.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool SimulationFulfillment { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool SimulationAutomaticFulfillment { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
+    public DateTime? SimulationDesiredCompletionUtc { get; set; }
     public Guid? 신청개인정보동의증적Id { get; set; }
     public string 신청출처Code { get; set; } = string.Empty;
     public string? 화주Id { get; set; }
@@ -227,6 +234,9 @@ public sealed class TimeWindowDTO
 
 public sealed class PricingDTO
 {
+    /// <summary>서버가 동결한 사전 합의 수행 요금표입니다. 기준견적·화주 청구·실지급과 구별합니다.</summary>
+    public Ssalddel.Contracts.Common.Pricing.AgreedRateTableSnapshotDto? AgreedRateTable { get; set; }
+    public string AgreedRateTableEvidenceStatusCode { get; set; } = "NotSelected";
     public string? 거리계산방식 { get; set; }
     public string? 단가출처 { get; set; }
     public string? 서비스레벨 { get; set; }

@@ -8,11 +8,21 @@ using Ssalddel.Contracts.Common.Dispatch;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Contracts.Driver.Food;
 using Ssalddel.Contracts.Driver.Work;
+using Ssalddel.Contracts.Driver.Settings;
 
 namespace FDriverApp.Services;
 
 public interface IFoodDeliveryDriverApiService
 {
+    Task<기사권역복귀설정응답> GetReturnAreaSettingsAsync(CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("권역 복귀 설정 조회를 지원하지 않습니다.");
+    Task<기사권역복귀설정응답> UpdateReturnAreaSettingsAsync(기사권역복귀설정수정요청 request, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("권역 복귀 설정 저장을 지원하지 않습니다.");
+    Task<Ssalddel.Contracts.Driver.Notification.기사알림설정응답?> GetNotificationSettingsAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult<Ssalddel.Contracts.Driver.Notification.기사알림설정응답?>(null);
+    Task<Ssalddel.Contracts.Driver.Notification.기사알림설정응답> UpdateNotificationSettingsAsync(
+        Ssalddel.Contracts.Driver.Notification.기사알림설정수정요청 settings, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("알림 설정 저장을 지원하지 않습니다.");
     Task<FoodDeliveryDriverWorkspaceDto> GetWorkspaceAsync(CancellationToken cancellationToken = default);
     Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync(DateOnly date, CancellationToken cancellationToken = default);
     Task<FoodDeliveryCompletedDeliveryDetailDto> GetCompletedDeliveryDetailAsync(string settlementId, CancellationToken cancellationToken = default);
@@ -50,6 +60,21 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
 
     public Task<FoodDeliveryDriverWorkspaceDto> GetWorkspaceAsync(CancellationToken cancellationToken = default)
         => SendAsync<FoodDeliveryDriverWorkspaceDto>(HttpMethod.Get, "api/v1/driver/food-deliveries/workspace", null, cancellationToken);
+
+    public Task<기사권역복귀설정응답> GetReturnAreaSettingsAsync(CancellationToken cancellationToken = default)
+        => SendAsync<기사권역복귀설정응답>(HttpMethod.Get, "api/v1/driver/return-area/settings", null, cancellationToken);
+
+    public Task<기사권역복귀설정응답> UpdateReturnAreaSettingsAsync(기사권역복귀설정수정요청 request, CancellationToken cancellationToken = default)
+        => SendAsync<기사권역복귀설정응답>(HttpMethod.Put, "api/v1/driver/return-area/settings", request, cancellationToken);
+
+    public async Task<Ssalddel.Contracts.Driver.Notification.기사알림설정응답?> GetNotificationSettingsAsync(CancellationToken cancellationToken = default)
+        => await SendAsync<Ssalddel.Contracts.Driver.Notification.기사알림설정응답>(HttpMethod.Get,
+            "api/v1/driver/notifications/settings", null, cancellationToken);
+
+    public Task<Ssalddel.Contracts.Driver.Notification.기사알림설정응답> UpdateNotificationSettingsAsync(
+        Ssalddel.Contracts.Driver.Notification.기사알림설정수정요청 settings, CancellationToken cancellationToken = default)
+        => SendAsync<Ssalddel.Contracts.Driver.Notification.기사알림설정응답>(HttpMethod.Put,
+            "api/v1/driver/notifications/settings", settings, cancellationToken);
 
     public Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync(DateOnly date, CancellationToken cancellationToken = default)
         => SendAsync<FoodDeliveryDailySettlementDto>(HttpMethod.Get,
@@ -156,6 +181,9 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
             "api/v1/driver/food-deliveries/route",
             request,
             cancellationToken);
+
+    internal Task<T> SendPricingAsync<T>(HttpMethod method, string path, object? body, CancellationToken token)
+        => SendAsync<T>(method, path, body, token);
 
     private async Task<T> SendAsync<T>(
         HttpMethod method,

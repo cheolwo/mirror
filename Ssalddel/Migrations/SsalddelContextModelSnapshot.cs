@@ -22,6 +22,60 @@ namespace Ssalddel.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("Ssalddel.Domain.Pricing.AgreedRateTableRecord", b =>
+                {
+                    b.Property<string>("AgreementId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<string>("BusinessKind").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                    b.Property<string>("VehicleCode").IsRequired().HasMaxLength(80).HasColumnType("varchar(80)");
+                    b.Property<string>("ProposerKind").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                    b.Property<string>("ProposerId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<string>("CounterpartyKind").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                    b.Property<string>("CounterpartyId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<string>("TermsJson").IsRequired().HasColumnType("longtext");
+                    b.Property<string>("TermsDigest").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<string>("StatusCode").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                    b.Property<DateTime>("EffectiveFromUtc").HasColumnType("datetime(6)");
+                    b.Property<DateTime>("EffectiveUntilUtc").HasColumnType("datetime(6)");
+                    b.Property<DateTime?>("AcceptedAtUtc").HasColumnType("datetime(6)");
+                    b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                    b.Property<string>("HistoryJson").IsRequired().HasColumnType("longtext");
+                    b.HasKey("AgreementId");
+                    b.HasIndex("ProposerKind", "ProposerId");
+                    b.HasIndex("CounterpartyKind", "CounterpartyId");
+                    b.ToTable("agreed_rate_tables");
+                });
+
+            modelBuilder.Entity("Ssalddel.Domain.Pricing.AgreedRateTableCommandReceipt", b =>
+                {
+                    b.Property<string>("PartyKind").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                    b.Property<string>("PartyId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<Guid>("RequestId").HasColumnType("char(36)");
+                    b.Property<string>("InputDigest").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<string>("ResultJson").IsRequired().HasColumnType("longtext");
+                    b.Property<DateTime>("RecordedAtUtc").HasColumnType("datetime(6)");
+                    b.HasKey("PartyKind", "PartyId", "RequestId");
+                    b.ToTable("agreed_rate_table_receipts");
+                });
+
+            modelBuilder.Entity("Ssalddel.Domain.Pricing.AgreedRateTableSelectionRecord", b =>
+                {
+                    b.Property<Guid>("SelectionRequestId").HasColumnType("char(36)");
+                    b.Property<string>("BusinessKind").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                    b.Property<string>("WorkId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<string>("AgreementId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<long>("AgreementRevision").HasColumnType("bigint");
+                    b.Property<string>("SnapshotJson").IsRequired().HasColumnType("longtext");
+                    b.Property<string>("SelectingPartyKind").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                    b.Property<string>("SelectingPartyId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<DateTime>("SelectedAtUtc").HasColumnType("datetime(6)");
+                    b.Property<decimal?>("AgreedAmountKrw").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("DistanceKm").HasPrecision(18, 3).HasColumnType("decimal(18,3)");
+                    b.Property<string>("DistanceBasisCode").IsRequired().HasMaxLength(80).HasColumnType("varchar(80)");
+                    b.Property<string>("SynchronizationStatusCode").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                    b.HasKey("BusinessKind", "WorkId");
+                    b.ToTable("agreed_rate_table_selections");
+                });
+
             modelBuilder.Entity("살뜰.도메인.음식.음식주문기사정산", b =>
                 {
                     b.Property<long>("Id").ValueGeneratedOnAdd().HasColumnType("bigint");
@@ -9297,6 +9351,7 @@ namespace Ssalddel.Migrations
                     b.Property<decimal?>("최소운임").HasPrecision(18, 2).HasColumnType("decimal(18,2)").HasColumnName("minimum_fare");
                     b.Property<string>("거리계산방식").HasMaxLength(80).HasColumnType("varchar(80)").HasColumnName("distance_basis");
                     b.Property<string>("단가출처").HasMaxLength(160).HasColumnType("varchar(160)").HasColumnName("rate_source");
+                    b.Property<string>("합의요금표SnapshotJson").HasColumnType("longtext").HasColumnName("agreed_rate_table_snapshot_json");
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
@@ -10430,6 +10485,7 @@ namespace Ssalddel.Migrations
 
             modelBuilder.Entity("살뜰.도메인.음식.음식주문", b =>
                 {
+                    b.Property<bool>("모의처리처수행").HasColumnType("tinyint(1)").HasColumnName("simulation_fulfillment_routing");
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
@@ -14201,6 +14257,10 @@ namespace Ssalddel.Migrations
                         .HasColumnName("shipper_id");
 
                     b.Property<string>("생활배송접수키").HasMaxLength(64).HasColumnType("varchar(64)").HasColumnName("neighborhood_registration_key");
+                    b.Property<string>("생활배송포장크기Code").HasMaxLength(16).HasColumnType("varchar(16)").HasColumnName("neighborhood_package_size_code");
+                    b.Property<bool>("모의처리처수행").ValueGeneratedOnAdd().HasColumnType("tinyint(1)").HasColumnName("neighborhood_simulation_fulfillment").HasDefaultValue(false);
+                    b.Property<bool>("자동처리처수행").ValueGeneratedOnAdd().HasColumnType("tinyint(1)").HasDefaultValue(false);
+                    b.Property<DateTime?>("모의처리희망완료Utc").HasColumnType("datetime(6)").HasColumnName("neighborhood_simulation_deadline_utc");
                     b.HasKey("Id");
 
                     b.HasIndex("생활배송접수키").IsUnique().HasDatabaseName("ux_neighborhood_registration_key");
@@ -15183,6 +15243,516 @@ namespace Ssalddel.Migrations
                     b.Navigation("정산");
                 });
             modelBuilder.Entity("살뜰.도메인.음식.음식주문기사정산", b => b.Navigation("지급검증목록"));
+            modelBuilder.Entity("Ssalddel.Domain.Community.NeighborhoodFulfillmentQuoteRecord", b =>
+                {
+                    b.Property<string>("SourceKind").IsRequired().ValueGeneratedOnAdd().HasMaxLength(40).HasColumnType("varchar(40)").HasDefaultValue("NeighborhoodDelivery");
+                    b.Property<long?>("ConsentRevision").HasColumnType("bigint");
+                    b.Property<long>("SourceRevision").HasColumnType("bigint");
+                    b.Property<string>("Leg").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                    b.Property<string>("QuoteId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<string>("ActorId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<string>("InputDigest").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<string>("RequestId").HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<string>("ProviderId").IsRequired().HasMaxLength(60).HasColumnType("varchar(60)");
+                    b.Property<decimal>("CostKrw").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("WeightKg").HasPrecision(18, 3).HasColumnType("decimal(18,3)");
+                    b.Property<decimal>("DistanceKm").HasPrecision(18, 3).HasColumnType("decimal(18,3)");
+                    b.Property<DateTime?>("DesiredCompletionUtc").HasColumnType("datetime(6)");
+                    b.Property<DateTime>("EstimatedCompletionUtc").HasColumnType("datetime(6)");
+                    b.Property<DateTime>("ExpiresAtUtc").HasColumnType("datetime(6)");
+                    b.Property<bool>("IsSimulation").HasColumnType("tinyint(1)");
+                    b.HasKey("QuoteId");
+                    b.HasIndex("ActorId", "ExpiresAtUtc");
+                    b.ToTable("neighborhood_fulfillment_quotes");
+                });
+
+            modelBuilder.Entity("Ssalddel.Domain.Community.NeighborhoodFulfillmentRecord", b =>
+                {
+                    b.Property<string>("SourceKind").IsRequired().ValueGeneratedOnAdd().HasMaxLength(40).HasColumnType("varchar(40)").HasDefaultValue("NeighborhoodDelivery");
+                    b.Property<bool>("IsAutomatic").HasColumnType("tinyint(1)");
+                    b.Property<string>("StateCode").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                    b.Property<string>("ReviewCode").HasMaxLength(80).HasColumnType("varchar(80)");
+                    b.Property<string>("SelectionReason").IsRequired().HasMaxLength(500).HasColumnType("varchar(500)");
+                    b.Property<string>("RequestId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<string>("ActorId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<string>("AttemptId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<long>("Revision").HasColumnType("bigint").IsConcurrencyToken();
+                    b.Property<DateTime>("UpdatedAtUtc").HasColumnType("datetime(6)");
+                    b.HasKey("SourceKind", "RequestId");
+                    b.ToTable("neighborhood_fulfillment");
+                });
+
+            modelBuilder.Entity("Ssalddel.Domain.Community.NeighborhoodFulfillmentAttemptRecord", b =>
+                {
+                    b.Property<string>("SourceKind").IsRequired().ValueGeneratedOnAdd().HasMaxLength(40).HasColumnType("varchar(40)").HasDefaultValue("NeighborhoodDelivery");
+                    b.Property<long?>("ConsentRevision").HasColumnType("bigint");
+                    b.Property<long>("SourceRevision").HasColumnType("bigint");
+                    b.Property<string>("Leg").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                    b.Property<decimal?>("ConfirmedIncurredCostKrw").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                    b.Property<string>("ResultOperationId").HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<string>("AttemptId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<string>("RequestId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<Guid>("ClientRequestId").HasColumnType("char(36)");
+                    b.Property<string>("SelectionDigest").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<string>("QuoteId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<string>("ProviderId").IsRequired().HasMaxLength(60).HasColumnType("varchar(60)");
+                    b.Property<string>("StateCode").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                    b.Property<string>("ExternalRequestId").HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<decimal>("CostKrw").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                    b.Property<bool>("IsSimulation").HasColumnType("tinyint(1)");
+                    b.Property<bool>("SharingAgreed").HasColumnType("tinyint(1)");
+                    b.Property<DateTime>("CreatedAtUtc").HasColumnType("datetime(6)");
+                    b.Property<DateTime>("UpdatedAtUtc").HasColumnType("datetime(6)");
+                    b.Property<DateTime?>("DesiredCompletionUtc").HasColumnType("datetime(6)");
+                    b.Property<DateTime>("EstimatedCompletionUtc").HasColumnType("datetime(6)");
+                    b.Property<long>("Revision").HasColumnType("bigint").IsConcurrencyToken();
+                    b.Property<Guid?>("CancelClientRequestId").HasColumnType("char(36)");
+                    b.Property<string>("HistoryJson").IsRequired().HasColumnType("longtext");
+                    b.HasKey("AttemptId");
+                    b.HasIndex("SourceKind", "RequestId", "ClientRequestId").IsUnique().HasDatabaseName("IX_fulfillment_attempt_source_client");
+                    b.HasIndex("SourceKind", "RequestId", "ConsentRevision", "ProviderId").IsUnique().HasDatabaseName("IX_fulfillment_attempt_source_consent_provider");
+                    b.ToTable("neighborhood_fulfillment_attempts");
+                });
+            modelBuilder.Entity("Ssalddel.Domain.Community.AutoFulfillmentConsentRecord", b =>
+                {
+                    b.Property<string>("SourceKind").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                    b.Property<string>("RequestId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<string>("OwnerId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<Guid>("ClientRequestId").HasColumnType("char(36)");
+                    b.Property<string>("InputDigest").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                    b.Property<decimal>("MaxUserChargeKrw").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                    b.Property<DateTime?>("DesiredCompletionUtc").HasColumnType("datetime(6)");
+                    b.Property<string>("AllowedProvidersJson").IsRequired().HasMaxLength(1000).HasColumnType("varchar(1000)");
+                    b.Property<string>("InformationFieldsJson").IsRequired().HasMaxLength(1000).HasColumnType("varchar(1000)");
+                    b.Property<string>("NoticeVersion").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                    b.Property<string>("ReceiptsJson").IsRequired().HasColumnType("longtext");
+                    b.Property<bool>("SharingAgreed").HasColumnType("tinyint(1)");
+                    b.Property<bool>("AutomaticSubmissionAgreed").HasColumnType("tinyint(1)");
+                    b.Property<bool>("DirectPaymentAgreed").HasColumnType("tinyint(1)");
+                    b.Property<bool>("Revoked").HasColumnType("tinyint(1)");
+                    b.Property<decimal>("FrozenRestaurantSupportKrw").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                    b.Property<string>("FrozenCostSharingPolicyJson").HasColumnType("longtext");
+                    b.Property<long?>("RestaurantSupportRevision").HasColumnType("bigint");
+                    b.Property<DateTime>("UpdatedAtUtc").HasColumnType("datetime(6)");
+                    b.HasKey("SourceKind", "RequestId");
+                    b.ToTable("fulfillment_routing_consents");
+                });
+            modelBuilder.Entity("Ssalddel.Domain.Community.RestaurantFulfillmentSupportRecord", b =>
+                {
+                    b.Property<long>("RestaurantId").HasColumnType("bigint");
+                    b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                    b.Property<decimal>("FixedContributionKrw").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                    b.Property<string>("CostSharingPolicyJson").HasColumnType("longtext");
+                    b.Property<bool>("Enabled").HasColumnType("tinyint(1)");
+                    b.Property<Guid>("ClientRequestId").HasColumnType("char(36)");
+                    b.Property<string>("ActorId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<DateTime>("UpdatedAtUtc").HasColumnType("datetime(6)");
+                    b.HasKey("RestaurantId");
+                    b.ToTable("restaurant_fulfillment_supports");
+                });
+            modelBuilder.Entity("Ssalddel.Domain.Community.AutoFulfillmentOutboxRecord", b =>
+                {
+                    b.Property<string>("Id").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<string>("SourceKind").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                    b.Property<string>("RequestId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<Guid>("OperationId").HasColumnType("char(36)");
+                    b.Property<string>("StateCode").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                    b.Property<int>("ClaimRevision").IsConcurrencyToken().HasColumnType("int");
+                    b.Property<string>("LastErrorCode").HasMaxLength(80).HasColumnType("varchar(80)");
+                    b.Property<DateTime>("UpdatedAtUtc").HasColumnType("datetime(6)");
+                    b.HasKey("Id");
+                    b.HasIndex("SourceKind", "RequestId", "OperationId").IsUnique();
+                    b.HasIndex("StateCode", "UpdatedAtUtc");
+                    b.ToTable("fulfillment_routing_outbox");
+                });
+            modelBuilder.Entity("Ssalddel.Domain.Community.FulfillmentMockJobRecord", b =>
+                {
+                    b.Property<string>("AttemptId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<string>("SourceKind").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                    b.Property<string>("RequestId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<string>("ProviderId").IsRequired().HasMaxLength(60).HasColumnType("varchar(60)");
+                    b.Property<string>("ExternalRequestId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<string>("StateCode").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                    b.Property<string>("Leg").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                    b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                    b.Property<long>("AssignmentRevision").HasColumnType("bigint");
+                    b.Property<string>("ExternalDriverReference").HasMaxLength(100).HasColumnType("varchar(100)");
+                    b.Property<Guid?>("LastClientRequestId").HasColumnType("char(36)");
+                    b.Property<string>("LastRequestDigest").HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<decimal?>("ConfirmedIncurredCostKrw").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                    b.Property<DateTime>("CreatedAtUtc").HasColumnType("datetime(6)");
+                    b.Property<DateTime>("UpdatedAtUtc").HasColumnType("datetime(6)");
+                    b.HasKey("AttemptId");
+                    b.ToTable("fulfillment_mock_jobs");
+                });
+            modelBuilder.Entity("살뜰.도메인.창고.분산거점Record", b =>
+            {
+                b.Property<string>("SiteId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<long>("WarehouseId").HasColumnType("bigint");
+                b.Property<string>("PlaceId").IsRequired().HasMaxLength(120).HasColumnType("varchar(120)");
+                b.Property<string>("PublicCandidateRef").IsRequired().HasMaxLength(200).HasColumnType("varchar(200)");
+                b.Property<string>("PublicLabel").IsRequired().HasMaxLength(120).HasColumnType("varchar(120)");
+                b.Property<string>("OwnerUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<string>("ManagerUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<string>("PrivateDetailsJson").IsRequired().HasColumnType("longtext");
+                b.Property<bool>("SpaceConfirmed").HasColumnType("tinyint(1)");
+                b.Property<bool>("PickupPointConfirmed").HasColumnType("tinyint(1)");
+                b.Property<bool>("OwnerConsented").HasColumnType("tinyint(1)");
+                b.Property<bool>("ManagerConsented").HasColumnType("tinyint(1)");
+                b.Property<string>("ConsentEvidenceJson").IsRequired().HasColumnType("longtext");
+                b.Property<string>("StatusCode").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.HasKey("SiteId");
+                b.HasIndex("WarehouseId").IsUnique();
+                b.ToTable("distributed_sites");
+            });
+            modelBuilder.Entity("살뜰.도메인.창고.분산적재위치Record", b =>
+            {
+                b.Property<string>("LocationId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("SiteId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("Barcode").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                b.Property<string>("Label").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                b.HasKey("LocationId");
+                b.HasIndex("Barcode").IsUnique();
+                b.HasIndex("SiteId");
+                b.ToTable("distributed_locations");
+            });
+            modelBuilder.Entity("살뜰.도메인.창고.분산입고계획Record", b =>
+            {
+                b.Property<string>("PlanId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("SourceReference").IsRequired().HasMaxLength(120).HasColumnType("varchar(120)");
+                b.Property<string>("CreatorUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<string>("StatusCode").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.HasKey("PlanId");
+                b.ToTable("distributed_inbound_plans");
+            });
+            modelBuilder.Entity("살뜰.도메인.창고.분산재고LotRecord", b =>
+            {
+                b.Property<string>("LotId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("PlanId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("LineKey").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("SiteId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("LocationId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<long>("SourceInboundId").HasColumnType("bigint");
+                b.Property<long>("TargetInboundId").HasColumnType("bigint");
+                b.Property<long>("InboundItemId").HasColumnType("bigint");
+                b.Property<string>("OwnerUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<string>("SellerUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<string>("Sku").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                b.Property<string>("LotCode").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                b.Property<string>("StorageAgreementId").HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("StorageAgreementSnapshotJson").IsRequired().HasColumnType("longtext");
+                b.Property<int>("ExpectedQuantity").HasColumnType("int");
+                b.Property<int>("ReceivedQuantity").HasColumnType("int");
+                b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.HasKey("LotId");
+                b.HasIndex("PlanId", "LineKey").IsUnique();
+                b.HasIndex("InboundItemId").IsUnique();
+                b.HasIndex("OwnerUserId", "Sku");
+                b.HasIndex("LocationId");
+                b.ToTable("distributed_lots");
+            });
+            modelBuilder.Entity("살뜰.도메인.창고.분산배송WaveRecord", b =>
+            {
+                b.Property<string>("WaveId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("RoundId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("CreatorUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<string>("Label").IsRequired().HasMaxLength(120).HasColumnType("varchar(120)");
+                b.Property<string>("StatusCode").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                b.Property<string>("DriverId").HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<DateTime>("CutoffUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime>("PickupStartUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime>("PickupEndUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime>("DeliveryStartUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime>("DeliveryEndUtc").HasColumnType("datetime(6)");
+                b.Property<decimal>("PickupServiceMinutes").HasPrecision(18, 3).HasColumnType("decimal(18,3)");
+                b.Property<decimal>("DeliveryServiceMinutes").HasPrecision(18, 3).HasColumnType("decimal(18,3)");
+                b.Property<string>("RouteJson").IsRequired().HasColumnType("longtext");
+                b.Property<string>("RouteEvidenceJson").IsRequired().HasColumnType("longtext");
+                b.Property<decimal?>("TotalElapsedMinutes").HasPrecision(18, 3).HasColumnType("decimal(18,3)");
+                b.Property<decimal?>("TotalDistanceKm").HasPrecision(18, 3).HasColumnType("decimal(18,3)");
+                b.Property<decimal?>("OfferedDriverFareKrw").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+                b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.HasKey("WaveId");
+                b.HasIndex("RoundId").IsUnique();
+                b.ToTable("distributed_waves");
+            });
+            modelBuilder.Entity("살뜰.도메인.창고.분산배송주문Record", b =>
+            {
+                b.Property<string>("CargoEvidenceDigest").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("OrderId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("WaveId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("OrderReference").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                b.Property<string>("CargoRequestId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<string>("SellerUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<string>("CustomerUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<string>("StatusCode").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                b.Property<bool>("CustomerAcknowledged").HasColumnType("tinyint(1)");
+                b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.HasKey("OrderId");
+                b.HasIndex("CargoRequestId").IsUnique();
+                b.HasIndex("WaveId");
+                b.ToTable("distributed_orders");
+            });
+            modelBuilder.Entity("살뜰.도메인.창고.분산재고예약Record", b =>
+            {
+                b.Property<string>("ReservationId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("WaveId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("OrderId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("LotId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<long>("OutboundPlanId").HasColumnType("bigint");
+                b.Property<int>("Quantity").HasColumnType("int");
+                b.Property<int>("PickedQuantity").HasColumnType("int");
+                b.Property<int>("DeliveredQuantity").HasColumnType("int");
+                b.Property<int>("ReleasedQuantity").HasColumnType("int");
+                b.Property<int>("ReturnedQuantity").HasColumnType("int");
+                b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.HasKey("ReservationId");
+                b.HasIndex("OutboundPlanId").IsUnique();
+                b.HasIndex("OrderId", "LotId").IsUnique();
+                b.HasIndex("LotId");
+                b.ToTable("distributed_reservations");
+            });
+            modelBuilder.Entity("살뜰.도메인.창고.분산물류CommandReceipt", b =>
+            {
+                b.Property<string>("ActorUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<Guid>("RequestId").HasColumnType("char(36)");
+                b.Property<string>("InputDigest").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("Kind").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                b.Property<string>("AggregateId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("ReservationId").HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<int>("Quantity").HasColumnType("int");
+                b.Property<long>("Revision").HasColumnType("bigint");
+                b.Property<string>("StatusCode").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                b.Property<DateTime>("RecordedAtUtc").HasColumnType("datetime(6)");
+                b.HasKey("ActorUserId", "RequestId");
+                b.ToTable("distributed_receipts");
+            });
+            modelBuilder.Entity("살뜰.도메인.창고.분산적재위치Record", b => b.HasOne("살뜰.도메인.창고.분산거점Record", null).WithMany().HasForeignKey("SiteId").OnDelete(DeleteBehavior.Restrict));
+            modelBuilder.Entity("살뜰.도메인.창고.분산재고LotRecord", b => b.HasOne("살뜰.도메인.창고.분산입고계획Record", null).WithMany().HasForeignKey("PlanId").OnDelete(DeleteBehavior.Restrict));
+            modelBuilder.Entity("살뜰.도메인.창고.분산재고LotRecord", b => b.HasOne("살뜰.도메인.창고.분산적재위치Record", null).WithMany().HasForeignKey("LocationId").OnDelete(DeleteBehavior.Restrict));
+            modelBuilder.Entity("살뜰.도메인.창고.분산배송주문Record", b => b.HasOne("살뜰.도메인.창고.분산배송WaveRecord", null).WithMany().HasForeignKey("WaveId").OnDelete(DeleteBehavior.Restrict));
+            modelBuilder.Entity("살뜰.도메인.창고.분산재고예약Record", b => b.HasOne("살뜰.도메인.창고.분산배송주문Record", null).WithMany().HasForeignKey("OrderId").OnDelete(DeleteBehavior.Restrict));
+            modelBuilder.Entity("살뜰.도메인.창고.분산재고예약Record", b => b.HasOne("살뜰.도메인.창고.분산재고LotRecord", null).WithMany().HasForeignKey("LotId").OnDelete(DeleteBehavior.Restrict));
+            modelBuilder.Entity("살뜰.도메인.창고.분산보관합의Record", b =>
+            {
+                b.Property<string>("AgreementId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("SiteId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("LocationId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("SpaceOwnerUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<string>("GoodsOwnerUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<string>("CreatorUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<string>("TermsJson").IsRequired().HasColumnType("longtext");
+                b.Property<string>("HistoryJson").IsRequired().HasColumnType("longtext");
+                b.Property<string>("StatusCode").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                b.Property<int>("TermsVersion").HasColumnType("int");
+                b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.Property<bool>("SpaceOwnerConsented").HasColumnType("tinyint(1)");
+                b.Property<bool>("GoodsOwnerConsented").HasColumnType("tinyint(1)");
+                b.Property<DateTime>("StartsAtUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime>("EndsAtUtc").HasColumnType("datetime(6)");
+                b.HasKey("AgreementId"); b.HasIndex("LocationId", "GoodsOwnerUserId").IsUnique();
+                b.ToTable("distributed_storage_agreements");
+            });
+            modelBuilder.Entity("살뜰.도메인.창고.분산보관합의Record", b => b.HasOne("살뜰.도메인.창고.분산적재위치Record", null).WithMany().HasForeignKey("LocationId").OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_distributed_storage_agreements_locations"));
+            modelBuilder.Entity("살뜰.도메인.창고.분산사진증빙Record", b =>
+            {
+                b.Property<string>("Kind").IsRequired().HasMaxLength(20).HasColumnType("varchar(20)");
+                b.Property<string>("DeletionLimitationCode").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                b.Property<string>("ContentType").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                b.Property<string>("StatusCode").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                b.Property<string>("ActorUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<string>("EvidenceId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("AggregateId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("BindingDigest").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("InputSha256").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("StoredSha256").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("PrivateDetailsJson").IsRequired().HasColumnType("longtext");
+                b.Property<Guid>("UploadRequestId").HasColumnType("char(36)").UseCollation("ascii_general_ci");
+                b.Property<Guid>("CompletionRequestId").HasColumnType("char(36)").UseCollation("ascii_general_ci");
+                b.Property<long>("Bytes").HasColumnType("bigint"); b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.Property<DateTime>("CreatedAtUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime?>("UploadedAtUtc").HasColumnType("datetime(6)"); b.Property<DateTime?>("BoundAtUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime?>("CustodyEndedAtUtc").HasColumnType("datetime(6)"); b.Property<DateTime?>("DeleteAfterUtc").HasColumnType("datetime(6)"); b.Property<DateTime?>("DeletedAtUtc").HasColumnType("datetime(6)");
+                b.Property<bool>("ActiveObjectAbsent").HasColumnType("tinyint(1)"); b.Property<bool>("HistoricalCopiesVerifiedAbsent").HasColumnType("tinyint(1)");
+                b.HasKey("EvidenceId"); b.HasIndex("ActorUserId", "UploadRequestId").IsUnique(); b.HasIndex("ActorUserId", "CompletionRequestId");
+                b.HasIndex("StatusCode", "CreatedAtUtc"); b.HasIndex("DeleteAfterUtc"); b.ToTable("distributed_photo_evidence");
+            });
+            modelBuilder.Entity("살뜰.도메인.창고.분산사진보존정지Record", b =>
+            {
+                b.Property<string>("CaseId").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                b.Property<string>("SourceKind").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                b.Property<string>("SourceId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("LegalBasisJson").IsRequired().HasColumnType("longtext");
+                b.Property<long>("Sequence").HasColumnType("bigint"); b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.Property<bool>("Active").HasColumnType("tinyint(1)"); b.Property<DateTime?>("ReviewAtUtc").HasColumnType("datetime(6)");
+                b.HasKey("CaseId"); b.HasIndex("SourceKind", "SourceId", "Active"); b.ToTable("distributed_photo_holds");
+            });
+            modelBuilder.Entity("살뜰.도메인.정산.NeighborhoodSettlementAgreementRecord", b =>
+            {
+                b.Property<string>("AgreementId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("SourceKind").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                b.Property<string>("SourceId").IsRequired().HasMaxLength(120).HasColumnType("varchar(120)");
+                b.Property<string>("CreatorUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<string>("ActivityKind").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                b.Property<string>("StatusCode").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                b.Property<string>("TermsJson").IsRequired().HasColumnType("longtext");
+                b.Property<string>("SourceSnapshotJson").IsRequired().HasColumnType("longtext");
+                b.Property<string>("ConsentsJson").IsRequired().HasColumnType("longtext");
+                b.Property<string>("HistoryJson").IsRequired().HasColumnType("longtext");
+                b.Property<int>("TermsVersion").HasColumnType("int");
+                b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.Property<DateTime>("CreatedAtUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime>("UpdatedAtUtc").HasColumnType("datetime(6)");
+                b.HasKey("AgreementId"); b.HasIndex("SourceKind", "SourceId").IsUnique().HasDatabaseName("IX_neighborhood_agreement_source");
+                b.ToTable("neighborhood_settlement_agreements");
+            });
+            modelBuilder.Entity("살뜰.도메인.정산.NeighborhoodSettlementAgreementVersionRecord", b =>
+            {
+                b.Property<string>("AgreementId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<int>("TermsVersion").HasColumnType("int");
+                b.Property<string>("TermsJson").IsRequired().HasColumnType("longtext").Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Throw);
+                b.Property<string>("SourceSnapshotJson").IsRequired().HasColumnType("longtext").Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Throw);
+                b.Property<string>("ConsentsJson").IsRequired().HasColumnType("longtext");
+                b.Property<DateTime>("CreatedAtUtc").HasColumnType("datetime(6)");
+                b.HasKey("AgreementId", "TermsVersion"); b.ToTable("neighborhood_settlement_versions");
+            });
+            modelBuilder.Entity("살뜰.도메인.정산.NeighborhoodSettlementEntryRecord", b =>
+            {
+                b.Property<string>("EntryId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("AgreementId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<int>("TermsVersion").HasColumnType("int");
+                b.Property<string>("LineKey").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("Kind").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                b.Property<string>("OriginKind").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                b.Property<string>("OriginId").IsRequired().HasMaxLength(120).HasColumnType("varchar(120)");
+                b.Property<long>("OriginRevision").HasColumnType("bigint");
+                b.Property<string>("AccrualKey").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("CanonicalDeliveryOrigin").HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<string>("OriginalEntryId").HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("DetailsJson").IsRequired().HasColumnType("longtext");
+                b.Property<string>("StatusCode").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.Property<DateTime>("RecordedAtUtc").HasColumnType("datetime(6)");
+                b.HasKey("EntryId"); b.HasIndex("AccrualKey").IsUnique().HasDatabaseName("IX_neighborhood_entry_accrual");
+                b.HasIndex("CanonicalDeliveryOrigin").IsUnique().HasDatabaseName("IX_neighborhood_entry_delivery_origin");
+                b.HasIndex("AgreementId", "TermsVersion").HasDatabaseName("IX_neighborhood_entry_version");
+                b.HasIndex("OriginalEntryId").HasDatabaseName("IX_neighborhood_entry_original"); b.ToTable("neighborhood_settlement_entries");
+            });
+            modelBuilder.Entity("살뜰.도메인.정산.NeighborhoodSettlementPaymentRecord", b =>
+            {
+                b.Property<string>("PaymentId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("AgreementId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("DetailsJson").IsRequired().HasColumnType("longtext");
+                b.Property<string>("StatusCode").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.Property<DateTime>("ReportedAtUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime?>("RecipientConfirmedAtUtc").HasColumnType("datetime(6)");
+                b.HasKey("PaymentId"); b.HasIndex("AgreementId").HasDatabaseName("IX_neighborhood_payment_agreement"); b.ToTable("neighborhood_settlement_payments");
+            });
+            modelBuilder.Entity("살뜰.도메인.정산.NeighborhoodSettlementCommandReceiptRecord", b =>
+            {
+                b.Property<string>("ActorUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<Guid>("RequestId").HasColumnType("char(36)").UseCollation("ascii_general_ci");
+                b.Property<string>("AgreementId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("InputDigest").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("Kind").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                b.Property<long>("Revision").HasColumnType("bigint");
+                b.Property<string>("ResponseJson").IsRequired().HasColumnType("longtext");
+                b.Property<DateTime>("RecordedAtUtc").HasColumnType("datetime(6)");
+                b.HasKey("ActorUserId", "RequestId"); b.HasIndex("AgreementId").HasDatabaseName("IX_neighborhood_receipt_agreement"); b.ToTable("neighborhood_settlement_receipts");
+            });
+            modelBuilder.Entity("살뜰.도메인.정산.NeighborhoodSettlementAgreementVersionRecord", b => b.HasOne("살뜰.도메인.정산.NeighborhoodSettlementAgreementRecord", null).WithMany().HasForeignKey("AgreementId").OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_neighborhood_version_agreement"));
+            modelBuilder.Entity("살뜰.도메인.정산.NeighborhoodSettlementEntryRecord", b => b.HasOne("살뜰.도메인.정산.NeighborhoodSettlementAgreementVersionRecord", null).WithMany().HasForeignKey("AgreementId", "TermsVersion").OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_neighborhood_entry_version"));
+            modelBuilder.Entity("살뜰.도메인.정산.NeighborhoodSettlementEntryRecord", b => b.HasOne("살뜰.도메인.정산.NeighborhoodSettlementEntryRecord", null).WithMany().HasForeignKey("OriginalEntryId").OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_neighborhood_entry_original"));
+            modelBuilder.Entity("살뜰.도메인.정산.NeighborhoodSettlementPaymentRecord", b => b.HasOne("살뜰.도메인.정산.NeighborhoodSettlementAgreementRecord", null).WithMany().HasForeignKey("AgreementId").OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_neighborhood_payment_agreement"));
+            modelBuilder.Entity("살뜰.도메인.정산.NeighborhoodSettlementCommandReceiptRecord", b => b.HasOne("살뜰.도메인.정산.NeighborhoodSettlementAgreementRecord", null).WithMany().HasForeignKey("AgreementId").OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_neighborhood_receipt_agreement"));
+            // Neighborhood member delivery: frozen schema for the additive 20261009100000 migration.
+            modelBuilder.Entity("살뜰.도메인.운송.운송원장", b =>
+            {
+                b.Property<bool>("일반회원배송전용").HasColumnType("tinyint(1)").HasColumnName("neighborhood_member_only");
+                b.Property<string>("일반회원수행자UserId").HasMaxLength(191).HasColumnType("varchar(191)").HasColumnName("assigned_member_user_id");
+                b.Property<string>("수행자종류").HasMaxLength(40).HasColumnType("varchar(40)").HasColumnName("performer_kind");
+            });
+            modelBuilder.Entity("Ssalddel.Domain.Community.NeighborhoodMemberParticipation", b =>
+            {
+                b.Property<string>("UserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.Property<long>("WorkLockRevision").HasColumnType("bigint");
+                b.Property<bool>("ReceiveOffers").HasColumnType("tinyint(1)");
+                b.Property<string>("PrivatePayload").IsRequired().HasColumnType("longtext");
+                b.Property<string>("ActiveRequestId").HasMaxLength(120).HasColumnType("varchar(120)");
+                b.Property<DateTime>("UpdatedAtUtc").HasColumnType("datetime(6)");
+                b.HasKey("UserId"); b.HasIndex("ReceiveOffers"); b.ToTable("neighborhood_member_participation");
+            });
+            modelBuilder.Entity("Ssalddel.Domain.Community.NeighborhoodMemberDelivery", b =>
+            {
+                b.Property<string>("RequestId").IsRequired().HasMaxLength(120).HasColumnType("varchar(120)");
+                b.Property<string>("OwnerUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<string>("AssignedMemberUserId").HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.Property<string>("StateCode").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                b.Property<Guid>("ConsentEvidenceId").HasColumnType("char(36)").UseCollation("ascii_general_ci");
+                b.Property<string>("NoticeVersion").IsRequired().HasMaxLength(80).HasColumnType("varchar(80)");
+                b.Property<decimal>("FareKrw").HasPrecision(18,2).HasColumnType("decimal(18,2)");
+                b.Property<decimal?>("DistanceKm").HasPrecision(18,3).HasColumnType("decimal(18,3)");
+                b.Property<DateTime>("WindowEndUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime?>("AssignedAtUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime?>("CompletedAtUtc").HasColumnType("datetime(6)");
+                b.Property<string>("PickupEvidenceId").HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("DeliveryEvidenceId").HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("IssueCode").HasMaxLength(40).HasColumnType("varchar(40)");
+                b.Property<string>("SupportCaseId").HasMaxLength(120).HasColumnType("varchar(120)");
+                b.Property<string>("PrivateIssuePayload").HasColumnType("longtext");
+                b.Property<DateTime>("UpdatedAtUtc").HasColumnType("datetime(6)");
+                b.HasKey("RequestId"); b.HasIndex("AssignedMemberUserId","StateCode"); b.ToTable("neighborhood_member_delivery");
+            });
+            modelBuilder.Entity("Ssalddel.Domain.Community.NeighborhoodMemberOffer", b =>
+            {
+                b.Property<string>("OfferId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("RequestId").IsRequired().HasMaxLength(120).HasColumnType("varchar(120)");
+                b.Property<string>("MemberUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<long>("ParticipationRevision").HasColumnType("bigint");
+                b.Property<long>("DeliveryRevision").HasColumnType("bigint");
+                b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.Property<string>("StateCode").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                b.Property<DateTime>("CreatedAtUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime>("ExpiresAtUtc").HasColumnType("datetime(6)");
+                b.Property<string>("PushStateCode").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                b.Property<int>("PushAttempts").HasColumnType("int");
+                b.Property<long>("PushClaimRevision").IsConcurrencyToken().HasColumnType("bigint");
+                b.Property<DateTime?>("PushClaimUntilUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime?>("PushLastAttemptUtc").HasColumnType("datetime(6)");
+                b.HasKey("OfferId"); b.HasIndex("RequestId","MemberUserId").IsUnique();
+                b.HasIndex("MemberUserId","CreatedAtUtc"); b.HasIndex("PushStateCode","ExpiresAtUtc"); b.ToTable("neighborhood_member_offer");
+            });
+            modelBuilder.Entity("Ssalddel.Domain.Community.NeighborhoodMemberReceipt", b =>
+            {
+                b.Property<string>("ActorUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<Guid>("ClientRequestId").HasColumnType("char(36)").UseCollation("ascii_general_ci");
+                b.Property<string>("Kind").IsRequired().HasMaxLength(40).HasColumnType("varchar(40)");
+                b.Property<string>("AggregateId").IsRequired().HasMaxLength(120).HasColumnType("varchar(120)");
+                b.Property<string>("InputDigest").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<DateTime>("RecordedAtUtc").HasColumnType("datetime(6)");
+                b.HasKey("ActorUserId","ClientRequestId"); b.ToTable("neighborhood_member_receipt");
+            });
+            modelBuilder.Entity("Ssalddel.Domain.Community.NeighborhoodMemberPhoto", b =>
+            {
+                b.Property<string>("EvidenceId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("RequestId").IsRequired().HasMaxLength(120).HasColumnType("varchar(120)");
+                b.Property<string>("ActorUserId").IsRequired().HasMaxLength(191).HasColumnType("varchar(191)");
+                b.Property<Guid>("UploadRequestId").HasColumnType("char(36)").UseCollation("ascii_general_ci");
+                b.Property<long>("WorkRevision").HasColumnType("bigint");
+                b.Property<string>("StageCode").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                b.Property<string>("InputDigest").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("StoredSha256").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("PrivatePayload").IsRequired().HasColumnType("longtext");
+                b.Property<string>("StateCode").IsRequired().HasMaxLength(30).HasColumnType("varchar(30)");
+                b.Property<DateTime>("CreatedAtUtc").HasColumnType("datetime(6)");
+                b.HasKey("EvidenceId"); b.HasIndex("ActorUserId","UploadRequestId").IsUnique(); b.ToTable("neighborhood_member_photo");
+            });
 #pragma warning restore 612, 618
         }
     }

@@ -16,6 +16,18 @@ public static class NeighborhoodDeliveryRoutes
 
 public sealed class NeighborhoodDeliveryRequest
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool MemberDeliveryRequested { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool MemberDeliveryDisclosureAgreed { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? MemberDeliveryNoticeVersion { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public Ssalddel.Contracts.Common.Fulfillment.AutoFulfillmentConsent? AutoFulfillment { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public DateTime? DesiredCompletionUtc { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public NeighborhoodFulfillmentSelection? FulfillmentSelection { get; set; }
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public Ssalddel.Contracts.Common.Commerce.거래보호확인Request? CommerceProtection { get; set; }
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
@@ -28,6 +40,9 @@ public sealed class NeighborhoodDeliveryRequest
     public string CargoName { get; set; } = string.Empty;
     public int Quantity { get; set; } = 1;
     public decimal WeightKg { get; set; }
+    /// <summary>우리 앱의 선택적 포장 크기 분류입니다. 특정 배송 업체의 실제 규격을 뜻하지 않습니다.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? PackageSizeCode { get; set; }
     public string VehicleType { get; set; } = "오토바이";
     [IsmsPProtectedData(PersonalDataFieldKey.DetailedAddress, "생활 배송 픽업 주소 처리")]
     [IsmsPProtectedData(PersonalDataFieldKey.PhoneNumber, "생활 배송 픽업 연락처 처리")]
@@ -49,6 +64,9 @@ public sealed class NeighborhoodDeliveryRequest
 
 public sealed class NeighborhoodDeliveryQuoteResponse
 {
+    public bool FulfillmentRoutingEnabled { get; set; }
+    public IReadOnlyList<Ssalddel.Contracts.Common.Fulfillment.AutoFulfillmentProviderDescriptor> AutomaticProviders { get; set; } = [];
+    public IReadOnlyList<NeighborhoodFulfillmentOption> FulfillmentOptions { get; set; } = [];
     public 화주운송기준운임견적응답 Fare { get; set; } = new();
     public bool AutomaticDispatchEnabled { get; set; }
     public string AutomaticDispatchBlockCode { get; set; } = string.Empty;
@@ -67,6 +85,14 @@ public static class NeighborhoodDeliveryProposalStates
 
 public sealed class NeighborhoodDeliveryResponse
 {
+    public bool MemberDeliveryRequested { get; set; }
+    public string? AssignedMemberUserId { get; set; }
+    public string? MemberWorkStateCode { get; set; }
+    public long MemberWorkRevision { get; set; }
+    public bool CanCancelMemberDelivery { get; set; }
+    public string? MemberSupportCaseId { get; set; }
+    public Ssalddel.Contracts.Common.Fulfillment.AutoFulfillmentSnapshot? AutoFulfillment { get; set; }
+    public NeighborhoodFulfillmentSnapshot? Fulfillment { get; set; }
     public string? DispatchMode { get; set; }
     public long DispatchRevision { get; set; }
     public bool CanChangeDispatchMode { get; set; }
@@ -75,6 +101,8 @@ public sealed class NeighborhoodDeliveryResponse
     /// <summary>서버의 보존된 신청 근거가 있는 경우에만 반환합니다. 과거 기록에서 추정하지 않습니다.</summary>
     public long? SourcePostId { get; set; }
     public string CargoName { get; set; } = string.Empty;
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? PackageSizeCode { get; set; }
     public bool IdempotentReplay { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public string RequestStatusCode { get; set; } = string.Empty;
@@ -92,6 +120,20 @@ public sealed class NeighborhoodDeliveryResponse
     public NeighborhoodDeliveryDisclosureResponse? DriverDisclosure { get; set; }
     /// <summary>기존 본인 운송 의뢰 권한 정책을 통과한 상세 정보입니다. 공개 게시글에 연결하지 않습니다.</summary>
     public 화주운송의뢰응답 Request { get; set; } = new();
+}
+
+/// <summary>생활 배송 공통 입력 범주이며 업체별 치수·무게 제한이나 지원 약속이 아닙니다.</summary>
+public static class NeighborhoodPackageSizes
+{
+    public const string Small = "Small";
+    public const string Medium = "Medium";
+    public const string Large = "Large";
+    public static IReadOnlyList<string> Codes { get; } = [Small, Medium, Large];
+    public static bool IsKnown(string? value) => value is Small or Medium or Large;
+    public static string Label(string? value) => value switch
+    {
+        Small => "소형", Medium => "중형", Large => "대형", _ => "미입력"
+    };
 }
 
 /// <summary>신청 동의와 별도로, 선정된 한 기사에게 해당 배송의 필요한 정보를 제공하는 동의입니다.</summary>

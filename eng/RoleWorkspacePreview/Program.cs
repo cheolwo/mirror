@@ -26,10 +26,20 @@ builder.Services.AddScoped<INeighborhoodDeliveryClient, PreviewNeighborhoodDeliv
 builder.Services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodDeliveryQueryViewModel>();
 builder.Services.AddCommunityToolsPreview();
 builder.Services.AddLifeFacilitationPreview();
+builder.Services.AddNeighborhoodFulfillmentPreview();
+builder.Services.AddAutoFulfillmentPreview();
+builder.Services.AddNeighborhoodMemberDeliveryPreview();
+builder.Services.AddScoped<OrderLedgerRolePreviewFixture>();
+builder.Services.AddScoped<Ssalddel.Ui.Common.Areas.App.Services.I주문원장Service>(sp => sp.GetRequiredService<OrderLedgerRolePreviewFixture>());
+builder.Services.AddScoped<Ssalddel.Ui.Common.Areas.App.ViewModels.주문업무상태ViewModel>();
+builder.Services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.주문조회ViewModel>();
+builder.Services.AddScoped<DeliveryCostSharingPreviewFixture>();
 builder.Services.AddScoped<WarehouseWorkspaceApiClient>();
 builder.Services.AddScoped<CargoDriverWorkspaceApiClient>();
 builder.Services.AddScoped<RoleWorkspaceState>();
-builder.Services.AddTransient<RoleWorkspaceViewModel>();
+builder.Services.AddTransient(sp => new Uri(sp.GetRequiredService<Microsoft.AspNetCore.Components.NavigationManager>().Uri).AbsolutePath.StartsWith("/delivery-cost-sharing-preview/role-", StringComparison.Ordinal)
+    ? sp.GetRequiredService<DeliveryCostSharingPreviewFixture>().RoleModel
+    : ActivatorUtilities.CreateInstance<RoleWorkspaceViewModel>(sp));
 builder.Services.AddScoped(_ =>
 {
     var http = new HttpClient { BaseAddress = new Uri(previewOrigin + "/") };

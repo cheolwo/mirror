@@ -1,5 +1,6 @@
 @using Ssalddel.Ui.Common.Areas.App.ViewModels
 @using Ssalddel.Contracts.Food
+@inject NavigationManager Navigation
 
 <MudPaper Elevation="0" Outlined="true" Class="food-order-panel">
     @if (!string.IsNullOrWhiteSpace(Detail.요청OrderNo))
@@ -85,11 +86,62 @@
             </div>
         }
 
+        @if (!OrdererFoodOrderPresentation.IsStopped(detail.주문.상태) && Detail.수령확인표시)
+        {
+            <section class="food-order-current-task" aria-label="현재 주문 진행" data-food-order-current-task>
+                <MudText Typo="Typo.h6">수령 확인 대기</MudText>
+                @ReceiptSteps(detail)
+                <div class="food-order-receipt-action">
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                        음식을 받은 뒤 수령 확인을 눌러 주세요.
+                    </MudAlert>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Success"
+                               StartIcon="@Icons.Material.Filled.Verified"
+                               Disabled="@(!Detail.수령확인가능)"
+                               OnClick="ReceiptConfirmationRequested">
+                        음식 수령 확인
+                    </MudButton>
+                    <details class="food-order-receipt-memo">
+                        <summary>수령 확인 메모 (선택)</summary>
+                        <MudTextField T="string"
+                                      @bind-Value="Detail.수령확인메모"
+                                      Label="수령 확인 메모"
+                                      Placeholder="예: 문 앞에서 정상 수령"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      MaxLength="500"
+                                      Counter="500"
+                                      Disabled="@(!Detail.수령확인가능)"
+                                      Lines="2" />
+                    </details>
+                </div>
+            </section>
+        }
+
         <Ssalddel.Ui.Common.Areas.App.Components.Commerce.거래보호Notice SourceKind="food-order" SourceId="@detail.주문.주문번호" />
+        @if (detail.음식점수락시각Utc.HasValue)
+        {
+            <section aria-label="주문 취소·변경 협의">
+                <MudText Typo="Typo.body2">음식점이 수락한 주문의 취소·변경은 협의가 필요합니다. 요청 접수만으로 주문·배송이 취소되거나 환불이 완료되지 않습니다.</MudText>
+                <MudButton Variant="Variant.Text" Href="@SupportHref(detail.주문.주문번호)">취소·변경 협의 요청 및 처리 확인</MudButton>
+            </section>
+        }
+        @if (detail.AutoFulfillment is { } automatic)
+        {
+            <Ssalddel.Ui.Common.Areas.App.Components.Fulfillment.AutoFulfillmentStatus Value="@(Detail.AutoRouting.Value ?? automatic)"
+                Disabled="@(Detail.처리중 || Detail.AutoRouting.IsSending)" Pending="Detail.AutoRouting.HasPending" Error="@Detail.AutoRouting.Error"
+                RefreshRequested="Detail.자동배송확인Async" CancelRequested="Detail.자동배송취소Async" RevokeRequested="Detail.자동배송동의철회Async">
+                <Renewal>
+                    <Ssalddel.Ui.Common.Areas.App.Components.Fulfillment.AutoFulfillmentConditions Model="Detail.AutoRouting.Conditions" FoodOrder="true" Disabled="@(Detail.처리중 || Detail.AutoRouting.IsSending)" />
+                    <MudButton Disabled="@(!Detail.AutoRouting.CanRenew || !Detail.AutoRouting.Conditions.IsComplete)" OnClick="Detail.자동배송동의갱신Async">자동 접수 조건 다시 확인</MudButton>
+                </Renewal>
+            </Ssalddel.Ui.Common.Areas.App.Components.Fulfillment.AutoFulfillmentStatus>
+        }
         @if (Cancellation is not null)
         {
             <OrdererFoodOrderCancellationPanel Cancellation="Cancellation"
-                                               Disabled="@(!Detail.최신상태확인됨 || Detail.처리중)"
+                                               Disabled="@(!Detail.최신상태확인됨 || Detail.처리중 || Detail.AutoRouting.IsSending || Detail.AutoRouting.HasPending)"
                                                CancellationRequested="CancellationRequested" />
         }
 
@@ -97,7 +149,7 @@
                                          Icon="@Icons.Material.Filled.ReceiptLong"
                                          Color="Color.Primary"
                                          PrivacyHint="수령지와 연락처는 주문한 계정에서 필요할 때만 펼쳐 확인합니다.">
-            <MudExpansionPanel Text="주문 상품" Expanded="true">
+            <MudExpansionPanel Text="주문 상품" Expanded="@(!Detail.수령확인표시)">
                 @foreach (var item in detail.상품목록)
                 {
                     <div class="food-order-line-item">
@@ -143,58 +195,9 @@
                         기사 위치 확인이 지연되고 있습니다. 배달 진행 상태를 확인해 주세요.
                     </MudAlert>
                 }
-                @if (!OrdererFoodOrderPresentation.IsStopped(detail.주문.상태))
+                @if (!OrdererFoodOrderPresentation.IsStopped(detail.주문.상태) && !Detail.수령확인표시)
                 {
-                <div class="food-order-receipt-steps" aria-label="전달과 수령 확인 단계">
-                    <div class="food-order-receipt-step @(detail.배달진행.기사전달완료 ? "food-order-receipt-step--done" : string.Empty)">
-                        <MudIcon Icon="@(detail.배달진행.기사전달완료 ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.RadioButtonUnchecked)"
-                                 Color="@(detail.배달진행.기사전달완료 ? Color.Success : Color.Default)"
-                                 Size="Size.Small" />
-                        <span>
-                            <strong>1. 기사 전달 완료</strong>
-                            <small>@(detail.배달진행.기사전달완료 ? "기사가 전달 완료를 기록했습니다." : "기사의 전달 완료를 기다리고 있습니다.")</small>
-                        </span>
-                    </div>
-                    <div class="food-order-receipt-step @(detail.배달진행.주문자수령확인됨 ? "food-order-receipt-step--done" : string.Empty)">
-                        <MudIcon Icon="@(detail.배달진행.주문자수령확인됨 ? Icons.Material.Filled.Verified : Icons.Material.Outlined.RadioButtonUnchecked)"
-                                 Color="@(detail.배달진행.주문자수령확인됨 ? Color.Success : Color.Default)"
-                                 Size="Size.Small" />
-                        <span>
-                            <strong>2. 주문자 수령 확인</strong>
-                            <small>
-                                @(detail.배달진행.주문자수령확인됨
-                                    ? $"확인 {OrdererFoodOrderPresentation.FormatOptionalDate(detail.배달진행.수령확인시각Utc)}"
-                                    : "실제 음식을 받은 뒤 주문자가 직접 확인합니다.")
-                            </small>
-                        </span>
-                    </div>
-                </div>
-                }
-
-                @if (!OrdererFoodOrderPresentation.IsStopped(detail.주문.상태) && Detail.수령확인표시)
-                {
-                    <div class="food-order-receipt-action">
-                        <MudTextField T="string"
-                                      @bind-Value="Detail.수령확인메모"
-                                      Label="수령 확인 메모 (선택)"
-                                      Placeholder="예: 문 앞에서 정상 수령"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      MaxLength="500"
-                                      Counter="500"
-                                      Disabled="@(!Detail.수령확인가능)"
-                                      Lines="2" />
-                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
-                            음식을 받은 뒤 수령 확인을 눌러 주세요.
-                        </MudAlert>
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Success"
-                                   StartIcon="@Icons.Material.Filled.Verified"
-                                   Disabled="@(!Detail.수령확인가능)"
-                                   OnClick="ReceiptConfirmationRequested">
-                            음식 수령 확인
-                        </MudButton>
-                    </div>
+                    @ReceiptSteps(detail)
                 }
 
                 <MudButton Variant="Variant.Text"
@@ -235,6 +238,28 @@
 </MudPaper>
 
 @code {
+    private string SupportHref(string orderNo) => Navigation.ToAbsoluteUri("commerce/disputes?sourceKind=food-order&sourceId=" + Uri.EscapeDataString(orderNo)).ToString();
+    private RenderFragment ReceiptSteps(주문자음식주문상세응답 detail) => @<div class="food-order-receipt-steps" aria-label="전달과 수령 확인 단계">
+        <div class="food-order-receipt-step @(detail.배달진행.기사전달완료 ? "food-order-receipt-step--done" : string.Empty)">
+            <MudIcon Icon="@(detail.배달진행.기사전달완료 ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.RadioButtonUnchecked)"
+                     Color="@(detail.배달진행.기사전달완료 ? Color.Success : Color.Default)" Size="Size.Small" />
+            <span>
+                <strong>1. 기사 전달 완료</strong>
+                <small>@(detail.배달진행.기사전달완료 ? "기사가 전달 완료를 기록했습니다." : "기사의 전달 완료를 기다리고 있습니다.")</small>
+            </span>
+        </div>
+        <div class="food-order-receipt-step @(detail.배달진행.주문자수령확인됨 ? "food-order-receipt-step--done" : string.Empty)">
+            <MudIcon Icon="@(detail.배달진행.주문자수령확인됨 ? Icons.Material.Filled.Verified : Icons.Material.Outlined.RadioButtonUnchecked)"
+                     Color="@(detail.배달진행.주문자수령확인됨 ? Color.Success : Color.Default)" Size="Size.Small" />
+            <span>
+                <strong>2. 주문자 수령 확인</strong>
+                <small>@(detail.배달진행.주문자수령확인됨
+                    ? $"확인 {OrdererFoodOrderPresentation.FormatOptionalDate(detail.배달진행.수령확인시각Utc)}"
+                    : "실제 음식을 받은 뒤 주문자가 직접 확인합니다.")</small>
+            </span>
+        </div>
+    </div>;
+
     [Parameter, EditorRequired]
     public 주문자음식주문상세ViewModel Detail { get; set; } = default!;
 

@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:maps="clr-namespace:FDriverApp.Controls"
+    xmlns:fonts="clr-namespace:Fonts"
     xmlns:pageModels="clr-namespace:FDriverApp.PageModels"
     xmlns:models="clr-namespace:Ssalddel.Ui.Common.Areas.App.Models;assembly=Ssalddel.Ui.Common"
     x:Class="FDriverApp.Pages.MainPage"
@@ -9,6 +10,11 @@
     Title="{Binding AppName}"
     BackgroundColor="{AppThemeBinding Light={StaticResource DriverCanvas}, Dark={StaticResource DriverCanvasDark}}">
     <ContentPage.Resources>
+        <FontImageSource x:Key="ProfileIcon" Glyph="{x:Static fonts:FluentUI.person_24_regular}"
+            FontFamily="{x:Static fonts:FluentUI.FontFamily}" Size="20"
+            Color="{AppThemeBinding Light={StaticResource DriverAccentStrong}, Dark={StaticResource DriverAccentDark}}" />
+        <FontImageSource x:Key="ProfileSelectedIcon" Glyph="{x:Static fonts:FluentUI.person_24_regular}"
+            FontFamily="{x:Static fonts:FluentUI.FontFamily}" Size="20" Color="{StaticResource White}" />
         <Style x:Key="DeliveryStageLabelStyle" TargetType="Label" BasedOn="{StaticResource DriverMetadataStyle}">
             <Setter Property="FontAttributes" Value="Bold" />
             <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource DriverAccentStrong}, Dark={StaticResource DriverAccentDark}}" />
@@ -25,13 +31,39 @@
             <Setter Property="VerticalOptions" Value="Center" />
             <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource DriverBorder}, Dark={StaticResource DriverBorderDark}}" />
         </Style>
+        <Style x:Key="DriverDetailsIconButtonStyle" TargetType="Button" BasedOn="{StaticResource DriverSecondaryButtonStyle}">
+            <Setter Property="maps:DriverActionIcon.Glyph" Value="{x:Static fonts:FluentUI.chevron_down_24_regular}" />
+            <Style.Triggers>
+                <DataTrigger TargetType="Button" Binding="{Binding IsDeliveryDetailsExpanded}" Value="True">
+                    <Setter Property="maps:DriverActionIcon.Glyph" Value="{x:Static fonts:FluentUI.chevron_up_24_regular}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="DriverSettingsIconButtonStyle" TargetType="Button" BasedOn="{StaticResource DriverSecondaryButtonStyle}">
+            <Setter Property="maps:DriverActionIcon.Glyph" Value="{x:Static fonts:FluentUI.chevron_down_24_regular}" />
+            <Style.Triggers>
+                <DataTrigger TargetType="Button" Binding="{Binding IsWorkControlsExpanded}" Value="True">
+                    <Setter Property="maps:DriverActionIcon.Glyph" Value="{x:Static fonts:FluentUI.chevron_up_24_regular}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="DriverCurrentDeliveryIconButtonStyle" TargetType="Button" BasedOn="{StaticResource DriverSecondaryButtonStyle}">
+            <Setter Property="maps:DriverActionIcon.Glyph" Value="{x:Static fonts:FluentUI.chevron_down_24_regular}" />
+            <Style.Triggers>
+                <DataTrigger TargetType="Button" Binding="{Binding IsCurrentDeliveryExpanded}" Value="True">
+                    <Setter Property="maps:DriverActionIcon.Glyph" Value="{x:Static fonts:FluentUI.chevron_up_24_regular}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </ContentPage.Resources>
     <Grid>
         <Grid IsVisible="{Binding IsRegularWorkspaceVisible}">
                 <Grid RowDefinitions="Auto,*">
-                    <VerticalStackLayout Grid.Row="0" Padding="16,8" Spacing="8"
-                        BackgroundColor="{AppThemeBinding Light={StaticResource DriverSurface}, Dark={StaticResource DriverSurfaceDark}}">
-                        <FlexLayout Direction="Row" Wrap="Wrap" JustifyContent="Start" AlignItems="Center" Margin="-4">
+                    <VerticalStackLayout x:Name="WorkspaceHeader" Grid.Row="0" Padding="16,8" Spacing="8"
+                        ZIndex="3" VerticalOptions="Start" BackgroundColor="Transparent"
+                        InputTransparent="True" CascadeInputTransparent="False" SizeChanged="OnFoodLayoutSizeChanged">
+                        <FlexLayout Direction="Row" Wrap="Wrap" JustifyContent="Start" AlignItems="Center" Margin="-4"
+                            InputTransparent="True" CascadeInputTransparent="False">
                             <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="배달" Margin="4" Padding="8,8"
                                 Clicked="OnDeliveryClicked" SemanticProperties.Description="배달 영역">
                                 <Button.Triggers>
@@ -41,26 +73,19 @@
                                     </DataTrigger>
                                 </Button.Triggers>
                             </Button>
-                            <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="배달 내역" Margin="4" Padding="8,8"
-                                Clicked="OnSettlementClicked" SemanticProperties.Description="완료 배달 내역">
-                                <Button.Triggers>
-                                    <DataTrigger TargetType="Button" Binding="{Binding Navigation.IsSettlement}" Value="True">
-                                        <Setter Property="BackgroundColor" Value="{StaticResource DriverAccent}" />
-                                        <Setter Property="TextColor" Value="{StaticResource White}" />
-                                    </DataTrigger>
-                                </Button.Triggers>
-                            </Button>
                             <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="내 정보" Margin="4" Padding="8,8"
+                                ImageSource="{StaticResource ProfileIcon}" ContentLayout="Left,8"
                                 Clicked="OnProfileClicked" SemanticProperties.Description="내 정보 영역">
                                 <Button.Triggers>
                                     <DataTrigger TargetType="Button" Binding="{Binding Navigation.IsProfile}" Value="True">
                                         <Setter Property="BackgroundColor" Value="{StaticResource DriverAccent}" />
                                         <Setter Property="TextColor" Value="{StaticResource White}" />
+                                        <Setter Property="ImageSource" Value="{StaticResource ProfileSelectedIcon}" />
                                     </DataTrigger>
                                 </Button.Triggers>
                             </Button>
                         </FlexLayout>
-                        <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="배달로 돌아가기"
+                        <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_left_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Text="배달로 돌아가기"
                             IsVisible="{Binding Navigation.IsAuxiliary}" Clicked="OnDeliveryClicked"
                             HorizontalOptions="Start" />
                         <VerticalStackLayout IsVisible="{Binding Navigation.IsAuxiliary}" Spacing="4">
@@ -70,7 +95,7 @@
                                 IsVisible="{Binding HasWorkspaceWarning}" TextColor="{AppThemeBinding Light={StaticResource DriverWarning}, Dark={StaticResource DriverWarningDark}}" />
                             <Label Style="{StaticResource DriverMetadataStyle}" Text="현재 자동 배차가 중지되어 있습니다."
                                 IsVisible="{Binding HasDispatchNotice}" TextColor="{AppThemeBinding Light={StaticResource DriverWarning}, Dark={StaticResource DriverWarningDark}}" />
-                            <Label Style="{StaticResource DriverMetadataStyle}" Text="위치 권한과 GPS를 확인해 주세요."
+                            <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding LocationNotice}"
                                 IsVisible="{Binding HasLocationWarning}" TextColor="{AppThemeBinding Light={StaticResource DriverWarning}, Dark={StaticResource DriverWarningDark}}" />
                         </VerticalStackLayout>
                         <Border Style="{StaticResource DriverCardStyle}"
@@ -90,7 +115,7 @@
                                         FontAttributes="Bold"
                                         TextColor="{StaticResource White}" />
                                 </VerticalStackLayout>
-                                <Button Style="{StaticResource DriverSecondaryButtonStyle}" Grid.Column="1"
+                                <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_right_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Grid.Column="1"
                                     Text="보기"
                                     Padding="8,8" VerticalOptions="Center"
                                     Command="{Binding OpenNewRecommendationsCommand}"
@@ -98,8 +123,14 @@
                             </Grid>
                         </Border>
                     </VerticalStackLayout>
-                    <Grid x:Name="WorkspaceAreas" Grid.Row="1" SizeChanged="OnFoodLayoutSizeChanged">
-                        <Grid x:Name="DeliveryWorkspace" IsVisible="{Binding Navigation.IsDelivery}" RowDefinitions="*,Auto">
+                    <Grid x:Name="WorkspaceAreas" Grid.Row="1" SizeChanged="OnFoodLayoutSizeChanged" ZIndex="0">
+                        <Grid.Triggers>
+                            <DataTrigger TargetType="Grid" Binding="{Binding Navigation.IsDelivery}" Value="True">
+                                <Setter Property="Grid.Row" Value="0" />
+                                <Setter Property="Grid.RowSpan" Value="2" />
+                            </DataTrigger>
+                        </Grid.Triggers>
+                        <Grid x:Name="DeliveryWorkspace" IsVisible="{Binding Navigation.IsDelivery}">
                             <maps:FDriverNativeMapView x:Name="FoodDeliveryMap"
                                 Grid.Row="0"
                                 PropertyChanged="OnFoodMapPropertyChanged"
@@ -114,12 +145,15 @@
                                 HasCurrentLocation="{Binding HasCurrentLocation}"
                                 Markers="{Binding MapMarkers}"
                                 RouteOverlays="{Binding SelectedRouteOverlays}"
-                                ShowTrafficLayer="True"
+                                ShowTrafficLayer="False"
                                 ShowLocationButton="False"
                                 ShowCurrentLocationOverlay="{Binding HasCurrentLocation}"
                                 MarkerSelected="OnMapMarkerSelected" />
-                            <Border x:Name="FoodMapLegend" Style="{StaticResource DriverCardStyle}" Grid.Row="0"
-                                IsVisible="{Binding HasRouteSelection}" Padding="8" Margin="8"
+                            <VerticalStackLayout x:Name="FoodMapTools" Grid.Row="0" ZIndex="1"
+                                HorizontalOptions="End" VerticalOptions="Start" Margin="8" Spacing="8"
+                                InputTransparent="True" CascadeInputTransparent="False">
+                            <Border x:Name="FoodMapLegend" Style="{StaticResource DriverCardStyle}"
+                                IsVisible="{Binding HasRouteSelection}" Padding="8"
                                 HorizontalOptions="End" VerticalOptions="Start" SizeChanged="OnFoodLayoutSizeChanged">
                                 <Border.Triggers>
                                     <DataTrigger TargetType="Border" Binding="{Binding IsMapReady, Source={x:Reference FoodDeliveryMap}, x:DataType='maps:FDriverNativeMapView'}" Value="False">
@@ -137,8 +171,8 @@
                                     </Grid>
                                 </VerticalStackLayout>
                             </Border>
-                            <Button x:Name="FoodMapRecenterButton" Grid.Row="0" Style="{StaticResource DriverSecondaryButtonStyle}" Text="현위치"
-                                Margin="8" HorizontalOptions="End" VerticalOptions="End"
+                            <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.my_location_24_regular}" x:Name="FoodMapRecenterButton" Style="{StaticResource DriverSecondaryButtonStyle}" Text="현위치"
+                                HorizontalOptions="End" VerticalOptions="Start"
                                 SizeChanged="OnFoodLayoutSizeChanged"
                                 Command="{Binding RecenterMapCommand}" IsEnabled="{Binding HasCurrentLocation}"
                                 SemanticProperties.Description="지도에서 현재 위치로 돌아가기">
@@ -151,7 +185,9 @@
                                     </DataTrigger>
                                 </Button.Triggers>
                             </Button>
-                            <Border x:Name="DeliveryCard" Style="{StaticResource DriverCardStyle}" Grid.Row="1"
+                            </VerticalStackLayout>
+                            <Border x:Name="DeliveryCard" Style="{StaticResource DriverCardStyle}" Grid.Row="0"
+                                ZIndex="2" VerticalOptions="End" Margin="8,0,8,8"
                                 BackgroundColor="{AppThemeBinding Light={StaticResource DriverSurfaceSubtle}, Dark={StaticResource DriverSurfaceSubtleDark}}"
                                 StrokeThickness="0"
                                 Padding="16" SizeChanged="OnFoodLayoutSizeChanged">
@@ -163,9 +199,9 @@
                                             <VerticalStackLayout x:Name="WorkspaceSummarySection" Spacing="8">
                                                 <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding WorkspaceWarningText}"
                                                     IsVisible="{Binding HasWorkspaceWarning}" TextColor="{AppThemeBinding Light={StaticResource DriverWarning}, Dark={StaticResource DriverWarningDark}}" />
-                                                <Label Style="{StaticResource DriverMetadataStyle}" Text="위치 권한과 GPS를 확인해 주세요."
+                                                <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding LocationNotice}"
                                                     IsVisible="{Binding HasTaskLocationWarning}" TextColor="{AppThemeBinding Light={StaticResource DriverWarning}, Dark={StaticResource DriverWarningDark}}" />
-                                                <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="위치 다시 확인"
+                                                <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_clockwise_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Text="위치 다시 확인"
                                                     IsVisible="{Binding HasTaskLocationWarning}" Command="{Binding RetryMapLocationCommand}" />
                                                 <Label Style="{StaticResource DriverMetadataStyle}" Text="현재 자동 배차가 중지되어 있습니다."
                                                     IsVisible="{Binding HasTaskDispatchNotice}" TextColor="{AppThemeBinding Light={StaticResource DriverWarning}, Dark={StaticResource DriverWarningDark}}" />
@@ -244,7 +280,7 @@
                                                             <Label Style="{StaticResource DriverSectionStyle}" Text="주문 정보" SemanticProperties.HeadingLevel="Level2" />
                                                             <Label Style="{StaticResource DriverBodyStyle}" Text="{Binding ActiveDelivery.OrderSummary}" IsVisible="{Binding HasActiveWork}" FontAttributes="Bold" />
                                                             <Label Style="{StaticResource DriverValueStyle}" Text="{Binding CurrentDeliveryFeeText}" />
-                                                            <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="{Binding DeliveryDetailsToggleText}"
+                                                            <Button Style="{StaticResource DriverDetailsIconButtonStyle}" Text="{Binding DeliveryDetailsToggleText}"
                                                                 Command="{Binding ToggleDeliveryDetailsCommand}" />
                                                             <VerticalStackLayout IsVisible="{Binding IsDeliveryDetailsExpanded}" Spacing="8">
                                                                 <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding PickupPointText}" IsVisible="{Binding HasPickupStage}" LineBreakMode="WordWrap" />
@@ -254,9 +290,9 @@
                                                                         <BoxView Grid.Column="1" Style="{StaticResource DeliverySectionDividerStyle}" />
                                                                     </Grid>
                                                                     <Label Style="{StaticResource DriverBodyStyle}" Text="{Binding NextActionGuide}" />
-                                                                    <Button Style="{StaticResource DriverDangerButtonStyle}" Text="현장 중단"
+                                                                    <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.stop_24_regular}" Style="{StaticResource DriverDangerButtonStyle}" Text="현장 중단"
                                                                         Command="{Binding OpenInterruptionCommand}" IsEnabled="{Binding CanOpenInterruption}" />
-                                                                    <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="이 배달 문제 접수"
+                                                                    <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.warning_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Text="이 배달 문제 접수"
                                                                         Clicked="OnProblemClicked" IsVisible="{Binding ActiveDelivery.HasSupportSource}" />
                                                                 </VerticalStackLayout>
                                                             </VerticalStackLayout>
@@ -272,7 +308,7 @@
                                                 <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding StatusMessage}"
                                                     IsVisible="{Binding HasDeliveryStatusNotice}" />
                                             </VerticalStackLayout>
-                                            <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="{Binding DeliveryDetailsToggleText}"
+                                            <Button Style="{StaticResource DriverDetailsIconButtonStyle}" Text="{Binding DeliveryDetailsToggleText}"
                                                 IsVisible="{Binding HasDeliveryDetails}" Command="{Binding ToggleDeliveryDetailsCommand}">
                                                 <Button.Triggers>
                                                     <DataTrigger TargetType="Button" Binding="{Binding IsCurrentDeliveryContentVisible}" Value="True">
@@ -295,7 +331,7 @@
                                                                             <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding Reason}" LineBreakMode="WordWrap" />
                                                                             <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding RouteText}" />
                                                                             <Label Style="{StaticResource DriverValueStyle}" Text="{Binding PayoutText}" />
-                                                                            <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="묶음 수락"
+                                                                            <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.checkmark_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Text="묶음 수락"
                                                                                 Command="{Binding x:DataType='pageModels:MainPageModel', Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, Path=AcceptBundleCommand}"
                                                                                 CommandParameter="{Binding .}" />
                                                                         </VerticalStackLayout>
@@ -320,13 +356,13 @@
                                                                         <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding DistanceText}" />
                                                                         <Label Style="{StaticResource DriverValueStyle}" Text="{Binding DriverPayoutText}" />
                                                                         <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding WeatherSurchargeText}" IsVisible="{Binding IsWeatherSurchargeApplied}" />
-                                                                        <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="지도에서 선택"
+                                                                        <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.directions_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Text="지도에서 선택"
                                                                             Command="{Binding x:DataType='pageModels:MainPageModel', Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, Path=SelectTicketCommand}"
                                                                             CommandParameter="{Binding .}" />
-                                                                        <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="수락"
+                                                                        <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.checkmark_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Text="수락"
                                                                             Command="{Binding x:DataType='pageModels:MainPageModel', Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, Path=AcceptTicketCommand}"
                                                                             CommandParameter="{Binding .}" IsEnabled="{Binding CanAccept}" />
-                                                                        <Button Style="{StaticResource DriverDangerButtonStyle}" Text="거절"
+                                                                        <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.dismiss_24_regular}" Style="{StaticResource DriverDangerButtonStyle}" Text="거절"
                                                                             Command="{Binding x:DataType='pageModels:MainPageModel', Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, Path=RejectTicketCommand}"
                                                                             CommandParameter="{Binding .}" IsEnabled="{Binding CanReject}" />
                                                                     </VerticalStackLayout>
@@ -337,17 +373,23 @@
                                                 </VerticalStackLayout>
                                             </VerticalStackLayout>
                                             <BoxView Style="{StaticResource DeliverySectionDividerStyle}" Margin="0,8" />
-                                            <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="{Binding WorkControlsToggleText}"
+                                            <Button Style="{StaticResource DriverSettingsIconButtonStyle}" Text="{Binding WorkControlsToggleText}"
                                                 Command="{Binding ToggleWorkControlsCommand}" />
                                             <VerticalStackLayout IsVisible="{Binding IsWorkControlsExpanded}" Spacing="8">
                                                 <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding Today}" />
                                                 <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding RecommendedTickets, StringFormat='추천 {0}건'}" />
-                                                <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="현재 배달"
+                                                <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.box_checkmark_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Text="현재 배달"
                                                     IsVisible="{Binding HasActiveWork}"
                                                     Clicked="OnCurrentDeliveryClicked" Command="{Binding OpenCurrentDeliveryCommand}" />
-                                                <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="{Binding WorkToggleText}"
-                                                    Command="{Binding ToggleWorkCommand}" IsEnabled="{Binding CanToggleWork}" />
-                                                <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="{Binding DispatchIntentButtonText}"
+                                                <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.play_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Text="{Binding WorkToggleText}"
+                                                    Command="{Binding ToggleWorkCommand}" IsEnabled="{Binding CanToggleWork}">
+                                                    <Button.Triggers>
+                                                        <DataTrigger TargetType="Button" Binding="{Binding IsOnDuty}" Value="True">
+                                                            <Setter Property="maps:DriverActionIcon.Glyph" Value="{x:Static fonts:FluentUI.stop_24_regular}" />
+                                                        </DataTrigger>
+                                                    </Button.Triggers>
+                                                </Button>
+                                                <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.alert_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Text="{Binding DispatchIntentButtonText}"
                                                     Command="{Binding ToggleDispatchIntentCommand}" IsEnabled="{Binding CanToggleDispatchIntent}" />
                                             </VerticalStackLayout>
                                         </VerticalStackLayout>
@@ -355,21 +397,21 @@
                                     </RefreshView>
                                     <Grid x:Name="DeliveryPrimaryFooter" Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding HasDeliveryFooter}"
                                         MinimumHeightRequest="48" SizeChanged="OnFoodLayoutSizeChanged">
-                                        <Button Style="{StaticResource DriverPrimaryButtonStyle}" Text="운행 시작"
+                                        <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.play_24_regular}" Style="{StaticResource DriverPrimaryButtonStyle}" Text="운행 시작"
                                             IsVisible="{Binding IsStartWorkPrimaryAction}" Command="{Binding ToggleWorkCommand}" IsEnabled="{Binding CanToggleWork}" />
-                                        <Button Style="{StaticResource DriverPrimaryButtonStyle}" Text="신규 배차 받기"
+                                        <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.alert_24_regular}" Style="{StaticResource DriverPrimaryButtonStyle}" Text="신규 배차 받기"
                                             IsVisible="{Binding IsEnableDispatchPrimaryAction}" Command="{Binding ToggleDispatchIntentCommand}" IsEnabled="{Binding CanToggleDispatchIntent}" />
-                                        <Button Style="{StaticResource DriverPrimaryButtonStyle}" Text="위치 다시 확인"
+                                        <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_clockwise_24_regular}" Style="{StaticResource DriverPrimaryButtonStyle}" Text="위치 다시 확인"
                                             IsVisible="{Binding IsWaitingLocationPrimaryAction}" Command="{Binding RetryMapLocationCommand}" IsEnabled="{Binding CanToggleWork}" />
-                                        <Button Style="{StaticResource DriverPrimaryButtonStyle}" Text="전달 완료"
+                                        <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.checkmark_24_regular}" Style="{StaticResource DriverPrimaryButtonStyle}" Text="전달 완료"
                                             IsVisible="{Binding IsCompletionPrimaryAction}" Command="{Binding CompleteDeliveryCommand}" IsEnabled="{Binding CanCompleteDelivery}" />
-                                        <Button Style="{StaticResource DriverPrimaryButtonStyle}" Text="픽업 완료"
+                                        <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.box_checkmark_24_regular}" Style="{StaticResource DriverPrimaryButtonStyle}" Text="픽업 완료"
                                             IsVisible="{Binding IsPickupPrimaryAction}" Command="{Binding ConfirmPickupCommand}" IsEnabled="{Binding CanConfirmPickup}" />
-                                        <Button Style="{StaticResource DriverPrimaryButtonStyle}" Text="가게 도착"
+                                        <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.building_shop_24_regular}" Style="{StaticResource DriverPrimaryButtonStyle}" Text="가게 도착"
                                             IsVisible="{Binding IsArrivalPrimaryAction}" Command="{Binding RecordRestaurantArrivalCommand}" IsEnabled="{Binding CanRecordArrival}" />
-                                        <Button Style="{StaticResource DriverPrimaryButtonStyle}" Text="선택한 배달 수락"
+                                        <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.checkmark_24_regular}" Style="{StaticResource DriverPrimaryButtonStyle}" Text="선택한 배달 수락"
                                             IsVisible="{Binding IsRecommendationPrimaryAction}" Command="{Binding AcceptSelectedTicketCommand}" IsEnabled="{Binding CanAcceptSelectedTicket}" />
-                                        <Button Grid.Column="1" Style="{StaticResource DriverSecondaryButtonStyle}" Text="{Binding CurrentDeliveryToggleText}"
+                                        <Button Grid.Column="1" Style="{StaticResource DriverCurrentDeliveryIconButtonStyle}" Text="{Binding CurrentDeliveryToggleText}"
                                             IsVisible="{Binding HasActiveWork}" Clicked="OnCurrentDeliveryCardToggleClicked"
                                             SemanticProperties.Description="현재 배달 정보 접기 또는 펼치기" />
                                     </Grid>
@@ -384,7 +426,47 @@
                                 <Label Style="{StaticResource DriverSectionStyle}" Text="내 정보" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource DriverText}, Dark={StaticResource DriverTextDark}}" />
                                 <Label Style="{StaticResource DriverBodyStyle}" Text="{Binding SignedInUserText}" TextColor="{AppThemeBinding Light={StaticResource DriverTextSecondary}, Dark={StaticResource DriverTextSecondaryDark}}" />
                                 <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding SettlementText}" TextColor="{AppThemeBinding Light={StaticResource DriverTextSecondary}, Dark={StaticResource DriverTextSecondaryDark}}" />
-                                <Button Style="{StaticResource DriverDangerButtonStyle}" Text="로그아웃"
+                                <Border Style="{StaticResource DriverCardStyle}">
+                                    <VerticalStackLayout Spacing="10">
+                                        <Label Style="{StaticResource DriverSectionStyle}" Text="복귀 권역" />
+                                        <Label Style="{StaticResource DriverMetadataStyle}" Text="집이나 활동 중심을 기준으로 복귀할 배달을 우선 확인합니다." />
+                                        <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_clockwise_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}"
+                                            Text="설정 조회" Command="{Binding LoadReturnAreaSettingsCommand}" />
+                                        <ActivityIndicator IsRunning="{Binding ReturnAreaSettingsBusy}" IsVisible="{Binding ReturnAreaSettingsBusy}" />
+                                        <VerticalStackLayout IsVisible="{Binding ReturnAreaSettingsLoaded}" Spacing="10">
+                                            <Picker Title="복귀 방식" ItemsSource="{Binding ReturnAreaModes}" SelectedIndex="{Binding ReturnAreaModeIndex}"
+                                                IsEnabled="{Binding CanEditReturnAreaSettings}" FontSize="16" FontAutoScalingEnabled="False" MinimumHeightRequest="48" />
+                                            <Entry Text="{Binding ReturnAreaAnchorName}" Placeholder="기준점 이름 (예: 집, 활동 중심)" MaxLength="80"
+                                                IsEnabled="{Binding CanEditReturnAreaSettings}" FontSize="16" FontAutoScalingEnabled="False" MinimumHeightRequest="48" />
+                                            <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding ReturnAreaAnchorText}" />
+                                            <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.my_location_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}"
+                                                Text="현재 위치를 기준점으로 선택" Command="{Binding UseCurrentLocationForReturnAreaCommand}" IsEnabled="{Binding CanEditReturnAreaSettings}" />
+                                            <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="반경 설정" Command="{Binding ToggleReturnAreaRadiusOptionsCommand}" />
+                                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12" IsVisible="{Binding ReturnAreaRadiusOptionsVisible}">
+                                                <VerticalStackLayout Spacing="4">
+                                                    <Label Style="{StaticResource DriverMetadataStyle}" Text="복귀 시작 (km)" />
+                                                    <Entry Text="{Binding ReturnAreaEntryRadiusText}" Keyboard="Numeric" IsEnabled="{Binding CanEditReturnAreaSettings}"
+                                                        FontSize="16" FontAutoScalingEnabled="False" MinimumHeightRequest="48" />
+                                                </VerticalStackLayout>
+                                                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                                    <Label Style="{StaticResource DriverMetadataStyle}" Text="복귀 해제 (km)" />
+                                                    <Entry Text="{Binding ReturnAreaReleaseRadiusText}" Keyboard="Numeric" IsEnabled="{Binding CanEditReturnAreaSettings}"
+                                                        FontSize="16" FontAutoScalingEnabled="False" MinimumHeightRequest="48" />
+                                                </VerticalStackLayout>
+                                            </Grid>
+                                            <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.checkmark_24_regular}" Style="{StaticResource DriverPrimaryButtonStyle}"
+                                                Text="복귀 설정 저장" Command="{Binding SaveReturnAreaSettingsCommand}" IsEnabled="{Binding CanEditReturnAreaSettings}" />
+                                        </VerticalStackLayout>
+                                        <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding ReturnAreaSettingsNotice}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                                <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.alert_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Text="알림 설정" Clicked="OnNotificationSettingsClicked" />
+                                <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.book_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Text="합의 요금표" Clicked="OnAgreedRatesClicked" />
+                                <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding NotificationSettingsNotice}" />
+                                <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.list_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Text="배달 내역"
+                                    Clicked="OnSettlementClicked" SemanticProperties.Description="완료 배달 내역과 정산 상세 보기"
+                                    HorizontalOptions="Fill" />
+                                <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.sign_out_24_regular}" Style="{StaticResource DriverDangerButtonStyle}" Text="로그아웃"
                                     Command="{Binding LogoutCommand}" HorizontalOptions="Start" />
                             </VerticalStackLayout>
                         </ScrollView>
@@ -411,9 +493,15 @@
                 <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding ExceptionEditor.Notice}"
                     TextColor="{AppThemeBinding Light={StaticResource DriverWarning}, Dark={StaticResource DriverWarningDark}}" />
                 <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding StatusMessage}" />
-                <Button Style="{StaticResource DriverDangerButtonStyle}" Text="{Binding ExceptionEditor.ActionLabel}"
-                    Command="{Binding SubmitInterruptionCommand}" IsEnabled="{Binding CanSubmitInterruption}" />
-                <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="현재 배달로 돌아가기"
+                <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.stop_24_regular}" Style="{StaticResource DriverDangerButtonStyle}" Text="{Binding ExceptionEditor.ActionLabel}"
+                    Command="{Binding SubmitInterruptionCommand}" IsEnabled="{Binding CanSubmitInterruption}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding ExceptionEditor.HasPendingRequest}" Value="True">
+                            <Setter Property="maps:DriverActionIcon.Glyph" Value="{x:Static fonts:FluentUI.arrow_clockwise_24_regular}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_left_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Text="현재 배달로 돌아가기"
                     Command="{Binding CloseInterruptionCommand}" />
                 <ActivityIndicator IsVisible="{Binding IsBusy}" IsRunning="{Binding IsBusy}" />
             </VerticalStackLayout>

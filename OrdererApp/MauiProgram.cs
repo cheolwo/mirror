@@ -23,6 +23,7 @@ public static class MauiProgram
 
         builder.Services.AddMudServices();
         builder.Services.AddMauiBlazorWebView();
+        builder.Services.AddSingleton<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment.I업무사진촬영Adapter, Ssalddel.Client.Infrastructure.Native.Maui업무사진촬영Adapter>();
         builder.Services.AddOrdererSecurityServices();
         builder.Services.AddSingleton<IFoodOrderPendingSubmissionStore, Services.Security.OrdererFoodOrderPendingSubmissionStore>();
         builder.Services.AddSingleton<IPlatformCommunityNodeNavigationResolver, OrdererPlatformCommunityNodeNavigationResolver>();

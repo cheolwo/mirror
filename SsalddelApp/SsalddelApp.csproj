@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
     <PropertyGroup>
         <TargetFrameworks>net10.0-android</TargetFrameworks>
@@ -50,10 +50,25 @@
         </AssemblyAttribute>
     </ItemGroup>
 
+    <!-- 일반 앱 전용 외부 Firebase 설정만 허용합니다. 다른 역할 앱 설정을 복사하지 않습니다. -->
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
+        <MemberFirebaseGoogleServicesJson Condition="'$(MemberFirebaseGoogleServicesJson)' == ''">$(SSALDDEL_MEMBER_FIREBASE_GOOGLE_SERVICES_JSON)</MemberFirebaseGoogleServicesJson>
+        <DefineConstants Condition="'$(MemberFirebaseGoogleServicesJson)' != '' and Exists('$(MemberFirebaseGoogleServicesJson)')">$(DefineConstants);SSALDDEL_MEMBER_FIREBASE</DefineConstants>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android' and '$(MemberFirebaseGoogleServicesJson)' != '' and Exists('$(MemberFirebaseGoogleServicesJson)')">
+        <PackageReference Include="Xamarin.Firebase.Messaging" />
+        <GoogleServicesJson Include="$(MemberFirebaseGoogleServicesJson)" />
+    </ItemGroup>
+    <Target Name="ValidateMemberFirebaseConfiguration" BeforeTargets="PrepareForBuild" Condition="'$(TargetFramework)' == 'net10.0-android'">
+        <Error Condition="'$(MemberFirebaseGoogleServicesJson)' != '' and !Exists('$(MemberFirebaseGoogleServicesJson)')" Text="The ordinary member app Firebase configuration file was not found. Supply its own external Google Services JSON." />
+        <Warning Condition="'$(MemberFirebaseGoogleServicesJson)' == ''" Text="Ordinary member push is not configured. Server inbox refresh remains available; actual device push reception has not been enabled." />
+    </Target>
+
     <ItemGroup>
         <Compile Include="../eng/role-workspace/*.cs" Link="Services/%(Filename)%(Extension)" />
         <ProjectReference Include="..\Ssalddel.Contracts\Ssalddel.Contracts.csproj" />
         <ProjectReference Include="..\Ssalddel.Client.Infrastructure\Ssalddel.Client.Infrastructure.csproj" />
+        <Compile Include="..\Ssalddel.Client.Infrastructure\Native\Maui업무사진촬영Adapter.cs" Link="Services\Maui업무사진촬영Adapter.cs" />
         <ProjectReference Include="..\Ssalddel.Ui.Common\Ssalddel.Ui.Common.csproj" />
         <!-- App Icon -->
         <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />

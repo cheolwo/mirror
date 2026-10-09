@@ -117,6 +117,7 @@
     <Compile Include="..\FDriverApp\Services\FoodDeliveryDriverApiService.cs" Link="Clients\Driver\FoodDeliveryDriverApiService.cs" />
     <Compile Include="..\FDriverApp\Services\FDriverAppProfile.cs" Link="Clients\Driver\FDriverAppProfile.cs" />
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.cs" Link="Clients\Driver\MainPageModel.cs" />
+    <Compile Include="..\FDriverApp\PageModels\MainPageModel.ReturnAreaSettings.cs" Link="Clients\Driver\MainPageModel.ReturnAreaSettings.cs" />
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodExceptions.cs" Link="Clients\Driver\MainPageModel.FoodExceptions.cs" />
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodDailySettlement.cs" Link="Clients\Driver\MainPageModel.FoodDailySettlement.cs" />
     <Compile Include="..\FDriverApp\PageModels\FDriverDailySettlementItem.cs" Link="Clients\Driver\FDriverDailySettlementItem.cs" />
@@ -129,6 +130,10 @@
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodPresentation.cs" Link="Clients\Driver\MainPageModel.FoodPresentation.cs" />
     <Compile Include="..\FDriverApp\PageModels\FDriverMapRouteState.cs" Link="Clients\Driver\FDriverMapRouteState.cs" />
     <Compile Include="..\FDriverApp\PageModels\FDriverFoodNotificationState.cs" Link="Clients\Driver\FDriverFoodNotificationState.cs" />
+    <Compile Include="..\FDriverApp\PageModels\FDriverNotificationSettingsPageModel.cs" Link="Clients\Driver\FDriverNotificationSettingsPageModel.cs" />
+    <Compile Include="..\FDriverApp\Services\FDriverNotificationPublicationGate.cs" Link="Clients\Driver\FDriverNotificationPublicationGate.cs" />
+    <Compile Include="..\FDriverApp\Services\FDriverAgreedRateWorkspaceBridge.cs" Link="Clients\Driver\FDriverAgreedRateWorkspaceBridge.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\RestaurantAgreedRateWorkspaceBridge.cs" Link="Clients\Restaurant\RestaurantAgreedRateWorkspaceBridge.cs" />
     <Compile Include="..\FDriverApp\Services\IFDriverFoodNotificationService.cs" Link="Clients\Driver\IFDriverFoodNotificationService.cs" />
     <Compile Include="..\FDriverApp\PageModels\FDriverDeliveryExceptionState.cs" Link="Clients\Driver\FDriverDeliveryExceptionState.cs" />
     <Compile Include="..\FDriverApp\PageModels\FDriverWorkspaceNavigationState.cs" Link="Clients\Driver\FDriverWorkspaceNavigationState.cs" />

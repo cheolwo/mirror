@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="@Href("_content/Ssalddel.Ui.Common/Areas/App/css/neighborhood-map.css")" />
 @{ Model.SynchronizeOwner(); }
 <main class="neighborhood-map-page">
-    <header class="neighborhood-map-header"><div><span>우리 동네</span><h1>생활 지도</h1></div><details class="neighborhood-map-more"><summary>더 보기</summary><a href="@Href("/information/regional-agricultural-map")">공공자료</a><a href="@Href(AppsHref)">업무 앱</a></details></header>
+    <header class="neighborhood-map-header"><div><span>우리 동네</span><h1>생활 지도</h1></div><details class="neighborhood-map-more"><summary>더 보기</summary><a href="@Href(NeighborhoodMemberDeliveryRoutes.Offers)">받은 배송 제안</a><a href="@Href("/information/regional-agricultural-map")">공공자료</a><a href="@Href(AppsHref)">업무 앱</a></details></header>
     <nav class="neighborhood-map-navigation @(HasSelectedWork ? "has-current-work" : "")" aria-label="생활 화면">
         <button type="button" aria-pressed="@(Model.PanelKind is null or "post" or "spaces" or "space" ? "true" : "false")" @onclick="ShowNearby">주변 보기</button>
         <button type="button" aria-pressed="@(Model.PanelKind is "mine" or "work" or "delivery" ? "true" : "false")" @onclick="ShowMine">내 할 일</button>
@@ -43,6 +43,8 @@
                 @if (Model.Delivery is { } delivery)
                 {
                     <details class="neighborhood-map-note"><summary>선택 배송의 지도 정보</summary><p>픽업은 주황색, 전달은 파란색 핀입니다.</p>
+                        @if (delivery.AutoFulfillment is { } automatic) { <p>@(automatic.ProviderName ?? "플랫폼 선정 대기") @(automatic.IsSimulation ? "· 모의 서비스" : "") · @AutoFulfillmentPresentation.State(automatic.StateCode)</p><p>처리 상태 최근 확인 @NeighborhoodDeliveryPresentation.Time(automatic.UpdatedAtUtc)</p> }
+                        else if (delivery.Fulfillment is { } fulfillment) { <p>@fulfillment.ProviderName @(fulfillment.IsSimulation ? "· 모의 서비스" : "") · @NeighborhoodDeliveryPresentation.FulfillmentStage(fulfillment.StateCode)</p><p>처리 상태 최근 확인 @NeighborhoodDeliveryPresentation.Time(fulfillment.UpdatedAtUtc)</p> }
                         @if (delivery.PlannedRoute is { } route) { <p>예정 거리 @(route.DistanceKm?.ToString("0.###") ?? "미확인") km · @(route.DurationMinutes?.ToString("0.#") ?? "미확인")분</p><p>@route.Notice · @(route.SourceCode == "NaverCloudDirections" ? "NAVER Directions" : "경로 제공 자료") · @route.CalculatedAtUtc.ToLocalTime().ToString("HH:mm")</p> }
                         else { <p>@delivery.RouteNotice</p> }
                         <p>@delivery.DriverLocationNotice</p>

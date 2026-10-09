@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Ssalddel.ApiMetadata;
 using Ssalddel.Contracts.Driver.Settlement;
 using Ssalddel.Contracts.Shipper.Request;
+using Ssalddel.Application.Shipper.Request;
 using 살뜰.Data;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.기사;
@@ -180,13 +181,21 @@ public sealed class 기사지급준비UseCase : I기사지급준비UseCase
             settlementAccountVerified,
             hasOpenAbnormalTransportIncident);
 
+        var agreement = 저장합의조회(fare, request, transport);
+        var agreementStatus = string.IsNullOrWhiteSpace(fare?.합의요금표SnapshotJson) ? "NotSelected"
+            : agreement is null ? "InvalidEvidence" : "StoredAcceptedAgreement";
+        if (agreementStatus == "InvalidEvidence") readiness = new("RateTableEvidenceInvalid",
+            "저장된 사전 합의 수행 대가와 판본 근거를 확인해 주세요.", false);
+
         return new 기사지급준비항목응답
         {
             TransportId = transport.Id,
             TransportNumber = transport.운송번호,
             RequestId = request?.의뢰Id ?? transport.의뢰Id,
             CompletedAtUtc = transport.도착!.Value,
-            ExpectedPayoutAmount = fare?.기사지급예정운임,
+            ExpectedPayoutAmount = request?.모의처리처수행 == true ? null : fare?.기사지급예정운임,
+            AgreedRateTable = agreement,
+            AgreedRateTableEvidenceStatusCode = agreementStatus,
             CurrencyCode = "KRW",
             AmountSource = fare?.기사지급예정운임.HasValue == true
                 ? "운임구성.기사지급예정운임"
@@ -198,6 +207,33 @@ public sealed class 기사지급준비UseCase : I기사지급준비UseCase
             ReadinessMessage = readiness.Message,
             IsReadyForPayoutPreparation = readiness.IsReady
         };
+    }
+
+    internal static Ssalddel.Contracts.Common.Pricing.AgreedRateTableSnapshotDto? 저장합의조회(
+        운임구성? fare, 화주운송의뢰? request, 운송원장 transport)
+    {
+        if (string.IsNullOrWhiteSpace(fare?.합의요금표SnapshotJson) || request is null) return null;
+        try
+        {
+            var snapshot = System.Text.Json.JsonSerializer.Deserialize<Ssalddel.Contracts.Common.Pricing.AgreedRateTableSnapshotDto>(fare.합의요금표SnapshotJson,
+                new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
+            if (!Ssalddel.Domain.Pricing.AgreedRateTableEvidencePolicy.IsValid(snapshot)
+                || snapshot!.BusinessKind != Ssalddel.Contracts.Common.Pricing.AgreedRateBusinessKinds.CargoTransport
+                || snapshot.VehicleCode != request.차량종류 || fare.의뢰Id != request.의뢰Id || request.운임구성Id != fare.Id
+                || fare.예상거리Km is not > 0 || fare.거리계산방식 is null) return null;
+            var driver = new Ssalddel.Contracts.Common.Pricing.AgreedRatePartyDto(
+                Ssalddel.Contracts.Common.Pricing.AgreedRatePartyKinds.CargoDriver, transport.확정기사Id ?? transport.기사_운송자 ?? "");
+            var owner = new Ssalddel.Contracts.Common.Pricing.AgreedRatePartyDto(
+                Ssalddel.Contracts.Common.Pricing.AgreedRatePartyKinds.Shipper, request.화주Id);
+            if (!(snapshot.Proposer == driver && snapshot.Counterparty == owner || snapshot.Counterparty == driver && snapshot.Proposer == owner)) return null;
+            var terms = snapshot.CargoPricing!;
+            var frozenTotal = 화주운송기준운임계산기.Calculate(new() { 차량종류 = snapshot.VehicleCode,
+                대기료 = fare.대기료, 수작업비 = fare.수작업비, 할증 = fare.할증 },
+                new(snapshot.VehicleCode, terms.BaseFareKrw, terms.PerKmKrw, terms.MinimumFareKrw, "StoredAcceptedAgreement"), fare.예상거리Km.Value).최종운임;
+            return frozenTotal == fare.기사지급예정운임 ? snapshot : null;
+        }
+        catch (System.Text.Json.JsonException) { return null; }
+        catch (ArgumentException) { return null; }
     }
 
     internal static 기사지급준비판정 준비상태판정(
@@ -222,6 +258,8 @@ public sealed class 기사지급준비UseCase : I기사지급준비UseCase
                 "비정상 운송 사건의 운영 검토가 끝날 때까지 기사 지급 준비를 보류합니다.",
                 false);
         }
+        if (request.모의처리처수행)
+            return new("SimulationFulfillmentExcluded", "모의 처리처 수행 기록은 실제 기사 지급·정산 대상에서 제외합니다.", false);
 
         if (expectedPayoutAmount is not > 0)
         {

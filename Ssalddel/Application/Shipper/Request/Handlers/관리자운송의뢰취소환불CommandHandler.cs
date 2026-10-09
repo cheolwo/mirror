@@ -1,7 +1,10 @@
+using System.Data;
 using System.Text.Json;
 using FluentResults;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Contracts.Admin.Transport;
+using Ssalddel.Contracts.Common.Community;
+using Ssalddel.Contracts.Common.Fulfillment;
 using Ssalddel.Contracts.Shipper.Request;
 using 살뜰.Services.Options;
 using 살뜰.도메인.결제;
@@ -57,6 +60,37 @@ public sealed class 관리자운송의뢰취소환불CommandHandler
         if (entity is null)
         {
             return Result.Fail<화주운송의뢰응답>("의뢰를 찾을 수 없습니다.");
+        }
+        if (await _db.운송원장.AsNoTracking().AnyAsync(x => x.의뢰Id == requestId && x.일반회원배송전용, cancellationToken))
+            return Result.Fail<화주운송의뢰응답>(new Error("일반 회원 배송은 전용 취소 또는 지원 사건 복구에서 물품 인수와 수행 책임을 먼저 확인해 주세요.")
+                .WithMetadata("ErrorCode", "MemberDeliveryRecoveryRequired").WithMetadata("StatusCode", 409));
+
+        // 같은 source/current를 읽는 처리처 선택과 직렬화하여 확인 뒤 재접수가 끼어들지 않게 합니다.
+        // 일반 운송 취소의 기존 경로는 유지하고 모의 수행만 전용 취소 확인을 요구합니다.
+        await using var fulfillmentTransaction = entity.모의처리처수행 && _db.Database.IsRelational()
+            ? await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken) : null;
+        if (entity.모의처리처수행)
+        {
+            await _db.Entry(entity).ReloadAsync(cancellationToken);
+            var current = await _db.NeighborhoodFulfillments.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.SourceKind == FulfillmentSourceKinds.NeighborhoodDelivery && x.RequestId == requestId, cancellationToken);
+            var attempt = current is null ? null : await _db.NeighborhoodFulfillmentAttempts.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.SourceKind == FulfillmentSourceKinds.NeighborhoodDelivery && x.AttemptId == current.AttemptId && x.RequestId == requestId, cancellationToken);
+            var hasAttempts = await _db.NeighborhoodFulfillmentAttempts.AsNoTracking()
+                .AnyAsync(x => x.SourceKind == FulfillmentSourceKinds.NeighborhoodDelivery && x.RequestId == requestId, cancellationToken);
+            var unsent = current is null
+                && !hasAttempts
+                && !await _db.운송원장.AsNoTracking().AnyAsync(x => x.의뢰Id == requestId || x.원본의뢰Id == requestId, cancellationToken);
+            // 자동 재선정 대기 중인 이전 실패만으로 원 의뢰를 종료하지 않습니다.
+            // 전용 Coordinator가 현재 수행의 취소를 확인한 뒤에만 관리자 취소를 허용합니다.
+            var verifiedClosed = current?.IsAutomatic == true
+                ? current.StateCode == AutoFulfillmentStates.Cancelled
+                    && (attempt?.StateCode is AutoFulfillmentStates.Cancelled or AutoFulfillmentStates.Failed
+                        || string.IsNullOrEmpty(current.AttemptId) && !hasAttempts)
+                : attempt?.StateCode is NeighborhoodFulfillmentStates.Cancelled or NeighborhoodFulfillmentStates.Failed;
+            if (!unsent && !verifiedClosed)
+                return Result.Fail<화주운송의뢰응답>(new Error("처리처 수행이 남아 있거나 결과를 확인할 수 없습니다. 배송 상세에서 처리처 취소 결과를 먼저 확인해 주세요.")
+                    .WithMetadata("ErrorCode", "FulfillmentCancellationRequired").WithMetadata("StatusCode", 409));
         }
 
         if (string.Equals(entity.상태, 상태값.의뢰상태.취소, StringComparison.OrdinalIgnoreCase)
@@ -134,6 +168,7 @@ public sealed class 관리자운송의뢰취소환불CommandHandler
         });
 
         await _db.SaveChangesAsync(cancellationToken);
+        if (fulfillmentTransaction is not null) await fulfillmentTransaction.CommitAsync(cancellationToken);
         return Result.Ok(화주운송의뢰매퍼.To응답(entity));
     }
 }

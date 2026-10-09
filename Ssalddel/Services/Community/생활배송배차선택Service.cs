@@ -29,6 +29,12 @@ public sealed class 생활배송배차선택Service(SsalddelContext db, ICurrent
         var source = await db.화주운송의뢰.AsNoTracking().SingleOrDefaultAsync(x => x.의뢰Id == requestId, ct);
         if (source?.주문자UserId != currentUser.UserId || source.클라이언트요청Id?.StartsWith(NeighborhoodDeliveryRoutes.ClientRequestPrefix, StringComparison.Ordinal) != true)
             return Fail("RequestNotFound", "본인 배송 의뢰를 찾을 수 없습니다.", 404);
+        var queue = await db.운송원장.SingleOrDefaultAsync(x => x.의뢰Id == requestId, ct);
+        if (queue?.일반회원배송전용 == true)
+            return Fail("MemberDeliveryDedicatedRouteRequired", "일반 회원 배송은 회원 배송 상세에서 관리해 주세요.");
+        if (source.자동처리처수행 || source.모의처리처수행 && await db.NeighborhoodFulfillments.AsNoTracking()
+                .AnyAsync(x => x.SourceKind == "NeighborhoodDelivery" && x.RequestId == requestId && x.IsAutomatic, ct))
+            return Fail("AutomaticFulfillmentManaged", "플랫폼 자동 수행 의뢰의 배차 방식은 사전동의와 처리처 수행 절차에서 관리합니다.");
         var signature = JsonSerializer.Serialize(request);
         var history = await db.운송이벤트.AsNoTracking().Where(x => x.의뢰Id == requestId && x.이벤트타입 == EventType).Select(x => x.메타데이터).ToListAsync(ct);
         foreach (var raw in history)
@@ -37,7 +43,6 @@ public sealed class 생활배송배차선택Service(SsalddelContext db, ICurrent
             if (old.ClientRequestId == request.ClientRequestId) return old.Actor == currentUser.UserId && old.Signature == signature ? Result.Ok()
                 : Fail("IdempotencyConflict", "같은 요청 번호로 다른 선택을 보낼 수 없습니다.");
         }
-        var queue = await db.운송원장.SingleOrDefaultAsync(x => x.의뢰Id == requestId, ct);
         if (queue is null || queue.생활배송배차방식 is null || !queue.생활배송수락준비완료
             || queue.상태 != 상태값.배차대기상태.대기 || queue.확정기사Id is not null || queue.배차큐단계 == 상태값.배차큐단계.종료
             || source.상태 != 상태값.의뢰상태.생성됨) return Fail("DispatchChoiceLocked", "기사 확정 또는 처리 중인 배송은 현재 절차를 먼저 확인해 주세요.");
@@ -64,6 +69,16 @@ public sealed class 생활배송배차선택Service(SsalddelContext db, ICurrent
         if (source is null) return work.LinkedDeliveryRequestId is null ? Result.Ok() : Fail("DeliveryAuthorityUnavailable", "배송 원장을 확인할 수 없습니다.");
         if (source.주문자UserId != work.OwnerUserId && source.주문자UserId != work.RequesterUserId) return Fail("DeliveryLinkNotAllowed", "연결된 의뢰 권한을 확인해 주세요.");
         var queue = await db.운송원장.SingleOrDefaultAsync(x => x.의뢰Id == source.의뢰Id, ct);
+        if (queue?.일반회원배송전용 == true)
+            return Fail("MemberDeliveryDedicatedRouteRequired", "일반 회원 배송의 취소는 회원 배송 상세에서 진행해 주세요.");
+        if (source.모의처리처수행)
+        {
+            var active = await db.NeighborhoodFulfillments.AsNoTracking().SingleOrDefaultAsync(x => x.SourceKind == "NeighborhoodDelivery" && x.RequestId == source.의뢰Id, ct);
+            var attempt = active is null ? null : await db.NeighborhoodFulfillmentAttempts.AsNoTracking().SingleOrDefaultAsync(x => x.AttemptId == active.AttemptId, ct);
+            if (active is null && await db.운송원장.AsNoTracking().AnyAsync(x => x.의뢰Id == source.의뢰Id, ct)
+                || active is not null && (attempt is null || attempt.StateCode is not (NeighborhoodFulfillmentStates.Cancelled or NeighborhoodFulfillmentStates.Failed)))
+                return Fail("DeliveryRecoveryRequired", "처리처 수행 결과와 취소 확인을 배송 상세에서 먼저 확인해 주세요.");
+        }
         if (source.상태 == 상태값.의뢰상태.취소 && (queue is null || queue.배차큐단계 == 상태값.배차큐단계.종료)) return Result.Ok();
         if (queue?.확정기사Id is not null || source.배차상태 is not (상태값.배차상태.미시작 or 상태값.배차상태.매칭중))
             return Fail("DeliveryRecoveryRequired", "기사가 확정된 배송입니다. 배송 상세의 취소·재배차·물건 인수 상태를 먼저 확인해 주세요.");

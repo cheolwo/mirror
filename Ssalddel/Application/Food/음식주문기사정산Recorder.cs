@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Ssalddel.Contracts.Food;
+using Ssalddel.Contracts.Common.Pricing;
 using 살뜰.Data;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.음식;
@@ -20,6 +21,9 @@ public static class 음식주문기사정산Recorder
         음식배달시도 attempt,
         CancellationToken cancellationToken)
     {
+        // 자동 수행 v1의 모의 배정/완료는 기사 대금이나 실지급 근거가 아닙니다.
+        if (order.모의처리처수행)
+            return;
         if (queue.배차업무유형 != 상태값.배차업무유형.음식배달
             || 음식주문상태코드.Normalize(order.상태) is not (음식주문상태코드.전달완료 or 음식주문상태코드.수령확인)
             || queue.배차큐단계 != 상태값.배차큐단계.종료
@@ -218,10 +222,31 @@ public static class 음식주문기사정산Recorder
                 // LegacyUnsplit의 DropoffFeeKrw는 과거 기본액 전체입니다. 전달비로 노출하지 않습니다.
                 result.EvidenceStatusCode = result.BaseSplitCode == "LegacyUnsplit" ? "LegacyUnsplit" : "UnclassifiedBaseSplit";
             }
+            if (root.TryGetProperty("합의요금표", out var agreed) && agreed.ValueKind != JsonValueKind.Null)
+            {
+                var snapshot = agreed.Deserialize<AgreedRateTableSnapshotDto>(new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                if (!Ssalddel.Domain.Pricing.AgreedRateTableEvidencePolicy.IsValid(snapshot) || snapshot!.BusinessKind != AgreedRateBusinessKinds.FoodDelivery
+                    || snapshot.VehicleCode != result.RouteVehicleCode || snapshot.FoodPricing is null || snapshot.CargoPricing is not null
+                    || snapshot.Revision < 1 || string.IsNullOrWhiteSpace(snapshot.TermsDigest)
+                    || !(snapshot.Proposer == new AgreedRatePartyDto(AgreedRatePartyKinds.FoodDriver, item.기사Id)
+                        || snapshot.Counterparty == new AgreedRatePartyDto(AgreedRatePartyKinds.FoodDriver, item.기사Id))
+                    || !item.요금정책판본.Contains($"|agreement:{snapshot.AgreementId}:{snapshot.Revision}:{snapshot.TermsDigest}", StringComparison.Ordinal)
+                    || snapshot.FoodPricing.PickupFeeKrw != pickup || snapshot.FoodPricing.DropoffFeeKrw != dropoff)
+                    return Missing("InvalidEvidence");
+                if (frozenAt is not { } frozen || !result.DistanceKm.HasValue || frozen < snapshot.AcceptedAtUtc
+                    || frozen < snapshot.EffectiveFromUtc || frozen >= snapshot.EffectiveUntilUtc)
+                    return Missing("InvalidEvidence");
+                var frozenLine = 음식배달지급검토Policy.건별계산(new(snapshot.FoodPricing,
+                    [new("stored", DateOnly.FromDateTime(frozen), result.DistanceKm, "RouteEstimate", "None", 0m, 0m, 0m)])).Lines[0];
+                if (frozenLine.DistanceFeeKrw != distance || frozenLine.MinimumAdjustmentKrw != minimum || frozenLine.GrossPayoutKrw != baseAndDistance)
+                    return Missing("InvalidEvidence");
+                result.AgreedRateTable = snapshot;
+            }
             return result;
         }
         catch (JsonException) { return Missing("InvalidEvidence"); }
         catch (OverflowException) { return Missing("InvalidEvidence"); }
+        catch (ArgumentException) { return Missing("InvalidEvidence"); }
 
         static decimal? Amount(JsonElement element, string name)
             => element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Number

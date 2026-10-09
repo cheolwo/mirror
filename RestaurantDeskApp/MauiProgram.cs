@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Configuration;
+using System.Reflection;
 using Ssalddel.Ui.Common.Areas.App.Services;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
 using MudBlazor.Services;
@@ -45,6 +46,30 @@ public static class MauiProgram
         builder.Services.Configure<RestaurantDeskOptions>(builder.Configuration.GetSection(RestaurantDeskOptions.SectionName));
         builder.Services.PostConfigure<RestaurantDeskOptions>(options =>
             options.ServerBaseUrl = operationalApiBaseAddress.AbsoluteUri);
+#if DEBUG
+        var usbFoodTestFixture = typeof(MauiProgram).Assembly
+            .GetCustomAttributes<AssemblyMetadataAttribute>()
+            .FirstOrDefault(attribute => attribute.Key == "SsalddelUsbFoodTestFixture")?.Value;
+        if (usbFoodTestFixture == "sagajeong-food-mobile-dispatch.r1"
+            && operationalApiBaseAddress.Scheme == Uri.UriSchemeHttp
+            && operationalApiBaseAddress.IsLoopback && operationalApiBaseAddress.Port == 5363
+            && operationalApiBaseAddress.AbsolutePath == "/"
+            && string.IsNullOrEmpty(operationalApiBaseAddress.UserInfo)
+            && string.IsNullOrEmpty(operationalApiBaseAddress.Query)
+            && string.IsNullOrEmpty(operationalApiBaseAddress.Fragment))
+        {
+            // 명시적인 USB 시험 판본에서만 서버의 합성 음식점 101과 결속한다.
+            builder.Services.PostConfigure<RestaurantDeskOptions>(options =>
+            {
+                options.RestaurantId = 101;
+                options.RestaurantName = "사가정 한상 샘플";
+                options.RestaurantAddress = "서울특별시 중랑구 사가정역 내부 검증권역";
+                options.RestaurantDetailAddress = string.Empty;
+                options.RestaurantLatitude = 37.580450m;
+                options.RestaurantLongitude = 127.087950m;
+            });
+        }
+#endif
         builder.Services.Configure<RestaurantOrderAlertOptions>(builder.Configuration.GetSection(RestaurantOrderAlertOptions.SectionName));
         builder.Services.AddSingleton<IClientSecureTokenStore, RestaurantMauiSecureTokenStore>();
         builder.Services.AddSingleton<IClientSessionGuard, ClientSessionGuard>();
@@ -90,6 +115,9 @@ public static class MauiProgram
             client.BaseAddress = operationalApiBaseAddress;
         });
         builder.Services.AddSingleton<음식점전표DraftFactory>();
+        builder.Services.AddSingleton<RestaurantAgreedRateWorkspaceBridge>();
+        builder.Services.AddSingleton<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.IRoleWorkspaceApi>(sp => sp.GetRequiredService<RestaurantAgreedRateWorkspaceBridge>());
+        builder.Services.AddSingleton<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.IRoleWorkspaceAccess>(sp => sp.GetRequiredService<RestaurantAgreedRateWorkspaceBridge>());
         builder.Services.AddTransient<I음식점메뉴ApiClient>(sp =>
             (Ssalddel음식주문Client)sp.GetRequiredService<I음식주문ApiClient>());
         builder.Services.AddSingleton<I음식점주문DeskService, 음식점주문DeskService>();

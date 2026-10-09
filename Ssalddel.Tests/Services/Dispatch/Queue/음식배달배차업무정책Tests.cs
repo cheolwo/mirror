@@ -12,11 +12,58 @@ using 살뜰.Services.Storage.Local;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.기사;
 using 살뜰.도메인.운송;
+using Ssalddel.Application.Pricing;
+using Ssalddel.Contracts.Common.Pricing;
 
 namespace Ssalddel.Tests.Services.Dispatch.Queue;
 
-public sealed class 음식배달배차업무정책Tests
+public sealed partial class 음식배달배차업무정책Tests
 {
+    [Fact]
+    public async Task 명시합의선택은기존적격후보중상대기사로좁히되배정이나수락을만들지않는다()
+    {
+        var now = DateTime.UtcNow;
+        var state = new FakeDriverStateStore([
+            Snapshot("other", 기사앱식별자.FoodDeliveryDriverApp, 37.5001m, 127m, now, 1000),
+            Snapshot("agreed", 기사앱식별자.FoodDeliveryDriverApp, 37.502m, 127m, now, 0)]);
+        var spaces = await CreateFoodSpaceStoreAsync(("other", 37.5001m, 127m), ("agreed", 37.502m, 127m));
+        var q = Queue();
+        var result = await CreatePolicy(state, new FakeRejectedRequestStore(), spaces, agreed: new Agreement("agreed")).다음후보선정Async(q);
+        Assert.Equal("agreed", result?.DriverId);
+        Assert.Null(q.확정기사Id); Assert.Null(q.현재추천대상기사Id);
+        Assert.Equal(상태값.배차큐단계.계획배차, q.배차큐단계);
+    }
+
+    [Theory]
+    [InlineData("Off")]
+    [InlineData("Stopped")]
+    [InlineData("Stale")]
+    [InlineData("MissingGps")]
+    [InlineData("Rejected")]
+    [InlineData("Radius")]
+    [InlineData("OtherApp")]
+    [InlineData("Expired")]
+    public async Task 사전합의기사도수신운행GPS거절반경관문을통과해야하며미적격이면다른기사로금액을전환하지않는다(string condition)
+    {
+        var now = DateTime.UtcNow;
+        var selectedLatitude = condition == "Radius" ? 37.512m : 37.502m;
+        var selected = Snapshot("agreed", condition == "OtherApp" ? 기사앱식별자.CargoYongdalDriverApp : 기사앱식별자.FoodDeliveryDriverApp,
+            selectedLatitude, 127m, condition == "Stale" ? now.AddMinutes(-20) : now, 0, condition == "Radius" ? 1m : null);
+        if (condition == "Stopped") selected = selected with { 운행상태 = "휴식중" };
+        if (condition == "MissingGps") selected = selected with { Latitude = null };
+        var state = new FakeDriverStateStore([selected, Snapshot("other", 기사앱식별자.FoodDeliveryDriverApp, 37.5001m, 127m, now, 1000)]);
+        var spaces = await CreateFoodSpaceStoreAsync(("agreed", selectedLatitude, 127m), ("other", 37.5001m, 127m));
+        var rejected = new FakeRejectedRequestStore();
+        if (condition == "Rejected") await rejected.RejectAsync("agreed", "food-order-1");
+        var receiving = new TestDispatchAvailability();
+        if (condition == "Off") await receiving.기사의사변경Async("agreed", new() { 수신의사Code = 운영배차수신의사Code.Off });
+        var q = Queue();
+        var result = await CreatePolicy(state, rejected, spaces, receiving: receiving,
+            agreed: new Agreement("agreed", condition == "Expired")).다음후보선정Async(q);
+        Assert.Null(result); Assert.Null(q.확정기사Id); Assert.Null(q.현재추천대상기사Id);
+        Assert.Null(q.기사지급예정액);
+    }
+
     [Fact]
     public async Task 운행과최신위치가있어도_OFF기사는제외하고_ON기사만후보로선정한다()
     {
@@ -266,7 +313,10 @@ public sealed class 음식배달배차업무정책Tests
         IDriverRejectedRequestStore rejected,
         I음식배달권실행공간Store? foodSpaceStore = null,
         ISsalddelFoodOrderStore? foodOrderStore = null,
-        I운영배차공통UseCase? receiving = null)
+        I운영배차공통UseCase? receiving = null,
+        IAgreedRateTableUseCase? agreed = null,
+        I기사권역복귀Service? returnService = null,
+        I음식권역복귀일정평가Service? foodPlan = null)
     {
         var options = new 배차큐정책Options
         {
@@ -284,7 +334,7 @@ public sealed class 음식배달배차업무정책Tests
             foodSpaceStore ?? new InMemory음식배달권실행공간Store(),
             foodOrderStore ?? new FakeFoodOrderStore(),
             Options.Create(options),
-            receiving ?? new TestDispatchAvailability());
+            receiving ?? new TestDispatchAvailability(), agreed, returnService, foodPlan);
     }
 
     private static 운송원장 Queue()
@@ -378,6 +428,20 @@ public sealed class 음식배달배차업무정책Tests
 
         public Task RemoveAsync(string driverId, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
+    }
+
+    private sealed class Agreement(string driver, bool unavailable = false) : IAgreedRateTableUseCase
+    {
+        public Task<string?> SelectedDriverAsync(string business, string workId, CancellationToken ct)
+            => unavailable ? Task.FromException<string?>(new AgreedRateTableException("RateTableExpired")) : Task.FromResult<string?>(driver);
+        public Task<IReadOnlyList<AgreedRateTableDto>> ListAsync(AgreedRatePartyDto actor, CancellationToken ct) => throw new NotSupportedException();
+        public Task<AgreedRateTableDto> GetAsync(string id, AgreedRatePartyDto actor, CancellationToken ct) => throw new NotSupportedException();
+        public Task<AgreedRateTableDto> ProposeAsync(AgreedRatePartyDto actor, AgreedRateTableProposalRequest request, CancellationToken ct) => throw new NotSupportedException();
+        public Task<AgreedRateTableDto> ActAsync(string id, AgreedRatePartyDto actor, AgreedRateTableActionRequest request, CancellationToken ct) => throw new NotSupportedException();
+        public Task<AgreedRateTablePreviewDto> PreviewAsync(string id, AgreedRatePartyDto actor, AgreedRateTablePreviewRequest request, CancellationToken ct) => throw new NotSupportedException();
+        public Task<AgreedRateTableSelectionDto> SelectAsync(string id, AgreedRatePartyDto actor, AgreedRateTableSelectionRequest request, CancellationToken ct) => throw new NotSupportedException();
+        public Task<AgreedRateTableSelectionDto> GetSelectionAsync(string id, string workId, AgreedRatePartyDto actor, CancellationToken ct) => throw new NotSupportedException();
+        public Task<AgreedRateTableSnapshotDto?> SelectedAsync(string business, string workId, string driverId, string vehicle, CancellationToken ct) => throw new NotSupportedException();
     }
 
     private sealed class FakeRejectedRequestStore : IDriverRejectedRequestStore

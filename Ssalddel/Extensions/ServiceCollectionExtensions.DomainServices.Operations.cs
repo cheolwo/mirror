@@ -52,8 +52,17 @@ public static partial class ServiceCollectionExtensions
         });
         services.AddScoped<I앱문맥이미지자산조회UseCase, 앱문맥이미지자산조회UseCase>();
         services.AddScoped<Ssalddel.Services.Community.I생활배송의뢰UseCase, Ssalddel.Services.Community.생활배송의뢰UseCase>();
+        services.AddScoped<Ssalddel.Services.Community.I생활배송엑셀초안Service, Ssalddel.Services.Community.생활배송엑셀초안Service>();
+        services.AddOptions<Ssalddel.Services.Community.NeighborhoodFulfillmentOptions>().BindConfiguration(Ssalddel.Services.Community.NeighborhoodFulfillmentOptions.SectionName);
+        services.AddScoped<Ssalddel.Services.Community.I생활배송처리처Service, Ssalddel.Services.Community.생활배송처리처Service>();
+        services.AddScoped<Ssalddel.Services.Community.IFulfillmentProvider, Ssalddel.Services.Community.InternalNeighborhoodFulfillmentProvider>();
+        services.AddSingleton<Ssalddel.Services.Community.IFulfillmentProvider>(sp => new Ssalddel.Services.Community.MockNeighborhoodFulfillmentProvider(
+            "mock-quick", "모의 퀵 배송", 15, 20, 1.15m, 25, sp.GetRequiredService<TimeProvider>()));
+        services.AddSingleton<Ssalddel.Services.Community.IFulfillmentProvider>(sp => new Ssalddel.Services.Community.MockNeighborhoodFulfillmentProvider(
+            "mock-local", "모의 생활 배송", 10, 10, .85m, 60, sp.GetRequiredService<TimeProvider>()));
         services.AddScoped<Ssalddel.Services.Community.I생활배송기사정보제공동의Service, Ssalddel.Services.Community.생활배송기사정보제공동의Service>();
         services.AddScoped<Ssalddel.Services.Community.I생활배송지도Service, Ssalddel.Services.Community.생활배송지도Service>();
+        services.AddSsalddelFulfillmentRouting();
         services.AddScoped<I국내화물운송기사상태Service, 국내화물운송기사상태Service>();
         services.AddScoped<I음식배달기사추천기록Service, 음식배달기사추천기록Service>();
         services.AddSingleton<ICommandFileStoragePathResolver, CommandFileStoragePathResolver>();
@@ -90,6 +99,15 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I샘플이미지대상Resolver, 상품상세이미지생성작업대상Resolver>();
         services.AddScoped<I샘플이미지생성Service, 샘플이미지생성Service>();
         services.AddScoped<I배차추천경로Service, 배차추천경로Service>();
+        services.AddOptions<기사권역복귀정책Options>().BindConfiguration("DriverReturnArea")
+            .Validate(x => x.최대가점 is > 0m and <= 50m && x.목표개선거리Km > 0m
+                && x.위치유효시간초 is > 0 and <= 600 && x.최대위치오차M is > 0m and <= 1000m,
+                "DriverReturnAreaPolicyInvalid").ValidateOnStart();
+        services.AddScoped<I기사권역복귀Service, 기사권역복귀Service>();
+        services.AddSingleton<I기사권역복귀설정Store, Mongo기사권역복귀설정Store>();
+        services.AddScoped<Ssalddel.Application.Driver.Settings.I기사권역복귀설정UseCase,
+            Ssalddel.Application.Driver.Settings.기사권역복귀설정UseCase>();
+        services.AddScoped<I음식권역복귀일정평가Service, 음식권역복귀일정평가Service>();
         services.AddScoped<I용달기사프로필UseCase, 용달기사프로필UseCase>();
         services.AddScoped<I기사알림UseCase, 기사알림UseCase>();
         services.AddScoped<I기사정산계좌UseCase, 기사정산계좌UseCase>();

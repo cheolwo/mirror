@@ -94,6 +94,12 @@ namespace FDriverApp
             builder.Services.AddSingleton<IFDriverWorkspaceNavigator, FDriverWorkspaceNavigator>();
             builder.Services.AddSingleton<MainPageModel>();
             builder.Services.AddSingleton<MainPage>();
+            builder.Services.AddTransient<FDriverNotificationSettingsPageModel>();
+            builder.Services.AddTransient<NotificationSettingsPage>();
+            builder.Services.AddTransient<AgreedRateTablePage>();
+            builder.Services.AddSingleton<FDriverAgreedRateWorkspaceBridge>();
+            builder.Services.AddSingleton<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.IRoleWorkspaceApi>(sp => sp.GetRequiredService<FDriverAgreedRateWorkspaceBridge>());
+            builder.Services.AddSingleton<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.IRoleWorkspaceAccess>(sp => sp.GetRequiredService<FDriverAgreedRateWorkspaceBridge>());
             builder.Services.AddSingleton<AppShell>();
             builder.Services.AddSingleton<IFDriverCompletedDeliveryNavigator, FDriverCompletedDeliveryNavigator>();
             builder.Services.AddTransient<FDriverCompletedDeliveryListPageModel>();

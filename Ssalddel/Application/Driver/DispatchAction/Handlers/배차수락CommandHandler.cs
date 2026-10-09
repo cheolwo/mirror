@@ -28,6 +28,7 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
     private readonly I화물배차수락적격성Service _수락적격성Service;
     private readonly I화물연속배차UseCase _연속배차UseCase;
     private readonly ILogger<배차수락CommandHandler> _logger;
+    private readonly bool _memberDeliveryEnabled;
 
     public 배차수락CommandHandler(
         SsalddelContext db,
@@ -37,7 +38,8 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         IWorkRelationshipSnapshotCollector relationshipSnapshotCollector,
         I화물배차수락적격성Service 수락적격성Service,
         I화물연속배차UseCase 연속배차UseCase,
-        ILogger<배차수락CommandHandler> logger)
+        ILogger<배차수락CommandHandler> logger,
+        Microsoft.Extensions.Options.IOptions<Ssalddel.Services.Community.NeighborhoodMemberDeliveryOptions>? memberDelivery = null)
     {
         _db = db;
         _publisher = publisher;
@@ -47,6 +49,7 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         _수락적격성Service = 수락적격성Service;
         _연속배차UseCase = 연속배차UseCase;
         _logger = logger;
+        _memberDeliveryEnabled = memberDelivery?.Value.Enabled == true;
     }
 
     public async Task<Result<배차수락결과>> Handle(배차수락Command request, CancellationToken cancellationToken)
@@ -118,11 +121,16 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
             ? await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
             : null;
 
+        if (_memberDeliveryEnabled && await Ssalddel.Services.Community.NeighborhoodMemberWorkExclusion.LockAndHasMemberWorkAsync(_db, request.기사Id, cancellationToken))
+            return new(Conflict("MemberWorkInProgress", "일반 회원 배송을 마친 뒤 다른 배차를 수락할 수 있습니다."));
+
         var queue = await _db.운송원장.FirstOrDefaultAsync(x => x.의뢰Id == request.RequestId, cancellationToken);
         if (queue is null)
         {
             return new(Result.Fail<배차수락결과>("배차대기 데이터를 찾을 수 없습니다."));
         }
+        if (queue.일반회원배송전용)
+            return new(Conflict("MemberDeliveryDedicatedRouteRequired", "일반 회원 배송은 해당 회원에게 전달된 배송 제안에서 수락해 주세요."));
 
         var dispatchRequest = await _db.화주운송의뢰.FirstOrDefaultAsync(x => x.의뢰Id == request.RequestId, cancellationToken);
         if (dispatchRequest is null)
@@ -148,6 +156,9 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         {
             return new(Result.Ok(new 배차수락결과(request.RequestId, "이미 수락된 운송입니다.")));
         }
+
+        if (await Ssalddel.Application.Pricing.AgreedCargoAcceptancePolicy.CheckAsync(_db, dispatchRequest, request.기사Id, cancellationToken) is { } rateError)
+            return new(Conflict(rateError, "선택한 사전 합의 요금표의 기사·업무·원장 근거를 다시 확인해 주세요."));
 
         if (queue.생활배송배차방식 is not null && (!queue.생활배송수락준비완료 || request.ExpectedRecommendationRound is null))
             return new(Conflict("DispatchChoiceNotReady", "현재 배송 연결과 배차 판본을 확인해 주세요."));
@@ -191,7 +202,8 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
             return new(Conflict(
                 eligibility.오류코드 ?? 화물배차수락오류코드.일정실패,
                 eligibility.오류메시지 ?? "현재 운송 조건으로 수락할 수 없습니다.",
-                eligibility.경고코드));
+                eligibility.경고코드,
+                eligibility.경고메시지));
         }
 
         if (queue.생활배송배차방식 is not null) queue.생활배송선택판본++;
@@ -297,10 +309,12 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
     private static Result<배차수락결과> Conflict(
         string errorCode,
         string message,
-        IReadOnlyList<string>? warningCodes = null)
+        IReadOnlyList<string>? warningCodes = null,
+        IReadOnlyList<string>? warningMessages = null)
         => Result.Fail<배차수락결과>(
             new Error(message)
                 .WithMetadata("StatusCode", 409)
                 .WithMetadata("ErrorCode", errorCode)
-                .WithMetadata("WarningCodes", warningCodes ?? []));
+                .WithMetadata("WarningCodes", warningCodes ?? [])
+                .WithMetadata("WarningMessages", warningMessages ?? []));
 }

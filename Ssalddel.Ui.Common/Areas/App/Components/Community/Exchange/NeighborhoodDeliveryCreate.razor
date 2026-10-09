@@ -40,39 +40,82 @@
         else
         {
             <form @onsubmit="Submit" @onsubmit:preventDefault>
-                <fieldset disabled="@(Model.IsSending || Model.NeedsSubmissionReview)"><legend>배송할 물건과 위치</legend>
+                <fieldset disabled="@(Model.IsSending || Model.NeedsSubmissionReview || Model.SimpleInput.IsBusy)"><legend>배송할 물건과 위치</legend>
+                    <section class="exchange-surface"><h2>배송 참여자</h2><label class="delivery-check"><input type="checkbox" @bind="Model.MemberDeliveryRequested" /><span>주변 생활 회원에게 배송 제안</span></label><p class="exchange-note">선택하면 운반 조건에 맞는 회원에게 제안합니다. 플랫폼 이용료와 배차 수수료는 0원이며, 배송비는 별도로 직접 지급합니다.</p></section>
+                    @if (!Model.NeedsSubmissionReview) { <생활배송간편입력 Model="Model" /> }
+                    @if (Model.SimpleInput.ShowDetailed || Model.NeedsSubmissionReview)
+                    {
                     <section class="exchange-surface"><h2>배송할 물건</h2><p class="exchange-note">생활 화물 배송용입니다. 음식 주문은 기존 음식 배달 화면을 이용해 주세요.</p>
-                        <label for="delivery-cargo">물건 이름</label><input id="delivery-cargo" @bind="Model.Draft.CargoName" @bind:event="oninput" maxlength="120" required />
-                        <label for="delivery-quantity">수량</label><input id="delivery-quantity" type="number" @bind="Model.Draft.Quantity" min="1" max="1000" required />
-                        <label for="delivery-weight">전체 중량(kg)</label><input id="delivery-weight" type="number" @bind="Model.Draft.WeightKg" min="0.001" max="10000" step="0.001" required />
-                        <label for="delivery-vehicle">배송 차량</label><select id="delivery-vehicle" @bind="Model.Draft.VehicleType"><option>오토바이</option><option>다마스</option><option>라보</option><option>1톤</option></select>
+                        <label for="delivery-cargo">물건 이름</label><input id="delivery-cargo" @bind="Model.Draft.CargoName" @bind:event="oninput" @bind:after="Model.InputChanged" maxlength="120" required />
+                        <label for="delivery-quantity">수량</label><input id="delivery-quantity" type="number" @bind="Model.Draft.Quantity" @bind:after="Model.InputChanged" min="1" max="1000" required />
+                        <label for="delivery-weight">전체 중량(kg)</label><input id="delivery-weight" type="number" @bind="Model.Draft.WeightKg" @bind:after="Model.InputChanged" min="0.001" max="10000" step="0.001" required />
+                        <label for="delivery-package-size">포장 크기 <small>선택</small></label><select id="delivery-package-size" @bind="Model.PackageSizeCode" @bind:after="Model.InputChanged"><option value="">미입력</option><option value="Small">작음</option><option value="Medium">보통</option><option value="Large">큼</option></select>
+                        <p class="exchange-note">우리 배송 입력용 분류입니다. 실제 업체의 규격을 뜻하지 않으며, 필요한 크기가 없으면 해당 모의 처리처에 접수하지 않습니다.</p>
+                        <label for="delivery-vehicle">배송 차량</label><select id="delivery-vehicle" @bind="Model.Draft.VehicleType" @bind:after="Model.InputChanged"><option value="">선택해 주세요</option><option>오토바이</option><option>다마스</option><option>라보</option><option>1톤</option></select>
+                        @if (!Model.AutoRoutingEnabled) { <label for="delivery-desired">희망 완료 시각 <small>선택</small></label><input id="delivery-desired" type="datetime-local" @bind="Model.DesiredCompletionLocal" @bind:after="Model.InputChanged" /><p class="exchange-note">미지정이면 물품 조건을 충족하는 처리처끼리 비용을 비교합니다.</p> }
                     </section>
-                    <section class="exchange-surface"><h2>기사를 찾는 방식</h2><label for="delivery-mode">배차 방식</label><select id="delivery-mode" @bind="Model.Draft.DispatchMode" disabled="@(Model.IsSending || Model.NeedsSubmissionReview)"><option value="automatic">자동 추천</option><option value="public-call">공개 콜 · 기사 자율 수락</option><option value="hybrid">자동 추천과 공개 콜 함께</option></select><p class="exchange-note">@NeighborhoodDeliveryPresentation.배차선택안내(Model.Draft.DispatchMode)</p></section>
+                    @if (!Model.MemberDeliveryRequested) { <section class="exchange-surface"><h2>기사를 찾는 방식</h2><label for="delivery-mode">배차 방식</label><select id="delivery-mode" @bind="Model.Draft.DispatchMode" @bind:after="Model.InputChanged" disabled="@(Model.IsSending || Model.NeedsSubmissionReview)"><option value="automatic">자동 추천</option><option value="public-call">공개 콜 · 기사 자율 수락</option><option value="hybrid">자동 추천과 공개 콜 함께</option></select><p class="exchange-note">@NeighborhoodDeliveryPresentation.배차선택안내(Model.Draft.DispatchMode)</p></section> }
 
-                    <NeighborhoodDeliveryLocationEditor Id="delivery-pickup" Title="픽업지" Value="Model.Draft.Pickup" @bind-Start="Model.PickupStart" @bind-End="Model.PickupEnd" Changed="StateHasChanged" />
-                    <NeighborhoodDeliveryLocationEditor Id="delivery-dropoff" Title="전달지" Value="Model.Draft.Dropoff" @bind-Start="Model.DropoffStart" @bind-End="Model.DropoffEnd" Changed="StateHasChanged" />
-                    <section class="exchange-surface"><h2>배송 요청 사항</h2><label for="delivery-notes">요청 사항 <small>선택</small></label><textarea id="delivery-notes" @bind="Model.Draft.Notes" @bind:event="oninput" maxlength="1000" rows="3"></textarea></section>
+                    <NeighborhoodDeliveryLocationEditor Id="delivery-pickup" Title="픽업지" Value="Model.Draft.Pickup" @bind-Start="Model.PickupStart" @bind-End="Model.PickupEnd" Changed="Model.InputChanged" />
+                    <NeighborhoodDeliveryLocationEditor Id="delivery-dropoff" Title="전달지" Value="Model.Draft.Dropoff" @bind-Start="Model.DropoffStart" @bind-End="Model.DropoffEnd" Changed="Model.InputChanged" />
+                    <section class="exchange-surface"><h2>배송 요청 사항</h2><label for="delivery-notes">요청 사항 <small>선택</small></label><textarea id="delivery-notes" @bind="Model.Draft.Notes" @bind:event="oninput" @bind:after="Model.InputChanged" maxlength="1000" rows="3"></textarea></section>
+                    @if (!Model.NeedsSubmissionReview)
+                    {
+                        <p class="exchange-note">표시된 시각은 작성용 기본값일 수 있습니다. 실제 가능한 시간창을 확인하세요.</p>
+                        @if (Model.SimpleInput.HasMissingTimes) { <p class="delivery-warning">엑셀에서 비어 있던 시각은 간편 작성의 시간 단계에서 보완해 주세요.</p> }
+                        <label class="delivery-check"><input type="checkbox" @bind="Model.SimpleInput.DropoffTimeUnspecified" /><span>전달 시간 지정 안 함 · 이 경우 위에 표시된 전달 시각은 보내지 않습니다.</span></label>
+                        <label class="delivery-check"><input type="checkbox" @bind="Model.SimpleInput.TimeReviewed" /><span>표시된 픽업·전달 시간창이 실제 가능한 시각임을 확인했습니다.</span></label>
+                    }
+                    }
+                    @if (Model.SimpleInput.ShowDetailed || Model.SimpleInput.Step == 3 || Model.NeedsSubmissionReview)
+                    {
                     <Ssalddel.Ui.Common.Areas.App.Components.Commerce.거래보호Notice RequireAcknowledgment="true" Disabled="@(Model.IsSending || Model.NeedsSubmissionReview)" @bind-Confirmation="Model.Draft.CommerceProtection" />
                     <button type="button" class="exchange-primary" @onclick="Model.QuoteAsync">@(Model.IsSending ? "확인 중…" : "배송비 확인하기")</button>
+                    }
                 </fieldset>
-                @if (Model.NeedsSubmissionReview && Model.Quote is null)
-                { <section class="exchange-surface"><h2>원 배송 요청 이어서 확인</h2><p>이전에 확인한 배송비 @NeighborhoodDeliveryPresentation.Money(Model.Draft.AgreedFareKrw)를 포함한 원 입력으로 결과를 확인합니다.</p><button type="submit" class="exchange-primary" disabled="@Model.IsSending">같은 요청 다시 확인하기</button></section> }
-                @if (Model.Quote is { } quote)
+                @if (Model.NeedsSubmissionReview)
+                {
+                    <section class="exchange-surface"><h2>원 배송 요청 이어서 확인</h2>
+                        @if (Model.Draft.AutoFulfillment is { } originalAuthorization)
+                        { <p>본인 부담 상한 @NeighborhoodDeliveryPresentation.Money(originalAuthorization.MaxUserChargeKrw)를 포함한 원 자동 접수 조건과 입력으로 결과를 확인합니다.</p> }
+                        else
+                        { <p>이전에 확인한 배송비 @NeighborhoodDeliveryPresentation.Money(Model.Draft.FulfillmentSelection?.ConfirmedCostKrw ?? Model.Draft.AgreedFareKrw)를 포함한 원 입력으로 결과를 확인합니다.</p> }
+                        <p>접수 결과 확인이 필요합니다. 같은 요청 번호로 원 결과만 확인하며 새 견적이나 동의를 보내지 않습니다.</p>
+                        <button type="submit" class="exchange-primary" disabled="@Model.IsSending">같은 요청 다시 확인하기</button>
+                    </section>
+                }
+                else if (Model.Quote is { } quote)
                 {
                     <section class="exchange-surface" aria-labelledby="delivery-quote-title"><h2 id="delivery-quote-title">배송비 확인</h2>
+                        @if (Model.AutoRoutingEnabled)
+                        { <Ssalddel.Ui.Common.Areas.App.Components.Fulfillment.AutoFulfillmentConditions Model="Model.AutoConditions" Disabled="@(Model.IsSending || Model.NeedsSubmissionReview)" /> }
                         @if (!Model.HasCurrentQuote) { <p role="status">입력이 바뀌었습니다. 배송비를 다시 확인해 주세요.</p> }
                         else
                         {
-                            <strong class="delivery-fare">@NeighborhoodDeliveryPresentation.Money(quote.Fare.최종운임)</strong>
+                            @if (Model.MemberDeliveryRequested)
+                            { <strong class="delivery-fare">@NeighborhoodDeliveryPresentation.Money(quote.Fare.최종운임)</strong><p>플랫폼 이용료 0원 · 배차 수수료 0원</p><label class="delivery-check"><input type="checkbox" @bind="Model.Draft.MemberDeliveryDisclosureAgreed" /><span>수락이 확정된 회원에게 이 배송에 필요한 픽업·전달 주소와 연락처를 제공하는 데 동의합니다. 수락 전 제안에는 지역과 물품·배송비만 표시합니다.</span></label> }
+                            else if (Model.AutoRoutingEnabled)
+                            { <p>위 허용 조건 안에서 플랫폼이 처리처를 정합니다. 현재 견적은 확인용이며, 접수 직전에 비용·시간·가용성을 다시 확인합니다.</p> }
+                            else if (Model.HasFulfillmentOptions)
+                            {
+                                <NeighborhoodFulfillmentOptions Options="quote.FulfillmentOptions" SelectedQuoteId="@Model.SelectedFulfillmentQuoteId" Disabled="@(Model.IsSending || Model.NeedsSubmissionReview)" SelectionChanged="Model.SelectFulfillment" />
+                                @if (quote.FulfillmentOptions.Any(option => option.IsSimulation)) { <p class="delivery-warning">모의 서비스는 연결 흐름 검증용입니다. 실제 외부 업체 접수·기사 배차·지급이 아닙니다.</p> }
+                                @if (Model.SelectedFulfillmentOption is { } selected)
+                                {
+                                    <label class="delivery-check"><input type="checkbox" @bind="Model.FulfillmentCostAgreed" disabled="@(Model.IsSending || Model.NeedsSubmissionReview)" /><span>@selected.ProviderName · 총비용 @NeighborhoodDeliveryPresentation.Money(selected.TotalCostKrw)를 확인하고 확정합니다.</span></label>
+                                    @if (selected.ProviderId != "internal") { <label class="delivery-check"><input type="checkbox" @bind="Model.ProviderInformationSharingAgreed" disabled="@(Model.IsSending || Model.NeedsSubmissionReview)" /><span>선택한 처리처에 이 배송에 필요한 픽업·전달 주소, 담당자 연락처와 요청 사항을 제공하는 데 동의합니다.</span></label> }
+                                }
+                            }
+                            else { <strong class="delivery-fare">@NeighborhoodDeliveryPresentation.Money(quote.Fare.최종운임)</strong> }
                             <p>@NeighborhoodDeliveryPresentation.Distance(quote.Fare.예상거리Km) · @quote.Fare.거리계산방식</p>
                             @foreach (var warning in quote.Fare.경고목록) { <p class="exchange-note">@warning</p> }
-                            <p>@quote.SettlementNotice</p>
-                            @if (NeighborhoodDeliveryPresentation.자동추천준비안내(Model.Draft.DispatchMode, quote.AutomaticDispatchEnabled) is { } dispatchNotice)
+                            <p>@(Model.AutoRoutingEnabled || Model.HasFulfillmentOptions && Model.SelectedFulfillmentOption?.ProviderId != "internal" ? "처리처의 비용 확정과 실제 지급은 별도입니다. 접수만으로 지급 완료를 표시하지 않습니다." : quote.SettlementNotice)</p>
+                            @if (!Model.MemberDeliveryRequested && !Model.AutoRoutingEnabled && (!Model.HasFulfillmentOptions || Model.SelectedFulfillmentOption?.ProviderId == "internal") && NeighborhoodDeliveryPresentation.자동추천준비안내(Model.Draft.DispatchMode, quote.AutomaticDispatchEnabled) is { } dispatchNotice)
                             { <p class="delivery-warning">@dispatchNotice</p> }
-                            <label class="delivery-check"><input type="checkbox" @bind="Model.DirectPaymentAgreed" disabled="@(Model.IsSending || Model.NeedsSubmissionReview)" /><span>이 배송비를 기사에게 직접 현장 지급하기로 합의합니다.</span></label>
+                            @if (Model.MemberDeliveryRequested || !Model.AutoRoutingEnabled && (!Model.HasFulfillmentOptions || Model.SelectedFulfillmentOption?.ProviderId == "internal")) { <label class="delivery-check"><input type="checkbox" @bind="Model.DirectPaymentAgreed" disabled="@(Model.IsSending || Model.NeedsSubmissionReview)" /><span>이 배송비를 배송 참여자에게 직접 지급하기로 합의합니다.</span></label> }
                             <label class="delivery-check"><input type="checkbox" @bind="Model.DispatchRequested" disabled="@(Model.IsSending || Model.NeedsSubmissionReview)" /><span>위 조건으로 배송을 요청합니다. 접수와 기사 수락은 별도입니다.</span></label>
                             @if (Model.NeedsSubmissionReview) { <p role="status">접수 결과 확인이 필요합니다. 내 배송 의뢰를 먼저 확인해 주세요. 다시 제출하면 같은 요청 번호와 입력을 사용합니다.</p> }
-                            <button type="submit" class="exchange-primary" disabled="@(Model.IsSending || !Model.DirectPaymentAgreed || !Model.DispatchRequested || Model.Draft.CommerceProtection?.NoticeAccepted != true)">@(Model.IsSending ? "접수 중…" : Model.NeedsSubmissionReview ? "같은 요청 다시 확인하기" : "배송 요청 접수하기")</button>
+                            <button type="submit" class="exchange-primary" disabled="@(Model.IsSending || !Model.NeedsSubmissionReview && !Model.CanConfirmCurrentQuote || !Model.DispatchRequested || Model.Draft.CommerceProtection?.NoticeAccepted != true)">@(Model.IsSending ? "접수 중…" : Model.NeedsSubmissionReview ? "같은 요청 다시 확인하기" : "배송 요청 접수하기")</button>
                         }
                     </section>
                 }

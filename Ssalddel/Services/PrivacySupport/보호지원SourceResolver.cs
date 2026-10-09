@@ -1,15 +1,21 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Ssalddel.Application.Warehouse;
+using Ssalddel.Contracts.Common.Warehouse;
 using Ssalddel.Contracts.Common.PrivacySupport;
 using Ssalddel.Contracts.Common.Community;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Services.Community;
 using 살뜰.Data;
 using 살뜰.도메인.공통;
+using 살뜰.도메인.창고;
+using 살뜰.Services.Options;
 
 namespace Ssalddel.Services.PrivacySupport;
 
 /// <summary>존재와 당사자를 기존 업무 원장에서 확인합니다. 역할 선택이나 client가 제시한 상대방 ID를 믿지 않습니다.</summary>
-public sealed class 보호지원SourceResolver(SsalddelContext db, I생활협업연결Query collaborations) : I보호지원SourceResolver
+public sealed class 보호지원SourceResolver(SsalddelContext db, I생활협업연결Query collaborations,
+    IOptions<DistributedFulfillmentOptions>? distributed = null, ISsalddelExecutionModePolicy? execution = null) : I보호지원SourceResolver
 {
     public async Task<보호지원Source?> 조회Async(string sourceKind, string sourceId, string actorUserId, CancellationToken cancellationToken = default)
     {
@@ -49,6 +55,39 @@ public sealed class 보호지원SourceResolver(SsalddelContext db, I생활협업
             parties.AddRange(await db.운송원장.AsNoTracking().Where(x => x.의뢰Id == sourceId
                     && x.배차업무유형 != 상태값.배차업무유형.음식배달 && x.확정기사Id != null)
                 .Select(x => x.확정기사Id!).ToListAsync(cancellationToken));
+            if (neighborhood)
+                parties.AddRange(await db.운송원장.AsNoTracking().Where(x => x.의뢰Id == sourceId && x.일반회원배송전용
+                    && x.일반회원수행자UserId != null).Select(x => x.일반회원수행자UserId!).ToListAsync(cancellationToken));
+        }
+        else if (sourceKind is 보호지원출처Codes.분산입고 or 보호지원출처Codes.분산배송)
+        {
+            // No role-selection or public address can grant access to private warehouse proof.
+            if (distributed?.Value is not { Enabled: true } settings || settings.Profile != DistributedFulfillmentCodes.Profile
+                || execution?.IsSimulation != true) return null;
+            분산재고LotRecord[] lots;
+            if (sourceKind == 보호지원출처Codes.분산입고)
+            {
+                var lot = await db.Set<분산재고LotRecord>().AsNoTracking().SingleOrDefaultAsync(x => x.LotId == sourceId, cancellationToken);
+                if (lot is null) return null;
+                lots = [lot];
+            }
+            else
+            {
+                var order = await db.Set<분산배송주문Record>().AsNoTracking().SingleOrDefaultAsync(x => x.OrderId == sourceId, cancellationToken);
+                if (order is null) return null;
+                var wave = await db.Set<분산배송WaveRecord>().AsNoTracking().SingleOrDefaultAsync(x => x.WaveId == order.WaveId, cancellationToken);
+                if (wave is null) return null;
+                parties.Add(wave.CreatorUserId);
+                parties.AddRange([order.CustomerUserId, order.SellerUserId]);
+                if (!string.IsNullOrWhiteSpace(wave.DriverId) && await db.운송원장.AsNoTracking().AnyAsync(x => x.의뢰Id == order.CargoRequestId
+                    && x.확정기사Id == wave.DriverId && x.배차업무유형 != 상태값.배차업무유형.음식배달, cancellationToken)) parties.Add(wave.DriverId);
+                var lotIds = await db.Set<분산재고예약Record>().AsNoTracking().Where(x => x.OrderId == order.OrderId && x.WaveId == wave.WaveId).Select(x => x.LotId).ToArrayAsync(cancellationToken);
+                lots = await db.Set<분산재고LotRecord>().AsNoTracking().Where(x => Enumerable.Contains(lotIds, x.LotId)).ToArrayAsync(cancellationToken);
+            }
+            parties.AddRange(lots.SelectMany(x => new[] { x.OwnerUserId, x.SellerUserId }));
+            var siteIds = lots.Select(x => x.SiteId).Distinct().ToArray();
+            var sites = await db.Set<분산거점Record>().AsNoTracking().Where(x => Enumerable.Contains(siteIds, x.SiteId)).ToArrayAsync(cancellationToken);
+            parties.AddRange(sites.SelectMany(x => new[] { x.OwnerUserId, x.ManagerUserId }));
         }
         else return null;
         var ids = parties.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).ToArray();

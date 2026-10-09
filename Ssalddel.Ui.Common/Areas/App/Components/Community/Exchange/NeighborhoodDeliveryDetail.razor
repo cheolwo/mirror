@@ -11,24 +11,69 @@
     else if (Model.Error is not null && Model.Detail is null) { <div class="exchange-error" role="alert">@Model.Error<button @onclick="Reload">다시 불러오기</button></div> }
     else if (Model.Detail is { } value)
     {
-        <section class="exchange-surface" data-neighborhood-current><span class="exchange-kind">@NeighborhoodDeliveryPresentation.Stage(value)</span><h2>@value.CargoName</h2><p>@NeighborhoodDeliveryPresentation.Progress(value.DispatchStatusCode)</p>
+        <section class="exchange-surface" data-neighborhood-current><span class="exchange-kind">@(value.MemberDeliveryRequested ? "생활 회원 배송" : NeighborhoodDeliveryPresentation.Stage(value))</span><h2>@value.CargoName</h2><p>@(value.MemberDeliveryRequested ? NeighborhoodMemberDeliveryPresentation.State(value.MemberWorkStateCode) : value.AutoFulfillment is { } autoCurrent ? autoCurrent.ProviderName : value.Fulfillment is { } current ? current.ProviderName : NeighborhoodDeliveryPresentation.Progress(value.DispatchStatusCode))</p>
             @if (Model.Error is not null) { <div class="exchange-error" role="alert">@Model.Error</div> }
-            <p role="status">@NeighborhoodDeliveryPresentation.다음행동안내(value, Model.HasPendingChoice)</p>
-            @if (value.ProposalStateCode is not (NeighborhoodDeliveryProposalStates.Assigned or NeighborhoodDeliveryProposalStates.Closed or NeighborhoodDeliveryProposalStates.RegistrationPending)
+            <p role="status">@(value.MemberDeliveryRequested ? value.MemberWorkStateCode == "Delivered" ? "전달 기록을 확인했습니다. 실제 물품 수령과 배송비 지급은 별도로 확인해 주세요." : value.MemberWorkStateCode == "Issue" ? "배송 문제를 확인하고 있습니다. 운영자의 안내를 기다려 주세요." : "주변 회원의 수락과 픽업·전달 진행을 이 의뢰에서 확인할 수 있습니다." : NeighborhoodDeliveryPresentation.다음행동안내(value, Model.HasPendingChoice))</p>
+            @if (!value.MemberDeliveryRequested && value.AutoFulfillment is null && (value.Fulfillment is null || value.Fulfillment.ProviderId == "internal") && value.ProposalStateCode is not (NeighborhoodDeliveryProposalStates.Assigned or NeighborhoodDeliveryProposalStates.Closed or NeighborhoodDeliveryProposalStates.RegistrationPending)
                 && NeighborhoodDeliveryPresentation.자동추천준비안내(value.DispatchMode, value.AutomaticDispatchEnabled) is { } dispatchNotice)
             { <p class="delivery-warning">@dispatchNotice</p> }
-            @if (Model.HasPendingChoice)
+            @if (value.AutoFulfillment is not null)
+            { <p class="exchange-note">자동 배송 처리에서 최신 진행과 접수 조건을 확인하세요.</p> }
+            else if (value.Fulfillment is not null)
+            {
+                <button class="exchange-primary" disabled="@Model.IsSending" @onclick="Model.RefreshFulfillmentAsync">@(Model.IsSending ? "확인 중…" : Model.HasPendingFulfillmentOperation ? "원 요청 결과 확인" : "진행 새로고침")</button>
+            }
+            else if (Model.HasPendingChoice)
             { <button class="exchange-primary" disabled="@Model.IsSending" @onclick="Model.ChangeDispatchAsync">@(Model.IsSending ? "확인 중…" : "원 선택 결과 확인")</button> }
             else
             { <button class="exchange-primary" disabled="@Model.IsSending" @onclick="Reload">진행 새로고침</button> }
             @if (Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo.CargoIncidentPresentation.Notice(value.Request) is { } review)
             { <div class="delivery-warning" role="status"><strong>@review.Label</strong><p>@review.Value</p></div> }
         </section>
-        @if (value.DispatchMode is not null)
+        @if (value.MemberDeliveryRequested) { <NeighborhoodMemberRequestStatus RequestId="@value.RequestId" Revision="@value.MemberWorkRevision" Refreshed="Reload" /> }
+        @if (value.AutoFulfillment is { } automatic)
+        {
+            <Ssalddel.Ui.Common.Areas.App.Components.Fulfillment.AutoFulfillmentStatus Value="@(Model.AutoRouting.Value ?? automatic)" Disabled="@(Model.IsSending || Model.AutoRouting.IsSending)" Pending="Model.AutoRouting.HasPending" Error="@Model.AutoRouting.Error" RefreshRequested="Model.RefreshAutoAsync" CancelRequested="Model.CancelAutoAsync" RevokeRequested="Model.RevokeAutoAsync">
+                <Renewal>
+                    <Ssalddel.Ui.Common.Areas.App.Components.Fulfillment.AutoFulfillmentConditions Model="Model.AutoRouting.Conditions" Disabled="Model.AutoRouting.IsSending" />
+                    <button type="button" class="exchange-primary" disabled="@(Model.AutoRouting.IsSending || !Model.AutoRouting.CanRenew || !Model.AutoRouting.Conditions.IsComplete)" @onclick="Model.RenewAutoAsync">자동 접수 조건 다시 확인</button>
+                </Renewal>
+            </Ssalddel.Ui.Common.Areas.App.Components.Fulfillment.AutoFulfillmentStatus>
+        }
+        else if (value.Fulfillment is { } fulfillment)
+        {
+            <section class="exchange-surface" aria-labelledby="delivery-provider-title"><h2 id="delivery-provider-title">배송 처리처</h2>
+                <p><strong>@fulfillment.ProviderName</strong> · @NeighborhoodDeliveryPresentation.FulfillmentStage(fulfillment.StateCode)</p>
+                @if (fulfillment.IsSimulation) { <p class="delivery-warning">모의 서비스 · 실제 외부 업체 접수·배차·지급 없음</p> }
+                <p>@fulfillment.Notice</p>
+                <p>확정 비용 <strong>@NeighborhoodDeliveryPresentation.Money(fulfillment.CostKrw)</strong></p>
+                <p>예상 완료 @NeighborhoodDeliveryPresentation.Time(fulfillment.EstimatedCompletionUtc)</p>
+                <p class="exchange-note">최근 확인 @NeighborhoodDeliveryPresentation.Time(fulfillment.UpdatedAtUtc)</p>
+                @if (fulfillment.CanCancel && !Model.HasPendingFulfillmentOperation)
+                { <button disabled="@Model.IsSending" @onclick="Model.CancelFulfillmentAsync">현재 처리처 접수 취소 요청</button> }
+                @if (Model.CanChangeFulfillment)
+                {
+                    <p>@(fulfillment.StateCode == "AwaitingSelection" ? "이 의뢰는 아직 처리처에 접수되지 않았습니다. 처리처와 비용을 확인하고 확정해 주세요." : "새 처리처와 비용을 다시 확정합니다. 기존 의뢰를 유지하고 새 수행 시도를 기록합니다.")</p>
+                    <button disabled="@Model.IsSending" @onclick="Model.LoadFulfillmentOptionsAsync">@(Model.IsSending ? "견적 확인 중…" : "새 처리처 견적 확인")</button>
+                    @if (Model.FulfillmentQuote is { } providerQuote)
+                    {
+                        <NeighborhoodFulfillmentOptions Options="providerQuote.FulfillmentOptions" SelectedQuoteId="@Model.SelectedFulfillmentQuoteId" Disabled="@Model.IsSending" SelectionChanged="Model.SelectFulfillment" />
+                        @if (Model.SelectedFulfillmentOption is { } selected)
+                        {
+                            <label class="delivery-check"><input type="checkbox" @bind="Model.FulfillmentCostAgreed" disabled="@Model.IsSending" /><span>@selected.ProviderName · 총비용 @NeighborhoodDeliveryPresentation.Money(selected.TotalCostKrw)를 확인하고 확정합니다.</span></label>
+                            @if (selected.ProviderId == "internal") { <label class="delivery-check"><input type="checkbox" @bind="Model.FulfillmentDirectPaymentAgreed" disabled="@Model.IsSending" /><span>이 배송비를 기사에게 직접 현장 지급하기로 합의합니다.</span></label> }
+                            else { <label class="delivery-check"><input type="checkbox" @bind="Model.ProviderInformationSharingAgreed" disabled="@Model.IsSending" /><span>선택한 처리처에 이 배송에 필요한 픽업·전달 주소, 담당자 연락처와 요청 사항을 제공하는 데 동의합니다.</span></label> }
+                        }
+                        <button class="exchange-primary" disabled="@(Model.IsSending || !Model.CanConfirmFulfillment)" @onclick="Model.ChooseFulfillmentAsync">@(fulfillment.StateCode == "AwaitingSelection" ? "선택한 처리처로 접수" : "선택한 처리처로 다시 접수")</button>
+                    }
+                }
+            </section>
+        }
+        @if (!value.MemberDeliveryRequested && value.DispatchMode is not null && (value.AutoFulfillment is null || value.AutoFulfillment.ProviderId == "internal") && (value.Fulfillment is null || value.Fulfillment.ProviderId == "internal"))
         {
             <section class="exchange-surface"><h2>기사를 찾는 방식</h2><p>@NeighborhoodDispatchModes.Label(value.DispatchMode)</p>
                 <p class="exchange-note">@NeighborhoodDeliveryPresentation.배차선택안내(value.DispatchMode)</p>
-                @if (value.CanChangeDispatchMode || Model.HasPendingChoice)
+                @if (value.AutoFulfillment is null && (value.CanChangeDispatchMode || Model.HasPendingChoice))
                 {
                     <label for="delivery-choice">배차 방식 변경</label><select id="delivery-choice" @bind="Model.SelectedDispatchMode" disabled="@(Model.IsSending || Model.HasPendingChoice)"><option value="automatic">자동 추천</option><option value="public-call">공개 콜</option><option value="hybrid">자동 추천과 공개 콜 함께</option></select>
                     @if (!Model.HasPendingChoice) { <button disabled="@Model.IsSending" @onclick="Model.ChangeDispatchAsync">배차 방식 저장</button> }
@@ -37,7 +82,7 @@
                 @if (value.CollaborationId is { } workId) { <a href="@Href(NeighborhoodCollaborationRoutes.Detail(workId))">협업 조건·직접 전달 변경 확인</a> }
             </section>
         }
-        @if (value.DriverDisclosure is { } disclosure)
+        @if (!value.MemberDeliveryRequested && (value.AutoFulfillment is null || value.AutoFulfillment.ProviderId == "internal") && (value.Fulfillment is null || value.Fulfillment.ProviderId == "internal") && value.DriverDisclosure is { } disclosure)
         {
             <section class="exchange-surface" aria-labelledby="delivery-disclosure-title"><h2 id="delivery-disclosure-title">기사에게 배송 정보 제공</h2>
                 @if (string.IsNullOrWhiteSpace(disclosure.ConfirmedDriverId)) { <p>기사가 확정되면 해당 기사와 제공할 정보를 확인할 수 있습니다.</p> }
@@ -62,9 +107,9 @@
                 }
             </section>
         }
-        <section class="exchange-surface"><h2>배송비와 지급 상태</h2><strong class="delivery-fare">@NeighborhoodDeliveryPresentation.Money(value.FareKrw)</strong><p>@NeighborhoodDeliveryPresentation.Distance(value.DistanceKm) · @value.DistanceBasis</p><p>@NeighborhoodDeliveryPresentation.Collection(value)</p>
+        <section class="exchange-surface"><h2>배송비와 지급 상태</h2><strong class="delivery-fare">@NeighborhoodDeliveryPresentation.Money(value.AutoFulfillment is { } autoCost ? autoCost.UserChargeKrw : value.Fulfillment is { } cost ? cost.CostKrw : value.FareKrw)</strong><p>@NeighborhoodDeliveryPresentation.Distance(value.DistanceKm) · @value.DistanceBasis</p><p>@(value.AutoFulfillment is not null || value.Fulfillment is { ProviderId: not "internal" } ? "실제 지급 미확인" : NeighborhoodDeliveryPresentation.Collection(value))</p>
             @if (NeighborhoodDeliveryPresentation.입금확인안내(value) is { } paymentNotice) { <p class="exchange-note">@paymentNotice</p> }
-            <p class="exchange-note">기사에게 직접 현장 지급하는 조건입니다. 의뢰 접수와 배송 완료만으로 수금 완료를 표시하지 않습니다.</p>
+            <p class="exchange-note">의뢰 접수·배송 완료·비용 확정·실제 지급은 각각 확인합니다. @(value.Fulfillment is { IsOperationalSettlementEligible: false } ? "모의 수행 기록은 운영 정산 대상에서 제외됩니다." : "의뢰 접수와 배송 완료만으로 수금 완료를 표시하지 않습니다.")</p>
         </section>
         <section class="exchange-surface"><h2>픽업지</h2><p class="exchange-body">@value.Request.픽업지<br />@value.Request.픽업상세지</p>
             @if (value.Request.픽업 is { } pickup) { <p>@pickup.연락처.이름 · @pickup.연락처.전화번호</p> }

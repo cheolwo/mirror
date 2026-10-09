@@ -93,9 +93,9 @@
                             @if (RoleWorkspaceActionPolicy.KeepVisible(Model.Role?.Key, action, Model.DetailsExpanded))
                             {
                                 @if (action.Enabled && !Model.CommandBusy && !Model.AccountBusy && !Model.IsRefreshing && Model.RefreshError is null && action.Route is not null && ActionHref(action.Route) is { } href)
-                                { <a href="@href" class="@(action.IsPrimary ? "is-primary" : "")">@action.Label</a> }
+                                { <a href="@href" class="@(action.IsPrimary ? "is-primary" : "")"><RoleWorkspaceActionContent ActionKey="@action.Key" Label="@action.Label" /></a> }
                                 else
-                                { <button type="button" class="@(action.IsPrimary ? "is-primary" : "")" disabled="@(!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null || action.Route is not null)" @onclick="() => RequestAction(item.Id, action)">@action.Label</button> }
+                                { <button type="button" class="@(action.IsPrimary ? "is-primary" : "")" disabled="@(!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null || action.Route is not null)" @onclick="() => RequestAction(item.Id, action)"><RoleWorkspaceActionContent ActionKey="@action.Key" Label="@action.Label" /></button> }
                                 @if (!action.Enabled && action.DisabledReason is { Length: > 0 } reason) { <p class="role-map-workspace__hint">@reason</p> }
                             }
                         }
@@ -116,9 +116,9 @@
                         @foreach (var action in DirectWorkspaceActions)
                         {
                             @if (action.Enabled && !Model.CommandBusy && !Model.AccountBusy && !Model.IsRefreshing && Model.RefreshError is null && action.Route is not null && ActionHref(action.Route) is { } href)
-                            { <a href="@href" class="@(action.IsPrimary ? "is-primary" : "")">@action.Label</a> }
+                            { <a href="@href" class="@(action.IsPrimary ? "is-primary" : "")"><RoleWorkspaceActionContent ActionKey="@action.Key" Label="@action.Label" /></a> }
                             else
-                            { <button type="button" class="@(action.IsPrimary ? "is-primary" : "")" disabled="@(!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null || action.Route is not null)" @onclick="() => RequestAction(string.Empty, action)">@action.Label</button> }
+                            { <button type="button" class="@(action.IsPrimary ? "is-primary" : "")" disabled="@(!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null || action.Route is not null)" @onclick="() => RequestAction(string.Empty, action)"><RoleWorkspaceActionContent ActionKey="@action.Key" Label="@action.Label" /></button> }
                             @if (!action.Enabled && action.DisabledReason is { Length: > 0 } reason) { <p class="role-map-workspace__hint">@reason</p> }
                         }
                     </nav>
@@ -132,9 +132,9 @@
                         @foreach (var action in UnclassifiedWorkspaceActions)
                         {
                             @if (action.Enabled && !Model.CommandBusy && !Model.AccountBusy && !Model.IsRefreshing && Model.RefreshError is null && action.Route is not null && ActionHref(action.Route) is { } href)
-                            { <a href="@href" class="@(action.IsPrimary ? "is-primary" : "")">@action.Label</a> }
+                            { <a href="@href" class="@(action.IsPrimary ? "is-primary" : "")"><RoleWorkspaceActionContent ActionKey="@action.Key" Label="@action.Label" /></a> }
                             else
-                            { <button type="button" class="@(action.IsPrimary ? "is-primary" : "")" disabled="@(!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null || action.Route is not null)" @onclick="() => RequestAction(string.Empty, action)">@action.Label</button> }
+                            { <button type="button" class="@(action.IsPrimary ? "is-primary" : "")" disabled="@(!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null || action.Route is not null)" @onclick="() => RequestAction(string.Empty, action)"><RoleWorkspaceActionContent ActionKey="@action.Key" Label="@action.Label" /></button> }
                             @if (!action.Enabled && action.DisabledReason is { Length: > 0 } reason) { <p class="role-map-workspace__hint">@reason</p> }
                         }
                     </nav>
@@ -149,9 +149,9 @@
                         {
                             var action = tool.Action;
                             @if (action.Enabled && !Model.CommandBusy && !Model.AccountBusy && !Model.IsRefreshing && Model.RefreshError is null && action.Route is not null && ActionHref(action.Route) is { } href)
-                            { <a href="@href">@action.Label</a> }
+                            { <a href="@href"><RoleWorkspaceActionContent ActionKey="@action.Key" Label="@action.Label" /></a> }
                             else
-                            { <button type="button" disabled="@(!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null || action.Route is not null)" @onclick="() => RequestAction(tool.ItemId, action)">@action.Label</button> }
+                            { <button type="button" disabled="@(!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null || action.Route is not null)" @onclick="() => RequestAction(tool.ItemId, action)"><RoleWorkspaceActionContent ActionKey="@action.Key" Label="@action.Label" /></button> }
                             @if (!action.Enabled && action.DisabledReason is { Length: > 0 } reason) { <p class="role-map-workspace__hint">@reason</p> }
                         }
                     </nav>
@@ -245,6 +245,17 @@
                     _ => null
                 };
                 if (related is not null) actions.Add((string.Empty, related));
+                if (Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Pricing.AgreedRateTableClient.Supports(Model.Role?.Key))
+                    actions.Add((string.Empty, new RoleWorkspaceAction("agreed-rates", "합의 요금표",
+                        $"/workspace/{Model.Role!.Key}/agreed-rates", RequiresConfirmation: false)));
+                if (Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment.분산이행Navigation.Supports(Model.Role?.Key))
+                    actions.Add((string.Empty, new RoleWorkspaceAction("distributed-fulfillment", "분산 보관·배송 업무",
+                        RoleWorkspaceNavigation.WithReturn(Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment.분산이행Navigation.Href(Model.Role!.Key,
+                            Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment.분산이행Navigation.DefaultScreen(Model.Role.Key)), Model.WorkspaceHref), RequiresConfirmation: false)));
+                if (Model.Role?.Key is "restaurant" or "shipper" && Model.SelectedItem is { } rateWork
+                    && RoleWorkspaceNavigation.StableId(rateWork.Id) is { } workId)
+                    actions.Add((rateWork.Id, new RoleWorkspaceAction("agreed-rates-for-work", "이 업무의 합의 요금표",
+                        $"/workspace/{Model.Role.Key}/agreed-rates?workId={Uri.EscapeDataString(workId)}", RequiresConfirmation: false)));
             }
             return actions;
         }

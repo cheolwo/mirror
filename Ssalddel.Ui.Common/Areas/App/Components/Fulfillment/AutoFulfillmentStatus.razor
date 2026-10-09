@@ -1,0 +1,46 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Fulfillment
+@using Ssalddel.Contracts.Common.Fulfillment
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+<section class="auto-fulfillment-status" aria-label="자동 배송 처리 진행">
+    <h3>자동 배송 처리</h3>
+    <p role="status"><strong>@AutoFulfillmentPresentation.State(Value.StateCode)</strong></p>
+    <p>선정 처리처 <strong>@(string.IsNullOrWhiteSpace(Value.ProviderName) ? "선정 대기" : Value.ProviderName)</strong></p>
+    @if (!string.IsNullOrWhiteSpace(Value.SelectionReason)) { <p>선정 이유 · @Value.SelectionReason</p> }
+    @if (Value.SourceKind == FulfillmentSourceKinds.FoodOrder && !Value.ExecutionPaused)
+    { <p>적용된 배송비 조건 · @DeliveryCostSharingPresentation.Summary(Value.CostSharingPolicy, Value.FrozenRestaurantSupportKrw) · 판본 @Value.RestaurantSupportRevision</p> }
+    @if (Value.SourceKind == FulfillmentSourceKinds.FoodOrder && Value.CostSharingAllowed == false)
+    { <p class="auto-fulfillment-warning">@DeliveryCostSharingPresentation.HeldReason</p> }
+    <dl>
+        <div><dt>주문 전체 배송 비용</dt><dd>@DeliveryCostSharingPresentation.Total(Value)</dd></div>
+        @if (Value.SourceKind == FulfillmentSourceKinds.FoodOrder) { <div><dt>음식점 부담</dt><dd>@DeliveryCostSharingPresentation.Merchant(Value)</dd></div> }
+        <div><dt>본인 부담</dt><dd>@DeliveryCostSharingPresentation.Customer(Value)</dd></div>
+        <div><dt>본인 부담 상한</dt><dd>@AutoFulfillmentPresentation.Money(Value.ExecutionPaused ? null : Value.MaxUserChargeKrw)</dd></div>
+        <div><dt>예상 완료</dt><dd>@AutoFulfillmentPresentation.Time(Value.EstimatedCompletionUtc)</dd></div>
+    </dl>
+    <p>@Value.Notice</p>
+    @if (Value.IsSimulation) { <p class="auto-fulfillment-warning">모의 수행 · 실제 외부 배송·청구·입금·기사 지급 없음</p> }
+    @if (Value.IsSimulation && Value.ProviderId is { } providerId && AssumedFulfillmentProviderCatalog.IsAssumed(providerId)) { <p class="auto-fulfillment-warning">실제 업체 연결이 아닌 가정 API 검증입니다. 모의 비용·예상 시간은 실제 업체의 요금·약속을 뜻하지 않습니다.</p> }
+    <p class="auto-fulfillment-note">최근 확인 @AutoFulfillmentPresentation.Time(Value.UpdatedAtUtc) · 비용 기록과 실제 결제·지급은 별도입니다.</p>
+    @if (AutoFulfillmentPresentation.ConsentRenewalLockedReason(Value.ConsentRenewalLockedReasonCode) is { } renewalLockedReason)
+    { <p class="auto-fulfillment-warning" role="status">@renewalLockedReason</p> }
+    @if (!string.IsNullOrWhiteSpace(Error)) { <p class="auto-fulfillment-error" role="alert">@Error</p> }
+    @if (Value.ExecutionPaused)
+    { <p class="auto-fulfillment-warning">자동 배송 처리가 중지되어 있습니다. 원 요청을 조회만 할 수 있으며 비용과 수행 상태는 다시 확인해야 합니다.</p> }
+    else
+    { <div class="auto-fulfillment-actions">
+        @if (RefreshRequested.HasDelegate) { <button type="button" disabled="@Disabled" @onclick="RefreshRequested">@(Disabled ? "확인 중…" : Pending ? "원 요청 결과 확인" : "자동 배송 진행 확인")</button> }
+        @if (Value.CanCancel && !Pending && CancelRequested.HasDelegate) { <button type="button" disabled="@Disabled" @onclick="CancelRequested">현재 처리처 접수 취소</button> }
+        @if (!Pending && !Value.SourceClosed && RevokeRequested.HasDelegate && Value.StateCode != AutoFulfillmentStates.Completed) { <button type="button" disabled="@Disabled" @onclick="RevokeRequested">새 자동 접수 동의 철회</button> }
+    </div> }
+    @if (Renewal is not null && AutoFulfillmentPresentation.CanRenew(Value) && !Pending) { @Renewal }
+</section>
+@code {
+    [Parameter, EditorRequired] public AutoFulfillmentSnapshot Value { get; set; } = null!;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public bool Pending { get; set; }
+    [Parameter] public string? Error { get; set; }
+    [Parameter] public EventCallback RefreshRequested { get; set; }
+    [Parameter] public EventCallback CancelRequested { get; set; }
+    [Parameter] public EventCallback RevokeRequested { get; set; }
+    [Parameter] public RenderFragment? Renewal { get; set; }
+}

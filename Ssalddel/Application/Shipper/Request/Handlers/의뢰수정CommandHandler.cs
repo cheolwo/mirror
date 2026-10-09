@@ -89,6 +89,10 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
         {
             return Result.Fail<화주운송의뢰응답>("의뢰를 찾을 수 없습니다.");
         }
+        if (entity.모의처리처수행 && (cargoChanged || pickupChanged || dropoffChanged || transportChanged || settlementChanged || pricingChanged))
+        {
+            return Conflict("SimulationFulfillmentLocked", "모의 처리처 수행의 확인 조건은 일반 운송 수정에서 바꿀 수 없습니다. 수행 결과와 취소를 먼저 확인해 주세요.");
+        }
         if (request.픽업지.위도.HasValue != request.픽업지.경도.HasValue
             || request.하차지.위도.HasValue != request.하차지.경도.HasValue)
             return Result.Fail<화주운송의뢰응답>("좌표는 위도와 경도를 함께 제공해야 합니다.");
@@ -101,6 +105,8 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
         화주운송기준운임견적응답? estimate = null;
         if (pricingChanged)
         {
+            if (!string.IsNullOrWhiteSpace(fareComposition?.합의요금표SnapshotJson))
+                return Conflict("FreightAgreedPricingFrozen", "사전 합의 요금표로 동결한 수행 대가는 기존 의뢰에서 바꿀 수 없습니다. 새 의뢰로 다시 합의해 주세요.");
             var unapproved = entity.정산상태 is "결제대기" or "청구대기" or "후불승인대기" or "인수증대기";
             if (entity.상태 != 상태값.의뢰상태.생성됨 || entity.결제상태 != 상태값.결제상태.결제대기
                 || entity.배차상태 != 상태값.배차상태.미시작 || !unapproved

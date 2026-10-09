@@ -95,6 +95,8 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly ILogger<음식배달기사업무Service> _logger;
     private readonly I운영배차공통UseCase _수신의사;
+    private readonly Ssalddel.Services.Fulfillment.I자동수행Coordinator? _fulfillment;
+    private readonly bool _memberDeliveryEnabled;
 
     public 음식배달기사업무Service(
         SsalddelContext db,
@@ -110,7 +112,9 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         IPublisher publisher,
         ICurrentUserAccessor currentUserAccessor,
         ILogger<음식배달기사업무Service> logger,
-        I운영배차공통UseCase 수신의사)
+        I운영배차공통UseCase 수신의사,
+        Ssalddel.Services.Fulfillment.I자동수행Coordinator? fulfillment = null,
+        Microsoft.Extensions.Options.IOptions<Ssalddel.Services.Community.NeighborhoodMemberDeliveryOptions>? memberDelivery = null)
     {
         _db = db;
         _locationStore = locationStore;
@@ -126,6 +130,8 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         _currentUserAccessor = currentUserAccessor;
         _logger = logger;
         _수신의사 = 수신의사;
+        _fulfillment = fulfillment;
+        _memberDeliveryEnabled = memberDelivery?.Value.Enabled == true;
     }
 
     public async Task<IReadOnlyList<DriverWorkOfferDto>> 제안조회Async(
@@ -238,6 +244,9 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
                 await using var transaction = await _db.Database.BeginTransactionAsync(
                     IsolationLevel.Serializable,
                     cancellationToken);
+                if (_memberDeliveryEnabled && await Ssalddel.Services.Community.NeighborhoodMemberWorkExclusion.LockAndHasMemberWorkAsync(_db, driverId, cancellationToken))
+                    return Result.Fail<List<FoodDeliveryAssignment>>(new Error("일반 회원 배송을 마친 뒤 다른 배차를 수락할 수 있습니다.")
+                        .WithMetadata("StatusCode", 409).WithMetadata("ErrorCode", "MemberWorkInProgress"));
                 if (!살뜰.도메인.배차.운영배차수신상태Policy.신규배차수신허용(
                         await _수신의사.수신상태조회Async(driverId, cancellationToken)))
                 {
@@ -349,7 +358,9 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         var acceptedAtUtc = DateTime.UtcNow;
         foreach (var assignment in completedAssignments)
         {
-            await ApplySettlementAsync(driverId, acceptedAtUtc, cancellationToken);
+            if (!await _db.음식주문.AsNoTracking().AnyAsync(x => x.주문번호 == assignment.OrderNo
+                    && x.모의처리처수행, cancellationToken))
+                await ApplySettlementAsync(driverId, acceptedAtUtc, cancellationToken);
             await _deliveryScopeStore.Remove운송의뢰Async(assignment.Queue.의뢰Id, cancellationToken);
             await SyncLedgersAsync(assignment.Queue, assignment.OrderNo, driverId, cancellationToken);
             await NotifyRestaurantAsync(
@@ -829,6 +840,11 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         var order = await _db.음식주문
             .Include(x => x.상태이력)
             .FirstOrDefaultAsync(x => x.주문번호 == orderNo, cancellationToken);
+        if (order?.모의처리처수행 == true && (_fulfillment is null
+                || !await _fulfillment.내부수행허용Async(
+                    new(Ssalddel.Contracts.Common.Fulfillment.FulfillmentSourceKinds.FoodOrder, orderNo),
+                    ct: cancellationToken)))
+            return null;
         return order is null ? null : (queue, order);
     }
 

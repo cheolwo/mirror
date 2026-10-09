@@ -133,7 +133,8 @@ public sealed class 운송원장Mongo동기화Service : I운송원장Mongo동기
                     : await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
                     {
                         await using var tx = _db.Database.IsRelational()
-                            ? await _db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, cancellationToken)
+                            ? await _db.Database.BeginTransactionAsync(_db.Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite"
+                                ? IsolationLevel.Serializable : IsolationLevel.RepeatableRead, cancellationToken)
                             : null;
                         var read = await 읽기TupleAsync(requestId, cancellationToken);
                         if (tx is not null) await tx.CommitAsync(cancellationToken);
@@ -326,6 +327,7 @@ public static class 운송원장Mongo동기화Builder
                     ("화물종류", 의뢰?.화물종류),
                     ("화물설명", 의뢰?.화물설명),
                     ("화물수량", Format(의뢰?.화물수량)),
+                    ("생활배송포장크기Code", 의뢰?.생활배송포장크기Code),
                     ("화물길이Mm", Format(의뢰?.화물길이Mm)),
                     ("화물폭Mm", Format(의뢰?.화물폭Mm)),
                     ("화물높이Mm", Format(의뢰?.화물높이Mm)),
@@ -405,12 +407,17 @@ public static class 운송원장Mongo동기화Builder
                     ("Km당단가", Format(fare?.Km당단가)),
                     ("최소운임", Format(fare?.최소운임)),
                     ("단가출처", fare?.단가출처),
+                    ("기사지급예정운임", Format(fare?.기사지급예정운임)),
+                    ("사전합의요금표SnapshotJson", fare?.합의요금표SnapshotJson),
                     ("대기료", Format(의뢰?.대기료)),
                     ("수작업비", Format(의뢰?.수작업비)),
                     ("할증", Format(의뢰?.할증)),
                     ("세금계산서필요", Format(의뢰?.세금계산서필요)),
                     ("현금영수증필요", Format(의뢰?.현금영수증필요)),
                     ("정산메모", 의뢰?.정산메모),
+                    ("모의처리처수행", 의뢰?.모의처리처수행.ToString()),
+                    ("자동처리처수행", 의뢰?.자동처리처수행.ToString()),
+                    ("모의처리희망완료Utc", 의뢰?.모의처리희망완료Utc?.ToString("O")),
                     ("이벤트조회Api", "GET api/v1/transport-request-ledgers/{requestId}/events"))
             }
         ];

@@ -18,6 +18,7 @@ public static class MauiProgram
             });
 
         builder.Services.AddMauiBlazorWebView();
+        builder.Services.AddSingleton<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment.I업무사진촬영Adapter, Ssalddel.Client.Infrastructure.Native.Maui업무사진촬영Adapter>();
         builder.Services.AddMudServices();
         builder.Services.AddWarehouseManagerApplication();
         builder.Services.AddSingleton<IPlatformCommunityNodeNavigationResolver, WarehousePlatformCommunityNodeNavigationResolver>();

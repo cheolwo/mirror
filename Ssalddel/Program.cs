@@ -251,6 +251,9 @@ builder.Services.AddFreeSocialMediaResearch(builder.Configuration);
 builder.Services.AddOfficialNewsRss(builder.Configuration);
 builder.Services.AddYouTubeSocialContextWorkspace(builder.Configuration);
 builder.Services.AddSsalddelDomainServices();
+builder.Services.AddSsalddelAgreedRateTables();
+Ssalddel.Extensions.DistributedFulfillmentRegistration.AddDistributedFulfillment(builder.Services, builder.Configuration);
+Ssalddel.Services.WorldProjection.DistributedBuildingCandidateRegistration.AddDistributedBuildingCandidates(builder.Services, builder.Configuration);
 builder.Services.Add통신판매보호Services(builder.Configuration);
 Ssalddel.Services.PrivacyRetention.개인정보보존ServiceRegistration.Add개인정보보존Services(builder.Services, builder.Configuration);
 Ssalddel.Services.PrivacySupport.보호지원ServiceCollectionExtensions.Add거래개인정보지원Services(builder.Services, builder.Configuration);
@@ -274,6 +277,7 @@ builder.Services.AddSingleton<I기사개발스냅샷Provider, InMemory기사개�
 
 Ssalddel.Services.Development.FoodObserver.음식배달관찰검증Hosting.Add음식배달관찰검증(builder);
 Ssalddel.Services.Development.ObservableOperations.관찰운영검증Hosting.Add관찰운영검증(builder);
+Ssalddel.Services.Development.MobileFieldTest.모바일음식배차시험Hosting.Add모바일음식배차시험(builder);
 var app = builder.Build();
 app.Logger.LogInformation("Ssalddel execution mode: {ExecutionMode}", executionOptions.Mode);
 if (developmentReadOnly)
