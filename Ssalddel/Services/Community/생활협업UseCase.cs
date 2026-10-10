@@ -12,10 +12,11 @@ using 살뜰.Data;
 namespace Ssalddel.Services.Community;
 
 /// <summary>공개 글과 별개의 보호된 당사자 합의 원장. 배송·보관 수행 권위는 해당 기존 원장을 조회합니다.</summary>
-public sealed class 생활협업UseCase(I생활협업Store store, SsalddelContext db, ICurrentUserAccessor currentUser,
+public sealed partial class 생활협업UseCase(I생활협업Store store, SsalddelContext db, ICurrentUserAccessor currentUser,
     TimeProvider clock, I생활협업공간Source? spaces = null, I생활협업보관상태Source? storage = null,
     I생활협업배송Source? deliveries = null, I생활배송배차선택Service? deliveryChoices = null,
-    Ssalddel.Services.Commerce.I통신판매거래Guard? commerce = null) : I생활협업UseCase, I생활협업연결Query
+    Ssalddel.Services.Commerce.I통신판매거래Guard? commerce = null,
+    NeighborhoodMemberDeliveryUseCase? memberDeliveries = null) : I생활협업UseCase, I생활협업연결Query
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
@@ -90,18 +91,29 @@ public sealed class 생활협업UseCase(I생활협업Store store, SsalddelContex
             return Fail("CollaborationNotFound", "본인의 신청을 찾을 수 없습니다.", 404);
         var fingerprint = Fingerprint(request);
         var receipt = record.Receipts.SingleOrDefault(x => x.ClientRequestId == request.ClientRequestId);
+        if (record.ReceiptConfirmationIntent is { StateCode: "pending" } pendingReceipt)
+        {
+            if (request.Action != NeighborhoodCollaborationActions.ConfirmCompletion || pendingReceipt.ClientRequestId != request.ClientRequestId
+                || pendingReceipt.ActorUserId != actor || pendingReceipt.Fingerprint != fingerprint)
+                return Fail("ReceiptConfirmationPending", "수령 확인 결과를 같은 요청으로 먼저 확인해 주세요.", 409);
+            return await ConfirmMemberReceiptAsync(record, request, actor, fingerprint, cancellationToken);
+        }
         if (receipt is not null)
         {
             if (receipt.ActorUserId != actor || receipt.Fingerprint != fingerprint)
                 return Fail("IdempotencyConflict", "같은 요청 번호로 다른 결정을 보낼 수 없습니다.", 409);
             return Result.Ok(ToResponse(record, actor, true));
         }
-        if (request.ClientRequestId == record.CreateRequestId || record.StorageReservationIntents.Any(x => x.RequestId == request.ClientRequestId))
+        if (request.ClientRequestId == record.CreateRequestId || record.StorageReservationIntents.Any(x => x.RequestId == request.ClientRequestId)
+            || record.ReceiptConfirmationIntent?.ClientRequestId == request.ClientRequestId)
             return Fail("IdempotencyConflict", "신청 번호는 다른 결정에 재사용할 수 없습니다.", 409);
         if (record.Revision != request.ExpectedRevision) return Fail("RevisionConflict", "상대방이 내용을 변경했습니다. 최신 내용을 다시 확인해 주세요.", 409);
         if (record.Receipts.Count >= 500) return Fail("CommandLimitReached", "이 업무의 변경 기록 한도에 도달했습니다.", 409);
         if (!AllowedActions(record, actor).Contains(request.Action, StringComparer.Ordinal))
             return Fail("ActionNotAllowed", "현재 상태 또는 권한에서는 이 결정을 할 수 없습니다.", 409);
+        if (request.Action == NeighborhoodCollaborationActions.ConfirmCompletion && record.LinkedDeliveryRequestId is { } memberRequestId
+            && await db.운송원장.AsNoTracking().AnyAsync(x => x.의뢰Id == memberRequestId && x.일반회원배송전용, cancellationToken))
+            return await ConfirmMemberReceiptAsync(record, request, actor, fingerprint, cancellationToken);
         var now = clock.GetUtcNow().UtcDateTime;
         if (commerce is not null && request.Action is NeighborhoodCollaborationActions.Agree or NeighborhoodCollaborationActions.UpdateTerms)
         {
@@ -396,6 +408,8 @@ public sealed class 생활협업UseCase(I생활협업Store store, SsalddelContex
 
     private static IReadOnlyList<string> AllowedActions(생활협업Record record, string actor)
     {
+        if (record.ReceiptConfirmationIntent is { StateCode: "pending" } receiptIntent)
+            return receiptIntent.ActorUserId == actor ? [NeighborhoodCollaborationActions.ConfirmCompletion] : [];
         var result = new List<string>(); var party = IsParty(record, actor); var participant = record.Participants.SingleOrDefault(x => x.UserId == actor);
         if (record.StatusCode == NeighborhoodCollaborationStates.Completed)
         {
@@ -486,7 +500,8 @@ public sealed class 생활협업UseCase(I생활협업Store store, SsalddelContex
         && (item.Kind != NeighborhoodCollaborationKinds.Storage
             || item.OwnerPrivacyNoticeVersion == NeighborhoodCollaborationAgreementNotice.Version
             && item.RequesterPrivacyNoticeVersion == NeighborhoodCollaborationAgreementNotice.Version);
-    private static bool ReservationLocked(생활협업Record item) => item.DeliveryIntent?.StateCode == "pending" || item.StorageReservationIntents.Any(x => x.StateCode is "pending" or "confirmed");
+    private static bool ReservationLocked(생활협업Record item) => item.DeliveryIntent?.StateCode == "pending"
+        || item.ReceiptConfirmationIntent?.StateCode == "pending" || item.StorageReservationIntents.Any(x => x.StateCode is "pending" or "confirmed");
     private static bool IsParty(생활협업Record item, string actor) => item.OwnerUserId == actor || item.RequesterUserId == actor;
     private static bool CanRead(생활협업Record item, string actor) => IsParty(item, actor) || item.Participants.Any(x => x.UserId == actor);
     private static string Role(생활협업Record item, string actor) => item.OwnerUserId == actor ? "owner" : item.RequesterUserId == actor ? "requester" : "participant";

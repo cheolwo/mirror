@@ -63,6 +63,8 @@ public sealed record 보호지원보존적용(long Sequence, bool Hold, DateTime
 
 public interface I보호지원Store
 {
+    Task<IReadOnlyList<보호지원Record>> 변경목록Async(DateTime afterUtc, string afterId, int take, CancellationToken ct = default)
+        => throw new NotSupportedException("Changed support query is not configured.");
     // null means the source index/protection state is unknown; callers must defer photo deletion.
     Task<bool?> HasOpenCaseAsync(string sourceKind, string sourceId, CancellationToken cancellationToken = default)
         => Task.FromResult<bool?>(null);

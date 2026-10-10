@@ -11,7 +11,7 @@
 else if (Scenario == "offers-empty") { <NeighborhoodMemberOffers @key="Scenario" /> }
 else if (Scenario.StartsWith("offer-")) { <NeighborhoodMemberOfferDetail OfferId="preview-member-offer" @key="Scenario" /> }
 else if (Scenario == "request-cancel") { <NeighborhoodDeliveryFrame><main class="exchange-page"><NeighborhoodMemberRequestStatus RequestId="preview-member-work" /></main></NeighborhoodDeliveryFrame> }
-else if (Scenario is "assigned" or "evidence-ready" or "picked" or "delivered" or "issue" or "anonymous" or "error" || Scenario == "") { <NeighborhoodMemberWork RequestId="preview-member-work" @key="Scenario" /> }
+else if (Scenario is "assigned" or "evidence-ready" or "picked" or "delivered" or "received" or "issue" or "anonymous" or "error" || Scenario == "") { <NeighborhoodMemberWork RequestId="preview-member-work" @key="Scenario" /> }
 else { <main><h1>생활 배송 화면 검토</h1><ul>@foreach (var value in NeighborhoodMemberDeliveryPreviewFixture.Scenarios) { <li><a href="@("/neighborhood-member-delivery-preview/" + value)">@value</a></li> }</ul></main> }
 @code {
     [Parameter] public string Scenario { get; set; } = "index";

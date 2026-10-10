@@ -20,12 +20,13 @@ public sealed class NeighborhoodMemberWorkViewModel(INeighborhoodMemberDeliveryC
     public 업무촬영사진? Photo { get; private set; }
     public bool CaptureSupported => capture.IsSupported;
     public bool PhotoUploadPending => _upload is not null || Pending?.Kind == "evidence";
-    public string Stage => Work?.CanPickup == true ? "Pickup" : Work?.CanDeliver == true ? "Delivery" : "";
+    public string Stage => Work?.EvidenceStageCode switch { "Pickup" => "Pickup", "Delivery" => "Delivery", _ => "" };
     public string PrimaryLabel => Stage == "Pickup" ? "사진 보내고 픽업 완료" : Stage == "Delivery" ? "사진 보내고 전달 완료" : "현재 상태 확인";
     public string? IssueReason { get; set; }
     public bool CanComplete => Work is not null && Stage.Length > 0 && !IsLoading && !IsSending
         && (Pending is null || Session.Matches(Stage == "Pickup" ? "pickup" : "deliver", Work.RequestId) || Session.Matches("evidence", Work.RequestId) && _upload is not null)
-        && (Photo is not null || PhotoUploadPending || (Stage == "Pickup" ? Work.PickupEvidenceId : Work.DeliveryEvidenceId) is not null);
+        && (Photo is not null && _photoStage == Stage || _upload is not null && _upload.StageCode == Stage
+            || (Stage == "Pickup" ? Work.CanPickup && Work.PickupEvidenceId is not null : Work.CanDeliver && Work.DeliveryEvidenceId is not null));
     protected override void ResetForOwner() { Work = null; Items = []; Loaded = false; Photo = null; _upload = null; _photoStage = null; IssueReason = null; }
     public async Task LoadAsync(string? requestId = null)
     {
@@ -39,7 +40,7 @@ public sealed class NeighborhoodMemberWorkViewModel(INeighborhoodMemberDeliveryC
             {
                 var value = await client.WorkAsync(requestId, Token); if (!Current(operation)) return;
                 if (value?.RequestId != requestId) throw new InvalidOperationException("업무 조회 결과가 없습니다.");
-                if (Work?.StateCode != value.StateCode) { Photo = null; _upload = null; _photoStage = null; }
+                if (Work?.StateCode != value.StateCode || Stage != value.EvidenceStageCode) { Photo = null; _upload = null; _photoStage = null; }
                 Work = value;
                 if (Session.Matches("evidence", requestId))
                 {
@@ -78,7 +79,8 @@ public sealed class NeighborhoodMemberWorkViewModel(INeighborhoodMemberDeliveryC
     public async Task CaptureAsync()
     {
         if (InputsLocked || PhotoUploadPending || !CaptureSupported || Stage.Length == 0 || !await PrepareAsync()) return;
-        var operation = Begin(); var stage = Stage; IsLoading = true; Error = null; Changed();
+        var stage = Stage; if (stage.Length == 0) return;
+        var operation = Begin(); IsLoading = true; Error = null; Changed();
         try
         {
             var photo = await capture.CaptureAsync(stage == "Pickup" ? "픽업 사진" : "전달 사진", Token);
@@ -114,11 +116,15 @@ public sealed class NeighborhoodMemberWorkViewModel(INeighborhoodMemberDeliveryC
                 }
                 await client.EvidenceAsync(target, _upload, Token); if (!Current(operation)) return;
                 var stored = await client.WorkAsync(target, Token); if (!Current(operation)) return;
-                if (stored?.RequestId != target || (stage == "Pickup" ? stored.PickupEvidenceId : stored.DeliveryEvidenceId) is null)
+                if (stored?.RequestId != target || stored.Revision <= _upload.ExpectedRevision
+                    || stored.EvidenceStageCode != stage
+                    || !(stage == "Pickup" ? stored.CanPickup && stored.PickupEvidenceId is not null : stored.CanDeliver && stored.DeliveryEvidenceId is not null))
                     throw new InvalidOperationException("사진 저장 증빙을 확인하지 못했습니다.");
                 await Session.ClearAsync(Owner!, Token, _upload.ClientRequestId); if (!Current(operation)) return;
                 Work = stored; _upload = null; Photo = null; _photoStage = null;
             }
+            if (Stage != stage || !(stage == "Pickup" ? Work.CanPickup : Work.CanDeliver))
+                throw new InvalidOperationException("현재 단계의 완료 권한을 확인하지 못했습니다. 최신 배송 상태를 다시 확인해 주세요.");
             var kind = stage == "Pickup" ? "pickup" : "deliver";
             var body = new NeighborhoodMemberCommandRequest { ClientRequestId = Guid.NewGuid(), ExpectedRevision = Work.Revision };
             body = await PrepareCommandAsync(Owner!, kind, target, body.ClientRequestId, body.ExpectedRevision, body, Token);
@@ -129,7 +135,9 @@ public sealed class NeighborhoodMemberWorkViewModel(INeighborhoodMemberDeliveryC
             if (latest?.RequestId != target || latest.Revision <= body.ExpectedRevision || latest.StateCode != (stage == "Pickup" ? "PickedUp" : "Delivered"))
                 throw new InvalidOperationException("완료 원장 재조회 필요");
             await Session.ClearAsync(Owner!, Token, body.ClientRequestId); if (!Current(operation)) return;
-            Work = latest; Notice = stage == "Pickup" ? "물품을 픽업했습니다." : "전달을 완료했습니다. 수령자의 확인과 지급 확인은 별도입니다.";
+            Work = latest; Notice = stage == "Pickup" ? "물품을 픽업했습니다." : latest.ReceiptConfirmedAtUtc is null
+                ? "전달을 완료했습니다. 수령자의 확인과 지급 확인은 별도입니다."
+                : "전달을 완료했고 수령자의 확인을 받았습니다. 지급 확인은 별도입니다.";
         }
         catch (Exception ex) { await RejectPendingAsync(ex, operation); if (Current(operation) && DefinitiveRejection(ex)) { _upload = null; Photo = null; _photoStage = null; } }
         finally { if (Current(operation)) { IsSending = false; Changed(); } }

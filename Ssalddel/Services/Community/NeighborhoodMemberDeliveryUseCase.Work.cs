@@ -40,10 +40,13 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase
             FareKrw = row.FareKrw, DistanceKm = row.DistanceKm, RequestNotes = accessible ? source.요청사항 : null,
             Pickup = accessible && row.StateCode != "PickedUp" ? Location(source, true) : null,
             Dropoff = accessible ? Location(source, false) : null,
+            EvidenceStageCode = accessible ? row.StateCode == "Assigned" ? "Pickup" : row.StateCode == "PickedUp" ? "Delivery" : "" : "",
             CanPickup = accessible && row.StateCode == "Assigned" && row.PickupEvidenceId is not null,
             CanDeliver = accessible && row.StateCode == "PickedUp" && row.DeliveryEvidenceId is not null,
             PickupEvidenceId = row.PickupEvidenceId, DeliveryEvidenceId = row.DeliveryEvidenceId,
-            IssueCode = row.IssueCode, SupportCaseId = row.SupportCaseId, CompletedAtUtc = row.CompletedAtUtc };
+            IssueCode = row.IssueCode, SupportCaseId = row.SupportCaseId, CompletedAtUtc = row.CompletedAtUtc,
+            ReceiptConfirmedAtUtc = await Receipts.AsNoTracking().Where(x => x.AggregateId == row.RequestId && x.Kind == "ReceiptConfirmation")
+                .Select(x => (DateTime?)x.RecordedAtUtc).SingleOrDefaultAsync(ct) };
     }
     private static LocationContactDTO Location(화주운송의뢰 s, bool pickup)
         => new()
@@ -105,6 +108,8 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase
             photo = (await Photos.SingleOrDefaultAsync(x => x.ActorUserId == actor && x.UploadRequestId == request.ClientRequestId, ct))!;
             if (photo is null)
             {
+                // 이미 배정된 업무 증빙은 비용 경고를 기록하되 한도 초과로 중단하지 않는다.
+                if (operationsBudget is not null) await operationsBudget.ConsumeAsync("photos", true, ct);
                 var id = Stable("NMP-", actor + ":" + request.ClientRequestId.ToString("N"));
                 var name = "neighborhood-member-proof/" + Stable("", actor) + "/" + id + ".jpg";
                 photo = new() { EvidenceId = id, ActorUserId = actor, UploadRequestId = request.ClientRequestId,

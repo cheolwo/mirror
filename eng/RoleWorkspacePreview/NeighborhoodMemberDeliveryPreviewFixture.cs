@@ -24,7 +24,7 @@ public static class NeighborhoodMemberDeliveryPreviewRegistration
 internal sealed class NeighborhoodMemberDeliveryPreviewFixture(NavigationManager navigation) : INeighborhoodMemberDeliveryClient, INeighborhoodDeliveryClient,
     ISsalddel현재사용자Context, IRoleWorkspaceLocationProvider, I업무사진촬영Adapter
 {
-    internal static readonly string[] Scenarios = ["settings-off", "settings-ready", "settings-saved", "feature-off", "offers-empty", "offer-ready", "offer-expired", "assigned", "evidence-ready", "picked", "delivered", "issue", "anonymous", "error", "request-cancel"];
+    internal static readonly string[] Scenarios = ["settings-off", "settings-ready", "settings-saved", "feature-off", "offers-empty", "offer-ready", "offer-expired", "assigned", "evidence-ready", "picked", "delivered", "received", "issue", "anonymous", "error", "request-cancel"];
     private string Scenario => new Uri(navigation.Uri).AbsolutePath.Split('/').Last();
     private readonly NeighborhoodMemberDeliverySession _session = new(new VolatileNeighborhoodMemberPendingStore());
     private NeighborhoodMemberParticipationViewModel? _participation;
@@ -57,13 +57,15 @@ internal sealed class NeighborhoodMemberDeliveryPreviewFixture(NavigationManager
     private NeighborhoodMemberWorkResponse Current => _current ??= new()
     {
         RequestId = "preview-member-work", Revision = 1, CargoName = "책 한 상자", Quantity = 1, WeightKg = 2, FareKrw = 4000, DistanceKm = 2,
-        StateCode = Scenario switch { "picked" => "PickedUp", "delivered" => "Delivered", "issue" => "Issue", _ => "Assigned" },
-        CanPickup = Scenario is "assigned" or "evidence-ready" || Scenario == "preview-member-work", CanDeliver = Scenario == "picked",
-        PickupEvidenceId = Scenario == "evidence-ready" ? "preview-saved-photo" : null,
-        RequestNotes = "물품을 비에 젖지 않게 전달해 주세요.",
+        StateCode = Scenario switch { "picked" => "PickedUp", "delivered" or "received" => "Delivered", "issue" => "Issue", _ => "Assigned" },
+        EvidenceStageCode = Scenario switch { "picked" => "Delivery", "delivered" or "received" or "issue" => "", _ => "Pickup" },
+        CanPickup = Scenario == "evidence-ready", CanDeliver = false,
+        PickupEvidenceId = Scenario == "evidence-ready" ? "preview-saved-photo" : Scenario == "picked" ? "preview-pickup-photo" : null,
+        ReceiptConfirmedAtUtc = Scenario == "received" ? DateTime.UtcNow : null,
+        RequestNotes = Scenario is "delivered" or "received" ? null : "물품을 비에 젖지 않게 전달해 주세요.",
         SupportCaseId = Scenario == "issue" ? "preview-support-case" : null,
-        Pickup = Scenario is "delivered" or "issue" ? null : Place("픽업 장소 1", 37.58m, 127.08m),
-        Dropoff = Scenario is "delivered" or "issue" ? null : Place("전달 장소 1", 37.59m, 127.09m)
+        Pickup = Scenario is "picked" or "delivered" or "received" or "issue" ? null : Place("픽업 장소 1", 37.58m, 127.08m),
+        Dropoff = Scenario is "delivered" or "received" or "issue" ? null : Place("전달 장소 1", 37.59m, 127.09m)
     };
     private static Ssalddel.Contracts.Shipper.Request.LocationContactDTO Place(string label, decimal lat, decimal lng) => new()
     { 주소 = new() { 도로명주소 = label, 상세주소 = "현관 앞", 위도 = lat, 경도 = lng }, 연락처 = new() { 이름 = "담당자", 전화번호 = "010-0000-0000" } };
@@ -78,19 +80,19 @@ internal sealed class NeighborhoodMemberDeliveryPreviewFixture(NavigationManager
     public Task<IReadOnlyList<NeighborhoodMemberOfferResponse>> OffersAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<NeighborhoodMemberOfferResponse>>(Scenario == "offers-empty" ? [] : [Offer]);
     public Task<NeighborhoodMemberOfferResponse?> OfferAsync(string id, CancellationToken ct) => Read(Offer);
     public Task<NeighborhoodMemberWorkResponse?> AcceptAsync(string id, NeighborhoodMemberAcceptRequest body, CancellationToken ct)
-    { Offer.StateCode = "Accepted"; Offer.CanAccept = false; Current.StateCode = "Assigned"; Current.CanPickup = true; Mutations++; Changed?.Invoke(); return Read(Current); }
+    { Offer.StateCode = "Accepted"; Offer.CanAccept = false; Current.StateCode = "Assigned"; Current.EvidenceStageCode = "Pickup"; Current.CanPickup = Current.CanDeliver = false; Mutations++; Changed?.Invoke(); return Read(Current); }
     public Task<NeighborhoodMemberOfferResponse?> DeclineAsync(string id, NeighborhoodMemberCommandRequest body, CancellationToken ct)
     { Offer.StateCode = "Declined"; Offer.CanAccept = false; Mutations++; Changed?.Invoke(); return Read(Offer); }
     public Task<IReadOnlyList<NeighborhoodMemberWorkResponse>> WorkAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<NeighborhoodMemberWorkResponse>>([Current]);
     public Task<NeighborhoodMemberWorkResponse?> WorkAsync(string id, CancellationToken ct) => Read(Current);
     public Task<NeighborhoodMemberWorkResponse?> EvidenceAsync(string id, NeighborhoodMemberEvidenceRequest body, CancellationToken ct)
-    { Current.Revision++; if (body.StageCode == "Pickup") Current.PickupEvidenceId = "preview-pickup-photo"; else Current.DeliveryEvidenceId = "preview-delivery-photo"; Mutations++; Changed?.Invoke(); return Read(Current); }
+    { Current.Revision++; if (body.StageCode == "Pickup") { Current.PickupEvidenceId = "preview-pickup-photo"; Current.CanPickup = true; } else { Current.DeliveryEvidenceId = "preview-delivery-photo"; Current.CanDeliver = true; } Mutations++; Changed?.Invoke(); return Read(Current); }
     public Task<NeighborhoodMemberWorkResponse?> PickupAsync(string id, NeighborhoodMemberCommandRequest body, CancellationToken ct)
-    { Current.Revision++; Current.StateCode = "PickedUp"; Current.CanPickup = false; Current.CanDeliver = true; Mutations++; Changed?.Invoke(); return Read(Current); }
+    { Current.Revision++; Current.StateCode = "PickedUp"; Current.EvidenceStageCode = "Delivery"; Current.Pickup = null; Current.CanPickup = Current.CanDeliver = false; Mutations++; Changed?.Invoke(); return Read(Current); }
     public Task<NeighborhoodMemberWorkResponse?> DeliverAsync(string id, NeighborhoodMemberCommandRequest body, CancellationToken ct)
-    { Current.Revision++; Current.StateCode = "Delivered"; Current.CanDeliver = false; Current.Pickup = Current.Dropoff = null; Mutations++; Changed?.Invoke(); return Read(Current); }
+    { Current.Revision++; Current.StateCode = "Delivered"; Current.EvidenceStageCode = ""; Current.CanPickup = Current.CanDeliver = false; Current.Pickup = Current.Dropoff = null; Current.RequestNotes = null; Mutations++; Changed?.Invoke(); return Read(Current); }
     public Task<NeighborhoodMemberWorkResponse?> IssueAsync(string id, NeighborhoodMemberIssueRequest body, CancellationToken ct)
-    { Current.Revision++; Current.StateCode = "Issue"; Current.SupportCaseId = "preview-support-case"; Current.CanPickup = Current.CanDeliver = false; Mutations++; Changed?.Invoke(); return Read(Current); }
+    { Current.Revision++; Current.StateCode = "Issue"; Current.EvidenceStageCode = ""; Current.SupportCaseId = "preview-support-case"; Current.CanPickup = Current.CanDeliver = false; Mutations++; Changed?.Invoke(); return Read(Current); }
     public Task CancelRequestAsync(string id, NeighborhoodMemberCommandRequest body, CancellationToken ct)
     { _source.MemberWorkRevision++; _source.MemberWorkStateCode = "Cancelled"; _source.CanCancelMemberDelivery = false; Mutations++; Changed?.Invoke(); return Task.CompletedTask; }
     public Task<Ssalddel.Contracts.Common.Privacy.신청개인정보동의증적Response?> ConsentAsync(Ssalddel.Contracts.Common.Privacy.신청개인정보동의기록Request request, CancellationToken ct) => throw new NotSupportedException();

@@ -74,20 +74,41 @@ public sealed class NeighborhoodMemberDeliveryRenderTests
     public async Task 수행카드는_현재상태의장소와_사진완료만_주행동으로보인다(string state, string place, string primary)
     {
         var f = new NeighborhoodMemberDeliveryUiTests.Fixture(); f.CurrentWork.StateCode = state;
-        f.CurrentWork.CanPickup = state == "Assigned"; f.CurrentWork.CanDeliver = state == "PickedUp";
+        f.CurrentWork.EvidenceStageCode = state == "Assigned" ? "Pickup" : "Delivery";
+        if (state == "PickedUp") f.CurrentWork.Pickup = null;
         var html = await Render<NeighborhoodMemberWork>(f, new() { [nameof(NeighborhoodMemberWork.RequestId)] = "work" });
         Assert.Contains("member-delivery-map__canvas", html); Assert.Matches("<summary[^>]*>" + place, html);
+        Assert.Contains("010-0000-0000", html); Assert.Matches("<button(?![^>]*disabled)[^>]*>사진 촬영</button>", html);
+        Assert.Matches("<button[^>]*disabled[^>]*>" + primary, html);
         Assert.Contains(primary, html); Assert.Matches("<summary[^>]*>요청 사항", html); Assert.Matches("<summary[^>]*>물품·배송비", html);
         Assert.DoesNotContain("다른 배달", html); Assert.DoesNotContain("사진 보내고 " + (state == "Assigned" ? "전달" : "픽업") + " 완료", html);
     }
-    [Fact]
-    public async Task 전달완료는_상세주소를숨기고_수령과지급확인이_별도임을_설명한다()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task 전달완료는_상세주소를숨기고_수령확인의_대기와_확인을_구분한다(bool received)
     {
         var f = new NeighborhoodMemberDeliveryUiTests.Fixture(); f.CurrentWork.StateCode = "Delivered";
+        f.CurrentWork.EvidenceStageCode = ""; f.CurrentWork.ReceiptConfirmedAtUtc = received ? DateTime.UtcNow : null;
         f.CurrentWork.CanPickup = f.CurrentWork.CanDeliver = false; f.CurrentWork.Pickup = f.CurrentWork.Dropoff = null;
         var html = await Render<NeighborhoodMemberWork>(f, new() { [nameof(NeighborhoodMemberWork.RequestId)] = "work" });
-        Assert.Contains("수령자의 확인", html); Assert.Contains("배송비 지급 확인은 전달 완료와 별도", html);
+        if (received) { Assert.Contains("수령자의 수령 확인을 받았습니다", html); Assert.Contains("전달 완료 · 수령 확인됨", html); Assert.DoesNotContain("수령 확인 대기", html); Assert.DoesNotContain("수령자의 확인을 기다려", html); }
+        else Assert.Contains("수령자의 확인을 기다려", html);
+        Assert.Contains("배송비 지급 확인은 전달 완료와 별도", html);
         Assert.DoesNotContain("010-0000-0000", html); Assert.DoesNotContain("사진 촬영", html);
+    }
+    [Theory]
+    [InlineData("Assigned")]
+    [InlineData("PickedUp")]
+    [InlineData("Issue")]
+    [InlineData("Cancelled")]
+    public async Task 서버가_상세정보와_사진단계를_닫으면_첫촬영과_연락처를_렌더하지않는다(string state)
+    {
+        var f = new NeighborhoodMemberDeliveryUiTests.Fixture(); f.CurrentWork.StateCode = state;
+        f.CurrentWork.EvidenceStageCode = ""; f.CurrentWork.Pickup = f.CurrentWork.Dropoff = null; f.CurrentWork.RequestNotes = null;
+        var html = await Render<NeighborhoodMemberWork>(f, new() { [nameof(NeighborhoodMemberWork.RequestId)] = "work" });
+        Assert.DoesNotContain("010-0000-0000", html); Assert.DoesNotContain("비공개 상세", html);
+        Assert.DoesNotContain("사진 촬영", html); Assert.DoesNotContain("사진 보내고", html);
     }
     [Fact]
     public async Task 로그인화면에는_업무정보와_주소카드를_동시에렌더하지않는다()

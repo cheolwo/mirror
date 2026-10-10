@@ -12,7 +12,7 @@ public static class 생활배송배차Policy
     public static string 접수키(string actor, string clientId) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(actor + ":" + clientId)));
     public const string Marker = ":dispatch-policy:";
     public const string MemberMarker = ":member-delivery:v1:";
-    public static string 신청메모(NeighborhoodDeliveryRequest request) => request.DispatchMode is null ? string.Empty
+    public static string 신청메모(NeighborhoodDeliveryRequest request) => request.DispatchMode is null && !(request.MemberDeliveryRequested && request.CollaborationId is not null) ? string.Empty
         : Marker + Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new 선택근거(request.DispatchMode, request.CollaborationId, request.ExpectedTermsRevision))));
     public static void 큐초기화(운송원장 queue, string? memo)
     {
@@ -25,6 +25,14 @@ public static class 생활배송배차Policy
         if (index < 0) return;
         var evidence = JsonSerializer.Deserialize<선택근거>(Encoding.UTF8.GetString(Convert.FromBase64String(memo![(index + Marker.Length)..])))
             ?? throw new InvalidDataException("Neighborhood dispatch evidence missing.");
+        if (queue.일반회원배송전용)
+        {
+            if (evidence.Mode is not null || string.IsNullOrWhiteSpace(evidence.CollaborationId) || evidence.TermsRevision is null or < 1)
+                throw new InvalidDataException("Neighborhood member collaboration evidence invalid.");
+            queue.생활배송협업Id = evidence.CollaborationId; queue.생활배송조건판본 = evidence.TermsRevision;
+            queue.생활배송선택판본 = 1;
+            return;
+        }
         if (!NeighborhoodDispatchModes.IsKnown(evidence.Mode)) throw new InvalidDataException("Neighborhood dispatch mode invalid.");
         queue.생활배송배차방식 = evidence.Mode; queue.생활배송선택판본 = 1;
         queue.생활배송협업Id = evidence.CollaborationId; queue.생활배송조건판본 = evidence.TermsRevision;
@@ -46,5 +54,5 @@ public static class 생활배송배차Policy
         queue.공개전환시각 = open ? DateTime.UtcNow : null; queue.UpdatedAt = DateTime.UtcNow;
     }
     private const int 공개상태 = 상태값.배차노출상태.공개중;
-    private sealed record 선택근거(string Mode, string? CollaborationId, long? TermsRevision);
+    private sealed record 선택근거(string? Mode, string? CollaborationId, long? TermsRevision);
 }

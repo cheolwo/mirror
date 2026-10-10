@@ -190,7 +190,9 @@ public sealed class 음식배차요청OutboxService(
         var updated = orderStore.배차대기반영(order.주문번호, queue.Id, DateTime.UtcNow)
                       ?? throw new InvalidOperationException("배차대기를 연결할 음식 주문을 찾을 수 없습니다.");
         queue = await db.운송원장.AsNoTracking().SingleOrDefaultAsync(x => x.Id == queue.Id, cancellationToken) ?? queue;
-        await transportLedgerSync.운송실행투영동기화Async(queue, item.변경자, cancellationToken);
+        var transportLedger = await transportLedgerSync.운송실행투영동기화Async(queue, item.변경자, cancellationToken);
+        if (transportLedger is null)
+            throw new InvalidOperationException("FoodOrderDeliveryLedgerUnavailable");
         await foodLedgerOutbox.음식주문예약후즉시처리Async(
             updated,
             item.변경자,

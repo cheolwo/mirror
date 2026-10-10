@@ -12,6 +12,39 @@ namespace Ssalddel.Tests.Services.Community;
 
 public sealed class CommunityLedgerRelationMongoIntegrationTests
 {
+    [OrderLedgerMongoFact]
+    public async Task Food_order_snapshot_save_with_null_child_list_preserves_existing_relationship_in_Mongo()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        const string orderNo = "food-root-preserve";
+        await fixture.Store.원장저장Async(new()
+        {
+            원장Id = "child-1", 원장템플릿Key = CommunityLedgerTemplateKeys.CargoTransport, 제목 = "독립 운송"
+        }, "worker");
+        var initial = 음식마트원장Mongo동기화Builder.음식주문저장요청생성(new()
+        {
+            주문번호 = orderNo, 주문자UserId = "customer-1", 상태 = "주문대기"
+        });
+        initial.포함원장목록 = [Reference("child-1", order: 7)];
+        var root = await fixture.Store.원장저장Async(initial, "owner");
+        var update = 음식마트원장Mongo동기화Builder.음식주문저장요청생성(new()
+        {
+            주문번호 = orderNo, 주문자UserId = "customer-1", 상태 = "조리중"
+        });
+        update.기대Revision = root.Revision;
+        Assert.Null(update.포함원장목록);
+
+        await fixture.Store.원장저장Async(update, "worker");
+
+        var reloaded = (await fixture.Store.원장조회Async(root.원장Id))!;
+        var reference = Assert.Single(reloaded.포함원장목록);
+        Assert.Equal("child-1", reference.원장Id);
+        Assert.Equal(주문원장포함역할.운송, reference.역할);
+        Assert.Equal(7, reference.표시순서);
+        Assert.True(reference.필수여부);
+        Assert.Equal(root.Revision + 1, reloaded.Revision);
+    }
+
     [OrderLedgerMongoTheory]
     [InlineData(false, "detach")]
     [InlineData(true, "detach")]

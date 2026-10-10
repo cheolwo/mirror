@@ -1,6 +1,7 @@
 using Ssalddel.Contracts.Common.Community;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Services.Community;
+using Ssalddel.Services.PrivacyRetention;
 using System.Text.Json;
 using Ssalddel.Application.Warehouse;
 using Ssalddel.Contracts.Common.Warehouse;
@@ -9,6 +10,93 @@ namespace Ssalddel.Tests.Services.Community;
 
 public sealed class OrderLedgerRoleQueryServiceTests
 {
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    [InlineData(false, true)]
+    public async Task Purged_food_ledger_cannot_create_an_implicit_relation_but_keeps_explicit_history(
+        bool rootPurged, bool explicitRelation)
+    {
+        var root = FoodLedger(음식주문상태코드.픽업완료);
+        var child = Ledger("historical-custom-transport", CommunityLedgerTemplateKeys.FoodDelivery, "driver-1", "기사");
+        child.외부참조 = new Dictionary<string, string>
+        {
+            ["원천Id"] = "existing-order", ["원천유형"] = "RestaurantFoodOrder"
+        };
+        var purged = rootPurged ? root : child;
+        purged.확장속성 = new Dictionary<string, string>(purged.확장속성)
+        {
+            [배송원장개인정보파기Service.Marker] = "FoodOrder:existing-order"
+        };
+        root.포함원장목록 = explicitRelation
+            ? [Reference(child.원장Id, child.원장템플릿Key, 주문원장포함역할.배송, 3)] : [];
+        var stored = JsonSerializer.Serialize(root);
+        var store = new FakeLedgerStore(root, child);
+        var service = new 주문원장역할별조회Service(store, new FakeDisclosureStore());
+
+        var result = await service.조회Async(root.원장Id, "orderer-1", 주문원장조회역할.주문자);
+
+        Assert.True(result.IsSuccess);
+        if (explicitRelation)
+        {
+            var item = Assert.Single(result.Value.관련원장목록);
+            Assert.Equal(child.원장Id, item.원장Id);
+            Assert.Equal(3, item.표시순서);
+            Assert.Null(item.원장상세);
+        }
+        else Assert.Empty(result.Value.관련원장목록);
+        Assert.Equal(rootPurged ? 0 : 1, store.ListReads);
+        Assert.Equal(stored, JsonSerializer.Serialize(root));
+    }
+
+    [Theory]
+    [InlineData("orderer-1", "주문자", false)]
+    [InlineData("driver-1", "운송담당자", true)]
+    public async Task Legacy_food_source_reference_is_read_only_and_keeps_role_disclosure(
+        string userId, string role, bool childVisible)
+    {
+        var root = FoodLedger(음식주문상태코드.픽업완료);
+        root.포함원장목록 = [];
+        var child = Ledger("historical-custom-transport", CommunityLedgerTemplateKeys.FoodDelivery, "driver-1", "기사");
+        child.외부참조 = new Dictionary<string, string> { ["원천Id"] = "existing-order", ["원천유형"] = "RestaurantFoodOrder" };
+        var stored = JsonSerializer.Serialize(root);
+        var service = new 주문원장역할별조회Service(new FakeLedgerStore(root, child), new FakeDisclosureStore());
+
+        var result = await service.조회Async(root.원장Id, userId, role);
+
+        Assert.True(result.IsSuccess);
+        var item = Assert.Single(result.Value.관련원장목록);
+        Assert.Equal(child.원장Id, item.원장Id);
+        Assert.Equal(주문원장포함역할.배송, item.주문안역할);
+        Assert.Equal(childVisible, item.상세조회가능여부);
+        Assert.Equal(childVisible, item.원장상세 is not null);
+        Assert.Equal(stored, JsonSerializer.Serialize(root));
+        Assert.Empty(root.포함원장목록);
+    }
+
+    [Theory]
+    [InlineData("source")]
+    [InlineData("type")]
+    [InlineData("community")]
+    [InlineData("template")]
+    public async Task Legacy_food_lookup_rejects_unrelated_transport(string mismatch)
+    {
+        var root = FoodLedger(음식주문상태코드.픽업완료);
+        root.포함원장목록 = [];
+        var child = Ledger("historical-custom-transport", CommunityLedgerTemplateKeys.FoodDelivery, "driver-1", "기사");
+        child.외부참조 = new Dictionary<string, string> { ["원천Id"] = mismatch == "source" ? "another-order" : "existing-order",
+            ["원천유형"] = mismatch == "type" ? "CargoTransport" : "RestaurantFoodOrder" };
+        if (mismatch == "community") child.커뮤니티Id = "another-community";
+        if (mismatch == "template") child.원장템플릿Key = CommunityLedgerTemplateKeys.CargoTransport;
+        var service = new 주문원장역할별조회Service(new FakeLedgerStore(root, child), new FakeDisclosureStore());
+
+        var result = await service.조회Async(root.원장Id, "orderer-1", 주문원장조회역할.주문자);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Value.관련원장목록);
+    }
+
     [Fact]
     public async Task Orderer_view_masks_other_owners_child_ledgers()
     {
@@ -377,6 +465,7 @@ public sealed class OrderLedgerRoleQueryServiceTests
     private sealed class FakeLedgerStore : I커뮤니티원장저장소
     {
         private readonly Dictionary<string, 커뮤니티원장Dto> _ledgers;
+        public int ListReads { get; private set; }
 
         public FakeLedgerStore(params 커뮤니티원장Dto[] ledgers)
         {
@@ -390,7 +479,10 @@ public sealed class OrderLedgerRoleQueryServiceTests
             => throw new NotSupportedException();
 
         public Task<IReadOnlyList<커뮤니티원장Dto>> 원장목록조회Async(커뮤니티원장조회조건 query, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<커뮤니티원장Dto>>(_ledgers.Values.ToArray());
+        {
+            ListReads++;
+            return Task.FromResult<IReadOnlyList<커뮤니티원장Dto>>(_ledgers.Values.ToArray());
+        }
 
         public Task<커뮤니티원장Dto?> 원장상태변경Async(커뮤니티원장상태변경요청 request, string updatedBy, CancellationToken cancellationToken = default)
             => Task.FromResult<커뮤니티원장Dto?>(null);

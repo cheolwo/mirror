@@ -93,6 +93,17 @@ public sealed class Mongo보호지원Store : I보호지원Store
         return result.MatchedCount == 1;
     }
 
+    public async Task<IReadOnlyList<보호지원Record>> 변경목록Async(DateTime afterUtc, string afterId, int take, CancellationToken ct = default)
+    {
+        await IndexesAsync(ct);
+        var f = Builders<보호지원Document>.Filter;
+        var recent = DateTime.UtcNow.AddDays(-2);
+        var filter = (f.Ne(x => x.StatusCode, "closed") | f.Gte(x => x.UpdatedAtUtc, recent))
+            & (f.Gt(x => x.UpdatedAtUtc, afterUtc) | (f.Eq(x => x.UpdatedAtUtc, afterUtc) & f.Gt(x => x.CaseId, afterId)));
+        return (await collection.Find(filter).SortBy(x => x.UpdatedAtUtc).ThenBy(x => x.CaseId)
+            .Limit(Math.Clamp(take, 1, 100)).ToListAsync(ct)).Select(Read).ToArray();
+    }
+
     public async Task<IReadOnlyList<보호지원Record>> 목록Async(string? userId, string? kind, int skip, int take, CancellationToken cancellationToken = default)
     {
         await IndexesAsync(cancellationToken);
@@ -163,6 +174,7 @@ public sealed class Mongo보호지원Store : I보호지원Store
             if (indexesReady) return;
             var keys = Builders<보호지원Document>.IndexKeys;
             await collection.Indexes.CreateManyAsync([
+                new(keys.Ascending(x => x.UpdatedAtUtc).Ascending(x => x.CaseId)),
                 new(keys.Ascending(x => x.PartyHashes).Descending(x => x.UpdatedAtUtc)),
                 new(keys.Ascending(x => x.Kind).Ascending(x => x.StatusCode).Descending(x => x.UpdatedAtUtc)),
                 new(keys.Ascending(x => x.PurgeAfterAtUtc).Ascending(x => x.SourceHoldActive).Ascending(x => x.RetentionPending)),

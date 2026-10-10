@@ -1,4 +1,11 @@
-# [기획 · 운영체제·주문 업무망 · PLAN-OPERATIONS-ORDER-CENTERED-WORK-NETWORK · r6]
+# [기획 · 주문 원장·총괄 관리자 · PLAN-OPERATIONS-ORDER-CENTERED-WORK-NETWORK · r7]
+
+- 현재 판본: [주문 중심 구조 보완·총괄 관리자 명세 r7](order-ledger-admin-refactor.implementation.r7.md)
+- 현재 범위: 음식 배송과 물품·창고 배송의 원장·상태·역할 인계 대조, 음식 배송 참조/읽기 표시/관계 응답 보호/기사 복구 보완, 총괄 관리자 네 업무의 책임·권한 명세.
+- 상태: `ApprovedScope / Implemented / LocalValidated / AdminSpecificationPrepared / RealDbAndDeviceValidationPending`. 최종 Fast 886개·Task 9,462개 통과와 음식 기사 Android Debug build 성공을 확인했다. 관리자 모바일 화면·지사 권한·실지급·운영 활성화는 이번 범위에 포함하지 않는다.
+- 현재 실행 결과는 r7의 통합 검증 반환을 따른다. 아래 r6의 장기 미정·다음 질문은 이전 기획 기준선이며 이번 승인으로 자동 확정되지 않는다.
+
+## r6 기획 기준선
 
 - 기획 판본: `order-centered-work-network.r6`
 - 상태: `Draft / CurrentStructureCatalogImplemented / OrderAsCausalSpineConfirmed / PartialOrderRequired / IndividualAndGroupShipperDefaultsConfirmed / BroadDelegatedOperatorAuthorityConfirmed / SinglePrimaryWithAssistantsConfirmed / AssistantDefaultScopeConfirmed / TransportOperatorAuthorityFirstSliceImplemented / OperatingSystemInteractionCatalogImplemented / FreightRoundTripProjectionImplemented / RootAuthorityPending / ImplementationInProgress`

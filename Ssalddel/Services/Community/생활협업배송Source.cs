@@ -60,7 +60,9 @@ public static class 생활배송출처Evidence
         if (markerAt < 0 || markerAt != memo.LastIndexOf(Marker, StringComparison.Ordinal)) return null;
         var suffix = memo.AsSpan(markerAt + Marker.Length);
         var policyAt = suffix.IndexOf(생활배송배차Policy.Marker, StringComparison.Ordinal);
-        if (policyAt >= 0) suffix = suffix[..policyAt];
+        var memberAt = suffix.IndexOf(생활배송배차Policy.MemberMarker, StringComparison.Ordinal);
+        var endAt = policyAt < 0 ? memberAt : memberAt < 0 ? policyAt : Math.Min(policyAt, memberAt);
+        if (endAt >= 0) suffix = suffix[..endAt];
         return long.TryParse(suffix, NumberStyles.None, CultureInfo.InvariantCulture, out var id) && id > 0 ? id : null;
     }
 }

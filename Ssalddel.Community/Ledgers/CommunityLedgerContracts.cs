@@ -76,6 +76,7 @@ public sealed class 커뮤니티원장조회조건
     public IReadOnlyList<string> 포함원장Ids { get; set; } = [];
     public IReadOnlyDictionary<string, string> 외부참조조건 { get; set; } = new Dictionary<string, string>();
     public int Limit { get; set; } = 50;
+    public int Skip { get; set; }
 }
 
 public sealed class 커뮤니티원장저장요청

@@ -95,11 +95,12 @@ public sealed class 주문원장Controller : CommunityControllerBase
             return this.ToActionResult(access);
         }
 
-        return this.ToActionResult(await _useCase.하위원장연결Async(
+        var changed = await _useCase.하위원장연결Async(
             주문원장Id,
             request,
             CurrentUserId(),
-            cancellationToken));
+            cancellationToken);
+        return await 변경후보호조회Async(주문원장Id, changed, cancellationToken);
     }
 
     [HttpDelete("{주문원장Id}/children/{하위원장Id}")]
@@ -117,12 +118,24 @@ public sealed class 주문원장Controller : CommunityControllerBase
             return this.ToActionResult(access);
         }
 
-        return this.ToActionResult(await _useCase.하위원장분리Async(
+        var changed = await _useCase.하위원장분리Async(
             주문원장Id,
             하위원장Id,
             기대Revision,
             CurrentUserId(),
-            cancellationToken));
+            cancellationToken);
+        return await 변경후보호조회Async(주문원장Id, changed, cancellationToken);
+    }
+
+    private async Task<IActionResult> 변경후보호조회Async(
+        string 주문원장Id, FluentResults.Result<주문원장통합Dto> changed, CancellationToken cancellationToken)
+    {
+        if (changed.IsFailed) return this.ToActionResult(changed);
+        // 변경 성공도 현재 권한으로 다시 조회합니다. 권한이 철회되거나 조회가 실패하면
+        // 변경 UseCase가 조합한 내부 상세를 응답으로 돌려주지 않습니다.
+        var current = await _sender.Send(new 주문자주문원장조회Query(주문원장Id, CurrentUserId()), cancellationToken);
+        if (current.IsFailed) return this.ToActionResult(current);
+        return Ok(주문원장변경응답Projector.생성(changed.Value, current.Value));
     }
 
     [HttpGet("{주문원장Id}/signature")]

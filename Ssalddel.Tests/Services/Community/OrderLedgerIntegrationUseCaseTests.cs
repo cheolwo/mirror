@@ -6,6 +6,54 @@ namespace Ssalddel.Tests.Services.Community;
 
 public sealed class OrderLedgerIntegrationUseCaseTests
 {
+    [Theory]
+    [InlineData(CommunityLedgerTemplateKeys.FoodOrder)]
+    [InlineData(CommunityLedgerTemplateKeys.SsalddelMart)]
+    public async Task Status_search_and_counts_include_matching_orders_after_the_first_200(string template)
+    {
+        var rows = Enumerable.Range(0, 201).Select(index => Ledger($"order-{index}", template, 커뮤니티원장상태.완료)).ToArray();
+        if (template == CommunityLedgerTemplateKeys.FoodOrder)
+            foreach (var row in rows) row.블록목록 = [new() { BlockId = "food-order", BlockType = CommunityLedgerBlockTypes.Order,
+                State = row == rows[^1] ? "전달완료" : "수령확인" }];
+        else rows[^1].상태 = 커뮤니티원장상태.진행중;
+        var service = new 주문원장통합UseCase(new FakeLedgerStore(rows));
+
+        var result = await service.주문자목록조회Async("user-1", new() { 상태 = 커뮤니티원장상태.진행중 });
+
+        Assert.Equal(rows[^1].원장Id, Assert.Single(result.Value.Items).원장Id);
+        Assert.Equal(1, result.Value.TotalCount);
+        Assert.Equal(1, result.Value.원장종류목록.Single(x => x.원장템플릿Key == template).내원장수);
+    }
+
+    [Theory]
+    [InlineData("전달완료", 커뮤니티원장상태.진행중)]
+    [InlineData("수령확인", 커뮤니티원장상태.완료)]
+    [InlineData("취소", 커뮤니티원장상태.닫힘)]
+    public async Task Food_list_filter_count_and_detail_use_the_same_revision_block(string stage, string expected)
+    {
+        var root = Ledger("food-order:read-1", CommunityLedgerTemplateKeys.FoodOrder, 커뮤니티원장상태.완료, 7);
+        root.현재단계Key = "픽업대기";
+        root.블록목록 = [new() { BlockId = "food-order", BlockType = CommunityLedgerBlockTypes.Order, State = stage }];
+        var stored = System.Text.Json.JsonSerializer.Serialize(root);
+        var service = new 주문원장통합UseCase(new FakeLedgerStore(root));
+
+        var list = await service.주문자목록조회Async("user-1", new() { 상태 = expected });
+        var detail = await service.조회Async(root.원장Id);
+        var excluded = await service.주문자목록조회Async("user-1", new() { 상태 = expected == 커뮤니티원장상태.완료
+            ? 커뮤니티원장상태.진행중 : 커뮤니티원장상태.완료 });
+
+        Assert.True(list.IsSuccess);
+        var item = Assert.Single(list.Value.Items);
+        Assert.Equal(expected, item.상태);
+        Assert.Equal(stage, item.현재단계Key);
+        Assert.Equal(1, list.Value.TotalCount);
+        Assert.Equal(1, list.Value.원장종류목록.Single(x => x.원장템플릿Key == CommunityLedgerTemplateKeys.FoodOrder).내원장수);
+        Assert.Equal(expected, detail.Value.주문원장.상태);
+        Assert.Equal(item.Revision, detail.Value.주문원장.Revision);
+        Assert.Empty(excluded.Value.Items);
+        Assert.Equal(stored, System.Text.Json.JsonSerializer.Serialize(root));
+    }
+
     [Fact]
     public async Task Link_child_ledger_adds_reference_to_order_root()
     {
@@ -717,7 +765,7 @@ public sealed class OrderLedgerIntegrationUseCaseTests
             }
 
             return Task.FromResult<IReadOnlyList<커뮤니티원장Dto>>(
-                items.Take(query.Limit <= 0 ? 50 : query.Limit).ToArray());
+                items.Skip(Math.Max(0, query.Skip)).Take(query.Limit <= 0 ? 50 : query.Limit).ToArray());
         }
 
         public Task<커뮤니티원장Dto?> 원장상태변경Async(

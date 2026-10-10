@@ -79,6 +79,7 @@ public sealed class 생활협업Record
     public string? TermsAuthorRoleCode { get; set; }
     public string? ProviderRoleCode { get; set; }
     public 생활배송연결IntentRecord? DeliveryIntent { get; set; }
+    public 생활협업수령IntentRecord? ReceiptConfirmationIntent { get; set; }
     public string SourceTitle { get; set; } = string.Empty;
     public string? PublicNeighborhoodRegionKey { get; set; }
     public string OwnerUserId { get; set; } = string.Empty;
@@ -102,6 +103,20 @@ public sealed class 생활협업Record
     public List<생활협업명령Receipt> Receipts { get; set; } = [];
     public List<NeighborhoodCollaborationHistoryResponse> History { get; set; } = [];
     public List<생활협업예약IntentRecord> StorageReservationIntents { get; set; } = [];
+}
+/// <summary>Mongo 합의 판본을 먼저 고정하고 SQL 수령 기록을 같은 요청으로 회복하는 내부 인계.</summary>
+public sealed class 생활협업수령IntentRecord
+{
+    public Guid ClientRequestId { get; set; }
+    public string ActorUserId { get; set; } = "";
+    public string Fingerprint { get; set; } = "";
+    public string RequestId { get; set; } = "";
+    public long TermsRevision { get; set; }
+    public long WorkRevision { get; set; }
+    public string DeliveryEvidenceId { get; set; } = "";
+    public string StateCode { get; set; } = "pending";
+    public DateTime RecordedAtUtc { get; set; }
+    public DateTime? ConfirmedAtUtc { get; set; }
 }
 public sealed class 생활협업예약IntentRecord
 {

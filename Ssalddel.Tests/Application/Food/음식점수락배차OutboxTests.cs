@@ -110,6 +110,44 @@ public sealed class 음식점수락배차OutboxTests
     }
 
     [Fact]
+    public async Task 운송Mongo결과가없으면_배차Outbox가대기로남고_같은기존큐로회복한다()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var order = CreateOrderSnapshot();
+        var queue = new 운송원장
+        {
+            의뢰Id = order.주문번호, 운송번호 = order.주문번호,
+            배차업무유형 = 상태값.배차업무유형.음식배달,
+            원본의뢰유형 = 운송의뢰배차원천유형.음식점주문,
+            원본의뢰Id = order.주문번호
+        };
+        database.Context.운송원장.Add(queue);
+        await database.Context.SaveChangesAsync();
+        order.배차대기Id = queue.Id;
+        var transportSync = new NoOpTransportSync { ReturnNull = true };
+        var foodOutbox = new NoOpFoodLedgerOutbox();
+        var service = new 음식배차요청OutboxService(database.Context, null!, transportSync, foodOutbox,
+            new NoOpRealtime(), new NoOpRestaurantNotification(), new RecordingOrderStore(order),
+            new NoOpGeo(), NullLogger<음식배차요청OutboxService>.Instance);
+        await service.예약Async(order, "restaurant-41", "mongo-missing");
+
+        Assert.Equal(1, await service.대기항목처리Async());
+        var item = await database.Context.음식마트원장동기화Outbox.SingleAsync();
+        Assert.Equal(OutboxProcessingStatuses.Pending, item.처리상태);
+        Assert.Equal(0, foodOutbox.FoodAttempts);
+        transportSync.ReturnNull = false;
+        item.UpdatedAtUtc = DateTime.UtcNow - OutboxProcessingPolicy.RetryDelay - TimeSpan.FromSeconds(1);
+        await database.Context.SaveChangesAsync();
+
+        Assert.Equal(1, await service.대기항목처리Async());
+        Assert.Equal(OutboxProcessingStatuses.Succeeded, item.처리상태);
+        Assert.Equal(2, item.시도횟수);
+        Assert.Equal(1, foodOutbox.FoodAttempts);
+        Assert.Equal(queue.Id, Assert.Single(await database.Context.운송원장.ToListAsync()).Id);
+        Assert.Equal(0, await service.대기항목처리Async());
+    }
+
+    [Fact]
     public async Task 기존음식마트원장처리기는_배차요청유형을소비하지않는다()
     {
         await using var database = await TestDatabase.CreateAsync();
@@ -254,18 +292,23 @@ public sealed class 음식점수락배차OutboxTests
 
     private sealed class NoOpTransportSync : I운송원장Mongo동기화Service
     {
+        public bool ReturnNull { get; set; }
         public Task<커뮤니티원장Dto?> 화주운송의뢰동기화Async(화주운송의뢰 의뢰, string updatedBy, CancellationToken cancellationToken = default)
             => Task.FromResult<커뮤니티원장Dto?>(null);
         public Task<커뮤니티원장Dto?> 운송실행투영동기화Async(운송원장 운송실행투영, string updatedBy, CancellationToken cancellationToken = default)
-            => Task.FromResult<커뮤니티원장Dto?>(null);
+            => Task.FromResult<커뮤니티원장Dto?>(ReturnNull ? null : new() { 원장Id = 운송원장Mongo동기화Builder.원장Id생성(운송실행투영.의뢰Id!) });
         public Task<운송원장Mongo동기화상태> 상태조회Async(string 의뢰Id, CancellationToken cancellationToken = default)
             => Task.FromResult(운송원장Mongo동기화상태.Empty(의뢰Id, string.Empty));
     }
 
     private sealed class NoOpFoodLedgerOutbox : I음식마트원장동기화OutboxService
     {
+        public int FoodAttempts { get; private set; }
         public Task 음식주문예약후즉시처리Async(음식주문응답 order, string updatedBy, string idempotencyKey, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
+        {
+            FoodAttempts++;
+            return Task.CompletedTask;
+        }
         public Task 출고원장예약후즉시처리Async(IReadOnlyList<출고예정> outbounds, IReadOnlyList<입고요청> inbounds, string updatedBy, string idempotencyKey, string? currentStageKey = null, string? ledgerTemplateKey = null, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
         public Task<int> 대기항목처리Async(int take = 100, CancellationToken cancellationToken = default)

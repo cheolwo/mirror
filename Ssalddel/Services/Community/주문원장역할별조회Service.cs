@@ -84,7 +84,7 @@ public sealed class 주문원장역할별조회Service : I주문원장역할별�
             return BadRequest("역할별 조회는 개별 주문 원장을 기점으로 시작해야 합니다.");
         }
 
-        var references = root.포함원장목록
+        var references = (await 음식주문원장참조Resolver.조회Async(_원장저장소, root, cancellationToken))
             .Where(x => 역할에필요한참조인가(조회역할, x.역할))
             .OrderBy(x => x.표시순서)
             .ToArray();
@@ -135,7 +135,7 @@ public sealed class 주문원장역할별조회Service : I주문원장역할별�
                 조회근거 = accessBasis,
                 상세조회가능여부 = direct || granted,
                 공개요청가능여부 = child is not null && !direct && !granted && !string.IsNullOrWhiteSpace(child.생성자UserId),
-                원장상세 = direct || granted ? child : null
+                원장상세 = (direct || granted) && child is not null ? FoodOrderLedgerReadPresentation.Normalize(child) : null
             };
         }).ToArray();
 

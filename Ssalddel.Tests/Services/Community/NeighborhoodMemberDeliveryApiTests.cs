@@ -77,6 +77,8 @@ public sealed class NeighborhoodMemberDeliveryApiTests
     {
         await using var f=await NeighborhoodMemberDeliveryTests.Fixture.CreateAsync();
         var migration=new Ssalddel.Migrations.AddNeighborhoodMemberDelivery();
+        // 최초 테이블과 후속 운영 알림의 keyset 조회 index를 함께 대조한다. 원 migration은 변경하지 않는다.
+        var indexOperations=migration.UpOperations.Concat(new Ssalddel.Migrations.AddOperationsAlerts().UpOperations).OfType<CreateIndexOperation>().ToArray();
         var tables=migration.UpOperations.OfType<CreateTableOperation>().ToArray();Assert.Equal(5,tables.Length);
         var models=f.Db.Model.GetEntityTypes().Where(t=>t.ClrType.Namespace==typeof(NeighborhoodMemberDelivery).Namespace && t.GetTableName()!.StartsWith("neighborhood_member_")).ToArray();
         Assert.Equal(5,models.Length);
@@ -86,7 +88,7 @@ public sealed class NeighborhoodMemberDeliveryApiTests
             Assert.Equal(model.GetProperties().Select(p=>p.GetColumnName(identifier)).Order(),table.Columns.Select(c=>c.Name).Order());
             Assert.Equal(model.FindPrimaryKey()!.Properties.Select(p=>p.GetColumnName(identifier)),table.PrimaryKey!.Columns);
             foreach(var index in model.GetIndexes())
-                Assert.Contains(migration.UpOperations.OfType<CreateIndexOperation>(),i=>i.Table==table.Name && i.Columns.SequenceEqual(index.Properties.Select(p=>p.GetColumnName(identifier))) && i.IsUnique==index.IsUnique);
+                Assert.Contains(indexOperations,i=>i.Table==table.Name && i.Columns.SequenceEqual(index.Properties.Select(p=>p.GetColumnName(identifier))) && i.IsUnique==index.IsUnique);
         }
         var memberColumn=Assert.Single(migration.UpOperations.OfType<AddColumnOperation>(),x=>x.Name=="neighborhood_member_only");
         Assert.Equal("운송실행투영",memberColumn.Table);Assert.Equal(false,memberColumn.DefaultValue);Assert.False(memberColumn.IsNullable);

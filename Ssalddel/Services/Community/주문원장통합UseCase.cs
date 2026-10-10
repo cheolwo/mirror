@@ -81,20 +81,35 @@ public sealed class 주문원장통합UseCase : I주문원장통합UseCase
 
         var page = Math.Max(0, request.Page);
         var pageSize = Math.Clamp(request.PageSize, 1, 100);
-        var ledgers = await _원장저장소.원장목록조회Async(
-            new 커뮤니티원장조회조건
+        var ledgers = new List<커뮤니티원장Dto>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var offset = 0;
+        while (true)
+        {
+            var batch = await _원장저장소.원장목록조회Async(new 커뮤니티원장조회조건
             {
                 접근UserId = 주문자UserId.Trim(),
                 원장템플릿Key = templateKey,
                 원장템플릿Keys = templateKey is null
                     ? 주문자원장종류.Select(template => template.Key).ToArray()
                     : [],
-                상태 = string.IsNullOrWhiteSpace(request.상태) ? null : request.상태.Trim(),
-                Limit = 200
-            },
-            cancellationToken);
+                // 음식 원장의 저장 요약은 준비 완료일 수 있습니다. 같은 판본의 업무 블록을
+                // 판독한 뒤 상태 검색과 집계를 적용해야 전달/수령 대기 주문이 사라지지 않습니다.
+                상태 = templateKey is not null && templateKey != CommunityLedgerTemplateKeys.FoodOrder
+                    ? request.상태?.Trim() : null,
+                Limit = 200,
+                Skip = offset
+            }, cancellationToken);
+            var added = 0;
+            foreach (var ledger in batch)
+                if (seen.Add(ledger.원장Id)) { ledgers.Add(ledger); added++; }
+            if (batch.Count < 200) break;
+            if (added == 0) throw new InvalidOperationException("주문 목록의 다음 페이지를 확인하지 못했습니다.");
+            offset += batch.Count;
+        }
         var search = string.IsNullOrWhiteSpace(request.Search) ? null : request.Search.Trim();
         var filtered = ledgers
+            .Select(FoodOrderLedgerReadPresentation.Normalize)
             .Where(ledger => 주문자원장템플릿Keys.Contains(ledger.원장템플릿Key))
             .Where(ledger => templateKey is null
                              || string.Equals(
@@ -344,7 +359,9 @@ public sealed class 주문원장통합UseCase : I주문원장통합UseCase
         커뮤니티원장Dto 주문원장,
         CancellationToken cancellationToken)
     {
-        var 참조목록 = 주문원장.포함원장목록.OrderBy(x => x.표시순서).ToArray();
+        주문원장 = FoodOrderLedgerReadPresentation.Normalize(주문원장);
+        var 참조목록 = (await 음식주문원장참조Resolver.조회Async(
+            _원장저장소, 주문원장, cancellationToken)).OrderBy(x => x.표시순서).ToArray();
         var 조회작업목록 = 참조목록
             .Select(x => _원장저장소.원장조회Async(x.원장Id, cancellationToken))
             .ToArray();
@@ -367,7 +384,7 @@ public sealed class 주문원장통합UseCase : I주문원장통합UseCase
                 역할 = 참조.역할,
                 필수여부 = 참조.필수여부,
                 표시순서 = 참조.표시순서,
-                원장 = 하위원장목록[index],
+                원장 = 하위원장목록[index] is { } child ? FoodOrderLedgerReadPresentation.Normalize(child) : null,
                 조회상태 = 하위원장목록[index] is null ? "원장누락" : "정상",
                 주문자서명상태 = 서명기록목록.TryGetValue(참조.원장Id, out var 서명기록)
                     ? 주문원장서명상태Factory.생성(서명기록, now)

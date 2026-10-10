@@ -40,7 +40,9 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase(
     I신청개인정보동의증적Service consent, I배차추천경로Service routes, IObjectStorageService storage,
     I판매자확인Store? identities = null, Ssalddel.Services.PrivacySupport.보호지원UseCase? support = null,
     ISsalddelBackgroundJobActivationPolicy? activation = null, IOptions<SsalddelExecutionOptions>? executionOptions = null,
-    I운송원장Mongo동기화Service? ledgerSync = null)
+    I운송원장Mongo동기화Service? ledgerSync = null,
+    Ssalddel.Services.OperationsAlerts.OperationsBudgetGate? operationsBudget = null,
+    I생활협업Store? memberCollaborations = null)
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     private DateTime Now => clock.GetUtcNow().UtcDateTime;

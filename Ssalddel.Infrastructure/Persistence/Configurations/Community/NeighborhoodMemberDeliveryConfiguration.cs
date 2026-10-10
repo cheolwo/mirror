@@ -27,6 +27,7 @@ public sealed class NeighborhoodMemberDeliveryConfiguration : IEntityTypeConfigu
         b.Property(x => x.IssueCode).HasMaxLength(40); b.Property(x => x.PrivateIssuePayload).HasColumnType("longtext");
         b.Property(x => x.SupportCaseId).HasMaxLength(120);
         b.HasIndex(x => new { x.AssignedMemberUserId, x.StateCode });
+        b.HasIndex(x => new { x.UpdatedAtUtc, x.RequestId });
     }
 }
 public sealed class NeighborhoodMemberOfferConfiguration : IEntityTypeConfiguration<NeighborhoodMemberOffer>
