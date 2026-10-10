@@ -1,0 +1,1827 @@
+{
+  "schemaVersion": "ssalddel-code-map.v1",
+  "workAreaKey": "food-driver",
+  "workAreaVersion": "1",
+  "features": [
+    {
+      "key": "food-driver-work",
+      "label": "\uC74C\uC2DD \uAE30\uC0AC \uC6B4\uD589\u00B7\uD604\uC7AC \uC5C5\uBB34\u00B7\uC218\uD589\u00B7\uC815\uC0B0 \uACBD\uACC4",
+      "dependsOnFeatures": [],
+      "steps": [
+        {
+          "flowOrder": 10,
+          "stepKey": "contract.work-start-request",
+          "dependsOnStepKeys": [],
+          "executionStage": "Definition",
+          "layer": "Contract",
+          "componentType": "Ssalddel.Contracts.Driver.Work.\uAE30\uC0AC\uC6B4\uD589\uC2DC\uC791\uC694\uCCAD",
+          "assembly": "Ssalddel.Contracts",
+          "sourcePath": "Ssalddel.Contracts/Driver/Work/\uAE30\uC0AC\uC6B4\uD589Dtos.cs",
+          "sourceLine": 11,
+          "responsibility": "\uAE30\uC0AC\uC758 \uC6B4\uD589 \uC2DC\uC791 \uC785\uB825\uACFC \uC120\uD0DD\uC801 \uD074\uB77C\uC774\uC5B8\uD2B8 \uC694\uCCAD \uC2DD\uBCC4\uC790\uB97C \uC815\uC758\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uC2DC\uC791 \uC694\uCCAD ID\uC640 \uBC30\uCC28 \uC218\uC2E0 \uBCC0\uACBD ID\uB294 \uBCC4\uAC1C\uB2E4. \uACC4\uC57D \uC790\uCCB4\uB294 \uC2DC\uC791 POST \uC7AC\uC804\uC1A1\uC774\uB098 \uC0C1\uD0DC \uBCC0\uACBD\uC744 \uC2E4\uD589\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 11,
+          "stepKey": "contract.work-start-response",
+          "dependsOnStepKeys": [
+            "contract.work-start-request"
+          ],
+          "executionStage": "Definition",
+          "layer": "Contract",
+          "componentType": "Ssalddel.Contracts.Driver.Work.\uAE30\uC0AC\uC6B4\uD589\uC2DC\uC791\uC751\uB2F5",
+          "assembly": "Ssalddel.Contracts",
+          "sourcePath": "Ssalddel.Contracts/Driver/Work/\uAE30\uC0AC\uC6B4\uD589Dtos.cs",
+          "sourceLine": 11,
+          "responsibility": "SQL \uADFC\uBB34 \uD655\uC815 \uACB0\uACFC\uC640 \uC778\uB371\uC2A4 \uD6C4\uC18D \uB300\uAE30 \uC5EC\uBD80\uB97C \uC804\uB2EC\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "FollowupPending\uC740 SQL \uC800\uC7A5 \uC2E4\uD328\uAC00 \uC544\uB2C8\uBA70 \uC751\uB2F5\uB9CC\uC73C\uB85C \uBC30\uCC28 \uC218\uC2E0 ON\uC774\uB098 \uC678\uBD80 \uD6C4\uC18D \uC644\uB8CC\uB97C \uD655\uC815\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 12,
+          "stepKey": "contract.work-status",
+          "dependsOnStepKeys": [],
+          "executionStage": "Definition",
+          "layer": "Contract",
+          "componentType": "Ssalddel.Contracts.Driver.Work.\uAE30\uC0AC\uC6B4\uD589\uC0C1\uD0DC\uC751\uB2F5",
+          "assembly": "Ssalddel.Contracts",
+          "sourcePath": "Ssalddel.Contracts/Driver/Work/\uAE30\uC0AC\uC6B4\uD589Dtos.cs",
+          "sourceLine": 11,
+          "responsibility": "\uC6B4\uD589 \uC815\uBCF8\uC758 \uADFC\uBB34\uC640 \uC2DC\uC791 \uC694\uCCAD \uC18C\uC720\uAD8C \uBC0F \uC704\uCE58 \uD22C\uC601\uC744 \uC804\uB2EC\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uC6B4\uD589 \uC0C1\uD0DC\uC640 \uC2DC\uC791 \uC694\uCCAD ID\uB294 SQL \uAE30\uC900\uC774\uACE0 \uC704\uCE58\u00B7Aging\uC740 \uC778\uB371\uC2A4 \uD22C\uC601\uC774\uB2E4. \uAD6C\uD615 \uADFC\uBB34\uC758 null \uC694\uCCAD ID\uB97C \uD604\uC7AC \uC694\uCCAD\uC73C\uB85C \uCD94\uC815\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 13,
+          "stepKey": "contract.offer",
+          "dependsOnStepKeys": [],
+          "executionStage": "Definition",
+          "layer": "Contract",
+          "componentType": "Ssalddel.Contracts.Driver.Food.FoodDeliveryDriverOfferDto",
+          "assembly": "Ssalddel.Contracts",
+          "sourcePath": "Ssalddel.Contracts/Driver/Food/FoodDeliveryDriverWorkspaceDtos.cs",
+          "sourceLine": 15,
+          "responsibility": "\uC218\uB77D \uC804 \uC74C\uC2DD \uBC30\uB2EC \uC81C\uC548\uC758 \uC870\uAC74\uACFC \uAC00\uB2A5\uD55C \uD589\uB3D9\uC744 \uC804\uB2EC\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uAC70\uB9AC null\uACFC \uD655\uC778\uB41C 0\uC744 \uAD6C\uBCC4\uD55C\uB2E4. \uC81C\uC548 \uAE08\uC561\uC740 \uC74C\uC2DD \uC8FC\uBB38 \uAE08\uC561\uC774\uB098 \uAE30\uC0AC \uC2E4\uC9C0\uAE09 \uC644\uB8CC\uB97C \uB73B\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 14,
+          "stepKey": "contract.active-delivery",
+          "dependsOnStepKeys": [],
+          "executionStage": "Definition",
+          "layer": "Contract",
+          "componentType": "Ssalddel.Contracts.Driver.Food.FoodDeliveryDriverActiveDeliveryDto",
+          "assembly": "Ssalddel.Contracts",
+          "sourcePath": "Ssalddel.Contracts/Driver/Food/FoodDeliveryDriverWorkspaceDtos.cs",
+          "sourceLine": 15,
+          "responsibility": "\uD604\uC7AC \uAE30\uC0AC\uC5D0\uAC8C \uC5F0\uACB0\uB41C \uBC30\uB2EC \uC2DC\uB3C4\uC640 Revision \uBC0F \uD5C8\uC6A9 \uD589\uB3D9\uC744 \uC804\uB2EC\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uC8FC\uBB38\u00B7\uC81C\uC548\u00B7\uC2DC\uB3C4 \uC2DD\uBCC4\uC790\uB294 \uC11C\uB85C \uB300\uCCB4\uD558\uC9C0 \uC54A\uB294\uB2E4. \uACE0\uAC1D \uC0C1\uC138\uB294 \uAD8C\uD55C \uC788\uB294 \uD604\uC7AC \uC5C5\uBB34\uC5D0 \uD55C\uC815\uD558\uBA70 \uC804\uB2EC \uC644\uB8CC\uC640 \uC218\uB839 \uD655\uC778\u00B7\uC2E4\uC9C0\uAE09\uC740 \uBCC4\uAC1C\uB2E4."
+        },
+        {
+          "flowOrder": 15,
+          "stepKey": "contract.current-work",
+          "dependsOnStepKeys": [
+            "contract.active-delivery",
+            "contract.offer"
+          ],
+          "executionStage": "Definition",
+          "layer": "Contract",
+          "componentType": "Ssalddel.Contracts.Driver.Food.FoodDeliveryDriverCurrentWorkDto",
+          "assembly": "Ssalddel.Contracts",
+          "sourcePath": "Ssalddel.Contracts/Driver/Food/FoodDeliveryDriverWorkspaceDtos.cs",
+          "sourceLine": 15,
+          "responsibility": "\uC9C0\uB3C4\uC640 \uD604\uC7AC \uC218\uD589 \uC5C5\uBB34\uC758 \uC815\uC0B0 \uC5C6\uB294 \uC870\uD68C \uC751\uB2F5\uC744 \uC815\uC758\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uC6D4 \uC815\uC0B0\u00B7\uC8FC\uBB38\uBCC4 \uC815\uC0B0\u00B7\uC644\uB8CC \uC0C1\uC138\uB97C \uD3EC\uD568\uD558\uC9C0 \uC54A\uB294 \uD604\uC7AC \uC5C5\uBB34 \uACC4\uC57D\uC774\uB2E4."
+        },
+        {
+          "flowOrder": 16,
+          "stepKey": "contract.legacy-workspace",
+          "dependsOnStepKeys": [
+            "contract.current-work"
+          ],
+          "executionStage": "Definition",
+          "layer": "Contract",
+          "componentType": "Ssalddel.Contracts.Driver.Food.FoodDeliveryDriverWorkspaceDto",
+          "assembly": "Ssalddel.Contracts",
+          "sourcePath": "Ssalddel.Contracts/Driver/Food/FoodDeliveryDriverWorkspaceDtos.cs",
+          "sourceLine": 15,
+          "responsibility": "\uAE30\uC874 \uC815\uC0B0 \uD3EC\uD568 \uC74C\uC2DD \uAE30\uC0AC workspace \uC751\uB2F5\uC744 \uBCF4\uC874\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uD604\uC7AC \uC5C5\uBB34 \uACC4\uC57D\uACFC \uD638\uD658 \uC815\uC0B0 \uC870\uD68C\uB97C \uAD6C\uBCC4\uD55C\uB2E4. \uC815\uC0B0 \uAE30\uB85D\uC774\uB098 \uBAA8\uC758 \uC9C0\uAE09 \uC131\uACF5\uC744 \uC2E4\uC81C \uC774\uCCB4\uB85C \uC2B9\uACA9\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 17,
+          "stepKey": "contract.driver-followup-intent",
+          "dependsOnStepKeys": [],
+          "executionStage": "Definition",
+          "layer": "Contract",
+          "componentType": "Ssalddel.Services.Community.\uC74C\uC2DD\uAE30\uC0AC\uD6C4\uC18D\uC758\uB3C4",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Services/Community/FoodDriverFollowupOutbox.cs",
+          "sourceLine": 15,
+          "responsibility": "\uC74C\uC2DD \uAE30\uC0AC \uC0C1\uD0DC \uBCC0\uACBD\uC758 \uD6C4\uC18D \uC6D0\uCC9C \uC2DD\uBCC4\uC790\uC640 \uC0AC\uAC74 \uC815\uBCF4\uB97C \uC815\uC758\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uACE0\uAC1D \uC8FC\uC18C\u00B7\uC5F0\uB77D\uCC98 \uC0AC\uBCF8\uC744 \uB2F4\uC9C0 \uC54A\uB294\uB2E4. \uC6D0\uC7A5 \uB3D9\uAE30\uD654\u00B7\uC54C\uB9BC \uC608\uC57D\uC740 \uC2E4\uC81C \uBC1C\uC1A1\uC774\uB098 \uC218\uB839\u00B7\uC2E4\uC9C0\uAE09 \uC644\uB8CC\uAC00 \uC544\uB2C8\uB2E4."
+        },
+        {
+          "flowOrder": 18,
+          "stepKey": "contract.driver-followup-port",
+          "dependsOnStepKeys": [
+            "contract.driver-followup-intent"
+          ],
+          "executionStage": "Definition",
+          "layer": "Contract",
+          "componentType": "Ssalddel.Services.Community.I\uC74C\uC2DD\uAE30\uC0AC\uD6C4\uC18DOutboxService",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Services/Community/FoodDriverFollowupOutbox.cs",
+          "sourceLine": 15,
+          "responsibility": "\uC0C1\uD0DC \uBCC0\uACBD\uACFC \uD568\uAED8 \uC608\uC57D\uD558\uACE0 \uC800\uC7A5 \uD6C4 \uCC98\uB9AC\uD558\uB294 \uC74C\uC2DD \uAE30\uC0AC \uD6C4\uC18D \uACC4\uC57D\uC744 \uC815\uC758\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uC608\uC57D\uC740 \uD638\uCD9C\uC790\uC758 SaveChanges\uC640 transaction\uC73C\uB85C \uD655\uC815\uD558\uBA70 \uC989\uC2DC\uCC98\uB9AC\uB294 \uBCC4\uB3C4\uB2E4. \uC778\uD130\uD398\uC774\uC2A4 \uC120\uC5B8 \uC790\uCCB4\uB294 \uC800\uC7A5\u00B7\uBC1C\uC1A1\uC744 \uC2E4\uD589\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 19,
+          "stepKey": "contract.work-start-followup-port",
+          "dependsOnStepKeys": [
+            "contract.work-start-response"
+          ],
+          "executionStage": "Definition",
+          "layer": "Contract",
+          "componentType": "\uC0B4\uB730.Services.Dispatch.Queue.I\uAE30\uC0AC\uC6B4\uD589\uC2DC\uC791\uD6C4\uC18DService",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Services/Dispatch/Queue/\uAE30\uC0AC\uC6B4\uD589\uC2DC\uC791\uD6C4\uC18DService.cs",
+          "sourceLine": 21,
+          "responsibility": "\uADFC\uBB34 \uC2DD\uBCC4\uC790 \uAE30\uC900 \uC6B4\uD589 \uC2DC\uC791 \uC778\uB371\uC2A4 \uC7AC\uAD6C\uC131 \uACC4\uC57D\uC744 \uC815\uC758\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uC6B4\uD589 \uC2DC\uC791 \uC815\uBCF8\uC744 \uB9CC\uB4E4\uAC70\uB098 \uC218\uC2E0 \uC758\uC0AC\uB97C \uBCC0\uACBD\uD558\uB294 \uACC4\uC57D\uC774 \uC544\uB2C8\uB2E4."
+        },
+        {
+          "flowOrder": 20,
+          "stepKey": "contract.food-workspace-port",
+          "dependsOnStepKeys": [
+            "contract.current-work",
+            "contract.legacy-workspace"
+          ],
+          "executionStage": "Definition",
+          "layer": "Contract",
+          "componentType": "Ssalddel.Application.Driver.Food.IFoodDeliveryDriverWorkspaceUseCase",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.cs",
+          "sourceLine": 24,
+          "responsibility": "\uD604\uC7AC \uC5C5\uBB34\uC640 \uD638\uD658 workspace \uBC0F \uC815\uC0B0\u00B7\uC644\uB8CC \uC0C1\uC138 \uC870\uD68C \uACC4\uC57D\uC744 \uC815\uC758\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uD604\uC7AC \uC870\uD68C\uC640 \uC815\uC0B0 \uC870\uD68C\uC758 \uD638\uCD9C\uC744 \uAD6C\uBCC4\uD558\uBA70 \uC870\uD68C \uACC4\uC57D \uC790\uCCB4\uB294 \uC5C5\uBB34 \uC0C1\uD0DC\uB97C \uC804\uC774\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 30,
+          "stepKey": "domain.driver-shift",
+          "dependsOnStepKeys": [
+            "contract.work-start-request",
+            "contract.work-status"
+          ],
+          "executionStage": "Definition",
+          "layer": "Domain",
+          "componentType": "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uAE30\uC0AC\uADFC\uBB34",
+          "assembly": "Ssalddel.Domain",
+          "sourcePath": "Ssalddel.Domain/\uAE30\uC0AC/DriverShift.cs",
+          "sourceLine": 14,
+          "responsibility": "\uC6B4\uD589 \uC2DC\uC791 \uC694\uCCAD\uC758 \uBA71\uB4F1\uC131\uACFC \uD604\uC7AC \uADFC\uBB34 \uC2AC\uB86F\uC744 \uB2F4\uB294 SQL \uC804\uBB38 \uC0C1\uD0DC\uB97C \uC815\uC758\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uC74C\uC2DD\u00B7\uD654\uBB3C \uACF5\uC6A9 \uADFC\uBB34 \uBAA8\uB378\uC774\uBA70 ActiveDriverId\u00B7\uC885\uB8CC \uC2DC\uAC01\u00B7\uC694\uCCAD \uC9C0\uBB38\uC740 \uC11C\uBC84\uAC00 \uAC80\uC99D\uD55C\uB2E4. \uD0C0\uC785 \uC815\uC758 \uC790\uCCB4\uAC00 DB\uB97C \uC800\uC7A5\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 31,
+          "stepKey": "domain.work-start-followup",
+          "dependsOnStepKeys": [
+            "domain.driver-shift"
+          ],
+          "executionStage": "Definition",
+          "layer": "Domain",
+          "componentType": "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uAE30\uC0AC\uC6B4\uD589\uC2DC\uC791\uD6C4\uC18D",
+          "assembly": "Ssalddel.Domain",
+          "sourcePath": "Ssalddel.Domain/\uAE30\uC0AC/DriverWorkStartFollowup.cs",
+          "sourceLine": 12,
+          "responsibility": "SQL \uADFC\uBB34\uC640 \uD568\uAED8 \uD655\uC815\uD560 \uC778\uB371\uC2A4 \uD6C4\uC18D\uC758 \uC7AC\uC2DC\uB3C4 \uC0C1\uD0DC\uB97C \uC815\uC758\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "ShiftId\uC5D0 \uACB0\uC18D\uB41C \uC791\uC5C5 \uC0C1\uD0DC\uC774\uBA70 \uACE0\uAC1D \uC815\uBCF4\uB098 \uC2DC\uC791 \uC8FC\uC18C\uB97C \uBCF5\uC81C\uD558\uC9C0 \uC54A\uB294\uB2E4. SQL \uADFC\uBB34 \uC131\uACF5\uACFC \uC778\uB371\uC2A4 \uCC98\uB9AC \uC131\uACF5\uC740 \uBCC4\uB3C4\uB2E4."
+        },
+        {
+          "flowOrder": 40,
+          "stepKey": "infrastructure.shift-mapping",
+          "dependsOnStepKeys": [
+            "domain.driver-shift"
+          ],
+          "executionStage": "Definition",
+          "layer": "Infrastructure",
+          "componentType": "\uC0B4\uB730.Infrastructure.Persistence.Configurations.Driver.\uAE30\uC0AC\uADFC\uBB34Configuration",
+          "contractType": "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uAE30\uC0AC\uADFC\uBB34",
+          "assembly": "Ssalddel.Infrastructure",
+          "sourcePath": "Ssalddel.Infrastructure/Persistence/Configurations/Driver/\uAE30\uC0AC\uADFC\uBB34Configuration.cs",
+          "sourceLine": 17,
+          "responsibility": "\uADFC\uBB34 \uC2DC\uC791 \uC2DD\uBCC4\uC790\uC640 \uD65C\uC131 \uAE30\uC0AC \uC2AC\uB86F\uC758 SQL \uB9E4\uD551\u00B7\uACE0\uC720 \uC81C\uC57D\uC744 \uC815\uC758\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "EF \uBAA8\uB378 \uB9E4\uD551\uC774\uBA70 migration \uC2E4\uD589\uC774\uB098 \uAE30\uC874 \uADFC\uBB34 \uAC12 \uC7AC\uC791\uC131\uC740 \uC218\uD589\uD558\uC9C0 \uC54A\uB294\uB2E4. nullable \uACE0\uC720 \uC2AC\uB86F\uACFC \uC2DC\uC791 \uC694\uCCAD \uD0A4\uC758 \uC758\uBBF8\uB97C \uBCF4\uC874\uD55C\uB2E4."
+        },
+        {
+          "flowOrder": 41,
+          "stepKey": "infrastructure.work-start-followup-mapping",
+          "dependsOnStepKeys": [
+            "domain.work-start-followup"
+          ],
+          "executionStage": "Definition",
+          "layer": "Infrastructure",
+          "componentType": "\uC0B4\uB730.Infrastructure.Persistence.Configurations.Driver.\uAE30\uC0AC\uC6B4\uD589\uC2DC\uC791\uD6C4\uC18DConfiguration",
+          "contractType": "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uAE30\uC0AC\uC6B4\uD589\uC2DC\uC791\uD6C4\uC18D",
+          "assembly": "Ssalddel.Infrastructure",
+          "sourcePath": "Ssalddel.Infrastructure/Persistence/Configurations/Driver/DriverWorkStartFollowupConfiguration.cs",
+          "sourceLine": 16,
+          "responsibility": "\uADFC\uBB34\uBCC4 \uD6C4\uC18D \uC791\uC5C5\uC758 SQL \uD0A4\uC640 \uC7AC\uC2DC\uB3C4 \uC870\uD68C \uC778\uB371\uC2A4\uB97C \uC815\uC758\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "EF \uBAA8\uB378 \uB9E4\uD551\uB9CC \uC815\uC758\uD55C\uB2E4. \uC2E4\uC81C DB \uC801\uC6A9\uACFC \uC791\uC5C5 \uCC98\uB9AC \uC644\uB8CC\uB294 \uBCC4\uB3C4\uC774\uBA70 \uADFC\uBB34 \uC678\uB798 \uD0A4 \uACB0\uC18D\uC744 \uBCF4\uC874\uD55C\uB2E4."
+        },
+        {
+          "flowOrder": 50,
+          "stepKey": "application.work-transition-lock",
+          "dependsOnStepKeys": [
+            "infrastructure.shift-mapping"
+          ],
+          "executionStage": "Confirm",
+          "layer": "Application",
+          "componentType": "Ssalddel.Application.Driver.Work.\uAE30\uC0AC\uC6B4\uD589\uC804\uC774Lock",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Application/Driver/Work/\uAE30\uC0AC\uC6B4\uD589\uC804\uC774Lock.cs",
+          "sourceLine": 16,
+          "responsibility": "\uC6B4\uD589 \uC2DC\uC791\u00B7\uC885\uB8CC\u00B7GPS\u00B7\uD6C4\uC18D\uC758 \uAE30\uC0AC\uBCC4 \uC804\uC774 \uC21C\uC11C\uB97C \uC9C1\uB82C\uD654\uD55C\uB2E4.",
+          "effects": [
+            "PersistentWrite",
+            "StateMutation"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [
+            "OperationalState"
+          ],
+          "boundary": "\uD504\uB85C\uC138\uC2A4 \uC7A0\uAE08\uACFC transaction \uB0B4\uBD80\uC758 SQL \uD589 \uC7A0\uAE08\uC744 \uD568\uAED8 \uC0AC\uC6A9\uD55C\uB2E4. \uB3D9\uC77C \uAC12\uC744 \uC720\uC9C0\uD558\uB294 UPDATE\uB3C4 DB \uC4F0\uAE30\uC774\uBA70 \uC7A0\uAE08 \uC790\uCCB4\uAC00 \uC5C5\uBB34 \uC131\uACF5\uC744 \uD655\uC815\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 52,
+          "stepKey": "application.driver-action-policy",
+          "dependsOnStepKeys": [
+            "contract.active-delivery",
+            "contract.offer"
+          ],
+          "executionStage": "Preview",
+          "layer": "Application",
+          "componentType": "\uC0B4\uB730.Services.Dispatch.Recommendation.\uC74C\uC2DD\uBC30\uB2EC\uAE30\uC0AC\uC5C5\uBB34Service",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Policies.cs",
+          "sourceLine": 40,
+          "responsibility": "\uC774\uBBF8 \uC870\uD68C\uB41C \uC5C5\uBB34\uC5D0 \uB300\uD55C \uD65C\uC131 \uC0C1\uD55C\uACFC \uBB36\uC74C \uB3D9\uC120 \uC870\uAC74\uC744 \uD310\uC815\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uC774 partial\uC758 \uD310\uC815\uC740 \uC601\uC18D \uC0C1\uD0DC\uB97C \uD655\uC815\uD558\uC9C0 \uC54A\uB294\uB2E4. \uC2E4\uC81C \uAD8C\uD55C\u00B7\uD604\uC7AC Revision \uC7AC\uAC80\uC0AC\uC640 SQL \uC800\uC7A5\uC740 \uC0C1\uD0DC \uC804\uC774 \uACBD\uACC4\uAC00 \uB9E1\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 53,
+          "stepKey": "application.current-bundle-policy",
+          "dependsOnStepKeys": [
+            "contract.offer"
+          ],
+          "executionStage": "Preview",
+          "layer": "Application",
+          "componentType": "Ssalddel.Application.Driver.Food.FoodDeliveryCurrentBundlePolicy",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.BundlePolicy.cs",
+          "sourceLine": 25,
+          "responsibility": "\uD604\uC7AC \uC81C\uC548 \uC790\uB8CC\uC5D0\uC11C \uD45C\uC2DC\uD560 \uBB36\uC74C \uD6C4\uBCF4\uB97C \uC21C\uC218 \uACC4\uC0B0\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uD6C4\uBCF4 \uC0DD\uC131\uC740 \uC790\uB3D9 \uC218\uB77D\u00B7\uBC30\uCC28 \uD655\uC815\u00B7\uC601\uC18D \uC800\uC7A5\uC774 \uC544\uB2C8\uB2E4."
+        },
+        {
+          "flowOrder": 54,
+          "stepKey": "application.current-work-projector",
+          "dependsOnStepKeys": [
+            "contract.active-delivery",
+            "contract.offer"
+          ],
+          "executionStage": "Projection",
+          "layer": "Application",
+          "componentType": "Ssalddel.Application.Driver.Food.FoodDeliveryCurrentWorkProjector",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.CurrentWorkProjection.cs",
+          "sourceLine": 25,
+          "responsibility": "\uD655\uC778\uB41C \uC81C\uC548\u00B7\uC6B4\uC1A1\u00B7\uC2DC\uB3C4 \uC790\uB8CC\uB97C \uD604\uC7AC \uC5C5\uBB34 \uC751\uB2F5 \uAC12\uC73C\uB85C \uBCC0\uD658\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uC774 projection\uC740 \uC785\uB825 \uC0AC\uBCF8\uB9CC \uBCC0\uD658\uD55C\uB2E4. DB \uC870\uD68C\uB098 \uC0C1\uD0DC \uBCC0\uACBD\u00B7\uC678\uBD80 \uD638\uCD9C\uC744 \uC2E4\uD589\uD558\uC9C0 \uC54A\uC73C\uBA70 \uC804\uB2EC\u00B7\uC218\uB839\u00B7\uC2E4\uC9C0\uAE09 \uC0C1\uD0DC\uB97C \uD569\uCE58\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 55,
+          "stepKey": "application.driver-offer-query",
+          "dependsOnStepKeys": [
+            "contract.active-delivery",
+            "contract.offer"
+          ],
+          "executionStage": "Query",
+          "layer": "Application",
+          "componentType": "\uC0B4\uB730.Services.Dispatch.Recommendation.\uC74C\uC2DD\uBC30\uB2EC\uAE30\uC0AC\uC5C5\uBB34Service",
+          "contractType": "\uC0B4\uB730.Services.Dispatch.Recommendation.I\uC74C\uC2DD\uBC30\uB2EC\uAE30\uC0AC\uC5C5\uBB34Service",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Query.cs",
+          "sourceLine": 41,
+          "responsibility": "\uD604\uC7AC \uAE30\uC0AC\uC5D0\uAC8C \uC720\uD6A8\uD55C \uC81C\uC548\uACFC \uC218\uD589 \uC5C5\uBB34\uB97C \uC870\uD68C\uD55C\uB2E4.",
+          "effects": [
+            "NetworkCall",
+            "PersistentRead",
+            "PersistentWrite"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [
+            "OperationalState"
+          ],
+          "boundary": "SQL \uC804\uBB38 \uC0C1\uD0DC\uB294 \uC870\uD68C\uB9CC \uD55C\uB2E4. \uACF5\uD1B5 \uC218\uC2E0 \uC0C1\uD0DC \uC870\uD68C\uB294 \uC601\uC18D \uC6D0\uC7A5 \uAE30\uC900 Redis \uD22C\uC601\uC744 \uC7AC\uAD6C\uC131\uD560 \uC218 \uC788\uC73C\uBA70 \uC218\uC2E0 \uC758\uC0AC \uC790\uCCB4\uB97C \uBC14\uAFB8\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 70,
+          "stepKey": "application.work-start",
+          "dependsOnStepKeys": [
+            "application.work-transition-lock",
+            "contract.work-start-request",
+            "contract.work-start-response",
+            "domain.work-start-followup"
+          ],
+          "executionStage": "Confirm",
+          "layer": "Application",
+          "componentType": "Ssalddel.Application.Driver.Work.\uC6B4\uD589\uC2DC\uC791CommandHandler",
+          "contractType": "Ssalddel.Application.Driver.Work.\uC6B4\uD589\uC2DC\uC791Command",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Application/Driver/Work/Handlers/\uC6B4\uD589\uC2DC\uC791CommandHandler.cs",
+          "sourceLine": 29,
+          "responsibility": "\uAD8C\uD55C\uACFC \uC694\uCCAD \uC18C\uC720\uAD8C\uC744 \uAC80\uC99D\uD574 \uADFC\uBB34\uC640 \uC74C\uC2DD \uC6B4\uD589 \uC2DC\uC791 \uD6C4\uC18D \uC758\uB3C4\uB97C \uD568\uAED8 \uD655\uC815\uD55C\uB2E4.",
+          "effects": [
+            "NetworkCall",
+            "ThirdPartyApiCall",
+            "PersistentRead",
+            "PersistentWrite",
+            "MayIncurExternalCost",
+            "StateMutation"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [
+            "OperationalState"
+          ],
+          "boundary": "\uB3D9\uC77C \uC694\uCCAD\u00B7\uB3D9\uC77C \uC785\uB825\uC740 \uAC19\uC740 SQL \uADFC\uBB34\uB97C \uBC18\uD658\uD55C\uB2E4. \uC74C\uC2DD \uC2DC\uC791\uC758 SQL commit\uACFC \uC778\uB371\uC2A4 \uD6C4\uC18D \uC131\uACF5\uC740 \uBCC4\uB3C4\uB2E4. \uAC19\uC740 Handler\uC758 \uD654\uBB3C \uBD84\uAE30\uB294 \uAE30\uC874 \uC989\uC2DC \uD6C4\uC18D\u00B7\uCD94\uCC9C\uC744 \uD1B5\uD574 \uC678\uBD80 \uACBD\uB85C API\uC640 \uD478\uC2DC\uB97C \uD638\uCD9C\uD560 \uC218 \uC788\uC73C\uBA70 \uC74C\uC2DD \uC2DC\uC791\uC5D0\uB294 \uADF8 \uCD94\uCC9C \uD638\uCD9C\uC744 \uC801\uC6A9\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 75,
+          "stepKey": "application.work-status",
+          "dependsOnStepKeys": [
+            "contract.work-status",
+            "domain.driver-shift"
+          ],
+          "executionStage": "Query",
+          "layer": "Application",
+          "componentType": "Ssalddel.Application.Driver.Work.\uC6B4\uD589\uC0C1\uD0DC\uC870\uD68CQueryHandler",
+          "contractType": "Ssalddel.Application.Driver.Work.\uC6B4\uD589\uC0C1\uD0DC\uC870\uD68CQuery",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Application/Driver/Work/Handlers/\uC6B4\uD589\uC0C1\uD0DC\uC870\uD68CQueryHandler.cs",
+          "sourceLine": 12,
+          "responsibility": "SQL \uC6B4\uD589\u00B7\uCD5C\uC2E0 \uADFC\uBB34 \uC18C\uC720\uAD8C\uACFC \uC704\uCE58 \uC778\uB371\uC2A4\uB97C \uD568\uAED8 \uC7AC\uC870\uD68C\uD55C\uB2E4.",
+          "effects": [
+            "NetworkCall",
+            "PersistentRead"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [],
+          "boundary": "\uC6B4\uD589 \uC0C1\uD0DC\u00B7\uC2DC\uC791 \uC694\uCCAD ID\u00B7\uC2E4\uD589\uC720\uD615\uC758 \uAD8C\uC704\uB294 SQL\uC774\uBA70 \uC704\uCE58\u00B7Aging\uC740 Redis \uB610\uB294 \uC124\uC815\uB41C \uC778\uB371\uC2A4 \uC0AC\uBCF8\uC774\uB2E4. \uC778\uB371\uC2A4\uB85C SQL \uC6B4\uD589\uC744 \uBCF5\uC6D0\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 80,
+          "stepKey": "application.work-stop",
+          "dependsOnStepKeys": [
+            "application.work-transition-lock",
+            "domain.driver-shift"
+          ],
+          "executionStage": "Confirm",
+          "layer": "Application",
+          "componentType": "Ssalddel.Application.Driver.Work.\uC6B4\uD589\uC885\uB8CCCommandHandler",
+          "contractType": "Ssalddel.Application.Driver.Work.\uC6B4\uD589\uC885\uB8CCCommand",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Application/Driver/Work/Handlers/\uC6B4\uD589\uC885\uB8CCCommandHandler.cs",
+          "sourceLine": 19,
+          "responsibility": "\uAD8C\uD55C \uAC80\uC99D \uD6C4 SQL \uADFC\uBB34\uB97C \uC885\uB8CC\uD558\uACE0 \uC2E4\uD589 \uC778\uB371\uC2A4\uB97C \uC815\uB9AC\uD55C\uB2E4.",
+          "effects": [
+            "NetworkCall",
+            "PersistentRead",
+            "PersistentWrite",
+            "StateMutation"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [
+            "OperationalState"
+          ],
+          "boundary": "\uC2DC\uC791\u00B7GPS\u00B7\uD6C4\uC18D\uACFC \uAC19\uC740 \uAE30\uC0AC \uC7A0\uAE08\uC744 \uC0AC\uC6A9\uD55C\uB2E4. \uC778\uB371\uC2A4 \uC815\uB9AC \uC2E4\uD328\uB294 \uB85C\uADF8\uC5D0 \uB0A8\uAE30\uACE0 SQL \uC885\uB8CC\uB97C \uBCF4\uC874\uD558\uBA70 \uAE30\uC874 \uBA85\uC2DC\uC801 \uC218\uC2E0 OFF\uC640 \uC5C5\uBB34 \uC644\uB8CC\uB97C \uD569\uCE58\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 85,
+          "stepKey": "application.work-location",
+          "dependsOnStepKeys": [
+            "application.work-transition-lock",
+            "contract.work-status"
+          ],
+          "executionStage": "Projection",
+          "layer": "Application",
+          "componentType": "Ssalddel.Application.Driver.Work.\uC704\uCE58\uAC31\uC2E0CommandHandler",
+          "contractType": "Ssalddel.Application.Driver.Work.\uC704\uCE58\uAC31\uC2E0Command",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Application/Driver/Work/Handlers/\uC704\uCE58\uAC31\uC2E0CommandHandler.cs",
+          "sourceLine": 24,
+          "responsibility": "\uD604\uC7AC \uADFC\uBB34\u00B7\uC571 \uC18C\uC720\uAD8C\uC744 \uAC80\uC99D\uD574 GPS \uD22C\uC601\uACFC \uC811\uADFC\u00B7\uC704\uCE58 \uD6C4\uC18D\uC744 \uAC31\uC2E0\uD55C\uB2E4.",
+          "effects": [
+            "NetworkCall",
+            "ThirdPartyApiCall",
+            "PersistentRead",
+            "PersistentWrite",
+            "MayIncurExternalCost",
+            "StateMutation"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [
+            "OperationalState"
+          ],
+          "boundary": "\uC885\uB8CC\uC640 \uAC19\uC740 \uAE30\uC0AC \uC7A0\uAE08\uC73C\uB85C \uB2A6\uC740 GPS\uC758 \uC6B4\uD589 \uBD80\uD65C\uC744 \uB9C9\uB294\uB2E4. \uC678\uBD80 \uC5ED\uC9C0\uC624\uCF54\uB529\uC740 \uAD6C \uB2E8\uC704 \uACF5\uAC1C \uB3D9\uC758\uAC00 \uC788\uC744 \uB54C\uB9CC \uD638\uCD9C\uD558\uBA70 \uACE0\uAC1D \uACBD\uB85C\uB098 \uBC30\uB2EC \uC644\uB8CC\uB97C \uD655\uC815\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 110,
+          "stepKey": "application.current-work",
+          "dependsOnStepKeys": [
+            "application.current-bundle-policy",
+            "application.current-work-projector",
+            "application.driver-offer-query",
+            "contract.current-work"
+          ],
+          "executionStage": "Query",
+          "layer": "Application",
+          "componentType": "Ssalddel.Application.Driver.Food.FoodDeliveryDriverWorkspaceUseCase",
+          "contractType": "Ssalddel.Application.Driver.Food.IFoodDeliveryDriverWorkspaceUseCase",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.cs",
+          "sourceLine": 24,
+          "responsibility": "\uC815\uC0B0\uC744 \uC77D\uC9C0 \uC54A\uACE0 \uD604\uC7AC \uC81C\uC548\u00B7\uC218\uD589 \uC2DC\uB3C4\u00B7\uC870\uB9AC \uC0C1\uD0DC\uB97C \uC870\uD569\uD55C\uB2E4.",
+          "effects": [
+            "NetworkCall",
+            "PersistentRead",
+            "PersistentWrite"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [
+            "OperationalState"
+          ],
+          "boundary": "GetCurrentWorkAsync\uB294 \uC6D4 \uC815\uC0B0\u00B7\uC8FC\uBB38\uBCC4 \uC815\uC0B0\u00B7\uC644\uB8CC \uC0C1\uC138\uB97C \uD638\uCD9C\uD558\uC9C0 \uC54A\uB294\uB2E4. SQL \uC804\uBB38 \uC0C1\uD0DC\uB294 \uC870\uD68C\uB9CC \uD558\uBA70 \uC704\uC784\uD55C \uC218\uC2E0 \uC870\uD68C\uAC00 Redis \uD22C\uC601\uC744 \uC7AC\uAD6C\uC131\uD560 \uC218 \uC788\uB2E4."
+        },
+        {
+          "flowOrder": 115,
+          "stepKey": "application.legacy-workspace",
+          "dependsOnStepKeys": [
+            "application.current-work",
+            "contract.legacy-workspace"
+          ],
+          "executionStage": "Query",
+          "layer": "Application",
+          "componentType": "Ssalddel.Application.Driver.Food.FoodDeliveryDriverWorkspaceUseCase",
+          "contractType": "Ssalddel.Application.Driver.Food.IFoodDeliveryDriverWorkspaceUseCase",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.cs",
+          "sourceLine": 24,
+          "responsibility": "\uAE30\uC874 workspace \uD638\uCD9C\uC5D0 \uD604\uC7AC \uC5C5\uBB34\uC640 \uC6D4\u00B7\uCD5C\uADFC \uC8FC\uBB38 \uC815\uC0B0\uC744 \uD568\uAED8 \uBC18\uD658\uD55C\uB2E4.",
+          "effects": [
+            "NetworkCall",
+            "PersistentRead",
+            "PersistentWrite"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [
+            "OperationalState"
+          ],
+          "boundary": "GetAsync \uD638\uD658 \uACBD\uACC4\uB2E4. \uC815\uC0B0 \uC870\uD68C \uC2E4\uD328\uB294 \uD604\uC7AC \uC5C5\uBB34\uAC00 \uC5C6\uB294 \uC815\uC0C1 \uC751\uB2F5\uC73C\uB85C \uC228\uAE30\uC9C0 \uC54A\uACE0 \uBCC4\uB3C4 \uC624\uB958\uB85C \uAD6C\uBD84\uD55C\uB2E4. \uC218\uB839 \uD655\uC778\uACFC \uC2E4\uC81C \uC9C0\uAE09 \uC644\uB8CC\uB97C \uCD94\uC815\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 120,
+          "stepKey": "application.driver-actions",
+          "dependsOnStepKeys": [
+            "application.driver-action-policy",
+            "contract.active-delivery",
+            "contract.driver-followup-port"
+          ],
+          "executionStage": "Confirm",
+          "layer": "Application",
+          "componentType": "\uC0B4\uB730.Services.Dispatch.Recommendation.\uC74C\uC2DD\uBC30\uB2EC\uAE30\uC0AC\uC5C5\uBB34Service",
+          "contractType": "\uC0B4\uB730.Services.Dispatch.Recommendation.I\uC74C\uC2DD\uBC30\uB2EC\uAE30\uC0AC\uC5C5\uBB34Service",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs",
+          "sourceLine": 86,
+          "responsibility": "\uAE30\uC0AC \uC218\uB77D\u00B7\uAC70\uC808\u00B7\uB3C4\uCC29\u00B7\uC911\uB2E8\u00B7\uD53D\uC5C5\u00B7\uC804\uB2EC\uC758 \uAD8C\uD55C\u00B7Revision\u00B7\uD604\uC7AC \uC0C1\uD0DC \uC804\uC774\uB97C \uC870\uC728\uD55C\uB2E4.",
+          "effects": [
+            "NetworkCall",
+            "ThirdPartyApiCall",
+            "PersistentRead",
+            "PersistentWrite",
+            "MayIncurExternalCost",
+            "StateMutation"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [
+            "OperationalState"
+          ],
+          "boundary": "\uC218\uB77D\u00B7\uB3C4\uCC29\u00B7\uD53D\uC5C5\u00B7\uC804\uB2EC\uC740 SQL \uBCC0\uACBD\uACFC \uD6C4\uC18D \uC608\uC57D\uC744 \uAC19\uC740 transaction\uC73C\uB85C \uD655\uC815\uD55C\uB2E4. \uAC70\uC808\uC758 \uAE30\uC874 \uB450 \uB2E8\uACC4 \uC800\uC7A5\uC740 \uBCC4\uB3C4\uB2E4. \uAC70\uC808\u00B7\uC911\uB2E8\uC758 \uB2E4\uC74C \uD6C4\uBCF4 \uC9C4\uD589\uC740 \uC0C8 \uC81C\uC548 \uC694\uAE08 \uC0B0\uC815\uC744 \uD1B5\uD574 \uC678\uBD80 \uACBD\uB85C API\uB97C \uD638\uCD9C\uD560 \uC218 \uC788\uC73C\uBA70 \uC804\uB2EC\u00B7\uC218\uB839\u00B7\uC815\uC0B0\u00B7\uC2E4\uC9C0\uAE09\uC744 \uD569\uCE58\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 125,
+          "stepKey": "application.driver-state-persistence",
+          "dependsOnStepKeys": [
+            "application.driver-actions"
+          ],
+          "executionStage": "Persistence",
+          "layer": "Application",
+          "componentType": "\uC0B4\uB730.Services.Dispatch.Recommendation.\uC74C\uC2DD\uBC30\uB2EC\uAE30\uC0AC\uC5C5\uBB34Service",
+          "contractType": "\uC0B4\uB730.Services.Dispatch.Recommendation.I\uC74C\uC2DD\uBC30\uB2EC\uAE30\uC0AC\uC5C5\uBB34Service",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.StatePersistence.cs",
+          "sourceLine": 41,
+          "responsibility": "\uAE30\uC0AC \uB3D9\uC791\uC758 SQL \uC6D0\uCC9C\u00B7\uBC30\uB2EC \uC2DC\uB3C4\u00B7\uCC45\uC784 \uD310\uC815\uACFC transaction \uC800\uC7A5\uC744 \uCC98\uB9AC\uD55C\uB2E4.",
+          "effects": [
+            "PersistentRead",
+            "PersistentWrite",
+            "StateMutation"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [
+            "OperationalState"
+          ],
+          "boundary": "\uB3D9\uC2DC\uC131 \uCDA9\uB3CC\uACFC DB \uC800\uC7A5 \uC2E4\uD328\uB294 rollback\uD55C\uB2E4. SQL \uC804\uBB38 \uC0C1\uD0DC\uC640 Mongo \uC8FC\uBB38 \uC6D0\uC7A5\uC758 \uAD00\uACC4 \uAD8C\uC704\uB294 \uBCC4\uAC1C\uC774\uBA70 \uC800\uC7A5 \uC131\uACF5\uC774 \uC678\uBD80 \uD6C4\uC18D \uC644\uB8CC\uB97C \uB73B\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 130,
+          "stepKey": "application.daily-settlement",
+          "dependsOnStepKeys": [
+            "contract.food-workspace-port"
+          ],
+          "executionStage": "Query",
+          "layer": "Application",
+          "componentType": "Ssalddel.Application.Driver.Food.FoodDeliveryDriverWorkspaceUseCase",
+          "contractType": "Ssalddel.Application.Driver.Food.IFoodDeliveryDriverWorkspaceUseCase",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.DailySettlement.cs",
+          "sourceLine": 17,
+          "responsibility": "\uC804\uB2EC \uC644\uB8CC SQL \uC815\uC0B0 \uC6D0\uC7A5\uC744 \uD55C\uAD6D \uB0A0\uC9DC \uAE30\uC900\uC73C\uB85C \uC870\uD68C\uD55C\uB2E4.",
+          "effects": [
+            "PersistentRead"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [],
+          "boundary": "\uD604\uC7AC \uC81C\uC548\u00B7\uCD5C\uADFC 40\uAC74\uC758 \uD569\uACC4\uB85C \uB300\uCCB4\uD558\uC9C0 \uC54A\uB294\uB2E4. \uC804\uB2EC \uC644\uB8CC\uC77C\u00B7\uC218\uB839 \uD655\uC778\u00B7\uACF5\uC81C\u00B7\uBAA8\uC758 \uC9C0\uAE09\u00B7\uC2E4\uC81C \uC774\uCCB4\uB294 \uBCC4\uAC1C\uC774\uBA70 \uC2E4\uC81C \uC774\uCCB4 \uC644\uB8CC\uB97C \uC0DD\uC131\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 135,
+          "stepKey": "application.completed-detail",
+          "dependsOnStepKeys": [
+            "contract.food-workspace-port"
+          ],
+          "executionStage": "Query",
+          "layer": "Application",
+          "componentType": "Ssalddel.Application.Driver.Food.FoodDeliveryDriverWorkspaceUseCase",
+          "contractType": "Ssalddel.Application.Driver.Food.IFoodDeliveryDriverWorkspaceUseCase",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.CompletedDetail.cs",
+          "sourceLine": 19,
+          "responsibility": "\uAE30\uC0AC \uC18C\uC720\uAD8C\u00B7\uC870\uD68C \uAE30\uD55C\u00B7\uC2DC\uB3C4 \uC5F0\uACB0\uC774 \uD655\uC778\uB41C \uC644\uB8CC \uC0C1\uC138\uB9CC \uBC18\uD658\uD55C\uB2E4.",
+          "effects": [
+            "PersistentRead"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [],
+          "boundary": "\uB2E4\uB978 \uAE30\uC0AC\uC758 \uC815\uC0B0 \uC874\uC7AC \uC5EC\uBD80\uB098 \uACE0\uAC1D \uC815\uBCF4\uB97C \uACF5\uAC1C\uD558\uC9C0 \uC54A\uB294\uB2E4. \uC870\uD68C \uC911 \uAE30\uD55C \uACBD\uACFC\uB3C4 \uB2E4\uC2DC \uCC28\uB2E8\uD558\uBA70 \uC644\uB8CC \uC0C1\uC138 \uC870\uD68C\uB294 \uD604\uC7AC \uC5C5\uBB34\uB098 \uC2E4\uC81C \uC9C0\uAE09 \uD310\uC815\uC774 \uC544\uB2C8\uB2E4."
+        },
+        {
+          "flowOrder": 140,
+          "stepKey": "application.driver-followups",
+          "dependsOnStepKeys": [
+            "application.driver-state-persistence",
+            "contract.driver-followup-intent"
+          ],
+          "executionStage": "Projection",
+          "layer": "Application",
+          "componentType": "\uC0B4\uB730.Services.Dispatch.Recommendation.\uC74C\uC2DD\uBC30\uB2EC\uAE30\uC0AC\uC5C5\uBB34Service",
+          "contractType": "\uC0B4\uB730.Services.Dispatch.Recommendation.I\uC74C\uC2DD\uBC30\uB2EC\uAE30\uC0AC\uC5C5\uBB34Service",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Followups.cs",
+          "sourceLine": 41,
+          "responsibility": "\uD655\uC815\uB41C \uAE30\uC0AC \uC0C1\uD0DC \uBCC0\uACBD\uC758 \uC6D0\uC7A5 \uB3D9\uAE30\uD654\u00B7\uC54C\uB9BC\u00B7\uD65C\uB3D9\u00B7\uC815\uC0B0 \uD6C4\uC18D\uC744 \uC804\uB2EC\uD55C\uB2E4.",
+          "effects": [
+            "NetworkCall",
+            "PersistentRead",
+            "PersistentWrite",
+            "StateMutation"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [
+            "OperationalState"
+          ],
+          "boundary": "\uC608\uC57D\uACFC \uC2E4\uC81C \uCC98\uB9AC\uB294 \uBCC4\uAC1C\uB2E4. \uC601\uC18D Outbox\uAC00 \uC788\uC73C\uBA74 \uC7AC\uCC98\uB9AC\uD558\uBA70 \uAE30\uC874 fallback\u00B7\uAC70\uC808\u00B7\uC6D4 \uC815\uC0B0\uC758 \uBCC4\uB3C4 \uACBD\uACC4\uB97C \uBCF4\uC874\uD55C\uB2E4. \uC751\uB2F5 \uC720\uC2E4\uC5D0\uC11C \uC678\uBD80 \uC218\uC2E0\uC758 \uC815\uD655\uD788 \uD55C \uBC88 \uC804\uB2EC\uC744 \uBCF4\uC7A5\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 150,
+          "stepKey": "infrastructure.work-start-followup",
+          "dependsOnStepKeys": [
+            "application.work-start",
+            "application.work-transition-lock",
+            "contract.work-start-followup-port",
+            "infrastructure.work-start-followup-mapping"
+          ],
+          "executionStage": "Projection",
+          "layer": "Infrastructure",
+          "componentType": "\uC0B4\uB730.Services.Dispatch.Queue.\uAE30\uC0AC\uC6B4\uD589\uC2DC\uC791\uD6C4\uC18DService",
+          "contractType": "\uC0B4\uB730.Services.Dispatch.Queue.I\uAE30\uC0AC\uC6B4\uD589\uC2DC\uC791\uD6C4\uC18DService",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Services/Dispatch/Queue/\uAE30\uC0AC\uC6B4\uD589\uC2DC\uC791\uD6C4\uC18DService.cs",
+          "sourceLine": 21,
+          "responsibility": "SQL\uC758 \uD604\uC7AC \uADFC\uBB34\uB97C \uC2E4\uD589 \uC778\uB371\uC2A4\uB85C \uC7AC\uAD6C\uC131\uD558\uACE0 \uC2E4\uD328 \uC7AC\uC2DC\uB3C4\uB97C \uBCF4\uC874\uD55C\uB2E4.",
+          "effects": [
+            "NetworkCall",
+            "PersistentRead",
+            "PersistentWrite",
+            "StateMutation"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [
+            "OperationalState"
+          ],
+          "boundary": "\uC885\uB8CC\u00B7\uC0C8 \uADFC\uBB34 \uB4A4\uC758 \uC624\uB798\uB41C \uC791\uC5C5\uC740 \uC778\uB371\uC2A4\uB97C \uB418\uC0B4\uB9AC\uC9C0 \uC54A\uB294\uB2E4. \uAC19\uC740 \uADFC\uBB34 GPS\u00B7Aging\uC744 \uCD08\uAE30\uD654\uD558\uC9C0 \uC54A\uC73C\uBA70 \uC218\uC2E0 \uC758\uC0AC\u00B7\uCD94\uCC9C\uC740 \uBCC0\uACBD\uD558\uC9C0 \uC54A\uB294\uB2E4. SQL\uACFC Redis\uB294 \uBCC4\uB3C4 \uACBD\uACC4\uB2E4."
+        },
+        {
+          "flowOrder": 160,
+          "stepKey": "infrastructure.driver-followup-outbox",
+          "dependsOnStepKeys": [
+            "application.driver-followups",
+            "contract.driver-followup-port"
+          ],
+          "executionStage": "Persistence",
+          "layer": "Infrastructure",
+          "componentType": "Ssalddel.Services.Community.\uC74C\uC2DD\uB9C8\uD2B8\uC6D0\uC7A5\uB3D9\uAE30\uD654OutboxService",
+          "contractType": "Ssalddel.Services.Community.I\uC74C\uC2DD\uAE30\uC0AC\uD6C4\uC18DOutboxService",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs",
+          "sourceLine": 60,
+          "responsibility": "\uAE30\uC0AC \uD6C4\uC18D \uC758\uB3C4\uB97C \uAE30\uC874 SQL Outbox\uC5D0\uC11C \uBA71\uB4F1 \uC608\uC57D\uD558\uACE0 \uCD5C\uC2E0 \uC6D0\uCC9C\uC73C\uB85C \uCC98\uB9AC\uD55C\uB2E4.",
+          "effects": [
+            "NetworkCall",
+            "PersistentRead",
+            "PersistentWrite",
+            "StateMutation"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [
+            "OperationalState"
+          ],
+          "boundary": "\uC608\uC57D\uC740 \uD638\uCD9C\uC790 transaction\uC5D0 \uACB0\uC18D\uD558\uACE0 \uCC98\uB9AC \uC2DC \uCD5C\uC2E0 \uC815\uBCF8\u00B7\uAC1C\uC778\uC815\uBCF4 \uD30C\uAE30 \uC7A5\uBCBD\uC744 \uB2E4\uC2DC \uD655\uC778\uD55C\uB2E4. SQL \uC804\uBB38 \uC0C1\uD0DC\u00B7Mongo \uAD00\uACC4 \uD22C\uC601\u00B7\uC678\uBD80 \uC54C\uB9BC\uC740 \uBCC4\uAC1C\uC774\uBA70 \uC218\uB839\u00B7\uC2E4\uC9C0\uAE09\uC744 \uD655\uC815\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 170,
+          "stepKey": "infrastructure.work-start-worker",
+          "dependsOnStepKeys": [
+            "infrastructure.work-start-followup"
+          ],
+          "executionStage": "Tick",
+          "layer": "Infrastructure",
+          "componentType": "\uC0B4\uB730.Services.Dispatch.Queue.\uAE30\uC0AC\uC6B4\uD589\uC2DC\uC791\uD6C4\uC18DWorker",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Services/Dispatch/Queue/\uAE30\uC0AC\uC6B4\uD589\uC2DC\uC791\uD6C4\uC18DWorker.cs",
+          "sourceLine": 11,
+          "responsibility": "\uC8FC\uAE30\uC801\uC73C\uB85C \uC0C8 scope\uC5D0\uC11C \uC6B4\uD589 \uC2DC\uC791 \uD6C4\uC18D \uB300\uAE30\uB97C \uC7AC\uCC98\uB9AC\uD55C\uB2E4.",
+          "effects": [
+            "NetworkCall",
+            "PersistentRead",
+            "PersistentWrite",
+            "StateMutation"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [
+            "OperationalState"
+          ],
+          "boundary": "\uAE30\uC874 pending \uC791\uC5C5\uB9CC \uCC98\uB9AC\uD558\uBA70 \uC0C8 \uC6B4\uD589 \uC2DC\uC791\uC774\uB098 \uC790\uB3D9 \uC218\uC2E0 ON\uC744 \uB9CC\uB4E4\uC9C0 \uC54A\uB294\uB2E4. worker \uBC18\uBCF5\uC740 \uC2E4\uC81C \uC778\uB371\uC2A4 \uC131\uACF5\u00B7\uBC30\uCC28 \uC218\uB77D\u00B7\uC6B4\uC601 \uD65C\uC131\uD654 \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4."
+        },
+        {
+          "flowOrder": 180,
+          "stepKey": "api.food-driver",
+          "dependsOnStepKeys": [
+            "application.completed-detail",
+            "application.current-work",
+            "application.daily-settlement",
+            "application.driver-actions",
+            "application.legacy-workspace",
+            "application.work-location",
+            "application.work-start",
+            "application.work-status",
+            "application.work-stop"
+          ],
+          "executionStage": "Confirm",
+          "layer": "Api",
+          "componentType": "Ssalddel.Controllers.Driver.Food.\uC74C\uC2DD\uBC30\uB2EC\uAE30\uC0AC\uC5C5\uBB34Controller",
+          "contractType": "Ssalddel.Application.Driver.Food.IFoodDeliveryDriverWorkspaceUseCase",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Controllers/Driver/Food/\uC74C\uC2DD\uBC30\uB2EC\uAE30\uC0AC\uC5C5\uBB34Controller.cs",
+          "sourceLine": 44,
+          "responsibility": "\uC778\uC99D\uB41C \uC74C\uC2DD \uAE30\uC0AC\uC758 \uC870\uD68C\u00B7\uC6B4\uD589\u00B7\uBC30\uB2EC \uB3D9\uC791\uC744 \uAE30\uC874 route\uC640 \uC624\uB958 \uACC4\uC57D\uC73C\uB85C \uC5F0\uACB0\uD55C\uB2E4.",
+          "effects": [
+            "NetworkCall",
+            "ThirdPartyApiCall",
+            "PersistentRead",
+            "PersistentWrite",
+            "MayIncurExternalCost",
+            "StateMutation"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [
+            "OperationalState"
+          ],
+          "boundary": "workspace/current\uB294 \uC815\uC0B0 \uC5C6\uB294 \uC870\uD68C\uC774\uBA70 \uD638\uD658 workspace\u00B7\uC815\uC0B0\uC740 \uBCC4\uB3C4\uB2E4. \uD558\uC704 SQL\u00B7Mongo\u00B7Redis\u00B7\uC54C\uB9BC\u00B7\uACBD\uB85C API \uD6A8\uACFC\uB97C \uC704\uC784\uD558\uBA70 \uC11C\uBC84 \uAD8C\uD55C\u00B7Revision\u00B7\uAC1C\uC778\uC815\uBCF4\uC640 Operational/Simulation \uAC8C\uC774\uD2B8\uB97C \uBCF4\uC874\uD55C\uB2E4."
+        },
+        {
+          "flowOrder": 190,
+          "stepKey": "contract.workspace-port",
+          "dependsOnStepKeys": [],
+          "executionStage": "Definition",
+          "layer": "Contract",
+          "componentType": "Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.IRoleWorkspaceAdapter",
+          "assembly": "Ssalddel.Ui.Common",
+          "sourcePath": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs",
+          "sourceLine": 25,
+          "responsibility": "\uACF5\uD1B5 \uC5ED\uD560 \uC178\uC774 \uC870\uD68C\u00B7\uD589\uB3D9\u00B7\uCD08\uAE30\uD654\uB97C \uC704\uC784\uD558\uB294 \uD3EC\uD2B8",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uC5ED\uD560\uBCC4 \uAD6C\uD604\uC758 \uB0B4\uBD80 \uC800\uC7A5\uC18C\u00B7\uAD8C\uD55C\uC744 \uC18C\uC720\uD558\uC9C0 \uC54A\uB294 \uD638\uCD9C \uACC4\uC57D\uC774\uB2E4."
+        },
+        {
+          "flowOrder": 191,
+          "stepKey": "contract.recovery-port",
+          "dependsOnStepKeys": [],
+          "executionStage": "Definition",
+          "layer": "Contract",
+          "componentType": "Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.IRoleWorkspaceRecovery",
+          "assembly": "Ssalddel.Ui.Common",
+          "sourcePath": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs",
+          "sourceLine": 25,
+          "responsibility": "\uBBF8\uD655\uC815 \uD589\uB3D9\uACFC \uC815\uBCF8 \uC870\uD68C \uBCF5\uAD6C\uB97C \uACF5\uD1B5 \uC178\uC5D0 \uC81C\uACF5\uD558\uB294 \uD3EC\uD2B8",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uAD6C\uD604\uCCB4\uBCC4 \uBCF5\uAD6C \uD310\uB2E8\uC744 \uB178\uCD9C\uD558\uBA70 \uC7AC\uC804\uC1A1\u00B7\uC601\uC18D \uC800\uC7A5 \uC790\uCCB4\uB97C \uC218\uD589\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 200,
+          "stepKey": "ui.recovery-policy",
+          "dependsOnStepKeys": [
+            "contract.work-start-response",
+            "contract.work-status"
+          ],
+          "executionStage": "Definition",
+          "layer": "Domain",
+          "componentType": "Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food.FoodDriverWorkRecoveryPolicy",
+          "assembly": "Ssalddel.Ui.Common",
+          "sourcePath": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverWorkRecoveryPolicy.cs",
+          "sourceLine": 13,
+          "responsibility": "\uC6B4\uD589 \uC2DC\uC791\uC758 \uB3D9\uC77C \uC694\uCCAD\u00B7\uC815\uBCF8 \uC0C1\uD0DC\uC640 \uC751\uB2F5 \uC720\uC2E4 \uBCF5\uAD6C\uB97C \uC21C\uC218 \uD310\uC815",
+          "effects": [],
+          "readsFrom": [
+            "ClientPresentation"
+          ],
+          "writesTo": [],
+          "boundary": "\uC804\uB2EC\uBC1B\uC740 \uAC12\uB9CC \uD310\uC815\uD558\uBA70 HTTP\u00B7GPS\u00B7\uC554\uD638\uD654 \uC800\uC7A5\u00B7\uC11C\uBC84 \uC0C1\uD0DC \uBCC0\uACBD\uC740 \uD638\uCD9C\uC790\uAC00 \uC18C\uC720\uD55C\uB2E4."
+        },
+        {
+          "flowOrder": 203,
+          "stepKey": "ui.food-presentation",
+          "dependsOnStepKeys": [
+            "ui.recovery-policy"
+          ],
+          "executionStage": "Presentation",
+          "layer": "ViewModel",
+          "componentType": "Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food.FoodWorkspacePresentation",
+          "assembly": "Ssalddel.Ui.Common",
+          "sourcePath": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodWorkspacePresentation.cs",
+          "sourceLine": 11,
+          "responsibility": "\uC74C\uC2DD \uC5ED\uD560\uC758 \uAE08\uC561\u00B7\uC2DC\uAC01\u00B7\uAC00\uB2A5 \uD589\uB3D9\u00B7\uC9C0\uB3C4 \uD45C\uC2DC \uAC12\uC744 \uC21C\uC218 \uBCC0\uD658",
+          "effects": [],
+          "readsFrom": [
+            "ClientPresentation"
+          ],
+          "writesTo": [],
+          "boundary": "\uAE30\uC0AC \uC774\uC678 \uC74C\uC2DD \uC5ED\uD560\uB3C4 \uACF5\uC720\uD558\uB294 \uD45C\uC2DC \uB3C4\uAD6C\uC774\uBA70 \uC870\uD68C\u00B7\uBA85\uB839\u00B7\uC815\uC0B0 \uD655\uC815\uC740 \uC218\uD589\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 205,
+          "stepKey": "ui.stage-presentation",
+          "dependsOnStepKeys": [
+            "contract.active-delivery",
+            "ui.food-presentation"
+          ],
+          "executionStage": "Presentation",
+          "layer": "ViewModel",
+          "componentType": "Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food.FoodDriverStagePresentation",
+          "assembly": "Ssalddel.Ui.Common",
+          "sourcePath": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverStagePresentation.cs",
+          "sourceLine": 14,
+          "responsibility": "\uD655\uC778\uB41C \uBC30\uB2EC \uC0C1\uD0DC\u00B7\uAC00\uB2A5 \uD589\uB3D9\uC73C\uB85C \uD604\uC7AC \uC218\uD589 \uB2E8\uACC4\uC640 \uC8FC \uD589\uB3D9 \uD45C\uC2DC\uB97C \uC120\uD0DD",
+          "effects": [],
+          "readsFrom": [
+            "ClientPresentation"
+          ],
+          "writesTo": [],
+          "boundary": "\uC21C\uC218 \uD45C\uC2DC \uD310\uC815\uC774\uBA70 \uC2E4\uC81C \uD53D\uC5C5\u00B7\uC804\uB2EC \uAC00\uB2A5 \uAD8C\uD55C\uC744 \uC0DD\uC131\uD558\uAC70\uB098 \uC11C\uBC84 \uC0C1\uD0DC\uB97C \uBCC0\uACBD\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 206,
+          "stepKey": "ui.workspace-presentation",
+          "dependsOnStepKeys": [
+            "contract.current-work",
+            "ui.food-presentation",
+            "ui.stage-presentation"
+          ],
+          "executionStage": "Presentation",
+          "layer": "ViewModel",
+          "componentType": "Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food.FoodDriverWorkspacePresentation",
+          "assembly": "Ssalddel.Ui.Common",
+          "sourcePath": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverWorkspacePresentation.cs",
+          "sourceLine": 13,
+          "responsibility": "\uD655\uC815\uB41C \uD604\uC7AC \uBC30\uB2EC \uC751\uB2F5\uC744 \uB2E8\uACC4\uBCC4 \uBAA9\uC801\uC9C0\u00B7\uC694\uCCAD\u00B7\uC8FC\uBB38 \uCE74\uB4DC\uC640 \uC9C0\uB3C4 \uAC12\uC73C\uB85C \uBCC0\uD658",
+          "effects": [],
+          "readsFrom": [
+            "ClientPresentation"
+          ],
+          "writesTo": [],
+          "boundary": "\uC870\uD68C\u00B7\uBA85\uB839\u00B7\uC7A5\uCE58\u00B7\uC601\uC18D \uC800\uC7A5\uC744 \uC18C\uC720\uD558\uC9C0 \uC54A\uB294\uB2E4. \uBBF8\uD655\uC778 \uAC70\uB9AC\uC640 0\uC744 \uAD6C\uBD84\uD558\uBA70 \uC815\uC0B0\uC744 \uD604\uC7AC \uC870\uD68C\uC5D0 \uC11E\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 210,
+          "stepKey": "ui.food-driver-adapter",
+          "dependsOnStepKeys": [
+            "api.food-driver",
+            "contract.recovery-port",
+            "contract.workspace-port",
+            "ui.recovery-policy",
+            "ui.workspace-presentation"
+          ],
+          "executionStage": "Confirm",
+          "layer": "ClientAdapter",
+          "componentType": "Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food.FoodDriverRoleWorkspaceAdapter",
+          "contractType": "Ssalddel.Contracts.Driver.Food.FoodDeliveryDriverCurrentWorkDto",
+          "assembly": "Ssalddel.Ui.Common",
+          "sourcePath": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverRoleWorkspaceAdapter.cs",
+          "sourceLine": 16,
+          "responsibility": "\uC74C\uC2DD \uAE30\uC0AC \uD604\uC7AC \uC870\uD68C\u00B7\uC6B4\uD589 \uC2DC\uC791\u00B7\uC218\uC2E0 \uC758\uC0AC\u00B7\uC218\uD589 \uBA85\uB839\uACFC \uC815\uBCF8 \uBCF5\uAD6C\uB97C \uC870\uB9BD",
+          "effects": [
+            "NetworkCall",
+            "ThirdPartyApiCall",
+            "PersistentRead",
+            "PersistentWrite",
+            "UiStateMutation",
+            "MayIncurExternalCost",
+            "StateMutation"
+          ],
+          "readsFrom": [
+            "OperationalState",
+            "ClientPresentation"
+          ],
+          "writesTo": [
+            "OperationalState",
+            "ClientPresentation"
+          ],
+          "boundary": "\uC11C\uBC84 \uBA85\uB839 \uD6A8\uACFC\uB97C \uC704\uC784\uD55C\uB2E4. \uBBF8\uD655\uC815 ID\uB294 \uC774 \uAC1D\uCCB4 \uC218\uBA85\uC5D0\uB9CC \uBCF4\uC874\uD558\uBA70 \uB124\uC774\uD2F0\uBE0C \uC554\uD638\uD654 \uC800\uC7A5\uC744 \uC218\uD589\uD558\uC9C0 \uC54A\uB294\uB2E4. \uC790\uB3D9 \uC870\uD68C\uB294 \uC218\uB77D\uC774\uB098 \uC2DC\uC791 POST \uC790\uB3D9 \uC7AC\uC804\uC1A1\uC774 \uC544\uB2C8\uB2E4."
+        },
+        {
+          "flowOrder": 215,
+          "stepKey": "ui.food-action-view-model",
+          "dependsOnStepKeys": [
+            "api.food-driver",
+            "ui.food-presentation"
+          ],
+          "executionStage": "Confirm",
+          "layer": "ViewModel",
+          "componentType": "Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food.FoodRoleActionViewModel",
+          "assembly": "Ssalddel.Ui.Common",
+          "sourcePath": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodRoleActionViewModel.cs",
+          "sourceLine": 15,
+          "responsibility": "\uC74C\uC2DD \uC5ED\uD560\uC758 \uBCC4\uB3C4 \uD589\uB3D9 \uC785\uB825\u00B7\uD655\uC778\u00B7\uB3D9\uC77C \uC694\uCCAD \uBCF5\uAD6C\uB97C \uACC4\uC815 \uC218\uBA85\uC5D0 \uACB0\uC18D",
+          "effects": [
+            "NetworkCall",
+            "ThirdPartyApiCall",
+            "PersistentRead",
+            "PersistentWrite",
+            "UiStateMutation",
+            "MayIncurExternalCost",
+            "StateMutation"
+          ],
+          "readsFrom": [
+            "OperationalState",
+            "ClientPresentation"
+          ],
+          "writesTo": [
+            "OperationalState",
+            "ClientPresentation"
+          ],
+          "boundary": "\uAE30\uC0AC \uC911\uB2E8 \uB4F1 \uD655\uC778 \uC785\uB825\uC758 \uD074\uB77C\uC774\uC5B8\uD2B8 \uC870\uC728\uC774\uBA70 \uC11C\uBC84 \uAD8C\uD55C\u00B7\uC0C1\uD0DC \uC6D0\uC7A5\uC744 \uB300\uCCB4\uD558\uC9C0 \uC54A\uB294\uB2E4. \uB2E4\uB978 \uC74C\uC2DD \uC5ED\uD560\uACFC \uACF5\uC720\uD55C\uB2E4."
+        },
+        {
+          "flowOrder": 220,
+          "stepKey": "ui.workspace-view-model",
+          "dependsOnStepKeys": [
+            "contract.recovery-port",
+            "contract.workspace-port"
+          ],
+          "executionStage": "Presentation",
+          "layer": "ViewModel",
+          "componentType": "Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.RoleWorkspaceViewModel",
+          "assembly": "Ssalddel.Ui.Common",
+          "sourcePath": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/RoleWorkspaceViewModel.cs",
+          "sourceLine": 10,
+          "responsibility": "\uC5ED\uD560 \uD3EC\uD2B8\uC758 \uC870\uD68C\u00B7\uC120\uD0DD\u00B7\uACC4\uC815 \uC218\uBA85\u00B7\uC790\uB3D9 \uD655\uC778\uACFC \uD45C\uC2DC \uC0C1\uD0DC\uB97C \uC870\uC728",
+          "effects": [
+            "NetworkCall",
+            "ThirdPartyApiCall",
+            "PersistentRead",
+            "PersistentWrite",
+            "UiStateMutation",
+            "MayIncurExternalCost",
+            "StateMutation"
+          ],
+          "readsFrom": [
+            "ClientPresentation"
+          ],
+          "writesTo": [
+            "OperationalState",
+            "ClientPresentation"
+          ],
+          "boundary": "\uAD6C\uCCB4 \uC74C\uC2DD \uAE30\uC0AC Adapter\uC5D0 \uC758\uC874\uD558\uC9C0 \uC54A\uB294 \uACF5\uD1B5 \uC178\uC774\uB2E4. \uD3EC\uD2B8\uB85C \uC704\uC784\uD55C \uBA85\uB839 \uD6A8\uACFC\uB97C \uD3EC\uD568\uD558\uBA70 \uC5C5\uBB34 \uAD8C\uD55C\u00B7\uC601\uC18D \uC800\uC7A5\uC740 \uC11C\uBC84\uAC00 \uC18C\uC720\uD55C\uB2E4."
+        },
+        {
+          "flowOrder": 230,
+          "stepKey": "ui.role-map-view",
+          "dependsOnStepKeys": [
+            "ui.workspace-view-model"
+          ],
+          "executionStage": "Presentation",
+          "layer": "View",
+          "componentType": "Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.RoleMapWorkspace",
+          "assembly": "Ssalddel.Ui.Common",
+          "sourcePath": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/RoleMapWorkspace.razor",
+          "sourceLine": 3,
+          "responsibility": "\uC804\uCCB4 \uC9C0\uB3C4\uC640 \uB3C5\uB9BD\uB41C \uC0C1\uD0DC\uBCC4 \uCE74\uB4DC\u00B7\uD589\uB3D9\uC744 \uD45C\uC2DC\uD558\uB294 \uACF5\uD1B5 \uC5ED\uD560 \uD654\uBA74",
+          "effects": [
+            "NetworkCall",
+            "ThirdPartyApiCall",
+            "PersistentRead",
+            "PersistentWrite",
+            "UiStateMutation",
+            "MayIncurExternalCost",
+            "StateMutation"
+          ],
+          "readsFrom": [
+            "ClientPresentation"
+          ],
+          "writesTo": [
+            "OperationalState",
+            "ClientPresentation"
+          ],
+          "boundary": "Model\uC5D0 \uC870\uD68C\u00B7\uBA85\uB839\uC744 \uC704\uC784\uD55C\uB2E4. \uCE74\uB4DC \uB192\uC774\uB85C \uC9C0\uB3C4\uB97C \uBCC0\uACBD\uD558\uC9C0 \uC54A\uC73C\uBA70 \uC11C\uBC84 \uAD8C\uD55C\u00B7\uC2E4\uC81C GPS\u00B7\uC9C0\uB3C4 SDK \uC131\uACF5\uC744 \uC774 \uBA54\uD0C0\uB370\uC774\uD130\uAC00 \uC99D\uBA85\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        }
+      ],
+      "sourceBindings": [
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.contract.current-work",
+          "relatedStepKeys": [
+            "contract.current-work",
+            "contract.legacy-workspace",
+            "contract.offer",
+            "contract.active-delivery"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel.Contracts/Driver/Food/FoodDeliveryDriverWorkspaceDtos.cs",
+              "symbol": "StepKey = \u0022contract.current-work\u0022",
+              "line": 15
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.contract.work-start-request",
+          "relatedStepKeys": [
+            "contract.work-start-request",
+            "contract.work-start-response",
+            "contract.work-status"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel.Contracts/Driver/Work/\uAE30\uC0AC\uC6B4\uD589Dtos.cs",
+              "symbol": "StepKey = \u0022contract.work-start-request\u0022",
+              "line": 11
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.domain.driver-shift",
+          "relatedStepKeys": [
+            "domain.driver-shift"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel.Domain/\uAE30\uC0AC/DriverShift.cs",
+              "symbol": "StepKey = \u0022domain.driver-shift\u0022",
+              "line": 14
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.domain.work-start-followup",
+          "relatedStepKeys": [
+            "domain.work-start-followup"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel.Domain/\uAE30\uC0AC/DriverWorkStartFollowup.cs",
+              "symbol": "StepKey = \u0022domain.work-start-followup\u0022",
+              "line": 12
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.infrastructure.shift-mapping",
+          "relatedStepKeys": [
+            "infrastructure.shift-mapping"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel.Infrastructure/Persistence/Configurations/Driver/\uAE30\uC0AC\uADFC\uBB34Configuration.cs",
+              "symbol": "StepKey = \u0022infrastructure.shift-mapping\u0022",
+              "line": 17
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.infrastructure.work-start-followup-mapping",
+          "relatedStepKeys": [
+            "infrastructure.work-start-followup-mapping"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel.Infrastructure/Persistence/Configurations/Driver/DriverWorkStartFollowupConfiguration.cs",
+              "symbol": "StepKey = \u0022infrastructure.work-start-followup-mapping\u0022",
+              "line": 16
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.ui.role-map-view",
+          "relatedStepKeys": [
+            "ui.role-map-view"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/RoleMapWorkspace.razor",
+              "symbol": "StepKey = \u0022ui.role-map-view\u0022",
+              "line": 3
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.ui.workspace-view-model",
+          "relatedStepKeys": [
+            "ui.workspace-view-model"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/RoleWorkspaceViewModel.cs",
+              "symbol": "StepKey = \u0022ui.workspace-view-model\u0022",
+              "line": 10
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.ui.food-driver-adapter",
+          "relatedStepKeys": [
+            "ui.food-driver-adapter"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverRoleWorkspaceAdapter.cs",
+              "symbol": "StepKey = \u0022ui.food-driver-adapter\u0022",
+              "line": 16
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.ui.stage-presentation",
+          "relatedStepKeys": [
+            "ui.stage-presentation"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverStagePresentation.cs",
+              "symbol": "StepKey = \u0022ui.stage-presentation\u0022",
+              "line": 14
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.ui.recovery-policy",
+          "relatedStepKeys": [
+            "ui.recovery-policy"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverWorkRecoveryPolicy.cs",
+              "symbol": "StepKey = \u0022ui.recovery-policy\u0022",
+              "line": 13
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.ui.workspace-presentation",
+          "relatedStepKeys": [
+            "ui.workspace-presentation"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverWorkspacePresentation.cs",
+              "symbol": "StepKey = \u0022ui.workspace-presentation\u0022",
+              "line": 13
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.ui.food-action-view-model",
+          "relatedStepKeys": [
+            "ui.food-action-view-model"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodRoleActionViewModel.cs",
+              "symbol": "StepKey = \u0022ui.food-action-view-model\u0022",
+              "line": 15
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.ui.food-presentation",
+          "relatedStepKeys": [
+            "ui.food-presentation"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodWorkspacePresentation.cs",
+              "symbol": "StepKey = \u0022ui.food-presentation\u0022",
+              "line": 11
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.contract.workspace-port",
+          "relatedStepKeys": [
+            "contract.workspace-port",
+            "contract.recovery-port"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs",
+              "symbol": "StepKey = \u0022contract.workspace-port\u0022",
+              "line": 25
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.application.current-bundle-policy",
+          "relatedStepKeys": [
+            "application.current-bundle-policy"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.BundlePolicy.cs",
+              "symbol": "StepKey = \u0022application.current-bundle-policy\u0022",
+              "line": 25
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.application.completed-detail",
+          "relatedStepKeys": [
+            "application.completed-detail"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.CompletedDetail.cs",
+              "symbol": "StepKey = \u0022application.completed-detail\u0022",
+              "line": 19
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.contract.food-workspace-port",
+          "relatedStepKeys": [
+            "contract.food-workspace-port",
+            "application.current-work",
+            "application.legacy-workspace"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.cs",
+              "symbol": "StepKey = \u0022contract.food-workspace-port\u0022",
+              "line": 24
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.application.current-work-projector",
+          "relatedStepKeys": [
+            "application.current-work-projector"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.CurrentWorkProjection.cs",
+              "symbol": "StepKey = \u0022application.current-work-projector\u0022",
+              "line": 25
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.application.daily-settlement",
+          "relatedStepKeys": [
+            "application.daily-settlement"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.DailySettlement.cs",
+              "symbol": "StepKey = \u0022application.daily-settlement\u0022",
+              "line": 17
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.application.work-transition-lock",
+          "relatedStepKeys": [
+            "application.work-transition-lock"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Work/\uAE30\uC0AC\uC6B4\uD589\uC804\uC774Lock.cs",
+              "symbol": "StepKey = \u0022application.work-transition-lock\u0022",
+              "line": 16
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.application.work-status",
+          "relatedStepKeys": [
+            "application.work-status"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Work/Handlers/\uC6B4\uD589\uC0C1\uD0DC\uC870\uD68CQueryHandler.cs",
+              "symbol": "StepKey = \u0022application.work-status\u0022",
+              "line": 12
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.application.work-start",
+          "relatedStepKeys": [
+            "application.work-start"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Work/Handlers/\uC6B4\uD589\uC2DC\uC791CommandHandler.cs",
+              "symbol": "StepKey = \u0022application.work-start\u0022",
+              "line": 29
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.application.work-stop",
+          "relatedStepKeys": [
+            "application.work-stop"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Work/Handlers/\uC6B4\uD589\uC885\uB8CCCommandHandler.cs",
+              "symbol": "StepKey = \u0022application.work-stop\u0022",
+              "line": 19
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.application.work-location",
+          "relatedStepKeys": [
+            "application.work-location"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Work/Handlers/\uC704\uCE58\uAC31\uC2E0CommandHandler.cs",
+              "symbol": "StepKey = \u0022application.work-location\u0022",
+              "line": 24
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.api.food-driver",
+          "relatedStepKeys": [
+            "api.food-driver"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Controllers/Driver/Food/\uC74C\uC2DD\uBC30\uB2EC\uAE30\uC0AC\uC5C5\uBB34Controller.cs",
+              "symbol": "StepKey = \u0022api.food-driver\u0022",
+              "line": 44
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.contract.driver-followup-intent",
+          "relatedStepKeys": [
+            "contract.driver-followup-intent",
+            "contract.driver-followup-port"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Community/FoodDriverFollowupOutbox.cs",
+              "symbol": "StepKey = \u0022contract.driver-followup-intent\u0022",
+              "line": 15
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.infrastructure.driver-followup-outbox",
+          "relatedStepKeys": [
+            "infrastructure.driver-followup-outbox"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs",
+              "symbol": "StepKey = \u0022infrastructure.driver-followup-outbox\u0022",
+              "line": 60
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.contract.work-start-followup-port",
+          "relatedStepKeys": [
+            "contract.work-start-followup-port",
+            "infrastructure.work-start-followup"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Queue/\uAE30\uC0AC\uC6B4\uD589\uC2DC\uC791\uD6C4\uC18DService.cs",
+              "symbol": "StepKey = \u0022contract.work-start-followup-port\u0022",
+              "line": 21
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.infrastructure.work-start-worker",
+          "relatedStepKeys": [
+            "infrastructure.work-start-worker"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Queue/\uAE30\uC0AC\uC6B4\uD589\uC2DC\uC791\uD6C4\uC18DWorker.cs",
+              "symbol": "StepKey = \u0022infrastructure.work-start-worker\u0022",
+              "line": 11
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.application.driver-actions",
+          "relatedStepKeys": [
+            "application.driver-actions"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs",
+              "symbol": "StepKey = \u0022application.driver-actions\u0022",
+              "line": 86
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.application.driver-followups",
+          "relatedStepKeys": [
+            "application.driver-followups"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Followups.cs",
+              "symbol": "StepKey = \u0022application.driver-followups\u0022",
+              "line": 41
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.application.driver-action-policy",
+          "relatedStepKeys": [
+            "application.driver-action-policy"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Policies.cs",
+              "symbol": "StepKey = \u0022application.driver-action-policy\u0022",
+              "line": 40
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.application.driver-offer-query",
+          "relatedStepKeys": [
+            "application.driver-offer-query"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Query.cs",
+              "symbol": "StepKey = \u0022application.driver-offer-query\u0022",
+              "line": 41
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.application.driver-state-persistence",
+          "relatedStepKeys": [
+            "application.driver-state-persistence"
+          ],
+          "responsibility": "reflection \uB2E8\uACC4\uC758 \uC2E4\uC81C \uC120\uC5B8 \uD30C\uC77C \uBC0F partial \uCC45\uC784\uC744 \uBA85\uC2DC\uC801\uC73C\uB85C \uACB0\uC18D",
+          "boundary": "\uD0D0\uC0C9 \uC18C\uC2A4 \uC5F0\uACB0\uC774\uBA70 \uB7F0\uD0C0\uC784 \uD638\uCD9C\u00B7\uC644\uB8CC \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.StatePersistence.cs",
+              "symbol": "StepKey = \u0022application.driver-state-persistence\u0022",
+              "line": 41
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "native.current-work",
+          "relatedStepKeys": [
+            "api.food-driver",
+            "application.current-work"
+          ],
+          "responsibility": "\uB124\uC774\uD2F0\uBE0C \uC571\uC758 \uD604\uC7AC \uC5C5\uBB34 API\uC640 \uD654\uBA74 \uC815\uBCF8 \uC7AC\uC870\uD68C \uC9C4\uC785",
+          "boundary": "\uD604\uC7AC \uC870\uD68C\uB294 \uC815\uC0B0 \uC870\uD68C\uC640 \uBD84\uB9AC\uD55C\uB2E4. \uB124\uC774\uD2F0\uBE0C assembly\uB97C reflection\uC73C\uB85C \uBD88\uB7EC\uC624\uC9C0 \uC54A\uB294\uB2E4.",
+          "sources": [
+            {
+              "path": "FDriverApp/Services/FoodDeliveryDriverApiService.cs",
+              "symbol": "public Task\u003CFoodDeliveryDriverCurrentWorkDto\u003E GetCurrentWorkAsync",
+              "line": 71
+            },
+            {
+              "path": "FDriverApp/PageModels/MainPageModel.cs",
+              "symbol": "private async Task LoadWorkspaceAsync",
+              "line": 718
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "native.automatic-start",
+          "relatedStepKeys": [
+            "application.work-start",
+            "ui.recovery-policy"
+          ],
+          "responsibility": "\uC6B4\uD589 \uC2DC\uC791 \uD55C \uBC88\uACFC \uB3D9\uC77C \uC694\uCCAD ID\uB97C \uD1B5\uD55C \uC815\uBCF8 \uD655\uC778\u00B7\uC218\uC2E0 \uC758\uC0AC \uBCF5\uAD6C",
+          "boundary": "\uBD88\uD655\uC2E4\uD55C \uC2DC\uC791 POST\uB97C \uC790\uB3D9 \uC7AC\uC804\uC1A1\uD558\uC9C0 \uC54A\uACE0 \uC0AC\uC6A9\uC790\uC758 \uBA85\uC2DC\uC801 \uC218\uC2E0 OFF\uB97C \uBCF4\uC874\uD55C\uB2E4.",
+          "sources": [
+            {
+              "path": "FDriverApp/PageModels/MainPageModel.AutomaticWork.cs",
+              "symbol": "private async Task StartAutomaticWorkAsync",
+              "line": 28
+            },
+            {
+              "path": "FDriverApp/PageModels/MainPageModel.AutomaticWork.cs",
+              "symbol": "private async Task ReconcileAutomaticWorkAsync",
+              "line": 93
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "native.pending-recovery",
+          "relatedStepKeys": [
+            "ui.recovery-policy",
+            "contract.recovery-port"
+          ],
+          "responsibility": "\uACC4\uC815\uBCC4 \uBBF8\uD655\uC815 \uC694\uCCAD ID\uC758 \uB124\uC774\uD2F0\uBE0C \uC554\uD638\uD654 \uC800\uC7A5\u00B7\uBCF5\uC6D0",
+          "boundary": "\uACF5\uD1B5 UI \uAC1D\uCCB4\uC758 \uC77C\uC2DC \uBCF4\uC874\uACFC \uBCC4\uB3C4\uB2E4. \uC800\uC7A5\u00B7\uBCF5\uC6D0\uC740 \uC2E4\uC81C \uAE30\uAE30 \uC2E4\uD589 \uAC80\uC99D\uC744 \uB300\uC2E0\uD558\uC9C0 \uC54A\uB294\uB2E4.",
+          "sources": [
+            {
+              "path": "FDriverApp/PageModels/MainPageModel.FoodPending.cs",
+              "symbol": "private async Task RestorePendingOperationsAsync",
+              "line": 33
+            },
+            {
+              "path": "FDriverApp/PageModels/MainPageModel.FoodPending.cs",
+              "symbol": "private async Task PersistPendingOperationsAsync",
+              "line": 86
+            },
+            {
+              "path": "FDriverApp/Services/FDriverSecurePendingOperationStore.cs",
+              "symbol": "public sealed class FDriverSecurePendingOperationStore",
+              "line": 5
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "native.work-screen",
+          "relatedStepKeys": [
+            "ui.stage-presentation",
+            "ui.workspace-presentation",
+            "api.food-driver"
+          ],
+          "responsibility": "\uC804\uBB38 \uAE30\uC0AC \uC804\uCCB4 \uC9C0\uB3C4\u00B7\uB3C5\uB9BD \uCE74\uB4DC XAML\uACFC \uCF54\uB4DC\uBD80",
+          "boundary": "x:Class\uC640 namespace/partial class\uB97C \uD568\uAED8 \uAC80\uC0AC\uD55C\uB2E4. \uB124\uC774\uD2F0\uBE0C \uD654\uBA74\uC740 reflection View \uD615\uC2DD\uC73C\uB85C \uC704\uC7A5\uD558\uC9C0 \uC54A\uB294\uB2E4.",
+          "sources": [
+            {
+              "path": "FDriverApp/Pages/MainPage.xaml",
+              "symbol": "x:Class=\u0022FDriverApp.Pages.MainPage\u0022",
+              "line": 8
+            },
+            {
+              "path": "FDriverApp/Pages/MainPage.xaml.cs",
+              "symbol": "public partial class MainPage",
+              "line": 8
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "native.profile-settlement",
+          "relatedStepKeys": [
+            "application.legacy-workspace",
+            "application.daily-settlement",
+            "application.completed-detail"
+          ],
+          "responsibility": "\uB0B4 \uC815\uBCF4 \uC9C4\uC785\uC758 \uC815\uC0B0 \uC870\uD68C\uC640 \uC218\uD589 \uC790\uB3D9 \uC870\uD68C\uC758 \uBD84\uB9AC",
+          "boundary": "\uC815\uC0B0\u00B7\uC785\uAE08 \uC644\uB8CC\uB97C \uD604\uC7AC \uBC30\uB2EC \uC0C1\uD0DC\uC5D0\uC11C \uCD94\uB860\uD558\uC9C0 \uC54A\uB294\uB2E4.",
+          "sources": [
+            {
+              "path": "FDriverApp/PageModels/MainPageModel.FoodDailySettlement.cs",
+              "symbol": "public async Task RefreshProfileSettlementAsync",
+              "line": 29
+            },
+            {
+              "path": "FDriverApp/Services/FoodDeliveryDriverApiService.cs",
+              "symbol": "public Task\u003CFoodDeliveryDailySettlementDto\u003E GetDailySettlementAsync",
+              "line": 98
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "native.foreground-notification",
+          "relatedStepKeys": [
+            "ui.recovery-policy",
+            "application.current-work"
+          ],
+          "responsibility": "\uD654\uBA74 \uC804\uACBD \uBCF5\uADC0\u00B7\uBC30\uCC28 \uC54C\uB9BC \uB4A4 \uCD5C\uC2E0 \uC5C5\uBB34 \uC7AC\uC870\uD68C",
+          "boundary": "\uBC31\uADF8\uB77C\uC6B4\uB4DC \uC704\uCE58\u00B7\uC2E4\uC81C \uD478\uC2DC \uC218\uC2E0\u00B7\uC790\uB3D9 \uC218\uB77D \uC644\uB8CC\uC758 \uC99D\uAC70\uAC00 \uC544\uB2C8\uB2E4.",
+          "sources": [
+            {
+              "path": "FDriverApp/PageModels/MainPageModel.cs",
+              "symbol": "private async Task ResumeForegroundWorkspaceAsync",
+              "line": 192
+            },
+            {
+              "path": "FDriverApp/PageModels/MainPageModel.FoodNotifications.cs",
+              "symbol": "public async Task ResumeFoodNotificationWorkspaceAsync",
+              "line": 181
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "Warning",
+      "code": "CODEMAP100",
+      "featureKey": "food-driver",
+      "stepKey": "FDriverApp/Services/FDriverSecurePendingOperationStore.cs",
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 1\uAC1C: FDriverSecurePendingOperationStore"
+    },
+    {
+      "severity": "Warning",
+      "code": "CODEMAP100",
+      "featureKey": "food-driver",
+      "stepKey": "FDriverApp/Services/FoodDeliveryDriverApiService.cs",
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 2\uAC1C: FoodDeliveryDriverApiService, IFoodDeliveryDriverApiService"
+    },
+    {
+      "severity": "Warning",
+      "code": "CODEMAP100",
+      "featureKey": "food-driver",
+      "stepKey": "Ssalddel/Application/Driver/Food",
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 2\uAC1C: FoodDeliveryDriverRouteService, IFoodDeliveryDriverRouteService"
+    },
+    {
+      "severity": "Warning",
+      "code": "CODEMAP100",
+      "featureKey": "food-driver",
+      "stepKey": "Ssalddel/Controllers/Driver/Food",
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 2\uAC1C: \uB9C8\uD2B8\uAE30\uC0AC\uC5C5\uBB34Controller, \uBC30\uB2EC\uAE30\uC0AC\uC6D4\uC815\uC0B0Controller"
+    },
+    {
+      "severity": "Warning",
+      "code": "CODEMAP100",
+      "featureKey": "food-driver",
+      "stepKey": "Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs",
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 2\uAC1C: I\uC74C\uC2DD\uB9C8\uD2B8\uC6D0\uC7A5\uB3D9\uAE30\uD654OutboxService, I\uC74C\uC2DD\uB9C8\uD2B8\uC6D0\uC7A5\uB3D9\uAE30\uD654\uBCF5\uAD6CService"
+    },
+    {
+      "severity": "Warning",
+      "code": "CODEMAP100",
+      "featureKey": "food-driver",
+      "stepKey": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs",
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 1\uAC1C: I\uC74C\uC2DD\uBC30\uB2EC\uAE30\uC0AC\uC5C5\uBB34Service"
+    }
+  ]
+}

@@ -8,6 +8,7 @@ namespace Ssalddel.Contracts.Common.Metadata
 
 public static class SsalddelCodeFeatureKeys
 {
+    public const string FoodDriverWork = "food-driver-work";
     public const string FoodWorkflowLineage = "food-workflow-lineage";
     public const string ApifyActorIntegration = "apify-actor-integration";
     public const string AppContextImageBatch = "app-context-image-batch";

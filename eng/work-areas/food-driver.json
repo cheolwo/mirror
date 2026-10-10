@@ -1,0 +1,734 @@
+{
+  "key": "food-driver",
+  "version": "1",
+  "label": "음식 기사 업무",
+  "solutions": [
+    "Ssalddel.v3.5.slnx"
+  ],
+  "readFirst": [
+    "AGENTS.md",
+    "Ssalddel/AGENTS.md",
+    "Ssalddel.Ui.Common/AGENTS.md",
+    "Ssalddel.Tests/AGENTS.md",
+    "docs/Architecture/SsalddelCodeMetadata.md",
+    "docs/Architecture/FoodDriverCodeNavigation.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR/driver-code-metadata.r51.md",
+    "docs/ProjectOverview/page-docs/driver-workspace-sections-r1.md",
+    "Ssalddel.Tests/Architecture/FoodDriverCodeMetadataTests.cs",
+    "Ssalddel.Tests/Architecture/FoodDriverCodeMapSourceBindingTests.cs"
+  ],
+  "sourceRoots": [
+    "Ssalddel.Contracts/Driver/Work",
+    "Ssalddel.Contracts/Driver/Food",
+    "Ssalddel.Domain/기사",
+    "Ssalddel.Infrastructure/Persistence/Configurations/Driver",
+    "Ssalddel/Application/Driver/Work",
+    "Ssalddel/Application/Driver/Food",
+    "Ssalddel/Controllers/Driver/Food",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core",
+    "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs",
+    "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Query.cs",
+    "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Policies.cs",
+    "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.StatePersistence.cs",
+    "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Followups.cs",
+    "Ssalddel/Services/Dispatch/Queue/기사운행시작후속Service.cs",
+    "Ssalddel/Services/Dispatch/Queue/기사운행시작후속Worker.cs",
+    "Ssalddel/Services/Community/FoodDriverFollowupOutbox.cs",
+    "Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs",
+    "FDriverApp/Services/FoodDeliveryDriverApiService.cs",
+    "FDriverApp/Services/FDriverSecurePendingOperationStore.cs",
+    "FDriverApp/PageModels/MainPageModel.cs",
+    "FDriverApp/PageModels/MainPageModel.AutomaticWork.cs",
+    "FDriverApp/PageModels/MainPageModel.FoodPending.cs",
+    "FDriverApp/PageModels/MainPageModel.FoodDailySettlement.cs",
+    "FDriverApp/PageModels/MainPageModel.FoodNotifications.cs",
+    "FDriverApp/Pages/MainPage.xaml",
+    "FDriverApp/Pages/MainPage.xaml.cs"
+  ],
+  "excludedRoots": [
+    "bin",
+    "obj",
+    ".vs",
+    "artifacts",
+    "vendor",
+    "node_modules"
+  ],
+  "features": [
+    {
+      "key": "food-driver-work",
+      "label": "음식 기사 운행·현재 업무·수행·정산 경계",
+      "dependsOnFeatures": [],
+      "requiredStepKeys": [
+        "api.food-driver",
+        "application.completed-detail",
+        "application.current-bundle-policy",
+        "application.current-work",
+        "application.current-work-projector",
+        "application.daily-settlement",
+        "application.driver-action-policy",
+        "application.driver-actions",
+        "application.driver-followups",
+        "application.driver-offer-query",
+        "application.driver-state-persistence",
+        "application.legacy-workspace",
+        "application.work-location",
+        "application.work-start",
+        "application.work-status",
+        "application.work-stop",
+        "application.work-transition-lock",
+        "contract.active-delivery",
+        "contract.current-work",
+        "contract.driver-followup-intent",
+        "contract.driver-followup-port",
+        "contract.food-workspace-port",
+        "contract.legacy-workspace",
+        "contract.offer",
+        "contract.recovery-port",
+        "contract.work-start-followup-port",
+        "contract.work-start-request",
+        "contract.work-start-response",
+        "contract.work-status",
+        "contract.workspace-port",
+        "domain.driver-shift",
+        "domain.work-start-followup",
+        "infrastructure.driver-followup-outbox",
+        "infrastructure.shift-mapping",
+        "infrastructure.work-start-followup",
+        "infrastructure.work-start-followup-mapping",
+        "infrastructure.work-start-worker",
+        "ui.food-action-view-model",
+        "ui.food-driver-adapter",
+        "ui.food-presentation",
+        "ui.recovery-policy",
+        "ui.role-map-view",
+        "ui.stage-presentation",
+        "ui.workspace-presentation",
+        "ui.workspace-view-model"
+      ],
+      "sourceBindings": [
+        {
+          "key": "source.contract.current-work",
+          "relatedStepKeys": [
+            "contract.current-work",
+            "contract.legacy-workspace",
+            "contract.offer",
+            "contract.active-delivery"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel.Contracts/Driver/Food/FoodDeliveryDriverWorkspaceDtos.cs",
+              "symbol": "StepKey = \"contract.current-work\""
+            }
+          ]
+        },
+        {
+          "key": "source.contract.work-start-request",
+          "relatedStepKeys": [
+            "contract.work-start-request",
+            "contract.work-start-response",
+            "contract.work-status"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel.Contracts/Driver/Work/기사운행Dtos.cs",
+              "symbol": "StepKey = \"contract.work-start-request\""
+            }
+          ]
+        },
+        {
+          "key": "source.domain.driver-shift",
+          "relatedStepKeys": [
+            "domain.driver-shift"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel.Domain/기사/DriverShift.cs",
+              "symbol": "StepKey = \"domain.driver-shift\""
+            }
+          ]
+        },
+        {
+          "key": "source.domain.work-start-followup",
+          "relatedStepKeys": [
+            "domain.work-start-followup"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel.Domain/기사/DriverWorkStartFollowup.cs",
+              "symbol": "StepKey = \"domain.work-start-followup\""
+            }
+          ]
+        },
+        {
+          "key": "source.infrastructure.shift-mapping",
+          "relatedStepKeys": [
+            "infrastructure.shift-mapping"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel.Infrastructure/Persistence/Configurations/Driver/기사근무Configuration.cs",
+              "symbol": "StepKey = \"infrastructure.shift-mapping\""
+            }
+          ]
+        },
+        {
+          "key": "source.infrastructure.work-start-followup-mapping",
+          "relatedStepKeys": [
+            "infrastructure.work-start-followup-mapping"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel.Infrastructure/Persistence/Configurations/Driver/DriverWorkStartFollowupConfiguration.cs",
+              "symbol": "StepKey = \"infrastructure.work-start-followup-mapping\""
+            }
+          ]
+        },
+        {
+          "key": "source.ui.role-map-view",
+          "relatedStepKeys": [
+            "ui.role-map-view"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/RoleMapWorkspace.razor",
+              "symbol": "StepKey = \"ui.role-map-view\""
+            }
+          ]
+        },
+        {
+          "key": "source.ui.workspace-view-model",
+          "relatedStepKeys": [
+            "ui.workspace-view-model"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/RoleWorkspaceViewModel.cs",
+              "symbol": "StepKey = \"ui.workspace-view-model\""
+            }
+          ]
+        },
+        {
+          "key": "source.ui.food-driver-adapter",
+          "relatedStepKeys": [
+            "ui.food-driver-adapter"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverRoleWorkspaceAdapter.cs",
+              "symbol": "StepKey = \"ui.food-driver-adapter\""
+            }
+          ]
+        },
+        {
+          "key": "source.ui.stage-presentation",
+          "relatedStepKeys": [
+            "ui.stage-presentation"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverStagePresentation.cs",
+              "symbol": "StepKey = \"ui.stage-presentation\""
+            }
+          ]
+        },
+        {
+          "key": "source.ui.recovery-policy",
+          "relatedStepKeys": [
+            "ui.recovery-policy"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverWorkRecoveryPolicy.cs",
+              "symbol": "StepKey = \"ui.recovery-policy\""
+            }
+          ]
+        },
+        {
+          "key": "source.ui.workspace-presentation",
+          "relatedStepKeys": [
+            "ui.workspace-presentation"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverWorkspacePresentation.cs",
+              "symbol": "StepKey = \"ui.workspace-presentation\""
+            }
+          ]
+        },
+        {
+          "key": "source.ui.food-action-view-model",
+          "relatedStepKeys": [
+            "ui.food-action-view-model"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodRoleActionViewModel.cs",
+              "symbol": "StepKey = \"ui.food-action-view-model\""
+            }
+          ]
+        },
+        {
+          "key": "source.ui.food-presentation",
+          "relatedStepKeys": [
+            "ui.food-presentation"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodWorkspacePresentation.cs",
+              "symbol": "StepKey = \"ui.food-presentation\""
+            }
+          ]
+        },
+        {
+          "key": "source.contract.workspace-port",
+          "relatedStepKeys": [
+            "contract.workspace-port",
+            "contract.recovery-port"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs",
+              "symbol": "StepKey = \"contract.workspace-port\""
+            }
+          ]
+        },
+        {
+          "key": "source.application.current-bundle-policy",
+          "relatedStepKeys": [
+            "application.current-bundle-policy"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.BundlePolicy.cs",
+              "symbol": "StepKey = \"application.current-bundle-policy\""
+            }
+          ]
+        },
+        {
+          "key": "source.application.completed-detail",
+          "relatedStepKeys": [
+            "application.completed-detail"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.CompletedDetail.cs",
+              "symbol": "StepKey = \"application.completed-detail\""
+            }
+          ]
+        },
+        {
+          "key": "source.contract.food-workspace-port",
+          "relatedStepKeys": [
+            "contract.food-workspace-port",
+            "application.current-work",
+            "application.legacy-workspace"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.cs",
+              "symbol": "StepKey = \"contract.food-workspace-port\""
+            }
+          ]
+        },
+        {
+          "key": "source.application.current-work-projector",
+          "relatedStepKeys": [
+            "application.current-work-projector"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.CurrentWorkProjection.cs",
+              "symbol": "StepKey = \"application.current-work-projector\""
+            }
+          ]
+        },
+        {
+          "key": "source.application.daily-settlement",
+          "relatedStepKeys": [
+            "application.daily-settlement"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.DailySettlement.cs",
+              "symbol": "StepKey = \"application.daily-settlement\""
+            }
+          ]
+        },
+        {
+          "key": "source.application.work-transition-lock",
+          "relatedStepKeys": [
+            "application.work-transition-lock"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Work/기사운행전이Lock.cs",
+              "symbol": "StepKey = \"application.work-transition-lock\""
+            }
+          ]
+        },
+        {
+          "key": "source.application.work-status",
+          "relatedStepKeys": [
+            "application.work-status"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Work/Handlers/운행상태조회QueryHandler.cs",
+              "symbol": "StepKey = \"application.work-status\""
+            }
+          ]
+        },
+        {
+          "key": "source.application.work-start",
+          "relatedStepKeys": [
+            "application.work-start"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Work/Handlers/운행시작CommandHandler.cs",
+              "symbol": "StepKey = \"application.work-start\""
+            }
+          ]
+        },
+        {
+          "key": "source.application.work-stop",
+          "relatedStepKeys": [
+            "application.work-stop"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Work/Handlers/운행종료CommandHandler.cs",
+              "symbol": "StepKey = \"application.work-stop\""
+            }
+          ]
+        },
+        {
+          "key": "source.application.work-location",
+          "relatedStepKeys": [
+            "application.work-location"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Application/Driver/Work/Handlers/위치갱신CommandHandler.cs",
+              "symbol": "StepKey = \"application.work-location\""
+            }
+          ]
+        },
+        {
+          "key": "source.api.food-driver",
+          "relatedStepKeys": [
+            "api.food-driver"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Controllers/Driver/Food/음식배달기사업무Controller.cs",
+              "symbol": "StepKey = \"api.food-driver\""
+            }
+          ]
+        },
+        {
+          "key": "source.contract.driver-followup-intent",
+          "relatedStepKeys": [
+            "contract.driver-followup-intent",
+            "contract.driver-followup-port"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Community/FoodDriverFollowupOutbox.cs",
+              "symbol": "StepKey = \"contract.driver-followup-intent\""
+            }
+          ]
+        },
+        {
+          "key": "source.infrastructure.driver-followup-outbox",
+          "relatedStepKeys": [
+            "infrastructure.driver-followup-outbox"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs",
+              "symbol": "StepKey = \"infrastructure.driver-followup-outbox\""
+            }
+          ]
+        },
+        {
+          "key": "source.contract.work-start-followup-port",
+          "relatedStepKeys": [
+            "contract.work-start-followup-port",
+            "infrastructure.work-start-followup"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Queue/기사운행시작후속Service.cs",
+              "symbol": "StepKey = \"contract.work-start-followup-port\""
+            }
+          ]
+        },
+        {
+          "key": "source.infrastructure.work-start-worker",
+          "relatedStepKeys": [
+            "infrastructure.work-start-worker"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Queue/기사운행시작후속Worker.cs",
+              "symbol": "StepKey = \"infrastructure.work-start-worker\""
+            }
+          ]
+        },
+        {
+          "key": "source.application.driver-actions",
+          "relatedStepKeys": [
+            "application.driver-actions"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs",
+              "symbol": "StepKey = \"application.driver-actions\""
+            }
+          ]
+        },
+        {
+          "key": "source.application.driver-followups",
+          "relatedStepKeys": [
+            "application.driver-followups"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Followups.cs",
+              "symbol": "StepKey = \"application.driver-followups\""
+            }
+          ]
+        },
+        {
+          "key": "source.application.driver-action-policy",
+          "relatedStepKeys": [
+            "application.driver-action-policy"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Policies.cs",
+              "symbol": "StepKey = \"application.driver-action-policy\""
+            }
+          ]
+        },
+        {
+          "key": "source.application.driver-offer-query",
+          "relatedStepKeys": [
+            "application.driver-offer-query"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Query.cs",
+              "symbol": "StepKey = \"application.driver-offer-query\""
+            }
+          ]
+        },
+        {
+          "key": "source.application.driver-state-persistence",
+          "relatedStepKeys": [
+            "application.driver-state-persistence"
+          ],
+          "responsibility": "reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속",
+          "boundary": "탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.StatePersistence.cs",
+              "symbol": "StepKey = \"application.driver-state-persistence\""
+            }
+          ]
+        },
+        {
+          "key": "native.current-work",
+          "relatedStepKeys": [
+            "api.food-driver",
+            "application.current-work"
+          ],
+          "responsibility": "네이티브 앱의 현재 업무 API와 화면 정본 재조회 진입",
+          "boundary": "현재 조회는 정산 조회와 분리한다. 네이티브 assembly를 reflection으로 불러오지 않는다.",
+          "sources": [
+            {
+              "symbol": "public Task<FoodDeliveryDriverCurrentWorkDto> GetCurrentWorkAsync",
+              "path": "FDriverApp/Services/FoodDeliveryDriverApiService.cs"
+            },
+            {
+              "symbol": "private async Task LoadWorkspaceAsync",
+              "path": "FDriverApp/PageModels/MainPageModel.cs"
+            }
+          ]
+        },
+        {
+          "key": "native.automatic-start",
+          "relatedStepKeys": [
+            "application.work-start",
+            "ui.recovery-policy"
+          ],
+          "responsibility": "운행 시작 한 번과 동일 요청 ID를 통한 정본 확인·수신 의사 복구",
+          "boundary": "불확실한 시작 POST를 자동 재전송하지 않고 사용자의 명시적 수신 OFF를 보존한다.",
+          "sources": [
+            {
+              "symbol": "private async Task StartAutomaticWorkAsync",
+              "path": "FDriverApp/PageModels/MainPageModel.AutomaticWork.cs"
+            },
+            {
+              "symbol": "private async Task ReconcileAutomaticWorkAsync",
+              "path": "FDriverApp/PageModels/MainPageModel.AutomaticWork.cs"
+            }
+          ]
+        },
+        {
+          "key": "native.pending-recovery",
+          "relatedStepKeys": [
+            "ui.recovery-policy",
+            "contract.recovery-port"
+          ],
+          "responsibility": "계정별 미확정 요청 ID의 네이티브 암호화 저장·복원",
+          "boundary": "공통 UI 객체의 일시 보존과 별도다. 저장·복원은 실제 기기 실행 검증을 대신하지 않는다.",
+          "sources": [
+            {
+              "symbol": "private async Task RestorePendingOperationsAsync",
+              "path": "FDriverApp/PageModels/MainPageModel.FoodPending.cs"
+            },
+            {
+              "symbol": "private async Task PersistPendingOperationsAsync",
+              "path": "FDriverApp/PageModels/MainPageModel.FoodPending.cs"
+            },
+            {
+              "symbol": "public sealed class FDriverSecurePendingOperationStore",
+              "path": "FDriverApp/Services/FDriverSecurePendingOperationStore.cs"
+            }
+          ]
+        },
+        {
+          "key": "native.work-screen",
+          "relatedStepKeys": [
+            "ui.stage-presentation",
+            "ui.workspace-presentation",
+            "api.food-driver"
+          ],
+          "responsibility": "전문 기사 전체 지도·독립 카드 XAML과 코드부",
+          "boundary": "x:Class와 namespace/partial class를 함께 검사한다. 네이티브 화면은 reflection View 형식으로 위장하지 않는다.",
+          "sources": [
+            {
+              "symbol": "x:Class=\"FDriverApp.Pages.MainPage\"",
+              "path": "FDriverApp/Pages/MainPage.xaml"
+            },
+            {
+              "symbol": "public partial class MainPage",
+              "path": "FDriverApp/Pages/MainPage.xaml.cs"
+            }
+          ]
+        },
+        {
+          "key": "native.profile-settlement",
+          "relatedStepKeys": [
+            "application.legacy-workspace",
+            "application.daily-settlement",
+            "application.completed-detail"
+          ],
+          "responsibility": "내 정보 진입의 정산 조회와 수행 자동 조회의 분리",
+          "boundary": "정산·입금 완료를 현재 배달 상태에서 추론하지 않는다.",
+          "sources": [
+            {
+              "symbol": "public async Task RefreshProfileSettlementAsync",
+              "path": "FDriverApp/PageModels/MainPageModel.FoodDailySettlement.cs"
+            },
+            {
+              "symbol": "public Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync",
+              "path": "FDriverApp/Services/FoodDeliveryDriverApiService.cs"
+            }
+          ]
+        },
+        {
+          "key": "native.foreground-notification",
+          "relatedStepKeys": [
+            "ui.recovery-policy",
+            "application.current-work"
+          ],
+          "responsibility": "화면 전경 복귀·배차 알림 뒤 최신 업무 재조회",
+          "boundary": "백그라운드 위치·실제 푸시 수신·자동 수락 완료의 증거가 아니다.",
+          "sources": [
+            {
+              "symbol": "private async Task ResumeForegroundWorkspaceAsync",
+              "path": "FDriverApp/PageModels/MainPageModel.cs"
+            },
+            {
+              "symbol": "public async Task ResumeFoodNotificationWorkspaceAsync",
+              "path": "FDriverApp/PageModels/MainPageModel.FoodNotifications.cs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

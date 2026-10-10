@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using Ssalddel.CodeMap;
 using Ssalddel.Contracts.Common.Metadata;
 using Ssalddel.Interior.Contracts;
 using Ssalddel.Interior.Domain;
@@ -15,12 +16,38 @@ using Ssalddel.Simulation.Hosting.Controllers;
 using Ssalddel.Unity.Application;
 
 var repositoryRoot = FindRepositoryRoot();
-var manifestPath = Path.Combine(repositoryRoot, "eng", "work-areas", "simulation-unity.json");
+var workArea = ReadOption(args, "--work-area") ?? "simulation-unity";
+if (workArea is not ("simulation-unity" or "food-driver")
+    || (args.Contains("--work-area", StringComparer.Ordinal) && ReadOption(args, "--work-area") is null))
+{
+    Console.Error.WriteLine("--work-area는 simulation-unity 또는 food-driver여야 합니다.");
+    return 3;
+}
+var manifestPath = Path.Combine(repositoryRoot, "eng", "work-areas", workArea + ".json");
 var manifest = JsonSerializer.Deserialize<WorkAreaManifest>(
     File.ReadAllText(manifestPath, Encoding.UTF8),
-    JsonOptions()) ?? throw new InvalidOperationException("simulation-unity manifest를 읽을 수 없습니다.");
+    JsonOptions()) ?? throw new InvalidOperationException($"{workArea} manifest를 읽을 수 없습니다.");
+if (manifest.Key != workArea)
+{
+    Console.Error.WriteLine("manifest key와 --work-area가 일치하지 않습니다.");
+    return 3;
+}
+var manifestErrors = CodeMapSourceBindingValidator.ValidateManifest(repositoryRoot, manifest);
+if (manifestErrors.Length > 0)
+{
+    foreach (var diagnostic in manifestErrors)
+        Console.Error.WriteLine($"{diagnostic.Severity} {diagnostic.Code} {diagnostic.FeatureKey} {diagnostic.StepKey}: {diagnostic.Message}");
+    return 1;
+}
 
-var assemblies = new[]
+var assemblies = workArea == "food-driver" ? new[]
+{
+    Assembly.Load("Ssalddel"),
+    Assembly.Load("Ssalddel.Contracts"),
+    Assembly.Load("Ssalddel.Domain"),
+    Assembly.Load("Ssalddel.Infrastructure"),
+    Assembly.Load("Ssalddel.Ui.Common"),
+} : new[]
 {
     typeof(I실내공간조립Engine).Assembly,
     typeof(DeterministicInteriorLayoutEngine).Assembly,
@@ -44,21 +71,24 @@ var diagnostics = SsalddelCodeMetadataValidator.Validate(graph, requireNavigatio
 
 AddManifestDiagnostics(manifest, graph, diagnostics);
 AddAuthorityDiagnostics(graph, diagnostics);
-var sourceIndex = BuildSourceIndex(repositoryRoot, manifest, graph, diagnostics);
+var bindingResult = CodeMapSourceBindingValidator.Validate(repositoryRoot, manifest,
+    graph.Steps.Select(step => new CodeMapStepIdentity(step.FeatureKey, step.StepKey)).ToArray());
+diagnostics.AddRange(bindingResult.Diagnostics);
+var sourceIndex = BuildSourceIndex(repositoryRoot, manifest, graph, bindingResult.Bindings, diagnostics);
 AddCoverageWarnings(repositoryRoot, manifest, graph, diagnostics);
 
-var document = BuildDocument(manifest, graph, sourceIndex, diagnostics);
+var document = BuildDocument(repositoryRoot, manifest, graph, sourceIndex, bindingResult.Bindings, diagnostics);
 var json = JsonSerializer.Serialize(document, JsonOptions()) + Environment.NewLine;
 var markdown = BuildMarkdown(document);
-var jsonPath = Path.Combine(repositoryRoot, "docs", "AI", "generated", "simulation-unity-code-map.json");
-var markdownPath = Path.Combine(repositoryRoot, "docs", "AI", "generated", "simulation-unity-code-map.md");
+var jsonPath = Path.Combine(repositoryRoot, "docs", "AI", "generated", workArea + "-code-map.json");
+var markdownPath = Path.Combine(repositoryRoot, "docs", "AI", "generated", workArea + "-code-map.md");
 var hasErrors = diagnostics.Any(item =>
     item.Severity == SsalddelCodeMetadataDiagnosticSeverity.Error);
 
 var featureArgument = ReadOption(args, "--feature");
 if (!string.IsNullOrWhiteSpace(featureArgument))
 {
-    var feature = document.Features.SingleOrDefault(item => item.Key == featureArgument);
+    var feature = document.Features.FirstOrDefault(item => item.Key == featureArgument);
     if (feature is null)
     {
         Console.Error.WriteLine($"기능 키를 찾을 수 없습니다: {featureArgument}");
@@ -83,7 +113,7 @@ if (args.Contains("--write", StringComparer.Ordinal))
     Directory.CreateDirectory(Path.GetDirectoryName(jsonPath)!);
     File.WriteAllText(jsonPath, json, new UTF8Encoding(false));
     File.WriteAllText(markdownPath, markdown, new UTF8Encoding(false));
-    Console.WriteLine("Simulation·Unity 코드 지도를 갱신했습니다.");
+    Console.WriteLine($"{document.WorkAreaLabel} 코드 지도를 갱신했습니다.");
 }
 else
 {
@@ -97,7 +127,7 @@ else
         return 2;
     }
 
-    Console.WriteLine("Simulation·Unity 코드 지도가 현재 메타데이터와 일치합니다.");
+    Console.WriteLine($"{document.WorkAreaLabel} 코드 지도가 현재 메타데이터와 일치합니다.");
 }
 
 foreach (var diagnostic in diagnostics)
@@ -146,6 +176,9 @@ static void AddManifestDiagnostics(
 {
     var knownFeatures = manifest.Features.Select(feature => feature.Key)
         .ToHashSet(StringComparer.Ordinal);
+    foreach (var duplicate in manifest.Features.GroupBy(feature => feature.Key, StringComparer.Ordinal)
+        .Where(group => string.IsNullOrWhiteSpace(group.Key) || group.Count() > 1))
+        diagnostics.Add(Error("CODEMAP022", duplicate.Key, string.Empty, "manifest 기능 키가 비어 있거나 중복되었습니다."));
     foreach (var feature in manifest.Features)
     {
         var actualSteps = graph.Steps.Where(step => step.FeatureKey == feature.Key)
@@ -199,9 +232,10 @@ static Dictionary<(string FeatureKey, string StepKey), string?> BuildSourceIndex
     string repositoryRoot,
     WorkAreaManifest manifest,
     SsalddelCodeMetadataGraph graph,
+    IReadOnlyCollection<ResolvedCodeMapSourceBinding> sourceBindings,
     ICollection<SsalddelCodeMetadataDiagnostic> diagnostics)
 {
-    var files = EnumerateSourceFiles(repositoryRoot, manifest).ToArray();
+    var files = EnumerateSourceFiles(repositoryRoot, manifest).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
     var contents = files.ToDictionary(
         path => path,
         path => File.ReadAllText(path, Encoding.UTF8),
@@ -219,7 +253,12 @@ static Dictionary<(string FeatureKey, string StepKey), string?> BuildSourceIndex
     {
         var typeName = step.ComponentType.Name.Split('`')[0];
         var declaration = new Regex(@"\b(class|interface|struct|record)\s+" + Regex.Escape(typeName) + @"\b", RegexOptions.CultureInvariant);
-        var candidates = contents.Where(pair => declaration.IsMatch(pair.Value)).Select(pair => pair.Key).ToArray();
+        bool MatchesSource(string path, string content) => manifest.Key == "simulation-unity"
+            ? declaration.IsMatch(content)
+            : CodeMapSourceBindingValidator.MatchesReflectedSource(
+                Path.GetRelativePath(repositoryRoot, path).Replace('\\', '/'), content,
+                step.ComponentType.Assembly.GetName().Name ?? string.Empty, step.ComponentType.Namespace ?? string.Empty, typeName);
+        var candidates = contents.Where(pair => MatchesSource(pair.Key, pair.Value)).Select(pair => pair.Key).ToArray();
         if (featureFieldNames.TryGetValue(step.FeatureKey, out var fieldName))
         {
             var preferred = candidates.Where(path => contents[path].Contains(
@@ -236,6 +275,17 @@ static Dictionary<(string FeatureKey, string StepKey), string?> BuildSourceIndex
                 RegexOptions.CultureInvariant)).ToArray();
             if (exactSteps.Length == 1) candidates = exactSteps;
         }
+
+        // Explicit bindings disambiguate only this reflected type; a native host never replaces an API component.
+        var explicitSources = sourceBindings.Where(binding => binding.FeatureKey == step.FeatureKey
+                && binding.RelatedStepKeys.Contains(step.StepKey, StringComparer.Ordinal))
+            .SelectMany(binding => binding.Sources).Select(source => Path.Combine(repositoryRoot, source.Path))
+            .Where(path => contents.TryGetValue(path, out var content)
+                && MatchesSource(path, content))
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        if (explicitSources.Length == 1) candidates = explicitSources;
+        else if (explicitSources.Length > 1)
+            diagnostics.Add(Error("CODEMAP057", step.FeatureKey, step.StepKey, "같은 reflection 단계의 명시 소스가 여러 파일로 충돌합니다."));
 
         foreach (var reference in step.SourceCodeRefs.Concat(step.SharedRuleRefs))
         {
@@ -254,7 +304,10 @@ static Dictionary<(string FeatureKey, string StepKey), string?> BuildSourceIndex
         result[(step.FeatureKey, step.StepKey)] = relativePath;
         if (relativePath is null)
         {
-            diagnostics.Add(Warning("CODEMAP101", step.FeatureKey, step.StepKey, "소스 파일을 하나로 결정하지 못했습니다."));
+            if (manifest.Key == "food-driver" && manifest.Features.Any(feature => feature.Key == step.FeatureKey
+                && feature.RequiredStepKeys.Contains(step.StepKey, StringComparer.Ordinal)))
+                diagnostics.Add(Error("CODEMAP058", step.FeatureKey, step.StepKey, "필수 단계의 소스 파일을 하나로 결정하지 못했습니다."));
+            else diagnostics.Add(Warning("CODEMAP101", step.FeatureKey, step.StepKey, "소스 파일을 하나로 결정하지 못했습니다."));
         }
     }
 
@@ -275,10 +328,11 @@ static void AddCoverageWarnings(
     var allFiles = EnumerateSourceFiles(repositoryRoot, manifest).ToArray();
     foreach (var sourceRoot in manifest.SourceRoots)
     {
-        var fullRoot = Path.GetFullPath(Path.Combine(repositoryRoot, sourceRoot))
-            .TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        var sourceRootPath = Path.GetFullPath(Path.Combine(repositoryRoot, sourceRoot));
+        var fullRoot = sourceRootPath.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         var missing = new SortedSet<string>(StringComparer.Ordinal);
-        foreach (var file in allFiles.Where(path => Path.GetFullPath(path).StartsWith(fullRoot, StringComparison.OrdinalIgnoreCase)))
+        foreach (var file in allFiles.Where(path => Path.GetFullPath(path).StartsWith(fullRoot, StringComparison.OrdinalIgnoreCase)
+            || (manifest.Key == "food-driver" && Path.GetFullPath(path).Equals(sourceRootPath, StringComparison.OrdinalIgnoreCase))))
         {
             var text = File.ReadAllText(file, Encoding.UTF8);
             foreach (Match match in eligible.Matches(text))
@@ -305,12 +359,31 @@ static IEnumerable<string> EnumerateSourceFiles(string repositoryRoot, WorkAreaM
     foreach (var root in manifest.SourceRoots)
     {
         var fullRoot = Path.Combine(repositoryRoot, root);
+        if (manifest.Key == "food-driver" && File.Exists(fullRoot))
+        {
+            yield return fullRoot;
+            continue;
+        }
         if (!Directory.Exists(fullRoot)) continue;
-        foreach (var path in Directory.EnumerateFiles(fullRoot, "*.cs", SearchOption.AllDirectories))
+        var paths = manifest.Key == "simulation-unity"
+            ? Directory.EnumerateFiles(fullRoot, "*.cs", SearchOption.AllDirectories)
+            : Directory.EnumerateFiles(fullRoot, "*", new EnumerationOptions
+            {
+                RecurseSubdirectories = true,
+                AttributesToSkip = FileAttributes.ReparsePoint,
+                IgnoreInaccessible = false,
+            });
+        foreach (var path in paths
+            .Where(path => path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)
+                || (manifest.Key != "simulation-unity" && path.EndsWith(".razor", StringComparison.OrdinalIgnoreCase))))
         {
             var segments = Path.GetRelativePath(fullRoot, path)
                 .Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            if (!segments.Any(segment => manifest.ExcludedRoots.Contains(segment, StringComparer.OrdinalIgnoreCase)))
+            var relative = Path.GetRelativePath(repositoryRoot, path).Replace('\\', '/');
+            if (!segments.Any(segment => (manifest.ExcludedRoots ?? Array.Empty<string>()).Contains(segment, StringComparer.OrdinalIgnoreCase))
+                && (manifest.Key == "simulation-unity" || !(manifest.ExcludedRoots ?? Array.Empty<string>()).Any(excluded =>
+                    relative.Equals(excluded, StringComparison.OrdinalIgnoreCase)
+                    || relative.StartsWith(excluded.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase))))
             {
                 yield return path;
             }
@@ -319,9 +392,11 @@ static IEnumerable<string> EnumerateSourceFiles(string repositoryRoot, WorkAreaM
 }
 
 static CodeMapDocument BuildDocument(
+    string repositoryRoot,
     WorkAreaManifest manifest,
     SsalddelCodeMetadataGraph graph,
     IReadOnlyDictionary<(string FeatureKey, string StepKey), string?> sourceIndex,
+    IReadOnlyCollection<ResolvedCodeMapSourceBinding> sourceBindings,
     IEnumerable<SsalddelCodeMetadataDiagnostic> diagnostics)
 {
     var features = manifest.Features.Select(feature => new CodeMapFeature
@@ -329,6 +404,8 @@ static CodeMapDocument BuildDocument(
         Key = feature.Key,
         Label = feature.Label,
         DependsOnFeatures = feature.DependsOnFeatures,
+        SourceBindings = feature.SourceBindings is not { Length: > 0 } ? null
+            : sourceBindings.Where(binding => binding.FeatureKey == feature.Key).ToArray(),
         Steps = graph.Steps.Where(step => step.FeatureKey == feature.Key)
             .Select(step => new CodeMapStep
             {
@@ -338,8 +415,11 @@ static CodeMapDocument BuildDocument(
                 ExecutionStage = step.ExecutionStage.ToString(),
                 Layer = step.Layer.ToString(),
                 ComponentType = step.ComponentType.FullName ?? step.ComponentType.Name,
+                ContractType = manifest.Key == "simulation-unity" ? null : step.ContractType?.FullName,
                 Assembly = step.ComponentType.Assembly.GetName().Name ?? string.Empty,
                 SourcePath = sourceIndex[(step.FeatureKey, step.StepKey)],
+                SourceLine = manifest.Key == "simulation-unity" ? null
+                    : FindSourceLine(repositoryRoot, sourceIndex[(step.FeatureKey, step.StepKey)], step, sourceBindings),
                 Responsibility = step.Responsibility,
                 Effects = FlagNames(step.Effects),
                 ReadsFrom = FlagNames(step.ReadsFrom),
@@ -357,6 +437,8 @@ static CodeMapDocument BuildDocument(
         SchemaVersion = "ssalddel-code-map.v1",
         WorkAreaKey = manifest.Key,
         WorkAreaVersion = manifest.Version,
+        WorkAreaLabel = manifest.Key == "simulation-unity" ? "Simulation·Unity"
+            : string.IsNullOrWhiteSpace(manifest.Label) ? "음식 기사" : manifest.Label,
         Features = features,
         Diagnostics = diagnostics
             .OrderBy(item => item.Severity)
@@ -380,15 +462,41 @@ static string[] FlagNames<T>(T value) where T : struct, Enum
     return text == "None" ? Array.Empty<string>() : text.Split(", ", StringSplitOptions.RemoveEmptyEntries);
 }
 
+static int? FindSourceLine(
+    string repositoryRoot,
+    string? sourcePath,
+    SsalddelCodeMetadataDescriptor step,
+    IReadOnlyCollection<ResolvedCodeMapSourceBinding> sourceBindings)
+{
+    if (sourcePath is null) return null;
+    var explicitSource = sourceBindings.Where(binding => binding.FeatureKey == step.FeatureKey
+            && binding.RelatedStepKeys.Contains(step.StepKey, StringComparer.Ordinal))
+        .SelectMany(binding => binding.Sources).FirstOrDefault(source => source.Path == sourcePath);
+    if (explicitSource is not null) return explicitSource.Line;
+    var content = File.ReadAllText(Path.Combine(repositoryRoot, sourcePath), Encoding.UTF8);
+    var match = Regex.Match(content, @"\bStepKey\s*=\s*""" + Regex.Escape(step.StepKey) + @"""", RegexOptions.CultureInvariant);
+    if (!match.Success)
+        match = Regex.Match(content, @"\b(class|interface|struct|record)\s+"
+            + Regex.Escape(step.ComponentType.Name.Split('`')[0]) + @"\b", RegexOptions.CultureInvariant);
+    return match.Success ? 1 + content.AsSpan(0, match.Index).Count('\n') : 1;
+}
+
 static string BuildMarkdown(CodeMapDocument document)
 {
     var builder = new StringBuilder();
-    builder.AppendLine("# Simulation·Unity 코드 탐색 트리");
+    var extended = document.WorkAreaKey != "simulation-unity";
+    builder.Append("# ").Append(document.WorkAreaLabel).AppendLine(" 코드 탐색 트리");
     builder.AppendLine();
-    builder.AppendLine("> 이 문서는 `SsalddelCodeMetadataAttribute`와 `eng/work-areas/simulation-unity.json`에서 자동 생성된다. 직접 수정하지 않는다.");
+    builder.Append("> 이 문서는 `SsalddelCodeMetadataAttribute`와 `eng/work-areas/")
+        .Append(document.WorkAreaKey).AppendLine(".json`에서 자동 생성된다. 직접 수정하지 않는다.");
+    if (extended)
+    {
+        builder.AppendLine();
+        builder.AppendLine("소스 결속은 검토한 파일·심볼의 탐색 연결이다. reflection 단계와 분리하며 실제 호출·실행 성공이나 운영 검증을 인증하지 않는다. MAUI 앱 assembly를 로드하지 않는다.");
+    }
     builder.AppendLine();
     builder.AppendLine("```text");
-    builder.AppendLine("Simulation·Unity");
+    builder.AppendLine(document.WorkAreaLabel);
     for (var index = 0; index < document.Features.Length; index++)
     {
         var feature = document.Features[index];
@@ -403,10 +511,16 @@ static string BuildMarkdown(CodeMapDocument document)
                 .Append(step.StepKey).Append(" · ").Append(step.Layer).Append(" · ")
                 .Append(step.ExecutionStage).AppendLine();
         }
+        if (feature.SourceBindings is { Length: > 0 })
+            foreach (var binding in feature.SourceBindings)
+                builder.Append(lastFeature ? "   " : "│  ")
+                    .Append("  소스 결속 · ").AppendLine(binding.Key);
     }
     builder.AppendLine("```");
     builder.AppendLine();
-    builder.AppendLine("기능 하나만 보려면 `dotnet run --project eng/Ssalddel.CodeMap -- --feature <기능키>`를 사용한다.");
+    builder.Append("기능 하나만 보려면 `dotnet run --project eng/Ssalddel.CodeMap -- ")
+        .Append(extended ? "--work-area " + document.WorkAreaKey + " " : string.Empty)
+        .AppendLine("--feature <기능키>`를 사용한다.");
     builder.AppendLine();
     foreach (var feature in document.Features)
     {
@@ -425,7 +539,8 @@ static string BuildMarkdown(CodeMapDocument document)
             if (step.SourcePath is not null)
             {
                 builder.Append('[').Append(step.ComponentType.Split('.').Last()).Append("](")
-                    .Append("../../../").Append(step.SourcePath).Append(')');
+                    .Append("../../../").Append(step.SourcePath)
+                    .Append(step.SourceLine is { } line ? "#L" + line : string.Empty).Append(')');
             }
             else
             {
@@ -436,6 +551,12 @@ static string BuildMarkdown(CodeMapDocument document)
             builder.Append("  - 읽기/쓰기: `").Append(JoinOrNone(step.ReadsFrom)).Append(" → ").Append(JoinOrNone(step.WritesTo)).AppendLine("`");
             builder.Append("  - 부수효과: `").Append(JoinOrNone(step.Effects)).AppendLine("`");
             builder.Append("  - 경계: ").AppendLine(step.Boundary);
+            if (extended)
+            {
+                if (step.ContractType is not null)
+                    builder.Append("  - 주 계약: `").Append(step.ContractType).AppendLine("`");
+                builder.Append("  - 먼저 읽을 단계: ").AppendLine(JoinOrNone(step.DependsOnStepKeys));
+            }
             if (step.ReuseKind is not null)
             {
                 builder.Append("  - 재사용 종류: `").Append(step.ReuseKind).AppendLine("`");
@@ -446,6 +567,22 @@ static string BuildMarkdown(CodeMapDocument document)
                     builder.Append("  - 공유 규칙: [").Append(Path.GetFileName(reference))
                         .Append("](../../../").Append(reference).AppendLine(")");
                 builder.Append("  - 변형/제외: ").AppendLine(step.Adaptation);
+            }
+        }
+        if (feature.SourceBindings is { Length: > 0 })
+        {
+            builder.AppendLine();
+            builder.AppendLine("### 소스 결속");
+            builder.AppendLine();
+            foreach (var binding in feature.SourceBindings)
+            {
+                builder.Append("- **").Append(binding.Key).Append("** · ").AppendLine(binding.Responsibility);
+                builder.Append("  - 관련 단계(탐색): ").AppendLine(string.Join(", ", binding.RelatedStepKeys.Select(key => "`" + key + "`")));
+                builder.Append("  - 경계: ").AppendLine(binding.Boundary);
+                foreach (var source in binding.Sources)
+                    builder.Append("  - [").Append(source.Path).Append(':').Append(source.Line)
+                        .Append("](../../../").Append(source.Path).Append("#L").Append(source.Line)
+                        .Append(") · `").Append(source.Symbol).AppendLine("`");
             }
         }
         builder.AppendLine();
@@ -478,6 +615,25 @@ static string BuildFeatureTree(CodeMapFeature feature)
             builder.Append("   공유 규칙: ").AppendLine(string.Join(" | ", step.SharedRuleRefs ?? Array.Empty<string>()));
             builder.Append("   변형/제외: ").AppendLine(step.Adaptation);
         }
+        if (step.SourceLine is not null)
+        {
+            builder.Append("   소스: ").Append(step.SourcePath).Append(':').AppendLine(step.SourceLine.ToString());
+            builder.Append("   먼저 읽을 단계: ").AppendLine(JoinOrNone(step.DependsOnStepKeys));
+            if (step.ContractType is not null) builder.Append("   주 계약: ").AppendLine(step.ContractType);
+            builder.Append("   경계: ").AppendLine(step.Boundary);
+        }
+    }
+    if (feature.SourceBindings is { Length: > 0 })
+    {
+        builder.AppendLine("소스 결속(정적 탐색 연결; reflection 단계와 별도)");
+        foreach (var binding in feature.SourceBindings)
+        {
+            builder.Append("- ").Append(binding.Key).Append(" · ").AppendLine(binding.Responsibility);
+            builder.Append("  관련 단계: ").AppendLine(string.Join(", ", binding.RelatedStepKeys));
+            builder.Append("  경계: ").AppendLine(binding.Boundary);
+            foreach (var source in binding.Sources)
+                builder.Append("  ").Append(source.Path).Append(':').Append(source.Line).Append(" · ").AppendLine(source.Symbol);
+        }
     }
     return builder.ToString();
 }
@@ -490,27 +646,10 @@ static SsalddelCodeMetadataDiagnostic Error(string code, string featureKey, stri
 static SsalddelCodeMetadataDiagnostic Warning(string code, string featureKey, string stepKey, string message)
     => new(SsalddelCodeMetadataDiagnosticSeverity.Warning, code, featureKey, stepKey, message);
 
-internal sealed class WorkAreaManifest
-{
-    public string Key { get; set; } = string.Empty;
-    public string Version { get; set; } = string.Empty;
-    public string[] Solutions { get; set; } = Array.Empty<string>();
-    public string[] ReadFirst { get; set; } = Array.Empty<string>();
-    public string[] SourceRoots { get; set; } = Array.Empty<string>();
-    public string[] ExcludedRoots { get; set; } = Array.Empty<string>();
-    public WorkAreaFeature[] Features { get; set; } = Array.Empty<WorkAreaFeature>();
-}
-
-internal sealed class WorkAreaFeature
-{
-    public string Key { get; set; } = string.Empty;
-    public string Label { get; set; } = string.Empty;
-    public string[] DependsOnFeatures { get; set; } = Array.Empty<string>();
-    public string[] RequiredStepKeys { get; set; } = Array.Empty<string>();
-}
-
 internal sealed class CodeMapDocument
 {
+    [JsonIgnore]
+    public string WorkAreaLabel { get; set; } = string.Empty;
     public string SchemaVersion { get; set; } = string.Empty;
     public string WorkAreaKey { get; set; } = string.Empty;
     public string WorkAreaVersion { get; set; } = string.Empty;
@@ -524,6 +663,7 @@ internal sealed class CodeMapFeature
     public string Label { get; set; } = string.Empty;
     public string[] DependsOnFeatures { get; set; } = Array.Empty<string>();
     public CodeMapStep[] Steps { get; set; } = Array.Empty<CodeMapStep>();
+    public ResolvedCodeMapSourceBinding[]? SourceBindings { get; set; }
 }
 
 internal sealed class CodeMapStep
@@ -538,8 +678,10 @@ internal sealed class CodeMapStep
     public string ExecutionStage { get; set; } = string.Empty;
     public string Layer { get; set; } = string.Empty;
     public string ComponentType { get; set; } = string.Empty;
+    public string? ContractType { get; set; }
     public string Assembly { get; set; } = string.Empty;
     public string? SourcePath { get; set; }
+    public int? SourceLine { get; set; }
     public string Responsibility { get; set; } = string.Empty;
     public string[] Effects { get; set; } = Array.Empty<string>();
     public string[] ReadsFrom { get; set; } = Array.Empty<string>();

@@ -231,6 +231,29 @@ function Test-RequiresEvidenceMapCheck {
     ).Count -gt 0
 }
 
+function Test-RequiresFoodDriverCodeMapCheck {
+    param([string[]] $Files)
+
+    $manifestPath = Join-Path $repoRoot "eng/work-areas/food-driver.json"
+    $manifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    foreach ($file in $Files) {
+        if ((Test-IsCodeMetadataSharedPath -File $file) -or
+            $file -match "^eng/Ssalddel\.CodeMap/" -or
+            $file -eq "eng/work-areas/food-driver.json" -or
+            $file -match "^docs/AI/generated/food-driver-code-map\.(json|md)$" -or
+            $file -match "^Ssalddel.Tests/Architecture/FoodDriverCode.*Tests\.cs$") { return $true }
+        $segments = @($file -split "/")
+        $excluded = @($manifest.excludedRoots | Where-Object {
+            $segments -contains $_ -or $file -eq $_ -or $file.StartsWith($_.TrimEnd('/') + '/', [StringComparison]::OrdinalIgnoreCase)
+        }).Count -gt 0
+        if ($excluded) { continue }
+        if (@($manifest.sourceRoots | Where-Object {
+            $file -eq $_ -or $file.StartsWith($_.TrimEnd('/') + '/', [StringComparison]::OrdinalIgnoreCase)
+        }).Count -gt 0) { return $true }
+    }
+    return $false
+}
+
 function Test-IsProductPath {
     param([string] $File)
 
@@ -482,6 +505,7 @@ try {
     $changedFiles = @(Get-ChangedFiles)
     $guidanceOnly = Test-IsGuidanceOnly -Files $changedFiles
     $codeMapCheck = Test-RequiresCodeMapCheck -Files $changedFiles
+    $foodDriverCodeMapCheck = Test-RequiresFoodDriverCodeMapCheck -Files $changedFiles
     $evidenceMapCheck = Test-RequiresEvidenceMapCheck -Files $changedFiles
     $buildTargets = @()
     $testPlans = @()
@@ -563,6 +587,7 @@ try {
         ChangedPaths = @($changedFiles)
         GuidanceOnly = $guidanceOnly
         CodeMapCheck = $codeMapCheck
+        FoodDriverCodeMapCheck = $foodDriverCodeMapCheck
         EvidenceMapCheck = $evidenceMapCheck
         BuildTargets = @($buildTargets)
         TestPlans = @($testPlans | ForEach-Object {
@@ -660,6 +685,20 @@ try {
             -Executable "dotnet" `
             -Arguments $codeMapArguments `
             -LogPath (Join-Path $runDirectory "code-map-check.log")
+    }
+
+    if ($foodDriverCodeMapCheck) {
+        $foodDriverCodeMapArguments = @(
+            "run", "--project", "eng/Ssalddel.CodeMap/Ssalddel.CodeMap.csproj",
+            "--configuration", $Configuration, "--no-launch-profile"
+        )
+        if ($NoRestore) { $foodDriverCodeMapArguments += "--no-restore" }
+        $foodDriverCodeMapArguments += @("--", "--work-area", "food-driver", "--check")
+        Invoke-LoggedCommand `
+            -Name "Food driver code map check" `
+            -Executable "dotnet" `
+            -Arguments $foodDriverCodeMapArguments `
+            -LogPath (Join-Path $runDirectory "food-driver-code-map-check.log")
     }
 
     if ($evidenceMapCheck) {

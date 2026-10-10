@@ -9,6 +9,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Ssalddel.CodeMetadata\Ssalddel.CodeMetadata.csproj" />
+    <ProjectReference Include="..\..\Ssalddel\Ssalddel.csproj" />
+    <ProjectReference Include="..\..\Ssalddel.Contracts\Ssalddel.Contracts.csproj" />
+    <ProjectReference Include="..\..\Ssalddel.Domain\Ssalddel.Domain.csproj" />
+    <ProjectReference Include="..\..\Ssalddel.Infrastructure\Ssalddel.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Ssalddel.Ui.Common\Ssalddel.Ui.Common.csproj" />
     <ProjectReference Include="..\..\Ssalddel.Interior.Contracts\Ssalddel.Interior.Contracts.csproj" />
     <ProjectReference Include="..\..\Ssalddel.Interior.Domain\Ssalddel.Interior.Domain.csproj" />
     <ProjectReference Include="..\..\Ssalddel.Simulation.Application\Ssalddel.Simulation.Application.csproj" />

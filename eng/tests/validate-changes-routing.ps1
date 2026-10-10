@@ -97,6 +97,35 @@ Assert-ContainsExactly "Metadata tests" @($metadata.TestPlans | ForEach-Object {
     "Ssalddel.Unity.Tests/Ssalddel.Unity.Tests.csproj"
 )
 if (-not $metadata.CodeMapCheck) { throw "공용 메타데이터 변경은 코드 지도 검증을 포함해야 합니다." }
+if (-not $metadata.FoodDriverCodeMapCheck) { throw "공용 메타데이터 변경은 음식 기사 지도도 검사해야 합니다." }
+
+foreach ($path in @(
+    "FDriverApp/Pages/MainPage.xaml",
+    "FDriverApp/PageModels/MainPageModel.AutomaticWork.cs",
+    "Ssalddel/Application/Driver/Work/Handlers/운행시작CommandHandler.cs",
+    "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Query.cs",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/RoleMapWorkspace.razor",
+    "eng/work-areas/food-driver.json",
+    "eng/Ssalddel.CodeMap/CodeMapSourceBindingValidator.cs",
+    "docs/AI/generated/food-driver-code-map.json",
+    "Ssalddel.Tests/Architecture/FoodDriverCodeMetadataTests.cs"
+)) {
+    $food = Get-ValidationPlan -Level Fast -Paths @($path)
+    if (-not $food.FoodDriverCodeMapCheck) { throw "음식 기사 지도 routing 누락: $path" }
+}
+foreach ($path in @(
+    "Ssalddel/Application/Restaurant/Orders/RestaurantOrderUseCase.cs",
+    "Ssalddel/Application/Driver/Transport/Handlers/운송현재조회QueryHandler.cs",
+    "FDriverApp/PageModels/UnrelatedCargoPageModel.cs",
+    "Ssalddel/Application/Driver/Food/obj/Generated.cs",
+    "docs/AI/CURRENT_WORK.md"
+)) {
+    $unrelated = Get-ValidationPlan -Level Fast -Paths @($path)
+    if ($unrelated.FoodDriverCodeMapCheck) { throw "음식 기사 지도 범위 과다: $path" }
+}
+if ($simulation.FoodDriverCodeMapCheck -or $unity.FoodDriverCodeMapCheck) {
+    throw "Simulation·Unity 단독 변경은 음식 기사 지도 검사를 요구하지 않습니다."
+}
 
 $global = Get-ValidationPlan -Level Task -Paths @(
     "Directory.Build.props"
