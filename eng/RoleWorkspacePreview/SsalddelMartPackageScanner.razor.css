@@ -1,0 +1,10 @@
+.mart-package-scan { margin-top: 16px; color: #172B36; }
+.mart-package-scan__button { min-height: 48px; padding: 12px 16px; border: 1px solid #0F766E; border-radius: 12px; background: #0F766E; color: #fff; font: inherit; cursor: pointer; }
+.mart-package-scan__button--secondary { border-color: #788C97; background: #fff; color: #172B36; }
+.mart-package-scan__button:disabled { opacity: .6; cursor: default; }
+.mart-package-scan__button:focus-visible { outline: 3px solid #1D4ED8; outline-offset: 3px; }
+.mart-package-scan__notice { margin: 8px 0; color: #586B78; font-size: 14px; line-height: 1.5; }
+.mart-package-scan__camera { padding: 12px; margin: 12px 0; border: 1px solid #788C97; border-radius: 12px; }
+.mart-package-scan__camera[hidden] { display: none; }
+.mart-package-scan video { display: block; width: 100%; max-height: 280px; aspect-ratio: 4 / 3; object-fit: contain; background: #172B36; border-radius: 8px; }
+.mart-package-scan__camera p { font-size: 14px; line-height: 1.5; }

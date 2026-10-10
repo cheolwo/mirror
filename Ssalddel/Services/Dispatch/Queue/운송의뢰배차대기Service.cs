@@ -77,6 +77,7 @@ public sealed class 운송의뢰배차대기Service : I운송의뢰배차대기S
         var sourceId = NormalizeOptional(options?.원본의뢰Id) ?? NormalizeOptional(target.원천참조번호);
         var shipperId = NormalizeOptional(options?.화주Id) ?? NormalizeOptional(target.판매자UserId);
         var existing = await _db.운송원장.SingleOrDefaultAsync(x => x.의뢰Id == requestId, cancellationToken);
+        마트원천결속검증(existing, requestId, sourceType, sourceId ?? requestId, shipperId, options?.배차업무유형);
         if (existing is not null)
         {
             ApplyExistingMetadata(existing, target, options, requestId, sourceType, sourceId, shipperId);
@@ -122,6 +123,31 @@ public sealed class 운송의뢰배차대기Service : I운송의뢰배차대기S
         _db.운송원장.Add(entity);
         await Upsert배달권실행공간Async(entity, cancellationToken);
         return entity;
+    }
+
+    // 마트 원천은 음식 배차 큐를 쓰더라도 음식주문으로 바꾸거나 다른 화주의 의뢰를 재사용하지 않는다.
+    // 확정 기사 조기 반환도 같은 검증을 거쳐야 하므로 마트 인계 Service와 공유한다.
+    internal static void 마트원천결속검증(
+        운송원장? existing,
+        string requestId,
+        string sourceType,
+        string sourceId,
+        string? shipperId,
+        int? workType)
+    {
+        var incomingMart = string.Equals(sourceType, 운송의뢰배차원천유형.살뜰마트포장완료주문, StringComparison.OrdinalIgnoreCase);
+        var existingMart = string.Equals(existing?.원본의뢰유형, 운송의뢰배차원천유형.살뜰마트포장완료주문, StringComparison.OrdinalIgnoreCase);
+        if (!incomingMart && !existingMart)
+            return;
+
+        if (!incomingMart || workType is { } requestedType && requestedType != 상태값.배차업무유형.음식배달
+            || string.IsNullOrWhiteSpace(shipperId)
+            || existing is not null && (!existingMart
+                || !string.Equals(existing.의뢰Id, requestId, StringComparison.Ordinal)
+                || !string.Equals(existing.원본의뢰Id, sourceId, StringComparison.Ordinal)
+                || !string.Equals(existing.화주Id, shipperId, StringComparison.Ordinal)
+                || existing.배차업무유형 != 상태값.배차업무유형.음식배달))
+            throw new InvalidOperationException("마트 배차 원천 결속이 일치하지 않아 기존 업무를 변경하지 않았습니다.");
     }
 
     private void ApplyExistingMetadata(

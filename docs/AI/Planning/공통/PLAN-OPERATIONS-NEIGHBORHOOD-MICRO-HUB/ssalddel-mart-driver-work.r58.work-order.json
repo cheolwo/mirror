@@ -1,0 +1,348 @@
+{
+  "planId": "PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB",
+  "revision": "r58",
+  "status": "Implemented / LocalValidated / SimulationConsumerBound / OperationalDeferred",
+  "acceptedBy": "development",
+  "approvalBasis": "2026-10-10 user requested next priority mart driver accept-pickup-delivery software workflow",
+  "baseCommit": "d1bab3eec08dc0a49c9a87f882590d394205c9a4",
+  "designDocumentRef": "ssalddel-mart-driver-work.implementation.r58.md",
+  "designSha256": "E60C627ABEEC93A96376B44F047DB2897899EA8154282D7BA001D10A8561AEAE",
+  "approvedDesignSha256": "E60C627ABEEC93A96376B44F047DB2897899EA8154282D7BA001D10A8561AEAE",
+  "primaryOwner": "operations",
+  "writePaths": [
+    "Ssalddel/Services/Community/WarehouseLedgerBusinessProjectionHandler.cs",
+    "Ssalddel/Services/Community/FoodMartLedgerMongoSyncService.cs",
+    "Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs",
+    "docs/AI/generated/food-driver-code-map.json",
+    "docs/AI/generated/food-driver-code-map.md",
+    "Ssalddel.Tests/Infrastructure/Persistence/MartDriverWorkMigrationTests.cs",
+    "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs",
+    "FDriverApp/Services/살뜰마트배송SecurePendingStore.cs",
+    "Ssalddel/Application/Driver/Transport/Services/기사운송상태변경CommandExecutor.cs",
+    "FDriverApp/Services/살뜰마트배송ApiClient.cs",
+    "FDriverApp/PageModels/살뜰마트배송PageViewModel.cs",
+    "FDriverApp/Pages/살뜰마트배송Page.xaml",
+    "FDriverApp/Pages/살뜰마트배송Page.xaml.cs",
+    "FDriverApp/Pages/MainPage.xaml",
+    "FDriverApp/Pages/MainPage.xaml.cs",
+    "FDriverApp/AppShell.xaml.cs",
+    "FDriverApp/MauiProgram.cs",
+    "Ssalddel.Tests/Clients/FDriverMartDeliveryWorkspaceTests.cs",
+    "Ssalddel.Tests/Clients/FDriverMartDeliveryApiClientTests.cs",
+    "Ssalddel.Tests/Clients/FDriverMartDeliveryCompositionTests.cs",
+    "Ssalddel.Tests/Ssalddel.Tests.csproj",
+    "Ssalddel.Tests/Services/Operations/MartLastMileDriverSoftwareLifecycleTests.cs",
+    "Ssalddel.Tests/Controllers/MartLastMileDriverControllerTests.cs",
+    "Ssalddel.Tests/Application/Food/음식배달정상수직생명주기Tests.MartSourceBoundary.cs",
+    "Ssalddel.Tests/Application/Driver/Transport/MartTransportBypassBoundaryTests.cs",
+    "Ssalddel.Contracts/Mart/마트기사업무Dtos.cs",
+    "Ssalddel.Domain/마트/마트기사업무.cs",
+    "Ssalddel.Infrastructure/Persistence/Configurations/Mart/마트기사업무Configuration.cs",
+    "Ssalddel.Infrastructure/Persistence/SsalddelContext.cs",
+    "Ssalddel/Migrations/20261010190000_AddMartDriverWorkR58.cs",
+    "Ssalddel/Migrations/SsalddelContextModelSnapshot.cs",
+    "Ssalddel/Services/Operations/마트기사업무Options.cs",
+    "Ssalddel/Services/Operations/마트기사업무Service.cs",
+    "Ssalddel/Services/Operations/마트기사업무Service.Query.cs",
+    "Ssalddel/Services/Operations/마트기사업무Service.Commands.cs",
+    "Ssalddel/Services/Operations/마트기사업무Service.PackageSlip.cs",
+    "Ssalddel/Services/Operations/마트기사후속OutboxService.cs",
+    "Ssalddel/Services/Operations/마트기사후속OutboxWorker.cs",
+    "Ssalddel/Services/Operations/마트기사업무ServiceCollectionExtensions.cs",
+    "Ssalddel/Services/Operations/MartLastMileDispatchReadinessPolicy.cs",
+    "Ssalddel/Extensions/ServiceCollectionExtensions.DomainServices.Operations.cs",
+    "Ssalddel/Controllers/Driver/Food/마트기사업무Controller.cs",
+    "Ssalddel/Controllers/Common/마트전표Controller.cs",
+    "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.StatePersistence.cs",
+    "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Query.cs",
+    "Ssalddel.Tests/Services/Operations/마트기사업무ServiceTests.cs",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-driver-work.implementation.r58.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-driver-work.r58.work-order.json",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/ProjectOverview/page-docs/ssalddel-mart-driver-work-r58.md",
+    "docs/ProjectOverview/page-docs/README.md",
+    "docs/Changes/2026-10-10-ssalddel-mart-driver-work-r58.md",
+    "docs/Changes/README.md"
+  ],
+  "scopeClarifications": [
+    "Controller metadata declares its primary Mart feature consistently; the shared service gate still enforces Mart, FoodDelivery and Warehouse flags together for every operation.",
+    "A digest-bound persisted mart RDB state copy must not replay warehouse inventory or outbound business commands; bind header state/stage too so explicit community edits keep their existing projection path.",
+    "Exclude all mart aliases before the food offer query limit; mart work cannot hide existing food offers.",
+    "Protect the first driver-accept race during legacy mart projection with serializable SQL checks and pending retry, without claiming atomic cross-store ordering.",
+    "Existing mart Mongo sync and WarehouseOutbound child outbox must reread the current mart driver attempt and cannot overwrite its SQL lifecycle or replay an earlier captured stage.",
+    "Use a single outbound per full available inventory lot; reserved, split and shared lot inference remains unsupported.",
+    "Slip issuance before packing is allowed by existing r56 intent; pickup still requires complete current picking and packing.",
+    "Successful mart actions append only Action, Revision and opaque RequestId to the existing SQL transport event in the same transaction.",
+    "Confirmed structured command rejection is distinct from an unknown result; GET request-not-found never authorizes automatic POST replay.",
+    "Native screen compile and view-model tests do not claim actual MAUI rendering or physical device verification.",
+    "Regenerate the existing food-driver code map after source/menu changes; do not edit generated output manually."
+  ],
+  "excludedEffects": [
+    "OperationalActivation",
+    "SharedDatabaseMigration",
+    "RealPayments",
+    "RealNotifications",
+    "Hardware",
+    "Commit",
+    "Push",
+    "Deploy"
+  ],
+  "validationCeiling": [
+    "IsolatedSQLite",
+    "ControllerAndService",
+    "ContractAndAppBuild",
+    "LocalUiRendering",
+    "Fast",
+    "Task"
+  ],
+  "unverified": [
+    "NativeMauiUiRendering",
+    "RealMySqlMongoRedis",
+    "AuthenticatedOperationalHttp",
+    "PhysicalAndroidDevice",
+    "PhysicalPrinter"
+  ],
+  "implementationReturn": {
+    "state": "Implemented / LocalValidated / SimulationConsumerBound / OperationalDeferred",
+    "fast": {
+      "directory": "artifacts/local/validation/20261010-193237",
+      "solution": "Ssalddel.v3.5.slnx",
+      "buildErrors": 0,
+      "buildWarnings": 140,
+      "passed": 262,
+      "failed": 0,
+      "skipped": 0
+    },
+    "task": {
+      "directory": "artifacts/local/validation/20261010-193355",
+      "solution": "Ssalddel.v3.5.slnx",
+      "buildErrors": 0,
+      "buildWarnings": 70,
+      "passed": 10299,
+      "failed": 0,
+      "skipped": 15,
+      "total": 10314
+    },
+    "connectionBoundary": "Actual controllers and services with isolated SQLite exercise mart attempts, package slips, request receipts, inventory and outbound changes, SQL events and durable outbox. Existing community ledger consumer uses a test store; real MySQL, MongoDB, Redis and authenticated HTTP are not verified.",
+    "clientBoundary": "FDriver API client, view-model and composition tests plus native XAML compile. No actual native rendering, device install, hardware or physical SecureStorage validation.",
+    "productReadiness": "SimulationConsumerBound; MartDriverWorkflow disabled by default and requires Simulation, writable execution and all Mart/FoodDelivery/Warehouse flags.",
+    "sourceFingerprintCount": 44,
+    "sourceFingerprintDrift": 0,
+    "approvedDesignHashMatched": true,
+    "crossStoreBoundary": "SQL authority remains separate from Mongo presentation. Expected revision CAS and fresh rereads prevent SQL rollback; a temporarily stale Mongo copy can converge through pending retry. No atomic cross-store guarantee.",
+    "earlierValidationFailures": [
+      {
+        "directory": "artifacts/local/validation/20261010-190104",
+        "reason": "Generated food-driver map stale; regenerated with official tool."
+      },
+      {
+        "directory": "artifacts/local/validation/20261010-190320",
+        "reason": "Test imports missing; corrected without changing product behavior."
+      },
+      {
+        "directory": "artifacts/local/validation/20261010-191843",
+        "reason": "EF expression array Contains selected .NET 10 Span overload and controller rejection wrapper omitted normalized result details; corrected."
+      },
+      {
+        "directory": "artifacts/local/validation/20261010-192240",
+        "reason": "Race fixture assumed product state before dispatch; now compares actual canonical pre-race product state."
+      },
+      {
+        "directory": "artifacts/local/validation/20261010-192637",
+        "reason": "Two API metadata assertions; declared primary Mart feature/workflow/capability consistently while retaining all three service gates."
+      }
+    ],
+    "documentation": {
+      "state": "Validated",
+      "directory": "artifacts/local/validation/20261010-193910",
+      "fastPassed": true,
+      "buildTestsSkippedForDocsOnly": true,
+      "markdownDocumentsChecked": 9,
+      "localMarkdownLinksChecked": 1186,
+      "missingLocalMarkdownLinks": 0,
+      "scopedDiffCheckPassed": true
+    },
+    "remaining": "Warehouse/mart staff UI to product slip issuance API, isolated authenticated HTTP and real MySQL/Mongo/Redis E2E, actual native rendering, device and hardware verification. No recipient confirmation, settlement or payout completion is created by delivery.",
+    "commitPushDeployPerformed": false
+  },
+  "sourceFingerprints": [
+    {
+      "Path": "FDriverApp/AppShell.xaml.cs",
+      "Sha256": "C1333F3D4F4EC5A17ADCA6548D3A207D4CBFB6699EBBA1FFA3FE8A6297AECF59"
+    },
+    {
+      "Path": "FDriverApp/MauiProgram.cs",
+      "Sha256": "DDB5F68032242B4153FBB2603A03D0EF41FE98771356BC48416E213867A2FC6D"
+    },
+    {
+      "Path": "FDriverApp/PageModels/살뜰마트배송PageViewModel.cs",
+      "Sha256": "89B93BBD3F19D793209879E4B8D41E934B69DCCA2D13E2FD50F493F27B0CDC35"
+    },
+    {
+      "Path": "FDriverApp/Pages/살뜰마트배송Page.xaml",
+      "Sha256": "4B59536E56F7A520DC44DBBF423677D44A776D58A0E5F9E1DBC900E48E12044C"
+    },
+    {
+      "Path": "FDriverApp/Pages/살뜰마트배송Page.xaml.cs",
+      "Sha256": "B0FAD4A2C0A9EED9150433D2E7ABD50A236C9C02F1F28C38BFFB618500FECA0D"
+    },
+    {
+      "Path": "FDriverApp/Pages/MainPage.xaml",
+      "Sha256": "F3F7A73BF59BE15D71EC8547C0F831C94962F54053E183E60C75B044E3F54976"
+    },
+    {
+      "Path": "FDriverApp/Pages/MainPage.xaml.cs",
+      "Sha256": "0C14F153B56233684D32AD4A9EE72D91AF385078BC0DE89B2D05B1D827C54D9C"
+    },
+    {
+      "Path": "FDriverApp/Services/살뜰마트배송ApiClient.cs",
+      "Sha256": "5442F178ADD2965D6E9408C6215A074C30CBDA023B43F856F71ED60ED831AD62"
+    },
+    {
+      "Path": "FDriverApp/Services/살뜰마트배송SecurePendingStore.cs",
+      "Sha256": "E6D5780DDD8F56843A0901C1DA8EAA0641B2EBF3C1CAE50FB5187BA3586A84F4"
+    },
+    {
+      "Path": "Ssalddel.Contracts/Mart/마트기사업무Dtos.cs",
+      "Sha256": "43421A92C5E6F6969552FD6098B56419DBE93E61DAF3666CFC4CBF753E31FCCA"
+    },
+    {
+      "Path": "Ssalddel.Domain/마트/마트기사업무.cs",
+      "Sha256": "FF03A8C9B9337765893CF6B4171067C8EADE02CCB9EFABD0ED866CE4293526EB"
+    },
+    {
+      "Path": "Ssalddel.Infrastructure/Persistence/Configurations/Mart/마트기사업무Configuration.cs",
+      "Sha256": "30ADC3A61833BE4783C79224F2B57AA14A2027896A6AAAC8A59E0151CBD626B3"
+    },
+    {
+      "Path": "Ssalddel.Infrastructure/Persistence/SsalddelContext.cs",
+      "Sha256": "7CB050592424C631869A9CB88E2E0289C528609C98EF6032A6B71873AA3DE19E"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Driver/Transport/MartTransportBypassBoundaryTests.cs",
+      "Sha256": "52F9F4A40E405F4677E05D2CFFF422873893FE2CC69B712700DE009F40DD7B38"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Food/음식배달정상수직생명주기Tests.MartSourceBoundary.cs",
+      "Sha256": "A55B4033E156DDED87A1C506845BCA72EC1071B75EE5FBD5222666BC1EACB543"
+    },
+    {
+      "Path": "Ssalddel.Tests/Clients/FDriverMartDeliveryApiClientTests.cs",
+      "Sha256": "CF9B0581ED986AC51C6710F069370D313CC07A916CA7750AC00F04A7C3136C08"
+    },
+    {
+      "Path": "Ssalddel.Tests/Clients/FDriverMartDeliveryCompositionTests.cs",
+      "Sha256": "88AD8C650EFBF17150590F4F0938D03D09035C5213204C7222C1B1F4F45CB907"
+    },
+    {
+      "Path": "Ssalddel.Tests/Clients/FDriverMartDeliveryWorkspaceTests.cs",
+      "Sha256": "67211A10EFE955A337ED691A01C8F8B23D81C7675C20446803B155B7BF2EA3F7"
+    },
+    {
+      "Path": "Ssalddel.Tests/Controllers/MartLastMileDriverControllerTests.cs",
+      "Sha256": "803364CF508E19058E928D3977887AE5DE06C7BCA51DD5068865C7CC82104736"
+    },
+    {
+      "Path": "Ssalddel.Tests/Infrastructure/Persistence/MartDriverWorkMigrationTests.cs",
+      "Sha256": "EA55C1C672E3966F6EAEB2FC4C6EBF65EAB80AB0755752513A0F57AF84D459BD"
+    },
+    {
+      "Path": "Ssalddel.Tests/Services/Operations/마트기사업무ServiceTests.cs",
+      "Sha256": "42E7A43B116B4133BF8BEA8706C34403B23A002547E7699DD41CCFE472FBC82F"
+    },
+    {
+      "Path": "Ssalddel.Tests/Services/Operations/MartLastMileDriverSoftwareLifecycleTests.cs",
+      "Sha256": "5B6EA1F34BE6A09DCF4B9AEBFEF43AD116A96C4CB57CF4B908D6E7BBEF665589"
+    },
+    {
+      "Path": "Ssalddel.Tests/Ssalddel.Tests.csproj",
+      "Sha256": "785470891B2FD1ED6FCB0AC77DFBA5E828F727B225581803696B89D31A4EF7E7"
+    },
+    {
+      "Path": "Ssalddel/Application/Driver/Transport/Services/기사운송상태변경CommandExecutor.cs",
+      "Sha256": "F06DEE996E853703F228B6E6F8FE21074F76EC1CE977FC9383F9D433AB1CC92D"
+    },
+    {
+      "Path": "Ssalddel/Controllers/Common/마트전표Controller.cs",
+      "Sha256": "4ABD7D554BFF4ED9235D05A4B657FC37CE40034E49053321B29DF69774CCC70D"
+    },
+    {
+      "Path": "Ssalddel/Controllers/Driver/Food/마트기사업무Controller.cs",
+      "Sha256": "D0655CA9BA9C9F1AE40DCC39CBC31333F9699701942A359662D3C7A7411610B2"
+    },
+    {
+      "Path": "Ssalddel/Extensions/ServiceCollectionExtensions.DomainServices.Operations.cs",
+      "Sha256": "40C0DA629B980FB9498A103B49F57993323528BC23CE6DB4E67162E5447391F7"
+    },
+    {
+      "Path": "Ssalddel/Migrations/20261010190000_AddMartDriverWorkR58.cs",
+      "Sha256": "C0B04ADB17CDA9DE728F422C96780564B6F5898F05183F609F22AA04B839F5A9"
+    },
+    {
+      "Path": "Ssalddel/Migrations/SsalddelContextModelSnapshot.cs",
+      "Sha256": "6A908DCF57A5C2910CA885B5CA398DB51869E6226318E61FFD6CDB9D1734C7E1"
+    },
+    {
+      "Path": "Ssalddel/Services/Community/FoodMartLedgerMongoSyncService.cs",
+      "Sha256": "204237ED6F30109C3E3C07E55D8977EE87785164649EB8BE21D157B09433E753"
+    },
+    {
+      "Path": "Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs",
+      "Sha256": "E0DB0452E487D29639FB60A9D2BEEDEA81B6D91D515B7DC5BF07FFE9F517B929"
+    },
+    {
+      "Path": "Ssalddel/Services/Community/WarehouseLedgerBusinessProjectionHandler.cs",
+      "Sha256": "7BF2825714DB2C4EBBBD330CCE070D34CF580B618E5CB310BA697A544A2C9F92"
+    },
+    {
+      "Path": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs",
+      "Sha256": "C8A7AECF56B008B1BB6BCC607E42D4264869FEEBEF98E6A4B82199CE4088D5A1"
+    },
+    {
+      "Path": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Query.cs",
+      "Sha256": "127D019972B5B5DCB499C9757EAEED4132C42B5FB4740E02E59B34320EEB00FA"
+    },
+    {
+      "Path": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.StatePersistence.cs",
+      "Sha256": "752B7049CC7A6D737EE7D09FD141D243FE314377F82A8058767544D81B96FCDF"
+    },
+    {
+      "Path": "Ssalddel/Services/Operations/마트기사업무Options.cs",
+      "Sha256": "6E8D60A20A3719458C8B3CE31D18528418A213FD9114AA2F47CDC27D2DFF880F"
+    },
+    {
+      "Path": "Ssalddel/Services/Operations/마트기사업무Service.Commands.cs",
+      "Sha256": "199624C7DF7F29E5BC8299DBEC6F3185EA0F3FF7FF653F2AE2E6F0A4804C20C7"
+    },
+    {
+      "Path": "Ssalddel/Services/Operations/마트기사업무Service.cs",
+      "Sha256": "5FA0738AAB05E5B508BE33296845E10C0997C7694F6DAA8AEA264A67C3562ADE"
+    },
+    {
+      "Path": "Ssalddel/Services/Operations/마트기사업무Service.PackageSlip.cs",
+      "Sha256": "831548B24E550258C644B2B693D8AB4762F2125E2590C2ECA72CB46E89CC99EA"
+    },
+    {
+      "Path": "Ssalddel/Services/Operations/마트기사업무Service.Query.cs",
+      "Sha256": "10A6CA5A090D6ABFDABAF217319FCC4D66EDB39F6913158C67C7CE8D33999E41"
+    },
+    {
+      "Path": "Ssalddel/Services/Operations/마트기사업무ServiceCollectionExtensions.cs",
+      "Sha256": "4DD94890E52B1584FA224EA360C7C8FCC389312A554C373139D2F9824646F934"
+    },
+    {
+      "Path": "Ssalddel/Services/Operations/마트기사후속OutboxService.cs",
+      "Sha256": "C9D7AE50B13E0F285E372A39278758CEC7C5F2BD1495A29F794CB31E1D480F22"
+    },
+    {
+      "Path": "Ssalddel/Services/Operations/마트기사후속OutboxWorker.cs",
+      "Sha256": "10742BBE21364862D8CEE06E2F4D062360D2A77CD242006B4188350D6C344360"
+    },
+    {
+      "Path": "Ssalddel/Services/Operations/MartLastMileDispatchReadinessPolicy.cs",
+      "Sha256": "C2B47E4BB8412BE7D95CCE476B1E05DF18F9D8089E5FEEC72C19C7C2BCEB715F"
+    }
+  ]
+}

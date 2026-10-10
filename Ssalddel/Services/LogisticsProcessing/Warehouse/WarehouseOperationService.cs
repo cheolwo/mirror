@@ -1,5 +1,6 @@
 ﻿using Ssalddel.Application.CommandProcessing;
 using System.Data;
+using Ssalddel.Application.Warehouse;
 using Ssalddel.Contracts.Common.Inbound;
 using Ssalddel.Contracts.Common.Inventory;
 using Ssalddel.Contracts.Common.Warehouse;
@@ -1093,6 +1094,8 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
         }
         if (창고재고공정Policy.포장차단사유(item.상태, request.포장수량, item.가용수량) is { } blocked)
             throw new InvalidOperationException(blocked);
+        if (await 마트주문피킹완료Guard.입고상품차단사유Async(_db, item, cancellationToken) is { } pickingBlocked)
+            throw new InvalidOperationException(pickingBlocked);
 
         var now = DateTime.UtcNow;
         item.상태 = $"포장완료-{packageType}";

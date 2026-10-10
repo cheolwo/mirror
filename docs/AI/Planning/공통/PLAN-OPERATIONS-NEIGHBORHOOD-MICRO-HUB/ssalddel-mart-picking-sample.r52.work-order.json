@@ -1,0 +1,112 @@
+{
+  "planId": "PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB",
+  "revision": "r52",
+  "status": "Implemented / LocalValidated / OperationalDeferred",
+  "acceptedBy": "development",
+  "baseCommit": "d1bab3eec08dc0a49c9a87f882590d394205c9a4",
+  "designDocumentRef": "ssalddel-mart-picking-sample.implementation.r52.md",
+  "designSha256": "51B8253EC571DA312463C937AD6D4CC75A93303FFB396BEFF7D2AB6252C01A40",
+  "approvedDesignSha256": "8C62DB3C2347F190EC0CC1207510A2C36E5D71C2D6E31FBB40F6AF6762B983FF",
+  "designUpdate": "Same approved scope; implementation return and validation evidence appended",
+  "primaryOwner": "operations",
+  "writePaths": [
+    "Ssalddel/Application/Warehouse/마트주문피킹완료Guard.cs",
+    "Ssalddel/Application/Warehouse/포장작업UseCase.cs",
+    "Ssalddel/Services/LogisticsProcessing/Warehouse/WarehouseOperationService.cs",
+    "Ssalddel/Services/LogisticsProcessing/Warehouse/알뜰살뜰마트배차대기Service.cs",
+    "Ssalddel.Tests/Application/Warehouse/MartPickingCompletionGuardTests.cs",
+    "Ssalddel.Tests/Services/LogisticsProcessing/Warehouse/알뜰살뜰마트배차대기ServiceTests.cs",
+    "Ssalddel.Tests/Clients/SsalddelMartSampleTests.cs",
+    "Ssalddel.Tests/Ssalddel.Tests.csproj",
+    "eng/RoleWorkspacePreview/SsalddelMartSampleInput.cs",
+    "eng/RoleWorkspacePreview/SsalddelMartSampleRuntime.cs",
+    "eng/RoleWorkspacePreview/SsalddelMartSamplePage.razor",
+    "eng/RoleWorkspacePreview/SsalddelMartSamplePage.razor.css",
+    "eng/RoleWorkspacePreview/verify-ssalddel-mart-sample.mjs",
+    "eng/RoleWorkspacePreview/RoleWorkspacePreview.csproj",
+    "eng/RoleWorkspacePreview/Program.cs",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-picking-sample.implementation.r52.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-picking-sample.r52.work-order.json",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/Changes/2026-10-10-ssalddel-mart-picking-sample-r52.md",
+    "docs/Changes/README.md",
+    "docs/assets/changes/2026-10-10-ssalddel-mart-sample-r52-picking-390.png",
+    "docs/assets/changes/2026-10-10-ssalddel-mart-sample-r52-completed-390.png"
+  ],
+  "excludedEffects": ["OperationalDatabaseWrite", "SourceMutation", "RealDispatch", "Payment", "ExternalNotification", "Commit", "Push", "Deploy"],
+  "validationCeiling": ["Build", "ScopedTests", "IsolatedSqliteUseCases", "LoopbackRenderedUi"],
+  "sourceFingerprints": [
+    {
+      "Path": "Ssalddel/Application/Warehouse/마트주문피킹완료Guard.cs",
+      "Hash": "4315759421451E1BB63C90B5D2CDC8B1E67E7E3B32D82A04552E2CF47386AA17"
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/포장작업UseCase.cs",
+      "Hash": "EA16EEC655626AF8E4EF83B2045154F93864077D4023A53D5D91BD1DC6B41FB9"
+    },
+    {
+      "Path": "Ssalddel/Services/LogisticsProcessing/Warehouse/WarehouseOperationService.cs",
+      "Hash": "734F3914CD1120D6B276BF37AC0C8ACB30748315FE8C48D63F81F1B0C74606CC"
+    },
+    {
+      "Path": "Ssalddel/Services/LogisticsProcessing/Warehouse/알뜰살뜰마트배차대기Service.cs",
+      "Hash": "EAC634AD9DDFE5F3B0BE3941D2D9D9A6321CCB24CAE054FA62DDC62C14F36FF6"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Warehouse/MartPickingCompletionGuardTests.cs",
+      "Hash": "616517A85133053380EF4AD0F042F9AE785B1E3DF7F441F316977DF3FD2E2DFA"
+    },
+    {
+      "Path": "Ssalddel.Tests/Services/LogisticsProcessing/Warehouse/알뜰살뜰마트배차대기ServiceTests.cs",
+      "Hash": "53B81877B4EF1342CFBD13E19CD6C8D1F2981FFBA6FC72BF4C03996649DFF99F"
+    },
+    {
+      "Path": "Ssalddel.Tests/Clients/SsalddelMartSampleTests.cs",
+      "Hash": "382F863586832A32F3EE44DEEFF37C3A31512D7AC85F02700F15242199F1087F"
+    },
+    {
+      "Path": "Ssalddel.Tests/Ssalddel.Tests.csproj",
+      "Hash": "A7262693E89A7AEC818FFDD10A5FC443E676E1A824E2241C9E38B9718684FA6A"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/SsalddelMartSampleInput.cs",
+      "Hash": "49D716F665CBFD94E0B337EA784DFC10A40F1176735035790A1B8E8CABE57288"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/SsalddelMartSampleRuntime.cs",
+      "Hash": "407F4A5DE4A3D301DF818816E2C27364E45834A786DA767CB97CB5A1552F1F12"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/SsalddelMartSamplePage.razor",
+      "Hash": "A6D2AF3D9D63308947FE61F24726265DC3D76E6416093E12A98A75FB8991D490"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/SsalddelMartSamplePage.razor.css",
+      "Hash": "943D6ADB535B6A7717FD1127ED1F2E48EA54A732627ADADD2240AA5B6A544BC9"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/verify-ssalddel-mart-sample.mjs",
+      "Hash": "43A0789345E35E57379630358FF7B137F2C7F2C846119033A5811F272808CF68"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/RoleWorkspacePreview.csproj",
+      "Hash": "7275468B1011F666B6F7BC59D22D7CF595A61B17C116E04937B27D94DEC0D7EF"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/Program.cs",
+      "Hash": "442858E46A270BE2C600D2984F15395AF4DD4652F261E30EFB7DF3D0D4137CD5"
+    }
+  ],
+  "validationResults": {
+    "Fast": { "Passed": 101, "Failed": 0, "Skipped": 0, "Evidence": "artifacts/local/validation/20261010-145253" },
+    "Task": { "Passed": 9963, "Failed": 0, "Skipped": 15, "Total": 9978, "Build": "Ssalddel.v3.5.slnx", "Evidence": "artifacts/local/validation/20261010-145925" },
+    "PreviewBuild": { "Passed": true, "Evidence": "artifacts/local/ssalddel-mart-sample-r52/preview-build-isolated.log" },
+    "Ui": { "Passed": 15, "Failed": 0, "Widths": [320, 390, 1280], "Modes": ["private", "public", "missing", "invalid", "operational"], "Captures": 51, "PrivateLines": 22, "PrivateUnits": 36, "SyntheticLines": 6, "SyntheticUnits": 8, "Evidence": "artifacts/local/ssalddel-mart-sample-r52/ui-*/result.json" },
+    "SourceDrift": { "Files": 15, "Changed": 0, "InputHashesUnchanged": true, "UiBinaryHashesUnchanged": true },
+    "InitialFailures": { "Resolved": true, "Causes": ["Razor implicit quantity suffix", "EF array Contains ReadOnlySpan expression", "Existing preview locks default output"], "Resolution": "Explicit Razor expressions, Enumerable.Contains, isolated output without stopping existing apps" },
+    "RemainingIssues": ["Existing SQLitePCLRaw.lib.e_sqlite3 2.1.10 NU1903 warning", "MartLastMileConsumerBindingUnavailable remains intentional"]
+  },
+  "unverified": ["MySqlMongoRuntime", "AuthenticatedBusinessHttp", "OperationalOutboxEndToEnd", "AndroidDevice", "PhysicalBarcodeScanner", "MartDriverAdapter"]
+}

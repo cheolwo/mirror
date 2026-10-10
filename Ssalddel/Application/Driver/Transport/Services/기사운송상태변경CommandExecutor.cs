@@ -78,6 +78,14 @@ public sealed class 기사운송상태변경CommandExecutor : I기사운송상�
             return Result.Fail<기사운송상태변경응답>("운송을 찾을 수 없습니다.");
         }
 
+        // 마트 라스트마일은 현재 전표·시도 revision 검증 없이 화물 API로 완료할 수 없습니다.
+        if (살뜰.Services.Dispatch.Engine.운송의뢰배차원천유형.Is살뜰마트음식주문(entity.원본의뢰유형))
+        {
+            return Result.Fail<기사운송상태변경응답>(new Error("살뜰마트 배송 화면에서 현재 전표와 배송 상태를 확인해 주세요.")
+                .WithMetadata("StatusCode", StatusCodes.Status409Conflict)
+                .WithMetadata("ErrorCode", "MartDriverWorkflowRequired"));
+        }
+
         var requestId = !string.IsNullOrWhiteSpace(entity.의뢰Id) ? entity.의뢰Id : entity.운송번호;
         // Completed outbound rows still bind distributed custody. Use only legacy tables so unmigrated cargo databases remain compatible.
         if (!string.Equals(request.이벤트명, "DistributedCargoCustody", StringComparison.Ordinal)

@@ -1,0 +1,125 @@
+@using Microsoft.JSInterop
+@using Ssalddel.Contracts.Common.Documents
+@using Ssalddel.Contracts.Common.Identifiers
+@using Ssalddel.Ui.Common.Areas.App.Services
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+@if (Order.Slip is { Active: true } 전표)
+{
+    <article class="mart-slip" data-package-slip data-package-label-id="@전표.LabelId" data-package-revision="@전표.Revision"
+             data-package-order-id="@Order.SampleOrderId" data-package-confirmation-code="@전표.ConfirmationCode">
+        <div class="mart-slip__heading"><div><span>포장 1/1 · 표본 전표</span><h3>포장에 붙일 전표</h3></div>
+            <button type="button" data-package-print disabled="@(Disabled || _출력중)" @onclick="출력Async">전표 출력</button></div>
+        <p>포장 전에도 출력할 수 있어요. 출력만으로 포장·픽업이 완료되지는 않습니다.</p>
+        <details data-package-slip-details>
+            <summary>QR · 네 자리 번호 보기</summary>
+            @if (_Qr is not null) { <img data-package-qr data-package-code="@전표.QrCode" src="@_Qr.DataUri" alt="표본 포장 픽업 QR" width="240" height="240" /> }
+            <p class="mart-slip__number">확인번호 <strong>@전표.ConfirmationCode</strong></p>
+            <p>@Order.DisplayLabel · 전표 판본 @전표.Revision · 출력 요청 @전표.PrintRequestCount 회</p>
+            <p>출력 요청은 인쇄 창 호출 기록입니다. 실물 인쇄 성공을 뜻하지 않습니다.</p>
+            @if (!Order.AllPacked && !Order.MockHandedOff)
+            {
+                @if (!_재발급확인)
+                {
+                    <button type="button" data-package-reissue-open disabled="@(Disabled || _출력중)" @onclick="() => _재발급확인 = true">전표 재발급</button>
+                }
+                else
+                {
+                    <p>이전 전표는 사용할 수 없게 됩니다. 이전 전표를 떼어내고 새 전표를 붙여 주세요.</p>
+                    <button type="button" data-package-reissue-confirm disabled="@(Disabled || _출력중)" @onclick="재발급Async">이전 전표 폐기 · 재발급</button>
+                    <button type="button" disabled="@(Disabled || _출력중)" @onclick="() => _재발급확인 = false">돌아가기</button>
+                }
+            }
+        </details>
+        @if (!string.IsNullOrEmpty(_안내)) { <p role="status" data-package-print-status>@_안내</p> }
+    </article>
+}
+
+@code {
+    [Parameter, EditorRequired] public 살뜰마트표본주문상태 Order { get; set; } = default!;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public EventCallback PrintRequested { get; set; }
+    [Parameter] public EventCallback ReissueRequested { get; set; }
+    private readonly ISsalddelIdentifierCodeGenerator _생성기 = new ZxingSsalddelIdentifierCodeGenerator();
+    private IJSObjectReference? _모듈, _인쇄기;
+    private SsalddelIdentifierCodeImage? _Qr;
+    private string _전표Id = "", _안내 = "";
+    private bool _출력중, _재발급확인, _disposed;
+
+    protected override void OnParametersSet()
+    {
+        if (Order.Slip is not { Active: true } 전표 || _전표Id == 전표.LabelId) return;
+        _전표Id = 전표.LabelId;
+        _재발급확인 = false;
+        _안내 = "";
+        _Qr = _생성기.Generate(new(페이로드(전표), Width: 240, Height: 240, Margin: 4));
+    }
+
+    private static SsalddelIdentifierCodePayload 페이로드(살뜰마트표본전표상태 전표)
+        => SsalddelIdentifierCodePayloads.Create(SsalddelIdentifierKindCode.HandlingUnit, 전표.LabelId, rawCode: 전표.QrCode);
+
+    private async Task 출력Async()
+    {
+        if (_disposed || Disabled || _출력중 || Order.Slip is not { Active: true } 전표) return;
+        var 전표Id = 전표.LabelId;
+        _출력중 = true;
+        try
+        {
+            _모듈 ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/ssalddel-mart-package-print.js");
+            if (_disposed || 전표Id != _전표Id) return;
+            _인쇄기 ??= await _모듈.InvokeAsync<IJSObjectReference>("createPrinter");
+            if (_disposed || 전표Id != _전표Id) return;
+            var 출력물 = new SsalddelDocumentOutputService(_생성기).CreateOutboundExpectedItems(new()
+            {
+                DocumentNo = 전표.LabelId,
+                Title = "살뜰마트 표본 포장 전표",
+                Status = "표본 · 포장 1/1",
+                WarehouseName = "살뜰마트",
+                OwnerName = $"확인번호 {전표.ConfirmationCode}",
+                CounterpartyName = "표본 기사 픽업용",
+                OrderNo = Order.DisplayLabel,
+                WorkMemo = $"포장 1/1 · 확인번호 {전표.ConfirmationCode} · 판본 {전표.Revision}. 표본용 전표입니다. 출력은 포장·픽업 완료가 아닙니다. 앱의 현재 상태를 확인해 주세요.",
+                DocumentBarcodePayload = 페이로드(전표),
+                PrintLayout = new() { PaperSize = SsalddelDocumentPaperSizeCode.Thermal80, Density = SsalddelDocumentDensityCode.Dense,
+                    PrintStyle = SsalddelDocumentPrintStyleCode.ReceiptSlip, IncludeDocumentQrCode = true, IncludeLineBarcodes = false },
+                Lines = Order.Lines.Select((품목, 번호) => new SsalddelExpectedItemDocumentLine
+                    { LineNo = (번호 + 1).ToString(), ProductName = 품목.ProductName, Quantity = 품목.Quantity }).ToArray()
+            });
+            var 결과 = await _인쇄기.InvokeAsync<string>("request", 출력물.Title, 출력물.Html);
+            if (_disposed || 전표Id != _전표Id) return;
+            if (결과 == "requested")
+            {
+                await PrintRequested.InvokeAsync();
+                _안내 = "인쇄 창을 요청했어요. 실제 출력 여부는 프린터에서 확인해 주세요.";
+            }
+            else _안내 = "인쇄 창을 열지 못했어요. 다시 시도해 주세요.";
+        }
+        catch (Exception 오류) when (오류 is JSException or JSDisconnectedException or InvalidOperationException or OperationCanceledException)
+        { if (!_disposed) _안내 = "인쇄 요청을 확인하지 못했어요. 현재 전표를 확인한 뒤 다시 시도해 주세요."; }
+        finally { _출력중 = false; if (_disposed) await 인쇄기해제Async(); }
+    }
+
+    private async Task 재발급Async() { if (!Disabled && !_출력중 && !_disposed) await ReissueRequested.InvokeAsync(); }
+    public async ValueTask DisposeAsync()
+    {
+        _disposed = true;
+        await 인쇄기해제Async();
+        _Qr = null;
+    }
+    private async ValueTask 인쇄기해제Async()
+    {
+        var 인쇄기 = _인쇄기; _인쇄기 = null;
+        var 모듈 = _모듈; _모듈 = null;
+        if (인쇄기 is not null)
+        {
+            try { await 인쇄기.InvokeVoidAsync("dispose"); await 인쇄기.DisposeAsync(); }
+            catch (Exception 오류) when (오류 is JSException or JSDisconnectedException or InvalidOperationException or OperationCanceledException) { }
+        }
+        if (모듈 is not null)
+        {
+            try { await 모듈.DisposeAsync(); }
+            catch (Exception 오류) when (오류 is JSException or JSDisconnectedException or InvalidOperationException or OperationCanceledException) { }
+        }
+    }
+}

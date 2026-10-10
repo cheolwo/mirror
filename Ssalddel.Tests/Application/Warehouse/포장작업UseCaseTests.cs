@@ -1,10 +1,13 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Warehouse;
 using Ssalddel.Application.Warehouse.Events;
+using Ssalddel.Application.Warehouse.Handlers;
 using Ssalddel.Contracts.Common.Inventory;
 using Ssalddel.Contracts.Common.ViewSettings;
+using Ssalddel.Services.LogisticsProcessing.Warehouse;
 using 살뜰.Data;
 using 살뜰.Infrastructure.Security;
 using 살뜰.Services.Audit;
@@ -52,12 +55,18 @@ public sealed class 포장작업UseCaseTests
         Assert.Single(await db.재고이력.Where(x => x.입고상품Id == ids.AccessibleId && x.이력유형 == "포장").ToArrayAsync());
         Assert.Single(await db.재고이동.Where(x => x.입고상품Id == ids.AccessibleId && x.이동유형 == "포장").ToArrayAsync());
         Assert.Single(logs.Entries);
-        var notification = Assert.IsType<창고포장완료됨Event>(Assert.Single(publisher.Notifications));
+        var notification = Assert.Single(publisher.Notifications.OfType<창고포장완료됨Event>());
         Assert.Equal("ORDER-A", notification.주문참조번호);
         Assert.Equal("감자", notification.상품명);
         Assert.Equal("POTATO", notification.SKU);
         Assert.Equal(포장유형코드.냉장포장, notification.포장유형);
         Assert.Equal("A-02-01", notification.보관위치);
+        var recheck = Assert.Single(publisher.Notifications.OfType<창고포장배차재확인요청됨Event>());
+        Assert.Equal(ids.AccessibleId, recheck.입고상품Id);
+        Assert.Equal("worker-a", recheck.사용자Id);
+        Assert.Equal(first.Value.PackedAtUtc, replay.Value.PackedAtUtc);
+        Assert.Equal(first.Value.PackedAtUtc, recheck.포장완료시각Utc);
+        Assert.Equal(2, publisher.Notifications.Count);
     }
 
     [Fact]
@@ -71,8 +80,126 @@ public sealed class 포장작업UseCaseTests
         Assert.True(repack.IsFailed); Assert.Equal(409, repack.Errors.Single().Metadata["StatusCode"]);
     }
 
+    [Theory]
+    [InlineData("missing-history")]
+    [InlineData("missing-packed-time")]
+    [InlineData("available-quantity-changed")]
+    [InlineData("history-quantity-changed")]
+    [InlineData("zero-quantity")]
+    [InlineData("different-request-quantity")]
+    public async Task 완료재요청은_현재포장근거와전체수량불일치에서_배차재확인을발행하지않는다(string defect)
+    {
+        await using var db = CreateContext(); var ids = await SeedAsync(db);
+        var publisher = new RecordingPublisher(); var logs = new RecordingLog();
+        var useCase = CreateUseCase(db, "worker-a", logs, publisher);
+        var request = Request(9, 포장유형코드.일반포장);
+        Assert.True((await useCase.완료Async(ids.AccessibleId, request, RequestContext(), CancellationToken.None)).IsSuccess);
+        var item = await db.입고상품.SingleAsync(value => value.Id == ids.AccessibleId);
+        var history = await db.재고이력.SingleAsync(value => value.입고상품Id == ids.AccessibleId && value.이력유형 == "포장");
+        switch (defect)
+        {
+            case "missing-history": db.재고이력.Remove(history); break;
+            case "missing-packed-time": history.처리일시 = default; break;
+            case "available-quantity-changed": item.가용수량 = 8; break;
+            case "history-quantity-changed": history.변경후수량 = 8; break;
+            case "zero-quantity": item.가용수량 = 0; history.변경후수량 = 0; request.PackagingQuantity = 0; break;
+            case "different-request-quantity": request.PackagingQuantity = 8; break;
+        }
+        await db.SaveChangesAsync();
+        var result = await useCase.완료Async(ids.AccessibleId, request, RequestContext(), CancellationToken.None);
+        Assert.True(result.IsFailed); Assert.Equal(409, result.Errors.Single().Metadata["StatusCode"]);
+        Assert.Empty(publisher.Notifications.OfType<창고포장배차재확인요청됨Event>());
+        Assert.Single(publisher.Notifications.OfType<창고포장완료됨Event>());
+        Assert.Single(await db.재고이동.Where(value => value.입고상품Id == ids.AccessibleId).ToArrayAsync());
+        Assert.Single(logs.Entries);
+        Assert.False(db.ChangeTracker.HasChanges());
+    }
+
+    [Theory]
+    [InlineData(null, 401)]
+    [InlineData("not-a-warehouse-worker", 404)]
+    public async Task 완료재요청도_인증과현재창고접근없이는_배차재확인을발행하지않는다(string? userId, int expectedStatus)
+    {
+        await using var db = CreateContext(); var ids = await SeedAsync(db);
+        var publisher = new RecordingPublisher(); var logs = new RecordingLog();
+        var request = Request(9, 포장유형코드.일반포장);
+        Assert.True((await CreateUseCase(db, "worker-a", logs, publisher)
+            .완료Async(ids.AccessibleId, request, RequestContext(), CancellationToken.None)).IsSuccess);
+        var result = await CreateUseCase(db, userId, logs, publisher)
+            .완료Async(ids.AccessibleId, request, RequestContext(), CancellationToken.None);
+        Assert.True(result.IsFailed); Assert.Equal(expectedStatus, result.Errors.Single().Metadata["StatusCode"]);
+        Assert.Empty(publisher.Notifications.OfType<창고포장배차재확인요청됨Event>());
+        Assert.Single(publisher.Notifications.OfType<창고포장완료됨Event>());
+        Assert.Single(logs.Entries);
+        Assert.False(db.ChangeTracker.HasChanges());
+    }
+
+    [Fact]
+    public async Task 같은창고다른담당자재요청은_인증주체로후속만재확인하고_원래포장사실을유지한다()
+    {
+        await using var db = CreateContext(); var ids = await SeedAsync(db);
+        var publisher = new RecordingPublisher(); var logs = new RecordingLog();
+        var request = Request(9, 포장유형코드.일반포장);
+        var first = await CreateUseCase(db, "worker-a", logs, publisher)
+            .완료Async(ids.AccessibleId, request, RequestContext(), CancellationToken.None);
+        var item = await db.입고상품.SingleAsync(value => value.Id == ids.AccessibleId);
+        var updatedAt = item.UpdatedAt;
+        db.창고사용자.Add(new 창고사용자 { 창고Id = item.창고Id, UserId = "worker-b", 역할명 = "출고" });
+        await db.SaveChangesAsync();
+        var result = await CreateUseCase(db, "worker-b", logs, publisher)
+            .완료Async(ids.AccessibleId, request, RequestContext(), CancellationToken.None);
+        Assert.True(result.IsSuccess); Assert.True(result.Value.IdempotentReplay);
+        var recheck = Assert.Single(publisher.Notifications.OfType<창고포장배차재확인요청됨Event>());
+        Assert.Equal("worker-b", recheck.사용자Id);
+        Assert.Equal(first.Value.PackedAtUtc, recheck.포장완료시각Utc);
+        Assert.Equal(first.Value.PackedAtUtc, result.Value.PackedAtUtc);
+        Assert.Equal(updatedAt, item.UpdatedAt);
+        Assert.Single(publisher.Notifications.OfType<창고포장완료됨Event>());
+        Assert.Equal("worker-a", Assert.Single(await db.재고이력.Where(value => value.입고상품Id == item.Id && value.이력유형 == "포장").ToArrayAsync()).처리UserId);
+        Assert.Single(await db.재고이동.Where(value => value.입고상품Id == item.Id).ToArrayAsync());
+        Assert.Single(logs.Entries);
+        Assert.False(db.ChangeTracker.HasChanges());
+    }
+
+    [Fact]
+    public async Task 포장저장후배차후속실패는_명시적동일재요청으로만재확인하며_포장Event를복제하지않는다()
+    {
+        await using var db = CreateContext(); var ids = await SeedAsync(db);
+        var queue = new RecordingDispatchQueue { RemainingFailures = 2 };
+        var handler = new 알뜰살뜰마트포장완료배차대기EventHandler(queue,
+            NullLogger<알뜰살뜰마트포장완료배차대기EventHandler>.Instance);
+        var publisher = new RecordingPublisher
+        {
+            OnPublish = (notification, ct) => notification switch
+            {
+                창고포장완료됨Event completed => handler.Handle(completed, ct),
+                창고포장배차재확인요청됨Event recheck => handler.Handle(recheck, ct),
+                _ => Task.CompletedTask
+            }
+        };
+        var logs = new RecordingLog(); var useCase = CreateUseCase(db, "worker-a", logs, publisher);
+        var request = Request(9, 포장유형코드.일반포장);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => useCase.완료Async(ids.AccessibleId, request, RequestContext(), CancellationToken.None));
+        var item = await db.입고상품.SingleAsync(value => value.Id == ids.AccessibleId);
+        var packedAt = item.UpdatedAt;
+        Assert.Equal("포장완료-일반포장", item.상태);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => useCase.완료Async(ids.AccessibleId, request, RequestContext(), CancellationToken.None));
+        var recovered = await useCase.완료Async(ids.AccessibleId, request, RequestContext(), CancellationToken.None);
+        Assert.True(recovered.IsSuccess); Assert.True(recovered.Value.IdempotentReplay);
+        Assert.Equal(packedAt, recovered.Value.PackedAtUtc);
+        Assert.Equal(packedAt, item.UpdatedAt);
+        Assert.Equal(3, queue.Calls.Count);
+        Assert.All(queue.Calls, call => Assert.Equal((ids.AccessibleId, "worker-a"), call));
+        Assert.Single(publisher.Notifications.OfType<창고포장완료됨Event>());
+        Assert.Equal(2, publisher.Notifications.OfType<창고포장배차재확인요청됨Event>().Count());
+        Assert.Single(await db.재고이력.Where(value => value.입고상품Id == item.Id && value.이력유형 == "포장").ToArrayAsync());
+        Assert.Single(await db.재고이동.Where(value => value.입고상품Id == item.Id).ToArrayAsync());
+        Assert.Single(logs.Entries);
+        Assert.False(db.ChangeTracker.HasChanges());
+    }
+
     private static 포장작업완료요청 Request(int quantity, string type) => new() { PackagingQuantity = quantity, PackagingType = type, InventoryConfirmed = true, PackageLabelConfirmed = true };
-    private static 포장작업UseCase CreateUseCase(SsalddelContext db, string userId, RecordingLog? logs = null, RecordingPublisher? publisher = null)
+    private static 포장작업UseCase CreateUseCase(SsalddelContext db, string? userId, RecordingLog? logs = null, RecordingPublisher? publisher = null)
         => new(db, new FakeCurrentUserAccessor(userId, 역할명.창고관리자), logs ?? new(), publisher ?? new());
     private static 창고작업요청Context RequestContext() => new("WarehouseManagerApp", "worker-a", "포장 작업자", 역할명.창고관리자, "/work/outbound/packing", "trace-pack", "127.0.0.1", "test");
     private static SsalddelContext CreateContext() => new(new DbContextOptionsBuilder<SsalddelContext>().UseInMemoryDatabase(Guid.NewGuid().ToString("N")).Options, new DummyEncryption());
@@ -99,7 +226,30 @@ public sealed class 포장작업UseCaseTests
     private sealed class RecordingPublisher:IPublisher
     {
         public List<object> Notifications{get;}=[];
-        public Task Publish(object notification,CancellationToken cancellationToken=default){Notifications.Add(notification);return Task.CompletedTask;}
-        public Task Publish<TNotification>(TNotification notification,CancellationToken cancellationToken=default) where TNotification:INotification { Notifications.Add(notification); return Task.CompletedTask; }
+        public Func<INotification, CancellationToken, Task>? OnPublish { get; init; }
+        public Task Publish(object notification,CancellationToken cancellationToken=default)
+        {
+            Notifications.Add(notification);
+            return notification is INotification typed && OnPublish is not null ? OnPublish(typed, cancellationToken) : Task.CompletedTask;
+        }
+        public Task Publish<TNotification>(TNotification notification,CancellationToken cancellationToken=default) where TNotification:INotification
+            => Publish((object)notification, cancellationToken);
+    }
+    private sealed class RecordingDispatchQueue : I알뜰살뜰마트배차대기Service
+    {
+        public int RemainingFailures { get; set; }
+        public List<(long ItemId, string UserId)> Calls { get; } = [];
+        public Task<IReadOnlyList<알뜰살뜰마트배차대기생성결과>> 입고상품포장완료반영Async(long 입고상품Id, string updatedBy, CancellationToken cancellationToken = default)
+        {
+            Calls.Add((입고상품Id, updatedBy));
+            if (RemainingFailures > 0)
+            {
+                RemainingFailures--;
+                throw new InvalidOperationException("격리 시험: 배차 후속 경계 실패");
+            }
+            return Task.FromResult<IReadOnlyList<알뜰살뜰마트배차대기생성결과>>([]);
+        }
+        public Task<알뜰살뜰마트배차대기생성결과> 주문포장완료후배차대기생성Async(string 주문참조번호, string updatedBy, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException("이 시험은 입고상품 포장 재확인 경로만 사용합니다.");
     }
 }

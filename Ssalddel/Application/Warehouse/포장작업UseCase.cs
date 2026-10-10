@@ -114,12 +114,20 @@ public sealed class 포장작업UseCase(
         {
             var existing = await db.재고이력.AsNoTracking().Where(history => history.입고상품Id == item.Id && history.이력유형 == "포장")
                 .OrderByDescending(history => history.처리일시).ThenByDescending(history => history.Id).FirstOrDefaultAsync(cancellationToken);
-            if (!string.Equals(PackagingType(item.상태), type, StringComparison.Ordinal) || existing?.변경후수량 != request.PackagingQuantity)
+            if (existing is null || existing.처리일시 == default || request.PackagingQuantity <= 0
+                || item.가용수량 != request.PackagingQuantity
+                || !string.Equals(PackagingType(item.상태), type, StringComparison.Ordinal)
+                || existing.변경후수량 != request.PackagingQuantity)
                 return Conflict<포장작업결과응답>("이미 포장 완료된 재고의 수량·유형 변경은 별도 재포장 작업에서 처리해 주세요.");
+            // 명시적 동일 재요청은 배차 후속만 재확인합니다. 포장 완료 Event 전체를 재발행하지 않습니다.
+            await publisher.Publish(new 창고포장배차재확인요청됨Event(
+                userId, item.Id, AsUtc(existing.처리일시), DateTime.UtcNow), cancellationToken);
             return Result.Ok(ToResult(item, request.PackagingQuantity, type, existing.처리일시, true));
         }
         if (창고재고공정Policy.포장차단사유(item.상태, request.PackagingQuantity, item.가용수량) is { } blocked)
             return Conflict<포장작업결과응답>(blocked);
+        if (await 마트주문피킹완료Guard.입고상품차단사유Async(db, item, cancellationToken) is { } pickingBlocked)
+            return Conflict<포장작업결과응답>(pickingBlocked);
 
         var inbound = await db.입고요청.AsNoTracking()
             .FirstOrDefaultAsync(candidate => candidate.Id == item.입고요청Id, cancellationToken);

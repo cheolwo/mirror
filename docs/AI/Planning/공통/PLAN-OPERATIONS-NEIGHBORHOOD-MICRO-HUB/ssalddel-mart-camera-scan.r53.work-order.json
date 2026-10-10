@@ -1,0 +1,52 @@
+{
+  "planId": "PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB",
+  "revision": "r53",
+  "status": "Implemented / LocalValidated / AndroidDeferred / OperationalDeferred",
+  "acceptedBy": "development",
+  "approvalBasis": "2026-10-10 user request to add QR/barcode scanning to current mart sample",
+  "baseCommit": "d1bab3eec08dc0a49c9a87f882590d394205c9a4",
+  "designDocumentRef": "ssalddel-mart-camera-scan.implementation.r53.md",
+  "designSha256": "1B764AB281C2EFBAD26BA4F12D62B13BAD9C48FD0929C7A9AAF4A85DE41A5648",
+  "approvedDesignSha256": "077D3178F2497F2EAC7FED0833FB38FFFCF5659C45B605FF5C8CEC7A2B37AD39",
+  "designUpdate": "Same approved scope; implementation return and evidence appended",
+  "primaryOwner": "operations",
+  "writePaths": [
+    "eng/RoleWorkspacePreview/SsalddelMartRackScanner.razor",
+    "eng/RoleWorkspacePreview/SsalddelMartRackScanner.razor.css",
+    "eng/RoleWorkspacePreview/SsalddelMartSamplePage.razor",
+    "eng/RoleWorkspacePreview/wwwroot/js/ssalddel-mart-scanner.js",
+    "eng/RoleWorkspacePreview/test-ssalddel-mart-scanner.mjs",
+    "eng/RoleWorkspacePreview/verify-ssalddel-mart-scanner.mjs",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-camera-scan.implementation.r53.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-camera-scan.r53.work-order.json",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/Changes/2026-10-10-ssalddel-mart-camera-scan-r53.md",
+    "docs/Changes/README.md",
+    "docs/assets/changes/2026-10-10-ssalddel-mart-scan-r53-390.png"
+  ],
+  "excludedEffects": ["OperationalDatabaseWrite", "SourceMutation", "RealDispatch", "Payment", "ExternalNotification", "LanExposure", "ApkBinding", "CameraPersistence", "Commit", "Push", "Deploy"],
+  "validationCeiling": ["Build", "ScopedTests", "TaskTests", "LoopbackRenderedUi", "MockDecoderLifecycle", "SyntheticLabelRoundtrip"],
+  "unverified": ["AndroidDeviceCamera", "MauiWebView", "AuthenticatedBusinessHttp", "OperationalOutboxEndToEnd"],
+  "sourceFingerprints": [
+    { "Path": "eng/RoleWorkspacePreview/SsalddelMartRackScanner.razor", "Hash": "D3C64C3C8CAF4D4267E88C9B28C99F6A915CA465F994DD402E7466598E57FEEE" },
+    { "Path": "eng/RoleWorkspacePreview/SsalddelMartRackScanner.razor.css", "Hash": "0C3CAA62F0C58B2EA46893DD7D74B1F822C436BBF3234E113EB4E14470B6C704" },
+    { "Path": "eng/RoleWorkspacePreview/SsalddelMartSamplePage.razor", "Hash": "1BC29A3FCEC005F7562DFAE187DD2C99CF6DE144BA012CB04A3B84B8E82B75D4" },
+    { "Path": "eng/RoleWorkspacePreview/wwwroot/js/ssalddel-mart-scanner.js", "Hash": "574635DAC56883A974C429710506BE38C946FFAA4FC894609404F3B65859D260" },
+    { "Path": "eng/RoleWorkspacePreview/test-ssalddel-mart-scanner.mjs", "Hash": "EC9E17FBADDEAA28F4A9CDE8B77770CB54EA8FA8FFD2C132A8AA39B18CCECE68" },
+    { "Path": "eng/RoleWorkspacePreview/verify-ssalddel-mart-scanner.mjs", "Hash": "F2F3DC160D790A1D931519ACF354EE452A58AB6BB320CBDFE6FE3DCB2A875FDC" }
+  ],
+  "validationResults": {
+    "PreviewBuild": { "Passed": true, "Errors": 0, "Evidence": "artifacts/local/ssalddel-mart-scan-r53/preview-build-label-fix.log" },
+    "CsharpRegression": { "Passed": 39, "Failed": 0, "Skipped": 0, "Evidence": "artifacts/local/ssalddel-mart-scan-r53/tests/mart-scan-regression.trx" },
+    "JavascriptLifecycle": { "Passed": 30, "Failed": 0, "Evidence": "artifacts/local/ssalddel-mart-scan-r53/scanner-unit.log" },
+    "MockDecoderUi": { "Passed": 27, "Failed": 0, "Widths": [320, 390, 1280], "PhysicalScanVerified": false, "SourceDrift": false, "ServerFailuresDuringRun": 0, "Evidence": "artifacts/local/ssalddel-mart-scan-r53/ui-scanner-accepted/result.json" },
+    "ManualUiRegression": { "Passed": 3, "Failed": 0, "Evidence": "artifacts/local/ssalddel-mart-scan-r53/ui-manual-accepted/result.json" },
+    "ActualSyntheticLabelDecode": { "Passed": 12, "Failed": 0, "Widths": [320, 390], "Modes": ["SvgViewBox", "DisplayDpr1", "DisplayDpr3"], "PhysicalScanVerified": false, "Evidence": "artifacts/local/ssalddel-mart-scan-r53/labels-roundtrip/decode-result.json" },
+    "FastTaskRouting": { "Passed": true, "BuildSkippedForEngPaths": true, "TestsSkippedForEngPaths": true, "ExplicitBuildAndTestsReportedSeparately": true },
+    "DelayedCircuitDisposalAudit": { "Status": "Passed", "IdleSeconds": 221, "ServerFailures": 0, "ErrorLogBytes": 0, "Evidence": "artifacts/local/ssalddel-mart-scan-r53/delayed-circuit-audit.json" },
+    "ResolvedFindings": ["WrongCodeTerminalState", "LatePermissionMicrotaskCleanup", "DisconnectedCircuitDisposeException", "Code128NonIntegerDownscale"],
+    "RemainingIssues": ["Existing SQLitePCLRaw.lib.e_sqlite3 2.1.10 NU1903 warning", "Native phone camera and APK binding deferred"]
+  }
+}

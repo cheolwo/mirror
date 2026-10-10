@@ -1,0 +1,157 @@
+{
+  "planId": "PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB",
+  "revision": "r57",
+  "status": "Implemented / LocalValidated / SoftwareConnectionFoundation / OperationalDeferred",
+  "acceptedBy": "development",
+  "approvalBasis": "2026-10-10 user requested software dispatch connection before hardware",
+  "baseCommit": "d1bab3eec08dc0a49c9a87f882590d394205c9a4",
+  "designDocumentRef": "ssalddel-mart-dispatch-connection.implementation.r57.md",
+  "designSha256": "4559A95E745A8FD727D126A009FE9665523D73792C200B01F0C13AB94E045C4D",
+  "approvedDesignSha256": "4559A95E745A8FD727D126A009FE9665523D73792C200B01F0C13AB94E045C4D",
+  "designClarification": "Same warehouse access is rechecked for the current authenticated actor; replay is not restricted to the original packer.",
+  "priorDesignSha256": [
+    "E1C6BFBEEAE9F75F41EDD521E3298B9FCBB6C6B961710F79E2FD9D37B6F9DBA8",
+    "E39CAD741DB91FB4888CA6DE6B56D0CCA538D2F6DED9D1BEF640A3A34FC5B801"
+  ],
+  "primaryOwner": "operations",
+  "writePaths": [
+    "Ssalddel/Services/Operations/마트라스트마일원천Adapter.cs",
+    "Ssalddel/Services/Operations/MartLastMileDispatchReadinessPolicy.cs",
+    "Ssalddel/Extensions/ServiceCollectionExtensions.DomainServices.Operations.cs",
+    "Ssalddel.Tests/Services/Operations/마트라스트마일원천AdapterTests.cs",
+    "Ssalddel/Application/Warehouse/포장작업UseCase.cs",
+    "Ssalddel/Application/Warehouse/Events/창고포장배차재확인요청됨Event.cs",
+    "Ssalddel/Application/Warehouse/Handlers/알뜰살뜰마트포장완료배차대기EventHandler.cs",
+    "Ssalddel.Tests/Application/Warehouse/포장작업UseCaseTests.cs",
+    "Ssalddel.Tests/Application/Warehouse/MartPickingCompletionGuardTests.cs",
+    "Ssalddel.Tests/Clients/SsalddelMartSampleTests.cs",
+    "Ssalddel/Services/LogisticsProcessing/Warehouse/알뜰살뜰마트배차대기Service.cs",
+    "Ssalddel/Services/Dispatch/Queue/운송의뢰배차대기Service.cs",
+    "Ssalddel.Tests/Services/Dispatch/MartDispatchSourceCollisionTests.cs",
+    "Ssalddel.Tests/Services/Operations/MartDispatchSoftwareConnectionTests.cs",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-dispatch-connection.implementation.r57.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-dispatch-connection.r57.work-order.json",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/Changes/2026-10-10-ssalddel-mart-dispatch-connection-r57.md",
+    "docs/Changes/README.md"
+  ],
+  "excludedEffects": [
+    "EnableOperationalDispatch",
+    "FakeFoodOrder",
+    "OperationalDatabaseWrite",
+    "ExternalNotification",
+    "Hardware",
+    "Commit",
+    "Push",
+    "Deploy"
+  ],
+  "validationCeiling": [
+    "SourceAndContract",
+    "IsolatedDatabaseConnection",
+    "TestOnlyReadyConsumer",
+    "Build",
+    "Fast",
+    "Task"
+  ],
+  "unverified": [
+    "OperationalDriverConsumer",
+    "AuthenticatedOperationalHttp",
+    "MongoRedisEndToEnd",
+    "AndroidDevice",
+    "PhysicalPrinter",
+    "AutomaticDurableRecovery"
+  ],
+  "implementationReturn": {
+    "state": "Implemented / LocalValidated / SoftwareConnectionFoundation / OperationalDeferred",
+    "fast": {
+      "directory": "artifacts/local/validation/20261010-180817",
+      "passed": 149,
+      "failed": 0,
+      "skipped": 0
+    },
+    "task": {
+      "directory": "artifacts/local/validation/20261010-180938",
+      "solution": "Ssalddel.v3.5.slnx",
+      "buildErrors": 0,
+      "buildWarnings": 61,
+      "passed": 10180,
+      "failed": 0,
+      "skipped": 15,
+      "total": 10195
+    },
+    "connectionBoundary": "Actual packing UseCase, Event handlers, mart service, OS handoff and common queue on isolated SQLite. Test-only ready consumer; Mongo and Redis replaced by recording boundaries.",
+    "productReadiness": "MartLastMileConsumerBindingUnavailable",
+    "sourceFingerprintDrift": 0,
+    "documentation": {
+      "directory": "artifacts/local/validation/20261010-181952",
+      "fastPassed": true,
+      "buildTestsSkippedForDocsOnly": true,
+      "localMarkdownLinksChecked": 1034,
+      "missingLocalMarkdownLinks": 0,
+      "scopedDiffCheckPassed": true
+    },
+    "concurrentSampleTestCompatibility": "Preserved another thread's updated event-count assertions; no unrelated UI changes.",
+    "remaining": "Mart driver attempt, operational slip and request-result persistence, FDriver accept/pickup/delivery, real authenticated HTTP and DB integration.",
+    "commitPushDeployPerformed": false
+  },
+  "sourceFingerprints": [
+    {
+      "Path": "Ssalddel/Services/Operations/마트라스트마일원천Adapter.cs",
+      "Sha256": "E0781B25733C076B0F87B99DE38E6814C408F96009D647D9DC16626E16E70EB2"
+    },
+    {
+      "Path": "Ssalddel/Services/Operations/MartLastMileDispatchReadinessPolicy.cs",
+      "Sha256": "B579764962B6231FD1F89425CCCCF034BBFDFC214A5D8CCC270A401A02B0AB56"
+    },
+    {
+      "Path": "Ssalddel/Extensions/ServiceCollectionExtensions.DomainServices.Operations.cs",
+      "Sha256": "7B1539B02CF8FBF79ED3543B5F17D54D862329A74BFB85E68A44B882845A1B14"
+    },
+    {
+      "Path": "Ssalddel.Tests/Services/Operations/마트라스트마일원천AdapterTests.cs",
+      "Sha256": "B675F6069005A37E26180CF1A73B9114ACE1D03370AA6A27D86066F3465F9CCF"
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/포장작업UseCase.cs",
+      "Sha256": "421BE54B208D2091363677D5211FED1081599A9882CFE37106450A652FBD727B"
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/Events/창고포장배차재확인요청됨Event.cs",
+      "Sha256": "827F589B40918C2864D3D9FD6D5A37FFC7260D3D2FAA751F38A30F6CB8D306A9"
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/Handlers/알뜰살뜰마트포장완료배차대기EventHandler.cs",
+      "Sha256": "6401C769AEA052FE981A134F8FFF8EF169F105F09576939A70E94C8FDB17B06A"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Warehouse/포장작업UseCaseTests.cs",
+      "Sha256": "8D33A626731418DFDD5F6BAA66E0D3B6090AFCDF3BEAB63CBDB57F06B0C577C5"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Warehouse/MartPickingCompletionGuardTests.cs",
+      "Sha256": "1DDF5A0630C2FFAF1A35E2709568B48B4A7DC1941FFE51A77BAA8A2D08BA047A"
+    },
+    {
+      "Path": "Ssalddel.Tests/Clients/SsalddelMartSampleTests.cs",
+      "Sha256": "39F290D9B6AA507AA981C093EC7D68FF622AC67AAED4BC980D5578068A6025A9"
+    },
+    {
+      "Path": "Ssalddel/Services/LogisticsProcessing/Warehouse/알뜰살뜰마트배차대기Service.cs",
+      "Sha256": "A1BBF77ACDB9AD3AA649582DAF4DDFB3E33142096CFCC8829225C7EE7B3D0D2C"
+    },
+    {
+      "Path": "Ssalddel/Services/Dispatch/Queue/운송의뢰배차대기Service.cs",
+      "Sha256": "86DEF2F43C250DC36D24D9ED2367F8D055BE19D7E51170CEB524B849DF5C6907"
+    },
+    {
+      "Path": "Ssalddel.Tests/Services/Dispatch/MartDispatchSourceCollisionTests.cs",
+      "Sha256": "714EAB0247D1875456815ED3C4F5E142666B4388426D2EB2F8DD139FCADFF068"
+    },
+    {
+      "Path": "Ssalddel.Tests/Services/Operations/MartDispatchSoftwareConnectionTests.cs",
+      "Sha256": "026CEE9A6398AA9A5F1A3A649C571DBEE23937A7CEB3E0B009D6F30AA50B798E"
+    }
+  ]
+}

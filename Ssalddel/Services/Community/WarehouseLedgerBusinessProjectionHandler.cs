@@ -24,6 +24,20 @@ public sealed class 입출고원장업무투영Handler : I원장업무투영동�
 
     public async Task 동기화Async(커뮤니티원장Dto 원장, CancellationToken cancellationToken = default)
     {
+        // 이미 저장된 마트 업무 상태 사본은 새 입출고 Command가 아닙니다.
+        // 블록을 편집하면 digest가 달라져 기존 협업 원장 투영 경로를 유지합니다.
+        if (string.Equals(원장.원장템플릿Key, CommunityLedgerTemplateKeys.SsalddelMart, StringComparison.OrdinalIgnoreCase)
+            && 원장.외부참조.TryGetValue("원천Id", out var 주문참조번호)
+            && !string.IsNullOrWhiteSpace(주문참조번호)
+            && 원장.확장속성.TryGetValue("MartDriverSnapshotState", out var 사본상태)
+            && string.Equals(사본상태, 원장.상태, StringComparison.Ordinal)
+            && 원장.확장속성.TryGetValue("MartDriverSnapshotStage", out var 사본단계)
+            && string.Equals(사본단계, 원장.현재단계Key, StringComparison.Ordinal)
+            && 운송원장RdbSnapshotMarker.Matches(원장, 주문참조번호))
+        {
+            return;
+        }
+
         var snapshot = 입출고원장업무투영Snapshot.생성(원장);
         if (snapshot is null)
         {

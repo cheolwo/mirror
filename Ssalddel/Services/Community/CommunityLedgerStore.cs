@@ -162,6 +162,8 @@ public sealed partial class Mongo커뮤니티원장저장소 : I커뮤니티원�
         var 문서목록 = await _collection
             .Find(BuildFilter(query))
             .SortByDescending(x => x.수정시각Utc)
+            .ThenByDescending(x => x.원장Id)
+            .Skip(Math.Max(0, query.Skip))
             .Limit(query.Limit <= 0 ? 50 : Math.Min(query.Limit, 200))
             .ToListAsync(cancellationToken);
 

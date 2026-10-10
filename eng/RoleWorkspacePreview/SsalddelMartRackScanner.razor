@@ -1,0 +1,157 @@
+@using Microsoft.JSInterop
+@using Ssalddel.Contracts.Common.Identifiers
+@using Ssalddel.Ui.Common.Areas.App.Services
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<section class="mart-scan" data-scan-state="@_상태" aria-label="선반 코드 스캔">
+    <button type="button" class="mart-scan__button" data-scan-start
+            disabled="@(Disabled || _카메라열림)" @onclick="스캔시작Async">카메라로 코드 스캔</button>
+    <p class="mart-scan__notice" role="status" aria-live="polite">@상태안내</p>
+    <div class="mart-scan__camera" hidden="@(!_카메라열림)">
+        <video @ref="_영상" data-scan-video autoplay muted playsinline aria-label="선반 QR 또는 바코드 카메라 미리보기"></video>
+        <p>선반의 QR 코드 또는 바코드를 화면 가운데에 맞춰 주세요.</p>
+        <button type="button" class="mart-scan__button" data-scan-stop @onclick="스캔닫기Async">카메라 닫기 · 직접 입력</button>
+    </div>
+    <details class="mart-scan__labels" data-scan-labels>
+        <summary>연습용 선반 QR·바코드 보기</summary>
+        <p>합성 선반 표찰입니다. 다른 화면에 띄우거나 인쇄한 표찰을 스캔해 볼 수 있어요. 실제 상품 바코드는 아닙니다.</p>
+        @if (_Qr is not null && _Barcode is not null)
+        {
+            <figure><img data-scan-qr src="@_Qr.DataUri" alt="현재 합성 선반 QR 코드" width="240" height="240" /><figcaption>QR · @ExpectedRackCode</figcaption></figure>
+            <figure><img data-scan-barcode src="@_Barcode.DataUri" alt="현재 합성 선반 Code128 바코드" width="240" height="102" /><figcaption>Code128 · @ExpectedRackCode</figcaption></figure>
+        }
+    </details>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public string ExpectedRackCode { get; set; } = "";
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public EventCallback<string> CodeScanned { get; set; }
+
+    private ElementReference _영상;
+    private IJSObjectReference? _모듈, _스캐너;
+    private DotNetObjectReference<SsalddelMartRackScanner>? _콜백;
+    private SsalddelIdentifierCodeImage? _Qr, _Barcode;
+    private string _표찰코드 = "", _세션 = "", _상태 = "idle";
+    private bool _카메라열림, _disposed;
+
+    private string 상태안내 => _상태 switch
+    {
+        "starting" => "카메라 권한을 확인하고 있어요. 원하지 않으면 닫고 직접 입력할 수 있습니다.",
+        "scanning" => "QR·바코드를 읽고 있어요. 영상은 저장하거나 서버에 보내지 않습니다.",
+        "matched" => "선반 코드를 입력했어요. 상품명과 수량을 확인한 뒤 피킹 완료를 눌러 주세요.",
+        "wrong-code" => "지금 찾을 상품의 선반 코드가 아니에요. 올바른 표찰로 다시 스캔하거나 직접 입력해 주세요.",
+        "permission-denied" => "카메라 권한이 허용되지 않았어요. 선반 코드를 직접 입력해 주세요.",
+        "camera-unavailable" => "사용할 수 있는 카메라가 없어요. 선반 코드를 직접 입력해 주세요.",
+        "unsupported" => "이 브라우저는 QR·바코드 카메라 인식을 지원하지 않아요. 직접 입력해 주세요.",
+        "insecure" => "카메라는 보안 연결이 필요해요. 지금은 선반 코드를 직접 입력해 주세요.",
+        "timeout" => "코드를 읽지 못해 카메라를 닫았어요. 다시 스캔하거나 직접 입력해 주세요.",
+        "hidden" or "disconnected" => "화면을 떠나거나 연결이 끊겨 카메라를 닫았어요. 필요하면 다시 켜 주세요.",
+        "cancelled" => "카메라를 닫았어요. 선반 코드는 직접 입력해도 됩니다.",
+        "failed" => "카메라 인식을 마치지 못했어요. 다시 스캔하거나 직접 입력해 주세요.",
+        _ => "스캔은 선반 코드 입력만 도와줘요. 상품·수량 확인과 피킹 완료는 직접 진행합니다."
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_표찰코드 != ExpectedRackCode)
+        {
+            await 카메라해제Async();
+            _표찰코드 = ExpectedRackCode;
+            _상태 = "idle";
+            _Qr = _Barcode = null;
+            if (합성선반코드인가(ExpectedRackCode))
+            {
+                var payload = SsalddelIdentifierCodePayloads.Create(SsalddelIdentifierKindCode.StorageLocation, ExpectedRackCode, rawCode: ExpectedRackCode);
+                var generator = new ZxingSsalddelIdentifierCodeGenerator();
+                _Qr = generator.Generate(new(payload, SsalddelMachineReadableCodeFormatCode.QrCode, 240, 240, 4));
+                // 얇은 막대가 모바일 비정수 축소로 소실되지 않도록 2배 생성 후 240px로 표시합니다.
+                _Barcode = generator.Generate(new(payload, SsalddelMachineReadableCodeFormatCode.Code128, 480, 192, 8));
+            }
+        }
+        if (Disabled && _카메라열림) await 스캔닫기Async();
+    }
+
+    private async Task 스캔시작Async()
+    {
+        if (_disposed || Disabled || _카메라열림 || !합성선반코드인가(ExpectedRackCode)) return;
+        await 카메라해제Async();
+        _카메라열림 = true;
+        _상태 = "starting";
+        var session = _세션 = Guid.NewGuid().ToString("N");
+        try
+        {
+            _모듈 ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/ssalddel-mart-scanner.js");
+            if (_disposed || _세션 != session) return;
+            _콜백 ??= DotNetObjectReference.Create(this);
+            var scanner = await _모듈.InvokeAsync<IJSObjectReference>("createScanner", _영상, _콜백, session, ExpectedRackCode);
+            if (_disposed || _세션 != session)
+            {
+                await scanner.InvokeVoidAsync("dispose");
+                await scanner.DisposeAsync();
+                return;
+            }
+            _스캐너 = scanner;
+            var state = await scanner.InvokeAsync<string>("start");
+            // 늦게 끝난 권한·인식 결과가 닫힌 화면이나 다음 품목을 덮어쓰지 않습니다.
+            if (!_disposed && _세션 == session && _상태 == "starting")
+            {
+                _상태 = state is "scanning" or "unsupported" or "insecure" or "permission-denied" or "camera-unavailable" or "cancelled" ? state : "failed";
+                _카메라열림 = state == "scanning";
+            }
+        }
+        catch (Exception error) when (error is JSException or JSDisconnectedException or InvalidOperationException or OperationCanceledException)
+        {
+            if (!_disposed && _세션 == session) { _상태 = "failed"; await 카메라해제Async(); }
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnScanAsync(string session, string state, string rawCode)
+    {
+        if (_disposed || Disabled || !_카메라열림 || session != _세션) return;
+        if (state == "matched")
+        {
+            if (!합성선반코드인가(rawCode) || !string.Equals(rawCode, ExpectedRackCode, StringComparison.Ordinal)) return;
+            _상태 = "matched";
+            await 카메라해제Async();
+            if (!_disposed && !Disabled) await CodeScanned.InvokeAsync(rawCode);
+        }
+        else if (state is "wrong-code" or "timeout" or "hidden" or "disconnected" or "failed")
+        {
+            _상태 = state;
+            await 카메라해제Async();
+        }
+        if (!_disposed) await InvokeAsync(StateHasChanged);
+    }
+
+    private static bool 합성선반코드인가(string? code) => code is { Length: 15 } &&
+        code.StartsWith("SAMPLE-RACK-", StringComparison.Ordinal) && code.AsSpan(12).IndexOfAnyExceptInRange('0', '9') < 0;
+
+    private async Task 스캔닫기Async() { _상태 = "cancelled"; await 카메라해제Async(); }
+
+    private async Task 카메라해제Async()
+    {
+        _세션 = "";
+        _카메라열림 = false;
+        var scanner = _스캐너;
+        _스캐너 = null;
+        if (scanner is null) return;
+        try { await scanner.InvokeVoidAsync("dispose"); await scanner.DisposeAsync(); }
+        catch (Exception error) when (error is JSException or JSDisconnectedException or InvalidOperationException or OperationCanceledException) { }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _콜백?.Dispose();
+        await 카메라해제Async();
+        if (_모듈 is not null)
+        {
+            try { await _모듈.DisposeAsync(); }
+            catch (Exception error) when (error is JSException or JSDisconnectedException or InvalidOperationException or OperationCanceledException) { }
+        }
+    }
+}

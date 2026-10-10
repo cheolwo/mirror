@@ -25,6 +25,8 @@ public sealed class 비정상운송사건Configuration : IEntityTypeConfiguratio
         builder.Property(x => x.최근검토자UserId).HasMaxLength(191).IsRequired();
         builder.Property(x => x.최근검토사유).HasMaxLength(1000).IsRequired();
         builder.Property(x => x.Revision).IsConcurrencyToken();
+        builder.HasIndex(x => new { x.UpdatedAt, x.사건StableId })
+            .HasDatabaseName("IX_비정상운송사건_갱신_사건");
         builder.HasIndex(x => new { x.운송의뢰Id, x.상태Code, x.UpdatedAt })
             .HasDatabaseName("IX_비정상운송사건_의뢰_상태_갱신");
         builder.HasIndex(x => new { x.운송Id, x.상태Code })

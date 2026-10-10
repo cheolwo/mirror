@@ -1,0 +1,14 @@
+.mart-scan { margin-top: 16px; color: #172B36; }
+.mart-scan__button { min-height: 48px; padding: 12px 16px; border: 1px solid #788C97; border-radius: 12px; background: #fff; color: #172B36; font: inherit; cursor: pointer; }
+.mart-scan__button:disabled { opacity: .6; cursor: default; }
+.mart-scan__button:focus-visible, .mart-scan summary:focus-visible { outline: 3px solid #1D4ED8; outline-offset: 3px; }
+.mart-scan__notice, .mart-scan__labels p, figcaption { margin: 8px 0; color: #586B78; font-size: 14px; line-height: 1.5; }
+.mart-scan__camera { padding: 12px; margin: 12px 0; border: 1px solid #788C97; border-radius: 12px; }
+.mart-scan__camera[hidden] { display: none; }
+.mart-scan video { display: block; width: 100%; max-height: 280px; aspect-ratio: 4 / 3; object-fit: contain; background: #172B36; border-radius: 8px; }
+.mart-scan__camera p { font-size: 14px; }
+.mart-scan__labels { margin-top: 12px; border-block: 1px solid #DCE5E9; }
+.mart-scan summary { min-height: 48px; padding: 12px 0; cursor: pointer; }
+.mart-scan figure { margin: 16px 0; text-align: center; }
+.mart-scan img { max-width: 100%; height: auto; background: #fff; }
+.mart-scan figcaption { overflow-wrap: anywhere; }

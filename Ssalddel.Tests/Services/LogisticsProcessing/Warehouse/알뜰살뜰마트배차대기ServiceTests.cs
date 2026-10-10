@@ -98,6 +98,11 @@ public sealed class 알뜰살뜰마트배차대기ServiceTests
             작업유형 = 피킹포장작업유형.포장,
             상태 = 피킹포장작업상태.진행중,
             입고상품Id = 77,
+            출고예정Id = outbound.Id,
+            창고Id = outbound.출고창고Id,
+            상품명 = outbound.상품명,
+            SKU = outbound.SKU,
+            라인Key = "sample-line-77",
             주문참조번호 = "MART-001",
             작업자UserId = "worker-a",
             수량 = 1,
@@ -106,6 +111,7 @@ public sealed class 알뜰살뜰마트배차대기ServiceTests
             UpdatedAt = initial
         });
         if (scenario != "general-outbound")
+        {
             db.마트주문.Add(new 마트주문
             {
                 주문참조번호 = "MART-001",
@@ -114,8 +120,23 @@ public sealed class 알뜰살뜰마트배차대기ServiceTests
                 상태 = "포장 완료",
                 현재단계 = "포장",
                 CreatedAt = initial,
-                UpdatedAt = initial
+                UpdatedAt = initial,
+                상품목록 = [new 마트주문상품 { 출고예정Id = outbound.Id, 상품명 = outbound.상품명, SKU = outbound.SKU, 수량 = 1 }]
             });
+            db.피킹포장작업.Add(new 피킹포장작업
+            {
+                작업Key = "pick:MART-001:77", 작업유형 = 피킹포장작업유형.피킹,
+                상태 = 피킹포장작업상태.완료, 입고상품Id = 77, 출고예정Id = outbound.Id,
+                창고Id = outbound.출고창고Id, 상품명 = outbound.상품명, SKU = outbound.SKU,
+                라인Key = "sample-line-77", 주문참조번호 = "MART-001", 수량 = 1,
+                완료일시Utc = initial, CreatedAt = initial, UpdatedAt = initial
+            });
+            db.재고이력.Add(new 재고이력
+            {
+                입고상품Id = 77, 이력유형 = "포장", 변경수량 = 0, 변경후수량 = 1,
+                원인유형 = "포장작업", 처리UserId = "worker-a", 처리일시 = initial.AddMinutes(3)
+            });
+        }
         await db.SaveChangesAsync();
         var outboundBefore = (outbound.상태, outbound.운송의뢰Id, outbound.UpdatedAt);
         var queue = new RecordingDispatchQueue();
@@ -129,10 +150,10 @@ public sealed class 알뜰살뜰마트배차대기ServiceTests
             new MartLastMileDispatchReadinessPolicy(db, new ReadinessFeatures(scenario)));
 
         var result = Assert.Single(await service.입고상품포장완료반영Async(77, "worker-a"));
-        var taskAfter = await db.피킹포장작업.AsNoTracking().SingleAsync();
+        var taskAfter = await db.피킹포장작업.AsNoTracking().SingleAsync(task => task.작업유형 == 피킹포장작업유형.포장);
         clock.UtcNow = clock.UtcNow.AddMinutes(10);
         var replay = Assert.Single(await service.입고상품포장완료반영Async(77, "worker-a"));
-        var taskReplay = await db.피킹포장작업.AsNoTracking().SingleAsync();
+        var taskReplay = await db.피킹포장작업.AsNoTracking().SingleAsync(task => task.작업유형 == 피킹포장작업유형.포장);
 
         Assert.Equal(expectedCode, result.결과코드);
         Assert.Equal(expectedCode, replay.결과코드);
@@ -144,7 +165,7 @@ public sealed class 알뜰살뜰마트배차대기ServiceTests
         Assert.Equal(string.Empty, result.인계StableId);
         Assert.Equal(피킹포장작업상태.완료, taskAfter.상태);
         Assert.Equal(initial, taskAfter.시작일시Utc);
-        Assert.Equal(initial.AddMinutes(5), taskAfter.완료일시Utc);
+        Assert.Equal(initial.AddMinutes(scenario == "general-outbound" ? 5 : 3), taskAfter.완료일시Utc);
         Assert.Equal(taskAfter.상태, taskReplay.상태);
         Assert.Equal(taskAfter.시작일시Utc, taskReplay.시작일시Utc);
         Assert.Equal(taskAfter.완료일시Utc, taskReplay.완료일시Utc);

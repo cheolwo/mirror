@@ -1,0 +1,312 @@
+@page "/workspace/warehouse/ssalddel-mart-sample"
+@rendermode InteractiveServer
+@inject SsalddelMartSampleRuntime Runtime
+@implements IDisposable
+
+<PageTitle>살뜰마트 · 포장과 픽업 표본</PageTitle>
+
+<main class="mart-sample" data-mart-sample-ready="@(_초기조회완료 ? "true" : "false")"
+      data-mart-sample-loaded="@(Runtime.HasData ? "true" : "false")" data-pickup-receipt-count="@Runtime.PickupCount" aria-busy="@Runtime.IsBusy">
+    <header class="mart-sample__header">
+        <span class="mart-sample__badge">로컬 검증 표본</span>
+        <h1>살뜰마트</h1>
+        <p>상품을 찾고, 포장하고, 다음 담당자에게 넘겨요.</p>
+        <p class="mart-sample__boundary">기록된 상품·수량을 합성 선반에서 확인하는 표본입니다. 실제 재고·배차·배송·결제는 처리하지 않습니다.</p>
+    </header>
+
+    @if (!_초기조회완료)
+    {
+        <section class="mart-sample__state" role="status">표본 자료와 작업 상태를 확인하고 있습니다.</section>
+    }
+    else if (!Runtime.HasData)
+    {
+        <section class="mart-sample__state" role="alert" data-mart-input-unavailable>
+            <h2>표본 자료를 확인해 주세요</h2>
+            <p>@Runtime.Notice</p>
+            @if (!string.IsNullOrWhiteSpace(Runtime.Error)) { <p>@Runtime.Error</p> }
+            <p>자료가 없거나 조건이 맞지 않으면 다른 상품으로 대신하지 않습니다.</p>
+        </section>
+    }
+    else if (!Runtime.Initialized)
+    {
+        <section class="mart-sample__state" role="alert" data-mart-runtime-unavailable>
+            <h2>작업 상태를 준비하지 못했어요</h2>
+            <p>@Runtime.Error</p>
+            <p>선택한 상품 자료는 유지합니다. 작업 상태를 다시 확인해 주세요.</p>
+            <button type="button" class="mart-sample__secondary" disabled="@Runtime.IsBusy" @onclick="표본준비Async">표본 작업 다시 준비</button>
+        </section>
+    }
+    else
+    {
+        <nav class="mart-sample__roles" aria-label="표본 역할 선택">
+            <button type="button" data-mart-role="worker" aria-pressed="@(!_기사관점 ? "true" : "false")" disabled="@(Runtime.IsBusy || _픽업처리중)" @onclick="() => 관점변경(false)">포장 담당자</button>
+            <button type="button" data-mart-role="driver" aria-pressed="@(_기사관점 ? "true" : "false")" disabled="@(Runtime.IsBusy || _픽업처리중)" @onclick="() => 관점변경(true)">기사 픽업 표본</button>
+        </nav>
+        <section class="mart-sample__orders" aria-label="작업 주문 선택">
+            @foreach (var 주문 in Runtime.Orders)
+            {
+                <button type="button" class="mart-sample__order @(선택주문?.SampleOrderId == 주문.SampleOrderId ? "is-selected" : null)"
+                        data-order-id="@주문.SampleOrderId" aria-pressed="@(선택주문?.SampleOrderId == 주문.SampleOrderId ? "true" : "false")"
+                        disabled="@(Runtime.IsBusy || _픽업처리중)" @onclick="() => 주문선택Async(주문.SampleOrderId)">
+                    <strong>@주문.DisplayLabel</strong>
+                    <span>@주문.Stage</span>
+                    <span>@(주문.Lines.Count)종 · @(주문.Lines.Sum(품목 => 품목.Quantity))개</span>
+                </button>
+            }
+        </section>
+
+        @if (!string.IsNullOrWhiteSpace(Runtime.Error))
+        {
+            <section class="mart-sample__error" role="alert" data-mart-operation-error>
+                <strong>작업을 완료하지 못했어요</strong>
+                <p>@Runtime.Error</p>
+                <p>같은 주문의 상태를 유지합니다. 입력과 현재 단계를 다시 확인해 주세요.</p>
+            </section>
+        }
+
+        @if (선택주문 is { } 선택)
+        {
+            <section class="mart-sample__work" data-selected-order="@선택.SampleOrderId" data-stage="@단계Key(선택)" data-role="@(_기사관점 ? "driver" : "worker")"
+                     aria-labelledby="mart-work-title">
+                <header class="mart-sample__work-header">
+                    <div><span class="mart-sample__eyebrow">@선택.DisplayLabel</span><h2 id="mart-work-title">@선택.Stage</h2></div>
+                    <span class="mart-sample__status">피킹 @선택.Lines.Count(대상품목 => 대상품목.PickingStatus == "완료") / @선택.Lines.Count</span>
+                </header>
+
+                <ol class="mart-sample__steps" aria-label="주문 작업 단계">
+                    <li class="@(선택.AllPicked ? "is-done" : "is-current")">1. 상품 찾기</li>
+                    <li class="@(선택.AllPacked ? "is-done" : 선택.AllPicked ? "is-current" : null)">2. 포장</li>
+                    <li class="@(선택.MockHandedOff ? "is-done" : 선택.AllPacked ? "is-current" : null)">3. 표본 픽업</li>
+                </ol>
+
+                @if (_기사관점)
+                {
+                    @if (선택.MockHandedOff)
+                    {
+                        <article class="mart-sample__completion" role="status" data-mart-order-completed data-pickup-completed>
+                            <h3>픽업 완료</h3>
+                            <p>서버가 이 표본 주문의 픽업을 확인했습니다.</p>
+                            <p>격리된 모의 기사 수행 결과입니다. 실제 배송·정산 완료를 뜻하지 않습니다.</p>
+                        </article>
+                    }
+                    else if (선택.Slip is { Active: true } 전표)
+                    {
+                        <article class="mart-sample__item" data-mart-pickup data-package-label-id="@전표.LabelId" data-package-revision="@전표.Revision">
+                            <span class="mart-sample__eyebrow">표본 기사 · @선택.DisplayLabel · 포장 1/1</span>
+                            <h3>포장 전표를 스캔해 주세요</h3>
+                            <p>일치하는 QR을 스캔하면 서버 확인 후 바로 픽업 완료됩니다.</p>
+                            @if (!선택.AllPacked) { <p class="mart-sample__hint" data-package-not-ready>아직 포장 전입니다. 전표가 있어도 픽업할 수 없습니다.</p> }
+                            <SsalddelMartPackageScanner @key="전표.LabelId" ExpectedPackageCode="@전표.QrCode" Disabled="@(Runtime.IsBusy || _픽업처리중)"
+                                CodeScanned="@(코드 => 전표픽업Async(선택.SampleOrderId, 전표.LabelId, 전표.Revision, 코드, true))" />
+                            <form @onsubmit="() => 전표픽업Async(선택.SampleOrderId, 전표.LabelId, 전표.Revision, _픽업번호, false)" @onsubmit:preventDefault>
+                                <label class="mart-sample__field" for="mart-pickup-number">카메라 대신 전표 번호로 픽업
+                                    <input id="mart-pickup-number" data-pickup-number type="text" inputmode="numeric" maxlength="4" autocomplete="off" @bind="_픽업번호" @bind:event="oninput" disabled="@(Runtime.IsBusy || _픽업처리중)" />
+                                </label>
+                                <button type="submit" class="mart-sample__secondary" data-pickup-number-submit disabled="@(Runtime.IsBusy || _픽업처리중 || !번호입력완료)">번호로 픽업</button>
+                            </form>
+                            @if (_픽업처리중) { <p role="status">서버에서 픽업 결과를 확인하고 있습니다.</p> }
+                        </article>
+                    }
+                    else
+                    {
+                        <article class="mart-sample__item"><h3>활성 전표가 없어요</h3><p>포장 담당자 화면에서 전표를 먼저 준비해 주세요.</p></article>
+                    }
+                }
+                else
+                {
+                @if (선택.Slip is { Active: true } 출력전표)
+                {
+                    <SsalddelMartPackageSlip @key="출력전표.LabelId" Order="@선택" Disabled="@Runtime.IsBusy"
+                        PrintRequested="() => 전표출력기록Async(선택.SampleOrderId, 출력전표.LabelId, 출력전표.Revision)"
+                        ReissueRequested="() => 전표재발급Async(선택.SampleOrderId)" />
+                }
+                else
+                {
+                    <button type="button" class="mart-sample__secondary" data-package-issue disabled="@Runtime.IsBusy" @onclick="() => 전표준비Async(선택.SampleOrderId)">전표 다시 준비</button>
+                }
+                @if (!선택.AllPicked && 현재품목 is { } 품목)
+                {
+                    <article class="mart-sample__item" data-current-line="@품목.LineId" data-picking-status="@품목.PickingStatus">
+                        <span class="mart-sample__eyebrow">지금 찾을 상품</span>
+                        <h3>@품목.ProductName</h3>
+                        <div class="mart-sample__item-facts"><span>필요 수량 <strong>@(품목.Quantity)개</strong></span><span>합성 선반 <strong data-current-rack>@품목.RackCode</strong></span></div>
+                        <p class="mart-sample__hint">선반과 코드는 실제 매장 위치가 아닌 표본용 배치입니다.</p>
+                        @if (품목.PickingStatus == "진행중")
+                        {
+                            <label class="mart-sample__field" for="mart-rack-code">선반 확인 코드
+                                <input id="mart-rack-code" data-rack-input type="text" maxlength="120" autocomplete="off" spellcheck="false"
+                                       @bind="_선반코드" @bind:event="oninput" disabled="@Runtime.IsBusy" aria-describedby="mart-rack-help" />
+                            </label>
+                            <p id="mart-rack-help" class="mart-sample__hint">선반 코드를 스캔하거나 직접 입력해 주세요.</p>
+                            <SsalddelMartRackScanner @key="품목.LineId" ExpectedRackCode="@품목.RackCode" Disabled="@Runtime.IsBusy"
+                                CodeScanned="@(코드 => 선반스캔적용(선택.SampleOrderId, 품목.LineId, 코드))" />
+                            <label class="mart-sample__check"><input data-product-confirm type="checkbox" @bind="_상품확인" disabled="@Runtime.IsBusy" /><span>상품명을 확인했습니다.</span></label>
+                            <label class="mart-sample__check"><input data-quantity-confirm type="checkbox" @bind="_수량확인" disabled="@Runtime.IsBusy" /><span>필요한 @(품목.Quantity)개를 모두 확인했습니다.</span></label>
+                            <button type="button" class="mart-sample__primary" data-action="primary" data-action-kind="pick"
+                                    disabled="@(Runtime.IsBusy || string.IsNullOrWhiteSpace(_선반코드) || !_상품확인 || !_수량확인)" @onclick="피킹완료Async">이 상품 피킹 완료</button>
+                        }
+                        else
+                        {
+                            <p>상품명과 수량을 읽고 이 상품의 피킹을 시작해 주세요.</p>
+                            <button type="button" class="mart-sample__primary" data-action="primary" data-action-kind="start" disabled="@Runtime.IsBusy" @onclick="피킹시작Async">이 상품 피킹 시작</button>
+                        }
+                    </article>
+                }
+                else if (!선택.AllPacked)
+                {
+                    <article class="mart-sample__item">
+                        <h3>모든 상품을 찾았어요</h3>
+                        <p>@(선택.Lines.Count)종 · @(선택.Lines.Sum(대상품목 => 대상품목.Quantity))개를 확인하고 주문 전체를 포장합니다.</p>
+                        <label class="mart-sample__check"><input data-inventory-confirm type="checkbox" @bind="_품목전체확인" disabled="@Runtime.IsBusy" /><span>이 주문의 모든 상품과 수량을 확인했습니다.</span></label>
+                        <label class="mart-sample__check"><input data-package-confirm type="checkbox" @bind="_포장표찰확인" disabled="@Runtime.IsBusy" /><span>포장과 주문 표찰을 확인했습니다.</span></label>
+                        <button type="button" class="mart-sample__primary" data-action="primary" data-action-kind="pack"
+                                disabled="@(Runtime.IsBusy || !_품목전체확인 || !_포장표찰확인)" @onclick="주문포장Async">주문 전체 포장 완료</button>
+                    </article>
+                }
+                else if (!선택.MockHandedOff)
+                {
+                    <article class="mart-sample__item">
+                        <h3>다음 담당자에게 넘길 준비가 됐어요</h3>
+                        <p>포장에 전표를 붙인 뒤, 기사 픽업 표본에서 QR 또는 네 자리 번호로 픽업합니다.</p>
+                        <button type="button" class="mart-sample__primary" data-action-kind="handoff-view"
+                                disabled="@Runtime.IsBusy" @onclick="() => 관점변경(true)">기사 픽업 표본으로 보기</button>
+                    </article>
+                }
+                else
+                {
+                    <article class="mart-sample__completion" role="status" data-mart-order-completed>
+                        <h3>표본 기사에게 인계했어요</h3>
+                        <p>상품 찾기와 포장을 마치고 다음 담당자에게 넘기는 표본을 확인했습니다.</p>
+                        <p>실제 기사 수행·배송 완료·정산 완료를 뜻하지 않습니다. 다른 주문을 선택해 이어갈 수 있습니다.</p>
+                    </article>
+                }
+                }
+
+                <details class="mart-sample__details">
+                    <summary>전체 상품 진행 보기</summary>
+                    <ul class="mart-sample__lines">
+                        @foreach (var 항목 in 선택.Lines)
+                        {
+                            <li data-mart-line data-line-quantity="@항목.Quantity" data-line-picked="@(항목.PickingStatus == "완료" ? "true" : "false")" data-line-packed="@(항목.Packed ? "true" : "false")">
+                                <span>@항목.ProductName</span><strong>@(항목.Quantity)개</strong><span>@(항목.Packed ? "포장 완료" : 항목.PickingStatus == "완료" ? "피킹 완료" : 항목.PickingStatus == "진행중" ? "피킹 중" : "피킹 대기")</span>
+                            </li>
+                        }
+                    </ul>
+                </details>
+            </section>
+        }
+
+        <footer class="mart-sample__footer">
+            <details><summary>표본 정보</summary><p>@Runtime.Notice</p><p>상품명·수량은 기록 자료, 선반·SKU·재고·담당자·기사는 합성 정보입니다. 온도 조건·보관 적합성·실물 스캔·실제 인계는 검증하지 않습니다.</p></details>
+            @if (!_초기화요청)
+            {
+                <button type="button" class="mart-sample__secondary" data-reset-open disabled="@Runtime.IsBusy" @onclick="() => _초기화요청 = true">표본 처음부터 다시 하기</button>
+            }
+            else
+            {
+                <section class="mart-sample__reset" aria-label="표본 초기화 확인">
+                    <p>세 주문의 표본 작업 상태를 모두 처음으로 되돌릴까요? 원본 자료와 운영 데이터는 바꾸지 않습니다.</p>
+                    <button type="button" class="mart-sample__secondary" data-reset-confirm disabled="@Runtime.IsBusy" @onclick="표본초기화Async">표본 상태 초기화</button>
+                    <button type="button" class="mart-sample__secondary" disabled="@Runtime.IsBusy" @onclick="() => _초기화요청 = false">계속 작업하기</button>
+                </section>
+            }
+        </footer>
+    }
+    @if (Runtime.IsBusy) { <p class="mart-sample__busy" role="status">같은 주문의 작업 결과를 확인하고 있습니다.</p> }
+</main>
+
+@code {
+    private readonly CancellationTokenSource _lifetime = new();
+    private string? _선택주문Id;
+    private string _선반코드 = "";
+    private bool _초기조회완료;
+    private bool _상품확인, _수량확인, _품목전체확인, _포장표찰확인, _초기화요청, _기사관점, _픽업처리중, _disposed;
+    private string _픽업번호 = "", _픽업요청Key = "", _픽업요청Id = "";
+    private bool 번호입력완료 => _픽업번호.Length == 4 && _픽업번호.All(문자 => 문자 is >= '0' and <= '9');
+    private 살뜰마트표본주문상태? 선택주문 => Runtime.Orders.FirstOrDefault(주문 => 주문.SampleOrderId == _선택주문Id);
+    private 살뜰마트표본품목상태? 현재품목 => 선택주문?.Lines.FirstOrDefault(품목 => 품목.PickingStatus != "완료");
+
+    protected override Task OnInitializedAsync() => 표본준비Async();
+    private async Task 표본준비Async()
+    {
+        _초기조회완료 = false;
+        try
+        {
+            await Runtime.InitializeAsync(_lifetime.Token);
+            _선택주문Id = Runtime.Orders.FirstOrDefault()?.SampleOrderId;
+            if (_선택주문Id is { } 주문Id) await Runtime.IssueSlipAsync(주문Id, _lifetime.Token);
+        }
+        finally { _초기조회완료 = true; }
+    }
+
+    private static string 단계Key(살뜰마트표본주문상태 주문) => 주문.MockHandedOff ? "completed" : 주문.AllPacked ? "handoff" : 주문.AllPicked ? "packing" : "picking";
+    private async Task 주문선택Async(string 주문Id)
+    {
+        if (Runtime.IsBusy || _픽업처리중) return;
+        _선택주문Id = 주문Id;
+        입력초기화();
+        await Runtime.IssueSlipAsync(주문Id, _lifetime.Token);
+    }
+    private void 관점변경(bool 기사관점) { if (Runtime.IsBusy || _픽업처리중) return; _기사관점 = 기사관점; 입력초기화(); }
+    private void 입력초기화()
+    {
+        _선반코드 = _픽업번호 = _픽업요청Id = _픽업요청Key = "";
+        _상품확인 = _수량확인 = _품목전체확인 = _포장표찰확인 = false;
+    }
+    private void 선반스캔적용(string 주문Id, string 품목Id, string 코드)
+    {
+        if (Runtime.IsBusy || 선택주문?.SampleOrderId != 주문Id || 현재품목 is not { PickingStatus: "진행중" } 품목 ||
+            품목.LineId != 품목Id || !string.Equals(품목.RackCode, 코드, StringComparison.Ordinal)) return;
+        _선반코드 = 코드;
+        // 스캔은 입력만 채우며 상품·수량 확인이나 피킹 완료를 대신하지 않습니다.
+    }
+    private async Task 피킹시작Async()
+    {
+        if (선택주문 is not { } 주문 || 현재품목 is not { } 품목) return;
+        await Runtime.StartPickingAsync(주문.SampleOrderId, 품목.LineId, _lifetime.Token);
+    }
+    private async Task 피킹완료Async()
+    {
+        if (선택주문 is not { } 주문 || 현재품목 is not { } 품목) return;
+        if (await Runtime.CompletePickingAsync(주문.SampleOrderId, 품목.LineId, _선반코드, _상품확인, _수량확인, _lifetime.Token)) 입력초기화();
+    }
+    private async Task 주문포장Async()
+    {
+        if (선택주문 is not { } 주문) return;
+        if (await Runtime.PackOrderAsync(주문.SampleOrderId, _품목전체확인, _포장표찰확인, _lifetime.Token)) 입력초기화();
+    }
+    private async Task 전표준비Async(string 주문Id) { await Runtime.IssueSlipAsync(주문Id, _lifetime.Token); }
+    private async Task 전표재발급Async(string 주문Id)
+    {
+        if (await Runtime.ReissueSlipAsync(주문Id, _lifetime.Token)) 입력초기화();
+    }
+    private async Task 전표출력기록Async(string 주문Id, string 전표Id, long revision)
+    {
+        if (!_disposed) await Runtime.RecordPrintRequestAsync(주문Id, 전표Id, revision, _lifetime.Token);
+    }
+    private async Task 전표픽업Async(string 주문Id, string 전표Id, long revision, string 코드, bool qr)
+    {
+        if (_disposed || !_기사관점 || Runtime.IsBusy || _픽업처리중 || 선택주문 is not { } 주문 ||
+            주문.SampleOrderId != 주문Id || 주문.Slip?.LabelId != 전표Id || 주문.Slip.Revision != revision) return;
+        var 요청Key = $"{주문Id}|{전표Id}|{revision}|{qr}|{코드}";
+        if (_픽업요청Key != 요청Key) { _픽업요청Key = 요청Key; _픽업요청Id = Guid.NewGuid().ToString("D"); }
+        _픽업처리중 = true;
+        try
+        {
+            var 완료 = qr
+                ? await Runtime.PickupByQrAsync(주문Id, 코드, _픽업요청Id, revision, SsalddelMartSampleRuntime.SampleDriverId, _lifetime.Token)
+                : await Runtime.PickupByNumberAsync(주문Id, 코드, _픽업요청Id, revision, SsalddelMartSampleRuntime.SampleDriverId, _lifetime.Token);
+            _픽업번호 = "";
+            if (!완료) { _픽업요청Id = _픽업요청Key = ""; }
+        }
+        finally { _픽업처리중 = false; }
+    }
+    private async Task 표본초기화Async()
+    {
+        await Runtime.ResetAsync(_lifetime.Token);
+        await 표본준비Async();
+        _초기화요청 = false;
+        입력초기화();
+    }
+    public void Dispose() { _disposed = true; 입력초기화(); _lifetime.Cancel(); _lifetime.Dispose(); }
+}

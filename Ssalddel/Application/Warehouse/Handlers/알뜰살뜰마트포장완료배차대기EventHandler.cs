@@ -6,13 +6,21 @@ namespace Ssalddel.Application.Warehouse.Handlers;
 
 public sealed class 알뜰살뜰마트포장완료배차대기EventHandler(
     I알뜰살뜰마트배차대기Service 배차대기Service,
-    ILogger<알뜰살뜰마트포장완료배차대기EventHandler> logger) : INotificationHandler<창고포장완료됨Event>
+    ILogger<알뜰살뜰마트포장완료배차대기EventHandler> logger) :
+    INotificationHandler<창고포장완료됨Event>,
+    INotificationHandler<창고포장배차재확인요청됨Event>
 {
-    public async Task Handle(창고포장완료됨Event notification, CancellationToken cancellationToken)
+    public Task Handle(창고포장완료됨Event notification, CancellationToken cancellationToken)
+        => 배차재확인Async(notification.입고상품Id, notification.사용자Id, cancellationToken);
+
+    public Task Handle(창고포장배차재확인요청됨Event notification, CancellationToken cancellationToken)
+        => 배차재확인Async(notification.입고상품Id, notification.사용자Id, cancellationToken);
+
+    private async Task 배차재확인Async(long 입고상품Id, string 사용자Id, CancellationToken cancellationToken)
     {
         var results = await 배차대기Service.입고상품포장완료반영Async(
-            notification.입고상품Id,
-            notification.사용자Id,
+            입고상품Id,
+            사용자Id,
             cancellationToken);
 
         foreach (var result in results)

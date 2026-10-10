@@ -1,5 +1,6 @@
 using Ssalddel.Contracts.Common.Community;
 using Ssalddel.Contracts.Common.Warehouse;
+using Ssalddel.Application.Warehouse;
 using Ssalddel.Services.Community;
 using Ssalddel.Services.Operations;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,7 @@ using 살뜰.도메인.공통;
 using 살뜰.도메인.창고;
 using 살뜰.도메인.운영;
 using 살뜰.Services.Dispatch.Engine;
+using 살뜰.Services.Dispatch.Queue;
 
 namespace Ssalddel.Services.LogisticsProcessing.Warehouse;
 
@@ -63,17 +65,6 @@ public sealed class 알뜰살뜰마트배차대기Service : I알뜰살뜰마트�
             .Where(x => x.입고상품Id == 입고상품Id && x.작업유형 == 피킹포장작업유형.포장)
             .ToListAsync(cancellationToken);
 
-        // 창고 포장 완료 투영은 기사 연결 준비와 별개로 유지하되 재전달 시 시각을 바꾸지 않습니다.
-        var changed = false;
-        foreach (var 작업 in 포장작업목록.Where(task => task.상태 != 피킹포장작업상태.완료))
-        {
-            작업.상태 = 피킹포장작업상태.완료;
-            작업.시작일시Utc ??= now;
-            작업.완료일시Utc = now;
-            작업.UpdatedAt = now;
-            changed = true;
-        }
-
         var 주문참조번호목록 = 포장작업목록
             .Select(x => x.주문참조번호)
             .Concat(await _db.출고예정
@@ -86,6 +77,39 @@ public sealed class 알뜰살뜰마트배차대기Service : I알뜰살뜰마트�
             .Cast<string>()
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
+
+        // Event는 재조회 신호입니다. 원본 재고·피킹·포장 근거가 없으면 완료를 투영하지 않습니다.
+        var item = await _db.입고상품.AsNoTracking()
+            .FirstOrDefaultAsync(candidate => candidate.Id == 입고상품Id, cancellationToken);
+        var isMart = await _db.마트주문.AsNoTracking()
+            .AnyAsync(order => Enumerable.Contains(주문참조번호목록, order.주문참조번호), cancellationToken);
+        var blocked = item is null || !item.상태.StartsWith("포장완료", StringComparison.Ordinal)
+            ? "현재 재고의 포장 완료 근거를 확인해 주세요."
+            : await 마트주문피킹완료Guard.입고상품차단사유Async(_db, item, cancellationToken);
+        var packedAtUtc = isMart && item is not null
+            ? await 실제포장시각조회Async(item.Id, item.가용수량, cancellationToken)
+            : now;
+        if (blocked is not null || !packedAtUtc.HasValue
+            || (isMart && (포장작업목록.Any(task => task.상태 != 피킹포장작업상태.취소
+                    && (task.수량 <= 0 || task.창고Id != item!.창고Id
+                        || task.SKU != item.SKU || task.상품명 != item.상품명))
+                || 포장작업목록.Where(task => task.상태 != 피킹포장작업상태.취소)
+                    .Sum(task => (long)task.수량) != item!.가용수량)))
+            return 주문참조번호목록.Select(reference => 알뜰살뜰마트배차대기생성결과.보류(
+                reference, 알뜰살뜰마트배차대기결과코드.포장대기,
+                blocked ?? "살뜰마트 실제 포장 이력과 작업 연결을 확인해 주세요.")).ToArray();
+
+        // 취소는 별도 업무 사실이며 완료로 덮지 않습니다. 재전달도 기존 완료 시각을 보존합니다.
+        var changed = false;
+        foreach (var 작업 in 포장작업목록.Where(task => task.상태 != 피킹포장작업상태.완료
+                     && task.상태 != 피킹포장작업상태.취소))
+        {
+            작업.상태 = 피킹포장작업상태.완료;
+            작업.시작일시Utc ??= packedAtUtc;
+            작업.완료일시Utc = packedAtUtc;
+            작업.UpdatedAt = now;
+            changed = true;
+        }
 
         if (changed) await _db.SaveChangesAsync(cancellationToken);
 
@@ -125,6 +149,10 @@ public sealed class 알뜰살뜰마트배차대기Service : I알뜰살뜰마트�
                 "마트 주문에 연결된 출고예정이 없어 배차대기를 만들지 않았습니다.");
         }
 
+        if (await 마트주문피킹완료Guard.주문차단사유Async(_db, orderRef, cancellationToken) is { } pickingBlocked)
+            return 알뜰살뜰마트배차대기생성결과.보류(
+                orderRef, 알뜰살뜰마트배차대기결과코드.포장대기, pickingBlocked);
+
         var 포장준비상태 = await 포장준비상태조회Async(orderRef, 출고목록, cancellationToken);
         if (!포장준비상태.완료)
         {
@@ -151,10 +179,10 @@ public sealed class 알뜰살뜰마트배차대기Service : I알뜰살뜰마트�
         var target = targetResult.Target;
         var existingQueue = await _db.운송원장
             .AsNoTracking()
-            .FirstOrDefaultAsync(
-                x => x.배차업무유형 == 상태값.배차업무유형.음식배달
-                     && x.원본의뢰Id == orderRef,
-                cancellationToken);
+            .SingleOrDefaultAsync(x => x.의뢰Id == orderRef, cancellationToken);
+        운송의뢰배차대기Service.마트원천결속검증(
+            existingQueue, orderRef, 운송의뢰배차원천유형.살뜰마트포장완료주문,
+            orderRef, target.판매자UserId, 상태값.배차업무유형.음식배달);
         if (!string.IsNullOrWhiteSpace(existingQueue?.확정기사Id))
         {
             return 알뜰살뜰마트배차대기생성결과.생성됨(
@@ -262,6 +290,29 @@ public sealed class 알뜰살뜰마트배차대기Service : I알뜰살뜰마트�
             .Where(x => x.주문참조번호 == 주문참조번호 && x.작업유형 == 피킹포장작업유형.포장)
             .ToListAsync(cancellationToken);
 
+        if (await _db.마트주문.AsNoTracking().AnyAsync(order => order.주문참조번호 == 주문참조번호, cancellationToken))
+        {
+            var activeTasks = 포장작업목록.Where(task => task.상태 != 피킹포장작업상태.취소).ToArray();
+            if (activeTasks.Length == 0 || activeTasks.Any(task => task.출고예정Id is null
+                    || !출고목록.Any(plan => plan.Id == task.출고예정Id)))
+                return new 마트포장준비상태(false, null);
+            DateTime? latest = null;
+            foreach (var plan in 출고목록)
+            {
+                if (plan.입고상품Id is null || plan.상태 == 출고상태.취소)
+                    return new 마트포장준비상태(false, null);
+                var matching = activeTasks.Where(task => task.출고예정Id == plan.Id).ToArray();
+                var packedAt = await 실제포장시각조회Async(plan.입고상품Id.Value, plan.수량, cancellationToken);
+                if (!packedAt.HasValue || matching.Length == 0 || matching.Any(task => task.입고상품Id != plan.입고상품Id
+                        || task.창고Id != plan.출고창고Id || task.SKU != plan.SKU || task.상품명 != plan.상품명
+                        || task.수량 <= 0 || task.상태 != 피킹포장작업상태.완료 || !task.완료일시Utc.HasValue)
+                    || matching.Sum(task => (long)task.수량) != plan.수량)
+                    return new 마트포장준비상태(false, null);
+                latest = !latest.HasValue || packedAt > latest ? packedAt : latest;
+            }
+            return new 마트포장준비상태(true, latest);
+        }
+
         if (포장작업목록.Count > 0)
         {
             var completed = 포장작업목록.All(x => x.상태 == 피킹포장작업상태.완료);
@@ -311,6 +362,19 @@ public sealed class 알뜰살뜰마트배차대기Service : I알뜰살뜰마트�
         return new 마트포장준비상태(
             outboundsCompleted,
             outboundsCompleted ? 출고목록.Max(x => AsUtc(x.CreatedAt)) : null);
+    }
+
+    private async Task<DateTime?> 실제포장시각조회Async(long 입고상품Id, int expectedQuantity, CancellationToken cancellationToken)
+    {
+        var item = await _db.입고상품.AsNoTracking()
+            .FirstOrDefaultAsync(candidate => candidate.Id == 입고상품Id, cancellationToken);
+        if (item is null || !item.상태.StartsWith("포장완료", StringComparison.Ordinal) || expectedQuantity <= 0)
+            return null;
+        var history = await _db.재고이력.AsNoTracking()
+            .Where(candidate => candidate.입고상품Id == 입고상품Id && candidate.이력유형 == "포장")
+            .OrderByDescending(candidate => candidate.처리일시).ThenByDescending(candidate => candidate.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+        return history?.변경후수량 == expectedQuantity ? AsUtc(history.처리일시) : null;
     }
 
     private async Task<마트배차대상생성결과> BuildDispatchTargetAsync(

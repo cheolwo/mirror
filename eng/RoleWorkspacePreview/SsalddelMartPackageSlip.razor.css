@@ -1,0 +1,11 @@
+.mart-slip { margin-top: 20px; padding: 16px; border: 1px solid #DCE5E9; border-radius: 12px; background: #F5F7FA; color: #172B36; }
+.mart-slip__heading { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.mart-slip h3 { margin: 4px 0 0; font-size: 20px; }
+.mart-slip p, .mart-slip__heading span { font-size: 14px; line-height: 1.5; color: #586B78; }
+.mart-slip button { min-height: 48px; padding: 10px 16px; border: 1px solid #0F766E; border-radius: 12px; background: #fff; color: #0F766E; font: inherit; cursor: pointer; }
+.mart-slip button:disabled { opacity: .6; cursor: default; }
+.mart-slip summary { min-height: 48px; padding: 12px 0; cursor: pointer; }
+.mart-slip img { display: block; width: 240px; max-width: 100%; height: auto; background: #fff; }
+.mart-slip .mart-slip__number { color: #172B36; font-size: 18px; }
+.mart-slip__number strong { font-size: 28px; letter-spacing: .15em; font-variant-numeric: tabular-nums; }
+.mart-slip button:focus-visible, .mart-slip summary:focus-visible { outline: 3px solid #1D4ED8; outline-offset: 3px; }

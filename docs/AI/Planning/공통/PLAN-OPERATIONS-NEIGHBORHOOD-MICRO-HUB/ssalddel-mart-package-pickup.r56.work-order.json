@@ -1,0 +1,204 @@
+{
+  "planId": "PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB",
+  "revision": "r56",
+  "status": "Implemented / LocalValidated / AndroidDeferred / OperationalDeferred",
+  "acceptedBy": "development",
+  "approvalBasis": "2026-10-10 user requested implementation after r55 scan-completes-pickup decision",
+  "baseCommit": "d1bab3eec08dc0a49c9a87f882590d394205c9a4",
+  "designDocumentRef": "ssalddel-mart-package-pickup.implementation.r56.md",
+  "designSha256": "C6FB35F34C8A0178A63CC7148D56589EB59CD6E5BB5B111C9FA65DEFD651A455",
+  "approvedDesignSha256": "22CDAAAEF0D8D6D11F0E2F80F9BA556BDBAE5E0B64CECC984D4DFBD8CD78EE61",
+  "primaryOwner": "operations",
+  "writePaths": [
+    "eng/RoleWorkspacePreview/SsalddelMartSampleRuntime.cs",
+    "eng/RoleWorkspacePreview/SsalddelMartSamplePickup.cs",
+    "Ssalddel.Tests/Clients/SsalddelMartSampleTests.cs",
+    "Ssalddel.Tests/Clients/SsalddelMartPackagePickupTests.cs",
+    "Ssalddel.Tests/Ssalddel.Tests.csproj",
+    "eng/RoleWorkspacePreview/wwwroot/js/ssalddel-mart-scanner.js",
+    "eng/RoleWorkspacePreview/test-ssalddel-mart-scanner.mjs",
+    "eng/RoleWorkspacePreview/SsalddelMartPackageScanner.razor",
+    "eng/RoleWorkspacePreview/SsalddelMartPackageScanner.razor.css",
+    "eng/RoleWorkspacePreview/SsalddelMartSamplePage.razor",
+    "eng/RoleWorkspacePreview/SsalddelMartSamplePage.razor.css",
+    "eng/RoleWorkspacePreview/SsalddelMartPackageSlip.razor",
+    "eng/RoleWorkspacePreview/SsalddelMartPackageSlip.razor.css",
+    "eng/RoleWorkspacePreview/wwwroot/js/ssalddel-mart-package-print.js",
+    "eng/RoleWorkspacePreview/test-ssalddel-mart-package-print.mjs",
+    "eng/RoleWorkspacePreview/verify-ssalddel-mart-pickup.mjs",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-package-pickup.implementation.r56.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-package-pickup.r56.work-order.json",
+    "docs/ProjectOverview/page-docs/ssalddel-mart-package-pickup-r56.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/Changes/2026-10-10-ssalddel-mart-package-pickup-r56.md",
+    "docs/Changes/README.md",
+    "docs/assets/changes/2026-10-10-ssalddel-mart-slip-r56-390.png",
+    "docs/assets/changes/2026-10-10-ssalddel-mart-pickup-r56-390.png",
+    "docs/assets/changes/2026-10-10-ssalddel-mart-pickup-completed-r56-390.png"
+  ],
+  "excludedEffects": [
+    "OperationalDatabaseWrite",
+    "NativeDriverBinding",
+    "RealDispatch",
+    "SourceMutation",
+    "ExternalNotification",
+    "Payment",
+    "LanExposure",
+    "Commit",
+    "Push",
+    "Deploy"
+  ],
+  "validationCeiling": [
+    "Build",
+    "ScopedCsharpTests",
+    "JavascriptLifecycle",
+    "LoopbackRenderedUi",
+    "MockDecoderLifecycle",
+    "SyntheticLabelDecode",
+    "PrintDialogRequest"
+  ],
+  "designUpdate": "같은 격리 로컬 표본 범위의 구현 반환·검증 근거를 추가했다. 80mm 전표만 확인했으며 58mm·실물 출력·Android·운영 연결은 미검증이다.",
+  "sourceFingerprints": [
+    {
+      "Path": "eng/RoleWorkspacePreview/SsalddelMartSampleRuntime.cs",
+      "Hash": "01C03B6D925C0956F3AEEE780455B1BD653FAF83EE48B9A1B0304CC5E1F60889"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/SsalddelMartSamplePickup.cs",
+      "Hash": "8B79AC31B42C5D29AED4FB315453FEBC12DD12ECD8E125F9358AAD1CB2D52C34"
+    },
+    {
+      "Path": "Ssalddel.Tests/Clients/SsalddelMartSampleTests.cs",
+      "Hash": "07188BA13757A1583D00CA682F728D6B6BA3D5F63DCB8FF662C7837646746E0D"
+    },
+    {
+      "Path": "Ssalddel.Tests/Clients/SsalddelMartPackagePickupTests.cs",
+      "Hash": "EAE5E010BD310FD8C2E1EBD73E0F1AD01E56BA0EEEDF13624C82DA56F796A2AA"
+    },
+    {
+      "Path": "Ssalddel.Tests/Ssalddel.Tests.csproj",
+      "Hash": "69B1D808314737FC750815DFE1497E59B1A548C58B2DD4AEF473DC60EE217B85"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/wwwroot/js/ssalddel-mart-scanner.js",
+      "Hash": "2E175771DB25DA3E819CF366390B251F550F0B4D5DCA18E4DAC85EF36C54B61C"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/test-ssalddel-mart-scanner.mjs",
+      "Hash": "E915093AF064255865898F53317E849D47604D8DAF575CB5D358696244E406E8"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/SsalddelMartPackageScanner.razor",
+      "Hash": "C61708A3EADCB8F3F1CC7B59E067177E876E370C09975E3AFDFC7F475D566BB6"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/SsalddelMartPackageScanner.razor.css",
+      "Hash": "C103F38301F81AC5D807395689DA6041AC284AD13321D3DF3F0B1114F87DC6D4"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/SsalddelMartSamplePage.razor",
+      "Hash": "DE256499B76EE9058EEE0B2982E19DF15640C1AA87CF8C745ABCA3C48941B91C"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/SsalddelMartSamplePage.razor.css",
+      "Hash": "9CB4DBE86B8721483FDB44E7B395D835315353643E39A4A9CFE5C1D69C85D81F"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/SsalddelMartPackageSlip.razor",
+      "Hash": "174706FD046DE73FCFBEBFB8E3F4F8B8EDA42AC3A342C37B3132018BC7E9FA06"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/SsalddelMartPackageSlip.razor.css",
+      "Hash": "E64B3FB4C552CBA7A087C71B0FEFE8A6BC6AB487273C8A7F9FF500C80D5AE24F"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/wwwroot/js/ssalddel-mart-package-print.js",
+      "Hash": "F9C46DC3009D23EE49BC229CFF0BC64AE23C75966D1A1C1527BDF11D67CABC3C"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/test-ssalddel-mart-package-print.mjs",
+      "Hash": "922F42CEA8365BD7C94082CEAB08181432D8A96139EFD1806608060FED4AE631"
+    },
+    {
+      "Path": "eng/RoleWorkspacePreview/verify-ssalddel-mart-pickup.mjs",
+      "Hash": "70B4064169DB34EB013B4AF87D310BC8011DE8E5884DFDCE296541444A519DDA"
+    }
+  ],
+  "validationResults": {
+    "PreviewBuild": {
+      "passed": true,
+      "errors": 0,
+      "evidence": "artifacts/local/ssalddel-mart-package-pickup-r56/preview-build.log"
+    },
+    "ScopedCsharp": {
+      "passed": 69,
+      "failed": 0,
+      "evidence": "artifacts/local/ssalddel-mart-pickup-r56/tests/mart-package-pickup-final.trx"
+    },
+    "JavascriptLifecycle": {
+      "passed": 62,
+      "failed": 0,
+      "evidence": "artifacts/local/ssalddel-mart-package-pickup-r56/javascript-tests.log"
+    },
+    "RenderedUi": {
+      "passed": 21,
+      "failed": 0,
+      "widths": [
+        320,
+        390,
+        1280
+      ],
+      "mockDecoder": true,
+      "mockPrintDialog": true,
+      "sourceDrift": false,
+      "serverFailures": 0,
+      "evidence": "artifacts/local/ssalddel-mart-package-pickup-r56/ui/result.json"
+    },
+    "ActualSyntheticLabelDecode": {
+      "passed": 12,
+      "failed": 0,
+      "decoder": "ZXing.Net",
+      "physicalScanVerified": false,
+      "evidence": "artifacts/local/ssalddel-mart-package-pickup-r56/ui/decode-result.json"
+    },
+    "Fast": {
+      "passed": true,
+      "testsPassed": 69,
+      "evidence": "artifacts/local/validation/20261010-162324"
+    },
+    "Task": {
+      "passed": true,
+      "testsPassed": 9993,
+      "testsFailed": 0,
+      "environmentSkipped": 15,
+      "buildTarget": "Ssalddel.v3.5.slnx",
+      "evidence": "artifacts/local/validation/20261010-162710"
+    },
+    "DelayedCircuitDisposal": {
+      "passed": true,
+      "secondsAfterUiCompletion": 242,
+      "serverFailures": 0,
+      "stderrBytes": 0,
+      "evidence": "artifacts/local/ssalddel-mart-package-pickup-r56/delayed-circuit-audit.json"
+    }
+  },
+  "resolvedFindings": [
+    "StalePrintCallbackCrossedRequestBoundary",
+    "LateImportProxyCleanup"
+  ],
+  "remainingIssues": [
+    "Existing SQLitePCLRaw.lib.e_sqlite3 2.1.10 NU1903 warning",
+    "Other existing compile warnings",
+    "Operational driver assignment and authenticated API are not connected"
+  ],
+  "unverified": [
+    "AuthenticatedOperationalHttp",
+    "OperationalOutbox",
+    "AndroidCamera",
+    "PhysicalPrinter",
+    "Thermal58mm",
+    "DurableHostRestart"
+  ]
+}
