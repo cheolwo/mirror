@@ -104,8 +104,10 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I원장업무투영동기화Handler, 음식주문원장업무투영Handler>();
         services.AddScoped<I운송원장Mongo동기화Service, 운송원장Mongo동기화Service>();
         services.AddScoped<I음식마트원장Mongo동기화Service, 음식마트원장Mongo동기화Service>();
-        services.AddScoped<I음식마트원장동기화OutboxService, 음식마트원장동기화OutboxService>();
-        services.AddScoped<I음식마트원장동기화복구Service, 음식마트원장동기화OutboxService>();
+        services.AddScoped<음식마트원장동기화OutboxService>();
+        services.AddScoped<I음식마트원장동기화OutboxService>(sp => sp.GetRequiredService<음식마트원장동기화OutboxService>());
+        services.AddScoped<I음식마트원장동기화복구Service>(sp => sp.GetRequiredService<음식마트원장동기화OutboxService>());
+        services.AddScoped<I음식기사후속OutboxService>(sp => sp.GetRequiredService<음식마트원장동기화OutboxService>());
         services.AddScoped<I음식배차요청OutboxService, 음식배차요청OutboxService>();
         services.AddSingleton<I교육기관제출대기열, Mongo교육기관제출대기열>();
         services.AddScoped<I현장체험활동UseCase, 현장체험활동UseCase>();

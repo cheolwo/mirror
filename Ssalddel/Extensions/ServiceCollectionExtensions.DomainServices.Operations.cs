@@ -74,6 +74,8 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I피킹포장작업투영Service, 피킹포장작업투영Service>();
         services.AddScoped<I출고피킹작업생성Service, 출고피킹작업생성Service>();
         services.AddSingleton<살뜰.도메인.운영.살뜰마트라스트마일배차Policy>();
+        services.AddScoped<I마트라스트마일원천Adapter, 마트라스트마일원천Adapter>();
+        services.Add마트기사업무();
         services.AddScoped<IMartLastMileDispatchReadinessPolicy, MartLastMileDispatchReadinessPolicy>();
         services.AddScoped<I살뜰마트라스트마일배차인계Service, 살뜰마트라스트마일배차인계Service>();
         services.AddScoped<I알뜰살뜰마트배차대기Service, 알뜰살뜰마트배차대기Service>();
@@ -193,6 +195,8 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I기사월정산Service, 기사월정산Service>();
         services.AddScoped<IPlatformProfitReturnService, PlatformProfitReturnService>();
         services.AddHostedService<배차실행인덱스예열HostedService>();
+        services.AddScoped<I기사운행시작후속Service, 기사운행시작후속Service>();
+        services.AddHostedService<기사운행시작후속Worker>();
         services.AddHostedService<화물연속배차BackgroundService>();
         services.AddHostedService<운영체제업무인계OutboxWorker>();
         services.AddHostedService<출고피킹작업생성Worker>();

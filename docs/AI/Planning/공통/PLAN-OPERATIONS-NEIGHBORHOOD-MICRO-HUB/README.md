@@ -1,4 +1,64 @@
-# [기획 · 생활 교류·생활권 물류 · PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB · r32]
+# [기획 · 생활 교류·생활권 물류 · PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB · r58]
+
+## 현재 구현: 살뜰마트 기사 수락·픽업·전달 r58
+
+[승인 범위 r58](ssalddel-mart-driver-work.implementation.r58.md)·[개발 반환](ssalddel-mart-driver-work.r58.work-order.json)에 따라 r57의 기사 소비자 결손을 보완했다. `Implemented / LocalValidated / SimulationConsumerBound / OperationalDeferred`. 마트 전용 수락→현재 전표 입력 즉시 픽업→전달·보호 전표·요청 영수증·후속 Outbox와 독립 FDriver 화면을 결속하고 기존 음식/화물/정산을 분리한다. Fast 262건·전체 앱 build·Task 10,299건 통과, 환경 의존 15건 건너뜀. [검증·한계](../../../../Changes/2026-10-10-ssalddel-mart-driver-work-r58.md). Simulation·기본 OFF·현재 기사/판본/포장/멱등 관문을 유지하며 실제 화면 렌더·인증 HTTP/DB·단말·하드웨어·공용 DB Migration 적용·실운영은 별도다. 아래 기존 승인·구현·검증 이력은 보존한다.
+
+## 이전 기준선: 살뜰마트 배차 소프트웨어 연결 기반 r57
+
+[승인 범위 r57](ssalddel-mart-dispatch-connection.implementation.r57.md)·[개발 반환](ssalddel-mart-dispatch-connection.r57.work-order.json)에 따라 하드웨어보다 서버 연결 기반을 먼저 보완했다. `Implemented / LocalValidated / SoftwareConnectionFoundation / OperationalDeferred`. 실제 마트 원천 읽기 Adapter, 포장 후속 실패의 명시적 재확인 Event와 다른 원천 번호 충돌 보호를 구현했다. Fast 149건·전체 앱 build·Task 10,180건 통과, 환경 의존 시험 15건 미실행. [검증 기록](../../../../Changes/2026-10-10-ssalddel-mart-dispatch-connection-r57.md). 제품 기사 소비자 미지원 보류는 유지하므로 실제 기사 수락·픽업 연결 완료가 아니다. 기존 r56 표본·전표·샘플 이미지와 이전 승인·검증은 보존한다.
+
+## 현재 구현: 살뜰마트 전표 출력·스캔 즉시 픽업 r56
+
+[승인·구현 r56](ssalddel-mart-package-pickup.implementation.r56.md)·[작업 지시](ssalddel-mart-package-pickup.r56.work-order.json)에 따라 r54의 첫 격리 표본 단계를 구현했다. `Implemented / LocalValidated / AndroidDeferred / OperationalDeferred`. 포장 전 전표 출력, 기존 피킹·포장과 QR 인식 즉시 서버 측 표본 픽업 기록을 연결한다. 네 자리 제출은 대체 입력이고 추가 완료 버튼은 없다. 현재 전표·주문·합성 배정 기사·준비 상태와 중복을 검사한다. 집중 C# 69·JS 62·UI 21·실제 QR 디코딩 12건, Fast와 전체 앱 build·Task 9,993건 통과(Mongo 15건 미실행). [샘플·검증](../../../../Changes/2026-10-10-ssalddel-mart-package-pickup-r56.md). 실제 마트 기사 Adapter·실물 인쇄·APK 결속은 별도다. 아래 이전 기획·증거는 보존한다.
+
+## 이전 선택: 전표 QR 스캔으로 픽업 완료 r55
+
+[사용자 선택 r55](ssalddel-mart-scan-pickup.direction.r55.md)은 r54의 스캔 뒤 추가 확인 버튼을 대체한다. `ScanActionDecisionAccepted / ImplementationApprovalPending / OperationalDeferred`. 픽업용 QR 스캔을 완료 의사로 받아 서버 검증 성공 뒤 바로 완료하며 별도 버튼은 두지 않는다. 네 자리 입력 제출 방식과 제품 구현 범위까지 승인한 것은 아니다. 아래 r54의 조사·제안과 r52/r53 구현은 보존한다.
+
+## 이전 제안: 살뜰마트 포장 전표·기사 픽업 확인 r54
+
+[전표·픽업 제안 r54](ssalddel-mart-package-slip.design.r54.md)은 기존 전표 출력·QR 생성과 기사 인계 코드를 대조한다. `SourceReviewed / ProposedDesign / ImplementationApprovalPending / OperationalDeferred`. 포장 전 출력, 서버 포장 준비 판정, 기사 QR/네 자리 확인과 실제 픽업 기록을 분리한다. 마트 기사 Adapter 부재와 실제 인쇄·Android 미검증을 유지하며 제품 코드는 변경하지 않는다. r52/r53의 기존 승인·구현·검증은 아래에 보존한다.
+
+## 현재 후속 구현: 살뜰마트 선반 QR·바코드 카메라 입력 r53
+
+[승인 범위 r53](ssalddel-mart-camera-scan.implementation.r53.md)·[작업 지시](ssalddel-mart-camera-scan.r53.work-order.json)는 r52의 선반 코드 입력을 보완했다. `Approved / Implemented / LocalValidated / AndroidDeferred / OperationalDeferred`. QR/Code128 인식은 입력만 채우며 상품·수량 확인과 피킹 완료를 대신하지 않는다. C# 39·JS 30·가상 카메라 UI 27·수동 UI 3·실제 표찰 디코딩 12건 통과. [변경·검증과 샘플](../../../../Changes/2026-10-10-ssalddel-mart-camera-scan-r53.md)에 실제 휴대폰 촬영·APK 결속과의 경계를 기록한다. 아래 이전 구현·검증은 보존한다.
+
+## 현재 로컬 검증: 살뜰마트 기록 상품 피킹·포장 표본 r52
+
+[승인 범위 r52](ssalddel-mart-picking-sample.implementation.r52.md)·[작업 지시](ssalddel-mart-picking-sample.r52.work-order.json)는 기록 상품명·수량을 합성 선반·재고와 연결하는 좁은 표본이다. 화면·프로세스 이름은 **살뜰마트**로 통일하고 원본 사업자 이름은 비공개 출처로만 남긴다. 주문 전체 피킹 → 품목 포장 → 모의 기사 인계를 실제 배차와 구분한다. `Approved / Implemented / LocalValidated / OperationalDeferred`이며 아래 r51과 이전 검증을 대체하지 않는다. Fast 101·Task 9,963건과 UI 15건 통과, Mongo 환경 시험 15건 미실행. [변경·검증 기록](../../../../Changes/2026-10-10-ssalddel-mart-picking-sample-r52.md)에 샘플 이미지를 연결하며 실제 마트 기사·Android 연계는 후속이다.
+
+## 현재 코드 보완 전국 생활 공간 입고 재고 관리 r51
+
+사용자 요청에 따라 [승인 범위 r51](nationwide-storage-foundation.implementation.r51.md)·[작업 지시](nationwide-storage-foundation.r51.work-order.json)의 지역 독립적인 보관 기반을 보완했다. `Implemented / LocalValidated / OperationalDeferred`이며 기존 r30/r31/r32의 등록·동의·입고를 재사용하고 한 공간의 인증·페이지 재고 조회와 지역 밖 참고 자료 장애 격리를 분리했다. Fast 102건·전체 Task 9,926건과 관련 앱 build를 통과했고 환경 의존 MongoDB 15건은 미실행이다. [변경과 검증](../../../../Changes/2026-10-10-nationwide-storage-foundation-r51.md)에 코드·시험·실운영 경계를 기록한다. 전국 실운영이나 공간 사용 허가를 확정하지 않으며 무료 관리 도구와 실제 보관·배송 비용은 구별한다. 아래 문의 준비·후속 정책 제안과 이전 구현은 보존한다.
+
+## 현재 문서 준비 공통 사전 문의 r50
+
+사용자가 특정 아파트보다 중랑구·동대문구·광진구·노원구·구리시의 공통 문의 양식을 먼저 준비하도록 선택했다. [준비 범위와 지역별 대장](administrative-common-inquiry.design.r50.md)·[공통 문의 원본](administrative-common-inquiry.template.r50.md)은 `CommonTemplateScopeAccepted / TemplatePrepared / ProductImplementationDeferred / SubmissionDeferred`다. 대상 공간 미선정인 일반 질의이며 문서 작성과 기관별 발송·접수·허가를 구별한다. 아래 r49의 공식 출처·코드 조사와 특정 공간용 양식, 이전 승인·구현은 보존한다.
+
+## 후속 제안: 공동주택 사전 문의·행정서식 초안 r49
+
+[공식 출처·초안 절차 r49](administrative-document-drafts.design.r49.md)와 [사전 문의서 템플릿](administrative-preconsultation.template.r49.md)을 준비했다. `SourceReviewed / ProposedDesign / ImplementationApprovalPending / SubmissionDeferred`이며 기존 문서 초안·암호화 보관 기반을 재사용하는 제안이다. 모든 공간의 일률 허가를 전제하지 않고, 관할 기관에 적용 절차를 먼저 확인한다. 제품 작성기·공식 서식 채움·이메일 발송·민원 접수·허가 결과는 아직 구현하거나 실행하지 않았으며 r48과 기존 승인·검증을 보존한다.
+
+## 후속 검토: 아파트 생활권 거점 적용 r48
+
+[아파트 적용 검토 r48](apartment-shared-space.review.r48.md)은 r30/r31/r32의 실제 분산 보관·인계 기반을 아파트 사용 권한·담당 위임·구획 공유 용량·출입 시간·불량 격리·잔존 재고 반출과 대조한다. `SourceReviewed / ProposedDesign / ImplementationApprovalPending / OperationalDeferred`이며 상세 정책은 제안이다. 사용 적합성이 확인된 구획 한 곳의 유인 인계를 첫 사례로 권장하되, 제품 코드·DB·운영 설정이나 아래 기존 승인·검증은 변경하지 않는다.
+
+## 현재 구현: 음식 배달 경험 공유 r47
+
+[승인 r47](delivery-experience-sharing.implementation.r47.md)·[작업 지시](delivery-experience-sharing.r47.work-order.json)에 따라 음식 기사·음식점·주문자의 현재 업무에서 확인된 앱 완료 건수를 알아보도록 보완했다. **구현·로컬 검증 완료 / 운영 미활성**이며 실제 방문 횟수나 신뢰 점수로 확대하지 않고 기능과 타인 공유는 기본 OFF다. [페이지·코드·DB 책임](../../../../ProjectOverview/page-docs/delivery-experience-sharing-r47.md)·[변경·검증](../../../../Changes/2026-10-09-delivery-experience-sharing-r47.md). 최종 Fast 88개·Task 실행 9,526개·공통 모바일 38장면 통과, 환경 의존 Mongo 15개 미실행이다. EF migration SQL 생성·APK hash 수집과 실제 DB 적용·패키지/서명·단말·원격 알림·운영 활성화를 구분한다. 아래 기존 승인과 검증 근거는 보존한다.
+
+## 현재 구현: 회원 생활 배송 한 건 완주 r46
+
+[승인 r46](member-delivery-completion.implementation.r46.md)·[작업 지시](member-delivery-completion.r46.work-order.json)에 따라 r44의 최초 촬영·협업 접수·수령 확인 결손을 보완했다. 제공/필요 글의 실제 상대 수령자만 확인하며 전달·수령·지급은 분리한다. [화면 책임](../../../../ProjectOverview/page-docs/neighborhood-member-completion-r46.md)·[실제 검증·샘플](../../../../Changes/2026-10-09-neighborhood-member-completion-r46.md). 회원/협업 집중 시험·제품 Razor 모바일 화면과 일반 앱 APK는 로컬 증거이며 실제 DB·휴대폰·운영 활성화는 보류다. 아래 운영 알림 r45와 기존 승인·증거를 대체하지 않는다.
+
+## 현재 구현: 공통 운영 알림·월 50만 원 운영 준비 r45
+
+[승인 구현 r45](operator-alerts.implementation.r45.md)는 운영자가 예외를 알아차리고 기존 업무 화면으로 이동하는 공통 알림·outbox·확인 경로와 Azure 감시/백업/예산 준비다. [페이지·코드·DB](../../../../ProjectOverview/page-docs/operations-alerts-r45.md)·[실제 검증](../../../../Changes/2026-10-09-operations-alerts-r45.md). 로컬 시험·화면·관리자 APK를 확인했으며 실제 외부 발송·유료 배포는 OFF다. r44 회원 배송 보완은 별도 작업으로 유지한다.
+
+## 현재 운영 시나리오 대조 r44
+
+[운영 시나리오 r44](operating-scenarios.review.r44.md)는 본인이 운영자와 배송 참여자를 겸하는 지역 거래·무료 배차의 정상 인계와 대기·충돌·통신/사진 실패·취소·미수령·미지급·정보 열람을 현재 화면·서버·원장에 대조한다. 기존 집중 시험 162개는 통과했지만 최초 촬영 권한, 협업/회원 배송 접수, 수령 확인의 연결 보완이 필요하다. 이번에는 조사·문서화만 진행했으며 아래 개별 구현·APK 기록을 전체 거래의 실제 운영 성공으로 확대하지 않는다. 기능과 Operational 기본 OFF는 유지한다.
 
 ## 현재 구현: 일반 회원 생활 배송 참여 r39
 

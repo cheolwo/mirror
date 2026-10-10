@@ -22,6 +22,274 @@ namespace Ssalddel.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("살뜰.도메인.마트.마트배송시도", b =>
+                {
+                    b.Property<string>("시도StableId").IsRequired().HasMaxLength(220).HasColumnType("varchar(220)");
+                    b.Property<string>("배차의뢰Id").IsRequired().HasMaxLength(120).HasColumnType("varchar(120)");
+                    b.Property<string>("주문참조번호").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                    b.Property<string>("기사Id").IsRequired().HasMaxLength(450).HasColumnType("varchar(450)");
+                    b.Property<string>("상태Code").IsRequired().HasMaxLength(32).HasColumnType("varchar(32)");
+                    b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                    b.Property<int>("추천라운드").HasColumnType("int");
+                    b.Property<string>("픽업전표Id").HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<long?>("픽업전표Revision").HasColumnType("bigint");
+                    b.Property<DateTime>("수락시각Utc").HasColumnType("datetime(6)");
+                    b.Property<DateTime?>("픽업시각Utc").HasColumnType("datetime(6)");
+                    b.Property<DateTime?>("전달시각Utc").HasColumnType("datetime(6)");
+                    b.Property<DateTime>("CreatedAtUtc").HasColumnType("datetime(6)");
+                    b.Property<DateTime>("UpdatedAtUtc").HasColumnType("datetime(6)");
+                    b.HasKey("시도StableId");
+                    b.HasIndex("배차의뢰Id").IsUnique();
+                    b.HasIndex("기사Id", "상태Code", "UpdatedAtUtc");
+                    b.ToTable("마트배송시도");
+                });
+
+            modelBuilder.Entity("살뜰.도메인.마트.마트포장전표", b =>
+                {
+                    b.Property<string>("주문참조번호").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                    b.Property<string>("전표Id").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                    b.Property<string>("보호코드Json").IsRequired().HasColumnType("longtext");
+                    b.Property<string>("QrDigest").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<bool>("활성여부").HasColumnType("tinyint(1)");
+                    b.Property<DateTime>("발급시각Utc").HasColumnType("datetime(6)");
+                    b.Property<DateTime?>("픽업시각Utc").HasColumnType("datetime(6)");
+                    b.Property<int>("확인실패횟수").HasColumnType("int");
+                    b.Property<DateTime?>("번호차단만료시각Utc").HasColumnType("datetime(6)");
+                    b.HasKey("주문참조번호");
+                    b.HasIndex("전표Id").IsUnique();
+                    b.ToTable("마트포장전표");
+                });
+
+            modelBuilder.Entity("살뜰.도메인.마트.마트기사요청영수증", b =>
+                {
+                    b.Property<string>("작업자UserId").IsRequired().HasMaxLength(450).HasColumnType("varchar(450)");
+                    b.Property<Guid>("클라이언트요청Id").HasColumnType("char(36)");
+                    b.Property<string>("작업Code").IsRequired().HasMaxLength(32).HasColumnType("varchar(32)");
+                    b.Property<string>("배차의뢰Id").IsRequired().HasMaxLength(120).HasColumnType("varchar(120)");
+                    b.Property<string>("주문참조번호").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                    b.Property<string>("보호입력Digest").IsRequired().HasColumnType("longtext");
+                    b.Property<bool>("성공여부").HasColumnType("tinyint(1)");
+                    b.Property<string>("결과Code").IsRequired().HasMaxLength(80).HasColumnType("varchar(80)");
+                    b.Property<int>("결과StatusCode").HasColumnType("int");
+                    b.Property<DateTime>("CreatedAtUtc").HasColumnType("datetime(6)");
+                    b.HasKey("작업자UserId", "클라이언트요청Id");
+                    b.HasIndex("CreatedAtUtc");
+                    b.ToTable("마트기사요청영수증");
+                });
+
+            modelBuilder.Entity("살뜰.도메인.마트.마트기사후속Outbox", b =>
+                {
+                    b.Property<string>("멱등키").IsRequired().HasMaxLength(200).HasColumnType("varchar(200)");
+                    b.Property<string>("배차의뢰Id").IsRequired().HasMaxLength(120).HasColumnType("varchar(120)");
+                    b.Property<string>("주문참조번호").IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
+                    b.Property<string>("기사Id").IsRequired().HasMaxLength(450).HasColumnType("varchar(450)");
+                    b.Property<string>("시도StableId").IsRequired().HasMaxLength(220).HasColumnType("varchar(220)");
+                    b.Property<long>("업무Revision").HasColumnType("bigint");
+                    b.Property<string>("종류Code").IsRequired().HasMaxLength(32).HasColumnType("varchar(32)");
+                    b.Property<string>("상태Code").IsRequired().HasMaxLength(32).HasColumnType("varchar(32)");
+                    b.Property<int>("시도횟수").HasColumnType("int");
+                    b.Property<long>("ClaimRevision").IsConcurrencyToken().HasColumnType("bigint");
+                    b.Property<string>("LeaseOwner").HasMaxLength(64).HasColumnType("varchar(64)");
+                    b.Property<DateTime?>("LeaseUntilUtc").HasColumnType("datetime(6)");
+                    b.Property<DateTime?>("NextAttemptAtUtc").HasColumnType("datetime(6)");
+                    b.Property<string>("마지막실패Code").HasMaxLength(80).HasColumnType("varchar(80)");
+                    b.Property<DateTime>("CreatedAtUtc").HasColumnType("datetime(6)");
+                    b.Property<DateTime>("UpdatedAtUtc").HasColumnType("datetime(6)");
+                    b.HasKey("멱등키");
+                    b.HasIndex("상태Code", "NextAttemptAtUtc", "CreatedAtUtc");
+                    b.ToTable("마트기사후속Outbox");
+                });
+
+            modelBuilder.Entity("살뜰.도메인.음식.음식배달경험공유설정", b =>
+                {
+                    b.Property<string>("기사Id")
+                        .HasMaxLength(450)
+                        .HasColumnType("varchar(450)");
+
+                    b.Property<long>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("현재관계자공유")
+                        .HasColumnType("tinyint(1)");
+
+                    b.HasKey("기사Id");
+
+                    b.ToTable("음식배달경험공유설정");
+                });
+
+            modelBuilder.Entity("살뜰.도메인.음식.음식배달경험완료Outbox", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTime>("CompletedAtUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("ProjectedAtUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("기사Id")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("varchar(450)");
+
+                    b.Property<string>("단지Id")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("단지표시명")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("도로Id")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("도로표시명")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("실행모드Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("완료종류Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("원천시도Id")
+                        .IsRequired()
+                        .HasMaxLength(220)
+                        .HasColumnType("varchar(220)");
+
+                    b.Property<string>("주문번호")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("지점Id")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("지점표시명")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectedAtUtc", "CreatedAtUtc");
+
+                    b.HasIndex("기사Id", "주문번호", "완료종류Code", "실행모드Code")
+                        .IsUnique();
+
+                    b.ToTable("음식배달경험완료Outbox");
+                });
+
+            modelBuilder.Entity("살뜰.도메인.음식.음식배달경험Fact", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTime>("ProjectedAtUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("기사Id")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("varchar(450)");
+
+                    b.Property<string>("실행모드Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("완료OutboxId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("완료종류Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("장소Id")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("장소종류Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("장소표시명")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("완료OutboxId", "장소종류Code")
+                        .IsUnique();
+
+                    b.HasIndex("기사Id", "완료종류Code", "장소종류Code", "장소Id", "실행모드Code");
+
+                    b.ToTable("음식배달경험Fact");
+                });
+
+            modelBuilder.Entity("살뜰.도메인.음식.음식배달전달지역Snapshot", b =>
+                {
+                    b.Property<string>("주문번호")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("VerifiedAtUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("단지Id")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("단지표시명")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("도로Id")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("도로표시명")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("원천Code")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("확인상태Code")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.HasKey("주문번호");
+
+                    b.ToTable("음식배달전달지역Snapshot");
+                });
+
             modelBuilder.Entity("Ssalddel.Domain.Pricing.AgreedRateTableRecord", b =>
                 {
                     b.Property<string>("AgreementId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
@@ -5670,11 +5938,34 @@ namespace Ssalddel.Migrations
                         .HasDefaultValue("CargoTransport")
                         .HasColumnName("transport_execution_type");
 
+                    b.Property<Guid?>("WorkStartClientRequestId").HasColumnType("char(36)").HasColumnName("work_start_client_request_id");
+                    b.Property<string>("WorkStartRequestKey").HasMaxLength(64).HasColumnType("varchar(64)").HasColumnName("work_start_request_key");
+                    b.Property<string>("WorkStartInputFingerprint").HasMaxLength(64).HasColumnType("varchar(64)").HasColumnName("work_start_input_fingerprint");
+                    b.Property<string>("ActiveDriverId").HasMaxLength(450).HasColumnType("varchar(450)").HasColumnName("active_driver_id");
+                    b.Property<DateTime?>("StoppedAtUtc").HasColumnType("datetime(6)").HasColumnName("stopped_at_utc");
+                    b.Property<string>("StartReturnPreference").HasMaxLength(32).HasColumnType("varchar(32)").HasColumnName("start_return_preference");
+                    b.HasIndex("WorkStartRequestKey").IsUnique().HasDatabaseName("IX_driver_shifts_WorkStartRequestKey");
+                    b.HasIndex("ActiveDriverId").IsUnique().HasDatabaseName("IX_driver_shifts_ActiveDriverId");
                     b.HasKey("Id");
 
                     b.ToTable("driver_shifts", (string)null);
                 });
 
+            modelBuilder.Entity("살뜰.도메인.기사.기사운행시작후속", b =>
+            {
+                b.Property<long>("ShiftId").HasColumnType("bigint");
+                b.Property<string>("DriverId").IsRequired().HasMaxLength(450).HasColumnType("varchar(450)");
+                b.Property<string>("Status").IsRequired().HasMaxLength(32).HasColumnType("varchar(32)");
+                b.Property<int>("AttemptCount").HasColumnType("int");
+                b.Property<DateTime>("CreatedAtUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime?>("NextAttemptAtUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime?>("CompletedAtUtc").HasColumnType("datetime(6)");
+                b.Property<string>("LastFailureCode").HasMaxLength(100).HasColumnType("varchar(100)");
+                b.HasKey("ShiftId");
+                b.HasIndex("Status", "NextAttemptAtUtc");
+                b.ToTable("driver_work_start_followups", (string)null);
+                b.HasOne("살뜰.도메인.기사.기사근무", null).WithOne().HasForeignKey("살뜰.도메인.기사.기사운행시작후속", "ShiftId").OnDelete(DeleteBehavior.Cascade).IsRequired();
+            });
             modelBuilder.Entity("살뜰.도메인.기사.기사운송대금지급요청", b =>
                 {
                     b.Property<long>("Id")
@@ -9832,6 +10123,11 @@ namespace Ssalddel.Migrations
 
             modelBuilder.Entity("살뜰.도메인.음식.음식배달시도", b =>
                 {
+                    b.Property<string>("경험실행모드Code")
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("experience_execution_mode_code");
+
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
@@ -15753,6 +16049,67 @@ namespace Ssalddel.Migrations
                 b.Property<DateTime>("CreatedAtUtc").HasColumnType("datetime(6)");
                 b.HasKey("EvidenceId"); b.HasIndex("ActorUserId","UploadRequestId").IsUnique(); b.ToTable("neighborhood_member_photo");
             });
+            modelBuilder.Entity("Ssalddel.Domain.Notifications.OperationsAlert", b =>
+            {
+                b.Property<string>("Id").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("SourceKind").IsRequired().HasMaxLength(32).HasColumnType("varchar(32)");
+                b.Property<string>("SourceId").IsRequired().HasMaxLength(128).HasColumnType("varchar(128)");
+                b.Property<string>("ProblemCode").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("Severity").IsRequired().HasMaxLength(16).HasColumnType("varchar(16)");
+                b.Property<string>("Status").IsRequired().HasMaxLength(16).HasColumnType("varchar(16)");
+                b.Property<string>("AcknowledgedBy").HasMaxLength(450).HasColumnType("varchar(450)");
+                b.Property<int>("Episode").HasColumnType("int");
+                b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.Property<bool>("ReminderQueued").HasColumnType("tinyint(1)");
+                b.Property<DateTime>("CreatedAtUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime>("LastVerifiedAtUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime?>("AcknowledgedAtUtc").HasColumnType("datetime(6)");
+                b.HasKey("Id"); b.HasIndex("SourceKind", "SourceId"); b.HasIndex("Status", "CreatedAtUtc", "Id"); b.ToTable("operations_alerts");
+            });
+            modelBuilder.Entity("Ssalddel.Domain.Notifications.OperationsAlertOutbox", b =>
+            {
+                b.Property<string>("Id").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("AlertId").HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("Kind").IsRequired().HasMaxLength(16).HasColumnType("varchar(16)");
+                b.Property<string>("Channel").IsRequired().HasMaxLength(16).HasColumnType("varchar(16)");
+                b.Property<string>("RecipientUserId").IsRequired().HasMaxLength(450).HasColumnType("varchar(450)");
+                b.Property<string>("Status").IsRequired().HasMaxLength(24).HasColumnType("varchar(24)");
+                b.Property<string>("ErrorCode").HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<int>("Episode").HasColumnType("int"); b.Property<int>("Attempts").HasColumnType("int");
+                b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.Property<DateTime>("CreatedAtUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime>("NextAttemptUtc").HasColumnType("datetime(6)");
+                b.Property<DateTime?>("LeaseUntilUtc").HasColumnType("datetime(6)");
+                b.HasKey("Id"); b.HasIndex("Status", "NextAttemptUtc", "LeaseUntilUtc"); b.ToTable("operations_alert_outbox");
+            });
+            modelBuilder.Entity("Ssalddel.Domain.Notifications.OperationsAlertCheckpoint", b =>
+            {
+                b.Property<string>("Id").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("CursorId").IsRequired().HasMaxLength(128).HasColumnType("varchar(128)");
+                b.Property<long>("Revision").IsConcurrencyToken().HasColumnType("bigint");
+                b.Property<DateTime>("CursorUtc").HasColumnType("datetime(6)"); b.Property<DateTime?>("StartedAtUtc").HasColumnType("datetime(6)");
+                b.HasKey("Id"); b.ToTable("operations_alert_checkpoints");
+            });
+            modelBuilder.Entity("Ssalddel.Domain.Notifications.OperationsAlertReceipt", b =>
+            {
+                b.Property<string>("Id").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("AlertId").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("ActorUserId").IsRequired().HasMaxLength(450).HasColumnType("varchar(450)");
+                b.Property<Guid>("RequestId").HasColumnType("char(36)").UseCollation("ascii_general_ci");
+                b.Property<long>("ExpectedRevision").HasColumnType("bigint"); b.Property<int>("Episode").HasColumnType("int");
+                b.HasKey("Id"); b.HasIndex("ActorUserId", "RequestId").IsUnique(); b.ToTable("operations_alert_receipts");
+            });
+            modelBuilder.Entity("Ssalddel.Domain.Notifications.OperationsBudgetUsage", b =>
+            {
+                b.Property<string>("Id").IsRequired().HasMaxLength(64).HasColumnType("varchar(64)");
+                b.Property<string>("Category").IsRequired().HasMaxLength(32).HasColumnType("varchar(32)");
+                b.Property<DateTime>("DayUtc").HasColumnType("datetime(6)"); b.Property<DateTime>("UpdatedAtUtc").HasColumnType("datetime(6)");
+                b.Property<int>("Count").HasColumnType("int"); b.HasKey("Id"); b.HasIndex("DayUtc", "Category"); b.ToTable("operations_budget_usage");
+            });
+            modelBuilder.Entity("Ssalddel.Domain.Community.NeighborhoodMemberDelivery", b =>
+                b.HasIndex("UpdatedAtUtc", "RequestId"));
+            modelBuilder.Entity("살뜰.도메인.운송.비정상운송사건", b =>
+                b.HasIndex("UpdatedAt", "사건StableId").HasDatabaseName("IX_비정상운송사건_갱신_사건"));
 #pragma warning restore 612, 618
         }
     }

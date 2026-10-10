@@ -187,6 +187,10 @@ namespace 살뜰.Data
         public DbSet<마트주문요청> 마트주문요청 { get; set; } = null!;
         public DbSet<마트주문> 마트주문 { get; set; } = null!;
         public DbSet<마트주문상품> 마트주문상품 { get; set; } = null!;
+        public DbSet<마트배송시도> 마트배송시도 { get; set; } = null!;
+        public DbSet<마트포장전표> 마트포장전표 { get; set; } = null!;
+        public DbSet<마트기사요청영수증> 마트기사요청영수증 { get; set; } = null!;
+        public DbSet<마트기사후속Outbox> 마트기사후속Outbox { get; set; } = null!;
         public DbSet<플랫폼공급조건계약> 플랫폼공급조건계약 { get; set; } = null!;
         public DbSet<플랫폼공급조건계약품목> 플랫폼공급조건계약품목 { get; set; } = null!;
         public DbSet<공급계약이용등록> 공급계약이용등록 { get; set; } = null!;

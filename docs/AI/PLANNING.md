@@ -1,5 +1,101 @@
 # Mirror 기획 목차
 
+## 예외 복구 코드 책임 분리 r2 (2026-10-10)
+
+- [PLAN-OPERATIONS-EXCEPTION-CONTINUITY r2](Planning/공통/PLAN-OPERATIONS-EXCEPTION-CONTINUITY/exception-continuity.refactoring.r2.md): `Implemented / LocalValidated / DeviceAndOperationalDeferred`. 음식 역할별 요청 준비·완료 근거와 운영자 연결 배송 복구 상태/표시를 기존 동작을 유지하며 분리했다. Fast 116건·전체 소비 앱 build·Task 10,328건 통과, 실패 0·환경 의존 15건 건너뜀. 실제 제품 화면 37항목을 확인했다. [작업 지시](Planning/공통/PLAN-OPERATIONS-EXCEPTION-CONTINUITY/exception-continuity.r2.work-order.json)·[페이지 책임](../ProjectOverview/page-docs/exception-continuity-refactoring-r2.md)·[검증과 한계](../Changes/2026-10-10-exception-continuity-refactoring-r2.md). 기존 r1 및 다른 작업의 증거를 보존한다.
+
+## 살뜰마트 기사 수락·픽업·전달 소프트웨어 연결 (2026-10-10)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r58](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-driver-work.implementation.r58.md): `Implemented / LocalValidated / SimulationConsumerBound / OperationalDeferred`. r57의 기사 소비자 결손을 전용 수락→전표 입력 즉시 픽업→전달 API·보호 전표·요청 영수증·후속 Outbox와 독립 FDriver 화면으로 보완했다. Fast 262건·전체 앱 build·Task 10,299건 통과, 환경 의존 15건 건너뜀. [개발 반환](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-driver-work.r58.work-order.json)·[페이지 책임](../ProjectOverview/page-docs/ssalddel-mart-driver-work-r58.md). Simulation·기본 OFF를 유지하며 실제 화면 렌더·인증 HTTP/DB·하드웨어·실운영·결제·단말은 별도다. 아래 이전 기획·검증을 보존한다.
+
+## 살뜰마트 배차 소프트웨어 연결 기반 (2026-10-10, 이전 기준선)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r57](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-dispatch-connection.implementation.r57.md): `Implemented / LocalValidated / SoftwareConnectionFoundation / OperationalDeferred`. 마트 원천 읽기·포장 재확인·공통 큐 원천 충돌 보호와 실제 Service 연결 시험을 보완했다. Fast 149건·전체 앱 build·Task 10,180건 통과, 환경 의존 시험 15건 미실행. [개발 반환](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-dispatch-connection.r57.work-order.json). 제품 기사 소비자 미지원 보류를 유지하며 실제 배차·마트 기사 수락/픽업·하드웨어 연결과 구분한다. r56의 합성 전표·픽업과 이전 증거는 보존한다.
+
+## 역할 앱 예외 후 업무 지속 보완 (2026-10-10)
+
+- [PLAN-OPERATIONS-EXCEPTION-CONTINUITY r1](Planning/공통/PLAN-OPERATIONS-EXCEPTION-CONTINUITY/exception-continuity.implementation.r1.md): `Implemented / LocalValidated / DeviceAndOperationalDeferred`. 화주·생활 배송의 접수 복원, 분산 사진/명령 재조회, 하차 완료 확인, 지원 사건 후 원 배송 인계, 공통 음식 요청 조회, 지도 재개와 늦은 수입 조회 응답 보호를 보완했다. 최종 Fast 543개·전체 앱 build·Task 10,180개 통과, 실패 0·환경 시험 15개 미실행이며 실제 화면 10항목과 OS 선언 63개를 확인했다. [작업 지시](Planning/공통/PLAN-OPERATIONS-EXCEPTION-CONTINUITY/exception-continuity.r1.work-order.json). 실제 기기·운영 DB·Azure·외부 실행과 커밋/푸시는 범위 밖이다.
+
+## 살뜰마트 전표 출력·QR 스캔 즉시 픽업 표본 (2026-10-10)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r56](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-package-pickup.implementation.r56.md): `Implemented / LocalValidated / AndroidDeferred / OperationalDeferred`. r54 조사·r55 선택을 기존 피킹/포장·선반 입력에 연결했다. 포장 전 전표 출력과 QR/네 자리 입력 한 번의 표본 픽업을 구현하고 준비·판본·합성 기사·멱등 관문을 유지한다. [작업 지시](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-package-pickup.r56.work-order.json), [화면 책임](../ProjectOverview/page-docs/ssalddel-mart-package-pickup-r56.md), [검증·샘플](../Changes/2026-10-10-ssalddel-mart-package-pickup-r56.md). 실제 기사 앱·운영 DB/Outbox·단말·물리 인쇄는 후속이다.
+
+## 살뜰마트 전표 QR 스캔으로 픽업 완료 선택 (2026-10-10)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r55](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-scan-pickup.direction.r55.md): `ScanActionDecisionAccepted / ImplementationApprovalPending / OperationalDeferred`. r54의 스캔 뒤 추가 버튼 제안을 대체한다. 픽업용 QR 스캔 후 서버 검증 성공 시 바로 완료하며 네 자리 입력 제출 방식·제품 구현은 별도다. 이전 조사·승인·검증은 보존한다. 다음 질문 없음.
+
+## 살뜰마트 포장 전표·기사 픽업 확인 제안 이력 (2026-10-10)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r54](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-package-slip.design.r54.md): `SourceReviewed / ProposedDesign / ImplementationApprovalPending / OperationalDeferred`. 기존 전표·QR 기반 재사용과 포장 전 출력의 조사·제안 이력이다. QR 스캔 뒤 추가 완료 버튼 제안은 r55가 대체하며 나머지 미승인 세부안과 r52/r53의 이전 구현·검증은 보존한다.
+
+## 살뜰마트 선반 QR·바코드 카메라 입력 (2026-10-10)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r53](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-camera-scan.implementation.r53.md): `Approved / Implemented / LocalValidated / AndroidDeferred / OperationalDeferred`. r52를 보존하고 합성 선반 QR·Code128 카메라 입력을 추가했다. 상품·수량 확인과 명시적 피킹 완료는 유지한다. C# 39·JS 30·가상 카메라 UI 27·수동 UI 3·실제 표찰 디코딩 12건 통과. [검증·샘플](../Changes/2026-10-10-ssalddel-mart-camera-scan-r53.md), [작업 지시](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-camera-scan.r53.work-order.json). 실제 휴대폰 촬영·MAUI/운영 결속은 별도다.
+
+## 살뜰마트 기록 상품 피킹·포장 표본 (2026-10-10)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r52](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-picking-sample.implementation.r52.md): `Approved / Implemented / LocalValidated / OperationalDeferred`. 기록 상품명·수량을 합성 선반에 결속하고 기존 피킹·포장 UseCase와 전체 주문 선행 관문을 재사용·보완했다. 화면·프로세스는 살뜰마트, 원본 사업자 명칭은 비공개 계보로만 보존한다. Fast 101·Task 9,963건과 UI 15건 통과(Mongo 환경 15건 미실행). [검증·샘플 이미지](../Changes/2026-10-10-ssalddel-mart-picking-sample-r52.md). 실제 마트 기사·Android 연계는 모의 인계와 별도다.
+
+## 전국 생활 공간 입고 재고 관리 코드 기반 (2026-10-10)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r51](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/nationwide-storage-foundation.implementation.r51.md): `Implemented / LocalValidated / OperationalDeferred`. 아파트를 포함한 전국 공통 공간 관리에 기존 r30/r31/r32를 재사용하며 한 공간의 독립·권한 제한·페이지 재고 조회와 참고 건물 후보의 지역 밖 장애 격리만 보완했다. [코드·검증](../Changes/2026-10-10-nationwide-storage-foundation-r51.md), r50 문의 준비와 r48 미승인 상세 정책은 별도다.
+
+## 생활권 보관 공간 공통 사전 문의 양식 (2026-10-10)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r50](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/administrative-common-inquiry.design.r50.md): `CommonTemplateScopeAccepted / TemplatePrepared / ProductImplementationDeferred / SubmissionDeferred`. 사용자 선택에 따라 특정 공간 미선정인 [공통 문의 원본](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/administrative-common-inquiry.template.r50.md)과 중랑구·동대문구·광진구·노원구·구리시의 준비 대장을 만들었다. 문서 준비에 한정하며 기관별 발송·접수·회신·개별 공간 승인은 별도다. r49 조사와 이전 구현·검증을 보존한다.
+
+## 공동주택 거점 사전 문의·행정서식 초안 (2026-10-10)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r49](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/administrative-document-drafts.design.r49.md): `SourceReviewed / ProposedDesign / ImplementationApprovalPending / SubmissionDeferred`. 공식 행위허가/신고 서식과 기존 문서 기반을 대조하고 [문의서 샘플](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/administrative-preconsultation.template.r49.md)을 준비했다. r48 후속 제안이며 제품 작성·발송·접수·운영 승인은 아니다.
+
+## 아파트 생활권 물류 거점 적용 검토 (2026-10-10)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r48](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/apartment-shared-space.review.r48.md): `SourceReviewed / ProposedDesign / ImplementationApprovalPending / OperationalDeferred`. r30/r31/r32를 재사용하며 공간 사용 권한·교대 담당·공유 용량·출입 시간·불량 격리·철회 후 반출의 보완 순서를 제안한다. 기존 코드 대조·기획 보완이며 제품 구현·현장 운영 승인은 아니다.
+
+## 주문자 메뉴 사진·기록 자료 연결 (2026-10-10)
+
+- [PLAN-OPERATIONS-ORDERER-MENU-CATALOG r1](Planning/공통/PLAN-OPERATIONS-ORDERER-MENU-CATALOG/orderer-menu-catalog.r1.md): `Implemented / LocallyVerified`. 기존 주문자 대표 이미지와 비공개 기록 메뉴·금액·사진 검토, 기존 Azure Blob 재사용 보관 명세를 구현했다. 최종 범위는 로컬 준비까지이며 Fast 219·Task 9,886개·화면 12장면 통과. 단가 미확인·과거 금액·사진 사용 조건을 보존하고 실제 업로드·운영 메뉴 등록·다중 상세 갤러리는 완료로 보고하지 않는다.
+
+## 실제 배달 기록 기반 로컬 검증 (2026-10-10)
+
+- [PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR r54](Planning/공통/PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR/delivery-history-local-replay.r54.md): `Implemented / LocalValidated / DeviceDeferred / OperationalDeferred`. 기존 574건·391지점의 읽기 전용 추출·기사/음식점 조회·서버/네이티브 로컬 대조를 완료했다. Fast 194·Task 9,824개 통과(Mongo 환경 15개 미실행), 320/390px 전체 내역 검증. 단말/운영 활성화와 구별한다. [변경 기록](../Changes/2026-10-10-delivery-history-local-replay-r54.md).
+
+## 기사 배달료 상세·현재 수행 안내와 USB 설치 (2026-10-09)
+
+- [PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR r53](Planning/공통/PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR/driver-detail-work-copy.r53.md): `Implemented / LocalValidated / DeviceInstalled / StartupAndReadOnlyNavigationValidated / ServerWorkflowDeferred`. r52 후속 우선순위 3·4와 단말 업데이트 설치 범위다. [작업 범위](Planning/공통/PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR/driver-detail-work-copy.r53.work-order.json)·[변경·검증 기록](../Changes/2026-10-09-driver-detail-work-copy-r53.md). 금액·명령·상태·개인정보 수명을 유지하며 설치와 서버/실제 업무 검증을 구별한다.
+
+## 기사 내 정보 메뉴·배달 내역 (2026-10-09)
+
+- [PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR r52](Planning/공통/PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR/driver-profile-history.r52.md): `Implemented / LocalValidated / DeviceDeferred`. 내 정보 메뉴·독립 설정·완료 목록 행 선택과 상세 복귀를 구현했다. [작업 범위](Planning/공통/PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR/driver-profile-history.r52.work-order.json)·[검증 기록](../Changes/2026-10-09-driver-profile-history-r52.md). 요금 상세/현재 카드 추가 수정은 후속이며 단말·운영은 별도다.
+
+## 음식 기사 책임 메타데이터·탐색 지도 (2026-10-09)
+
+- [PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR r51](Planning/공통/PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR/driver-code-metadata.r51.md): `Implemented / LocalValidated / DeviceAndOperationalDeferred`. 음식 기사 핵심 45단계·명시 소스 결속 41개와 현재/정산·순수/영속·공통/네이티브 경계를 연결했다. [작업 범위](Planning/공통/PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR/driver-code-metadata.r51.work-order.json)·[탐색 안내](../Architecture/FoodDriverCodeNavigation.md)·[생성 지도](generated/food-driver-code-map.md)·[검증 기록](../Changes/2026-10-09-food-driver-code-metadata-r51.md). Fast 264·Task 12,751개 통과(환경 의존 Mongo 15개 미실행), 기존 기본 지도·E 책임 검사·서명된 기사 APK를 확인했다. 실제 기기·운영은 별도다.
+
+## 음식 기사 DB–API–화면 리팩토링 (2026-10-09)
+
+- [PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR r50](Planning/공통/PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR/driver-vertical-refactor.r50.md): `Implemented / LocalValidated / DeviceAndOperationalDeferred`. 음식 기사 운행 시작·신규 수신부터 수락/픽업/전달까지 저장·후속 복구·현재 조회·화면 판단을 분리했다. Fast 1,061개·Task 실행 9,701개·공통 모바일 18장면 통과, 별도 Mongo 환경 시험 15개 미실행. [작업 범위](Planning/공통/PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR/driver-vertical-refactor.r50.work-order.json)·[페이지 책임](../ProjectOverview/page-docs/driver-workspace-sections-r1.md#dbapi화면-책임-분리-r14)·[이번 검증 기록](../Changes/2026-10-09-driver-vertical-refactor-r50.md). 추가형 migration·APK 준비와 실제 단말·공용 DB·운영을 구분한다.
+
+## 음식 배달 경험 공유 (2026-10-09)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r47](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/delivery-experience-sharing.implementation.r47.md): `Implemented / LocalValidated / OperationalDeferred`. 음식 기사·음식점·주문자가 현재 업무에서 확인된 완료 건수를 선택 공유한다. 공식 수령지 선택을 서버에서 다시 대조하고 상세주소·타 고객 이력은 공개하지 않는다. 최종 Fast 88개·Task 실행 9,526개·공통 모바일 38장면 통과, 환경 의존 Mongo 15개 미실행. 기능/공유 기본 OFF이며 실제 DB 적용·APK 패키지/서명·단말 검증과 구분한다. [페이지 책임](../ProjectOverview/page-docs/delivery-experience-sharing-r47.md)·[이번 변경·검증](../Changes/2026-10-09-delivery-experience-sharing-r47.md).
+
+## 주문 원장 구조 보완·총괄 관리자 명세 (2026-10-09)
+
+- [PLAN-OPERATIONS-ORDER-CENTERED-WORK-NETWORK r7](Planning/공통/PLAN-OPERATIONS-ORDER-CENTERED-WORK-NETWORK/order-ledger-admin-refactor.implementation.r7.md): `ApprovedScope / Implemented / LocalValidated / AdminSpecificationPrepared / RealDbAndDeviceValidationPending`. 음식·물품 흐름을 동일 깊이로 대조하고 음식 배송 참조·목록/상세 단계 판독·연결 응답 공개 보호·기사 조회 실패 복구를 구현했다. Fast 886개·Task 9,462개 통과와 음식 기사 Android build를 확인했다. 관리자 네 업무의 명세이며 관리자 화면·지사 권한·실지급 구현은 제외한다. [이번 변경·검증](../Changes/2026-10-09-order-ledger-admin-refactor-r7.md).
+
+## 회원 생활 배송 한 건 완주 (2026-10-09)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r46](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/member-delivery-completion.implementation.r46.md): `Implemented / LocalValidated / RealDbE2ePending / DeviceAndOperationalDeferred`. 최초 촬영·협업 접수·실제 반대 수령자 확인을 연결하고 같은 요청의 SQL/Mongo 부분 저장·동시 완료를 복구한다. Fast 190·Task 실행 9,458개 통과와 환경 의존 15개 미실행을 구분한다. [실행 결과와 샘플 화면](../Changes/2026-10-09-neighborhood-member-completion-r46.md). 별도 운영 알림 r45의 승인·검증은 보존한다.
+
+## 공통 운영 알림·월 50만 원 운영 준비 (2026-10-09)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r45](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/operator-alerts.implementation.r45.md): `Implemented / LocalValidated / ExternalActivationDeferred`. 운영자 앱·Gmail 경로와 독립 Azure 장애 감시·암호화 백업·예산 설정을 준비했다. 긴급 발생과 일일 요약, 알림 확인과 업무 해결을 분리한다. [실행 결과](../Changes/2026-10-09-operations-alerts-r45.md)에서 APK·시험·미실행 범위를 확인한다.
+
+## 지역 거래·무료 배차 운영 시나리오 대조 (2026-10-09)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r44](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/operating-scenarios.review.r44.md): `SourceReviewed / FocusedTestsPassed / MemberFlowGapsIdentified / OperationalDeferred`. 본인이 운영자·배송 참여자를 겸하는 정상 인계와 문제 상황을 대조했다. 기존 집중 시험 162개 통과와 최초 촬영·협업 접수·수령 확인의 미연결을 구분하고, 운영자 개입 및 후속 구현 완료 조건을 정리했다. 제품 코드·실운영·배포는 변경하지 않았다.
+
 ## 일반 회원의 근처 생활 배송 참여 (2026-10-09)
 
 - [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r39](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/member-delivery.implementation.r39.md): `Implemented / LocalValidated / DeviceAndOperationalDeferred`. 일반 회원·기존 요금·등록 활동 위치·동시 제안을 사용자 선택으로 확정했다. 본인 수락 건만 수행하고 사진 업로드·상태 전이·앱 알림을 연결했다. 사용자 선택에 따라 로컬 검증·APK까지 완료했다. [실행 결과](../Changes/2026-10-09-neighborhood-member-delivery-r43.md).
@@ -349,9 +445,9 @@
 | 기획 ID | 현재 문서 | 상태 | 역할 |
 | --- | --- | --- | --- |
 | `PLAN-SYSTEM-GEOSPATIAL-TILE-SEMANTIC-ZOOM` | [공간 타일 기반 단계적 의미 확대 r2](Planning/시스템/PLAN-SYSTEM-GEOSPATIAL-TILE-SEMANTIC-ZOOM/README.md) · [행정동·역세권·사가정 디오라마 전환 r2](Planning/시스템/PLAN-SYSTEM-GEOSPATIAL-TILE-SEMANTIC-ZOOM/admin-station-diorama-transition.implementation.r2.md) | `Approved / ExistingSemanticZoomReused / ExistingStreamingLifecycleReused / AdminStationTransitionImplemented / SagajeongPreparedChildPlayModeVerified / CurrentAdministrativeBoundaryBlocked / LogicalTileStreamingNotImplemented` | 기존 한반도 거점 화면에서 권역·면목제3·8동·사가정역을 거쳐 준비된 사가정 1km 디오라마를 열고 역세권 문맥으로 복귀한다. 행정동은 과거 경계 후보임을 표시하며 현재 경계·다른 역·논리 타일 지연 적재는 열지 않았다. |
-| `PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB` | [간편 작성·엑셀 입력 r29와 후속 음성](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md) | `r29 Implemented / LocalInputValidated / OperationalE2ePending / VoiceDeferred; r28 LocalSimulationValidated / RealProviderPending` | r29는 고정 엑셀의 선택행·필수 보완·메모리 입력을 기존 견적/동의/접수에 연결한다. 신규 70·Fast 453·Task 8,540 통과(Mongo 2건 건너뜀), 실제 공통 UI 36장면은 로컬 입력 증거다. r28 서버 후보·모의 수행 경계와 이전 증거는 보존하며 실제 운영/단말·음성으로 확대하지 않는다. |
+| `PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB` | [생활 교류·지역 물류](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md) · [기사 수락·픽업·전달 r58](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/ssalddel-mart-driver-work.implementation.r58.md) · [전국 공간 코드 r51](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/nationwide-storage-foundation.implementation.r51.md) | `r58 Implemented / LocalValidated / SimulationConsumerBound / OperationalDeferred; r57 SoftwareConnectionFoundation; r56 AndroidDeferred; r51 LocalValidated` | 마트 전용 기사 API·FDriver·전표·요청 결과·후속 Outbox를 Simulation·기본 OFF로 결속했다. Fast 262·Task 10,299건 통과, 환경 의존 15건 건너뜀. 실제 화면 렌더·인증 HTTP/DB·단말·하드웨어는 별도다. r57 연결 기반·r56 합성 전표와 이전 승인·증거는 보존한다. |
 | `PLAN-OPERATIONS-ABNORMAL-WORK-RECOVERY` | [비정상 업무 처리·회복 r5](Planning/공통/PLAN-OPERATIONS-ABNORMAL-WORK-RECOVERY/README.md) | `Approved / FirstPartialDamageSliceImplemented / OperationalActivationDeferred / FifthDecisionAsked` | 정상 8개 인수·파손 2개 영향분 보류, 운영자 revision 결정과 보험 적용 가능성 검토 상태를 구현했다. 다음 문답은 수령인 부재의 재연락·대기·운영자 선택이다. |
-| `PLAN-OPERATIONS-ORDER-CENTERED-WORK-NETWORK` | [주문 중심 운영체제 업무망 r6](Planning/공통/PLAN-OPERATIONS-ORDER-CENTERED-WORK-NETWORK/README.md) | `Draft / Priorities1To5FirstSliceImplemented / Priority6Partial / RootAuthorityPending / ImplementationInProgress` | 개인 주문자는 본인, 공동주문은 대표를 기본 화주로 둔다. 운송 건의 판본화된 주·보조 담당자 권한과 화주→화물→화주 읽기 전용 업무망을 구현했으며, 원천 공동주문·비용 귀속 결속은 아직 만들지 않았다. |
+| `PLAN-OPERATIONS-ORDER-CENTERED-WORK-NETWORK` | [주문 원장 구조 보완·총괄 관리자 명세 r7](Planning/공통/PLAN-OPERATIONS-ORDER-CENTERED-WORK-NETWORK/order-ledger-admin-refactor.implementation.r7.md) · [r6 기획 이력](Planning/공통/PLAN-OPERATIONS-ORDER-CENTERED-WORK-NETWORK/README.md#r6-기획-기준선) | `ApprovedScope / Implemented / LocalValidated / AdminSpecificationPrepared / RealDbAndDeviceValidationPending` | 음식·물품 인계 대조, 음식 루트 배송 참조·조회 단계·변경 응답 보호·기사 복구와 총괄 관리자 네 업무 명세를 완료했다. 원천 공동주문·비용 귀속 등 r6 장기 미정과 관리자 화면 구현은 이번 승인 범위 밖이다. |
 | `PLAN-OPERATIONS-LOGISTICS-OS` | [화물운송 OS와 음식배달 OS r12](Planning/공통/PLAN-OPERATIONS-LOGISTICS-OS/README.md) | `Draft / FoodSalesRoleViewConfirmed / BackendFoundationImplemented / DisposableMySqlValidated / HandoffOutboxProcessorImplemented / ShipperToCargoHandoffImplemented / CargoCompletionToShipperAcceptanceImplemented / AbnormalTransportIncidentHoldImplemented / WarehouseOutboundToPickingPackingImplemented / WarehouseOutboundToCargoHandoffImplemented / CompletionProjectionCoreImplemented / OtherConcreteWorkflowAdoptionPending / OperationalActivationDeferred` | 음식 판매 OS는 별도 서버 권위를 즉시 만들지 않고 기존 음식 주문·음식점 응답·조리·픽업 준비를 묶은 역할 화면으로 둔다. 기존 인계·완료 투영 기반은 유지한다. |
 | `PLAN-OPERATIONS-FOOD-SALES-ORDER-DESK` | [음식 판매 OS 주문 처리 화면 r5](Planning/공통/PLAN-OPERATIONS-FOOD-SALES-ORDER-DESK/README.md) | `Draft / AssignedDriverRelationshipBadgeConfirmed / CompletedDeliveryCountOnlyConfirmed / RelationshipBadgeDetailConfirmed / RestaurantVisibilityControlConfirmed / DefaultVisibleConfirmed / PreferenceFailureFailClosed / RelationshipNoDriverSelectionAuthorityConfirmed / FoodRestaurantDriverRelationshipProjectionRequired / RelationshipVisibilityPreferenceRequired / MobileProductImplementationDeferred` | 배정 기사 관계 배지에서 공동 완료 내역으로 이동하고 음식점이 기사 상대 노출을 기본 ON에서 끌 수 있다. |
 | `PLAN-OPERATIONS-ORDERER-ACTIVE-ORDER-HOME` | [주문자 지도 중심 음식점 발견·150건 활동 기사 지정 제안·진행 주문 추적 r11](Planning/공통/PLAN-OPERATIONS-ORDERER-ACTIVE-ORDER-HOME/README.md) | `Draft / MapFirstRestaurantDiscoveryConfirmed / ListSecondaryConfirmed / ActiveOrderMapOverlayConfirmed / FairMarkerBaselineConfirmed / AnonymousCourierSupplyPreviewConfirmed / PreferredDriverFirstOfferConfirmed / OrdererSubscriptionEntitlementRequiredConfirmed / Weekly150ActivityBadgeConfirmed / WednesdayTuesdayActivityCycleConfirmed / Weekly150DirectOfferEligibilityConfirmed / GeneralDispatchGateRejected / DriverActivityDisclosureOptInRequired / NotEmploymentCertification / DriverVetoConfirmed / NoPenaltyDeclineConfirmed / SeparateWorkOfferConsentRequired / DirectAssignmentRejected / DispatchEngineEligibilityAuthorityPreserved / VoluntaryDriverAcceptancePreserved / OrderBoundLocationAfterAssignmentOnly / DriverBenefitRequired / SubscriptionUnitEconomicsDefined / PriceAndIncludedUsagePending / RestaurantDistanceLimitConfirmed / ExistingSearchPolicyBound / PublicMapAnchorContractRequired / NaverMapsProviderCandidateConfirmed / ProductImplementationDeferred` | 유효한 주문자 구독과 기사 수~화 정상 완료 150건+ 배지, 기사 동의·현재 적격이 모두 맞아야 지정 제안을 연다. 일반 주문·일반 배차는 구독 없이 유지하고 가격·포함량·기사 혜택은 경제성 Preview 뒤 정한다. |

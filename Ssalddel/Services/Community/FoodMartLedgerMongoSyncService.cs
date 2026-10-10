@@ -1,10 +1,15 @@
 using Ssalddel.Contracts.Common.Community;
 using Ssalddel.Contracts.Food;
+using System.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using 살뜰.Data;
 using 살뜰.도메인.마트;
 using 살뜰.도메인.창고;
+using 살뜰.도메인.공통;
+using 살뜰.Services.Dispatch.Engine;
+using Ssalddel.Services.PrivacyRetention;
 
 namespace Ssalddel.Services.Community;
 
@@ -47,14 +52,79 @@ public sealed class 음식마트원장Mongo동기화Service : I음식마트원�
     {
         try
         {
-            var request = 음식마트원장Mongo동기화Builder.음식주문저장요청생성(주문);
-            return await _원장저장소.원장저장Async(request, updatedBy, cancellationToken);
+            for (var attempt = 0; attempt < 3; attempt++)
+            {
+                var request = 음식마트원장Mongo동기화Builder.음식주문저장요청생성(주문);
+                var existing = await _원장저장소.원장조회Async(request.원장Id!, cancellationToken);
+                request.기대Revision = existing?.Revision ?? 0;
+                await 음식배송원장연결Async(request, existing, 주문, cancellationToken);
+                try
+                {
+                    return await _원장저장소.원장저장Async(request, updatedBy, cancellationToken);
+                }
+                catch (InvalidOperationException ex) when (attempt < 2
+                    && ex.Message.StartsWith("원장의 현재 상태가 다른 요청에서 먼저 변경되었습니다.", StringComparison.Ordinal))
+                {
+                    // 관계 편집과 겹친 경우 최신 포함 관계를 다시 읽어 합칩니다.
+                }
+            }
+
+            throw new InvalidOperationException("음식 주문 원장 동기화 중 판본이 변경되었습니다.");
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
             _logger.LogWarning(ex, "음식 주문 원장 Mongo 동기화에 실패했습니다. 주문번호={주문번호}", 주문.주문번호);
             return null;
         }
+    }
+
+    private async Task 음식배송원장연결Async(
+        커뮤니티원장저장요청 request,
+        커뮤니티원장Dto? existing,
+        음식주문응답 주문,
+        CancellationToken cancellationToken)
+    {
+        // 배차가 없는 주문도 같은 원장으로 조회할 수 있습니다. null은 저장소가 기존 관계를 보존한다는 뜻입니다.
+        if (주문.배차대기Id is not { } dispatchWaitId) return;
+        var queue = await _db.운송원장.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Id == dispatchWaitId, cancellationToken)
+            ?? throw new InvalidOperationException("FoodOrderDispatchSourceUnavailable");
+        if (queue.배차업무유형 != 상태값.배차업무유형.음식배달
+            || !운송의뢰배차원천유형.Is음식점주문(queue.원본의뢰유형)
+            || !string.Equals(queue.원본의뢰Id, 주문.주문번호, StringComparison.Ordinal))
+            throw new InvalidOperationException("FoodOrderDispatchSourceMismatch");
+
+        var requestId = Clean(queue.의뢰Id) ?? Clean(queue.운송번호)
+            ?? throw new InvalidOperationException("FoodOrderDispatchIdentityUnavailable");
+        var childId = Clean(queue.커뮤니티원장Id) ?? 운송원장Mongo동기화Builder.원장Id생성(requestId);
+        var child = await _원장저장소.원장조회Async(childId, cancellationToken)
+            ?? throw new InvalidOperationException("FoodOrderDeliveryLedgerUnavailable");
+        if (child.확장속성.ContainsKey(배송원장개인정보파기Service.Marker))
+            throw new InvalidOperationException("PrivacyDeletionRestoreBlocked");
+        if (!string.Equals(child.원장템플릿Key, CommunityLedgerTemplateKeys.FoodDelivery, StringComparison.OrdinalIgnoreCase)
+            || !운송의뢰배차원천유형.Is음식점주문(TryGet(child.외부참조, "원천유형"))
+            || !string.Equals(TryGet(child.외부참조, "원천Id"), 주문.주문번호, StringComparison.Ordinal))
+            throw new InvalidOperationException("FoodOrderDeliveryLedgerSourceMismatch");
+
+        주문원장구성정책.연결검증(new 커뮤니티원장Dto
+        {
+            원장Id = request.원장Id!,
+            원장템플릿Key = request.원장템플릿Key,
+            커뮤니티Id = request.커뮤니티Id
+        }, child, 주문원장포함역할.배송);
+        var references = existing?.포함원장목록.ToList() ?? [];
+        if (references.Any(x => string.Equals(x.원장Id, child.원장Id, StringComparison.OrdinalIgnoreCase)))
+            return; // 이미 있는 관계의 역할·필수 여부·순서는 후속 동기화가 바꾸지 않습니다.
+
+        references.Add(new 커뮤니티포함원장참조Dto
+        {
+            원장Id = child.원장Id,
+            원장템플릿Key = child.원장템플릿Key,
+            역할 = 주문원장포함역할.배송,
+            필수여부 = true,
+            표시순서 = references.Select(x => x.표시순서).DefaultIfEmpty(-1).Max() + 1
+        });
+        request.포함원장목록 = references;
     }
 
     public async Task<커뮤니티원장Dto?> 출고원장동기화Async(
@@ -72,16 +142,36 @@ public sealed class 음식마트원장Mongo동기화Service : I음식마트원�
 
         try
         {
+            var references = 출고목록.Select(x => Clean(x.주문참조번호)).Where(x => x is not null).Distinct().ToArray();
+            if (await _db.Set<마트배송시도>().AsNoTracking()
+                    .AnyAsync(x => Enumerable.Contains(references, x.주문참조번호), cancellationToken))
+            {
+                if (references.Length != 1 || 출고목록.Any(x => Clean(x.주문참조번호) != references[0]))
+                    throw new InvalidOperationException("MartDriverLedgerSourceMismatch");
+                return await 마트기사상태사본동기화Async(references[0]!, updatedBy, cancellationToken);
+            }
+
             var request = 음식마트원장Mongo동기화Builder.출고원장저장요청생성(
                 출고목록,
                 입고목록,
                 현재단계Key,
                 원장템플릿Key);
+            if (string.Equals(request.원장템플릿Key, CommunityLedgerTemplateKeys.SsalddelMart, StringComparison.OrdinalIgnoreCase))
+            {
+                var attributes = request.확장속성.ToDictionary(x => x.Key, x => x.Value, StringComparer.OrdinalIgnoreCase);
+                attributes["MartDriverSnapshotState"] = request.상태;
+                attributes["MartDriverSnapshotStage"] = request.현재단계Key ?? string.Empty;
+                request.확장속성 = attributes;
+                운송원장RdbSnapshotMarker.Attach(request, TryGet(request.외부참조, "원천Id")!);
+            }
             var ledger = await _원장저장소.원장저장Async(request, updatedBy, cancellationToken);
+            // 최초 기사 수락이 외부 저장 중 시작됐어도 예전 사본을 성공 처리하거나 SQL에 역투영하지 않습니다.
+            if (ledger is not null && await _db.Set<마트배송시도>().AsNoTracking()
+                    .AnyAsync(x => Enumerable.Contains(references, x.주문참조번호), cancellationToken)) return null;
             if (ledger is not null
                 && string.Equals(request.원장템플릿Key, CommunityLedgerTemplateKeys.SsalddelMart, StringComparison.OrdinalIgnoreCase))
             {
-                await 마트주문투영Async(request, ledger, 출고목록, cancellationToken);
+                if (!await 마트주문투영Async(request, ledger, 출고목록, cancellationToken)) return null;
             }
 
             return ledger;
@@ -94,7 +184,156 @@ public sealed class 음식마트원장Mongo동기화Service : I음식마트원�
         }
     }
 
-    private async Task 마트주문투영Async(
+    // 기사 업무가 시작된 마트 주문은 이미 확정된 SQL 업무 사실을 읽는 사본입니다.
+    // 옛 Outbox payload의 단계나 출고완료만으로 수령·정산까지 완료됐다고 추론하지 않습니다.
+    private async Task<커뮤니티원장Dto?> 마트기사상태사본동기화Async(
+        string reference, string updatedBy, CancellationToken ct)
+    {
+        if (_db.Database.CurrentTransaction is not null) return null;
+        var ledgerId = 음식마트원장Mongo동기화Builder.출고원장Id생성(reference, CommunityLedgerTemplateKeys.SsalddelMart);
+        for (var retry = 0; retry < 3; retry++)
+        {
+            // SQL 사본보다 먼저 Mongo 판본을 읽어 과거 SQL 사본이 최신 발행의 판본을 차지하지 않게 합니다.
+            var existing = await _원장저장소.원장조회Async(ledgerId, ct);
+            var snapshot = await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+            {
+                await using var transaction = _db.Database.IsRelational()
+                    ? await _db.Database.BeginTransactionAsync(_db.Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite"
+                        ? IsolationLevel.Serializable : IsolationLevel.RepeatableRead, ct)
+                    : null;
+                var read = await 마트기사상태사본조회Async(reference, ct);
+                if (transaction is not null) await transaction.CommitAsync(ct);
+                return read;
+            });
+            if (snapshot is null) return null;
+            var request = 음식마트원장Mongo동기화Builder.출고원장저장요청생성(
+                snapshot.Outbounds, snapshot.Inbounds, snapshot.Stage, CommunityLedgerTemplateKeys.SsalddelMart);
+            request.기대Revision = existing?.Revision ?? 0;
+            // 기사 전달 사실까지만 존재합니다. 수령 확인·정산·지급 완료는 별도 업무입니다.
+            request.상태 = 커뮤니티원장상태.진행중;
+            foreach (var block in request.블록목록)
+            {
+                if (block.BlockId is "mart-order" or "mart-delivery") block.State = snapshot.Stage;
+                if (block.BlockId == "picking-packing") block.State = "포장 완료";
+            }
+            var references = request.외부참조.ToDictionary(x => x.Key, x => x.Value, StringComparer.OrdinalIgnoreCase);
+            references["마트배송시도Id"] = snapshot.Attempt.시도StableId;
+            references["마트배송Revision"] = snapshot.Attempt.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            request.외부참조 = references;
+            var attributes = request.확장속성.ToDictionary(x => x.Key, x => x.Value, StringComparer.OrdinalIgnoreCase);
+            attributes["동기화정책"] = "확정된 마트 기사 SQL 업무의 읽기 사본이며 수령 확인·정산·지급 완료가 아닙니다.";
+            attributes["MartDriverSnapshotState"] = request.상태;
+            attributes["MartDriverSnapshotStage"] = request.현재단계Key!;
+            request.확장속성 = attributes;
+            운송원장RdbSnapshotMarker.Attach(request, reference);
+            커뮤니티원장Dto? ledger;
+            try
+            {
+                ledger = await _원장저장소.원장저장Async(request, updatedBy, ct);
+            }
+            catch (InvalidOperationException ex) when (retry < 2
+                && ex.Message.StartsWith("원장의 현재 상태가 다른 요청에서 먼저 변경되었습니다.", StringComparison.Ordinal))
+            {
+                continue;
+            }
+            if (ledger is null) return null;
+            // 두 저장소의 원자적 CAS가 아닙니다. 외부 저장 중 SQL이 전진하면 성공 처리하지 않고
+            // 기존 Outbox를 Pending으로 남겨 최신 사본 재처리로 수렴시킵니다.
+            var stableId = snapshot.Attempt.시도StableId;
+            var revision = snapshot.Attempt.Revision;
+            var state = snapshot.Attempt.상태Code;
+            if (!await _db.Set<마트배송시도>().AsNoTracking().AnyAsync(x => x.시도StableId == stableId
+                && x.Revision == revision && x.상태Code == state, ct)) return null;
+            // 기존 tracked 주문/상품을 SaveChanges로 덮지 않습니다. 업무 열과 상품 열은 기사 Command 소유입니다.
+            var now = DateTime.UtcNow;
+            if (_db.Database.IsRelational())
+            {
+                var changed = await _db.마트주문.Where(x => x.주문참조번호 == reference
+                    && _db.Set<마트배송시도>().Any(a => a.시도StableId == stableId && a.Revision == revision && a.상태Code == state))
+                    .ExecuteUpdateAsync(x => x.SetProperty(y => y.커뮤니티원장Id, ledger.원장Id)
+                        .SetProperty(y => y.커뮤니티원장템플릿Key, CommunityLedgerTemplateKeys.SsalddelMart)
+                        .SetProperty(y => y.커뮤니티원장상태, ledger.상태)
+                        .SetProperty(y => y.커뮤니티원장동기화시각Utc, now), ct);
+                if (changed != 1) return null;
+            }
+            return ledger;
+        }
+        return null;
+    }
+
+    private async Task<마트기사상태사본?> 마트기사상태사본조회Async(string reference, CancellationToken ct)
+    {
+        var attempt = await _db.Set<마트배송시도>().AsNoTracking()
+            .SingleOrDefaultAsync(x => x.주문참조번호 == reference, ct);
+        var order = await _db.마트주문.AsNoTracking().SingleOrDefaultAsync(x => x.주문참조번호 == reference, ct);
+        if (attempt is null || order is null || order.상태 == "취소") return null;
+        var queue = await _db.운송원장.AsNoTracking().SingleOrDefaultAsync(x => x.의뢰Id == attempt.배차의뢰Id, ct);
+        if (queue is null || queue.원본의뢰유형 != "SsalddelMartPackedOrder" || queue.원본의뢰Id != reference
+            || queue.의뢰Id != reference || queue.일반회원배송전용
+            || queue.배차업무유형 != 상태값.배차업무유형.음식배달
+            || queue.확정기사Id != attempt.기사Id || queue.화주Id != order.판매자UserId
+            || string.IsNullOrWhiteSpace(order.주문자UserId)) return null;
+        var stage = attempt.상태Code switch
+        {
+            "Accepted" when queue.상태 == 상태값.배차대기상태.확정 && queue.배차큐단계 == 상태값.배차큐단계.확정 => "픽업대기",
+            "PickedUp" when queue.상태 == 상태값.배차상태.상차완료 && queue.배차큐단계 == 상태값.배차큐단계.확정 => "배송중",
+            "Delivered" when queue.상태 == 상태값.배차상태.하차완료 && queue.배차큐단계 == 상태값.배차큐단계.종료 => "전달완료",
+            _ => null
+        };
+        if (stage is null) return null;
+        var outbounds = await _db.출고예정.AsNoTracking().Where(x => x.주문참조번호 == reference).OrderBy(x => x.Id).ToListAsync(ct);
+        if (outbounds.Count == 0 || outbounds.Any(x => x.운송의뢰Id != queue.의뢰Id
+            || x.판매자UserId != order.판매자UserId || x.주문자UserId != order.주문자UserId
+            || (attempt.상태Code == "Accepted" ? x.상태 != 출고상태.준비중 : x.상태 != 출고상태.출고완료))) return null;
+        var inboundIds = outbounds.Where(x => x.입고요청Id.HasValue).Select(x => x.입고요청Id!.Value).Distinct().ToArray();
+        var inbounds = await _db.입고요청.AsNoTracking().Where(x => Enumerable.Contains(inboundIds, x.Id)).OrderBy(x => x.Id).ToListAsync(ct);
+        return new(attempt, stage, outbounds, inbounds);
+    }
+
+    private sealed record 마트기사상태사본(마트배송시도 Attempt, string Stage, IReadOnlyList<출고예정> Outbounds, IReadOnlyList<입고요청> Inbounds);
+
+    private async Task<bool> 마트주문투영Async(
+        커뮤니티원장저장요청 request,
+        커뮤니티원장Dto ledger,
+        IReadOnlyList<출고예정> 출고목록,
+        CancellationToken cancellationToken)
+    {
+        if (!_db.Database.IsRelational())
+            return await 마트주문투영저장Async(request, ledger, 출고목록, cancellationToken);
+        if (_db.Database.CurrentTransaction is { } callerTransaction)
+        {
+            // 중첩 transaction을 열지 않습니다. 약한 상위 격리 수준에서는 absence→Save 경합을 보장할 수 없습니다.
+            return callerTransaction.GetDbTransaction().IsolationLevel == IsolationLevel.Serializable
+                && await 마트주문투영저장Async(request, ledger, 출고목록, cancellationToken);
+        }
+        return await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+            try
+            {
+                var applied = await 마트주문투영저장Async(request, ledger, 출고목록, cancellationToken);
+                if (applied) await transaction.CommitAsync(cancellationToken);
+                else await transaction.RollbackAsync(cancellationToken);
+                return applied;
+            }
+            catch
+            {
+                // transaction Dispose가 SQL을 rollback합니다. 실패한 projection의 변경만 제거하여
+                // 상위 Outbox의 Pending 저장이 주문/상품 변경을 뜻하지 않게 합니다.
+                var reference = TryGet(request.외부참조, "주문참조번호", "주문번호", "원천Id");
+                var orders = _db.ChangeTracker.Entries<마트주문>().Where(x => x.Entity.주문참조번호 == reference).ToArray();
+                var orderIds = orders.Select(x => x.Entity.Id).ToHashSet();
+                var outboundIds = 출고목록.Select(x => x.Id).ToHashSet();
+                foreach (var line in _db.ChangeTracker.Entries<마트주문상품>().Where(x => orderIds.Contains(x.Entity.마트주문Id)
+                    || (x.Entity.출고예정Id.HasValue && outboundIds.Contains(x.Entity.출고예정Id.Value))).ToArray())
+                    line.State = EntityState.Detached;
+                foreach (var order in orders) order.State = EntityState.Detached;
+                throw;
+            }
+        });
+    }
+
+    private async Task<bool> 마트주문투영저장Async(
         커뮤니티원장저장요청 request,
         커뮤니티원장Dto ledger,
         IReadOnlyList<출고예정> 출고목록,
@@ -104,6 +343,9 @@ public sealed class 음식마트원장Mongo동기화Service : I음식마트원�
                          ?? 출고목록.Select(x => Clean(x.주문참조번호)).FirstOrDefault(x => x is not null)
                          ?? Clean(ledger.원장Id)
                          ?? throw new InvalidOperationException("마트 주문 projection을 만들려면 주문참조번호가 필요합니다.");
+        // 관계형 저장소에서는 호출자가 연 직렬화 transaction의 범위 잠금으로 최초 수락 삽입과 함께 직렬화합니다.
+        if (await _db.Set<마트배송시도>().AsNoTracking()
+                .AnyAsync(x => x.주문참조번호 == 주문참조번호, cancellationToken)) return false;
         var first = 출고목록[0];
         var now = DateTime.UtcNow;
         var 상태 = Clean(request.현재단계Key) ?? Clean(ledger.상태) ?? "출고 예정";
@@ -153,6 +395,7 @@ public sealed class 음식마트원장Mongo동기화Service : I음식마트원�
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     private static string? TryGet(IReadOnlyDictionary<string, string>? data, params string[] keys)

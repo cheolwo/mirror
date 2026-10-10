@@ -11,13 +11,14 @@
     <div class="member-delivery-map__panel">
         <NeighborhoodMemberStateNotice Model="Model" LoginHref="@LoginHref" />
         @if (_mapStatus.Message is not null && Model.IsAuthenticated) { <p class="exchange-note" role="status">@_mapStatus.Message</p> }
+        @if (_mapFailed && Model.IsAuthenticated) { <button @onclick="RetryMap" disabled="@(_rendering || _suspended)">지도 다시 표시</button> }
         @if (Model.IsAuthenticated && Model.Work is { } work)
         {
             <details class="member-delivery-map__card" open><summary>@(Model.Stage == "Pickup" ? "픽업 장소" : Model.Stage == "Delivery" ? "전달 장소" : "배송 상태")</summary>
-                <div class="member-delivery-map__section"><p class="exchange-note">@NeighborhoodMemberDeliveryPresentation.State(work.StateCode)</p>
+                <div class="member-delivery-map__section"><p class="exchange-note">@(work.StateCode == "Delivered" && work.ReceiptConfirmedAtUtc is not null ? "전달 완료 · 수령 확인됨" : NeighborhoodMemberDeliveryPresentation.State(work.StateCode))</p>
                     @if (Model.Stage == "Pickup" && work.Pickup is { } pickup) { @Place(pickup) }
                     else if (Model.Stage == "Delivery" && work.Dropoff is { } dropoff) { @Place(dropoff) }
-                    else { <p>@(work.StateCode == "Delivered" ? "전달 기록을 확인했습니다. 수령자의 확인을 기다려 주세요." : work.StateCode == "Issue" ? "문제 접수 상태입니다. 운영자의 안내를 기다려 주세요." : "현재 업무 상태를 다시 확인해 주세요.")</p> }
+                    else { <p>@(work.StateCode == "Delivered" ? work.ReceiptConfirmedAtUtc is null ? "전달 기록을 확인했습니다. 수령자의 확인을 기다려 주세요." : "수령자의 수령 확인을 받았습니다. 배송비 지급 확인은 별도입니다." : work.StateCode == "Issue" ? "문제 접수 상태입니다. 운영자의 안내를 기다려 주세요." : "현재 업무 상태를 다시 확인해 주세요.")</p> }
                     @if (work.StateCode == "Issue" && work.SupportCaseId is { Length: > 0 } caseId) { <p class="exchange-note">지원 접수 번호 @caseId<br />운영자가 확인한 뒤 배송 재개 또는 픽업 전 취소를 안내합니다. 전달 완료·비용 지급과 별도로 처리합니다.</p> }
                 </div>
                 @if (Model.Stage.Length > 0)
@@ -49,7 +50,7 @@
     [Parameter] public string RequestId { get; set; } = "";
     [Parameter] public string LoginHref { get; set; } = "/login";
     private string? _loaded;
-    private bool _disposed, _rendering;
+    private bool _disposed, _rendering, _suspended, _mapFailed;
     private long _mapRevision;
     private long _mapGeneration;
     private CancellationTokenSource? _mapUpdate;
@@ -57,11 +58,26 @@
     private NeighborhoodMapHostStatus _mapStatus = NeighborhoodMapHostStatus.Loading;
     private readonly CancellationTokenSource _lifetime = new();
     private string Href(string route) => Navigation.ToAbsoluteUri(route.TrimStart('/')).ToString();
-    protected override void OnInitialized() => Model.PropertyChanged += Changed;
+    protected override void OnInitialized()
+    {
+        Model.PropertyChanged += Changed;
+        if (MapHost is INeighborhoodMapInteractionHost interaction) { interaction.Suspended += Suspended; interaction.Invalidated += Invalidated; }
+    }
     protected override Task OnParametersSetAsync() { if (_loaded == RequestId) return Task.CompletedTask; _loaded = RequestId; return Reload(); }
     private Task Reload() => Model.LoadAsync(RequestId);
     public Task RefreshAsync() => Reload();
-    public async Task NotifyAuthenticationChangedAsync() { ++_mapGeneration; _mapUpdate?.Cancel(); Model.ResetAuthentication(); _renderedFingerprint = null; await MapHost.HideAsync(); if (!_disposed) await InvokeAsync(StateHasChanged); }
+    public async Task NotifyAuthenticationChangedAsync() { if (_disposed) return; InvalidateMap(); Model.ResetAuthentication(); await HideMap(); if (!_disposed) await InvokeAsync(StateHasChanged); }
+    private void InvalidateMap() { ++_mapGeneration; _mapUpdate?.Cancel(); _renderedFingerprint = null; _mapFailed = false; }
+    private async Task HideMap() { try { await MapHost.HideAsync(); } catch { } }
+    private async Task RetryMap() { if (_disposed || _suspended) return; InvalidateMap(); await HideMap(); if (!_disposed) await InvokeAsync(StateHasChanged); }
+    private void Suspended()
+    {
+        if (!_disposed) _ = InvokeAsync(() => { if (_disposed) return; _suspended = true; InvalidateMap(); StateHasChanged(); });
+    }
+    private void Invalidated()
+    {
+        if (!_disposed) _ = InvokeAsync(() => { if (_disposed) return; _suspended = false; InvalidateMap(); StateHasChanged(); });
+    }
     private RenderFragment Place(LocationContactDTO location) => builder =>
     {
         builder.OpenElement(0, "p"); builder.AddAttribute(1, "class", "member-delivery-map__address"); builder.AddContent(2, location.주소.도로명주소); builder.CloseElement();
@@ -71,7 +87,7 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         Model.SynchronizeOwner();
-        if (_disposed || _rendering) return;
+        if (_disposed || _rendering || _suspended) return;
         if (Model.IsAuthenticated && !Model.Loaded && !Model.IsLoading && Model.Error is null) await Reload();
         var work = Model.IsAuthenticated ? Model.Work : null;
         var fingerprint = work is null ? "none" : work.RequestId + ":" + work.Revision + ":" + work.StateCode;
@@ -87,12 +103,21 @@
             NeighborhoodMapHostStatus status;
             if (markers.Count == 0) { await MapHost.HideAsync(update.Token); status = new("unavailable", work is null ? null : "표시할 위치가 없습니다. 현재 배송 카드에서 확인해 주세요."); }
             else status = await MapHost.RenderAsync("member-delivery-map-canvas", new(++_mapRevision, markers, [], PreserveViewport: true), _ => Task.CompletedTask, update.Token);
-            if (_disposed || generation != _mapGeneration || !ReferenceEquals(work, Model.IsAuthenticated ? Model.Work : null)) { await MapHost.HideAsync(); return; }
+            if (_disposed || _suspended || generation != _mapGeneration || !ReferenceEquals(work, Model.IsAuthenticated ? Model.Work : null)) { await HideMap(); return; }
             _mapStatus = status;
             _renderedFingerprint = fingerprint;
+            _mapFailed = markers.Count > 0 && status.Code != "ready";
         }
         catch (OperationCanceledException) when (update.IsCancellationRequested) { }
-        catch { _mapStatus = NeighborhoodMapHostStatus.Unavailable; }
+        catch
+        {
+            if (!_disposed && !_suspended && generation == _mapGeneration)
+            {
+                _mapStatus = NeighborhoodMapHostStatus.Unavailable;
+                _renderedFingerprint = fingerprint;
+                _mapFailed = true;
+            }
+        }
         finally { if (ReferenceEquals(_mapUpdate, update)) _mapUpdate = null; _rendering = false; if (!_disposed) await InvokeAsync(StateHasChanged); }
     }
     private static void AddMarker(List<NeighborhoodMapMarker> markers, string id, string label, LocationContactDTO? location, string kind)
@@ -104,6 +129,7 @@
     public async ValueTask DisposeAsync()
     {
         if (_disposed) return; _disposed = true; Model.PropertyChanged -= Changed; Model.Dispose(); _lifetime.Cancel();
+        if (MapHost is INeighborhoodMapInteractionHost interaction) { interaction.Suspended -= Suspended; interaction.Invalidated -= Invalidated; }
         try { await MapHost.HideAsync(); } catch { } _lifetime.Dispose();
     }
 }

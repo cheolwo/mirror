@@ -45,6 +45,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\eng\Ssalddel.CodeMap\CodeMapManifest.cs" Link="Architecture\CodeMapManifest.cs" />
+    <Compile Include="..\eng\Ssalddel.CodeMap\CodeMapSourceBindingValidator.cs" Link="Architecture\CodeMapSourceBindingValidator.cs" />
     <Compile Include="..\FDriverApp\Controls\NaverMapReadiness.cs" Link="Clients\NaverMapReadiness.cs" />
     <Compile Include="..\SsalddelAdminApp\Services\AdminAuthSession.cs" Link="Clients\Admin\AdminAuthSession.cs" />
     <Compile Include="..\SsalddelAdminApp\Services\AdminAuthService.cs" Link="Clients\Admin\AdminAuthService.cs" />
@@ -67,6 +69,7 @@
     <Compile Include="..\DriverApp\ViewModels\Driver\기사PageViewModelBase.cs" Link="Clients\Cargo\기사PageViewModelBase.cs" />
     <Compile Include="..\DriverApp\ViewModels\Driver\Transport\*.cs" Link="Clients\Cargo\Transport\%(Filename)%(Extension)" />
     <Compile Include="..\SsalddelApp\Services\IAuthSession.cs" Link="Clients\Shipper\IAuthSession.cs" />
+    <Compile Include="..\SsalddelApp\Services\MauiWorkflowRecoveryStore.cs" Link="Clients\Shipper\MauiWorkflowRecoveryStore.cs" />
     <Compile Include="..\SsalddelApp\Services\AuthSession.cs" Link="Clients\Shipper\AuthSession.cs" />
     <Compile Include="..\SsalddelApp\Services\AuthApiService.cs" Link="Clients\Shipper\AuthApiService.cs" />
     <Compile Include="..\SsalddelApp\Services\IShipperOperationsService.cs" Link="Clients\Shipper\IShipperOperationsService.cs" />
@@ -115,6 +118,8 @@
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodPending.cs" Link="Clients\Driver\MainPageModel.FoodPending.cs" />
     <Compile Include="..\FDriverApp\Services\FDriverAuthApiService.cs" Link="Clients\Driver\FDriverAuthApiService.cs" />
     <Compile Include="..\FDriverApp\Services\FoodDeliveryDriverApiService.cs" Link="Clients\Driver\FoodDeliveryDriverApiService.cs" />
+    <Compile Include="..\FDriverApp\Services\살뜰마트배송ApiClient.cs" Link="Clients\Driver\살뜰마트배송ApiClient.cs" />
+    <Compile Include="..\FDriverApp\PageModels\살뜰마트배송PageViewModel.cs" Link="Clients\Driver\살뜰마트배송PageViewModel.cs" />
     <Compile Include="..\FDriverApp\Services\FDriverAppProfile.cs" Link="Clients\Driver\FDriverAppProfile.cs" />
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.cs" Link="Clients\Driver\MainPageModel.cs" />
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.ReturnAreaSettings.cs" Link="Clients\Driver\MainPageModel.ReturnAreaSettings.cs" />
@@ -128,6 +133,9 @@
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodNotifications.cs" Link="Clients\Driver\MainPageModel.FoodNotifications.cs" />
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodMap.cs" Link="Clients\Driver\MainPageModel.FoodMap.cs" />
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodPresentation.cs" Link="Clients\Driver\MainPageModel.FoodPresentation.cs" />
+    <Compile Include="..\FDriverApp\PageModels\MainPageModel.DeliveryExperience.cs" Link="Clients\Driver\MainPageModel.DeliveryExperience.cs" />
+    <Compile Include="..\FDriverApp\PageModels\MainPageModel.LocationTransmission.cs" Link="Clients\Driver\MainPageModel.LocationTransmission.cs" />
+    <Compile Include="..\FDriverApp\PageModels\MainPageModel.AutomaticWork.cs" Link="Clients\Driver\MainPageModel.AutomaticWork.cs" />
     <Compile Include="..\FDriverApp\PageModels\FDriverMapRouteState.cs" Link="Clients\Driver\FDriverMapRouteState.cs" />
     <Compile Include="..\FDriverApp\PageModels\FDriverFoodNotificationState.cs" Link="Clients\Driver\FDriverFoodNotificationState.cs" />
     <Compile Include="..\FDriverApp\PageModels\FDriverNotificationSettingsPageModel.cs" Link="Clients\Driver\FDriverNotificationSettingsPageModel.cs" />
@@ -159,4 +167,13 @@
     <Compile Include="..\RestaurantDeskApp\Components\Pages\OrderDetail.razor.cs" Link="Clients\Restaurant\OrderDetail.razor.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="../eng/RoleWorkspacePreview/HistoricalDeliveryDataset.cs" Link="Clients/HistoricalDeliveryDataset.cs" />
+    <Compile Include="../eng/RoleWorkspacePreview/HistoricalDeliveryPreviewFixture.cs" Link="Clients/HistoricalDeliveryPreviewFixture.cs" />
+    <Compile Include="../eng/RoleWorkspacePreview/RecordedMenuCatalogDataset.cs" Link="Clients/RecordedMenuCatalogDataset.cs" />
+    <Compile Include="../eng/RoleWorkspacePreview/RecordedMenuCatalogPreviewFixture.cs" Link="Clients/RecordedMenuCatalogPreviewFixture.cs" />
+    <Compile Include="../eng/RoleWorkspacePreview/SsalddelMartSampleInput.cs" Link="Clients/SsalddelMartSampleInput.cs" />
+    <Compile Include="../eng/RoleWorkspacePreview/SsalddelMartSampleRuntime.cs" Link="Clients/SsalddelMartSampleRuntime.cs" />
+    <Compile Include="../eng/RoleWorkspacePreview/SsalddelMartSamplePickup.cs" Link="Clients/SsalddelMartSamplePickup.cs" />
+  </ItemGroup>
 </Project>

@@ -1,5 +1,7 @@
 # 화면별 상세 README
 
+- [살뜰마트 기사 수락·픽업·전달 r58](ssalddel-mart-driver-work-r58.md) · FDriver 별도 진입·현재 배정·전표 입력 한 번의 픽업·전달과 요청 결과 우선 복구. Simulation·기본 OFF, 실제 단말·하드웨어·운영 검증은 별도.
+
 - [일반 회원 생활 배송 참여](neighborhood-member-delivery-r43.md) · 참여 설정·받은 제안·본인 수행을 분리하고 사진 전송과 완료, 서버 판본·수락 권위를 연결. 실행 결과는 r43 변경 기록에서 확인.
 
 - [생활 거래 정산의 서버·DB 책임](neighborhood-settlement-r38.md) · 역할별 지급 의무와 원본 업무 근거, 보호 원장·API와 후속 앱 화면의 책임. 앱 화면은 이번 범위에서 보류.

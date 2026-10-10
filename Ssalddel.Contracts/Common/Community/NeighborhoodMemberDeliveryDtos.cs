@@ -108,6 +108,22 @@ public sealed class NeighborhoodMemberRecoveryResponse
     public string StateCode { get; set; } = "";
 }
 
+/// <summary>종결 지원 사건에 결속한 관리자 복구 판단입니다. 주소·연락처·사진은 제공하지 않습니다.</summary>
+public sealed class NeighborhoodMemberRecoveryContextResponse
+{
+    public string RequestId { get; set; } = "";
+    public string SupportCaseId { get; set; } = "";
+    public long Revision { get; set; }
+    public string StateCode { get; set; } = "";
+    public string? IssueCode { get; set; }
+    public bool CanResume { get; set; }
+    public bool CanCancelBeforePickup { get; set; }
+    public string? BlockReason { get; set; }
+    /// <summary>같은 운영자의 원 요청 번호·본문 해시가 저장된 복구 영수증과 일치한 경우만 제공합니다.</summary>
+    public Guid? AppliedClientRequestId { get; set; }
+    public string? AppliedResolutionCode { get; set; }
+}
+
 public sealed class NeighborhoodMemberWorkResponse
 {
     public string RequestId { get; set; } = "";
@@ -123,6 +139,8 @@ public sealed class NeighborhoodMemberWorkResponse
     public LocationContactDTO? Pickup { get; set; }
     public LocationContactDTO? Dropoff { get; set; }
     public string? RequestNotes { get; set; }
+    /// <summary>사진 유무와 별개인 서버 허용 촬영 단계. 빈 값이면 촬영할 수 없습니다.</summary>
+    public string EvidenceStageCode { get; set; } = "";
     public bool CanPickup { get; set; }
     public bool CanDeliver { get; set; }
     public string? PickupEvidenceId { get; set; }
@@ -130,4 +148,6 @@ public sealed class NeighborhoodMemberWorkResponse
     public string? IssueCode { get; set; }
     public string? SupportCaseId { get; set; }
     public DateTime? CompletedAtUtc { get; set; }
+    /// <summary>전달 완료와 별개인 협업 상대방의 실제 수령 확인 시각.</summary>
+    public DateTime? ReceiptConfirmedAtUtc { get; set; }
 }

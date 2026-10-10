@@ -257,6 +257,8 @@ Ssalddel.Services.WorldProjection.DistributedBuildingCandidateRegistration.AddDi
 builder.Services.Add통신판매보호Services(builder.Configuration);
 Ssalddel.Services.PrivacyRetention.개인정보보존ServiceRegistration.Add개인정보보존Services(builder.Services, builder.Configuration);
 Ssalddel.Services.PrivacySupport.보호지원ServiceCollectionExtensions.Add거래개인정보지원Services(builder.Services, builder.Configuration);
+Ssalddel.Services.OperationsAlerts.OperationsAlertsRegistration.AddOperationsAlerts(builder.Services, builder.Configuration);
+builder.Services.AddFoodDeliveryExperience(builder.Configuration);
 var developmentReadOnly = builder.Environment.IsDevelopment()
                           && executionOptions.Mode == SsalddelExecutionMode.Simulation
                           && executionOptions.DevelopmentReadOnly;
