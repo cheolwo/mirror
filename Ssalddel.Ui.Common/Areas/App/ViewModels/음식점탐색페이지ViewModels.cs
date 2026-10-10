@@ -478,6 +478,7 @@ public sealed partial class 음식주문작성ViewModel(
         요청내용변경됨();
         if (clearRecipient)
         {
+            주소식별초기화(); 주소검색어 = string.Empty;
             수령인명 = string.Empty;
             연락처 = string.Empty;
             주소 = string.Empty;
@@ -505,7 +506,7 @@ public sealed partial class 음식주문작성ViewModel(
 
     partial void On수령인명Changed(string value) => 요청내용변경됨();
     partial void On연락처Changed(string value) => 요청내용변경됨();
-    partial void On주소Changed(string value) => 요청내용변경됨();
+    partial void On주소Changed(string value) { 주소식별초기화(); 요청내용변경됨(); }
     partial void On상세주소Changed(string value) => 요청내용변경됨();
     partial void On요청사항Changed(string value) => 요청내용변경됨();
     partial void On주문자본인수령여부Changed(bool value) => 요청내용변경됨();

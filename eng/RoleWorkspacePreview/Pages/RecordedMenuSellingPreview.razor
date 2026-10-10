@@ -1,0 +1,35 @@
+@page "/recorded-menu-selling-preview"
+@using Ssalddel.Ui.Common.Areas.App.Components.Food
+@inject RecordedMenuCatalogPreviewFixture Catalog
+@implements IDisposable
+
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<main class="menu-preview" data-selling-preview-ready="@(_fixture is not null ? "true" : "false")">
+    <header class="menu-preview__header">
+        <span class="menu-preview__badge">로컬 · 합성 자료</span>
+        <h1>판매 메뉴 표시 검토</h1>
+        <p>판매가 4,000원은 수량 계산을 확인하기 위한 합성 값입니다. 참고 사진의 실제 메뉴 가격이 아닙니다.</p>
+        <p>로그인·주문 접수·결제를 실행하지 않습니다. 과거 주문 기록의 가격을 현재 판매가로 변환하지 않습니다.</p>
+    </header>
+    @if (_fixture is not null)
+    {
+        <OrdererRestaurantDetailPanel Detail="_fixture.Detail" Writer="_fixture.Writer" Authentication="_fixture.Authentication" />
+        <output data-selling-quantity="@_fixture.Writer.메뉴수량(RecordedMenuSellingPreviewFixture.MenuId)"
+            data-selling-amount="@_fixture.Writer.주문금액.ToString(System.Globalization.CultureInfo.InvariantCulture)">합성 수량·금액 대조</output>
+    }
+</main>
+
+@code {
+    private RecordedMenuSellingPreviewFixture? _fixture;
+    protected override async Task OnInitializedAsync()
+    {
+        _fixture = new(Catalog);
+        _fixture.Writer.PropertyChanged += Changed;
+        await _fixture.InitializeAsync();
+    }
+    private void Changed(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => _ = InvokeAsync(StateHasChanged);
+    public void Dispose()
+    {
+        if (_fixture is not null) _fixture.Writer.PropertyChanged -= Changed;
+    }
+}

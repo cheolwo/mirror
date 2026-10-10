@@ -1,0 +1,24 @@
+@page "/recorded-menu-catalog-preview"
+@using Ssalddel.Ui.Common.Areas.App.Components.Food
+@inject RecordedMenuCatalogPreviewFixture Fixture
+
+<main class="menu-preview" data-menu-catalog-ready data-menu-catalog-loaded="@(Fixture.HasData ? "true" : "false")">
+    <header class="menu-preview__header">
+        <span class="menu-preview__badge">로컬 · 읽기 전용</span>
+        <h1>주문 메뉴 자료</h1>
+        <p>@Fixture.Notice</p>
+        <p>실제 주문·결제·운영 판매 메뉴 등록 기능은 연결하지 않습니다.</p>
+    </header>
+    @if (Fixture.HasData)
+    {
+        <OrdererRecordedMenuCatalog Items="Fixture.Items" SelectedBranchId="@_branchId" SelectedBranchIdChanged="SelectBranch"
+            SearchText="@_searchText" SearchTextChanged="Search" />
+    }
+</main>
+
+@code {
+    private string? _branchId;
+    private string _searchText = "";
+    private void SelectBranch(string? branchId) => _branchId = branchId;
+    private void Search(string text) => _searchText = text;
+}

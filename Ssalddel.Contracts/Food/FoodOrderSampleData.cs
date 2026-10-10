@@ -107,6 +107,12 @@ public static class FoodOrderSampleData
         return new 음식주문응답
         {
             주문번호 = source.주문번호,
+            ExperienceSummaries = source.ExperienceSummaries.Select(x => new DeliveryExperienceSummaryDto
+            {
+                MetricCode = x.MetricCode, PlaceKind = x.PlaceKind, PlaceDisplayName = x.PlaceDisplayName,
+                CompletedCount = x.CompletedCount, EvidenceStatusCode = x.EvidenceStatusCode,
+                AsOfUtc = x.AsOfUtc, ExecutionModeCode = x.ExecutionModeCode
+            }).ToArray(),
             AutoFulfillment = source.AutoFulfillment is null ? null
                 : System.Text.Json.JsonSerializer.Deserialize<Ssalddel.Contracts.Common.Fulfillment.AutoFulfillmentSnapshot>(
                     System.Text.Json.JsonSerializer.Serialize(source.AutoFulfillment)),

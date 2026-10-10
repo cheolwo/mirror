@@ -1,0 +1,5 @@
+.menu-preview { box-sizing: border-box; max-width: 1100px; margin: 0 auto; padding: 16px; color: #17243a; background: #f5f7fb; min-height: 100vh; overflow-wrap: anywhere; }
+.menu-preview__header { padding: 16px; margin-bottom: 16px; border-radius: 16px; background: #fff; border: 1px solid #dce3ed; }
+.menu-preview__header h1 { margin: 12px 0; font-size: 1.45rem; line-height: 1.35; }
+.menu-preview__header p { margin: 8px 0 0; font-size: .9rem; line-height: 1.55; }
+.menu-preview__badge { display: inline-block; color: #255c47; background: #e8f5ed; border-radius: 999px; padding: 4px 9px; font-size: .8rem; }

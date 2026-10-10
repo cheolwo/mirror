@@ -105,6 +105,15 @@
                           Immediate="true"
                           Disabled="@Writer.처리중"
                           Class="food-order-composer__wide" />
+            <details class="food-order-composer__address-search food-order-composer__wide">
+                <summary>주소 검색</summary>
+                <MudTextField @bind-Value="Writer.주소검색어" Label="도로명 또는 건물명" Variant="Variant.Outlined" Immediate="true" Disabled="@(Writer.처리중 || Writer.입력잠금 || Writer.주소검색중)" />
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Search" Disabled="@(Writer.처리중 || Writer.입력잠금 || Writer.주소검색중)" OnClick="@(() => Writer.주소검색Async())">@(Writer.주소검색중 ? "검색 중" : "주소 찾기")</MudButton>
+                @if (Writer.주소검색오류 is { } addressError) { <p role="status">@addressError</p> }
+                @if (Writer.주소검색완료 && Writer.주소검색결과.Count == 0) { <p>검색 결과가 없습니다. 배달 주소를 직접 입력해 주세요.</p> }
+                @foreach (var address in Writer.주소검색결과)
+                { <MudButton Variant="Variant.Text" FullWidth="true" Disabled="@(Writer.처리중 || Writer.입력잠금)" OnClick="@(() => Writer.검색주소선택(address))">@address.RoadAddress</MudButton> }
+            </details>
             <MudTextField @bind-Value="Writer.상세주소"
                           Label="상세 주소"
                           Variant="Variant.Outlined"

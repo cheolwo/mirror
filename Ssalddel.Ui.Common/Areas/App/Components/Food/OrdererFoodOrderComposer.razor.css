@@ -71,6 +71,10 @@
 .food-order-composer__wide {
     grid-column: 1 / -1;
 }
+.food-order-composer__address-search { min-width: 0; }
+.food-order-composer__address-search summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; color: var(--ss-accent, #0f766e); }
+.food-order-composer__address-search p { font-size: 14px; overflow-wrap: anywhere; }
+.food-order-composer__address-search ::deep button { min-height: 48px; overflow-wrap: anywhere; text-align: left; }
 
 @media (max-width: 720px) {
     .food-order-composer__form {

@@ -1,0 +1,75 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Food
+
+<section class="recorded-menu-catalog" aria-label="과거 주문 메뉴" data-recorded-menu-catalog data-testid="recorded-menu-catalog">
+    <header class="recorded-menu-catalog__heading">
+        <div>
+            <h2>기록으로 보는 메뉴</h2>
+            <p>@OrdererRecordedMenuPresentation.HistoricalPriceNotice</p>
+        </div>
+        <span class="recorded-menu-catalog__count">@VisibleItems.Count.ToString("N0")개 기록</span>
+    </header>
+    <div class="recorded-menu-catalog__filters">
+        <label>
+            <span>매장·지점</span>
+            <select value="@SelectedBranchId" @onchange="BranchChanged" data-recorded-menu-branch data-testid="recorded-menu-branch">
+                <option value="">전체 매장</option>
+                @foreach (var branch in Branches)
+                {
+                    <option value="@branch.BranchId">@branch.BranchName</option>
+                }
+            </select>
+        </label>
+        <label>
+            <span>메뉴 검색</span>
+            <input type="search" value="@SearchText" @oninput="SearchChanged" placeholder="메뉴·매장·옵션" data-recorded-menu-search data-testid="recorded-menu-search" />
+        </label>
+    </div>
+    <p class="recorded-menu-catalog__image-notice">@OrdererRecordedMenuPresentation.ReferenceImageNotice 공개 사용 승인은 별도입니다.</p>
+    @if (VisibleItems.Count == 0)
+    {
+        <div class="recorded-menu-catalog__empty" role="status">@(Items.Count == 0 ? "확인된 메뉴 기록이 없습니다." : "조건에 맞는 메뉴 기록이 없습니다. 검색어나 매장을 다시 선택해 주세요.")</div>
+    }
+    else
+    {
+        <div class="recorded-menu-catalog__list">
+            @foreach (var item in VisibleItems)
+            {
+                <article class="recorded-menu-card" @key="item.Id" data-testid="recorded-menu-card" data-recorded-menu-id="@item.Id" data-recorded-menu-branch-id="@item.BranchId" data-public-use-approved="@item.PublicUseApproved.ToString().ToLowerInvariant()" data-image-options-match-confirmed="@item.ImageOptionsMatchConfirmed.ToString().ToLowerInvariant()">
+                    <div class="recorded-menu-card__image">
+                        <OrdererMenuImage ImageUrl="@item.ImageUrl" MenuName="@(item.ImageMenuName ?? item.MenuName)" Caption="@(OrdererMenuImage.SafeImageUrl(item.ImageUrl) is not null ? "공식 메뉴 참고 이미지" : null)" />
+                    </div>
+                    <div class="recorded-menu-card__content">
+                        <p class="recorded-menu-card__branch">@item.BranchName</p>
+                        <h3>@item.MenuName</h3>
+                        <p class="recorded-menu-card__meta">@OrdererRecordedMenuPresentation.Date(item.ServiceDate) · @OrdererRecordedMenuPresentation.Quantity(item.Quantity)</p>
+                        <p class="recorded-menu-card__options"><span>옵션</span> @OrdererRecordedMenuPresentation.Options(item)</p>
+                        <dl class="recorded-menu-card__amounts">
+                            <div><dt>기록된 단가</dt><dd>@OrdererRecordedMenuPresentation.Amount(item.UnitPriceKrw)</dd></div>
+                            @if (item.DisplayedItemAmountKrw.HasValue)
+                            {
+                                <div><dt>당시 메뉴 금액</dt><dd>@OrdererRecordedMenuPresentation.Amount(item.DisplayedItemAmountKrw)</dd></div>
+                            }
+                            @if (item.OrderAmountKrw.HasValue)
+                            {
+                                <div><dt>당시 주문 합계</dt><dd>@OrdererRecordedMenuPresentation.Amount(item.OrderAmountKrw)</dd></div>
+                            }
+                        </dl>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter] public IReadOnlyList<OrdererRecordedMenuObservation> Items { get; set; } = [];
+    [Parameter] public string? SelectedBranchId { get; set; }
+    [Parameter] public EventCallback<string?> SelectedBranchIdChanged { get; set; }
+    [Parameter] public string SearchText { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> SearchTextChanged { get; set; }
+
+    private IReadOnlyList<OrdererRecordedMenuObservation> VisibleItems => OrdererRecordedMenuPresentation.Filter(Items, SelectedBranchId, SearchText);
+    private IEnumerable<OrdererRecordedMenuObservation> Branches => Items.DistinctBy(item => item.BranchId).OrderBy(item => item.BranchName, StringComparer.Ordinal);
+    private Task BranchChanged(ChangeEventArgs args) => SelectedBranchIdChanged.InvokeAsync(string.IsNullOrEmpty(args.Value?.ToString()) ? null : args.Value.ToString());
+    private Task SearchChanged(ChangeEventArgs args) => SearchTextChanged.InvokeAsync(args.Value?.ToString() ?? string.Empty);
+}

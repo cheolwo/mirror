@@ -57,7 +57,10 @@
                 @foreach (var menu in detail.메뉴목록)
                 {
                     <div class="restaurant-menu-item">
-                        <div>
+                        <div class="restaurant-menu-image">
+                            <OrdererMenuImage ImageUrl="@menu.대표이미지Url" MenuName="@menu.메뉴명" />
+                        </div>
+                        <div class="restaurant-menu-description">
                             <MudText Typo="Typo.subtitle2">@menu.메뉴명</MudText>
                             <MudText Typo="Typo.caption">@OrdererRestaurantPresentation.ValueOrDash(menu.설명)</MudText>
                         </div>

@@ -4,6 +4,8 @@
 
 이 문서는 OrdererApp 에 속한 화면별 README를 모은 색인입니다. 각 화면 문서는 캡처 이미지, 화면 책임, 사용자와 참여자, API/서버 연계, 보안 점검을 별도로 설명합니다.
 
+2026-10-10 수입 준비 공통 조회 책임 보완: 기존 7개 화면의 목적과 읽기 전용 경계를 유지한다. 현재 원장·원천 집단의 조회만 표시하고 이전 선택의 늦은 성공/실패는 폐기한다. 30초 재조회 실패 시 같은 선택의 마지막 확인 내용과 경고를 유지하며 다른 선택으로 넘기지 않는다. [승인 범위](../../../AI/Planning/공통/PLAN-OPERATIONS-EXCEPTION-CONTINUITY/exception-continuity.implementation.r1.md).
+
 인증과 업무 표시의 기준은 [로그인·업무 책임 카드](../auth-workspace-separation-r1.md)와 [페이지 원칙의 인증 경계](../../../Architecture/WholeRoadmapPagePrinciple.md#인증과-업무의-경계)를 참조합니다. 음식점 탐색·마트 요청의 상세 문서와 함께, 별도 상세 README가 없는 재료 자동집단화·수요 작성은 기존 [GroupPurchaseProducts](../../../../OrdererApp/Components/Pages/GroupPurchaseProducts.razor)와 [GroupPurchaseDemandCreate](../../../../OrdererApp/Components/Pages/GroupPurchaseDemandCreate.razor)의 인증 모드를 확인합니다. 공개 탐색과 로그인 입력을 나누며, 인증 후 기존 선택·수요 초안으로 복귀하고 저장은 사용자가 별도로 실행합니다.
 
 | 페이지 ID / 제목 | 라우트 | 분류 | 화면 책임 | 캡처 |

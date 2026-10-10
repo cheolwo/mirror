@@ -38,11 +38,16 @@
 
 .restaurant-menu-item {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 88px minmax(0, 1fr) auto;
     gap: .75rem;
     padding: .8rem;
     border: 1px solid var(--mud-palette-lines-default);
     border-radius: 12px;
+}
+
+.restaurant-menu-description {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .restaurant-menu-price {
@@ -81,10 +86,11 @@
     }
 
     .restaurant-menu-item {
-        grid-template-columns: 1fr;
+        grid-template-columns: 80px minmax(0, 1fr);
     }
 
     .restaurant-menu-price {
+        grid-column: 2;
         justify-items: start;
     }
 }

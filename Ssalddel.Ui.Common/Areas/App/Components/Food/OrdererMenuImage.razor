@@ -1,0 +1,57 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Food
+
+<figure class="orderer-menu-image" data-testid="recorded-menu-image" data-menu-image-state="@(_loadFailed ? "error" : _safeUrl is null ? "missing" : "available")">
+    @if (_safeUrl is not null && !_loadFailed)
+    {
+        <img src="@_safeUrl" alt="@AlternativeText" loading="lazy" decoding="async" @onerror="ImageFailed" />
+    }
+    else
+    {
+        <div class="orderer-menu-image__fallback" role="img" aria-label="@AlternativeText" data-testid="@(_loadFailed ? "recorded-menu-image-error" : "recorded-menu-image-empty")">
+            <MudIcon Icon="@Icons.Material.Outlined.Image" Size="Size.Medium" aria-hidden="true" />
+            <span>@(_loadFailed ? "사진을 불러오지 못했습니다" : "사진 없음")</span>
+        </div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Caption))
+    {
+        <figcaption>@Caption</figcaption>
+    }
+</figure>
+
+@code {
+    [Parameter] public string? ImageUrl { get; set; }
+    [Parameter] public string MenuName { get; set; } = string.Empty;
+    [Parameter] public string? Caption { get; set; }
+
+    private string? _safeUrl;
+    private bool _loadFailed;
+    private string AlternativeText => $"{(string.IsNullOrWhiteSpace(MenuName) ? "메뉴" : MenuName.Trim())} 메뉴 사진";
+
+    protected override void OnParametersSet()
+    {
+        var next = SafeImageUrl(ImageUrl);
+        if (!string.Equals(next, _safeUrl, StringComparison.Ordinal)) _loadFailed = false;
+        _safeUrl = next;
+    }
+
+    private void ImageFailed() => _loadFailed = true;
+
+    /// <summary>대표 이미지 계약을 표시할 때 HTTPS 또는 앱 내부 상대 주소만 허용합니다.</summary>
+    public static string? SafeImageUrl(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var candidate = value.Trim();
+        if (candidate.Any(char.IsControl) || candidate.Contains('\\')
+            || candidate.StartsWith("//", StringComparison.Ordinal)
+            || candidate.StartsWith('#') || candidate.StartsWith('?')) return null;
+        if (candidate.StartsWith('/')) return candidate;
+        if (!Uri.TryCreate(candidate, UriKind.RelativeOrAbsolute, out var uri)) return null;
+        if (!uri.IsAbsoluteUri)
+        {
+            var firstSegment = candidate.Split('/', '?', '#')[0];
+            return firstSegment.Contains(':') ? null : candidate;
+        }
+        return uri.Scheme == Uri.UriSchemeHttps && !string.IsNullOrWhiteSpace(uri.Host)
+            && string.IsNullOrEmpty(uri.UserInfo) ? uri.AbsoluteUri : null;
+    }
+}
