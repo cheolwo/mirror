@@ -16,6 +16,7 @@ public sealed partial class 기사운송사진ViewModel(
     private byte[]? _bytes;
     private string? _uploadedObjectName;
     private string? _uploadedUrl;
+    private int _captureGeneration;
 
     [ObservableProperty]
     public partial bool 촬영중 { get; private set; }
@@ -31,6 +32,12 @@ public sealed partial class 기사운송사진ViewModel(
     [RelayCommand(AllowConcurrentExecutions = false)]
     public async Task 촬영Async()
     {
+        if (촬영중)
+        {
+            return;
+        }
+
+        var generation = _captureGeneration;
         if (!MediaPicker.Default.IsCaptureSupported)
         {
             상태.설정("이 기기에서는 카메라 촬영을 지원하지 않습니다.", Severity.Warning);
@@ -47,6 +54,11 @@ public sealed partial class 기사운송사진ViewModel(
                 Title = 촬영제목
             });
 
+            if (generation != _captureGeneration)
+            {
+                return;
+            }
+
             if (photo is null)
             {
                 상태.설정("사진 촬영이 취소되었습니다.", Severity.Info);
@@ -54,8 +66,16 @@ public sealed partial class 기사운송사진ViewModel(
             }
 
             await using var imageStream = await photo.OpenReadAsync();
+            if (generation != _captureGeneration)
+            {
+                return;
+            }
             using var memoryStream = new MemoryStream();
             await imageStream.CopyToAsync(memoryStream);
+            if (generation != _captureGeneration)
+            {
+                return;
+            }
 
             _bytes = memoryStream.ToArray();
             OnPropertyChanged(nameof(사진있음));
@@ -68,19 +88,23 @@ public sealed partial class 기사운송사진ViewModel(
         }
         catch (FeatureNotSupportedException)
         {
-            상태.설정("이 기기에서는 카메라 촬영을 지원하지 않습니다.", Severity.Warning);
+            if (generation == _captureGeneration)
+                상태.설정("이 기기에서는 카메라 촬영을 지원하지 않습니다.", Severity.Warning);
         }
         catch (PermissionException)
         {
-            상태.설정("카메라 권한이 필요합니다. 앱 권한 설정에서 카메라 접근을 허용해 주세요.", Severity.Error);
+            if (generation == _captureGeneration)
+                상태.설정("카메라 권한이 필요합니다. 앱 권한 설정에서 카메라 접근을 허용해 주세요.", Severity.Error);
         }
         catch (Exception ex)
         {
-            상태.설정($"사진 촬영 중 오류가 발생했습니다: {ex.Message}", Severity.Error);
+            if (generation == _captureGeneration)
+                상태.설정($"사진 촬영 중 오류가 발생했습니다: {ex.Message}", Severity.Error);
         }
         finally
         {
-            촬영중 = false;
+            if (generation == _captureGeneration)
+                촬영중 = false;
         }
     }
 
@@ -126,6 +150,7 @@ public sealed partial class 기사운송사진ViewModel(
 
     public void 초기화()
     {
+        _captureGeneration++;
         촬영중 = false;
         파일명 = null;
         _bytes = null;

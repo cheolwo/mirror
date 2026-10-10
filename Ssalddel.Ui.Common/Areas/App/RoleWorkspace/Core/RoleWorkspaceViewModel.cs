@@ -1,9 +1,18 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Ssalddel.Contracts.Common.Metadata;
 using Ssalddel.Ui.Common.Areas.App.Models;
 
 namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
 
 /// <summary>역할 화면의 조회·선택·수명만 조립합니다. 권한과 업무 변경은 기존 API가 소유합니다.</summary>
+[SsalddelCodeMetadata(SsalddelCodeFeatureKeys.FoodDriverWork, SsalddelCodeLayer.ViewModel,
+    "역할 포트의 조회·선택·계정 수명·자동 확인과 표시 상태를 조율",
+    StepKey = "ui.workspace-view-model", FlowOrder = 220, ExecutionStage = SsalddelCodeExecutionStage.Presentation,
+    DependsOnStepKeys = new[] { "contract.workspace-port", "contract.recovery-port" },
+    ReadsFrom = SsalddelCodeDataScope.ClientPresentation,
+    WritesTo = SsalddelCodeDataScope.ClientPresentation | SsalddelCodeDataScope.OperationalState,
+    Effects = SsalddelCodeEffect.UiStateMutation | SsalddelCodeEffect.NetworkCall | SsalddelCodeEffect.StateMutation | SsalddelCodeEffect.PersistentRead | SsalddelCodeEffect.PersistentWrite | SsalddelCodeEffect.ThirdPartyApiCall | SsalddelCodeEffect.MayIncurExternalCost,
+    Boundary = "구체 음식 기사 Adapter에 의존하지 않는 공통 셸이다. 포트로 위임한 명령 효과를 포함하며 업무 권한·영속 저장은 서버가 소유한다.")]
 public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
 {
     private readonly IReadOnlyDictionary<string, IRoleWorkspaceAdapter> _adapters;
@@ -21,6 +30,8 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     private readonly Dictionary<string, int> _initializingAccess = new(StringComparer.Ordinal);
     private string? _refreshAfterInitializationRole;
     private bool _disposed, _suspended;
+    public bool FoodDispatchStateUnconfirmed => _adapter is IRoleWorkspaceRecovery { PreferenceStateUnconfirmed: true };
+    public bool FoodStartStateUnconfirmed => _adapter is IRoleWorkspaceRecovery { StartStateUnconfirmed: true };
 
     public RoleWorkspaceViewModel(IEnumerable<IRoleWorkspaceAdapter> adapters, IRoleWorkspaceAccess access, RoleWorkspaceState state,
         TimeProvider? clock = null)
@@ -55,6 +66,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     public bool AccessDenied { get; private set; }
     public string? Error { get; private set; }
     public string? CommandError { get; private set; }
+    private string? _commandErrorActionKey;
     public long Generation => _generation;
     public string WorkspaceHref => Role is null ? "/" : RoleWorkspaceNavigation.Href(Role.Key, SelectedId);
 
@@ -149,6 +161,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
             if (!string.Equals(snapshot.RoleKey, role.Key, StringComparison.Ordinal))
                 throw new InvalidOperationException("역할별 응답이 일치하지 않습니다.");
             _snapshot = snapshot with { Items = snapshot.Items.ToArray() };
+            ResolveCanonicalRequests(adapter, role.Key);
             var preferred = Items.FirstOrDefault(item => item.Id == snapshot.SelectedId)
                 ?? Items.FirstOrDefault(item => item.Id == selected);
             var current = Items.FirstOrDefault(item => item.IsCurrent);
@@ -174,7 +187,11 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
                 RequiresLogin = exception.StatusCode == 401;
                 AccessDenied = exception.StatusCode == 403;
                 if (RequiresLogin || AccessDenied || !preserveSnapshot)
-                { _snapshot = null; Error = exception.Message; adapter.Clear(); }
+                {
+                    _snapshot = null; Error = exception.Message;
+                    if (RequiresLogin || AccessDenied) adapter.Clear();
+                    else ClearTransientAdapterSnapshot(adapter);
+                }
                 else RefreshError = "업무 정보를 갱신하지 못했습니다. 마지막 확인 내용을 표시하고 있습니다.";
             }
         }
@@ -183,7 +200,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
             if (Current(generation, role.Key) && request == _readGeneration)
             {
                 if (preserveSnapshot) RefreshError = "업무 정보를 갱신하지 못했습니다. 마지막 확인 내용을 표시하고 있습니다.";
-                else { Error = "현재 업무를 불러오지 못했습니다. 다시 시도해 주세요."; adapter.Clear(); }
+                else { Error = "현재 업무를 불러오지 못했습니다. 다시 시도해 주세요."; ClearTransientAdapterSnapshot(adapter); }
             }
         }
         finally
@@ -202,7 +219,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     {
         if (_disposed || _suspended || CommandBusy || AccountBusy || IsRefreshing || !Items.Any(item => item.Id == itemId)) return;
         SelectedId = itemId;
-        CommandError = null;
+        if (!FoodDispatchStateUnconfirmed && !FoodStartStateUnconfirmed) { CommandError = null; _commandErrorActionKey = null; }
         SaveView(null);
         await RefreshAsync();
     }
@@ -220,11 +237,12 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
             : SelectedItem?.Id == itemId ? SelectedItem.Actions?.FirstOrDefault(action => action.Key == actionKey) : null;
         if (_disposed || _suspended || CommandBusy || AccountBusy || IsLoading || IsRefreshing || RefreshError is not null || Role is not { } role || _adapter is not { } adapter
             || action is not { Enabled: true, Route: null }) return;
+        if (adapter is IRoleWorkspaceRecovery blockingRecovery && blockingRecovery.BlocksAction(actionKey)) return;
         var generation = _generation;
         var requestId = _state.RequestId(role.Key, itemId, actionKey);
         var command = _command = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
         CommandBusy = true;
-        CommandError = null;
+        if (!FoodDispatchStateUnconfirmed && !FoodStartStateUnconfirmed) { CommandError = null; _commandErrorActionKey = null; }
         Publish();
         try
         {
@@ -242,19 +260,41 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
                 RequiresLogin = exception.StatusCode == 401;
                 AccessDenied = exception.StatusCode == 403;
                 CommandError = exception.Message;
+                _commandErrorActionKey = actionKey;
+                if (!RequiresLogin && !AccessDenied && adapter is IRoleWorkspaceRecovery recovery)
+                    CommandError = recovery.RecordUnconfirmedAction(actionKey) ?? exception.Message;
                 if (RequiresLogin || AccessDenied)
-                { _snapshot = null; adapter.Clear(); Error = exception.Message; CommandError = null; Publish(true); }
+                { _snapshot = null; adapter.Clear(); Error = exception.Message; CommandError = null; _commandErrorActionKey = null; Publish(true); }
             }
         }
         catch (Exception)
         {
-            if (Current(generation, role.Key)) CommandError = "처리 결과를 확인하지 못했습니다. 같은 버튼으로 다시 확인해 주세요.";
+            if (Current(generation, role.Key))
+            {
+                CommandError = (adapter as IRoleWorkspaceRecovery)?.RecordUnconfirmedAction(actionKey)
+                    ?? "처리 결과를 확인하지 못했습니다. 같은 버튼으로 다시 확인해 주세요.";
+                _commandErrorActionKey = actionKey;
+            }
         }
         finally
         {
             if (Current(generation, role.Key)) { CommandBusy = false; Publish(); }
             if (ReferenceEquals(_command, command)) _command = null;
             command.Dispose();
+        }
+    }
+
+    private void ResolveCanonicalRequests(IRoleWorkspaceAdapter adapter, string roleKey)
+    {
+        if (adapter is not IRoleWorkspaceRecovery recovery) return;
+        var resolved = recovery.ResolveCanonicalActions();
+        foreach (var actionKey in resolved.CompletedActions) _state.CompleteRequest(roleKey, string.Empty, actionKey);
+        // 정본 조회는 이 요청의 오류만 정리합니다. 이후 별도 명령의 오류는 보존합니다.
+        if (resolved.ActionKey is not null && resolved.ActionKey == _commandErrorActionKey)
+        {
+            if (resolved.Notice is { } notice) CommandError = notice;
+            else if (resolved.OutcomeConfirmed && !recovery.StartStateUnconfirmed && !recovery.PreferenceStateUnconfirmed)
+            { CommandError = null; _commandErrorActionKey = null; }
         }
     }
 
@@ -357,7 +397,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     public void Suspend()
     {
         if (_disposed) return;
-        Invalidate();
+        Invalidate(preservePendingRequests: true);
         _suspended = true;
         if (Role is { } role) _state.ClearViewport(role.Key);
         Publish(true);
@@ -402,16 +442,27 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     private bool ScopeCurrent(long generation, string roleKey)
         => !_disposed && !_suspended && generation == _generation && Role?.Key == roleKey;
 
-    private void Invalidate()
+    private void Invalidate(bool preservePendingRequests = false)
     {
         ++_generation;
         ++_readGeneration;
         Cancel(ref _read);
         Cancel(ref _command);
-        _adapter?.Clear();
+        if (_adapter is { } adapter)
+        {
+            if (preservePendingRequests) ClearTransientAdapterSnapshot(adapter);
+            else adapter.Clear();
+        }
         _snapshot = null;
         IsLoading = IsRefreshing = CommandBusy = AccountBusy = RequiresLogin = AccessDenied = false;
         Error = CommandError = AccountError = RefreshError = LocationMessage = null;
+        _commandErrorActionKey = null;
+    }
+
+    private static void ClearTransientAdapterSnapshot(IRoleWorkspaceAdapter adapter)
+    {
+        if (adapter is IRoleWorkspaceRecovery recovery) recovery.ClearTransientSnapshot();
+        else adapter.Clear();
     }
 
     private void SaveView(NeighborhoodMapViewport? viewport)

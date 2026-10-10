@@ -95,7 +95,9 @@ public sealed class OrdererGroupImportReadinessPageCompositionTests
         Assert.Contains("TimeSpan.FromSeconds(30)", source);
         Assert.Contains("PeriodicTimer", source);
         Assert.Contains("preserveCurrentContent: true", source);
-        Assert.Contains("이전에 확인한 내용을 유지합니다.", source);
+        Assert.Contains("OrdererGroupImportReadinessState", source);
+        Assert.Contains("이전에 확인한 내용을 유지합니다.", File.ReadAllText(Path.Combine(FindRepositoryRoot(),
+            "Ssalddel.Ui.Common", "Areas", "App", "ViewModels", "OrdererGroupImportReadinessState.cs")));
         Assert.Contains("@implements IAsyncDisposable", source);
     }
 

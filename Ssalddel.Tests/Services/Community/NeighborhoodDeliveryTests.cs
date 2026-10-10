@@ -32,6 +32,19 @@ namespace Ssalddel.Tests.Services.Community;
 /// </summary>
 public sealed class NeighborhoodDeliveryTests
 {
+    [Fact]
+    public async Task 원접수번호조회는_본인정본만반환하고_업무를새로접수하지않는다()
+    {
+        await using var f = new Fixture(); var input = Input(); var created = await f.UseCase().등록Async(input);
+        Assert.True(created.IsSuccess);
+        var own = await f.UseCase().내접수조회Async(input.ClientRequestId);
+        Assert.Equal(created.Value.RequestId, own!.RequestId);
+        Assert.Null(await f.UseCase().내접수조회Async(Guid.NewGuid()));
+        f.Current.UserId = "other-member"; Assert.Null(await f.UseCase().내접수조회Async(input.ClientRequestId));
+        f.Current.UserId = null; Assert.Null(await f.UseCase().내접수조회Async(input.ClientRequestId));
+        Assert.Equal(1, await f.Db.화주운송의뢰.CountAsync()); Assert.Equal(1, await f.Db.운송원장.CountAsync());
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

@@ -17,6 +17,20 @@ namespace Ssalddel.Tests.Application.Warehouse;
 public sealed class DistributedPhotoStorageTests
 {
     [Fact]
+    public async Task 원업로드번호조회는_본인사진의현재권한을확인하고_새사진이나완료기록을만들지않는다()
+    {
+        await using var f = await Create(); var setup = await Setup(f); var service = Service(f, out _);
+        var binding = await f.Use(Operator).AuthorizeEvidenceAsync(Operator, setup.Work, default); var upload = Upload(setup.Work);
+        var image = await service.UploadAsync(Operator, binding, upload, default);
+        var own = await service.GetByUploadAsync(Operator, upload.UploadRequestId, default);
+        Assert.Equal(image.EvidenceId, own.EvidenceId); Assert.Equal(setup.Request.RequestId, own.CompletionRequestId);
+        await Error("DistributedPhotoNotFound", () => service.GetByUploadAsync(SellerA, upload.UploadRequestId, default));
+        await Error("DistributedPhotoNotFound", () => service.GetByUploadAsync(Operator, Guid.NewGuid(), default));
+        Assert.Equal(1, await f.Db.Set<분산사진증빙Record>().CountAsync());
+        Assert.Equal(0, await f.Db.Set<분산물류CommandReceipt>().CountAsync(x => x.Kind == "ReceiveBatch"));
+    }
+
+    [Fact]
     public async Task 실제배정이해제된기사는남아있는순회상태만으로사진과사진메타데이터를조회할수없다()
     {
         await using var f = await Create(); var wave = await f.Round(); var workspace = await f.Use(DistributedTestFixture.Driver).WorkspaceAsync(DistributedTestFixture.Driver, "driver", default);
@@ -27,13 +41,14 @@ public sealed class DistributedPhotoStorageTests
             Lines = [new() { ReservationId = item.ReservationId, OwnerUserId = item.OwnerUserId, Sku = item.Sku, Quantity = 1 }] };
         var work = new DistributedEvidenceWorkRequest { Kind = "Pick", AggregateId = wave.WaveId, Pick = request };
         var service = Service(f, out _); var binding = await f.Use(DistributedTestFixture.Driver).AuthorizeEvidenceAsync(DistributedTestFixture.Driver, work, default);
-        var photo = await service.UploadAsync(DistributedTestFixture.Driver, binding, Upload(work), default);
+        var upload = Upload(work); var photo = await service.UploadAsync(DistributedTestFixture.Driver, binding, upload, default);
         Assert.True((await service.GetAsync(DistributedTestFixture.Driver, photo.EvidenceId, default)).ReadAllowed); Assert.NotEmpty((await service.ContentAsync(DistributedTestFixture.Driver, photo.EvidenceId, default)).Bytes);
         var cargoId = wave.Orders.Single(x => x.OrderId == item.OrderId).CargoRequestId;
         await f.Db.운송원장.Where(x => x.의뢰Id == cargoId).ExecuteUpdateAsync(s => s.SetProperty(x => x.확정기사Id, "another-driver"));
         Assert.Equal("Accepted", (await f.Db.Set<분산배송WaveRecord>().AsNoTracking().SingleAsync()).StatusCode);
         await Error("DistributedPhotoNotFound", () => service.GetAsync(DistributedTestFixture.Driver, photo.EvidenceId, default));
         await Error("DistributedPhotoNotFound", () => service.ContentAsync(DistributedTestFixture.Driver, photo.EvidenceId, default));
+        await Error("DistributedPhotoNotFound", () => service.GetByUploadAsync(DistributedTestFixture.Driver, upload.UploadRequestId, default));
     }
     [Fact]
     public async Task 실제비공개사진업로드는같은요청으로중복되지않고업무완료영수증과동일트랜잭션에결속된다()

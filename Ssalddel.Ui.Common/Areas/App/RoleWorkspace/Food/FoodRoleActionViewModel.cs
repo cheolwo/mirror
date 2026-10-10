@@ -1,4 +1,5 @@
 using Ssalddel.Contracts.Admin.Food;
+using Ssalddel.Contracts.Common.Metadata;
 using Ssalddel.Contracts.Common.Dispatch;
 using Ssalddel.Contracts.Common.Drivers;
 using Ssalddel.Contracts.Common.Workflow;
@@ -9,6 +10,14 @@ using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
 namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food;
 
 /// <summary>입력·확인·동일 요청 재시도를 한 역할 계정 수명에 결속합니다.</summary>
+[SsalddelCodeMetadata(SsalddelCodeFeatureKeys.FoodDriverWork, SsalddelCodeLayer.ViewModel,
+    "음식 역할의 별도 행동 입력·확인·동일 요청 복구를 계정 수명에 결속",
+    StepKey = "ui.food-action-view-model", FlowOrder = 215, ExecutionStage = SsalddelCodeExecutionStage.Confirm,
+    DependsOnStepKeys = new[] { "api.food-driver", "ui.food-presentation" },
+    ReadsFrom = SsalddelCodeDataScope.OperationalState | SsalddelCodeDataScope.ClientPresentation,
+    WritesTo = SsalddelCodeDataScope.OperationalState | SsalddelCodeDataScope.ClientPresentation,
+    Effects = SsalddelCodeEffect.NetworkCall | SsalddelCodeEffect.UiStateMutation | SsalddelCodeEffect.StateMutation | SsalddelCodeEffect.PersistentRead | SsalddelCodeEffect.PersistentWrite | SsalddelCodeEffect.ThirdPartyApiCall | SsalddelCodeEffect.MayIncurExternalCost,
+    Boundary = "기사 중단 등 확인 입력의 클라이언트 조율이며 서버 권한·상태 원장을 대체하지 않는다. 다른 음식 역할과 공유한다.")]
 public sealed class FoodRoleActionViewModel : IDisposable
 {
     private readonly IRoleWorkspaceApi api;
@@ -18,10 +27,11 @@ public sealed class FoodRoleActionViewModel : IDisposable
     private long generation;
     private bool disposed;
     private object? detail;
-    private PendingRequest? pending;
+    private FoodRolePreparedRequest? pending;
     private 업무가능행동Dto? allowed;
     private bool submitted;
     private bool commandAcknowledged;
+    private bool canonicalReadSucceeded;
     private FoodRoleCompletionExpectation? completion;
     public FoodRoleActionViewModel(IRoleWorkspaceApi api, IRoleWorkspaceAccess access)
     {
@@ -37,7 +47,8 @@ public sealed class FoodRoleActionViewModel : IDisposable
     public bool IsBusy { get; private set; }
     public bool IsLoaded { get; private set; }
     public bool IsConfirming => pending is not null;
-    public bool IsAwaitingResult => pending is not null && commandAcknowledged;
+    public bool IsAwaitingResult => pending is not null && submitted;
+    public bool CanRetrySameRequest => IsAwaitingResult && !commandAcknowledged && canonicalReadSucceeded && !IsBusy;
     public bool IsCompleted { get; private set; }
     public bool RequiresLogin { get; private set; }
     public bool Confirmed { get; set; }
@@ -130,7 +141,7 @@ public sealed class FoodRoleActionViewModel : IDisposable
         }
         if (RoleKey == "food-driver" && ActionKey == 음식배달가능행동Ids.기사배달중단)
         {
-            var workspace = await api.GetAsync<FoodDeliveryDriverWorkspaceDto>(RoleKey, "api/v1/driver/food-deliveries/workspace", token);
+            var workspace = await api.GetAsync<FoodDeliveryDriverCurrentWorkDto>(RoleKey, "api/v1/driver/food-deliveries/workspace/current", token);
             if (workspace.DriverId != identity?.OwnerId) throw new InvalidOperationException("기사 업무 응답이 일치하지 않습니다.");
             return afterCommand ? workspace : (object?)workspace.ActiveDeliveries.FirstOrDefault(value => value.OfferId == ItemId)
                 ?? throw new InvalidOperationException("현재 수행 배달을 찾지 못했습니다.");
@@ -171,62 +182,21 @@ public sealed class FoodRoleActionViewModel : IDisposable
         Changed?.Invoke();
     }
 
-    private PendingRequest BuildRequest(Guid requestId)
+    private FoodRolePreparedRequest BuildRequest(Guid requestId)
     {
-        if (RoleKey != "operator" && (allowed is null || allowed.ExpiresAtUtc is { } expires && expires <= DateTime.UtcNow))
-            throw new InvalidOperationException("현재 가능 행동을 다시 조회해 주세요.");
-        var cleanReason = Reason.Trim();
-        if (cleanReason.Length > 1000) throw new ArgumentException("사유는 1,000자 이내로 입력해 주세요.");
-        var id = Uri.EscapeDataString(ItemId);
-        if (RoleKey == "orderer")
+        var selectedAttempt = InterruptedAttempts.FirstOrDefault(value => value.시도StableId == AttemptId);
+        var input = new FoodRoleRequestSnapshot(RoleKey, ItemId, ActionKey)
         {
-            if (ReasonCode is not (운영배차주문자취소사유Code.단순변심 or 운영배차주문자취소사유Code.중복주문 or 운영배차주문자취소사유Code.주소문제 or 운영배차주문자취소사유Code.기타)
-                || ReasonCode == 운영배차주문자취소사유Code.기타 && cleanReason.Length == 0) throw new ArgumentException("취소 사유를 선택하고 필요한 설명을 입력해 주세요.");
-            return new(requestId, $"api/v1/food-orders/{id}/cancellation", new 주문자음식주문취소요청
-                { 클라이언트요청Id = requestId, 예상Revision = allowed!.ExpectedRevision, 사유Code = ReasonCode, 사유 = cleanReason },
-                BeforeRevision: allowed.ExpectedRevision ?? ((주문자음식주문상세응답)detail!).상태이력.Count);
-        }
-        if (RoleKey == "restaurant" && ActionKey == 음식배달가능행동Ids.음식점주문수락)
-        {
-            if (!ImmediatePickup && PreparationMinutes is not (> 0 and <= 240)) throw new ArgumentException("조리 예상 시간을 1~240분으로 입력해 주세요.");
-            if (string.IsNullOrWhiteSpace(RestaurantName) || string.IsNullOrWhiteSpace(RestaurantAddress)) throw new ArgumentException("음식점 이름과 픽업 주소를 확인해 주세요.");
-            var order = (음식주문응답)detail!;
-            var originalAddress = RestaurantAddress.Trim() == order.음식점주소.Trim() && RestaurantDetailAddress.Trim() == order.음식점상세주소.Trim();
-            return new(requestId, $"api/v1/food-orders/{id}/restaurant-acceptance", new 음식점주문수락요청
-            {
-                클라이언트요청Id = requestId, 음식점명 = RestaurantName.Trim(), 음식점주소 = RestaurantAddress.Trim(), 음식점상세주소 = RestaurantDetailAddress.Trim(),
-                음식점위도 = originalAddress ? order.음식점위도 : null, 음식점경도 = originalAddress ? order.음식점경도 : null,
-                조리예상분 = ImmediatePickup ? 0 : PreparationMinutes, 즉시픽업가능여부 = ImmediatePickup, 수락메모 = cleanReason
-            }, BeforeRevision: order.Revision, OriginalDetailAddress: order.음식점상세주소);
-        }
-        if (RoleKey == "restaurant")
-        {
-            if (ActionKey == 음식배달가능행동Ids.음식점조리시간변경 && PreparationMinutes is not (> 0 and <= 240)) throw new ArgumentException("조리 예상 시간을 1~240분으로 입력해 주세요.");
-            if (ActionKey == 음식배달가능행동Ids.음식점주문거절 && cleanReason.Length == 0) throw new ArgumentException("거절 사유를 입력해 주세요.");
-            return new(requestId, $"api/v1/food-orders/{id}/restaurant-progress", new 음식점주문진행변경요청
-            {
-                클라이언트요청Id = requestId, 예상Revision = allowed!.ExpectedRevision ?? ((음식주문응답)detail!).Revision,
-                작업 = ActionKey == 음식배달가능행동Ids.음식점주문거절 ? 음식점주문진행작업코드.거절 : 음식점주문진행작업코드.조리시간변경,
-                조리예상분 = ActionKey == 음식배달가능행동Ids.음식점조리시간변경 ? PreparationMinutes : null, 사유 = cleanReason
-            }, BeforeRevision: allowed.ExpectedRevision ?? ((음식주문응답)detail!).Revision);
-        }
-        if (RoleKey == "food-driver")
-        {
-            var delivery = (FoodDeliveryDriverActiveDeliveryDto)detail!;
-            if (string.IsNullOrWhiteSpace(delivery.DeliveryAttemptId)) throw new ArgumentException("현재 배달 시도를 다시 확인해 주세요.");
-            return new(requestId, $"api/v1/driver/food-deliveries/offers/{id}/interruption", new 음식배달중단요청
-            {
-                클라이언트요청Id = requestId, 예상시도Revision = allowed!.ExpectedRevision ?? delivery.AttemptRevision,
-                사유Code = 음식배달중단사유Code.정규화(ReasonCode), 메모 = cleanReason
-            }, BeforeRevision: allowed.ExpectedRevision ?? delivery.AttemptRevision, AttemptId: delivery.DeliveryAttemptId);
-        }
-        var attempt = InterruptedAttempts.FirstOrDefault(value => value.시도StableId == AttemptId)
-            ?? throw new ArgumentException("검토할 중단 배달을 선택해 주세요.");
-        if (DecisionCode is not (음식배달중단검토판정Code.보호 or 음식배달중단검토판정Code.기사책임 or 음식배달중단검토판정Code.음식점책임 or 음식배달중단검토판정Code.플랫폼책임)
-            || cleanReason.Length == 0) throw new ArgumentException("판정과 근거를 입력해 주세요.");
-        return new(requestId, $"api/v1/admin/food-orders/delivery-attempts/{Uri.EscapeDataString(AttemptId)}/interruption-review",
-            new 음식배달중단검토요청 { 클라이언트요청Id = requestId, 예상Revision = attempt.Revision, 판정Code = DecisionCode, 판정사유 = cleanReason, 악용확정여부 = AbuseConfirmed },
-            true, attempt.Revision, AttemptId: attempt.시도StableId);
+            HasAllowedAction = allowed is not null, ExpectedRevision = allowed?.ExpectedRevision, ActionExpiresAtUtc = allowed?.ExpiresAtUtc,
+            OrdererHistoryCount = detail is 주문자음식주문상세응답 orderer ? orderer.상태이력.Count : 0,
+            Order = detail is 음식주문응답 order ? new(order.Revision, order.음식점주소, order.음식점상세주소, order.음식점위도, order.음식점경도) : null,
+            Delivery = detail is FoodDeliveryDriverActiveDeliveryDto delivery ? new(delivery.DeliveryAttemptId, delivery.AttemptRevision) : null,
+            Review = selectedAttempt is null ? null : new(selectedAttempt.시도StableId, selectedAttempt.Revision),
+            PreparationMinutes = PreparationMinutes, ImmediatePickup = ImmediatePickup,
+            RestaurantName = RestaurantName, RestaurantAddress = RestaurantAddress, RestaurantDetailAddress = RestaurantDetailAddress,
+            ReasonCode = ReasonCode, Reason = Reason, AttemptId = AttemptId, DecisionCode = DecisionCode, AbuseConfirmed = AbuseConfirmed
+        };
+        return FoodRoleRequestPreparation.Prepare(input, requestId, DateTime.UtcNow);
     }
 
     public async Task<bool> SubmitAsync()
@@ -244,33 +214,65 @@ public sealed class FoodRoleActionViewModel : IDisposable
                 request.BeforeRevision, request.AttemptId, request.OriginalDetailAddress, identity?.OwnerId);
             return await ConfirmResultAsync(owner, token);
         }
+        catch (OperationCanceledException) when (Current(owner) && !token.IsCancellationRequested)
+        { return await RecoverUnknownResultAsync(owner, token); }
         catch (OperationCanceledException) { return false; }
         catch (RoleWorkspaceAccessException ex) when (Current(owner))
         {
             if (ex.StatusCode is 401 or 403) AccessFailure(ex);
             else if (!commandAcknowledged && ex.StatusCode is (400 or 404 or 409 or 422))
             { pending = null; Confirmed = false; IsLoaded = false; Message = "업무 상태가 변경되었습니다. 최신 상태를 다시 확인해 주세요."; }
-            else Message = commandAcknowledged ? "요청 응답을 받았지만 최신 결과를 조회하지 못했습니다. 결과를 다시 확인해 주세요."
-                : "요청 결과를 확인하지 못했습니다. 같은 내용으로 다시 시도해 주세요.";
+            else if (!commandAcknowledged) return await RecoverUnknownResultAsync(owner, token);
+            else Message = "요청 응답을 받았지만 최신 결과를 조회하지 못했습니다. 결과를 다시 확인해 주세요.";
             return false;
         }
         catch when (!Current(owner)) { return false; }
-        catch { Message = commandAcknowledged ? "요청 응답을 받았지만 최신 결과를 조회하지 못했습니다. 결과를 다시 확인해 주세요."
-            : "요청 결과를 확인하지 못했습니다. 같은 내용으로 다시 시도해 주세요."; return false; }
+        catch
+        {
+            if (!commandAcknowledged) return await RecoverUnknownResultAsync(owner, token);
+            Message = "요청 응답을 받았지만 최신 결과를 조회하지 못했습니다. 결과를 다시 확인해 주세요.";
+            return false;
+        }
         finally { if (Current(owner)) IsBusy = false; Changed?.Invoke(); }
     }
 
-    private async Task<object?> SendCommandAsync(PendingRequest request, CancellationToken token)
+    private async Task<object?> SendCommandAsync(FoodRolePreparedRequest request, CancellationToken token)
     {
         if (request.UsePut) return await api.PutAsync<음식배달시도운영응답>(RoleKey, request.Path, request.Body, token);
         if (request.Body is 음식배달중단요청) return await api.PostAsync<FoodDeliveryDriverActionResponse>(RoleKey, request.Path, request.Body, token);
         return await api.PostAsync<음식주문응답>(RoleKey, request.Path, request.Body, token);
     }
 
+    /// <summary>조회만으로 확인되지 않은 최초 요청을 사용자가 명시적으로 다시 확인합니다.</summary>
+    public async Task<bool> RetrySameRequestAsync()
+    {
+        if (!CanRetrySameRequest || !Current(generation)) return false;
+        // 재확인 직전에도 정본을 먼저 읽습니다. 조회 실패 시 POST하지 않습니다.
+        if (await CheckResultAsync()) return true;
+        if (!CanRetrySameRequest || pending is null || !Current(generation)) return false;
+        submitted = false; Confirmed = true;
+        return await SubmitAsync();
+    }
+
+    private async Task<bool> RecoverUnknownResultAsync(long owner, CancellationToken token)
+    {
+        canonicalReadSucceeded = false;
+        try { return await ConfirmResultAsync(owner, token); }
+        catch (OperationCanceledException) { return false; }
+        catch (RoleWorkspaceAccessException ex) when (Current(owner))
+        {
+            if (ex.StatusCode is 401 or 403) AccessFailure(ex);
+            else Message = "요청 결과와 최신 상태를 확인하지 못했습니다. 결과를 다시 확인해 주세요.";
+            return false;
+        }
+        catch when (!Current(owner)) { return false; }
+        catch { Message = "요청 결과와 최신 상태를 확인하지 못했습니다. 결과를 다시 확인해 주세요."; return false; }
+    }
+
     public async Task<bool> CheckResultAsync()
     {
         if (disposed || IsBusy || !IsAwaitingResult || !Current(generation)) return false;
-        var owner = generation; var token = lifetime.Token; IsBusy = true; Message = null; Changed?.Invoke();
+        var owner = generation; var token = lifetime.Token; IsBusy = true; canonicalReadSucceeded = false; Message = null; Changed?.Invoke();
         try { return await ConfirmResultAsync(owner, token); }
         catch (OperationCanceledException) { return false; }
         catch (RoleWorkspaceAccessException ex) when (Current(owner))
@@ -288,9 +290,14 @@ public sealed class FoodRoleActionViewModel : IDisposable
     {
         var current = await ReadDetailAsync(token, afterCommand: true);
         if (!Current(owner)) return false;
+        canonicalReadSucceeded = true;
+        if (!commandAcknowledged && pending is { } request)
+            completion = FoodRoleCompletionExpectation.FromCanonical(ItemId, request.RequestId, request.Body, current,
+                request.BeforeRevision, request.AttemptId, request.OriginalDetailAddress, identity?.OwnerId);
         if (completion?.Matches(current) != true)
         {
-            Message = "요청 응답을 받았지만 반영 상태를 아직 확인하지 못했습니다. 결과를 다시 확인해 주세요.";
+            Message = commandAcknowledged ? "요청 응답을 받았지만 반영 상태를 아직 확인하지 못했습니다. 결과를 다시 확인해 주세요."
+                : "현재 업무를 조회했지만 이 요청의 처리 결과는 확인되지 않았습니다. 같은 요청을 다시 확인할 수 있습니다.";
             return false;
         }
         detail = current; pending = null; completion = null; Confirmed = false; IsCompleted = true; IsLoaded = false; Message = null;
@@ -317,7 +324,7 @@ public sealed class FoodRoleActionViewModel : IDisposable
     private void Invalidate()
     {
         generation++; lifetime.Cancel(); lifetime.Dispose(); lifetime = new(); detail = null; allowed = null; pending = null; submitted = false;
-        commandAcknowledged = false; completion = null;
+        commandAcknowledged = false; canonicalReadSucceeded = false; completion = null;
         IsBusy = false; IsLoaded = false; IsCompleted = false; Confirmed = false; PreparationMinutes = null; ImmediatePickup = false;
         RestaurantName = RestaurantAddress = RestaurantDetailAddress = ReasonCode = Reason = AttemptId = DecisionCode = string.Empty; AbuseConfirmed = false;
     }
@@ -327,6 +334,4 @@ public sealed class FoodRoleActionViewModel : IDisposable
         disposed = true; access.Changed -= AuthenticationChanged; generation++; lifetime.Cancel(); lifetime.Dispose();
         detail = null; pending = null; completion = null; commandAcknowledged = false;
     }
-    private sealed record PendingRequest(Guid RequestId, string Path, object Body, bool UsePut = false,
-        long BeforeRevision = 0, string? AttemptId = null, string? OriginalDetailAddress = null);
 }

@@ -29,6 +29,15 @@ public static class MauiProgram
         builder.Services.AddSingleton<IPlatformCommunityNodeNavigationResolver, OrdererPlatformCommunityNodeNavigationResolver>();
         builder.Services.AddSingleton<IPlatformHomeWorkspaceNavigationResolver, OrdererPlatformHomeWorkspaceNavigationResolver>();
         builder.Services.AddSsalddelUiCommonAppServices<OrdererAccessTokenProvider>();
+        builder.Services.AddScoped<IWorkflowRecoveryStore>(services =>
+        {
+            var session = services.GetRequiredService<Ssalddel.Client.Infrastructure.Security.ClientAuthSession>();
+            return new Ssalddel.Client.Infrastructure.Native.MauiRoleWorkflowRecoveryStore(() =>
+            {
+                var current = session.CaptureIdentity();
+                return new Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.RoleWorkspaceIdentity(current.OwnerId, current.Revision, session.IsAuthenticated);
+            }, "orderer");
+        });
         builder.Services.AddTransient<주문자Controller기능모음ViewModel>();
         builder.Services.AddTransient<음식Controller기능모음ViewModel>();
         builder.Services.AddTransient<주문자공동구매기능ViewModel>();

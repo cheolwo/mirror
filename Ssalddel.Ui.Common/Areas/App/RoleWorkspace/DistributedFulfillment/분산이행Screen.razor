@@ -15,7 +15,12 @@
         @if (Model.Error is { } error) { <p class="error" role="alert">@error</p> }
         @if (Model.ValidationError is { } invalid) { <p class="error" role="alert">@invalid</p> }
         @if (Model.Message is { } message) { <p role="status">@message</p> }
-        @if (Model.HasPendingCommand)
+        @if (Model.RecoveryExpired)
+        {
+            <p>이전 입력 원문은 삭제했으며 요청 번호로 결과를 확인합니다. 조회 오류가 있으면 새 업무를 시작하지 않습니다.</p>
+            <button type="button" disabled="@Model.IsBusy" @onclick="Model.DiscardExpiredRecoveryAsync">원 결과 확인 후 새 업무 준비</button>
+        }
+        else if (Model.HasPendingCommand)
         {
             <p>처리 결과가 아직 확인되지 않았습니다. 입력을 바꾸기 전에 같은 요청을 확인해 주세요.</p>
             <button class="primary" type="button" disabled="@Model.IsBusy" @onclick="Model.RetryPendingAsync">같은 요청 결과 확인</button>
@@ -23,8 +28,8 @@
         }
         else if (Model.HasPendingPhoto)
         {
-            <p>사진 전송 결과를 아직 확인하지 못했습니다. 원래 사진과 같은 요청을 다시 확인합니다.</p>
-            <button class="primary" type="button" disabled="@Model.IsBusy" @onclick="Model.RetryPhotoAsync">같은 사진 전송 결과 확인</button>
+            <p>@(Model.Photo.NeedsRecapture ? "사진 원본은 보관하지 않습니다. 미저장 결과를 확인하고 현재 업무에서 다시 촬영해 주세요." : "원 사진의 저장 연결과 같은 완료 요청을 확인합니다.")</p>
+            <button class="primary" type="button" disabled="@Model.IsBusy" @onclick="Model.RetryPhotoAsync">같은 사진·완료 요청 이어가기</button>
             <button type="button" disabled="@Model.IsBusy" @onclick="Model.CancelPhotoWorkAsync">이 사진 작업 닫고 최신 업무 조회</button>
             <p>사진 작업을 닫아도 이미 저장된 입고·피킹·전달 기록이 취소되지는 않습니다.</p>
         }
@@ -88,7 +93,8 @@
             if (api is null || access is null) return;
             actualTransport = ownedTransport = new 분산이행RoleTransport(api, access);
         }
-        Model = new(new 분산이행Client(actualTransport, RoleKey), Screen, Services.GetService(typeof(I업무사진촬영Adapter)) as I업무사진촬영Adapter); Model.Changed += Changed;
+        Model = new(new 분산이행Client(actualTransport, RoleKey), Screen, Services.GetService(typeof(I업무사진촬영Adapter)) as I업무사진촬영Adapter,
+            Services.GetService(typeof(Ssalddel.Ui.Common.Areas.App.Services.IWorkflowRecoveryStore)) as Ssalddel.Ui.Common.Areas.App.Services.IWorkflowRecoveryStore); Model.Changed += Changed;
         if (RecoveryRequestId is { } request && request != Guid.Empty) await Model.RecoverReceiptAsync(request);
         else await Model.LoadAsync(SelectedId);
     }

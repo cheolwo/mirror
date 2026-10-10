@@ -1,0 +1,23 @@
+@page "/exception-refactoring-preview/{Scenario}"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food
+@using Ssalddel.Ui.Common.Areas.BackOffice.Components.PrivacySupport
+@inject RefactoringPreviewFixture Fixture
+
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside style="padding:6px 16px;background:#eaf5f3;color:#0f766e;font-size:12px">리팩터링 화면 검증 · 격리 예시 자료</aside>
+@if (Scenario.StartsWith("support-", StringComparison.Ordinal))
+{
+    <보호지원관리Page @key="Scenario" CaseId="@RefactoringPreviewFixture.CaseId" AdminOwnerProvider="AdminOwner" />
+}
+else
+{
+    <FoodRoleActionForm @key="Scenario" RoleKey="@Fixture.Role" ItemId="@RefactoringPreviewFixture.ItemId" ActionKey="@Fixture.Action" Completed="Completed" />
+}
+<RefactoringPreviewMetrics />
+
+@code {
+    [Parameter] public string Scenario { get; set; } = "orderer";
+    protected override void OnParametersSet() => Fixture.Reset(Scenario);
+    private string? AdminOwner() => "preview-admin";
+    private void Completed() => Fixture.MarkFoodCompleted();
+}

@@ -1,0 +1,67 @@
+@using Ssalddel.Contracts.Common.Dispatch
+@using Ssalddel.Contracts.Food
+
+@if (RoleKey == "restaurant" && ActionKey == 음식배달가능행동Ids.음식점주문수락)
+{
+    <label>음식점 이름<input @bind="Model.RestaurantName" @bind:after="NotifyInputChangedAsync" maxlength="200" /></label>
+    <label>픽업 주소<input @bind="Model.RestaurantAddress" @bind:after="NotifyInputChangedAsync" maxlength="500" /></label>
+    <label>상세 주소<input @bind="Model.RestaurantDetailAddress" @bind:after="NotifyInputChangedAsync" maxlength="500" /></label>
+    <label class="food-role-action__check"><input type="checkbox" @bind="Model.ImmediatePickup" @bind:after="NotifyInputChangedAsync" />지금 픽업할 수 있습니다.</label>
+}
+@if (RoleKey == "restaurant" && ActionKey is 음식배달가능행동Ids.음식점주문수락 or 음식배달가능행동Ids.음식점조리시간변경)
+{
+    @if (!Model.ImmediatePickup)
+    {
+        <label>이번 주문 조리 예상 시간(분)<input type="number" min="1" max="240" @bind="Model.PreparationMinutes" @bind:after="NotifyInputChangedAsync" /></label>
+        <p>이 시간은 이번 주문에 적용합니다. 가게나 기기의 기본 조리시간은 바뀌지 않습니다.</p>
+    }
+}
+@if (RoleKey == "orderer")
+{
+    <label>취소 사유<select @bind="Model.ReasonCode" @bind:after="NotifyInputChangedAsync">
+        <option value="">선택해 주세요.</option>
+        <option value="@운영배차주문자취소사유Code.단순변심">단순 변심</option>
+        <option value="@운영배차주문자취소사유Code.중복주문">중복 주문</option>
+        <option value="@운영배차주문자취소사유Code.주소문제">주소 문제</option>
+        <option value="@운영배차주문자취소사유Code.기타">기타</option>
+    </select></label>
+}
+@if (RoleKey == "food-driver")
+{
+    <label>이번 배달 중단 사유<select @bind="Model.ReasonCode" @bind:after="NotifyInputChangedAsync">
+        <option value="">선택해 주세요.</option>
+        <option value="@음식배달중단사유Code.사고">사고</option>
+        <option value="@음식배달중단사유Code.조리지연">음식점 조리 지연</option>
+        <option value="@음식배달중단사유Code.배터리부족">배터리 부족</option>
+        <option value="@음식배달중단사유Code.배달수단고장">배달 수단 고장</option>
+        <option value="@음식배달중단사유Code.위험기상">위험 기상</option>
+        <option value="@음식배달중단사유Code.개인긴급">개인 긴급 상황</option>
+        <option value="@음식배달중단사유Code.기타">기타</option>
+    </select></label>
+}
+@if (RoleKey == "operator")
+{
+    <label>검토할 중단 배달<select @bind="Model.AttemptId" @bind:after="NotifyInputChangedAsync">
+        @foreach (var attempt in Model.InterruptedAttempts)
+        {
+            <option value="@attempt.시도StableId">@attempt.시도순번 회차 · @attempt.중단사유Code · @FoodWorkspacePresentation.Time(attempt.중단시각Utc)</option>
+        }
+    </select></label>
+    <label>이번 중단 건 책임 판정<select @bind="Model.DecisionCode" @bind:after="NotifyInputChangedAsync">
+        <option value="">선택해 주세요.</option>
+        <option value="@음식배달중단검토판정Code.보호">보호 사유</option>
+        <option value="@음식배달중단검토판정Code.기사책임">기사 책임</option>
+        <option value="@음식배달중단검토판정Code.음식점책임">음식점 책임</option>
+        <option value="@음식배달중단검토판정Code.플랫폼책임">플랫폼 책임</option>
+    </select></label>
+    <label class="food-role-action__check"><input type="checkbox" @bind="Model.AbuseConfirmed" @bind:after="NotifyInputChangedAsync" />검토 근거에 따라 악용이 확정되었습니다.</label>
+}
+<label>@(RoleKey == "operator" ? "판정 근거" : "사유·메모")<textarea @bind="Model.Reason" @bind:after="NotifyInputChangedAsync" maxlength="1000" rows="3"></textarea></label>
+
+@code {
+    [Parameter, EditorRequired] public FoodRoleActionViewModel Model { get; set; } = null!;
+    [Parameter, EditorRequired] public string RoleKey { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string ActionKey { get; set; } = string.Empty;
+    [Parameter] public EventCallback InputsChanged { get; set; }
+    private Task NotifyInputChangedAsync() => InputsChanged.InvokeAsync();
+}

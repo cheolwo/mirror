@@ -12,6 +12,9 @@ public interface IShipperOperationsService
 
     Task<ShipperRequestItem?> GetRequestAsync(string requestId, CancellationToken cancellationToken = default);
 
+    Task<ShipperRequestItem?> GetRequestByClientRequestIdAsync(string clientRequestId, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("접수 요청 조회가 구성되지 않았습니다.");
+
     Task<IReadOnlyList<공개화물요약응답>> GetPublicCargoAsync(CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<창고요약응답>> GetWarehousesAsync(CancellationToken cancellationToken = default);

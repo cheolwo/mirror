@@ -189,7 +189,7 @@ public sealed class RoleOptionScopeR3Tests
             {
                 "restaurant" => new 음식주문응답 { 주문번호 = "work-a", 음식점명 = "음식점 1", 음식점주소 = "픽업 장소 1", 조리예상분 = 15,
                     AvailableActions = allowed ? [new() { ActionId = action, ExpectedRevision = 3 }] : [] },
-                "food-driver" => new FoodDeliveryDriverWorkspaceDto { DriverId = "owner-a", ActiveDeliveries = [new() { OfferId = "work-a",
+                "food-driver" => new FoodDeliveryDriverCurrentWorkDto { DriverId = "owner-a", ActiveDeliveries = [new() { OfferId = "work-a",
                     DeliveryAttemptId = "attempt-a", AvailableActions = [new() { ActionId = action, ExpectedRevision = 3 }] }] },
                 "operator" => new 음식주문운영추적응답 { 주문번호 = "work-a", 배달시도목록 = [new() { 시도StableId = "attempt-a", Revision = 3,
                     상태Code = 음식배달시도상태Code.중단 }] },

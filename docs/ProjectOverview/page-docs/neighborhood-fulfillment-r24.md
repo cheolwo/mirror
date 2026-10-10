@@ -1,5 +1,7 @@
 # 생활 배송 수행 방식 선택·진행 확인 r24
 
+2026-10-10 예외 지속 보완의 책임: 작성 화면은 미확정 원 접수를 계정별 보호 보관하고 재진입 후 결과 확인부터 수행한다. 확인 전에는 새 요청으로 우회하지 않으며 원 요청 재전송과 미확인 기록 폐기를 별도 행동으로 구분한다. 만료 시 비공개 원문은 지우고 결과 확인용 번호만 유지한다. [승인 범위](../../AI/Planning/공통/PLAN-OPERATIONS-EXCEPTION-CONTINUITY/exception-continuity.implementation.r1.md).
+
 2026-10-07. [승인한 구현 범위](../../AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/fulfillment.implementation.r24.md)는 기존 생활 배송의 작성과 상세를 보완한다. 실제 외부 API 대신 기본 비활성화된 Simulation 공급자를 사용한다. 구현·시험·실제 렌더 상태는 [변경 기록](../../Changes/2026-10-07-neighborhood-fulfillment-r24.md)에서 구별한다.
 
 | 책임 | 내용 |

@@ -2,10 +2,10 @@
 .food-role-action h1 { font-size: 1.5rem; margin: 1rem 0; }
 .food-role-action h2 { font-size: 1.1rem; }
 .food-role-action fieldset { border: 0; padding: 0; display: grid; gap: 1rem; }
-.food-role-action label { display: grid; gap: .35rem; font-weight: 600; }
-.food-role-action input, .food-role-action select, .food-role-action textarea { min-height: 2.75rem; border: 1px solid var(--ss-border, #dce5e9); border-radius: .5rem; padding: .65rem; font: inherit; width: 100%; box-sizing: border-box; }
-.food-role-action .food-role-action__check { display: flex; align-items: center; gap: .65rem; font-weight: 400; }
-.food-role-action__check input { width: 1.3rem; min-height: 1.3rem; }
+.food-role-action ::deep label { display: grid; gap: .35rem; font-weight: 600; }
+.food-role-action ::deep input, .food-role-action ::deep select, .food-role-action ::deep textarea { min-height: 2.75rem; border: 1px solid var(--ss-border, #dce5e9); border-radius: .5rem; padding: .65rem; font: inherit; width: 100%; box-sizing: border-box; }
+.food-role-action ::deep .food-role-action__check { display: flex; align-items: center; gap: .65rem; font-weight: 400; }
+::deep .food-role-action__check input { width: 1.3rem; min-height: 1.3rem; }
 .food-role-action button { min-height: 2.75rem; border: 1px solid var(--ss-border, #dce5e9); background: white; color: inherit; border-radius: .5rem; padding: .65rem 1rem; font: inherit; cursor: pointer; }
 .food-role-action .food-role-action__primary { color: white; background: var(--ss-accent, #0f766e); border-color: var(--ss-accent, #0f766e); }
 .food-role-action__confirmation { margin-top: 1.25rem; border-top: 1px solid var(--ss-border, #dce5e9); padding-top: 1rem; }

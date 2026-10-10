@@ -74,6 +74,7 @@ public sealed class RoleWorkspaceActionUsageTests
 
     [Theory]
     [InlineData("orderer", 음식배달가능행동Ids.주문취소)]
+    [InlineData("orderer", OrdererRoleWorkspaceAdapter.RequestSupport)]
     [InlineData("restaurant", 음식배달가능행동Ids.음식점주문거절)]
     [InlineData("restaurant", 음식배달가능행동Ids.음식점조리시간변경)]
     [InlineData("food-driver", 음식배달가능행동Ids.기사제안거절)]

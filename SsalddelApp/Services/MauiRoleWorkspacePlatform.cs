@@ -49,7 +49,13 @@ public sealed class MauiRoleWorkspaceTokenStoreFactory : IRoleWorkspaceTokenStor
 }
 public sealed class MauiRoleWorkspaceLocationProvider : IRoleWorkspaceLocationProvider
 {
-    public async Task<RoleWorkspaceLocation?> GetCurrentAsync(CancellationToken ct)
+    public Task<RoleWorkspaceLocation?> GetCurrentAsync(CancellationToken ct)
+        => GetCurrentCoreAsync(requestPermission: true, ct);
+
+    public Task<RoleWorkspaceLocation?> GetCurrentWithoutPermissionPromptAsync(CancellationToken ct)
+        => GetCurrentCoreAsync(requestPermission: false, ct);
+
+    private static async Task<RoleWorkspaceLocation?> GetCurrentCoreAsync(bool requestPermission, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         try
@@ -60,7 +66,7 @@ public sealed class MauiRoleWorkspaceLocationProvider : IRoleWorkspaceLocationPr
                 ct.ThrowIfCancellationRequested();
                 var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
                 ct.ThrowIfCancellationRequested();
-                if (status != PermissionStatus.Granted)
+                if (requestPermission && status != PermissionStatus.Granted)
                     status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
                 ct.ThrowIfCancellationRequested();
                 return status;

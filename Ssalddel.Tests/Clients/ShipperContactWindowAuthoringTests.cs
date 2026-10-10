@@ -46,12 +46,14 @@ public sealed class ShipperContactWindowAuthoringTests
         await model.InitializeAsync();
         await model.SubmitAsync();
         Assert.False(model.IsBusy);
-        Assert.Contains("등록 실패", model.StatusMessage);
+        Assert.Contains("이전 접수 결과", model.StatusMessage);
         Assert.Null(navigation.LastPath);
         Assert.Equal("010-1111-2222", state.상차연락처전화번호);
         Assert.Equal(new DateTime(2030, 10, 3, 9, 0, 0), state.상차시간창시작일시);
         operations.FailAdd = false;
         await model.SubmitAsync();
+        Assert.Equal(1, operations.AddCalls); // 불명확한 응답에는 GET만 수행합니다.
+        await model.RetryPendingAsync();
         Assert.Equal(2, operations.AddCalls);
         Assert.Equal("010-1111-2222", operations.Submitted?.픽업정보?.연락처.전화번호);
     }
@@ -134,6 +136,7 @@ public sealed class ShipperContactWindowAuthoringTests
         public Task<IReadOnlyList<string>> GetVehicleTypesAsync(CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<string>>(["1톤 카고"]);
         public Task<IReadOnlyList<ShipperRequestItem>> GetRequestsAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<ShipperRequestItem?> GetRequestAsync(string requestId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<ShipperRequestItem?> GetRequestByClientRequestIdAsync(string requestId, CancellationToken cancellationToken = default) => Task.FromResult<ShipperRequestItem?>(null);
         public Task<IReadOnlyList<공개화물요약응답>> GetPublicCargoAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<창고요약응답>> GetWarehousesAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<입고요청항목응답>> GetInboundsAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();

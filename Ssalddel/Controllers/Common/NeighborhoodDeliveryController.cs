@@ -157,6 +157,15 @@ public sealed class 생활배송의뢰Controller(I생활배송의뢰UseCase useC
         return Ok(await useCase.내목록Async(page, cancellationToken));
     }
 
+    [HttpGet("by-client-request/{clientRequestId:guid}")]
+    [SsalddelApiOperation(SsalddelOperation.Browse)]
+    public async Task<IActionResult> 내접수조회(Guid clientRequestId, CancellationToken cancellationToken)
+    {
+        Response.Headers.CacheControl = "private, no-store";
+        var item = await useCase.내접수조회Async(clientRequestId, cancellationToken);
+        return item is null ? this.ToNotFoundProblem("본인 배송 접수 결과를 찾을 수 없습니다.") : Ok(item);
+    }
+
     [HttpPost("{requestId}/dispatch-choice")]
     [SsalddelApiOperation(SsalddelOperation.Decide)]
     public async Task<IActionResult> 배차선택(string requestId, [FromBody] NeighborhoodDispatchChoiceRequest request, CancellationToken cancellationToken)

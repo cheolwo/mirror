@@ -15,6 +15,10 @@ namespace Ssalddel.Services.Community;
 
 public interface I운송원장Mongo동기화Service
 {
+    Task<커뮤니티원장Dto?> 화주운송의뢰신규접수Async(
+        화주운송의뢰 의뢰, string updatedBy, CancellationToken cancellationToken = default)
+        => 화주운송의뢰동기화Async(의뢰, updatedBy, cancellationToken);
+
     Task<커뮤니티원장Dto?> 화주운송의뢰동기화Async(
         화주운송의뢰 의뢰,
         string updatedBy,
@@ -58,6 +62,15 @@ public sealed class 운송원장Mongo동기화Service : I운송원장Mongo동기
         }
 
         return 저장Async(requestId, 의뢰, null, updatedBy, cancellationToken);
+    }
+
+    // 새 모바일 접수만 첫 생성 CAS를 사용합니다. 같은 번호의 다른 본문으로 수정하지 않습니다.
+    public Task<커뮤니티원장Dto?> 화주운송의뢰신규접수Async(
+        화주운송의뢰 의뢰, string updatedBy, CancellationToken cancellationToken = default)
+    {
+        var requestId = Clean(의뢰.의뢰Id);
+        return requestId is null ? Task.FromResult<커뮤니티원장Dto?>(null)
+            : 저장Async(requestId, 의뢰, null, updatedBy, cancellationToken, firstCreationOnly: true);
     }
 
     public Task<커뮤니티원장Dto?> 운송실행투영동기화Async(
@@ -112,7 +125,8 @@ public sealed class 운송원장Mongo동기화Service : I운송원장Mongo동기
         화주운송의뢰? 의뢰,
         운송원장? 운송실행투영,
         string updatedBy,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool firstCreationOnly = false)
     {
         try
         {
@@ -126,6 +140,7 @@ public sealed class 운송원장Mongo동기화Service : I운송원장Mongo동기
                 // Read the Mongo revision BEFORE opening the RDB snapshot. Reading it afterwards
                 // would let an older tuple claim the revision of a newer business publication.
                 var existing = await _원장저장소.원장조회Async(ledgerId, cancellationToken);
+                if (firstCreationOnly && existing is not null) return null;
                 var expectedRevision = existing?.Revision ?? 0;
                 var callerTransactionOpen = _db.Database.CurrentTransaction is not null;
                 var tuple = callerTransactionOpen
@@ -141,6 +156,7 @@ public sealed class 운송원장Mongo동기화Service : I운송원장Mongo동기
                         return read;
                     });
                 var persisted = tuple.Request is not null || tuple.Transport is not null;
+                if (firstCreationOnly && persisted) return null;
                 if (persisted && callerTransactionOpen)
                 {
                     _logger.LogWarning("열린 RDB transaction의 운송 snapshot 발행을 보류합니다. Commit 뒤 다시 동기화해야 합니다. RequestId={RequestId}", requestId);
@@ -165,6 +181,7 @@ public sealed class 운송원장Mongo동기화Service : I운송원장Mongo동기
                 }
                 catch (InvalidOperationException ex) when (attempt < 2 && IsRevisionConflict(ex))
                 {
+                    if (firstCreationOnly) return null;
                     // Mongo커뮤니티원장저장소 reports expected-revision/CAS conflicts as this
                     // InvalidOperationException; unrelated validation failures are not retried.
                     if (callerTransactionOpen) throw;

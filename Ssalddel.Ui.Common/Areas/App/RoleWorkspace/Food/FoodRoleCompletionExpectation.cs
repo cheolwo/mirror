@@ -11,10 +11,34 @@ internal sealed class FoodRoleCompletionExpectation(Func<object, bool> matches)
 {
     public bool Matches(object detail) => matches(detail);
 
-    public static FoodRoleCompletionExpectation? Create(string itemId, Guid requestId, object body, object? response,
+    /// <summary>전송 응답이 없으면 원 요청 이력이 노출되는 정본에서만 완료 근거를 구성합니다.</summary>
+    public static FoodRoleCompletionExpectation? FromCanonical(string itemId, Guid requestId, object body, object detail,
         long beforeRevision, string? beforeAttemptId, string? originalDetailAddress, string? ownerId)
     {
-        if (body is 주문자음식주문취소요청 && response is 음식주문응답 cancellation
+        // 기사 업무에서 시도가 사라지거나 운영자 판정 값이 같다는 것만으로 이번 요청을 인증하지 않습니다.
+        if (body is (음식점주문수락요청 or 음식점주문진행변경요청) && detail is 음식주문응답 order
+            && !string.IsNullOrWhiteSpace(ownerId)
+            && order.상태이력.Any(history => history.클라이언트요청Id == requestId && history.처리UserId == ownerId))
+            return Create(itemId, requestId, body, order, beforeRevision, beforeAttemptId, originalDetailAddress, ownerId);
+        // 주문자 상세는 원 요청 ID·처리자·판본을 제공하지 않으므로 취소 상태만으로 완료를 인정하지 않습니다.
+        return null;
+    }
+
+    public static FoodRoleCompletionExpectation? Create(string itemId, Guid requestId, object body, object? response,
+        long beforeRevision, string? beforeAttemptId, string? originalDetailAddress, string? ownerId)
+        => body switch
+        {
+            주문자음식주문취소요청 => ForOrdererCancellation(itemId, requestId, response, beforeRevision),
+            음식점주문수락요청 acceptance => ForRestaurantAcceptance(itemId, requestId, acceptance, response, beforeRevision, originalDetailAddress),
+            음식점주문진행변경요청 progress => ForRestaurantProgress(itemId, requestId, progress, response, beforeRevision),
+            음식배달중단요청 => ForDriverInterruption(itemId, response, beforeRevision, beforeAttemptId, ownerId),
+            음식배달중단검토요청 review => ForOperatorReview(itemId, review, response, beforeRevision, beforeAttemptId),
+            _ => null
+        };
+
+    private static FoodRoleCompletionExpectation? ForOrdererCancellation(string itemId, Guid requestId, object? response, long beforeRevision)
+    {
+        if (response is 음식주문응답 cancellation
             && OrderResponse(cancellation, itemId, requestId, beforeRevision, 음식주문상태코드.취소)
             && cancellation.상태 == 음식주문상태코드.취소)
         {
@@ -22,8 +46,13 @@ internal sealed class FoodRoleCompletionExpectation(Func<object, bool> matches)
             return new(value => value is 주문자음식주문상세응답 current
                 && current.주문.주문번호 == itemId && current.주문.상태 == 음식주문상태코드.취소);
         }
+        return null;
+    }
 
-        if (body is 음식점주문수락요청 acceptance && response is 음식주문응답 accepted
+    private static FoodRoleCompletionExpectation? ForRestaurantAcceptance(string itemId, Guid requestId, 음식점주문수락요청 acceptance,
+        object? response, long beforeRevision, string? originalDetailAddress)
+    {
+        if (response is 음식주문응답 accepted
             && OrderResponse(accepted, itemId, requestId, beforeRevision, 음식주문상태코드.주문확인,
                 acceptance.즉시픽업가능여부 ? "음식점 주문 확인 · 기존 준비 완료" : "음식점 주문 확인 · 배차 후 조리")
             && AcceptedStage(accepted.상태) && accepted.음식점수락시각Utc is { } acceptedAt && acceptedAt != default)
@@ -45,8 +74,13 @@ internal sealed class FoodRoleCompletionExpectation(Func<object, bool> matches)
                 && current.음식점명 == name && current.음식점주소 == address && current.음식점상세주소 == detailAddress
                 && Clean(current.수락메모) == memo);
         }
+        return null;
+    }
 
-        if (body is 음식점주문진행변경요청 progress && response is 음식주문응답 changed)
+    private static FoodRoleCompletionExpectation? ForRestaurantProgress(string itemId, Guid requestId, 음식점주문진행변경요청 progress,
+        object? response, long beforeRevision)
+    {
+        if (response is 음식주문응답 changed)
         {
             var rejecting = progress.작업 == 음식점주문진행작업코드.거절;
             if (progress.작업 is not (음식점주문진행작업코드.거절 or 음식점주문진행작업코드.조리시간변경)) return null;
@@ -64,19 +98,28 @@ internal sealed class FoodRoleCompletionExpectation(Func<object, bool> matches)
                     : AcceptedStage(current.상태) && PreparationHistory(current, requestId, historyReason)
                         && MinutesMatch(current, requestId, minutes!.Value, beforeRevision)));
         }
+        return null;
+    }
 
-        if (body is 음식배달중단요청 && response is FoodDeliveryDriverActionResponse interrupted
+    private static FoodRoleCompletionExpectation? ForDriverInterruption(string itemId, object? response, long beforeRevision, string? beforeAttemptId, string? ownerId)
+    {
+        if (response is FoodDeliveryDriverActionResponse interrupted
             && !string.IsNullOrWhiteSpace(beforeAttemptId) && !string.IsNullOrWhiteSpace(ownerId)
             && interrupted.OfferId == itemId && interrupted.DeliveryAttemptId == beforeAttemptId
             && interrupted.Status == "Interrupted" && interrupted.AttemptRevision is { } attemptRevision && attemptRevision > beforeRevision)
         {
             var attemptId = beforeAttemptId;
-            return new(value => value is FoodDeliveryDriverWorkspaceDto workspace && workspace.DriverId == ownerId
+            return new(value => value is FoodDeliveryDriverCurrentWorkDto workspace && workspace.DriverId == ownerId
                 && workspace.ActiveDeliveries.All(active => active.DeliveryAttemptId != attemptId
                     && !(active.OfferId == itemId && string.IsNullOrWhiteSpace(active.DeliveryAttemptId))));
         }
+        return null;
+    }
 
-        if (body is 음식배달중단검토요청 review && response is 음식배달시도운영응답 reviewed)
+    private static FoodRoleCompletionExpectation? ForOperatorReview(string itemId, 음식배달중단검토요청 review, object? response,
+        long beforeRevision, string? beforeAttemptId)
+    {
+        if (response is 음식배달시도운영응답 reviewed)
         {
             var responsibility = review.판정Code switch
             {

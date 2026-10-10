@@ -104,6 +104,13 @@ namespace Ssalddel.Controllers.Shipper.Request01
                 : this.ToProblemActionResult(result.Errors.Select(x => x.Message));
         }
 
+        [HttpGet("by-client-request/{clientRequestId}")]
+        public async Task<IActionResult> 접수요청조회(string clientRequestId, CancellationToken cancellationToken)
+        {
+            var item = await _useCase.접수요청조회Async(clientRequestId, cancellationToken);
+            return item is null ? this.ToNotFoundProblem("접수 요청의 운송의뢰를 찾을 수 없습니다.") : Ok(item);
+        }
+
         [HttpGet("{requestId}")]
         public async Task<IActionResult> 의뢰단건조회(string requestId)
         {

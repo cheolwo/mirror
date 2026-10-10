@@ -14,12 +14,21 @@
     else
     {
         @if (Model.Error is not null) { <div class="exchange-error" role="alert">@Model.Error</div> }
-        @if (Model.Submitted is { } submitted && Model.CollaborationId is not null)
+        @if (Model.Submitted is { } submitted)
         {
-            <section class="exchange-surface"><h2>배송 접수 완료</h2><p>같은 배송 의뢰를 보존하고 협업 연결만 확인합니다.</p>
+            <section class="exchange-surface"><h2>배송 접수 완료</h2><p>@(Model.CollaborationId is null ? "저장된 배송 접수를 확인했습니다. 접수한 배송에서 현재 진행 상태를 확인하세요." : "같은 배송 의뢰를 보존하고 협업 연결만 확인합니다.")</p>
                 <a href="@Href(ResultHref(submitted.RequestId))">접수한 배송 보기</a>
-                <button class="exchange-primary" disabled="@Model.IsSending" @onclick="RetryLink">협업 연결 다시 확인</button>
-                <a href="@Href(NeighborhoodMapNavigation.ReturnToPanel(ReturnUrl, "work", Model.CollaborationId) ?? NeighborhoodCollaborationRoutes.Detail(Model.CollaborationId))">협업 진행으로</a>
+                <button class="exchange-primary" disabled="@Model.IsSending" @onclick="RetryLink">@(Model.CollaborationId is null ? "접수 결과 확인하고 이어가기" : "협업 연결 다시 확인")</button>
+                @if (Model.CollaborationId is { } collaborationId)
+                { <a href="@Href(NeighborhoodMapNavigation.ReturnToPanel(ReturnUrl, "work", collaborationId) ?? NeighborhoodCollaborationRoutes.Detail(collaborationId))">협업 진행으로</a> }
+            </section>
+        }
+        else if (Model.RecoveryExpired)
+        {
+            <section class="exchange-surface"><h2>이전 배송 요청 확인</h2><p>주소·연락처를 포함한 입력 원문은 72시간 뒤 삭제됩니다. 이전 요청 번호로 접수 결과를 먼저 확인합니다.</p>
+                <button class="exchange-primary" disabled="@Model.IsSending" @onclick="Model.CheckRecoveryAsync">원 요청 결과 다시 확인</button>
+                @if (Model.RecoveryCheckedMissing)
+                { <button disabled="@Model.IsSending" @onclick="Model.DiscardExpiredRecoveryAsync">미접수 결과를 확인하고 새로 작성</button> }
             </section>
         }
         else if (!Model.CanWriteCollaboration)
@@ -80,8 +89,8 @@
                         { <p>본인 부담 상한 @NeighborhoodDeliveryPresentation.Money(originalAuthorization.MaxUserChargeKrw)를 포함한 원 자동 접수 조건과 입력으로 결과를 확인합니다.</p> }
                         else
                         { <p>이전에 확인한 배송비 @NeighborhoodDeliveryPresentation.Money(Model.Draft.FulfillmentSelection?.ConfirmedCostKrw ?? Model.Draft.AgreedFareKrw)를 포함한 원 입력으로 결과를 확인합니다.</p> }
-                        <p>접수 결과 확인이 필요합니다. 같은 요청 번호로 원 결과만 확인하며 새 견적이나 동의를 보내지 않습니다.</p>
-                        <button type="submit" class="exchange-primary" disabled="@Model.IsSending">같은 요청 다시 확인하기</button>
+                        <p>@(Model.RegistrationRecoveryPending ? "배송 의뢰는 저장됐으며 배차 접수는 확인 중입니다. 같은 번호와 입력으로만 배차 접수를 이어갑니다." : "접수 결과 확인이 필요합니다. 같은 요청 번호로 원 결과를 먼저 확인하며 새 견적이나 동의를 보내지 않습니다.")</p>
+                        <button type="submit" class="exchange-primary" disabled="@Model.IsSending">@(Model.RegistrationRecoveryPending ? "저장된 의뢰 배차 접수 이어가기" : "같은 요청 다시 확인하기")</button>
                     </section>
                 }
                 else if (Model.Quote is { } quote)
@@ -136,7 +145,7 @@
     private string BackHref => NeighborhoodMapNavigation.SafeReturn(ReturnUrl) ?? NeighborhoodDeliveryRoutes.Home;
     private string ResultHref(string id) => NeighborhoodMapNavigation.ReturnToPanel(ReturnUrl, "delivery", id) ?? NeighborhoodDeliveryRoutes.Detail(id);
     protected override void OnInitialized() => Model.PropertyChanged += Changed;
-    protected override async Task OnParametersSetAsync() { Model.Initialize(SourcePostId); await Model.LoadCollaborationAsync(CollaborationId); }
+    protected override async Task OnParametersSetAsync() { Model.Initialize(SourcePostId); await Model.RestoreAsync(); await Model.LoadCollaborationAsync(CollaborationId); }
     protected override void OnAfterRender(bool firstRender) => Model.SynchronizeOwner();
     private void Changed(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => _ = InvokeAsync(StateHasChanged);
     private async Task Submit() { if (await Model.SubmitAsync() is { } requestId) Navigation.NavigateTo(Href(ResultHref(requestId))); }

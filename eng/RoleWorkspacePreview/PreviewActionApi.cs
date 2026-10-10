@@ -10,7 +10,10 @@ public sealed class PreviewActionApi : IRoleWorkspaceApi
     public event Action? Changed;
     public int Writes { get; private set; }
     public int Reads { get; private set; }
-    public void Reset(string value) { scenario = value; Writes = Reads = 0; }
+    private Guid? submittedId;
+    private string? submittedBody;
+    public bool RequestReused { get; private set; }
+    public void Reset(string value) { scenario = value; Writes = Reads = 0; submittedId = null; submittedBody = null; RequestReused = false; }
 
     public Task<T> GetAsync<T>(string roleKey, string relativePath, CancellationToken cancellationToken)
     {
@@ -35,7 +38,15 @@ public sealed class PreviewActionApi : IRoleWorkspaceApi
         if (roleKey != "orderer" || relativePath != "api/v1/food-orders/order-preview/cancellation")
             throw new InvalidOperationException("미리보기에서 지원하지 않는 요청입니다.");
         var request = body as 주문자음식주문취소요청 ?? throw new InvalidOperationException("취소 요청 형식이 다릅니다.");
+        var snapshot = System.Text.Json.JsonSerializer.Serialize(request);
+        if (submittedId is not null)
+        {
+            RequestReused = submittedId == request.클라이언트요청Id && submittedBody == snapshot;
+            if (!RequestReused) throw new InvalidOperationException("동일 요청의 번호와 원문이 바뀌었습니다.");
+        }
+        submittedId = request.클라이언트요청Id; submittedBody = snapshot;
         Writes++; Changed?.Invoke();
+        if (Writes == 1 && scenario == "lost-response") throw new HttpRequestException("Preview commit response interruption");
         return Task.FromResult<T?>((T)(object)new 음식주문응답
         {
             주문번호 = "order-preview", Revision = 4, 상태 = 음식주문상태코드.취소,

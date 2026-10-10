@@ -17,7 +17,8 @@ internal sealed record DistributedPhotoPrivate(DistributedEvidenceBinding Bindin
 
 /// <summary>사진 바이트의 보관과 업무 명령의 소비는 별개이며 소비는 업무 SQL 트랜잭션 안에서만 가능합니다.</summary>
 public sealed partial class DistributedPhotoEvidenceService(SsalddelContext db, IObjectStorageService storage,
-    ISsalddelExecutionModePolicy execution, IOptions<DistributedFulfillmentOptions> options, TimeProvider clock)
+    ISsalddelExecutionModePolicy execution, IOptions<DistributedFulfillmentOptions> options, TimeProvider clock,
+    Ssalddel.Services.OperationsAlerts.OperationsBudgetGate? operationsBudget = null)
     : IDistributedPhotoEvidenceBinder
 {
     internal const string OwnedPrefix = "distributed-proof";
@@ -64,6 +65,7 @@ public sealed partial class DistributedPhotoEvidenceService(SsalddelContext db, 
         }
         else
         {
+            if (operationsBudget is not null) await operationsBudget.ConsumeAsync("photos", true, ct);
             var id = "DPH-" + Guid.NewGuid().ToString("N");
             var actorHash = Sha(Encoding.UTF8.GetBytes(actor.UserId));
             row = new() { EvidenceId = id, ActorUserId = actor.UserId, UploadRequestId = request.UploadRequestId,
@@ -149,6 +151,13 @@ public sealed partial class DistributedPhotoEvidenceService(SsalddelContext db, 
     public async Task<DistributedPhotoEvidenceDto> GetAsync(DistributedActor actor, string id, CancellationToken ct)
     {
         Gate(actor.UserId); var row = await Photos.AsNoTracking().SingleOrDefaultAsync(x => x.EvidenceId == id, ct);
+        Require(row is not null && await CanRead(actor, row, ct), "DistributedPhotoNotFound", 404);
+        return Dto(row!, row!.StatusCode is "Uploaded" or "Bound");
+    }
+    public async Task<DistributedPhotoEvidenceDto> GetByUploadAsync(DistributedActor actor, Guid uploadRequestId, CancellationToken ct)
+    {
+        Gate(actor.UserId);
+        var row = await Photos.AsNoTracking().SingleOrDefaultAsync(x => x.ActorUserId == actor.UserId && x.UploadRequestId == uploadRequestId, ct);
         Require(row is not null && await CanRead(actor, row, ct), "DistributedPhotoNotFound", 404);
         return Dto(row!, row!.StatusCode is "Uploaded" or "Bound");
     }

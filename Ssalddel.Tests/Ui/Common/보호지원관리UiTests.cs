@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Ssalddel.Contracts.Common.PrivacySupport;
+using Ssalddel.Contracts.Common.Community;
 using Ssalddel.Ui.Common.Areas.BackOffice.Components.PrivacySupport;
 using Ssalddel.Ui.Common.Areas.App.Services;
 using Ssalddel.Ui.Common.Areas.BackOffice.Services;
@@ -11,7 +12,7 @@ using Ssalddel.Ui.Common.Areas.BackOffice.ViewModels;
 
 namespace Ssalddel.Tests.Ui.Common;
 
-public sealed class 보호지원관리UiTests
+public sealed partial class 보호지원관리UiTests
 {
     [Fact]
     public async Task 일반계정은관리사건_API를호출하지않는다()
@@ -180,6 +181,14 @@ public sealed class 보호지원관리UiTests
         public List<보호지원CommandRequest> Commands { get; } = [];
         public Func<string, Task<보호지원CaseResponse>>? DetailFactory;
         public Func<string, Task<보호지원증거Response>>? EvidenceFactory;
+        public Func<string, NeighborhoodMemberRecoveryRequest, Task<NeighborhoodMemberRecoveryContextResponse>>? RecoveryFactory;
+        public Func<string, NeighborhoodMemberRecoveryRequest, Task<NeighborhoodMemberRecoveryResponse>>? RecoveryCommand;
+        public List<NeighborhoodMemberRecoveryRequest> RecoveryCommands { get; } = [];
+        public int RecoveryReads;
+        public Task<NeighborhoodMemberRecoveryContextResponse> 배송복구조회Async(string id, NeighborhoodMemberRecoveryRequest request, CancellationToken ct)
+        { RecoveryReads++; return RecoveryFactory?.Invoke(id, request) ?? throw new NotSupportedException(); }
+        public Task<NeighborhoodMemberRecoveryResponse> 배송복구Async(string id, NeighborhoodMemberRecoveryRequest request, CancellationToken ct)
+        { RecoveryCommands.Add(request); return RecoveryCommand?.Invoke(id, request) ?? throw new NotSupportedException(); }
         public Task<보호지원ListResponse> 목록Async(string kind, int page, CancellationToken ct)
         { Reads++; return Task.FromResult(new 보호지원ListResponse()); }
         public async Task<보호지원CaseResponse> 상세Async(string id, CancellationToken ct)

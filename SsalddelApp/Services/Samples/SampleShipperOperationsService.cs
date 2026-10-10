@@ -38,6 +38,9 @@ public sealed class SampleShipperOperationsService : IShipperOperationsService
         return Task.FromResult(_store.GetPublicCargo());
     }
 
+    public Task<ShipperRequestItem?> GetRequestByClientRequestIdAsync(string clientRequestId, CancellationToken cancellationToken = default)
+        => GetRequestAsync(clientRequestId, cancellationToken);
+
     public Task<IReadOnlyList<창고요약응답>> GetWarehousesAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();

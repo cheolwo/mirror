@@ -11,6 +11,8 @@ public interface INeighborhoodDeliveryClient
     Task<NeighborhoodDeliveryResponse?> CreateAsync(NeighborhoodDeliveryRequest request, CancellationToken ct);
     Task<IReadOnlyList<NeighborhoodDeliveryResponse>> MineAsync(int page, CancellationToken ct);
     Task<NeighborhoodDeliveryResponse?> ReadAsync(string requestId, CancellationToken ct);
+    Task<NeighborhoodDeliveryResponse?> ReadSubmissionAsync(Guid clientRequestId, CancellationToken ct)
+        => Task.FromResult<NeighborhoodDeliveryResponse?>(null);
     Task<NeighborhoodDeliveryInputPreviewResponse?> PreviewInputAsync(NeighborhoodDeliveryInputPreviewRequest request, CancellationToken ct)
         => Task.FromException<NeighborhoodDeliveryInputPreviewResponse?>(new NotSupportedException());
     Task<NeighborhoodDeliveryInputTemplateResponse?> GetInputTemplateAsync(CancellationToken ct)
@@ -54,6 +56,9 @@ public sealed class NeighborhoodDeliveryClient(ISsalddelJsonApiClient api) : INe
     public Task<NeighborhoodDeliveryResponse?> ReadAsync(string requestId, CancellationToken ct)
         => api.GetAsync<NeighborhoodDeliveryResponse>($"{NeighborhoodDeliveryRoutes.Api}/{Uri.EscapeDataString(requestId)}",
             "배송 진행 조회", cancellationToken: ct);
+    public Task<NeighborhoodDeliveryResponse?> ReadSubmissionAsync(Guid clientRequestId, CancellationToken ct)
+        => api.GetAsync<NeighborhoodDeliveryResponse>($"{NeighborhoodDeliveryRoutes.Api}/by-client-request/{clientRequestId:D}",
+            "원 배송 접수 결과 확인", cancellationToken: ct);
     public Task<NeighborhoodDeliveryInputPreviewResponse?> PreviewInputAsync(NeighborhoodDeliveryInputPreviewRequest request, CancellationToken ct)
         => api.SendAsync<NeighborhoodDeliveryInputPreviewRequest, NeighborhoodDeliveryInputPreviewResponse>(HttpMethod.Post,
             $"{NeighborhoodDeliveryRoutes.Api}/input-preview", request, "배송 엑셀 초안 확인", cancellationToken: ct);

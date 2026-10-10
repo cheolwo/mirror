@@ -9,9 +9,9 @@ using Ssalddel.Ui.Common.Areas.App.Services;
 namespace Ssalddel.Ui.Common.Areas.App.ViewModels;
 
 /// <summary>비공개 배송 작성 수명과 견적 확인을 소유합니다. 계산·접수·배차 권위는 서버에 있습니다.</summary>
-public sealed class NeighborhoodDeliveryAuthoringViewModel(
+public sealed partial class NeighborhoodDeliveryAuthoringViewModel(
     INeighborhoodDeliveryClient client, ISsalddel현재사용자Context user,
-    INeighborhoodCollaborationClient? collaborations = null) : ObservableObject, IDisposable
+    INeighborhoodCollaborationClient? collaborations = null, IWorkflowRecoveryStore? recoveryStore = null) : ObservableObject, IDisposable
 {
     private readonly CancellationTokenSource _lifetime = new();
     private string? _owner;
@@ -56,7 +56,7 @@ public sealed class NeighborhoodDeliveryAuthoringViewModel(
     public DateTime DropoffEnd { get => _dropoffEnd; set { _dropoffEnd = value; _simpleInput?.TimeChanged("DropoffEnd"); } }
     private 생활배송간편입력ViewModel? _simpleInput;
     public 생활배송간편입력ViewModel SimpleInput => _simpleInput ??= new(this, client);
-    public bool CanEditInput => !_disposed && IsAuthenticated && !IsSending && !NeedsSubmissionReview
+    public bool CanEditInput => !_disposed && IsAuthenticated && !IsSending && !NeedsSubmissionReview && !RecoveryExpired
         && Submitted is null && ConsentEvidenceId.HasValue && CollectionConsent && AgeConfirmed && CanWriteCollaboration;
     public bool DispatchRequested { get; set; }
     public bool DirectPaymentAgreed { get; set; }
@@ -138,6 +138,7 @@ public sealed class NeighborhoodDeliveryAuthoringViewModel(
     public void Initialize(long? sourcePostId)
     {
         SynchronizeOwner();
+        if (NeedsSubmissionReview || RecoveryExpired || Submitted is not null) return;
         Draft.SourcePostId = sourcePostId is > 0 ? sourcePostId : null;
     }
 
@@ -250,6 +251,7 @@ public sealed class NeighborhoodDeliveryAuthoringViewModel(
 
     public async Task<string?> SubmitAsync()
     {
+        if (!await RestoreAsync() || RecoveryExpired) return null;
         if (Submitted is not null) return await RetryLinkAsync();
         if (IsSending || !CheckOwner() || !Validate()) return null;
         if (!CanWriteCollaboration) { Error = "협업의 현재 합의를 먼저 확인해 주세요."; Changed(); return null; }
@@ -283,17 +285,30 @@ public sealed class NeighborhoodDeliveryAuthoringViewModel(
         var input = Fingerprint(request);
         if (_submittedInput is not null && input != _submittedInput)
         { Error = "접수 확인 중인 요청의 입력을 바꿀 수 없습니다. 내 배송 의뢰를 먼저 확인해 주세요."; Changed(); return null; }
+        var checkingOriginal = _submittedInput is not null;
         _submittedInput = input;
         _recoveryRequest ??= JsonSerializer.Deserialize<NeighborhoodDeliveryRequest>(JsonSerializer.Serialize(request))!;
         var owner = _owner; var generation = ++_generation; IsSending = true; Changed();
         try
         {
-            var result = await client.CreateAsync(request, _lifetime.Token);
+            await PersistRecoveryAsync(owner!, _lifetime.Token);
+            if (!OwnerMatches(generation, owner)) return null;
+            var result = checkingOriginal ? await client.ReadSubmissionAsync(request.ClientRequestId, _lifetime.Token) : null;
+            if (!OwnerMatches(generation, owner)) return null;
+            RegistrationRecoveryPending = result?.ProposalStateCode == NeighborhoodDeliveryProposalStates.RegistrationPending;
+            if (RegistrationRecoveryPending) result = null;
+            result ??= await client.CreateAsync(request, _lifetime.Token);
             if (!OwnerMatches(generation, owner)) return null;
             if (result is null || string.IsNullOrWhiteSpace(result.RequestId))
             { Error = "접수 결과를 확인하지 못했습니다. 내 배송 의뢰를 먼저 확인해 주세요. 다시 제출할 때 같은 요청 번호를 사용합니다."; return null; }
+            RegistrationRecoveryPending = result.ProposalStateCode == NeighborhoodDeliveryProposalStates.RegistrationPending;
+            if (RegistrationRecoveryPending) { Error = RegistrationPendingNotice; return null; }
             Submitted = result;
+            await PersistRecoveryAsync(owner!, _lifetime.Token);
+            if (!OwnerMatches(generation, owner)) return null;
             if (_collaboration is not null && !await LinkSubmittedAsync(generation, owner)) return null;
+            await RemoveRecoveryAsync(owner!, _lifetime.Token);
+            if (!OwnerMatches(generation, owner)) return null;
             Draft = NewDraft(); Quote = null; _quotedInput = null; _submittedInput = null; _recoveryRequest = null; DispatchRequested = false; DirectPaymentAgreed = false; AutoRoutingEnabled = false; AutoConditions.Clear(); ResetFulfillmentChoice(); _simpleInput?.Completed();
             return result.RequestId;
         }
@@ -301,7 +316,22 @@ public sealed class NeighborhoodDeliveryAuthoringViewModel(
         {
             if (OwnerMatches(generation, owner))
             {
-                if (ex is SsalddelApiException { StatusCode: 400 or 422 }) { _submittedInput = null; _recoveryRequest = null; }
+                if (ex is SsalddelApiException { StatusCode: 400 or 422 }
+                    or SsalddelApiException { ErrorCode: "QuoteChanged" or "FulfillmentQuoteExpired" or "FulfillmentQuoteChanged" or "FulfillmentQuoteMismatch" or "FulfillmentCostChanged" })
+                {
+                    try
+                    {
+                        await RemoveRecoveryAsync(owner!, _lifetime.Token);
+                        if (!OwnerMatches(generation, owner)) return null;
+                        _submittedInput = null; _recoveryRequest = null;
+                    }
+                    catch (Exception)
+                    {
+                        if (OwnerMatches(generation, owner))
+                            Error = "거절된 원 요청의 보관 상태를 확인하지 못했습니다. 같은 요청 결과를 다시 확인해 주세요.";
+                        return null;
+                    }
+                }
                 ApplyError(ex);
             }
             return null;
@@ -313,7 +343,13 @@ public sealed class NeighborhoodDeliveryAuthoringViewModel(
     {
         if (IsSending || !CheckOwner() || Submitted is null) return null;
         var owner = _owner; var generation = ++_generation; IsSending = true; Error = null; Changed();
-        try { return await LinkSubmittedAsync(generation, owner) ? Submitted?.RequestId : null; }
+        try
+        {
+            if (!await LinkSubmittedAsync(generation, owner)) return null;
+            await RemoveRecoveryAsync(owner!, _lifetime.Token);
+            return OwnerMatches(generation, owner) ? Submitted?.RequestId : null;
+        }
+        catch (Exception ex) { if (OwnerMatches(generation, owner)) ApplyError(ex); return null; }
         finally { if (OwnerMatches(generation, owner)) { IsSending = false; Changed(); } }
     }
 
@@ -326,6 +362,8 @@ public sealed class NeighborhoodDeliveryAuthoringViewModel(
             // 배송이 이미 접수된 뒤에는 협업 연결만 재시도하며 새 배송 의뢰를 만들지 않습니다.
             _linkCommand ??= new() { ClientRequestId = Guid.NewGuid(), ExpectedRevision = _collaboration.Revision,
                 Action = NeighborhoodCollaborationActions.LinkDelivery, LinkedDeliveryRequestId = Submitted.RequestId };
+            await PersistRecoveryAsync(owner!, _lifetime.Token);
+            if (!OwnerMatches(generation, owner)) return false;
             var linked = await collaborations.CommandAsync(_collaborationId, _linkCommand, _lifetime.Token);
             if (!OwnerMatches(generation, owner)) return false;
             if (linked?.LinkedDeliveryRequestId == Submitted.RequestId) { _collaboration = linked; return true; }
@@ -422,6 +460,7 @@ public sealed class NeighborhoodDeliveryAuthoringViewModel(
     private static NeighborhoodDeliveryRequest NewDraft() => new() { ClientRequestId = Guid.NewGuid(), DispatchMode = NeighborhoodDispatchModes.Automatic };
     private void ClearPrivateInput()
     {
+        _recoveryLoaded = false; _expiredRecoveryId = null; _recoveryCreatedAtUtc = null; RecoveryCheckedMissing = false; RegistrationRecoveryPending = false;
         _simpleInput?.Clear();
         _pickupStart = DateTime.Now.AddMinutes(30); _pickupEnd = DateTime.Now.AddHours(2);
         _dropoffStart = DateTime.Now.AddMinutes(30); _dropoffEnd = DateTime.Now.AddHours(3);

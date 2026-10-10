@@ -1,7 +1,9 @@
 @using Ssalddel.Contracts.Common.Orderer
 @using Ssalddel.Ui.Common.Areas.App.Services
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
 @implements IAsyncDisposable
 @inject I같이수입준비주문자Client ReadinessClient
+@inject ISsalddel현재사용자Context CurrentUser
 
 @if (string.IsNullOrWhiteSpace(AutoGroupId))
 {
@@ -59,13 +61,14 @@ else
 
 @code {
     private static readonly TimeSpan RefreshInterval = TimeSpan.FromSeconds(30);
-    private string? _loadedKey;
-    private bool _isLoading;
-    private string? _error;
-    private string? _backgroundWarning;
-    private DateTime? _lastLoadedAtUtc;
-    private 같이수입준비주문자조회응답? _readiness;
-    private CancellationTokenSource? _loadCancellation;
+    private OrdererGroupImportReadinessState _state = default!;
+    private string? _loadedKey => _state.Key;
+    private bool _isLoading => _state.IsLoading;
+    private string? _error => _state.Error;
+    private string? _backgroundWarning => _state.BackgroundWarning;
+    private DateTime? _lastLoadedAtUtc => _state.LastLoadedAtUtc;
+    private 같이수입준비주문자조회응답? _readiness => _state.Readiness;
+    private bool _disposed;
     private CancellationTokenSource? _pollingCancellation;
     private Task? _pollingTask;
 
@@ -73,9 +76,12 @@ else
     [Parameter] public string? AutoGroupId { get; set; }
     [Parameter, EditorRequired] public RenderFragment<같이수입준비주문자조회응답> ChildContent { get; set; } = default!;
 
+    protected override void OnInitialized() => _state = new(ReadinessClient, () => CurrentUser.현재사용자.UserId);
+
     protected override async Task OnParametersSetAsync()
     {
-        var key = $"{LedgerId}|{AutoGroupId}";
+        _state.SynchronizeOwner();
+        var key = OrdererGroupImportReadinessState.SelectionKey(LedgerId, AutoGroupId);
         if (string.Equals(_loadedKey, key, StringComparison.Ordinal))
         {
             return;
@@ -86,7 +92,7 @@ else
     }
 
     private async Task RetryAsync()
-        => await LoadAsync($"{LedgerId}|{AutoGroupId}", force: true);
+        => await LoadAsync(OrdererGroupImportReadinessState.SelectionKey(LedgerId, AutoGroupId), force: true);
 
     private async Task LoadAsync(
         string key,
@@ -98,62 +104,13 @@ else
             return;
         }
 
-        _loadCancellation?.Cancel();
-        _loadCancellation?.Dispose();
-        var cancellation = new CancellationTokenSource();
-        _loadCancellation = cancellation;
-        _loadedKey = key;
-        if (!preserveCurrentContent)
-        {
-            _readiness = null;
-            _error = null;
-        }
-
-        _backgroundWarning = null;
-        if (string.IsNullOrWhiteSpace(LedgerId) || string.IsNullOrWhiteSpace(AutoGroupId))
-        {
-            return;
-        }
-
-        _isLoading = !preserveCurrentContent;
-        try
-        {
-            var refreshed = await ReadinessClient.조회Async(
-                    LedgerId,
-                    AutoGroupId,
-                    cancellation.Token)
-                ?? throw new InvalidOperationException("서버에서 원장 응답을 받지 못했습니다.");
-            _readiness = refreshed;
-            _lastLoadedAtUtc = DateTime.UtcNow;
-        }
-        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
-        {
-            return;
-        }
-        catch (Exception exception)
-        {
-            var message = $"같이 수입 준비 자료를 불러오지 못했습니다. {exception.Message}";
-            if (preserveCurrentContent && _readiness is not null)
-            {
-                _backgroundWarning = $"{message} 이전에 확인한 내용을 유지합니다.";
-            }
-            else
-            {
-                _error = message;
-            }
-        }
-        finally
-        {
-            if (!preserveCurrentContent && ReferenceEquals(_loadCancellation, cancellation))
-            {
-                _isLoading = false;
-            }
-        }
+        if (_disposed || key != OrdererGroupImportReadinessState.SelectionKey(LedgerId, AutoGroupId)) return;
+        await _state.LoadAsync(LedgerId, AutoGroupId, force, preserveCurrentContent);
     }
 
     private void EnsurePolling()
     {
-        if (_pollingTask is not null)
+        if (_disposed || _pollingTask is not null)
         {
             return;
         }
@@ -169,16 +126,12 @@ else
         {
             while (await timer.WaitForNextTickAsync(cancellationToken))
             {
-                var key = _loadedKey;
-                if (string.IsNullOrWhiteSpace(key))
-                {
-                    continue;
-                }
-
                 await InvokeAsync(async () =>
                 {
+                    if (_disposed) return;
+                    var key = OrdererGroupImportReadinessState.SelectionKey(LedgerId, AutoGroupId);
                     await LoadAsync(key, force: true, preserveCurrentContent: true);
-                    StateHasChanged();
+                    if (!_disposed) StateHasChanged();
                 });
             }
         }
@@ -189,8 +142,10 @@ else
 
     public async ValueTask DisposeAsync()
     {
+        if (_disposed) return;
+        _disposed = true;
+        _state.Dispose();
         _pollingCancellation?.Cancel();
-        _loadCancellation?.Cancel();
         if (_pollingTask is not null)
         {
             try
@@ -202,8 +157,6 @@ else
             }
         }
 
-        _loadCancellation?.Dispose();
-        _loadCancellation = null;
         _pollingCancellation?.Dispose();
         _pollingCancellation = null;
         _pollingTask = null;

@@ -6,7 +6,7 @@ using Ssalddel.Ui.Common.Areas.BackOffice.Services;
 
 namespace Ssalddel.Ui.Common.Areas.BackOffice.ViewModels;
 
-public sealed class 보호지원관리ViewModel(I보호지원관리Client client, Func<string?> adminOwner) : ObservableObject, IDisposable
+public sealed partial class 보호지원관리ViewModel(I보호지원관리Client client, Func<string?> adminOwner) : ObservableObject, IDisposable
 {
     private string? _owner;
     private long _generation;
@@ -27,7 +27,7 @@ public sealed class 보호지원관리ViewModel(I보호지원관리Client client
     public bool RequiresRefresh { get; private set; }
     public string? Error { get; private set; }
     public string? Notice { get; private set; }
-    public bool HasPending => _pending is not null;
+    public bool HasPending => _pending is not null || HasRecoveryPending;
     public bool IsAuthenticated => !_disposed && !string.IsNullOrWhiteSpace(adminOwner());
     public int EvidenceCount { get; private set; }
     public int RecipientCount => _recipientIds.Count;
@@ -73,7 +73,7 @@ public sealed class 보호지원관리ViewModel(I보호지원관리Client client
         var owner = adminOwner();
         if (_owner == owner || _disposed) return;
         Cancel(); _owner = owner; Items = []; Detail = null; Loaded = false;
-        _pending = null; _pendingCaseId = null; ClearPrivateRecords();
+        _pending = null; _pendingCaseId = null; ClearPrivateRecords(); ClearRecovery();
         Error = Notice = null; RequiresRefresh = false; RequiresLogin = string.IsNullOrWhiteSpace(owner);
         ClearDraft(); Changed();
     }
@@ -84,7 +84,7 @@ public sealed class 보호지원관리ViewModel(I보호지원관리Client client
         if (_caseId != selected)
         {
             Cancel(); Detail = null; ClearPrivateRecords();
-            _pending = null; _pendingCaseId = null; ClearDraft();
+            _pending = null; _pendingCaseId = null; ClearDraft(); ClearRecovery();
         }
         _caseId = selected;
         if (!IsAuthenticated || HasPending || _disposed) return;
@@ -103,7 +103,7 @@ public sealed class 보호지원관리ViewModel(I보호지원관리Client client
                 var row = await client.상세Async(selected, _operation.Token);
                 if (!Current(op)) return;
                 if (row.CaseId != selected) throw new InvalidOperationException();
-                Detail = row; SelectAllowedAction();
+                Detail = row; ClearRecovery(); SelectAllowedAction();
             }
             Loaded = true; RequiresLogin = false;
         }
@@ -140,7 +140,7 @@ public sealed class 보호지원관리ViewModel(I보호지원관리Client client
         _pending = BuildRequest(); _pendingCaseId = Detail!.CaseId;
         await SendPendingAsync();
     }
-    public Task RetryAsync() => SendPendingAsync();
+    public Task RetryAsync() => HasRecoveryPending ? CheckRecoveryAsync() : SendPendingAsync();
     private async Task SendPendingAsync()
     {
         SynchronizeOwner();
@@ -242,6 +242,7 @@ public sealed class 보호지원관리ViewModel(I보호지원관리Client client
         {
             ClearPrivateRecords(); Detail = null; Items = []; Loaded = false;
             _pending = null; _pendingCaseId = null; ClearDraft(); RequiresRefresh = true;
+            ClearRecovery();
         }
         Error = ex is SsalddelApiException { StatusCode: 401 } ? "운영자 로그인이 만료되었습니다. 다시 로그인해 주세요."
             : ex is SsalddelApiException { StatusCode: 403 } ? "이 사건의 담당 권한이 없습니다. 배정 상태를 다시 확인해 주세요."
@@ -251,5 +252,5 @@ public sealed class 보호지원관리ViewModel(I보호지원관리Client client
         if (ex is SsalddelApiException { StatusCode: 401 }) RequiresLogin = true;
     }
     private void Changed() { if (!_disposed) OnPropertyChanged(string.Empty); }
-    public void Dispose() { if (_disposed) return; _disposed = true; Cancel(); _operation.Dispose(); ClearPrivateRecords(); _pending = null; Items = []; Detail = null; ClearDraft(); }
+    public void Dispose() { if (_disposed) return; _disposed = true; Cancel(); _operation.Dispose(); ClearPrivateRecords(); ClearRecovery(); _pending = null; Items = []; Detail = null; ClearDraft(); }
 }

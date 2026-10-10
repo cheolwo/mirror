@@ -379,7 +379,9 @@ internal sealed class DistributedUiTransport : I분산이행Transport
     public List<string> Gets { get; } = [];
     public List<(string Path, DistributedCommandRequest Body)> Posts { get; } = [];
     public List<DistributedPhotoUploadRequest> PhotoPosts { get; } = [];
+    public Dictionary<Guid, DistributedPhotoEvidenceDto> PhotoEvidence { get; } = [];
     public Action<DistributedPhotoUploadRequest>? BeforePhotoPost { get; set; }
+    public Action<DistributedPhotoUploadRequest>? AfterPhotoPost { get; set; }
     public Action<DistributedCommandRequest>? AfterPost { get; set; }
     public Func<DistributedPhotoEvidenceDto, DistributedPhotoEvidenceDto>? AlterPhoto { get; set; }
     public Dictionary<Guid, DistributedReceiptDto> Receipts { get; } = [];
@@ -396,7 +398,9 @@ internal sealed class DistributedUiTransport : I분산이행Transport
     public async Task<T> GetAsync<T>(string roleKey, string path, CancellationToken ct)
     {
         Gets.Add(path); BeforeGet?.Invoke(path); if (CustomGet is not null) return (T)await CustomGet(path, ct);
-        object result = path.Contains("/order-ledger-candidates?") ? RootCandidates : path.Contains("/workspace?") ? Workspace : path.Contains("/receipts/")
+        object result = path.Contains("/evidence/uploads/")
+            ? PhotoEvidence.TryGetValue(Guid.Parse(path.Split("/evidence/uploads/")[1].Split('?')[0]), out var photo) ? photo : throw new RoleWorkspaceAccessException(404, "photo not recorded")
+            : path.Contains("/order-ledger-candidates?") ? RootCandidates : path.Contains("/workspace?") ? Workspace : path.Contains("/receipts/")
             ? Receipts.TryGetValue(Guid.Parse(path.Split("/receipts/")[1].Split('?')[0]), out var receipt) ? receipt : throw new RoleWorkspaceAccessException(404, "not recorded") : Workspace.Waves.Single(wave => path.Contains("/waves/" + wave.WaveId + "?")); return (T)result;
     }
     public Task<T?> PostAsync<TRequest, T>(string roleKey, string path, TRequest body, CancellationToken ct)
@@ -407,6 +411,7 @@ internal sealed class DistributedUiTransport : I분산이행Transport
             var proof = new DistributedPhotoEvidenceDto("photo-" + photo.UploadRequestId.ToString("N"), photo.Work.Kind, photo.Work.AggregateId,
                 분산사진업무Session.Body(photo.Work)!.RequestId, new string('a', 64), "Uploaded", DateTime.UtcNow, true, "image/jpeg", 128,
                 DistributedEvidenceDigests.Payload(분산사진업무Session.Body(photo.Work)!));
+            PhotoEvidence[photo.UploadRequestId] = AlterPhoto?.Invoke(proof) ?? proof; AfterPhotoPost?.Invoke(photo);
             return Task.FromResult((T?)(object)(AlterPhoto?.Invoke(proof) ?? proof));
         }
         var command = Assert.IsAssignableFrom<DistributedCommandRequest>(body); Posts.Add((path, command)); BeforePost?.Invoke(command);

@@ -22,6 +22,7 @@ public static class RoleWorkspaceActionPolicy
         {
             (RoleWorkspaceCatalog.Orderer, 음식배달가능행동Ids.주문수령확인) => RoleWorkspaceActionUsage.Required,
             (RoleWorkspaceCatalog.Orderer, 음식배달가능행동Ids.주문취소) => RoleWorkspaceActionUsage.Conditional,
+            (RoleWorkspaceCatalog.Orderer, OrdererRoleWorkspaceAdapter.RequestSupport) => RoleWorkspaceActionUsage.Conditional,
             (RoleWorkspaceCatalog.Orderer, "food.new-order") => RoleWorkspaceActionUsage.OptionalTool,
 
             (RoleWorkspaceCatalog.Restaurant, 음식배달가능행동Ids.음식점주문수락

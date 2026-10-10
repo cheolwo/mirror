@@ -24,6 +24,9 @@ public sealed class DistributedPhotoEvidenceController(IDistributedFulfillmentUs
         => Run(async actor => Ok(await evidence.UploadAsync(actor, await useCase.AuthorizeEvidenceAsync(actor, request.Work, ct), request, ct)));
     [HttpGet("{id}")]
     public Task<IActionResult> Metadata(string id, CancellationToken ct) => Run(async a => Ok(await evidence.GetAsync(a, id, ct)));
+    [HttpGet("uploads/{uploadRequestId:guid}")]
+    public Task<IActionResult> UploadResult(Guid uploadRequestId, CancellationToken ct)
+        => Run(async a => Ok(await evidence.GetByUploadAsync(a, uploadRequestId, ct)));
     [HttpGet("{id}/content")]
     public Task<IActionResult> Content(string id, CancellationToken ct) => Run(async a =>
     { var value = await evidence.ContentAsync(a, id, ct); return File(value.Bytes, value.ContentType); });

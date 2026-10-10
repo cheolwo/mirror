@@ -50,4 +50,13 @@ public sealed class WebRoleWorkspaceLocationProvider(IJSRuntime js) : IRoleWorks
         await using var module = await js.InvokeAsync<IJSObjectReference>("import", ct, "./js/role-workspace-location.js");
         return await module.InvokeAsync<RoleWorkspaceLocation?>("current", ct);
     }
+
+    public async Task<RoleWorkspaceLocation?> GetCurrentWithoutPermissionPromptAsync(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        await using var module = await js.InvokeAsync<IJSObjectReference>("import", ct, "./js/role-workspace-location.js");
+        var location = await module.InvokeAsync<RoleWorkspaceLocation?>("currentWithoutPermissionPrompt", ct);
+        ct.ThrowIfCancellationRequested();
+        return location;
+    }
 }

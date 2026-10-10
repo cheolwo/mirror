@@ -4,6 +4,8 @@
 
 ## 화면과 책임
 
+2026-10-10 예외 지속 보완의 책임: 같은 역할/업무의 미확정 요청은 화면 복귀 후 영수증 확인부터 이어간다. 사진 업무는 원본을 저장하지 않고 업로드 번호와 증빙 참조를 복원·재조회한다. 원본 부재와 업로드 미확인은 재촬영 필요로 구분하며 새 완료로 간주하지 않는다. [승인 범위](../../AI/Planning/공통/PLAN-OPERATIONS-EXCEPTION-CONTINUITY/exception-continuity.implementation.r1.md).
+
 공통 경로는 `/workspace/{role}/distributed/{section}`이며 선택 대상은 `selected`로 유지한다. `warehouse`, `shipper`, `cargo-driver`, `orderer`, `operator`의 역할 선택은 로그인·서버 권한 부여와 다르다. 서버 조회 역할은 창고·화주·기사·주문자로 제한하며 운영자의 출고 묶음은 창고 운영 범위로 조회한다.
 
 | 섹션 | 담당자 | 표시와 현재 행동 | 서버·원장 |

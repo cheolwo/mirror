@@ -38,6 +38,11 @@ public interface I화주운송의뢰UseCase
         string requestId,
         CancellationToken cancellationToken = default);
 
+    Task<화주운송의뢰응답?> 접수요청조회Async(
+        string clientRequestId,
+        CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("접수 요청 조회가 구성되지 않았습니다.");
+
     Task<Result<운송업무담당자배정응답>> 업무담당자조회Async(
         string requestId,
         CancellationToken cancellationToken = default);
@@ -210,6 +215,11 @@ public sealed class 화주운송의뢰UseCase : I화주운송의뢰UseCase
         string requestId,
         CancellationToken cancellationToken = default)
         => await _sender.Send(new 의뢰단건조회Query(requestId), cancellationToken);
+
+    public Task<화주운송의뢰응답?> 접수요청조회Async(
+        string clientRequestId,
+        CancellationToken cancellationToken = default)
+        => _sender.Send(new 의뢰접수요청조회Query(clientRequestId), cancellationToken);
 
     public Task<Result<운송업무담당자배정응답>> 업무담당자조회Async(
         string requestId,

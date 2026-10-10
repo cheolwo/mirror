@@ -6,7 +6,7 @@ using Ssalddel.Ui.Common.Areas.App.Services;
 namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment;
 
 /// <summary>한 역할의 조회·명시 처리·같은 요청 재확인을 소유합니다. 권한과 순회 순서는 서버가 결정합니다.</summary>
-public sealed class 분산이행PageViewModel : IDisposable
+public sealed partial class 분산이행PageViewModel : IDisposable
 {
     private readonly 분산이행Client client;
     private CancellationTokenSource lifetime = new();
@@ -17,11 +17,12 @@ public sealed class 분산이행PageViewModel : IDisposable
     private PhotoOperation? photoOperation;
     private DistributedRootOrderCandidatesDto? rootOrderCandidates;
     private long rootOrderGeneration;
-    public 분산이행PageViewModel(분산이행Client client, string screen, I업무사진촬영Adapter? capture = null)
+    public 분산이행PageViewModel(분산이행Client client, string screen, I업무사진촬영Adapter? capture = null, IWorkflowRecoveryStore? recoveryStore = null)
     {
         if (!분산이행Navigation.AllowsScreen(client.RoleKey, screen))
             throw new ArgumentException("활동 역할의 업무 화면을 확인해 주세요.");
-        this.client = client; Screen = screen; Photo = new(capture ?? new 미지원업무사진촬영Adapter()); client.Transport.Changed += AuthenticationChanged;
+        this.client = client; Screen = screen; this.recoveryStore = recoveryStore ?? new VolatileWorkflowRecoveryStore();
+        Photo = new(capture ?? new 미지원업무사진촬영Adapter()); client.Transport.Changed += AuthenticationChanged;
     }
     public event Action? Changed;
     public string RoleKey => client.RoleKey;
@@ -33,8 +34,8 @@ public sealed class 분산이행PageViewModel : IDisposable
     public string? Message { get; private set; }
     public string? ValidationError { get; private set; }
     public 분산사진업무Session Photo { get; }
-    public bool HasPendingPhoto => Photo.UploadStarted && Photo.Work is not null && !HasPendingCommand;
-    public bool PhotoInputsLocked => Photo.UploadStarted || HasPendingCommand || IsBusy;
+    public bool HasPendingPhoto => (Photo.UploadStarted || Photo.Restored) && Photo.Work is not null && !HasPendingCommand;
+    public bool PhotoInputsLocked => Photo.UploadStarted || Photo.Restored || HasPendingCommand || RecoveryExpired || IsBusy;
     public DistributedWorkspaceDto? Workspace { get; private set; }
     public DistributedWaveDto? SelectedWave { get; private set; }
     public string? SelectedId { get; private set; }
@@ -42,8 +43,8 @@ public sealed class 분산이행PageViewModel : IDisposable
     public DistributedInboundDto? SelectedInbound => Workspace?.InboundPlans.SingleOrDefault(value => value.PlanId == SelectedId);
     public DistributedStorageAgreementDto? SelectedAgreement => Workspace?.StorageAgreements.SingleOrDefault(value => value.AgreementId == SelectedId);
     public bool HasPendingCommand => pending is not null;
-    public Guid? RequestId => pending?.Body.RequestId;
-    public bool CanEdit => IsLoaded && !IsBusy && !RequiresLogin && !HasPendingCommand && !Photo.HasUnresolvedUpload && Error is null;
+    public Guid? RequestId => pending?.Body.RequestId ?? expiredRecoveryId;
+    public bool CanEdit => IsLoaded && !IsBusy && !RequiresLogin && !HasPendingCommand && !RecoveryExpired && !Photo.HasUnresolvedUpload && !Photo.Restored && Error is null;
     public bool IsLoadingRootOrders { get; private set; }
     public string? RootOrdersError { get; private set; }
     public string? SelectedRootOrderId { get; private set; }
@@ -189,7 +190,7 @@ public sealed class 분산이행PageViewModel : IDisposable
         if (HasPendingCommand || HasPendingPhoto || IsBusy) return Task.CompletedTask;
         if (!ValidSelection(selectedId ?? SelectedId)) return Task.CompletedTask;
         SelectedId = CleanId(selectedId ?? SelectedId); Message = null;
-        return RunAsync(RefreshAsync);
+        return RunAsync(async ct => { await RestoreRecoveryAsync(ct); RequireCurrent(ct); await RefreshAsync(ct); });
     }
     public Task ChooseAsync(string id)
     {
@@ -327,17 +328,40 @@ public sealed class 분산이행PageViewModel : IDisposable
         if (!Photo.HasPhotos) return InvalidInputAsync("완료 사진을 먼저 촬영하고 확인해 주세요.");
         return RunAsync(UploadAndCompleteAsync);
     }
-    public Task RetryPhotoAsync() => HasPendingPhoto ? RunAsync(UploadAndCompleteAsync) : Task.CompletedTask;
+    public Task RetryPhotoAsync() => !HasPendingPhoto ? Task.CompletedTask : RunAsync(async ct =>
+    {
+        if (Photo.CompletionRequestId is { } id)
+        {
+            var receipt = await TryReceiptAsync(id, ct); RequireCurrent(ct);
+            if (receipt is not null) { await FinishRecoveredReceiptAsync(receipt, ct); return; }
+        }
+        if (Photo.Restored)
+        {
+            await Photo.RecoverUploadsAsync(client, ct, () => RequireCurrent(ct)); RequireCurrent(ct);
+            if (Photo.NeedsRecapture)
+            { await RefreshAsync(ct); Message = "저장되지 않은 사진의 원본은 보관하지 않았습니다. 사진 작업을 닫고 현재 업무에서 다시 촬영해 주세요."; return; }
+        }
+        await UploadAndCompleteAsync(ct);
+    });
     public Task CancelPhotoWorkAsync()
     {
         if (IsBusy || HasPendingCommand) return Task.CompletedTask;
-        Photo.Clear(); photoOperation = null;
-        return LoadAsync(SelectedId);
+        return RunAsync(async ct =>
+        {
+            if (Photo.CompletionRequestId is { } id)
+            {
+                var receipt = await TryReceiptAsync(id, ct); RequireCurrent(ct);
+                if (receipt is not null) { await FinishRecoveredReceiptAsync(receipt, ct); return; }
+                await recoveryStore.RemoveAsync(owner!.OwnerId!, RecoveryScope, id, ct); RequireCurrent(ct);
+            }
+            Photo.Clear(); photoOperation = null; recoveryCreatedAtUtc = null; await RefreshAsync(ct);
+            Message = "완료 기록이 없는 사진 작업을 닫았습니다. 현재 위치·수량을 확인하고 다시 촬영해 주세요.";
+        });
     }
     private async Task UploadAndCompleteAsync(CancellationToken ct)
     {
         var operation = photoOperation ?? throw new InvalidOperationException("확인할 사진 업무가 없습니다.");
-        await Photo.UploadAsync(client, ct, () => RequireCurrent(ct)); RequireCurrent(ct);
+        await Photo.UploadAsync(client, ct, () => RequireCurrent(ct), () => PersistRecoveryAsync(ct)); RequireCurrent(ct);
         var body = Photo.CompletionBody();
         var snapshot = (DistributedCommandRequest)JsonSerializer.Deserialize(JsonSerializer.Serialize(body, body.GetType()), body.GetType())!;
         pending = new(operation.Action == "import-lot" ? operation.Action : operation.Action + "-batch", operation.Suffix, snapshot,
@@ -393,6 +417,7 @@ public sealed class 분산이행PageViewModel : IDisposable
         if (command.Acknowledgement is null)
         {
             command.Sent = true;
+            await PersistRecoveryAsync(ct); RequireCurrent(ct);
             var acknowledgement = await client.SendAsync(command.Suffix, command.Body, ct); RequireCurrent(ct);
             if (acknowledgement is null || acknowledgement.RequestId != command.Body.RequestId
                 || string.IsNullOrWhiteSpace(acknowledgement.AggregateId) || string.IsNullOrWhiteSpace(acknowledgement.StatusCode)
@@ -400,10 +425,13 @@ public sealed class 분산이행PageViewModel : IDisposable
                 || acknowledgement.Revision <= command.Body.ExpectedRevision)
                 throw new InvalidOperationException("저장 응답의 요청·대상·판본을 확인하지 못했습니다. 같은 요청을 다시 확인해 주세요.");
             command.Acknowledgement = acknowledgement;
+            await PersistRecoveryAsync(ct); RequireCurrent(ct);
         }
         var receipt = await client.ReceiptAsync(command.Body.RequestId, ct); RequireCurrent(ct);
         var acknowledgementResult = command.Acknowledgement;
         if (receipt.RequestId != command.Body.RequestId || receipt.AggregateId != acknowledgementResult.AggregateId
+            || command.AggregateId is { } expectedAggregate && receipt.AggregateId != expectedAggregate
+            || receipt.Revision <= command.Body.ExpectedRevision
             || receipt.Revision != acknowledgementResult.Revision || receipt.Kind != ReceiptKind(command.Action)
             || command.Quantity is { } quantity && receipt.Quantity != quantity
             || command.ReservationId is { } reservation && receipt.ReservationId != reservation)
@@ -412,7 +440,8 @@ public sealed class 분산이행PageViewModel : IDisposable
         var revision = FindRevision(receipt.AggregateId);
         if (revision is null || revision < receipt.Revision)
             throw new InvalidOperationException("처리 후 같은 업무의 최신 상태를 확인하지 못했습니다.");
-        pending = null;
+        await recoveryStore.RemoveAsync(owner!.OwnerId!, RecoveryScope, command.Body.RequestId, ct); RequireCurrent(ct);
+        pending = null; recoveryCreatedAtUtc = null;
         if (Photo.CompletionRequestId == command.Body.RequestId) { Photo.Clear(); photoOperation = null; }
         Message = command.Action == "retry-order-ledger"
             ? SelectedWave?.Orders.FirstOrDefault(x => command.Suffix.EndsWith($"/orders/{분산이행Client.Segment(x.OrderId)}/ledger", StringComparison.Ordinal))?.OrderLedgerConnectionStatusCode switch
@@ -474,7 +503,17 @@ public sealed class 분산이행PageViewModel : IDisposable
             { Clear(); RequiresLogin = status == 401; Error = status == 401 ? "로그인한 뒤 업무를 다시 확인해 주세요." : "이 업무를 처리할 권한이 없습니다."; }
             else
             {
-                if (status is >= 400 and < 500 && status != 408 && pending?.Acknowledgement is null) pending = null;
+                if (status is >= 400 and < 500 && status != 408 && pending is { Acknowledgement: null } rejected)
+                {
+                    try
+                    {
+                        await recoveryStore.RemoveAsync(owner!.OwnerId!, RecoveryScope, rejected.Body.RequestId, ct);
+                        RequireCurrent(ct); pending = null; recoveryCreatedAtUtc = null;
+                    }
+                    catch (Exception) { /* 삭제 실패·계정 전환에서는 원 요청을 보존하고 새 요청을 만들지 않습니다. */ }
+                    if (disposed || mine != generation || ct.IsCancellationRequested) return;
+                    if (client.Transport.Identity(RoleKey) != owner) { AuthenticationChanged(); return; }
+                }
                 Workspace = null; SelectedWave = null; IsLoaded = false;
                 Error = status == 409 ? "업무 상태가 변경되었습니다. 최신 내용을 조회한 뒤 다시 확인해 주세요."
                     : HasPendingCommand ? "요청 결과를 아직 확인하지 못했습니다. 같은 요청의 결과를 확인해 주세요."
@@ -497,7 +536,8 @@ public sealed class 분산이행PageViewModel : IDisposable
         Clear(); owner = null; RequiresLogin = !client.Transport.Identity(RoleKey).IsAuthenticated; IsBusy = false; Changed?.Invoke();
     }
     private void Clear()
-    { ClearRootOrderCandidates(); Workspace = null; SelectedWave = null; SelectedId = null; pending = null; Photo.Clear(); photoOperation = null; IsLoaded = false; Error = Message = ValidationError = null; }
+    { ClearRootOrderCandidates(); Workspace = null; SelectedWave = null; SelectedId = null; pending = null; Photo.Clear(); photoOperation = null; IsLoaded = false; Error = Message = ValidationError = null;
+      recoveryLoaded = false; recoveryCreatedAtUtc = null; expiredRecoveryId = null; }
     private static string? CleanId(string? id) => id is null ? null : RoleWorkspaceNavigation.StableId(id)
         ?? throw new InvalidOperationException("업무 대상의 번호를 확인해 주세요.");
     public void Dispose()

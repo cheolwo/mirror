@@ -6,12 +6,25 @@
 
 <PageTitle>의뢰 최종 검토</PageTitle>
 
+@if (PageModel.HasPendingRequest)
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-3">이전에 보낸 접수의 결과를 먼저 확인해 주세요. 재등록할 때도 같은 원문과 접수 번호를 사용합니다.</MudAlert>
+    <MudStack Row="true" Class="mb-3">
+        <MudButton OnClick="PageModel.RecoverPendingAsync" Disabled="PageModel.IsBusy" StartIcon="@Icons.Material.Filled.Refresh">접수 결과 확인</MudButton>
+        <MudButton OnClick="PageModel.RetryPendingAsync" Disabled="@(!PageModel.CanRetryPendingRequest)">같은 요청으로 다시 등록</MudButton>
+    </MudStack>
+}
+@if (PageModel.RegistrationEnabled == false)
+{
+    <MudButton OnClick="PageModel.InitializeAsync" Disabled="PageModel.IsBusy" Class="mb-3">등록 준비 다시 확인</MudButton>
+}
+
 <ShipperRequestReviewScreen ViewModel="PageModel.State"
                             NavigationContext="RouteContext"
                             ScreenCode="03.06"
                             Title="의뢰 최종 검토"
                             Description="누락과 실행 경계를 확인한 뒤 의뢰 등록을 요청합니다."
-                            RegistrationEnabled="PageModel.RegistrationEnabled"
+                            RegistrationEnabled="@(PageModel.HasPendingRequest ? false : PageModel.RegistrationEnabled)"
                             RegistrationBoundaryMessage="@PageModel.RegistrationBoundaryMessage"
                             StatusMessage="@PageModel.StatusMessage"
                             StatusSeverity="PageModel.StatusSeverity"

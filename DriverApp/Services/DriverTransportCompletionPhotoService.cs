@@ -107,7 +107,7 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
             return new DriverTransportCompletionPhotoResult(
                 Uploaded: true,
                 CompletionRecorded: false,
-                Message: $"사진은 서버에 업로드됐지만 완료 처리는 저장되지 않았습니다. 네트워크 확인 후 다시 완료 버튼을 눌러 주세요. {ex.Message}",
+                Message: $"사진 업로드는 확인했지만 완료 결과를 확인하지 못했습니다. 같은 운송의 현재 상태를 먼저 확인해 주세요. {ex.Message}",
                 Url: upload.Url,
                 ObjectName: upload.ObjectName);
         }
@@ -203,7 +203,7 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
     {
         if (photo.Kind == DriverTransportCompletionPhotoKind.Pickup)
         {
-            await _transportApi.상차완료Async(photo.TransportId, new 기사운송상차완료요청
+            var result = await _transportApi.상차완료Async(photo.TransportId, new 기사운송상차완료요청
             {
                 상차사진ObjectName = upload.ObjectName,
                 상차사진Url = upload.Url,
@@ -216,14 +216,18 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
                 인수증서명생략확인 = photo.ReceiptEvidence?.SignatureOmitted == true,
                 인수증서명생략사유 = photo.ReceiptEvidence?.SignatureOmissionReason
             }, cancellationToken);
+            if (result is null || result.Id != photo.TransportId || result.상태 != "상차완료")
+                throw new InvalidOperationException("요청한 운송의 상차 완료 결과를 확인하지 못했습니다.");
             return;
         }
 
-        await _transportApi.하차완료Async(photo.TransportId, new 기사운송하차완료요청
+        var dropoffResult = await _transportApi.하차완료Async(photo.TransportId, new 기사운송하차완료요청
         {
             하차사진ObjectName = upload.ObjectName,
             하차사진Url = upload.Url
         }, cancellationToken);
+        if (dropoffResult is null || dropoffResult.Id != photo.TransportId || dropoffResult.상태 != "인수완료")
+            throw new InvalidOperationException("요청한 운송의 하차 완료 결과를 확인하지 못했습니다.");
     }
 
     private void ApplyAuthorization(HttpRequestMessage request)

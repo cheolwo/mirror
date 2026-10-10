@@ -15,6 +15,30 @@ namespace Ssalddel.Tests.Clients;
 /// <summary>실제 모바일 adapter와 모의 HTTP 원장의 계약 시험. 실제 서버/DB/기사 UI 실행 증거는 아닙니다.</summary>
 public sealed class ShipperContactWindowApiTests
 {
+    [Theory]
+    [InlineData(HttpStatusCode.NotFound)]
+    [InlineData(HttpStatusCode.ServiceUnavailable)]
+    [InlineData(HttpStatusCode.OK)]
+    public async Task 접수결과조회는_404만미발견으로구분하고_오류를빈결과로바꾸지않는다(HttpStatusCode status)
+    {
+        var auth = new AuthSession(new ShipperRecoveryTokenStore(), new ClientSessionGuard());
+        await auth.ApplyAsync(ShipperRecoveryFixture.Snapshot());
+        using var handler = new RecoveryHandler(status);
+        using var client = new HttpClient(handler) { BaseAddress = new("https://test.invalid/") };
+        var observer = new TransportRequestLedgerObserver();
+        await using var realtime = new TransportRequestLedgerRealtimeClient(client.BaseAddress, _ => Task.FromResult<string?>(null), observer);
+        var service = new ServerBackedShipperOperationsService(client, auth, CreateAuthApi(client, auth), observer, realtime);
+        if (status == HttpStatusCode.ServiceUnavailable)
+            await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetRequestByClientRequestIdAsync("shipper-app-key"));
+        else
+        {
+            var result = await service.GetRequestByClientRequestIdAsync("shipper-app-key");
+            if (status == HttpStatusCode.NotFound) Assert.Null(result);
+            else Assert.Equal("server-ledger-id", result!.의뢰Id);
+        }
+        Assert.Equal("/api/v1/shipper/requests/by-client-request/shipper-app-key", handler.Path);
+    }
+
     [Fact]
     public async Task 실제등록과수정DTO의인계정보는_같은의뢰재조회에서도보존된다()
     {
@@ -97,6 +121,18 @@ public sealed class ShipperContactWindowApiTests
     {
         public Task<노드스티커보유권동기화Response?> LoadAsync(string userId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task SaveAsync(노드스티커보유권동기화Response snapshot, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
+
+    private sealed class RecoveryHandler(HttpStatusCode status) : HttpMessageHandler
+    {
+        public string? Path;
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Assert.Equal(HttpMethod.Get, request.Method); Assert.Equal("Bearer", request.Headers.Authorization?.Scheme);
+            Path = request.RequestUri!.AbsolutePath;
+            return Task.FromResult(new HttpResponseMessage(status) { Content = status == HttpStatusCode.OK
+                ? JsonContent.Create(new 화주운송의뢰응답 { 의뢰Id = "server-ledger-id" }) : new StringContent("not available") });
+        }
     }
 
     private sealed class LedgerHandler : HttpMessageHandler

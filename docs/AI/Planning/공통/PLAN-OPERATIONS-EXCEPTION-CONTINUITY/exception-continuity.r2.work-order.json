@@ -1,0 +1,99 @@
+{
+  "planId": "PLAN-OPERATIONS-EXCEPTION-CONTINUITY",
+  "revision": "r2",
+  "status": "Implemented / LocalValidated / DeviceAndOperationalDeferred",
+  "acceptedBy": "development",
+  "approvalBasis": "2026-10-10 user selected today code refactoring and requested Implement the proposed plan.",
+  "baseCommit": "d1bab3eec08dc0a49c9a87f882590d394205c9a4",
+  "designDocumentRef": "exception-continuity.refactoring.r2.md",
+  "approvedDesignSha256": "A310A6072E86BA1C0F3DC291635BB2574E8FB561BFF311DAA91FE159C8A91DDD",
+  "designSha256": "B91D0ECEE1E6CFC4636A67D6D0D805729A6791299560490B3B428DD204DEF8DC",
+  "primaryOwner": "operations",
+  "writePaths": [
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/",
+    "Ssalddel.Ui.Common/Areas/BackOffice/ViewModels/보호지원관리ViewModel.MemberRecovery.cs",
+    "Ssalddel.Ui.Common/Areas/BackOffice/ViewModels/MemberDeliveryRecoveryState.cs",
+    "Ssalddel.Ui.Common/Areas/BackOffice/Components/PrivacySupport/",
+    "Ssalddel.Tests/Ui/Common/",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-EXCEPTION-CONTINUITY/",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/ProjectOverview/page-docs/",
+    "docs/Changes/2026-10-10-exception-continuity-refactoring-r2.md",
+    "docs/Changes/README.md",
+    "eng/RoleWorkspacePreview/"
+  ],
+  "excludedEffects": [
+    "PublicApiChange",
+    "DatabaseSchemaChange",
+    "PersistentRecoveryFormatChange",
+    "OperationalDatabaseWrite",
+    "Azure",
+    "DeviceInstallation",
+    "RealDispatch",
+    "ExternalNotification",
+    "Payment",
+    "Commit",
+    "Push",
+    "Deploy"
+  ],
+  "validationCeiling": [
+    "Build",
+    "ScopedCsharpTests",
+    "Fast",
+    "Task",
+    "LoopbackRenderedUi"
+  ],
+  "developmentReturnRef": "docs/Changes/2026-10-10-exception-continuity-refactoring-r2.md",
+  "validation": {
+    "Fast": {
+      "passed": true,
+      "testsPassed": 116,
+      "testsFailed": 0,
+      "skipped": 0,
+      "evidence": "artifacts/local/validation/20261010-203326"
+    },
+    "Task": {
+      "passed": true,
+      "testsPassed": 10328,
+      "testsFailed": 0,
+      "environmentSkipped": 15,
+      "buildTarget": "Ssalddel.v3.5.slnx",
+      "evidence": "artifacts/local/validation/20261010-204148"
+    },
+    "LoopbackRenderedUi": {
+      "passed": 37,
+      "failed": 0,
+      "browserErrors": 0,
+      "width": 390,
+      "height": 844,
+      "isolatedFixtures": true,
+      "operationalOrExternalHttpAttempts": 0,
+      "originalStyleReference": "Captured original DOM and CSS with matching theme; static reference, not restored interactive runtime",
+      "evidence": "artifacts/local/exception-continuity-refactoring-r2-20261010/ui/verification.json"
+    },
+    "SourceFingerprint": {
+      "checked": 18,
+      "differences": 0,
+      "before": "artifacts/local/exception-continuity-refactoring-r2-20261010/validation-final-before.json",
+      "after": "artifacts/local/exception-continuity-refactoring-r2-20261010/validation-final-after.json",
+      "runtime": "artifacts/local/exception-continuity-refactoring-r2-20261010/preview-runtime-hashes.json"
+    }
+  },
+  "remainingIssues": [
+    "MongoToSqlProjectionAndFareHandoffPartialRecovery",
+    "C04PhotoUploadLossAndRawRestartNotCovered",
+    "WebAndC06AndAdminPendingNotDurable",
+    "ExistingDependencyAndCompileWarnings"
+  ],
+  "unverified": [
+    "NativeProtectedStorage",
+    "AndroidCamera",
+    "NativeMapResume",
+    "AuthenticatedOperationalHttp",
+    "OperationalDatabaseAndOutbox",
+    "RealDispatch",
+    "ExternalNotification",
+    "Payment"
+  ]
+}

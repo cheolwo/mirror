@@ -228,6 +228,8 @@ public sealed partial class NeighborhoodDeliveryViewModelTests
         public Func<신청개인정보동의기록Request, Task<신청개인정보동의증적Response?>> Consent { get; set; } = _ => Task.FromResult<신청개인정보동의증적Response?>(NeighborhoodDeliveryViewModelTests.Consent());
         public Func<NeighborhoodDeliveryRequest, Task<NeighborhoodDeliveryResponse?>> Create { get; set; } = _ => Task.FromResult<NeighborhoodDeliveryResponse?>(new() { RequestId = "request" });
         public Func<string, Task<NeighborhoodDeliveryResponse?>> Read { get; set; } = _ => Task.FromResult<NeighborhoodDeliveryResponse?>(null);
+        public Func<Guid, Task<NeighborhoodDeliveryResponse?>> SubmissionRead { get; set; } = _ => Task.FromResult<NeighborhoodDeliveryResponse?>(null);
+        public List<Guid> SubmissionReads { get; } = [];
         public Func<NeighborhoodDeliveryDisclosureRequest, Task<NeighborhoodDeliveryDisclosureResponse?>> Disclosure { get; set; } = _ => Task.FromResult<NeighborhoodDeliveryDisclosureResponse?>(null);
         public List<NeighborhoodDeliveryRequest> Created { get; } = [];
         public List<NeighborhoodDeliveryDisclosureRequest> Disclosures { get; } = [];
@@ -238,6 +240,7 @@ public sealed partial class NeighborhoodDeliveryViewModelTests
         public Task<NeighborhoodDeliveryResponse?> CreateAsync(NeighborhoodDeliveryRequest request, CancellationToken ct) { Created.Add(request); return Create(request); }
         public Task<IReadOnlyList<NeighborhoodDeliveryResponse>> MineAsync(int page, CancellationToken ct) => Task.FromResult<IReadOnlyList<NeighborhoodDeliveryResponse>>([]);
         public Task<NeighborhoodDeliveryResponse?> ReadAsync(string requestId, CancellationToken ct) => Read(requestId);
+        public Task<NeighborhoodDeliveryResponse?> ReadSubmissionAsync(Guid requestId, CancellationToken ct) { SubmissionReads.Add(requestId); return SubmissionRead(requestId); }
         public Task<NeighborhoodDeliveryDisclosureResponse?> RecordDisclosureAsync(string requestId, NeighborhoodDeliveryDisclosureRequest request, CancellationToken ct)
         { Disclosures.Add(request); return Disclosure(request); }
     }

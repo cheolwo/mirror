@@ -25,6 +25,8 @@ public interface I생활배송의뢰UseCase
     Task<Result<NeighborhoodDeliveryResponse>> 등록Async(NeighborhoodDeliveryRequest request, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<NeighborhoodDeliveryResponse>> 내목록Async(int page = 1, CancellationToken cancellationToken = default);
     Task<NeighborhoodDeliveryResponse?> 내상세Async(string requestId, CancellationToken cancellationToken = default);
+    Task<NeighborhoodDeliveryResponse?> 내접수조회Async(Guid clientRequestId, CancellationToken cancellationToken = default)
+        => Task.FromResult<NeighborhoodDeliveryResponse?>(null);
 }
 
 /// <summary>
@@ -245,6 +247,15 @@ public sealed class 생활배송의뢰UseCase(
         return items;
     }
 
+    public async Task<NeighborhoodDeliveryResponse?> 내접수조회Async(Guid clientRequestId, CancellationToken cancellationToken = default)
+    {
+        if (clientRequestId == Guid.Empty || string.IsNullOrWhiteSpace(currentUser.UserId)) return null;
+        var key = ClientRequestPrefix + clientRequestId.ToString("N");
+        var id = await db.화주운송의뢰.AsNoTracking().Where(x => x.주문자UserId == currentUser.UserId && x.클라이언트요청Id == key)
+            .Select(x => x.의뢰Id).SingleOrDefaultAsync(cancellationToken);
+        return id is null ? null : await 내상세Async(id, cancellationToken);
+    }
+
     public async Task<NeighborhoodDeliveryResponse?> 내상세Async(string requestId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(currentUser.UserId) || string.IsNullOrWhiteSpace(requestId)) return null;
@@ -307,7 +318,7 @@ public sealed class 생활배송의뢰UseCase(
         }
         if (request?.DispatchMode is not null && !NeighborhoodDispatchModes.IsKnown(request.DispatchMode)) return Fail("InvalidDispatchChoice", "배차 방식을 확인해 주세요.");
         if (request?.CollaborationId is not null && (string.IsNullOrWhiteSpace(request.CollaborationId) || request.CollaborationId.Length > 100
-            || request.ExpectedTermsRevision is null or < 1 || request.DispatchMode is null)) return Fail("AgreementRequired", "현재 협업 조건과 배차 방식을 확인해 주세요.");
+            || request.ExpectedTermsRevision is null or < 1 || !request.MemberDeliveryRequested && request.DispatchMode is null)) return Fail("AgreementRequired", "현재 협업 조건과 수행 방식을 확인해 주세요.");
         if (request?.CollaborationId is null && request?.ExpectedTermsRevision is not null) return Fail("AgreementRequired", "협업 조건 연결을 확인해 주세요.");
         if (request is null || request.ClientRequestId == Guid.Empty) return Fail("InvalidDeliveryRequest", "배송 요청 번호가 필요합니다.");
         if (request.PackageSizeCode is not null)

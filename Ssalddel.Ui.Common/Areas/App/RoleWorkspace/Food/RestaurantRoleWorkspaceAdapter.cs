@@ -102,7 +102,9 @@ public sealed class RestaurantRoleWorkspaceAdapter(IRoleWorkspaceApi api) : IRol
         return new("주문 메뉴", FoodWorkspacePresentation.Value(menu, "메뉴 확인 필요"),
             [new("조리 단계", stage), new("준비 예정", FoodWorkspacePresentation.Time(order.조리예상완료시각Utc)),
              new("준비 완료", FoodWorkspacePresentation.Time(ready)), new("최근 변경", FoodWorkspacePresentation.Time(order.최근변경시각Utc))],
-            new("다음 행동", next));
+            new("다음 행동", next), ExperienceLines: !afterPickup && order.배차상태 == 음식주문배차상태코드.기사배정
+                && 음식점주문수신함처리상태코드.미처리여부(order.상태)
+                ? DeliveryExperiencePresentation.RestaurantLines(order.ExperienceSummaries) : []);
     }
 
     private static string NextGuide(음식주문응답 order, IReadOnlyList<RoleWorkspaceAction> actions, DateTime? ready, DateTime? cooking)

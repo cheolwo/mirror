@@ -90,6 +90,8 @@ public sealed class 분산이행Client(I분산이행Transport transport, string 
         => Transport.GetAsync<DistributedReceiptDto>(RoleKey, Path("receipts/" + requestId.ToString("D")), ct);
     public Task<DistributedPhotoEvidenceDto?> UploadPhotoAsync(DistributedPhotoUploadRequest request, CancellationToken ct)
         => Transport.PostAsync<DistributedPhotoUploadRequest, DistributedPhotoEvidenceDto>(RoleKey, Path("evidence"), request, ct);
+    public Task<DistributedPhotoEvidenceDto> PhotoByUploadAsync(Guid uploadRequestId, CancellationToken ct)
+        => Transport.GetAsync<DistributedPhotoEvidenceDto>(RoleKey, Path("evidence/uploads/" + uploadRequestId.ToString("D")), ct);
     public Task<DistributedCommandResponse?> SendAsync(string suffix, DistributedCommandRequest body, CancellationToken ct)
     {
         if (body.RequestId == Guid.Empty || body.ExpectedRevision < 0)

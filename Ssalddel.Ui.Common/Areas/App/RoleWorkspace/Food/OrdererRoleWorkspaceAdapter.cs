@@ -9,6 +9,7 @@ namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food;
 /// <summary>주문 소유자용 API 투영을 사용하며 역할 선택을 권한으로 판정하지 않습니다.</summary>
 public sealed class OrdererRoleWorkspaceAdapter(IRoleWorkspaceApi api, TimeProvider? clock = null) : IRoleWorkspaceAdapter
 {
+    public const string RequestSupport = "food.request-support";
     private readonly Dictionary<string, 주문자음식주문상세응답> details = new(StringComparer.Ordinal);
     private readonly TimeProvider time = clock ?? TimeProvider.System;
     public string RoleKey => "orderer";
@@ -64,6 +65,8 @@ public sealed class OrdererRoleWorkspaceAdapter(IRoleWorkspaceApi api, TimeProvi
             });
         if (FoodWorkspacePresentation.Available(detail.AvailableActions, 음식배달가능행동Ids.주문취소, "주문 취소",
                 route: FoodWorkspacePresentation.ActionRoute("orderer", 음식배달가능행동Ids.주문취소, order.주문번호)) is { } cancel) actions.Add(cancel);
+        actions.Add(new(RequestSupport, detail.음식점수락시각Utc.HasValue ? "취소·변경 협의 및 거래 문제" : "거래 문제 신고·처리 확인",
+            "/commerce/disputes?sourceKind=food-order&sourceId=" + Uri.EscapeDataString(order.주문번호), RequiresConfirmation: false));
         var sections = item.Sections!.Concat([FoodWorkspacePresentation.Section("배달 진행", ("진행 안내", detail.배달진행.안내),
             ("기사 전달", detail.배달진행.기사전달완료 ? "전달 완료" : "전달 대기"),
             ("내 수령 확인", detail.배달진행.주문자수령확인됨 ? "확인 완료" : "미확인")),
@@ -97,7 +100,9 @@ public sealed class OrdererRoleWorkspaceAdapter(IRoleWorkspaceApi api, TimeProvi
                 [new("조리 예정", FoodWorkspacePresentation.Time(order.조리예상완료시각Utc)),
                  new("최근 변경", FoodWorkspacePresentation.Time(detail.배달진행.최근변경시각Utc)),
                  new("위치 기록", LocationTime(tracking.기록시각Utc)), new("위치 조회", LocationTime(tracking.조회시각Utc)),
-                 new("위치 안내", locationNotice)], new("다음 확인", next)) };
+                 new("위치 안내", locationNotice)], new("다음 확인", next),
+                ExperienceLines: order.상태 == 음식주문상태코드.픽업완료 && !detail.배달진행.기사전달완료
+                    ? DeliveryExperiencePresentation.OrdererLines(detail.ExperienceSummaries) : []) };
     }
 
     private static string Stage(string status) => status switch

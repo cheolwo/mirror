@@ -28,19 +28,105 @@ public sealed class FoodRoleActionViewModelTests
         };
         model.Confirmed = true;
         Assert.False(await model.SubmitAsync());
-        Assert.False(model.IsAwaitingResult);
+        Assert.True(model.IsAwaitingResult);
         Assert.False(await model.CheckResultAsync());
+        Assert.True(model.CanRetrySameRequest);
         var requestId = model.RequestId;
         model.Reason = "바뀐 입력"; model.Confirmed = false; model.Edit();
         Assert.Equal(requestId, model.RequestId);
         model.Confirmed = true;
-        Assert.True(await model.SubmitAsync());
+        Assert.False(await model.SubmitAsync());
+        Assert.Single(api.Writes);
+        Assert.True(await model.RetrySameRequestAsync());
         Assert.Equal(2, api.Writes.Count);
         Assert.Same(api.Writes[0].Body, api.Writes[1].Body);
         var body = Assert.IsType<주문자음식주문취소요청>(api.Writes[1].Body);
         Assert.Equal(requestId, body.클라이언트요청Id);
         Assert.Equal("주문이 중복됐습니다.", body.사유);
         Assert.True(model.IsCompleted);
+    }
+
+    [Fact]
+    public async Task LostRestaurantResponseCompletesFromItsOwnCanonicalHistoryWithoutRepeatingPost()
+    {
+        var api = RestaurantApi(음식배달가능행동Ids.음식점주문수락);
+        using var model = new FoodRoleActionViewModel(api, new Access());
+        await model.InitializeAsync("restaurant", "order-a", 음식배달가능행동Ids.음식점주문수락);
+        model.PreparationMinutes = 30; model.Prepare(); model.Confirmed = true;
+        api.Post = (_, body) =>
+        {
+            var canonical = AcceptedResponse((음식점주문수락요청)body);
+            canonical.상태이력[0].처리UserId = "user-a";
+            api.Reads[RestaurantPath] = canonical;
+            throw new HttpRequestException("response lost after commit");
+        };
+        Assert.True(await model.SubmitAsync()); Assert.True(model.IsCompleted);
+        Assert.Single(api.Writes); Assert.False(model.CanRetrySameRequest);
+    }
+
+    [Fact]
+    public async Task LostResponseCannotCompleteFromAnotherRequestsMatchingStateAndReadFailureBlocksReplay()
+    {
+        var api = RestaurantApi(음식배달가능행동Ids.음식점주문수락);
+        using var model = new FoodRoleActionViewModel(api, new Access());
+        await model.InitializeAsync("restaurant", "order-a", 음식배달가능행동Ids.음식점주문수락);
+        model.PreparationMinutes = 30; model.Prepare(); model.Confirmed = true;
+        api.Post = (_, body) =>
+        {
+            var sameState = AcceptedResponse((음식점주문수락요청)body);
+            sameState.상태이력[0].클라이언트요청Id = Guid.NewGuid();
+            api.Reads[RestaurantPath] = sameState;
+            throw new HttpRequestException("response lost");
+        };
+        Assert.False(await model.SubmitAsync()); Assert.True(model.IsAwaitingResult);
+        Assert.False(model.IsCompleted); Assert.True(model.CanRetrySameRequest);
+        api.AsyncGet = _ => Task.FromException<object>(new HttpRequestException("read unavailable"));
+        Assert.False(await model.RetrySameRequestAsync()); Assert.False(model.CanRetrySameRequest);
+        Assert.Single(api.Writes); Assert.NotNull(model.RequestId);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("other-user")]
+    public async Task LostRestaurantResponseRequiresCurrentOwnersRequestHistory(string? actor)
+    {
+        var api = RestaurantApi(음식배달가능행동Ids.음식점주문수락);
+        using var model = new FoodRoleActionViewModel(api, new Access());
+        await model.InitializeAsync("restaurant", "order-a", 음식배달가능행동Ids.음식점주문수락);
+        model.PreparationMinutes = 30; model.Prepare(); model.Confirmed = true;
+        api.Post = (_, body) =>
+        {
+            var canonical = AcceptedResponse((음식점주문수락요청)body);
+            canonical.상태이력[0].처리UserId = actor; api.Reads[RestaurantPath] = canonical;
+            throw new HttpRequestException("response lost");
+        };
+        Assert.False(await model.SubmitAsync()); Assert.False(model.IsCompleted);
+        Assert.True(model.IsAwaitingResult); Assert.Single(api.Writes);
+    }
+
+    [Fact]
+    public async Task CancelledStatusWithoutRequestHistoryKeepsLostCancellationUnconfirmed()
+    {
+        var api = CancelApi(); using var model = new FoodRoleActionViewModel(api, new Access());
+        await PrepareCancellationAsync(model);
+        api.Post = (_, _) => { api.Reads[CancelPath] = CancelledDetail(); throw new HttpRequestException(); };
+        Assert.False(await model.SubmitAsync()); Assert.True(model.IsAwaitingResult);
+        Assert.False(model.IsCompleted); Assert.True(model.CanRetrySameRequest); Assert.Single(api.Writes);
+        Assert.False(await model.SubmitAsync()); Assert.Single(api.Writes);
+    }
+
+    [Fact]
+    public async Task DisappearedDriverAttemptDoesNotAuthenticateLostInterruptionRequest()
+    {
+        var api = new Api(); api.Reads[DriverPath] = new FoodDeliveryDriverCurrentWorkDto { DriverId = "user-a",
+            ActiveDeliveries = [new() { OfferId = "offer-a", DeliveryAttemptId = "attempt-a", AttemptRevision = 9,
+                AvailableActions = [new() { ActionId = 음식배달가능행동Ids.기사배달중단, ExpectedRevision = 9 }] }] };
+        using var model = new FoodRoleActionViewModel(api, new Access());
+        await model.InitializeAsync("food-driver", "offer-a", 음식배달가능행동Ids.기사배달중단);
+        model.ReasonCode = 음식배달중단사유Code.사고; model.Prepare(); model.Confirmed = true;
+        api.Post = (_, _) => { api.Reads[DriverPath] = new FoodDeliveryDriverCurrentWorkDto { DriverId = "user-a" }; throw new HttpRequestException(); };
+        Assert.False(await model.SubmitAsync()); Assert.False(model.IsCompleted);
+        Assert.True(model.IsAwaitingResult); Assert.True(model.CanRetrySameRequest); Assert.Single(api.Writes);
     }
 
     [Fact]
@@ -97,9 +183,9 @@ public sealed class FoodRoleActionViewModelTests
     public async Task DriverInterruptionRefreshesWorkspaceWhenTheCompletedAttemptDisappears()
     {
         var api = new Api(); var access = new Access();
-        var workspace = new FoodDeliveryDriverWorkspaceDto { DriverId = "user-a", ActiveDeliveries = [new() { OfferId = "offer-a", DeliveryAttemptId = "attempt-a", AttemptRevision = 9,
+        var workspace = new FoodDeliveryDriverCurrentWorkDto { DriverId = "user-a", ActiveDeliveries = [new() { OfferId = "offer-a", DeliveryAttemptId = "attempt-a", AttemptRevision = 9,
             AvailableActions = [new() { ActionId = 음식배달가능행동Ids.기사배달중단, ExpectedRevision = 9 }] }] };
-        api.Reads["api/v1/driver/food-deliveries/workspace"] = workspace;
+        api.Reads["api/v1/driver/food-deliveries/workspace/current"] = workspace;
         api.Post = (_, _) => { workspace.ActiveDeliveries = []; return InterruptedResponse(); };
         using var model = new FoodRoleActionViewModel(api, access);
         await model.InitializeAsync("food-driver", "offer-a", 음식배달가능행동Ids.기사배달중단);
@@ -357,7 +443,7 @@ public sealed class FoodRoleActionViewModelTests
     public async Task DriverChecksOwnWorkspaceAndOriginalAttemptWhileAllowingNewAttemptForSameOffer()
     {
         var api = new Api();
-        var workspace = new FoodDeliveryDriverWorkspaceDto { DriverId = "user-a", ActiveDeliveries = [new()
+        var workspace = new FoodDeliveryDriverCurrentWorkDto { DriverId = "user-a", ActiveDeliveries = [new()
             { OfferId = "offer-a", DeliveryAttemptId = "attempt-a", AttemptRevision = 9,
                 AvailableActions = [new() { ActionId = 음식배달가능행동Ids.기사배달중단, ExpectedRevision = 9 }] }] };
         api.Reads[DriverPath] = workspace; api.Post = (_, _) => InterruptedResponse();
@@ -365,9 +451,9 @@ public sealed class FoodRoleActionViewModelTests
         await model.InitializeAsync("food-driver", "offer-a", 음식배달가능행동Ids.기사배달중단);
         model.ReasonCode = 음식배달중단사유Code.사고; model.Prepare(); model.Confirmed = true;
         Assert.False(await model.SubmitAsync()); Assert.True(model.IsAwaitingResult);
-        api.Reads[DriverPath] = new FoodDeliveryDriverWorkspaceDto { DriverId = "other-user" };
+        api.Reads[DriverPath] = new FoodDeliveryDriverCurrentWorkDto { DriverId = "other-user" };
         Assert.False(await model.CheckResultAsync()); Assert.False(model.IsCompleted);
-        api.Reads[DriverPath] = new FoodDeliveryDriverWorkspaceDto { DriverId = "user-a", ActiveDeliveries =
+        api.Reads[DriverPath] = new FoodDeliveryDriverCurrentWorkDto { DriverId = "user-a", ActiveDeliveries =
             [new() { OfferId = "offer-a", DeliveryAttemptId = "attempt-b", AttemptRevision = 1 }] };
         Assert.True(await model.CheckResultAsync()); Assert.Single(api.Writes);
     }
@@ -402,6 +488,88 @@ public sealed class FoodRoleActionViewModelTests
         Assert.False(await model.SubmitAsync()); Assert.True(model.RequiresLogin);
         Assert.Null(model.RequestId); Assert.Empty(model.Reason); Assert.False(model.IsAwaitingResult);
         Assert.False(await model.CheckResultAsync()); Assert.Single(api.Writes);
+    }
+
+    [Theory]
+    [InlineData(음식배달가능행동Ids.음식점주문수락, 0, false)]
+    [InlineData(음식배달가능행동Ids.음식점주문수락, 1, true)]
+    [InlineData(음식배달가능행동Ids.음식점주문수락, 240, true)]
+    [InlineData(음식배달가능행동Ids.음식점주문수락, 241, false)]
+    [InlineData(음식배달가능행동Ids.음식점조리시간변경, 0, false)]
+    [InlineData(음식배달가능행동Ids.음식점조리시간변경, 1, true)]
+    [InlineData(음식배달가능행동Ids.음식점조리시간변경, 240, true)]
+    [InlineData(음식배달가능행동Ids.음식점조리시간변경, 241, false)]
+    public async Task RequestPreparationKeepsExistingCookingMinuteBoundsWithoutClamping(string action, int minutes, bool valid)
+    {
+        var api = RestaurantApi(action);
+        using var model = new FoodRoleActionViewModel(api, new Access());
+        await model.InitializeAsync("restaurant", "order-a", action);
+        model.PreparationMinutes = minutes; model.Prepare();
+        Assert.Equal(valid, model.RequestId.HasValue); Assert.Empty(api.Writes);
+        if (!valid)
+        {
+            Assert.Equal("조리 예상 시간을 1~240분으로 입력해 주세요.", model.Message);
+            return;
+        }
+        model.Confirmed = true; await model.SubmitAsync();
+        var body = Assert.Single(api.Writes).Body;
+        Assert.Equal(minutes, body is 음식점주문수락요청 acceptance ? acceptance.조리예상분
+            : Assert.IsType<음식점주문진행변경요청>(body).조리예상분);
+    }
+
+    [Fact]
+    public async Task PreparedAcceptanceKeepsImmediatePickupAndOriginalAddressValuesAfterDraftAndSourceChange()
+    {
+        var api = RestaurantApi(음식배달가능행동Ids.음식점주문수락);
+        var source = (음식주문응답)api.Reads[RestaurantPath];
+        source.음식점상세주소 = "1층"; source.음식점위도 = 37.5m; source.음식점경도 = 127m;
+        using var model = new FoodRoleActionViewModel(api, new Access());
+        await model.InitializeAsync("restaurant", "order-a", 음식배달가능행동Ids.음식점주문수락);
+        model.RestaurantName = " 음식점 "; model.RestaurantAddress = " 주소 "; model.RestaurantDetailAddress = " 1층 ";
+        model.ImmediatePickup = true; model.PreparationMinutes = null; model.Reason = " 준비 완료 "; model.Prepare();
+        var requestId = model.RequestId;
+        model.ImmediatePickup = false; model.PreparationMinutes = 40; model.RestaurantAddress = "다른 주소";
+        model.Reason = "다른 메모"; source.음식점위도 = 38m; source.음식점상세주소 = "2층";
+        model.Confirmed = true; await model.SubmitAsync();
+        var write = Assert.Single(api.Writes);
+        Assert.Equal("api/v1/food-orders/order-a/restaurant-acceptance", write.Path);
+        var request = Assert.IsType<음식점주문수락요청>(write.Body);
+        Assert.Equal(requestId, request.클라이언트요청Id); Assert.True(request.즉시픽업가능여부); Assert.Equal(0, request.조리예상분);
+        Assert.Equal("음식점", request.음식점명); Assert.Equal("주소", request.음식점주소); Assert.Equal("1층", request.음식점상세주소);
+        Assert.Equal(37.5m, request.음식점위도); Assert.Equal(127m, request.음식점경도); Assert.Equal("준비 완료", request.수락메모);
+    }
+
+    [Fact]
+    public async Task RequestPreparationRechecksActionExpiryAfterInitialLoadWithoutSending()
+    {
+        var api = RestaurantApi(음식배달가능행동Ids.음식점조리시간변경);
+        using var model = new FoodRoleActionViewModel(api, new Access());
+        await model.InitializeAsync("restaurant", "order-a", 음식배달가능행동Ids.음식점조리시간변경);
+        Assert.True(model.IsLoaded);
+        ((음식주문응답)api.Reads[RestaurantPath]).AvailableActions[0].ExpiresAtUtc = DateTime.UtcNow.AddMinutes(-1);
+        model.PreparationMinutes = 30; model.Prepare();
+        Assert.Null(model.RequestId); Assert.Equal("현재 가능 행동을 다시 조회해 주세요.", model.Message); Assert.Empty(api.Writes);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task DriverRequestPreparationKeepsAllowedOrAttemptRevisionAndFrozenReason(bool hasAllowedRevision)
+    {
+        var api = new Api();
+        api.Reads[DriverPath] = new FoodDeliveryDriverCurrentWorkDto { DriverId = "user-a", ActiveDeliveries =
+            [new() { OfferId = "offer-a", DeliveryAttemptId = "attempt-a", AttemptRevision = 9,
+                AvailableActions = [new() { ActionId = 음식배달가능행동Ids.기사배달중단, ExpectedRevision = hasAllowedRevision ? 10 : null }] }] };
+        using var model = new FoodRoleActionViewModel(api, new Access());
+        await model.InitializeAsync("food-driver", "offer-a", 음식배달가능행동Ids.기사배달중단);
+        model.ReasonCode = 음식배달중단사유Code.사고; model.Reason = " 확인 메모 "; model.Prepare();
+        var requestId = model.RequestId; model.ReasonCode = 음식배달중단사유Code.기타; model.Reason = "변경 메모";
+        model.Confirmed = true; await model.SubmitAsync();
+        var write = Assert.Single(api.Writes);
+        Assert.Equal("api/v1/driver/food-deliveries/offers/offer-a/interruption", write.Path);
+        var request = Assert.IsType<음식배달중단요청>(write.Body);
+        Assert.Equal(requestId, request.클라이언트요청Id); Assert.Equal(hasAllowedRevision ? 10 : 9, request.예상시도Revision);
+        Assert.Equal(음식배달중단사유Code.사고, request.사유Code); Assert.Equal("확인 메모", request.메모);
     }
 
     private static async Task PrepareCancellationAsync(FoodRoleActionViewModel model)
@@ -480,7 +648,7 @@ public sealed class FoodRoleActionViewModelTests
 
     private const string CancelPath = "api/v1/food-orders/order-a";
     private const string RestaurantPath = "api/v1/food-orders/restaurant/inbox/order-a";
-    private const string DriverPath = "api/v1/driver/food-deliveries/workspace";
+    private const string DriverPath = "api/v1/driver/food-deliveries/workspace/current";
     private const string OperatorPath = "api/v1/admin/food-orders/order-a/operations-trace";
     private static 주문자음식주문상세응답 CancelledDetail() => new() { 주문 = new() { 주문번호 = "order-a", 상태 = 음식주문상태코드.취소 } };
     private static 음식주문응답 CancelledResponse(Guid requestId) => new() { 주문번호 = "order-a", Revision = 4, 상태 = 음식주문상태코드.취소,

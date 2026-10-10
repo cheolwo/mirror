@@ -126,11 +126,30 @@ public sealed class NeighborhoodMemberDeliveryRecoveryTests
         var replay=await f.Service(support:support).IssueAsync(work.RequestId,issue);Assert.Equal(work.SupportCaseId,replay.SupportCaseId);Assert.Single(cases.Rows);
         var recovery=new NeighborhoodMemberRecoveryRequest { ClientRequestId=Guid.NewGuid(),ExpectedRevision=work.Revision,SupportCaseId=work.SupportCaseId!,ResolutionCode="CancelBeforePickup" };
         Assert.Equal("MemberRecoveryEvidenceRequired",(await Assert.ThrowsAsync<NeighborhoodMemberDeliveryException>(()=>f.Service().RecoverAsync(work.RequestId,recovery,cases,default))).Code);
+        Assert.Equal("MemberRecoveryEvidenceRequired",(await Assert.ThrowsAsync<NeighborhoodMemberDeliveryException>(()=>f.Service().RecoveryContextAsync(work.RequestId,recovery,cases,default))).Code);
         var row=cases.Rows[work.SupportCaseId!];row.StatusCode="closed";row.ClosedAtUtc=f.Clock.Now;
+        Assert.Equal("MemberRecoveryEvidenceRequired",(await Assert.ThrowsAsync<NeighborhoodMemberDeliveryException>(()=>f.Service().RecoveryContextAsync(work.RequestId,recovery,cases,default))).Code);
         // 이 시험은 지원 저장소 계약에 종결·개별 통지 증거를 공급한다. 실제 외부 발송은 수행하지 않는다.
         row.Notifications=row.PartyUserIds.Select(p=>new 보호지원Notification("result",p,"member","mock-notice",f.Clock.Now,f.Clock.Now,row.ReviewCycle)).ToList();
-        f.Actor.UserId="admin";var result=await f.Service().RecoverAsync(work.RequestId,recovery,cases,default);
+        f.Actor.UserId="admin";
+        var receiptsBefore=await f.Db.Set<NeighborhoodMemberReceipt>().CountAsync();
+        var context=await f.Service().RecoveryContextAsync(work.RequestId,recovery,cases,default);
+        Assert.Equal(work.Revision,context.Revision);Assert.True(context.CanCancelBeforePickup);Assert.Null(context.AppliedClientRequestId);
+        Assert.Equal(receiptsBefore,await f.Db.Set<NeighborhoodMemberReceipt>().CountAsync());
+        var result=await f.Service().RecoverAsync(work.RequestId,recovery,cases,default);
         Assert.Equal("Cancelled",result.StateCode);f.Db.ChangeTracker.Clear();
+        context=await f.Service().RecoveryContextAsync(work.RequestId,recovery,cases,default);
+        Assert.Equal(recovery.ClientRequestId,context.AppliedClientRequestId);Assert.Equal(recovery.ResolutionCode,context.AppliedResolutionCode);
+        Assert.False(context.CanResume);Assert.False(context.CanCancelBeforePickup);
+        var changedBody=new NeighborhoodMemberRecoveryRequest { ClientRequestId=recovery.ClientRequestId,ExpectedRevision=recovery.ExpectedRevision,
+            SupportCaseId=recovery.SupportCaseId,ResolutionCode="Resume" };
+        Assert.Equal("IdempotencyConflict",(await Assert.ThrowsAsync<NeighborhoodMemberDeliveryException>(()=>f.Service().RecoveryContextAsync(work.RequestId,changedBody,cases,default))).Code);
+        f.Actor.UserId="other-admin";context=await f.Service().RecoveryContextAsync(work.RequestId,recovery,cases,default);
+        Assert.Equal("Cancelled",context.StateCode);Assert.Null(context.AppliedClientRequestId);
+        row.SourceId="another-delivery";
+        Assert.Equal("MemberRecoveryEvidenceRequired",(await Assert.ThrowsAsync<NeighborhoodMemberDeliveryException>(()=>f.Service().RecoveryContextAsync(work.RequestId,recovery,cases,default))).Code);
+        row.SourceId=work.RequestId;row.ReviewCycle++;
+        Assert.Equal("MemberRecoveryEvidenceRequired",(await Assert.ThrowsAsync<NeighborhoodMemberDeliveryException>(()=>f.Service().RecoveryContextAsync(work.RequestId,recovery,cases,default))).Code);
         Assert.Null((await f.Db.Set<NeighborhoodMemberParticipation>().SingleAsync()).ActiveRequestId);
         var source=await f.Db.화주운송의뢰.SingleAsync();Assert.Equal(상태값.의뢰상태.취소,source.상태);Assert.Equal(상태값.결제상태.결제대기,source.결제상태);
     }

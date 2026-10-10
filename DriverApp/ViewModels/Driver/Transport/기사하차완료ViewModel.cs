@@ -7,6 +7,7 @@ namespace DriverApp.ViewModels.Driver.Transport;
 public sealed partial class 기사하차완료ViewModel(
     IDriverTransportCompletionPhotoService completionService) : ObservableObject
 {
+    private long _generation;
     [ObservableProperty]
     public partial bool 처리중 { get; private set; }
 
@@ -25,9 +26,11 @@ public sealed partial class 기사하차완료ViewModel(
 
         try
         {
+            var generation = _generation;
             처리중 = true;
             결과 = null;
-            결과 = await completionService.CompleteWithPhotoAsync(request, cancellationToken);
+            var result = await completionService.CompleteWithPhotoAsync(request, cancellationToken);
+            if (generation == _generation && !cancellationToken.IsCancellationRequested) 결과 = result;
         }
         finally
         {
@@ -37,6 +40,8 @@ public sealed partial class 기사하차완료ViewModel(
 
     public void 초기화()
     {
+        ++_generation;
+        처리Command.Cancel();
         처리중 = false;
         결과 = null;
     }

@@ -1,5 +1,7 @@
 using System.Text.Json;
 using Ssalddel.Contracts.Common.Warehouse;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
+using Ssalddel.Ui.Common.Areas.App.Services;
 
 namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment;
 
@@ -11,12 +13,14 @@ public sealed class 분산사진업무Session(I업무사진촬영Adapter capture
     public DistributedEvidenceWorkRequest? Work { get; private set; }
     public string Title { get; private set; } = "";
     public bool CaptureSupported => capture.IsSupported;
-    public IReadOnlyList<업무촬영사진> Photos => photos.Select(item => item.Photo).ToArray();
+    public IReadOnlyList<업무촬영사진> Photos => photos.Where(item => item.Photo is not null).Select(item => item.Photo!).ToArray();
     public IReadOnlyList<string> EvidenceIds => photos.Where(item => item.Evidence is not null).Select(item => item.Evidence!.EvidenceId).ToArray();
     public bool HasPhotos => photos.Count is > 0 and <= 3;
     public bool UploadStarted => photos.Any(item => item.UploadStarted);
     public bool HasUnresolvedUpload => photos.Any(item => item.UploadStarted && item.Evidence is null);
     public bool FullyUploaded => HasPhotos && photos.All(item => item.Evidence is not null);
+    public bool Restored { get; private set; }
+    public bool NeedsRecapture => photos.Any(item => item.Photo is null && item.Evidence is null);
     public Guid? CompletionRequestId => Body(Work)?.RequestId;
     public bool Bind(DistributedEvidenceWorkRequest work, string title)
     {
@@ -41,24 +45,66 @@ public sealed class 분산사진업무Session(I업무사진촬영Adapter capture
     }
     public void Remove(int index)
     { if (!UploadStarted && index >= 0 && index < photos.Count) photos.RemoveAt(index); }
-    public async Task UploadAsync(분산이행Client client, CancellationToken ct, Action requireCurrent)
+    public async Task UploadAsync(분산이행Client client, CancellationToken ct, Action requireCurrent, Func<Task>? persist = null)
     {
         if (Work is null || !HasPhotos) throw new InvalidOperationException("완료 사진을 먼저 촬영하고 확인해 주세요.");
         foreach (var item in photos)
         {
             if (item.Evidence is not null) continue;
+            if (item.UploadStarted)
+            {
+                try
+                {
+                    var saved = await client.PhotoByUploadAsync(item.UploadRequestId, ct); requireCurrent();
+                    AcceptEvidence(item, saved);
+                    if (persist is not null) await persist();
+                    continue;
+                }
+                catch (RoleWorkspaceAccessException ex) when (ex.StatusCode == 404) { }
+                catch (SsalddelApiException ex) when (ex.StatusCode == 404) { }
+            }
+            if (item.Photo is null) throw new InvalidOperationException("사진 원본은 단말에 보관하지 않습니다. 미저장 결과를 확인한 뒤 현재 업무에서 다시 촬영해 주세요.");
             item.UploadStarted = true;
+            if (persist is not null) await persist();
+            requireCurrent();
             var response = await client.UploadPhotoAsync(new() { UploadRequestId = item.UploadRequestId, Work = Work,
                 ContentType = item.Photo.ContentType, ImageBase64 = Convert.ToBase64String(item.Photo.Bytes), CapturedAtUtc = item.CapturedAtUtc }, ct);
             requireCurrent();
-            if (response is null || string.IsNullOrWhiteSpace(response.EvidenceId) || response.Kind != Work.Kind || response.AggregateId != Work.AggregateId
-                || response.CompletionRequestId != CompletionRequestId || response.InputDigest != DistributedEvidenceDigests.Payload(Body(Work)!)
+            AcceptEvidence(item, response);
+            if (persist is not null) await persist();
+        }
+    }
+    private void AcceptEvidence(사진항목 item, DistributedPhotoEvidenceDto? response)
+    {
+            var work = Work ?? throw new InvalidOperationException("사진을 확인할 원 업무가 없습니다.");
+            var body = Body(work) ?? throw new InvalidOperationException("사진의 완료 요청을 확인하지 못했습니다.");
+            if (response is null || string.IsNullOrWhiteSpace(response.EvidenceId) || response.Kind != work.Kind || response.AggregateId != work.AggregateId
+                || response.CompletionRequestId != body.RequestId || response.InputDigest != DistributedEvidenceDigests.Payload(body)
                 || string.IsNullOrEmpty(response.BindingDigest) || response.BindingDigest.Length != 64 || response.BindingDigest.Any(c => !Uri.IsHexDigit(c))
-                || photos.Any(other => other.Evidence is { } stored && (stored.BindingDigest != response.BindingDigest || stored.EvidenceId == response.EvidenceId))
+                || photos.Any(other => !ReferenceEquals(other, item) && other.Evidence is { } stored && (stored.BindingDigest != response.BindingDigest || stored.EvidenceId == response.EvidenceId))
                 || response.StatusCode is not ("Uploaded" or "Bound") || !response.ReadAllowed
                 || response.ContentType is not ("image/jpeg" or "image/png") || response.Bytes is <= 0 or > 5 * 1024 * 1024)
                 throw new InvalidOperationException("사진 저장 응답의 업무 연결을 확인하지 못했습니다. 같은 사진 전송 결과를 다시 확인해 주세요.");
             item.Evidence = response;
+    }
+
+    public DistributedPhotoSessionRecovery? Snapshot() => Work is null ? null : new(Work, Title,
+        photos.Select(item => new DistributedPhotoPendingUpload(item.UploadRequestId, item.CapturedAtUtc, item.UploadStarted)).ToArray());
+    public void Restore(DistributedPhotoSessionRecovery saved)
+    {
+        if (Body(saved.Work) is not { RequestId: var id } || id == Guid.Empty || saved.Uploads.Count is < 1 or > 3
+            || saved.Uploads.Any(item => item.UploadRequestId == Guid.Empty) || saved.Uploads.Select(item => item.UploadRequestId).Distinct().Count() != saved.Uploads.Count)
+            throw new InvalidDataException("이전 사진의 업무 연결을 확인하지 못했습니다.");
+        Clear(); Work = saved.Work; Title = saved.Title; context = DistributedEvidenceDigests.Payload(Work); Restored = true;
+        foreach (var item in saved.Uploads) photos.Add(new(null, item.UploadRequestId, item.CapturedAtUtc) { UploadStarted = item.UploadStarted });
+    }
+    public async Task RecoverUploadsAsync(분산이행Client client, CancellationToken ct, Action requireCurrent)
+    {
+        foreach (var item in photos.Where(item => item.UploadStarted))
+        {
+            try { var saved = await client.PhotoByUploadAsync(item.UploadRequestId, ct); requireCurrent(); AcceptEvidence(item, saved); }
+            catch (RoleWorkspaceAccessException ex) when (ex.StatusCode == 404) { requireCurrent(); }
+            catch (SsalddelApiException ex) when (ex.StatusCode == 404) { requireCurrent(); }
         }
     }
     public DistributedCommandRequest CompletionBody()
@@ -75,15 +121,19 @@ public sealed class 분산사진업무Session(I업무사진촬영Adapter capture
         }
         return body;
     }
-    public void Clear() { photos.Clear(); context = null; Work = null; Title = ""; }
+    public void Clear() { photos.Clear(); context = null; Work = null; Title = ""; Restored = false; }
     public static DistributedCommandRequest? Body(DistributedEvidenceWorkRequest? work) => work?.Kind switch
     { "Receive" => work.Receive, "Pick" => work.Pick, "Deliver" => work.Deliver, "Return" => work.Return, "ImportLot" => work.ImportLot, _ => null };
-    private sealed class 사진항목(업무촬영사진 photo, Guid uploadRequestId, DateTime capturedAtUtc)
+    private sealed class 사진항목(업무촬영사진? photo, Guid uploadRequestId, DateTime capturedAtUtc)
     {
-        public 업무촬영사진 Photo { get; } = photo;
+        public 업무촬영사진? Photo { get; } = photo;
         public Guid UploadRequestId { get; } = uploadRequestId;
         public DateTime CapturedAtUtc { get; } = capturedAtUtc;
         public bool UploadStarted { get; set; }
         public DistributedPhotoEvidenceDto? Evidence { get; set; }
     }
 }
+
+public sealed record DistributedPhotoSessionRecovery(DistributedEvidenceWorkRequest Work, string Title,
+    IReadOnlyList<DistributedPhotoPendingUpload> Uploads);
+public sealed record DistributedPhotoPendingUpload(Guid UploadRequestId, DateTime CapturedAtUtc, bool UploadStarted);

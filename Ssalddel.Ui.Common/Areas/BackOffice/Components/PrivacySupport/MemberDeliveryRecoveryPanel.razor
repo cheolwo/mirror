@@ -1,0 +1,45 @@
+@namespace Ssalddel.Ui.Common.Areas.BackOffice.Components.PrivacySupport
+@using Ssalddel.Ui.Common.Areas.BackOffice.ViewModels
+@using Ssalddel.Contracts.Common.PrivacySupport
+
+@if (ShowPendingResult)
+{
+    @if (Model.HasRecoveryPending)
+    {
+        <section aria-label="배송 복구 결과 확인"><h2>배송 복구 결과 확인</h2><p>요청 내용을 보존했습니다. 최신 배송과 이번 요청의 처리 기록을 확인하세요.</p>
+            <button class="support-primary" disabled="@Model.IsBusy" @onclick="Model.CheckRecoveryAsync">결과 다시 확인</button>
+            @if (Model.CanRetryRecovery) { <button disabled="@Model.IsBusy" @onclick="Model.RetryRecoveryAsync">같은 복구 요청 다시 확인</button> }
+        </section>
+    }
+}
+else if (Model.Detail is { } row && row.Kind == 보호지원종류Codes.분쟁 && row.SourceKind == 보호지원출처Codes.생활배송 && row.StatusCode == "closed")
+{
+    <section aria-label="연결된 배송 복구"><h2>연결된 배송 복구</h2>
+        <p>사건 종결과 배송 처리는 별개입니다. 당사자에게 안내한 결과에 맞춰 배송을 재개하거나 픽업 전에 취소합니다.</p>
+        <button disabled="@(!Model.CanLoadRecovery)" @onclick="Model.LoadRecoveryAsync">연결된 배송 확인</button>
+        @if (Model.Recovery is { } recovery)
+        {
+            <p>현재 배송: @DeliveryStatus(recovery.StateCode)</p>
+            @if (recovery.BlockReason is { Length: > 0 } reason) { <p class="support-warning">@reason</p> }
+            @if (recovery.CanResume || recovery.CanCancelBeforePickup)
+            {
+                <fieldset disabled="@(Model.IsBusy || Model.HasPending)">
+                    <label for="member-recovery-resolution">배송 처리</label>
+                    <select id="member-recovery-resolution" @bind="Model.RecoveryResolution">
+                        @if (recovery.CanResume) { <option value="Resume">배송 재개</option> }
+                        @if (recovery.CanCancelBeforePickup) { <option value="CancelBeforePickup">픽업 전 취소</option> }
+                    </select>
+                    <label class="support-check"><input type="checkbox" @bind="Model.RecoveryConfirmed" />안내한 처리방안과 현재 배송을 확인했습니다.</label>
+                    <p class="support-muted">재개한 단계에서는 새 사진이 필요합니다. 이 처리는 수령 확인·정산·환불·지급을 완료하지 않습니다.</p>
+                    <button class="support-primary" disabled="@(!Model.CanSubmitRecovery)" @onclick="Model.SubmitRecoveryAsync">선택한 배송 처리 요청</button>
+                </fieldset>
+            }
+        }
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired] public 보호지원관리ViewModel Model { get; set; } = default!;
+    [Parameter] public bool ShowPendingResult { get; set; }
+    private static string DeliveryStatus(string code) => code switch { "Issue" => "문제 검토 대기", "Assigned" => "픽업 대기", "PickedUp" => "전달 대기", "Delivered" => "전달 완료", "Cancelled" => "취소됨", _ => "최신 상태 확인" };
+}

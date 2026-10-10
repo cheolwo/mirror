@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Ssalddel.Contracts.Common.PrivacySupport;
+using Ssalddel.Contracts.Common.Community;
 using Ssalddel.Ui.Common.Areas.App.Services;
 
 namespace Ssalddel.Ui.Common.Areas.BackOffice.Services;
@@ -12,12 +13,15 @@ public interface I보호지원관리Client
     Task<보호지원CaseResponse> 상세Async(string caseId, CancellationToken ct);
     Task<보호지원CaseResponse> 변경Async(string caseId, 보호지원CommandRequest request, CancellationToken ct);
     Task<보호지원증거Response> 비공개확인Async(string caseId, CancellationToken ct);
+    Task<NeighborhoodMemberRecoveryContextResponse> 배송복구조회Async(string requestId, NeighborhoodMemberRecoveryRequest request, CancellationToken ct);
+    Task<NeighborhoodMemberRecoveryResponse> 배송복구Async(string requestId, NeighborhoodMemberRecoveryRequest request, CancellationToken ct);
 }
 
 public sealed class 보호지원관리Client(ISsalddelJsonApiClient api) : I보호지원관리Client
 {
     private const string Root = "api/v1/admin/privacy-support/cases";
     private static string Case(string id) => Root + "/" + Uri.EscapeDataString(id);
+    private static string Delivery(string id) => "api/v1/admin/neighborhood-member-deliveries/" + Uri.EscapeDataString(id);
     public async Task<보호지원ListResponse> 목록Async(string kind, int page, CancellationToken ct)
         => await api.GetAsync<보호지원ListResponse>(Root + "?kind=" + Uri.EscapeDataString(kind)
             + "&page=" + Math.Clamp(page, 1, 10000), "보호 지원 접수 목록", false, ct) ?? throw new InvalidOperationException();
@@ -29,6 +33,15 @@ public sealed class 보호지원관리Client(ISsalddelJsonApiClient api) : I보�
     public async Task<보호지원증거Response> 비공개확인Async(string caseId, CancellationToken ct)
         => await api.GetAsync<보호지원증거Response>(Case(caseId) + "/evidence?reasonCode=case-review",
             "담당자 비공개 기록 확인", false, ct) ?? throw new InvalidOperationException();
+    public async Task<NeighborhoodMemberRecoveryContextResponse> 배송복구조회Async(string requestId, NeighborhoodMemberRecoveryRequest request, CancellationToken ct)
+        => await api.GetAsync<NeighborhoodMemberRecoveryContextResponse>(Delivery(requestId) + "/recovery?supportCaseId=" + Uri.EscapeDataString(request.SupportCaseId)
+            + "&clientRequestId=" + request.ClientRequestId.ToString("D")
+            + "&expectedRevision=" + request.ExpectedRevision.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            + "&resolutionCode=" + Uri.EscapeDataString(request.ResolutionCode), "연결된 생활 배송 복구 확인", false, ct)
+            ?? throw new InvalidOperationException();
+    public async Task<NeighborhoodMemberRecoveryResponse> 배송복구Async(string requestId, NeighborhoodMemberRecoveryRequest request, CancellationToken ct)
+        => await api.SendAsync<NeighborhoodMemberRecoveryRequest, NeighborhoodMemberRecoveryResponse>(HttpMethod.Post,
+            Delivery(requestId) + "/recover", request, "연결된 생활 배송 복구", cancellationToken: ct) ?? throw new InvalidOperationException();
 }
 
 public static class 보호지원관리UiModule

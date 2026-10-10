@@ -24,6 +24,15 @@ public static class MauiProgram
         builder.Services.AddSingleton<IPlatformCommunityNodeNavigationResolver, WarehousePlatformCommunityNodeNavigationResolver>();
         builder.Services.AddSingleton<IPlatformHomeWorkspaceNavigationResolver, WarehousePlatformHomeWorkspaceNavigationResolver>();
         builder.Services.AddSsalddelUiCommonAppServices<WarehouseAccessTokenProvider>();
+        builder.Services.AddScoped<IWorkflowRecoveryStore>(services =>
+        {
+            var session = services.GetRequiredService<Ssalddel.Client.Infrastructure.Security.ClientAuthSession>();
+            return new Ssalddel.Client.Infrastructure.Native.MauiRoleWorkflowRecoveryStore(() =>
+            {
+                var current = session.CaptureIdentity();
+                return new Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.RoleWorkspaceIdentity(current.OwnerId, current.Revision, session.IsAuthenticated);
+            }, "warehouse");
+        });
 #if DEBUG || SSALDDEL_USB_FIELD_TEST
         const bool allowInsecureDebugEndpoint = true;
 #else

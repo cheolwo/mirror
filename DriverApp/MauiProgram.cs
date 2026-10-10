@@ -28,6 +28,13 @@ public static class MauiProgram
 
 		builder.Services.AddDriverAppServices(builder.Configuration);
 		builder.Services.AddSsalddelUiCommonAppServices<IAuthSession>();
+        builder.Services.AddScoped<IWorkflowRecoveryStore>(services =>
+        {
+            var session = services.GetRequiredService<IAuthSession>();
+            return new Ssalddel.Client.Infrastructure.Native.MauiRoleWorkflowRecoveryStore(
+                () => new Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.RoleWorkspaceIdentity(
+                    session.UserId, session.SessionRevision, session.IsAuthenticated), "cargo-driver");
+        });
 #if DEBUG || SSALDDEL_USB_FIELD_TEST
 		const bool allowInsecureDebugEndpoint = true;
 #else

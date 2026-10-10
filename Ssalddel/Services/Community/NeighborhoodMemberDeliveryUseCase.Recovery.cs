@@ -46,13 +46,7 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase
     {
         Gate(); var actor = Actor(); var digest = Digest(request);
         Require(request.ResolutionCode is "Resume" or "CancelBeforePickup", "MemberRecoveryInvalid", "재개 또는 픽업 전 취소를 선택해 주세요.", 400);
-        var incident = await cases.조회Async(request.SupportCaseId, ct);
-        Require(incident is not null && incident.SourceKind == 보호지원출처Codes.생활배송 && incident.SourceId == requestId
-            && incident.StatusCode == "closed" && incident.ClosedAtUtc is not null
-            && incident.PartyUserIds.Length > 0 && incident.PartyUserIds.All(p => incident.Notifications.Any(n => n.Kind == "result"
-                && n.RecipientUserId == p && n.ReviewCycle == incident.ReviewCycle && n.DeliveredAtUtc != default
-                && !string.IsNullOrWhiteSpace(n.EvidenceRef))),
-            "MemberRecoveryEvidenceRequired", "당사자에게 결과가 통지된 종결 지원 사건이 필요합니다.");
+        await RequireRecoveryEvidenceAsync(requestId, request.SupportCaseId, cases, ct);
         await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         if (await ReplayAsync(actor, request.ClientRequestId, "Recovery", requestId, digest, ct))
         {
@@ -83,5 +77,46 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase
         await SaveAsync(ct); await tx.CommitAsync(ct);
         await SyncLedgerAsync(requestId, actor, ct);
         return new() { RequestId = requestId, Revision = row.Revision, StateCode = row.StateCode };
+    }
+
+    /// <summary>관리자 Controller에서만 소비하며 실제 복구와 지급은 실행하지 않는 정본 조회입니다.</summary>
+    public async Task<NeighborhoodMemberRecoveryContextResponse> RecoveryContextAsync(string requestId, NeighborhoodMemberRecoveryRequest request,
+        I보호지원Store cases, CancellationToken ct)
+    {
+        Gate(); var actor = Actor();
+        await RequireRecoveryEvidenceAsync(requestId, request.SupportCaseId, cases, ct);
+        var row = await Deliveries.AsNoTracking().SingleOrDefaultAsync(x => x.RequestId == requestId, ct);
+        Require(row is not null && row.SupportCaseId == request.SupportCaseId,
+            "MemberRecoveryChanged", "업무 또는 지원 사건이 바뀌었습니다.");
+        var applied = request.ClientRequestId != Guid.Empty
+            && await ReplayAsync(actor, request.ClientRequestId, "Recovery", requestId, Digest(request), ct);
+        var canResume = row!.StateCode == "Issue" && row.AssignedAtUtc > Now.AddHours(-72);
+        string? reason = row.StateCode != "Issue" ? "현재 배송은 문제 검토 대기 상태가 아닙니다."
+            : !canResume ? "정보 제공 동의 기한을 다시 확인해 주세요." : null;
+        if (canResume)
+        {
+            try { await RequireApplicationConsentAsync(row, ct); }
+            catch (NeighborhoodMemberDeliveryException ex) when (ex.Code is "MemberDisclosureChanged" or "PrivacyConsentRequired")
+            { canResume = false; reason = ex.Message; }
+        }
+        return new()
+        {
+            RequestId = row.RequestId, SupportCaseId = request.SupportCaseId, Revision = row.Revision,
+            StateCode = row.StateCode, IssueCode = row.IssueCode, CanResume = canResume,
+            CanCancelBeforePickup = row.StateCode == "Issue" && row.IssueCode == "BeforePickupReviewRequired",
+            BlockReason = reason, AppliedClientRequestId = applied ? request.ClientRequestId : null,
+            AppliedResolutionCode = applied ? request.ResolutionCode : null
+        };
+    }
+
+    private static async Task RequireRecoveryEvidenceAsync(string requestId, string supportCaseId, I보호지원Store cases, CancellationToken ct)
+    {
+        var incident = await cases.조회Async(supportCaseId, ct);
+        Require(incident is not null && incident.SourceKind == 보호지원출처Codes.생활배송 && incident.SourceId == requestId
+            && incident.StatusCode == "closed" && incident.ClosedAtUtc is not null
+            && incident.PartyUserIds.Length > 0 && incident.PartyUserIds.All(p => incident.Notifications.Any(n => n.Kind == "result"
+                && n.RecipientUserId == p && n.ReviewCycle == incident.ReviewCycle && n.DeliveredAtUtc != default
+                && !string.IsNullOrWhiteSpace(n.EvidenceRef))),
+            "MemberRecoveryEvidenceRequired", "당사자에게 결과가 통지된 종결 지원 사건이 필요합니다.");
     }
 }

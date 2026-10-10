@@ -6,6 +6,8 @@
 
 ## 페이지 책임 카드
 
+2026-10-10 공통 음식 업무 화면의 보완 책임: 응답 유실 후에는 결과 확인을 우선하며 원 요청 근거 없이 현재 상태만으로 완료를 확정하지 않는다. 근거가 부족하면 같은 번호/원문을 명시적으로 다시 확인한다. 주문자 지도 상세의 문제 접수는 원주문과 안전한 복귀 경로를 기존 지원 기능으로 넘긴다. 지원 접수 자체가 취소/환불 완료는 아니다. [승인 범위](../../AI/Planning/공통/PLAN-OPERATIONS-EXCEPTION-CONTINUITY/exception-continuity.implementation.r1.md).
+
 ### 주문자의 선택 주문 취소
 
 | 항목 | 현재 구현 |
@@ -73,7 +75,7 @@
 | 보조 정보 | 유산 추정 여부, 기존 검토 사유·악용 확정 기록. 보호 대상에서 기사 책임으로 바꾸려면 사람 검토의 악용 확정이 필요하다. |
 | 독립 업무·제외 정보 | [ReviewWorkspace](../../../SsalddelAdmin/Components/Pages/FoodDeliveryInterruptionReviewWorkspace.razor)가 추적 폼·모의 지급과 상호 배타적으로 표시된다. 검토는 자동 재배차나 실제 지급을 실행하지 않는다. 새 귀책 정책도 만들지 않는다. |
 | 진입·실패·복귀 | 전송 중 입력/대상 변경 잠금. 응답 유실은 정본 재조회 후 같은 입력이면 원래 요청 ID·예상 revision으로 재시도한다. 409는 요청을 새로 만들기 전에 최신 시도와 근거를 다시 확인한다. 401은 추적 정보를 숨기고 독립 로그인으로 복귀한다. 주문/인증 변경·이탈은 늦은 응답을 무효화한다. |
-| 책임 판정 | 독립 모드·상태 소유자 [FoodDeliveryInterruptionReviewState](../../../SsalddelAdmin/Services/FoodDeliveryInterruptionReviewState.cs)·진입/복귀를 둔 분리. 기존 관리자 route와 모의 지급 책임을 보존한다. |
+| 책임 판정 | 독립 모드·상태 소유자 [FoodDeliveryInterruptionReviewState](../../../Ssalddel.Ui.Common/Areas/BackOffice/Services/FoodDeliveryInterruptionReviewState.cs)·진입/복귀를 둔 분리. 기존 관리자 route와 모의 지급 책임을 보존한다. |
 
 ## 코드·API에서 DB까지
 

@@ -89,6 +89,8 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
         var isServerAdmin = 주문자권한검사.IsServerAdmin(_currentUserAccessor);
         var shipperId = 주문자권한검사.ResolveShipperId(_currentUserAccessor, currentUserId, request.화주Id);
         var clientRequestId = request.클라이언트요청Id?.Trim() ?? string.Empty;
+        var isMobileSubmission = clientRequestId.StartsWith("shipper-app-", StringComparison.Ordinal)
+            && Guid.TryParseExact(clientRequestId[12..], "N", out _);
         if (!string.IsNullOrWhiteSpace(clientRequestId))
         {
             var duplicate = await _db.화주운송의뢰
@@ -129,7 +131,10 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
             모의처리처수행 = request.SimulationFulfillment,
             자동처리처수행 = request.SimulationFulfillment && request.SimulationAutomaticFulfillment,
             모의처리희망완료Utc = request.SimulationFulfillment ? request.SimulationDesiredCompletionUtc : null,
-            의뢰Id = clientRequestId.StartsWith(Ssalddel.Contracts.Common.Community.NeighborhoodDeliveryRoutes.ClientRequestPrefix, StringComparison.Ordinal)
+            // 새 모바일 접수는 첫 요청이 아직 저장 중이어도 같은 Mongo 원장/CAS와 RDB 키를 사용합니다.
+            // 기존 요청의 ID와 생활배송 키 의미는 변경하지 않습니다.
+            의뢰Id = (clientRequestId.StartsWith(Ssalddel.Contracts.Common.Community.NeighborhoodDeliveryRoutes.ClientRequestPrefix, StringComparison.Ordinal)
+                    || isMobileSubmission)
                 ? new Guid(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(currentUserId + ":" + clientRequestId)).AsSpan(0, 16)).ToString()
                 : Guid.NewGuid().ToString(),
             화주Id = shipperId,
@@ -184,10 +189,14 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
             UpdatedAt = DateTime.UtcNow
         };
 
-        var ledger = await _원장동기화Service.화주운송의뢰동기화Async(entity, currentUserId, cancellationToken);
+        var ledger = isMobileSubmission
+            ? await _원장동기화Service.화주운송의뢰신규접수Async(entity, currentUserId, cancellationToken)
+            : await _원장동기화Service.화주운송의뢰동기화Async(entity, currentUserId, cancellationToken);
         if (ledger is null)
         {
-            return Result.Fail<화주운송의뢰응답>("운송 의뢰 원장을 저장하지 못했습니다.");
+            return Result.Fail<화주운송의뢰응답>(isMobileSubmission
+                ? "접수 결과를 아직 확인하지 못했습니다. 같은 접수 번호로 결과를 조회해 주세요. 기존 원장을 수정하거나 새 번호로 재등록하지 않았습니다."
+                : "운송 의뢰 원장을 저장하지 못했습니다.");
         }
 
         var projectedEntity = await _db.화주운송의뢰

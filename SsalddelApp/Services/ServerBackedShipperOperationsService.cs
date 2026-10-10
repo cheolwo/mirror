@@ -67,6 +67,26 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
         return item;
     }
 
+    public async Task<ShipperRequestItem?> GetRequestByClientRequestIdAsync(
+        string clientRequestId, CancellationToken cancellationToken = default)
+    {
+        await EnsureAuthorizedConnectionAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(clientRequestId))
+            throw new InvalidOperationException("확인할 접수 요청 번호가 없습니다.");
+        using var request = CreateAuthorizedRequest(HttpMethod.Get,
+            $"api/v1/shipper/requests/by-client-request/{Uri.EscapeDataString(clientRequestId.Trim())}");
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException(await BuildFailureMessageAsync(response, "접수 결과 확인", cancellationToken));
+        var source = await response.Content.ReadFromJsonAsync<화주운송의뢰응답>(cancellationToken);
+        if (source is null || string.IsNullOrWhiteSpace(source.의뢰Id))
+            throw new InvalidOperationException("접수 결과의 운송 의뢰를 확인하지 못했습니다.");
+        var item = ToRequestItem(source);
+        Observe(item, "SsalddelApp.RequestRecovery");
+        return item;
+    }
+
     public async Task<IReadOnlyList<공개화물요약응답>> GetPublicCargoAsync(CancellationToken cancellationToken = default)
     {
         using var response = await _httpClient.GetAsync("api/v1/shipper/requests/public", cancellationToken);

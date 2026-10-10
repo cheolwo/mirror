@@ -43,6 +43,10 @@ public sealed class SmokeAwareShipperOperationsService : IShipperOperationsServi
             token => _sample.GetPublicCargoAsync(token),
             cancellationToken);
 
+    // 불명확한 실제 접수는 샘플의 미존재/성공으로 대체하지 않습니다.
+    public Task<ShipperRequestItem?> GetRequestByClientRequestIdAsync(string clientRequestId, CancellationToken cancellationToken = default)
+        => _server.GetRequestByClientRequestIdAsync(clientRequestId, cancellationToken);
+
     public Task<IReadOnlyList<창고요약응답>> GetWarehousesAsync(CancellationToken cancellationToken = default)
         => WithSampleFallbackAsync(
             token => _server.GetWarehousesAsync(token),
@@ -74,7 +78,9 @@ public sealed class SmokeAwareShipperOperationsService : IShipperOperationsServi
             cancellationToken);
 
     public Task<ShipperRequestItem> AddRequestAsync(ShipperRequestItem request, CancellationToken cancellationToken = default)
-        => WithSampleFallbackAsync(
+        => request.의뢰Id.StartsWith("shipper-app-", StringComparison.Ordinal)
+            ? _server.AddRequestAsync(request, cancellationToken)
+            : WithSampleFallbackAsync(
             token => _server.AddRequestAsync(request, token),
             token => _sample.AddRequestAsync(request, token),
             cancellationToken);

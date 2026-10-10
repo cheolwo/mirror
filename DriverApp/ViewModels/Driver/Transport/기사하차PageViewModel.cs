@@ -15,6 +15,8 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
     private long _sessionRevision;
     private long? _initializedTransportId;
     private CancellationTokenSource? _arrivalCancellation;
+    private CancellationTokenSource? _completionCancellation;
+    private bool _completionOutcomePending;
 
     public 기사하차PageViewModel(
         기사운송상세조회Service detail,
@@ -50,7 +52,9 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
     public 기사운송사진ViewModel 사진 { get; }
     public 기사운송예외신고ViewModel 예외 { get; }
     public 기사하차완료ViewModel 하차완료 { get; }
-    public bool 완료처리중 => 하차완료.처리중;
+    public bool 완료처리중 => _completionCancellation is not null || 하차완료.처리중;
+    public bool 완료결과확인필요 => _completionOutcomePending;
+    public bool 하차완료확인 => 운송?.현재단계 == "인수완료";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(도착가능))]
@@ -62,7 +66,7 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
            && 운송?.현재단계 is "상차완료" or "운송중";
 
     public bool 완료가능
-        => 운송 is not null
+        => !_disposed && !로그인필요 && !_completionOutcomePending && 운송 is not null
            && !처리중
            && !완료처리중
            && !도착처리중
@@ -76,6 +80,8 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
     {
         get
         {
+            if (하차완료확인) return "하차 완료를 확인했습니다. 진행 중 운송으로 돌아갈 수 있습니다.";
+            if (_completionOutcomePending) return "하차 완료 결과를 먼저 다시 확인해 주세요. 같은 완료 요청을 반복하지 않습니다.";
             if (운송?.현재단계 != "하차지도착")
             {
                 return "하차지 도착을 서버에 기록한 뒤 인수 확인을 진행해 주세요.";
@@ -110,6 +116,8 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
         _initializedTransportId = transportId;
         운송Id = transportId;
         도착작업취소();
+        완료작업취소();
+        _completionOutcomePending = false;
         취소();
         운송 = null;
         작업상태.초기화();
@@ -190,38 +198,64 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
 
         var transportId = 운송Id;
         var sessionRevision = _detail.SessionRevision;
+        using var cancellation = new CancellationTokenSource();
+        _completionCancellation = cancellation;
+        _completionOutcomePending = true;
+        OnPropertyChanged(string.Empty);
         try
         {
             작업상태.설정($"{인계.결제증빙방식} 확인 후 하차 완료를 처리하는 중입니다.", Severity.Info);
-
-            var request = 사진.완료요청생성(DriverTransportCompletionPhotoKind.Dropoff, 운송Id);
-            await 하차완료.처리Command.ExecuteAsync(request);
-            if (_disposed || transportId != 운송Id || sessionRevision != _detail.SessionRevision)
+            try
             {
-                return;
+                var request = 사진.완료요청생성(DriverTransportCompletionPhotoKind.Dropoff, transportId);
+                await 하차완료.처리Command.ExecuteAsync(request);
+                if (!현재완료작업(transportId, sessionRevision, cancellation)) return;
+                if (하차완료.결과 is { } result) 사진.업로드결과반영(result);
             }
-            var result = 하차완료.결과
-                         ?? throw new InvalidOperationException("하차 완료 API 처리 결과가 없습니다.");
-
-            사진.업로드결과반영(result);
-            var objectName = string.IsNullOrWhiteSpace(result.ObjectName) ? string.Empty : $" 저장 경로: {result.ObjectName}";
-            작업상태.설정($"{result.Message}{objectName}", result.CompletionRecorded ? Severity.Success : Severity.Warning);
+            catch (Exception)
+            {
+                // 응답 유실은 미저장으로 단정하지 않고 같은 운송의 정본을 조회합니다.
+            }
+            if (!현재완료작업(transportId, sessionRevision, cancellation)) return;
+            _detailLoad = 새로고침Async(cancellation.Token);
+            var refreshed = await _detailLoad;
+            if (!현재완료작업(transportId, sessionRevision, cancellation)) return;
+            작업상태.설정(하차완료확인
+                ? "같은 운송을 다시 조회해 하차 완료를 확인했습니다."
+                : refreshed && 운송 is not null
+                    ? "현재 운송 상태를 다시 확인했습니다. 아직 완료되지 않았다면 기존 사진과 확인 내용으로 다시 요청할 수 있습니다."
+                    : $"하차 완료 결과를 아직 확인하지 못했습니다. 사진과 확인 내용을 유지했으니 결과를 다시 확인해 주세요. {오류메시지}",
+                하차완료확인 ? Severity.Success : Severity.Warning);
         }
-        catch (Exception ex)
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
+        finally
         {
-            if (_disposed || transportId != 운송Id || sessionRevision != _detail.SessionRevision)
+            if (ReferenceEquals(_completionCancellation, cancellation))
             {
-                return;
+                _completionCancellation = null;
+                OnPropertyChanged(string.Empty);
             }
-            작업상태.설정($"하차 완료 처리에 실패했습니다. 다시 시도해 주세요. {ex.Message}", Severity.Error);
         }
+    }
+
+    private bool 현재완료작업(long id, long revision, CancellationTokenSource cancellation)
+        => ReferenceEquals(_completionCancellation, cancellation) && !_disposed
+           && !cancellation.IsCancellationRequested && 운송Id == id
+           && _detail.로그인됨 && _detail.SessionRevision == revision;
+
+    private void 완료작업취소()
+    {
+        var cancellation = _completionCancellation;
+        _completionCancellation = null;
+        cancellation?.Cancel();
+        하차완료.처리Command.Cancel();
     }
 
     public bool 로그인필요 => !_detail.로그인됨;
 
     public async Task InitializeAsync(long transportId)
     {
-        if (도착처리중 && 운송Id == transportId) return;
+        if ((도착처리중 || 완료처리중) && 운송Id == transportId) return;
         Initialize(transportId);
         // 이전 ID의 취소된 작업이 끝난 뒤 현재 ID만 시작합니다.
         if (_detailLoad is not null)
@@ -247,9 +281,17 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
         {
             return;
         }
+        var preserveConfirmation = _completionOutcomePending && 운송?.현재단계 == "하차지도착"
+            && detail?.현재단계 == "하차지도착"
+            && 운송.상차대상화물목록.SequenceEqual(detail.상차대상화물목록);
         운송 = detail;
-        화물.운송설정(detail);
-        인계.초기화();
+        if (!preserveConfirmation)
+        {
+            화물.운송설정(detail);
+            인계.초기화();
+        }
+        if (detail is not null) _completionOutcomePending = false;
+        if (하차완료확인) 사진.초기화();
         OnPropertyChanged(string.Empty);
     }
 
@@ -260,9 +302,11 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
             if (!_detail.로그인됨 || 운송 is not null)
             {
                 도착작업취소();
+                완료작업취소();
                 취소();
             }
             운송 = null;
+            _completionOutcomePending = false;
             화물.운송설정(null);
             사진.초기화();
             인계.초기화();
@@ -280,6 +324,8 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
         {
             _disposed = true;
             도착작업취소();
+            완료작업취소();
+            사진.초기화();
             _detail.인증변경 -= OnAuthenticationChanged;
         }
         base.Dispose(disposing);
