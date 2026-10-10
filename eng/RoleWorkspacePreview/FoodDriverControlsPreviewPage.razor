@@ -1,0 +1,20 @@
+@page "/food-driver-controls-preview/{Scenario}"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@inject FoodDriverControlsPreviewFixture Fixture
+@implements IDisposable
+
+<p style="margin:0;padding:8px 16px;background:#eaf5f3;font-size:14px;">음식기사 제어 화면 검토 · 예시 자료</p>
+@if (ready)
+{
+    <RoleMapWorkspace RoleKey="food-driver" />
+    <output hidden data-controls-ready data-on-duty="@Fixture.OnDuty.ToString().ToLowerInvariant()" data-receiving="@Fixture.Receiving.ToString().ToLowerInvariant()"
+        data-location-posts="@Fixture.LocationPosts" data-explicit-location="@Fixture.ExplicitLocationRequests" data-intent-writes="@Fixture.IntentWrites" data-stop-posts="@Fixture.StopPosts"></output>
+}
+@code {
+    [Parameter] public string Scenario { get; set; } = "on";
+    private bool ready;
+    protected override void OnInitialized() => Fixture.Changed += Changed;
+    protected override async Task OnParametersSetAsync() { await Fixture.ConfigureAsync(Scenario); ready = true; }
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() => Fixture.Changed -= Changed;
+}

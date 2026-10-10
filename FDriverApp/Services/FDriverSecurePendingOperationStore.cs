@@ -59,6 +59,11 @@ public sealed class FDriverSecurePendingOperationStore : IFDriverPendingOperatio
             || value.Arrival is { } arrival && (string.IsNullOrWhiteSpace(arrival.OfferId)
                 || string.IsNullOrWhiteSpace(arrival.AttemptId) || arrival.Request is null || arrival.Request.클라이언트요청Id == Guid.Empty)
             || value.DispatchIntent is { } intent && intent.클라이언트요청Id == Guid.Empty
+            || value.StartReceptionRequestId is { } startId && (startId == Guid.Empty
+                || value.DispatchIntent?.클라이언트요청Id != startId
+                || value.DispatchIntent.수신의사Code != Ssalddel.Contracts.Common.Dispatch.운영배차수신의사Code.On)
+            || value.StartRequestId is { } workStartId && (workStartId == Guid.Empty
+                || value.StartReceptionRequestId is null || value.StartReceptionRequestId == workStartId)
             || value.Interruption is { } interruption && (string.IsNullOrWhiteSpace(interruption.OfferId)
                 || string.IsNullOrWhiteSpace(interruption.AttemptId) || interruption.Request is null
                 || interruption.Request.클라이언트요청Id == Guid.Empty || interruption.Request.메모?.Length is > 500))

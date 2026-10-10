@@ -126,7 +126,7 @@ public static class PreviewFoodFixtures
 
     public static object ReadDriver(string path, string scenario, bool noMap, DateTime recordedAt) => path switch
     {
-        "api/v1/driver/food-deliveries/workspace" => Driver(scenario, noMap, recordedAt),
+        "api/v1/driver/food-deliveries/workspace/current" => Driver(scenario, noMap, recordedAt),
         // 위치 공급자와 운행 응답 모두 기사 위치를 만들지 않습니다.
         "api/v1/driver/food-deliveries/work/status" => new 기사운행상태응답
             { DriverId = DriverId, Status = "운행중", UpdatedAt = recordedAt },
@@ -138,7 +138,7 @@ public static class PreviewFoodFixtures
         _ => throw new InvalidOperationException("미리보기에서 지원하지 않는 음식 기사 조회입니다.")
     };
 
-    public static FoodDeliveryDriverWorkspaceDto Driver(string scenario, bool noMap, DateTime recordedAt)
+    public static FoodDeliveryDriverCurrentWorkDto Driver(string scenario, bool noMap, DateTime recordedAt)
     {
         var offer = scenario is "offer" or "expired";
         var empty = scenario is "waiting" or "complete";

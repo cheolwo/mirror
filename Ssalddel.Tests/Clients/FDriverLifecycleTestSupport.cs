@@ -98,26 +98,51 @@ namespace Ssalddel.Tests.Clients
         public Func<운영배차수신의사변경요청, CancellationToken, Task<운영배차수신상태Dto>>? ChangeIntent { get; set; }
         public Func<string, 음식배달가게도착요청, CancellationToken, Task<FoodDeliveryDriverActionResponse>>? Arrival { get; set; }
         public Func<string, 음식배달중단요청, CancellationToken, Task<FoodDeliveryDriverActionResponse>>? Interruption { get; set; }
+        public Func<string, string, CancellationToken, Task<FoodDeliveryDriverActionResponse>>? DeliveryAction { get; set; }
+        public List<(string Action, string Target)> DeliveryActionCalls { get; } = [];
         public int StopWorkCalls { get; private set; }
+        public int StartWorkCalls { get; private set; }
+        public List<Guid> StartRequestIds { get; } = [];
+        public Guid? CanonicalStartRequestId { get; set; }
+        public string? CanonicalExecutionType { get; set; } = "FoodDelivery";
+        public int CurrentWorkCalls { get; private set; }
+        public int WorkspaceCalls { get; private set; }
+        public Func<string, CancellationToken, Task>? StartWork { get; set; }
         public int LocationCalls { get; private set; }
+        public Func<기사위치갱신요청, CancellationToken, Task<기사위치갱신응답?>>? LocationUpdate { get; set; }
         public Func<CancellationToken, Task<FoodDeliveryDriverWorkspaceDto>> Workspace { get; set; }
             = _ => Task.FromResult(Data("before"));
         public Func<CancellationToken, Task<FoodDeliveryDriverRouteResponseDto>> Route { get; set; }
             = _ => Task.FromResult(new FoodDeliveryDriverRouteResponseDto());
         public int WorkStatusCalls { get; private set; }
         public string WorkStatus { get; set; } = "운행종료";
+        public Func<CancellationToken, Task<기사운행상태응답?>>? WorkStatusRead { get; set; }
         public List<FoodDeliveryDriverRouteRequestDto> RouteRequests { get; } = [];
         public Task<FoodDeliveryDriverWorkspaceDto> GetWorkspaceAsync(CancellationToken cancellationToken = default)
-            => Workspace(cancellationToken);
+        { WorkspaceCalls++; return Workspace(cancellationToken); }
+        public async Task<FoodDeliveryDriverCurrentWorkDto> GetCurrentWorkAsync(CancellationToken cancellationToken = default)
+        {
+            CurrentWorkCalls++;
+            var source = await Workspace(cancellationToken);
+            return new() { DriverId = source.DriverId, Recommendations = source.Recommendations,
+                ActiveDeliveries = source.ActiveDeliveries, BundleCandidates = source.BundleCandidates,
+                MaxActiveDeliveries = source.MaxActiveDeliveries, DispatchAutomationEnabled = source.DispatchAutomationEnabled,
+                DispatchAutomationNotice = source.DispatchAutomationNotice, UpdatedAtUtc = source.UpdatedAtUtc };
+        }
         public Task<기사운행상태응답?> GetWorkStatusAsync(CancellationToken cancellationToken = default)
         {
             WorkStatusCalls++;
-            return Task.FromResult<기사운행상태응답?>(new() { Status = WorkStatus });
+            if (WorkStatusRead is not null) return WorkStatusRead(cancellationToken);
+            return Task.FromResult<기사운행상태응답?>(new() { Status = WorkStatus,
+                WorkStartClientRequestId = CanonicalStartRequestId, 운송실행유형 = CanonicalExecutionType });
         }
-        public Task StartWorkAsync(string startLocation, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task StartWorkAsync(string startLocation, CancellationToken cancellationToken = default)
+        { StartWorkCalls++; WorkStatus = "운행중"; return StartWork?.Invoke(startLocation, cancellationToken) ?? Task.CompletedTask; }
+        public Task StartWorkAsync(string startLocation, Guid clientRequestId, CancellationToken cancellationToken = default)
+        { StartRequestIds.Add(clientRequestId); CanonicalStartRequestId = clientRequestId; return StartWorkAsync(startLocation, cancellationToken); }
         public Task StopWorkAsync(CancellationToken cancellationToken = default) { StopWorkCalls++; return Task.CompletedTask; }
         public Task<기사위치갱신응답?> UpdateLocationAsync(기사위치갱신요청 request, CancellationToken cancellationToken = default)
-        { LocationCalls++; return Task.FromResult<기사위치갱신응답?>(null); }
+        { LocationCalls++; return LocationUpdate?.Invoke(request, cancellationToken) ?? Task.FromResult<기사위치갱신응답?>(null); }
         public Task<운영배차수신상태Dto> GetDispatchAvailabilityAsync(CancellationToken cancellationToken = default)
             => Availability(cancellationToken);
         public Task<운영배차수신상태Dto> ChangeDispatchIntentAsync(운영배차수신의사변경요청 request, CancellationToken cancellationToken = default)
@@ -126,11 +151,16 @@ namespace Ssalddel.Tests.Clients
             => Arrival?.Invoke(offerId, request, cancellationToken) ?? Action();
         public Task<FoodDeliveryDriverActionResponse> InterruptAsync(string offerId, 음식배달중단요청 request, CancellationToken cancellationToken = default)
             => Interruption?.Invoke(offerId, request, cancellationToken) ?? Action();
-        public Task<FoodDeliveryDriverActionResponse> AcceptAsync(string offerId, CancellationToken cancellationToken = default) => Action();
-        public Task<FoodDeliveryDriverActionResponse> RejectAsync(string offerId, CancellationToken cancellationToken = default) => Action();
-        public Task<FoodDeliveryDriverActionResponse> AcceptBundleAsync(IReadOnlyList<string> offerIds, CancellationToken cancellationToken = default) => Action();
-        public Task<FoodDeliveryDriverActionResponse> ConfirmPickupAsync(string offerId, CancellationToken cancellationToken = default) => Action();
-        public Task<FoodDeliveryDriverActionResponse> CompleteAsync(string offerId, CancellationToken cancellationToken = default) => Action();
+        public Task<FoodDeliveryDriverActionResponse> AcceptAsync(string offerId, CancellationToken cancellationToken = default) => DeliveryActionAsync("accept", offerId, cancellationToken);
+        public Task<FoodDeliveryDriverActionResponse> RejectAsync(string offerId, CancellationToken cancellationToken = default) => DeliveryActionAsync("reject", offerId, cancellationToken);
+        public Task<FoodDeliveryDriverActionResponse> AcceptBundleAsync(IReadOnlyList<string> offerIds, CancellationToken cancellationToken = default) => DeliveryActionAsync("bundle", string.Join(",", offerIds), cancellationToken);
+        public Task<FoodDeliveryDriverActionResponse> ConfirmPickupAsync(string offerId, CancellationToken cancellationToken = default) => DeliveryActionAsync("pickup", offerId, cancellationToken);
+        public Task<FoodDeliveryDriverActionResponse> CompleteAsync(string offerId, CancellationToken cancellationToken = default) => DeliveryActionAsync("complete", offerId, cancellationToken);
+        private Task<FoodDeliveryDriverActionResponse> DeliveryActionAsync(string action, string target, CancellationToken cancellationToken)
+        {
+            DeliveryActionCalls.Add((action, target));
+            return DeliveryAction?.Invoke(action, target, cancellationToken) ?? Action();
+        }
         public Task<FoodDeliveryDriverRouteResponseDto> GetRouteAsync(FoodDeliveryDriverRouteRequestDto request, CancellationToken cancellationToken = default)
         {
             RouteRequests.Add(request);

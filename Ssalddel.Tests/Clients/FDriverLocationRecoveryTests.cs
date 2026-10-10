@@ -236,6 +236,8 @@ public sealed class FDriverLocationRecoveryTests
     {
         var model = FDriverLifecycleTestSupport.Model(new(), api ?? new(), gps);
         await model.InitializeAsync();
+        // Server heartbeat cases represent an explicitly started driving session.
+        model.IsOnDuty = true;
         return model;
     }
     private static Task<FDriverLocationSnapshot?> Capture(MainPageModel model, bool sendToServer, CancellationToken token = default)

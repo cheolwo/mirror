@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:FDriverApp.Controls" xmlns:fonts="clr-namespace:Fonts"
+    xmlns:models="clr-namespace:FDriverApp.PageModels" x:Class="FDriverApp.Pages.ReturnAreaSettingsPage"
+    x:DataType="models:MainPageModel" Title="복귀 권역" Shell.NavBarIsVisible="False"
+    BackgroundColor="{AppThemeBinding Light={StaticResource DriverCanvas}, Dark={StaticResource DriverCanvasDark}}">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+            <Button Text="내 정보로 돌아가기" controls:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_left_24_regular}"
+                Clicked="OnBackClicked" Style="{StaticResource DriverSecondaryButtonStyle}" HorizontalOptions="Start" />
+            <Label Text="복귀 권역" Style="{StaticResource DriverTitleStyle}" />
+            <VerticalStackLayout IsVisible="{Binding IsAuthenticated}" Spacing="16">
+                <Label Style="{StaticResource DriverBodyStyle}" Text="집이나 활동 중심을 기준으로 복귀할 배달을 우선 확인합니다." />
+                <Border Style="{StaticResource DriverCardStyle}">
+                    <VerticalStackLayout Spacing="12">
+                        <Button controls:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_clockwise_24_regular}"
+                            Style="{StaticResource DriverSecondaryButtonStyle}" Text="설정 조회" Command="{Binding LoadReturnAreaSettingsCommand}" />
+                        <ActivityIndicator IsRunning="{Binding ReturnAreaSettingsBusy}" IsVisible="{Binding ReturnAreaSettingsBusy}" />
+                        <VerticalStackLayout IsVisible="{Binding ReturnAreaSettingsLoaded}" Spacing="12">
+                            <Picker Title="복귀 방식" ItemsSource="{Binding ReturnAreaModes}" SelectedIndex="{Binding ReturnAreaModeIndex}"
+                                IsEnabled="{Binding CanEditReturnAreaSettings}" FontSize="16" FontAutoScalingEnabled="False" MinimumHeightRequest="48" />
+                            <Entry Text="{Binding ReturnAreaAnchorName}" Placeholder="기준점 이름 (예: 집, 활동 중심)" MaxLength="80"
+                                IsEnabled="{Binding CanEditReturnAreaSettings}" Style="{StaticResource DriverFieldStyle}" />
+                            <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding ReturnAreaAnchorText}" />
+                            <Button controls:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.my_location_24_regular}"
+                                Style="{StaticResource DriverSecondaryButtonStyle}" Text="현재 위치를 기준점으로 선택"
+                                Command="{Binding UseCurrentLocationForReturnAreaCommand}" IsEnabled="{Binding CanEditReturnAreaSettings}" />
+                            <Button Style="{StaticResource DriverSecondaryButtonStyle}" Text="반경 설정" Command="{Binding ToggleReturnAreaRadiusOptionsCommand}" />
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12" IsVisible="{Binding ReturnAreaRadiusOptionsVisible}">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Style="{StaticResource DriverMetadataStyle}" Text="복귀 시작 (km)" />
+                                    <Entry Text="{Binding ReturnAreaEntryRadiusText}" Keyboard="Numeric" IsEnabled="{Binding CanEditReturnAreaSettings}"
+                                        Style="{StaticResource DriverFieldStyle}" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                    <Label Style="{StaticResource DriverMetadataStyle}" Text="복귀 해제 (km)" />
+                                    <Entry Text="{Binding ReturnAreaReleaseRadiusText}" Keyboard="Numeric" IsEnabled="{Binding CanEditReturnAreaSettings}"
+                                        Style="{StaticResource DriverFieldStyle}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                            <Button controls:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.checkmark_24_regular}"
+                                Style="{StaticResource DriverPrimaryButtonStyle}" Text="복귀 설정 저장"
+                                Command="{Binding SaveReturnAreaSettingsCommand}" IsEnabled="{Binding CanEditReturnAreaSettings}" />
+                        </VerticalStackLayout>
+                        <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding ReturnAreaSettingsNotice}" LineBreakMode="WordWrap" />
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+            <VerticalStackLayout IsVisible="{Binding IsSignedOut}" Spacing="12">
+                <Label Text="기사 로그인이 필요합니다." Style="{StaticResource DriverBodyStyle}" />
+                <Button Text="로그인 화면으로" Clicked="OnLoginClicked" Style="{StaticResource DriverPrimaryButtonStyle}" />
+            </VerticalStackLayout>
+            <ActivityIndicator IsVisible="{Binding IsRestoringSession}" IsRunning="{Binding IsRestoringSession}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

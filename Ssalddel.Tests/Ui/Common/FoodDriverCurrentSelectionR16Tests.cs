@@ -21,7 +21,7 @@ public sealed class FoodDriverCurrentSelectionR16Tests
             Pickup = new() { Address = "픽업 장소 2", Latitude = 37.57m, Longitude = 127.08m },
             Dropoff = new() { Address = "전달 장소 2", Latitude = 37.58m, Longitude = 127.09m }
         };
-        api.Reads["api/v1/driver/food-deliveries/workspace"] = new FoodDeliveryDriverWorkspaceDto { ActiveDeliveries = [active] };
+        api.Reads["api/v1/driver/food-deliveries/workspace/current"] = new FoodDeliveryDriverCurrentWorkDto { ActiveDeliveries = [active] };
         api.Reads["api/v1/driver/food-deliveries/work/status"] = new 기사운행상태응답 { Status = "운행중" };
         api.Reads["api/v1/driver/operational-dispatch/availability"] = new 운영배차수신상태Dto
         { 수신의사Code = 운영배차수신의사Code.On, 실효상태Code = 운영배차실효상태Code.배차가능 };

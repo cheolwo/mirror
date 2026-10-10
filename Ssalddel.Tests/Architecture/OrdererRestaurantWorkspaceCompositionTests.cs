@@ -72,7 +72,9 @@ public sealed class OrdererRestaurantWorkspaceCompositionTests
         Assert.Contains("@media (max-width: 700px)", searchCss);
         Assert.Contains("@media (max-width: 700px)", listCss);
         Assert.Contains("position: static", detailCss);
-        Assert.Contains("grid-template-columns: 1fr", detailCss);
+        Assert.Contains("@media (max-width: 700px)", detailCss);
+        Assert.Contains("grid-template-columns: 80px minmax(0, 1fr)", detailCss);
+        Assert.Contains("grid-column: 2", detailCss);
     }
 
     private static string FindComponentDirectory()

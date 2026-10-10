@@ -1,10 +1,17 @@
 using System.Globalization;
+using Ssalddel.Contracts.Common.Metadata;
 using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Ui.Common.Areas.App.Models;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
 
 namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food;
 
+[SsalddelCodeMetadata(SsalddelCodeFeatureKeys.FoodDriverWork, SsalddelCodeLayer.ViewModel,
+    "음식 역할의 금액·시각·가능 행동·지도 표시 값을 순수 변환",
+    StepKey = "ui.food-presentation", FlowOrder = 203, ExecutionStage = SsalddelCodeExecutionStage.Presentation,
+    DependsOnStepKeys = new[] { "ui.recovery-policy" },
+    ReadsFrom = SsalddelCodeDataScope.ClientPresentation, Effects = SsalddelCodeEffect.None,
+    Boundary = "기사 이외 음식 역할도 공유하는 표시 도구이며 조회·명령·정산 확정은 수행하지 않는다.")]
 public static class FoodWorkspacePresentation
 {
     public static string Money(decimal amount) => amount.ToString("N0", CultureInfo.GetCultureInfo("ko-KR")) + "원";
@@ -29,19 +36,23 @@ public static class FoodWorkspacePresentation
         => Coordinates(latitude, longitude) ? [new(id, label, kind, (double)latitude!.Value, (double)longitude!.Value)] : [];
 
     public static RoleWorkspaceAction? Available(IReadOnlyList<업무가능행동Dto> actions, string key, string label,
-        bool primary = false, string? route = null)
+        bool primary = false, string? route = null, bool automaticRefresh = false, DateTime? nowUtc = null)
     {
         var action = actions.FirstOrDefault(value => value.ActionId == key);
         if (action is null) return null;
-        var current = !action.ExpiresAtUtc.HasValue || action.ExpiresAtUtc.Value > DateTime.UtcNow;
-        return new(key, label, route, primary, current, current ? null : "가능 행동의 확인 시각이 지났습니다. 새로고침해 주세요.");
+        var current = FoodDriverWorkRecoveryPolicy.OfferCurrent(action.ExpiresAtUtc, nowUtc ?? DateTime.UtcNow);
+        return new(key, label, route, primary, current, current ? null : automaticRefresh
+            ? "가능 행동의 확인 시각이 지났습니다. 최신 상태를 자동으로 확인합니다."
+            : "가능 행동의 확인 시각이 지났습니다. 새로고침해 주세요.");
     }
 
-    public static 업무가능행동Dto Require(IReadOnlyList<업무가능행동Dto> actions, string key)
+    public static 업무가능행동Dto Require(IReadOnlyList<업무가능행동Dto> actions, string key, bool automaticRefresh = false, DateTime? nowUtc = null)
     {
         var action = actions.FirstOrDefault(value => value.ActionId == key);
-        if (action is null || action.ExpiresAtUtc is { } expiry && expiry <= DateTime.UtcNow)
-            throw new InvalidOperationException("현재 할 수 없는 행동입니다. 새로고침으로 확인해 주세요.");
+        if (action is null || !FoodDriverWorkRecoveryPolicy.OfferCurrent(action.ExpiresAtUtc, nowUtc ?? DateTime.UtcNow))
+            throw new InvalidOperationException(automaticRefresh
+                ? "현재 할 수 없는 행동입니다. 최신 상태를 자동으로 확인합니다."
+                : "현재 할 수 없는 행동입니다. 새로고침으로 확인해 주세요.");
         return action;
     }
 

@@ -1,4 +1,7 @@
 @namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@using Ssalddel.Contracts.Common.Metadata
+@attribute [SsalddelCodeMetadata(SsalddelCodeFeatureKeys.FoodDriverWork, SsalddelCodeLayer.View, "전체 지도와 독립된 상태별 카드·행동을 표시하는 공통 역할 화면", StepKey = "ui.role-map-view", FlowOrder = 230, ExecutionStage = SsalddelCodeExecutionStage.Presentation, DependsOnStepKeys = new[] { "ui.workspace-view-model" }, ReadsFrom = SsalddelCodeDataScope.ClientPresentation, WritesTo = SsalddelCodeDataScope.ClientPresentation | SsalddelCodeDataScope.OperationalState, Effects = SsalddelCodeEffect.UiStateMutation | SsalddelCodeEffect.NetworkCall | SsalddelCodeEffect.StateMutation | SsalddelCodeEffect.PersistentRead | SsalddelCodeEffect.PersistentWrite | SsalddelCodeEffect.ThirdPartyApiCall | SsalddelCodeEffect.MayIncurExternalCost, Boundary = "Model에 조회·명령을 위임한다. 카드 높이로 지도를 변경하지 않으며 서버 권한·실제 GPS·지도 SDK 성공을 이 메타데이터가 증명하지 않는다.")]
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food
 @inject RoleWorkspaceViewModel Model
 @inject INeighborhoodMapHost MapHost
 @inject NavigationManager Navigation
@@ -21,10 +24,16 @@
         <summary>표시 설정</summary>
         <div><label><input type="checkbox" checked="@Model.ShowMarkers" @onchange="MarkersChanged" />위치 핀</label><label><input type="checkbox" checked="@Model.ShowRoutes" @onchange="RoutesChanged" />이동 경로</label></div>
     </details>
+    @if (IsFoodDriver && Model.ListOnly)
+    {
+        <div class="role-map-workspace__driver-list-control"><FoodDriverDispatchToggle Action="DispatchControl" IsBusy="@(Model.CommandBusy || Model.AccountBusy)" IsStateKnown="DispatchStateKnown" Toggled="ToggleDispatch" /></div>
+    }
     @if (!Model.ListOnly)
     {
     <section class="role-map-workspace__geography" aria-label="현재 업무 지도">
         <div id="role-workspace-map-canvas" class="role-map-workspace__canvas" aria-label="업무 위치와 이동 경로"></div>
+        @if (IsFoodDriver)
+        { <div class="role-map-workspace__driver-map-control"><FoodDriverDispatchToggle Action="DispatchControl" IsBusy="@(Model.CommandBusy || Model.AccountBusy)" IsStateKnown="DispatchStateKnown" Toggled="ToggleDispatch" /></div> }
         @if (_hostStatus.Code != "ready")
         {
             <div class="role-map-workspace__map-notice" role="status"><span>@(_hostStatus.Message ?? "지도를 확인하지 못했습니다. 아래 업무 목록을 이용해 주세요.")</span><button type="button" @onclick="RetryMap">지도 다시 시도</button><button type="button" @onclick="() => SetListOnly(true)">목록으로 보기</button></div>
@@ -66,6 +75,8 @@
                     {
                         <section class="role-map-workspace__summary" aria-label="현재 업무 핵심 정보">
                             <div class="role-map-workspace__destination"><h3>@summary.DestinationLabel</h3><p>@summary.Destination</p></div>
+                            @if (!Model.IsRefreshing && Model.RefreshError is null)
+                            { <Ssalddel.Ui.Common.Areas.App.Components.Food.DeliveryExperienceLines Lines="summary.ExperienceLines" /> }
                             @if (summary.Metrics is { Count: > 0 } metrics)
                             { <dl class="role-map-workspace__metrics">@foreach (var metric in metrics) { <div><dt>@metric.Label</dt><dd>@metric.Value</dd></div> }</dl> }
                             @if (summary.Request is { } request)
@@ -118,7 +129,7 @@
                             @if (action.Enabled && !Model.CommandBusy && !Model.AccountBusy && !Model.IsRefreshing && Model.RefreshError is null && action.Route is not null && ActionHref(action.Route) is { } href)
                             { <a href="@href" class="@(action.IsPrimary ? "is-primary" : "")"><RoleWorkspaceActionContent ActionKey="@action.Key" Label="@action.Label" /></a> }
                             else
-                            { <button type="button" class="@(action.IsPrimary ? "is-primary" : "")" disabled="@(!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null || action.Route is not null)" @onclick="() => RequestAction(string.Empty, action)"><RoleWorkspaceActionContent ActionKey="@action.Key" Label="@action.Label" /></button> }
+                            { <button type="button" class="@(action.IsPrimary ? "is-primary" : "")" disabled="@(!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null || action.Route is not null || Model.FoodStartStateUnconfirmed)" @onclick="() => RequestAction(string.Empty, action)"><RoleWorkspaceActionContent ActionKey="@action.Key" Label="@action.Label" /></button> }
                             @if (!action.Enabled && action.DisabledReason is { Length: > 0 } reason) { <p class="role-map-workspace__hint">@reason</p> }
                         }
                     </nav>
@@ -157,7 +168,7 @@
                     </nav>
                 </details>
             }
-            @if (_confirmation is { } confirmation)
+            @if (_confirmation is { } confirmation && !IsProfileConfirmation)
             {
                 <div class="role-map-workspace__confirmation" data-neighborhood-map-occlusion>
                     <p>@confirmation.Label 하시겠어요?</p><div><button type="button" disabled="@Model.CommandBusy" @onclick="ConfirmAction">확인</button><button type="button" disabled="@Model.CommandBusy" @onclick="CancelAction">취소</button></div>
@@ -169,13 +180,29 @@
             {
                 <details class="role-map-workspace__list" open="@Model.ListOnly"><summary>업무 목록 · @Model.Items.Count 건</summary><ul>@foreach (var row in Model.Items) { <li><button type="button" disabled="@(Model.CommandBusy || Model.IsRefreshing)" aria-pressed="@(row.Id == Model.SelectedId ? "true" : "false")" @onclick="() => SelectItem(row.Id)"><span><strong>@row.Title</strong><small>@row.Status</small></span><MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" /></button></li> }</ul></details>
             }
-            <button type="button" class="role-map-workspace__refresh" disabled="@(Model.IsLoading || Model.IsRefreshing || Model.CommandBusy)" @onclick="Refresh">@(Model.IsRefreshing ? "최신 정보 확인 중" : "새로고침")</button>
+            @if (!IsFoodDriver)
+            {
+                <button type="button" class="role-map-workspace__refresh" disabled="@(Model.IsLoading || Model.IsRefreshing || Model.CommandBusy)" @onclick="Refresh">@(Model.IsRefreshing ? "최신 정보 확인 중" : "새로고침")</button>
+            }
             @if (Model.IsAuthenticated)
             {
-                <details class="role-map-workspace__list role-map-workspace__workspace-actions">
-                    <summary>계정</summary>
+                <details class="role-map-workspace__list role-map-workspace__workspace-actions role-map-workspace__profile">
+                    <summary>@if (IsFoodDriver) { <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" /> }@(IsFoodDriver ? "내 정보" : "계정")</summary>
                     <div class="role-map-workspace__actions"><button type="button" disabled="@(Model.CommandBusy || Model.AccountBusy)" @onclick="Model.SignOutAsync">@(Model.AccountBusy ? "로그아웃 중" : "로그아웃")</button></div>
                     @if (Model.AccountError is { } accountError) { <p class="role-map-workspace__error" role="alert">@accountError</p> }
+                    @if (ProfileStopAction is { } stopAction)
+                    {
+                        <div class="role-map-workspace__actions role-map-workspace__stop-work">
+                            <button type="button" disabled="@(!stopAction.Enabled || Model.CommandBusy || Model.AccountBusy || !DispatchStateKnown)" @onclick="() => RequestAction(string.Empty, stopAction)"><RoleWorkspaceActionContent ActionKey="@stopAction.Key" Label="@stopAction.Label" /></button>
+                            @if (!stopAction.Enabled && stopAction.DisabledReason is { Length: > 0 } reason) { <p class="role-map-workspace__hint">@reason</p> }
+                        </div>
+                        @if (IsProfileConfirmation && _confirmation is { } profileConfirmation)
+                        {
+                            <div class="role-map-workspace__confirmation role-map-workspace__profile-confirmation">
+                                <p>@profileConfirmation.Label 하시겠어요?</p><div><button type="button" disabled="@Model.CommandBusy" @onclick="ConfirmAction">확인</button><button type="button" disabled="@Model.CommandBusy" @onclick="CancelAction">취소</button></div>
+                            </div>
+                        }
+                    }
                 </details>
             }
         }
@@ -206,17 +233,25 @@
 
 @code {
     private bool CanShowWorkspace => Model.IsAuthenticated && !Model.RequiresLogin && !Model.AccessDenied;
+    private bool IsFoodDriver => Model.Role?.Key == "food-driver";
+    private RoleWorkspaceAction? DispatchControl => IsFoodDriver ? Model.EmptyActions.FirstOrDefault(action => action.Key is FoodDriverRoleWorkspaceAdapter.EnableDispatch or FoodDriverRoleWorkspaceAdapter.DisableDispatch) : null;
+    private RoleWorkspaceAction? ProfileStopAction => IsFoodDriver ? Model.EmptyActions.FirstOrDefault(action => action.Key == FoodDriverRoleWorkspaceAdapter.StopWork) : null;
+    private bool DispatchStateKnown => !Model.IsLoading && !Model.IsRefreshing && Model.Error is null && Model.RefreshError is null
+        && !Model.FoodDispatchStateUnconfirmed && !Model.FoodStartStateUnconfirmed && DispatchControl?.Enabled == true;
+    private bool IsProfileConfirmation => IsFoodDriver && _confirmation?.Key == FoodDriverRoleWorkspaceAdapter.StopWork;
+    private bool IsFoodDriverPositionedControl(RoleWorkspaceAction action) => IsFoodDriver && action.Key is FoodDriverRoleWorkspaceAdapter.StopWork
+        or FoodDriverRoleWorkspaceAdapter.EnableDispatch or FoodDriverRoleWorkspaceAdapter.DisableDispatch;
     // 표시 분류는 권한·실행 조건을 바꾸지 않습니다. 기존 adapter와 가능 행동이 실행을 소유합니다.
     private bool HasCurrentWork => Model.Items.Any(item => item.IsCurrent);
     private IReadOnlyList<RoleWorkspaceAction> DirectWorkspaceActions => Model.EmptyActions
-        .Where(action => RoleWorkspaceActionPolicy.GetUsage(Model.Role?.Key, action) switch
+        .Where(action => !IsFoodDriverPositionedControl(action)).Where(action => RoleWorkspaceActionPolicy.GetUsage(Model.Role?.Key, action) switch
         {
             RoleWorkspaceActionUsage.Required or RoleWorkspaceActionUsage.Conditional => true,
             RoleWorkspaceActionUsage.OptionalTool => !HasCurrentWork,
             _ => Model.SelectedItem is null
         }).ToArray();
     private IReadOnlyList<RoleWorkspaceAction> UnclassifiedWorkspaceActions => Model.SelectedItem is null ? []
-        : Model.EmptyActions.Where(action => RoleWorkspaceActionPolicy.GetUsage(Model.Role?.Key, action)
+        : Model.EmptyActions.Where(action => !IsFoodDriverPositionedControl(action)).Where(action => RoleWorkspaceActionPolicy.GetUsage(Model.Role?.Key, action)
             == RoleWorkspaceActionUsage.Unclassified).ToArray();
 
     private IReadOnlyList<(string ItemId, RoleWorkspaceAction Action)> ToolActions
@@ -232,7 +267,7 @@
                         == RoleWorkspaceActionUsage.OptionalTool).Select(action => (item.Id, action)));
                 }
                 if (HasCurrentWork)
-                    actions.AddRange(Model.EmptyActions.Where(action => RoleWorkspaceActionPolicy.GetUsage(Model.Role?.Key, action)
+                    actions.AddRange(Model.EmptyActions.Where(action => !IsFoodDriverPositionedControl(action)).Where(action => RoleWorkspaceActionPolicy.GetUsage(Model.Role?.Key, action)
                         == RoleWorkspaceActionUsage.OptionalTool).Select(action => (string.Empty, action)));
             }
             if (Model.IsAuthenticated)
@@ -427,6 +462,7 @@
     private void MarkersChanged(ChangeEventArgs args) => Model.SetMapVisibility(args.Value is true, Model.ShowRoutes);
     private void RoutesChanged(ChangeEventArgs args) => Model.SetMapVisibility(Model.ShowMarkers, args.Value is true);
     private void RetryMap() { _renderedRevision = -1; _hostStatus = NeighborhoodMapHostStatus.Loading; }
+    private Task ToggleDispatch(RoleWorkspaceAction action) => RequestAction(string.Empty, action);
     private Task RequestAction(string itemId, RoleWorkspaceAction action)
     {
         if (!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null) return Task.CompletedTask;

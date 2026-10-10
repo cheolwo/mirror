@@ -159,12 +159,24 @@ public sealed class FDriverPendingDurableRecoveryTests
     [Fact]
     public async Task FailedCanonicalGet_BlocksExplicitArrivalRetryAndKeepsOriginalSnapshot()
     {
-        var api = Api(Active()); var store = new PendingStore(); var writes = 0;
-        api.Arrival = (_, _, _) => { writes++; throw new FDriverApiException("lost", null); };
+        var active = Active(); var api = Api(active); var store = new PendingStore();
+        var requests = new List<음식배달가게도착요청>();
+        api.Arrival = (_, request, _) => { requests.Add(request); throw new FDriverApiException("lost", null); };
         var model = Model(api, store); await model.InitializeAsync(); await model.RecordRestaurantArrivalCommand.ExecuteAsync(null);
         api.Workspace = _ => throw new FDriverApiException("offline", null);
         await model.RecordRestaurantArrivalCommand.ExecuteAsync(null);
-        Assert.Equal(1, writes); Assert.NotNull((await store.LoadAsync())!.Arrival);
+        Assert.Single(requests); Assert.NotNull((await store.LoadAsync())!.Arrival);
+        Assert.False(model.CanRecordArrival);
+        await model.RecordRestaurantArrivalCommand.ExecuteAsync(null);
+        Assert.Single(requests);
+        active.AttemptRevision = 8;
+        api.Workspace = _ => Task.FromResult(new FoodDeliveryDriverWorkspaceDto { DriverId = "test-driver", ActiveDeliveries = [active], UpdatedAtUtc = DateTime.UtcNow });
+        await model.RefreshCommand.ExecuteAsync(null);
+        Assert.True(model.CanRecordArrival);
+        await model.RecordRestaurantArrivalCommand.ExecuteAsync(null);
+        Assert.Equal(2, requests.Count);
+        Assert.Equal(requests[0].클라이언트요청Id, requests[1].클라이언트요청Id);
+        Assert.Equal(7, requests[1].예상시도Revision);
         await model.StopMonitoringAsync();
     }
 

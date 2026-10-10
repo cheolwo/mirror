@@ -57,7 +57,11 @@ public sealed record DriverWorkOfferDto(
     [property: JsonPropertyName("temporaryDemandSurcharge")] decimal TemporaryDemandSurcharge = 0m,
     [property: JsonPropertyName("temporaryDemandSurchargeApplied")] bool TemporaryDemandSurchargeApplied = false,
     [property: JsonPropertyName("pricingPolicyRevision")] string? PricingPolicyRevision = null,
-    [property: JsonPropertyName("weatherObservedAtUtc")] DateTimeOffset? WeatherObservedAtUtc = null);
+    [property: JsonPropertyName("weatherObservedAtUtc")] DateTimeOffset? WeatherObservedAtUtc = null)
+{
+    [JsonPropertyName("experienceSummaries")]
+    public IReadOnlyList<Ssalddel.Contracts.Food.DeliveryExperienceSummaryDto> ExperienceSummaries { get; init; } = [];
+}
 
 public sealed class FoodDeliveryDriverActionResponse
 {

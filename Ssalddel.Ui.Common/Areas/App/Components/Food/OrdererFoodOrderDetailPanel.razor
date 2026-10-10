@@ -179,6 +179,8 @@
                           Dense="true">
                     @detail.배달진행.안내
                 </MudAlert>
+                @if (Detail.최신상태확인됨 && !Detail.처리중 && detail.주문.상태 == 음식주문상태코드.픽업완료 && !detail.배달진행.기사전달완료)
+                { <DeliveryExperienceLines Lines="Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food.DeliveryExperiencePresentation.OrdererLines(detail.ExperienceSummaries)" /> }
                 @if (!OrdererFoodOrderPresentation.IsStopped(detail.주문.상태)
                     && OrdererFoodOrderPresentation.NeedsDeliveryRecovery(detail.배달진행))
                 {

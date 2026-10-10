@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using FDriverApp.Services;
 using Ssalddel.Contracts.Common.Dispatch;
 using Ssalddel.Contracts.Food;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food;
 
 namespace FDriverApp.PageModels;
 
@@ -19,22 +20,24 @@ public sealed partial class MainPageModel
 
     public bool IsRegularWorkspaceVisible => IsAuthenticated && !ExceptionEditor.IsOpen;
     public bool IsExceptionWorkspaceVisible => IsAuthenticated && ExceptionEditor.IsOpen;
-    public bool CanToggleWork => IsAuthenticated && _pendingRecoveryReady && !IsBusy && !(IsOnDuty && HasActiveWork);
-    public bool CanToggleDispatchIntent => IsAuthenticated && _pendingRecoveryReady && !IsBusy && !ExceptionEditor.IsOpen
+    public bool CanToggleWork => CanUseWorkspaceState && _workStatusKnown && !(IsOnDuty && HasActiveWork)
+        && (IsOnDuty || _pendingStartReceptionRequestId is null);
+    public bool CanToggleDispatchIntent => CanUseWorkspaceState && _workStatusKnown && !ExceptionEditor.IsOpen
+        && _pendingStartReceptionRequestId is null
         && (DispatchIntentKnown || _pendingDispatchIntent is not null);
     public string DispatchIntentButtonText => _pendingDispatchIntent is not null ? "수신 변경 다시 확인"
         : !DispatchIntentKnown ? "신규 배차 상태 확인 중"
         : ReceivesNewDispatches ? "신규 배차 받기 ON" : "신규 배차 받기 OFF";
-    public bool CanRecordArrival => IsAuthenticated && _pendingRecoveryReady && !IsBusy && !ExceptionEditor.IsOpen
+    public bool CanRecordArrival => CanUseWorkspaceState && !ExceptionEditor.IsOpen
         && !ExceptionEditor.HasPendingRequest
         && IsArrivalPrimaryAction
         && ActiveDelivery?.Can(음식배달가능행동Ids.기사가게도착) == true
         && (_pendingArrival is null || _pendingArrivalAttemptId == ActiveDelivery.DeliveryAttemptId)
         && !string.IsNullOrWhiteSpace(ActiveDelivery.DeliveryAttemptId);
-    public bool CanOpenInterruption => IsAuthenticated && _pendingRecoveryReady && !IsBusy && !ExceptionEditor.IsOpen
+    public bool CanOpenInterruption => CanUseWorkspaceState && !ExceptionEditor.IsOpen
         && ActiveDelivery?.Can(음식배달가능행동Ids.기사배달중단) == true
         && !string.IsNullOrWhiteSpace(ActiveDelivery.DeliveryAttemptId);
-    public bool CanSubmitInterruption => IsAuthenticated && _pendingRecoveryReady && !IsBusy && ExceptionEditor.IsOpen
+    public bool CanSubmitInterruption => CanUseWorkspaceState && ExceptionEditor.IsOpen
         && ExceptionEditor.Delivery?.Can(음식배달가능행동Ids.기사배달중단) == true;
     public bool CanEditInterruption => CanSubmitInterruption && ExceptionEditor.IsInputUnlocked;
 
@@ -47,8 +50,13 @@ public sealed partial class MainPageModel
         OnPropertyChanged(nameof(CanRecordArrival)); OnPropertyChanged(nameof(CanOpenInterruption));
         OnPropertyChanged(nameof(CanSubmitInterruption)); OnPropertyChanged(nameof(CanEditInterruption));
         OnPropertyChanged(nameof(CanToggleDispatchIntent)); OnPropertyChanged(nameof(DispatchIntentButtonText));
+        OnPropertyChanged(nameof(IsDispatchReceptionOn)); OnPropertyChanged(nameof(CanUseDispatchReceptionSwitch));
+        OnPropertyChanged(nameof(DispatchReceptionStatusText));
+        OnPropertyChanged(nameof(WaitingTitle)); OnPropertyChanged(nameof(WaitingNotice));
         OnPropertyChanged(nameof(CanToggleWork));
         OnPropertyChanged(nameof(CanConfirmPickup)); OnPropertyChanged(nameof(CanCompleteDelivery));
+        AcceptTicketCommand.NotifyCanExecuteChanged(); RejectTicketCommand.NotifyCanExecuteChanged();
+        AcceptBundleCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnDispatchIntentKnownChanged(bool value) => NotifyExceptionState();
@@ -63,13 +71,30 @@ public sealed partial class MainPageModel
             if (workspaceGeneration is { } generation
                 && generation != Interlocked.Read(ref _workspaceSnapshotGeneration)) return;
             ReceivesNewDispatches = status.수신의사Code == 운영배차수신의사Code.On;
-            DispatchIntentKnown = true;
+            DispatchIntentKnown = status.수신의사Code is 운영배차수신의사Code.On or 운영배차수신의사Code.Off;
             ApplyWaitingDispatchAvailability(status);
+            if (!DispatchIntentKnown)
+            {
+                DispatchIntentNotice = "신규 배차 수신 상태를 자동으로 확인하고 있습니다.";
+                NotifyExceptionState(); return;
+            }
             DispatchIntentNotice = ReceivesNewDispatches ? "신규 배차를 받습니다." : "신규 배차를 받지 않습니다. 현재 배달과 위치 갱신은 유지합니다.";
             if (ReceivesNewDispatches && status.실효상태Code != 운영배차실효상태Code.배차가능)
                 DispatchIntentNotice += " 운행·배차 조건을 확인해 주세요.";
-            if (_pendingDispatchIntent?.수신의사Code == status.수신의사Code)
+            if (_pendingDispatchIntent?.수신의사Code == status.수신의사Code
+                && (_pendingStartReceptionRequestId != _pendingDispatchIntent.클라이언트요청Id
+                    || _pendingStartRequestId is not null && _verifiedStartRequestId == _pendingStartRequestId
+                    && FoodDriverWorkRecoveryPolicy.ResolveStart(true, _workStatusKnown ? IsOnDuty ? "운행중" : "운행종료" : null,
+                        status.수신의사Code) == FoodDriverStartRecoveryDecision.Complete))
+            {
+                if (_pendingStartReceptionRequestId == _pendingDispatchIntent.클라이언트요청Id)
+                {
+                    _pendingStartReceptionRequestId = null;
+                    _pendingStartRequestId = null;
+                    _verifiedStartRequestId = null;
+                }
                 _pendingDispatchIntent = null;
+            }
             NotifyExceptionState();
         }
         catch (Exception) when (workspaceGeneration is { } generation
@@ -81,7 +106,7 @@ public sealed partial class MainPageModel
         catch (FDriverApiException ex) when (ex.StatusCode != HttpStatusCode.Unauthorized && !cancellationToken.IsCancellationRequested)
         {
             DispatchIntentKnown = false;
-            DispatchIntentNotice = "신규 배차 수신 상태를 확인하지 못했습니다. 새로고침해 주세요.";
+            DispatchIntentNotice = "신규 배차 수신 상태를 확인하지 못했습니다. 자동으로 다시 확인합니다.";
             NotifyExceptionState();
         }
     }
@@ -229,6 +254,7 @@ public sealed partial class MainPageModel
     private void ClearExceptionWorkspace()
     {
         ExceptionEditor.Reset(); _pendingArrival = null; _pendingArrivalAttemptId = null; _pendingDispatchIntent = null;
+        _pendingStartReceptionRequestId = null; _pendingStartRequestId = null; _verifiedStartRequestId = null;
         _pendingArrivalOfferId = null; _restoredInterruption = null; _pendingLoadedOwner = null; _pendingMemoryOwner = null;
         _pendingPersistedFingerprint = null; _pendingRecoveryReady = false;
         DispatchIntentKnown = false; ReceivesNewDispatches = false;

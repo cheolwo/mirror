@@ -59,6 +59,7 @@ public sealed partial class 음식주문작성ViewModel
         메뉴가격확인필요 = true, 결제수단 = 결제수단,
         CommerceProtection = 거래보호확인 is null ? null : new 거래보호확인Request
             { NoticeVersion = 거래보호확인.NoticeVersion, NoticeAccepted = 거래보호확인.NoticeAccepted, SellerRevision = 거래보호확인.SellerRevision },
-        AutoFulfillment = 자동배송사용 ? AutoConditions.BuildConsent() : null
+        AutoFulfillment = 자동배송사용 ? AutoConditions.BuildConsent() : null,
+        DestinationIdentity = 선택주소식별복사()
     };
 }

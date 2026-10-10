@@ -17,7 +17,9 @@ public sealed class 음식주문등록CommandHandler(
     IPublisher publisher,
     SsalddelContext? db = null,
     Ssalddel.Services.Commerce.I통신판매거래Guard? commerce = null,
-    I자동수행Coordinator? fulfillment = null) : IRequestHandler<음식주문등록Command, 음식주문응답>
+    I자동수행Coordinator? fulfillment = null,
+    Ssalddel.Services.DeliveryExperience.음식배달경험Service? experience = null,
+    Ssalddel.Services.DeliveryExperience.음식배달전달지역Resolver? destinationResolver = null) : IRequestHandler<음식주문등록Command, 음식주문응답>
 {
     public async Task<음식주문응답> Handle(음식주문등록Command request, CancellationToken cancellationToken)
     {
@@ -39,7 +41,10 @@ public sealed class 음식주문등록CommandHandler(
         if (commerce is not null)
             await commerce.음식주문요구Async(canonicalRequest.주문자UserId, canonicalRequest.음식점Id,
                 request.Payload.CommerceProtection, canonicalRequest.클라이언트요청Id.ToString("N"), cancellationToken);
-        var saveResult = await 등록과음식점제안기록Async(canonicalRequest, cancellationToken);
+        var destination = experience?.Enabled == true && destinationResolver is not null
+            ? await destinationResolver.확인Async(canonicalRequest.수령인정보.주소, canonicalRequest.DestinationIdentity, cancellationToken)
+            : null;
+        var saveResult = await 등록과음식점제안기록Async(canonicalRequest, cancellationToken, destination);
         var order = saveResult.주문;
 
         if (saveResult.새로생성됨)
@@ -54,7 +59,8 @@ public sealed class 음식주문등록CommandHandler(
 
     private async Task<음식주문저장결과> 등록과음식점제안기록Async(
         음식주문등록요청 request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        살뜰.도메인.음식.음식배달전달지역Snapshot? destination = null)
     {
         if (db is null)
         {
@@ -66,6 +72,7 @@ public sealed class 음식주문등록CommandHandler(
             var saved = orderStore.멱등등록(request);
             if (saved.새로생성됨)
             {
+                전달지역결속(saved.주문.주문번호, destination);
                 db.운영배차활동사건.Add(운영배차활동사건Factory.음식점유효주문제안(
                     saved.주문.음식점Id,
                     saved.주문.주문번호,
@@ -91,6 +98,7 @@ public sealed class 음식주문등록CommandHandler(
             }
             if (saved.새로생성됨)
             {
+                전달지역결속(saved.주문.주문번호, destination);
                 db.운영배차활동사건.Add(운영배차활동사건Factory.음식점유효주문제안(
                     saved.주문.음식점Id,
                     saved.주문.주문번호,
@@ -100,6 +108,15 @@ public sealed class 음식주문등록CommandHandler(
             await transaction.CommitAsync(cancellationToken);
             return saved;
         });
+    }
+
+    private void 전달지역결속(string orderNo, 살뜰.도메인.음식.음식배달전달지역Snapshot? destination)
+    {
+        if (destination is null || db is null) return;
+        // 실행 전략이 재시도하는 경우 이전 rollback의 snapshot 추적만 제거합니다.
+        if (db.Entry(destination).State != EntityState.Detached) db.Entry(destination).State = EntityState.Detached;
+        destination.주문번호 = orderNo;
+        db.Set<살뜰.도메인.음식.음식배달전달지역Snapshot>().Add(destination);
     }
 
     private async Task<음식주문응답> 현재수행반영Async(음식주문응답 order, CancellationToken ct)

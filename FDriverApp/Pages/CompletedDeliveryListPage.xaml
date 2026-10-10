@@ -28,18 +28,22 @@
                 HorizontalOptions="Start" Style="{StaticResource DriverPrimaryButtonStyle}" />
         </VerticalStackLayout>
         <Grid Grid.Row="1">
-            <CollectionView x:Name="DeliveryList" ItemsSource="{Binding Items}" SelectionMode="None">
+            <CollectionView x:Name="DeliveryList" ItemsSource="{Binding Items}" SelectionMode="Single"
+                SelectionChanged="OnDeliverySelected" Scrolled="OnDeliveryListScrolled">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:FDriverDailySettlementItem">
-                        <VerticalStackLayout Padding="16,12,16,0" Spacing="12"
+                        <VerticalStackLayout Padding="16,12,16,0" Spacing="12" MinimumHeightRequest="48"
+                            SemanticProperties.Hint="배달 상세 보기"
                             BackgroundColor="{AppThemeBinding Light={StaticResource DriverSurface}, Dark={StaticResource DriverSurfaceDark}}">
-                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="4" ColumnSpacing="12">
+                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto,Auto" RowSpacing="4" ColumnSpacing="12">
                                 <Label Text="{Binding Display.RestaurantName}" Style="{StaticResource DriverBodyStyle}" FontAttributes="Bold" />
                                 <Label Grid.Column="1" Text="{Binding Display.GrossText}" Style="{StaticResource DriverValueStyle}" HorizontalTextAlignment="End" />
                                 <Label Grid.Row="1" Text="{Binding CompletedText}" Style="{StaticResource DriverMetadataStyle}" />
                                 <Label Grid.Row="2" Text="{Binding DistanceText}" Style="{StaticResource DriverMetadataStyle}" />
-                                <Button controls:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_right_24_regular}" Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Text="상세 보기"
-                                    Command="{Binding OpenDetailsCommand}" Style="{StaticResource DriverSecondaryButtonStyle}" />
+                                <Label Grid.Column="2" Grid.RowSpan="3" Text="{x:Static fonts:FluentUI.arrow_right_24_regular}"
+                                    FontFamily="{x:Static fonts:FluentUI.FontFamily}" FontSize="20" FontAutoScalingEnabled="False"
+                                    TextColor="{AppThemeBinding Light={StaticResource DriverTextSecondary}, Dark={StaticResource DriverTextSecondaryDark}}"
+                                    VerticalOptions="Center" AutomationProperties.IsInAccessibleTree="False" />
                             </Grid>
                             <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource DriverBorder}, Dark={StaticResource DriverBorderDark}}" />
                         </VerticalStackLayout>

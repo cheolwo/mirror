@@ -120,8 +120,8 @@ public sealed class FDriverNotificationAuthRecipientCompositionTests
     {
         var workContract = Read("Ssalddel.Contracts", "Common/Drivers/DriverWorkDtos.cs");
         var workspaceContract = Read("Ssalddel.Contracts", "Driver/Food/FoodDeliveryDriverWorkspaceDtos.cs");
-        var workService = Read("Ssalddel", "Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs");
-        var workspaceUseCase = Read("Ssalddel", "Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.cs");
+        var workService = Read("Ssalddel", "Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Query.cs");
+        var workspaceUseCase = Read("Ssalddel", "Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.CurrentWorkProjection.cs");
         var model = Read("FDriverApp", "PageModels/MainPageModel.cs");
         var page = Read("FDriverApp", "Pages/MainPage.xaml");
 

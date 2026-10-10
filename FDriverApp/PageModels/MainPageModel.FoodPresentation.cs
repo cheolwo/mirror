@@ -34,9 +34,10 @@ public sealed partial class MainPageModel
     public bool IsCurrentDeliverySummaryVisible => HasActiveWork && !IsCurrentDeliveryExpanded;
     public string CurrentDeliveryToggleText => IsCurrentDeliveryExpanded ? "접기" : "펼치기";
     public string? CurrentDeliveryPresentationKey => _currentDeliveryPresentationKey;
-    public FDriverFoodStage CurrentDeliveryStage => FoodDriverStagePresentation.Resolve(
+    private FoodDriverStage CurrentServerDeliveryStage => FoodDriverStagePresentation.Resolve(
         ActiveDelivery is not null, IsCurrentTargetDropoff, ActiveDelivery?.RestaurantArrivedAtUtc.HasValue == true,
-        ActiveDelivery?.Can(음식배달가능행동Ids.기사픽업확인) == true, HasAllowedArrival) switch
+        ActiveDelivery?.Can(음식배달가능행동Ids.기사픽업확인) == true, HasAllowedArrival);
+    public FDriverFoodStage CurrentDeliveryStage => CurrentServerDeliveryStage switch
     {
         FoodDriverStage.PickupTravel => FDriverFoodStage.PickupTravel,
         FoodDriverStage.PickupWaiting => FDriverFoodStage.PickupWaiting,
@@ -62,16 +63,42 @@ public sealed partial class MainPageModel
                 : string.IsNullOrEmpty(expected) ? current : $"{current}\n{expected}";
         }
     }
-    public string CurrentDeliveryStageText => CurrentDeliveryStage switch
+    public string CurrentDeliveryStageText => FoodDriverStagePresentation.Text(CurrentServerDeliveryStage,
+        ActiveDelivery?.RestaurantArrivedAtUtc.HasValue == true);
+    public string CurrentDeliveryPrimaryActionLabel => FoodDriverStagePresentation.PrimaryActionLabel(CurrentServerDeliveryStage);
+    private string CurrentDeliveryServerGuide => ActiveDelivery is { } delivery
+        ? FoodDriverStagePresentation.Guide(CurrentServerDeliveryStage, delivery.AvailableActions,
+            !string.IsNullOrWhiteSpace(delivery.DeliveryAttemptId), delivery.IsRecooking,
+            delivery.CurrentPickupReadyAtUtc is { } readyAt && readyAt != default)
+        : string.Empty;
+    public string CurrentDeliveryActionGuide
     {
-        FDriverFoodStage.PickupTravel => "음식점 이동 중",
-        FDriverFoodStage.PickupWaiting => ActiveDelivery?.RestaurantArrivedAtUtc.HasValue == true
-            ? "음식점 도착 · 픽업 대기" : "픽업 대기",
-        FDriverFoodStage.Delivery => "고객에게 전달 중",
-        _ => "배차 대기"
-    };
+        get
+        {
+            if (ActiveDelivery is not { } delivery) return NextActionGuide;
+            var stage = CurrentServerDeliveryStage;
+            var serverAllowsAction = delivery.Can(FoodDriverStagePresentation.PrimaryAction(stage))
+                && (stage != FoodDriverStage.PickupTravel || HasAllowedArrival);
+            var canAct = stage switch
+            {
+                FoodDriverStage.PickupTravel => CanRecordArrival,
+                FoodDriverStage.PickupWaiting => CanConfirmPickup,
+                FoodDriverStage.Delivery => CanCompleteDelivery,
+                _ => false
+            };
+            if (serverAllowsAction && !canAct)
+                return IsBusy ? "처리 결과를 확인하고 있습니다." : "최신 배달 상태와 가능 행동을 자동으로 확인하고 있습니다.";
+            return CurrentDeliveryServerGuide;
+        }
+    }
     public string DeliveryDetailsToggleText => IsDeliveryDetailsExpanded ? "상세 접기" : "상세 보기";
     public string WorkControlsToggleText => IsWorkControlsExpanded ? "설정 접기" : "운행·수신 설정";
+    public bool IsDispatchReceptionOn => DispatchIntentKnown && ReceivesNewDispatches;
+    public bool CanUseDispatchReceptionSwitch => DispatchIntentKnown && CanToggleDispatchIntent;
+    public string DispatchReceptionStatusText => _pendingStartReceptionRequestId is not null ? "준비 확인 중"
+        : !_workStatusKnown ? "운행 확인 중"
+        : !DispatchIntentKnown ? "확인 필요"
+        : IsBusy ? "변경 중" : ReceivesNewDispatches ? "켜짐" : "꺼짐";
 
     public bool IsWaitingForDelivery => IsAuthenticated && !HasActiveWork
         && !HasRecommendationContent && SelectedTicket is null;
@@ -82,6 +109,7 @@ public sealed partial class MainPageModel
         && (!IsWaitingForDelivery || StatusMessage is not (
             "기사 로그인 후 배달 업무를 시작할 수 있습니다." or "운행 시작을 눌러 배달을 시작하세요."
             or "배달 요청을 기다리고 있습니다." or "운행을 시작했습니다. 신규 배차 수신은 별도로 선택해 주세요."
+            or "운행을 시작했습니다. 현재 위치에 맞는 새 배달 요청을 자동으로 확인합니다."
             or "운행을 종료했습니다. 진행 중 배달은 계속 확인할 수 있습니다."));
     public bool HasTaskLocationWarning => HasMapLocationWarning && !IsWaitingForDelivery;
     public bool HasTaskDispatchNotice => HasDispatchNotice && !IsWaitingForDelivery;
@@ -95,14 +123,17 @@ public sealed partial class MainPageModel
             || (_waitingEffectiveDispatchState == 운영배차실효상태Code.조건부적합
                 && _waitingEffectiveDispatchReason != "NoEffectiveEligibilityRecorded"
                 && (_waitingEffectiveDispatchChangedAtUtc.HasValue || !string.IsNullOrWhiteSpace(_waitingEffectiveDispatchReason))));
-    public string WaitingTitle => IsOnDuty ? "배차 대기" : "운행 시작 전";
-    public string WaitingNotice => !IsOnDuty ? "운행을 시작하면 배달 요청을 받을 준비를 합니다."
+    public string WaitingTitle => _pendingStartReceptionRequestId is not null ? "운행 준비 확인 중"
+        : !_workStatusKnown ? "운행 확인 중" : IsOnDuty ? "배차 대기" : "운행 시작 전";
+    public string WaitingNotice => _pendingStartReceptionRequestId is not null ? "운행 시작과 신규 배차 수신 상태를 자동으로 확인하고 있습니다."
+        : !_workStatusKnown ? "현재 운행 상태를 자동으로 확인하고 있습니다."
+        : !IsOnDuty ? "운행을 시작하면 배달 요청을 받을 준비를 합니다."
         : !DispatchIntentKnown ? DispatchIntentNotice
         : !ReceivesNewDispatches ? "신규 배차 받기를 켜면 배달 요청을 받을 수 있습니다."
         : HasServerDispatchRestriction ? _waitingEffectiveDispatchState switch
         {
             운영배차실효상태Code.서버일시정지 => "신규 배차가 일시 중지되었습니다. 운영자에게 문의해 주세요.",
-            운영배차실효상태Code.연결확인불가 => "배차 연결 상태를 확인할 수 없습니다. 연결을 확인한 뒤 새로고침해 주세요.",
+            운영배차실효상태Code.연결확인불가 => "배차 연결 상태를 확인할 수 없습니다. 연결을 자동으로 확인하고 있습니다.",
             _ => "신규 배차 조건을 충족하지 못했습니다. 운행·배차 조건을 확인해 주세요."
         }
         : !HasCurrentLocation ? LocationNotice
@@ -122,7 +153,7 @@ public sealed partial class MainPageModel
     public bool IsRecommendationPrimaryAction => ActiveDelivery is null && SelectedTicket is not null;
     public bool HasDeliveryPrimaryAction => IsCompletionPrimaryAction || IsPickupPrimaryAction
         || IsArrivalPrimaryAction || IsRecommendationPrimaryAction || IsStartWorkPrimaryAction
-        || IsEnableDispatchPrimaryAction || IsWaitingLocationPrimaryAction;
+        || IsWaitingLocationPrimaryAction;
     public bool HasDeliveryFooter => HasActiveWork || HasDeliveryPrimaryAction;
 
     private bool IsCurrentTargetDropoff => ActiveDelivery is not null
@@ -130,6 +161,9 @@ public sealed partial class MainPageModel
     public bool IsCurrentTargetPickup => HasRouteSelection && !IsCurrentTargetDropoff;
     public string CurrentDeliveryTargetLabel => !HasRouteSelection ? "현재 배달"
         : IsCurrentTargetDropoff ? "전달할 곳" : "픽업할 음식점";
+    public string CurrentDeliveryAddressText => FoodDriverStagePresentation.Address(
+        ActiveDelivery is not null ? IsCurrentTargetDropoff ? ActiveDelivery.Dropoff.Address : ActiveDelivery.Pickup.Address
+            : SelectedTicket?.Pickup.Address, CurrentServerDeliveryStage);
     public string CurrentDeliveryTargetText
     {
         get
@@ -138,8 +172,8 @@ public sealed partial class MainPageModel
                 ? IsCurrentTargetDropoff ? ActiveDelivery.Dropoff : ActiveDelivery.Pickup
                 : SelectedTicket?.Pickup;
             return stop is null ? "지도에서 배달을 선택해 주세요."
-                : string.IsNullOrWhiteSpace(stop.Label) ? stop.Address
-                : string.IsNullOrWhiteSpace(stop.Address) ? stop.Label : $"{stop.Label}\n{stop.Address}";
+                : string.IsNullOrWhiteSpace(stop.Label) ? CurrentDeliveryAddressText
+                : $"{stop.Label}\n{CurrentDeliveryAddressText}";
         }
     }
     public string CurrentDeliveryFeeText => (ActiveDelivery?.DriverPayout ?? SelectedTicket?.DriverPayout) is decimal fee
@@ -173,6 +207,7 @@ public sealed partial class MainPageModel
 
     private void NotifyFoodPresentationState()
     {
+        NotifyDeliveryExperience();
         var key = ActiveDelivery is null ? null
             : $"{ActiveDelivery.OfferId}|{ActiveDelivery.DeliveryAttemptId}|{CurrentDeliveryStage}";
         var contextChanged = _currentDeliveryPresentationKey != key;
@@ -184,6 +219,8 @@ public sealed partial class MainPageModel
         OnPropertyChanged(nameof(IsFoodCardExpanded));
         OnPropertyChanged(nameof(CurrentDeliveryStage));
         OnPropertyChanged(nameof(CurrentDeliveryStageText));
+        OnPropertyChanged(nameof(CurrentDeliveryPrimaryActionLabel));
+        OnPropertyChanged(nameof(CurrentDeliveryActionGuide));
         OnPropertyChanged(nameof(IsCurrentDeliveryContentVisible));
         OnPropertyChanged(nameof(IsCurrentDeliverySummaryVisible));
         OnPropertyChanged(nameof(HasPickupStage));
@@ -194,6 +231,7 @@ public sealed partial class MainPageModel
         OnPropertyChanged(nameof(CurrentDeliveryTargetLabel));
         OnPropertyChanged(nameof(IsCurrentTargetPickup));
         OnPropertyChanged(nameof(CurrentDeliveryTargetText));
+        OnPropertyChanged(nameof(CurrentDeliveryAddressText));
         OnPropertyChanged(nameof(CurrentDeliveryFeeText));
         OnPropertyChanged(nameof(CurrentDeliveryStatusText));
         OnPropertyChanged(nameof(IsCompletionPrimaryAction));

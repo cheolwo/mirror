@@ -28,7 +28,7 @@ public sealed class FDriverWaitingPresentationTests
         Assert.Equal(start, model.IsStartWorkPrimaryAction);
         Assert.Equal(enableDispatch, model.IsEnableDispatchPrimaryAction);
         Assert.Equal(retryLocation, model.IsWaitingLocationPrimaryAction);
-        Assert.Equal(start || enableDispatch || retryLocation, model.HasDeliveryFooter);
+        Assert.Equal(start || retryLocation, model.HasDeliveryFooter);
         Assert.False(model.HasSelectedRecommendationSummary);
         Assert.False(model.HasDeliveryDetails);
         Assert.False(model.IsDeliveryDetailsVisible);
@@ -106,6 +106,10 @@ public sealed class FDriverWaitingPresentationTests
         var model = FDriverLifecycleTestSupport.Model(new(), api);
         await model.InitializeAsync();
         Assert.False(model.DispatchIntentKnown);
+        model.ReceivesNewDispatches = true; // A previous snapshot must not look confirmed after a failed read.
+        Assert.False(model.IsDispatchReceptionOn);
+        Assert.False(model.CanUseDispatchReceptionSwitch);
+        Assert.Equal("확인 필요", model.DispatchReceptionStatusText);
         Assert.False(model.IsEnableDispatchPrimaryAction);
         Assert.False(model.IsWaitingLocationPrimaryAction);
         Assert.Contains("확인하지 못했습니다", model.WaitingNotice);
@@ -233,7 +237,7 @@ public sealed class FDriverWaitingPresentationTests
         var page = XDocument.Load(RepoFile("FDriverApp/Pages/MainPage.xaml"));
         XNamespace x = "http://schemas.microsoft.com/winfx/2009/xaml";
         var footer = Assert.Single(page.Descendants(), element => (string?)element.Attribute(x + "Name") == "DeliveryPrimaryFooter");
-        foreach (var label in new[] { "운행 시작", "신규 배차 받기", "위치 다시 확인" })
+        foreach (var label in new[] { "운행 시작", "위치 다시 확인" })
         {
             var action = Assert.Single(footer.Elements(), element => (string?)element.Attribute("Text") == label);
             Assert.DoesNotContain(action.Ancestors(), element => element.Name.LocalName == "ScrollView");
@@ -245,6 +249,21 @@ public sealed class FDriverWaitingPresentationTests
             (string?)element.Attribute("Text") == "{Binding CurrentDeliveryTargetText}"
             && (string?)element.Attribute("IsVisible") == "{Binding HasSelectedRecommendationSummary}");
         Assert.Equal("Label", target.Name.LocalName);
+        var reception = Assert.Single(page.Descendants(), element => (string?)element.Attribute(x + "Name") == "FoodDispatchReceptionControl");
+        Assert.Equal("Start", (string?)reception.Attribute("HorizontalOptions"));
+        Assert.Equal("Start", (string?)reception.Attribute("VerticalOptions"));
+        Assert.DoesNotContain(reception.Ancestors(), element => element.Name.LocalName == "ScrollView");
+        var toggle = Assert.Single(reception.Descendants(), element => element.Name.LocalName == "Switch");
+        Assert.Equal("{Binding IsDispatchReceptionOn, Mode=OneWay}", (string?)toggle.Attribute("IsToggled"));
+        Assert.Equal("{Binding CanUseDispatchReceptionSwitch}", (string?)toggle.Attribute("IsEnabled"));
+        Assert.DoesNotContain(footer.Elements(), element => (string?)element.Attribute("Command") == "{Binding ToggleDispatchIntentCommand}");
+        var profile = Assert.Single(page.Descendants(), element => (string?)element.Attribute(x + "Name") == "ProfileSection");
+        var endWork = profile.Elements().Last();
+        Assert.Equal("운행 종료", (string?)endWork.Attribute("Text"));
+        Assert.Equal("{Binding CanToggleWork}", (string?)endWork.Attribute("IsEnabled"));
+        Assert.Equal("{Binding IsOnDuty}", (string?)endWork.Attribute("IsVisible"));
+        Assert.DoesNotContain(body.Descendants(), element => (string?)element.Attribute("Command") is
+            "{Binding ToggleWorkCommand}" or "{Binding ToggleDispatchIntentCommand}");
     }
 
     private static FDriverTestWorkspaceApi Api(bool onDuty, bool receives) => new()

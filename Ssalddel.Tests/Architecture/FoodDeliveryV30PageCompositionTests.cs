@@ -337,6 +337,11 @@ public sealed class FoodDeliveryV30PageCompositionTests
         var driverWork = Read(
             "Ssalddel",
             "Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs");
+        var driverFollowups = Read(
+            "Ssalddel",
+            "Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Followups.cs");
+        var followupOutbox = Read("Ssalddel", "Services/Community/FoodMartLedgerSyncOutboxService.cs");
+        var registrations = Read("Ssalddel", "Extensions/ServiceCollectionExtensions.DomainServices.Community.cs");
         var realtime = Read(
             "RestaurantDeskApp",
             "Services/음식점주문SignalRClientService.cs");
@@ -344,7 +349,12 @@ public sealed class FoodDeliveryV30PageCompositionTests
 
         Assert.Contains("ReceiveRestaurantOrderStatusChanged", hub);
         Assert.Contains("주문상태변경알림발송Async", serverNotification);
-        Assert.Contains("NotifyRestaurantAsync", driverWork);
+        Assert.Contains("예약후속Async", driverWork);
+        Assert.Contains("_driverFollowups.예약Async", driverFollowups);
+        Assert.Contains("_driverFollowups.즉시처리Async", driverFollowups);
+        Assert.Contains("음식기사후속Kinds.RestaurantNotification", followupOutbox);
+        Assert.Contains("restaurantNotification.주문상태변경알림발송Async", followupOutbox);
+        Assert.Contains("AddScoped<I음식기사후속OutboxService>", registrations);
         Assert.Contains("음식점주문상태변경알림", realtime);
         Assert.Contains("재연결후재조회요청", realtime);
         Assert.Contains("음식점실시간연결상태.재연결중", realtime);

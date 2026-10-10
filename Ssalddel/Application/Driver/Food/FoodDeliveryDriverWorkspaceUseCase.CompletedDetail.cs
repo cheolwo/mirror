@@ -1,3 +1,5 @@
+using Ssalddel.Contracts.Common.Metadata;
+
 using Microsoft.EntityFrameworkCore;
 using Ssalddel.Application.Food;
 using Ssalddel.Contracts.Food;
@@ -7,6 +9,19 @@ using 살뜰.도메인.음식;
 
 namespace Ssalddel.Application.Driver.Food;
 
+[SsalddelCodeMetadata(
+    SsalddelCodeFeatureKeys.FoodDriverWork,
+    SsalddelCodeLayer.Application,
+    "기사 소유권·조회 기한·시도 연결이 확인된 완료 상세만 반환한다.",
+    ContractType = typeof(IFoodDeliveryDriverWorkspaceUseCase),
+    Effects = SsalddelCodeEffect.PersistentRead,
+    FlowOrder = 135,
+    StepKey = "application.completed-detail",
+    DependsOnStepKeys = ["contract.food-workspace-port"],
+    ExecutionStage = SsalddelCodeExecutionStage.Query,
+    ReadsFrom = SsalddelCodeDataScope.OperationalState,
+    WritesTo = SsalddelCodeDataScope.None,
+    Boundary = "다른 기사의 정산 존재 여부나 고객 정보를 공개하지 않는다. 조회 중 기한 경과도 다시 차단하며 완료 상세 조회는 현재 업무나 실제 지급 판정이 아니다.")]
 public sealed partial class FoodDeliveryDriverWorkspaceUseCase
 {
     public async Task<FoodDeliveryCompletedDeliveryDetailDto?> GetCompletedDeliveryDetailAsync(

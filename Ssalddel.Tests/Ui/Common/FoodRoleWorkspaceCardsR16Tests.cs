@@ -89,14 +89,16 @@ public sealed class FoodRoleWorkspaceCardsR16Tests
         detail.수령인정보.수령인명 = "수령인 개인 이름";
         detail.수령인정보.연락처 = "010-1234-5678";
         detail.수령인정보.주소 = "고객 개인 주소";
-        var item = Assert.Single((await new OrdererRoleWorkspaceAdapter(OrdererApi(detail), new FixedTime()).LoadAsync(null, default)).Items);
+        var api = OrdererApi(detail);
+        var item = Assert.Single((await new OrdererRoleWorkspaceAdapter(api, new FixedTime()).LoadAsync(null, default)).Items);
         Assert.Empty(item.Markers!);
-        Assert.Empty(item.Actions!);
+        AssertSourceBoundSupport(Assert.Single(item.Actions!));
         Assert.Equal(stage, item.Summary!.Destination);
         var text = SummaryText(item.Summary);
         Assert.DoesNotContain("수령인 개인 이름", text);
         Assert.DoesNotContain("010-1234-5678", text);
         Assert.DoesNotContain("고객 개인 주소", text);
+        Assert.Empty(api.Writes);
     }
 
     [Theory]
@@ -110,9 +112,17 @@ public sealed class FoodRoleWorkspaceCardsR16Tests
         detail.배달진행.안내 = "전달·수령 상태를 확인해 주세요.";
         detail.AvailableActions = [new() { ActionId = 음식배달가능행동Ids.주문수령확인,
             ExpiresAtUtc = expired ? DateTime.UtcNow.AddMinutes(-1) : DateTime.UtcNow.AddMinutes(1) }];
-        var item = Assert.Single((await new OrdererRoleWorkspaceAdapter(OrdererApi(detail), new FixedTime()).LoadAsync(null, default)).Items);
-        Assert.Equal(enabled, Assert.Single(item.Actions!).Enabled);
+        var api = OrdererApi(detail);
+        var item = Assert.Single((await new OrdererRoleWorkspaceAdapter(api, new FixedTime()).LoadAsync(null, default)).Items);
+        Assert.Equal(2, item.Actions!.Count);
+        var receipt = Assert.Single(item.Actions, action => action.Key == 음식배달가능행동Ids.주문수령확인);
+        Assert.Equal(enabled, receipt.Enabled);
+        Assert.True(receipt.IsPrimary);
+        Assert.True(receipt.RequiresConfirmation);
+        AssertSourceBoundSupport(Assert.Single(item.Actions, action => action.Key == OrdererRoleWorkspaceAdapter.RequestSupport));
         Assert.Equal(enabled ? "음식을 받은 뒤 수령을 확인해 주세요." : detail.배달진행.안내, item.Summary!.Request!.Value);
+        Assert.Empty(item.Markers!);
+        Assert.Empty(api.Writes);
     }
 
     [Fact]
@@ -258,6 +268,15 @@ public sealed class FoodRoleWorkspaceCardsR16Tests
         var item = Assert.Single((await new OperatorRoleWorkspaceAdapter(api).LoadAsync(null, default)).Items);
         Assert.Equal(markerCount, item.Markers!.Count);
         Assert.NotNull(item.Summary);
+    }
+
+    private static void AssertSourceBoundSupport(RoleWorkspaceAction support)
+    {
+        Assert.Equal(OrdererRoleWorkspaceAdapter.RequestSupport, support.Key);
+        Assert.Equal("/commerce/disputes?sourceKind=food-order&sourceId=" + OrderNo, support.Route);
+        Assert.True(support.Enabled);
+        Assert.False(support.IsPrimary);
+        Assert.False(support.RequiresConfirmation);
     }
 
     private static 주문자음식주문상세응답 OrdererDetail() => new()

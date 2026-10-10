@@ -36,7 +36,8 @@ public interface I주문자음식주문조회UseCase
 [SsalddelUseCaseActor(SsalddelActor.Orderer)]
 public sealed class 주문자음식주문조회UseCase(
     SsalddelContext db,
-    Ssalddel.Services.Fulfillment.I자동수행Coordinator? fulfillment = null) : I주문자음식주문조회UseCase
+    Ssalddel.Services.Fulfillment.I자동수행Coordinator? fulfillment = null,
+    Ssalddel.Services.DeliveryExperience.음식배달경험Service? experience = null) : I주문자음식주문조회UseCase
 {
     public async Task<Result<음식주문접수결과응답>> 접수결과Async(
         Guid requestId, string? ordererUserId, CancellationToken cancellationToken)
@@ -145,6 +146,7 @@ public sealed class 주문자음식주문조회UseCase(
         var transport = await LoadLatestTransportAsync(cleanOrderNo, cancellationToken);
         var driverLocation = await LoadDriverLocationAsync(order, transport, cancellationToken);
         var detail = ToDetail(order, transport, driverLocation);
+        detail.ExperienceSummaries = experience?.주문자요약(cleanOrderNo, userId) ?? [];
         if (order.모의처리처수행)
             detail.AutoFulfillment = fulfillment?.Enabled != true
                 ? Ssalddel.Services.Fulfillment.AutoFulfillmentSnapshotProjection.Paused(

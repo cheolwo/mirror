@@ -48,7 +48,7 @@ namespace Ssalddel.Tests.Application.Food;
 /// 배차 후보 선정은 배차 엔진의 독립 시험 범위로 두고, 그 결과로 만들어진 추천 운송 원장부터
 /// 실제 음식 주문 Handler와 기사 업무 Service, 완료 World 투영까지 한 판본으로 관통합니다.
 /// </summary>
-public sealed class 음식배달정상수직생명주기Tests
+public sealed partial class 음식배달정상수직생명주기Tests
 {
     [Theory]
     [InlineData("transport", "assigned")]
@@ -200,7 +200,7 @@ public sealed class 음식배달정상수직생명주기Tests
                 throw new InvalidOperationException("food-r24-post-binding-sync-failure");
             }
             LastQueue = queue;
-            return Task.FromResult<커뮤니티원장Dto?>(null);
+            return Task.FromResult<커뮤니티원장Dto?>(new() { 원장Id = 운송원장Mongo동기화Builder.원장Id생성(queue.의뢰Id!) });
         }
         public Task<운송원장Mongo동기화상태> 상태조회Async(string id, CancellationToken cancellationToken = default)
             => Task.FromResult(운송원장Mongo동기화상태.Empty(id, string.Empty));
@@ -643,7 +643,9 @@ public sealed class 음식배달정상수직생명주기Tests
 
     private static 음식배달기사업무Service CreateDriverWork(
         SsalddelContext context, EfSsalddelFoodOrderStore store, RecordingPublisher publisher, string driverId,
-        I운영배차공통UseCase? receiving = null)
+        I운영배차공통UseCase? receiving = null,
+        Ssalddel.Services.DeliveryExperience.음식배달경험Service? experience = null,
+        ISsalddelExecutionModePolicy? experienceExecution = null)
         => new 음식배달기사업무Service(
             context,
             new InMemoryDriverLocationStore(),
@@ -658,7 +660,8 @@ public sealed class 음식배달정상수직생명주기Tests
             publisher,
             new TestCurrentUserAccessor(driverId, "Driver"),
             NullLogger<음식배달기사업무Service>.Instance,
-            receiving ?? new TestDispatchAvailability());
+            receiving ?? new TestDispatchAvailability(),
+            experience: experience, experienceExecution: experienceExecution);
 
     [Fact]
     public async Task 수신OFF는기존추천수락을차단하지만_수락된업무와도착중단을유지한다()
@@ -987,7 +990,7 @@ public sealed class 음식배달정상수직생명주기Tests
             => Task.FromResult<커뮤니티원장Dto?>(null);
 
         public Task<커뮤니티원장Dto?> 운송실행투영동기화Async(운송원장 운송실행투영, string updatedBy, CancellationToken cancellationToken = default)
-            => Task.FromResult<커뮤니티원장Dto?>(null);
+            => Task.FromResult<커뮤니티원장Dto?>(new() { 원장Id = 운송원장Mongo동기화Builder.원장Id생성(운송실행투영.의뢰Id!) });
 
         public Task<운송원장Mongo동기화상태> 상태조회Async(string 의뢰Id, CancellationToken cancellationToken = default)
             => Task.FromResult(운송원장Mongo동기화상태.Empty(의뢰Id, string.Empty));

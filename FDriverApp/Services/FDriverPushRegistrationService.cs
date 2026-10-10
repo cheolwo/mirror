@@ -81,7 +81,7 @@ public sealed class FDriverPushRegistrationService
     private async Task<FDriverPushRegistrationResult> RegisterCoreAsync(CancellationToken cancellationToken)
     {
         if (!_store.IsConfigured) return new(FDriverPushRegistrationState.ConfigurationRequired,
-            "푸시 설정 전 · 앱 복귀와 새로고침으로 요청 확인");
+            "푸시 설정 전 · 앱 복귀와 자동 갱신으로 요청 확인");
         var owner = _session.UserId;
         if (string.IsNullOrWhiteSpace(owner) || !HasDriverRole()) return new(FDriverPushRegistrationState.AuthenticationRequired);
         var credentials = await CredentialsAsync(owner, cancellationToken);
@@ -91,14 +91,14 @@ public sealed class FDriverPushRegistrationService
         if (state.RevocationPending && state.RegisteredOwnerId == owner)
         {
             if (!await DeleteAsync(state, credentials.Value.Token, cancellationToken))
-                return Failed("이전 알림 해제를 확인하지 못했습니다. 새로고침하면 다시 확인합니다.");
+                return Failed("이전 알림 해제를 확인하지 못했습니다. 앱으로 돌아오면 다시 확인합니다.");
             EnsureCurrentOwner(owner, credentials.Value.Revision, cancellationToken);
             state = state with { RegisteredOwnerId = null, RegisteredTokenHash = null, RegisteredAtUtc = null, RevocationPending = false };
             await _store.SaveAsync(state, cancellationToken);
         }
         // 다른 계정의 설치 해제 요청에는 현재 계정의 자격 증명을 사용하지 않습니다.
         if (string.IsNullOrWhiteSpace(state.PushToken)) return new(FDriverPushRegistrationState.TokenUnavailable,
-            "알림 연결 대기 · 앱 복귀와 새로고침으로 요청 확인");
+            "알림 연결 대기 · 앱 복귀와 자동 갱신으로 요청 확인");
         var tokenHash = Hash(state.PushToken);
         if (!state.RevocationPending && state.RegisteredOwnerId == owner && state.RegisteredTokenHash == tokenHash
             && state.RegisteredAtUtc > DateTime.UtcNow.AddDays(-1))
@@ -109,7 +109,7 @@ public sealed class FDriverPushRegistrationService
             "android", state.PushToken));
         using var response = await _http.SendAsync(request, cancellationToken);
         EnsureCurrentOwner(owner, credentials.Value.Revision, cancellationToken);
-        if (!response.IsSuccessStatusCode) return Failed("알림 연결을 확인하지 못했습니다. 앱 복귀와 새로고침으로 요청을 확인하세요.");
+        if (!response.IsSuccessStatusCode) return Failed("알림 연결을 확인하지 못했습니다. 앱 복귀와 자동 갱신으로 요청을 확인합니다.");
         await _store.SaveAsync(state with { RegisteredOwnerId = owner, RegisteredTokenHash = tokenHash,
             RegisteredAtUtc = DateTime.UtcNow, RevocationPending = false }, cancellationToken);
         EnsureCurrentOwner(owner, credentials.Value.Revision, cancellationToken);
@@ -150,7 +150,7 @@ public sealed class FDriverPushRegistrationService
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (OperationCanceledException) { return Failed("알림 연결 중 계정이 변경되었습니다. 현재 계정으로 다시 확인하세요."); }
         catch (Exception ex) when (ex is not OperationCanceledException)
-        { return Failed("알림 연결을 확인하지 못했습니다. 앱 복귀와 새로고침으로 요청을 확인하세요."); }
+        { return Failed("알림 연결을 확인하지 못했습니다. 앱 복귀와 자동 갱신으로 요청을 확인합니다."); }
         finally { _gate.Release(); }
     }
 

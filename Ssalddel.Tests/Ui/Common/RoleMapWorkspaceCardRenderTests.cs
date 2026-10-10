@@ -23,7 +23,7 @@ public sealed class RoleMapWorkspaceCardRenderTests
     [Fact]
     public async Task 수락전_접힌카드에_배달료_거리_픽업지가_보이고_긴메뉴는_상세로_남는다()
     {
-        var html = await RenderAsync(new FoodDeliveryDriverWorkspaceDto
+        var html = await RenderAsync(new FoodDeliveryDriverCurrentWorkDto
         {
             Recommendations = [new() { OfferId = "offer-a", RestaurantName = "음식점", DriverPayout = 4720, DistanceKm = 3.414m,
                 Pickup = new() { Address = "픽업지 기본 주소" }, Dropoff = new() { Address = "수락 전 전달 주소" },
@@ -50,12 +50,12 @@ public sealed class RoleMapWorkspaceCardRenderTests
         active.RestaurantArrivedAtUtc = arrived ? new DateTime(2026, 10, 5, 3, 0, 0, DateTimeKind.Utc) : null;
         active.CurrentPreparationRound = arrived ? 2 : 1;
         active.AvailableActions = [new() { ActionId = arrived ? 음식배달가능행동Ids.기사픽업확인 : 음식배달가능행동Ids.기사가게도착 }];
-        var html = await RenderAsync(new FoodDeliveryDriverWorkspaceDto { ActiveDeliveries = [active] });
+        var html = await RenderAsync(new FoodDeliveryDriverCurrentWorkDto { ActiveDeliveries = [active] });
         Assert.Contains("픽업지 기본 주소", html);
         Assert.Contains("4,180원", html);
         Assert.Contains("10/5 12:10 (한국)", html);
-        Assert.Contains(arrived ? "음식 픽업 확인" : "음식점 도착", html);
-        if (arrived) Assert.Contains("재조리 음식을 픽업해 주세요.", html);
+        Assert.Contains(arrived ? "픽업 완료" : "가게 도착", html);
+        if (arrived) Assert.Contains("재조리 음식을 받은 뒤 픽업 완료를 눌러 주세요.", html);
         Assert.DoesNotContain("고객 전달 주소", html);
         Assert.DoesNotContain("초인종 없이 문 앞에 놓아 주세요.", html);
         Assert.DoesNotContain("수령인 이름", html);
@@ -68,11 +68,11 @@ public sealed class RoleMapWorkspaceCardRenderTests
     [InlineData(true)]
     public async Task 전달_기본카드는_주소와필수요청을_보이고_메뉴와가린연락처는_상세에_남는다(bool expanded)
     {
-        var html = await RenderAsync(new FoodDeliveryDriverWorkspaceDto { ActiveDeliveries = [ActiveDelivery()] }, expanded);
+        var html = await RenderAsync(new FoodDeliveryDriverCurrentWorkDto { ActiveDeliveries = [ActiveDelivery()] }, expanded);
         Assert.Contains("고객 전달 주소", html);
         Assert.Contains("초인종 없이 문 앞에 놓아 주세요.", html);
         Assert.Contains("4,180원", html);
-        Assert.Contains("고객 전달 완료", html);
+        Assert.Contains("전달 완료", html);
         Assert.DoesNotContain("010-1234-5678", html);
         Assert.DoesNotContain("픽업지 기본 주소", html);
         if (expanded)
@@ -101,10 +101,10 @@ public sealed class RoleMapWorkspaceCardRenderTests
         AvailableActions = [new() { ActionId = 음식배달가능행동Ids.기사전달완료 }]
     };
 
-    private static async Task<string> RenderAsync(FoodDeliveryDriverWorkspaceDto workspace, bool expanded = false)
+    private static async Task<string> RenderAsync(FoodDeliveryDriverCurrentWorkDto workspace, bool expanded = false)
     {
         var api = new FoodRoleWorkspaceAdapterTests.Api();
-        api.Reads["api/v1/driver/food-deliveries/workspace"] = workspace;
+        api.Reads["api/v1/driver/food-deliveries/workspace/current"] = workspace;
         api.Reads["api/v1/driver/food-deliveries/work/status"] = new 기사운행상태응답 { Status = "운행중" };
         api.Reads["api/v1/driver/operational-dispatch/availability"] = new 운영배차수신상태Dto
         { 수신의사Code = 운영배차수신의사Code.On, 실효상태Code = 운영배차실효상태Code.배차가능 };

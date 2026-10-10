@@ -1,6 +1,7 @@
 using System.Globalization;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Contracts.Common.Fulfillment;
+using Ssalddel.Contracts.Common.PublicData;
 
 namespace Ssalddel.Ui.Common.Areas.App.Services;
 
@@ -28,6 +29,8 @@ public interface I주문자음식주문읽기Service
 
 public interface I주문자음식주문쓰기Service
 {
+    Task<PublicDataLookupResponse<RoadAddressItem>> 주소검색Async(string keyword, CancellationToken ct = default)
+        => Task.FromException<PublicDataLookupResponse<RoadAddressItem>>(new NotSupportedException("주소 검색을 사용할 수 없습니다."));
     Task<FoodAutoFulfillmentQuoteResponse> 자동배송조건Async(음식주문등록요청 request, CancellationToken ct = default)
         => Task.FromResult(new FoodAutoFulfillmentQuoteResponse());
     Task<음식주문응답> 등록Async(
@@ -61,6 +64,11 @@ public sealed class 주문자음식주문Client(
     I주문자음식주문취소Service
 {
     private const string BasePath = "api/v1/food-orders";
+    public async Task<PublicDataLookupResponse<RoadAddressItem>> 주소검색Async(string keyword, CancellationToken ct = default)
+        => await client.GetAsync<PublicDataLookupResponse<RoadAddressItem>>(
+            "api/v1/orderer/public-data/addresses?keyword=" + Uri.EscapeDataString(keyword.Trim()) + "&page=1&pageSize=10",
+            "배달 주소 검색", allowNotFound: false, cancellationToken: ct)
+            ?? throw new InvalidOperationException("주소 검색 결과를 확인하지 못했습니다.");
     public async Task<FoodAutoFulfillmentQuoteResponse> 자동배송조건Async(음식주문등록요청 request, CancellationToken ct = default)
         => await client.SendAsync<음식주문등록요청, FoodAutoFulfillmentQuoteResponse>(HttpMethod.Post, $"{BasePath}/fulfillment-quote", request, "음식 배송 조건 확인", cancellationToken: ct)
             ?? throw new InvalidOperationException("음식 배송 조건을 확인하지 못했습니다.");

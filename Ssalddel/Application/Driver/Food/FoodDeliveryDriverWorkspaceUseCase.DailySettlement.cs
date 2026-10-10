@@ -1,3 +1,5 @@
+using Ssalddel.Contracts.Common.Metadata;
+
 using Microsoft.EntityFrameworkCore;
 using Ssalddel.Application.Food;
 using Ssalddel.Contracts.Food;
@@ -5,6 +7,19 @@ using 살뜰.도메인.음식;
 
 namespace Ssalddel.Application.Driver.Food;
 
+[SsalddelCodeMetadata(
+    SsalddelCodeFeatureKeys.FoodDriverWork,
+    SsalddelCodeLayer.Application,
+    "전달 완료 SQL 정산 원장을 한국 날짜 기준으로 조회한다.",
+    ContractType = typeof(IFoodDeliveryDriverWorkspaceUseCase),
+    Effects = SsalddelCodeEffect.PersistentRead,
+    FlowOrder = 130,
+    StepKey = "application.daily-settlement",
+    DependsOnStepKeys = ["contract.food-workspace-port"],
+    ExecutionStage = SsalddelCodeExecutionStage.Query,
+    ReadsFrom = SsalddelCodeDataScope.OperationalState,
+    WritesTo = SsalddelCodeDataScope.None,
+    Boundary = "현재 제안·최근 40건의 합계로 대체하지 않는다. 전달 완료일·수령 확인·공제·모의 지급·실제 이체는 별개이며 실제 이체 완료를 생성하지 않는다.")]
 public sealed partial class FoodDeliveryDriverWorkspaceUseCase
 {
     /// <summary>완료 원장의 UTC 시각을 한국 날짜로 묶습니다. 수령 확인·후속 공제·모의 지급일로 귀속을 옮기지 않습니다.</summary>

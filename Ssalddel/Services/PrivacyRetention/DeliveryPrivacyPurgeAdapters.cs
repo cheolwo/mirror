@@ -13,7 +13,8 @@ using Ssalddel.Services.Outbox;
 namespace Ssalddel.Services.PrivacyRetention;
 
 public sealed class 음식배송개인정보파기Adapter(SsalddelContext db, I개인정보보존Store store,
-    I배송원장개인정보파기Service ledgers) : I개인정보파기Adapter
+    I배송원장개인정보파기Service ledgers,
+    Ssalddel.Services.DeliveryExperience.음식배달경험Service? experience = null) : I개인정보파기Adapter
 {
     public string SourceCode => 개인정보파기원천Codes.FoodOrder;
     public async Task<IReadOnlyList<개인정보파기대상>> DiscoverAsync(DateTime cutoff, int limit, CancellationToken ct, long afterSequence = 0)
@@ -76,6 +77,7 @@ public sealed class 음식배송개인정보파기Adapter(SsalddelContext db, I�
         var ledgerIds = new[] { order.커뮤니티원장Id ?? "food-order:" + job.RecordId }
             .Concat(transports.Select(x => x.커뮤니티원장Id ?? "transport:" + x.의뢰Id)).Distinct().ToArray();
         await 배송개인정보이력파기.파기Async(db, transports, ledgerIds, ct);
+        if (experience is not null) await experience.원천지역최소화Async(job.RecordId, ct);
         await db.SaveChangesAsync(ct);
         foreach (var id in ledgerIds)
             if (!await ledgers.파기Async(id, SourceCode, job.RecordId, ct)) return new(false, "LinkedLedgerSourceOrRevisionUnverified", []);

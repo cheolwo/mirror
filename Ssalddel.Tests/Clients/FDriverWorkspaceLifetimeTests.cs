@@ -348,7 +348,7 @@ public sealed class FDriverWorkspaceLifetimeTests
             }
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = request.RequestUri.AbsolutePath.EndsWith("workspace", StringComparison.Ordinal)
+                Content = request.RequestUri.AbsolutePath.EndsWith("workspace/current", StringComparison.Ordinal)
                     ? JsonContent.Create(FDriverTestWorkspaceApi.Data("recovered"))
                     : JsonContent.Create(new 기사운행상태응답 { Status = "운행종료" })
             });

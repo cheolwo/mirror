@@ -27,15 +27,15 @@ public sealed partial class MainPageModel
         _foodNotificationState = new(_foodNotifications);
     }
 
-    private void ApplyFoodRecommendations(FoodDeliveryDriverWorkspaceDto workspace)
+    private void ApplyFoodRecommendations(FoodDeliveryDriverCurrentWorkDto workspace)
     {
-        var now = DateTime.UtcNow;
+        var now = _time.GetUtcNow().UtcDateTime;
         var acceptedIds = workspace.ActiveDeliveries.Select(x => x.OfferId).ToHashSet(StringComparer.Ordinal);
         var recommendations = workspace.Recommendations.Where(x => !acceptedIds.Contains(x.OfferId)
                 && (!x.ExpiresAtUtc.HasValue || x.ExpiresAtUtc.Value > now))
                 .GroupBy(x => x.OfferId, StringComparer.Ordinal).Select(x => x.First()).ToArray();
         RecommendedTicketItems.Clear();
-        foreach (var offer in recommendations) RecommendedTicketItems.Add(DeliveryTicketPreview.From(offer));
+        foreach (var offer in recommendations) RecommendedTicketItems.Add(DeliveryTicketPreview.From(offer, now));
         _foodNotificationState.BindAccount(IsAuthenticated ? _authSession.UserId : null);
         _foodNotificationState.Reconcile(DispatchIntentKnown && ReceivesNewDispatches ? RecommendedTicketItems.ToArray() : [], now);
         UpdateFoodRecommendationNotice();

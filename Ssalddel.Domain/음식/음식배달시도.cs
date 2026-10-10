@@ -6,6 +6,9 @@ namespace 살뜰.도메인.음식;
 [Table("음식배달시도")]
 public sealed class 음식배달시도
 {
+    // 새 수락에서 확인한 모드만 기록합니다. 유산 기록의 모드를 추정하지 않습니다.
+    [Column("experience_execution_mode_code"), MaxLength(32)]
+    public string? 경험실행모드Code { get; set; }
     [Key]
     [Column("id")]
     public long Id { get; set; }

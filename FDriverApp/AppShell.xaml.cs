@@ -15,7 +15,10 @@ namespace FDriverApp
             Routing.RegisterRoute(FDriverCompletedDeliveryNavigator.DetailRoute, typeof(CompletedDeliveryDetailPage));
             Routing.RegisterRoute(FDriverProtectionSupportNavigator.RouteName, typeof(ProtectionSupportPage));
             Routing.RegisterRoute(NotificationSettingsPage.RouteName, typeof(NotificationSettingsPage));
+            Routing.RegisterRoute(ReturnAreaSettingsPage.RouteName, typeof(ReturnAreaSettingsPage));
+            Routing.RegisterRoute(DeliveryExperienceSettingsPage.RouteName, typeof(DeliveryExperienceSettingsPage));
             Routing.RegisterRoute(AgreedRateTablePage.RouteName, typeof(AgreedRateTablePage));
+            Routing.RegisterRoute(살뜰마트배송Page.RouteName, typeof(살뜰마트배송Page));
             var currentTheme = Application.Current!.RequestedTheme;
             ThemeSegmentedControl.SelectedIndex = currentTheme == AppTheme.Light ? 0 : 1;
         }

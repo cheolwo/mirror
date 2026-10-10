@@ -1,3 +1,5 @@
+using Ssalddel.Contracts.Common.Metadata;
+
 using FluentResults;
 using Ssalddel.Contracts.Common.Drivers;
 using Ssalddel.Contracts.Common.Transport;
@@ -12,6 +14,19 @@ using 살뜰.Services.Transport;
 
 namespace Ssalddel.Application.Driver.Work;
 
+[SsalddelCodeMetadata(
+    SsalddelCodeFeatureKeys.FoodDriverWork,
+    SsalddelCodeLayer.Application,
+    "현재 근무·앱 소유권을 검증해 GPS 투영과 접근·위치 후속을 갱신한다.",
+    ContractType = typeof(위치갱신Command),
+    Effects = SsalddelCodeEffect.PersistentRead | SsalddelCodeEffect.PersistentWrite | SsalddelCodeEffect.NetworkCall | SsalddelCodeEffect.StateMutation | SsalddelCodeEffect.ThirdPartyApiCall | SsalddelCodeEffect.MayIncurExternalCost,
+    FlowOrder = 85,
+    StepKey = "application.work-location",
+    DependsOnStepKeys = ["application.work-transition-lock", "contract.work-status"],
+    ExecutionStage = SsalddelCodeExecutionStage.Projection,
+    ReadsFrom = SsalddelCodeDataScope.OperationalState,
+    WritesTo = SsalddelCodeDataScope.OperationalState,
+    Boundary = "종료와 같은 기사 잠금으로 늦은 GPS의 운행 부활을 막는다. 외부 역지오코딩은 구 단위 공개 동의가 있을 때만 호출하며 고객 경로나 배달 완료를 확정하지 않는다.")]
 public sealed class 위치갱신CommandHandler : IRequestHandler<위치갱신Command, Result<기사위치갱신응답>>
 {
     private readonly SsalddelContext _db;
@@ -67,93 +82,14 @@ public sealed class 위치갱신CommandHandler : IRequestHandler<위치갱신Com
             return Result.Fail<기사위치갱신응답>("위도와 경도가 필요합니다.");
         }
 
-        var driver = await _db.용달기사.FirstOrDefaultAsync(x => x.기사Id == request.기사Id, cancellationToken);
-        if (driver is null)
+        var applied = await ApplyCurrentWorkLocationAsync(request, cancellationToken);
+        if (applied.IsFailed)
         {
-            return Result.Fail<기사위치갱신응답>("용달기사 정보를 찾을 수 없습니다.");
+            return Result.Fail<기사위치갱신응답>(applied.Errors);
         }
 
-        var status = string.IsNullOrWhiteSpace(request.운행상태)
-            ? driver.운행상태
-            : request.운행상태.Trim();
-        if (!string.Equals(status, 상태값.기사운행상태.운행중, StringComparison.OrdinalIgnoreCase))
-        {
-            return Result.Fail<기사위치갱신응답>("운행중 상태에서만 위치를 전송할 수 있습니다.");
-        }
-
-        var currentShift = await _db.기사근무
-            .AsNoTracking()
-            .Where(x => x.기사Id == request.기사Id)
-            .OrderByDescending(x => x.시작시각 ?? x.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken);
-        var shiftAppKey = ResolveShiftAppKey(currentShift?.운송실행유형);
-        if (!string.IsNullOrWhiteSpace(shiftAppKey)
-            && !string.IsNullOrWhiteSpace(request.AppKey)
-            && !string.Equals(shiftAppKey, request.AppKey, StringComparison.Ordinal))
-        {
-            return Result.Fail<기사위치갱신응답>(
-                "현재 근무의 운송 실행유형과 위치를 전송한 기사 앱이 일치하지 않습니다.");
-        }
-
-        driver.운행상태 = 상태값.기사운행상태.운행중;
-        driver.UpdatedAt = DateTime.UtcNow;
-
-        var recordedAt = request.기록시각 ?? DateTime.UtcNow;
-        var receivedAt = DateTime.UtcNow;
-        var snapshot = new DriverLocationSnapshot(
-            request.기사Id,
-            request.위도.Value,
-            request.경도.Value,
-            request.정확도_m,
-            상태값.기사운행상태.운행중,
-            recordedAt,
-            receivedAt);
-
-        _driverLocationStore.Upsert(snapshot);
-        _db.기사위치기록.Add(new 기사위치기록
-        {
-            기사Id = snapshot.DriverId,
-            위도 = snapshot.Latitude,
-            경도 = snapshot.Longitude,
-            정확도_m = snapshot.AccuracyM,
-            기록시각 = snapshot.RecordedAtUtc,
-            CreatedAt = snapshot.ReceivedAtUtc,
-            UpdatedAt = snapshot.ReceivedAtUtc
-        });
-
-        await _db.SaveChangesAsync(cancellationToken);
+        var (snapshot, osState) = applied.Value;
         await PublishActiveTransportLocationAsync(request.기사Id, cancellationToken);
-        var osState = await _국내화물운송기사상태Service.위치갱신Async(
-            snapshot,
-            상차접근허용반경Km: request.상차접근허용반경Km,
-            appKey: shiftAppKey ?? request.AppKey,
-            cancellationToken: cancellationToken);
-        var 음식배달기사 = string.Equals(
-            osState.AppKey,
-            기사앱식별자.FoodDeliveryDriverApp,
-            StringComparison.Ordinal);
-        var 현재좌표 = new 배차경로좌표(snapshot.Latitude, snapshot.Longitude);
-        var 배달권 = 음식배달기사
-            ? 음식배달권정책.판정(현재좌표, null)
-            : 국내화물배달권정책.판정(현재좌표, driver.주_활동지역);
-        if (음식배달기사)
-        {
-            await _국내화물배달권실행공간Store.Remove기사Async(request.기사Id, cancellationToken);
-            await _음식배달권실행공간Store.Upsert기사Async(
-                배달권.배달권키,
-                request.기사Id,
-                음식배달권정책.인접배달권키조회(배달권.배달권키),
-                cancellationToken);
-        }
-        else
-        {
-            await _음식배달권실행공간Store.Remove기사Async(request.기사Id, cancellationToken);
-            await _국내화물배달권실행공간Store.Upsert기사Async(
-                배달권.배달권키,
-                request.기사Id,
-                국내행정구역배달권Catalog.인접배달권키조회(배달권.배달권키),
-                cancellationToken);
-        }
 
         try
         {
@@ -204,6 +140,114 @@ public sealed class 위치갱신CommandHandler : IRequestHandler<위치갱신Com
             커뮤니티현재공개지역 = communityDistrictLabel
         });
     }
+
+    private async Task<Result<LocationProjection>> ApplyCurrentWorkLocationAsync(
+        위치갱신Command request, CancellationToken cancellationToken)
+    {
+        // 시작·종료·후속 투영과 같은 잠금을 사용해, 늦은 GPS가 종료된 인덱스를 되살리지 않게 합니다.
+        using var gate = await 기사운행전이Lock.진입Async(request.기사Id, cancellationToken);
+        return await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var transaction = _db.Database.IsRelational()
+                ? await _db.Database.BeginTransactionAsync(cancellationToken) : null;
+            await 기사운행전이Lock.행잠금Async(_db, request.기사Id, cancellationToken);
+            var driver = await _db.용달기사.FirstOrDefaultAsync(x => x.기사Id == request.기사Id, cancellationToken);
+            if (driver is null)
+            {
+                return Result.Fail<LocationProjection>("용달기사 정보를 찾을 수 없습니다.");
+            }
+            await _db.Entry(driver).ReloadAsync(cancellationToken);
+
+            var status = string.IsNullOrWhiteSpace(request.운행상태)
+                ? driver.운행상태
+                : request.운행상태.Trim();
+            if (!string.Equals(driver.운행상태, 상태값.기사운행상태.운행중, StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(status, 상태값.기사운행상태.운행중, StringComparison.OrdinalIgnoreCase))
+            {
+                return Result.Fail<LocationProjection>("운행중 상태에서만 위치를 전송할 수 있습니다.");
+            }
+
+            var currentShift = await _db.기사근무
+                .AsNoTracking()
+                .Where(x => x.기사Id == request.기사Id)
+                .OrderByDescending(x => x.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+            var shiftAppKey = ResolveShiftAppKey(currentShift?.운송실행유형);
+            if (!string.IsNullOrWhiteSpace(shiftAppKey)
+                && !string.IsNullOrWhiteSpace(request.AppKey)
+                && !string.Equals(shiftAppKey, request.AppKey, StringComparison.Ordinal))
+            {
+                return Result.Fail<LocationProjection>(
+                    "현재 근무의 운송 실행유형과 위치를 전송한 기사 앱이 일치하지 않습니다.");
+            }
+
+            // 위치 보고는 운행 시작 명령이 아니다. 동시에 종료된 근무 상태도 덮어쓰지 않는다.
+            driver.UpdatedAt = DateTime.UtcNow;
+
+            var recordedAt = request.기록시각 ?? DateTime.UtcNow;
+            var receivedAt = DateTime.UtcNow;
+            var snapshot = new DriverLocationSnapshot(
+                request.기사Id,
+                request.위도.Value,
+                request.경도.Value,
+                request.정확도_m,
+                상태값.기사운행상태.운행중,
+                recordedAt,
+                receivedAt);
+
+            _driverLocationStore.Upsert(snapshot);
+            _db.기사위치기록.Add(new 기사위치기록
+            {
+                기사Id = snapshot.DriverId,
+                위도 = snapshot.Latitude,
+                경도 = snapshot.Longitude,
+                정확도_m = snapshot.AccuracyM,
+                기록시각 = snapshot.RecordedAtUtc,
+                CreatedAt = snapshot.ReceivedAtUtc,
+                UpdatedAt = snapshot.ReceivedAtUtc
+            });
+
+            await _db.SaveChangesAsync(cancellationToken);
+            var osState = await _국내화물운송기사상태Service.위치갱신Async(
+                snapshot,
+                shiftId: currentShift?.Id,
+                상차접근허용반경Km: request.상차접근허용반경Km,
+                appKey: shiftAppKey ?? request.AppKey,
+                cancellationToken: cancellationToken);
+            var 음식배달기사 = string.Equals(
+                osState.AppKey,
+                기사앱식별자.FoodDeliveryDriverApp,
+                StringComparison.Ordinal);
+            var 현재좌표 = new 배차경로좌표(snapshot.Latitude, snapshot.Longitude);
+            var 배달권 = 음식배달기사
+                ? 음식배달권정책.판정(현재좌표, null)
+                : 국내화물배달권정책.판정(현재좌표, driver.주_활동지역);
+            if (음식배달기사)
+            {
+                await _국내화물배달권실행공간Store.Remove기사Async(request.기사Id, cancellationToken);
+                await _음식배달권실행공간Store.Upsert기사Async(
+                    배달권.배달권키,
+                    request.기사Id,
+                    음식배달권정책.인접배달권키조회(배달권.배달권키),
+                    cancellationToken);
+            }
+            else
+            {
+                await _음식배달권실행공간Store.Remove기사Async(request.기사Id, cancellationToken);
+                await _국내화물배달권실행공간Store.Upsert기사Async(
+                    배달권.배달권키,
+                    request.기사Id,
+                    국내행정구역배달권Catalog.인접배달권키조회(배달권.배달권키),
+                    cancellationToken);
+            }
+
+            if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+            return Result.Ok(new LocationProjection(snapshot, osState));
+        });
+    }
+
+    private sealed record LocationProjection(
+        DriverLocationSnapshot Snapshot, 국내화물운송기사상태Snapshot State);
 
     private static string? ResolveShiftAppKey(string? 운송실행유형)
         => 운송실행유형 switch

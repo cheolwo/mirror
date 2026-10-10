@@ -7,6 +7,7 @@ using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Contracts.Driver.Food;
 using Ssalddel.Contracts.Driver.Work;
 using Ssalddel.Contracts.Food;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food;
 
 namespace Ssalddel.Tests.Clients;
 
@@ -49,6 +50,101 @@ public sealed class FDriverFoodPresentationTests
         Assert.False(model.IsArrivalSecondaryAction);
         Assert.False(model.CanConfirmPickup);
         Assert.False(model.CanRecordArrival);
+    }
+
+    [Theory]
+    [InlineData(FDriverFoodStage.PickupTravel, "음식점 이동 중", "가게 도착")]
+    [InlineData(FDriverFoodStage.PickupWaiting, "음식점 도착 · 픽업 대기", "픽업 완료")]
+    [InlineData(FDriverFoodStage.Delivery, "고객에게 전달 중", "전달 완료")]
+    public void NativeAndSharedCurrentCards_UseTheSameStageAndActionWords(FDriverFoodStage stage, string title, string actionLabel)
+    {
+        var source = DeliveryData(4200, stage == FDriverFoodStage.Delivery ? Actions(true, false, false)
+            : stage == FDriverFoodStage.PickupWaiting ? Actions(false, true, false) : Actions(false, false, true));
+        if (stage == FDriverFoodStage.PickupWaiting) source.RestaurantArrivedAtUtc = DateTime.UtcNow;
+        if (stage == FDriverFoodStage.Delivery) source.WorkStatus = DriverWorkOfferStatus.MovingToDropoff;
+        var model = Model(); model.ActiveDelivery = ActiveDeliveryPreview.From(source);
+        var shared = FoodDriverWorkspacePresentation.Active(source, DateTime.UtcNow);
+
+        Assert.Equal(stage, model.CurrentDeliveryStage);
+        Assert.Equal(title, model.CurrentDeliveryStageText);
+        Assert.Equal(title, shared.Status);
+        Assert.Equal(actionLabel, model.CurrentDeliveryPrimaryActionLabel);
+        Assert.Equal(actionLabel, Assert.Single(shared.Actions!, action => action.IsPrimary).Label);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CurrentCardAddress_PreservesTheFullAddressWithoutRepeatingThePlaceName(bool delivery)
+    {
+        var source = DeliveryData(4200, delivery ? Actions(true, false, false) : Actions(false, false, true));
+        source.RestaurantName = "음식점 이름"; source.Pickup.Label = source.RestaurantName;
+        if (delivery) source.WorkStatus = DriverWorkOfferStatus.MovingToDropoff;
+        var model = Model(); model.ActiveDelivery = ActiveDeliveryPreview.From(source);
+
+        Assert.Equal(delivery ? source.Dropoff.Address : source.Pickup.Address, model.CurrentDeliveryAddressText);
+        Assert.DoesNotContain(source.RestaurantName, model.CurrentDeliveryAddressText);
+        var shared = FoodDriverWorkspacePresentation.Active(source, DateTime.UtcNow);
+        Assert.Equal(model.CurrentDeliveryAddressText, shared.Summary!.Destination);
+    }
+
+    [Theory]
+    [InlineData(false, "픽업 주소 미확인")]
+    [InlineData(true, "전달 주소 미확인")]
+    public void MissingCurrentAddress_IsExplicitEvenWhenThePlaceHasAName(bool delivery, string expected)
+    {
+        var source = DeliveryData(4200, delivery ? Actions(true, false, false) : Actions(false, false, true));
+        if (delivery) { source.WorkStatus = DriverWorkOfferStatus.MovingToDropoff; source.Dropoff.Address = " "; }
+        else source.Pickup.Address = string.Empty;
+        var model = Model(); model.ActiveDelivery = ActiveDeliveryPreview.From(source);
+
+        Assert.Equal(expected, model.CurrentDeliveryAddressText);
+        Assert.Contains(expected, model.CurrentDeliveryTargetText);
+        var shared = FoodDriverWorkspacePresentation.Active(source, DateTime.UtcNow);
+        Assert.Equal(expected, shared.Summary!.Destination);
+        Assert.Contains(shared.Sections!, section => section.Fields.Any(field => field.Value == expected));
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void MissingOrExpiredArrivalAndCompletionActions_DoNotInstructPressingTheirButtons(bool delivery, bool expired)
+    {
+        var source = DeliveryData(4200, expired ? [new()
+        {
+            ActionId = delivery ? 음식배달가능행동Ids.기사전달완료 : 음식배달가능행동Ids.기사가게도착,
+            ExpiresAtUtc = DateTime.UtcNow.AddMinutes(-1)
+        }] : []);
+        if (delivery) source.WorkStatus = DriverWorkOfferStatus.MovingToDropoff;
+        var model = Model(); model.IsAuthenticated = true; model.ActiveDelivery = ActiveDeliveryPreview.From(source);
+
+        Assert.DoesNotContain("눌러", model.CurrentDeliveryActionGuide);
+        Assert.Contains("자동으로 확인", model.CurrentDeliveryActionGuide);
+        var shared = FoodDriverWorkspacePresentation.Active(source, DateTime.UtcNow);
+        var action = Assert.Single(shared.Actions!, item => item.IsPrimary);
+        Assert.False(action.Enabled);
+        Assert.DoesNotContain("눌러", action.DisabledReason!);
+    }
+
+    [Fact]
+    public void CurrentActionGuide_FollowsExpiryAndBusyWithoutChangingTheStageOrRecoveryNotice()
+    {
+        var source = DeliveryData(4200, Actions(false, false, true));
+        var model = Model(); model.IsAuthenticated = true; model.ActiveDelivery = ActiveDeliveryPreview.From(source);
+        Assert.Contains("가게 도착을 눌러", model.CurrentDeliveryActionGuide);
+        model.StatusMessage = "앞선 요청의 처리 결과를 확인하고 있습니다.";
+        model.IsBusy = true;
+        Assert.Equal("처리 결과를 확인하고 있습니다.", model.CurrentDeliveryActionGuide);
+        Assert.Equal("앞선 요청의 처리 결과를 확인하고 있습니다.", model.StatusMessage);
+        Assert.Equal(FDriverFoodStage.PickupTravel, model.CurrentDeliveryStage);
+        Assert.Equal("가게 도착", model.CurrentDeliveryPrimaryActionLabel);
+        model.IsBusy = false;
+        source.AvailableActions[0].ExpiresAtUtc = DateTime.UtcNow.AddMinutes(-1);
+        Assert.DoesNotContain("눌러", model.CurrentDeliveryActionGuide);
+        Assert.Contains("확인 시각이 지났습니다", model.CurrentDeliveryActionGuide);
+        Assert.Equal("앞선 요청의 처리 결과를 확인하고 있습니다.", model.StatusMessage);
     }
 
     [Fact]
@@ -116,7 +212,7 @@ public sealed class FDriverFoodPresentationTests
             Assert.Contains("재조리 음식 · 준비 중", model.PickupPreparationTimeText);
             Assert.Contains("준비 예정", model.PickupPreparationTimeText);
             Assert.DoesNotContain("준비 완료", model.PickupPreparationTimeText);
-            Assert.Contains("이번 음식의 준비 완료를 기다려", model.NextActionGuide);
+            Assert.Contains("이번 재조리 음식이 아직 준비되지 않았습니다. 준비 완료를 기다려", model.NextActionGuide);
             Assert.False(model.CanConfirmPickup);
             await model.ConfirmPickupCommand.ExecuteAsync(null);
             Assert.Equal(0, api.PickupCalls);
@@ -544,6 +640,8 @@ public sealed class FDriverFoodPresentationTests
         }
         public Task<FoodDeliveryDriverWorkspaceDto> GetWorkspaceAsync(CancellationToken cancellationToken = default)
             => inner.GetWorkspaceAsync(cancellationToken);
+        public Task<FoodDeliveryDriverCurrentWorkDto> GetCurrentWorkAsync(CancellationToken cancellationToken = default)
+            => inner.GetCurrentWorkAsync(cancellationToken);
         public Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync(DateOnly date, CancellationToken cancellationToken = default)
             => inner.GetDailySettlementAsync(date, cancellationToken);
         public Task<FoodDeliveryCompletedDeliveryDetailDto> GetCompletedDeliveryDetailAsync(string settlementId, CancellationToken cancellationToken = default)
@@ -556,6 +654,8 @@ public sealed class FDriverFoodPresentationTests
             => inner.ChangeDispatchIntentAsync(request, cancellationToken);
         public Task StartWorkAsync(string startLocation, CancellationToken cancellationToken = default)
             => inner.StartWorkAsync(startLocation, cancellationToken);
+        public Task StartWorkAsync(string startLocation, Guid clientRequestId, CancellationToken cancellationToken = default)
+            => inner.StartWorkAsync(startLocation, clientRequestId, cancellationToken);
         public Task StopWorkAsync(CancellationToken cancellationToken = default)
             => inner.StopWorkAsync(cancellationToken);
         public Task<기사위치갱신응답?> UpdateLocationAsync(기사위치갱신요청 request, CancellationToken cancellationToken = default)

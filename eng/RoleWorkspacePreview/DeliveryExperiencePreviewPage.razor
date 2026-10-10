@@ -1,0 +1,15 @@
+@page "/delivery-experience-preview/{Role}/{Scenario}"
+@inject DeliveryExperiencePreviewFixture Fixture
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside data-experience-ready style="padding:8px 16px;background:#eaf5f3;color:#0f766e;font-size:14px">배달 경험 화면 검토 · 예시 자료</aside>
+<RoleMapWorkspace RoleKey="@Role" HomeHref="/" />
+@if (Scenario is "known" or "partial")
+{ <button data-experience-withdraw type="button" style="margin:12px 16px;min-height:48px" @onclick="Withdraw">공유 철회 재조회 시험</button> }
+@code {
+    [Parameter] public string Role { get; set; } = "orderer";
+    [Parameter] public string Scenario { get; set; } = "known";
+    private bool _prepared;
+    protected override async Task OnParametersSetAsync()
+    { if (!_prepared) { _prepared = true; await Fixture.PrepareAsync(); } }
+    private async Task Withdraw() { await Fixture.WithdrawAsync(); }
+}

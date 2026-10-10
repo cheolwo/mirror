@@ -140,12 +140,13 @@ public sealed class FoodRoleStageGuidanceTests
         active.CurrentPickupReadyAtUtc = DateTime.UtcNow;
         // 준비시각만 생기고 서버 가능 행동이 없으면 계속 비활성입니다.
         var readyOnly = Assert.Single((await adapter.LoadAsync(null, default)).Items);
-        Assert.Contains("픽업 가능 여부를 새로고침", Summary(readyOnly).Request!.Value);
+        Assert.Contains("픽업 가능 여부를 자동으로 확인", Summary(readyOnly).Request!.Value);
+        Assert.DoesNotContain("새로고침", Summary(readyOnly).Request!.Value);
         Assert.False(Assert.Single(readyOnly.Actions!, action => action.IsPrimary).Enabled);
 
         active.AvailableActions = 음식배달가능행동Projector.기사배달용(active.WorkStatus, 5, active.RestaurantArrivedAtUtc, true);
         var ready = Assert.Single((await adapter.LoadAsync(null, default)).Items);
-        Assert.Contains("픽업해 주세요", Summary(ready).Request!.Value);
+        Assert.Contains("음식을 받은 뒤 픽업 완료를 눌러 주세요", Summary(ready).Request!.Value);
         Assert.True(Assert.Single(ready.Actions!, action => action.IsPrimary).Enabled);
 
         active.WorkStatus = DriverWorkOfferStatus.MovingToDropoff;
@@ -169,7 +170,7 @@ public sealed class FoodRoleStageGuidanceTests
         };
         var offer = new FoodDeliveryDriverOfferDto { OfferId = "offer-new", AvailableActions = 음식배달가능행동Projector.기사제안용(null) };
         var api = DriverApi(active);
-        var workspace = Assert.IsType<FoodDeliveryDriverWorkspaceDto>(api.Reads["api/v1/driver/food-deliveries/workspace"]);
+        var workspace = Assert.IsType<FoodDeliveryDriverCurrentWorkDto>(api.Reads["api/v1/driver/food-deliveries/workspace/current"]);
         workspace.Recommendations = [offer];
         var availability = Assert.IsType<운영배차수신상태Dto>(api.Reads["api/v1/driver/operational-dispatch/availability"]);
         var work = Assert.IsType<기사운행상태응답>(api.Reads["api/v1/driver/food-deliveries/work/status"]);
@@ -225,8 +226,9 @@ public sealed class FoodRoleStageGuidanceTests
             CurrentPreparationRound = 2, CurrentPickupReadyAtUtc = DateTime.UtcNow, RestaurantArrivedAtUtc = DateTime.UtcNow,
             AvailableActions = [new() { ActionId = 음식배달가능행동Ids.기사픽업확인, ExpiresAtUtc = DateTime.UtcNow.AddMinutes(-1) }] };
         var item = Assert.Single((await new FoodDriverRoleWorkspaceAdapter(DriverApi(active), new NoLocation()).LoadAsync(null, default)).Items);
-        Assert.DoesNotContain("픽업해 주세요", Summary(item).Request!.Value);
-        Assert.Contains("새로고침", Summary(item).Request!.Value);
+        Assert.DoesNotContain("픽업 완료를 눌러 주세요", Summary(item).Request!.Value);
+        Assert.Contains("자동으로 확인", Summary(item).Request!.Value);
+        Assert.DoesNotContain("새로고침", Summary(item).Request!.Value);
         Assert.False(Assert.Single(item.Actions!, action => action.IsPrimary).Enabled);
     }
 
@@ -236,9 +238,11 @@ public sealed class FoodRoleStageGuidanceTests
     public async Task OrdererDoesNotPresentAssignmentAsCooking(string status, string expected)
     {
         var detail = new 주문자음식주문상세응답 { 주문 = new() { 주문번호 = "order-current", 상태 = status } };
-        var item = Assert.Single((await new OrdererRoleWorkspaceAdapter(OrdererApi(detail)).LoadAsync(null, default)).Items);
+        var api = OrdererApi(detail);
+        var item = Assert.Single((await new OrdererRoleWorkspaceAdapter(api).LoadAsync(null, default)).Items);
         Assert.Equal(expected, Summary(item).Destination);
-        Assert.Empty(item.Actions!);
+        AssertSourceBoundSupportOnly(item);
+        Assert.Empty(api.Writes);
     }
 
     [Theory]
@@ -255,11 +259,23 @@ public sealed class FoodRoleStageGuidanceTests
                 배차상태 = fromOrder ? dispatch : 음식주문배차상태코드.기사배정 },
             배달진행 = new() { 현재운송상태 = fromOrder ? 음식주문배차상태코드.미요청 : dispatch }
         };
-        var item = Assert.Single((await new OrdererRoleWorkspaceAdapter(OrdererApi(detail)).LoadAsync(null, default)).Items);
+        var api = OrdererApi(detail);
+        var item = Assert.Single((await new OrdererRoleWorkspaceAdapter(api).LoadAsync(null, default)).Items);
         Assert.Equal("조리 중", Summary(item).Destination);
         Assert.Contains("주문 취소나 환불", Summary(item).Request!.Value);
         Assert.Contains(dispatch == 음식주문배차상태코드.배차불가 ? "자동 확정되는 것은 아니며" : "별도 확인", Summary(item).Request!.Value);
-        Assert.Empty(item.Actions!);
+        AssertSourceBoundSupportOnly(item);
+        Assert.Empty(api.Writes);
+    }
+
+    private static void AssertSourceBoundSupportOnly(RoleWorkspaceItem item)
+    {
+        var support = Assert.Single(item.Actions!);
+        Assert.Equal(OrdererRoleWorkspaceAdapter.RequestSupport, support.Key);
+        Assert.Equal("/commerce/disputes?sourceKind=food-order&sourceId=order-current", support.Route);
+        Assert.True(support.Enabled);
+        Assert.False(support.IsPrimary);
+        Assert.False(support.RequiresConfirmation);
     }
 
     private static RoleWorkspaceSummary Summary(RoleWorkspaceItem item) => Assert.IsType<RoleWorkspaceSummary>(item.Summary);
@@ -275,7 +291,7 @@ public sealed class FoodRoleStageGuidanceTests
     private static FoodRoleWorkspaceAdapterTests.Api DriverApi(FoodDeliveryDriverActiveDeliveryDto delivery)
     {
         var api = new FoodRoleWorkspaceAdapterTests.Api();
-        api.Reads["api/v1/driver/food-deliveries/workspace"] = new FoodDeliveryDriverWorkspaceDto { ActiveDeliveries = [delivery] };
+        api.Reads["api/v1/driver/food-deliveries/workspace/current"] = new FoodDeliveryDriverCurrentWorkDto { ActiveDeliveries = [delivery] };
         api.Reads["api/v1/driver/food-deliveries/work/status"] = new 기사운행상태응답 { Status = "운행중" };
         api.Reads["api/v1/driver/operational-dispatch/availability"] = new 운영배차수신상태Dto { 수신의사Code = 운영배차수신의사Code.On, 실효상태Code = 운영배차실효상태Code.배차가능 };
         return api;

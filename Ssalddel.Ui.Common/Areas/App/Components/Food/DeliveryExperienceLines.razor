@@ -1,0 +1,12 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Food
+
+@if (Lines is { Count: > 0 })
+{
+    <div class="delivery-experience-lines" data-delivery-experience aria-label="앱 배달 경험">
+        @foreach (var line in Lines.Take(2)) { <p>@line</p> }
+    </div>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<string>? Lines { get; set; }
+}

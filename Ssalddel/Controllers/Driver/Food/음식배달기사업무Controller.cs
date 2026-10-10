@@ -1,3 +1,5 @@
+using Ssalddel.Contracts.Common.Metadata;
+
 using Ssalddel.ApiMetadata;
 using Ssalddel.Application.Driver.Food;
 using Ssalddel.Application.Driver.Work;
@@ -11,6 +13,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Ssalddel.Filters;
+using FluentResults;
+using Ssalddel.Contracts.Common.Workflow;
 using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.Services.Versioning;
 using 살뜰.도메인.공통;
@@ -30,6 +34,19 @@ namespace Ssalddel.Controllers.Driver.Food;
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 [Route("api/v1/driver/food-deliveries")]
 [SsalddelApiContractName("FoodDeliveryDriverController")]
+[SsalddelCodeMetadata(
+    SsalddelCodeFeatureKeys.FoodDriverWork,
+    SsalddelCodeLayer.Api,
+    "인증된 음식 기사의 조회·운행·배달 동작을 기존 route와 오류 계약으로 연결한다.",
+    ContractType = typeof(IFoodDeliveryDriverWorkspaceUseCase),
+    Effects = SsalddelCodeEffect.PersistentRead | SsalddelCodeEffect.PersistentWrite | SsalddelCodeEffect.NetworkCall | SsalddelCodeEffect.StateMutation | SsalddelCodeEffect.ThirdPartyApiCall | SsalddelCodeEffect.MayIncurExternalCost,
+    FlowOrder = 180,
+    StepKey = "api.food-driver",
+    DependsOnStepKeys = ["application.work-start", "application.work-status", "application.work-stop", "application.work-location", "application.current-work", "application.legacy-workspace", "application.driver-actions", "application.daily-settlement", "application.completed-detail"],
+    ExecutionStage = SsalddelCodeExecutionStage.Confirm,
+    ReadsFrom = SsalddelCodeDataScope.OperationalState,
+    WritesTo = SsalddelCodeDataScope.OperationalState,
+    Boundary = "workspace/current는 정산 없는 조회이며 호환 workspace·정산은 별도다. 하위 SQL·Mongo·Redis·알림·경로 API 효과를 위임하며 서버 권한·Revision·개인정보와 Operational/Simulation 게이트를 보존한다.")]
 public sealed class 음식배달기사업무Controller : DriverControllerBase
 {
     private readonly IFoodDeliveryDriverWorkspaceUseCase _업무공간UseCase;
@@ -52,7 +69,28 @@ public sealed class 음식배달기사업무Controller : DriverControllerBase
     [HttpGet("workspace")]
     [SsalddelApiContractName("GetWorkspace")]
     public async Task<IActionResult> 업무공간조회(CancellationToken cancellationToken)
-        => Ok(await _업무공간UseCase.GetAsync(CurrentDriverId(), cancellationToken));
+    {
+        if (string.IsNullOrWhiteSpace(CurrentUserId)) return Unauthorized();
+        try
+        {
+            return Ok(await _업무공간UseCase.GetAsync(CurrentDriverId(), cancellationToken));
+        }
+        catch (FoodDeliverySettlementUnavailableException)
+        {
+            return ToFoodFailure([new Error("정산 정보를 확인할 수 없습니다. 현재 업무는 계속 확인할 수 있습니다.")
+                .WithMetadata("StatusCode", StatusCodes.Status503ServiceUnavailable)
+                .WithMetadata("ErrorCode", FoodDeliverySettlementUnavailableException.Code)]);
+        }
+    }
+
+    [HttpGet("workspace/current")]
+    [SsalddelApiContractName("GetCurrentWork")]
+    [SsalddelApiOperation(SsalddelOperation.Browse)]
+    public async Task<IActionResult> 현재업무조회(CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(CurrentUserId)) return Unauthorized();
+        return Ok(await _업무공간UseCase.GetCurrentWorkAsync(CurrentDriverId(), cancellationToken));
+    }
 
     [HttpGet("settlements/daily")]
     [SsalddelApiContractName("GetDailySettlement")]
@@ -125,11 +163,12 @@ public sealed class 음식배달기사업무Controller : DriverControllerBase
                 요청.복귀콜선호,
                 커뮤니티운행공개: false,
                 커뮤니티구단위위치공개동의: false,
-                운송실행유형: 운송실행유형코드.음식배달),
+                운송실행유형: 운송실행유형코드.음식배달,
+                ClientRequestId: 요청.ClientRequestId),
             cancellationToken);
 
         return result.IsFailed
-            ? this.ToProblemActionResult(result.Errors.Select(x => x.Message))
+            ? ToFoodFailure(result.Errors)
             : CreatedAtAction(nameof(운행상태조회), result.Value);
     }
 
@@ -160,7 +199,7 @@ public sealed class 음식배달기사업무Controller : DriverControllerBase
             cancellationToken);
 
         return result.IsFailed
-            ? this.ToProblemActionResult(result.Errors.Select(x => x.Message))
+            ? ToFoodFailure(result.Errors)
             : Ok(result.Value);
     }
 
@@ -174,7 +213,7 @@ public sealed class 음식배달기사업무Controller : DriverControllerBase
     public async Task<IActionResult> 제안수락(
         [FromRoute(Name = "offerId")] string 제안Id,
         CancellationToken cancellationToken)
-        => this.ToActionResult(await _음식배달기사업무Service.수락Async(
+        => ToFoodActionResult(await _음식배달기사업무Service.수락Async(
             CurrentDriverId(),
             제안Id,
             cancellationToken));
@@ -185,7 +224,7 @@ public sealed class 음식배달기사업무Controller : DriverControllerBase
         [FromRoute(Name = "offerId")] string 제안Id,
         [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] FoodDeliveryOfferRejectRequest? 요청,
         CancellationToken cancellationToken)
-        => this.ToActionResult(await _음식배달기사업무Service.거절Async(
+        => ToFoodActionResult(await _음식배달기사업무Service.거절Async(
             CurrentDriverId(),
             제안Id,
             요청?.ReasonCode,
@@ -196,7 +235,7 @@ public sealed class 음식배달기사업무Controller : DriverControllerBase
     public async Task<IActionResult> 묶음제안수락(
         [FromBody] FoodDeliveryBundleAcceptRequest 요청,
         CancellationToken cancellationToken)
-        => this.ToActionResult(await _음식배달기사업무Service.묶음수락Async(
+        => ToFoodActionResult(await _음식배달기사업무Service.묶음수락Async(
             CurrentDriverId(),
             요청?.OfferIds ?? [],
             cancellationToken));
@@ -206,7 +245,7 @@ public sealed class 음식배달기사업무Controller : DriverControllerBase
     public async Task<IActionResult> 픽업완료(
         [FromRoute(Name = "offerId")] string 제안Id,
         CancellationToken cancellationToken)
-        => this.ToActionResult(await _음식배달기사업무Service.픽업완료Async(
+        => ToFoodActionResult(await _음식배달기사업무Service.픽업완료Async(
             CurrentDriverId(),
             제안Id,
             cancellationToken));
@@ -217,7 +256,7 @@ public sealed class 음식배달기사업무Controller : DriverControllerBase
         [FromRoute(Name = "offerId")] string 제안Id,
         [FromBody] 음식배달가게도착요청 요청,
         CancellationToken cancellationToken)
-        => this.ToActionResult(await _음식배달기사업무Service.가게도착Async(
+        => ToFoodActionResult(await _음식배달기사업무Service.가게도착Async(
             CurrentDriverId(),
             제안Id,
             요청,
@@ -229,7 +268,7 @@ public sealed class 음식배달기사업무Controller : DriverControllerBase
         [FromRoute(Name = "offerId")] string 제안Id,
         [FromBody] 음식배달중단요청 요청,
         CancellationToken cancellationToken)
-        => this.ToActionResult(await _음식배달기사업무Service.중단Async(
+        => ToFoodActionResult(await _음식배달기사업무Service.중단Async(
             CurrentDriverId(),
             제안Id,
             요청,
@@ -240,7 +279,7 @@ public sealed class 음식배달기사업무Controller : DriverControllerBase
     public async Task<IActionResult> 전달완료(
         [FromRoute(Name = "offerId")] string 제안Id,
         CancellationToken cancellationToken)
-        => this.ToActionResult(await _음식배달기사업무Service.전달완료Async(
+        => ToFoodActionResult(await _음식배달기사업무Service.전달완료Async(
             CurrentDriverId(),
             제안Id,
             cancellationToken));
@@ -265,4 +304,31 @@ public sealed class 음식배달기사업무Controller : DriverControllerBase
         }
     }
 
+    private IActionResult ToFoodActionResult<T>(Result<T> result)
+        => result.IsSuccess ? Ok(result.Value) : ToFoodFailure(result.Errors);
+
+    private IActionResult ToFoodFailure(IReadOnlyCollection<IError> errors)
+    {
+        var message = errors.Select(x => x.Message).FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
+                      ?? "요청을 처리할 수 없습니다.";
+        object? Metadata(string key) => errors.Select(x => x.Metadata.GetValueOrDefault(key))
+            .FirstOrDefault(x => x is not null);
+        var classification = Result응답확장.실패분류(message);
+        var status = Metadata("StatusCode") is int explicitStatus ? explicitStatus : classification.StatusCode;
+        var code = Metadata("ErrorCode") as string ?? classification.Code;
+        var revision = Metadata("CurrentRevision") switch { long value => value, int value => value, _ => (long?)null };
+        var refresh = status is StatusCodes.Status409Conflict or StatusCodes.Status503ServiceUnavailable;
+        return this.To업무실패Problem(message, status, code,
+            Metadata("FailureClassCode") as string ?? (status >= 500
+                ? 업무실패분류Codes.일시기술장애
+                : 업무실패분류Codes.업무규칙차단),
+            Metadata("ResponsibilityRoleCode") as string ?? 업무실패책임역할Codes.음식배달운영체제,
+            Metadata("RequiresStateRefresh") is bool explicitRefresh ? explicitRefresh : refresh,
+            Metadata("RetryPolicyCode") as string ?? (refresh
+                ? 업무재시도정책Codes.상태재조회후사용자재시도
+                : 업무재시도정책Codes.자동재시도안함),
+            Metadata("AvailableRecoveryActions") as IEnumerable<string> ?? (refresh
+                ? [업무복구행동Ids.상태전체재조회] : []),
+            revision);
+    }
 }

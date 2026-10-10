@@ -36,14 +36,49 @@
                         <Label Text="{Binding Settlement.Display.RestaurantName}" Style="{StaticResource DriverBodyStyle}" FontAttributes="Bold" />
                         <Label Text="{Binding Settlement.CompletedText}" Style="{StaticResource DriverMetadataStyle}" />
                         <BoxView Style="{StaticResource DetailDividerStyle}" />
-                        <Label Text="{Binding Settlement.Display.GrossText, StringFormat='배달료 {0}'}" Style="{StaticResource DriverValueStyle}" />
-                        <Label Text="{Binding Settlement.DeductionSummaryText}" Style="{StaticResource DriverMetadataStyle}" />
-                        <Label Text="{Binding Settlement.NetSummaryText}" Style="{StaticResource DriverBodyStyle}" />
-                        <Label Text="{Binding Settlement.Display.StatusText}" Style="{StaticResource DriverMetadataStyle}" />
-                        <Label Text="{Binding Settlement.Display.PaymentText}" Style="{StaticResource DriverMetadataStyle}" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <Label Text="배달료 합계" Style="{StaticResource DriverBodyStyle}" />
+                            <Label Grid.Column="1" Text="{Binding Settlement.Display.GrossText}" Style="{StaticResource DriverValueStyle}" HorizontalTextAlignment="End" />
+                        </Grid>
                         <BoxView Style="{StaticResource DetailDividerStyle}" />
                         <Label Text="요금 구성" Style="{StaticResource DriverBodyStyle}" />
-                        <Label Text="{Binding Settlement.PricingDetails}" Style="{StaticResource DriverMetadataStyle}" />
+                        <Label Text="{Binding Settlement.PricingNotice}" Style="{StaticResource DriverMetadataStyle}" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Settlement.PricingRows}" Spacing="8">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:배달요금항목Display">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                        <Label Text="{Binding Label}" Style="{StaticResource DriverMetadataStyle}" />
+                                        <Label Grid.Column="1" Text="{Binding Value}" Style="{StaticResource DriverMetadataStyle}" HorizontalTextAlignment="End" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                        <BoxView Style="{StaticResource DetailDividerStyle}" />
+                        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="8" ColumnSpacing="12">
+                            <Label Text="공제" Style="{StaticResource DriverMetadataStyle}" />
+                            <Label Grid.Column="1" Text="{Binding Settlement.Display.DeductionText}" Style="{StaticResource DriverMetadataStyle}" HorizontalTextAlignment="End" />
+                            <Label Grid.Row="1" Text="수령액" Style="{StaticResource DriverBodyStyle}" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding Settlement.Display.NetText}" Style="{StaticResource DriverBodyStyle}" HorizontalTextAlignment="End" />
+                        </Grid>
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <Grid.Triggers>
+                                <DataTrigger TargetType="Grid" Binding="{Binding Settlement.Display.StatusText}" Value="">
+                                    <Setter Property="IsVisible" Value="False" />
+                                </DataTrigger>
+                            </Grid.Triggers>
+                            <Label Text="정산 상태" Style="{StaticResource DriverMetadataStyle}" />
+                            <Label Grid.Column="1" Text="{Binding Settlement.Display.StatusText}" Style="{StaticResource DriverMetadataStyle}" HorizontalTextAlignment="End" />
+                        </Grid>
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <Grid.Triggers>
+                                <DataTrigger TargetType="Grid" Binding="{Binding Settlement.Display.PaymentText}" Value="">
+                                    <Setter Property="IsVisible" Value="False" />
+                                </DataTrigger>
+                            </Grid.Triggers>
+                            <Label Text="지급 상태" Style="{StaticResource DriverMetadataStyle}" />
+                            <Label Grid.Column="1" Text="{Binding Settlement.Display.PaymentText}" Style="{StaticResource DriverMetadataStyle}" HorizontalTextAlignment="End" />
+                        </Grid>
+                        <Label Text="{Binding Settlement.Display.NoticeText}" Style="{StaticResource DriverMetadataStyle}" />
                     </VerticalStackLayout>
                 </Border>
                 <Border Style="{StaticResource DriverCardStyle}" Padding="16" IsVisible="{Binding HasOrderDetails}">

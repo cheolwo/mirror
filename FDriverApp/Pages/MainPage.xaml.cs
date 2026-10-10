@@ -13,6 +13,8 @@ namespace FDriverApp.Pages
         private int _navigationRevision;
         private int? _restoringScrollRevision;
         private bool _foodLayoutUpdateQueued;
+        private bool _dispatchReceptionUpdating;
+        private bool _profileNavigationInProgress;
         private readonly IFDriverCompletedDeliveryNavigator _completedDeliveryNavigator;
         private readonly IFDriverProtectionSupportNavigator _supportNavigator;
 
@@ -46,6 +48,7 @@ namespace FDriverApp.Pages
                 // Only overlay layout changes here. The map keeps the same full viewport
                 // and camera while the task card opens or closes.
                 FoodMapTools.Margin = new Thickness(8, Math.Max(8, WorkspaceHeader.Height + 8), 8, 8);
+                FoodDispatchReceptionControl.Margin = new Thickness(8, Math.Max(8, WorkspaceHeader.Height + 8), 8, 8);
                 var height = FDriverFoodPresentationLayout.CardHeight(WorkspaceAreas.Height,
                     DeliveryCardBodyContent.Height, footerHeight, model.IsFoodCardExpanded);
                 if (Math.Abs(DeliveryCard.HeightRequest - height) > 0.5)
@@ -75,6 +78,8 @@ namespace FDriverApp.Pages
                     model.ApplyEntryFocus(focus);
                 if (model.IsAuthenticated)
                     model.Navigation.TryApplyFocus(focus);
+                if (model.IsAuthenticated && model.Navigation.IsProfile)
+                    await model.RefreshProfileSettlementAsync();
                 if (model.IsAuthenticated && model.Navigation.IsSettlement)
                 {
                     _entryFocus = null;
@@ -124,6 +129,27 @@ namespace FDriverApp.Pages
         private async void OnProfileClicked(object? sender, EventArgs args)
             => await ShowSectionAsync(FDriverWorkspaceSection.Profile);
 
+        private async void OnDispatchReceptionToggled(object? sender, ToggledEventArgs args)
+        {
+            if (_dispatchReceptionUpdating || sender is not Switch toggle
+                || BindingContext is not MainPageModel model
+                || args.Value == model.IsDispatchReceptionOn) return;
+
+            _dispatchReceptionUpdating = true;
+            try
+            {
+                // A switch gesture requests a change; the server read owns its displayed state.
+                toggle.IsToggled = model.IsDispatchReceptionOn;
+                if (_pageActive && model.Navigation.IsDelivery && model.CanUseDispatchReceptionSwitch)
+                    await model.ToggleDispatchIntentCommand.ExecuteAsync(null);
+            }
+            finally
+            {
+                toggle.IsToggled = model.IsDispatchReceptionOn;
+                _dispatchReceptionUpdating = false;
+            }
+        }
+
         private async void OnSettlementClicked(object? sender, EventArgs args)
         {
             if (_pageActive && BindingContext is MainPageModel { IsAuthenticated: true } model)
@@ -134,6 +160,26 @@ namespace FDriverApp.Pages
         {
             if (BindingContext is MainPageModel { IsAuthenticated: true } && Shell.Current is { } shell)
                 await shell.GoToAsync(AgreedRateTablePage.RouteName);
+        }
+
+        private async void OnReturnAreaSettingsClicked(object? sender, EventArgs args)
+            => await OpenProfileSettingsAsync(ReturnAreaSettingsPage.RouteName);
+
+        private async void OnDeliveryExperienceSettingsClicked(object? sender, EventArgs args)
+            => await OpenProfileSettingsAsync(DeliveryExperienceSettingsPage.RouteName);
+
+        private async void OnMartDeliveriesClicked(object? sender, EventArgs args)
+            => await OpenProfileSettingsAsync(살뜰마트배송Page.RouteName);
+
+        private async Task OpenProfileSettingsAsync(string route)
+        {
+            if (_profileNavigationInProgress || !_pageActive
+                || BindingContext is not MainPageModel { IsAuthenticated: true } model
+                || !model.Navigation.IsProfile || Shell.Current is not { } shell) return;
+            _profileNavigationInProgress = true;
+            try { await shell.GoToAsync(route); }
+            catch { await DisplayAlertAsync("화면을 열지 못했습니다", "잠시 후 다시 선택해 주세요.", "확인"); }
+            finally { _profileNavigationInProgress = false; }
         }
 
         private async void OnNotificationSettingsClicked(object? sender, EventArgs args)
@@ -273,6 +319,8 @@ namespace FDriverApp.Pages
             _entryFocus = null;
             model.Navigation.Select(section);
             var navigationRevision = ++_navigationRevision;
+            if (section == FDriverWorkspaceSection.Profile)
+                await model.RefreshProfileSettlementAsync();
             if (!_pageActive || !model.IsAuthenticated || model.Navigation.Selected != section
                 || navigationRevision != _navigationRevision)
                 return;

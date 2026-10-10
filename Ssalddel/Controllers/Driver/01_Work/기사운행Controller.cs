@@ -61,11 +61,12 @@ namespace Ssalddel.Controllers.Driver.Work01
                 request.복귀지출처,
                 request.복귀콜선호,
                 request.커뮤니티운행공개,
-                request.커뮤니티구단위위치공개동의));
+                request.커뮤니티구단위위치공개동의,
+                ClientRequestId: request.ClientRequestId));
 
             if (result.IsFailed)
             {
-                return this.ToProblemActionResult(result.Errors.Select(x => x.Message));
+                return this.ToActionResult(result);
             }
 
             return CreatedAtAction(nameof(상태조회), new { }, result.Value);

@@ -6,6 +6,8 @@ using Ssalddel.Ui.Common.Areas.App.Models;
 
 namespace FDriverApp.PageModels;
 
+public sealed record 배달요금항목Display(string Label, string Value);
+
 public sealed partial class FDriverDailySettlementItem : ObservableObject
 {
     public string SettlementId { get; init; } = string.Empty;
@@ -16,6 +18,8 @@ public sealed partial class FDriverDailySettlementItem : ObservableObject
     public string NetSummaryText { get; init; } = "수령액 미확정";
     public string CompletedText { get; init; } = string.Empty;
     public string PricingDetails { get; init; } = string.Empty;
+    public IReadOnlyList<배달요금항목Display> PricingRows { get; init; } = [];
+    public string PricingNotice { get; init; } = string.Empty;
     public string DistanceText { get; init; } = "요금 기준 거리 확인 전";
     public IAsyncRelayCommand? OpenDetailsCommand { get; private set; }
     [ObservableProperty] private bool _isPricingExpanded;
@@ -26,6 +30,7 @@ public sealed partial class FDriverDailySettlementItem : ObservableObject
     {
         var pricing = row.PricingBreakdown;
         var lines = new List<string>();
+        var pricingRows = new List<배달요금항목Display>();
         if (pricing.EvidenceStatusCode is "MissingEvidence" or "InvalidEvidence")
             lines.Add("수락 당시 요금 구성을 확인하지 못했습니다.");
         else
@@ -33,14 +38,28 @@ public sealed partial class FDriverDailySettlementItem : ObservableObject
             lines.Add(pricing.EvidenceStatusCode == "MissingComponents"
                 ? "수락 당시 요금 · 세부 구성 확인 전" : "수락 당시 저장된 요금 구성");
             if (pricing.BaseSplitCode == "LegacyUnsplit")
+            {
                 lines.Add($"기본비 합계 {Money(pricing.BaseAmount)} · 픽업·전달 구분 미확인");
+                pricingRows.Add(new("기본비 합계", Money(pricing.BaseAmount)));
+            }
             else
+            {
                 lines.Add($"픽업 {Money(pricing.PickupAmount)} · 전달 {Money(pricing.DropoffAmount)}");
+                pricingRows.Add(new("픽업비", Money(pricing.PickupAmount)));
+                pricingRows.Add(new("전달비", Money(pricing.DropoffAmount)));
+            }
             lines.Add($"거리비 {Money(pricing.DistanceAmount)} · 최소요금 조정 {Money(pricing.MinimumAdjustmentAmount)}");
             lines.Add($"시간 할증 {Money(pricing.TimeSurchargeAmount)} · 날씨 할증 {Money(pricing.WeatherSurchargeAmount)} · 수요 할증 {Money(pricing.DemandSurchargeAmount)}");
             lines.Add(pricing.DistanceKm.HasValue
                 ? $"요금 기준 거리 {pricing.DistanceKm.Value:0.###}km"
                 : "요금 기준 거리 확인 전");
+            pricingRows.Add(new("거리비", Money(pricing.DistanceAmount)));
+            pricingRows.Add(new("최소요금 조정", Money(pricing.MinimumAdjustmentAmount)));
+            pricingRows.Add(new("시간 할증", Money(pricing.TimeSurchargeAmount)));
+            pricingRows.Add(new("날씨 할증", Money(pricing.WeatherSurchargeAmount)));
+            pricingRows.Add(new("수요 할증", Money(pricing.DemandSurchargeAmount)));
+            pricingRows.Add(new("요금 기준 거리", pricing.DistanceKm.HasValue
+                ? $"{pricing.DistanceKm.Value:0.###}km" : "확인 전"));
         }
         var item = new FDriverDailySettlementItem
         {
@@ -53,6 +72,9 @@ public sealed partial class FDriverDailySettlementItem : ObservableObject
             CompletedText = row.CompletedAtUtc == default ? "완료 시각 확인 전"
                 : row.CompletedAtUtc.AddHours(9).ToString("M/d HH:mm", CultureInfo.InvariantCulture) + " 전달 완료",
             PricingDetails = string.Join(Environment.NewLine, lines),
+            PricingRows = pricingRows.ToArray(),
+            PricingNotice = lines[0] + (pricingRows.Count > 0 && pricing.BaseSplitCode == "LegacyUnsplit"
+                ? " · 픽업·전달 구분 미확인" : string.Empty),
             DistanceText = pricing.DistanceKm.HasValue
                 ? $"요금 기준 거리 {pricing.DistanceKm.Value:0.###}km" : "요금 기준 거리 확인 전"
         };

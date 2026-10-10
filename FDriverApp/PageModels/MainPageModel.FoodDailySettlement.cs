@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FDriverApp.Services;
 using Ssalddel.Contracts.Food;
+using Ssalddel.Ui.Common.Areas.App.Models;
 
 namespace FDriverApp.PageModels;
 
@@ -11,6 +12,7 @@ public sealed partial class MainPageModel
 {
     private CancellationTokenSource? _dailySettlementCancellation;
     private long _dailySettlementRevision;
+    private long _profileSettlementRevision;
     [ObservableProperty] private DateTime _selectedSettlementDate = DateTime.UtcNow.AddHours(9).Date;
     [ObservableProperty] private bool _isDailySettlementLoading;
     [ObservableProperty, NotifyPropertyChangedFor(nameof(HasNoDailySettlementItems))] private bool _isDailySettlementLoaded;
@@ -22,6 +24,52 @@ public sealed partial class MainPageModel
     [ObservableProperty] private string _dailySettlementPaymentText = "입금 확인 전";
     public ObservableCollection<FDriverDailySettlementItem> DailySettlementItems { get; } = [];
     public bool HasNoDailySettlementItems => IsDailySettlementLoaded && DailySettlementItems.Count == 0;
+
+    /// <summary>수행 자동 조회와 분리된 내 정보 진입의 정산 조회입니다.</summary>
+    public async Task RefreshProfileSettlementAsync()
+    {
+        if (!_workspaceActive || !IsAuthenticated || !Navigation.IsProfile) return;
+        var owner = _authSession.UserId; var lifetime = _workspaceCancellation;
+        var revision = ++_profileSettlementRevision;
+        SettlementText = "이번 달 이용료를 확인하고 있습니다.";
+        try
+        {
+            var summary = await _api.GetWorkspaceAsync(lifetime.Token);
+            lifetime.Token.ThrowIfCancellationRequested();
+            if (revision != _profileSettlementRevision || owner != _authSession.UserId
+                || !ReferenceEquals(lifetime, _workspaceCancellation) || !IsAuthenticated) return;
+            if (summary.DriverId != owner || summary.Settlement is null
+                || summary.Settlement.년도 < 1 || summary.Settlement.월 is < 1 or > 12)
+                throw new FDriverApiException("기사 정산 정보를 확인하지 못했습니다.", null);
+            OrderSettlementItems.Clear();
+            foreach (var item in summary.OrderSettlements) OrderSettlementItems.Add(FoodDeliverySettlementDisplay.From(item));
+            SettlementText = $"월 이용료 · {summary.Settlement.년도}년 {summary.Settlement.월}월 · "
+                + $"배차 {summary.Settlement.배차건수:N0}건 · 이용료 {summary.Settlement.이용료:N0}원"
+                + (summary.Settlement.결제완료 ? " · 납부 완료" : string.Empty);
+        }
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
+        catch (FDriverApiException ex) when (!lifetime.IsCancellationRequested)
+        {
+            if (revision != _profileSettlementRevision || owner != _authSession.UserId) return;
+            SettlementText = "정산 정보를 확인하지 못했습니다. 내 정보에 다시 들어오면 재조회합니다.";
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                CancelWorkspaceLifetime();
+                await ClearAuthenticationAsync();
+            }
+        }
+        catch (Exception) when (!lifetime.IsCancellationRequested)
+        {
+            if (revision == _profileSettlementRevision && owner == _authSession.UserId
+                && ReferenceEquals(lifetime, _workspaceCancellation) && IsAuthenticated)
+                SettlementText = "정산 정보를 확인하지 못했습니다. 내 정보에 다시 들어오면 재조회합니다.";
+        }
+    }
+
+    private void ClearProfileSettlementValues()
+    {
+        ++_profileSettlementRevision; OrderSettlementItems.Clear(); SettlementText = "이번 달 이용료 조회 전";
+    }
 
     partial void OnSelectedSettlementDateChanged(DateTime value)
     {

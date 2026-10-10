@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:FDriverApp.Controls" xmlns:fonts="clr-namespace:Fonts"
+    xmlns:models="clr-namespace:FDriverApp.PageModels" x:Class="FDriverApp.Pages.DeliveryExperienceSettingsPage"
+    x:DataType="models:MainPageModel" Title="배달 경험 공유" Shell.NavBarIsVisible="False"
+    BackgroundColor="{AppThemeBinding Light={StaticResource DriverCanvas}, Dark={StaticResource DriverCanvasDark}}">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+            <Button Text="내 정보로 돌아가기" controls:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_left_24_regular}"
+                Clicked="OnBackClicked" Style="{StaticResource DriverSecondaryButtonStyle}" HorizontalOptions="Start" />
+            <Label Text="배달 경험 공유" Style="{StaticResource DriverTitleStyle}" />
+            <VerticalStackLayout IsVisible="{Binding IsAuthenticated}" Spacing="16">
+                <Label Style="{StaticResource DriverBodyStyle}"
+                    Text="현재 배달의 음식점·주문자에게 이 매장과 전달 지역의 완료 건수만 공유합니다." LineBreakMode="WordWrap" />
+                <Border Style="{StaticResource DriverCardStyle}">
+                    <VerticalStackLayout Spacing="12">
+                        <Button controls:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_clockwise_24_regular}"
+                            Style="{StaticResource DriverSecondaryButtonStyle}" Text="공유 설정 조회"
+                            Command="{Binding LoadExperienceSharingCommand}" IsEnabled="{Binding CanLoadExperienceSharing}" />
+                        <ActivityIndicator IsRunning="{Binding ExperienceSharingBusy}" IsVisible="{Binding ExperienceSharingBusy}" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" IsVisible="{Binding ExperienceSharingLoaded}">
+                            <Label Style="{StaticResource DriverBodyStyle}" Text="완료 건수 공유" VerticalOptions="Center" />
+                            <Switch Grid.Column="1" IsToggled="{Binding ShareDeliveryExperience}" IsEnabled="{Binding CanEditExperienceSharing}"
+                                MinimumHeightRequest="48" MinimumWidthRequest="48"
+                                SemanticProperties.Description="현재 배달의 음식점과 주문자에게 완료 건수 공유" />
+                        </Grid>
+                        <Button controls:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.checkmark_24_regular}"
+                            Style="{StaticResource DriverPrimaryButtonStyle}" Text="공유 설정 저장"
+                            Command="{Binding SaveExperienceSharingCommand}" IsVisible="{Binding ExperienceSharingLoaded}"
+                            IsEnabled="{Binding CanEditExperienceSharing}" />
+                        <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding ExperienceSharingNotice}" LineBreakMode="WordWrap" />
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+            <VerticalStackLayout IsVisible="{Binding IsSignedOut}" Spacing="12">
+                <Label Text="기사 로그인이 필요합니다." Style="{StaticResource DriverBodyStyle}" />
+                <Button Text="로그인 화면으로" Clicked="OnLoginClicked" Style="{StaticResource DriverPrimaryButtonStyle}" />
+            </VerticalStackLayout>
+            <ActivityIndicator IsVisible="{Binding IsRestoringSession}" IsRunning="{Binding IsRestoringSession}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

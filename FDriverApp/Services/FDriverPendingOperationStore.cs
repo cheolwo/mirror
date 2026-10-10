@@ -6,7 +6,8 @@ namespace FDriverApp.Services;
 public sealed record FDriverPendingArrival(string OfferId, string AttemptId, 음식배달가게도착요청 Request);
 public sealed record FDriverPendingInterruption(string OfferId, string AttemptId, 음식배달중단요청 Request);
 public sealed record FDriverPendingOperationsSnapshot(string OwnerId, FDriverPendingArrival? Arrival,
-    운영배차수신의사변경요청? DispatchIntent, FDriverPendingInterruption? Interruption);
+    운영배차수신의사변경요청? DispatchIntent, FDriverPendingInterruption? Interruption,
+    Guid? StartReceptionRequestId = null, Guid? StartRequestId = null);
 
 public interface IFDriverPendingOperationStore
 {
@@ -27,4 +28,4 @@ internal sealed class FDriverMemoryPendingOperationStore : IFDriverPendingOperat
 }
 
 public sealed class FDriverPendingStorageException(Exception inner)
-    : InvalidOperationException("이전 요청을 안전하게 저장하거나 확인하지 못했습니다. 새로고침한 뒤 다시 시도해 주세요.", inner);
+    : InvalidOperationException("이전 요청을 안전하게 저장하거나 확인하지 못했습니다. 앱을 다시 열어 확인해 주세요.", inner);

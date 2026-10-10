@@ -1,3 +1,5 @@
+using Ssalddel.Contracts.Common.Metadata;
+
 using Ssalddel.Contracts.Common.Drivers;
 using Ssalddel.Contracts.Driver.Food;
 using Ssalddel.Contracts.Food;
@@ -13,8 +15,21 @@ using 살뜰.도메인.공통;
 
 namespace Ssalddel.Application.Driver.Food;
 
+[SsalddelCodeMetadata(
+    SsalddelCodeFeatureKeys.FoodDriverWork,
+    SsalddelCodeLayer.Contract,
+    "현재 업무와 호환 workspace 및 정산·완료 상세 조회 계약을 정의한다.",
+    Effects = SsalddelCodeEffect.None,
+    FlowOrder = 20,
+    StepKey = "contract.food-workspace-port",
+    DependsOnStepKeys = ["contract.current-work", "contract.legacy-workspace"],
+    ExecutionStage = SsalddelCodeExecutionStage.Definition,
+    ReadsFrom = SsalddelCodeDataScope.None,
+    WritesTo = SsalddelCodeDataScope.None,
+    Boundary = "현재 조회와 정산 조회의 호출을 구별하며 조회 계약 자체는 업무 상태를 전이하지 않는다.")]
 public interface IFoodDeliveryDriverWorkspaceUseCase
 {
+    Task<FoodDeliveryDriverCurrentWorkDto> GetCurrentWorkAsync(string driverId, CancellationToken cancellationToken);
     Task<FoodDeliveryDriverWorkspaceDto> GetAsync(string driverId, CancellationToken cancellationToken);
     Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync(
         string driverId, DateOnly? completionDateKst, CancellationToken cancellationToken);
@@ -22,13 +37,42 @@ public interface IFoodDeliveryDriverWorkspaceUseCase
         string driverId, string settlementId, CancellationToken cancellationToken);
 }
 
+/// <summary>정산 조회 실패를 정산 내역이 없는 정상 응답과 구분합니다.</summary>
+public sealed class FoodDeliverySettlementUnavailableException : Exception
+{
+    public const string Code = "FoodSettlementUnavailable";
+    public FoodDeliverySettlementUnavailableException()
+        : base("정산 정보를 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.") { }
+}
+
+[SsalddelCodeMetadata(
+    SsalddelCodeFeatureKeys.FoodDriverWork,
+    SsalddelCodeLayer.Application,
+    "정산을 읽지 않고 현재 제안·수행 시도·조리 상태를 조합한다.",
+    ContractType = typeof(IFoodDeliveryDriverWorkspaceUseCase),
+    Effects = SsalddelCodeEffect.PersistentRead | SsalddelCodeEffect.PersistentWrite | SsalddelCodeEffect.NetworkCall,
+    FlowOrder = 110,
+    StepKey = "application.current-work",
+    DependsOnStepKeys = ["contract.current-work", "application.driver-offer-query", "application.current-bundle-policy", "application.current-work-projector"],
+    ExecutionStage = SsalddelCodeExecutionStage.Query,
+    ReadsFrom = SsalddelCodeDataScope.OperationalState,
+    WritesTo = SsalddelCodeDataScope.OperationalState,
+    Boundary = "GetCurrentWorkAsync는 월 정산·주문별 정산·완료 상세를 호출하지 않는다. SQL 전문 상태는 조회만 하며 위임한 수신 조회가 Redis 투영을 재구성할 수 있다.")]
+[SsalddelCodeMetadata(
+    SsalddelCodeFeatureKeys.FoodDriverWork,
+    SsalddelCodeLayer.Application,
+    "기존 workspace 호출에 현재 업무와 월·최근 주문 정산을 함께 반환한다.",
+    ContractType = typeof(IFoodDeliveryDriverWorkspaceUseCase),
+    Effects = SsalddelCodeEffect.PersistentRead | SsalddelCodeEffect.PersistentWrite | SsalddelCodeEffect.NetworkCall,
+    FlowOrder = 115,
+    StepKey = "application.legacy-workspace",
+    DependsOnStepKeys = ["contract.legacy-workspace", "application.current-work"],
+    ExecutionStage = SsalddelCodeExecutionStage.Query,
+    ReadsFrom = SsalddelCodeDataScope.OperationalState,
+    WritesTo = SsalddelCodeDataScope.OperationalState,
+    Boundary = "GetAsync 호환 경계다. 정산 조회 실패는 현재 업무가 없는 정상 응답으로 숨기지 않고 별도 오류로 구분한다. 수령 확인과 실제 지급 완료를 추정하지 않는다.")]
 public sealed partial class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDriverWorkspaceUseCase
 {
-    private const decimal MaxPickupSeparationKm = 1.5m;
-    private const decimal MaxDropoffSeparationKm = 3m;
-    private const decimal MaxBundleRouteKm = 6m;
-    private static readonly TimeSpan MaxReadyTimeGap = TimeSpan.FromMinutes(12);
-
     private readonly SsalddelContext _db;
     private readonly I음식배달기사업무Service _driverWork;
     private readonly I배달기사월정산UseCase _settlements;
@@ -55,7 +99,7 @@ public sealed partial class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDr
         _completedDetailAccessOptions = completedDetailAccessOptions?.Value ?? new FoodDeliveryCompletedDetailAccessOptions();
     }
 
-    public async Task<FoodDeliveryDriverWorkspaceDto> GetAsync(
+    public async Task<FoodDeliveryDriverCurrentWorkDto> GetCurrentWorkAsync(
         string driverId,
         CancellationToken cancellationToken)
     {
@@ -107,39 +151,43 @@ public sealed partial class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDr
                 preparationByOrder.GetValueOrDefault(ResolveOrderNo(x))))
             .ToArray();
 
-        var settlementResult = await _settlements.당월조회Async(driverId, driverId, cancellationToken);
-        var settlement = settlementResult.IsSuccess
-            ? settlementResult.Value
-            : new 배달기사월정산응답
-            {
-                기사Id = driverId,
-                년도 = DateTime.UtcNow.Year,
-                월 = DateTime.UtcNow.Month
-            };
         var dispatchAutomationEnabled = _executionMode.IsOperational
                                         && _featureFlags.IsEnabled(
                                             VersionFeatureFlagKeys.FoodDeliveryWorkflow);
-        var orderSettlements = await _db.음식주문기사정산
-            .AsNoTracking()
-            .Include(x => x.지급검증목록)
-            .Where(x => x.기사Id == driverId)
-            .OrderByDescending(x => x.전달완료시각Utc)
-            .Take(40)
-            .ToListAsync(cancellationToken);
 
-        return new FoodDeliveryDriverWorkspaceDto
+        return new FoodDeliveryDriverCurrentWorkDto
         {
             DriverId = driverId,
             Recommendations = offers,
             ActiveDeliveries = active,
             BundleCandidates = BuildBundleCandidates(offers),
             MaxActiveDeliveries = 음식배달기사활성업무Policy.MaxActiveDeliveries,
-            Settlement = settlement,
-            OrderSettlements = orderSettlements.Select(x => 음식주문기사정산Recorder.ToDto(
-                x, currentExecutionModeCode: _executionMode.Mode.ToString())).ToArray(),
             DispatchAutomationEnabled = dispatchAutomationEnabled,
             DispatchAutomationNotice = ResolveDispatchAutomationNotice(dispatchAutomationEnabled),
-            UpdatedAtUtc = DateTime.UtcNow
+            UpdatedAtUtc = _timeProvider.GetUtcNow().UtcDateTime
+        };
+    }
+
+    /// <summary>이전 workspace API의 정산 포함 응답을 유지합니다.</summary>
+    public async Task<FoodDeliveryDriverWorkspaceDto> GetAsync(string driverId, CancellationToken cancellationToken)
+    {
+        var current = await GetCurrentWorkAsync(driverId, cancellationToken);
+        var settlementResult = await _settlements.당월조회Async(driverId, driverId, cancellationToken);
+        if (settlementResult.IsFailed) throw new FoodDeliverySettlementUnavailableException();
+        var settlement = settlementResult.Value;
+        var orderSettlements = await _db.음식주문기사정산.AsNoTracking()
+            .Include(x => x.지급검증목록).Where(x => x.기사Id == driverId)
+            .OrderByDescending(x => x.전달완료시각Utc).Take(40).ToListAsync(cancellationToken);
+        return new FoodDeliveryDriverWorkspaceDto
+        {
+            DriverId = current.DriverId, Recommendations = current.Recommendations,
+            ActiveDeliveries = current.ActiveDeliveries, BundleCandidates = current.BundleCandidates,
+            MaxActiveDeliveries = current.MaxActiveDeliveries,
+            DispatchAutomationEnabled = current.DispatchAutomationEnabled,
+            DispatchAutomationNotice = current.DispatchAutomationNotice, UpdatedAtUtc = current.UpdatedAtUtc,
+            Settlement = settlement,
+            OrderSettlements = orderSettlements.Select(x => 음식주문기사정산Recorder.ToDto(
+                x, currentExecutionModeCode: _executionMode.Mode.ToString())).ToArray()
         };
     }
 
@@ -156,159 +204,15 @@ public sealed partial class FoodDeliveryDriverWorkspaceUseCase : IFoodDeliveryDr
     }
 
     private static FoodDeliveryDriverOfferDto ToOffer(DriverWorkOfferDto offer)
-        => new()
-        {
-            OfferId = offer.OfferId,
-            OrderSummary = offer.Title,
-            RestaurantName = offer.Pickup.Label,
-            Pickup = ToStop(offer.Pickup),
-            Dropoff = ToStop(offer.Dropoff),
-            DriverPayout = offer.DriverPayout,
-            WeatherSurcharge = offer.WeatherSurcharge,
-            WeatherSurchargeApplied = offer.WeatherSurchargeApplied,
-            PricingPolicyRevision = offer.PricingPolicyRevision ?? string.Empty,
-            WeatherObservedAtUtc = offer.WeatherObservedAtUtc?.UtcDateTime,
-            DistanceKm = offer.DistanceKm.HasValue ? (decimal)offer.DistanceKm.Value : null,
-            RecommendationReason = offer.RecommendationReason,
-            ExpiresAtUtc = offer.ExpiresAtUtc?.UtcDateTime,
-            AvailableActions = 음식배달가능행동Projector.기사제안용(offer.ExpiresAtUtc?.UtcDateTime),
-            ExecutionProfile = offer.ExecutionProfile
-                               ?? 운송실행프로필Factory.Create(
-                                   살뜰.Services.Dispatch.Engine.운송의뢰배차원천유형.음식점주문,
-                                   상태값.배차업무유형.음식배달)
-        };
+        => FoodDeliveryCurrentWorkProjector.ToOffer(offer);
 
-    private static FoodDeliveryDriverActiveDeliveryDto ToActiveDelivery(
-        살뜰.도메인.운송.운송원장 transport,
-        DriverWorkOfferDto offer,
-        살뜰.도메인.음식.음식배달시도? attempt,
-        음식주문현재조리상태? preparation)
-        => new()
-        {
-            TransportId = transport.Id,
-            OrderNo = !string.IsNullOrWhiteSpace(attempt?.주문번호) ? attempt.주문번호 : ResolveOrderNo(transport),
-            OfferId = offer.OfferId,
-            OrderSummary = offer.Title,
-            RestaurantName = offer.Pickup.Label,
-            Pickup = ToStop(offer.Pickup),
-            Dropoff = ToStop(offer.Dropoff),
-            DriverPayout = offer.DriverPayout,
-            WeatherSurcharge = offer.WeatherSurcharge,
-            WeatherSurchargeApplied = offer.WeatherSurchargeApplied,
-            PricingPolicyRevision = offer.PricingPolicyRevision ?? string.Empty,
-            WeatherObservedAtUtc = offer.WeatherObservedAtUtc?.UtcDateTime,
-            TransportStatus = transport.상태,
-            WorkStatus = offer.Status,
-            DeliveryAttemptId = attempt?.시도StableId ?? string.Empty,
-            AttemptRevision = attempt?.Revision ?? 0,
-            RestaurantArrivedAtUtc = attempt?.가게도착시각Utc,
-            DisplayedPreparationReadyAtUtc = attempt?.표시준비예정시각Utc,
-            PreparationDelayEligibleAtUtc = attempt?.표시준비예정시각Utc?.AddMinutes(10),
-            IsPreparationDelayRedispatch = attempt?.조리지연재배차여부 ?? false,
-            CurrentPreparationRound = preparation?.Round ?? 1,
-            CurrentPickupReadyAtUtc = preparation?.ReadyAtUtc,
-            RecookingRequestedAtUtc = preparation?.RecookingRequestedAtUtc,
-            ExecutionProfile = offer.ExecutionProfile ?? 운송실행프로필Factory.Create(transport),
-            Recipient = ToRecipient(offer.Recipient),
-            AvailableActions = 음식배달가능행동Projector.기사배달용(
-                offer.Status,
-                attempt?.Revision ?? 0,
-                attempt?.가게도착시각Utc,
-                pickupReady: preparation?.ReadyAtUtc.HasValue == true),
-            UpdatedAtUtc = transport.UpdatedAt
-        };
+    private static FoodDeliveryDriverActiveDeliveryDto ToActiveDelivery(살뜰.도메인.운송.운송원장 transport,
+        DriverWorkOfferDto offer, 살뜰.도메인.음식.음식배달시도? attempt, 음식주문현재조리상태? preparation)
+        => FoodDeliveryCurrentWorkProjector.ToActiveDelivery(transport, offer, attempt, preparation);
 
     private static string ResolveOrderNo(살뜰.도메인.운송.운송원장 transport)
         => string.IsNullOrWhiteSpace(transport.원본의뢰Id) ? transport.의뢰Id : transport.원본의뢰Id;
 
-    private static FoodDeliveryDriverRecipientDto ToRecipient(DriverWorkRecipientDto? recipient)
-        => recipient is null
-            ? new FoodDeliveryDriverRecipientDto()
-            : new FoodDeliveryDriverRecipientDto
-            {
-                DisplayName = recipient.DisplayName,
-                ContactPhone = recipient.ContactPhone,
-                DeliveryInstructions = recipient.DeliveryInstructions,
-                OrdererIsRecipient = recipient.OrdererIsRecipient
-            };
-
-    private static FoodDeliveryDriverStopDto ToStop(DriverWorkStopDto stop)
-        => new()
-        {
-            Label = stop.Label,
-            Address = stop.Address,
-            Latitude = (decimal)stop.Latitude,
-            Longitude = (decimal)stop.Longitude,
-            TargetAtUtc = stop.TargetTime?.UtcDateTime
-        };
-
-    private static IReadOnlyList<FoodDeliveryBundleCandidateDto> BuildBundleCandidates(
-        IReadOnlyList<FoodDeliveryDriverOfferDto> offers)
-    {
-        var remaining = offers
-            .Where(HasCoordinates)
-            .OrderBy(x => x.Pickup.TargetAtUtc ?? DateTime.MaxValue)
-            .ToList();
-        var result = new List<FoodDeliveryBundleCandidateDto>();
-
-        while (remaining.Count > 1)
-        {
-            var first = remaining[0];
-            remaining.RemoveAt(0);
-            var second = remaining.FirstOrDefault(candidate => CanBundle(first, candidate));
-            if (second is null)
-            {
-                continue;
-            }
-
-            remaining.Remove(second);
-            var estimatedRouteKm = EstimateBundleRouteKm(first, second);
-            result.Add(new FoodDeliveryBundleCandidateDto
-            {
-                BundleId = $"bundle:{first.OfferId}:{second.OfferId}",
-                OfferIds = [first.OfferId, second.OfferId],
-                Title = $"{first.RestaurantName} + {second.RestaurantName}",
-                Reason = "조리 완료 시각과 픽업·전달 동선이 가까운 2건 묶음입니다.",
-                TotalPayout = first.DriverPayout + second.DriverPayout,
-                EstimatedRouteKm = Math.Round(estimatedRouteKm, 1)
-            });
-        }
-
-        return result;
-    }
-
-    private static bool CanBundle(FoodDeliveryDriverOfferDto first, FoodDeliveryDriverOfferDto second)
-    {
-        var readyGap = first.Pickup.TargetAtUtc.HasValue && second.Pickup.TargetAtUtc.HasValue
-            ? (first.Pickup.TargetAtUtc.Value - second.Pickup.TargetAtUtc.Value).Duration()
-            : TimeSpan.Zero;
-        return readyGap <= MaxReadyTimeGap
-               && DistanceKm(first.Pickup, second.Pickup) <= MaxPickupSeparationKm
-               && DistanceKm(first.Dropoff, second.Dropoff) <= MaxDropoffSeparationKm
-               && EstimateBundleRouteKm(first, second) <= MaxBundleRouteKm;
-    }
-
-    private static decimal EstimateBundleRouteKm(
-        FoodDeliveryDriverOfferDto first,
-        FoodDeliveryDriverOfferDto second)
-        => DistanceKm(first.Pickup, second.Pickup)
-           + DistanceKm(second.Pickup, first.Dropoff)
-           + DistanceKm(first.Dropoff, second.Dropoff);
-
-    private static decimal DistanceKm(FoodDeliveryDriverStopDto first, FoodDeliveryDriverStopDto second)
-    {
-        var lat1 = DegreesToRadians((double)first.Latitude!.Value);
-        var lat2 = DegreesToRadians((double)second.Latitude!.Value);
-        var dLat = lat2 - lat1;
-        var dLon = DegreesToRadians((double)(second.Longitude!.Value - first.Longitude!.Value));
-        var a = Math.Pow(Math.Sin(dLat / 2d), 2d)
-                + Math.Cos(lat1) * Math.Cos(lat2) * Math.Pow(Math.Sin(dLon / 2d), 2d);
-        return (decimal)(6371d * 2d * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1d - a)));
-    }
-
-    private static bool HasCoordinates(FoodDeliveryDriverOfferDto offer)
-        => offer.Pickup.Latitude.HasValue && offer.Pickup.Longitude.HasValue
-           && offer.Dropoff.Latitude.HasValue && offer.Dropoff.Longitude.HasValue;
-
-    private static double DegreesToRadians(double value) => value * Math.PI / 180d;
+    private static IReadOnlyList<FoodDeliveryBundleCandidateDto> BuildBundleCandidates(IReadOnlyList<FoodDeliveryDriverOfferDto> offers)
+        => FoodDeliveryCurrentBundlePolicy.Build(offers);
 }

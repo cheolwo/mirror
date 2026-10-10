@@ -13,11 +13,29 @@ namespace Ssalddel.Tests.Ui.Common;
 
 public sealed class FoodRoleWorkspaceAdapterTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task OrdererSupportKeepsOriginalOrderContextWithoutPerformingCancellation(bool accepted)
+    {
+        var api = new Api(); const string id = "주문:a";
+        api.Reads["api/v1/food-orders?page=1&pageSize=50"] = new 주문자음식주문목록응답();
+        api.Reads["api/v1/food-orders/" + Uri.EscapeDataString(id)] = new 주문자음식주문상세응답
+        { 주문 = new() { 주문번호 = id, 상태 = accepted ? 음식주문상태코드.주문확인 : 음식주문상태코드.주문대기 },
+            음식점수락시각Utc = accepted ? DateTime.UtcNow : null };
+        var item = Assert.Single((await new OrdererRoleWorkspaceAdapter(api).LoadAsync(id, default)).Items);
+        var support = Assert.Single(item.Actions!, action => action.Key == OrdererRoleWorkspaceAdapter.RequestSupport);
+        Assert.Equal("/commerce/disputes?sourceKind=food-order&sourceId=" + Uri.EscapeDataString(id), support.Route);
+        Assert.False(support.RequiresConfirmation);
+        Assert.True(RoleWorkspaceActionPolicy.KeepVisible("orderer", support, false));
+        Assert.Empty(api.Writes);
+        if (accepted) Assert.Contains("협의", support.Label);
+    }
     [Fact]
     public async Task DriverOfferSummaryUsesActualFeeDistanceAndPickupBeforeAcceptance()
     {
         var api = DriverApi(new());
-        api.Reads["api/v1/driver/food-deliveries/workspace"] = new FoodDeliveryDriverWorkspaceDto
+        api.Reads["api/v1/driver/food-deliveries/workspace/current"] = new FoodDeliveryDriverCurrentWorkDto
         {
             Recommendations = [new() { OfferId = "offer-a", RestaurantName = "음식점", DriverPayout = 4720,
                 DistanceKm = 3.414m, OrderSummary = "긴 메뉴 정보", Pickup = new() { Address = "픽업 주소" },
@@ -41,7 +59,7 @@ public sealed class FoodRoleWorkspaceAdapterTests
     public async Task DriverOfferSummaryDoesNotInventMissingMetricsAndKeepsConfirmedZeroDistance(string? distance, string expected)
     {
         var api = DriverApi(new());
-        api.Reads["api/v1/driver/food-deliveries/workspace"] = new FoodDeliveryDriverWorkspaceDto
+        api.Reads["api/v1/driver/food-deliveries/workspace/current"] = new FoodDeliveryDriverCurrentWorkDto
         {
             Recommendations = [new() { OfferId = "offer-a", DriverPayout = 0,
                 DistanceKm = distance is null ? null : decimal.Parse(distance, System.Globalization.CultureInfo.InvariantCulture) }]
@@ -318,7 +336,7 @@ public sealed class FoodRoleWorkspaceAdapterTests
     private static Api DriverApi(FoodDeliveryDriverActiveDeliveryDto delivery)
     {
         var api = new Api();
-        api.Reads["api/v1/driver/food-deliveries/workspace"] = new FoodDeliveryDriverWorkspaceDto { ActiveDeliveries = [delivery] };
+        api.Reads["api/v1/driver/food-deliveries/workspace/current"] = new FoodDeliveryDriverCurrentWorkDto { ActiveDeliveries = [delivery] };
         api.Reads["api/v1/driver/food-deliveries/work/status"] = new 기사운행상태응답 { Status = "운행중" };
         api.Reads["api/v1/driver/operational-dispatch/availability"] = new 운영배차수신상태Dto { 수신의사Code = 운영배차수신의사Code.On, 실효상태Code = 운영배차실효상태Code.배차가능 };
         return api;

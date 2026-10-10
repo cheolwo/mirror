@@ -1,0 +1,95 @@
+{
+  "planId": "PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB",
+  "revision": "r47",
+  "status": "Implemented / Local verification complete",
+  "approval": "2026-10-09 user: Implement the proposed plan",
+  "baseCommit": "d1bab3eec08dc0a49c9a87f882590d394205c9a4",
+  "designDocumentRef": "delivery-experience-sharing.implementation.r47.md",
+  "designSha256": "6E61E030CE350D574B42CFEE550B41086A411083913FE60A06378EF9423A9439",
+  "primaryOwner": "operations",
+  "writePaths": [
+    "Ssalddel.Contracts/Food/**",
+    "Ssalddel.Contracts/Driver/Food/FoodDeliveryDriverWorkspaceDtos.cs",
+    "Ssalddel.Contracts/Common/Drivers/DriverWorkDtos.cs",
+    "Ssalddel.Domain/음식/**",
+    "Ssalddel.Infrastructure/Persistence/Configurations/Food/**",
+    "Ssalddel/Services/DeliveryExperience/**",
+    "Ssalddel/Services/Food/음식주문메뉴검증Service.cs",
+    "Ssalddel/Services/PrivacyRetention/DeliveryPrivacyPurgeAdapters.cs",
+    "Ssalddel/Extensions/ServiceCollectionExtensions.DeliveryExperience.cs",
+    "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs",
+    "Ssalddel/Application/Food/**",
+    "Ssalddel/Application/Driver/Food/**",
+    "Ssalddel/Application/Driver/Settings/기사배달경험공유UseCase.cs",
+    "Ssalddel/Controllers/Driver/**",
+    "Ssalddel/Program.cs",
+    "Ssalddel/Migrations/**",
+    "FDriverApp/**",
+    "RestaurantDeskApp/**",
+    "OrdererApp/**",
+    "Ssalddel.Ui.Common/Areas/App/**",
+    "Ssalddel.Tests/**",
+    "eng/RoleWorkspacePreview/**",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/**",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/AI/PLANNING.md",
+    "docs/Changes/**",
+    "docs/assets/changes/delivery-experience-sharing-r47/**",
+    "docs/ProjectOverview/page-docs/**"
+  ],
+  "excludedEffects": [
+    "OperationalActivation",
+    "RealDbMigration",
+    "RemotePush",
+    "DeviceInstall",
+    "Deploy",
+    "Unity",
+    "VideoEdit",
+    "Commit",
+    "Push"
+  ],
+  "validationCeiling": [
+    "FocusedTests",
+    "Fast",
+    "Task",
+    "IsolatedDatabaseAndHttp",
+    "ProductRazorRender",
+    "ConsumerBuild"
+  ],
+  "validationResults": {
+    "Fast": {
+      "Passed": 88,
+      "Failed": 0,
+      "Evidence": "artifacts/local/validation/20261009-142403"
+    },
+    "Task": {
+      "Passed": 9526,
+      "Skipped": 15,
+      "Failed": 0,
+      "Evidence": "artifacts/local/validation/20261009-142519"
+    },
+    "Ui": {
+      "Passed": 38,
+      "Failed": 0,
+      "Evidence": "artifacts/local/delivery-experience-r47/ui/verification.json"
+    },
+    "SourceDrift": {
+      "Files": 49,
+      "Changed": 0,
+      "Evidence": "artifacts/local/delivery-experience-r47/source-final-task-verification.json"
+    },
+    "Database": {
+      "IsolatedSqliteAndHttpVerified": true,
+      "MySqlSchemaScriptGenerated": true,
+      "OperationalMigrationApplied": false,
+      "Script": "artifacts/local/delivery-experience-r47/migration-idempotent.sql"
+    },
+    "Consumers": {
+      "Build": "Ssalddel.v3.5.slnx",
+      "ApkInventory": "artifacts/local/delivery-experience-r47/existing-bin-apk-inventory.json",
+      "DeviceInstalled": false,
+      "CurrentApkEvidence": "artifacts/local/delivery-experience-r47/apk-post-task-verification.json",
+      "FinalApkInventory": "artifacts/local/delivery-experience-r47/final-bin-apk-inventory.json"
+    }
+  }
+}

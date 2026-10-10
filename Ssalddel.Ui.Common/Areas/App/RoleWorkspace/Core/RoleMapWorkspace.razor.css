@@ -11,7 +11,11 @@
 .role-map-workspace__settings > div { display: flex; gap: 20px; padding-bottom: 10px; }
 .role-map-workspace__settings label { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; }
 .role-map-workspace__settings input { width: 18px; height: 18px; accent-color: var(--ss-accent, #0f766e); }
-.role-map-workspace__geography { background: var(--ss-surface, #fff); border-bottom: 1px solid var(--ss-border, #dce5e9); }
+.role-map-workspace__geography { position: relative; background: var(--ss-surface, #fff); border-bottom: 1px solid var(--ss-border, #dce5e9); }
+.role-map-workspace__driver-map-control { position: absolute; top: 12px; left: 12px; z-index: 3; max-width: calc(100% - 24px); }
+.role-map-workspace__driver-list-control { padding: 10px 16px; }
+.role-map-workspace__profile > summary { display: flex; align-items: center; gap: 8px; }
+.role-map-workspace__profile-confirmation { margin: 0 16px 16px; }
 .role-map-workspace__canvas { width: 100%; height: clamp(250px, 43dvh, 480px); background: #e8eeee; }
 .role-map-workspace__map-notice { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 10px 16px; font-size: 14px; color: var(--ss-muted, #586b78); }
 .role-map-workspace__panel { padding: 16px; }

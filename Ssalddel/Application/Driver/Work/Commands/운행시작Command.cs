@@ -21,7 +21,8 @@ public sealed record 운행시작Command : 살뜰CommandBase, IRequest<Result<Ss
         string? 복귀콜선호,
         bool 커뮤니티운행공개,
         bool 커뮤니티구단위위치공개동의,
-        string 운송실행유형 = 운송실행유형코드.화물운송)
+        string 운송실행유형 = 운송실행유형코드.화물운송,
+        Guid? ClientRequestId = null)
     {
         기사Id = string.IsNullOrWhiteSpace(driverId) ? string.Empty : driverId;
         this.시작모드 = 시작모드;
@@ -36,6 +37,7 @@ public sealed record 운행시작Command : 살뜰CommandBase, IRequest<Result<Ss
         this.복귀콜선호 = 복귀콜선호;
         this.커뮤니티운행공개 = 커뮤니티운행공개;
         this.커뮤니티구단위위치공개동의 = 커뮤니티구단위위치공개동의;
+        this.ClientRequestId = ClientRequestId;
         this.운송실행유형 = string.Equals(
             운송실행유형,
             운송실행유형코드.음식배달,
@@ -47,6 +49,7 @@ public sealed record 운행시작Command : 살뜰CommandBase, IRequest<Result<Ss
     }
 
     public string 기사Id { get; init; } = string.Empty;
+    public Guid? ClientRequestId { get; init; }
     public string 시작모드 { get; init; } = string.Empty;
     public DateTime? 시작시각 { get; init; }
     public string 시작위치 { get; init; } = string.Empty;

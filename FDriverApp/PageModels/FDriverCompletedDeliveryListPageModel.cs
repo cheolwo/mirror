@@ -26,6 +26,7 @@ public sealed partial class FDriverCompletedDeliveryListPageModel : ObservableOb
     private bool _foreground = true;
     private bool _navigationInProgress;
     private bool _sessionSubscribed;
+    private FDriverDailySettlementItem? _firstVisibleItem;
 
     [ObservableProperty] private DateTime _selectedDate = DateTime.UtcNow.AddHours(9).Date;
     [ObservableProperty] private int _pageNumber = 1;
@@ -41,6 +42,22 @@ public sealed partial class FDriverCompletedDeliveryListPageModel : ObservableOb
     public bool HasPreviousPage => IsLoaded && !IsLoading && PageNumber > 1;
     public bool HasNextPage => IsLoaded && !IsLoading && PageNumber < PageCount;
     public bool HasNoItems => IsLoaded && !IsLoading && Items.Count == 0;
+    public int? ScrollRestoreIndex
+    {
+        get
+        {
+            if (_firstVisibleItem is null || _loadedOwner != _session.UserId || !HasDriverSession()) return null;
+            var index = Items.IndexOf(_firstVisibleItem);
+            return index >= 0 ? index : null;
+        }
+    }
+
+    public void RememberScrollPosition(int firstVisibleItemIndex)
+    {
+        if (_active && _foreground && IsLoaded && !IsLoading && _loadedOwner == _session.UserId
+            && HasDriverSession() && firstVisibleItemIndex >= 0 && firstVisibleItemIndex < Items.Count)
+            _firstVisibleItem = Items[firstVisibleItemIndex];
+    }
 
     public FDriverCompletedDeliveryListPageModel(IFoodDeliveryDriverApiService api,
         IFDriverAuthSession session, IFDriverCompletedDeliveryNavigator navigator)
@@ -191,6 +208,7 @@ public sealed partial class FDriverCompletedDeliveryListPageModel : ObservableOb
 
     private void RenderPage()
     {
+        _firstVisibleItem = null;
         Items.Clear();
         foreach (var item in _allItems.Skip((PageNumber - 1) * PageSize).Take(PageSize)) Items.Add(item);
         NotifyPaging();

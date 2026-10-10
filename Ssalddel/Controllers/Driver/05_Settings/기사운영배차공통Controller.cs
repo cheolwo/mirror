@@ -6,6 +6,7 @@ using Ssalddel.Contracts.Common.Dispatch;
 using 살뜰.Data;
 using 살뜰.Services.Dispatch.Common;
 using 살뜰.Services.Versioning;
+using Ssalddel.Contracts.Common.Workflow;
 
 namespace Ssalddel.Controllers.Driver.Settings05;
 
@@ -39,20 +40,12 @@ public sealed class 기사운영배차공통Controller : DriverControllerBase
     {
         if (요청 is null || 요청.클라이언트요청Id == Guid.Empty)
         {
-            return BadRequest(new ProblemDetails
-            {
-                Title = "배차 수신 의사 변경 요청이 올바르지 않습니다.",
-                Detail = "클라이언트 요청 ID가 필요합니다."
-            });
+            return InvalidIntent("배차 수신 의사 변경 요청이 올바르지 않습니다.", "DispatchIntent.RequestIdRequired");
         }
 
         if (요청.수신의사Code is not (운영배차수신의사Code.On or 운영배차수신의사Code.Off))
         {
-            return BadRequest(new ProblemDetails
-            {
-                Title = "배차 수신 의사 코드가 올바르지 않습니다.",
-                Detail = "On 또는 Off만 사용할 수 있습니다."
-            });
+            return InvalidIntent("배차 수신 의사 코드가 올바르지 않습니다.", "DispatchIntent.InvalidCode");
         }
 
         return Ok(await _useCase.기사의사변경Async(CurrentDriverId(), 요청, cancellationToken));
@@ -61,4 +54,9 @@ public sealed class 기사운영배차공통Controller : DriverControllerBase
     [HttpGet("short-metrics")]
     public async Task<ActionResult<운영배차단기지표Dto>> 단기지표조회(CancellationToken cancellationToken)
         => Ok(await _useCase.단기지표조회Async(CurrentDriverId(), cancellationToken));
+
+    private ActionResult InvalidIntent(string message, string code)
+        => this.To업무실패Problem(message, StatusCodes.Status400BadRequest, code,
+            업무실패분류Codes.업무규칙차단, 업무실패책임역할Codes.플랫폼운영자,
+            false, 업무재시도정책Codes.자동재시도안함);
 }

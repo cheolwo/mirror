@@ -15,7 +15,8 @@ public interface I음식점음식주문조회UseCase
 /// 실시간 알림 유실이나 앱 재시작 뒤에도 이 조회가 수신함의 기준이 됩니다.
 /// </summary>
 public sealed class 음식점음식주문조회UseCase(
-    ISsalddelFoodOrderStore orderStore) : I음식점음식주문조회UseCase
+    ISsalddelFoodOrderStore orderStore,
+    Ssalddel.Services.DeliveryExperience.음식배달경험Service? experience = null) : I음식점음식주문조회UseCase
 {
     public 음식점주문수신함응답 목록(음식점주문수신함조회요청 request, long 음식점Id)
     {
@@ -59,6 +60,7 @@ public sealed class 음식점음식주문조회UseCase(
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(FoodOrderSampleData.Clone)
+                .Select(order => 경험반영(order, 음식점Id))
                 .Select(음식배달가능행동Projector.음식점용)
                 .ToArray(),
             TotalCount = ordered.Length,
@@ -78,8 +80,14 @@ public sealed class 음식점음식주문조회UseCase(
 
         var order = orderStore.GetOrder(주문번호.Trim());
         return order?.음식점Id == 음식점Id
-            ? 음식배달가능행동Projector.음식점용(FoodOrderSampleData.Clone(order))
+            ? 음식배달가능행동Projector.음식점용(경험반영(FoodOrderSampleData.Clone(order), 음식점Id))
             : null;
+    }
+
+    private 음식주문응답 경험반영(음식주문응답 order, long restaurantId)
+    {
+        order.ExperienceSummaries = experience?.음식점요약(order.주문번호, restaurantId) ?? [];
+        return order;
     }
 
     private static DateTime 최근변경시각(음식주문응답 order)

@@ -151,6 +151,7 @@ public sealed partial class MainPageModel
 
     private void StopFoodMap()
     {
+        CancelLocationTransmissions();
         ++_foodMapLifetime;
         _foodMapCancellation?.Cancel();
         if (_foodMapLocationHandler is not null) _locationService.LocationChanged -= _foodMapLocationHandler;
@@ -207,6 +208,7 @@ public sealed partial class MainPageModel
         => _ = MainThread.InvokeOnMainThreadAsync(() =>
         {
             if (!IsFoodMapLifetimeCurrent(lifetime)) return;
+            CancelLocationTransmissions();
             _foodMapLocation = null;
             _foodMapRoutes.ForgetLocation();
             _foodMapListenerRetryAtUtc = DateTime.UtcNow.AddSeconds(60);
@@ -222,6 +224,8 @@ public sealed partial class MainPageModel
     private bool ApplyFoodMapLocation(FDriverLocationSnapshot location)
     {
         if (!_foodMapForeground || !IsFreshFoodMapLocation(location)) return false;
+        if (_locationService.Status is FDriverLocationStatus.PermissionRequired
+            or FDriverLocationStatus.ServicesDisabled or FDriverLocationStatus.Unsupported) return false;
         if (_foodMapLocation is not null && location.RecordedAtUtc < _foodMapLocation.RecordedAtUtc) return false;
         _foodMapLocation = location;
         CurrentLocationLatitude = (double)location.Latitude;

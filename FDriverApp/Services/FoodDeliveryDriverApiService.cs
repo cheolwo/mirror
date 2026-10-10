@@ -14,6 +14,11 @@ namespace FDriverApp.Services;
 
 public interface IFoodDeliveryDriverApiService
 {
+    Task<DeliveryExperienceSharingPreferenceDto> GetDeliveryExperienceSharingAsync(CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("배달 경험 공유 설정 조회를 지원하지 않습니다.");
+    Task<DeliveryExperienceSharingPreferenceDto> UpdateDeliveryExperienceSharingAsync(DeliveryExperienceSharingPreferenceRequest request,
+        CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("배달 경험 공유 설정 저장을 지원하지 않습니다.");
     Task<기사권역복귀설정응답> GetReturnAreaSettingsAsync(CancellationToken cancellationToken = default)
         => throw new NotSupportedException("권역 복귀 설정 조회를 지원하지 않습니다.");
     Task<기사권역복귀설정응답> UpdateReturnAreaSettingsAsync(기사권역복귀설정수정요청 request, CancellationToken cancellationToken = default)
@@ -24,12 +29,14 @@ public interface IFoodDeliveryDriverApiService
         Ssalddel.Contracts.Driver.Notification.기사알림설정수정요청 settings, CancellationToken cancellationToken = default)
         => throw new NotSupportedException("알림 설정 저장을 지원하지 않습니다.");
     Task<FoodDeliveryDriverWorkspaceDto> GetWorkspaceAsync(CancellationToken cancellationToken = default);
+    Task<FoodDeliveryDriverCurrentWorkDto> GetCurrentWorkAsync(CancellationToken cancellationToken = default);
     Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync(DateOnly date, CancellationToken cancellationToken = default);
     Task<FoodDeliveryCompletedDeliveryDetailDto> GetCompletedDeliveryDetailAsync(string settlementId, CancellationToken cancellationToken = default);
     Task<기사운행상태응답?> GetWorkStatusAsync(CancellationToken cancellationToken = default);
     Task<운영배차수신상태Dto> GetDispatchAvailabilityAsync(CancellationToken cancellationToken = default);
     Task<운영배차수신상태Dto> ChangeDispatchIntentAsync(운영배차수신의사변경요청 request, CancellationToken cancellationToken = default);
     Task StartWorkAsync(string startLocation, CancellationToken cancellationToken = default);
+    Task StartWorkAsync(string startLocation, Guid clientRequestId, CancellationToken cancellationToken = default);
     Task StopWorkAsync(CancellationToken cancellationToken = default);
     Task<기사위치갱신응답?> UpdateLocationAsync(기사위치갱신요청 request, CancellationToken cancellationToken = default);
     Task<FoodDeliveryDriverActionResponse> AcceptAsync(string offerId, CancellationToken cancellationToken = default);
@@ -60,6 +67,18 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
 
     public Task<FoodDeliveryDriverWorkspaceDto> GetWorkspaceAsync(CancellationToken cancellationToken = default)
         => SendAsync<FoodDeliveryDriverWorkspaceDto>(HttpMethod.Get, "api/v1/driver/food-deliveries/workspace", null, cancellationToken);
+
+    public Task<FoodDeliveryDriverCurrentWorkDto> GetCurrentWorkAsync(CancellationToken cancellationToken = default)
+        => SendAsync<FoodDeliveryDriverCurrentWorkDto>(HttpMethod.Get, "api/v1/driver/food-deliveries/workspace/current", null, cancellationToken);
+
+    public Task<DeliveryExperienceSharingPreferenceDto> GetDeliveryExperienceSharingAsync(CancellationToken cancellationToken = default)
+        => SendAsync<DeliveryExperienceSharingPreferenceDto>(HttpMethod.Get,
+            "api/v1/driver/preferences/delivery-experience-sharing", null, cancellationToken);
+
+    public Task<DeliveryExperienceSharingPreferenceDto> UpdateDeliveryExperienceSharingAsync(DeliveryExperienceSharingPreferenceRequest request,
+        CancellationToken cancellationToken = default)
+        => SendAsync<DeliveryExperienceSharingPreferenceDto>(HttpMethod.Put,
+            "api/v1/driver/preferences/delivery-experience-sharing", request, cancellationToken);
 
     public Task<기사권역복귀설정응답> GetReturnAreaSettingsAsync(CancellationToken cancellationToken = default)
         => SendAsync<기사권역복귀설정응답>(HttpMethod.Get, "api/v1/driver/return-area/settings", null, cancellationToken);
@@ -99,11 +118,18 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
             cancellationToken);
 
     public async Task StartWorkAsync(string startLocation, CancellationToken cancellationToken = default)
+        => await StartWorkCoreAsync(startLocation, null, cancellationToken);
+
+    public async Task StartWorkAsync(string startLocation, Guid clientRequestId, CancellationToken cancellationToken = default)
+        => await StartWorkCoreAsync(startLocation, clientRequestId, cancellationToken);
+
+    private async Task StartWorkCoreAsync(string startLocation, Guid? clientRequestId, CancellationToken cancellationToken)
         => _ = await SendAsync<기사운행시작응답>(
             HttpMethod.Post,
             "api/v1/driver/food-deliveries/work/start",
             new 기사운행시작요청
             {
+                ClientRequestId = clientRequestId,
                 시작모드 = "바로시작",
                 시작시각 = DateTime.UtcNow,
                 시작위치 = startLocation,

@@ -1,0 +1,21 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food
+
+@if (Action is { } action)
+{
+    <button type="button" class="food-driver-dispatch-toggle" role="switch" aria-label="신규 배차 받기"
+        aria-checked="@(IsStateKnown && action.Key == FoodDriverRoleWorkspaceAdapter.DisableDispatch ? "true" : "false")"
+        disabled="@(!action.Enabled || IsBusy || !IsStateKnown)" @onclick="() => Toggled.InvokeAsync(action)">
+        <span class="food-driver-dispatch-toggle__track" aria-hidden="true"><span></span></span>
+        <span class="food-driver-dispatch-toggle__text"><strong>신규 배차 받기</strong><small>@StatusText(action)</small></span>
+    </button>
+}
+
+@code {
+    [Parameter] public RoleWorkspaceAction? Action { get; set; }
+    [Parameter] public bool IsBusy { get; set; }
+    [Parameter] public bool IsStateKnown { get; set; } = true;
+    [Parameter] public EventCallback<RoleWorkspaceAction> Toggled { get; set; }
+    private string StatusText(RoleWorkspaceAction action) => !IsStateKnown ? "확인 필요" : IsBusy ? "변경 중"
+        : action.Key == FoodDriverRoleWorkspaceAdapter.DisableDispatch ? "켜짐" : "꺼짐";
+}

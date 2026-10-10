@@ -42,7 +42,7 @@ public sealed partial class MainPageModel
             {
                 ExceptionEditor.Reset();
                 _pendingArrival = null; _pendingArrivalAttemptId = null; _pendingArrivalOfferId = null;
-                _pendingDispatchIntent = null; _restoredInterruption = null;
+                _pendingDispatchIntent = null; _pendingStartReceptionRequestId = null; _pendingStartRequestId = null; _verifiedStartRequestId = null; _restoredInterruption = null;
                 _pendingMemoryOwner = actor.Owner;
             }
             _pendingRecoveryReady = false;
@@ -58,6 +58,9 @@ public sealed partial class MainPageModel
             _pendingArrivalAttemptId = saved?.Arrival?.AttemptId;
             _pendingArrivalOfferId = saved?.Arrival?.OfferId;
             _pendingDispatchIntent = saved?.DispatchIntent;
+            _pendingStartReceptionRequestId = saved?.StartReceptionRequestId;
+            _pendingStartRequestId = saved?.StartRequestId;
+            _verifiedStartRequestId = null;
             _restoredInterruption = saved?.Interruption;
             _pendingLoadedOwner = actor.Owner;
             _pendingPersistedFingerprint = Fingerprint(saved ?? new(actor.Owner, null, null, null));
@@ -76,7 +79,8 @@ public sealed partial class MainPageModel
         return new(owner,
             _pendingArrival is not null && _pendingArrivalOfferId is not null && _pendingArrivalAttemptId is not null
                 ? new(_pendingArrivalOfferId, _pendingArrivalAttemptId, CopyArrival(_pendingArrival)) : null,
-            _pendingDispatchIntent is null ? null : CopyIntent(_pendingDispatchIntent), savedInterruption);
+            _pendingDispatchIntent is null ? null : CopyIntent(_pendingDispatchIntent), savedInterruption,
+            _pendingStartReceptionRequestId, _pendingStartRequestId);
     }
 
     private async Task PersistPendingOperationsAsync(CancellationToken cancellationToken)

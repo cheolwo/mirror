@@ -1,3 +1,5 @@
+using Ssalddel.Contracts.Common.Metadata;
+
 using FluentResults;
 using System.Collections.Concurrent;
 using System.Data;
@@ -74,7 +76,20 @@ public interface I음식배달기사업무Service
         CancellationToken cancellationToken = default);
 }
 
-public sealed class 음식배달기사업무Service : I음식배달기사업무Service
+[SsalddelCodeMetadata(
+    SsalddelCodeFeatureKeys.FoodDriverWork,
+    SsalddelCodeLayer.Application,
+    "기사 수락·거절·도착·중단·픽업·전달의 권한·Revision·현재 상태 전이를 조율한다.",
+    ContractType = typeof(I음식배달기사업무Service),
+    Effects = SsalddelCodeEffect.PersistentRead | SsalddelCodeEffect.PersistentWrite | SsalddelCodeEffect.NetworkCall | SsalddelCodeEffect.StateMutation | SsalddelCodeEffect.ThirdPartyApiCall | SsalddelCodeEffect.MayIncurExternalCost,
+    FlowOrder = 120,
+    StepKey = "application.driver-actions",
+    DependsOnStepKeys = ["application.driver-action-policy", "contract.driver-followup-port", "contract.active-delivery"],
+    ExecutionStage = SsalddelCodeExecutionStage.Confirm,
+    ReadsFrom = SsalddelCodeDataScope.OperationalState,
+    WritesTo = SsalddelCodeDataScope.OperationalState,
+    Boundary = "수락·도착·픽업·전달은 SQL 변경과 후속 예약을 같은 transaction으로 확정한다. 거절의 기존 두 단계 저장은 별도다. 거절·중단의 다음 후보 진행은 새 제안 요금 산정을 통해 외부 경로 API를 호출할 수 있으며 전달·수령·정산·실지급을 합치지 않는다.")]
+public sealed partial class 음식배달기사업무Service : I음식배달기사업무Service
 {
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> 수락Gates = new(StringComparer.Ordinal);
     private const decimal 묶음픽업최대거리Km = 1.5m;
@@ -88,6 +103,7 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
     private readonly I음식배달권실행공간Store _deliveryScopeStore;
     private readonly ISsalddelFoodOrderStore _foodOrderStore;
     private readonly I음식마트원장동기화OutboxService _foodLedgerOutbox;
+    private readonly I음식기사후속OutboxService? _driverFollowups;
     private readonly I운송원장Mongo동기화Service _transportLedgerSync;
     private readonly I음식점주문실시간알림Service _restaurantNotification;
     private readonly I기사월정산Service _settlementService;
@@ -97,6 +113,8 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
     private readonly I운영배차공통UseCase _수신의사;
     private readonly Ssalddel.Services.Fulfillment.I자동수행Coordinator? _fulfillment;
     private readonly bool _memberDeliveryEnabled;
+    private readonly Ssalddel.Services.DeliveryExperience.음식배달경험Service? _experience;
+    private readonly 살뜰.Services.Options.ISsalddelExecutionModePolicy? _experienceExecution;
 
     public 음식배달기사업무Service(
         SsalddelContext db,
@@ -114,7 +132,10 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         ILogger<음식배달기사업무Service> logger,
         I운영배차공통UseCase 수신의사,
         Ssalddel.Services.Fulfillment.I자동수행Coordinator? fulfillment = null,
-        Microsoft.Extensions.Options.IOptions<Ssalddel.Services.Community.NeighborhoodMemberDeliveryOptions>? memberDelivery = null)
+        Microsoft.Extensions.Options.IOptions<Ssalddel.Services.Community.NeighborhoodMemberDeliveryOptions>? memberDelivery = null,
+        Ssalddel.Services.DeliveryExperience.음식배달경험Service? experience = null,
+        살뜰.Services.Options.ISsalddelExecutionModePolicy? experienceExecution = null,
+        I음식기사후속OutboxService? driverFollowups = null)
     {
         _db = db;
         _locationStore = locationStore;
@@ -123,6 +144,7 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         _deliveryScopeStore = deliveryScopeStore;
         _foodOrderStore = foodOrderStore;
         _foodLedgerOutbox = foodLedgerOutbox;
+        _driverFollowups = driverFollowups ?? foodLedgerOutbox as I음식기사후속OutboxService;
         _transportLedgerSync = transportLedgerSync;
         _restaurantNotification = restaurantNotification;
         _settlementService = settlementService;
@@ -132,56 +154,8 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         _수신의사 = 수신의사;
         _fulfillment = fulfillment;
         _memberDeliveryEnabled = memberDelivery?.Value.Enabled == true;
-    }
-
-    public async Task<IReadOnlyList<DriverWorkOfferDto>> 제안조회Async(
-        string driverId,
-        CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(driverId))
-        {
-            return [];
-        }
-
-        var now = DateTime.UtcNow;
-        var receiving = 살뜰.도메인.배차.운영배차수신상태Policy.신규배차수신허용(
-            await _수신의사.수신상태조회Async(driverId, cancellationToken));
-        var queues = await _db.운송원장
-            .AsNoTracking()
-            .Where(x => x.배차업무유형 == 상태값.배차업무유형.음식배달
-                        && x.상태 != 상태값.배차상태.인수완료
-                        && ((receiving && x.상태 == 상태값.배차대기상태.대기
-                             && x.배차큐단계 == 상태값.배차큐단계.배차추천
-                             && x.배차노출상태 == 상태값.배차노출상태.추천중
-                             && x.현재추천대상기사Id == driverId
-                             && x.추천만료시각.HasValue
-                             && x.추천만료시각 > now)
-                            || (x.확정기사Id == driverId
-                                && x.배차큐단계 == 상태값.배차큐단계.확정)))
-            .OrderBy(x => x.추천만료시각)
-            .ThenBy(x => x.CreatedAt)
-            .Take(12)
-            .ToListAsync(cancellationToken);
-        if (queues.Count == 0)
-        {
-            return [];
-        }
-
-        var orderNos = queues
-            .Select(ResolveOrderNo)
-            .Distinct(StringComparer.Ordinal)
-            .ToArray();
-        var orders = await _db.음식주문
-            .AsNoTracking()
-            .Include(x => x.상품목록)
-            .Where(x => Enumerable.Contains(orderNos, x.주문번호))
-            .ToDictionaryAsync(x => x.주문번호, StringComparer.Ordinal, cancellationToken);
-
-        _locationStore.TryGetLatest(driverId, out var driverLocation);
-        return queues
-            .Where(queue => orders.ContainsKey(ResolveOrderNo(queue)))
-            .Select(queue => ToOffer(queue, orders[ResolveOrderNo(queue)], driverLocation))
-            .ToArray();
+        _experience = experience;
+        _experienceExecution = experienceExecution;
     }
 
     public async Task<Result<FoodDeliveryDriverActionResponse>> 수락Async(
@@ -333,6 +307,8 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
                         queue.추천라운드,
                         changedAtUtc,
                         attempt.시도StableId));
+                    await 예약후속Async(queue, order.주문번호, driverId, "기사배정", changedAtUtc,
+                        requireBundle ? "기사가 묶음 배달을 수락했습니다." : "기사가 배달을 수락했습니다.", cancellationToken);
                 }
 
                 var saveResult = await SaveTransactionAsync(transaction, cancellationToken);
@@ -362,17 +338,8 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
                     && x.모의처리처수행, cancellationToken))
                 await ApplySettlementAsync(driverId, acceptedAtUtc, cancellationToken);
             await _deliveryScopeStore.Remove운송의뢰Async(assignment.Queue.의뢰Id, cancellationToken);
-            await SyncLedgersAsync(assignment.Queue, assignment.OrderNo, driverId, cancellationToken);
-            await NotifyRestaurantAsync(
-                assignment.OrderNo,
-                requireBundle ? "기사가 묶음 배달을 수락했습니다." : "기사가 배달을 수락했습니다.",
-                cancellationToken);
-            await PublishCommunityActivityAsync(
-                assignment.Queue.의뢰Id,
-                assignment.OrderNo,
-                "기사배정",
-                assignment.Queue.UpdatedAt,
-                cancellationToken);
+            await 처리후속Async(후속의도(assignment.Queue, assignment.OrderNo, driverId, "기사배정", assignment.Queue.UpdatedAt,
+                requireBundle ? "기사가 묶음 배달을 수락했습니다." : "기사가 배달을 수락했습니다."), cancellationToken);
         }
 
         return Result.Ok(new FoodDeliveryDriverActionResponse
@@ -388,13 +355,6 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         });
     }
 
-    private static Result<T> 활성업무상한초과<T>(int currentActiveDeliveries, int requestedDeliveries)
-        => Result.Fail<T>(new Error(음식배달기사활성업무Policy.초과안내(
-                currentActiveDeliveries,
-                requestedDeliveries))
-            .WithMetadata("StatusCode", StatusCodes.Status409Conflict)
-            .WithMetadata("ErrorCode", 음식배달기사활성업무Policy.LimitExceededErrorCode));
-
     public async Task<Result<FoodDeliveryDriverActionResponse>> 거절Async(
         string driverId,
         string offerId,
@@ -406,7 +366,7 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
             .FirstOrDefaultAsync(x => x.의뢰Id == offerId
                                       && x.배차업무유형 == 상태값.배차업무유형.음식배달,
                 cancellationToken);
-        if (queue is null)
+        if (queue is null || 운송의뢰배차원천유형.Is살뜰마트음식주문(queue.원본의뢰유형))
         {
             return Result.Fail<FoodDeliveryDriverActionResponse>("음식 배달 제안을 찾을 수 없습니다.");
         }
@@ -442,12 +402,11 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         {
             order.배차상태 = 음식주문배차상태코드.배차대기;
             order.UpdatedAt = DateTime.UtcNow;
+            var followup = 후속의도(queue, orderNo, driverId, "Rejected", order.UpdatedAt,
+                "기사가 제안을 거절해 다른 기사 배차를 계속합니다.", activity: false);
+            if (_driverFollowups is not null) await _driverFollowups.예약Async(followup, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
-            await SyncFoodLedgerAsync(orderNo, driverId, cancellationToken);
-            await NotifyRestaurantAsync(
-                orderNo,
-                "기사가 제안을 거절해 다른 기사 배차를 계속합니다.",
-                cancellationToken);
+            await 처리후속Async(followup, cancellationToken);
         }
 
         return Result.Ok(Response(offerId, orderNo, DriverWorkOfferStatus.Rejected, "음식 배달 제안을 거절했습니다."));
@@ -505,13 +464,15 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
                 attempt.Revision++;
                 attempt.UpdatedAtUtc = now;
                 _db.운송이벤트.Add(위치감사사건(queue, driverId, "RestaurantArrival", locationAudit, now, attempt.시도StableId));
+                var followup = await 예약후속Async(queue, order.주문번호, driverId, "RestaurantArrived", now,
+                    null, cancellationToken, syncLedgers: false);
                 var saved = await SaveTransactionAsync(transaction, cancellationToken);
                 if (saved.IsFailed) return Result.Fail<FoodDeliveryStateChange>(saved.Errors);
                 return Result.Ok(new FoodDeliveryStateChange(
                     queue,
                     order.주문번호,
                     Response(offerId, order.주문번호, DriverWorkOfferStatus.MovingToPickup, "가게 도착을 기록했습니다.", locationAudit, attempt),
-                    true));
+                    true, Followup: followup));
             }
 
             await transaction.RollbackAsync(cancellationToken);
@@ -522,8 +483,8 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
                 false));
         });
         if (result.IsFailed) return Result.Fail<FoodDeliveryDriverActionResponse>(result.Errors);
-        if (result.Value.Changed)
-            await PublishCommunityActivityAsync(offerId, result.Value.OrderNo, "RestaurantArrived", DateTime.UtcNow, cancellationToken);
+        if (result.Value.Changed && result.Value.Followup is { } arrivalFollowup)
+            await 처리후속Async(arrivalFollowup, cancellationToken);
         return Result.Ok(result.Value.Response);
     }
 
@@ -616,11 +577,14 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
             배차재추천상태Policy.적용(queue, driverId, now);
             _db.운영배차활동사건.Add(운영배차활동사건Factory.중단(driverId, offerId, order.주문번호, queue.추천라운드, now, attempt.시도StableId, reasonCode, responsibility));
             _db.운영배차활동사건.Add(운영배차활동사건Factory.균형반환(driverId, offerId, order.주문번호, queue.추천라운드, now, attempt.시도StableId, responsibility));
+            var followup = await 예약후속Async(queue, order.주문번호, driverId,
+                postPickup ? "DeliveryInterruptedRecook" : "DeliveryInterrupted", now,
+                postPickup ? "픽업 후 배달 중단으로 재조리와 재배차를 진행합니다." : "배달 중단 후 재배차를 진행합니다.", cancellationToken);
             var saved = await SaveTransactionAsync(transaction, cancellationToken);
             return saved.IsFailed
                 ? Result.Fail<FoodDeliveryStateChange>(saved.Errors)
                 : Result.Ok(new FoodDeliveryStateChange(queue, order.주문번호,
-                    Response(offerId, order.주문번호, "Interrupted", postPickup ? "배달을 중단하고 재조리·재배차를 시작했습니다." : "배달을 중단하고 재배차를 시작했습니다.", attempt: attempt), true, postPickup));
+                    Response(offerId, order.주문번호, "Interrupted", postPickup ? "배달을 중단하고 재조리·재배차를 시작했습니다." : "배달을 중단하고 재배차를 시작했습니다.", attempt: attempt), true, postPickup, followup));
         });
 
         if (result.IsFailed) return Result.Fail<FoodDeliveryDriverActionResponse>(result.Errors);
@@ -628,19 +592,8 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         {
             try { await _queueTransitionService.추천대기처리Async(offerId, cancellationToken); }
             catch (Exception ex) when (!cancellationToken.IsCancellationRequested) { _logger.LogWarning(ex, "배달 중단 후 즉시 재배차에 실패했습니다. 영속 대기열에서 재시도합니다. OfferId={OfferId}", offerId); }
-            await SyncLedgersAsync(result.Value.Queue, result.Value.OrderNo, driverId, cancellationToken);
-            await NotifyRestaurantAsync(
-                result.Value.OrderNo,
-                result.Value.RequiresRecook
-                    ? "픽업 후 배달 중단으로 재조리와 재배차를 진행합니다."
-                    : "배달 중단 후 재배차를 진행합니다.",
-                cancellationToken);
-            await PublishCommunityActivityAsync(
-                offerId,
-                result.Value.OrderNo,
-                result.Value.RequiresRecook ? "DeliveryInterruptedRecook" : "DeliveryInterrupted",
-                DateTime.UtcNow,
-                cancellationToken);
+            if (result.Value.Followup is { } interruptedFollowup)
+                await 처리후속Async(interruptedFollowup, cancellationToken);
         }
         return Result.Ok(result.Value.Response);
     }
@@ -788,6 +741,11 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
                     _db, order, queue, attempt, cancellationToken);
             }
 
+            if (_experience is not null)
+                await _experience.완료근거추가Async(order, attempt,
+                    nextOrderState == 음식주문상태코드.픽업완료 ? "PickupCompleted" : "DeliveryCompleted", cancellationToken);
+            var followup = await 예약후속Async(queue, order.주문번호, driverId, nextOrderState,
+                changedAtUtc, reason, cancellationToken);
             var saveResult = await SaveTransactionAsync(transaction, cancellationToken);
             return saveResult.IsFailed
                 ? Result.Fail<FoodDeliveryStateChange>(saveResult.Errors)
@@ -795,7 +753,7 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
                     queue,
                     order.주문번호,
                     Response(offerId, order.주문번호, responseState, $"{reason} 처리했습니다.", locationAudit, attempt),
-                    true));
+                    true, Followup: followup));
         });
         if (transactionResult.IsFailed)
         {
@@ -805,251 +763,11 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         var stateChange = transactionResult.Value;
         if (stateChange.Changed)
         {
-            await SyncLedgersAsync(stateChange.Queue, stateChange.OrderNo, driverId, cancellationToken);
-            await NotifyRestaurantAsync(stateChange.OrderNo, reason, cancellationToken);
-            await PublishCommunityActivityAsync(
-                stateChange.Queue.의뢰Id,
-                stateChange.OrderNo,
-                nextOrderState,
-                stateChange.Queue.UpdatedAt,
-                cancellationToken);
+            if (stateChange.Followup is { } followup)
+                await 처리후속Async(followup, cancellationToken);
         }
 
         return Result.Ok(stateChange.Response);
-    }
-
-    private async Task<(운송원장 Queue, 음식주문 Order)?> LoadForActionAsync(
-        string offerId,
-        CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(offerId))
-        {
-            return null;
-        }
-
-        var queue = await _db.운송원장
-            .FirstOrDefaultAsync(x => x.의뢰Id == offerId
-                                      && x.배차업무유형 == 상태값.배차업무유형.음식배달,
-                cancellationToken);
-        if (queue is null)
-        {
-            return null;
-        }
-
-        var orderNo = ResolveOrderNo(queue);
-        var order = await _db.음식주문
-            .Include(x => x.상태이력)
-            .FirstOrDefaultAsync(x => x.주문번호 == orderNo, cancellationToken);
-        if (order?.모의처리처수행 == true && (_fulfillment is null
-                || !await _fulfillment.내부수행허용Async(
-                    new(Ssalddel.Contracts.Common.Fulfillment.FulfillmentSourceKinds.FoodOrder, orderNo),
-                    ct: cancellationToken)))
-            return null;
-        return order is null ? null : (queue, order);
-    }
-
-    private async Task<음식배달시도> 수락시도생성Async(
-        운송원장 queue,
-        음식주문 order,
-        string driverId,
-        DateTime acceptedAtUtc,
-        CancellationToken cancellationToken)
-    {
-        var previousAttempts = await _db.음식배달시도
-            .Where(x => x.주문번호 == order.주문번호)
-            .OrderByDescending(x => x.시도순번)
-            .ToListAsync(cancellationToken);
-        var sequence = previousAttempts.Count == 0 ? 1 : previousAttempts[0].시도순번 + 1;
-        var followsPreparationDelay = previousAttempts.Any(x =>
-            x.상태Code == 음식배달시도상태Code.중단
-            && x.중단사유Code == 음식배달중단사유Code.조리지연);
-        var displayedReadyAtUtc = order.조리예상완료시각Utc;
-        if (followsPreparationDelay)
-        {
-            var minimumReadyAtUtc = acceptedAtUtc.AddMinutes(10);
-            if (!displayedReadyAtUtc.HasValue || displayedReadyAtUtc.Value < minimumReadyAtUtc)
-            {
-                displayedReadyAtUtc = minimumReadyAtUtc;
-            }
-        }
-
-        var attempt = new 음식배달시도
-        {
-            시도StableId = 배달시도StableId(order.주문번호, sequence),
-            주문번호 = order.주문번호,
-            제안Id = queue.의뢰Id,
-            기사Id = driverId,
-            추천라운드 = queue.추천라운드,
-            시도순번 = sequence,
-            상태Code = 음식배달시도상태Code.수락,
-            Revision = 1,
-            수락시각Utc = acceptedAtUtc,
-            표시준비예정시각Utc = displayedReadyAtUtc,
-            조리지연재배차여부 = followsPreparationDelay,
-            CreatedAtUtc = acceptedAtUtc,
-            UpdatedAtUtc = acceptedAtUtc
-        };
-        _db.음식배달시도.Add(attempt);
-        return attempt;
-    }
-
-    private async Task<음식배달시도> 현재시도조회또는추정Async(
-        운송원장 queue,
-        음식주문 order,
-        string driverId,
-        CancellationToken cancellationToken)
-    {
-        var attempt = await _db.음식배달시도
-            .Where(x => x.주문번호 == order.주문번호
-                        && x.제안Id == queue.의뢰Id
-                        && x.기사Id == driverId)
-            .OrderByDescending(x => x.시도순번)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (attempt is not null)
-        {
-            return attempt;
-        }
-
-        var sequence = (await _db.음식배달시도
-            .Where(x => x.주문번호 == order.주문번호)
-            .MaxAsync(x => (int?)x.시도순번, cancellationToken) ?? 0) + 1;
-        var acceptedAtUtc = order.상태이력
-            .Where(x => x.다음상태 == 음식주문상태코드.기사배정)
-            .OrderByDescending(x => x.전이시각Utc)
-            .Select(x => x.전이시각Utc)
-            .FirstOrDefault();
-        if (acceptedAtUtc == default)
-        {
-            acceptedAtUtc = queue.UpdatedAt == default ? DateTime.UtcNow : queue.UpdatedAt;
-        }
-
-        attempt = new 음식배달시도
-        {
-            시도StableId = 배달시도StableId(order.주문번호, sequence),
-            주문번호 = order.주문번호,
-            제안Id = queue.의뢰Id,
-            기사Id = driverId,
-            추천라운드 = queue.추천라운드,
-            시도순번 = sequence,
-            상태Code = 음식주문상태코드.Normalize(order.상태) == 음식주문상태코드.픽업완료
-                ? 음식배달시도상태Code.픽업완료
-                : 음식배달시도상태Code.수락,
-            Revision = 1,
-            수락시각Utc = DateTime.SpecifyKind(acceptedAtUtc, DateTimeKind.Utc),
-            표시준비예정시각Utc = order.조리예상완료시각Utc,
-            픽업완료시각Utc = 음식주문상태코드.Normalize(order.상태) == 음식주문상태코드.픽업완료
-                ? queue.출발_픽업
-                : null,
-            유산추정여부 = true,
-            CreatedAtUtc = DateTime.UtcNow,
-            UpdatedAtUtc = DateTime.UtcNow
-        };
-        _db.음식배달시도.Add(attempt);
-        return attempt;
-    }
-
-    private async Task<string> 초기책임판정Async(
-        string driverId,
-        string reasonCode,
-        DateTime occurredAtUtc,
-        CancellationToken cancellationToken)
-    {
-        if (reasonCode == 음식배달중단사유Code.조리지연)
-        {
-            return 운영배차책임Code.음식점;
-        }
-
-        if (reasonCode is 음식배달중단사유Code.사고
-            or 음식배달중단사유Code.배터리부족
-            or 음식배달중단사유Code.배달수단고장
-            or 음식배달중단사유Code.위험기상)
-        {
-            return 운영배차책임Code.보호대상;
-        }
-
-        if (reasonCode != 음식배달중단사유Code.개인긴급)
-        {
-            return 운영배차책임Code.미확정;
-        }
-
-        var timeZone = 운영배차단기지표Calculator.대한민국시간대조회();
-        var localDate = DateOnly.FromDateTime(
-            TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(occurredAtUtc, DateTimeKind.Utc), timeZone));
-        var localStart = localDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
-        var localEnd = localDate.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
-        var startUtc = TimeZoneInfo.ConvertTimeToUtc(localStart, timeZone);
-        var endUtc = TimeZoneInfo.ConvertTimeToUtc(localEnd, timeZone);
-        var alreadyProtectedToday = await _db.음식배달시도.AnyAsync(x =>
-            x.기사Id == driverId
-            && x.중단사유Code == 음식배달중단사유Code.개인긴급
-            && x.중단시각Utc >= startUtc
-            && x.중단시각Utc < endUtc
-            && x.책임Code == 운영배차책임Code.보호대상,
-            cancellationToken);
-        return alreadyProtectedToday ? 운영배차책임Code.미확정 : 운영배차책임Code.보호대상;
-    }
-
-    private static bool 픽업준비됨(음식주문 order)
-        => 음식주문현재조리Policy.계산(order).ReadyAtUtc.HasValue;
-
-    private static 운송이벤트 위치감사사건(
-        운송원장 queue,
-        string driverId,
-        string action,
-        FoodDeliveryLocationAuditResult locationAudit,
-        DateTime occurredAtUtc,
-        string attemptId)
-        => new()
-        {
-            의뢰Id = queue.의뢰Id,
-            이벤트타입 = 운송이벤트유형.음식배달위치감사,
-            이벤트시각 = occurredAtUtc,
-            메타데이터 = JsonSerializer.Serialize(new
-            {
-                Action = action,
-                DriverId = driverId,
-                DeliveryAttemptId = attemptId,
-                locationAudit.Code,
-                locationAudit.DistanceKm,
-                locationAudit.DriverLocationAtUtc,
-                locationAudit.DriverLatitude,
-                locationAudit.DriverLongitude,
-                locationAudit.TargetLatitude,
-                locationAudit.TargetLongitude,
-                Policy = "AdvisoryEvidenceOnly"
-            })
-        };
-
-    private static string 배달시도StableId(string orderNo, int sequence)
-    {
-        var hash = Convert.ToHexString(SHA256.HashData(
-                Encoding.UTF8.GetBytes($"{orderNo}|{sequence}")))
-            .ToLowerInvariant();
-        return $"food-delivery-attempt:{hash}";
-    }
-
-    private async Task<Result> SaveTransactionAsync(
-        Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await _db.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-            return Result.Ok();
-        }
-        catch (DbUpdateConcurrencyException ex)
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            _logger.LogInformation(ex, "음식 배달 상태 변경 중 동시성 충돌이 발생했습니다.");
-            return Result.Fail("다른 기사 또는 운영자가 먼저 상태를 변경했습니다. 목록을 새로고침해 주세요.");
-        }
-        catch (DbUpdateException ex)
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            _logger.LogWarning(ex, "음식 배달 상태 저장에 실패했습니다.");
-            return Result.Fail("음식 배달 상태를 저장하지 못했습니다.");
-        }
     }
 
     private sealed record FoodDeliveryAssignment(운송원장 Queue, string OrderNo);
@@ -1059,238 +777,8 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
         string OrderNo,
         FoodDeliveryDriverActionResponse Response,
         bool Changed,
-        bool RequiresRecook = false);
-
-    private async Task SyncLedgersAsync(
-        운송원장 queue,
-        string orderNo,
-        string updatedBy,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await _transportLedgerSync.운송실행투영동기화Async(queue, updatedBy, cancellationToken);
-            var order = _foodOrderStore.GetOrder(orderNo);
-            if (order is not null)
-            {
-                await _foodLedgerOutbox.음식주문예약후즉시처리Async(
-                    order,
-                    updatedBy,
-                    BuildFoodLedgerIdempotencyKey(order, updatedBy),
-                    cancellationToken);
-            }
-        }
-        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
-        {
-            _logger.LogWarning(ex, "음식 배달 확정 후 원장 동기화에 실패했습니다. OrderNo={OrderNo}", orderNo);
-        }
-    }
-
-    private async Task SyncFoodLedgerAsync(
-        string orderNo,
-        string updatedBy,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var order = _foodOrderStore.GetOrder(orderNo);
-            if (order is not null)
-            {
-                await _foodLedgerOutbox.음식주문예약후즉시처리Async(
-                    order,
-                    updatedBy,
-                    BuildFoodLedgerIdempotencyKey(order, updatedBy),
-                    cancellationToken);
-            }
-        }
-        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
-        {
-            _logger.LogWarning(ex, "음식 주문 상태 변경 후 원장 동기화에 실패했습니다. OrderNo={OrderNo}", orderNo);
-        }
-    }
-
-    private static string BuildFoodLedgerIdempotencyKey(
-        음식주문응답 order,
-        string updatedBy)
-    {
-        var latestTransition = order.상태이력
-            .OrderByDescending(x => x.전이시각Utc)
-            .FirstOrDefault()
-            ?.전이시각Utc
-            .Ticks ?? 0L;
-        return $"food-driver:{order.주문번호}:{order.상태}:{order.배차상태}:{updatedBy}:{latestTransition}";
-    }
-
-    private async Task NotifyRestaurantAsync(
-        string orderNo,
-        string reason,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var order = _foodOrderStore.GetOrder(orderNo);
-            if (order is not null)
-            {
-                await _restaurantNotification.주문상태변경알림발송Async(order, reason, cancellationToken);
-            }
-        }
-        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
-        {
-            _logger.LogWarning(
-                ex,
-                "음식 배달 상태 변경 후 음식점 실시간 알림에 실패했습니다. OrderNo={OrderNo}",
-                orderNo);
-        }
-    }
-
-    private async Task PublishCommunityActivityAsync(
-        string deliveryId,
-        string orderNo,
-        string status,
-        DateTime occurredAtUtc,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await _publisher.Publish(
-                new 음식배달인계상태변경됨Event(
-                    deliveryId,
-                    orderNo,
-                    status,
-                    occurredAtUtc,
-                    $"food-delivery:{deliveryId}:{status}:{occurredAtUtc.Ticks}"),
-                cancellationToken);
-        }
-        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
-        {
-            _logger.LogWarning(
-                ex,
-                "음식 배달 상태 변경 후 커뮤니티 활동 신호 발행에 실패했습니다. OrderNo={OrderNo}, Status={Status}",
-                orderNo,
-                status);
-        }
-    }
-
-    private async Task ApplySettlementAsync(
-        string driverId,
-        DateTime acceptedAtUtc,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await _settlementService.배차확정반영Async(driverId, acceptedAtUtc, cancellationToken);
-        }
-        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
-        {
-            _logger.LogWarning(ex, "음식 배달 확정 후 기사 월정산 반영에 실패했습니다. DriverId={DriverId}", driverId);
-        }
-    }
-
-    private bool 묶음동선가능(IReadOnlyList<(운송원장 Queue, 음식주문 Order)> assignments)
-    {
-        for (var firstIndex = 0; firstIndex < assignments.Count - 1; firstIndex++)
-        {
-            for (var secondIndex = firstIndex + 1; secondIndex < assignments.Count; secondIndex++)
-            {
-                var first = assignments[firstIndex];
-                var second = assignments[secondIndex];
-                if (first.Order.조리예상완료시각Utc.HasValue
-                    && second.Order.조리예상완료시각Utc.HasValue
-                    && (first.Order.조리예상완료시각Utc.Value - second.Order.조리예상완료시각Utc.Value).Duration()
-                    > 묶음조리완료최대차이)
-                {
-                    return false;
-                }
-
-                var firstPickup = CreatePoint(first.Queue.픽업_위도, first.Queue.픽업_경도);
-                var secondPickup = CreatePoint(second.Queue.픽업_위도, second.Queue.픽업_경도);
-                var firstDropoff = CreatePoint(first.Queue.하차_위도, first.Queue.하차_경도);
-                var secondDropoff = CreatePoint(second.Queue.하차_위도, second.Queue.하차_경도);
-                if (firstPickup is null || secondPickup is null || firstDropoff is null || secondDropoff is null
-                    || (_routeService.CalculateDistanceKm(firstPickup, secondPickup) ?? decimal.MaxValue) > 묶음픽업최대거리Km
-                    || (_routeService.CalculateDistanceKm(firstDropoff, secondDropoff) ?? decimal.MaxValue) > 묶음전달최대거리Km)
-                {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    private DriverWorkOfferDto ToOffer(
-        운송원장 queue,
-        음식주문 order,
-        DriverLocationSnapshot? driverLocation)
-    {
-        var pickup = CreatePoint(queue.픽업_위도, queue.픽업_경도);
-        var dropoff = CreatePoint(queue.하차_위도, queue.하차_경도);
-        var deliveryDistance = pickup is not null && dropoff is not null
-            ? _routeService.CalculateDistanceKm(pickup, dropoff)
-            : null;
-        var pickupDistance = driverLocation is not null && pickup is not null
-            ? _routeService.CalculateDistanceKm(
-                new 배차경로좌표(driverLocation.Latitude, driverLocation.Longitude),
-                pickup)
-            : null;
-        var status = ResolveOfferStatus(queue, order);
-        var menu = order.상품목록.Count == 0
-            ? "음식 주문"
-            : string.Join(", ", order.상품목록.Take(2).Select(x => $"{x.상품명} {x.수량}개"));
-        var reason = pickupDistance.HasValue
-            ? $"음식점까지 {pickupDistance.Value:0.0}km · 픽업 준비 {FormatReadyTime(order.조리예상완료시각Utc)}"
-            : $"픽업 준비 {FormatReadyTime(order.조리예상완료시각Utc)}";
-        var isRecommended = status == DriverWorkOfferStatus.Recommended;
-        var dropoffAddress = isRecommended
-            ? ToApproximateAddress(queue.하차_도로명주소)
-            : JoinAddress(queue.하차_도로명주소, queue.하차_상세주소);
-        var dropoffLatitude = isRecommended
-            ? ToApproximateCoordinate(queue.하차_위도)
-            : queue.하차_위도;
-        var dropoffLongitude = isRecommended
-            ? ToApproximateCoordinate(queue.하차_경도)
-            : queue.하차_경도;
-
-        return new DriverWorkOfferDto(
-            queue.의뢰Id,
-            기사앱식별자.FoodDeliveryDriverApp,
-            기사도메인구분.음식배달,
-            기사업무유형코드.음식배달,
-            menu,
-            $"{order.음식점명} 픽업 · {dropoffAddress} 전달",
-            new DriverWorkStopDto(
-                string.IsNullOrWhiteSpace(order.음식점명) ? "음식점" : order.음식점명,
-                JoinAddress(queue.픽업_도로명주소, queue.픽업_상세주소),
-                (double)(queue.픽업_위도 ?? 0m),
-                (double)(queue.픽업_경도 ?? 0m),
-                ToOffset(order.조리예상완료시각Utc)),
-            new DriverWorkStopDto(
-                isRecommended ? "고객 전달 권역" : "고객 주소",
-                dropoffAddress,
-                (double)(dropoffLatitude ?? 0m),
-                (double)(dropoffLongitude ?? 0m),
-                ToOffset(order.조리예상완료시각Utc?.AddMinutes(42))),
-            queue.기사지급예정액 ?? CalculateDriverPayout(deliveryDistance),
-            deliveryDistance.HasValue ? (double)deliveryDistance.Value : null,
-            reason,
-            status,
-            ToOffset(queue.추천만료시각),
-            [order.주문번호],
-            운송실행프로필Factory.Create(queue),
-            isRecommended
-                ? null
-                : new DriverWorkRecipientDto(
-                    order.수령인명,
-                    order.수령인연락처,
-                    order.수령요청사항,
-                    order.주문자본인수령여부),
-            queue.기사기상할증액 ?? 0m,
-            queue.기사기상할증적용여부,
-            queue.기사한시수요할증액 ?? 0m,
-            queue.기사한시수요할증적용여부,
-            queue.기사제안요금정책판본,
-            ToOffset(queue.픽업지기상기준시각Utc));
-    }
+        bool RequiresRecook = false,
+        음식기사후속의도? Followup = null);
 
     private static void ApplyFoodOrderState(
         음식주문 order,
@@ -1315,71 +803,6 @@ public sealed class 음식배달기사업무Service : I음식배달기사업무S
 
     private static string ResolveOrderNo(운송원장 queue)
         => string.IsNullOrWhiteSpace(queue.원본의뢰Id) ? queue.의뢰Id : queue.원본의뢰Id;
-
-    private static string ResolveOfferStatus(운송원장 queue, 음식주문 order)
-    {
-        var foodState = 음식주문상태코드.Normalize(order.상태);
-        if (foodState is 음식주문상태코드.전달완료 or 음식주문상태코드.수령확인)
-        {
-            return DriverWorkOfferStatus.Completed;
-        }
-
-        if (foodState == 음식주문상태코드.픽업완료)
-        {
-            return DriverWorkOfferStatus.MovingToDropoff;
-        }
-
-        return queue.배차큐단계 == 상태값.배차큐단계.확정
-            ? DriverWorkOfferStatus.MovingToPickup
-            : DriverWorkOfferStatus.Recommended;
-    }
-
-    private static 배차경로좌표? CreatePoint(decimal? latitude, decimal? longitude)
-        => latitude.HasValue && longitude.HasValue
-            ? new 배차경로좌표(latitude.Value, longitude.Value)
-            : null;
-
-    private static decimal CalculateDriverPayout(decimal? deliveryDistanceKm)
-    {
-        const decimal minimumPayout = 2500m;
-        const decimal includedDistanceKm = 1m;
-        const decimal perAdditionalKm = 900m;
-        var distance = Math.Max(0m, deliveryDistanceKm ?? 0m);
-        return Math.Max(minimumPayout, minimumPayout + Math.Max(0m, distance - includedDistanceKm) * perAdditionalKm);
-    }
-
-    private static DateTimeOffset? ToOffset(DateTime? value)
-        => value.HasValue
-            ? new DateTimeOffset(DateTime.SpecifyKind(value.Value, DateTimeKind.Utc))
-            : null;
-
-    private static string FormatReadyTime(DateTime? value)
-        => value.HasValue ? $"{value.Value.ToLocalTime():HH:mm}" : "시간 미정";
-
-    private static string JoinAddress(string primary, string detail)
-        => string.IsNullOrWhiteSpace(detail) ? primary : $"{primary} {detail}";
-
-    internal static string ToApproximateAddress(string address)
-    {
-        var parts = address.Split(
-            ' ',
-            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        var nonNumericParts = parts
-            .Where(part => !part.Any(char.IsDigit))
-            .Take(2)
-            .ToArray();
-        return nonNumericParts.Length switch
-        {
-            0 => "상세 위치는 수락 후 공개",
-            1 => $"{nonNumericParts[0]} 인근",
-            _ => $"{nonNumericParts[0]} {nonNumericParts[1]} 인근"
-        };
-    }
-
-    internal static decimal? ToApproximateCoordinate(decimal? coordinate)
-        => coordinate.HasValue
-            ? Math.Round(coordinate.Value, 2, MidpointRounding.AwayFromZero)
-            : null;
 
     private static FoodDeliveryDriverActionResponse Response(
         string offerId,

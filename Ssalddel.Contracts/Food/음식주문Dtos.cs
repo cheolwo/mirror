@@ -125,6 +125,7 @@ public sealed class 음식주문상품Dto
 
 public sealed class 음식주문등록요청
 {
+    public FoodDeliveryDestinationIdentityRequest? DestinationIdentity { get; set; }
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public AutoFulfillmentConsent? AutoFulfillment { get; set; }
     // 등록 Handler가 검증한 서버 값입니다. 클라이언트 JSON으로 모의 수행 표식을 설정할 수 없습니다.
@@ -182,6 +183,7 @@ public sealed class 주문자음식주문취소요청
 
 public sealed class 음식주문응답
 {
+    public IReadOnlyList<DeliveryExperienceSummaryDto> ExperienceSummaries { get; set; } = [];
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public AutoFulfillmentSnapshot? AutoFulfillment { get; set; }
     public string 주문번호 { get; set; } = string.Empty;
@@ -281,6 +283,7 @@ public sealed class 주문자음식주문목록응답
 
 public sealed class 주문자음식주문상세응답
 {
+    public IReadOnlyList<DeliveryExperienceSummaryDto> ExperienceSummaries { get; set; } = [];
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public AutoFulfillmentSnapshot? AutoFulfillment { get; set; }
     public 주문자음식주문요약응답 주문 { get; set; } = new();
