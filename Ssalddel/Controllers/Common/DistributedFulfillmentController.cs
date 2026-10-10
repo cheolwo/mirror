@@ -24,6 +24,9 @@ public sealed class DistributedFulfillmentController(IDistributedFulfillmentUseC
 {
     [HttpGet("workspace")]
     public Task<IActionResult> Workspace([FromQuery] string roleKey = "warehouse", CancellationToken ct = default) => Run(a => useCase.WorkspaceAsync(a, roleKey, ct));
+    [HttpGet("sites/{id}/inventory")]
+    public Task<IActionResult> 공간재고(string id, [FromQuery] string roleKey = "warehouse", [FromQuery] int skip = 0,
+        [FromQuery] int take = 50, CancellationToken ct = default) => Run(a => useCase.공간재고Async(a, id, roleKey, skip, take, ct));
     [HttpGet("world-projection")]
     public Task<IActionResult> World([FromQuery] string roleKey = "warehouse", CancellationToken ct = default) => Run(a => useCase.WorldAsync(a, roleKey, ct));
     [HttpGet("waves/{id}")]

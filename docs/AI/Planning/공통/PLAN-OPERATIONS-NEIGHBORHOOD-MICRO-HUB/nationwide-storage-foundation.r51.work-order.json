@@ -1,0 +1,94 @@
+{
+  "planId": "PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB",
+  "revision": "r51",
+  "status": "Implemented / LocalValidated / OperationalDeferred",
+  "approval": "2026-10-10 user: 코드적으로 전국 생활 공간의 입고·공급망 관리 뼈대 정리",
+  "baseCommit": "d1bab3eec08dc0a49c9a87f882590d394205c9a4",
+  "designDocumentRef": "nationwide-storage-foundation.implementation.r51.md",
+  "designSha256": "5F501C51AF1896A5C5EB52B46D6EF5C444FC806845B8019B058B910004C318C3",
+  "primaryOwner": "operations",
+  "writePaths": [
+    "Ssalddel.Contracts/Common/Warehouse/분산공간재고Dtos.cs",
+    "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.cs",
+    "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Inventory.cs",
+    "Ssalddel/Controllers/Common/DistributedFulfillmentController.cs",
+    "Ssalddel/Services/WorldProjection/DistributedBuildingCandidateProvider.cs",
+    "Ssalddel.Tests/Application/Warehouse/분산공간재고Tests.cs",
+    "Ssalddel.Tests/Controllers/분산물류HttpTests.cs",
+    "Ssalddel.Tests/Services/WorldProjection/DistributedBuildingCandidateTests.cs",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/nationwide-storage-foundation.implementation.r51.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/nationwide-storage-foundation.r51.work-order.json",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/Changes/2026-10-10-nationwide-storage-foundation-r51.md"
+  ],
+  "excludedEffects": ["OperationalActivation", "RealDbMutation", "AuthorityExpansion", "SchemaChange", "ExternalNotification", "DeviceInstall", "Unity", "AdministrativeSubmission", "Commit", "Push", "Deploy"],
+  "validationCeiling": ["FocusedTests", "Fast", "Task", "IsolatedSqliteAndHttp", "Build", "DocumentLinks"],
+  "validationResults": {
+    "Fast": {
+      "Passed": 102,
+      "Failed": 0,
+      "Skipped": 0,
+      "Evidence": "artifacts/local/validation/20261010-134631"
+    },
+    "Task": {
+      "Build": "Ssalddel.v3.5.slnx",
+      "Passed": 9926,
+      "Failed": 0,
+      "Skipped": 15,
+      "Total": 9941,
+      "Evidence": "artifacts/local/validation/20261010-134822"
+    },
+    "Scope": {
+      "NewInventoryTests": 25,
+      "IsolatedSqliteAndHttpVerified": true,
+      "RealMySqlMongoVerified": false,
+      "DeviceVerified": false,
+      "OperationalActivated": false
+    },
+    "SourceDrift": {
+      "Files": 8,
+      "Changed": 0
+    },
+    "InitialFailure": {
+      "Resolved": true,
+      "Cause": "New test Driver namespace collision",
+      "Evidence": "artifacts/local/validation/20261010-134209"
+    }
+  },
+  "sourceFingerprints": [
+    {
+      "Path": "Ssalddel.Contracts/Common/Warehouse/분산공간재고Dtos.cs",
+      "Hash": "422F2CB583CB32CC3629216637BFBB67B4DC83B908FDE13FD94E9B84FB22C5FF"
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.cs",
+      "Hash": "B386965561A09B286C56A0942626C5457D9DF7EEDB842B3967D05638CC64D83F"
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Inventory.cs",
+      "Hash": "527C0DD9BC916736D6C37A2D6278CBBA81299B3101E705E22491EFF658674D53"
+    },
+    {
+      "Path": "Ssalddel/Controllers/Common/DistributedFulfillmentController.cs",
+      "Hash": "992454A0CC3B01BE3BE83CD202C851F063FDA1D05E8ED19CDCF9556A08CD1EBB"
+    },
+    {
+      "Path": "Ssalddel/Services/WorldProjection/DistributedBuildingCandidateProvider.cs",
+      "Hash": "61B4E34548F6DD276C63562E28052CDE74B10D6365BF758849186C47A8D9FB25"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Warehouse/분산공간재고Tests.cs",
+      "Hash": "DE59787E94AB429BD4F822E4F1572A88F96FA2F3B7855FE612F0F43820AC8275"
+    },
+    {
+      "Path": "Ssalddel.Tests/Controllers/분산물류HttpTests.cs",
+      "Hash": "2F2BD9BF3DDFD46DB53AE5CBC31FF00B48A3289E90991307FF5EF267737E68F9"
+    },
+    {
+      "Path": "Ssalddel.Tests/Services/WorldProjection/DistributedBuildingCandidateTests.cs",
+      "Hash": "657C6E434BA6DBB36C5432A735CBEF29269B45EEE045494D543304A2ABB0B4A9"
+    }
+  ]
+}

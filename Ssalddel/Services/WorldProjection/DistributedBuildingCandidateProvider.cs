@@ -30,12 +30,18 @@ public sealed class DistributedBuildingCandidateProvider(IOptions<DistributedBui
         ct.ThrowIfCancellationRequested();
         if (!settings.Enabled) return [];
         if (warehouseId <= 0 || string.IsNullOrWhiteSpace(confirmedWarehouseAddress)) return [];
-        try { return await ReadCandidatesAsync(confirmedWarehouseAddress, ct); }
+        try
+        {
+            // 참고 번들의 적용 지역 밖 공간은 이 파일의 가용성에 의존하지 않습니다.
+            var addressKey = StreetAddressKey(confirmedWarehouseAddress);
+            if (addressKey is null) return [];
+            return await ReadCandidatesAsync(addressKey, ct);
+        }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException or ArgumentException)
         { throw Unavailable(); }
     }
 
-    private async Task<IReadOnlyList<DistributedBuildingCandidateDto>> ReadCandidatesAsync(string confirmedWarehouseAddress, CancellationToken ct)
+    private async Task<IReadOnlyList<DistributedBuildingCandidateDto>> ReadCandidatesAsync(string addressKey, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(settings.Sha256) || settings.Sha256.Length != 64 || !settings.Sha256.All(Uri.IsHexDigit)
             || string.IsNullOrWhiteSpace(settings.BundlePath) || !Path.IsPathFullyQualified(settings.BundlePath)
@@ -53,8 +59,6 @@ public sealed class DistributedBuildingCandidateProvider(IOptions<DistributedBui
             || !root.TryGetProperty("attribution", out var attribution) || string.IsNullOrWhiteSpace(attribution.GetString())
             || !root.TryGetProperty("buildings", out var buildings) || buildings.ValueKind != JsonValueKind.Array
             || buildings.GetArrayLength() > 20_000) throw Unavailable();
-        var addressKey = StreetAddressKey(confirmedWarehouseAddress);
-        if (addressKey is null) return [];
         var ids = new HashSet<string>(StringComparer.Ordinal);
         var candidates = new List<DistributedBuildingCandidateDto>();
         foreach (var building in buildings.EnumerateArray())
@@ -77,9 +81,9 @@ public sealed class DistributedBuildingCandidateProvider(IOptions<DistributedBui
     private string? StreetAddressKey(string address)
     {
         var normalized = 공개사업장주소정규화Engine.NormalizeRoadAddress(address);
-        var locality = 공개사업장주소정규화Engine.NormalizeRoadAddress(settings.Locality);
+        var locality = 공개사업장주소정규화Engine.NormalizeRoadAddress(settings.Locality) ?? throw Unavailable();
         // 같은 지역의 명시적인 도로명만 비교하며 다른 구의 같은 도로번호는 자동 연결하지 않습니다.
-        if (normalized is null || locality is null || !normalized.StartsWith(locality + " ", StringComparison.Ordinal)) return null;
+        if (normalized is null || !normalized.StartsWith(locality + " ", StringComparison.Ordinal)) return null;
         return string.Concat(normalized[locality.Length..].Where(character => !char.IsWhiteSpace(character)));
     }
     private static DistributedFulfillmentException Unavailable() => new("DistributedBuildingCandidatesUnavailable", 503);

@@ -26,6 +26,7 @@ public sealed class DistributedFulfillmentException(string code, int status = 40
 public interface IDistributedFulfillmentUseCase
 {
     Task<DistributedWorkspaceDto> WorkspaceAsync(DistributedActor actor, string roleKey, CancellationToken ct);
+    Task<분산공간재고PageDto> 공간재고Async(DistributedActor actor, string siteId, string roleKey, int skip, int take, CancellationToken ct);
     Task<DistributedWaveDto> WaveAsync(DistributedActor actor, string id, string roleKey, CancellationToken ct);
     Task<DistributedRootOrderCandidatesDto> RootOrderCandidatesAsync(DistributedActor actor, string waveId,
         string cargoRequestId, string roleKey, CancellationToken ct);

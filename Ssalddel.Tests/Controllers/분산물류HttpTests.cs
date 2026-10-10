@@ -37,6 +37,57 @@ public sealed class 분산물류HttpTests
     private const string Base = "/" + DistributedFulfillmentCodes.BaseRoute;
 
     [Fact]
+    public async Task 공간재고_HTTP는_인증과관계를검사하고_페이지와역할별최소정보만반환한다()
+    {
+        await using var host = await Host.Create();
+        var sites = await host.Data.Sites(); await host.Data.Stock(sites);
+        var endpoint = Base + "/sites/" + sites[0].SiteId + "/inventory";
+        using var anonymous = await host.Client.GetAsync(endpoint);
+        Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
+
+        host.Actor(DistributedTestFixture.Operator);
+        using var response = await host.Client.GetAsync(endpoint + "?take=1");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode); NoStore(response);
+        var first = (await response.Content.ReadFromJsonAsync<분산공간재고PageDto>())!;
+        Assert.Equal(sites[0].SiteId, first.Site.SiteId); Assert.True(first.HasMore);
+        var item = Assert.Single(first.Items); Assert.Equal(5, item.ReceivedQuantity);
+        Assert.Equal(0, item.RemainingExpectedQuantity); Assert.Equal(5, item.AvailableQuantity);
+        using var nextResponse = await host.Client.GetAsync(endpoint + "?skip=1&take=1");
+        var next = (await nextResponse.Content.ReadFromJsonAsync<분산공간재고PageDto>())!;
+        Assert.False(next.HasMore); Assert.NotEqual(item.LotId, Assert.Single(next.Items).LotId);
+
+        host.Actor(DistributedTestFixture.SellerA);
+        using var sellerResponse = await host.Client.GetAsync(endpoint + "?roleKey=shipper");
+        Assert.Equal(HttpStatusCode.OK, sellerResponse.StatusCode); NoStore(sellerResponse);
+        var seller = (await sellerResponse.Content.ReadFromJsonAsync<분산공간재고PageDto>())!;
+        Assert.Equal(50, seller.Take); Assert.Equal("선택 가능한 적재 위치", Assert.Single(seller.Items).LocationLabel);
+        var json = await sellerResponse.Content.ReadAsStringAsync();
+        foreach (var privateField in new[] { "barcode", "address", "latitude", "longitude", "pickupInstructions", "ownerUserId", "sellerUserId", "evidence", "sourceReference" })
+            Assert.DoesNotContain(privateField, json, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(sites[0].Locations[0].Barcode, json); Assert.DoesNotContain("합성 출입 안내", json);
+
+        host.Actor(DistributedTestFixture.CustomerB);
+        using var forbidden = await host.Client.GetAsync(endpoint);
+        Assert.Equal(HttpStatusCode.NotFound, forbidden.StatusCode); Assert.Equal("DistributedSiteNotFound", await Code(forbidden));
+        using var tampered = await host.Client.GetAsync(endpoint + "?roleKey=shipper");
+        Assert.Equal(HttpStatusCode.NotFound, tampered.StatusCode);
+        host.Actor(DistributedTestFixture.Operator);
+        using var invalid = await host.Client.GetAsync(endpoint + "?take=101");
+        Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode); Assert.Equal("DistributedInventoryPageInvalid", await Code(invalid));
+        using var driverScope = await host.Client.GetAsync(endpoint + "?roleKey=driver");
+        Assert.Equal(HttpStatusCode.BadRequest, driverScope.StatusCode);
+    }
+
+    [Fact]
+    public async Task 공간재고_HTTP도_기능비활성상태에서는_등록자료를공개하지않는다()
+    {
+        await using var host = await Host.Create(enabled: false); host.Actor(DistributedTestFixture.Operator);
+        using var response = await host.Client.GetAsync(Base + "/sites/unavailable/inventory");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("DistributedFulfillmentDisabled", await Code(response));
+    }
+
+    [Fact]
     public async Task 비공개사진_HTTP저장만으로입고되지않고_정확한완료명령만수량과사진을함께반영한다()
     {
         await using var host = await Host.Create(actualPhotos: true);
