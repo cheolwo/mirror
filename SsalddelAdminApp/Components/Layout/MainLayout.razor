@@ -3,6 +3,7 @@
 @inject AdminAuthSession Session
 @inject AdminAuthService AuthService
 @inject NavigationManager Navigation
+@inject AdminOperationsPushService Push
 
 <MudLayout Class="admin-mobile-layout">
     <MudAppBar Dense="false" Elevation="0" Class="admin-mobile-appbar">
@@ -26,6 +27,7 @@
     <MudDrawer @bind-Open="drawerOpen" Variant="DrawerVariant.Responsive" Elevation="1" ClipMode="DrawerClipMode.Always">
         <MudNavMenu Class="pa-3">
             <MudNavLink Href="/overview" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">운영 개요</MudNavLink>
+            <MudNavLink Href="/operations-alerts" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Notifications">운영 알림</MudNavLink>
             <MudNavLink Href="/food-operations" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Restaurant">음식 주문</MudNavLink>
             @if (Session.IsServerAdmin)
             { <MudNavLink Href="/privacy-support" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FactCheck">거래·개인정보 처리 요청</MudNavLink> }
@@ -87,6 +89,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Push.OpenRequested += HandlePush;
         Session.Changed += HandleSessionChanged;
         await Session.RestoreAsync();
         if (!string.IsNullOrWhiteSpace(Session.RefreshToken))
@@ -99,11 +102,14 @@
 
     private async Task LogoutAsync()
     {
+        await Push.DeactivateAsync();
         await Session.LogoutAsync();
         Navigation.NavigateTo("/login");
     }
 
-    private void HandleSessionChanged() => InvokeAsync(StateHasChanged);
+    private void HandleSessionChanged() => InvokeAsync(async () => { if (!Session.IsServerAdmin) Push.ClearLocalNotifications(); else await Push.RegisterAsync(); StateHasChanged(); });
 
-    public void Dispose() => Session.Changed -= HandleSessionChanged;
+    private void HandlePush() => InvokeAsync(() => { if (Push.ConsumeHref() is { } href) Navigation.NavigateTo(href); });
+    protected override void OnAfterRender(bool firstRender) { if (firstRender) HandlePush(); }
+    public void Dispose() { Session.Changed -= HandleSessionChanged; Push.OpenRequested -= HandlePush; }
 }

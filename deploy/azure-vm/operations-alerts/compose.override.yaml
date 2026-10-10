@@ -1,0 +1,24 @@
+# 기존 compose.yaml 뒤에 명시적으로 합성. 유료 리소스 생성/실제 발송을 자동 활성화하지 않는다.
+services:
+  mysql:
+    mem_limit: 1600m
+  mongo:
+    mem_limit: 1400m
+  app:
+    mem_limit: 3600m
+    environment:
+      OperationsAlerts__Enabled: "${MIRROR_OPERATIONS_ALERTS_ENABLED:-false}"
+      OperationsAlerts__ExternalSendEnabled: "${MIRROR_OPERATIONS_EXTERNAL_SEND_ENABLED:-false}"
+      OperationsAlerts__OperatorUserId: "${MIRROR_OPERATOR_USER_ID:-}"
+      OperationsAlerts__RecipientEmail: "${MIRROR_OPERATOR_EMAIL:-}"
+      OperationsAlerts__PublicBaseUrl: "https://${SSALDDEL_SITE_HOST}"
+      OperationsAlerts__PollSeconds: "30"
+      OperationsAlerts__PageSize: "50"
+      OperationsAlerts__PagesPerCycle: "4"
+      OperationsAlerts__Gmail__UserName: "${MIRROR_OPERATOR_GMAIL_USER:-}"
+      OperationsAlerts__Gmail__AppPassword: "${MIRROR_OPERATOR_GMAIL_APP_PASSWORD:-}"
+      OperationsBudget__Enabled: "${MIRROR_OPERATIONS_BUDGET_ENABLED:-false}"
+      OperationsBudget__NewPhotoUploadsPerDay: "1000"
+      OperationsBudget__ExternalRouteRequestsPerDay: "1000"
+      Logging__LogLevel__Default: Warning
+      Logging__LogLevel__Ssalddel.Services.OperationsAlerts: Warning

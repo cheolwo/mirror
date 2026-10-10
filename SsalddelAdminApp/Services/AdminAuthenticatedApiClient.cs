@@ -30,6 +30,9 @@ public sealed class AdminAuthenticatedApiClient
                ?? throw new AdminApiException("서버 응답을 읽을 수 없습니다.", response.StatusCode);
     }
 
+    public async Task DeleteAsync(string path, CancellationToken ct = default)
+    { using var response = await SendWithRefreshAsync(HttpMethod.Delete, path, ct); }
+
     public async Task<TResponse> PostAsync<TRequest, TResponse>(
         string path,
         TRequest body,

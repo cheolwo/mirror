@@ -9,6 +9,8 @@
     <SingleProject>true</SingleProject>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AdminFirebaseGoogleServicesJson Condition="'$(AdminFirebaseGoogleServicesJson)' == ''">$(SSALDDEL_ADMIN_FIREBASE_GOOGLE_SERVICES_JSON)</AdminFirebaseGoogleServicesJson>
+    <DefineConstants Condition="Exists('$(AdminFirebaseGoogleServicesJson)')">$(DefineConstants);SSALDDEL_ADMIN_FIREBASE</DefineConstants>
     <EnableDefaultCssItems>false</EnableDefaultCssItems>
     <ApplicationTitle>살뜰 관리자</ApplicationTitle>
     <ApplicationId>com.ssalddel.adminapp</ApplicationId>
@@ -50,4 +52,12 @@
     <PackageReference Include="MudBlazor" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android' and Exists('$(AdminFirebaseGoogleServicesJson)')">
+    <PackageReference Include="Xamarin.Firebase.Messaging" />
+    <GoogleServicesJson Include="$(AdminFirebaseGoogleServicesJson)" />
+  </ItemGroup>
+  <Target Name="ValidateAdminFirebaseConfiguration" BeforeTargets="PrepareForBuild" Condition="'$(TargetFramework)' == 'net10.0-android'">
+    <Error Condition="'$(AdminFirebaseGoogleServicesJson)' != '' and !Exists('$(AdminFirebaseGoogleServicesJson)')" Text="관리자 Firebase 설정 파일을 찾을 수 없습니다." />
+    <Warning Condition="'$(AdminFirebaseGoogleServicesJson)' == ''" Text="관리자 Firebase 설정 없음: 실제 푸시는 연결되지 않습니다. 로컬 앱 검증용 빌드입니다." />
+  </Target>
 </Project>

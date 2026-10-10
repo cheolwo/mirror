@@ -22,6 +22,8 @@ public static partial class ServiceCollectionExtensions
 {
     public static IServiceCollection AddSsalddelHttpClients(this IServiceCollection services)
     {
+        services.AddHttpContextAccessor();
+        services.AddTransient<Ssalddel.Services.OperationsAlerts.OperationsRouteBudgetHandler>();
         services.AddHttpClient<I픽업지기상관측Client, 기상청초단기실황Client>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<PublicDataOptions>>().Value;
@@ -54,12 +56,12 @@ public static partial class ServiceCollectionExtensions
             client.Timeout = TimeSpan.FromSeconds(Math.Max(10, options.TimeoutSeconds));
         });
         services.AddHttpClient<IGeocodingService, GoogleGeocodingService>();
-        services.AddHttpClient<IRouteDistanceService, GoogleRouteDistanceService>();
+        services.AddHttpClient<IRouteDistanceService, GoogleRouteDistanceService>().AddHttpMessageHandler<Ssalddel.Services.OperationsAlerts.OperationsRouteBudgetHandler>();
         services.AddHttpClient<INaverCloudDirectionsService, NaverCloudDirectionsService>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NaverCloudDirectionsOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl);
-        }).RemoveAllLoggers(); // 경로 URI에는 기사 비공개 기준점과 고객 좌표가 포함된다.
+        }).AddHttpMessageHandler<Ssalddel.Services.OperationsAlerts.OperationsRouteBudgetHandler>().RemoveAllLoggers(); // 경로 URI에는 기사 비공개 기준점과 고객 좌표가 포함된다.
         services.AddHttpClient<IOpinetAveragePriceService, OpinetAveragePriceService>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<OpinetOptions>>().Value;

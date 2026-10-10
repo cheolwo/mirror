@@ -1,0 +1,21 @@
+{
+  "currency": "KRW",
+  "monthlyTotalKrw": 500000,
+  "normalTargetKrw": 300000,
+  "azureBudgetEquivalentKrw": 400000,
+  "externalQuotaReserveKrw": 100000,
+  "allocationKrw": {
+    "serverAndDatabase": 120000,
+    "diskIpNetwork": 50000,
+    "photosAndBackups": 50000,
+    "monitorLogsEmail": 30000,
+    "mapsAndExternalApis": 50000,
+    "reserve": 200000
+  },
+  "actualThresholdPercent": [80, 90, 100],
+  "forecastThresholdPercent": 100,
+  "vmProposal": "Standard_D2as_v5",
+  "region": "koreacentral",
+  "isPriceQuote": false,
+  "isHardSpendingCap": false
+}

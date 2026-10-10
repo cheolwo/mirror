@@ -60,6 +60,11 @@
 		@legacyCommunity path /community /community/* /ko/community /ko/community/* /en/community /en/community/* /ja/community /ja/community/*
 		redir @legacyCommunity /roles/01{uri} 308
 
+		@operationsAlertLink path /operations-alerts /operations-alerts/*
+		handle @operationsAlertLink {
+			reverse_proxy app:8080
+		}
+
 		@legacyAccount path /login
 		redir @legacyAccount /roles/01{uri} 308
 

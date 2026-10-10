@@ -1,0 +1,42 @@
+@page "/operations-alerts"
+@page "/operations-alerts/{AlertId}"
+@using Ssalddel.Ui.Common.Areas.BackOffice.Components.Operations
+@using Ssalddel.Ui.Common.Areas.BackOffice.ViewModels
+@inject OperationsAlertsState State
+@inject AdminAuthSession Session
+@inject AdminAuthService Auth
+@inject AdminOperationsPushService Push
+@implements IDisposable
+<PageTitle>운영 알림</PageTitle>
+@if (restoring) { <p role="status">로그인 상태를 확인하고 있습니다.</p> }
+else { <OperationsAlertsView State="State" Authenticated="Session.IsServerAdmin" LoginHref="@LoginHref" DetailId="@AlertId" Status="@status"
+    Retry="Load" SelectStatus="SelectStatus" Previous="Previous" Next="Next" Acknowledge="State.AcknowledgeAsync" />
+    @if (Session.IsServerAdmin) { <MudButton Variant="Variant.Text" OnClick="EnableNotifications">이 기기 알림 허용</MudButton> }
+}
+@code {
+    [Parameter] public string? AlertId { get; set; }
+    private bool restoring = true;
+    private string status = "Open";
+    private int page = 1;
+    private string LoginHref => "/login?returnUrl=" + Uri.EscapeDataString(AlertId is null ? "/operations-alerts" : "/operations-alerts/" + Uri.EscapeDataString(AlertId));
+    protected override async Task OnInitializedAsync()
+    {
+        Session.Changed += SessionChanged; State.Changed += Changed;
+        await Session.RestoreAsync(); await Auth.EnsureAccessTokenAsync(); restoring = false;
+        State.SetOwner(Session.IsServerAdmin ? Session.UserId : null); await Push.RegisterAsync();
+    }
+    protected override Task OnParametersSetAsync() => restoring ? Task.CompletedTask : Load();
+    private Task Load() => State.LoadAsync(AlertId, status, page);
+    private void EnableNotifications()
+    {
+#if ANDROID
+        if (Microsoft.Maui.ApplicationModel.Platform.CurrentActivity is MainActivity activity) activity.RequestOperationsNotificationPermission();
+#endif
+    }
+    private async Task SelectStatus(string value) { status = value; page = 1; await Load(); }
+    private async Task Previous() { page = Math.Max(1, page - 1); await Load(); }
+    private async Task Next() { page++; await Load(); }
+    private void Changed() => InvokeAsync(StateHasChanged);
+    private void SessionChanged() => InvokeAsync(async () => { State.SetOwner(Session.IsServerAdmin ? Session.UserId : null); await Load(); });
+    public void Dispose() { Session.Changed -= SessionChanged; State.Changed -= Changed; State.Dispose(); }
+}

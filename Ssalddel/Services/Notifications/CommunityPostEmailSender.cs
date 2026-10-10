@@ -77,32 +77,8 @@ public sealed class GmailCommunityPostEmailSender : ICommunityPostEmailSender
 
         try
         {
-            using var mailMessage = new MailMessage
-            {
-                From = new MailAddress(
-                    from!.Address,
-                    gmail.FromDisplayName.Trim(),
-                    Encoding.UTF8),
-                Subject = message.Subject,
-                SubjectEncoding = Encoding.UTF8,
-                Body = message.Body,
-                BodyEncoding = Encoding.UTF8,
-                IsBodyHtml = false
-            };
-            mailMessage.To.Add(recipient!);
-            mailMessage.Headers.Add(
-                "X-Ssalddel-Community-Post-Id",
-                message.PostId.ToString(CultureInfo.InvariantCulture));
-
-            using var client = new SmtpClient(GmailSmtpHost, GmailSmtpPort)
-            {
-                DeliveryMethod = SmtpDeliveryMethod.Network,
-                EnableSsl = true,
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(userName, appPassword)
-            };
-
-            await client.SendMailAsync(mailMessage, cancellationToken);
+            await GmailSmtpTransport.SendAsync(gmail, message.RecipientEmail, message.Subject, message.Body,
+                "X-Ssalddel-Community-Post-Id", message.PostId.ToString(CultureInfo.InvariantCulture), cancellationToken);
             return new(CommunityPostEmailDeliveryStatus.Sent);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

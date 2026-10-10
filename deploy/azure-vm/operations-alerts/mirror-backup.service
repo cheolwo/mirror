@@ -1,0 +1,15 @@
+[Unit]
+Description=Mirror encrypted database backup
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+EnvironmentFile=/etc/mirror/backup.env
+WorkingDirectory=/opt/mirror
+ExecStart=/usr/bin/bash /opt/mirror/operations-alerts/backup.sh
+TimeoutStartSec=45min
+StandardOutput=journal
+StandardError=journal
