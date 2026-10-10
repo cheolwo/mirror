@@ -1,0 +1,195 @@
+@page "/historical-delivery-preview"
+@implements IDisposable
+@using System.Globalization
+@inject HistoricalDeliveryPreviewFixture Fixture
+
+<main class="history" data-history-ready data-history-loaded="@(Fixture.HasData ? "true" : "false")">
+    <header class="history__header">
+        <span class="history__badge">로컬 · 읽기 전용</span>
+        <h1>배달 기록 대조</h1>
+        <p>@Fixture.Notice</p>
+    </header>
+    @if (Fixture.Projection is { } projection && Fixture.DriverList is { } model)
+    {
+        <section class="history__context" aria-label="자료 범위">
+            <strong data-history-total>@projection.Dataset.Records.Length.ToString("N0")건</strong>
+            <span>@projection.Dataset.CoverageStart.ToString("yyyy.MM.dd") ~ @projection.Dataset.CoverageEnd.ToString("yyyy.MM.dd")</span>
+            <p>금액·거리·메뉴는 확인된 과거 자료입니다. 계정·완료 상태·내부 시각은 화면 검증용이며 실제 정산·입금은 확인하지 않습니다.</p>
+        </section>
+        <nav class="history__roles" aria-label="조회 관점">
+            <button type="button" data-history-driver aria-pressed="@(!_restaurant ? "true" : "false")" @onclick="ShowDriver">기사 내역</button>
+            <button type="button" data-history-restaurant aria-pressed="@(_restaurant ? "true" : "false")" @onclick="ShowRestaurant">음식점 기록</button>
+        </nav>
+        @if (!_restaurant)
+        {
+            <section class="history__filter" aria-label="날짜 선택">
+                <label for="history-date">배달 날짜</label>
+                <select id="history-date" data-history-date value="@model.SelectedDate.ToString("yyyy-MM-dd")" @onchange="ChangeDate">
+                    @foreach (var day in Fixture.Dates)
+                    { <option value="@day.ToString("yyyy-MM-dd")">@day.ToString("yyyy.MM.dd")</option> }
+                </select>
+            </section>
+            <section class="history__totals" aria-label="날짜별 기록 요약" data-history-day>
+                <strong data-history-count>@model.TotalCountText</strong>
+                <span data-history-fee>@model.GrossTotalText</span>
+                <span data-history-distance>앱 표시 거리 합계 @Distance(projection.ForDate(DateOnly.FromDateTime(model.SelectedDate)).Sum(x => x.DistanceKm))</span>
+                <p>기존 기사 내역 목록의 조회·20건 페이지 이동을 재사용합니다. 배달 날짜는 원본 날짜이며 실제 완료 시각은 별도로 표시합니다.</p>
+            </section>
+            @if (model.IsLoading) { <p role="status">기록을 불러오고 있습니다.</p> }
+            @if (model.HasNoItems) { <p>이 날짜에 확인된 기록이 없습니다.</p> }
+            <ol class="history__records" aria-label="기사 배달 내역">
+                @foreach (var item in model.Items)
+                {
+                    var row = projection.Find(item.SettlementId)!;
+                    <li @key="row.RecordId" data-history-record="@row.RecordId" data-history-branch="@row.BranchId">
+                        <button type="button" class="history__row" data-history-open="@row.RecordId" @onclick="() => OpenDriver(item)">
+                            <span class="history__row-name">@projection.Branch(row.BranchId)?.DisplayName</span>
+                            <span class="history__row-number">@row.ServiceDate.ToString("MM.dd") · 기록 @row.Sequence</span>
+                            <span class="history__row-money">@Money(row.DeliveryFeeKrw)</span>
+                            <span class="history__row-distance">앱 표시 거리 @Distance(row.DistanceKm)</span>
+                            <span class="history__row-action">상세 보기 <span aria-hidden="true">›</span></span>
+                        </button>
+                    </li>
+                }
+            </ol>
+            <nav class="history__paging" aria-label="배달 내역 페이지">
+                <button type="button" data-history-previous disabled="@(!model.HasPreviousPage)" @onclick="Previous">이전</button>
+                <span data-history-page>@model.PageText</span>
+                <button type="button" data-history-next disabled="@(!model.HasNextPage)" @onclick="Next">다음</button>
+            </nav>
+        }
+        else
+        {
+            <section class="history__filter" aria-label="음식점 선택">
+                <label for="history-branch">매장·지점</label>
+                <select id="history-branch" data-history-branch-select value="@_branchId" @onchange="ChangeBranch">
+                    @foreach (var branch in projection.Dataset.Branches.OrderBy(x => x.DisplayName, StringComparer.Ordinal))
+                    { <option value="@branch.BranchId">@branch.DisplayName</option> }
+                </select>
+            </section>
+            <section class="history__totals" aria-label="지점별 기록 요약">
+                <strong data-history-branch-count>확인된 배달 @(BranchRows.Count)건</strong>
+                <span data-history-branch-fee>배달료 합계 @Money(BranchRows.Sum(x => x.DeliveryFeeKrw))</span>
+                <span data-history-branch-address>@(projection.Branch(_branchId)?.PublicPickupAddress ?? "공개 매장 주소 미확인")</span>
+                <p>기사 내역과 같은 배달 건을 지점별로 모았습니다. 실제 음식점 계정·현재 주문 수신함·매출 정산을 생성하지 않습니다.</p>
+            </section>
+            <ol class="history__records" aria-label="음식점 배달 기록">
+                @foreach (var row in BranchRows.Skip((_branchPage - 1) * 20).Take(20))
+                {
+                    <li @key="row.RecordId" data-history-record="@row.RecordId" data-history-branch="@row.BranchId">
+                        <button type="button" class="history__row" data-history-open="@row.RecordId" @onclick="() => Fixture.Select(row.RecordId)">
+                            <span class="history__row-name">@projection.Branch(row.BranchId)?.DisplayName</span>
+                            <span class="history__row-number">@row.ServiceDate.ToString("MM.dd") · 기록 @row.Sequence</span>
+                            <span class="history__row-money">@Money(row.DeliveryFeeKrw)</span>
+                            <span class="history__row-distance">앱 표시 거리 @Distance(row.DistanceKm)</span>
+                            <span class="history__row-action">상세 보기 <span aria-hidden="true">›</span></span>
+                        </button>
+                    </li>
+                }
+            </ol>
+            <nav class="history__paging" aria-label="음식점 기록 페이지">
+                <button type="button" data-history-branch-previous disabled="@(_branchPage <= 1)" @onclick="() => _branchPage--">이전</button>
+                <span data-history-branch-page>@_branchPage / @BranchPageCount 페이지</span>
+                <button type="button" data-history-branch-next disabled="@(_branchPage >= BranchPageCount)" @onclick="() => _branchPage++">다음</button>
+            </nav>
+        }
+        @if (projection.Find(Fixture.SelectedRecordId) is { } selected)
+        {
+            <section class="history__detail" aria-label="선택 배달 상세" data-history-detail="@selected.RecordId">
+                <div class="history__detail-title"><h2>@projection.Branch(selected.BranchId)?.DisplayName</h2><button type="button" @onclick="Fixture.ClearSelection" aria-label="상세 닫기">닫기</button></div>
+                <dl>
+                    <div><dt>배달 날짜</dt><dd>@selected.ServiceDate.ToString("yyyy.MM.dd") · 기록 @selected.Sequence</dd></div>
+                    <div><dt>배달료</dt><dd data-history-detail-fee>@Money(selected.DeliveryFeeKrw)</dd></div>
+                    <div><dt>앱 표시 거리</dt><dd data-history-detail-distance>@Distance(selected.DistanceKm)</dd></div>
+                    <div><dt>실제 완료 시각</dt><dd data-history-actual-time>@ActualTime(selected.ActualCompletedAtUtc)</dd></div>
+                    <div><dt>주문 금액</dt><dd data-history-order-amount>@Money(selected.FoodOrderAmountKrw)</dd></div>
+                    <div><dt>공제·수령액</dt><dd>미확인 · 실제 정산·입금으로 확정하지 않음</dd></div>
+                </dl>
+                <div class="history__detail-section">
+                    <h3>주문 메뉴</h3>
+                    @if (selected.MenuItems.Length > 0)
+                    {
+                        <ul class="history__menu" data-history-menu>
+                            @foreach (var menu in selected.MenuItems)
+                            {
+                                <li><strong>@menu.Name</strong><span>@(menu.Quantity.HasValue ? $"{menu.Quantity}개" : "수량 미확인")</span>
+                                    <span>단가 @Money(menu.UnitPriceKrw)</span><span>표시 항목금액 @Money(menu.DisplayedItemAmountKrw)</span>
+                                    @if (menu.Options.Length > 0) { <span>옵션: @string.Join(" · ", menu.Options)</span> }
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else { <p data-history-menu-unknown>이 배달 건에 연결된 메뉴 상세는 미확인입니다.</p> }
+                    @if (selected.MenuSummary.Length > 0)
+                    { <p class="history__muted">기존 기록 메뉴 요약 · 세부 수량·금액은 별도: @string.Join(" · ", selected.MenuSummary)</p> }
+                    <p class="history__muted">표시 항목금액을 수량으로 나눠 단가로 추정하지 않습니다.</p>
+                </div>
+                @if (selected.FeeComponents.Length > 0)
+                {
+                    <div class="history__detail-section"><h3>확인된 요금 구성</h3><dl>
+                        @foreach (var component in selected.FeeComponents)
+                        {
+                            <div><dt>@component.Label</dt><dd>@Money(component.AmountKrw)</dd></div>
+                            @foreach (var child in component.Children)
+                            { <div class="history__component-child"><dt>@child.Label</dt><dd>@Money(child.AmountKrw)</dd></div> }
+                        }
+                    </dl><p class="history__muted">상위 합계와 하위 항목을 다시 더하지 않습니다. 현재 요율로 재계산하지 않습니다.</p></div>
+                }
+                <div class="history__detail-section">
+                    <h3>같은 기록 연결</h3>
+                    <p>기사와 음식점 관점 모두 동일한 배달 건을 조회합니다. 동시 픽업의 주문 수는 합치지 않습니다.</p>
+                    <button type="button" data-history-to-restaurant @onclick="() => ShowRestaurantRecord(selected)">이 음식점 기록에서 보기</button>
+                    <button type="button" data-history-to-driver @onclick="() => ShowDriverRecord(selected)">이 날짜 기사 내역에서 보기</button>
+                </div>
+            </section>
+        }
+        <footer class="history__footer">고객 이름·연락처·전달 주소·플랫폼 주문번호는 포함하지 않습니다. 지도·GPS·알림·업무 쓰기를 호출하지 않습니다.</footer>
+    }
+</main>
+
+@code {
+    private bool _restaurant;
+    private string _branchId = "";
+    private int _branchPage = 1;
+    private IReadOnlyList<HistoricalDeliveryRecord> BranchRows => Fixture.Projection?.ForBranch(_branchId) ?? [];
+    private int BranchPageCount => Math.Max(1, (BranchRows.Count + 19) / 20);
+    protected override async Task OnInitializedAsync()
+    {
+        _branchId = Fixture.Projection?.Dataset.Records.FirstOrDefault()?.BranchId ?? "";
+        await Fixture.InitializeAsync();
+    }
+    private async Task ChangeDate(ChangeEventArgs args)
+    { if (DateOnly.TryParseExact(args.Value?.ToString(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day)) await Fixture.SetDateAsync(day); }
+    private void ChangeBranch(ChangeEventArgs args)
+    {
+        var branch = args.Value?.ToString();
+        if (Fixture.Projection?.Branch(branch) is null) return;
+        _branchId = branch!; _branchPage = 1; Fixture.ClearSelection();
+    }
+    private void ShowDriver() => _restaurant = false;
+    private void ShowRestaurant() { _restaurant = true; Fixture.ClearSelection(); }
+    private async Task OpenDriver(FDriverApp.PageModels.FDriverDailySettlementItem item)
+    { if (item.OpenDetailsCommand is { } command) await command.ExecuteAsync(null); }
+    private void Previous() => Fixture.DriverList?.PreviousPageCommand.Execute(null);
+    private void Next() => Fixture.DriverList?.NextPageCommand.Execute(null);
+    private void ShowRestaurantRecord(HistoricalDeliveryRecord row)
+    {
+        _restaurant = true; _branchId = row.BranchId;
+        _branchPage = BranchRows.Select((item, index) => (item.RecordId, index)).First(x => x.RecordId == row.RecordId).index / 20 + 1;
+    }
+    private async Task ShowDriverRecord(HistoricalDeliveryRecord row)
+    {
+        _restaurant = false;
+        await Fixture.SetDateAsync(row.ServiceDate);
+        var rows = Fixture.Projection!.ForDate(row.ServiceDate);
+        var page = rows.Select((item, index) => (item.RecordId, index)).First(x => x.RecordId == row.RecordId).index / 20 + 1;
+        while (Fixture.DriverList!.PageNumber > page && Fixture.DriverList.HasPreviousPage) Previous();
+        while (Fixture.DriverList!.PageNumber < page && Fixture.DriverList.HasNextPage) Next();
+        Fixture.Select(row.RecordId);
+    }
+    private static string Money(decimal? value) => value.HasValue ? value.Value.ToString("#,0.##", CultureInfo.GetCultureInfo("ko-KR")) + "원" : "미확인";
+    private static string Distance(decimal value) => value.ToString("0.########", CultureInfo.InvariantCulture) + "km";
+    private static string ActualTime(DateTime? value) => value.HasValue && value.Value != default
+        ? value.Value.AddHours(9).ToString("yyyy.MM.dd HH:mm", CultureInfo.InvariantCulture) + " (한국 시간)" : "미확인";
+    public void Dispose() => Fixture.DriverList?.Deactivate();
+}

@@ -1,0 +1,40 @@
+{
+  "planId": "PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR",
+  "revision": "r54",
+  "status": "Implemented / LocalValidated / DeviceDeferred / OperationalDeferred",
+  "approval": "2026-10-10 user: existing delivery data for local driver and restaurant tests; USB disconnected",
+  "baseCommit": "d1bab3eec08dc0a49c9a87f882590d394205c9a4",
+  "designDocumentRef": "delivery-history-local-replay.r54.md",
+  "designSha256": "9CCB4A36E90288C1C0C4472599E95BD077A0E90721A247973A3EDE54C7EAB2D2",
+  "primaryOwner": "operations",
+  "writePaths": [
+    "eng/RoleWorkspacePreview/HistoricalDelivery*",
+    "eng/RoleWorkspacePreview/import-delivery-history.py",
+    "eng/RoleWorkspacePreview/verify-historical-delivery.mjs",
+    "eng/RoleWorkspacePreview/Pages/HistoricalDelivery*",
+    "eng/RoleWorkspacePreview/Program.cs",
+    "eng/RoleWorkspacePreview/RoleWorkspacePreview.csproj",
+    "eng/RoleWorkspacePreview/README.md",
+    "Ssalddel.Tests/Clients/HistoricalDelivery*",
+    "Ssalddel.Tests/Ssalddel.Tests.csproj",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DRIVER-VERTICAL-REFACTOR/delivery-history-local-replay.r54*",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/AI/PLANNING.md",
+    "docs/Changes/README.md",
+    "docs/Changes/2026-10-10-delivery-history-local-replay-r54.md"
+  ],
+  "evidenceRoot": "artifacts/local/delivery-history-replay-r54/",
+  "excludedEffects": [
+    "Phone",
+    "DeviceApkReleaseOrInstall",
+    "OperationalDb",
+    "Azure",
+    "RealPayment",
+    "Notification",
+    "Unity",
+    "Video",
+    "Share",
+    "Commit",
+    "Push"
+  ]
+}
