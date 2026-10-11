@@ -73,6 +73,9 @@ public sealed class 음식권역복귀일정평가ServiceTests
         var optimizer = new CapturingOptimizer(new RoutePort());
         var result = await Service(db, optimizer).평가Async("driver", candidate, Current, now);
         Assert.False(result.적격여부); Assert.False(result.전체실경로확인됨); Assert.Empty(optimizer.Requests);
+        var basis = await Service(db, optimizer).후속픽업기준조회Async("driver", candidate, Current, now);
+        Assert.False(basis.확인됨); Assert.True(basis.활성업무있음);
+        Assert.Null(basis.기준좌표); Assert.Null(basis.가용예상시각Utc); Assert.Empty(optimizer.Requests);
     }
 
     [Theory]
@@ -84,6 +87,93 @@ public sealed class 음식권역복귀일정평가ServiceTests
         var candidate = await SeedAsync(db, now);
         var result = await Service(db, new CapturingOptimizer(new RoutePort(actual, returnedOption))).평가Async("driver", candidate, Current, now);
         Assert.False(result.전체실경로확인됨); Assert.False(result.적격여부);
+        var basis = await Service(db, new CapturingOptimizer(new RoutePort(actual, returnedOption)))
+            .후속픽업기준조회Async("driver", candidate, Current, now);
+        Assert.False(basis.확인됨); Assert.Equal("ActiveScheduleRouteUnverified", basis.사유Code);
+    }
+
+    [Fact]
+    public async Task 후속픽업기준은기존전체업무의마지막전달지와완료시각이며새주문을끼워넣지않는다()
+    {
+        await using var db = Context(); var now = DateTime.UtcNow;
+        var candidate = await SeedAsync(db, now);
+        var optimizer = new CapturingOptimizer(new RoutePort());
+        var result = await Service(db, optimizer).후속픽업기준조회Async("driver", candidate, Current, now);
+        Assert.True(result.확인됨); Assert.True(result.활성업무있음);
+        Assert.Equal("ActiveScheduleEnd", result.사유Code);
+        Assert.Equal(new 배차경로좌표(37.5m, 127.10m), result.기준좌표);
+        Assert.Equal(now.AddMinutes(20), result.가용예상시각Utc);
+        Assert.Equal("traavoidcaronly", result.RouteOption);
+        Assert.Single(optimizer.Requests);
+        Assert.Equal("active", Assert.Single(optimizer.Requests[0].작업목록).의뢰Id);
+        Assert.True(optimizer.Requests[0].작업목록[0].이미픽업완료);
+    }
+
+    [Fact]
+    public async Task 활성업무가없을때만현재GPS와지금시각을명시적으로반환한다()
+    {
+        await using var db = Context(); var now = DateTime.UtcNow;
+        var candidate = await SeedAsync(db, now);
+        db.RemoveRange(await db.운송원장.ToListAsync());
+        db.RemoveRange(await db.음식배달시도.ToListAsync()); await db.SaveChangesAsync();
+        var optimizer = new CapturingOptimizer(new RoutePort());
+        var result = await Service(db, optimizer).후속픽업기준조회Async("driver", candidate, Current, now);
+        Assert.True(result.확인됨); Assert.False(result.활성업무있음);
+        Assert.Equal("CurrentLocation", result.사유Code);
+        Assert.Equal(Current, result.기준좌표); Assert.Equal(now, result.가용예상시각Utc);
+        Assert.Null(result.RouteOption); Assert.Empty(optimizer.Requests);
+    }
+
+    [Fact]
+    public async Task 수락시도가있고실행투영이없으면유휴현재위치로대체하지않는다()
+    {
+        await using var db = Context(); var now = DateTime.UtcNow;
+        var candidate = await SeedAsync(db, now);
+        db.RemoveRange(await db.운송원장.ToListAsync()); await db.SaveChangesAsync();
+        var optimizer = new CapturingOptimizer(new RoutePort());
+        var result = await Service(db, optimizer).후속픽업기준조회Async("driver", candidate, Current, now);
+        Assert.False(result.확인됨); Assert.True(result.활성업무있음);
+        Assert.Equal("ActiveScheduleQueueMissing", result.사유Code);
+        Assert.Null(result.기준좌표); Assert.Null(result.가용예상시각Utc); Assert.Empty(optimizer.Requests);
+    }
+
+    [Fact]
+    public async Task 일부활성실행투영만있어도다른최신수락업무가누락되면전체완료ETA로승격하지않는다()
+    {
+        await using var db = Context(); var now = DateTime.UtcNow;
+        var candidate = await SeedAsync(db, now);
+        db.음식배달시도.Add(new 음식배달시도
+        {
+            주문번호 = "unprojected", 제안Id = "unprojected-offer", 기사Id = "driver", 시도순번 = 1,
+            시도StableId = "unprojected-attempt", Revision = 1, 상태Code = 음식배달시도상태Code.수락, 수락시각Utc = now.AddMinutes(-1)
+        });
+        await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+        var optimizer = new CapturingOptimizer(new RoutePort());
+        var result = await Service(db, optimizer).후속픽업기준조회Async("driver", candidate, Current, now);
+        Assert.False(result.확인됨); Assert.Equal("ActiveScheduleQueueMissing", result.사유Code);
+        Assert.Null(result.가용예상시각Utc); Assert.Empty(optimizer.Requests);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task 실행투영없는과거미완료시도는최신중단이나다른기사재배차를대신하지않는다(bool reassigned)
+    {
+        await using var db = Context(); var now = DateTime.UtcNow;
+        var candidate = await SeedAsync(db, now);
+        db.RemoveRange(await db.운송원장.ToListAsync());
+        db.음식배달시도.Add(new 음식배달시도
+        {
+            주문번호 = "active", 제안Id = "next-offer", 기사Id = reassigned ? "other-driver" : "driver", 시도순번 = 2,
+            시도StableId = "next-attempt", Revision = 1, 상태Code = 음식배달시도상태Code.수락,
+            수락시각Utc = now, 중단시각Utc = reassigned ? null : now
+        });
+        await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+        var optimizer = new CapturingOptimizer(new RoutePort());
+        var result = await Service(db, optimizer).후속픽업기준조회Async("driver", candidate, Current, now);
+        Assert.True(result.확인됨); Assert.False(result.활성업무있음);
+        Assert.Equal("CurrentLocation", result.사유Code); Assert.Equal(Current, result.기준좌표);
+        Assert.Empty(optimizer.Requests);
     }
 
     private static 음식권역복귀일정평가Service Service(SsalddelContext db, I픽업하차경로최적화Service optimizer)
