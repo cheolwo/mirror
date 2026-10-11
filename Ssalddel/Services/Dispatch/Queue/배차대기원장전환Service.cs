@@ -11,6 +11,7 @@ using 살뜰.도메인.배차;
 using 살뜰.Services.Dispatch.Engine;
 using 살뜰.Services.Dispatch.Notification;
 using 살뜰.Services.Dispatch.Recommendation;
+using 살뜰.Services.Dispatch.AI;
 
 namespace 살뜰.Services.Dispatch.Queue
 {
@@ -24,6 +25,11 @@ namespace 살뜰.Services.Dispatch.Queue
         private readonly I음식배달배차흐름Resolver _음식배달배차흐름Resolver;
         private readonly I음식배달기사제안요금Service? _음식배달기사제안요금Service;
         private readonly I음식배달기사추천기록Service? _음식배달기사추천기록Service;
+        private readonly bool _foodDemandParticipationEnabled;
+        private readonly IFoodDispatchCandidateAI? _candidateAI;
+        private readonly IFoodDispatchTimingService? _dispatchTiming;
+        private readonly TimeProvider _timingClock;
+        private readonly ILogger<배차대기원장전환Service>? _timingLogger;
 
         public 배차대기원장전환Service(
             SsalddelContext db,
@@ -33,7 +39,12 @@ namespace 살뜰.Services.Dispatch.Queue
             I국내화물운송기사상태Service 국내화물운송기사상태Service,
             I음식배달배차흐름Resolver 음식배달배차흐름Resolver,
             I음식배달기사제안요금Service? 음식배달기사제안요금Service = null,
-            I음식배달기사추천기록Service? 음식배달기사추천기록Service = null)
+            I음식배달기사추천기록Service? 음식배달기사추천기록Service = null,
+            IOptions<음식배달수요참여Options>? 수요참여Options = null,
+            IFoodDispatchCandidateAI? candidateAI = null,
+            IFoodDispatchTimingService? dispatchTiming = null,
+            TimeProvider? timeProvider = null,
+            ILogger<배차대기원장전환Service>? timingLogger = null)
         {
             _db = db;
             _options = options.Value;
@@ -43,6 +54,11 @@ namespace 살뜰.Services.Dispatch.Queue
             _음식배달배차흐름Resolver = 음식배달배차흐름Resolver;
             _음식배달기사제안요금Service = 음식배달기사제안요금Service;
             _음식배달기사추천기록Service = 음식배달기사추천기록Service;
+            _foodDemandParticipationEnabled = 수요참여Options?.Value.Enabled == true;
+            _candidateAI = candidateAI;
+            _dispatchTiming = dispatchTiming;
+            _timingClock = timeProvider ?? TimeProvider.System;
+            _timingLogger = timingLogger;
         }
 
         public async Task<배차대기원장전환결과> 계획배차에서추천으로전환Async(string requestId, CancellationToken cancellationToken = default)

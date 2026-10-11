@@ -316,7 +316,8 @@ public sealed partial class 음식배달배차업무정책Tests
         I운영배차공통UseCase? receiving = null,
         IAgreedRateTableUseCase? agreed = null,
         I기사권역복귀Service? returnService = null,
-        I음식권역복귀일정평가Service? foodPlan = null)
+        I음식권역복귀일정평가Service? foodPlan = null,
+        I음식배달수요참여Service? demand = null)
     {
         var options = new 배차큐정책Options
         {
@@ -334,7 +335,7 @@ public sealed partial class 음식배달배차업무정책Tests
             foodSpaceStore ?? new InMemory음식배달권실행공간Store(),
             foodOrderStore ?? new FakeFoodOrderStore(),
             Options.Create(options),
-            receiving ?? new TestDispatchAvailability(), agreed, returnService, foodPlan);
+            receiving ?? new TestDispatchAvailability(), agreed, returnService, foodPlan, demand);
     }
 
     private static 운송원장 Queue()

@@ -1,6 +1,7 @@
 using 살뜰.도메인.공통;
 using 살뜰.도메인.배차;
 using 살뜰.Services.Dispatch.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace 살뜰.Services.Dispatch.Queue
 {
@@ -45,6 +46,28 @@ namespace 살뜰.Services.Dispatch.Queue
                         배차엔진후속전환.전환없음,
                         blocked,
                         cancellationToken);
+            }
+
+            // 직접 지정에서도 첫 추천의 수집 판단을 우회하지 않는다.
+            if (selection is null && await 음식배달수집판정Async(queue, cancellationToken) is { } collecting)
+                return collecting;
+
+            // 직접 기사 지정도 현재 후보 선정을 통과한다. 이미 선정한 자동 흐름과 유효한 기존 제안은 재평가하지 않는다.
+            if (selection is null && (_foodDemandParticipationEnabled || _candidateAI?.Enabled == true || _dispatchTiming?.Enabled == true)
+                && queue.배차업무유형 == 상태값.배차업무유형.음식배달)
+            {
+                var before = 음식배달선정원장판본.생성(queue);
+                selection = await _candidateSelectionService.다음후보선정Async(
+                    queue.의뢰Id, 제외기사Id: null, cancellationToken);
+                if (!await 음식배달선정후현재원장확인Async(queue, before, cancellationToken))
+                    return 전환안됨(queue, 배차대기원장전환결과코드.추천준비안됨,
+                        "FoodDispatchAI.QueueChanged", driverId);
+                if (selection is null || selection.상태값 != 배차추천후보선정상태.선정됨
+                    || !string.Equals(selection.후보?.DriverId, driverId, StringComparison.Ordinal))
+                {
+                    return 전환안됨(queue, 배차대기원장전환결과코드.추천준비안됨,
+                        "현재 배차 참여 순서에 맞는 기사에게만 새 제안을 시작할 수 있습니다.", driverId);
+                }
             }
 
             if (queue.배차업무유형 == 상태값.배차업무유형.음식배달
@@ -144,7 +167,14 @@ namespace 살뜰.Services.Dispatch.Queue
                 return await 공개배차로전환Async(queue.의뢰Id, cancellationToken);
             }
 
+            if (await 음식배달수집판정Async(queue, cancellationToken) is { } collecting)
+                return collecting;
+
+            var before = 음식배달선정원장판본.생성(queue);
             var selection = await _candidateSelectionService.다음후보선정Async(queue.의뢰Id, excludeDriverId, cancellationToken);
+            if (!await 음식배달선정후현재원장확인Async(queue, before, cancellationToken))
+                return 전환안됨(queue, 배차대기원장전환결과코드.추천준비안됨,
+                    "FoodDispatchAI.QueueChanged", excludeDriverId);
             if (selection.공개배차전환허용)
             {
                 var changedAtUtc = DateTime.UtcNow;
@@ -223,6 +253,19 @@ namespace 살뜰.Services.Dispatch.Queue
                 배차엔진후속전환.보류,
                 blocked,
                 cancellationToken);
+        }
+
+        private async Task<bool> 음식배달선정후현재원장확인Async(
+            운송원장 queue, 음식배달선정원장판본 before, CancellationToken cancellationToken)
+        {
+            if ((_candidateAI?.Enabled != true && _dispatchTiming?.Enabled != true)
+                || before.업무유형 != 상태값.배차업무유형.음식배달)
+                return true;
+            var entry = _db.Entry(queue);
+            await entry.ReloadAsync(cancellationToken);
+            return entry.State != EntityState.Detached
+                && before == 음식배달선정원장판본.생성(queue)
+                && 배차실행인덱스재구성정책.미처리운송의뢰인가(queue, DateTime.UtcNow);
         }
     }
 }

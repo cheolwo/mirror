@@ -13,6 +13,7 @@ using 살뜰.Services.Dispatch.Continuity;
 using 살뜰.Services.Dispatch.Engine;
 using 살뜰.Services.Dispatch.Notification;
 using 살뜰.Services.Dispatch.Queue;
+using 살뜰.Services.Dispatch.AI;
 using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.Services.DeliveryZones;
 using 살뜰.Services.Documents;
@@ -158,6 +159,39 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IFoodDeliveryDispatchAIReviewService, FoodDeliveryDispatchAIReviewService>();
         services.AddScoped<I배차업무정책, 용달운송배차업무정책>();
         services.AddScoped<I배차업무정책, 음식배달배차업무정책>();
+        services.AddOptions<FoodDispatchOllamaOptions>().BindConfiguration(FoodDispatchOllamaOptions.SectionName)
+            .Validate(x => x.Validate(), "FoodDispatchOllamaConfigurationInvalid").ValidateOnStart();
+        services.AddHttpClient<IFoodDispatchCandidateAI, OllamaFoodDispatchCandidateAI>(client =>
+            client.Timeout = Timeout.InfiniteTimeSpan)
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                UseProxy = false,
+                AllowAutoRedirect = false,
+                UseCookies = false
+            });
+        services.AddOptions<음식배달수요참여Options>().BindConfiguration("FoodDemandParticipation")
+            .Validate(x => x.유효한가(), "FoodDemandParticipationConfigurationInvalid").ValidateOnStart();
+        services.AddSingleton<살뜰.도메인.배차.음식배달수요참여Policy>();
+        services.AddScoped<I음식배달수요참여Service, 음식배달수요참여Service>();
+        services.AddOptions<음식권역배차OllamaOptions>().BindConfiguration(음식권역배차OllamaOptions.SectionName)
+            .Validate(x => x.Validate(), "FoodRegionalDispatchOllamaConfigurationInvalid").ValidateOnStart();
+        services.AddHttpClient<I음식권역배차AI, Ollama음식권역배차AI>(client => client.Timeout = Timeout.InfiniteTimeSpan)
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                UseProxy = false, AllowAutoRedirect = false, UseCookies = false
+            });
+        services.AddScoped<I음식권역배차관리Service, 음식권역배차관리Service>();
+        services.AddOptions<FoodDispatchTimingOptions>().BindConfiguration(FoodDispatchTimingOptions.SectionName)
+            .Validate(x => x.Validate(), "FoodDispatchTimingConfigurationInvalid").ValidateOnStart();
+        services.AddSingleton<살뜰.도메인.배차.FoodDispatchTimingPolicy>();
+        services.AddOptions<FoodDispatchTimingOllamaOptions>().BindConfiguration(FoodDispatchTimingOllamaOptions.SectionName)
+            .Validate(x => x.Validate(), "FoodDispatchTimingOllamaConfigurationInvalid").ValidateOnStart();
+        services.AddHttpClient<IFoodDispatchTimingAI, OllamaFoodDispatchTimingAI>(client => client.Timeout = Timeout.InfiniteTimeSpan)
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                UseProxy = false, AllowAutoRedirect = false, UseCookies = false
+            });
+        services.AddScoped<IFoodDispatchTimingService, FoodDispatchTimingService>();
         services.AddScoped<I운송의뢰배차원천분류Service, 운송의뢰배차원천분류Service>();
         services.AddScoped<I운송의뢰배차대기Service, 운송의뢰배차대기Service>();
         services.AddScoped<I화물용달배차흐름Resolver, 화물용달배차흐름Resolver>();

@@ -2,8 +2,10 @@
 
 - 기획 ID: `PLAN-OPERATIONS-DISPATCH-CORE`
 - 기획 분야: 공통 / 운영 배차
-- 기획 판본: `dispatch-core.r43`
-- 상태: `Draft / StakeholderPolicyConfirmedInPart / TwoOperationalOsRelated / FoodPreparationTimeFiveTenFifteenTwentyConfirmed / FoodOver20MinuteInAppAndPushConfirmed / DriverNoResponseDemotedFromOperatorOverview / FoodSalesOrderDecisionVisualLinked / FoodWeatherThreePointPolicyApproved / FoodWeatherPickupNowcastFoundationImplemented / FoodWeatherServerCacheImplemented / FoodWeatherThreePointImplementationPending / FreightPostAcceptanceReconsentConfirmed / FreightCommitmentGraphConfirmed / FreightRiskVisibilityConfirmed / FreightInfeasibleReservationReleaseConfirmed / ShipperMaterialChangeOnlyNotificationConfirmed / ShipperRecoveryNotificationConfirmed / FreightContinuityBackendFoundationImplementedDisabled / FreightGraphEffectsDeferred / BackendBatch5InterruptionRecoveryImplemented / FrontendPartial / OperationalActivationDeferred`
+- 기획 판본: `dispatch-core.r52`
+- 배차 시점 상태: `Implemented / LocalValidated / OperationalDisabled / PolicyDraftMaterialsPrepared / HumanReviewPending`.
+- 학습자료 상태: `DraftMaterialsPrepared / HumanReviewPending / ReadyRowsZero / WeightTrainingNotStarted`.
+- 상태: `Draft / StakeholderPolicyConfirmedInPart / TwoOperationalOsRelated / FoodPreparationTimeFiveTenFifteenTwentyConfirmed / FoodOver20MinuteInAppAndPushConfirmed / DriverNoResponseDemotedFromOperatorOverview / FoodSalesOrderDecisionVisualLinked / FoodWeatherThreePointPolicyApproved / FoodWeatherPickupNowcastFoundationImplemented / FoodWeatherServerCacheImplemented / FoodWeatherThreePointImplementationPending / FreightPostAcceptanceReconsentConfirmed / FreightCommitmentGraphConfirmed / FreightRiskVisibilityConfirmed / FreightInfeasibleReservationReleaseConfirmed / ShipperMaterialChangeOnlyNotificationConfirmed / ShipperRecoveryNotificationConfirmed / FreightContinuityBackendFoundationImplementedDisabled / FreightGraphEffectsDeferred / BackendBatch5InterruptionRecoveryImplemented / FrontendPartial / FoodDemandParticipationImplementedDisabled / FoodDemandParticipationLocalValidated / LocalModelDockerCpuValidated / OfflineAssumedAiScenariosValidated / ProjectGroundedAdvisoryImplemented / LocalValidationCompleteWithQualityLimits / HumanReviewPending / RegionalCandidateAdvisoryImplemented / RegionalCandidateLocalValidatedWithModelQualityLimits / OperationalActivationDeferred / FoodCandidateApplicationImplemented / IsolatedLocalModelApplicationValidated / LocalApplicationValidationComplete / ExternalOperationalDeferred / FoodDispatchWorkflowScenariosImplemented / LocalLoopbackHttpMobilePageModelValidated / NotificationRecoveryGapsReproduced / RealDeviceDeferred`
 - 상위 기획: `PLAN-OPERATIONS-LOGISTICS-OS`. 지역·Scene과 독립된 운영 업무 공통 정책
 - 관련 기획: `PLAN-ARCH-OPERATIONS-UNITY-TRANSFER-001`, `PLAN-SYSTEM-OBSERVER-WORLD`
 - 관련 WI·PlayableLoop: 미등록. 이번 1차 공통 코어는 운영 비활성 계약·순수 계산·포트 경계이며 Unity PlayableLoop 구현이 아님
@@ -11,8 +13,21 @@
 - 개발 인계 상태: 2026-09-11 기존 픽업지 기상 조회·서버 캐시는 `AcceptedInCurrentThread / FoodWeatherServerCacheImplemented`. 같은 날 확정한 세 지점 판정은 `PolicyApproved / ImplementationPending`
 - 계보: 첫 공통 코어 초안과 후속 정책 문답을 이 정본에 통합
 - 구현 준비 점검: [운영 배차 공통 코어 구현 준비 점검 r1](implementation-readiness-audit.r1.md)
+- 2026-10-11 후속: [음식 수요·참여 순서 구현 r44](demand-participation.implementation.r44.md) · [현재 스레드 작업 명세](demand-participation.r44.work-order.json). 기본 OFF인 소프트 참여 권고와 실제 후보 선정·직접 추천 보호를 연결한다. 영속 권역 정원·운영 활성화·LLM 실추론은 별도다.
+- 2026-10-11 r45 당시 범위: [AI 가정형 오프라인 운영 시나리오 r45](offline-scenarios.implementation.r45.md) · [작업 명세](offline-scenarios.r45.work-order.json). 차단을 유지한 합성 시간표에서 실제 참여 Policy와 가상 순차 배정을 비교한다. 제품 코드·운영 설정·실제 모델은 변경하거나 실행하지 않는다.
+
+- 2026-10-11 r46 당시 범위: [프로젝트 근거 기반 설명 r46](project-advisory.implementation.r46.md) · [현재 스레드 작업 명세](project-advisory.r46.work-order.json). 허용된 규칙·합성 시점·기존 대안을 Docker 로컬 모델에 제공하고 설명·위험·사람 검토를 별도 기록한다. 12개 상황·30개 시점의 로컬 호출을 완료했으며 구조 검사 18개 통과·12개 규칙 결과 복귀다. 구조 통과는 설명 정확도가 아니고 모두 사람 검토 대기이며 가중치 학습·제품 배차·운영 활성화는 하지 않았다.
+- 2026-10-11 r47 당시 범위: [배달권·기사 후보 근거 연결](candidate-advisory.implementation.r47.md) · [작업 명세](candidate-advisory.r47.work-order.json). 기존 음식 후보 정책의 동일권·인접권·제한 확장·제약·선정 결과를 동작 보존 검토 결과로 분리하고 합성 입력에서 제한된 로컬 AI 검토로 연결한다. 합성 10개·내부 82개·정책 시험 61개·Python 97개가 통과했다. 실제 모델 4회는 최종 재검증에서 모두 기존 정책 결과로 복귀했으며 사람 검토 대기다. 실제 배차·운영 활성화·가중치 학습은 하지 않는다. r46 기록은 보존하고 소스 변경에 따른 과거 근거의 만료를 정상으로 처리한다.
+
+- 2026-10-11 r48 당시 범위: [음식 배차 수행 경로의 AI 선택](candidate-application.implementation.r48.md) · [작업 명세](candidate-application.r48.work-order.json). 제한된 모델 선택을 기존 서버 추천·요금·감사 저장에 연결하고 응답 뒤 현재 후보/원장을 다시 확인한다. 집중 161개·최종 Fast 169개·Task 10,500개와 격리 SQLite의 실제 모델 1회 적용을 확인했다. 모델은 기존 엔진과 같은 합성 기사를 선택했으며 판단 개선을 입증하지 않는다. 공유 기본값은 OFF이고 PC의 Git 제외 설정만 ON이다. 최초 메타데이터 예상 목록 누락 실패를 보존하고 관련 시험 보완 후 전체 검증을 통과했다. 제품 호스트·기사 수락·외부 알림/운영 배포는 미실행이다.
+
+- 2026-10-11 최신 r49: [주문·기사 앱 통합 시나리오](workflow-scenarios.implementation.r49.md) · [작업 명세](workflow-scenarios.r49.work-order.json) · [검증 결과](../../../../Changes/2026-10-11-local-dispatch-workflow-scenarios-r49.md). 주문부터 추천·앱 내부 배차 안내·수락·픽업·전달·별도 수령 확인까지 실제 루프백 HTTP와 격리 SQLite, 제품 API client·수신기·PageModel로 검증했다. 신규 22개·Fast 210개·Task 10,522개 통과, 실제 모델 2회 적용·단일 후보 1사례 호출 생략이다. 추천 저장/알림 생성과 Failed 재발송 공백 3개를 재현했다. 제품 수정·실제 FCM/단말/화면·자동 이벤트 예약·외부 운영은 별도다.
 
 ## 이 기획이 소유하는 범위
+
+- 2026-10-11 최신 r52: [음식 주문 수집과 배차 시점](batch-timing.implementation.r52.md) · [작업 명세](batch-timing.r52.work-order.json) · [변경/검증 기록](../../../../Changes/2026-10-11-food-dispatch-batch-timing-r52.md). 최초 접수 기준의 짧은 수집을 첫 추천 전 자동/직접 경로에 연결하고 조합·마감·수요/기사 자료를 대조한다. AI는 서버의 허용 행동만 선택한다. 기본 OFF, 실제 공동 다건 수락·4,000원 점수·가중치 학습·운영 적용은 별도다.
+
+- 2026-10-11 최신 r51: [학습자료 제작](training-materials.implementation.r51.md) · [작업 명세](training-materials.r51.work-order.json) · [검증 기록](../../../../Changes/2026-10-11-dispatch-training-materials-r51.md). 과거 기록 504건·339지점에서 합성 상황 4,041개를 생성하고 중복 9개를 격리해 후보 4,032개·한국어 검토 24개를 준비했다. 현재 정책의 초안이며 학습 사용 승인 자료 0행, 모델 호출·가중치 학습·사람 승인·운영 적용 0이다. 후속 픽업 9개는 검토 근거만 남기며 제품/원본/기존 검증을 보존한다.
 
 이 기획은 특정 동네나 Unity 장면이 아니라 주문자·음식점·기사·플랫폼이 함께 사용하는 운영 배차 의미를 소유한다. `화물운송 OS`와 `음식배달 OS`의 전체 생명주기를 소유하는 상위 실행자가 아니라, 두 OS가 같은 의미로 사용하는 좁은 계약과 판정 기반이다.
 
@@ -211,3 +226,5 @@
 ## 다음 질문 하나
 
 기사 현재 위치가 기존 배차 적격 판정의 신선도 기준을 넘긴 경우에는 그 지점을 기상 판정에서 제외하고 픽업지·전달지만으로 판정할까? 추천은 오래된 기사 좌표로 비를 추정하지 않고 기존 위치 신선도 기준을 그대로 재사용하는 것이다.
+
+- 2026-10-11 최신 r50: [지역 배차 판단 준비](regional-management.implementation.r50.md) · [작업 명세](regional-management.r50.work-order.json) · [변경/검증](../../../../Changes/2026-10-11-regional-dispatch-management-r50.md). 중랑·동대문·광진504건/339지점의 공개 관측과 합성 기사·주문으로 2·3·4·5번을 구체화했다. 지역 시나리오27개·실제 추론 누적6회·독립 SQLite6개를 검증했다. 기본OFF·사람 검토Pending·실제 멀티 원자적 수락/단말/운영 보류.

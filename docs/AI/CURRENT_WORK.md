@@ -1,5 +1,77 @@
 # Mirror(거울) Current Work
 
+## 음식 주문 수집·배차 시점 판단 r52 (2026-10-11, 로컬 검증 완료·운영 OFF)
+
+- [수락 설계](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/batch-timing.implementation.r52.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/batch-timing.r52.work-order.json)에 따라 첫 음식 추천 전에 짧게 주문을 모을지 현재 배차로 진행할지 서버 정책과 제한 AI 선택을 연결했다. 최초 접수 시각의 대기 상한·자료 신선도·확인된 조리 예정 시각·큐 판본을 재확인한다. 공유 기본값은 OFF다.
+- [변경/검증 기록](../Changes/2026-10-11-food-dispatch-batch-timing-r52.md)·[자료 실행 안내](../../eng/local-dispatch-ai/DispatchTimingScenarioRunner/README.md)를 따른다. 신규 135개 포함 Fast 244개, Task 전체 10,753개 통과·실패 0·Mongo 환경 의존 15개 건너뜀이다. 별도 자료 도구 빌드 오류/경고 0·Python 42개 통과, 8유형의 정책 초안 4,032개·대표 24개를 준비했다. 지점 교차/입력 중복 0, ready 0행·모델 호출/학습/사람 승인/운영 변경 0이다.
+- 수집 중 새 제안·요금·알림은 만들지 않는다. 기존 수요 판정 투영 복구는 가능하다. 실제 다건 공동 수락·4,000원 수렴 점수·모델 학습/운영 활성화는 별도다. 자료는 현재 순수 정책의 검토 초안이며 실제 AI 프롬프트 학습용 변환은 후속이다. 작업 명세 밖 소스 변경 0을 확인했다.
+
+## 배차 학습자료 1차 제작 r51 (2026-10-11, 후보 제작 완료·사람 검토 대기)
+
+- [수락 설계](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/training-materials.implementation.r51.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/training-materials.r51.work-order.json)에 따라 기존 504건·339지점의 출처와 합성 상황을 결합해 현재 정책 답안 초안 4,041개를 만들었다. 중복 후속 픽업 9개를 격리하고 후보 4,032개를 학습 2,784·검증 856·평가 392로 나눴다. 지점 교차·후보 입력 중복은 0이다.
+- [변경/검증 기록](../Changes/2026-10-11-dispatch-training-materials-r51.md)과 [실행 안내](../../eng/local-dispatch-ai/TrainingMaterialRunner/README.md)를 따른다. 대표 24개를 한국어 검토표로 준비했다. 별도 도구 빌드 오류 0·Python 반례 45개 통과, 생성/컴파일 동일성 재실행을 확인했다. 실제 적재·도로 경로·최적 선택 검증은 아니며 모든 답안은 Pending, ready 0행·모델 호출/학습/사람 승인/운영 변경 0이다. 제품·원본·다른 dirty 작업을 보존한다.
+
+## 지역 배차 판단 준비 r50 (2026-10-11, 로컬 시나리오 완료·단말/운영 보류)
+
+- [승인 설계](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/regional-management.implementation.r50.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/regional-management.r50.work-order.json)에 따라 2·3·4·5번(기사 부족/과잉·마지막 전달지 후속 픽업·단건/2건 조합)을 기존 정책과 서버 권위 안에서 구현했다. 새 후속 픽업·권역 검토 AI 옵션은 기본 OFF다.
+- 중랑·동대문·광진504건·339지점/확인 메뉴488항목의 비공개 파생자료를 준비했다. 고객 위치·기사 GPS는 합성이며 역사 가격·방문 요약 메뉴를 현재 단건 값으로 승격하지 않는다. [변경/검증 기록](../Changes/2026-10-11-regional-dispatch-management-r50.md)과 [실행 안내](../../eng/local-dispatch-ai/RegionalScenarioRunner/README.md)를 따른다.
+- 최종 모의27개와 대표 실제 모델2회가 포함된27개를 통과했다. 앞선 실제4회를 포함한 r50 누적6/6회, 실제 선택은 모두 기준과 동일하다. SQLite6개를 독립 재조회했다. Python22개·Fast214개, Task `20261011-171622` 전체10,618개 통과·실패0·실제 Mongo 환경 의존15개 건너뜀이다. solution 빌드의 회원/관리자 Firebase 미설정 경고6개·오류0을 기록했다. 사람 검토 Pending, 모델 가중치 학습·실제 멀티 원자적 수락·전역 미래 끝점 탐색·단말/외부 FCM·운영 활성화·Unity·commit/push는 별도다.
+
+## 주문·Ollama 배차·기사 앱 통합 시나리오 r49 (2026-10-11, 로컬 검증 완료·단말/외부 운영 보류)
+
+- [승인 설계](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/workflow-scenarios.implementation.r49.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/workflow-scenarios.r49.work-order.json)에 따라 실제 주문·기사 Controller의 루프백 HTTP, 격리 SQLite, 기존 후보/추천/요금 서비스와 FDriver API·수신기·PageModel을 연결했다. 주문→음식점 수락→추천→앱 내부 안내→수락·도착·픽업·전달→별도 수령 확인을 실행한다. 제품 소스·설정은 변경하지 않는다.
+- 신규 통합 22개와 최종 Fast 210개가 통과했다. Task `artifacts/local/validation/20261011-155651`은 solution 빌드 오류 0·10,522개 통과·실패 0·환경 의존 15개 건너뜀이다. 새 실행 도구 최종 빌드는 경고/오류 0이다. 최초 시험 빌드 실패는 보존하고 실제 저장소 API에 맞춰 수정했다.
+- [변경·실행 기록](../Changes/2026-10-11-local-dispatch-workflow-scenarios-r49.md): 같은 선택 소스의 모의 세 흐름 성공 후 실제 `20261011T065859Z-actual-077d3d06`의 세 흐름을 통과했다. 같은 권역·인접권은 Ollama 각 1회 선택 적용, 현재 수요는 단일 허용 후보여서 호출 0회다. 실제 두 선택 모두 기존 기준과 같아 판단 개선 증거는 아니다. r49 시작 예산 2/4, 이전 예산·결과는 보존했다. 각 DB를 종료 뒤 독립 재조회했다.
+- 추천 저장 뒤 알림 Outbox 생성 실패와 Failed 재발송 부재 2변형을 재현했다. 공백 발견이며 제품 수정 완료가 아니다. 완료 뒤 후속 동기화 Outbox 1개씩은 Pending이다. 알림 성공은 기록용 포트이며 실제 FCM·Android 배너/소리·화면 렌더·생산 JWT·자동 이벤트 예약·운영 DB/정산·APK/USB·Azure·commit/push는 미실행이다. 사용자 요청에 따라 로컬 통합 시험까지만 진행했다.
+
+## 음식 배차 수행 경로의 Ollama 후보 선택 r48 (2026-10-11, 로컬 검증 완료·외부 운영 보류)
+
+- [승인 설계](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/candidate-application.implementation.r48.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/candidate-application.r48.work-order.json)에 따라 서버 DI→음식 후보 정책→제한 Ollama 선택→현재 후보/원장 재확인→기존 추천·요금·감사 저장을 연결했다. 실제 허용 후보·픽업 단계·최신 수요 우선권을 유지하고 실패·지연에는 현재 엔진 기준 후보로 돌아간다. 새 API·원장·UI·화물/Unity는 추가하지 않는다.
+- typed 서비스 65개·정책/직접 추천/SQLite·DI 96개, 합계 161개 집중 시험이 통과했다. 새 검증 도구 빌드는 경고·오류 0이며 기본 실행은 추론·배차 0회다. 최초 Fast 166개와 최종 Fast 169개(`artifacts/local/validation/20261011-152240`)가 통과했다. 최초 Task의 메타데이터 예상 목록 누락 1개 실패를 보존하고 관련 시험 한 단계만 보완했다. 최종 Task `20261011-152313`은 solution 빌드 오류 0·전체 10,500개 통과·실패 0·환경 의존 15개 건너뜀이다.
+- [변경·실행 기록](../Changes/2026-10-11-local-dispatch-candidate-application-r48.md)의 실제 실행 `20261011T061842Z-6f2e87e0`은 Ollama 1회·현재 허용 선택 적용·격리 SQLite 저장 후 재조회를 확인했다. 모델은 기존 엔진과 같은 합성 기사를 골랐고 시험 고정 요금 4,000원 동결·추천 라운드 1·감사/활동 각 1건, 중복 전환 없음이다. 전체 실행 8.923376초는 DB 준비를 포함하며 판단 개선·실제 요금 계산·제품 호스트의 10초 설정 검증은 아니다. r48 누적 시작 예산은 1/2이고 두 번째 호출은 하지 않았다.
+- 공유 기본값/예시는 OFF, Git 제외 PC 설정에만 ON·timeout 10초다. 검증의 외부 알림 요청 1건은 시험 경계에서 억제했고 실제 고객 변경·외부 발송·기사 수락·제품 호스트 실행은 없다. r47 최종 0개 통과/4개 복귀와 r46 기록·소진 예산을 보존하며 소스 변경에 따른 과거 근거 만료를 정상 처리한다. 운영 배포·APK·단말·Azure·학습·commit/push는 미실행이다.
+
+## 배달권·기사 후보 근거를 연결하는 로컬 AI r47 (2026-10-11, 로컬 검증·모델 품질 한계·운영 OFF)
+
+- [승인 설계](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/candidate-advisory.implementation.r47.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/candidate-advisory.r47.work-order.json)에 따라 기존 음식 후보 정책의 같은 권역·인접권·제한 확장·후보 관문·선정 근거를 읽기 전용 결과로 분리하고 실제 정책을 합성 입력에서 실행하는 별도 도구와 제한된 Ollama 검토를 연결한다. 운영 알고리즘·최종 서버 권위·기존 기본 OFF를 유지한다.
+- 실제 후보 정책 합성 10개·내부 검사 82개, 후보 정책 집중 시험 61개(신규 21·기존 40), Python 97개(신규 53·이전 44)가 통과했다. 기본 준비 검사는 10개·모델 0회다. Fast `artifacts/local/validation/20261011-142931`에서 서버/시험 두 프로젝트 빌드와 61개 시험을 확인했고 최종 Task 근거는 작업 명세에 별도 기록한다.
+- [변경 기록](../Changes/2026-10-11-local-dispatch-candidate-advisory-r47.md)의 실제 모델 실행 `20261011T052841Z-1966597c9499`은 4회 완료, 최초 1개 관문 통과·3개 복귀였다. 관련 출처 대응 검사를 보강한 뒤 원응답 재검증에서는 0개 통과·4개 기존 정책 결과 유지다. 최초 결과와 후속 재검증을 별도 보존했고 추가 추론 0회·사람 승인 0건이다. r47 누적 예산 4회는 소진됐으며 이전 r46의 36회 기록·원응답·보고서를 보존한다.
+- 현재 정책·사용자 확인 방향·합성 가정·미구현 제안을 구분한다. 약 4건/h 방향을 현재 기본 3.5건/h로 덮어쓰지 않고 시간대 가점과 마지막 전달지 기반 다음 픽업을 구현 사실로 표현하지 않는다. 정책 소스 변경으로 r46 근거가 현재 검사에서 만료되는 것은 정상이며 과거 해시를 갱신해 재승인하지 않는다. 실제 배차·DB·외부 알림·새 UI·APK·Unity·Azure·학습·commit/push는 범위 밖이다.
+
+## 배차 사례 문답 검토 (2026-10-11, 수요 우선·장기 대기 기회 방향 확인·세부 기준 미정)
+
+- [문답 검토 절차](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/배차-사례-문답검토절차.md)를 정리하고 기존 실제 모델 실행의 5개 합성 시점을 첫 검토 묶음으로 재사용했다. 상황·현재 정책 결과·AI 원문·코덱스 수정 초안·사용자 질문을 분리하고 입력/응답 해시를 연결했다. 비공개 자료는 `artifacts/local/local-dispatch-ai/dialogue-review-20261011/round-01/`이다.
+- 사용자 검토 대상은 코덱스의 수정 초안이며 AI 원응답 승인과 구별한다. 사람 승인·학습 후보 생성·새 모델 호출·운영 효과는 없으며 제품 코드·정책·DB를 변경하지 않았다. 현재 수요 참여 검토를 기사별 배차·묶음 경로의 AI 선택 완료로 확대하지 않는다.
+- 5개 사례의 입력·응답/산출물 해시, 사용자 검토 대기·학습 후보 제외, 미확인 목표 인원의 null 보존과 문서 링크를 확인했다. 문서 범위 Fast `artifacts/local/validation/20261011-133952`·Task `20261011-133956`의 차이 검사가 통과했으며 제품 build/test는 문서 전용으로 생략했다.
+- 후속 사용자 의견은 피크 진입 시 신규 참여 가점, 피크 종료 시 기존 활동 기사 할당 우선, 공통 장기 대기 고려다. 앞선 일률 대기 초안의 완전 승인으로 기록하지 않고 첫 피드백을 묶음 해시에 연결해 별도 보존했다. 시간표·수요 보정·가점·예외 기준은 미정이며 새 엔진/모델 실행·정책 변경·AI 원응답 승인·학습 후보 생성은 하지 않았다.
+- 두 번째 답변에서 시간표보다 실제 주문량·기사 가용 여력을 우선하는 방향을 확인했다. 사용자 경험의 약 4건/h를 계획 가정으로 기록하고 여력 초과 시 비피크 진입에도 추가 참여를 권고한다. 세부 수치·관측 창·안전 여유는 미정이며 contract 기본 3.5건/h·기존 실행은 보존했다. 이전 피드백 해시에 연결한 별도 의견 2를 추가했으며 새 추론·실제 배차·가중치 학습·제품 코드 변경은 없다.
+- 대화 가정에서 기존 기사로 주문을 처리할 수 있어도 수행 조건이 비슷하면 오래 기다린 기사에게 다음 건을 우선 제안하는 방향에 사용자가 동의했다. 가정의 30분은 임계값 확정이 아니며 기존 업무·적격/픽업 관문을 유지한다. 이전 피드백과 연결한 의견 3을 별도 보존했고 이 가정의 엔진/모델 실행·AI 원응답 승인·학습 후보 생성·운영 효과는 없다.
+
+## 프로젝트 근거를 참고하는 배차·운영 AI r46 (2026-10-11, 로컬 검증 완료·품질 한계·운영 OFF)
+
+- [승인 범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/project-advisory.implementation.r46.md)에 따라 기존 합성 시나리오의 관측 기준·3.5건/h·12개 상황에서 실제 30개 시점과 규칙·출처·기존 대안을 내보내고 Docker 로컬 모델의 설명을 받았다. 제품 서버 API·DB·배차·알림·기본 OFF를 유지하며 모델 가중치 학습은 하지 않았다.
+- 최종 Python 44개·C# 도구 내부 174개 검사가 통과하고 기존 288개 비교 해시를 유지했다. 실제 30개 응답 중 구조 검사 18개 통과·12개 규칙 결과 복귀이며 설명 정확도는 측정하지 않았다. 모든 응답은 사람 검토 대기, 승인 0건이다. CPU 응답 중앙값 37.227초·p95 43.672초로 실시간 배차와 분리된 사후 검토만 다룬다.
+- [변경 기록](../Changes/2026-10-11-local-dispatch-project-advisory-r46.md)에 실행·반례·해시와 수치 대조 보고서를 연결했다. AI 초안과 C# 계산 수치표를 분리하고 승인된 이력만 향후 학습 후보로 만들 수 있도록 했지만 실제 승인·학습은 하지 않았다. 기존 Docker 실제 실행과 r44/r45 당시 경계·관련 없는 변경을 보존했다.
+
+## Docker Ollama 실제 실행·합성 응답 확인 (2026-10-11, CPU 로컬 검증)
+
+- 사용자의 후속 한 번 실행 요청에서 Docker 시작은 실행 도구가 허용했다. [실행 상태](../../eng/local-dispatch-ai/docker/README.md)에 따라 공식 `ollama/ollama:0.40.2`의 digest를 고정하고 기존 `qwen3:1.7b`를 별도 Docker volume에 복사했다. 컨테이너 안 manifest와 blob 5개의 해시가 원본과 같다. Windows 캐시·기존 다른 컨테이너는 변경하지 않는다.
+- 첫 읽기 전용 캐시 초기화 실패를 별도 모델 volume으로, 내부망 호스트 접속 실패를 루프백 포트가 게시된 bridge로 수정했다. 실제 API 버전·모델과 CPU 장치, balanced 합성 한 건의 `validated_advisory_only`를 확인했다(약 12.7초). 참고 기사 수 10명은 제공된 35건/3.5건/h 계산이며 수요 예측이나 배차 최적화 결과가 아니다. 기존 모의 방어 시험 14개 통과와 실제 추론을 구분한다.
+- `127.0.0.1:12681`·클라우드 OFF·자동 재시작 OFF·CPU/RAM 제한을 유지하고 이번 컨테이너는 실행 상태로 남긴다. 운영 API/상태 변경 0건, GPU·MCP 등록·제품 배차 통합·Azure·APK·commit/push는 미실행이다. 실행 근거는 Git 제외 `artifacts/local/local-dispatch-ai/docker-runtime-20261011/`이며 앞선 준비 기록과 r44/r45 및 관련 없는 변경은 보존한다. 이전 Windows 거절 원인이나 전체 권한 해제를 확인한 것은 아니다.
+
+## AI 가정형 오프라인 운영 시나리오 r45 (2026-10-11, 차단 유지·로컬 비교 완료)
+
+- [승인 범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/offline-scenarios.implementation.r45.md)와 [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/offline-scenarios.r45.work-order.json)에 따라 합성 주문·기사 시간표와 실제 수요 참여 Policy를 연결하는 개발 도구를 준비했다. r44 제품 코드·기본 OFF·실제 수락 관문은 변경하지 않는다.
+- 12개 상황 × 8개 비교 × 계획 처리량 3·3.5·4건/h의 288개 비교와 내부 점검 165개를 통과했다. 빌드 경고/오류 0, 기존 서버 업무 회복 시험 61개 통과. 213개 비교는 배정 대기·완료소요·미완료 기준의 검토 대상이며 검사 통과와 시간 만족을 구분한다. 실제 경로·조리·사고 상태 기계를 복제하지 않았다.
+- 입력·결과는 근거 해시별로 보존한다. 정확한 모의 예측의 배정 대기 p95 개선은 0/36개이며 기사 부족·긴 순차 수행이 남은 위험이다. 다음 우선순위는 약속 완료시간과 잔여 여력에 따른 제안·접수 용량·대안 안내의 검토다.
+- r45 작업 당시에는 모델 실행 차단을 유지하고 Ollama 재시작·대체 추론·권한 완화·네트워크/업무 API·운영 DB 쓰기·APK·단말·Azure·배포·commit/push를 수행하지 않았다. 최종 수치와 제한은 [변경 기록](../Changes/2026-10-11-offline-dispatch-scenarios-r45.md)에 남긴다. 후속 사용자가 요청한 Docker 실행 결과는 상단 최신 절과 별도 실행 근거로 구분한다.
+
+## 음식 배차 수요·참여 순서 r44 (2026-10-11, 기본 OFF 구현·로컬 검증 완료)
+
+- [승인 범위·정책](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/demand-participation.implementation.r44.md)에 따라 음식 후보 선정에 수요·잔여 업무·기존 활동 보호·신규 대기·장기 대기/지연 예외를 연결했다. 직접 지정도 같은 선정을 확인한다. 기본 OFF, 기사 의사·유효 제안·수락 업무·동시 수행 관문·요금·지급·화물 흐름은 유지한다.
+- [변경·검증 기록](../Changes/2026-10-11-food-demand-participation-r44.md). 소프트 참여 순서이며 권역 원자적 정원/영속 대기열은 아니다. r44 당시 로컬 Ollama·모델은 준비했지만 실행 도구의 시작 거절로 실추론은 미검증이었다. 후속 Docker 합성 응답 검증은 상단 최신 절로 구분하며 운영 활성화·단말·Azure·commit/push는 r44 범위 밖이다.
+- Fast 89건·최종 전체 Task 10,386건 통과, 실패 0·환경 의존 Mongo 15건 건너뜀. AI 방어 시험 14건 통과. 최종 전체 실행 전후 소스 16개 해시 변화 0이며 결과와 초기 실패 수정은 변경 기록에 남겼다.
+
 ## 예외 복구 코드 책임 분리 r2 (2026-10-10, 로컬 검증 완료)
 
 - [사용자 승인 범위](Planning/공통/PLAN-OPERATIONS-EXCEPTION-CONTINUITY/exception-continuity.refactoring.r2.md)와 [작업 지시](Planning/공통/PLAN-OPERATIONS-EXCEPTION-CONTINUITY/exception-continuity.r2.work-order.json)에 따라 음식 역할별 요청 준비·완료 근거와 지원 사건/배송 복구 상태·표시를 분리했다. 기존 동작·권한·계정/세대·원장 완료 근거·저장 정책을 유지한다.
