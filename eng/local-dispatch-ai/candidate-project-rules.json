@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": "food-candidate-review/r47",
+  "rules": [
+    {
+      "id": "AUTHORITY", "status": "implemented",
+      "summary": "현재 서버 정책은 추천 후보를 반환한다. AI 검토 선택은 배차 확정·수락·원장 변경 권한이 없으며 엔진 기준 결과를 유지한다.",
+      "sources": [{"path": "Ssalddel/Services/Dispatch/Queue/음식배달배차업무정책.cs", "anchors": ["new 배차추천후보("]}]
+    },
+    {
+      "id": "AREA_SEARCH", "status": "implemented",
+      "summary": "좌표 기반 주배달권부터 평가한다. 부족한 동일권 후보·최신 수요 판단·복귀 평가 조건에서 인접권을 검토하며 후보가 없을 때 제한 거리 확장한다. 격자 이웃은 도로 경로나 거리 관문 통과를 보장하지 않는다.",
+      "sources": [
+        {"path": "Ssalddel/Services/Dispatch/Coordination/음식배달권정책.cs", "anchors": ["food-cell-v1", "인접배달권키조회", "거리확장배달권키조회"]},
+        {"path": "Ssalddel/Services/Dispatch/Queue/음식배달배차업무정책.cs", "anchors": ["음식배달동일권최소후보기사수", "decisions is not null || 인접탐색필요"]}
+      ]
+    },
+    {
+      "id": "ELIGIBILITY", "status": "implemented",
+      "summary": "앱·운행·수신 의사·GPS 신선도·거절·제외·운영/기사 접근 반경·합의 기사 제한을 유지한다. 조회만 한 후보나 탈락 후보를 AI가 다시 허용하지 않는다.",
+      "sources": [{"path": "Ssalddel/Services/Dispatch/Queue/음식배달배차업무정책.cs", "anchors": ["신규배차수신허용", "기사위치신선도정책.유효한가", "allowedRadiusKm"]}]
+    },
+    {
+      "id": "PICKUP_TIMELINESS", "status": "implemented",
+      "summary": "최신 수요 판정에서는 먼저 가장 좋은 픽업 적시성 단계로 좁히고 참여 허용 후보를 비교한다. 장기 대기·복귀 가점으로 픽업 지연을 무조건 앞세우지 않는다.",
+      "sources": [{"path": "Ssalddel/Services/Dispatch/Queue/음식배달배차업무정책.cs", "anchors": ["bestPickupStage", "픽업 지연 후보를 복귀 가점으로 살리지 않는다."]}]
+    },
+    {
+      "id": "DEMAND_CAPACITY", "status": "implemented",
+      "summary": "실제 수요 참여 정책은 대기 주문과 관측/예측 중 큰 유입량을 고려하고 기존 업무의 남은 수행시간을 가용 처리량에서 뺀다. Unknown/Stale는 0건으로 바꾸지 않고 기존 관문으로 복귀한다. 시간당 처리 목표 기본값은 3.5이며 보장 생산성이 아니다.",
+      "sources": [
+        {"path": "Ssalddel.Domain/배차/음식배달수요참여Policy.cs", "anchors": ["Math.Max(관측기반예상", "ExistingActivityProtected"]},
+        {"path": "Ssalddel.Contracts/Common/Dispatch/음식배달수요참여Contracts.cs", "anchors": ["= 3.5m", "미확인은 null이며 0으로 치환하지 않습니다."]}
+      ]
+    },
+    {
+      "id": "WAITING_ORDER", "status": "implemented",
+      "summary": "수요 참여 허용·장기 대기 기회·기존 활동·최근 배차수·안정된 대기 기준을 순서대로 고려한다. 현재 대기 점수와 실제 대기 분은 별도 필드다. 높은 점수만으로 모든 수행 조건이 비슷하다고 판단하지 않는다.",
+      "sources": [{"path": "Ssalddel.Domain/배차/음식배달수요참여Policy.cs", "anchors": ["LongWaitOpportunity", ".ThenBy(x => 원천[x.기사Id].최근시간창배차수)"]}]
+    },
+    {
+      "id": "USER_CAPACITY_FIRST", "status": "user_preference",
+      "summary": "사용자는 시간표보다 실제 주문량과 수행 여력을 우선하도록 방향을 확인했다. 시간당 약 4건은 사용자 계획 가정이다. 피크 종료라도 인력이 부족하면 추가 참여를 고려한다. 시간대 가점 세부 값은 아직 미정이다.",
+      "sources": [{"path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/배차-사례-문답검토절차.md", "anchors": ["실제 기사 수와 주문량의 관계가 시간대보다 우선", "현재 contract 기본값 `3.5건/h`"]}]
+    },
+    {
+      "id": "USER_LONG_WAIT", "status": "user_preference",
+      "summary": "사용자는 적격·수신·거리·픽업/수행 조건이 비슷하면 오래 기다린 기사에게 다음 건을 우선 제안하는 방향에 동의했다. 비슷함의 거리/시간 범위는 미정이고 30분을 새 고정 임계값으로 승인한 것은 아니다.",
+      "sources": [{"path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/배차-사례-문답검토절차.md", "anchors": ["확인한 방향:", "가정의 30분을 고정 정책 값으로 확정하지 않는다."]}]
+    },
+    {
+      "id": "FUTURE_ANCHOR", "status": "proposed",
+      "summary": "수행 중 기사의 마지막 전달지·잔여시간을 다음 픽업 출발점으로 사용하는 것은 후속 제안이다. 현재 후보 접근 거리는 현재 GPS 기준이고 마지막 전달지는 별도 복귀 평가에 쓰인다.",
+      "sources": [{"path": "Ssalddel/Services/Dispatch/Queue/음식배달배차업무정책.cs", "anchors": ["new 배차경로좌표(candidate.Latitude!.Value, candidate.Longitude!.Value)", "plan.기존마지막좌표, plan.후보마지막좌표"]}]
+    },
+    {
+      "id": "SYNTHETIC_LIMITS", "status": "simulation_assumption",
+      "summary": "이번 좌표·기사·수요는 합성 입력이다. 실제 서버 후보 정책을 호출하되 거리 서비스는 합성 직선 근사이고 실제 도로 경로·수입·현장 운영 안정성·최적성은 검증하지 않는다.",
+      "sources": [{"path": "eng/local-dispatch-ai/CandidateScenarioRunner/fixture.json", "anchors": ["SYN-CANDIDATE-"]}]
+    }
+  ]
+}

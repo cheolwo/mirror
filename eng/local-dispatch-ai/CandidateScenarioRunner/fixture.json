@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "cases": [
+    {
+      "caseId": "SYN-CANDIDATE-SAME-SUFFICIENT", "title": "동일 배달권 후보가 충분해 인접권을 조회하지 않는 상황",
+      "drivers": [
+        {"driverId":"SYN-D001","latitude":37.5005,"longitude":127.0001,"spaceRole":"same"},
+        {"driverId":"SYN-D002","latitude":37.4995,"longitude":127.0001,"spaceRole":"adjacent","agingScore":100}
+      ]
+    },
+    {
+      "caseId": "SYN-CANDIDATE-ADJACENT", "title": "동일 배달권 후보가 없어 인접권을 조회하는 상황",
+      "drivers": [{"driverId":"SYN-D001","latitude":37.4995,"longitude":127.0001,"spaceRole":"adjacent"}]
+    },
+    {
+      "caseId": "SYN-CANDIDATE-EXPANDED", "title": "동일권과 인접권에 후보가 없어 제한 거리로 확장하는 상황",
+      "drivers": [{"driverId":"SYN-D001","latitude":37.5,"longitude":127.0501,"spaceRole":"expanded"}]
+    },
+    {
+      "caseId": "SYN-CANDIDATE-TIMELINESS", "title": "장기 대기 기사보다 제시간에 픽업 가능한 후보를 우선하는 상황",
+      "cookingReadyOffsetMinutes": -4, "demandStatus": "current", "pendingOrders": 1,
+      "drivers": [
+        {"driverId":"SYN-D001","latitude":37.5001,"longitude":127,"spaceRole":"same","waitMinutes":5},
+        {"driverId":"SYN-D002","latitude":37.51,"longitude":127,"spaceRole":"same","waitMinutes":40,"agingScore":100}
+      ]
+    },
+    {
+      "caseId": "SYN-CANDIDATE-LONG-WAIT", "title": "수행 조건이 비슷하면 장기 대기자에게 다음 건을 우선하는 상황",
+      "demandStatus": "current", "pendingOrders": 1,
+      "drivers": [
+        {"driverId":"SYN-D001","latitude":37.5005,"longitude":127,"spaceRole":"same","waitMinutes":40},
+        {"driverId":"SYN-D002","latitude":37.5005,"longitude":127,"spaceRole":"same","waitMinutes":5,"existingActivity":true,"remainingMinutes":10,"recentAssignments":4}
+      ]
+    },
+    {
+      "caseId": "SYN-CANDIDATE-GATES", "title": "수신 거부와 만료 위치와 주문 거절과 접근 반경을 제외하는 상황",
+      "drivers": [
+        {"driverId":"SYN-D001","latitude":37.5001,"longitude":127,"spaceRole":"same","receivingOn":false},
+        {"driverId":"SYN-D002","latitude":37.5001,"longitude":127,"spaceRole":"same","gpsAgeMinutes":20},
+        {"driverId":"SYN-D003","latitude":37.5001,"longitude":127,"spaceRole":"same","rejected":true},
+        {"driverId":"SYN-D004","latitude":37.512,"longitude":127,"spaceRole":"same","approachRadiusKm":1},
+        {"driverId":"SYN-D005","latitude":37.5005,"longitude":127,"spaceRole":"same"}
+      ]
+    },
+    {
+      "caseId": "SYN-CANDIDATE-NONE", "title": "후보가 없어 임의 기사를 만들지 않는 상황", "drivers": []
+    },
+    {
+      "caseId": "SYN-CANDIDATE-DEMAND-STALE", "title": "수요가 만료되면 기존 물리 관문으로 다시 평가하는 상황",
+      "demandStatus": "stale", "pendingOrders": 1, "recentOrders": 2,
+      "drivers": [
+        {"driverId":"SYN-D001","latitude":37.5001,"longitude":127,"spaceRole":"same","agingScore":100},
+        {"driverId":"SYN-D002","latitude":37.502,"longitude":127,"spaceRole":"same","existingActivity":true,"remainingMinutes":10,"recentAssignments":4}
+      ]
+    },
+    {
+      "caseId": "SYN-CANDIDATE-CAPACITY-SHORTAGE", "title": "대기 주문이 기존 처리 여력을 초과해 신규 참여가 필요한 상황",
+      "demandStatus": "current", "pendingOrders": 50, "recentOrders": 2,
+      "drivers": [
+        {"driverId":"SYN-D001","latitude":37.5005,"longitude":127,"spaceRole":"same","existingActivity":true,"remainingMinutes":30,"recentAssignments":3},
+        {"driverId":"SYN-D002","latitude":37.5005,"longitude":127,"spaceRole":"same","waitMinutes":10},
+        {"driverId":"SYN-D003","latitude":37.5005,"longitude":127,"spaceRole":"same","waitMinutes":5},
+        {"driverId":"SYN-D004","latitude":37.5001,"longitude":127,"spaceRole":"same","capacityEligible":false,"waitMinutes":40,"agingScore":100}
+      ]
+    },
+    {
+      "caseId": "SYN-CANDIDATE-REMAINING-UNKNOWN", "title": "기존 기사 잔여 수행시간 미확인을 영으로 바꾸지 않는 상황",
+      "demandStatus": "current", "pendingOrders": 1,
+      "drivers": [
+        {"driverId":"SYN-D001","latitude":37.5001,"longitude":127,"spaceRole":"same","existingActivity":true,"remainingMinutes":null},
+        {"driverId":"SYN-D002","latitude":37.502,"longitude":127,"spaceRole":"same"}
+      ]
+    }
+  ]
+}
