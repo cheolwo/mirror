@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "id": "food-demand-participation.r44",
+  "status": "LocalValidatedOperationalDisabled",
+  "acceptedInCurrentThread": true,
+  "authorization": "현재 사용자가 수요에 따른 참여 조절의 코드 반영과 로컬 AI 설치·시험을 요청함",
+  "baselineCommit": "86f3eae59328cfe5ef7ec9e3aef48ae351cf54d9",
+  "designRevision": "dispatch-core.r44",
+  "designDocumentRef": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/demand-participation.implementation.r44.md",
+  "designSha256": "ab0798494c933453687979a2bdecc05217d4f4d7185cdee219d17602411ca6ca",
+  "writePaths": [
+    "docs/AI/CURRENT_WORK.md",
+    "docs/AI/PLANNING.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/demand-participation.implementation.r44.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/demand-participation.r44.work-order.json",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/README.md",
+    "docs/Changes/2026-10-11-food-demand-participation-r44.md",
+    "docs/Changes/README.md",
+    "eng/local-dispatch-ai/dispatch_advisor.py",
+    "eng/local-dispatch-ai/README.md",
+    "eng/local-dispatch-ai/run-local.ps1",
+    "eng/local-dispatch-ai/test_dispatch_advisor.py",
+    "Ssalddel.Contracts/Common/Dispatch/음식배달수요참여Contracts.cs",
+    "Ssalddel.Domain/배차/음식배달수요참여Policy.cs",
+    "Ssalddel.Tests/Domain/Dispatch/운영배차공통계약Tests.cs",
+    "Ssalddel.Tests/Domain/Dispatch/음식배달수요참여PolicyTests.cs",
+    "Ssalddel.Tests/Services/Dispatch/Queue/음식배달배차업무정책Tests.cs",
+    "Ssalddel.Tests/Services/Dispatch/Queue/음식배달배차업무정책Tests.DemandParticipation.cs",
+    "Ssalddel.Tests/Services/Dispatch/Queue/음식배달수요참여ServiceTests.cs",
+    "Ssalddel.Tests/Services/Dispatch/Queue/FoodDemandParticipationDirectRecommendationTests.cs",
+    "Ssalddel/Extensions/ServiceCollectionExtensions.DomainServices.Operations.cs",
+    "Ssalddel/Services/Dispatch/Queue/배차대기원장전환Service.cs",
+    "Ssalddel/Services/Dispatch/Queue/배차대기원장전환Service.Recommendation.cs",
+    "Ssalddel/Services/Dispatch/Queue/음식배달배차업무정책.cs",
+    "Ssalddel/Services/Dispatch/Queue/음식배달수요참여Service.cs"
+  ],
+  "localInstallRoot": "%LOCALAPPDATA%/Ssalddel/LocalDispatchAI",
+  "operationalActivation": false,
+  "finalStateAuthority": "server-use-cases",
+  "localAiInput": "built-in-synthetic-aggregates-only",
+  "localModelInference": "BlockedByAutomaticApprovalReview",
+  "excluded": [
+    "new-ui",
+    "cargo-participation-policy",
+    "durable-regional-quota",
+    "accepted-work-revocation",
+    "payout",
+    "unity",
+    "deploy",
+    "commit",
+    "push"
+  ],
+  "validation": {
+    "Fast": {
+      "passed": 89,
+      "failed": 0,
+      "skipped": 0,
+      "evidence": "artifacts/local/validation/20261011-103949"
+    },
+    "Task": {
+      "passed": 10386,
+      "failed": 0,
+      "skipped": 15,
+      "skipReason": "EnvironmentDependentMongoIntegration",
+      "evidence": "artifacts/local/validation/20261011-104935"
+    },
+    "LocalAiDefense": {
+      "passed": 14,
+      "failed": 0,
+      "evidence": "artifacts/local/local-dispatch-ai/unit-tests.log"
+    },
+    "SourceHashVerifiedCount": 16,
+    "SourceChangedDuringFinalTask": 0,
+    "LocalDocumentLinksChecked": 13
+  }
+}
