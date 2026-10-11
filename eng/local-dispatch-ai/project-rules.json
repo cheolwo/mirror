@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": "food-demand-participation/v1",
+  "rules": [
+    {
+      "id": "AUTHORITY", "status": "implemented",
+      "summary": "참여 정책은 소프트 권고다. 최종 권한·수락·동시성은 서버 UseCase가 검사한다. 운행 의사·기존 업무·운임·지급을 변경하지 않는다.",
+      "sources": [{"path": "Ssalddel.Domain/배차/음식배달수요참여Policy.cs", "anchors": ["소프트 목표와 결정적 순서만 계산한다."]}]
+    },
+    {
+      "id": "INCUMBENT_PROTECTION", "status": "implemented",
+      "summary": "적격 기존 활동 기사는 목표 인원 초과만으로 제외하지 않는다. 부적격 기사를 이 보호로 다시 허용하지 않는다.",
+      "sources": [{"path": "Ssalddel.Domain/배차/음식배달수요참여Policy.cs", "anchors": ["ExistingActivityProtected", "ExistingEligibilityNotMet"]}]
+    },
+    {
+      "id": "WAITING_ORDER", "status": "implemented",
+      "summary": "신규 참여 대상은 안정된 대기기준·운행시작·기사ID 순서다. 최종 추천 순서는 허용 여부·장기대기/기존활동·최근 배차수·대기기준을 별도로 비교한다. GPS나 토글은 대기 시작을 초기화하지 않는다.",
+      "sources": [
+        {"path": "Ssalddel.Domain/배차/음식배달수요참여Policy.cs", "anchors": ["=> 기사.OrderBy(대기기준)", ".ThenBy(x => 원천[x.기사Id].최근시간창배차수)"]},
+        {"path": "Ssalddel.Contracts/Common/Dispatch/음식배달수요참여Contracts.cs", "anchors": ["새로고침·재연결·수신 토글로 갱신하지 않습니다."]}
+      ]
+    },
+    {
+      "id": "DATA_FALLBACK", "status": "implemented",
+      "summary": "Unknown·Stale 또는 잔여시간 미확인은 주문이나 잔여시간 영으로 바꾸지 않는다. 참여 제한을 보류하고 기존 적격 관문을 재검사한다.",
+      "sources": [
+        {"path": "Ssalddel.Domain/배차/음식배달수요참여Policy.cs", "anchors": ["미확인 수요를 주문 0건으로 치환해 신규 참여를 막지 않는다."]},
+        {"path": "Ssalddel.Contracts/Common/Dispatch/음식배달수요참여Contracts.cs", "anchors": ["미확인은 null이며 0으로 치환하지 않습니다."]}
+      ]
+    },
+    {
+      "id": "OBSERVED_FORECAST_MAX", "status": "implemented",
+      "summary": "예상 업무량은 대기 주문에 관측 기반 환산량과 선택적 예측 중 큰 값을 더한다. 관측과 예측을 중복 합산하지 않는다. 처리량은 계획 가정이며 보장 생산성이 아니다.",
+      "sources": [{"path": "Ssalddel.Domain/배차/음식배달수요참여Policy.cs", "anchors": ["var 업무량 = 입력.대기주문수!.Value + Math.Max(관측기반예상, 입력.향후수요예측건수 ?? 0m);"]}]
+    },
+    {
+      "id": "EXCEPTION_OPPORTUNITIES", "status": "implemented",
+      "summary": "장기 대기와 주문 지연에는 추가 참여 기회를 권고한다. 적격·픽업 관문을 유지하며 실제 배차·영속 승격·수입 보장은 아니다.",
+      "sources": [{"path": "Ssalddel.Domain/배차/음식배달수요참여Policy.cs", "anchors": ["LongWaitOpportunity", "OrderDelayCapacityException"]}]
+    },
+    {
+      "id": "SYNTHETIC_LIMITS", "status": "simulation_assumption",
+      "summary": "비교 지표는 가상 주문의 FIFO·기사별 순차 수행 결과다. oracle은 알려진 미래량의 상한 비교이며 AI 예측이 아니다. 실제 경로·조리·수입·운영 안정성을 입증하지 않는다.",
+      "sources": [{"path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/offline-scenarios.implementation.r45.md", "anchors": ["수행 시간은 기사별 순차 누적", "시험 시간표의 미래를 읽는 상한 비교값이며 실제 예측 성능이 아니다."]}]
+    },
+    {
+      "id": "FUTURE_PICKUP_ANCHOR", "status": "proposed",
+      "summary": "음식점 주변 범위의 대기 우선과 수행 중 기사의 확정 마지막 전달지·잔여시간을 다음 픽업에 반영하는 것은 후속 제안이다. 현재 접근거리는 기사 GPS 기준이며 마지막 전달지는 복귀 평가에 사용된다. 아래 소스는 현재 차이의 근거이고 제안 구현 근거가 아니다.",
+      "sources": [{"path": "Ssalddel/Services/Dispatch/Queue/음식배달배차업무정책.cs", "anchors": ["new 배차경로좌표(candidate.Latitude.Value, candidate.Longitude.Value)", "plan.기존마지막좌표, plan.후보마지막좌표"]}]
+    }
+  ]
+}

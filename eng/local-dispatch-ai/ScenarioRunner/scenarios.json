@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 1,
+  "syntheticOnly": true,
+  "horizonMinutes": 120,
+  "drainMinutes": 120,
+  "seed": 17,
+  "scenarios": [
+    {
+      "id": "SYN-BALANCED-35-PER-HOUR",
+      "title": "시간당 35건의 균형 수요",
+      "initialDrivers": 10,
+      "initialActiveDrivers": 8,
+      "initialTasksPerActiveDriver": 1,
+      "serviceMinutes": 17.143,
+      "arrivalWaves": [
+        { "startMinute": 0, "endMinute": 120, "intervalMinutes": 12, "count": 7 }
+      ],
+      "driverWaves": [],
+      "faults": []
+    },
+    {
+      "id": "SYN-LOW-DEMAND-EXCESS-ENTRY",
+      "title": "저수요에서 신규 기사 대량 유입",
+      "initialDrivers": 8,
+      "initialActiveDrivers": 2,
+      "initialTasksPerActiveDriver": 1,
+      "serviceMinutes": 17.143,
+      "arrivalWaves": [
+        { "startMinute": 0, "endMinute": 120, "intervalMinutes": 15, "count": 1 }
+      ],
+      "driverWaves": [
+        { "minute": 10, "count": 20 },
+        { "minute": 60, "count": 10 }
+      ],
+      "faults": []
+    },
+    {
+      "id": "SYN-SUDDEN-DEMAND-SURGE",
+      "title": "주문 급증과 단계적인 기사 유입",
+      "initialDrivers": 10,
+      "initialActiveDrivers": 8,
+      "initialTasksPerActiveDriver": 1,
+      "serviceMinutes": 17.143,
+      "arrivalWaves": [
+        { "startMinute": 0, "endMinute": 30, "intervalMinutes": 10, "count": 2 },
+        { "startMinute": 30, "endMinute": 90, "intervalMinutes": 5, "count": 5 },
+        { "startMinute": 90, "endMinute": 120, "intervalMinutes": 10, "count": 3 }
+      ],
+      "driverWaves": [
+        { "minute": 20, "count": 8 },
+        { "minute": 50, "count": 8 }
+      ],
+      "faults": []
+    },
+    {
+      "id": "SYN-SURGE-THEN-DEMAND-DROP",
+      "title": "주문 급증 뒤 급감과 늦은 기사 유입",
+      "initialDrivers": 10,
+      "initialActiveDrivers": 6,
+      "initialTasksPerActiveDriver": 1,
+      "serviceMinutes": 17.143,
+      "arrivalWaves": [
+        { "startMinute": 0, "endMinute": 40, "intervalMinutes": 5, "count": 7 },
+        { "startMinute": 40, "endMinute": 120, "intervalMinutes": 20, "count": 1 }
+      ],
+      "driverWaves": [
+        { "minute": 15, "count": 15 },
+        { "minute": 60, "count": 10 }
+      ],
+      "faults": []
+    },
+    {
+      "id": "SYN-INITIAL-ACTIVE-CAP-THREE",
+      "title": "기존 기사 모두 동시 수행 3건에서 시작",
+      "initialDrivers": 6,
+      "initialActiveDrivers": 6,
+      "initialTasksPerActiveDriver": 3,
+      "serviceMinutes": 17.143,
+      "arrivalWaves": [
+        { "startMinute": 0, "endMinute": 30, "intervalMinutes": 5, "count": 4 },
+        { "startMinute": 30, "endMinute": 120, "intervalMinutes": 15, "count": 2 }
+      ],
+      "driverWaves": [
+        { "minute": 10, "count": 3 }
+      ],
+      "faults": []
+    },
+    {
+      "id": "SYN-ZERO-DEMAND-LONG-WAIT",
+      "title": "주문 없이 장기 대기 기회만 도래",
+      "initialDrivers": 12,
+      "initialActiveDrivers": 0,
+      "initialTasksPerActiveDriver": 0,
+      "serviceMinutes": 17.143,
+      "arrivalWaves": [],
+      "driverWaves": [
+        { "minute": 10, "count": 8 }
+      ],
+      "faults": []
+    },
+    {
+      "id": "SYN-DRIVER-SHORTAGE",
+      "title": "지속적인 기사 부족과 늦은 보충",
+      "initialDrivers": 2,
+      "initialActiveDrivers": 2,
+      "initialTasksPerActiveDriver": 1,
+      "serviceMinutes": 20,
+      "arrivalWaves": [
+        { "startMinute": 0, "endMinute": 120, "intervalMinutes": 10, "count": 5 }
+      ],
+      "driverWaves": [
+        { "minute": 90, "count": 2 }
+      ],
+      "faults": []
+    },
+    {
+      "id": "SYN-GPS-TEMPORARILY-UNAVAILABLE",
+      "title": "수행 중 기사 위치 관측 중단 후 복구",
+      "initialDrivers": 10,
+      "initialActiveDrivers": 6,
+      "initialTasksPerActiveDriver": 1,
+      "serviceMinutes": 17.143,
+      "arrivalWaves": [
+        { "startMinute": 0, "endMinute": 120, "intervalMinutes": 12, "count": 7 }
+      ],
+      "driverWaves": [
+        { "minute": 30, "count": 4 }
+      ],
+      "faults": [
+        { "kind": "gps_unavailable", "startMinute": 15, "endMinute": 45, "driverCount": 6 }
+      ]
+    },
+    {
+      "id": "SYN-NEW-OFFERS-OFF",
+      "title": "신규 제안 수신 중단과 기존 업무 지속",
+      "initialDrivers": 10,
+      "initialActiveDrivers": 6,
+      "initialTasksPerActiveDriver": 1,
+      "serviceMinutes": 17.143,
+      "arrivalWaves": [
+        { "startMinute": 0, "endMinute": 120, "intervalMinutes": 12, "count": 7 }
+      ],
+      "driverWaves": [
+        { "minute": 40, "count": 5 }
+      ],
+      "faults": [
+        { "kind": "new_offers_off", "startMinute": 20, "endMinute": 80, "driverCount": 8 }
+      ]
+    },
+    {
+      "id": "SYN-DEMAND-SNAPSHOT-UNKNOWN",
+      "title": "수요 관측 누락 후 복구",
+      "initialDrivers": 10,
+      "initialActiveDrivers": 6,
+      "initialTasksPerActiveDriver": 1,
+      "serviceMinutes": 17.143,
+      "arrivalWaves": [
+        { "startMinute": 0, "endMinute": 120, "intervalMinutes": 12, "count": 7 }
+      ],
+      "driverWaves": [],
+      "faults": [
+        { "kind": "demand_unknown", "startMinute": 15, "endMinute": 55, "driverCount": 0 }
+      ]
+    },
+    {
+      "id": "SYN-DEMAND-SNAPSHOT-STALE",
+      "title": "수요 관측 만료 후 복구",
+      "initialDrivers": 10,
+      "initialActiveDrivers": 6,
+      "initialTasksPerActiveDriver": 1,
+      "serviceMinutes": 17.143,
+      "arrivalWaves": [
+        { "startMinute": 0, "endMinute": 120, "intervalMinutes": 12, "count": 7 }
+      ],
+      "driverWaves": [],
+      "faults": [
+        { "kind": "demand_stale", "startMinute": 10, "endMinute": 50, "driverCount": 0 }
+      ]
+    },
+    {
+      "id": "SYN-LONG-SEQUENTIAL-SERVICE",
+      "title": "긴 순차 수행시간과 잔여 업무 과다",
+      "initialDrivers": 8,
+      "initialActiveDrivers": 6,
+      "initialTasksPerActiveDriver": 2,
+      "serviceMinutes": 45,
+      "arrivalWaves": [
+        { "startMinute": 0, "endMinute": 120, "intervalMinutes": 10, "count": 3 }
+      ],
+      "driverWaves": [
+        { "minute": 20, "count": 6 },
+        { "minute": 80, "count": 4 }
+      ],
+      "faults": []
+    }
+  ]
+}

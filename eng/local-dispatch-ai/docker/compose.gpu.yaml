@@ -1,0 +1,10 @@
+# 선택적 NVIDIA GPU 설정. 실제 장치 접근은 아직 검증하지 않았다.
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
