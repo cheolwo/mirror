@@ -60,8 +60,8 @@
 
             <Border x:Name="RecommendationBanner"
                     Padding="12,9"
-                    BackgroundColor="#111827"
-                    Stroke="#60a5fa"
+                    BackgroundColor="#FFFFFF"
+                    Stroke="#DCE5E9"
                     StrokeThickness="1"
                     IsVisible="False">
                 <Border.GestureRecognizers>
@@ -78,35 +78,21 @@
                 </Border.Shadow>
 
                 <Grid RowDefinitions="Auto,Auto" RowSpacing="7">
-                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
-                        <Border WidthRequest="34"
-                                HeightRequest="34"
-                                BackgroundColor="#2563eb"
-                                StrokeThickness="0">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="17" />
-                            </Border.StrokeShape>
-                            <Label Text="!"
-                                   FontAttributes="Bold"
-                                   FontSize="16"
-                                   TextColor="#ffffff"
-                                   HorizontalTextAlignment="Center"
-                                   VerticalTextAlignment="Center" />
-                        </Border>
-
-                        <Label Grid.Column="1"
-                               Text="신규 배차 추천"
-                               FontAttributes="Bold"
-                               FontSize="15"
-                               TextColor="#ffffff"
-                               VerticalTextAlignment="Center"
-                               LineBreakMode="TailTruncation" />
+                    <Grid ColumnDefinitions="4,4,24,*,Auto" ColumnSpacing="6">
+                        <BoxView x:Name="RecommendationPrimaryBar" Color="#64748B" />
+                        <BoxView x:Name="RecommendationSecondaryBar" Grid.Column="1" Color="#DC2626" IsVisible="False" />
+                        <Path Grid.Column="2" Data="M3 7 L12 2 L21 7 L21 17 L12 22 L3 17 Z M3 7 L12 12 L21 7 M12 12 L12 22"
+                              Stroke="#172B36" StrokeThickness="1.6" Aspect="Uniform" HeightRequest="24" WidthRequest="24" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="3" Spacing="2">
+                            <Label x:Name="RecommendationWorkLabel" Text="신규 배차 추천" FontAttributes="Bold" FontSize="15" TextColor="#172B36" LineBreakMode="WordWrap" />
+                            <Label x:Name="RecommendationActivityLabel" FontSize="13" TextColor="#586B78" LineBreakMode="WordWrap" />
+                        </VerticalStackLayout>
 
                         <Label x:Name="RecommendationCountdownLabel"
-                               Grid.Column="2"
+                               Grid.Column="4"
                                FontAttributes="Bold"
                                FontSize="13"
-                               TextColor="#ffffff"
+                               TextColor="#172B36"
                                VerticalTextAlignment="Center" />
                     </Grid>
 
@@ -125,8 +111,8 @@
                              VerticalOptions="End">
             <Border x:Name="RecommendationDetailBanner"
                     Padding="12"
-                    BackgroundColor="#0f172a"
-                    Stroke="#38bdf8"
+                    BackgroundColor="#FFFFFF"
+                    Stroke="#DCE5E9"
                     StrokeThickness="1"
                     IsVisible="False">
                 <Border.StrokeShape>
@@ -140,23 +126,27 @@
                 </Border.Shadow>
 
                 <Grid RowDefinitions="Auto,Auto" RowSpacing="7">
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                        <VerticalStackLayout Spacing="2">
-                            <Label Text="신규 배차 추천 확인"
+                    <Grid ColumnDefinitions="4,4,24,*,Auto" ColumnSpacing="6">
+                        <BoxView x:Name="RecommendationDetailPrimaryBar" Color="#64748B" />
+                        <BoxView x:Name="RecommendationDetailSecondaryBar" Grid.Column="1" Color="#DC2626" IsVisible="False" />
+                        <Path Grid.Column="2" Data="M3 7 L12 2 L21 7 L21 17 L12 22 L3 17 Z M3 7 L12 12 L21 7 M12 12 L12 22"
+                              Stroke="#172B36" StrokeThickness="1.6" Aspect="Uniform" HeightRequest="24" WidthRequest="24" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="3" Spacing="2">
+                            <Label x:Name="RecommendationDetailWorkLabel" Text="신규 배차 추천 확인"
                                 FontAttributes="Bold"
                                 FontSize="15"
-                                TextColor="#ffffff" />
+                                TextColor="#172B36" />
                             <Label x:Name="RecommendationSummaryLabel"
                                    FontSize="13"
-                                   TextColor="#dbeafe"
+                                   TextColor="#586B78"
                                    LineBreakMode="WordWrap" />
                         </VerticalStackLayout>
 
                         <Label x:Name="RecommendationDetailCountdownLabel"
-                               Grid.Column="1"
+                               Grid.Column="4"
                                FontAttributes="Bold"
                                FontSize="13"
-                               TextColor="#ffffff"
+                               TextColor="#172B36"
                                VerticalTextAlignment="Center" />
                     </Grid>
 
@@ -170,8 +160,8 @@
 
             <Border x:Name="LinkedRouteCard"
                     Padding="14"
-                    BackgroundColor="#f8fafc"
-                    Stroke="#bfdbfe"
+                    BackgroundColor="#FFFFFF"
+                    Stroke="#DCE5E9"
                     StrokeThickness="1"
                     IsVisible="False">
                 <Border.StrokeShape>
@@ -179,6 +169,16 @@
                 </Border.StrokeShape>
 
                 <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="4,4,24,*" ColumnSpacing="6">
+                        <BoxView x:Name="LinkedOfferPrimaryBar" Color="#64748B" />
+                        <BoxView x:Name="LinkedOfferSecondaryBar" Grid.Column="1" Color="#DC2626" IsVisible="False" />
+                        <Path Grid.Column="2" Data="M3 7 L12 2 L21 7 L21 17 L12 22 L3 17 Z M3 7 L12 12 L21 7 M12 12 L12 22"
+                              Stroke="#172B36" StrokeThickness="1.6" Aspect="Uniform" HeightRequest="24" WidthRequest="24" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="3" Spacing="2">
+                            <Label x:Name="LinkedOfferWorkLabel" FontAttributes="Bold" FontSize="15" TextColor="#172B36" LineBreakMode="WordWrap" />
+                            <Label x:Name="LinkedOfferActivityLabel" FontSize="13" TextColor="#586B78" LineBreakMode="WordWrap" />
+                        </VerticalStackLayout>
+                    </Grid>
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                         <VerticalStackLayout Spacing="2">
                             <Label Text="운행 연계 경로"
@@ -218,6 +218,10 @@
                            FontSize="13"
                            TextColor="#334155"
                            LineBreakMode="WordWrap" />
+
+                    <Label x:Name="RecommendationPricingDistanceLabel" FontSize="13" TextColor="#586B78" LineBreakMode="WordWrap" />
+                    <Label x:Name="RecommendationPricingFeeLabel" FontSize="13" TextColor="#172B36" LineBreakMode="WordWrap" />
+                    <Label x:Name="RecommendationPricingRateLabel" FontSize="13" TextColor="#586B78" LineBreakMode="WordWrap" />
 
                     <Label x:Name="RecommendationDecisionStatusLabel"
                            FontSize="13"

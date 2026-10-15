@@ -17,11 +17,13 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
     private CancellationTokenSource? _arrivalCancellation;
     private CancellationTokenSource? _completionCancellation;
     private bool _completionOutcomePending;
+    private 기사운송샘플항목? _pendingConfirmationTransport;
 
     public 기사하차PageViewModel(
         기사운송상세조회Service detail,
         기사하차완료ViewModel 하차완료,
-        IDriverTransportExceptionService exceptionService)
+        IDriverTransportExceptionService exceptionService,
+        IDriverCargoPhotoRecoveryStore? recoveryStore = null)
     {
         _detail = detail;
         _sessionRevision = detail.SessionRevision;
@@ -29,7 +31,7 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
         작업상태 = 하위ViewModel등록(new 기사운송작업상태ViewModel());
         화물 = 하위ViewModel등록(new 기사하차화물ViewModel(작업상태));
         인계 = 하위ViewModel등록(new 기사하차인계확인ViewModel());
-        사진 = 하위ViewModel등록(new 기사운송사진ViewModel("하차", "하차 완료 사진", 작업상태));
+        사진 = 하위ViewModel등록(new 기사운송사진ViewModel("하차", "하차 완료 사진", 작업상태, recoveryStore));
         예외 = 하위ViewModel등록(new 기사운송예외신고ViewModel(
             exceptionService,
             작업상태,
@@ -118,6 +120,7 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
         도착작업취소();
         완료작업취소();
         _completionOutcomePending = false;
+        _pendingConfirmationTransport = null;
         취소();
         운송 = null;
         작업상태.초기화();
@@ -201,6 +204,8 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
         using var cancellation = new CancellationTokenSource();
         _completionCancellation = cancellation;
         _completionOutcomePending = true;
+        _pendingConfirmationTransport = 운송 is { } snapshot ? snapshot with
+        { 상차대상화물목록 = snapshot.상차대상화물목록.ToArray(), 상차체크목록 = snapshot.상차체크목록.ToArray() } : null;
         OnPropertyChanged(string.Empty);
         try
         {
@@ -281,17 +286,32 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
         {
             return;
         }
-        var preserveConfirmation = _completionOutcomePending && 운송?.현재단계 == "하차지도착"
+        var confirmation = _pendingConfirmationTransport ?? 운송;
+        var preserveConfirmation = _completionOutcomePending && confirmation?.현재단계 == "하차지도착"
             && detail?.현재단계 == "하차지도착"
-            && 운송.상차대상화물목록.SequenceEqual(detail.상차대상화물목록);
+            && confirmation.의뢰Id == detail.의뢰Id && confirmation.하차지 == detail.하차지
+            && confirmation.상차대상화물목록.SequenceEqual(detail.상차대상화물목록)
+            && confirmation.상차체크목록.SequenceEqual(detail.상차체크목록)
+            && confirmation.인수증필요 == detail.인수증필요 && confirmation.인수증서명필수 == detail.인수증서명필수
+            && confirmation.결제방식 == detail.결제방식 && confirmation.수령자명 == detail.수령자명
+            && confirmation.수령자연락처 == detail.수령자연락처 && confirmation.전달요청 == detail.전달요청;
         운송 = detail;
-        if (!preserveConfirmation)
+        if (!preserveConfirmation && !(_completionOutcomePending && detail is null))
         {
             화물.운송설정(detail);
             인계.초기화();
         }
-        if (detail is not null) _completionOutcomePending = false;
-        if (하차완료확인) 사진.초기화();
+        if (detail is not null)
+        {
+            _completionOutcomePending = false;
+            _pendingConfirmationTransport = null;
+        }
+        if (detail is not null && _detail.로그인됨)
+        {
+            사진.복구설정(_detail.OwnerId, DriverTransportCompletionPhotoKind.Dropoff, transportId, _detail.SessionRevision);
+            if (하차완료확인) await 사진.완료확인정리Async(cancellationToken);
+            else await 사진.복원Async(cancellationToken);
+        }
         OnPropertyChanged(string.Empty);
     }
 
@@ -307,6 +327,7 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
             }
             운송 = null;
             _completionOutcomePending = false;
+            _pendingConfirmationTransport = null;
             화물.운송설정(null);
             사진.초기화();
             인계.초기화();

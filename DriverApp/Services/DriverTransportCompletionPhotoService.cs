@@ -12,6 +12,11 @@ public enum DriverTransportCompletionPhotoKind
     Dropoff
 }
 
+public static class DriverTransportCompletionPhotoLimits
+{
+    public const int MaximumUploadBytes = 5 * 1024 * 1024;
+}
+
 public sealed record DriverTransportCompletionPhoto(
     DriverTransportCompletionPhotoKind Kind,
     long TransportId,
@@ -78,17 +83,20 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
     private readonly IAuthSession _authSession;
     private readonly AuthApiService _authApiService;
     private readonly IDriverTransportApiService _transportApi;
+    private readonly IDriverCargoPhotoRecoveryStore? _recoveryStore;
 
     public HttpDriverTransportCompletionPhotoService(
         HttpClient httpClient,
         IAuthSession authSession,
         AuthApiService authApiService,
-        IDriverTransportApiService transportApi)
+        IDriverTransportApiService transportApi,
+        IDriverCargoPhotoRecoveryStore? recoveryStore = null)
     {
         _httpClient = httpClient;
         _authSession = authSession;
         _authApiService = authApiService;
         _transportApi = transportApi;
+        _recoveryStore = recoveryStore;
     }
 
     public async Task<DriverTransportCompletionPhotoResult> CompleteWithPhotoAsync(
@@ -96,29 +104,85 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
         CancellationToken cancellationToken = default)
     {
         await _authSession.RestoreAsync(cancellationToken);
-
-        var upload = await ResolveUploadAsync(photo, cancellationToken);
+        var owner = _authSession.UserId;
+        var revision = _authSession.SessionRevision;
+        if (!_authSession.IsAuthenticated || string.IsNullOrWhiteSpace(owner))
+            throw new UnauthorizedAccessException("로그인한 뒤 현재 운송을 다시 확인해 주세요.");
+        if (photo.TransportId <= 0 || !Enum.IsDefined(photo.Kind))
+            throw new ArgumentException("완료할 운송과 단계를 확인해 주세요.");
+        if (photo.Bytes is not { Length: > 0 and <= DriverTransportCompletionPhotoLimits.MaximumUploadBytes })
+            throw new ArgumentException("사진은 5MB 이하로 다시 촬영해 주세요.");
+        using var operation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        void AuthenticationChanged()
+        {
+            if (!_authSession.IsAuthenticated || _authSession.SessionRevision != revision || _authSession.UserId != owner)
+            {
+                try { operation.Cancel(); }
+                catch (ObjectDisposedException) { }
+            }
+        }
+        _authSession.Changed += AuthenticationChanged;
         try
         {
-            await CompleteTransportAsync(photo, upload, cancellationToken);
-        }
-        catch (Exception ex) when (IsCompletionRetryableFailure(ex))
-        {
+            EnsureCurrentSession(owner, revision, operation.Token);
+            if (_recoveryStore is not null || !string.IsNullOrWhiteSpace(photo.ExistingObjectName))
+            {
+                var current = await _transportApi.상세조회Async(photo.TransportId, operation.Token);
+                EnsureCurrentSession(owner, revision, operation.Token);
+                if (current is null || current.Id != photo.TransportId)
+                    throw new InvalidOperationException("현재 계정의 운송을 확인하지 못했습니다.");
+                var alreadyComplete = photo.Kind == DriverTransportCompletionPhotoKind.Pickup
+                    ? current.상태 is "상차완료" or "운송중" or "하차지도착" or "인수완료"
+                    : current.상태 == "인수완료";
+                if (alreadyComplete)
+                    return new(false, true, "같은 운송에서 해당 단계 완료를 확인했습니다. 현재 운송을 다시 조회해 주세요.");
+                if (current.상태 != (photo.Kind == DriverTransportCompletionPhotoKind.Pickup ? "상차지도착" : "하차지도착"))
+                    throw new InvalidOperationException("현재 운송 단계에서는 이 완료 요청을 보낼 수 없습니다.");
+            }
+            if (_recoveryStore is not null)
+                await _recoveryStore.SaveAsync(owner, photo, operation.Token);
+            EnsureCurrentSession(owner, revision, operation.Token);
+            var upload = await ResolveUploadAsync(photo, operation.Token);
+            EnsureCurrentSession(owner, revision, operation.Token);
+            if (string.IsNullOrWhiteSpace(upload.ObjectName))
+                throw new InvalidOperationException("사진 업로드 결과를 확인하지 못했습니다.");
+            if (_recoveryStore is not null)
+                await _recoveryStore.SaveAsync(owner, photo with { ExistingObjectName = upload.ObjectName, ExistingUrl = upload.Url }, operation.Token);
+            EnsureCurrentSession(owner, revision, operation.Token);
+            try
+            {
+                await CompleteTransportAsync(photo, upload, operation.Token);
+                EnsureCurrentSession(owner, revision, operation.Token);
+            }
+            catch (Exception ex) when (IsCompletionRetryableFailure(ex) && !operation.IsCancellationRequested)
+            {
+                return new DriverTransportCompletionPhotoResult(
+                    Uploaded: true,
+                    CompletionRecorded: false,
+                    Message: "사진 업로드는 확인했지만 완료 결과를 확인하지 못했습니다. 같은 운송의 현재 상태를 먼저 확인해 주세요.",
+                    Url: upload.Url,
+                    ObjectName: upload.ObjectName);
+            }
+
+            var stepName = photo.Kind == DriverTransportCompletionPhotoKind.Pickup ? "상차 완료" : "하차 완료";
             return new DriverTransportCompletionPhotoResult(
                 Uploaded: true,
-                CompletionRecorded: false,
-                Message: $"사진 업로드는 확인했지만 완료 결과를 확인하지 못했습니다. 같은 운송의 현재 상태를 먼저 확인해 주세요. {ex.Message}",
+                CompletionRecorded: true,
+                Message: $"{stepName} 사진 업로드와 완료 처리가 끝났습니다.",
                 Url: upload.Url,
                 ObjectName: upload.ObjectName);
         }
+        finally
+        {
+            _authSession.Changed -= AuthenticationChanged;
+        }
+    }
 
-        var stepName = photo.Kind == DriverTransportCompletionPhotoKind.Pickup ? "상차 완료" : "하차 완료";
-        return new DriverTransportCompletionPhotoResult(
-            Uploaded: true,
-            CompletionRecorded: true,
-            Message: $"{stepName} 사진 업로드와 완료 처리가 끝났습니다.",
-            Url: upload.Url,
-            ObjectName: upload.ObjectName);
+    private void EnsureCurrentSession(string owner, long revision, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!_authSession.IsAuthenticated || _authSession.UserId != owner || _authSession.SessionRevision != revision)
+            throw new OperationCanceledException("로그인 정보가 변경되었습니다.", cancellationToken);
     }
 
     private async Task<FileUploadResponse> ResolveUploadAsync(

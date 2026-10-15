@@ -69,7 +69,9 @@ public static class DriverServiceCollectionExtensions
         services.AddSingleton<IDriverFoodDeliveryApiService, DriverFoodDeliveryApiService>();
         services.AddSingleton<IDriverReservationApiService, DriverReservationApiService>();
         services.AddSingleton<IDriverSettingsApiService, DriverSettingsApiService>();
+        services.AddSingleton<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverPreferences.IDriverWorkParticipationClient, DriverWorkParticipationClient>();
         services.AddSingleton<IDriverSettlementApiService, DriverSettlementApiService>();
+        services.AddSingleton<IDriverPayoutPreparationApiService, DriverPayoutPreparationApiService>();
         services.AddSingleton<IDriverNotificationApiService, DriverNotificationApiService>();
         services.AddSingleton<IDriverCommandFeatureSettingsApiService, DriverCommandFeatureSettingsApiService>();
         services.AddSingleton<IDriverDevelopmentApiService, DriverDevelopmentApiService>();
@@ -83,6 +85,8 @@ public static class DriverServiceCollectionExtensions
         services.AddSingleton<DriverRecommendationDecisionService>();
         services.AddSingleton<IDriverRecommendationDecisionService>(sp => sp.GetRequiredService<DriverRecommendationDecisionService>());
         services.AddSingleton<IDriverRecommendationNotificationService, SampleDriverRecommendationNotificationService>();
+        services.AddSingleton<IDriverRecommendationPushTargetStore, DriverRecommendationPushTargetStore>();
+        services.AddSingleton<DriverRecommendationPushRecovery>();
         services.AddSingleton<기사샘플데이터Service>();
         services.AddSingleton<ServerBackedDriverSampleDataService>();
         services.AddSingleton<IDriverSampleDataService>(sp => sp.GetRequiredService<ServerBackedDriverSampleDataService>());
@@ -129,6 +133,7 @@ public static class DriverServiceCollectionExtensions
         services.AddTransient<기사상차PageViewModel>();
         services.AddTransient<기사하차PageViewModel>();
         services.AddTransient<기사운송내역PageViewModel>();
+        services.AddTransient<기사운송대금PageViewModel>();
 
         return services;
     }

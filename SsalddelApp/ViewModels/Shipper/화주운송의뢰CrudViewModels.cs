@@ -83,6 +83,8 @@ public abstract class 화주운송의뢰Crud업무ViewModelBase(
         => new()
         {
             의뢰Id = source.의뢰Id,
+            신청개인정보동의증적Id = source.신청개인정보동의증적Id,
+            신청출처Code = source.신청출처Code,
             화물종류 = source.화물종류,
             화물원본 = ShipperRequestItem.화물복사(source.화물원본),
             원본화물종류 = source.원본화물종류,
@@ -98,6 +100,13 @@ public abstract class 화주운송의뢰Crud업무ViewModelBase(
             예상거리Km = source.예상거리Km,
             기준운임 = source.기준운임,
             기사지급예정운임 = source.기사지급예정운임,
+            서비스레벨 = source.서비스레벨,
+            요청사항 = source.요청사항,
+            대기료 = source.대기료,
+            수작업비 = source.수작업비,
+            할증 = source.할증,
+            알선소Id = source.알선소Id,
+            절차메모 = source.절차메모,
             정산시점 = source.정산시점,
             증빙방식 = source.증빙방식,
             수납주체 = source.수납주체,

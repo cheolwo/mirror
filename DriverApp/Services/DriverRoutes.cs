@@ -14,6 +14,7 @@ public static class DriverRoutes
     public const string FoodDeliveries = "/driver/food-deliveries";
     public const string CurrentTransport = "/driver/transports/current";
     public const string DeliveryHistory = "/driver/transports/history";
+    public const string Payouts = "/driver/payouts";
     public const string CurrentMonthSettlement = "/driver/settlements/current-month";
     public const string SettlementInfo = "/driver/settlements/info";
     public const string BankAccount = "/driver/account/bank";
@@ -30,4 +31,9 @@ public static class DriverRoutes
     public static string TransportPickup(long transportId) => $"/driver/transports/{transportId}/pickup";
 
     public static string TransportDropoff(long transportId) => $"/driver/transports/{transportId}/dropoff";
+
+    public static string PayoutList(int year, int month) => $"{Payouts}?year={year}&month={month}";
+
+    public static string PayoutDetail(long transportId, int year, int month)
+        => $"{Payouts}/{transportId}?year={year}&month={month}";
 }

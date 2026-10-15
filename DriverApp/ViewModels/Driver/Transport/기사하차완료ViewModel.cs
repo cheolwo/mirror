@@ -24,9 +24,9 @@ public sealed partial class 기사하차완료ViewModel(
             throw new InvalidOperationException("하차 완료 ViewModel에는 하차 완료 요청만 전달할 수 있습니다.");
         }
 
+        var generation = _generation;
         try
         {
-            var generation = _generation;
             처리중 = true;
             결과 = null;
             var result = await completionService.CompleteWithPhotoAsync(request, cancellationToken);
@@ -34,7 +34,7 @@ public sealed partial class 기사하차완료ViewModel(
         }
         finally
         {
-            처리중 = false;
+            if (generation == _generation) 처리중 = false;
         }
     }
 

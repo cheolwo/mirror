@@ -3,6 +3,7 @@ using Ssalddel.Contracts.Common.Inbound;
 using Ssalddel.Contracts.Common.Inventory;
 using Ssalddel.Contracts.Common.Warehouse;
 using Ssalddel.Contracts.Shipper.Request;
+using Ssalddel.Contracts.Common.Privacy;
 using Microsoft.Extensions.Options;
 using SsalddelApp.Models.Shipper;
 using SsalddelApp.Services.Samples;
@@ -25,6 +26,10 @@ public sealed class SmokeAwareShipperOperationsService : IShipperOperationsServi
         _dataModeOptions = dataModeOptions;
     }
 
+    // 신청 동의는 샘플 성공으로 대체하지 않고 본인 인증 서버의 증적만 사용합니다.
+    public Task<신청개인정보동의증적Response?> RecordPrivacyConsentAsync(신청개인정보동의기록Request request, CancellationToken cancellationToken = default)
+        => _server.RecordPrivacyConsentAsync(request, cancellationToken);
+
     public Task<IReadOnlyList<ShipperRequestItem>> GetRequestsAsync(CancellationToken cancellationToken = default)
         => WithSampleFallbackAsync(
             token => _server.GetRequestsAsync(token),
@@ -36,6 +41,13 @@ public sealed class SmokeAwareShipperOperationsService : IShipperOperationsServi
             token => _server.GetRequestAsync(requestId, token),
             token => _sample.GetRequestAsync(requestId, token),
             cancellationToken);
+
+    // 인수증 등록과 결과 확인을 sample 원장의 성공·미존재로 대체하지 않습니다.
+    public Task<ShipperRequestItem?> GetRequestForReceiptAsync(string requestId, CancellationToken cancellationToken = default)
+        => _server.GetRequestForReceiptAsync(requestId, cancellationToken);
+
+    public Task RegisterReceiptAsync(string requestId, 화주운송의뢰인수증등록요청 request, CancellationToken cancellationToken = default)
+        => _server.RegisterReceiptAsync(requestId, request, cancellationToken);
 
     public Task<IReadOnlyList<공개화물요약응답>> GetPublicCargoAsync(CancellationToken cancellationToken = default)
         => WithSampleFallbackAsync(

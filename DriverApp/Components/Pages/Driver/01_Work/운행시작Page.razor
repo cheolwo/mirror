@@ -21,13 +21,14 @@
                 <MudText Typo="Typo.body1">기본 시작 위치: @ViewModel.시작위치</MudText>
                 <MudText Typo="Typo.body1">복귀지: @(ViewModel.복귀지 ?? "미설정")</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">위치 송신 간격: 서버 권장값 기준, 기본 5분</MudText>
-                <MudCheckBox T="bool" @bind-Value="ViewModel.커뮤니티운행공개" Color="Color.Success">
+                <MudCheckBox T="bool" @bind-Value="ViewModel.커뮤니티운행공개" Color="Color.Success"
+                             Disabled="@(ViewModel.처리중 || ViewModel.운행시작결과미확인)">
                     운행 시작을 커뮤니티에 공개하고 개별 운송 의뢰 받기
                 </MudCheckBox>
                 <MudCheckBox T="bool"
                              @bind-Value="ViewModel.커뮤니티구단위위치공개동의"
                              Color="Color.Primary"
-                             Disabled="@(!ViewModel.커뮤니티운행공개)">
+                             Disabled="@(!ViewModel.커뮤니티운행공개 || ViewModel.처리중 || ViewModel.운행시작결과미확인)">
                     현재 GPS를 시·도와 시·군·구까지만 변환하여 공개하는 데 동의
                 </MudCheckBox>
                 <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">
@@ -44,7 +45,7 @@
                            Color="Color.Success"
                            Disabled="ViewModel.운행시작불가"
                            OnClick="@(() => ViewModel.운행시작Command.ExecuteAsync(null))">
-                    @(ViewModel.처리중 ? "처리 중" : ViewModel.위치송신중 ? "위치 송신 중" : "운행 시작")
+                    @(ViewModel.처리중 ? "처리 중" : ViewModel.운행시작결과미확인 ? "현재 운행 확인" : ViewModel.위치송신중 ? "위치 송신 중" : "운행 시작")
                 </MudButton>
                 <MudButton Variant="Variant.Outlined"
                            Color="Color.Warning"

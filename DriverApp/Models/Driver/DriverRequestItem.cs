@@ -2,6 +2,13 @@ namespace DriverApp.Models.Driver;
 
 public sealed class DriverRequestItem
 {
+    public string? WorkKind { get; set; }
+    public IReadOnlyList<string> AssignedActivities { get; set; } = [];
+    public Ssalddel.Contracts.Common.Drivers.DriverOfferPricingDto? Pricing { get; set; }
+    public Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverOffers.DriverOfferVisual OfferVisual
+        => Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverOffers.DriverOfferPresentation.Resolve(WorkKind ?? 운송의뢰유형코드, AssignedActivities);
+    public Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverOffers.DriverOfferPricingVisual OfferPricing
+        => Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverOffers.DriverOfferPresentation.Pricing(Pricing);
     public string 의뢰Id { get; set; } = string.Empty;
     public string 화물종류 { get; set; } = string.Empty;
     public string 운송방식 { get; set; } = "혼적";

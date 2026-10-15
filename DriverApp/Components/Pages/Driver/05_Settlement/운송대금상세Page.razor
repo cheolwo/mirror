@@ -1,0 +1,75 @@
+@page "/driver/payouts/{TransportId:long}"
+@using DriverApp.ViewModels.Driver.Settlement
+@using DriverApp.ViewModels.Driver.Transport
+@inherits DriverApp.Components.MvvmComponentBase<기사운송대금PageViewModel>
+
+<PageTitle>운송대금 상세</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="py-4">
+    <MudStack Spacing="3">
+        <MudText Typo="Typo.h4" HtmlTag="h1">운송대금 상세</MudText>
+        @if (ViewModel.불러오는중)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+            <MudText>선택한 운송대금을 확인하고 있습니다.</MudText>
+        }
+        else if (ViewModel.로그인필요)
+        {
+            <MudAlert Severity="Severity.Warning">운송대금은 기사 로그인 후 확인할 수 있습니다.</MudAlert>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@DriverRoutes.LoginFor(CurrentHref)">로그인하고 확인</MudButton>
+        }
+        else if (!string.IsNullOrWhiteSpace(ViewModel.오류메시지))
+        {
+            <MudAlert Severity="Severity.Error">@ViewModel.오류메시지</MudAlert>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="RefreshAsync">다시 조회</MudButton>
+        }
+        else if (ViewModel.선택항목 is not { } item)
+        {
+            <MudAlert Severity="Severity.Info">이 달의 내 운송대금 목록에서 해당 운송을 찾지 못했습니다. 목록에서 운송을 다시 선택해 주세요.</MudAlert>
+        }
+        else
+        {
+            <MudPaper Class="driver-recommendation-card pa-4" Elevation="0">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.subtitle2">지급 예정 운임</MudText>
+                    <MudText Typo="Typo.h4" Style="font-variant-numeric: tabular-nums">@item.금액표시</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">실제 입금 완료나 공제 후 실수령액을 뜻하지 않습니다.</MudText>
+                    <MudDivider />
+                    <MudText Typo="Typo.h6">@item.상태표시</MudText>
+                    <MudText>@item.ReadinessMessage</MudText>
+                    @if (item.ReadinessCode is "SettlementAccountMissing" or "SettlementAccountUnverified")
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="@DriverRoutes.BankAccount">계좌 정보 확인</MudButton>
+                    }
+                </MudStack>
+            </MudPaper>
+
+            <MudPaper Class="pa-4" Elevation="0">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6">운송 정보</MudText>
+                    <MudText Typo="Typo.body2">운송 @item.TransportId · @item.TransportNumber</MudText>
+                    <MudText Typo="Typo.body2">원천 의뢰 @item.RequestId</MudText>
+                    <MudText Typo="Typo.body2">완료 @기사국내시각표시.표시(item.CompletedAtUtc)</MudText>
+                    <MudDivider />
+                    <MudText Typo="Typo.h6">수납·정산 상태</MudText>
+                    <MudText Typo="Typo.body2">정산 시점 · @Known(item.SettlementTiming)</MudText>
+                    <MudText Typo="Typo.body2">화주 수납 · @Known(item.ShipperPaymentStatus)</MudText>
+                    <MudText Typo="Typo.body2">운임 정산 · @Known(item.FreightSettlementStatus)</MudText>
+                </MudStack>
+            </MudPaper>
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Refresh" OnClick="RefreshAsync">상태 새로고침</MudButton>
+        }
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.ArrowBack" Href="@ListHref">운송대금 목록으로</MudButton>
+    </MudStack>
+</MudContainer>
+
+@code {
+    [Parameter] public long TransportId { get; set; }
+    [SupplyParameterFromQuery(Name = "year")] public int? Year { get; set; }
+    [SupplyParameterFromQuery(Name = "month")] public int? Month { get; set; }
+    private string ListHref => ViewModel.기간유효 ? DriverRoutes.PayoutList(ViewModel.Year, ViewModel.Month) : DriverRoutes.Payouts;
+    private string CurrentHref => ViewModel.기간유효 ? DriverRoutes.PayoutDetail(TransportId, ViewModel.Year, ViewModel.Month) : ListHref;
+    protected override Task OnParametersSetAsync() => ViewModel.InitializeAsync(Year, Month, TransportId);
+    private Task RefreshAsync() => ViewModel.RefreshAsync();
+    private static string Known(string value) => string.IsNullOrWhiteSpace(value) ? "미확인" : value;
+}

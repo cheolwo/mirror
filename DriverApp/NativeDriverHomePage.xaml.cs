@@ -3,6 +3,7 @@ using DriverApp.Models.Driver;
 using DriverApp.Services;
 using Ssalddel.Contracts.Common.Drivers;
 using System.Globalization;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverOffers;
 
 namespace DriverApp;
 
@@ -90,8 +91,9 @@ public partial class NativeDriverHomePage : ContentPage
 
         RestoreDefaultMapState();
 
-        StatusLabel.IsVisible = false;
-        StatusLabel.Text = string.Empty;
+        var queryWarnings = _sampleDataService.ReadState.Warnings;
+        StatusLabel.IsVisible = queryWarnings.Count > 0;
+        StatusLabel.Text = string.Join("\n", queryWarnings.Take(2));
         TransportFooterBar.ShowTransport(_currentTransport);
         ShowIncomingRecommendation(incoming);
         RecommendationDetailBanner.IsVisible = false;
@@ -213,6 +215,8 @@ public partial class NativeDriverHomePage : ContentPage
         }
 
         TransportFooterBar.IsVisible = true;
+        ApplyRecommendationPresentation(incoming!.Request);
+        RecommendationWorkLabel.Text = $"{incoming.Request.OfferVisual.Label} · 새 추천 {incoming.PendingCount}건";
         RecommendationSummaryLabel.Text = $"{marker.Title} · {marker.PickupAddress} 상차 추천이 도착했습니다. 대기 {incoming!.PendingCount}건";
         RecommendationDetailBanner.IsVisible = false;
         LinkedRouteCard.IsVisible = false;
@@ -338,6 +342,7 @@ public partial class NativeDriverHomePage : ContentPage
         DriverRequestItem? request)
     {
         LinkedRouteCard.IsVisible = true;
+        ApplyRecommendationPresentation(request);
         var routeState = _routePlanningService.BuildLinkedRouteCardState(currentLocation, currentTransport, recommendation);
         LinkedRouteSummaryLabel.Text = routeState.Summary;
         LinkedRouteBenefitLabel.Text = routeState.Benefit;
@@ -347,6 +352,27 @@ public partial class NativeDriverHomePage : ContentPage
         RecommendationCompactInfoLabel.Text = BuildRecommendationCompactInfo(request);
         RecommendationDecisionStatusLabel.Text = "경로와 수익을 확인한 뒤 수락, 보류, 거절을 선택할 수 있습니다.";
         RecommendationDecisionButtons.IsEnabled = true;
+    }
+
+    private void ApplyRecommendationPresentation(DriverRequestItem? request)
+    {
+        var visual = request?.OfferVisual ?? DriverOfferPresentation.Resolve(null, []);
+        foreach (var bar in new[] { RecommendationPrimaryBar, RecommendationDetailPrimaryBar, LinkedOfferPrimaryBar })
+            bar.Color = Color.FromArgb(visual.PrimaryColor);
+        foreach (var bar in new[] { RecommendationSecondaryBar, RecommendationDetailSecondaryBar, LinkedOfferSecondaryBar })
+        {
+            bar.IsVisible = visual.IsCombined;
+            bar.Color = Color.FromArgb(visual.SecondaryColor ?? DriverOfferPresentation.WarehouseColor);
+        }
+        RecommendationWorkLabel.Text = visual.Label;
+        RecommendationDetailWorkLabel.Text = visual.Label + " · 추천 확인";
+        LinkedOfferWorkLabel.Text = visual.Label;
+        RecommendationActivityLabel.Text = LinkedOfferActivityLabel.Text = visual.ActivityText;
+        var price = request?.OfferPricing ?? DriverOfferPresentation.Pricing(null);
+        RecommendationPricingDistanceLabel.Text = price.DistanceText;
+        RecommendationPricingFeeLabel.Text = price.DistanceFeeText;
+        RecommendationPricingRateLabel.Text = price.HasEvidence ? price.RateText + " · 주행거리와 별도" : string.Empty;
+        RecommendationPricingRateLabel.IsVisible = price.HasEvidence;
     }
 
     private async void OnAcceptRecommendationClicked(object? sender, EventArgs e)

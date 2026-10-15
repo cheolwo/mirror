@@ -18,9 +18,9 @@
             <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
             <MudText>이번 달 이용료를 불러오고 있습니다.</MudText>
         }
-        else if (!ViewModel.초기화됨)
+        else if (!ViewModel.정산조회상태.CanDisplayValues)
         {
-            <MudAlert Severity="Severity.Error">@(ViewModel.오류메시지 ?? "이번 달 이용료를 확인하지 못했습니다.")</MudAlert>
+            <MudAlert Severity="Severity.Error">@(ViewModel.오류메시지 ?? ViewModel.정산조회상태.Message)</MudAlert>
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="재조회Async">다시 시도</MudButton>
         }
         else

@@ -1,0 +1,94 @@
+@page "/driver/payouts"
+@using DriverApp.ViewModels.Driver.Settlement
+@using DriverApp.ViewModels.Driver.Transport
+@inherits DriverApp.Components.MvvmComponentBase<기사운송대금PageViewModel>
+
+<PageTitle>운송대금</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="py-4">
+    <MudStack Spacing="3">
+        <MudPaper Class="driver-page-legacy-header pa-4" Elevation="0">
+            <MudStack Spacing="1">
+                <MudText Typo="Typo.h4" HtmlTag="h1">운송대금</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">완료한 운송별 지급 예정 운임과 지급 준비 상태를 확인합니다.</MudText>
+            </MudStack>
+        </MudPaper>
+
+        @if (ViewModel.불러오는중)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+            <MudText>운송대금을 불러오고 있습니다.</MudText>
+        }
+        else if (ViewModel.로그인필요)
+        {
+            <MudAlert Severity="Severity.Warning">운송대금은 기사 로그인 후 확인할 수 있습니다.</MudAlert>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@DriverRoutes.LoginFor(CurrentHref)">로그인하고 확인</MudButton>
+        }
+        else
+        {
+            @if (ViewModel.기간유효)
+            {
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ChevronLeft"
+                               Disabled="@(ViewModel.Year == 2000 && ViewModel.Month == 1)" Href="@PeriodHref(-1)">이전 달</MudButton>
+                    <MudText Typo="Typo.subtitle1">@ViewModel.Year 년 @ViewModel.Month 월</MudText>
+                    <MudButton Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ChevronRight"
+                               Disabled="@(ViewModel.Year == 2100 && ViewModel.Month == 12)" Href="@PeriodHref(1)">다음 달</MudButton>
+                </MudStack>
+            }
+            @if (!string.IsNullOrWhiteSpace(ViewModel.오류메시지))
+            {
+                <MudAlert Severity="Severity.Error">@ViewModel.오류메시지</MudAlert>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="RefreshAsync">다시 조회</MudButton>
+            }
+            else if (ViewModel.항목목록.Count == 0)
+            {
+                <MudPaper Class="pa-4" Elevation="0">
+                    <MudStack Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Color="Color.Secondary" />
+                        <MudText Typo="Typo.h6">이 달의 완료 운송이 없습니다.</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">다른 달을 선택하거나 배달 내역에서 운송 진행을 확인해 주세요.</MudText>
+                    </MudStack>
+                </MudPaper>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">지급 준비는 실제 입금 완료나 공제 후 실수령액을 뜻하지 않습니다.</MudText>
+                @foreach (var item in ViewModel.항목목록)
+                {
+                    <MudPaper Class="driver-recommendation-card pa-4" Elevation="0">
+                        <MudStack Spacing="2">
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Wrap="Wrap.Wrap">
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.subtitle1">운송 @item.TransportId</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">완료 @기사국내시각표시.표시(item.CompletedAtUtc)</MudText>
+                                </MudStack>
+                                <MudText Typo="Typo.h6" Style="font-variant-numeric: tabular-nums">@item.금액표시</MudText>
+                            </MudStack>
+                            <MudDivider />
+                            <MudText Typo="Typo.subtitle2">@item.상태표시</MudText>
+                            <MudText Typo="Typo.body2">@item.ReadinessMessage</MudText>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ChevronRight"
+                                       Href="@DriverRoutes.PayoutDetail(item.TransportId, ViewModel.Year, ViewModel.Month)">운송대금 상세</MudButton>
+                        </MudStack>
+                    </MudPaper>
+                }
+                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Refresh" OnClick="RefreshAsync">운송대금 새로고침</MudButton>
+            }
+        }
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="@DriverRoutes.DeliveryHistory">배달 내역으로</MudButton>
+    </MudStack>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery(Name = "year")] public int? Year { get; set; }
+    [SupplyParameterFromQuery(Name = "month")] public int? Month { get; set; }
+    private string CurrentHref => ViewModel.기간유효 ? DriverRoutes.PayoutList(ViewModel.Year, ViewModel.Month) : DriverRoutes.Payouts;
+    protected override Task OnParametersSetAsync() => ViewModel.InitializeAsync(Year, Month);
+    private Task RefreshAsync() => ViewModel.RefreshAsync();
+    private string PeriodHref(int offset)
+    {
+        var period = new DateTime(ViewModel.Year, ViewModel.Month, 1).AddMonths(offset);
+        return period.Year is >= 2000 and <= 2100 ? DriverRoutes.PayoutList(period.Year, period.Month) : CurrentHref;
+    }
+}

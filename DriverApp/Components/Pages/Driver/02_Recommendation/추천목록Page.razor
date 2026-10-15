@@ -42,8 +42,17 @@
                 <MudButton Class="ml-2" Variant="Variant.Outlined" Color="Color.Error" OnClick="재조회Async">다시 시도</MudButton>
             </MudAlert>
         }
+        else if (!추천조회상태.CanDisplayValues)
+        {
+            <MudAlert Severity="Severity.Warning">@추천조회상태.Message</MudAlert>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="재조회Async">새 추천 확인</MudButton>
+        }
         else
         {
+            @if (추천조회상태.StateCode == DriverWorkspaceReadStatus.Sample)
+            {
+                <MudAlert Severity="Severity.Info">예시 자료 · 실제 배차 제안이 아닙니다.</MudAlert>
+            }
             <MudStack Row="true" Justify="Justify.FlexEnd">
                 <MudButton Variant="Variant.Text"
                            Color="Color.Primary"
@@ -213,8 +222,10 @@
     ];
 
     private IReadOnlyList<추천의뢰표시항목> 표시목록
-        => DriverNativeLocationPolicy.SelectRecommendations(
-            Samples.거리포함추천의뢰목록조회(), Samples.기사현재위치, DateTime.UtcNow, _선택반경Km, _정렬기준 == "수익");
+        => 추천조회상태.CanDisplayValues ? DriverNativeLocationPolicy.SelectRecommendations(
+            Samples.거리포함추천의뢰목록조회(), Samples.기사현재위치, DateTime.UtcNow, _선택반경Km, _정렬기준 == "수익") : [];
+
+    private DriverWorkspaceSliceReadState 추천조회상태 => Samples.ReadState.Recommendations;
 
     private bool 최근위치확인됨 => DriverNativeLocationPolicy.Present(Samples.기사현재위치, DateTime.UtcNow).IsAvailable;
 
@@ -232,7 +243,7 @@
             };
         }
     }
-    private string 추천건수문구 => string.Format("추천 {0}건", 표시목록.Count);
+    private string 추천건수문구 => 추천조회상태.CanDisplayValues ? string.Format("추천 {0}건", 표시목록.Count) : "추천 건수 미확인";
 
     private static string 간단부제(추천의뢰표시항목 item) => item.가까운순위 is { } rank
         ? $"{rank}. {item.의뢰.화물종류} · {item.의뢰.상태}"
@@ -328,7 +339,7 @@
     }
 
     private bool 자동거절대상(DriverRequestItem request)
-        => request.추천응답만료
+        => 추천조회상태.IsCurrent && request.추천응답만료
            && DecisionService.GetDecision(request.의뢰Id) is null
            && !_자동거절처리중.Contains(request.의뢰Id);
 

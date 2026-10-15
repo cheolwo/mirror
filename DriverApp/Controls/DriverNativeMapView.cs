@@ -52,7 +52,7 @@ public sealed class DriverNativeMapView : View
         nameof(ShowTrafficLayer),
         typeof(bool),
         typeof(DriverNativeMapView),
-        true);
+        false);
 
     public static readonly BindableProperty ShowLocationButtonProperty = BindableProperty.Create(
         nameof(ShowLocationButton),

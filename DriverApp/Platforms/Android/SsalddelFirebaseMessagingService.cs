@@ -3,7 +3,6 @@ using Android.Content;
 using Android.Util;
 using DriverApp.Services;
 using Firebase.Messaging;
-using Ssalddel.Contracts.Common.Drivers;
 using Microsoft.Extensions.DependencyInjection;
 
 #pragma warning disable CS0618, CS0672
@@ -25,7 +24,25 @@ public sealed class SsalddelFirebaseMessagingService : FirebaseMessagingService
     public override void OnMessageReceived(RemoteMessage message)
     {
         base.OnMessageReceived(message);
-        _ = HandleMessageAsync(message.Data);
+        // Persist the minimal pointer before returning Firebase's bounded callback.
+        // Failed/slow reads are retried on foreground resume, never converted into acceptance.
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        try
+        {
+            var data = new Dictionary<string, string>(message.Data);
+            Task.Run(async () =>
+            {
+                var recovery = DriverAppServiceProvider.Services.GetRequiredService<DriverRecommendationPushRecovery>();
+                var captured = await recovery.CaptureAsync(data, openRequested: false, cancellation.Token);
+                if (captured.Status == DriverRecommendationPushRecoveryStatus.Captured)
+                    await recovery.RecoverAsync(cancellation.Token);
+            }, cancellation.Token).WaitAsync(cancellation.Token).GetAwaiter().GetResult();
+        }
+        catch (Exception)
+        {
+            // Tokens, addresses, payloads and exception messages never enter Android logs.
+            Log.Warn(Tag, "Recommendation hint could not be confirmed; retry on app resume.");
+        }
     }
 
     public static Task RegisterTokenAsync(string? token)
@@ -35,94 +52,11 @@ public sealed class SsalddelFirebaseMessagingService : FirebaseMessagingService
             await tokenService.수신토큰저장및등록Async(token);
         });
 
-    private static Task HandleMessageAsync(IDictionary<string, string> data)
-        => RunWithServicesAsync(async services =>
-        {
-            if (!IsDispatchRecommendation(data))
-            {
-                return;
-            }
-
-            var requestId = ResolveRequestId(data);
-            if (string.IsNullOrWhiteSpace(requestId))
-            {
-                return;
-            }
-
-            var sampleData = services.GetRequiredService<IDriverSampleDataService>();
-            var mapService = services.GetRequiredService<IDriverHomeMapService>();
-            var notificationService = services.GetRequiredService<IDriverRecommendationNotificationService>();
-
-            await sampleData.RefreshAsync(force: true);
-            var request = sampleData.추천의뢰조회(requestId);
-            if (request is null)
-            {
-                return;
-            }
-
-            var marker = mapService.BuildMarkers([request]).FirstOrDefault();
-            if (marker is null)
-            {
-                marker = new DriverMapMarkerItem(
-                    request.의뢰Id,
-                    0d,
-                    0d,
-                    0d,
-                    0d,
-                    request.화물종류,
-                    request.요약설명,
-                    request.픽업지);
-            }
-
-            var pendingCount = ResolvePendingCount(data);
-            notificationService.Publish(new DriverIncomingRecommendation(
-                marker,
-                request,
-                DateTime.Now,
-                "FCM",
-                pendingCount));
-        });
-
     private static async Task RunWithServicesAsync(Func<IServiceProvider, Task> action)
     {
-        try
-        {
-            await action(DriverAppServiceProvider.Services);
-        }
-        catch (Exception ex)
-        {
-            Log.Warn(Tag, ex.ToString());
-        }
+        try { await action(DriverAppServiceProvider.Services); }
+        catch (Exception) { Log.Warn(Tag, "Push registration could not complete."); }
     }
-
-    private static bool IsDispatchRecommendation(IDictionary<string, string> data)
-        => data.TryGetValue("type", out var type)
-           && 기사배차추천알림계약.Is배차추천(type);
-
-    private static string ResolveRequestId(IDictionary<string, string> data)
-    {
-        if (data.TryGetValue("topRequestId", out var topRequestId)
-            && !string.IsNullOrWhiteSpace(topRequestId))
-        {
-            return topRequestId;
-        }
-
-        if (!data.TryGetValue("requestIds", out var requestIds)
-            || string.IsNullOrWhiteSpace(requestIds))
-        {
-            return string.Empty;
-        }
-
-        return requestIds
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .FirstOrDefault() ?? string.Empty;
-    }
-
-    private static int ResolvePendingCount(IDictionary<string, string> data)
-        => data.TryGetValue("recommendationCount", out var countText)
-           && int.TryParse(countText, out var count)
-            ? count
-            : 1;
 }
 
 #pragma warning restore CS0618, CS0672

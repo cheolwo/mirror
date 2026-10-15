@@ -14,6 +14,7 @@ public sealed class 기사운송상세조회Service(IDriverTransportApiService a
     }
 
     public bool 로그인됨 => auth.IsAuthenticated;
+    public string? OwnerId => auth.IsAuthenticated ? auth.UserId : null;
     public long SessionRevision => auth.SessionRevision;
 
     public Task 상차지도착Async(long transportId, CancellationToken cancellationToken)

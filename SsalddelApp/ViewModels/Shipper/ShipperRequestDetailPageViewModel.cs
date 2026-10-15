@@ -12,7 +12,7 @@ namespace SsalddelApp.ViewModels.Shipper;
 /// 모바일 상세 route의 서버/sample adapter 조회, 원장 관찰과 FakePG 개발 흐름을 담당합니다.
 /// 결제 실행은 명시적인 payment route에서만 이 ViewModel을 통해 호출합니다.
 /// </summary>
-public sealed class ShipperRequestDetailPageViewModel : IDisposable
+public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
 {
     private readonly IShipperOperationsService _operations;
     private readonly ITransportRequestLedgerObserver _ledgerObserver;
@@ -103,9 +103,14 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
         if (_disposed) return;
         var loadRevision = Interlocked.Increment(ref _loadRevision);
         var normalized = string.IsNullOrWhiteSpace(requestId) ? null : requestId.Trim();
-        if (!string.Equals(State.LookupRequestId, normalized, StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(State.LookupRequestId, normalized,
+                _receiptMode ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase))
         {
             ClearPrivateState();
+        }
+        else if (ReceiptSubmitting || ReceiptChecking)
+        {
+            return;
         }
         State.LookupRequestId = normalized ?? string.Empty;
         State.Created = created;
@@ -153,13 +158,22 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
         }
 
         await _queryLifetime.RunAsync(
-            token => _operations.GetRequestAsync(normalized, token),
+            token => _receiptMode
+                ? _operations.GetRequestForReceiptAsync(normalized, token)
+                : _operations.GetRequestAsync(normalized, token),
             result =>
             {
+                if (_receiptMode && result is not null
+                    && !string.Equals(result.의뢰Id, normalized, StringComparison.Ordinal))
+                    throw new InvalidOperationException("조회한 의뢰가 선택한 의뢰와 다릅니다.");
                 _source = result;
-                ApplyReceipt();
+                // 인수증 화면은 로컬 FakePG 표시로 서버 금융 상태를 덮지 않습니다.
+                if (_receiptMode) _receipt = null;
+                else ApplyReceipt();
                 State.Request = _source is null ? null : Map(_source);
-                if (showMessage)
+                var hadPendingReceipt = _receiptMode && ReceiptNeedsResultCheck;
+                if (_receiptMode) ApplyReceiptLookup();
+                if (showMessage && !hadPendingReceipt)
                 {
                     SetStatus(
                         _source is null ? "운송 의뢰 정보를 찾지 못했습니다."
@@ -396,6 +410,7 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
 
     private void ClearPrivateState()
     {
+        ClearReceiptState();
         _source = null;
         _receipt = null;
         State.Request = null;

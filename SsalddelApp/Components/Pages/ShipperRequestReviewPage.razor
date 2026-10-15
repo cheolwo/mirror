@@ -25,6 +25,7 @@
                             Title="의뢰 최종 검토"
                             Description="누락과 실행 경계를 확인한 뒤 의뢰 등록을 요청합니다."
                             RegistrationEnabled="@(PageModel.HasPendingRequest ? false : PageModel.RegistrationEnabled)"
+                            SubmissionPrerequisiteSatisfied="PageModel.HasValidPrivacyConsent"
                             RegistrationBoundaryMessage="@PageModel.RegistrationBoundaryMessage"
                             StatusMessage="@PageModel.StatusMessage"
                             StatusSeverity="PageModel.StatusSeverity"
@@ -34,7 +35,19 @@
                             Changed="PageModel.AutoSaveAsync"
                             SaveRequested="PageModel.SaveAsync"
                             ResetRequested="PageModel.ResetAsync"
-                            SubmitRequested="PageModel.SubmitAsync" />
+                            SubmitRequested="PageModel.SubmitAsync">
+    <BeforeSubmission>
+        @if (!PageModel.HasPendingRequest)
+        {
+            <ShipperPrivacyConsentPanel @bind-CollectionConsent="PageModel.CollectionConsent"
+                                       @bind-AgeConfirmed="PageModel.AgeConfirmed"
+                                       Recorded="PageModel.HasValidPrivacyConsent"
+                                       CanRecord="PageModel.CanRecordPrivacyConsent"
+                                       IsBusy="PageModel.IsBusy"
+                                       RecordRequested="PageModel.RecordPrivacyConsentAsync" />
+        }
+    </BeforeSubmission>
+</ShipperRequestReviewScreen>
 
 @code {
     private ShipperRequestNavigationContext RouteContext

@@ -14,6 +14,20 @@
             </MudStack>
         </MudPaper>
 
+        @if (ViewModel.처리중)
+        {
+            <MudText Typo="Typo.body2">예약 목록을 불러오고 있습니다.</MudText>
+        }
+        else if (!ViewModel.예약조회상태.CanDisplayValues)
+        {
+            <MudAlert Severity="Severity.Warning">@ViewModel.예약조회상태.Message</MudAlert>
+        }
+        else if (ViewModel.예약목록.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info">현재 등록된 예약이 없습니다.</MudAlert>
+        }
+        else
+        {
         <MudGrid Spacing="3">
             @foreach (var item in ViewModel.예약목록)
             {
@@ -32,6 +46,7 @@
                 </MudItem>
             }
         </MudGrid>
+        }
 
         <MudStack Row="true" Spacing="2">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/driver/work/start">운행 시작으로</MudButton>

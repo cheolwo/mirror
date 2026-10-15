@@ -83,5 +83,5 @@ public sealed class DriverRecommendationApiService : IDriverRecommendationApiSer
         => await _client.GetAsync<IReadOnlyList<기사배차추천항목응답>>(
             path,
             operationName,
-            cancellationToken) ?? [];
+            cancellationToken) ?? throw new InvalidOperationException("추천 운송 목록을 확인하지 못했습니다. 배차가 없는 것으로 표시하지 않습니다.");
 }

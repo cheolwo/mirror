@@ -19,7 +19,7 @@
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.PhotoCamera"
-                   Disabled="@IsCapturing"
+                   Disabled="@(IsCapturing || IsCompleting)"
                    OnClick="CaptureAsync">
             @(HasPhoto ? RetakeButtonText : CaptureButtonText)
         </MudButton>
@@ -30,14 +30,14 @@
                    OnClick="CompleteAsync">
             @(IsCompleting ? CompletingText : CompleteButtonText)
         </MudButton>
-        @if (HasPhoto)
+        @if (HasPhoto || ShowClear)
         {
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Secondary"
                        StartIcon="@Icons.Material.Filled.Delete"
                        Disabled="@IsCompleting"
                        OnClick="ClearAsync">
-                @ClearButtonText
+                @(HasPhoto ? ClearButtonText : "복구 사진 폐기")
             </MudButton>
         }
     </MudStack>
@@ -72,6 +72,9 @@
 
     [Parameter]
     public bool HasPhoto { get; set; }
+
+    [Parameter]
+    public bool ShowClear { get; set; }
 
     [Parameter]
     public bool IsCapturing { get; set; }

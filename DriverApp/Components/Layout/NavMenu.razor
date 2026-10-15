@@ -41,6 +41,7 @@
     [
         new("직접 피킹·배송 순회", "/driver/distributed/round", "work"),
         new("운행 시작", DriverRoutes.WorkStart, "work"),
+        new("받을 업무·적재 설정", "/driver/work/settings", "settings"),
         new("보낸 탐색 문의함", DriverRoutes.ExplorationCampaigns, "outbox"),
         new("음식 배달 업무", DriverRoutes.FoodDeliveries, "food"),
         new("배달 내역", DriverRoutes.DeliveryHistory, "history"),
@@ -101,6 +102,7 @@
         if (route.Equals(DriverRoutes.Login, StringComparison.OrdinalIgnoreCase)
             || route.Equals(DriverRoutes.Notifications, StringComparison.OrdinalIgnoreCase)
             || route.Equals(DriverRoutes.NotificationSettings, StringComparison.OrdinalIgnoreCase)
+            || route.Equals("/driver/work/settings", StringComparison.OrdinalIgnoreCase)
             || route.Equals("/driver/settings/views", StringComparison.OrdinalIgnoreCase))
         {
             return "driver-menu-settings";

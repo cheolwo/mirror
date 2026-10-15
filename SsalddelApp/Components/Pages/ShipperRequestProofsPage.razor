@@ -9,10 +9,23 @@
                             Context="@RouteContext"
                             ScreenCode="03.10"
                             Title="증빙 관리"
-                            Description="문서 과정에서 필요한 증빙의 존재와 검수 상태를 확인합니다."
+                            Description="운송 증빙을 확인하고 수령·검수한 인수증을 등록합니다."
                             HomeHref="@ShipperRoutes.ShipperHome"
                             NewRequestHref="@ShipperRoutes.Request"
-                            RefreshRequested="RefreshAsync" />
+                            RefreshRequested="RefreshAsync">
+    <ReceiptContent>
+        <ShipperReceiptRegistrationPanel ReadinessMessage="@PageModel.ReceiptReadinessMessage"
+                                         ReceiptNumber="@PageModel.ReceiptNumber" ReceiptNumberChanged="PageModel.SetReceiptNumber"
+                                         Memo="@PageModel.ReceiptMemo" MemoChanged="PageModel.SetReceiptMemo"
+                                         AcceptanceConfirmed="PageModel.ReceiptAcceptanceConfirmed"
+                                         AcceptanceConfirmedChanged="PageModel.SetReceiptAcceptanceConfirmed"
+                                         Registered="@(PageModel.State.Request?.ReceiptRegisteredAt is not null || !string.IsNullOrWhiteSpace(PageModel.State.Request?.ReceiptNumber))"
+                                         RegisteredNumber="@(PageModel.State.Request?.ReceiptNumber ?? string.Empty)"
+                                         InputLocked="PageModel.ReceiptInputLocked" NeedsResultCheck="PageModel.ReceiptNeedsResultCheck"
+                                         CanRegister="PageModel.CanRegisterReceipt" IsBusy="@(PageModel.ReceiptSubmitting || PageModel.ReceiptChecking)"
+                                         RegisterRequested="RegisterAsync" CheckRequested="CheckAsync" />
+    </ReceiptContent>
+</ShipperRequestProofsScreen>
 
 @code {
     [Parameter] public string? RequestId { get; set; }
@@ -27,7 +40,10 @@
         => PageModel.StateChanged += OnPageModelStateChanged;
 
     protected override Task OnParametersSetAsync()
-        => PageModel.InitializeAsync(RequestId);
+        => PageModel.InitializeReceiptAsync(RequestId);
+
+    private Task RegisterAsync() => PageModel.RegisterReceiptAsync();
+    private Task CheckAsync() => PageModel.ConfirmReceiptResultAsync();
 
     private Task RefreshAsync()
         => PageModel.LoadAsync(RequestId);

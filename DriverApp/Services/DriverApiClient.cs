@@ -1,9 +1,19 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Ssalddel.Contracts.Common.Operations;
 
 namespace DriverApp.Services;
+
+/// <summary>응답의 상태와 서버가 명시한 시작 거절만 보존한다. 원문 오류·주소·토큰을 저장하지 않는다.</summary>
+public sealed class DriverApiException(HttpStatusCode statusCode, string operation, string? errorCode, Guid? rejectedStartId)
+    : InvalidOperationException($"{operation} API 실패: HTTP {(int)statusCode}" + (errorCode is null ? "" : $" ({errorCode})"))
+{
+    public HttpStatusCode StatusCode { get; } = statusCode;
+    public string? ErrorCode { get; } = errorCode;
+    public Guid? RejectedWorkStartRequestId { get; } = rejectedStartId;
+}
 
 /// <summary>
 /// 기사 앱의 타입드 API 서비스들이 공통으로 사용하는 인증 HTTP 클라이언트입니다.
@@ -357,8 +367,24 @@ public sealed class DriverApiClient : IDriverApiClient
         }
 
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        var detail = string.IsNullOrWhiteSpace(body) ? string.Empty : $": {body}";
-        throw new InvalidOperationException(
-            $"{operationName} API 실패: HTTP {(int)response.StatusCode}{detail}");
+        string? code = null;
+        try
+        {
+            using var json = JsonDocument.Parse(body);
+            if (json.RootElement.ValueKind == JsonValueKind.Object
+                && (json.RootElement.TryGetProperty("code", out var value) || json.RootElement.TryGetProperty("errorCode", out value))
+                && value.ValueKind == JsonValueKind.String)
+            {
+                var candidate = value.GetString();
+                if (candidate is { Length: > 0 and <= 100 } && candidate.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '_' or '-')) code = candidate;
+            }
+        }
+        catch (JsonException) { }
+        Guid? rejected = null;
+        if (response.Headers.TryGetValues("X-Mirror-Work-Start-Outcome", out var outcomes)
+            && outcomes.SingleOrDefault() == "Rejected"
+            && response.Headers.TryGetValues("X-Mirror-Work-Start-Request-Id", out var ids)
+            && Guid.TryParse(ids.SingleOrDefault(), out var id)) rejected = id;
+        throw new DriverApiException(response.StatusCode, operationName, code, rejected);
     }
 }

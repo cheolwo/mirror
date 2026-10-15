@@ -5,6 +5,7 @@ using Ssalddel.Contracts.Common.Inbound;
 using Ssalddel.Contracts.Common.Inventory;
 using Ssalddel.Contracts.Common.Warehouse;
 using Ssalddel.Contracts.Shipper.Request;
+using Ssalddel.Contracts.Common.Privacy;
 using SsalddelApp.Models.Shipper;
 
 namespace SsalddelApp.Services;
@@ -30,6 +31,10 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
         _ledgerObserver = ledgerObserver;
         _realtimeClient = realtimeClient;
     }
+
+    public Task<신청개인정보동의증적Response?> RecordPrivacyConsentAsync(신청개인정보동의기록Request request, CancellationToken cancellationToken = default)
+        => PostAuthorizedJsonAsync<신청개인정보동의기록Request, 신청개인정보동의증적Response>(
+            "api/v1/common/application-privacy-consents", request, cancellationToken);
 
     public async Task<IReadOnlyList<ShipperRequestItem>> GetRequestsAsync(CancellationToken cancellationToken = default)
     {
@@ -65,6 +70,21 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
         var item = ToRequestItem(response);
         Observe(item, "SsalddelApp.RequestDetail");
         return item;
+    }
+
+    public Task<ShipperRequestItem?> GetRequestForReceiptAsync(string requestId, CancellationToken cancellationToken = default)
+        => GetRequestAsync(requestId, cancellationToken);
+
+    public async Task RegisterReceiptAsync(string requestId, 화주운송의뢰인수증등록요청 request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(requestId) || string.IsNullOrWhiteSpace(request.인수증번호))
+            throw new InvalidOperationException("의뢰와 인수증 번호를 확인해 주세요.");
+
+        // POST는 한 번만 보내고 결과 확정은 호출 화면의 별도 정본 GET이 소유합니다.
+        await PostAuthorizedJsonAsync<화주운송의뢰인수증등록요청, 화주운송의뢰응답>(
+            $"api/v1/shipper/requests/{Uri.EscapeDataString(requestId.Trim())}/settlement/receipt",
+            request, cancellationToken);
     }
 
     public async Task<ShipperRequestItem?> GetRequestByClientRequestIdAsync(
@@ -304,45 +324,60 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
     {
         var amount = source.결제예정금액
             ?? (source.기준운임.HasValue ? decimal.ToInt32(source.기준운임.Value) : null);
+        var cargo = ShipperRequestItem.화물복사(source.화물원본) ?? new CargoDTO();
+        cargo.화물종류 = source.화물종류;
+        var paymentMethod = ShipperRequestItem.신규결제수단확인(source.결제수단);
 
         return new 화주운송의뢰생성요청
         {
+            신청개인정보동의증적Id = source.신청개인정보동의증적Id,
+            신청출처Code = source.신청출처Code,
             화주Id = ResolveUserId(),
             운송방식 = string.IsNullOrWhiteSpace(source.운송방식) ? "일반" : source.운송방식,
             차량종류 = string.IsNullOrWhiteSpace(source.차량종류) ? "1톤 카고" : source.차량종류,
-            결제수단 = string.IsNullOrWhiteSpace(source.결제수단) ? 결제수단.카드.ToString() : source.결제수단,
+            결제수단 = paymentMethod.ToString(),
             결제예정금액 = amount,
             정산조건 = new 화주운송정산조건DTO
             {
                 정산시점 = 정산시점.선결제,
-                결제수단 = 결제수단.카드,
+                결제수단 = paymentMethod,
                 증빙방식 = 증빙방식.인수증,
                 수납주체 = 수납주체.플랫폼,
                 정산메모 = "SsalddelApp 서버 API 생성"
             },
-            화물 = new CargoDTO
-            {
-                화물종류 = string.IsNullOrWhiteSpace(source.화물종류) ? "일반화물" : source.화물종류,
-                수량 = 1
-            },
+            화물 = cargo,
             픽업 = ShipperRequestHandoffMapper.Copy(source.픽업정보, source.픽업지),
             하차 = ShipperRequestHandoffMapper.Copy(source.하차정보, source.하차지),
             요금옵션 = new PricingDTO
             {
-                서비스레벨 = "standard",
-                요청사항 = "SsalddelApp 서버 API 생성",
+                서비스레벨 = source.서비스레벨 ?? "standard",
+                // 적재 형태에는 독립 계약 필드가 없으므로 명시한 작업 조건으로만 보존합니다.
+                요청사항 = CreateWorkInstructions(source),
                 예상거리Km = source.예상거리Km,
                 최종운임 = source.기준운임,
                 기사지급예정운임 = source.기사지급예정운임,
+                대기료 = source.대기료,
+                수작업비 = source.수작업비,
+                할증 = source.할증,
                 알선정책 = new 화주운송알선정책DTO
                 {
                     알선단계 = source.알선단계,
-                    재알선금지 = source.재알선금지
+                    재알선금지 = source.재알선금지,
+                    알선소Id = source.알선소Id,
+                    정책메모 = source.절차메모
                 }
             },
             클라이언트요청Id = string.IsNullOrWhiteSpace(source.의뢰Id) ? $"shipper-app-{Guid.NewGuid():N}" : source.의뢰Id,
             결제상태 = string.IsNullOrWhiteSpace(source.결제상태) ? "결제대기" : source.결제상태
         };
+    }
+
+    private static string CreateWorkInstructions(ShipperRequestItem source)
+    {
+        var instructions = source.요청사항 ?? "SsalddelApp 서버 API 생성";
+        return string.IsNullOrWhiteSpace(source.화물적재형태)
+            ? instructions
+            : $"{instructions}\n적재 형태: {source.화물적재형태}";
     }
 
     private static ShipperRequestItem ToRequestItem(화주운송의뢰응답 source)
@@ -372,6 +407,13 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
             예상거리Km = source.요금옵션?.예상거리Km,
             기준운임 = source.최종운임,
             기사지급예정운임 = source.요금옵션?.기사지급예정운임,
+            서비스레벨 = source.요금옵션?.서비스레벨,
+            요청사항 = source.요금옵션?.요청사항,
+            대기료 = source.요금옵션?.대기료,
+            수작업비 = source.요금옵션?.수작업비,
+            할증 = source.요금옵션?.할증,
+            알선소Id = source.요금옵션?.알선정책?.알선소Id,
+            절차메모 = source.요금옵션?.알선정책?.정책메모,
             정산시점 = source.정산시점?.ToString() ?? string.Empty,
             증빙방식 = source.증빙방식?.ToString() ?? string.Empty,
             수납주체 = source.수납주체?.ToString() ?? string.Empty,

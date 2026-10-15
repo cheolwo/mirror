@@ -1,11 +1,15 @@
 @using DriverApp.Models.Driver
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverOffers
 
-<MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="@Class">
-    <MudChip T="string" Size="Size.Small" Color="@RequestTypeColor" Variant="Variant.Filled">@Request.운송의뢰유형표시</MudChip>
+<MudStack Spacing="1" Class="@Class">
+    <DriverOfferBadge Visual="@Request.OfferVisual" />
+    <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+    <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">@Request.운송의뢰유형표시</MudChip>
     @if (Request.세대배송포함여부)
     {
         <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">@Request.세대배송범위표시</MudChip>
     }
+    </MudStack>
 </MudStack>
 
 @code {
@@ -14,6 +18,4 @@
 
     [Parameter]
     public string Class { get; set; } = "mt-1";
-
-    private Color RequestTypeColor => Request.공동주문운송여부 ? Color.Warning : Color.Primary;
 }

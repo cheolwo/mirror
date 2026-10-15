@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using Ssalddel.Contracts.Common.Community;
 using Ssalddel.Contracts.Shipper.Request;
+using Ssalddel.Contracts.Common.Privacy;
 using Ssalddel.Ui.Common.Areas.App.Services;
 using Ssalddel.Ui.Common.Areas.App.Models;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
@@ -27,6 +28,10 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
     private WorkflowRecoveryRecord? _pending;
     private ShipperRequestItem? _pendingRequest;
     private bool _pendingNotFound;
+    private Guid _consentRequestId = Guid.NewGuid();
+    private long _consentGeneration;
+    private bool _collectionConsent;
+    private bool _ageConfirmed;
 
     public ShipperRequestAuthoringPageViewModel(운송의뢰작성ViewModel state,
         IShipperOperationsService operations, NavigationManager navigation,
@@ -48,7 +53,23 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
     public string StatusMessage { get; private set; } = string.Empty;
     public Severity StatusSeverity { get; private set; } = Severity.Info;
     public bool HasPendingRequest => _pending is not null;
-    public bool CanRetryPendingRequest => _pendingNotFound && _pendingRequest is not null && !IsBusy;
+    public bool CanRetryPendingRequest => _pendingNotFound && PendingConsentBound && !IsBusy;
+    private bool PendingConsentBound => _pendingRequest?.신청개인정보동의증적Id is { } id && id != Guid.Empty
+        && _pendingRequest.신청출처Code == 신청개인정보출처Codes.커뮤니티지도;
+    public Guid? PrivacyConsentEvidenceId { get; private set; }
+    public bool CollectionConsent
+    {
+        get => _collectionConsent;
+        set { _collectionConsent = value; if (!value) ClearPrivacyConsent(); }
+    }
+    public bool AgeConfirmed
+    {
+        get => _ageConfirmed;
+        set { _ageConfirmed = value; if (!value) ClearPrivacyConsent(); }
+    }
+    public bool HasValidPrivacyConsent => PrivacyConsentEvidenceId is { } id && id != Guid.Empty && CollectionConsent && AgeConfirmed;
+    public bool CanRecordPrivacyConsent => !IsBusy && !HasPendingRequest && CollectionConsent && AgeConfirmed && !HasValidPrivacyConsent
+        && (_auth is null || _auth.IsLoggedIn && !string.IsNullOrWhiteSpace(_auth.UserId));
     public bool PendingInputExpired => _pending is not null && _pendingRequest is null;
     public string RegistrationBoundaryMessage { get; private set; }
         = "등록 준비를 확인하고 있습니다. 등록만으로 자동 배차·계약·결제가 확정되지는 않습니다.";
@@ -110,12 +131,60 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
             return Task.CompletedTask;
         }
         State.Reset();
+        ResetPrivacyConsent();
         StatusSeverity = Severity.Info;
         StatusMessage = "운송 의뢰 입력값을 초기화했습니다.";
         return Task.CompletedTask;
     }
     public async Task<decimal?> EstimateFareAsync(string vehicleType, decimal distanceKm)
         => await _operations.EstimateFareAsync(vehicleType, distanceKm);
+
+    public async Task RecordPrivacyConsentAsync()
+    {
+        if (_disposed || IsBusy || HasPendingRequest) return;
+        if (!CollectionConsent || !AgeConfirmed)
+        {
+            StatusSeverity = Severity.Warning;
+            StatusMessage = "개인정보 수집·이용 안내와 본인·연령 확인을 모두 선택해 주세요.";
+            return;
+        }
+        SubmissionContext context;
+        try { context = CurrentContext(); }
+        catch (InvalidOperationException ex)
+        {
+            StatusSeverity = Severity.Warning;
+            StatusMessage = ex.Message;
+            return;
+        }
+        var generation = _consentGeneration;
+        var requestId = _consentRequestId;
+        IsBusy = true;
+        try
+        {
+            var evidence = await _operations.RecordPrivacyConsentAsync(new()
+            {
+                증적Id = requestId, 업무Code = 신청개인정보업무Codes.운송대행,
+                출처Code = 신청개인정보출처Codes.커뮤니티지도, 동의문버전 = 신청개인정보동의정책.현재버전,
+                수집이용동의 = CollectionConsent, 연령요건확인 = AgeConfirmed
+            });
+            if (!IsCurrent(context) || generation != _consentGeneration || !CollectionConsent || !AgeConfirmed) return;
+            if (evidence is null || evidence.증적Id != requestId || evidence.상태Code != 신청개인정보동의상태Codes.유효
+                || evidence.업무Code != 신청개인정보업무Codes.운송대행 || evidence.출처Code != 신청개인정보출처Codes.커뮤니티지도
+                || evidence.동의문버전 != 신청개인정보동의정책.현재버전)
+                throw new InvalidOperationException("본인 운송 신청의 유효한 동의 증적을 확인하지 못했습니다.");
+            PrivacyConsentEvidenceId = evidence.증적Id;
+            StatusSeverity = Severity.Success;
+            StatusMessage = "운송 신청의 개인정보 동의 기록을 확인했습니다. 최종 조건을 확인한 뒤 의뢰를 등록해 주세요.";
+        }
+        catch (Exception ex)
+        {
+            if (!IsCurrent(context) || generation != _consentGeneration) return;
+            PrivacyConsentEvidenceId = null;
+            StatusSeverity = Severity.Warning;
+            StatusMessage = $"개인정보 동의 기록을 확인하지 못했습니다. 의뢰는 보내지 않았습니다. {ex.Message}";
+        }
+        finally { if (IsCurrent(context)) IsBusy = false; }
+    }
 
     public async Task SubmitAsync()
     {
@@ -126,6 +195,19 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
             StatusSeverity = Severity.Warning;
             StatusMessage = RegistrationEnabled != true ? "등록 준비를 먼저 확인해 주세요."
                 : "등록 전 점검 목록의 필수 항목을 보완해 주세요.";
+            return;
+        }
+        try { _ = ShipperRequestItem.신규결제수단확인(State.결제수단); }
+        catch (InvalidOperationException ex)
+        {
+            StatusSeverity = Severity.Warning;
+            StatusMessage = ex.Message;
+            return;
+        }
+        if (!HasValidPrivacyConsent)
+        {
+            StatusSeverity = Severity.Warning;
+            StatusMessage = "본인 신청의 개인정보 수집·이용 동의를 먼저 기록해 주세요.";
             return;
         }
         var context = CurrentContext();
@@ -163,7 +245,7 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
 
     private async Task SendPendingAsync(SubmissionContext context)
     {
-        if (_pending is null || _pendingRequest is null || !IsCurrent(context)) return;
+        if (_pending is null || _pendingRequest is null || !PendingConsentBound || !IsCurrent(context)) return;
         IsBusy = true;
         _pendingNotFound = false;
         StatusSeverity = Severity.Info;
@@ -217,6 +299,8 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
             StatusSeverity = Severity.Warning;
             StatusMessage = _pendingRequest is null
                 ? "이전 접수 결과를 찾지 못했습니다. 보관 기한이 지나 원문은 삭제됐으며 접수 번호는 유지합니다. 새 의뢰로 우회하지 않고 결과를 다시 확인해 주세요."
+                : !PendingConsentBound
+                    ? "이전 접수의 개인정보 동의 증적을 확인할 수 없어 결과 조회만 가능합니다. 기존 접수 번호를 유지하고 결과를 다시 확인해 주세요."
                 : "이전 접수 결과를 아직 찾지 못했습니다. 원문과 번호는 유지했습니다. 같은 요청으로 다시 등록을 선택할 수 있습니다.";
         }
         catch (Exception ex)
@@ -236,6 +320,7 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
         _pending = null;
         _pendingRequest = null;
         _pendingNotFound = false;
+        ResetPrivacyConsent();
         StatusSeverity = Severity.Success;
         StatusMessage = "운송 의뢰 원장 등록을 확인했습니다.";
         var route = ShipperRequestNavigationContext.Parse(_navigation.Uri);
@@ -247,11 +332,22 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
         var draft = State.ToDraft();
         return new()
         {
+            신청개인정보동의증적Id = PrivacyConsentEvidenceId,
+            신청출처Code = 신청개인정보출처Codes.커뮤니티지도,
             의뢰Id = clientRequestId, 화물종류 = draft.화물종류, 화물적재형태 = draft.화물적재형태,
+            화물원본 = new CargoDTO
+            {
+                화물종류 = draft.화물종류, 설명 = draft.화물설명,
+                수량 = draft.화물수량, 중량Kg = draft.화물중량Kg,
+                부피Cbm = draft.화물부피Cbm, 온도조건 = draft.온도조건
+            },
             의뢰상태 = "접수", 결제상태 = draft.결제예정금액.HasValue ? "결제대기" : "대기", 배차상태 = "매칭중",
             운송방식 = draft.운송방식, 차량종류 = draft.차량종류 ?? "1톤 카고", 결제수단 = draft.결제수단,
             결제예정금액 = draft.결제예정금액, 예상거리Km = draft.예상거리Km, 기준운임 = draft.기준운임,
             기사지급예정운임 = draft.기사지급예정운임, 알선단계 = draft.알선단계, 재알선금지 = draft.재알선금지,
+            서비스레벨 = draft.서비스레벨, 요청사항 = draft.요청사항,
+            대기료 = draft.대기료, 수작업비 = draft.수작업비, 할증 = draft.할증,
+            알선소Id = draft.알선소Id, 절차메모 = draft.절차메모,
             재알선의심 = draft.재알선의심, 정책위반 = draft.정책위반, 정책경고목록 = draft.정책경고목록,
             생성일시 = DateTime.Now, 픽업지 = draft.픽업도로명주소, 하차지 = draft.하차도로명주소,
             픽업정보 = ShipperRequestHandoffMapper.CreatePickup(draft), 하차정보 = ShipperRequestHandoffMapper.CreateDropoff(draft)
@@ -290,6 +386,7 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
         _pendingRequest = null;
         _pendingNotFound = false;
         State.Reset();
+        ResetPrivacyConsent();
         StatusMessage = "로그인한 계정의 접수 결과를 다시 확인해 주세요.";
         StatusSeverity = Severity.Info;
     }
@@ -300,6 +397,18 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
         if (_auth is not null) _auth.Changed -= OnAuthenticationChanged;
         _pending = null;
         _pendingRequest = null;
+        ResetPrivacyConsent();
+    }
+    private void ClearPrivacyConsent()
+    {
+        ++_consentGeneration;
+        PrivacyConsentEvidenceId = null;
+        _consentRequestId = Guid.NewGuid();
+    }
+    private void ResetPrivacyConsent()
+    {
+        _collectionConsent = _ageConfirmed = false;
+        ClearPrivacyConsent();
     }
     private sealed record SubmissionContext(string Owner, long Revision, long Generation);
     private sealed record SubmissionPayload(ShipperRequestItem Request, 운송모델작성Draft Draft);

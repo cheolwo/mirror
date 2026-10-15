@@ -5,6 +5,8 @@ namespace SsalddelApp.Models.Shipper;
 public sealed class ShipperRequestItem
 {
     public string 의뢰Id { get; set; } = string.Empty;
+    public Guid? 신청개인정보동의증적Id { get; set; }
+    public string 신청출처Code { get; set; } = string.Empty;
     public string 화물종류 { get; set; } = string.Empty;
     public CargoDTO? 화물원본 { get; set; }
     public string? 원본화물종류 { get; set; }
@@ -28,6 +30,13 @@ public sealed class ShipperRequestItem
     public decimal? 예상거리Km { get; set; }
     public decimal? 기준운임 { get; set; }
     public decimal? 기사지급예정운임 { get; set; }
+    public string? 서비스레벨 { get; set; }
+    public string? 요청사항 { get; set; }
+    public decimal? 대기료 { get; set; }
+    public decimal? 수작업비 { get; set; }
+    public decimal? 할증 { get; set; }
+    public string? 알선소Id { get; set; }
+    public string? 절차메모 { get; set; }
     public string 정산시점 { get; set; } = string.Empty;
     public string 증빙방식 { get; set; } = string.Empty;
     public string 수납주체 { get; set; } = string.Empty;
@@ -63,6 +72,16 @@ public sealed class ShipperRequestItem
         중량Kg = source.중량Kg, 부피Cbm = source.부피Cbm, 팔레트개수 = source.팔레트개수,
         화물파손주의여부 = source.화물파손주의여부, 온도조건 = source.온도조건
     };
+
+    internal static 결제수단 신규결제수단확인(string? value)
+        => value switch
+        {
+            null or "" => Ssalddel.Contracts.Shipper.Request.결제수단.카드,
+            "카드" => Ssalddel.Contracts.Shipper.Request.결제수단.카드,
+            "가상계좌" => Ssalddel.Contracts.Shipper.Request.결제수단.가상계좌,
+            "계좌이체" => Ssalddel.Contracts.Shipper.Request.결제수단.계좌이체,
+            _ => throw new InvalidOperationException("선택한 결제 방식의 정산 시점과 수납 주체를 확인해야 합니다. 인수증·현금성 정산은 계약 조건을 확인한 뒤 접수해 주세요.")
+        };
 
     private static bool IsPaymentSecured(string? paymentStatus)
         => ContainsAny(paymentStatus, "결제완료", "결제확보", "입금확인", "승인완료");

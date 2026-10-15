@@ -5,6 +5,8 @@ namespace DriverApp.Services;
 
 public interface IDriverSampleDataService
 {
+    DriverWorkspaceReadState ReadState => new();
+
     Task RefreshAsync(
         CancellationToken cancellationToken = default,
         bool force = false);

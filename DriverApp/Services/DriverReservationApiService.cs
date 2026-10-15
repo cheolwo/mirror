@@ -25,7 +25,7 @@ public sealed class DriverReservationApiService : IDriverReservationApiService
         => await _client.GetAsync<IReadOnlyList<기사예약목록응답>>(
             BasePath,
             "기사 예약 목록 조회",
-            cancellationToken) ?? [];
+            cancellationToken) ?? throw new InvalidOperationException("예약 목록을 확인하지 못했습니다. 예약이 없는 것으로 표시하지 않습니다.");
 
     public Task<기사예약응답?> 생성Async(
         기사예약요청 request,

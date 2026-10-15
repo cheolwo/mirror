@@ -24,7 +24,8 @@ public sealed class DriverFreightWorkspaceStore : IDriverFreightWorkspaceStore
 
     public async Task<기사화물운송작업공간응답> RefreshAsync(CancellationToken cancellationToken = default)
     {
-        Current = await _api.작업공간조회Async(cancellationToken) ?? new 기사화물운송작업공간응답();
+        Current = await _api.작업공간조회Async(cancellationToken)
+            ?? throw new InvalidOperationException("화물 운송 작업공간을 확인하지 못했습니다. 빈 운송 목록으로 표시하지 않습니다.");
         return Current;
     }
 }

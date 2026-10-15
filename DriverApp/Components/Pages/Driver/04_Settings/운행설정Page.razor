@@ -1,27 +1,5 @@
-﻿@page "/driver/work/settings"
-@inject IDriverSampleDataService Samples
+@page "/driver/work/settings"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverPreferences
 
-<PageTitle>운행설정</PageTitle>
-
-<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
-    <MudStack Spacing="3">
-        <MudPaper Class="pa-4" Elevation="1">
-            <MudStack Spacing="1">
-                <MudText Typo="Typo.h4">운행 설정</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">운행 시작 전에 기본 위치와 복귀 기준을 확인한다.</MudText>
-            </MudStack>
-        </MudPaper>
-
-        <MudPaper Class="pa-4" Elevation="2">
-            <MudStack Spacing="2">
-                <MudText Typo="Typo.h6">운행 기본값</MudText>
-                <MudText Typo="Typo.body1">시작 모드: @Samples.근무상태.시작모드</MudText>
-                <MudText Typo="Typo.body1">시작 위치: @Samples.근무상태.시작위치</MudText>
-                <MudText Typo="Typo.body1">복귀지: @(Samples.근무상태.복귀지 ?? "미설정")</MudText>
-                <MudAlert Severity="Severity.Info">나중에 위치 권한과 선호 권역 설정을 붙이면 추천 품질을 바로 확인할 수 있다.</MudAlert>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/driver/work/start">운행 시작으로</MudButton>
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/driver/home">기사 홈으로</MudButton>
-            </MudStack>
-        </MudPaper>
-    </MudStack>
-</MudContainer>
+<PageTitle>받을 업무·적재 설정</PageTitle>
+<DriverWorkParticipationScreen ReturnHref="@DriverRoutes.Menu" LoginHref="@(DriverRoutes.LoginFor("/driver/work/settings"))" />

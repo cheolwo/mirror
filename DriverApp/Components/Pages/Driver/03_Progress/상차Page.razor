@@ -35,8 +35,19 @@
                     <MudAlert Severity="Severity.Warning">운송 정보를 찾지 못했습니다.</MudAlert>
                     <MudButton OnClick="@(() => ViewModel.InitializeAsync(운송Id))" Color="Color.Primary">다시 불러오기</MudButton>
                 }
+                else if (ViewModel.상차완료확인)
+                {
+                    <MudAlert Severity="Severity.Success">상차 완료가 확인되었습니다. 다음 업무로 이동해 주세요.</MudAlert>
+                    <MudButton Href="@(ViewModel.운송?.현재단계 == "인수완료" ? DriverRoutes.CurrentTransport : DriverRoutes.TransportDropoff(운송Id))"
+                               Variant="Variant.Filled" Color="Color.Primary">다음 업무</MudButton>
+                }
                 else
                 {
+                    @if (ViewModel.완료결과확인필요)
+                    {
+                        <MudAlert Severity="Severity.Warning">완료 결과를 아직 확인하지 못했습니다. 사진과 확인 내용은 보존됩니다.</MudAlert>
+                        <MudButton OnClick="@(() => ViewModel.InitializeAsync(운송Id))" Color="Color.Primary">완료 결과 확인</MudButton>
+                    }
                     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
                         <MudStack Spacing="0">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">상차지</MudText>
@@ -409,9 +420,10 @@
                                                StatusMessage="@ViewModel.작업상태.메시지"
                                                StatusSeverity="@ViewModel.작업상태.심각도"
                                                HasPhoto="@ViewModel.사진.사진있음"
+                                               ShowClear="@ViewModel.사진.복구자료폐기가능"
                                                IsCapturing="@ViewModel.사진.촬영중"
                                                CanComplete="@ViewModel.완료가능"
-                                               IsCompleting="@ViewModel.상차완료.처리중"
+                                               IsCompleting="@ViewModel.완료처리중"
                                                CompletionGuide="@ViewModel.완료안내"
                                                CaptureButtonText="상차 완료 사진 촬영"
                                                RetakeButtonText="상차 사진 다시 촬영"

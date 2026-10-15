@@ -1,0 +1,15 @@
+@page "/activity-settlements"
+@page "/activity-settlements/{AgreementId}"
+@layout CommunityMobileLayout
+@inject NavigationManager Navigation
+<PageTitle>활동·정산 내역 · 살뜰</PageTitle>
+<SsalddelApp.Components.Shared.NeighborhoodAuthenticationBoundary AuthenticationChanged="@AuthenticationChanged">
+    <Ssalddel.Ui.Common.Areas.App.Components.Settlement.활동정산Screen @ref="page" AgreementId="@AgreementId" ReturnUrl="@ReturnUrl" LoginHref="@LoginHref" />
+</SsalddelApp.Components.Shared.NeighborhoodAuthenticationBoundary>
+@code {
+    [Parameter] public string? AgreementId { get; set; }
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+    private Ssalddel.Ui.Common.Areas.App.Components.Settlement.활동정산Screen? page;
+    private string LoginHref => NeighborhoodExchangeAuthenticationRoutes.LoginHref(new Uri(Navigation.Uri).PathAndQuery);
+    private Task AuthenticationChanged() => page?.NotifyAuthenticationChangedAsync() ?? Task.CompletedTask;
+}

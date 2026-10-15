@@ -9,6 +9,8 @@ namespace DriverApp.Services.Samples;
 
 public sealed class 기사샘플데이터Service : IDriverSampleDataService
 {
+    public DriverWorkspaceReadState ReadState => DriverWorkspaceReadState.Sample;
+
     private readonly IReadOnlyList<DriverRequestItem> _추천의뢰목록;
     private readonly IReadOnlyList<기사예약샘플항목> _예약목록;
     private readonly IReadOnlyList<기사운송샘플항목> _운송목록;
