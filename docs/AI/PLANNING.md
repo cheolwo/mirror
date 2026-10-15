@@ -1,5 +1,9 @@
 # Mirror 기획 목차
 
+## 생활 퀵 개별 업무 검토 r103 (2026-10-15)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r103 검토](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/quick-delivery-review.r103.md): `Reviewed / GapsIdentified / ImplementationNotAuthorized`. 퀵의 직접 지급/주간 명세와 플랫폼 지급 구분, 접수 수정·취소/희망 시각, 수락 보수/물품 적합성, 부재·반송/신고·수령 마감 공백을 개별 확인했다. 관련 기존 시험 358개 통과이며 신규 정책·코드·실금전·기기 검증은 미수행이다. r102 구현과 기존 기획 미정을 보존한다.
+
 ## 공동주택 기획의 기존 역할 화면 반영 r102 (2026-10-15)
 
 - [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r102 승인 구현](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/role-screen-integration.design.r102.md): `Implemented / LocalValidated / OperationalDeferred`. 주민의 기존 필요글 진입, 본인 약정 기본보수, 기존 입고 일정 요약의 세 범위다. Fast 34개·Task 12,017개 통과 및 루프백 20개 배치·격리 글 저장을 확인했다. [변경·검증](../Changes/2026-10-15-community-role-screens-r102.md)에 미지원 협업 조회·기기·실제 지급의 검증 상한을 기록하며 r101 및 이전 기획의 미정·전문 원장·권한 경계를 보존한다.

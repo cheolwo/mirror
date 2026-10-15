@@ -1,4 +1,8 @@
-# [기획 · 생활 교류·생활권 물류 · PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB · r102]
+# [기획 · 생활 교류·생활권 물류 · PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB · r103]
+
+## 최신 검토: 생활 퀵의 개별 업무 흐름 r103
+
+[검토 r103](quick-delivery-review.r103.md)은 `Reviewed / GapsIdentified / ImplementationNotAuthorized`다. 일반 생활 퀵·동네 회원 배송의 접수/수락/수령과 예외 마감을 따로 대조했다. 현재 퀵은 기사 직접 지급이며 주간 업무 명세 표시를 플랫폼 주간 지급 완료로 볼 수 없다. 수정·취소/희망 시각 보존, 수락 보수/적재 정보, 부재·반송/신고·수령 확인의 공백을 구분했고 관련 기존 시험 358개가 통과했다. 기존 변경의 커밋 정리와 신규 퀵 구현 승인은 별개이며 r102 구현·운영 게이트·금융 분리를 보존한다.
 
 ## 최신 구현: 공동주택 기획의 기존 역할 화면 반영 r102
 
