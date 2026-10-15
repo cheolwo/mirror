@@ -17,6 +17,13 @@ if (mapPreview || collaborationPreview) builder.Configuration.AddUserSecrets("47
 builder.WebHost.UseUrls(previewOrigin).UseStaticWebAssets();
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 var evidence = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "../../artifacts/local/", flexiblePreview ? "neighborhood-flexible-delivery-r22" : collaborationPreview ? "neighborhood-collaboration-r1" : mapPreview ? "community-map-home-r1" : "neighborhood-exchange-mvp-r1"));
+// Keep older review databases intact when validating against a newer schema.
+if (!flexiblePreview && !collaborationPreview && !mapPreview && builder.Configuration["ExchangePreviewEvidenceName"] is { } evidenceName)
+{
+    if (string.IsNullOrWhiteSpace(evidenceName) || evidenceName is "." or ".." || evidenceName.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not '-' and not '_'))
+        throw new InvalidOperationException("Use a single local evidence folder name for the exchange preview.");
+    evidence = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "../../artifacts/local/", evidenceName));
+}
 Directory.CreateDirectory(evidence);
 if (flexiblePreview) builder.AddFlexibleDatabase(evidence);
 else builder.Services.AddDbContext<SsalddelContext>(options => options.UseSqlite($"Data Source={Path.Combine(evidence, "preview.sqlite")}"));
@@ -56,6 +63,14 @@ builder.Services.AddSingleton<ISsalddel현재사용자Context, PreviewDeliveryUs
 builder.Services.AddSingleton<INeighborhoodDeliveryClient, PreviewDeliveryClient>();
 builder.Services.AddTransient<NeighborhoodDeliveryAuthoringViewModel>();
 builder.Services.AddTransient<NeighborhoodDeliveryQueryViewModel>();
+if (!collaborationPreview)
+{
+    // The latest post detail renders the public collaboration summary in every mode.
+    // Keep missing endpoints visible as an ordinary load error; do not synthesize agreements.
+    builder.Services.AddScoped<INeighborhoodCollaborationClient, NeighborhoodCollaborationClient>();
+    builder.Services.AddScoped<NeighborhoodCollaborationDraftSession>();
+    builder.Services.AddTransient<NeighborhoodCollaborationSourceViewModel>();
+}
 if (collaborationPreview) builder.AddCollaborationPreview(evidence);
 if (flexiblePreview) builder.AddFlexibleDelivery();
 var app = builder.Build();

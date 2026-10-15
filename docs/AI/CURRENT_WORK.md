@@ -1,5 +1,143 @@
 # Mirror(거울) Current Work
 
+## 공동주택 기획의 기존 역할 화면 반영 r102 (2026-10-15, 구현·로컬 화면 검증 완료)
+
+- [승인 범위](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/role-screen-integration.design.r102.md)·[변경·검증](../Changes/2026-10-15-community-role-screens-r102.md): 주민의 기존 필요글 작성에 비구속 입고 희망 진입을, 활동정산 상세에 본인 약정 기본보수 요약을, 기존 입고 목록에 상품별 일정·예정/실입고·변경안/이전 예약 구분을 반영했다. 기존 업무 명령·원장·권한·미확정 값과 응답 유실 복구 경계를 유지한다.
+- Fast 34개·Task 12,017개 통과·실패 0개·환경 의존 16개 미실행. 루프백 Chrome 20개 배치와 가상 글 저장·HTTP 재조회·새로 고침을 확인했다. 격리 SQLite 229개 테이블에서 글·기존 음성/키워드 후속만 증가했다. 기본 Preview의 미지원 협업 조회는 오류 안내로 남아 있으며 전체 협업 통합 검증은 아니다. 새 기여금 5%/10% 공제·관리비 반영·공개 일감·자가 피킹·주민 창고 권한은 구현하지 않았다. 기기·외부 운영·실제 지급·Figma·Unity·commit/push는 별도이며 r101과 이전 기획의 미정·구현 이력은 보존한다.
+
+## 이전 기획: 분야 전환·주민 수요와 입고 판단 제안 r101 (2026-10-15)
+
+- [기획 답변 r101](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/workflow-operating-decisions.design.r101.md): `TopicChangeAccepted / NextTopicProposed / ImplementationNotAuthorized`. 사용자의 요청으로 인력·보수 논의를 멈추고 다른 기획 후보를 정리했다. 다음 후보는 주민 수요와 입고 판단, 상품 상태, 잔여 재고 후속 처리다. 주민 입고 희망을 실제 주문과 구분하는 방식을 먼저 제안하며 새 분야의 선택·정책은 아직 미정이다.
+- `onsite-task-list-and-piecework-offer-entry`는 `Deferred / NotDecided / TopicChangeRequested`다. 다음 `resident-nonbinding-inbound-interest`는 `Asked / Unanswered`이며 r100 이하 방향·미정·기존 구현 검증 상한을 보존한다. 제품 코드·DB·권한·실제 주민 자료 수집/업무/지급·기기 시험은 변경하지 않았다.
+
+## 이전 기획: 고객센터 1차 검토·처리 인계 기획 r80 (2026-10-15)
+
+- [기획 답변 r80](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/workflow-operating-decisions.design.r80.md): `AcceptedDirection / QuestionsOpen / ImplementationNotAuthorized`. 신고 후 정산 보류를 유지하고 고객센터 상담원이 문제 상황·증빙·당사자 설명을 먼저 파악해 처리 방향을 안내하거나 해당 업무로 인계하는 방향을 수용했다. 상담 처리와 실제 환불·재배송·보류 해제·송금 결과는 구분한다.
+- `reported-delivery-issue-release-authority`는 `Answered / SupportTriageAccepted / FinancialAuthorityOpen`, 다음 `support-agent-financial-action-authority`는 `Asked / Unanswered`다. 상담원 직접 확인과 운영자 승인 대상 금융 조치를 나눌지 묻는다. 새 계정/역할·금융 결정권·실제 지급·제품 변경은 아직 승인하지 않았다. 기획 문서와 목차만 갱신했으며 r76 구현은 그대로다.
+
+## 이전 기획: 고객 문제 신고 시 정산 보류 r79 (2026-10-15)
+
+- [기획 답변 r79](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/workflow-operating-decisions.design.r79.md): `AcceptedDirection / QuestionsOpen / ImplementationNotAuthorized`. 고객이 미수령·누락·파손을 신고하면 해당 주문의 미지급 정산을 보류하는 방향을 수용했다. 전달 증빙·재원이 있는 단순 무응답 건과 구분하며, 일부 작업 보수 선지급까지 승인한 것으로 해석하지 않는다. 수행 기록·발생액은 보존한다.
+- 질문 `reported-delivery-issue-payment-scope`는 `Answered / HoldAccepted / PartialReleaseUnresolved`, 다음 `reported-delivery-issue-release-authority`는 `Asked / Unanswered`다. 초기 운영자가 양측 설명·전달 증빙을 검토해 해제 여부를 결정할지 묻는다. 다른 주문·주간 전체 동결·자동 환불·기지급 회수·책임 판정·구현 승인은 포함하지 않는다. 기획 문서만 갱신했으며 r76 제품·설정·실금전은 그대로다.
+
+## 이전 기획: 전달 증빙·지급 재원 기반 작업 보수 r78 (2026-10-15)
+
+- [기획 답변 r78](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/workflow-operating-decisions.design.r78.md): `AcceptedDirection / QuestionsOpen / ImplementationNotAuthorized`. 사용자 답변에 따라 전달 증빙과 해당 작업 보수의 지급 재원이 확인되면 고객 무응답과 별도로 확인된 작업 보수를 정산할 수 있는 방향을 확정했다. 고객 수령 상태·공동 성과금·실제 입금·기존 주간 합산은 별개로 유지한다.
+- 기존 질문 `unconfirmed-receipt-earned-work-release`는 `Answered / AcceptedDirection`, 다음 `reported-delivery-issue-payment-scope`는 `Asked / Unanswered`다. 실제 미수령·누락·파손 신고에서 문제 관련 금액과 다툼 없는 작업 보수의 처리를 다음 문답으로 남긴다. 기획만 반영했으며 r76 제품 코드·DB·설정·실제 지급·기기·외부 서비스·commit/push는 변경하지 않았다.
+
+## 이전 검토: 운영 약속·예외 종결 기획 문답 r77 (2026-10-15)
+
+- [검토 초안](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/workflow-operating-decisions.review.r77.md): `Draft / QuestionsOpen / ImplementationNotAuthorized`. 기존 r76 이후 코드 수정 대신 기획 문제를 다시 검토했다. 확인한 작업 보수의 예외 지급, 손실 재원·책임, 재작업 담당·대가, 공간 회수 종결, 운영자 부재 시 서비스 약속이 우선 문답 대상이다.
+- 질문 `unconfirmed-receipt-earned-work-release`는 `Asked / Unanswered`다. 전달 증빙·보수 재원이 확인돼도 고객 무응답인 물품 주문에서 수령 상태와 별도로 작업 보수 검토·정산을 허용할지 묻는다. 기존 보수 발생/지급 구분은 유지하며 아직 자동 지급·보상·수령 완료 정책을 승인하지 않았다. 제품 코드·설정·데이터·기기·외부 서비스·commit/push 변경 없이 기획 문서와 목차만 갱신했다. r76 구현·검증은 아래와 같다.
+
+## 휴대폰 없이 업무 예외 마감 보완 r76 (2026-10-15)
+
+- [승인 범위](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/workflow-exception-closeout.implementation.r76.md)·[구현 결과](../Changes/2026-10-15-workflow-exception-closeout-r76.md)·[역할별 업무 트리](../ProjectOverview/page-docs/role-workflow-tree-r76.md): 운행 시작 거절/유실, 화물 보수 수락·복수 사건 금융 보존, 음식 배차 지연·재조리·지원 인계, 입고 완료·마트 수령 해결·공간 반출과 본인 주간 명세를 보완했다. 반출 후 추가 보관료·기간 원가 배부는 근거 재확인으로 보류한다. Fast 481개·제품 Task 11,996개·공통 규칙 Task 2,001개 통과, 실패 0개·환경 의존 16개 건너뜀·소비 앱 빌드 오류 0개다.
+- 기존 기본 OFF·Simulation·전문 원장·권한·사진·판본·같은 요청 복구와 미커밋 작업을 보존한다. 음식 취소/환불/재조리 비용·불량 처분·반출 추가 보수·활동 지급 신고의 프로세스 종료 뒤 복구는 별도 후속이다. 휴대폰·브라우저 시각·새 APK 설치·Azure/GCS·실제 FCM/송금·운영 활성화·Unity 장면·commit/push는 수행하지 않는다.
+
+## USB 없이 주문·배차·기사 앱 검증 r75 (2026-10-15)
+
+- [승인 범위](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/dispatch-device-cloud-verification.implementation.r75.md)·[결과](../Changes/2026-10-15-local-dispatch-verification-r75.md): 화물 후보 LINQ 오류·푸시 식별자/클릭 복귀·운행 시작 유실 복구·부가 조회 장애/미확인 표시·음식 수락 후 보수 근거를 보완했다. 전체 소비 앱 빌드 오류 0개·Task 11,865개 통과/실패 0개/환경 의존 16개 건너뜀·집중 202개·별도 정책/복구 9개 통과. 기존 미커밋 작업을 보존한다.
+- 음식·화물 APK 0.1.77/177의 서명/해시/현재 소비 소스를 확인하고 음식 ‘살뜰 배달!’ 음원의 패키지 내부 해시도 대조했다. Debug USB 로컬 서버용이며 설치하지 않았다. 실제 FCM·소리 청취·잠금/종료·사진/카메라·시각 검수는 휴대폰 연결 뒤 별도다.
+- 기존 Azure F1 앱은 PC HTTPS 요청에 응답했으나 health 두 경로 404로 Hongdal 배포/업무 준비는 미확인이다. Azure 리소스/배포·운영 migration·실금전·commit/push는 변경하지 않았다. 전용 실행은 격리 SQLite와 명시 대체 포트이며 실제 MySQL/Mongo·Ollama/FCM·화물 HTTP/사진/완료의 성공으로 확대하지 않는다. 일반 화물 기사 보수 미확인과 SignalR/AndroidX 경고는 후속이다.
+
+## USB 실제 휴대폰 APK 검증 r74 (2026-10-15)
+
+- 일곱 앱 설치·기기 APK 해시 대조, 로그인·네이버 지도·주문/재고 목록과 상세·알림 설정·운영자 연결 복구·운행 시작/종료를 확인했다. 최종 기기 판본: 화물 기사 175, 음식 기사 176, 나머지 다섯 앱 174. [검증 결과와 화면](../Changes/2026-10-15-usb-apk-device-verification-r74.md).
+- 기사 API 실행 분류·공간 조회 DI 순환·운행 시작 모드·지원 화면 잘림·commit 후 추천 실패에 따른 시작 실패 응답을 보완했다. 최종 전체 앱 빌드 오류 0, Task 11,779개 통과·환경 의존 16개 건너뜀, 실패 0. 기존 미커밋 작업은 보존한다. 두 기사 시험 근무 종료를 SQL과 대조했고, 화면 유지 설정은 복원했다. 격리 로컬 서버·USB 연결은 사용자 화면 확인용으로 유지한다.
+- 유가/경로 미설정으로 정상 추천·수락 이후 촬영·배송/수령 완주는 차단됐다. 실제 FCM·결제/송금·Azure/GCS·운영 migration·Release 배포와 commit/push는 미실시다. 설치/로컬 검증을 운영 준비 완료로 합치지 않는다.
+
+
+## 배송료 선결제·화물 주간 지급 준비 r73 (2026-10-15, 로컬 검증 완료)
+
+- [승인 범위](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/transport-prepayment-settlement.implementation.r73.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/transport-prepayment-settlement.r73.work-order.json): 저장 배송료/혜택 근거, 토스 입금 상태와 동일 결제 재조회, 승인 후속 상태 보존, 완료 주간 기준 화물 지급 준비 명세를 보완했다. 두 옵션 기본 OFF·실지급 Provider 미연결. [구현·검증](../Changes/2026-10-15-transport-prepayment-settlement-r73.md).
+- 사용자 기준은 업무별 건별 보수 발생과 한 사람 기준 주간 합산이다. 음식·피킹까지의 통합 명세/공통 지급·주간 자동 마감·실송금은 아직 후속이다. [주간 연결 확인](../ProjectOverview/page-docs/weekly-worker-payout-audit-r73.md). Fast 268개·Task 11,736개 통과·환경 의존 16개 건너뜀·전체 소비 앱 빌드 오류 0개이며 공용 DB·실금전·휴대폰 설치·운영 ON·commit/push를 하지 않는다.
+
+
+## 기사 직선거리 요금과 추천 배차 표시 r72 (2026-10-15, 구현·로컬 검증 완료)
+
+- [승인 범위](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/straight-line-driver-pricing.implementation.r72.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/straight-line-driver-pricing.r72.work-order.json): 음식/소형 배송 기사 거리비를 픽업→전달 직선 1km당 1,000원·원 단위 비례 반올림으로 준비하고, 두 기사 앱의 업무별 색 배너와 실제 맡을 작업/요금 근거를 연결한다. 기본/할증·기존 합의/동결·고객 청구·일반 화물·안전 관문을 구분한다. 기본 OFF이며 [변경·검증](../Changes/2026-10-15-straight-line-driver-pricing-r72.md)에 최종 범위를 기록한다.
+
+- Fast 246개·Task 11,636개 통과, 실패 0개·환경 의존 16개 건너뜀·전체 소비 앱 빌드 오류 0개/경고 61개. 공통 Razor 정적 렌더 5상태·기존 범위 밖 변경 파일 341개 보존. 브라우저 연결 부재로 화면 캡처는 미실시이며 실제 휴대폰·새 APK·운영 ON·commit/push는 별도다.
+
+## 기사 업무 선택과 공통 수락 보호 r71 (2026-10-15, 구현·로컬 검증 완료)
+
+- [승인 범위](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/driver-participation.implementation.r71.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/driver-participation.r71.work-order.json): 기사 본인의 음식·퀵·화물 희망과 직접 피킹 옵션, 공통 미완료 업무 수락 검사, 두 기사 앱 설정을 연결했다. 전문 원장·기존 자격·일정·사진·보수는 유지한다. Fast 493개·분산 묶음 5개·Task 11,550개 통과, 환경 의존 16개 건너뜀·전체 앱 빌드 오류 0개. 별도 실제 MySQL 두 연결의 마지막 한 자리 수락 시험 1개 통과. [변경·검증](../Changes/2026-10-15-driver-participation-r71.md). 기능 기본 OFF·혼합 근거 부족 시 보류·지도/배차 목록 통합·새 APK 배포/실기기·운영/commit/push 별도.
+
+## 비공개 APK 준비와 화주 인수증 연결 r70 (2026-10-15, 구현·로컬 검증 완료)
+
+- [승인 범위](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/private-apk-preparation.implementation.r70.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/private-apk-preparation.r70.work-order.json): 기존 인수증 API의 모바일 입력·유실 재조회, 로컬 GCS APK 준비와 역할별 현황을 보완했다. Fast 155·Task 11,425개 통과, 환경 의존 15개 건너뜀·전체 소비 앱 빌드 오류 0개. 공통 패널 HTTP SSR 4상태와 로컬 Debug APK 두 개(0.1.70/170)의 서명·ABI·해시를 확인했다. [현황·다음 순서](../Deployment/PrivateApkPilotReadiness-20261015.md)·[결과](../Changes/2026-10-15-private-apk-preparation-r70.md). SignalR/.NET 보안 갱신, 외부 HTTPS·초대 접근·푸시·실기기는 후속이며 실제 업로드·운영·commit/push는 별도다.
+
+## 국내 화물 한 건 마감 r69 (2026-10-14, 구현·로컬 검증 완료)
+
+- [수용 범위](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/cargo-closeout.implementation.r69.md): 화주 작성 원문·실제 동의 연결, 접수 원장/사진/완료 인수 보호, 기사 상차 재조회·암호화 사진 복구·영속 후속, 본인 운송대금 목록/상세를 보완했다. 기존 음식·마트·분산 업무, 금융 상태와 실제 송금은 구분한다.
+- Fast 661개·API 경계 5개·Task 11,395개 통과, 환경 의존 MongoDB 15개 건너뜀·전체 소비 앱 빌드 오류 0개. localhost HTML 9개 상태와 격리 MySQL/MongoDB 화물 5단계, 서버 재시작 뒤 완료 인수·삭제 보호·지급 준비·후속 Done·금융 상태 보존을 확인했다. [구현·실행·한계](../Changes/2026-10-14-cargo-closeout-r69.md). 브라우저 시각·물리 기기·실입금·운영 활성화·commit/push는 별도다.
+
+## 마트 고객 수령과 기존 보수 지급 조건 연결 r68 (2026-10-13, 구현·로컬 검증 완료)
+
+- [수용 범위](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/mart-customer-receipt.implementation.r68.md): 실제 주문자의 전량 수령·부분/누락/파손 보류를 기존 마트배송시도에 보호 저장하고 기존 정산 지급 관문에 연결했다. 기사 전달과 수령, 접수 기록과 현재 검증을 분리하며 사전 합의·기존 보수·지급 기록을 보존했다. 신규 창고 시각은 SQL/JSON의 UTC 마이크로초 정밀도를 맞췄다.
+- 집중 45개·Fast 347개·DB 호환 Fast 4개·Task 11,236개 통과, 환경 의존 MongoDB 15개 건너뜀, 최종 소비 앱 빌드 오류 0개. 범위 밖 기존 파일 171개를 보존했다. 운영 기본 OFF·Simulation을 유지하며 보류 해제·실제 MySQL/동시 HTTP·화면/단말·공유 DB 적용·실제 이체·Azure/GCS·Unity·commit/push는 후속이다. [변경 및 검증](../Changes/2026-10-13-mart-customer-receipt-r68.md).
+
+## 주문별 원가·보수와 마트 작업 근거 연결 r67 (2026-10-13, 구현·로컬 검증 완료)
+
+- [수용 범위](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/mart-order-compensation.implementation.r67.md): 사용자 선택 1·2번에 따라 기존 원주문의 참조 아래 본인 원가·보수를 읽고, 마트 피킹·포장의 실제 완료 근거를 기존 정산에 연결한다. 입고 작업자 채무와 주문별 원가 귀속은 구분하며 미정 단가·불명확한 과거 근거를 0원이나 완료로 바꾸지 않는다.
+- 기존 r59~r65 미커밋 작업을 보존했다. 실제 완료자/수량 동결, 작업 전 합의 판본, 전역 중복 보호와 권한을 구현했다. Fast 250개·Task 11,202개 통과, 환경 의존 MongoDB 15개 건너뜀, 앱 소비 프로젝트 빌드 오류 0개. 운영 기본 OFF·Simulation을 유지하며 신규 앱 화면·APK·공유 DB 적용·고객 수령 후 지급 해제·실제 지급·Azure/GCS·Unity·commit/push는 후속이다.
+
+## 역할별 업무 시작·완료 연결 검증 r66 (2026-10-12, 조사·재현 완료)
+
+- [역할별 검증 보고서](../ProjectOverview/page-docs/role-work-completion-audit-r66.md): 음식 주문자/음식점/기사, 공급자/공간 제공자/입고·피킹/물품 배송/수령자, 지급자/수령자/운영자의 시작·마무리와 화물 완료 인계를 현재 코드·기존 시험으로 대조했다. 정상 작업·상대방 확인·정산·지급 신고·사건 종결은 별개다.
+- 기존 집중 시험 620건 통과·실패/건너뜀 0, 현재 OS 카탈로그 63개 검사 통과. 독립 SQLite 두 개에서 같은 입고 행·재고가 수령/취소 순서에 따라 `PartiallyReceived`/`Received`로 달라지는 문제를 재현했다. 지급 신고 화면 연결, 공간 종료 재고 반출, 음식 수락 후 취소와 장기 미수령의 예외 종결이 주요 후속이다. 제품 수정·실제 계약/송금·기기/Azure/Unity·운영 설정 변경·commit/push는 수행하지 않았다. 이전 미커밋 작업은 보존한다.
+
+## 입고·보관 공통 UI 구조 정리 r65 (2026-10-12, 로컬 검증 완료)
+
+- [수용 설계](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/inbound-cleanup.implementation.r65.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/inbound-cleanup.r65.work-order.json): 사용자의 정리 우선 요청에 따라 같은 ViewModel 안의 주문/사진 책임을 partial로 나누고 표시 중복을 기존 공통 파일로 모은다. 화면/문구/동작·서버/원장·Recovery 형식은 보존한다. [변경·검증·후속](../Changes/2026-10-12-inbound-cleanup-r65.md). 새 기능·서비스·DI·운영 활성화·commit/push는 범위 밖이다.
+
+- 검증: Fast 225건·Task 11,167건 통과·실패 0건·환경 의존 MongoDB 15건 건너뜀·전체 앱 빌드 오류 0개/경고 145개. 기존 멤버 90개·Razor 출력 10개·CSS 3개·보호 파일 38개 보존을 확인했다. 기기 설치·운영 활성화·commit/push는 수행하지 않았다.
+
+## 입고·공간·보관 협의 시각 정돈 r64 (2026-10-12, 로컬 검증 완료·운영 OFF)
+
+- [수용 설계](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/inbound-visual.implementation.r64.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/inbound-visual.r64.work-order.json): 사용자 후속 요청에 따라 컬러 이모지 없이 단색 아이콘·수량/상태 위계·의미별 섹션·2열/좁은 폭 배치를 기존 r63 공통 화면에 적용한다. 서버/VM/계약/정산/승인 조건은 유지한다. [화면·검증](../Changes/2026-10-12-inbound-visual-r64.md). 기본 OFF·기기/Azure·commit/push 별도.
+
+- 검증: Fast 74건·Task 11,167건 통과·환경 의존 MongoDB 15건 건너뜀·전체 앱 빌드 오류 0개/경고 144개·로컬 Edge 9개 배치 확인. 실제 단말/인증 HTTP·공유 DB 적용은 별도다.
+
+## 공급자·공간 제공자 입고 협의 구현 r63 (2026-10-12, 로컬 검증 완료·운영 OFF)
+
+- [수용 설계](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/supplier-space-inbound.implementation.r63.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/supplier-space-inbound.r63.work-order.json): r62 제안을 승인받아 공간 수용 조건·품목/포장/온도/용량 검사, 입고 행별 제안·동일 판본 양측 동의·예약, 현재 보관 계약과 변경안 분리를 기존 서버·공통 모바일 UI에 연결한다.
+- [페이지→코드→DB 책임](../ProjectOverview/page-docs/distributed-inbound-collaboration-r63.md)·[변경 및 검증](../Changes/2026-10-12-supplier-space-inbound-r63.md). Fast 279건·Task 11,167건 통과, 실패 0건·환경 의존 MongoDB 15건 건너뜀·전체 앱 빌드 오류 0개. 예약은 실제 재고·보수가 아니며 사진·바코드·실수량이 있는 입고만 정산 근거가 된다. 기본 OFF·Simulation 유지, Unity·실제 DB/단말/Azure·실제 계약/지급·commit/push는 별도다. 기존 미커밋 작업은 보존한다.
+
+## 공급자·공간 제공자 협의와 계약 후 입고 r62 (2026-10-12, 방향 기록·후속 설계)
+
+- [현재 기획](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/supplier-space-inbound.design.r62.md): 농가·공장·제조업체와 공간 제공자의 협의, 농산물 거부/공산품 허용 등 수용 조건, 계약 후 건별 물량·일정 승인을 제안했다. 기존 양측 보관 합의·합의 전 초안·사진 수령은 이미 있는 기반으로 구분했다.
+- `AcceptedDirection / ProposedDesign / ImplementationPending / OperationalDeferred`. 조사·문서 작업이며 제품 코드·DB·APK·Unity·실제 계약·외부 메시지·운영 활성화·commit/push는 수행하지 않는다. 다음 구현 순서는 공간 수용 정책 → 계약 협의/입고 예약 승인 → 수령·공간 전체 용량·r60/r61 원가 연결이다. 첫 구현안은 건별 명시 승인이며 반복 자동 입고는 미확정이다. 기존 미커밋 구현은 보존한다.
+
+- 문서 전용 Fast 차이 검사 통과·새 기획서 링크 17개 경로 확인·독립 읽기 검토 완료. 제품 빌드/업무 시험은 미실행이며 검사 기록은 `artifacts/local/validation/20261012-133948/`다.
+
+## 원가 귀속·플랫폼 몫 r61 (2026-10-12, 로컬 검증 완료·운영 OFF)
+
+- [수용 설계](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/settlement-economics.implementation.r61.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/settlement-economics.r61.work-order.json): 사용자 선택 1·2번의 입고·보관 원가 귀속 및 잔여금 5%/10% 플랫폼 몫을 기존 정산 원장에 연결했다. 무료 확인·원 단위 잔액·원천 조정·동시 변경·본인 정보·기간 중복 환원을 보호한다.
+- [검증 반환](../Changes/2026-10-12-settlement-economics-r61.md): Fast 239건·Task 11,088건 통과, 환경 의존 MongoDB 15건 건너뜀·전체 앱 빌드 오류 0. 순차 피킹 뒤 과거 보관 수량과 플랫폼 증빙 비노출도 확인했다. 실제 DB·외부 지급·운영·단말·Azure·Unity·AI 경제 연계·commit/push는 별도다. 기존 미커밋 작업은 보존한다.
+
+## 입고·보관과 출고·배송 정산 분리 r60 (2026-10-12, 로컬 검증 완료·운영 OFF)
+
+- [수용 범위](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/receiving-outbound.implementation.r60.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/receiving-outbound.r60.work-order.json): 기존 Lot/주문을 재사용해 새 약정의 업무 경계·지급 시점을 동결하고, 부분 입고·보관 근거와 출고 후 고객 수령 관문을 분리했다. 보수 발생과 실제 지급은 별개다.
+- [검증 반환](../Changes/2026-10-12-receiving-outbound-r60.md): Fast 159건·Task 11,005건 통과, 환경 의존 MongoDB 15건 건너뜀·빌드 오류 0. 목록·상세의 업무 구분, 당시 항목별 지급 조건, 과거 채권·환불·멱등 재조회 보존을 격리 SQLite와 HtmlRenderer로 검증했다. 실운영·은행·단말·Azure·Unity·커밋/푸시는 별도이며 이전 r53/r54/r59 작업을 보존한다.
+
+## 생활 공간 활동 보수·공동 성과금 r59 (2026-10-12, 로컬 검증 완료·운영 OFF)
+
+- [수용 범위](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/activity-compensation.implementation.r59.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/activity-compensation.r59.work-order.json): 실제 주문/수량/처리자/사진 근거, 기본 보수와 추가 성과금 분리, 최신 판본 동의·계산 지문·중복 발생 보호, 본인 활동/정산 목록·상세를 연결했다.
+- [검증 반환](../Changes/2026-10-12-activity-compensation-r59.md): 전체 앱 빌드 오류 0·Fast 518건·Task 10,957건 통과, 환경 의존 MongoDB 15건 건너뜀. 실제 격리 입고/사진/피킹/배송/수령→정산 연결과 HtmlRenderer를 검증했다. 구형/미귀속 입고·보관은 추정하지 않는다. 경제 입력은 Simulation 합의 진술이고 실제 지급/은행/단말/Azure/운영 활성화/커밋·푸시는 별도다. 기존 r53/r54 미커밋 작업을 보존한다.
+
+## 음식 배차 알림 복구·기사 겸 운영자 r54 (2026-10-11, 로컬 통합 검증 완료·운영 OFF)
+
+- [승인 설계](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/notification-recovery.implementation.r54.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/notification-recovery.r54.work-order.json)에 따라 사용자 선택 1·2·4번을 구현했다. 유효한 추천의 누락 알림 복원, 제한 재시도·동시 발송 방지·중단 복구, 일시 오류 경보 억제와 조치 안내를 연결한다. r53 변경을 보존한다.
+- [변경/검증 기록](../Changes/2026-10-11-food-dispatch-notification-recovery-r54.md): 일반 기사 두 건 연속 수행·동일 저장소의 HTTP host 재생성·본인 우대 없는 선정까지 검증했다. 최종 Fast 107개·격리 Mongo 24개를 포함한 Task 전체 10,895개 통과, 실패/건너뜀 0·빌드 오류 0이다. 최초 실패와 수정 이력·임시 DB/컨테이너 정리·이전 작업 보존을 기록했다. 실제 기기·FCM·GPS·전체 프로세스/Redis 재시작·운영 활성화·Azure·학습·commit/push는 별도다.
+
+## 음식 배차 정보 준비 상태 r53 (2026-10-11, 로컬 검증 완료·운영 OFF)
+
+- [수락 설계](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/information-readiness.implementation.r53.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/information-readiness.r53.work-order.json)를 현재 스레드 요청으로 승인·해시 고정했다. 기존 원주문·현재 조리·좌표·주문 풀·수요·기사 여력을 확인하고 수집 판단에 결속한다. 누락·만료이면 추가 수집 대신 기존 후보/요금 관문으로 복귀한다.
+- 수집 판단의 준비와 전체 당사자 조율 준비를 구분한다. 고객 확약·비용 동의·기사 일정/적재·현재 후보 견적·플랫폼 확정 재원은 실제 확인 근거가 없으면 부족으로 보존한다. 금액을 0으로 만들거나 상품 매출/Simulation 동의를 운영 재원으로 승격하지 않는다.
+- [변경/검증 기록](../Changes/2026-10-11-food-dispatch-information-readiness-r53.md): Fast 217개 통과 후 사용자 후속 요청으로 기존 Docker Mongo 이미지를 격리 replica set/standalone 시험에 재사용했다. Mongo Fast 24개·최종 Task 전체 10,855개 통과, 실패/건너뜀 0·solution 빌드 오류 0이다. 처음 건너뛴 15개는 활성화 뒤 23개로 펼쳐졌고 문서 왕복 1개도 실검증했다. 시험용 집계 오류와 임시 공간 여유 부족의 최초 실패 기록을 보존한다. 시험 DB/컨테이너 정리 완료·기존 DB/볼륨 변경 0이다. 원장 재조회 뒤 정보 만료·재조리 이전 예정시각 재사용을 차단하고 설계 해시·기준선 HEAD·빈 index·명세 밖 소스 변경 0을 유지한다. 기존 기본 OFF·r52 시간 상한·후속 후보/요금/수락 관문을 유지하며 실제 모델·외부 API 추가 호출·알림·학습·APK 설치/단말 실행·USB·Azure·Unity·커밋/푸시는 수행하지 않았다.
+
 ## 음식 주문 수집·배차 시점 판단 r52 (2026-10-11, 로컬 검증 완료·운영 OFF)
 
 - [수락 설계](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/batch-timing.implementation.r52.md)·[작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/batch-timing.r52.work-order.json)에 따라 첫 음식 추천 전에 짧게 주문을 모을지 현재 배차로 진행할지 서버 정책과 제한 AI 선택을 연결했다. 최초 접수 시각의 대기 상한·자료 신선도·확인된 조리 예정 시각·큐 판본을 재확인한다. 공유 기본값은 OFF다.
