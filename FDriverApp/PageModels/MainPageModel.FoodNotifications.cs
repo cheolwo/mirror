@@ -1,5 +1,6 @@
 using FDriverApp.Services;
 using Ssalddel.Contracts.Driver.Food;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverOffers;
 
 namespace FDriverApp.PageModels;
 
@@ -13,6 +14,15 @@ public sealed partial class MainPageModel
     private string _notificationSettingsNotice = "알림 설정 확인 전";
     public string NotificationSettingsNotice => _notificationSettingsNotice;
     public string? FoodNotificationFocus => _foodNotificationFocus;
+    private DeliveryTicketPreview? LatestRecommendationForDisplay => _foodNotificationState.LatestOfferId is { } id
+        ? RecommendedTicketItems.FirstOrDefault(x => x.TicketId == id)
+        : RecommendedTicketItems.FirstOrDefault(x => !x.IsExpired);
+    private DriverOfferVisual NewRecommendationVisual => LatestRecommendationForDisplay?.OfferVisual ?? DriverOfferPresentation.Resolve(null, []);
+    public string NewRecommendationPrimaryColor => NewRecommendationVisual.PrimaryColor;
+    public string NewRecommendationSecondaryColor => NewRecommendationVisual.SecondaryColor ?? DriverOfferPresentation.WarehouseColor;
+    public bool NewRecommendationHasCombinedWork => NewRecommendationVisual.IsCombined;
+    public string NewRecommendationWorkLabel => "최근 요청 · " + NewRecommendationVisual.Label;
+    public string NewRecommendationActivityText => NewRecommendationVisual.ActivityText;
 
     public string? TakeFoodNotificationFocus()
     {
@@ -68,6 +78,7 @@ public sealed partial class MainPageModel
         NewRecommendationNotice = HasNewRecommendations
             ? $"새 추천 배차 {_foodNotificationState.UnreadCount}건이 도착했습니다."
             : "확인할 새 추천 배차가 없습니다.";
+        NotifyRecommendationPresentation();
     }
 
     private void ClearFoodNotifications()
@@ -76,9 +87,19 @@ public sealed partial class MainPageModel
         _foodNotificationFocus = null;
         HasNewRecommendations = false;
         NewRecommendationNotice = "확인할 새 추천 배차가 없습니다.";
+        NotifyRecommendationPresentation();
         _settingsCheckedAtUtc = default;
         _notificationSettingsNotice = "알림 설정 확인 전";
         OnPropertyChanged(nameof(NotificationSettingsNotice));
+    }
+
+    private void NotifyRecommendationPresentation()
+    {
+        OnPropertyChanged(nameof(NewRecommendationPrimaryColor));
+        OnPropertyChanged(nameof(NewRecommendationSecondaryColor));
+        OnPropertyChanged(nameof(NewRecommendationHasCombinedWork));
+        OnPropertyChanged(nameof(NewRecommendationWorkLabel));
+        OnPropertyChanged(nameof(NewRecommendationActivityText));
     }
 
     private async Task RefreshNotificationSettingsAsync(CancellationToken token)

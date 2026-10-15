@@ -92,8 +92,8 @@
                         </VerticalStackLayout>
                         <Border Style="{StaticResource DriverCardStyle}"
                             IsVisible="{Binding HasNewRecommendations}"
-                            BackgroundColor="{StaticResource DriverAccent}"
-                            Stroke="{AppThemeBinding Light={StaticResource DriverAccentBorder}, Dark={StaticResource DriverBorderDark}}"
+                            BackgroundColor="White"
+                            Stroke="{StaticResource DriverBorder}"
                             StrokeThickness="1"
                             Padding="8"
                             HorizontalOptions="Fill"
@@ -101,13 +101,19 @@
                             <Border.StrokeShape>
                                 <RoundRectangle CornerRadius="16" />
                             </Border.StrokeShape>
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{StaticResource DriverSpaceSmall}">
-                                <VerticalStackLayout Spacing="4">
+                            <Grid ColumnDefinitions="4,4,24,*,Auto" ColumnSpacing="6">
+                                <BoxView Color="{Binding NewRecommendationPrimaryColor}" />
+                                <BoxView Grid.Column="1" Color="{Binding NewRecommendationSecondaryColor}" IsVisible="{Binding NewRecommendationHasCombinedWork}" />
+                                <Path Grid.Column="2" Data="M3 7 L12 2 L21 7 L21 17 L12 22 L3 17 Z M3 7 L12 12 L21 7 M12 12 L12 22"
+                                    Stroke="#172B36" StrokeThickness="1.6" Aspect="Uniform" HeightRequest="24" WidthRequest="24" VerticalOptions="Center" />
+                                <VerticalStackLayout Grid.Column="3" Spacing="4">
                                     <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding NewRecommendationNotice}"
                                         FontAttributes="Bold"
-                                        TextColor="{StaticResource White}" />
+                                        TextColor="#172B36" />
+                                    <Label Style="{StaticResource DriverBodyStyle}" Text="{Binding NewRecommendationWorkLabel}" TextColor="#172B36" />
+                                    <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding NewRecommendationActivityText}" TextColor="#586B78" />
                                 </VerticalStackLayout>
-                                <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_right_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Grid.Column="1"
+                                <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_right_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Grid.Column="4"
                                     Text="보기"
                                     Padding="8,8" VerticalOptions="Center"
                                     Command="{Binding OpenNewRecommendationsCommand}"
@@ -287,6 +293,14 @@
                                                                 Command="{Binding ToggleDeliveryDetailsCommand}" />
                                                             <VerticalStackLayout IsVisible="{Binding IsDeliveryDetailsExpanded}" Spacing="8">
                                                                 <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding PickupPointText}" IsVisible="{Binding HasPickupStage}" LineBreakMode="WordWrap" />
+                                                                <VerticalStackLayout IsVisible="{Binding HasActiveWork}" Spacing="4">
+                                                                    <Label Style="{StaticResource DriverMetadataStyle}" Text="배달료 산정 근거" SemanticProperties.HeadingLevel="Level3" />
+                                                                    <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding ActiveDelivery.PricingDistanceText}" />
+                                                                    <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding ActiveDelivery.PricingDistanceFeeText}" />
+                                                                    <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding ActiveDelivery.PricingRateText}" />
+                                                                    <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding ActiveDelivery.PricingComponentsText}" LineBreakMode="WordWrap" />
+                                                                    <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding ActiveDelivery.PricingPolicyText}" LineBreakMode="WordWrap" />
+                                                                </VerticalStackLayout>
                                                                 <VerticalStackLayout IsVisible="{Binding HasActiveWork}" Spacing="8">
                                                                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12" Margin="0,4,0,0">
                                                                         <Label Style="{StaticResource DriverMetadataStyle}" Text="현장 처리" SemanticProperties.HeadingLevel="Level3" />
@@ -348,6 +362,16 @@
                                                             <DataTemplate x:DataType="pageModels:DeliveryTicketPreview">
                                                                 <Border Style="{StaticResource DriverCardStyle}" Padding="8">
                                                                     <VerticalStackLayout Spacing="4">
+                                                                        <Grid ColumnDefinitions="4,4,24,*" ColumnSpacing="6" BackgroundColor="White">
+                                                                            <BoxView Color="{Binding OfferPrimaryColor}" />
+                                                                            <BoxView Grid.Column="1" Color="{Binding OfferSecondaryColor}" IsVisible="{Binding HasCombinedWork}" />
+                                                                            <Path Grid.Column="2" Data="M3 7 L12 2 L21 7 L21 17 L12 22 L3 17 Z M3 7 L12 12 L21 7 M12 12 L12 22"
+                                                                                Stroke="#172B36" StrokeThickness="1.6" Aspect="Uniform" HeightRequest="24" WidthRequest="24" VerticalOptions="Center" />
+                                                                            <VerticalStackLayout Grid.Column="3" Spacing="4">
+                                                                                <Label Style="{StaticResource DriverBodyStyle}" Text="{Binding OfferLabel}" TextColor="#172B36" />
+                                                                                <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding AssignedActivityText}" TextColor="#586B78" />
+                                                                            </VerticalStackLayout>
+                                                                        </Grid>
                                                                         <Label Style="{StaticResource DriverBodyStyle}" Text="{Binding OrderSummary}" FontAttributes="Bold" />
                                                                         <Label Style="{StaticResource DriverBodyStyle}" Text="{Binding RestaurantName}" />
                                                                         <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding RestaurantAddress}" LineBreakMode="WordWrap" />
@@ -356,6 +380,9 @@
                                                                         <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding RemainingText}" FontAttributes="Bold"
                                                                             TextColor="{AppThemeBinding Light={StaticResource DriverWarning}, Dark={StaticResource DriverWarningDark}}" />
                                                                         <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding DistanceText}" />
+                                                                        <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding PricingDistanceText}" />
+                                                                        <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding PricingDistanceFeeText}" />
+                                                                        <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding PricingRateText}" IsVisible="{Binding HasPricingEvidence}" />
                                                                         <Label Style="{StaticResource DriverValueStyle}" Text="{Binding DriverPayoutText}" />
                                                                         <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding WeatherSurchargeText}" IsVisible="{Binding IsWeatherSurchargeApplied}" />
                                                                         <Button maps:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.directions_24_regular}" Style="{StaticResource DriverSecondaryButtonStyle}" Text="지도에서 선택"
@@ -415,6 +442,9 @@
                                 <Label Style="{StaticResource DriverSectionStyle}" Text="설정" Margin="0,16,0,0" />
                                 <Border Style="{StaticResource DriverCardStyle}" Padding="0">
                                     <VerticalStackLayout Spacing="0">
+                                        <maps:DriverProfileMenuRow Text="받을 업무·적재 설정" Glyph="{x:Static fonts:FluentUI.list_24_regular}"
+                                            Clicked="OnWorkPreferencesClicked" />
+                                        <BoxView Style="{StaticResource DeliverySectionDividerStyle}" Margin="16,0" />
                                         <maps:DriverProfileMenuRow Text="복귀 권역" Glyph="{x:Static fonts:FluentUI.my_location_24_regular}"
                                             Clicked="OnReturnAreaSettingsClicked" />
                                         <BoxView Style="{StaticResource DeliverySectionDividerStyle}" Margin="16,0" />

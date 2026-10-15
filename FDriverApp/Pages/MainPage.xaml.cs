@@ -165,6 +165,9 @@ namespace FDriverApp.Pages
         private async void OnReturnAreaSettingsClicked(object? sender, EventArgs args)
             => await OpenProfileSettingsAsync(ReturnAreaSettingsPage.RouteName);
 
+        private async void OnWorkPreferencesClicked(object? sender, EventArgs args)
+            => await OpenProfileSettingsAsync(WorkPreferencesPage.RouteName);
+
         private async void OnDeliveryExperienceSettingsClicked(object? sender, EventArgs args)
             => await OpenProfileSettingsAsync(DeliveryExperienceSettingsPage.RouteName);
 

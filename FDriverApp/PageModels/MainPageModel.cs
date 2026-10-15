@@ -13,6 +13,7 @@ using Ssalddel.Contracts.Driver.Work;
 using Ssalddel.Ui.Common.Areas.App.Services;
 using Ssalddel.Ui.Common.Areas.App.Models;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverOffers;
 
 namespace FDriverApp.PageModels;
 
@@ -1231,6 +1232,20 @@ public sealed partial class MainPageModel : ObservableObject
 
 public sealed class DeliveryTicketPreview : ObservableObject
 {
+    public string? WorkKind { get; init; }
+    public IReadOnlyList<string> AssignedActivities { get; init; } = [];
+    public DriverOfferPricingDto? Pricing { get; init; }
+    public DriverOfferVisual OfferVisual => DriverOfferPresentation.Resolve(WorkKind ?? ExecutionProfile.실행유형코드, AssignedActivities);
+    public DriverOfferPricingVisual OfferPricing => DriverOfferPresentation.Pricing(Pricing);
+    public string OfferPrimaryColor => OfferVisual.PrimaryColor;
+    public string OfferSecondaryColor => OfferVisual.SecondaryColor ?? DriverOfferPresentation.WarehouseColor;
+    public bool HasCombinedWork => OfferVisual.IsCombined;
+    public string OfferLabel => OfferVisual.Label;
+    public string AssignedActivityText => OfferVisual.ActivityText;
+    public string PricingDistanceText => OfferPricing.DistanceText;
+    public string PricingDistanceFeeText => OfferPricing.DistanceFeeText;
+    public string PricingRateText => OfferPricing.RateText;
+    public bool HasPricingEvidence => OfferPricing.HasEvidence;
     private string _remainingText = "응답시간 확인 중";
     private bool _isExpired;
     private DateTime _nowUtc;
@@ -1342,14 +1357,15 @@ public sealed class DeliveryTicketPreview : ObservableObject
             item.RecommendationReason,
             item.ExpiresAtUtc,
             item.ExecutionProfile,
-            item.AvailableActions, nowUtc);
+            item.AvailableActions, nowUtc)
+        { WorkKind = item.WorkKind, AssignedActivities = item.AssignedActivities, Pricing = item.Pricing };
 
     public DriverWorkOfferDto ToDriverWorkOffer(FDriverAppProfile profile)
         => new(
             TicketId,
             profile.AppKey,
             profile.DriverDomain,
-            profile.PrimaryWorkType,
+            WorkKind ?? profile.PrimaryWorkType,
             OrderSummary,
             $"{PickupActionLabel} · {CompletionActionLabel}",
             Pickup,
@@ -1359,7 +1375,8 @@ public sealed class DeliveryTicketPreview : ObservableObject
             RecommendationReason,
             ExecutionProfile: ExecutionProfile,
             WeatherSurcharge: WeatherSurcharge,
-            WeatherSurchargeApplied: IsWeatherSurchargeApplied);
+            WeatherSurchargeApplied: IsWeatherSurchargeApplied)
+        { AssignedActivities = this.AssignedActivities, Pricing = this.Pricing };
 
     internal static string ActionLabel(string? value, string fallback)
         => string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
@@ -1391,6 +1408,15 @@ public sealed record ActiveDeliveryPreview(
     FoodDeliveryDriverRecipientDto Recipient,
     IReadOnlyList<업무가능행동Dto> AvailableActions)
 {
+    public string? WorkKind { get; init; }
+    public IReadOnlyList<string> AssignedActivities { get; init; } = [];
+    public DriverOfferPricingDto? Pricing { get; init; }
+    public DriverOfferPricingVisual OfferPricing => DriverOfferPresentation.Pricing(Pricing);
+    public string PricingDistanceText => OfferPricing.DistanceText;
+    public string PricingDistanceFeeText => OfferPricing.DistanceFeeText;
+    public string PricingRateText => OfferPricing.RateText;
+    public string PricingComponentsText => OfferPricing.ComponentsText;
+    public string PricingPolicyText => OfferPricing.PolicyText;
     public IReadOnlyList<DeliveryExperienceSummaryDto> ExperienceSummaries { get; init; } = [];
     public string OrderNo { get; init; } = string.Empty;
     public bool HasSupportSource => !string.IsNullOrWhiteSpace(OrderNo);
@@ -1451,6 +1477,9 @@ public sealed record ActiveDeliveryPreview(
             CurrentPreparationRound = item.CurrentPreparationRound,
             CurrentPickupReadyAtUtc = item.CurrentPickupReadyAtUtc,
             RecookingRequestedAtUtc = item.RecookingRequestedAtUtc,
+            WorkKind = item.WorkKind,
+            AssignedActivities = item.AssignedActivities ?? [],
+            Pricing = item.Pricing,
             ExperienceSummaries = item.ExperienceSummaries ?? []
         };
 
@@ -1459,7 +1488,7 @@ public sealed record ActiveDeliveryPreview(
             OfferId,
             profile.AppKey,
             profile.DriverDomain,
-            profile.PrimaryWorkType,
+            WorkKind ?? profile.PrimaryWorkType,
             OrderSummary,
             $"{PickupActionLabel} · {CompletionActionLabel}",
             Pickup,
@@ -1475,7 +1504,8 @@ public sealed record ActiveDeliveryPreview(
                 Recipient.DeliveryInstructions,
                 Recipient.OrdererIsRecipient),
             WeatherSurcharge: WeatherSurcharge,
-            WeatherSurchargeApplied: WeatherSurchargeApplied);
+            WeatherSurchargeApplied: WeatherSurchargeApplied)
+        { AssignedActivities = this.AssignedActivities, Pricing = this.Pricing };
 }
 
 public sealed record FoodDeliveryBundlePreview(

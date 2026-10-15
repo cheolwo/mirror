@@ -86,6 +86,7 @@ namespace FDriverApp
                 TimeSpan.FromSeconds(20));
             builder.Services.AddSingleton<FDriverAuthApiService>();
             builder.Services.AddSingleton<IFoodDeliveryDriverApiService, FoodDeliveryDriverApiService>();
+            builder.Services.AddSingleton<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverPreferences.IDriverWorkParticipationClient, DriverWorkParticipationClient>();
             builder.Services.AddSingleton<I살뜰마트배송ApiClient, 살뜰마트배송ApiClient>();
             builder.Services.AddSingleton<I살뜰마트배송PendingStore, 살뜰마트배송SecurePendingStore>();
             builder.Services.AddSingleton<FDriverApp.PageModels.살뜰마트배송PageViewModel>();
@@ -102,6 +103,7 @@ namespace FDriverApp
             builder.Services.AddTransient<NotificationSettingsPage>();
             builder.Services.AddTransient<ReturnAreaSettingsPage>();
             builder.Services.AddTransient<DeliveryExperienceSettingsPage>();
+            builder.Services.AddTransient<WorkPreferencesPage>();
             builder.Services.AddTransient<AgreedRateTablePage>();
             builder.Services.AddSingleton<FDriverAgreedRateWorkspaceBridge>();
             builder.Services.AddSingleton<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.IRoleWorkspaceApi>(sp => sp.GetRequiredService<FDriverAgreedRateWorkspaceBridge>());

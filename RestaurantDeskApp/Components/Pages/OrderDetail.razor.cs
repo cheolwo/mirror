@@ -241,7 +241,9 @@ public partial class OrderDetail : ComponentBase, IDisposable
         : order is null ? "주문 확인 중"
         : order.배차상태 == 음식주문배차상태코드.배차불가 ? "배차 확인이 필요해요"
         : order.수락가능 ? "주문 확인이 필요해요"
-        : ShowCurrentRecooking ? order.현재픽업준비완료 ? "재조리 음식이 준비됐어요" : "다시 조리 중이에요"
+        : ShowCurrentRecooking ? order.현재픽업준비완료 ? "재조리 음식이 준비됐어요"
+            : order.조리시작가능 ? "재조리를 시작해 주세요"
+            : order.현재조리시작확인 ? "다시 조리 중이에요" : "재조리 요청 · 기사 배정 대기"
         : order.조리시작가능 ? "조리를 시작해 주세요"
         : order.픽업준비가능 ? "조리 중이에요"
         : OrderStatusLabel(order.상태);
@@ -256,7 +258,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
 
     private string CurrentPreparationText => order?.현재픽업준비완료 == true
         ? $"이번 음식 · 준비 완료 {FormatOptionalDate(order.상세주문?.CurrentPickupReadyAtUtc)}"
-        : "이번 음식 · 준비 중";
+        : order?.현재조리시작확인 == true ? "이번 음식 · 조리 중" : "이번 음식 · 조리 시작 전";
 
     private bool ShowDispatchAttention => order is not null && !readFailed
         && order.상태 is not (음식점주문Desk상태코드.거절 or 음식점주문Desk상태코드.취소 or 음식점주문Desk상태코드.수령확인)
@@ -270,8 +272,9 @@ public partial class OrderDetail : ComponentBase, IDisposable
         : order.수락가능 ? "메뉴와 조리 예상시간을 확인하고 주문을 접수해 주세요."
         : ShowCurrentRecooking ? order.현재픽업준비완료
             ? "이번 음식이 준비됐어요. 새 기사가 픽업할 때까지 기다려 주세요."
-            : order.픽업준비가능 ? "다시 조리하고 있어요. 이번 음식이 완성되면 픽업 준비 완료를 눌러 주세요."
-                : "다시 조리하고 있어요. 최신 배차와 준비 상태를 확인해 주세요."
+            : order.조리시작가능 ? "새 기사가 배정됐어요. 조리 시작을 눌러 재조리를 시작해 주세요. 추가 비용은 운영 검토 대상입니다."
+                : order.현재조리시작확인 ? "다시 조리하고 있어요. 이번 음식이 완성되면 픽업 준비 완료를 눌러 주세요."
+                    : "재조리를 요청받았어요. 새 기사 배정 후 시작해 주세요. 추가 비용은 운영 검토 대상입니다."
         : order.조리시작가능 ? "기사가 배정됐어요. 조리를 시작할 수 있습니다."
         : order.픽업준비가능 ? "조리가 끝나면 픽업 준비 완료를 눌러 주세요."
         : order.조리변경가능 && order.현재조리시작확인 ? "조리는 시작됐어요. 기사 재배정을 기다리고 있습니다."

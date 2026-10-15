@@ -14,6 +14,10 @@ namespace FDriverApp.Services;
 
 public interface IFoodDeliveryDriverApiService
 {
+    Task<DriverWorkParticipationResponse> GetWorkParticipationAsync(CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("업무·적재 설정 조회를 지원하지 않습니다.");
+    Task<DriverWorkParticipationResponse> UpdateWorkParticipationAsync(DriverWorkParticipationUpdate request, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("업무·적재 설정 저장을 지원하지 않습니다.");
     Task<DeliveryExperienceSharingPreferenceDto> GetDeliveryExperienceSharingAsync(CancellationToken cancellationToken = default)
         => throw new NotSupportedException("배달 경험 공유 설정 조회를 지원하지 않습니다.");
     Task<DeliveryExperienceSharingPreferenceDto> UpdateDeliveryExperienceSharingAsync(DeliveryExperienceSharingPreferenceRequest request,
@@ -70,6 +74,12 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
 
     public Task<FoodDeliveryDriverCurrentWorkDto> GetCurrentWorkAsync(CancellationToken cancellationToken = default)
         => SendAsync<FoodDeliveryDriverCurrentWorkDto>(HttpMethod.Get, "api/v1/driver/food-deliveries/workspace/current", null, cancellationToken);
+
+    public Task<DriverWorkParticipationResponse> GetWorkParticipationAsync(CancellationToken cancellationToken = default)
+        => SendAsync<DriverWorkParticipationResponse>(HttpMethod.Get, "api/v1/driver/work-participation", null, cancellationToken);
+
+    public Task<DriverWorkParticipationResponse> UpdateWorkParticipationAsync(DriverWorkParticipationUpdate request, CancellationToken cancellationToken = default)
+        => SendAsync<DriverWorkParticipationResponse>(HttpMethod.Put, "api/v1/driver/work-participation", request, cancellationToken);
 
     public Task<DeliveryExperienceSharingPreferenceDto> GetDeliveryExperienceSharingAsync(CancellationToken cancellationToken = default)
         => SendAsync<DeliveryExperienceSharingPreferenceDto>(HttpMethod.Get,

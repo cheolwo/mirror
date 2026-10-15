@@ -17,6 +17,7 @@ namespace FDriverApp
             Routing.RegisterRoute(NotificationSettingsPage.RouteName, typeof(NotificationSettingsPage));
             Routing.RegisterRoute(ReturnAreaSettingsPage.RouteName, typeof(ReturnAreaSettingsPage));
             Routing.RegisterRoute(DeliveryExperienceSettingsPage.RouteName, typeof(DeliveryExperienceSettingsPage));
+            Routing.RegisterRoute(WorkPreferencesPage.RouteName, typeof(WorkPreferencesPage));
             Routing.RegisterRoute(AgreedRateTablePage.RouteName, typeof(AgreedRateTablePage));
             Routing.RegisterRoute(살뜰마트배송Page.RouteName, typeof(살뜰마트배송Page));
             var currentTheme = Application.Current!.RequestedTheme;
