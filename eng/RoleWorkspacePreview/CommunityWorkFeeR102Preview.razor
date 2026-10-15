@@ -1,0 +1,72 @@
+@page "/community-planning-r102/work-fee"
+@using Ssalddel.Contracts.Common.Settlement
+@using Ssalddel.Ui.Common.Areas.App.Components.Settlement
+
+<PageTitle>작업 보수 화면 검토 · 살뜰</PageTitle>
+<main data-community-work-fee-r102-ready="true" data-case="@CurrentCase" style="max-width:840px;min-width:0;margin:auto;padding:16px;color:#172b36;background:#f5f7fa;overflow-wrap:anywhere">
+    <aside aria-label="화면 검토 자료 안내" style="padding:16px;border:1px solid #dce5e9;border-radius:16px;background:#fff">
+        <strong>화면 검토용 자료</strong>
+        <p style="margin:8px 0 0">아래 금액과 조건은 화면 확인을 위해 만든 예시입니다. 실제 약정·작업·지급을 실행하지 않습니다.</p>
+    </aside>
+    <nav aria-label="보수 화면 상태 선택" style="display:flex;flex-wrap:wrap;gap:12px;margin:16px 0">
+        <a href="/" style="min-height:48px;display:inline-flex;align-items:center;color:#0b5c56">검토 홈</a>
+        <a href="/community-planning-r102/work-fee?case=ready" aria-current="@(CurrentCase == "ready" ? "page" : null)" style="min-height:48px;display:inline-flex;align-items:center;color:#0b5c56">약정 보수</a>
+        <a href="/community-planning-r102/work-fee?case=unknown" aria-current="@(CurrentCase == "unknown" ? "page" : null)" style="min-height:48px;display:inline-flex;align-items:center;color:#0b5c56">미확정 조건</a>
+        <a href="/community-planning-r102/work-fee?case=included" aria-current="@(CurrentCase == "included" ? "page" : null)" style="min-height:48px;display:inline-flex;align-items:center;color:#0b5c56">배송비 포함</a>
+    </nav>
+    <사전보수요약Panel Value="Value" CurrentUserId="preview-worker-r102" />
+</main>
+
+@code {
+    [SupplyParameterFromQuery(Name = "case")] public string? Case { get; set; }
+    private string CurrentCase => Case is "unknown" or "included" ? Case : "ready";
+    private NeighborhoodSettlementSummaryDto Value
+    {
+        get
+        {
+            var lines = CurrentCase switch
+            {
+                "unknown" => new[]
+                {
+                    Line("picking", NeighborhoodSettlementCodes.Picking, NeighborhoodSettlementCodes.PerUnit),
+                    Line("packing", NeighborhoodSettlementCodes.Packing, NeighborhoodSettlementCodes.Fixed)
+                },
+                "included" => new[]
+                {
+                    Line("delivery", NeighborhoodSettlementCodes.Delivery, NeighborhoodSettlementCodes.Fixed, amount: 4000, included: true),
+                    Line("picking", NeighborhoodSettlementCodes.Picking, NeighborhoodSettlementCodes.Fixed, amount: 800, included: true)
+                },
+                _ => new[]
+                {
+                    Line("picking", NeighborhoodSettlementCodes.Picking, NeighborhoodSettlementCodes.PerUnit, price: 200, quantity: 10),
+                    Line("packing", NeighborhoodSettlementCodes.Packing, NeighborhoodSettlementCodes.Fixed, amount: 500, quantity: 1)
+                }
+            };
+            return new()
+            {
+                Agreement = new()
+                {
+                    AgreementId = "preview-agreement-r102", TermsVersion = 1,
+                    StatusCode = NeighborhoodSettlementCodes.AwaitingConsent,
+                    Terms = new()
+                    {
+                        ActivityKind = NeighborhoodSettlementCodes.StoredGoods,
+                        WorkflowKind = NeighborhoodSettlementWorkflowCodes.OutboundDelivery,
+                        PaymentReleaseCondition = NeighborhoodSettlementWorkflowCodes.CustomerReceived,
+                        ExpiresAtUtc = CurrentCase == "unknown" ? null : new DateTime(2026, 10, 16, 9, 0, 0, DateTimeKind.Utc),
+                        Lines = lines
+                    }
+                },
+                Workflow = new() { Kind = NeighborhoodSettlementWorkflowCodes.OutboundDelivery, StateCode = "Reserved" }
+            };
+        }
+    }
+
+    private static NeighborhoodSettlementTermLine Line(string key, string kind, string billing,
+        decimal? amount = null, decimal? price = null, decimal? quantity = null, bool included = false)
+        => new()
+        {
+            LineKey = key, Kind = kind, Billing = billing, AmountKrw = amount, UnitPriceKrw = price, Quantity = quantity,
+            PayerUserId = "preview-payer-r102", PayeeUserId = "preview-worker-r102", IncludedInDelivery = included
+        };
+}

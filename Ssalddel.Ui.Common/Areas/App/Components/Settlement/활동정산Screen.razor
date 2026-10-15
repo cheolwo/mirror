@@ -1,0 +1,234 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Settlement
+@using Ssalddel.Contracts.Common.Settlement
+@using Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@inherits NeighborhoodWorkflowPageBase<활동정산PageViewModel>
+@{ SynchronizeInput(); }
+
+<main class="activity-settlement" aria-label="활동·정산 내역">
+    <header>
+        <a href="@Href(SafeReturn)">← 업무로 돌아가기</a>
+        <h1>활동·정산 내역</h1>
+        <p>내 활동 보수의 근거와 확인 상태를 살펴봅니다.</p>
+    </header>
+    @if (!Model.IsAuthenticated)
+    {
+        <section><h2>로그인이 필요해요</h2><p>본인에게 허용된 정산 내역을 확인합니다.</p><a class="primary" href="@LoginHref">로그인하기</a></section>
+    }
+    else
+    {
+        @if (Model.IsLoading) { <p role="status">활동·정산 내역을 확인하고 있습니다.</p> }
+        @if (Model.Error is { } error) { <p class="error" role="alert">@error</p> }
+        @if (Model.ValidationError is { } validation) { <p class="error" role="alert">@validation</p> }
+        @if (Model.Notice is { } notice) { <p role="status">@notice</p> }
+        @if (Model.HasPending)
+        {
+            <section aria-label="이전 정산 요청 확인"><h2>처리 결과 확인이 필요해요</h2>
+                <p>이전 요청의 결과를 먼저 확인해 주세요.</p>
+                <button class="primary" type="button" disabled="@(Model.IsSending || Model.IsLoading)" @onclick="Recover">이전 요청 결과 확인</button>
+            </section>
+        }
+        <nav aria-label="정산 내역 탐색">
+            @if (Model.SelectedId is not null) { <a href="@Href(활동정산Navigation.Href(returnUrl: SafeReturn))">내 정산 목록</a> }
+            <button type="button" disabled="@(Model.IsSending || Model.IsLoading)" @onclick="Reload">최신 내역 다시 조회</button>
+            @if (!Model.ShowWeekly) { <button type="button" disabled="@(Model.IsSending || Model.IsLoading)" @onclick="() => Model.LoadWeeklyAsync()">내 주간 업무 명세</button> }
+            else { <button type="button" disabled="@(Model.IsSending || Model.IsLoading)" @onclick="() => Model.LoadAsync()">활동 정산 목록</button> }
+        </nav>
+        @if (Model.ShowWeekly)
+        {
+            @if (Model.Loaded && Model.Weekly is { } weekly)
+            {
+                <nav aria-label="주간 명세 기간">
+                    <button type="button" disabled="@(Model.IsSending || Model.IsLoading)" @onclick="() => Model.LoadWeeklyAsync(weekly.CompletionWeekStartKst.AddDays(-7))">이전 주</button>
+                    <button type="button" disabled="@(Model.IsSending || Model.IsLoading)" @onclick="() => Model.LoadWeeklyAsync(weekly.CompletionWeekStartKst.AddDays(7))">다음 주</button>
+                </nav>
+                <WorkerWeeklyStatementPanel Value="weekly" />
+            }
+        }
+        else if (Model.Loaded && Model.Detail is { } detail)
+        {
+            @if (detail.CanResolveMartReceipt && detail.Agreement.SourceKind == NeighborhoodSettlementCodes.MartOrder
+                && long.TryParse(detail.Agreement.SourceId, out var martOrderId) && martOrderId > 0)
+            {
+                <Ssalddel.Ui.Common.Areas.App.Components.Mart.마트수령문제해결Panel OrderId="martOrderId" />
+            }
+            <section aria-label="선택 정산 약정">
+                <h2>@활동정산표시.WorkflowKind(detail.Workflow?.Kind)</h2>
+                <p>@활동정산표시.Activity(detail.Agreement.Terms.ActivityKind)</p>
+                <p class="state">@활동정산표시.State(detail.Agreement.StatusCode)</p>
+                <p>약정 @detail.Agreement.TermsVersion 판 · @활동정산표시.Time(detail.Agreement.UpdatedAtUtc)</p>
+                <p>내 동의: @(Model.MyConsentGranted ? "현재 약정에 동의함" : "현재 약정 동의 전")</p>
+                <p>아래 약정 금액과 조건을 확인한 뒤 동의해 주세요. 동의는 지급 완료를 뜻하지 않습니다.</p>
+            </section>
+            <사전보수요약Panel Value="detail" CurrentUserId="@Model.CurrentUserId" />
+            <section aria-label="업무 진행과 지급 기준">
+                <h2>현재 약정의 업무 진행·지급 기준</h2>
+                <dl>
+                    <dt>업무 구분</dt><dd>@활동정산표시.WorkflowKind(detail.Workflow?.Kind)</dd>
+                    <dt>현재 단계</dt><dd>@활동정산표시.WorkflowState(detail.Workflow?.StateCode, detail.Workflow?.Kind)</dd>
+                    <dt>지급 기준</dt><dd>@활동정산표시.PaymentReleaseCondition(detail.Agreement.Terms.PaymentReleaseCondition)</dd>
+                    <dt>지급 조건</dt><dd>@활동정산표시.PaymentReleaseStatus(detail.Workflow)</dd>
+                </dl>
+                <p>발생 항목은 각 항목에 적용된 약정의 지급 조건을 따릅니다.</p>
+                @if (detail.Workflow is { InventoryLotIds.Count: > 0 } workflow)
+                { <p>입고·출고 연결 재고 @workflow.InventoryLotIds.Count 건</p> }
+                @if (detail.Workflow?.PaymentReleaseReady != true)
+                {
+                    <p class="notice">@활동정산표시.WorkflowReason(detail.Workflow?.WaitingReasonCode)</p>
+                    <p>작업 보수의 발생 내역은 유지됩니다. 지급 조건과 실제 수령은 별도로 확인합니다.</p>
+                }
+                else
+                { <p>업무 완료 조건 충족은 금액 확정이나 실제 지급 완료를 뜻하지 않습니다.</p> }
+            </section>
+            <details aria-label="기본보수 약정"><summary>전체 기본보수 약정</summary>
+                @if (!detail.Agreement.Terms.Lines.Any(line => 사전보수요약표시.기본보수인가(line.Kind))) { <p>등록된 기본보수 약정이 없습니다.</p> }
+                @foreach (var line in detail.Agreement.Terms.Lines.Where(line => 사전보수요약표시.기본보수인가(line.Kind)))
+                { <article><h3>@사전보수요약표시.항목명(line)</h3><strong>@사전보수요약표시.금액(line)</strong><p>@활동정산표시.Direction(line.PayerUserId, line.PayeeUserId, Model.CurrentUserId)</p>
+                    @if (line.PeriodStartUtc is not null || line.PeriodEndUtc is not null) { <p>약정 기간 @(line.PeriodStartUtc is { } start ? 활동정산표시.Time(start) : "시작 미확정") ~ @(line.PeriodEndUtc is { } end ? 활동정산표시.Time(end) : "종료 미확정")</p> }
+                    @if (line.IncludedInDelivery) { <p>기존 배송비에 포함된 항목입니다.</p> }
+                </article> }
+                @if (detail.Totals.UnresolvedLineCount > 0) { <p class="notice">미확정 조건 @detail.Totals.UnresolvedLineCount 건 · 확인되지 않은 금액은 0원으로 계산하지 않습니다.</p> }
+            </details>
+            @if (detail.Agreement.Terms.Lines.Any(line => !사전보수요약표시.기본보수인가(line.Kind)))
+            {
+                <details><summary>거래대금·전달금·기타 약정</summary>
+                    @foreach (var line in detail.Agreement.Terms.Lines.Where(line => !사전보수요약표시.기본보수인가(line.Kind)))
+                    { <article><h3>@활동정산표시.Kind(line.Kind)</h3><strong>@활동정산표시.TermsAmount(line)</strong><p>@활동정산표시.Direction(line.PayerUserId, line.PayeeUserId, Model.CurrentUserId)</p></article> }
+                </details>
+            }
+            <활동성과금Panel Value="detail" CurrentUserId="@Model.CurrentUserId" />
+            @if (Model.CanAccrueReward)
+            { <section aria-label="성과금 발생 기록 확인"><h2>성과금 발생 기록</h2>
+                <label><input class="acknowledgment" type="checkbox" @bind="rewardAcknowledged" />위 계산과 근거를 확인했습니다. 발생 기록은 실제 이체가 아닙니다.</label>
+                <button class="primary" type="button" disabled="@(!rewardAcknowledged)" @onclick="() => Model.AccrueRewardAsync(rewardAcknowledged)">이 계산을 발생 내역으로 기록</button>
+            </section> }
+            @if (Model.AgreementAllows("consent") && !Model.MyConsentGranted)
+            { <button class="primary" type="button" @onclick="() => Model.ConsentAsync(true)">현재 약정에 동의</button> }
+            else if (Model.AgreementAllows("revoke") && Model.MyConsentGranted)
+            { <button type="button" @onclick="() => Model.ConsentAsync(false)">현재 약정 동의 철회</button> }
+            <section aria-label="발생 정산 항목"><h2>발생·확정 내역</h2>
+                @if (detail.Entries.Count == 0) { <p>발생한 정산 항목이 없습니다. 약정 금액과 발생 금액은 별도로 확인합니다.</p> }
+                @foreach (var entry in detail.Entries)
+                {
+                    <article @key="entry.EntryId"><h3>@활동정산표시.Kind(entry.Kind)</h3><strong>@활동정산표시.Money(entry.AmountKrw)</strong>
+                        <p class="state">@활동정산표시.State(entry.StatusCode)</p><p>@활동정산표시.Direction(entry.PayerUserId, entry.PayeeUserId, Model.CurrentUserId)</p>
+                        @if (entry.PaymentReleaseReady == false)
+                        { <p class="notice">@활동정산표시.EntryPaymentWaitingReason(entry.PaymentWaitingReasonCode)</p> }
+                        @if (entry.IncludedInDelivery) { <p class="notice">기존 배송 원장 참고 · 별도 지급액으로 더하지 않습니다.</p> }
+                        @if (entry.IsInternal) { <p>내부 작업 · 외부 수입과 별도로 확인합니다.</p> }
+                        @if (entry.IsTransit) { <p>소유자에게 전달할 통과금 · 활동 보수와 별도로 확인합니다.</p> }
+                        @if (Model.CanReportPayment(entry))
+                        {
+                            <details><summary>내 지급 신고 기록</summary>
+                                <p>실제로 지급한 금액만 기록합니다. 이 버튼은 송금을 실행하지 않습니다.</p>
+                                <p>아직 신고하지 않은 상한 @활동정산표시.Money(entry.ReportablePaymentAmountKrw)</p>
+                                <label>지급액(원)<input type="number" min="0.01" max="@entry.ReportablePaymentAmountKrw" step="0.01" disabled="@(!Model.CanAct)" @bind="Report(entry.EntryId).Amount" /></label>
+                                <label>지급 확인 내용<textarea maxlength="1000" disabled="@(!Model.CanAct)" @bind="Report(entry.EntryId).Evidence"></textarea></label>
+                                <p>계좌번호·전화번호·고객 주소·이체 원본을 입력하지 마세요.</p>
+                                <label><input class="acknowledgment" type="checkbox" disabled="@(!Model.CanAct)" @bind="Report(entry.EntryId).Acknowledged" />실제 지급한 내용을 기록하는 것임을 확인합니다.</label>
+                                <button class="primary" type="button" disabled="@(!Model.CanAct || !Report(entry.EntryId).Acknowledged)" @onclick="() => Model.ReportPaymentAsync(entry.EntryId, Report(entry.EntryId).Amount, Report(entry.EntryId).Evidence, Report(entry.EntryId).Acknowledged)">내 지급 신고 기록</button>
+                            </details>
+                        }
+                        <details><summary>계산·완료 근거</summary><p>@(string.IsNullOrWhiteSpace(entry.CalculationBasis) ? "계산 근거 확인 필요" : entry.CalculationBasis)</p>
+                            <p>완료 근거 @entry.WorkEvidenceReferences.Count 건 · @활동정산표시.Time(entry.RecordedAtUtc)</p>
+                            @if (entry.OriginalEntryId is not null) { <p>이전 항목에 연결된 조정입니다.</p> }
+                        </details>
+                        @if (entry.ConfirmationUserIds.Contains(Model.CurrentUserId!, StringComparer.Ordinal)) { <p>내 항목 확인을 기록했습니다.</p> }
+                        else if (Model.EntryAllows(entry, "confirm-entry"))
+                        { <button class="primary" type="button" @onclick="() => Model.ConfirmAsync(entry.EntryId)">이 항목 확인</button> }
+                        @if (Model.EntryAllows(entry, "dispute"))
+                        { <details><summary>이 항목 이의제기</summary><label>이의 사유<textarea maxlength="1000" value="@Reason(entry.EntryId)" @oninput="e => reasons[entry.EntryId] = e.Value?.ToString() ?? string.Empty"></textarea></label>
+                            <p>이름·연락처·계좌·고객 주소를 입력하지 마세요.</p><button type="button" @onclick="() => Model.DisputeAsync(entry.EntryId, Reason(entry.EntryId))">이의제기 접수</button>
+                        </details> }
+                    </article>
+                }
+            </section>
+            <section aria-label="지급 신고와 수령 확인"><h2>지급 신고·수령 확인</h2>
+                <p class="notice">지급 신고와 당사자의 수령 진술입니다. 은행 입금 검증과 실제 이체 실행은 제공하지 않습니다.</p>
+                @if (detail.Payments.Count == 0) { <p>지급 신고 기록이 없습니다.</p> }
+                @foreach (var payment in detail.Payments)
+                {
+                    <article @key="payment.PaymentId"><h3>@활동정산표시.State(payment.StatusCode)</h3>
+                        <dl><dt>지급 신고액</dt><dd>@활동정산표시.Money(payment.AmountKrw)</dd><dt>누적 수령 확인액</dt><dd>@활동정산표시.Money(payment.RecipientConfirmedAmountKrw)</dd></dl>
+                        <p>@활동정산표시.Direction(payment.PayerUserId, payment.PayeeUserId, Model.CurrentUserId) · @활동정산표시.Time(payment.ReportedAtUtc)</p>
+                        @if (Model.PaymentAllows(payment, "confirm-receipt"))
+                        { <details><summary>내 수령액 확인</summary><p>실제로 받은 누적 금액을 입력해 주세요.</p>
+                            <label>누적 수령액(원)<input type="number" min="@payment.RecipientConfirmedAmountKrw" max="@payment.AmountKrw" step="0.01" @bind="Receipt(payment.PaymentId).Amount" /></label>
+                            <label>확인 사유<textarea maxlength="1000" @bind="Receipt(payment.PaymentId).Reason"></textarea></label>
+                            <button class="primary" type="button" @onclick="() => Model.ReceiveAsync(payment.PaymentId, Receipt(payment.PaymentId).Amount, Receipt(payment.PaymentId).Reason)">내 수령 진술 기록</button>
+                        </details> }
+                    </article>
+                }
+            </section>
+        }
+        else if (Model.Loaded && Model.SelectedId is null)
+        {
+            @if (Model.Items.Count == 0) { <section><h2>정산 내역이 없습니다</h2><p>본인에게 연결된 활동 약정이 생기면 이곳에서 확인할 수 있습니다.</p></section> }
+            else
+            {
+                @foreach (var group in 활동정산표시.WorkflowGroups)
+                {
+                    var items = Model.Items.Where(item => 활동정산표시.WorkflowGroup(item) == group).ToArray();
+                    if (items.Length == 0) { continue; }
+                    <section aria-label="@($"{활동정산표시.WorkflowGroupTitle(group)} 정산 목록")">
+                        <h2>@활동정산표시.WorkflowGroupTitle(group)</h2>
+                        @foreach (var item in items)
+                        { <a class="settlement-row" href="@Href(활동정산Navigation.Href(item.Agreement.AgreementId, SafeReturn))">
+                            <h3>@활동정산표시.Activity(item.Agreement.Terms.ActivityKind)</h3>
+                            @if (group == NeighborhoodSettlementWorkflowCodes.Other)
+                            { <p>@활동정산표시.WorkflowKind(item.Workflow?.Kind)</p> }
+                            <span class="state">@활동정산표시.State(item.Agreement.StatusCode)</span>
+                            <p>@활동정산표시.WorkflowState(item.Workflow?.StateCode, item.Workflow?.Kind) · @활동정산표시.PaymentReleaseStatus(item.Workflow)</p>
+                            <p>기본보수 약정 @item.Agreement.Terms.Lines.Count(line => 활동정산표시.IsBasic(line.Kind)) 건 · 발생 항목 @item.Entries.Count 건</p>
+                            @if (item.Totals.UnresolvedLineCount > 0) { <p class="notice">미확정 조건 @item.Totals.UnresolvedLineCount 건</p> }
+                            <small>@활동정산표시.Time(item.Agreement.UpdatedAtUtc)</small><span>상세 확인 →</span>
+                        </a> }
+                    </section>
+                }
+            }
+        }
+    }
+</main>
+
+@code {
+    [Parameter] public string? AgreementId { get; set; }
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    [Parameter] public string? ReturnUrl { get; set; }
+    private string SafeReturn => RoleWorkspaceNavigation.LocalRoute(ReturnUrl) ?? NeighborhoodCollaborationRoutes.Home;
+    private string? selection;
+    private bool initialized;
+    private string? inputOwner;
+    private bool rewardAcknowledged;
+    private readonly Dictionary<string, string> reasons = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, ReceiptInput> receipts = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, PaymentReportInput> reports = new(StringComparer.Ordinal);
+    private string Reason(string id) => reasons.GetValueOrDefault(id, "");
+    private ReceiptInput Receipt(string id) { if (!receipts.TryGetValue(id, out var input)) receipts[id] = input = new(); return input; }
+    private PaymentReportInput Report(string id) { if (!reports.TryGetValue(id, out var input)) reports[id] = input = new(); return input; }
+    private void SynchronizeInput()
+    {
+        Model.SynchronizeOwner(); var owner = Model.IsAuthenticated ? Model.CurrentUserId : null;
+        if (inputOwner == owner) return;
+        inputOwner = owner; reasons.Clear(); receipts.Clear(); reports.Clear(); rewardAcknowledged = false;
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        SynchronizeInput();
+        if (initialized && selection == AgreementId) return;
+        initialized = true; selection = AgreementId; reasons.Clear(); receipts.Clear(); reports.Clear(); rewardAcknowledged = false; await Model.LoadAsync(AgreementId);
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        SynchronizeInput();
+        if (Model.IsAuthenticated && !Model.Loaded && !Model.IsLoading && !Model.IsSending && Model.Error is null) await Model.LoadAsync(AgreementId);
+    }
+    private Task Reload() { rewardAcknowledged = false; return Model.ShowWeekly ? Model.LoadWeeklyAsync(Model.Weekly?.CompletionWeekStartKst) : Model.LoadAsync(Model.SelectedId ?? AgreementId); }
+    private async Task Recover()
+    {
+        await Model.RecoverAsync();
+        if (!Model.HasPending && Model.SelectedId is { } id && id != AgreementId)
+            Navigation.NavigateTo(Href(활동정산Navigation.Href(id, SafeReturn)));
+    }
+    private sealed class ReceiptInput { public decimal? Amount { get; set; } public string Reason { get; set; } = ""; }
+    private sealed class PaymentReportInput { public decimal? Amount { get; set; } public string Evidence { get; set; } = ""; public bool Acknowledged { get; set; } }
+}

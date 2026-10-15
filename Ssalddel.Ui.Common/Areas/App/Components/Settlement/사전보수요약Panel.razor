@@ -1,0 +1,53 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Settlement
+@using Ssalddel.Contracts.Common.Settlement
+@using Ssalddel.Ui.Common.Areas.App.Models
+
+<section class="work-fee-summary" aria-label="내 기본보수 확인">
+    <header>
+        <span class="work-fee-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M9 8h6M9 12h6M9 16h3" /></svg>
+        </span>
+        <div><h2>내가 받을 기본보수</h2><p>현재 약정의 금액과 조건을 먼저 확인하세요.</p></div>
+    </header>
+    @if (Receivable.Count == 0)
+    {
+        <p class="work-fee-empty">별도로 받을 기본보수 항목이 없습니다. 배송비에 포함된 항목과 전체 약정을 확인하세요.</p>
+    }
+    else
+    {
+        <div class="work-fee-lines">
+            @foreach (var line in Receivable)
+            {
+                <article @key="line">
+                    <div class="work-fee-line-heading"><h3>@사전보수요약표시.항목명(line)</h3><strong>@사전보수요약표시.금액(line)</strong></div>
+                    @if (line.Billing == NeighborhoodSettlementCodes.PerUnit || line.Quantity.HasValue)
+                    { <p>약정 수량: @사전보수요약표시.수량(line.Quantity)</p> }
+                    @if (line.PeriodStartUtc.HasValue || line.PeriodEndUtc.HasValue)
+                    { <p>적용 기간: @(line.PeriodStartUtc is { } start ? 활동정산표시.Time(start) : "시작 미확정") ~ @(line.PeriodEndUtc is { } end ? 활동정산표시.Time(end) : "종료 미확정")</p> }
+                </article>
+            }
+        </div>
+    }
+    <dl>
+        <dt>약정 범위</dt><dd>@활동정산표시.WorkflowKind(Value.Workflow?.Kind) · @활동정산표시.Activity(Value.Agreement.Terms.ActivityKind)</dd>
+        <dt>약정 유효기한</dt><dd>@(Value.Agreement.Terms.ExpiresAtUtc is { } expires ? 활동정산표시.Time(expires) : "유효기한 미확정")</dd>
+        <dt>지급 기준</dt><dd>@활동정산표시.PaymentReleaseCondition(Value.Agreement.Terms.PaymentReleaseCondition)</dd>
+    </dl>
+    @if (DeliveryReferences.Count > 0)
+    {
+        <details>
+            <summary>배송비에 포함된 보수 @DeliveryReferences.Count 건</summary>
+            <p>기존 배송비에 포함된 참고 항목입니다. 별도 지급액으로 더하지 않습니다.</p>
+            @foreach (var line in DeliveryReferences)
+            { <p>@사전보수요약표시.항목명(line): @사전보수요약표시.금액(line)</p> }
+        </details>
+    }
+    <p class="work-fee-note">약정 금액은 실제 발생·지급 내역과 다릅니다. 미확정 조건은 0원으로 계산하지 않습니다.</p>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public NeighborhoodSettlementSummaryDto Value { get; set; } = default!;
+    [Parameter] public string? CurrentUserId { get; set; }
+    private IReadOnlyList<NeighborhoodSettlementTermLine> Receivable => 사전보수요약표시.본인수령항목(Value.Agreement, CurrentUserId);
+    private IReadOnlyList<NeighborhoodSettlementTermLine> DeliveryReferences => 사전보수요약표시.본인수령항목(Value.Agreement, CurrentUserId, includedInDelivery: true);
+}
