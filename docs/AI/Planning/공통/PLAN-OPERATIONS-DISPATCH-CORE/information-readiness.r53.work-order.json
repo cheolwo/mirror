@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "id": "food-dispatch-information-readiness.r53",
+  "status": "ImplementedLocalValidatedExternalDeferred",
+  "acceptedInCurrentThread": true,
+  "implementationAllowed": true,
+  "userRequestedGoal": "1번 배차 정보 충분성 기준을 기존 프로젝트 자원으로 보완",
+  "baselineCommit": "08931c2371f29de615f4a4f133b535e5df76bf7f",
+  "designRevision": "dispatch-core.r53",
+  "designDocumentRef": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/information-readiness.implementation.r53.md",
+  "designSha256": "cc9add1f7095d27ad563d9cafb167163c5a75ab9be3c4d105a2c9595c412ea5b",
+  "writePaths": [
+    "Ssalddel.Contracts/Common/Dispatch/FoodDispatchInformationReadinessContracts.cs",
+    "Ssalddel.Contracts/Common/Dispatch/FoodDispatchTimingContracts.cs",
+    "Ssalddel.Domain/배차/FoodDispatchInformationReadinessPolicy.cs",
+    "Ssalddel.Domain/배차/FoodDispatchTimingPolicy.cs",
+    "Ssalddel/Services/Dispatch/AI/FoodDispatchTimingService.cs",
+    "Ssalddel/Services/Dispatch/AI/FoodDispatchTimingService.Information.cs",
+    "Ssalddel/Services/Dispatch/Queue/배차대기원장전환Service.FoodTiming.cs",
+    "Ssalddel.Tests/Domain/Dispatch/FoodDispatchInformationReadinessPolicyTests.cs",
+    "Ssalddel.Tests/Domain/Dispatch/FoodDispatchTimingPolicyTests.cs",
+    "Ssalddel.Tests/Domain/Dispatch/운영배차공통계약Tests.cs",
+    "Ssalddel.Tests/Services/Dispatch/AI/FoodDispatchTimingServiceTests.cs",
+    "Ssalddel.Tests/Services/Dispatch/Queue/FoodDispatchTimingTransitionTests.cs",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/information-readiness*",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/README.md",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/Changes/README.md",
+    "docs/Changes/2026-10-11-food-dispatch-information-readiness-r53.md"
+  ],
+  "modelCallsAllowed": 0,
+  "weightTrainingAllowed": false,
+  "operationalChangesAllowed": false,
+  "defaultOperationalOptionsEnabled": false,
+  "validation": {
+    "fast": {
+      "run": "artifacts/local/validation/20261011-202839",
+      "passed": 217,
+      "failed": 0,
+      "skipped": 0,
+      "buildErrors": 0,
+      "buildWarnings": 152
+    },
+    "task": {
+      "run": "artifacts/local/validation/20261011-203137",
+      "passed": 10832,
+      "failed": 0,
+      "skippedEnvironmentDependentMongo": 15,
+      "buildErrors": 0,
+      "buildWarnings": 61
+    },
+    "initialFast": {
+      "run": "artifacts/local/validation/20261011-202453",
+      "passed": 216,
+      "failed": 1,
+      "reason": "Test port counter increment was skipped when an optional callback was null; fixed and final Fast/Task passed."
+    },
+    "scope": {
+      "changedPaths": 19,
+      "outsideWritePaths": 0,
+      "designHashUnchanged": true,
+      "baselineHeadUnchanged": true,
+      "indexUnchanged": true,
+      "ref": "artifacts/local/food-dispatch-information-r53/scope-audit.json"
+    },
+    "mongo": {
+      "requestedInCurrentThread": true,
+      "existingImageReused": true,
+      "imageId": "sha256:45b422ba19c0f028a917ea43746ab8e8cdbdaaeb50d2e6e634a17c59666e0dbb",
+      "serverVersion": "8.0.26",
+      "fast": {
+        "run": "artifacts/local/validation/20261011-205545",
+        "passed": 24,
+        "failed": 0,
+        "skipped": 0,
+        "buildErrors": 0,
+        "buildWarnings": 0
+      },
+      "task": {
+        "run": "artifacts/local/validation/20261011-205559",
+        "passed": 10855,
+        "failed": 0,
+        "skipped": 0,
+        "buildErrors": 0,
+        "buildWarnings": 6
+      },
+      "initialFast": {
+        "run": "artifacts/local/validation/20261011-205501",
+        "passed": 23,
+        "failed": 1,
+        "skipped": 0,
+        "reason": "Temporary filesystem free space was below Mongo index creation minimum; increased its size cap and final Fast/Task passed."
+      },
+      "isolatedReplicaSetAndStandalone": true,
+      "existingDataMounted": false,
+      "imageDownloaded": false,
+      "testDatabasesCleaned": true,
+      "temporaryContainersRemoved": true,
+      "summaryRef": "artifacts/local/food-dispatch-information-r53/mongo-20261011T115538Z-11a42c0d/summary.json",
+      "runnerRef": "artifacts/local/food-dispatch-information-r53/run_mongo_validation.py"
+    },
+    "modelCalls": 0,
+    "weightTraining": false,
+    "operationalActivation": false,
+    "realDeviceTested": false,
+    "externalNotificationsSent": false,
+    "committed": false,
+    "pushed": false
+  }
+}

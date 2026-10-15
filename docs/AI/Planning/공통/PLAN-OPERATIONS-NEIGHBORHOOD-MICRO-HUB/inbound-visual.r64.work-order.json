@@ -1,0 +1,216 @@
+{
+  "planId": "PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB",
+  "revision": "r64",
+  "status": "Implemented / LocalValidated / OperationalDeferred",
+  "approval": "Current user: 디자인을 아름답게 정돈하고 아이콘 사용; subsequent correction: 색이 들어간 이모지는 피함",
+  "baseCommit": "08931c2371f29de615f4a4f133b535e5df76bf7f",
+  "primaryOwner": "operations-ui",
+  "designDocumentRef": "inbound-visual.implementation.r64.md",
+  "designSha256": "45773842E4D29EC3C4AA3C12AABABA15D862892C93C5D6FC3DA7F36183FA25A4",
+  "sourceImplementationRef": "supplier-space-inbound.implementation.r63.md",
+  "writePaths": [
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산공간Screen.razor",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고Screen.razor",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산보관합의Screen.razor",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산공간수용조건Panel.razor",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산공간수용조건Panel.razor.css",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고협의Panel.razor",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고협의Panel.razor.css",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산보관변경협의Panel.razor",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행Screen.razor.css",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고Icon.razor",
+    "Ssalddel.Tests/Ui/Common/분산입고협의RenderTests.cs",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/inbound-visual.implementation.r64.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/inbound-visual.r64.work-order.json",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/AI/PLANNING.md",
+    "docs/Changes/README.md",
+    "docs/Changes/2026-10-12-inbound-visual-r64.md",
+    "docs/ProjectOverview/page-docs/distributed-inbound-collaboration-r63.md",
+    "docs/assets/changes/2026-10-12-inbound-r64-policy.png",
+    "docs/assets/changes/2026-10-12-inbound-r64-collaboration.png",
+    "docs/assets/changes/2026-10-12-inbound-r64-pending-terms.png"
+  ],
+  "baseline": [
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산공간Screen.razor",
+      "Exists": true,
+      "Sha256": "24E824850506319156ED9DA9725D4665A326998EC5495F877B0DE8A70368068D"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고Screen.razor",
+      "Exists": true,
+      "Sha256": "6FB15755D17B2FD27B89FBDD966800E7C00BF4122D11EB5EE93A7E9A9AC77DDC"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산보관합의Screen.razor",
+      "Exists": true,
+      "Sha256": "BD30274F9BA8B42A53C4B4948E5E801F0570A6D047B0253CD278646E7CE45355"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산공간수용조건Panel.razor",
+      "Exists": true,
+      "Sha256": "DC4FC1B34DED0370EC83CAD0192D22B6982F01839F8B4539F6DAC81D79C08E16"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산공간수용조건Panel.razor.css",
+      "Exists": true,
+      "Sha256": "4FF06E38A9BA73EBC8D77A23FD4D49E64A3F6299567BEE7C62BA89333D3D3648"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고협의Panel.razor",
+      "Exists": true,
+      "Sha256": "19706FB02895997E736C13B0DD3966FEA8812F7541D47F5B63AEECA4EB0CC72C"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고협의Panel.razor.css",
+      "Exists": true,
+      "Sha256": "9A2B42857033E31E89E4BCB3AB70CF018DC235F722BC450EAB25593B9407AA53"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산보관변경협의Panel.razor",
+      "Exists": true,
+      "Sha256": "475A2B1386DDF615BFDD6D34F3E51F9AD035AD182915F8A7B1571EC6EB18E9FB"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행Screen.razor.css",
+      "Exists": true,
+      "Sha256": "4F8156D07AEEDDCF3BFB2FDF07AA2B8EFD4D9A16C6818B8FAD36DE349F687F27"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고Icon.razor",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel.Tests/Ui/Common/분산입고협의RenderTests.cs",
+      "Exists": true,
+      "Sha256": "FF0DC96E6354A838E7F1EA806B7940C154972178730497A11AAC8638CECA0D15"
+    },
+    {
+      "Path": "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/inbound-visual.implementation.r64.md",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/inbound-visual.r64.work-order.json",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md",
+      "Exists": true,
+      "Sha256": "DBB3328E97D6ABD2ADC70160EAAAD0EA90E9FC58905C87A53DBDDCC2646C02D0"
+    },
+    {
+      "Path": "docs/AI/CURRENT_WORK.md",
+      "Exists": true,
+      "Sha256": "E6F62ED4261FDA46766B9A429D1944984DD2D7A62CC893AFE2899C969843694C"
+    },
+    {
+      "Path": "docs/AI/PLANNING.md",
+      "Exists": true,
+      "Sha256": "56D01908FE448C8E0B7A8FA3A7375FA0880D2CE06480FC274570EBAB09F5DCB7"
+    },
+    {
+      "Path": "docs/Changes/README.md",
+      "Exists": true,
+      "Sha256": "0B06FE7BE5E4D1F7B604B3B129F625A0938A7C405F8CF60480B57F9549F823F6"
+    },
+    {
+      "Path": "docs/Changes/2026-10-12-inbound-visual-r64.md",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "docs/ProjectOverview/page-docs/distributed-inbound-collaboration-r63.md",
+      "Exists": true,
+      "Sha256": "A2276E03A84A519F438590AFF4E40F73B0E40BBA6A1854F4BBD1E5EBCC38CA97"
+    },
+    {
+      "Path": "docs/assets/changes/2026-10-12-inbound-r64-policy.png",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "docs/assets/changes/2026-10-12-inbound-r64-collaboration.png",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "docs/assets/changes/2026-10-12-inbound-r64-pending-terms.png",
+      "Exists": false,
+      "Sha256": null
+    }
+  ],
+  "excludedEffects": [
+    "ServerRules",
+    "Contracts",
+    "Database",
+    "ExternalAssets",
+    "CommunityFigma",
+    "Unity",
+    "DeviceInstallation",
+    "Commit",
+    "Push",
+    "Deploy"
+  ],
+  "validationCeiling": [
+    "Fast",
+    "Task",
+    "ConsumerBuild",
+    "HtmlRenderer",
+    "LocalBrowserLayout",
+    "DocumentLinks"
+  ],
+  "approvedDesignSha256": "8CE6623319594759D269C7A1613B70E1D7B61FBE31F4EFAC7EEE5FA6868BCC41",
+  "validation": {
+    "fast": {
+      "Passed": 74,
+      "Skipped": 0,
+      "Failed": 0,
+      "Directory": "artifacts/local/validation/20261012-200138"
+    },
+    "task": {
+      "Directory": "artifacts/local/validation/20261012-200533",
+      "Passed": 11167,
+      "Skipped": 15,
+      "Failed": 0,
+      "SkipReason": "Environment-dependent MongoDB integration tests"
+    },
+    "solutionBuild": {
+      "Warnings": 144,
+      "Errors": 0,
+      "Solution": "Ssalddel.v3.5.slnx",
+      "IncludesConsumerApps": true
+    },
+    "localBrowser": {
+      "Layouts": 9,
+      "HorizontalOverflow": 0,
+      "EvidenceKind": "Actual Razor HtmlRenderer output with test fixtures",
+      "BrowserErrors": 0,
+      "Evidence": "artifacts/local/inbound-r64/browser-verification.json",
+      "SmallButtons": 0,
+      "ViewportWidths": [
+        320,
+        390,
+        768
+      ],
+      "Engine": "Edge via Playwright"
+    },
+    "protectedR63Sources": {
+      "Count": 31,
+      "Changed": 0,
+      "Evidence": "artifacts/local/inbound-r64/protected-r63-sources.json"
+    },
+    "screenshots": [
+      "docs/assets/changes/2026-10-12-inbound-r64-policy.png",
+      "docs/assets/changes/2026-10-12-inbound-r64-collaboration.png",
+      "docs/assets/changes/2026-10-12-inbound-r64-pending-terms.png"
+    ],
+    "productSourceFingerprints": "artifacts/local/inbound-r64/final-product-source-fingerprints.json",
+    "documentLinks": "artifacts/local/inbound-r64/document-links.json",
+    "finalVerification": "artifacts/local/inbound-r64/final-verification.json"
+  }
+}

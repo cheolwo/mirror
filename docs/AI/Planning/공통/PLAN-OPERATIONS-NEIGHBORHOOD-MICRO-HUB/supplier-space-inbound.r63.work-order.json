@@ -1,0 +1,404 @@
+{
+  "planId": "PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB",
+  "revision": "r63",
+  "status": "Implemented / LocalValidated / OperationalDeferred",
+  "approval": "2026-10-12 current user: 그냥 구현까지 진행해줘",
+  "baseCommit": "08931c2371f29de615f4a4f133b535e5df76bf7f",
+  "designDocumentRef": "supplier-space-inbound.implementation.r63.md",
+  "designSha256": "16FD3A5C7EFD7780E9CABF548BC0BB339FECCA021BE3E38D95837B65159929CC",
+  "sourceProposalRef": "supplier-space-inbound.design.r62.md",
+  "sourceProposalSha256": "9395079410E380B5F78BF78DFBB864207C8F1DB2564DA3DA6652E7EF9ACFF747",
+  "primaryOwner": "operations",
+  "writePaths": [
+    "Ssalddel.Contracts/Common/Warehouse/DistributedInboundCollaborationDtos.cs",
+    "Ssalddel.Contracts/Common/Warehouse/DistributedFulfillmentDtos.cs",
+    "Ssalddel.Contracts/Common/Warehouse/DistributedStorageProofDtos.cs",
+    "Ssalddel.Domain/창고/분산입고수용Policy.cs",
+    "Ssalddel.Domain/창고/분산물류Record.cs",
+    "Ssalddel.Domain/창고/분산보관합의Record.cs",
+    "Ssalddel.Infrastructure/Persistence/Configurations/Warehouse/분산물류Configuration.cs",
+    "Ssalddel.Infrastructure/Persistence/PersonalDataProtectionModelBuilderExtensions.cs",
+    "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.cs",
+    "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.InboundCollaboration.cs",
+    "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Batch.cs",
+    "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Import.cs",
+    "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Read.cs",
+    "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Agreements.cs",
+    "Ssalddel/Controllers/Common/DistributedFulfillmentController.cs",
+    "Ssalddel/Migrations/20261012143000_AddDistributedInboundCollaboration.cs",
+    "Ssalddel/Migrations/SsalddelContextModelSnapshot.cs",
+    "Ssalddel.Tests/Domain/Warehouse/분산입고수용PolicyTests.cs",
+    "Ssalddel.Tests/Application/Warehouse/DistributedInboundCollaborationTests.cs",
+    "Ssalddel.Tests/Application/Warehouse/DistributedStorageProofTests.cs",
+    "Ssalddel.Tests/Application/Settlement/NeighborhoodInboundCollaborationIntegrationTests.cs",
+    "Ssalddel.Tests/Infrastructure/DistributedInboundCollaborationMigrationTests.cs",
+    "Ssalddel.Tests/Infrastructure/DistributedStorageProofMigrationTests.cs",
+    "Ssalddel.Tests/Infrastructure/DistributedFulfillmentMigrationTests.cs",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산공간수용조건Panel.razor",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산공간수용조건Panel.razor.css",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고협의Panel.razor",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고협의Panel.razor.css",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산보관변경협의Panel.razor",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산공간Screen.razor",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고Screen.razor",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산보관합의Screen.razor",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행Screen.razor",
+    "Ssalddel.Tests/Ui/Common/분산입고협의RenderTests.cs",
+    "Ssalddel.Tests/Ui/Common/분산입고협의PageViewModelTests.cs",
+    "docs\\AI\\Planning\\공통\\PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB\\supplier-space-inbound.implementation.r63.md",
+    "docs\\AI\\Planning\\공통\\PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB\\supplier-space-inbound.r63.work-order.json",
+    "docs\\AI\\Planning\\공통\\PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB\\README.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/AI/PLANNING.md",
+    "docs/Changes/README.md",
+    "docs/Changes/2026-10-12-supplier-space-inbound-r63.md",
+    "docs/ProjectOverview/page-docs/distributed-inbound-collaboration-r63.md",
+    "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Evidence.cs",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행Client.cs",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행PageViewModel.cs",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행PageViewModel.Recovery.cs",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행표시.cs",
+    "docs/assets/changes/2026-10-12-inbound-r63-policy.png",
+    "docs/assets/changes/2026-10-12-inbound-r63-collaboration.png",
+    "docs/assets/changes/2026-10-12-inbound-r63-pending-terms.png"
+  ],
+  "excludedEffects": [
+    "OperationalActivation",
+    "SharedDbMutation",
+    "ExternalPayment",
+    "ExternalNotification",
+    "Unity",
+    "DeviceInstallation",
+    "Commit",
+    "Push",
+    "Deploy"
+  ],
+  "validationCeiling": [
+    "Fast",
+    "Task",
+    "IsolatedSqlite",
+    "HtmlRenderer",
+    "Build",
+    "MigrationModel",
+    "DocumentLinks",
+    "LocalBrowserLayout"
+  ],
+  "baseline": [
+    {
+      "Path": "Ssalddel.Contracts/Common/Warehouse/DistributedInboundCollaborationDtos.cs",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel.Contracts/Common/Warehouse/DistributedFulfillmentDtos.cs",
+      "Exists": true,
+      "Sha256": "746E07FAA5A7DF85EB5B8B307D497F401B58188598C0F415596551E14877A75B"
+    },
+    {
+      "Path": "Ssalddel.Contracts/Common/Warehouse/DistributedStorageProofDtos.cs",
+      "Exists": true,
+      "Sha256": "C34E3DC7FC2E8C76CA5D6C67F5ED0A9903222DEAA9435092830846A6EBE97038"
+    },
+    {
+      "Path": "Ssalddel.Domain/창고/분산입고수용Policy.cs",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel.Domain/창고/분산물류Record.cs",
+      "Exists": true,
+      "Sha256": "A33F3B5A6BD031035558E81457A891D85D65E51E6D41DABDD46FEA833AE8A7DF"
+    },
+    {
+      "Path": "Ssalddel.Domain/창고/분산보관합의Record.cs",
+      "Exists": true,
+      "Sha256": "ED828D94F200D3283882333A528D10189C2406D79E2A9698565AEC8EBE9AF231"
+    },
+    {
+      "Path": "Ssalddel.Infrastructure/Persistence/Configurations/Warehouse/분산물류Configuration.cs",
+      "Exists": true,
+      "Sha256": "2A5987D09AD59418021F8BF2F7A294A2B67F9CA10A213A38AC661429B251D7CF"
+    },
+    {
+      "Path": "Ssalddel.Infrastructure/Persistence/PersonalDataProtectionModelBuilderExtensions.cs",
+      "Exists": true,
+      "Sha256": "13D9F0657AF7D26BC698A81FFA8966BB7951245F8F46CF5E42207D3EBE230ED6"
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.cs",
+      "Exists": true,
+      "Sha256": "ABDF65B7ED658B109079386ECC040CB6011BA1558611607EC87030296980831A"
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.InboundCollaboration.cs",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Batch.cs",
+      "Exists": true,
+      "Sha256": "F57E3A3031B920921B9437BE72025391D1DAEBF22BA32BCF1AADF76FCB85D781"
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Import.cs",
+      "Exists": true,
+      "Sha256": "2AE8938FA35119F8E7B219C12F50F0392126D93CE5F3B73B7110B335773D74DB"
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Read.cs",
+      "Exists": true,
+      "Sha256": "3BFA9A9991002B5D203FF28831DBA3B8C75D007BCB6F25168A4303F48F7C0C71"
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Agreements.cs",
+      "Exists": true,
+      "Sha256": "BEED96A1BCFC187B8DC0EBFF3496B43BC63F5FFEC200AB255F10A47E976D61C4"
+    },
+    {
+      "Path": "Ssalddel/Controllers/Common/DistributedFulfillmentController.cs",
+      "Exists": true,
+      "Sha256": "992454A0CC3B01BE3BE83CD202C851F063FDA1D05E8ED19CDCF9556A08CD1EBB"
+    },
+    {
+      "Path": "Ssalddel/Migrations/20261012143000_AddDistributedInboundCollaboration.cs",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel/Migrations/SsalddelContextModelSnapshot.cs",
+      "Exists": true,
+      "Sha256": "EC80591240F09210E93B55F15E9A794A0AC08793C461B07044288977226946FA"
+    },
+    {
+      "Path": "Ssalddel.Tests/Domain/Warehouse/분산입고수용PolicyTests.cs",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Warehouse/DistributedInboundCollaborationTests.cs",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Warehouse/DistributedStorageProofTests.cs",
+      "Exists": true,
+      "Sha256": "81C36C99F1409D59F5A17DF74885B2650E6C1FFA45976E11AC9A7C29CF8DABD6"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Settlement/NeighborhoodInboundCollaborationIntegrationTests.cs",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel.Tests/Infrastructure/DistributedInboundCollaborationMigrationTests.cs",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel.Tests/Infrastructure/DistributedStorageProofMigrationTests.cs",
+      "Exists": true,
+      "Sha256": "19CD8DD947F4B4191DE07E87E02E7C31CF882C3F73192F3A770E9BCB3D48B30D"
+    },
+    {
+      "Path": "Ssalddel.Tests/Infrastructure/DistributedFulfillmentMigrationTests.cs",
+      "Exists": true,
+      "Sha256": "0BBB0D3E2A3DF349D6DFC785AA212F301A85E42D7AB0BC85DCD127834F2E2ECE"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산공간수용조건Panel.razor",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산공간수용조건Panel.razor.css",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고협의Panel.razor",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고협의Panel.razor.css",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산보관변경협의Panel.razor",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산공간Screen.razor",
+      "Exists": true,
+      "Sha256": "FA9BFD926C203DDC65A3DB4634876A0A103E236D21037DA348343665151B7AC1"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고Screen.razor",
+      "Exists": true,
+      "Sha256": "E6BD593E4C30DD64F32FF86D3E6677B63FEC77A7313AAF2FCF99C9EB093E2D1C"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산보관합의Screen.razor",
+      "Exists": true,
+      "Sha256": "CE0C021902996BE732A8A65CB259E08004193E07F1156C5D9695D57E511470F1"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행Screen.razor",
+      "Exists": true,
+      "Sha256": "2C3A178A6FD82C4783069D7DB616AE38E8E3F524660247FC7AA1C484244CF990"
+    },
+    {
+      "Path": "Ssalddel.Tests/Ui/Common/분산입고협의RenderTests.cs",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel.Tests/Ui/Common/분산입고협의PageViewModelTests.cs",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "docs\\AI\\Planning\\공통\\PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB\\supplier-space-inbound.implementation.r63.md",
+      "Exists": true,
+      "Sha256": "E7FD454905F2D5EAA3FF16144D263060388146E1BEBF630EDA47C032D122DC23"
+    },
+    {
+      "Path": "docs\\AI\\Planning\\공통\\PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB\\supplier-space-inbound.r63.work-order.json",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "docs\\AI\\Planning\\공통\\PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB\\README.md",
+      "Exists": true,
+      "Sha256": "0BB0207F24E42076A5CBEF995CD13333DC9CAA0659E82FD3D53E562799547FC1"
+    },
+    {
+      "Path": "docs/AI/CURRENT_WORK.md",
+      "Exists": true,
+      "Sha256": "94B3E7CB77E8F2992A6CFB499FD204456B55048EA5C7662BA9752633FFA35A7C"
+    },
+    {
+      "Path": "docs/AI/PLANNING.md",
+      "Exists": true,
+      "Sha256": "074D522755EB632FDBC3DF1E1B7C041D9A764575B251DFF598CE45243418ED47"
+    },
+    {
+      "Path": "docs/Changes/README.md",
+      "Exists": true,
+      "Sha256": "E85E074AB10E22F7C977D8BDE0F5B99C622E1E3BF0482A3389F2461DE2ACDBF1"
+    },
+    {
+      "Path": "docs/Changes/2026-10-12-supplier-space-inbound-r63.md",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "docs/ProjectOverview/page-docs/distributed-inbound-collaboration-r63.md",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Evidence.cs",
+      "Exists": true,
+      "Sha256": "2C02CEA283C7ACD175E90619D69169D9D7BAF2C873ABFB32AA5A967F34E7BD6F"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행Client.cs",
+      "Exists": true,
+      "Sha256": "7A4BBA031F2C992783832BC294DE7C17D64ACF452B98A7E068D161F877FB4BD7"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행PageViewModel.cs",
+      "Exists": true,
+      "Sha256": "926668AFAF8A4F93A13F5530248CA211DA53200EB67AB6DC78B7E4CE4506FF6B"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행PageViewModel.Recovery.cs",
+      "Exists": true,
+      "Sha256": "BA0A4A2B444AAA383937CDF10F11C08E117AE796F336C67D71D208A6ECC5C418"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행표시.cs",
+      "Exists": true,
+      "Sha256": "BC9886DD5B9354507D192E4AA77565C70387AF68958872984F78048D624C86FC"
+    },
+    {
+      "Path": "docs/assets/changes/2026-10-12-inbound-r63-policy.png",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "docs/assets/changes/2026-10-12-inbound-r63-collaboration.png",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "docs/assets/changes/2026-10-12-inbound-r63-pending-terms.png",
+      "Exists": false,
+      "Sha256": null
+    }
+  ],
+  "scopeAmendments": [
+    "2026-10-12 docs AGENTS actual UI PNG requirement: three local HtmlRenderer browser screenshots added before creation; no new product routes or operational effects."
+  ],
+  "approvedDesignSha256": "E7FD454905F2D5EAA3FF16144D263060388146E1BEBF630EDA47C032D122DC23",
+  "validationResults": {
+    "completedAtUtc": "2026-10-12T05:18:24.6294513Z",
+    "fast": {
+      "passed": 279,
+      "failed": 0,
+      "skipped": 0,
+      "artifactDirectory": "artifacts/local/validation/20261012-141120"
+    },
+    "task": {
+      "passed": 11167,
+      "failed": 0,
+      "skipped": 15,
+      "total": 11182,
+      "skippedReason": "Environment-dependent MongoDB integration tests",
+      "artifactDirectory": "artifacts/local/validation/20261012-141318"
+    },
+    "build": {
+      "solution": "Ssalddel.v3.5.slnx",
+      "errors": 0,
+      "warnings": 64,
+      "artifact": "artifacts/local/validation/20261012-141318/build-01.log"
+    },
+    "newRevisionTests": {
+      "passed": 79,
+      "failed": 0
+    },
+    "isolatedWorkflow": "SQLite UseCase and actual photo service with synthetic JPEG: 3 reserved, 2 received, stock/work 2, agreed 100/unit generates 200 compensation basis; replay unchanged; no payment/outbound",
+    "localScreens": {
+      "count": 3,
+      "width": 390,
+      "horizontalOverflow": 0,
+      "browserErrors": 0,
+      "artifact": "artifacts/local/inbound-r63/browser-verification.json",
+      "realDevice": false,
+      "authenticatedHttp": false
+    },
+    "recoveredFailures": [
+      "First Fast: 260 passed, 10 failed. Explicit Enumerable.Contains fixes 8 EF Span query failures. SQL literal and isolated protected-model cache fix 2 migration tests. Original logs retained at artifacts/local/validation/20261012-135854.",
+      "Independent review: allow remaining quantity reduction down to received amount; reject null goods/category/supplier input before mutation and render missing categories safely. Regression tests included in final runs."
+    ],
+    "limitations": [
+      "Default OFF and existing Simulation profile unchanged",
+      "Shared MySQL/Mongo migration and production concurrency not executed",
+      "No authenticated HTTP workflow, Android camera, phone installation or Azure deployment",
+      "No actual contract, supplier shipment, external notification or payment",
+      "Access hours remain agreed free text, no automatic parser",
+      "Supplier return completion and recurring automatic inbound remain outside scope",
+      "Unity, commit and push unchanged"
+    ],
+    "changeDocumentRef": "docs/Changes/2026-10-12-supplier-space-inbound-r63.md",
+    "sourceFingerprintArtifact": "artifacts/local/inbound-r63/final-product-source-fingerprints.json",
+    "documentLinks": {
+      "checked": 23,
+      "failed": 0,
+      "artifact": "artifacts/local/inbound-r63/document-links.json"
+    }
+  }
+}

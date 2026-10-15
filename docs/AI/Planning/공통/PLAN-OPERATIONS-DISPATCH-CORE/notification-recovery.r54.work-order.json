@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "id": "food-dispatch-notification-recovery.r54",
+  "status": "ImplementedLocalValidatedExternalDeferred",
+  "acceptedInCurrentThread": true,
+  "implementationAllowed": true,
+  "baselineCommit": "08931c2371f29de615f4a4f133b535e5df76bf7f",
+  "baselineDirtyHashes": {
+    "Ssalddel.Tests/Services/Dispatch/Queue/FoodDispatchTimingTransitionTests.cs": "ab9abc2fdaec3f9c13a7f02b164170f2e44f4f483275ba1131c451adf377fe63",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/README.md": "86760d7dc145b1634dbafee6bf64b070359ee9a27d32620c585d0f38cf0b5d73",
+    "docs/AI/PLANNING.md": "d5ca4c2743f369f09f9ecc1a1044880cceeaa9fac827f4d2be8117f2012f86ed",
+    "Ssalddel.Tests/Domain/Dispatch/운영배차공통계약Tests.cs": "ce5a0760da30b5af307d2faf285aaf66a72a4432bb878583ba919a6a7cf4d03e",
+    "docs/AI/CURRENT_WORK.md": "3bd69234687112ef9853fc89b8a81fb9acb678af3a97add9c7e39fad3669bad5",
+    "Ssalddel.Domain/배차/FoodDispatchInformationReadinessPolicy.cs": "56c57de1646fbe10993c43c43cc2d9a3a1fbbaa2667d4763f833d2a8fc30b98f",
+    "Ssalddel.Tests/Domain/Dispatch/FoodDispatchInformationReadinessPolicyTests.cs": "2f7162270cfef20bfe02b0fea7b1e91c9418aaa6854a5f6113c6f51c1216bbb3",
+    "Ssalddel.Contracts/Common/Dispatch/FoodDispatchInformationReadinessContracts.cs": "e0f1360881d7033522922a916800836804d3fed04fbdc4affd8112cbf4a9c67d",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/information-readiness.r53.work-order.json": "ec8a9a74260a1e7046a62aa628943b51ee35a97fb73a956975c7a7ea1b2ee2aa",
+    "Ssalddel.Contracts/Common/Dispatch/FoodDispatchTimingContracts.cs": "99d7f2a52c8c303be7fd2103eab2719aad613b8632c0ecf17ca3acfd469bcb4b",
+    "Ssalddel/Services/Dispatch/AI/FoodDispatchTimingService.Information.cs": "257efe720b62eb7a4a26e759f07dce4a865bc4bce091b6293346e04c9e33e829",
+    "Ssalddel.Tests/Domain/Dispatch/FoodDispatchTimingPolicyTests.cs": "00cab199d163a5071b1792ef986f98af39423c9f294c622671c2eb69a6701643",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/information-readiness.implementation.r53.md": "cc9add1f7095d27ad563d9cafb167163c5a75ab9be3c4d105a2c9595c412ea5b",
+    "docs/Changes/2026-10-11-food-dispatch-information-readiness-r53.md": "a720eb645d20e145c00129a4aedcc31392d2922cbe28cb47477b234fd1ae3c2a",
+    "Ssalddel.Tests/Services/Dispatch/AI/FoodDispatchTimingServiceTests.cs": "e78b672b02ee6082b5f744768045fdaefccc2cedc10a3b533f33d7990387a79c",
+    "docs/Changes/README.md": "def242a154f8ed3616788e871fe2e3c095e4cec029bdbf4632e1ab57464e4137",
+    "Ssalddel/Services/Dispatch/Queue/배차대기원장전환Service.FoodTiming.cs": "123816250eb5904f2a85d44d00558b5daf0b7c2770a87c2b26d6c4b97345cbd8",
+    "Ssalddel/Services/Dispatch/AI/FoodDispatchTimingService.cs": "e45c364225e04ffffcd58fb949bf839baed96b33243c04677cc921717e8f3004",
+    "Ssalddel.Domain/배차/FoodDispatchTimingPolicy.cs": "21b103028d652669f3905a2bec3e56b23867a805ca5b46fcffa8e4ccee5cf711"
+  },
+  "designRevision": "dispatch-core.r54",
+  "designDocumentRef": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/notification-recovery.implementation.r54.md",
+  "designSha256": "9e19cc38ab76abff86df1890a1a287201f356f0d7ce1901431c9d3b9a8238633",
+  "writePaths": [
+    "Ssalddel/Services/Dispatch/Notification/배차추천알림Service.cs",
+    "Ssalddel/Services/Dispatch/Notification/배차추천알림Service.FoodRecovery.cs",
+    "Ssalddel/Services/Dispatch/Notification/FoodRecommendationNotificationRecoveryPolicy.cs",
+    "Ssalddel/Services/Dispatch/Queue/배차대기원장전환Service.Recommendation.cs",
+    "Ssalddel/Application/Admin/Food/음식주문운영추적UseCase.cs",
+    "Ssalddel/Services/OperationsAlerts/FoodOperationsAlertSource.cs",
+    "Ssalddel/Services/OperationsAlerts/OperationsAlertsOptions.cs",
+    "Ssalddel/Services/OperationsAlerts/OperationsAlertCoordinator.cs",
+    "Ssalddel.Tests/Application/Admin/Food/음식주문운영추적UseCaseTests.cs",
+    "Ssalddel.Tests/Services/OperationsAlerts/FoodOperationsAlertSourceTests.cs",
+    "Ssalddel.Tests/Services/OperationsAlerts/OperationsAlertsTests.cs",
+    "Ssalddel.Tests/Services/Dispatch/Notification/FoodRecommendationNotificationRecoveryTests.cs",
+    "Ssalddel.Tests/Services/Dispatch/Notification/FoodRecommendationPushInstallationTests.cs",
+    "Ssalddel.Tests/Services/Dispatch/AI/FoodDispatchWorkflowScenarioFixture.GapTests.cs",
+    "Ssalddel.Tests/Services/Dispatch/AI/FoodDispatchWorkflowScenarioFixture.Pilot.cs",
+    "Ssalddel.Tests/Clients/FDriverSelfOperationPilotTests.cs",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/notification-recovery*",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/README.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/AI/PLANNING.md",
+    "docs/Changes/README.md",
+    "docs/Changes/2026-10-11-food-dispatch-notification-recovery-r54.md",
+    "Ssalddel.Tests/Services/Dispatch/AI/FoodDispatchWorkflowScenarioFixture.cs",
+    "Ssalddel.Tests/Services/Dispatch/Queue/FoodDemandParticipationDirectRecommendationTests.cs"
+  ],
+  "operationalActivationAllowed": false,
+  "externalNotificationsAllowed": false,
+  "modelCallsAllowed": 0,
+  "validation": {
+    "fast": {
+      "run": "artifacts/local/validation/20261011-223838",
+      "passed": 107,
+      "failed": 0,
+      "skipped": 0,
+      "testBuildWarnings": 71,
+      "serverBuildWarnings": 0,
+      "buildErrors": 0
+    },
+    "task": {
+      "exitCode": 0,
+      "driverLog": "artifacts\\local\\food-dispatch-notification-r54\\mongo-20261011T134032Z-06703303\\task.log",
+      "run": "artifacts/local/validation/20261011-224039",
+      "passed": 10895,
+      "failed": 0,
+      "skipped": 0,
+      "solutionBuildWarnings": 6,
+      "buildErrors": 0
+    },
+    "mongo": {
+      "summaryRef": "artifacts/local/food-dispatch-notification-r54/mongo-20261011T134032Z-06703303/summary.json",
+      "imageId": "sha256:45b422ba19c0f028a917ea43746ab8e8cdbdaaeb50d2e6e634a17c59666e0dbb",
+      "databaseVersion": "8.0.26",
+      "testsPassed": 24,
+      "isolatedStandaloneAndReplica": true,
+      "testDatabasesCleaned": true,
+      "containersRemoved": true,
+      "existingDatabasesAndVolumesChanged": false
+    },
+    "ordinaryDriverPilot": {
+      "testsPassed": 2,
+      "ordersCompletedSequentially": 2,
+      "adminApiCalls": 0,
+      "ownerPreferenceApplied": false,
+      "restartScope": "HTTP host recreated using same SQLite and test memory stores"
+    },
+    "historicalRuns": [
+      {
+        "run": "artifacts/local/validation/20261011-223036",
+        "status": "BuildFailed",
+        "reason": "Test-only unused cargo port DTO namespace missing; fixed"
+      },
+      {
+        "run": "artifacts/local/validation/20261011-223241",
+        "passed": 98,
+        "failed": 2,
+        "skipped": 0,
+        "reason": "Old stale-outbox expectations updated for current-recommendation repair"
+      },
+      {
+        "run": "artifacts/local/validation/20261011-223435",
+        "passed": 100,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "run": "artifacts/local/validation/20261011-223545",
+        "passed": 10885,
+        "failed": 10,
+        "skipped": 0,
+        "reason": "One old direct-recommendation notification expectation and nine test-provider-root failures; fixed without warning suppression"
+      }
+    ],
+    "scopeAuditRef": "artifacts/local/food-dispatch-notification-r54/scope-audit.json",
+    "scope": {
+      "dirtyPaths": 40,
+      "baselineDirtyPaths": 19,
+      "outsideWritePaths": 0,
+      "priorUnrelatedHashesPreserved": true,
+      "headUnchanged": true,
+      "indexEmpty": true,
+      "frozenDesignHashUnchanged": true
+    },
+    "readOnlyReview": "No remaining blocking defect or overstated evidence found",
+    "documentationFast": {
+      "run": "artifacts/local/validation/20261011-224328",
+      "diffCheckPassed": true,
+      "buildAndTestsSkippedAsDocsOnly": true
+    },
+    "limits": {
+      "operationalActivation": false,
+      "externalNotificationsSent": 0,
+      "modelCalls": 0,
+      "phoneOrNativeFcmVerified": false,
+      "azureVerified": false,
+      "redisOrFullProcessRestartVerified": false,
+      "backgroundTimerRuntimeVerified": false,
+      "realMySqlVerified": false,
+      "apkPackageIndependentlyVerified": false,
+      "committed": false,
+      "pushed": false
+    }
+  }
+}

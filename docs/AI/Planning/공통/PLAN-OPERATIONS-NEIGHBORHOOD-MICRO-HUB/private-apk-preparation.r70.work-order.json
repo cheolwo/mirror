@@ -1,0 +1,64 @@
+{
+  "schema": "operations-local-work-order.v1",
+  "id": "private-apk-preparation-r70",
+  "status": "CompletedLocalValidation",
+  "approval": "User requested private APK preparation and implementation of the first missing workflow, with GCS as the proposed future APK download store.",
+  "plan": "private-apk-preparation.implementation.r70.md",
+  "planSha256": "2221871b251b1049c563487f80f24fd822e4cb5cd375db606b07c4f7be50413f",
+  "scope": "local private APK preparation and one existing shipper receipt registration flow",
+  "writePaths": {
+    "shipperReceipt": [
+      "SsalddelApp/ViewModels/Shipper/ShipperRequestDetailPageViewModel.cs",
+      "SsalddelApp/Components/Pages/ShipperRequestProofsPage.razor",
+      "SsalddelApp/Services/IShipperOperationsService.cs",
+      "SsalddelApp/Services/ServerBackedShipperOperationsService.cs",
+      "SsalddelApp/Services/SmokeAwareShipperOperationsService.cs",
+      "Ssalddel.Ui.Common/Areas/App/Components/Transport/ShipperRequestProofsScreen.razor",
+      "Ssalddel.Ui.Common/Areas/App/Models/ShipperRequestDetail*.cs",
+      "Ssalddel.Tests/Clients/ShipperReceipt*Tests.cs",
+      "docs/ProjectOverview/page-docs/shipper-receipt-registration-r70.md",
+      "SsalddelApp/ViewModels/Shipper/ShipperRequestDetailPageViewModel.Receipt.cs",
+      "Ssalddel.Ui.Common/Areas/App/Components/Transport/ShipperReceiptRegistrationPanel.razor"
+    ],
+    "apkPreparation": [
+      "eng/release/PrivateApkGcs.Common.ps1",
+      "eng/release/prepare-private-apk-gcs.ps1",
+      "eng/tests/private-apk-gcs.ps1"
+    ],
+    "integration": [
+      "Ssalddel.Tests/Ssalddel.Tests.csproj",
+      "docs/AI/CURRENT_WORK.md",
+      "docs/AI/PLANNING.md",
+      "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md",
+      "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/private-apk-preparation.implementation.r70.md",
+      "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/private-apk-preparation.r70.work-order.json",
+      "docs/Deployment/PrivateApkPilotReadiness-20261015.md",
+      "docs/Changes/2026-10-15-private-apk-preparation-r70.md",
+      "docs/Changes/README.md",
+      "artifacts/local/private-apk-preparation-r70/"
+    ]
+  },
+  "forbiddenEffects": [
+    "cloud writes",
+    "upload",
+    "signed URL issuance",
+    "public ACL",
+    "new signing key",
+    "operational flags",
+    "real transfer",
+    "unrelated dirty changes",
+    "Unity",
+    "commit",
+    "push"
+  ],
+  "verification": [
+    "focused receipt tests",
+    "offline APK preparation tests",
+    "Fast explicit Paths",
+    "Task explicit Paths",
+    "consumer app build",
+    "host render or stated limitation",
+    "baseline byte comparison",
+    "two local standalone Debug APKs without installation or sharing"
+  ]
+}

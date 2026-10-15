@@ -1,0 +1,244 @@
+{
+  "planId": "PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB",
+  "revision": "r61",
+  "status": "Implemented / LocalValidated / OperationalDeferred",
+  "approval": "2026-10-12 current user: 1번, 2번 진행",
+  "baseCommit": "08931c2371f29de615f4a4f133b535e5df76bf7f",
+  "designDocumentRef": "settlement-economics.implementation.r61.md",
+  "designSha256": "0053F751DDB7027588E11B543B4B44FE52063658F9D43BD8A27F6E22384275C9",
+  "primaryOwner": "operations",
+  "writePaths": [
+    "Ssalddel.Contracts/Common/Settlement/NeighborhoodSettlementEconomicsDtos.cs",
+    "Ssalddel.Contracts/Common/Settlement/NeighborhoodActivityRewardDtos.cs",
+    "Ssalddel.Contracts/Common/Settlement/NeighborhoodSettlementDtos.cs",
+    "Ssalddel.Domain/정산/NeighborhoodInventoryCostAttributionRecord.cs",
+    "Ssalddel.Infrastructure/Persistence/Configurations/Settlement/생활거래정산Configuration.cs",
+    "Ssalddel.Infrastructure/Persistence/PersonalDataProtectionModelBuilderExtensions.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Source.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementSourceResolver.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Read.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.ActivityRewards.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.CostAttribution.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.PlatformShare.cs",
+    "Ssalddel/Services/Settlement/PlatformProfitReturnService.cs",
+    "Ssalddel/Migrations/20261012130000_AddNeighborhoodInventoryCostAttribution.cs",
+    "Ssalddel/Migrations/SsalddelContextModelSnapshot.cs",
+    "Ssalddel.Tests/Application/Settlement/NeighborhoodPlatformShareTests.cs",
+    "Ssalddel.Tests/Application/Settlement/NeighborhoodInventoryCostAttributionTests.cs",
+    "Ssalddel.Tests/Application/Settlement/NeighborhoodActivityRewardWarehouseIntegrationTests.cs",
+    "Ssalddel.Tests/Application/Settlement/NeighborhoodActivityRewardUseCaseTests.cs",
+    "Ssalddel.Tests/Application/Settlement/NeighborhoodSettlementStorageQuantityResolverTests.cs",
+    "Ssalddel.Tests/Infrastructure/NeighborhoodInventoryCostAttributionMigrationTests.cs",
+    "Ssalddel.Tests/Infrastructure/NeighborhoodSettlementPersistenceTests.cs",
+    "Ssalddel.Ui.Common/Areas/App/Models/활동정산표시.cs",
+    "Ssalddel.Ui.Common/Areas/App/Components/Settlement/활동성과금Panel.razor",
+    "Ssalddel.Tests/Ui/Common/활동성과금경제RenderTests.cs",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/settlement-economics.implementation.r61.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/settlement-economics.r61.work-order.json",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/AI/PLANNING.md",
+    "docs/Changes/2026-10-12-settlement-economics-r61.md",
+    "docs/Changes/README.md",
+    "docs/ProjectOverview/page-docs/activity-settlements-r61.md"
+  ],
+  "excludedEffects": [
+    "OperationalActivation",
+    "RealDbMutation",
+    "AuthorityExpansion",
+    "ExternalPayment",
+    "ExternalNotification",
+    "Unity",
+    "Commit",
+    "Push",
+    "Deploy"
+  ],
+  "validationCeiling": [
+    "Fast",
+    "Task",
+    "IsolatedSqlite",
+    "HtmlRenderer",
+    "Build",
+    "DocumentLinks"
+  ],
+  "acceptedDesignSha256": "3742BB488A23F2FBB747E2C06116BD4310C700B28DAF1D8755E088D96F299AEA",
+  "completedAtUtc": "2026-10-12T04:27:35.3094047Z",
+  "validation": {
+    "Build": {
+      "Errors": 0,
+      "Solution": "Ssalddel.v3.5.slnx",
+      "Warnings": 64,
+      "Evidence": "artifacts/local/validation/20261012-132234/build-01.log"
+    },
+    "DocumentLinks": {
+      "Checked": 17,
+      "Scope": "r61 documents and exact settlement-economics registry references only",
+      "Missing": 0
+    },
+    "Runtime": "Isolated SQLite actual fulfillment use cases; HtmlRenderer; no shared DB or actual payout",
+    "Task": {
+      "Passed": 11088,
+      "Total": 11103,
+      "Evidence": "artifacts/local/validation/20261012-132234",
+      "Skipped": 15,
+      "SkipReason": "MongoDB environment not configured",
+      "Failed": 0
+    },
+    "Fast": {
+      "Evidence": "artifacts/local/validation/20261012-132028",
+      "Passed": 239,
+      "Failed": 0,
+      "Skipped": 0
+    }
+  },
+  "validationFailures": [
+    {
+      "Stage": "Build",
+      "Resolution": "Correct test Summary.Revision to Agreement.Revision",
+      "Evidence": "artifacts/local/validation/20261012-125952"
+    },
+    {
+      "Stage": "Build",
+      "Resolution": "Correct remaining test Summary.Revision references",
+      "Evidence": "artifacts/local/validation/20261012-130342"
+    },
+    {
+      "Stage": "DiffCheck",
+      "Resolution": "Remove extra EOF blank lines from new docs",
+      "Evidence": "artifacts/local/validation/20261012-130733"
+    },
+    {
+      "Stage": "Fast",
+      "Failed": 12,
+      "Passed": 213,
+      "Resolution": "Explicit Free amount fixture, frozen historical access regression expectation, semantic dt/dd assertions independent of CSS attributes",
+      "Evidence": "artifacts/local/validation/20261012-130806"
+    },
+    {
+      "Stage": "Fast",
+      "Failed": 1,
+      "Passed": 224,
+      "Resolution": "Use rendered current policy weight phrase in UI assertion",
+      "Evidence": "artifacts/local/validation/20261012-131402"
+    }
+  ],
+  "reviewFindings": [
+    {
+      "Status": "FixedAndValidated",
+      "Resolution": "Filter nonfunding platform entry response; preserve stored audit evidence",
+      "Finding": "Platform payee could read other contributors evidence references through its entry"
+    },
+    {
+      "Status": "FixedAndValidated",
+      "Resolution": "Add separately verified constant quantity intervals; preserve coarse continuous intervals",
+      "Finding": "Later sequential picks lowered minimum quantity for historical storage periods"
+    }
+  ],
+  "sourceFingerprints": [
+    {
+      "Path": "Ssalddel.Contracts/Common/Settlement/NeighborhoodSettlementEconomicsDtos.cs",
+      "Hash": "333F06F1729F4022B3B284EEEE411D82224225BB9395D5DEC54A6315C93F13F4"
+    },
+    {
+      "Path": "Ssalddel.Contracts/Common/Settlement/NeighborhoodActivityRewardDtos.cs",
+      "Hash": "E3A2B85CE6390B832E9DB7196FEFAA59234000F394B4D74CACB6B02E77685AC6"
+    },
+    {
+      "Path": "Ssalddel.Contracts/Common/Settlement/NeighborhoodSettlementDtos.cs",
+      "Hash": "5E269059C408B271A6017DC9761BF8549C59965FD0D830530892B74B9D07EA5C"
+    },
+    {
+      "Path": "Ssalddel.Domain/정산/NeighborhoodInventoryCostAttributionRecord.cs",
+      "Hash": "A6088895D658AF226DE92B54FD7D24E7251A48144F1BABB4FA3E002B71E28AA8"
+    },
+    {
+      "Path": "Ssalddel.Infrastructure/Persistence/Configurations/Settlement/생활거래정산Configuration.cs",
+      "Hash": "C6504F50A6E6AF356D8B7DAF64B1D9C39E088177F2AEDD0E6B3CEE9D710FDC3E"
+    },
+    {
+      "Path": "Ssalddel.Infrastructure/Persistence/PersonalDataProtectionModelBuilderExtensions.cs",
+      "Hash": "13D9F0657AF7D26BC698A81FFA8966BB7951245F8F46CF5E42207D3EBE230ED6"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Source.cs",
+      "Hash": "46DAA19411CF3C6AB0EC95DDF3A45E0717E8FD96B2734A3C87661AE7331A8B96"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementSourceResolver.cs",
+      "Hash": "3FAF77838FAF2C8616619A6892F4F49AB9A6E8498A0B6A0688CF94B74EAF5EF1"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.cs",
+      "Hash": "16BF2DE5940AC15BE36E54B99EC5EA30169CCA7D98AAB09334EE6A95F89B275D"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Read.cs",
+      "Hash": "D6A0A772AC576C121A7ED71C7C74427F96359E9DC7A7371E2FF6435F2E51B444"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.ActivityRewards.cs",
+      "Hash": "DCC53240FF8B2A7222383C6A5158F28F1A5BEAA5B9A6624289F1A50585CC4292"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.CostAttribution.cs",
+      "Hash": "58C63A674109FDAB51A189145A6628E45D40A58BBC504D0603669543BDCB8875"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.PlatformShare.cs",
+      "Hash": "ECFA016ADE68FA9252E8D90D9A646696FD5C91C7E61F592687FA7B1A322414D5"
+    },
+    {
+      "Path": "Ssalddel/Services/Settlement/PlatformProfitReturnService.cs",
+      "Hash": "3BD62D28A9B859A6E781FA85DD6E0EDE8472B2D44245084B651893038E164ABA"
+    },
+    {
+      "Path": "Ssalddel/Migrations/20261012130000_AddNeighborhoodInventoryCostAttribution.cs",
+      "Hash": "44C3BEF551001050497C47CBFB5FE2FB67E4888FC7878AD828DC10E179C47C70"
+    },
+    {
+      "Path": "Ssalddel/Migrations/SsalddelContextModelSnapshot.cs",
+      "Hash": "EC80591240F09210E93B55F15E9A794A0AC08793C461B07044288977226946FA"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Settlement/NeighborhoodPlatformShareTests.cs",
+      "Hash": "1260C17C0B6DF14B025261856166D8333D5544C38839CC32709C13F81DF5CFB7"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Settlement/NeighborhoodInventoryCostAttributionTests.cs",
+      "Hash": "7A9617356C037DDE2F41CB40FCCFD6C0FDB191F99823CE163A86A1E6A2DAA63C"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Settlement/NeighborhoodActivityRewardWarehouseIntegrationTests.cs",
+      "Hash": "09316D1C8A7598FCC558417DC2B18E02C77A05CB9C03893007FE7FE499A8BBA5"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Settlement/NeighborhoodActivityRewardUseCaseTests.cs",
+      "Hash": "E119B415BE9C8A94296DADF801412DB2D1B0C02434D28A6517319A12A66FFB7B"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Settlement/NeighborhoodSettlementStorageQuantityResolverTests.cs",
+      "Hash": "AE671E049DB72B23B99097EF5A9C663169F898B078F73660DA2232ACF026FF6D"
+    },
+    {
+      "Path": "Ssalddel.Tests/Infrastructure/NeighborhoodInventoryCostAttributionMigrationTests.cs",
+      "Hash": "AD79A68FECAEDF77BB8E7C09FE7A578F4A4EA1D780FCFB869466794B61504FCD"
+    },
+    {
+      "Path": "Ssalddel.Tests/Infrastructure/NeighborhoodSettlementPersistenceTests.cs",
+      "Hash": "D625646DF7FDFDA1BD444BA5A53A6BDBE54C1CCA30943AE268743F9BAD592889"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/Models/활동정산표시.cs",
+      "Hash": "68209C9ED400755DDC6EBE677B3BFCD1CD40B38B3208FF0E125DD9331527C2B7"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/Components/Settlement/활동성과금Panel.razor",
+      "Hash": "775A5693AB1BE7F0E3D32E943F375353F5D1DA6A257607E822FCADEC38D83686"
+    },
+    {
+      "Path": "Ssalddel.Tests/Ui/Common/활동성과금경제RenderTests.cs",
+      "Hash": "F919131D96B386D0C1C6208176E577BD17262FFFFFBEDD6E03D0192011BDBBA6"
+    }
+  ]
+}

@@ -256,6 +256,22 @@
         },
         {
           "flowOrder": 41,
+          "stepKey": "domain.straight-line-delivery-pricing",
+          "dependsOnStepKeys": [],
+          "executionStage": "Definition",
+          "layer": "Domain",
+          "componentType": "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC6B4\uC1A1.StraightLineDeliveryPricingPolicy",
+          "assembly": "Ssalddel.Domain",
+          "sourcePath": "Ssalddel.Domain/\uC6B4\uC1A1/StraightLineDeliveryPricingPolicy.cs",
+          "sourceLine": 8,
+          "responsibility": "\uD53D\uC5C5\uC5D0\uC11C \uC804\uB2EC\uAE4C\uC9C0\uC758 \uC6D0\uB798 \uC9C1\uC120\uAC70\uB9AC\uB85C \uBE44\uB840 \uAC70\uB9AC\uBE44\uB97C \uACC4\uC0B0\uD55C\uB2E4.",
+          "effects": [],
+          "readsFrom": [],
+          "writesTo": [],
+          "boundary": "\uAC70\uB9AC \uD45C\uC2DC\uB97C \uBC18\uC62C\uB9BC\uD558\uAE30 \uC804 \uC6D0\uAC70\uB9AC\uB85C \uAC70\uB9AC\uBE44\uB9CC \uC6D0 \uB2E8\uC704 \uBC18\uC62C\uB9BC\uD55C\uB2E4. \uACBD\uB85C\u00B7\uC2DC\uAC04\u00B7\uCC28\uB7C9\u00B7\uD63C\uC801 \uC548\uC804 \uAC80\uC0AC\uB97C \uB300\uCCB4\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 41,
           "stepKey": "infrastructure.work-start-followup-mapping",
           "dependsOnStepKeys": [
             "domain.work-start-followup"
@@ -336,6 +352,26 @@
           "boundary": "\uD6C4\uBCF4 \uC0DD\uC131\uC740 \uC790\uB3D9 \uC218\uB77D\u00B7\uBC30\uCC28 \uD655\uC815\u00B7\uC601\uC18D \uC800\uC7A5\uC774 \uC544\uB2C8\uB2E4."
         },
         {
+          "flowOrder": 53,
+          "stepKey": "application.driver-offer-evidence",
+          "dependsOnStepKeys": [],
+          "executionStage": "Projection",
+          "layer": "Application",
+          "componentType": "\uC0B4\uB730.Services.Dispatch.Recommendation.\uAE30\uC0AC\uC81C\uC548\uD45C\uC2DC\uADFC\uAC70Service",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Services/Dispatch/Recommendation/\uAE30\uC0AC\uC81C\uC548\uD45C\uC2DC\uADFC\uAC70Service.cs",
+          "sourceLine": 13,
+          "responsibility": "\uC800\uC7A5\uD55C \uAE30\uC0AC \uC694\uAE08 \uADFC\uAC70\uC640 \uC2E4\uC81C \uBD84\uC0B0 \uD53C\uD0B9 \uCC45\uC784\uC744 \uC81C\uC548 \uD45C\uC2DC\uB85C \uC77D\uB294\uB2E4.",
+          "effects": [
+            "PersistentRead"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [],
+          "boundary": "\uC870\uD68C\uB9CC \uC218\uD589\uD55C\uB2E4. \uACE0\uAC1D \uACAC\uC801\u00B7\uD76C\uB9DD \uC635\uC158\u00B7\uCC3D\uACE0 \uC120\uD589 bool\uB85C \uBCF4\uC218\uB098 \uD3EC\uC7A5 \uBC30\uC815\uC744 \uCD94\uB860\uD558\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
           "flowOrder": 54,
           "stepKey": "application.current-work-projector",
           "dependsOnStepKeys": [
@@ -367,7 +403,7 @@
           "contractType": "\uC0B4\uB730.Services.Dispatch.Recommendation.I\uC74C\uC2DD\uBC30\uB2EC\uAE30\uC0AC\uC5C5\uBB34Service",
           "assembly": "Ssalddel",
           "sourcePath": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Query.cs",
-          "sourceLine": 41,
+          "sourceLine": 42,
           "responsibility": "\uD604\uC7AC \uAE30\uC0AC\uC5D0\uAC8C \uC720\uD6A8\uD55C \uC81C\uC548\uACFC \uC218\uD589 \uC5C5\uBB34\uB97C \uC870\uD68C\uD55C\uB2E4.",
           "effects": [
             "NetworkCall",
@@ -381,6 +417,28 @@
             "OperationalState"
           ],
           "boundary": "SQL \uC804\uBB38 \uC0C1\uD0DC\uB294 \uC870\uD68C\uB9CC \uD55C\uB2E4. \uACF5\uD1B5 \uC218\uC2E0 \uC0C1\uD0DC \uC870\uD68C\uB294 \uC601\uC18D \uC6D0\uC7A5 \uAE30\uC900 Redis \uD22C\uC601\uC744 \uC7AC\uAD6C\uC131\uD560 \uC218 \uC788\uC73C\uBA70 \uC218\uC2E0 \uC758\uC0AC \uC790\uCCB4\uB97C \uBC14\uAFB8\uC9C0 \uC54A\uB294\uB2E4."
+        },
+        {
+          "flowOrder": 60,
+          "stepKey": "application.shared-driver-admission",
+          "dependsOnStepKeys": [],
+          "executionStage": "Confirm",
+          "layer": "Application",
+          "componentType": "Ssalddel.Services.Dispatch.Participation.SharedDriverWorkAdmissionService",
+          "assembly": "Ssalddel",
+          "sourcePath": "Ssalddel/Services/Dispatch/Participation/SharedDriverWorkAdmissionService.cs",
+          "sourceLine": 35,
+          "responsibility": "\uAE30\uC0AC \uD76C\uB9DD \uC5C5\uBB34\uC640 \uC74C\uC2DD\u00B7\uD654\uBB3C\u00B7\uBD84\uC0B0 \uBBF8\uC644\uB8CC \uC57D\uC18D\uC744 \uACF5\uD1B5 \uC218\uB77D \uC9C1\uC804\uC5D0 \uAC80\uC0AC\uD55C\uB2E4.",
+          "effects": [
+            "PersistentWrite"
+          ],
+          "readsFrom": [
+            "OperationalState"
+          ],
+          "writesTo": [
+            "OperationalState"
+          ],
+          "boundary": "SQL \uC7A0\uAE08 \uD589\uB9CC \uAC31\uC2E0\uD55C\uB2E4. \uC804\uBB38 \uC6D0\uC7A5\u00B7\uCC28\uB7C9 \uC801\uD569\uC131\u00B7\uC644\uB8CC\u00B7\uC815\uC0B0\u00B7\uC9C0\uAE09 \uAD8C\uC704\uB97C \uB300\uCCB4\uD558\uC9C0 \uC54A\uB294\uB2E4."
         },
         {
           "flowOrder": 70,
@@ -572,7 +630,7 @@
           "contractType": "\uC0B4\uB730.Services.Dispatch.Recommendation.I\uC74C\uC2DD\uBC30\uB2EC\uAE30\uC0AC\uC5C5\uBB34Service",
           "assembly": "Ssalddel",
           "sourcePath": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs",
-          "sourceLine": 86,
+          "sourceLine": 87,
           "responsibility": "\uAE30\uC0AC \uC218\uB77D\u00B7\uAC70\uC808\u00B7\uB3C4\uCC29\u00B7\uC911\uB2E8\u00B7\uD53D\uC5C5\u00B7\uC804\uB2EC\uC758 \uAD8C\uD55C\u00B7Revision\u00B7\uD604\uC7AC \uC0C1\uD0DC \uC804\uC774\uB97C \uC870\uC728\uD55C\uB2E4.",
           "effects": [
             "NetworkCall",
@@ -1570,7 +1628,7 @@
             {
               "path": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs",
               "symbol": "StepKey = \u0022application.driver-actions\u0022",
-              "line": 86
+              "line": 87
             }
           ]
         },
@@ -1618,7 +1676,7 @@
             {
               "path": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Query.cs",
               "symbol": "StepKey = \u0022application.driver-offer-query\u0022",
-              "line": 41
+              "line": 42
             }
           ]
         },
@@ -1651,12 +1709,12 @@
             {
               "path": "FDriverApp/Services/FoodDeliveryDriverApiService.cs",
               "symbol": "public Task\u003CFoodDeliveryDriverCurrentWorkDto\u003E GetCurrentWorkAsync",
-              "line": 71
+              "line": 75
             },
             {
               "path": "FDriverApp/PageModels/MainPageModel.cs",
               "symbol": "private async Task LoadWorkspaceAsync",
-              "line": 718
+              "line": 719
             }
           ]
         },
@@ -1751,7 +1809,7 @@
             {
               "path": "FDriverApp/Services/FoodDeliveryDriverApiService.cs",
               "symbol": "public Task\u003CFoodDeliveryDailySettlementDto\u003E GetDailySettlementAsync",
-              "line": 98
+              "line": 108
             }
           ]
         },
@@ -1768,12 +1826,60 @@
             {
               "path": "FDriverApp/PageModels/MainPageModel.cs",
               "symbol": "private async Task ResumeForegroundWorkspaceAsync",
-              "line": 192
+              "line": 193
             },
             {
               "path": "FDriverApp/PageModels/MainPageModel.FoodNotifications.cs",
               "symbol": "public async Task ResumeFoodNotificationWorkspaceAsync",
-              "line": 181
+              "line": 202
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.application.shared-driver-admission",
+          "relatedStepKeys": [
+            "application.shared-driver-admission"
+          ],
+          "responsibility": "\uAE30\uC0AC \uC5C5\uBB34 \uC120\uD0DD\uACFC \uBBF8\uC644\uB8CC \uC57D\uC18D\uC744 \uC218\uB77D \uC9C1\uC804\uC5D0 \uAC80\uC0AC\uD558\uB294 \uACF5\uD1B5 \uAD00\uBB38",
+          "boundary": "\uC804\uBB38 \uC6D0\uC7A5\uACFC \uC790\uACA9\u00B7\uCC28\uB7C9\u00B7\uC644\uB8CC\u00B7\uC815\uC0B0\uC744 \uB300\uCCB4\uD558\uC9C0 \uC54A\uB294 \uC5F0\uACB0",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Participation/SharedDriverWorkAdmissionService.cs",
+              "symbol": "StepKey = \u0022application.shared-driver-admission\u0022",
+              "line": 35
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.domain.straight-line-delivery-pricing",
+          "relatedStepKeys": [
+            "domain.straight-line-delivery-pricing"
+          ],
+          "responsibility": "\uC6D0\uB798 \uC9C1\uC120\uAC70\uB9AC\uB85C \uAE30\uC0AC \uAC70\uB9AC\uBE44\uB9CC \uACC4\uC0B0\uD55C\uB2E4",
+          "boundary": "\uC6B4\uC784 \uC218\uB77D\u00B7\uC2E4\uC9C0\uAE09\u00B7\uACBD\uB85C \uC548\uC804 \uD310\uC815\uC744 \uB300\uC2E0\uD558\uC9C0 \uC54A\uB294\uB2E4",
+          "sources": [
+            {
+              "path": "Ssalddel.Domain/\uC6B4\uC1A1/StraightLineDeliveryPricingPolicy.cs",
+              "symbol": "StepKey = \u0022domain.straight-line-delivery-pricing\u0022",
+              "line": 8
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "source.application.driver-offer-evidence",
+          "relatedStepKeys": [
+            "application.driver-offer-evidence"
+          ],
+          "responsibility": "\uC800\uC7A5\uB41C \uAE30\uC0AC \uC694\uAE08\uACFC \uC2E4\uC81C \uD53C\uD0B9 \uCC45\uC784\uC744 \uC81C\uC548 \uD45C\uC2DC\uB85C \uC77D\uB294\uB2E4",
+          "boundary": "\uC6B4\uC784 \uC218\uB77D\u00B7\uC2E4\uC9C0\uAE09\u00B7\uACBD\uB85C \uC548\uC804 \uD310\uC815\uC744 \uB300\uC2E0\uD558\uC9C0 \uC54A\uB294\uB2E4",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Recommendation/\uAE30\uC0AC\uC81C\uC548\uD45C\uC2DC\uADFC\uAC70Service.cs",
+              "symbol": "StepKey = \u0022application.driver-offer-evidence\u0022",
+              "line": 13
             }
           ]
         }
@@ -1815,6 +1921,13 @@
       "featureKey": "food-driver",
       "stepKey": "Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs",
       "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 2\uAC1C: I\uC74C\uC2DD\uB9C8\uD2B8\uC6D0\uC7A5\uB3D9\uAE30\uD654OutboxService, I\uC74C\uC2DD\uB9C8\uD2B8\uC6D0\uC7A5\uB3D9\uAE30\uD654\uBCF5\uAD6CService"
+    },
+    {
+      "severity": "Warning",
+      "code": "CODEMAP100",
+      "featureKey": "food-driver",
+      "stepKey": "Ssalddel/Services/Dispatch/Participation/SharedDriverWorkAdmissionService.cs",
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 1\uAC1C: ISharedDriverWorkAdmissionService"
     },
     {
       "severity": "Warning",

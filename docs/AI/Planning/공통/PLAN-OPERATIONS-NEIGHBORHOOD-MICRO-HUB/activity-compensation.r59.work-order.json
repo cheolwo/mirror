@@ -1,0 +1,313 @@
+{
+  "planId": "PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB",
+  "revision": "r59",
+  "status": "Implemented / LocalValidated / OperationalDeferred",
+  "approval": "2026-10-12 user: 제안 1~5번을 기존 프로젝트 구조에 맞춰 리팩토링하고 필요한 기능 추가",
+  "baseCommit": "08931c2371f29de615f4a4f133b535e5df76bf7f",
+  "designDocumentRef": "activity-compensation.implementation.r59.md",
+  "designSha256": "41D73F855124878EBABA185BC133A6130767AE93A4C7F10DDA282BEF9CEF26B1",
+  "primaryOwner": "operations",
+  "writePaths": [
+    "docs/AI/CURRENT_WORK.md",
+    "docs/AI/PLANNING.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/activity-compensation.implementation.r59.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/activity-compensation.r59.work-order.json",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md",
+    "docs/Changes/2026-10-12-activity-compensation-r59.md",
+    "docs/Changes/README.md",
+    "docs/ProjectOverview/page-docs/activity-settlements-r59.md",
+    "Ssalddel.Contracts/Common/Settlement/NeighborhoodActivityRewardDtos.cs",
+    "Ssalddel.Contracts/Common/Settlement/NeighborhoodSettlementDtos.cs",
+    "Ssalddel.Contracts/Common/Versioning/SsalddelPageCapabilityCatalog.RoleWorkspace.cs",
+    "Ssalddel.Domain/정산/활동성과배분Policy.cs",
+    "Ssalddel.Domain/창고/분산물류Record.cs",
+    "Ssalddel.Infrastructure/Persistence/Configurations/Warehouse/분산물류Configuration.cs",
+    "Ssalddel.Infrastructure/Persistence/PersonalDataProtectionModelBuilderExtensions.cs",
+    "Ssalddel.Tests/Application/Settlement/NeighborhoodActivityRewardUseCaseTests.cs",
+    "Ssalddel.Tests/Application/Settlement/NeighborhoodActivityRewardWarehouseIntegrationTests.cs",
+    "Ssalddel.Tests/Application/Settlement/NeighborhoodSettlementSourceResolverTests.cs",
+    "Ssalddel.Tests/Application/Warehouse/DistributedStorageProofTests.cs",
+    "Ssalddel.Tests/Contracts/Common/PageCapabilityCatalogTests.cs",
+    "Ssalddel.Tests/Domain/Settlement/활동성과배분PolicyTests.cs",
+    "Ssalddel.Tests/Infrastructure/DistributedCompletionLineEvidenceTests.cs",
+    "Ssalddel.Tests/Infrastructure/DistributedFulfillmentMigrationTests.cs",
+    "Ssalddel.Tests/Infrastructure/DistributedStorageProofMigrationTests.cs",
+    "Ssalddel.Tests/Ui/Common/활동정산PageViewModelTests.cs",
+    "Ssalddel.Tests/Ui/Common/활동정산RenderTests.cs",
+    "Ssalddel.Ui.Common/Areas/App/Components/Community/Exchange/NeighborhoodCollaborationList.razor",
+    "Ssalddel.Ui.Common/Areas/App/Components/Settlement/활동성과금Panel.razor",
+    "Ssalddel.Ui.Common/Areas/App/Components/Settlement/활동성과금Panel.razor.css",
+    "Ssalddel.Ui.Common/Areas/App/Components/Settlement/활동정산Screen.razor",
+    "Ssalddel.Ui.Common/Areas/App/Components/Settlement/활동정산Screen.razor.css",
+    "Ssalddel.Ui.Common/Areas/App/Models/활동정산표시.cs",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행Screen.razor",
+    "Ssalddel.Ui.Common/Areas/App/Services/활동정산Client.cs",
+    "Ssalddel.Ui.Common/Areas/App/Services/SsalddelUiCommonServiceCollectionExtensions.cs",
+    "Ssalddel.Ui.Common/Areas/App/ViewModels/활동정산PageViewModel.cs",
+    "Ssalddel.Ui.Common/Areas/App/ViewModels/활동정산Session.cs",
+    "Ssalddel.WebApp/Pages/활동정산Page.razor",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementSourceResolver.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.ActivityRewards.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Entries.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Read.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Source.cs",
+    "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Batch.cs",
+    "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.cs",
+    "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Custody.cs",
+    "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Evidence.cs",
+    "Ssalddel/Controllers/Common/NeighborhoodSettlementController.cs",
+    "Ssalddel/Migrations/20261012100000_AddDistributedCompletionLineEvidence.cs",
+    "Ssalddel/Migrations/SsalddelContextModelSnapshot.cs",
+    "SsalddelApp/Components/Pages/활동정산Page.razor"
+  ],
+  "excludedEffects": [
+    "OperationalActivation",
+    "RealDbMutation",
+    "AuthorityExpansion",
+    "ExternalNotification",
+    "ExternalPayment",
+    "DeviceInstall",
+    "Unity",
+    "Commit",
+    "Push",
+    "Deploy"
+  ],
+  "validationCeiling": [
+    "FocusedTests",
+    "Fast",
+    "Task",
+    "IsolatedSqlite",
+    "MigrationTests",
+    "HtmlRenderer",
+    "Build",
+    "DocumentLinks"
+  ],
+  "validationResults": {
+    "Fast": {
+      "Passed": 518,
+      "Failed": 0,
+      "Skipped": 0,
+      "BuildErrors": 0,
+      "Evidence": "artifacts/local/validation/20261012-095308",
+      "EarlierEvidence": "artifacts/local/validation/20261012-094508"
+    },
+    "Task": {
+      "Passed": 10957,
+      "Failed": 0,
+      "Skipped": 15,
+      "Total": 10972,
+      "BuildErrors": 0,
+      "BuildWarnings": 73,
+      "Evidence": "artifacts/local/validation/20261012-095444",
+      "SkippedScope": "MongoDB environment tests"
+    },
+    "InitialFailure": {
+      "Resolved": true,
+      "Evidence": "artifacts/local/validation/20261012-093913",
+      "Cause": "Razor string parameter passed literal instead of current user value"
+    },
+    "Scope": {
+      "BankVerified": false,
+      "CommitOrPush": false,
+      "OperationalActivated": false,
+      "DeviceVerified": false,
+      "RealDbApplied": false,
+      "IsolatedWarehouseToSettlementVerified": true,
+      "HtmlRendererVerified": true
+    },
+    "SourceDrift": {
+      "Changed": 0,
+      "Files": 44
+    }
+  },
+  "sourceFingerprints": [
+    {
+      "Path": "Ssalddel.Contracts/Common/Settlement/NeighborhoodActivityRewardDtos.cs",
+      "Hash": "B2545AA60E40B3C64CD8C7ED066935D0045F6D4F9C7424796C54FF03CC932B53"
+    },
+    {
+      "Path": "Ssalddel.Contracts/Common/Settlement/NeighborhoodSettlementDtos.cs",
+      "Hash": "737C518D53DE5AC2F503C800E69319F8F5F7AF263E5469635DF040BDE02FB6AD"
+    },
+    {
+      "Path": "Ssalddel.Contracts/Common/Versioning/SsalddelPageCapabilityCatalog.RoleWorkspace.cs",
+      "Hash": "FC5E6CA134D540029412C266695554ECB4DBB588E7E36F98E854CEBCE66BB856"
+    },
+    {
+      "Path": "Ssalddel.Domain/정산/활동성과배분Policy.cs",
+      "Hash": "1B4B0A74A2934BC57A072B2541A7C095DB4C1CCA095FEB6C67DF70E5E37840FD"
+    },
+    {
+      "Path": "Ssalddel.Domain/창고/분산물류Record.cs",
+      "Hash": "A33F3B5A6BD031035558E81457A891D85D65E51E6D41DABDD46FEA833AE8A7DF"
+    },
+    {
+      "Path": "Ssalddel.Infrastructure/Persistence/Configurations/Warehouse/분산물류Configuration.cs",
+      "Hash": "2A5987D09AD59418021F8BF2F7A294A2B67F9CA10A213A38AC661429B251D7CF"
+    },
+    {
+      "Path": "Ssalddel.Infrastructure/Persistence/PersonalDataProtectionModelBuilderExtensions.cs",
+      "Hash": "5FF729B4EA7A5C6DF703CE1C45AB193B70B68926CD5CD47D588518E662A4412A"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Settlement/NeighborhoodActivityRewardUseCaseTests.cs",
+      "Hash": "5A4536E7BECC43D79BEC5912FB129FABD0D97D41AED85A3B0884F7C8C23AD4A8"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Settlement/NeighborhoodActivityRewardWarehouseIntegrationTests.cs",
+      "Hash": "22B218F3AEFAE7670D2C5DFC47FA08ACA78E890062F47A6E352EF58FEE2DD310"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Settlement/NeighborhoodSettlementSourceResolverTests.cs",
+      "Hash": "B1B586332FE5AFE94E3B121003A463DE00CBD58158208974A55B9B0934EEF1D2"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Warehouse/DistributedStorageProofTests.cs",
+      "Hash": "81C36C99F1409D59F5A17DF74885B2650E6C1FFA45976E11AC9A7C29CF8DABD6"
+    },
+    {
+      "Path": "Ssalddel.Tests/Contracts/Common/PageCapabilityCatalogTests.cs",
+      "Hash": "23596D6BFF1EA1093CB106800A32AB28D435A25B73D8ADA6C80ED9CB65E13A7C"
+    },
+    {
+      "Path": "Ssalddel.Tests/Domain/Settlement/활동성과배분PolicyTests.cs",
+      "Hash": "196BB8487DFB6DEFE6A369B5C598E148840B7EE817EDD440F754CABEB83B4A60"
+    },
+    {
+      "Path": "Ssalddel.Tests/Infrastructure/DistributedCompletionLineEvidenceTests.cs",
+      "Hash": "7843A8FFDD91EF08047542C03B1382E058691524303CF621DC6C30A69F232BAD"
+    },
+    {
+      "Path": "Ssalddel.Tests/Infrastructure/DistributedFulfillmentMigrationTests.cs",
+      "Hash": "0BBB0D3E2A3DF349D6DFC785AA212F301A85E42D7AB0BC85DCD127834F2E2ECE"
+    },
+    {
+      "Path": "Ssalddel.Tests/Infrastructure/DistributedStorageProofMigrationTests.cs",
+      "Hash": "19CD8DD947F4B4191DE07E87E02E7C31CF882C3F73192F3A770E9BCB3D48B30D"
+    },
+    {
+      "Path": "Ssalddel.Tests/Ui/Common/활동정산PageViewModelTests.cs",
+      "Hash": "B7C8B8288FE58A116D90DEF03EDB9CB5A7DE7EFB11C3D580D40B9FC24522F9A0"
+    },
+    {
+      "Path": "Ssalddel.Tests/Ui/Common/활동정산RenderTests.cs",
+      "Hash": "E53D9426ACC52FC8394E2133DADB8477113E176910A0FAAEAF0D77D5A2E80354"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/Components/Community/Exchange/NeighborhoodCollaborationList.razor",
+      "Hash": "CC72FE40650FCBB3A8AD8B749FFDB8E04345C09A953A5C8D5FBB9B94FB983231"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/Components/Settlement/활동성과금Panel.razor",
+      "Hash": "7194AFC835265E8385A7267C5B5374C41047EC15763E731425F11437DA9BF2BD"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/Components/Settlement/활동성과금Panel.razor.css",
+      "Hash": "BBB37C61D94383833E7816D820E7CE7BF16A1561B384F25A487B02FB9405467A"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/Components/Settlement/활동정산Screen.razor",
+      "Hash": "063FDCF35EB544895A0F93F2E747D522E2CAAF86CCED00D9FD5A016DB47037C5"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/Components/Settlement/활동정산Screen.razor.css",
+      "Hash": "AF51773EC9E943CE3B0C875DF0EBB2162E8C512C063589C2C24AB6848D4F6F6E"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/Models/활동정산표시.cs",
+      "Hash": "504B6F55B03C1537764737DE568F9B1A6260701A9FB480964FC9BAEBBB301070"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행Screen.razor",
+      "Hash": "2C3A178A6FD82C4783069D7DB616AE38E8E3F524660247FC7AA1C484244CF990"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/Services/활동정산Client.cs",
+      "Hash": "34BFE5BE2D93812774930932B66E3817375125FD9271E947DB4DB1ECB9D7DCAB"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/Services/SsalddelUiCommonServiceCollectionExtensions.cs",
+      "Hash": "E99B74102E70866BB3FC024FDFE84688D231AFAEEB7560BEFFAF8FAAB6F92EE2"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/ViewModels/활동정산PageViewModel.cs",
+      "Hash": "E82975166CE0FEBBFF761C0D9BCB9E9889EE7818EF9F034F427AAF2F28D01D9A"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/ViewModels/활동정산Session.cs",
+      "Hash": "773B224DAFCE69C5A100C047E6333A55226247A300A7639E0312C86DDED24E6B"
+    },
+    {
+      "Path": "Ssalddel.WebApp/Pages/활동정산Page.razor",
+      "Hash": "A271E59450005D0EC09EE819E1F1DF4000A82AF5F4C86F94E80BE9EEA28192B9"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementSourceResolver.cs",
+      "Hash": "F214CAA18E2FAA814D84BEBFF4F7B2FDCA1A29A3907B49EDCF3B5A8A78370C0A"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.ActivityRewards.cs",
+      "Hash": "5EB4F755E43B633522CE9FE1402B56A33F80DC70F2929D230A80149C48099203"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.cs",
+      "Hash": "130B6C585F47787F43A5530600A8FD5837556770A7B790EEAD37A568F4063EC9"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Entries.cs",
+      "Hash": "7D57083827A634FDB5267723AAC4A55C9DBB97E00E6CFABE5FE1BAE3E3BCFC07"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Read.cs",
+      "Hash": "F693214B2DFFF08BBF10563A7E86FEFCD0137E0A8BE0E6B99ED477085B15ADFB"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Source.cs",
+      "Hash": "60A11CB9D3EEDA5624DCA511342DF35EAE8AD47F54CA1941B26CB193B47E0B20"
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Batch.cs",
+      "Hash": "F57E3A3031B920921B9437BE72025391D1DAEBF22BA32BCF1AADF76FCB85D781"
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.cs",
+      "Hash": "ABDF65B7ED658B109079386ECC040CB6011BA1558611607EC87030296980831A"
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Custody.cs",
+      "Hash": "519D6B60A4A2EB2F421C9855295DAB9569E7E10D43F373F5AE901B3FE4CE8E13"
+    },
+    {
+      "Path": "Ssalddel/Application/Warehouse/DistributedFulfillmentUseCase.Evidence.cs",
+      "Hash": "2C02CEA283C7ACD175E90619D69169D9D7BAF2C873ABFB32AA5A967F34E7BD6F"
+    },
+    {
+      "Path": "Ssalddel/Controllers/Common/NeighborhoodSettlementController.cs",
+      "Hash": "4A9457E01FC1850E0FBDEEAF1C2D65B769E00FF42271AB6F422A2AEDF398676B"
+    },
+    {
+      "Path": "Ssalddel/Migrations/20261012100000_AddDistributedCompletionLineEvidence.cs",
+      "Hash": "532395A72E945B8ACA8CC17B3CAF91CE63DCA4E2CD4771843A26266FB6F6D392"
+    },
+    {
+      "Path": "Ssalddel/Migrations/SsalddelContextModelSnapshot.cs",
+      "Hash": "26BE9F07DA52E47F8944B1B1376E9F8E9224F0332EEB8FD1707D28F7C8015DCE"
+    },
+    {
+      "Path": "SsalddelApp/Components/Pages/활동정산Page.razor",
+      "Hash": "E6ACF656E45B808ECE42944A1020BDD1B7CED1FFF48F2D2A608BD589AC001B9E"
+    }
+  ],
+  "additionalValidationFailures": [
+    {
+      "Retest": "Passed",
+      "Skipped": 15,
+      "Resolution": "Added authenticated Beta Simulation rules and explicit route regression tests",
+      "Cause": "New route capability registration missing",
+      "Evidence": "artifacts/local/validation/20261012-094727",
+      "Failed": 1,
+      "Passed": 10954
+    }
+  ]
+}

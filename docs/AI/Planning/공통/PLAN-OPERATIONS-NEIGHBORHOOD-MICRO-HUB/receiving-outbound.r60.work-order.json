@@ -1,0 +1,183 @@
+{
+  "planId": "PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB",
+  "revision": "r60",
+  "status": "Implemented / LocalValidated / OperationalDeferred",
+  "approval": "2026-10-12 user direct request: 입고와 출고·배송을 각각 관리하도록 리팩토링",
+  "baseCommit": "08931c2371f29de615f4a4f133b535e5df76bf7f",
+  "designDocumentRef": "receiving-outbound.implementation.r60.md",
+  "designSha256": "0180FF69C1494194B631ABCF0BB3B636B351E1FA85477FD96F0DE2EF5E5F85B2",
+  "primaryOwner": "operations",
+  "writePaths": [
+    "Ssalddel.Contracts/Common/Settlement/NeighborhoodSettlementWorkflowDtos.cs",
+    "Ssalddel.Contracts/Common/Settlement/NeighborhoodSettlementDtos.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Source.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Workflow.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Entries.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Payments.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Read.cs",
+    "Ssalddel/Application/Settlement/NeighborhoodSettlementSourceResolver.cs",
+    "Ssalddel.Tests/Application/Settlement/NeighborhoodSettlementSourceResolverTests.cs",
+    "Ssalddel.Tests/Application/Settlement/NeighborhoodSettlementUseCaseTests.cs",
+    "Ssalddel.Tests/Application/Settlement/NeighborhoodSettlementWorkflowTests.cs",
+    "Ssalddel.Tests/Application/Settlement/NeighborhoodActivityRewardWarehouseIntegrationTests.cs",
+    "Ssalddel.Ui.Common/Areas/App/Models/활동정산표시.cs",
+    "Ssalddel.Ui.Common/Areas/App/Components/Settlement/활동정산Screen.razor",
+    "Ssalddel.Tests/Ui/Common/활동정산RenderTests.cs",
+    "Ssalddel.Tests/Ui/Common/활동정산PageViewModelTests.cs",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/receiving-outbound.implementation.r60.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/receiving-outbound.r60.work-order.json",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/AI/PLANNING.md",
+    "docs/Changes/2026-10-12-receiving-outbound-r60.md",
+    "docs/Changes/README.md",
+    "docs/ProjectOverview/page-docs/activity-settlements-r60.md"
+  ],
+  "excludedEffects": [
+    "OperationalActivation",
+    "RealDbMutation",
+    "AuthorityExpansion",
+    "ExternalNotification",
+    "ExternalPayment",
+    "DeviceInstall",
+    "Unity",
+    "Commit",
+    "Push",
+    "Deploy"
+  ],
+  "validationCeiling": [
+    "Fast",
+    "Task",
+    "IsolatedSqlite",
+    "HtmlRenderer",
+    "Build",
+    "DocumentLinks"
+  ],
+  "validationResults": {
+    "Fast": {
+      "Passed": 159,
+      "Failed": 0,
+      "Skipped": 0,
+      "EvidenceRef": "artifacts/local/validation/20261012-120203/",
+      "Scope": "Settlement, activity reward, common settlement UI and completion evidence"
+    },
+    "Task": {
+      "Passed": 11005,
+      "Failed": 0,
+      "Skipped": 15,
+      "Total": 11020,
+      "SkippedReason": "MongoDB environment dependent integration tests",
+      "EvidenceRef": "artifacts/local/validation/20261012-120438/"
+    },
+    "Build": {
+      "Solution": "Ssalddel.v3.5.slnx",
+      "Errors": 0,
+      "Warnings": 61,
+      "EvidenceRef": "artifacts/local/validation/20261012-120438/build-01.log"
+    },
+    "InitialFast": {
+      "Passed": 154,
+      "Failed": 5,
+      "EvidenceRef": "artifacts/local/validation/20261012-115639/",
+      "Cause": "Legacy test fixture attempted to change immutable saved terms",
+      "Resolution": "Create historical terms as initial isolated SQLite state; preserve production immutable guard"
+    },
+    "Integration": {
+      "Environment": "Isolated SQLite and actual warehouse/cargo/settlement UseCases",
+      "Verified": [
+        "Inbound payment report before outbound order",
+        "Accrued outbound compensation preserved before customer receipt",
+        "Payment report blocked before receipt and accepted afterward",
+        "Inventory links, historical terms, refunds and parties preserved"
+      ],
+      "PaymentEvidence": "Synthetic statements only; no actual bank transfer"
+    },
+    "Ui": {
+      "Environment": "HtmlRenderer",
+      "Verified": [
+        "Workflow list groups",
+        "Current workflow and release terms",
+        "Per-entry historical release conditions",
+        "Legacy agreement display"
+      ],
+      "ActualBrowserOrDevice": false
+    },
+    "IndependentReview": {
+      "Scope": "17 r60 source files",
+      "FindingsResolved": 2,
+      "AdditionalBlockingFindings": 0,
+      "Mode": "Read only"
+    }
+  },
+  "sourceFingerprints": [
+    {
+      "Path": "Ssalddel.Contracts/Common/Settlement/NeighborhoodSettlementWorkflowDtos.cs",
+      "Hash": "374EAA4E790B19DFEB21EA60D90B91F5EB310884E0C7446EF4AA5435690C4B14"
+    },
+    {
+      "Path": "Ssalddel.Contracts/Common/Settlement/NeighborhoodSettlementDtos.cs",
+      "Hash": "3B318A9A630F8370D88FD9C4B45CD6D314B07DB4F9A6A8993D58938F601F116E"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Source.cs",
+      "Hash": "BB9C609DC408A8D4625F52FCFA162CDC5616A113CE5A115248C26A1638D096FD"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Workflow.cs",
+      "Hash": "8FBE58C7C533C178A5A583D258EA47222DBF122E01299D47497DE5C0D679BADF"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.cs",
+      "Hash": "D15D0A841F783E633F95F51E220978DD7E71BAE540DE7F8719F82899E6526CB9"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Entries.cs",
+      "Hash": "3971AC469ADC5C0AEABC0BF8FBF4A6F00084518C59AC6C1339137B410E25792D"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Payments.cs",
+      "Hash": "77DC5FBB45D298F576ACEAFDBCE7320F93EA1757E70E254C656D24248103EEA6"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Read.cs",
+      "Hash": "CCDD20151CD8C18DD6E7C131F11455BC26DD113E0F40A35879DFA4DD4BBF92A7"
+    },
+    {
+      "Path": "Ssalddel/Application/Settlement/NeighborhoodSettlementSourceResolver.cs",
+      "Hash": "34B6BBF6B5BE790D07A933425884561FCC5476EBB54D78DBA0BB3F2B8CDA3C2A"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Settlement/NeighborhoodSettlementSourceResolverTests.cs",
+      "Hash": "FD7AC3B4472A10208F77031BC62C333E5C3687EA387F5A80A8DFDF0030B5F661"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Settlement/NeighborhoodSettlementUseCaseTests.cs",
+      "Hash": "580A83C3CDB453D4DCE3BE609B2B95F05E8F9C3C91797070BBA6C5EF896BC020"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Settlement/NeighborhoodSettlementWorkflowTests.cs",
+      "Hash": "EF97116E8555B85FE1292F31B8AFF30253A69C76F41C93E81BDC5155191842A0"
+    },
+    {
+      "Path": "Ssalddel.Tests/Application/Settlement/NeighborhoodActivityRewardWarehouseIntegrationTests.cs",
+      "Hash": "0632AC1F5737450E888DF24A94C60EF1085DE19C9E1B4077D1CB7ADE5872983C"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/Models/활동정산표시.cs",
+      "Hash": "49202C68AE4ED5C0C732F4A4284BF74E637C4CC5BF6116E67440E01050620E81"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/Components/Settlement/활동정산Screen.razor",
+      "Hash": "0253BE63079ECC33798253E0B1499CB082220C1E1843FF6F3C9C0C9206CEB71C"
+    },
+    {
+      "Path": "Ssalddel.Tests/Ui/Common/활동정산RenderTests.cs",
+      "Hash": "F1EC578AE2BAAB0B8DAAF3D89891B472B0F01F68998925F8EE75A91BCDB32EE8"
+    },
+    {
+      "Path": "Ssalddel.Tests/Ui/Common/활동정산PageViewModelTests.cs",
+      "Hash": "E09F6942884807BC9F2C0050E36263E1038C5836AA4C22BDF8CF9457C76B060E"
+    }
+  ]
+}

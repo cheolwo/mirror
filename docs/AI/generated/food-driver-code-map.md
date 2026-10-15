@@ -21,12 +21,15 @@
    ├─ 030 domain.driver-shift · Domain · Definition
    ├─ 031 domain.work-start-followup · Domain · Definition
    ├─ 040 infrastructure.shift-mapping · Infrastructure · Definition
+   ├─ 041 domain.straight-line-delivery-pricing · Domain · Definition
    ├─ 041 infrastructure.work-start-followup-mapping · Infrastructure · Definition
    ├─ 050 application.work-transition-lock · Application · Confirm
    ├─ 052 application.driver-action-policy · Application · Preview
    ├─ 053 application.current-bundle-policy · Application · Preview
+   ├─ 053 application.driver-offer-evidence · Application · Projection
    ├─ 054 application.current-work-projector · Application · Projection
    ├─ 055 application.driver-offer-query · Application · Query
+   ├─ 060 application.shared-driver-admission · Application · Confirm
    ├─ 070 application.work-start · Application · Confirm
    ├─ 075 application.work-status · Application · Query
    ├─ 080 application.work-stop · Application · Confirm
@@ -93,6 +96,9 @@
      소스 결속 · native.work-screen
      소스 결속 · native.profile-settlement
      소스 결속 · native.foreground-notification
+     소스 결속 · source.application.shared-driver-admission
+     소스 결속 · source.domain.straight-line-delivery-pricing
+     소스 결속 · source.application.driver-offer-evidence
 ```
 
 기능 하나만 보려면 `dotnet run --project eng/Ssalddel.CodeMap -- --work-area food-driver --feature <기능키>`를 사용한다.
@@ -184,6 +190,12 @@
   - 경계: EF 모델 매핑이며 migration 실행이나 기존 근무 값 재작성은 수행하지 않는다. nullable 고유 슬롯과 시작 요청 키의 의미를 보존한다.
   - 주 계약: `살뜰.도메인.기사.기사근무`
   - 먼저 읽을 단계: domain.driver-shift
+- **041 domain.straight-line-delivery-pricing** — [StraightLineDeliveryPricingPolicy](../../../Ssalddel.Domain/운송/StraightLineDeliveryPricingPolicy.cs#L8) · 픽업에서 전달까지의 원래 직선거리로 비례 거리비를 계산한다.
+  - 계층/단계: `Domain / Definition`
+  - 읽기/쓰기: `None → None`
+  - 부수효과: `None`
+  - 경계: 거리 표시를 반올림하기 전 원거리로 거리비만 원 단위 반올림한다. 경로·시간·차량·혼적 안전 검사를 대체하지 않는다.
+  - 먼저 읽을 단계: None
 - **041 infrastructure.work-start-followup-mapping** — [기사운행시작후속Configuration](../../../Ssalddel.Infrastructure/Persistence/Configurations/Driver/DriverWorkStartFollowupConfiguration.cs#L16) · 근무별 후속 작업의 SQL 키와 재시도 조회 인덱스를 정의한다.
   - 계층/단계: `Infrastructure / Definition`
   - 읽기/쓰기: `None → None`
@@ -209,19 +221,31 @@
   - 부수효과: `None`
   - 경계: 후보 생성은 자동 수락·배차 확정·영속 저장이 아니다.
   - 먼저 읽을 단계: contract.offer
+- **053 application.driver-offer-evidence** — [기사제안표시근거Service](../../../Ssalddel/Services/Dispatch/Recommendation/기사제안표시근거Service.cs#L13) · 저장한 기사 요금 근거와 실제 분산 피킹 책임을 제안 표시로 읽는다.
+  - 계층/단계: `Application / Projection`
+  - 읽기/쓰기: `OperationalState → None`
+  - 부수효과: `PersistentRead`
+  - 경계: 조회만 수행한다. 고객 견적·희망 옵션·창고 선행 bool로 보수나 포장 배정을 추론하지 않는다.
+  - 먼저 읽을 단계: None
 - **054 application.current-work-projector** — [FoodDeliveryCurrentWorkProjector](../../../Ssalddel/Application/Driver/Food/FoodDeliveryDriverWorkspaceUseCase.CurrentWorkProjection.cs#L25) · 확인된 제안·운송·시도 자료를 현재 업무 응답 값으로 변환한다.
   - 계층/단계: `Application / Projection`
   - 읽기/쓰기: `None → None`
   - 부수효과: `None`
   - 경계: 이 projection은 입력 사본만 변환한다. DB 조회나 상태 변경·외부 호출을 실행하지 않으며 전달·수령·실지급 상태를 합치지 않는다.
   - 먼저 읽을 단계: contract.active-delivery | contract.offer
-- **055 application.driver-offer-query** — [음식배달기사업무Service](../../../Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Query.cs#L41) · 현재 기사에게 유효한 제안과 수행 업무를 조회한다.
+- **055 application.driver-offer-query** — [음식배달기사업무Service](../../../Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Query.cs#L42) · 현재 기사에게 유효한 제안과 수행 업무를 조회한다.
   - 계층/단계: `Application / Query`
   - 읽기/쓰기: `OperationalState → OperationalState`
   - 부수효과: `NetworkCall | PersistentRead | PersistentWrite`
   - 경계: SQL 전문 상태는 조회만 한다. 공통 수신 상태 조회는 영속 원장 기준 Redis 투영을 재구성할 수 있으며 수신 의사 자체를 바꾸지 않는다.
   - 주 계약: `살뜰.Services.Dispatch.Recommendation.I음식배달기사업무Service`
   - 먼저 읽을 단계: contract.active-delivery | contract.offer
+- **060 application.shared-driver-admission** — [SharedDriverWorkAdmissionService](../../../Ssalddel/Services/Dispatch/Participation/SharedDriverWorkAdmissionService.cs#L35) · 기사 희망 업무와 음식·화물·분산 미완료 약속을 공통 수락 직전에 검사한다.
+  - 계층/단계: `Application / Confirm`
+  - 읽기/쓰기: `OperationalState → OperationalState`
+  - 부수효과: `PersistentWrite`
+  - 경계: SQL 잠금 행만 갱신한다. 전문 원장·차량 적합성·완료·정산·지급 권위를 대체하지 않는다.
+  - 먼저 읽을 단계: None
 - **070 application.work-start** — [운행시작CommandHandler](../../../Ssalddel/Application/Driver/Work/Handlers/운행시작CommandHandler.cs#L29) · 권한과 요청 소유권을 검증해 근무와 음식 운행 시작 후속 의도를 함께 확정한다.
   - 계층/단계: `Application / Confirm`
   - 읽기/쓰기: `OperationalState → OperationalState`
@@ -264,7 +288,7 @@
   - 경계: GetAsync 호환 경계다. 정산 조회 실패는 현재 업무가 없는 정상 응답으로 숨기지 않고 별도 오류로 구분한다. 수령 확인과 실제 지급 완료를 추정하지 않는다.
   - 주 계약: `Ssalddel.Application.Driver.Food.IFoodDeliveryDriverWorkspaceUseCase`
   - 먼저 읽을 단계: application.current-work | contract.legacy-workspace
-- **120 application.driver-actions** — [음식배달기사업무Service](../../../Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs#L86) · 기사 수락·거절·도착·중단·픽업·전달의 권한·Revision·현재 상태 전이를 조율한다.
+- **120 application.driver-actions** — [음식배달기사업무Service](../../../Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs#L87) · 기사 수락·거절·도착·중단·픽업·전달의 권한·Revision·현재 상태 전이를 조율한다.
   - 계층/단계: `Application / Confirm`
   - 읽기/쓰기: `OperationalState → OperationalState`
   - 부수효과: `NetworkCall | ThirdPartyApiCall | PersistentRead | PersistentWrite | MayIncurExternalCost | StateMutation`
@@ -513,7 +537,7 @@
 - **source.application.driver-actions** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `application.driver-actions`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
-  - [Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs:86](../../../Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs#L86) · `StepKey = "application.driver-actions"`
+  - [Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs:87](../../../Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.cs#L87) · `StepKey = "application.driver-actions"`
 - **source.application.driver-followups** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `application.driver-followups`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
@@ -525,7 +549,7 @@
 - **source.application.driver-offer-query** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `application.driver-offer-query`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
-  - [Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Query.cs:41](../../../Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Query.cs#L41) · `StepKey = "application.driver-offer-query"`
+  - [Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Query.cs:42](../../../Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Query.cs#L42) · `StepKey = "application.driver-offer-query"`
 - **source.application.driver-state-persistence** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `application.driver-state-persistence`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
@@ -533,8 +557,8 @@
 - **native.current-work** · 네이티브 앱의 현재 업무 API와 화면 정본 재조회 진입
   - 관련 단계(탐색): `api.food-driver`, `application.current-work`
   - 경계: 현재 조회는 정산 조회와 분리한다. 네이티브 assembly를 reflection으로 불러오지 않는다.
-  - [FDriverApp/Services/FoodDeliveryDriverApiService.cs:71](../../../FDriverApp/Services/FoodDeliveryDriverApiService.cs#L71) · `public Task<FoodDeliveryDriverCurrentWorkDto> GetCurrentWorkAsync`
-  - [FDriverApp/PageModels/MainPageModel.cs:718](../../../FDriverApp/PageModels/MainPageModel.cs#L718) · `private async Task LoadWorkspaceAsync`
+  - [FDriverApp/Services/FoodDeliveryDriverApiService.cs:75](../../../FDriverApp/Services/FoodDeliveryDriverApiService.cs#L75) · `public Task<FoodDeliveryDriverCurrentWorkDto> GetCurrentWorkAsync`
+  - [FDriverApp/PageModels/MainPageModel.cs:719](../../../FDriverApp/PageModels/MainPageModel.cs#L719) · `private async Task LoadWorkspaceAsync`
 - **native.automatic-start** · 운행 시작 한 번과 동일 요청 ID를 통한 정본 확인·수신 의사 복구
   - 관련 단계(탐색): `application.work-start`, `ui.recovery-policy`
   - 경계: 불확실한 시작 POST를 자동 재전송하지 않고 사용자의 명시적 수신 OFF를 보존한다.
@@ -555,15 +579,27 @@
   - 관련 단계(탐색): `application.legacy-workspace`, `application.daily-settlement`, `application.completed-detail`
   - 경계: 정산·입금 완료를 현재 배달 상태에서 추론하지 않는다.
   - [FDriverApp/PageModels/MainPageModel.FoodDailySettlement.cs:29](../../../FDriverApp/PageModels/MainPageModel.FoodDailySettlement.cs#L29) · `public async Task RefreshProfileSettlementAsync`
-  - [FDriverApp/Services/FoodDeliveryDriverApiService.cs:98](../../../FDriverApp/Services/FoodDeliveryDriverApiService.cs#L98) · `public Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync`
+  - [FDriverApp/Services/FoodDeliveryDriverApiService.cs:108](../../../FDriverApp/Services/FoodDeliveryDriverApiService.cs#L108) · `public Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync`
 - **native.foreground-notification** · 화면 전경 복귀·배차 알림 뒤 최신 업무 재조회
   - 관련 단계(탐색): `ui.recovery-policy`, `application.current-work`
   - 경계: 백그라운드 위치·실제 푸시 수신·자동 수락 완료의 증거가 아니다.
-  - [FDriverApp/PageModels/MainPageModel.cs:192](../../../FDriverApp/PageModels/MainPageModel.cs#L192) · `private async Task ResumeForegroundWorkspaceAsync`
-  - [FDriverApp/PageModels/MainPageModel.FoodNotifications.cs:181](../../../FDriverApp/PageModels/MainPageModel.FoodNotifications.cs#L181) · `public async Task ResumeFoodNotificationWorkspaceAsync`
+  - [FDriverApp/PageModels/MainPageModel.cs:193](../../../FDriverApp/PageModels/MainPageModel.cs#L193) · `private async Task ResumeForegroundWorkspaceAsync`
+  - [FDriverApp/PageModels/MainPageModel.FoodNotifications.cs:202](../../../FDriverApp/PageModels/MainPageModel.FoodNotifications.cs#L202) · `public async Task ResumeFoodNotificationWorkspaceAsync`
+- **source.application.shared-driver-admission** · 기사 업무 선택과 미완료 약속을 수락 직전에 검사하는 공통 관문
+  - 관련 단계(탐색): `application.shared-driver-admission`
+  - 경계: 전문 원장과 자격·차량·완료·정산을 대체하지 않는 연결
+  - [Ssalddel/Services/Dispatch/Participation/SharedDriverWorkAdmissionService.cs:35](../../../Ssalddel/Services/Dispatch/Participation/SharedDriverWorkAdmissionService.cs#L35) · `StepKey = "application.shared-driver-admission"`
+- **source.domain.straight-line-delivery-pricing** · 원래 직선거리로 기사 거리비만 계산한다
+  - 관련 단계(탐색): `domain.straight-line-delivery-pricing`
+  - 경계: 운임 수락·실지급·경로 안전 판정을 대신하지 않는다
+  - [Ssalddel.Domain/운송/StraightLineDeliveryPricingPolicy.cs:8](../../../Ssalddel.Domain/운송/StraightLineDeliveryPricingPolicy.cs#L8) · `StepKey = "domain.straight-line-delivery-pricing"`
+- **source.application.driver-offer-evidence** · 저장된 기사 요금과 실제 피킹 책임을 제안 표시로 읽는다
+  - 관련 단계(탐색): `application.driver-offer-evidence`
+  - 경계: 운임 수락·실지급·경로 안전 판정을 대신하지 않는다
+  - [Ssalddel/Services/Dispatch/Recommendation/기사제안표시근거Service.cs:13](../../../Ssalddel/Services/Dispatch/Recommendation/기사제안표시근거Service.cs#L13) · `StepKey = "application.driver-offer-evidence"`
 
 ## 진단 요약
 
 - 오류: 0
-- 경고: 6
+- 경고: 7
 - 일반 공개 타입의 미표기는 경고이며, 필수 단계·권위 위반·오래된 생성 파일만 검증을 차단한다.

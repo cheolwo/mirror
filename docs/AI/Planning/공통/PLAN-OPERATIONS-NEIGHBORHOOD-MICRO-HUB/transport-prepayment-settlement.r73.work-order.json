@@ -1,0 +1,93 @@
+{
+  "schema": "operations-local-work-order.v1",
+  "id": "transport-prepayment-settlement-r73",
+  "status": "CompletedLocal",
+  "approval": "User selected delivery-fee prepayment and explicitly requested implementation.",
+  "plan": "transport-prepayment-settlement.implementation.r73.md",
+  "planSha256": "26c5a2f75c3bc1f09391c34f2a5b45ea2ee8750e630da88a6e39cd8cda2d6ec7",
+  "writePaths": {
+    "root": [
+      "Ssalddel/Services/Options/TransportPrepaymentOptions.cs",
+      "Ssalddel/Services/Options/DriverPayoutBatchOptions.cs",
+      "Ssalddel/Extensions/ServiceCollectionExtensions.DomainServices.Operations.cs",
+      "Ssalddel/Services/Payments/기사지급OutboxService.cs",
+      "Ssalddel.Tests/Services/Payments/",
+      "Ssalddel/Migrations/",
+      "docs/AI/CURRENT_WORK.md",
+      "docs/AI/PLANNING.md",
+      "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/",
+      "docs/Architecture/TransportPaymentSettlementPolicy.md",
+      "docs/Changes/",
+      "artifacts/local/transport-prepayment-settlement-r73/",
+      "Ssalddel/Extensions/ServiceCollectionExtensions.HttpClients.cs",
+      "Ssalddel.Contracts/Shipper/Request/화주운송의뢰Dtos.cs",
+      "Ssalddel/Application/Shipper/Request/화주직접운임제안Policy.cs",
+      "Ssalddel/Application/Shipper/Request/화주운송의뢰UseCase.cs",
+      "Ssalddel.Tests/Application/Shipper/Payment/ShipperDirectFareR73Tests.cs",
+      "Ssalddel.Tests/Infrastructure/Persistence/TransportPrepaymentMigrationR73Tests.cs",
+      "docs/ProjectOverview/page-docs/weekly-worker-payout-audit-r73.md"
+    ],
+    "preparation": [
+      "Ssalddel/Application/Shipper/Payment/화주운송결제진행정책.cs",
+      "Ssalddel/Application/Shipper/Payment/배송료결제준비근거Policy.cs",
+      "Ssalddel/Application/Shipper/Payment/Handlers/토스결제준비CommandHandler.cs",
+      "Ssalddel/Application/Shipper/Payment/Handlers/공통결제준비CommandHandler.cs",
+      "Ssalddel/Application/Shipper/Payment/Handlers/용달운송의뢰결제승인완료EventHandler.cs",
+      "Ssalddel.Domain/결제/결제.cs",
+      "Ssalddel.Tests/Application/Shipper/Payment/"
+    ],
+    "pg": [
+      "Ssalddel/Services/External/Toss/",
+      "Ssalddel/Services/Payments/I결제Provider.cs",
+      "Ssalddel/Services/Payments/Toss결제Provider.cs",
+      "Ssalddel/Services/Payments/공통결제Service.cs",
+      "Ssalddel/Application/Shipper/Payment/Handlers/토스결제승인CommandHandler.cs",
+      "Ssalddel/Application/Shipper/Payment/Handlers/공통결제승인CommandHandler.cs",
+      "Ssalddel/Application/Shipper/Payment/Handlers/토스결제재조회CommandHandler.cs",
+      "Ssalddel/Application/Shipper/Payment/Commands/토스결제재조회Command.cs",
+      "Ssalddel/Controllers/Shipper/02_Payment/화주결제Controller.cs",
+      "Ssalddel/Controllers/Platform/Payments/",
+      "Ssalddel.Contracts/Shipper/Payment/",
+      "Ssalddel.Tests/Services/Payments/",
+      "Ssalddel.Tests/Application/Shipper/Payment/",
+      "Ssalddel/Application/Shipper/Payment/결제입금재조회UseCase.cs"
+    ],
+    "batch": [
+      "Ssalddel.Domain/기사/기사운송대금정산배치.cs",
+      "Ssalddel.Infrastructure/Persistence/Configurations/Driver/기사운송대금정산배치Configuration.cs",
+      "Ssalddel.Infrastructure/Persistence/SsalddelContext.cs",
+      "Ssalddel.Contracts/Admin/Settlement/배송료정산배치Dtos.cs",
+      "Ssalddel/Application/Admin/Settlement/배송료정산배치UseCase.cs",
+      "Ssalddel/Controllers/Admin/Settlement/배송료정산배치Controller.cs",
+      "Ssalddel.Tests/Application/Admin/Settlement/배송료정산배치R73Tests.cs"
+    ]
+  },
+  "forbiddenEffects": [
+    "live payment refund payout",
+    "shared database migration",
+    "cloud deployment",
+    "operational activation",
+    "APK distribution",
+    "Unity",
+    "commit",
+    "push"
+  ],
+  "steering": [
+    "2026-10-15 shipper may propose a persisted direct delivery fee; payment approval verifies that source instead of forcing a platform quote.",
+    "2026-10-15 user clarified weekly worker accrual by work completion and one Wednesday/Thursday payout. Cargo batch calendar is in scope; unified food/picking payout and real transfer remain follow-up.",
+    "2026-10-15 user reaffirmed per-work accrual with person-level weekly settlement; separate ledgers are retained."
+  ],
+  "approvedPlanSha256": "b5d213914147ecc97ce5cb21e3a6bd81392e07e7f7f8e88968bb2f6ee6c23482",
+  "result": {
+    "sourceStatus": "Implemented",
+    "validationStatus": "LocalValidated",
+    "operationalStatus": "Deferred",
+    "fastPassed": 268,
+    "taskPassed": 11736,
+    "taskSkipped": 16,
+    "failed": 0,
+    "unifiedFoodCargoPickingWeeklyPayout": "FollowUpPending",
+    "actualTransferCompleted": false,
+    "report": "../../../../Changes/2026-10-15-transport-prepayment-settlement-r73.md"
+  }
+}

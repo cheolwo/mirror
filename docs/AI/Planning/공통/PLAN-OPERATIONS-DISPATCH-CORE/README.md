@@ -2,7 +2,9 @@
 
 - 기획 ID: `PLAN-OPERATIONS-DISPATCH-CORE`
 - 기획 분야: 공통 / 운영 배차
-- 기획 판본: `dispatch-core.r52`
+- 기획 판본: `dispatch-core.r54`
+- 알림 복구·기사 겸 운영자: [r54 승인 설계](notification-recovery.implementation.r54.md)·[작업 명세](notification-recovery.r54.work-order.json)·[검증/한계](../../../../Changes/2026-10-11-food-dispatch-notification-recovery-r54.md). 유효 추천의 누락 복원·제한 재시도와 조치 필요한 예외 알림, 일반 기사 두 건 연속 수행을 로컬 검증하며 기존 운영 OFF를 유지한다.
+- 정보 준비 상태: `Implemented / LocalValidated / OperationalDisabled / ExternalOperationalDeferred`.
 - 배차 시점 상태: `Implemented / LocalValidated / OperationalDisabled / PolicyDraftMaterialsPrepared / HumanReviewPending`.
 - 학습자료 상태: `DraftMaterialsPrepared / HumanReviewPending / ReadyRowsZero / WeightTrainingNotStarted`.
 - 상태: `Draft / StakeholderPolicyConfirmedInPart / TwoOperationalOsRelated / FoodPreparationTimeFiveTenFifteenTwentyConfirmed / FoodOver20MinuteInAppAndPushConfirmed / DriverNoResponseDemotedFromOperatorOverview / FoodSalesOrderDecisionVisualLinked / FoodWeatherThreePointPolicyApproved / FoodWeatherPickupNowcastFoundationImplemented / FoodWeatherServerCacheImplemented / FoodWeatherThreePointImplementationPending / FreightPostAcceptanceReconsentConfirmed / FreightCommitmentGraphConfirmed / FreightRiskVisibilityConfirmed / FreightInfeasibleReservationReleaseConfirmed / ShipperMaterialChangeOnlyNotificationConfirmed / ShipperRecoveryNotificationConfirmed / FreightContinuityBackendFoundationImplementedDisabled / FreightGraphEffectsDeferred / BackendBatch5InterruptionRecoveryImplemented / FrontendPartial / FoodDemandParticipationImplementedDisabled / FoodDemandParticipationLocalValidated / LocalModelDockerCpuValidated / OfflineAssumedAiScenariosValidated / ProjectGroundedAdvisoryImplemented / LocalValidationCompleteWithQualityLimits / HumanReviewPending / RegionalCandidateAdvisoryImplemented / RegionalCandidateLocalValidatedWithModelQualityLimits / OperationalActivationDeferred / FoodCandidateApplicationImplemented / IsolatedLocalModelApplicationValidated / LocalApplicationValidationComplete / ExternalOperationalDeferred / FoodDispatchWorkflowScenariosImplemented / LocalLoopbackHttpMobilePageModelValidated / NotificationRecoveryGapsReproduced / RealDeviceDeferred`
@@ -24,6 +26,8 @@
 - 2026-10-11 최신 r49: [주문·기사 앱 통합 시나리오](workflow-scenarios.implementation.r49.md) · [작업 명세](workflow-scenarios.r49.work-order.json) · [검증 결과](../../../../Changes/2026-10-11-local-dispatch-workflow-scenarios-r49.md). 주문부터 추천·앱 내부 배차 안내·수락·픽업·전달·별도 수령 확인까지 실제 루프백 HTTP와 격리 SQLite, 제품 API client·수신기·PageModel로 검증했다. 신규 22개·Fast 210개·Task 10,522개 통과, 실제 모델 2회 적용·단일 후보 1사례 호출 생략이다. 추천 저장/알림 생성과 Failed 재발송 공백 3개를 재현했다. 제품 수정·실제 FCM/단말/화면·자동 이벤트 예약·외부 운영은 별도다.
 
 ## 이 기획이 소유하는 범위
+
+- 2026-10-11 최신 r53: [음식 배차 정보 준비 상태](information-readiness.implementation.r53.md) · [작업 명세](information-readiness.r53.work-order.json) · [변경/검증 기록](../../../../Changes/2026-10-11-food-dispatch-information-readiness-r53.md). 원주문·현재 조리·공간·수요와 기사 여력의 관측/판본을 대조해 추가 수집 대기를 허용한다. 고객 확약·실제 기사 일정/적재·현재 견적·플랫폼 확정 재원은 별도 미확인 상태로 유지한다. Fast 217개 및 격리 Docker Mongo Fast 24개, 최종 Task 10,855개 통과·실패/건너뜀 0이다. 시험 DB/컨테이너를 정리했고 기존 DB/볼륨은 보존했다. 수집 준비는 전체 배차·수익성 검증이 아니며 기본 OFF·기존 단건 관문·금액 산식은 보존한다.
 
 - 2026-10-11 최신 r52: [음식 주문 수집과 배차 시점](batch-timing.implementation.r52.md) · [작업 명세](batch-timing.r52.work-order.json) · [변경/검증 기록](../../../../Changes/2026-10-11-food-dispatch-batch-timing-r52.md). 최초 접수 기준의 짧은 수집을 첫 추천 전 자동/직접 경로에 연결하고 조합·마감·수요/기사 자료를 대조한다. AI는 서버의 허용 행동만 선택한다. 기본 OFF, 실제 공동 다건 수락·4,000원 점수·가중치 학습·운영 적용은 별도다.
 

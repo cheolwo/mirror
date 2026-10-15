@@ -1,0 +1,192 @@
+{
+  "planId": "PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB",
+  "revision": "r65",
+  "status": "Approved / Implemented / LocalValidated / OperationalDeferred",
+  "approval": "Current user: 정리를 먼저, 확장성이 심함",
+  "baseCommit": "08931c2371f29de615f4a4f133b535e5df76bf7f",
+  "primaryOwner": "operations-ui",
+  "designDocumentRef": "inbound-cleanup.implementation.r65.md",
+  "designSha256": "498EFBB72E49F677B8B0B0D8EFEA36C8D95F8238AEE21B9975C56A96238AFE4A",
+  "writePaths": [
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행PageViewModel.cs",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행PageViewModel.Orders.cs",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행PageViewModel.Photos.cs",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행표시.cs",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산공간수용조건Panel.razor",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고협의Panel.razor",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/inbound-cleanup.implementation.r65.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/inbound-cleanup.r65.work-order.json",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/AI/PLANNING.md",
+    "docs/Changes/README.md",
+    "docs/Changes/2026-10-12-inbound-cleanup-r65.md",
+    "docs/ProjectOverview/page-docs/distributed-inbound-collaboration-r63.md"
+  ],
+  "baseline": [
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행PageViewModel.cs",
+      "Exists": true,
+      "Sha256": "FF91DABC4EA54AFF0F0AAE748398D5C6FA997337E8118BFC2F4184E01916DD93"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행PageViewModel.Orders.cs",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행PageViewModel.Photos.cs",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행표시.cs",
+      "Exists": true,
+      "Sha256": "679E54E15DDCCE1CBA2ABE994A72B1929FDB7A5E7475970DAC1B2BBF11E604B5"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산공간수용조건Panel.razor",
+      "Exists": true,
+      "Sha256": "4784FFC96FB9D1495A692F0AB9FFD1E6EC611628F60EE134A0EECF88C7CD0C1F"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고협의Panel.razor",
+      "Exists": true,
+      "Sha256": "65FF46D45D65D041CDAFB78F430B9A8CF55D2B0C01D2C16896585325EA659151"
+    },
+    {
+      "Path": "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/inbound-cleanup.implementation.r65.md",
+      "Exists": true,
+      "Sha256": "CAAA0B4679111331391AA212408931081082BA44F380543A896F069A7F722CCE"
+    },
+    {
+      "Path": "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/inbound-cleanup.r65.work-order.json",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/README.md",
+      "Exists": true,
+      "Sha256": "4E10D69E346B008D8500A3E057FB248FC85C2C85F7AD3455C4632973A51A966D"
+    },
+    {
+      "Path": "docs/AI/CURRENT_WORK.md",
+      "Exists": true,
+      "Sha256": "D90DEA79F9250620C33B5AB436E54658023223986B9D1DEB8985B46338C03248"
+    },
+    {
+      "Path": "docs/AI/PLANNING.md",
+      "Exists": true,
+      "Sha256": "DDB89FBE416AC01981FAE77404EB9B825966A44B951E3D48581A1DF235C3B1B5"
+    },
+    {
+      "Path": "docs/Changes/README.md",
+      "Exists": true,
+      "Sha256": "9F55F029FDA250F97FEAB427B90869413E2A847A29A61D84C1ABC60A6AF29D2A"
+    },
+    {
+      "Path": "docs/Changes/2026-10-12-inbound-cleanup-r65.md",
+      "Exists": false,
+      "Sha256": null
+    },
+    {
+      "Path": "docs/ProjectOverview/page-docs/distributed-inbound-collaboration-r63.md",
+      "Exists": true,
+      "Sha256": "3BD6A924FD31581D7C5026CD8AE636EB44F31D4831DF0F48F3203E6E8244588D"
+    }
+  ],
+  "excludedEffects": [
+    "ServerRules",
+    "Contracts",
+    "Database",
+    "BehaviorChanges",
+    "PageLayout",
+    "NewFeature",
+    "NewServiceOrInterface",
+    "Unity",
+    "DeviceInstallation",
+    "Commit",
+    "Push",
+    "Deploy"
+  ],
+  "validationCeiling": [
+    "MemberBodyComparison",
+    "Fast",
+    "Task",
+    "ConsumerBuild",
+    "HtmlRendererEquivalence",
+    "DocumentLinks"
+  ],
+  "protectedSources": "artifacts/local/inbound-r65/protected-sources.json",
+  "approvedDesignSha256": "CAAA0B4679111331391AA212408931081082BA44F380543A896F069A7F722CCE",
+  "validation": {
+    "Fast": {
+      "Run": "artifacts/local/validation/20261012-203252",
+      "Failed": 0,
+      "Passed": 225,
+      "Skipped": 0
+    },
+    "Task": {
+      "Run": "artifacts/local/validation/20261012-203513",
+      "Failed": 0,
+      "SkipReason": "Environment-dependent MongoDB integration tests",
+      "Passed": 11167,
+      "Skipped": 15
+    },
+    "ConsumerBuild": {
+      "Warnings": 145,
+      "ChangedFileWarnings": 0,
+      "Errors": 0
+    },
+    "Members": {
+      "Before": 90,
+      "Unchanged": true,
+      "Evidence": "artifacts/local/inbound-r65/member-equivalence.json",
+      "After": 90
+    },
+    "Html": {
+      "Compared": 10,
+      "ByteIdentical": 10,
+      "Evidence": "artifacts/local/inbound-r65/html-equivalence.json"
+    },
+    "Css": {
+      "Unchanged": 3,
+      "Compared": 3
+    },
+    "ProtectedSources": {
+      "Unchanged": 38,
+      "Compared": 38
+    },
+    "Evidence": "artifacts/local/inbound-r65/",
+    "OperationalActivation": false,
+    "DeviceInstallation": false,
+    "Commit": false,
+    "Push": false
+  },
+  "productFingerprints": [
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행PageViewModel.cs",
+      "Sha256": "F290CB76E764A6E16AF1E1B968B5B64CAD5C7982F217D0C499B05C5BF1289932"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행PageViewModel.Orders.cs",
+      "Sha256": "82121CD1BDA5B44761498DBE898C9FFDA0CC835E8328D817E167BE68800A87AA"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행PageViewModel.Photos.cs",
+      "Sha256": "FA2C174C7F4A24EF8F839EDF875D5999974393AEE618EFA19FE4C2A11F12F343"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산이행표시.cs",
+      "Sha256": "05B05C5E99C62679EBF9DD48001D1E83D01365F8A6DE166D7F55DB96482DF9A9"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산공간수용조건Panel.razor",
+      "Sha256": "25185E617E0E1EF81E9B36C3C40C14E234B3A9EF1F392B3CD3B9514486058825"
+    },
+    {
+      "Path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DistributedFulfillment/분산입고협의Panel.razor",
+      "Sha256": "4B7558367557A498B25223B39272C5F82383A73F7A085A3C7B86B3FEA7E83234"
+    }
+  ]
+}

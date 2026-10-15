@@ -2,6 +2,7 @@
 
 - 날짜: 2026-10-08.
 - 상태: `AcceptedDirection / ProposedDesign / ImplementationPending`.
+- 후속: [기사 업무 선택과 공통 수락 보호 r71](driver-participation.implementation.r71.md)에서 우선 1·2번과 설정 화면을 구현한다. 근거가 없는 음식·화물 동시 수행과 전체 경로 통합은 계속 후속이다.
 - 사용자 방향: 기사 본인이 오토바이 배달통에 실을 수 있는 물품과 수행 여력에 맞춰 음식·화물을 여러 건 선택하고, 픽업·전달을 조합해 시간당 배달 수입을 높일 기회를 갖도록 한다. 3·4건은 사용자가 든 예이며 모두에게 강제하는 고정 목표나 수입 보장이 아니다.
 - 이번 범위: 현재 코드의 읽기 조사와 후속 설계 기록. 제품 코드·배차 상한·DB·기능 활성화·APK·실행 환경은 변경하지 않는다.
 - 관계: [분산 순회 r30](distributed-warehouse.implementation.r30.md)의 피킹/전달 혼합과 구간별 적재량을 재사용한다. [원주문·동시 변경 보호 r35](root-order-selection-concurrency.implementation.r35.md)는 완료된 별도 범위이며 교차 유형의 배차 여력 보호를 대신하지 않는다.

@@ -4,7 +4,23 @@
 
 ## 화면 캡처
 
+2026-10-15 r71: 아래는 기존 캡처이며 새 업무·적재 설정의 실행 증거가 아닙니다. 새 공통 폼의 정적 렌더·소비 앱 빌드와 실제 모바일 입력·배치는 별도로 검증합니다.
+
 <img src="../../../assets/app-pages/DriverApp/DriverApp-P06-1.png" alt="DriverApp-P06-1 화면 캡처" width="720">
+
+## 업무·적재 설정 r71 책임 카드
+
+| 항목 | 현재 구성 |
+| --- | --- |
+| 주 사용자·질문 | 같은 기사 계정이 어떤 업무를 받고, 현재 차량에 어느 정도 적재할 수 있는가? |
+| 페이지·진입 | DriverApp의 기존 `/driver/work/settings`와 메뉴. FDriverApp 내 정보 → `food-work-preferences`에서 같은 공통 폼을 사용한다. |
+| 완료 결과 | 음식·소형 물품 퀵·화물의 희망 업무, 별도 직접 피킹, 차량·중량 kg·부피 L·희망 동시 건수·추가 배차 의사를 서버에 저장하고 정본으로 다시 확인한다. |
+| 기본 정보·주 행동 | 받을 업무 → 차량·적재 조건 → 추가 배차의 세 섹션. 주 행동은 설정 저장이며 로딩·오류·저장 결과 미확인은 바로 표시한다. 알 수 없는 제원은 빈칸으로 둔다. |
+| 독립 업무 | 운행 시작·종료, 실제 배차 수락, 피킹·전달 수행, 정산은 기존 화면과 전문 원장에서 처리한다. 선택은 수행 자격이나 혼합 적재 승인·권한을 만들지 않는다. |
+| 준비 경계 | 공통 수락 기능이 꺼져 있어도 설정은 준비할 수 있다. 실제 제안은 서버의 기존 역할·자격과 운영 준비 상태를 따른다. |
+| 실패·복귀 | 판본을 포함한 PUT 한 번 뒤 GET으로 확인한다. 결과가 불명확하면 재전송을 잠그고 정본 조회만 허용한다. 계정/로그인 판본 변경·화면 종료의 늦은 응답은 버린다. 기존 메뉴/내 정보로 돌아간다. |
+| page → code → DB | [공통 화면](../../../../../Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DriverPreferences/DriverWorkParticipationScreen.razor) → [표시·저장 확인 VM](../../../../../Ssalddel.Ui.Common/Areas/App/RoleWorkspace/DriverPreferences/DriverWorkParticipationViewModel.cs) → 두 앱의 기존 인증 HTTP adapter → `GET/PUT api/v1/driver/work-participation` → 기사 본인 SQL 설정·revision. |
+| 검증 범위 | 세션·응답 유실·판본과 실제 공통 Razor 정적 렌더를 집중 시험으로 확인한다. 실제 브라우저 배치, APK, 단말, 운영 DB·배차는 각 별도 증거다. |
 
 ## 기본 정보
 
