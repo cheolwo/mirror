@@ -102,5 +102,5 @@ public sealed partial class 보호지원관리ViewModel
             ? "연결된 배송과 종결 사건의 처리 조건이 바뀌었습니다. 최신 내용을 다시 확인해 주세요."
             : "배송 복구 결과를 확인하지 못했습니다. 요청 내용은 보존했으니 결과를 다시 확인해 주세요.";
     }
-    private void ClearRecovery() => _memberDeliveryRecovery.Clear();
+    private void ClearRecovery() { _memberDeliveryRecovery.Clear(); ClearFoodFollowUp(); }
 }

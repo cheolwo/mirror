@@ -1,0 +1,218 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Contracts.Common.Warehouse
+<section class="inbound-visual inbound-panel inbound-collaboration" aria-label="공급자와 공간 제공자의 입고 협의">
+    <div class="inbound-heading"><분산입고Icon Kind="agreement" /><div><span class="inbound-eyebrow">공급자와 공간 제공자</span><h2>이번 입고 협의</h2></div></div>
+    <label>협의할 상품·위치<select @bind="lineKey" @bind:after="ChangeLine" disabled="@(!Model.CanEdit)"><option value="">상품을 선택해 주세요</option>
+        @foreach (var item in Plan.Lines) { <option value="@item.LineKey">@item.Sku · @LocationLabel(item.LocationId) · @item.ExpectedQuantity 개</option> }</select></label>
+    @if (Line is { } line)
+    {
+        var collaboration = line.InboundCollaboration;
+        <div class="inbound-overview">
+            <span class="inbound-badge">@(line.ReceivedQuantity >= line.ExpectedQuantity ? "입고 완료" : 분산이행표시.InboundCollaborationStatus(collaboration?.StatusCode))</span>
+            <div class="inbound-stats">
+                <div class="inbound-stat" aria-label="@($"예정 {line.ExpectedQuantity} 개")"><span>예정 수량</span><strong>@line.ExpectedQuantity <small>개</small></strong></div>
+                <div class="inbound-stat" aria-label="@($"실제 입고 {line.ReceivedQuantity} 개")"><span>실제 입고</span><strong>@line.ReceivedQuantity <small>개</small></strong></div>
+            </div>
+            @if (line.NextActorLabel is { Length: > 0 } next) { <p class="inbound-next"><분산입고Icon Kind="people" />@($"다음 담당 · {next}")</p> }
+        </div>
+        @foreach (var reason in line.WaitingReasonCodes ?? []) { <p class="notice inbound-wait" role="status">@분산이행표시.InboundWaitingReason(reason)</p> }
+        @if (collaboration is null) { <p class="inbound-help">상품·수량·도착 시간을 제안한 뒤 물품 소유자와 공간 제공자가 같은 조건을 확인합니다.</p> }
+        else
+        {
+            var terms = collaboration.Terms;
+            @if (collaboration.ReservedTerms is { } reserved && collaboration.ReservedTermsVersion != collaboration.TermsVersion)
+            { <p class="notice">이전 @collaboration.ReservedTermsVersion 차에서 승인한 @reserved.Quantity 개의 공간은 확보 중입니다. 아래 변경안의 승인 전에는 실제 입고를 진행할 수 없습니다.</p> }
+            <div class="inbound-section">
+                <h3 class="inbound-section-heading"><분산입고Icon Kind="box" />물품 정보</h3>
+                <dl class="terms inbound-facts">
+                    <div><dt>물품 분류</dt><dd>@((terms.Goods.CategoryCodes ?? []).Count == 0 ? "분류 미확인" : string.Join(" · ", (terms.Goods.CategoryCodes ?? []).Select(code => 분산이행표시.InboundCategory(code))))</dd></div>
+                    <div><dt>받을 수량</dt><dd>@terms.Quantity 개</dd></div>
+                    <div><dt>공급자 유형</dt><dd>@분산이행표시.InboundSupplier(terms.SupplierTypeCode)</dd></div>
+                    <div><dt>포장·온도</dt><dd>@분산이행표시.InboundPackaging(terms.Goods.PackagingCode) · @분산이행표시.InboundTemperature(terms.Goods.TemperatureCode)</dd></div>
+                    <div class="wide"><dt>식품·가공</dt><dd>@분산이행표시.InboundFood(terms.Goods.IsFood) · @분산이행표시.InboundProcessed(terms.Goods.IsProcessed)</dd></div>
+                    <div><dt>상품 한 개의 점유량</dt><dd>@terms.Goods.CapacityPerItem @terms.Goods.CapacityUnit</dd></div>
+                    @if (terms.Goods.WeightKgPerItem is { } weight) { <div><dt>상품 한 개의 중량</dt><dd>@weight kg</dd></div> }
+                    @if (terms.Goods.VolumeM3PerItem is { } volume) { <div><dt>상품 한 개의 부피</dt><dd>@volume m³</dd></div> }
+                </dl>
+            </div>
+            <div class="inbound-section">
+                <h3 class="inbound-section-heading"><분산입고Icon Kind="clock" />일정과 보관</h3>
+                <dl class="terms inbound-facts">
+                    <div class="wide"><dt>도착 예정</dt><dd>@분산이행표시.Time(terms.ArrivalStartUtc) ~ @분산이행표시.Time(terms.ArrivalEndUtc)</dd></div>
+                    <div class="wide"><dt>보관 종료</dt><dd>@분산이행표시.Time(terms.StorageEndsAtUtc)</dd></div>
+                    <div><dt>조건 판본</dt><dd>@collaboration.TermsVersion 차</dd></div>
+                    <div><dt>보관 합의</dt><dd>@terms.AgreementTermsVersion 차 조건</dd></div>
+                </dl>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(terms.SupplyPriceOrFreeTerms) || !string.IsNullOrWhiteSpace(terms.SupplierResponsibilityTerms) || !string.IsNullOrWhiteSpace(terms.ReturnTerms))
+            {
+                <div class="inbound-section">
+                    <h3 class="inbound-section-heading"><분산입고Icon Kind="shield" />공급과 책임</h3>
+                    <dl class="terms inbound-facts">
+                        @if (!string.IsNullOrWhiteSpace(terms.SupplyPriceOrFreeTerms)) { <div class="wide"><dt>공급·무상 조건</dt><dd>@terms.SupplyPriceOrFreeTerms</dd></div> }
+                        @if (!string.IsNullOrWhiteSpace(terms.SupplierResponsibilityTerms)) { <div class="wide"><dt>공급·위탁 책임</dt><dd>@terms.SupplierResponsibilityTerms</dd></div> }
+                        @if (!string.IsNullOrWhiteSpace(terms.ReturnTerms)) { <div class="wide"><dt>회수·반환 조건</dt><dd>@terms.ReturnTerms</dd></div> }
+                    </dl>
+                </div>
+            }
+            <div class="inbound-section">
+                <h3 class="inbound-section-heading"><분산입고Icon Kind="people" />양측 동의</h3>
+                <div class="inbound-consents">
+                    <div class="inbound-party" data-consented="@(collaboration.GoodsOwnerConsented ? "true" : "false")"><span>물품 소유자</span><strong><분산입고Icon Kind="@(collaboration.GoodsOwnerConsented ? "check" : "clock")" />@(collaboration.GoodsOwnerConsented ? "동의" : "미동의")</strong></div>
+                    <div class="inbound-party" data-consented="@(collaboration.SpaceOwnerConsented ? "true" : "false")"><span>공간 제공자</span><strong><분산입고Icon Kind="@(collaboration.SpaceOwnerConsented ? "check" : "clock")" />@(collaboration.SpaceOwnerConsented ? "동의" : "미동의")</strong></div>
+                </div>
+                <p class="inbound-help">입고 승인과 실제 도착·입고 확인은 각각 별도입니다. 협의 메모는 동의를 대신하지 않습니다.</p>
+                @if (Can("consent-inbound"))
+                {
+                    <label class="check inbound-confirm"><input type="checkbox" @bind="consentConfirmed" disabled="@(!Model.CanEdit)" />@collaboration.TermsVersion 차의 상품·수량·일정·계약 조건을 확인했습니다</label>
+                    <button class="primary" type="button" disabled="@(!Model.CanEdit || !consentConfirmed)" @onclick="Consent"><분산입고Icon Kind="check" />이번 입고 조건에 동의</button>
+                }
+            </div>
+        }
+        @if (Can("propose-inbound") && !editing) { <button class="inbound-secondary" type="button" @onclick="BeginProposal"><분산입고Icon Kind="edit" />@(collaboration is null ? "입고 조건 제안" : "수정 조건 제안")</button> }
+        @if (editing)
+        {
+            @if (draftRevision != Plan.Revision) { <p class="notice">협의 상태가 바뀌었습니다. 작성한 내용은 유지되며, 최신 조건을 확인하고 다시 작성해 주세요.</p> }
+            <fieldset disabled="@(!Model.CanEdit)"><legend>함께 확인할 이번 입고 조건</legend>
+                <div class="inbound-section">
+                    <h3 class="inbound-section-heading"><분산입고Icon Kind="agreement" />보관 합의</h3>
+                    <label>연결할 보관 합의<select @bind="agreementId"><option value="">보관 합의를 선택해 주세요</option>@foreach (var agreement in Agreements)
+                        { <option value="@agreement.AgreementId">@LocationLabel(agreement.LocationId) · @agreement.TermsVersion 차 · @(agreement.StatusCode == "Active" ? "양측 동의" : "동의 대기") · @agreement.Terms.PriceOrFreeTerms</option> }</select></label>
+                    @if (!Agreements.Any()) { <p class="notice">현재 상품·위치에 연결할 보관 합의가 없습니다. 보관 조건을 먼저 작성해 주세요.</p> }
+                    <p class="inbound-help">보관 합의에 양측이 동의하기 전에도 물량·일정은 협의할 수 있습니다. 실제 입고 승인은 보관 합의 동의 뒤 가능합니다.</p>
+                </div>
+                @if (line.ReceivedQuantity > 0) { <p class="inbound-help">이미 받은 물품의 소유 관계와 상품 특성은 유지하고, 남은 물량의 수량·일정을 협의합니다.</p> }
+                <fieldset class="inbound-section" disabled="@(line.ReceivedQuantity > 0)"><legend>물품과 공급 관계</legend>
+                    <div class="inbound-form-grid">
+                        <label class="wide">이번 공급 담당<select @bind="supplierUserId"><option value="">선택해 주세요</option><option value="@line.OwnerUserId">물품 소유자@(line.OwnerUserId == line.SellerUserId ? " · 판매 담당자" : "")</option>
+                            @if (line.SellerUserId is { } seller && seller != line.OwnerUserId) { <option value="@seller">위탁 판매 담당자</option> }</select></label>
+                        <label class="wide">공급자 유형<select @bind="supplierType"><option value="">선택해 주세요</option>@foreach (var option in suppliers) { <option value="@option.Key">@option.Label</option> }</select></label>
+                        <div class="goods-options wide"><h3>확인한 물품 분류</h3><div class="inbound-chips">@foreach (var option in categories)
+                        { <label class="check inbound-choice"><input type="checkbox" checked="@categoryCodes.Contains(option.Key)" @onchange="e => ToggleCategory(option.Key, e)" />@option.Label</label> }</div></div>
+                        <label>식품 여부<select @bind="food"><option value="">미확인</option><option value="yes">식품</option><option value="no">식품 아님</option></select></label>
+                        <label>가공 여부<select @bind="processed"><option value="">미확인</option><option value="yes">가공품</option><option value="no">가공하지 않음</option></select></label>
+                        <label>포장<select @bind="packaging"><option value="">미확인</option><option value="sealed">밀봉</option><option value="boxed">상자 포장</option><option value="unpacked">비포장</option></select></label>
+                        <label>필요 보관 온도<select @bind="temperature"><option value="">미확인</option><option value="ambient">상온</option><option value="chilled">냉장</option><option value="frozen">냉동</option></select></label>
+                        <label>공간 용량 단위<input @bind="unit" placeholder="공간과 같은 단위" /></label>
+                        <label>상품 한 개의 점유량<input type="number" min="0.001" step="0.001" @bind="capacityPerItem" /></label>
+                        <label>상품 한 개의 중량(kg) · 선택<input type="number" min="0.001" step="0.001" @bind="weightPerItem" /></label>
+                        <label>상품 한 개의 부피(m³) · 선택<input type="number" min="0.001" step="0.001" @bind="volumePerItem" /></label>
+                    </div>
+                </fieldset>
+                <div class="inbound-section">
+                    <h3 class="inbound-section-heading"><분산입고Icon Kind="clock" />수량과 일정</h3>
+                    <div class="inbound-form-grid">
+                        <label class="wide">이번 총 예정 수량<input type="number" min="@Math.Max(1, line.ReceivedQuantity)" max="@line.ExpectedQuantity" @bind="quantity" /></label>
+                        <label class="wide">도착 시작<input type="datetime-local" @bind="arrivalStart" /></label><label class="wide">도착 종료<input type="datetime-local" @bind="arrivalEnd" /></label>
+                        <label class="wide">보관 종료<input type="datetime-local" @bind="storageEnd" /></label>
+                    </div>
+                    <label class="check inbound-confirm"><input type="checkbox" @bind="accessConfirmed" />공간의 출입 가능 시간과 이번 도착 시간을 확인했습니다</label>
+                </div>
+                <div class="inbound-section">
+                    <h3 class="inbound-section-heading"><분산입고Icon Kind="shield" />공급과 반환 조건</h3>
+                    <label>공급 가격 또는 무상 조건<textarea @bind="priceTerms"></textarea></label>
+                    <label>공급·위탁 책임<textarea @bind="responsibilityTerms" placeholder="물품 소유·판매 권한과 공급 담당자의 책임"></textarea></label>
+                    <label>미판매 물품 회수·반환 조건<textarea @bind="returnTerms"></textarea></label>
+                    <label class="check inbound-confirm"><input type="checkbox" @bind="proposalConfirmed" />위 상품 특성과 공급·보관 조건을 확인했습니다</label>
+                </div>
+            </fieldset>
+            <div class="actions inbound-actions"><button class="primary" type="button" disabled="@(!Model.CanEdit || !proposalConfirmed || draftRevision != Plan.Revision)" @onclick="Propose"><분산입고Icon Kind="arrow" />입고 조건 보내기</button><button type="button" disabled="@(!Model.CanEdit)" @onclick="CloseProposal">작성 닫기</button></div>
+            <p class="inbound-help">제안만으로 출발·적재가 승인되지 않습니다. 변경 제안은 이전 입고 승인을 대체하지 않습니다.</p>
+        }
+        @if (collaboration is not null && (Can("reject-inbound") || Can("cancel-inbound")))
+        {
+            <details><summary><분산입고Icon Kind="ban" />거절·취소</summary><label>이유<textarea @bind="decisionReason" disabled="@(!Model.CanEdit)"></textarea></label>
+                <label class="check inbound-confirm"><input type="checkbox" @bind="decisionConfirmed" disabled="@(!Model.CanEdit)" />이유와 이번 협의의 중단을 확인했습니다</label>
+                <div class="actions">@if (Can("reject-inbound")) { <button type="button" disabled="@(!decisionConfirmed || string.IsNullOrWhiteSpace(decisionReason))" @onclick="() => Decide(false)">이번 입고 거절</button> }
+                    @if (Can("cancel-inbound")) { <button type="button" disabled="@(!decisionConfirmed || string.IsNullOrWhiteSpace(decisionReason))" @onclick="() => Decide(true)">이번 입고 취소</button> }</div>
+                <p class="inbound-help">이미 받은 물품은 사라지지 않습니다. 수령 후 차이나 반송은 별도로 협의합니다.</p>
+            </details>
+        }
+        @if (collaboration is not null && Can("note-inbound"))
+        {
+            <details><summary><분산입고Icon Kind="message" />협의 메모</summary><label>전할 내용<textarea @bind="note" disabled="@(!Model.CanEdit)"></textarea></label>
+                <label class="check inbound-confirm"><input type="checkbox" @bind="noteConfirmed" disabled="@(!Model.CanEdit)" />계약 당사자에게 공유할 내용입니다</label>
+                <button type="button" disabled="@(!Model.CanEdit || !noteConfirmed || string.IsNullOrWhiteSpace(note))" @onclick="SendNote">협의 메모 남기기</button></details>
+        }
+        @if (collaboration?.History.Count > 0)
+        {
+            <details><summary><분산입고Icon Kind="history" />협의 기록</summary>@foreach (var history in collaboration.History.OrderByDescending(x => x.RecordedAtUtc).Take(20))
+            { <article class="history"><p>@분산이행표시.InboundHistoryKind(history.Kind) · @history.TermsVersion 차 · @Actor(history.ActorUserId) · @분산이행표시.Time(history.RecordedAtUtc)</p>@if (!string.IsNullOrWhiteSpace(history.Note)) { <p>@history.Note</p> }</article> }</details>
+        }
+    }
+</section>
+@code {
+    [Parameter, EditorRequired] public 분산이행PageViewModel Model { get; set; } = default!;
+    [Parameter, EditorRequired] public DistributedInboundDto Plan { get; set; } = default!;
+    private static readonly IReadOnlyList<(string Key, string Label)> categories = 분산이행표시.InboundCategoryOptions;
+    private static readonly IReadOnlyList<(string Key, string Label)> suppliers = 분산이행표시.InboundSupplierOptions;
+    private readonly HashSet<string> categoryCodes = new(StringComparer.Ordinal);
+    private string lineKey = "", agreementId = "", supplierUserId = "", supplierType = "", food = "", processed = "", packaging = "", temperature = "", unit = "", priceTerms = "", responsibilityTerms = "", returnTerms = "", decisionReason = "", note = "";
+    private int? quantity;
+    private decimal? capacityPerItem, weightPerItem, volumePerItem;
+    private DateTime? arrivalStart, arrivalEnd, storageEnd;
+    private bool editing, accessConfirmed, proposalConfirmed, consentConfirmed, decisionConfirmed, noteConfirmed;
+    private long draftRevision;
+    private string? identity, consentVersion;
+    private DistributedInboundLineDto? Line => Plan.Lines.SingleOrDefault(x => x.LineKey == lineKey);
+    private IEnumerable<DistributedStorageAgreementDto> Agreements => Line is { } line
+        ? Model.Workspace?.StorageAgreements.Where(x => (x.StatusCode is "Active" or "Draft") && x.LocationId == line.LocationId && x.GoodsOwnerUserId == line.OwnerUserId && x.Terms.AllowedSkus.Contains(line.Sku, StringComparer.Ordinal)) ?? []
+        : [];
+    private bool Can(string action) => Line?.AllowedActions is { } actions && Model.Allows(action, actions);
+    protected override void OnParametersSet()
+    {
+        var next = $"{Model.CurrentUserId}|{Plan.PlanId}";
+        if (identity != next) { identity = next; lineKey = Plan.Lines.FirstOrDefault(x => x.InboundCollaboration is not null || x.AllowedActions is not null)?.LineKey ?? Plan.Lines.FirstOrDefault()?.LineKey ?? ""; ChangeLine(); }
+        var version = $"{Plan.Revision}|{Line?.LineKey}|{Line?.InboundCollaboration?.TermsVersion}";
+        if (consentVersion != version) { consentVersion = version; consentConfirmed = decisionConfirmed = noteConfirmed = false; }
+    }
+    private void ChangeLine() { CloseProposal(); consentConfirmed = decisionConfirmed = noteConfirmed = false; decisionReason = note = ""; }
+    private void BeginProposal()
+    {
+        if (Line is not { } line || !Can("propose-inbound")) return;
+        var terms = line.InboundCollaboration?.Terms; var policy = Model.Workspace?.Sites.SingleOrDefault(x => x.SiteId == line.SiteId)?.AcceptancePolicy;
+        agreementId = terms?.AgreementId ?? ""; supplierUserId = terms?.SupplierUserId ?? ""; supplierType = terms?.SupplierTypeCode ?? ""; categoryCodes.Clear(); if (terms is not null) categoryCodes.UnionWith(terms.Goods.CategoryCodes ?? []);
+        food = Bool(terms?.Goods.IsFood); processed = Bool(terms?.Goods.IsProcessed); packaging = terms?.Goods.PackagingCode ?? ""; temperature = terms?.Goods.TemperatureCode ?? "";
+        unit = terms?.Goods.CapacityUnit ?? policy?.CapacityUnit ?? ""; capacityPerItem = terms?.Goods.CapacityPerItem; weightPerItem = terms?.Goods.WeightKgPerItem; volumePerItem = terms?.Goods.VolumeM3PerItem;
+        quantity = terms?.Quantity ?? line.ExpectedQuantity; arrivalStart = Local(terms?.ArrivalStartUtc); arrivalEnd = Local(terms?.ArrivalEndUtc); storageEnd = Local(terms?.StorageEndsAtUtc);
+        priceTerms = terms?.SupplyPriceOrFreeTerms ?? ""; responsibilityTerms = terms?.SupplierResponsibilityTerms ?? ""; returnTerms = terms?.ReturnTerms ?? "";
+        accessConfirmed = proposalConfirmed = false; draftRevision = Plan.Revision; editing = true;
+    }
+    private void CloseProposal() { editing = proposalConfirmed = accessConfirmed = false; }
+    private void ToggleCategory(string key, ChangeEventArgs e) { if (e.Value is true) categoryCodes.Add(key); else categoryCodes.Remove(key); proposalConfirmed = false; }
+    private async Task Propose()
+    {
+        var line = Line; var agreement = Agreements.SingleOrDefault(x => x.AgreementId == agreementId);
+        if (line is null || agreement is null || string.IsNullOrWhiteSpace(line.SellerUserId) || (supplierUserId != line.OwnerUserId && supplierUserId != line.SellerUserId) || supplierType.Length == 0 || categoryCodes.Count == 0 || food.Length == 0 || packaging.Length == 0 || temperature.Length == 0
+            || capacityPerItem is null or <= 0 || string.IsNullOrWhiteSpace(unit) || quantity is null or < 1 || quantity < line.ReceivedQuantity || quantity > line.ExpectedQuantity || arrivalStart is null || arrivalEnd is null || storageEnd is null
+            || arrivalEnd <= arrivalStart || storageEnd <= arrivalEnd || !accessConfirmed || weightPerItem is <= 0 || volumePerItem is <= 0
+            || new[] { priceTerms, responsibilityTerms, returnTerms }.Any(string.IsNullOrWhiteSpace))
+        { await Model.InvalidInputAsync("유효한 보관 합의와 상품 특성·실제 수량·도착/보관 시간·공급 및 반환 조건을 확인해 주세요."); return; }
+        await Execute("propose-inbound", "proposals", new DistributedInboundProposalRequest { ExpectedRevision = draftRevision, Terms = new()
+        { AgreementId = agreement.AgreementId, AgreementTermsVersion = agreement.TermsVersion, SupplierUserId = supplierUserId, SupplierTypeCode = supplierType,
+            GoodsOwnerUserId = line.OwnerUserId, SellerUserId = line.SellerUserId, Quantity = quantity.Value,
+            Goods = new() { CategoryCodes = categoryCodes.Order(StringComparer.Ordinal).ToArray(), IsFood = NullableBool(food), IsProcessed = NullableBool(processed), PackagingCode = packaging,
+                TemperatureCode = temperature, CapacityUnit = unit.Trim(), CapacityPerItem = capacityPerItem.Value, WeightKgPerItem = weightPerItem, VolumeM3PerItem = volumePerItem },
+            ArrivalStartUtc = Utc(arrivalStart.Value), ArrivalEndUtc = Utc(arrivalEnd.Value), StorageEndsAtUtc = Utc(storageEnd.Value), AccessHoursConfirmed = accessConfirmed,
+            SupplyPriceOrFreeTerms = priceTerms.Trim(), SupplierResponsibilityTerms = responsibilityTerms.Trim(), ReturnTerms = returnTerms.Trim() } }, proposalConfirmed);
+        if (!Model.HasPendingCommand && Model.Message is not null) CloseProposal();
+    }
+    private Task Consent() => Line?.InboundCollaboration is { } collaboration ? Execute("consent-inbound", "consents", new DistributedInboundConsentRequest { ExpectedRevision = Plan.Revision, TermsVersion = collaboration.TermsVersion, Granted = true }, consentConfirmed) : Task.CompletedTask;
+    private Task Decide(bool cancel) => Line?.InboundCollaboration is { } collaboration ? Execute(cancel ? "cancel-inbound" : "reject-inbound", "decisions", new DistributedInboundDecisionRequest
+        { ExpectedRevision = Plan.Revision, TermsVersion = collaboration.TermsVersion, Action = cancel ? "Cancel" : "Reject", Reason = decisionReason.Trim() }, decisionConfirmed && !string.IsNullOrWhiteSpace(decisionReason)) : Task.CompletedTask;
+    private async Task SendNote()
+    {
+        if (Line?.InboundCollaboration is not { } collaboration) return;
+        await Execute("note-inbound", "notes", new DistributedInboundNoteRequest { ExpectedRevision = Plan.Revision, TermsVersion = collaboration.TermsVersion, Note = note.Trim() }, noteConfirmed && !string.IsNullOrWhiteSpace(note));
+        if (!Model.HasPendingCommand && Model.Message is not null) { note = ""; noteConfirmed = false; }
+    }
+    private Task Execute(string action, string suffix, DistributedCommandRequest request, bool confirmed) => Line is { } line ? Model.ExecuteAsync(action,
+        $"inbound-plans/{분산이행Client.Segment(Plan.PlanId)}/lines/{분산이행Client.Segment(line.LineKey)}/{suffix}", request, Plan.PlanId, line.AllowedActions, confirmed) : Task.CompletedTask;
+    private string LocationLabel(string id) => Model.Workspace?.Sites.SelectMany(x => x.Locations).SingleOrDefault(x => x.LocationId == id)?.Label ?? "승인된 적재 위치";
+    private string Actor(string id) => id == Model.CurrentUserId ? "본인" : id == Line?.OwnerUserId ? "물품 소유자" : id == Line?.SellerUserId ? "공급 담당자" : "계약 당사자";
+    private static string Bool(bool? value) => value is true ? "yes" : value is false ? "no" : "";
+    private static bool? NullableBool(string value) => value == "yes" ? true : value == "no" ? false : null;
+    private static DateTime? Local(DateTime? value) => value is { } date ? DateTime.SpecifyKind(date, DateTimeKind.Utc).ToLocalTime() : null;
+    private static DateTime Utc(DateTime value) => DateTime.SpecifyKind(value, DateTimeKind.Local).ToUniversalTime();
+
+}

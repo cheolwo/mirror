@@ -1,0 +1,14 @@
+@page "/activity-settlements"
+@page "/activity-settlements/{AgreementId}"
+@inject NavigationManager Navigation
+<PageTitle>활동·정산 내역 · 살뜰</PageTitle>
+<Ssalddel.WebApp.Components.Community.NeighborhoodAuthenticationBoundary AuthenticationChanged="@AuthenticationChanged">
+    <Ssalddel.Ui.Common.Areas.App.Components.Settlement.활동정산Screen @ref="page" AgreementId="@AgreementId" ReturnUrl="@ReturnUrl" LoginHref="@LoginHref" />
+</Ssalddel.WebApp.Components.Community.NeighborhoodAuthenticationBoundary>
+@code {
+    [Parameter] public string? AgreementId { get; set; }
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+    private Ssalddel.Ui.Common.Areas.App.Components.Settlement.활동정산Screen? page;
+    private string LoginHref => Navigation.ToAbsoluteUri("login?returnUrl=" + Uri.EscapeDataString(new Uri(Navigation.Uri).PathAndQuery)).ToString();
+    private Task AuthenticationChanged() => page?.NotifyAuthenticationChangedAsync() ?? Task.CompletedTask;
+}

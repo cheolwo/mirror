@@ -1,0 +1,40 @@
+@namespace Ssalddel.Ui.Common.Areas.BackOffice.Components.PrivacySupport
+@using Ssalddel.Ui.Common.Areas.BackOffice.ViewModels
+@using Ssalddel.Contracts.Admin.Food
+@using Ssalddel.Contracts.Common.PrivacySupport
+
+@if (Model.HasFoodFollowUpPending)
+{
+    <section aria-label="음식 후속 처리 결과 확인"><h2>음식 후속 처리 결과 확인</h2>
+        <p>이번 요청을 보존했습니다. 주문의 처리 기록부터 다시 확인하세요.</p>
+        <button class="support-primary" disabled="@Model.IsBusy" @onclick="Model.CheckFoodFollowUpAsync">결과 다시 확인</button>
+        @if (Model.CanRetryFoodFollowUp) { <button disabled="@Model.IsBusy" @onclick="Model.RetryFoodFollowUpAsync">같은 요청으로 진행</button> }
+        @if (Model.CanReviewChangedFoodFollowUp) { <button disabled="@Model.IsBusy" @onclick="Model.ReviewChangedFoodFollowUpAsync">최신 사건 다시 검토</button> }
+    </section>
+}
+else if (Model.Detail is { Kind: 보호지원종류Codes.분쟁, SourceKind: 보호지원출처Codes.음식주문 } row)
+{
+    <section aria-label="연결된 음식 주문 처리"><h2>연결된 음식 주문 처리</h2>
+        <p>사건 안내와 음식 주문 처리는 별개입니다. 최신 결과를 모든 당사자에게 안내한 뒤 다음 업무로 인계합니다.</p>
+        <a href="@("/admin/food-delivery/order-trace?orderNo=" + Uri.EscapeDataString(row.SourceId))">음식 주문 진행 확인</a>
+        <button disabled="@(!Model.CanLoadFoodFollowUp)" @onclick="Model.LoadFoodFollowUpAsync">후속 처리 확인</button>
+        @if (Model.FoodFollowUp is { } context)
+        {
+            <p>현재 주문: @context.OrderStatus</p>
+            @if (context.LastFollowUp is { } last) { <p role="status">마지막 인계: @last.Message</p> }
+            @if (context.BlockReason.Length > 0) { <p class="support-warning">@context.BlockReason</p> }
+            <fieldset disabled="@(Model.IsBusy || Model.HasPending)">
+                <label for="food-followup-action">다음 업무</label>
+                <select id="food-followup-action" @bind="Model.FoodFollowUpAction">
+                    @if (context.CanRetryDispatch) { <option value="RetryDispatch">적격 기사 재탐색 요청</option> }
+                    @if (context.CanRecordOperatorReview) { <option value="OperatorReview">취소·미수령·비용 협의 운영 검토</option> }
+                </select>
+                <label class="support-check"><input type="checkbox" @bind="Model.FoodFollowUpConfirmed" />안내한 처리방안과 현재 주문을 확인했습니다.</label>
+                <p class="support-muted">취소·재배송·수령 확인·환불·기사 지급은 자동 완료되지 않습니다. 미정 비용은 당사자 합의와 운영 검토가 필요합니다.</p>
+                <button class="support-primary" disabled="@(!Model.CanSubmitFoodFollowUp)" @onclick="Model.SubmitFoodFollowUpAsync">선택한 후속 처리 요청</button>
+            </fieldset>
+        }
+    </section>
+}
+
+@code { [Parameter, EditorRequired] public 보호지원관리ViewModel Model { get; set; } = default!; }

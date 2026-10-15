@@ -1,0 +1,100 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Settlement
+@using Ssalddel.Contracts.Common.Settlement
+
+<section aria-label="공동 초과성과금"><h2>공동 초과성과금</h2>
+    @if (Value.Agreement.Terms.ActivityRewardTerms is { } terms)
+    {
+        var recorded = Value.ActivityReward?.AlreadyAccrued == true;
+        var showEconomics = recorded ? Value.ActivityReward?.PlatformRetentionRatePercent is not null : terms.Economics is not null;
+        var recordedRetentionRate = recorded ? Value.ActivityReward?.PlatformRetentionRatePercent : null;
+        <p>기본보수와 구별하여, 사전에 합의한 비율과 실제 활동 근거로 계산합니다.</p>
+        <p class="notice">연습 환경에서 당사자가 합의한 경제 입력 진술입니다. 실재원·확정 이익·실제 입금을 인증하지 않습니다.</p>
+        <dl><dt>@(recordedRetentionRate is not null ? "계산에 적용한 초과성과 환원 비율" : recorded ? "현재 약정의 초과성과 환원 비율" : "초과성과 환원 비율")</dt><dd>@활동정산표시.Percent(recordedRetentionRate is { } appliedRate ? 100m - appliedRate : terms.Policy.ReturnRatePercent)</dd></dl>
+        @if (showEconomics)
+        {
+            <dl><dt>@(recorded ? "계산에 적용한 플랫폼 보유 비율" : "플랫폼 보유 비율")</dt><dd>@활동정산표시.Percent(Value.ActivityReward?.PlatformRetentionRatePercent ?? terms.Economics?.PlatformRetentionRatePercent)</dd></dl>
+            <p>입고·보관 연결 비용과 출고 기본 작업 비용·기타 비용·예비금을 차감한 양의 잔여금 기준입니다. 실제 영업이익률이나 입금 확인을 뜻하지 않습니다.</p>
+        }
+        <details><summary>@(recorded ? "현재 약정 조건 · 발생 내역은 당시 계산 보존" : "성과금 합의·계산 근거")</summary>
+            @if (recorded)
+            { <p>아래 수입·비용·가중치는 현재 약정 조건입니다. 이미 발생한 금액은 당시 계산을 보존하며 이 값으로 다시 계산하지 않습니다.</p> }
+            <dl><dt>합의 수입</dt><dd>@활동정산표시.Money(terms.FinancialBasis.RevenueAmountKrw)</dd>
+                <dt>@(terms.Economics is not null ? "출고 기본 작업 비용" : "기본 작업 보수 비용")</dt><dd>@활동정산표시.Money(terms.FinancialBasis.BasicWorkCostAmountKrw)</dd>
+                <dt>기타 비용</dt><dd>@활동정산표시.Money(terms.FinancialBasis.OtherCostAmountKrw)</dd>
+                <dt>예비금</dt><dd>@활동정산표시.Money(terms.FinancialBasis.ReserveAmountKrw)</dd></dl>
+            @if (terms.Economics is not null)
+            { <p>수입에서 입고·보관 연결 비용과 출고 기본 작업 비용·기타 비용·예비금을 뺀 양의 잔여금을 합의 비율에 따라 나눕니다.</p> }
+            else
+            { <p>수입에서 기본 작업 보수·기타 비용·예비금을 뺀 양의 초과성과에 환원 비율을 적용합니다.</p> }
+            @foreach (var weight in terms.Policy.Weights)
+            { <p>@활동정산표시.Kind(weight.Kind) · @활동정산표시.Unit(weight.UnitCode)당 가중치 @(weight.Weight?.ToString("0.######") ?? "미합의")</p> }
+        </details>
+        @if (Value.ActivityReward is { } preview)
+        {
+            <p class="state">@(preview.AlreadyAccrued ? "발생 내역에 기록된 계산" : 활동정산표시.State(preview.StatusCode))</p>
+            @if (preview.StatusCode == NeighborhoodActivityRewardCodes.Ready)
+            {
+                @if (showEconomics)
+                {
+                    <dl><dt>연결된 입고·보관 비용</dt><dd>@활동정산표시.Money(preview.CostAttributionAmountKrw)</dd>
+                        <dt>비용 차감 후 잔여금</dt><dd>@활동정산표시.Money(preview.SurplusAmountKrw)</dd>
+                        <dt>플랫폼 몫</dt><dd>@활동정산표시.Money(preview.PlatformRetentionAmountKrw)</dd>
+                        <dt>참여자 성과금 풀</dt><dd>@활동정산표시.Money(preview.PoolAmountKrw)</dd></dl>
+                    @if (preview.CostAttributions.Count > 0)
+                    { <p>연결된 원가 @preview.CostAttributions.Count 건</p> }
+                    <p>출고 기본 작업 비용과 별도로 반영하는 연결 비용입니다.</p>
+                    <p>기본 작업 보수와 추가 성과금은 구분하여 기록합니다.</p>
+                }
+                else
+                { <dl><dt>공동 성과금 풀</dt><dd>@활동정산표시.Money(preview.PoolAmountKrw)</dd></dl> }
+                @if (preview.Allocations.FirstOrDefault(value => value.ActorUserId == CurrentUserId) is { } mine)
+                { <dl><dt>내 성과금 @(preview.AlreadyAccrued ? "발생액" : "예정액")</dt><dd>@활동정산표시.Money(mine.AmountKrw)</dd></dl> }
+                else { <p>내 성과금 배분 항목은 확인되지 않았습니다.</p> }
+                <p>금액 확정·지급 신고·수령 확인은 아래 내역에서 별도로 확인합니다.</p>
+                @if (preview.ContributionShares.Any(value => value.Contribution.ActorUserId == CurrentUserId))
+                { <details><summary>내 활동별 성과금 계산</summary>
+                    @foreach (var share in preview.ContributionShares.Where(value => value.Contribution.ActorUserId == CurrentUserId))
+                    { <article><h3>@활동정산표시.Kind(share.Contribution.Kind).Replace(" 기본보수", " 활동")</h3>
+                        <p>완료량 @share.Contribution.Quantity.ToString("0.######") @활동정산표시.Unit(share.Contribution.UnitCode) × 합의 가중치 @share.AgreedWeight.ToString("0.######")</p>
+                        <p>성과금 배분 @활동정산표시.Money(share.AmountKrw) · 완료 근거 @share.Contribution.EvidenceReferences.Count 건</p>
+                    </article> }
+                </details> }
+                @if (preview.FractionalPoolRemainderKrw is > 0)
+                { <p>1원 미만 잔액 @preview.FractionalPoolRemainderKrw.Value.ToString("0.########") 원 · 배분액에서 분리하여 보존합니다.</p> }
+            }
+            else
+            {
+                <p>성과금 금액 미확정 · 기본보수는 위 약정과 발생 내역에서 확인합니다.</p>
+                @foreach (var reason in preview.ReasonCodes.Select(활동정산표시.RewardReason).Distinct()) { <p class="notice">@reason</p> }
+            }
+        }
+        else { <p class="notice">성과금 계산 근거를 확인하지 못했습니다. 최신 내역을 다시 조회해 주세요.</p> }
+    }
+    else if (Value.ActivityReward is { AlreadyAccrued: true } previous)
+    {
+        <p class="state">발생 내역에 기록된 계산</p>
+        <p>이전 약정의 발생 계산입니다. 현재 약정과 구분해 보관합니다.</p>
+        <p class="notice">연습 환경에서 기록된 계산이며 실재원·확정 이익·실제 입금을 인증하지 않습니다.</p>
+        @if (previous.Allocations.FirstOrDefault(value => value.ActorUserId == CurrentUserId) is { } mine)
+        { <dl><dt>내 성과금 발생액</dt><dd>@활동정산표시.Money(mine.AmountKrw)</dd></dl> }
+        else { <p>내 성과금 배분 항목은 확인되지 않았습니다.</p> }
+        @if (previous.PlatformRetentionRatePercent is { } previousRate)
+        { <dl><dt>당시 플랫폼 보유 비율</dt><dd>@활동정산표시.Percent(previousRate)</dd></dl> }
+        @if (previous.PlatformRetentionAmountKrw is { } previousAmount)
+        { <dl><dt>당시 플랫폼 몫</dt><dd>@활동정산표시.Money(previousAmount)</dd></dl> }
+        @if (previous.ContributionShares.Any(value => value.Contribution.ActorUserId == CurrentUserId))
+        { <details><summary>내 활동별 성과금 계산</summary>
+            @foreach (var share in previous.ContributionShares.Where(value => value.Contribution.ActorUserId == CurrentUserId))
+            { <article><h3>@활동정산표시.Kind(share.Contribution.Kind).Replace(" 기본보수", " 활동")</h3>
+                <p>완료량 @share.Contribution.Quantity.ToString("0.######") @활동정산표시.Unit(share.Contribution.UnitCode) × 당시 가중치 @share.AgreedWeight.ToString("0.######")</p>
+                <p>성과금 배분 @활동정산표시.Money(share.AmountKrw) · 완료 근거 @share.Contribution.EvidenceReferences.Count 건</p>
+            </article> }
+        </details> }
+        <p>금액 확정·지급 신고·수령 확인은 아래 내역에서 별도로 확인합니다.</p>
+    }
+    else { <p>등록된 공동 초과성과금 약정이 없습니다. 기본보수는 별도로 확인합니다.</p> }
+</section>
+@code {
+    [Parameter, EditorRequired] public NeighborhoodSettlementSummaryDto Value { get; set; } = default!;
+    [Parameter] public string? CurrentUserId { get; set; }
+}

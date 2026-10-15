@@ -1,0 +1,112 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Contracts.Common.Warehouse
+<div class="inbound-visual">
+    <section aria-label="잔여 재고 반출 합의">
+        <h2 class="inbound-section-heading"><분산입고Icon Kind="space" />잔여 재고 정리</h2>
+        <p>공간 제공자와 물품 소유자가 수량·반출 담당자·인계 조건에 각각 동의합니다. 예약하거나 운송 중인 물품은 기존 주문의 취소·반환부터 확인해 주세요.</p>
+        @if (Model.Workspace?.StockReleases.Count == 0) { <p>본인에게 연결된 반출 합의가 없습니다.</p> }
+        <label>반출 합의<select @bind="releaseId" @bind:after="SelectionChanged" disabled="@(!Model.CanEdit || Model.Photo.HasPhotos)"><option value="">합의를 선택해 주세요</option>
+            @foreach (var item in Model.Workspace?.StockReleases ?? []) { <option value="@item.ReleaseId">@item.SiteLabel · @item.ProductLabel · @ReleaseStatus(item.StatusCode)</option> }</select></label>
+        @if (Release is { } release)
+        {
+            <h3>@release.SiteLabel · @release.ProductLabel</h3>
+            <p>@ReleaseStatus(release.StatusCode) · 합의 @release.AgreedQuantity 개 · 반출 확인 @release.ReleasedQuantity 개</p>
+            <p>다음 담당 · @release.NextActorLabel</p><p>@release.HandoverTerms</p>
+            <p>공간 제공자 @(release.SpaceOwnerConsented ? "동의" : "미동의") · 물품 소유자 @(release.GoodsOwnerConsented ? "동의" : "미동의")</p>
+            @if (Model.Allows("consent-stock-release", release.AllowedActions))
+            {
+                <label class="check"><input type="checkbox" @bind="consentConfirmed" disabled="@(!Model.CanEdit)" />본인의 인계 조건·담당자·수량을 확인했습니다</label>
+                <button class="primary" type="button" disabled="@(!consentConfirmed || !Model.CanEdit)" @onclick="() => Consent(false)">@(MyConsent(release) ? "내 동의 철회" : "반출 조건에 동의")</button>
+                <button type="button" disabled="@(!consentConfirmed || !Model.CanEdit)" @onclick="() => Consent(true)">남은 반출 협의 취소</button>
+            }
+            @if (Model.Allows("handover-stock-release", release.AllowedActions))
+            {
+                <p>@release.PickupInstructions</p>
+                <label>현장 적재대 바코드<input @bind="barcode" disabled="@Model.PhotoInputsLocked" autocomplete="off" /></label>
+                <label>이번에 실제로 인계하는 수량<input type="number" min="1" max="@(release.AgreedQuantity - release.ReleasedQuantity)" @bind="quantity" disabled="@Model.PhotoInputsLocked" /></label>
+                <label class="check"><input type="checkbox" @bind="handoverConfirmed" disabled="@Model.PhotoInputsLocked" />인계 조건에 따라 실제 물품과 수량을 확인했습니다</label>
+                <분산사진업무Screen Model="Model" Work="HandoverWork" Title="잔여 물품 인계" Action="handover-stock-release"
+                    Suffix="@($"sites/{분산이행Client.Segment(release.SiteId)}/stock-release-handovers")" AllowedActions="release.AllowedActions" Quantity="quantity" Confirmed="handoverConfirmed" />
+            }
+        }
+    </section>
+    @if (Model.Workspace?.StockReleaseCandidates is { Count: > 0 } candidates)
+    {
+        <section aria-label="새 반출 조건 제안"><h2>반출 조건 제안</h2>
+            <label>내가 협의할 물품<select @bind="candidateId" @bind:after="SelectionChanged" disabled="@(!Model.CanEdit)"><option value="">물품을 선택해 주세요</option>
+                @foreach (var item in candidates) { <option value="@item.LotId">@item.SiteLabel · @item.ProductLabel · 가용 @item.AvailableQuantity 개</option> }</select></label>
+            @if (Candidate is { } candidate)
+            {
+                <label>반출 담당자<select @bind="assigneeId" disabled="@(!Model.CanEdit)"><option value="">담당자를 선택해 주세요</option>
+                    @foreach (var person in candidate.AssigneeCandidates) { <option value="@person.UserId">@person.Label</option> }</select></label>
+                <label>합의할 수량<input type="number" min="1" max="@candidate.AvailableQuantity" @bind="proposalQuantity" disabled="@(!Model.CanEdit)" /></label>
+                <label>인계 조건<textarea @bind="terms" disabled="@(!Model.CanEdit)" placeholder="누구에게 어떻게 인계할지 확인한 조건"></textarea></label>
+                <label>반출 사유<textarea @bind="reason" disabled="@(!Model.CanEdit)"></textarea></label>
+                <label class="check"><input type="checkbox" @bind="proposalConfirmed" disabled="@(!Model.CanEdit)" />실제 소유 관계와 제안 내용을 확인했습니다</label>
+                <button class="primary" type="button" disabled="@(!Model.CanEdit || !proposalConfirmed)" @onclick="Propose">반출 조건 보내기</button>
+            }
+        </section>
+    }
+    @if (CloseSites.Count > 0)
+    {
+        <section aria-label="보관 공간 사용 종료"><h2>보관 공간 사용 종료</h2>
+            <label>종료할 공간<select @bind="closeSiteId" @bind:after="SelectionChanged" disabled="@(!Model.CanEdit)"><option value="">공간을 선택해 주세요</option>
+                @foreach (var candidate in CloseSites) { <option value="@candidate.SiteId">@candidate.PublicLabel</option> }</select></label>
+        @if (CloseSiteSelection is { } site)
+        {
+            <h3>@site.PublicLabel 사용 종료</h3>
+            <p>반출 합의를 마쳐도 공간 사용이 자동으로 종료되지는 않습니다. 남은 재고·예약·불량 물품·기사 보관량을 다시 확인합니다.</p>
+            <label>정리 확인 근거<input @bind="closeEvidence" disabled="@(!Model.CanEdit)" /></label>
+            <label class="check"><input type="checkbox" @bind="closeConfirmed" disabled="@(!Model.CanEdit)" />현장에 남은 물품과 보관 중인 물품이 없음을 확인했습니다</label>
+            <button type="button" disabled="@(!Model.CanEdit || !closeConfirmed || string.IsNullOrWhiteSpace(closeEvidence))" @onclick="() => CloseSite(site)">재고·보관량 확인 후 공간 사용 종료</button>
+        }
+        </section>
+    }
+</div>
+@code {
+    [Parameter, EditorRequired] public 분산이행PageViewModel Model { get; set; } = default!;
+    private string releaseId = "", candidateId = "", assigneeId = "", barcode = "", terms = "", reason = "", closeEvidence = "", closeSiteId = "";
+    private string? context;
+    private int quantity = 1, proposalQuantity = 1;
+    private bool consentConfirmed, handoverConfirmed, proposalConfirmed, closeConfirmed;
+    private DistributedStockReleaseDto? Release => Model.Workspace?.StockReleases.SingleOrDefault(x => x.ReleaseId == releaseId);
+    private DistributedStockReleaseCandidateDto? Candidate => Model.Workspace?.StockReleaseCandidates.SingleOrDefault(x => x.LotId == candidateId);
+    private IReadOnlyList<DistributedSiteDto> CloseSites => (Model.Workspace?.Sites ?? []).Where(x => x.AllowedActions.Contains("close-site")).ToArray();
+    private DistributedSiteDto? CloseSiteSelection => CloseSites.SingleOrDefault(x => x.SiteId == closeSiteId);
+    protected override void OnParametersSet()
+    {
+        var next = $"{Model.CurrentUserId}|{releaseId}|{Release?.SiteRevision}|{candidateId}|{Candidate?.SiteRevision}|{closeSiteId}|{CloseSiteSelection?.Revision}";
+        if (context == next) return;
+        context = next; consentConfirmed = handoverConfirmed = proposalConfirmed = closeConfirmed = false;
+        if (!Model.PhotoInputsLocked) { barcode = ""; quantity = 1; }
+    }
+    private void SelectionChanged()
+    {
+        consentConfirmed = handoverConfirmed = proposalConfirmed = closeConfirmed = false;
+        assigneeId = terms = reason = closeEvidence = ""; proposalQuantity = 1;
+        if (!Model.PhotoInputsLocked) { barcode = ""; quantity = 1; }
+    }
+    private bool MyConsent(DistributedStockReleaseDto release) => Model.CurrentUserId == release.SpaceOwnerUserId ? release.SpaceOwnerConsented : release.GoodsOwnerConsented;
+    private Task Consent(bool cancel) => Release is { } r ? Model.ExecuteAsync(cancel ? "cancel-stock-release" : "consent-stock-release",
+        $"sites/{분산이행Client.Segment(r.SiteId)}/stock-release-consents", new DistributedStockReleaseConsentRequest
+        { ExpectedRevision = r.SiteRevision, ReleaseId = r.ReleaseId, Granted = !cancel && !MyConsent(r), CancelRemaining = cancel },
+        r.SiteId, r.AllowedActions, consentConfirmed) : Task.CompletedTask;
+    private Task Propose()
+    {
+        if (Candidate is not { } c || proposalQuantity <= 0 || proposalQuantity > c.AvailableQuantity
+            || !c.AssigneeCandidates.Any(x => x.UserId == assigneeId) || string.IsNullOrWhiteSpace(terms) || string.IsNullOrWhiteSpace(reason))
+            return Model.InvalidInputAsync("실제 물품·수량·담당자와 인계 조건을 확인해 주세요.");
+        return Model.ExecuteAsync("propose-stock-release", $"sites/{분산이행Client.Segment(c.SiteId)}/stock-releases",
+            new DistributedStockReleaseProposalRequest { ExpectedRevision = c.SiteRevision, LotId = c.LotId, AssignedUserId = assigneeId,
+                Quantity = proposalQuantity, HandoverTerms = terms, Reason = reason }, c.SiteId, ["propose-stock-release"], proposalConfirmed);
+    }
+    private DistributedEvidenceWorkRequest? HandoverWork => Release is { } r && quantity > 0
+        && quantity <= r.AgreedQuantity - r.ReleasedQuantity && !string.IsNullOrWhiteSpace(barcode)
+        ? new() { Kind = "StockRelease", AggregateId = r.SiteId, StockRelease = new() { ExpectedRevision = r.SiteRevision,
+            ReleaseId = r.ReleaseId, LocationBarcode = barcode.Trim(), Quantity = quantity } } : null;
+    private Task CloseSite(DistributedSiteDto site) => Model.ExecuteAsync("close-site", $"sites/{분산이행Client.Segment(site.SiteId)}/close",
+        new DistributedSiteCloseRequest { ExpectedRevision = site.Revision, NoRemainingCustodyConfirmed = closeConfirmed, EvidenceReference = closeEvidence },
+        site.SiteId, site.AllowedActions, closeConfirmed);
+    private static string ReleaseStatus(string state) => state switch
+    { "AwaitingConsent" => "양측 동의 대기", "Confirmed" => "반출 준비", "PartiallyReleased" => "일부 반출 확인", "Completed" => "인계 확인", "Cancelled" => "남은 협의 취소", _ => "현재 상태 확인 필요" };
+}

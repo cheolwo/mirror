@@ -1,0 +1,5 @@
+.acceptance-policy { min-width: 0; }
+.policy-options { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; }
+.policy-options h3, .policy-options small { flex-basis: 100%; }
+.policy-options label.check { margin: 0; padding: 8px 12px; border: 1px solid var(--role-border, #DCE5E9); border-radius: 12px; background: var(--role-surface, #FFFFFF); }
+.acceptance-policy dl { overflow-wrap: anywhere; }

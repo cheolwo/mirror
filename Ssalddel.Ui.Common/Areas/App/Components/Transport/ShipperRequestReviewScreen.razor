@@ -18,6 +18,8 @@
     <운송의뢰작성요약Panel ViewModel="ViewModel" />
     <운송의뢰검증Panel ViewModel="ViewModel" NavigationContext="NavigationContext" />
 
+    @BeforeSubmission
+
     <MudPaper Elevation="0" Outlined="true" Class="pa-4">
         <MudStack Spacing="2">
             <MudStack Spacing="0">
@@ -93,9 +95,12 @@
     [Parameter] public EventCallback ResetRequested { get; set; }
     [Parameter] public EventCallback SubmitRequested { get; set; }
     [Parameter] public EventCallback RetryRegistrationCheck { get; set; }
+    [Parameter] public RenderFragment? BeforeSubmission { get; set; }
+    [Parameter] public bool SubmissionPrerequisiteSatisfied { get; set; } = true;
 
     private bool CanSubmit
         => RegistrationEnabled == true
+           && SubmissionPrerequisiteSatisfied
            && ViewModel.서버등록가능
            && !IsBusy
            && SubmitRequested.HasDelegate;

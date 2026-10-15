@@ -14,9 +14,6 @@ public sealed partial class 분산이행PageViewModel : IDisposable
     private long generation;
     private bool disposed;
     private PendingCommand? pending;
-    private PhotoOperation? photoOperation;
-    private DistributedRootOrderCandidatesDto? rootOrderCandidates;
-    private long rootOrderGeneration;
     public 분산이행PageViewModel(분산이행Client client, string screen, I업무사진촬영Adapter? capture = null, IWorkflowRecoveryStore? recoveryStore = null)
     {
         if (!분산이행Navigation.AllowsScreen(client.RoleKey, screen))
@@ -33,9 +30,6 @@ public sealed partial class 분산이행PageViewModel : IDisposable
     public string? Error { get; private set; }
     public string? Message { get; private set; }
     public string? ValidationError { get; private set; }
-    public 분산사진업무Session Photo { get; }
-    public bool HasPendingPhoto => (Photo.UploadStarted || Photo.Restored) && Photo.Work is not null && !HasPendingCommand;
-    public bool PhotoInputsLocked => Photo.UploadStarted || Photo.Restored || HasPendingCommand || RecoveryExpired || IsBusy;
     public DistributedWorkspaceDto? Workspace { get; private set; }
     public DistributedWaveDto? SelectedWave { get; private set; }
     public string? SelectedId { get; private set; }
@@ -45,59 +39,6 @@ public sealed partial class 분산이행PageViewModel : IDisposable
     public bool HasPendingCommand => pending is not null;
     public Guid? RequestId => pending?.Body.RequestId ?? expiredRecoveryId;
     public bool CanEdit => IsLoaded && !IsBusy && !RequiresLogin && !HasPendingCommand && !RecoveryExpired && !Photo.HasUnresolvedUpload && !Photo.Restored && Error is null;
-    public bool IsLoadingRootOrders { get; private set; }
-    public string? RootOrdersError { get; private set; }
-    public string? SelectedRootOrderId { get; private set; }
-    public IReadOnlyList<DistributedRootOrderCandidateDto> RootOrderCandidates => rootOrderCandidates?.Candidates ?? [];
-    public bool RootOrdersLoaded => owner == client.Transport.Identity(RoleKey) && rootOrderCandidates is { } snapshot && snapshot.CurrentUserId == CurrentUserId
-        && snapshot.WaveId == SelectedWave?.WaveId && snapshot.WaveRevision == SelectedWave.Revision;
-    public bool HasSelectedRootOrder => RootOrdersLoaded && SelectedRootOrderId is { } id
-        && RootOrderCandidates.Any(candidate => candidate.RootOrderLedgerId == id);
-
-    public void ClearRootOrderCandidates()
-    {
-        ++rootOrderGeneration; rootOrderCandidates = null; SelectedRootOrderId = null;
-        RootOrdersError = null; IsLoadingRootOrders = false;
-    }
-    public void SelectRootOrder(string? id)
-    {
-        SelectedRootOrderId = RootOrdersLoaded && RootOrderCandidates.Any(candidate => candidate.RootOrderLedgerId == id) ? id : null;
-        Changed?.Invoke();
-    }
-    public async Task LoadRootOrderCandidatesAsync(string cargoId)
-    {
-        if (RoleKey != "shipper" || Screen != "orders" || !CanEdit || SelectedWave is not { } wave
-            || !Allows("add-order", wave.AllowedActions) || Workspace?.CargoCandidates.Any(cargo => cargo.CargoRequestId == cargoId) != true) return;
-        ClearRootOrderCandidates(); var mine = rootOrderGeneration; var ct = lifetime.Token;
-        IsLoadingRootOrders = true; Changed?.Invoke();
-        bool Current() => !disposed && mine == rootOrderGeneration && !ct.IsCancellationRequested
-            && owner == client.Transport.Identity(RoleKey) && SelectedWave?.WaveId == wave.WaveId && SelectedWave.Revision == wave.Revision;
-        try
-        {
-            var snapshot = await client.RootOrderCandidatesAsync(wave.WaveId, cargoId, ct);
-            if (!Current()) return;
-            if (snapshot.CurrentUserId != CurrentUserId || snapshot.WaveId != wave.WaveId || snapshot.WaveRevision != wave.Revision
-                || snapshot.CargoRequestId != cargoId || snapshot.Candidates is null
-                || snapshot.Candidates.Count > 200 || snapshot.Candidates.Select(candidate => candidate.RootOrderLedgerId).Distinct().Count() != snapshot.Candidates.Count
-                || snapshot.Candidates.Any(candidate => CleanId(candidate.RootOrderLedgerId) is null || candidate.Revision < 0
-                    || string.IsNullOrWhiteSpace(candidate.Label) || candidate.StatusCode is not ("초안" or "진행중")))
-                throw new InvalidOperationException("원주문의 현재 당사자와 선택 조건을 확인하지 못했습니다.");
-            rootOrderCandidates = snapshot;
-        }
-        catch (Exception) when (!Current()) { }
-        catch (Exception ex) when (Current())
-        {
-            var status = ex switch { RoleWorkspaceAccessException role => role.StatusCode, SsalddelApiException api => api.StatusCode, _ => 0 };
-            if (status == 401)
-            {
-                AuthenticationChanged(); RequiresLogin = true; Error = "로그인한 뒤 업무를 다시 확인해 주세요.";
-                Changed?.Invoke(); return;
-            }
-            RootOrdersError = status == 409 ? "주문이나 배송 조건이 바뀌었습니다. 최신 업무를 다시 조회한 뒤 원주문을 확인해 주세요."
-                : "연결할 원주문을 확인하지 못했습니다. 다시 조회해 주세요.";
-        }
-        finally { if (Current()) { IsLoadingRootOrders = false; Changed?.Invoke(); } }
-    }
     public string? CurrentUserId => owner?.OwnerId;
     public DistributedStopDto? CurrentStop => SelectedWave?.Stops.SingleOrDefault(value => value.StopId == SelectedWave.CurrentStopId);
     public IReadOnlyList<DistributedReservationDto> CurrentPickLines => SelectedWave is { } wave && CurrentStop is { Kind: DistributedFulfillmentCodes.Pickup } stop
@@ -114,24 +55,6 @@ public sealed partial class 분산이행PageViewModel : IDisposable
            && wave.Reservations.Any(line => line.OrderId == order.OrderId)
            && wave.Reservations.Where(line => line.OrderId == order.OrderId).All(line => line.PickedQuantity == line.Quantity && line.ReturnedQuantity == 0 && line.ReleasedQuantity == 0)
            && CurrentDeliveryOrders.Any(value => value.OrderId == order.OrderId);
-    public bool CanAcknowledge(DistributedOrderDto order)
-        => RoleKey == "orderer" && order.IsCurrentCustomer && Allows("acknowledge", order.AllowedActions);
-    public bool CanCancel(DistributedOrderDto order)
-        => (RoleKey is "shipper" or "orderer" or "warehouse" or "operator")
-           && (RoleKey != "orderer" || order.IsCurrentCustomer) && Allows("cancel", order.AllowedActions);
-    public bool CanRetryOrderLedger(DistributedOrderDto order)
-        => (RoleKey is "orderer" or "shipper") && (RoleKey != "orderer" || order.IsCurrentCustomer)
-           && order.OrderLedgerConnectionStatusCode == "Pending" && !string.IsNullOrWhiteSpace(order.RootOrderLedgerId)
-           && order.RootOrderLedgerRevision.HasValue && Allows("retry-order-ledger", order.AllowedActions);
-    public Task RetryOrderLedgerAsync(string orderId)
-    {
-        var order = SelectedWave?.Orders.SingleOrDefault(x => x.OrderId == orderId);
-        if (order is null || !CanRetryOrderLedger(order)) return Task.CompletedTask;
-        return ExecuteAsync("retry-order-ledger", $"waves/{분산이행Client.Segment(SelectedWave!.WaveId)}/orders/{분산이행Client.Segment(orderId)}/ledger",
-            new DistributedOrderLedgerLinkRequest { ExpectedRevision = SelectedWave.Revision,
-                RootOrderLedgerId = order.RootOrderLedgerId!, ExpectedRootRevision = order.RootOrderLedgerRevision!.Value },
-            SelectedWave.WaveId, order.AllowedActions, true);
-    }
     public bool CanManageWaves => (RoleKey is "warehouse" or "operator") && IsLoaded
         && ((Workspace?.AllowedActions.Contains("create-wave") ?? false)
             || (Workspace?.Waves.Any(wave => wave.AllowedActions.Any(action => action is "close" or "plan")) ?? false));
@@ -147,42 +70,6 @@ public sealed partial class 분산이행PageViewModel : IDisposable
         return ExecuteAsync("accept", $"waves/{분산이행Client.Segment(wave.WaveId)}/accept",
             new DistributedRoundAcceptRequest { ExpectedRevision = wave.Revision, AcknowledgedWarningCodes = acknowledgedCodes.Distinct(StringComparer.Ordinal).ToArray() },
             wave.WaveId, wave.AllowedActions, true);
-    }
-
-    public Task AddOrderAsync(string cargoId, string reference, IReadOnlyList<DistributedOrderLineRequest> lines, bool confirmed, bool connectRootOrder = false)
-    {
-        var wave = SelectedWave;
-        if (!confirmed || RoleKey != "shipper" || wave is null || !Allows("add-order", wave.AllowedActions)) return Task.CompletedTask;
-        var root = connectRootOrder && HasSelectedRootOrder && rootOrderCandidates?.CargoRequestId == cargoId
-            ? RootOrderCandidates.Single(candidate => candidate.RootOrderLedgerId == SelectedRootOrderId) : null;
-        if (connectRootOrder && (IsLoadingRootOrders || root is null))
-            return InvalidInputAsync("현재 화물 의뢰의 원주문을 다시 조회하고 목록에서 선택해 주세요.");
-        if (string.IsNullOrWhiteSpace(reference) || Workspace?.CargoCandidates.Any(cargo => cargo.CargoRequestId == cargoId) != true
-            || lines.Count == 0 || lines.Any(line => line.Quantity < 1) || lines.Any(line => line.ExistingOutboundPlanId.HasValue) && lines.Any(line => !line.ExistingOutboundPlanId.HasValue))
-            return InvalidInputAsync("조회한 내 의뢰와 상품을 선택하고 새 예약 또는 기존 예약 편입 중 한 방식으로 확인해 주세요.");
-        if (lines.All(line => line.ExistingOutboundPlanId.HasValue))
-        {
-            if (lines.Select(line => line.ExistingOutboundPlanId).Distinct().Count() != lines.Count || lines.Any(line =>
-                Workspace.ExistingOutboundCandidates.SingleOrDefault(candidate => candidate.ExistingOutboundPlanId == line.ExistingOutboundPlanId) is not { } candidate
-                || candidate.CargoRequestId != cargoId || candidate.LotId != line.LotId || candidate.Quantity != line.Quantity || candidate.SellerUserId != CurrentUserId))
-                return InvalidInputAsync("같은 내 화물 의뢰의 조회한 기존 예약을 원래 수량 그대로 선택해 주세요.");
-        }
-        else if (lines.GroupBy(line => line.LotId).Any(group =>
-            Workspace.Lots.SingleOrDefault(lot => lot.LotId == group.Key) is not { } lot || lot.SellerUserId != CurrentUserId || group.Sum(line => (long)line.Quantity) > lot.AvailableQuantity))
-            return InvalidInputAsync("조회한 본인 판매 재고의 가용 수량 안에서 새 예약을 입력해 주세요.");
-        return ExecuteAsync("add-order", $"waves/{분산이행Client.Segment(wave.WaveId)}/orders", new DistributedOrderRequest
-            { ExpectedRevision = wave.Revision, OrderReference = reference.Trim(), CargoRequestId = cargoId, Lines = lines.ToArray(),
-                RootOrderLedgerId = root?.RootOrderLedgerId, ExpectedRootRevision = root?.Revision }, wave.WaveId, wave.AllowedActions, true);
-    }
-
-    public Task CancelAsync(string orderId, string reason, bool confirmed)
-    {
-        var order = SelectedWave?.Orders.SingleOrDefault(value => value.OrderId == orderId);
-        if (!confirmed || order is null || !CanCancel(order)) return Task.CompletedTask;
-        if (string.IsNullOrWhiteSpace(reason)) return InvalidInputAsync("선택한 주문의 취소 사유를 입력해 주세요.");
-        return ExecuteAsync("cancel", $"waves/{분산이행Client.Segment(SelectedWave!.WaveId)}/cancel",
-            new DistributedCancelRequest { ExpectedRevision = SelectedWave.Revision, OrderId = order.OrderId, Reason = reason.Trim() },
-            SelectedWave.WaveId, order.AllowedActions, true);
     }
 
     public Task LoadAsync(string? selectedId = null)
@@ -255,7 +142,7 @@ public sealed partial class 분산이행PageViewModel : IDisposable
         int? quantity = null, string? reservationId = null)
     {
         if (!confirmed || !Allows(action, allowedActions)) return Task.CompletedTask;
-        if (action is "receive" or "pick" or "deliver" or "return" or "import-lot")
+        if (action is "receive" or "pick" or "deliver" or "return" or "import-lot" or "handover-stock-release")
             return InvalidInputAsync("완료 사진을 촬영하고 사진 보내기 절차로 완료해 주세요.");
         if ((action is "create-wave" or "close" or "plan") && !CanManageWaves) return Task.CompletedTask;
         if ((action is "pick" or "deliver" or "accept") && RoleKey != "cargo-driver") return Task.CompletedTask;
@@ -269,105 +156,6 @@ public sealed partial class 분산이행PageViewModel : IDisposable
     }
     public Task InvalidInputAsync(string message)
     { ValidationError = message; Changed?.Invoke(); return Task.CompletedTask; }
-    public void ClearPhotos()
-    { if (HasPendingCommand || Photo.HasUnresolvedUpload) return; Photo.Clear(); photoOperation = null; }
-    public void RemovePhoto(int index)
-    { if (!PhotoInputsLocked) { Photo.Remove(index); Changed?.Invoke(); } }
-    public Task CapturePhotoAsync(DistributedEvidenceWorkRequest work, string title, string action, string suffix,
-        IReadOnlyList<string> allowedActions, int? quantity = null)
-    {
-        if (!Allows(action, allowedActions) || PhotoInputsLocked) return Task.CompletedTask;
-        if (!ValidPhotoWork(work, action)) { ClearPhotos(); return InvalidInputAsync("현재 업무의 위치·상품·남은 수량을 다시 확인해 주세요."); }
-        if (!Photo.Bind(work, title)) return InvalidInputAsync("먼저 원래 사진 전송과 완료 요청의 결과를 확인해 주세요.");
-        photoOperation = new(action, suffix, quantity);
-        return RunAsync(async ct =>
-        {
-            try
-            {
-                var captured = await Photo.CaptureAsync(ct); RequireCurrent(ct);
-                Message = captured ? "사진을 확인한 뒤 보내고 완료해 주세요." : "사진 촬영이 취소되었습니다.";
-            }
-            catch (Exception ex) when (ex is NotSupportedException or InvalidOperationException)
-            { RequireCurrent(ct); ValidationError = ex.Message; }
-        });
-    }
-    private bool ValidPhotoWork(DistributedEvidenceWorkRequest work, string action)
-    {
-        if (분산사진업무Session.Body(work) is not { } body || body.RequestId != Guid.Empty) return false;
-        if (work.Kind == "Receive" && action == "receive" && work.Receive is { } receive && SelectedInbound is { } inbound && work.AggregateId == inbound.PlanId && body.ExpectedRevision == inbound.Revision)
-        {
-            var rows = receive.Lines.Select(line => (Input: line, Row: inbound.Lines.SingleOrDefault(row => row.LineKey == line.LineKey))).ToArray();
-            return rows.Length > 0 && rows.Select(item => item.Input.LineKey).Distinct().Count() == rows.Length && rows.All(item => item.Row is { } row && item.Input.Sku == row.Sku && item.Input.Quantity > 0 && item.Input.Quantity <= row.ExpectedQuantity - row.ReceivedQuantity)
-                && rows.Select(item => (item.Row!.LocationId, item.Row.OwnerUserId)).Distinct().Count() == 1 && LocationBarcode(rows[0].Row!.LocationId) == receive.LocationBarcode;
-        }
-        if (work.Kind == "Pick" && action == "pick" && RoleKey == "cargo-driver" && work.Pick is { } pick && SelectedWave is { } wave && work.AggregateId == wave.WaveId && body.ExpectedRevision == wave.Revision && pick.StopId == CurrentStop?.StopId)
-        {
-            var rows = pick.Lines.Select(line => (Input: line, Row: CurrentPickLines.SingleOrDefault(row => row.ReservationId == line.ReservationId))).ToArray();
-            return rows.Length > 0 && rows.Select(item => item.Input.ReservationId).Distinct().Count() == rows.Length && rows.All(item => item.Row is { } row && CanPick(row) && item.Input.OwnerUserId == row.OwnerUserId && item.Input.Sku == row.Sku && item.Input.Quantity > 0 && item.Input.Quantity <= row.Quantity - row.PickedQuantity - row.ReleasedQuantity)
-                && rows.Select(item => (item.Row!.LocationId, item.Row.OwnerUserId)).Distinct().Count() == 1 && LocationBarcode(rows[0].Row!.LocationId) == pick.LocationBarcode;
-        }
-        if (work.Kind == "Deliver" && action == "deliver" && RoleKey == "cargo-driver" && work.Deliver is { } delivery && SelectedWave is { } deliveryWave && work.AggregateId == deliveryWave.WaveId && body.ExpectedRevision == deliveryWave.Revision && delivery.StopId == CurrentStop?.StopId)
-            return ValidReservationLines(delivery.Lines, deliveryWave, line => CurrentDeliveryOrders.Any(order => order.OrderId == line.OrderId && CanDeliver(order)) && line.AllowedActions.Contains("deliver"));
-        if (work.Kind == "Return" && action == "return" && work.Return is { } returned && SelectedWave is { } returnWave && work.AggregateId == returnWave.WaveId && body.ExpectedRevision == returnWave.Revision)
-        {
-            if (!ValidReservationLines(returned.Lines, returnWave, line => line.AllowedActions.Contains("return"))) return false;
-            var rows = returned.Lines.Select(line => returnWave.Reservations.Single(row => row.ReservationId == line.ReservationId)).ToArray();
-            return rows.Select(row => (row.LocationId, row.OwnerUserId)).Distinct().Count() == 1 && LocationBarcode(rows[0].LocationId) == returned.LocationBarcode;
-        }
-        if (work.Kind == "ImportLot" && action == "import-lot" && work.ImportLot is { } import && Workspace?.Sites.SingleOrDefault(site => site.SiteId == work.AggregateId) is { } importSite && body.ExpectedRevision == importSite.Revision)
-            return import.ActualLocationConfirmed && !string.IsNullOrWhiteSpace(import.LotCode) && importSite.Locations.Any(location => location.LocationId == import.LocationId && location.Barcode == import.LocationBarcode)
-                && Workspace.ExistingStockCandidates.Any(stock => stock.InboundItemId == import.InboundItemId && stock.SiteId == importSite.SiteId && (RoleKey != "shipper" || stock.SellerUserId == CurrentUserId));
-        return false;
-    }
-    private static bool ValidReservationLines(IReadOnlyList<DistributedDeliveryLineRequest> lines, DistributedWaveDto wave, Func<DistributedReservationDto, bool> allowed)
-        => lines.Count > 0 && lines.Select(line => line.ReservationId).Distinct().Count() == lines.Count && lines.All(line => wave.Reservations.SingleOrDefault(row => row.ReservationId == line.ReservationId) is { } row && allowed(row) && line.Quantity > 0 && line.Quantity <= row.PickedQuantity - row.DeliveredQuantity - row.ReturnedQuantity);
-    private string? LocationBarcode(string id) => Workspace?.Sites.SelectMany(site => site.Locations).SingleOrDefault(location => location.LocationId == id)?.Barcode;
-    public Task CompletePhotoAsync(bool confirmed)
-    {
-        if (!confirmed || !CanEdit || photoOperation is null || Photo.Work is null) return Task.CompletedTask;
-        if (!Photo.HasPhotos) return InvalidInputAsync("완료 사진을 먼저 촬영하고 확인해 주세요.");
-        return RunAsync(UploadAndCompleteAsync);
-    }
-    public Task RetryPhotoAsync() => !HasPendingPhoto ? Task.CompletedTask : RunAsync(async ct =>
-    {
-        if (Photo.CompletionRequestId is { } id)
-        {
-            var receipt = await TryReceiptAsync(id, ct); RequireCurrent(ct);
-            if (receipt is not null) { await FinishRecoveredReceiptAsync(receipt, ct); return; }
-        }
-        if (Photo.Restored)
-        {
-            await Photo.RecoverUploadsAsync(client, ct, () => RequireCurrent(ct)); RequireCurrent(ct);
-            if (Photo.NeedsRecapture)
-            { await RefreshAsync(ct); Message = "저장되지 않은 사진의 원본은 보관하지 않았습니다. 사진 작업을 닫고 현재 업무에서 다시 촬영해 주세요."; return; }
-        }
-        await UploadAndCompleteAsync(ct);
-    });
-    public Task CancelPhotoWorkAsync()
-    {
-        if (IsBusy || HasPendingCommand) return Task.CompletedTask;
-        return RunAsync(async ct =>
-        {
-            if (Photo.CompletionRequestId is { } id)
-            {
-                var receipt = await TryReceiptAsync(id, ct); RequireCurrent(ct);
-                if (receipt is not null) { await FinishRecoveredReceiptAsync(receipt, ct); return; }
-                await recoveryStore.RemoveAsync(owner!.OwnerId!, RecoveryScope, id, ct); RequireCurrent(ct);
-            }
-            Photo.Clear(); photoOperation = null; recoveryCreatedAtUtc = null; await RefreshAsync(ct);
-            Message = "완료 기록이 없는 사진 작업을 닫았습니다. 현재 위치·수량을 확인하고 다시 촬영해 주세요.";
-        });
-    }
-    private async Task UploadAndCompleteAsync(CancellationToken ct)
-    {
-        var operation = photoOperation ?? throw new InvalidOperationException("확인할 사진 업무가 없습니다.");
-        await Photo.UploadAsync(client, ct, () => RequireCurrent(ct), () => PersistRecoveryAsync(ct)); RequireCurrent(ct);
-        var body = Photo.CompletionBody();
-        var snapshot = (DistributedCommandRequest)JsonSerializer.Deserialize(JsonSerializer.Serialize(body, body.GetType()), body.GetType())!;
-        pending = new(operation.Action == "import-lot" ? operation.Action : operation.Action + "-batch", operation.Suffix, snapshot,
-            Photo.Work!.AggregateId, operation.Quantity, null);
-        await SendPendingAsync(ct);
-    }
     public Task PickAsync(string reservationId, string locationBarcode, string sku, int quantity, string evidence, bool confirmed)
     {
         var line = CurrentPickLines.SingleOrDefault(item => item.ReservationId == reservationId);
@@ -390,15 +178,6 @@ public sealed partial class 분산이행PageViewModel : IDisposable
         return ExecuteAsync("deliver", $"waves/{분산이행Client.Segment(SelectedWave!.WaveId)}/deliveries",
             new DistributedDeliveryRequest { ExpectedRevision = SelectedWave.Revision, StopId = CurrentStop!.StopId,
                 OrderId = order.OrderId, EvidenceReference = evidence.Trim() }, SelectedWave.WaveId, SelectedWave.AllowedActions, true);
-    }
-    public Task AcknowledgeAsync(string orderId, string evidence, bool confirmed)
-    {
-        var order = SelectedWave?.Orders.SingleOrDefault(item => item.OrderId == orderId);
-        if (!confirmed || order is null || !CanAcknowledge(order)) return Task.CompletedTask;
-        if (string.IsNullOrWhiteSpace(evidence)) return InvalidInputAsync("본인이 물품을 수령한 확인 근거를 입력해 주세요.");
-        return ExecuteAsync("acknowledge", $"waves/{분산이행Client.Segment(SelectedWave!.WaveId)}/acknowledgements",
-            new DistributedAcknowledgementRequest { ExpectedRevision = SelectedWave.Revision, OrderId = order.OrderId,
-                EvidenceReference = evidence.Trim() }, SelectedWave.WaveId, order.AllowedActions, true);
     }
     public Task RetryPendingAsync() => HasPendingCommand ? RunAsync(SendPendingAsync) : Task.CompletedTask;
     private async Task SendPendingAsync(CancellationToken ct)
@@ -467,6 +246,8 @@ public sealed partial class 분산이행PageViewModel : IDisposable
     }
     private long? FindRevision(string id)
         => Workspace?.Sites.FirstOrDefault(value => value.SiteId == id)?.Revision
+           ?? Workspace?.StockReleases.FirstOrDefault(value => value.SiteId == id)?.SiteRevision
+           ?? Workspace?.StockReleaseCandidates.FirstOrDefault(value => value.SiteId == id)?.SiteRevision
            ?? Workspace?.InboundPlans.FirstOrDefault(value => value.PlanId == id)?.Revision
            ?? Workspace?.Waves.FirstOrDefault(value => value.WaveId == id)?.Revision
            ?? Workspace?.StorageAgreements.FirstOrDefault(value => value.AgreementId == id)?.Revision;
@@ -475,9 +256,13 @@ public sealed partial class 분산이행PageViewModel : IDisposable
       "create-location" => "CreateLocation", "import-lot" => "ImportLot", "plan-inbound" => "PlanInbound", "receive" => "Receive",
       "create-wave" => "CreateWave", "add-order" => "AddOrder", "close" => "Close", "plan" => "Plan", "accept" => "Accept",
       "retry-order-ledger" => "LinkOrderLedger",
+      "propose-stock-release" => "StockReleaseProposal", "consent-stock-release" or "cancel-stock-release" => "StockReleaseConsent",
+      "handover-stock-release" => "StockReleaseHandover", "close-site" => "CloseSite",
       "pick" => "Pick", "deliver" => "Deliver", "cancel" => "Cancel", "return" => "Return", "acknowledge" => "Acknowledge",
       "receive-batch" => "ReceiveBatch", "pick-batch" => "PickBatch", "deliver-batch" => "DeliverBatch", "return-batch" => "ReturnBatch",
-      "create-agreement" => "CreateAgreement", "change-terms" => "AgreementTerms", "consent" or "revoke" => "AgreementConsent", _ => "" };
+      "create-agreement" => "CreateAgreement", "change-terms" => "AgreementTerms", "consent" or "revoke" or "consent-pending-terms" => "AgreementConsent",
+      "set-acceptance-policy" => "SiteAcceptancePolicy", "propose-inbound" => "InboundProposal", "consent-inbound" => "InboundConsent",
+      "reject-inbound" or "cancel-inbound" => "InboundDecision", "note-inbound" => "InboundNote", _ => "" };
     private async Task RunAsync(Func<CancellationToken, Task> operation)
     {
         if (disposed || IsBusy) return;
@@ -515,9 +300,10 @@ public sealed partial class 분산이행PageViewModel : IDisposable
                     if (client.Transport.Identity(RoleKey) != owner) { AuthenticationChanged(); return; }
                 }
                 Workspace = null; SelectedWave = null; IsLoaded = false;
-                Error = status == 409 ? "업무 상태가 변경되었습니다. 최신 내용을 조회한 뒤 다시 확인해 주세요."
+                var code = ex switch { RoleWorkspaceAccessException role => role.ErrorCode, SsalddelApiException api => api.ErrorCode, _ => null };
+                Error = 분산이행표시.InboundReason(code) ?? (status == 409 ? "업무 상태가 변경되었습니다. 최신 내용을 조회한 뒤 다시 확인해 주세요."
                     : HasPendingCommand ? "요청 결과를 아직 확인하지 못했습니다. 같은 요청의 결과를 확인해 주세요."
-                    : "업무를 확인하지 못했습니다. 연결과 입력을 확인한 뒤 다시 시도해 주세요.";
+                    : "업무를 확인하지 못했습니다. 연결과 입력을 확인한 뒤 다시 시도해 주세요.");
             }
         }
         finally { if (!disposed && mine == generation) { IsBusy = false; Changed?.Invoke(); } }
@@ -545,5 +331,4 @@ public sealed partial class 분산이행PageViewModel : IDisposable
     private sealed record PendingCommand(string Action, string Suffix, DistributedCommandRequest Body,
         string? AggregateId, int? Quantity, string? ReservationId)
     { public DistributedCommandResponse? Acknowledgement { get; set; } public bool Sent { get; set; } }
-    private sealed record PhotoOperation(string Action, string Suffix, int? Quantity);
 }

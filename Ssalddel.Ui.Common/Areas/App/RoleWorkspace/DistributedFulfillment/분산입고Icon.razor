@@ -1,0 +1,24 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using MudBlazor
+<span class="inbound-icon" aria-hidden="true"><MudIcon Icon="@Icon" Size="Size.Small" Color="Color.Inherit" /></span>
+@code {
+    [Parameter] public string Kind { get; set; } = "box";
+    private string Icon => Kind switch
+    {
+        "space" => Icons.Material.Outlined.HomeWork,
+        "clock" => Icons.Material.Outlined.Schedule,
+        "agreement" => Icons.Material.Outlined.Description,
+        "people" => Icons.Material.Outlined.People,
+        "check" => Icons.Material.Outlined.CheckCircle,
+        "edit" => Icons.Material.Outlined.Edit,
+        "message" => Icons.Material.Outlined.ChatBubbleOutline,
+        "history" => Icons.Material.Outlined.History,
+        "shield" => Icons.Material.Outlined.Shield,
+        "settings" => Icons.Material.Outlined.Settings,
+        "temperature" => Icons.Material.Outlined.Thermostat,
+        "ban" => Icons.Material.Outlined.Block,
+        "close" => Icons.Material.Outlined.Close,
+        "arrow" => Icons.Material.Outlined.ArrowForward,
+        _ => Icons.Material.Outlined.Inventory2
+    };
+}

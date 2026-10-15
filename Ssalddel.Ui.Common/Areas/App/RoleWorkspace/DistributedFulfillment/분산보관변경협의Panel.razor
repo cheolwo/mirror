@@ -1,0 +1,51 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Contracts.Common.Warehouse
+@if (Agreement.PendingTerms is { } terms && Agreement.PendingTermsVersion is { } version)
+{
+    <section class="inbound-visual inbound-panel" aria-label="아직 확정되지 않은 보관 변경안">
+        <div class="inbound-heading">
+            <분산입고Icon Kind="agreement" />
+            <div><span class="inbound-eyebrow">미확정 변경안</span><h2>보관 변경안 · @version 차</h2></div>
+        </div>
+        <p class="inbound-help">양측이 이 변경안에 동의하기 전까지 현재 보관 조건은 유지됩니다.</p>
+        <div class="inbound-section">
+            <h3 class="inbound-section-heading"><분산입고Icon Kind="box" />상품과 보관</h3>
+            <dl class="terms inbound-facts">
+                <div class="wide"><dt>허용 상품</dt><dd>@string.Join(" · ", terms.AllowedSkus)</dd></div>
+                <div><dt>최대 보관 수량</dt><dd>@terms.MaximumStoredQuantity 개</dd></div>
+                <div><dt>출입 시간</dt><dd>@terms.AccessHours</dd></div>
+                <div class="wide"><dt>보관 기간</dt><dd>@분산이행표시.Time(terms.StartsAtUtc) ~ @분산이행표시.Time(terms.EndsAtUtc)</dd></div>
+            </dl>
+        </div>
+        <div class="inbound-section">
+            <h3 class="inbound-section-heading"><분산입고Icon Kind="shield" />비용과 책임</h3>
+            <dl class="terms inbound-facts">
+                <div class="wide"><dt>비용·무상 조건</dt><dd>@terms.PriceOrFreeTerms</dd></div>
+                <div class="wide"><dt>관리 담당·방법</dt><dd>@terms.CustodianAndCare</dd></div>
+                <div class="wide"><dt>분실·파손·반환</dt><dd>@terms.LossDamageAndReturnTerms</dd></div>
+            </dl>
+        </div>
+        <div class="inbound-section">
+            <h3 class="inbound-section-heading"><분산입고Icon Kind="people" />당사자 동의</h3>
+            <div class="inbound-consents">
+                <div class="inbound-party" data-consented="@(Agreement.PendingSpaceOwnerConsented == true ? "true" : "false")"><span>공간 제공자</span><strong>@(Agreement.PendingSpaceOwnerConsented == true ? "동의" : "미동의")</strong></div>
+                <div class="inbound-party" data-consented="@(Agreement.PendingGoodsOwnerConsented == true ? "true" : "false")"><span>상품 소유자</span><strong>@(Agreement.PendingGoodsOwnerConsented == true ? "동의" : "미동의")</strong></div>
+            </div>
+            @if (Model.Allows("consent-pending-terms", Agreement.AllowedActions))
+            {
+                <label class="check inbound-confirm"><input type="checkbox" @bind="confirmed" disabled="@(!Model.CanEdit)" />현재 조건과 이 변경안의 차이를 확인했습니다</label>
+                <div class="inbound-actions"><button class="primary" type="button" disabled="@(!Model.CanEdit || !confirmed)" @onclick="Consent"><분산입고Icon Kind="check" />이 변경안에 동의</button></div>
+            }
+        </div>
+    </section>
+}
+@code {
+    [Parameter, EditorRequired] public 분산이행PageViewModel Model { get; set; } = default!;
+    [Parameter, EditorRequired] public DistributedStorageAgreementDto Agreement { get; set; } = default!;
+    private bool confirmed;
+    private string? version;
+    protected override void OnParametersSet() { var next = $"{Model.CurrentUserId}|{Agreement.AgreementId}|{Agreement.Revision}|{Agreement.PendingTermsVersion}"; if (version != next) { version = next; confirmed = false; } }
+    private Task Consent() => Agreement.PendingTermsVersion is { } termsVersion ? Model.ExecuteAsync("consent-pending-terms",
+        $"storage-agreements/{분산이행Client.Segment(Agreement.AgreementId)}/consents", new DistributedStorageAgreementConsentRequest
+        { ExpectedRevision = Agreement.Revision, TermsVersion = termsVersion, Granted = true }, Agreement.AgreementId, Agreement.AllowedActions, confirmed) : Task.CompletedTask;
+}

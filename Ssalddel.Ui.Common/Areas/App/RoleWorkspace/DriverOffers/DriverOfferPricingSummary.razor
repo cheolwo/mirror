@@ -1,0 +1,27 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverOffers
+@using Ssalddel.Contracts.Common.Drivers
+
+@{ var value = DriverOfferPresentation.Pricing(Pricing); }
+<section class="driver-offer-pricing" data-testid="driver-offer-pricing" aria-label="기사 제안 거리비">
+    <h3>거리비 산정</h3>
+    <p>@value.DistanceText · @value.DistanceFeeText</p>
+    @if (value.HasEvidence)
+    {
+        <p>@value.RateText</p>
+        <p>@value.ComponentsText</p>
+        <p>@value.TotalText</p>
+        <small>주행거리·픽업 접근거리와 별도입니다.</small>
+        <details><summary>산정 근거</summary><small>@value.PolicyText · @RoundingText</small></details>
+    }
+</section>
+
+@code {
+    [Parameter] public DriverOfferPricingDto? Pricing { get; set; }
+    private string RoundingText => Pricing?.RoundingCode switch
+    {
+        "ProportionalAwayFromZero" => "거리비 원 단위 반올림",
+        "Floor" => "거리 단위 절사",
+        "Ceiling" => "거리 단위 올림",
+        _ => "반올림 규칙 확인 필요"
+    };
+}

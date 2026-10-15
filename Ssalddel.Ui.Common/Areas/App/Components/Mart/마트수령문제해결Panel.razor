@@ -1,0 +1,45 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Mart
+@using System.ComponentModel
+@using Ssalddel.Ui.Common.Areas.App.Services
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+@inject ISsalddelJsonApiClient Api
+@inject ISsalddel현재사용자Context UserContext
+@inject IWorkflowRecoveryStore Recovery
+@implements IDisposable
+@{ Model?.SynchronizeOwner(); }
+
+<section class="mart-receipt-resolution" aria-label="수령 문제 해결">
+    <h3>수령 문제 해결</h3>
+    @if (Model is not null)
+    {
+        <마트수령문제해결Form Model="Model" Reload="Reload" />
+    }
+</section>
+
+@code {
+    [Parameter] public long OrderId { get; set; }
+    private 마트수령문제해결ViewModel? Model;
+    private long loadedId;
+    protected override void OnInitialized()
+    {
+        Model = new(new 마트수령문제해결Client(Api), Recovery, UserContext);
+        Model.PropertyChanged += OnChanged;
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        Model!.SynchronizeOwner();
+        if (loadedId == OrderId && Model.OrderId == OrderId || OrderId <= 0) return;
+        loadedId = OrderId; await Model!.LoadAsync(OrderId);
+    }
+    private Task Reload() => Model!.LoadAsync(OrderId);
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Model!.SynchronizeOwner();
+        if (Model.IsAuthenticated && Model.OrderId != OrderId && !Model.IsLoading && !Model.IsSending && Model.Error is null) await Reload();
+    }
+    private void OnChanged(object? sender, PropertyChangedEventArgs e) => _ = InvokeAsync(StateHasChanged);
+    public void Dispose()
+    {
+        if (Model is not null) { Model.PropertyChanged -= OnChanged; Model.Dispose(); }
+    }
+}

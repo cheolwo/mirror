@@ -20,8 +20,11 @@ public sealed partial class 분산이행PageViewModel
         typeof(DistributedRoundAcceptRequest), typeof(DistributedPickRequest), typeof(DistributedDeliveryRequest),
         typeof(DistributedCancelRequest), typeof(DistributedReturnRequest), typeof(DistributedAcknowledgementRequest),
         typeof(DistributedStorageAgreementRequest), typeof(DistributedStorageAgreementConsentRequest),
+        typeof(DistributedSiteAcceptancePolicyRequest), typeof(DistributedInboundProposalRequest),
+        typeof(DistributedInboundConsentRequest), typeof(DistributedInboundDecisionRequest), typeof(DistributedInboundNoteRequest),
         typeof(DistributedInboundReceiptBatchRequest), typeof(DistributedPickBatchRequest),
-        typeof(DistributedDeliveryBatchRequest), typeof(DistributedReturnBatchRequest)];
+        typeof(DistributedDeliveryBatchRequest), typeof(DistributedReturnBatchRequest), typeof(DistributedStockReleaseProposalRequest),
+        typeof(DistributedStockReleaseConsentRequest), typeof(DistributedStockReleaseHandoverRequest), typeof(DistributedSiteCloseRequest)];
     private Task PersistRecoveryAsync(CancellationToken ct)
     {
         RequireCurrent(ct);
@@ -101,7 +104,7 @@ public sealed partial class 분산이행PageViewModel
     {
         if (Photo.Work is { } work && photoOperation is { } operation)
         {
-            var action = operation.Action == "import-lot" ? operation.Action : operation.Action + "-batch";
+            var action = operation.Action is "import-lot" or "handover-stock-release" ? operation.Action : operation.Action + "-batch";
             if (receipt.RequestId != Photo.CompletionRequestId || receipt.AggregateId != work.AggregateId
                 || receipt.Kind != ReceiptKind(action) || receipt.Revision <= 분산사진업무Session.Body(work)!.ExpectedRevision
                 || operation.Quantity is { } quantity && receipt.Quantity != quantity)

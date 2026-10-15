@@ -1,0 +1,7 @@
+.driver-offer-badge { display:flex; gap:8px; align-items:center; color:#172B36; background:#fff; padding:8px 0; }
+.driver-offer-badge__bars { display:flex; gap:2px; align-self:stretch; min-height:28px; }
+.driver-offer-badge__bars > span { width:4px; border-radius:2px; }
+.driver-offer-badge__icon { width:22px; height:22px; flex:none; }
+.driver-offer-badge strong { display:block; font-size:14px; line-height:20px; font-weight:600; }
+.driver-offer-badge small { display:block; color:#586B78; font-size:14px; line-height:20px; overflow-wrap:anywhere; }
+@media (forced-colors:active) { .driver-offer-badge__bars > span { border:1px solid CanvasText; } }

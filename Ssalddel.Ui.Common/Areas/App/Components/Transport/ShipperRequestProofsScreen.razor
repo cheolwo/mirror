@@ -15,8 +15,10 @@
         @if (State.Request is { } item)
         {
             <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
-                사진·서명 원본은 기사 증빙 저장소에서 검수합니다. 이 화면은 화주 의뢰 원장의 연결 상태를 보여 주며 증빙을 새로 생성하거나 완료 처리하지 않습니다.
+                사진·서명 원본은 기사 증빙 저장소에서 검수합니다. 인수증 등록과 입금·정산 완료는 별도로 확인합니다.
             </MudAlert>
+
+            @ReceiptContent
 
             <div class="shipper-proofs">
                 @foreach (var proof in ShipperRequestDetailPresentation.BuildProofs(item))
@@ -51,6 +53,7 @@
     [Parameter, EditorRequired] public string NewRequestHref { get; set; } = string.Empty;
     [Parameter] public string LoginHref { get; set; } = "/login";
     [Parameter] public EventCallback RefreshRequested { get; set; }
+    [Parameter] public RenderFragment? ReceiptContent { get; set; }
 
     private static Color ResolveColor(ShipperRequestProgressState state)
         => state switch

@@ -1,0 +1,16 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverOffers
+
+<div class="driver-offer-badge" data-testid="driver-offer-badge" aria-label="@($"{Visual.Label} · {Visual.ActivityText}")">
+    <span class="driver-offer-badge__bars" aria-hidden="true">
+        <span style="@($"background-color:{Visual.PrimaryColor}")"></span>
+        @if (Visual.SecondaryColor is { } second) { <span style="@($"background-color:{second}")"></span> }
+    </span>
+    <svg class="driver-offer-badge__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <path d="@DriverOfferPresentation.WorkIconPath" />
+    </svg>
+    <span><strong>@Visual.Label</strong><small>@Visual.ActivityText</small></span>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public DriverOfferVisual Visual { get; set; } = DriverOfferPresentation.Resolve(null, []);
+}

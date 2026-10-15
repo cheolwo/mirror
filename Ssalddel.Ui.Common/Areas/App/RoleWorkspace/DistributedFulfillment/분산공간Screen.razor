@@ -1,14 +1,15 @@
 @namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
 @using Ssalddel.Contracts.Common.Warehouse
-<section aria-label="보관 거점과 독립 동의"><h2>내 보관 거점</h2>
-    <p>소유자와 관리자의 동의는 각각 확인합니다. 동의 철회 뒤 새 예약·피킹의 허용 여부는 서버의 최신 상태로 확인합니다.</p>
+<div class="inbound-visual">
+<section aria-label="보관 거점과 독립 동의"><div class="inbound-heading"><분산입고Icon Kind="space" /><div><span class="inbound-eyebrow">공간 관리</span><h2>내 보관 거점</h2></div></div>
+    <p class="inbound-help">소유자와 관리자의 동의는 각각 확인합니다. 동의 철회 뒤 새 예약·피킹의 허용 여부는 서버의 최신 상태로 확인합니다.</p>
     @if (Model.Workspace?.Sites.Count == 0) { <p>조회한 보관 거점이 없습니다.</p> }
     <ul class="items">@foreach (var site in Model.Workspace!.Sites)
     { <li><button type="button" disabled="@(!Model.CanEdit)" @onclick="() => Choose(site.SiteId)"><strong>@site.PublicLabel · @분산이행표시.Status(site.StatusCode)</strong><span>소유자 @(site.OwnerConsented ? "동의" : "미동의") · 관리자 @(site.ManagerConsented ? "동의" : "미동의")</span></button></li> }</ul>
 </section>
 @if (Model.Allows("create-site"))
 {
-    <section aria-label="기존 내 창고를 보관 거점으로 등록"><h2>보관 거점 등록</h2>
+    <section aria-label="기존 내 창고를 보관 거점으로 등록"><h2 class="inbound-section-heading"><분산입고Icon Kind="space" />보관 거점 등록</h2>
         @if (Model.Workspace!.WarehouseCandidates.Count == 0) { <p>첫 보관 공간을 본인 소유·본인 관리로 등록할 수 있습니다. 소유자와 관리자 동의는 등록 뒤 각각 확인합니다.</p> }
         <label class="check"><input type="checkbox" @bind="registerNew" disabled="@(!Model.CanEdit)" />새 보관 공간을 직접 등록</label>
             <fieldset disabled="@(!Model.CanEdit)"><legend>내 창고와 공개 건물 후보 선택</legend>
@@ -43,6 +44,7 @@
 }
 @if (Model.SelectedSite is { } selected)
 {
+    <분산공간수용조건Panel Model="Model" Site="selected" />
     <section aria-label="선택 공간 동의와 적재 위치"><h2>@selected.PublicLabel</h2>
         <p>@분산이행표시.Status(selected.StatusCode)</p><p>@selected.Floor · @selected.Subspace</p><p>@selected.PickupInstructions</p>
         @if (new[] { "consent-owner", "consent-manager", "revoke-owner", "revoke-manager" }.Any(action => Model.Allows(action, selected.AllowedActions)))
@@ -62,6 +64,7 @@
         }
     </section>
 }
+</div>
 @code {
     [Parameter, EditorRequired] public 분산이행PageViewModel Model { get; set; } = default!;
     private long warehouseId;

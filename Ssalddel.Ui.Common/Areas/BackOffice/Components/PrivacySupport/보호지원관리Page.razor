@@ -18,7 +18,8 @@
         @if (Model.Error is not null) { <section role="alert" class="support-warning"><p>@Model.Error</p>@if (!Model.HasPending) { <button disabled="@Model.IsBusy" @onclick="ReloadAsync">다시 조회</button> }</section> }
         @if (Model.Notice is not null) { <p role="status" class="support-notice">@Model.Notice</p> }
         <MemberDeliveryRecoveryPanel Model="Model" ShowPendingResult="true" />
-        @if (!Model.HasRecoveryPending && Model.HasPending) { <section><h2>처리 결과 확인</h2><p>결과가 확인되지 않았습니다. 같은 입력과 요청 번호로 재확인합니다.</p><button class="support-primary" disabled="@Model.IsBusy" @onclick="Model.RetryAsync">같은 요청 다시 확인</button></section> }
+        @if (Model.HasFoodFollowUpPending) { <FoodSupportFollowUpPanel Model="Model" /> }
+        @if (!Model.HasRecoveryPending && !Model.HasFoodFollowUpPending && Model.HasPending) { <section><h2>처리 결과 확인</h2><p>결과가 확인되지 않았습니다. 같은 입력과 요청 번호로 재확인합니다.</p><button class="support-primary" disabled="@Model.IsBusy" @onclick="Model.RetryAsync">같은 요청 다시 확인</button></section> }
         @if (string.IsNullOrWhiteSpace(CaseId))
         {
             <section><h2>요청 목록</h2><label for="support-kind">업무 종류</label><select id="support-kind" value="@Model.Kind" @onchange="ChangeKind" disabled="@Model.IsBusy"><option value="transaction-dispute">거래 문제</option><option value="privacy-rights">개인정보 요청</option><option value="privacy-incident">개인정보 사고</option></select>
@@ -40,6 +41,7 @@
                 @if (row.Kind == "privacy-incident" && !row.IncidentNoticeCoverageVerified) { <p class="support-warning">개별 통지 기록은 전체 영향 대상의 안내 완료를 의미하지 않습니다.</p> }
             </section>
             <MemberDeliveryRecoveryPanel Model="Model" />
+            @if (!Model.HasFoodFollowUpPending) { <FoodSupportFollowUpPanel Model="Model" /> }
             @if (Model.Actions.Any(action => action != "assign-self"))
             {
                 <section><h2>담당자 전용 기록</h2><p class="support-muted">개인정보가 포함될 수 있습니다. 담당 업무에 필요한 경우에만 열람하세요. 열람 사실은 감사 기록으로 남습니다.</p>

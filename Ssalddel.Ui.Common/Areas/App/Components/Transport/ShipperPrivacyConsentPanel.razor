@@ -1,0 +1,48 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Transport
+@using Ssalddel.Contracts.Common.Privacy
+
+<MudPaper Elevation="0" Outlined="true" Class="pa-4" data-testid="shipper-privacy-consent">
+    <MudStack Spacing="2">
+        <MudText Typo="Typo.h6">운송 신청 개인정보 안내</MudText>
+        <MudText Typo="Typo.body2">@Notice.수집이용목적</MudText>
+        <dl>
+            <dt>수집 항목</dt><dd>@string.Join(" · ", Notice.수집항목)</dd>
+            <dt>보유·이용 기간</dt><dd>@Notice.보유이용기간</dd>
+        </dl>
+        <details>
+            <summary>동의 거부·정보 제공 안내</summary>
+            <p>@Notice.동의거부안내</p>
+            <p>@Notice.제3자제공안내</p>
+            <p>@Notice.국외이전안내</p>
+            <p>주민등록번호·여권번호·건강정보 등 고유식별정보와 민감정보를 메모에 입력하지 마세요.</p>
+            <p>만 14세 미만의 법정대리인 동의 절차는 준비되지 않아 이 신청을 제출할 수 없습니다.</p>
+            <small>안내 버전: @신청개인정보동의정책.현재버전</small>
+        </details>
+        <MudDivider />
+        <MudCheckBox T="bool" Value="CollectionConsent" ValueChanged="CollectionConsentChanged" Disabled="IsBusy"
+                     Label="[필수] 수집·이용 목적, 항목, 보유 기간과 거부 영향을 확인하고 동의합니다." />
+        <MudCheckBox T="bool" Value="AgeConfirmed" ValueChanged="AgeConfirmedChanged" Disabled="IsBusy"
+                     Label="[필수] 만 14세 이상이며 본인 명의로 신청합니다." />
+        @if (Recorded)
+        {
+            <MudAlert Severity="Severity.Success" Dense="true">개인정보 동의 기록을 확인했습니다.</MudAlert>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FactCheck"
+                       Disabled="@(!CanRecord)" OnClick="RecordRequested">@(IsBusy ? "동의 기록 중" : "동의 기록 확인")</MudButton>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter] public bool CollectionConsent { get; set; }
+    [Parameter] public EventCallback<bool> CollectionConsentChanged { get; set; }
+    [Parameter] public bool AgeConfirmed { get; set; }
+    [Parameter] public EventCallback<bool> AgeConfirmedChanged { get; set; }
+    [Parameter] public bool Recorded { get; set; }
+    [Parameter] public bool CanRecord { get; set; }
+    [Parameter] public bool IsBusy { get; set; }
+    [Parameter] public EventCallback RecordRequested { get; set; }
+    private static readonly 신청개인정보동의안내 Notice = 신청개인정보동의정책.For(신청개인정보업무Codes.운송대행);
+}

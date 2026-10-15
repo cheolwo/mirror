@@ -1,0 +1,76 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Mart
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+@using Ssalddel.Contracts.Mart
+
+@if (Model.RequiresLogin)
+{ <p role="status">로그인 후 본인 주문의 수령 문제를 확인해 주세요.</p> }
+@if (Model.IsLoading) { <p role="status">수령 상태 확인 중</p> }
+@if (Model.Error is not null) { <p role="alert">@Model.Error</p> }
+@if (Model.Notice is not null) { <p role="status">@Model.Notice</p> }
+@if (Model.ValidationError is not null) { <p role="alert">@Model.ValidationError</p> }
+@if (Model.HasPending)
+{
+    <p>이전 요청 결과가 확인될 때까지 새 해결 요청을 보내지 않습니다.</p>
+    <button type="button" disabled="@(Model.IsSending || Model.IsLoading)" @onclick="Model.RecoverAsync">이전 요청 결과 확인</button>
+}
+else
+{
+    <button type="button" disabled="@(Model.IsSending || Model.IsLoading)" @onclick="Reload">최신 수령 상태 확인</button>
+}
+@if (Model.Value is { } value && value.HoldRecorded)
+{
+    <div class="receipt-state">
+        <p><strong>@State(value.ResolutionStatus)</strong></p>
+        <dl><dt>신고한 문제</dt><dd>@Reason(value.HoldReasonCode)</dd>
+            <dt>다음 담당</dt><dd>@Actor(value.NextActor)</dd>
+            <dt>구매자 확인</dt><dd>@(value.BuyerConsented ? "확인함" : "확인 전")</dd>
+            <dt>판매자 확인</dt><dd>@(value.SellerConsented ? "확인함" : "확인 전")</dd></dl>
+    </div>
+    <p>원래 수령·문제 신고는 보존합니다. 양측의 확인 진술은 사진 검증이나 실제 입금 확인을 대신하지 않습니다.</p>
+    @if (value.PaymentReleaseReady)
+    { <p role="status">전량 수령 재확인을 마쳤습니다. 정산 조건과 실제 지급·수령은 정산 내역에서 별도로 확인합니다.</p> }
+    @if (value.CanProposeResolution && Model.CanAct)
+    {
+        <fieldset disabled="@(!Model.CanAct)"><legend>해결 조건 제안</legend>
+            <label><input type="checkbox" @bind="full" />문제 해결 후 전량 수령을 다시 확인하는 조건</label>
+            <p>부분 수령·반품·금액 합의는 운영 검토에 남으며 수령 완료나 정산 가능으로 바뀌지 않습니다.</p>
+            <label>실제 확인 수량<input type="number" min="0" max="@value.TotalOrderQuantity" step="1" @bind="quantity" /></label>
+            <label>본인의 확인 근거<input type="text" maxlength="240" @bind="evidence" placeholder="확인한 물품과 상태 · 고객 개인정보 제외" /></label>
+            <label><input type="checkbox" @bind="acknowledged" />실제 확인한 수량과 내용을 본인으로 기록합니다</label>
+            <button type="button" @onclick="Propose">해결 조건 제안</button>
+        </fieldset>
+    }
+    @if (value.CanConsentResolution && Model.CanAct)
+    {
+        <fieldset disabled="@(!Model.CanAct)"><legend>제안 조건 확인</legend>
+            <p>@(value.OutcomeCode == MartReceiptResolutionCodes.FullReceiptReconfirmed ? "전량 수령 재확인" : "부분·기타 운영 검토") · 제안 수량 @value.ProposedQuantity</p>
+            <label>본인이 확인한 수량<input type="number" min="0" max="@value.TotalOrderQuantity" step="1" @bind="consentQuantity" /></label>
+            <label>본인의 확인 근거<input type="text" maxlength="240" @bind="consentEvidence" placeholder="확인한 물품과 상태 · 고객 개인정보 제외" /></label>
+            <label><input type="checkbox" @bind="consentAcknowledged" />제안 수량과 조건을 직접 확인했습니다</label>
+            <button type="button" @onclick="() => Consent(true)">조건에 동의</button>
+            <button type="button" @onclick="() => Consent(false)">동의하지 않고 검토 요청</button>
+        </fieldset>
+    }
+}
+
+@code {
+    [Parameter, EditorRequired] public 마트수령문제해결ViewModel Model { get; set; } = default!;
+    [Parameter] public EventCallback Reload { get; set; }
+    private bool full, acknowledged, consentAcknowledged;
+    private long quantity, consentQuantity;
+    private string? evidence, consentEvidence;
+    private string? context;
+    protected override void OnParametersSet()
+    {
+        var current = $"{Model.CurrentUserId}:{Model.OrderId}:{Model.Value?.MyRole}:{Model.Value?.Revision}";
+        if (current == context) return;
+        context = current; full = acknowledged = consentAcknowledged = false; quantity = consentQuantity = 0;
+        evidence = consentEvidence = null;
+    }
+    private Task Propose() => Model.ProposeAsync(full, quantity, evidence, acknowledged);
+    private Task Consent(bool granted) => Model.ConsentAsync(granted, consentQuantity, consentEvidence, consentAcknowledged);
+    private static string Reason(string? reason) => reason switch { "Partial" => "부분 수령", "Missing" => "누락", "Damaged" => "파손", _ => "확인 필요" };
+    private static string Actor(string actor) => actor switch { "Buyer" => "구매자", "Seller" => "판매자", "BuyerOrSeller" => "구매자 또는 판매자", "OperatorReview" => "운영 검토 · 추가 합의 필요", _ => "후속 정산 절차" };
+    private static string State(string state) => state switch { "ResolvedFullReceipt" => "전량 수령 재확인 완료", "AwaitingProposal" => "해결 조건 제안 대기",
+        "AwaitingConsents" => "양측 확인 대기", "OperationalReview" => "부분·기타 문제 운영 검토", "SourceChanged" => "주문 근거 변경 · 다시 합의 필요", _ => "배송 근거 확인 필요" };
+}

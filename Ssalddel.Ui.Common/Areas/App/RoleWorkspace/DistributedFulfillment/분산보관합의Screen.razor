@@ -1,18 +1,19 @@
 @namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
 @using Ssalddel.Contracts.Common.Warehouse
-<section aria-label="내 공간 보관 합의"><h2>공간 제공자와 상품 소유자의 보관 합의</h2>
-    <p>같은 조건에 양측이 동의해야 실제 입고·새 예약을 진행할 수 있습니다. 공간 관리자 동의는 별도로 유지됩니다.</p>
+<div class="inbound-visual">
+<section aria-label="내 공간 보관 합의"><div class="inbound-heading"><분산입고Icon Kind="agreement" /><div><span class="inbound-eyebrow">보관 조건</span><h2>공간 제공자와 상품 소유자의 보관 합의</h2></div></div>
+    <p class="inbound-help">같은 조건에 양측이 동의해야 실제 입고·새 예약을 진행할 수 있습니다. 공간 관리자 동의는 별도로 유지됩니다.</p>
     @if (Model.Workspace!.StorageAgreements.Count == 0) { <p>아직 기록한 보관 합의가 없습니다.</p> }
     <ul class="items">@foreach (var agreement in Model.Workspace.StorageAgreements)
     { <li><button type="button" disabled="@(!Model.CanEdit)" @onclick="() => Choose(agreement.AgreementId)"><strong>@LocationLabel(agreement.LocationId) · @OwnerLabel(agreement.GoodsOwnerUserId)</strong><span>@AgreementStatus(agreement.StatusCode) · 공간 제공자 @(agreement.SpaceOwnerConsented ? "동의" : "미동의") · 상품 소유자 @(agreement.GoodsOwnerConsented ? "동의" : "미동의")</span></button></li> }</ul>
 </section>
 @if (Model.SelectedAgreement is { } selected)
 {
-    <section aria-label="선택한 보관 조건"><h2>@LocationLabel(selected.LocationId)</h2><p>@OwnerLabel(selected.GoodsOwnerUserId)의 상품 보관 · 조건 @selected.TermsVersion 차</p>
-        <dl class="terms"><dt>허용 상품</dt><dd>@string.Join(" · ", selected.Terms.AllowedSkus)</dd><dt>허용 수량</dt><dd>@selected.Terms.MaximumStoredQuantity 개</dd>
-            <dt>보관 기간</dt><dd>@분산이행표시.Time(selected.Terms.StartsAtUtc) ~ @분산이행표시.Time(selected.Terms.EndsAtUtc)</dd>
-            <dt>출입 시간</dt><dd>@selected.Terms.AccessHours</dd><dt>비용·무상 조건</dt><dd>@selected.Terms.PriceOrFreeTerms</dd>
-            <dt>관리 담당·관리 방법</dt><dd>@selected.Terms.CustodianAndCare</dd><dt>분실·파손·반환 조건</dt><dd>@selected.Terms.LossDamageAndReturnTerms</dd></dl>
+    <section aria-label="선택한 보관 조건"><div class="inbound-heading"><분산입고Icon Kind="shield" /><div><span class="inbound-eyebrow">현재 보관 조건</span><h2>@LocationLabel(selected.LocationId)</h2></div></div><p>@OwnerLabel(selected.GoodsOwnerUserId)의 상품 보관 · 조건 @selected.TermsVersion 차</p>
+        <dl class="terms inbound-facts"><div class="wide"><dt>허용 상품</dt><dd>@string.Join(" · ", selected.Terms.AllowedSkus)</dd></div><div class="wide"><dt>허용 수량</dt><dd>@selected.Terms.MaximumStoredQuantity 개</dd></div>
+            <div class="wide"><dt>보관 기간</dt><dd>@분산이행표시.Time(selected.Terms.StartsAtUtc) ~ @분산이행표시.Time(selected.Terms.EndsAtUtc)</dd></div>
+            <div class="wide"><dt>출입 시간</dt><dd>@selected.Terms.AccessHours</dd></div><div class="wide"><dt>비용·무상 조건</dt><dd>@selected.Terms.PriceOrFreeTerms</dd></div>
+            <div class="wide"><dt>관리 담당·관리 방법</dt><dd>@selected.Terms.CustodianAndCare</dd></div><div class="wide"><dt>분실·파손·반환 조건</dt><dd>@selected.Terms.LossDamageAndReturnTerms</dd></div></dl>
         @if (selected.StatusCode is "Expired" or "Revoked") { <p class="notice">새 입고·예약은 진행할 수 없습니다. 보관 중인 물품의 반환·정리 절차는 계속 확인합니다.</p> }
         @if (Model.Allows("consent", selected.AllowedActions) || Model.Allows("revoke", selected.AllowedActions))
         {
@@ -25,6 +26,7 @@
         @if (Model.Allows("change-terms", selected.AllowedActions))
         { <button type="button" @onclick="EditTerms">이 조건을 바탕으로 변경안 작성</button> }
     </section>
+    <분산보관변경협의Panel Model="Model" Agreement="selected" />
 }
 @if (CanDraft)
 {
@@ -43,10 +45,11 @@
         </fieldset>
         <button class="primary" type="button" disabled="@(!Model.CanEdit || !draftConfirmed)" @onclick="SaveTerms">보관 조건 저장</button>
         @if (editingAgreementId is not null) { <button type="button" disabled="@(!Model.CanEdit)" @onclick="ResetDraft">변경안 닫기</button> }
-        <p>저장은 양측 동의를 대신하지 않습니다. 조건 변경 뒤에는 양측이 다시 동의합니다. 플랫폼은 보관료를 수금하지 않습니다.</p>
+        <p>저장은 양측 동의를 대신하지 않습니다. 변경안에 양측이 동의하기 전까지 현재 보관 조건은 유지됩니다. 플랫폼은 보관료를 수금하지 않습니다.</p>
         </section>
     </details>
 }
+</div>
 @code {
     [Parameter, EditorRequired] public 분산이행PageViewModel Model { get; set; } = default!;
     private string locationId = "", goodsOwnerId = "", skus = "", accessHours = "", priceTerms = "", careTerms = "", returnTerms = "";

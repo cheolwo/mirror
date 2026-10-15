@@ -125,6 +125,9 @@ public static class SsalddelUiCommonServiceCollectionExtensions
         services.TryAddScoped<INeighborhoodExchangeClient, NeighborhoodExchangeClient>();
         services.TryAddScoped<INeighborhoodCollaborationClient, NeighborhoodCollaborationClient>();
         services.TryAddScoped<INeighborhoodStorageClient, NeighborhoodStorageClient>();
+        services.TryAddScoped<I활동정산Client, 활동정산Client>();
+        services.TryAddScoped<Ssalddel.Ui.Common.Areas.App.ViewModels.활동정산Session>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.활동정산PageViewModel>();
         services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodCollaborationAuthoringViewModel>();
         services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodCollaborationQueryViewModel>();
         services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodCollaborationSourceViewModel>();

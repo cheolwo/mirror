@@ -1,0 +1,111 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Contracts.Common.Warehouse
+<section class="acceptance-policy inbound-visual inbound-panel" aria-label="공간 수용 조건">
+    <div class="inbound-heading">
+        <분산입고Icon Kind="space" />
+        <div><span class="inbound-eyebrow">공간 수용 조건</span><h2>받을 수 있는 물품</h2></div>
+    </div>
+    @if (Site.AcceptancePolicy is { } policy)
+    {
+        <div class="inbound-section">
+            <h3 class="inbound-section-heading"><분산입고Icon Kind="box" />품목과 포장</h3>
+            <dl class="terms inbound-facts">
+                <div class="wide"><dt>허용 품목</dt><dd class="inbound-chips">@if (policy.AllowedCategoryCodes.Count == 0) { <span class="inbound-chip">미설정</span> } else { @foreach (var category in policy.AllowedCategoryCodes) { <span class="inbound-chip">@분산이행표시.InboundCategory(category, "분류 확인 필요")</span> } }</dd></div>
+                <div class="wide"><dt>거부 품목</dt><dd class="inbound-chips">@if (policy.DeniedCategoryCodes.Count == 0) { <span class="inbound-chip">별도 거부 없음</span> } else { @foreach (var category in policy.DeniedCategoryCodes) { <span class="inbound-chip"><분산입고Icon Kind="ban" />@분산이행표시.InboundCategory(category, "분류 확인 필요")</span> } }</dd></div>
+                <div><dt>식품</dt><dd>@(policy.AllowFood ? policy.RequireProcessedFood ? "가공식품만" : "받을 수 있음" : "받지 않음")</dd></div>
+                <div><dt>포장</dt><dd>@Labels(policy.AllowedPackagingCodes, code => 분산이행표시.InboundPackaging(code, "포장 확인 필요"))@(policy.RequireSealedPackaging ? " · 밀봉 필수" : "")</dd></div>
+            </dl>
+        </div>
+        <div class="inbound-section">
+            <h3 class="inbound-section-heading"><분산입고Icon Kind="space" />보관과 출입</h3>
+            <div class="inbound-stats">
+                <div class="inbound-stat" aria-label="@($"{policy.MaximumCapacity} {policy.CapacityUnit}")"><small>공간 전체 용량</small><strong>@policy.MaximumCapacity <span>@policy.CapacityUnit</span></strong></div>
+                @if (policy.MaximumWeightKg is { } weight) { <div class="inbound-stat"><small>전체 중량 한도</small><strong>@weight <span>kg</span></strong></div> }
+                @if (policy.MaximumVolumeM3 is { } volume) { <div class="inbound-stat"><small>전체 부피 한도</small><strong>@volume <span>m³</span></strong></div> }
+            </div>
+            <dl class="terms inbound-facts">
+                <div><dt>보관 온도</dt><dd>@Labels(policy.AllowedTemperatureCodes, code => 분산이행표시.InboundTemperature(code, "온도 확인 필요"))</dd></div>
+                @if (policy.MaximumStorageDays is { } days) { <div><dt>최대 보관 기간</dt><dd>@days 일</dd></div> }
+                <div class="wide"><dt>출입 가능 시간</dt><dd>@policy.AccessHours</dd></div>
+            </dl>
+        </div>
+        <p class="inbound-help">조건 변경은 기존 물품의 보관 기록을 바꾸지 않습니다. 새 입고는 현재 조건을 다시 확인합니다.</p>
+    }
+    else { <p class="inbound-help">공간의 품목·용량·출입 조건을 아직 등록하지 않았습니다.</p> }
+    @if (Model.Allows("set-acceptance-policy", Site.AllowedActions))
+    {
+        @if (!editing) { <div class="inbound-actions"><button type="button" @onclick="BeginEdit"><분산입고Icon Kind="edit" />수용 조건 설정</button></div> }
+        else
+        {
+            <fieldset disabled="@(!Model.CanEdit)"><legend>이 공간에서 받을 물품과 조건</legend>
+                <div class="policy-options inbound-section"><h3 class="inbound-section-heading"><분산입고Icon Kind="box" />허용 품목</h3>@foreach (var option in categories)
+                { <label class="check"><input type="checkbox" checked="@allowed.Contains(option.Key)" @onchange="e => Toggle(allowed, option.Key, e)" />@option.Label</label> }</div>
+                <div class="policy-options inbound-section"><h3 class="inbound-section-heading"><분산입고Icon Kind="ban" />거부 품목</h3>@foreach (var option in categories)
+                { <label class="check"><input type="checkbox" checked="@denied.Contains(option.Key)" @onchange="e => Toggle(denied, option.Key, e)" />@option.Label</label> }<small>허용과 거부가 겹치면 거부를 우선합니다.</small></div>
+                <div class="inbound-form-grid">
+                    <label class="wide">식품 수용<select @bind="food"><option value="">선택해 주세요</option><option value="yes">식품을 받음</option><option value="no">식품을 받지 않음</option></select></label>
+                    @if (food == "yes") { <label class="check wide"><input type="checkbox" @bind="processedOnly" />가공식품만 받음</label> }
+                </div>
+                <div class="policy-options inbound-section"><h3 class="inbound-section-heading"><분산입고Icon Kind="box" />허용 포장</h3>@foreach (var option in packagings)
+                { <label class="check"><input type="checkbox" checked="@packaging.Contains(option.Key)" @onchange="e => Toggle(packaging, option.Key, e)" />@option.Label</label> }</div>
+                <label class="check"><input type="checkbox" @bind="sealedOnly" />밀봉 포장 필수</label>
+                <div class="policy-options inbound-section"><h3 class="inbound-section-heading"><분산입고Icon Kind="temperature" />보관 가능 온도</h3>@foreach (var option in temperatures)
+                { <label class="check"><input type="checkbox" checked="@temperature.Contains(option.Key)" @onchange="e => Toggle(temperature, option.Key, e)" />@option.Label</label> }</div>
+                <div class="inbound-form-grid">
+                    <label>공간 전체 용량 단위<input @bind="unit" placeholder="예: 상자" maxlength="20" /></label>
+                    <label>공간 전체 수용량<input type="number" min="0.001" step="0.001" @bind="capacity" /></label>
+                    <label>전체 중량 한도(kg) · 선택<input type="number" min="0.001" step="0.001" @bind="maximumWeight" /></label>
+                    <label>전체 부피 한도(m³) · 선택<input type="number" min="0.001" step="0.001" @bind="maximumVolume" /></label>
+                    <label class="wide">출입 가능 시간<input @bind="accessHours" placeholder="예: 평일 10~18시, 도착 전 연락" /></label>
+                    <label>최대 보관 일수 · 선택<input type="number" min="1" @bind="storageDays" /></label>
+                </div>
+                <label class="check inbound-confirm"><input type="checkbox" @bind="confirmed" />공간 제공자로서 위 조건을 확인했습니다</label>
+            </fieldset>
+            <div class="actions inbound-actions"><button class="primary" type="button" disabled="@(!Model.CanEdit || !confirmed)" @onclick="Save"><분산입고Icon Kind="check" />수용 조건 저장</button><button type="button" disabled="@(!Model.CanEdit)" @onclick="Close"><분산입고Icon Kind="close" />닫기</button></div>
+        }
+    }
+</section>
+@code {
+    [Parameter, EditorRequired] public 분산이행PageViewModel Model { get; set; } = default!;
+    [Parameter, EditorRequired] public DistributedSiteDto Site { get; set; } = default!;
+    private static readonly IReadOnlyList<(string Key, string Label)> categories = 분산이행표시.InboundCategoryOptions;
+    private static readonly IReadOnlyList<(string Key, string Label)> packagings = 분산이행표시.InboundPackagingOptions;
+    private static readonly IReadOnlyList<(string Key, string Label)> temperatures = 분산이행표시.InboundTemperatureOptions;
+    private readonly HashSet<string> allowed = new(StringComparer.Ordinal), denied = new(StringComparer.Ordinal), packaging = new(StringComparer.Ordinal), temperature = new(StringComparer.Ordinal);
+    private string food = "", unit = "", accessHours = "";
+    private decimal? capacity, maximumWeight, maximumVolume;
+    private int? storageDays;
+    private bool processedOnly, sealedOnly, confirmed, editing;
+    private long draftRevision;
+    private string? viewIdentity;
+    protected override void OnParametersSet()
+    {
+        var identity = $"{Model.CurrentUserId}|{Site.SiteId}";
+        if (viewIdentity != identity) { viewIdentity = identity; editing = confirmed = false; }
+    }
+    private void BeginEdit()
+    {
+        var p = Site.AcceptancePolicy;
+        allowed.Clear(); denied.Clear(); packaging.Clear(); temperature.Clear();
+        if (p is not null) { allowed.UnionWith(p.AllowedCategoryCodes); denied.UnionWith(p.DeniedCategoryCodes); packaging.UnionWith(p.AllowedPackagingCodes); temperature.UnionWith(p.AllowedTemperatureCodes); }
+        food = p is null ? "" : p.AllowFood ? "yes" : "no"; processedOnly = p?.RequireProcessedFood ?? false; sealedOnly = p?.RequireSealedPackaging ?? false;
+        unit = p?.CapacityUnit ?? ""; capacity = p?.MaximumCapacity; maximumWeight = p?.MaximumWeightKg; maximumVolume = p?.MaximumVolumeM3;
+        storageDays = p?.MaximumStorageDays; accessHours = p?.AccessHours ?? ""; confirmed = false; draftRevision = Site.Revision; editing = true;
+    }
+    private void Close() { editing = confirmed = false; }
+    private void Toggle(HashSet<string> values, string key, ChangeEventArgs e) { if (e.Value is true) values.Add(key); else values.Remove(key); confirmed = false; }
+    private async Task Save()
+    {
+        if (allowed.Count == 0 || packaging.Count == 0 || temperature.Count == 0 || food.Length == 0 || capacity is null or <= 0
+            || string.IsNullOrWhiteSpace(unit) || string.IsNullOrWhiteSpace(accessHours) || maximumWeight is <= 0 || maximumVolume is <= 0 || storageDays is <= 0)
+        { await Model.InvalidInputAsync("허용 품목·포장·온도·식품 수용 여부와 용량 단위·수용량·출입 시간을 확인해 주세요."); return; }
+        await Model.ExecuteAsync("set-acceptance-policy", $"sites/{분산이행Client.Segment(Site.SiteId)}/acceptance-policy", new DistributedSiteAcceptancePolicyRequest
+        { ExpectedRevision = draftRevision, Policy = new() { AllowedCategoryCodes = allowed.Order(StringComparer.Ordinal).ToArray(), DeniedCategoryCodes = denied.Order(StringComparer.Ordinal).ToArray(),
+            AllowFood = food == "yes", RequireProcessedFood = food == "yes" && processedOnly, RequireSealedPackaging = sealedOnly,
+            AllowedPackagingCodes = packaging.Order(StringComparer.Ordinal).ToArray(), AllowedTemperatureCodes = temperature.Order(StringComparer.Ordinal).ToArray(),
+            CapacityUnit = unit.Trim(), MaximumCapacity = capacity.Value, MaximumWeightKg = maximumWeight, MaximumVolumeM3 = maximumVolume, MaximumStorageDays = storageDays, AccessHours = accessHours.Trim() } },
+            Site.SiteId, Site.AllowedActions, confirmed);
+        if (!Model.HasPendingCommand && Model.Message is not null) Close();
+    }
+    private static string Labels(IReadOnlyList<string> values, Func<string, string> label, string empty = "미설정") => values.Count == 0 ? empty : string.Join(" · ", values.Select(label));
+}

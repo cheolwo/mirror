@@ -1,0 +1,58 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Transport
+
+<MudPaper Elevation="0" Outlined="true" Class="pa-4 mt-4" data-testid="shipper-receipt-registration">
+    <MudStack Spacing="2">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+            <MudIcon Icon="@Icons.Material.Outlined.ReceiptLong" />
+            <MudText Typo="Typo.h6">인수증 등록</MudText>
+        </MudStack>
+        <MudText Typo="Typo.body2">@ReadinessMessage</MudText>
+        @if (Registered)
+        {
+            <MudText Typo="Typo.subtitle2">등록된 번호: @RegisteredNumber</MudText>
+        }
+        else
+        {
+            <MudTextField T="string" Label="인수증 번호" Value="@ReceiptNumber" ValueChanged="ReceiptNumberChanged"
+                          Variant="Variant.Outlined" Disabled="InputLocked" Immediate="true" Required="true" />
+            <MudTextField T="string" Label="검수 메모 (선택)" Value="@Memo" ValueChanged="MemoChanged"
+                          Variant="Variant.Outlined" Disabled="InputLocked" Lines="2" Immediate="true"
+                          HelperText="수량·파손 등 확인 내용을 적어 주세요. 고객 연락처·계좌는 입력하지 마세요." />
+            <MudCheckBox T="bool" Value="AcceptanceConfirmed" ValueChanged="AcceptanceConfirmedChanged"
+                         Disabled="InputLocked" Label="수령한 화물과 인수증 내용을 확인했습니다." />
+            @if (NeedsResultCheck)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true">등록 결과를 확인하기 전에는 다시 전송하지 않습니다.</MudAlert>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.FindInPage"
+                           Disabled="IsBusy" OnClick="CheckRequested" Style="min-height:48px">
+                    @(IsBusy ? "등록 결과 확인 중" : "등록 결과 확인")
+                </MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.FactCheck"
+                           Disabled="@(!CanRegister)" OnClick="RegisterRequested" Style="min-height:48px">
+                    @(IsBusy ? "등록 결과 확인 중" : "인수증 등록")
+                </MudButton>
+            }
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter] public string ReadinessMessage { get; set; } = string.Empty;
+    [Parameter] public string ReceiptNumber { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> ReceiptNumberChanged { get; set; }
+    [Parameter] public string Memo { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> MemoChanged { get; set; }
+    [Parameter] public bool AcceptanceConfirmed { get; set; }
+    [Parameter] public EventCallback<bool> AcceptanceConfirmedChanged { get; set; }
+    [Parameter] public bool Registered { get; set; }
+    [Parameter] public string RegisteredNumber { get; set; } = string.Empty;
+    [Parameter] public bool InputLocked { get; set; }
+    [Parameter] public bool NeedsResultCheck { get; set; }
+    [Parameter] public bool CanRegister { get; set; }
+    [Parameter] public bool IsBusy { get; set; }
+    [Parameter] public EventCallback RegisterRequested { get; set; }
+    [Parameter] public EventCallback CheckRequested { get; set; }
+}

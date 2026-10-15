@@ -7,6 +7,7 @@
     else
     {
         <nav class="exchange-tabs" aria-label="협업 구분"><button aria-pressed="@(Model.Scope == "requested")" @onclick="Requested">내가 신청한 일</button><button aria-pressed="@(Model.Scope == "undertaken")" @onclick="Undertaken">받은 요청·맡은 일</button></nav>
+        <a href="@Href(활동정산Navigation.Href(returnUrl: NeighborhoodCollaborationRoutes.Home))">활동·정산 내역</a>
         @if (Model.HasPending) { <section class="exchange-surface"><h2>처리 결과 확인이 필요해요</h2><p>자동으로 다시 보내지 않습니다. 먼저 이전 요청 결과를 확인하세요.</p><button disabled="@Model.IsSending" @onclick="Recover">처리 결과 확인</button></section> }
         @if (Model.Notice is not null) { <p role="status" class="exchange-note">@Model.Notice</p> }
         @if (Model.IsLoading) { <p role="status">할 일을 불러오는 중입니다.</p> }

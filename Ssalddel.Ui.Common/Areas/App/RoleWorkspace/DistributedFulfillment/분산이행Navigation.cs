@@ -11,9 +11,9 @@ public static class 분산이행Navigation
     { "warehouse" => "sites", "shipper" => "inventory", "cargo-driver" => "round", "operator" => "waves", _ => "orders" };
     public static bool AllowsScreen(string role, string screen) => role switch
     {
-        "warehouse" => screen is "sites" or "agreements" or "inventory" or "inbound" or "returns" or "waves",
-        "shipper" => screen is "agreements" or "inventory" or "inbound" or "orders",
-        "cargo-driver" => screen == "round",
+        "warehouse" => screen is "sites" or "agreements" or "inventory" or "inbound" or "returns" or "waves" or "stock-release",
+        "shipper" => screen is "agreements" or "inventory" or "inbound" or "orders" or "stock-release",
+        "cargo-driver" => screen is "round" or "stock-release",
         "orderer" => screen == "orders",
         "operator" => screen == "waves",
         _ => false
@@ -31,6 +31,7 @@ public static class 분산이행Navigation
         "agreements" => "공간 보관 합의",
         "returns" => "반품 입고 확인",
         "inventory" => "거점별 상품 재고",
+        "stock-release" => "잔여 재고 반출",
         "inbound" => "예정 상품 입고",
         "round" => "현재 순회 배송",
         "waves" => "시간대 배송 묶음",

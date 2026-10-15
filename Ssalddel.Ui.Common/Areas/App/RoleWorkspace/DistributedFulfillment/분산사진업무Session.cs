@@ -118,12 +118,13 @@ public sealed class 분산사진업무Session(I업무사진촬영Adapter capture
             case DistributedDeliveryBatchRequest delivery: delivery.PhotoEvidenceIds = EvidenceIds; break;
             case DistributedReturnBatchRequest returned: returned.PhotoEvidenceIds = EvidenceIds; break;
             case DistributedExistingLotRequest import: import.PhotoEvidenceIds = EvidenceIds; break;
+            case DistributedStockReleaseHandoverRequest release: release.PhotoEvidenceIds = EvidenceIds; break;
         }
         return body;
     }
     public void Clear() { photos.Clear(); context = null; Work = null; Title = ""; Restored = false; }
     public static DistributedCommandRequest? Body(DistributedEvidenceWorkRequest? work) => work?.Kind switch
-    { "Receive" => work.Receive, "Pick" => work.Pick, "Deliver" => work.Deliver, "Return" => work.Return, "ImportLot" => work.ImportLot, _ => null };
+    { "Receive" => work.Receive, "Pick" => work.Pick, "Deliver" => work.Deliver, "Return" => work.Return, "ImportLot" => work.ImportLot, "StockRelease" => work.StockRelease, _ => null };
     private sealed class 사진항목(업무촬영사진? photo, Guid uploadRequestId, DateTime capturedAtUtc)
     {
         public 업무촬영사진? Photo { get; } = photo;

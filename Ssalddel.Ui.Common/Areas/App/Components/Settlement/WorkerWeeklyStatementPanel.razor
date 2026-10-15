@@ -1,0 +1,46 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Settlement
+@using Ssalddel.Contracts.Common.Settlement
+@using Ssalddel.Ui.Common.Areas.App.Models
+
+@if (Value is { } value)
+{
+    <section aria-label="본인 주간 업무 명세">
+        <h2>내 주간 업무 명세</h2>
+        <p>@value.CompletionWeekStartKst.ToString("yyyy.MM.dd") ~ @value.CompletionWeekStartKst.AddDays(6).ToString("MM.dd") · 한국 시간 완료일 기준</p>
+        <p>음식·화물·피킹 등 완료한 업무를 한 주 단위로 확인합니다.</p>
+        <dl>
+            <dt>발생액 · 세전</dt><dd>@활동정산표시.Money(value.AccruedAmountKrw)</dd>
+            <dt>확인된 발생액 · 세전</dt><dd>@활동정산표시.Money(value.KnownAccruedAmountKrw)</dd>
+            <dt>지급 조건 충족액 · 세전</dt><dd>@활동정산표시.Money(value.KnownPaymentConditionReadyAmountKrw)</dd>
+            <dt>조건 확인·보류액 · 세전</dt><dd>@활동정산표시.Money(value.KnownHeldAmountKrw)</dd>
+            <dt>지급 신고액</dt><dd>@활동정산표시.Money(value.ReportedPaymentAmountKrw)</dd>
+            <dt>당사자 수령 진술액</dt><dd>@활동정산표시.Money(value.RecipientConfirmedAmountKrw)</dd>
+            <dt>은행 입금 확인</dt><dd>확인 자료 없음</dd>
+        </dl>
+        <p class="notice">지급 조건 충족과 신고·수령 진술은 실제 입금 검증과 다릅니다. 음식 모의 지급 검증을 실지급으로 더하지 않습니다.</p>
+        @if (value.UnknownAmountCount > 0) { <p>금액 미확정 @value.UnknownAmountCount 건 · 전체 발생액은 미확정입니다.</p> }
+        @if (value.UnassignedCompletionTimeCount > 0) { <p>완료일 미확인 항목 @value.UnassignedCompletionTimeCount 건은 주간 합계에서 제외했습니다.</p> }
+        @if (value.ExcludedDeliveryReferenceCount > 0) { <p>기존 배송 원장 참고 @value.ExcludedDeliveryReferenceCount 건은 중복 합산하지 않았습니다.</p> }
+        @if (value.Lines.Count == 0) { <p>이 주간에 확인된 본인 완료 업무가 없습니다.</p> }
+        @foreach (var row in value.Lines)
+        {
+            <article @key="row.StableId">
+                <h3>@Source(row.SourceKind) · @활동정산표시.Kind(row.ActivityKind)</h3>
+                <strong>@활동정산표시.Money(row.AccruedAmountKrw) · 세전</strong>
+                <p>완료 @활동정산표시.Time(row.CompletedAtUtc)</p>
+                <p>@(row.PaymentConditionReady ? "지급 조건 충족 · 실제 송금 별도" : "지급 조건 확인·보류")</p>
+                @if (!row.PaymentConditionReady && !string.IsNullOrWhiteSpace(row.WaitingReason))
+                { <p>@(row.SourceKind is NeighborhoodSettlementCodes.FoodOrder or NeighborhoodSettlementCodes.CargoRequest ? row.WaitingReason : 활동정산표시.EntryPaymentWaitingReason(row.WaitingReason))</p> }
+                <p>지급예정일 @(row.PayoutScheduledAtUtc is { } scheduled ? 활동정산표시.Time(scheduled) : "미정")</p>
+                @if (row.NetAmountKrw is { } net) { <p>원장 수령 예정액 @활동정산표시.Money(net) · 실제 입금 별도</p> }
+                @if (row.AgreementId is { } agreement) { <a href="@Ssalddel.Ui.Common.Areas.App.Services.활동정산Navigation.Href(agreement)">활동 정산 상세</a> }
+            </article>
+        }
+    </section>
+}
+
+@code {
+    [Parameter] public WorkerWeeklyStatementDto? Value { get; set; }
+    private static string Source(string kind) => kind switch
+    { NeighborhoodSettlementCodes.FoodOrder => "음식 배달", NeighborhoodSettlementCodes.CargoRequest => "화물 운송", _ => "활동 보수" };
+}

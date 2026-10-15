@@ -1,0 +1,6 @@
+.driver-offer-pricing { border-top:1px solid #DCE5E9; padding-top:12px; color:#172B36; }
+.driver-offer-pricing h3 { margin:0 0 8px; font-size:16px; line-height:24px; font-weight:600; }
+.driver-offer-pricing p { margin:4px 0; font-size:14px; line-height:20px; font-variant-numeric:tabular-nums; }
+.driver-offer-pricing small { color:#586B78; font-size:14px; line-height:20px; overflow-wrap:anywhere; }
+.driver-offer-pricing summary { min-height:48px; display:flex; align-items:center; cursor:pointer; font-size:14px; }
+.driver-offer-pricing summary:focus-visible { outline:2px solid #0F766E; outline-offset:2px; }

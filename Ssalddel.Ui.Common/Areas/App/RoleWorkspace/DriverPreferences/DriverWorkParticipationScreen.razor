@@ -1,0 +1,24 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverPreferences
+@implements IDisposable
+@inject IDriverWorkParticipationClient Client
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="py-4">
+    <MudButton Variant="Variant.Text" Href="@ReturnHref" StartIcon="@Icons.Material.Outlined.ArrowBack" Style="min-height:48px">돌아가기</MudButton>
+    <MudText Typo="Typo.h5" Class="mt-2 mb-4">받을 업무·적재 설정</MudText>
+    @if (model is not null)
+    {
+        <DriverWorkParticipationForm Model="model" LoginHref="@LoginHref" />
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public string ReturnHref { get; set; } = "/driver/menu";
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    private DriverWorkParticipationViewModel? model;
+    protected override async Task OnInitializedAsync()
+    {
+        model = new(Client);
+        await model.LoadAsync();
+    }
+    public void Dispose() => model?.Dispose();
+}

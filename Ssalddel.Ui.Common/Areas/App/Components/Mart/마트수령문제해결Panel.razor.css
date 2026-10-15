@@ -1,0 +1,11 @@
+.mart-receipt-resolution { margin-block: 1.25rem; padding: 1rem; border: 1px solid #dbe2ea; border-radius: 14px; background: #fff; color: #182433; }
+.mart-receipt-resolution h3 { margin-top: 0; }
+.mart-receipt-resolution ::deep fieldset { display: grid; gap: .75rem; margin-block: 1rem; padding: 1rem; border: 1px solid #dbe2ea; border-radius: 10px; }
+.mart-receipt-resolution ::deep label { display: grid; gap: .35rem; }
+.mart-receipt-resolution ::deep label:has(input[type="checkbox"]) { display: flex; align-items: flex-start; gap: .5rem; }
+.mart-receipt-resolution ::deep input:not([type="checkbox"]) { width: 100%; min-height: 44px; padding: .5rem; border: 1px solid #9aa9ba; border-radius: 7px; box-sizing: border-box; }
+.mart-receipt-resolution ::deep button { min-height: 44px; padding: .6rem .9rem; border: 1px solid #7d8b9c; border-radius: 8px; background: #f6f8fa; color: #182433; }
+.mart-receipt-resolution ::deep button:disabled { opacity: .55; }
+.mart-receipt-resolution ::deep dl { display: grid; grid-template-columns: minmax(6rem, 1fr) 2fr; gap: .4rem .75rem; }
+.mart-receipt-resolution ::deep dd { margin: 0; }
+.mart-receipt-resolution ::deep [role="alert"] { padding: .65rem; border-inline-start: 3px solid #9c342f; background: #fff3f2; }

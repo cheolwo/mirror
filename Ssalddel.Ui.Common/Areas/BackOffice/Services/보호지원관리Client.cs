@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Ssalddel.Contracts.Common.PrivacySupport;
 using Ssalddel.Contracts.Common.Community;
+using Ssalddel.Contracts.Admin.Food;
 using Ssalddel.Ui.Common.Areas.App.Services;
 
 namespace Ssalddel.Ui.Common.Areas.BackOffice.Services;
@@ -15,6 +16,10 @@ public interface I보호지원관리Client
     Task<보호지원증거Response> 비공개확인Async(string caseId, CancellationToken ct);
     Task<NeighborhoodMemberRecoveryContextResponse> 배송복구조회Async(string requestId, NeighborhoodMemberRecoveryRequest request, CancellationToken ct);
     Task<NeighborhoodMemberRecoveryResponse> 배송복구Async(string requestId, NeighborhoodMemberRecoveryRequest request, CancellationToken ct);
+    Task<FoodSupportFollowUpContext> 음식후속조회Async(string orderNo, string caseId, Guid? requestId, CancellationToken ct)
+        => throw new NotSupportedException();
+    Task<FoodSupportFollowUpResponse> 음식후속처리Async(string orderNo, FoodSupportFollowUpRequest request, CancellationToken ct)
+        => throw new NotSupportedException();
 }
 
 public sealed class 보호지원관리Client(ISsalddelJsonApiClient api) : I보호지원관리Client
@@ -42,6 +47,14 @@ public sealed class 보호지원관리Client(ISsalddelJsonApiClient api) : I보�
     public async Task<NeighborhoodMemberRecoveryResponse> 배송복구Async(string requestId, NeighborhoodMemberRecoveryRequest request, CancellationToken ct)
         => await api.SendAsync<NeighborhoodMemberRecoveryRequest, NeighborhoodMemberRecoveryResponse>(HttpMethod.Post,
             Delivery(requestId) + "/recover", request, "연결된 생활 배송 복구", cancellationToken: ct) ?? throw new InvalidOperationException();
+    private static string Food(string orderNo) => "api/v1/admin/food-orders/" + Uri.EscapeDataString(orderNo) + "/support-follow-up";
+    public async Task<FoodSupportFollowUpContext> 음식후속조회Async(string orderNo, string caseId, Guid? requestId, CancellationToken ct)
+        => await api.GetAsync<FoodSupportFollowUpContext>(Food(orderNo) + "?supportCaseId=" + Uri.EscapeDataString(caseId)
+            + (requestId.HasValue ? "&clientRequestId=" + requestId.Value.ToString("D") : ""), "연결된 음식 주문 처리 확인", false, ct)
+            ?? throw new InvalidOperationException();
+    public async Task<FoodSupportFollowUpResponse> 음식후속처리Async(string orderNo, FoodSupportFollowUpRequest request, CancellationToken ct)
+        => await api.SendAsync<FoodSupportFollowUpRequest, FoodSupportFollowUpResponse>(HttpMethod.Post,
+            Food(orderNo), request, "연결된 음식 주문 후속 처리", cancellationToken: ct) ?? throw new InvalidOperationException();
 }
 
 public static class 보호지원관리UiModule

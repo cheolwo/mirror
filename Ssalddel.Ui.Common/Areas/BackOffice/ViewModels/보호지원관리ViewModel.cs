@@ -27,7 +27,7 @@ public sealed partial class 보호지원관리ViewModel(I보호지원관리Clien
     public bool RequiresRefresh { get; private set; }
     public string? Error { get; private set; }
     public string? Notice { get; private set; }
-    public bool HasPending => _pending is not null || HasRecoveryPending;
+    public bool HasPending => _pending is not null || HasRecoveryPending || HasFoodFollowUpPending;
     public bool IsAuthenticated => !_disposed && !string.IsNullOrWhiteSpace(adminOwner());
     public int EvidenceCount { get; private set; }
     public int RecipientCount => _recipientIds.Count;
