@@ -1,0 +1,97 @@
+@page "/community-planning-r102/inbound"
+@using Ssalddel.Contracts.Common.Warehouse
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+
+<PageTitle>입고 일정 화면 검토 · 살뜰</PageTitle>
+<main data-community-inbound-r102-ready="true" data-case="@CurrentCase"
+      style="max-width:840px;min-width:0;margin:auto;padding:16px;color:#172b36;background:#f5f7fa;overflow-wrap:anywhere">
+    <aside aria-label="화면 검토 자료 안내" style="padding:16px;border:1px solid #dce5e9;border-radius:16px;background:#fff">
+        <strong>화면 검토용 합성 자료</strong>
+        <p style="margin:8px 0 0">실제 공통 입고 일정 요약을 예시 자료로 표시합니다. 실제 입고 예약·재고·계약을 만들지 않습니다.</p>
+    </aside>
+    <nav aria-label="입고 일정 화면 상태 선택" style="display:flex;flex-wrap:wrap;gap:12px;margin:16px 0">
+        <a href="/" style="min-height:48px;display:inline-flex;align-items:center;color:#0b5c56">검토 홈</a>
+        <a href="/community-planning-r102/inbound?case=planned" aria-current="@(CurrentCase == "planned" ? "page" : null)" style="min-height:48px;display:inline-flex;align-items:center;color:#0b5c56">예정·실입고</a>
+        <a href="/community-planning-r102/inbound?case=changed" aria-current="@(CurrentCase == "changed" ? "page" : null)" style="min-height:48px;display:inline-flex;align-items:center;color:#0b5c56">일정 변경안</a>
+        <a href="/community-planning-r102/inbound?case=unknown" aria-current="@(CurrentCase == "unknown" ? "page" : null)" style="min-height:48px;display:inline-flex;align-items:center;color:#0b5c56">일정 미확인</a>
+    </nav>
+    <section aria-label="390폭 입고 계획 목록" style="width:100%;max-width:390px;min-width:0;margin:0 auto;padding:16px;border:1px solid #dce5e9;border-radius:16px;background:#fff">
+        <h1 style="margin:0;font-size:24px;line-height:32px">입고 계획·실물 확인</h1>
+        <p style="font-size:14px;line-height:22px;color:#586b78">입고 예정 수량과 실제 확인 수량을 구분합니다. 일부만 확인한 수량도 근거와 함께 보존됩니다.</p>
+        <ul class="items" style="list-style:none;padding:0;margin:16px 0 0">
+            <li style="margin:0;border:1px solid #dce5e9;border-radius:12px">
+                <div style="display:flex;flex-direction:column;gap:4px;padding:16px">
+                    <strong style="font-size:16px;line-height:24px">@PlanLabel</strong>
+                    <span style="font-size:14px;line-height:22px;color:#586b78">예정 @Lines.Sum(line => line.ExpectedQuantity) 개 · 확인 @Lines.Sum(line => line.ReceivedQuantity) 개</span>
+                </div>
+                <분산입고일정요약Panel Lines="Lines" Sites="Sites" />
+            </li>
+        </ul>
+    </section>
+</main>
+
+@code {
+    [SupplyParameterFromQuery(Name = "case")] public string? Case { get; set; }
+    private string CurrentCase => Case is "changed" or "unknown" ? Case : "planned";
+    private string PlanLabel => CurrentCase switch
+    {
+        "changed" => "생활 물품 입고 · 조건 변경 협의",
+        "unknown" => "생활 물품 입고 · 일정 확인 대기",
+        _ => "생활 물품 입고 · 계획됨"
+    };
+
+    private static IReadOnlyList<DistributedSiteDto> Sites { get; } =
+    [
+        new()
+        {
+            SiteId = "preview-site-r102", PublicLabel = "생활 보관 공간 A",
+            Locations = [new("preview-location-r102", "preview-site-r102", "preview-barcode-r102", "선반 1")]
+        }
+    ];
+
+    private IReadOnlyList<DistributedInboundLineDto> Lines
+    {
+        get
+        {
+            if (CurrentCase == "unknown")
+                return
+                [
+                    new("preview-line-a-r102", "preview-site-r102", "preview-location-r102", "preview-owner-r102", "생활 물품 A", "preview-lot-a-r102", 4, 0),
+                    Line("preview-line-b-r102", "생활 물품 B", 2, 0, new(), status: "Proposed")
+                ];
+            var first = Line("preview-line-a-r102", "생활 물품 A", 5, CurrentCase == "changed" ? 1 : 0, Terms());
+            if (CurrentCase == "changed")
+            {
+                var collaboration = first.InboundCollaboration!;
+                collaboration.TermsVersion = 2;
+                collaboration.StatusCode = "Proposed";
+                collaboration.ReservedTermsVersion = 1;
+                collaboration.ReservedTerms = Terms();
+                collaboration.ReservedTerms.Quantity = 3;
+                collaboration.ReservedTerms.ArrivalStartUtc = collaboration.ReservedTerms.ArrivalStartUtc.AddDays(-2);
+                collaboration.ReservedTerms.ArrivalEndUtc = collaboration.ReservedTerms.ArrivalEndUtc.AddDays(-2);
+                return [first];
+            }
+            var secondTerms = Terms();
+            secondTerms.Quantity = 3;
+            secondTerms.ArrivalStartUtc = secondTerms.ArrivalStartUtc.AddDays(2);
+            secondTerms.ArrivalEndUtc = secondTerms.ArrivalEndUtc.AddDays(2);
+            secondTerms.StorageEndsAtUtc = secondTerms.StorageEndsAtUtc.AddDays(2);
+            return [first, Line("preview-line-b-r102", "생활 물품 B", 3, 1, secondTerms)];
+        }
+    }
+
+    private static DistributedInboundLineDto Line(string id, string sku, int expected, int received, DistributedInboundCollaborationTerms terms, string status = "Confirmed")
+        => new(id, "preview-site-r102", "preview-location-r102", "preview-owner-r102", sku, "preview-lot-r102", expected, received)
+        {
+            InboundCollaboration = new() { TermsVersion = 1, StatusCode = status, Terms = terms }
+        };
+
+    private static DistributedInboundCollaborationTerms Terms() => new()
+    {
+        Quantity = 5,
+        ArrivalStartUtc = new(2026, 10, 20, 1, 0, 0, DateTimeKind.Utc),
+        ArrivalEndUtc = new(2026, 10, 20, 3, 0, 0, DateTimeKind.Utc),
+        StorageEndsAtUtc = new(2026, 10, 25, 3, 0, 0, DateTimeKind.Utc)
+    };
+}

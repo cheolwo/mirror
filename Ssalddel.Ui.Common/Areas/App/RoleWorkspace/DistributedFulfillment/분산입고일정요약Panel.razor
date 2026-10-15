@@ -1,0 +1,67 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Contracts.Common.Warehouse
+
+@if (Lines.Count > 0)
+{
+    <div class="inbound-schedule" aria-label="상품별 입고 일정 요약">
+        @foreach (var line in Lines)
+        {
+            var collaboration = line.InboundCollaboration;
+            <div class="inbound-schedule__line">
+                <div class="inbound-schedule__heading">
+                    <strong>@line.Sku</strong>
+                    <span>@LocationLabel(line)</span>
+                </div>
+                <p class="inbound-schedule__status">@분산이행표시.InboundCollaborationStatus(collaboration?.StatusCode)</p>
+                <p class="inbound-schedule__quantity">예정 @line.ExpectedQuantity 개 · 실제 입고 @line.ReceivedQuantity 개</p>
+                @if (collaboration is null)
+                {
+                    <p class="inbound-schedule__unknown">도착·보관 일정 미확인</p>
+                }
+                else
+                {
+                    var hasPreviousReservation = collaboration.ReservedTerms is not null
+                        && collaboration.ReservedTermsVersion != collaboration.TermsVersion;
+                    <dl class="inbound-schedule__facts">
+                        <div><dt>@(hasPreviousReservation ? "변경안 도착 예정" : "도착 예정")</dt><dd>@ArrivalWindow(collaboration.Terms)</dd></div>
+                        <div><dt>@(hasPreviousReservation ? "변경안 보관 종료" : "보관 종료")</dt><dd>@StorageEnd(collaboration.Terms)</dd></div>
+                    </dl>
+                    @if (hasPreviousReservation && collaboration.ReservedTerms is { } reserved)
+                    {
+                        <div class="inbound-schedule__reservation" aria-label="이전 확정 예약 일정">
+                            <p>이전 확정 예약 · @(collaboration.ReservedTermsVersion is { } version ? $"{version} 차" : "판본 확인 필요")</p>
+                            <dl class="inbound-schedule__facts">
+                                <div><dt>확보 수량</dt><dd>@reserved.Quantity 개</dd></div>
+                                <div><dt>도착 예정</dt><dd>@ArrivalWindow(reserved)</dd></div>
+                                <div><dt>보관 종료</dt><dd>@StorageEnd(reserved)</dd></div>
+                            </dl>
+                        </div>
+                    }
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<DistributedInboundLineDto> Lines { get; set; } = [];
+    [Parameter] public IReadOnlyList<DistributedSiteDto> Sites { get; set; } = [];
+
+    private string LocationLabel(DistributedInboundLineDto line)
+    {
+        var site = Sites.FirstOrDefault(item => item.SiteId == line.SiteId);
+        var location = site?.Locations.FirstOrDefault(item => item.LocationId == line.LocationId);
+        if (site is null || location is null) return "보관 위치 확인 대기";
+        return $"{site.PublicLabel} · {location.Label}";
+    }
+
+    private static string ArrivalWindow(DistributedInboundCollaborationTerms terms)
+        => terms.ArrivalStartUtc == default || terms.ArrivalEndUtc <= terms.ArrivalStartUtc
+            ? "일정 미확인"
+            : $"{분산이행표시.Time(terms.ArrivalStartUtc)} ~ {분산이행표시.Time(terms.ArrivalEndUtc)}";
+
+    private static string StorageEnd(DistributedInboundCollaborationTerms terms)
+        => terms.StorageEndsAtUtc == default || terms.ArrivalEndUtc == default || terms.StorageEndsAtUtc < terms.ArrivalEndUtc
+            ? "일정 미확인"
+            : 분산이행표시.Time(terms.StorageEndsAtUtc);
+}
