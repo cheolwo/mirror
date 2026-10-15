@@ -34,6 +34,9 @@ public sealed record FoodDispatchTimingInput
     /// <summary>최초 큐 생성 시각입니다. 재평가·새 주문·UpdatedAt으로 바꾸지 않습니다.</summary>
     public DateTimeOffset QueuedAtUtc { get; init; }
     public DateTimeOffset? SnapshotAtUtc { get; init; }
+    /// <summary>서버 조회가 결속한 정보 준비 상태입니다. 구형 순수 정책 입력의 null은 호환용이며 실제 수집 대기에는 허용하지 않습니다.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public FoodDispatchInformationReadiness? InformationReadiness { get; init; }
     /// <summary>확인된 배차 마감이 있을 때만 제공합니다. 미확인은 null입니다.</summary>
     public DateTimeOffset? LatestDispatchAtUtc { get; init; }
     public bool Applicable { get; init; } = true;

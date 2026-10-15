@@ -112,6 +112,7 @@ public sealed partial class 분산물류UseCase
         {
             var wave = await Wave(id, ct); OwnWave(actor, wave); Revision(wave.Revision, r);
             Require(wave.StatusCode is "Closed" or "Planned" or "NeedsReplan" or "AcceptancePending", "DistributedWaveCannotPlan");
+            if (sharedAdmission is not null) await sharedAdmission.LockAsync(r.DriverId, ct);
             var driver = await db.용달기사.AsNoTracking().SingleOrDefaultAsync(x => x.기사Id == r.DriverId && x.상태 == "활동중", ct);
             Require(driver is not null && driverLocations.TryGetLatest(r.DriverId, out _), "DistributedDriverLocationMissing");
             driverLocations.TryGetLatest(r.DriverId, out var location);
@@ -123,9 +124,21 @@ public sealed partial class 분산물류UseCase
             var cargoIds = orders.Select(x => x.CargoRequestId).ToArray();
             var existingAssignments = await db.운송원장.AsNoTracking().Where(x => Enumerable.Contains(cargoIds, x.의뢰Id)
                 && x.상태 != "인수완료" && x.배차큐단계 != 상태값.배차큐단계.종료)
-                .Select(x => new { x.기사_운송자, x.확정기사Id }).ToArrayAsync(ct);
+                .ToArrayAsync(ct);
             Require(existingAssignments.All(x => (string.IsNullOrWhiteSpace(x.기사_운송자) || x.기사_운송자 == r.DriverId)
                 && (string.IsNullOrWhiteSpace(x.확정기사Id) || x.확정기사Id == r.DriverId)), "DistributedCargoAssignmentDriverLocked");
+            if (sharedAdmission is not null)
+            {
+                // 계획 전체를 한 번에 검사해 개별 건은 맞지만 전체 묶음이 희망 한도를 초과하는 계획을 막습니다.
+                // 동일 요청의 영수증은 Execute가 먼저 복구하고, 기존 확정 건은 공통 관문이 중복 계산하지 않습니다.
+                var participation = await sharedAdmission.CheckAsync(r.DriverId, cargoIds, ct);
+                if (participation.IsFailed)
+                {
+                    var error = participation.Errors[0];
+                    throw new DistributedFulfillmentException(error.Metadata.GetValueOrDefault("ErrorCode")?.ToString()
+                        ?? "DistributedDriverParticipationRequired");
+                }
+            }
             Require(!await db.운송원장.AnyAsync(x => x.기사_운송자 == r.DriverId && x.상태 != "인수완료" && x.배차큐단계 != 살뜰.도메인.공통.상태값.배차큐단계.종료 && !Enumerable.Contains(cargoIds, x.의뢰Id), ct), "DistributedDriverOtherCommitmentsRequireReplan");
             var orderIdsForPlan = orders.Select(x => x.OrderId).ToArray();
             var reservations = await Query<분산재고예약Record>().Where(x => Enumerable.Contains(orderIdsForPlan, x.OrderId)).ToArrayAsync(ct);
@@ -196,8 +209,25 @@ public sealed partial class 분산물류UseCase
             Revision(wave.Revision, r); Require(wave.StatusCode is "Planned" or "AcceptancePending", "DistributedRoundCannotAccept");
             Require(Now <= wave.DeliveryEndUtc && Stops(wave).Where(x => x.StatusCode == "Pending").All(x => Now <= x.WindowEndUtc), "DistributedPickingGrantExpired");
             Require(driverLocations.TryGetLatest(actor.UserId, out var currentLocation) && currentLocation.RecordedAtUtc >= Now.AddMinutes(-2), "DistributedDriverLocationStale");
-            // Each existing cargo acceptance has its own transaction. Never describe partial assignment as a fully accepted round.
             var orders = await Query<분산배송주문Record>().Where(x => x.WaveId == id && x.StatusCode != "Cancelled" && x.StatusCode != "Delivered").ToArrayAsync(ct);
+            if (sharedAdmission?.Enabled == true)
+            {
+                // 계획 뒤 희망 한도가 바뀐 경우에도 첫 화물 수락 전에 전체 묶음을 재검사합니다.
+                // 이 사전 검사는 용량 예약이 아닙니다. 각 화물 수락이 최신 사실을 다시 확인합니다.
+                await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+                {
+                    await using var preflight = await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
+                    var participation = await sharedAdmission.CheckAsync(actor.UserId, orders.Select(x => x.CargoRequestId).ToArray(), ct);
+                    if (participation.IsFailed)
+                    {
+                        var error = participation.Errors[0];
+                        throw new DistributedFulfillmentException(error.Metadata.GetValueOrDefault("ErrorCode")?.ToString()
+                            ?? "DistributedDriverParticipationRequired");
+                    }
+                    await preflight.CommitAsync(ct);
+                });
+            }
+            // Each existing cargo acceptance has its own transaction. Never describe partial assignment as a fully accepted round.
             foreach (var order in orders)
             {
                 db.ChangeTracker.Clear(); var latest = await Wave(id, ct);

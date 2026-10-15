@@ -12,6 +12,7 @@ using 살뜰.Services.Dispatch.Engine;
 using 살뜰.Services.Dispatch.Notification;
 using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.Services.Dispatch.AI;
+using Ssalddel.Services.Dispatch.Participation;
 
 namespace 살뜰.Services.Dispatch.Queue
 {
@@ -30,6 +31,8 @@ namespace 살뜰.Services.Dispatch.Queue
         private readonly IFoodDispatchTimingService? _dispatchTiming;
         private readonly TimeProvider _timingClock;
         private readonly ILogger<배차대기원장전환Service>? _timingLogger;
+        private readonly ISharedDriverWorkAdmissionService? _sharedAdmission;
+        private readonly I소형배송기사제안요금Service? _smallGoodsPricing;
 
         public 배차대기원장전환Service(
             SsalddelContext db,
@@ -44,7 +47,9 @@ namespace 살뜰.Services.Dispatch.Queue
             IFoodDispatchCandidateAI? candidateAI = null,
             IFoodDispatchTimingService? dispatchTiming = null,
             TimeProvider? timeProvider = null,
-            ILogger<배차대기원장전환Service>? timingLogger = null)
+            ILogger<배차대기원장전환Service>? timingLogger = null,
+            ISharedDriverWorkAdmissionService? sharedAdmission = null,
+            I소형배송기사제안요금Service? smallGoodsPricing = null)
         {
             _db = db;
             _options = options.Value;
@@ -59,6 +64,8 @@ namespace 살뜰.Services.Dispatch.Queue
             _dispatchTiming = dispatchTiming;
             _timingClock = timeProvider ?? TimeProvider.System;
             _timingLogger = timingLogger;
+            _sharedAdmission = sharedAdmission;
+            _smallGoodsPricing = smallGoodsPricing;
         }
 
         public async Task<배차대기원장전환결과> 계획배차에서추천으로전환Async(string requestId, CancellationToken cancellationToken = default)
@@ -256,6 +263,12 @@ namespace 살뜰.Services.Dispatch.Queue
 
             if (!Ssalddel.Services.Community.생활배송배차Policy.공개허용(queue))
                 return 전환안됨(queue, 배차대기원장전환결과코드.단계불일치, "현재 선택에서 공개 콜을 허용하지 않았습니다.");
+            if (_smallGoodsPricing is not null)
+            {
+                var pricing = await _smallGoodsPricing.준비Async(queue, cancellationToken);
+                if (pricing.IsFailed)
+                    return 전환안됨(queue, 배차대기원장전환결과코드.배차구성오류, pricing.Errors[0].Message);
+            }
             공개배차상태적용(queue, DateTime.UtcNow);
 
             await _db.SaveChangesAsync(cancellationToken);

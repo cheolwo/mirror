@@ -29,7 +29,9 @@ public static class 음식배달기사제안요금Policy
         bool 한시수요할증허용,
         string deliveryKey = "offer",
         decimal 시간대할증액 = 0m,
-        FoodDeliveryPayoutPricingPolicy? 합의계산정책 = null)
+        FoodDeliveryPayoutPricingPolicy? 합의계산정책 = null,
+        FoodDeliveryPayoutPricingPolicy? 기본거리계산정책 = null,
+        string 거리근거Code = "RouteEstimate")
     {
         ArgumentNullException.ThrowIfNull(policy);
         if (시간대할증액 < 0m) throw new ArgumentException("FoodPricingTimeSurchargeInvalid", nameof(시간대할증액));
@@ -37,14 +39,14 @@ public static class 음식배달기사제안요금Policy
         if (합의계산정책 is null && (policy.기사픽업지급액 is < 0m || policy.기사픽업지급액 > policy.기사기본지급액))
             throw new ArgumentException("픽업 지급액은 총 기본 지급액 안에서 배분해야 합니다.", nameof(policy));
         var date = DateOnly.FromDateTime(판정시각Utc.UtcDateTime);
-        var calculationPolicy = 합의계산정책 ?? new FoodDeliveryPayoutPricingPolicy(
+        var calculationPolicy = 합의계산정책 ?? 기본거리계산정책 ?? new FoodDeliveryPayoutPricingPolicy(
             기본판본, date, date, policy.기사픽업지급액 ?? 0m,
             policy.기사기본지급액 - (policy.기사픽업지급액 ?? 0m), policy.거리단위Meters,
             policy.기사거리단위지급액, "Ceiling", policy.포함거리Meters, policy.기사최소지급액);
         // 배분 미정일 때 DropoffFeeKrw 칸은 기존 기본액 전체를 운반한다. 실제 전달비로 해석하지 않는다.
         var components = 음식배달지급검토Policy.구성계산(calculationPolicy,
             new FoodDeliveryPayoutReviewDelivery(deliveryKey, date, 픽업지에서전달지까지거리Km,
-                "RouteEstimate", "ExistingOperatingPolicy", 0m, 0m, 0m), calculationPolicy.PickupFeeKrw);
+                거리근거Code, "ExistingOperatingPolicy", 0m, 0m, 0m), calculationPolicy.PickupFeeKrw);
         var basePayout = components.GrossPayoutKrw;
         var weatherApplied = policy.기사기상할증활성화여부
                              && 유효한강수근거있음

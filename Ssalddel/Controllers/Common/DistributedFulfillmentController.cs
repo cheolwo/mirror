@@ -41,6 +41,24 @@ public sealed class DistributedFulfillmentController(IDistributedFulfillmentUseC
     public Task<IActionResult> CreateSite(DistributedSiteCreateRequest r, CancellationToken ct) => Run(a => useCase.SiteAsync(a, r, ct));
     [HttpPost("sites/{id}/consents")]
     public Task<IActionResult> Consent(string id, DistributedConsentRequest r, CancellationToken ct) => Run(a => useCase.ConsentAsync(a, id, r, ct));
+    [HttpPost("sites/{id}/stock-releases")]
+    public Task<IActionResult> StockReleaseProposal(string id, DistributedStockReleaseProposalRequest r, CancellationToken ct) => Run(a => useCase.StockReleaseProposalAsync(a, id, r, ct));
+    [HttpPost("sites/{id}/stock-release-consents")]
+    public Task<IActionResult> StockReleaseConsent(string id, DistributedStockReleaseConsentRequest r, CancellationToken ct) => Run(a => useCase.StockReleaseConsentAsync(a, id, r, ct));
+    [HttpPost("sites/{id}/stock-release-handovers")]
+    public Task<IActionResult> StockReleaseHandover(string id, DistributedStockReleaseHandoverRequest r, CancellationToken ct) => Run(a => useCase.StockReleaseHandoverAsync(a, id, r, ct));
+    [HttpPost("sites/{id}/close")]
+    public Task<IActionResult> CloseSite(string id, DistributedSiteCloseRequest r, CancellationToken ct) => Run(a => useCase.CloseSiteAsync(a, id, r, ct));
+    [HttpPost("sites/{id}/acceptance-policy")]
+    public Task<IActionResult> AcceptancePolicy(string id, DistributedSiteAcceptancePolicyRequest r, CancellationToken ct) => Run(a => useCase.SiteAcceptancePolicyAsync(a, id, r, ct));
+    [HttpPost("inbound-plans/{id}/lines/{lineKey}/proposals")]
+    public Task<IActionResult> InboundProposal(string id, string lineKey, DistributedInboundProposalRequest r, CancellationToken ct) => Run(a => useCase.InboundProposalAsync(a, id, lineKey, r, ct));
+    [HttpPost("inbound-plans/{id}/lines/{lineKey}/consents")]
+    public Task<IActionResult> InboundConsent(string id, string lineKey, DistributedInboundConsentRequest r, CancellationToken ct) => Run(a => useCase.InboundConsentAsync(a, id, lineKey, r, ct));
+    [HttpPost("inbound-plans/{id}/lines/{lineKey}/decisions")]
+    public Task<IActionResult> InboundDecision(string id, string lineKey, DistributedInboundDecisionRequest r, CancellationToken ct) => Run(a => useCase.InboundDecisionAsync(a, id, lineKey, r, ct));
+    [HttpPost("inbound-plans/{id}/lines/{lineKey}/notes")]
+    public Task<IActionResult> InboundNote(string id, string lineKey, DistributedInboundNoteRequest r, CancellationToken ct) => Run(a => useCase.InboundNoteAsync(a, id, lineKey, r, ct));
     [HttpPost("sites/{id}/storage-agreements")]
     public Task<IActionResult> Agreement(string id, DistributedStorageAgreementRequest r, CancellationToken ct) => Run(a => useCase.AgreementAsync(a, id, r, ct));
     [HttpPost("storage-agreements/{id}/terms")]

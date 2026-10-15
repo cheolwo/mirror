@@ -8,6 +8,10 @@ public static partial class SsalddelPageCapabilityCatalog
         foreach (var app in new[] { SsalddelPageAppCodes.IntegratedWeb, SsalddelPageAppCodes.Shipper })
         {
             var prefix = app == SsalddelPageAppCodes.IntegratedWeb ? "web" : "shipper";
+            rules.Add(Prefix(prefix + "-activity-settlements", app, "/activity-settlements", PageCapabilityStage.Beta,
+                PageInteractionBoundary.Simulation, true, "3.5",
+                "기본 비활성 정산 연습 기능입니다. 인증한 본인의 기본보수·공동 초과성과금 근거를 조회하고 약정 동의·항목 확인·이의·수령 진술을 기록합니다. 실제 이체나 확정 이익·은행 입금 인증은 제공하지 않습니다.",
+                workflowCodes: ["WarehouseFulfillment", "FoodDelivery", "DomesticTransport"]));
             rules.Add(Prefix(prefix + "-role-workspace-login", app, "/workspace-login", PageCapabilityStage.Beta,
                 PageInteractionBoundary.PlatformPersistence, false, "3.5",
                 "역할의 계정 인증만 수행하고 원래 업무로 복귀합니다. 역할 선택은 업무 권한을 부여하지 않습니다."));

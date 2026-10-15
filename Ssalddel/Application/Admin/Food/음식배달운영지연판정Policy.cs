@@ -9,13 +9,17 @@ public sealed record 음식배달운영지연판정입력(
     DateTime? 조리예상완료시각Utc = null,
     DateTime? 픽업준비시각Utc = null,
     DateTime? 픽업완료시각Utc = null,
-    DateTime? 전달완료시각Utc = null);
+    DateTime? 전달완료시각Utc = null,
+    DateTime? 기사확보대기시작시각Utc = null,
+    bool 유효기사배정 = false);
 
 public sealed record 음식배달운영지연판정결과(
     string 음식점준비지연상태Code,
     int 음식점준비초과분,
     string 배달진행지연상태Code,
-    int 배달진행초과분);
+    int 배달진행초과분,
+    string 기사확보지연상태Code = 음식배달운영지연상태Codes.없음,
+    int 기사확보대기분 = 0);
 
 /// <summary>
 /// 운영 화면이 같은 사실을 '예상 시간 초과'와 '조리 지연'으로 중복 표시하지 않도록
@@ -37,12 +41,18 @@ public static class 음식배달운영지연판정Policy
         var state = 음식주문상태코드.Normalize(input.주문상태);
         var preparationOverdue = 음식점준비초과분(input, state);
         var deliveryOverdue = 배달진행초과분(input, state);
+        var dispatchWait = !input.유효기사배정
+            && state is 음식주문상태코드.주문확인 or 음식주문상태코드.조리중 or 음식주문상태코드.픽업대기
+            && input.기사확보대기시작시각Utc.HasValue
+                ? 초과분(input.조회시각Utc, input.기사확보대기시작시각Utc.Value) : 0;
 
         return new 음식배달운영지연판정결과(
             지연상태(preparationOverdue),
             preparationOverdue,
             지연상태(deliveryOverdue),
-            deliveryOverdue);
+            deliveryOverdue,
+            지연상태(dispatchWait),
+            dispatchWait);
     }
 
     private static int 음식점준비초과분(

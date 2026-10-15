@@ -63,6 +63,12 @@ public sealed partial class 운송완료입금요청Service : I운송완료입�
             return new 운송완료입금요청결과(false, "화주 운송 의뢰 없음");
         }
 
+        // 지연된 상차 Event가 이미 끝난 운송을 상차완료로 되돌리거나 뒤늦게 조기 청구하지 않는다.
+        if (context.입금요청종류 == 운송입금요청종류.상차완료조기정산
+            && request.배차상태 is "운송중" or "하차지도착" or "인수완료" or "취소")
+            return new 운송완료입금요청결과(false, "이미 다음 운송 단계로 진행되어 조기 입금 요청을 생략합니다.", request.의뢰Id);
+        if (request.배차상태 == "취소")
+            return new 운송완료입금요청결과(false, "취소된 의뢰의 입금 요청은 만들지 않습니다.", request.의뢰Id);
         request.배차상태 = context.배차상태;
 
         var hasOpenAbnormalTransportIncident = await _db.비정상운송사건

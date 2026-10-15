@@ -25,7 +25,17 @@ public sealed class DistributedStorageAgreementConsentRequest : DistributedComma
 public sealed record DistributedStorageAgreementDto(string AgreementId, string SiteId, string LocationId,
     string SpaceOwnerUserId, string GoodsOwnerUserId, int TermsVersion, long Revision, string StatusCode,
     bool SpaceOwnerConsented, bool GoodsOwnerConsented, DistributedStorageTerms Terms,
-    IReadOnlyList<string> AllowedActions);
+    IReadOnlyList<string> AllowedActions)
+{
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public DistributedStorageTerms? PendingTerms { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public int? PendingTermsVersion { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public bool? PendingSpaceOwnerConsented { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public bool? PendingGoodsOwnerConsented { get; init; }
+}
 
 public sealed class DistributedInboundReceiptBatchRequest : DistributedCommandRequest
 {

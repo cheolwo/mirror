@@ -139,7 +139,9 @@ public sealed class 기사운송상태변경CommandExecutor : I기사운송상�
                         기사운송상태코드.인수완료,
                         StringComparison.Ordinal)
                         ? Guid.NewGuid().ToString("N")
-                        : string.Empty
+                        : string.Empty,
+                    cargoCloseoutR69 = request.이벤트명 == nameof(운송인수완료됨Event)
+                        ? CargoCompletionRecoveryMarker.Create(entity, now) : null
                 })
             });
         }

@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Ssalddel.Services.Dispatch.Participation;
 using Ssalddel.Contracts.Common.Warehouse;
 using 살뜰.Data;
 using 살뜰.Services.Options;
@@ -36,12 +37,21 @@ public interface IDistributedFulfillmentUseCase
     Task<DistributedCommandResponse> AgreementAsync(DistributedActor actor, string siteId, DistributedStorageAgreementRequest request, CancellationToken ct);
     Task<DistributedCommandResponse> AgreementTermsAsync(DistributedActor actor, string id, DistributedStorageAgreementRequest request, CancellationToken ct);
     Task<DistributedCommandResponse> AgreementConsentAsync(DistributedActor actor, string id, DistributedStorageAgreementConsentRequest request, CancellationToken ct);
+    Task<DistributedCommandResponse> SiteAcceptancePolicyAsync(DistributedActor actor, string id, DistributedSiteAcceptancePolicyRequest request, CancellationToken ct);
+    Task<DistributedCommandResponse> InboundProposalAsync(DistributedActor actor, string id, string lineKey, DistributedInboundProposalRequest request, CancellationToken ct);
+    Task<DistributedCommandResponse> InboundConsentAsync(DistributedActor actor, string id, string lineKey, DistributedInboundConsentRequest request, CancellationToken ct);
+    Task<DistributedCommandResponse> InboundDecisionAsync(DistributedActor actor, string id, string lineKey, DistributedInboundDecisionRequest request, CancellationToken ct);
+    Task<DistributedCommandResponse> InboundNoteAsync(DistributedActor actor, string id, string lineKey, DistributedInboundNoteRequest request, CancellationToken ct);
     Task<DistributedCommandResponse> ReceiveBatchAsync(DistributedActor actor, string id, DistributedInboundReceiptBatchRequest request, CancellationToken ct);
     Task<DistributedCommandResponse> PickBatchAsync(DistributedActor actor, string id, DistributedPickBatchRequest request, CancellationToken ct);
     Task<DistributedCommandResponse> DeliverBatchAsync(DistributedActor actor, string id, DistributedDeliveryBatchRequest request, CancellationToken ct);
     Task<DistributedCommandResponse> ReturnBatchAsync(DistributedActor actor, string id, DistributedReturnBatchRequest request, CancellationToken ct);
     Task<DistributedCommandResponse> SiteAsync(DistributedActor actor, DistributedSiteCreateRequest request, CancellationToken ct);
     Task<DistributedCommandResponse> ConsentAsync(DistributedActor actor, string id, DistributedConsentRequest request, CancellationToken ct);
+    Task<DistributedCommandResponse> StockReleaseProposalAsync(DistributedActor actor, string siteId, DistributedStockReleaseProposalRequest request, CancellationToken ct);
+    Task<DistributedCommandResponse> StockReleaseConsentAsync(DistributedActor actor, string siteId, DistributedStockReleaseConsentRequest request, CancellationToken ct);
+    Task<DistributedCommandResponse> StockReleaseHandoverAsync(DistributedActor actor, string siteId, DistributedStockReleaseHandoverRequest request, CancellationToken ct);
+    Task<DistributedCommandResponse> CloseSiteAsync(DistributedActor actor, string siteId, DistributedSiteCloseRequest request, CancellationToken ct);
     Task<DistributedCommandResponse> LocationAsync(DistributedActor actor, string id, DistributedLocationCreateRequest request, CancellationToken ct);
     Task<DistributedCommandResponse> ImportLotAsync(DistributedActor actor, string id, DistributedExistingLotRequest request, CancellationToken ct);
     Task<DistributedCommandResponse> InboundAsync(DistributedActor actor, DistributedInboundPlanRequest request, CancellationToken ct);
@@ -62,7 +72,8 @@ public interface IDistributedFulfillmentUseCase
 public sealed partial class 분산물류UseCase(SsalddelContext db, ISsalddelExecutionModePolicy execution,
     IOptions<DistributedFulfillmentOptions> options, I분산배송경로Planner planner, I분산화물연결Service cargo,
     TimeProvider clock, IDriverLocationStore driverLocations, IDistributedBuildingCandidateProvider buildingCandidates,
-    IDistributedPhotoEvidenceBinder photoEvidence, I분산주문원장연결Adapter? orderLedgers = null) : IDistributedFulfillmentUseCase
+    IDistributedPhotoEvidenceBinder photoEvidence, I분산주문원장연결Adapter? orderLedgers = null,
+    ISharedDriverWorkAdmissionService? sharedAdmission = null) : IDistributedFulfillmentUseCase
 {
     private IQueryable<T> Query<T>() where T : class => db.Set<T>();
     private DateTime Now => clock.GetUtcNow().UtcDateTime;
@@ -121,9 +132,14 @@ public sealed partial class 분산물류UseCase(SsalddelContext db, ISsalddelExe
         try
         {
             var result = await action();
-            db.Add(new 분산물류CommandReceipt { ActorUserId = actor.UserId, RequestId = request.RequestId, InputDigest = digest,
-                Kind = kind, AggregateId = result.Id, Revision = result.Revision, StatusCode = result.Status,
-                ReservationId = result.Reservation, Quantity = result.Quantity, RecordedAtUtc = Now });
+            // 행별 근거를 포함한 영수증을 최종 결과와 함께 한 번만 저장합니다.
+            var receipt = db.ChangeTracker.Entries<분산물류CommandReceipt>().Select(x => x.Entity)
+                .SingleOrDefault(x => x.ActorUserId == actor.UserId && x.RequestId == request.RequestId)
+                ?? new 분산물류CommandReceipt { ActorUserId = actor.UserId, RequestId = request.RequestId };
+            if (db.Entry(receipt).State == EntityState.Detached) db.Add(receipt);
+            receipt.InputDigest = digest; receipt.Kind = kind; receipt.RecordedAtUtc = Now;
+            receipt.AggregateId = result.Id; receipt.Revision = result.Revision; receipt.StatusCode = result.Status;
+            receipt.ReservationId = result.Reservation; receipt.Quantity = result.Quantity;
             await db.SaveChangesAsync(ct); await tx.CommitAsync(ct); await tx.DisposeAsync();
             await cargo.FlushCommittedEventsAsync(CancellationToken.None);
             return new(request.RequestId, result.Id, result.Revision, result.Status, false);
@@ -168,6 +184,7 @@ public sealed partial class 분산물류UseCase(SsalddelContext db, ISsalddelExe
         => Execute(actor, "Consent", id, r, async () =>
         {
             var site = await Site(id, ct); Revision(site.Revision, r);
+            Require(site.StatusCode != "Closed", "DistributedSiteClosed");
             Require((r.ConsentKind == "Owner" && site.OwnerUserId == actor.UserId) || (r.ConsentKind == "Manager" && site.ManagerUserId == actor.UserId), "DistributedConsentPartyMismatch", 403);
             var evidence = Text(r.EvidenceReference, 200);
             if (r.ConsentKind == "Owner") site.OwnerConsented = r.Granted; else site.ManagerConsented = r.Granted;
@@ -226,7 +243,8 @@ public sealed partial class 분산물류UseCase(SsalddelContext db, ISsalddelExe
                 }
                 Require(sourceStock is not null && sourceStock.입고수량 == 0 && sourceStock.가용수량 == 0 && sourceStock.예약수량 == 0
                     && sourceStock.판매자UserId == actor.UserId && !string.IsNullOrWhiteSpace(sourceStock.소유자UserId), "DistributedInboundOwnershipEvidenceMissing");
-                var allocated = await Query<분산재고LotRecord>().Where(x => x.SourceInboundId == sourceId).SumAsync(x => (int?)x.ExpectedQuantity, ct) ?? 0;
+                var allocated = (await Query<분산재고LotRecord>().Where(x => x.SourceInboundId == sourceId).ToArrayAsync(ct))
+                    .Where(x => !ClosedInbound(x)).Sum(x => x.ExpectedQuantity);
                 Require(allocated + group.Sum(x => x.ExpectedQuantity) <= source!.예정수량, "DistributedInboundSourceOverallocated");
                 source.상태 = "분할입고예정";
                 foreach (var line in group)
@@ -244,7 +262,8 @@ public sealed partial class 분산물류UseCase(SsalddelContext db, ISsalddelExe
                     db.Add(stock); await db.SaveChangesAsync(ct);
                     db.Add(new 분산재고LotRecord { LotId = Id("lot"), PlanId = plan.PlanId, LineKey = Text(line.LineKey, 64), SiteId = site.SiteId,
                         LocationId = location.LocationId, SourceInboundId = source.Id, TargetInboundId = target.Id, InboundItemId = stock.Id,
-                        OwnerUserId = sourceStock.소유자UserId, SellerUserId = source.판매자UserId, Sku = stock.SKU, LotCode = Text(line.LotCode, 100), ExpectedQuantity = line.ExpectedQuantity }); site.Revision++;
+                        OwnerUserId = sourceStock.소유자UserId, SellerUserId = source.판매자UserId, Sku = stock.SKU, LotCode = Text(line.LotCode, 100), ExpectedQuantity = line.ExpectedQuantity,
+                        InboundCollaborationJson = site.AcceptancePolicyJson is not null ? Serialize(new DistributedInboundCollaborationDto { StatusCode = "Draft" }) : null }); site.Revision++;
                 }
             }
             return (plan.PlanId, plan.Revision, plan.StatusCode, (string?)null, 0);

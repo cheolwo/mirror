@@ -8,17 +8,22 @@ public sealed class 운송완료화주인수인계EventHandler : INotificationHa
 {
     private readonly I화물운송완료화주인수인계Service _handoffService;
     private readonly ILogger<운송완료화주인수인계EventHandler> _logger;
+    private readonly ICargoCompletionRecoveryService? _recovery;
 
     public 운송완료화주인수인계EventHandler(
         I화물운송완료화주인수인계Service handoffService,
-        ILogger<운송완료화주인수인계EventHandler> logger)
+        ILogger<운송완료화주인수인계EventHandler> logger,
+        ICargoCompletionRecoveryService? recovery = null)
     {
         _handoffService = handoffService;
         _logger = logger;
+        _recovery = recovery;
     }
 
     public async Task Handle(운송인수완료됨Event notification, CancellationToken cancellationToken)
     {
+        if (_recovery is not null)
+        { await _recovery.ProcessTransportAsync(notification.운송Id, cancellationToken); return; }
         try
         {
             var handoff = await _handoffService.완료결과요청Async(

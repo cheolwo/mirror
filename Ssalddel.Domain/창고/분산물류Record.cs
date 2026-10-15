@@ -10,6 +10,9 @@ public sealed class 분산거점Record
     public string OwnerUserId { get; set; } = "";
     public string ManagerUserId { get; set; } = "";
     public string PrivateDetailsJson { get; set; } = "{}";
+    // null은 기존 수용 정책 미설정 상태이며 미확인 조건을 임의로 허용한 뜻이 아닙니다.
+    public string? AcceptancePolicyJson { get; set; }
+    public long AcceptancePolicyRevision { get; set; }
     public bool SpaceConfirmed { get; set; }
     public bool PickupPointConfirmed { get; set; }
     public bool OwnerConsented { get; set; }
@@ -35,6 +38,8 @@ public sealed class 분산입고계획Record
 }
 public sealed class 분산재고LotRecord
 {
+    // 기존 입고 계획의 행별 협의·승인 이력입니다. 재고 원장의 수량 권위를 대체하지 않습니다.
+    public string? InboundCollaborationJson { get; set; }
     public string? StorageAgreementId { get; set; }
     public string StorageAgreementSnapshotJson { get; set; } = "[]";
     public string LotId { get; set; } = "";
@@ -114,4 +119,24 @@ public sealed class 분산물류CommandReceipt
     public long Revision { get; set; }
     public string StatusCode { get; set; } = "";
     public DateTime RecordedAtUtc { get; set; }
+    // 구형 영수증은 null입니다. 총수량/사진의 집합으로 행별 작업을 소급 추정하지 않습니다.
+    public string? CompletionLinesJson { get; set; }
 }
+
+/// <summary>완료 명령과 함께 저장한 행별 실물 근거입니다. 업무 상태나 새 재고 원장을 소유하지 않습니다.</summary>
+public sealed record 분산물류완료행
+{
+    public string LineKey { get; init; } = "";
+    public string WorkKind { get; init; } = "";
+    public string ActorUserId { get; init; } = "";
+    public string LotId { get; init; } = "";
+    public long InboundItemId { get; init; }
+    public long? InventoryHistoryId { get; init; }
+    public string? ReservationId { get; init; }
+    public string? OrderId { get; init; }
+    public string? RootOrderLedgerId { get; init; }
+    public int Quantity { get; init; }
+    public IReadOnlyList<string> PhotoEvidenceIds { get; init; } = [];
+}
+
+public sealed record 분산물류완료근거(int SchemaVersion, IReadOnlyList<분산물류완료행> Lines);

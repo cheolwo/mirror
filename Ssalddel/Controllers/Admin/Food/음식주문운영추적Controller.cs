@@ -23,8 +23,37 @@ namespace Ssalddel.Controllers.Admin.Food;
 public sealed class 음식주문운영추적Controller(
     I음식주문운영추적UseCase useCase,
     I음식배달중단검토UseCase? interruptionReviewUseCase = null,
-    I음식주문기사정산UseCase? settlementUseCase = null) : ControllerBase
+    I음식주문기사정산UseCase? settlementUseCase = null,
+    I음식주문지원후속UseCase? supportFollowUpUseCase = null) : ControllerBase
 {
+    [HttpGet("{orderNo}/support-follow-up")]
+    [SsalddelApiContractName("GetFoodSupportFollowUp")]
+    [SsalddelApiCapability(SsalddelCapability.FoodDelivery)]
+    [SsalddelApiOperation(SsalddelOperation.Browse)]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public Task<IActionResult> 지원후속조회(string orderNo, [FromQuery] string supportCaseId,
+        [FromQuery] Guid? clientRequestId, CancellationToken cancellationToken)
+        => 지원후속응답Async(async () => await supportFollowUpUseCase!.조회Async(orderNo, supportCaseId, clientRequestId, cancellationToken));
+
+    [HttpPost("{orderNo}/support-follow-up")]
+    [SsalddelApiContractName("ApplyFoodSupportFollowUp")]
+    [SsalddelApiCapability(SsalddelCapability.FoodDelivery)]
+    [SsalddelApiOperation(SsalddelOperation.Execute)]
+    public Task<IActionResult> 지원후속처리(string orderNo, [FromBody] FoodSupportFollowUpRequest request,
+        CancellationToken cancellationToken)
+        => 지원후속응답Async(async () => await supportFollowUpUseCase!.처리Async(orderNo, request, cancellationToken));
+
+    private async Task<IActionResult> 지원후속응답Async(Func<Task<object?>> action)
+    {
+        if (supportFollowUpUseCase is null) return StatusCode(StatusCodes.Status503ServiceUnavailable);
+        try { var result = await action(); return result is null ? NotFound() : Ok(result); }
+        catch (Ssalddel.Services.PrivacySupport.보호지원Exception ex)
+        { return this.ToProblemActionResult(ex.Message, ex.StatusCode); }
+        catch (ArgumentException ex) { return this.ToProblemActionResult(ex.Message, StatusCodes.Status400BadRequest); }
+        catch (DbUpdateConcurrencyException ex) { return this.ToProblemActionResult(ex.Message, StatusCodes.Status409Conflict); }
+        catch (InvalidOperationException ex) { return this.ToProblemActionResult(ex.Message, StatusCodes.Status409Conflict); }
+    }
+
     [HttpGet("operations")]
     [SsalddelApiContractName("GetOperationsList")]
     [SsalddelApiCapability(SsalddelCapability.FoodDelivery)]

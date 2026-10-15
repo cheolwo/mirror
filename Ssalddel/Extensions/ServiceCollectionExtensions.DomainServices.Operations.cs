@@ -107,6 +107,22 @@ public static partial class ServiceCollectionExtensions
                 && x.위치유효시간초 is > 0 and <= 600 && x.최대위치오차M is > 0m and <= 1000m,
                 "DriverReturnAreaPolicyInvalid").ValidateOnStart();
         services.AddScoped<I기사권역복귀Service, 기사권역복귀Service>();
+        services.AddOptions<Ssalddel.Services.Dispatch.Participation.SharedDriverWorkOptions>()
+            .BindConfiguration(Ssalddel.Services.Dispatch.Participation.SharedDriverWorkOptions.SectionName)
+            .Validate(x => x.OperationalMaxConcurrentJobs is >= 1 and <= 10, "SharedDriverWorkLimitInvalid").ValidateOnStart();
+        services.AddScoped<Ssalddel.Services.Dispatch.Participation.ISharedDriverWorkAdmissionService,
+            Ssalddel.Services.Dispatch.Participation.SharedDriverWorkAdmissionService>();
+        services.AddOptions<StraightLineDriverPricingOptions>()
+            .BindConfiguration(StraightLineDriverPricingOptions.SectionName);
+        services.AddOptions<TransportPrepaymentOptions>()
+            .BindConfiguration(TransportPrepaymentOptions.SectionName);
+        services.AddOptions<DriverPayoutBatchOptions>()
+            .BindConfiguration(DriverPayoutBatchOptions.SectionName);
+        services.AddScoped<Ssalddel.Application.Shipper.Payment.토스결제입금재조회UseCase>();
+        services.AddScoped<I배송료정산배치UseCase, 배송료정산배치UseCase>();
+        services.AddScoped<I소형배송기사제안요금Service, 소형배송기사제안요금Service>();
+        services.AddScoped<Ssalddel.Application.Driver.Participation.IDriverWorkParticipationUseCase,
+            Ssalddel.Application.Driver.Participation.DriverWorkParticipationUseCase>();
         services.AddSingleton<I기사권역복귀설정Store, Mongo기사권역복귀설정Store>();
         services.AddScoped<Ssalddel.Application.Driver.Settings.I기사권역복귀설정UseCase,
             Ssalddel.Application.Driver.Settings.기사권역복귀설정UseCase>();

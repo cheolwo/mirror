@@ -1,4 +1,5 @@
 using Ssalddel.Contracts.Common.Finance;
+using 살뜰.도메인.운송;
 
 namespace 살뜰.도메인.음식;
 
@@ -17,7 +18,7 @@ public static class 음식배달지급검토Policy
         Money(policy.MinimumPayoutKrw);
         Require(policy.IncludedDistanceMeters is >= 0 and <= 1000000, "포함 거리(m)가 유효하지 않습니다.");
         Require(policy.DistanceUnitMeters is >= 1 and <= 100000, "거리 단위(m)가 유효하지 않습니다.");
-        Require(policy.DistanceRoundingCode is "Floor" or "Ceiling", "거리 절사/올림을 명시해야 합니다.");
+        Require(policy.DistanceRoundingCode is "Floor" or "Ceiling" or StraightLineDeliveryPricingPolicy.RoundingCode, "거리 절사/올림 또는 비례 원 반올림을 명시해야 합니다.");
         Require(request.Deliveries.Count is >= 1 and <= 1000, "검토할 배달은 1~1000건이어야 합니다.");
         var deliveryKeys = new HashSet<string>(StringComparer.Ordinal);
         var pickupDays = new Dictionary<string, DateOnly>(StringComparer.Ordinal);
@@ -30,8 +31,8 @@ public static class 음식배달지급검토Policy
             Require(delivery.ServiceDate >= policy.EffectiveFrom && delivery.ServiceDate <= policy.EffectiveThrough,
                 "배달일이 요금 정책의 유효기간 밖입니다.");
             Require(delivery.DistanceKm is >= 0m and <= 1000m, "확인된 거리(km)가 필요합니다. 미확인은 0으로 대체하지 않습니다.");
-            Require(delivery.DistanceBasisCode is "AppDisplayed" or "RouteEstimate" or "ConfirmedRoute",
-                "앱 표시/경로 추정/확정 경로 거리의 구분이 필요합니다.");
+            Require(delivery.DistanceBasisCode is "AppDisplayed" or "RouteEstimate" or "ConfirmedRoute" or StraightLineDeliveryPricingPolicy.DistanceBasisCode,
+                "앱 표시/경로 추정/확정 경로/직선 거리의 구분이 필요합니다.");
             Money(delivery.TimeSurchargeKrw); Money(delivery.StorePromotionKrw); Money(delivery.RegionSurchargeKrw);
             var pickup = policy.PickupFeeKrw;
             if (delivery.SimultaneousPickupKey is not null)
@@ -62,14 +63,21 @@ public static class 음식배달지급검토Policy
         Require(delivery.DistanceKm is >= 0m and <= 1000m, "확인된 거리(km)가 필요합니다. 미확인은 0으로 대체하지 않습니다.");
         Require(policy.DistanceUnitMeters is >= 1 and <= 100000 && policy.IncludedDistanceMeters is >= 0 and <= 1000000,
             "거리 정책의 단위/포함 거리가 유효하지 않습니다.");
-        Require(policy.DistanceRoundingCode is "Floor" or "Ceiling", "거리 절사/올림을 명시해야 합니다.");
+        Require(policy.DistanceRoundingCode is "Floor" or "Ceiling" or StraightLineDeliveryPricingPolicy.RoundingCode, "거리 절사/올림 또는 비례 원 반올림을 명시해야 합니다.");
         Require(new[] { pickupFeeKrw, policy.DropoffFeeKrw, policy.DistanceUnitFeeKrw, policy.MinimumPayoutKrw,
             delivery.TimeSurchargeKrw, delivery.StorePromotionKrw, delivery.RegionSurchargeKrw }
             .All(value => value is >= 0m and <= 1000000000m), "지급 구성액이 유효하지 않습니다.");
         var distance = delivery.DistanceKm!.Value;
         var units = Math.Max(0m, distance * 1000m - policy.IncludedDistanceMeters) / policy.DistanceUnitMeters;
-        units = policy.DistanceRoundingCode == "Floor" ? Math.Floor(units) : Math.Ceiling(units);
-        var distanceFee = units * policy.DistanceUnitFeeKrw;
+        decimal distanceFee;
+        if (policy.DistanceRoundingCode == StraightLineDeliveryPricingPolicy.RoundingCode)
+            distanceFee = StraightLineDeliveryPricingPolicy.CalculateDistanceFee(
+                Math.Max(0m, distance - policy.IncludedDistanceMeters / 1000m), policy.DistanceUnitFeeKrw * 1000m / policy.DistanceUnitMeters);
+        else
+        {
+            units = policy.DistanceRoundingCode == "Floor" ? Math.Floor(units) : Math.Ceiling(units);
+            distanceFee = units * policy.DistanceUnitFeeKrw;
+        }
         var gross = pickupFeeKrw + policy.DropoffFeeKrw + distanceFee + delivery.TimeSurchargeKrw
                     + delivery.StorePromotionKrw + delivery.RegionSurchargeKrw;
         var minimumAdjustment = Math.Max(0m, policy.MinimumPayoutKrw - gross);

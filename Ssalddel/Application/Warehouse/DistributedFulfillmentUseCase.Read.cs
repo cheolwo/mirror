@@ -33,6 +33,7 @@ public sealed partial class 분산물류UseCase
         var orders = await Query<분산배송주문Record>().AsNoTracking().ToArrayAsync(ct);
         var waves = await Query<분산배송WaveRecord>().AsNoTracking().ToArrayAsync(ct);
         var reservations = await Query<분산재고예약Record>().AsNoTracking().ToArrayAsync(ct);
+        var allAgreements = await Query<분산보관합의Record>().AsNoTracking().ToArrayAsync(ct);
         var cargoIdsForActor = orders.Where(x => x.StatusCode is not "Delivered" and not "Cancelled").Select(x => x.CargoRequestId).ToArray();
         var currentAssignments = await db.운송원장.AsNoTracking().Where(x => Enumerable.Contains(cargoIdsForActor, x.의뢰Id)
             && x.기사_운송자 == actor.UserId && x.확정기사Id == actor.UserId && x.상태 != "인수완료"
@@ -76,14 +77,18 @@ public sealed partial class 분산물류UseCase
             if (canManage)
             {
                 if (site.OwnerUserId == actor.UserId) actions.Add("create-agreement");
+                if (site.OwnerUserId == actor.UserId) actions.Add("set-acceptance-policy");
                 if (site.OwnerUserId == actor.UserId) actions.Add(site.OwnerConsented ? "revoke-owner" : "consent-owner");
                 if (site.ManagerUserId == actor.UserId) actions.Add(site.ManagerConsented ? "revoke-manager" : "consent-manager");
-                if (site.StatusCode == "Active") actions.AddRange(["create-location", "import-lot", "receive"]);
+                if (site.StatusCode == "Active") { actions.AddRange(["create-location", "receive"]); if (site.AcceptancePolicyJson is null) actions.Add("import-lot"); }
+                if (site.StatusCode == "Closed") actions.Clear();
             }
             if (roleKey == "shipper") actions.Add("create-agreement");
             return new DistributedSiteDto { SiteId = site.SiteId, WarehouseId = site.WarehouseId, PlaceId = site.PlaceId,
                 PublicLabel = site.PublicLabel, PublicCandidateRef = site.PublicCandidateRef, StatusCode = site.StatusCode, Revision = site.Revision,
                 OwnerConsented = site.OwnerConsented, ManagerConsented = site.ManagerConsented, Floor = privateDetails?.Floor,
+                AcceptancePolicy = site.AcceptancePolicyJson is null ? null : Deserialize<DistributedSiteAcceptancePolicy>(site.AcceptancePolicyJson),
+                AcceptancePolicyRevision = site.AcceptancePolicyJson is null ? null : site.AcceptancePolicyRevision,
                 Subspace = privateDetails?.Subspace, PickupInstructions = privateDetails?.PickupInstructions, AllowedActions = actions,
                 Locations = canManage || canPick || roleKey == "shipper" ? locations.Where(x => x.SiteId == site.SiteId)
                     .Select(x => new DistributedLocationDto(x.LocationId, x.SiteId, canManage || canPick ? x.Barcode : "", canManage || canPick ? x.Label : "선택 가능한 적재 위치")).ToArray() : [] };
@@ -93,17 +98,21 @@ public sealed partial class 분산물류UseCase
                 x.SellerUserId, x.Sku, x.LotCode, x.InboundItemId, stocks[x.InboundItemId].입고수량, stocks[x.InboundItemId].가용수량, stocks[x.InboundItemId].예약수량,
                 ownerNames.GetValueOrDefault(x.OwnerUserId, "등록된 상품 소유자"), stocks[x.InboundItemId].상품명)).ToArray(),
             InboundPlans = roleKey is "warehouse" or "shipper" ? plans.Where(x => visibleLots.Any(l => l.PlanId == x.PlanId)).Select(x => new DistributedInboundDto(x.PlanId, x.SourceReference, x.StatusCode, x.Revision,
-                visibleLots.Where(l => l.PlanId == x.PlanId).Select(l => new DistributedInboundLineDto(l.LineKey, l.SiteId, l.LocationId, l.OwnerUserId, l.Sku, l.LotCode, l.ExpectedQuantity, l.ReceivedQuantity)).ToArray(),
-                roleKey == "warehouse" && visibleLots.Any(l => l.PlanId == x.PlanId && sites.Any(s => s.SiteId == l.SiteId && Manages(actor, s) && s.StatusCode == "Active")) ? ["receive"] : [])).ToArray() : [],
+                visibleLots.Where(l => l.PlanId == x.PlanId).Select(l => MapInboundLine(actor, l, allSites.Single(s => s.SiteId == l.SiteId), allAgreements)).ToArray(),
+                roleKey == "warehouse" && visibleLots.Any(l => l.PlanId == x.PlanId && sites.Any(s => s.SiteId == l.SiteId && Manages(actor, s)
+                    && s.StatusCode == "Active" && l.ReceivedQuantity < l.ExpectedQuantity && InboundApprovalReasons(l, s, allAgreements).Count == 0)) ? ["receive"] : [])).ToArray() : [],
             Receipts = (await Query<분산물류CommandReceipt>().AsNoTracking().Where(x => x.ActorUserId == actor.UserId).OrderByDescending(x => x.RecordedAtUtc).Take(200).ToArrayAsync(ct)).Select(ReceiptDto).ToArray() };
         var allowed = new List<string>();
         if (roleKey is "warehouse" or "shipper")
         {
             var delegatedOwnerIds = await db.입고상품.AsNoTracking().Where(x => x.판매자UserId == actor.UserId).Select(x => x.소유자UserId).Distinct().ToArrayAsync(ct);
-            var agreements = await Query<분산보관합의Record>().AsNoTracking().Where(x => x.SpaceOwnerUserId == actor.UserId || x.GoodsOwnerUserId == actor.UserId || x.CreatorUserId == actor.UserId).ToArrayAsync(ct);
+            var agreements = allAgreements.Where(x => x.SpaceOwnerUserId == actor.UserId || x.GoodsOwnerUserId == actor.UserId || x.CreatorUserId == actor.UserId).ToArray();
             workspace.StorageAgreements = agreements.Select(x => new DistributedStorageAgreementDto(x.AgreementId, x.SiteId, x.LocationId,
                 x.SpaceOwnerUserId, x.GoodsOwnerUserId, x.TermsVersion, x.Revision, AgreementStatus(x), x.SpaceOwnerConsented, x.GoodsOwnerConsented,
-                Deserialize<DistributedStorageTerms>(x.TermsJson), x.SpaceOwnerUserId == actor.UserId || x.GoodsOwnerUserId == actor.UserId ? ["change-terms", (x.SpaceOwnerUserId == actor.UserId && x.SpaceOwnerConsented) || (x.GoodsOwnerUserId == actor.UserId && x.GoodsOwnerConsented) ? "revoke" : "consent"] : [])).ToArray();
+                Deserialize<DistributedStorageTerms>(x.TermsJson), AgreementActions(actor, x))
+                { PendingTerms = x.PendingTermsJson is null ? null : Deserialize<DistributedStorageTerms>(x.PendingTermsJson), PendingTermsVersion = x.PendingTermsVersion,
+                    PendingSpaceOwnerConsented = x.PendingTermsJson is null ? null : x.PendingSpaceOwnerConsented,
+                    PendingGoodsOwnerConsented = x.PendingTermsJson is null ? null : x.PendingGoodsOwnerConsented }).ToArray();
             var managedSiteIds = allSites.Where(x => x.OwnerUserId == actor.UserId).Select(x => x.SiteId).ToArray();
             var ownerCandidateIds = roleKey == "warehouse" ? lots.Where(x => Enumerable.Contains(managedSiteIds, x.SiteId)).Select(x => x.OwnerUserId)
                 .Concat(delegatedOwnerIds).Append(actor.UserId).Distinct().ToArray() : delegatedOwnerIds.Append(actor.UserId).Distinct().ToArray();
@@ -175,6 +184,7 @@ public sealed partial class 분산물류UseCase
             linkStates[connection.OrderId] = orderLedgers is null ? new("Pending", ErrorCode: "DistributedOrderLedgerAdapterUnavailable")
                 : await orderLedgers.ReadAsync(actor.UserId, connection, ct);
         workspace.Waves = visibleWaves.Select(wave => MapWave(actor, roleKey, wave, orders.Where(x => x.WaveId == wave.WaveId).ToArray(), reservations.Where(x => x.WaveId == wave.WaveId).ToArray(), lots, requests, ValidGrant(wave), managedSites, workspace.Lots, linkStates)).ToArray();
+        await PopulateStockReleaseWorkspace(actor, roleKey, workspace, allSites, ct);
         return workspace;
     }
     private DistributedWaveDto MapWave(DistributedActor actor, string role, 분산배송WaveRecord wave, 분산배송주문Record[] allOrders,

@@ -94,7 +94,7 @@ public static partial class ServiceCollectionExtensions
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<TossPaymentsOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl);
-        });
+        }).RemoveAllLoggers();
         services.AddHttpClient<IImageGenerationProviderClient, NanoBananaImageGenerationClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<GeminiImageOptions>>().Value;

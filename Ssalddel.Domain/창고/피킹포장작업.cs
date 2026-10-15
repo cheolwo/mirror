@@ -58,6 +58,9 @@ public class 피킹포장작업
 
     public DateTime? 완료일시Utc { get; set; }
 
+    /// <summary>신규 완료 시 동결한 실제 처리자·처리량·전문 업무 연결입니다. 과거 완료에 소급 생성하지 않습니다.</summary>
+    public string? 완료근거Json { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

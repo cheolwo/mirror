@@ -36,11 +36,11 @@ public sealed record FoodDispatchTimingAISelection(string? ActionCode, string St
     "음식 권역의 미배정 주문·최근 유입·기사 참여 여력을 대조해 짧은 수집 또는 기존 즉시 처리를 판단한다.",
     Effects = SsalddelCodeEffect.PersistentRead | SsalddelCodeEffect.PersistentWrite | SsalddelCodeEffect.NetworkCall, FlowOrder = 46,
     StepKey = "application.food-dispatch-timing",
-    DependsOnStepKeys = ["application.food-demand-participation", "domain.food-dispatch-timing-policy"],
+    DependsOnStepKeys = ["application.food-demand-participation", "domain.food-dispatch-timing-policy", "domain.food-dispatch-information-policy"],
     ExecutionStage = SsalddelCodeExecutionStage.Query,
     ReadsFrom = SsalddelCodeDataScope.OperationalState, WritesTo = SsalddelCodeDataScope.OperationalState,
     Boundary = "최초 접수 시각의 수집 상한을 재시도·AI로 연장하지 않는다. 좌표 근사 조합은 적재/모든 약속 검증이나 실제 묶음 수락이 아니다. 기존 수요 서비스의 판정 투영 복구는 가능하나 요금·추천·수락·알림 원장은 변경하지 않는다.")]
-public sealed class FoodDispatchTimingService(SsalddelContext db, I음식배달수요참여Service demandService,
+public sealed partial class FoodDispatchTimingService(SsalddelContext db, I음식배달수요참여Service demandService,
     IFoodDispatchTimingAI ai, IOptions<FoodDispatchTimingOptions> options, FoodDispatchTimingPolicy policy,
     TimeProvider clock, ILogger<FoodDispatchTimingService> logger,
     ISsalddelFoodOrderStore? foodOrderStore = null) : IFoodDispatchTimingService
@@ -54,6 +54,7 @@ public sealed class FoodDispatchTimingService(SsalddelContext db, I음식배달�
         ArgumentNullException.ThrowIfNull(queue);
         cancellationToken.ThrowIfCancellationRequested();
         var settings = options.Value;
+        var timingSettings = settings.Policy;
         var now = clock.GetUtcNow();
         var applicable = Enabled && queue.배차업무유형 == 상태값.배차업무유형.음식배달
             && queue.상태 == 상태값.배차대기상태.대기 && !Market(queue)
@@ -67,26 +68,37 @@ public sealed class FoodDispatchTimingService(SsalddelContext db, I음식배달�
             IsRetry = queue.추천라운드 > 0 || queue.계획배차시도횟수 > 1
                 || queue.배차노출상태 == 상태값.배차노출상태.추천후보없음
         };
-        FoodDispatchTimingEvaluation Result(string status) => new(input, policy.Evaluate(input, settings.Policy), status);
-        if (!applicable) return new(input, policy.Evaluate(input), Enabled ? "NotApplicable" : "Disabled");
-        if (!settings.Validate()) return new(input, policy.Evaluate(input), "InvalidConfiguration");
+        var information = new TimingInformation(applicable && !input.HasActiveOffer && !input.IsRetry, queue, now);
+        // 설정 오류도 기존 복귀 결과로 반환하므로 준비 상태 계산에 잘못된 유효시간을 넘기지 않습니다.
+        var informationMaxAge = timingSettings?.MaxSnapshotAgeSeconds is >= 1 and <= 120
+            ? timingSettings.MaxSnapshotAgeSeconds : 15;
+        void RefreshInformation() => input = input with
+        {
+            InformationReadiness = information.Evaluate(input.NowUtc, informationMaxAge)
+        };
+        FoodDispatchTimingEvaluation Result(string status, FoodDispatchTimingDecision? decision = null, bool defaultPolicy = false)
+        {
+            input = input with { NowUtc = clock.GetUtcNow() };
+            RefreshInformation();
+            var currentDecision = policy.Evaluate(input, defaultPolicy ? null : timingSettings);
+            if (decision?.ActionCode == "Collect" && currentDecision.ActionCode != "Collect")
+                return new(input, currentDecision, status == "Applied" ? "ServerRequiredAfterAI" : "ServerRequired");
+            return new(input, decision ?? currentDecision, status);
+        }
+        if (!applicable) return Result(Enabled ? "NotApplicable" : "Disabled", defaultPolicy: true);
+        if (!settings.Validate() || timingSettings is null) return Result("InvalidConfiguration", defaultPolicy: true);
         // 재배차·기존 제안·최대 대기를 먼저 판정하여 불필요한 조회나 모델 호출을 하지 않습니다.
         if (input.HasActiveOffer || input.IsRetry || input.QueuedAtUtc == default || input.QueuedAtUtc > now
-            || (now - input.QueuedAtUtc).TotalSeconds >= settings.Policy.MaxWaitSeconds)
+            || (now - input.QueuedAtUtc).TotalSeconds >= timingSettings.MaxWaitSeconds)
             return Result("ServerRequired");
-        if (!Coordinate(queue.픽업_위도, queue.픽업_경도)) return Result("RegionUnknown");
+        if (!Coordinate(queue.픽업_위도, queue.픽업_경도)
+            || !Coordinate(queue.하차_위도, queue.하차_경도)) return Result("RegionUnknown");
 
         try
         {
-            var orderId = string.IsNullOrWhiteSpace(queue.원본의뢰Id) ? queue.의뢰Id : queue.원본의뢰Id;
-            var readyAt = foodOrderStore?.GetOrder(orderId)?.조리예상완료시각Utc;
-            if (readyAt.HasValue)
-            {
-                // 조리 예정 완료는 배차를 더 늦추지 않기 위한 보수적 상한입니다. 실제 픽업 시각이 아닙니다.
-                var readyUtc = readyAt.Value.Kind == DateTimeKind.Local
-                    ? readyAt.Value.ToUniversalTime() : DateTime.SpecifyKind(readyAt.Value, DateTimeKind.Utc);
-                input = input with { LatestDispatchAtUtc = new DateTimeOffset(readyUtc) };
-            }
+            var source = ReadOrderInformation(queue, information);
+            // 현재 차수의 조리 예정만 보수적 상한으로 사용합니다. 실제 픽업·도착 시각이 아닙니다.
+            input = input with { LatestDispatchAtUtc = source?.LatestDispatchAtUtc };
             cancellationToken.ThrowIfCancellationRequested();
             var region = 음식배달권정책.판정(new(queue.픽업_위도!.Value, queue.픽업_경도!.Value), null).배달권키;
             var keys = 음식배달권정책.인접배달권키조회(region).Append(region).ToHashSet(StringComparer.Ordinal);
@@ -102,7 +114,11 @@ public sealed class FoodDispatchTimingService(SsalddelContext db, I음식배달�
                     && x.픽업_경도 >= minLongitude && x.픽업_경도 < minLongitude + 3m * CellSize
                     && (x.CreatedAt >= from || x.상태 == 상태값.배차대기상태.대기))
                 .OrderBy(x => x.Id).Take(settings.MaximumQueueRows + 1).ToArrayAsync(cancellationToken);
-            if (rows.Length > settings.MaximumQueueRows) return Result("SnapshotTruncated");
+            if (rows.Length > settings.MaximumQueueRows)
+            {
+                information.Missing(FoodDispatchInformationKeys.OrderPool, "QueuePoolTruncated");
+                return Result("SnapshotTruncated");
+            }
             var regional = rows.Where(x => Coordinate(x.픽업_위도, x.픽업_경도)
                     && keys.Contains(음식배달권정책.판정(new(x.픽업_위도!.Value, x.픽업_경도!.Value), null).배달권키))
                 .GroupBy(x => string.IsNullOrWhiteSpace(x.원본의뢰Id) ? x.의뢰Id : x.원본의뢰Id, StringComparer.Ordinal)
@@ -112,8 +128,15 @@ public sealed class FoodDispatchTimingService(SsalddelContext db, I음식배달�
                 && string.IsNullOrWhiteSpace(x.현재추천대상기사Id)
                 && string.IsNullOrWhiteSpace(x.확정기사Id) && string.IsNullOrWhiteSpace(x.기사_운송자)
                 && !배차실행인덱스재구성정책.유효한추천중잠금인가(x, now.UtcDateTime)).ToArray();
-            if (!pending.Any(x => x.의뢰Id == queue.의뢰Id && x.Id == queue.Id)) return Result("CurrentQueueNotObserved");
+            if (!pending.Any(x => x.의뢰Id == queue.의뢰Id && x.Id == queue.Id))
+            {
+                information.Missing(FoodDispatchInformationKeys.OrderPool, "CurrentQueueNotObserved");
+                return Result("CurrentQueueNotObserved");
+            }
+            information.Current(FoodDispatchInformationKeys.OrderPool, clock.GetUtcNow());
             var demand = await demandService.평가Async(queue, cancellationToken);
+            ObserveDemandInformation(information, demand);
+            RecheckOrderInformation(queue, source, information);
             var observedAt = clock.GetUtcNow();
             var current = Current(demand, observedAt);
             var compatible = pending.Count(x => Compatible(queue, x));
@@ -126,35 +149,43 @@ public sealed class FoodDispatchTimingService(SsalddelContext db, I음식배달�
                 DriverCapacityKnown = current && demand!.기존기사가용처리건수.HasValue,
                 AvailableDrivers = current ? demand!.기사판정목록.Count(x => x.신규제안허용) : 0,
                 WaitingOrders = pending.Length, CompatibleOrders = compatible,
-                PromisingPlanAvailable = compatible >= settings.Policy.MinimumCompatibleOrders,
-                ExpectedNewOrders = arrivals * (decimal)settings.Policy.CollectionSeconds / settings.ObservationSeconds,
+                PromisingPlanAvailable = compatible >= timingSettings.MinimumCompatibleOrders,
+                ExpectedNewOrders = arrivals * (decimal)timingSettings.CollectionSeconds / settings.ObservationSeconds,
                 DelayRisk = pending.Any(x => x.CreatedAt < now.UtcDateTime.AddMinutes(-10))
             };
-            var baseline = policy.Evaluate(input, settings.Policy);
-            if (!baseline.AllowedActions.Contains("Collect", StringComparer.Ordinal)) return new(input, baseline, "ServerRequired");
-            if (!ai.Enabled) return new(input, baseline, "Disabled");
+            RefreshInformation();
+            var baseline = policy.Evaluate(input, timingSettings);
+            if (!baseline.AllowedActions.Contains("Collect", StringComparer.Ordinal)) return Result("ServerRequired", baseline);
+            if (!ai.Enabled) return Result("Disabled", baseline);
             var selection = await ai.SelectAsync(input, baseline, cancellationToken);
+            RecheckOrderInformation(queue, source, information);
             // 모델 대기 중 경과한 시간도 원래 접수 시각에 합산합니다.
             input = input with { NowUtc = clock.GetUtcNow() };
-            var currentDecision = policy.Evaluate(input, settings.Policy);
+            RefreshInformation();
+            var currentDecision = policy.Evaluate(input, timingSettings);
             if (selection.StatusCode == "Applied" && selection.ActionCode == "Collect"
                 && currentDecision.AllowedActions.Contains("Collect", StringComparer.Ordinal))
-                return new(input, currentDecision, "Applied");
+                return Result("Applied", currentDecision);
             if (selection.StatusCode == "Applied" && selection.ActionCode == "Collect")
-                return new(input, currentDecision, "ServerRequiredAfterAI");
+                return Result("ServerRequiredAfterAI", currentDecision);
             if (selection.StatusCode == "Applied" && selection.ActionCode == "DispatchNow")
-                return new(input, currentDecision with { ActionCode = "DispatchNow", ReasonCode = "AITimingDispatchNow", RecheckAtUtc = null,
-                    AllowedActions = ["DispatchNow"] }, "Applied");
+                return Result("Applied", currentDecision with { ActionCode = "DispatchNow", ReasonCode = "AITimingDispatchNow", RecheckAtUtc = null,
+                    AllowedActions = ["DispatchNow"] });
             // 통신 실패 또는 허용 밖 선택으로 주문을 더 기다리게 만들지 않습니다.
-            return new(input, currentDecision with { ActionCode = "DispatchNow", ReasonCode = "AITimingFallback", RecheckAtUtc = null,
-                AllowedActions = ["DispatchNow"] },
-                selection.StatusCode == "Applied" ? "InvalidSelection" : selection.StatusCode);
+            return Result(selection.StatusCode == "Applied" ? "InvalidSelection" : selection.StatusCode,
+                currentDecision with { ActionCode = "DispatchNow", ReasonCode = "AITimingFallback", RecheckAtUtc = null,
+                    AllowedActions = ["DispatchNow"] });
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception ex) when (ex is System.Data.Common.DbException or TimeoutException or InvalidOperationException
             or StackExchange.Redis.RedisException or OperationCanceledException)
         {
             logger.LogWarning("Food dispatch timing snapshot unavailable. FailureType={FailureType}", ex.GetType().Name);
+            information.Missing(FoodDispatchInformationKeys.Order, "SnapshotReadFailed");
+            information.Missing(FoodDispatchInformationKeys.Preparation, "SnapshotReadFailed");
+            information.Missing(FoodDispatchInformationKeys.OrderPool, "SnapshotReadFailed");
+            information.Missing(FoodDispatchInformationKeys.Demand, "SnapshotReadFailed");
+            information.Missing(FoodDispatchInformationKeys.DriverCapacity, "SnapshotReadFailed");
             input = input with { NowUtc = clock.GetUtcNow(), DemandKnown = false, DriverCapacityKnown = false, SnapshotAtUtc = null };
             return Result("SnapshotReadFailed");
         }

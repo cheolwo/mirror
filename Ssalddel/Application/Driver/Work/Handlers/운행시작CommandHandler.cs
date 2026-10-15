@@ -249,7 +249,19 @@ public sealed class 운행시작CommandHandler : IRequestHandler<운행시작Com
                 운송실행유형코드.음식배달,
                 StringComparison.Ordinal))
         {
-            await _dispatchRecommendationService.SendToDriverAsync(request.기사Id);
+            // SQL 근무와 운행 인덱스는 이미 확정됐습니다. 추천·알림 실패를
+            // 시작 실패로 돌려 재시작을 유도하거나 알림 성공으로 기록하지 않습니다.
+            try
+            {
+                await _dispatchRecommendationService.SendToDriverAsync(request.기사Id);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogWarning(
+                    "확정한 화물 운행의 추천·알림 완료를 확인하지 못했습니다. ShiftId={ShiftId} FailureType={FailureType}",
+                    shift.Id,
+                    ex.GetType().Name);
+            }
         }
 
         _logger.LogInformation(

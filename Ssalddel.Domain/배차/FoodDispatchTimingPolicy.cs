@@ -57,6 +57,11 @@ public sealed class FoodDispatchTimingPolicy
             return Dispatch("SnapshotStale");
         if (!input.DemandKnown) return Dispatch("DemandUnknown");
         if (!input.DriverCapacityKnown) return Dispatch("DriverCapacityUnknown");
+        // 서버가 결속한 정보가 부족하거나 바뀌면 주문을 더 모으지 않는다. 기존 단건 관문은 그대로 적용한다.
+        // null은 기존 오프라인 순수 정책 입력의 호환 경계이며 제품 전환 서비스는 null 수집을 별도로 거부한다.
+        if (input.InformationReadiness is { SchedulingStateCode: not FoodDispatchInformationStateCodes.Current } information)
+            return Dispatch(information.SchedulingStateCode == FoodDispatchInformationStateCodes.Stale
+                ? "InformationStale" : "InformationMissing");
         if (input.WaitingOrders == 0) return Dispatch("NoWaitingOrders");
 
         var bufferedDeadline = AddSecondsBounded(hardDeadline, -settings.DeadlineBufferSeconds);

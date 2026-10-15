@@ -234,6 +234,8 @@ public sealed class TimeWindowDTO
 
 public sealed class PricingDTO
 {
+    /// <summary>화주가 제안한 총 배송료를 기사에게 동일하게 제시합니다. 참고 견적과 구분합니다.</summary>
+    public bool 화주직접운임제안 { get; set; }
     /// <summary>서버가 동결한 사전 합의 수행 요금표입니다. 기준견적·화주 청구·실지급과 구별합니다.</summary>
     public Ssalddel.Contracts.Common.Pricing.AgreedRateTableSnapshotDto? AgreedRateTable { get; set; }
     public string AgreedRateTableEvidenceStatusCode { get; set; } = "NotSelected";

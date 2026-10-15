@@ -5,10 +5,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Ssalddel.Contracts.Driver.Notification;
 using Ssalddel.ApiMetadata;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Driver.Notification07
 {
     [SsalddelApiVersion(SsalddelProductVersion.V2_0)]
+    [SsalddelApiFeature(VersionFeatureFlagKeys.OperationalDispatchCore)]
     [SsalddelApiAudience(SsalddelActor.Driver)]
     [SsalddelApiCapability(SsalddelCapability.Notification)]
     [SsalddelApiOperation(SsalddelOperation.Browse)]

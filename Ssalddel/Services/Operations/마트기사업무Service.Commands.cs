@@ -27,14 +27,24 @@ public sealed partial class 마트기사업무Service
             request.ExpectedRecommendationRound, request.ExpectedQueueUpdatedAtUtc, false, cancellationToken);
     }
 
-    private Task<Result<마트기사업무항목Dto>> RespondAsync(string driverId, string offerId, Guid requestId,
+    private async Task<Result<마트기사업무항목Dto>> RespondAsync(string driverId, string offerId, Guid requestId,
         string kind, string digest, int round, DateTime updatedAt, bool accept, CancellationToken ct)
-        => TransactionAsync(async () =>
+    {
+        using var sharedLease = !accept || sharedAdmission is null ? null
+            : await sharedAdmission.EnterAsync(driverId, ct);
+        return await TransactionAsync(async () =>
         {
             if (!IsDriver(driverId)) return Fail<마트기사업무항목Dto>("MartDriverIdentityRequired", 403);
+            if (accept && sharedAdmission is not null)
+                await sharedAdmission.LockAsync(driverId, ct);
             var receipt = await ReceiptAsync(requestId, ct);
             if (receipt is not null) return SameReceipt(receipt, kind, offerId, digest)
                 ? await ReceiptResultAsync(receipt, ct) : Fail<마트기사업무항목Dto>("MartDriverRequestConflict");
+            if (accept && sharedAdmission is not null)
+            {
+                var admission = await sharedAdmission.CheckAsync(driverId, [offerId], ct);
+                if (admission.IsFailed) return Result.Fail<마트기사업무항목Dto>(admission.Errors);
+            }
             var queue = await QueueAsync(offerId, ct);
             if (queue is null) return Fail<마트기사업무항목Dto>("MartDriverWorkNotFound", 404);
             if (round < 1 || queue.추천라운드 != round || Utc(queue.UpdatedAt) != Utc(updatedAt)
@@ -84,6 +94,7 @@ public sealed partial class 마트기사업무Service
             return Result.Ok(accept ? Item(queue, attempt, null, driverId) : new 마트기사업무항목Dto
                 { OfferId = offerId, OrderReference = queue.원본의뢰Id, StateCode = "Rejected", QueueUpdatedAtUtc = Utc(queue.UpdatedAt) });
         }, requestId, ct);
+    }
 
     public Task<Result<마트기사업무항목Dto>> 전달Async(string 기사Id, string offerId, 마트기사전달요청 request, CancellationToken cancellationToken = default)
     {

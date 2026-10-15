@@ -33,6 +33,17 @@ namespace 살뜰.Services.Dispatch.Queue
                 && !string.IsNullOrWhiteSpace(queue.현재추천대상기사Id)
                 && (!queue.추천만료시각.HasValue || queue.추천만료시각 > DateTime.UtcNow))
             {
+                if (_sharedAdmission is not null)
+                {
+                    var participation = await _sharedAdmission.CheckRecommendationAsync(
+                        queue.현재추천대상기사Id, queue, cancellationToken);
+                    if (participation.IsFailed)
+                        return 전환안됨(queue, 배차대기원장전환결과코드.추천준비안됨,
+                            participation.Errors[0].Message, driverId);
+                }
+                if (queue.배차업무유형 == 상태값.배차업무유형.음식배달 && queue.추천만료시각.HasValue)
+                    await _recommendationNotificationService.추천알림요청생성Async(queue.Id, queue.의뢰Id,
+                        queue.현재추천대상기사Id, queue.추천라운드, cancellationToken);
                 var blocked = 전환안됨(
                     queue,
                     배차대기원장전환결과코드.이미추천중,
@@ -79,8 +90,21 @@ namespace 살뜰.Services.Dispatch.Queue
                     queue, selection, 배차엔진후속전환.전환없음, blocked, cancellationToken);
             }
 
+            var beforePricing = _db.Entry(queue).CurrentValues.Clone();
             try
             {
+                if (_smallGoodsPricing is not null)
+                {
+                    var pricing = await _smallGoodsPricing.준비Async(queue, cancellationToken);
+                    if (pricing.IsFailed)
+                    {
+                        _db.Entry(queue).CurrentValues.SetValues(beforePricing);
+                        var blocked = 전환안됨(queue, 배차대기원장전환결과코드.배차구성오류,
+                            pricing.Errors[0].Message, driverId);
+                        return selection is null ? blocked : await 감사기록후반환Async(
+                            queue, selection, 배차엔진후속전환.전환없음, blocked, cancellationToken);
+                    }
+                }
                 await 음식배달제안요금동결Async(queue, driverId, cancellationToken);
             }
             catch (Exception ex) when (ex is ArgumentException or Ssalddel.Application.Pricing.AgreedRateTableException)
@@ -89,6 +113,20 @@ namespace 살뜰.Services.Dispatch.Queue
                     "배달료 계산에 필요한 거리 또는 요금 정책이 유효하지 않아 제안을 생성하지 않았습니다.", driverId);
                 return selection is null ? blocked : await 감사기록후반환Async(
                     queue, selection, 배차엔진후속전환.전환없음, blocked, cancellationToken);
+            }
+
+            // 후보·AI·요금 계산을 기다리는 동안 변경된 업무 선택도 실제 제안 저장과 알림 전에 다시 확인합니다.
+            if (_sharedAdmission is not null)
+            {
+                var participation = await _sharedAdmission.CheckRecommendationAsync(driverId, queue, cancellationToken);
+                if (participation.IsFailed)
+                {
+                    _db.Entry(queue).CurrentValues.SetValues(beforePricing);
+                    var blocked = 전환안됨(queue, 배차대기원장전환결과코드.추천준비안됨,
+                        participation.Errors[0].Message, driverId);
+                    return selection is null ? blocked : await 감사기록후반환Async(
+                        queue, selection, 배차엔진후속전환.전환없음, blocked, cancellationToken);
+                }
             }
 
             var changedAtUtc = DateTime.UtcNow;

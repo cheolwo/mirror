@@ -84,7 +84,7 @@ public sealed class 운송상세조회QueryHandler : IRequestHandler<운송상�
             인수증필요 = 기사운송증빙조건정책.인수증필요(shipperRequest?.증빙방식, shipperRequest?.결제수단),
             인수증서명필수 = 기사운송증빙조건정책.인수증서명필수(shipperRequest?.요청사항, shipperRequest?.정산메모),
             UpdatedAt = entity.UpdatedAt,
-            첨부Json = entity.첨부_json,
+            첨부Json = 화물운송사진증빙Policy.ClientAttachments(entity.첨부_json),
             메모 = entity.메모
         };
         기사운송업무상태Projector.투영(response, entity,

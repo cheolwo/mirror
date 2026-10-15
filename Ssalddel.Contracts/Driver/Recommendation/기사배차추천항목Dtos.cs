@@ -5,6 +5,9 @@ namespace Ssalddel.Contracts.Driver.Recommendation;
 /// </summary>
 public sealed class 기사배차추천항목응답
 {
+    public string? WorkKind { get; set; }
+    public IReadOnlyList<string> AssignedActivities { get; set; } = [];
+    public Ssalddel.Contracts.Common.Drivers.DriverOfferPricingDto? Pricing { get; set; }
     public string 의뢰Id { get; set; } = string.Empty;
     public string 화물종류 { get; set; } = string.Empty;
     public string 운송의뢰유형코드 { get; set; } = "GeneralCargoTransport";

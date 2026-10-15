@@ -11,6 +11,7 @@ public static class NeighborhoodSettlementRegistration
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddScoped<INeighborhoodSettlementSourceResolver, NeighborhoodSettlementSourceResolver>();
         services.TryAddScoped<INeighborhoodSettlementUseCase, NeighborhoodSettlementUseCase>();
+        services.TryAddScoped<I주문별원가보수조회Service, 주문별원가보수조회Service>();
         return services;
     }
 }

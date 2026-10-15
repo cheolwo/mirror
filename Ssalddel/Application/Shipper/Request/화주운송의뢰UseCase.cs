@@ -396,6 +396,8 @@ public sealed class 화주운송의뢰UseCase : I화주운송의뢰UseCase
         CancellationToken cancellationToken)
     {
         var pricing = request.요금옵션;
+        if (pricing?.화주직접운임제안 == true)
+            return 화주직접운임제안Policy.준비(request);
         if (pricing?.예상거리Km is <= 0m)
             return Result.Fail<PricingDTO?>("예상 거리는 0보다 커야 합니다. 거리 자료가 없으면 값을 생략해 주세요.");
         if (!ShouldEstimateFare(request, pricing))

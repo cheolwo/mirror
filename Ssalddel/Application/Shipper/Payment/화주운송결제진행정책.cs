@@ -22,7 +22,8 @@ public static class 화주운송결제진행정책
     public static 화주운송결제검증결과 결제준비요청검증(
         화주운송의뢰 request,
         string? userId,
-        string? role)
+        string? role,
+        bool 선결제허용 = false)
     {
         if (!화주결제권한정책.의뢰결제권한있음(request, userId, role))
         {
@@ -34,7 +35,12 @@ public static class 화주운송결제진행정책
             return 화주운송결제검증결과.실패("모의 처리처 수행은 결제·지급·정산 대상이 아닙니다.");
         }
 
-        if (!상차완료이후인가(request.배차상태))
+        if (request.상태 == 상태값.의뢰상태.취소 || request.배차상태 == 상태값.배차상태.취소)
+        {
+            return 화주운송결제검증결과.실패("취소된 의뢰는 결제를 진행할 수 없습니다.");
+        }
+
+        if (!상차완료이후인가(request.배차상태) && !(선결제허용 && 선결제초기상태인가(request)))
         {
             return 화주운송결제검증결과.실패("상차완료 이후에만 결제를 진행할 수 있습니다.");
         }
@@ -46,6 +52,10 @@ public static class 화주운송결제진행정책
 
         return 화주운송결제검증결과.통과함();
     }
+
+    public static bool 선결제초기상태인가(화주운송의뢰 request)
+        => request.정산시점 == "선결제" && request.상태 == 상태값.의뢰상태.생성됨
+           && request.배차상태 == 상태값.배차상태.미시작;
 
     public static 화주운송결제검증결과 결제승인요청검증(
         결제 payment,
@@ -82,6 +92,12 @@ public static class 화주운송결제진행정책
         if (request?.결제상태 == 상태값.결제상태.결제완료)
         {
             return 화주운송결제검증결과.실패("이미 결제완료된 의뢰입니다.");
+        }
+
+        if (payment.결제대상유형 == 결제공통정의.결제대상유형.용달운송의뢰)
+        {
+            var evidence = 배송료결제준비근거Policy.현재근거검증(payment, request);
+            if (evidence.IsFailed) return 화주운송결제검증결과.실패(evidence.Errors[0].Message);
         }
 
         return 화주운송결제검증결과.통과함();

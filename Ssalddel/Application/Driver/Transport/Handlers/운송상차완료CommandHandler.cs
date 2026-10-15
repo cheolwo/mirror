@@ -2,6 +2,7 @@ using FluentResults;
 using Microsoft.AspNetCore.Http;
 using Ssalddel.Contracts.Driver.Transport;
 using 살뜰.도메인.창고;
+using Ssalddel.Services.Storage;
 
 namespace Ssalddel.Application.Driver.Transport;
 
@@ -10,15 +11,18 @@ public sealed class 운송상차완료CommandHandler : IRequestHandler<운송상
     private readonly SsalddelContext _db;
     private readonly I기사운송상태변경CommandExecutor _executor;
     private readonly I운송증빙첨부JsonWriter _attachmentWriter;
+    private readonly IObjectStorageService? _storage;
 
     public 운송상차완료CommandHandler(
         SsalddelContext db,
         I기사운송상태변경CommandExecutor executor,
-        I운송증빙첨부JsonWriter attachmentWriter)
+        I운송증빙첨부JsonWriter attachmentWriter,
+        IObjectStorageService? storage = null)
     {
         _db = db;
         _executor = executor;
         _attachmentWriter = attachmentWriter;
+        _storage = storage;
     }
 
     public async Task<Result<기사운송상태변경응답>> Handle(운송상차완료Command request, CancellationToken cancellationToken)
@@ -71,7 +75,13 @@ public sealed class 운송상차완료CommandHandler : IRequestHandler<운송상
             return Result.Fail<기사운송상태변경응답>(receiptEvidenceResult.Errors.Select(x => x.Message));
         }
 
-        var receiptEvidence = receiptEvidenceResult.Value;
+        var verifiedPhoto = await 화물운송사진증빙Policy.VerifyAsync(_db, _storage, request.Id, request.기사Id,
+            "pickup-complete-photo", request.상차사진ObjectName, cancellationToken);
+        if (verifiedPhoto.IsFailed)
+            return Result.Fail<기사운송상태변경응답>(verifiedPhoto.Errors);
+        var receiptEvidence = receiptEvidenceResult.Value is { } receipt
+            ? receipt with { 상차사진ObjectName = verifiedPhoto.Value.ObjectName, 상차사진Url = verifiedPhoto.Value.Url }
+            : null;
 
         return await _executor.실행Async(
             new 기사운송상태변경요청(
@@ -96,8 +106,8 @@ public sealed class 운송상차완료CommandHandler : IRequestHandler<운송상
                     entity,
                     new 운송증빙첨부(
                         "pickup-complete-photo",
-                        request.상차사진ObjectName,
-                        request.상차사진Url,
+                        verifiedPhoto.Value.ObjectName,
+                        verifiedPhoto.Value.Url,
                         request.기사Id,
                         changedAt,
                         new Dictionary<string, object?>

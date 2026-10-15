@@ -16,6 +16,7 @@ using 살뜰.Services.Dispatch.Common;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Services.Community;
 using Ssalddel.Services.Food;
+using Ssalddel.Services.Dispatch.Participation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -115,6 +116,7 @@ public sealed partial class 음식배달기사업무Service : I음식배달기�
     private readonly bool _memberDeliveryEnabled;
     private readonly Ssalddel.Services.DeliveryExperience.음식배달경험Service? _experience;
     private readonly 살뜰.Services.Options.ISsalddelExecutionModePolicy? _experienceExecution;
+    private readonly ISharedDriverWorkAdmissionService? _sharedAdmission;
 
     public 음식배달기사업무Service(
         SsalddelContext db,
@@ -135,7 +137,8 @@ public sealed partial class 음식배달기사업무Service : I음식배달기�
         Microsoft.Extensions.Options.IOptions<Ssalddel.Services.Community.NeighborhoodMemberDeliveryOptions>? memberDelivery = null,
         Ssalddel.Services.DeliveryExperience.음식배달경험Service? experience = null,
         살뜰.Services.Options.ISsalddelExecutionModePolicy? experienceExecution = null,
-        I음식기사후속OutboxService? driverFollowups = null)
+        I음식기사후속OutboxService? driverFollowups = null,
+        ISharedDriverWorkAdmissionService? sharedAdmission = null)
     {
         _db = db;
         _locationStore = locationStore;
@@ -156,6 +159,7 @@ public sealed partial class 음식배달기사업무Service : I음식배달기�
         _memberDeliveryEnabled = memberDelivery?.Value.Enabled == true;
         _experience = experience;
         _experienceExecution = experienceExecution;
+        _sharedAdmission = sharedAdmission;
     }
 
     public async Task<Result<FoodDeliveryDriverActionResponse>> 수락Async(
@@ -207,6 +211,8 @@ public sealed partial class 음식배달기사업무Service : I음식배달기�
             return 활성업무상한초과<FoodDeliveryDriverActionResponse>(0, normalizedIds.Length);
         }
 
+        using var sharedLease = _sharedAdmission is null ? null
+            : await _sharedAdmission.EnterAsync(driverId, cancellationToken);
         var gate = 수락Gates.GetOrAdd(driverId, static _ => new SemaphoreSlim(1, 1));
         await gate.WaitAsync(cancellationToken);
         Result<List<FoodDeliveryAssignment>> transactionResult;
@@ -218,6 +224,11 @@ public sealed partial class 음식배달기사업무Service : I음식배달기�
                 await using var transaction = await _db.Database.BeginTransactionAsync(
                     IsolationLevel.Serializable,
                     cancellationToken);
+                if (_sharedAdmission is not null)
+                {
+                    var admission = await _sharedAdmission.CheckAsync(driverId, normalizedIds, cancellationToken);
+                    if (admission.IsFailed) return Result.Fail<List<FoodDeliveryAssignment>>(admission.Errors);
+                }
                 if (_memberDeliveryEnabled && await Ssalddel.Services.Community.NeighborhoodMemberWorkExclusion.LockAndHasMemberWorkAsync(_db, driverId, cancellationToken))
                     return Result.Fail<List<FoodDeliveryAssignment>>(new Error("일반 회원 배송을 마친 뒤 다른 배차를 수락할 수 있습니다.")
                         .WithMetadata("StatusCode", 409).WithMetadata("ErrorCode", "MemberWorkInProgress"));
@@ -562,29 +573,30 @@ public sealed partial class 음식배달기사업무Service : I음식배달기�
                     ? order.적용조리분.Value
                     : order.플랫폼참고조리분 is > 0 ? order.플랫폼참고조리분.Value : 20;
                 order.적용조리분 = cookingMinutes;
-                order.조리예상완료시각Utc = now.AddMinutes(cookingMinutes);
+                // 재조리를 요청한 사실만 기록한다. 새 유효 기사 배정 뒤 음식점이 실제로 시작한다.
+                order.조리예상완료시각Utc = null;
             }
 
             var nextState = postPickup
-                ? 음식주문상태코드.조리중
+                ? 음식주문상태코드.주문확인
                 : 픽업준비됨(order)
                     ? 음식주문상태코드.픽업대기
                     : 음식주문현재조리Policy.계산(order).CookingStartedAtUtc.HasValue
                         ? 음식주문상태코드.조리중
                         : 음식주문상태코드.주문확인;
             ApplyFoodOrderState(order, nextState, 음식주문배차상태코드.배차대기,
-                postPickup ? 음식주문현재조리Policy.재조리요청이력사유 : $"픽업 전 배달 중단 · {reasonCode}", now);
+                postPickup ? 음식주문현재조리Policy.재조리대기이력사유 : $"픽업 전 배달 중단 · {reasonCode}", now);
             배차재추천상태Policy.적용(queue, driverId, now);
             _db.운영배차활동사건.Add(운영배차활동사건Factory.중단(driverId, offerId, order.주문번호, queue.추천라운드, now, attempt.시도StableId, reasonCode, responsibility));
             _db.운영배차활동사건.Add(운영배차활동사건Factory.균형반환(driverId, offerId, order.주문번호, queue.추천라운드, now, attempt.시도StableId, responsibility));
             var followup = await 예약후속Async(queue, order.주문번호, driverId,
                 postPickup ? "DeliveryInterruptedRecook" : "DeliveryInterrupted", now,
-                postPickup ? "픽업 후 배달 중단으로 재조리와 재배차를 진행합니다." : "배달 중단 후 재배차를 진행합니다.", cancellationToken);
+                postPickup ? "픽업 후 배달 중단으로 재조리를 요청했습니다. 새 기사 배정 뒤 음식점이 조리를 시작합니다. 추가 비용은 운영 검토가 필요합니다." : "배달 중단 후 재배차를 진행합니다.", cancellationToken);
             var saved = await SaveTransactionAsync(transaction, cancellationToken);
             return saved.IsFailed
                 ? Result.Fail<FoodDeliveryStateChange>(saved.Errors)
                 : Result.Ok(new FoodDeliveryStateChange(queue, order.주문번호,
-                    Response(offerId, order.주문번호, "Interrupted", postPickup ? "배달을 중단하고 재조리·재배차를 시작했습니다." : "배달을 중단하고 재배차를 시작했습니다.", attempt: attempt), true, postPickup, followup));
+                    Response(offerId, order.주문번호, "Interrupted", postPickup ? "배달을 중단하고 재조리·재배차를 요청했습니다." : "배달을 중단하고 재배차를 시작했습니다.", attempt: attempt), true, postPickup, followup));
         });
 
         if (result.IsFailed) return Result.Fail<FoodDeliveryDriverActionResponse>(result.Errors);

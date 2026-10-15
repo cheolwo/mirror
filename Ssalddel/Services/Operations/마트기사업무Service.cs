@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Driver.DispatchAction;
 using Ssalddel.Contracts.Mart;
+using Ssalddel.Services.Dispatch.Participation;
 using 살뜰.Data;
 using 살뜰.Infrastructure.Security;
 using 살뜰.Services.Dispatch.Common;
@@ -39,7 +40,8 @@ public sealed partial class 마트기사업무Service(
     I마트라스트마일원천Adapter source,
     IPersonalDataEncryptionService protector,
     I운영배차공통UseCase receiving,
-    TimeProvider? timeProvider = null) : I마트기사업무Service
+    TimeProvider? timeProvider = null,
+    ISharedDriverWorkAdmissionService? sharedAdmission = null) : I마트기사업무Service
 {
     internal const string SourceType = "SsalddelMartPackedOrder";
     private DateTime Now => (timeProvider ?? TimeProvider.System).GetUtcNow().UtcDateTime;

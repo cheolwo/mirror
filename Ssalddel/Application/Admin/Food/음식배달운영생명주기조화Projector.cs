@@ -15,7 +15,9 @@ public sealed record 음식배달운영생명주기조화입력(
     bool 최근배달시도중단여부 = false,
     bool 공동원장동기화확인필요여부 = false,
     bool 기사알림확인필요여부 = false,
-    bool 기사배정확정여부 = false);
+    bool 기사배정확정여부 = false,
+    string 기사확보지연상태Code = 음식배달운영지연상태Codes.없음,
+    int 기사확보대기분 = 0);
 
 /// <summary>
 /// 각 역할 앱의 별도 상태기를 만들지 않고 음식 주문 원장과 배차·Outbox 진단을
@@ -35,10 +37,12 @@ public static class 음식배달운영생명주기조화Projector
         var technicalFailures = 기술이상목록(input);
         var delayNeedsReview = input.음식점준비지연상태Code
                                    == 음식배달운영지연상태Codes.운영자확인필요
+                               || input.기사확보지연상태Code == 음식배달운영지연상태Codes.운영자확인필요
                                || input.배달진행지연상태Code
                                    == 음식배달운영지연상태Codes.운영자확인필요;
         var delayNeedsAttention = input.음식점준비지연상태Code
                                       == 음식배달운영지연상태Codes.주의
+                                  || input.기사확보지연상태Code == 음식배달운영지연상태Codes.주의
                                   || input.배달진행지연상태Code
                                       == 음식배달운영지연상태Codes.주의;
         var operatorReviewRequired = delayNeedsReview || technicalFailures.Count > 0;
@@ -90,6 +94,8 @@ public static class 음식배달운영생명주기조화Projector
             음식점준비초과분 = Math.Max(0, input.음식점준비초과분),
             배달진행지연상태Code = input.배달진행지연상태Code,
             배달진행초과분 = Math.Max(0, input.배달진행초과분),
+            기사확보지연상태Code = input.기사확보지연상태Code,
+            기사확보대기분 = Math.Max(0, input.기사확보대기분),
             정상경로조화여부 = workDelays.Count == 0
                                 && automaticRecoveries.Count == 0
                                 && technicalFailures.Count == 0,
@@ -141,6 +147,8 @@ public static class 음식배달운영생명주기조화Projector
         음식배달운영생명주기조화입력 input)
     {
         var values = new List<string>();
+        if (input.기사확보지연상태Code != 음식배달운영지연상태Codes.없음)
+            values.Add(음식배달운영업무지연Codes.기사확보지연);
         if (input.음식점준비지연상태Code != 음식배달운영지연상태Codes.없음)
             values.Add(음식배달운영업무지연Codes.음식점준비지연);
         if (input.배달진행지연상태Code != 음식배달운영지연상태Codes.없음)
@@ -163,6 +171,8 @@ public static class 음식배달운영생명주기조화Projector
         음식배달운영생명주기조화입력 input)
     {
         var values = new List<string>();
+        if (input.기사확보지연상태Code == 음식배달운영지연상태Codes.운영자확인필요)
+            values.Add(음식배달운영업무지연Codes.기사확보지연);
         if (input.음식점준비지연상태Code
             == 음식배달운영지연상태Codes.운영자확인필요)
         {

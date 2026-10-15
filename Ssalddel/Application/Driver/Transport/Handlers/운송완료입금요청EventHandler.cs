@@ -9,13 +9,16 @@ public sealed class 운송완료입금요청EventHandler :
 {
     private readonly I운송완료입금요청Service _입금요청Service;
     private readonly ILogger<운송완료입금요청EventHandler> _logger;
+    private readonly ICargoCompletionRecoveryService? _recovery;
 
     public 운송완료입금요청EventHandler(
         I운송완료입금요청Service 입금요청Service,
-        ILogger<운송완료입금요청EventHandler> logger)
+        ILogger<운송완료입금요청EventHandler> logger,
+        ICargoCompletionRecoveryService? recovery = null)
     {
         _입금요청Service = 입금요청Service;
         _logger = logger;
+        _recovery = recovery;
     }
 
     public async Task Handle(운송상차완료됨Event notification, CancellationToken cancellationToken)
@@ -53,6 +56,8 @@ public sealed class 운송완료입금요청EventHandler :
 
     public async Task Handle(운송인수완료됨Event notification, CancellationToken cancellationToken)
     {
+        if (_recovery is not null)
+        { await _recovery.ProcessTransportAsync(notification.운송Id, cancellationToken); return; }
         try
         {
             var result = await _입금요청Service.준비Async(notification, cancellationToken);

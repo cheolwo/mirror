@@ -15,6 +15,8 @@ public static class OperationsAlertsRegistration
         services.AddScoped<IOperationsAlertSource, FoodOperationsAlertSource>();
         services.AddScoped<IOperationsAlertSource, MemberOperationsAlertSource>();
         services.AddScoped<IOperationsAlertSource, CargoOperationsAlertSource>();
+        services.AddScoped<IOperationsAlertSource, MartReceiptOperationsAlertSource>();
+        services.AddScoped<IOperationsAlertSource, DistributedSiteOperationsAlertSource>();
         services.AddScoped<IOperationsAlertSource, OperationsBudgetAlertSource>();
         services.AddScoped<IOperationsAlertSource, NotificationOperationsAlertSource>();
         services.AddScoped<IOperationsAlertChannel, OperationsAlertEmailChannel>(); services.AddScoped<IOperationsAlertChannel, OperationsAlertPushChannel>();

@@ -14,6 +14,7 @@ using Ssalddel.Contracts.Common.Dispatch;
 using Ssalddel.Contracts.Common.Operations;
 using 살뜰.Services.Dispatch.Common;
 using Ssalddel.Contracts.Food;
+using Ssalddel.Contracts.Driver.Settings;
 using Ssalddel.Services.Community;
 using Ssalddel.Services.Food;
 using MediatR;
@@ -58,6 +59,9 @@ public sealed partial class 음식배달기사업무Service
         var now = DateTime.UtcNow;
         var receiving = 살뜰.도메인.배차.운영배차수신상태Policy.신규배차수신허용(
             await _수신의사.수신상태조회Async(driverId, cancellationToken));
+        if (receiving && _sharedAdmission is not null)
+            receiving = (await _sharedAdmission.CheckParticipationAsync(
+                driverId, DriverWorkKinds.FoodDelivery, false, cancellationToken)).IsSuccess;
         var martSourceTypes = new[]
         {
             운송의뢰배차원천유형.살뜰마트주문.ToUpperInvariant(),
@@ -81,6 +85,17 @@ public sealed partial class 음식배달기사업무Service
             .ThenBy(x => x.CreatedAt)
             .Take(12)
             .ToListAsync(cancellationToken);
+        if (_sharedAdmission is not null)
+        {
+            for (var index = queues.Count - 1; index >= 0; index--)
+            {
+                var queue = queues[index];
+                // 희망 업무·현재 약속은 미수락 제안에만 적용합니다. 진행 중 업무의 복구·완료는 유지합니다.
+                if (queue.확정기사Id == driverId && queue.배차큐단계 == 상태값.배차큐단계.확정) continue;
+                var recommendation = await _sharedAdmission.CheckRecommendationAsync(driverId, queue, cancellationToken);
+                if (recommendation.IsFailed) queues.RemoveAt(index);
+            }
+        }
         if (queues.Count == 0)
         {
             return [];
@@ -180,7 +195,11 @@ public sealed partial class 음식배달기사업무Service
             queue.기사한시수요할증액 ?? 0m,
             queue.기사한시수요할증적용여부,
             queue.기사제안요금정책판본,
-            ToOffset(queue.픽업지기상기준시각Utc));
+            ToOffset(queue.픽업지기상기준시각Utc))
+        {
+            AssignedActivities = 기사제안표시근거Service.운송작업(false),
+            Pricing = 기사제안표시근거Service.요금근거(queue)
+        };
     }
 
     private static string ResolveOfferStatus(운송원장 queue, 음식주문 order)

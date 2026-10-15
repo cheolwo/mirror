@@ -7,7 +7,7 @@ namespace 살뜰.Infrastructure.Persistence.Configurations.Settlement;
 
 public static class NeighborhoodSettlementModel
 {
-    public static readonly string[] Tables = ["neighborhood_settlement_agreements", "neighborhood_settlement_versions", "neighborhood_settlement_entries", "neighborhood_settlement_payments", "neighborhood_settlement_receipts"];
+    public static readonly string[] Tables = ["neighborhood_settlement_agreements", "neighborhood_settlement_versions", "neighborhood_settlement_entries", "neighborhood_settlement_payments", "neighborhood_settlement_receipts", "NeighborhoodInventoryCostAttributions"];
     public static void Configure(ModelBuilder m)
     {
         Agreement(m.Entity<NeighborhoodSettlementAgreementRecord>());
@@ -15,6 +15,7 @@ public static class NeighborhoodSettlementModel
         Entry(m.Entity<NeighborhoodSettlementEntryRecord>());
         Payment(m.Entity<NeighborhoodSettlementPaymentRecord>());
         Receipt(m.Entity<NeighborhoodSettlementCommandReceiptRecord>());
+        InventoryCostAttribution(m.Entity<NeighborhoodInventoryCostAttributionRecord>());
     }
     public static void Agreement(EntityTypeBuilder<NeighborhoodSettlementAgreementRecord> b)
     {
@@ -61,6 +62,17 @@ public static class NeighborhoodSettlementModel
         b.HasIndex(x => x.AgreementId).HasDatabaseName("IX_neighborhood_receipt_agreement");
         b.HasOne<NeighborhoodSettlementAgreementRecord>().WithMany().HasForeignKey(x => x.AgreementId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_neighborhood_receipt_agreement");
     }
+    public static void InventoryCostAttribution(EntityTypeBuilder<NeighborhoodInventoryCostAttributionRecord> b)
+    {
+        b.ToTable(Tables[5]); b.HasKey(x => x.AttributionId);
+        b.Property(x => x.AttributionId).HasMaxLength(120);
+        b.Property(x => x.SourceEntryId).HasMaxLength(120); b.Property(x => x.SourceAgreementId).HasMaxLength(120);
+        b.Property(x => x.OrderId).HasMaxLength(120); b.Property(x => x.AgreementId).HasMaxLength(120);
+        b.Property(x => x.CalculationDigest).HasMaxLength(64); b.Property(x => x.DetailsJson).HasColumnType("longtext");
+        b.HasIndex(x => new { x.SourceEntryId, x.OrderId }).IsUnique().HasDatabaseName("IX_neighborhood_inventory_cost_source_order");
+        b.HasIndex(x => x.SourceAgreementId).HasDatabaseName("IX_neighborhood_inventory_cost_source_agreement");
+        foreach (var property in b.Metadata.GetProperties()) property.SetAfterSaveBehavior(PropertySaveBehavior.Throw);
+    }
 }
 
 public sealed class NeighborhoodSettlementAgreementConfiguration : IEntityTypeConfiguration<NeighborhoodSettlementAgreementRecord>
@@ -73,3 +85,5 @@ public sealed class NeighborhoodSettlementPaymentConfiguration : IEntityTypeConf
 { public void Configure(EntityTypeBuilder<NeighborhoodSettlementPaymentRecord> b) => NeighborhoodSettlementModel.Payment(b); }
 public sealed class NeighborhoodSettlementReceiptConfiguration : IEntityTypeConfiguration<NeighborhoodSettlementCommandReceiptRecord>
 { public void Configure(EntityTypeBuilder<NeighborhoodSettlementCommandReceiptRecord> b) => NeighborhoodSettlementModel.Receipt(b); }
+public sealed class NeighborhoodInventoryCostAttributionConfiguration : IEntityTypeConfiguration<NeighborhoodInventoryCostAttributionRecord>
+{ public void Configure(EntityTypeBuilder<NeighborhoodInventoryCostAttributionRecord> b) => NeighborhoodSettlementModel.InventoryCostAttribution(b); }

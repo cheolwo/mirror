@@ -10,7 +10,7 @@ public sealed class FoodOperationsAlertSource(SsalddelContext db, I음식주문�
     public string Key => "food";
     public bool RepeatActiveSweep => true;
     private static readonly string[] Codes = ["DispatchLedgerMissing", "DispatchCorrelationMismatch",
-        "SharedLedgerOutboxReviewRequired", "DriverNotificationOutboxReviewRequired", "RestaurantPreparationDelay", "DeliveryProgressDelay"];
+        "SharedLedgerOutboxReviewRequired", "DriverNotificationOutboxReviewRequired", "RestaurantPreparationDelay", "DeliveryProgressDelay", "DriverAssignmentDelay"];
     public async Task<IReadOnlyList<OperationsObservation>> ReadChangesAsync(DateTime afterUtc, string afterId, int take, CancellationToken ct)
     {
         if (!configuration.GetValue<bool>("VersionFeatureFlags:FoodDeliveryWorkflow")) return [];
@@ -26,11 +26,13 @@ public sealed class FoodOperationsAlertSource(SsalddelContext db, I음식주문�
     {
         if (!configuration.GetValue<bool>("VersionFeatureFlags:FoodDeliveryWorkflow")) throw new InvalidOperationException("FeatureDisabled");
         var row = await trace.조회Async(id, ct) ?? throw new InvalidOperationException("SourceUnavailable");
-        var active = row.생명주기조화.기술이상Codes.Concat(row.생명주기조화.업무지연Codes).ToHashSet(StringComparer.Ordinal);
+        // 주의와 자동 회복은 운영자 호출 사유가 아니다. 원장의 확정된 수동 확인 대상만 관찰한다.
+        var active = row.생명주기조화.예외Codes.ToHashSet(StringComparer.Ordinal);
         var latestAttempt = row.배달시도목록.OrderByDescending(x => x.시도순번).FirstOrDefault();
         var interruptedAfterPickup = latestAttempt is { 픽업완료시각Utc: not null, 중단시각Utc: not null, 전달완료시각Utc: null };
         return Codes.Select(code => new OperationsObservation(Key, id, code,
-            code is "DispatchLedgerMissing" or "DispatchCorrelationMismatch" ? "Urgent" : "Warning", active.Contains(code), row.최근변경시각Utc))
+            code is "DispatchLedgerMissing" or "DispatchCorrelationMismatch" or "DriverNotificationOutboxReviewRequired"
+                ? "Urgent" : "Warning", active.Contains(code), row.최근변경시각Utc))
             .Append(new(Key, id, "AfterPickupRecoveryRequired", "Urgent", interruptedAfterPickup, row.최근변경시각Utc)).ToArray();
     }
 }

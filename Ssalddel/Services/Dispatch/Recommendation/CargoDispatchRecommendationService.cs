@@ -6,6 +6,7 @@ using 살뜰.도메인.화물;
 using 살뜰.도메인.화주;
 using 살뜰.도메인.차량;
 using Ssalddel.Application.Driver.Recommendation;
+using Ssalddel.Services.Dispatch.Participation;
 
 namespace 살뜰.Services.Dispatch.Recommendation
 {
@@ -14,6 +15,8 @@ namespace 살뜰.Services.Dispatch.Recommendation
         private readonly I차량화물적합성Service _적합성Service;
         private readonly 살뜰.Services.Dispatch.Queue.I배차대기원장전환Service _원장전환Service;
         private readonly I기사권역복귀Service _권역복귀Service;
+        private readonly ISharedDriverWorkAdmissionService? _sharedAdmission;
+        private readonly I소형배송기사제안요금Service? _smallGoodsPricing;
 
         public 화물배차추천Service(
             SsalddelContext db,
@@ -31,7 +34,9 @@ namespace 살뜰.Services.Dispatch.Recommendation
             IOpinetAveragePriceService averagePriceService,
             IGeocodingService geocodingService,
             살뜰.Services.Dispatch.Queue.I배차대기원장전환Service 원장전환Service,
-            I기사권역복귀Service 권역복귀Service)
+            I기사권역복귀Service 권역복귀Service,
+            ISharedDriverWorkAdmissionService? sharedAdmission = null,
+            I소형배송기사제안요금Service? smallGoodsPricing = null)
             : base(
                 db,
                 driverLocationStore,
@@ -49,6 +54,8 @@ namespace 살뜰.Services.Dispatch.Recommendation
             _적합성Service = 적합성Service;
             _원장전환Service = 원장전환Service;
             _권역복귀Service = 권역복귀Service;
+            _sharedAdmission = sharedAdmission;
+            _smallGoodsPricing = smallGoodsPricing;
         }
 
         protected override async Task<bool> IsDrivingAsync(string driverId)
@@ -108,7 +115,23 @@ namespace 살뜰.Services.Dispatch.Recommendation
                             && q.현재추천대상기사Id == driverId)
                 .ToListAsync();
 
+            if (_sharedAdmission is not null)
+            {
+                for (var index = items.Count - 1; index >= 0; index--)
+                {
+                    var participation = await _sharedAdmission.CheckRecommendationAsync(driverId, items[index], CancellationToken.None);
+                    if (participation.IsFailed) items.RemoveAt(index);
+                }
+            }
+
+            if (_smallGoodsPricing is not null)
+            {
+                for (var index = items.Count - 1; index >= 0; index--)
+                    if ((await _smallGoodsPricing.조회검증Async(items[index], CancellationToken.None)).IsFailed) items.RemoveAt(index);
+            }
+
             var requestIds = items.Select(q => q.의뢰Id).Distinct().ToList();
+            var directPickingIds = await 기사제안표시근거Service.직접피킹의뢰Async(_db, requestIds);
             var requestMap = await LoadRequestMapAsync(requestIds);
             var cargoMap = await LoadCargoMapAsync(requestIds);
             var vehicleSpec = await LoadVehicleSpecAsync(driver?.차량);
@@ -192,7 +215,8 @@ namespace 살뜰.Services.Dispatch.Recommendation
                 var totalDistanceKm = SumDistance(emptyDistanceKm, cargoDistanceKm, returnDistanceKm);
                 var tollFare = SumMoney(routeFromOriginToPickup?.TollFare, routeFromPickupToDropoff?.TollFare);
                 var estimatedFuelCost = EstimateFuelCost(totalDistanceKm, fuelEfficiencyKmPerLiter, fuelPricePerLiter);
-                var estimatedRevenue = ResolveEstimatedRevenue(request);
+                var offerPricing = 소형배송기사제안요금Service.TryReadPricing(x.Item);
+                var estimatedRevenue = offerPricing?.TotalPayoutKrw ?? ResolveEstimatedRevenue(request);
                 var estimatedTotalCost = SumMoney(tollFare, estimatedFuelCost);
                 var estimatedExtraProfit = estimatedRevenue.HasValue && estimatedTotalCost.HasValue
                     ? estimatedRevenue.Value - estimatedTotalCost.Value
@@ -230,6 +254,9 @@ namespace 살뜰.Services.Dispatch.Recommendation
 
                 var recommendation = new DispatchRecommendationDto
                 {
+                    WorkKind = SharedDriverWorkAdmissionService.ResolveWorkKind(x.Item),
+                    AssignedActivities = 기사제안표시근거Service.운송작업(directPickingIds.Contains(x.Item.의뢰Id)),
+                    Pricing = offerPricing,
                     의뢰Id = x.Item.의뢰Id,
                     화물종류 = request?.화물종류 ?? x.Item.픽업_도로명주소,
                     픽업지 = x.Item.픽업_도로명주소,

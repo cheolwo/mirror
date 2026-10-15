@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using 살뜰.도메인.창고;
 
@@ -25,6 +26,7 @@ public static class 분산물류Model
         b.Property(x => x.PublicCandidateRef).HasMaxLength(200); b.Property(x => x.OwnerUserId).HasMaxLength(191);
         b.Property(x => x.ManagerUserId).HasMaxLength(191); b.Property(x => x.StatusCode).HasMaxLength(40);
         b.Property(x => x.PrivateDetailsJson).HasColumnType("longtext"); b.Property(x => x.ConsentEvidenceJson).HasColumnType("longtext");
+        b.Property(x => x.AcceptancePolicyJson).HasColumnType("longtext");
     }
     public static void Location(EntityTypeBuilder<분산적재위치Record> b)
     {
@@ -47,6 +49,7 @@ public static class 분산물류Model
         b.Property(x => x.OwnerUserId).HasMaxLength(191); b.Property(x => x.SellerUserId).HasMaxLength(191); b.Property(x => x.Sku).HasMaxLength(100);
         b.Property(x => x.LotCode).HasMaxLength(100); b.Property(x => x.Revision).IsConcurrencyToken();
         b.Property(x => x.StorageAgreementId).HasMaxLength(64); b.Property(x => x.StorageAgreementSnapshotJson).HasColumnType("longtext");
+        b.Property(x => x.InboundCollaborationJson).HasColumnType("longtext");
         b.HasIndex(x => new { x.PlanId, x.LineKey }).IsUnique(); b.HasIndex(x => x.InboundItemId).IsUnique();
         b.HasIndex(x => new { x.OwnerUserId, x.Sku });
         b.HasOne<분산입고계획Record>().WithMany().HasForeignKey(x => x.PlanId).OnDelete(DeleteBehavior.Restrict);
@@ -90,6 +93,8 @@ public static class 분산물류Model
         b.Property(x => x.ActorUserId).HasMaxLength(191); b.Property(x => x.InputDigest).HasMaxLength(64);
         b.Property(x => x.Kind).HasMaxLength(40); b.Property(x => x.AggregateId).HasMaxLength(64);
         b.Property(x => x.ReservationId).HasMaxLength(64); b.Property(x => x.StatusCode).HasMaxLength(40);
+        b.Property(x => x.CompletionLinesJson).HasColumnType("longtext").Metadata
+            .SetAfterSaveBehavior(PropertySaveBehavior.Throw);
         b.Property(x => x.RecordedAtUtc).HasConversion(x => x, x => DateTime.SpecifyKind(x, DateTimeKind.Utc));
     }
     public static void Agreement(EntityTypeBuilder<분산보관합의Record> b)
@@ -99,6 +104,7 @@ public static class 분산물류Model
         b.Property(x => x.SpaceOwnerUserId).HasMaxLength(191); b.Property(x => x.GoodsOwnerUserId).HasMaxLength(191);
         b.Property(x => x.CreatorUserId).HasMaxLength(191);
         b.Property(x => x.TermsJson).HasColumnType("longtext"); b.Property(x => x.HistoryJson).HasColumnType("longtext");
+        b.Property(x => x.PendingTermsJson).HasColumnType("longtext");
         b.Property(x => x.StatusCode).HasMaxLength(40); b.Property(x => x.Revision).IsConcurrencyToken();
         b.Property(x => x.StartsAtUtc).HasConversion(x => x, x => DateTime.SpecifyKind(x, DateTimeKind.Utc));
         b.Property(x => x.EndsAtUtc).HasConversion(x => x, x => DateTime.SpecifyKind(x, DateTimeKind.Utc));

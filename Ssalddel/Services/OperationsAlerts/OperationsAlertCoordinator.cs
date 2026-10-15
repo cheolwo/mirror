@@ -92,7 +92,7 @@ public sealed class OperationsAlertCoordinator(SsalddelContext db, IOptionsMonit
         => await db.Set<OperationsAlert>().AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct) is { } row ? await DtoAsync(row, ct) : null;
     private async Task<OperationsAlertDto> DtoAsync(OperationsAlert row, CancellationToken ct)
         => new(row.Id, row.Episode, row.Revision, row.Severity, row.Status, OperationsAlertPresentation.Title(row.ProblemCode),
-            "해당 업무를 열어 진행 상태와 처리 근거를 확인하세요.", OperationsAlertPresentation.Href(row.SourceKind, row.SourceId), row.CreatedAtUtc,
+            OperationsAlertPresentation.Action(row.ProblemCode), OperationsAlertPresentation.Href(row.SourceKind, row.SourceId), row.CreatedAtUtc,
             row.LastVerifiedAtUtc, row.LastVerifiedAtUtc >= Now.AddMinutes(-2),
             await db.Set<OperationsAlertOutbox>().Where(x => x.AlertId == row.Id && x.Episode == row.Episode)
                 .Select(x => x.Channel + ":" + x.Status).ToArrayAsync(ct));

@@ -16,7 +16,7 @@ public sealed class 피킹포장작업Configuration : IEntityTypeConfiguration<�
         builder.Property(x => x.작업Key).HasColumnName("작업_key").HasMaxLength(120).IsRequired();
         builder.Property(x => x.작업유형).HasColumnName("작업유형").HasMaxLength(30).IsRequired();
         builder.Property(x => x.처리방식).HasColumnName("처리방식").HasMaxLength(50).IsRequired();
-        builder.Property(x => x.상태).HasColumnName("상태").HasMaxLength(30).IsRequired();
+        builder.Property(x => x.상태).HasColumnName("상태").HasMaxLength(30).IsRequired().IsConcurrencyToken();
         builder.Property(x => x.출고묶음Id).HasColumnName("출고묶음_id");
         builder.Property(x => x.출고예정Id).HasColumnName("출고예정_id");
         builder.Property(x => x.입고상품Id).HasColumnName("입고상품_id");
@@ -40,6 +40,7 @@ public sealed class 피킹포장작업Configuration : IEntityTypeConfiguration<�
         builder.Property(x => x.커뮤니티원장블록Id).HasColumnName("community_ledger_block_id").HasMaxLength(120);
         builder.Property(x => x.시작일시Utc).HasColumnName("started_at_utc");
         builder.Property(x => x.완료일시Utc).HasColumnName("completed_at_utc");
+        builder.Property(x => x.완료근거Json).HasColumnName("completion_evidence_json").HasColumnType("longtext");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");
 

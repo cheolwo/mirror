@@ -95,6 +95,8 @@ public sealed class 피킹포장작업투영Service : I피킹포장작업투영S
         string? 커뮤니티원장Id,
         DateTime now)
     {
+        // 시작 이후 업무 귀속·처리량은 재계획으로 변경하지 않습니다. 완료 근거와 기존 보수 귀속을 보존합니다.
+        if (entity.시작일시Utc.HasValue || entity.완료일시Utc.HasValue || entity.완료근거Json is not null) return;
         entity.작업유형 = 피킹포장작업유형.피킹;
         entity.처리방식 = 작업.처리방식.ToString();
         entity.상태 = ResolveState(entity);
@@ -129,6 +131,7 @@ public sealed class 피킹포장작업투영Service : I피킹포장작업투영S
         string? 커뮤니티원장Id,
         DateTime now)
     {
+        if (entity.시작일시Utc.HasValue || entity.완료일시Utc.HasValue || entity.완료근거Json is not null) return;
         entity.작업유형 = 피킹포장작업유형.포장;
         entity.처리방식 = 피킹포장처리방식.피킹포장분리.ToString();
         entity.상태 = ResolveState(entity);

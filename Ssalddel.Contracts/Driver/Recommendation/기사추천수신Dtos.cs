@@ -10,6 +10,9 @@ public enum 기사추천조회범위
 
 public sealed class 기사추천수신항목
 {
+    public string? WorkKind { get; set; }
+    public IReadOnlyList<string> AssignedActivities { get; set; } = [];
+    public Ssalddel.Contracts.Common.Drivers.DriverOfferPricingDto? Pricing { get; set; }
     public string 의뢰Id { get; set; } = string.Empty;
     public string 화물종류 { get; set; } = string.Empty;
     public string 운송의뢰유형코드 { get; set; } = "GeneralCargoTransport";

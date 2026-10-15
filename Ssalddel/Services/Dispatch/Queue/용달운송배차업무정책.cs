@@ -81,7 +81,7 @@ namespace 살뜰.Services.Dispatch.Queue
                 .Distinct(StringComparer.Ordinal)
                 .ToArray();
             var vehicles = await _db.용달기사.AsNoTracking()
-                .Where(x => candidateDriverIds.Contains(x.기사Id) && x.상태 == "활동중")
+                .Where(x => Enumerable.Contains(candidateDriverIds, x.기사Id) && x.상태 == "활동중")
                 .ToDictionaryAsync(x => x.기사Id, StringComparer.Ordinal, cancellationToken);
             var now = DateTime.UtcNow;
 

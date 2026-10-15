@@ -24,6 +24,9 @@ public sealed class 공통결제준비CommandHandler : IRequestHandler<공통결
             return Result.Fail<공통결제준비응답>("현재는 TossPayments 제공자만 지원합니다.");
         }
 
+        if (string.IsNullOrWhiteSpace(request.대상Id) || request.금액 <= 0)
+            return Result.Fail<공통결제준비응답>("의뢰와 서버 확정 금액을 확인해 주세요.");
+
         var tossResult = await _sender.Send(new 토스결제준비Command(request.대상Id, request.금액), cancellationToken);
         if (tossResult.IsFailed)
         {

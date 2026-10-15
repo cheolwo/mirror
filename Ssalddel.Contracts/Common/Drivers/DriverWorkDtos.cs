@@ -59,6 +59,11 @@ public sealed record DriverWorkOfferDto(
     [property: JsonPropertyName("pricingPolicyRevision")] string? PricingPolicyRevision = null,
     [property: JsonPropertyName("weatherObservedAtUtc")] DateTimeOffset? WeatherObservedAtUtc = null)
 {
+    [JsonPropertyName("assignedActivities")]
+    public IReadOnlyList<string> AssignedActivities { get; init; } = [];
+    [JsonPropertyName("pricing")]
+    public DriverOfferPricingDto? Pricing { get; init; }
+
     [JsonPropertyName("experienceSummaries")]
     public IReadOnlyList<Ssalddel.Contracts.Food.DeliveryExperienceSummaryDto> ExperienceSummaries { get; init; } = [];
 }

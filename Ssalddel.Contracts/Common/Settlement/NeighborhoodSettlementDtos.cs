@@ -5,8 +5,11 @@ public static class NeighborhoodSettlementCodes
 {
     public const string PreparedFood = "PreparedFood", StoredGoods = "StoredGoods", TransportOnly = "TransportOnly";
     public const string DistributedOrder = "DistributedOrder", DistributedLot = "DistributedLot", FoodOrder = "FoodOrder", CargoRequest = "CargoRequest";
+    public const string MartOrder = "MartOrder";
     public const string OwnerDirect = "OwnerDirect", SellerCollect = "SellerCollect";
-    public const string ProductSale = "ProductSale", SalesAgency = "SalesAgency", Storage = "Storage", Inbound = "Inbound", Picking = "Picking", Delivery = "Delivery", OwnerRemittance = "OwnerRemittance", Adjustment = "Adjustment";
+    public const string ProductSale = "ProductSale", SalesAgency = "SalesAgency", Storage = "Storage", Inbound = "Inbound", Picking = "Picking", Delivery = "Delivery", OwnerRemittance = "OwnerRemittance", Adjustment = "Adjustment", ActivityReward = "ActivityReward";
+    public const string PlatformShare = "PlatformShare";
+    public const string Packing = "Packing";
     public const string Fixed = "Fixed", Free = "Free", PerUnit = "PerUnit", StoragePeriod = "StoragePeriod";
     public const string Ambient = "Ambient", Chilled = "Chilled", Frozen = "Frozen";
     public const string Draft = "Draft", AwaitingConsent = "AwaitingConsent", Active = "Active", Superseded = "Superseded", Revoked = "Revoked";
@@ -17,6 +20,7 @@ public static class NeighborhoodSettlementCodes
 public static class NeighborhoodSettlementRoles
 {
     public const string Buyer = "Buyer", Owner = "Owner", Seller = "Seller", SpaceOwner = "SpaceOwner", Receiver = "Receiver", Picker = "Picker", Driver = "Driver";
+    public const string Packer = "Packer";
 }
 
 public class NeighborhoodSettlementCommand
@@ -57,6 +61,12 @@ public sealed class NeighborhoodSettlementAgreementRequest : NeighborhoodSettlem
     public string SourceKind { get; set; } = "";
     public string SourceId { get; set; } = "";
     public string ActivityKind { get; set; } = "";
+    /// <summary>신규 약정은 서버가 source별 경계를 동결합니다. null인 과거 판본을 소급 변경하지 않습니다.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? WorkflowKind { get; set; }
+    /// <summary>작업 완료와 고객 수령을 구분하는 지급 시점 약정입니다. 실제 송금 실행 옵션이 아닙니다.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? PaymentReleaseCondition { get; set; }
     public string GoodsPaymentRoute { get; set; } = NeighborhoodSettlementCodes.OwnerDirect;
     public string? GoodsOwnerUserId { get; set; }
     public string? SellerUserId { get; set; }
@@ -64,6 +74,14 @@ public sealed class NeighborhoodSettlementAgreementRequest : NeighborhoodSettlem
     public bool Perishable { get; set; }
     public DateTime? ExpiresAtUtc { get; set; }
     public IReadOnlyList<NeighborhoodSettlementTermLine> Lines { get; set; } = [];
+    /// <summary>선택한 공동 성과금 약정입니다. 기본 작업비와 별개이며 실제 수익·입금을 인증하지 않습니다.</summary>
+    public NeighborhoodActivityRewardAgreementDto? ActivityRewardTerms { get; set; }
+}
+
+public sealed class NeighborhoodSettlementActivityRewardAccrualRequest : NeighborhoodSettlementCommand
+{
+    /// <summary>본인이 확인한 계산과 서버 재계산이 같아야 발생시킬 수 있습니다.</summary>
+    public string ExpectedCalculationDigest { get; set; } = "";
 }
 
 public sealed class NeighborhoodSettlementConsentRequest : NeighborhoodSettlementCommand
@@ -180,6 +198,13 @@ public sealed class NeighborhoodSettlementEntryDto
     public IReadOnlyList<string> ConfirmationUserIds { get; set; } = [];
     public string? DisputeReason { get; set; }
     public IReadOnlyList<string> WorkEvidenceReferences { get; set; } = [];
+    public string? ActivityRewardCalculationDigest { get; set; }
+    /// <summary>현재 조회 시 원래 약정의 지급 시점 관문을 확인한 결과입니다. 실제 송금 여부가 아닙니다.</summary>
+    public bool? PaymentReleaseReady { get; set; }
+    /// <summary>Unreported amount for this authenticated payer. Recipient statements do not release an existing report reservation.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public decimal? ReportablePaymentAmountKrw { get; set; }
+    public string? PaymentWaitingReasonCode { get; set; }
     public DateTime RecordedAtUtc { get; set; }
     public IReadOnlyList<string> AllowedActions { get; set; } = [];
 }
@@ -218,10 +243,14 @@ public sealed class NeighborhoodSettlementTotalsDto
 
 public sealed class NeighborhoodSettlementSummaryDto
 {
+    /// <summary>현재 전문 원천의 실제 주문자/판매자에게만 해결 절차 진입을 표시한다. API 권한을 대신하지 않는다.</summary>
+    public bool CanResolveMartReceipt { get; set; }
     public NeighborhoodSettlementAgreementDto Agreement { get; set; } = new();
     public IReadOnlyList<NeighborhoodSettlementEntryDto> Entries { get; set; } = [];
     public IReadOnlyList<NeighborhoodSettlementPaymentDto> Payments { get; set; } = [];
     public NeighborhoodSettlementTotalsDto Totals { get; set; } = new();
+    public NeighborhoodActivityRewardPreviewDto? ActivityReward { get; set; }
+    public NeighborhoodSettlementWorkflowDto? Workflow { get; set; }
 }
 
 public sealed class NeighborhoodSettlementReceiptDto
@@ -235,4 +264,6 @@ public sealed class NeighborhoodSettlementReceiptDto
     public string? PaymentId { get; set; }
     public bool Replayed { get; set; }
     public DateTime RecordedAtUtc { get; set; }
+    /// <summary>성과금 발생 시 서버가 동결한 계산 근거입니다. 명령 실행자 본인의 영수증에서만 조회합니다.</summary>
+    public NeighborhoodActivityRewardPreviewDto? ActivityRewardCalculation { get; set; }
 }

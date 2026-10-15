@@ -184,6 +184,8 @@ public sealed record DistributedCommandResponse(Guid RequestId, string Aggregate
 }
 public sealed class DistributedWorkspaceDto
 {
+    public IReadOnlyList<DistributedStockReleaseDto> StockReleases { get; set; } = [];
+    public IReadOnlyList<DistributedStockReleaseCandidateDto> StockReleaseCandidates { get; set; } = [];
     public IReadOnlyList<DistributedStorageAgreementDto> StorageAgreements { get; set; } = [];
     public IReadOnlyList<DistributedPartyCandidateDto> GoodsOwnerCandidates { get; set; } = [];
     public string CurrentUserId { get; set; } = "";
@@ -218,6 +220,10 @@ public sealed record DistributedExistingStockCandidateDto(long InboundItemId, st
     string SellerUserId, string Sku, int ReceivedQuantity, int AvailableQuantity);
 public sealed class DistributedSiteDto
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DistributedSiteAcceptancePolicy? AcceptancePolicy { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public long? AcceptancePolicyRevision { get; set; }
     public string SiteId { get; set; } = "";
     public long WarehouseId { get; set; }
     public string PlaceId { get; set; } = "";
@@ -238,7 +244,19 @@ public sealed record DistributedLotDto(string LotId, string SiteId, string Locat
     string LotCode, long InboundItemId, int ReceivedQuantity, int AvailableQuantity, int ReservedQuantity,
     string OwnerLabel = "", string ProductLabel = "");
 public sealed record DistributedInboundLineDto(string LineKey, string SiteId, string LocationId, string OwnerUserId,
-    string Sku, string LotCode, int ExpectedQuantity, int ReceivedQuantity);
+    string Sku, string LotCode, int ExpectedQuantity, int ReceivedQuantity)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? SellerUserId { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DistributedInboundCollaborationDto? InboundCollaboration { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<string>? AllowedActions { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<string>? WaitingReasonCodes { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? NextActorLabel { get; init; }
+}
 public sealed record DistributedInboundDto(string PlanId, string SourceReference, string StatusCode, long Revision,
     IReadOnlyList<DistributedInboundLineDto> Lines, IReadOnlyList<string> AllowedActions);
 public sealed class DistributedWaveDto

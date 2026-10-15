@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Ssalddel.Services.Storage;
 using 살뜰.Services.Storage.Local;
+using Ssalddel.Application.Driver.Transport;
 
 namespace Ssalddel.Application.Files;
 
@@ -71,6 +72,37 @@ public sealed class 파일업로드UseCase : I파일업로드UseCase
         }
 
         var folder = _pathResolver.ResolveCommandFolder(command.CommandName, command.ReferenceId);
+        var photoKind = 화물운송사진증빙Policy.Kind(command.CommandName);
+        if (photoKind is not null)
+        {
+            if (command.File.Length > 화물운송사진증빙Policy.MaximumBytes)
+                return Result.Fail<파일업로드응답>("운송 사진은 5MB 이하여야 합니다.");
+            var actor = _currentUserAccessor.UserId ?? "";
+            var transportId = long.Parse(command.ReferenceId!);
+            var transport = await _db.운송원장.SingleOrDefaultAsync(x => x.Id == transportId && x.기사_운송자 == actor, cancellationToken);
+            if (transport is null || !화물운송사진증빙Policy.CanUpload(transport, photoKind))
+                return Result.Fail<파일업로드응답>("현재 배정된 운송의 상차·하차 단계에서 사진을 촬영해 주세요.");
+            var assignmentRound = transport.추천라운드;
+            var cargoRequestId = transport.의뢰Id;
+
+            await using var original = command.File.OpenReadStream();
+            using var buffer = new MemoryStream();
+            await original.CopyToAsync(buffer, cancellationToken);
+            var bytes = buffer.ToArray();
+            if (!화물운송사진증빙Policy.IsPhoto(bytes))
+                return Result.Fail<파일업로드응답>("JPEG 또는 PNG 사진을 다시 촬영·업로드해 주세요.");
+            await using var photo = new MemoryStream(bytes, writable: false);
+            var uploaded = await _objectStorageService.UploadAsync(photo, command.File.FileName, command.File.ContentType,
+                folder, ObjectStorageAccess.Private, cancellationToken);
+            // 업로드 중 다른 기사가 배정됐거나 상태가 바뀌면 새 영수증을 현재 업무에 연결하지 않는다.
+            await _db.Entry(transport).ReloadAsync(cancellationToken);
+            if (transport.기사_운송자 != actor || transport.추천라운드 != assignmentRound || transport.의뢰Id != cargoRequestId
+                || !화물운송사진증빙Policy.CanUpload(transport, photoKind))
+                return Result.Fail<파일업로드응답>("사진 업로드 중 운송 배정 또는 단계가 변경되었습니다. 현재 운송을 다시 확인해 주세요.");
+            화물운송사진증빙Policy.RecordUpload(transport, actor, photoKind, uploaded, bytes);
+            await _db.SaveChangesAsync(cancellationToken);
+            return Result.Ok(new 파일업로드응답(uploaded.ContainerName, uploaded.ObjectName, uploaded.Url));
+        }
         await using var stream = command.File.OpenReadStream();
         var result = await _objectStorageService.UploadAsync(
             stream,

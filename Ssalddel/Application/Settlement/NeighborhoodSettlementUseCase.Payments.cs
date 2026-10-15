@@ -28,6 +28,28 @@ public sealed partial class NeighborhoodSettlementUseCase
         => (entry.AmountKrw ?? 0m) + all.Where(x => x.OriginalEntryId == entry.EntryId && x.AmountKrw < 0
             && x.StatusCode == NeighborhoodSettlementCodes.Confirmed).Sum(x => x.AmountKrw ?? 0m);
 
+    private static decimal? ReportablePayment(NeighborhoodSettlementEntryDto entry,
+        IReadOnlyList<NeighborhoodSettlementEntryDto> entries, IReadOnlyList<NeighborhoodSettlementPaymentDto> reports, string actor)
+    {
+        var refund = entry.OriginalEntryId is not null && entry.AmountKrw < 0;
+        if ((refund ? entry.PayeeUserId : entry.PayerUserId) != actor || entry.IsInternal || entry.IncludedInDelivery
+            || entry.AmountKrw is null or 0 || entry.StatusCode != NeighborhoodSettlementCodes.Confirmed
+            || entry.PaymentReleaseReady != true
+            || entries.Any(x => x.OriginalEntryId == entry.EntryId && x.AmountKrw < 0 && x.StatusCode != NeighborhoodSettlementCodes.Confirmed)) return null;
+        var reserved = reports.SelectMany(x => x.Allocations).Where(x => x.EntryId == entry.EntryId).Sum(x => x.AmountKrw);
+        if (!refund) return Math.Max(0, EffectiveCharge(entry, entries) - reserved);
+        var original = entries.SingleOrDefault(x => x.EntryId == entry.OriginalEntryId);
+        if (original is null) return null;
+        var linked = entries.Where(x => x.OriginalEntryId == original.EntryId).ToArray();
+        if (linked.Any(x => x.AmountKrw < 0 && x.StatusCode != NeighborhoodSettlementCodes.Confirmed)) return null;
+        var grossIds = linked.Where(x => x.AmountKrw > 0).Select(x => x.EntryId).Append(original.EntryId).ToHashSet(StringComparer.Ordinal);
+        var refundIds = linked.Where(x => x.AmountKrw < 0).Select(x => x.EntryId).ToHashSet(StringComparer.Ordinal);
+        var received = reports.Sum(p => p.Allocations.Where(a => grossIds.Contains(a.EntryId)).Sum(a => ConfirmedAllocation(p, a.EntryId)));
+        var net = original.AmountKrw!.Value + linked.Where(x => x.StatusCode == NeighborhoodSettlementCodes.Confirmed).Sum(x => x.AmountKrw ?? 0m);
+        var refundReserved = reports.SelectMany(x => x.Allocations).Where(x => refundIds.Contains(x.EntryId)).Sum(x => x.AmountKrw);
+        return Math.Max(0, Math.Min(decimal.Abs(entry.AmountKrw!.Value) - reserved, Math.Max(0, received - net) - refundReserved));
+    }
+
     public Task<NeighborhoodSettlementReceiptDto> ReportPaymentAsync(string id, string actor, NeighborhoodSettlementPaymentReportRequest r, CancellationToken ct)
         => Execute(actor, "ReportPayment", id, r, async () =>
         {
@@ -48,6 +70,7 @@ public sealed partial class NeighborhoodSettlementUseCase
                 Require((refund ? entry.PayeeUserId : entry.PayerUserId) == actor, "NeighborhoodSettlementPayerRequired", 403);
                 Require(!entry.IsInternal && !entry.IncludedInDelivery && entry.AmountKrw != 0
                     && entry.StatusCode == NeighborhoodSettlementCodes.Confirmed, "NeighborhoodSettlementEntryNotPayable");
+                await RequirePaymentRelease(agreement, entry, entries, ct);
                 var recipient = refund ? entry.PayerUserId : entry.PayeeUserId;
                 payee ??= recipient;
                 Require(payee == recipient, "NeighborhoodSettlementPaymentRecipientMixed", 400);

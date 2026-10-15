@@ -13,11 +13,14 @@ namespace 살뜰.Services.Dispatch.Request
     {
         private readonly SsalddelContext _db;
         private readonly IDriverRejectedRequestStore _rejectedRequestStore;
+        private readonly I소형배송기사제안요금Service? _smallGoodsPricing;
 
-        public NationalDispatchRequestService(SsalddelContext db, IDriverRejectedRequestStore rejectedRequestStore)
+        public NationalDispatchRequestService(SsalddelContext db, IDriverRejectedRequestStore rejectedRequestStore,
+            I소형배송기사제안요금Service? smallGoodsPricing = null)
         {
             _db = db;
             _rejectedRequestStore = rejectedRequestStore;
+            _smallGoodsPricing = smallGoodsPricing;
         }
 
         public async Task<IReadOnlyList<DispatchRecommendationDto>> GetNationwideRequestsAsync(string driverId, CancellationToken cancellationToken = default)
@@ -35,6 +38,10 @@ namespace 살뜰.Services.Dispatch.Request
                 .ToListAsync(cancellationToken);
 
             var requestIds = items.Select(q => q.의뢰Id).Distinct().ToList();
+            if (_smallGoodsPricing is not null)
+                for (var index = items.Count - 1; index >= 0; index--)
+                    if ((await _smallGoodsPricing.조회검증Async(items[index], cancellationToken)).IsFailed) items.RemoveAt(index);
+            var directPickingIds = await 기사제안표시근거Service.직접피킹의뢰Async(_db, items.Select(x => x.의뢰Id).ToArray(), cancellationToken);
             var requestMap = requestIds.Count == 0
                 ? new Dictionary<string, 화주운송의뢰>(StringComparer.Ordinal)
                 : await _db.화주운송의뢰
@@ -48,6 +55,9 @@ namespace 살뜰.Services.Dispatch.Request
                 {
                     var recommendation = new DispatchRecommendationDto
                     {
+                        WorkKind = Ssalddel.Services.Dispatch.Participation.SharedDriverWorkAdmissionService.ResolveWorkKind(q),
+                        AssignedActivities = 기사제안표시근거Service.운송작업(directPickingIds.Contains(q.의뢰Id)),
+                        Pricing = 기사제안표시근거Service.요금근거(q),
                         의뢰Id = q.의뢰Id,
                         화물종류 = requestMap.TryGetValue(q.의뢰Id, out var request) ? request.화물종류 : q.픽업_도로명주소,
                         픽업지 = q.픽업_도로명주소,

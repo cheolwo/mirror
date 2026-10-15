@@ -15,6 +15,7 @@ public sealed class 마트배송시도Configuration : IEntityTypeConfiguration<�
         b.Property(x => x.기사Id).HasMaxLength(450).IsRequired();
         b.Property(x => x.상태Code).HasMaxLength(32).IsRequired();
         b.Property(x => x.픽업전표Id).HasMaxLength(64);
+        b.Property(x => x.고객수령근거Json).HasColumnName("customer_receipt_evidence_json").HasColumnType("longtext");
         b.Property(x => x.Revision).IsConcurrencyToken();
         b.HasIndex(x => x.배차의뢰Id).IsUnique();
         b.HasIndex(x => new { x.기사Id, x.상태Code, x.UpdatedAtUtc });

@@ -17,7 +17,7 @@ public sealed class 기사운행시작요청
 {
     /// <summary>동일 시작 요청의 재조회·재전송을 구분하는 선택적 식별자입니다.</summary>
     public Guid? ClientRequestId { get; set; }
-    public string 시작모드 { get; set; } = "immediate";
+    public string 시작모드 { get; set; } = "바로시작";
     public DateTime? 시작시각 { get; set; }
     public string 시작위치 { get; set; } = string.Empty;
     public string? 복귀지 { get; set; }

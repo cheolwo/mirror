@@ -47,19 +47,41 @@ public sealed class 화주운송의뢰인수증등록CommandHandler : IRequestHa
             return Result.Fail<ShipRequest.화주운송의뢰응답>("의뢰를 찾을 수 없습니다.");
         }
 
-        if (entity.정산상태 != ShipRequest.운임정산상태.후불승인완료.ToString() &&
-            entity.정산상태 != ShipRequest.운임정산상태.인수증대기.ToString())
+        var receiptStages = new[] { ShipRequest.운임정산상태.후불승인완료.ToString(), ShipRequest.운임정산상태.인수증대기.ToString(),
+            ShipRequest.운임정산상태.인수증등록완료.ToString(), ShipRequest.운임정산상태.청구대기.ToString(),
+            ShipRequest.운임정산상태.입금대기.ToString(), ShipRequest.운임정산상태.입금확인완료.ToString(), ShipRequest.운임정산상태.정산완료.ToString() };
+        if (!receiptStages.Contains(entity.정산상태, StringComparer.Ordinal))
         {
             return Result.Fail<ShipRequest.화주운송의뢰응답>("인수증 등록은 후불 승인 이후에만 가능합니다.");
         }
+
+        var completedTransportExists = await _db.운송원장.AsNoTracking().AnyAsync(x =>
+            (x.의뢰Id == entity.의뢰Id || (x.의뢰Id == string.Empty && x.운송번호 == entity.의뢰Id))
+            && x.상태 == 살뜰.도메인.공통.상태값.배차상태.인수완료 && x.도착 != null, cancellationToken);
+        if (!completedTransportExists)
+            return Result.Fail<ShipRequest.화주운송의뢰응답>(new Error("기사의 운송 완료를 확인한 뒤 인수증을 등록해 주세요.")
+                .WithMetadata("ErrorCode", "CargoCompletionRequired").WithMetadata("StatusCode", 409));
 
         var completionHandoff = await _completionHandoffService.화주인수Async(
             entity.의뢰Id,
             cancellationToken);
 
+        if (completionHandoff is null || completionHandoff.상태Code != 운영체제업무인계상태Codes.수락됨)
+            return Result.Fail<ShipRequest.화주운송의뢰응답>(new Error("운송 완료 인계를 아직 확인하지 못했습니다. 같은 의뢰를 다시 조회해 주세요.")
+                .WithMetadata("ErrorCode", "CargoCompletionHandoffPending").WithMetadata("StatusCode", 409));
+
+        if (entity.인수증등록일시 is not null)
+            return entity.인수증번호 == request.인수증번호.Trim()
+                ? Result.Ok(화주운송의뢰매퍼.To응답(entity, completionHandoff: completionHandoff))
+                : Result.Fail<ShipRequest.화주운송의뢰응답>(new Error("이미 등록한 인수증이 있습니다. 기존 기록을 확인해 주세요.")
+                    .WithMetadata("ErrorCode", "CargoReceiptAlreadyRegistered").WithMetadata("StatusCode", 409));
+
         entity.인수증번호 = request.인수증번호.Trim();
         entity.인수증등록일시 = DateTime.UtcNow;
-        entity.정산상태 = ShipRequest.운임정산상태.인수증등록완료.ToString();
+        // 인수 확인이 이미 진행한 청구·수납·정산 상태를 되돌리지 않는다.
+        if (entity.정산상태 == ShipRequest.운임정산상태.후불승인완료.ToString()
+            || entity.정산상태 == ShipRequest.운임정산상태.인수증대기.ToString())
+            entity.정산상태 = ShipRequest.운임정산상태.인수증등록완료.ToString();
         entity.정산메모 = MergeMemo(entity.정산메모, request.등록메모);
         entity.UpdatedAt = DateTime.UtcNow;
 

@@ -1,12 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Ssalddel.Contracts.Admin.Food;
 using Ssalddel.Contracts.Food;
+using 살뜰.Services.Dispatch.Notification;
 using Ssalddel.Services.Outbox;
 using 살뜰.Data;
 using 살뜰.Services.Dispatch.Engine;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.설정;
 using 살뜰.도메인.운송;
+using Ssalddel.Services.Food;
 
 namespace Ssalddel.Application.Admin.Food;
 
@@ -107,14 +109,30 @@ public sealed partial class 음식주문운영추적UseCase(
             .SingleOrDefaultAsync(x => x.주문번호 == normalizedOrderNo, cancellationToken);
         var normalizedOrderStatus = 음식주문상태코드.Normalize(order.상태);
         var latestDeliveryAttempt = deliveryAttempts.FirstOrDefault();
+        var validDriverAssigned = order.배차상태 == 음식주문배차상태코드.기사배정
+            && !HasDispatchLinkMismatch(order.배차대기Id, queue)
+            && queue is not null
+            && queue.상태 == 상태값.배차대기상태.확정
+            && queue.배차큐단계 == 상태값.배차큐단계.확정
+            && !string.IsNullOrWhiteSpace(queue.확정기사Id)
+            && latestDeliveryAttempt is not null
+            && latestDeliveryAttempt.제안Id == queue.의뢰Id
+            && latestDeliveryAttempt.기사Id == queue.확정기사Id
+            && latestDeliveryAttempt.중단시각Utc is null
+            && latestDeliveryAttempt.전달완료시각Utc is null;
+        var currentPreparation = 음식주문현재조리Policy.계산(order);
+        var waitingStartedAt = latestDeliveryAttempt?.중단시각Utc
+            ?? order.배차요청시각Utc ?? order.음식점수락시각Utc;
         var delayEvaluation = 음식배달운영지연판정Policy.판정(
             new 음식배달운영지연판정입력(
                 normalizedOrderStatus,
                 now,
                 order.조리예상완료시각Utc,
-                FindTransitionAt(order, 음식주문상태코드.픽업대기),
+                currentPreparation.ReadyAtUtc,
                 latestDeliveryAttempt?.픽업완료시각Utc,
-                latestDeliveryAttempt?.전달완료시각Utc));
+                latestDeliveryAttempt?.전달완료시각Utc,
+                waitingStartedAt,
+                validDriverAssigned));
         var recommendationExpired = IsRecommendationExpired(queue, now);
         var dispatchLedgerMissing = IsDispatchLedgerMissing(
             normalizedOrderStatus,
@@ -136,8 +154,9 @@ public sealed partial class 음식주문운영추적UseCase(
             queue,
             ledgerOutboxes,
             recommendationOutboxes,
-            delayEvaluation);
-        var outboxes = BuildOutboxes(ledgerOutboxes, recommendationOutboxes, now);
+            delayEvaluation,
+            now);
+        var outboxes = BuildOutboxes(ledgerOutboxes, recommendationOutboxes, queue, now);
         var checkpoints = BuildCheckpoints(order, queue, outboxes);
         var latestDeliveryAttemptInterrupted = latestDeliveryAttempt?.상태Code
                                               == 음식배달시도상태Code.중단;
@@ -156,17 +175,9 @@ public sealed partial class 음식주문운영추적UseCase(
                     x.종류 == "음식 공동 원장 동기화" && x.운영자확인필요),
                 기사알림확인필요여부: outboxes.Any(x =>
                     x.종류 == "기사 추천 알림" && x.운영자확인필요),
-                기사배정확정여부: order.배차상태 == 음식주문배차상태코드.기사배정
-                    && !dispatchLinkMismatch
-                    && queue is not null
-                    && queue.상태 == 상태값.배차대기상태.확정
-                    && queue.배차큐단계 == 상태값.배차큐단계.확정
-                    && !string.IsNullOrWhiteSpace(queue.확정기사Id)
-                    && latestDeliveryAttempt is not null
-                    && latestDeliveryAttempt.제안Id == queue.의뢰Id
-                    && latestDeliveryAttempt.기사Id == queue.확정기사Id
-                    && latestDeliveryAttempt.중단시각Utc is null
-                    && latestDeliveryAttempt.전달완료시각Utc is null));
+                기사배정확정여부: validDriverAssigned,
+                기사확보지연상태Code: delayEvaluation.기사확보지연상태Code,
+                기사확보대기분: delayEvaluation.기사확보대기분));
 
         return new 음식주문운영추적응답
         {
@@ -240,6 +251,7 @@ public sealed partial class 음식주문운영추적UseCase(
     private static IReadOnlyList<음식주문운영Outbox응답> BuildOutboxes(
         IReadOnlyList<음식마트원장동기화Outbox> ledgerOutboxes,
         IReadOnlyList<배차추천알림Outbox> recommendationOutboxes,
+        운송원장? queue,
         DateTime now)
     {
         var ledgerItems = ledgerOutboxes.Select(x => new 음식주문운영Outbox응답
@@ -250,10 +262,10 @@ public sealed partial class 음식주문운영추적UseCase(
             시도횟수 = x.시도횟수,
             마지막시도시각Utc = x.마지막시도시각Utc,
             갱신시각Utc = x.UpdatedAtUtc,
-            재시도예정 = x.처리상태 == OutboxProcessingStatuses.Pending
-                         && x.시도횟수 < OutboxProcessingPolicy.MaximumAttempts,
-            운영자확인필요 = x.처리상태 == OutboxProcessingStatuses.Failed
+            재시도예정 = (x.처리상태 == OutboxProcessingStatuses.Pending
+                         && x.시도횟수 < OutboxProcessingPolicy.MaximumAttempts)
                          || IsStaleProcessing(x.처리상태, x.UpdatedAtUtc, now),
+            운영자확인필요 = x.처리상태 == OutboxProcessingStatuses.Failed,
             실패요약 = string.IsNullOrWhiteSpace(x.마지막오류)
                 ? string.Empty
                 : "마지막 공동 원장 동기화 처리에서 오류가 기록되었습니다."
@@ -266,10 +278,16 @@ public sealed partial class 음식주문운영추적UseCase(
             시도횟수 = x.시도횟수,
             마지막시도시각Utc = x.마지막시도시각,
             갱신시각Utc = x.UpdatedAt,
-            재시도예정 = x.발송상태 == OutboxProcessingStatuses.Pending,
-            운영자확인필요 = x.발송상태 == OutboxProcessingStatuses.Failed,
-            실패요약 = x.발송상태 == OutboxProcessingStatuses.Failed
-                ? "기사 추천 알림 발송에 실패했습니다. 앱의 서버 재조회 경로를 함께 확인해야 합니다."
+            재시도예정 = IsCurrentRecommendation(queue, x, now)
+                && !FoodRecommendationNotificationRecoveryPolicy.RequiresOperatorReview(x, now)
+                && x.발송상태 is "Pending" or "Failed" or "Sending",
+            운영자확인필요 = IsCurrentRecommendation(queue, x, now)
+                && FoodRecommendationNotificationRecoveryPolicy.RequiresOperatorReview(x, now),
+            실패요약 = IsCurrentRecommendation(queue, x, now)
+                && FoodRecommendationNotificationRecoveryPolicy.RequiresOperatorReview(x, now)
+                ? "현재 기사 추천 알림의 자동 복구가 소진되었습니다. 알림 설정과 기사 앱의 서버 재조회 경로를 확인하세요."
+                : IsCurrentRecommendation(queue, x, now) && x.발송상태 == "Failed"
+                    ? "기사 추천 알림을 자동으로 다시 발송할 예정입니다."
                 : string.Empty
         });
 
@@ -289,7 +307,6 @@ public sealed partial class 음식주문운영추적UseCase(
         DateTime now)
     {
         var warnings = new List<string>();
-        var closed = orderStatus is 음식주문상태코드.거절 or 음식주문상태코드.취소;
         var dispatchExpected = orderStatus is not 음식주문상태코드.주문대기
             and not 음식주문상태코드.거절
             and not 음식주문상태코드.취소;
@@ -317,6 +334,8 @@ public sealed partial class 음식주문운영추적UseCase(
         {
             warnings.Add($"음식점 준비가 예상 완료 시각을 {delayEvaluation.음식점준비초과분}분 초과했습니다.");
         }
+        if (delayEvaluation.기사확보지연상태Code != 음식배달운영지연상태Codes.없음)
+            warnings.Add($"유효한 기사 배정 없이 {delayEvaluation.기사확보대기분}분 기다리고 있습니다. 배차 엔진은 적격 후보 재탐색을 계속합니다.");
 
         if (delayEvaluation.배달진행지연상태Code != 음식배달운영지연상태Codes.없음)
         {
@@ -331,21 +350,10 @@ public sealed partial class 음식주문운영추적UseCase(
         {
             warnings.Add("음식 공동 원장 동기화가 최대 재시도 뒤 실패한 항목이 있습니다.");
         }
-        else if (ledgerOutboxes.Any(x => IsStaleProcessing(x.처리상태, x.UpdatedAtUtc, now)))
+        if (recommendationOutboxes.Any(x => IsCurrentRecommendation(queue, x, now)
+                     && FoodRecommendationNotificationRecoveryPolicy.RequiresOperatorReview(x, now)))
         {
-            warnings.Add("음식 공동 원장 동기화 처리 lease가 만료된 항목이 있습니다.");
-        }
-
-        if (!closed
-            && queue is not null
-            && queue.추천라운드 > 0
-            && recommendationOutboxes.Count == 0)
-        {
-            warnings.Add("추천 라운드는 시작됐지만 기사 추천 알림 Outbox 기록을 찾지 못했습니다.");
-        }
-        else if (recommendationOutboxes.Any(x => x.발송상태 == OutboxProcessingStatuses.Failed))
-        {
-            warnings.Add("기사 추천 알림 발송 실패 항목이 있습니다.");
+            warnings.Add("현재 기사 추천 알림의 자동 복구가 소진되어 운영자 확인이 필요합니다.");
         }
 
         return warnings;
@@ -357,7 +365,8 @@ public sealed partial class 음식주문운영추적UseCase(
         운송원장? queue,
         IReadOnlyList<음식마트원장동기화Outbox> ledgerOutboxes,
         IReadOnlyList<배차추천알림Outbox> recommendationOutboxes,
-        음식배달운영지연판정결과 delayEvaluation)
+        음식배달운영지연판정결과 delayEvaluation,
+        DateTime now)
     {
         var guides = new List<string>();
         var dispatchExpected = orderStatus is not 음식주문상태코드.주문대기
@@ -381,6 +390,8 @@ public sealed partial class 음식주문운영추적UseCase(
         {
             guides.Add("음식점의 현재 준비 상태와 변경된 준비 예정시각을 확인하고 필요한 경우 주문자에게 지연 사실을 안내합니다.");
         }
+        if (delayEvaluation.기사확보지연상태Code == 음식배달운영지연상태Codes.운영자확인필요)
+            guides.Add("운영자가 배차 가능 기사와 예상 대기를 확인하고 음식점·주문자에게 대기 또는 취소 협의를 안내합니다. 적격성·수락 관문은 유지하며 취소·환불은 별도 확인합니다.");
 
         if (delayEvaluation.배달진행지연상태Code
             == 음식배달운영지연상태Codes.운영자확인필요)
@@ -393,7 +404,8 @@ public sealed partial class 음식주문운영추적UseCase(
             guides.Add("실패 원인을 해소한 뒤 관리자 사유와 함께 공동 원장 Outbox를 재처리해야 합니다.");
         }
 
-        if (recommendationOutboxes.Any(x => x.발송상태 == OutboxProcessingStatuses.Failed))
+        if (recommendationOutboxes.Any(x => IsCurrentRecommendation(queue, x, now)
+                && FoodRecommendationNotificationRecoveryPolicy.RequiresOperatorReview(x, now)))
         {
             guides.Add("기사 push token과 FCM 설정을 확인하되, 기사 앱의 30초 서버 재조회로 추천이 복구되는지도 확인합니다.");
         }
@@ -605,6 +617,9 @@ public sealed partial class 음식주문운영추적UseCase(
     private static bool IsStaleProcessing(string status, DateTime updatedAtUtc, DateTime now)
         => status == OutboxProcessingStatuses.Processing
            && updatedAtUtc <= now - OutboxProcessingPolicy.LeaseTimeout;
+
+    private static bool IsCurrentRecommendation(운송원장? queue, 배차추천알림Outbox item, DateTime now)
+        => queue is not null && FoodRecommendationNotificationRecoveryPolicy.IsCurrentRecommendation(queue, item, now);
 
     private static DateTime ResolveLastChangedAt(
         DateTime orderUpdatedAt,

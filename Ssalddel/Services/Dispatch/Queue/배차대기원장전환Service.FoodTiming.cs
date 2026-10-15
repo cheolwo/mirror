@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Ssalddel.Contracts.Common.Dispatch;
 using 살뜰.Services.Dispatch.Engine;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.배차;
@@ -31,13 +32,33 @@ public sealed partial class 배차대기원장전환Service
             return 전환안됨(queue, 배차대기원장전환결과코드.추천준비안됨, "FoodDispatchTiming.QueueChanged");
 
         var decision = evaluation.Decision;
-        _timingLogger?.LogInformation(
-            "FoodDispatchTiming ActionCode={ActionCode} ReasonCode={ReasonCode} PolicyVersion={PolicyVersion} RecheckAtUtc={RecheckAtUtc} HardDeadlineUtc={HardDeadlineUtc} AIStatusCode={AIStatusCode}",
-            decision.ActionCode, decision.ReasonCode, decision.PolicyVersion,
-            decision.RecheckAtUtc, decision.HardDeadlineUtc, evaluation.AIStatusCode);
-        // 모델이나 자료 조회가 늦었으면 보류를 새로 시작하지 않는다. 기존 최종 후보 관문은 그대로 적용한다.
+        // 원장 재조회가 늦어져도 응답 당시의 Current를 그대로 적용하지 않습니다.
         var now = _timingClock.GetUtcNow();
-        if (decision.ActionCode != "Collect" || !decision.RecheckAtUtc.HasValue
+        var information = evaluation.Input.InformationReadiness;
+        var currentInformation = information is { MaxAgeSeconds: >= 1 and <= 120 }
+            ? new FoodDispatchInformationReadinessPolicy().Evaluate(
+                evaluation.Input.Applicable && !evaluation.Input.HasActiveOffer && !evaluation.Input.IsRetry,
+                now, information.MaxAgeSeconds, information.Evidence)
+            : null;
+        if (decision.ActionCode == FoodDispatchTimingActionCodes.Collect
+            && currentInformation?.SchedulingStateCode != FoodDispatchInformationStateCodes.Current)
+            decision = decision with
+            {
+                ActionCode = FoodDispatchTimingActionCodes.DispatchNow,
+                ReasonCode = currentInformation?.SchedulingStateCode == FoodDispatchInformationStateCodes.Stale
+                    ? "InformationStaleAfterReload" : "InformationMissingAfterReload",
+                RecheckAtUtc = null,
+                AllowedActions = [FoodDispatchTimingActionCodes.DispatchNow]
+            };
+        _timingLogger?.LogInformation(
+            "FoodDispatchTiming ActionCode={ActionCode} ReasonCode={ReasonCode} PolicyVersion={PolicyVersion} RecheckAtUtc={RecheckAtUtc} HardDeadlineUtc={HardDeadlineUtc} AIStatusCode={AIStatusCode} SchedulingInformation={SchedulingInformation} CoordinationInformation={CoordinationInformation}",
+            decision.ActionCode, decision.ReasonCode, decision.PolicyVersion,
+            decision.RecheckAtUtc, decision.HardDeadlineUtc, evaluation.AIStatusCode,
+            currentInformation?.SchedulingStateCode ?? FoodDispatchInformationStateCodes.Missing,
+            currentInformation?.CoordinationStateCode ?? FoodDispatchInformationStateCodes.Missing);
+        // 모델이나 자료 조회가 늦었으면 보류를 새로 시작하지 않는다. 기존 최종 후보 관문은 그대로 적용한다.
+        if (currentInformation?.SchedulingStateCode != FoodDispatchInformationStateCodes.Current
+            || decision.ActionCode != "Collect" || !decision.RecheckAtUtc.HasValue
             || now >= decision.RecheckAtUtc.Value || now >= decision.HardDeadlineUtc)
             return null;
         return 전환안됨(queue, "FoodDispatchTiming.Collect",

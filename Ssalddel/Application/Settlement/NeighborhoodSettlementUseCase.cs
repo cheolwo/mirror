@@ -17,6 +17,8 @@ public interface INeighborhoodSettlementUseCase
     Task<NeighborhoodSettlementReceiptDto> TermsAsync(string id, string actorUserId, NeighborhoodSettlementAgreementRequest request, CancellationToken ct);
     Task<NeighborhoodSettlementReceiptDto> ConsentAsync(string id, string actorUserId, NeighborhoodSettlementConsentRequest request, CancellationToken ct);
     Task<NeighborhoodSettlementReceiptDto> AccrueAsync(string id, string actorUserId, NeighborhoodSettlementAccrualRequest request, CancellationToken ct);
+    Task<NeighborhoodActivityRewardPreviewDto> ActivityRewardPreviewAsync(string id, string actorUserId, CancellationToken ct);
+    Task<NeighborhoodSettlementReceiptDto> AccrueActivityRewardAsync(string id, string actorUserId, NeighborhoodSettlementActivityRewardAccrualRequest request, CancellationToken ct);
     Task<NeighborhoodSettlementReceiptDto> ConfirmEntryAsync(string id, string actorUserId, NeighborhoodSettlementEntryConfirmRequest request, CancellationToken ct);
     Task<NeighborhoodSettlementReceiptDto> DisputeAsync(string id, string actorUserId, NeighborhoodSettlementDisputeRequest request, CancellationToken ct);
     Task<NeighborhoodSettlementReceiptDto> AdjustmentAsync(string id, string actorUserId, NeighborhoodSettlementAdjustmentRequest request, CancellationToken ct);
@@ -24,6 +26,7 @@ public interface INeighborhoodSettlementUseCase
     Task<NeighborhoodSettlementReceiptDto> ConfirmReceiptAsync(string id, string actorUserId, NeighborhoodSettlementPaymentReceiptRequest request, CancellationToken ct);
     Task<NeighborhoodSettlementSummaryDto> GetAsync(string id, string actorUserId, CancellationToken ct);
     Task<IReadOnlyList<NeighborhoodSettlementSummaryDto>> MySummaryAsync(string actorUserId, CancellationToken ct);
+    Task<WorkerWeeklyStatementDto> WeeklyStatementAsync(string actorUserId, DateOnly? completionDateKst, CancellationToken ct);
     Task<NeighborhoodSettlementReceiptDto> ReceiptAsync(string actorUserId, Guid requestId, CancellationToken ct);
 }
 
@@ -63,6 +66,8 @@ public sealed partial class NeighborhoodSettlementUseCase(SsalddelContext db,
         => line.PayerUserId == actor || line.PayeeUserId == actor;
     private static string[] RequiredConsents(NeighborhoodSettlementAgreementRequest terms)
         => terms.Lines.SelectMany(x => new[] { x.PayerUserId, x.PayeeUserId }.Concat(x.DeliveryCostShares.Select(s => s.PayerUserId)))
+            .Concat(terms.ActivityRewardTerms is { } reward ? reward.ParticipantUserIds.Append(reward.PayerUserId) : [])
+            .Concat(terms.ActivityRewardTerms?.Economics is { } economics ? new[] { economics.PlatformPayeeUserId } : [])
             .Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).ToArray();
     private static NeighborhoodSettlementAgreementRequest Terms(NeighborhoodSettlementAgreementRecord row)
         => Deserialize<NeighborhoodSettlementAgreementRequest>(row.TermsJson);
@@ -73,11 +78,12 @@ public sealed partial class NeighborhoodSettlementUseCase(SsalddelContext db,
     {
         var row = await db.Set<NeighborhoodSettlementAgreementRecord>().SingleOrDefaultAsync(x => x.AgreementId == id, ct)
             ?? throw new NeighborhoodSettlementException("NeighborhoodSettlementNotFound", 404);
-        if (row.CreatorUserId == actor || Party(Source(row), actor)) return row;
+        if (row.CreatorUserId == actor || Party(Source(row), actor) || PlatformParty(Terms(row), actor)) return row;
         // 조건 변경 전 본인에게 발생한 채무·수금 근거도 본인 범위에서는 계속 조회합니다.
         var versions = await db.Set<NeighborhoodSettlementAgreementVersionRecord>().AsNoTracking()
             .Where(x => x.AgreementId == id).ToArrayAsync(ct);
-        Require(versions.Any(x => Party(Deserialize<NeighborhoodSettlementSourceSnapshot>(x.SourceSnapshotJson), actor)),
+        Require(versions.Any(x => Party(Deserialize<NeighborhoodSettlementSourceSnapshot>(x.SourceSnapshotJson), actor)
+            || PlatformParty(Deserialize<NeighborhoodSettlementAgreementRequest>(x.TermsJson), actor)),
             "NeighborhoodSettlementNotFound", 404);
         return row;
     }
@@ -99,11 +105,14 @@ public sealed partial class NeighborhoodSettlementUseCase(SsalddelContext db,
         {
             Require(r.ExpectedRevision == 0, "NeighborhoodSettlementRevisionConflict");
             var source = await sources.ResolveAsync(Text(r.SourceKind, 40), Text(r.SourceId, 120), ct);
-            Require(Party(source, actor), "NeighborhoodSettlementPartyRequired", 403); ValidateTerms(r, source);
+            var terms = WorkflowTerms(r);
+            Require(Party(source, actor), "NeighborhoodSettlementPartyRequired", 403); ValidateTerms(terms, source); ValidateActivityRewardTerms(terms, source);
+            await ValidatePlatformShareTerms(terms, source, ct);
+            ValidateInventoryCostSelections(terms);
             var row = new NeighborhoodSettlementAgreementRecord
             {
                 AgreementId = NewId("nsa"), SourceKind = r.SourceKind, SourceId = r.SourceId, CreatorUserId = actor,
-                ActivityKind = r.ActivityKind, TermsJson = Serialize(r), SourceSnapshotJson = Serialize(source),
+                ActivityKind = terms.ActivityKind, TermsJson = Serialize(terms), SourceSnapshotJson = Serialize(source),
                 StatusCode = NeighborhoodSettlementCodes.AwaitingConsent, CreatedAtUtc = Now, UpdatedAtUtc = Now
             };
             AppendHistory(row, actor, "Create", Now); db.Add(row); VersionSnapshot(row);
@@ -116,8 +125,11 @@ public sealed partial class NeighborhoodSettlementUseCase(SsalddelContext db,
             var row = await Owned(id, actor, ct); Revision(row, r);
             Require(row.SourceKind == r.SourceKind && row.SourceId == r.SourceId, "NeighborhoodSettlementSourceChangeForbidden");
             var source = await sources.ResolveAsync(row.SourceKind, row.SourceId, ct);
-            Require(Party(source, actor), "NeighborhoodSettlementPartyRequired", 403); ValidateTerms(r, source);
-            row.TermsVersion++; row.Revision++; row.TermsJson = Serialize(r); row.SourceSnapshotJson = Serialize(source);
+            var terms = WorkflowTerms(r);
+            Require(Party(source, actor), "NeighborhoodSettlementPartyRequired", 403); ValidateTerms(terms, source); ValidateActivityRewardTerms(terms, source);
+            await ValidatePlatformShareTerms(terms, source, ct);
+            ValidateInventoryCostSelections(terms);
+            row.TermsVersion++; row.Revision++; row.TermsJson = Serialize(terms); row.SourceSnapshotJson = Serialize(source);
             row.ActivityKind = r.ActivityKind; row.ConsentsJson = "[]"; row.StatusCode = NeighborhoodSettlementCodes.AwaitingConsent;
             row.UpdatedAtUtc = Now; AppendHistory(row, actor, "Terms", Now); VersionSnapshot(row);
             return Result(row, r.RequestId, "Terms");

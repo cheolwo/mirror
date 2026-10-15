@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using Ssalddel.Contracts.Common.Drivers;
 using Ssalddel.Contracts.Common.Dispatch;
+using Ssalddel.Services.Dispatch.Participation;
 using 살뜰.Services.Dispatch.Common;
 using Ssalddel.Services.Food;
 using 살뜰.Services.Dispatch.Coordination;
@@ -28,6 +29,7 @@ public sealed class 음식배달배차업무정책 : I배차업무정책
     private readonly I음식권역복귀일정평가Service? _음식일정;
     private readonly I음식배달수요참여Service? _수요참여;
     private readonly IFoodDispatchCandidateAI? _candidateAI;
+    private readonly ISharedDriverWorkAdmissionService? _sharedAdmission;
 
     public 음식배달배차업무정책(
         I국내화물운송기사상태Store 기사상태Store,
@@ -41,7 +43,8 @@ public sealed class 음식배달배차업무정책 : I배차업무정책
         I기사권역복귀Service? 권역복귀 = null,
         I음식권역복귀일정평가Service? 음식일정 = null,
         I음식배달수요참여Service? 수요참여 = null,
-        IFoodDispatchCandidateAI? candidateAI = null)
+        IFoodDispatchCandidateAI? candidateAI = null,
+        ISharedDriverWorkAdmissionService? sharedAdmission = null)
     {
         _기사상태Store = 기사상태Store;
         _거절Store = 거절Store;
@@ -55,6 +58,7 @@ public sealed class 음식배달배차업무정책 : I배차업무정책
         _음식일정 = 음식일정;
         _수요참여 = 수요참여;
         _candidateAI = candidateAI;
+        _sharedAdmission = sharedAdmission;
     }
 
     public int 배차업무유형 => 상태값.배차업무유형.음식배달;
@@ -442,6 +446,18 @@ public sealed class 음식배달배차업무정책 : I배차업무정책
             {
                 검토기록(검토항목, candidate.DriverId, 공간단계, 공간설명, blocked, candidate, null, decisions);
                 continue;
+            }
+
+            if (_sharedAdmission is not null)
+            {
+                var participation = await _sharedAdmission.CheckRecommendationAsync(candidate.DriverId, queue, cancellationToken);
+                if (participation.IsFailed)
+                {
+                    var code = participation.Errors.FirstOrDefault()?.Metadata.GetValueOrDefault("ErrorCode")?.ToString()
+                        ?? "DriverWorkNotSelected";
+                    검토기록(검토항목, candidate.DriverId, 공간단계, 공간설명, code, candidate, null, decisions);
+                    continue;
+                }
             }
 
             var current = new 배차경로좌표(candidate.Latitude!.Value, candidate.Longitude!.Value);

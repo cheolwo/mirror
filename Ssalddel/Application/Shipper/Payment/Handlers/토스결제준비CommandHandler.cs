@@ -14,17 +14,20 @@ public sealed class 토스결제준비CommandHandler : IRequestHandler<토스결
     private readonly IOptions<TossPaymentsOptions> _options;
     private readonly I콘텐츠혜택계산Service _benefitService;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly IOptions<TransportPrepaymentOptions> _prepaymentOptions;
 
     public 토스결제준비CommandHandler(
         SsalddelContext db,
         IOptions<TossPaymentsOptions> options,
         I콘텐츠혜택계산Service benefitService,
-        ICurrentUserAccessor currentUserAccessor)
+        ICurrentUserAccessor currentUserAccessor,
+        IOptions<TransportPrepaymentOptions>? prepaymentOptions = null)
     {
         _db = db;
         _options = options;
         _benefitService = benefitService;
         _currentUserAccessor = currentUserAccessor;
+        _prepaymentOptions = prepaymentOptions ?? Microsoft.Extensions.Options.Options.Create(new TransportPrepaymentOptions());
     }
 
     public async Task<Result<토스결제준비응답>> Handle(토스결제준비Command request, CancellationToken cancellationToken)
@@ -48,41 +51,61 @@ public sealed class 토스결제준비CommandHandler : IRequestHandler<토스결
         var 진행검증 = 화주운송결제진행정책.결제준비요청검증(
             shipperRequest,
             _currentUserAccessor.UserId,
-            _currentUserAccessor.Role);
+            _currentUserAccessor.Role,
+            _prepaymentOptions.Value.Enabled);
         if (!진행검증.통과)
         {
             return Result.Fail<토스결제준비응답>(진행검증.실패사유);
         }
 
-        var requestedAmount = request.Amount > 0 ? request.Amount : shipperRequest.결제예정금액 ?? 0;
-        if (requestedAmount <= 0)
+        var gross = 배송료결제준비근거Policy.서버원운임조회(shipperRequest);
+        if (gross.IsFailed) return Result.Fail<토스결제준비응답>(gross.Errors);
+        if (request.Amount != gross.Value)
         {
-            return Result.Fail<토스결제준비응답>("결제금액이 유효하지 않습니다.");
+            return Result.Fail<토스결제준비응답>(new Error("요청 금액이 서버의 확정 운임과 다릅니다. 금액을 다시 확인해 주세요.")
+                .WithMetadata("ErrorCode", "PreparationAmountMismatch"));
         }
 
-        var benefitEstimate = await _benefitService.계산Async(shipperRequest.화주Id, requestedAmount, cancellationToken);
-        requestedAmount = benefitEstimate.최종결제금액;
+        var benefitEstimate = await _benefitService.계산Async(shipperRequest.화주Id, gross.Value, cancellationToken);
+        var requestedAmount = benefitEstimate.최종결제금액;
         if (requestedAmount <= 0)
         {
             return Result.Fail<토스결제준비응답>("적용 가능한 보상으로 결제금액이 0원이 되어 온라인 결제를 진행할 수 없습니다.");
         }
 
-        var existingPendingPayment = await _db.결제
-            .Where(x => x.의뢰Id == shipperRequest.의뢰Id && x.결제상태 == 상태값.결제상태.결제대기 && x.결제금액 == requestedAmount)
+        var pendingPayments = await _db.결제
+            .Where(x => x.의뢰Id == shipperRequest.의뢰Id && x.결제상태 == 상태값.결제상태.결제대기)
             .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
 
-        if (existingPendingPayment != null)
+        var startedPayments = pendingPayments.Where(x => !string.IsNullOrWhiteSpace(x.PaymentKey)).ToArray();
+        if (startedPayments.Length > 1)
+            return Result.Fail<토스결제준비응답>(new Error("시작된 결제가 여러 건입니다. 기존 결제 결과를 먼저 확인해 주세요.")
+                .WithMetadata("ErrorCode", "PreparationResultCheckRequired"));
+
+        foreach (var existingPendingPayment in (startedPayments.Length == 1 ? startedPayments.AsEnumerable() : pendingPayments)
+                     .Where(x => x.결제금액 == requestedAmount))
         {
-            return Result.Ok(new 토스결제준비응답
+            var existingEvidence = 배송료결제준비근거Policy.현재근거검증(existingPendingPayment, shipperRequest);
+            var existingBenefit = 배송료결제준비근거Policy.혜택근거검증(existingPendingPayment, benefitEstimate);
+            if (existingEvidence.IsSuccess && existingBenefit.IsSuccess)
             {
-                결제Id = existingPendingPayment.결제Id,
-                의뢰Id = existingPendingPayment.의뢰Id,
-                OrderId = existingPendingPayment.OrderId,
-                Amount = existingPendingPayment.결제금액,
-                ClientKey = _options.Value.ClientKey
-            });
+                return Result.Ok(new 토스결제준비응답
+                {
+                    결제Id = existingPendingPayment.결제Id,
+                    의뢰Id = existingPendingPayment.의뢰Id,
+                    OrderId = existingPendingPayment.OrderId,
+                    Amount = existingPendingPayment.결제금액,
+                    ClientKey = _options.Value.ClientKey
+                });
+            }
         }
+
+        // 금액이 달라도 이미 PG 키가 생긴 결제는 입금 결과부터 확인합니다.
+        // 명시적 재준비는 새 근거를 만들며 이전 금액·근거는 소급 변경하지 않습니다.
+        if (pendingPayments.Any(x => !string.IsNullOrWhiteSpace(x.PaymentKey)))
+            return Result.Fail<토스결제준비응답>(new Error("이미 시작된 결제의 결과를 먼저 확인해 주세요. 새 결제를 만들지 않습니다.")
+                .WithMetadata("ErrorCode", "PreparationResultCheckRequired"));
 
         var orderId = 주문번호생성();
         var payment = new 살뜰.도메인.결제.결제
@@ -102,6 +125,10 @@ public sealed class 토스결제준비CommandHandler : IRequestHandler<토스결
             결제상태 = 상태값.결제상태.결제대기,
             CreatedAt = DateTime.UtcNow
         };
+
+        var evidence = 배송료결제준비근거Policy.생성(payment, shipperRequest, benefitEstimate);
+        if (evidence.IsFailed) return Result.Fail<토스결제준비응답>(evidence.Errors);
+        payment.준비근거Json = evidence.Value;
 
         shipperRequest.결제상태 = 상태값.결제상태.결제대기;
         shipperRequest.UpdatedAt = DateTime.UtcNow;

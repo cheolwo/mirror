@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Ssalddel.Services.Dispatch.Participation;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.배차;
 using 살뜰.도메인.기사;
@@ -22,13 +23,20 @@ public sealed partial class 국내화물배차조율입력Factory
         차량제원? vehicleSpec,
         IReadOnlySet<string> rejectedDriverIds,
         int acceptedTransportCount,
-        DateTime now)
+        DateTime now,
+        CancellationToken cancellationToken)
     {
         var excluded = new List<string>();
         excluded.AddRange(국내화물배차후보금지정책.조합후보금지사유(driver.기사Id, rejectedDriverIds));
         excluded.AddRange(국내화물배차후보금지정책.기사후보금지사유(
             state,
             driver));
+        if (_sharedAdmission is not null)
+        {
+            var participation = await _sharedAdmission.CheckRecommendationAsync(driver.기사Id, queue, cancellationToken);
+            if (participation.IsFailed)
+                excluded.AddRange(participation.Errors.Select(x => x.Message));
+        }
 
         var pickupPoint = CreatePoint(queue.픽업_위도, queue.픽업_경도);
         var dropoffPoint = CreatePoint(queue.하차_위도, queue.하차_경도);

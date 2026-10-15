@@ -29,7 +29,7 @@ public sealed partial class NeighborhoodSettlementUseCase
         {
             NeighborhoodSettlementCodes.FoodOrder => NeighborhoodSettlementCodes.PreparedFood,
             NeighborhoodSettlementCodes.CargoRequest => NeighborhoodSettlementCodes.TransportOnly,
-            NeighborhoodSettlementCodes.DistributedLot or NeighborhoodSettlementCodes.DistributedOrder => NeighborhoodSettlementCodes.StoredGoods,
+            NeighborhoodSettlementCodes.DistributedLot or NeighborhoodSettlementCodes.DistributedOrder or NeighborhoodSettlementCodes.MartOrder => NeighborhoodSettlementCodes.StoredGoods,
             _ => ""
         };
         Require(expected.Length > 0 && terms.ActivityKind == expected, "NeighborhoodSettlementActivityUnsupported", 400);
@@ -69,10 +69,14 @@ public sealed partial class NeighborhoodSettlementUseCase
             Require(line.Quantity is null || Quantity(line.Quantity.Value), "NeighborhoodSettlementQuantityInvalid", 400);
             Utc(line.PeriodStartUtc); Utc(line.PeriodEndUtc);
             Require(line.Kind is NeighborhoodSettlementCodes.ProductSale or NeighborhoodSettlementCodes.OwnerRemittance or NeighborhoodSettlementCodes.SalesAgency
-                or NeighborhoodSettlementCodes.Storage or NeighborhoodSettlementCodes.Inbound or NeighborhoodSettlementCodes.Picking or NeighborhoodSettlementCodes.Delivery,
+                or NeighborhoodSettlementCodes.Storage or NeighborhoodSettlementCodes.Inbound or NeighborhoodSettlementCodes.Picking or NeighborhoodSettlementCodes.Packing or NeighborhoodSettlementCodes.Delivery,
                 "NeighborhoodSettlementLineKindInvalid", 400);
             Require(terms.ActivityKind != NeighborhoodSettlementCodes.TransportOnly || line.Kind == NeighborhoodSettlementCodes.Delivery,
                 "NeighborhoodSettlementTransportLineUnsupported", 400);
+            Require(line.Kind != NeighborhoodSettlementCodes.Packing || terms.SourceKind == NeighborhoodSettlementCodes.MartOrder,
+                "NeighborhoodSettlementPackingSourceUnsupported", 400);
+            Require(terms.SourceKind != NeighborhoodSettlementCodes.MartOrder || line.Kind is NeighborhoodSettlementCodes.Picking or NeighborhoodSettlementCodes.Packing,
+                "NeighborhoodSettlementMartLineUnsupported", 400);
             Require(terms.ActivityKind != NeighborhoodSettlementCodes.PreparedFood || line.Kind is NeighborhoodSettlementCodes.ProductSale
                 or NeighborhoodSettlementCodes.OwnerRemittance or NeighborhoodSettlementCodes.SalesAgency or NeighborhoodSettlementCodes.Delivery,
                 "NeighborhoodSettlementPreparedFoodLineUnsupported", 400);
@@ -117,7 +121,7 @@ public sealed partial class NeighborhoodSettlementUseCase
                 NeighborhoodSettlementCodes.ProductSale => terms.GoodsPaymentRoute == NeighborhoodSettlementCodes.OwnerDirect ? "Owner" : "Seller",
                 NeighborhoodSettlementCodes.OwnerRemittance => "Owner", NeighborhoodSettlementCodes.SalesAgency => "Seller",
                 NeighborhoodSettlementCodes.Storage => "SpaceOwner", NeighborhoodSettlementCodes.Inbound => "Receiver",
-                NeighborhoodSettlementCodes.Picking => "Picker", NeighborhoodSettlementCodes.Delivery => "Driver", _ => ""
+                NeighborhoodSettlementCodes.Picking => "Picker", NeighborhoodSettlementCodes.Packing => "Packer", NeighborhoodSettlementCodes.Delivery => "Driver", _ => ""
             };
             Require(line.BeneficiaryRole == payeeRole, "NeighborhoodSettlementBeneficiaryMismatch", 403);
             var payerRoles = line.Kind switch

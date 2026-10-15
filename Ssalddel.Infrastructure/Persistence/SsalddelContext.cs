@@ -51,6 +51,8 @@ namespace 살뜰.Data
         public DbSet<기사위치기록> 기사위치기록 { get; set; } = null!;
         public DbSet<기사월정산> 기사월정산 { get; set; } = null!;
         public DbSet<기사운송대금지급요청> 기사운송대금지급요청 { get; set; } = null!;
+        public DbSet<기사운송대금정산배치> 기사운송대금정산배치 { get; set; } = null!;
+        public DbSet<기사운송대금정산배치행> 기사운송대금정산배치행 { get; set; } = null!;
         public DbSet<차량제원> 차량제원 { get; set; } = null!;
         public DbSet<탐색캠페인> 탐색캠페인 { get; set; } = null!;
         public DbSet<탐색캠페인대상자> 탐색캠페인대상자 { get; set; } = null!;

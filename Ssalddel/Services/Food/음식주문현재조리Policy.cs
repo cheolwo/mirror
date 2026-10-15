@@ -16,6 +16,8 @@ public sealed record 음식주문현재조리상태(
 public static class 음식주문현재조리Policy
 {
     public const string 재조리요청이력사유 = "픽업 후 배달 중단 · 재조리·재배차";
+    // 구형 사유는 당시 실제 조리 시작으로 읽는다. 새 요청은 음식점의 시작 명령과 구분한다.
+    public const string 재조리대기이력사유 = "픽업 후 배달 중단 · 재조리 요청·기사 재배정 대기";
 
     public static 음식주문현재조리상태 계산(음식주문 order)
         => 계산(order.상태이력.OrderBy(x => x.전이시각Utc).ThenBy(x => x.Id)
@@ -44,6 +46,13 @@ public static class 음식주문현재조리Policy
         DateTime? recookingAt = null;
         foreach (var item in history)
         {
+            if (item.사유 == 재조리대기이력사유 && item.다음상태 == 음식주문상태코드.주문확인)
+            {
+                round++;
+                recookingAt = item.전이시각Utc;
+                startedAt = readyAt = null;
+                continue;
+            }
             if (item.사유 == 재조리요청이력사유 && item.다음상태 == 음식주문상태코드.조리중)
             {
                 round++;

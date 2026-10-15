@@ -49,7 +49,8 @@ public sealed class 생활배송의뢰UseCase(
     I생활배송기사정보제공동의Service? driverDisclosure = null, I생활배송협업Guard? collaborationGuard = null,
     Ssalddel.Services.Commerce.I통신판매거래Guard? commerce = null, I생활배송처리처Service? fulfillment = null,
     I자동수행Coordinator? automatic = null, I운송원장Mongo동기화Service? ledgerSync = null,
-    NeighborhoodMemberDeliveryUseCase? members = null) : I생활배송의뢰UseCase
+    NeighborhoodMemberDeliveryUseCase? members = null,
+    살뜰.Services.Dispatch.Recommendation.I소형배송기사제안요금Service? smallGoodsPricing = null) : I생활배송의뢰UseCase
 {
     internal const string ClientRequestPrefix = NeighborhoodDeliveryRoutes.ClientRequestPrefix;
     private const string MemoPrefix = "neighborhood-delivery:v1:";
@@ -189,6 +190,12 @@ public sealed class 생활배송의뢰UseCase(
                 await db.Entry(pendingQueue).ReloadAsync(cancellationToken);
                 if (!pendingQueue.생활배송수락준비완료 && pendingQueue.배차큐단계 != 상태값.배차큐단계.종료 && pendingQueue.확정기사Id is null)
                 {
+                    // 공개 콜은 추천 시작을 거치지 않을 수 있습니다. 노출 준비 전에 같은 기사 요금 근거를 저장합니다.
+                    if (smallGoodsPricing is not null)
+                    {
+                        var pricing = await smallGoodsPricing.준비Async(pendingQueue, cancellationToken);
+                        if (pricing.IsFailed) return Result.Fail<NeighborhoodDeliveryResponse>(pricing.Errors);
+                    }
                     pendingQueue.생활배송수락준비완료 = true; pendingQueue.생활배송선택판본++;
                     생활배송배차Policy.대기적용(pendingQueue);
                     await db.SaveChangesAsync(cancellationToken);

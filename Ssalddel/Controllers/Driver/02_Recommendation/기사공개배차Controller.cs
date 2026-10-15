@@ -4,10 +4,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using 살뜰.도메인.공통;
 using Ssalddel.ApiMetadata;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Driver.Recommendation02
 {
     [SsalddelApiVersion(SsalddelProductVersion.V2_0)]
+    [SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
     [SsalddelApiCapability(SsalddelCapability.Dispatch)]
     [SsalddelApiOperation(SsalddelOperation.Browse)]
     [SsalddelApiOperation(SsalddelOperation.Decide)]

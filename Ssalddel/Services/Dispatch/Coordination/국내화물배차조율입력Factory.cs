@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Ssalddel.Services.Dispatch.Participation;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.배차;
 using 살뜰.도메인.기사;
@@ -34,6 +35,7 @@ public sealed partial class 국내화물배차조율입력Factory : I국내화�
     private readonly 배차큐정책Options _options;
     private readonly 국내화물배차AI정책Options _aiPolicyOptions;
     private readonly I기사권역복귀Service _권역복귀Service;
+    private readonly ISharedDriverWorkAdmissionService? _sharedAdmission;
     private readonly Dictionary<string, 기사권역복귀상태> _권역복귀상태Cache = new(StringComparer.Ordinal);
     private readonly Dictionary<string, bool> _다른업무Cache = new(StringComparer.Ordinal);
 
@@ -50,7 +52,8 @@ public sealed partial class 국내화물배차조율입력Factory : I국내화�
         I운송의뢰수익묶음Service 수익묶음Service,
         IOptions<배차큐정책Options> options,
         IOptions<국내화물배차AI정책Options> aiPolicyOptions,
-        I기사권역복귀Service 권역복귀Service)
+        I기사권역복귀Service 권역복귀Service,
+        ISharedDriverWorkAdmissionService? sharedAdmission = null)
     {
         _db = db;
         _기사상태Store = 기사상태Store;
@@ -65,6 +68,7 @@ public sealed partial class 국내화물배차조율입력Factory : I국내화�
         _options = options.Value;
         _aiPolicyOptions = aiPolicyOptions.Value;
         _권역복귀Service = 권역복귀Service;
+        _sharedAdmission = sharedAdmission;
     }
 
     public async Task<국내화물배차조율입력> 생성Async(

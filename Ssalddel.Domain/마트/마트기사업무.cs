@@ -15,6 +15,8 @@ public sealed class 마트배송시도
     public DateTime 수락시각Utc { get; set; }
     public DateTime? 픽업시각Utc { get; set; }
     public DateTime? 전달시각Utc { get; set; }
+    /// <summary>불변 수령 확인과 명시적 문제 보류를 분리하는 비공개 보호 근거입니다.</summary>
+    public string? 고객수령근거Json { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public DateTime UpdatedAtUtc { get; set; }
 }

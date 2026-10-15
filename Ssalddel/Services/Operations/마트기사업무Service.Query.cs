@@ -39,6 +39,12 @@ public sealed partial class 마트기사업무Service
         if (queue is null || (queue.확정기사Id != 기사Id
                 && !배차응답가능정책.추천수락가능(queue, 기사Id, Now)))
             return Fail<마트기사업무항목Dto>("MartDriverWorkNotFound", 404);
+        // 신규 제안 의사를 꺼도 이미 수락한 업무의 조회·완료와 영수증 재조회는 유지합니다.
+        if (queue.확정기사Id != 기사Id && sharedAdmission is not null)
+        {
+            var participation = await sharedAdmission.CheckRecommendationAsync(기사Id, queue, cancellationToken);
+            if (participation.IsFailed) return Result.Fail<마트기사업무항목Dto>(participation.Errors);
+        }
         var attempt = await db.Set<마트배송시도>().AsNoTracking()
             .SingleOrDefaultAsync(x => x.배차의뢰Id == queue.의뢰Id && x.기사Id == 기사Id, cancellationToken);
         if (queue.확정기사Id == 기사Id && attempt is null) return Fail<마트기사업무항목Dto>("MartDriverAttemptNotFound", 404);

@@ -15,6 +15,7 @@ public interface IPlatformProfitReturnService
 
 public sealed class PlatformProfitReturnService : IPlatformProfitReturnService
 {
+    private const string RetainedSurplusRevenueSource = "NeighborhoodRetainedSurplus";
     private readonly SsalddelContext _db;
 
     public PlatformProfitReturnService(SsalddelContext db)
@@ -24,6 +25,11 @@ public sealed class PlatformProfitReturnService : IPlatformProfitReturnService
 
     public async Task<PlatformRevenueEntryResponse> RecordRevenueAsync(PlatformRevenueEntryRequest request, CancellationToken cancellationToken)
     {
+        // 주문 성과금과 함께 발생한 잔여금은 전용 transaction만 기록합니다. 수동 입력 우회는 허용하지 않습니다.
+        if (string.Equals(request.RevenueSource?.Trim(), RetainedSurplusRevenueSource, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("주문 잔여금의 플랫폼 몫은 주문별 정산에서만 기록할 수 있습니다.", nameof(request.RevenueSource));
+        }
         if (request.PlatformRevenueAmount < 0 || request.GrossAmount < 0)
         {
             throw new ArgumentException("수익 금액은 음수일 수 없습니다.");
@@ -87,7 +93,9 @@ public sealed class PlatformProfitReturnService : IPlatformProfitReturnService
         var fromUtc = request.PeriodStartDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         var toUtc = request.PeriodEndDate.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         var revenueAmount = await _db.PlatformRevenueEntries
-            .Where(x => x.OccurredAtUtc >= fromUtc && x.OccurredAtUtc < toUtc)
+            // 이 주문의 참여자 성과금은 이미 배분했습니다. 남긴 플랫폼 몫을 기간 환원으로 다시 나누지 않습니다.
+            .Where(x => x.OccurredAtUtc >= fromUtc && x.OccurredAtUtc < toUtc
+                && x.RevenueSource != RetainedSurplusRevenueSource)
             .SumAsync(x => x.PlatformRevenueAmount, cancellationToken);
 
         var operatingCost = Math.Max(0m, request.OperatingCostAmount);

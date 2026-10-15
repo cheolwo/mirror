@@ -13,6 +13,7 @@ public sealed class DistributedEvidenceWorkRequest
     public DistributedDeliveryBatchRequest? Deliver { get; set; }
     public DistributedReturnBatchRequest? Return { get; set; }
     public DistributedExistingLotRequest? ImportLot { get; set; }
+    public DistributedStockReleaseHandoverRequest? StockRelease { get; set; }
 }
 public sealed record DistributedEvidenceBinding
 {

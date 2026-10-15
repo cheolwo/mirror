@@ -26,6 +26,7 @@ public sealed partial class NeighborhoodSettlementUseCase
             var row = await Owned(id, actor, ct); Revision(row, r);
             Require(row.StatusCode == NeighborhoodSettlementCodes.Active, "NeighborhoodSettlementLatestConsentRequired");
             var terms = Terms(row); var source = await CurrentSource(row, ct);
+            // 구형 혼합 약정도 새 작업의 경계를 우회하는 추가 청구 근거로 사용하지 않습니다.
             Require(terms.ExpiresAtUtc is null || terms.ExpiresAtUtc > Now, "NeighborhoodSettlementTermsExpired");
             Require(r.Lines is { Count: > 0 and <= 64 } && r.Lines.Select(x => x.LineKey).Distinct(StringComparer.Ordinal).Count() == r.Lines.Count,
                 "NeighborhoodSettlementAccrualLinesInvalid", 400);
@@ -37,6 +38,7 @@ public sealed partial class NeighborhoodSettlementUseCase
                 var line = terms.Lines.SingleOrDefault(x => x.LineKey == requested.LineKey)
                     ?? throw new NeighborhoodSettlementException("NeighborhoodSettlementLineNotFound", 404);
                 Require(LineParty(line, actor), "NeighborhoodSettlementAccrualPartyRequired", 403);
+                ValidateWorkflowLines(new() { SourceKind = terms.SourceKind, Lines = [line] });
                 Require(Resolved(line, source), "NeighborhoodSettlementAmountUnresolved");
                 var entry = await CreateAccrual(row, line, requested, r, source, existing, ct);
                 created.Add(entry); existing.Add(Entry(entry));
@@ -68,7 +70,8 @@ public sealed partial class NeighborhoodSettlementUseCase
                 || e.OriginKind == request.OriginKind && e.OriginId == request.OriginId)
             select e).ToArrayAsync(ct)).Select(Entry);
         var combined = existing.Concat(globallyRecorded).DistinctBy(x => x.EntryId).ToArray();
-        var same = combined.Where(x => x.Kind == line.Kind && (x.PayeeUserId == line.PayeeUserId || line.Kind == NeighborhoodSettlementCodes.ProductSale)
+        var same = combined.Where(x => x.Kind == line.Kind && (x.PayeeUserId == line.PayeeUserId || line.Kind == NeighborhoodSettlementCodes.ProductSale
+                || source.SourceKind == NeighborhoodSettlementCodes.MartOrder && x.OriginKind == request.OriginKind && x.OriginId == request.OriginId)
             && x.OriginalEntryId is null).ToArray();
         var originSame = same.Where(x => x.OriginKind == request.OriginKind && x.OriginId == request.OriginId).ToArray();
         IReadOnlyList<string> evidence; DateTime? start = null, end = null; decimal amount;
@@ -79,7 +82,7 @@ public sealed partial class NeighborhoodSettlementUseCase
                 "NeighborhoodSettlementStoragePeriodRequired", 400);
             Require(source.StorageStartedAtUtc.HasValue && source.StorageStartedAtUtc.Value.Kind == DateTimeKind.Utc
                 && source.ObservedAtUtc.Kind == DateTimeKind.Utc && start >= source.StorageStartedAtUtc && end <= Now && end <= source.ObservedAtUtc
-                && source.CompletionEvidenceReferences.Count > 0,
+                && StorageEvidence(source).Count > 0,
                 "NeighborhoodSettlementStoragePeriodNotCompleted");
             Require(source.StorageIntervals.Any(x => x.StartUtc.Kind == DateTimeKind.Utc && (x.EndUtc is null || x.EndUtc.Value.Kind == DateTimeKind.Utc)
                 && x.StartUtc <= start && (x.EndUtc is null || x.EndUtc >= end) && x.MinimumQuantity >= units),
@@ -88,7 +91,7 @@ public sealed partial class NeighborhoodSettlementUseCase
             Require(!same.Any(x => x.PeriodStartUtc < end && x.PeriodEndUtc > start), "NeighborhoodSettlementStoragePeriodOverlap");
             Require(source.ActualCompletedUnits > 0 && units <= source.ActualCompletedUnits
                 && (line.Quantity is null || units <= line.Quantity), "NeighborhoodSettlementCompletedQuantityExceeded");
-            amount = line.AmountKrw!.Value; evidence = source.CompletionEvidenceReferences;
+            amount = line.AmountKrw!.Value; evidence = StorageEvidence(source);
         }
         else if (line.Kind == NeighborhoodSettlementCodes.Storage && line.Billing == NeighborhoodSettlementCodes.Free)
         {
@@ -97,13 +100,13 @@ public sealed partial class NeighborhoodSettlementUseCase
                 && request.OriginKind == source.SourceKind && request.OriginId == source.SourceId,
                 "NeighborhoodSettlementOriginMismatch");
             Require(source.ObservedAtUtc.Kind == DateTimeKind.Utc && source.ObservedAtUtc <= Now
-                && source.CompletionEvidenceReferences.Count > 0
+                && StorageEvidence(source).Count > 0
                 && source.StorageIntervals.Any(x => x.StartUtc.Kind == DateTimeKind.Utc && x.StartUtc <= source.ObservedAtUtc
                     && (x.EndUtc is null || x.EndUtc.Value.Kind == DateTimeKind.Utc && x.EndUtc > x.StartUtc && x.EndUtc <= source.ObservedAtUtc)
                     && x.MinimumQuantity >= units && x.MinimumQuantity >= (line.Quantity ?? units)),
                 "NeighborhoodSettlementStoragePeriodEvidenceRequired");
             Require((line.Quantity is null || units <= line.Quantity) && !same.Any(), "NeighborhoodSettlementCompletedQuantityExceeded");
-            amount = 0m; evidence = source.CompletionEvidenceReferences;
+            amount = 0m; evidence = StorageEvidence(source);
         }
         else
         {
@@ -111,11 +114,14 @@ public sealed partial class NeighborhoodSettlementUseCase
             var workKind = line.Kind is NeighborhoodSettlementCodes.OwnerRemittance or NeighborhoodSettlementCodes.SalesAgency
                 || line.Kind == NeighborhoodSettlementCodes.Storage && line.Billing == NeighborhoodSettlementCodes.PerUnit
                 ? NeighborhoodSettlementCodes.ProductSale : line.Kind;
+            if (line.Kind == NeighborhoodSettlementCodes.Storage && line.Billing == NeighborhoodSettlementCodes.PerUnit
+                && Terms(row).WorkflowKind == NeighborhoodSettlementWorkflowCodes.InboundStorage)
+                workKind = NeighborhoodSettlementCodes.Inbound;
             var works = source.CompletedWork.Where(x => x.Kind == workKind && x.OriginKind == request.OriginKind && x.OriginId == request.OriginId
                 && (x.OccurredAtUtc.HasValue ? x.OccurredAtUtc.Value.Kind == DateTimeKind.Utc && x.OccurredAtUtc <= Now
                     : workKind == NeighborhoodSettlementCodes.ProductSale && source.ObservedAtUtc.Kind == DateTimeKind.Utc && source.ObservedAtUtc <= Now)
                 && x.Quantity > 0 && x.EvidenceReferences.Count > 0).ToArray();
-            if (line.Kind is NeighborhoodSettlementCodes.Inbound or NeighborhoodSettlementCodes.Picking)
+            if (line.Kind is NeighborhoodSettlementCodes.Inbound or NeighborhoodSettlementCodes.Picking or NeighborhoodSettlementCodes.Packing)
                 works = works.Where(x => x.ActorUserId == line.PayeeUserId
                     && (!Role(source, line.PayerUserId, "Owner") || x.GoodsOwnerUserId == line.PayerUserId)
                     && (!Role(source, line.PayerUserId, "Seller") || x.SellerUserId == line.PayerUserId)).ToArray();
@@ -129,6 +135,24 @@ public sealed partial class NeighborhoodSettlementUseCase
             if (line.Kind == NeighborhoodSettlementCodes.SalesAgency)
                 works = works.Where(x => x.SellerUserId == line.PayeeUserId && x.GoodsOwnerUserId == line.PayerUserId).ToArray();
             Require(works.Length > 0, "NeighborhoodSettlementCompletedWorkRequired");
+            if (source.SourceKind == NeighborhoodSettlementCodes.MartOrder)
+            {
+                var consents = Deserialize<List<NeighborhoodSettlementConsentDto>>(row.ConsentsJson);
+                // 포장은 실제 시작이 별도 기록되지 않으므로 선행 피킹 시작까지 동의한 단가만 적용합니다.
+                // 완료 후 새 판본·철회 후 재동의로 이미 한 일을 새 고가 단가에 소급 청구하지 않습니다.
+                Require(works.All(work => work.AgreementDeadlineAtUtc is { Kind: DateTimeKind.Utc } deadline
+                    && deadline <= Now && work.OccurredAtUtc is { Kind: DateTimeKind.Utc } completed && deadline <= completed
+                    && RequiredConsents(Terms(row)).All(user => consents.Any(consent => consent.UserId == user
+                        && consent.TermsVersion == row.TermsVersion && consent.Granted
+                        && consent.RecordedAtUtc.Kind == DateTimeKind.Utc && consent.RecordedAtUtc <= deadline))),
+                    "NeighborhoodSettlementWorkPriorConsentRequired");
+                // 실제 작업 전체를 덮는 정액/무료 보수는 일부 수량 청구와 혼합하여 중복 청구하지 않습니다.
+                if (line.Billing != NeighborhoodSettlementCodes.PerUnit)
+                    Require(!originSame.Any(), "NeighborhoodSettlementFixedChargeAlreadyAccrued");
+                else
+                    Require(!originSame.Any(entry => entry.Billing != NeighborhoodSettlementCodes.PerUnit),
+                        "NeighborhoodSettlementCompletedQuantityExceeded");
+            }
             var completed = works.Sum(x => x.Quantity); evidence = works.SelectMany(x => x.EvidenceReferences).Distinct(StringComparer.Ordinal).ToArray();
             if (line.Billing == NeighborhoodSettlementCodes.PerUnit)
             {
@@ -240,6 +264,7 @@ public sealed partial class NeighborhoodSettlementUseCase
                 OriginalEntryId = original.EntryId, IsInternal = original.IsInternal, IsTransit = original.IsTransit,
                 CalculationBasis = "원 금액을 덮어쓰지 않는 정정: " + Text(r.Reason, 1000),
                 WorkEvidenceReferences = original.WorkEvidenceReferences, StatusCode = NeighborhoodSettlementCodes.Accrued,
+                ActivityRewardCalculationDigest = original.ActivityRewardCalculationDigest,
                 Revision = 1, RecordedAtUtc = Now
             };
             db.Add(new NeighborhoodSettlementEntryRecord { EntryId = entry.EntryId, AgreementId = id, TermsVersion = entry.TermsVersion,

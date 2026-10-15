@@ -26,8 +26,17 @@ public sealed partial class 분산물류UseCase
         {
             var agreement = await Agreement(id, ct); RequireAgreementParty(actor, agreement); Revision(agreement.Revision, r);
             Require(r.LocationId == agreement.LocationId && r.GoodsOwnerUserId == agreement.GoodsOwnerUserId, "DistributedAgreementPartiesImmutable");
-            ValidateTerms(r.Terms); AddAgreementHistory(agreement, actor.UserId, "Superseded");
-            agreement.TermsVersion++; agreement.TermsJson = Serialize(r.Terms); agreement.StartsAtUtc = r.Terms.StartsAtUtc; agreement.EndsAtUtc = r.Terms.EndsAtUtc;
+            ValidateTerms(r.Terms);
+            if (agreement.StatusCode == "Active" && agreement.SpaceOwnerConsented && agreement.GoodsOwnerConsented)
+            {
+                agreement.PendingTermsVersion = NextAgreementTermsVersion(agreement);
+                agreement.PendingTermsJson = Serialize(r.Terms); agreement.PendingSpaceOwnerConsented = false; agreement.PendingGoodsOwnerConsented = false;
+                agreement.Revision++; AddAgreementHistory(agreement, actor.UserId, "TermsProposed");
+                return (id, agreement.Revision, AgreementStatus(agreement), (string?)null, 0);
+            }
+            AddAgreementHistory(agreement, actor.UserId, "Superseded");
+            agreement.TermsVersion = NextAgreementTermsVersion(agreement); agreement.TermsJson = Serialize(r.Terms); agreement.StartsAtUtc = r.Terms.StartsAtUtc; agreement.EndsAtUtc = r.Terms.EndsAtUtc;
+            ClearPendingTerms(agreement);
             agreement.SpaceOwnerConsented = false; agreement.GoodsOwnerConsented = false; agreement.StatusCode = "Draft"; agreement.Revision++;
             AddAgreementHistory(agreement, actor.UserId, "Draft"); return (id, agreement.Revision, agreement.StatusCode, (string?)null, 0);
         }, ct);
@@ -35,11 +44,30 @@ public sealed partial class 분산물류UseCase
         => Execute(actor, "AgreementConsent", id, r, async () =>
         {
             var agreement = await Agreement(id, ct); RequireAgreementParty(actor, agreement); Revision(agreement.Revision, r);
+            if (agreement.PendingTermsVersion == r.TermsVersion && agreement.PendingTermsJson is not null)
+            {
+                var pending = Deserialize<DistributedStorageTerms>(agreement.PendingTermsJson);
+                if (r.Granted) Require(Now < pending.EndsAtUtc, "DistributedAgreementExpired");
+                if (actor.UserId == agreement.SpaceOwnerUserId) agreement.PendingSpaceOwnerConsented = r.Granted;
+                if (actor.UserId == agreement.GoodsOwnerUserId) agreement.PendingGoodsOwnerConsented = r.Granted;
+                AddAgreementHistory(agreement, actor.UserId, r.Granted ? "PendingGranted" : "PendingRejected");
+                if (!r.Granted) ClearPendingTerms(agreement);
+                else if (agreement.PendingSpaceOwnerConsented && agreement.PendingGoodsOwnerConsented)
+                {
+                    AddAgreementHistory(agreement, actor.UserId, "Superseded");
+                    agreement.TermsVersion = r.TermsVersion; agreement.TermsJson = agreement.PendingTermsJson;
+                    agreement.StartsAtUtc = pending.StartsAtUtc; agreement.EndsAtUtc = pending.EndsAtUtc;
+                    agreement.SpaceOwnerConsented = true; agreement.GoodsOwnerConsented = true; agreement.StatusCode = "Active";
+                    ClearPendingTerms(agreement); AddAgreementHistory(agreement, actor.UserId, "Activated");
+                }
+                agreement.Revision++; return (id, agreement.Revision, AgreementStatus(agreement), (string?)null, 0);
+            }
             Require(r.TermsVersion == agreement.TermsVersion, "DistributedAgreementTermsVersionMismatch");
             if (r.Granted) Require(Now < agreement.EndsAtUtc, "DistributedAgreementExpired");
             if (actor.UserId == agreement.SpaceOwnerUserId) agreement.SpaceOwnerConsented = r.Granted;
             if (actor.UserId == agreement.GoodsOwnerUserId) agreement.GoodsOwnerConsented = r.Granted;
             agreement.StatusCode = !r.Granted ? "Revoked" : agreement.SpaceOwnerConsented && agreement.GoodsOwnerConsented ? "Active" : "AwaitingOtherParty";
+            if (!r.Granted) ClearPendingTerms(agreement);
             agreement.Revision++; AddAgreementHistory(agreement, actor.UserId, r.Granted ? "Granted" : "Revoked");
             return (id, agreement.Revision, AgreementStatus(agreement), (string?)null, 0);
         }, ct);
@@ -57,10 +85,22 @@ public sealed partial class 분산물류UseCase
         Text(terms!.AccessHours, 200); Text(terms.PriceOrFreeTerms, 500); Text(terms.CustodianAndCare, 500); Text(terms.LossDamageAndReturnTerms, 1000);
     }
     private string AgreementStatus(분산보관합의Record a) => a.StatusCode == "Active" ? Now >= a.EndsAtUtc ? "Expired" : Now < a.StartsAtUtc ? "NotStarted" : "Active" : a.StatusCode;
+    private static void ClearPendingTerms(분산보관합의Record agreement)
+    {
+        agreement.PendingTermsJson = null; agreement.PendingTermsVersion = null;
+        agreement.PendingSpaceOwnerConsented = false; agreement.PendingGoodsOwnerConsented = false;
+    }
+    private static int NextAgreementTermsVersion(분산보관합의Record agreement)
+        => Math.Max(Math.Max(agreement.TermsVersion, agreement.PendingTermsVersion ?? 0),
+            Deserialize<List<DistributedAgreementHistory>>(agreement.HistoryJson).Select(x => x.TermsVersion).DefaultIfEmpty(0).Max()) + 1;
     private void AddAgreementHistory(분산보관합의Record agreement, string actorId, string action)
     {
         var history = Deserialize<List<DistributedAgreementHistory>>(agreement.HistoryJson);
-        history.Add(new(agreement.TermsVersion, actorId, action, agreement.SpaceOwnerConsented, agreement.GoodsOwnerConsented, agreement.TermsJson, Now));
+        var pending = action is "TermsProposed" or "PendingGranted" or "PendingRejected";
+        history.Add(new(pending ? agreement.PendingTermsVersion!.Value : agreement.TermsVersion, actorId, action,
+            pending ? agreement.PendingSpaceOwnerConsented : agreement.SpaceOwnerConsented,
+            pending ? agreement.PendingGoodsOwnerConsented : agreement.GoodsOwnerConsented,
+            pending ? agreement.PendingTermsJson! : agreement.TermsJson, Now));
         agreement.HistoryJson = Serialize(history);
     }
     private async Task<분산보관합의Record> ActiveAgreement(분산재고LotRecord lot, CancellationToken ct)

@@ -90,6 +90,9 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<ITransportRequestLedgerRealtimeService, TransportRequestLedgerRealtimeService>();
         services.AddScoped<I운송증빙첨부JsonWriter, 운송증빙첨부JsonWriter>();
         services.AddScoped<I운송완료입금요청Service, 운송완료입금요청Service>();
+        services.AddOptions<CargoCompletionRecoveryOptions>().BindConfiguration(CargoCompletionRecoveryOptions.SectionName);
+        services.AddScoped<ICargoCompletionRecoveryService, CargoCompletionRecoveryService>();
+        services.AddHostedService<CargoCompletionRecoveryWorker>();
         services.AddScoped<ICommand기능설정Resolver, Command기능설정Resolver>();
         services.AddScoped<ICommand기능CatalogResolver, Command기능CatalogResolver>();
         services.AddScoped<IWorkRelationshipSnapshotCollector, WorkRelationshipSnapshotCollector>();
@@ -129,6 +132,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I음식주문접수UseCase, 음식주문접수UseCase>();
         services.AddScoped<I주문자음식주문조회UseCase, 주문자음식주문조회UseCase>();
         services.AddScoped<I음식주문운영추적UseCase, 음식주문운영추적UseCase>();
+        services.AddScoped<I음식주문지원후속UseCase, 음식주문지원후속UseCase>();
         services.AddScoped<I운영후속처리복구UseCase, 운영후속처리복구UseCase>();
         services.AddSingleton<I플랫폼운영경제성Calculator, 플랫폼운영경제성Calculator>();
         services.AddScoped<I플랫폼운영경제성UseCase, 플랫폼운영경제성UseCase>();

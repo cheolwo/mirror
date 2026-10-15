@@ -8,6 +8,7 @@ using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Shipper.Request;
 using Ssalddel.Contracts.Common.Hr;
 using Ssalddel.Contracts.Common.Operations;
+using Ssalddel.Services.Dispatch.Participation;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.운송;
 using 살뜰.도메인.화주;
@@ -29,6 +30,8 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
     private readonly I화물연속배차UseCase _연속배차UseCase;
     private readonly ILogger<배차수락CommandHandler> _logger;
     private readonly bool _memberDeliveryEnabled;
+    private readonly ISharedDriverWorkAdmissionService? _sharedAdmission;
+    private readonly I소형배송기사제안요금Service? _smallGoodsPricing;
 
     public 배차수락CommandHandler(
         SsalddelContext db,
@@ -39,7 +42,9 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         I화물배차수락적격성Service 수락적격성Service,
         I화물연속배차UseCase 연속배차UseCase,
         ILogger<배차수락CommandHandler> logger,
-        Microsoft.Extensions.Options.IOptions<Ssalddel.Services.Community.NeighborhoodMemberDeliveryOptions>? memberDelivery = null)
+        Microsoft.Extensions.Options.IOptions<Ssalddel.Services.Community.NeighborhoodMemberDeliveryOptions>? memberDelivery = null,
+        ISharedDriverWorkAdmissionService? sharedAdmission = null,
+        I소형배송기사제안요금Service? smallGoodsPricing = null)
     {
         _db = db;
         _publisher = publisher;
@@ -50,6 +55,8 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         _연속배차UseCase = 연속배차UseCase;
         _logger = logger;
         _memberDeliveryEnabled = memberDelivery?.Value.Enabled == true;
+        _sharedAdmission = sharedAdmission;
+        _smallGoodsPricing = smallGoodsPricing;
     }
 
     public async Task<Result<배차수락결과>> Handle(배차수락Command request, CancellationToken cancellationToken)
@@ -69,6 +76,8 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
                 "플랫폼의 후보 정보만으로 배차를 확정할 수 없습니다. 참여 기사 본인의 수락이 필요합니다.");
         }
 
+        using var sharedLease = _sharedAdmission is null ? null
+            : await _sharedAdmission.EnterAsync(request.기사Id, cancellationToken);
         var driverGate = 기사별수락Gate.GetOrAdd(request.기사Id, static _ => new SemaphoreSlim(1, 1));
         await driverGate.WaitAsync(cancellationToken);
         try
@@ -121,6 +130,9 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
             ? await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
             : null;
 
+        if (_sharedAdmission is not null)
+            await _sharedAdmission.LockAsync(request.기사Id, cancellationToken);
+
         if (_memberDeliveryEnabled && await Ssalddel.Services.Community.NeighborhoodMemberWorkExclusion.LockAndHasMemberWorkAsync(_db, request.기사Id, cancellationToken))
             return new(Conflict("MemberWorkInProgress", "일반 회원 배송을 마친 뒤 다른 배차를 수락할 수 있습니다."));
 
@@ -155,6 +167,12 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
             && string.Equals(queue.확정기사Id ?? queue.기사_운송자, request.기사Id, StringComparison.Ordinal))
         {
             return new(Result.Ok(new 배차수락결과(request.RequestId, "이미 수락된 운송입니다.")));
+        }
+
+        if (_sharedAdmission is not null)
+        {
+            var admission = await _sharedAdmission.CheckAsync(request.기사Id, [request.RequestId], cancellationToken);
+            if (admission.IsFailed) return new(Result.Fail<배차수락결과>(admission.Errors));
         }
 
         if (await Ssalddel.Application.Pricing.AgreedCargoAcceptancePolicy.CheckAsync(_db, dispatchRequest, request.기사Id, cancellationToken) is { } rateError)
@@ -205,6 +223,23 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
                 eligibility.경고코드,
                 eligibility.경고메시지));
         }
+
+        if (_smallGoodsPricing is not null)
+        {
+            var payout = await _smallGoodsPricing.수락검증Async(queue, request.기사Id, cancellationToken);
+            if (payout.IsFailed) return new(Result.Fail<배차수락결과>(payout.Errors));
+        }
+
+        // 고객 청구 운임은 기사 보수가 아니다. 기존 약정/직접 합의 또는 소형 배송의
+        // 검증된 제안으로 지급액이 정해진 뒤에만 새 유상 업무를 확정한다.
+        var driverFare = await _db.운임구성.SingleOrDefaultAsync(
+            x => x.Id == dispatchRequest.운임구성Id && x.의뢰Id == request.RequestId, cancellationToken);
+        if (driverFare?.기사지급예정운임 is not > 0
+            || decimal.Truncate(driverFare.기사지급예정운임.Value) != driverFare.기사지급예정운임.Value)
+            return new(Conflict("FreightDriverPayoutAgreementRequired", "기사 보수가 아직 확정되지 않았습니다. 화주와 운임을 합의한 뒤 최신 제안에서 수락해 주세요."));
+        if (queue.기사지급예정액.HasValue && queue.기사지급예정액 != driverFare.기사지급예정운임)
+            return new(Conflict("FreightDriverPayoutAgreementChanged", "제시한 기사 보수와 현재 합의가 다릅니다. 최신 제안을 확인해 주세요."));
+        queue.기사지급예정액 ??= driverFare.기사지급예정운임;
 
         if (queue.생활배송배차방식 is not null) queue.생활배송선택판본++;
         queue.상태 = 상태값.배차대기상태.확정;

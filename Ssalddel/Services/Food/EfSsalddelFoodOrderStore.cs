@@ -613,7 +613,7 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         if (order.배차대기Id is not { } id || order.배차상태 != 음식주문배차상태코드.기사배정)
             return false;
         var queue = _db.운송원장.AsNoTracking().SingleOrDefault(x => x.Id == id);
-        if (queue is null || queue.원본의뢰Id != order.주문번호
+        if (queue is null || (string.IsNullOrWhiteSpace(queue.원본의뢰Id) ? queue.의뢰Id : queue.원본의뢰Id) != order.주문번호
             || queue.배차업무유형 != 상태값.배차업무유형.음식배달
             || queue.상태 != 상태값.배차대기상태.확정 || queue.배차큐단계 != 상태값.배차큐단계.확정
             || string.IsNullOrWhiteSpace(queue.확정기사Id)) return false;

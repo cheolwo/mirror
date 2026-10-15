@@ -66,6 +66,13 @@ namespace Ssalddel.Controllers.Driver.Work01
 
             if (result.IsFailed)
             {
+                // Handler의 실패 Result는 SQL 시작 확정 전 거절이다. 예외/응답 유실에는
+                // 이 표식을 붙이지 않으며 구형 오류 본문 계약은 그대로 유지한다.
+                if (HttpContext is not null && request.ClientRequestId is { } rejectedId && rejectedId != Guid.Empty)
+                {
+                    Response.Headers["X-Mirror-Work-Start-Outcome"] = "Rejected";
+                    Response.Headers["X-Mirror-Work-Start-Request-Id"] = rejectedId.ToString("D");
+                }
                 return this.ToActionResult(result);
             }
 

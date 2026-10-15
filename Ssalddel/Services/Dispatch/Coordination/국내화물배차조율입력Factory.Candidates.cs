@@ -82,7 +82,8 @@ public sealed partial class 국내화물배차조율입력Factory
                     vehicleSpec,
                     rejectedDriverIds,
                     GetAcceptedTransportCount(acceptedTransportCounts, state.DriverId),
-                    now));
+                    now,
+                    cancellationToken));
             }
         }
 

@@ -166,11 +166,16 @@ public sealed class 피킹작업UseCase(
             return Conflict<피킹작업결과응답>("대기 상태의 피킹 작업만 시작할 수 있습니다.");
         }
 
-        var now = DateTime.UtcNow;
+        var now = WarehouseActivityCompletionEvidence.NormalizeUtc(DateTime.UtcNow);
         task.상태 = 피킹포장작업상태.진행중;
         task.시작일시Utc = now;
         task.UpdatedAt = now;
-        await db.SaveChangesAsync(cancellationToken);
+        try { await db.SaveChangesAsync(cancellationToken); }
+        catch (DbUpdateConcurrencyException)
+        {
+            db.ChangeTracker.Clear();
+            return Conflict<피킹작업결과응답>("작업 상태가 다른 요청에서 변경되었습니다. 현재 작업을 다시 조회해 주세요.");
+        }
         await LogAsync("Started", task, context, cancellationToken);
         return Result.Ok(ToResult(task, false));
     }
@@ -226,11 +231,17 @@ public sealed class 피킹작업UseCase(
             return Conflict<피킹작업결과응답>("진행중 상태의 피킹 작업만 완료할 수 있습니다.");
         }
 
-        var now = DateTime.UtcNow;
+        var now = WarehouseActivityCompletionEvidence.NormalizeUtc(DateTime.UtcNow);
         task.상태 = 피킹포장작업상태.완료;
         task.완료일시Utc = now;
+        task.완료근거Json = WarehouseActivityCompletionEvidence.Capture(task, userId, now);
         task.UpdatedAt = now;
-        await db.SaveChangesAsync(cancellationToken);
+        try { await db.SaveChangesAsync(cancellationToken); }
+        catch (DbUpdateConcurrencyException)
+        {
+            db.ChangeTracker.Clear();
+            return Conflict<피킹작업결과응답>("작업 상태가 다른 요청에서 변경되었습니다. 현재 작업을 다시 조회해 주세요.");
+        }
         await LogAsync("Completed", task, context, cancellationToken);
         await publisher.Publish(
             new 창고피킹완료됨Event(

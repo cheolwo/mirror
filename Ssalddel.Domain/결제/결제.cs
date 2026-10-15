@@ -66,6 +66,12 @@ namespace 살뜰.도메인.결제
         [Column("raw_response_json")]
         public string? 원본응답Json { get; set; }
 
+        [Column("preparation_evidence_json")]
+        public string? 준비근거Json { get; set; }
+
+        [Column("deposit_webhook_verification_hash")]
+        public string? PG입금알림검증Hash { get; set; }
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

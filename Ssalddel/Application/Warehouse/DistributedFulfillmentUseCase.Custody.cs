@@ -86,10 +86,13 @@ public sealed partial class 분산물류UseCase
             order.CustomerAcknowledged = true; order.Revision++; wave.Revision++;
             return (id, wave.Revision, wave.StatusCode, (string?)null, 0);
         }, ct);
-    private async Task InventoryHistory(long itemId, string actor, string kind, int quantity, string evidence, CancellationToken ct)
-        => db.재고이력.Add(new 재고이력 { 입고상품Id = itemId, 이력유형 = kind, 변경수량 = quantity,
+    private async Task<재고이력> InventoryHistory(long itemId, string actor, string kind, int quantity, string evidence, CancellationToken ct)
+    {
+        var history = new 재고이력 { 입고상품Id = itemId, 이력유형 = kind, 변경수량 = quantity,
             변경후수량 = await db.입고상품.Where(x => x.Id == itemId).Select(x => x.가용수량).SingleAsync(ct),
-            원인유형 = "분산물류실물영수증", 처리UserId = actor, 메모 = evidence, 처리일시 = Now });
+            원인유형 = "분산물류실물영수증", 처리UserId = actor, 메모 = evidence, 처리일시 = Now };
+        db.재고이력.Add(history); return history;
+    }
     private async Task RefreshCancellationStatus(분산배송WaveRecord wave, CancellationToken ct)
     {
         var orders = await Query<분산배송주문Record>().Where(x => x.WaveId == wave.WaveId).ToArrayAsync(ct);

@@ -45,6 +45,7 @@ public sealed class 비정상운송사건Service : I비정상운송사건Service
         var entity = await _db.비정상운송사건
             .FirstOrDefaultAsync(x => x.사건StableId == stableId, cancellationToken);
         var created = entity is null;
+        var continuingHold = entity?.정산보류적용여부 == true;
 
         if (entity is null)
         {
@@ -97,10 +98,17 @@ public sealed class 비정상운송사건Service : I비정상운송사건Service
         if (shipperRequest is not null)
         {
             var holdStatus = 운임정산상태.비정상운송검토보류.ToString();
-            if (!string.Equals(shipperRequest.정산상태, holdStatus, StringComparison.Ordinal)
-                && string.IsNullOrWhiteSpace(entity.보류전정산상태Code))
+            if (!string.Equals(shipperRequest.정산상태, holdStatus, StringComparison.Ordinal))
             {
+                // 재개 후 같은 유형이 다시 신고돼도 이번 보류 직전 사실을 보존한다.
                 entity.보류전정산상태Code = shipperRequest.정산상태;
+            }
+            else
+            {
+                // 두 번째 사건도 같은 보류의 원상태를 보존한다. 접수/종료 순서에 의존하지 않는다.
+                // 종료된 동일 유형의 옛 입금 근거를 새 보류에 가져오지 않는다.
+                entity.보류전정산상태Code = await 보류원상태조회Async(entity, cancellationToken)
+                    ?? (continuingHold && 유효원상태(entity.보류전정산상태Code) ? entity.보류전정산상태Code : string.Empty);
             }
 
             shipperRequest.정산상태 = holdStatus;
@@ -252,9 +260,12 @@ public sealed class 비정상운송사건Service : I비정상운송사건Service
                         운임정산상태.비정상운송검토보류.ToString(),
                         StringComparison.Ordinal))
                 {
-                    shipperRequest.정산상태 = string.IsNullOrWhiteSpace(entity.보류전정산상태Code)
-                        ? 운임정산상태.입금확인완료.ToString()
-                        : entity.보류전정산상태Code;
+                    // 사건 종료는 수납 증빙이 아니다. 과거 빈 근거는 같은 보류의 기록으로만
+                    // 복구하며 그마저 없으면 보류를 유지해 운영자 확인 대상으로 남긴다.
+                    var original = 유효원상태(entity.보류전정산상태Code)
+                        ? entity.보류전정산상태Code
+                        : await 보류원상태조회Async(entity, cancellationToken);
+                    if (original is not null) shipperRequest.정산상태 = original;
                 }
             }
 
@@ -263,6 +274,27 @@ public sealed class 비정상운송사건Service : I비정상운송사건Service
 
         return new(true, false, entity);
     }
+
+    private async Task<string?> 보류원상태조회Async(비정상운송사건 incident, CancellationToken ct)
+    {
+        // 같은 보류 중 살아 있었거나 이후 닫힌 사건만 사용한다. 오래전 완료된 보류의
+        // 입금 상태를 현재 미확인 보류에 가져오지 않는다.
+        var rows = await _db.비정상운송사건.AsNoTracking()
+            .Where(x => x.운송의뢰Id == incident.운송의뢰Id && x.사건StableId != incident.사건StableId
+                && x.최근신고시각Utc <= incident.최근신고시각Utc)
+            .ToListAsync(ct);
+        var candidates = rows.Where(x => x.정산보류적용여부
+                || x.상태Code == 비정상운송사건상태Codes.운영검토대기
+                || x.UpdatedAt >= incident.최근신고시각Utc)
+            .Select(x => x.보류전정산상태Code).Where(유효원상태).Distinct(StringComparer.Ordinal).ToArray();
+        return candidates.Length == 1 ? candidates[0] : null;
+    }
+
+    private static bool 유효원상태(string? state)
+        => !string.IsNullOrWhiteSpace(state)
+           && Enum.TryParse<운임정산상태>(state, out var parsed) && Enum.IsDefined(parsed)
+           && string.Equals(state, parsed.ToString(), StringComparison.Ordinal)
+           && parsed != 운임정산상태.비정상운송검토보류;
 
     public static string? 유형Code찾기(string? 예외Code)
         => 예외Code?.Trim() switch

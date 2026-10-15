@@ -33,6 +33,9 @@ internal static class FoodDeliveryCurrentWorkProjector
     public static FoodDeliveryDriverOfferDto ToOffer(DriverWorkOfferDto offer)
         => new()
         {
+            WorkKind = offer.WorkType,
+            AssignedActivities = offer.AssignedActivities,
+            Pricing = offer.Pricing,
             OfferId = offer.OfferId,
             OrderSummary = offer.Title,
             RestaurantName = offer.Pickup.Label,
@@ -60,6 +63,9 @@ internal static class FoodDeliveryCurrentWorkProjector
         음식주문현재조리상태? preparation)
         => new()
         {
+            WorkKind = offer.WorkType,
+            AssignedActivities = offer.AssignedActivities,
+            Pricing = offer.Pricing,
             TransportId = transport.Id,
             ExperienceSummaries = offer.ExperienceSummaries,
             OrderNo = !string.IsNullOrWhiteSpace(attempt?.주문번호) ? attempt.주문번호 : ResolveOrderNo(transport),

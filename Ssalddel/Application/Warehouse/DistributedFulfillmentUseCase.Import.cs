@@ -9,6 +9,8 @@ public sealed partial class 분산물류UseCase
     {
         var site = await Site(id, ct); Require(Manages(actor, site), "DistributedSiteManagerRequired", 403); Revision(site.Revision, r);
         Require(site.StatusCode == "Active" && r.ActualLocationConfirmed, "DistributedActualLocationConfirmationRequired");
+        // 정책이 있는 공간의 새 입고는 공급 협의와 양측 승인 경로를 거칩니다.
+        Require(site.AcceptancePolicyJson is null, "DistributedInboundApprovalRequired");
         var location = await Query<분산적재위치Record>().SingleOrDefaultAsync(x => x.LocationId == r.LocationId && x.SiteId == id, ct);
         Require(location is not null && location.Barcode == r.LocationBarcode, "DistributedLocationMismatch");
         var item = await db.입고상품.AsNoTracking().SingleOrDefaultAsync(x => x.Id == r.InboundItemId && x.창고Id == site.WarehouseId, ct);

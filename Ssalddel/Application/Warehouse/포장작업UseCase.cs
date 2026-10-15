@@ -131,13 +131,47 @@ public sealed class 포장작업UseCase(
 
         var inbound = await db.입고요청.AsNoTracking()
             .FirstOrDefaultAsync(candidate => candidate.Id == item.입고요청Id, cancellationToken);
-        var now = DateTime.UtcNow;
+        var now = WarehouseActivityCompletionEvidence.NormalizeUtc(DateTime.UtcNow);
         item.상태 = $"포장완료-{type}";
         item.UpdatedAt = now;
         var historyMemo = string.IsNullOrWhiteSpace(memo) ? $"포장 {request.PackagingQuantity}개 / {type}" : $"포장 {request.PackagingQuantity}개 / {type}. {memo}";
+        // 전체 재고 포장 사실을 개별 작업으로 나누는 근거는 원래 완료 저장과 함께 동결합니다.
+        // 과거 완료 작업이나 불명확한 수량 연결은 보수를 위해 소급 인증하지 않습니다.
+        var packingTasks = await db.피킹포장작업.Where(task => task.입고상품Id == item.Id
+            && task.작업유형 == 피킹포장작업유형.포장 && task.상태 != 피킹포장작업상태.취소).ToArrayAsync(cancellationToken);
+        if (packingTasks.Length is > 0 and <= 64 && packingTasks.All(task => task.상태 != 피킹포장작업상태.완료
+                && task.완료근거Json is null && task.수량 > 0 && task.출고예정Id > 0
+                && task.창고Id == item.창고Id && task.SKU == item.SKU && task.상품명 == item.상품명)
+            && packingTasks.Sum(task => (long)task.수량) == request.PackagingQuantity)
+        {
+            var shares = packingTasks.OrderBy(task => task.Id).Select(task => new WarehousePackingBatchShare(task.Id, task.수량)).ToArray();
+            var outboundIds = packingTasks.Select(task => task.출고예정Id).ToList();
+            var pickingStarts = await db.피킹포장작업.AsNoTracking().Where(task => outboundIds.Contains(task.출고예정Id)
+                && task.작업유형 == 피킹포장작업유형.피킹 && task.상태 == 피킹포장작업상태.완료)
+                .Select(task => new { task.출고예정Id, task.시작일시Utc }).ToArrayAsync(cancellationToken);
+            var batchKey = $"packing:{item.Id}:{now.Ticks}";
+            foreach (var task in packingTasks)
+            {
+                // 기존 표시·후속 재처리 계약의 시작값은 유지합니다. 실제 포장 시작 근거로는 사용하지 않습니다.
+                task.시작일시Utc ??= now;
+                task.완료일시Utc = now;
+                task.상태 = 피킹포장작업상태.완료;
+                task.UpdatedAt = now;
+                // 포장 시작은 별도 관측되지 않습니다. 선행 피킹 시작을 사전합의의 보수적 기한으로만 사용합니다.
+                var starts = pickingStarts.Where(start => start.출고예정Id == task.출고예정Id).ToArray();
+                var deadline = starts.Length > 0 && starts.All(start => start.시작일시Utc.HasValue)
+                    ? starts.Min(start => start.시작일시Utc) : null;
+                task.완료근거Json = WarehouseActivityCompletionEvidence.Capture(task, userId, now, batchKey, request.PackagingQuantity, shares, deadline);
+            }
+        }
         db.재고이력.Add(new 재고이력 { 입고상품Id = item.Id, 이력유형 = "포장", 변경수량 = 0, 변경후수량 = request.PackagingQuantity, 원인유형 = "포장작업", 원인Id = item.입고요청Id, 처리UserId = userId, 메모 = historyMemo, 처리일시 = now });
         db.재고이동.Add(new 재고이동 { 창고Id = item.창고Id, 입고상품Id = item.Id, 상품명 = item.상품명, SKU = item.SKU, 이동유형 = "포장", 수량 = request.PackagingQuantity, 입고요청Id = item.입고요청Id, 처리UserId = userId, 메모 = historyMemo, 발생일시 = now });
-        await db.SaveChangesAsync(cancellationToken);
+        try { await db.SaveChangesAsync(cancellationToken); }
+        catch (DbUpdateConcurrencyException)
+        {
+            db.ChangeTracker.Clear();
+            return Conflict<포장작업결과응답>("포장 작업 상태가 다른 요청에서 변경되었습니다. 현재 재고와 작업을 다시 조회해 주세요.");
+        }
         await LogAsync(item, request.PackagingQuantity, type, context, cancellationToken);
         await publisher.Publish(
             new 창고포장완료됨Event(

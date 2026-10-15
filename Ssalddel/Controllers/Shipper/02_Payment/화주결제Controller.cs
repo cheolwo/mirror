@@ -99,5 +99,14 @@ namespace Ssalddel.Controllers.Shipper.Payment02
             var result = await _sender.Send(new 토스결제승인Command(request.PaymentKey, request.OrderId, request.Amount));
             return result.IsSuccess ? Ok(result.Value) : this.ToProblemActionResult(result.Errors.Select(x => x.Message));
         }
+
+        [HttpPost("toss/reconcile")]
+        [Authorize(Roles = 역할명.화주 + "," + 역할명.판매자 + "," + 역할명.서버관리자)]
+        [Ssalddel재무영향Profile(재무영향ProfileIds.결제승인)]
+        public async Task<IActionResult> 토스입금재조회([FromBody] 토스입금재조회요청 request, CancellationToken cancellationToken)
+        {
+            var result = await _sender.Send(new 토스결제재조회Command(request.OrderId), cancellationToken);
+            return result.IsSuccess ? Ok(result.Value) : this.ToProblemActionResult(result.Errors.Select(x => x.Message));
+        }
     }
 }

@@ -49,6 +49,7 @@ public static class 음식배달운영지연상태Codes
 
 public static class 음식배달운영업무지연Codes
 {
+    public const string 기사확보지연 = "DriverAssignmentDelay";
     public const string 음식점준비지연 = "RestaurantPreparationDelay";
     public const string 배달진행지연 = "DeliveryProgressDelay";
 }
@@ -112,6 +113,10 @@ public sealed class 음식배달운영생명주기조화응답
     public string 배달진행지연상태Code { get; set; } = 음식배달운영지연상태Codes.없음;
 
     public int 배달진행초과분 { get; set; }
+
+    public string 기사확보지연상태Code { get; set; } = 음식배달운영지연상태Codes.없음;
+
+    public int 기사확보대기분 { get; set; }
 
     public bool 정상경로조화여부 { get; set; } = true;
 

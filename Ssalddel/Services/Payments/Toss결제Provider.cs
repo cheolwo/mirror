@@ -33,12 +33,22 @@ public sealed class Toss결제Provider : I결제Provider
         var result = await _tossPaymentsService.ConfirmAsync(new TossConfirmApiRequest(
             request.PaymentKey,
             request.OrderId,
-            request.Amount));
-
-        return new 결제승인결과(
-            result.IsSuccess,
-            result.ResponseJson,
-            result.PaymentMethod,
-            request.PaymentKey);
+            request.Amount), cancellationToken);
+        return Validate(result, request);
+    }
+    public async Task<결제승인결과> 결제조회Async(결제승인요청 request, CancellationToken cancellationToken = default)
+    {
+        if (!_executionModePolicy.IsOperational) return new(false, "{\"code\":\"OperationalModeRequired\"}", null, null);
+        return Validate(await _tossPaymentsService.GetAsync(request.PaymentKey, cancellationToken), request);
+    }
+    private static 결제승인결과 Validate(TossConfirmResult result, 결제승인요청 expected)
+    {
+        var sanitized = TossPaymentResponsePolicy.Sanitize(result.ResponseJson, out var secretHash);
+        if (!result.IsSuccess) return new(false, sanitized, null, null, IsUncertain: result.IsUncertain);
+        if (!TossPaymentResponsePolicy.TryRead(sanitized, out var fact) || fact!.PaymentKey != expected.PaymentKey
+            || fact.OrderId != expected.OrderId || fact.TotalAmount != expected.Amount)
+            return new(false, "{\"code\":\"PaymentEvidenceMismatch\"}", null, null, IsUncertain: true);
+        return new(true, sanitized, fact.Method, fact.PaymentKey, fact.Status, fact.PaymentKey, fact.OrderId,
+            fact.TotalAmount, fact.Currency, DepositCallbackVerificationHash: result.DepositCallbackVerificationHash ?? secretHash);
     }
 }

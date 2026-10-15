@@ -4,16 +4,22 @@ using Ssalddel.Hubs;
 using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.도메인.공통;
 using Ssalddel.Application.Driver.Recommendation;
+using Ssalddel.Services.Dispatch.Participation;
 
 namespace 살뜰.Services.Dispatch.Queue
 {
     public sealed class 공개배차Service : I공개배차Service
     {
         private readonly SsalddelContext _db;
+        private readonly ISharedDriverWorkAdmissionService? _sharedAdmission;
+        private readonly I소형배송기사제안요금Service? _smallGoodsPricing;
 
-        public 공개배차Service(SsalddelContext db)
+        public 공개배차Service(SsalddelContext db, ISharedDriverWorkAdmissionService? sharedAdmission = null,
+            I소형배송기사제안요금Service? smallGoodsPricing = null)
         {
             _db = db;
+            _sharedAdmission = sharedAdmission;
+            _smallGoodsPricing = smallGoodsPricing;
         }
 
         public async Task<IReadOnlyList<DispatchRecommendationDto>> GetPublicDispatchesAsync(string driverId, CancellationToken cancellationToken = default)
@@ -29,12 +35,28 @@ namespace 살뜰.Services.Dispatch.Queue
                 .OrderBy(q => q.CreatedAt)
                 .ToListAsync(cancellationToken);
 
+            if (_sharedAdmission is not null)
+            {
+                for (var index = items.Count - 1; index >= 0; index--)
+                {
+                    var participation = await _sharedAdmission.CheckRecommendationAsync(driverId, items[index], cancellationToken);
+                    if (participation.IsFailed) items.RemoveAt(index);
+                }
+            }
+
+            if (_smallGoodsPricing is not null)
+            {
+                for (var index = items.Count - 1; index >= 0; index--)
+                    if ((await _smallGoodsPricing.조회검증Async(items[index], cancellationToken)).IsFailed) items.RemoveAt(index);
+            }
+
             if (items.Count == 0)
             {
                 return Array.Empty<DispatchRecommendationDto>();
             }
 
             var requestIds = items.Select(x => x.의뢰Id).Distinct().ToArray();
+            var directPickingIds = await 기사제안표시근거Service.직접피킹의뢰Async(_db, requestIds, cancellationToken);
             var requestMap = await _db.화주운송의뢰
                 .AsNoTracking()
                 .Where(x => Enumerable.Contains(requestIds, x.의뢰Id))
@@ -52,6 +74,9 @@ namespace 살뜰.Services.Dispatch.Queue
 
                 var recommendation = new DispatchRecommendationDto
                 {
+                    WorkKind = SharedDriverWorkAdmissionService.ResolveWorkKind(item),
+                    AssignedActivities = 기사제안표시근거Service.운송작업(directPickingIds.Contains(item.의뢰Id)),
+                    Pricing = 소형배송기사제안요금Service.TryReadPricing(item),
                     의뢰Id = item.의뢰Id,
                     화물종류 = request?.화물종류 ?? cargo?.주의사항 ?? item.픽업_도로명주소,
                     픽업지 = item.픽업_도로명주소,

@@ -73,7 +73,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I생활협업보관예약Guard, 생활협업보관예약Guard>();
         services.AddScoped<생활협업UseCase>();
         services.AddScoped<I생활협업UseCase>(sp => sp.GetRequiredService<생활협업UseCase>());
-        services.AddScoped<I생활협업연결Query>(sp => sp.GetRequiredService<생활협업UseCase>());
+        services.AddScoped<I생활협업연결Query, 생활협업연결Query>();
         services.AddScoped<I생활협업배송Source, Ef생활협업배송Source>();
         services.AddScoped<I생활협업공간Source, 생활협업공간Source>();
         services.AddScoped<I생활협업보관상태Source, 생활협업보관상태Source>();

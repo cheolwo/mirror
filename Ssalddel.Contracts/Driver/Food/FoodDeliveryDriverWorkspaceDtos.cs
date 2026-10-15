@@ -78,6 +78,9 @@ public sealed class FoodDeliveryDriverStopDto
     Boundary = "거리 null과 확인된 0을 구별한다. 제안 금액은 음식 주문 금액이나 기사 실지급 완료를 뜻하지 않는다.")]
 public sealed class FoodDeliveryDriverOfferDto
 {
+    public string? WorkKind { get; set; }
+    public IReadOnlyList<string> AssignedActivities { get; set; } = [];
+    public Ssalddel.Contracts.Common.Drivers.DriverOfferPricingDto? Pricing { get; set; }
     public string OfferId { get; set; } = string.Empty;
     public string OrderSummary { get; set; } = string.Empty;
     public string RestaurantName { get; set; } = string.Empty;
@@ -108,6 +111,9 @@ public sealed class FoodDeliveryDriverOfferDto
     Boundary = "주문·제안·시도 식별자는 서로 대체하지 않는다. 고객 상세는 권한 있는 현재 업무에 한정하며 전달 완료와 수령 확인·실지급은 별개다.")]
 public sealed class FoodDeliveryDriverActiveDeliveryDto
 {
+    public string? WorkKind { get; set; }
+    public IReadOnlyList<string> AssignedActivities { get; set; } = [];
+    public Ssalddel.Contracts.Common.Drivers.DriverOfferPricingDto? Pricing { get; set; }
     public IReadOnlyList<Ssalddel.Contracts.Food.DeliveryExperienceSummaryDto> ExperienceSummaries { get; set; } = [];
     public long TransportId { get; set; }
     /// <summary>현재 수행 원장의 주문번호입니다. 표시 제목이나 배차 제안 ID로 추론하지 않습니다.</summary>

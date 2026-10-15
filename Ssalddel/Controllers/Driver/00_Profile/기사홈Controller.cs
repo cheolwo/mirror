@@ -4,10 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using Ssalddel.Application.Driver.Home;
 using Ssalddel.ApiMetadata;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Driver.Profile00
 {
     [SsalddelApiVersion(SsalddelProductVersion.V2_0)]
+    [SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
     [SsalddelApiCapability(SsalddelCapability.DriverWork)]
     [SsalddelApiOperation(SsalddelOperation.Browse)]
     [ApiController]
