@@ -39,8 +39,10 @@ public sealed class 기사운송원장상호작용Tests
             new ThrowingPublisher(), new TestCurrentUserAccessor("driver-1", "기사"),
             new 참여자실행권한검사(), NullLogger<기사운송상태변경CommandExecutor>.Instance);
         var writer = new 운송증빙첨부JsonWriter();
-        var pickupHandler = new 운송상차완료CommandHandler(db, executor, writer);
-        var dropoffHandler = new 운송인수완료CommandHandler(executor, writer);
+        var storage = new CargoPhotoTestStorage();
+        await storage.SeedReceiptAsync(db, transport.Id, "driver-1", pickup ? "pickup-complete-photo" : "dropoff-complete-photo", "proof/photo.jpg");
+        var pickupHandler = new 운송상차완료CommandHandler(db, executor, writer, storage);
+        var dropoffHandler = new 운송인수완료CommandHandler(executor, writer, db, storage);
 
         async Task<bool> CompleteAsync(string objectName)
         {
@@ -57,7 +59,8 @@ public sealed class 기사운송원장상호작용Tests
 
         Assert.Equal(pickup ? 기사운송상태코드.상차완료 : 기사운송상태코드.인수완료, transport.상태);
         Assert.Equal(firstJson, transport.첨부_json);
-        var photo = Assert.Single(JsonNode.Parse(transport.첨부_json)!.AsArray())!;
+        var photo = Assert.Single(JsonNode.Parse(transport.첨부_json)!.AsArray().Where(x => x?["kind"]?.GetValue<string>()
+            == (pickup ? "pickup-complete-photo" : "dropoff-complete-photo")))!;
         Assert.Equal(pickup ? "pickup-complete-photo" : "dropoff-complete-photo", photo["kind"]!.GetValue<string>());
         Assert.Equal("proof/photo.jpg", photo["objectName"]!.GetValue<string>());
         Assert.Single(await db.운송이벤트.ToListAsync());

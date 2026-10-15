@@ -10,6 +10,23 @@ namespace Ssalddel.Tests.Application.Driver.Transport;
 
 public sealed class 운송완료입금요청ServiceTests
 {
+    [Theory]
+    [InlineData("운송중")]
+    [InlineData("하차지도착")]
+    [InlineData("인수완료")]
+    [InlineData("취소")]
+    public async Task 지연된상차Event는현재진행상태를되돌리거나뒤늦게조기청구하지않는다(string state)
+    {
+        await using var db = CreateContext();
+        db.Add(new 화주운송의뢰 { 의뢰Id = "late-pickup", 화주Id = "shipper", 배차상태 = state,
+            정산시점 = "운송완료후정산", 정산상태 = "후불승인완료", 결제예정금액 = 50000 });
+        await db.SaveChangesAsync();
+        var result = await new 운송완료입금요청Service(db).조기준비Async(new("driver", 1, "late-pickup", "", "",
+            "상차지도착", "상차완료", DateTime.UtcNow, "", null));
+        Assert.False(result.처리됨); Assert.Equal(state, (await db.화주운송의뢰.AsNoTracking().SingleAsync()).배차상태);
+        Assert.Empty(db.결제); Assert.Empty(db.Command알림Outbox);
+    }
+
     [Fact]
     public async Task 열린비정상운송사건이있으면_완료뒤입금요청을만들지않는다()
     {

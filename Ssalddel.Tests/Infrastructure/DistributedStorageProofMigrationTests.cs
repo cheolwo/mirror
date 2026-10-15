@@ -46,6 +46,7 @@ public sealed class DistributedStorageProofMigrationTests
         await using var db = new SsalddelContext(new DbContextOptionsBuilder<SsalddelContext>().UseSqlite(c).Options, new Encryption());
         var generator = db.GetService<IMigrationsSqlGenerator>(); var model = db.GetService<IDesignTimeModel>().Model;
         foreach (var command in generator.Generate(new AddDistributedFulfillment().UpOperations, model)) await db.Database.ExecuteSqlRawAsync(command.CommandText);
+        foreach (var command in generator.Generate(new AddDistributedCompletionLineEvidence().UpOperations, model)) await db.Database.ExecuteSqlRawAsync(command.CommandText);
         var requestId = Guid.NewGuid(); db.Add(new 분산물류CommandReceipt { ActorUserId = "legacy-driver", RequestId = requestId, InputDigest = "legacy-digest", Kind = "Deliver", AggregateId = "legacy-wave", StatusCode = "Completed", Revision = 2, RecordedAtUtc = DateTime.UtcNow }); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
         foreach (var command in generator.Generate(new AddDistributedStorageProof().UpOperations, model)) await db.Database.ExecuteSqlRawAsync(command.CommandText);
         Assert.Equal(requestId, (await db.Set<분산물류CommandReceipt>().SingleAsync()).RequestId); Assert.Empty(await db.Set<분산사진증빙Record>().ToArrayAsync());

@@ -26,6 +26,15 @@ namespace Ssalddel.Tests.Application.Driver.Work;
 public sealed class DriverWorkStartReliabilityTests
 {
     [Fact]
+    public void 기본_운행시작요청은_서버_시작모드_검증을_통과한다()
+    {
+        var input = new Ssalddel.Contracts.Driver.Work.기사운행시작요청 { 시작위치 = "현재 위치" };
+        var command = new 운행시작Command("driver", input.시작모드, null, input.시작위치,
+            null, null, null, null, false, null, null, false, false, ClientRequestId: Guid.NewGuid());
+        Assert.True(new 운행시작CommandValidator().Validate(command).IsValid);
+    }
+
+    [Fact]
     public async Task 같은요청은_다른Context에서도_한근무를반환한다()
     {
         await using var f = await Fixture.CreateAsync();

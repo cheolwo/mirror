@@ -42,7 +42,9 @@ public sealed class Toss결제ProviderTests
         public Task<TossConfirmResult> ConfirmAsync(TossConfirmApiRequest request)
         {
             CallCount++;
-            return Task.FromResult(new TossConfirmResult(true, "{}", "CARD"));
+            var json = System.Text.Json.JsonSerializer.Serialize(new { status = "DONE", paymentKey = request.PaymentKey,
+                orderId = request.OrderId, totalAmount = request.Amount, currency = "KRW", method = "CARD" });
+            return Task.FromResult(new TossConfirmResult(true, json, "CARD"));
         }
     }
 }

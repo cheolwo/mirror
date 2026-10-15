@@ -115,14 +115,14 @@ public sealed class OperationsAlertsTests
             new 살뜰.도메인.운송.비정상운송사건 { 사건StableId="cargo-b", 운송의뢰Id="request-b", UpdatedAt=f.Clock.Now });
         await f.Db.SaveChangesAsync();
         var source = new CargoOperationsAlertSource(f.Db, f.Clock);
-        var first = Assert.Single(await source.ReadChangesAsync(DateTime.UnixEpoch,"",1,default));
+        var first = Assert.Single((await source.ReadChangesAsync(DateTime.UnixEpoch,"",1,default)).Where(x => x.ProblemCode == "CargoIncidentReviewRequired"));
         Assert.Equal("cargo-a",first.SourceId);Assert.Equal("Urgent",first.Severity);Assert.True(first.Active);
-        var second=Assert.Single(await source.ReadChangesAsync(first.ChangedAtUtc,first.SourceId,1,default));
+        var second=Assert.Single((await source.ReadChangesAsync(first.ChangedAtUtc,first.SourceId,1,default)).Where(x => x.ProblemCode == "CargoIncidentReviewRequired"));
         Assert.Equal("cargo-b",second.SourceId);Assert.Equal("Warning",second.Severity);
         await f.Coordinator.ObserveAsync(first, f.Clock.Now.AddHours(-1));
         var incident=await f.Db.Set<살뜰.도메인.운송.비정상운송사건>().SingleAsync(x=>x.사건StableId=="cargo-a");
         incident.상태Code=살뜰.도메인.운송.비정상운송사건상태Codes.조치결정;await f.Db.SaveChangesAsync();
-        await f.Coordinator.ObserveAsync(Assert.Single(await source.ReadCurrentAsync("cargo-a",default)),f.Clock.Now);
+        await f.Coordinator.ObserveAsync(Assert.Single((await source.ReadCurrentAsync("cargo-a",default)).Where(x => x.ProblemCode == "CargoIncidentReviewRequired")),f.Clock.Now);
         Assert.Equal("Resolved",(await f.Single()).Status);Assert.Equal("request-a",incident.운송의뢰Id);
         await Assert.ThrowsAsync<InvalidOperationException>(()=>source.ReadCurrentAsync("missing",default));
     }
@@ -132,6 +132,26 @@ public sealed class OperationsAlertsTests
         await f.Observe(); await f.Observe(); Assert.Equal(2, await f.Db.Set<OperationsAlertOutbox>().CountAsync());
         await f.Observe(false); Assert.Equal("Resolved", (await f.Single()).Status);
         await f.Observe(); Assert.Equal(2, (await f.Single()).Episode); Assert.Equal(4, await f.Db.Set<OperationsAlertOutbox>().CountAsync());
+    }
+    [Theory]
+    [InlineData("DriverNotificationOutboxReviewRequired", "배차 알림 복구 소진", "서버 재조회")]
+    [InlineData("AfterPickupRecoveryRequired", "픽업 후 배송 중단", "안전")]
+    [InlineData("RestaurantPreparationDelay", "음식 준비 지연", "준비 상태")]
+    public async Task 인증된알림상세는_문제별다음행동을_원문없이안내한다(string code, string title, string action)
+    {
+        await using var f = await Fixture.Create();
+        await f.Coordinator.ObserveAsync(new("food", "food-fixture", code, "Urgent", true, f.Clock.Now), f.Clock.Now.AddMinutes(-1));
+        var alert = await f.Single();
+        var detail = Assert.IsType<OperationsAlertDto>(await f.Coordinator.DetailAsync(alert.Id));
+        Assert.Contains(title, detail.Title);
+        Assert.Contains(action, detail.Action);
+        Assert.Equal("/food-operations/orders/food-fixture", detail.SourceHref);
+    }
+    [Fact] public void 미등록문제코드는_입력원문을다음행동에노출하지않는다()
+    {
+        const string privateInput = "private address 010-1234-5678";
+        Assert.Equal("업무 진행 확인 필요", OperationsAlertPresentation.Title(privateInput));
+        Assert.DoesNotContain(privateInput, OperationsAlertPresentation.Action(privateInput));
     }
     [Fact] public async Task AcknowledgeReplaysOnlySamePayloadAndDoesNotResolveBusiness()
     {

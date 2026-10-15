@@ -53,6 +53,7 @@ try
             admin = CargoJourneySeed.AdminId
         },
         synthetic = true,
+        photoStorageProvider = "Local",
         serverListening = true,
         journeyCompleted = false,
         deviceUiProof = false,

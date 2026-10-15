@@ -40,8 +40,11 @@ public sealed class FoodDispatchTimingServiceTests
         var result = await f.Service(options).EvaluateAsync(queue);
 
         Assert.NotEqual("Collect", result.Decision.ActionCode);
+        Assert.NotNull(result.Input.InformationReadiness);
+        Assert.Equal(scenario == "Expired" ? "Missing" : "NotApplicable", result.Input.InformationReadiness.SchedulingStateCode);
         Assert.Equal(0, f.Demand.Calls);
         Assert.Equal(0, f.AI.Calls);
+        Assert.Equal(0, f.Order.Reads);
     }
 
     [Fact]
@@ -61,6 +64,10 @@ public sealed class FoodDispatchTimingServiceTests
         Assert.Equal(0.1m, result.Input.ExpectedNewOrders);
         Assert.Equal(1, result.Input.AvailableDrivers);
         Assert.Equal("Applied", result.AIStatusCode);
+        Assert.Equal("Current", result.Input.InformationReadiness!.SchedulingStateCode);
+        Assert.Equal("Missing", result.Input.InformationReadiness.CoordinationStateCode);
+        Assert.All(result.Input.InformationReadiness.Evidence.Take(6), x => Assert.Equal("Current", x.StateCode));
+        Assert.All(result.Input.InformationReadiness.Evidence.Skip(6), x => Assert.Equal("Missing", x.StateCode));
         Assert.Equal(before, System.Text.Json.JsonSerializer.Serialize(await f.Db.운송원장.AsNoTracking().OrderBy(x => x.Id).ToArrayAsync()));
         Assert.False(f.Db.ChangeTracker.HasChanges());
     }
@@ -263,6 +270,7 @@ public sealed class FoodDispatchTimingServiceTests
         f.Db.Entry(queue).Property(x => x.원본의뢰Id).IsModified = true;
         await f.PersistAsync();
         var order = new FoodOrderPort(readyKnown ? f.Clock.Now.AddSeconds(10).UtcDateTime : null);
+        order.Value!.배차대기Id = queue.Id;
         var result = await f.Service(order: order).EvaluateAsync(queue);
         Assert.Equal("original-food-order", order.RequestedId);
         Assert.Equal(readyKnown ? "DispatchNow" : "Collect", result.Decision.ActionCode);
@@ -280,6 +288,277 @@ public sealed class FoodDispatchTimingServiceTests
         Assert.Equal("DispatchNow", result.Decision.ActionCode);
         Assert.Equal(0, f.AI.Calls);
     }
+
+    [Theory]
+    [InlineData("Missing", "OrderNotFound")]
+    [InlineData("Unavailable", "OrderSourceUnavailable")]
+    [InlineData("OrderNumber", "OrderLinkMismatch")]
+    [InlineData("QueueLink", "OrderLinkMismatch")]
+    [InlineData("Revision", "OrderLinkMismatch")]
+    [InlineData("UnknownState", "OrderNotActive")]
+    [InlineData("Cancelled", "OrderNotActive")]
+    [InlineData("PickedUp", "OrderNotActive")]
+    [InlineData("Delivered", "OrderNotActive")]
+    public async Task 원주문누락연결불일치종결픽업이후는추가대기만금지한다(string scenario, string reason)
+    {
+        await using var f = await Fixture.CreateAsync();
+        var queue = await f.SeedAsync();
+        if (scenario == "Missing") f.Order.Value = null;
+        if (scenario == "OrderNumber") f.Order.Value!.주문번호 = "other-order";
+        if (scenario == "QueueLink") f.Order.Value!.배차대기Id = queue.Id + 1;
+        if (scenario == "Revision") f.Order.Value!.Revision = 0;
+        if (scenario == "UnknownState") f.Order.Value!.상태 = "unrecognized";
+        if (scenario == "Cancelled") f.Order.Value!.상태 = 음식주문상태코드.취소;
+        if (scenario == "PickedUp") f.Order.Value!.상태 = 음식주문상태코드.픽업완료;
+        if (scenario == "Delivered") f.Order.Value!.상태 = 음식주문상태코드.전달완료;
+        var before = System.Text.Json.JsonSerializer.Serialize(await f.Db.운송원장.AsNoTracking().OrderBy(x => x.Id).ToArrayAsync());
+
+        var result = await f.Service(withoutOrderStore: scenario == "Unavailable").EvaluateAsync(queue);
+
+        Assert.Equal("DispatchNow", result.Decision.ActionCode);
+        Assert.Equal("InformationMissing", result.Decision.ReasonCode);
+        Assert.Equal("Missing", result.Input.InformationReadiness!.SchedulingStateCode);
+        Assert.Equal(reason, Evidence(result, FoodDispatchInformationKeys.Order).ReasonCode);
+        Assert.Equal(0, f.AI.Calls);
+        Assert.Equal(before, System.Text.Json.JsonSerializer.Serialize(await f.Db.운송원장.AsNoTracking().OrderBy(x => x.Id).ToArrayAsync()));
+        Assert.False(f.Db.ChangeTracker.HasChanges());
+    }
+
+    [Theory]
+    [InlineData("Pickup")]
+    [InlineData("Dropoff")]
+    public async Task 픽업전달어느좌표든없으면위치근거가부족하다(string side)
+    {
+        await using var f = await Fixture.CreateAsync();
+        var queue = await f.SeedAsync();
+        if (side == "Pickup") queue.픽업_위도 = null;
+        else queue.하차_경도 = null;
+        var result = await f.Service().EvaluateAsync(queue);
+        Assert.Equal("DispatchNow", result.Decision.ActionCode);
+        Assert.Equal("Missing", Evidence(result, FoodDispatchInformationKeys.Locations).StateCode);
+        Assert.Equal("LocationsMissing", Evidence(result, FoodDispatchInformationKeys.Locations).ReasonCode);
+        Assert.Equal(0, f.Demand.Calls);
+        Assert.Equal(0, f.AI.Calls);
+    }
+
+    [Theory]
+    [InlineData("Demand", "Revision")]
+    [InlineData("Demand", "State")]
+    [InlineData("Demand", "QueueLink")]
+    [InlineData("Demand", "Estimate")]
+    [InlineData("AI", "Revision")]
+    [InlineData("AI", "State")]
+    [InlineData("AI", "QueueLink")]
+    [InlineData("AI", "Estimate")]
+    public async Task 자료조회나모델대기중원주문판본상태연결조리가바뀌면수집을취소한다(string stage, string change)
+    {
+        await using var f = await Fixture.CreateAsync();
+        var queue = await f.SeedAsync();
+        var originalTime = f.Clock.Now;
+        Action mutate = () =>
+        {
+            if (change == "Revision") f.Order.Value!.Revision++;
+            if (change == "State") f.Order.Value!.상태 = 음식주문상태코드.취소;
+            if (change == "QueueLink") f.Order.Value!.배차대기Id = queue.Id + 1;
+            if (change == "Estimate") f.Order.Value!.조리예상완료시각Utc = f.Clock.Now.AddMinutes(5).UtcDateTime;
+        };
+        if (stage == "Demand") f.Demand.AfterCall = mutate;
+        else f.AI.AfterCall = mutate;
+
+        var result = await f.Service().EvaluateAsync(queue);
+
+        Assert.Equal("DispatchNow", result.Decision.ActionCode);
+        Assert.Equal("InformationStale", result.Decision.ReasonCode);
+        Assert.Equal("Stale", result.Input.InformationReadiness!.SchedulingStateCode);
+        var order = Evidence(result, FoodDispatchInformationKeys.Order);
+        Assert.Equal("OrderChanged", order.ReasonCode);
+        Assert.Equal(1L, order.SourceRevision);
+        Assert.Equal(originalTime, order.ObservedAtUtc);
+        Assert.Equal("PreparationChanged", Evidence(result, FoodDispatchInformationKeys.Preparation).ReasonCode);
+        Assert.Equal(stage == "AI" ? 1 : 0, f.AI.Calls);
+        Assert.False(f.Db.ChangeTracker.HasChanges());
+    }
+
+    [Fact]
+    public async Task 재조리이전준비완료와예정시각을현재차수상한으로쓰지않는다()
+    {
+        await using var f = await Fixture.CreateAsync();
+        var queue = await f.SeedAsync();
+        var oldReady = f.Clock.Now.AddMinutes(-1).UtcDateTime;
+        var recooking = f.Clock.Now.AddSeconds(-10).UtcDateTime;
+        f.Order.Value!.상태 = 음식주문상태코드.조리중;
+        f.Order.Value.CurrentPreparationRound = 2;
+        f.Order.Value.CurrentCookingStartedAtUtc = recooking;
+        f.Order.Value.RecookingRequestedAtUtc = recooking;
+        f.Order.Value.픽업준비시각Utc = oldReady;
+        f.Order.Value.조리예상완료시각Utc = oldReady;
+        f.Order.Value.상태이력 =
+        [
+            new() { 다음상태 = 음식주문상태코드.픽업대기, 사유 = "음식점 픽업 준비 완료", 전이시각Utc = oldReady },
+            new() { 다음상태 = 음식주문상태코드.조리중, 사유 = 음식주문현재조리Policy.재조리요청이력사유, 전이시각Utc = recooking }
+        ];
+        f.Order.Value.주문번호 = "current";
+        var before = System.Text.Json.JsonSerializer.Serialize(f.Order.Value);
+
+        var result = await f.Service().EvaluateAsync(queue);
+
+        Assert.Equal("Collect", result.Decision.ActionCode);
+        Assert.Null(result.Input.LatestDispatchAtUtc);
+        Assert.Equal("Current", Evidence(result, FoodDispatchInformationKeys.Preparation).StateCode);
+        Assert.Equal(before, System.Text.Json.JsonSerializer.Serialize(f.Order.Value));
+        Assert.False(f.Db.ChangeTracker.HasChanges());
+    }
+
+    [Theory]
+    [InlineData("NoMinutes")]
+    [InlineData("PreviousRoundFutureEstimate")]
+    [InlineData("CurrentRoundEstimate")]
+    public async Task 재조리차수의예정시각은미래값이어도확정상한으로재사용하지않는다(string scenario)
+    {
+        await using var f = await Fixture.CreateAsync();
+        var queue = await f.SeedAsync();
+        var recooking = f.Clock.Now.AddSeconds(-5).UtcDateTime;
+        f.Order.Value!.상태 = 음식주문상태코드.조리중;
+        f.Order.Value.CurrentPreparationRound = 2;
+        f.Order.Value.CurrentCookingStartedAtUtc = recooking;
+        f.Order.Value.RecookingRequestedAtUtc = recooking;
+        f.Order.Value.조리예상분 = scenario == "NoMinutes" ? null : 20;
+        f.Order.Value.조리예상완료시각Utc = scenario == "CurrentRoundEstimate"
+            ? recooking.AddMinutes(20) : recooking.AddMinutes(10);
+        f.Order.Value.상태이력 = [new() { 다음상태 = 음식주문상태코드.조리중,
+            사유 = 음식주문현재조리Policy.재조리요청이력사유, 전이시각Utc = recooking }];
+        var result = await f.Service().EvaluateAsync(queue);
+        Assert.Equal("Collect", result.Decision.ActionCode);
+        Assert.Null(result.Input.LatestDispatchAtUtc);
+        Assert.Equal("Current", Evidence(result, FoodDispatchInformationKeys.Preparation).StateCode);
+    }
+
+    [Theory]
+    [InlineData("Round")]
+    [InlineData("CurrentCooking")]
+    [InlineData("CurrentReady")]
+    [InlineData("Recooking")]
+    [InlineData("CookingWithoutStart")]
+    [InlineData("ReadyWithoutTime")]
+    public async Task 현재차수선언과조리이력이모순되면과거준비정보를재사용하지않는다(string scenario)
+    {
+        await using var f = await Fixture.CreateAsync();
+        var queue = await f.SeedAsync();
+        if (scenario == "Round") f.Order.Value!.CurrentPreparationRound = 2;
+        if (scenario == "CurrentCooking") f.Order.Value!.CurrentCookingStartedAtUtc = f.Clock.Now.AddMinutes(-1).UtcDateTime;
+        if (scenario == "CurrentReady") f.Order.Value!.CurrentPickupReadyAtUtc = f.Clock.Now.AddMinutes(-1).UtcDateTime;
+        if (scenario == "Recooking") f.Order.Value!.RecookingRequestedAtUtc = f.Clock.Now.AddMinutes(-1).UtcDateTime;
+        if (scenario == "CookingWithoutStart") f.Order.Value!.상태 = 음식주문상태코드.조리중;
+        if (scenario == "ReadyWithoutTime") f.Order.Value!.상태 = 음식주문상태코드.픽업대기;
+        f.Order.Value!.조리예상완료시각Utc = f.Clock.Now.AddMinutes(5).UtcDateTime;
+        var result = await f.Service().EvaluateAsync(queue);
+        Assert.Equal("DispatchNow", result.Decision.ActionCode);
+        Assert.Null(result.Input.LatestDispatchAtUtc);
+        Assert.Equal("Missing", Evidence(result, FoodDispatchInformationKeys.Preparation).StateCode);
+        Assert.Equal("InvalidPreparation", Evidence(result, FoodDispatchInformationKeys.Preparation).ReasonCode);
+        Assert.Equal(0, f.AI.Calls);
+    }
+
+    [Theory]
+    [InlineData("Local")]
+    [InlineData("Unspecified")]
+    public async Task 조리근거시각은동일UTC축으로정규화한다(string kind)
+    {
+        await using var f = await Fixture.CreateAsync();
+        var queue = await f.SeedAsync();
+        var actual = f.Clock.Now.AddSeconds(10);
+        f.Order.Value!.조리예상완료시각Utc = kind == "Local"
+            ? actual.LocalDateTime : DateTime.SpecifyKind(actual.UtcDateTime, DateTimeKind.Unspecified);
+        var result = await f.Service().EvaluateAsync(queue);
+        Assert.Equal(actual, result.Input.LatestDispatchAtUtc);
+        Assert.Equal("DeadlineApproaching", result.Decision.ReasonCode);
+        Assert.Equal("Current", Evidence(result, FoodDispatchInformationKeys.Preparation).StateCode);
+    }
+
+    [Fact]
+    public async Task 확인된수요처리여력기사수신규유입0은누락이아닌현재근거다()
+    {
+        await using var f = await Fixture.CreateAsync();
+        var queue = await f.SeedAsync(arrival: false);
+        f.Demand.Value!.예상업무량건수 = 0m;
+        f.Demand.Value.기존기사가용처리건수 = 0m;
+        f.Demand.Value.기사판정목록 = [];
+        var result = await f.Service().EvaluateAsync(queue);
+        Assert.Equal("Current", result.Input.InformationReadiness!.SchedulingStateCode);
+        Assert.Equal("Current", Evidence(result, FoodDispatchInformationKeys.Demand).StateCode);
+        Assert.Equal("Current", Evidence(result, FoodDispatchInformationKeys.DriverCapacity).StateCode);
+        Assert.Equal(0, result.Input.AvailableDrivers);
+        Assert.Equal(0m, result.Input.ExpectedNewOrders);
+        Assert.Equal("NoAvailableDrivers", result.Decision.ReasonCode);
+        Assert.Equal(0, f.AI.Calls);
+    }
+
+    [Theory]
+    [InlineData(-1, "Stale", "ObservationFuture")]
+    [InlineData(15, "Current", "InformationObserved")]
+    [InlineData(16, "Stale", "ObservationStale")]
+    [InlineData(360, "Stale", "ObservationStale")]
+    public async Task 수요근거원래관측시각의미래와유효경계를보존한다(int age, string state, string reason)
+    {
+        await using var f = await Fixture.CreateAsync();
+        var queue = await f.SeedAsync();
+        f.Demand.Value!.판정시각Utc = f.Clock.Now.AddSeconds(-age);
+        var result = await f.Service().EvaluateAsync(queue);
+        foreach (var key in new[] { FoodDispatchInformationKeys.Demand, FoodDispatchInformationKeys.DriverCapacity })
+        {
+            Assert.Equal(state, Evidence(result, key).StateCode);
+            Assert.Equal(reason, Evidence(result, key).ReasonCode);
+            Assert.Equal(f.Demand.Value.판정시각Utc, Evidence(result, key).ObservedAtUtc);
+        }
+        Assert.Equal(state == "Current" ? "Collect" : "DispatchNow", result.Decision.ActionCode);
+        Assert.Equal(state == "Current" ? 1 : 0, f.AI.Calls);
+    }
+
+    [Fact]
+    public async Task 모델대기중준비정보유효기간이끝나면다시관측한것처럼갱신하지않는다()
+    {
+        await using var f = await Fixture.CreateAsync();
+        var queue = await f.SeedAsync(ageSeconds: 1);
+        var observedAt = f.Clock.Now;
+        f.AI.AfterCall = () => f.Clock.Now = f.Clock.Now.AddSeconds(16);
+        var result = await f.Service().EvaluateAsync(queue);
+        Assert.Equal("DispatchNow", result.Decision.ActionCode);
+        Assert.Equal("SnapshotStale", result.Decision.ReasonCode);
+        Assert.Equal("Stale", result.Input.InformationReadiness!.SchedulingStateCode);
+        Assert.Equal("ObservationStale", Evidence(result, FoodDispatchInformationKeys.Order).ReasonCode);
+        Assert.Equal(observedAt, Evidence(result, FoodDispatchInformationKeys.Order).ObservedAtUtc);
+        Assert.Equal("ServerRequiredAfterAI", result.AIStatusCode);
+        Assert.Equal(3, f.Order.Reads);
+    }
+
+    [Fact]
+    public async Task 모델꺼짐이어도원주문재조회시간경과를최종시각에포함한다()
+    {
+        await using var f = await Fixture.CreateAsync();
+        var queue = await f.SeedAsync(ageSeconds: 1);
+        var observedAt = f.Clock.Now;
+        f.AI.Enabled = false;
+        f.Order.BeforeRead = read => { if (read == 2) f.Clock.Now = f.Clock.Now.AddSeconds(16); };
+        var result = await f.Service().EvaluateAsync(queue);
+        Assert.Equal(observedAt.AddSeconds(16), result.Input.NowUtc);
+        Assert.Equal("DispatchNow", result.Decision.ActionCode);
+        Assert.Equal("Stale", result.Input.InformationReadiness!.SchedulingStateCode);
+        Assert.Equal(0, f.AI.Calls);
+    }
+
+    [Fact]
+    public async Task 정책설정이null이어도준비상태를반환하고즉시복귀한다()
+    {
+        await using var f = await Fixture.CreateAsync();
+        var result = await f.Service(new() { Enabled = true, Policy = null! }).EvaluateAsync(f.Queue("current"));
+        Assert.Equal("InvalidConfiguration", result.AIStatusCode);
+        Assert.Equal("DispatchNow", result.Decision.ActionCode);
+        Assert.Equal("Missing", result.Input.InformationReadiness!.SchedulingStateCode);
+        Assert.Equal(0, f.Order.Reads);
+    }
+
+    private static FoodDispatchInformationEvidence Evidence(FoodDispatchTimingEvaluation result, string key)
+        => Assert.Single(result.Input.InformationReadiness!.Evidence, x => x.Key == key);
 
     [Fact]
     public async Task 호출자취소는복구판정으로숨기지않는다()
@@ -302,6 +581,7 @@ public sealed class FoodDispatchTimingServiceTests
         public MutableClock Clock { get; } = new();
         public DemandPort Demand { get; } = new();
         public AIPort AI { get; } = new();
+        public FoodOrderPort Order { get; } = new();
         public static async Task<Fixture> CreateAsync()
         {
             var connection = new SqliteConnection("Data Source=:memory:");
@@ -329,12 +609,15 @@ public sealed class FoodDispatchTimingServiceTests
             Db.운송원장.Add(queue);
             if (arrival) { var previous = Queue("completed-arrival", 50); previous.상태 = "완료"; Db.운송원장.Add(previous); }
             await PersistAsync();
+            Order.Value!.배차대기Id = queue.Id;
             return queue;
         }
         public Task PersistAsync() => PersistCoreAsync();
         private async Task PersistCoreAsync() { await Db.SaveChangesAsync(); Db.ChangeTracker.Clear(); }
-        public FoodDispatchTimingService Service(FoodDispatchTimingOptions? options = null, ISsalddelFoodOrderStore? order = null)
-            => new(Db, Demand, AI, Options.Create(options ?? new() { Enabled = true }), new(), Clock, NullLogger<FoodDispatchTimingService>.Instance, order);
+        public FoodDispatchTimingService Service(FoodDispatchTimingOptions? options = null, ISsalddelFoodOrderStore? order = null,
+            bool withoutOrderStore = false)
+            => new(Db, Demand, AI, Options.Create(options ?? new() { Enabled = true }), new(), Clock, NullLogger<FoodDispatchTimingService>.Instance,
+                withoutOrderStore ? null : order ?? Order);
         public async ValueTask DisposeAsync() { await Db.DisposeAsync(); await Connection.DisposeAsync(); }
     }
 
@@ -347,8 +630,9 @@ public sealed class FoodDispatchTimingServiceTests
     {
         public 음식배달수요참여결과? Value { get; set; }
         public int Calls { get; private set; }
+        public Action? AfterCall { get; set; }
         public Task<음식배달수요참여결과?> 평가Async(운송원장 queue, CancellationToken cancellationToken = default)
-        { Calls++; return Task.FromResult(Value); }
+        { Calls++; AfterCall?.Invoke(); return Task.FromResult(Value); }
     }
     private sealed class AIPort : IFoodDispatchTimingAI
     {
@@ -365,10 +649,25 @@ public sealed class FoodDispatchTimingServiceTests
         public string? Protect(string? value) => value;
         public string? Unprotect(string? value) => value;
     }
-    private sealed class FoodOrderPort(DateTime? readyAt) : ISsalddelFoodOrderStore
+    private sealed class FoodOrderPort(DateTime? readyAt = null) : ISsalddelFoodOrderStore
     {
         public string? RequestedId { get; private set; }
-        public 음식주문응답? GetOrder(string orderNo) { RequestedId = orderNo; return new() { 주문번호 = orderNo, 조리예상완료시각Utc = readyAt }; }
+        public int Reads { get; private set; }
+        public Action<int>? BeforeRead { get; set; }
+        public 음식주문응답? Value { get; set; } = new()
+        {
+            상태 = 음식주문상태코드.주문확인, 배차상태 = 음식주문배차상태코드.배차대기,
+            Revision = 1, 조리예상완료시각Utc = readyAt,
+            최근변경시각Utc = new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+        };
+        public 음식주문응답? GetOrder(string orderNo)
+        {
+            RequestedId = orderNo;
+            Reads++;
+            BeforeRead?.Invoke(Reads);
+            if (Value is not null && string.IsNullOrEmpty(Value.주문번호)) Value.주문번호 = orderNo;
+            return Value;
+        }
         public 음식주문목록응답 GetOrders() => throw new NotSupportedException();
         public 음식주문응답 AddOrder(음식주문등록요청 request) => throw new NotSupportedException();
         public 음식주문응답? 음식점수락(string orderNo, 음식점주문수락요청 request) => throw new NotSupportedException();

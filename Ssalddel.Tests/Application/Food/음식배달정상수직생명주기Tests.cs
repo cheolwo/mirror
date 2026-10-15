@@ -442,7 +442,7 @@ public sealed partial class 음식배달정상수직생명주기Tests
     [InlineData(true, false, "")]
     [InlineData(true, true, "  ")]
     public async Task 픽업후중단은_현재재조리준비만으로_새기사인계와단일정산을완료한다(
-        bool originallyPrepared, bool readyBeforeNewAcceptance, string? legacyOriginalSource)
+        bool originallyPrepared, bool readyBeforeWorkspaceRead, string? legacyOriginalSource)
     {
         await using var database = await TestDatabase.CreateAsync();
         var store = new EfSsalddelFoodOrderStore(database.Context);
@@ -487,16 +487,17 @@ public sealed partial class 음식배달정상수직생명주기Tests
         order = store.GetOrder(order.주문번호)!;
         Assert.Equal(interruptedRevision, order.Revision);
         Assert.Equal(2, order.CurrentPreparationRound);
-        Assert.Equal(음식주문상태코드.조리중, order.상태);
+        Assert.Equal(음식주문상태코드.주문확인, order.상태);
         Assert.Equal(historicalReadyAt, order.픽업준비시각Utc);
         Assert.Equal(historicalStartedAt, order.조리시작시각Utc);
         Assert.Null(order.CurrentPickupReadyAtUtc);
         Assert.NotNull(order.RecookingRequestedAtUtc);
-        Assert.Equal(order.RecookingRequestedAtUtc, order.CurrentCookingStartedAtUtc);
+        Assert.Null(order.CurrentCookingStartedAtUtc);
         Assert.True(order.조리예상분 > 0);
-        Assert.True(order.조리예상완료시각Utc > order.RecookingRequestedAtUtc);
-        Assert.Contains(음식배달가능행동Projector.음식점용(order).AvailableActions,
-            x => x.ActionId == 음식배달가능행동Ids.음식점픽업준비완료);
+        Assert.Null(order.조리예상완료시각Utc);
+        Assert.DoesNotContain(음식배달가능행동Projector.음식점용(order).AvailableActions,
+            x => x.ActionId == 음식배달가능행동Ids.음식점픽업준비완료
+                || x.ActionId == 음식배달가능행동Ids.음식점조리시작);
         Assert.Empty(await database.Context.음식주문기사정산.ToListAsync());
         if (oldReadyRequest is not null)
         {
@@ -512,11 +513,28 @@ public sealed partial class 음식배달정상수직생명주기Tests
         var currentReadyRequest = new 음식점주문진행변경요청
         { 클라이언트요청Id = Guid.NewGuid(), 예상Revision = order.Revision,
             작업 = 음식점주문진행작업코드.픽업준비 };
-        if (readyBeforeNewAcceptance)
-            order = store.음식점진행변경(order.주문번호, currentReadyRequest, "restaurant-41")!.주문;
+        Assert.Throws<InvalidOperationException>(() => store.음식점진행변경(order.주문번호,
+            new() { 클라이언트요청Id = Guid.NewGuid(), 예상Revision = order.Revision,
+                작업 = 음식점주문진행작업코드.조리시작 }, "restaurant-41"));
+        Assert.Throws<InvalidOperationException>(() => store.음식점진행변경(order.주문번호,
+            currentReadyRequest, "restaurant-41"));
         await RecommendReplacementAsync(database.Context, offerId, nextDriver);
         var nextWork = CreateDriverWork(database, store, publisher, nextDriver);
         Assert.True((await nextWork.수락Async(nextDriver, offerId)).IsSuccess);
+        order = store.GetOrder(order.주문번호)!;
+        Assert.True(order.조리시작가능);
+        Assert.Null(order.CurrentCookingStartedAtUtc);
+        Assert.True((await nextWork.픽업완료Async(nextDriver, offerId)).IsFailed);
+        order = store.음식점진행변경(order.주문번호,
+            new() { 클라이언트요청Id = Guid.NewGuid(), 예상Revision = order.Revision,
+                작업 = 음식점주문진행작업코드.조리시작 }, "restaurant-41")!.주문;
+        Assert.True(order.CurrentCookingStartedAtUtc >= order.RecookingRequestedAtUtc);
+        Assert.True(order.조리예상완료시각Utc > order.RecookingRequestedAtUtc);
+        if (readyBeforeWorkspaceRead)
+        {
+            currentReadyRequest.예상Revision = order.Revision;
+            order = store.음식점진행변경(order.주문번호, currentReadyRequest, "restaurant-41")!.주문;
+        }
         Assert.True((await firstWork.픽업완료Async(firstDriver, offerId)).IsFailed);
         Assert.True((await firstWork.전달완료Async(firstDriver, offerId)).IsFailed);
         var workspace = new FoodDeliveryDriverWorkspaceUseCase(database.Context, nextWork,
@@ -526,10 +544,10 @@ public sealed partial class 음식배달정상수직생명주기Tests
         var active = Assert.Single((await workspace.GetAsync(nextDriver, default)).ActiveDeliveries);
         Assert.Equal(2, active.CurrentPreparationRound);
         Assert.Equal(order.RecookingRequestedAtUtc, active.RecookingRequestedAtUtc);
-        Assert.Equal(readyBeforeNewAcceptance, active.CurrentPickupReadyAtUtc.HasValue);
+        Assert.Equal(readyBeforeWorkspaceRead, active.CurrentPickupReadyAtUtc.HasValue);
         Assert.Equal(store.GetOrder(order.주문번호)!.CurrentPickupReadyAtUtc, active.CurrentPickupReadyAtUtc);
-        Assert.Equal(readyBeforeNewAcceptance, active.AvailableActions.Any(x => x.ActionId == 음식배달가능행동Ids.기사픽업확인));
-        if (!readyBeforeNewAcceptance)
+        Assert.Equal(readyBeforeWorkspaceRead, active.AvailableActions.Any(x => x.ActionId == 음식배달가능행동Ids.기사픽업확인));
+        if (!readyBeforeWorkspaceRead)
         {
             Assert.True((await nextWork.픽업완료Async(nextDriver, offerId)).IsFailed);
             order = store.GetOrder(order.주문번호)!;

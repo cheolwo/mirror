@@ -46,6 +46,11 @@ public sealed class DistributedFulfillmentMigrationTests
         await db.Database.ExecuteSqlRawAsync("CREATE TABLE preserved_stock (owner TEXT NOT NULL, quantity INTEGER NOT NULL); INSERT INTO preserved_stock VALUES ('legacy-owner',7);");
         foreach (var command in db.GetService<IMigrationsSqlGenerator>().Generate(new AddDistributedFulfillment().UpOperations, db.GetService<IDesignTimeModel>().Model))
             await db.Database.ExecuteSqlRawAsync(command.CommandText);
+        foreach (var command in db.GetService<IMigrationsSqlGenerator>().Generate(new AddDistributedCompletionLineEvidence().UpOperations, db.GetService<IDesignTimeModel>().Model))
+            await db.Database.ExecuteSqlRawAsync(command.CommandText);
+        foreach (var migration in new Migration[] { new AddDistributedStorageProof(), new AddDistributedInboundCollaboration() })
+            foreach (var command in db.GetService<IMigrationsSqlGenerator>().Generate(migration.UpOperations, db.GetService<IDesignTimeModel>().Model))
+                await db.Database.ExecuteSqlRawAsync(command.CommandText);
         var id = Guid.NewGuid(); db.Add(new 분산거점Record { SiteId = "fixture-site", WarehouseId = 1, PlaceId = "warehouse:1", OwnerUserId = "fixture-owner", ManagerUserId = "fixture-manager", Revision = 3, OwnerConsented = true, ManagerConsented = true });
         db.Add(new 분산물류CommandReceipt { ActorUserId = "fixture-owner", RequestId = id, InputDigest = "fixture-digest", Kind = "Consent", AggregateId = "fixture-site", Revision = 3, RecordedAtUtc = DateTime.UtcNow });
         await db.SaveChangesAsync(); db.ChangeTracker.Clear();

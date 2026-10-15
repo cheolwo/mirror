@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Ssalddel.Tests.Services.Dispatch.AI;
 
-/// <summary>기존 알림 복구 결손을 재현한다. 결손이 수정됐다고 인증하는 시험이 아니다.</summary>
+/// <summary>r49에 기록한 결손을 r54의 실제 저장·HTTP 경로로 재검증한다. 실제 FCM 전달 시험은 아니다.</summary>
 public sealed class FoodDispatchWorkflowNotificationGapTests
 {
     [Theory]
@@ -31,7 +31,7 @@ public sealed class FoodDispatchWorkflowNotificationGapTests
     }
 
     [Fact]
-    public async Task Gap_추천저장후알림Outbox생성실패는_추천재시도로복구되지않는다()
+    public async Task Recovery_추천저장후알림Outbox생성실패는_발송주기에같은추천으로복구된다()
     {
         using var model = new HttpClient(new ModelResponse());
         await using var fixture = await FoodDispatchWorkflowScenarioFixture.CreateAsync("same-region", model);
@@ -45,16 +45,16 @@ public sealed class FoodDispatchWorkflowNotificationGapTests
         await fixture.RetryRecommendationAsync();
         await fixture.DispatchPendingNotificationsAsync();
         var retried = await fixture.ReadSnapshotAsync();
-        Assert.Equal(0, retried.NotificationOutboxCount);
+        Assert.Equal(1, retried.NotificationOutboxCount);
         Assert.Equal(failed.RecommendedDriverId, retried.RecommendedDriverId);
         Assert.Equal(failed.FrozenFee, retried.FrozenFee);
         Assert.Equal(0, retried.AttemptCount);
-        Assert.Empty(fixture.PushMessages);
+        Assert.Single(fixture.PushMessages);
         Assert.Equal(1, fixture.ModelRequests);
     }
 
     [Fact]
-    public async Task Gap_토큰없음Failed는_토큰복구후Pending처리나같은라운드예약으로재발송되지않는다()
+    public async Task Recovery_토큰없음Failed는_토큰복구후같은라운드로재발송된다()
     {
         using var model = new HttpClient(new ModelResponse());
         await using var fixture = await FoodDispatchWorkflowScenarioFixture.CreateAsync("same-region", model);
@@ -65,11 +65,11 @@ public sealed class FoodDispatchWorkflowNotificationGapTests
         Assert.Empty(fixture.PushMessages);
         await fixture.SetPushInstallationActiveAsync(true);
         await fixture.RetryNotificationRequestAsync();
-        await fixture.DispatchPendingNotificationsAsync();
+        await fixture.DispatchPendingNotificationsAsync(new RetryClock());
         var recovered = await fixture.ReadSnapshotAsync();
         Assert.Equal(1, recovered.NotificationOutboxCount);
-        Assert.Equal(["Failed"], recovered.NotificationOutboxStatuses);
-        Assert.Empty(fixture.PushMessages);
+        Assert.Equal(["Succeeded"], recovered.NotificationOutboxStatuses);
+        Assert.Single(fixture.PushMessages);
         using var driver = fixture.CreateActorClient(fixture.AccessToken);
         using var current = await driver.GetAsync("api/v1/driver/food-deliveries/workspace/current");
         Assert.Equal(HttpStatusCode.OK, current.StatusCode);
@@ -78,7 +78,7 @@ public sealed class FoodDispatchWorkflowNotificationGapTests
     }
 
     [Fact]
-    public async Task Gap_일시FCM실패Failed는_전송복구후같은라운드를재발송하지않는다()
+    public async Task Recovery_일시FCM실패Failed는_전송복구후같은라운드로재발송된다()
     {
         using var model = new HttpClient(new ModelResponse());
         await using var fixture = await FoodDispatchWorkflowScenarioFixture.CreateAsync("same-region", model);
@@ -88,11 +88,14 @@ public sealed class FoodDispatchWorkflowNotificationGapTests
         Assert.Equal(["Failed"], (await fixture.ReadSnapshotAsync()).NotificationOutboxStatuses);
         fixture.PushSucceeded = true;
         await fixture.RetryNotificationRequestAsync();
-        await fixture.DispatchPendingNotificationsAsync();
-        Assert.Single(fixture.PushMessages);
-        Assert.Equal(["Failed"], (await fixture.ReadSnapshotAsync()).NotificationOutboxStatuses);
+        await fixture.DispatchPendingNotificationsAsync(new RetryClock());
+        Assert.Equal(2, fixture.PushMessages.Count);
+        Assert.Equal(["Succeeded"], (await fixture.ReadSnapshotAsync()).NotificationOutboxStatuses);
         Assert.Equal(1, (await fixture.ReadSnapshotAsync()).RecommendationRound);
     }
+
+    private sealed class RetryClock : TimeProvider
+    { public override DateTimeOffset GetUtcNow() => DateTimeOffset.UtcNow.AddSeconds(6); }
 
     private sealed class ModelResponse : HttpMessageHandler
     {

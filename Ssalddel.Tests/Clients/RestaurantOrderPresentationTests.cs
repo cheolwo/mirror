@@ -123,7 +123,7 @@ public sealed class RestaurantOrderPresentationTests
         Assert.True(Property<bool>(page, "ShowCurrentRecooking"));
         Assert.Contains(ready ? "재조리 음식이 준비" : "다시 조리 중", Property<string>(page, "CurrentStepLabel"));
         Assert.Contains(ready ? "새 기사가 픽업" : "이번 음식이 완성되면", Property<string>(page, "NextStepGuide"));
-        Assert.Contains(ready ? "준비 완료" : "준비 중", Property<string>(page, "CurrentPreparationText"));
+        Assert.Contains(ready ? "준비 완료" : "조리 중", Property<string>(page, "CurrentPreparationText"));
         Assert.Equal(initialReady, item.상세주문.픽업준비시각Utc);
     }
 
@@ -132,6 +132,8 @@ public sealed class RestaurantOrderPresentationTests
     {
         var item = new 음식점주문DeskItem
         {
+            상태 = 음식주문상태코드.주문확인,
+            배차상태 = 음식주문배차상태코드.배차대기,
             상세주문 = new()
             {
                 CurrentPreparationRound = 2,
@@ -142,6 +144,10 @@ public sealed class RestaurantOrderPresentationTests
         Assert.True(item.재조리주문);
         Assert.False(item.현재조리시작확인);
         Assert.False(item.현재픽업준비완료);
+        var page = Create(item);
+        Assert.Contains("재조리 요청", Property<string>(page, "CurrentStepLabel"));
+        Assert.Contains("기사 배정 대기", Property<string>(page, "CurrentStepLabel"));
+        Assert.Contains("조리 시작 전", Property<string>(page, "CurrentPreparationText"));
     }
 
     [Theory]

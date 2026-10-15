@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Bogus" />
     <PackageReference Include="coverlet.collector">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -41,6 +42,32 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\DriverApp\Services\DriverRecommendationPushHint.cs" Link="Clients\Cargo\R75\DriverRecommendationPushHint.cs" />
+    <Compile Include="..\DriverApp\Services\DriverRecommendationPushRecovery.cs" Link="Clients\Cargo\R75\DriverRecommendationPushRecovery.cs" />
+    <Compile Include="..\DriverApp\Services\DriverWorkStartRecoveryCoordinator.cs" Link="Clients\Cargo\R75\DriverWorkStartRecoveryCoordinator.cs" />
+    <Compile Include="..\DriverApp\Services\DriverWorkStartRecoveryStore.cs" Link="Clients\Cargo\R75\DriverWorkStartRecoveryStore.cs" />
+    <Compile Include="..\DriverApp\Services\DriverWorkspaceReadState.cs" Link="Clients\Cargo\R75\DriverWorkspaceReadState.cs" />
+    <Compile Include="..\DriverApp\Services\IDriverWorkApiService.cs" Link="Clients\Cargo\R75\IDriverWorkApiService.cs" />
+    <Compile Include="..\DriverApp\Services\DriverWorkApiService.cs" Link="Clients\Cargo\R75\DriverWorkApiService.cs" />
+    <Compile Include="..\DriverApp\Services\DriverFreightWorkspaceStore.cs" Link="Clients\Cargo\R75\DriverFreightWorkspaceStore.cs" />
+    <Compile Include="..\DriverApp\Services\DriverRecommendationApiService.cs" Link="Clients\Cargo\R75\DriverRecommendationApiService.cs" />
+    <Compile Include="..\DriverApp\Services\DriverSettlementApiService.cs" Link="Clients\Cargo\R75\DriverSettlementApiService.cs" />
+    <Compile Include="..\DriverApp\Services\DriverReservationApiService.cs" Link="Clients\Cargo\R75\DriverReservationApiService.cs" />
+    <Compile Include="..\DriverApp\Services\Samples\ServerBackedDriverSampleDataService.cs" Link="Clients\Cargo\R75\ServerBackedDriverSampleDataService.cs" />
+    <Compile Include="..\DriverApp\Services\Samples\기사샘플데이터Service.cs" Link="Clients\Cargo\R75\기사샘플데이터Service.cs" />
+    <Compile Include="..\DriverApp\Services\Geo\거리계산Service.cs" Link="Clients\Cargo\R75\거리계산Service.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DriverApp\Services\IDriverRecommendationNotificationService.cs" Link="Clients\Cargo\R75\IDriverRecommendationNotificationService.cs" />
+    <Compile Include="..\DriverApp\Services\IDriverHomeMapService.cs" Link="Clients\Cargo\R75\IDriverHomeMapService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DriverApp\Services\DriverTransportApiService.cs" Link="Clients\Cargo\R75\DriverTransportApiService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 
@@ -65,6 +92,9 @@
     <Compile Include="..\DriverApp\Services\IAuthSession.cs" Link="Clients\Cargo\IAuthSession.cs" />
     <Compile Include="..\DriverApp\Services\DriverRoutes.cs" Link="Clients\Cargo\DriverRoutes.cs" />
     <Compile Include="..\DriverApp\Services\DriverTransportCompletionPhotoService.cs" Link="Clients\Cargo\DriverTransportCompletionPhotoService.cs" />
+    <Compile Include="..\DriverApp\Services\DriverCargoPhotoRecoveryStore.cs" Link="Clients\Cargo\DriverCargoPhotoRecoveryStore.cs" />
+    <Compile Include="..\DriverApp\Services\DriverPayoutPreparationApiService.cs" Link="Clients\Cargo\DriverPayoutPreparationApiService.cs" />
+    <Compile Include="..\DriverApp\ViewModels\Driver\Settlement\기사운송대금PageViewModel.cs" Link="Clients\Cargo\기사운송대금PageViewModel.cs" />
     <Compile Include="..\DriverApp\Services\DriverTransportExceptionService.cs" Link="Clients\Cargo\DriverTransportExceptionService.cs" />
     <Compile Include="..\DriverApp\ViewModels\Driver\기사PageViewModelBase.cs" Link="Clients\Cargo\기사PageViewModelBase.cs" />
     <Compile Include="..\DriverApp\ViewModels\Driver\Transport\*.cs" Link="Clients\Cargo\Transport\%(Filename)%(Extension)" />
@@ -77,11 +107,14 @@
     <Compile Include="..\SsalddelApp\Services\꾸미기보유권동기화Service.cs" Link="Clients\Shipper\꾸미기보유권동기화Service.cs" />
     <Compile Include="..\SsalddelApp\Models\Shipper\ShipperRequestItem.cs" Link="Clients\Shipper\ShipperRequestItem.cs" />
     <Compile Include="..\SsalddelApp\ViewModels\Shipper\ShipperRequestDetailPageViewModel.cs" Link="Clients\Shipper\ShipperRequestDetailPageViewModel.cs" />
+    <Compile Include="..\SsalddelApp\ViewModels\Shipper\ShipperRequestDetailPageViewModel.Receipt.cs" Link="Clients\Shipper\ShipperRequestDetailPageViewModel.Receipt.cs" />
     <Compile Include="..\SsalddelApp\ViewModels\Shipper\ShipperQueryLifetime.cs" Link="Clients\Shipper\ShipperQueryLifetime.cs" />
     <Compile Include="..\DriverApp\Services\AuthSession.cs" Link="Clients\Cargo\AuthSession.cs" />
     <Compile Include="..\DriverApp\Services\AuthApiService.cs" Link="Clients\Cargo\AuthApiService.cs" />
     <Compile Include="..\DriverApp\Services\DriverApiClient.cs" Link="Clients\Cargo\DriverApiClient.cs" />
     <Compile Include="..\DriverApp\Services\DriverOperatingProfileService.cs" Link="Clients\Cargo\DriverOperatingProfileService.cs" />
+    <Compile Include="..\DriverApp\Services\DriverWorkParticipationClient.cs" Link="Clients\Cargo\DriverWorkParticipationClient.cs" />
+    <Compile Include="..\FDriverApp\Services\DriverWorkParticipationClient.cs" Link="Clients\Driver\DriverWorkParticipationClient.cs" />
     <Compile Include="..\DriverApp\Services\IApiClient.cs" Link="Clients\Cargo\IApiClient.cs" />
     <Compile Include="..\DriverApp\Services\IDriverTransportApiService.cs" Link="Clients\Cargo\IDriverTransportApiService.cs" />
     <Compile Include="..\DriverApp\Services\기사운송상세조회Service.cs" Link="Clients\Cargo\기사운송상세조회Service.cs" />

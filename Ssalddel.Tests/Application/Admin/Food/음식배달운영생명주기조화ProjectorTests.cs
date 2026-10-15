@@ -6,6 +6,17 @@ namespace Ssalddel.Tests.Application.Admin.Food;
 
 public sealed class 음식배달운영생명주기조화ProjectorTests
 {
+    [Fact]
+    public void 장기기사확보대기는_엔진재탐색과운영인계를함께표시한다()
+    {
+        var result = 음식배달운영생명주기조화Projector.판정(new(음식주문상태코드.주문확인,
+            기사확보지연상태Code: 음식배달운영지연상태Codes.운영자확인필요, 기사확보대기분: 12));
+        Assert.Equal(음식배달운영생명주기단계Codes.기사확보대기, result.현재단계Code);
+        Assert.Contains(음식배달운영책임주체Codes.배차Engine, result.현재책임주체Codes);
+        Assert.Contains(음식배달운영책임주체Codes.플랫폼운영자, result.현재책임주체Codes);
+        Assert.Contains(음식배달운영업무지연Codes.기사확보지연, result.예외Codes);
+        Assert.True(result.운영자확인필요여부);
+    }
     [Theory]
     [InlineData(
         음식주문상태코드.주문대기,

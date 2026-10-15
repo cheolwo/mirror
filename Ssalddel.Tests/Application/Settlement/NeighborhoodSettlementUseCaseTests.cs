@@ -11,7 +11,7 @@ using 살뜰.도메인.정산;
 
 namespace Ssalddel.Tests.Application.Settlement;
 
-public sealed class NeighborhoodSettlementUseCaseTests
+public sealed partial class NeighborhoodSettlementUseCaseTests
 {
     [Theory]
     [InlineData(false, "neighborhood-settlement-r38", SsalddelExecutionMode.Simulation)]
@@ -154,7 +154,9 @@ public sealed class NeighborhoodSettlementUseCaseTests
     [Fact]
     public async Task 보관기간은실제보관시작이후경과한기간만허용하고합의간중복을막는다()
     {
-        await using var f = await Fixture.Create(); var terms = f.Terms();
+        await using var f = await Fixture.Create();
+        f.Resolver.Snapshot = f.Source(sourceKind: NeighborhoodSettlementCodes.DistributedLot);
+        var terms = f.Terms();
         terms.Lines = [new() { LineKey = "period", Kind = NeighborhoodSettlementCodes.Storage, Billing = NeighborhoodSettlementCodes.StoragePeriod,
             AmountKrw = 500, Quantity = 5, PayerUserId = "owner", PayeeUserId = "space", BeneficiaryRole = "SpaceOwner",
             PeriodStartUtc = f.Clock.Now.AddDays(-1), PeriodEndUtc = f.Clock.Now.AddHours(-1) }];
@@ -163,7 +165,7 @@ public sealed class NeighborhoodSettlementUseCaseTests
             OriginKind = f.Resolver.Snapshot.SourceKind, OriginId = f.Resolver.Snapshot.SourceId,
             Lines = [new() { LineKey = "period", Quantity = 5, PeriodStartUtc = terms.Lines[0].PeriodStartUtc, PeriodEndUtc = terms.Lines[0].PeriodEndUtc }] };
         await Error("NeighborhoodSettlementStoragePeriodNotCompleted", () => f.Use().AccrueAsync(r.AgreementId, "owner", accrual, default));
-        f.Resolver.Snapshot = f.Source(storageStart: f.Clock.Now.AddDays(-2));
+        f.Resolver.Snapshot = f.Source(storageStart: f.Clock.Now.AddDays(-2), sourceKind: NeighborhoodSettlementCodes.DistributedLot);
         await f.Use().AccrueAsync(r.AgreementId, "owner", accrual, default);
         terms.RequestId = Guid.NewGuid(); terms.ExpectedRevision = r.Revision + 1;
         var current = await f.Use().GetAsync(r.AgreementId, "owner", default); terms.ExpectedRevision = current.Agreement.Revision;
@@ -174,25 +176,36 @@ public sealed class NeighborhoodSettlementUseCaseTests
     }
 
     [Fact]
-    public async Task 판매금액미확인은무료가아니며판매수량보관료와대행료는별도로발생한다()
+    public async Task 판매금액미확인은무료가아니며입고보관료와출고판매대행료를분리한다()
     {
         await using var f = await Fixture.Create();
         f.Resolver.Snapshot = f.Source(saleTotal: null, saleWork: true, workTime: null);
         var terms = f.Terms(); terms.GoodsOwnerUserId = "owner";
         terms.Lines = [new() { LineKey = "sale", Kind = NeighborhoodSettlementCodes.ProductSale, Billing = NeighborhoodSettlementCodes.Fixed,
                 AmountKrw = 1000, PayerUserId = "buyer", PayeeUserId = "owner", BeneficiaryRole = "Owner" },
-            new() { LineKey = "storage", Kind = NeighborhoodSettlementCodes.Storage, Billing = NeighborhoodSettlementCodes.PerUnit,
-                UnitPriceKrw = 30, Quantity = 5, PayerUserId = "owner", PayeeUserId = "space", BeneficiaryRole = "SpaceOwner" },
             new() { LineKey = "agency", Kind = NeighborhoodSettlementCodes.SalesAgency, Billing = NeighborhoodSettlementCodes.PerUnit,
                 UnitPriceKrw = 20, Quantity = 5, PayerUserId = "owner", PayeeUserId = "seller", BeneficiaryRole = "Seller" }];
         var r = await f.Activate(terms); var read = await f.Use().GetAsync(r.AgreementId, "owner", default);
         Assert.Equal(1, read.Totals.UnresolvedLineCount);
         await Error("NeighborhoodSettlementAmountUnresolved", () => f.Accrue(r, 1, "owner", "sale"));
         r = await f.Use().AccrueAsync(r.AgreementId, "owner", new() { RequestId = Guid.NewGuid(), ExpectedRevision = r.Revision,
-            OriginKind = "ProofReceipt", OriginId = "pick-1", Lines = [new() { LineKey = "storage", Quantity = 2 }, new() { LineKey = "agency", Quantity = 2 }] }, default);
+            OriginKind = "ProofReceipt", OriginId = "pick-1", Lines = [new() { LineKey = "agency", Quantity = 2 }] }, default);
         read = await f.Use().GetAsync(r.AgreementId, "owner", default);
-        Assert.Equal(100m, read.Totals.KnownAccruedAmountKrw); Assert.Equal(2, read.Entries.Count);
+        Assert.Equal(40m, read.Totals.KnownAccruedAmountKrw); Assert.Single(read.Entries);
         Assert.All(read.Entries, x => Assert.NotEqual(NeighborhoodSettlementCodes.ProductSale, x.Kind));
+
+        await using var inbound = await Fixture.Create();
+        inbound.Resolver.Snapshot = inbound.Source(sourceKind: NeighborhoodSettlementCodes.DistributedLot, saleTotal: null);
+        var storageTerms = inbound.Terms();
+        storageTerms.Lines = [new() { LineKey = "storage", Kind = NeighborhoodSettlementCodes.Storage, Billing = NeighborhoodSettlementCodes.PerUnit,
+            UnitPriceKrw = 30, Quantity = 5, PayerUserId = "owner", PayeeUserId = "space", BeneficiaryRole = "SpaceOwner" }];
+        var storage = await inbound.Activate(storageTerms);
+        storage = await inbound.Use().AccrueAsync(storage.AgreementId, "owner", new() { RequestId = Guid.NewGuid(), ExpectedRevision = storage.Revision,
+            OriginKind = "ProofReceipt", OriginId = "pick-1", Lines = [new() { LineKey = "storage", Quantity = 2 }] }, default);
+        var storageRead = await inbound.Use().GetAsync(storage.AgreementId, "owner", default);
+        Assert.Equal(60m, storageRead.Totals.KnownAccruedAmountKrw);
+        Assert.Equal(NeighborhoodSettlementCodes.Storage, Assert.Single(storageRead.Entries).Kind);
+        Assert.NotEqual(read.Agreement.Terms.WorkflowKind, storageRead.Agreement.Terms.WorkflowKind);
     }
 
     [Fact]
@@ -322,22 +335,24 @@ public sealed class NeighborhoodSettlementUseCaseTests
     [Fact]
     public async Task 실물보관구간이없거나전량출고뒤인기간은과거입고량이있어도청구하지못한다()
     {
-        await using var f = await Fixture.Create(); var terms = f.Terms();
+        await using var f = await Fixture.Create();
+        f.Resolver.Snapshot = f.Source(sourceKind: NeighborhoodSettlementCodes.DistributedLot);
+        var terms = f.Terms();
         terms.Lines = [new() { LineKey = "period", Kind = NeighborhoodSettlementCodes.Storage, Billing = NeighborhoodSettlementCodes.StoragePeriod,
             AmountKrw = 100, PayerUserId = "owner", PayeeUserId = "space", BeneficiaryRole = "SpaceOwner",
             PeriodStartUtc = f.Clock.Now.AddHours(-2), PeriodEndUtc = f.Clock.Now.AddMinutes(-1) }];
-        f.Resolver.Snapshot = f.Source(storageIntervals: []); var r = await f.Activate(terms);
+        f.Resolver.Snapshot = f.Source(storageIntervals: [], sourceKind: NeighborhoodSettlementCodes.DistributedLot); var r = await f.Activate(terms);
         var request = new NeighborhoodSettlementAccrualRequest { RequestId = Guid.NewGuid(), ExpectedRevision = r.Revision,
             OriginKind = NeighborhoodSettlementCodes.DistributedLot, OriginId = "lot-1", Lines = [new() { LineKey = "period",
                 PeriodStartUtc = terms.Lines[0].PeriodStartUtc, PeriodEndUtc = terms.Lines[0].PeriodEndUtc }] };
         await Error("NeighborhoodSettlementStoragePeriodEvidenceRequired", () => f.Use().AccrueAsync(r.AgreementId, "owner", request, default));
-        f.Resolver.Snapshot = f.Source(storageIntervals: [new(f.Clock.Now.AddHours(-2), f.Clock.Now.AddHours(-1), 5)]);
+        f.Resolver.Snapshot = f.Source(storageIntervals: [new(f.Clock.Now.AddHours(-2), f.Clock.Now.AddHours(-1), 5)], sourceKind: NeighborhoodSettlementCodes.DistributedLot);
         await Error("NeighborhoodSettlementStoragePeriodEvidenceRequired", () => f.Use().AccrueAsync(r.AgreementId, "owner", request, default));
         Assert.Empty(await f.Db.Set<NeighborhoodSettlementEntryRecord>().ToArrayAsync());
     }
 
     [Fact]
-    public async Task Lot와주문이같은정본입출고이력을참조해도처리량을두번청구하지못한다()
+    public async Task 서로다른주문이같은정본피킹이력을참조해도처리량을두번청구하지못한다()
     {
         await using var f = await Fixture.Create(); var first = await f.Activate(); await f.Accrue(first, 4);
         f.Resolver.Snapshot = f.Source(sourceKind: NeighborhoodSettlementCodes.DistributedOrder, sourceId: "order-1");
@@ -403,16 +418,18 @@ public sealed class NeighborhoodSettlementUseCaseTests
     [Fact]
     public async Task 무료보관은실제보관구간수량근거가있어야영원항목으로확정한다()
     {
-        await using var f = await Fixture.Create(); var terms = f.Terms();
+        await using var f = await Fixture.Create();
+        f.Resolver.Snapshot = f.Source(sourceKind: NeighborhoodSettlementCodes.DistributedLot);
+        var terms = f.Terms();
         terms.Lines = [new() { LineKey = "free-storage", Kind = NeighborhoodSettlementCodes.Storage, Billing = NeighborhoodSettlementCodes.Free,
             AmountKrw = 0, Quantity = 3, PayerUserId = "owner", PayeeUserId = "space", BeneficiaryRole = "SpaceOwner" }];
-        f.Resolver.Snapshot = f.Source(storageIntervals: []); var r = await f.Activate(terms);
+        f.Resolver.Snapshot = f.Source(storageIntervals: [], sourceKind: NeighborhoodSettlementCodes.DistributedLot); var r = await f.Activate(terms);
         var request = new NeighborhoodSettlementAccrualRequest { RequestId = Guid.NewGuid(), ExpectedRevision = r.Revision,
             OriginKind = NeighborhoodSettlementCodes.DistributedLot, OriginId = "lot-1", Lines = [new() { LineKey = "free-storage", Quantity = 3 }] };
         await Error("NeighborhoodSettlementStoragePeriodEvidenceRequired", () => f.Use().AccrueAsync(r.AgreementId, "owner", request, default));
-        f.Resolver.Snapshot = f.Source(storageIntervals: [new(f.Clock.Now.AddHours(-2), null, 2)]);
+        f.Resolver.Snapshot = f.Source(storageIntervals: [new(f.Clock.Now.AddHours(-2), null, 2)], sourceKind: NeighborhoodSettlementCodes.DistributedLot);
         await Error("NeighborhoodSettlementStoragePeriodEvidenceRequired", () => f.Use().AccrueAsync(r.AgreementId, "owner", request, default));
-        f.Resolver.Snapshot = f.Source(); r = await f.Use().AccrueAsync(r.AgreementId, "owner", request, default);
+        f.Resolver.Snapshot = f.Source(sourceKind: NeighborhoodSettlementCodes.DistributedLot); r = await f.Use().AccrueAsync(r.AgreementId, "owner", request, default);
         var entry = Assert.Single((await f.Use().GetAsync(r.AgreementId, "owner", default)).Entries);
         Assert.Equal(0m, entry.AmountKrw); Assert.Equal(3m, entry.Quantity);
         r = await f.Confirm(r, entry.EntryId, "owner"); r = await f.Confirm(r, entry.EntryId, "space");
@@ -442,7 +459,9 @@ public sealed class NeighborhoodSettlementUseCaseTests
     private sealed class Resolver : INeighborhoodSettlementSourceResolver
     {
         public NeighborhoodSettlementSourceSnapshot Snapshot { get; set; } = new();
-        public Task<NeighborhoodSettlementSourceSnapshot> ResolveAsync(string kind, string id, CancellationToken ct) => Task.FromResult(Snapshot);
+        public Exception? Failure { get; set; }
+        public Task<NeighborhoodSettlementSourceSnapshot> ResolveAsync(string kind, string id, CancellationToken ct)
+            => Failure is null ? Task.FromResult(Snapshot) : Task.FromException<NeighborhoodSettlementSourceSnapshot>(Failure);
     }
     private sealed class Encryption : IPersonalDataEncryptionService
     { public string? Protect(string? value) => value; public string? Unprotect(string? value) => value; }
@@ -457,7 +476,7 @@ public sealed class NeighborhoodSettlementUseCaseTests
         public NeighborhoodSettlementSourceSnapshot Source(string digest = "source-v1", string? workActor = "picker", DateTime? storageStart = null,
             decimal? saleTotal = 1000, bool saleWork = false, DateTime? workTime = default, bool delivery = false, bool internalPicker = false,
             string sourceId = "lot-1", string originId = "pick-1", IReadOnlyList<NeighborhoodSettlementStorageInterval>? storageIntervals = null,
-            string sourceKind = NeighborhoodSettlementCodes.DistributedLot)
+            string sourceKind = NeighborhoodSettlementCodes.DistributedOrder)
             => new()
             {
                 SourceKind = sourceKind, SourceId = sourceId, SourceVersion = "1", SourceDigest = digest,
@@ -466,9 +485,15 @@ public sealed class NeighborhoodSettlementUseCaseTests
                     new("picker", internalPicker ? ["Picker", "Owner"] : ["Picker"]), new("receiver", ["Receiver"]), new("driver", ["Driver"])],
                 ActualCompletedUnits = 5, HistoricalSaleTotalKrw = saleTotal, ObservedAtUtc = Clock.Now, StorageStartedAtUtc = storageStart ?? Clock.Now.AddHours(-2),
                 StorageIntervals = storageIntervals ?? [new(storageStart ?? Clock.Now.AddHours(-2), null, 5)],
+                StorageEvidenceReferences = ["actual-receipt"],
                 CompletionEvidenceReferences = ["actual-receipt"], FrozenDriverFareKrw = delivery ? 4000m : null,
+                RewardOutcome = sourceKind == NeighborhoodSettlementCodes.DistributedOrder ? new(5, ["delivered", "customer-received"]) : null,
+                Workflow = new() { Kind = sourceKind == NeighborhoodSettlementCodes.DistributedLot
+                    ? NeighborhoodSettlementWorkflowCodes.InboundStorage : NeighborhoodSettlementWorkflowCodes.OutboundDelivery,
+                    StateCode = "Completed", CompletionConfirmed = true, PaymentReleaseReady = true, InventoryLotIds = ["lot-1"] },
                 CanonicalDeliveryOrigin = delivery ? "cargo:original-delivery" : null, OriginalExternalPaymentStatus = delivery ? "CollectionPending" : null,
-                CompletedWork = [new(delivery ? NeighborhoodSettlementCodes.Delivery : saleWork ? NeighborhoodSettlementCodes.ProductSale : NeighborhoodSettlementCodes.Picking,
+                CompletedWork = [new(delivery ? NeighborhoodSettlementCodes.Delivery : saleWork ? NeighborhoodSettlementCodes.ProductSale
+                    : sourceKind == NeighborhoodSettlementCodes.DistributedLot ? NeighborhoodSettlementCodes.Inbound : NeighborhoodSettlementCodes.Picking,
                     "ProofReceipt", originId, saleWork ? 5m : delivery ? 1m : 5m, workTime ?? (saleWork ? null : Clock.Now.AddMinutes(-1)), ["actual-completion"], workActor,
                     GoodsOwnerUserId: internalPicker ? "picker" : "owner", SpaceOwnerUserId: "space", SellerUserId: "seller")]
             };

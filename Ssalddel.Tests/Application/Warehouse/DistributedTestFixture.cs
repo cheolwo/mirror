@@ -7,6 +7,7 @@ using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Driver.DispatchAction;
 using Ssalddel.Application.Driver.Transport;
 using Ssalddel.Application.Warehouse;
+using Ssalddel.Tests.Application.Driver.Transport;
 using Ssalddel.Contracts.Common.Dispatch;
 using Ssalddel.Contracts.Common.Warehouse;
 using Ssalddel.Services.LogisticsProcessing.VehicleLoading;
@@ -41,7 +42,8 @@ internal sealed class DistributedTestFixture(SqliteConnection connection, Ssaldd
     public bool RequireVehicleAdvisory { get; set; }
     public VerifiedFixturePhotos Photos { get; } = new();
     public IDistributedFulfillmentUseCase Service => Use(Operator);
-    public 분산물류UseCase Use(DistributedActor actor, bool enabled = true, SsalddelExecutionMode mode = SsalddelExecutionMode.Simulation, string? profile = null, SsalddelContext? store = null, IDistributedPhotoEvidenceBinder? binder = null, I분산주문원장연결Adapter? orderLedgers = null)
+    public 분산물류UseCase Use(DistributedActor actor, bool enabled = true, SsalddelExecutionMode mode = SsalddelExecutionMode.Simulation, string? profile = null, SsalddelContext? store = null, IDistributedPhotoEvidenceBinder? binder = null, I분산주문원장연결Adapter? orderLedgers = null,
+        Ssalddel.Services.Dispatch.Participation.ISharedDriverWorkAdmissionService? sharedAdmission = null)
     {
         var workingDb = store ?? Db;
         var current = new Current(actor.UserId, actor.IsDriver ? "기사" : "화주");
@@ -53,22 +55,31 @@ internal sealed class DistributedTestFixture(SqliteConnection connection, Ssaldd
             eligibility, new Continuity(), NullLogger<배차수락CommandHandler>.Instance);
         var executor = TransportExecutor(actor, workingDb);
         var cargo = new 분산화물연결Service(workingDb, new Sender(handler, () => FailCargoId), executor, Publisher, NullLogger<분산화물연결Service>.Instance);
-        return new(workingDb, execution, options, new 분산배송경로Planner(Routes, options), cargo, Clock, Locations, new EmptyDistributedBuildingCandidateProvider(), binder ?? Photos, orderLedgers);
+        return new(workingDb, execution, options, new 분산배송경로Planner(Routes, options), cargo, Clock, Locations, new EmptyDistributedBuildingCandidateProvider(), binder ?? Photos, orderLedgers, sharedAdmission);
     }
     public I기사운송상태변경CommandExecutor TransportExecutor(DistributedActor actor, SsalddelContext? store = null)
         => new 기사운송상태변경CommandExecutor(store ?? Db, new 기사운송상태전이Service(), Publisher,
             new Current(actor.UserId, actor.IsDriver ? "기사" : "화주"), new 참여자실행권한검사(), NullLogger<기사운송상태변경CommandExecutor>.Instance);
-    public Task<FluentResults.Result<Ssalddel.Contracts.Driver.Transport.기사운송상태변경응답>> GeneralTransportProgressAsync(long id, string target)
+    public async Task<FluentResults.Result<Ssalddel.Contracts.Driver.Transport.기사운송상태변경응답>> GeneralTransportProgressAsync(long id, string target)
     {
         var executor = TransportExecutor(Driver); var attachments = new 운송증빙첨부JsonWriter();
-        return target switch
+        var photos = new CargoPhotoTestStorage();
+        var transport = await Db.운송원장.AsNoTracking().SingleAsync(x => x.Id == id);
+        var distributed = await Db.출고예정.AsNoTracking().Where(x => x.운송의뢰Id == transport.의뢰Id && x.입고상품Id != null)
+            .Join(Db.입고상품.AsNoTracking(), x => x.입고상품Id!.Value, x => x.Id, (_, x) => x)
+            .AnyAsync(x => x.보관위치.StartsWith("DLOC-"));
+        if (!distributed && target is 기사운송상태코드.상차완료 or 기사운송상태코드.인수완료)
+            await photos.SeedReceiptAsync(Db, id, Driver.UserId,
+                target == 기사운송상태코드.상차완료 ? "pickup-complete-photo" : "dropoff-complete-photo",
+                target == 기사운송상태코드.상차완료 ? "fixture-pickup-photo" : "fixture-dropoff-photo");
+        return await (target switch
         {
             기사운송상태코드.상차지도착 => new 운송상차지도착CommandHandler(executor).Handle(new(Driver.UserId, id), default),
-            기사운송상태코드.상차완료 => new 운송상차완료CommandHandler(Db, executor, attachments).Handle(new(Driver.UserId, id) { 상차사진ObjectName = "fixture-pickup-photo" }, default),
+            기사운송상태코드.상차완료 => new 운송상차완료CommandHandler(Db, executor, attachments, photos).Handle(new(Driver.UserId, id) { 상차사진ObjectName = "fixture-pickup-photo" }, default),
             기사운송상태코드.하차지도착 => new 운송하차지도착CommandHandler(executor).Handle(new(Driver.UserId, id), default),
-            기사운송상태코드.인수완료 => new 운송인수완료CommandHandler(executor, attachments).Handle(new(Driver.UserId, id) { 하차사진ObjectName = "fixture-dropoff-photo" }, default),
+            기사운송상태코드.인수완료 => new 운송인수완료CommandHandler(executor, attachments, Db, photos).Handle(new(Driver.UserId, id) { 하차사진ObjectName = "fixture-dropoff-photo" }, default),
             _ => throw new ArgumentOutOfRangeException(nameof(target))
-        };
+        });
     }
     public static async Task<DistributedTestFixture> Create()
     {

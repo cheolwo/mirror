@@ -11,6 +11,7 @@ using 살뜰.Data;
 using 살뜰.Infrastructure.Persistence.Configurations.Settlement;
 using 살뜰.Infrastructure.Security;
 using 살뜰.도메인.정산;
+using 살뜰.도메인.창고;
 
 namespace Ssalddel.Tests.Infrastructure;
 
@@ -22,6 +23,45 @@ public sealed class NeighborhoodSettlementPersistenceTests : IDisposable
     public void Dispose() => _sqliteServices.Dispose();
 
     [Fact]
+    public async Task 마트완료근거migration은격리SQLite에nullable열하나만추가한다()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:"); await connection.OpenAsync(); await using var db = Db(connection);
+        await db.Database.ExecuteSqlRawAsync("CREATE TABLE 피킹포장작업 (id INTEGER PRIMARY KEY)");
+        var migration = new AddMartActivityCompletionEvidence();
+        var operation = Assert.Single(migration.UpOperations);
+        var column = Assert.IsType<AddColumnOperation>(operation);
+        Assert.Equal("피킹포장작업", column.Table); Assert.Equal("completion_evidence_json", column.Name); Assert.True(column.IsNullable);
+        foreach (var command in db.GetService<IMigrationsSqlGenerator>().Generate(migration.UpOperations, db.GetService<IDesignTimeModel>().Model))
+            await db.Database.ExecuteSqlRawAsync(command.CommandText);
+        await db.Database.ExecuteSqlRawAsync("INSERT INTO 피킹포장작업 (id, completion_evidence_json) VALUES (1, NULL)");
+        using var query = connection.CreateCommand(); query.CommandText = "SELECT completion_evidence_json IS NULL FROM 피킹포장작업 WHERE id=1";
+        Assert.Equal(1L, await query.ExecuteScalarAsync());
+    }
+
+    [Fact]
+    public async Task 마트완료근거는보호해서저장하고실제MySQL모델과snapshot의열동시성이일치한다()
+    {
+        using (var mysql = new SsalddelContext(new DbContextOptionsBuilder<SsalddelContext>().UseMySql("Server=127.0.0.1;Database=not_opened;User ID=fixture;Password=fixture;",
+            new MySqlServerVersion(new Version(8, 4, 0)), options => options.MigrationsAssembly("Ssalddel")).Options, new Encryption()))
+        {
+            var snapshot = mysql.GetService<IModelRuntimeInitializer>().Initialize(mysql.GetService<IMigrationsAssembly>().ModelSnapshot!.Model, designTime: true);
+            var model = mysql.GetService<IDesignTimeModel>().Model;
+            Assert.Empty(mysql.GetService<IMigrationsModelDiffer>().GetDifferences(snapshot.GetRelationalModel(), model.GetRelationalModel()).Where(operation => Table(operation) == "피킹포장작업"));
+            var entity = model.FindEntityType(typeof(피킹포장작업))!;
+            Assert.NotNull(entity.FindProperty(nameof(피킹포장작업.완료근거Json))!.GetValueConverter());
+            Assert.True(entity.FindProperty(nameof(피킹포장작업.상태))!.IsConcurrencyToken);
+        }
+        await using var connection = new SqliteConnection("Data Source=:memory:"); await connection.OpenAsync(); await using var db = Db(connection);
+        await db.Database.EnsureCreatedAsync();
+        db.피킹포장작업.Add(new() { 작업Key = "private-work", 완료근거Json = "{\"ActorUserId\":\"actual-worker-private\",\"Quantity\":2}" });
+        await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+        using var query = connection.CreateCommand(); query.CommandText = "SELECT completion_evidence_json FROM 피킹포장작업 WHERE 작업_key='private-work'";
+        var raw = Assert.IsType<string>(await query.ExecuteScalarAsync());
+        Assert.StartsWith("protected:", raw); Assert.DoesNotContain("actual-worker-private", raw);
+        Assert.Contains("actual-worker-private", (await db.피킹포장작업.SingleAsync()).완료근거Json);
+    }
+
+    [Fact]
     public void 실제MySQL모델과snapshot은5테이블과보호변환동시성멱등키배송원점유일성을같이유지한다()
     {
         using var db = new SsalddelContext(new DbContextOptionsBuilder<SsalddelContext>().UseMySql("Server=127.0.0.1;Database=not_opened;User ID=fixture;Password=fixture;", new MySqlServerVersion(new Version(8, 4, 0)), o => o.MigrationsAssembly("Ssalddel")).Options, new Encryption());
@@ -29,7 +69,7 @@ public sealed class NeighborhoodSettlementPersistenceTests : IDisposable
         var model = db.GetService<IDesignTimeModel>().Model;
         var diff = db.GetService<IMigrationsModelDiffer>().GetDifferences(snapshot.GetRelationalModel(), model.GetRelationalModel()).Where(x => NeighborhoodSettlementModel.Tables.Contains(Table(x))).ToArray();
         Assert.True(diff.Length == 0, string.Join("\n", diff.Select(x => x.GetType().Name + ":" + Table(x) + ":" + x.GetType().GetProperty("Name")?.GetValue(x))));
-        var entities = model.GetEntityTypes().Where(x => NeighborhoodSettlementModel.Tables.Contains(x.GetTableName())).ToArray(); Assert.Equal(5, entities.Length);
+        var entities = model.GetEntityTypes().Where(x => NeighborhoodSettlementModel.Tables.Contains(x.GetTableName())).ToArray(); Assert.Equal(6, entities.Length);
         Assert.All(entities, e => { Assert.NotNull(e.FindPrimaryKey()); Assert.All(e.GetProperties().Where(x => x.Name.EndsWith("Json", StringComparison.Ordinal)), p => Assert.NotNull(p.GetValueConverter())); });
         var agreement = model.FindEntityType(typeof(NeighborhoodSettlementAgreementRecord))!; Assert.True(agreement.FindProperty("Revision")!.IsConcurrencyToken);
         var entry = model.FindEntityType(typeof(NeighborhoodSettlementEntryRecord))!;

@@ -230,6 +230,7 @@ public sealed partial class FoodDispatchWorkflowScenarioFixture : IAsyncDisposab
         builder.Services.AddSingleton<I국내화물운송기사상태Store>(_states);
         builder.Services.AddSingleton<IPublisher>(_publisher);
         builder.Services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<음식주문등록CommandHandler>());
+        ConfigurePilotServices(builder.Services);
         // RecordingPublisher intentionally suppresses production Event handlers; actual durable bridges are explicitly drained.
         builder.Services.AddSingleton<IPublisher>(_publisher);
         builder.Services.AddScoped<ISsalddelFoodOrderStore, EfSsalddelFoodOrderStore>();
@@ -327,10 +328,12 @@ public sealed partial class FoodDispatchWorkflowScenarioFixture : IAsyncDisposab
             queue.현재추천대상기사Id ?? throw new InvalidOperationException("No recommended driver."), queue.추천라운드);
     }
 
-    public async Task DispatchPendingNotificationsAsync()
+    public async Task DispatchPendingNotificationsAsync(TimeProvider? clock = null)
     {
         await using var db = CreateContext();
-        await Notifications(db).업무유형별대기알림발송Async(상태값.배차업무유형.음식배달);
+        await new 배차추천알림Service(db, new AppScopedDriverPushTokenStore(db, _legacyTokens), _push,
+            NullLogger<배차추천알림Service>.Instance, clock)
+            .업무유형별대기알림발송Async(상태값.배차업무유형.음식배달);
         _steps.Add("FoodNotificationOutboxDrainedToRecordingFCMBoundary");
     }
 

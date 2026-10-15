@@ -5,6 +5,31 @@ namespace Ssalddel.Tests.Contracts.Common;
 
 public sealed class PageCapabilityCatalogTests
 {
+    [Theory]
+    [InlineData("/activity-settlements")]
+    [InlineData("/activity-settlements/agreement-1")]
+    public void 활동정산_목록과상세는_Web과통합앱에서_인증필수3점5BetaSimulation으로분류한다(string route)
+    {
+        foreach (var app in new[] { SsalddelPageAppCodes.IntegratedWeb, SsalddelPageAppCodes.Shipper })
+        {
+            Assert.True(SsalddelPageCapabilityCatalog.TryResolve(app, route, out var capability));
+            var prefix = app == SsalddelPageAppCodes.IntegratedWeb ? "web" : "shipper";
+            Assert.Equal(prefix + "-activity-settlements", capability.PageKey);
+            Assert.Equal(app, capability.AppCode);
+            Assert.Equal("/activity-settlements", capability.RoutePattern);
+            Assert.Equal(PageCapabilityMatchKind.Prefix, capability.MatchKind);
+            Assert.Equal(PageCapabilityStage.Beta, capability.Stage);
+            Assert.Equal(PageInteractionBoundary.Simulation, capability.Boundary);
+            Assert.True(capability.RequiresAuthentication);
+            Assert.False(capability.HasExternalEffects);
+            Assert.Equal("3.5", capability.IntroducedVersion);
+            Assert.Contains("기본 비활성 정산 연습", capability.Notice);
+            Assert.Equal(["WarehouseFulfillment", "FoodDelivery", "DomesticTransport"], capability.WorkflowCodes);
+            Assert.Single(SsalddelPageCapabilityCatalog.GetAll(), item => item.AppCode == app
+                && item.RoutePattern == "/activity-settlements" && item.MatchKind == PageCapabilityMatchKind.Prefix);
+        }
+    }
+
     [Fact]
     public void 제품로드맵은_개별주문뒤에_같이주문과무역준비를배치한다()
     {

@@ -251,7 +251,9 @@ public sealed class CargoDriverAuthenticationRecoveryTests
         var handler = new TestHandler((_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)));
         using var http = Client(handler);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => Api(http, session).GetAsync<object>("api/test", "운송"));
+        var failure = await Assert.ThrowsAsync<DriverApiException>(() => Api(http, session).GetAsync<object>("api/test", "운송"));
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, failure.StatusCode);
+        Assert.Null(failure.RejectedWorkStartRequestId);
 
         Assert.True(session.IsAuthenticated);
         Assert.Equal(0, store.ClearCount);

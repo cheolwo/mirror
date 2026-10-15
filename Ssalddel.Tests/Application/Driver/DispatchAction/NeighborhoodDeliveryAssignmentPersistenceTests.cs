@@ -86,6 +86,12 @@ public sealed partial class NeighborhoodDeliveryAssignmentPersistenceTests
                 현재추천대상기사Id = "driver-1", 추천라운드 = 3, 추천만료시각 = DateTime.UtcNow.AddMinutes(5)
             });
             await f.Db.SaveChangesAsync();
+            // 수락/롤백을 시험하는 사전 합의 보수입니다. 고객 청구액으로 기사 보수를 추정하지 않습니다.
+            var fare = new 운임구성 { 의뢰Id = "delivery-1", 기사지급예정운임 = 4000m };
+            f.Db.운임구성.Add(fare);
+            await f.Db.SaveChangesAsync();
+            (await f.Db.화주운송의뢰.SingleAsync()).운임구성Id = fare.Id;
+            await f.Db.SaveChangesAsync();
             return f;
         }
         public async ValueTask DisposeAsync() { await Db.DisposeAsync(); await connection.DisposeAsync(); }

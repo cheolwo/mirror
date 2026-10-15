@@ -19,12 +19,18 @@ public sealed class DriverWorkflowReliabilityCompositionTests
         var contract = Read("DriverApp/Services/IDriverSampleDataService.cs");
         var serverBacked = Read("DriverApp/Services/Samples/ServerBackedDriverSampleDataService.cs");
         var fcm = Read("DriverApp/Platforms/Android/SsalddelFirebaseMessagingService.cs");
+        var recovery = Read("DriverApp/Services/DriverRecommendationPushRecovery.cs");
 
         Assert.Contains("bool force = false", contract);
         Assert.Contains("if (_loaded && !force)", serverBacked);
-        Assert.Contains("RefreshAsync(force: true)", fcm);
-        Assert.Contains("추천의뢰조회(requestId)", fcm);
-        Assert.DoesNotContain("?? sampleData.추천의뢰목록.FirstOrDefault()", fcm);
+        Assert.Contains("GetRequiredService<DriverRecommendationPushRecovery>()", fcm);
+        Assert.Contains("recovery.CaptureAsync(data, openRequested: false, cancellation.Token)", fcm);
+        Assert.Contains("recovery.RecoverAsync(cancellation.Token)", fcm);
+        Assert.Contains("samples.RefreshAsync(cancellationToken, force: true)", recovery);
+        Assert.Contains("samples.추천의뢰조회(target.Hint.RequestId)", recovery);
+        Assert.True(recovery.IndexOf("samples.RefreshAsync(cancellationToken, force: true)", StringComparison.Ordinal)
+            < recovery.IndexOf("samples.추천의뢰조회(target.Hint.RequestId)", StringComparison.Ordinal));
+        Assert.DoesNotContain("?? samples.추천의뢰목록.FirstOrDefault()", recovery);
     }
 
     [Fact]

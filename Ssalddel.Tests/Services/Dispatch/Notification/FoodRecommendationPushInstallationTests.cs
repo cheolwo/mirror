@@ -127,8 +127,22 @@ public sealed class FoodRecommendationPushInstallationTests
 
         await service.업무유형별대기알림발송Async(상태값.배차업무유형.음식배달);
 
-        Assert.Empty(push.Messages);
-        Assert.Equal("Failed", Assert.Single(db.배차추천알림Outbox).발송상태);
+        var old = await db.배차추천알림Outbox.SingleAsync(x => x.기사Id == "same-driver" && x.추천라운드 == 1);
+        Assert.Equal("Obsolete", old.발송상태);
+        if (change == "new-round")
+        {
+            // Only the newly current recommendation is repaired and sent.
+            Assert.Single(push.Messages);
+            var current = await db.배차추천알림Outbox.SingleAsync(x => x.추천라운드 == 2);
+            Assert.Equal("Succeeded", current.발송상태);
+            Assert.Equal(1, current.시도횟수);
+        }
+        else
+        {
+            Assert.Empty(push.Messages);
+            if (change == "reassigned")
+                Assert.Equal("Failed", (await db.배차추천알림Outbox.SingleAsync(x => x.기사Id == "other-driver")).발송상태);
+        }
     }
 
     [Fact]

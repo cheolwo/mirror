@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -103,6 +104,21 @@ public sealed class DistributedFulfillmentUseCaseTests
         Assert.All(await f.Db.Set<분산재고예약Record>().ToArrayAsync(), x => Assert.Equal(x.Quantity, x.DeliveredQuantity));
         Assert.All(await f.Db.출고예정.ToArrayAsync(), x => Assert.Equal(출고상태.출고완료, x.상태));
         Assert.Equal(2, f.Publisher.Events.OfType<운송인수완료됨Event>().Count());
+        var completionReceipts = await f.Db.Set<분산물류CommandReceipt>().AsNoTracking().Where(x => x.Kind == "Pick" || x.Kind == "Deliver").ToArrayAsync();
+        Assert.NotEmpty(completionReceipts);
+        foreach (var receipt in completionReceipts)
+        {
+            var detail = JsonSerializer.Deserialize<분산물류완료근거>(receipt.CompletionLinesJson!, new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+            Assert.Equal(receipt.Quantity, detail.Lines.Sum(x => x.Quantity));
+            foreach (var line in detail.Lines)
+            {
+                var reservation = await f.Db.Set<분산재고예약Record>().AsNoTracking().SingleAsync(x => x.ReservationId == line.ReservationId);
+                Assert.Equal(reservation.LotId, line.LotId); Assert.Equal(reservation.OrderId, line.OrderId);
+                Assert.Equal(Driver.UserId, line.ActorUserId); Assert.Equal(receipt.Kind, line.WorkKind);
+                if (receipt.Kind == "Pick") Assert.Equal(-line.Quantity, (await f.Db.재고이력.AsNoTracking().SingleAsync(x => x.Id == line.InventoryHistoryId)).변경수량);
+                else Assert.Null(line.InventoryHistoryId);
+            }
+        }
         foreach (var customer in new[] { CustomerA, CustomerB })
         {
             await f.Export("orderer", customer, "delivered");

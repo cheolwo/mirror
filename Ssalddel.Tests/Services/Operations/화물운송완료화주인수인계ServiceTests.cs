@@ -112,6 +112,52 @@ public sealed class 화물운송완료화주인수인계ServiceTests
         Assert.Empty(await db.운영체제업무인계Outbox.ToListAsync());
     }
 
+    [Theory]
+    [InlineData("missing-transport", "CargoCompletionRequired")]
+    [InlineData("unfinished-transport", "CargoCompletionRequired")]
+    [InlineData("missing-handoff", "CargoCompletionHandoffPending")]
+    public async Task 인수증은실제완료운송과완료인계가없으면기록하지않는다(string scenario, string code)
+    {
+        await using var db = CreateContext(); var request = CreateRequest();
+        db.화주운송의뢰.Add(request);
+        if (scenario != "missing-transport")
+        {
+            var transport = CreateCompletedTransport();
+            if (scenario == "unfinished-transport") { transport.상태 = "운송중"; transport.도착 = null; }
+            db.운송원장.Add(transport);
+        }
+        await db.SaveChangesAsync();
+        var handler = new 화주운송의뢰인수증등록CommandHandler(db, CreateService(db),
+            new 화주운송업무담당자UseCase(db, new TestCurrentUserAccessor("shipper-501", "화주"), TimeProvider.System));
+        var result = await handler.Handle(new("request-501", "unconfirmed-receipt", "미확인"), default);
+        Assert.True(result.IsFailed); Assert.Equal(code, result.Errors.Single().Metadata["ErrorCode"]);
+        var stored = await db.화주운송의뢰.AsNoTracking().SingleAsync();
+        Assert.Empty(stored.인수증번호); Assert.Null(stored.인수증등록일시);
+        Assert.Equal(ShipRequest.운임정산상태.인수증대기.ToString(), stored.정산상태);
+        Assert.Empty(db.운영체제업무인계Outbox);
+    }
+
+    [Theory]
+    [InlineData("청구대기")]
+    [InlineData("입금대기")]
+    [InlineData("입금확인완료")]
+    [InlineData("정산완료")]
+    public async Task 완료후화주인수증은진전한금융상태를되돌리지않고같은번호재시도는멱등이다(string state)
+    {
+        await using var db = CreateContext(); var request = CreateRequest(); request.정산상태 = state;
+        db.Add(request); db.Add(CreateCompletedTransport()); await db.SaveChangesAsync();
+        var service = CreateService(db); await service.완료결과요청Async(501, true);
+        var handler = new 화주운송의뢰인수증등록CommandHandler(db, service,
+            new 화주운송업무담당자UseCase(db, new TestCurrentUserAccessor("shipper-501", "화주"), TimeProvider.System));
+        Assert.True((await handler.Handle(new("request-501", "receipt", "확인"), default)).IsSuccess);
+        var firstTime = request.인수증등록일시;
+        Assert.True((await handler.Handle(new("request-501", "receipt", "중복"), default)).IsSuccess);
+        Assert.Equal(state, request.정산상태); Assert.Equal(firstTime, request.인수증등록일시);
+        Assert.Equal("receipt", request.인수증번호); Assert.DoesNotContain("중복", request.정산메모);
+        Assert.True((await handler.Handle(new("request-501", "changed", "변경"), default)).IsFailed);
+        Assert.Equal("receipt", request.인수증번호); Assert.Equal(state, request.정산상태);
+    }
+
     private static 화물운송완료화주인수인계Service CreateService(SsalddelContext db)
     {
         var timeProvider = new FixedTimeProvider(Now);

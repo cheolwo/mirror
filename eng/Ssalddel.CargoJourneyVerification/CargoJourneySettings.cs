@@ -41,6 +41,8 @@ internal sealed class CargoJourneySettings
             ["TransientState:Provider"] = "Memory",
             ["SsalddelExecution:Mode"] = "Simulation",
             ["SsalddelExecution:DevelopmentReadOnly"] = "false",
+            ["ObjectStorage:Provider"] = "Local",
+            ["CargoCompletionRecovery:Enabled"] = "false",
             ["DatabaseInitialization:RunAtStartup"] = "false",
             ["FoodObserverVerification:Enabled"] = "false",
             ["ObservableOperationsVerification:Enabled"] = "false",
@@ -96,6 +98,7 @@ internal sealed class CargoJourneySettings
     {
         if (!environment.IsDevelopment()
             || configuration["SsalddelExecution:Mode"] != "Simulation"
+            || configuration["ObjectStorage:Provider"] != "Local"
             || configuration.GetValue<bool>("DatabaseInitialization:RunAtStartup")
             || configuration["MongoDb:ConnectionString"] != MongoConnection
             || configuration["MongoDb:Database"] != DatabaseName

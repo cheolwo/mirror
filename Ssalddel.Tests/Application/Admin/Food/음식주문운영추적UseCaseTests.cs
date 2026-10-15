@@ -5,6 +5,7 @@ using Ssalddel.Application.Admin.Food;
 using Ssalddel.Contracts.Admin.Food;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Services.Outbox;
+using 살뜰.Services.Dispatch.Notification;
 using 살뜰.Data;
 using 살뜰.Infrastructure.Security;
 using 살뜰.Services.Dispatch.Engine;
@@ -17,6 +18,8 @@ namespace Ssalddel.Tests.Application.Admin.Food;
 
 public sealed class 음식주문운영추적UseCaseTests
 {
+    private static readonly InMemoryDatabaseRoot SharedDatabaseRoot = new();
+
     [Fact]
     public async Task 수령확인완료주문의_stableId와Outbox를_개인정보없이추적한다()
     {
@@ -147,6 +150,88 @@ public sealed class 음식주문운영추적UseCaseTests
             && x.상태 == 음식주문운영추적상태코드.복구필요);
     }
 
+    [Theory]
+    [InlineData("Failed", 1, 0, false)]
+    [InlineData("Failed", 4, 0, false)]
+    [InlineData("Failed", 5, 0, true)]
+    [InlineData("Sending", 5, 0, false)]
+    [InlineData("Sending", 5, -61, true)]
+    public async Task 현재추천의_알림은_자동복구소진시에만_운영자확인으로표시한다(string status, int attempts, int changedSeconds, bool review)
+    {
+        await using var db = CreateContext();
+        var orderNo = $"FOOD-TRACE-NOTIFICATION-{attempts}";
+        var queue = await SeedQueueAsync(db, orderNo, 상태값.배차노출상태.추천중, DateTime.UtcNow.AddMinutes(10));
+        var order = CreateOrder(orderNo, 음식주문상태코드.조리중, queue.Id);
+        order.조리예상완료시각Utc = DateTime.UtcNow.AddMinutes(20);
+        db.음식주문.Add(order);
+        AddSucceededOutboxes(db, queue, orderNo);
+        var notice = db.배차추천알림Outbox.Local.Single();
+        notice.발송상태 = status;
+        notice.시도횟수 = attempts;
+        notice.UpdatedAt = DateTime.UtcNow.AddSeconds(changedSeconds);
+        await db.SaveChangesAsync();
+
+        var result = Assert.IsType<음식주문운영추적응답>(await new 음식주문운영추적UseCase(db).조회Async(orderNo));
+        var item = Assert.Single(result.Outbox목록, x => x.종류 == "기사 추천 알림");
+        Assert.Equal(review, item.운영자확인필요);
+        Assert.Equal(!review, item.재시도예정);
+        Assert.Equal(review, result.생명주기조화.운영자확인필요여부);
+        Assert.Equal(review, result.생명주기조화.예외Codes.Contains(음식배달운영기술이상Codes.기사알림확인필요));
+        Assert.Equal(review, result.경고목록.Any(x => x.Contains("자동 복구가 소진", StringComparison.Ordinal)));
+    }
+
+    [Theory]
+    [InlineData("expired")]
+    [InlineData("reassigned")]
+    [InlineData("accepted")]
+    public async Task 과거추천의_알림소진은_현재운영자경보로승격하지않는다(string scenario)
+    {
+        await using var db = CreateContext();
+        var orderNo = $"FOOD-TRACE-OLD-NOTIFICATION-{scenario}";
+        var queue = await SeedQueueAsync(db, orderNo, 상태값.배차노출상태.추천중, DateTime.UtcNow.AddMinutes(10));
+        var order = CreateOrder(orderNo, 음식주문상태코드.조리중, queue.Id);
+        order.조리예상완료시각Utc = DateTime.UtcNow.AddMinutes(20);
+        db.음식주문.Add(order);
+        AddSucceededOutboxes(db, queue, orderNo);
+        var notice = db.배차추천알림Outbox.Local.Single();
+        notice.발송상태 = "Failed";
+        notice.시도횟수 = FoodRecommendationNotificationRecoveryPolicy.MaxAttempts;
+        if (scenario == "expired") queue.추천만료시각 = DateTime.UtcNow.AddSeconds(-1);
+        if (scenario == "reassigned") queue.현재추천대상기사Id = "driver-next";
+        if (scenario == "accepted") queue.배차큐단계 = 상태값.배차큐단계.확정;
+        await db.SaveChangesAsync();
+
+        var result = Assert.IsType<음식주문운영추적응답>(await new 음식주문운영추적UseCase(db).조회Async(orderNo));
+        var item = Assert.Single(result.Outbox목록, x => x.종류 == "기사 추천 알림");
+        Assert.False(item.운영자확인필요);
+        Assert.False(item.재시도예정);
+        Assert.DoesNotContain(음식배달운영기술이상Codes.기사알림확인필요, result.생명주기조화.예외Codes);
+        Assert.DoesNotContain(result.복구안내목록, x => x.Contains("push token", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task 회수가능한동기화lease는_자동복구예정이며_운영자확인이아니다()
+    {
+        await using var db = CreateContext();
+        const string orderNo = "FOOD-TRACE-SYNC-LEASE";
+        var queue = await SeedQueueAsync(db, orderNo, 상태값.배차노출상태.추천중, DateTime.UtcNow.AddMinutes(10));
+        var order = CreateOrder(orderNo, 음식주문상태코드.조리중, queue.Id);
+        order.조리예상완료시각Utc = DateTime.UtcNow.AddMinutes(20);
+        db.음식주문.Add(order);
+        AddSucceededOutboxes(db, queue, orderNo);
+        var sync = db.음식마트원장동기화Outbox.Local.Single();
+        sync.처리상태 = OutboxProcessingStatuses.Processing;
+        sync.시도횟수 = 1;
+        sync.UpdatedAtUtc = DateTime.UtcNow - OutboxProcessingPolicy.LeaseTimeout - TimeSpan.FromSeconds(1);
+        await db.SaveChangesAsync();
+
+        var result = Assert.IsType<음식주문운영추적응답>(await new 음식주문운영추적UseCase(db).조회Async(orderNo));
+        var item = Assert.Single(result.Outbox목록, x => x.종류 == "음식 공동 원장 동기화");
+        Assert.True(item.재시도예정);
+        Assert.False(item.운영자확인필요);
+        Assert.False(result.생명주기조화.운영자확인필요여부);
+    }
+
     [Fact]
     public async Task 조리예상완료10분초과는_음식점준비지연한건으로운영자에게표시한다()
     {
@@ -159,6 +244,8 @@ public sealed class 음식주문운영추적UseCaseTests
             DateTime.UtcNow.AddMinutes(2));
         var order = CreateOrder(orderNo, 음식주문상태코드.조리중, queue.Id);
         order.조리예상완료시각Utc = DateTime.UtcNow.AddMinutes(-11);
+        order.음식점수락시각Utc = DateTime.UtcNow.AddMinutes(-20);
+        order.배차요청시각Utc = DateTime.UtcNow.AddMinutes(-1); // 조리 지연과 최근 재탐색의 대기는 서로 다른 시계다.
         db.음식주문.Add(order);
         AddSucceededOutboxes(db, queue, orderNo);
         await db.SaveChangesAsync();
@@ -342,6 +429,7 @@ public sealed class 음식주문운영추적UseCaseTests
                 : 상태값.배차큐단계.배차추천,
             배차노출상태 = exposureStatus,
             추천라운드 = 1,
+            현재추천대상기사Id = "driver-succeeded",
             추천만료시각 = expiresAt,
             픽업_도로명주소 = "서울시 중랑구 음식점",
             하차_도로명주소 = "서울시 중랑구 상세주소",
@@ -372,7 +460,7 @@ public sealed class 음식주문운영추적UseCaseTests
             배차대기Id = queueId,
             음식점수락시각Utc = status == 음식주문상태코드.주문대기
                 ? null
-                : DateTime.UtcNow.AddMinutes(-15),
+                : DateTime.UtcNow.AddMinutes(-1), // 알림/lease 시험은 새 장기 기사확보 지연 조건과 분리한다.
             CreatedAt = DateTime.UtcNow.AddMinutes(-30),
             UpdatedAt = DateTime.UtcNow.AddMinutes(-1)
         };
@@ -380,7 +468,7 @@ public sealed class 음식주문운영추적UseCaseTests
     private static SsalddelContext CreateContext()
         => CreateContext(
             $"food-operations-trace-{Guid.NewGuid():N}",
-            new InMemoryDatabaseRoot());
+            SharedDatabaseRoot);
 
     private static SsalddelContext CreateContext(string databaseName, InMemoryDatabaseRoot root)
     {

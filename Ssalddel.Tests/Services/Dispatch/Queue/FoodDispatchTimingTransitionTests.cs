@@ -91,6 +91,38 @@ public sealed class FoodDispatchTimingTransitionTests
         Assert.Equal(1, f.Notifications.Calls);
     }
 
+    [Theory]
+    [InlineData("missing-information")]
+    [InlineData("stale-information")]
+    [InlineData("unbound-information")]
+    public async Task 준비근거없는Collect응답도_자동과직접경로에서_기존요금관문으로복귀한다(string mode)
+    {
+        foreach (var direct in new[] { false, true })
+        {
+            await using var f = new Fixture();
+            f.Timing.Mode = mode;
+            var result = direct ? await f.Service.추천시작Async("timing-order", "driver")
+                : await f.Service.추천대기처리Async("timing-order");
+            Assert.True(result.전환여부);
+            Assert.Equal(1, f.Pricing.Calls);
+            Assert.Equal(1, f.Notifications.Calls);
+            Assert.Equal(4000m, (await f.Db.운송원장.AsNoTracking().SingleAsync()).기사지급예정액);
+        }
+    }
+
+    [Fact]
+    public async Task 판단후원장재조회사이에정보가만료되면_수집기한전이어도_기존배차를진행한다()
+    {
+        await using var f = new Fixture();
+        // 수집 종료까지는 25초가 남지만 관측 유효시간 15초는 지납니다.
+        f.Timing.BeforeReturn = () => { f.Clock.Now += TimeSpan.FromSeconds(16); return Task.CompletedTask; };
+        var result = await f.Service.추천대기처리Async("timing-order");
+        Assert.True(result.전환여부);
+        Assert.Equal(1, f.Selection.Calls);
+        Assert.Equal(1, f.Pricing.Calls);
+        Assert.Equal(1, f.Notifications.Calls);
+    }
+
     [Fact]
     public async Task 판단중_원장이취소되면_낡은판단으로_추천하지않는다()
     {
@@ -180,8 +212,22 @@ public sealed class FoodDispatchTimingTransitionTests
             var input = new FoodDispatchTimingInput { NowUtc = clock.Now, QueuedAtUtc = new(queue.CreatedAt, TimeSpan.Zero),
                 SnapshotAtUtc = clock.Now, DemandKnown = Mode != "unknown", DriverCapacityKnown = true,
                 WaitingOrders = Mode == "ready" ? 2 : 1, CompatibleOrders = Mode == "ready" ? 2 : 1,
-                AvailableDrivers = 2, ExpectedNewOrders = Mode == "sparse" ? 0m : 1m, DelayRisk = Mode == "urgent" };
+                AvailableDrivers = 2, ExpectedNewOrders = Mode == "sparse" ? 0m : 1m, DelayRisk = Mode == "urgent",
+                InformationReadiness = Mode == "unbound-information" ? null : new(
+                    Mode == "missing-information" ? FoodDispatchInformationStateCodes.Missing
+                        : Mode == "stale-information" ? FoodDispatchInformationStateCodes.Stale : FoodDispatchInformationStateCodes.Current,
+                    FoodDispatchInformationStateCodes.Missing,
+                    new[] { FoodDispatchInformationKeys.Order, FoodDispatchInformationKeys.Preparation,
+                        FoodDispatchInformationKeys.Locations, FoodDispatchInformationKeys.OrderPool,
+                        FoodDispatchInformationKeys.Demand, FoodDispatchInformationKeys.DriverCapacity }
+                        .Select(key => new FoodDispatchInformationEvidence(key,
+                            key == FoodDispatchInformationKeys.Order && Mode == "missing-information" ? "Missing"
+                                : key == FoodDispatchInformationKeys.Order && Mode == "stale-information" ? "Stale" : "Current",
+                            "InformationObserved", clock.Now)).ToArray()) };
             var decision = new FoodDispatchTimingPolicy().Evaluate(input, new());
+            // 전환 경계에서 오래된/결속 안 된 외부 Collect 응답도 다시 거부하는지 확인합니다.
+            if (Mode is "missing-information" or "stale-information" or "unbound-information")
+                decision = decision with { ActionCode = "Collect", RecheckAtUtc = clock.Now.AddSeconds(10), AllowedActions = ["Collect", "DispatchNow"] };
             if (BeforeReturn is not null) await BeforeReturn();
             return new(input, decision, "Fake");
         }

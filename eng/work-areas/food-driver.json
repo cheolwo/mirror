@@ -45,7 +45,10 @@
     "FDriverApp/PageModels/MainPageModel.FoodDailySettlement.cs",
     "FDriverApp/PageModels/MainPageModel.FoodNotifications.cs",
     "FDriverApp/Pages/MainPage.xaml",
-    "FDriverApp/Pages/MainPage.xaml.cs"
+    "FDriverApp/Pages/MainPage.xaml.cs",
+    "Ssalddel/Services/Dispatch/Participation/SharedDriverWorkAdmissionService.cs",
+    "Ssalddel.Domain/운송/StraightLineDeliveryPricingPolicy.cs",
+    "Ssalddel/Services/Dispatch/Recommendation/기사제안표시근거Service.cs"
   ],
   "excludedRoots": [
     "bin",
@@ -105,7 +108,10 @@
         "ui.role-map-view",
         "ui.stage-presentation",
         "ui.workspace-presentation",
-        "ui.workspace-view-model"
+        "ui.workspace-view-model",
+        "application.shared-driver-admission",
+        "domain.straight-line-delivery-pricing",
+        "application.driver-offer-evidence"
       ],
       "sourceBindings": [
         {
@@ -725,6 +731,48 @@
             {
               "symbol": "public async Task ResumeFoodNotificationWorkspaceAsync",
               "path": "FDriverApp/PageModels/MainPageModel.FoodNotifications.cs"
+            }
+          ]
+        },
+        {
+          "key": "source.application.shared-driver-admission",
+          "relatedStepKeys": [
+            "application.shared-driver-admission"
+          ],
+          "responsibility": "기사 업무 선택과 미완료 약속을 수락 직전에 검사하는 공통 관문",
+          "boundary": "전문 원장과 자격·차량·완료·정산을 대체하지 않는 연결",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Participation/SharedDriverWorkAdmissionService.cs",
+              "symbol": "StepKey = \"application.shared-driver-admission\""
+            }
+          ]
+        },
+        {
+          "key": "source.domain.straight-line-delivery-pricing",
+          "relatedStepKeys": [
+            "domain.straight-line-delivery-pricing"
+          ],
+          "responsibility": "원래 직선거리로 기사 거리비만 계산한다",
+          "boundary": "운임 수락·실지급·경로 안전 판정을 대신하지 않는다",
+          "sources": [
+            {
+              "path": "Ssalddel.Domain/운송/StraightLineDeliveryPricingPolicy.cs",
+              "symbol": "StepKey = \"domain.straight-line-delivery-pricing\""
+            }
+          ]
+        },
+        {
+          "key": "source.application.driver-offer-evidence",
+          "relatedStepKeys": [
+            "application.driver-offer-evidence"
+          ],
+          "responsibility": "저장된 기사 요금과 실제 피킹 책임을 제안 표시로 읽는다",
+          "boundary": "운임 수락·실지급·경로 안전 판정을 대신하지 않는다",
+          "sources": [
+            {
+              "path": "Ssalddel/Services/Dispatch/Recommendation/기사제안표시근거Service.cs",
+              "symbol": "StepKey = \"application.driver-offer-evidence\""
             }
           ]
         }

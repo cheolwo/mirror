@@ -7,6 +7,7 @@ using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Driver.Transport;
 using Ssalddel.Application.Warehouse;
 using Ssalddel.Application.Warehouse.Events;
+using Ssalddel.Tests.Application.Driver.Transport;
 using Ssalddel.Contracts.Common.Inventory;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Services.Community;
@@ -45,13 +46,15 @@ public sealed class 출고운송인계완료UseCaseTests
         var warehouse = CreateUseCase(db);
         var released = await warehouse.완료Async(planId, Request(), RequestContext(), CancellationToken.None);
         Assert.True(released.IsSuccess);
+        var photos = new CargoPhotoTestStorage();
+        await photos.SeedReceiptAsync(db, transport.Id, "driver-7", "pickup-complete-photo", "private/test/pickup.jpg");
         var unsigned = await new 운송상차완료CommandHandler(db, executor, new 운송증빙첨부JsonWriter())
             .Handle(new 운송상차완료Command("driver-7", transport.Id)
             { 상차사진ObjectName = "private/test/pickup.jpg" }, CancellationToken.None);
         Assert.True(unsigned.IsFailed);
         Assert.Contains("서명", unsigned.Errors.Single().Message, StringComparison.Ordinal);
         Assert.Equal("상차지도착", transport.상태);
-        var pickup = await new 운송상차완료CommandHandler(db, executor, new 운송증빙첨부JsonWriter())
+        var pickup = await new 운송상차완료CommandHandler(db, executor, new 운송증빙첨부JsonWriter(), photos)
             .Handle(new 운송상차완료Command("driver-7", transport.Id)
             {
                 상차사진ObjectName = "private/test/pickup.jpg", 인수증확인완료 = true,
@@ -106,7 +109,10 @@ public sealed class 출고운송인계완료UseCaseTests
         transport.상태 = "상차지도착";
         await db.SaveChangesAsync();
 
-        var result = await new 운송상차완료CommandHandler(db, CreateDriverExecutor(db), new 운송증빙첨부JsonWriter())
+        var photos = new CargoPhotoTestStorage();
+        await photos.SeedReceiptAsync(db, transport.Id, "driver-7", "pickup-complete-photo", "private/test/pickup.jpg");
+
+        var result = await new 운송상차완료CommandHandler(db, CreateDriverExecutor(db), new 운송증빙첨부JsonWriter(), photos)
             .Handle(new 운송상차완료Command("driver-7", transport.Id)
             { 상차사진ObjectName = "private/test/pickup.jpg" }, CancellationToken.None);
 

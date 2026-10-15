@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.Text.Json;
+using Ssalddel.Contracts.Common.Privacy;
 using Microsoft.AspNetCore.Components;
 using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Tests.UiCommon;
@@ -20,7 +22,7 @@ public sealed class ShipperRequestSubmissionRecoveryTests
         var navigation = new Navigation();
         using var model = new ShipperRequestAuthoringPageViewModel(ShipperRequestContactWindowTests.CompleteState(), operations, navigation,
             recovery: new VolatileWorkflowRecoveryStore());
-        await model.InitializeAsync(); await model.SubmitAsync();
+        await model.InitializeAsync(); await ShipperConsentFixture.ConfirmAsync(model); await model.SubmitAsync();
         Assert.Single(stub.Posts); Assert.Single(stub.Gets);
         Assert.False(model.HasPendingRequest); Assert.Equal(ShipperRoutes.RequestDetailFor("ledger-one"), navigation.LastPath);
     }
@@ -33,7 +35,7 @@ public sealed class ShipperRequestSubmissionRecoveryTests
         var state = ShipperRequestContactWindowTests.CompleteState();
         state.상차연락처전화번호 = "010-1111-2222";
         using var model = new ShipperRequestAuthoringPageViewModel(state, operations, new Navigation(), recovery: new VolatileWorkflowRecoveryStore());
-        await model.InitializeAsync(); await model.SubmitAsync();
+        await model.InitializeAsync(); await ShipperConsentFixture.ConfirmAsync(model); await model.SubmitAsync();
         var key = stub.Posts.Single().의뢰Id;
         state.상차연락처전화번호 = "010-9999-9999";
         await model.SubmitAsync(); await model.ResetAsync();
@@ -52,17 +54,29 @@ public sealed class ShipperRequestSubmissionRecoveryTests
         var store = new VolatileWorkflowRecoveryStore();
         var (operations, stub) = Operations(); stub.Add = _ => throw new IOException("lost response");
         var original = ShipperRequestContactWindowTests.CompleteState(); original.상차상세주소 = "상차장 2";
+        original.화물수량 = 7; original.화물중량Kg = 12.5m; original.화물부피Cbm = .48m;
+        original.온도조건 = "냉장"; original.화물설명 = "원래 취급 조건";
+        original.화물적재형태 = "일반 화물(박스/팔레트)";
+        original.결제수단 = "계좌이체"; original.요청사항 = "상차 전 연락";
+        original.대기료 = 0m; original.수작업비 = 1500m; original.할증 = null;
+        original.알선소Id = "broker-original"; original.절차메모 = "최초 절차";
         using (var first = new ShipperRequestAuthoringPageViewModel(original, operations, new Navigation(), auth, store))
-        { await first.InitializeAsync(); await first.SubmitAsync(); }
+        { await first.InitializeAsync(); await ShipperConsentFixture.ConfirmAsync(first); await first.SubmitAsync(); }
         var key = stub.Posts.Single().의뢰Id;
+        var originalPayload = JsonSerializer.Serialize(stub.Posts.Single());
+        original.화물수량 = 99; original.화물중량Kg = 99m; original.온도조건 = "냉동";
+        original.요청사항 = "바뀐 요청"; original.대기료 = 999m; original.결제수단 = "카드";
         var restored = new 운송의뢰작성ViewModel();
         using var second = new ShipperRequestAuthoringPageViewModel(restored, operations, new Navigation(), auth, store);
         await second.InitializeAsync();
         Assert.Single(stub.Posts); Assert.True(second.HasPendingRequest); Assert.True(second.CanRetryPendingRequest);
         Assert.Equal("상차장 2", restored.상차상세주소); Assert.True(restored.서버등록가능);
+        Assert.Equal(7, restored.화물수량); Assert.Equal(12.5m, restored.화물중량Kg);
+        Assert.Equal("냉장", restored.온도조건); Assert.Equal("계좌이체", restored.결제수단);
         stub.Add = _ => Task.FromResult(new ShipperRequestItem { 의뢰Id = "ledger-one" });
         await second.RetryPendingAsync();
         Assert.Equal(key, stub.Posts[1].의뢰Id);
+        Assert.Equal(originalPayload, JsonSerializer.Serialize(stub.Posts[1]));
         Assert.Null(await store.LoadAsync("shipper-a", ShipperRequestAuthoringPageViewModel.RecoveryScope, default));
     }
 
@@ -85,6 +99,7 @@ public sealed class ShipperRequestSubmissionRecoveryTests
         using var first = new ShipperRequestAuthoringPageViewModel(ShipperRequestContactWindowTests.CompleteState(), operations, new Navigation(), recovery: store);
         using var second = new ShipperRequestAuthoringPageViewModel(ShipperRequestContactWindowTests.CompleteState(), operations, new Navigation(), recovery: store);
         await first.InitializeAsync(); await second.InitializeAsync();
+        await ShipperConsentFixture.ConfirmAsync(first); await ShipperConsentFixture.ConfirmAsync(second);
         var submitting = first.SubmitAsync(); var key = stub.Posts.Single().의뢰Id;
         await second.SubmitAsync(); Assert.Single(stub.Posts); Assert.True(second.HasPendingRequest);
         Assert.Equal(key, stub.Gets.Last());
@@ -97,7 +112,7 @@ public sealed class ShipperRequestSubmissionRecoveryTests
         var (operations, stub) = Operations(); stub.FailGet = true;
         using var model = new ShipperRequestAuthoringPageViewModel(ShipperRequestContactWindowTests.CompleteState(), operations,
             new Navigation(), recovery: new FailingStore());
-        await model.InitializeAsync(); await model.SubmitAsync(); await model.RetryPendingAsync();
+        await model.InitializeAsync(); await ShipperConsentFixture.ConfirmAsync(model); await model.SubmitAsync(); await model.RetryPendingAsync();
         Assert.Empty(stub.Posts); Assert.True(model.HasPendingRequest); Assert.False(model.CanRetryPendingRequest);
     }
 
@@ -123,7 +138,7 @@ public sealed class ShipperRequestSubmissionRecoveryTests
         var (operations, stub) = Operations(); var pending = new TaskCompletionSource<ShipperRequestItem>();
         stub.Add = _ => pending.Task; var navigation = new Navigation(); var store = new VolatileWorkflowRecoveryStore();
         using var model = new ShipperRequestAuthoringPageViewModel(ShipperRequestContactWindowTests.CompleteState(), operations, navigation, auth, store);
-        await model.InitializeAsync(); var submit = model.SubmitAsync();
+        await model.InitializeAsync(); await ShipperConsentFixture.ConfirmAsync(model); var submit = model.SubmitAsync();
         await auth.ApplyAsync(ShipperRecoveryFixture.Snapshot("shipper-b"));
         pending.SetResult(new() { 의뢰Id = "ledger-one" }); await submit;
         Assert.Null(navigation.LastPath); Assert.False(model.HasPendingRequest); Assert.Empty(model.State.상차도로명주소);
@@ -146,6 +161,8 @@ public sealed class ShipperRequestSubmissionRecoveryTests
         public Func<ShipperRequestItem, Task<ShipperRequestItem>> Add = _ => Task.FromResult(new ShipperRequestItem { 의뢰Id = "ledger-one" });
         protected override object? Invoke(MethodInfo? method, object?[]? args)
         {
+            if (method?.Name == nameof(IShipperOperationsService.RecordPrivacyConsentAsync))
+                return Task.FromResult<신청개인정보동의증적Response?>(ShipperConsentFixture.Response((신청개인정보동의기록Request)args![0]!));
             if (method?.Name == nameof(IShipperOperationsService.GetVehicleTypesAsync))
             { VehicleCalls++; return FailVehicles ? Task.FromException<IReadOnlyList<string>>(new IOException("vehicles unavailable")) : Task.FromResult<IReadOnlyList<string>>(["1톤 카고"]); }
             if (method?.Name == nameof(IShipperOperationsService.AddRequestAsync))

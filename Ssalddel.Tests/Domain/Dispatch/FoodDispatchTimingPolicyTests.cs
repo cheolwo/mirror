@@ -8,6 +8,20 @@ public sealed class FoodDispatchTimingPolicyTests
     private static readonly DateTimeOffset Queued = new(2026, 10, 11, 3, 0, 0, TimeSpan.Zero);
     private readonly FoodDispatchTimingPolicy _policy = new();
 
+    [Theory]
+    [InlineData("Missing", "InformationMissing")]
+    [InlineData("Stale", "InformationStale")]
+    [InlineData("NotApplicable", "InformationMissing")]
+    public void 결속된수집정보가현재가아니면_수집을금지하고_기존배차관문으로넘긴다(string state, string reason)
+        => AssertForced(_policy.Evaluate(Input() with { InformationReadiness = new(state, "Missing", []) }), reason);
+
+    [Fact]
+    public void 수집정보준비를_전체조율과수익성의준비로_혼동하지않는다()
+    {
+        var result = _policy.Evaluate(Input() with { InformationReadiness = new("Current", "Missing", []) });
+        Assert.Equal("Collect", result.ActionCode);
+    }
+
     [Fact]
     public void 추가주문근거와_여력이_있으면_최초큐부터_30초까지만_수집한다()
     {

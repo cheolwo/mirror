@@ -18,7 +18,7 @@ using 살뜰.Services.Dispatch.Continuity;
 
 namespace Ssalddel.Tests.Application.Driver.DispatchAction;
 
-public sealed class 배차수락CommandHandlerTests
+public sealed partial class 배차수락CommandHandlerTests
 {
     [Fact]
     public async Task 일반회원전용SQL의뢰는권한있는기사도구형수락경로로확정할수없다()
@@ -66,6 +66,8 @@ public sealed class 배차수락CommandHandlerTests
         db.운송원장.Add(queue);
         db.화주운송의뢰.Add(request);
         await db.SaveChangesAsync();
+
+        await SeedAgreedDriverPayout(db, request);
 
         var handler = new 배차수락CommandHandler(
             db,
@@ -292,12 +294,21 @@ public sealed class 배차수락CommandHandlerTests
         db.운송원장.Add(queue);
         db.화주운송의뢰.Add(request);
         await db.SaveChangesAsync();
+        await SeedAgreedDriverPayout(db, request);
         return (queue, request);
+    }
+
+    private static async Task SeedAgreedDriverPayout(SsalddelContext db, 화주운송의뢰 request)
+    {
+        var fare = new 운임구성 { 의뢰Id = request.의뢰Id, 기사지급예정운임 = 18000m };
+        db.Add(fare); await db.SaveChangesAsync();
+        request.운임구성Id = fare.Id; await db.SaveChangesAsync();
     }
 
     private static 배차수락CommandHandler CreateHandler(
         SsalddelContext db,
-        I화물배차수락적격성Service eligibility)
+        I화물배차수락적격성Service eligibility,
+        Ssalddel.Services.Dispatch.Participation.ISharedDriverWorkAdmissionService? sharedAdmission = null)
         => new(
             db,
             new ThrowingPublisher(),
@@ -306,7 +317,8 @@ public sealed class 배차수락CommandHandlerTests
             new WorkRelationshipSnapshotCollector(),
             eligibility,
             new StubContinuityUseCase(),
-            NullLogger<배차수락CommandHandler>.Instance);
+            NullLogger<배차수락CommandHandler>.Instance,
+            sharedAdmission: sharedAdmission);
 
     private static SsalddelContext CreateContext()
     {

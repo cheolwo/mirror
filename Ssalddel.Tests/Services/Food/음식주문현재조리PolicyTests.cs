@@ -8,6 +8,26 @@ public sealed class 음식주문현재조리PolicyTests
 {
     private static readonly DateTime At = new(2026, 10, 4, 1, 0, 0, DateTimeKind.Utc);
 
+    [Fact]
+    public void 새재조리요청은_조리시작과준비시각을비우고_음식점시작을기다린다()
+    {
+        var order = new 음식주문 { 상태이력 =
+        [
+            Event(1, 음식주문상태코드.조리중, "음식점 조리 시작"),
+            Event(2, 음식주문상태코드.픽업대기, "음식점 픽업 준비 완료"),
+            Event(3, 음식주문상태코드.주문확인, 음식주문현재조리Policy.재조리대기이력사유)
+        ] };
+        var waiting = 음식주문현재조리Policy.계산(order);
+        Assert.Equal(2, waiting.Round);
+        Assert.Equal(At.AddMinutes(3), waiting.RecookingRequestedAtUtc);
+        Assert.Null(waiting.CookingStartedAtUtc);
+        Assert.Null(waiting.ReadyAtUtc);
+        order.상태이력.Add(Event(4, 음식주문상태코드.기사배정, "F드라이버 배차 수락"));
+        Assert.Null(음식주문현재조리Policy.계산(order).CookingStartedAtUtc);
+        order.상태이력.Add(Event(5, 음식주문상태코드.조리중, "음식점 조리 시작"));
+        Assert.Equal(At.AddMinutes(5), 음식주문현재조리Policy.계산(order).CookingStartedAtUtc);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

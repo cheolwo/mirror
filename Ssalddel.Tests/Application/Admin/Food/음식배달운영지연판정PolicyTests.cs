@@ -9,6 +9,31 @@ public sealed class 음식배달운영지연판정PolicyTests
     private static readonly DateTime Now = new(2026, 9, 19, 12, 0, 0, DateTimeKind.Utc);
 
     [Theory]
+    [InlineData(4, false, 음식배달운영지연상태Codes.없음)]
+    [InlineData(5, false, 음식배달운영지연상태Codes.주의)]
+    [InlineData(10, false, 음식배달운영지연상태Codes.운영자확인필요)]
+    [InlineData(60, true, 음식배달운영지연상태Codes.없음)]
+    public void 기사확보대기는_기존운영확인기준을따르고_유효배정이면해소된다(
+        int minutes, bool assigned, string expected)
+    {
+        var result = 음식배달운영지연판정Policy.판정(new(음식주문상태코드.주문확인, Now,
+            기사확보대기시작시각Utc: Now.AddMinutes(-minutes), 유효기사배정: assigned));
+        Assert.Equal(expected, result.기사확보지연상태Code);
+        Assert.Equal(assigned ? 0 : minutes, result.기사확보대기분);
+    }
+
+    [Theory]
+    [InlineData(음식주문상태코드.주문대기)]
+    [InlineData(음식주문상태코드.픽업완료)]
+    [InlineData(음식주문상태코드.취소)]
+    public void 배차대기외단계는_장기기사확보대기로오인하지않는다(string status)
+    {
+        var result = 음식배달운영지연판정Policy.판정(new(status, Now,
+            기사확보대기시작시각Utc: Now.AddHours(-2)));
+        Assert.Equal(음식배달운영지연상태Codes.없음, result.기사확보지연상태Code);
+    }
+
+    [Theory]
     [InlineData(4, 음식배달운영지연상태Codes.없음)]
     [InlineData(5, 음식배달운영지연상태Codes.주의)]
     [InlineData(9, 음식배달운영지연상태Codes.주의)]

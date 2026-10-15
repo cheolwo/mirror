@@ -34,7 +34,7 @@ public sealed class 업무흐름규칙ParityTests
             rules.Where(rule => rule.업무흐름코드 is not (업무흐름코드.음식배달 or 업무흐름코드.창고입고)),
             rule => Assert.Equal("workflow-rules.v1", rule.RuleRevision));
         Assert.Equal(
-            "food-delivery.v5",
+            "food-delivery.v6",
             rules.Single(rule => rule.업무흐름코드 == 업무흐름코드.음식배달).RuleRevision);
         Assert.Equal(
             "warehouse-inbound.v1",
@@ -85,6 +85,10 @@ public sealed class 업무흐름규칙ParityTests
             업무흐름코드.음식배달,
             음식주문상태코드.주문대기,
             음식주문상태코드.취소).허용여부);
+        Assert.True(업무상태전이Policy.판정(
+            업무흐름코드.음식배달,
+            음식주문상태코드.픽업완료,
+            음식주문상태코드.주문확인).허용여부);
         Assert.False(업무상태전이Policy.판정(
             업무흐름코드.음식배달,
             음식주문상태코드.수령확인,
@@ -118,7 +122,7 @@ public sealed class 업무흐름규칙ParityTests
                 음식주문상태코드.주문대기,
                 음식주문상태코드.기사배정));
 
-        Assert.Contains("food-delivery.v5", error.Message, StringComparison.Ordinal);
+        Assert.Contains("food-delivery.v6", error.Message, StringComparison.Ordinal);
         Assert.Contains(업무규칙차단사유코드.허용되지않은상태전이, error.Message, StringComparison.Ordinal);
     }
 

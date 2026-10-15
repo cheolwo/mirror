@@ -92,7 +92,8 @@ public sealed class FoodDemandParticipationDirectRecommendationTests
         Assert.Equal(배차대기원장전환결과코드.이미추천중, result.결과코드);
         Assert.Equal(0, fixture.Selection.Calls);
         Assert.Equal(0, fixture.Pricing.Calls);
-        Assert.Equal(0, fixture.Notifications.Calls);
+        Assert.Equal(1, fixture.Notifications.Calls);
+        Assert.Equal(("existing-driver", 4), fixture.Notifications.LastRequest);
         fixture.Db.ChangeTracker.Clear();
         var saved = await fixture.Db.운송원장.SingleAsync();
         Assert.Equal("existing-driver", saved.현재추천대상기사Id);
@@ -176,8 +177,9 @@ public sealed class FoodDemandParticipationDirectRecommendationTests
     private sealed class NotificationPort : I배차추천알림Service
     {
         public int Calls { get; private set; }
+        public (string Driver, int Round)? LastRequest { get; private set; }
         public Task 추천알림요청생성Async(long id, string request, string driver, int round, CancellationToken ct = default)
-        { Calls++; return Task.CompletedTask; }
+        { Calls++; LastRequest = (driver, round); return Task.CompletedTask; }
         public Task<int> 대기알림발송Async(int take = 100, CancellationToken ct = default) => throw new NotSupportedException();
     }
 

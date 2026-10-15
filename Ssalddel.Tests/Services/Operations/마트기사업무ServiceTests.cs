@@ -21,7 +21,7 @@ using 살뜰.도메인.창고;
 namespace Ssalddel.Tests.Services.Operations;
 
 /// <summary>격리 SQLite 서비스 시험. 실제 인증 HTTP·외부 저장소·기기·운영 활성화 증거가 아닙니다.</summary>
-public sealed class 마트기사업무ServiceTests
+public sealed partial class 마트기사업무ServiceTests
 {
     private const string Ref = "MART-R58-GUARDS";
     private const string Driver = "r58-guard-driver";
@@ -270,9 +270,10 @@ public sealed class 마트기사업무ServiceTests
     {
         public SsalddelContext Db { get; } = db;
         public PickupFailureInterceptor Interceptor { get; } = interceptor;
-        public 마트기사업무Service Service(bool receivingOff = false, I마트라스트마일원천Adapter? adapter = null)
+        public 마트기사업무Service Service(bool receivingOff = false, I마트라스트마일원천Adapter? adapter = null,
+            Ssalddel.Services.Dispatch.Participation.ISharedDriverWorkAdmissionService? sharedAdmission = null)
             => new(Db, new Actor(Driver, 역할명.기사), new Gate(), adapter ?? new 마트라스트마일원천Adapter(Db), new ProtectedData(),
-                receivingOff ? new TestDispatchAvailability(Ssalddel.Contracts.Common.Dispatch.운영배차수신의사Code.Off) : new TestDispatchAvailability(), new Clock());
+                receivingOff ? new TestDispatchAvailability(Ssalddel.Contracts.Common.Dispatch.운영배차수신의사Code.Off) : new TestDispatchAvailability(), new Clock(), sharedAdmission);
         public 마트기사업무Service StaffService() => new(Db, new Actor(Staff, 역할명.창고관리자), new Gate(),
             new 마트라스트마일원천Adapter(Db), new ProtectedData(), new TestDispatchAvailability(), new Clock());
         public async Task<마트기사수락요청> AcceptRequestAsync()

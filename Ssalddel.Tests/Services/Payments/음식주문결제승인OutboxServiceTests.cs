@@ -430,8 +430,13 @@ public sealed class 음식주문결제승인OutboxServiceTests
         public Task<결제승인결과> 결제승인Async(결제승인요청 request, CancellationToken cancellationToken = default)
         {
             Calls++;
-            return Task.FromResult(new 결제승인결과(Success, "raw-provider-response", "카드", "test-transaction"));
+            return Task.FromResult(Result(request));
         }
+        public Task<결제승인결과> 결제조회Async(결제승인요청 request, CancellationToken cancellationToken = default)
+            => Task.FromResult(Result(request));
+        private 결제승인결과 Result(결제승인요청 request) => new(Success,
+            JsonSerializer.Serialize(new { status = "DONE", paymentKey = request.PaymentKey, orderId = request.OrderId,
+                totalAmount = request.Amount, currency = "KRW", method = "카드" }), "카드", "test-transaction");
     }
 
     private sealed class TestClock : TimeProvider
