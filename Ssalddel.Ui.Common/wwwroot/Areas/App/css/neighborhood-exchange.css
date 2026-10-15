@@ -9,6 +9,12 @@
 .exchange-page small,.exchange-eyebrow { color:var(--ss-muted,#586b78); font-size:14px; }
 .exchange-page a { color:var(--ss-accent,#0f766e); }
 .exchange-page .exchange-primary { display:flex; align-items:center; justify-content:center; min-height:48px; width:100%; border:0; border-radius:12px; padding:12px 16px; background:var(--ss-accent,#0f766e); color:white; text-decoration:none; font:inherit; font-weight:600; }
+.exchange-interest-entry { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px; margin-top:12px; border:1px solid var(--ss-border,#dce5e9); border-radius:12px; background:var(--ss-surface,white); text-decoration:none; }
+.exchange-interest-entry strong,.exchange-interest-entry small { display:block; }
+.exchange-interest-entry small { margin-top:4px; }
+.exchange-interest-hint { padding:16px 20px; border:1px solid var(--ss-border,#dce5e9); border-radius:16px; background:var(--ss-surface,white); }
+.exchange-interest-hint ul { padding-left:20px; margin:8px 0; }
+.exchange-interest-hint p { font-size:14px; color:var(--ss-muted,#586b78); margin:12px 0 0; }
 .exchange-page button { min-height:48px; padding:8px 14px; border:1px solid var(--ss-control-border,#788c97); border-radius:12px; background:var(--ss-surface,white); color:var(--ss-ink,#172b36); cursor:pointer; font-size:16px; }
 .exchange-page button:disabled { opacity:.6; cursor:wait; }
 .exchange-tabs { display:flex; gap:8px; margin:24px 0 16px; border-bottom:1px solid var(--ss-border,#dce5e9); }

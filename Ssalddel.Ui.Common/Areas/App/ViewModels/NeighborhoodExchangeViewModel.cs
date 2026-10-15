@@ -8,9 +8,12 @@ namespace Ssalddel.Ui.Common.Areas.App.ViewModels;
 /// <summary>페이지별 수명으로 목록·작성·상세 표시를 조립합니다. 권한은 서버 응답으로 판단합니다.</summary>
 public sealed class NeighborhoodExchangeViewModel(INeighborhoodExchangeClient client, INeighborhoodExchangeMapClient? mapClient = null) : ObservableObject, IDisposable
 {
+    public const string InboundInterestPurpose = "inbound-interest";
     private readonly CancellationTokenSource _lifetime = new();
     private long _readGeneration;
     private bool _disposed;
+    private bool _writePurposePrepared;
+    public bool IsInboundInterest { get; private set; }
     private long _regionGeneration;
     public IReadOnlyList<NeighborhoodPublicRegionDto> WriteRegions { get; private set; } = [];
     public string? PublicNeighborhoodRegionKey { get; set; }
@@ -35,6 +38,17 @@ public sealed class NeighborhoodExchangeViewModel(INeighborhoodExchangeClient cl
     public string CommentBody { get; set; } = "";
     public string CommentPassword { get; set; } = "";
     public string DeletePassword { get; set; } = "";
+
+    /// <summary>작성 진입의 표시 문맥만 준비합니다. 기존 초안과 게시 요청은 바꾸지 않습니다.</summary>
+    public void PrepareWritePurpose(string? purpose)
+    {
+        if (_disposed || _writePurposePrepared || IsSending) return;
+        _writePurposePrepared = true;
+        if (!string.IsNullOrEmpty(Title) || !string.IsNullOrEmpty(Body) || !string.IsNullOrEmpty(Password)) return;
+        IsInboundInterest = string.Equals(purpose, InboundInterestPurpose, StringComparison.Ordinal);
+        if (IsInboundInterest) Intent = NeighborhoodExchange.Need;
+        Changed();
+    }
     private readonly Dictionary<long, string> _commentDeletePasswords = [];
     public string GetCommentDeletePassword(long id) => _commentDeletePasswords.GetValueOrDefault(id, "");
     public void SetCommentDeletePassword(long id, string? value) => _commentDeletePasswords[id] = value ?? "";
@@ -98,6 +112,8 @@ public sealed class NeighborhoodExchangeViewModel(INeighborhoodExchangeClient cl
     {
         if (IsSending) return null;
         Error = null;
+        if (IsInboundInterest && Intent != NeighborhoodExchange.Need)
+        { Error = "입고 희망은 필요해요 글로 등록합니다. 글 구분을 확인해 주세요."; Changed(); return null; }
         if (!NeighborhoodExchange.IsIntent(Intent) || string.IsNullOrWhiteSpace(Title) || Title.Trim().Length > 160
             || string.IsNullOrWhiteSpace(Body) || Body.Trim().Length > 4000 || !ValidPassword(Password))
         { Error = "구분, 제목(160자 이하), 설명(4,000자 이하), 비밀번호(4~100자)를 확인해 주세요."; Changed(); return null; }

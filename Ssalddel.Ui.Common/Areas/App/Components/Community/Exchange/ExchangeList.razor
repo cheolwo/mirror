@@ -3,6 +3,9 @@
 <ExchangeFrame><main class="exchange-page">
     <header><span class="exchange-eyebrow">살뜰 · 생활 교류</span><h1>일상에서 서로 돕기</h1><p>물건, 공간, 시간과 재능. 제공할 수 있는 것과 필요한 것을 나눠 보세요.</p></header>
     <a class="exchange-primary" href="@Href(NeighborhoodExchange.Write)">글 올리기</a>
+    <a class="exchange-interest-entry" href="@Href(NeighborhoodExchange.Write + "?purpose=" + Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodExchangeViewModel.InboundInterestPurpose)">
+        <span><strong>우리 동네에 필요한 상품</strong><small>구매 약속 없이 입고 희망을 알려요</small></span><span aria-hidden="true">→</span>
+    </a>
     <nav class="exchange-tabs" aria-label="글 구분">
         @foreach (var choice in Choices)
         {
