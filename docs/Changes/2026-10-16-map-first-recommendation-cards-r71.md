@@ -62,3 +62,5 @@ S08 원본 1080×2340 화면에서 header 끝 y=244부터 순번 안내 시작 y
 [M/N/O 준비 절차](../../artifacts/local/recommendation-map-r69/prepare-r187.md)와 [host 변경 전 사본·해시](../../artifacts/local/recommendation-map-r69/.private/source-before-r187/source-sha256.json)를 보존한다. [별도 준비 호출](../../artifacts/local/recommendation-map-r69/.private/20261016-094331-785508-r187-prepare.json)로 세 의뢰 생성·후불 승인을 준비했고 [M/N 두 건 추천](../../artifacts/local/recommendation-map-r69/.private/20261016-095835-841995-r187-offer.json) 뒤 [O 추가·세 건 정본 확인](../../artifacts/local/recommendation-map-r69/.private/20261016-100058-959476-r187-offer.json)을 실행했다. 기존 A~L은 되돌리거나 추천 만료를 연장하지 않는다. 화면 구분을 위해 여섯 점을 서로 다르게 선언한 합성 좌표를 사용하며 실제 매장/고객·주행 경로로 설명하지 않는다.
 
 APK187의 부분 화면과 시험 실패는 위 이력으로 보존하며 [후속 r72](2026-10-16-direct-recommendation-card-actions-r72.md) 검증을 대신하지 않는다. 시험용 유효시간 300초는 제품 기본 60초 수락 검증이 아니다. 시험용 좌표/예상 연결선과 실제 위치·실제 주행·FCM·금융 결과는 구분한다. 자동 worker·FCM·금융 효과는 OFF다. 위치가 포함된 원본 화면은 비공개 로컬에 보관하고 문서 자산으로 복사하지 않는다. 이번 요청은 commit/push가 아니다.
+
+원본 화면은 비공개로 유지하며, 검토한 대표 파생 화면과 판본별 설명은 [휴대폰 UI 진행 요약](2026-10-16-phone-ui-progress-summary.md)에서 확인한다.

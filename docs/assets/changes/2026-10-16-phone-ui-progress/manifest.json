@@ -1,0 +1,367 @@
+{
+  "schema": "reviewed-ui-documentation-excerpts-v1",
+  "date": "2026-10-16",
+  "sourceOriginals": "Private local originals remain outside Git; no camera or UI-dump payload is embedded.",
+  "derivativesAreScreenshots": true,
+  "images": [
+    {
+      "id": "01-recommendation-banner",
+      "file": "01-recommendation-banner.png",
+      "sha256": "f6158daede6ca23c46668b8e75e3c4cdb454803bc37e6fbf4998d04cf95d04dc",
+      "sourceCapture": "E53-r184-automatic-banner.png",
+      "sourceSha256": "2742c639df7c987d84e4f0738b6d6cc9a64b7fa59ddc1ec41ffea29db97162a5",
+      "sourceSizePx": [
+        1080,
+        2340
+      ],
+      "cropBoxPx": [
+        48,
+        523,
+        1033,
+        743
+      ],
+      "outputSizePx": [
+        985,
+        220
+      ],
+      "transform": "crop-only; source pixels preserved; metadata not copied",
+      "captureApp": "cargo-driver",
+      "captureAppVersion": "0.1.184",
+      "captureVersionCode": 184,
+      "changeRecord": "../../../Changes/2026-10-16-recommendation-map-carousel-r69.md",
+      "changeRecordCommit": "e216cb8d13294fba4bc5d493e6261b6204b7190a",
+      "workflowStage": "추천 배너",
+      "visibleScopeAndExclusions": "추천 두 건과 남은 시간. 원본 지도/GPS·시스템 상태 표시줄 제외.",
+      "privacyReview": "reviewed-codex-pixels",
+      "claimBoundary": "Existing real-device capture of an isolated synthetic scenario; not a new device test or evidence of real delivery/payment.",
+      "privacyReviewBasis": "Each output PNG visually reviewed by a separate Codex agent; root reviewed the full contact sheet and outputs 03/04/11. This is not human approval or automated identity detection."
+    },
+    {
+      "id": "02-card-before",
+      "file": "02-card-before.png",
+      "sha256": "88b50428eb912586cc550141d0181026d2a204d91d130788d1f6c60a04946054",
+      "sourceCapture": "U08-r189-first-card-settled.png",
+      "sourceSha256": "0b80ddae5ada0f9b954dbcba5567cb7d09b012b4713688a00902ce692ee71eab",
+      "sourceSizePx": [
+        1080,
+        2340
+      ],
+      "cropBoxPx": [
+        114,
+        1821,
+        968,
+        2169
+      ],
+      "outputSizePx": [
+        854,
+        348
+      ],
+      "transform": "crop-only; source pixels preserved; metadata not copied",
+      "captureApp": "cargo-driver",
+      "captureAppVersion": "0.1.189",
+      "captureVersionCode": 189,
+      "changeRecord": "../../../Changes/2026-10-16-direct-recommendation-card-actions-r72.md",
+      "changeRecordCommit": "e216cb8d13294fba4bc5d493e6261b6204b7190a",
+      "workflowStage": "이전 추천 카드",
+      "visibleScopeAndExclusions": "128 DIP 카드의 금액·주소·버튼. 지도/GPS·다른 카드·상태 표시줄 제외.",
+      "privacyReview": "reviewed-codex-pixels",
+      "claimBoundary": "Existing real-device capture of an isolated synthetic scenario; not a new device test or evidence of real delivery/payment.",
+      "privacyReviewBasis": "Each output PNG visually reviewed by a separate Codex agent; root reviewed the full contact sheet and outputs 03/04/11. This is not human approval or automated identity detection."
+    },
+    {
+      "id": "03-card-current",
+      "file": "03-card-current.png",
+      "sha256": "0666d53352ef61c9a07edc20d631e6794145272d5b976a17d638a9e64a5d92f0",
+      "sourceCapture": "V06-r190-first-compact-card.png",
+      "sourceSha256": "f9e2f1bddb6cf8991cb7ee1a954aa40720bd03b34ac47fd1e62b22be754453fc",
+      "sourceSizePx": [
+        1080,
+        2340
+      ],
+      "cropBoxPx": [
+        114,
+        1851,
+        968,
+        2169
+      ],
+      "outputSizePx": [
+        854,
+        318
+      ],
+      "transform": "crop-only; source pixels preserved; metadata not copied",
+      "captureApp": "cargo-driver",
+      "captureAppVersion": "0.1.190",
+      "captureVersionCode": 190,
+      "changeRecord": "../../../Changes/2026-10-16-compact-recommendation-card-design-r73.md",
+      "changeRecordCommit": "e216cb8d13294fba4bc5d493e6261b6204b7190a",
+      "workflowStage": "최신 추천 카드",
+      "visibleScopeAndExclusions": "116 DIP 카드의 두 열 배치와 파랑 거절·주황 수락. 지도/GPS·다른 카드·상태 표시줄 제외.",
+      "privacyReview": "reviewed-codex-pixels",
+      "claimBoundary": "Existing real-device capture of an isolated synthetic scenario; not a new device test or evidence of real delivery/payment.",
+      "privacyReviewBasis": "Each output PNG visually reviewed by a separate Codex agent; root reviewed the full contact sheet and outputs 03/04/11. This is not human approval or automated identity detection."
+    },
+    {
+      "id": "04-selected-map",
+      "file": "04-selected-map.png",
+      "sha256": "aa678ecf3c30aec9794370c9c25d2d06a4eb9267f99af057fce3a34668d521e7",
+      "sourceCapture": "V07-r190-second-compact-card.png",
+      "sourceSha256": "473acebe8cb4eeab36049126b6cf1398fffe38dd458450184e0606ab64cf951e",
+      "sourceSizePx": [
+        1080,
+        2340
+      ],
+      "cropBoxPx": [
+        0,
+        280,
+        1080,
+        1554
+      ],
+      "outputSizePx": [
+        1080,
+        1274
+      ],
+      "transform": "crop-only; source pixels preserved; metadata not copied",
+      "captureApp": "cargo-driver",
+      "captureAppVersion": "0.1.190",
+      "captureVersionCode": 190,
+      "changeRecord": "../../../Changes/2026-10-16-compact-recommendation-card-design-r73.md",
+      "changeRecordCommit": "e216cb8d13294fba4bc5d493e6261b6204b7190a",
+      "workflowStage": "선택한 추천의 핀",
+      "visibleScopeAndExclusions": "합성 픽업/전달과 비선택 핀의 지도 일부. 실제 GPS와 그 끝점이 있는 하단·시스템 정보 제외. 지도 제공: NAVER.",
+      "privacyReview": "reviewed-codex-pixels",
+      "claimBoundary": "Existing real-device capture of an isolated synthetic scenario; not a new device test or evidence of real delivery/payment.",
+      "privacyReviewBasis": "Each output PNG visually reviewed by a separate Codex agent; root reviewed the full contact sheet and outputs 03/04/11. This is not human approval or automated identity detection."
+    },
+    {
+      "id": "05-third-card",
+      "file": "05-third-card.png",
+      "sha256": "1148ac2ec7514a8c23f8b3cfb2116361795a0c57abf45fde61ef19295f70e699",
+      "sourceCapture": "V10-r190-third-compact-card.png",
+      "sourceSha256": "47abdd5816a4f73cc73632b79b917757cb55da566af958e1d6b9c85600e69f49",
+      "sourceSizePx": [
+        1080,
+        2340
+      ],
+      "cropBoxPx": [
+        94,
+        1851,
+        944,
+        2169
+      ],
+      "outputSizePx": [
+        850,
+        318
+      ],
+      "transform": "crop-only; source pixels preserved; metadata not copied",
+      "captureApp": "cargo-driver",
+      "captureAppVersion": "0.1.190",
+      "captureVersionCode": 190,
+      "changeRecord": "../../../Changes/2026-10-16-compact-recommendation-card-design-r73.md",
+      "changeRecordCommit": "e216cb8d13294fba4bc5d493e6261b6204b7190a",
+      "workflowStage": "세 번째 추천 카드",
+      "visibleScopeAndExclusions": "6,400원과 픽업/전달 장소6 카드. 전체 지도/GPS·인접 카드 제외. 넘김 동작 자체는 원본 관측 기록 참조.",
+      "privacyReview": "reviewed-codex-pixels",
+      "claimBoundary": "Existing real-device capture of an isolated synthetic scenario; not a new device test or evidence of real delivery/payment.",
+      "privacyReviewBasis": "Each output PNG visually reviewed by a separate Codex agent; root reviewed the full contact sheet and outputs 03/04/11. This is not human approval or automated identity detection."
+    },
+    {
+      "id": "06-cargo-current-actions",
+      "file": "06-cargo-current-actions.png",
+      "sha256": "7f9dfdb1561b0dbc60b623a4e2007b4c454ac13dd4f10480620caddef27ae484",
+      "sourceCapture": "Q06-current-actions-180.png",
+      "sourceSha256": "0746d4204d9e9e906df83c1c1bdef91dae708b4a30eea4dbde1fba7906ac8fc5",
+      "sourceSizePx": [
+        1080,
+        2340
+      ],
+      "cropBoxPx": [
+        85,
+        497,
+        970,
+        1164
+      ],
+      "outputSizePx": [
+        885,
+        667
+      ],
+      "transform": "crop-only; source pixels preserved; metadata not copied",
+      "captureApp": "cargo-driver",
+      "captureAppVersion": "0.1.180",
+      "captureVersionCode": 180,
+      "changeRecord": "../../../Changes/2026-10-16-physical-phone-verification-r67.md",
+      "changeRecordCommit": "e216cb8d13294fba4bc5d493e6261b6204b7190a",
+      "workflowStage": "화물 수락 후 다음 행동",
+      "visibleScopeAndExclusions": "같은 사례05의 운임·상차 처리·하차 화면 확인. 계정 머리글·시스템 정보·다른 업무 상세 제외.",
+      "privacyReview": "reviewed-codex-pixels",
+      "claimBoundary": "Existing real-device capture of an isolated synthetic scenario; not a new device test or evidence of real delivery/payment.",
+      "privacyReviewBasis": "Each output PNG visually reviewed by a separate Codex agent; root reviewed the full contact sheet and outputs 03/04/11. This is not human approval or automated identity detection."
+    },
+    {
+      "id": "07-cargo-pickup-photo-required",
+      "file": "07-cargo-pickup-photo-required.png",
+      "sha256": "e83bbe09ef84112294832f189431b78a75085de99a55226017e82a6137a7e083",
+      "sourceCapture": "Q06-photo-required-180.png",
+      "sourceSha256": "f25e9acd5f9782cd8c9f4cdc10433e6b672f196f35ef02edf7739eec6a61a23a",
+      "sourceSizePx": [
+        1080,
+        2340
+      ],
+      "cropBoxPx": [
+        85,
+        1298,
+        974,
+        2097
+      ],
+      "outputSizePx": [
+        889,
+        799
+      ],
+      "transform": "crop-only; source pixels preserved; metadata not copied",
+      "captureApp": "cargo-driver",
+      "captureAppVersion": "0.1.180",
+      "captureVersionCode": 180,
+      "changeRecord": "../../../Changes/2026-10-16-physical-phone-verification-r67.md",
+      "changeRecordCommit": "e216cb8d13294fba4bc5d493e6261b6204b7190a",
+      "workflowStage": "상차 사진 필요",
+      "visibleScopeAndExclusions": "상차 사진 촬영과 비활성 완료 버튼·안내. 계정·위치·실제 촬영 사진·첨부 식별자 제외.",
+      "privacyReview": "reviewed-codex-pixels",
+      "claimBoundary": "Existing real-device capture of an isolated synthetic scenario; not a new device test or evidence of real delivery/payment.",
+      "privacyReviewBasis": "Each output PNG visually reviewed by a separate Codex agent; root reviewed the full contact sheet and outputs 03/04/11. This is not human approval or automated identity detection."
+    },
+    {
+      "id": "08-cargo-delivery-photo-required",
+      "file": "08-cargo-delivery-photo-required.png",
+      "sha256": "7ea60089e748bd678dbc50b834bfce30c97119d2681c32dd76d3cfecbf9d767d",
+      "sourceCapture": "Q07-delivery-photo-required-180.png",
+      "sourceSha256": "33fa95c273aceb2ec559f287a7170afebb841640b4f9296a0be69fd95d541ef6",
+      "sourceSizePx": [
+        1080,
+        2340
+      ],
+      "cropBoxPx": [
+        85,
+        1240,
+        974,
+        2040
+      ],
+      "outputSizePx": [
+        889,
+        800
+      ],
+      "transform": "crop-only; source pixels preserved; metadata not copied",
+      "captureApp": "cargo-driver",
+      "captureAppVersion": "0.1.180",
+      "captureVersionCode": 180,
+      "changeRecord": "../../../Changes/2026-10-16-physical-phone-verification-r67.md",
+      "changeRecordCommit": "e216cb8d13294fba4bc5d493e6261b6204b7190a",
+      "workflowStage": "하차 사진 필요",
+      "visibleScopeAndExclusions": "하차 사진 촬영과 비활성 완료 버튼·안내. 계정·수금 항목·위치·촬영 사진·첨부 식별자 제외.",
+      "privacyReview": "reviewed-codex-pixels",
+      "claimBoundary": "Existing real-device capture of an isolated synthetic scenario; not a new device test or evidence of real delivery/payment.",
+      "privacyReviewBasis": "Each output PNG visually reviewed by a separate Codex agent; root reviewed the full contact sheet and outputs 03/04/11. This is not human approval or automated identity detection."
+    },
+    {
+      "id": "09-cargo-completed",
+      "file": "09-cargo-completed.png",
+      "sha256": "2c2f7f593cfb99e5e54004c52295cf1835859363b793019526ecd9adfd5f46e4",
+      "sourceCapture": "Q08-cargo-delivery-confirmed-180.png",
+      "sourceSha256": "087c7819f36d2530dd0f4e8faed664817bcb2cdc2d79444c5aeab6fb4fb83201",
+      "sourceSizePx": [
+        1080,
+        2340
+      ],
+      "cropBoxPx": [
+        45,
+        441,
+        1034,
+        1113
+      ],
+      "outputSizePx": [
+        989,
+        672
+      ],
+      "transform": "crop-only; source pixels preserved; metadata not copied",
+      "captureApp": "cargo-driver",
+      "captureAppVersion": "0.1.180",
+      "captureVersionCode": 180,
+      "changeRecord": "../../../Changes/2026-10-16-physical-phone-verification-r67.md",
+      "changeRecordCommit": "e216cb8d13294fba4bc5d493e6261b6204b7190a",
+      "workflowStage": "하차 완료 확인",
+      "visibleScopeAndExclusions": "같은 사례05의 하차 완료 확인과 다음 업무 복귀 버튼. 계정·시스템 정보와 불필요한 빈 공간 제외.",
+      "privacyReview": "reviewed-codex-pixels",
+      "claimBoundary": "Existing real-device capture of an isolated synthetic scenario; not a new device test or evidence of real delivery/payment.",
+      "privacyReviewBasis": "Each output PNG visually reviewed by a separate Codex agent; root reviewed the full contact sheet and outputs 03/04/11. This is not human approval or automated identity detection."
+    },
+    {
+      "id": "10-food-pickup",
+      "file": "10-food-pickup.png",
+      "sha256": "bd1c0048bca73629c9b01c6b48193a3d7b065034e931c6806870b07894f23236",
+      "sourceCapture": "F05-food-ready-to-pickup.png",
+      "sourceSha256": "f8b334f3b8831c044691952f69dc9e63c65feb7dbe802aab099764918767ee6b",
+      "sourceSizePx": [
+        1080,
+        2340
+      ],
+      "cropBoxPx": [
+        69,
+        738,
+        1013,
+        2145
+      ],
+      "outputSizePx": [
+        944,
+        1407
+      ],
+      "transform": "crop-only; source pixels preserved; metadata not copied",
+      "captureApp": "food-driver",
+      "captureAppVersion": "0.1.178",
+      "captureVersionCode": 178,
+      "changeRecord": "../../../Changes/2026-10-16-physical-phone-verification-r67.md",
+      "changeRecordCommit": "e216cb8d13294fba4bc5d493e6261b6204b7190a",
+      "workflowStage": "음식점 도착·픽업 대기",
+      "visibleScopeAndExclusions": "합성 음식점/주문·준비 완료·픽업 완료 버튼. 지도/GPS·시스템 상태 표시줄 제외.",
+      "privacyReview": "reviewed-codex-pixels",
+      "claimBoundary": "Existing real-device capture of an isolated synthetic scenario; not a new device test or evidence of real delivery/payment.",
+      "privacyReviewBasis": "Each output PNG visually reviewed by a separate Codex agent; root reviewed the full contact sheet and outputs 03/04/11. This is not human approval or automated identity detection."
+    },
+    {
+      "id": "11-food-delivery",
+      "file": "11-food-delivery.png",
+      "sha256": "90bc83a0057597bea8e8931abf2c80cb9de2ec119612cd8957a1f4a1334a7509",
+      "sourceCapture": "F06-food-picked-up.png",
+      "sourceSha256": "f4e59a20b280ce3bca2d998a262e37dd2ab4424360ea3bc32ab30e11d205b139",
+      "sourceSizePx": [
+        1080,
+        2340
+      ],
+      "cropBoxPx": [
+        69,
+        975,
+        1013,
+        2145
+      ],
+      "outputSizePx": [
+        944,
+        1170
+      ],
+      "transform": "crop-only; source pixels preserved; metadata not copied",
+      "captureApp": "food-driver",
+      "captureAppVersion": "0.1.178",
+      "captureVersionCode": 178,
+      "changeRecord": "../../../Changes/2026-10-16-physical-phone-verification-r67.md",
+      "changeRecordCommit": "e216cb8d13294fba4bc5d493e6261b6204b7190a",
+      "workflowStage": "고객에게 전달 중",
+      "visibleScopeAndExclusions": "합성 수령지·고객 요청사항·전달 완료 버튼. 지도/GPS·위쪽 별도 상태 안내·시스템 정보 제외.",
+      "privacyReview": "reviewed-codex-pixels",
+      "claimBoundary": "Existing real-device capture of an isolated synthetic scenario; not a new device test or evidence of real delivery/payment.",
+      "privacyReviewBasis": "Each output PNG visually reviewed by a separate Codex agent; root reviewed the full contact sheet and outputs 03/04/11. This is not human approval or automated identity detection."
+    }
+  ],
+  "verification": {
+    "sourceAndOutputSha256": "matched-11-of-11",
+    "outputPixelEqualityToSourceCrop": "passed-11-of-11",
+    "embeddedMetadata": "none",
+    "newDeviceExecution": false,
+    "humanApprovalClaimed": false
+  }
+}

@@ -73,3 +73,5 @@ APK188 시험 뒤 신규 배차 수신은 [T08 후속 UI](../../artifacts/local/
 APK189은 [별도 S/T/U 준비](../../artifacts/local/recommendation-map-r69/prepare-r189.md)와 [준비 호출](../../artifacts/local/recommendation-map-r69/.private/20261016-102858-521462-r189-prepare.json), [S/T 두 건 추천](../../artifacts/local/recommendation-map-r69/.private/20261016-103502-413270-r189-offer.json)을 사용했다. 이전 P/Q/R과 실패·소스 사본·추천 유효시간을 보존했다.
 
 시험 자료는 선언된 합성 좌표·300초 추천 유효시간이며 자동 worker·FCM·금융 효과는 OFF다. 제품 기본 60초·실제 주행·실제 금융·공개 운영 검증으로 확대하지 않는다. 원본 기기 화면은 비공개 로컬에 두고 문서 자산으로 복사하지 않는다. 이번 요청은 commit/push가 아니다.
+
+원본 화면은 비공개로 유지하며, 검토한 대표 파생 화면과 판본별 설명은 [휴대폰 UI 진행 요약](2026-10-16-phone-ui-progress-summary.md)에서 확인한다.

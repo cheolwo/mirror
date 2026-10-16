@@ -76,3 +76,5 @@ R07과 R08 PNG SHA-256은 모두 `1b7ff59df517aff11d7c63137bd64c345e02fcb2f70962
 [APK186용 J/K/L 절차](../../artifacts/local/recommendation-map-r69/prepare-r186.md)에 따라 [별도 준비](../../artifacts/local/recommendation-map-r69/.private/20261016-091205-494742-r186-prepare.json)와 [J/K 두 건 추천](../../artifacts/local/recommendation-map-r69/.private/20261016-091804-824871-r186-offer.json), [L 추가 후 세 건 정본 확인](../../artifacts/local/recommendation-map-r69/.private/20261016-092100-376471-r186-offer.json)을 실행했다. 서버의 유효 추천, 위 기기 화면·제스처와 마지막 미수락 원장을 각각 구분한다. 기존 A~I·실패 화면·helper·journal을 보존하고 새 의뢰로 검증하도록 분리했다.
 
 추천 유효시간은 격리 host의 300초이고 자동 worker·FCM·금융 효과는 OFF다. 제품 기본 60초 수락·실제 주행 경로·실제 금융·공개 운영을 검증한 것으로 확대하지 않는다. 위치가 포함된 원본 화면은 비공개 로컬 증거로 보관하고 문서 이미지 자산으로 복사하지 않는다. APK185와 APK186의 수신 OFF 복원을 각각 확인했다. 이번 APK186은 카드 표시·선택·주의 확인·복귀 검증이며, 수락·사진 수행·취소·거절을 다시 실행한 것으로 확대하지 않는다. commit/push는 이번 요청 범위가 아니다.
+
+원본 화면은 비공개로 유지하며, 검토한 대표 파생 화면과 판본별 설명은 [휴대폰 UI 진행 요약](2026-10-16-phone-ui-progress-summary.md)에서 확인한다.

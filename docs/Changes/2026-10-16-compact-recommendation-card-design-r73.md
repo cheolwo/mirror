@@ -56,3 +56,5 @@ Task에도 같은 필터를 전달했으나 기존 [검증 도구](../../eng/val
 [최종 V/W/X 상태 원장](../../artifacts/local/recommendation-map-r69/.private/20261016-110708-457059-r190-status.json)은 관측 시점 세 건 유효·queue20/exposure210·round1, 확정 기사 없음·보수 미동결·후불승인완료/결제대기다. [별도 준비](../../artifacts/local/recommendation-map-r69/.private/20261016-105505-599741-r190-prepare.json)와 [V/W 두 건 추천](../../artifacts/local/recommendation-map-r69/.private/20261016-110307-058271-r190-offer.json)을 사용했고 기존 A~U 이력이나 V/W 만료를 되돌리지 않았다. 합성 좌표·격리 host 추천 유효시간300초·worker/FCM/금융 OFF를 유지한다.
 
 긴 실제 주소 스크롤·실제 수락/거절 확정·제품 기본60초 수락·자동 worker·FCM·주행·금융·다른 역할 앱·공개 운영·commit/push는 이번 검증으로 완료를 선언하지 않는다. 이전 r71 전체 시험 시간 초과·r72 APK188 주소 잘림·APK189 전체 시험/기기 성공과 원본 비공개 기기 화면은 모두 보존한다.
+
+원본 화면은 비공개로 유지하며, 검토한 대표 파생 화면과 판본별 설명은 [휴대폰 UI 진행 요약](2026-10-16-phone-ui-progress-summary.md)에서 확인한다.
