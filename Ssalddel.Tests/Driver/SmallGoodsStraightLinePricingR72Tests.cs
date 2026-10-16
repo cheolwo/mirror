@@ -210,7 +210,8 @@ public sealed partial class 배차수락CommandHandlerTests
     private static 배차수락CommandHandler QuickHandler(SsalddelContext db, I소형배송기사제안요금Service service) => new(db,
         new ThrowingPublisher(), new TestCurrentUserAccessor("driver-1", "기사"), new 참여자실행권한검사(),
         new WorkRelationshipSnapshotCollector(), new StubEligibilityService(), new StubContinuityUseCase(),
-        NullLogger<배차수락CommandHandler>.Instance, smallGoodsPricing: service);
+        NullLogger<배차수락CommandHandler>.Instance, smallGoodsPricing: service,
+        운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용);
     private static async Task<(운송원장 Queue, 화주운송의뢰 Work, 운임구성 Fare)> SeedQuickPricing(SsalddelContext db)
     {
         var fare = new 운임구성 { 의뢰Id = "quick-r72", 최종운임 = 34000m, 기사지급예정운임 = 7777m, 예상거리Km = 15m, Km당단가 = 500m };

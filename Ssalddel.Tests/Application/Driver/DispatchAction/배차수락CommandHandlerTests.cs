@@ -77,7 +77,8 @@ public sealed partial class 배차수락CommandHandlerTests
             new WorkRelationshipSnapshotCollector(),
             new StubEligibilityService(),
             new StubContinuityUseCase(),
-            NullLogger<배차수락CommandHandler>.Instance);
+            NullLogger<배차수락CommandHandler>.Instance,
+            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용);
 
         var result = await handler.Handle(
             new 배차수락Command("driver-1", "request-1"),
@@ -249,7 +250,8 @@ public sealed partial class 배차수락CommandHandlerTests
         var snapshots = new WorkRelationshipSnapshotCollector();
         var handler = new 배차수락CommandHandler(
             db, publisher, new TestCurrentUserAccessor("driver-1", "기사"), new 참여자실행권한검사(),
-            snapshots, new StubEligibilityService(), continuity, NullLogger<배차수락CommandHandler>.Instance);
+            snapshots, new StubEligibilityService(), continuity, NullLogger<배차수락CommandHandler>.Instance,
+            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용);
 
         var accepted = await handler.Handle(new 배차수락Command("driver-1", request.의뢰Id), CancellationToken.None);
         var replay = await handler.Handle(new 배차수락Command("driver-1", request.의뢰Id), CancellationToken.None);
@@ -318,7 +320,10 @@ public sealed partial class 배차수락CommandHandlerTests
             eligibility,
             new StubContinuityUseCase(),
             NullLogger<배차수락CommandHandler>.Instance,
-            sharedAdmission: sharedAdmission);
+            sharedAdmission: sharedAdmission,
+            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용,
+            후속픽업: new Ssalddel.Tests.Services.Dispatch.Common.화물후속픽업시험Service(),
+            기사위치: new Ssalddel.Tests.Services.Dispatch.Common.화물현재위치시험Store());
 
     private static SsalddelContext CreateContext()
     {

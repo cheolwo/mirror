@@ -25,6 +25,13 @@ public interface I운영배차활동원장Store
         운영배차활동사건Dto 사건,
         CancellationToken cancellationToken = default);
 
+    /// <summary>같은 기사의 수동 변경과 조건부 최초 ON을 같은 영속 쓰기 경계에서 비교·추가합니다.</summary>
+    ValueTask<bool> 수신의사추가Async(운영배차활동사건Dto 사건, bool 최초On조건부적용,
+        string? 예상수신의사판본Token, CancellationToken cancellationToken = default)
+        => 최초On조건부적용
+            ? throw new NotSupportedException("조건부 최초 ON에는 원자적 수신 의사 저장소가 필요합니다.")
+            : 사건추가Async(사건, cancellationToken);
+
     ValueTask<IReadOnlyList<운영배차활동사건Dto>> 기간조회Async(
         string 주체Id,
         DateTimeOffset 시작시각UtcInclusive,

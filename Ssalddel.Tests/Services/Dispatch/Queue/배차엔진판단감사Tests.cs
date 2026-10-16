@@ -35,7 +35,9 @@ public sealed class 배차엔진판단감사Tests
         await db.SaveChangesAsync();
         var food = new StubFoodPricingService();
         var service = new 배차대기원장전환Service(db, Options.Create(new 배차큐정책Options()),
-            null!, new NoOpRecommendationNotificationService(), new NoOpDriverStateService(), null!, food);
+            null!, new NoOpRecommendationNotificationService(), new NoOpDriverStateService(), null!, food,
+            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용,
+            화물대상후보: new Ssalddel.Tests.Services.Dispatch.Common.용달대상후보시험Service());
         var result = await service.추천시작Async(queue.의뢰Id, "cargo-driver");
         Assert.True(result.전환여부);
         Assert.Equal(0, food.CallCount);
@@ -203,11 +205,13 @@ public sealed class 배차엔진판단감사Tests
     [Fact]
     public async Task 후보선정_추천시작과_감사이벤트는_같은SaveChanges에포함된다()
     {
-        await using var db = new CapturingSsalddelContext(CreateOptions());
+        await using var db = new CapturingSsalddelContext(new DbContextOptionsBuilder<SsalddelContext>()
+            .UseInMemoryDatabase($"cargo-audit-current-source-{Guid.NewGuid():N}").Options);
         var queue = CreateQueue();
         queue.배차큐단계 = 상태값.배차큐단계.배차추천;
         queue.배차노출상태 = 상태값.배차노출상태.추천대기;
-        db.Attach(queue);
+        db.운송원장.Add(queue);
+        await db.PersistSeedAsync(); // 최종 판본 재조회는 실제 저장된 기준선을 읽는다.
 
         var selection = 배차추천후보선정결과.선정됨(
             new 배차추천후보("DRIVER-ATOMIC", 87m, "근접 기사")) with
@@ -228,7 +232,8 @@ public sealed class 배차엔진판단감사Tests
             new StubCandidateSelectionService(selection),
             new NoOpRecommendationNotificationService(),
             new NoOpDriverStateService(),
-            null!);
+            null!,
+            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용);
 
         var method = typeof(배차대기원장전환Service).GetMethod(
             "추천거절후다음후보로진행Async",
@@ -454,6 +459,7 @@ public sealed class 배차엔진판단감사Tests
         : SsalddelContext(options, new DummyPersonalDataEncryptionService())
     {
         public List<IReadOnlyList<(Type EntityType, EntityState State)>> SaveBatches { get; } = [];
+        public Task<int> PersistSeedAsync() => base.SaveChangesAsync(true, CancellationToken.None);
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
             => CaptureSave();

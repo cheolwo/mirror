@@ -28,6 +28,8 @@ public static class 운영배차주체역할Code
 public static class 운영배차사건유형Code
 {
     public const string 제안전달 = "OfferPresented";
+    // 앱이 활성 제안을 표시했다는 수신 확인이며 사람의 읽음이나 수락을 의미하지 않는다.
+    public const string 제안표시확인 = "OfferDisplayed";
     public const string 수락 = "Accepted";
     public const string 거절 = "Rejected";
     public const string 무응답 = "NoResponse";
@@ -38,6 +40,14 @@ public static class 운영배차사건유형Code
     public const string 수신의사변경 = "IntentChanged";
     public const string 실효상태변경 = "EffectiveStateChanged";
     public const string 책임판정 = "ResponsibilityReviewed";
+}
+
+public static class 운영배차미응답Code
+{
+    public const string 앱표시확인 = "ApplicationOfferDisplayed";
+    public const string 표시제안만료 = "DisplayedOfferExpired";
+    public const string 기사명시재개 = "DriverExplicitNoResponseResume";
+    public static string 라운드상태(int round) => $"RecommendationRound:{round}";
 }
 
 public static class 운영배차제안유효성Code
@@ -180,14 +190,24 @@ public sealed class 운영배차수신상태Dto
     public string 실효상태Code { get; set; } = 운영배차실효상태Code.조건부적합;
     public string 실효사유Code { get; set; } = string.Empty;
     public DateTimeOffset? 수신의사변경시각Utc { get; set; }
+    // 최초 운행 ON의 조건부 적용에만 사용하는 서버 원장 판본입니다. 사건이 없으면 null입니다.
+    public string? 수신의사판본Token { get; set; }
     public DateTimeOffset? 실효상태변경시각Utc { get; set; }
     public DateTimeOffset 서버관측시각Utc { get; set; }
+    public bool 미응답자동중지여부 { get; set; }
+    public int 연속미응답횟수 { get; set; }
+    public DateTimeOffset? 미응답자동중지시각Utc { get; set; }
 }
 
 public sealed class 운영배차수신의사변경요청
 {
     public Guid 클라이언트요청Id { get; set; }
     public string 수신의사Code { get; set; } = 운영배차수신의사Code.Off;
+    // 운행 시작의 자동 ON은 false를 유지한다. 본인의 재개 토글 ON만 true를 보낸다.
+    public bool 미응답자동중지해제 { get; set; }
+    // 기본 false: 기존 수동 ON/OFF 계약을 유지합니다. true는 ON + 재개 false만 허용합니다.
+    public bool 최초On조건부적용 { get; set; }
+    public string? 예상수신의사판본Token { get; set; }
 }
 
 [SsalddelCodeMetadata(
@@ -203,6 +223,9 @@ public sealed class 운영배차활동사건Dto
 {
     public string 사건StableId { get; set; } = string.Empty;
     public DateTimeOffset 발생시각Utc { get; set; }
+    // 서버 원장의 저장 순서 근거입니다. 기존 사건/메모리 구현에는 없을 수 있으며 외부 입력의 시각을 신뢰하지 않습니다.
+    [System.Text.Json.Serialization.JsonIgnore]
+    public DateTimeOffset? 원장기록시각Utc { get; set; }
     public string 운영시장시간대Id { get; set; } = 운영배차시장시간대Code.대한민국;
     public string? ShiftId { get; set; }
     public string? 제안Id { get; set; }

@@ -71,8 +71,8 @@ public sealed class 운영배차공통UseCase : I운영배차공통UseCase
         CancellationToken cancellationToken = default)
     {
         var subjectId = 주체확인(주체Id);
-        var cached = await 수신상태투영조회Async(subjectId, cancellationToken);
-        return cached ?? await 수신상태재구성Async(subjectId, cancellationToken);
+        // 만료/수락은 업무 트랜잭션에서 직접 사건을 추가한다. 과거 캐시로 신규 수신을 허용하지 않는다.
+        return await 수신상태재구성Async(subjectId, cancellationToken);
     }
 
     public async Task<운영배차수신상태Dto> 기사의사변경Async(
@@ -83,18 +83,24 @@ public sealed class 운영배차공통UseCase : I운영배차공통UseCase
         ArgumentNullException.ThrowIfNull(요청);
         var subjectId = 주체확인(기사Id);
         요청Id확인(요청.클라이언트요청Id);
+        if (요청.미응답자동중지해제 && 요청.수신의사Code != 운영배차수신의사Code.On)
+            throw new ArgumentException("미응답 자동 중지는 본인의 명시 ON 요청으로만 해제할 수 있습니다.", nameof(요청));
+        if (요청.최초On조건부적용 && (요청.수신의사Code != 운영배차수신의사Code.On || 요청.미응답자동중지해제))
+            throw new ArgumentException("조건부 최초 ON은 자동 중지를 해제할 수 없습니다.", nameof(요청));
+        if (요청.예상수신의사판본Token?.Length > 180)
+            throw new ArgumentException("수신 의사 판본을 다시 확인해 주세요.", nameof(요청));
         var stableId = $"dispatch-intent:{요청.클라이언트요청Id:N}";
         var existing = await _원장.사건조회Async(stableId, cancellationToken);
         if (existing is not null)
         {
-            멱등의사요청확인(existing, subjectId, 요청.수신의사Code);
+            멱등의사요청확인(existing, subjectId, 요청);
             return await 수신상태재구성Async(subjectId, cancellationToken);
         }
 
         var now = _timeProvider.GetUtcNow();
         var current = await 수신상태조회Async(subjectId, cancellationToken);
         _수신상태Policy.기사의사변경(current, subjectId, 요청.수신의사Code, now);
-        await _원장.사건추가Async(new 운영배차활동사건Dto
+        await _원장.수신의사추가Async(new 운영배차활동사건Dto
         {
             사건StableId = stableId,
             발생시각Utc = now,
@@ -103,9 +109,11 @@ public sealed class 운영배차공통UseCase : I운영배차공통UseCase
             사건유형Code = 운영배차사건유형Code.수신의사변경,
             제안유효성Code = 운영배차제안유효성Code.해당없음,
             책임Code = 운영배차책임Code.해당없음,
-            사유Code = "DriverExplicitIntent",
+            사유Code = 요청.최초On조건부적용 ? 운영배차수신의사판본.최초On사유
+                : 요청.미응답자동중지해제 ? 운영배차미응답Code.기사명시재개 : "DriverExplicitIntent",
+            업무시도Id = 운영배차수신의사판본.요청근거(요청.최초On조건부적용, 요청.예상수신의사판본Token),
             상태값Code = 요청.수신의사Code
-        }, cancellationToken);
+        }, 요청.최초On조건부적용, 요청.예상수신의사판본Token, cancellationToken);
 
         return await 수신상태재구성Async(subjectId, cancellationToken);
     }
@@ -186,7 +194,8 @@ public sealed class 운영배차공통UseCase : I운영배차공통UseCase
         foreach (var item in events
                      .Where(x => x.사건유형Code is 운영배차사건유형Code.수신의사변경
                          or 운영배차사건유형Code.실효상태변경)
-                     .OrderBy(x => x.발생시각Utc)
+                     .OrderBy(x => x.사건유형Code == 운영배차사건유형Code.수신의사변경
+                         ? 운영배차수신의사판본.기록순서(x) : x.발생시각Utc)
                      .ThenBy(x => x.사건StableId, StringComparer.Ordinal))
         {
             state = item.사건유형Code == 운영배차사건유형Code.수신의사변경
@@ -199,6 +208,9 @@ public sealed class 운영배차공통UseCase : I운영배차공통UseCase
         }
 
         state ??= 초기상태(주체Id, now);
+        state.수신의사판본Token = 운영배차수신의사판본.계산(events);
+        운영배차미응답Policy.반영(state, events);
+        state.서버관측시각Utc = now;
         await 수신상태투영저장Async(state, cancellationToken);
         return state;
     }
@@ -292,13 +304,16 @@ public sealed class 운영배차공통UseCase : I운영배차공통UseCase
     private static void 멱등의사요청확인(
         운영배차활동사건Dto existing,
         string 주체Id,
-        string 수신의사Code)
+        운영배차수신의사변경요청 요청)
     {
         if (existing.주체Id != 주체Id
             || existing.사건유형Code != 운영배차사건유형Code.수신의사변경
-            || existing.상태값Code != 수신의사Code)
+            || existing.상태값Code != 요청.수신의사Code
+            || existing.사유Code != (요청.최초On조건부적용 ? 운영배차수신의사판본.최초On사유
+                : 요청.미응답자동중지해제 ? 운영배차미응답Code.기사명시재개 : "DriverExplicitIntent")
+            || existing.업무시도Id != 운영배차수신의사판본.요청근거(요청.최초On조건부적용, 요청.예상수신의사판본Token))
         {
-            throw new InvalidOperationException("같은 클라이언트 요청 ID에 다른 배차 수신 의사 요청이 있습니다.");
+            throw new 운영배차수신요청충돌Exception();
         }
     }
 

@@ -136,6 +136,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I기사지급OutboxService, 기사지급OutboxService>();
         services.AddScoped<I기사운송일정구성Service, 기사운송일정구성Service>();
         services.AddScoped<I운송일정삽입평가Service, 운송일정삽입평가Service>();
+        services.AddScoped<I화물후속픽업기준Service, 화물후속픽업기준Service>();
         services.AddScoped<I화물배차수락적격성Service, 화물배차수락적격성Service>();
         services.AddSingleton<살뜰.도메인.운송.화물연속배차Policy>();
         services.AddScoped<I화물연속배차UseCase, 화물연속배차UseCase>();
@@ -173,7 +174,9 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I국내화물배차조율실행Service, 국내화물배차조율실행Service>();
         services.AddScoped<IDomesticCargoDispatchAIReviewService, DomesticCargoDispatchAIReviewService>();
         services.AddScoped<IFoodDeliveryDispatchAIReviewService, FoodDeliveryDispatchAIReviewService>();
-        services.AddScoped<I배차업무정책, 용달운송배차업무정책>();
+        services.AddScoped<용달운송배차업무정책>();
+        services.AddScoped<I배차업무정책>(provider => provider.GetRequiredService<용달운송배차업무정책>());
+        services.AddScoped<I용달운송대상후보Service>(provider => provider.GetRequiredService<용달운송배차업무정책>());
         services.AddScoped<I배차업무정책, 음식배달배차업무정책>();
         services.AddOptions<FoodDispatchOllamaOptions>().BindConfiguration(FoodDispatchOllamaOptions.SectionName)
             .Validate(x => x.Validate(), "FoodDispatchOllamaConfigurationInvalid").ValidateOnStart();

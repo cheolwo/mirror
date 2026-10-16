@@ -33,6 +33,7 @@ internal static class FoodDeliveryCurrentWorkProjector
     public static FoodDeliveryDriverOfferDto ToOffer(DriverWorkOfferDto offer)
         => new()
         {
+            RecommendationRound = offer.RecommendationRound,
             WorkKind = offer.WorkType,
             AssignedActivities = offer.AssignedActivities,
             Pricing = offer.Pricing,

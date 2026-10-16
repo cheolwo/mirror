@@ -30,6 +30,7 @@ public static partial class ServiceCollectionExtensions
 
         services.AddScoped<I운영배차활동원장Store, Ef운영배차활동원장Store>();
         services.AddScoped<I운영배차공통UseCase, 운영배차공통UseCase>();
+        services.AddScoped<I운영배차제안표시Service, 운영배차제안표시Service>();
         services.AddSingleton<운영배차수신상태Policy>();
         services.AddSingleton<운영배차단기지표Calculator>();
         services.TryAddSingleton(TimeProvider.System);

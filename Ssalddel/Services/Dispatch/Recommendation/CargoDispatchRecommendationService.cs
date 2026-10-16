@@ -7,6 +7,9 @@ using 살뜰.도메인.화주;
 using 살뜰.도메인.차량;
 using Ssalddel.Application.Driver.Recommendation;
 using Ssalddel.Services.Dispatch.Participation;
+using 살뜰.Services.Dispatch.Common;
+using 살뜰.Services.Dispatch.Queue;
+using Microsoft.Extensions.Options;
 
 namespace 살뜰.Services.Dispatch.Recommendation
 {
@@ -17,6 +20,9 @@ namespace 살뜰.Services.Dispatch.Recommendation
         private readonly I기사권역복귀Service _권역복귀Service;
         private readonly ISharedDriverWorkAdmissionService? _sharedAdmission;
         private readonly I소형배송기사제안요금Service? _smallGoodsPricing;
+        private readonly I운영배차공통UseCase? _운영배차;
+        private readonly I화물후속픽업기준Service _후속픽업;
+        private readonly 배차큐정책Options _queueOptions;
 
         public 화물배차추천Service(
             SsalddelContext db,
@@ -36,7 +42,10 @@ namespace 살뜰.Services.Dispatch.Recommendation
             살뜰.Services.Dispatch.Queue.I배차대기원장전환Service 원장전환Service,
             I기사권역복귀Service 권역복귀Service,
             ISharedDriverWorkAdmissionService? sharedAdmission = null,
-            I소형배송기사제안요금Service? smallGoodsPricing = null)
+            I소형배송기사제안요금Service? smallGoodsPricing = null,
+            I운영배차공통UseCase? 운영배차 = null,
+            I화물후속픽업기준Service? 후속픽업 = null,
+            IOptions<배차큐정책Options>? queueOptions = null)
             : base(
                 db,
                 driverLocationStore,
@@ -56,6 +65,9 @@ namespace 살뜰.Services.Dispatch.Recommendation
             _권역복귀Service = 권역복귀Service;
             _sharedAdmission = sharedAdmission;
             _smallGoodsPricing = smallGoodsPricing;
+            _운영배차 = 운영배차;
+            _후속픽업 = 후속픽업 ?? new 화물후속픽업기준Service(db, 기사운송일정구성Service, 운송일정삽입평가Service);
+            _queueOptions = queueOptions?.Value ?? new 배차큐정책Options();
         }
 
         protected override async Task<bool> IsDrivingAsync(string driverId)
@@ -76,6 +88,7 @@ namespace 살뜰.Services.Dispatch.Recommendation
 
         private async Task<IReadOnlyList<DispatchRecommendationDto>> GetRecommendationsCoreAsync(string driverId, 배차추천검색조건? criteria, bool isDriving)
         {
+            if (!await 운영배차신규수신Guard.허용Async(_운영배차, driverId, CancellationToken.None)) return [];
             await 추천만료정리Async(driverId);
 
             var driver = await _db.용달기사.AsNoTracking().FirstOrDefaultAsync(x => x.기사Id == driverId);
@@ -98,11 +111,25 @@ namespace 살뜰.Services.Dispatch.Recommendation
             var originLocation = isDriving
                 ? await _routeService.ResolveRouteAnchorLocationAsync(driverId, driver, currentLocation)
                 : await _routeService.ResolveOriginLocationAsync(driverId, driver, currentLocation, criteria);
+            화물후속픽업기준결과? pickupBasis = null;
+            if (_queueOptions.화물수행종료기준사용)
+            {
+                var hasWork = await _db.운송원장.AsNoTracking().AnyAsync(x => (x.확정기사Id == driverId || x.기사_운송자 == driverId)
+                    && x.배차큐단계 == 상태값.배차큐단계.확정 && x.상태 != 상태값.배차상태.인수완료);
+                if (hasWork && (actualLocation is null || currentLocation is null
+                        || !기사위치신선도정책.유효한가(currentLocation.ReceivedAtUtc, DateTime.UtcNow, _queueOptions.기사위치유효시간분))) return [];
+                if (actualLocation is not null)
+                {
+                    pickupBasis = await _후속픽업.조회Async(driverId, actualLocation, DateTime.UtcNow);
+                    if (!pickupBasis.확인됨) return [];
+                    if (pickupBasis.활성업무있음) originLocation = pickupBasis.기준좌표;
+                }
+            }
             var routeAnchorLocation = isDriving ? originLocation : null;
-            var currentSchedulePlan = isDriving || returnArea.정책선택됨
+            var currentSchedulePlan = pickupBasis?.기존계획 ?? (isDriving || returnArea.정책선택됨
                 ? await _기사운송일정구성Service.구성Async(driverId,
                     returnArea.정책선택됨 ? actualLocation : originLocation)
-                : null;
+                : null);
             var returnDestination = await ResolveReturnDestinationAsync(driverId, driver);
             var fuelPricePerLiter = await ResolveFuelPricePerLiterAsync();
             var fuelEfficiencyKmPerLiter = ResolveFuelEfficiencyKmPerLiter(driver?.차량);
@@ -173,7 +200,13 @@ namespace 살뜰.Services.Dispatch.Recommendation
                     ? await _운송일정삽입평가Service.평가Async(currentSchedulePlan, request)
                     : null;
                 var insertionResult = await _routeService.EstimateInsertionDelayAsync(originLocation, routeAnchorLocation, pickupPoint, dropoffPoint);
-                var routeFromOriginToPickup = await _routeService.EstimateRouteAsync(originLocation, pickupPoint);
+                배차경로예상결과? routeFromOriginToPickup;
+                if (pickupBasis is { 활성업무있음: true, RouteOption: not null })
+                {
+                    try { routeFromOriginToPickup = await _routeService.EstimateRouteAsync(originLocation, pickupPoint, pickupBasis.RouteOption, CancellationToken.None); }
+                    catch (Exception) { continue; } // 경로 제공 실패는 새 후보의 근거 미확인이다.
+                }
+                else routeFromOriginToPickup = await _routeService.EstimateRouteAsync(originLocation, pickupPoint);
                 var routeFromPickupToDropoff = await _routeService.EstimateRouteAsync(pickupPoint, dropoffPoint);
                 var routeFromOriginToDropoff = await _routeService.EstimateRouteAsync(originLocation, dropoffPoint);
                 var routeFromDropoffToReturn = await _routeService.EstimateRouteAsync(dropoffPoint, returnDestination.좌표);
@@ -193,14 +226,25 @@ namespace 살뜰.Services.Dispatch.Recommendation
                     routeAnchorDistanceKm = Math.Round(_routeService.CalculateDistanceKm(routeAnchorLocation, pickupPoint) ?? 0m, 2);
                 }
 
-                var routeAnchorRoute = await _routeService.EstimateRouteAsync(routeAnchorLocation, pickupPoint);
+                var routeAnchorRoute = pickupBasis is { 활성업무있음: true }
+                    ? routeFromOriginToPickup : await _routeService.EstimateRouteAsync(routeAnchorLocation, pickupPoint);
                 var pickupArrivalMinutes = routeAnchorRoute?.Duration?.TotalMinutes ?? routeFromOriginToPickup?.Duration?.TotalMinutes;
+                if (pickupBasis is { 활성업무있음: true })
+                {
+                    if (!pickupArrivalMinutes.HasValue || !pickupBasis.가용예상시각Utc.HasValue
+                        || routeFromOriginToPickup is not { 실제경로여부: true, DistanceKm: >= 0m, Duration: not null }
+                        || routeFromOriginToPickup.Duration.Value < TimeSpan.Zero || routeFromOriginToPickup.RouteOption != pickupBasis.RouteOption
+                        || scheduleEvaluation is not { 삽입가능여부: true, 전체완수가능여부: true, 후보포함실제경로확인됨: true }
+                        || !scheduleEvaluation.시도목록.Any(a => a.시도유형 == "하차후이어가기" && a.전체완수가능여부 && a.전체실제경로확인됨)) continue;
+                    pickupArrivalMinutes += (pickupBasis.가용예상시각Utc.Value - DateTime.UtcNow).TotalMinutes;
+                }
                 decimal? pickupWindowSlackMinutes = null;
                 var pickupWindowEnd = request?.픽업_시간창_종료일시;
                 if (pickupWindowEnd.HasValue && pickupArrivalMinutes.HasValue)
                 {
                     pickupWindowSlackMinutes = (decimal)((pickupWindowEnd.Value - DateTime.UtcNow).TotalMinutes - pickupArrivalMinutes.Value);
                 }
+                if (pickupBasis is { 활성업무있음: true } && (!pickupWindowSlackMinutes.HasValue || pickupWindowSlackMinutes < 0m)) continue;
 
                 var 판단결과 = _판정Service.판정(request, additionalDelayMinutes, pickupWindowSlackMinutes, routeAnchorDistanceKm, fit, scheduleEvaluation);
 
@@ -334,6 +378,8 @@ namespace 살뜰.Services.Dispatch.Recommendation
                 result.Add(recommendation);
             }
 
+            if (!await 운영배차신규수신Guard.허용Async(_운영배차, driverId, CancellationToken.None)
+                || (pickupBasis is not null && !await _후속픽업.현재근거확인Async(driverId, pickupBasis))) return [];
             return returnArea.활성여부
                 ? result.OrderByDescending(x => x.추천점수 ?? decimal.MinValue)
                     .ThenBy(x => x.픽업거리Km ?? decimal.MaxValue).Take(10).ToArray()

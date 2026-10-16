@@ -18,6 +18,34 @@ namespace Ssalddel.Tests.Filters;
 public sealed class SsalddelApiFeatureBoundaryFilterTests
 {
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task R64_연속배차조회와변경은국내화물게이트로열고기본OFF에서는닫는다(bool enabled)
+    {
+        foreach (var action in new[] { "조회", "변경" })
+        {
+            var context = CreateContext<Ssalddel.Controllers.Driver.Settings05.화물연속배차Controller>(action);
+            var flags = enabled ? new RecordingFeatureFlagService(VersionFeatureFlagKeys.DomesticTransportWorkflow)
+                : new RecordingFeatureFlagService(VersionFeatureFlagKeys.FoodDeliveryWorkflow, VersionFeatureFlagKeys.OperationalDispatchCore);
+            var called = false;
+            await new SsalddelApiFeatureBoundaryFilter(flags).OnActionExecutionAsync(context, () =>
+            {
+                called = true;
+                return Task.FromResult(new ActionExecutedContext(context, [], new object()));
+            });
+            Assert.Equal(enabled, called);
+            Assert.Equal([VersionFeatureFlagKeys.DomesticTransportWorkflow], flags.CheckedFeatureKeys);
+            if (!enabled)
+            {
+                var result = Assert.IsType<ObjectResult>(context.Result);
+                var problem = Assert.IsType<ProblemDetails>(result.Value);
+                Assert.Equal(StatusCodes.Status404NotFound, result.StatusCode);
+                Assert.Equal("FeatureDisabled", problem.Extensions["errorCode"]);
+            }
+        }
+    }
+
+    [Theory]
     [InlineData(false, false)]
     [InlineData(true, false)]
     [InlineData(false, true)]

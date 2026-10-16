@@ -64,6 +64,15 @@ namespace 살뜰.Services.Dispatch.Recommendation
         배차경로좌표? 시작좌표,
         IReadOnlyList<기사운송일정항목> 항목목록);
 
+    public sealed record 운송기존일정평가결과(bool 확인됨, 배차경로좌표? 종료좌표, DateTime? 완료예상시각Utc,
+        string? RouteOption, string 사유Code);
+
+    public sealed record 화물후속픽업기준결과(bool 활성업무있음, bool 확인됨, 배차경로좌표? 기준좌표,
+        DateTime? 가용예상시각Utc, string? RouteOption, string 사유Code, 기사운송일정계획? 기존계획 = null)
+    {
+        public string? 원장판본 { get; init; }
+    }
+
     public sealed record 운송일정도착예상항목(
         string 의뢰Id,
         string 단계유형,

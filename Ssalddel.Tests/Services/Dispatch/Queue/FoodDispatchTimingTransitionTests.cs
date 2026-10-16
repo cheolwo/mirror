@@ -190,7 +190,9 @@ public sealed class FoodDispatchTimingTransitionTests
             Db.운송원장.Add(Queue); Db.SaveChanges();
             Timing = new(Clock);
             Service = new(Db, Options.Create(new 배차큐정책Options()), Selection, Notifications, Cargo,
-                new 음식배달배차흐름Resolver(), Pricing, new FoodRecordPort(), dispatchTiming: Timing, timeProvider: Clock);
+                new 음식배달배차흐름Resolver(), Pricing, new FoodRecordPort(), dispatchTiming: Timing, timeProvider: Clock,
+                운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용,
+                화물대상후보: new Ssalddel.Tests.Services.Dispatch.Common.용달대상후보시험Service());
         }
         public async ValueTask DisposeAsync() { await Db.DisposeAsync(); await connection.DisposeAsync(); }
     }

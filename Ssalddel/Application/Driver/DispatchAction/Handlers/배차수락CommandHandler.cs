@@ -14,6 +14,9 @@ using 살뜰.도메인.운송;
 using 살뜰.도메인.화주;
 using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.Services.Dispatch.Continuity;
+using 살뜰.Services.Dispatch.Common;
+using 살뜰.Services.Dispatch.Queue;
+using Ssalddel.Application.Driver.Transport;
 
 namespace Ssalddel.Application.Driver.DispatchAction;
 
@@ -32,6 +35,10 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
     private readonly bool _memberDeliveryEnabled;
     private readonly ISharedDriverWorkAdmissionService? _sharedAdmission;
     private readonly I소형배송기사제안요금Service? _smallGoodsPricing;
+    private readonly I운영배차공통UseCase? _운영배차;
+    private readonly I화물후속픽업기준Service? _후속픽업;
+    private readonly IDriverLocationStore? _기사위치;
+    private readonly 배차큐정책Options _queueOptions;
 
     public 배차수락CommandHandler(
         SsalddelContext db,
@@ -44,7 +51,11 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         ILogger<배차수락CommandHandler> logger,
         Microsoft.Extensions.Options.IOptions<Ssalddel.Services.Community.NeighborhoodMemberDeliveryOptions>? memberDelivery = null,
         ISharedDriverWorkAdmissionService? sharedAdmission = null,
-        I소형배송기사제안요금Service? smallGoodsPricing = null)
+        I소형배송기사제안요금Service? smallGoodsPricing = null,
+        I운영배차공통UseCase? 운영배차 = null,
+        I화물후속픽업기준Service? 후속픽업 = null,
+        IDriverLocationStore? 기사위치 = null,
+        Microsoft.Extensions.Options.IOptions<배차큐정책Options>? queueOptions = null)
     {
         _db = db;
         _publisher = publisher;
@@ -57,6 +68,10 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         _memberDeliveryEnabled = memberDelivery?.Value.Enabled == true;
         _sharedAdmission = sharedAdmission;
         _smallGoodsPricing = smallGoodsPricing;
+        _운영배차 = 운영배차;
+        _후속픽업 = 후속픽업;
+        _기사위치 = 기사위치;
+        _queueOptions = queueOptions?.Value ?? new 배차큐정책Options();
     }
 
     public async Task<Result<배차수락결과>> Handle(배차수락Command request, CancellationToken cancellationToken)
@@ -144,6 +159,11 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         if (queue.일반회원배송전용)
             return new(Conflict("MemberDeliveryDedicatedRouteRequired", "일반 회원 배송은 해당 회원에게 전달된 배송 제안에서 수락해 주세요."));
 
+        if (queue.배차업무유형 != 상태값.배차업무유형.용달운송)
+            return new(Conflict(화물배차수락오류코드.차량적합실패, "화물 기사 수락 경로에서는 용달 운송 의뢰만 처리할 수 있습니다."));
+        if (기존수락본인업무인가(queue, request.기사Id))
+            return new(Result.Ok(new 배차수락결과(request.RequestId, "이미 수락된 운송입니다.")));
+
         var dispatchRequest = await _db.화주운송의뢰.FirstOrDefaultAsync(x => x.의뢰Id == request.RequestId, cancellationToken);
         if (dispatchRequest is null)
         {
@@ -156,17 +176,18 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
             return new(Conflict(화주운송배차진입정책.진입불가오류코드, settlementReadiness.사유));
         }
 
-        if (queue.배차업무유형 != 상태값.배차업무유형.용달운송)
+        if (!await 운영배차신규수신Guard.허용Async(_운영배차, request.기사Id, cancellationToken))
+            return new(Conflict("FreightDispatchReceivingOff", "신규 배차 수신 또는 서버의 배차 조건을 확인해 주세요. 현재 운송은 유지됩니다."));
+        var beforeActive = await 현재업무판본Async(request.기사Id, cancellationToken);
+        화물후속픽업기준결과? activeBasis = null;
+        if (_queueOptions.화물수행종료기준사용 && beforeActive.Length > 0)
         {
-            return new(Conflict(
-                화물배차수락오류코드.차량적합실패,
-                "화물 기사 수락 경로에서는 용달 운송 의뢰만 처리할 수 있습니다."));
-        }
-
-        if (queue.상태 == 상태값.배차대기상태.확정
-            && string.Equals(queue.확정기사Id ?? queue.기사_운송자, request.기사Id, StringComparison.Ordinal))
-        {
-            return new(Result.Ok(new 배차수락결과(request.RequestId, "이미 수락된 운송입니다.")));
+            if (_후속픽업 is null || _기사위치 is null || !_기사위치.TryGetLatest(request.기사Id, out var location)
+                || !기사위치신선도정책.유효한가(location.ReceivedAtUtc, DateTime.UtcNow, _queueOptions.기사위치유효시간분))
+                return new(Conflict(화물배차수락오류코드.일정근거부족, "진행 중 업무의 현재 위치와 전체 완료 근거를 다시 확인해 주세요."));
+            activeBasis = await _후속픽업.조회Async(request.기사Id, new(location.Latitude, location.Longitude), DateTime.UtcNow, cancellationToken);
+            if (!activeBasis.확인됨 || !activeBasis.활성업무있음)
+                return new(Conflict(화물배차수락오류코드.일정근거부족, "기존 전체 업무의 완료 예상시각과 마지막 목적지를 확인할 수 없습니다."));
         }
 
         if (_sharedAdmission is not null)
@@ -239,6 +260,12 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
             return new(Conflict("FreightDriverPayoutAgreementRequired", "기사 보수가 아직 확정되지 않았습니다. 화주와 운임을 합의한 뒤 최신 제안에서 수락해 주세요."));
         if (queue.기사지급예정액.HasValue && queue.기사지급예정액 != driverFare.기사지급예정운임)
             return new(Conflict("FreightDriverPayoutAgreementChanged", "제시한 기사 보수와 현재 합의가 다릅니다. 최신 제안을 확인해 주세요."));
+        var currentActive = await 현재업무판본Async(request.기사Id, cancellationToken);
+        if (!Enumerable.SequenceEqual(beforeActive, currentActive)
+            || (activeBasis is not null && !await _후속픽업!.현재근거확인Async(request.기사Id, activeBasis, cancellationToken))
+            || !await 운영배차신규수신Guard.허용Async(_운영배차, request.기사Id, cancellationToken)
+            || !(배차응답가능정책.추천수락가능(queue, request.기사Id, DateTime.UtcNow) || 배차응답가능정책.공개배차수락가능(queue)))
+            return new(Conflict("FreightDispatchConditionsChanged", "수락 검증 중 수신 상태나 기존 업무가 변경되었거나 제안이 만료되었습니다. 최신 제안을 확인해 주세요."));
         queue.기사지급예정액 ??= driverFare.기사지급예정운임;
 
         if (queue.생활배송배차방식 is not null) queue.생활배송선택판본++;
@@ -340,6 +367,24 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         운송원장? Queue = null,
         화주운송의뢰? DispatchRequest = null,
         DateTime AcceptedAtUtc = default);
+
+    private sealed record 현재업무판본(string Id, string State, string? Driver, string Assigned,
+        DateTime? RowVersion, DateTime UpdatedAt, DateTime? Pickup, DateTime? Dropoff);
+
+    private static bool 기존수락본인업무인가(운송원장 queue, string driverId)
+        => queue.배차큐단계 == 상태값.배차큐단계.확정
+           && (queue.확정기사Id == driverId || queue.기사_운송자 == driverId)
+           && (string.IsNullOrWhiteSpace(queue.확정기사Id) || queue.확정기사Id == driverId)
+           && (string.IsNullOrWhiteSpace(queue.기사_운송자) || queue.기사_운송자 == driverId)
+           && queue.상태 is 상태값.배차대기상태.확정 or 기사운송상태코드.배차확정
+               or 기사운송상태코드.이동중 or 기사운송상태코드.상차지도착 or 기사운송상태코드.상차완료
+               or 기사운송상태코드.운송중 or 기사운송상태코드.하차지도착 or 기사운송상태코드.인수완료;
+
+    private Task<현재업무판본[]> 현재업무판본Async(string driverId, CancellationToken ct)
+        => _db.운송원장.AsNoTracking().Where(x => (x.확정기사Id == driverId || x.기사_운송자 == driverId)
+            && x.배차큐단계 == 상태값.배차큐단계.확정 && x.상태 != 상태값.배차상태.인수완료)
+            .OrderBy(x => x.의뢰Id).Select(x => new 현재업무판본(x.의뢰Id, x.상태, x.확정기사Id, x.기사_운송자,
+                x.RowVersion, x.UpdatedAt, x.출발_픽업, x.도착)).ToArrayAsync(ct);
 
     private static Result<배차수락결과> Conflict(
         string errorCode,

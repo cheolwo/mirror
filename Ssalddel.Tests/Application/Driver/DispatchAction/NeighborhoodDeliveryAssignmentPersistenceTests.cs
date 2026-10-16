@@ -64,7 +64,8 @@ public sealed partial class NeighborhoodDeliveryAssignmentPersistenceTests
         public SsalddelContext Db { get; private set; } = null!;
         public Continuity Continuity { get; } = new();
         public 배차수락CommandHandler Handler => new(Db, new FailedPublisher(), new Current(), new 참여자실행권한검사(),
-            new WorkRelationshipSnapshotCollector(), new Eligibility(), Continuity, NullLogger<배차수락CommandHandler>.Instance);
+            new WorkRelationshipSnapshotCollector(), new Eligibility(), Continuity, NullLogger<배차수락CommandHandler>.Instance,
+            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용);
         public static async Task<Fixture> Create(bool neighborhood = true)
         {
             var f = new Fixture();

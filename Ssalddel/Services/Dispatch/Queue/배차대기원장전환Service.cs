@@ -33,6 +33,9 @@ namespace 살뜰.Services.Dispatch.Queue
         private readonly ILogger<배차대기원장전환Service>? _timingLogger;
         private readonly ISharedDriverWorkAdmissionService? _sharedAdmission;
         private readonly I소형배송기사제안요금Service? _smallGoodsPricing;
+        private readonly I운영배차공통UseCase? _운영배차;
+        private readonly I화물후속픽업기준Service? _화물후속픽업;
+        private readonly I용달운송대상후보Service? _화물대상후보;
 
         public 배차대기원장전환Service(
             SsalddelContext db,
@@ -49,7 +52,10 @@ namespace 살뜰.Services.Dispatch.Queue
             TimeProvider? timeProvider = null,
             ILogger<배차대기원장전환Service>? timingLogger = null,
             ISharedDriverWorkAdmissionService? sharedAdmission = null,
-            I소형배송기사제안요금Service? smallGoodsPricing = null)
+            I소형배송기사제안요금Service? smallGoodsPricing = null,
+            I운영배차공통UseCase? 운영배차 = null,
+            I화물후속픽업기준Service? 화물후속픽업 = null,
+            I용달운송대상후보Service? 화물대상후보 = null)
         {
             _db = db;
             _options = options.Value;
@@ -66,6 +72,9 @@ namespace 살뜰.Services.Dispatch.Queue
             _timingLogger = timingLogger;
             _sharedAdmission = sharedAdmission;
             _smallGoodsPricing = smallGoodsPricing;
+            _운영배차 = 운영배차;
+            _화물후속픽업 = 화물후속픽업;
+            _화물대상후보 = 화물대상후보;
         }
 
         public async Task<배차대기원장전환결과> 계획배차에서추천으로전환Async(string requestId, CancellationToken cancellationToken = default)
@@ -121,6 +130,7 @@ namespace 살뜰.Services.Dispatch.Queue
                 && queue.배차노출상태 == 상태값.배차노출상태.추천후보없음;
             if (queue.배차큐단계 != 상태값.배차큐단계.배차추천
                 || (queue.배차노출상태 != 상태값.배차노출상태.추천대기
+                    && queue.배차노출상태 != 상태값.배차노출상태.추천만료
                     && !음식배달재탐색대기))
             {
                 return 전환안됨(
@@ -129,7 +139,10 @@ namespace 살뜰.Services.Dispatch.Queue
                     "추천대기 상태가 아니라 전환하지 않았습니다.");
             }
 
-            return await 추천거절후다음후보로진행Async(queue, queue.마지막거절기사Id, cancellationToken);
+            var expiredDriver = queue.배차노출상태 is 상태값.배차노출상태.추천대기 or 상태값.배차노출상태.추천만료
+                && string.IsNullOrWhiteSpace(queue.현재추천대상기사Id) && !queue.추천만료시각.HasValue
+                    ? await 만료된추천기사조회Async(queue, cancellationToken) : null;
+            return await 추천거절후다음후보로진행Async(queue, expiredDriver ?? queue.마지막거절기사Id, cancellationToken);
         }
 
         public async Task<배차대기원장전환결과> 추천시작Async(string requestId, string driverId, int? timeoutSeconds = null, CancellationToken cancellationToken = default)
@@ -206,38 +219,11 @@ namespace 살뜰.Services.Dispatch.Queue
 
         public async Task<배차대기원장전환결과> 추천만료처리Async(string requestId, CancellationToken cancellationToken = default)
         {
-            var queue = await _db.운송원장.FirstOrDefaultAsync(x => x.의뢰Id == requestId, cancellationToken);
-            if (queue is null)
-            {
-                return 대상없음(requestId);
-            }
-
-            if (queue.상태 != 상태값.배차대기상태.대기)
-            {
-                return 대기상태아님(queue);
-            }
-
-            if (!queue.추천만료시각.HasValue || queue.추천만료시각 > DateTime.UtcNow)
-            {
-                return 전환안됨(
-                    queue,
-                    배차대기원장전환결과코드.만료전,
-                    "추천 만료 시각 전이라 만료 처리하지 않았습니다.",
-                    queue.현재추천대상기사Id);
-            }
-
-            var expiredDriverId = queue.현재추천대상기사Id;
-
-            queue.배차큐단계 = 상태값.배차큐단계.배차추천;
-            queue.배차노출상태 = 상태값.배차노출상태.추천만료;
-            queue.현재추천대상기사Id = null;
-            queue.추천시작시각 = null;
-            queue.추천만료시각 = null;
-            queue.UpdatedAt = DateTime.UtcNow;
-
-            await _db.SaveChangesAsync(cancellationToken);
-
-            return await 추천거절후다음후보로진행Async(queue, expiredDriverId, cancellationToken);
+            var mutation = await _db.Database.CreateExecutionStrategy().ExecuteAsync(
+                () => 추천만료원장전환Async(requestId, cancellationToken));
+            if (mutation.Blocked is not null) return mutation.Blocked;
+            // 다음 후보 탐색은 만료와 미응답 사건이 확정된 뒤 별도로 진행한다.
+            return await 추천거절후다음후보로진행Async(mutation.Queue!, mutation.DriverId, cancellationToken);
         }
 
         public async Task<배차대기원장전환결과> 공개배차로전환Async(string requestId, CancellationToken cancellationToken = default)

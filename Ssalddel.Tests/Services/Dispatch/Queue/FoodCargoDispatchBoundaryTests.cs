@@ -312,7 +312,9 @@ public sealed class FoodCargoDispatchBoundaryTests
         I음식배달기사추천기록Service? food,
         CandidatePort? selection = null)
         => new(db, Options.Create(new 배차큐정책Options()), selection!, notification,
-            cargo, new 음식배달배차흐름Resolver(), pricing, food);
+            cargo, new 음식배달배차흐름Resolver(), pricing, food,
+            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용,
+            화물대상후보: new Ssalddel.Tests.Services.Dispatch.Common.용달대상후보시험Service());
 
     private sealed class CandidatePort(배차추천후보선정결과 result) : I배차추천후보선정Service
     {

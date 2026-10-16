@@ -372,13 +372,21 @@ namespace Ssalddel.Tests.Services.Dispatch.AI
                 await new SsalddelMobilePushInstallationService(db).UpsertAsync(item.Id,
                     new($"r75-installation-{item.Id}", 기사앱식별자.CargoYongdalDriverApp,
                         "Android", $"synthetic-token-{item.Id}"), default);
+                _locations.Upsert(new(item.Id, PickupLatitude, PickupLongitude, 5m, 상태값.기사운행상태.운행중, now, now));
+                await Availability(db).기사의사변경Async(item.Id, new()
+                {
+                    클라이언트요청Id = Guid.NewGuid(), 수신의사Code = 운영배차수신의사Code.On
+                });
             }
             await db.SaveChangesAsync();
             var queue = await db.운송원장.SingleAsync(x => x.의뢰Id == requestId);
             Assert.Null(queue.현재추천대상기사Id);
-            var policy = new 용달운송배차업무정책(db, _locations, _states, Options.Create(_queueOptions), _routes,
+            var availability = Availability(db);
+            var scheduleEvaluation = new 운송일정삽입평가Service(routes);
+            var anchor = new 화물후속픽업기준Service(db, new 기사운송일정구성Service(db), scheduleEvaluation);
+            var policy = new 용달운송배차업무정책(db, _locations, _states, Options.Create(_queueOptions), routes,
                 new 차량화물적합성Service(new 차량적재추천Engine()), new 배차추천판정Service(),
-                new 배차추천평가Service(), _rejected);
+                new 배차추천평가Service(), _rejected, 운영배차: availability, 후속픽업: anchor, 일정평가: scheduleEvaluation);
             var engine = new 화물용달배차엔진([policy], new 운송의뢰배차원천분류Service(),
                 new 화물용달배차흐름Resolver(), NullLogger<화물용달배차엔진>.Instance);
             var selection = new 배차추천후보선정Service(db, new 운영체제배차EngineCatalog([engine]));
@@ -391,7 +399,8 @@ namespace Ssalddel.Tests.Services.Dispatch.AI
             var noCandidate = await selection.다음후보선정Async(requestId, "r75-cargo-incompatible");
             Assert.Equal("r75-cargo-older", noCandidate.후보?.DriverId);
             var transition = new 배차대기원장전환Service(db, Options.Create(_queueOptions), selection, Notifications(db),
-                new 국내화물운송기사상태Service(_states), new 음식배달배차흐름Resolver(), smallGoodsPricing: smallPricing);
+                new 국내화물운송기사상태Service(_states), new 음식배달배차흐름Resolver(), smallGoodsPricing: smallPricing,
+                운영배차: availability, 화물후속픽업: anchor, 화물대상후보: policy);
             var changed = await transition.계획배차에서추천으로전환Async(requestId);
             Assert.True(changed.전환여부);
             await db.Entry(queue).ReloadAsync();
@@ -410,13 +419,14 @@ namespace Ssalddel.Tests.Services.Dispatch.AI
             var continuity = new 화물연속배차UseCase(db, Availability(db), new InMemory화물연속배차ProjectionStore(),
                 new PilotUnusedCargoRecommendations(), routes, _locations, new 화물연속배차Policy(),
                 Options.Create(new 화물연속배차Options { Enabled = false }), TimeProvider.System,
-                NullLogger<화물연속배차UseCase>.Instance);
+                NullLogger<화물연속배차UseCase>.Instance, 후속픽업: anchor, queueOptions: Options.Create(_queueOptions));
             var eligibility = new 화물배차수락적격성Service(db, _locations,
                 new 차량화물적합성Service(new 차량적재추천Engine()), new 기사운송일정구성Service(db),
                 new 운송일정삽입평가Service(routes));
             var accept = new 배차수락CommandHandler(db, _publisher, new TestCurrentUserAccessor(driver, "기사"),
                 new 참여자실행권한검사(), new WorkRelationshipSnapshotCollector(), eligibility, continuity,
-                NullLogger<배차수락CommandHandler>.Instance, smallGoodsPricing: smallPricing);
+                NullLogger<배차수락CommandHandler>.Instance, smallGoodsPricing: smallPricing,
+                운영배차: availability, 후속픽업: anchor, 기사위치: _locations, queueOptions: Options.Create(_queueOptions));
             var acceptCommand = new 배차수락Command(driver, requestId, queue.추천라운드,
                 [화물배차수락경고코드.차량주의사항]);
             var accepted = await accept.Handle(acceptCommand, CancellationToken.None);
@@ -524,7 +534,7 @@ namespace Ssalddel.Tests.Services.Dispatch.AI
 
         private sealed class r75합성경로Service(I배차추천경로Service inner) : I배차추천경로Service
         {
-            private static Task<배차경로예상결과?> Route(string? option = null) => Task.FromResult<배차경로예상결과?>(
+            private static Task<배차경로예상결과?> Route(string? option = "trafast") => Task.FromResult<배차경로예상결과?>(
                 new(8m, TimeSpan.FromMinutes(10), 0m, "r75-explicit-synthetic-route", true) { RouteOption = option });
             public Task<배차경로예상결과?> EstimateRouteAsync(배차경로좌표? origin, 배차경로좌표? destination) => Route();
             public Task<배차경로예상결과?> EstimateRouteAsync(배차경로좌표? origin, 배차경로좌표? destination, string option, CancellationToken ct) => Route(option);

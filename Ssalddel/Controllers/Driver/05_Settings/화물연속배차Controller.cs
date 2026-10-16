@@ -4,10 +4,12 @@ using Ssalddel.ApiMetadata;
 using Ssalddel.Contracts.Common.Dispatch;
 using 살뜰.도메인.공통;
 using 살뜰.Services.Dispatch.Continuity;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Driver.Settings05;
 
 [SsalddelApiVersion(SsalddelProductVersion.V2_0)]
+[SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
 [SsalddelApiCapability(SsalddelCapability.Dispatch)]
 [SsalddelApiAudience(SsalddelActor.Driver)]
 [ApiController]

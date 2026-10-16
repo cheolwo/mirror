@@ -59,6 +59,9 @@ public sealed record DriverWorkOfferDto(
     [property: JsonPropertyName("pricingPolicyRevision")] string? PricingPolicyRevision = null,
     [property: JsonPropertyName("weatherObservedAtUtc")] DateTimeOffset? WeatherObservedAtUtc = null)
 {
+    [JsonPropertyName("recommendationRound")]
+    public int RecommendationRound { get; init; }
+
     [JsonPropertyName("assignedActivities")]
     public IReadOnlyList<string> AssignedActivities { get; init; } = [];
     [JsonPropertyName("pricing")]

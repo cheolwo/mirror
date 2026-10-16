@@ -7,6 +7,16 @@ namespace 살뜰.Services.Dispatch.Common;
 
 public static class 운영배차활동사건Factory
 {
+    public static 운영배차활동사건 제안표시확인(string 기사Id, string 제안Id, int 추천라운드, DateTime 발생시각Utc)
+        => 생성(기사Id, 운영배차주체역할Code.기사, 제안Id, null, 추천라운드, 발생시각Utc,
+            운영배차사건유형Code.제안표시확인, 운영배차제안유효성Code.유효, 운영배차책임Code.해당없음,
+            운영배차미응답Code.앱표시확인, 운영배차미응답Code.라운드상태(추천라운드));
+
+    public static 운영배차활동사건 무응답(string 기사Id, string 제안Id, int 추천라운드, DateTime 만료시각Utc)
+        => 생성(기사Id, 운영배차주체역할Code.기사, 제안Id, null, 추천라운드, 만료시각Utc,
+            운영배차사건유형Code.무응답, 운영배차제안유효성Code.유효, 운영배차책임Code.미확정,
+            운영배차미응답Code.표시제안만료, 운영배차미응답Code.라운드상태(추천라운드));
+
     public static 운영배차활동사건 유효제안(
         string 기사Id,
         string 제안Id,

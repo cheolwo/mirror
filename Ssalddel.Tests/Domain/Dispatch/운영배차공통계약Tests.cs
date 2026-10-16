@@ -57,8 +57,10 @@ public sealed class 운영배차공통계약Tests
         Assert.Equal(
             [
                 "contract.operational-dispatch-availability",
+                "contract.operational-dispatch-offer-receipt",
                 "contract.operational-dispatch-activity",
                 "domain.operational-dispatch-availability-policy",
+                "domain.operational-dispatch-no-response",
                 "domain.operational-dispatch-short-window",
                 "contract.food-demand-participation",
                 "contract.food-dispatch-timing",
@@ -68,13 +70,16 @@ public sealed class 운영배차공통계약Tests
                 "domain.food-dispatch-timing-policy",
                 "domain.food-dispatch-information-policy",
                 "application.food-demand-participation",
+                "application.cargo-next-pickup-anchor",
                 "application.food-dispatch-timing",
                 "application.food-regional-dispatch-review",
                 "infrastructure.food-dispatch-ollama-selection",
                 "infrastructure.food-dispatch-timing-ollama",
                 "infrastructure.food-regional-dispatch-ollama",
+                "application.operational-dispatch-new-offer-guard",
                 "application.operational-dispatch-decision-projection-port",
-                "application.operational-dispatch-usecase"
+                "application.operational-dispatch-usecase",
+                "application.operational-dispatch-offer-display"
             ],
             metadata.Select(x => x.StepKey).ToArray());
         Assert.All(metadata, item => Assert.False(string.IsNullOrWhiteSpace(item.Boundary)));

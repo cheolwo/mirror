@@ -4,6 +4,8 @@ namespace 살뜰.Services.Dispatch.Recommendation
 {
     public interface I운송일정삽입평가Service
     {
+        Task<운송기존일정평가결과> 기존일정평가Async(기사운송일정계획 계획, CancellationToken cancellationToken = default)
+            => Task.FromResult(new 운송기존일정평가결과(false, null, null, null, "ExistingScheduleServiceUnsupported"));
         Task<운송삽입평가결과> 평가Async(기사운송일정계획 계획, 화주운송의뢰 후보의뢰, CancellationToken cancellationToken = default);
     }
 
@@ -14,6 +16,19 @@ namespace 살뜰.Services.Dispatch.Recommendation
         public 운송일정삽입평가Service(I배차추천경로Service routeService)
         {
             _routeService = routeService;
+        }
+
+        public async Task<운송기존일정평가결과> 기존일정평가Async(기사운송일정계획 계획, CancellationToken cancellationToken = default)
+        {
+            if (계획.시작좌표 is null || 계획.항목목록.Count == 0
+                || 계획.항목목록.Any(x => x.좌표 is null || !x.시간창종료일시.HasValue))
+                return new(false, null, null, null, "ActiveScheduleEvidenceMissing");
+            var baseline = await 시뮬레이션Async(계획.시작좌표, 계획.항목목록, 계획.기준시각, cancellationToken);
+            var last = baseline.도착예상목록.OrderBy(x => x.순서).LastOrDefault();
+            return baseline.전체완수가능여부 && baseline.전체실제경로확인됨 && baseline.종료좌표 is not null
+                   && last?.예상도착시각 is { } eta && eta >= 계획.기준시각 && !string.IsNullOrWhiteSpace(baseline.경로옵션)
+                ? new(true, baseline.종료좌표, eta, baseline.경로옵션, "VerifiedActiveScheduleEnd")
+                : new(false, null, null, null, "ActiveScheduleRouteUnverified");
         }
 
         public async Task<운송삽입평가결과> 평가Async(기사운송일정계획 계획, 화주운송의뢰 후보의뢰, CancellationToken cancellationToken = default)

@@ -169,7 +169,7 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
                 new 배차경로좌표(currentLocation.Latitude, currentLocation.Longitude),
                 cancellationToken);
             var schedule = await _일정삽입평가Service.평가Async(plan, 후보의뢰, cancellationToken);
-            if (!schedule.삽입가능여부 || !schedule.전체완수가능여부)
+            if (!schedule.삽입가능여부 || !schedule.전체완수가능여부 || !schedule.후보포함실제경로확인됨)
             {
                 return Block(
                     화물배차수락오류코드.일정실패,
@@ -182,7 +182,7 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
             }
 
             var feasibleCapacityAttempt = schedule.시도목록
-                .Where(x => x.전체완수가능여부)
+                .Where(x => x.전체완수가능여부 && x.전체실제경로확인됨)
                 .OrderBy(x => x.총추가지연분 ?? decimal.MaxValue)
                 .ThenBy(x => x.총소요시간분 ?? decimal.MaxValue)
                 .Select(x => new

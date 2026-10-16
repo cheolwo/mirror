@@ -5,7 +5,7 @@ using 살뜰.도메인.배차;
 
 namespace 살뜰.Services.Dispatch.Common;
 
-public sealed class Ef운영배차활동원장Store : I운영배차활동원장Store
+public sealed partial class Ef운영배차활동원장Store : I운영배차활동원장Store
 {
     private readonly SsalddelContext _db;
 
@@ -30,6 +30,8 @@ public sealed class Ef운영배차활동원장Store : I운영배차활동원장S
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(사건);
+        if (사건.사건유형Code == 운영배차사건유형Code.수신의사변경)
+            return await 수신의사추가Async(사건, false, null, cancellationToken);
         var existing = await 사건조회Async(사건.사건StableId, cancellationToken);
         if (existing is not null)
         {
@@ -107,6 +109,8 @@ public sealed class Ef운영배차활동원장Store : I운영배차활동원장S
         {
             사건StableId = entity.사건StableId,
             발생시각Utc = new DateTimeOffset(DateTime.SpecifyKind(entity.발생시각Utc, DateTimeKind.Utc)),
+            원장기록시각Utc = entity.기록시각Utc == default ? null
+                : new DateTimeOffset(DateTime.SpecifyKind(entity.기록시각Utc, DateTimeKind.Utc)),
             운영시장시간대Id = entity.운영시장시간대Id,
             ShiftId = entity.ShiftId,
             제안Id = entity.제안Id,
@@ -139,6 +143,8 @@ public sealed class Ef운영배차활동원장Store : I운영배차활동원장S
                    && existing.지표단위수 == requested.지표단위수;
         if (!same)
         {
+            if (requested.사건유형Code == 운영배차사건유형Code.수신의사변경)
+                throw new 운영배차수신요청충돌Exception();
             throw new InvalidOperationException($"같은 사건 Stable ID '{requested.사건StableId}'에 다른 요청 내용이 있습니다.");
         }
     }

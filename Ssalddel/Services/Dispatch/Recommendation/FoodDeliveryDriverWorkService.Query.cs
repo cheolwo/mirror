@@ -197,6 +197,7 @@ public sealed partial class 음식배달기사업무Service
             queue.기사제안요금정책판본,
             ToOffset(queue.픽업지기상기준시각Utc))
         {
+            RecommendationRound = isRecommended ? queue.추천라운드 : 0,
             AssignedActivities = 기사제안표시근거Service.운송작업(false),
             Pricing = 기사제안표시근거Service.요금근거(queue)
         };

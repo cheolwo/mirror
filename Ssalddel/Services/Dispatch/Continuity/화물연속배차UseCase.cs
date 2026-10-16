@@ -14,6 +14,7 @@ using 살뜰.Services.Dispatch.Common;
 using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.Services.Options;
 using 살뜰.Services.Storage.Local;
+using 살뜰.Services.Dispatch.Queue;
 
 namespace 살뜰.Services.Dispatch.Continuity;
 
@@ -44,6 +45,8 @@ public sealed class 화물연속배차UseCase : I화물연속배차UseCase
     private readonly 화물연속배차Options _options;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<화물연속배차UseCase> _logger;
+    private readonly I화물후속픽업기준Service _후속픽업;
+    private readonly 배차큐정책Options _queueOptions;
 
     public 화물연속배차UseCase(
         SsalddelContext db,
@@ -55,7 +58,9 @@ public sealed class 화물연속배차UseCase : I화물연속배차UseCase
         화물연속배차Policy policy,
         IOptions<화물연속배차Options> options,
         TimeProvider timeProvider,
-        ILogger<화물연속배차UseCase> logger)
+        ILogger<화물연속배차UseCase> logger,
+        I화물후속픽업기준Service? 후속픽업 = null,
+        IOptions<배차큐정책Options>? queueOptions = null)
     {
         _db = db;
         _운영배차 = 운영배차;
@@ -67,6 +72,8 @@ public sealed class 화물연속배차UseCase : I화물연속배차UseCase
         _options = options.Value;
         _timeProvider = timeProvider;
         _logger = logger;
+        _후속픽업 = 후속픽업 ?? new 화물후속픽업기준Service(db, new 기사운송일정구성Service(db), new 운송일정삽입평가Service(경로Service));
+        _queueOptions = queueOptions?.Value ?? new 배차큐정책Options();
     }
 
     public async Task<화물연속배차상태Dto> 조회Async(string 기사Id, CancellationToken cancellationToken = default)
@@ -160,8 +167,8 @@ public sealed class 화물연속배차UseCase : I화물연속배차UseCase
         }
 
         var availability = await _운영배차.수신상태조회Async(기사Id, cancellationToken);
-        if (availability.수신의사Code != 운영배차수신의사Code.On
-            || availability.실효상태Code != 운영배차실효상태Code.배차가능)
+        if (!살뜰.도메인.배차.운영배차수신상태Policy.신규배차수신허용(availability)
+            || !await _db.화물연속배차상태.AsNoTracking().AnyAsync(x => x.기사Id == 기사Id && x.활성여부, cancellationToken))
         {
             return null;
         }
@@ -179,6 +186,7 @@ public sealed class 화물연속배차UseCase : I화물연속배차UseCase
         var current = await _db.운송원장.AsNoTracking()
             .Where(x => x.기사_운송자 == 기사Id
                         && x.배차업무유형 == 상태값.배차업무유형.용달운송
+                        && x.배차큐단계 == 상태값.배차큐단계.확정
                         && x.상태 != "인수완료")
             .OrderBy(x => x.도착 ?? DateTime.MaxValue)
             .FirstOrDefaultAsync(cancellationToken);
@@ -186,6 +194,12 @@ public sealed class 화물연속배차UseCase : I화물연속배차UseCase
         {
             return null;
         }
+
+        var basisNow = _timeProvider.GetUtcNow().UtcDateTime;
+        if (!_위치Store.TryGetLatest(기사Id, out var anchorLocation)
+            || !기사위치신선도정책.유효한가(anchorLocation.ReceivedAtUtc, basisNow, _queueOptions.기사위치유효시간분)) return null;
+        var basis = await _후속픽업.조회Async(기사Id, new 배차경로좌표(anchorLocation.Latitude, anchorLocation.Longitude), basisNow, cancellationToken);
+        if (!basis.확인됨 || !basis.활성업무있음 || basis.기준좌표 is null) return null;
 
         var recommendations = await _추천Service.GetDrivingRecommendationsAsync(기사Id);
         var candidate = recommendations
@@ -215,11 +229,11 @@ public sealed class 화물연속배차UseCase : I화물연속배차UseCase
         var moving = _위치Store.TryGetLatest(기사Id, out var location)
                      && string.Equals(location.DrivingStatus, 상태값.기사운행상태.운행중, StringComparison.Ordinal);
         var nearDropoff = false;
-        if (location is not null && current.하차_위도.HasValue && current.하차_경도.HasValue)
+        if (location is not null)
         {
             nearDropoff = (_경로Service.CalculateDistanceKm(
                 new 배차경로좌표(location.Latitude, location.Longitude),
-                new 배차경로좌표(current.하차_위도.Value, current.하차_경도.Value)) ?? decimal.MaxValue)
+                basis.기준좌표) ?? decimal.MaxValue)
                 <= _options.도착임박거리Km;
         }
 
@@ -255,6 +269,16 @@ public sealed class 화물연속배차UseCase : I화물연속배차UseCase
         };
 
         _db.화물다음콜예약.Add(reservation);
+        var finalNow = _timeProvider.GetUtcNow().UtcDateTime;
+        if (reservation.만료시각Utc <= finalNow
+            || !await _후속픽업.현재근거확인Async(기사Id, basis, cancellationToken)
+            || !await _db.화물연속배차상태.AsNoTracking().AnyAsync(x => x.기사Id == 기사Id && x.활성여부, cancellationToken)
+            || !await _db.운송원장.AsNoTracking().AnyAsync(x => x.의뢰Id == candidate.의뢰Id
+                && x.현재추천대상기사Id == 기사Id && x.추천라운드 == candidate.추천라운드
+                && x.상태 == 상태값.배차대기상태.대기 && x.배차큐단계 == 상태값.배차큐단계.배차추천
+                && x.배차노출상태 == 상태값.배차노출상태.추천중 && x.추천만료시각 > finalNow, cancellationToken)
+            || !await 운영배차신규수신Guard.허용Async(_운영배차, 기사Id, cancellationToken))
+        { _db.Entry(reservation).State = EntityState.Detached; return null; }
         _db.배차추천알림Outbox.Add(new 배차추천알림Outbox
         {
             의뢰Id = candidate.의뢰Id,
@@ -284,6 +308,8 @@ public sealed class 화물연속배차UseCase : I화물연속배차UseCase
         long? expectedRevision,
         CancellationToken cancellationToken = default)
     {
+        if (!await 운영배차신규수신Guard.허용Async(_운영배차, 기사Id, cancellationToken))
+            return new(false, "FreightDispatchReceivingOff", "신규 배차 수신 상태를 확인해 주세요.");
         if (string.IsNullOrWhiteSpace(reservationId))
         {
             return new 화물예약검증결과(true);

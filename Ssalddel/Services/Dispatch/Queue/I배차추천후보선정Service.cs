@@ -8,7 +8,11 @@ namespace 살뜰.Services.Dispatch.Queue
         Task<배차추천후보선정결과> 다음후보선정Async(string requestId, string? 제외기사Id = null, CancellationToken cancellationToken = default);
     }
 
-    public sealed record 배차추천후보(string DriverId, decimal 추천점수, string 추천사유);
+    public sealed record 배차추천후보(string DriverId, decimal 추천점수, string 추천사유)
+    {
+        [System.Text.Json.Serialization.JsonIgnore]
+        public 살뜰.Services.Dispatch.Recommendation.화물후속픽업기준결과? 화물수행근거 { get; init; }
+    }
 
     public enum 배차추천후보선정상태
     {

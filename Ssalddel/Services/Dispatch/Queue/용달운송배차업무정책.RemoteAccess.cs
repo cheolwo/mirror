@@ -1,4 +1,5 @@
 using 살뜰.도메인.화물;
+using Microsoft.EntityFrameworkCore;
 using 살뜰.Services.Storage.Local;
 
 namespace 살뜰.Services.Dispatch.Queue
@@ -16,11 +17,20 @@ namespace 살뜰.Services.Dispatch.Queue
                 .ToDictionary(x => x.Key, x => x.First(), StringComparer.Ordinal);
 
             var activeCandidates = await _국내화물운송기사상태Store.활성기사조회Async(
-                Math.Max(1, _options.원거리지원후보최대조회수),
+                Math.Clamp(_options.원거리지원후보최대조회수, 1, 500),
                 cancellationToken);
+            var activeIds = activeCandidates.Select(x => x.DriverId).Distinct(StringComparer.Ordinal).ToArray();
+            var performing = _options.화물수행종료기준사용
+                ? (await _db.운송원장.AsNoTracking().Where(x => x.배차큐단계 == 상태값.배차큐단계.확정
+                    && x.상태 != 상태값.배차상태.인수완료
+                    && (Enumerable.Contains(activeIds, x.확정기사Id!) || Enumerable.Contains(activeIds, x.기사_운송자)))
+                    .Select(x => x.확정기사Id ?? x.기사_운송자).Distinct().ToArrayAsync(cancellationToken)).ToHashSet(StringComparer.Ordinal)
+                : new HashSet<string>(StringComparer.Ordinal);
 
             foreach (var state in activeCandidates)
             {
+                // GPS 반경 밖이어도 현재 업무의 끝점이 새 픽업 근처일 수 있다. 제한된 active-index만 합친다.
+                if (performing.Contains(state.DriverId)) { result.TryAdd(state.DriverId, state); continue; }
                 if (result.ContainsKey(state.DriverId)
                     || !state.상차접근허용반경Km.HasValue
                     || !state.Latitude.HasValue

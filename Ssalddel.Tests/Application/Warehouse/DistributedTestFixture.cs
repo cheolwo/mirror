@@ -17,6 +17,9 @@ using 살뜰.Services.Dispatch.Continuity;
 using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.Services.Options;
 using 살뜰.Services.Storage.Local;
+using 살뜰.Services.Dispatch.Common;
+using 살뜰.도메인.배차;
+using Ssalddel.Infrastructure.Storage.Memory;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.기사;
 using 살뜰.도메인.창고;
@@ -41,6 +44,10 @@ internal sealed class DistributedTestFixture(SqliteConnection connection, Ssaldd
     public string? FailCargoId { get; set; }
     public bool RequireVehicleAdvisory { get; set; }
     public VerifiedFixturePhotos Photos { get; } = new();
+    private readonly InMemory운영배차판정ProjectionStore _availabilityProjection = new();
+    private I운영배차공통UseCase Availability(SsalddelContext store) => new 운영배차공통UseCase(
+        new Ef운영배차활동원장Store(store), _availabilityProjection, new 운영배차수신상태Policy(),
+        new 운영배차단기지표Calculator(), TimeProvider.System, NullLogger<운영배차공통UseCase>.Instance);
     public IDistributedFulfillmentUseCase Service => Use(Operator);
     public 분산물류UseCase Use(DistributedActor actor, bool enabled = true, SsalddelExecutionMode mode = SsalddelExecutionMode.Simulation, string? profile = null, SsalddelContext? store = null, IDistributedPhotoEvidenceBinder? binder = null, I분산주문원장연결Adapter? orderLedgers = null,
         Ssalddel.Services.Dispatch.Participation.ISharedDriverWorkAdmissionService? sharedAdmission = null)
@@ -52,7 +59,9 @@ internal sealed class DistributedTestFixture(SqliteConnection connection, Ssaldd
         var eligibility = new 화물배차수락적격성Service(workingDb, Locations, new 차량화물적합성Service(new 차량적재추천Engine()),
             new 기사운송일정구성Service(workingDb), new 운송일정삽입평가Service(Routes));
         var handler = new 배차수락CommandHandler(workingDb, Publisher, current, new 참여자실행권한검사(), new WorkRelationshipSnapshotCollector(),
-            eligibility, new Continuity(), NullLogger<배차수락CommandHandler>.Instance);
+            eligibility, new Continuity(), NullLogger<배차수락CommandHandler>.Instance,
+            운영배차: Availability(workingDb), 후속픽업: new 화물후속픽업기준Service(workingDb,
+                new 기사운송일정구성Service(workingDb), new 운송일정삽입평가Service(Routes)), 기사위치: Locations);
         var executor = TransportExecutor(actor, workingDb);
         var cargo = new 분산화물연결Service(workingDb, new Sender(handler, () => FailCargoId), executor, Publisher, NullLogger<분산화물연결Service>.Instance);
         return new(workingDb, execution, options, new 분산배송경로Planner(Routes, options), cargo, Clock, Locations, new EmptyDistributedBuildingCandidateProvider(), binder ?? Photos, orderLedgers, sharedAdmission);
@@ -99,9 +108,14 @@ internal sealed class DistributedTestFixture(SqliteConnection connection, Ssaldd
             SKU = "same-sku", 상품명 = "A 기업 물품", 입고수량 = 0, 가용수량 = 0 });
         d.살뜰참여자.AddRange(new 살뜰.도메인.사용자.살뜰참여자 { Id = "goods-owner-a", 표시이름 = "A 기업 소유자" },
             new 살뜰.도메인.사용자.살뜰참여자 { Id = SellerB.UserId, 표시이름 = "B 기업 소유자" });
-        await d.SaveChangesAsync(); d.ChangeTracker.Clear(); return f;
+        await d.SaveChangesAsync();
+        await f.Availability(d).기사의사변경Async(Driver.UserId, new()
+        {
+            클라이언트요청Id = Guid.NewGuid(), 수신의사Code = 운영배차수신의사Code.On
+        });
+        d.ChangeTracker.Clear(); return f;
     }
-    public void RefreshLocation() => Locations.Upsert(new(Driver.UserId, 37, 127, 5, "대기", Clock.Now, Clock.Now));
+    public void RefreshLocation() => Locations.Upsert(new(Driver.UserId, 37, 127, 5, "대기", Clock.Now, DateTime.UtcNow));
     public SsalddelContext IndependentContext() => new(new DbContextOptionsBuilder<SsalddelContext>().UseSqlite(connection).Options, new Encryption());
     public async Task Export(string role, DistributedActor actor, string stage)
     {
@@ -280,8 +294,12 @@ internal sealed class DistributedRoute : I배차추천경로Service
     public Task<배차경로좌표?> ResolveRouteAnchorLocationAsync(string id, 용달기사? driver, DriverLocationSnapshot? location) => Task.FromResult<배차경로좌표?>(null);
     public Task<배차경로예상결과?> EstimateRouteAsync(배차경로좌표? a, 배차경로좌표? b)
         => Task.FromResult<배차경로예상결과?>(Available && a is not null && b is not null ? new(Math.Abs(a.Latitude - b.Latitude) * 100,
-            TimeSpan.FromMinutes((double)(Math.Abs(a.Latitude - b.Latitude) * 100 + 1)), 0, "ExplicitSyntheticFixture", true) : null);
-    public Task<배차경로예상결과?> EstimateRouteAsync(배차경로좌표? a, 배차경로좌표? b, string option, CancellationToken ct) => EstimateRouteAsync(a, b);
+            TimeSpan.FromMinutes((double)(Math.Abs(a.Latitude - b.Latitude) * 100 + 1)), 0, "ExplicitSyntheticFixture", true) { RouteOption = "trafast" } : null);
+    public async Task<배차경로예상결과?> EstimateRouteAsync(배차경로좌표? a, 배차경로좌표? b, string option, CancellationToken ct)
+    {
+        var route = await EstimateRouteAsync(a, b);
+        return route is null ? null : route with { RouteOption = option };
+    }
     public Task<배차경로예상결과?> EstimateOrderedRouteAsync(배차경로좌표? origin, IReadOnlyList<배차경로좌표> stops, CancellationToken ct = default) => EstimateRouteAsync(origin, stops.LastOrDefault());
     public Task<배차삽입경로예상결과?> EstimateInsertionDelayAsync(배차경로좌표? a, 배차경로좌표? b, 배차경로좌표? c, 배차경로좌표? d) => Task.FromResult<배차삽입경로예상결과?>(null);
     public decimal? CalculateDistanceKm(배차경로좌표 a, 배차경로좌표 b) => Math.Abs(a.Latitude - b.Latitude) * 100;

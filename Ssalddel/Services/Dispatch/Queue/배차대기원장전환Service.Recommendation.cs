@@ -29,6 +29,12 @@ namespace 살뜰.Services.Dispatch.Queue
                         cancellationToken);
             }
 
+            if (queue.배차업무유형 == 상태값.배차업무유형.용달운송
+                && !await 운영배차신규수신Guard.허용Async(_운영배차, driverId, cancellationToken))
+                return 전환안됨(queue, 배차대기원장전환결과코드.추천준비안됨, "신규 배차 수신 상태를 확인해 주세요.", driverId);
+            var cargoBefore = queue.배차업무유형 == 상태값.배차업무유형.용달운송
+                ? 음식배달선정원장판본.생성(queue) : null;
+
             if (queue.배차노출상태 == 상태값.배차노출상태.추천중
                 && !string.IsNullOrWhiteSpace(queue.현재추천대상기사Id)
                 && (!queue.추천만료시각.HasValue || queue.추천만료시각 > DateTime.UtcNow))
@@ -62,6 +68,15 @@ namespace 살뜰.Services.Dispatch.Queue
             // 직접 지정에서도 첫 추천의 수집 판단을 우회하지 않는다.
             if (selection is null && await 음식배달수집판정Async(queue, cancellationToken) is { } collecting)
                 return collecting;
+
+            if (selection is null && queue.배차업무유형 == 상태값.배차업무유형.용달운송)
+            {
+                var target = _화물대상후보 is null ? null
+                    : await _화물대상후보.대상후보조회Async(queue, driverId, cancellationToken);
+                if (target is null)
+                    return 전환안됨(queue, 배차대기원장전환결과코드.추천준비안됨, "현재 후보 근거가 확인되지 않은 기사에게 추천할 수 없습니다.", driverId);
+                selection = 배차추천후보선정결과.선정됨(target);
+            }
 
             // 직접 기사 지정도 현재 후보 선정을 통과한다. 이미 선정한 자동 흐름과 유효한 기존 제안은 재평가하지 않는다.
             if (selection is null && (_foodDemandParticipationEnabled || _candidateAI?.Enabled == true || _dispatchTiming?.Enabled == true)
@@ -130,6 +145,23 @@ namespace 살뜰.Services.Dispatch.Queue
             }
 
             var changedAtUtc = DateTime.UtcNow;
+            if (queue.배차업무유형 == 상태값.배차업무유형.용달운송)
+            {
+                var currentQueue = await _db.운송원장.AsNoTracking().SingleOrDefaultAsync(x => x.의뢰Id == queue.의뢰Id, cancellationToken);
+                var basis = selection?.후보?.화물수행근거;
+                var activeWithoutBasis = basis is null && _options.화물수행종료기준사용
+                    && await _db.운송원장.AsNoTracking().AnyAsync(x => (x.기사_운송자 == driverId || x.확정기사Id == driverId)
+                        && x.배차큐단계 == 상태값.배차큐단계.확정 && x.상태 != 상태값.배차상태.인수완료, cancellationToken);
+                if (currentQueue is null || cargoBefore != 음식배달선정원장판본.생성(currentQueue)
+                    || cargoBefore != 음식배달선정원장판본.생성(queue)
+                    || activeWithoutBasis || (basis is not null && (_화물후속픽업 is null
+                        || !await _화물후속픽업.현재근거확인Async(driverId, basis, cancellationToken)))
+                    || !await 운영배차신규수신Guard.허용Async(_운영배차, driverId, cancellationToken))
+                {
+                    _db.Entry(queue).CurrentValues.SetValues(beforePricing);
+                    return 전환안됨(queue, 배차대기원장전환결과코드.추천준비안됨, "기사의 수신 상태 또는 기존 수행 근거가 변경되었습니다.", driverId);
+                }
+            }
             queue.배차큐단계 = 상태값.배차큐단계.배차추천;
             queue.배차노출상태 = 상태값.배차노출상태.추천중;
             queue.현재추천대상기사Id = driverId;

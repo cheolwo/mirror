@@ -23,6 +23,7 @@ public sealed class 운영배차수신상태Policy
         ArgumentNullException.ThrowIfNull(현재);
         if (현재.수신의사Code != 운영배차수신의사Code.On
             || !현재.수신의사변경시각Utc.HasValue
+            || 현재.미응답자동중지여부
             || 현재.실효상태Code == 운영배차실효상태Code.서버일시정지)
         {
             return false;
@@ -58,6 +59,9 @@ public sealed class 운영배차수신상태Policy
             실효사유Code = 현재?.실효사유Code ?? string.Empty,
             수신의사변경시각Utc = 발생시각Utc.ToUniversalTime(),
             실효상태변경시각Utc = 현재?.실효상태변경시각Utc,
+            미응답자동중지여부 = 현재?.미응답자동중지여부 ?? false,
+            연속미응답횟수 = 현재?.연속미응답횟수 ?? 0,
+            미응답자동중지시각Utc = 현재?.미응답자동중지시각Utc,
             서버관측시각Utc = 발생시각Utc.ToUniversalTime()
         };
     }
@@ -85,6 +89,9 @@ public sealed class 운영배차수신상태Policy
             실효사유Code = 실효사유Code ?? string.Empty,
             수신의사변경시각Utc = 현재.수신의사변경시각Utc,
             실효상태변경시각Utc = 관측시각Utc.ToUniversalTime(),
+            미응답자동중지여부 = 현재.미응답자동중지여부,
+            연속미응답횟수 = 현재.연속미응답횟수,
+            미응답자동중지시각Utc = 현재.미응답자동중지시각Utc,
             서버관측시각Utc = 관측시각Utc.ToUniversalTime()
         };
     }

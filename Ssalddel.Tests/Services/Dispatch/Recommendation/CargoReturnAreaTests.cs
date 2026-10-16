@@ -447,7 +447,8 @@ public sealed class CargoReturnAreaTests
         public 화물배차추천Service Recommendations(bool realFit = false) => new(Db, location, Rejected, null!, null!, null!, routes,
             new 배차추천판정Service(), Score, realFit ? new 차량화물적합성Service(new 차량적재추천Engine()) : Fit,
             new 기사운송일정구성Service(Db), new 운송일정삽입평가Service(routes),
-            new FixtureFuel(), null!, null!, ReturnArea);
+            new FixtureFuel(), null!, null!, ReturnArea,
+            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용);
 
         public 국내화물배차조율입력Factory Factory(bool realFit = false) => new(Db, new FixtureDriverState(), Rejected, routes,
             realFit ? new 차량화물적합성Service(new 차량적재추천Engine()) : Fit,
@@ -503,6 +504,12 @@ public sealed class CargoReturnAreaTests
         }
         public Task<배차경로예상결과?> EstimateOrderedRouteAsync(배차경로좌표? origin, IReadOnlyList<배차경로좌표> stops, CancellationToken cancellationToken = default)
             => throw new NotSupportedException();
+        public Task<배차경로예상결과?> EstimateRouteAsync(배차경로좌표? origin, 배차경로좌표? destination,
+            string routeOption, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return EstimateRouteAsync(origin, destination);
+        }
         public Task<배차삽입경로예상결과?> EstimateInsertionDelayAsync(배차경로좌표? origin, 배차경로좌표? anchor, 배차경로좌표? pickup, 배차경로좌표? dropoff)
             => Task.FromResult<배차삽입경로예상결과?>(null);
         public decimal? CalculateDistanceKm(배차경로좌표 source, 배차경로좌표 target)

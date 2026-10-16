@@ -78,6 +78,8 @@ public sealed class FoodDeliveryDriverStopDto
     Boundary = "거리 null과 확인된 0을 구별한다. 제안 금액은 음식 주문 금액이나 기사 실지급 완료를 뜻하지 않는다.")]
 public sealed class FoodDeliveryDriverOfferDto
 {
+    /// <summary>현재 서버 추천 차수입니다. 0은 구형 응답이며 미응답 집계용 수신 확인에 사용하지 않습니다.</summary>
+    public int RecommendationRound { get; set; }
     public string? WorkKind { get; set; }
     public IReadOnlyList<string> AssignedActivities { get; set; } = [];
     public Ssalddel.Contracts.Common.Drivers.DriverOfferPricingDto? Pricing { get; set; }

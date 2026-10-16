@@ -33,6 +33,9 @@ namespace 살뜰.Services.Dispatch.Queue
         // 실제 일정 근거가 없으면 현재 위치로 가장하지 않고 신규 후보에서 제외한다.
         public bool 음식배달수행종료기준사용 { get; set; }
 
+        // 수행 중 퀵·화물은 확인된 전체 업무 끝점/완료 예상시각에서 다음 픽업을 평가한다.
+        public bool 화물수행종료기준사용 { get; set; } = true;
+
         // 추천 후 공개 전환까지의 기본 대기시간(초)
         public int 공개전환대기초 { get; set; } = 0;
 
