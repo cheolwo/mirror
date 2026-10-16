@@ -13,6 +13,111 @@ namespace Ssalddel.Tests.Services.Community;
 
 public sealed class NeighborhoodDeliveryDisclosureTests
 {
+    [Theory]
+    [InlineData("legacy")]
+    [InlineData("automatic")]
+    [InlineData("source")]
+    [InlineData("source-automatic")]
+    [InlineData("member")]
+    [InlineData("source-member")]
+    [InlineData("member-policy")]
+    [InlineData("source-member-policy")]
+    public async Task 등록메모의기존출처회원배차블록뒤에도정확한신청동의를검증한다(string kind)
+    {
+        await using var fixture = await Fixture.Create();
+        var id = Guid.NewGuid();
+        var memo = "neighborhood-delivery:v1:fixture:consent:" + id.ToString("N");
+        if (kind.StartsWith("source", StringComparison.Ordinal)) memo += 생활배송출처Evidence.Marker + "17";
+        if (kind.Contains("member", StringComparison.Ordinal)) memo += 생활배송배차Policy.MemberMarker;
+        if (kind.EndsWith("automatic", StringComparison.Ordinal))
+            memo += 생활배송배차Policy.신청메모(new() { DispatchMode = NeighborhoodDispatchModes.Automatic });
+        if (kind.EndsWith("member-policy", StringComparison.Ordinal))
+            memo += 생활배송배차Policy.신청메모(new()
+                { MemberDeliveryRequested = true, CollaborationId = "collaboration", ExpectedTermsRevision = 3 });
+        (await fixture.Db.화주운송의뢰.SingleAsync()).정산메모 = memo;
+        await fixture.Db.SaveChangesAsync();
+
+        Assert.True((await fixture.Service.내상태Async("delivery-a"))!.CanRecordConsent);
+        var recorded = await fixture.Service.기록Async("delivery-a", Decision());
+
+        Assert.True(recorded.IsSuccess);
+        Assert.True(recorded.Value.Consented);
+        Assert.True(await fixture.Service.유효한기사제공동의인가Async("delivery-a", "driver-a", "member-a"));
+        Assert.Equal(id, fixture.Consent.LastId);
+        fixture.Consent.Active = false;
+        Assert.False((await fixture.Service.내상태Async("delivery-a"))!.CanRecordConsent);
+        Assert.False(await fixture.Service.유효한기사제공동의인가Async("delivery-a", "driver-a", "member-a"));
+    }
+
+    [Theory]
+    [InlineData("short")]
+    [InlineData("long")]
+    [InlineData("empty")]
+    [InlineData("hyphen")]
+    [InlineData("nonhex")]
+    [InlineData("guid-space")]
+    [InlineData("duplicate-consent")]
+    [InlineData("wrong-prefix")]
+    [InlineData("marker-in-fingerprint")]
+    [InlineData("unknown-suffix")]
+    [InlineData("source-zero")]
+    [InlineData("source-negative")]
+    [InlineData("source-duplicate")]
+    [InlineData("source-overflow")]
+    [InlineData("member-duplicate")]
+    [InlineData("member-wrong-version")]
+    [InlineData("wrong-marker-order")]
+    [InlineData("policy-empty")]
+    [InlineData("policy-base64")]
+    [InlineData("policy-json")]
+    [InlineData("policy-unknown-mode")]
+    [InlineData("policy-member-conflict")]
+    public async Task 불명확한GUID경계와손상되거나임의인메모는동의서비스를호출하지않는다(string kind)
+    {
+        await using var fixture = await Fixture.Create();
+        var id = Guid.NewGuid();
+        var prefix = "neighborhood-delivery:v1:fixture:consent:";
+        var token = id.ToString("N");
+        var automatic = 생활배송배차Policy.신청메모(new() { DispatchMode = NeighborhoodDispatchModes.Automatic });
+        var memo = kind switch
+        {
+            "short" => prefix + token[..31] + automatic,
+            "long" => prefix + token + "0" + automatic,
+            "empty" => prefix + Guid.Empty.ToString("N") + automatic,
+            "hyphen" => prefix + id.ToString("D") + automatic,
+            "nonhex" => prefix + "z" + token[1..] + automatic,
+            "guid-space" => prefix + token + " " + automatic,
+            "duplicate-consent" => prefix + token + ":consent:" + token,
+            "wrong-prefix" => "neighborhood-delivery:v2:fixture:consent:" + token + automatic,
+            "marker-in-fingerprint" => "neighborhood-delivery:v1:fixture:source-post:17:consent:" + token,
+            "unknown-suffix" => prefix + token + ":unknown:accepted",
+            "source-zero" => prefix + token + 생활배송출처Evidence.Marker + "0" + automatic,
+            "source-negative" => prefix + token + 생활배송출처Evidence.Marker + "-1" + automatic,
+            "source-duplicate" => prefix + token + 생활배송출처Evidence.Marker + "17" + 생활배송출처Evidence.Marker + "18" + automatic,
+            "source-overflow" => prefix + token + 생활배송출처Evidence.Marker + "999999999999999999999999" + automatic,
+            "member-duplicate" => prefix + token + 생활배송배차Policy.MemberMarker + 생활배송배차Policy.MemberMarker,
+            "member-wrong-version" => prefix + token + ":member-delivery:v2:",
+            "wrong-marker-order" => prefix + token + 생활배송배차Policy.MemberMarker + 생활배송출처Evidence.Marker + "17",
+            "policy-empty" => prefix + token + 생활배송배차Policy.Marker,
+            "policy-base64" => prefix + token + 생활배송배차Policy.Marker + "not-base64",
+            "policy-json" => prefix + token + 생활배송배차Policy.Marker + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("{}")),
+            "policy-unknown-mode" => prefix + token + 생활배송배차Policy.신청메모(new() { DispatchMode = "unknown" }),
+            "policy-member-conflict" => prefix + token + 생활배송배차Policy.MemberMarker + automatic,
+            _ => throw new InvalidOperationException()
+        };
+        (await fixture.Db.화주운송의뢰.SingleAsync()).정산메모 = memo;
+        await fixture.Db.SaveChangesAsync();
+
+        Assert.False((await fixture.Service.내상태Async("delivery-a"))!.CanRecordConsent);
+        var rejected = await fixture.Service.기록Async("delivery-a", Decision());
+
+        Assert.True(rejected.IsFailed);
+        Assert.Equal("PrivacyConsentRequired", Assert.Single(rejected.Errors).Metadata["ErrorCode"]);
+        Assert.False(await fixture.Service.유효한기사제공동의인가Async("delivery-a", "driver-a", "member-a"));
+        Assert.Equal(0, fixture.Consent.Calls);
+        Assert.Empty(fixture.Db.운송이벤트);
+    }
+
     [Fact]
     public async Task 동의는선정기사와추천차수에결속하고_명시철회뒤과거허가로돌아가지않는다()
     {
@@ -150,8 +255,11 @@ public sealed class NeighborhoodDeliveryDisclosureTests
     private sealed class ApplicationConsent : I신청개인정보동의증적Service
     {
         public bool Active { get; set; } = true;
+        public Guid? LastId { get; private set; }
+        public int Calls { get; private set; }
         public Task 유효한동의요구Async(Guid? id, string work, string source, string user, CancellationToken cancellationToken = default)
         {
+            LastId = id; Calls++;
             Assert.Equal(신청개인정보업무Codes.운송대행, work);
             Assert.Equal(NeighborhoodDeliveryRoutes.PrivacyConsentSourceCode, source);
             Assert.Equal("member-a", user);

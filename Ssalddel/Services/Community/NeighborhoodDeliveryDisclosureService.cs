@@ -142,9 +142,7 @@ public sealed class 생활배송기사정보제공동의Service(SsalddelContext 
     {
         if (applicationConsent is null) return false;
         var memo = entity.정산메모 ?? string.Empty;
-        var index = memo.LastIndexOf(":consent:", StringComparison.Ordinal);
-        if (!memo.StartsWith("neighborhood-delivery:v1:", StringComparison.Ordinal) || index < 0
-            || !Guid.TryParseExact(memo[(index + ":consent:".Length)..], "N", out var evidenceId) || evidenceId == Guid.Empty) return false;
+        if (!TryReadApplicationConsent(memo, out var evidenceId)) return false;
         try
         {
             await applicationConsent.유효한동의요구Async(evidenceId, 신청개인정보업무Codes.운송대행,
@@ -152,6 +150,48 @@ public sealed class 생활배송기사정보제공동의Service(SsalddelContext 
             return true;
         }
         catch (InvalidOperationException) { return false; }
+    }
+
+    private static bool TryReadApplicationConsent(string memo, out Guid evidenceId)
+    {
+        evidenceId = Guid.Empty;
+        const string prefix = "neighborhood-delivery:v1:";
+        const string consentMarker = ":consent:";
+        if (!memo.StartsWith(prefix, StringComparison.Ordinal)) return false;
+        var index = memo.IndexOf(consentMarker, StringComparison.Ordinal);
+        if (index < prefix.Length || index != memo.LastIndexOf(consentMarker, StringComparison.Ordinal)) return false;
+        var fingerprint = memo.AsSpan(prefix.Length, index - prefix.Length);
+        if (fingerprint.IsEmpty || fingerprint.Contains(':')) return false;
+        var suffix = memo.AsSpan(index + consentMarker.Length);
+        // GUID 뒤에는 등록 UseCase가 붙이는 알려진 메모 블록만 허용한다. 임의 문자열을 잘라 허가하지 않는다.
+        if (suffix.Length < 32 || !Guid.TryParseExact(suffix[..32], "N", out evidenceId) || evidenceId == Guid.Empty) return false;
+        suffix = suffix[32..];
+        if (suffix.IsEmpty) return true;
+        if (suffix.StartsWith(생활배송출처Evidence.Marker, StringComparison.Ordinal))
+        {
+            if (생활배송출처Evidence.Read(memo) is null) return false;
+            var value = suffix[생활배송출처Evidence.Marker.Length..];
+            var end = value.IndexOf(':');
+            if (end < 0) return true;
+            suffix = value[end..];
+        }
+        if (suffix.StartsWith(생활배송배차Policy.MemberMarker, StringComparison.Ordinal))
+        {
+            suffix = suffix[생활배송배차Policy.MemberMarker.Length..];
+            if (suffix.IsEmpty) return true;
+        }
+        if (!suffix.StartsWith(생활배송배차Policy.Marker, StringComparison.Ordinal)
+            || suffix.Length == 생활배송배차Policy.Marker.Length) return false;
+        try
+        {
+            // 기존 저장 형식의 모드·회원 배송·협업 판본 검사를 재사용한다. 임시 객체만 검사하며 저장하지 않는다.
+            생활배송배차Policy.큐초기화(new 운송원장(), memo);
+            return true;
+        }
+        catch (Exception error) when (error is FormatException or JsonException or InvalidDataException or ArgumentException)
+        {
+            return false;
+        }
     }
 
     private async Task<IReadOnlyList<DisclosureEvidence>> EventsAsync(string requestId, CancellationToken cancellationToken)
