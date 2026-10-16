@@ -10,6 +10,7 @@ using Ssalddel.Contracts.Common.Operations;
 using Microsoft.Maui.Handlers;
 using Microsoft.Maui.Dispatching;
 using GoogleBitmapDescriptorFactory = Android.Gms.Maps.Model.BitmapDescriptorFactory;
+using GoogleBitmapDescriptor = Android.Gms.Maps.Model.BitmapDescriptor;
 using GoogleCameraUpdateFactory = Android.Gms.Maps.CameraUpdateFactory;
 using GoogleLatLng = Android.Gms.Maps.Model.LatLng;
 using GoogleMap = Android.Gms.Maps.GoogleMap;
@@ -42,11 +43,10 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
     private readonly List<GooglePolyline> _googleRouteOverlays = [];
     private readonly Dictionary<string, DriverMapMarkerItem> _googleMarkerItems = new(StringComparer.Ordinal);
     private GoogleMarker? _googleCurrentLocationMarker;
+    private GoogleBitmapDescriptor? _googleInactiveMarkerIcon;
     private IDispatcherTimer? _locationFreshnessTimer;
     private DriverNativeLocationPresentation? _locationPresentation;
     private long _mapLifecycleGeneration;
-    private static readonly int PickupMarkerTintColor = AndroidColor.Rgb(245, 124, 0);
-    private static readonly int DropoffMarkerTintColor = AndroidColor.Rgb(37, 99, 235);
 
     protected override FrameLayout CreatePlatformView()
     {
@@ -109,6 +109,7 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
     protected override void DisconnectHandler(FrameLayout platformView)
     {
         ++_mapLifecycleGeneration;
+        StopDirectionCompass();
         StopLocationFreshnessTimer();
         _locationPresentation = null;
         ClearNaverMarkers();
@@ -116,6 +117,8 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         ClearGoogleMarkers();
         ClearGoogleRouteOverlays();
         ClearGoogleCurrentLocationMarker();
+        _googleInactiveMarkerIcon?.Dispose();
+        _googleInactiveMarkerIcon = null;
 
         if (_naverMapView is not null)
         {
@@ -314,13 +317,9 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         }
 
         ClearNaverMarkers();
-        foreach (var item in VirtualView.Markers)
+        foreach (var pin in RecommendationMarkerPresentations())
         {
-            AddNaverMarker(item, item.PickupLatitude, item.PickupLongitude, item.PickupLabel, item.PickupAddress, PickupMarkerTintColor);
-            if (item.DropoffLatitude != 0d && item.DropoffLongitude != 0d)
-            {
-                AddNaverMarker(item, item.DropoffLatitude, item.DropoffLongitude, item.DropoffLabel, item.DropoffAddress, DropoffMarkerTintColor);
-            }
+            AddNaverMarker(pin);
         }
     }
 
@@ -332,15 +331,15 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         }
 
         ClearGoogleMarkers();
-        foreach (var item in VirtualView.Markers)
+        foreach (var pin in RecommendationMarkerPresentations())
         {
-            AddGoogleMarker(item, item.PickupLatitude, item.PickupLongitude, item.PickupLabel, item.PickupAddress, 30f);
-            if (item.DropoffLatitude != 0d && item.DropoffLongitude != 0d)
-            {
-                AddGoogleMarker(item, item.DropoffLatitude, item.DropoffLongitude, item.DropoffLabel, item.DropoffAddress, 210f);
-            }
+            AddGoogleMarker(pin);
         }
     }
+
+    private IReadOnlyList<DriverRecommendationMarkerPresentation> RecommendationMarkerPresentations()
+        => DriverRecommendationMarkerPresentationPolicy.Build(VirtualView.Markers,
+            VirtualView.HighlightSelectedRecommendation, VirtualView.SelectedRecommendationRequestId);
 
     private void ApplyNaverRouteOverlays()
     {
@@ -416,6 +415,7 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         overlay.CircleOutlineColor = AndroidColor.Argb(120, 25, 118, 210);
         overlay.CircleOutlineWidth = 2;
         overlay.Visible = VirtualView.ShowCurrentLocationOverlay && point is not null;
+        RefreshDirectionPresentation();
     }
 
     private void ApplyGoogleLocationOverlay()
@@ -459,7 +459,11 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
     }
 
     private void OnLocationFreshnessTick(object? sender, EventArgs e)
-        => RefreshLocationPresentation();
+    {
+        RefreshLocationPresentation();
+        // 위치가 변하지 않아도 센서 방향의 신선도는 별도로 만료됩니다.
+        RefreshDirectionPresentation();
+    }
 
     private void StopLocationFreshnessTimer()
     {
@@ -469,13 +473,7 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         _locationFreshnessTimer = null;
     }
 
-    private void AddNaverMarker(
-        DriverMapMarkerItem item,
-        double latitude,
-        double longitude,
-        string caption,
-        string subCaption,
-        int iconTintColor)
+    private void AddNaverMarker(DriverRecommendationMarkerPresentation pin)
     {
         if (_naverMap is null || VirtualView is null)
         {
@@ -484,24 +482,19 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
 
         var marker = new NaverMarker
         {
-            Position = new NaverLatLng(latitude, longitude),
+            Position = new NaverLatLng(pin.Latitude, pin.Longitude),
             Icon = NaverMarkerIcons.Black,
-            IconTintColor = iconTintColor,
-            CaptionText = caption,
-            SubCaptionText = subCaption
+            IconTintColor = ParseColor(pin.TintColor, AndroidColor.Gray),
+            CaptionText = pin.Caption,
+            SubCaptionText = pin.SubCaption,
+            ZIndex = pin.ZIndex
         };
-        marker.Click += (_, _) => VirtualView.SendMarkerSelected(item);
+        marker.Click += (_, _) => VirtualView.SendMarkerSelected(pin.Source);
         marker.Map = _naverMap;
         _naverMarkers.Add(marker);
     }
 
-    private void AddGoogleMarker(
-        DriverMapMarkerItem item,
-        double latitude,
-        double longitude,
-        string caption,
-        string subCaption,
-        float hue)
+    private void AddGoogleMarker(DriverRecommendationMarkerPresentation pin)
     {
         if (_googleMap is null)
         {
@@ -509,10 +502,11 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         }
 
         var options = new GoogleMarkerOptions()
-            .SetPosition(new GoogleLatLng(latitude, longitude))
-            .SetTitle(caption)
-            .SetSnippet(subCaption)
-            .SetIcon(GoogleBitmapDescriptorFactory.DefaultMarker(hue));
+            .SetPosition(new GoogleLatLng(pin.Latitude, pin.Longitude))
+            .SetTitle(pin.Caption)
+            .SetSnippet(pin.SubCaption)
+            .SetIcon(pin.IsMuted ? GetGoogleInactiveMarkerIcon() : GoogleBitmapDescriptorFactory.DefaultMarker(pin.IsPickup ? 30f : 210f));
+        options.InvokeZIndex(pin.ZIndex);
         var marker = _googleMap.AddMarker(options);
         if (marker is null)
         {
@@ -522,8 +516,41 @@ public partial class DriverNativeMapViewHandler : ViewHandler<DriverNativeMapVie
         _googleMarkers.Add(marker);
         if (!string.IsNullOrWhiteSpace(marker.Id))
         {
-            _googleMarkerItems[marker.Id] = item;
+            _googleMarkerItems[marker.Id] = pin.Source;
         }
+    }
+
+    private GoogleBitmapDescriptor GetGoogleInactiveMarkerIcon()
+    {
+        if (_googleInactiveMarkerIcon is not null) return _googleInactiveMarkerIcon;
+
+        // Google의 기본 마커 hue는 채도를 낮출 수 없어 비선택 핀만 회색으로 직접 그립니다.
+        var density = Math.Max(1f, MauiContext?.Context?.Resources?.DisplayMetrics?.Density ?? 1f);
+        using var bitmap = Android.Graphics.Bitmap.CreateBitmap((int)Math.Ceiling(32f * density),
+            (int)Math.Ceiling(44f * density), Android.Graphics.Bitmap.Config.Argb8888!)
+            ?? throw new InvalidOperationException("비선택 지도 핀을 만들지 못했습니다.");
+        using var canvas = new Android.Graphics.Canvas(bitmap);
+        canvas.Scale(density, density);
+        using var paint = new Android.Graphics.Paint { AntiAlias = true };
+        using var path = new Android.Graphics.Path();
+        path.MoveTo(16f, 42f);
+        path.CubicTo(12f, 36f, 3f, 24f, 3f, 16f);
+        path.CubicTo(3f, 8.8f, 8.8f, 3f, 16f, 3f);
+        path.CubicTo(23.2f, 3f, 29f, 8.8f, 29f, 16f);
+        path.CubicTo(29f, 24f, 20f, 36f, 16f, 42f);
+        path.Close();
+        paint.Color = ParseColor(DriverRecommendationMarkerPresentationPolicy.InactiveTintColor, AndroidColor.Gray);
+        paint.SetStyle(Android.Graphics.Paint.Style.Fill!);
+        canvas.DrawPath(path, paint);
+        paint.Color = AndroidColor.White;
+        paint.StrokeWidth = 1.5f;
+        paint.SetStyle(Android.Graphics.Paint.Style.Stroke!);
+        canvas.DrawPath(path, paint);
+        paint.SetStyle(Android.Graphics.Paint.Style.Fill!);
+        canvas.DrawCircle(16f, 16f, 4f, paint);
+        _googleInactiveMarkerIcon = GoogleBitmapDescriptorFactory.FromBitmap(bitmap)
+            ?? throw new InvalidOperationException("비선택 지도 핀을 연결하지 못했습니다.");
+        return _googleInactiveMarkerIcon;
     }
 
     private bool OnGoogleMarkerClicked(GoogleMarker marker)

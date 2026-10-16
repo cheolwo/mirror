@@ -7,7 +7,7 @@ using Ssalddel.Contracts.Driver.Work;
 
 namespace Ssalddel.Tests.Clients;
 
-public sealed class CargoWorkRecoveryR75Tests
+public sealed partial class CargoWorkRecoveryR75Tests
 {
     [Fact]
     public async Task LostPostResponse_QueriesSameRequestAndContinuesLocationWithoutAnotherPost()
@@ -215,13 +215,13 @@ public sealed class CargoWorkRecoveryR75Tests
         public string? Mismatch, LastLocationStatus;
         public Func<Task>? BeforeCanonical;
         public Action? AfterPost;
-        public Fixture()
+        public Fixture(IDriverOperationalDispatchApiService? dispatchReception = null)
         {
             Store = new(key => Task.FromResult(Saved.GetValueOrDefault(key)),
                 (key, value) => { Saved[key] = value; return Task.CompletedTask; }, key => Saved.Remove(key));
             _http = new(new Handler(Handle)) { BaseAddress = new Uri("https://test.invalid/") };
             Api = new(new DriverApiClient(_http, Auth, new AuthApiService(_http, Auth), new DriverOperatingProfileService()));
-            Coordinator = new(Api, Auth, Store);
+            Coordinator = new(Api, Auth, Store, dispatchReception);
         }
         public Task<DriverWorkStartRecoveryResult> Start(CancellationToken token = default)
             => Coordinator.StartOrRecoverAsync(CreateRequest, StartLocation, token);

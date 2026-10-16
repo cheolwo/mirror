@@ -64,12 +64,12 @@
                             <MudSelectItem T="string" Value="@("수익성이 낮음")">수익성이 낮음</MudSelectItem>
                         </MudSelect>
                     }
-                    <MudStack Row="true" Spacing="2">
-                        @if (의뢰?.경고목록.Count > 0)
-                        {
-                            <MudAlert Severity="Severity.Warning">@string.Join(" · ", 의뢰.경고목록)</MudAlert>
-                            <MudCheckBox T="bool" @bind-Value="_경고확인완료" Label="차량·화물 주의사항을 확인했습니다." />
-                        }
+                    @if (의뢰?.경고목록.Count > 0)
+                    {
+                        <MudAlert Severity="Severity.Warning">@string.Join(" · ", 의뢰.경고목록)</MudAlert>
+                        <MudCheckBox T="bool" @bind-Value="_경고확인완료" Label="차량·화물 주의사항을 확인했습니다." />
+                    }
+                    <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
                         <MudButton Variant="Variant.Filled" Color="Color.Success" Disabled="@(의뢰 is null || (의뢰.경고목록.Count > 0 && !_경고확인완료))" OnClick="배차수락">배차 수락</MudButton>
                         <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Disabled="@(의뢰 is null)" OnClick="배차보류">보류</MudButton>
                         @if (_거절입력표시)

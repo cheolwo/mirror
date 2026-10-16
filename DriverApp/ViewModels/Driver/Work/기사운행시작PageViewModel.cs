@@ -33,7 +33,8 @@ public sealed partial class 기사운행시작PageViewModel : 기사PageViewMode
         IDriverSampleDataService samples,
         I기사위치송신Service 위치송신,
         IDriverWorkApiService workApi,
-        IAuthSession session)
+        IAuthSession session,
+        IDriverOperationalDispatchApiService? dispatchReception = null)
     {
         this.근무기능 = 하위ViewModel등록(근무기능);
         _samples = samples;
@@ -42,7 +43,7 @@ public sealed partial class 기사운행시작PageViewModel : 기사PageViewMode
         _startRecovery = new(workApi, session, new DriverWorkStartRecoveryStore(
             key => SecureStorage.Default.GetAsync(key),
             (key, value) => SecureStorage.Default.SetAsync(key, value),
-            key => SecureStorage.Default.Remove(key)));
+            key => SecureStorage.Default.Remove(key)), dispatchReception);
         _startRecovery.Changed += 상태연쇄알림;
         _위치송신.Changed += 위치송신상태변경;
     }

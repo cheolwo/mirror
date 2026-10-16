@@ -42,6 +42,12 @@ public sealed class DriverNativeMapView : View
         typeof(DriverNativeMapView),
         Array.Empty<DriverMapMarkerItem>());
 
+    public static readonly BindableProperty HighlightSelectedRecommendationProperty = BindableProperty.Create(
+        nameof(HighlightSelectedRecommendation), typeof(bool), typeof(DriverNativeMapView), false);
+
+    public static readonly BindableProperty SelectedRecommendationRequestIdProperty = BindableProperty.Create(
+        nameof(SelectedRecommendationRequestId), typeof(string), typeof(DriverNativeMapView), null);
+
     public static readonly BindableProperty RouteOverlaysProperty = BindableProperty.Create(
         nameof(RouteOverlays),
         typeof(IReadOnlyList<DriverMapRouteOverlay>),
@@ -71,6 +77,12 @@ public sealed class DriverNativeMapView : View
         typeof(double),
         typeof(DriverNativeMapView),
         6d);
+
+    public static readonly BindableProperty ShowDirectionArrowProperty = BindableProperty.Create(
+        nameof(ShowDirectionArrow), typeof(bool), typeof(DriverNativeMapView), false);
+
+    public static readonly BindableProperty IsDirectionTrackingActiveProperty = BindableProperty.Create(
+        nameof(IsDirectionTrackingActive), typeof(bool), typeof(DriverNativeMapView), false);
 
     public static readonly BindableProperty MaxZoomProperty = BindableProperty.Create(
         nameof(MaxZoom),
@@ -119,6 +131,18 @@ public sealed class DriverNativeMapView : View
         set => SetValue(MarkersProperty, value);
     }
 
+    public bool HighlightSelectedRecommendation
+    {
+        get => (bool)GetValue(HighlightSelectedRecommendationProperty);
+        set => SetValue(HighlightSelectedRecommendationProperty, value);
+    }
+
+    public string? SelectedRecommendationRequestId
+    {
+        get => (string?)GetValue(SelectedRecommendationRequestIdProperty);
+        set => SetValue(SelectedRecommendationRequestIdProperty, value);
+    }
+
     public IReadOnlyList<DriverMapRouteOverlay> RouteOverlays
     {
         get => (IReadOnlyList<DriverMapRouteOverlay>)GetValue(RouteOverlaysProperty);
@@ -141,6 +165,18 @@ public sealed class DriverNativeMapView : View
     {
         get => (bool)GetValue(ShowCurrentLocationOverlayProperty);
         set => SetValue(ShowCurrentLocationOverlayProperty, value);
+    }
+
+    public bool ShowDirectionArrow
+    {
+        get => (bool)GetValue(ShowDirectionArrowProperty);
+        set => SetValue(ShowDirectionArrowProperty, value);
+    }
+
+    public bool IsDirectionTrackingActive
+    {
+        get => (bool)GetValue(IsDirectionTrackingActiveProperty);
+        set => SetValue(IsDirectionTrackingActiveProperty, value);
     }
 
     public double MinZoom

@@ -4,6 +4,7 @@
 @inject DriverHomeDisplayPreferenceService HomeDisplayPreferenceService
 @inject 추천카드표시설정Service CardPreferenceService
 @inject IDriverSampleDataService SampleData
+@inject 기사위치표시설정Service LocationDisplayPreferences
 
 <PageTitle>화면 설정</PageTitle>
 
@@ -20,6 +21,19 @@
         {
             <MudAlert Severity="@messageSeverity">@message</MudAlert>
         }
+
+        <MudPaper Class="pa-4" Elevation="1">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.h6">지도 현재 위치 표시</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">휴대폰이 향한 방향을 표시합니다. 확인할 수 없으면 위치점으로 표시합니다.</MudText>
+                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                    <MudButton Variant="@(LocationDisplayPreferences.방향화살표표시 ? Variant.Outlined : Variant.Filled)"
+                               Color="Color.Primary" OnClick="@(() => SetDirectionArrow(false))">현재 위치점</MudButton>
+                    <MudButton Variant="@(LocationDisplayPreferences.방향화살표표시 ? Variant.Filled : Variant.Outlined)"
+                               Color="Color.Primary" OnClick="@(() => SetDirectionArrow(true))">방향 화살표</MudButton>
+                </MudStack>
+            </MudStack>
+        </MudPaper>
 
         <MudPaper Class="pa-4" Elevation="1">
             <MudStack Spacing="2">
@@ -118,6 +132,21 @@
     private bool isBusy;
     private string? message;
     private Severity messageSeverity = Severity.Info;
+
+    private void SetDirectionArrow(bool enabled)
+    {
+        try
+        {
+            LocationDisplayPreferences.SetDirectionArrow(enabled);
+            messageSeverity = Severity.Success;
+            message = enabled ? "방향을 확인할 수 있을 때 화살표로 표시합니다." : "현재 위치를 위치점으로 표시합니다.";
+        }
+        catch (Exception)
+        {
+            messageSeverity = Severity.Error;
+            message = "현재 위치 표시 설정을 저장하지 못했습니다. 다시 시도해 주세요.";
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {

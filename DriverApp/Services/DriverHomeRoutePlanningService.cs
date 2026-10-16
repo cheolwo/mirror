@@ -6,6 +6,58 @@ namespace DriverApp.Services;
 
 public sealed class DriverHomeRoutePlanningService
 {
+    /// <summary>픽업과 전달을 독립된 구간으로 구성합니다. 같은 좌표의 라벨 제거로 전달 구간이 사라지지 않습니다.</summary>
+    public IReadOnlyList<DriverMapRouteOverlay> BuildRecommendationReviewRouteOverlays(
+        기사현재위치샘플 currentLocation, 기사운송샘플항목? currentTransport, DriverMapMarkerItem recommendation)
+    {
+        if (!ReviewCoordinateValid(recommendation.PickupLatitude, recommendation.PickupLongitude)) return [];
+        var overlays = new List<DriverMapRouteOverlay>();
+        var pickupPoints = new List<DriverMapRoutePoint>();
+        if (ReviewCoordinateValid((double)currentLocation.위도, (double)currentLocation.경도))
+            pickupPoints.Add(new((double)currentLocation.위도, (double)currentLocation.경도, "현재 위치"));
+        var next = ResolveCurrentTransportNextCoordinate(currentTransport);
+        if (next is { } point && ReviewCoordinateValid(point.Latitude, point.Longitude))
+            AddDistinctPoint(pickupPoints, point.Latitude, point.Longitude, point.Label);
+        AddDistinctPoint(pickupPoints, recommendation.PickupLatitude, recommendation.PickupLongitude, "추천 상차지");
+        if (pickupPoints.Count >= 2)
+            overlays.Add(new(recommendation.RequestId, "예상 픽업 경로", pickupPoints, "#f97316"));
+
+        var deliveryPoints = new List<DriverMapRoutePoint>
+        {
+            new(recommendation.PickupLatitude, recommendation.PickupLongitude, "추천 상차지")
+        };
+        if (ReviewCoordinateValid(recommendation.DropoffLatitude, recommendation.DropoffLongitude))
+            AddDistinctPoint(deliveryPoints, recommendation.DropoffLatitude, recommendation.DropoffLongitude, "추천 하차지");
+        if (deliveryPoints.Count >= 2)
+            overlays.Add(new(recommendation.RequestId, "예상 전달 경로", deliveryPoints, "#2563eb"));
+        return overlays;
+    }
+
+    private static bool ReviewCoordinateValid(double latitude, double longitude)
+        => double.IsFinite(latitude) && double.IsFinite(longitude)
+            && latitude is >= -90 and <= 90 and not 0 && longitude is >= -180 and <= 180 and not 0;
+
+    public IReadOnlyList<DriverMapRouteOverlay> BuildCurrentRouteOverlays(
+        기사현재위치샘플 currentLocation, 기사운송샘플항목? currentTransport)
+    {
+        if (currentTransport is null) return [];
+        var points = new List<DriverMapRoutePoint>();
+        if (HasCoordinate(currentLocation.위도, currentLocation.경도))
+            points.Add(new((double)currentLocation.위도, (double)currentLocation.경도, "현재 위치"));
+        AddCurrentTransportNextPoint(points, currentTransport);
+        return points.Count < 2 ? [] : [new(currentTransport.의뢰Id, "현재 수행 경로", points,
+            IsCurrentTransportBeforePickupComplete(currentTransport) ? "#f97316" : "#2563eb")];
+    }
+
+    public DriverMapMarkerItem? CurrentMarker(기사운송샘플항목? transport)
+    {
+        if (transport is null || (!HasCoordinate(transport.픽업위도, transport.픽업경도)
+            && !HasCoordinate(transport.하차위도, transport.하차경도))) return null;
+        return new(transport.의뢰Id, (double)(transport.픽업위도 ?? 0m), (double)(transport.픽업경도 ?? 0m),
+            (double)(transport.하차위도 ?? 0m), (double)(transport.하차경도 ?? 0m), transport.화물종류,
+            transport.다음행동, transport.픽업지, transport.하차지, "현재 상차지", "현재 하차지");
+    }
+
     public IReadOnlyList<DriverMapRouteOverlay> BuildLinkedRouteOverlays(
         기사현재위치샘플 currentLocation,
         기사운송샘플항목? currentTransport,

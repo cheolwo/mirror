@@ -4,11 +4,13 @@ using System.Text.Json;
 
 namespace DriverApp.Services;
 
-/// <summary>Only request identity and the original optional disclosure choices are persisted. No GPS/address/token.</summary>
+/// <summary>요청 식별값·공개 선택·시작 전 수신 의사 판본만 저장한다. GPS/주소/인증값은 저장하지 않는다.</summary>
 public sealed record DriverWorkStartRecoveryRecord(
     string OwnerId, Guid ClientRequestId, DateTime CreatedAtUtc,
     bool CommunityPublicationRequested, bool CoarseLocationConsent,
-    Guid? RejectedClientRequestId = null, int? RejectionStatusCode = null);
+    Guid? RejectedClientRequestId = null, int? RejectionStatusCode = null,
+    bool ReceptionIntentObserved = false, DateTimeOffset? ReceptionIntentObservedAtUtc = null,
+    string? ReceptionIntentVersionToken = null);
 
 public interface IDriverWorkStartRecoveryStore
 {

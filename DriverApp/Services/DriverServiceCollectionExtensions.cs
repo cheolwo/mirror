@@ -35,6 +35,8 @@ public static class DriverServiceCollectionExtensions
 
         services.AddSingleton<DriverAppProfile>();
         services.AddSingleton<DriverOperatingProfileService>();
+        services.AddSingleton<Microsoft.Maui.Storage.IPreferences>(_ => Microsoft.Maui.Storage.Preferences.Default);
+        services.AddSingleton<기사위치표시설정Service>();
         services.AddSingleton<IClientSecureTokenStore, MauiSecureTokenStore>();
         services.AddSingleton<IClientSessionGuard, ClientSessionGuard>();
         services.AddSingleton<ITransportRequestLedgerObserver, TransportRequestLedgerObserver>();
@@ -60,9 +62,12 @@ public static class DriverServiceCollectionExtensions
         services.AddSingleton<DriverHomeDisplayPreferenceService>();
         services.AddSingleton<IDriverHomeMapService, DriverHomeMapService>();
         services.AddSingleton<DriverHomeRoutePlanningService>();
+        services.AddSingleton<DriverNativeHomeWorkspaceState>();
+        services.AddTransient<NativeDriverRecommendationPage>();
         services.AddSingleton<IDriverApiClient, DriverApiClient>();
         services.AddSingleton<IDriverProfileApiService, DriverProfileApiService>();
         services.AddSingleton<IDriverWorkApiService, DriverWorkApiService>();
+        services.AddSingleton<IDriverOperationalDispatchApiService, DriverOperationalDispatchApiService>();
         services.AddSingleton<IDriverRecommendationApiService, DriverRecommendationApiService>();
         services.AddSingleton<IDriverExplorationCampaignApiService, DriverExplorationCampaignApiService>();
         services.AddSingleton<IDriverDispatchActionApiService, DriverDispatchActionApiService>();

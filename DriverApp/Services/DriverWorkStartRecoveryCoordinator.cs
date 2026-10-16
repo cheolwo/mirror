@@ -1,5 +1,6 @@
 using Ssalddel.Contracts.Common.Transport;
 using Ssalddel.Contracts.Driver.Work;
+using Ssalddel.Contracts.Common.Dispatch;
 
 namespace DriverApp.Services;
 
@@ -9,11 +10,12 @@ public sealed record DriverWorkStartRecoveryResult(bool ServerConfirmed, bool Lo
 /// One explicit start POST is followed by a canonical read. Unknown outcomes are read again, never silently reposted.
 /// Account/session/page cancellation invalidates late replies before local location transmission can begin.
 /// </summary>
-public sealed class DriverWorkStartRecoveryCoordinator : IDisposable
+public sealed partial class DriverWorkStartRecoveryCoordinator : IDisposable
 {
     private readonly IDriverWorkApiService _api;
     private readonly IAuthSession _session;
     private readonly IDriverWorkStartRecoveryStore _store;
+    private readonly IDriverOperationalDispatchApiService? _dispatchReception;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private CancellationTokenSource? _active;
     private string? _activeOwner;
@@ -25,9 +27,10 @@ public sealed class DriverWorkStartRecoveryCoordinator : IDisposable
     public DriverWorkStartRecoveryRecord? Pending { get; private set; }
     public event Action? Changed;
 
-    public DriverWorkStartRecoveryCoordinator(IDriverWorkApiService api, IAuthSession session, IDriverWorkStartRecoveryStore store)
+    public DriverWorkStartRecoveryCoordinator(IDriverWorkApiService api, IAuthSession session, IDriverWorkStartRecoveryStore store,
+        IDriverOperationalDispatchApiService? dispatchReception = null)
     {
-        _api = api; _session = session; _store = store;
+        _api = api; _session = session; _store = store; _dispatchReception = dispatchReception;
         _session.Changed += SessionChanged;
     }
 
@@ -76,8 +79,12 @@ public sealed class DriverWorkStartRecoveryCoordinator : IDisposable
                 EnsureCurrent(owner, revision, token);
                 if (request is null) return Unknown("운행 시작에 필요한 위치 또는 권한을 확인해 주세요.");
                 request.ClientRequestId = Guid.NewGuid();
+                var reception = await ReadReceptionBeforeStartAsync(owner, revision, token);
                 Pending = new(owner, request.ClientRequestId.Value, DateTime.UtcNow,
-                    request.커뮤니티운행공개, request.커뮤니티운행공개 && request.커뮤니티구단위위치공개동의);
+                    request.커뮤니티운행공개, request.커뮤니티운행공개 && request.커뮤니티구단위위치공개동의,
+                    ReceptionIntentObserved: reception is not null,
+                    ReceptionIntentObservedAtUtc: reception?.수신의사변경시각Utc,
+                    ReceptionIntentVersionToken: reception?.수신의사판본Token);
                 // Do not send a POST unless recovery identity is safely saved first.
                 await _store.SaveAsync(Pending, token);
                 EnsureCurrent(owner, revision, token); Changed?.Invoke();
@@ -167,6 +174,13 @@ public sealed class DriverWorkStartRecoveryCoordinator : IDisposable
         }
         if (Pending is not null)
         {
+            if (_dispatchReception is not null && !Pending.ReceptionIntentObserved)
+                message += " 신규 배차 받기는 지도 토글에서 상태를 확인해 주세요.";
+            if (!await ConfirmInitialReceptionAsync(owner, revision, token))
+            {
+                ResolutionState = "ConfirmedReceptionPending"; Changed?.Invoke();
+                return new(true, true, "운행과 위치 송신은 시작됐지만 신규 배차 수신 결과가 미확인입니다. 같은 운행 확인 또는 신규 배차 토글로 상태를 확인해 주세요.");
+            }
             // If encrypted removal fails, keep the same recovery request; do not replace it with another POST.
             try { await _store.RemoveAsync(owner, token); EnsureCurrent(owner, revision, token); Pending = null; }
             catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }

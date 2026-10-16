@@ -2,7 +2,7 @@ using DriverApp.Models.Driver.Samples;
 using DriverApp.Models.Driver;
 using DriverApp.Services;
 using Ssalddel.Contracts.Common.Drivers;
-using System.Globalization;
+using Microsoft.Extensions.DependencyInjection;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverOffers;
 
 namespace DriverApp;
@@ -10,106 +10,228 @@ namespace DriverApp;
 public partial class NativeDriverHomePage : ContentPage
 {
     private readonly IDriverSampleDataService _sampleDataService;
-    private readonly IDriverHomeMapService _mapService;
-    private readonly IDriverRecommendationDecisionService _decisionService;
     private readonly IDriverRecommendationNotificationService _recommendationNotificationService;
     private readonly DriverHomeRoutePlanningService _routePlanningService;
     private readonly I기사푸시토큰등록Service _pushTokenRegistrationService;
     private readonly DriverOperatingProfileService _operatingProfileService;
     private readonly DriverNativeHomeWorkspaceState _workspaceState;
+    private readonly IServiceProvider _services;
+    private readonly 기사위치표시설정Service _locationDisplayPreferences;
     private long _pageRefreshGeneration;
     private bool _isSubscribed;
-    private DriverMapMarkerItem? _incomingRecommendation;
     private DriverRequestItem? _incomingRecommendationRequest;
-    private DriverRequestItem? _acceptedRecommendationRequest;
     private 기사운송샘플항목? _currentTransport;
-    private IReadOnlyList<DriverMapMarkerItem> _defaultRecommendationMarkers = [];
     private double _defaultCenterLatitude = (double)DriverNativeLocationPolicy.DefaultCameraCenter.Latitude;
     private double _defaultCenterLongitude = (double)DriverNativeLocationPolicy.DefaultCameraCenter.Longitude;
     private const double DefaultMapZoom = 11d;
     private IDispatcherTimer? _recommendationCountdownTimer;
     private bool _autoRejectingRecommendation;
+    private IDispatcherTimer? _workspaceRefreshTimer;
+    private Window? _observedWindow;
+    private bool _foreground;
+    private bool _workspaceRefreshing;
+    private bool _recommendationCommandBusy;
 
     public NativeDriverHomePage(
         IDriverSampleDataService sampleDataService,
-        IDriverHomeMapService mapService,
-        IDriverRecommendationDecisionService decisionService,
         IDriverRecommendationNotificationService recommendationNotificationService,
         DriverHomeRoutePlanningService routePlanningService,
         I기사푸시토큰등록Service pushTokenRegistrationService,
         DriverOperatingProfileService operatingProfileService,
-        IAuthSession authSession)
+        DriverNativeHomeWorkspaceState workspaceState,
+        IServiceProvider services,
+        기사위치표시설정Service locationDisplayPreferences)
     {
         InitializeComponent();
         _sampleDataService = sampleDataService;
-        _mapService = mapService;
-        _decisionService = decisionService;
         _recommendationNotificationService = recommendationNotificationService;
         _routePlanningService = routePlanningService;
         _pushTokenRegistrationService = pushTokenRegistrationService;
         _operatingProfileService = operatingProfileService;
-        _workspaceState = new(sampleDataService, authSession);
+        _locationDisplayPreferences = locationDisplayPreferences;
+        _workspaceState = workspaceState;
+        _services = services;
         ApplyOperatingProfile();
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        _foreground = true;
+        ApplyDirectionSettings();
         SubscribeEvents();
+        ObserveWindow();
         ApplyOperatingProfile();
         await RefreshCurrentWorkspaceAsync();
+        StartWorkspaceRefresh();
     }
 
-    private async Task RefreshCurrentWorkspaceAsync()
+    private async Task RefreshCurrentWorkspaceAsync(bool periodic = false)
     {
+        if (!_isSubscribed || !_foreground || _workspaceRefreshing || _recommendationCommandBusy) return;
+        _workspaceRefreshing = true;
         var generation = ++_pageRefreshGeneration;
-        ClearCurrentWorkspaceDisplay();
-        StatusLabel.Text = "현재 운송을 확인하고 있습니다.";
-        StatusLabel.IsVisible = true;
-        RetryWorkspaceButton.IsVisible = false;
-        await _workspaceState.ActivateAsync();
-        if (!_isSubscribed || generation != _pageRefreshGeneration) return;
+        try
+        {
+            TransportFooterBar.IsEnabled = false;
+            ApplyReceptionControl();
+            if (!_workspaceState.IsActive) await _workspaceState.ActivateAsync();
+            else if (periodic) await _workspaceState.PollAsync();
+            else await _workspaceState.RefreshAsync();
+            if (!_isSubscribed || !_foreground || generation != _pageRefreshGeneration) return;
+            ApplyCurrentWorkspaceDisplay();
+        }
+        finally
+        {
+            _workspaceRefreshing = false;
+            if (_isSubscribed && _foreground)
+            {
+                ApplyReceptionControl();
+                if (generation != _pageRefreshGeneration && !_workspaceState.IsActive)
+                    Dispatcher.Dispatch(async () => await RefreshCurrentWorkspaceAsync());
+            }
+        }
+    }
+
+    private void ApplyCurrentWorkspaceDisplay()
+    {
+        _currentTransport = _workspaceState.CurrentTransport;
+        TransportFooterBar.ShowTransport(_currentTransport);
+        TransportFooterBar.IsVisible = true;
+        TransportFooterBar.IsEnabled = _workspaceState.IsReady;
+        ApplyReceptionControl();
         if (!_workspaceState.IsReady)
         {
             StatusLabel.Text = _workspaceState.ErrorMessage;
+            StatusLabel.IsVisible = true;
             RetryWorkspaceButton.IsVisible = true;
+            RecommendationBanner.IsVisible = false;
+            StopRecommendationCountdown();
+            if (_currentTransport is null) { MapView.Markers = []; MapView.RouteOverlays = []; }
+            else RestoreDefaultMapState(); // 확인 실패 시 추천 검토 경로를 현재 업무 경로로 오인하지 않게 합니다.
             return;
         }
 
         var currentLocation = _sampleDataService.기사현재위치;
-        var markers = _mapService.BuildMarkers(_sampleDataService.추천의뢰목록);
-        _defaultRecommendationMarkers = markers;
+
         var cameraCenter = DriverNativeLocationPolicy.CameraCenter(currentLocation, DateTime.UtcNow);
         _defaultCenterLatitude = (double)cameraCenter.Latitude;
         _defaultCenterLongitude = (double)cameraCenter.Longitude;
         MapView.CurrentLocation = currentLocation;
         ShowLocationNotice(DriverNativeLocationPolicy.Present(currentLocation, DateTime.UtcNow));
-        var incoming = _recommendationNotificationService.GetCurrent();
-        _incomingRecommendation = incoming?.Marker;
-        _incomingRecommendationRequest = incoming?.Request;
-        _currentTransport = _workspaceState.CurrentTransport;
-
+        var incoming = ReadCanonicalIncoming();
+        _incomingRecommendationRequest = incoming;
         RestoreDefaultMapState();
 
-        var queryWarnings = _sampleDataService.ReadState.Warnings;
+        var queryWarnings = _workspaceState.MapWarnings;
+        RetryWorkspaceButton.IsVisible = queryWarnings.Count > 0 || _workspaceState.UnconfirmedAcceptanceRequestId is not null;
         StatusLabel.IsVisible = queryWarnings.Count > 0;
         StatusLabel.Text = string.Join("\n", queryWarnings.Take(2));
-        TransportFooterBar.ShowTransport(_currentTransport);
+        if (_workspaceState.UnconfirmedAcceptanceRequestId is not null)
+        { StatusLabel.Text = "수락 결과를 확인하고 있습니다. 현재 운송은 계속 진행할 수 있습니다."; StatusLabel.IsVisible = true; }
         ShowIncomingRecommendation(incoming);
-        RecommendationDetailBanner.IsVisible = false;
-        LinkedRouteCard.IsVisible = false;
-        RecommendationDecisionButtons.IsEnabled = true;
-        await RegisterStoredPushTokenQuietlyAsync();
     }
 
     protected override void OnDisappearing()
     {
         ++_pageRefreshGeneration;
-        _workspaceState.Deactivate();
+        _foreground = false;
+        MapView.IsDirectionTrackingActive = false;
+        StopWorkspaceRefresh();
+        StopObservingWindow();
+        _workspaceState.Pause();
         ClearCurrentWorkspaceDisplay();
         StopRecommendationCountdown();
         UnsubscribeEvents();
         base.OnDisappearing();
+    }
+
+    private void ObserveWindow()
+    {
+        if (ReferenceEquals(_observedWindow, Window)) return;
+        StopObservingWindow(); _observedWindow = Window;
+        if (_observedWindow is null) return;
+        _observedWindow.Activated += OnWindowActivated;
+        _observedWindow.Deactivated += OnWindowDeactivated;
+        _observedWindow.Stopped += OnWindowDeactivated;
+        _observedWindow.Resumed += OnWindowActivated;
+    }
+
+    private void StopObservingWindow()
+    {
+        if (_observedWindow is null) return;
+        _observedWindow.Activated -= OnWindowActivated;
+        _observedWindow.Deactivated -= OnWindowDeactivated;
+        _observedWindow.Stopped -= OnWindowDeactivated;
+        _observedWindow.Resumed -= OnWindowActivated;
+        _observedWindow = null;
+    }
+
+    private async void OnWindowActivated(object? sender, EventArgs args)
+    {
+        if (!_isSubscribed || _foreground) return;
+        _foreground = true;
+        ApplyDirectionSettings();
+        await RefreshCurrentWorkspaceAsync(); StartWorkspaceRefresh();
+    }
+
+    private void OnWindowDeactivated(object? sender, EventArgs args)
+    {
+        if (!_isSubscribed || !_foreground) return;
+        _foreground = false; ++_pageRefreshGeneration;
+        MapView.IsDirectionTrackingActive = false;
+        StopWorkspaceRefresh(); StopRecommendationCountdown(); _workspaceState.Pause();
+        TransportFooterBar.IsEnabled = false;
+        ApplyReceptionControl();
+    }
+
+    private void StartWorkspaceRefresh()
+    {
+        if (!_isSubscribed || !_foreground || _workspaceRefreshTimer is not null) return;
+        _workspaceRefreshTimer = Dispatcher.CreateTimer();
+        _workspaceRefreshTimer.Interval = DriverNativeHomeWorkspaceState.RefreshInterval;
+        _workspaceRefreshTimer.Tick += async (_, _) => await RefreshCurrentWorkspaceAsync(periodic: true);
+        _workspaceRefreshTimer.Start();
+        _ = RegisterStoredPushTokenQuietlyAsync();
+    }
+
+    private void StopWorkspaceRefresh()
+    { _workspaceRefreshTimer?.Stop(); _workspaceRefreshTimer = null; }
+
+    private void ApplyDirectionSettings()
+    {
+        MapView.ShowDirectionArrow = _locationDisplayPreferences.방향화살표표시;
+        MapView.IsDirectionTrackingActive = _foreground;
+    }
+
+    private void OnDirectionSettingsChanged()
+        => Dispatcher.Dispatch(() => { if (_isSubscribed && _foreground) ApplyDirectionSettings(); });
+
+    private DriverRequestItem? ReadCanonicalIncoming()
+    {
+        if (!_workspaceState.CanRespondToRecommendation) return null;
+        var prior = _recommendationNotificationService.GetCurrent();
+        var offers = _sampleDataService.추천의뢰목록.Where(x => DriverRecommendationSelectionState.IsLive(x, DateTime.UtcNow)).ToArray();
+        return offers.FirstOrDefault(x => prior is not null && x.의뢰Id == prior.Request.의뢰Id && x.추천라운드 == prior.Request.추천라운드)
+            ?? offers.FirstOrDefault();
+    }
+
+    private void ApplyReceptionControl()
+    {
+        ReceptionSwitch.IsToggled = _workspaceState.ReceivesNewDispatches;
+        ReceptionSwitch.IsEnabled = _foreground && !_workspaceRefreshing && _workspaceState.CanChangeReception && !_recommendationCommandBusy;
+        ReceptionStateLabel.Text = _workspaceState.IsChangingIntent ? "변경 중" : !_workspaceState.ReceptionKnown ? "확인 필요"
+            : _workspaceState.AutomaticallyPaused ? "미응답으로 중지" : _workspaceState.ReceivesNewDispatches ? "켜짐" : "꺼짐";
+        ReceptionNoticeLabel.Text = _workspaceState.ReceptionNotice;
+        ReceptionNoticeLabel.IsVisible = !string.IsNullOrWhiteSpace(ReceptionNoticeLabel.Text);
+    }
+
+    private async void OnReceptionToggled(object? sender, ToggledEventArgs args)
+    {
+        if (!_foreground || !_workspaceState.CanChangeReception || args.Value == _workspaceState.ReceivesNewDispatches) return;
+        var task = _workspaceState.ToggleReceptionAsync(); ApplyReceptionControl();
+        await task;
+        if (_isSubscribed && _foreground) ApplyCurrentWorkspaceDisplay();
     }
 
     private async void OnRetryWorkspaceClicked(object? sender, EventArgs e)
@@ -128,12 +250,10 @@ public partial class NativeDriverHomePage : ContentPage
 
     private void ClearCurrentWorkspaceDisplay()
     {
+        _recommendationCommandBusy = false;
         StopRecommendationCountdown();
         _currentTransport = null;
-        _incomingRecommendation = null;
         _incomingRecommendationRequest = null;
-        _acceptedRecommendationRequest = null;
-        _defaultRecommendationMarkers = [];
         MapView.CurrentLocation = null;
         _defaultCenterLatitude = (double)DriverNativeLocationPolicy.DefaultCameraCenter.Latitude;
         _defaultCenterLongitude = (double)DriverNativeLocationPolicy.DefaultCameraCenter.Longitude;
@@ -145,21 +265,6 @@ public partial class NativeDriverHomePage : ContentPage
         TransportFooterBar.ShowTransport(null);
         TransportFooterBar.IsVisible = false;
         RecommendationBanner.IsVisible = false;
-        RecommendationDetailBanner.IsVisible = false;
-        LinkedRouteCard.IsVisible = false;
-        RecommendationDecisionButtons.IsEnabled = false;
-    }
-
-    private void OnMarkerSelected(object? sender, DriverMapMarkerItem marker)
-    {
-        if (!_workspaceState.IsReady) return;
-        if (LinkedRouteCard.IsVisible)
-        {
-            return;
-        }
-
-        TransportFooterBar.IsVisible = true;
-        TransportFooterBar.ShowMarker(marker);
     }
 
     private void OnOperatingProfileChanged()
@@ -184,7 +289,7 @@ public partial class NativeDriverHomePage : ContentPage
         => MapProviderLabel.Text = $"NAVER 지도 · Directions\n{presentation.Notice}";
 
     private 기사현재위치샘플 RouteCurrentLocation()
-        => DriverNativeLocationPolicy.ForCurrentRoute(_sampleDataService.기사현재위치, DateTime.UtcNow);
+        => DriverNativeLocationPolicy.ForCurrentRoute(MapView.CurrentLocation ?? _sampleDataService.기사현재위치, DateTime.UtcNow);
 
     private async Task RegisterStoredPushTokenQuietlyAsync()
     {
@@ -198,42 +303,28 @@ public partial class NativeDriverHomePage : ContentPage
         }
     }
 
-    private void ShowIncomingRecommendation(DriverIncomingRecommendation? incoming)
+    private void ShowIncomingRecommendation(DriverRequestItem? request)
     {
-        var marker = incoming?.Marker;
-        RecommendationBanner.IsVisible = marker is not null;
-        if (marker is null)
+        RecommendationBanner.IsVisible = request is not null && _workspaceState.CanRespondToRecommendation;
+        if (request is null)
         {
-            RecommendationSummaryLabel.Text = string.Empty;
             RecommendationCountdownLabel.Text = string.Empty;
-            RecommendationDetailCountdownLabel.Text = string.Empty;
             RecommendationCountdownProgress.Progress = 0d;
-            RecommendationDetailCountdownProgress.Progress = 0d;
-            RecommendationDetailBanner.IsVisible = false;
-            StopRecommendationCountdown();
-            return;
+            StopRecommendationCountdown(); return;
         }
-
-        TransportFooterBar.IsVisible = true;
-        ApplyRecommendationPresentation(incoming!.Request);
-        RecommendationWorkLabel.Text = $"{incoming.Request.OfferVisual.Label} · 새 추천 {incoming.PendingCount}건";
-        RecommendationSummaryLabel.Text = $"{marker.Title} · {marker.PickupAddress} 상차 추천이 도착했습니다. 대기 {incoming!.PendingCount}건";
-        RecommendationDetailBanner.IsVisible = false;
-        LinkedRouteCard.IsVisible = false;
-        StartRecommendationCountdown(incoming);
-    }
-
-    private void StartRecommendationCountdown(DriverIncomingRecommendation incoming)
-    {
-        _autoRejectingRecommendation = false;
-        StopRecommendationCountdown();
-
+        var visual = request.OfferVisual;
+        RecommendationPrimaryBar.Color = Color.FromArgb(visual.PrimaryColor);
+        RecommendationSecondaryBar.IsVisible = visual.IsCombined;
+        RecommendationSecondaryBar.Color = Color.FromArgb(visual.SecondaryColor ?? DriverOfferPresentation.WarehouseColor);
+        var count = _sampleDataService.추천의뢰목록.Count(x => DriverRecommendationSelectionState.IsLive(x, DateTime.UtcNow));
+        RecommendationWorkLabel.Text = $"{visual.Label} · 새 추천 {count}건";
+        RecommendationActivityLabel.Text = visual.ActivityText + " · 눌러서 한 건씩 확인";
+        StopRecommendationCountdown(); _autoRejectingRecommendation = false;
         _recommendationCountdownTimer = Dispatcher.CreateTimer();
         _recommendationCountdownTimer.Interval = TimeSpan.FromSeconds(1);
-        _recommendationCountdownTimer.Tick += async (_, _) => await UpdateRecommendationCountdownAsync(incoming);
+        _recommendationCountdownTimer.Tick += async (_, _) => await UpdateRecommendationCountdownAsync(request);
         _recommendationCountdownTimer.Start();
-
-        _ = UpdateRecommendationCountdownAsync(incoming);
+        _ = UpdateRecommendationCountdownAsync(request);
     }
 
     private void StopRecommendationCountdown()
@@ -247,367 +338,54 @@ public partial class NativeDriverHomePage : ContentPage
         _recommendationCountdownTimer = null;
     }
 
-    private async Task UpdateRecommendationCountdownAsync(DriverIncomingRecommendation incoming)
+    private async Task UpdateRecommendationCountdownAsync(DriverRequestItem request)
     {
-        var request = incoming.Request;
-        var expiresAt = request.추천만료시각?.ToLocalTime() ?? incoming.ReceivedAt.AddSeconds(60);
-        var startsAt = request.추천시작시각?.ToLocalTime() ?? incoming.ReceivedAt;
-        var totalSeconds = Math.Max(1d, (expiresAt - startsAt).TotalSeconds);
-        var remainingSeconds = Math.Max(0d, (expiresAt - DateTime.Now).TotalSeconds);
-        var progress = Math.Clamp((totalSeconds - remainingSeconds) / totalSeconds, 0d, 1d);
-
-        var countdownText = remainingSeconds > 0d
-            ? $"{Math.Ceiling(remainingSeconds):0}초"
-            : "미응답 처리";
-        var progressColor = remainingSeconds > 10d ? Color.FromArgb("#22c55e") : Color.FromArgb("#f59e0b");
-
-        RecommendationCountdownLabel.Text = countdownText;
-        RecommendationDetailCountdownLabel.Text = countdownText;
-        RecommendationCountdownProgress.Progress = progress;
-        RecommendationDetailCountdownProgress.Progress = progress;
-        RecommendationCountdownProgress.ProgressColor = progressColor;
-        RecommendationDetailCountdownProgress.ProgressColor = progressColor;
-
-        if (remainingSeconds > 0d || _autoRejectingRecommendation || _decisionService.GetDecision(request.의뢰Id) is not null)
-        {
-            return;
-        }
-
+        var expiresAtUtc = DriverRecommendationSelectionState.NormalizeServerUtc(request.추천만료시각!.Value);
+        var startsAtUtc = DriverRecommendationSelectionState.NormalizeServerUtc(request.추천시작시각!.Value);
+        var total = Math.Max(1d, (expiresAtUtc - startsAtUtc).TotalSeconds);
+        var remaining = Math.Max(0d, (expiresAtUtc - DateTime.UtcNow).TotalSeconds);
+        RecommendationCountdownLabel.Text = remaining > 0 ? $"{Math.Ceiling(remaining):0}초" : "현재 상태 확인 중";
+        RecommendationCountdownProgress.Progress = Math.Clamp((total - remaining) / total, 0d, 1d);
+        if (remaining > 0 || _autoRejectingRecommendation || !_foreground || !_isSubscribed) return;
         _autoRejectingRecommendation = true;
-        try
-        {
-            var decision = await _decisionService.RejectAsync(request, "60초 미응답 자동 거절");
-            RecommendationCountdownLabel.Text = "자동 거절";
-            RecommendationDetailCountdownLabel.Text = "자동 거절";
-            RecommendationDecisionStatusLabel.Text = BuildDecisionMessage(decision);
-            _recommendationNotificationService.MarkHandled(request.의뢰Id);
-            RecommendationBanner.IsVisible = false;
-            RecommendationDetailBanner.IsVisible = false;
-            LinkedRouteCard.IsVisible = false;
-            RestoreDefaultMapState();
-            StatusLabel.Text = "응답 제한 시간이 지나 추천이 자동 거절되었습니다.";
-        }
-        catch (Exception ex)
-        {
-            _autoRejectingRecommendation = false;
-            RecommendationCountdownLabel.Text = "처리 실패";
-            RecommendationDetailCountdownLabel.Text = "처리 실패";
-            StatusLabel.Text = ex.Message;
-        }
-        finally
-        {
-            StopRecommendationCountdown();
-        }
-    }
-
-    private void OnOpenIncomingRecommendationClicked(object? sender, EventArgs e)
-    {
-        if (_incomingRecommendation is null)
-        {
-            RecommendationBanner.IsVisible = false;
-            return;
-        }
-
-        var routeOverlays = _routePlanningService.BuildLinkedRouteOverlays(RouteCurrentLocation(), _currentTransport, _incomingRecommendation, "#16a34a", "연계 추천 경로");
-        FocusMapOnRoute(routeOverlays, _incomingRecommendation, reserveBottomSpace: true);
-        MapView.Markers = [_incomingRecommendation];
-        MapView.RouteOverlays = routeOverlays;
-        TransportFooterBar.IsVisible = false;
-        RecommendationDetailBanner.IsVisible = false;
-        ShowLinkedRouteCard(RouteCurrentLocation(), _currentTransport, _incomingRecommendation, _incomingRecommendationRequest);
-        TitleLabel.Text = "배차 추천 확인";
-        StatusLabel.Text = "현재 이동 단계와 추천 운송 의뢰의 상차/하차 경로를 함께 표시했습니다.";
-        RecommendationBanner.IsVisible = false;
-    }
-
-    private void OnDismissRecommendationClicked(object? sender, EventArgs e)
-    {
-        if (_incomingRecommendationRequest is not null)
-        {
-            _recommendationNotificationService.MarkDismissed(_incomingRecommendationRequest.의뢰Id);
-        }
-
-        RecommendationBanner.IsVisible = false;
-        RecommendationDetailBanner.IsVisible = false;
-        LinkedRouteCard.IsVisible = false;
-        TransportFooterBar.IsVisible = true;
-        RestoreDefaultMapState();
-        StatusLabel.Text = "추천 알림을 잠시 접었습니다. 지도 마커나 하단 목록에서 다시 확인할 수 있습니다.";
-    }
-
-    private void ShowLinkedRouteCard(
-        기사현재위치샘플 currentLocation,
-        기사운송샘플항목? currentTransport,
-        DriverMapMarkerItem recommendation,
-        DriverRequestItem? request)
-    {
-        LinkedRouteCard.IsVisible = true;
-        ApplyRecommendationPresentation(request);
-        var routeState = _routePlanningService.BuildLinkedRouteCardState(currentLocation, currentTransport, recommendation);
-        LinkedRouteSummaryLabel.Text = routeState.Summary;
-        LinkedRouteBenefitLabel.Text = routeState.Benefit;
-        CurrentDropoffRouteLabel.Text = routeState.CurrentRouteLabel;
-        RecommendationPickupRouteLabel.Text = routeState.RecommendationPickupRouteLabel;
-        RecommendationDropoffRouteLabel.Text = routeState.RecommendationDropoffRouteLabel;
-        RecommendationCompactInfoLabel.Text = BuildRecommendationCompactInfo(request);
-        RecommendationDecisionStatusLabel.Text = "경로와 수익을 확인한 뒤 수락, 보류, 거절을 선택할 수 있습니다.";
-        RecommendationDecisionButtons.IsEnabled = true;
-    }
-
-    private void ApplyRecommendationPresentation(DriverRequestItem? request)
-    {
-        var visual = request?.OfferVisual ?? DriverOfferPresentation.Resolve(null, []);
-        foreach (var bar in new[] { RecommendationPrimaryBar, RecommendationDetailPrimaryBar, LinkedOfferPrimaryBar })
-            bar.Color = Color.FromArgb(visual.PrimaryColor);
-        foreach (var bar in new[] { RecommendationSecondaryBar, RecommendationDetailSecondaryBar, LinkedOfferSecondaryBar })
-        {
-            bar.IsVisible = visual.IsCombined;
-            bar.Color = Color.FromArgb(visual.SecondaryColor ?? DriverOfferPresentation.WarehouseColor);
-        }
-        RecommendationWorkLabel.Text = visual.Label;
-        RecommendationDetailWorkLabel.Text = visual.Label + " · 추천 확인";
-        LinkedOfferWorkLabel.Text = visual.Label;
-        RecommendationActivityLabel.Text = LinkedOfferActivityLabel.Text = visual.ActivityText;
-        var price = request?.OfferPricing ?? DriverOfferPresentation.Pricing(null);
-        RecommendationPricingDistanceLabel.Text = price.DistanceText;
-        RecommendationPricingFeeLabel.Text = price.DistanceFeeText;
-        RecommendationPricingRateLabel.Text = price.HasEvidence ? price.RateText + " · 주행거리와 별도" : string.Empty;
-        RecommendationPricingRateLabel.IsVisible = price.HasEvidence;
-    }
-
-    private async void OnAcceptRecommendationClicked(object? sender, EventArgs e)
-    {
-        if (_incomingRecommendationRequest is null)
-        {
-            RecommendationDecisionStatusLabel.Text = "처리할 추천 의뢰를 찾지 못했습니다.";
-            return;
-        }
-
-        RecommendationDecisionButtons.IsEnabled = false;
-        RecommendationDecisionState decision;
-        try
-        {
-            decision = await _decisionService.AcceptAsync(_incomingRecommendationRequest);
-        }
-        catch (Exception ex)
-        {
-            RecommendationDecisionStatusLabel.Text = ex.Message;
-            RecommendationDecisionButtons.IsEnabled = true;
-            return;
-        }
-
-        _acceptedRecommendationRequest = _incomingRecommendationRequest;
-        RecommendationDecisionStatusLabel.Text = BuildDecisionMessage(decision);
-        RecommendationBanner.IsVisible = false;
-        RecommendationDetailBanner.IsVisible = false;
         StopRecommendationCountdown();
-        LinkedRouteBenefitLabel.Text = "수락됨";
-        ShowAcceptedRecommendationOnMap();
-        _recommendationNotificationService.MarkHandled(_incomingRecommendationRequest.의뢰Id);
-        StatusLabel.Text = "배차 추천을 수락했습니다. 이제 추천 상차지로 이동해 상차 확인을 진행합니다.";
+        await RefreshCurrentWorkspaceAsync(); // 만료는 서버 재조회만 하며 거절 명령을 만들지 않습니다.
     }
 
-    private void OnHoldRecommendationClicked(object? sender, EventArgs e)
+    private async void OnOpenIncomingRecommendationClicked(object? sender, EventArgs e)
     {
-        if (_incomingRecommendationRequest is null)
-        {
-            RecommendationDecisionStatusLabel.Text = "처리할 추천 의뢰를 찾지 못했습니다.";
-            return;
-        }
-
-        var decision = _decisionService.Hold(_incomingRecommendationRequest);
-        RecommendationDecisionStatusLabel.Text = BuildDecisionMessage(decision);
-        StatusLabel.Text = "추천을 보류했습니다. 지도나 추천 목록에서 다시 확인할 수 있습니다.";
-    }
-
-    private async void OnRejectRecommendationClicked(object? sender, EventArgs e)
-    {
-        if (_incomingRecommendationRequest is null)
-        {
-            RecommendationDecisionStatusLabel.Text = "처리할 추천 의뢰를 찾지 못했습니다.";
-            return;
-        }
-
-        RecommendationDecisionButtons.IsEnabled = false;
-        RecommendationDecisionState decision;
+        if (_incomingRecommendationRequest is not { } request || !_workspaceState.CanRespondToRecommendation
+            || _recommendationCommandBusy) return;
+        _recommendationCommandBusy = true;
         try
         {
-            decision = await _decisionService.RejectAsync(_incomingRecommendationRequest, "지도 연계 경로에서 거절");
+            var page = _services.GetRequiredService<NativeDriverRecommendationPage>();
+            page.Prefer(request.의뢰Id, request.추천라운드);
+            await Navigation.PushAsync(page);
         }
-        catch (Exception ex)
-        {
-            RecommendationDecisionStatusLabel.Text = ex.Message;
-            RecommendationDecisionButtons.IsEnabled = true;
-            return;
-        }
-
-        RecommendationDecisionStatusLabel.Text = BuildDecisionMessage(decision);
-        LinkedRouteBenefitLabel.Text = "거절됨";
-        StopRecommendationCountdown();
-        _recommendationNotificationService.MarkHandled(_incomingRecommendationRequest.의뢰Id);
-        LinkedRouteCard.IsVisible = false;
-        RecommendationBanner.IsVisible = false;
-        RecommendationDetailBanner.IsVisible = false;
-        _incomingRecommendation = null;
-        _incomingRecommendationRequest = null;
-        RestoreDefaultMapState();
-        StatusLabel.Text = "추천을 거절했습니다. 다른 추천이 들어오면 다시 알려드립니다.";
+        finally { _recommendationCommandBusy = false; }
     }
-
-    private async void OnCancelAcceptedRecommendationClicked(object? sender, EventArgs e)
-    {
-        var request = _acceptedRecommendationRequest ?? _incomingRecommendationRequest;
-        if (request is null)
-        {
-            RecommendationDecisionStatusLabel.Text = "취소할 추천 의뢰를 찾지 못했습니다.";
-            return;
-        }
-
-        var currentDecision = _decisionService.GetDecision(request.의뢰Id);
-        if (currentDecision?.Decision != DriverRecommendationDecisionCode.Accepted)
-        {
-            RecommendationDecisionStatusLabel.Text = "수락한 추천만 취소할 수 있습니다.";
-            return;
-        }
-
-        RecommendationDecisionButtons.IsEnabled = false;
-        RecommendationDecisionState decision;
-        try
-        {
-            decision = await _decisionService.CancelAcceptedAsync(request, "지도 화면에서 수락 취소");
-        }
-        catch (Exception ex)
-        {
-            RecommendationDecisionStatusLabel.Text = ex.Message;
-            RecommendationDecisionButtons.IsEnabled = true;
-            return;
-        }
-
-        RecommendationDecisionStatusLabel.Text = BuildDecisionMessage(decision);
-        LinkedRouteBenefitLabel.Text = "재배차";
-        StopRecommendationCountdown();
-        _recommendationNotificationService.MarkHandled(request.의뢰Id);
-        _acceptedRecommendationRequest = null;
-        LinkedRouteCard.IsVisible = false;
-        RecommendationBanner.IsVisible = false;
-        RecommendationDetailBanner.IsVisible = false;
-        _incomingRecommendation = null;
-        _incomingRecommendationRequest = null;
-        RestoreDefaultMapState();
-        StatusLabel.Text = "수락을 취소했습니다. 서버에서는 재배차와 화주 알림이 필요한 상태로 처리됩니다.";
-    }
-
-    private static string BuildDecisionMessage(RecommendationDecisionState decision)
-        => $"{decision.Decision} · {decision.DecidedAt:HH:mm} · {decision.Memo} / 서버 후속: {decision.FollowUpPlan.OperationalMemo}";
 
     private void RestoreDefaultMapState()
     {
         MapView.CenterLatitude = _defaultCenterLatitude;
         MapView.CenterLongitude = _defaultCenterLongitude;
         MapView.Zoom = DefaultMapZoom;
-        MapView.Markers = _defaultRecommendationMarkers;
-        MapView.RouteOverlays = [];
+        var currentMarker = _routePlanningService.CurrentMarker(_currentTransport);
+        MapView.Markers = currentMarker is null ? [] : [currentMarker];
+        MapView.RouteOverlays = _routePlanningService.BuildCurrentRouteOverlays(RouteCurrentLocation(), _currentTransport);
         TransportFooterBar.IsVisible = true;
         TransportFooterBar.ShowTransport(_currentTransport);
-    }
-
-    private void ShowAcceptedRecommendationOnMap()
-    {
-        if (_incomingRecommendation is null)
-        {
-            return;
-        }
-
-        MapView.Markers = [_incomingRecommendation];
-        var acceptedRoute = _routePlanningService.BuildAcceptedRouteOverlays(RouteCurrentLocation(), _currentTransport, _incomingRecommendation);
-        var routeOverlays = acceptedRoute.Count > 0
-            ? acceptedRoute
-            : _routePlanningService.BuildLinkedRouteOverlays(RouteCurrentLocation(), _currentTransport, _incomingRecommendation);
-        FocusMapOnRoute(routeOverlays, _incomingRecommendation, reserveBottomSpace: true);
-        MapView.RouteOverlays = routeOverlays;
-        TransportFooterBar.IsVisible = false;
-    }
-
-    private static string BuildRecommendationCompactInfo(DriverRequestItem? request)
-    {
-        if (request is null)
-        {
-            return "운송 의뢰 상세 정보는 추천 상세 화면에서 확인할 수 있습니다.";
-        }
-
-        var fare = request.예상수익.HasValue
-            ? $"예상수익 {request.예상수익.Value.ToString("N0", CultureInfo.CurrentCulture)}원"
-            : "운임 미확인";
-        var distance = request.주행거리Km.HasValue
-            ? $"주행 {request.주행거리Km.Value.ToString("0.0", CultureInfo.CurrentCulture)}km"
-            : request.직선거리Km.HasValue
-                ? $"직선 {request.직선거리Km.Value.ToString("0.0", CultureInfo.CurrentCulture)}km"
-                : "거리 미확인";
-
-        return $"{request.추천업무유형표시} · {request.차량조건표시} · {request.시간조건표시} · {fare} · {distance}";
-    }
-
-    private void FocusMapOnRoute(
-        IReadOnlyList<DriverMapRouteOverlay> routeOverlays,
-        DriverMapMarkerItem recommendation,
-        bool reserveBottomSpace = false)
-    {
-        var points = routeOverlays
-            .SelectMany(x => x.Points)
-            .Where(x => x.Latitude != 0d && x.Longitude != 0d)
-            .ToList();
-
-        if (points.Count == 0)
-        {
-            MapView.CenterLatitude = reserveBottomSpace
-                ? recommendation.PickupLatitude + 0.015d
-                : recommendation.PickupLatitude;
-            MapView.CenterLongitude = recommendation.PickupLongitude;
-            MapView.Zoom = reserveBottomSpace ? 12.5d : 13d;
-            return;
-        }
-
-        var minLatitude = points.Min(x => x.Latitude);
-        var maxLatitude = points.Max(x => x.Latitude);
-        var minLongitude = points.Min(x => x.Longitude);
-        var maxLongitude = points.Max(x => x.Longitude);
-        var span = Math.Max(maxLatitude - minLatitude, maxLongitude - minLongitude);
-
-        var latitudeSpan = maxLatitude - minLatitude;
-        var centerLatitude = (minLatitude + maxLatitude) / 2d;
-        if (reserveBottomSpace)
-        {
-            centerLatitude += Math.Max(latitudeSpan * 0.18d, 0.012d);
-        }
-
-        MapView.CenterLatitude = centerLatitude;
-        MapView.CenterLongitude = (minLongitude + maxLongitude) / 2d;
-        var zoom = span switch
-        {
-            <= 0.03d => 13.5d,
-            <= 0.08d => 12.5d,
-            <= 0.18d => 11.5d,
-            <= 0.35d => 10.5d,
-            <= 0.7d => 9.5d,
-            _ => 8.5d
-        };
-        MapView.Zoom = reserveBottomSpace ? Math.Max(8d, zoom - 1.25d) : zoom;
+        TransportFooterBar.IsEnabled = _workspaceState.IsReady;
     }
 
     private void OnIncomingRecommendationChanged(DriverIncomingRecommendation? incoming)
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            if (!_isSubscribed || !_workspaceState.IsReady) return;
-            _incomingRecommendation = incoming?.Marker;
-            _incomingRecommendationRequest = incoming?.Request;
-            ShowIncomingRecommendation(incoming);
-            if (incoming is not null)
-            {
-                RecommendationDetailBanner.IsVisible = false;
-                LinkedRouteCard.IsVisible = false;
-                RestoreDefaultMapState();
-            }
+            if (!_isSubscribed || !_foreground || !_workspaceState.IsReady || _recommendationCommandBusy) return;
+            // 푸시는 식별 힌트입니다. 새 메시지만으로 현재 수행이나 검토 중인 경로를 교체하지 않습니다.
+            _ = RefreshCurrentWorkspaceAsync();
         });
     }
 
@@ -618,10 +396,10 @@ public partial class NativeDriverHomePage : ContentPage
             return;
         }
 
-        MapView.MarkerSelected += OnMarkerSelected;
         MapView.LocationPresentationChanged += OnLocationPresentationChanged;
         _recommendationNotificationService.Changed += OnIncomingRecommendationChanged;
         _operatingProfileService.Changed += OnOperatingProfileChanged;
+        _locationDisplayPreferences.Changed += OnDirectionSettingsChanged;
         _workspaceState.Invalidated += OnWorkspaceInvalidated;
         _isSubscribed = true;
     }
@@ -633,10 +411,10 @@ public partial class NativeDriverHomePage : ContentPage
             return;
         }
 
-        MapView.MarkerSelected -= OnMarkerSelected;
         MapView.LocationPresentationChanged -= OnLocationPresentationChanged;
         _recommendationNotificationService.Changed -= OnIncomingRecommendationChanged;
         _operatingProfileService.Changed -= OnOperatingProfileChanged;
+        _locationDisplayPreferences.Changed -= OnDirectionSettingsChanged;
         _workspaceState.Invalidated -= OnWorkspaceInvalidated;
         _isSubscribed = false;
     }

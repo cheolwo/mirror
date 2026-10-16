@@ -45,10 +45,12 @@
     <Compile Include="..\DriverApp\Services\DriverRecommendationPushHint.cs" Link="Clients\Cargo\R75\DriverRecommendationPushHint.cs" />
     <Compile Include="..\DriverApp\Services\DriverRecommendationPushRecovery.cs" Link="Clients\Cargo\R75\DriverRecommendationPushRecovery.cs" />
     <Compile Include="..\DriverApp\Services\DriverWorkStartRecoveryCoordinator.cs" Link="Clients\Cargo\R75\DriverWorkStartRecoveryCoordinator.cs" />
+    <Compile Include="..\DriverApp\Services\DriverWorkStartRecoveryCoordinator.DispatchReception.cs" Link="Clients\Cargo\R64\DriverWorkStartRecoveryCoordinator.DispatchReception.cs" />
     <Compile Include="..\DriverApp\Services\DriverWorkStartRecoveryStore.cs" Link="Clients\Cargo\R75\DriverWorkStartRecoveryStore.cs" />
     <Compile Include="..\DriverApp\Services\DriverWorkspaceReadState.cs" Link="Clients\Cargo\R75\DriverWorkspaceReadState.cs" />
     <Compile Include="..\DriverApp\Services\IDriverWorkApiService.cs" Link="Clients\Cargo\R75\IDriverWorkApiService.cs" />
     <Compile Include="..\DriverApp\Services\DriverWorkApiService.cs" Link="Clients\Cargo\R75\DriverWorkApiService.cs" />
+    <Compile Include="..\DriverApp\Services\DriverOperationalDispatchApiService.cs" Link="Clients\Cargo\R64\DriverOperationalDispatchApiService.cs" />
     <Compile Include="..\DriverApp\Services\DriverFreightWorkspaceStore.cs" Link="Clients\Cargo\R75\DriverFreightWorkspaceStore.cs" />
     <Compile Include="..\DriverApp\Services\DriverRecommendationApiService.cs" Link="Clients\Cargo\R75\DriverRecommendationApiService.cs" />
     <Compile Include="..\DriverApp\Services\DriverSettlementApiService.cs" Link="Clients\Cargo\R75\DriverSettlementApiService.cs" />
@@ -137,7 +139,10 @@
     <Compile Include="..\WarehouseManagerApp\Services\WarehouseManagerRoutes.cs" Link="Clients\Warehouse\WarehouseManagerRoutes.cs" />
     <Compile Include="..\DriverApp\Models\Driver\Samples\기사샘플모델.cs" Link="Clients\Cargo\기사샘플모델.cs" />
     <Compile Include="..\DriverApp\Models\Driver\Samples\DriverNativeLocationPolicy.cs" Link="Clients\Cargo\DriverNativeLocationPolicy.cs" />
+    <Compile Include="..\DriverApp\Models\Driver\Samples\DriverRecommendationMarkerPresentationPolicy.cs" Link="Clients\Cargo\DriverRecommendationMarkerPresentationPolicy.cs" />
+    <Compile Include="..\DriverApp\Models\Driver\Samples\기사위치방향State.cs" Link="Clients\Cargo\기사위치방향State.cs" />
     <Compile Include="..\DriverApp\Models\Driver\DriverRequestItem.cs" Link="Clients\Cargo\DriverRequestItem.cs" />
+    <Compile Include="..\DriverApp\Models\Driver\DriverRecommendationSelectionState.cs" Link="Clients\Cargo\DriverRecommendationSelectionState.cs" />
     <Compile Include="..\SsalddelApp\Models\Shipper\ShipperRequestHandoffMapper.cs" Link="Clients\Shipper\ShipperRequestHandoffMapper.cs" />
     <Compile Include="..\SsalddelApp\ViewModels\Shipper\ShipperRequestAuthoringPageViewModel.cs" Link="Clients\Shipper\ShipperRequestAuthoringPageViewModel.cs" />
     <Compile Include="..\SsalddelApp\ViewModels\Shipper\화주운송의뢰CrudViewModels.cs" Link="Clients\Shipper\화주운송의뢰CrudViewModels.cs" />

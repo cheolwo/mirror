@@ -21,6 +21,7 @@
         else if (!ViewModel.예약조회상태.CanDisplayValues)
         {
             <MudAlert Severity="Severity.Warning">@ViewModel.예약조회상태.Message</MudAlert>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="재조회Async">다시 시도</MudButton>
         }
         else if (ViewModel.예약목록.Count == 0)
         {
@@ -57,4 +58,6 @@
 
 @code {
     protected override Task OnInitializedAsync() => ViewModel.초기화Async();
+
+    private Task 재조회Async() => ViewModel.새로고침Async();
 }
