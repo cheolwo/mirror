@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../Ssalddel.Ui.Common/Ssalddel.Ui.Common.csproj" />
+    <ProjectReference Include="../../Ssalddel.Client.Infrastructure/Ssalddel.Client.Infrastructure.csproj" />
+    <Compile Include="../../SsalddelAdminApp/Services/AdminAuthSession.cs" Link="RoleClients/AdminAuthSession.cs" />
+    <Compile Include="../../SsalddelAdminApp/Services/AdminAuthService.cs" Link="RoleClients/AdminAuthService.cs" />
+    <Compile Include="../../SsalddelAdminApp/Services/AdminAuthenticatedApiClient.cs" Link="RoleClients/AdminAuthenticatedApiClient.cs" />
+    <Compile Include="../../SsalddelAdminApp/Services/DispatchTraining*.cs" Link="RoleClients/%(Filename)%(Extension)" />
+    <Content Include="../../SsalddelAdminApp/Components/Pages/DispatchTraining.razor" Link="LinkedAdmin/DispatchTraining.razor" />
+    <Content Include="../../SsalddelAdminApp/Components/Pages/DispatchTrainingDecisions.razor" Link="LinkedAdmin/DispatchTrainingDecisions.razor" />
+    <Content Include="../../SsalddelAdminApp/Components/Pages/DispatchTrainingDecisions.razor.css" Link="LinkedAdmin/DispatchTrainingDecisions.razor.css" />
+    <Content Include="../../SsalddelAdminApp/wwwroot/app.css" Link="admin-app.css" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

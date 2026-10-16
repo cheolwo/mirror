@@ -79,6 +79,8 @@
     <Compile Include="..\SsalddelAdminApp\Services\AdminAuthService.cs" Link="Clients\Admin\AdminAuthService.cs" />
     <Compile Include="..\SsalddelAdminApp\Services\AdminAuthenticatedApiClient.cs" Link="Clients\Admin\AdminAuthenticatedApiClient.cs" />
     <Compile Include="..\SsalddelAdminApp\Services\AdminFoodOperationsService.cs" Link="Clients\Admin\AdminFoodOperationsService.cs" />
+    <Compile Include="..\SsalddelAdminApp\Services\DispatchTraining*.cs" Link="Clients\Admin\%(Filename)%(Extension)" />
+    <Compile Include="..\eng\Ssalddel.DispatchTraining\DispatchTrainingShadowAI.cs" Link="DispatchTraining\DispatchTrainingShadowAI.cs" />
     <Compile Include="..\FDriverApp\Controls\FDriverMapCameraState.cs" Link="Clients\FDriverMapCameraState.cs" />
     <Compile Include="..\FDriverApp\Services\IFDriverLocationService.cs" Link="Clients\Driver\IFDriverLocationService.cs" />
     <Compile Include="..\OrdererApp\Components\Layout\OrdererPageDisplayContext.cs" Link="Clients\OrdererPageDisplayContext.cs" />

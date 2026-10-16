@@ -1,0 +1,22 @@
+using DispatchTrainingMobilePreview;
+using MudBlazor.Services;
+using Ssalddel.Client.Infrastructure.Security;
+using Ssalddel.Ui.Common.Areas.App.Services;
+using SsalddelAdminApp.Services;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseStaticWebAssets();
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+builder.Services.AddMudServices();
+builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new(builder.Configuration["DISPATCH_TRAINING_API"] ?? "http://127.0.0.1:5324/"), Timeout = TimeSpan.FromSeconds(15) });
+builder.Services.AddSingleton<IClientSessionGuard, ClientSessionGuard>();
+builder.Services.AddScoped<AdminAuthSession>(); builder.Services.AddScoped<AdminAuthService>(); builder.Services.AddScoped<AdminAuthenticatedApiClient>();
+builder.Services.AddScoped<IDispatchTrainingClient, DispatchTrainingClient>();
+builder.Services.AddScoped<IDispatchTrainingIdentity, PreviewLoginIdentity>();
+builder.Services.AddScoped<DispatchTrainingPendingSession>(); builder.Services.AddTransient<DispatchTrainingPageState>();
+builder.Services.AddScoped(_ => { var state = new 역할앱생명주기State(); state.초기화("브라우저 미리보기", true); state.전환(역할앱생명주기단계.활성); return state; });
+var app = builder.Build();
+app.UseStaticFiles(); app.UseAntiforgery();
+app.MapGet("/verification/admin-app.css", () => Results.File(Path.Combine(AppContext.BaseDirectory, "admin-app.css"), "text/css"));
+app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+app.Run();

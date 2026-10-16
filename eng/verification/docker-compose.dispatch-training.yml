@@ -1,0 +1,46 @@
+name: mirror-dispatch-training-r58
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ssalddel_dispatch_training
+      MYSQL_USER: dispatch_training
+      MYSQL_PASSWORD: ${DISPATCH_TRAINING_MYSQL_PASSWORD:?prepare training credentials}
+      MYSQL_ROOT_PASSWORD: ${DISPATCH_TRAINING_MYSQL_ROOT_PASSWORD:?prepare training credentials}
+    volumes: [training_mysql:/var/lib/mysql]
+    networks: [isolated]
+    healthcheck:
+      test: [CMD, mysqladmin, ping, -h, 127.0.0.1]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  mongo:
+    image: mongo:8.0
+    volumes: [training_mongo:/data/db]
+    networks: [isolated]
+    healthcheck:
+      test: [CMD, mongosh, --quiet, --eval, "db.runCommand({ping:1}).ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  gateway:
+    image: haproxy:3.2-alpine
+    volumes: ["./dispatch-training.haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro"]
+    ports: ["127.0.0.1:13312:3306", "127.0.0.1:27023:27017"]
+    networks: [access, isolated]
+    depends_on:
+      mysql: {condition: service_healthy}
+      mongo: {condition: service_healthy}
+networks:
+  access:
+    ipam:
+      config: [{subnet: 10.254.58.0/24}]
+  isolated:
+    internal: true
+    ipam:
+      config: [{subnet: 10.254.59.0/24}]
+volumes:
+  training_mysql:
+    name: mirror-dispatch-training-r58_mysql_v1
+  training_mongo:
+    name: mirror-dispatch-training-r58_mongo_v1

@@ -53,6 +53,10 @@ public static class MauiProgram
                 provider.GetRequiredService<ITransportRequestLedgerObserver>());
         });
         builder.Services.AddScoped<AdminAuthenticatedApiClient>();
+        builder.Services.AddScoped<IDispatchTrainingClient, DispatchTrainingClient>();
+        builder.Services.AddScoped<IDispatchTrainingIdentity, DispatchTrainingIdentity>();
+        builder.Services.AddScoped<DispatchTrainingPendingSession>();
+        builder.Services.AddTransient<DispatchTrainingPageState>();
         builder.Services.AddScoped<Ssalddel.Ui.Common.Areas.BackOffice.ViewModels.IOperationsAlertsClient, AdminOperationsAlertsClient>();
         builder.Services.AddTransient<Ssalddel.Ui.Common.Areas.BackOffice.ViewModels.OperationsAlertsState>();
         builder.Services.AddSingleton<AdminOperationsPushService>();

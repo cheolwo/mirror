@@ -6,6 +6,7 @@
 @inject ITransportRequestLedgerObserver LedgerObserver
 @inject TransportRequestLedgerRealtimeClient RealtimeClient
 @inject NavigationManager Navigation
+@inject IDispatchTrainingClient TrainingClient
 
 <PageTitle>살뜰 화물 운영 개요</PageTitle>
 
@@ -29,6 +30,11 @@
             </MudButton>
         }
     </div>
+
+    @if (trainingEnabled && Session.IsServerAdmin)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.Science" Href="/training/dispatch">가상 퀵 운영</MudButton>
+    }
 
     @if (!Session.IsServerAdmin)
     {
@@ -169,6 +175,8 @@
     private string syncText = "동기화 대기";
     private CancellationTokenSource? monitorCancellation;
     private Task? monitorTask;
+    private bool trainingEnabled;
+    private readonly CancellationTokenSource trainingCancellation = new();
 
     private static bool EnforceFieldTestRoutes
     {
@@ -215,6 +223,7 @@
 
         if (Session.IsServerAdmin)
         {
+            await ProbeTrainingAsync();
             await StartRealtimeQuietlyAsync();
             await LoadAsync(false);
             StartMonitor();
@@ -313,6 +322,7 @@
 
         if (errorMessage is null && Session.IsServerAdmin)
         {
+            await ProbeTrainingAsync();
             await StartRealtimeQuietlyAsync();
             await LoadAsync(false);
             StartMonitor();
@@ -322,6 +332,7 @@
     public ValueTask DisposeAsync()
     {
         LedgerObserver.RefreshRequested -= OnLedgerRefreshRequested;
+        trainingCancellation.Cancel(); trainingCancellation.Dispose();
         StopMonitor();
         return ValueTask.CompletedTask;
     }
@@ -343,6 +354,12 @@
         {
             // 연결 실패 시 30초 보완 조회를 유지합니다.
         }
+    }
+
+    private async Task ProbeTrainingAsync()
+    {
+        try { trainingEnabled = (await TrainingClient.CapabilityAsync(trainingCancellation.Token)).Enabled; }
+        catch { trainingEnabled = false; }
     }
 
     private sealed record AdminMetricItem(string Label, int Value);

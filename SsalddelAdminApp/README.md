@@ -10,6 +10,8 @@
 | /food-operations/reviews/{OrderNo} | 중단 근거와 책임 판정을 어떻게 기록할까? | 중단 시도·근거·확인, 명시 검토 저장 | 기존 공용 검토 상태의 ID/revision/원 입력·정본 GET·401/409 정책 재사용 |
 | /food-operations/demand-surcharge | 기사 배정 조건을 일정 시간 높일까? | 서버 허용 금액·시간을 조회한 뒤 명시 적용 | 화물 조회와 분리. 실패 시 정본 조회 후 같은 요청 확인, 계정 변경 후 늦은 응답 폐기 |
 | /overview/cargo, /operations | 화물 개요/운송·기사 상태는 어떤가? | 기존 화물 조회·동선 유지 | 음식 할증 조회에 종속시키지 않음. 기능 OFF는 오류를 감추지 않음 |
+| /training/dispatch | 이 가상 퀵 훈련의 발생·처리 상태를 어떻게 관리할까? | 30분·6명+지원2명·최대15건, 새 발생 시작/일시정지/재개/종료와 지원 참여 | 전용 훈련 호스트 capability가 켜진 경우에만 화물 개요에서 진입. 진행 업무는 발생 중지 뒤에도 계속 처리 |
+| /training/dispatch/decisions | 규칙 배차와 AI 비교가 어떻게 달랐나? | 같은 회차의 시각·규칙 선택·AI 성공/실패·일치 여부 | 상태 제어와 분리한 읽기 화면. 운영 화면으로 복귀 |
 
 음식 목록은 고객 주소·연락처·원시 payload 없이 주문번호·음식점·진행 상태·시각만 반환한다. 목록 GET, 기존 operations-trace와 interruption-review는 서버관리자 권한과 FoodDeliveryWorkflow를 따른다. APK의 기본 홈은 업무 진입 허브이며 다른 도메인의 API를 미리 호출하지 않는다. 화물 OFF가 음식 목록/상세를 차단하지 않고 음식 OFF도 화물 진입 자체를 차단하지 않는다.
 
@@ -18,3 +20,18 @@
 페이지 → AdminFoodOperationsService → 음식주문운영추적Controller → 음식주문운영추적UseCase/음식배달중단검토UseCase → 음식주문/배차/배달시도/기사정산 원장으로 연결한다. 검토 상태는 공용 FoodDeliveryInterruptionReviewState를 웹·모바일이 같은 의미로 소비한다. 계정이 바뀌면 표시와 진행 중 요청을 폐기하고 로그인 복귀 후 정본을 조회한다.
 
 검증은 코드/관련 시험, 격리 API·DB, 실제 Android APK, 공개 HTTPS·개인 휴대폰을 분리한다. 이번 보완의 원본/지문과 실행 근거는 Git 제외 artifacts/local/azure-mobile-hardening-r1/admin/에 보관하며 통합 검증은 총괄 작업에서 수행한다.
+
+## 가상 퀵 훈련 페이지 책임
+
+| 항목 | 기록 |
+| --- | --- |
+| 주 사용자·페이지/소스 | 기존 서버관리자. `/training/dispatch`와 독립 판단 기록 `/training/dispatch/decisions`, SsalddelAdminApp Android |
+| 대상·진입 문맥 | 전용 훈련 호스트의 회차 ID·현재 revision. 화물 개요의 작은 진입 링크는 capability Enabled 확인 시에만 표시 |
+| 한 문장 목적 | 관리자가 한 훈련 회차의 새 주문 발생과 지원 기사 참여를 제어하고 실제 서버 처리 결과를 확인한다 |
+| 완료 결과·상태별 주 행동 | 시작 전=새 훈련 시작, 발생 중=새 발생 일시정지, 일시정지=발생 재개. 발생 종료는 미완료 업무를 취소하지 않고 처리 종료를 기다림. 모든 행동은 서버 AllowedCommands와 revision에 따름 |
+| 기본 정보 | 발생/대기/운송/완료 건수, 발생 남은 시간, 다음 사건, 기사 참여, 미해결 문제. 판단 비교는 별도 페이지에서 읽음 |
+| 보조 정보 | 기사별 수행·완료 건수와 AI 비교 시각·응답 시간. 실제 고객 주소·연락처·자격값·원시 payload는 제공하지 않음 |
+| 독립 업무·제외 정보 | 기존 실운영 화물·음식, 요금/지급, 정책 설정·모델 학습은 원래 업무로 유지. 훈련 화면이 새 운영 권한을 만들지 않음 |
+| 진입·실패·복귀 | 미지원 서버의 capability404는 메뉴 숨김. 조회 오류는 오류로 표시. 전경5초 조회·복귀 즉시 정본 GET, 계정전환/페이지종료/백그라운드 뒤 늦은 응답 폐기. 불확실 POST는 같은 요청 번호를 보존하고 GET의 처리 번호로 확인하며 재전송하지 않음 |
+| 코드·API·DB | 페이지 → DispatchTrainingPageState/PendingSession → DispatchTrainingClient → 기존 AdminAuthenticatedApiClient/Bearer → 전용 `verification/dispatch-training` API. 서버 정본과 coordinator가 권한·상태·회차·revision을 검증 |
+| 책임 판정·검증 | 운영 제어와 판단 기록을 독립 경로로 분리. 집중 서비스/상태 시험과 Android 빌드·실제 화면·30분 실시간 실행은 별도 검증 결과로 기록. 같은 계정 페이지 왕복의 요청 번호 보존은 앱 프로세스 재시작 복원 증거가 아님 |

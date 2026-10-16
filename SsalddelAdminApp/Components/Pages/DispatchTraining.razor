@@ -1,0 +1,61 @@
+@page "/training/dispatch"
+@using Ssalddel.Contracts.Admin.DispatchTraining
+@inherits DispatchTrainingPageBase
+
+<PageTitle>가상 퀵 운영 · 살뜰 관리자</PageTitle>
+<MudStack Spacing="3" Class="admin-overview">
+    <div class="admin-page-header"><MudText Typo="Typo.h4">가상 퀵 운영</MudText><MudText Typo="Typo.body2" Color="Color.Secondary">30분 실시간 · 기사 6명 + 지원 2명 · 2분 간격, 최대 15건</MudText></div>
+    <MudButton Variant="Variant.Text" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.ArrowBack" Href="/overview/cargo">화물 운영으로</MudButton>
+    @if (!State.CapabilityChecked && State.Error is null) { <MudText role="status">훈련 기능을 확인하고 있습니다.</MudText> }
+    @if (State.Error is { } error) { <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@error</MudAlert> }
+    @if (State.CapabilityChecked && !State.Enabled) { <MudPaper Elevation="0" Outlined="true" Class="pa-4"><MudText>현재 서버는 가상 퀵 훈련을 제공하지 않습니다.</MudText></MudPaper> }
+    else if (State.RequiresLogin || State.Enabled && !State.IsAdmin)
+    { <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Login">관리자 로그인</MudButton> }
+    else if (State.Enabled)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">전용 연습 환경입니다. 규칙 배차로 진행하고 AI는 선택을 비교하여 기록합니다.</MudAlert>
+        @if (State.Notice is { } notice) { <MudText role="status">@notice</MudText> }
+        @if (State.HasPending) { <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">이전 명령의 결과를 먼저 확인해 주세요. 새 명령을 보내지 않습니다.</MudAlert> }
+        <MudButton Variant="Variant.Outlined" Color="Color.Inherit" Disabled="State.IsBusy" StartIcon="@Icons.Material.Filled.Refresh" OnClick="Refresh">현재 상태 조회</MudButton>
+        @if (State.IsBusy) { <MudText role="status">현재 훈련 상태를 확인하고 있습니다.</MudText> }
+        @if (State.Session is { } session)
+        {
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+                <MudStack Spacing="2"><MudText Typo="Typo.h6">@DispatchTrainingPresentation.Phase(session.PhaseCode)</MudText>
+                    <MudText>새 주문 발생 남은 시간 @DispatchTrainingPresentation.Remaining(session.RemainingGenerationSeconds)</MudText>
+                    <MudText Typo="Typo.body2">일시정지·발생 종료 후에도 이미 접수된 배차·운송은 계속 처리합니다.</MudText>
+                    <MudGrid Spacing="2">
+                        <MudItem xs="6"><MudText Typo="Typo.caption">발생 주문</MudText><MudText Typo="Typo.h6">@session.Counts.GeneratedOrders / @session.MaximumOrders</MudText></MudItem>
+                        <MudItem xs="6"><MudText Typo="Typo.caption">완료</MudText><MudText Typo="Typo.h6">@session.Counts.CompletedOrders 건</MudText></MudItem>
+                        <MudItem xs="6"><MudText Typo="Typo.caption">배차 대기</MudText><MudText>@session.Counts.WaitingOrders 건</MudText></MudItem>
+                        <MudItem xs="6"><MudText Typo="Typo.caption">운송 중</MudText><MudText>@session.Counts.InProgressOrders 건</MudText></MudItem>
+                    </MudGrid>
+                    @if (session.NextEvent is { } next) { <MudText Typo="Typo.body2">다음: @next.Label · @DispatchTrainingPresentation.Time(next.DueAtUtc)</MudText> }
+                    <MudText Typo="Typo.caption">서버 확인 @DispatchTrainingPresentation.Time(session.ServerTimeUtc) · 전경에서 5초마다 조회</MudText>
+                </MudStack>
+            </MudPaper>
+            <MudStack Spacing="2">
+                @if (session.PhaseCode is DispatchTrainingPhaseCodes.Idle or DispatchTrainingPhaseCodes.Completed)
+                { <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!State.CanCommand(DispatchTrainingCommandCodes.Start))" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="() => State.ExecuteAsync(DispatchTrainingCommandCodes.Start)">새 훈련 시작</MudButton> }
+                @if (session.PhaseCode == DispatchTrainingPhaseCodes.Running)
+                { <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!State.CanCommand(DispatchTrainingCommandCodes.Pause))" StartIcon="@Icons.Material.Filled.Pause" OnClick="() => State.ExecuteAsync(DispatchTrainingCommandCodes.Pause)">새 주문 발생 일시정지</MudButton> }
+                @if (session.PhaseCode == DispatchTrainingPhaseCodes.Paused)
+                { <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!State.CanCommand(DispatchTrainingCommandCodes.Resume))" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="() => State.ExecuteAsync(DispatchTrainingCommandCodes.Resume)">새 주문 발생 재개</MudButton> }
+                @if (session.PhaseCode is DispatchTrainingPhaseCodes.Running or DispatchTrainingPhaseCodes.Paused)
+                { <MudButton Variant="Variant.Outlined" Color="Color.Inherit" Disabled="@(!State.CanCommand(DispatchTrainingCommandCodes.Stop))" StartIcon="@Icons.Material.Filled.Stop" OnClick="() => State.ExecuteAsync(DispatchTrainingCommandCodes.Stop)">새 주문 발생 종료</MudButton> }
+            </MudStack>
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4"><MudStack Spacing="2"><MudText Typo="Typo.h6">기사 참여</MudText>
+                <MudText>기본 기사 @session.ActiveDriverCount 명 · 지원 참여 @session.ActivatedSupportDriverCount / 2명</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.PersonAdd" Disabled="@(!State.CanCommand(DispatchTrainingCommandCodes.SupportDrivers) || session.AvailableSupportDriverCount <= 0)" OnClick="() => State.ExecuteAsync(DispatchTrainingCommandCodes.SupportDrivers)">지원 기사 1명 참여</MudButton>
+                @foreach (var driver in session.Drivers)
+                { <MudText Typo="Typo.body2">@driver.Label · @DispatchTrainingPresentation.DriverState(driver.StatusCode) · 수행 @driver.ActiveWorkCount 건 · 완료 @driver.CompletedWorkCount 건</MudText> }
+            </MudStack></MudPaper>
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4"><MudStack Spacing="2"><MudText Typo="Typo.h6">확인할 문제</MudText>
+                @if (session.PendingIncidents.Count == 0) { <MudText>현재 확인할 문제가 없습니다.</MudText> }
+                @foreach (var incident in session.PendingIncidents) { <MudText>@incident.Message · @DispatchTrainingPresentation.Time(incident.RecordedAtUtc)</MudText> }
+            </MudStack></MudPaper>
+            <MudButton Variant="Variant.Outlined" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.CompareArrows" Href="@DispatchTrainingRoutes.Decisions">배차 판단·AI 비교 기록</MudButton>
+        }
+    }
+    @if (State.Error is not null && (!State.Enabled || !State.IsAdmin)) { <MudButton Variant="Variant.Outlined" Color="Color.Inherit" OnClick="Refresh">다시 확인</MudButton> }
+</MudStack>

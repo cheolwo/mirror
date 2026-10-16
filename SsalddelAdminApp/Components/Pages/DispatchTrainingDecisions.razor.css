@@ -1,0 +1,5 @@
+summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; }
+.training-candidate-facts { display: grid; gap: 8px; margin: 12px 0; }
+.training-candidate-facts > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.training-candidate-facts dt { color: var(--ss-muted, #586b78); }
+.training-candidate-facts dd { margin: 0; text-align: right; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
