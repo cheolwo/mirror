@@ -1,5 +1,53 @@
 # Mirror 기획 목차
 
+## 운영자 관점 업무 흐름 검증 r66 (2026-10-16)
+
+- [검토·실행 결과](../ProjectOverview/operator-workflow-review-r66.md): 운영 주요 흐름의 기존 시험 고유 대상 749개·훈련 자체 검사 14개 통과, 격리 실제 HTTP 퀵 2건 완료. 픽업 후 일반 취소와 관리자 반복 Start 불일치를 재현했고 수락 후속 복구·모바일 사건 경로·관제 조회 실패·음식 사건 마감 연결을 우선 보완하도록 제안했다. 이번 제품 구현·기능 활성화·물리폰/실제 송금·commit/push는 없으며 r65 기간 정책은 그대로 질문 중이다.
+
+## 기사 업무 집중 기간 기획 dispatch-core.r65 (2026-10-16)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE r65](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-work-focus.design.r65.md): `DirectionAccepted / SwitchingRuleAccepted / PeriodBoundaryAsked / ImplementationPendingPolicy`. 일정 기간 한 종류에 집중하며 맡은 업무를 모두 마친 뒤 본인이 변경할 수 있다. 하루/주간 시간 기준은 질문 중이다. 기존 r64·원장·기능 기본값을 보존했고 이번에는 조사·기획만 기록했다.
+
+## 퀵 기사 후속 콜·연속 수행 보완 dispatch-core.r64 (2026-10-16)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE r64](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/quick-driver-continuity.implementation.r64.md) · [변경·검증](../Changes/2026-10-16-quick-driver-continuity-r64.md): `Implemented / LocalValidated / StandaloneApkBuilt / DeviceDeferred`. 퀵 수신 조건·전체 업무 끝점/ETA·네이티브 현재 업무 유지/다음 전환·조건부 최초 ON·연속 API 분류를 보완했다. Fast 474개·Task 12,226개 통과·환경 의존 16개 미실행. 기존 기본 OFF·기기/실운영 경계를 유지한다.
+
+## 퀵 기사 이동 중 후속 콜·연속 수행 검증 dispatch-core.r63 (2026-10-16)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE r63](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/quick-driver-continuity.review.r63.md): `Reviewed / LocalTestsValidated / GapsIdentified / ImplementationNotAuthorized / DeviceDeferred`. 기존 시험 451개 통과, 연속배차 조회 Feature 미분류 404 재현. 퀵의 수신 관문·마지막 종료지/시각 후보·현재 카드 유지와 다음 업무 전환을 우선 보완하도록 제안하며 제품·설정·기기·운영은 변경하지 않는다.
+
+## 연속 미응답 수신 중지와 같은 토글 재개 dispatch-core.r62 (2026-10-16)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE r62](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-no-response.implementation.r62.md) · [변경·검증](../Changes/2026-10-16-driver-no-response-r62.md): `Implemented / LocalValidated / AndroidBuilt / DeviceDeferred / OperationalConfigurationUnchanged`. 기존 토글 ON으로만 미응답 중지를 해제한다. Fast 433개·Task 12,157개 통과·환경 의존 16개 미실행. 실제 토글 HTML 3상태·Android 빌드를 확인했고 화면 캡처·물리폰·실제 알림/외부 운영은 별도다.
+
+## 신규 배차 토글 확인과 본인 수신 재개 dispatch-core.r61 (2026-10-16)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE r61](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-dispatch-reception-toggle.review.r61.md): `ManualResumeAccepted / SourceAndLocalTestsVerified / DeviceVisualNotVerified / ImplementationGapsIdentified`. 세 번째 미응답 중지 뒤 본인이 토글을 켜서 재개하는 방향을 수용했다. 기존 음식 기사 토글·서버 연결과 시험 156개를 확인했고 최초 운행 시작 자동 ON·서버 중지 표시/직접 해제·자동 미응답 중지의 구현 공백을 구분했다. 제품·단말·운영 변경은 없다.
+
+## 세 번째 연속 미응답부터 신규 배차 수신 중지 dispatch-core.r60 (2026-10-16)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE r60](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-no-response-receiving-off.design.r60.md): `ThresholdAndActionAccepted / RecoveryPolicyOpen / ImplementationNotAuthorized`. 2회까지 유지·3회째 수신 OFF, 자동 운행 종료는 하지 않는 최신 사용자 정정이다. r59의 자동 종료 제안을 대체하며 다음 질문은 `driver-no-response-receiving-resume-mode / Asked / Unanswered`다. 실제 구현·운영 변경은 포함하지 않는다.
+
+## 배차 미응답과 자동 운행 종료 기획 dispatch-core.r59 (2026-10-16)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE r59](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-no-response-auto-stop.design.r59.md): `DirectionAccepted / ThresholdOpen / SafeguardsProposed / ImplementationNotAuthorized`. 미응답 상태의 자동 운행 종료 방향을 수용했다. 다음 질문은 `driver-no-response-auto-stop-threshold / Asked / Unanswered`이며 직접 거절·수행 중 업무 보호·대기시간·통신 장애 집계는 별개다. r58 구현과 검증 상태는 보존한다.
+
+## 모바일 가상 퀵 운영 dispatch-core.r58 (2026-10-16)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE r58](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/virtual-quick-operations.implementation.r58.md): `Implemented / LocalApiValidated / ApkPrepared / UiVisualDeferred / OperationalDisabled / DeviceDeferred`. 관리자 Android APK에 실시간 합성 운영을 연결했고 격리 실제 API 7건을 마감했다(8슬롯 생략). 규칙이 실제 선정하고 Ollama는 비교만 하며 이번 성공 비교는 미확인이다. 이전 미정 대기 정책·가중치 학습·운영 활성화는 이번 구현에 포함하지 않는다.
+
+## 기사 관점 배차 엔진 구성과 보완 검토 dispatch-core.r57 (2026-10-16)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE r57](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-dispatch-structure.review.r57.md): `Reviewed / GapsIdentified / QuestionsOpen / ImplementationNotAuthorized / WeightTrainingNotStarted`. r55 학습 전략과 r56 방향을 현재 음식/화물·퀵 코드와 대조한 검토다. 다음 질문은 `quick-driver-waiting-preserve-on-offer / Asked / Unanswered`이며 새 제품 구현·학습 승인은 아니다.
+
+## 이전 기획: 퀵 배차의 수행 가능성과 대기 우선 dispatch-core.r56 (2026-10-15)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE r56](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/quick-dispatch-feasibility-waiting.design.r56.md): `AcceptedDirection / QuestionsOpen / ImplementationNotAuthorized / WeightTrainingNotStarted`. r55의 기사 선택 우선순위를 구체화한 기획 답변이다. 다음 질문은 `quick-driver-waiting-clock-start / Asked / Unanswered`이며 제품·학습자료·모델 반영은 별도다.
+
+## 이전 제안: 퀵 우선 AI 배차 학습 전략 dispatch-core.r55 (2026-10-15)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE r55](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/quick-training-strategy.design.r55.md): `Proposed / QuestionsOpen / ImplementationNotAuthorized / WeightTrainingNotStarted`. 현재 음식 학습 후보·ready 0·과거 정책 해시를 대조하고, 퀵의 첫 문답 검토·평가·추가 학습·관측 적용 전략을 정리했다. 평균 단가·대기·시간/적재·손익 목표는 구분하고 미정 정책을 학습 정답으로 확정하지 않는다. 제품·자료 재생성·실학습·운영 활성화는 별도다.
+
 ## 생활 퀵 개별 업무 검토 r103 (2026-10-15)
 
 - [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r103 검토](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/quick-delivery-review.r103.md): `Reviewed / GapsIdentified / ImplementationNotAuthorized`. 퀵의 직접 지급/주간 명세와 플랫폼 지급 구분, 접수 수정·취소/희망 시각, 수락 보수/물품 적합성, 부재·반송/신고·수령 마감 공백을 개별 확인했다. 관련 기존 시험 358개 통과이며 신규 정책·코드·실금전·기기 검증은 미수행이다. r102 구현과 기존 기획 미정을 보존한다.

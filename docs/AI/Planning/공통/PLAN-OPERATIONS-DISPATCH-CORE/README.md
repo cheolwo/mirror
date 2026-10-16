@@ -2,7 +2,19 @@
 
 - 기획 ID: `PLAN-OPERATIONS-DISPATCH-CORE`
 - 기획 분야: 공통 / 운영 배차
-- 기획 판본: `dispatch-core.r54`
+- 기획 판본: `dispatch-core.r65`
+- 최신 기획: [기사 업무 집중 기간 r65](driver-work-focus.design.r65.md). `DirectionAccepted / SwitchingRuleAccepted / PeriodBoundaryAsked / ImplementationPendingPolicy`. 일정 기간 한 종류에 집중하고 맡은 일을 모두 마친 뒤 기사 본인이 변경한다. 하루/주간 시간 기준은 질문 중이며 자동 전환은 채택하지 않았다. 제품·DB·실행 설정은 변경하지 않았다.
+- 최신 승인 구현: [퀵 기사 후속 콜·연속 수행 보완 r64](quick-driver-continuity.implementation.r64.md) · [변경·검증](../../../../Changes/2026-10-16-quick-driver-continuity-r64.md). `Implemented / LocalValidated / StandaloneApkBuilt / DeviceDeferred`. 신규 수신 관문·전체 업무 끝점/ETA·네이티브 A→B 전환·조건부 최초 ON·연속 API 분류를 연결했다. Fast 474개·Task 12,226개 통과·환경 의존 16개 미실행. 단독 APK 생성·서명 확인과 실제 물리폰/운영 검증을 구분하며 기본 OFF는 유지한다.
+- 최신 검토·검증: [운영자 관점 업무 흐름 r66](../../../../ProjectOverview/operator-workflow-review-r66.md). 기존 운영 주요 시험 고유 대상 749개·훈련 자체 검사 14개 통과, 격리 실제 HTTP 퀵 2건 완료. 픽업 후 일반 취소와 관리자 반복 Start의 409를 재현했고 수락 후속 복구·모바일 사건 이동·관제 오류·음식 사건 마감 연결을 보완 대상으로 남겼다. 제품·설정·기기·운영·모델 학습은 변경하지 않았고 r65 기간 기준은 질문 중이다.
+- 이전 검토·검증: [퀵 기사 이동 중 후속 콜·연속 수행 r63](quick-driver-continuity.review.r63.md). `Reviewed / LocalTestsValidated / GapsIdentified / ImplementationNotAuthorized / DeviceDeferred`. 기존 시험 451개 통과, 연속배차 조회 API의 Feature 미분류 404를 재현했다. 자동 후보의 현재 GPS 기준·공통 수신 관문·네이티브 A→B 화면 연결 공백을 확인했으며 제품/설정/기기/운영은 변경하지 않았다.
+- 이전 승인 구현: [연속 미응답 수신 중지·같은 토글 재개 r62](driver-no-response.implementation.r62.md) · [변경·검증](../../../../Changes/2026-10-16-driver-no-response-r62.md). `Implemented / LocalValidated / AndroidBuilt / DeviceDeferred / OperationalConfigurationUnchanged`. Fast 433개·Task 12,157개 통과·환경 의존 16개 미실행. 토글 HTML 3상태·Android 빌드를 확인했다. 화면 캡처·물리폰·실제 알림/외부 운영은 별도이며 운행·기존 배달·다른 서버 제한은 보존한다.
+- 최신 답변·검증: [본인 수신 재개와 기존 토글 확인 r61](driver-dispatch-reception-toggle.review.r61.md). `ManualResumeAccepted / SourceAndLocalTestsVerified / DeviceVisualNotVerified / ImplementationGapsIdentified`. 세 번째 미응답 중지 뒤 본인이 토글을 켜서 재개한다. 음식 기사 지도 좌측 상단 토글·서버 연결과 기존 집중 시험 156개를 확인했다. 최초 운행 시작 자동 ON·서버 중지 중 켜짐 표시·직접 중지 해제 경로 공백은 구분하며 제품·APK·기기는 변경하지 않았다.
+- 이전 기획 정정: [세 번째 미응답부터 수신 중지 r60](driver-no-response-receiving-off.design.r60.md). 1·2회 유지·3회째 신규 수신만 중지하며 운행은 종료하지 않는다. 직접 거절·통신 장애·집계 초기화·대기시간은 미정이다.
+- 이전 기획 답변: [미응답과 자동 운행 종료 r59](driver-no-response-auto-stop.design.r59.md). 당시 제안 이력이며 자동 종료 방향·횟수는 r60의 사용자 정정으로 대체한다.
+- 이전 승인 구현: [모바일 가상 퀵 운영 r58](virtual-quick-operations.implementation.r58.md) · [변경·검증](../../../../Changes/2026-10-16-virtual-quick-operations-r58.md). `Implemented / LocalApiValidated / ApkPrepared / UiVisualDeferred / OperationalDisabled / DeviceDeferred`. 실제 시계 30분·최대 15슬롯, 관리자 APK·규칙/AI 비교를 구현했다. 격리 실제 API 7건 마감·8슬롯 생략과 자체 검증 14개·Task 12,100개를 구분한다. Ollama 성공 비교·실화면·기기는 별도이며 r56/r57의 미정 대기 정책은 변경하지 않는다.
+- 최신 검토: [기사 관점 배차 구성과 보완 r57](driver-dispatch-structure.review.r57.md). `Reviewed / GapsIdentified / QuestionsOpen / ImplementationNotAuthorized / WeightTrainingNotStarted`. 음식/화물·퀵의 현재 경로와 AI 역할, r56과 대기 점수·추천 시 초기화·후속 수행 평가의 차이를 조사했다. 다음은 추천만 받은 경우 대기 유지 여부다. 제품·설정·모델은 변경하지 않았다.
+- 최근 기획 답변: [수행 가능성과 대기 우선 r56](quick-dispatch-feasibility-waiting.design.r56.md). `AcceptedDirection / QuestionsOpen / ImplementationNotAuthorized / WeightTrainingNotStarted`. 업무를 차질 없이 수행할 수 있는 후보 사이 장기 대기 우선을 수용했다. 고정 ETA 차이 5분은 채택하지 않으며 대기시간 집계는 다음 문답으로 남긴다. 제품·학습자료·모델은 변경하지 않았다.
+- AI 학습 전략: [퀵 우선 학습 전략 r55](quick-training-strategy.design.r55.md). `Proposed / QuestionsOpen / ImplementationNotAuthorized / WeightTrainingNotStarted`. 음식 후보 4,032개씩 두 판단 자료의 ready는 모두 0이며 일부 정책 해시 변경을 확인했다. 퀵의 관측·판단 기준과 첫 대표 20개 문답 검토 → 고정 평가 → 소규모 SFT/LoRA → 관측/제한 적용을 제안한다. 이번에는 문서만 정리하며 실학습·운영 활성화는 하지 않는다.
 - 알림 복구·기사 겸 운영자: [r54 승인 설계](notification-recovery.implementation.r54.md)·[작업 명세](notification-recovery.r54.work-order.json)·[검증/한계](../../../../Changes/2026-10-11-food-dispatch-notification-recovery-r54.md). 유효 추천의 누락 복원·제한 재시도와 조치 필요한 예외 알림, 일반 기사 두 건 연속 수행을 로컬 검증하며 기존 운영 OFF를 유지한다.
 - 정보 준비 상태: `Implemented / LocalValidated / OperationalDisabled / ExternalOperationalDeferred`.
 - 배차 시점 상태: `Implemented / LocalValidated / OperationalDisabled / PolicyDraftMaterialsPrepared / HumanReviewPending`.

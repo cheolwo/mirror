@@ -1,6 +1,107 @@
 # Mirror(거울) Current Work
 
-## 생활 퀵 개별 흐름 검토와 맥락별 커밋 r103 (2026-10-15)
+## 추천 카드 여백과 응답 색 정리 r73 (2026-10-16, Fast·전체 Task·APK190 표시/넘김·취소/복귀 검증 완료)
+
+- [변경·독립 검토](../Changes/2026-10-16-compact-recommendation-card-design-r73.md): 사용자의 흰 여백 축소·거절 파랑/수락 주황 요청을 기존 추천 판단 책임 안의 시각 변경으로 정리했다. 배달료104 DIP 열(이름11/금액18)과 픽업/전달13 두 줄을 가로로 묶고 전체 요약 스크롤·하단 좌거절/우수락48 DIP를 유지하며 카드116 DIP로 조정했다. 주소 잘림 방지·긴 주소/좁은 폭·선택 구분을 검토했고 파랑/흰 글자5.169:1·밝은 주황/짙은 글자6.465:1 대비를 계산했다.
+- 제품 소스 `5a59f73fbcb50269b2affa2430dbb89cb012dbb29c91d2bbee779e19218f30a5`와 r72 사본의 시각 변경만 대조했다. Fast 앱 빌드·관련69개 통과·실패/생략0개, Task 솔루션 빌드·전체12,274개 통과·실패0/환경 의존16개 생략과 실제 TRX를 확인했고 종료 후 소스도 동일했다. Task는 명시 필터와 관계없이 Full인 기존 도구 계약에 따라 전체 실행으로 기록했다. APK190 제작·설치 버전/해시 `0679981e3c299a19c6c46a0a08be8f2bbcfcb818e952325caefe8954a933d816` 일치와 별도 격리 증분 제작 기록도 확인했다.
+- [최종 기기 원장](../../artifacts/local/physical-phone-r67/.private/compact-card-r73-r190-validation.json): V06의 두 열·각51px 주소·파랑/주황48 DIP 버튼, V07/V10/V12 두/세 건 양방향 카드·전체 핀/선택 색/카메라 유지, 거절/주의사항 창 취소와 V15 수신 OFF 복귀를 PNG·UI로 확인했다. V/W/X는 미확정·보수 미동결·후불승인완료/결제대기이며 실제 수락/거절 확정은0회다. 긴 실제 주소 스크롤은 미검증, 소스의 기존 스크롤 유지와 구분한다. 기존 지도/응답 가드·r72 증거·r71 실패 이력과 화면 유지15/권한·보안을 보존하며 서버·요금/정산·worker/FCM·금융·운영·commit/push는 변경하지 않는다.
+
+## 추천 카드에서 바로 응답 r72 (2026-10-16, 최종 Fast·Task·APK189 카드/확인 창 취소·복귀 검증 완료)
+
+- [책임·변경 기록](../Changes/2026-10-16-direct-recommendation-card-actions-r72.md): 128 DIP 카드에 배달료·픽업지·전달지와 하단 좌측 거절/우측 수락만 남겼다. 순번은 header로 옮기고 상세·보류·상시 체크를 제거했다. 필수 주의사항은 수락 클릭의 확인 창에서 처리하며 전체 핀/선택 색·카메라·실패 복구는 유지한다.
+- APK188 소스 `9bcc782ddb295aafbaa83a6dd05b5f8e81f787d433cd7ad438646887ee92d3cc`의 Fast 69개·Task 12,274개 통과·실패 0개·16개 생략과 설치 일치를 확인했지만 T06 전달 주소 잘림을 재현했다. 세 여백 속성만 조정해 14 DIP를 확보하도록 했고 128 DIP 카드·글자·48 DIP 버튼·지도·응답 가드는 유지했다. 수정 후 소스 `c0bf2aa8c91dd197852a4460f745605061dde2d3394de699f215205ceebb823b`의 Fast 69개·최종 Task 솔루션 빌드/12,274개 통과·실패 0개·환경 의존 16개 생략과 실제 TRX, APK189 제작·설치 버전/해시 `e9ca3c163621432c50255a560227422e7fff15951d4b551b778023035de64f3c` 일치를 확인했다. U08의 세 정보·픽업/전달 각51px·좌거절/우수락, U09/U13/U15의 두/세 건 양방향 카드와 전체 핀·선택 색·카메라 유지, 거절/경고 확인 창 취소와 U19 수신 OFF 복귀를 실제 PNG·UI로 확인했다. 실제 수락/거절 확정은 실행하지 않았고 S/T/U 모두 미확정·보수 미동결·후불승인완료/결제대기다. 이전 통과를 소급하지 않는다. APK188 T08 PNG의 변경 중 상태·r71 실패와 모든 이전 자료도 보존한다.
+- APK188 격리 host 빌드 경고/오류 0개·기존 ready/실행 식별자/DB/계정 유지 재시작과 P/Q/R 준비를 보존했다. APK189은 별도 S/T/U로 확인했고 [최종 기기 검증 원장](../../artifacts/local/physical-phone-r67/.private/direct-card-r72-r189-validation.json)에 소스/설치·실제 화면·시험·복구를 연결했다. 기존 A~R·r71의 전체 시험 1개 실패/단일 재시험 통과·APK187/188 자료를 보존하며 r72 전체 통과를 소급하지 않는다. 합성 좌표·300초·worker/FCM/금융 OFF를 유지하고 수신 OFF·화면 유지15를 복원/유지했다. 실제 운영·송금·commit/push로 확대하지 않는다.
+
+## 지도 우선 추천 비교 r71 (2026-10-16, APK187 부분 확인·후속 r72 정정 진행)
+
+- [책임·변경 기록](../Changes/2026-10-16-map-first-recommendation-cards-r71.md): 96 DIP 기본 카드에 순번·금액·짧은 주소·상세 진입을 두고 전체 주소/조건/경고/응답은 같은 ID·차수의 상세로 분리했다. 모든 유효 추천 핀과 선택한 주황/파랑·다른 회색, 전체 좌표 집합이 바뀔 때만 카메라 갱신을 연결했다. 기존 지도 기본값·현재 위치·명령 보호와 실패 후 핀 캐시 복구를 유지한다.
+- APK187 페이지 소스 SHA-256 `cd0495061b2670836246501b6f61c7cda2c56de4ce2fc099fa5147b2364b1a35`와 Fast69개 통과를 확인했다. Task 빌드는 성공했지만 전체 시험은 12,273개 통과·알림 콜백 2초 시간 초과 1개 실패·16개 생략이었다. 단일 재시험 1개만 통과했으며 원인 확정·전체 재시험 통과로 처리하지 않는다. APK187 설치 버전/해시 `9e43c3885d2df0abe8eaa972e4c74c331f85cb50d1f836bf1caa8dade8c04e0c` 일치와 S08/S09 두 카드·네 핀·선택 색/카메라 유지, S10/S11 상세 경고 확인 전후 수락 비활성/활성을 확인했고 수락은 실행하지 않았다.
+- M/N 추천 뒤 O 추가와 S12/S13의 세 카드·여섯 핀·선택 색을 확인했다. 수신 OFF는 S17 정착 PNG·UI로 확인했으며 앞선 S16 PNG의 변경 중 화면과 구분한다. 마지막 M/N/O 원장은 모두 미확정·보수 미동결·결제대기이고 수락/거절은 실행하지 않았다. 사용자가 상세 없는 카드로 다시 지정해 r72에서 보완하며 r71 부분 검증·단일 재시험을 최종 전체 성공으로 확대하지 않는다. host 파일 잠금 실패/재빌드 성공·r70 APK186·A~L·기존 실패를 보존하고 합성 좌표·300초·worker/FCM/금융 OFF를 유지한다. 서버 배차 정책·음식 기사 앱·요금/정산·Unity·공개 운영·commit/push는 이번 범위가 아니다.
+
+## 화물 추천별 독립 카드 r70 (2026-10-16, 구현·로컬 검증·APK186 독립 카드 확인 완료)
+
+- [변경·검증 기록](../Changes/2026-10-16-independent-recommendation-cards-r70.md): 기존 추천 페이지 한 파일에 독립 카드·양옆 미리보기·건별 버튼을 연결했다. APK185의 옆 카드 탭 후 중앙 G/지도 H 불일치 실패를 보존하고 탭·별도 선택 버튼을 제거했다. APK186에서 두 장·세 장 표시, 옆 카드 탭 전후 선택 유지, 양방향 넘김과 선택 지도, L 경고 확인/수락 활성과 K 미확인/수락 비활성의 분리, 운행 지도 복귀·신규 수신 OFF 복원을 확인했다. 일반 선택 동작은 좌우 넘김이다.
+- 최초 `CS0136` 빌드/APK 실패와 이전 Fast/Task 결과를 보존한다. 탭 제거 최종 소스 SHA-256 `2ebda7bd041960774a469568205b62092b23a02c46cb5930ddc4b663892b91a3`, Fast-final 53개 통과·실패/생략 0개, Task-final 솔루션 빌드 및 12,258개 통과·실패 0개·환경 의존 16개 생략을 확인했다. APK186 설치 버전·해시 `3ce3c0f28f45fe2b832ad2738c6f97ad8e133801505d24194ae831455aed4d5f` 일치도 별도 확인했다.
+- G/H/I와 J/K/L은 모두 수락하지 않았다. J/K는 자연 만료했고 L이 남은 상태에서 수신 OFF로 복원했다. J/K/L 마지막 원장의 확정 기사/동결 보수 없음·결제대기를 대조하고 기존 A~I·소스 사본·실패와 r69 증거를 보존했다. 합성 좌표·300초·worker/FCM/금융 OFF를 유지하며 원본 화면은 비공개 보관한다. APK186 수락·수행/취소/거절 재실행·실제 금융·주행·운영·commit/push로 확대하지 않는다.
+
+## 화물 기사 추천 지도와 좌우 카드 r69 (2026-10-16, 구현·로컬 검증·APK184 설치·추천 화면 확인 완료)
+
+- [화면 책임·진행 기록](../Changes/2026-10-16-recommendation-map-carousel-r69.md): 수행 지도에는 새 추천 배너를 표시하고, 배너에서 별도 추천 지도로 이동해 하단 건별 카드를 좌우로 넘기는 구조를 연결했다. 현재 업무와 추천 선택·수락을 분리하고 선택 카드의 픽업 주황/도착 파랑 핀을 연결한다.
+- APK183 설치·해시·추천 두 건의 좌우 카드·경고 확인·선택한 6,200원 건 수락과 운행 지도 복귀를 확인했다. 상하차 사진·완료 명령 후 원장에서 D 인수완료·입금대기·결제대기를 확인했으며 실제 금융은 미검증이다. APK182 배너 미표시와 UTC 수정 이력은 보존한다. 최종 APK184 설치·해시 일치와 새 E/F의 자동 배너·별도 지도·좌우 카드·복귀를 별도로 확인했다. E/F는 미수락이며 시험용 신규 수신 ON은 원래 OFF로 복원했다. 고정 카드가 가린 핀은 지도 이동 후 확인했고 지도 크기는 유지했다.
+- Fast-r4 43개 통과이며 방향 10개는 해당 집중 필터에서 빠져 이전 Fast-r3 53개와 전체 시험 근거로 구분한다. Task-r4 전체 빌드는 통과했으나 알림 콜백 시간 초과 1개가 실패했다. 후속 단일 1개·푸시 그룹 21개·같은 소스/산출물의 독립 전체 시험 12,258개 통과, 실패 0개·환경 의존 16개 생략을 각각 보존한다. 원인 확정·실제 주행/FCM/금융·운영·commit/push로 확대하지 않는다.
+
+## 화물 기사 현재 위치 방향 옵션 r68 (2026-10-16, 구현·기기 표시 검증 완료)
+
+- [변경·검증 기록](../Changes/2026-10-16-current-location-arrow-r68.md): 기존 화면 설정에 위치점·방향 화살표 선택을 연결했다. SDK 기본 화살표를 쓰며 미확인/10초 만료 시 위치점으로 복귀한다. 지도 전경과 옵션이 켜졌을 때만 방향 센서를 사용한다.
+- 관련 집중 시험58개·Fast 빌드와 전체 Task 빌드·제품 시험12,238개 통과, 실패0개·환경 의존16개 생략. APK181 기기 설치·해시 일치, 위치점/화살표 ON/OFF·배경 복귀·재실행 선택 유지를 실제 화면으로 확인했다. 방향은 휴대폰 자체 상단 기준이며, 실제 회전/주행 정확도·센서 장애 재현·지도 카메라 회전·서버 위치 전송 변경·음식 기사 앱은 이번 범위가 아니다.
+
+## 새 개발 휴대폰 배차·수행 검증 r67 (2026-10-16)
+
+- [실기기 검증 기록](../Changes/2026-10-16-physical-phone-verification-r67.md): 역할 앱 7개 설치·로그인, 음식 기사 추천→수락→도착→픽업→전달과 주문자의 별도 수령 확인을 실제 기기·격리 서버에서 대조했다. 배차 알림음은 사용자가 청취를 확인했다. 실제 FCM·클라우드 운영·상품 배송·송금과는 구분한다.
+- 화물 지도 정산·예약 오류 안내를 전용 페이지로 분리했고 관련 시험 23개가 통과했다. 수락 화면 가로 넘침도 고친 APK180을 기기에 설치해 새 화물 추천→수락→상차 사진·완료→하차 사진·완료를 검증했다. 사진 2장의 파일 해시·업로드 영수증·동일 운송 완료 참조를 읽기 전용으로 대조했다. 창고 연계 좌표 누락·전용 조회 오류·화면 하단 겹침과 기존 만료/공개 제안은 보존한다. 실제 FCM·주행·지급·전체 역할 생명주기·commit/push는 별도다.
+
+## 운영자 관점 업무 흐름 검증 r66 (2026-10-16)
+
+- [검증 보고서](../ProjectOverview/operator-workflow-review-r66.md): `Reviewed / LocalTestsValidated / IsolatedQuickHttpValidated / GapsReproduced / ProductUnchanged / DeviceDeferred / OperationalDisabled`. 기존 관련 시험 748개와 별도 격리 Mongo 1개, 훈련 자체 검사 14개가 통과했다. 새 격리 퀵 주문 2건을 실제 API·합성 사진으로 완료하고 신규 발생 중지 후 남은 업무 0을 확인했다.
+- 픽업 후 일반 취소의 기사/시각 초기화는 독립 정책 실행으로, 관리자 반복 Start의 409는 실제 HTTP로 재현했다. 수락 후속 복구·APK 사건 상세 경로·관제 조회 오류·음식 사건 최종 인계도 보완 대상으로 기록했다. AI 비교는 Timeout이며 모델 품질/물리폰/실제 알림·송금은 미검증이다. 이전 회차·Docker/볼륨·제품 설정을 보존했고 이번 host는 종료했다. r65 기간 기준 질문은 미답변으로 유지한다.
+
+## 기사 업무 집중 기간 기획 dispatch-core.r65 (2026-10-16)
+
+- [집중 업무·기간 r65](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-work-focus.design.r65.md): `DirectionAccepted / SwitchingRuleAccepted / PeriodBoundaryAsked / ImplementationPendingPolicy`. 복수로 가능한 업무와 일정 기간 집중할 한 종류를 구분한다. 기간 중에는 맡은 업무를 모두 마친 뒤 본인이 변경할 수 있도록 사용자가 선택했다. 현재 코드에는 기간 집중 선택이 없다.
+- 다음 질문은 하루/주간 시간 기준이며 `Asked / Unanswered`다. 기존 업무 완료·정산·수신 중지/재개를 보존하며 이번에는 제품·DB·플래그·APK·운영·commit/push를 변경하지 않았다.
+
+## 퀵 기사 후속 콜·연속 수행 보완 dispatch-core.r64 (2026-10-16, 구현·로컬 검증 완료)
+
+- [승인 명세 r64](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/quick-driver-continuity.implementation.r64.md) · [변경·검증](../Changes/2026-10-16-quick-driver-continuity-r64.md): `Implemented / LocalValidated / StandaloneApkBuilt / DeviceDeferred`. 공통 신규 수신 관문·전체 업무 끝점/ETA·네이티브 A→B 전환·연속 API 분류를 연결했다. 기존 화면의 토글과 판본 조건부 최초 ON으로 수동 OFF를 보존한다.
+- Fast 474개·Task 12,226개 통과, 실패 0개·환경 의존 16개 미실행. 단독 설치 APK 생성·서명 확인 완료. 기존 운행/수락 업무·기능 기본 OFF·다른 미커밋 작업을 보존했고 물리폰/주행·푸시/청취·외부 운영·commit/push는 수행하지 않았다.
+
+## 퀵 기사 이동 중 후속 콜·연속 수행 검증 dispatch-core.r63 (2026-10-16)
+
+- [검토·검증 r63](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/quick-driver-continuity.review.r63.md): `Reviewed / LocalTestsValidated / GapsIdentified / ImplementationNotAuthorized / DeviceDeferred`. 수행 중 추천 배너·추가 수락의 일정/적재 보호는 있으나 자동 후보의 현재 GPS 기준, 퀵 수신 OFF/미응답 관문 누락, 네이티브 수락 후 기존 카드 보존·자동 다음 업무 연결의 공백을 확인했다.
+- 관련 기존 시험 451개 통과·실패/건너뜀 0. 실제 제품 필터에서 연속배차 조회 API의 `404 FeatureBoundaryUnclassified`를 재현했다. 제품 코드·설정·APK·모델·운영·commit/push는 변경하지 않았고 실제 휴대폰·주행/푸시·알림음은 미검증이다. 서버 수신 조건 → 마지막 목적지/종료시각 후보 → 네이티브 A→B 전환 → 별도 예약 마감을 제안한다.
+
+## 연속 미응답 수신 중지와 같은 토글 재개 dispatch-core.r62 (2026-10-16, 구현·로컬 검증 완료)
+
+- [승인 명세 r62](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-no-response.implementation.r62.md) · [변경·검증](../Changes/2026-10-16-driver-no-response-r62.md): `Implemented / LocalValidated / AndroidBuilt / DeviceDeferred / OperationalConfigurationUnchanged`. 앱 표시 확인이 있는 유효 추천의 세 번째 연속 미응답에 신규 수신만 중지하고, 기존 토글의 명시 ON으로 재개한다. 운행·수락 업무·다른 서버 제한은 보존한다.
+- 기존 활동 원장·추천 만료·본인 API·음식 기사 네이티브/공통 토글을 연결했다. Fast 433개·최종 Task 12,157개 통과, 실패 0개·환경 의존 16개 미실행. 토글 HTML 3상태와 기존 네이버 지도 설정 포함 Android 빌드를 확인했다. 브라우저 보안 정책상 화면 캡처는 하지 않았다. 휴대폰 설치·실제 FCM/알림음·외부 운영·모델·commit/push는 수행하지 않았다.
+
+## 신규 배차 토글 확인과 본인 수신 재개 dispatch-core.r61 (2026-10-16)
+
+- [답변·검증 r61](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-dispatch-reception-toggle.review.r61.md): `ManualResumeAccepted / SourceAndLocalTestsVerified / DeviceVisualNotVerified / ImplementationGapsIdentified`. 세 번째 연속 미응답 중지 뒤 기사 본인이 토글을 켜서 재개하는 방향을 수용했다. 음식 기사 네이티브 지도 좌측 상단·공통 지도/목록 토글과 기존 서버 수신 연결을 확인했다.
+- 기존 집중 시험 156개 통과, 실패·건너뜀 0개. HTML·PageModel·루프백 HTTP/SQLite 근거이며 실제 APK 화면·USB·알림 검증은 아니다. 최초 운행 시작 자동 ON, 서버 중지여도 켜짐 표시, ON만으로 서버 중지 해제 불가와 연속 3회 중지 미구현을 기록했다. 제품·설정·APK·기기·운영·모델·commit/push는 변경하지 않았다. 상세 로그는 `artifacts/local/validation/20261016-dispatch-reception-r61/`다.
+
+## 세 번째 연속 미응답부터 신규 배차 수신 중지 dispatch-core.r60 (2026-10-16)
+
+- [기획 정정 r60](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-no-response-receiving-off.design.r60.md): `ThresholdAndActionAccepted / RecoveryPolicyOpen / ImplementationNotAuthorized`. 사용자 최신 정정에 따라 1·2회 연속 미응답은 유지하고 3회째 신규 배차 수신만 OFF로 전환한다. 운행 종료·기존 배달 취소는 하지 않는 기획 기준이다. r59는 당시 이력으로 보존한다.
+- 다음 질문은 `driver-no-response-receiving-resume-mode / Asked / Unanswered`: 기사님이 직접 토글을 켜서 수신을 재개할지다. 직접 거절·통신 장애·집계 초기화·대기 우선순위는 미정이며 기획 문서만 갱신했다. r58 제품·설정·DB·APK·모델·운영은 변경하지 않았다.
+
+## 배차 미응답과 자동 운행 종료 기획 dispatch-core.r59 (2026-10-16)
+
+- [기획 답변 r59](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-no-response-auto-stop.design.r59.md): `DirectionAccepted / ThresholdOpen / SafeguardsProposed / ImplementationNotAuthorized`. 배차에 미응답한 채 운행을 켜두는 상황에서 자체 운행 종료로 이어지는 방향을 수용했다. 직접 거절·통신 문제·수행 중 업무 보호와 대기시간은 별도로 구체화한다.
+- 다음 질문은 `driver-no-response-auto-stop-threshold / Asked / Unanswered`: 한 번 만료에 종료할지, 두 번 연속 미응답에 종료할지다. 읽은 기존 운행 종료 경로에는 수행 중 업무 확인 보호가 없으므로 단순 자동 호출을 구현 완료로 보지 않는다. 기획 문서만 갱신하며 r58 코드·설정·DB·APK·모델·운영은 변경하지 않았다.
+
+## 모바일 가상 퀵 운영 dispatch-core.r58 (2026-10-16)
+
+- [승인 설계 r58](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/virtual-quick-operations.implementation.r58.md) · [변경·검증](../Changes/2026-10-16-virtual-quick-operations-r58.md) · [실행 안내](../../eng/Ssalddel.DispatchTraining/README.md): `Implemented / LocalApiValidated / ApkPrepared / UiVisualDeferred / OperationalDisabled / DeviceDeferred`. 기존 관리자 APK에 30분·2분 간격 합성 퀵 운영, 신규 발생 제어·지원 기사 참여·규칙/AI 비교를 연결했다.
+- 전용 HTTP·MySQL·Mongo에서 실제 7건의 수락·동의·합성 사진 픽업·전달 완료와 지원 2명을 확인했다. 중지·재시작으로 8슬롯 생략, 재시작 확인 메모 1개 보존이다. 자체 검증 14개·최종 Task 12,100개 통과(환경 의존 16개 미실행), APK 내장 코드 대조 완료다. Ollama 성공 비교와 15건 무중단 수행·화면 픽셀·USB/외부 운영·실제 지급은 미검증이다. 미리보기 숨김 실행은 자동 승인 검토가 차단했고 재시도하지 않았다. 기존 대기·단가 정책과 관련 없는 미커밋 파일을 보존하며 commit/push는 수행하지 않았다.
+
+## 기사 관점 배차 엔진 구성과 보완 검토 dispatch-core.r57 (2026-10-16)
+
+- [검토 r57](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-dispatch-structure.review.r57.md): `Reviewed / GapsIdentified / QuestionsOpen / ImplementationNotAuthorized / WeightTrainingNotStarted`. 음식 Ollama와 규칙 기반 화물·생활 퀵의 현재 역할, 공통 업무 선택/수락 보호, 추천 시 대기 가점 초기화, r56 장기 대기 방향과 점수 정렬의 차이·후속 수행/혼합 근거 공백을 정적으로 대조했다.
+- 기획 문서·목차만 갱신한다. 제품·DB·설정·모델·단말·실운영은 실행하거나 변경하지 않았다. 다음 질문은 `quick-driver-waiting-preserve-on-offer / Asked / Unanswered`이며 기존 대기 시작점도 미정이다. 반복 수신한 r102 공동주택 화면 범위 답변은 이미 반영된 것으로 확인했으며 새 구현이나 대기 정책 승인으로 취급하지 않았다.
+- 문서 전용 Fast와 관련 링크 6개·새 파일 공백 검사를 통과했다. build·제품 시험은 실행하지 않았다. 검증 로그는 `artifacts/local/validation/20261016-092019/`다.
+
+## 이전 기획: 퀵 배차의 수행 가능성과 대기 우선 dispatch-core.r56 (2026-10-15)
+
+- [기획 답변 r56](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/quick-dispatch-feasibility-waiting.design.r56.md): `AcceptedDirection / QuestionsOpen / ImplementationNotAuthorized / WeightTrainingNotStarted`. 픽업·전달과 기존 업무에 지장 없는 후보를 추린 뒤 장기 대기 기사를 우선하는 방향이다. 고정 ETA 차이 5분은 채택하지 않았다. 다음 질문은 `quick-driver-waiting-clock-start / Asked / Unanswered`이며 수행 중 기사 마지막 목적지 기준을 보존한다.
+- 기획 본문과 목차만 갱신했다. 제품 코드·설정·자료 생성/승인·모델 호출/학습·운영 배차·commit/push는 수행하지 않았다. r55 전략과 기존 자료 상태는 그대로다.
+
+## 이전 제안: 퀵 우선 AI 배차 학습 전략 dispatch-core.r55 (2026-10-15)
+
+- [학습 전략 r55](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/quick-training-strategy.design.r55.md): `Proposed / QuestionsOpen / ImplementationNotAuthorized / WeightTrainingNotStarted`. 음식 AI 후보/조합/시점 연결과 퀵 미연결을 구분했다. r51/r52 후보는 각각 4,032개·ready 0이며 r51 정책 원천 2개 해시가 달라 과거 snapshot을 현재 정답으로 쓰지 않는다.
+- 대표 퀵 20개 문답 검토·허용 판단/목표 우선순위 → 고정 평가 → 소규모 추가 학습 → 판본화된 Ollama 실행/관측 적용을 제안했다. 로컬 GPU/RAM과 공식 TRL/Ollama/OR-Tools 문서를 읽었으며 제품 코드·자료 생성·모델 호출/학습·실운영·commit/push는 변경하지 않았다. r103 퀵의 금융/취소/규격/수령 미정도 정답으로 만들어 채우지 않는다.
+
+## 이전 검토: 생활 퀵 개별 흐름 검토와 맥락별 커밋 r103 (2026-10-15)
 
 - [퀵 개별 검토 r103](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/quick-delivery-review.r103.md): `Reviewed / GapsIdentified / ImplementationNotAuthorized`. 현재 생활 퀵의 기사 직접 지급과 주간 지급 준비의 차이, 일반 접수 수정·취소, 희망 완료 시각 보존, 수락 전 기사 보수, 물품 적합성, 부재·반송/신고·수령 마감의 공백을 확인했다. 신규 기능·정책은 구현하지 않았다.
 - 관련 기존 시험 358개 통과. APK/물리 기기·현장·외부 알림·실수납/이체는 새로 검증하지 않았다. 누적 변경 610파일을 11개 맥락으로 커밋했고 보호 도구 3개·알림음 1개는 로컬 보존했다. push는 수행하지 않았다. 이 검토 보고서는 후속 문서 커밋으로 구분한다.
