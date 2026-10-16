@@ -39,6 +39,8 @@ public interface IFoodDeliveryDriverApiService
     Task<기사운행상태응답?> GetWorkStatusAsync(CancellationToken cancellationToken = default);
     Task<운영배차수신상태Dto> GetDispatchAvailabilityAsync(CancellationToken cancellationToken = default);
     Task<운영배차수신상태Dto> ChangeDispatchIntentAsync(운영배차수신의사변경요청 request, CancellationToken cancellationToken = default);
+    Task AcknowledgeOfferPresentationAsync(string offerId, int recommendationRound, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
     Task StartWorkAsync(string startLocation, CancellationToken cancellationToken = default);
     Task StartWorkAsync(string startLocation, Guid clientRequestId, CancellationToken cancellationToken = default);
     Task StopWorkAsync(CancellationToken cancellationToken = default);
@@ -119,6 +121,11 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
 
     public Task<운영배차수신상태Dto> ChangeDispatchIntentAsync(운영배차수신의사변경요청 request, CancellationToken cancellationToken = default)
         => SendAsync<운영배차수신상태Dto>(HttpMethod.Put, "api/v1/driver/operational-dispatch/availability/intent", request, cancellationToken);
+
+    public Task AcknowledgeOfferPresentationAsync(string offerId, int recommendationRound, CancellationToken cancellationToken = default)
+        => SendNoContentAsync(HttpMethod.Put,
+            $"api/v1/driver/operational-dispatch/offers/{Uri.EscapeDataString(offerId)}/receipt",
+            new 운영배차제안표시확인요청 { 추천라운드 = recommendationRound }, cancellationToken);
 
     public async Task<기사운행상태응답?> GetWorkStatusAsync(CancellationToken cancellationToken = default)
         => await SendAsync<기사운행상태응답>(

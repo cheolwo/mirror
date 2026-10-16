@@ -46,6 +46,7 @@ public sealed partial class MainPageModel
                 .GroupBy(x => x.OfferId, StringComparer.Ordinal).Select(x => x.First()).ToArray();
         RecommendedTicketItems.Clear();
         foreach (var offer in recommendations) RecommendedTicketItems.Add(DeliveryTicketPreview.From(offer, now));
+        CaptureOfferPresentationCandidates(recommendations);
         _foodNotificationState.BindAccount(IsAuthenticated ? _authSession.UserId : null);
         _foodNotificationState.Reconcile(DispatchIntentKnown && ReceivesNewDispatches ? RecommendedTicketItems.ToArray() : [], now);
         UpdateFoodRecommendationNotice();
@@ -83,6 +84,7 @@ public sealed partial class MainPageModel
 
     private void ClearFoodNotifications()
     {
+        ClearOfferPresentations();
         _foodNotificationState.Clear();
         _foodNotificationFocus = null;
         HasNewRecommendations = false;

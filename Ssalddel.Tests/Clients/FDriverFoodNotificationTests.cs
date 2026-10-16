@@ -12,6 +12,58 @@ namespace Ssalddel.Tests.Clients;
 public sealed class FDriverFoodNotificationTests
 {
     [Fact]
+    public void NewRecommendationRound_RealertsTheSameOriginalOfferIdAfterRead_WhileLegacyReceiptStillWorks()
+    {
+        var notifications = new Notifications { Receipt = new("driver-a", ["legacy-offer"]) };
+        var state = new FDriverFoodNotificationState(notifications); state.BindAccount("driver-a");
+        state.Reconcile([Preview("legacy-offer")], DateTime.UtcNow); Assert.Empty(notifications.Published);
+        var offer = Offer("same-original-id"); offer.RecommendationRound = 1;
+        state.Reconcile([DeliveryTicketPreview.From(offer)], DateTime.UtcNow); state.MarkRead();
+        offer.RecommendationRound = 2;
+        state.Reconcile([DeliveryTicketPreview.From(offer)], DateTime.UtcNow);
+        Assert.Equal(2, notifications.Published.Count); Assert.All(notifications.Published, item => Assert.Equal("same-original-id", item.OfferId));
+        Assert.Equal("same-original-id", state.LatestOfferId); Assert.Equal(1, state.UnreadCount);
+        var restored = new FDriverFoodNotificationState(notifications); restored.BindAccount("driver-a");
+        restored.Reconcile([DeliveryTicketPreview.From(offer)], DateTime.UtcNow);
+        Assert.Equal(2, notifications.Published.Count);
+    }
+
+    [Fact]
+    public async Task VisibleLatestOfferReceipt_RetriesNextSnapshotOnly_CachesSuccess_AndAcknowledgesNewRound()
+    {
+        var offer = Offer("same-original-id"); offer.RecommendationRound = 1;
+        var api = Api([offer]); api.WorkStatus = "운행중";
+        var receipts = new List<(string OfferId, int Round)>();
+        api.AcknowledgePresentation = (id, round, _) =>
+        {
+            receipts.Add((id, round));
+            if (receipts.Count == 1) throw new FDriverApiException("표시 확인 응답 유실", HttpStatusCode.ServiceUnavailable);
+            return Task.CompletedTask;
+        };
+        var model = Model(api, new Notifications());
+        try
+        {
+            await model.InitializeAsync(); model.Navigation.TryApplyFocus("delivery");
+            Assert.True(model.HasNewRecommendations);
+            await model.AcknowledgeVisibleRecommendationAsync(offer.OfferId);
+            await model.AcknowledgeVisibleRecommendationAsync(offer.OfferId); Assert.Single(receipts);
+            await FDriverLifecycleTestSupport.RefreshBackground(model);
+            await model.AcknowledgeVisibleRecommendationAsync(offer.OfferId); Assert.Equal(2, receipts.Count);
+            await FDriverLifecycleTestSupport.RefreshBackground(model);
+            await model.AcknowledgeVisibleRecommendationAsync(offer.OfferId); Assert.Equal(2, receipts.Count);
+            await model.OpenNewRecommendationsCommand.ExecuteAsync(null); Assert.False(model.HasNewRecommendations);
+            offer.RecommendationRound = 2;
+            await FDriverLifecycleTestSupport.RefreshBackground(model); Assert.True(model.HasNewRecommendations);
+            await model.AcknowledgeVisibleRecommendationAsync(offer.OfferId);
+            Assert.Equal((offer.OfferId, 2), receipts[^1]); Assert.Equal(3, receipts.Count);
+            model.SetWorkspacePageVisible(false);
+            offer.RecommendationRound = 3; await FDriverLifecycleTestSupport.RefreshBackground(model);
+            await model.AcknowledgeVisibleRecommendationAsync(offer.OfferId); Assert.Equal(3, receipts.Count);
+        }
+        finally { await model.StopMonitoringAsync(); }
+    }
+
+    [Fact]
     public void RepeatedCanonicalOffer_HasOneAlertAndOneUnread()
     {
         var service = new Notifications(); var state = new FDriverFoodNotificationState(service);

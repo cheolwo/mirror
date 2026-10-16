@@ -32,6 +32,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     private bool _disposed, _suspended;
     public bool FoodDispatchStateUnconfirmed => _adapter is IRoleWorkspaceRecovery { PreferenceStateUnconfirmed: true };
     public bool FoodStartStateUnconfirmed => _adapter is IRoleWorkspaceRecovery { StartStateUnconfirmed: true };
+    public string? DispatchReceptionNotice => (_adapter as IRoleWorkspaceDispatchReceptionState)?.DispatchReceptionNotice;
 
     public RoleWorkspaceViewModel(IEnumerable<IRoleWorkspaceAdapter> adapters, IRoleWorkspaceAccess access, RoleWorkspaceState state,
         TimeProvider? clock = null)
@@ -69,6 +70,16 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     private string? _commandErrorActionKey;
     public long Generation => _generation;
     public string WorkspaceHref => Role is null ? "/" : RoleWorkspaceNavigation.Href(Role.Key, SelectedId);
+
+    public Task AcknowledgePresentedItemAsync(RoleWorkspaceItem displayedItem, CancellationToken cancellationToken = default)
+    {
+        if (_disposed || _suspended || IsLoading || IsRefreshing || CommandBusy || AccountBusy
+            || !IsAuthenticated || RequiresLogin || AccessDenied || Error is not null || RefreshError is not null
+            || SelectedItem is not { } item || !ReferenceEquals(displayedItem, item)
+            || _adapter is not IRoleWorkspacePresentationObserver observer)
+            return Task.CompletedTask;
+        return observer.AcknowledgePresentedAsync(item, cancellationToken);
+    }
 
     public async Task InitializeAsync(string? roleKey, string? selectedId = null)
     {

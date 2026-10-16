@@ -21,7 +21,7 @@ namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food;
     Effects = SsalddelCodeEffect.NetworkCall | SsalddelCodeEffect.UiStateMutation | SsalddelCodeEffect.StateMutation | SsalddelCodeEffect.PersistentRead | SsalddelCodeEffect.PersistentWrite | SsalddelCodeEffect.ThirdPartyApiCall | SsalddelCodeEffect.MayIncurExternalCost,
     Boundary = "서버 명령 효과를 위임한다. 미확정 ID는 이 객체 수명에만 보존하며 네이티브 암호화 저장을 수행하지 않는다. 자동 조회는 수락이나 시작 POST 자동 재전송이 아니다.")]
 public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleWorkspaceLocationProvider locationProvider,
-    TimeProvider? clock = null) : IRoleWorkspaceAdapter, IRoleWorkspaceRecovery
+    TimeProvider? clock = null) : IRoleWorkspaceAdapter, IRoleWorkspaceRecovery, IRoleWorkspaceDispatchReceptionState, IRoleWorkspacePresentationObserver
 {
     private FoodDeliveryDriverCurrentWorkDto? workspace;
     private 기사운행상태응답? work;
@@ -36,11 +36,17 @@ public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleW
     private string? unconfirmedPreferenceAction;
     private bool resolvedStart;
     private string? rejectedStartNotice;
+    private long presentationGeneration;
+    private readonly Dictionary<RoleWorkspaceItem, FoodDeliveryDriverOfferDto> presentationOffers = new(ReferenceEqualityComparer.Instance);
+    private readonly HashSet<(string OfferId, int Round)> acknowledgedPresentations = [];
+    private readonly HashSet<(string OfferId, int Round)> presentationAttempts = [];
     public bool StartReceptionPending => pendingStartReceptionRequestId.HasValue;
     public bool StartReceptionReady => FoodDriverWorkRecoveryPolicy.WorkState(work?.Status) == FoodDriverCanonicalWorkState.Driving
         && dispatch?.수신의사Code == 운영배차수신의사Code.On;
     public bool StartStateUnconfirmed => StartReceptionPending;
     public bool PreferenceStateUnconfirmed => unconfirmedPreferenceAction is not null;
+    public string? DispatchReceptionNotice => FoodDriverDispatchReceptionPolicy.IsKnown(dispatch)
+        && dispatch!.미응답자동중지여부 ? FoodDriverDispatchReceptionPolicy.AutomaticStopNotice : null;
     public string RoleKey => "food-driver";
     public const string StartWork = "food-driver.work-start";
     public const string StopWork = "food-driver.work-stop";
@@ -60,7 +66,7 @@ public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleW
         dispatch = availability;
         var onDuty = string.Equals(status.Status, "운행중", StringComparison.OrdinalIgnoreCase);
         var workStatusKnown = KnownWorkStatus(status.Status);
-        var receives = availability.수신의사Code == 운영배차수신의사Code.On;
+        var receives = FoodDriverDispatchReceptionPolicy.IsReceiving(availability);
         var receivingKnown = availability.수신의사Code is 운영배차수신의사Code.On or 운영배차수신의사Code.Off;
         await RefreshLocationWithoutPromptAsync(onDuty && (receives || value.ActiveDeliveries.Count > 0), cancellationToken);
         var nowUtc = time.GetUtcNow().UtcDateTime;
@@ -92,6 +98,7 @@ public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleW
             : !workStatusKnown ? "운행 상태를 자동으로 확인하고 있습니다."
             : !onDuty ? "운행을 시작하면 배달 요청을 받을 준비를 합니다."
             : !receivingKnown ? "신규 배차 수신 상태를 자동으로 확인하고 있습니다."
+            : availability.미응답자동중지여부 ? FoodDriverDispatchReceptionPolicy.AutomaticStopNotice
             : !receives ? "신규 배차 받기를 켜면 배달 요청을 받을 수 있습니다."
             : availability.실효상태Code switch
             {
@@ -105,7 +112,33 @@ public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleW
         if (!string.IsNullOrWhiteSpace(value.DispatchAutomationNotice)) notice += " " + value.DispatchAutomationNotice;
         if (!string.IsNullOrWhiteSpace(automaticLocationNotice)) notice += " " + automaticLocationNotice;
         if (!string.IsNullOrWhiteSpace(routeNotice)) notice += " " + routeNotice;
+        presentationGeneration++;
+        presentationOffers.Clear(); presentationAttempts.Clear();
+        foreach (var item in items.Where(item => !item.IsCurrent))
+        {
+            var offer = value.Recommendations.FirstOrDefault(offer => offer.OfferId == item.Id);
+            if (offer is not null) presentationOffers[item] = offer;
+        }
         return new(RoleKey, items, notice, selected, controls);
+    }
+
+    public async Task AcknowledgePresentedAsync(RoleWorkspaceItem displayedItem, CancellationToken cancellationToken)
+    {
+        if (!FoodDriverDispatchReceptionPolicy.IsReceiving(dispatch)
+            || !presentationOffers.TryGetValue(displayedItem, out var offer)
+            || offer.RecommendationRound <= 0 || string.IsNullOrWhiteSpace(offer.OfferId)
+            || offer.ExpiresAtUtc is not { } expiry || expiry <= time.GetUtcNow().UtcDateTime) return;
+        var key = (offer.OfferId, offer.RecommendationRound);
+        if (acknowledgedPresentations.Contains(key) || !presentationAttempts.Add(key)) return;
+        var generation = presentationGeneration;
+        try
+        {
+            await api.AcknowledgeOfferPresentationAsync(offer.OfferId, offer.RecommendationRound, cancellationToken);
+            if (generation == presentationGeneration && !cancellationToken.IsCancellationRequested)
+                acknowledgedPresentations.Add(key);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+        catch (Exception) { /* 표시 수신 확인 실패는 제안 표시를 막지 않습니다. 다음 정본 조회에서 같은 차수를 확인합니다. */ }
     }
 
     // 화면의 기존 15초 전경 재조회에 결속합니다. 배차 OFF여도 진행 배달의 위치는 유지합니다.
@@ -228,7 +261,9 @@ public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleW
         if (action is EnableDispatch or DisableDispatch)
         {
             await api.PutAsync<운영배차수신상태Dto>(RoleKey, "api/v1/driver/operational-dispatch/availability/intent",
-                new 운영배차수신의사변경요청 { 클라이언트요청Id = requestId, 수신의사Code = action == EnableDispatch ? 운영배차수신의사Code.On : 운영배차수신의사Code.Off }, token);
+                new 운영배차수신의사변경요청 { 클라이언트요청Id = requestId,
+                    수신의사Code = action == EnableDispatch ? 운영배차수신의사Code.On : 운영배차수신의사Code.Off,
+                    미응답자동중지해제 = action == EnableDispatch }, token);
         }
         else if (action == StartWork)
         {
@@ -340,7 +375,8 @@ public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleW
         if (unconfirmedPreferenceAction is { } action && dispatch?.수신의사Code is 운영배차수신의사Code.On or 운영배차수신의사Code.Off)
         {
             var desired = action == EnableDispatch ? 운영배차수신의사Code.On : 운영배차수신의사Code.Off;
-            if (dispatch.수신의사Code == desired) completed.Add(action);
+            if (FoodDriverDispatchReceptionPolicy.Confirms(new 운영배차수신의사변경요청
+                { 수신의사Code = desired, 미응답자동중지해제 = action == EnableDispatch }, dispatch)) completed.Add(action);
             unconfirmedPreferenceAction = null; confirmed = true;
         }
         var notice = rejectedStartNotice; rejectedStartNotice = null;
@@ -393,11 +429,13 @@ public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleW
         ClearTransientSnapshot();
         pendingStartReceptionRequestId = null;
         pendingStartRequestId = null; unconfirmedPreferenceAction = null; resolvedStart = false; rejectedStartNotice = null;
+        acknowledgedPresentations.Clear();
     }
 
     // 같은 계정의 일시 숨김/조회 실패에서는 진행 중인 시작→수신 ON 요청만 보존합니다.
     public void ClearTransientSnapshot()
     {
+        presentationGeneration++; presentationOffers.Clear(); presentationAttempts.Clear();
         workspace = null; work = null; dispatch = null; currentLocation = null;
         nextAutomaticLocationRead = default; locationRecoveryNeeded = false; automaticLocationNotice = null;
     }

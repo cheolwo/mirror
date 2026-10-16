@@ -22,3 +22,15 @@ export function stop(id) {
     window.removeEventListener("pageshow", subscription.changed);
     subscriptions.delete(id);
 }
+
+// DOM 존재만으로 표시를 인증하지 않습니다. 현재 선택 제안이 전경 viewport와 겹칠 때만 확인합니다.
+export function isElementInViewport(id) {
+    if (document.hidden) return false;
+    const element = document.getElementById(id);
+    if (!element || element.checkVisibility?.({ checkOpacity: true, checkVisibilityCSS: true }) === false) return false;
+    const style = window.getComputedStyle(element);
+    if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") return false;
+    const rect = element.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.right > 0
+        && rect.top < window.innerHeight && rect.left < window.innerWidth;
+}

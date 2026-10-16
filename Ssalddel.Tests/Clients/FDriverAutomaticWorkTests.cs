@@ -12,6 +12,86 @@ namespace Ssalddel.Tests.Clients;
 public sealed class FDriverAutomaticWorkTests
 {
     [Fact]
+    public async Task NoResponsePause_ShowsOffAndResumesOnlyFromManualOnWithoutClearingOtherRestrictions()
+    {
+        var paused = true; var requests = new List<운영배차수신의사변경요청>();
+        var api = Api(); api.WorkStatus = "운행중";
+        api.Availability = _ => Task.FromResult(new 운영배차수신상태Dto
+        { 수신의사Code = 운영배차수신의사Code.On, 미응답자동중지여부 = paused, 연속미응답횟수 = paused ? 3 : 0,
+            실효상태Code = 운영배차실효상태Code.서버일시정지 });
+        api.ChangeIntent = (request, _) =>
+        {
+            requests.Add(request); if (request.미응답자동중지해제) paused = false;
+            return api.Availability(default);
+        };
+        var model = FDriverLifecycleTestSupport.Model(new(), api);
+        try
+        {
+            await model.InitializeAsync(); await FDriverLifecycleTestSupport.RefreshBackground(model);
+            Assert.False(model.IsDispatchReceptionOn); Assert.True(model.CanUseDispatchReceptionSwitch);
+            Assert.Equal(FoodDriverDispatchReceptionPolicy.AutomaticStopNotice, model.DispatchAutomaticStopNotice);
+            Assert.Empty(requests);
+            await model.ToggleDispatchIntentCommand.ExecuteAsync(null);
+            var request = Assert.Single(requests);
+            Assert.Equal(운영배차수신의사Code.On, request.수신의사Code); Assert.True(request.미응답자동중지해제);
+            Assert.True(model.IsDispatchReceptionOn); Assert.Null(model.DispatchAutomaticStopNotice);
+            Assert.Contains("조건", model.DispatchIntentNotice);
+        }
+        finally { await model.StopMonitoringAsync(); }
+    }
+
+    [Fact]
+    public async Task AutomaticStartOn_PreservesNoResponsePauseAndUnlocksExplicitResumeSwitch()
+    {
+        var intent = 운영배차수신의사Code.Off; var requests = new List<운영배차수신의사변경요청>();
+        var api = Api(); api.WorkStatus = "운행종료";
+        api.Availability = _ => Task.FromResult(new 운영배차수신상태Dto
+        { 수신의사Code = intent, 미응답자동중지여부 = true, 연속미응답횟수 = 3 });
+        api.ChangeIntent = (request, _) => { requests.Add(request); intent = request.수신의사Code; return api.Availability(default); };
+        var model = FDriverLifecycleTestSupport.Model(new(), api);
+        try
+        {
+            await model.InitializeAsync(); await model.ToggleWorkCommand.ExecuteAsync(null);
+            Assert.True(model.IsOnDuty); Assert.False(model.IsDispatchReceptionOn);
+            Assert.True(model.CanUseDispatchReceptionSwitch);
+            Assert.All(requests, request => Assert.False(request.미응답자동중지해제));
+            Assert.Equal(FoodDriverDispatchReceptionPolicy.AutomaticStopNotice, model.DispatchAutomaticStopNotice);
+        }
+        finally { await model.StopMonitoringAsync(); }
+    }
+
+    [Fact]
+    public async Task AcknowledgedOldResume_DoesNotRetryForeverAfterAnotherPause_AndNextGestureGetsNewId()
+    {
+        var paused = true; var attempts = new List<운영배차수신의사변경요청>();
+        var api = Api(); api.WorkStatus = "운행중";
+        api.Availability = _ => Task.FromResult(new 운영배차수신상태Dto
+        { 수신의사Code = 운영배차수신의사Code.On, 미응답자동중지여부 = paused, 연속미응답횟수 = paused ? 3 : 0 });
+        api.ChangeIntent = (request, _) =>
+        {
+            attempts.Add(request);
+            if (attempts.Count == 1) throw new FDriverApiException("이미 적용한 뒤 새로운 미응답 중지가 발생한 합성 상황", HttpStatusCode.ServiceUnavailable);
+            if (attempts.Count >= 3) paused = false;
+            return api.Availability(default);
+        };
+        var model = FDriverLifecycleTestSupport.Model(new(), api);
+        try
+        {
+            await model.InitializeAsync(); await model.ToggleDispatchIntentCommand.ExecuteAsync(null);
+            Assert.False(model.IsDispatchReceptionOn);
+            await FDriverLifecycleTestSupport.RefreshBackground(model);
+            Assert.Equal(2, attempts.Count); Assert.Equal(attempts[0].클라이언트요청Id, attempts[1].클라이언트요청Id);
+            await FDriverLifecycleTestSupport.RefreshBackground(model);
+            Assert.Equal(2, attempts.Count); Assert.False(model.IsDispatchReceptionOn);
+            await model.ToggleDispatchIntentCommand.ExecuteAsync(null);
+            Assert.Equal(3, attempts.Count); Assert.NotEqual(attempts[1].클라이언트요청Id, attempts[2].클라이언트요청Id);
+            Assert.All(attempts, request => Assert.True(request.미응답자동중지해제));
+            Assert.True(model.IsDispatchReceptionOn);
+        }
+        finally { await model.StopMonitoringAsync(); }
+    }
+
+    [Fact]
     public async Task AutomaticTick_RecoversUnknownDispatchIntentWithoutManualRefreshOrIntentChange()
     {
         var availabilityFails = true;

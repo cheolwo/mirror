@@ -557,13 +557,13 @@
 - **native.current-work** · 네이티브 앱의 현재 업무 API와 화면 정본 재조회 진입
   - 관련 단계(탐색): `api.food-driver`, `application.current-work`
   - 경계: 현재 조회는 정산 조회와 분리한다. 네이티브 assembly를 reflection으로 불러오지 않는다.
-  - [FDriverApp/Services/FoodDeliveryDriverApiService.cs:75](../../../FDriverApp/Services/FoodDeliveryDriverApiService.cs#L75) · `public Task<FoodDeliveryDriverCurrentWorkDto> GetCurrentWorkAsync`
+  - [FDriverApp/Services/FoodDeliveryDriverApiService.cs:77](../../../FDriverApp/Services/FoodDeliveryDriverApiService.cs#L77) · `public Task<FoodDeliveryDriverCurrentWorkDto> GetCurrentWorkAsync`
   - [FDriverApp/PageModels/MainPageModel.cs:719](../../../FDriverApp/PageModels/MainPageModel.cs#L719) · `private async Task LoadWorkspaceAsync`
 - **native.automatic-start** · 운행 시작 한 번과 동일 요청 ID를 통한 정본 확인·수신 의사 복구
   - 관련 단계(탐색): `application.work-start`, `ui.recovery-policy`
   - 경계: 불확실한 시작 POST를 자동 재전송하지 않고 사용자의 명시적 수신 OFF를 보존한다.
   - [FDriverApp/PageModels/MainPageModel.AutomaticWork.cs:28](../../../FDriverApp/PageModels/MainPageModel.AutomaticWork.cs#L28) · `private async Task StartAutomaticWorkAsync`
-  - [FDriverApp/PageModels/MainPageModel.AutomaticWork.cs:93](../../../FDriverApp/PageModels/MainPageModel.AutomaticWork.cs#L93) · `private async Task ReconcileAutomaticWorkAsync`
+  - [FDriverApp/PageModels/MainPageModel.AutomaticWork.cs:94](../../../FDriverApp/PageModels/MainPageModel.AutomaticWork.cs#L94) · `private async Task ReconcileAutomaticWorkAsync`
 - **native.pending-recovery** · 계정별 미확정 요청 ID의 네이티브 암호화 저장·복원
   - 관련 단계(탐색): `ui.recovery-policy`, `contract.recovery-port`
   - 경계: 공통 UI 객체의 일시 보존과 별도다. 저장·복원은 실제 기기 실행 검증을 대신하지 않는다.
@@ -579,12 +579,12 @@
   - 관련 단계(탐색): `application.legacy-workspace`, `application.daily-settlement`, `application.completed-detail`
   - 경계: 정산·입금 완료를 현재 배달 상태에서 추론하지 않는다.
   - [FDriverApp/PageModels/MainPageModel.FoodDailySettlement.cs:29](../../../FDriverApp/PageModels/MainPageModel.FoodDailySettlement.cs#L29) · `public async Task RefreshProfileSettlementAsync`
-  - [FDriverApp/Services/FoodDeliveryDriverApiService.cs:108](../../../FDriverApp/Services/FoodDeliveryDriverApiService.cs#L108) · `public Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync`
+  - [FDriverApp/Services/FoodDeliveryDriverApiService.cs:110](../../../FDriverApp/Services/FoodDeliveryDriverApiService.cs#L110) · `public Task<FoodDeliveryDailySettlementDto> GetDailySettlementAsync`
 - **native.foreground-notification** · 화면 전경 복귀·배차 알림 뒤 최신 업무 재조회
   - 관련 단계(탐색): `ui.recovery-policy`, `application.current-work`
   - 경계: 백그라운드 위치·실제 푸시 수신·자동 수락 완료의 증거가 아니다.
   - [FDriverApp/PageModels/MainPageModel.cs:193](../../../FDriverApp/PageModels/MainPageModel.cs#L193) · `private async Task ResumeForegroundWorkspaceAsync`
-  - [FDriverApp/PageModels/MainPageModel.FoodNotifications.cs:202](../../../FDriverApp/PageModels/MainPageModel.FoodNotifications.cs#L202) · `public async Task ResumeFoodNotificationWorkspaceAsync`
+  - [FDriverApp/PageModels/MainPageModel.FoodNotifications.cs:204](../../../FDriverApp/PageModels/MainPageModel.FoodNotifications.cs#L204) · `public async Task ResumeFoodNotificationWorkspaceAsync`
 - **source.application.shared-driver-admission** · 기사 업무 선택과 미완료 약속을 수락 직전에 검사하는 공통 관문
   - 관련 단계(탐색): `application.shared-driver-admission`
   - 경계: 전문 원장과 자격·차량·완료·정산을 대체하지 않는 연결

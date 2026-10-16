@@ -84,7 +84,8 @@ public sealed partial class MainPageModel
                 EnsurePendingActor(actor, token);
                 LocationSyncText = "기사 위치 전송 지연 · 자동으로 다시 전송합니다.";
             }
-            StatusMessage = _pendingStartReceptionRequestId is null && ReceivesNewDispatches
+            StatusMessage = DispatchAutomaticallyPaused ? FoodDriverDispatchReceptionPolicy.AutomaticStopNotice
+                : _pendingStartReceptionRequestId is null && ReceivesNewDispatches
                 ? "운행을 시작했습니다. 현재 위치에 맞는 새 배달 요청을 자동으로 확인합니다."
                 : "운행 중입니다. 신규 배차 수신 결과를 자동으로 확인합니다.";
         }
@@ -150,6 +151,7 @@ public sealed partial class MainPageModel
         {
             await _api.ChangeDispatchIntentAsync(request, token);
             EnsureCurrent();
+            await CompleteAcknowledgedResumeAsync(request, token);
         }
         catch (FDriverApiException ex) when (ex.StatusCode != HttpStatusCode.Unauthorized && !token.IsCancellationRequested)
         {

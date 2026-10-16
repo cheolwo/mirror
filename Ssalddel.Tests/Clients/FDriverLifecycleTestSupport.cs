@@ -96,6 +96,9 @@ namespace Ssalddel.Tests.Clients
         public Func<CancellationToken, Task<운영배차수신상태Dto>> Availability { get; set; }
             = _ => Task.FromResult(new 운영배차수신상태Dto());
         public Func<운영배차수신의사변경요청, CancellationToken, Task<운영배차수신상태Dto>>? ChangeIntent { get; set; }
+        public Func<string, int, CancellationToken, Task>? AcknowledgePresentation { get; set; }
+        public Task AcknowledgeOfferPresentationAsync(string offerId, int recommendationRound, CancellationToken cancellationToken)
+            => AcknowledgePresentation?.Invoke(offerId, recommendationRound, cancellationToken) ?? Task.CompletedTask;
         public Func<string, 음식배달가게도착요청, CancellationToken, Task<FoodDeliveryDriverActionResponse>>? Arrival { get; set; }
         public Func<string, 음식배달중단요청, CancellationToken, Task<FoodDeliveryDriverActionResponse>>? Interruption { get; set; }
         public Func<string, string, CancellationToken, Task<FoodDeliveryDriverActionResponse>>? DeliveryAction { get; set; }

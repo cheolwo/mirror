@@ -60,6 +60,10 @@ public interface IRoleWorkspaceApi
     Task<T> GetAsync<T>(string roleKey, string path, CancellationToken cancellationToken);
     Task<T?> PostAsync<T>(string roleKey, string path, object body, CancellationToken cancellationToken);
     Task<T?> PutAsync<T>(string roleKey, string path, object body, CancellationToken cancellationToken);
+    async Task AcknowledgeOfferPresentationAsync(string offerId, int recommendationRound, CancellationToken cancellationToken)
+        => _ = await PutAsync<object>("food-driver",
+            $"api/v1/driver/operational-dispatch/offers/{Uri.EscapeDataString(offerId)}/receipt",
+            new Ssalddel.Contracts.Common.Dispatch.운영배차제안표시확인요청 { 추천라운드 = recommendationRound }, cancellationToken);
     Task<T?> UploadAsync<T>(string roleKey, string path, HttpContent body, CancellationToken cancellationToken);
 }
 public interface IRoleWorkspaceLocationProvider

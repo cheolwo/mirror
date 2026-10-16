@@ -1282,6 +1282,7 @@ public sealed class DeliveryTicketPreview : ObservableObject
     }
 
     public string TicketId { get; }
+    public int RecommendationRound { get; init; }
     public string OrderSummary { get; }
     public string RestaurantName { get; }
     public DriverWorkStopDto Pickup { get; }
@@ -1358,7 +1359,8 @@ public sealed class DeliveryTicketPreview : ObservableObject
             item.ExpiresAtUtc,
             item.ExecutionProfile,
             item.AvailableActions, nowUtc)
-        { WorkKind = item.WorkKind, AssignedActivities = item.AssignedActivities, Pricing = item.Pricing };
+        { WorkKind = item.WorkKind, AssignedActivities = item.AssignedActivities, Pricing = item.Pricing,
+            RecommendationRound = item.RecommendationRound };
 
     public DriverWorkOfferDto ToDriverWorkOffer(FDriverAppProfile profile)
         => new(

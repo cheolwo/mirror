@@ -95,10 +95,12 @@ public sealed partial class MainPageModel
     public string WorkControlsToggleText => IsWorkControlsExpanded ? "설정 접기" : "운행·수신 설정";
     public bool IsDispatchReceptionOn => DispatchIntentKnown && ReceivesNewDispatches;
     public bool CanUseDispatchReceptionSwitch => DispatchIntentKnown && CanToggleDispatchIntent;
+    public string? DispatchAutomaticStopNotice => DispatchIntentKnown && DispatchAutomaticallyPaused
+        ? FoodDriverDispatchReceptionPolicy.AutomaticStopNotice : null;
     public string DispatchReceptionStatusText => _pendingStartReceptionRequestId is not null ? "준비 확인 중"
         : !_workStatusKnown ? "운행 확인 중"
         : !DispatchIntentKnown ? "확인 필요"
-        : IsBusy ? "변경 중" : ReceivesNewDispatches ? "켜짐" : "꺼짐";
+        : IsBusy ? "변경 중" : DispatchAutomaticallyPaused ? "미응답으로 중지" : ReceivesNewDispatches ? "켜짐" : "꺼짐";
 
     public bool IsWaitingForDelivery => IsAuthenticated && !HasActiveWork
         && !HasRecommendationContent && SelectedTicket is null;

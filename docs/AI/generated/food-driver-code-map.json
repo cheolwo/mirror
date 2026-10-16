@@ -1709,7 +1709,7 @@
             {
               "path": "FDriverApp/Services/FoodDeliveryDriverApiService.cs",
               "symbol": "public Task\u003CFoodDeliveryDriverCurrentWorkDto\u003E GetCurrentWorkAsync",
-              "line": 75
+              "line": 77
             },
             {
               "path": "FDriverApp/PageModels/MainPageModel.cs",
@@ -1736,7 +1736,7 @@
             {
               "path": "FDriverApp/PageModels/MainPageModel.AutomaticWork.cs",
               "symbol": "private async Task ReconcileAutomaticWorkAsync",
-              "line": 93
+              "line": 94
             }
           ]
         },
@@ -1809,7 +1809,7 @@
             {
               "path": "FDriverApp/Services/FoodDeliveryDriverApiService.cs",
               "symbol": "public Task\u003CFoodDeliveryDailySettlementDto\u003E GetDailySettlementAsync",
-              "line": 108
+              "line": 110
             }
           ]
         },
@@ -1831,7 +1831,7 @@
             {
               "path": "FDriverApp/PageModels/MainPageModel.FoodNotifications.cs",
               "symbol": "public async Task ResumeFoodNotificationWorkspaceAsync",
-              "line": 202
+              "line": 204
             }
           ]
         },

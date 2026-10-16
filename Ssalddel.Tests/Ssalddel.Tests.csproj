@@ -166,6 +166,7 @@
     <Compile Include="..\FDriverApp\Services\IFDriverCompletedDeliveryNavigator.cs" Link="Clients\Driver\IFDriverCompletedDeliveryNavigator.cs" />
     <Compile Include="..\FDriverApp\PageModels\FDriverCompletedDeliveryDetailItem.cs" Link="Clients\Driver\FDriverCompletedDeliveryDetailItem.cs" />
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodNotifications.cs" Link="Clients\Driver\MainPageModel.FoodNotifications.cs" />
+    <Compile Include="..\FDriverApp\PageModels\MainPageModel.OfferPresentation.cs" Link="Clients\Driver\MainPageModel.OfferPresentation.cs" />
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodMap.cs" Link="Clients\Driver\MainPageModel.FoodMap.cs" />
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.FoodPresentation.cs" Link="Clients\Driver\MainPageModel.FoodPresentation.cs" />
     <Compile Include="..\FDriverApp\PageModels\MainPageModel.DeliveryExperience.cs" Link="Clients\Driver\MainPageModel.DeliveryExperience.cs" />

@@ -20,6 +20,74 @@ namespace Ssalddel.Tests.Ui.Common;
 
 public sealed class FoodDriverMapControlsTests
 {
+    [Fact]
+    public async Task 미응답자동중지는_조회와운행시작으로해제하지않고_수동ON만_해제의사를보낸다()
+    {
+        var api = new Api { AutomaticallyPaused = true }; var clock = new Clock();
+        var adapter = new FoodDriverRoleWorkspaceAdapter(api, new Location(clock), clock);
+        var paused = await adapter.LoadAsync(null, default);
+        Assert.Contains(paused.EmptyActions!, action => action.Key == FoodDriverRoleWorkspaceAdapter.EnableDispatch);
+        Assert.Equal(FoodDriverDispatchReceptionPolicy.AutomaticStopNotice, adapter.DispatchReceptionNotice);
+        await adapter.LoadAsync(null, default); Assert.Empty(api.IntentAttempts);
+        await adapter.PerformAsync(string.Empty, FoodDriverRoleWorkspaceAdapter.EnableDispatch, Guid.NewGuid(), default);
+        Assert.True(Assert.Single(api.IntentAttempts).미응답자동중지해제);
+        var resumed = await adapter.LoadAsync(null, default);
+        Assert.Null(adapter.DispatchReceptionNotice);
+        Assert.Contains(resumed.EmptyActions!, action => action.Key == FoodDriverRoleWorkspaceAdapter.DisableDispatch);
+
+        var startingApi = new Api(onDuty: false, receiving: false) { AutomaticallyPaused = true };
+        var starting = new FoodDriverRoleWorkspaceAdapter(startingApi, new Location(clock), clock);
+        await starting.LoadAsync(null, default);
+        await starting.PerformAsync(string.Empty, FoodDriverRoleWorkspaceAdapter.StartWork, Guid.NewGuid(), default);
+        Assert.False(Assert.Single(startingApi.IntentAttempts).미응답자동중지해제);
+        var started = await starting.LoadAsync(null, default);
+        Assert.Equal(FoodDriverDispatchReceptionPolicy.AutomaticStopNotice, starting.DispatchReceptionNotice);
+        Assert.Contains(started.EmptyActions!, action => action.Key == FoodDriverRoleWorkspaceAdapter.EnableDispatch && action.Enabled);
+    }
+
+    [Fact]
+    public async Task 실제선택카드의_표시확인만전송하고_실패는다음정본에서재시도하며_새차수와계정은구분한다()
+    {
+        var clock = new Clock(); var api = new Api { FailReceipt = true };
+        api.Recommendations = [ReceiptOffer("offer-a", 1, clock), ReceiptOffer("offer-b", 1, clock)];
+        var adapter = new FoodDriverRoleWorkspaceAdapter(api, new Location(clock), clock);
+        using var model = new RoleWorkspaceViewModel([adapter], new Access(), new RoleWorkspaceState(), clock);
+        await model.InitializeAsync("food-driver", null);
+        Assert.Empty(api.ReceiptAttempts); // 조회 자체는 화면 표시의 근거가 아닙니다.
+        var first = model.SelectedItem!;
+        await model.AcknowledgePresentedItemAsync(model.Items.Single(item => item.Id == "offer-b"));
+        Assert.Empty(api.ReceiptAttempts);
+        await model.AcknowledgePresentedItemAsync(first);
+        await model.AcknowledgePresentedItemAsync(first);
+        Assert.Equal(("offer-a", 1), Assert.Single(api.ReceiptAttempts));
+        api.FailReceipt = false; await model.RefreshAsync();
+        await model.AcknowledgePresentedItemAsync(first); Assert.Single(api.ReceiptAttempts); // 이전 DOM 참조
+        await model.AcknowledgePresentedItemAsync(model.SelectedItem!);
+        Assert.Equal(2, api.ReceiptAttempts.Count);
+        await model.RefreshAsync(); await model.AcknowledgePresentedItemAsync(model.SelectedItem!);
+        Assert.Equal(2, api.ReceiptAttempts.Count); // 성공한 동일 차수는 중복 전송하지 않습니다.
+        api.Recommendations = [ReceiptOffer("offer-a", 2, clock)];
+        await model.RefreshAsync(); await model.AcknowledgePresentedItemAsync(model.SelectedItem!);
+        Assert.Equal(("offer-a", 2), api.ReceiptAttempts[2]);
+        model.Suspend(); await model.AcknowledgePresentedItemAsync(model.SelectedItem!);
+        Assert.Equal(3, api.ReceiptAttempts.Count);
+        await model.ResumeAsync(); adapter.Clear(); await model.RefreshAsync();
+        await model.AcknowledgePresentedItemAsync(model.SelectedItem!);
+        Assert.Equal(4, api.ReceiptAttempts.Count); // 계정 초기화는 성공 캐시도 비웁니다.
+        api.Recommendations = [ReceiptOffer("offer-a", 0, clock)];
+        await model.RefreshAsync(); await model.AcknowledgePresentedItemAsync(model.SelectedItem!);
+        api.Recommendations = [ReceiptOffer("offer-a", 3, clock, expired: true)];
+        await model.RefreshAsync(); await model.AcknowledgePresentedItemAsync(model.SelectedItem!);
+        Assert.Equal(4, api.ReceiptAttempts.Count);
+    }
+
+    private static FoodDeliveryDriverOfferDto ReceiptOffer(string id, int round, Clock clock, bool expired = false) => new()
+    {
+        OfferId = id, RecommendationRound = round, RestaurantName = "음식점",
+        ExpiresAtUtc = clock.Now.AddMinutes(expired ? -1 : 5).UtcDateTime,
+        AvailableActions = [new() { ActionId = 음식배달가능행동Ids.기사제안수락 }]
+    };
+
     [Theory]
     [InlineData(true, true, false, 1)]
     [InlineData(true, false, true, 1)]
@@ -600,6 +668,9 @@ public sealed class FoodDriverMapControlsTests
     private sealed class Api(bool onDuty = true, bool receiving = true, bool active = false) : IRoleWorkspaceApi
     {
         public int LocationPosts, StopPosts, StartPosts; public bool FailIntent, ApplyThenFailIntent, FailAvailability, FailStop, FailStart, ApplyThenFailStart, FailWorkspace, BreakWorkspaceAfterIntent;
+        public bool AutomaticallyPaused, FailReceipt;
+        public List<FoodDeliveryDriverOfferDto> Recommendations { get; set; } = [];
+        public List<(string OfferId, int Round)> ReceiptAttempts { get; } = [];
         public bool Active { get; set; } = active;
         public string? StatusOverride { get; set; }
         public int? LocationFailureStatus { get; set; }
@@ -620,8 +691,10 @@ public sealed class FoodDriverMapControlsTests
             object result = path.EndsWith("work/status", StringComparison.Ordinal) ? new 기사운행상태응답 { Status = StatusOverride ?? (onDuty ? "운행중" : "운행종료"),
                 WorkStartClientRequestId = OmitStartIdentity ? null : StartIdentityOverride ?? StartRequests.LastOrDefault()?.ClientRequestId,
                 운송실행유형 = ExecutionType }
-                : path.EndsWith("availability", StringComparison.Ordinal) ? new 운영배차수신상태Dto { 수신의사Code = receiving ? 운영배차수신의사Code.On : 운영배차수신의사Code.Off }
-                : new FoodDeliveryDriverCurrentWorkDto { ActiveDeliveries = Active ? [new() { OfferId = "offer-a", RestaurantName = "음식점", DeliveryAttemptId = "attempt-a", AvailableActions = ActiveActions }] : [] };
+                : path.EndsWith("availability", StringComparison.Ordinal) ? new 운영배차수신상태Dto { 수신의사Code = receiving ? 운영배차수신의사Code.On : 운영배차수신의사Code.Off,
+                    미응답자동중지여부 = AutomaticallyPaused, 연속미응답횟수 = AutomaticallyPaused ? 3 : 0 }
+                : new FoodDeliveryDriverCurrentWorkDto { Recommendations = Recommendations,
+                    ActiveDeliveries = Active ? [new() { OfferId = "offer-a", RestaurantName = "음식점", DeliveryAttemptId = "attempt-a", AvailableActions = ActiveActions }] : [] };
             return Task.FromResult((T)result);
         }
         public async Task<T?> PostAsync<T>(string roleKey, string path, object body, CancellationToken token)
@@ -655,9 +728,15 @@ public sealed class FoodDriverMapControlsTests
             var request = Assert.IsType<운영배차수신의사변경요청>(body); IntentAttempts.Add(request);
             if (FailIntent) throw new InvalidOperationException("수신 변경 실패");
             IntentWrites.Add(request); receiving = request.수신의사Code == 운영배차수신의사Code.On;
+            if (receiving && request.미응답자동중지해제) AutomaticallyPaused = false;
             if (BreakWorkspaceAfterIntent) FailWorkspace = true;
             if (ApplyThenFailIntent) throw new InvalidOperationException("수신은 변경됐으나 응답이 유실되었습니다.");
             return Task.FromResult((T?)(object)new 운영배차수신상태Dto { 수신의사Code = request.수신의사Code });
+        }
+        public Task AcknowledgeOfferPresentationAsync(string offerId, int recommendationRound, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested(); ReceiptAttempts.Add((offerId, recommendationRound));
+            return FailReceipt ? Task.FromException(new InvalidOperationException("표시 확인 연결 실패")) : Task.CompletedTask;
         }
         public Task<T?> UploadAsync<T>(string roleKey, string path, HttpContent body, CancellationToken token) => throw new NotSupportedException();
     }

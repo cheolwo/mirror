@@ -26,14 +26,14 @@
     </details>
     @if (IsFoodDriver && Model.ListOnly)
     {
-        <div class="role-map-workspace__driver-list-control"><FoodDriverDispatchToggle Action="DispatchControl" IsBusy="@(Model.CommandBusy || Model.AccountBusy)" IsStateKnown="DispatchStateKnown" Toggled="ToggleDispatch" /></div>
+        <div class="role-map-workspace__driver-list-control"><FoodDriverDispatchToggle Action="DispatchControl" IsBusy="@(Model.CommandBusy || Model.AccountBusy)" IsStateKnown="DispatchStateKnown" AutomaticStopNotice="@Model.DispatchReceptionNotice" Toggled="ToggleDispatch" /></div>
     }
     @if (!Model.ListOnly)
     {
     <section class="role-map-workspace__geography" aria-label="현재 업무 지도">
         <div id="role-workspace-map-canvas" class="role-map-workspace__canvas" aria-label="업무 위치와 이동 경로"></div>
         @if (IsFoodDriver)
-        { <div class="role-map-workspace__driver-map-control"><FoodDriverDispatchToggle Action="DispatchControl" IsBusy="@(Model.CommandBusy || Model.AccountBusy)" IsStateKnown="DispatchStateKnown" Toggled="ToggleDispatch" /></div> }
+        { <div class="role-map-workspace__driver-map-control"><FoodDriverDispatchToggle Action="DispatchControl" IsBusy="@(Model.CommandBusy || Model.AccountBusy)" IsStateKnown="DispatchStateKnown" AutomaticStopNotice="@Model.DispatchReceptionNotice" Toggled="ToggleDispatch" /></div> }
         @if (_hostStatus.Code != "ready")
         {
             <div class="role-map-workspace__map-notice" role="status"><span>@(_hostStatus.Message ?? "지도를 확인하지 못했습니다. 아래 업무 목록을 이용해 주세요.")</span><button type="button" @onclick="RetryMap">지도 다시 시도</button><button type="button" @onclick="() => SetListOnly(true)">목록으로 보기</button></div>
@@ -66,7 +66,7 @@
             @if (Model.IsLoading) { <p class="role-map-workspace__loading" role="status">현재 업무를 불러오는 중입니다.</p> }
             else if (Model.SelectedItem is { } item)
             {
-                <article class="role-map-workspace__card">
+                <article id="role-workspace-current-item" class="role-map-workspace__card">
                     <header class="role-map-workspace__card-header">
                         <div><span class="role-map-workspace__status">@item.Status</span><h2>@item.Title</h2>@if (item.Summary is null && item.Subtitle is { Length: > 0 } subtitle) { <p>@subtitle</p> }</div>
                         <button type="button" class="role-map-workspace__expand" aria-expanded="@(Model.DetailsExpanded ? "true" : "false")" aria-controls="role-workspace-details" @onclick="ToggleDetails">@(Model.DetailsExpanded ? "접기" : "상세")<MudIcon Icon="@(Model.DetailsExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" /></button>
@@ -361,8 +361,19 @@
             catch (Exception) { _hostStatus = NeighborhoodMapHostStatus.Unavailable; }
             return;
         }
-        if (Model.ListOnly) return;
         if (_disposed || _suspended || Model.IsSuspended || _rendering || _switchingRole) return;
+        if (_visibilityModule is not null && Model.SelectedItem is { } displayedItem)
+        {
+            try
+            {
+                var visible = await _visibilityModule.InvokeAsync<bool>("isElementInViewport", _lifetime.Token, "role-workspace-current-item");
+                if (visible && !_disposed && !_suspended && !Model.IsSuspended)
+                    await Model.AcknowledgePresentedItemAsync(displayedItem, _lifetime.Token);
+            }
+            catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+            catch (Microsoft.JSInterop.JSException) { }
+        }
+        if (Model.ListOnly) return;
         var state = Model.RenderState();
         if (state.Revision == _renderedRevision) return;
         _rendering = true;

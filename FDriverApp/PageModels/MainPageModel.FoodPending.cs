@@ -136,5 +136,5 @@ public sealed partial class MainPageModel
     private static 음식배달가게도착요청 CopyArrival(음식배달가게도착요청 value) => new()
     { 클라이언트요청Id = value.클라이언트요청Id, 예상시도Revision = value.예상시도Revision };
     private static 운영배차수신의사변경요청 CopyIntent(운영배차수신의사변경요청 value) => new()
-    { 클라이언트요청Id = value.클라이언트요청Id, 수신의사Code = value.수신의사Code };
+    { 클라이언트요청Id = value.클라이언트요청Id, 수신의사Code = value.수신의사Code, 미응답자동중지해제 = value.미응답자동중지해제 };
 }

@@ -53,6 +53,11 @@ namespace FDriverApp.Pages
                     DeliveryCardBodyContent.Height, footerHeight, model.IsFoodCardExpanded);
                 if (Math.Abs(DeliveryCard.HeightRequest - height) > 0.5)
                     DeliveryCard.HeightRequest = height;
+                if (_pageActive && model.Navigation.IsDelivery && model.IsRegularWorkspaceVisible
+                    && WorkspaceHeader.IsVisible && FoodRecommendationNotice.IsVisible
+                    && FoodRecommendationNotice.Width > 0 && FoodRecommendationNotice.Height > 0
+                    && model.DisplayedRecommendationOfferId is { } offerId)
+                    _ = model.AcknowledgeVisibleRecommendationAsync(offerId);
             });
         }
 
@@ -228,6 +233,9 @@ namespace FDriverApp.Pages
 
         private async void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs args)
         {
+            if (_pageActive && args.PropertyName is nameof(MainPageModel.NewRecommendationNotice)
+                or nameof(MainPageModel.HasNewRecommendations) or nameof(MainPageModel.WorkspaceSyncText)
+                or nameof(MainPageModel.IsBusy)) QueueFoodLayoutUpdate();
             if (_pageActive && args.PropertyName is nameof(MainPageModel.IsAuthenticated) or nameof(MainPageModel.IsBusy)
                 && sender is MainPageModel { IsAuthenticated: true, IsBusy: false }
                 && await _supportNavigator.ResumeAfterLoginAsync()) return;

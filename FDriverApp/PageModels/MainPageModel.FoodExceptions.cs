@@ -16,6 +16,7 @@ public sealed partial class MainPageModel
     private 운영배차수신의사변경요청? _pendingDispatchIntent;
     [ObservableProperty] private bool _dispatchIntentKnown;
     [ObservableProperty] private bool _receivesNewDispatches;
+    [ObservableProperty] private bool _dispatchAutomaticallyPaused;
     [ObservableProperty] private string _dispatchIntentNotice = "신규 배차 수신 상태 확인 전";
 
     public bool IsRegularWorkspaceVisible => IsAuthenticated && !ExceptionEditor.IsOpen;
@@ -52,6 +53,7 @@ public sealed partial class MainPageModel
         OnPropertyChanged(nameof(CanToggleDispatchIntent)); OnPropertyChanged(nameof(DispatchIntentButtonText));
         OnPropertyChanged(nameof(IsDispatchReceptionOn)); OnPropertyChanged(nameof(CanUseDispatchReceptionSwitch));
         OnPropertyChanged(nameof(DispatchReceptionStatusText));
+        OnPropertyChanged(nameof(DispatchAutomaticStopNotice));
         OnPropertyChanged(nameof(WaitingTitle)); OnPropertyChanged(nameof(WaitingNotice));
         OnPropertyChanged(nameof(CanToggleWork));
         OnPropertyChanged(nameof(CanConfirmPickup)); OnPropertyChanged(nameof(CanCompleteDelivery));
@@ -61,6 +63,7 @@ public sealed partial class MainPageModel
 
     partial void OnDispatchIntentKnownChanged(bool value) => NotifyExceptionState();
     partial void OnReceivesNewDispatchesChanged(bool value) => NotifyExceptionState();
+    partial void OnDispatchAutomaticallyPausedChanged(bool value) => NotifyExceptionState();
 
     private async Task LoadDispatchAvailabilityAsync(CancellationToken cancellationToken, long? workspaceGeneration = null)
     {
@@ -70,7 +73,8 @@ public sealed partial class MainPageModel
             cancellationToken.ThrowIfCancellationRequested();
             if (workspaceGeneration is { } generation
                 && generation != Interlocked.Read(ref _workspaceSnapshotGeneration)) return;
-            ReceivesNewDispatches = status.수신의사Code == 운영배차수신의사Code.On;
+            DispatchAutomaticallyPaused = status.미응답자동중지여부;
+            ReceivesNewDispatches = FoodDriverDispatchReceptionPolicy.IsReceiving(status);
             DispatchIntentKnown = status.수신의사Code is 운영배차수신의사Code.On or 운영배차수신의사Code.Off;
             ApplyWaitingDispatchAvailability(status);
             if (!DispatchIntentKnown)
@@ -78,10 +82,11 @@ public sealed partial class MainPageModel
                 DispatchIntentNotice = "신규 배차 수신 상태를 자동으로 확인하고 있습니다.";
                 NotifyExceptionState(); return;
             }
-            DispatchIntentNotice = ReceivesNewDispatches ? "신규 배차를 받습니다." : "신규 배차를 받지 않습니다. 현재 배달과 위치 갱신은 유지합니다.";
+            DispatchIntentNotice = DispatchAutomaticallyPaused ? FoodDriverDispatchReceptionPolicy.AutomaticStopNotice
+                : ReceivesNewDispatches ? "신규 배차를 받습니다." : "신규 배차를 받지 않습니다. 현재 배달과 위치 갱신은 유지합니다.";
             if (ReceivesNewDispatches && status.실효상태Code != 운영배차실효상태Code.배차가능)
                 DispatchIntentNotice += " 운행·배차 조건을 확인해 주세요.";
-            if (_pendingDispatchIntent?.수신의사Code == status.수신의사Code
+            if (_pendingDispatchIntent is { } pending && FoodDriverDispatchReceptionPolicy.Confirms(pending, status)
                 && (_pendingStartReceptionRequestId != _pendingDispatchIntent.클라이언트요청Id
                     || _pendingStartRequestId is not null && _verifiedStartRequestId == _pendingStartRequestId
                     && FoodDriverWorkRecoveryPolicy.ResolveStart(true, _workStatusKnown ? IsOnDuty ? "운행중" : "운행종료" : null,
@@ -125,11 +130,16 @@ public sealed partial class MainPageModel
             _pendingDispatchIntent ??= new()
             {
                 클라이언트요청Id = Guid.NewGuid(),
-                수신의사Code = ReceivesNewDispatches ? 운영배차수신의사Code.Off : 운영배차수신의사Code.On
+                수신의사Code = ReceivesNewDispatches ? 운영배차수신의사Code.Off : 운영배차수신의사Code.On,
+                미응답자동중지해제 = !ReceivesNewDispatches
             };
             await PersistPendingOperationsAsync(cancellationToken);
             var request = CopyIntent(_pendingDispatchIntent);
-            try { await _api.ChangeDispatchIntentAsync(request, cancellationToken); }
+            try
+            {
+                await _api.ChangeDispatchIntentAsync(request, cancellationToken);
+                await CompleteAcknowledgedResumeAsync(request, cancellationToken);
+            }
             catch (FDriverApiException ex) when (ex.StatusCode != HttpStatusCode.Unauthorized && !cancellationToken.IsCancellationRequested)
             {
                 DispatchIntentNotice = "변경 결과를 다시 조회합니다. 응답을 확인할 때까지 같은 요청으로 재시도합니다.";
@@ -138,6 +148,17 @@ public sealed partial class MainPageModel
             await LoadDispatchAvailabilityAsync(cancellationToken);
             await LoadWorkspaceAsync(cancellationToken: cancellationToken);
         });
+    }
+
+    private async Task CompleteAcknowledgedResumeAsync(운영배차수신의사변경요청 request, CancellationToken token)
+    {
+        // 같은 요청의 2xx는 처리 확인입니다. 이후 새 중지가 생겼어도 예전 요청을 영구 재전송하지 않습니다.
+        if (!request.미응답자동중지해제 || _pendingDispatchIntent?.클라이언트요청Id != request.클라이언트요청Id
+            || _pendingStartReceptionRequestId == request.클라이언트요청Id) return;
+        token.ThrowIfCancellationRequested();
+        _pendingDispatchIntent = null;
+        await PersistPendingOperationsAsync(token);
+        NotifyExceptionState();
     }
 
     [RelayCommand]
@@ -257,7 +278,7 @@ public sealed partial class MainPageModel
         _pendingStartReceptionRequestId = null; _pendingStartRequestId = null; _verifiedStartRequestId = null;
         _pendingArrivalOfferId = null; _restoredInterruption = null; _pendingLoadedOwner = null; _pendingMemoryOwner = null;
         _pendingPersistedFingerprint = null; _pendingRecoveryReady = false;
-        DispatchIntentKnown = false; ReceivesNewDispatches = false;
+        DispatchIntentKnown = false; ReceivesNewDispatches = false; DispatchAutomaticallyPaused = false;
         ApplyWaitingDispatchAvailability(null);
         DispatchIntentNotice = "신규 배차 수신 상태 확인 전";
         NotifyExceptionState();

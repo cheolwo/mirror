@@ -90,8 +90,9 @@
                             <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding LocationNotice}"
                                 IsVisible="{Binding HasLocationWarning}" TextColor="{AppThemeBinding Light={StaticResource DriverWarning}, Dark={StaticResource DriverWarningDark}}" />
                         </VerticalStackLayout>
-                        <Border Style="{StaticResource DriverCardStyle}"
+                        <Border x:Name="FoodRecommendationNotice" Style="{StaticResource DriverCardStyle}"
                             IsVisible="{Binding HasNewRecommendations}"
+                            SizeChanged="OnFoodLayoutSizeChanged"
                             BackgroundColor="White"
                             Stroke="{StaticResource DriverBorder}"
                             StrokeThickness="1"
@@ -148,11 +149,13 @@
                                 ShowCurrentLocationOverlay="{Binding HasCurrentLocation}"
                                 MarkerSelected="OnMapMarkerSelected" />
                             <Border x:Name="FoodDispatchReceptionControl" Style="{StaticResource DriverCardStyle}"
-                                ZIndex="1" HorizontalOptions="Start" VerticalOptions="Start" Margin="8" Padding="12,4">
-                                <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="8" MinimumHeightRequest="48">
+                                ZIndex="1" HorizontalOptions="Start" VerticalOptions="Start" Margin="8" Padding="12,4" MaximumWidthRequest="340">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" MinimumHeightRequest="48">
                                     <VerticalStackLayout Spacing="0" VerticalOptions="Center">
                                         <Label Style="{StaticResource DriverMetadataStyle}" Text="신규 배차 받기" />
                                         <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding DispatchReceptionStatusText}" />
+                                        <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding DispatchAutomaticStopNotice}"
+                                            IsVisible="{Binding DispatchAutomaticallyPaused}" LineBreakMode="WordWrap" />
                                     </VerticalStackLayout>
                                     <Switch x:Name="FoodDispatchReceptionSwitch" Grid.Column="1"
                                         IsToggled="{Binding IsDispatchReceptionOn, Mode=OneWay}"
