@@ -1,5 +1,9 @@
 # Mirror(거울) Current Work
 
+## 맥락별 커밋 정리 (2026-10-22)
+
+- [커밋 목록과 보존 범위](../Changes/2026-10-22-context-commits.md): 앱·서버·화면·검증 기록을 맥락별로 저장했다. 이번 요청은 커밋만이며 푸시·배포는 하지 않았다. 이전의 별도 변경과 검증 실행 증거는 보존한다.
+
 ## 클라우드 제외 화물 운영 마감 r20 (2026-10-22)
 
 - [구현·실제 검증](../Changes/2026-10-22-local-operations-closeout-r20.md): `CompletedLocalAndDeviceValidationWithFindings / OperationalDisabled`. 금액·수납/지급 분리, 선택 의뢰 신고/복귀, 정식 분쟁 지급 보호와 FakePG의 MySQL 재시도 충돌을 보완했다. 최종 Task15,018통과/실패0/환경16미실행, 신규125사례·55소스 불일치0, APK209 설치SHA·실제384px 화면3장을 확인했다.
