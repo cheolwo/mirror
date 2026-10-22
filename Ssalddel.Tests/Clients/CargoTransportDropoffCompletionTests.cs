@@ -3,6 +3,8 @@ using DriverApp.Services;
 using DriverApp.ViewModels.Driver.Transport;
 using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Contracts.Driver.Transport;
+using Ssalddel.Ui.Common.Areas.App.Services;
+using Ssalddel.Ui.Common.Areas.App.ViewModels;
 
 namespace Ssalddel.Tests.Clients;
 
@@ -141,6 +143,57 @@ public sealed class CargoTransportDropoffCompletionTests
         Assert.True(result.Uploaded); Assert.False(result.CompletionRecorded);
         Assert.Contains("결과를 확인하지 못", result.Message); Assert.DoesNotContain("저장되지 않았", result.Message);
         Assert.Equal("private/uploaded-proof", result.ObjectName);
+    }
+
+    [Fact]
+    public async Task 사진완료서비스는_업로드후거절된업무사유를_안전한typed예외로보존한다()
+    {
+        using var f = new Fixture(); await f.Auth.RestoreAsync();
+        f.Api.Complete = _ => Task.FromException<기사운송상태변경응답?>(Failure("CargoDropoffPhotoRequired", "NotApplied"));
+        using var client = new HttpClient();
+        var service = new HttpDriverTransportCompletionPhotoService(client, f.Auth, null!, f.ApiService);
+        var result = await service.CompleteWithPhotoAsync(new(DriverTransportCompletionPhotoKind.Dropoff, 11,
+            "proof.jpg", "image/jpeg", [1, 2], ExistingObjectName: "private/uploaded-proof"));
+        Assert.True(result.Uploaded); Assert.False(result.CompletionRecorded);
+        Assert.Equal("CargoDropoffPhotoRequired", result.CompletionFailure?.ErrorCode);
+        Assert.Equal("NotApplied", result.CompletionFailure?.RecoveryProblem?.WorkflowContext?.OutcomeCode);
+    }
+
+    [Fact]
+    public async Task 하차거절은_GET미완료후에도사유를유지하고_실제완료확인시에해소한다()
+    {
+        using var f = new Fixture(); await f.Prepare();
+        f.Completion.Send = _ => Task.FromException<DriverTransportCompletionPhotoResult>(Failure("CargoDropoffPhotoRequired", "NotApplied"));
+        await f.Page.완료Async();
+        Assert.Equal("하차 사진 필요", 업무오류안내Presentation.생성(f.Page.완료실패!).제목);
+        Assert.True(f.Page.완료실패상태안내인가); Assert.True(f.Page.사진.사진있음);
+        Assert.False(f.Page.완료결과확인필요);
+        f.Api.State = "인수완료"; await f.Page.InitializeAsync(11);
+        Assert.Null(f.Page.완료실패); Assert.False(f.Page.사진.사진있음);
+    }
+
+    [Fact]
+    public async Task 서버미확정하차는_미완료GET뒤에도_결과조회만허용한다()
+    {
+        using var f = new Fixture(); await f.Prepare();
+        f.Completion.Send = _ => Task.FromResult(new DriverTransportCompletionPhotoResult(true, false, "확인 필요",
+            CompletionFailure: Failure("UnexpectedFailure", "Unknown")));
+        await f.Page.완료Async();
+        Assert.True(f.Page.완료결과확인필요); Assert.False(f.Page.완료가능);
+        Assert.Equal("하차 결과 확인 필요", 업무오류안내Presentation.생성(f.Page.완료실패!).제목);
+        await f.Page.완료Async(); Assert.Equal(1, f.Completion.Calls);
+        f.Api.State = "인수완료"; await f.Page.InitializeAsync(11);
+        Assert.Null(f.Page.완료실패); Assert.False(f.Page.완료결과확인필요);
+    }
+
+    private static DriverApiException Failure(string code, string outcome)
+    {
+        var metadata = SsalddelApiProblemParser.Parse(System.Text.Json.JsonSerializer.Serialize(new
+        {
+            errorCode = code, availableRecoveryActions = new[] { "RefreshState" },
+            workflowContext = new { operatingSystemId = "DomesticCargoTransportOS", stageId = "cargo.dropoff", outcomeCode = outcome }
+        }));
+        return new(System.Net.HttpStatusCode.BadRequest, "하차 완료", code, null, metadata);
     }
 
     private sealed class Fixture : IDisposable

@@ -62,7 +62,9 @@ public sealed class ProtectedWorkflowRecoveryStore(
     }
     private async Task<WorkflowRecoveryRecord?> ReadAsync(string owner, string scope)
     {
-        var json = await read(Key(owner, scope)); if (string.IsNullOrWhiteSpace(json)) return null;
+        var json = await read(Key(owner, scope));
+        if (json is null) return null;
+        if (string.IsNullOrWhiteSpace(json)) throw new InvalidDataException("이전 요청의 확인 기록을 읽지 못했습니다.");
         var record = JsonSerializer.Deserialize<WorkflowRecoveryRecord>(json) ?? throw new InvalidDataException("이전 요청을 확인하지 못했습니다.");
         WorkflowRecoveryPolicy.Validate(record);
         if (record.Owner != owner || record.Scope != scope) throw new InvalidDataException("이전 요청의 계정과 업무가 다릅니다.");

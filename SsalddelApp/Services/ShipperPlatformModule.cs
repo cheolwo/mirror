@@ -33,6 +33,15 @@ internal static class ShipperPlatformModule
         services.AddSingleton<Ssalddel.Ui.Common.Areas.App.ViewModels.INeighborhoodMemberPendingStore, MauiNeighborhoodMemberPendingStore>();
         // 역할 인증 접근자와 같은 화면 scope를 사용합니다. 보호 기록은 단말 저장소에 유지됩니다.
         services.AddScoped<IWorkflowRecoveryStore, MauiWorkflowRecoveryStore>();
+        services.AddScoped<IWorkflowRecoveryContext>(provider =>
+        {
+            var session = provider.GetRequiredService<IAuthSession>();
+            var client = provider.GetRequiredService<HttpClient>();
+            return new WorkflowRecoveryContext(
+                () => new Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.RoleWorkspaceIdentity(
+                    session.UserId, session.SessionRevision, session.IsLoggedIn),
+                () => client.BaseAddress);
+        });
         services.AddScoped<AuthApiService>();
         services.AddScoped<LogisticsServiceContractClient>();
         services.AddSingleton<I꾸미기보유권LocalStore, Maui꾸미기보유권LocalStore>();

@@ -123,6 +123,7 @@ namespace 살뜰.Data
         public DbSet<생활권물류거점용량예약> 생활권물류거점용량예약 { get; set; } = null!;
         public DbSet<생활권물류거점보상기록> 생활권물류거점보상기록 { get; set; } = null!;
         public DbSet<입고요청> 입고요청 { get; set; } = null!;
+        public DbSet<가입고사진신청> 가입고사진신청 { get; set; } = null!;
         public DbSet<입고상품> 입고상품 { get; set; } = null!;
         public DbSet<재고이력> 재고이력 { get; set; } = null!;
         public DbSet<출고묶음> 출고묶음 { get; set; } = null!;

@@ -69,6 +69,15 @@ public sealed class WebShipperWarehouseWorkspaceService(
             "입고 요청 등록",
             cancellationToken: cancellationToken);
 
+    public Task<입고요청항목응답?> GetInboundByClientRequestAsync(
+        Guid clientRequestId,
+        CancellationToken cancellationToken = default)
+        => client.GetAsync<입고요청항목응답>(
+            $"{BasePath}/inbounds/by-client-request/{RequireRequestId(clientRequestId)}",
+            "입고 접수 결과 확인",
+            allowNotFound: true,
+            cancellationToken);
+
     public Task<입고상품목록응답?> CompleteInboundAsync(
         long inboundId,
         입고완료요청 payload,
@@ -129,4 +138,7 @@ public sealed class WebShipperWarehouseWorkspaceService(
             : throw new ArgumentOutOfRangeException(
                 parameterName,
                 "원장 ID는 1 이상이어야 합니다.");
+
+    private static string RequireRequestId(Guid value)
+        => value != Guid.Empty ? value.ToString("D") : throw new ArgumentOutOfRangeException(nameof(value));
 }

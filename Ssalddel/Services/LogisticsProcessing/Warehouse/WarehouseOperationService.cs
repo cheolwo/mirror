@@ -1,4 +1,4 @@
-﻿using Ssalddel.Application.CommandProcessing;
+using Ssalddel.Application.CommandProcessing;
 using System.Data;
 using Ssalddel.Application.Warehouse;
 using Ssalddel.Contracts.Common.Inbound;
@@ -16,11 +16,11 @@ using 살뜰.Services.Dispatch.Engine;
 
 namespace Ssalddel.Services.LogisticsProcessing.Warehouse;
 
-public sealed class WarehouseOperationService : IWarehouseOperationService
+public sealed partial class WarehouseOperationService : IWarehouseOperationService
 {
     private readonly SsalddelContext _db;
     private readonly ICurrentUserAccessor _currentUserAccessor;
-    private readonly I운송원장Mongo동기화Service _transportLedgerSync;
+    private readonly 창고재위탁출고UseCase _재위탁출고UseCase;
 
     public WarehouseOperationService(
         SsalddelContext db,
@@ -29,7 +29,7 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
     {
         _db = db;
         _currentUserAccessor = currentUserAccessor;
-        _transportLedgerSync = transportLedgerSync;
+        _재위탁출고UseCase = new 창고재위탁출고UseCase(db, transportLedgerSync);
     }
 
     public async Task<창고목록응답> GetWarehousesAsync(CancellationToken cancellationToken)
@@ -379,6 +379,17 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
 
     public async Task<입고요청항목응답> CreateInboundAsync(입고요청저장요청 request, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
+        if (request.ClientRequestId == Guid.Empty)
+        {
+            throw new InboundSubmissionInvalidRequestException();
+        }
+        if (request.가입고사진신청Id.HasValue
+            && (request.가입고사진신청Id == Guid.Empty || request.ClientRequestId != request.가입고사진신청Id))
+        {
+            throw new InboundSubmissionInvalidRequestException();
+        }
+
         var userId = RequireUserId();
         await 창고접근확인Async(request.창고Id, userId, cancellationToken);
         var contract = (request.계약정보 ?? 입고계약스냅샷.Default(request.공급처명)).Normalize();
@@ -390,6 +401,7 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
         var entity = new 입고요청
         {
             창고Id = request.창고Id,
+            가입고사진신청Id = request.가입고사진신청Id,
             입고흐름유형 = 입고흐름유형코드.Normalize(request.입고흐름유형),
             입고생성경로 = string.IsNullOrWhiteSpace(request.입고생성경로)
                 ? BuildInboundSourceLabel(request.입고흐름유형)
@@ -422,8 +434,15 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
             UpdatedAt = DateTime.UtcNow
         };
 
+        if (request.ClientRequestId.HasValue)
+        {
+            return await 원요청입고저장Async(entity, request, cancellationToken);
+        }
+
         _db.입고요청.Add(entity);
-        await _db.SaveChangesAsync(cancellationToken);
+        var progress = await 창고업무진행알림.입고신청Async(_db, entity, userId, cancellationToken);
+        try { await _db.SaveChangesAsync(cancellationToken); }
+        catch { 창고업무진행알림.분리(_db, progress); throw; }
 
         return ToInboundResponse(entity);
     }
@@ -473,6 +492,7 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
             UpdatedAt = now
         };
         _db.입고요청.Add(entity);
+        var progress = await 창고업무진행알림.입고신청Async(_db, entity, userId, cancellationToken);
 
         try
         {
@@ -480,6 +500,7 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
         }
         catch (DbUpdateException)
         {
+            창고업무진행알림.분리(_db, progress);
             _db.Entry(entity).State = EntityState.Detached;
             var concurrentlyCreated = await FindUnplannedRequestByClientIdAsync(
                 userId,
@@ -492,6 +513,7 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
 
             return ResolveIdempotentUnplannedRequest(concurrentlyCreated, request);
         }
+        catch { 창고업무진행알림.분리(_db, progress); throw; }
 
         return ToInboundResponse(entity);
     }
@@ -509,6 +531,8 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
         {
             throw new InvalidOperationException("입고 예정 상태에서만 입고요청을 수정할 수 있습니다.");
         }
+        if (request.가입고사진신청Id.HasValue && request.가입고사진신청Id != entity.가입고사진신청Id)
+            throw new InboundSubmissionConflictException();
 
         await 창고접근확인Async(request.창고Id, userId, cancellationToken);
         var contract = (request.계약정보 ?? 입고계약스냅샷.Default(request.공급처명)).Normalize();
@@ -692,7 +716,9 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
             });
         }
 
-        await _db.SaveChangesAsync(cancellationToken);
+        var progress = await 창고업무진행알림.입고수령Async(_db, inbound, userId, completedAt, cancellationToken);
+        try { await _db.SaveChangesAsync(cancellationToken); }
+        catch { 창고업무진행알림.분리(_db, progress); throw; }
         if (transaction is not null)
         {
             await transaction.CommitAsync(cancellationToken);
@@ -902,26 +928,7 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
     public async Task<창고작업결과응답> InspectInboundItemAsync(long inboundItemId, 입고검수요청 request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        if (request.검수수량 <= 0)
-        {
-            throw new InvalidOperationException("검수수량은 1 이상이어야 합니다.");
-        }
-
-        if (request.불량수량 < 0 || request.불량수량 > request.검수수량)
-        {
-            throw new InvalidOperationException("불량수량은 검수수량보다 클 수 없습니다.");
-        }
-
-        if (request.검수수량 > 100_000)
-        {
-            throw new InvalidOperationException("검수수량은 100,000개 이하여야 합니다.");
-        }
-
-        var inspectionMemo = (request.검수메모 ?? string.Empty).Trim();
-        if (inspectionMemo.Length > 400)
-        {
-            throw new InvalidOperationException("검수 메모는 400자 이하로 입력해 주세요.");
-        }
+        var inspectionMemo = 입고검수Policy.입력정규화(request);
 
         var userId = RequireUserId();
         await using var transaction = _db.Database.IsRelational()
@@ -943,13 +950,14 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
                 request.검수수량,
                 request.불량수량,
                 inspectionMemo);
-            if (item.입고수량 == request.검수수량
-                && item.불량수량 == request.불량수량
-                && existingInspection is not null
-                && string.Equals(
-                    existingInspection.메모,
-                    requestedHistoryMemo,
-                    StringComparison.Ordinal))
+            if (입고검수Policy.동일재시도여부(
+                    item.입고수량,
+                    item.불량수량,
+                    existingInspection is not null,
+                    existingInspection?.메모,
+                    request.검수수량,
+                    request.불량수량,
+                    requestedHistoryMemo))
             {
                 if (transaction is not null)
                 {
@@ -959,8 +967,8 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
                 return ToWarehouseWorkResult(
                     item,
                     "입고검수",
-                    existingInspection.처리UserId,
-                    existingInspection.처리일시,
+                    existingInspection!.처리UserId,
+                    existingInspection!.처리일시,
                     inspectionMemo,
                     idempotentReplay: true);
             }
@@ -969,25 +977,19 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
                 "이미 완료된 입고 검수 결과를 다른 수량이나 메모로 다시 저장할 수 없습니다.");
         }
 
-        if (!string.Equals(item.상태, "보관중", StringComparison.Ordinal))
-        {
-            throw new InvalidOperationException("보관중 상태의 입고상품만 검수할 수 있습니다.");
-        }
-
-        var goodQuantity = request.검수수량 - request.불량수량;
-        if (goodQuantity < item.예약수량)
-        {
-            throw new InvalidOperationException(
-                "검수 후 정상 수량은 이미 예약된 수량보다 적을 수 없습니다.");
-        }
+        var plan = 입고검수Policy.신규검수계획(
+            item.상태,
+            item.예약수량,
+            request.검수수량,
+            request.불량수량);
 
         var now = DateTime.UtcNow;
         var previousAvailable = item.가용수량;
         var previousDefect = item.불량수량;
-        item.입고수량 = request.검수수량;
-        item.불량수량 = request.불량수량;
-        item.가용수량 = goodQuantity - item.예약수량;
-        item.상태 = request.불량수량 > 0 ? "검수완료-불량포함" : "검수완료";
+        item.입고수량 = plan.입고수량;
+        item.불량수량 = plan.불량수량;
+        item.가용수량 = plan.가용수량;
+        item.상태 = plan.상태;
         item.UpdatedAt = now;
 
         _db.재고이력.Add(new 재고이력
@@ -1011,7 +1013,9 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
             _db.재고이동.Add(CreateInventoryMovement(item, "입고검수", Math.Abs(item.불량수량 - previousDefect), userId, inspectionMemo, now));
         }
 
-        await _db.SaveChangesAsync(cancellationToken);
+        var progress = await 창고업무진행알림.재고Async(_db, item, "warehouse.inspected", "inspected", userId, now, cancellationToken);
+        try { await _db.SaveChangesAsync(cancellationToken); }
+        catch { 창고업무진행알림.분리(_db, progress); throw; }
         if (transaction is not null)
         {
             await transaction.CommitAsync(cancellationToken);
@@ -1020,9 +1024,14 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
         return ToWarehouseWorkResult(item, "입고검수", userId, now, inspectionMemo);
     }
 
-    public async Task<창고작업결과응답> PutAwayInventoryItemAsync(long inboundItemId, 적재위치배정요청 request, CancellationToken cancellationToken)
+    public Task<창고작업결과응답> PutAwayInventoryItemAsync(long inboundItemId, 적재위치배정요청 request, CancellationToken cancellationToken)
+        => 창고업무진행알림.저장단위Async(_db, committed => PutAwayInventoryItemAsyncCore(inboundItemId, request, cancellationToken, committed));
+
+    private async Task<창고작업결과응답> PutAwayInventoryItemAsyncCore(long inboundItemId, 적재위치배정요청 request, CancellationToken cancellationToken, Action committed)
     {
         var userId = RequireUserId();
+        await using var transaction = _db.Database.IsRelational() && _db.Database.CurrentTransaction is null
+            ? await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken) : null;
         var item = await 접근가능재고Query(userId)
             .FirstOrDefaultAsync(x => x.Id == inboundItemId, cancellationToken)
             ?? throw new InvalidOperationException("입고상품을 찾을 수 없거나 접근할 수 없습니다.");
@@ -1065,13 +1074,26 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
         });
         _db.재고이동.Add(CreateInventoryMovement(item, "적재", item.가용수량, userId, memo, now));
 
-        await _db.SaveChangesAsync(cancellationToken);
+        var progress = await 창고업무진행알림.재고Async(_db, item, "warehouse.stored", "stored", userId, now, cancellationToken);
+        try { await _db.SaveChangesAsync(cancellationToken); }
+        catch { 창고업무진행알림.분리(_db, progress); throw; }
+        if (transaction is not null)
+        {
+            await transaction.CommitAsync(cancellationToken);
+            committed();
+            await transaction.DisposeAsync();
+        }
         return ToWarehouseWorkResult(item, "적재", userId, now, request.적재메모);
     }
 
-    public async Task<창고작업결과응답> PackInventoryItemAsync(long inboundItemId, 포장작업요청 request, CancellationToken cancellationToken)
+    public Task<창고작업결과응답> PackInventoryItemAsync(long inboundItemId, 포장작업요청 request, CancellationToken cancellationToken)
+        => 창고업무진행알림.저장단위Async(_db, committed => PackInventoryItemAsyncCore(inboundItemId, request, cancellationToken, committed));
+
+    private async Task<창고작업결과응답> PackInventoryItemAsyncCore(long inboundItemId, 포장작업요청 request, CancellationToken cancellationToken, Action committed)
     {
         var userId = RequireUserId();
+        await using var transaction = _db.Database.IsRelational() && _db.Database.CurrentTransaction is null
+            ? await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken) : null;
         var item = await 접근가능재고Query(userId)
             .FirstOrDefaultAsync(x => x.Id == inboundItemId, cancellationToken)
             ?? throw new InvalidOperationException("입고상품을 찾을 수 없거나 접근할 수 없습니다.");
@@ -1116,262 +1138,27 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
         });
         _db.재고이동.Add(CreateInventoryMovement(item, "포장", request.포장수량, userId, memo, now));
 
-        await _db.SaveChangesAsync(cancellationToken);
+        var progress = await 창고업무진행알림.재고Async(_db, item, "warehouse.packed", $"packed:{request.포장수량}", userId, now, cancellationToken);
+        try { await _db.SaveChangesAsync(cancellationToken); }
+        catch { 창고업무진행알림.분리(_db, progress); throw; }
+        if (transaction is not null)
+        {
+            await transaction.CommitAsync(cancellationToken);
+            committed();
+            await transaction.DisposeAsync();
+        }
         return ToWarehouseWorkResult(item, "포장", userId, now, request.포장메모);
     }
 
     public async Task<Ssalddel.Contracts.Shipper.Request.화주운송의뢰응답> CreateReconsignmentRequestAsync(재고운송의뢰생성요청 request, CancellationToken cancellationToken)
     {
         var userId = RequireUserId();
-        var dropoffAddress = (request.하차지주소 ?? string.Empty).Trim();
-        var dropoffAddressDetail = (request.하차지상세주소 ?? string.Empty).Trim();
-        var dropoffContactName = (request.하차담당자명 ?? string.Empty).Trim();
-        var dropoffContactPhone = (request.하차연락처 ?? string.Empty).Trim();
-        var vehicleType = (request.차량종류 ?? string.Empty).Trim();
-        var handlingNote = (request.취급메모 ?? string.Empty).Trim();
-        var requestedPickupAtUtc = ReconsignmentTimeUtc(request.희망상차일시);
-        var requestedArrivalAtUtc = ReconsignmentTimeUtc(request.희망도착일시);
-
-        if (dropoffAddress.Length < 5
-            || dropoffAddress.StartsWith("주문자:", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException("운송의뢰에는 실제 하차지 도로명 주소가 필요합니다.");
-        }
-
-        if (string.IsNullOrWhiteSpace(vehicleType))
-        {
-            throw new InvalidOperationException("운송 차량 종류를 선택해 주세요.");
-        }
-
-        if (handlingNote.Length > 300)
-        {
-            throw new InvalidOperationException("취급 메모는 300자 이하로 입력해 주세요.");
-        }
-
-        if (dropoffContactName.Length > 100 || dropoffContactPhone.Length > 50)
-        {
-            throw new InvalidOperationException("하차 담당자명은 100자, 연락처는 50자 이하로 입력해 주세요.");
-        }
-
-        if (requestedPickupAtUtc.HasValue != requestedArrivalAtUtc.HasValue
-            || requestedPickupAtUtc.HasValue
-            && requestedArrivalAtUtc <= requestedPickupAtUtc)
-        {
-            throw new InvalidOperationException("희망 상차·도착 일시를 모두 입력하고 도착 일시를 상차 일시보다 뒤로 지정해 주세요.");
-        }
-
-        var item = await 접근가능재고Query(userId)
-            .FirstOrDefaultAsync(x => x.Id == request.입고상품Id, cancellationToken)
-            ?? throw new InvalidOperationException("입고상품을 찾을 수 없거나 접근할 수 없습니다.");
-
-        if (item.보관위치.StartsWith("DLOC-", StringComparison.Ordinal))
-            throw new InvalidOperationException("분산 적재 재고는 시간대 주문의 예약별 운송 연결을 이용해 주세요.");
-
-        출고예정? outboundPlan = null;
-        if (request.출고예정Id is > 0)
-        {
-            outboundPlan = await 접근가능출고Query(userId)
-                .FirstOrDefaultAsync(x => x.Id == request.출고예정Id.Value, cancellationToken)
-                ?? throw new InvalidOperationException("출고예정 원장을 찾을 수 없거나 접근할 수 없습니다.");
-
-            if (outboundPlan.입고상품Id != item.Id)
-            {
-                throw new InvalidOperationException("출고예정 원장과 운송에 인계할 입고상품이 일치하지 않습니다.");
-            }
-
-            if (outboundPlan.출고창고Id != item.창고Id)
-            {
-                throw new InvalidOperationException("출고예정 원장의 출발 창고와 입고상품의 창고가 일치하지 않습니다.");
-            }
-
-            if (!string.IsNullOrWhiteSpace(outboundPlan.운송의뢰Id))
-            {
-                var existing = await _db.화주운송의뢰.AsNoTracking()
-                    .SingleOrDefaultAsync(x => x.의뢰Id == outboundPlan.운송의뢰Id, cancellationToken)
-                    ?? throw new InvalidOperationException("출고예정 원장에 연결된 운송의뢰를 찾을 수 없습니다.");
-                var existingLink = await _db.운송의뢰상품연결.AsNoTracking()
-                    .SingleOrDefaultAsync(
-                        x => x.운송의뢰Id == existing.의뢰Id && x.입고상품Id == item.Id,
-                        cancellationToken)
-                    ?? throw new InvalidOperationException("출고예정 원장과 운송의뢰의 상품 연결을 확인할 수 없습니다.");
-
-                if (existingLink.할당수량 != request.요청수량
-                    || !string.Equals(existing.하차_도로명주소, dropoffAddress, StringComparison.Ordinal)
-                    || !string.Equals(existing.하차_상세주소, dropoffAddressDetail, StringComparison.Ordinal)
-                    || request.하차담당자명 is not null
-                       && !string.Equals(existing.하차_연락처_이름, dropoffContactName, StringComparison.Ordinal)
-                    || request.하차연락처 is not null
-                       && !string.Equals(existing.하차_연락처_전화번호, dropoffContactPhone, StringComparison.Ordinal)
-                    || !string.Equals(existing.차량종류, vehicleType, StringComparison.Ordinal))
-                {
-                    throw new InvalidOperationException("이미 운송의뢰가 연결된 출고예정입니다. 기존 의뢰와 다른 내용으로 다시 생성할 수 없습니다.");
-                }
-
-                var existingTransport = await _db.운송원장.AsNoTracking()
-                    .SingleOrDefaultAsync(x => x.의뢰Id == existing.의뢰Id, cancellationToken);
-                var retried = Ssalddel.Application.Shipper.Request.화주운송의뢰매퍼.To응답(existing, existingTransport);
-                retried.멱등재시도여부 = true;
-                return retried;
-            }
-
-            if (outboundPlan.상태 != 출고상태.준비중)
-            {
-                throw new InvalidOperationException("운송의뢰는 준비 중인 출고예정에서만 생성할 수 있습니다.");
-            }
-
-            if (outboundPlan.수량 != request.요청수량)
-            {
-                throw new InvalidOperationException("운송 요청 수량은 출고예정 원장의 수량과 일치해야 합니다.");
-            }
-        }
-
-        if (item.가용수량 < request.요청수량 || request.요청수량 <= 0)
-        {
-            throw new InvalidOperationException("가용수량보다 많은 수량을 재위탁할 수 없습니다.");
-        }
-
-        var warehouse = await _db.창고.FirstOrDefaultAsync(x => x.Id == item.창고Id, cancellationToken)
-            ?? throw new InvalidOperationException("창고 정보를 찾을 수 없습니다.");
-        if (!warehouse.IsActive || string.IsNullOrWhiteSpace(warehouse.주소))
-        {
-            throw new InvalidOperationException("활성 출고 창고와 실제 상차 주소가 필요합니다.");
-        }
-
-        var now = DateTime.UtcNow;
-        var pickupAt = requestedPickupAtUtc ?? now;
-        var arrivalAt = requestedArrivalAtUtc ?? pickupAt.AddDays(1);
-        var storageCondition = await _db.입고요청.AsNoTracking()
-            .Where(x => x.Id == item.입고요청Id)
-            .Select(x => x.보관조건)
-            .SingleOrDefaultAsync(cancellationToken);
-        var requestId = outboundPlan is null
-            ? Guid.NewGuid().ToString()
-            : $"warehouse-outbound-{outboundPlan.Id}";
-        var clientRequestId = outboundPlan is null
-            ? $"reconsignment-{item.Id}-{now:yyyyMMddHHmmss}"
-            : $"reconsignment-outbound-{outboundPlan.Id}";
-        var requestText = $"재위탁 출고 상품 SKU: {item.SKU}";
-        if (!string.IsNullOrWhiteSpace(handlingNote))
-        {
-            requestText = $"{requestText}\n취급 메모: {handlingNote}";
-        }
-
-        var shipRequest = new 화주운송의뢰
-        {
-            의뢰Id = requestId,
-            화주Id = item.판매자UserId,
-            주문자UserId = userId,
-            화물종류 = string.IsNullOrWhiteSpace(request.화물종류) ? item.상품명 : request.화물종류.Trim(),
-            화물설명 = $"입고상품 재위탁: {item.상품명}",
-            화물수량 = request.요청수량,
-            화물중량Kg = null,
-            화물부피Cbm = null,
-            화물파손주의여부 = false,
-            화물온도조건 = string.IsNullOrWhiteSpace(storageCondition) ? "상온" : storageCondition,
-            운송방식 = "재위탁",
-            차량종류 = vehicleType,
-            결제수단 = Ssalddel.Contracts.Shipper.Request.결제수단.별도정산.ToString(),
-            정산시점 = Ssalddel.Contracts.Shipper.Request.정산시점.운송완료후정산.ToString(),
-            증빙방식 = Ssalddel.Contracts.Shipper.Request.증빙방식.없음.ToString(),
-            수납주체 = Ssalddel.Contracts.Shipper.Request.수납주체.플랫폼.ToString(),
-            정산상태 = Ssalddel.Contracts.Shipper.Request.운임정산상태.청구대기.ToString(),
-            정산메모 = "입고상품 재위탁 운송",
-            결제예정금액 = null,
-            픽업_도로명주소 = warehouse.주소,
-            픽업_상세주소 = item.보관위치,
-            픽업_연락처_이름 = warehouse.담당자명,
-            픽업_연락처_전화번호 = warehouse.연락처,
-            픽업_시간창_시작일시 = pickupAt,
-            픽업_시간창_종료일시 = pickupAt.AddHours(1),
-            하차_도로명주소 = dropoffAddress,
-            하차_상세주소 = dropoffAddressDetail,
-            하차_연락처_이름 = dropoffContactName,
-            하차_연락처_전화번호 = dropoffContactPhone,
-            하차_시간창_시작일시 = arrivalAt,
-            하차_시간창_종료일시 = arrivalAt.AddHours(1),
-            서비스레벨 = "일반",
-            요청사항 = requestText,
-            클라이언트요청Id = clientRequestId,
-            상태 = 상태값.의뢰상태.생성됨,
-            결제상태 = 상태값.결제상태.결제대기,
-            배차상태 = 상태값.배차상태.미시작,
-            CreatedAt = now,
-            UpdatedAt = now
-        };
-
-        item.가용수량 -= request.요청수량;
-        item.예약수량 += request.요청수량;
-        item.상태 = item.가용수량 == 0 ? "재위탁대기" : item.상태;
-        item.UpdatedAt = now;
-        if (outboundPlan is not null)
-        {
-            outboundPlan.운송의뢰Id = shipRequest.의뢰Id;
-            outboundPlan.UpdatedAt = now;
-        }
-
-        _db.화주운송의뢰.Add(shipRequest);
-        _db.운송의뢰상품연결.Add(new 운송의뢰상품연결
-        {
-            운송의뢰Id = shipRequest.의뢰Id,
-            입고상품Id = item.Id,
-            할당수량 = request.요청수량,
-            CreatedAt = now
-        });
-
-        var transportProjection = new 운송원장
-        {
-            운송번호 = shipRequest.의뢰Id,
-            의뢰Id = shipRequest.의뢰Id,
-            화주Id = shipRequest.화주Id,
-            배차업무유형 = 상태값.배차업무유형.용달운송,
-            원본의뢰유형 = 운송의뢰배차원천유형.창고출고연계운송,
-            원본의뢰Id = (outboundPlan?.Id ?? item.Id).ToString(System.Globalization.CultureInfo.InvariantCulture),
-            픽업_도로명주소 = shipRequest.픽업_도로명주소,
-            픽업_상세주소 = shipRequest.픽업_상세주소,
-            픽업_위도 = shipRequest.픽업_위도,
-            픽업_경도 = shipRequest.픽업_경도,
-            하차_도로명주소 = shipRequest.하차_도로명주소,
-            하차_상세주소 = shipRequest.하차_상세주소,
-            하차_위도 = shipRequest.하차_위도,
-            하차_경도 = shipRequest.하차_경도,
-            상태 = 상태값.배차대기상태.대기,
-            CreatedAt = now,
-            UpdatedAt = now
-        };
-        _db.운송원장.Add(transportProjection);
-
-        _db.재고이력.Add(new 재고이력
-        {
-            입고상품Id = item.Id,
-            이력유형 = 재고이동유형.예약,
-            변경수량 = -request.요청수량,
-            변경후수량 = item.가용수량,
-            원인유형 = "재위탁운송생성",
-            처리UserId = userId,
-            메모 = $"재위탁 운송의뢰 생성: {shipRequest.의뢰Id}",
-            처리일시 = now
-        });
-
-        _db.재고이동.Add(new 재고이동
-        {
-            창고Id = item.창고Id,
-            입고상품Id = item.Id,
-            상품명 = item.상품명,
-            SKU = item.SKU,
-            이동유형 = 재고이동유형.예약,
-            수량 = request.요청수량,
-            출고예정Id = outboundPlan?.Id,
-            운송의뢰Id = shipRequest.의뢰Id,
-            처리UserId = userId,
-            메모 = $"재위탁 운송의뢰 생성: {shipRequest.의뢰Id}",
-            발생일시 = now
-        });
-
-        await Ssalddel.Application.Shipper.Request.화주운송의뢰매퍼.UpsertCargoRequirementAsync(_db, shipRequest, cancellationToken);
-        await _db.SaveChangesAsync(cancellationToken);
-        await _transportLedgerSync.화주운송의뢰동기화Async(shipRequest, userId, cancellationToken);
-
-        return Ssalddel.Application.Shipper.Request.화주운송의뢰매퍼.To응답(shipRequest, transportProjection);
+        return await _재위탁출고UseCase.ExecuteAsync(
+            request,
+            userId,
+            () => 접근가능재고Query(userId),
+            () => 접근가능출고Query(userId),
+            cancellationToken);
     }
 
     private static 창고요약응답 ToWarehouseResponse(창고 entity)
@@ -1409,6 +1196,8 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
         => new()
         {
             Id = entity.Id,
+            ClientRequestId = entity.일반입고클라이언트요청Id,
+            가입고사진신청Id = entity.가입고사진신청Id,
             창고Id = entity.창고Id,
             커뮤니티원장Id = entity.커뮤니티원장Id,
             커뮤니티원장템플릿Key = entity.커뮤니티원장템플릿Key,
@@ -1776,15 +1565,6 @@ public sealed class WarehouseOperationService : IWarehouseOperationService
             멱등재시도여부 = idempotentReplay
         };
     }
-
-    // 오프셋 JSON은 Local DateTime으로 역직렬화될 수 있으므로 저장 전에 UTC 시각으로 복원한다.
-    // 오프셋 없는 기존 입력은 시계값을 유지하며 서버의 UTC 시간창 계약으로 해석한다.
-    private static DateTime? ReconsignmentTimeUtc(DateTime? value)
-        => value is { } time
-            ? time.Kind == DateTimeKind.Local
-                ? time.ToUniversalTime()
-                : DateTime.SpecifyKind(time, DateTimeKind.Utc)
-            : null;
 
     private static DateTime AsUtc(DateTime value)
         => value.Kind == DateTimeKind.Utc

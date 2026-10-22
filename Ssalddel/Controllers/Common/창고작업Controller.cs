@@ -52,6 +52,7 @@ public sealed class 창고작업Controller : ControllerBase
     private readonly I출고예정검토UseCase _outboundPlanReviewUseCase;
     private readonly I출고운송인계완료UseCase _outboundTransportHandoffUseCase;
     private readonly I신청개인정보동의증적Service _applicationPrivacyConsent;
+    private readonly I가입고사진신청UseCase? _photoInboundUseCase;
 
     public 창고작업Controller(
         I창고작업UseCase useCase,
@@ -62,7 +63,8 @@ public sealed class 창고작업Controller : ControllerBase
         I출고인계준비UseCase outboundHandoffUseCase,
         I출고예정검토UseCase outboundPlanReviewUseCase,
         I출고운송인계완료UseCase outboundTransportHandoffUseCase,
-        I신청개인정보동의증적Service applicationPrivacyConsent)
+        I신청개인정보동의증적Service applicationPrivacyConsent,
+        I가입고사진신청UseCase? photoInboundUseCase = null)
     {
         _useCase = useCase;
         _pickingTaskUseCase = pickingTaskUseCase;
@@ -73,6 +75,52 @@ public sealed class 창고작업Controller : ControllerBase
         _outboundPlanReviewUseCase = outboundPlanReviewUseCase;
         _outboundTransportHandoffUseCase = outboundTransportHandoffUseCase;
         _applicationPrivacyConsent = applicationPrivacyConsent;
+        _photoInboundUseCase = photoInboundUseCase;
+    }
+
+    [HttpPost("inbound-photo-requests")]
+    [RequireHrRole(HrDetailedRoleCodes.WarehouseManager, HrDetailedRoleCodes.WarehouseInboundOperator)]
+    [RequestSizeLimit(5 * 1024 * 1024 + 128 * 1024)]
+    public async Task<IActionResult> 가입고사진신청생성(
+        [FromForm] Guid clientRequestId, [FromForm(Name = "name")] string? name,
+        [FromForm] IFormFile? file, CancellationToken cancellationToken)
+    {
+        Response.Headers.CacheControl = "private, no-store";
+        return this.ToActionResult(await _photoInboundUseCase!.CreateAsync(clientRequestId, name, file, cancellationToken));
+    }
+
+    [HttpGet("inbound-photo-requests")]
+    [RequireHrRole(HrDetailedRoleCodes.WarehouseManager, HrDetailedRoleCodes.WarehouseInboundOperator)]
+    public async Task<IActionResult> 가입고사진신청목록([FromQuery] int page = 0, [FromQuery] int pageSize = 25,
+        CancellationToken cancellationToken = default)
+    {
+        Response.Headers.CacheControl = "private, no-store";
+        return this.ToActionResult(await _photoInboundUseCase!.GetListAsync(page, pageSize, cancellationToken));
+    }
+
+    [HttpGet("inbound-photo-requests/{id:guid}")]
+    [RequireHrRole(HrDetailedRoleCodes.WarehouseManager, HrDetailedRoleCodes.WarehouseInboundOperator)]
+    public async Task<IActionResult> 가입고사진신청상세(Guid id, CancellationToken cancellationToken)
+    {
+        Response.Headers.CacheControl = "private, no-store";
+        return this.ToActionResult(await _photoInboundUseCase!.GetAsync(id, cancellationToken));
+    }
+
+    [HttpGet("inbound-photo-requests/{id:guid}/photo")]
+    [RequireHrRole(HrDetailedRoleCodes.WarehouseManager, HrDetailedRoleCodes.WarehouseInboundOperator)]
+    public async Task<IActionResult> 가입고사진내용(Guid id, CancellationToken cancellationToken)
+    {
+        Response.Headers.CacheControl = "private, no-store";
+        return this.ToActionResult(await _photoInboundUseCase!.GetPhotoAsync(id, cancellationToken));
+    }
+
+    [HttpPut("inbound-photo-requests/{id:guid}/name")]
+    [RequireHrRole(HrDetailedRoleCodes.WarehouseManager, HrDetailedRoleCodes.WarehouseInboundOperator)]
+    public async Task<IActionResult> 가입고사진이름변경(Guid id, [FromBody] 가입고사진이름변경요청 request,
+        CancellationToken cancellationToken)
+    {
+        Response.Headers.CacheControl = "private, no-store";
+        return this.ToActionResult(await _photoInboundUseCase!.RenameAsync(id, request, cancellationToken));
     }
 
     [HttpGet("warehouses")]
@@ -185,6 +233,17 @@ public sealed class 창고작업Controller : ControllerBase
     public async Task<IActionResult> 입고상세(long inboundId, CancellationToken cancellationToken)
     {
         var result = await _useCase.입고상세Async(inboundId, cancellationToken);
+        return this.ToActionResult(result);
+    }
+
+    [HttpGet("inbounds/by-client-request/{clientRequestId:guid}")]
+    [RequireHrRole(
+        HrDetailedRoleCodes.WarehouseManager,
+        HrDetailedRoleCodes.WarehouseInboundOperator)]
+    public async Task<IActionResult> 입고원요청조회(Guid clientRequestId, CancellationToken cancellationToken)
+    {
+        Response.Headers.CacheControl = "private, no-store";
+        var result = await _useCase.입고원요청조회Async(clientRequestId, cancellationToken);
         return this.ToActionResult(result);
     }
 

@@ -1,0 +1,123 @@
+@using Ssalddel.Contracts.Common.Inbound
+@implements IDisposable
+
+<section class="photo-inbound" aria-busy="@Model.IsBusy">
+    <header class="photo-inbound__header">
+        <div><span>입고 신청</span><h1>사진으로 입고 신청</h1></div>
+        <a href="@ReturnHref" aria-label="입고 목록으로 돌아가기"><MudIcon Icon="@Icons.Material.Filled.ArrowBack" /> 돌아가기</a>
+    </header>
+
+    @if (Model.Message is { } message)
+    {
+        <div class="photo-inbound__notice" role="status">
+            <MudIcon Icon="@(Model.HasError ? Icons.Material.Filled.Info : Icons.Material.Filled.CheckCircleOutline)" />
+            <span>@message</span>
+        </div>
+    }
+    @if (Model.IsBusy) { <MudProgressLinear Indeterminate="true" Color="Color.Primary" /> }
+
+    <div class="photo-inbound__layout">
+        <article class="photo-inbound__card">
+            @if (Model.PreviewUrl is { } preview)
+            {
+                <div class="photo-inbound__preview"><img src="@preview" alt="신청할 물품 사진" /></div>
+            }
+            else
+            {
+                <div class="photo-inbound__empty"><MudIcon Icon="@Icons.Material.Filled.AddPhotoAlternate" /><strong>@(Model.Current is null ? "입고할 물품을 찍어 주세요" : "사진 확인")</strong><span>JPG·PNG · 최대 5MB</span></div>
+            }
+
+            @if (Model.Current is { } current)
+            {
+                <div class="photo-inbound__body">
+                    <div class="photo-inbound__status"><span>@(current.입고요청Id is > 0 ? "입고 신청 연결됨" : "가 입고 접수")</span><time>@current.CreatedAtUtc.ToLocalTime().ToString("yyyy.MM.dd")</time></div>
+                    <h2>@DisplayName(current)</h2>
+                    @if (current.입고요청Id is null)
+                    {
+                        <label class="photo-inbound__label" for="photo-inbound-rename">이름</label>
+                        <div class="photo-inbound__rename"><input id="photo-inbound-rename" @bind="Model.Rename" maxlength="100" disabled="@Model.IsBusy" placeholder="예: 이번 주 입고 물품" /><button @onclick="RenameAsync" disabled="@(!Model.CanRename)">저장</button></div>
+                        <button class="photo-inbound__primary" @onclick="FormalAsync" disabled="@(!Model.CanStartFormal)"><MudIcon Icon="@Icons.Material.Filled.EditNote" /> 입고 정보 입력</button>
+                        <p class="photo-inbound__hint">이름과 입고 정보는 나중에 입력해도 됩니다.</p>
+                    }
+                    else
+                    {
+                        <a class="photo-inbound__primary" href="@FormalDetailHref(current.입고요청Id.Value)">입고 내역 보기</a>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="photo-inbound__body">
+                    <div class="photo-inbound__tools">
+                        @if (Model.CaptureSupported)
+                        {
+                            <button @onclick="CaptureAsync" disabled="@InputsDisabled"><MudIcon Icon="@Icons.Material.Filled.PhotoCamera" /> 사진 촬영</button>
+                        }
+                        <label class="photo-inbound__file" aria-disabled="@InputAriaDisabled"><MudIcon Icon="@Icons.Material.Filled.Image" /> 사진 선택<InputFile accept="image/jpeg,image/png" OnChange="SelectAsync" disabled="@InputsDisabled" /></label>
+                    </div>
+                    <details class="photo-inbound__optional"><summary>이름 붙이기 <span>선택</span></summary><input aria-label="신청 이름" @bind="Model.Name" maxlength="100" disabled="@InputsDisabled" placeholder="나중에 찾기 쉬운 이름" /></details>
+                    <button class="photo-inbound__primary" @onclick="SubmitAsync" disabled="@(!Model.CanSubmit)"><MudIcon Icon="@Icons.Material.Filled.AddTask" /> 가 입고 신청</button>
+                    <p class="photo-inbound__hint">사진만 먼저 등록하고, 입고 정보는 나중에 입력하세요.</p>
+                    @if (!InputsDisabled) { <a class="photo-inbound__secondary" href="@DetailsHref">직접 입력</a> }
+                </div>
+            }
+            @if (Model.HasPendingRequest || Model.RecoveryBlocked || Model.HasError)
+            {
+                <div class="photo-inbound__recovery"><button @onclick="RefreshAsync" disabled="@Model.IsBusy"><MudIcon Icon="@Icons.Material.Filled.Refresh" /> @(Model.HasPendingRequest ? "접수 결과 확인" : "다시 확인")</button></div>
+            }
+        </article>
+
+        <aside class="photo-inbound__list">
+            <div class="photo-inbound__list-heading"><h2>내 신청</h2><button @onclick="NewAsync" disabled="@(Model.IsBusy || Model.HasPendingRequest || Model.RecoveryBlocked)" aria-label="새 사진 신청"><MudIcon Icon="@Icons.Material.Filled.Add" /></button></div>
+            @if (Model.List.Items.Count == 0)
+            {
+                <p class="photo-inbound__hint">등록한 사진 신청이 여기에 모입니다.</p>
+            }
+            @foreach (var item in Model.List.Items)
+            {
+                <button class="photo-inbound__list-item @(Model.Current?.Id == item.Id ? "is-selected" : null)" @onclick="() => SelectItemAsync(item.Id)" disabled="@Model.IsBusy">
+                    <MudIcon Icon="@Icons.Material.Filled.Inventory2" /><span><strong>@DisplayName(item)</strong><small>@(item.입고요청Id is > 0 ? "입고 신청 연결됨" : "정보 입력 대기") · @item.CreatedAtUtc.ToLocalTime().ToString("MM.dd")</small></span><MudIcon Icon="@Icons.Material.Filled.ChevronRight" />
+                </button>
+            }
+            @if (Model.List.TotalCount > Model.List.PageSize)
+            {
+                <nav class="photo-inbound__paging" aria-label="준비 목록 페이지"><button @onclick="PreviousAsync" disabled="@(Model.IsBusy || Model.List.Page == 0)">이전</button><span>@(Model.List.Page + 1)</span><button @onclick="NextAsync" disabled="@(Model.IsBusy || (Model.List.Page + 1) * Model.List.PageSize >= Model.List.TotalCount)">다음</button></nav>
+            }
+        </aside>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public 가입고사진신청ViewModel Model { get; set; } = default!;
+    [Parameter] public string ReturnHref { get; set; } = "/shipper/inbound/requests";
+    [Parameter] public string DetailsHref { get; set; } = "/shipper/inbound/requests/new?details=true";
+    [Parameter] public EventCallback<Guid> FormalRequested { get; set; }
+    [Parameter] public EventCallback<Guid> SelectedRequested { get; set; }
+    private 가입고사진신청ViewModel? subscribed;
+    private bool InputsDisabled => Model.IsBusy || Model.HasPendingRequest || Model.RecoveryBlocked;
+    private string InputAriaDisabled => InputsDisabled ? "true" : "false";
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(subscribed, Model)) return;
+        if (subscribed is not null) subscribed.Changed -= Changed;
+        subscribed = Model; subscribed.Changed += Changed;
+    }
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    private Task SelectAsync(InputFileChangeEventArgs args) => args.FileCount == 0 ? Task.CompletedTask : Model.SelectPhotoAsync(args.File);
+    private Task CaptureAsync() => Model.CaptureAsync();
+    private Task SubmitAsync() => Model.SubmitAsync();
+    private Task RefreshAsync() => Model.RefreshAsync();
+    private Task RenameAsync() => Model.RenameAsync();
+    private Task NewAsync() => Model.NewAsync();
+    private Task PreviousAsync() => Model.LoadPageAsync(Model.List.Page - 1);
+    private Task NextAsync() => Model.LoadPageAsync(Model.List.Page + 1);
+    private async Task SelectItemAsync(Guid id)
+    {
+        if (SelectedRequested.HasDelegate) await SelectedRequested.InvokeAsync(id);
+        else await Model.SelectAsync(id);
+    }
+    private Task FormalAsync() => Model.Current is { } current && Model.CanStartFormal ? FormalRequested.InvokeAsync(current.Id) : Task.CompletedTask;
+    private static string DisplayName(가입고사진신청응답 item) => string.IsNullOrWhiteSpace(item.이름) ? "이름 없는 입고 신청" : item.이름;
+    private static string FormalDetailHref(long id) => $"/shipper/inbound/requests/{id}";
+    public void Dispose() { if (subscribed is not null) subscribed.Changed -= Changed; }
+}

@@ -6,6 +6,8 @@ using Ssalddel.Controllers;
 using Ssalddel.Application.Driver.Transport;
 using 살뜰.도메인.공통;
 using Ssalddel.Contracts.Driver.Transport;
+using Ssalddel.Contracts.Common.Versioning;
+using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.ApiMetadata;
 using 살뜰.Services.Versioning;
 
@@ -42,7 +44,8 @@ namespace Ssalddel.Controllers.Driver.Progress05
             var driverId = 현재기사Id();
             var result = await _sender.Send(new 운송현재조회Query(driverId));
 
-            if (result is null) return this.ToNotFoundProblem("현재 운송 정보를 찾을 수 없습니다.");
+            if (result is null) return this.ToNotFoundProblem("현재 운송 정보를 찾을 수 없습니다.",
+                맥락(OperatingSystemLifecycleStageIds.CargoTransport, 업무처리결과Codes.조회), "CargoTransportNotFound");
             return Ok(result);
         }
 
@@ -52,7 +55,8 @@ namespace Ssalddel.Controllers.Driver.Progress05
             var driverId = 현재기사Id();
             var result = await _sender.Send(new 운송상세조회Query(driverId, id));
 
-            if (result is null) return this.ToNotFoundProblem("운송 정보를 찾을 수 없습니다.");
+            if (result is null) return this.ToNotFoundProblem("운송 정보를 찾을 수 없습니다.",
+                맥락(OperatingSystemLifecycleStageIds.CargoTransport, 업무처리결과Codes.조회), "CargoTransportNotFound");
             return Ok(result);
         }
 
@@ -61,7 +65,7 @@ namespace Ssalddel.Controllers.Driver.Progress05
         {
             var driverId = 현재기사Id();
             var result = await _sender.Send(new 운송상차지도착Command(driverId, id));
-            return this.ToActionResult(result);
+            return this.ToActionResult(result, 맥락(OperatingSystemLifecycleStageIds.CargoPickup));
         }
 
         [HttpPost("{id:long}/pickup-complete")]
@@ -81,7 +85,7 @@ namespace Ssalddel.Controllers.Driver.Progress05
                 인수증서명생략확인 = request?.인수증서명생략확인 ?? false,
                 인수증서명생략사유 = request?.인수증서명생략사유
             });
-            return this.ToActionResult(result);
+            return this.ToActionResult(result, 맥락(OperatingSystemLifecycleStageIds.CargoPickup));
         }
 
         [HttpGet("workspace")]
@@ -96,7 +100,7 @@ namespace Ssalddel.Controllers.Driver.Progress05
         {
             var driverId = 현재기사Id();
             var result = await _sender.Send(new 운송하차지도착Command(driverId, id));
-            return this.ToActionResult(result);
+            return this.ToActionResult(result, 맥락(OperatingSystemLifecycleStageIds.CargoDropoff));
         }
 
         [HttpPost("{id:long}/complete")]
@@ -108,7 +112,7 @@ namespace Ssalddel.Controllers.Driver.Progress05
                 하차사진ObjectName = request?.하차사진ObjectName,
                 하차사진Url = request?.하차사진Url
             });
-            return this.ToActionResult(result);
+            return this.ToActionResult(result, 맥락(OperatingSystemLifecycleStageIds.CargoDropoff));
         }
 
         [HttpPost("{id:long}/report-issue")]
@@ -137,8 +141,11 @@ namespace Ssalddel.Controllers.Driver.Progress05
                 request.영향수량,
                 request.현장진행불가));
 
-            return this.ToActionResult(result);
+            return this.ToActionResult(result, 맥락(OperatingSystemLifecycleStageIds.CargoInterruptionRecovery));
         }
+
+        private static 업무실패맥락Dto 맥락(string stageId, string outcome = 업무처리결과Codes.미확정)
+            => new(OperatingSystemIds.DomesticCargoTransport, stageId, outcome);
 
     }
 }

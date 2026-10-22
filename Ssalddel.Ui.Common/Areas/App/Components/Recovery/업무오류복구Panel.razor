@@ -1,0 +1,118 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Recovery
+@implements IDisposable
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@inject Microsoft.Extensions.Logging.ILogger<업무오류복구Panel> Logger
+
+@if (_notice is not null)
+{
+    <section class="work-error-recovery" role="status" aria-live="polite">
+        <span>@_notice.제목</span>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="@(Busy || _retrying)" OnClick="ReopenAsync">안내 보기</MudButton>
+    </section>
+}
+
+@code {
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public Api작업오류? Error { get; set; }
+    [Parameter] public Ssalddel.Contracts.Common.Workflow.업무실패맥락Dto? Context { get; set; }
+    [Parameter] public string ContextKey { get; set; } = string.Empty;
+    [Parameter] public bool OutcomeUnknown { get; set; }
+    [Parameter] public bool Busy { get; set; }
+    [Parameter] public bool AllowRetry { get; set; } = true;
+    /// <summary>조회만 전달합니다. 제출·완료·결제 명령을 전달하지 않습니다.</summary>
+    [Parameter] public EventCallback RetryRequested { get; set; }
+    [Parameter] public string? ReturnHref { get; set; }
+    [Parameter] public string ReturnLabel { get; set; } = "업무로 돌아가기";
+    [Parameter] public bool AutoOpen { get; set; } = true;
+
+    private readonly 업무오류안내Session _session = new();
+    private 업무오류안내Presentation? _notice;
+    private IDialogReference? _dialog;
+    private bool _opening;
+    private bool _retrying;
+    private bool _disposed;
+    private bool CanReturn => _notice?.복귀허용 == true && ReturnHref?.StartsWith('/') == true && !ReturnHref.StartsWith("//", StringComparison.Ordinal);
+    private bool CanRetry => _notice?.재조회허용 == true && AllowRetry && RetryRequested.HasDelegate && !Busy && !_retrying;
+
+    protected override void OnParametersSet()
+    {
+        _notice = Error is not null ? 업무오류안내Presentation.생성(Error, Context, OutcomeUnknown)
+            : !string.IsNullOrWhiteSpace(Message) && Context is not null
+                ? 업무오류안내Presentation.생성(new Api작업오류("read-failure", string.Empty), Context, OutcomeUnknown)
+                : 업무오류안내Presentation.생성(Message, OutcomeUnknown);
+        if (_session.갱신(ContextKey, _notice?.분류, Busy))
+            CloseDialog();
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_disposed && AutoOpen && !Busy && !_retrying && _notice is not null)
+            _ = OpenAsync(manual: false);
+        return Task.CompletedTask;
+    }
+
+    private Task ReopenAsync() => OpenAsync(manual: true);
+
+    private async Task OpenAsync(bool manual)
+    {
+        if (_disposed || _opening || _dialog is not null || _notice is null || Busy || _retrying || !_session.열기(manual)) return;
+        var revision = _session.Revision;
+        var notice = _notice;
+        var openingPending = true;
+        _opening = true;
+        try
+        {
+            var dialog = await DialogService.ShowAsync<업무오류복구Dialog>(notice.제목,
+                new DialogParameters
+                {
+                    [nameof(업무오류복구Dialog.Notice)] = notice,
+                    [nameof(업무오류복구Dialog.CanRetry)] = CanRetry,
+                    [nameof(업무오류복구Dialog.CanReturn)] = CanReturn,
+                    [nameof(업무오류복구Dialog.ReturnLabel)] = ReturnLabel
+                }, new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true, CloseOnEscapeKey = true, CloseButton = false });
+            if (_disposed || revision != _session.Revision)
+            {
+                dialog.Close();
+                return;
+            }
+            _dialog = dialog;
+            _opening = false;
+            openingPending = false;
+            var result = await dialog.Result;
+            if (ReferenceEquals(_dialog, dialog)) _dialog = null;
+            if (_disposed || revision != _session.Revision || result?.Canceled != false) return;
+            if (result.Data is "return" && CanReturn)
+                Navigation.NavigateTo(ReturnHref!);
+            else if (result.Data is "retry" && CanRetry)
+            {
+                _retrying = true;
+                _session.재조회시작();
+                try { await RetryRequested.InvokeAsync(); }
+                finally { _retrying = false; }
+            }
+        }
+        catch (Exception exception)
+        {
+            Microsoft.Extensions.Logging.LoggerExtensions.LogWarning(Logger, exception, "업무 오류 안내 또는 재조회가 완료되지 않았습니다.");
+        }
+        finally
+        {
+            // 이미 표시됐던 이전 창의 종료가 새 창의 생성 대기를 해제하지 않습니다.
+            if (openingPending) _opening = false;
+            if (!_disposed) await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void CloseDialog()
+    {
+        _dialog?.Close();
+        _dialog = null;
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        CloseDialog();
+    }
+}

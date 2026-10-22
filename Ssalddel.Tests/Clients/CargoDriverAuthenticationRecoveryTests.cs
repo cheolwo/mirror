@@ -260,6 +260,26 @@ public sealed class CargoDriverAuthenticationRecoveryTests
         Assert.Equal(new[] { "/api/test" }, handler.Paths);
     }
 
+    [Fact]
+    public async Task DomainRecoveryMetadata_IsPreservedWithoutKeepingRawResponse()
+    {
+        var session = await SessionAsync(new TokenStore());
+        using var http = Client(new TestHandler((_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Conflict)
+        {
+            Content = new StringContent("""
+                {"errorCode":"CargoTransportHeld","detail":"RAW_PRIVATE_ADDRESS",
+                 "failureClassCode":"BusinessRuleBlocked","availableRecoveryActions":["RefreshState"],
+                 "workflowContext":{"operatingSystemId":"DomesticCargoTransportOS","stageId":"cargo.pickup","outcomeCode":"NotApplied"}}
+                """)
+        })));
+        var error = await Assert.ThrowsAsync<DriverApiException>(() => Api(http, session).GetAsync<object>("api/test", "상차"));
+        Assert.Equal("CargoTransportHeld", error.ErrorCode);
+        Assert.Equal("cargo.pickup", error.RecoveryProblem?.WorkflowContext?.StageId);
+        Assert.Contains("RefreshState", error.RecoveryProblem!.AvailableRecoveryActions);
+        Assert.Null(error.RecoveryProblem.Message);
+        Assert.DoesNotContain("RAW_PRIVATE", error.Message);
+    }
+
     private static async Task<AuthSession> SessionAsync(TokenStore store, bool expiredAccess = false, bool expiredRefresh = false)
     {
         var session = new AuthSession(store, new ClientSessionGuard());

@@ -28,7 +28,8 @@ public sealed class CargoPhotoRecoveryIntegrationTests
     {
         using var f = await Fixture.CreateAsync();
         f.Store.SaveHook = (_, _) => f.Store.Saved.Count == failedSave ? Task.FromException(new IOException("protected store failed")) : Task.CompletedTask;
-        await Assert.ThrowsAsync<IOException>(() => f.Service.CompleteWithPhotoAsync(Photo()));
+        var result = await f.Service.CompleteWithPhotoAsync(Photo());
+        Assert.True(result.CompletionNotSubmitted); Assert.False(result.CompletionRecorded);
         Assert.Equal(uploads, f.Handler.Uploads);
         Assert.Equal(0, f.Api.Completions);
     }
@@ -59,7 +60,8 @@ public sealed class CargoPhotoRecoveryIntegrationTests
     public async Task 다른현재단계는_사진보관업로드완료명령을보내지않는다(string state)
     {
         using var f = await Fixture.CreateAsync(); f.Api.State = state;
-        await Assert.ThrowsAsync<InvalidOperationException>(() => f.Service.CompleteWithPhotoAsync(Photo()));
+        var result = await f.Service.CompleteWithPhotoAsync(Photo());
+        Assert.True(result.CompletionNotSubmitted); Assert.False(result.CompletionRecorded);
         Assert.Equal(new[] { "GET" }, f.Trace);
     }
 

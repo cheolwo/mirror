@@ -35,6 +35,12 @@ public interface IWarehouseWorkspaceService
 
     Task<입고요청항목응답?> CreateInboundAsync(입고요청저장요청 payload, CancellationToken cancellationToken = default);
 
+    // 이전 서버나 별도 adapter의 미지원은 미확정입니다. 비슷한 목록 항목으로 대체하지 않습니다.
+    Task<입고요청항목응답?> GetInboundByClientRequestAsync(
+        Guid clientRequestId,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<입고요청항목응답?>(null);
+
     Task<입고상품목록응답?> CompleteInboundAsync(long inboundId, 입고완료요청 payload, CancellationToken cancellationToken = default);
 
     Task<재고목록응답?> GetInventoryAsync(CancellationToken cancellationToken = default);

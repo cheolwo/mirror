@@ -42,7 +42,9 @@ public sealed record DriverTransportCompletionPhotoResult(
     bool CompletionRecorded,
     string Message,
     string? Url = null,
-    string? ObjectName = null);
+    string? ObjectName = null,
+    DriverApiException? CompletionFailure = null,
+    bool CompletionNotSubmitted = false);
 
 public interface IDriverTransportCompletionPhotoService
 {
@@ -64,7 +66,8 @@ public sealed class SampleDriverTransportCompletionPhotoService : IDriverTranspo
             Uploaded: false,
             CompletionRecorded: false,
             Message: message,
-            ObjectName: BuildSampleObjectName(photo)));
+            ObjectName: BuildSampleObjectName(photo),
+            CompletionNotSubmitted: true));
     }
 
     private static string BuildSampleObjectName(DriverTransportCompletionPhoto photo)
@@ -122,6 +125,8 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
             }
         }
         _authSession.Changed += AuthenticationChanged;
+        FileUploadResponse? upload = null;
+        var completionAttempted = false;
         try
         {
             EnsureCurrentSession(owner, revision, operation.Token);
@@ -142,7 +147,7 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
             if (_recoveryStore is not null)
                 await _recoveryStore.SaveAsync(owner, photo, operation.Token);
             EnsureCurrentSession(owner, revision, operation.Token);
-            var upload = await ResolveUploadAsync(photo, operation.Token);
+            upload = await ResolveUploadAsync(photo, operation.Token);
             EnsureCurrentSession(owner, revision, operation.Token);
             if (string.IsNullOrWhiteSpace(upload.ObjectName))
                 throw new InvalidOperationException("사진 업로드 결과를 확인하지 못했습니다.");
@@ -151,6 +156,7 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
             EnsureCurrentSession(owner, revision, operation.Token);
             try
             {
+                completionAttempted = true;
                 await CompleteTransportAsync(photo, upload, operation.Token);
                 EnsureCurrentSession(owner, revision, operation.Token);
             }
@@ -161,7 +167,8 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
                     CompletionRecorded: false,
                     Message: "사진 업로드는 확인했지만 완료 결과를 확인하지 못했습니다. 같은 운송의 현재 상태를 먼저 확인해 주세요.",
                     Url: upload.Url,
-                    ObjectName: upload.ObjectName);
+                    ObjectName: upload.ObjectName,
+                    CompletionFailure: ex as DriverApiException);
             }
 
             var stepName = photo.Kind == DriverTransportCompletionPhotoKind.Pickup ? "상차 완료" : "하차 완료";
@@ -171,6 +178,15 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
                 Message: $"{stepName} 사진 업로드와 완료 처리가 끝났습니다.",
                 Url: upload.Url,
                 ObjectName: upload.ObjectName);
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception) when (!completionAttempted)
+        {
+            EnsureCurrentSession(owner, revision, operation.Token);
+            return new DriverTransportCompletionPhotoResult(
+                Uploaded: !string.IsNullOrWhiteSpace(upload?.ObjectName), CompletionRecorded: false,
+                Message: "완료 요청 전 준비를 마치지 못했습니다. 현재 운송을 확인한 뒤 다시 진행해 주세요.",
+                Url: upload?.Url, ObjectName: upload?.ObjectName, CompletionNotSubmitted: true);
         }
         finally
         {

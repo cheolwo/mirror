@@ -4,6 +4,8 @@ using Ssalddel.Contracts.Common.Inbound;
 using Ssalddel.Contracts.Common.Inventory;
 using Ssalddel.Contracts.Common.Metadata;
 using Ssalddel.Contracts.Common.Warehouse;
+using Ssalddel.Contracts.Common.Versioning;
+using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Contracts.Shipper.Request;
 using Ssalddel.Application.Warehouse.Events;
 using Ssalddel.Services.LogisticsProcessing.Warehouse;
@@ -26,6 +28,7 @@ public interface I창고작업UseCase
     Task<Result<입고요청목록응답>> 입고목록Async(CancellationToken cancellationToken);
     Task<Result<입고요청페이지응답>> 입고목록조회Async(입고요청목록조회요청 request, CancellationToken cancellationToken);
     Task<Result<입고요청항목응답>> 입고상세Async(long inboundId, CancellationToken cancellationToken);
+    Task<Result<입고요청항목응답>> 입고원요청조회Async(Guid clientRequestId, CancellationToken cancellationToken);
     Task<Result<입고요청항목응답>> 입고생성Async(입고요청저장요청 request, 창고작업요청Context context, CancellationToken cancellationToken);
     Task<Result<입고요청항목응답>> 현장입고요청생성Async(
         현장입고요청등록요청 request,
@@ -174,12 +177,73 @@ public sealed class 창고작업UseCase : I창고작업UseCase
                     .WithMetadata("StatusCode", StatusCodes.Status404NotFound));
     }
 
+    public async Task<Result<입고요청항목응답>> 입고원요청조회Async(Guid clientRequestId, CancellationToken cancellationToken)
+    {
+        if (clientRequestId == Guid.Empty)
+            return 입고신청실패("입고 신청 요청 ID를 확인해 주세요.", "InboundRequestIdInvalid",
+                StatusCodes.Status400BadRequest, 업무처리결과Codes.조회);
+
+        try
+        {
+            var item = await _warehouseOperationService.GetInboundByClientRequestIdAsync(clientRequestId, cancellationToken);
+            return item is not null ? Result.Ok(item)
+                : 입고신청실패("입고 신청 결과가 아직 확인되지 않습니다.", "InboundSubmissionNotFound",
+                    StatusCodes.Status404NotFound, 업무처리결과Codes.조회);
+        }
+        catch (Exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            return 입고신청실패("입고 신청 결과를 다시 확인해 주세요.", "InboundSubmissionLookupUnavailable",
+                StatusCodes.Status503ServiceUnavailable, 업무처리결과Codes.조회);
+        }
+    }
+
     public async Task<Result<입고요청항목응답>> 입고생성Async(입고요청저장요청 request, 창고작업요청Context context, CancellationToken cancellationToken)
     {
-        var result = await _warehouseOperationService.CreateInboundAsync(request, cancellationToken);
-        await 로그Async("Inbound", "Created", context, cancellationToken, entityId: result.Id, metadataJson: $"{{\"warehouseId\":{result.창고Id}}}");
+        입고요청항목응답 result;
+        try
+        {
+            result = await _warehouseOperationService.CreateInboundAsync(request, cancellationToken);
+        }
+        catch (InboundSubmissionInvalidRequestException)
+        {
+            return 입고신청실패("입고 신청 요청 ID를 확인해 주세요.", "InboundRequestIdInvalid",
+                StatusCodes.Status400BadRequest, 업무처리결과Codes.미적용);
+        }
+        catch (InboundSubmissionConflictException)
+        {
+            return 입고신청실패("기존 입고 신청 결과를 확인해 주세요.", "InboundSubmissionRequestConflict",
+                StatusCodes.Status409Conflict, 업무처리결과Codes.미확정);
+        }
+        catch (Exception) when (request.ClientRequestId.HasValue)
+        {
+            // 응답 유실이나 commit 이후 실패일 수 있다. 미저장으로 추정하여 재제출하지 않는다.
+            return 입고신청실패("입고 신청 결과를 확인해 주세요.", "InboundSubmissionOutcomeUnknown",
+                StatusCodes.Status503ServiceUnavailable, 업무처리결과Codes.미확정);
+        }
+
+        if (result.멱등재시도여부) return result;
+        try
+        {
+            await 로그Async("Inbound", "Created", context, cancellationToken, entityId: result.Id, metadataJson: $"{{\"warehouseId\":{result.창고Id}}}");
+        }
+        catch (Exception) when (request.ClientRequestId.HasValue)
+        {
+            // 입고 원장은 이미 저장됐다. 후속 감사 실패와 업무 미적용을 구분한다.
+            return 입고신청실패("입고 신청이 저장됐습니다. 내역을 확인해 주세요.", "InboundSubmissionFollowUpUnavailable",
+                StatusCodes.Status503ServiceUnavailable, 업무처리결과Codes.적용);
+        }
         return result;
     }
+
+    private static Result<입고요청항목응답> 입고신청실패(string message, string code, int statusCode, string outcome)
+        => Result.Fail<입고요청항목응답>(new Error(message)
+            .WithMetadata("StatusCode", statusCode)
+            .WithMetadata("ErrorCode", code)
+            .WithMetadata("WorkflowContext", new 업무실패맥락Dto(OperatingSystemIds.WarehouseCommerceFulfillment,
+                OperatingSystemLifecycleStageIds.WarehouseInboundPlan, outcome))
+            .WithMetadata("RequiresStateRefresh", true)
+            .WithMetadata("RetryPolicyCode", 업무재시도정책Codes.자동재시도안함)
+            .WithMetadata("AvailableRecoveryActions", new[] { 업무복구행동Ids.상태전체재조회 }));
 
     public async Task<Result<입고요청항목응답>> 현장입고요청생성Async(
         현장입고요청등록요청 request,

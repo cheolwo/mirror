@@ -41,6 +41,16 @@ public static class DriverServiceCollectionExtensions
         services.AddSingleton<IClientSessionGuard, ClientSessionGuard>();
         services.AddSingleton<ITransportRequestLedgerObserver, TransportRequestLedgerObserver>();
         services.AddSingleton<IAuthSession, AuthSession>();
+        services.AddScoped<Ssalddel.Ui.Common.Areas.App.Services.IWorkflowRecoveryContext>(provider =>
+        {
+            var session = provider.GetRequiredService<IAuthSession>();
+            var client = provider.GetRequiredService<HttpClient>();
+            return new Ssalddel.Ui.Common.Areas.App.Services.WorkflowRecoveryContext(
+                () => new Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.RoleWorkspaceIdentity(
+                    session.UserId, session.SessionRevision, session.IsAuthenticated),
+                () => client.BaseAddress);
+        });
+        services.AddScoped<IDriverCargoCompletionRecovery, DriverCargoCompletionRecovery>();
         services.AddSingleton<AuthApiService>();
         services.AddSingleton(provider =>
         {

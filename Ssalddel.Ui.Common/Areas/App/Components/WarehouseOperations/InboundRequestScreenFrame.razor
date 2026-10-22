@@ -1,4 +1,6 @@
 @using Ssalddel.Contracts.Common.Inbound
+@using Ssalddel.Contracts.Common.Workflow
+@using Ssalddel.Ui.Common.Areas.App.Components.Recovery
 
 <section class="inbound-request-screen" data-inbound-screen="@CurrentScreen.ToString().ToLowerInvariant()">
     <header class="inbound-request-screen__header">
@@ -18,6 +20,7 @@
             <MudButton Href="@Context.PathFor(InboundRequestScreenKind.Create)"
                        Variant="Variant.Outlined"
                        Color="Color.Secondary"
+                       Disabled="@State.HasPendingMutation"
                        StartIcon="@Icons.Material.Filled.Add">
                 신규 신청
             </MudButton>
@@ -28,13 +31,28 @@
                            StartIcon="@Icons.Material.Filled.Refresh"
                            Disabled="@State.IsBusy"
                            OnClick="RefreshRequested">
-                    새로고침
+                    @(State.CanQueryRegistrationResult ? "접수 결과 확인" : "새로고침")
                 </MudButton>
             }
         </div>
     </header>
 
-    @if (!string.IsNullOrWhiteSpace(State.Message))
+    <업무오류복구Panel Error="@State.Failure"
+                   Context="@State.Failure?.WorkflowContext"
+                   ContextKey="@($"warehouse-inbound:{CurrentScreen}:{InboundId ?? State.SavedInboundId}")"
+                   Busy="@State.IsBusy"
+                   AllowRetry="@RecoveryAllowsQuery"
+                   RetryRequested="RefreshRequested"
+                   ReturnHref="@Context.PathFor(InboundRequestScreenKind.List)"
+                   ReturnLabel="입고 목록" />
+
+    @if (State.RecoveryInboundId is > 0 && State.RecoveryInboundId != InboundId)
+    {
+        <MudButton Href="@Context.PathFor(InboundRequestScreenKind.Detail, State.RecoveryInboundId)"
+                   Variant="Variant.Outlined" Color="Color.Primary">이전 입고 확인</MudButton>
+    }
+
+    @if (State.Failure is null && !string.IsNullOrWhiteSpace(State.Message))
     {
         <MudAlert Severity="@ResolveSeverity(State.MessageTone)" Variant="Variant.Outlined">
             @State.Message
@@ -48,6 +66,7 @@
 
     <InboundRequestNavigation Context="@Context"
                               CurrentScreen="@CurrentScreen"
+                              NewRequestDisabled="@State.HasPendingMutation"
                               InboundId="@InboundId" />
 
     @if (State.IsBusy)
@@ -71,6 +90,15 @@
     [Parameter, EditorRequired] public string HomeHref { get; set; } = string.Empty;
     [Parameter] public EventCallback RefreshRequested { get; set; }
     [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+
+    // 새 계약의 원요청 번호가 있으면 기존 새로고침으로 접수 결과도 GET 확인합니다.
+    private bool RecoveryAllowsQuery
+        => RefreshRequested.HasDelegate
+           && (State.RecoveryInboundId is not > 0 || State.RecoveryInboundId == InboundId
+               || CurrentScreen == InboundRequestScreenKind.List)
+           && (CurrentScreen != InboundRequestScreenKind.Create
+               || State.CanQueryRegistrationResult
+               || State.Failure?.WorkflowContext?.OutcomeCode == 업무처리결과Codes.조회);
 
     private static Severity ResolveSeverity(InboundRequestPageMessageTone tone)
         => tone switch

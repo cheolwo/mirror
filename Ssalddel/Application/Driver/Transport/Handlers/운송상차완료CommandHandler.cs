@@ -1,6 +1,7 @@
 using FluentResults;
 using Microsoft.AspNetCore.Http;
 using Ssalddel.Contracts.Driver.Transport;
+using Ssalddel.Contracts.Common.Versioning;
 using 살뜰.도메인.창고;
 using Ssalddel.Services.Storage;
 
@@ -32,7 +33,8 @@ public sealed class 운송상차완료CommandHandler : IRequestHandler<운송상
             .FirstOrDefaultAsync(x => x.Id == request.Id && x.기사_운송자 == request.기사Id, cancellationToken);
         if (transport is null)
         {
-            return Result.Fail<기사운송상태변경응답>("운송을 찾을 수 없습니다.");
+            return Result.Fail<기사운송상태변경응답>(화물업무실패Factory.생성(
+                "CargoTransportNotFound", "운송을 찾을 수 없습니다.", OperatingSystemLifecycleStageIds.CargoPickup, 404));
         }
 
         var requestId = string.IsNullOrWhiteSpace(transport.의뢰Id) ? transport.운송번호 : transport.의뢰Id;
@@ -44,13 +46,17 @@ public sealed class 운송상차완료CommandHandler : IRequestHandler<운송상
                 cancellationToken))
         {
             return Result.Fail<기사운송상태변경응답>(
-                new Error("창고의 상품 인계 완료가 확인되어야 상차 완료 처리할 수 있습니다.")
-                    .WithMetadata("StatusCode", StatusCodes.Status409Conflict));
+                화물업무실패Factory.생성("CargoWarehouseHandoffPending",
+                    "창고의 상품 인계 완료가 확인되어야 상차 완료 처리할 수 있습니다.",
+                    OperatingSystemLifecycleStageIds.CargoPickup, StatusCodes.Status409Conflict,
+                    OperatingSystemIds.WarehouseCommerceFulfillment));
         }
 
         if (string.IsNullOrWhiteSpace(request.상차사진ObjectName))
         {
-            return Result.Fail<기사운송상태변경응답>("상차 완료 사진 업로드가 확인되어야 상차 완료 처리할 수 있습니다.");
+            return Result.Fail<기사운송상태변경응답>(화물업무실패Factory.생성(
+                "CargoPickupPhotoRequired", "상차 완료 사진 업로드가 확인되어야 상차 완료 처리할 수 있습니다.",
+                OperatingSystemLifecycleStageIds.CargoPickup));
         }
 
         var receiptRequired = await _db.화주운송의뢰
@@ -72,7 +78,8 @@ public sealed class 운송상차완료CommandHandler : IRequestHandler<운송상
             receiptRequired?.서명필수 == true);
         if (receiptEvidenceResult.IsFailed)
         {
-            return Result.Fail<기사운송상태변경응답>(receiptEvidenceResult.Errors.Select(x => x.Message));
+            return Result.Fail<기사운송상태변경응답>(receiptEvidenceResult.Errors.Select(error => 화물업무실패Factory.생성(
+                "CargoReceiptEvidenceRequired", error.Message, OperatingSystemLifecycleStageIds.CargoPickup)));
         }
 
         var verifiedPhoto = await 화물운송사진증빙Policy.VerifyAsync(_db, _storage, request.Id, request.기사Id,

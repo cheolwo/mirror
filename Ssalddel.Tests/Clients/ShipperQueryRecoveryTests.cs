@@ -218,6 +218,40 @@ public sealed class ShipperQueryRecoveryTests
         => new() { 의뢰Id = id, 결제예정금액 = amount, 배차상태 = "운송중", 결제상태 = "결제대기" };
 
     [Fact]
+    public async Task 자동조회복구는_이전조회실패만_해소한다()
+    {
+        using var fixture = new ShipperRecoveryFixture();
+        await fixture.Auth.ApplyAsync(ShipperRecoveryFixture.Snapshot());
+        var failed = fixture.Model.LoadAsync("A");
+        (await fixture.Operations.NextAsync()).Completion.SetException(new HttpRequestException("network trace-private"));
+        await failed;
+        Assert.Contains("조회 실패", fixture.Model.State.StatusMessage);
+        var recovered = fixture.Model.LoadAsync("A", showMessage: false);
+        (await fixture.Operations.NextAsync()).Completion.SetResult(Request("A", 1100));
+        await recovered;
+        Assert.Empty(fixture.Model.State.StatusMessage);
+        Assert.Equal("A", fixture.Model.State.Request?.RequestId);
+    }
+
+    [Theory]
+    [InlineData("인수증 등록 완료 · 입금·정산은 별도 확인")]
+    [InlineData("테스트 결제 완료 · 실제 결제 없음")]
+    [InlineData("등록 결과가 미확인입니다. 결과 확인 후 다시 진행해 주세요.")]
+    public async Task 자동조회성공은_중요명령결과를_덮지않는다(string message)
+    {
+        using var fixture = new ShipperRecoveryFixture();
+        await fixture.Auth.ApplyAsync(ShipperRecoveryFixture.Snapshot());
+        var run = fixture.Model.LoadAsync("A");
+        (await fixture.Operations.NextAsync()).Completion.SetResult(Request("A", 1100));
+        await run;
+        fixture.Model.State.StatusMessage = message;
+        var recovered = fixture.Model.LoadAsync("A", showMessage: false);
+        (await fixture.Operations.NextAsync()).Completion.SetResult(Request("A", 1100));
+        await recovered;
+        Assert.Equal(message, fixture.Model.State.StatusMessage);
+    }
+
+    [Fact]
     public async Task 세션복원중다른의뢰로이동하면_최신선택만조회한다()
     {
         using var fixture = new ShipperRecoveryFixture();

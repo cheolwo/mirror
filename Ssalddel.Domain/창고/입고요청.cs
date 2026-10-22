@@ -60,6 +60,16 @@ public class 입고요청
     [Column("현장입고_클라이언트_요청_id")]
     public Guid? 현장입고클라이언트요청Id { get; set; }
 
+    [Column("일반입고_클라이언트_요청_id")]
+    public Guid? 일반입고클라이언트요청Id { get; set; }
+
+    [Column("일반입고_최초_요청_해시")]
+    [MaxLength(64)]
+    public string? 일반입고최초요청해시 { get; set; }
+
+    [Column("가입고사진신청_id")]
+    public Guid? 가입고사진신청Id { get; set; }
+
     [Column("예정상품명")]
     [MaxLength(200)]
     public string 예정상품명 { get; set; } = string.Empty;

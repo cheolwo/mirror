@@ -68,6 +68,8 @@ public static partial class ServiceCollectionExtensions
 
         services.AddSsalddelInfrastructure();
         services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
+        services.AddScoped<Ssalddel.Application.Home.I플랫폼참여현황조회UseCase, Ssalddel.Application.Home.플랫폼참여현황조회UseCase>();
+        services.AddScoped<Ssalddel.Application.Home.I플랫폼참여상세조회UseCase, Ssalddel.Application.Home.플랫폼참여상세조회UseCase>();
         services.AddScoped<I개체시각대상Reader, 개체시각대상Reader>();
         services.AddSingleton<I개체시각자산Catalog, 개체시각자산Catalog>();
         services.AddScoped<개체시각대응UseCase>();
@@ -198,6 +200,8 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<ICommunityExperienceAwardService, CommunityExperienceAwardService>();
         services.AddScoped<ICommunityExperienceEventRecorder, CommunityExperienceEventRecorder>();
         services.AddScoped<IWarehouseOperationService, WarehouseOperationService>();
+        services.AddScoped<I가입고사진신청Service, 가입고사진신청Service>();
+        services.AddScoped<I가입고사진신청UseCase, 가입고사진신청UseCase>();
         services.AddScoped<IWarehousePerspectiveReadService, WarehousePerspectiveReadService>();
         services.AddScoped<ILoadingPerspectiveReadService, LoadingPerspectiveReadService>();
         services.AddScoped<IUnloadingPerspectiveReadService, UnloadingPerspectiveReadService>();

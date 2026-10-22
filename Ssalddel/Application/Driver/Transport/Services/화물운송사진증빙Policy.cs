@@ -4,6 +4,7 @@ using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using SkiaSharp;
 using Ssalddel.Services.Storage;
+using Ssalddel.Contracts.Common.Versioning;
 using 살뜰.Data;
 using 살뜰.도메인.운송;
 
@@ -101,24 +102,29 @@ public static class 화물운송사진증빙Policy
     public static async Task<Result<화물운송확인사진>> VerifyAsync(SsalddelContext? db, IObjectStorageService? storage,
         long id, string actor, string kind, string? objectName, CancellationToken ct)
     {
+        var stage = kind == "pickup-complete-photo"
+            ? OperatingSystemLifecycleStageIds.CargoPickup : OperatingSystemLifecycleStageIds.CargoDropoff;
+        Result<화물운송확인사진> Fail(string code, string message, int status = 409)
+            => Result.Fail<화물운송확인사진>(화물업무실패Factory.생성(code, message, stage, status));
         if (db is null)
-            return Failure("CargoPhotoStorageUnavailable", "비공개 사진 저장소를 확인한 뒤 다시 시도해 주세요.", 503);
+            return Fail("CargoPhotoStorageUnavailable", "비공개 사진 저장소를 확인한 뒤 다시 시도해 주세요.", 503);
         var transport = await db.운송원장.AsNoTracking()
             .SingleOrDefaultAsync(x => x.Id == id && x.기사_운송자 == actor, ct);
-        if (transport is null) return Failure("CargoPhotoBindingMismatch", "현재 배정된 운송의 사진을 다시 확인해 주세요.");
+        if (transport is null) return Fail("CargoPhotoBindingMismatch", "현재 배정된 운송의 사진을 다시 확인해 주세요.");
         // 전용 업무의 진행 차단을 일반 사진 오류로 숨기지 않는다. 해당 업무의 상태는 바꾸지 않는다.
         if (살뜰.Services.Dispatch.Engine.운송의뢰배차원천유형.Is살뜰마트음식주문(transport.원본의뢰유형))
-            return Failure("MartDriverWorkflowRequired", "살뜰마트 배송 화면에서 현재 전표와 배송 상태를 확인해 주세요.");
+            return Fail("MartDriverWorkflowRequired", "살뜰마트 배송 화면에서 현재 전표와 배송 상태를 확인해 주세요.");
         var requestId = string.IsNullOrWhiteSpace(transport.의뢰Id) ? transport.운송번호 : transport.의뢰Id;
         if (!string.IsNullOrWhiteSpace(requestId) && await db.출고예정.AsNoTracking()
             .Where(x => x.운송의뢰Id == requestId && x.입고상품Id != null)
             .Join(db.입고상품.AsNoTracking(), x => x.입고상품Id!.Value, x => x.Id, (_, item) => item)
             .AnyAsync(x => x.보관위치.StartsWith("DLOC-"), ct))
-            return Result.Fail<화물운송확인사진>(new Error("분산 물품은 현재 분산 순회 화면에서 피킹·전달을 확인해 주세요.")
-                .WithMetadata("Code", "DistributedCargoCustodyRequired").WithMetadata("ErrorCode", "DistributedCargoCustodyRequired")
-                .WithMetadata("StatusCode", 409));
+            return Result.Fail<화물운송확인사진>(화물업무실패Factory.생성(
+                    "DistributedCargoCustodyRequired", "분산 물품은 현재 분산 순회 화면에서 피킹·전달을 확인해 주세요.", stage, 409,
+                    OperatingSystemIds.WarehouseCommerceFulfillment)
+                .WithMetadata("Code", "DistributedCargoCustodyRequired"));
         if (storage is null || !storage.IsConfigured(ObjectStorageAccess.Private))
-            return Failure("CargoPhotoStorageUnavailable", "비공개 사진 저장소를 확인한 뒤 다시 시도해 주세요.", 503);
+            return Fail("CargoPhotoStorageUnavailable", "비공개 사진 저장소를 확인한 뒤 다시 시도해 주세요.", 503);
         JsonObject? receipt;
         try
         {
@@ -128,26 +134,24 @@ public static class 화물운송사진증빙Policy
                 && Text(x, "requestId") == requestId && x["recommendationRound"]?.GetValue<int>() == transport.추천라운드);
         }
         catch (Exception ex) when (ex is System.Text.Json.JsonException or InvalidOperationException or FormatException)
-        { return Failure("CargoPhotoReceiptInvalid", "사진 업로드 확인 기록을 읽지 못했습니다. 다시 촬영·업로드해 주세요."); }
+        { return Fail("CargoPhotoReceiptInvalid", "사진 업로드 확인 기록을 읽지 못했습니다. 다시 촬영·업로드해 주세요."); }
         if (receipt is null)
-            return Failure("CargoPhotoUploadReceiptRequired", "현재 운송의 사진 촬영·업로드 확인이 필요합니다. 이전 사진 경로만으로 완료할 수 없습니다.");
+            return Fail("CargoPhotoUploadReceiptRequired", "현재 운송의 사진 촬영·업로드 확인이 필요합니다. 이전 사진 경로만으로 완료할 수 없습니다.");
         try
         {
             var bytes = await storage.DownloadAsync(Text(receipt, "containerName"), Text(receipt, "objectName"), ct);
             if (!IsPhoto(bytes) || bytes.LongLength != receipt["bytes"]?.GetValue<long>() || Sha(bytes) != Text(receipt, "sha256"))
-                return Failure("CargoPhotoIntegrityMismatch", "업로드한 사진과 저장된 사진이 다릅니다. 다시 촬영·업로드해 주세요.");
+                return Fail("CargoPhotoIntegrityMismatch", "업로드한 사진과 저장된 사진이 다릅니다. 다시 촬영·업로드해 주세요.");
             return Result.Ok(new 화물운송확인사진(Text(receipt, "objectName"), Text(receipt, "url")));
         }
         catch (OperationCanceledException) { throw; }
         catch (Exception)
-        { return Failure("CargoPhotoStorageVerificationPending", "사진 저장 결과를 확인하지 못했습니다. 완료 처리 전에 다시 확인해 주세요.", 503); }
+        { return Fail("CargoPhotoStorageVerificationPending", "사진 저장 결과를 확인하지 못했습니다. 완료 처리 전에 다시 확인해 주세요.", 503); }
     }
 
     private static JsonArray Read(string? json) => string.IsNullOrWhiteSpace(json) ? []
         : JsonNode.Parse(json) as JsonArray ?? throw new InvalidOperationException("CargoPhotoReceiptInvalid");
     private static string Text(JsonObject node, string name) => node[name]?.GetValue<string>() ?? "";
-    private static Result<화물운송확인사진> Failure(string code, string message, int status = 409)
-        => Result.Fail<화물운송확인사진>(new Error(message).WithMetadata("ErrorCode", code).WithMetadata("StatusCode", status));
 }
 
 public sealed record 화물운송확인사진(string ObjectName, string Url);

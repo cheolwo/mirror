@@ -143,6 +143,7 @@ public static class SsalddelUiCommonServiceCollectionExtensions
         services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodExchangeViewModel>();
         services.TryAddScoped<INeighborhoodDeliveryClient, NeighborhoodDeliveryClient>();
         services.TryAddScoped<IWorkflowRecoveryStore, VolatileWorkflowRecoveryStore>();
+        services.TryAddScoped<IWorkflowRecoveryContext, WorkflowRecoveryContext>();
         services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodDeliveryAuthoringViewModel>();
         services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.NeighborhoodDeliveryQueryViewModel>();
         services.TryAddScoped<INeighborhoodMemberDeliveryClient, NeighborhoodMemberDeliveryClient>();

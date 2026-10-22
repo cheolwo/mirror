@@ -38,6 +38,8 @@ public static class InboundRequestPageRoutes
 /// </summary>
 public sealed record InboundRequestNavigationContext
 {
+    public bool DetailedEntry { get; init; }
+    public Guid? PhotoRequestId { get; init; }
     public bool Created { get; init; }
     public string? From { get; init; }
     public string? Source { get; init; }
@@ -88,6 +90,8 @@ public sealed record InboundRequestNavigationContext
         var query = ParseQuery(uri);
         return new InboundRequestNavigationContext
         {
+            DetailedEntry = ParseBool(query, "details"),
+            PhotoRequestId = Guid.TryParse(Get(query, "photoRequestId"), out var photoId) && photoId != Guid.Empty ? photoId : null,
             Created = ParseBool(query, "created"),
             From = SafeLocalOrNull(Get(query, "from")),
             Source = Get(query, "source"),
@@ -135,6 +139,8 @@ public sealed record InboundRequestNavigationContext
         }
 
         Add(values, "warehouseId", WarehouseId?.ToString(CultureInfo.InvariantCulture));
+        Add(values, "details", DetailedEntry ? "true" : null);
+        Add(values, "photoRequestId", PhotoRequestId?.ToString("D"));
         Add(values, "warehouseName", WarehouseName);
         Add(values, "proxyType", ProxyType);
         Add(values, "warehouseAddress", WarehouseAddress);

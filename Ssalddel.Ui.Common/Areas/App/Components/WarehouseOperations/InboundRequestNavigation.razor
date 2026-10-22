@@ -3,7 +3,8 @@
 <nav class="inbound-request-nav" aria-label="입고 요청 화면">
     @foreach (var item in Items)
     {
-        if (item.RequiresInboundId && InboundId is not > 0)
+        if ((item.RequiresInboundId && InboundId is not > 0)
+            || (NewRequestDisabled && item.Screen == InboundRequestScreenKind.Create))
         {
             <span class="inbound-request-nav__item inbound-request-nav__item--disabled" aria-disabled="true">
                 <MudIcon Icon="@item.Icon" Size="Size.Small" />
@@ -26,6 +27,7 @@
     [Parameter, EditorRequired] public InboundRequestNavigationContext Context { get; set; } = new();
     [Parameter] public InboundRequestScreenKind CurrentScreen { get; set; }
     [Parameter] public long? InboundId { get; set; }
+    [Parameter] public bool NewRequestDisabled { get; set; }
 
     private static readonly IReadOnlyList<NavigationItem> Items =
     [

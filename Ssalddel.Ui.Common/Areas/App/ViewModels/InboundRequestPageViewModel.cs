@@ -1,6 +1,8 @@
 using Ssalddel.Contracts.Common.Inbound;
 using Ssalddel.Contracts.Common.Sales;
 using Ssalddel.Contracts.Common.Warehouse;
+using Ssalddel.Contracts.Common.Versioning;
+using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Ui.Common.Areas.App.Services;
 
 namespace Ssalddel.Ui.Common.Areas.App.ViewModels;
@@ -27,10 +29,20 @@ public sealed class InboundRequestPageState
     public IReadOnlyList<입고상품항목응답> CompletionItems { get; internal set; } = [];
     public InboundRequestListFilter ListFilter { get; internal set; } = new();
     public bool Created { get; internal set; }
+    public Api작업오류? Failure { get; internal set; }
+    public long? SavedInboundId { get; internal set; }
+    public bool RegistrationResultPending { get; internal set; }
+    public long? CompletionResultPendingId { get; internal set; }
+    public bool CompletionApplied { get; internal set; }
+    public bool RecoveryBlocked { get; internal set; }
+    public bool CanQueryRegistrationResult { get; internal set; }
+    public bool HasPendingMutation => RecoveryBlocked || RegistrationResultPending || CompletionResultPendingId is > 0;
+    public long? RecoveryInboundId => CompletionResultPendingId ?? (RegistrationResultPending ? SavedInboundId : null);
 }
 
 public sealed class InboundRequestCreateDraft
 {
+    public Guid? PhotoRequestId { get; set; }
     public Guid? ApplicationPrivacyConsentEvidenceId { get; set; }
     public string ApplicationSourceCode { get; set; } = string.Empty;
     public long? WarehouseId { get; set; }
@@ -71,8 +83,14 @@ public sealed class InboundRequestCompletionDraft
 /// 입고 목록·신청·상세·완료와 별도 창고 등록 route의 조회·검증·상태 전이를 담당합니다.
 /// Route Page는 URL과 navigation만 조립합니다.
 /// </summary>
-public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService warehouseService)
+public sealed partial class InboundRequestPageViewModel(IWarehouseWorkspaceService warehouseService,
+    IWorkflowRecoveryStore? recoveryStore = null, IWorkflowRecoveryContext? recoveryContext = null,
+    Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.IRoleWorkspaceAccess? access = null) : IDisposable
 {
+    private readonly 업무선택ContextViewModel _detailSelection = new();
+    private bool _detailLoading;
+    private bool _mutationInProgress;
+    private bool _disposed;
     public InboundRequestPageState State { get; } = new();
     public InboundRequestCreateDraft CreateDraft { get; } = new();
     public WarehouseRegistrationDraft WarehouseDraft { get; } = new();
@@ -81,6 +99,8 @@ public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService wareh
 
     public bool CanComplete
         => State.Current is not null
+           && !State.HasPendingMutation
+           && State.Failure is null
            && !string.Equals(State.Current.상태, 입고상태코드.완료, StringComparison.OrdinalIgnoreCase)
            && !string.Equals(State.Current.상태, 입고상태코드.취소, StringComparison.OrdinalIgnoreCase);
 
@@ -95,8 +115,11 @@ public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService wareh
 
         State.IsBusy = true;
         State.ListFilter = filter ?? State.ListFilter;
+        WorkflowRecoverySnapshot? recovery = null;
         try
         {
+            recovery = await EnsureInboundRecoveryAsync(cancellationToken, refresh: true);
+            if (recovery is null) return;
             var response = await warehouseService.QueryInboundsAsync(new 입고요청목록조회요청
             {
                 Page = 0,
@@ -107,15 +130,19 @@ public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService wareh
                 SortBy = nameof(입고요청항목응답.Id),
                 SortDescending = true
             }, cancellationToken);
+            if (!RecoveryCurrent(recovery)) { DiscardForeignRecovery(recovery); return; }
             State.Items = response?.Items ?? [];
             State.TotalCount = response?.TotalCount ?? 0;
+            ClearQueryFailure();
             SetMessage($"입고 요청 {State.TotalCount:N0}건을 조회했습니다.", InboundRequestPageMessageTone.Success);
         }
         catch (Exception ex)
         {
+            if (recovery is not null && !RecoveryCurrent(recovery)) { DiscardForeignRecovery(recovery); return; }
             State.Items = [];
             State.TotalCount = 0;
-            SetMessage($"입고 요청 목록을 불러오지 못했습니다. {ex.Message}", InboundRequestPageMessageTone.Error);
+            SetFailure(ex, OperatingSystemLifecycleStageIds.WarehouseInboundPlan, 업무처리결과Codes.조회,
+                "입고 목록을 불러오지 못했습니다.");
         }
         finally
         {
@@ -128,7 +155,8 @@ public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService wareh
         CancellationToken cancellationToken = default)
     {
         await RefreshWarehousesAsync(cancellationToken);
-        ApplyCreateContext(context);
+        if (await EnsureInboundRecoveryAsync(cancellationToken) is not null)
+            ApplyCreateContext(context);
     }
 
     public async Task RefreshWarehousesAsync(CancellationToken cancellationToken = default)
@@ -139,18 +167,23 @@ public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService wareh
         }
 
         State.IsBusy = true;
+        WorkflowRecoverySnapshot? recovery = null;
         try
         {
+            recovery = await EnsureInboundRecoveryAsync(cancellationToken, refresh: true);
+            if (recovery is null) return;
             State.Warehouses = (await warehouseService.GetWarehousesAsync(cancellationToken))?.Items
                 .Where(item => item.IsActive)
                 .OrderByDescending(item => item.기본창고여부)
                 .ThenBy(item => item.창고명)
                 .ToArray() ?? [];
+            if (!RecoveryCurrent(recovery)) { DiscardForeignRecovery(recovery); return; }
             if (CreateDraft.WarehouseId is null && State.Warehouses.Count > 0)
             {
                 CreateDraft.WarehouseId = State.Warehouses[0].Id;
             }
 
+            ClearQueryFailure();
             SetMessage(
                 State.Warehouses.Count == 0
                     ? "사용 가능한 창고가 없습니다. 창고 등록 화면에서 먼저 등록해 주세요."
@@ -159,8 +192,10 @@ public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService wareh
         }
         catch (Exception ex)
         {
+            if (recovery is not null && !RecoveryCurrent(recovery)) { DiscardForeignRecovery(recovery); return; }
             State.Warehouses = [];
-            SetMessage($"창고 목록을 불러오지 못했습니다. {ex.Message}", InboundRequestPageMessageTone.Error);
+            SetFailure(ex, OperatingSystemLifecycleStageIds.WarehouseInboundPlan, 업무처리결과Codes.조회,
+                "입고할 창고를 불러오지 못했습니다.");
         }
         finally
         {
@@ -173,18 +208,60 @@ public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService wareh
         bool created = false,
         CancellationToken cancellationToken = default)
     {
-        if (State.IsBusy)
+        var targetKey = inboundId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        if (_disposed || _mutationInProgress
+            || (State.IsBusy && (!_detailLoading || _detailSelection.대상Key == targetKey)))
         {
             return;
         }
 
+        if (_detailSelection.선택(targetKey) && State.Current?.Id != inboundId)
+        {
+            State.Current = null;
+            State.Failure = null;
+        }
+        using var scope = _detailSelection.요청시작(cancellationToken);
+        _detailLoading = true;
         State.IsBusy = true;
         State.Created = created;
+        WorkflowRecoverySnapshot? recovery = null;
         try
         {
-            State.Current = inboundId > 0
-                ? await warehouseService.GetInboundAsync(inboundId, cancellationToken)
+            recovery = await EnsureInboundRecoveryAsync(scope.취소Token, refresh: true);
+            if (recovery is null || !scope.현재요청) return;
+            var current = inboundId > 0
+                ? await warehouseService.GetInboundAsync(inboundId, scope.취소Token)
                 : null;
+            if (_disposed || !scope.현재요청) return;
+            if (!RecoveryCurrent(recovery)) { DiscardForeignRecovery(recovery); return; }
+            if (current is null)
+            {
+                if (State.Current?.Id != inboundId) State.Current = null;
+                SetFailure(new SsalddelApiException("입고 요청 조회 범위 확인", 404, "입고 조회", string.Empty, null),
+                    DetailStage(inboundId), DetailOutcome(inboundId, created),
+                    "입고 요청을 확인하지 못했습니다.");
+                return;
+            }
+
+            if (current.Id != inboundId)
+                throw new InvalidOperationException("입고 요청 조회 대상 불일치");
+            State.Current = current;
+            await ConfirmInboundRecoveryAsync(current, recovery, scope.취소Token);
+            if (!RecoveryCurrent(recovery) || !scope.현재요청) return;
+            if (State.CompletionResultPendingId == inboundId)
+            {
+                if (!string.Equals(current.상태, 입고상태코드.완료, StringComparison.OrdinalIgnoreCase))
+                {
+                    SetFailure(new InvalidOperationException("입고 완료 결과 확인 대기"),
+                        OperatingSystemLifecycleStageIds.WarehouseReceiving,
+                        State.CompletionApplied ? 업무처리결과Codes.적용 : 업무처리결과Codes.미확정,
+                        "입고 완료 결과를 확인하고 있습니다.");
+                    return;
+                }
+                State.CompletionResultPendingId = null;
+                State.CompletionApplied = false;
+            }
+            if (!State.HasPendingMutation) State.Failure = null;
             SetMessage(
                 State.Current is null
                     ? "입고 요청을 찾을 수 없거나 현재 계정의 조회 범위에 없습니다."
@@ -195,19 +272,26 @@ public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService wareh
         }
         catch (Exception ex)
         {
-            State.Current = null;
-            SetMessage($"입고 요청 상세를 불러오지 못했습니다. {ex.Message}", InboundRequestPageMessageTone.Error);
+            if (_disposed || !scope.현재요청) return;
+            if (recovery is not null && !RecoveryCurrent(recovery)) { DiscardForeignRecovery(recovery); return; }
+            if (State.Current?.Id != inboundId) State.Current = null;
+            SetFailure(ex, DetailStage(inboundId), DetailOutcome(inboundId, created),
+                "입고 내역을 불러오지 못했습니다.");
         }
         finally
         {
-            State.IsBusy = false;
+            if (!_disposed && scope.현재요청)
+            {
+                State.IsBusy = false;
+                _detailLoading = false;
+            }
         }
     }
 
     public async Task LoadCompletionAsync(long inboundId, CancellationToken cancellationToken = default)
     {
         await LoadDetailAsync(inboundId, cancellationToken: cancellationToken);
-        if (State.Current is not null && string.IsNullOrWhiteSpace(CompletionDraft.ItemName))
+        if (State.Current?.Id == inboundId && string.IsNullOrWhiteSpace(CompletionDraft.ItemName))
         {
             CompletionDraft.ItemName = string.IsNullOrWhiteSpace(State.Current.예정상품명)
                 ? State.Current.공급처명
@@ -222,6 +306,20 @@ public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService wareh
     public async Task<long?> CreateInboundAsync(CancellationToken cancellationToken = default)
     {
         if (State.IsBusy)
+        {
+            return null;
+        }
+
+        var recovery = await PrepareRecoveryForMutationAsync(cancellationToken);
+        if (recovery is null) return null;
+
+        // 저장 응답을 받은 신청은 새 POST가 아니라 같은 원장의 조회로만 이어갑니다.
+        if (State.SavedInboundId is > 0)
+        {
+            await LoadDetailAsync(State.SavedInboundId.Value, created: true, cancellationToken);
+            return State.SavedInboundId;
+        }
+        if (State.RegistrationResultPending)
         {
             return null;
         }
@@ -248,11 +346,18 @@ public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService wareh
         }
 
         State.IsBusy = true;
+        _mutationInProgress = true;
+        State.Failure = null;
+        var posted = false;
         try
         {
+            if (!await WriteInboundAheadAsync(recovery, false, null, cancellationToken)) return null;
             var flowType = requestedFlowType;
+            posted = true;
             var response = await warehouseService.CreateInboundAsync(new 입고요청저장요청
             {
+                ClientRequestId = _inboundPending!.RequestId,
+                가입고사진신청Id = CreateDraft.PhotoRequestId,
                 신청개인정보동의증적Id = CreateDraft.ApplicationPrivacyConsentEvidenceId,
                 신청출처Code = CreateDraft.ApplicationSourceCode,
                 창고Id = CreateDraft.WarehouseId.Value,
@@ -280,23 +385,72 @@ public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService wareh
                     계약메모 = CreateDraft.Notes
                 }.Normalize()
             }, cancellationToken) ?? throw new InvalidOperationException("입고 요청 생성 응답이 비어 있습니다.");
+            RequireRecoveryCurrent(recovery);
+            if (response.Id <= 0)
+                throw new InvalidOperationException("생성한 입고 요청 ID를 확인하지 못했습니다.");
+            if (CreateDraft.PhotoRequestId is { } photoRequestId && response.가입고사진신청Id != photoRequestId)
+                throw new InvalidOperationException("사진 신청의 입고 연결을 확인하지 못했습니다.");
 
-            State.Current = await warehouseService.GetInboundAsync(response.Id, cancellationToken)
-                ?? throw new InvalidOperationException("저장한 입고 요청을 같은 ID로 다시 조회하지 못했습니다.");
+            // POST의 확정 응답과 후속 GET은 서로 다른 결과입니다.
+            State.SavedInboundId = response.Id;
+            State.Current = response;
             State.Created = true;
-            SetMessage(
-                $"입고 요청 #{response.Id}을 저장하고 같은 ID로 다시 조회했습니다.",
-                InboundRequestPageMessageTone.Success);
+            try
+            {
+                await PersistInboundOutcomeAsync(recovery, false, response.Id, 업무처리결과Codes.적용, cancellationToken);
+                var current = await warehouseService.GetInboundAsync(response.Id, cancellationToken)
+                    ?? throw new InvalidOperationException("저장한 입고 요청 조회 대기");
+                RequireRecoveryCurrent(recovery);
+                if (current.Id != response.Id)
+                    throw new InvalidOperationException("저장한 입고 요청 조회 대상 불일치");
+                State.Current = current;
+                await ConfirmInboundRecoveryAsync(current, recovery, cancellationToken);
+                State.Failure = null;
+                SetMessage($"입고 요청 #{response.Id}을 저장하고 같은 ID로 다시 조회했습니다.",
+                    InboundRequestPageMessageTone.Success);
+            }
+            catch (Exception ex)
+            {
+                if (!RecoveryCurrent(recovery)) { DiscardForeignRecovery(recovery); return null; }
+                SetFailure(ex, OperatingSystemLifecycleStageIds.WarehouseInboundPlan, 업무처리결과Codes.적용,
+                    "입고는 등록됐습니다. 내역을 확인해 주세요.");
+            }
             return response.Id;
         }
         catch (Exception ex)
         {
-            SetMessage($"입고 요청을 저장하지 못했습니다. {ex.Message}", InboundRequestPageMessageTone.Error);
+            if (!RecoveryCurrent(recovery)) { DiscardForeignRecovery(recovery); return null; }
+            if (!posted)
+            {
+                State.RecoveryBlocked = true; _inboundRecoveryLoaded = false;
+                SetFailure(ex, OperatingSystemLifecycleStageIds.WarehouseInboundPlan, 업무처리결과Codes.조회,
+                    "이전 신청을 확인하지 못했습니다. 다시 확인해 주세요.");
+                return null;
+            }
+            var outcome = MutationOutcome(ex, OperatingSystemLifecycleStageIds.WarehouseInboundPlan);
+            try
+            {
+                await PersistInboundOutcomeAsync(recovery, false, null, outcome, cancellationToken);
+                if (outcome == 업무처리결과Codes.미적용)
+                    await RemoveInboundRecoveryAsync(recovery, _inboundPending!, cancellationToken);
+            }
+            catch
+            {
+                if (!RecoveryCurrent(recovery)) { DiscardForeignRecovery(recovery); return null; }
+                State.RecoveryBlocked = true; _inboundRecoveryLoaded = false;
+            }
+            State.RegistrationResultPending = outcome != 업무처리결과Codes.미적용;
+            State.Created = outcome == 업무처리결과Codes.적용;
+            SetFailure(ex, OperatingSystemLifecycleStageIds.WarehouseInboundPlan,
+                outcome, outcome == 업무처리결과Codes.적용
+                    ? "입고는 등록됐습니다. 목록에서 내역을 확인해 주세요."
+                    : State.RegistrationResultPending ? "입고 접수 결과를 확인해 주세요. 다시 등록하지 마세요." : "입고 신청 내용을 확인해 주세요.");
             return null;
         }
         finally
         {
             State.IsBusy = false;
+            _mutationInProgress = false;
         }
     }
 
@@ -314,6 +468,7 @@ public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService wareh
         }
 
         State.IsBusy = true;
+        _mutationInProgress = true;
         try
         {
             var response = await warehouseService.CreateWarehouseAsync(new 창고저장요청
@@ -335,15 +490,18 @@ public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService wareh
         finally
         {
             State.IsBusy = false;
+            _mutationInProgress = false;
         }
     }
 
     public async Task<bool> CompleteInboundAsync(long inboundId, CancellationToken cancellationToken = default)
     {
-        if (State.IsBusy || State.Current?.Id != inboundId || !CanComplete)
+        if (State.IsBusy || State.Current?.Id != inboundId)
         {
             return false;
         }
+        var recovery = await PrepareRecoveryForMutationAsync(cancellationToken);
+        if (recovery is null || !CanComplete) return false;
 
         if (string.IsNullOrWhiteSpace(CompletionDraft.ItemName)
             || CompletionDraft.Quantity <= 0
@@ -355,8 +513,13 @@ public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService wareh
         }
 
         State.IsBusy = true;
+        _mutationInProgress = true;
+        State.Failure = null;
+        var posted = false;
         try
         {
+            if (!await WriteInboundAheadAsync(recovery, true, inboundId, cancellationToken)) return false;
+            posted = true;
             var result = await warehouseService.CompleteInboundAsync(inboundId, new 입고완료요청
             {
                 Items =
@@ -372,22 +535,71 @@ public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService wareh
                     }
                 ]
             }, cancellationToken) ?? throw new InvalidOperationException("입고 완료 응답이 비어 있습니다.");
-            State.Current = await warehouseService.GetInboundAsync(inboundId, cancellationToken)
-                ?? throw new InvalidOperationException("완료한 입고 요청을 같은 ID로 다시 조회하지 못했습니다.");
+            RequireRecoveryCurrent(recovery);
             State.CompletionItems = result.Items;
-            SetMessage(
-                $"입고 요청 #{inboundId}을 완료하고 같은 ID로 다시 조회했습니다.",
-                InboundRequestPageMessageTone.Success);
+            State.CompletionResultPendingId = inboundId;
+            State.CompletionApplied = true;
+            try
+            {
+                await PersistInboundOutcomeAsync(recovery, true, inboundId, 업무처리결과Codes.적용, cancellationToken);
+                var current = await warehouseService.GetInboundAsync(inboundId, cancellationToken)
+                    ?? throw new InvalidOperationException("완료한 입고 요청 조회 대기");
+                RequireRecoveryCurrent(recovery);
+                if (current.Id != inboundId)
+                    throw new InvalidOperationException("완료한 입고 요청 조회 대상 불일치");
+                State.Current = current;
+                if (!string.Equals(current.상태, 입고상태코드.완료, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("완료한 입고 요청 상태 반영 대기");
+                await ConfirmInboundRecoveryAsync(current, recovery, cancellationToken);
+                State.CompletionResultPendingId = null;
+                State.CompletionApplied = false;
+                State.Failure = null;
+                SetMessage($"입고 요청 #{inboundId}을 완료하고 같은 ID로 다시 조회했습니다.",
+                    InboundRequestPageMessageTone.Success);
+            }
+            catch (Exception ex)
+            {
+                if (!RecoveryCurrent(recovery)) { DiscardForeignRecovery(recovery); return false; }
+                SetFailure(ex, OperatingSystemLifecycleStageIds.WarehouseReceiving, 업무처리결과Codes.적용,
+                    "입고 완료는 처리됐습니다. 내역을 확인해 주세요.");
+            }
             return true;
         }
         catch (Exception ex)
         {
-            SetMessage($"입고 완료 처리에 실패했습니다. {ex.Message}", InboundRequestPageMessageTone.Error);
+            if (!RecoveryCurrent(recovery)) { DiscardForeignRecovery(recovery); return false; }
+            if (!posted)
+            {
+                State.RecoveryBlocked = true; _inboundRecoveryLoaded = false;
+                SetFailure(ex, OperatingSystemLifecycleStageIds.WarehouseReceiving, 업무처리결과Codes.조회,
+                    "이전 입고를 확인하지 못했습니다. 다시 확인해 주세요.");
+                return false;
+            }
+            var outcome = MutationOutcome(ex, OperatingSystemLifecycleStageIds.WarehouseReceiving);
+            try
+            {
+                await PersistInboundOutcomeAsync(recovery, true, inboundId, outcome, cancellationToken);
+                if (outcome == 업무처리결과Codes.미적용)
+                    await RemoveInboundRecoveryAsync(recovery, _inboundPending!, cancellationToken);
+            }
+            catch
+            {
+                if (!RecoveryCurrent(recovery)) { DiscardForeignRecovery(recovery); return false; }
+                State.RecoveryBlocked = true; _inboundRecoveryLoaded = false;
+            }
+            var rejected = outcome == 업무처리결과Codes.미적용;
+            State.CompletionResultPendingId = rejected ? null : inboundId;
+            State.CompletionApplied = outcome == 업무처리결과Codes.적용;
+            SetFailure(ex, OperatingSystemLifecycleStageIds.WarehouseReceiving,
+                outcome, outcome == 업무처리결과Codes.적용
+                    ? "입고 완료는 처리됐습니다. 내역을 확인해 주세요."
+                    : rejected ? "입고 완료 조건을 확인해 주세요." : "입고 완료 결과를 확인해 주세요. 다시 처리하지 마세요.");
             return false;
         }
         finally
         {
             State.IsBusy = false;
+            _mutationInProgress = false;
         }
     }
 
@@ -490,5 +702,56 @@ public sealed class InboundRequestPageViewModel(IWarehouseWorkspaceService wareh
     {
         State.Message = message;
         State.MessageTone = tone;
+    }
+
+    private string DetailStage(long inboundId)
+        => State.CompletionResultPendingId == inboundId
+            ? OperatingSystemLifecycleStageIds.WarehouseReceiving
+            : OperatingSystemLifecycleStageIds.WarehouseInboundPlan;
+
+    private string DetailOutcome(long inboundId, bool created)
+        => State.CompletionResultPendingId == inboundId
+            ? State.CompletionApplied ? 업무처리결과Codes.적용 : 업무처리결과Codes.미확정
+            : created || State.SavedInboundId == inboundId ? 업무처리결과Codes.적용 : 업무처리결과Codes.조회;
+
+    private void ClearQueryFailure()
+    {
+        if (State.Failure?.WorkflowContext?.OutcomeCode == 업무처리결과Codes.조회)
+            State.Failure = null;
+    }
+
+    private void SetFailure(Exception exception, string stage, string outcome, string message)
+    {
+        // 창고 목록의 후속 조회가 접수 결과 미확정 경고를 덮지 않습니다.
+        if (State.RegistrationResultPending && outcome == 업무처리결과Codes.조회 && State.Failure is not null)
+            return;
+        State.Failure = Api작업오류.변환(exception) with
+        {
+            WorkflowContext = new 업무실패맥락Dto(OperatingSystemIds.WarehouseCommerceFulfillment, stage, outcome),
+            재시도정책Code = 업무재시도정책Codes.상태재조회후사용자재시도,
+            복구가능행동 = [업무복구행동Ids.상태전체재조회]
+        };
+        SetMessage(message, InboundRequestPageMessageTone.Warning);
+    }
+
+    private static string MutationOutcome(Exception exception, string stage)
+    {
+        if (exception is not SsalddelApiException api) return 업무처리결과Codes.미확정;
+        var context = api.WorkflowContext;
+        if (context?.유효한가() == true
+            && OperatingSystemIds.TryNormalize(context.OperatingSystemId, out var operatingSystem)
+            && operatingSystem == OperatingSystemIds.WarehouseCommerceFulfillment
+            && context.StageId == stage
+            && context.OutcomeCode is 업무처리결과Codes.미적용 or 업무처리결과Codes.적용 or 업무처리결과Codes.미확정)
+            return context.OutcomeCode;
+
+        // 입고 저장 후 로그/Event 예외도 HTTP 400으로 응답할 수 있어 숫자로 미적용을 추측하지 않습니다.
+        return 업무처리결과Codes.미확정;
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        _detailSelection.Dispose();
     }
 }

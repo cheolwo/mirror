@@ -1,6 +1,11 @@
 @using Ssalddel.Ui.Common.Areas.App.ViewModels
 @inherits ViewModelParameterComponentBase<I업무조각ViewModel>
 @namespace Ssalddel.Ui.Common.Areas.App.Components.Crud
+@using Ssalddel.Ui.Common.Areas.App.Components.Recovery
+
+<업무오류복구Panel Message="@TechnicalMessage" ContextKey="@ViewModel.업무코드"
+                 Busy="@ViewModel.처리중" AllowRetry="false" AutoOpen="false"
+                 OutcomeUnknown="@(ViewModel.업무유형 is not (업무조각유형.목록조회 or 업무조각유형.상세조회))" />
 
 @if (ViewModel.처리중)
 {
@@ -8,13 +13,25 @@
 }
 else if (ViewModel.상태 == Api작업상태.실패)
 {
-    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="my-2">
-        @(ViewModel.오류메시지 ?? "업무를 처리하지 못했습니다.")
-    </MudAlert>
+    @if (TechnicalMessage is null)
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="my-2">
+            @(ViewModel.오류메시지 ?? "업무를 처리하지 못했습니다.")
+        </MudAlert>
+    }
 }
+
 else if (ViewModel.상태 == Api작업상태.취소됨)
 {
     <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="my-2">
         작업이 취소되었습니다.
     </MudAlert>
+}
+
+@code {
+    private string? TechnicalMessage => ViewModel.상태 == Api작업상태.실패
+        && ViewModel is 업무작업ViewModelBase typed
+        && 업무오류안내Presentation.기술실패인가(typed.오류)
+            ? typed.오류메시지 ?? "정보를 불러오지 못했습니다."
+            : null;
 }

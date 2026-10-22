@@ -31,6 +31,7 @@ public abstract class PageViewModelBase : 조립ViewModelBase, IPageViewModel
     private CancellationTokenSource? _현재작업취소;
     private PageViewModel상태 _상태 = PageViewModel상태.대기;
     private string? _오류메시지;
+    private Api작업오류? _api조회오류;
 
     public PageViewModel상태 상태
     {
@@ -54,6 +55,15 @@ public abstract class PageViewModelBase : 조립ViewModelBase, IPageViewModel
         get => _오류메시지;
         private set => SetProperty(ref _오류메시지, value);
     }
+
+    /// <summary>조회 실패의 구조화된 맥락입니다. 기존 표시 문자열과 업무 명령 상태는 유지합니다.</summary>
+    public Api작업오류? Api조회오류
+    {
+        get => _api조회오류;
+        private set => SetProperty(ref _api조회오류, value);
+    }
+
+    protected virtual Api작업오류 조회오류변환(Exception exception) => Api작업오류.변환(exception);
 
     public Task<bool> 초기화Async(CancellationToken cancellationToken = default)
         => 초기화됨
@@ -79,6 +89,7 @@ public abstract class PageViewModelBase : 조립ViewModelBase, IPageViewModel
     protected void 오류설정(string message)
     {
         오류메시지 = message;
+        Api조회오류 = new Api작업오류("page-read-failure", message);
         상태 = PageViewModel상태.실패;
     }
 
@@ -107,6 +118,7 @@ public abstract class PageViewModelBase : 조립ViewModelBase, IPageViewModel
         var operationCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _현재작업취소 = operationCancellation;
         오류메시지 = null;
+        Api조회오류 = null;
         상태 = PageViewModel상태.불러오는중;
 
         try
@@ -123,6 +135,7 @@ public abstract class PageViewModelBase : 조립ViewModelBase, IPageViewModel
         catch (Exception ex)
         {
             오류메시지 = ex.Message;
+            Api조회오류 = 조회오류변환(ex);
             상태 = PageViewModel상태.실패;
             return false;
         }

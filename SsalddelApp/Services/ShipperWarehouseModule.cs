@@ -19,6 +19,8 @@ internal static class ShipperWarehouseModule
         services.AddScoped<IShipperWarehouseWorkflowService>(provider =>
             provider.GetRequiredService<ShipperWarehouseService>());
         services.AddTransient<InboundRequestPageViewModel>();
+        services.AddScoped<I가입고사진신청Client, 가입고사진신청Client>();
+        services.AddTransient<가입고사진신청ViewModel>();
         services.AddScoped<IWarehousePickingPlanner, WarehousePickingPlanner>();
         services.AddScoped<IAppCommandHandler<CreateReconsignmentOrderCommand, 화주운송의뢰응답?>,
             CreateReconsignmentOrderCommandHandler>();

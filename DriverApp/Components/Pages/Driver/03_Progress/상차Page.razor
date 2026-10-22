@@ -1,5 +1,9 @@
 ﻿@page "/driver/transports/{운송Id:long}/pickup"
 @using DriverApp.ViewModels.Driver.Transport
+@using Ssalddel.Ui.Common.Areas.App.Components.Recovery
+@using Ssalddel.Contracts.Common.Workflow
+@using Ssalddel.Contracts.Common.Versioning
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
 @inherits MvvmComponentBase<기사상차PageViewModel>
 
 <PageTitle>상차</PageTitle>
@@ -9,35 +13,39 @@
         <MudPaper Class="driver-page-legacy-header pa-4" Elevation="1">
             <MudStack Spacing="1">
                 <MudText Typo="Typo.h4">상차</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">상차지 도착, 화물 확인, 사진 증빙을 마친 뒤 상차 완료를 처리합니다.</MudText>
             </MudStack>
         </MudPaper>
 
         <MudPaper Class="pa-4" Elevation="2">
             <MudStack Spacing="2">
+                <업무오류복구Panel Message="@조회오류"
+                               Error="@표시실패" Context="@조회맥락"
+                               ContextKey="@($"driver-pickup:{운송Id}")"
+                               Busy="@(ViewModel.처리중 || ViewModel.완료처리중)"
+                               OutcomeUnknown="@ViewModel.완료결과확인필요"
+                               RetryRequested="@(() => ViewModel.InitializeAsync(운송Id))"
+                               ReturnHref="@(ViewModel.완료결과확인필요 ? null : DriverRoutes.CurrentTransport)" />
                 @if (ViewModel.처리중)
                 {
                     <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
-                    <MudText>운송 정보를 불러오는 중입니다.</MudText>
+                    <MudText>불러오는 중</MudText>
                 }
                 else if (ViewModel.로그인필요)
                 {
-                    <MudAlert Severity="Severity.Warning">로그인 후 운송을 다시 확인해 주세요.</MudAlert>
+                    <MudAlert Severity="Severity.Warning">로그인이 필요합니다.</MudAlert>
                     <MudButton Href="@DriverRoutes.LoginFor(DriverRoutes.TransportPickup(운송Id))" Color="Color.Primary">로그인</MudButton>
                 }
                 else if (!string.IsNullOrWhiteSpace(ViewModel.오류메시지))
                 {
-                    <MudAlert Severity="Severity.Error">@ViewModel.오류메시지</MudAlert>
-                    <MudButton OnClick="@(() => ViewModel.InitializeAsync(운송Id))" Color="Color.Primary">다시 불러오기</MudButton>
+                    @* 완료 미확정이면 재전송 대신 공통 창에서 같은 운송 결과를 확인한다. *@
                 }
                 else if (ViewModel.운송 is null)
                 {
-                    <MudAlert Severity="Severity.Warning">운송 정보를 찾지 못했습니다.</MudAlert>
-                    <MudButton OnClick="@(() => ViewModel.InitializeAsync(운송Id))" Color="Color.Primary">다시 불러오기</MudButton>
+                    @* 없는 운송도 같은 조회 오류 복구를 제공한다. *@
                 }
                 else if (ViewModel.상차완료확인)
                 {
-                    <MudAlert Severity="Severity.Success">상차 완료가 확인되었습니다. 다음 업무로 이동해 주세요.</MudAlert>
+                    <MudAlert Severity="Severity.Success">상차 완료</MudAlert>
                     <MudButton Href="@(ViewModel.운송?.현재단계 == "인수완료" ? DriverRoutes.CurrentTransport : DriverRoutes.TransportDropoff(운송Id))"
                                Variant="Variant.Filled" Color="Color.Primary">다음 업무</MudButton>
                 }
@@ -45,7 +53,7 @@
                 {
                     @if (ViewModel.완료결과확인필요)
                     {
-                        <MudAlert Severity="Severity.Warning">완료 결과를 아직 확인하지 못했습니다. 사진과 확인 내용은 보존됩니다.</MudAlert>
+                        <MudAlert Severity="Severity.Warning">완료 여부 미확인 · 사진·확인 내용 보관 중</MudAlert>
                         <MudButton OnClick="@(() => ViewModel.InitializeAsync(운송Id))" Color="Color.Primary">완료 결과 확인</MudButton>
                     }
                     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
@@ -60,10 +68,6 @@
                         <MudItem xs="12" sm="4">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">화물</MudText>
                             <MudText Typo="Typo.body1">@ViewModel.운송.화물종류</MudText>
-                        </MudItem>
-                        <MudItem xs="12" sm="4">
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">의뢰</MudText>
-                            <MudText Typo="Typo.body1">@ViewModel.운송.의뢰Id</MudText>
                         </MudItem>
                         <MudItem xs="12" sm="4">
                             <MudText Typo="Typo.caption" Color="Color.Secondary">다음 이동</MudText>
@@ -131,13 +135,13 @@
                             @if (ViewModel.운송.IsLcl)
                             {
                                 <MudAlert Severity="Severity.Info" Dense="true">
-                                    LCL은 여러 화주의 화물이 섞여 나올 수 있으므로 문서 번호, 박스 라벨, 수량을 함께 대조합니다.
+                                    혼재 화물 · 문서·라벨·수량 확인
                                 </MudAlert>
                             }
                             else if (ViewModel.운송.IsFcl)
                             {
                                 <MudAlert Severity="Severity.Warning" Dense="true">
-                                    FCL은 컨테이너와 봉인 상태가 핵심입니다. 번호 불일치나 훼손 흔적은 상차 전에 사진으로 남깁니다.
+                                    컨테이너·봉인 확인 · 불일치·훼손 시 상차 전 촬영
                                 </MudAlert>
                             }
 
@@ -324,13 +328,13 @@
                                        Disabled="@(!ViewModel.도착가능)" OnClick="@(() => ViewModel.도착Command.ExecuteAsync(null))">
                                 @(ViewModel.도착처리중 ? "상차지 도착 기록 중" : "상차지 도착")
                             </MudButton>
-                            <MudCheckBox T="bool" @bind-Value="ViewModel.현장.상차지확인" Label="상차지에 도착했고 주소를 확인했습니다." Color="Color.Primary" />
-                            <MudCheckBox T="bool" @bind-Value="ViewModel.현장.화물상태확인" Label="화물 수량과 외관 상태를 확인했습니다." Color="Color.Primary" />
-                            <MudCheckBox T="bool" @bind-Value="ViewModel.현장.화주연락확인" Label="화주 또는 현장 담당자와 상차를 확인했습니다." Color="Color.Primary" />
+                            <MudCheckBox T="bool" @bind-Value="ViewModel.현장.상차지확인" Label="상차지 주소 확인" Color="Color.Primary" />
+                            <MudCheckBox T="bool" @bind-Value="ViewModel.현장.화물상태확인" Label="화물 수량·외관 확인" Color="Color.Primary" />
+                            <MudCheckBox T="bool" @bind-Value="ViewModel.현장.화주연락확인" Label="화주·담당자 상차 확인" Color="Color.Primary" />
                         </MudStack>
                     </MudPaper>
 
-                    <DriverTransportIssuePanel Description="상차 수량 부족, 다른 화물 혼입, 바코드 훼손 같은 예외를 즉시 남깁니다."
+                    <DriverTransportIssuePanel Description="수량 부족·화물 혼입·바코드 훼손"
                                                IssueTypes="@ViewModel.예외.유형목록"
                                                @bind-Open="ViewModel.예외.열림"
                                                @bind-IssueType="ViewModel.예외.유형"
@@ -412,12 +416,12 @@
                         </MudPaper>
                     }
 
-                    <DriverTransportProofPanel Title="상차 완료 사진"
-                                               Description="화물과 차량 적재 상태가 보이도록 촬영합니다. 사진 확인 후 완료 처리가 가능합니다."
+                    <DriverTransportProofPanel Title="상차 사진"
+                                               Description="화물·적재 상태 촬영"
                                                PreviewUrl="@ViewModel.사진.미리보기Url"
                                                PreviewAlt="상차 완료 사진 미리보기"
                                                FileName="@ViewModel.사진.파일명"
-                                               StatusMessage="@ViewModel.작업상태.메시지"
+                                               StatusMessage="@(ViewModel.완료실패상태안내인가 ? null : ViewModel.작업상태.메시지)"
                                                StatusSeverity="@ViewModel.작업상태.심각도"
                                                HasPhoto="@ViewModel.사진.사진있음"
                                                ShowClear="@ViewModel.사진.복구자료폐기가능"
@@ -425,21 +429,33 @@
                                                CanComplete="@ViewModel.완료가능"
                                                IsCompleting="@ViewModel.완료처리중"
                                                CompletionGuide="@ViewModel.완료안내"
-                                               CaptureButtonText="상차 완료 사진 촬영"
-                                               RetakeButtonText="상차 사진 다시 촬영"
+                                               CaptureButtonText="사진 촬영"
+                                               RetakeButtonText="다시 촬영"
                                                CompleteButtonText="상차 완료"
-                                               CompletingText="상차 완료 처리 중"
+                                               CompletingText="처리 중"
                                                OnCapture="@(() => ViewModel.사진.촬영Command.ExecuteAsync(null))"
                                                OnComplete="@(() => ViewModel.완료Command.ExecuteAsync(null))"
                                                OnClear="ViewModel.사진.제거" />
                 }
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/driver/transports/current">진행 중 운송으로</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/driver/transports/current">현재 운송</MudButton>
             </MudStack>
         </MudPaper>
     </MudStack>
 </MudContainer>
 
 @code {
+    private string? 조회오류 => ViewModel.처리중 || ViewModel.로그인필요
+        ? null
+        : !string.IsNullOrWhiteSpace(ViewModel.오류메시지)
+            ? ViewModel.오류메시지
+            : ViewModel.운송 is null ? "운송 정보를 찾지 못했습니다." : null;
+
+    private static readonly 업무실패맥락Dto 조회맥락 = new(OperatingSystemIds.DomesticCargoTransport,
+        OperatingSystemLifecycleStageIds.CargoPickup, 업무처리결과Codes.조회);
+    private Api작업오류? 조회실패 => 조회오류 is null ? null : ViewModel.Api조회오류
+        ?? new Api작업오류("CargoTransportNotFound", string.Empty, 404);
+    private Api작업오류? 표시실패 => 조회실패 ?? (ViewModel.로그인필요 ? null : ViewModel.완료실패);
+
     [Parameter]
     public long 운송Id { get; set; }
 

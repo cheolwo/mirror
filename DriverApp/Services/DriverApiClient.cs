@@ -3,16 +3,19 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Ssalddel.Contracts.Common.Operations;
+using Ssalddel.Ui.Common.Areas.App.Services;
 
 namespace DriverApp.Services;
 
 /// <summary>응답의 상태와 서버가 명시한 시작 거절만 보존한다. 원문 오류·주소·토큰을 저장하지 않는다.</summary>
-public sealed class DriverApiException(HttpStatusCode statusCode, string operation, string? errorCode, Guid? rejectedStartId)
+public sealed class DriverApiException(HttpStatusCode statusCode, string operation, string? errorCode, Guid? rejectedStartId,
+    SsalddelApiProblem? recoveryProblem = null)
     : InvalidOperationException($"{operation} API 실패: HTTP {(int)statusCode}" + (errorCode is null ? "" : $" ({errorCode})"))
 {
     public HttpStatusCode StatusCode { get; } = statusCode;
     public string? ErrorCode { get; } = errorCode;
     public Guid? RejectedWorkStartRequestId { get; } = rejectedStartId;
+    public SsalddelApiProblem? RecoveryProblem { get; } = recoveryProblem;
 }
 
 /// <summary>
@@ -367,6 +370,7 @@ public sealed class DriverApiClient : IDriverApiClient
         }
 
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        var problem = SsalddelApiProblemParser.Parse(body);
         string? code = null;
         try
         {
@@ -385,6 +389,8 @@ public sealed class DriverApiClient : IDriverApiClient
             && outcomes.SingleOrDefault() == "Rejected"
             && response.Headers.TryGetValues("X-Mirror-Work-Start-Request-Id", out var ids)
             && Guid.TryParse(ids.SingleOrDefault(), out var id)) rejected = id;
-        throw new DriverApiException(response.StatusCode, operationName, code, rejected);
+        // 원문·주소는 보관하지 않고 검증된 복구 메타데이터만 전달합니다.
+        throw new DriverApiException(response.StatusCode, operationName, code, rejected,
+            problem with { Message = null, TraceId = null, ErrorCode = code, FieldErrors = new Dictionary<string, string[]>() });
     }
 }

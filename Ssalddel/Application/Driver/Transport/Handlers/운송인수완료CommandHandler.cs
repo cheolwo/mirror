@@ -1,5 +1,6 @@
 using FluentResults;
 using Ssalddel.Contracts.Driver.Transport;
+using Ssalddel.Contracts.Common.Versioning;
 using Ssalddel.Services.Storage;
 using 살뜰.Data;
 
@@ -28,7 +29,9 @@ public sealed class 운송인수완료CommandHandler : IRequestHandler<운송인
     {
         if (string.IsNullOrWhiteSpace(request.하차사진ObjectName))
         {
-            return Result.Fail<기사운송상태변경응답>("하차 완료 사진 업로드가 확인되어야 하차 완료 처리할 수 있습니다.");
+            return Result.Fail<기사운송상태변경응답>(화물업무실패Factory.생성(
+                "CargoDropoffPhotoRequired", "하차 완료 사진 업로드가 확인되어야 하차 완료 처리할 수 있습니다.",
+                OperatingSystemLifecycleStageIds.CargoDropoff));
         }
 
         var verifiedPhoto = await 화물운송사진증빙Policy.VerifyAsync(_db, _storage, request.Id, request.기사Id,

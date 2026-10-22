@@ -126,6 +126,7 @@ public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
             _queryLifetime.CancelPending();
             ClearPrivateState();
             State.RequiresLogin = !_authSession.IsLoggedIn;
+            State.QueryError = Api작업오류.변환(ex);
             SetStatus($"로그인 세션 조회 실패: {ex.Message}", ShipperRequestDetailMessageTone.Error);
             NotifyStateChanged();
             return;
@@ -167,6 +168,7 @@ public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
                     && !string.Equals(result.의뢰Id, normalized, StringComparison.Ordinal))
                     throw new InvalidOperationException("조회한 의뢰가 선택한 의뢰와 다릅니다.");
                 _source = result;
+                State.QueryError = result is null ? new Api작업오류("request-not-found", string.Empty, 404) : null;
                 // 인수증 화면은 로컬 FakePG 표시로 서버 금융 상태를 덮지 않습니다.
                 if (_receiptMode) _receipt = null;
                 else ApplyReceipt();
@@ -176,8 +178,12 @@ public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
                 if (showMessage && !hadPendingReceipt)
                 {
                     SetStatus(
-                        _source is null ? "운송 의뢰 정보를 찾지 못했습니다."
-                            : $"{_source.의뢰Id} 원장을 adapter에서 다시 조회했습니다.",
+                        _source is null ? "운송 의뢰 정보를 찾지 못했습니다." : string.Empty,
+                        _source is null ? ShipperRequestDetailMessageTone.Warning : ShipperRequestDetailMessageTone.Success);
+                }
+                else if (!hadPendingReceipt && 업무오류안내Presentation.조회오류인가(State.StatusMessage))
+                {
+                    SetStatus(_source is null ? "운송 의뢰 정보를 찾지 못했습니다." : string.Empty,
                         _source is null ? ShipperRequestDetailMessageTone.Warning : ShipperRequestDetailMessageTone.Success);
                 }
             },
@@ -185,6 +191,7 @@ public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
             {
                 _source = null;
                 State.Request = null;
+                State.QueryError = Api작업오류.변환(ex);
                 SetStatus($"운송 의뢰 원장 조회 실패: {ex.Message}", ShipperRequestDetailMessageTone.Error);
             },
             () => { State.IsBusy = false; NotifyStateChanged(); },
@@ -242,7 +249,7 @@ public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
             _receipt = receipt;
             PaymentWindowOpen = false;
             SetStatus(
-                $"{source.의뢰Id} FakePG 개발 승인이 기록되었습니다. 같은 원장을 다시 조회합니다.",
+                "테스트 결제 완료 · 실제 결제 없음",
                 ShipperRequestDetailMessageTone.Success);
             await LoadAsync(source.의뢰Id, showMessage: false, cancellationToken: paymentCts.Token);
         }
@@ -250,7 +257,7 @@ public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
         catch (Exception ex)
         {
             if (IsCurrentPayment(source.의뢰Id, sessionRevision))
-                SetStatus($"FakePG 개발 승인 실패: {ex.Message}", ShipperRequestDetailMessageTone.Error);
+                SetStatus($"테스트 결제 실패: {ex.Message}", ShipperRequestDetailMessageTone.Error);
         }
         finally
         {
@@ -283,6 +290,7 @@ public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
             SettlementStatus = source.정산상태,
             DispatchStatus = source.배차상태,
             TransportStatus = source.운송상태,
+            OperationalReviewHeld = source.비정상운송검토보류중,
             TransportLedgerUpdatedAtUtc = source.운송원장갱신일시Utc,
             AssignedDriverId = source.확정기사Id,
             AssignedDriverName = source.확정기사명,
@@ -414,6 +422,7 @@ public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
         _source = null;
         _receipt = null;
         State.Request = null;
+        State.QueryError = null;
         State.IsBusy = false;
         PaymentWindowOpen = false;
         PaymentCompleting = false;

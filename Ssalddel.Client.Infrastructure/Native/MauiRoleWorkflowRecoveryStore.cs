@@ -18,7 +18,11 @@ public sealed class MauiRoleWorkflowRecoveryStore : IWorkflowRecoveryStore
 
     private MauiRoleWorkflowRecoveryStore(Func<string, RoleWorkspaceIdentity> identity)
         => store = new(identity, SecureStorage.Default.GetAsync, SecureStorage.Default.SetAsync,
-            key => SecureStorage.Default.Remove(key));
+            key =>
+            {
+                if (!SecureStorage.Default.Remove(key))
+                    throw new IOException("이전 요청의 확인 기록을 정리하지 못했습니다.");
+            });
     public Task<WorkflowRecoveryRecord?> LoadAsync(string owner, string scope, CancellationToken ct) => store.LoadAsync(owner, scope, ct);
     public Task SaveAsync(WorkflowRecoveryRecord record, CancellationToken ct) => store.SaveAsync(record, ct);
     public Task RemoveAsync(string owner, string scope, Guid expectedRequestId, CancellationToken ct) => store.RemoveAsync(owner, scope, expectedRequestId, ct);

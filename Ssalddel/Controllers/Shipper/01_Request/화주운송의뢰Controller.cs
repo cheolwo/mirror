@@ -11,6 +11,8 @@ using 살뜰.Services.Versioning;
 using System.Security.Claims;
 using Ssalddel.Contracts.Common.Privacy;
 using Ssalddel.Contracts.Common.Operations;
+using Ssalddel.Contracts.Common.Versioning;
+using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Services.Privacy;
 
 namespace Ssalddel.Controllers.Shipper.Request01
@@ -108,14 +110,20 @@ namespace Ssalddel.Controllers.Shipper.Request01
         public async Task<IActionResult> 접수요청조회(string clientRequestId, CancellationToken cancellationToken)
         {
             var item = await _useCase.접수요청조회Async(clientRequestId, cancellationToken);
-            return item is null ? this.ToNotFoundProblem("접수 요청의 운송의뢰를 찾을 수 없습니다.") : Ok(item);
+            return item is null ? this.ToNotFoundProblem("접수 요청의 운송의뢰를 찾을 수 없습니다.",
+                new 업무실패맥락Dto(OperatingSystemIds.ShipperTransportManagement,
+                    OperatingSystemLifecycleStageIds.ShipperRequestCommitment, 업무처리결과Codes.조회),
+                "ShipperRequestNotFound") : Ok(item);
         }
 
         [HttpGet("{requestId}")]
         public async Task<IActionResult> 의뢰단건조회(string requestId)
         {
             var item = await _useCase.의뢰단건조회Async(requestId);
-            return item == null ? this.ToNotFoundProblem("운송의뢰 데이터를 찾을 수 없습니다.") : Ok(item);
+            return item == null ? this.ToNotFoundProblem("운송의뢰 데이터를 찾을 수 없습니다.",
+                new 업무실패맥락Dto(OperatingSystemIds.ShipperTransportManagement,
+                    OperatingSystemLifecycleStageIds.ShipperProgressChange, 업무처리결과Codes.조회),
+                "ShipperRequestNotFound") : Ok(item);
         }
 
         [HttpGet("{requestId}/operators")]

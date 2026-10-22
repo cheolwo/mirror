@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Ssalddel.Contracts.Common.Workflow;
 
 namespace Ssalddel.Ui.Common.Areas.App.Services;
 
@@ -20,7 +21,8 @@ public sealed class SsalddelApiException : InvalidOperationException
         IReadOnlyList<string>? availableRecoveryActions = null,
         long? currentRevision = null,
         DateTime? retryAfterUtc = null,
-        string? errorCode = null)
+        string? errorCode = null,
+        업무실패맥락Dto? workflowContext = null)
         : base(message)
     {
         StatusCode = statusCode;
@@ -36,6 +38,7 @@ public sealed class SsalddelApiException : InvalidOperationException
         CurrentRevision = currentRevision;
         RetryAfterUtc = retryAfterUtc;
         ErrorCode = errorCode;
+        WorkflowContext = workflowContext;
     }
 
     public int StatusCode { get; }
@@ -51,6 +54,7 @@ public sealed class SsalddelApiException : InvalidOperationException
     public long? CurrentRevision { get; }
     public DateTime? RetryAfterUtc { get; }
     public string? ErrorCode { get; }
+    public 업무실패맥락Dto? WorkflowContext { get; }
 }
 
 public sealed record SsalddelApiProblem(
@@ -64,7 +68,8 @@ public sealed record SsalddelApiProblem(
     string? RetryPolicyCode,
     IReadOnlyList<string> AvailableRecoveryActions,
     long? CurrentRevision,
-    DateTime? RetryAfterUtc);
+    DateTime? RetryAfterUtc,
+    업무실패맥락Dto? WorkflowContext = null);
 
 public static class SsalddelApiProblemParser
 {
@@ -79,6 +84,7 @@ public static class SsalddelApiProblemParser
         {
             using var document = JsonDocument.Parse(body);
             var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object) return Empty();
             var errors = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
             if (root.TryGetProperty("errors", out var errorElement)
                 && errorElement.ValueKind == JsonValueKind.Object)
@@ -108,7 +114,7 @@ public static class SsalddelApiProblemParser
             return new SsalddelApiProblem(
                 ReadString(root, "detail") ?? ReadString(root, "message") ?? ReadString(root, "title"),
                 ReadString(root, "traceId"),
-                ReadString(root, "errorCode"),
+                ReadErrorCode(root),
                 errors,
                 ReadString(root, "failureClassCode"),
                 ReadString(root, "responsibilityRoleCode"),
@@ -116,7 +122,8 @@ public static class SsalddelApiProblemParser
                 ReadString(root, "retryPolicyCode"),
                 actions,
                 ReadInt64(root, "currentRevision"),
-                ReadDateTime(root, "retryAfterUtc"));
+                ReadDateTime(root, "retryAfterUtc"),
+                ReadWorkflowContext(root));
         }
         catch (JsonException)
         {
@@ -126,6 +133,35 @@ public static class SsalddelApiProblemParser
 
     private static SsalddelApiProblem Empty()
         => new(null, null, null, new Dictionary<string, string[]>(), null, null, false, null, [], null, null);
+
+    private static string? ReadErrorCode(JsonElement root)
+        => ReadNonEmptyCode(root, "errorCode") ?? ReadNonEmptyCode(root, "code");
+
+    private static 업무실패맥락Dto? ReadWorkflowContext(JsonElement root)
+    {
+        if (!root.TryGetProperty("workflowContext", out var context) || context.ValueKind != JsonValueKind.Object)
+            return null;
+        var os = ReadString(context, "operatingSystemId");
+        var stage = ReadString(context, "stageId");
+        var outcome = ReadString(context, "outcomeCode");
+        if (os is null || stage is null || outcome is null) return null;
+        var value = new 업무실패맥락Dto(os, stage, outcome);
+        return value.유효한가() ? value : null;
+    }
+
+    private static string? ReadNonEmptyCode(JsonElement root, string propertyName)
+    {
+        var exact = ReadString(root, propertyName);
+        if (!string.IsNullOrWhiteSpace(exact)) return exact;
+        foreach (var property in root.EnumerateObject())
+        {
+            if (!string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase)
+                || property.Value.ValueKind != JsonValueKind.String) continue;
+            var value = property.Value.GetString();
+            if (!string.IsNullOrWhiteSpace(value)) return value;
+        }
+        return null;
+    }
 
     private static string? ReadString(JsonElement root, string propertyName)
         => root.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
@@ -138,7 +174,7 @@ public static class SsalddelApiProblemParser
            && value.GetBoolean();
 
     private static long? ReadInt64(JsonElement root, string propertyName)
-        => root.TryGetProperty(propertyName, out var value) && value.TryGetInt64(out var parsed)
+        => root.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.Number && value.TryGetInt64(out var parsed)
             ? parsed
             : null;
 
@@ -456,6 +492,7 @@ public sealed class SsalddelJsonApiClient : ISsalddelJsonApiClient
             problem.AvailableRecoveryActions,
             problem.CurrentRevision,
             problem.RetryAfterUtc,
-            problem.ErrorCode);
+            problem.ErrorCode,
+            problem.WorkflowContext);
     }
 }

@@ -9,6 +9,10 @@
                            Description="창고·공급처·도착 예정과 계약 스냅샷을 검토한 뒤 입고 예정 원장을 저장합니다."
                            HomeHref="@HomeHref"
                            RefreshRequested="RefreshWarehousesRequested">
+    @if (Draft.PhotoRequestId.HasValue)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">사진 신청을 이어서 작성합니다.</MudAlert>
+    }
     @if (string.Equals(Context.Source, "diagram-warehouse-proxy", StringComparison.OrdinalIgnoreCase))
     {
         <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="mb-4">
@@ -108,10 +112,21 @@
                        Color="Color.Success"
                        Size="Size.Large"
                        StartIcon="@Icons.Material.Filled.Save"
-                       Disabled="@(State.IsBusy || State.Warehouses.Count == 0)"
+                       Disabled="@(State.IsBusy || State.Warehouses.Count == 0 || State.HasPendingMutation || State.SavedInboundId is > 0)"
                        OnClick="CreateRequested">
                 입고 요청 등록
             </MudButton>
+            @if (State.SavedInboundId is > 0)
+            {
+                <MudButton Href="@Context.PathFor(InboundRequestScreenKind.Detail, State.SavedInboundId)"
+                           Variant="Variant.Outlined" Color="Color.Primary">등록 내역 확인</MudButton>
+            }
+            else if (State.RegistrationResultPending)
+            {
+                <MudText Typo="Typo.body2" Class="mt-3">접수 결과 확인 전에는 다시 등록하지 마세요.</MudText>
+                <MudButton Href="@Context.PathFor(InboundRequestScreenKind.List)"
+                           Variant="Variant.Outlined" Color="Color.Primary">입고 목록 확인</MudButton>
+            }
         </MudPaper>
 
         <aside class="inbound-create-summary">

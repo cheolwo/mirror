@@ -91,12 +91,16 @@
     <Compile Include="..\OrdererApp\Services\OrdererAccessTokenProvider.cs" Link="Clients\OrdererAccessTokenProvider.cs" />
     <Compile Include="..\Ssalddel.WebApp\Services\WebOrdererAuthenticationService.cs" Link="Clients\WebOrdererAuthenticationService.cs" />
     <Compile Include="..\Ssalddel.WebApp\Services\WebAuthSessionService.cs" Link="Clients\WebAuthSessionService.cs" />
+    <Compile Include="..\Ssalddel.WebApp\Services\화주운송의뢰등록Service.cs" Link="Clients\WebShipper\화주운송의뢰등록Service.cs" />
+    <Compile Include="..\Ssalddel.WebApp\Services\운송의뢰자동저장Service.cs" Link="Clients\WebShipper\운송의뢰자동저장Service.cs" />
+    <Compile Include="..\Ssalddel.WebApp\ViewModels\ShipperRequestAuthoringPageViewModel.cs" Link="Clients\WebShipper\ShipperRequestAuthoringPageViewModel.cs" />
     <Compile Include="..\Ssalddel.WebApp\Services\WebRoleTheme.cs" Link="Clients\WebRoleTheme.cs" />
     <Compile Include="..\WarehouseManagerApp\Components\Layout\WarehousePageDisplayContext.cs" Link="Clients\WarehousePageDisplayContext.cs" />
     <Compile Include="..\DriverApp\Services\IAuthSession.cs" Link="Clients\Cargo\IAuthSession.cs" />
     <Compile Include="..\DriverApp\Services\DriverRoutes.cs" Link="Clients\Cargo\DriverRoutes.cs" />
     <Compile Include="..\DriverApp\Services\DriverTransportCompletionPhotoService.cs" Link="Clients\Cargo\DriverTransportCompletionPhotoService.cs" />
     <Compile Include="..\DriverApp\Services\DriverCargoPhotoRecoveryStore.cs" Link="Clients\Cargo\DriverCargoPhotoRecoveryStore.cs" />
+    <Compile Include="..\DriverApp\Services\DriverCargoCompletionRecovery.cs" Link="Clients\Cargo\DriverCargoCompletionRecovery.cs" />
     <Compile Include="..\DriverApp\Services\DriverPayoutPreparationApiService.cs" Link="Clients\Cargo\DriverPayoutPreparationApiService.cs" />
     <Compile Include="..\DriverApp\ViewModels\Driver\Settlement\기사운송대금PageViewModel.cs" Link="Clients\Cargo\기사운송대금PageViewModel.cs" />
     <Compile Include="..\DriverApp\Services\DriverTransportExceptionService.cs" Link="Clients\Cargo\DriverTransportExceptionService.cs" />

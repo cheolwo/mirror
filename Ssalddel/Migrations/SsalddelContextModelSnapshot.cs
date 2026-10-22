@@ -14848,6 +14848,81 @@ namespace Ssalddel.Migrations
                     b.ToTable("입고상품");
                 });
 
+            modelBuilder.Entity("살뜰.도메인.창고.가입고사진신청", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedNever()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("id");
+
+                    b.Property<long>("Bytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("bytes");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("content_type");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<long>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(1L)
+                        .HasColumnName("revision");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<string>("사진Container")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasColumnName("사진_container");
+
+                    b.Property<string>("사진ObjectName")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("varchar(1024)")
+                        .HasColumnName("사진_object_name");
+
+                    b.Property<string>("사진Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("사진_sha256");
+
+                    b.Property<string>("이름")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("이름");
+
+                    b.Property<string>("작성자UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("varchar(450)")
+                        .HasColumnName("작성자_user_id");
+
+                    b.Property<string>("최초요청해시")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("최초_요청_해시");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("작성자UserId", "CreatedAtUtc");
+
+                    b.ToTable("가입고사진신청");
+                });
+
             modelBuilder.Entity("살뜰.도메인.창고.입고요청", b =>
                 {
                     b.Property<long>("Id")
@@ -14856,6 +14931,10 @@ namespace Ssalddel.Migrations
                         .HasColumnName("id");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<Guid?>("가입고사진신청Id")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("가입고사진신청_id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)")
@@ -15075,11 +15154,23 @@ namespace Ssalddel.Migrations
                         .HasColumnType("varchar(32)")
                         .HasColumnName("현장입고_안내_version");
 
+                    b.Property<Guid?>("일반입고클라이언트요청Id")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("일반입고_클라이언트_요청_id");
+
+                    b.Property<string>("일반입고최초요청해시")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("일반입고_최초_요청_해시");
+
                     b.Property<Guid?>("현장입고클라이언트요청Id")
                         .HasColumnType("char(36)")
                         .HasColumnName("현장입고_클라이언트_요청_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("가입고사진신청Id")
+                        .IsUnique();
 
                     b.HasIndex("출고예정Id");
 
@@ -15088,6 +15179,9 @@ namespace Ssalddel.Migrations
                     b.HasIndex("입고흐름유형", "자동생성여부");
 
                     b.HasIndex("주문Id", "주문자UserId");
+
+                    b.HasIndex("주문자UserId", "일반입고클라이언트요청Id")
+                        .IsUnique();
 
                     b.HasIndex("주문자UserId", "현장입고클라이언트요청Id")
                         .IsUnique();
@@ -18459,6 +18553,18 @@ namespace Ssalddel.Migrations
                     b.Navigation("관리계정전기목록");
 
                     b.Navigation("증빙목록");
+                });
+            modelBuilder.Entity("살뜰.도메인.창고.입고요청", b =>
+                {
+                    b.HasOne("살뜰.도메인.창고.가입고사진신청", null)
+                        .WithOne("입고요청")
+                        .HasForeignKey("살뜰.도메인.창고.입고요청", "가입고사진신청Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("살뜰.도메인.창고.가입고사진신청", b =>
+                {
+                    b.Navigation("입고요청");
                 });
 #pragma warning restore 612, 618
         }

@@ -96,6 +96,9 @@ public sealed class 현장입고요청등록요청
 public sealed class 입고요청항목응답
 {
     public long Id { get; set; }
+    public Guid? 가입고사진신청Id { get; set; }
+    public Guid? ClientRequestId { get; set; }
+    public bool 멱등재시도여부 { get; set; }
     public long 창고Id { get; set; }
     public string? 커뮤니티원장Id { get; set; }
     public string? 커뮤니티원장템플릿Key { get; set; }
@@ -156,6 +159,8 @@ public sealed class 입고요청페이지응답
 
 public sealed class 입고요청저장요청
 {
+    public Guid? 가입고사진신청Id { get; set; }
+    public Guid? ClientRequestId { get; set; }
     public Guid? 신청개인정보동의증적Id { get; set; }
     public string 신청출처Code { get; set; } = string.Empty;
     public long 창고Id { get; set; }

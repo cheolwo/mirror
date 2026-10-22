@@ -20,7 +20,8 @@ public sealed record Api작업오류(
     string? 재시도정책Code = null,
     IReadOnlyList<string>? 복구가능행동 = null,
     long? 현재Revision = null,
-    DateTime? 재시도가능시각Utc = null)
+    DateTime? 재시도가능시각Utc = null,
+    업무실패맥락Dto? WorkflowContext = null)
 {
     public static Api작업오류 변환(Exception exception)
     {
@@ -48,7 +49,8 @@ public sealed record Api작업오류(
                 apiException.RetryPolicyCode,
                 apiException.AvailableRecoveryActions,
                 apiException.CurrentRevision,
-                apiException.RetryAfterUtc);
+                apiException.RetryAfterUtc,
+                apiException.WorkflowContext);
         }
 
         var transportFailure = exception as HttpRequestException

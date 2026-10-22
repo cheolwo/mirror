@@ -56,6 +56,13 @@ public sealed class ShipperWarehouseService(
             "입고 요청 등록",
             cancellationToken: cancellationToken);
 
+    public Task<입고요청항목응답?> GetInboundByClientRequestAsync(Guid clientRequestId, CancellationToken cancellationToken = default)
+        => client.GetAsync<입고요청항목응답>(
+            $"api/v1/warehouse-operations/inbounds/by-client-request/{RequireRequestId(clientRequestId)}",
+            "입고 접수 결과 확인",
+            allowNotFound: true,
+            cancellationToken: cancellationToken);
+
     public Task<입고상품목록응답?> CompleteInboundAsync(long inboundId, 입고완료요청 payload, CancellationToken cancellationToken = default)
         => client.SendAsync<입고완료요청, 입고상품목록응답>(
             HttpMethod.Post,
@@ -106,4 +113,7 @@ public sealed class ShipperWarehouseService(
             values.Add($"{name}={Uri.EscapeDataString(value.Trim())}");
         }
     }
+
+    private static string RequireRequestId(Guid value)
+        => value != Guid.Empty ? value.ToString("D") : throw new ArgumentOutOfRangeException(nameof(value));
 }

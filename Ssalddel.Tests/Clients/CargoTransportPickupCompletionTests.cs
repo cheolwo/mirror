@@ -4,6 +4,8 @@ using DriverApp.ViewModels.Driver.Transport;
 using Microsoft.AspNetCore.Components;
 using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Contracts.Driver.Transport;
+using Ssalddel.Ui.Common.Areas.App.Services;
+using Ssalddel.Ui.Common.Areas.App.ViewModels;
 
 namespace Ssalddel.Tests.Clients;
 
@@ -109,6 +111,73 @@ public sealed class CargoTransportPickupCompletionTests
         await f.Page.완료Async();
         Assert.True(f.Page.상차완료확인); Assert.False(f.Page.완료가능);
         Assert.EndsWith(state == "인수완료" ? DriverRoutes.CurrentTransport : DriverRoutes.TransportDropoff(11), f.Navigation.Uri);
+    }
+
+    [Theory]
+    [InlineData("CargoPickupPhotoRequired", "cargo.pickup", "상차 사진 필요")]
+    [InlineData("CargoWarehouseHandoffPending", "cargo.pickup", "창고 인계 확인 필요")]
+    [InlineData("CargoTransportHeld", "cargo.interruption-recovery", "운송 보류")]
+    public async Task 완료거절사유는_사진업로드결과와함께보존하고_미완료GET뒤_업무별안내로표시한다(string code, string stage, string title)
+    {
+        using var f = new Fixture(); await f.Prepare();
+        f.Completion.Send = _ => Task.FromResult(new DriverTransportCompletionPhotoResult(true, false, "확인 필요",
+            ObjectName: "private/proof", CompletionFailure: Failure(code, stage)));
+        await f.Page.완료Async();
+        Assert.Equal(code, f.Page.완료실패?.코드);
+        Assert.False(f.Page.완료결과확인필요); Assert.True(f.Page.사진.사진있음);
+        Assert.True(f.Page.완료실패상태안내인가);
+        Assert.Equal(title, 업무오류안내Presentation.생성(f.Page.완료실패!).제목);
+        f.Page.작업상태.설정("새 수량 문제를 확인해 주세요.", MudBlazor.Severity.Warning);
+        Assert.False(f.Page.완료실패상태안내인가);
+        f.Api.State = "상차완료";
+        await f.Page.InitializeAsync(11);
+        Assert.Null(f.Page.완료실패); Assert.True(f.Page.상차완료확인);
+        Assert.False(f.Page.사진.사진있음); Assert.Equal(1, f.Completion.Calls);
+    }
+
+    [Fact]
+    public async Task 서버가명시한미확정은_미완료GET만으로해제하거나_POST를반복하지않는다()
+    {
+        using var f = new Fixture(); await f.Prepare();
+        f.Completion.Send = _ => Task.FromException<DriverTransportCompletionPhotoResult>(Failure("UnexpectedFailure", "cargo.pickup", "Unknown"));
+        await f.Page.완료Async();
+        Assert.True(f.Page.완료결과확인필요); Assert.False(f.Page.완료가능);
+        Assert.Equal("Unknown", f.Page.완료실패?.WorkflowContext?.OutcomeCode);
+        Assert.True(f.Page.사진.사진있음);
+        await f.Page.InitializeAsync(11);
+        Assert.True(f.Page.완료결과확인필요); Assert.NotNull(f.Page.완료실패);
+        await f.Page.완료Async(); Assert.Equal(1, f.Completion.Calls);
+        f.Api.State = "상차완료"; await f.Page.InitializeAsync(11);
+        Assert.Null(f.Page.완료실패); Assert.False(f.Page.완료결과확인필요);
+    }
+
+    [Theory]
+    [InlineData("logout")]
+    [InlineData("dispose")]
+    [InlineData("transport")]
+    public async Task 이전계정이나운송의늦은실패는_새업무오류로남기지않는다(string transition)
+    {
+        using var f = new Fixture(); await f.Prepare();
+        var pending = new TaskCompletionSource<DriverTransportCompletionPhotoResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        f.Completion.Send = _ => pending.Task;
+        var completion = f.Page.완료Async();
+        if (transition == "logout") await f.Auth.ClearAsync();
+        else if (transition == "dispose") f.Page.Dispose();
+        else await f.Page.InitializeAsync(22);
+        pending.SetException(Failure("CargoPickupPhotoRequired", "cargo.pickup"));
+        await completion;
+        Assert.Null(f.Page.완료실패); Assert.False(f.Page.완료실패상태안내인가);
+        Assert.Equal("http://localhost/", f.Navigation.Uri);
+    }
+
+    private static DriverApiException Failure(string code, string stage, string outcome = "NotApplied")
+    {
+        var metadata = SsalddelApiProblemParser.Parse(System.Text.Json.JsonSerializer.Serialize(new
+        {
+            errorCode = code, availableRecoveryActions = new[] { "RefreshState" },
+            workflowContext = new { operatingSystemId = "DomesticCargoTransportOS", stageId = stage, outcomeCode = outcome }
+        }));
+        return new(System.Net.HttpStatusCode.BadRequest, "상차 완료", code, null, metadata);
     }
 
     private sealed class Fixture : IDisposable

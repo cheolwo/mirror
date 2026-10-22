@@ -34,7 +34,9 @@
                 @if (!CanComplete)
                 {
                     <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-                        현재 상태에서는 입고완료 Command를 다시 실행할 수 없습니다. 상세 화면에서 저장된 원장을 확인해 주세요.
+                        @(State.CompletionResultPendingId == InboundId
+                            ? "입고 완료 결과를 확인해 주세요. 다시 처리하지 마세요."
+                            : "현재 상태에서는 입고 완료를 다시 처리할 수 없습니다.")
                     </MudAlert>
                 }
                 else
@@ -91,12 +93,14 @@
             </aside>
         </div>
 
-        @if (State.CompletionItems.Count > 0)
+        @if (State.CompletionItems.Count > 0 && State.CompletionItems.All(result => result.입고요청Id == item.Id))
         {
             <MudPaper Elevation="0" Outlined="true" Class="pa-4 mt-4">
-                <MudText Typo="Typo.h6">재조회한 재고 전환 결과</MudText>
+                <MudText Typo="Typo.h6">입고 완료 응답</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
-                    Command 응답 뒤 입고 요청 #@(item.Id)을 다시 조회했으며, 아래는 생성된 재고 항목입니다.
+                    @(State.CompletionResultPendingId == InboundId
+                        ? "완료 응답은 받았습니다. 현재 입고 상태를 확인하고 있습니다."
+                        : "현재 입고 상태와 완료 응답을 확인했습니다.")
                 </MudText>
                 <div class="inbound-complete-results">
                     @foreach (var result in State.CompletionItems)

@@ -1,24 +1,87 @@
 @page "/shipper/inbound/requests/new"
 @using Ssalddel.Contracts.Common.Inbound
 @inject InboundRequestPageViewModel ViewModel
+@inject 가입고사진신청ViewModel PhotoModel
 @inject NavigationManager Navigation
+@implements IDisposable
 
 <PageTitle>입고 요청 등록</PageTitle>
 
+@if (!Context.DetailedEntry)
+{
+    <가입고사진신청Screen Model="PhotoModel"
+                         ReturnHref="@Context.ResolveReturnPath(ShipperRoutes.WarehouseWorkspace)"
+                         DetailsHref="@DirectEntryHref"
+                         FormalRequested="ContinueFormalAsync"
+                         SelectedRequested="SelectPhotoRequestAsync" />
+}
+else if (_entryError is not null)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@_entryError</MudAlert>
+    <MudButton Href="@PhotoEntryHref" Variant="Variant.Outlined">사진 신청으로 돌아가기</MudButton>
+}
+else
+{
 <InboundRequestCreateScreen State="@ViewModel.State"
                             Draft="@ViewModel.CreateDraft"
                             Context="@Context"
                             HomeHref="@ShipperRoutes.WarehouseWorkspace"
                             RefreshWarehousesRequested="RefreshWarehousesAsync"
                             CreateRequested="CreateAsync" />
+}
 
 @code {
     private InboundRequestNavigationContext Context { get; set; } = new();
+    private string? _loadedUri;
+    private string? _entryError;
+    private long _entryVersion;
+    private string DirectEntryHref => (Context with { DetailedEntry = true, PhotoRequestId = null }).PathFor(InboundRequestScreenKind.Create);
+    private string PhotoEntryHref => (Context with { DetailedEntry = false }).PathFor(InboundRequestScreenKind.Create);
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
+        if (_loadedUri == Navigation.Uri) return;
+        _loadedUri = Navigation.Uri;
+        var version = ++_entryVersion;
         Context = InboundRequestNavigationContext.Parse(Navigation.Uri);
+        _entryError = null;
+        if (!Context.DetailedEntry)
+        {
+            await PhotoModel.InitializeAsync(Context.PhotoRequestId);
+            return;
+        }
+        if (Context.PhotoRequestId is { } photoId)
+        {
+            await PhotoModel.InitializeAsync(photoId);
+            if (version != _entryVersion) return;
+            if (PhotoModel.Current?.Id != photoId || PhotoModel.HasError || PhotoModel.RecoveryBlocked
+                || PhotoModel.HasPendingRequest || PhotoModel.IsBusy)
+            {
+                _entryError = "사진 신청을 확인하지 못했습니다. 다시 확인해 주세요.";
+                return;
+            }
+            if (PhotoModel.Current.입고요청Id is > 0)
+            {
+                Navigation.NavigateTo(Context.PathFor(InboundRequestScreenKind.Detail, PhotoModel.Current.입고요청Id));
+                return;
+            }
+        }
         await ViewModel.LoadCreateAsync(Context);
+        if (version != _entryVersion) return;
+        if (!ViewModel.BindPhotoRequest(Context.PhotoRequestId))
+            _entryError = "이전 입고 신청의 결과를 먼저 확인해 주세요.";
+    }
+
+    private Task ContinueFormalAsync(Guid id)
+    {
+        Navigation.NavigateTo((Context with { DetailedEntry = true, PhotoRequestId = id }).PathFor(InboundRequestScreenKind.Create));
+        return Task.CompletedTask;
+    }
+
+    private Task SelectPhotoRequestAsync(Guid id)
+    {
+        Navigation.NavigateTo((Context with { DetailedEntry = false, PhotoRequestId = id }).PathFor(InboundRequestScreenKind.Create));
+        return Task.CompletedTask;
     }
 
     private async Task CreateAsync()
@@ -31,4 +94,5 @@
     }
 
     private Task RefreshWarehousesAsync() => ViewModel.RefreshWarehousesAsync();
+    public void Dispose() { _entryVersion++; PhotoModel.Dispose(); ViewModel.Dispose(); }
 }

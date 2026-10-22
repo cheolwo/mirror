@@ -3,10 +3,13 @@ using System.Text.Json;
 using FluentResults;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Contracts.Driver.Transport;
+using Ssalddel.Contracts.Common.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using 살뜰.Services.Notifications;
+using 살뜰.도메인.설정;
 using 살뜰.Data;
 using 살뜰.도메인.운송;
 using 살뜰.도메인.사용자;
@@ -75,15 +78,17 @@ public sealed class 기사운송상태변경CommandExecutor : I기사운송상�
             .FirstOrDefaultAsync(x => x.Id == request.운송Id && x.기사_운송자 == request.기사Id, cancellationToken);
         if (entity is null)
         {
-            return Result.Fail<기사운송상태변경응답>("운송을 찾을 수 없습니다.");
+            return Result.Fail<기사운송상태변경응답>(화물업무실패Factory.생성(
+                "CargoTransportNotFound", "운송을 찾을 수 없습니다.", 화물업무실패Factory.목표단계(request.목표상태), 404));
         }
 
         // 마트 라스트마일은 현재 전표·시도 revision 검증 없이 화물 API로 완료할 수 없습니다.
         if (살뜰.Services.Dispatch.Engine.운송의뢰배차원천유형.Is살뜰마트음식주문(entity.원본의뢰유형))
         {
-            return Result.Fail<기사운송상태변경응답>(new Error("살뜰마트 배송 화면에서 현재 전표와 배송 상태를 확인해 주세요.")
-                .WithMetadata("StatusCode", StatusCodes.Status409Conflict)
-                .WithMetadata("ErrorCode", "MartDriverWorkflowRequired"));
+            return Result.Fail<기사운송상태변경응답>(화물업무실패Factory.생성(
+                "MartDriverWorkflowRequired", "살뜰마트 배송 화면에서 현재 전표와 배송 상태를 확인해 주세요.",
+                화물업무실패Factory.목표단계(request.목표상태), StatusCodes.Status409Conflict,
+                OperatingSystemIds.SsalddelMartUrbanLogistics));
         }
 
         var requestId = !string.IsNullOrWhiteSpace(entity.의뢰Id) ? entity.의뢰Id : entity.운송번호;
@@ -97,10 +102,11 @@ public sealed class 기사운송상태변경CommandExecutor : I기사운송상�
                 .Join(_db.입고상품.AsNoTracking(), x => x.입고상품Id!.Value, x => x.Id, (_, item) => item)
                 .AnyAsync(x => x.보관위치.StartsWith("DLOC-"), cancellationToken))
         {
-            return Result.Fail<기사운송상태변경응답>(new Error("분산 물품은 현재 분산 순회 화면에서 피킹·전달을 확인해 주세요.")
-                .WithMetadata("Code", "DistributedCargoCustodyRequired")
-                .WithMetadata("ErrorCode", "DistributedCargoCustodyRequired")
-                .WithMetadata("StatusCode", StatusCodes.Status409Conflict));
+            return Result.Fail<기사운송상태변경응답>(화물업무실패Factory.생성(
+                    "DistributedCargoCustodyRequired", "분산 물품은 현재 분산 순회 화면에서 피킹·전달을 확인해 주세요.",
+                    화물업무실패Factory.목표단계(request.목표상태), StatusCodes.Status409Conflict,
+                    OperatingSystemIds.WarehouseCommerceFulfillment)
+                .WithMetadata("Code", "DistributedCargoCustodyRequired"));
         }
 
         var 이전상태 = entity.상태;
@@ -110,18 +116,22 @@ public sealed class 기사운송상태변경CommandExecutor : I기사운송상�
             기사운송업무상태Projector.투영(workflow, entity,
                 await 기사운송업무상태Projector.사건조회Async(_db, [entity.Id], cancellationToken));
             if (workflow.운송진행보류)
-                return Result.Fail<기사운송상태변경응답>("전체 운송이 보류되었습니다. 현재 예외 처리 상태를 확인해 주세요.");
+                return Result.Fail<기사운송상태변경응답>(화물업무실패Factory.생성(
+                    "CargoTransportHeld", "전체 운송이 보류되었습니다. 현재 예외 처리 상태를 확인해 주세요.",
+                    OperatingSystemLifecycleStageIds.CargoInterruptionRecovery));
         }
         var now = DateTime.UtcNow;
         var 상태변경 = _상태전이Service.상태변경(entity, request.목표상태, now);
         if (상태변경.IsFailed)
         {
-            return Result.Fail<기사운송상태변경응답>(상태변경.Errors.Select(x => x.Message));
+            return Result.Fail<기사운송상태변경응답>(상태변경.Errors.Select(error => 화물업무실패Factory.생성(
+                "CargoTransportStateChanged", error.Message, 화물업무실패Factory.목표단계(request.목표상태), 409)));
         }
 
         request.상태변경전처리?.Invoke(entity, now);
         await 화주원장상태반영Async(entity, now, cancellationToken);
 
+        Command알림Outbox? progressNotification = null;
         if (!string.IsNullOrWhiteSpace(requestId)
             && !string.Equals(이전상태, entity.상태, StringComparison.Ordinal))
         {
@@ -144,12 +154,27 @@ public sealed class 기사운송상태변경CommandExecutor : I기사운송상�
                         ? CargoCompletionRecoveryMarker.Create(entity, now) : null
                 })
             });
+            if (CargoWorkflowProgressNotifications.StageForState(entity.상태) is { } progressStage)
+            {
+                var source = await _db.화주운송의뢰.FirstOrDefaultAsync(x => x.의뢰Id == requestId, cancellationToken);
+                if (source is not null)
+                    progressNotification = await CargoWorkflowProgressNotifications.ReserveAsync(_db, progressStage, source, entity.Id,
+                        request.기사Id, now, Activity.Current?.TraceId.ToString() ?? string.Empty, cancellationToken);
+            }
         }
 
-        await _db.SaveChangesAsync(cancellationToken);
-        if (request.Commit이후발행수집 is { } collect)
-            collect(request.이벤트생성(new(entity, 이전상태, now, Activity.Current?.TraceId.ToString() ?? string.Empty)));
-        else await PublishAfterCommitAsync(request, entity, 이전상태, now, cancellationToken);
+        try { await _db.SaveChangesAsync(cancellationToken); }
+        catch
+        {
+            CargoWorkflowProgressNotifications.DiscardUncommitted(_db, progressNotification);
+            throw;
+        }
+        if (!string.Equals(이전상태, entity.상태, StringComparison.Ordinal))
+        {
+            if (request.Commit이후발행수집 is { } collect)
+                collect(request.이벤트생성(new(entity, 이전상태, now, Activity.Current?.TraceId.ToString() ?? string.Empty)));
+            else await PublishAfterCommitAsync(request, entity, 이전상태, now, cancellationToken);
+        }
 
         return Result.Ok(new 기사운송상태변경응답
         {
