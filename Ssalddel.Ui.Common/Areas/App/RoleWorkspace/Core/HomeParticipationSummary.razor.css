@@ -1,0 +1,36 @@
+.home-participation-summary { color: var(--ss-ink, #172b36); }
+.home-participation-summary__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 12px; color: var(--ss-muted, #586b78); font-size: 14px; line-height: 1.5; }
+.home-participation-summary__meta > span:first-child { color: var(--ss-ink, #172b36); font-weight: 600; }
+.home-participation-summary__meta time { margin-left: auto; }
+.home-participation-summary__mode { padding: 2px 8px; border: 1px solid var(--ss-border, #dce5e9); border-radius: 8px; background: var(--ss-canvas, #f5f7fa); }
+.home-participation-summary__notice { margin: 0 0 12px; color: var(--ss-muted, #586b78); font-size: 14px; line-height: 1.5; }
+.home-participation-summary__recovery { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 12px; color: var(--ss-ink, #172b36); font-size: 14px; line-height: 1.5; }
+.home-participation-summary__recovery button { min-height: 48px; padding: 8px 16px; border: 1px solid var(--ss-border, #dce5e9); border-radius: 12px; background: var(--ss-surface, #fff); color: var(--ss-accent-strong, #0b5c56); font: inherit; font-weight: 600; cursor: pointer; }
+.home-participation-summary__recovery button:focus-visible { outline: 3px solid var(--ss-accent-strong, #0b5c56); outline-offset: 3px; }
+.home-participation-summary__recovery button:disabled { color: var(--ss-muted, #586b78); cursor: default; }
+.home-participation-summary__finance { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.home-participation-summary__finance > div { min-width: 0; padding: 20px; border: 1px solid var(--ss-border, #dce5e9); border-radius: 16px; background: var(--ss-surface, #fff); }
+.home-participation-summary__finance dt { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: var(--ss-muted, #586b78); font-size: 14px; line-height: 1.5; }
+.home-participation-summary__icon { display: inline-flex; color: var(--ss-ink, #172b36); }
+.home-participation-summary__finance dd { margin: 12px 0 0; font-size: 28px; line-height: 1.35; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.home-participation-summary__participation { margin-top: 16px; padding: 20px; border: 1px solid var(--ss-border, #dce5e9); border-radius: 16px; background: var(--ss-surface, #fff); }
+.home-participation-summary__participation > header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.home-participation-summary__participation h2 { margin: 0; font-size: 16px; line-height: 1.5; font-weight: 600; }
+.home-participation-summary__participation > header > span { color: var(--ss-muted, #586b78); font-size: 14px; line-height: 1.5; }
+.home-participation-summary__details { display:inline-flex; align-items:center; gap:8px; min-height:48px; color:var(--ss-accent-strong,#0b5c56); font-size:14px; text-decoration:none; }
+.home-participation-summary__details:hover { text-decoration:underline; }
+.home-participation-summary__details:focus-visible { outline:3px solid var(--ss-accent-strong,#0b5c56); outline-offset:3px; }
+.home-participation-summary__counts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+.home-participation-summary__counts > div { min-width: 0; }
+.home-participation-summary__counts dt { color: var(--ss-muted, #586b78); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.home-participation-summary__counts dd { margin: 4px 0 0; font-size: 24px; line-height: 1.4; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.home-participation-summary__note { margin: 8px 0 0; color: var(--ss-muted, #586b78); font-size: 14px; line-height: 1.5; }
+@media (max-width: 540px) {
+    .home-participation-summary__meta time { width: 100%; margin-left: 0; }
+    .home-participation-summary__finance { gap: 8px; }
+    .home-participation-summary__finance > div { padding: 16px 12px; }
+    .home-participation-summary__finance dd { font-size: 24px; }
+    .home-participation-summary__participation { padding: 16px; }
+    .home-participation-summary__counts { gap: 8px; }
+    .home-participation-summary__counts dd { font-size: 20px; }
+}

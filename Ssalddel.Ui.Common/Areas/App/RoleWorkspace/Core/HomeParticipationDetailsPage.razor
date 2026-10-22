@@ -1,0 +1,74 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@using System.Globalization
+@using System.ComponentModel
+@implements IDisposable
+@inject HomeParticipationDetailsViewModel Model
+@inject NavigationManager Navigation
+
+<main class="participation-details" aria-busy="@(Model.IsLoading ? "true" : "false")">
+    <a class="participation-details__back" href="@HomeHref">← 운영 요약</a>
+    <header><span>Mirror · 거울</span><h1>참여 내역</h1><p>화물 하차 완료 기록 기준</p></header>
+    @if (Model.IsLoading)
+    { <p role="status">내역 확인 중</p> }
+    else if (Model.HasError)
+    { <section class="participation-details__notice" role="status"><p>참여 내역을 불러오지 못했습니다.</p><button type="button" @onclick="Reload">다시 확인</button></section> }
+    else if (Model.Response is { } response)
+    {
+        <section aria-labelledby="participation-total-title">
+            <div class="participation-details__meta"><h2 id="participation-total-title">전체 누적</h2>
+                @if (response.Summary.ExecutionMode == "Simulation") { <span class="participation-details__badge">시험 집계</span> }
+                <time datetime="@response.Summary.AsOfUtc.ToString("O")">기준 @response.Summary.AsOfUtc.ToOffset(TimeSpan.FromHours(9)).ToString("yyyy.MM.dd HH:mm") (한국)</time>
+            </div>
+            <dl class="participation-details__totals">
+                <div><dt>완료 운송</dt><dd>@Count(response.Summary.CompletedFreightTransportCount)건</dd></div>
+                <div><dt>화주 계정</dt><dd>@Count(response.Summary.FreightShipperAccountCount)개</dd></div>
+                <div><dt>기사 계정</dt><dd>@Count(response.Summary.FreightDriverAccountCount)개</dd></div>
+            </dl>
+            @if (response.Summary.HasIncompleteParticipantBindings) { <p class="participation-details__muted">확인되지 않은 일부 참여 계정은 제외했습니다.</p> }
+        </section>
+        <section aria-labelledby="participation-month-title">
+            <div class="participation-details__meta"><h2 id="participation-month-title">월별 내역</h2><span>완료일 · 한국 시각</span></div>
+            @if (response.MonthlyItems.Count == 0)
+            { <p class="participation-details__notice">이 페이지에 표시할 완료 기록이 없습니다.</p> }
+            <ul class="participation-details__months">
+                @foreach (var month in response.MonthlyItems)
+                {
+                    <li><h3>@MonthLabel(month.MonthCode)</h3><dl>
+                        <div><dt>완료 운송</dt><dd>@Count(month.CompletedFreightTransportCount)건</dd></div>
+                        <div><dt>화주 계정</dt><dd>@Count(month.FreightShipperAccountCount)개</dd></div>
+                        <div><dt>기사 계정</dt><dd>@Count(month.FreightDriverAccountCount)개</dd></div>
+                    </dl>@if (month.HasIncompleteParticipantBindings) { <small>일부 계정 미집계</small> }</li>
+                }
+            </ul>
+            <p class="participation-details__muted">같은 계정이 여러 달에 참여할 수 있어 월별 계정 수의 합은 전체 계정 수와 다를 수 있습니다.</p>
+            <nav class="participation-details__paging" aria-label="월별 내역 페이지">
+                @if (Model.Page > 1) { <a href="@PageHref(Model.Page - 1)">이전</a> } else { <span aria-disabled="true">이전</span> }
+                <span aria-current="page">@Model.Page 페이지</span>
+                @if (response.HasMore && Model.Page < 10000) { <a href="@PageHref(Model.Page + 1)">다음</a> } else { <span aria-disabled="true">다음</span> }
+            </nav>
+        </section>
+        <details class="participation-details__criteria"><summary>집계 기준</summary><ul>
+            <li>완료 시각과 의뢰 연결이 확인된 화물 운송입니다.</li>
+            <li>모의 수행 의뢰와 중복되거나 불명확한 의뢰 연결은 제외합니다.</li>
+            <li>참여 계정은 실제 계정과 역할의 연결이 확인된 경우만 셉니다.</li>
+            <li>하차 완료는 수령 확인·정산·실제 지급과 별도입니다.</li>
+        </ul></details>
+    }
+    <footer><h2>내 업무</h2><div class="participation-details__work"><a href="@Href("workspace/shipper")">화주 업무 →</a><a href="@Href("workspace/cargo-driver")">기사 업무 →</a></div><p class="participation-details__muted">개별 운송 내역은 로그인 후 내 업무에서 확인합니다.</p></footer>
+</main>
+
+@code {
+    [Parameter] public string? Page { get; set; }
+    private static readonly CultureInfo Korean = CultureInfo.GetCultureInfo("ko-KR");
+    private string HomeHref => Navigation.ToAbsoluteUri("").ToString();
+    private string Href(string path) => Navigation.ToAbsoluteUri(path).ToString();
+    private string PageHref(int page) => Href("overview/participation" + (page == 1 ? "" : "?page=" + page.ToString(CultureInfo.InvariantCulture)));
+    private static int NormalizePage(string? page) => int.TryParse(page, NumberStyles.None, CultureInfo.InvariantCulture, out var value) && value is >= 1 and <= 10000 ? value : 1;
+    private static string Count(int? number) => number?.ToString("N0", Korean) ?? "미집계";
+    private static string MonthLabel(string code) => DateTime.TryParseExact(code, "yyyy-MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out var month) ? month.ToString("yyyy년 M월", Korean) : code;
+    protected override void OnInitialized() => Model.PropertyChanged += Changed;
+    protected override Task OnParametersSetAsync() => Model.LoadAsync(NormalizePage(Page));
+    private Task Reload() => Model.LoadAsync(Model.Page);
+    private void Changed(object? sender, PropertyChangedEventArgs args) => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() { Model.PropertyChanged -= Changed; Model.Dispose(); }
+}

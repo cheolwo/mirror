@@ -1,0 +1,57 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@using System.Globalization
+@using Ssalddel.Contracts.Common.Home
+
+<section class="home-participation-summary" data-home-summary aria-label="누적 참여·이익 공유 현황" aria-busy="@(IsLoading ? "true" : "false")">
+    <header class="home-participation-summary__meta">
+        <span>전체 누적</span>
+        @if (Summary is not null && string.Equals(Summary.ExecutionMode, "Simulation", StringComparison.OrdinalIgnoreCase))
+        { <span class="home-participation-summary__mode">시험 집계</span> }
+        @if (!IsLoading && !HasError && Summary is { AsOfUtc: var asOf } && asOf != default)
+        { <time datetime="@asOf.ToString("O", CultureInfo.InvariantCulture)">기준 @asOf.ToOffset(TimeSpan.FromHours(9)).ToString("yyyy.MM.dd HH:mm", KoreanCulture) (한국)</time> }
+    </header>
+    @if (IsLoading)
+    { <p class="home-participation-summary__notice" role="status">현황 확인 중</p> }
+    else if (HasError)
+    {
+        <div class="home-participation-summary__recovery" role="status">
+            <span>현황을 불러오지 못했습니다.</span>
+            <button type="button" @onclick="Retry" disabled="@(!Retry.HasDelegate)">다시 확인</button>
+        </div>
+    }
+    <dl class="home-participation-summary__finance">
+        <div data-home-metric="confirmed-platform-profit">
+            <dt><span class="home-participation-summary__icon" aria-hidden="true"><MudIcon Icon="@Icons.Material.Outlined.AccountBalance" Size="Size.Small" /></span>플랫폼 확정 이익</dt>
+            <dd>@Money(Summary?.ConfirmedPlatformProfitKrw)</dd>
+        </div>
+        <div data-home-metric="confirmed-shared-payout">
+            <dt><span class="home-participation-summary__icon" aria-hidden="true"><MudIcon Icon="@Icons.Material.Outlined.Handshake" Size="Size.Small" /></span>공동분배 지급액</dt>
+            <dd>@Money(Summary?.ConfirmedSharedPayoutKrw)</dd>
+        </div>
+    </dl>
+    <section class="home-participation-summary__participation" aria-labelledby="home-freight-participation-title">
+        <header><h2 id="home-freight-participation-title">화물 완료 참여</h2><span>기록 기준</span>
+            @if (!string.IsNullOrWhiteSpace(DetailsHref)) { <a class="home-participation-summary__details" href="@DetailsHref">내역 보기 <span aria-hidden="true">→</span></a> }
+        </header>
+        <dl class="home-participation-summary__counts">
+            <div data-home-metric="completed-freight-transports"><dt>완료 운송</dt><dd>@Count(Summary?.CompletedFreightTransportCount, "건")</dd></div>
+            <div data-home-metric="freight-shipper-accounts"><dt>화주 계정</dt><dd>@Count(Summary?.FreightShipperAccountCount, "개")</dd></div>
+            <div data-home-metric="freight-driver-accounts"><dt>기사 계정</dt><dd>@Count(Summary?.FreightDriverAccountCount, "개")</dd></div>
+        </dl>
+        <p class="home-participation-summary__note">하차 완료 기록 · 수령 확인·정산과 별도 · 같은 계정의 역할별 중복 가능</p>
+        @if (!IsLoading && !HasError && Summary?.HasIncompleteParticipantBindings == true)
+        { <p class="home-participation-summary__note">일부 참여 계정은 집계되지 않았습니다.</p> }
+    </section>
+</section>
+
+@code {
+    [Parameter] public HomeParticipationSummaryResponse? Summary { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public bool HasError { get; set; }
+    [Parameter] public EventCallback Retry { get; set; }
+    [Parameter] public string? DetailsHref { get; set; }
+    private static readonly CultureInfo KoreanCulture = CultureInfo.GetCultureInfo("ko-KR");
+    private string? Unavailable => IsLoading ? "확인 중" : HasError ? "확인 불가" : null;
+    private string Money(decimal? amount) => Unavailable ?? (amount is { } value ? value.ToString("N0", KoreanCulture) + "원" : "미집계");
+    private string Count(int? count, string unit) => Unavailable ?? (count is { } value ? value.ToString("N0", KoreanCulture) + unit : "미집계");
+}

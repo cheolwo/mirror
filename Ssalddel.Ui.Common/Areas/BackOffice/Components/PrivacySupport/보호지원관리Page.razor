@@ -3,6 +3,7 @@
 @using Ssalddel.Ui.Common.Areas.BackOffice.ViewModels
 @using Ssalddel.Contracts.Common.PrivacySupport
 @inject I보호지원관리Client Client
+@inject IServiceProvider Services
 @implements IDisposable
 
 @{ Model?.SynchronizeOwner(); }
@@ -25,7 +26,7 @@
             <section><h2>요청 목록</h2><label for="support-kind">업무 종류</label><select id="support-kind" value="@Model.Kind" @onchange="ChangeKind" disabled="@Model.IsBusy"><option value="transaction-dispute">거래 문제</option><option value="privacy-rights">개인정보 요청</option><option value="privacy-incident">개인정보 사고</option></select>
                 @if (Model.Loaded && Model.Items.Count == 0) { <p class="support-muted">접수된 요청이 없습니다.</p> }
                 <div class="support-list">@foreach (var item in Model.Items) { <a class="support-row" href="@DetailHref(item.CaseId)"><strong>@KindLabel(item.Kind) · @Status(item.StatusCode)</strong><span>@Time(item.CreatedAtUtc)</span>@if (item.ProgressOverdue || item.ResultOverdue || item.IncidentOverdue) { <span class="support-danger">안내 기한 확인 필요</span> }<span class="support-muted">사건 확인 →</span></a> }</div>
-                <nav>@if (Model.Page > 1) { <button disabled="@Model.IsBusy" @onclick="() => Model.LoadAsync(kind: Model.Kind, page: Model.Page - 1)">이전 목록</button> }@if (Model.HasMore) { <button disabled="@Model.IsBusy" @onclick="() => Model.LoadAsync(kind: Model.Kind, page: Model.Page + 1)">다음 목록</button> }<button disabled="@Model.IsBusy" @onclick="ReloadAsync">새로고침</button></nav>
+                <nav>@if (Model.Page > 1) { <button disabled="@Model.IsBusy" @onclick="() => OpenListAsync(Model.Kind, Model.Page - 1)">이전 목록</button> }@if (Model.HasMore) { <button disabled="@Model.IsBusy" @onclick="() => OpenListAsync(Model.Kind, Model.Page + 1)">다음 목록</button> }<button disabled="@Model.IsBusy" @onclick="ReloadAsync">새로고침</button></nav>
             </section>
         }
         else if (Model.Detail is { } row)
@@ -83,23 +84,41 @@
                 }
             </section>
             <section><h2>처리 이력</h2>@if (row.History.Count == 0) { <p class="support-muted">추가 처리 기록이 없습니다.</p> }@foreach (var entry in row.History) { <p>@ActionLabel(entry.Action) <span class="support-muted">· @Time(entry.RecordedAtUtc)</span></p> }@if (row.Notifications.Count > 0) { <hr /><h3>안내 증빙 기록</h3>@foreach (var entry in row.Notifications) { <p>@NoticeLabel(entry.Kind) · @RecipientLabel(entry.RecipientRoleCode)<span class="support-muted"> · @(entry.RecordedDeliveredAtUtc is { } time ? Time(time) : "시각 미확인")</span></p> } }</section>
-            <nav><a href="@ListHref">요청 목록으로</a><button disabled="@(Model.IsBusy || Model.HasPending)" @onclick="ReloadAsync">최신 상태 조회</button></nav>
+            <nav><a href="@ListReturnHref">요청 목록으로</a><button disabled="@(Model.IsBusy || Model.HasPending)" @onclick="ReloadAsync">최신 상태 조회</button></nav>
         }
-        else if (!Model.IsBusy) { <section><h2>사건을 확인하지 못했습니다</h2><a href="@ListHref">요청 목록으로</a></section> }
+        else if (!Model.IsBusy) { <section><h2>사건을 확인하지 못했습니다</h2><a href="@ListReturnHref">요청 목록으로</a></section> }
     }
 </main>
 
 @code {
     [Parameter] public string? CaseId { get; set; }
+    [Parameter] public string? Kind { get; set; }
+    [Parameter] public int Page { get; set; } = 1;
+    [Parameter] public string? ReturnPath { get; set; }
     [Parameter] public Func<string?>? AdminOwnerProvider { get; set; }
     [Parameter] public string ListHref { get; set; } = "/privacy-support";
     [Parameter] public string LoginHref { get; set; } = "/login";
     private 보호지원관리ViewModel? Model;
+    private PrivacySupportNavigationContext RouteContext => PrivacySupportNavigationContext.Resolve(Kind, Page, ReturnPath);
+    private PrivacySupportNavigationContext ListContext => string.IsNullOrWhiteSpace(CaseId) && Model is { Loaded: true }
+        ? PrivacySupportNavigationContext.Resolve(Model.Kind, Model.Page, ReturnPath) : RouteContext;
+    private string ListReturnHref => ListContext.ListPath(ListHref);
     protected override void OnInitialized() { Model = new(Client, () => AdminOwnerProvider?.Invoke()); Model.PropertyChanged += Changed; }
-    protected override Task OnParametersSetAsync() => ReloadAsync();
-    private Task ReloadAsync() => Model!.LoadAsync(CaseId);
-    private Task ChangeKind(ChangeEventArgs args) => Model!.LoadAsync(kind: Convert.ToString(args.Value), page: 1);
-    private string DetailHref(string id) => ListHref.TrimEnd('/') + "/" + Uri.EscapeDataString(id);
+    protected override Task OnParametersSetAsync() => Model!.LoadAsync(CaseId, RouteContext.Kind, RouteContext.Page);
+    private Task ReloadAsync() => Model!.LoadAsync(CaseId, ListContext.Kind, ListContext.Page);
+    private Task ChangeKind(ChangeEventArgs args) => OpenListAsync(Convert.ToString(args.Value), 1);
+    private Task OpenListAsync(string? kind, int page)
+    {
+        if (Model is null || Model.IsBusy || Model.HasPending) return Task.CompletedTask;
+        var context = PrivacySupportNavigationContext.Resolve(kind, page, ReturnPath);
+        if (Services.GetService(typeof(NavigationManager)) is NavigationManager navigation)
+        {
+            navigation.NavigateTo(context.ListPath(ListHref));
+            return Task.CompletedTask;
+        }
+        return Model.LoadAsync(kind: context.Kind, page: context.Page);
+    }
+    private string DetailHref(string id) => ListContext.DetailPath(id, ListHref);
     private void Changed(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => _ = InvokeAsync(StateHasChanged);
     private static string Time(DateTime value) => value.AddHours(9).ToString("yyyy.MM.dd HH:mm") + " (한국 시간)";
     private static string KindLabel(string code) => code switch { "transaction-dispute" => "거래 문제", "privacy-rights" => "개인정보 요청", "privacy-incident" => "개인정보 사고", _ => "처리 요청" };

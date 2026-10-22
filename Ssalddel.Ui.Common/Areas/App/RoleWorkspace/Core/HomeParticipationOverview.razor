@@ -1,0 +1,65 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@using Ssalddel.Contracts.Common.Home
+@using Microsoft.Extensions.DependencyInjection
+@using Microsoft.Extensions.Logging
+@implements IDisposable
+@inject IServiceProvider Services
+
+<HomeParticipationSummary Summary="_summary" IsLoading="_loading" HasError="_hasError" Retry="LoadAsync" DetailsHref="@DetailsHref" />
+
+@code {
+    [Parameter] public string? DetailsHref { get; set; }
+    private HomeParticipationSummaryResponse? _summary;
+    private readonly CancellationTokenSource _lifetime = new();
+    private bool _loading = true;
+    private bool _hasError;
+    private bool _disposed;
+    private bool _requestInFlight;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        if (_disposed || _requestInFlight) return;
+        _requestInFlight = true;
+        _loading = true;
+        _hasError = false;
+        _summary = null;
+        try
+        {
+            // 기존 독립 역할 호스트도 같은 홈을 소비합니다. 공개 조회가 등록되지 않은
+            // 호스트에서는 현황만 확인 불가로 두고 역할 진입은 계속 제공합니다.
+            var client = Services.GetService<IHomeParticipationSummaryClient>();
+            if (client is null) { _hasError = true; return; }
+            using var request = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+            request.CancelAfter(TimeSpan.FromSeconds(10));
+            var summary = await client.LoadAsync(request.Token);
+            if (!_disposed)
+            {
+                _summary = summary;
+                _hasError = summary is null;
+            }
+        }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+        catch (Exception error) when (!_disposed)
+        {
+            // 통신·응답 오류를 가상 실적이나 0으로 바꾸지 않습니다.
+            Services.GetService<ILogger<HomeParticipationOverview>>()?.LogWarning(error, "누적 참여 현황 조회 실패");
+            _hasError = true;
+        }
+        catch (Exception) when (_disposed) { }
+        finally
+        {
+            _requestInFlight = false;
+            if (!_disposed) _loading = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _lifetime.Cancel();
+        _lifetime.Dispose();
+    }
+}

@@ -16,7 +16,8 @@
                                CargoRequestDraftHrefBase="/shipper/request"
                                UseBaguaRoleTransitionPages="true"
                                PostId="@PostId"
-                               BoardName="@QueryBoardName" />
+                               BoardName="@QueryBoardName"
+                               ListReturnPath="@RouteContext.BackHref" />
 </CommunityRoutePageFrame>
 
 @code {

@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Ssalddel.Client.Infrastructure.Transport;
 using Ssalddel.Contracts.Admin.Transport;
 using Ssalddel.Contracts.CommonContents;
+using SharedShipperRequest = Ssalddel.Contracts.Shipper.Request.화주운송의뢰응답;
 
 namespace SsalddelAdmin.Services;
 
@@ -37,9 +38,10 @@ public sealed partial class 백오피스조회Service : I백오피스Service
             ("dispatchStatus", 배차상태),
             ("pageSize", "200"));
 
-        var items = await 서버목록조회Async<화주운송의뢰응답>(
+        var source = await 서버목록조회Async<SharedShipperRequest>(
             query,
             cancellationToken);
+        var items = source.Select(AdminShipperRequestProjection.ToView).ToArray();
         foreach (var item in items)
         {
             Observe(item, "SsalddelAdmin.RequestList");
@@ -62,9 +64,10 @@ public sealed partial class 백오피스조회Service : I백오피스Service
             return null;
         }
 
-        var item = await 서버단건조회Async<화주운송의뢰응답>(
+        var source = await 서버단건조회Async<SharedShipperRequest>(
             $"api/v1/shipper/requests/{Uri.EscapeDataString(requestId.Trim())}",
             cancellationToken);
+        var item = AdminShipperRequestProjection.ToView(source);
         Observe(item, "SsalddelAdmin.RequestDetail");
         return item;
     }
@@ -92,9 +95,10 @@ public sealed partial class 백오피스조회Service : I백오피스Service
             cancellationToken);
 
         response.EnsureSuccessStatusCode();
-        var item = await response.Content.ReadFromJsonAsync<화주운송의뢰응답>(cancellationToken: cancellationToken);
-        if (item is not null)
+        var source = await response.Content.ReadFromJsonAsync<SharedShipperRequest>(cancellationToken: cancellationToken);
+        if (source is not null)
         {
+            var item = AdminShipperRequestProjection.ToView(source);
             Observe(item, "SsalddelAdmin.RequestCancelRefund");
             _ledgerObserver.RequestRefresh(item.의뢰Id, "SsalddelAdmin.RequestCancelRefund");
         }
@@ -203,7 +207,7 @@ public sealed partial class 백오피스조회Service : I백오피스Service
     public async Task<IReadOnlyList<운송진행응답>> 운송진행목록조회Async(string? 상태 = null, CancellationToken cancellationToken = default)
     {
         var query = BuildQuery("api/v1/admin/transports", ("상태", 상태));
-        return await 서버목록조회Async<운송진행응답>(
+        return await 운송관제목록조회Async<운송진행응답>(
             query,
             cancellationToken);
     }
@@ -211,9 +215,29 @@ public sealed partial class 백오피스조회Service : I백오피스Service
     public async Task<IReadOnlyList<운송이벤트로그응답>> 운송이벤트조회Async(string? requestId = null, CancellationToken cancellationToken = default)
     {
         var query = BuildQuery("api/v1/admin/transports/events", ("requestId", requestId));
-        return await 서버목록조회Async<운송이벤트로그응답>(
+        return await 운송관제목록조회Async<운송이벤트로그응답>(
             query,
             cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<운송진행응답>> 운송진행목록조회Async(string? 상태, string? businessCode, CancellationToken cancellationToken = default)
+    {
+        if (businessCode is null) return await 운송진행목록조회Async(상태, cancellationToken);
+        var business = businessCode.Trim().ToLowerInvariant();
+        if (business is not (Ssalddel.Contracts.Admin.BusinessPackages.BusinessPackageCatalog.FreightDelivery
+            or Ssalddel.Contracts.Admin.BusinessPackages.BusinessPackageCatalog.FoodDelivery))
+            throw new ArgumentException("운송 업무 구분을 확인해 주세요.", nameof(businessCode));
+        return await 운송관제목록조회Async<운송진행응답>(
+            BuildQuery("api/v1/admin/transports", ("상태", 상태), ("business", business)), cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<TItem>> 운송관제목록조회Async<TItem>(string query, CancellationToken cancellationToken)
+        where TItem : class
+    {
+        var items = await 서버단건조회Async<List<TItem>>(query, cancellationToken);
+        if (items.Any(item => item is null))
+            throw new InvalidDataException("운송 조회 목록의 항목을 확인하지 못했습니다.");
+        return items;
     }
 
     public async Task<IReadOnlyList<업체관리응답>> 업체목록조회Async(string? 상태 = null, CancellationToken cancellationToken = default)

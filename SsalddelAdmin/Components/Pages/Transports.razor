@@ -2,6 +2,8 @@
 @page "/admin/freight-delivery/transports"
 @page "/admin/order-warehouse/outbound-transports"
 @inject I백오피스Service DataService
+@inject NavigationManager Navigation
+@implements IDisposable
 
 <PageTitle>06. 운송 진행</PageTitle>
 
@@ -23,11 +25,17 @@
                 <MudCheckBox T="bool" @bind-Value="관리자확인만" Label="관리자 확인 필요만 보기" Color="Color.Primary" />
             </MudItem>
             <MudItem xs="12" md="3">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" FullWidth="true" OnClick="LoadAsync">조회</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" FullWidth="true" Disabled="@isLoading" OnClick="ApplyFiltersAsync">조회</MudButton>
             </MudItem>
         </MudGrid>
     </MudPaper>
 
+    @if (isLoading)
+    { <MudAlert Severity="Severity.Info">운송 목록을 불러오는 중입니다.</MudAlert> }
+    else if (errorMessage is not null)
+    { <MudAlert Severity="Severity.Warning">@errorMessage</MudAlert> }
+    else
+    {
     <MudGrid Spacing="3">
         <MudItem xs="12" sm="6" xl="3">
             <MudPaper Elevation="1" Class="pa-4" Style="height: 100%;">
@@ -172,14 +180,26 @@
             </MudPaper>
         </MudItem>
     </MudGrid>
+    }
 </MudStack>
 
 @code {
+    [SupplyParameterFromQuery(Name = "status")] public string? Status { get; set; }
+    [SupplyParameterFromQuery(Name = "eventRequest")] public string? EventRequestId { get; set; }
+    [SupplyParameterFromQuery(Name = "adminOnly")] public bool AdminOnly { get; set; }
     private string? statusFilter;
     private string? eventRequestFilter;
     private bool 관리자확인만;
     private IReadOnlyList<운송진행응답> transports = [];
     private IReadOnlyList<운송이벤트로그응답> events = [];
+    private bool isLoading;
+    private string? errorMessage;
+    private CancellationTokenSource? read;
+    private long generation;
+    private bool disposed;
+    private 운송관제NavigationContext? loadedContext;
+    private 운송관제NavigationContext Context => 운송관제NavigationContext.ForList(
+        new Uri(Navigation.Uri).AbsolutePath, statusFilter, eventRequestFilter, 관리자확인만);
 
     private IReadOnlyList<운송진행응답> 운영확인대상 => transports
         .Where(x => x.관리자확인필요 || x.예외신고됨 || IsStale(x))
@@ -192,12 +212,49 @@
         ? transports.Where(x => x.관리자확인필요 || x.예외신고됨 || IsStale(x)).ToArray()
         : transports;
 
-    protected override async Task OnInitializedAsync() => await LoadAsync();
+    protected override async Task OnParametersSetAsync()
+    {
+        statusFilter = Status; eventRequestFilter = EventRequestId; 관리자확인만 = AdminOnly;
+        await LoadAsync();
+    }
+
+    private Task ApplyFiltersAsync()
+    {
+        var href = Context.ListHref;
+        if (new Uri(Navigation.Uri).PathAndQuery != href)
+        {
+            Navigation.NavigateTo(href, replace: true);
+            return Task.CompletedTask;
+        }
+        return LoadAsync();
+    }
 
     private async Task LoadAsync()
     {
-        transports = await DataService.운송진행목록조회Async(statusFilter);
-        events = await DataService.운송이벤트조회Async(eventRequestFilter);
+        if (disposed) return;
+        read?.Cancel(); read?.Dispose();
+        using var request = read = new CancellationTokenSource();
+        var current = ++generation;
+        var context = Context;
+        isLoading = true; errorMessage = null;
+        try
+        {
+            var rows = await DataService.운송진행목록조회Async(context.Status, context.BusinessCode, request.Token);
+            var logs = await DataService.운송이벤트조회Async(context.EventRequestId, request.Token);
+            if (disposed || current != generation || request.IsCancellationRequested) return;
+            transports = rows; events = logs; loadedContext = context;
+        }
+        catch (OperationCanceledException) when (request.IsCancellationRequested) { }
+        catch (Exception)
+        {
+            if (!disposed && current == generation)
+            { transports = []; events = []; errorMessage = "운송 목록을 불러오지 못했습니다. 다시 조회해 주세요."; }
+        }
+        finally
+        {
+            if (!disposed && current == generation) isLoading = false;
+            if (ReferenceEquals(read, request)) read = null;
+        }
     }
 
     private static Color TransportColor(운송진행응답 item)
@@ -249,6 +306,11 @@
         return metadata.Length <= 80 ? metadata : metadata[..80] + "...";
     }
 
-    private static string WorkflowDetailHref(string requestId)
-        => $"/transports/{Uri.EscapeDataString(requestId)}";
+    private string WorkflowDetailHref(string requestId)
+        => 운송관제NavigationContext.ForList(Context.ListPath, loadedContext?.Status,
+            loadedContext?.EventRequestId, 관리자확인만).DetailHref(requestId);
+    public void Dispose()
+    {
+        disposed = true; ++generation; read?.Cancel(); read?.Dispose(); read = null;
+    }
 }

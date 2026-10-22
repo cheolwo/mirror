@@ -8,6 +8,15 @@ public static partial class SsalddelPageCapabilityCatalog
         foreach (var app in new[] { SsalddelPageAppCodes.IntegratedWeb, SsalddelPageAppCodes.Shipper })
         {
             var prefix = app == SsalddelPageAppCodes.IntegratedWeb ? "web" : "shipper";
+            rules.Add(Exact(prefix + "-home-participation-details", app, "/overview/participation", PageCapabilityStage.Live,
+                PageInteractionBoundary.ReadOnly, false, "0.0",
+                "공개 화물 참여 집계의 누적·월별 수치와 기준만 조회합니다. 개인 원장과 업무 처리는 기존 로그인·역할 권한을 따릅니다."));
+            foreach (var route in new[] { "/services", "/quick" })
+            {
+                rules.Add(Exact(prefix + (route == "/services" ? "-service-introduction" : "-quick-introduction-alias"),
+                    app, route, PageCapabilityStage.Live, PageInteractionBoundary.ReadOnly, false, "0.0",
+                    "음식·퀵/화물·공간 작업의 이용 방법과 준비 상태를 안내합니다. 업무 실행·수납·지급은 각 역할의 별도 경계를 따릅니다."));
+            }
             rules.Add(Prefix(prefix + "-activity-settlements", app, "/activity-settlements", PageCapabilityStage.Beta,
                 PageInteractionBoundary.Simulation, true, "3.5",
                 "기본 비활성 정산 연습 기능입니다. 인증한 본인의 기본보수·공동 초과성과금 근거를 조회하고 약정 동의·항목 확인·이의·수령 진술을 기록합니다. 실제 이체나 확정 이익·은행 입금 인증은 제공하지 않습니다.",

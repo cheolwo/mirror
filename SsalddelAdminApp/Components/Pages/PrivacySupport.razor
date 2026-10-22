@@ -1,21 +1,25 @@
 @page "/privacy-support"
 @page "/privacy-support/{CaseId}"
 @using Ssalddel.Ui.Common.Areas.BackOffice.Components.PrivacySupport
+@using Ssalddel.Contracts.Common.PrivacySupport
+@using Ssalddel.Contracts.Common.Community
 @inject AdminAuthSession Session
 @inject AdminAuthService AuthService
 @implements IDisposable
 
 <PageTitle>거래·개인정보 처리 요청</PageTitle>
 @if (restoring) { <p role="status">로그인 상태를 확인하고 있습니다.</p> }
-else { <보호지원관리Page CaseId="@CaseId" AdminOwnerProvider="AdminOwner" LoginHref="@LoginHref" /> }
+else { <보호지원관리Page CaseId="@CaseId" Kind="@Kind" Page="@Page" ReturnPath="@ReturnPath" AdminOwnerProvider="AdminOwner" LoginHref="@LoginHref" /> }
 
 @code {
     [Parameter] public string? CaseId { get; set; }
+    [SupplyParameterFromQuery(Name = PrivacySupportNavigationContext.KindQuery)] public string? Kind { get; set; }
+    [SupplyParameterFromQuery(Name = PrivacySupportNavigationContext.PageQuery)] public int Page { get; set; } = 1;
+    [SupplyParameterFromQuery(Name = PageNavigationQueryNames.ReturnPath)] public string? ReturnPath { get; set; }
     private bool restoring = true;
     private bool disposed;
     private string? AdminOwner() => Session.IsServerAdmin ? Session.UserId : null;
-    private string LoginHref => "/login?returnUrl=" + Uri.EscapeDataString(string.IsNullOrWhiteSpace(CaseId)
-        ? "/privacy-support" : "/privacy-support/" + Uri.EscapeDataString(CaseId));
+    private string LoginHref => PrivacySupportNavigationContext.Resolve(Kind, Page, ReturnPath).LoginPath(CaseId);
     protected override async Task OnInitializedAsync()
     {
         Session.Changed += SessionChanged;

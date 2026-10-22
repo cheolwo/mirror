@@ -25,6 +25,9 @@ public interface I백오피스Service
     Task<IReadOnlyList<기사배차내역응답>> 기사배차내역조회Async(string driverId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<기사월정산관리응답>> 기사월정산목록조회Async(int? year = null, int? month = null, string? driverId = null, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<운송진행응답>> 운송진행목록조회Async(string? 상태 = null, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<운송진행응답>> 운송진행목록조회Async(string? 상태, string? businessCode, CancellationToken cancellationToken = default)
+        => businessCode is null ? 운송진행목록조회Async(상태, cancellationToken)
+            : Task.FromException<IReadOnlyList<운송진행응답>>(new NotSupportedException("이 조회 서비스에서는 업무별 운송 목록을 확인할 수 없습니다."));
     Task<IReadOnlyList<운송이벤트로그응답>> 운송이벤트조회Async(string? requestId = null, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<업체관리응답>> 업체목록조회Async(string? 상태 = null, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<화주관리응답>> 화주목록조회Async(CancellationToken cancellationToken = default);
