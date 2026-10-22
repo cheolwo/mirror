@@ -15,6 +15,9 @@ public class 기사운송요약응답
     public DateTime? 출발_픽업 { get; set; }
     public DateTime? 도착 { get; set; }
     public decimal? 운임 { get; set; }
+    /// <summary>수락 시 운송 원장에 동결된 기사 지급 예정액입니다. 고객 청구액·입금 완료와 다릅니다.</summary>
+    public decimal? 기사지급예정액 { get; set; }
+    public string? 기사지급예정액근거 { get; set; }
     public decimal? 예상거리Km { get; set; }
     public string? 거리계산방식 { get; set; }
     public string 결제방식 { get; set; } = string.Empty;

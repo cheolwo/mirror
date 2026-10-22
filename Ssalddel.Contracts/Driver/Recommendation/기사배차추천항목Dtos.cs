@@ -8,6 +8,10 @@ public sealed class 기사배차추천항목응답
     public string? WorkKind { get; set; }
     public IReadOnlyList<string> AssignedActivities { get; set; } = [];
     public Ssalddel.Contracts.Common.Drivers.DriverOfferPricingDto? Pricing { get; set; }
+    /// <summary>원의뢰의 확인된 기사 약정액입니다. 고객 청구액·예상 수익·입금 완료 금액과 구분합니다.</summary>
+    public decimal? 기사지급예정운임 { get; set; }
+    /// <summary>지급 예정액의 원장 근거입니다. 구버전 응답 또는 미확인 값은 null입니다.</summary>
+    public string? 기사지급예정운임근거 { get; set; }
     public string 의뢰Id { get; set; } = string.Empty;
     public string 화물종류 { get; set; } = string.Empty;
     public string 운송의뢰유형코드 { get; set; } = "GeneralCargoTransport";

@@ -10,7 +10,7 @@
         <MudPaper Class="driver-page-legacy-header pa-4" Elevation="1">
             <MudStack Spacing="1">
                 <MudText Typo="Typo.h4">배달 내역</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">화물 운송 기록과 원장 운임을 확인합니다.</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">화물 운송 기록과 기사 지급 예정액을 확인합니다.</MudText>
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ReceiptLong" Href="@DriverRoutes.Payouts">받을 운송대금 확인</MudButton>
             </MudStack>
         </MudPaper>
@@ -73,7 +73,7 @@
                                                            PickupSubtitle="@PickupScheduleText(item)"
                                                            DropoffTitle="@item.도착지"
                                                            DropoffSubtitle="@HistoryDistanceText(item)"
-                                                           PaymentLabel="원장 운임"
+                                                           PaymentLabel="기사 지급 예정액"
                                                            PaymentItems="@HistoryPaymentItems(item)" />
                             </MudStack>
                         </MudPaper>
@@ -100,5 +100,8 @@
         => item.예상거리Km.HasValue ? 기사운송표시Mapper.Map(item).운송거리표시 : "거리 자료 없음";
 
     private static IReadOnlyList<string> HistoryPaymentItems(기사운송요약응답 item)
-        => [item.운임 is { } fare ? $"{fare:N0}원" : "운임 미확인", "실수령액은 별도 정산 확인"];
+    {
+        var display = 기사운송표시Mapper.Map(item);
+        return [display.운임표시, $"고객 총운임 {display.고객총운임표시}", "실수령액은 별도 정산 확인"];
+    }
 }

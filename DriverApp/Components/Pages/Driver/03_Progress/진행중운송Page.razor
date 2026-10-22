@@ -2,6 +2,11 @@
 @inject IDriverSampleDataService Samples
 @inject IAuthSession AuthSession
 @using Ssalddel.Client.Infrastructure.Transport
+@using Ssalddel.Ui.Common.Areas.App.Components.Recovery
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+@using Ssalddel.Contracts.Common.Workflow
+@using Ssalddel.Contracts.Common.Versioning
+@using DriverApp.ViewModels.Driver
 @implements IDisposable
 
 <PageTitle>진행중 운송</PageTitle>
@@ -11,34 +16,37 @@
         <MudPaper Class="driver-page-legacy-header pa-4" Elevation="1">
             <MudStack Spacing="1">
                 <MudText Typo="Typo.h4">진행 중 운송</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">현재 운송과 다음 행동을 서버 운송 데이터로 확인합니다.</MudText>
             </MudStack>
         </MudPaper>
-        <MudButton Href="/driver/distributed/round" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Inventory2">직접 피킹·배송 순회 확인</MudButton>
+        <MudButton Href="/driver/distributed/round" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Inventory2">피킹·배송</MudButton>
+
+        <업무오류복구Panel Message="@(_인증됨 ? _데이터오류 : null)"
+                       Error="@(_인증됨 ? _조회실패 : null)" Context="@조회맥락"
+                       ContextKey="driver-current-transport"
+                       Busy="@_데이터로딩중"
+                       RetryRequested="재조회Async"
+                       ReturnHref="@DriverRoutes.HomeSummary" />
 
         @if (_데이터로딩중)
         {
             <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
-            <MudText Typo="Typo.body2" Color="Color.Secondary">진행 중 운송을 확인하고 있습니다.</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">불러오는 중</MudText>
         }
         else if (!_인증됨)
         {
             <MudAlert Severity="Severity.Warning">
-                진행 중 운송은 기사 로그인 후 확인할 수 있습니다.
+                로그인이 필요합니다.
                 <MudButton Class="ml-2"
                            Variant="Variant.Filled"
                            Color="Color.Primary"
                            Href="@DriverRoutes.LoginFor(DriverRoutes.CurrentTransport)">
-                    로그인하고 운송 확인
+                    로그인
                 </MudButton>
             </MudAlert>
         }
         else if (!string.IsNullOrWhiteSpace(_데이터오류))
         {
-            <MudAlert Severity="Severity.Error">
-                @_데이터오류
-                <MudButton Class="ml-2" Variant="Variant.Outlined" Color="Color.Error" OnClick="재조회Async">다시 시도</MudButton>
-            </MudAlert>
+            @* 조회 실패 안내와 복귀는 공통 오류 창이 담당한다. *@
         }
         else if (현재운송 is not null)
         {
@@ -74,7 +82,7 @@
                             <MudText Typo="Typo.body1">@현재운송.운송거리표시</MudText>
                         </MudItem>
                         <MudItem xs="12" sm="4">
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">예상수익</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">기사 지급 예정액</MudText>
                             <MudText Typo="Typo.body1">@현재운송.운임표시</MudText>
                         </MudItem>
                         <MudItem xs="12" sm="4">
@@ -88,11 +96,9 @@
                         <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="@SecondaryActionHref">@SecondaryActionLabel</MudButton>
                     </MudStack>
 
-                    <MudAlert Severity="Severity.Info" Class="mb-0">주소와 결제 정보는 아래 운행 상세에서 필요한 순간에만 펼쳐 확인합니다.</MudAlert>
-
                     <MudPaper Elevation="0" Class="pa-3">
                         <MudStack Spacing="2">
-                            <MudText Typo="Typo.subtitle1">운송 상태 타임라인</MudText>
+                            <MudText Typo="Typo.subtitle1">진행 상황</MudText>
                             <MudGrid>
                                 @foreach (var step in TransportTimeline)
                                 {
@@ -112,7 +118,7 @@
                         <MudStack Spacing="2">
                             <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
                                 <MudStack Spacing="0">
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">수령자 최소 정보</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">수령자</MudText>
                                     <MudText Typo="Typo.subtitle1">@RecipientName</MudText>
                                 </MudStack>
                                 <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">@RecipientPaymentMethod</MudChip>
@@ -136,10 +142,10 @@
 
                     <SsalddelSensitiveDisclosureList Title="운행 상세"
                                                     Summary="@현재운송.현재단계"
-                                                    RelatedParties='@($"기사님 · 화주 · 하차지 담당자 / 의뢰 {현재운송.의뢰Id}")'
+                                                    RelatedParties="기사 · 화주 · 수령자"
                                                     Icon="@Icons.Material.Filled.LocalShipping"
                                                     Color="Color.Primary"
-                                                    PrivacyHint="운행 중 필요한 정보만 펼쳐 확인합니다.">
+                                                    PrivacyHint="">
                         <MudExpansionPanel Text="화물 정보">
                             <SsalddelSensitiveInfoRow Label="화물 종류" Value="@현재운송.화물종류" />
                             <SsalddelSensitiveInfoRow Label="상차 유형" Value="@현재운송.수입화물유형표시" />
@@ -158,7 +164,8 @@
                         </MudExpansionPanel>
 
                         <MudExpansionPanel Text="결제 정보">
-                            <SsalddelSensitiveInfoRow Label="예상 수익" Value="@현재운송.운임표시" />
+                            <SsalddelSensitiveInfoRow Label="기사 지급 예정액" Value="@현재운송.운임표시" />
+                            <SsalddelSensitiveInfoRow Label="고객 총운임" Value="@현재운송.고객총운임표시" />
                             <SsalddelSensitiveInfoRow Label="정산 기준" Value="하차 완료 후 정산 확인" />
                             <SsalddelSensitiveInfoRow Label="인수증" Value="하차 현장에서 필요 여부 확인" />
                         </MudExpansionPanel>
@@ -178,10 +185,9 @@
             <MudPaper Class="pa-4" Elevation="1">
                 <MudStack Spacing="2" AlignItems="AlignItems.Start">
                     <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Color="Color.Secondary" Size="Size.Large" />
-                    <MudText Typo="Typo.h6">현재 진행 중인 운송이 없습니다.</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">운행 대기를 시작하거나 추천 목록에서 다음 운송을 확인해 주세요.</MudText>
+                    <MudText Typo="Typo.h6">진행 중 운송 없음</MudText>
                     <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@DriverRoutes.Recommendations">추천 운송 보기</MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@DriverRoutes.Recommendations">추천 보기</MudButton>
                         <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="@DriverRoutes.WorkStart">운행 대기 시작</MudButton>
                         <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="재조회Async">새로고침</MudButton>
                     </MudStack>
@@ -189,7 +195,7 @@
             </MudPaper>
         }
 
-        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="@DriverRoutes.Home">기사 홈으로</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="@DriverRoutes.Home">홈</MudButton>
     </MudStack>
 </MudContainer>
 
@@ -197,6 +203,9 @@
     private bool _데이터로딩중 = true;
     private bool _인증됨;
     private string? _데이터오류;
+    private Api작업오류? _조회실패;
+    private static readonly 업무실패맥락Dto 조회맥락 = new(OperatingSystemIds.DomesticCargoTransport,
+        OperatingSystemLifecycleStageIds.CargoTransport, 업무처리결과Codes.조회);
     private readonly CancellationTokenSource _갱신취소 = new();
     private CancellationToken _갱신토큰;
     private bool _폐기됨;
@@ -251,6 +260,7 @@
                 _조회세션 = null;
                 _인증됨 = AuthSession.IsAuthenticated;
                 _데이터오류 = null;
+                _조회실패 = null;
                 _데이터로딩중 = false;
                 if (_인증됨)
                     await 데이터조회Async(force: true);
@@ -298,6 +308,7 @@
         var 판본 = Interlocked.Increment(ref _조회판본);
         _데이터로딩중 = true;
         _데이터오류 = null;
+        _조회실패 = null;
 
         try
         {
@@ -315,7 +326,10 @@
                 if (세션 != AuthSession.SessionRevision)
                 {
                     if (AuthSession.IsAuthenticated)
+                    {
                         _데이터오류 = "로그인 정보가 변경되었습니다. 다시 시도해 현재 운송을 확인해 주세요.";
+                        _조회실패 = new Api작업오류("session-changed", string.Empty, 401);
+                    }
                     return;
                 }
                 _조회세션 = 세션;
@@ -324,10 +338,13 @@
         catch (OperationCanceledException) when (_갱신토큰.IsCancellationRequested)
         {
         }
-        catch
+        catch (Exception ex)
         {
             if (!_폐기됨 && 판본 == _조회판본 && AuthSession.IsAuthenticated)
+            {
                 _데이터오류 = "진행 중 운송을 불러오지 못했습니다. 네트워크와 서버 연결을 확인한 뒤 다시 시도해 주세요.";
+                _조회실패 = 기사PageViewModelBase.정규화조회오류(ex);
+            }
         }
         finally
         {
@@ -343,9 +360,9 @@
         => 현재운송?.현재단계 is "확정" or "배차확정"
            || 현재운송?.다음행동.Contains("상차", StringComparison.OrdinalIgnoreCase) == true;
 
-    private string NextActionLabel => ShouldPickup ? "상차 처리하기" : "하차 처리하기";
+    private string NextActionLabel => ShouldPickup ? "상차" : "하차";
 
-    private string SecondaryActionLabel => ShouldPickup ? "하차 화면 확인" : "상차 화면 확인";
+    private string SecondaryActionLabel => ShouldPickup ? "하차 정보" : "상차 정보";
 
     private string NextActionHref => 현재운송 is null
         ? DriverRoutes.Home

@@ -27,6 +27,7 @@ public sealed class ShipperRequestDetailPageState
     public bool? IsWorkflowEnabled { get; set; } = true;
     public bool Created { get; set; }
     public string StatusMessage { get; set; } = string.Empty;
+    public Api작업오류? QueryError { get; set; }
     public ShipperRequestDetailMessageTone StatusTone { get; set; } = ShipperRequestDetailMessageTone.Info;
     public string SourceBoundaryMessage { get; set; }
         = "같은 운송 의뢰 ID의 저장 원장을 다시 조회해 표시합니다.";
@@ -41,6 +42,7 @@ public sealed record ShipperRequestDetailSnapshot
     public string SettlementStatus { get; init; } = string.Empty;
     public string DispatchStatus { get; init; } = string.Empty;
     public string TransportStatus { get; init; } = string.Empty;
+    public bool OperationalReviewHeld { get; init; }
     public DateTime? TransportLedgerUpdatedAtUtc { get; init; }
     public string AssignedDriverId { get; init; } = string.Empty;
     public string AssignedDriverName { get; init; } = string.Empty;
@@ -52,7 +54,11 @@ public sealed record ShipperRequestDetailSnapshot
     public string VehicleType { get; init; } = string.Empty;
     public string PaymentMethod { get; init; } = string.Empty;
     public int? ExpectedPaymentAmount { get; init; }
+    /// <summary>화주에게 청구하는 고객 총운임입니다. 기사 보수와 다릅니다.</summary>
     public decimal? FinalFare { get; init; }
+    /// <summary>수락 전 제안한 약정액입니다. 수락 후 운송 원장의 동결액을 대신하지 않습니다.</summary>
+    public decimal? AgreedDriverFare { get; init; }
+    /// <summary>수락 후 운송 원장에 동결된 지급 예정액만 표시합니다. 현재 화주 응답에 없으면 미확인입니다.</summary>
     public decimal? DriverFare { get; init; }
     public DateTime CreatedAt { get; init; }
     public string PickupAddress { get; init; } = string.Empty;
@@ -84,6 +90,7 @@ public sealed record ShipperRequestDetailSnapshot
             SettlementStatus = source.정산상태,
             DispatchStatus = source.배차상태,
             TransportStatus = source.운송상태,
+            OperationalReviewHeld = source.비정상운송검토보류중,
             TransportLedgerUpdatedAtUtc = source.운송원장갱신일시Utc,
             AssignedDriverId = source.확정기사Id ?? string.Empty,
             AssignedDriverName = source.확정기사명 ?? string.Empty,
@@ -96,7 +103,9 @@ public sealed record ShipperRequestDetailSnapshot
             PaymentMethod = source.결제수단,
             ExpectedPaymentAmount = source.결제예정금액,
             FinalFare = source.최종운임,
-            DriverFare = source.최종운임,
+            AgreedDriverFare = source.요금옵션?.기사지급예정운임,
+            // 화주 응답의 최종운임과 요금옵션은 운송 원장의 동결 기사액이 아닙니다.
+            DriverFare = null,
             CreatedAt = source.생성일시,
             PickupAddress = source.픽업지,
             DropoffAddress = source.하차지,
@@ -112,7 +121,8 @@ public sealed record ShipperRequestDetailSnapshot
             OnSitePaymentMemo = source.현장지급메모 ?? string.Empty,
             CargoDimensions = BuildDimensions(source.화물길이Mm, source.화물폭Mm, source.화물높이Mm),
             PalletCount = source.팔레트개수,
-            CanPay = ShipperRequestDetailPresentation.CanPay(source.배차상태, source.결제상태)
+            CanPay = ShipperRequestDetailPresentation.CanPay(source.배차상태, source.결제상태,
+                source.정산시점?.ToString(), source.의뢰상태)
         };
     }
 
@@ -145,9 +155,66 @@ public sealed record ShipperRequestPaymentReceiptPresentation(
     DateTimeOffset ApprovedAt,
     string? PayerMemo);
 
+public sealed record ShipperRequestNextAction(
+    string Title, string Reason, string ResponsibleParty, string Guidance,
+    ShipperRequestProgressState State, ShipperRequestDetailScreenKind RelatedScreen);
+
 public static class ShipperRequestDetailPresentation
 {
     public static readonly TimeSpan DriverLocationFreshnessWindow = TimeSpan.FromMinutes(10);
+
+    // 조회한 원장의 표시만 분류합니다. 이 결과는 승인 권한이나 배차 실행 가능 여부가 아닙니다.
+    public static ShipperRequestNextAction ResolveNextAction(ShipperRequestDetailSnapshot item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        if (IsCancelled(item))
+            return new("의뢰 취소 상태", "환불·정산은 별도 확인이 필요합니다.",
+                "화주·처리 담당자", "결제 상태를 확인해 주세요.", ShipperRequestProgressState.Attention, ShipperRequestDetailScreenKind.Payment);
+        if (NeedsReview(item))
+            return new("진행 확인·처리 대기", "보류·예외 상태입니다.",
+                "처리 담당자", "검토 결과를 기다려 주세요.", ShipperRequestProgressState.Attention, ShipperRequestDetailScreenKind.Timeline);
+        if (IsSimulationRecord(item))
+            return new("모의 수행 기록·정산 제외", "실제 결제·후불 승인·정산 대상이 아닙니다.",
+                "수행 확인 담당자", "진행 이력을 확인해 주세요.", ShipperRequestProgressState.Pending, ShipperRequestDetailScreenKind.Timeline);
+        if (item.SettlementStatus == "정산완료")
+            return new("정산 완료 기록", "실제 지급은 별도 확인이 필요합니다.",
+                "정산 담당자", "지급 내역을 확인해 주세요.", ShipperRequestProgressState.Completed, ShipperRequestDetailScreenKind.Proofs);
+        if (ResolveDropoffState(item) == ShipperRequestProgressState.Completed)
+            return new("운송 완료", "결제·정산·기사 입금은 별도 확인이 필요합니다.",
+                "화주·정산 담당자", "인수 증빙을 확인해 주세요.", ShipperRequestProgressState.Completed, ShipperRequestDetailScreenKind.Proofs);
+        if (ResolvePickupState(item) == ShipperRequestProgressState.Completed)
+            return new(TransportStage(item) == "하차지도착" ? "하차 확인 진행" : "운송 중",
+                "하차·인수 전입니다.",
+                "기사·수령 담당자", "전달·인수 결과를 확인해 주세요.", ShipperRequestProgressState.Active, ShipperRequestDetailScreenKind.Timeline);
+        if (ResolveAcceptedState(item) == ShipperRequestProgressState.Completed)
+            return new("기사 배정 완료", "상차 전입니다.",
+                "기사·상차 담당자", "상차 장소와 담당자 준비 상태를 확인해 주세요.", ShipperRequestProgressState.Active, ShipperRequestDetailScreenKind.Timeline);
+        if (!string.IsNullOrWhiteSpace(TransportStage(item)) && !IsKnownBeforeAcceptance(item))
+            return UnconfirmedNextAction();
+
+        if (item.PaymentStatus == "결제대기")
+        {
+            if (item.SettlementTiming == "선결제")
+                return new("접수 준비 · 결제 대기", "결제 후 배차 접수",
+                    "화주", "결제를 완료해 주세요.", ShipperRequestProgressState.Active, ShipperRequestDetailScreenKind.Payment);
+            if (item.SettlementTiming is ("운송완료후정산" or "월말정산") && item.SettlementStatus != "후불승인완료")
+                return new("후불 승인 확인 필요", "후불 승인 미확인",
+                    "후불 승인 담당자", "승인 조건을 확인해 주세요.", ShipperRequestProgressState.Active, ShipperRequestDetailScreenKind.Payment);
+            if (item.SettlementTiming == "현장지급" && item.SettlementStatus is not ("현장수금예정" or "현장수금완료"))
+                return new("현장 지급 조건 확인 필요", "지급 조건 미확인 · 수금·입금과 별도",
+                    "화주·현장 지급 담당자", "합의한 지급 조건을 확인해 주세요.", ShipperRequestProgressState.Active, ShipperRequestDetailScreenKind.Payment);
+        }
+
+        if (DispatchConditionsRecorded(item))
+        {
+            if (item.DispatchStatus is "대기" or "배차대기" or "매칭중" or "추천중" or "추천")
+                return new("기사 배차 대기", "기사 수락 전",
+                    "배차 담당·기사", "배차 결과를 기다려 주세요.", ShipperRequestProgressState.Active, ShipperRequestDetailScreenKind.Timeline);
+            return new("배차 접수 확인 필요", "지급 조건 확인됨 · 배차 미확인",
+                "배차 담당자", "배차 상태를 확인해 주세요.", ShipperRequestProgressState.Pending, ShipperRequestDetailScreenKind.Timeline);
+        }
+        return UnconfirmedNextAction();
+    }
 
     public static string ResolveDriverLocationFreshness(
         ShipperRequestDetailSnapshot item,
@@ -165,10 +232,11 @@ public static class ShipperRequestDetailPresentation
                 : "위치 미수신";
         }
 
-        var referenceUtc = nowUtc ?? DateTime.UtcNow;
-        var recordedAtUtc = item.DriverLocationRecordedAtUtc.Value.ToUniversalTime();
-        var age = referenceUtc.ToUniversalTime() - recordedAtUtc;
-        if (age <= DriverLocationFreshnessWindow)
+        var referenceUtc = NormalizeUtc(nowUtc ?? DateTime.UtcNow);
+        var recordedAtUtc = NormalizeUtc(item.DriverLocationRecordedAtUtc.Value);
+        var age = referenceUtc - recordedAtUtc;
+        if (age < TimeSpan.Zero) return "위치 시각 확인 필요";
+        if (age < DriverLocationFreshnessWindow)
         {
             return "최신 위치";
         }
@@ -186,16 +254,18 @@ public static class ShipperRequestDetailPresentation
             return false;
         }
 
-        var referenceUtc = nowUtc ?? DateTime.UtcNow;
-        return referenceUtc.ToUniversalTime()
-               - item.DriverLocationRecordedAtUtc.Value.ToUniversalTime()
-               > DriverLocationFreshnessWindow;
+        var age = NormalizeUtc(nowUtc ?? DateTime.UtcNow) - NormalizeUtc(item.DriverLocationRecordedAtUtc.Value);
+        return age < TimeSpan.Zero || age >= DriverLocationFreshnessWindow;
     }
 
+    // 서버의 *Utc 필드는 EF 왕복 뒤 Kind가 없어도 UTC다. 로컬 시간으로 다시 해석하지 않는다.
+    public static DateTime NormalizeUtc(DateTime value) => value.Kind == DateTimeKind.Unspecified
+        ? DateTime.SpecifyKind(value, DateTimeKind.Utc) : value.ToUniversalTime();
+
     public static string ResolveEtaStatus(ShipperRequestDetailSnapshot item)
-        => ContainsAny(item.TransportStatus, "하차완료", "인수완료", "완료")
+        => ResolveDropoffState(item) == ShipperRequestProgressState.Completed
             ? "도착 완료"
-            : "미산정 · 경로·교통 정보 연결 전";
+            : "미산정";
 
     public static IReadOnlyList<ShipperRequestTimelineStep> BuildTimeline(ShipperRequestDetailSnapshot item)
         =>
@@ -203,60 +273,68 @@ public static class ShipperRequestDetailPresentation
             new(
                 "결제",
                 Display(item.PaymentStatus),
-                "화주 결제 또는 후불·현장 지급 조건을 확인하는 단계입니다.",
+                string.Empty,
                 $"{Display(item.PaymentMethod)} · {Money(item.ExpectedPaymentAmount)}",
                 ResolvePaymentState(item)),
             new(
                 "배차",
                 Display(item.DispatchStatus),
-                "저장된 배차 상태가 기사 추천과 수락 흐름으로 이어지는지 확인합니다.",
+                ResolveNextAction(item).Title,
                 $"{Display(item.VehicleType)} · {Display(item.TransportMethod)}",
                 ResolveDispatchState(item)),
             new(
                 "기사 수락",
                 ResolveAcceptedStatus(item),
-                "기사 응답 뒤 실제 운송 후보가 정해지는 단계입니다.",
+                string.Empty,
                 $"상차지 {Display(item.PickupAddress)}",
                 ResolveAcceptedState(item)),
             new(
                 "상차",
                 ResolvePickupStatus(item),
-                "상차지 도착과 화물 인수 상태를 확인합니다.",
-                $"상차 상태 {Display(item.DispatchStatus)}",
+                string.Empty,
+                $"운송 상태 {Display(TransportStage(item))}",
                 ResolvePickupState(item)),
             new(
                 "하차",
                 ResolveDropoffStatus(item),
-                "하차 완료와 인수 확인 상태를 확인합니다.",
+                string.Empty,
                 $"하차지 {Display(item.DropoffAddress)}",
                 ResolveDropoffState(item)),
             new(
                 "정산",
                 Display(item.SettlementStatus),
-                "운송 완료 뒤 수납과 기사 정산 상태를 맞추는 단계입니다.",
-                $"{Display(item.SettlementTiming)} · 기사 지급 {Money(item.DriverFare)}",
+                string.Empty,
+                $"{Display(item.SettlementTiming)} · {ResolveDriverPaymentSummary(item)}",
                 ResolveSettlementState(item))
         ];
+
+    public static string ResolveDriverPaymentSummary(ShipperRequestDetailSnapshot item)
+    {
+        var beforeAcceptance = IsKnownBeforeAcceptance(item) && string.IsNullOrWhiteSpace(item.AssignedDriverId);
+        var amount = beforeAcceptance ? item.AgreedDriverFare : item.DriverFare;
+        var label = beforeAcceptance ? "기사 약정액" : "기사 지급 예정액";
+        return $"{label} {(amount.HasValue ? Money(amount) : "미확인")}";
+    }
 
     public static IReadOnlyList<ShipperRequestProofItem> BuildProofs(ShipperRequestDetailSnapshot item)
         =>
         [
             new(
                 "상차 증빙",
-                ResolvePickupState(item) == ShipperRequestProgressState.Completed ? "상차 상태 기록됨" : "상차 전",
-                "사진과 인수 내역은 기사 운송 원장에서 생성되며 이 화면은 연결 상태만 확인합니다.",
-                $"배차 상태 {Display(item.DispatchStatus)}",
+                ResolvePickupState(item) == ShipperRequestProgressState.Completed ? "상차 상태 기록됨" : ResolvePickupStatus(item),
+                string.Empty,
+                string.Empty,
                 ResolvePickupState(item)),
             new(
-                "하차/POD",
-                ResolveDropoffState(item) == ShipperRequestProgressState.Completed ? "하차 상태 기록됨" : "하차 전",
-                "하차 사진과 POD는 원본 증빙 저장소를 기준으로 검수해야 합니다.",
-                $"의뢰 상태 {Display(item.RequestStatus)}",
+                "하차 증빙",
+                ResolveDropoffState(item) == ShipperRequestProgressState.Completed ? "하차 상태 기록됨" : ResolveDropoffStatus(item),
+                string.Empty,
+                string.Empty,
                 ResolveDropoffState(item)),
             new(
                 "인수증",
                 string.IsNullOrWhiteSpace(item.ReceiptNumber) ? "등록 전" : "번호 등록됨",
-                "운송 의뢰 원장에 저장된 인수증 번호와 등록 시각만 표시합니다.",
+                string.Empty,
                 string.IsNullOrWhiteSpace(item.ReceiptNumber)
                     ? $"증빙 방식 {Display(item.EvidenceMethod)}"
                     : $"{item.ReceiptNumber} · {DisplayDateTime(item.ReceiptRegisteredAt)}",
@@ -264,7 +342,7 @@ public static class ShipperRequestDetailPresentation
             new(
                 "세무 증빙 조건",
                 ResolveTaxEvidenceStatus(item),
-                "발급 요구 조건을 표시하며 실제 세금계산서나 현금영수증을 임의로 생성하지 않습니다.",
+                "발급 요청 조건입니다.",
                 $"세금계산서 {YesNo(item.TaxInvoiceRequired)} · 현금영수증 {YesNo(item.CashReceiptRequired)}",
                 item.TaxInvoiceRequired || item.CashReceiptRequired
                     ? ShipperRequestProgressState.Active
@@ -272,51 +350,19 @@ public static class ShipperRequestDetailPresentation
         ];
 
     public static string ResolveOverallLabel(ShipperRequestDetailSnapshot item)
-    {
-        if (ResolveSettlementState(item) == ShipperRequestProgressState.Completed)
-        {
-            return "정산 완료";
-        }
-
-        if (ResolveDropoffState(item) == ShipperRequestProgressState.Completed)
-        {
-            return "하차 완료";
-        }
-
-        if (ResolvePickupState(item) == ShipperRequestProgressState.Completed)
-        {
-            return "운송 중";
-        }
-
-        if (ResolveAcceptedState(item) == ShipperRequestProgressState.Completed)
-        {
-            return "기사 수락";
-        }
-
-        return ResolveDispatchState(item) == ShipperRequestProgressState.Active ? "배차 진행" : "접수";
-    }
+        => ResolveNextAction(item).Title;
 
     public static ShipperRequestProgressState ResolveOverallState(ShipperRequestDetailSnapshot item)
-    {
-        var timeline = BuildTimeline(item);
-        if (timeline.Any(step => step.State == ShipperRequestProgressState.Attention))
-        {
-            return ShipperRequestProgressState.Attention;
-        }
-
-        if (ResolveSettlementState(item) == ShipperRequestProgressState.Completed)
-        {
-            return ShipperRequestProgressState.Completed;
-        }
-
-        return timeline.Any(step => step.State == ShipperRequestProgressState.Active)
-            ? ShipperRequestProgressState.Active
-            : ShipperRequestProgressState.Pending;
-    }
+        => ResolveNextAction(item).State;
 
     public static bool CanPay(string? dispatchStatus, string? paymentStatus)
         => ContainsAny(dispatchStatus, "상차완료", "운송중", "하차지도착", "하차완료", "인수완료")
            && !ContainsAny(paymentStatus, "결제완료", "결제확보", "입금확인", "승인완료");
+
+    // 표시 가능 여부만 판단합니다. 실제 실행은 서버 옵션·권한·확정 운임으로 다시 검사합니다.
+    public static bool CanPay(string? dispatchStatus, string? paymentStatus, string? settlementTiming, string? requestStatus)
+        => settlementTiming == "선결제" && requestStatus == "생성됨" && dispatchStatus == "미시작" && paymentStatus == "결제대기"
+           || CanPay(dispatchStatus, paymentStatus);
 
     public static ShipperRequestProgressState ResolvePaymentState(ShipperRequestDetailSnapshot item)
     {
@@ -325,7 +371,9 @@ public static class ShipperRequestDetailPresentation
             return ShipperRequestProgressState.Attention;
         }
 
-        if (ContainsAny(item.PaymentStatus, "결제완료", "결제확보", "승인", "입금확인", "완료"))
+        if (IsSimulationRecord(item)) return ShipperRequestProgressState.Pending;
+
+        if (item.PaymentStatus is "결제완료" or "결제확보" or "승인완료" or "입금확인")
         {
             return ShipperRequestProgressState.Completed;
         }
@@ -342,12 +390,12 @@ public static class ShipperRequestDetailPresentation
             return ShipperRequestProgressState.Attention;
         }
 
-        if (ContainsAny(item.DispatchStatus, "배차확정", "기사배정", "수락", "상차", "운송", "하차", "인수", "완료"))
+        if (ResolveAcceptedState(item) == ShipperRequestProgressState.Completed)
         {
             return ShipperRequestProgressState.Completed;
         }
 
-        return ContainsAny(item.DispatchStatus, "매칭", "배차대기", "추천", "대기")
+        return DispatchConditionsRecorded(item) && item.DispatchStatus is ("대기" or "매칭중" or "배차대기" or "추천중" or "추천")
             ? ShipperRequestProgressState.Active
             : ShipperRequestProgressState.Pending;
     }
@@ -359,12 +407,13 @@ public static class ShipperRequestDetailPresentation
             return ShipperRequestProgressState.Attention;
         }
 
-        if (ContainsAny(item.DispatchStatus, "수락", "배차확정", "기사배정", "상차", "운송", "하차", "인수", "완료"))
+        if (TransportStage(item) is "배차확정" or "확정" or "기사배정" or "수락" or "이동중" or "상차대기" or "상차중" or "상차지도착"
+            or "상차완료" or "운송중" or "하차대기" or "하차지도착" or "하차완료" or "인수완료" or "배송완료" or "운송완료")
         {
             return ShipperRequestProgressState.Completed;
         }
 
-        return ContainsAny(item.DispatchStatus, "추천", "매칭")
+        return DispatchConditionsRecorded(item) && item.DispatchStatus is ("추천" or "추천중" or "매칭중")
             ? ShipperRequestProgressState.Active
             : ShipperRequestProgressState.Pending;
     }
@@ -376,13 +425,12 @@ public static class ShipperRequestDetailPresentation
             return ShipperRequestProgressState.Attention;
         }
 
-        if (ContainsAny(item.DispatchStatus, "상차완료", "운송", "하차", "인수", "완료")
-            || ContainsAny(item.RequestStatus, "상차완료", "운송", "하차", "완료"))
+        if (TransportStage(item) is "상차완료" or "운송중" or "하차대기" or "하차지도착" or "하차완료" or "인수완료" or "배송완료" or "운송완료")
         {
             return ShipperRequestProgressState.Completed;
         }
 
-        return ContainsAny(item.DispatchStatus, "상차지도착", "상차대기", "배차확정", "기사배정", "수락")
+        return TransportStage(item) is "상차지도착" or "상차대기" or "상차중" or "이동중" or "배차확정" or "확정" or "기사배정" or "수락"
             ? ShipperRequestProgressState.Active
             : ShipperRequestProgressState.Pending;
     }
@@ -394,30 +442,33 @@ public static class ShipperRequestDetailPresentation
             return ShipperRequestProgressState.Attention;
         }
 
-        if (ContainsAny(item.DispatchStatus, "하차완료", "배송완료", "인수완료", "완료")
-            || ContainsAny(item.RequestStatus, "하차완료", "배송완료", "완료"))
+        if (TransportStage(item) is "하차완료" or "배송완료" or "인수완료" or "운송완료")
         {
             return ShipperRequestProgressState.Completed;
         }
 
-        return ContainsAny(item.DispatchStatus, "운송중", "하차지도착", "하차대기", "상차완료")
+        return TransportStage(item) is "운송중" or "하차지도착" or "하차대기" or "상차완료"
             ? ShipperRequestProgressState.Active
             : ShipperRequestProgressState.Pending;
     }
 
     public static ShipperRequestProgressState ResolveSettlementState(ShipperRequestDetailSnapshot item)
     {
-        if (HasProblem(item.SettlementStatus) || HasProblem(item.PaymentStatus))
+        if (item.OperationalReviewHeld || item.SettlementStatus == "미수발생"
+            || HasProblem(item.SettlementStatus) || HasProblem(item.PaymentStatus))
         {
             return ShipperRequestProgressState.Attention;
         }
 
-        if (ContainsAny(item.SettlementStatus, "정산완료", "입금확인완료", "완료"))
+        if (IsSimulationRecord(item)) return ShipperRequestProgressState.Pending;
+
+        if (item.SettlementStatus == "정산완료")
         {
             return ShipperRequestProgressState.Completed;
         }
 
-        return ContainsAny(item.SettlementStatus, "정산대기", "입금대기", "청구대기", "입금요청", "대기")
+        return item.SettlementStatus is "정산대기" or "입금대기" or "청구대기" or "입금요청" or "결제대기"
+            or "후불승인대기" or "후불승인완료" or "인수증대기" or "인수증등록완료" or "입금확인완료" or "현장수금예정" or "현장수금완료" or "결제완료"
                || ResolveDropoffState(item) == ShipperRequestProgressState.Completed
             ? ShipperRequestProgressState.Active
             : ShipperRequestProgressState.Pending;
@@ -447,25 +498,25 @@ public static class ShipperRequestDetailPresentation
             ShipperRequestProgressState.Completed => "기사 수락 완료",
             ShipperRequestProgressState.Active => "기사 응답 대기",
             ShipperRequestProgressState.Attention => "수락 흐름 확인 필요",
-            _ => "수락 전"
+            _ => IsKnownBeforeAcceptance(item) ? "수락 전" : "수락 상태 미확인"
         };
 
     private static string ResolvePickupStatus(ShipperRequestDetailSnapshot item)
         => ResolvePickupState(item) switch
         {
             ShipperRequestProgressState.Completed => "상차 완료",
-            ShipperRequestProgressState.Active => ContainsAny(item.DispatchStatus, "상차지도착") ? "상차지 도착" : "상차 준비",
+            ShipperRequestProgressState.Active => TransportStage(item) == "상차지도착" ? "상차지 도착" : "상차 준비",
             ShipperRequestProgressState.Attention => "상차 흐름 확인 필요",
-            _ => "상차 전"
+            _ => IsKnownBeforeAcceptance(item) ? "상차 전" : "상차 상태 미확인"
         };
 
     private static string ResolveDropoffStatus(ShipperRequestDetailSnapshot item)
         => ResolveDropoffState(item) switch
         {
             ShipperRequestProgressState.Completed => "하차 완료",
-            ShipperRequestProgressState.Active => ContainsAny(item.DispatchStatus, "하차지도착") ? "하차지 도착" : "하차 진행",
+            ShipperRequestProgressState.Active => TransportStage(item) == "하차지도착" ? "하차지 도착" : "하차 진행",
             ShipperRequestProgressState.Attention => "하차 흐름 확인 필요",
-            _ => "하차 전"
+            _ => IsKnownBeforeAcceptance(item) || ResolvePickupState(item) == ShipperRequestProgressState.Active ? "하차 전" : "하차 상태 미확인"
         };
 
     private static string ResolveTaxEvidenceStatus(ShipperRequestDetailSnapshot item)
@@ -494,4 +545,45 @@ public static class ShipperRequestDetailPresentation
     private static bool ContainsAny(string? value, params string[] tokens)
         => !string.IsNullOrWhiteSpace(value)
            && tokens.Any(token => value.Contains(token, StringComparison.OrdinalIgnoreCase));
+
+    private static string TransportStage(ShipperRequestDetailSnapshot item)
+        => !string.IsNullOrWhiteSpace(item.TransportStatus) ? item.TransportStatus
+            : !string.IsNullOrWhiteSpace(item.DispatchStatus) ? item.DispatchStatus : item.RequestStatus;
+
+    private static bool DispatchConditionsRecorded(ShipperRequestDetailSnapshot item)
+    {
+        // 표시용 조건 대조이며 실행 정책을 대체하지 않습니다. 알 수 없는 저장값은 확인된 조건으로 취급하지 않습니다.
+        if (item.RequestStatus != "생성됨" || NeedsReview(item)
+            || !TryReadStoredEnum<정산시점>(item.SettlementTiming, out var timing)
+            || !TryReadStoredEnum<운임정산상태>(item.SettlementStatus, out var settlement))
+            return false;
+        return item.PaymentStatus == "결제완료" || item.PaymentStatus == "결제대기" && (timing switch
+        {
+            정산시점.현장지급 => settlement == 운임정산상태.현장수금예정,
+            정산시점.운송완료후정산 or 정산시점.월말정산 => settlement == 운임정산상태.후불승인완료,
+            _ => false
+        });
+    }
+
+    private static bool TryReadStoredEnum<TEnum>(string value, out TEnum parsed) where TEnum : struct, Enum
+        => Enum.TryParse(value, ignoreCase: false, out parsed) && Enum.IsDefined(parsed)
+            && string.Equals(value, parsed.ToString(), StringComparison.Ordinal);
+
+    private static bool IsKnownBeforeAcceptance(ShipperRequestDetailSnapshot item)
+        => TransportStage(item) is "생성됨" or "미시작" or "대기" or "배차대기" or "매칭중" or "추천중" or "추천";
+
+    private static bool IsSimulationRecord(ShipperRequestDetailSnapshot item)
+        => item.SettlementStatus == "모의 수행·정산 제외";
+
+    private static ShipperRequestNextAction UnconfirmedNextAction()
+        => new("진행 상태 확인 필요", "다음 진행 조건 미확인",
+            "처리 담당자", "새로고침하거나 담당자에게 문의해 주세요.", ShipperRequestProgressState.Pending, ShipperRequestDetailScreenKind.Payment);
+
+    private static bool IsCancelled(ShipperRequestDetailSnapshot item)
+        => new[] { item.RequestStatus, item.DispatchStatus, item.TransportStatus, item.SettlementStatus }
+            .Any(status => status is "취소" or "의뢰취소" or "운송취소" or "정산취소");
+
+    private static bool NeedsReview(ShipperRequestDetailSnapshot item)
+        => item.OperationalReviewHeld || item.SettlementStatus == "미수발생"
+            || new[] { item.RequestStatus, item.DispatchStatus, item.TransportStatus, item.SettlementStatus, item.PaymentStatus }.Any(HasProblem);
 }

@@ -1,6 +1,7 @@
 using DriverApp.Models.Driver.Samples;
 using Ssalddel.Contracts.Driver.Transport;
 using DriverApp.ViewModels.Driver.Transport;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo;
 
 namespace DriverApp.Services;
 
@@ -14,7 +15,7 @@ internal static class 기사운송표시Mapper
             source is 기사운송상세응답 { 개인정보제공보류: false } dropoffLongitude ? dropoffLongitude.하차경도 : null,
             string.IsNullOrWhiteSpace(source.상태) ? "진행중" : source.상태,
             기사국내시각표시.한국시간(source.출발_픽업 ?? source.도착 ?? source.UpdatedAt).DateTime,
-            source.예상거리Km, source.운임, source.인수증필요, source.인수증서명필수,
+            source.예상거리Km, CargoDriverPayoutPresentation.FrozenAmount(source), source.인수증필요, source.인수증서명필수,
             string.IsNullOrWhiteSpace(source.결제방식) ? "서버 정산" : source.결제방식,
             source.상태 switch
             {
@@ -26,6 +27,7 @@ internal static class 기사운송표시Mapper
                 _ => "상태 갱신"
             })
         {
+            고객총운임 = source.운임,
             거리계산방식 = source.거리계산방식 ?? string.Empty,
             수령자명 = source.수령자명,
             수령자연락처 = source.수령자연락처,

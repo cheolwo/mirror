@@ -156,6 +156,7 @@ public sealed class DriverNativeLocationR16Tests
         var mapped = 기사운송표시Mapper.Map(new 기사운송상세응답
         {
             Id = 7, 상태 = "상차완료", 출발지 = "상차지", 도착지 = "하차지", 운임 = 12000m,
+            기사지급예정액 = 9000m, 기사지급예정액근거 = "운송원장.기사지급예정액",
             픽업위도 = 37.6m, 픽업경도 = 127.1m, 하차위도 = 37.7m, 하차경도 = 127.2m,
             수령자명 = "수령자", 전달요청 = "업무 요청", 인수증필요 = true
         });
@@ -163,7 +164,8 @@ public sealed class DriverNativeLocationR16Tests
         Assert.Equal(127.1m, mapped.픽업경도);
         Assert.Equal(37.7m, mapped.하차위도);
         Assert.Equal(127.2m, mapped.하차경도);
-        Assert.Equal(12000m, mapped.예상수익);
+        Assert.Equal(9000m, mapped.예상수익);
+        Assert.Equal(12000m, mapped.고객총운임);
         Assert.Equal("수령자", mapped.수령자명);
         Assert.Equal("업무 요청", mapped.전달요청);
         Assert.Equal("하차지 도착", mapped.다음행동);

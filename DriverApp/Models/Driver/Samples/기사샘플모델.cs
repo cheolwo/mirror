@@ -65,7 +65,12 @@ public sealed record 기사운송샘플항목(
     string 결제방식,
     string 다음행동)
 {
-    public string 운임표시 => 예상수익 is { } fare ? $"{fare:N0}원" : "운임 미확인";
+    /// <summary>서버 운송은 수락 시 동결된 기사 지급 예정액입니다. 실제 입금과 다릅니다.</summary>
+    public string 운임표시 => 예상수익 is { } fare ? $"{fare:N0}원" : "미확인";
+
+    public decimal? 고객총운임 { get; init; }
+
+    public string 고객총운임표시 => 고객총운임 is { } fare ? $"{fare:N0}원" : "운임 미확인";
 
     public string 운송거리표시 => 운송거리Km is { } distance ? $"예상 {distance:0.0}km" : "거리 미확인";
 

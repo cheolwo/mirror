@@ -23,7 +23,7 @@ public sealed class CargoPricingDisplayTests
     [InlineData(true, "{\"운임\":null,\"예상거리Km\":0}", "운임 미확인", "예상 0.0km")]
     [InlineData(false, "{\"운임\":6500,\"예상거리Km\":12.5,\"거리계산방식\":\"synthetic-quote-basis\"}", "6,500원", "예상 12.5km")]
     [InlineData(true, "{\"운임\":6500,\"예상거리Km\":12.5,\"거리계산방식\":\"synthetic-quote-basis\"}", "6,500원", "예상 12.5km")]
-    public void 기존_JSON의_누락_null_확인된0과양수는_상세와요약에서_구별하고_예상거리로표시한다(
+    public void 기존_JSON의_고객운임은_기사액으로대체하지않고_누락_null_0과양수를보존한다(
         bool detail, string json, string expectedFare, string expectedDistance)
     {
         기사운송요약응답 source = detail
@@ -37,10 +37,12 @@ public sealed class CargoPricingDisplayTests
 
         Assert.Equal(42, result.Id);
         Assert.Equal("synthetic-priced-request", result.의뢰Id);
-        Assert.Equal(source.운임, result.예상수익);
+        Assert.Null(result.예상수익);
+        Assert.Equal(source.운임, result.고객총운임);
         Assert.Equal(source.예상거리Km, result.운송거리Km);
         Assert.Equal(source.거리계산방식 ?? string.Empty, result.거리계산방식);
-        Assert.Equal(expectedFare, result.운임표시);
+        Assert.Equal("미확인", result.운임표시);
+        Assert.Equal(expectedFare, result.고객총운임표시);
         Assert.Equal(expectedDistance, result.운송거리표시);
         Assert.Equal("확정", result.현재단계);
         Assert.Equal("상차지 도착", result.다음행동);

@@ -43,6 +43,7 @@ public sealed class CargoTransportDetailRecoveryTests
             Id = id, 운송번호 = "synthetic-cargo-42", 출발지 = "합성 상차지", 도착지 = "합성 하차지",
             상태 = "상차지도착", 인수증필요 = true, 인수증서명필수 = true,
             수령자명 = "합성 수령자", 수령자연락처 = "test-only-dropoff", 전달요청 = "현장 확인", 운임 = 6500m,
+            기사지급예정액 = 5000m, 기사지급예정액근거 = "운송원장.기사지급예정액",
             상차담당자명 = "합성 상차 담당자", 상차연락처 = "test-only-pickup",
             상차시간창시작일시 = new DateTime(2026, 10, 3, 0, 30, 0, DateTimeKind.Utc),
             상차시간창종료일시 = new DateTime(2026, 10, 3, 1, 30, 0, DateTimeKind.Utc),
@@ -60,7 +61,8 @@ public sealed class CargoTransportDetailRecoveryTests
         Assert.Equal("test-only-pickup", result.상차연락처);
         Assert.Equal("10.03 09:30 ~ 10.03 10:30 (한국시간)", result.상차시간창표시);
         Assert.Equal("10.03 12:00 ~ 10.03 13:00 (한국시간)", result.하차시간창표시);
-        Assert.Equal(6500m, result.예상수익);
+        Assert.Equal(5000m, result.예상수익);
+        Assert.Equal(6500m, result.고객총운임);
     }
 
     [Fact]
