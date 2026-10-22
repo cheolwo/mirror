@@ -22,7 +22,8 @@ public partial class MainPage : ContentPage
 #if ANDROID
         cancellationToken.ThrowIfCancellationRequested();
         if (!_acceptMaps) return Ssalddel.Ui.Common.Areas.App.Models.NeighborhoodMapHostStatus.Unavailable;
-        if (!GoogleMapConfigured()) return new("unconfigured", "지도 연결 설정이 필요합니다. 목록으로 확인해 주세요.");
+        if (!Handlers.NeighborhoodNativeMapViewHandler.IsConfigured(Android.App.Application.Context))
+            return new("unconfigured", "지도 연결 설정이 필요합니다. 목록으로 확인해 주세요.");
         var generation = Interlocked.Increment(ref _generation);
         Controls.NeighborhoodNativeMapView? view = null;
         try
@@ -142,13 +143,4 @@ public partial class MainPage : ContentPage
         _window.Resumed -= OnWindowResumed;
         _window = null;
     }
-#if ANDROID
-    private static bool GoogleMapConfigured()
-    {
-        var context = Android.App.Application.Context;
-        var metadata = context.PackageManager?.GetApplicationInfo(context.PackageName!, Android.Content.PM.PackageInfoFlags.MetaData)?.MetaData;
-        var key = metadata?.GetString("com.google.android.geo.API_KEY");
-        return !string.IsNullOrWhiteSpace(key) && !key.Contains("NOT_CONFIGURED", StringComparison.Ordinal);
-    }
-#endif
 }

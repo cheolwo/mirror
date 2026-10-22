@@ -153,7 +153,14 @@ public sealed class 주문자음식주문조회UseCaseTests
             배차업무유형 = 상태값.배차업무유형.음식배달,
             상태 = "운송중",
             확정기사Id = "driver-private",
+            배차큐단계 = 상태값.배차큐단계.확정,
             UpdatedAt = recordedAt
+        });
+        context.음식배달시도.Add(new 음식배달시도
+        {
+            시도StableId = "food-location-current-assignment", 주문번호 = "FOOD-A-001", 제안Id = "FOOD-A-001",
+            기사Id = "driver-private", 시도순번 = 1, Revision = 1, 상태Code = 음식배달시도상태Code.수락,
+            수락시각Utc = recordedAt.AddSeconds(-1), CreatedAtUtc = recordedAt.AddSeconds(-1), UpdatedAtUtc = recordedAt.AddSeconds(-1)
         });
         context.기사위치기록.Add(new 기사위치기록
         {

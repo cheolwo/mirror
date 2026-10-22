@@ -233,6 +233,16 @@ public sealed class 주문자음식주문조회UseCase(
             };
         }
 
+        // 현재 수락의 명시적 시도만 위치 공개 근거로 사용한다. 유산 추정 시각이나
+        // 운송 UpdatedAt은 수락 시각이 아니므로 과거 GPS를 현재 배정에 붙이지 않는다.
+        var attempt = await db.음식배달시도.AsNoTracking()
+            .Where(item => item.주문번호 == order.주문번호)
+            .OrderByDescending(item => item.시도순번).ThenByDescending(item => item.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (!CurrentAssignment(transport, attempt, driverId, observedAtUtc))
+            return Unavailable("현재 배정 정보를 확인한 뒤 기사 위치를 표시합니다.", observedAtUtc);
+        var assignedAt = Utc(attempt!.수락시각Utc);
+
         var latest = await db.기사위치기록
             .AsNoTracking()
             .Where(item => item.기사Id == driverId)
@@ -240,32 +250,63 @@ public sealed class 주문자음식주문조회UseCase(
             .ThenByDescending(item => item.Id)
             .FirstOrDefaultAsync(cancellationToken);
         if (latest is null)
-        {
-            return new 주문자음식배달위치추적응답
-            {
-                상태 = 음식배달위치추적상태코드.갱신지연,
-                안내 = "기사 위치가 아직 수신되지 않았습니다. 배달 진행 상태는 계속 확인할 수 있습니다.",
-                조회시각Utc = observedAtUtc
-            };
-        }
+            return Unavailable("기사 위치가 아직 수신되지 않았습니다. 배달 진행 상태는 계속 확인할 수 있습니다.", observedAtUtc);
+        var recordedAt = Utc(latest.기록시각);
+        var receivedAt = Utc(latest.CreatedAt);
+        if (latest.위도 is < -90 or > 90 || latest.경도 is < -180 or > 180
+            || latest.위도 == 0 && latest.경도 == 0 || latest.정확도_m is < 0
+            || recordedAt < assignedAt || receivedAt < assignedAt
+            || recordedAt > receivedAt
+            || recordedAt > observedAtUtc || receivedAt > observedAtUtc
+            || observedAtUtc - recordedAt >= TimeSpan.FromSeconds(30)
+            || observedAtUtc - receivedAt >= TimeSpan.FromSeconds(30))
+            return Unavailable("최근 기사 위치를 확인하지 못했습니다. 배달 진행 상태는 계속 확인할 수 있습니다.", observedAtUtc);
 
-        var stale = observedAtUtc - DateTime.SpecifyKind(latest.기록시각, DateTimeKind.Utc)
-            > TimeSpan.FromSeconds(30);
+        // 위치를 읽는 동안 종료·재배정·새 시도로 바뀌었다면 이전 기사의 좌표를 버린다.
+        var currentOrder = await db.음식주문.AsNoTracking()
+            .Where(item => item.Id == order.Id).Select(item => new { item.주문자UserId, item.상태, item.UpdatedAt })
+            .SingleOrDefaultAsync(cancellationToken);
+        var currentTransport = await LoadLatestTransportAsync(order.주문번호, cancellationToken);
+        var currentAttempt = await db.음식배달시도.AsNoTracking()
+            .Where(item => item.주문번호 == order.주문번호)
+            .OrderByDescending(item => item.시도순번).ThenByDescending(item => item.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (currentOrder is null || currentOrder.주문자UserId != order.주문자UserId
+            || currentOrder.상태 != order.상태 || currentOrder.UpdatedAt != order.UpdatedAt
+            || currentTransport?.Id != transport!.Id || currentTransport.UpdatedAt != transport.UpdatedAt
+            || currentTransport.RowVersion != transport.RowVersion || currentTransport.상태 != transport.상태
+            || currentAttempt?.Id != attempt.Id || currentAttempt.Revision != attempt.Revision
+            || !CurrentAssignment(currentTransport, currentAttempt, driverId, observedAtUtc))
+            return Unavailable("배정 상태가 바뀌어 기사 위치를 다시 확인하고 있습니다.", observedAtUtc);
         return new 주문자음식배달위치추적응답
         {
-            상태 = stale
-                ? 음식배달위치추적상태코드.갱신지연
-                : 음식배달위치추적상태코드.추적중,
-            안내 = stale
-                ? "마지막 위치 수신 후 30초가 지났습니다. 현재 위치로 단정하지 않습니다."
-                : "기사 앱에서 받은 최근 위치입니다.",
+            상태 = 음식배달위치추적상태코드.추적중,
+            안내 = "기사 앱에서 받은 최근 위치입니다.",
             위도 = latest.위도,
             경도 = latest.경도,
             정확도_m = latest.정확도_m,
-            기록시각Utc = latest.기록시각,
+            기록시각Utc = recordedAt,
             조회시각Utc = observedAtUtc
         };
     }
+
+    private static bool CurrentAssignment(운송원장? transport, 음식배달시도? attempt, string driverId, DateTime nowUtc)
+        => transport is not null && transport.확정기사Id == driverId
+           && transport.배차업무유형 == 상태값.배차업무유형.음식배달
+           && transport.배차큐단계 == 상태값.배차큐단계.확정
+           && transport.상태 is (상태값.배차대기상태.확정 or 기사운송상태코드.배차확정
+               or 기사운송상태코드.이동중 or 기사운송상태코드.상차지도착 or 기사운송상태코드.상차완료
+               or 기사운송상태코드.운송중 or 기사운송상태코드.하차지도착)
+           && attempt is not null && !attempt.유산추정여부 && attempt.기사Id == driverId
+           && attempt.제안Id == transport.의뢰Id && attempt.추천라운드 == transport.추천라운드
+           && attempt.상태Code is (음식배달시도상태Code.수락 or 음식배달시도상태Code.가게도착 or 음식배달시도상태Code.픽업완료)
+           && attempt.중단시각Utc is null && attempt.전달완료시각Utc is null
+           && attempt.수락시각Utc != default && Utc(attempt.수락시각Utc) <= nowUtc;
+
+    private static 주문자음식배달위치추적응답 Unavailable(string message, DateTime nowUtc)
+        => new() { 상태 = 음식배달위치추적상태코드.갱신지연, 안내 = message, 조회시각Utc = nowUtc };
+    private static DateTime Utc(DateTime value) => value.Kind == DateTimeKind.Unspecified
+        ? DateTime.SpecifyKind(value, DateTimeKind.Utc) : value.ToUniversalTime();
 
     private static 주문자음식주문요약응답 ToSummary(
         음식주문 order,

@@ -2,6 +2,7 @@ using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Ssalddel.Application.CommandProcessing;
+using Ssalddel.Application.Driver.DispatchAction;
 using Ssalddel.Application.Shipper.Request;
 using Ssalddel.Contracts.Common.Community;
 using Ssalddel.Services.Community;
@@ -273,14 +274,28 @@ public sealed class NeighborhoodDeliveryMapServiceTests
         Assert.Null(detail.Request.기사최근위치시각Utc);
     }
 
-    [Fact]
-    public async Task 기존화물의최근위치조회동작은_생활배송guard로변경하지않는다()
+    [Theory]
+    [InlineData(-2, true)]
+    [InlineData(-60, false)]
+    public async Task 일반화물은_생활배송전용배정증거없이_현재수락후최근10분GPS만반환한다(int measuredMinutesAgo, bool visible)
     {
         await using var f = await Fixture.Create();
         f.Request.클라이언트요청Id = "legacy:1";
-        await f.AddLocation(f.Clock.Now.AddHours(-1), f.Clock.Now.AddHours(-1));
+        // 일반화물은 생활배송 전용 배정 사건을 요구하지 않는다. 실제 화물 수락의 기존 근거를 사용한다.
+        f.Db.운송이벤트.RemoveRange(f.Db.운송이벤트);
+        var measured = f.Clock.Now.AddMinutes(measuredMinutesAgo);
+        f.Db.운송이벤트.Add(CargoAcceptanceRecoveryMarker.Create(f.Queue, measured.AddMinutes(-1)));
+        await f.AddLocation(measured, measured.AddSeconds(10));
         var detail = await f.Deliveries.내상세Async("delivery-1");
-        Assert.Equal(37.51m, detail!.Request.기사최근위도);
+        Assert.NotNull(detail);
+        if (visible) Assert.Equal(37.51m, detail.Request.기사최근위도);
+        else
+        {
+            Assert.Null(detail.Request.기사최근위도);
+            Assert.Null(detail.Request.기사최근경도);
+            Assert.Null(detail.Request.기사최근위치시각Utc);
+        }
+        Assert.Null(await f.Service.내지도Async("delivery-1")); // 생활배송 전용 지도에는 여전히 노출하지 않는다.
     }
 
     private sealed class Fixture : IAsyncDisposable

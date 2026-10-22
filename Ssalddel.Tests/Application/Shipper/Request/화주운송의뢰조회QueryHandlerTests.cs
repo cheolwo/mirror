@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Shipper.Request;
+using Ssalddel.Application.Driver.DispatchAction;
 using Ssalddel.Contracts.Common.Operations;
 using Ssalddel.Contracts.Common.Versioning;
 using Ssalddel.Services.Operations;
@@ -68,6 +69,7 @@ public sealed class 화주운송의뢰조회QueryHandlerTests
             확정기사Id = "driver-1",
             기사_운송자 = "driver-1",
             상태 = 상태값.배차상태.운송중,
+            배차큐단계 = 상태값.배차큐단계.확정,
             UpdatedAt = DateTime.UtcNow
         });
         db.용달기사.Add(new 용달기사
@@ -83,6 +85,11 @@ public sealed class 화주운송의뢰조회QueryHandlerTests
             경도 = 127.039m,
             기록시각 = recordedAt
         });
+        await db.SaveChangesAsync();
+
+        // 정상 위치는 현재 수락과 같은 저장의 명시적 배정 근거 이후 기록이어야 한다.
+        var currentTransport = await db.운송원장.SingleAsync(x => x.의뢰Id == "request-1");
+        db.운송이벤트.Add(CargoAcceptanceRecoveryMarker.Create(currentTransport, recordedAt.AddSeconds(-1)));
         await db.SaveChangesAsync();
 
         var handler = new 의뢰단건조회QueryHandler(

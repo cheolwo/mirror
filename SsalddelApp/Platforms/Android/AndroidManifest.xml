@@ -3,6 +3,7 @@
     <application android:allowBackup="false" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true"
                  android:networkSecurityConfig="@xml/network_security_config" android:usesCleartextTraffic="false">
         <meta-data android:name="com.google.android.geo.API_KEY" android:value="${googleMapsApiKey}" />
+        <meta-data android:name="com.naver.maps.map.NCP_KEY_ID" android:value="@string/naver_map_sdk_ncp_key_id" />
     </application>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />

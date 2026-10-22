@@ -4,6 +4,7 @@ using Ssalddel.Contracts.Common.Versioning;
 using Ssalddel.Contracts.Shipper.Request;
 using Ssalddel.Services.Operations;
 using Ssalddel.Services.Community;
+using Ssalddel.Application.Driver.DispatchAction;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.기사;
 using 살뜰.도메인.운송;
@@ -35,6 +36,7 @@ internal static class 화주운송실행정보조회
             .AsNoTracking()
             .Where(x => requestIds.Contains(x.의뢰Id))
             .OrderByDescending(x => x.UpdatedAt)
+            .ThenByDescending(x => x.Id)
             .ToListAsync(cancellationToken);
 
         var latestLedgers = ledgers
@@ -119,11 +121,16 @@ internal static class 화주운송실행정보조회
                 .ToListAsync(cancellationToken))
                 .ToDictionary(x => x.기사Id, x => x, StringComparer.OrdinalIgnoreCase);
 
-        // 기존 화물 조회는 유지하되 생활 배송은 현재 배정 이후의 최근 GPS만 본인 상세에도 제공합니다.
-        var neighborhoodRequests = await db.화주운송의뢰.AsNoTracking()
-            .Where(x => requestIds.Contains(x.의뢰Id)
-                && x.클라이언트요청Id.StartsWith(Ssalddel.Contracts.Common.Community.NeighborhoodDeliveryRoutes.ClientRequestPrefix))
-            .ToListAsync(cancellationToken);
+        var requests = await db.화주운송의뢰.AsNoTracking()
+            .Where(x => requestIds.Contains(x.의뢰Id)).ToListAsync(cancellationToken);
+        var requestById = requests.ToDictionary(x => x.의뢰Id, StringComparer.Ordinal);
+        // 기존 수락과 같은 SQL 저장에 남은 배정 근거를 재사용한다. UpdatedAt을 수락시각으로 추정하지 않는다.
+        var acceptanceEvents = (await db.운송이벤트.AsNoTracking()
+            .Where(x => requestIds.Contains(x.의뢰Id) && x.이벤트타입 == CargoAcceptanceRecoveryMarker.EventType)
+            .OrderByDescending(x => x.Id).ToListAsync(cancellationToken))
+            .GroupBy(x => x.의뢰Id, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+        var neighborhoodRequests = requests.Where(NeighborhoodDeliveryLocationPolicy.IsNeighborhoodDelivery);
         var neighborhoodLocations = new Dictionary<string, 기사위치기록?>(StringComparer.OrdinalIgnoreCase);
         var nowUtc = DateTime.UtcNow;
         foreach (var neighborhoodRequest in neighborhoodRequests)
@@ -132,6 +139,21 @@ internal static class 화주운송실행정보조회
             var recent = await NeighborhoodDeliveryLocationPolicy.ReadAsync(db, neighborhoodRequest, neighborhoodLedger, nowUtc, cancellationToken);
             neighborhoodLocations[neighborhoodRequest.의뢰Id] = recent.Location;
         }
+
+        // 조회 중 종료·재배정이 일어났는지 다시 읽는다. 새 배정에 이전 기사의 좌표를 넘기지 않는다.
+        var currentRequests = (await db.화주운송의뢰.AsNoTracking()
+            .Where(x => requestIds.Contains(x.의뢰Id)).ToListAsync(cancellationToken))
+            .ToDictionary(x => x.의뢰Id, StringComparer.Ordinal);
+        var currentLedgers = (await db.운송원장.AsNoTracking()
+            .Where(x => requestIds.Contains(x.의뢰Id)).OrderByDescending(x => x.UpdatedAt)
+            .ThenByDescending(x => x.Id).ToListAsync(cancellationToken))
+            .GroupBy(x => x.의뢰Id, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+        var currentAcceptanceEvents = (await db.운송이벤트.AsNoTracking()
+            .Where(x => requestIds.Contains(x.의뢰Id) && x.이벤트타입 == CargoAcceptanceRecoveryMarker.EventType)
+            .OrderByDescending(x => x.Id).ToListAsync(cancellationToken))
+            .GroupBy(x => x.의뢰Id, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
 
         return requestIds
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -142,11 +164,30 @@ internal static class 화주운송실행정보조회
                     latestLedgers.TryGetValue(requestId, out var ledger);
                     var driverId = ledger?.확정기사Id;
                     var hasDriver = !string.IsNullOrWhiteSpace(driverId);
-                    var canExposeLocation = hasDriver && 기사위치공개가능(ledger?.상태);
+                    requestById.TryGetValue(requestId, out var source);
+                    currentRequests.TryGetValue(requestId, out var currentSource);
+                    currentLedgers.TryGetValue(requestId, out var currentLedger);
+                    var canExposeLocation = hasDriver && 현재배정유효(source, ledger)
+                        && currentSource is not null && source!.상태 == currentSource.상태
+                        && source.화주Id == currentSource.화주Id && source.주문자UserId == currentSource.주문자UserId
+                        && source.배차상태 == currentSource.배차상태 && source.UpdatedAt == currentSource.UpdatedAt
+                        && 같은배정(ledger, currentLedger);
 
                     drivers.TryGetValue(driverId ?? string.Empty, out var driver);
                     locations.TryGetValue(driverId ?? string.Empty, out var location);
                     if (neighborhoodLocations.TryGetValue(requestId, out var neighborhoodLocation)) location = neighborhoodLocation;
+                    else
+                    {
+                        acceptanceEvents.TryGetValue(requestId, out var acceptance);
+                        currentAcceptanceEvents.TryGetValue(requestId, out var currentAcceptance);
+                        var assignedAt = 현재배정시각(ledger, acceptance, nowUtc);
+                        canExposeLocation = canExposeLocation && assignedAt.HasValue
+                            && acceptance?.Id == currentAcceptance?.Id
+                            && 현재배정시각(currentLedger, currentAcceptance, nowUtc) == assignedAt
+                            && 최근배정위치(location, driverId!, assignedAt!.Value, nowUtc);
+                    }
+                    if (canExposeLocation && location is not null)
+                        location.기록시각 = Utc(location.기록시각); // EF의 Unspecified UTC를 JSON에서도 UTC로 보존한다.
                     handoffByRequestId.TryGetValue(requestId, out var handoff);
                     incidentsByRequestId.TryGetValue(requestId, out var requestIncidents);
                     운영체제업무인계Dto? completionHandoff = null;
@@ -168,11 +209,43 @@ internal static class 화주운송실행정보조회
                 StringComparer.OrdinalIgnoreCase);
     }
 
-    private static bool 기사위치공개가능(string? transportStatus)
-        => transportStatus is not null
-           && !string.Equals(transportStatus, 상태값.배차상태.인수완료, StringComparison.Ordinal)
-           && !string.Equals(transportStatus, 상태값.배차상태.하차완료, StringComparison.Ordinal)
-           && !string.Equals(transportStatus, 상태값.배차상태.취소, StringComparison.Ordinal);
+    private static bool 현재배정유효(살뜰.도메인.화주.화주운송의뢰? request, 운송원장? ledger)
+        => request is not null && request.상태 == 상태값.의뢰상태.생성됨
+           && request.배차상태 is not (상태값.배차상태.인수완료 or 상태값.배차상태.하차완료 or 상태값.배차상태.취소)
+           && ledger is not null && ledger.의뢰Id == request.의뢰Id
+           && ledger.배차업무유형 == 상태값.배차업무유형.용달운송
+           && ledger.배차큐단계 == 상태값.배차큐단계.확정 && !string.IsNullOrWhiteSpace(ledger.확정기사Id)
+           && ledger.상태 is (상태값.배차대기상태.확정 or 상태값.배차상태.배차확정
+               or "이동중" or "상차지도착" or 상태값.배차상태.상차중 or 상태값.배차상태.상차완료
+               or 상태값.배차상태.운송중 or "하차지도착");
+
+    private static bool 같은배정(운송원장? before, 운송원장? current)
+        => before is not null && current is not null && before.Id == current.Id
+           && before.확정기사Id == current.확정기사Id && before.추천라운드 == current.추천라운드
+           && before.상태 == current.상태 && before.배차큐단계 == current.배차큐단계
+           && before.UpdatedAt == current.UpdatedAt && before.RowVersion == current.RowVersion;
+
+    private static DateTime? 현재배정시각(운송원장? ledger, 운송이벤트? acceptance, DateTime nowUtc)
+    {
+        if (ledger is null || acceptance?.의뢰Id != ledger.의뢰Id || acceptance.이벤트시각 == default
+            || Utc(acceptance.이벤트시각) > nowUtc) return null;
+        var evidence = CargoAcceptanceRecoveryMarker.Read(acceptance.메타데이터);
+        return evidence is not null && evidence.TransportId == ledger.Id && evidence.DriverId == ledger.확정기사Id
+            && evidence.RecommendationRound == ledger.추천라운드 ? Utc(acceptance.이벤트시각) : null;
+    }
+
+    private static bool 최근배정위치(기사위치기록? location, string driverId, DateTime assignedAt, DateTime nowUtc)
+        => location is not null && location.기사Id == driverId && location.위도 is >= -90 and <= 90
+           && location.경도 is >= -180 and <= 180 && (location.위도 != 0 || location.경도 != 0)
+           && location.정확도_m is null or >= 0
+           && Utc(location.기록시각) >= assignedAt && Utc(location.CreatedAt) >= assignedAt
+           && Utc(location.기록시각) <= Utc(location.CreatedAt)
+           && Utc(location.기록시각) <= nowUtc && Utc(location.CreatedAt) <= nowUtc
+           && nowUtc - Utc(location.기록시각) < TimeSpan.FromMinutes(10)
+           && nowUtc - Utc(location.CreatedAt) < TimeSpan.FromMinutes(10);
+
+    private static DateTime Utc(DateTime value) => value.Kind == DateTimeKind.Unspecified
+        ? DateTime.SpecifyKind(value, DateTimeKind.Utc) : value.ToUniversalTime();
 
     private static 비정상운송사건Dto ToDto(비정상운송사건 entity)
         => new()
