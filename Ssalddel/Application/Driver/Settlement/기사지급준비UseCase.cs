@@ -5,6 +5,7 @@ using Ssalddel.ApiMetadata;
 using Ssalddel.Contracts.Driver.Settlement;
 using Ssalddel.Contracts.Shipper.Request;
 using Ssalddel.Application.Shipper.Request;
+using Ssalddel.Services.PrivacySupport;
 using 살뜰.Data;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.기사;
@@ -30,10 +31,12 @@ public interface I기사지급준비UseCase
 public sealed class 기사지급준비UseCase : I기사지급준비UseCase
 {
     private readonly SsalddelContext _db;
+    private readonly I화물분쟁지급보류Query? _disputes;
 
-    public 기사지급준비UseCase(SsalddelContext db)
+    public 기사지급준비UseCase(SsalddelContext db, I화물분쟁지급보류Query? disputes = null)
     {
         _db = db;
+        _disputes = disputes;
     }
 
     public async Task<Result<기사지급준비목록응답>> 월별조회Async(
@@ -116,21 +119,31 @@ public sealed class 기사지급준비UseCase : I기사지급준비UseCase
             기사정산계좌확인상태.확인완료,
             StringComparison.Ordinal);
 
-        var items = transports
-            .Select(transport =>
-            {
-                var request = 요청찾기(transport, requestsById);
-                faresByRequestId.TryGetValue(request?.의뢰Id ?? transport.의뢰Id, out var fare);
-                var requestId = request?.의뢰Id ?? transport.의뢰Id;
-                return 항목생성(
+        var items = new List<기사지급준비항목응답>(transports.Count);
+        foreach (var transport in transports)
+        {
+            var request = 요청찾기(transport, requestsById);
+            faresByRequestId.TryGetValue(request?.의뢰Id ?? transport.의뢰Id, out var fare);
+            var requestId = request?.의뢰Id ?? transport.의뢰Id;
+            var item = 항목생성(
                     transport,
                     request,
                     fare,
                     settlementAccount is not null,
                     accountVerified,
                     openAbnormalIncidentRequestIds.Contains(requestId));
-            })
-            .ToArray();
+            if (item.IsReadyForPayoutPreparation)
+            {
+                var dispute = await 보호지원화물지급보류Query.확인Async(_disputes, requestId, cancellationToken);
+                if (dispute.Hold)
+                {
+                    item.IsReadyForPayoutPreparation = false;
+                    item.ReadinessCode = dispute.Code;
+                    item.ReadinessMessage = dispute.Message;
+                }
+            }
+            items.Add(item);
+        }
 
         return Result.Ok(new 기사지급준비목록응답
         {

@@ -8,6 +8,7 @@ using Ssalddel.Application.Driver.Settlement;
 using Ssalddel.Contracts.Admin.Settlement;
 using Ssalddel.Contracts.Common.Finance;
 using Ssalddel.Contracts.Shipper.Request;
+using Ssalddel.Services.PrivacySupport;
 using 살뜰.Data;
 using 살뜰.Services.Options;
 using 살뜰.도메인.공통;
@@ -45,17 +46,20 @@ public sealed class 기사지급승인UseCase : I기사지급승인UseCase
     private readonly ICurrentUserAccessor _currentUser;
     private readonly ISsalddelExecutionModePolicy _executionMode;
     private readonly TimeProvider _timeProvider;
+    private readonly I화물분쟁지급보류Query? _disputes;
 
     public 기사지급승인UseCase(
         SsalddelContext db,
         ICurrentUserAccessor currentUser,
         ISsalddelExecutionModePolicy executionMode,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        I화물분쟁지급보류Query? disputes = null)
     {
         _db = db;
         _currentUser = currentUser;
         _executionMode = executionMode;
         _timeProvider = timeProvider;
+        _disputes = disputes;
     }
 
     public async Task<Result<기사지급승인응답>> 승인Async(
@@ -100,6 +104,9 @@ public sealed class 기사지급승인UseCase : I기사지급승인UseCase
                     StatusCodes.Status409Conflict);
             }
 
+            var replayDispute = await 보호지원화물지급보류Query.확인Async(_disputes, existing.의뢰Id, cancellationToken);
+            if (replayDispute.Hold)
+                return 상태실패<기사지급승인응답>(replayDispute.Message, StatusCodes.Status409Conflict, replayDispute.Code);
             return Result.Ok(await ToResponseAsync(existing, true, cancellationToken));
         }
 
@@ -188,6 +195,10 @@ public sealed class 기사지급승인UseCase : I기사지급승인UseCase
                 "이 운송에는 이미 다른 기사 지급 승인 기록이 있습니다.",
                 StatusCodes.Status409Conflict);
         }
+
+        var dispute = await 보호지원화물지급보류Query.확인Async(_disputes, requestId, cancellationToken);
+        if (dispute.Hold)
+            return 상태실패<기사지급승인응답>(dispute.Message, StatusCodes.Status409Conflict, dispute.Code);
 
         var now = _timeProvider.GetUtcNow().UtcDateTime;
         var entity = new 기사운송대금지급요청
@@ -344,8 +355,12 @@ public sealed class 기사지급승인UseCase : I기사지급승인UseCase
     private bool IsServerAdmin()
         => string.Equals(_currentUser.Role, 역할명.서버관리자, StringComparison.OrdinalIgnoreCase);
 
-    private static Result<T> 상태실패<T>(string message, int statusCode)
-        => Result.Fail<T>(new Error(message).WithMetadata("StatusCode", statusCode));
+    private static Result<T> 상태실패<T>(string message, int statusCode, string? code = null)
+    {
+        var error = new Error(message).WithMetadata("StatusCode", statusCode);
+        if (code is not null) error.WithMetadata("ErrorCode", code);
+        return Result.Fail<T>(error);
+    }
 }
 
 public sealed record 기사지급OutboxPayload(

@@ -68,6 +68,9 @@ public interface I보호지원Store
     // null means the source index/protection state is unknown; callers must defer photo deletion.
     Task<bool?> HasOpenCaseAsync(string sourceKind, string sourceId, CancellationToken cancellationToken = default)
         => Task.FromResult<bool?>(null);
+    // 지급 보류는 보존 목적의 hold와 별개입니다. 미구성/원천 색인 불명은 지급 허용이 아닙니다.
+    Task<bool?> HasUnresolvedDisputeAsync(string sourceKind, string sourceId, CancellationToken cancellationToken = default)
+        => Task.FromResult<bool?>(null);
     Task<보호지원Record?> 조회Async(string caseId, CancellationToken cancellationToken = default);
     Task<bool> 생성Async(보호지원Record record, CancellationToken cancellationToken = default);
     Task<bool> 교체Async(보호지원Record record, long expectedRevision, CancellationToken cancellationToken = default);

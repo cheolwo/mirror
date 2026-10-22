@@ -348,7 +348,8 @@ public sealed class 배송료정산배치R73Tests
         public 배송료정산배치UseCase Use(SsalddelContext? context = null, bool enabled = true, string role = 역할명.서버관리자,
             SsalddelExecutionMode mode = SsalddelExecutionMode.Simulation, string policy = "transport-payout-r73", DayOfWeek payoutDay = DayOfWeek.Thursday)
             => new(context ?? Db, new Current("actor", role), new ExecutionPolicy(mode),
-                Options.Create(new DriverPayoutBatchOptions { Enabled = enabled, PolicyRevision = policy, PayoutDay = payoutDay }), TimeProvider.System);
+                Options.Create(new DriverPayoutBatchOptions { Enabled = enabled, PolicyRevision = policy, PayoutDay = payoutDay }), TimeProvider.System,
+                Ssalddel.Tests.Services.Payments.CargoPayoutDisputeQueryStub.Clear);
         public static async Task<Fixture> Create()
         {
             var connectionString = "Data Source=payout-r73-" + Guid.NewGuid().ToString("N") + ";Mode=Memory;Cache=Shared;Default Timeout=1";

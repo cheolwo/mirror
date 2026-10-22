@@ -12,6 +12,7 @@ using Ssalddel.Application.Driver.Settlement;
 using Ssalddel.Application.Shipper.Payment;
 using Ssalddel.Contracts.Admin.Settlement;
 using Ssalddel.Contracts.Shipper.Request;
+using Ssalddel.Services.PrivacySupport;
 using 살뜰.Data;
 using 살뜰.Services.Options;
 using 살뜰.도메인.결제;
@@ -36,7 +37,8 @@ public sealed class 배송료정산배치UseCase(
     ICurrentUserAccessor currentUser,
     ISsalddelExecutionModePolicy executionMode,
     IOptions<DriverPayoutBatchOptions> options,
-    TimeProvider timeProvider) : I배송료정산배치UseCase
+    TimeProvider timeProvider,
+    I화물분쟁지급보류Query? disputes = null) : I배송료정산배치UseCase
 {
     public async Task<Result<배송료정산배치응답>> 준비Async(배송료정산배치준비요청 request, CancellationToken cancellationToken = default)
     {
@@ -197,6 +199,8 @@ public sealed class 배송료정산배치UseCase(
         var readiness = 기사지급준비UseCase.준비상태판정(source, fare?.기사지급예정운임, account is not null,
             account?.확인상태 == 기사정산계좌확인상태.확인완료, incident);
         if (!readiness.IsReady) return (readiness.Code, readiness.Message);
+        var dispute = await 보호지원화물지급보류Query.확인Async(disputes, line.의뢰Id, ct);
+        if (dispute.Hold) return (dispute.Code, dispute.Message);
         if (fare!.기사지급예정운임 != line.동결금액) return ("FareChanged", "현재 운임의 기사 지급액이 승인 채무와 달라 재검토가 필요합니다.");
 
         // 의뢰의 결제완료 문자열만으로 PG 수납을 확정하지 않습니다. 수동 입금은 기존 확인 원장을 유지합니다.

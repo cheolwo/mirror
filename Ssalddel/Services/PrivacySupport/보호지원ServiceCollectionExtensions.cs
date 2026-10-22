@@ -10,6 +10,7 @@ public static class 보호지원ServiceCollectionExtensions
         services.Configure<보호지원Options>(configuration.GetSection(보호지원Options.SectionName));
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton<I보호지원Store, Mongo보호지원Store>();
+        services.TryAddScoped<I화물분쟁지급보류Query, 보호지원화물지급보류Query>();
         // 분산 UI 모듈을 구성하지 않아도 기존 공통 지원 기능은 해결되어야 합니다.
         // 분산 출처 권한은 여전히 활성화된 정확한 Simulation profile을 확인한 뒤에만 부여합니다.
         services.TryAddScoped<I분산사진보존연결, DistributedPhotoHoldService>();

@@ -35,7 +35,7 @@ public sealed class 기사지급준비UseCaseTests
             확인상태 = 기사정산계좌확인상태.확인완료
         });
         await db.SaveChangesAsync();
-        var useCase = new 기사지급준비UseCase(db);
+        var useCase = new 기사지급준비UseCase(db, Ssalddel.Tests.Services.Payments.CargoPayoutDisputeQueryStub.Clear);
 
         var result = await useCase.월별조회Async("driver-a", 2026, 7);
 
@@ -85,7 +85,7 @@ public sealed class 기사지급준비UseCaseTests
             UpdatedAt = DateTime.UtcNow
         });
         await db.SaveChangesAsync();
-        var useCase = new 기사지급준비UseCase(db);
+        var useCase = new 기사지급준비UseCase(db, Ssalddel.Tests.Services.Payments.CargoPayoutDisputeQueryStub.Clear);
 
         var result = await useCase.월별조회Async("driver-a", 2026, 7);
 
@@ -137,7 +137,7 @@ public sealed class 기사지급준비UseCaseTests
             UpdatedAt = DateTime.UtcNow
         });
         await db.SaveChangesAsync();
-        var useCase = new 기사지급준비UseCase(db);
+        var useCase = new 기사지급준비UseCase(db, Ssalddel.Tests.Services.Payments.CargoPayoutDisputeQueryStub.Clear);
 
         var result = await useCase.월별조회Async("driver-a", 2026, 7);
 
@@ -169,7 +169,7 @@ public sealed class 기사지급준비UseCaseTests
             확인상태 = 기사정산계좌확인상태.미확인
         });
         await db.SaveChangesAsync();
-        var useCase = new 기사지급준비UseCase(db);
+        var useCase = new 기사지급준비UseCase(db, Ssalddel.Tests.Services.Payments.CargoPayoutDisputeQueryStub.Clear);
 
         var result = await useCase.월별조회Async("driver-a", 2026, 7);
 
@@ -193,7 +193,7 @@ public sealed class 기사지급준비UseCaseTests
             paymentStatus: 상태값.결제상태.결제대기,
             settlementTiming: 정산시점.현장지급.ToString(),
             onSiteCollectedAtUtc: new DateTime(2026, 7, 21, 9, 0, 0, DateTimeKind.Utc));
-        var useCase = new 기사지급준비UseCase(db);
+        var useCase = new 기사지급준비UseCase(db, Ssalddel.Tests.Services.Payments.CargoPayoutDisputeQueryStub.Clear);
 
         var result = await useCase.월별조회Async("driver-a", 2026, 7);
 
@@ -217,7 +217,7 @@ public sealed class 기사지급준비UseCaseTests
             expectedPayout: null,
             paymentStatus: 상태값.결제상태.결제완료,
             shipperPaymentAmount: 65000);
-        var useCase = new 기사지급준비UseCase(db);
+        var useCase = new 기사지급준비UseCase(db, Ssalddel.Tests.Services.Payments.CargoPayoutDisputeQueryStub.Clear);
 
         var result = await useCase.월별조회Async("driver-a", 2026, 7);
 
@@ -254,7 +254,7 @@ public sealed class 기사지급준비UseCaseTests
             new DateTime(2026, 7, 20, 8, 30, 0, DateTimeKind.Utc),
             50000m,
             상태값.결제상태.결제완료);
-        var useCase = new 기사지급준비UseCase(db);
+        var useCase = new 기사지급준비UseCase(db, Ssalddel.Tests.Services.Payments.CargoPayoutDisputeQueryStub.Clear);
 
         var result = await useCase.월별조회Async("driver-a", 2026, 7);
 

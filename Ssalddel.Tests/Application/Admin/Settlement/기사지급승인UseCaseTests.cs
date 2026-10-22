@@ -107,7 +107,8 @@ public sealed class 기사지급승인UseCaseTests
             db,
             new TestCurrentUserAccessor("admin-1", 역할명.서버관리자),
             new TestExecutionModePolicy(SsalddelExecutionMode.Simulation),
-            TimeProvider.System);
+            TimeProvider.System,
+            Ssalddel.Tests.Services.Payments.CargoPayoutDisputeQueryStub.Clear);
 
     private static 기사지급승인요청 CreateRequest(long transportId)
         => new()

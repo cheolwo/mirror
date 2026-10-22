@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Ssalddel.Services.PrivacySupport;
 using 살뜰.Data;
 using 살뜰.Services.Options;
 using 살뜰.도메인.기사;
 using 살뜰.도메인.설정;
+using 살뜰.도메인.운송;
 
 namespace 살뜰.Services.Payments;
 
@@ -64,17 +66,20 @@ public sealed class 기사지급OutboxService : I기사지급OutboxService
     private readonly I기사지급Gateway _gateway;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<기사지급OutboxService> _logger;
+    private readonly I화물분쟁지급보류Query? _disputes;
 
     public 기사지급OutboxService(
         SsalddelContext db,
         I기사지급Gateway gateway,
         TimeProvider timeProvider,
-        ILogger<기사지급OutboxService> logger)
+        ILogger<기사지급OutboxService> logger,
+        I화물분쟁지급보류Query? disputes = null)
     {
         _db = db;
         _gateway = gateway;
         _timeProvider = timeProvider;
         _logger = logger;
+        _disputes = disputes;
     }
 
     public async Task<int> 대기항목처리Async(
@@ -119,6 +124,12 @@ public sealed class 기사지급OutboxService : I기사지급OutboxService
 
             try
             {
+                var hold = await 지급직전보류조회Async(request, cancellationToken);
+                if (hold.Hold)
+                {
+                    재시도예약(outbox, request, now, hold.Code, hold.Message);
+                    continue;
+                }
                 var result = await _gateway.처리Async(request, cancellationToken);
                 request.마지막처리코드 = result.ResultCode;
                 request.마지막처리메시지 = result.Message;
@@ -167,6 +178,26 @@ public sealed class 기사지급OutboxService : I기사지급OutboxService
         }
 
         return processed;
+    }
+
+    private async Task<화물분쟁지급보류판정> 지급직전보류조회Async(
+        기사운송대금지급요청 request, CancellationToken cancellationToken)
+    {
+        var transport = await _db.운송원장.AsNoTracking().Where(x => x.Id == request.운송Id)
+            .Select(x => new { x.의뢰Id, x.운송번호, x.확정기사Id, x.기사_운송자, x.도착 })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(request.의뢰Id) || transport is null || !transport.도착.HasValue
+            || (transport.의뢰Id != request.의뢰Id && transport.운송번호 != request.의뢰Id)
+            || (transport.확정기사Id ?? transport.기사_운송자) != request.기사Id
+            || !await _db.화주운송의뢰.AsNoTracking().AnyAsync(x => x.의뢰Id == request.의뢰Id, cancellationToken))
+            return new(true, "CargoPayoutSourceUnconfirmed", "지급 원천 운송과 확정 기사 연결을 확인하지 못해 지급을 보류합니다.");
+
+        var incident = await _db.비정상운송사건.AsNoTracking().AnyAsync(x => x.운송의뢰Id == request.의뢰Id
+            && (x.정산보류적용여부 || x.상태Code == 비정상운송사건상태Codes.운영검토대기), cancellationToken);
+        if (incident) return new(true, "AbnormalTransportReviewHold", "비정상 운송 사건의 운영 검토가 끝날 때까지 기사 지급을 보류합니다.");
+
+        // 승인 이후 새로 접수된 정식 분쟁도 Gateway 호출 직전에 다시 읽습니다.
+        return await 보호지원화물지급보류Query.확인Async(_disputes, request.의뢰Id, cancellationToken);
     }
 
     private static void 재시도예약(

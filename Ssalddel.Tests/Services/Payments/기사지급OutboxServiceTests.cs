@@ -6,6 +6,8 @@ using 살뜰.Services.Options;
 using 살뜰.Services.Payments;
 using 살뜰.도메인.기사;
 using 살뜰.도메인.설정;
+using 살뜰.도메인.운송;
+using 살뜰.도메인.화주;
 
 namespace Ssalddel.Tests.Services.Payments;
 
@@ -21,7 +23,7 @@ public sealed class 기사지급OutboxServiceTests
             new 준비전용기사지급Gateway(
                 new TestExecutionModePolicy(SsalddelExecutionMode.Simulation)),
             TimeProvider.System,
-            NullLogger<기사지급OutboxService>.Instance);
+            NullLogger<기사지급OutboxService>.Instance, CargoPayoutDisputeQueryStub.Clear);
 
         var processed = await service.대기항목처리Async();
 
@@ -43,7 +45,7 @@ public sealed class 기사지급OutboxServiceTests
             db,
             new TransientFailureGateway(),
             TimeProvider.System,
-            NullLogger<기사지급OutboxService>.Instance);
+            NullLogger<기사지급OutboxService>.Instance, CargoPayoutDisputeQueryStub.Clear);
 
         await service.대기항목처리Async();
 
@@ -66,7 +68,7 @@ public sealed class 기사지급OutboxServiceTests
             new 준비전용기사지급Gateway(
                 new TestExecutionModePolicy(SsalddelExecutionMode.Operational)),
             TimeProvider.System,
-            NullLogger<기사지급OutboxService>.Instance);
+            NullLogger<기사지급OutboxService>.Instance, CargoPayoutDisputeQueryStub.Clear);
 
         await service.대기항목처리Async();
 
@@ -80,6 +82,12 @@ public sealed class 기사지급OutboxServiceTests
     private static async Task<(기사운송대금지급요청 Request, 기사지급Outbox Outbox)> SeedAsync(
         SsalddelContext db)
     {
+        db.운송원장.Add(new 운송원장
+        {
+            Id = 10, 의뢰Id = "request-10", 운송번호 = "transport-10", 확정기사Id = "driver-a",
+            도착 = DateTime.UtcNow.AddHours(-1), 상태 = "인수완료"
+        });
+        db.화주운송의뢰.Add(new 화주운송의뢰 { 의뢰Id = "request-10" });
         var request = new 기사운송대금지급요청
         {
             운송Id = 10,

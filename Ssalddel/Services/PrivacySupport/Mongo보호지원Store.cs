@@ -116,6 +116,13 @@ public sealed class Mongo보호지원Store : I보호지원Store
     }
 
     public async Task<bool?> HasOpenCaseAsync(string sourceKind, string sourceId, CancellationToken cancellationToken = default)
+        => await SourceDisputeExistsAsync(sourceKind, sourceId, RequiresSourcePreservation, cancellationToken);
+
+    public async Task<bool?> HasUnresolvedDisputeAsync(string sourceKind, string sourceId, CancellationToken cancellationToken = default)
+        => await SourceDisputeExistsAsync(sourceKind, sourceId, 보호지원화물지급보류Query.IsUnresolvedDispute, cancellationToken);
+
+    private async Task<bool?> SourceDisputeExistsAsync(string sourceKind, string sourceId,
+        Func<보호지원Record, bool> matches, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceKind);
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceId);
@@ -133,7 +140,7 @@ public sealed class Mongo보호지원Store : I보호지원Store
                 var record = Read(document);
                 if (record.SourceKind != sourceKind || record.SourceId != sourceId)
                     throw new InvalidDataException("Support source index binding does not match.");
-                if (RequiresSourcePreservation(record)) return true;
+                if (matches(record)) return true;
             }
         return false;
     }
