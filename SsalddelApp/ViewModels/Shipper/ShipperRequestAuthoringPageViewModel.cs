@@ -7,8 +7,10 @@ using Ssalddel.Contracts.Common.Privacy;
 using Ssalddel.Ui.Common.Areas.App.Services;
 using Ssalddel.Ui.Common.Areas.App.Models;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
+using Ssalddel.Ui.Common.Areas.App.ViewModels.Transport;
 using SsalddelApp.Models.Shipper;
 using SsalddelApp.Services;
+using SubmissionContext = Ssalddel.Ui.Common.Areas.App.ViewModels.Transport.ShipperSubmissionResultSession.Context;
 
 namespace SsalddelApp.ViewModels.Shipper;
 
@@ -20,10 +22,9 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
     private readonly NavigationManager _navigation;
     private readonly IAuthSession? _auth;
     private readonly IWorkflowRecoveryStore? _recovery;
+    private readonly ShipperSubmissionResultSession _submissionResults;
     private bool _initialized;
     private bool _initializing;
-    private bool _disposed;
-    private long _generation;
     private long _sessionRevision;
     private WorkflowRecoveryRecord? _pending;
     private ShipperRequestItem? _pendingRequest;
@@ -42,6 +43,10 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
         _navigation = navigation;
         _auth = auth;
         _recovery = recovery;
+        _submissionResults = new(
+            () => _auth is null ? new("local-session", "0", true)
+                : new(_auth.UserId, _auth.SessionRevision.ToString(System.Globalization.CultureInfo.InvariantCulture), _auth.IsLoggedIn),
+            "로그인 후 접수 결과를 확인해 주세요.");
         _sessionRevision = auth?.SessionRevision ?? 0;
         if (_auth is not null) _auth.Changed += OnAuthenticationChanged;
     }
@@ -76,19 +81,18 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
 
     public async Task InitializeAsync()
     {
-        if (_disposed || _initialized || _initializing) return;
+        if (_submissionResults.IsDisposed || _initialized || _initializing) return;
         _initializing = true;
-        var generation = _generation;
+        var generation = _submissionResults.Generation;
         try
         {
             if (_auth is not null) await _auth.RestoreAsync();
-            generation = _generation;
+            generation = _submissionResults.Generation;
             var context = CurrentContext();
             if (_auth is not null && _recovery is null)
                 throw new InvalidOperationException("이전 접수를 보호할 저장소를 확인하지 못했습니다.");
-            var vehicles = await _operations.GetVehicleTypesAsync();
-            if (!IsCurrent(context)) return;
-            VehicleTypes = vehicles;
+            // 화물 조건 없는 초기 추천을 차량 목록이나 적재 적합성 근거로 사용하지 않습니다.
+            VehicleTypes = [];
             if (_recovery is not null)
             {
                 var pending = await _recovery.LoadAsync(context.Owner, RecoveryScope, CancellationToken.None);
@@ -103,22 +107,22 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
         }
         catch (Exception ex)
         {
-            if (_disposed || generation != _generation) return;
+            if (_submissionResults.IsDisposed || generation != _submissionResults.Generation) return;
             VehicleTypes = [];
             RegistrationEnabled = false;
             StatusSeverity = Severity.Warning;
             StatusMessage = $"등록 준비를 확인하지 못했습니다. 입력을 유지했으니 다시 확인해 주세요. {ex.Message}";
             RegistrationBoundaryMessage = "등록 준비를 다시 확인한 뒤 계속할 수 있습니다. 기존 접수 결과가 있으면 먼저 조회합니다.";
         }
-        finally { if (generation == _generation) _initializing = false; }
+        finally { if (generation == _submissionResults.Generation) _initializing = false; }
     }
 
     public Task SaveAsync()
     {
         StatusSeverity = State.서버등록가능 ? Severity.Success : Severity.Warning;
         StatusMessage = State.서버등록가능
-            ? "현재 앱 세션에 초안을 유지했습니다. 등록 전 실행 경계를 다시 확인해 주세요."
-            : "현재 앱 세션에 초안을 유지했습니다. 등록 전 필수 입력을 보완해 주세요.";
+            ? "현재 화면에 초안을 유지했습니다. 앱 재시작 후 복원을 위한 저장은 아닙니다. 내용을 확인한 뒤 운송 의뢰를 등록해 주세요."
+            : "현재 화면에 초안을 유지했습니다. 앱 재시작 후 복원을 위한 저장은 아닙니다. 등록 전 필수 입력을 보완해 주세요.";
         return Task.CompletedTask;
     }
     public Task AutoSaveAsync() => Task.CompletedTask;
@@ -137,11 +141,31 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
         return Task.CompletedTask;
     }
     public async Task<decimal?> EstimateFareAsync(string vehicleType, decimal distanceKm)
-        => await _operations.EstimateFareAsync(vehicleType, distanceKm);
+        => await _operations.EstimateFareAsync(new 화주운송기준운임견적요청
+        {
+            차량종류 = vehicleType,
+            예상거리Km = distanceKm,
+            상차위도 = State.상차위도,
+            상차경도 = State.상차경도,
+            하차위도 = State.하차위도,
+            하차경도 = State.하차경도,
+            대기료 = State.대기료,
+            수작업비 = State.수작업비,
+            할증 = State.할증
+        });
+
+    public async Task<차량추천응답> RecommendVehiclesAsync(차량추천요청 request, CancellationToken cancellationToken)
+    {
+        var context = CurrentContext();
+        if (!IsCurrent(context)) throw new OperationCanceledException();
+        var response = await _operations.RecommendVehiclesAsync(request, cancellationToken);
+        if (!IsCurrent(context)) throw new OperationCanceledException();
+        return response;
+    }
 
     public async Task RecordPrivacyConsentAsync()
     {
-        if (_disposed || IsBusy || HasPendingRequest) return;
+        if (_submissionResults.IsDisposed || IsBusy || HasPendingRequest) return;
         if (!CollectionConsent || !AgeConfirmed)
         {
             StatusSeverity = Severity.Warning;
@@ -188,7 +212,7 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
 
     public async Task SubmitAsync()
     {
-        if (_disposed || IsBusy) return;
+        if (_submissionResults.IsDisposed || IsBusy) return;
         if (HasPendingRequest) { await RecoverPendingAsync(); return; }
         if (RegistrationEnabled != true || !State.서버등록가능)
         {
@@ -220,7 +244,7 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
 
     public async Task RecoverPendingAsync()
     {
-        if (_disposed || IsBusy || _pending is null) return;
+        if (_submissionResults.IsDisposed || IsBusy || _pending is null) return;
         var context = CurrentContext();
         IsBusy = true;
         try { await RecoverPendingCoreAsync(context); }
@@ -229,7 +253,7 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
 
     public async Task RetryPendingAsync()
     {
-        if (_disposed || IsBusy || !CanRetryPendingRequest) return;
+        if (_submissionResults.IsDisposed || IsBusy || !CanRetryPendingRequest) return;
         var context = CurrentContext();
         IsBusy = true;
         try
@@ -290,11 +314,12 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
     {
         if (_pending is null || !IsCurrent(context)) return;
         _pendingNotFound = false;
-        try
+        var result = await _submissionResults.ReconcileAsync(context,
+            () => _operations.GetRequestByClientRequestIdAsync(ClientRequestId(_pending.RequestId)),
+            created => FinishPendingAsync(created, context));
+        if (!IsCurrent(context)) return;
+        if (result.Kind == ShipperSubmissionResultKind.NotFound)
         {
-            var created = await _operations.GetRequestByClientRequestIdAsync(ClientRequestId(_pending.RequestId));
-            if (!IsCurrent(context)) return;
-            if (created is not null) { await FinishPendingAsync(created, context); return; }
             _pendingNotFound = true;
             StatusSeverity = Severity.Warning;
             StatusMessage = _pendingRequest is null
@@ -303,11 +328,10 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
                     ? "이전 접수의 개인정보 동의 증적을 확인할 수 없어 결과 조회만 가능합니다. 기존 접수 번호를 유지하고 결과를 다시 확인해 주세요."
                 : "이전 접수 결과를 아직 찾지 못했습니다. 원문과 번호는 유지했습니다. 같은 요청으로 다시 등록을 선택할 수 있습니다.";
         }
-        catch (Exception ex)
+        else if (result.Kind == ShipperSubmissionResultKind.Failed)
         {
-            if (!IsCurrent(context)) return;
             StatusSeverity = Severity.Warning;
-            StatusMessage = $"이전 접수 결과를 확인하지 못했습니다. 새 등록은 보내지 않았습니다. 결과 확인을 다시 시도해 주세요. {ex.Message}";
+            StatusMessage = $"이전 접수 결과를 확인하지 못했습니다. 새 등록은 보내지 않았습니다. 결과 확인을 다시 시도해 주세요. {result.Error!.Message}";
         }
     }
 
@@ -322,9 +346,13 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
         _pendingNotFound = false;
         ResetPrivacyConsent();
         StatusSeverity = Severity.Success;
-        StatusMessage = "운송 의뢰 원장 등록을 확인했습니다.";
+        var requiresPrepayment = created.정산시점 == "선결제" && created.결제상태 == "결제대기";
+        StatusMessage = requiresPrepayment ? "접수 준비 완료 · 결제 후 배차 접수" : "운송 의뢰 원장 등록을 확인했습니다.";
         var route = ShipperRequestNavigationContext.Parse(_navigation.Uri);
-        _navigation.NavigateTo(PageNavigationContext.WithReturnPath(ShipperRoutes.RequestDetailFor(created.의뢰Id), route.ReturnPath));
+        var next = requiresPrepayment
+            ? new ShipperRequestDetailNavigationContext().PathFor(ShipperRequestDetailScreenKind.Payment, created.의뢰Id)
+            : ShipperRoutes.RequestDetailFor(created.의뢰Id);
+        _navigation.NavigateTo(PageNavigationContext.WithReturnPath(next, route.ReturnPath));
     }
 
     private ShipperRequestItem CreateRequest(string clientRequestId)
@@ -339,7 +367,11 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
             {
                 화물종류 = draft.화물종류, 설명 = draft.화물설명,
                 수량 = draft.화물수량, 중량Kg = draft.화물중량Kg,
-                부피Cbm = draft.화물부피Cbm, 온도조건 = draft.온도조건
+                길이Mm = draft.화물길이Mm, 폭Mm = draft.화물폭Mm,
+                높이Mm = draft.화물높이Mm, 팔레트개수 = draft.팔레트개수,
+                부피Cbm = draft.화물부피Cbm, 온도조건 = draft.온도조건,
+                바닥회전가능여부 = draft.화물바닥회전가능여부,
+                적층가능여부 = draft.화물적층가능여부, 화물파손주의여부 = draft.화물파손주의여부
             },
             의뢰상태 = "접수", 결제상태 = draft.결제예정금액.HasValue ? "결제대기" : "대기", 배차상태 = "매칭중",
             운송방식 = draft.운송방식, 차량종류 = draft.차량종류 ?? "1톤 카고", 결제수단 = draft.결제수단,
@@ -366,19 +398,13 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
             throw new InvalidDataException("이전 접수 번호와 원문이 다릅니다.");
         if (payload is not null) State.ApplyDraft(payload.Draft);
     }
-    private SubmissionContext CurrentContext()
-    {
-        if (_auth is not null && (!_auth.IsLoggedIn || string.IsNullOrWhiteSpace(_auth.UserId)))
-            throw new InvalidOperationException("로그인 후 접수 결과를 확인해 주세요.");
-        return new(_auth?.UserId ?? "local-session", _auth?.SessionRevision ?? 0, _generation);
-    }
-    private bool IsCurrent(SubmissionContext context) => !_disposed && context.Generation == _generation
-        && (_auth is null || _auth.IsLoggedIn && _auth.UserId == context.Owner && _auth.SessionRevision == context.Revision);
+    private SubmissionContext CurrentContext() => _submissionResults.Capture();
+    private bool IsCurrent(SubmissionContext context) => _submissionResults.IsCurrent(context);
     private void OnAuthenticationChanged()
     {
         if (_auth is null || _sessionRevision == _auth.SessionRevision) return;
         _sessionRevision = _auth.SessionRevision;
-        ++_generation;
+        _submissionResults.Invalidate();
         _initialized = _initializing = IsBusy = false;
         RegistrationEnabled = null;
         VehicleTypes = [];
@@ -392,8 +418,8 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
     }
     public void Dispose()
     {
-        _disposed = true;
-        ++_generation;
+        _submissionResults.Dispose();
+        State.차량추천초기화();
         if (_auth is not null) _auth.Changed -= OnAuthenticationChanged;
         _pending = null;
         _pendingRequest = null;
@@ -410,6 +436,5 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
         _collectionConsent = _ageConfirmed = false;
         ClearPrivacyConsent();
     }
-    private sealed record SubmissionContext(string Owner, long Revision, long Generation);
     private sealed record SubmissionPayload(ShipperRequestItem Request, 운송모델작성Draft Draft);
 }

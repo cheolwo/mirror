@@ -252,7 +252,7 @@ public sealed class CargoReturnAreaTests
     [InlineData(false, true)]
     [InlineData(true, false)]
     [InlineData(true, true)]
-    public async Task 차량명세누락이나_기존화물과의구간적재미확인은_복귀가점적격으로확정하지않는다(bool existingCargo, bool coordination)
+    public async Task 차량명세누락이나_구간적재미확인은_적합성허용응답이있어도_복귀가점적격으로확정하지않는다(bool existingCargo, bool coordination)
     {
         await using var fixture = await Fixture.CreateAsync(1);
         var candidate = await fixture.Db.화주운송의뢰.SingleAsync();
@@ -281,7 +281,7 @@ public sealed class CargoReturnAreaTests
 
         var loading = new 차량화물적합성Service(new 차량적재추천Engine());
         var vehicle = await fixture.Db.차량제원.SingleOrDefaultAsync();
-        Assert.True(loading.판정(vehicle, candidate, null).적합여부);
+        Assert.Equal(existingCargo, loading.판정(vehicle, candidate, null).적합여부);
         if (existingCargo)
         {
             var current = await fixture.Db.화주운송의뢰.SingleAsync(x => x.의뢰Id == "existing-cargo");
@@ -291,13 +291,14 @@ public sealed class CargoReturnAreaTests
 
         if (coordination)
         {
-            var result = await fixture.Factory(realFit: true).생성Async(new() { 기사Ids = ["driver-1"] });
+            // 제원 누락 시에도 잘못된 적합 응답을 별도로 주어 복귀 가점의 독립 방어를 유지한다.
+            var result = await fixture.Factory(realFit: existingCargo).생성Async(new() { 기사Ids = ["driver-1"] });
             Assert.Single(result.조합평가목록);
             Assert.Equal(0m, Assert.Single(result.조합평가목록).복귀시간대부담점수);
         }
         else
         {
-            var result = Assert.Single(await fixture.Recommendations(realFit: true).GetDrivingRecommendationsAsync("driver-1"));
+            var result = Assert.Single(await fixture.Recommendations(realFit: existingCargo).GetDrivingRecommendationsAsync("driver-1"));
             Assert.True(result.차량적합여부);
             Assert.False(result.권역복귀확인됨);
             Assert.Equal(0m, result.권역복귀가점);
@@ -354,16 +355,55 @@ public sealed class CargoReturnAreaTests
         }
         await fixture.Db.SaveChangesAsync();
         var fit = new 차량화물적합성Service(new 차량적재추천Engine());
-        Assert.True(fit.판정(vehicle, request, null).적합여부);
+        Assert.Equal(condition == "cargo-unknown", fit.판정(vehicle, request, null).적합여부);
 
+        // 외부 적합 응답이 true여도 별도의 적재 근거가 없으면 복귀 가점을 인증하지 않는다.
         if (coordination)
-            Assert.Single((await fixture.Factory(realFit: true).생성Async(new() { 기사Ids = ["driver-1"] })).조합평가목록);
+            Assert.Single((await fixture.Factory().생성Async(new() { 기사Ids = ["driver-1"] })).조합평가목록);
         else
-            Assert.Equal(0m, Assert.Single(await fixture.Recommendations(realFit: true).GetDrivingRecommendationsAsync("driver-1")).권역복귀가점);
+            Assert.Equal(0m, Assert.Single(await fixture.Recommendations().GetDrivingRecommendationsAsync("driver-1")).권역복귀가점);
 
         var comparison = Assert.Single(fixture.ReturnArea.Evaluations);
         Assert.True(comparison.Verified);
         Assert.False(comparison.Eligible);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task 실제적합성에서_제원이나요구부피기준이미확인이면_조합후보와복귀가점을인증하지않는다(
+        bool missingVehicle, bool coordination)
+    {
+        await using var fixture = await Fixture.CreateAsync(1);
+        if (missingVehicle)
+            fixture.Db.차량제원.RemoveRange(fixture.Db.차량제원);
+        else
+        {
+            var vehicle = await fixture.Db.차량제원.SingleAsync();
+            vehicle.권장최대CBM = null;
+            vehicle.적재함높이Mm = null;
+        }
+        var queue = await fixture.Db.운송원장.SingleAsync();
+        if (coordination) queue.현재추천대상기사Id = null;
+        await fixture.Db.SaveChangesAsync();
+
+        if (coordination)
+        {
+            var result = Assert.Single((await fixture.Factory(realFit: true)
+                .생성Async(new() { 기사Ids = ["driver-1"] })).조합평가목록);
+            Assert.False(result.추천가능여부);
+            Assert.Contains(result.제외사유, x => x.Contains("검증 불가", StringComparison.Ordinal));
+        }
+        else
+        {
+            var result = Assert.Single(await fixture.Recommendations(realFit: true).GetDrivingRecommendationsAsync("driver-1"));
+            Assert.False(result.차량적합여부);
+            Assert.Contains(result.차량부적합사유, x => x.Contains("검증 불가", StringComparison.Ordinal));
+            Assert.Equal(0m, result.권역복귀가점);
+        }
+        Assert.False(Assert.Single(fixture.ReturnArea.Evaluations).Eligible);
     }
 
     [Theory]
@@ -395,6 +435,7 @@ public sealed class CargoReturnAreaTests
     private static 화주운송의뢰 Request(string id, decimal pickup, decimal dropoff) => new()
     {
         의뢰Id = id, 화물종류 = "상자", 운송방식 = "혼적", 화물온도조건 = "상온", 최종운임 = 10_000m,
+        결제상태 = 상태값.결제상태.결제완료, 정산상태 = "결제완료",
         화물중량Kg = 100m, 화물부피Cbm = 1m, 화물팔레트개수 = 0,
         픽업_도로명주소 = "fixture pickup", 픽업_위도 = pickup, 픽업_경도 = 0m,
         하차_도로명주소 = "fixture dropoff", 하차_위도 = dropoff, 하차_경도 = 0m,
@@ -448,13 +489,15 @@ public sealed class CargoReturnAreaTests
             new 배차추천판정Service(), Score, realFit ? new 차량화물적합성Service(new 차량적재추천Engine()) : Fit,
             new 기사운송일정구성Service(Db), new 운송일정삽입평가Service(routes),
             new FixtureFuel(), null!, null!, ReturnArea,
-            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용);
+            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용,
+            신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
 
         public 국내화물배차조율입력Factory Factory(bool realFit = false) => new(Db, new FixtureDriverState(), Rejected, routes,
             realFit ? new 차량화물적합성Service(new 차량적재추천Engine()) : Fit,
             new 배차추천판정Service(), Score, new 기사운송일정구성Service(Db), new 운송일정삽입평가Service(routes),
             new 운송의뢰수익묶음Service(), Options.Create(new 배차큐정책Options()),
-            Options.Create(new 국내화물배차AI정책Options()), ReturnArea);
+            Options.Create(new 국내화물배차AI정책Options()), ReturnArea,
+            신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
 
         public ValueTask DisposeAsync() => Db.DisposeAsync();
     }

@@ -77,6 +77,7 @@ public sealed class 운송원장RdbSnapshotProjectionTests
     {
         await using var db = CreateContext();
         var current = CreateRequest(47000m, "변경 주소");
+        current.정산시점 = "운송완료후정산";
         current.정산상태 = "후불승인완료";
         db.화주운송의뢰.Add(current);
         await db.SaveChangesAsync();

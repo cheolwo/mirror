@@ -1,0 +1,68 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Transport
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@using Ssalddel.Ui.Common.Areas.App.Components.Recovery
+@using Ssalddel.Contracts.Common.Versioning
+@using Ssalddel.Contracts.Common.Workflow
+@inject IRoleWorkspaceApi Api
+@inject IRoleWorkspaceAccess Access
+@inject IWorkflowRecoveryStore Recovery
+@inject HttpClient Http
+@implements IDisposable
+
+<MudStack Spacing="2">
+    <MudText Typo="Typo.h6">결제 후 접수</MudText>
+    @if (model?.State is { } state)
+    {
+        <MudText Typo="Typo.h5">@state.Amount.ToString("N0")원</MudText>
+        @if (state.PaymentConfirmed)
+        {
+            <MudText Typo="Typo.body2">배차 @ShipperRequestDetailPresentation.Display(state.DispatchStatus)</MudText>
+        }
+        else if (state.SimulationAvailable && state.Enabled)
+        {
+            <MudText Typo="Typo.caption">시험 결제 · 실제 결제·송금 없음</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CreditCard"
+                       Disabled="@(!model.CanPay)" OnClick="ConfirmAsync">시험 결제하고 접수</MudButton>
+        }
+    }
+    <MudText Typo="Typo.body2" role="status">@(model?.Message ?? "결제 상태 확인 중")</MudText>
+    <업무오류복구Panel Error="@model?.Error" Context="FailureContext" OutcomeUnknown="@(model?.NeedsResultCheck == true)"
+                   Message="@(model?.NeedsResultCheck == true ? model.Message : null)" ContextKey="@RequestId"
+                   Busy="@(model?.IsBusy == true)" RetryRequested="RefreshAsync" />
+    <MudButton Variant="Variant.Outlined" Disabled="@(model?.IsBusy != false)" OnClick="RefreshAsync">결과 확인</MudButton>
+    @if (model?.PendingRequestId is { } pendingId && pendingId != RequestId)
+    {
+        <MudLink Href="@(new ShipperRequestDetailNavigationContext().PathFor(ShipperRequestDetailScreenKind.Payment, pendingId))">이전 결제 확인</MudLink>
+    }
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired] public string RequestId { get; set; } = string.Empty;
+    [Parameter] public EventCallback Confirmed { get; set; }
+    private ShipperPrepaymentViewModel? model;
+    private static readonly 업무실패맥락Dto FailureContext = new(OperatingSystemIds.ShipperTransportManagement,
+        OperatingSystemLifecycleStageIds.ShipperRequestCommitment, 업무처리결과Codes.조회);
+    private string? loaded;
+    protected override void OnInitialized()
+    {
+        var context = new WorkflowRecoveryContext(() => Access.GetIdentity(RoleWorkspaceCatalog.Shipper), () => Http.BaseAddress);
+        model = new(Api, Access, Recovery, context); model.Changed += Update;
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        if (RequestId == loaded) return;
+        loaded = RequestId; await model!.LoadAsync(RequestId);
+    }
+    private async Task ConfirmAsync()
+    {
+        await model!.ConfirmSimulationAsync();
+        if (model.State?.PaymentConfirmed == true) await Confirmed.InvokeAsync();
+    }
+    private async Task RefreshAsync()
+    {
+        await model!.LoadAsync(RequestId);
+        if (model.State?.PaymentConfirmed == true) await Confirmed.InvokeAsync();
+    }
+    private void Update() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() { if (model is not null) { model.Changed -= Update; model.Dispose(); } }
+}

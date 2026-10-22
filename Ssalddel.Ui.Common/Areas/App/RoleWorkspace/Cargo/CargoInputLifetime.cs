@@ -32,7 +32,7 @@ public sealed class CargoInputLifetime : IDisposable
         IsBusy = false; HasError = false; Message = null;
     }
 
-    public async Task RunAsync(Func<CancellationToken, Task> work, string? success = null)
+    public async Task RunAsync(Func<CancellationToken, Task> work, string? success = null, string? failure = null)
     {
         if (_disposed || IsBusy) return;
         using var pending = new CancellationTokenSource();
@@ -56,7 +56,13 @@ public sealed class CargoInputLifetime : IDisposable
             RequireCurrent(pending.Token);
             if (success is not null) Message = success;
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException) when (pending.IsCancellationRequested || _disposed || generation != _generation) { }
+        catch (OperationCanceledException)
+        {
+            // HttpClient timeout also uses TaskCanceledException; it is not a page-lifetime cancellation.
+            HasError = true;
+            Message = failure ?? "응답을 기다리는 시간이 지났습니다. 현재 업무 상태를 다시 확인해 주세요.";
+        }
         catch (RoleWorkspaceAccessException ex) when (ex.StatusCode is 401 or 403)
         {
             if (_disposed || generation != _generation) return;
@@ -67,7 +73,7 @@ public sealed class CargoInputLifetime : IDisposable
         {
             if (_disposed || generation != _generation) return;
             HasError = true;
-            Message = "업무를 처리하지 못했습니다. 연결과 현재 상태를 확인한 뒤 다시 시도해 주세요.";
+            Message = failure ?? "업무를 처리하지 못했습니다. 연결과 현재 상태를 확인한 뒤 다시 시도해 주세요.";
         }
         finally
         {

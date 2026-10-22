@@ -16,19 +16,22 @@ public sealed class 용달운송의뢰결제승인완료EventHandler : INotifica
     private readonly I운송원장Mongo동기화Service _transportLedgerSync;
     private readonly ILogger<용달운송의뢰결제승인완료EventHandler> _logger;
     private readonly IOptions<TransportPrepaymentOptions> _prepaymentOptions;
+    private readonly ISsalddelExecutionModePolicy? _executionMode;
 
     public 용달운송의뢰결제승인완료EventHandler(
         SsalddelContext db,
         I운송의뢰배차대기Service dispatchQueueService,
         I운송원장Mongo동기화Service transportLedgerSync,
         ILogger<용달운송의뢰결제승인완료EventHandler> logger,
-        IOptions<TransportPrepaymentOptions>? prepaymentOptions = null)
+        IOptions<TransportPrepaymentOptions>? prepaymentOptions = null,
+        ISsalddelExecutionModePolicy? executionMode = null)
     {
         _db = db;
         _dispatchQueueService = dispatchQueueService;
         _transportLedgerSync = transportLedgerSync;
         _logger = logger;
         _prepaymentOptions = prepaymentOptions ?? Microsoft.Extensions.Options.Options.Create(new TransportPrepaymentOptions());
+        _executionMode = executionMode;
     }
 
     public async Task Handle(결제승인완료Event notification, CancellationToken cancellationToken)
@@ -70,6 +73,14 @@ public sealed class 용달운송의뢰결제승인완료EventHandler : INotifica
             var evidence = 배송료결제준비근거Policy.현재근거검증(payment, shipperRequest);
             if (evidence.IsFailed) throw new InvalidOperationException(evidence.Errors[0].Message);
         }
+        else if (payment.결제제공자 == 결제공통정의.결제제공자.FakePG
+                 && (화주운송결제진행정책.선결제초기상태인가(shipperRequest) || payment.준비근거Json is not null))
+        {
+            if (_executionMode?.IsSimulation != true)
+                throw new InvalidOperationException("선결제 FakePG 후속은 Simulation에서만 처리합니다.");
+            var evidence = 배송료결제준비근거Policy.현재근거검증(payment, shipperRequest);
+            if (evidence.IsFailed) throw new InvalidOperationException(evidence.Errors[0].Message);
+        }
 
         shipperRequest.결제상태 = 상태값.결제상태.결제완료;
         var hasOpenAbnormalTransportIncident = await _db.비정상운송사건
@@ -89,6 +100,7 @@ public sealed class 용달운송의뢰결제승인완료EventHandler : INotifica
 
         var createDispatchQueue = _prepaymentOptions.Value.Enabled
             && 화주운송결제진행정책.선결제초기상태인가(shipperRequest)
+            && 화주운송배차진입정책.판정(shipperRequest).가능
             && !await _db.운송원장.AsNoTracking().AnyAsync(x => x.의뢰Id == shipperRequest.의뢰Id, cancellationToken);
         if (createDispatchQueue)
         {

@@ -3,6 +3,7 @@
 <ShipperRequestScreenFrame ViewModel="ViewModel"
                            NavigationContext="NavigationContext"
                            Step="ShipperRequestAuthoringStep.Review"
+                           MobileStep="MobileStep"
                            ScreenCode="@ScreenCode"
                            Title="@Title"
                            Description="@Description"
@@ -15,17 +16,41 @@
         <MudAlert Severity="StatusSeverity">@StatusMessage</MudAlert>
     }
 
-    <운송의뢰작성요약Panel ViewModel="ViewModel" />
-    <운송의뢰검증Panel ViewModel="ViewModel" NavigationContext="NavigationContext" />
+    @if (MobileStep is null)
+    {
+        <운송의뢰작성요약Panel ViewModel="ViewModel" />
+        <운송의뢰검증Panel ViewModel="ViewModel" NavigationContext="NavigationContext" />
+    }
+    else
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-4"><MudStack Spacing="2">
+            @foreach (var step in ShipperRequestMobileStepCatalog.Steps.Where(item => item.Step != ShipperRequestMobileStep.Review))
+            {
+                <section class="shipper-mobile-review-section">
+                    <div><strong>@step.Title</strong><a href="@MobileHref(step.Step)">수정</a></div>
+                    <p>@MobileSummary(step.Step)</p>
+                </section>
+            }
+        </MudStack></MudPaper>
+        @if (ViewModel.입력검증메시지목록.Count > 0)
+        {
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4"><h3>접수 전 확인</h3>
+                @foreach (var item in ViewModel.입력검증메시지목록)
+                {
+                    <div class="shipper-mobile-review-check"><p>@item.내용</p><a href="@MobileHref(item.MobileStep ?? FirstMobileStep(item.단계))">@(item.필수 ? "보완" : "확인")</a></div>
+                }
+            </MudPaper>
+        }
+    }
 
     @BeforeSubmission
 
     <MudPaper Elevation="0" Outlined="true" Class="pa-4">
         <MudStack Spacing="2">
             <MudStack Spacing="0">
-                <MudText Typo="Typo.h6">실행 경계</MudText>
+                <MudText Typo="Typo.h6">@(MobileStep is null ? "실행 경계" : "접수 안내")</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    의뢰 등록은 현재 화면의 명시적 버튼으로만 요청합니다. 등록 뒤에도 추천·자동 배차·계약·결제는 별도 동의와 서버 상태 검증 없이 확정하지 않습니다.
+                    선결제 의뢰는 접수 준비를 저장한 뒤 결제합니다. 결제가 확인되면 배차가 접수됩니다.
                 </MudText>
             </MudStack>
 
@@ -61,7 +86,7 @@
                            StartIcon="@Icons.Material.Filled.Save"
                            Disabled="IsBusy"
                            OnClick="SaveRequested">
-                    초안 저장
+                    이 화면에 초안 유지
                 </MudButton>
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
@@ -79,6 +104,7 @@
     [Parameter, EditorRequired] public 운송의뢰작성ViewModel ViewModel { get; set; } = default!;
     [Parameter, EditorRequired] public ShipperRequestNavigationContext NavigationContext { get; set; } = new();
     [Parameter] public string? ScreenCode { get; set; }
+    [Parameter] public ShipperRequestMobileStep? MobileStep { get; set; }
     [Parameter] public string Title { get; set; } = "최종 확인";
     [Parameter] public string Description { get; set; } = "작성한 초안과 필수 입력, 운영 경계를 확인한 뒤 사용자가 명시적으로 저장 또는 등록합니다.";
     [Parameter] public bool? RegistrationEnabled { get; set; }
@@ -104,4 +130,23 @@
            && ViewModel.서버등록가능
            && !IsBusy
            && SubmitRequested.HasDelegate;
+
+    private string MobileHref(ShipperRequestMobileStep step) => NavigationContext.PathFor(step).TrimStart('/');
+    private static ShipperRequestMobileStep FirstMobileStep(ShipperRequestAuthoringStep step)
+        => ShipperRequestMobileStepCatalog.Steps.First(item => item.MajorStep == step).Step;
+    private string MobileSummary(ShipperRequestMobileStep step) => step switch
+    {
+        ShipperRequestMobileStep.Cargo => $"{Display(ViewModel.화물종류)} · 수량 {ViewModel.화물수량?.ToString() ?? "미입력"} · {Display(ViewModel.화물적재형태)}",
+        ShipperRequestMobileStep.Package => $"{ViewModel.화물중량Kg?.ToString("0.###") ?? "미입력"} kg · {ViewModel.화물길이Mm?.ToString() ?? "미입력"} × {ViewModel.화물폭Mm?.ToString() ?? "미입력"} × {ViewModel.화물높이Mm?.ToString() ?? "미입력"} mm",
+        ShipperRequestMobileStep.Pickup => $"{Display(ViewModel.상차도로명주소)} {ViewModel.상차상세주소} · {Display(ViewModel.상차연락처이름)} · {MaskedPhone(ViewModel.상차연락처전화번호)}",
+        ShipperRequestMobileStep.Dropoff => $"{Display(ViewModel.하차도로명주소)} {ViewModel.하차상세주소} · {Display(ViewModel.하차연락처이름)} · {MaskedPhone(ViewModel.하차연락처전화번호)}",
+        ShipperRequestMobileStep.Schedule => $"상차 {Window(ViewModel.상차시간창시작일시, ViewModel.상차시간창종료일시)} · 하차 {Window(ViewModel.하차시간창시작일시, ViewModel.하차시간창종료일시)} (한국시간)",
+        ShipperRequestMobileStep.Vehicle => $"{Display(ViewModel.차량종류)} · {Display(ViewModel.운송방식)}",
+        ShipperRequestMobileStep.Payment => $"{Display(ViewModel.결제수단)} · 예정 {ViewModel.결제예정금액?.ToString("N0") ?? "미입력"}원",
+        _ => "입력 내용을 확인해 주세요."
+    };
+    private static string Display(string? value) => string.IsNullOrWhiteSpace(value) ? "미입력" : value;
+    private static string MaskedPhone(string? value)
+    { var digits = new string((value ?? "").Where(char.IsDigit).ToArray()); return digits.Length > 4 ? "***-****-" + digits[^4..] : "연락처 미입력"; }
+    private static string Window(DateTime? start, DateTime? end) => start is null && end is null ? "미지정" : $"{start?.ToString("MM.dd HH:mm") ?? "시작 미입력"} ~ {end?.ToString("HH:mm") ?? "종료 미입력"}";
 }

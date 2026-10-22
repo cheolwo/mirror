@@ -20,10 +20,12 @@
 }
 
 <ShipperRequestReviewScreen ViewModel="PageModel.State"
+                            MobileStep="ShipperRequestMobileStep.Review"
                             NavigationContext="RouteContext"
                             ScreenCode="03.06"
                             Title="의뢰 최종 검토"
-                            Description="누락과 실행 경계를 확인한 뒤 의뢰 등록을 요청합니다."
+                            Description="입력한 내용과 동의를 확인한 뒤 결제로 이동합니다."
+                            SubmitLabel="결제 단계로"
                             RegistrationEnabled="@(PageModel.HasPendingRequest ? false : PageModel.RegistrationEnabled)"
                             SubmissionPrerequisiteSatisfied="PageModel.HasValidPrivacyConsent"
                             RegistrationBoundaryMessage="@PageModel.RegistrationBoundaryMessage"

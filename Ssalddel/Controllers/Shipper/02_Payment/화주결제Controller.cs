@@ -8,6 +8,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Ssalddel.ApiMetadata;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Shipper.Payment02
 {
@@ -26,6 +27,7 @@ namespace Ssalddel.Controllers.Shipper.Payment02
         }
 
         [HttpGet]
+        [SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
         [Authorize(Policy = "서버관리자전용")]
         public async Task<IActionResult> 결제목록조회(
             [FromQuery] string? 결제상태,
@@ -59,6 +61,15 @@ namespace Ssalddel.Controllers.Shipper.Payment02
             return result.IsSuccess ? Ok(result.Value) : this.ToProblemActionResult(result.Errors.Select(x => x.Message));
         }
 
+        [HttpGet("requests/{requestId}/prepayment")]
+        [SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
+        [Authorize(Roles = 역할명.화주 + "," + 역할명.판매자 + "," + 역할명.서버관리자)]
+        public async Task<IActionResult> 선결제상태조회(string requestId, CancellationToken cancellationToken)
+        {
+            var result = await _sender.Send(new 화주선결제조회Query(requestId), cancellationToken);
+            return result.IsSuccess ? Ok(result.Value) : NotFound();
+        }
+
         [HttpPost("confirm")]
         [Authorize(Roles = 역할명.화주 + "," + 역할명.판매자 + "," + 역할명.서버관리자)]
         [Ssalddel재무영향Profile(재무영향ProfileIds.결제승인)]
@@ -69,6 +80,7 @@ namespace Ssalddel.Controllers.Shipper.Payment02
         }
 
         [HttpPost("fake/confirm")]
+        [SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
         [Authorize(Roles = 역할명.화주 + "," + 역할명.판매자 + "," + 역할명.서버관리자)]
         [Ssalddel재무영향Profile(재무영향ProfileIds.결제승인, ConditionCode = "SimulationOnly")]
         public async Task<IActionResult> 페이크결제승인([FromBody] 페이크결제승인요청 request)

@@ -4,6 +4,7 @@ using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Shipper.Payment.Events;
 using Ssalddel.Contracts.Shipper.Payment;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using 살뜰.도메인.결제;
 using 살뜰.도메인.설정;
 using 살뜰.Services.Options;
@@ -19,17 +20,20 @@ public sealed class 페이크결제승인CommandHandler : IRequestHandler<페이
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IHostEnvironment _hostEnvironment;
     private readonly ISsalddelExecutionModePolicy _executionModePolicy;
+    private readonly IOptions<TransportPrepaymentOptions> _prepaymentOptions;
 
     public 페이크결제승인CommandHandler(
         SsalddelContext db,
         ICurrentUserAccessor currentUserAccessor,
         IHostEnvironment hostEnvironment,
-        ISsalddelExecutionModePolicy executionModePolicy)
+        ISsalddelExecutionModePolicy executionModePolicy,
+        IOptions<TransportPrepaymentOptions>? prepaymentOptions = null)
     {
         _db = db;
         _currentUserAccessor = currentUserAccessor;
         _hostEnvironment = hostEnvironment;
         _executionModePolicy = executionModePolicy;
+        _prepaymentOptions = prepaymentOptions ?? Options.Create(new TransportPrepaymentOptions());
     }
 
     public async Task<Result<페이크결제승인응답>> Handle(페이크결제승인Command request, CancellationToken cancellationToken)
@@ -52,6 +56,10 @@ public sealed class 페이크결제승인CommandHandler : IRequestHandler<페이
             return Result.Fail<페이크결제승인응답>("의뢰를 찾을 수 없습니다.");
         }
 
+        // 완료 결제의 멱등 재조회·Outbox 복구도 현재 결제 권한을 먼저 확인합니다.
+        if (!화주결제권한정책.의뢰결제권한있음(shipperRequest, _currentUserAccessor.UserId, _currentUserAccessor.Role))
+            return Result.Fail<페이크결제승인응답>("의뢰를 찾을 수 없습니다.");
+
         // 기존 완료 결제의 Outbox 재생 경로에서도 모의 배송을 운영 정산으로 승격하지 않습니다.
         if (shipperRequest.모의처리처수행)
         {
@@ -61,6 +69,8 @@ public sealed class 페이크결제승인CommandHandler : IRequestHandler<페이
         var alreadyCompletedPayment = await FindCompletedFakePaymentAsync(requestId, cancellationToken);
         if (shipperRequest.결제상태 == 상태값.결제상태.결제완료 && alreadyCompletedPayment is not null)
         {
+            if (request.Amount != alreadyCompletedPayment.결제금액)
+                return Result.Fail<페이크결제승인응답>("기존 결제 금액과 요청 금액이 다릅니다. 같은 결제를 다시 확인해 주세요.");
             await EnsurePaymentApprovedOutboxAsync(alreadyCompletedPayment, cancellationToken);
             return Result.Ok(ToResponse(alreadyCompletedPayment, alreadyCompleted: true));
         }
@@ -68,17 +78,20 @@ public sealed class 페이크결제승인CommandHandler : IRequestHandler<페이
         var 진행검증 = 화주운송결제진행정책.결제준비요청검증(
             shipperRequest,
             _currentUserAccessor.UserId,
-            _currentUserAccessor.Role);
+            _currentUserAccessor.Role,
+            선결제허용: _executionModePolicy.IsSimulation && _prepaymentOptions.Value.Enabled);
         if (!진행검증.통과)
         {
             return Result.Fail<페이크결제승인응답>(진행검증.실패사유);
         }
 
-        var amount = ResolveAmount(request.Amount, shipperRequest);
-        if (amount <= 0)
-        {
-            return Result.Fail<페이크결제승인응답>("결제금액이 유효하지 않습니다.");
-        }
+        var serverAmount = 배송료결제준비근거Policy.서버원운임조회(shipperRequest);
+        if (serverAmount.IsFailed) return Result.Fail<페이크결제승인응답>(serverAmount.Errors);
+        if (request.Amount != serverAmount.Value)
+            return Result.Fail<페이크결제승인응답>(new Error("요청 금액이 서버의 확정 운임과 다릅니다. 금액을 다시 확인해 주세요.")
+                .WithMetadata("ErrorCode", "PreparationAmountMismatch"));
+        var amount = serverAmount.Value;
+        var initialPrepayment = 화주운송결제진행정책.선결제초기상태인가(shipperRequest);
 
         var idempotencyKey = NormalizeIdempotencyKey(request.IdempotencyKey);
         if (!string.IsNullOrWhiteSpace(idempotencyKey))
@@ -89,6 +102,9 @@ public sealed class 페이크결제승인CommandHandler : IRequestHandler<페이
                 .FirstOrDefaultAsync(cancellationToken);
             if (existingPayment is not null)
             {
+                if (existingPayment.결제상태 != 상태값.결제상태.결제완료
+                    || existingPayment.결제금액 != amount)
+                    return Result.Fail<페이크결제승인응답>("같은 결제의 처리 결과를 먼저 확인해 주세요.");
                 return Result.Ok(ToResponse(existingPayment, alreadyCompleted: true));
             }
         }
@@ -127,10 +143,24 @@ public sealed class 페이크결제승인CommandHandler : IRequestHandler<페이
             승인일시 = now
         };
 
-        shipperRequest.결제상태 = 상태값.결제상태.결제완료;
-        shipperRequest.정산상태 = 상태값.결제상태.결제완료;
+        var previousMethod = shipperRequest.결제수단;
+        var previousExpectedAmount = shipperRequest.결제예정금액;
         shipperRequest.결제수단 = payment.결제수단;
         shipperRequest.결제예정금액 ??= amount;
+        if (initialPrepayment)
+        {
+            var preparation = 배송료결제준비근거Policy.생성(payment, shipperRequest,
+                new() { 원운임 = amount, 최종결제금액 = amount });
+            if (preparation.IsFailed)
+            {
+                shipperRequest.결제수단 = previousMethod;
+                shipperRequest.결제예정금액 = previousExpectedAmount;
+                return Result.Fail<페이크결제승인응답>(preparation.Errors);
+            }
+            payment.준비근거Json = preparation.Value;
+        }
+        shipperRequest.결제상태 = 상태값.결제상태.결제완료;
+        shipperRequest.정산상태 = 상태값.결제상태.결제완료;
         shipperRequest.UpdatedAt = now;
 
         await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
@@ -195,26 +225,6 @@ public sealed class 페이크결제승인CommandHandler : IRequestHandler<페이
                         && x.결제상태 == 상태값.결제상태.결제완료)
             .OrderByDescending(x => x.승인일시 ?? x.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken);
-    }
-
-    private static int ResolveAmount(int requestedAmount, 화주운송의뢰 shipperRequest)
-    {
-        if (requestedAmount > 0)
-        {
-            return requestedAmount;
-        }
-
-        if (shipperRequest.결제예정금액 is > 0)
-        {
-            return shipperRequest.결제예정금액.Value;
-        }
-
-        if (shipperRequest.최종운임 is > 0)
-        {
-            return decimal.ToInt32(decimal.Round(shipperRequest.최종운임.Value, 0, MidpointRounding.AwayFromZero));
-        }
-
-        return 0;
     }
 
     private static string? NormalizeIdempotencyKey(string? value)

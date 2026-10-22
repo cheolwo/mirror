@@ -3,6 +3,7 @@ using 살뜰.도메인.배차;
 using 살뜰.도메인.기사;
 using 살뜰.도메인.화주;
 using 살뜰.Services.Storage.Local;
+using Ssalddel.Application.Shipper.Request;
 
 namespace 살뜰.Services.Dispatch.Coordination;
 
@@ -28,6 +29,12 @@ public static class 국내화물배차후보금지정책
         if (운송의뢰 is null)
         {
             금지사유목록.Add("운송 의뢰 원장을 찾을 수 없습니다.");
+        }
+        else if (운송의뢰.정산시점 == "선결제" && 운송의뢰.결제상태 != 상태값.결제상태.결제완료)
+        {
+            // 이전에 생성된 미결제 큐도 추천 전에 검사합니다. 수락 단계의 기존 검사를 대체하지 않습니다.
+            var entry = 화주운송배차진입정책.판정(운송의뢰);
+            if (!entry.가능) 금지사유목록.Add(entry.사유);
         }
 
         if (배차대기.배차업무유형 != 상태값.배차업무유형.용달운송)

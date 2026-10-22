@@ -16,10 +16,17 @@ public sealed class MauiWorkflowRecoveryStore : IWorkflowRecoveryStore
         {
             var parts = scope.Split('.');
             if (access is not null && parts.Length == 4 && parts[0] == "distributed") return access.GetIdentity(parts[1]);
+            if (access is not null && parts.Length == 6 && parts[0] == "cargo" && parts[1] == "cargo-driver"
+                && parts[2] is "accept" or "pickup" or "dropoff" or "issue" && parts[4] == "v1"
+                && parts[5].StartsWith("server-", StringComparison.Ordinal)) return access.GetIdentity("cargo-driver");
             return new(session.UserId, session.SessionRevision, session.IsLoggedIn);
         }
         inner = new(Identity, read ?? SecureStorage.Default.GetAsync, write ?? SecureStorage.Default.SetAsync,
-            remove ?? (key => SecureStorage.Default.Remove(key)), time);
+            remove ?? (key =>
+            {
+                if (!SecureStorage.Default.Remove(key))
+                    throw new IOException("이전 요청의 확인 기록을 정리하지 못했습니다.");
+            }), time);
     }
     public Task<WorkflowRecoveryRecord?> LoadAsync(string owner, string scope, CancellationToken ct) => inner.LoadAsync(owner, scope, ct);
     public Task SaveAsync(WorkflowRecoveryRecord record, CancellationToken ct) => inner.SaveAsync(record, ct);

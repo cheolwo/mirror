@@ -308,6 +308,7 @@ public sealed class NeighborhoodFulfillmentTests
         await f.SelectInputAsync("mock-local");
         var canonical = await f.Db.화주운송의뢰.SingleAsync();
         canonical.모의처리처수행 = simulation; canonical.모의처리희망완료Utc = simulation ? f.Input.DesiredCompletionUtc : null;
+        if (!simulation) { canonical.정산시점 = "현장지급"; canonical.정산상태 = "현장수금예정"; }
         var mongoFirst = ProjectionLedger(canonical, persistedMirror: false);
         f.Db.화주운송의뢰.Remove(canonical); await f.Db.SaveChangesAsync(); f.Db.ChangeTracker.Clear();
         var projection = new 운송원장업무투영Handler(f.Db, NullLogger<운송원장업무투영Handler>.Instance);

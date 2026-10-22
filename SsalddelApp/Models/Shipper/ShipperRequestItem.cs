@@ -9,12 +9,15 @@ public sealed class ShipperRequestItem
     public string 신청출처Code { get; set; } = string.Empty;
     public string 화물종류 { get; set; } = string.Empty;
     public CargoDTO? 화물원본 { get; set; }
+    public CargoDTO? 원본화물 { get; set; }
+    public 화물적재입력결과? 적재조건 { get; set; }
     public string? 원본화물종류 { get; set; }
     public string 화물적재형태 { get; set; } = string.Empty;
     public string 의뢰상태 { get; set; } = string.Empty;
     public string 결제상태 { get; set; } = string.Empty;
     public string 배차상태 { get; set; } = string.Empty;
     public string 운송상태 { get; set; } = string.Empty;
+    public bool 비정상운송검토보류중 { get; set; }
     public DateTime? 운송원장갱신일시Utc { get; set; }
     public string 확정기사Id { get; set; } = string.Empty;
     public string 확정기사명 { get; set; } = string.Empty;
@@ -62,15 +65,17 @@ public sealed class ShipperRequestItem
     public LocationContactDTO? 픽업정보 { get; set; }
     public LocationContactDTO? 하차정보 { get; set; }
 
-    public bool CanPay => ContainsAny(배차상태, "상차완료", "운송중", "하차지도착", "하차완료", "인수완료")
-        && !IsPaymentSecured(결제상태);
+    public bool CanPay => Ssalddel.Ui.Common.Areas.App.ViewModels.ShipperRequestDetailPresentation.CanPay(
+        배차상태, 결제상태, 정산시점, 의뢰상태);
 
     internal static CargoDTO? 화물복사(CargoDTO? source) => source is null ? null : new()
     {
         화물종류 = source.화물종류, 설명 = source.설명, 수량 = source.수량,
         길이Mm = source.길이Mm, 폭Mm = source.폭Mm, 높이Mm = source.높이Mm,
         중량Kg = source.중량Kg, 부피Cbm = source.부피Cbm, 팔레트개수 = source.팔레트개수,
-        화물파손주의여부 = source.화물파손주의여부, 온도조건 = source.온도조건
+        화물파손주의여부 = source.화물파손주의여부, 온도조건 = source.온도조건,
+        바닥회전가능여부 = source.바닥회전가능여부, 적층가능여부 = source.적층가능여부,
+        부피입력초기화 = source.부피입력초기화
     };
 
     internal static 결제수단 신규결제수단확인(string? value)

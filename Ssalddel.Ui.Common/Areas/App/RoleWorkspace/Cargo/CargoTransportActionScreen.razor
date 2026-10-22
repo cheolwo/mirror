@@ -1,8 +1,11 @@
 @using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment
+@using Ssalddel.Ui.Common.Areas.App.Services
 @implements IDisposable
 @inject CargoDriverWorkspaceApiClient Client
 @inject IRoleWorkspaceApi Api
 @inject IRoleWorkspaceAccess Access
+@inject IServiceProvider Services
 
 <section class="cargo-action-screen" aria-label="@Model.Title">
     <header><a href="@Model.ReturnHref">지도 업무로 돌아가기</a><h1>@Model.Title</h1></header>
@@ -18,12 +21,22 @@
             <MudAlert Severity="@(Model.Lifetime.HasError ? Severity.Error : Severity.Success)">@message</MudAlert>
         }
         @if (Model.Lifetime.IsBusy) { <MudProgressLinear Indeterminate="true" aria-label="업무 처리 중" /> }
+        @if (Model.AwaitingResult)
+        { <p role="status">이전 처리 결과 확인 중입니다. 다시 저장하지 말고 현재 상태를 확인해 주세요.</p> }
         @if (Model.Source is { } source)
         {
             <article class="cargo-action-card">
                 <h2>@source.상태</h2>
                 <p>@(ActionKey == "pickup" ? source.출발지 : source.도착지)</p>
-                @if (!Model.StageAllowsInput && !Model.Saved)
+                @if (Model.CompletionConfirmed)
+                {
+                    <section role="status" aria-label="확인된 완료 상태">
+                        <MudAlert Severity="Severity.Success">@Model.CompletionMessage</MudAlert>
+                        <p>@Model.CompletionNextStep</p>
+                        <MudButton Href="@Model.CompletionHref" Variant="Variant.Filled" Color="Color.Primary">지도에서 다음 업무 확인</MudButton>
+                    </section>
+                }
+                else if (!Model.StageAllowsInput && !Model.Saved)
                 {
                     <MudAlert Severity="Severity.Warning">현재 단계에서는 이 입력을 저장할 수 없습니다. 지도로 돌아가 현재 업무를 확인해 주세요.</MudAlert>
                 }
@@ -41,10 +54,15 @@
                         <MudCheckBox T="bool" Label="작업 장소를 확인했습니다" @bind-Value="Model.LocationConfirmed" Disabled="Model.Lifetime.IsBusy" />
                         <MudCheckBox T="bool" Label="인계 담당자를 확인했습니다" @bind-Value="Model.RecipientConfirmed" Disabled="Model.Lifetime.IsBusy" />
                         <h2>현장 사진</h2>
+                        @if (Model.HasCameraSupport)
+                        {
+                            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.PhotoCamera" Disabled="@(!Model.CanCapturePhoto)" OnClick="CapturePhotoAsync">사진 촬영</MudButton>
+                        }
                         <label class="cargo-photo-label">현장 사진 선택 <InputFile OnChange="PhotoChanged" accept="image/jpeg,image/png,image/webp" disabled="@Model.Lifetime.IsBusy" /></label>
                         <p>8MB 이하 JPG·PNG·WebP 사진을 선택해 주세요.</p>
                         @if (Model.PhotoName is { } photo) { <p>선택한 사진: @photo</p> }
                         @if (_photoError is not null) { <MudAlert Severity="Severity.Error">@_photoError</MudAlert> }
+                        @if (Model.PhotoCaptureMessage is { } captureMessage) { <MudAlert Severity="Severity.Warning" role="status">@captureMessage</MudAlert> }
                         @if (ActionKey == "pickup" && source.인수증필요)
                         {
                             <h2>인수증 확인</h2>
@@ -68,11 +86,15 @@
                     }
                     <hr />
                     <MudCheckBox T="bool" Label="확인한 내용으로 저장하겠습니다" @bind-Value="Model.SaveConfirmed" Disabled="Model.Lifetime.IsBusy" />
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!Model.CanSubmit)" OnClick="Model.SubmitAsync">@Model.Title 저장</MudButton>
+                    @if (Model.SubmissionReadinessMessage is { } readiness)
+                    {
+                        <p id="@_readinessId" role="status" aria-live="polite">@readiness</p>
+                    }
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!Model.CanSubmit)" aria-describedby="@(Model.SubmissionReadinessMessage is null ? null : _readinessId)" OnClick="Model.SubmitAsync">@Model.Title 저장</MudButton>
                 }
             </article>
         }
-        @if (!Model.Lifetime.IsBusy && !Model.Saved)
+        @if (!Model.Lifetime.IsBusy && !Model.CompletionConfirmed)
         {
             <MudButton Variant="Variant.Outlined" OnClick="Reload">현재 상태 다시 확인</MudButton>
         }
@@ -84,8 +106,16 @@
     [Parameter] public string ActionKey { get; set; } = "";
     private CargoTransportActionViewModel Model = default!;
     private string? _photoError;
+    private readonly string _readinessId = $"cargo-action-readiness-{Guid.NewGuid():N}";
     private string LoginHref => CargoWorkspaceRoutes.DriverLogin(ItemId, ActionKey);
-    protected override void OnInitialized() { Model = new(Client, Api, Access); Model.Lifetime.Changed += Refresh; }
+    protected override void OnInitialized()
+    {
+        var http = Services.GetService(typeof(HttpClient)) as HttpClient;
+        var context = http is null ? null : new WorkflowRecoveryContext(() => Access.GetIdentity(RoleWorkspaceCatalog.CargoDriver), () => http.BaseAddress);
+        Model = new(Client, Api, Access, Services.GetService(typeof(I업무사진촬영Adapter)) as I업무사진촬영Adapter,
+            Services.GetService(typeof(IWorkflowRecoveryStore)) as IWorkflowRecoveryStore, context);
+        Model.Lifetime.Changed += Refresh;
+    }
     protected override Task OnParametersSetAsync() => Reload();
     private Task Reload() => Model.LoadAsync(ItemId, ActionKey);
     private void Refresh() { if (Model.Source is null) _photoError = null; _ = InvokeAsync(StateHasChanged); }
@@ -94,5 +124,6 @@
         try { Model.SetPhoto(args.File); _photoError = null; }
         catch (ArgumentException ex) { _photoError = ex.Message.Split(" (Parameter", StringSplitOptions.None)[0]; }
     }
+    private async Task CapturePhotoAsync() { _photoError = null; await Model.CapturePhotoAsync(); }
     public void Dispose() { Model.Lifetime.Changed -= Refresh; Model.Dispose(); }
 }

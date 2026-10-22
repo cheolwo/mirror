@@ -17,9 +17,9 @@
             <div class="shipper-payment">
                 <MudPaper Elevation="0" Outlined="true" Class="pa-4 shipper-payment__summary">
                     <div>
-                        <MudText Typo="Typo.overline" Color="Color.Secondary">PAYMENT STATUS</MudText>
+                        <MudText Typo="Typo.overline" Color="Color.Secondary">결제 상태</MudText>
                         <MudText Typo="Typo.h5">@ShipperRequestDetailPresentation.Display(item.PaymentStatus)</MudText>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">@item.RequestId · @ShipperRequestDetailPresentation.Display(item.PaymentMethod)</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">@ShipperRequestDetailPresentation.Display(item.PaymentMethod)</MudText>
                     </div>
                     <MudChip T="string"
                              Color="@ResolveColor(ShipperRequestDetailPresentation.ResolvePaymentState(item))"
@@ -42,7 +42,13 @@
                     </MudPaper>
 
                     <MudPaper Elevation="0" Outlined="true" Class="pa-4 shipper-payment__card">
-                        <MudText Typo="Typo.h6">개발 결제 경계</MudText>
+                        @if (item.SettlementTiming == "선결제")
+                        {
+                            <ShipperPrepaymentPanel RequestId="@item.RequestId" Confirmed="RefreshRequested" />
+                        }
+                        else
+                        {
+                        <MudText Typo="Typo.h6">테스트 결제</MudText>
                         @if (Receipt is not null)
                         {
                             <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true">
@@ -54,25 +60,26 @@
                         else if (SimulationAvailable)
                         {
                             <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                상차 완료 이후 원장 전이를 검증하는 FakePG입니다. 실제 카드 승인, 계좌 이체나 정산 송금은 발생하지 않습니다.
+                                실제 결제·송금은 발생하지 않습니다.
                             </MudText>
                             <MudButton Variant="Variant.Filled"
                                        Color="Color.Secondary"
                                        StartIcon="@Icons.Material.Filled.CreditCard"
                                        Disabled="@(!item.CanPay || PaymentAmount <= 0)"
                                        OnClick="OpenSimulationRequested">
-                                FakePG 결제창 열기
+                                테스트 결제
                             </MudButton>
                             @if (!item.CanPay)
                             {
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">상차 완료 전이거나 결제가 이미 확보되어 현재 실행할 수 없습니다.</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">상차 전이거나 결제가 확보된 건입니다.</MudText>
                             }
                         }
                         else
                         {
                             <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
-                                이 플랫폼에서는 결제 상태만 조회합니다. 결제 Command는 구성된 실행 경계와 권한을 통과한 별도 adapter에서만 사용할 수 있습니다.
+                                결제 상태 조회만 가능합니다.
                             </MudAlert>
+                        }
                         }
                     </MudPaper>
                 </div>
@@ -87,8 +94,7 @@
         <MudPaper Elevation="8" Class="pa-4 shipper-payment__window">
             <div class="shipper-payment__window-header">
                 <div>
-                    <MudText Typo="Typo.h6" id="shipper-payment-title">FakePG 결제창</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">@paymentItem.RequestId · 개발용 원장 전이</MudText>
+                    <MudText Typo="Typo.h6" id="shipper-payment-title">테스트 결제</MudText>
                 </div>
                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                Color="Color.Default"
@@ -122,10 +128,10 @@
                           Value="@PaymentMemo"
                           ValueChanged="PaymentMemoChanged"
                           Disabled="@PaymentCompleting"
-                          Placeholder="예: 화주가 개발 결제를 승인함" />
+                          Placeholder="결제 메모 (선택)" />
 
             <MudAlert Severity="Severity.Info" Dense="true">
-                FakePG는 서버 또는 허용된 local sample 원장에 개발용 기록만 남깁니다. 실제 금전 이동은 발생하지 않습니다.
+                테스트 기록만 저장됩니다. 실제 결제·송금은 발생하지 않습니다.
             </MudAlert>
         </MudPaper>
     </div>
@@ -135,8 +141,8 @@
     [Parameter, EditorRequired] public ShipperRequestDetailPageState State { get; set; } = default!;
     [Parameter, EditorRequired] public ShipperRequestDetailNavigationContext Context { get; set; } = new();
     [Parameter] public string? ScreenCode { get; set; }
-    [Parameter] public string Title { get; set; } = "운송 결제";
-    [Parameter] public string Description { get; set; } = "결제·수납 조건을 확인하고 허용된 개발 환경에서만 FakePG를 실행합니다.";
+    [Parameter] public string Title { get; set; } = "결제";
+    [Parameter] public string Description { get; set; } = string.Empty;
     [Parameter, EditorRequired] public string HomeHref { get; set; } = string.Empty;
     [Parameter, EditorRequired] public string NewRequestHref { get; set; } = string.Empty;
     [Parameter] public string LoginHref { get; set; } = "/login";

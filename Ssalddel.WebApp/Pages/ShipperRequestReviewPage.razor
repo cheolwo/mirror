@@ -5,12 +5,17 @@
 
 <PageTitle>운송 의뢰 작성 - 최종 확인</PageTitle>
 
+<WebShipperSubmissionRecoveryPanel PageModel="PageModel" />
+@if (!PageModel.HasSubmission && !PageModel.IsBusy)
+{
 <ShipperRequestReviewScreen ViewModel="PageModel.State"
+                            MobileStep="ShipperRequestMobileStep.Review"
+                            SubmitLabel="결제 단계로"
                             NavigationContext="RouteContext"
                             RootBackHref="@RouteContext.RootPath"
                             RegistrationEnabled="PageModel.RegistrationEnabled"
                             RegistrationBoundaryMessage="@PageModel.RegistrationBoundaryMessage"
-                            StatusMessage="@PageModel.StatusMessage"
+                            StatusMessage="@(PageModel.HasSubmission ? null : PageModel.StatusMessage)"
                             StatusSeverity="PageModel.StatusSeverity"
                             IsBusy="PageModel.IsBusy"
                             Changed="PageModel.AutoSaveAsync"
@@ -18,6 +23,7 @@
                             ResetRequested="PageModel.ResetAsync"
                             SubmitRequested="PageModel.SubmitAsync"
                             RetryRegistrationCheck="PageModel.LoadTransportRegistrationAvailabilityAsync" />
+}
 
 @code {
     private ShipperRequestNavigationContext RouteContext

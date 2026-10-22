@@ -62,9 +62,14 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
 
         var shipperRequest = await _db.화주운송의뢰
             .FirstOrDefaultAsync(x => x.의뢰Id == snapshot.RequestId, cancellationToken);
-        if (snapshot.SimulationFulfillment == true || shipperRequest?.모의처리처수행 == true)
+        var awaitingPrepayment = shipperRequest is null
+            ? snapshot.IsPrepaymentAwaitingCollection
+            : shipperRequest.정산시점 == "선결제" && shipperRequest.결제상태 != 상태값.결제상태.결제완료;
+        if (snapshot.SimulationFulfillment == true || shipperRequest?.모의처리처수행 == true
+            || snapshot.IsCargoRequest && awaitingPrepayment)
         {
-            // Mongo-first 생성은 처리처 선택 전에 의뢰만 저장합니다. 자체 큐는 확정된 internal 시도의 Command만 생성합니다.
+            // 선결제 접수 준비는 의뢰만 저장합니다. 수납 확인 후 기존 결제 Outbox가 배차 대기로 인계합니다.
+            // 모의 처리처 수행의 자체 큐는 확정된 internal 시도의 Command만 생성합니다.
             // 오래된 사본에서 simulation 표식이 빠졌어도 현재 서버 의뢰의 표식을 우선합니다.
             var sourceChanged = false;
             if (shipperRequest is null && snapshot.IsCargoRequest)
@@ -149,7 +154,8 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
                 var current = await _db.화주운송의뢰.AsNoTracking()
                     .SingleOrDefaultAsync(x => x.의뢰Id == snapshot.RequestId, cancellationToken);
                 if (current is null) return; // A deleted mirror cannot recreate an old request.
-                if (current.모의처리처수행 || snapshot.SimulationFulfillment == true) return;
+                if (current.모의처리처수행 || snapshot.SimulationFulfillment == true
+                    || current.정산시점 == "선결제" && current.결제상태 != 상태값.결제상태.결제완료) return;
                 var fresh = 운송원장Mongo동기화Builder.저장요청생성(current, null);
                 var freshSnapshot = 운송원장업무투영Snapshot.생성(new 커뮤니티원장Dto
                 {
@@ -270,7 +276,12 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
         changed |= SetString(entity.화주Id, snapshot.ShipperId, value => entity.화주Id = value);
         changed |= SetString(entity.주문자UserId, snapshot.OrdererUserId, value => entity.주문자UserId = value);
         changed |= SetString(entity.화물종류, snapshot.CargoType, value => entity.화물종류 = value);
-        changed |= SetString(entity.화물설명, snapshot.CargoDescription, value => entity.화물설명 = value);
+        if (snapshot.ContainsCargoLoadingEvidence)
+        {
+            var description = snapshot.CargoDescription ?? string.Empty;
+            if (entity.화물설명 != description) { entity.화물설명 = description; changed = true; }
+        }
+        else changed |= SetString(entity.화물설명, snapshot.CargoDescription, value => entity.화물설명 = value);
         changed |= SetInt(entity.화물수량, snapshot.CargoQuantity, value => entity.화물수량 = value);
         // 선택 크기는 최초 입력 근거입니다. 구형/알 수 없는 사본이나 늦은 다른 값으로 이미 저장한 근거를 지우지 않습니다.
         if (entity.생활배송포장크기Code is null && NeighborhoodPackageSizes.IsKnown(snapshot.PackageSizeCode))
@@ -281,6 +292,29 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
         changed |= SetInt(entity.화물팔레트개수, snapshot.PalletCount, value => entity.화물팔레트개수 = value);
         changed |= SetDecimal(entity.화물중량Kg, snapshot.CargoWeightKg, value => entity.화물중량Kg = value);
         changed |= SetDecimal(entity.화물부피Cbm, snapshot.CargoVolumeCbm, value => entity.화물부피Cbm = value);
+        if (snapshot.ContainsCargoLoadingEvidence)
+        {
+            // 새 판본의 원입력 null은 명시적인 초기화입니다. 이 표식이 없는 과거 사본은 새 근거를 지우지 않습니다.
+            var evidenceChanged = entity.화물입력부피Cbm != snapshot.CargoInputVolumeCbm
+                || entity.화물부피근거Code != snapshot.CargoVolumeEvidenceCode
+                || entity.화물적재계산판본 != snapshot.CargoLoadingCalculationRevision
+                || entity.화물바닥회전가능여부 != snapshot.CargoFloorRotationAllowed
+                || entity.화물적층가능여부 != snapshot.CargoStackingAllowed;
+            if (evidenceChanged)
+            {
+                entity.화물입력부피Cbm = snapshot.CargoInputVolumeCbm;
+                entity.화물부피근거Code = snapshot.CargoVolumeEvidenceCode;
+                entity.화물적재계산판본 = snapshot.CargoLoadingCalculationRevision;
+                entity.화물바닥회전가능여부 = snapshot.CargoFloorRotationAllowed;
+                entity.화물적층가능여부 = snapshot.CargoStackingAllowed;
+                changed = true;
+            }
+            if (entity.화물부피Cbm != snapshot.CargoVolumeCbm)
+            {
+                entity.화물부피Cbm = snapshot.CargoVolumeCbm;
+                changed = true;
+            }
+        }
         changed |= SetBool(entity.화물파손주의여부, snapshot.CargoFragile, value => entity.화물파손주의여부 = value);
         changed |= SetString(entity.화물온도조건, snapshot.CargoTemperature, value => entity.화물온도조건 = value);
         changed |= SetString(entity.운송방식, snapshot.TransportMethod, value => entity.운송방식 = value);
@@ -301,6 +335,9 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
         changed |= SetString(entity.픽업_연락처_전화번호, snapshot.PickupContactPhone, value => entity.픽업_연락처_전화번호 = value);
         changed |= SetDateTime(entity.픽업_시간창_시작일시, snapshot.PickupWindowStart, value => entity.픽업_시간창_시작일시 = value);
         changed |= SetDateTime(entity.픽업_시간창_종료일시, snapshot.PickupWindowEnd, value => entity.픽업_시간창_종료일시 = value);
+        changed |= SetDecimal(entity.픽업_작업시간분, snapshot.PickupHandlingMinutes, value => entity.픽업_작업시간분 = value);
+        if (snapshot.ContainsPickupHandlingTime && entity.픽업_작업시간분 != snapshot.PickupHandlingMinutes)
+        { entity.픽업_작업시간분 = snapshot.PickupHandlingMinutes; changed = true; }
         changed |= SetString(entity.하차_도로명주소, snapshot.DropoffAddress, value => entity.하차_도로명주소 = value);
         changed |= SetString(entity.하차_상세주소, snapshot.DropoffAddressDetail, value => entity.하차_상세주소 = value);
         changed |= SetDecimal(entity.하차_위도, snapshot.DropoffLatitude, value => entity.하차_위도 = value);
@@ -309,6 +346,9 @@ public sealed class 운송원장업무투영Handler : I원장업무투영동기�
         changed |= SetString(entity.하차_연락처_전화번호, snapshot.DropoffContactPhone, value => entity.하차_연락처_전화번호 = value);
         changed |= SetNullableDateTime(entity.하차_시간창_시작일시, snapshot.DropoffWindowStart, value => entity.하차_시간창_시작일시 = value);
         changed |= SetNullableDateTime(entity.하차_시간창_종료일시, snapshot.DropoffWindowEnd, value => entity.하차_시간창_종료일시 = value);
+        changed |= SetDecimal(entity.하차_작업시간분, snapshot.DropoffHandlingMinutes, value => entity.하차_작업시간분 = value);
+        if (snapshot.ContainsDropoffHandlingTime && entity.하차_작업시간분 != snapshot.DropoffHandlingMinutes)
+        { entity.하차_작업시간분 = snapshot.DropoffHandlingMinutes; changed = true; }
         changed |= SetString(entity.결제수단, snapshot.PaymentMethod, value => entity.결제수단 = value);
         changed |= SetString(entity.정산시점, snapshot.SettlementTiming, value => entity.정산시점 = value);
         changed |= SetString(entity.증빙방식, snapshot.EvidenceMethod, value => entity.증빙방식 = value);
@@ -432,6 +472,12 @@ public sealed class 운송원장업무투영Snapshot
     public int? PalletCount { get; init; }
     public decimal? CargoWeightKg { get; init; }
     public decimal? CargoVolumeCbm { get; init; }
+    public bool ContainsCargoLoadingEvidence { get; init; }
+    public decimal? CargoInputVolumeCbm { get; init; }
+    public string? CargoVolumeEvidenceCode { get; init; }
+    public string? CargoLoadingCalculationRevision { get; init; }
+    public bool? CargoFloorRotationAllowed { get; init; }
+    public bool? CargoStackingAllowed { get; init; }
     public bool? CargoFragile { get; init; }
     public string? CargoTemperature { get; init; }
     public string? TransportMethod { get; init; }
@@ -449,6 +495,8 @@ public sealed class 운송원장업무투영Snapshot
     public string? PickupContactPhone { get; init; }
     public DateTime? PickupWindowStart { get; init; }
     public DateTime? PickupWindowEnd { get; init; }
+    public decimal? PickupHandlingMinutes { get; init; }
+    public bool ContainsPickupHandlingTime { get; init; }
     public string? DropoffAddress { get; init; }
     public string? DropoffAddressDetail { get; init; }
     public decimal? DropoffLatitude { get; init; }
@@ -457,6 +505,8 @@ public sealed class 운송원장업무투영Snapshot
     public string? DropoffContactPhone { get; init; }
     public DateTime? DropoffWindowStart { get; init; }
     public DateTime? DropoffWindowEnd { get; init; }
+    public decimal? DropoffHandlingMinutes { get; init; }
+    public bool ContainsDropoffHandlingTime { get; init; }
     public string? PaymentMethod { get; init; }
     public string? SettlementTiming { get; init; }
     public string? EvidenceMethod { get; init; }
@@ -481,8 +531,11 @@ public sealed class 운송원장업무투영Snapshot
 
     public bool IsTransportRequestComplete => MissingRequiredFields.Count == 0;
 
+    public bool IsPrepaymentAwaitingCollection
+        => IsCargoRequest && SettlementTiming == "선결제" && PaymentState != 상태값.결제상태.결제완료;
+
     public bool CanCreateCoordinationTransport =>
-        !ContainsParticipantExecutionObservation && SimulationFulfillment != true;
+        !ContainsParticipantExecutionObservation && SimulationFulfillment != true && !IsPrepaymentAwaitingCollection;
 
     public int DispatchBusinessType
         => string.Equals(LedgerTemplateKey, CommunityLedgerTemplateKeys.FoodDelivery, StringComparison.OrdinalIgnoreCase)
@@ -574,9 +627,9 @@ public sealed class 운송원장업무투영Snapshot
             ContainsParticipantExecutionObservation =
                 HasParticipantExecutionObservation(원장, requestBlock),
             CargoType = TryGet(requestBlock?.Data, "화물종류", "CargoType", "cargoType"),
-            CargoDescription = FirstNonEmpty(
-                TryGet(requestBlock?.Data, "화물설명", "CargoDescription", "cargoDescription"),
-                원장.원함),
+            CargoDescription = TryGet(requestBlock?.Data, "화물적재근거포함") == "v1"
+                ? TryGet(requestBlock?.Data, "화물설명", "CargoDescription", "cargoDescription")
+                : FirstNonEmpty(TryGet(requestBlock?.Data, "화물설명", "CargoDescription", "cargoDescription"), 원장.원함),
             CargoQuantity = ParseInt(TryGet(requestBlock?.Data, "화물수량", "CargoQuantity", "cargoQuantity")),
             PackageSizeCode = TryGet(requestBlock?.Data, "생활배송포장크기Code", "PackageSizeCode"),
             CargoLengthMm = ParseInt(TryGet(requestBlock?.Data, "화물길이Mm", "CargoLengthMm", "cargoLengthMm")),
@@ -585,6 +638,12 @@ public sealed class 운송원장업무투영Snapshot
             PalletCount = ParseInt(TryGet(requestBlock?.Data, "팔레트개수", "PalletCount", "palletCount")),
             CargoWeightKg = ParseDecimal(TryGet(requestBlock?.Data, "화물중량Kg", "CargoWeightKg", "cargoWeightKg")),
             CargoVolumeCbm = ParseDecimal(TryGet(requestBlock?.Data, "화물부피Cbm", "CargoVolumeCbm", "cargoVolumeCbm")),
+            ContainsCargoLoadingEvidence = TryGet(requestBlock?.Data, "화물적재근거포함") == "v1",
+            CargoInputVolumeCbm = ParseDecimal(TryGet(requestBlock?.Data, "화물입력부피Cbm")),
+            CargoVolumeEvidenceCode = Clean(TryGet(requestBlock?.Data, "화물부피근거Code")),
+            CargoLoadingCalculationRevision = Clean(TryGet(requestBlock?.Data, "화물적재계산판본")),
+            CargoFloorRotationAllowed = ParseBool(TryGet(requestBlock?.Data, "화물바닥회전가능여부")),
+            CargoStackingAllowed = ParseBool(TryGet(requestBlock?.Data, "화물적층가능여부")),
             CargoFragile = ParseBool(TryGet(requestBlock?.Data, "화물파손주의여부", "CargoFragile", "cargoFragile")),
             CargoTemperature = TryGet(requestBlock?.Data, "화물온도조건", "CargoTemperature", "cargoTemperature"),
             TransportMethod = TryGet(requestBlock?.Data, "운송방식", "TransportMethod", "transportMethod"),
@@ -604,6 +663,8 @@ public sealed class 운송원장업무투영Snapshot
             PickupContactPhone = TryGet(pickupBlock?.Data, "연락처전화번호", "ContactPhone", "pickupContactPhone"),
             PickupWindowStart = ParseDateTime(TryGet(pickupBlock?.Data, "시간창시작", "WindowStart", "pickupWindowStart")),
             PickupWindowEnd = ParseDateTime(TryGet(pickupBlock?.Data, "시간창종료", "WindowEnd", "pickupWindowEnd")),
+            PickupHandlingMinutes = ParseDecimal(TryGet(pickupBlock?.Data, "작업시간분")),
+            ContainsPickupHandlingTime = TryGet(pickupBlock?.Data, "작업시간입력포함") == "v1",
             DropoffAddress = TryGet(dropoffBlock?.Data, "주소", "도로명주소", "DropoffAddress", "dropoffAddress"),
             DropoffAddressDetail = TryGet(dropoffBlock?.Data, "상세주소", "AddressDetail", "dropoffAddressDetail"),
             DropoffLatitude = ParseDecimal(TryGet(dropoffBlock?.Data, "위도", "Latitude", "lat", "dropoffLatitude")),
@@ -612,6 +673,8 @@ public sealed class 운송원장업무투영Snapshot
             DropoffContactPhone = TryGet(dropoffBlock?.Data, "연락처전화번호", "ContactPhone", "dropoffContactPhone"),
             DropoffWindowStart = ParseDateTime(TryGet(dropoffBlock?.Data, "시간창시작", "WindowStart", "dropoffWindowStart")),
             DropoffWindowEnd = ParseDateTime(TryGet(dropoffBlock?.Data, "시간창종료", "WindowEnd", "dropoffWindowEnd")),
+            DropoffHandlingMinutes = ParseDecimal(TryGet(dropoffBlock?.Data, "작업시간분")),
+            ContainsDropoffHandlingTime = TryGet(dropoffBlock?.Data, "작업시간입력포함") == "v1",
             PaymentMethod = TryGet(settlementBlock?.Data, "결제수단", "PaymentMethod", "paymentMethod"),
             SettlementTiming = TryGet(settlementBlock?.Data, "정산시점", "SettlementTiming", "settlementTiming"),
             EvidenceMethod = TryGet(settlementBlock?.Data, "증빙방식", "EvidenceMethod", "evidenceMethod"),
@@ -639,6 +702,7 @@ public sealed class 운송원장업무투영Snapshot
     private IReadOnlyList<string> BuildMissingRequiredFields()
     {
         var missing = new List<string>();
+        if (PickupHandlingMinutes is < 0m || DropoffHandlingMinutes is < 0m) missing.Add("상하차 작업시간 오류");
         AddMissing(missing, "요청자", FirstNonEmpty(ShipperId, OrdererUserId));
         AddMissing(missing, "화물종류", CargoType);
         AddMissing(missing, "상차지", PickupAddress);

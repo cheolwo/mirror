@@ -1,7 +1,10 @@
 @using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverOffers
+@using Ssalddel.Ui.Common.Areas.App.Services
 @implements IDisposable
 @inject CargoDriverWorkspaceApiClient Client
 @inject IRoleWorkspaceAccess Access
+@inject IServiceProvider Services
 
 <section class="cargo-action-screen" aria-label="추천 운송 참여">
     <header><a href="@Model.ReturnHref">지도 업무로 돌아가기</a><h1>추천 운송 참여</h1></header>
@@ -14,11 +17,22 @@
     {
         @if (Model.Lifetime.Message is { } message) { <MudAlert Severity="@(Model.Lifetime.HasError ? Severity.Error : Severity.Success)">@message</MudAlert> }
         @if (Model.Lifetime.IsBusy) { <MudProgressLinear Indeterminate="true" aria-label="추천 운송 확인 중" /> }
+        @if (Model.AwaitingResult)
+        { <p role="status">수락 결과 확인 중입니다. 다시 참여하지 말고 현재 운송을 확인해 주세요.</p> }
+        @if (Model.RecommendationChanged && !Model.Saved)
+        { <MudAlert Severity="Severity.Info">현재 위치나 진행 중 운송에 맞춰 추천 조건이 갱신됐습니다. 아래 보수와 주의사항을 다시 확인한 뒤 참여해 주세요.</MudAlert> }
+        @if (Model.Saved)
+        { <MudAlert Severity="Severity.Success">진행 중 운송을 확인했습니다. 지도로 돌아가 상차 업무를 시작해 주세요.</MudAlert> }
         @if (Model.Source is { } source && Model.Offer is { } offer)
         {
             <article class="cargo-action-card">
                 <h2>@source.화물종류</h2>
-                <dl><dt>상차지</dt><dd>@source.픽업지</dd><dt>하차지</dt><dd>@source.하차지</dd><dt>의뢰 결제 예정액</dt><dd>@CargoWorkspacePresentation.Money(source.결제예정금액)</dd></dl>
+                @{ var payout = CargoDriverPayoutPresentation.OfferAmount(offer); }
+                <dl><dt>기사 제안 보수</dt><dd data-testid="cargo-offer-driver-pay">@CargoDriverPayoutPresentation.Money(payout)</dd><dt>상차지</dt><dd>@source.픽업지</dd><dt>하차지</dt><dd>@source.하차지</dd><dt>의뢰 결제 예정액</dt><dd>@CargoWorkspacePresentation.Money(source.결제예정금액)</dd></dl>
+                @if (!payout.HasValue)
+                { <p role="status">기사 제안 보수의 산정 근거를 확인하지 못했습니다. 보수가 확인된 최신 추천에서 참여할 수 있습니다.</p> }
+                else
+                { <p>기사 제안 보수는 이번 운송을 맡았을 때의 지급 예정액이며, 입금 완료 금액은 아닙니다.</p> }
                 <p>의뢰 결제 예정액은 기사 실지급액을 뜻하지 않습니다. 참여 확인은 이번 추천 운송 한 건에 적용됩니다.</p>
                 <p>지도에 표시한 선은 직선 후보선이며 실제 주행 경로가 아닙니다.</p>
                 @foreach (var warning in Model.Warnings) { <MudAlert Severity="Severity.Warning">@warning</MudAlert> }
@@ -32,7 +46,7 @@
                 }
             </article>
         }
-        @if (!Model.Lifetime.IsBusy && !Model.Saved) { <MudButton Variant="Variant.Outlined" OnClick="Reload">추천 조건 다시 확인</MudButton> }
+        @if (!Model.Lifetime.IsBusy && !Model.Saved) { <MudButton Variant="Variant.Outlined" OnClick="Reload">@(Model.AwaitingResult ? "수락 결과 확인" : "추천 조건 다시 확인")</MudButton> }
     }
 </section>
 
@@ -40,7 +54,13 @@
     [Parameter] public string ItemId { get; set; } = "";
     private CargoOfferActionViewModel Model = default!;
     private string LoginHref => CargoWorkspaceRoutes.OfferLogin(ItemId);
-    protected override void OnInitialized() { Model = new(Client, Access); Model.Lifetime.Changed += Refresh; }
+    protected override void OnInitialized()
+    {
+        var http = Services.GetService(typeof(HttpClient)) as HttpClient;
+        var context = http is null ? null : new WorkflowRecoveryContext(() => Access.GetIdentity(RoleWorkspaceCatalog.CargoDriver), () => http.BaseAddress);
+        Model = new(Client, Access, Services.GetService(typeof(IWorkflowRecoveryStore)) as IWorkflowRecoveryStore, context);
+        Model.Lifetime.Changed += Refresh;
+    }
     protected override Task OnParametersSetAsync() => Reload();
     private Task Reload() => Model.LoadAsync(ItemId);
     private void Refresh() => _ = InvokeAsync(StateHasChanged);
