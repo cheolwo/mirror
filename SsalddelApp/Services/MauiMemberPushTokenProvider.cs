@@ -12,7 +12,7 @@ public sealed class MauiMemberPushTokenProvider(IMemberDeliveryPushStateStore st
 
     public async Task<SsalddelMobilePushTokenSnapshot?> GetCurrentAsync(CancellationToken cancellationToken = default)
     {
-        if (!IsConfigured || !MemberDeliveryPushService.NotificationsAllowed) return null;
+        if (!IsConfigured || !MemberDeliveryPushService.AppNotificationsAllowed) return null;
         var state = await store.LoadAsync(cancellationToken);
         return string.IsNullOrWhiteSpace(state.PushToken) ? null : new(state.DeviceInstallationId,
             MemberDeliveryPushCoordinator.AppKey, "android", state.PushToken, AppInfo.Current.VersionString,

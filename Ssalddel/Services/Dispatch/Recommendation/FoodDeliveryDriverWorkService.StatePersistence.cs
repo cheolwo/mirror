@@ -265,19 +265,28 @@ public sealed partial class 음식배달기사업무Service
         {
             await _db.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
+            _업무진행예약항목.Clear();
             return Result.Ok();
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            await transaction.RollbackAsync(cancellationToken);
+            try { await transaction.RollbackAsync(CancellationToken.None); }
+            finally { 업무진행예약해제(); }
             _logger.LogInformation(ex, "음식 배달 상태 변경 중 동시성 충돌이 발생했습니다.");
             return Result.Fail("다른 기사 또는 운영자가 먼저 상태를 변경했습니다. 목록을 새로고침해 주세요.");
         }
         catch (DbUpdateException ex)
         {
-            await transaction.RollbackAsync(cancellationToken);
+            try { await transaction.RollbackAsync(CancellationToken.None); }
+            finally { 업무진행예약해제(); }
             _logger.LogWarning(ex, "음식 배달 상태 저장에 실패했습니다.");
             return Result.Fail("음식 배달 상태를 저장하지 못했습니다.");
+        }
+        catch
+        {
+            try { await transaction.RollbackAsync(CancellationToken.None); }
+            finally { 업무진행예약해제(); }
+            throw;
         }
     }
 

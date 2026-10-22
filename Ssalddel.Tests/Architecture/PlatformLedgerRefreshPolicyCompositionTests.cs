@@ -1,3 +1,6 @@
+using 살뜰.Services.Notifications;
+using 살뜰.도메인.화주;
+
 namespace Ssalddel.Tests.Architecture;
 
 public sealed class PlatformLedgerRefreshPolicyCompositionTests
@@ -11,9 +14,12 @@ public sealed class PlatformLedgerRefreshPolicyCompositionTests
         var shipper = Read(
             "SsalddelApp",
             "ViewModels/Shipper/ShipperRequestDetailPageViewModel.cs");
-        var adminRequest = Read(
+        var adminRequestPage = Read(
             "SsalddelAdmin",
             "Components/Pages/RequestDetail.razor");
+        var adminRequest = string.Join("\n", adminRequestPage, Read(
+            "SsalddelAdmin",
+            "Services/운송의뢰상세ReadSession.cs"));
         var adminTransport = Read(
             "SsalddelAdmin",
             "Components/Pages/TransportWorkflowDetail.razor");
@@ -27,6 +33,7 @@ public sealed class PlatformLedgerRefreshPolicyCompositionTests
         Assert.Contains(
             "TransportRequestLedgerRefreshPolicy.FallbackPollingInterval",
             adminRequest);
+        Assert.Contains("운송의뢰상세ReadSession", adminRequestPage);
         Assert.Contains(
             "TransportRequestLedgerRefreshPolicy.FallbackPollingInterval",
             adminTransport);
@@ -70,9 +77,16 @@ public sealed class PlatformLedgerRefreshPolicyCompositionTests
             "Ssalddel",
             "Application/Driver/DispatchAction/Handlers/배차수락사후처리EventHandler.Notification.cs");
 
-        Assert.Contains("dispatchRequest.주문자UserId", source);
-        Assert.Contains("TargetUserId = targetUserId", source);
-        Assert.Contains("ShipperUserId = notification.화주Id", source);
+        Assert.Contains("CargoWorkflowProgressNotifications.ReserveAcceptedAsync(", source);
+        var request = new 화주운송의뢰
+        {
+            의뢰Id = "composition-request", 주문자UserId = "authenticated-orderer", 화주Id = "legacy-business"
+        };
+        var row = CargoWorkflowProgressNotifications.Create("cargo.accepted", request, null, "driver", DateTime.UtcNow);
+        Assert.Equal("authenticated-orderer", Command알림Payload.Parse(row.PayloadJson).TargetUserId);
+        request.주문자UserId = string.Empty;
+        row = CargoWorkflowProgressNotifications.Create("cargo.accepted", request, null, "driver", DateTime.UtcNow);
+        Assert.Equal("legacy-business", Command알림Payload.Parse(row.PayloadJson).TargetUserId);
     }
 
     [Fact]

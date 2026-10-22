@@ -6,6 +6,7 @@ using MediatR;
 using Ssalddel.Services.Operations;
 using Ssalddel.Services.Community;
 using Ssalddel.Application.Driver.Recommendation;
+using 살뜰.Services.Notifications;
 
 namespace Ssalddel.Application.Driver.Transport;
 
@@ -111,7 +112,16 @@ public sealed class 운송문제신고CommandHandler : IRequestHandler<운송문
             return Result.Fail<기사운송요약응답>(ex.Message);
         }
 
-        await _db.SaveChangesAsync(cancellationToken);
+        var source = await _db.화주운송의뢰.FirstOrDefaultAsync(x => x.의뢰Id == requestId, cancellationToken);
+        var progressNotification = source is null ? null
+            : await CargoWorkflowProgressNotifications.ReserveAsync(_db, "cargo.issue", source, entity.Id,
+                request.기사Id, now, Activity.Current?.TraceId.ToString() ?? string.Empty, cancellationToken);
+        try { await _db.SaveChangesAsync(cancellationToken); }
+        catch
+        {
+            CargoWorkflowProgressNotifications.DiscardUncommitted(_db, progressNotification);
+            throw;
+        }
         await PublishAfterCommitAsync(entity, 예외, request, incidentResult.사건, now, cancellationToken);
 
         var response = new 기사운송요약응답
@@ -135,6 +145,7 @@ public sealed class 운송문제신고CommandHandler : IRequestHandler<운송문
         };
         var shipperRequest = await _db.화주운송의뢰.AsNoTracking().Where(x => x.의뢰Id == requestId)
             .Select(x => new { x.클라이언트요청Id, x.주문자UserId }).FirstOrDefaultAsync(cancellationToken);
+        기사운송보수Projector.투영(response, entity);
         기사운송업무상태Projector.투영(response, entity,
             await 기사운송업무상태Projector.사건조회Async(_db, [entity.Id], cancellationToken));
         if (!await 생활배송기사정보공개Policy.정보제공가능인가Async(shipperRequest?.클라이언트요청Id,

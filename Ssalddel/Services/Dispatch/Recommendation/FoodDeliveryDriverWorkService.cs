@@ -334,6 +334,7 @@ public sealed partial class 음식배달기사업무Service : I음식배달기�
         }
         finally
         {
+            업무진행예약해제();
             gate.Release();
         }
         if (transactionResult.IsFailed)

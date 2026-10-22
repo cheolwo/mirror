@@ -35,7 +35,7 @@ public sealed class CargoCompletionRecoveryR69Tests
         Assert.False(await recovery.ProcessTransportAsync((await db.운송원장.AsNoTracking().SingleAsync()).Id));
         var recorded = await db.운송이벤트.AsNoTracking().SingleAsync(); Assert.Equal("Done", State(recorded));
         Assert.Single(db.운영체제업무인계); Assert.Single(db.운영체제업무인계Outbox);
-        Assert.Single(db.결제); Assert.Equal(3, await db.Command알림Outbox.CountAsync());
+        Assert.Single(db.결제); Assert.Equal(4, await db.Command알림Outbox.CountAsync());
         Assert.Equal("입금대기", (await db.화주운송의뢰.AsNoTracking().SingleAsync()).정산상태);
         Assert.Equal("인수완료", (await db.화주운송의뢰.AsNoTracking().SingleAsync()).배차상태);
         Assert.DoesNotContain("private.invalid", recorded.메타데이터); Assert.DoesNotContain("proof/photo.jpg", recorded.메타데이터);
@@ -50,12 +50,13 @@ public sealed class CargoCompletionRecoveryR69Tests
         var recovery = Service(db, clock, payment: payment);
         Assert.Equal(1, await recovery.ProcessPendingAsync());
         Assert.Equal("Retry", State(await db.운송이벤트.AsNoTracking().SingleAsync()));
-        Assert.Empty(db.결제); Assert.Empty(db.운영체제업무인계); Assert.Empty(db.Command알림Outbox);
+        Assert.Empty(db.결제); Assert.Empty(db.운영체제업무인계);
+        Assert.Equal("TransportDropoffCompleted", (await db.Command알림Outbox.SingleAsync()).FeatureName);
         Assert.DoesNotContain("private-secret", (await db.운송이벤트.AsNoTracking().SingleAsync()).메타데이터);
         payment.Fail = false; clock.Advance();
         Assert.Equal(1, await recovery.ProcessPendingAsync());
         Assert.Equal("Done", State(await db.운송이벤트.AsNoTracking().SingleAsync()));
-        Assert.Single(db.결제); Assert.Single(db.운영체제업무인계); Assert.Equal(3, await db.Command알림Outbox.CountAsync());
+        Assert.Single(db.결제); Assert.Single(db.운영체제업무인계); Assert.Equal(4, await db.Command알림Outbox.CountAsync());
     }
 
     [Fact]

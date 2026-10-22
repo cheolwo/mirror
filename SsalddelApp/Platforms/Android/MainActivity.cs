@@ -63,9 +63,12 @@ public class MainActivity : MauiAppCompatActivity
 
     private static void ReceiveNotificationTarget(Intent? intent)
     {
-        if (intent?.Action != MemberDeliveryPushService.OpenAction) return;
+        if (intent?.Action != MemberDeliveryPushService.OpenAction && intent?.Action != MemberDeliveryPushService.ProgressOpenAction) return;
         var data = new Dictionary<string, string>();
-        foreach (var key in new[] { "type", "appKey", "notificationId", "offerId", "requestId", "userId", "expiresAtUtc" })
+        var keys = intent.Action == MemberDeliveryPushService.ProgressOpenAction
+            ? new[] { "type", "eventId", "workflowKey", "stageCode", "sourceId", "userId", "occurredAtUtc", "deepLink" }
+            : new[] { "type", "appKey", "notificationId", "offerId", "requestId", "userId", "expiresAtUtc" };
+        foreach (var key in keys)
         {
             var value = intent.GetStringExtra(key);
             if (value is null) return;

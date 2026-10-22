@@ -7,6 +7,7 @@ using Ssalddel.ApiMetadata;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Warehouse.Events;
 using Ssalddel.Contracts.Common.Inventory;
+using Ssalddel.Services.LogisticsProcessing.Warehouse;
 using 살뜰.Data;
 using 살뜰.Services.Audit;
 using 살뜰.도메인.창고;
@@ -99,7 +100,10 @@ public sealed class 출고인계준비UseCase(
         });
     }
 
-    public async Task<Result<출고인계준비결과응답>> 완료Async(long inboundItemId, 출고인계준비완료요청 request, 창고작업요청Context context, CancellationToken cancellationToken)
+    public Task<Result<출고인계준비결과응답>> 완료Async(long inboundItemId, 출고인계준비완료요청 request, 창고작업요청Context context, CancellationToken cancellationToken)
+        => 창고업무진행알림.저장단위Async(db, committed => 완료저장Async(inboundItemId, request, context, cancellationToken, committed));
+
+    private async Task<Result<출고인계준비결과응답>> 완료저장Async(long inboundItemId, 출고인계준비완료요청 request, 창고작업요청Context context, CancellationToken cancellationToken, Action committed)
     {
         ArgumentNullException.ThrowIfNull(request);
         if (!request.PackageSealConfirmed || !request.TransportConditionsConfirmed)
@@ -108,6 +112,8 @@ public sealed class 출고인계준비UseCase(
         if (memo.Length > 400) return Invalid<출고인계준비결과응답>("출고 인계 메모는 400자 이하로 입력해 주세요.");
         var userId = CurrentUserId();
         if (userId is null) return Unauthorized<출고인계준비결과응답>();
+        await using var transaction = db.Database.IsRelational() && db.Database.CurrentTransaction is null
+            ? await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken) : null;
         var row = await (from item in 접근가능재고Query(userId)
                 join inbound in db.입고요청 on item.입고요청Id equals inbound.Id
                 where item.Id == inboundItemId
@@ -143,7 +149,16 @@ public sealed class 출고인계준비UseCase(
             입고상품Id = row.item.Id, 이력유형 = "출고인계준비", 변경수량 = 0, 변경후수량 = row.item.가용수량,
             원인유형 = "출고예정", 원인Id = row.item.입고요청Id, 처리UserId = userId, 메모 = historyMemo, 처리일시 = now
         });
-        await db.SaveChangesAsync(cancellationToken);
+        var progress = await 창고업무진행알림.출고Async(db, plan, row.item, "warehouse.ready", userId, now, cancellationToken);
+        try { await db.SaveChangesAsync(cancellationToken); }
+        catch { 창고업무진행알림.분리(db, progress); throw; }
+        if (transaction is not null)
+        {
+            await transaction.CommitAsync(cancellationToken);
+            committed();
+            // 커밋한 transaction을 먼저 해제하여 감사/Event가 새 저장 경계를 사용하도록 한다.
+            await transaction.DisposeAsync();
+        }
         await LogAsync(row.item, plan, context, cancellationToken);
         await publisher.Publish(
             new 창고출고인계준비완료됨Event(

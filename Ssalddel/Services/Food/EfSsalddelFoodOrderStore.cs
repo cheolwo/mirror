@@ -15,7 +15,7 @@ using 살뜰.Services.Options;
 
 namespace Ssalddel.Services.Food;
 
-public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤니티원장반영가능음식주문Store
+public sealed partial class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤니티원장반영가능음식주문Store
 {
     private readonly SsalddelContext _db;
     private readonly IOptions<FulfillmentRoutingOptions>? _routingOptions;
@@ -130,18 +130,25 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         });
 
         _db.음식주문.Add(order);
+        var notifications = 진행알림예약(order, "food.submitted", request.클라이언트요청Id);
         try
         {
             _db.SaveChanges();
         }
         catch (DbUpdateException) when (request.클라이언트요청Id != Guid.Empty)
         {
+            진행알림예약해제(notifications);
             existing = FindByClientRequest(request);
             if (existing is not null)
             {
                 return new 음식주문저장결과(ToDto(existing), false);
             }
 
+            throw;
+        }
+        catch
+        {
+            진행알림예약해제(notifications);
             throw;
         }
 
@@ -218,7 +225,8 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         return SaveIdempotentChange(
             order,
             cleanOrderNo,
-            request.클라이언트요청Id);
+            request.클라이언트요청Id,
+            "food.accepted");
     }
 
     public 음식주문변경결과? 음식점진행변경(
@@ -302,7 +310,14 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         return SaveIdempotentChange(
             order,
             cleanOrderNo,
-            request.클라이언트요청Id);
+            request.클라이언트요청Id,
+            request.작업.Trim() switch
+            {
+                음식점주문진행작업코드.조리시작 => "food.cooking",
+                음식점주문진행작업코드.픽업준비 when !prepared => "food.ready",
+                음식점주문진행작업코드.거절 => "food.rejected",
+                _ => null
+            });
     }
 
     public 음식주문변경결과? 주문자수령확인(
@@ -377,7 +392,8 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         return SaveIdempotentChange(
             order,
             cleanOrderNo,
-            request.클라이언트요청Id);
+            request.클라이언트요청Id,
+            "food.received");
     }
 
     public 음식주문변경결과? 주문자취소(
@@ -434,7 +450,8 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         return SaveIdempotentChange(
             order,
             cleanOrderNo,
-            request.클라이언트요청Id);
+            request.클라이언트요청Id,
+            "food.cancelled");
     }
 
     public 음식주문응답? 배차대기반영(string orderNo, long dispatchWaitId, DateTime dispatchRequestedAtUtc)
@@ -564,8 +581,10 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
     private 음식주문변경결과 SaveIdempotentChange(
         음식주문 order,
         string orderNo,
-        Guid clientRequestId)
+        Guid clientRequestId,
+        string? stageCode = null)
     {
+        var notifications = 진행알림예약(order, stageCode, clientRequestId);
         try
         {
             _db.SaveChanges();
@@ -573,6 +592,7 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
         }
         catch (DbUpdateException) when (clientRequestId != Guid.Empty)
         {
+            진행알림예약해제(notifications);
             _db.ChangeTracker.Clear();
             var existing = LoadOrderForUpdate(orderNo);
             if (existing is not null && FindDuplicate(existing, clientRequestId))
@@ -580,6 +600,11 @@ public sealed class EfSsalddelFoodOrderStore : ISsalddelFoodOrderStore, I커뮤�
                 return new 음식주문변경결과(ToDto(existing), false);
             }
 
+            throw;
+        }
+        catch
+        {
+            진행알림예약해제(notifications);
             throw;
         }
     }

@@ -50,7 +50,8 @@ public sealed class MemberDeliveryPushStore : IMemberDeliveryPushStateStore
     {
         if (!Guid.TryParseExact(state.DeviceInstallationId, "N", out _)
             || state.PushToken?.Length > 2000 || state.RegisteredOwnerId?.Length > 200
-            || state.Published.Count > 64 || state.RevocationPending && state.RegisteredOwnerId is null)
+            || state.Published.Count > 64 || state.ProgressPublished.Count > 64
+            || state.RevocationPending && state.RegisteredOwnerId is null)
             throw new InvalidDataException("알림 설치 정보를 확인해 주세요.");
     }
 }

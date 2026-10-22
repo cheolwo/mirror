@@ -1,4 +1,5 @@
 using FluentResults;
+using System.Text.Json;
 using MediatR;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,7 @@ using 살뜰.Services.Dispatch.Queue;
 using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.Services.DeliveryZones;
 using 살뜰.Services.Options;
+using 살뜰.Services.Notifications;
 using 살뜰.Services.Storage.Local;
 using 살뜰.Services.Transport;
 using 살뜰.Services.Weather;
@@ -98,7 +100,19 @@ public sealed class FoodAutoFulfillmentWorkflowTests
         state = await f.Evidence(state, FulfillmentEvidenceKinds.DriverAssigned);
         Assert.True(f.Store.GetOrder(state.SourceId)!.조리시작가능);
         Assert.Equal(음식주문상태코드.조리중, f.Progress(state.SourceId, 음식점주문진행작업코드.조리시작).상태);
-        Assert.Equal(음식주문상태코드.픽업대기, f.Progress(state.SourceId, 음식점주문진행작업코드.픽업준비).상태);
+        var ready = f.Progress(state.SourceId, 음식점주문진행작업코드.픽업준비);
+        Assert.Equal(음식주문상태코드.픽업대기, ready.상태);
+        // 외부 모의 배정 증거는 내부 기사 사용자나 운송 원장을 추정하는 근거가 아닙니다.
+        var progressNotices = await f.Db.Command알림Outbox.AsNoTracking()
+            .Where(row => row.FeatureName == 업무진행알림Recorder.FeatureName).ToArrayAsync();
+        Assert.Single(progressNotices, row => row.EventName == "food.ready");
+        Assert.All(progressNotices, row =>
+        {
+            using var payload = JsonDocument.Parse(row.PayloadJson);
+            Assert.Equal(ready.주문자UserId, payload.RootElement.GetProperty("targetUserId").GetString());
+            Assert.Equal($"/workspace/orderer?selected={Uri.EscapeDataString(ready.주문번호)}",
+                payload.RootElement.GetProperty("deepLink").GetString());
+        });
         state = await f.Evidence(state, FulfillmentEvidenceKinds.PickedUp);
         Assert.Equal(AutoFulfillmentStates.InTransit, state.StateCode);
         state = await f.Evidence(state, FulfillmentEvidenceKinds.Delivered);

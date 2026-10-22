@@ -28,6 +28,8 @@ using 살뜰.Services.Storage.Local;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.음식;
 using 살뜰.도메인.운송;
+using 살뜰.Services.Notifications;
+using 살뜰.도메인.설정;
 
 namespace 살뜰.Services.Dispatch.Recommendation;
 
@@ -46,6 +48,8 @@ namespace 살뜰.Services.Dispatch.Recommendation;
     Boundary = "예약과 실제 처리는 별개다. 영속 Outbox가 있으면 재처리하며 기존 fallback·거절·월 정산의 별도 경계를 보존한다. 응답 유실에서 외부 수신의 정확히 한 번 전달을 보장하지 않는다.")]
 public sealed partial class 음식배달기사업무Service
 {
+    private readonly List<Command알림Outbox> _업무진행예약항목 = [];
+
     private static 음식기사후속의도 후속의도(운송원장 queue, string orderNo, string driverId,
         string status, DateTime occurredAtUtc, string? reason, bool syncLedgers = true, bool activity = true)
         => new(orderNo, queue.Id, queue.의뢰Id, driverId, status, occurredAtUtc, reason, syncLedgers, activity);
@@ -55,8 +59,47 @@ public sealed partial class 음식배달기사업무Service
         bool syncLedgers = true, bool activity = true)
     {
         var intent = 후속의도(queue, orderNo, driverId, status, occurredAtUtc, reason, syncLedgers, activity);
-        if (_driverFollowups is not null) await _driverFollowups.예약Async(intent, cancellationToken);
-        return intent;
+        try
+        {
+            if (_driverFollowups is not null) await _driverFollowups.예약Async(intent, cancellationToken);
+            예약업무진행알림(queue, orderNo, driverId, status, occurredAtUtc, intent.EventId);
+            return intent;
+        }
+        catch
+        {
+            업무진행예약해제();
+            throw;
+        }
+    }
+
+    private void 예약업무진행알림(운송원장 queue, string orderNo, string driverId,
+        string status, DateTime occurredAtUtc, string occurrenceKey)
+    {
+        var stage = status switch
+        {
+            "기사배정" => "food.assigned",
+            "RestaurantArrived" => "food.arrived",
+            "픽업완료" => "food.picked-up",
+            "전달완료" => "food.delivered",
+            _ => null
+        };
+        if (stage is null || queue.확정기사Id != driverId
+            || queue.배차업무유형 != 상태값.배차업무유형.음식배달
+            || !운송의뢰배차원천유형.Is음식점주문(queue.원본의뢰유형)
+            || (string.IsNullOrWhiteSpace(queue.원본의뢰Id) ? queue.의뢰Id : queue.원본의뢰Id) != orderNo) return;
+        var order = _db.음식주문.Local.SingleOrDefault(x => x.주문번호 == orderNo);
+        if (order is null) return;
+        var row = 업무진행알림Recorder.Reserve(_db, stage, orderNo, occurrenceKey,
+            order.주문자UserId, $"/workspace/orderer?selected={Uri.EscapeDataString(orderNo)}", occurredAtUtc);
+        if (row is not null) _업무진행예약항목.Add(row);
+    }
+
+    private void 업무진행예약해제()
+    {
+        foreach (var row in _업무진행예약항목)
+            if (_db.Entry(row).State == EntityState.Added)
+                _db.Entry(row).State = EntityState.Detached;
+        _업무진행예약항목.Clear();
     }
 
     private async Task 처리후속Async(음식기사후속의도 intent, CancellationToken cancellationToken)

@@ -30,7 +30,8 @@ public sealed class 운송상태화주알림EventHandlerTests
             운송번호 = "request-1",
             의뢰Id = "request-1",
             확정기사Id = "driver-1",
-            기사_운송자 = "driver-1"
+            기사_운송자 = "driver-1",
+            상태 = "상차지도착"
         });
         await db.SaveChangesAsync();
 

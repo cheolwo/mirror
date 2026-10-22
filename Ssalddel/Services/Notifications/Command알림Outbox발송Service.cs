@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Ssalddel.Services.Outbox;
+using Ssalddel.Contracts.Common.Notifications;
 using 살뜰.Services.Options;
 using 살뜰.Services.Storage.Local;
 
@@ -42,7 +43,8 @@ public sealed class Command알림Outbox발송Service : ICommand알림Outbox발�
                           && (x.RetryCount == 0 || x.UpdatedAt <= retryCutoff))
                          || (x.Status == OutboxProcessingStatuses.Processing
                              && x.UpdatedAt <= leaseCutoff))
-                        && ((x.Target == "Shipper"
+                        && ((x.Target == 업무진행알림Recorder.Target && x.FeatureName == 업무진행알림Recorder.FeatureName)
+                            || (x.Target == "Shipper"
                              && (x.FeatureName == Command알림FeatureNames.배차수락
                                  || x.FeatureName == Command알림FeatureNames.상차접근
                                  || x.FeatureName == Command알림FeatureNames.운송완료입금요청
@@ -164,7 +166,7 @@ public sealed class Command알림Outbox발송Service : ICommand알림Outbox발�
         var installationTokens = await _db.SsalddelMobilePushInstallations
             .AsNoTracking()
             .Where(x => x.IsActive && x.UserId == payload.TargetUserId)
-            .Select(x => x.PushToken)
+            .Select(x => new { x.UserId, x.PushToken, x.AppKey })
             .Distinct()
             .ToListAsync(cancellationToken);
         if (installationTokens.Count > 0)
@@ -172,7 +174,9 @@ public sealed class Command알림Outbox발송Service : ICommand알림Outbox발�
             var results = new List<bool>(installationTokens.Count);
             foreach (var installationToken in installationTokens)
             {
-                results.Add(await SendFcmAsync(installationToken, payload, cancellationToken));
+                if (!string.Equals(installationToken.UserId, payload.TargetUserId, StringComparison.Ordinal)) continue;
+                results.Add(await SendFcmAsync(installationToken.PushToken, payload, cancellationToken,
+                    installationToken.AppKey == "ssalddel.shipper"));
             }
 
             return results.Any(sent => sent);
@@ -186,8 +190,24 @@ public sealed class Command알림Outbox발송Service : ICommand알림Outbox발�
     private Task<bool> SendFcmAsync(
         string token,
         Command알림Payload payload,
-        CancellationToken cancellationToken)
-        => _fcmPushService.SendToTokenAsync(
+        CancellationToken cancellationToken,
+        bool integratedApp = false)
+    {
+        if (payload.NotificationType == WorkflowProgressNotification.MessageType)
+        {
+            var data = new Dictionary<string, string>
+            {
+                ["type"] = payload.NotificationType, ["eventId"] = payload.EventId,
+                ["workflowKey"] = payload.WorkflowKey, ["stageCode"] = payload.StageCode,
+                ["sourceId"] = payload.SourceId, ["userId"] = payload.TargetUserId,
+                ["occurredAtUtc"] = payload.OccurredAtUtc, ["deepLink"] = payload.DeepLink
+            };
+            if (!WorkflowProgressNotification.TryParse(data, out var hint) || hint is null)
+                throw new JsonException("업무 진행 알림의 단계 또는 경로가 올바르지 않습니다.");
+            return _fcmPushService.SendAsync(new FcmPushMessage(token, hint.Stage.Title, hint.Stage.Body,
+                data, HighPriority: true, DataOnly: integratedApp), cancellationToken);
+        }
+        return _fcmPushService.SendToTokenAsync(
             token,
             payload.Title,
             payload.Body,
@@ -203,9 +223,26 @@ public sealed class Command알림Outbox발송Service : ICommand알림Outbox발�
                 ["deepLink"] = payload.DeepLink
             },
             cancellationToken);
+    }
 
-    private Task<bool> 알림톡발송Async(string featureName, Command알림Payload payload, CancellationToken cancellationToken)
+    private async Task<bool> 알림톡발송Async(string featureName, Command알림Payload payload, CancellationToken cancellationToken)
     {
+        if (payload.NotificationType == WorkflowProgressNotification.MessageType && payload.WorkflowKey == "cargo")
+        {
+            // 기존 알림톡 채널은 유지하되 연락처/주소를 Outbox 또는 FCM에 복제하지 않는다.
+            // 실제 발송 때 같은 원천과 현재 수신 권한을 확인한 뒤 기존 템플릿 변수만 채운다.
+            var source = await _db.화주운송의뢰.AsNoTracking()
+                .SingleOrDefaultAsync(row => row.의뢰Id == payload.SourceId, cancellationToken);
+            if (source is null || !string.Equals(source.의뢰Id, payload.SourceId, StringComparison.Ordinal)
+                || !string.Equals(CargoWorkflowProgressNotifications.Recipient(source), payload.TargetUserId, StringComparison.Ordinal)) return false;
+            payload = payload with
+            {
+                CargoType = source.화물종류, PickupAddress = source.픽업_도로명주소, DropoffAddress = source.하차_도로명주소,
+                RecipientPhone = source.픽업_연락처_전화번호, PickupContactPhone = source.픽업_연락처_전화번호,
+                PickupWindowText = source.픽업_시간창_시작일시 == default && source.픽업_시간창_종료일시 == default
+                    ? "상차 시간 협의" : $"{source.픽업_시간창_시작일시:O} ~ {source.픽업_시간창_종료일시:O}"
+            };
+        }
         var variables = new Dictionary<string, string>
         {
             ["requestId"] = payload.RequestId,
@@ -227,7 +264,7 @@ public sealed class Command알림Outbox발송Service : ICommand알림Outbox발�
             _ => _kakaoOptions.DispatchAcceptedTemplateCode
         };
 
-        return _kakaoAlimTalkService.SendAsync(
+        return await _kakaoAlimTalkService.SendAsync(
             new KakaoAlimTalkMessage(
                 payload.RecipientPhone,
                 templateCode,

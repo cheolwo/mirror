@@ -12,6 +12,11 @@
         _reading = true;
         try
         {
+            var progress = await Push.TakeProgressOpenTargetAsync();
+            if (!_disposed && progress is not null) { Navigation.NavigateTo(progress.Route); return; }
+            var progressSignIn = await Push.ProgressSignInTargetAsync();
+            if (!_disposed && progressSignIn is not null)
+            { Navigation.NavigateTo(NeighborhoodExchangeAuthenticationRoutes.LoginHref(progressSignIn)); return; }
             var hint = await Push.TakeOpenTargetAsync();
             if (!_disposed && hint is not null) Navigation.NavigateTo(hint.Route);
             else if (!_disposed && await Push.IsSignInRequiredAsync())

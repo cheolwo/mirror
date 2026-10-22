@@ -16,7 +16,12 @@ public sealed record MemberDeliveryPushState(string DeviceInstallationId)
     public DateTimeOffset? PreferencesCheckedAtUtc { get; init; }
     public MemberDeliveryPushHint? OpenTarget { get; init; }
     public IReadOnlyList<MemberDeliveryPublishedHint> Published { get; init; } = [];
+    public WorkflowProgressHint? ProgressOpenTarget { get; init; }
+    public IReadOnlyList<WorkflowProgressPublishedHint> ProgressPublished { get; init; } = [];
 }
+
+public sealed record WorkflowProgressPublishedHint(string EventId, string RecipientUserId,
+    string WorkflowKey, string SourceId, DateTimeOffset OccurredAtUtc);
 
 public sealed record MemberDeliveryPublishedHint(string NotificationId, DateTimeOffset ExpiresAtUtc);
 

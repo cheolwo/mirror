@@ -8,6 +8,7 @@ using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Warehouse.Events;
 using Ssalddel.Contracts.Common.ViewSettings;
 using Ssalddel.Contracts.Common.Warehouse;
+using Ssalddel.Services.LogisticsProcessing.Warehouse;
 using 살뜰.Data;
 using 살뜰.Services.Audit;
 using 살뜰.도메인.창고;
@@ -170,12 +171,14 @@ public sealed class 피킹작업UseCase(
         task.상태 = 피킹포장작업상태.진행중;
         task.시작일시Utc = now;
         task.UpdatedAt = now;
+        var progress = await 창고업무진행알림.피킹Async(db, task, "warehouse.picking", userId, now, cancellationToken);
         try { await db.SaveChangesAsync(cancellationToken); }
         catch (DbUpdateConcurrencyException)
         {
             db.ChangeTracker.Clear();
             return Conflict<피킹작업결과응답>("작업 상태가 다른 요청에서 변경되었습니다. 현재 작업을 다시 조회해 주세요.");
         }
+        catch { 창고업무진행알림.분리(db, progress); throw; }
         await LogAsync("Started", task, context, cancellationToken);
         return Result.Ok(ToResult(task, false));
     }
@@ -236,12 +239,14 @@ public sealed class 피킹작업UseCase(
         task.완료일시Utc = now;
         task.완료근거Json = WarehouseActivityCompletionEvidence.Capture(task, userId, now);
         task.UpdatedAt = now;
+        var progress = await 창고업무진행알림.피킹Async(db, task, "warehouse.picked", userId, now, cancellationToken);
         try { await db.SaveChangesAsync(cancellationToken); }
         catch (DbUpdateConcurrencyException)
         {
             db.ChangeTracker.Clear();
             return Conflict<피킹작업결과응답>("작업 상태가 다른 요청에서 변경되었습니다. 현재 작업을 다시 조회해 주세요.");
         }
+        catch { 창고업무진행알림.분리(db, progress); throw; }
         await LogAsync("Completed", task, context, cancellationToken);
         await publisher.Publish(
             new 창고피킹완료됨Event(

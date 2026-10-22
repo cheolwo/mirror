@@ -7,6 +7,7 @@ using Ssalddel.ApiMetadata;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Warehouse.Events;
 using Ssalddel.Contracts.Common.Inventory;
+using Ssalddel.Services.LogisticsProcessing.Warehouse;
 using 살뜰.Data;
 using 살뜰.Services.Audit;
 using 살뜰.도메인.창고;
@@ -97,7 +98,10 @@ public sealed class 포장작업UseCase(
         });
     }
 
-    public async Task<Result<포장작업결과응답>> 완료Async(long inboundItemId, 포장작업완료요청 request, 창고작업요청Context context, CancellationToken cancellationToken)
+    public Task<Result<포장작업결과응답>> 완료Async(long inboundItemId, 포장작업완료요청 request, 창고작업요청Context context, CancellationToken cancellationToken)
+        => 창고업무진행알림.저장단위Async(db, committed => 완료저장Async(inboundItemId, request, context, cancellationToken, committed));
+
+    private async Task<Result<포장작업결과응답>> 완료저장Async(long inboundItemId, 포장작업완료요청 request, 창고작업요청Context context, CancellationToken cancellationToken, Action committed)
     {
         ArgumentNullException.ThrowIfNull(request);
         if (!request.InventoryConfirmed || !request.PackageLabelConfirmed)
@@ -108,6 +112,8 @@ public sealed class 포장작업UseCase(
         if (memo.Length > 400) return Invalid<포장작업결과응답>("포장 메모는 400자 이하로 입력해 주세요.");
         var userId = CurrentUserId();
         if (userId is null) return Unauthorized<포장작업결과응답>();
+        await using var transaction = db.Database.IsRelational() && db.Database.CurrentTransaction is null
+            ? await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken) : null;
         var item = await 접근가능재고Query(userId).FirstOrDefaultAsync(candidate => candidate.Id == inboundItemId, cancellationToken);
         if (item is null) return NotFound<포장작업결과응답>();
         if (item.상태.StartsWith("포장완료-", StringComparison.Ordinal))
@@ -166,11 +172,20 @@ public sealed class 포장작업UseCase(
         }
         db.재고이력.Add(new 재고이력 { 입고상품Id = item.Id, 이력유형 = "포장", 변경수량 = 0, 변경후수량 = request.PackagingQuantity, 원인유형 = "포장작업", 원인Id = item.입고요청Id, 처리UserId = userId, 메모 = historyMemo, 처리일시 = now });
         db.재고이동.Add(new 재고이동 { 창고Id = item.창고Id, 입고상품Id = item.Id, 상품명 = item.상품명, SKU = item.SKU, 이동유형 = "포장", 수량 = request.PackagingQuantity, 입고요청Id = item.입고요청Id, 처리UserId = userId, 메모 = historyMemo, 발생일시 = now });
+        var progress = await 창고업무진행알림.재고Async(db, item, "warehouse.packed", $"packed:{request.PackagingQuantity}", userId, now, cancellationToken);
         try { await db.SaveChangesAsync(cancellationToken); }
         catch (DbUpdateConcurrencyException)
         {
             db.ChangeTracker.Clear();
             return Conflict<포장작업결과응답>("포장 작업 상태가 다른 요청에서 변경되었습니다. 현재 재고와 작업을 다시 조회해 주세요.");
+        }
+        catch { 창고업무진행알림.분리(db, progress); throw; }
+        if (transaction is not null)
+        {
+            await transaction.CommitAsync(cancellationToken);
+            committed();
+            // 커밋한 transaction을 먼저 해제하여 감사/Event가 새 저장 경계를 사용하도록 한다.
+            await transaction.DisposeAsync();
         }
         await LogAsync(item, request.PackagingQuantity, type, context, cancellationToken);
         await publisher.Publish(

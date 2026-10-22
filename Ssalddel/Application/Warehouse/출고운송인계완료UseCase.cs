@@ -8,6 +8,7 @@ using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Warehouse.Events;
 using Ssalddel.Contracts.Common.Inventory;
 using Ssalddel.Services.Community;
+using Ssalddel.Services.LogisticsProcessing.Warehouse;
 using Ssalddel.Services.Operations;
 using 살뜰.Data;
 using 살뜰.Services.Audit;
@@ -300,7 +301,9 @@ public sealed class 출고운송인계완료UseCase(
             발생일시 = now
         });
 
-        await db.SaveChangesAsync(cancellationToken);
+        var progress = await 창고업무진행알림.출고Async(db, plan, inventory, "warehouse.handed-over", userId, now, cancellationToken);
+        try { await db.SaveChangesAsync(cancellationToken); }
+        catch { 창고업무진행알림.분리(db, progress); throw; }
 
         await operatingSystemHandoff.인계Async(plan, cancellationToken);
 

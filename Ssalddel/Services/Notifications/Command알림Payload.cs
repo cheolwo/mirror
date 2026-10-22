@@ -4,6 +4,7 @@ namespace 살뜰.Services.Notifications;
 
 public static class Command알림FeatureNames
 {
+    public const string 업무진행 = Ssalddel.Contracts.Common.Notifications.WorkflowProgressNotification.MessageType;
     public const string 배차수락 = "DispatchAccepted";
     public const string 상차접근 = "DispatchPickupApproach";
     public const string 운송완료입금요청 = "TransportSettlementDepositReminder";
@@ -17,6 +18,7 @@ public static class Command알림FeatureNames
 
     public static readonly string[] 발송지원목록 =
     [
+        업무진행,
         배차수락,
         상차접근,
         운송완료입금요청,
@@ -59,6 +61,12 @@ public sealed record Command알림Payload(
     DateTime? ScheduledAtUtc,
     IReadOnlySet<string> Channels)
 {
+    public string EventId { get; init; } = string.Empty;
+    public string WorkflowKey { get; init; } = string.Empty;
+    public string StageCode { get; init; } = string.Empty;
+    public string SourceId { get; init; } = string.Empty;
+    public string OccurredAtUtc { get; init; } = string.Empty;
+
     public string AmountText => Amount <= 0 ? string.Empty : $"{Amount:N0}원";
 
     public bool IsScheduledForFuture(DateTime nowUtc)
@@ -99,7 +107,12 @@ public sealed record Command알림Payload(
             ReadString(root, "title", "기사님이 운송 의뢰를 수락했습니다."),
             ReadString(root, "body", "기사님이 운송 의뢰를 수락했습니다. 상차 준비를 확인해 주세요."),
             ReadDateTime(root, "scheduledAtUtc"),
-            ReadStringSet(root, "channels", new[] { "Push" }));
+            ReadStringSet(root, "channels", new[] { "Push" }))
+        {
+            EventId = ReadString(root, "eventId"), WorkflowKey = ReadString(root, "workflowKey"),
+            StageCode = ReadString(root, "stageCode"), SourceId = ReadString(root, "sourceId"),
+            OccurredAtUtc = ReadString(root, "occurredAtUtc")
+        };
     }
 
     private static string ReadString(JsonElement root, string propertyName, string fallback = "")

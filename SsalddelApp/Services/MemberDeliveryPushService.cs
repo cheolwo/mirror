@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace SsalddelApp.Services;
 
-public sealed class MemberDeliveryPushService : IMemberDeliveryPushPreferencesClient
+public sealed partial class MemberDeliveryPushService : IMemberDeliveryPushPreferencesClient
 {
     public const string OpenAction = "com.companyname.ssalddelapp.OPEN_MEMBER_DELIVERY";
     public const string ChannelPrefix = "member_delivery_alerts.v1";
@@ -29,6 +29,7 @@ public sealed class MemberDeliveryPushService : IMemberDeliveryPushPreferencesCl
         _store = store; _services = services; _http = http;
         _priorOwner = session.UserId;
         _coordinator = new(store, Session, session.RestoreAsync, Publish);
+        _progress = new(store, Session, session.RestoreAsync, PublishProgress);
         _session.Changed += AccountChanged;
     }
 
@@ -64,11 +65,17 @@ public sealed class MemberDeliveryPushService : IMemberDeliveryPushPreferencesCl
         => _coordinator.ReadPreferencesAsync(ownerId, cancellationToken);
 
     public Task<bool> ReceiveAsync(IReadOnlyDictionary<string, string> data, CancellationToken cancellationToken = default)
-        => _coordinator.ReceiveAsync(data, cancellationToken);
+        => data.TryGetValue("type", out var type) && type == WorkflowProgressNotification.MessageType
+            ? _progress.ReceiveAsync(data, cancellationToken) : _coordinator.ReceiveAsync(data, cancellationToken);
 
     public async Task QueueOpenTargetAsync(IReadOnlyDictionary<string, string> data, CancellationToken cancellationToken = default)
     {
         await _session.RestoreAsync(cancellationToken);
+        if (data.TryGetValue("type", out var type) && type == WorkflowProgressNotification.MessageType)
+        {
+            if (await _progress.QueueOpenTargetAsync(data, cancellationToken)) Changed?.Invoke();
+            return;
+        }
         if (await _coordinator.QueueOpenTargetAsync(data, cancellationToken)) Changed?.Invoke();
     }
 
@@ -122,6 +129,7 @@ public sealed class MemberDeliveryPushService : IMemberDeliveryPushPreferencesCl
         if (_priorOwner is not null && _priorOwner != owner)
         {
             Cancel();
+            CancelProgress();
             _ = ClearAccountSafelyAsync(_priorOwner);
         }
         _priorOwner = owner;
@@ -130,7 +138,7 @@ public sealed class MemberDeliveryPushService : IMemberDeliveryPushPreferencesCl
 
     private async Task ClearAccountSafelyAsync(string priorOwner)
     {
-        try { await _coordinator.ClearAccountAsync(priorOwner); }
+        try { await _coordinator.ClearAccountAsync(priorOwner); await _progress.ClearAccountAsync(priorOwner); }
         catch (Exception) { /* 저장 오류를 알림 성공으로 표시하지 않으며 이후 로그인·조회가 복구합니다. */ }
     }
 
@@ -140,14 +148,29 @@ public sealed class MemberDeliveryPushService : IMemberDeliveryPushPreferencesCl
         {
 #if ANDROID
             var context = global::Android.App.Application.Context;
-            if (OperatingSystem.IsAndroidVersionAtLeast(33)
-                && context.CheckSelfPermission(global::Android.Manifest.Permission.PostNotifications)
-                    != global::Android.Content.PM.Permission.Granted) return false;
+            if (!AppNotificationsAllowed) return false;
             var manager = (global::Android.App.NotificationManager?)context.GetSystemService(global::Android.Content.Context.NotificationService);
             return manager?.AreNotificationsEnabled() == true
                 && (!OperatingSystem.IsAndroidVersionAtLeast(26)
                     || !(manager.NotificationChannels ?? []).Any(channel => channel.Id?.StartsWith(ChannelPrefix, StringComparison.Ordinal) == true
                     && channel.Importance == global::Android.App.NotificationImportance.None));
+#else
+            return false;
+#endif
+        }
+    }
+
+    public static bool AppNotificationsAllowed
+    {
+        get
+        {
+#if ANDROID
+            var context = global::Android.App.Application.Context;
+            if (OperatingSystem.IsAndroidVersionAtLeast(33)
+                && context.CheckSelfPermission(global::Android.Manifest.Permission.PostNotifications)
+                    != global::Android.Content.PM.Permission.Granted) return false;
+            var manager = (global::Android.App.NotificationManager?)context.GetSystemService(global::Android.Content.Context.NotificationService);
+            return manager?.AreNotificationsEnabled() == true;
 #else
             return false;
 #endif
