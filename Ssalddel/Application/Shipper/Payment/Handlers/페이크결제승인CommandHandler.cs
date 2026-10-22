@@ -5,6 +5,7 @@ using Ssalddel.Application.Shipper.Payment.Events;
 using Ssalddel.Contracts.Shipper.Payment;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using 살뜰.도메인.결제;
 using 살뜰.도메인.설정;
 using 살뜰.Services.Options;
@@ -48,9 +49,48 @@ public sealed class 페이크결제승인CommandHandler : IRequestHandler<페이
             return Result.Fail<페이크결제승인응답>("의뢰Id is required");
         }
 
+        if (_db.Database.CurrentTransaction is not null)
+            return await ApproveLocalAsync(request, cancellationToken);
+
+        SavedPayment? saved = null;
+        var attempt = 0;
+        return await _db.Database.CreateExecutionStrategy().ExecuteAsync(async ct =>
+        {
+            // Commit 응답만 유실되면 같은 결제와 Outbox를 확인하고 이미 저장한 추적 상태를 유지합니다.
+            if (saved is not null && await SavedPaymentExistsAsync(saved, ct)) RestoreTracking(saved.Tracking);
+            var before = CaptureTracking();
+            try
+            {
+                await using var tx = _db.Database.IsRelational()
+                    ? await _db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct) : null;
+                var result = await ApproveLocalAsync(request, ct, reloadSource: attempt++ > 0,
+                    onSaved: payment => saved = new(payment.Id, payment.결제Id, payment.의뢰Id, payment.결제금액, CaptureTracking()));
+                if (result.IsSuccess)
+                {
+                    if (tx is not null) await tx.CommitAsync(ct);
+                }
+                else RestoreTracking(before);
+                return result;
+            }
+            catch
+            {
+                RestoreTracking(before);
+                throw;
+            }
+        }, cancellationToken);
+    }
+
+    private async Task<Result<페이크결제승인응답>> ApproveLocalAsync(페이크결제승인Command request,
+        CancellationToken cancellationToken, bool reloadSource = false, Action<결제>? onSaved = null)
+    {
         var requestId = request.의뢰Id.Trim();
         var shipperRequest = await _db.화주운송의뢰
             .FirstOrDefaultAsync(x => x.의뢰Id == requestId, cancellationToken);
+        if (reloadSource && shipperRequest is not null)
+        {
+            await _db.Entry(shipperRequest).ReloadAsync(cancellationToken);
+            if (_db.Entry(shipperRequest).State == EntityState.Detached) shipperRequest = null;
+        }
         if (shipperRequest is null)
         {
             return Result.Fail<페이크결제승인응답>("의뢰를 찾을 수 없습니다.");
@@ -72,6 +112,7 @@ public sealed class 페이크결제승인CommandHandler : IRequestHandler<페이
             if (request.Amount != alreadyCompletedPayment.결제금액)
                 return Result.Fail<페이크결제승인응답>("기존 결제 금액과 요청 금액이 다릅니다. 같은 결제를 다시 확인해 주세요.");
             await EnsurePaymentApprovedOutboxAsync(alreadyCompletedPayment, cancellationToken);
+            onSaved?.Invoke(alreadyCompletedPayment);
             return Result.Ok(ToResponse(alreadyCompletedPayment, alreadyCompleted: true));
         }
 
@@ -163,15 +204,48 @@ public sealed class 페이크결제승인CommandHandler : IRequestHandler<페이
         shipperRequest.정산상태 = 상태값.결제상태.결제완료;
         shipperRequest.UpdatedAt = now;
 
-        await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
-
         await _db.결제.AddAsync(payment, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
         await EnsurePaymentApprovedOutboxAsync(payment, cancellationToken);
-        await tx.CommitAsync(cancellationToken);
+        onSaved?.Invoke(payment);
 
         return Result.Ok(ToResponse(payment, alreadyCompleted: false));
     }
+
+    private async Task<bool> SavedPaymentExistsAsync(SavedPayment saved, CancellationToken ct)
+        => await _db.결제.AsNoTracking().AnyAsync(x => x.Id == saved.Id && x.결제Id == saved.PaymentId
+                && x.의뢰Id == saved.RequestId && x.PG사 == ProviderName && x.결제금액 == saved.Amount, ct)
+            && await _db.결제승인완료Outbox.AsNoTracking().AnyAsync(x => x.결제레코드Id == saved.Id
+                && x.결제Id == saved.PaymentId && x.대상Id == saved.RequestId && x.결제금액 == saved.Amount, ct);
+
+    private TrackedState[] CaptureTracking() => _db.ChangeTracker.Entries().Select(entry => new TrackedState(
+        entry, entry.State, entry.CurrentValues.Clone(), entry.OriginalValues.Clone(),
+        entry.Properties.ToDictionary(p => p.Metadata.Name, p => (p.IsModified, p.IsTemporary)))).ToArray();
+
+    private void RestoreTracking(TrackedState[] snapshot)
+    {
+        var retained = snapshot.Select(x => x.Entry.Entity).ToHashSet(ReferenceEqualityComparer.Instance);
+        foreach (var entry in _db.ChangeTracker.Entries().Where(x => !retained.Contains(x.Entity)).ToArray())
+            entry.State = EntityState.Detached;
+        foreach (var saved in snapshot)
+        {
+            var entry = saved.Entry;
+            entry.State = EntityState.Detached;
+            entry.CurrentValues.SetValues(saved.Current);
+            entry.OriginalValues.SetValues(saved.Original);
+            entry.State = saved.State;
+            foreach (var property in entry.Properties)
+            {
+                var flags = saved.Properties[property.Metadata.Name];
+                property.IsModified = flags.Modified;
+                property.IsTemporary = flags.Temporary;
+            }
+        }
+    }
+
+    private sealed record TrackedState(EntityEntry Entry, EntityState State, PropertyValues Current,
+        PropertyValues Original, IReadOnlyDictionary<string, (bool Modified, bool Temporary)> Properties);
+    private sealed record SavedPayment(long Id, string PaymentId, string RequestId, int Amount, TrackedState[] Tracking);
 
     private async Task EnsurePaymentApprovedOutboxAsync(결제 payment, CancellationToken cancellationToken)
     {
