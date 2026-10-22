@@ -1,0 +1,258 @@
+{
+  "schemaVersion": "workflow-progress-device-result.r7",
+  "status": "CompletedDeviceSampleValidation",
+  "deviceModel": "SM-A346N",
+  "androidVersion": 16,
+  "version": "0.1.203",
+  "installation": {
+    "updated": true,
+    "uninstalled": false,
+    "dataCleared": false,
+    "package": "com.companyname.ssalddelapp",
+    "version": "0.1.203",
+    "apkSha256": "3302c27be7c6ba72e674d22d65829a5128f162bccf97666acc4b8ccc55a0cd9a",
+    "previousApkSha256": "876522699c3a58ba204037a4ad7fddeab37e6adefb02ac813190b63fabe429de"
+  },
+  "sourceChangedDuringBuild": false,
+  "actualFcmProviderAccepted": 7,
+  "representativeStageSamplesDisplayed": [
+    "food.accepted",
+    "warehouse.received",
+    "warehouse.picked",
+    "cargo.picked-up",
+    "cargo.delivered"
+  ],
+  "duplicateSuppressed": true,
+  "earlierStageSuppressed": true,
+  "foregroundReceived": true,
+  "backgroundReceived": true,
+  "coldProcessReceived": true,
+  "coldTapRestored": true,
+  "clickedRoleRoutes": [
+    "/workspace/orderer",
+    "/workspace/warehouse",
+    "/workspace/shipper"
+  ],
+  "logoutRemovedOwnRemainingNotifications": true,
+  "unrelatedNotificationsCleared": false,
+  "devicePreferencesRespected": {
+    "confirmedSoundPreferenceUsed": true,
+    "unknownAccountPreferenceSilent": true
+  },
+  "audiblePlaybackRequested": true,
+  "humanSoundHeard": null,
+  "lockscreenVerified": false,
+  "forceStoppedReceiveVerified": false,
+  "dozeVerified": false,
+  "all27StagesOnDevice": false,
+  "specialistAppsVerified": false,
+  "realBusinessTransitionTriggeredSamples": false,
+  "productOutboxWorkerVerifiedOnDevice": false,
+  "realPayment": false,
+  "liveServer": "Existing isolated r106 Simulation host for login/installation/role reads; older binary; no current server stage E2E claim",
+  "samplesChangedBusinessState": false,
+  "productSourceChangedThisRun": false,
+  "preflight": {
+    "schemaVersion": "workflow-progress-device-preflight-tests.r7",
+    "actualSendExecuted": false,
+    "passed": 14,
+    "failed": 0,
+    "results": [
+      {
+        "status": "WorkflowProgressDeviceValidationPassed; no network request or notification sent.",
+        "case": "valid",
+        "networkRequested": false,
+        "passed": true
+      },
+      {
+        "status": "WorkflowProgressDeviceFailed:InstallationOwnerMismatch; stage=SampleValidation",
+        "case": "owner",
+        "networkRequested": false,
+        "passed": true
+      },
+      {
+        "status": "WorkflowProgressDeviceFailed:ExactlyOneActiveInstallationRequired; stage=SampleValidation",
+        "case": "count",
+        "networkRequested": false,
+        "passed": true
+      },
+      {
+        "status": "WorkflowProgressDeviceFailed:ExactlyOneActiveInstallationRequired; stage=SampleValidation",
+        "case": "inactive",
+        "networkRequested": false,
+        "passed": true
+      },
+      {
+        "status": "WorkflowProgressDeviceFailed:InstallationAppMismatch; stage=SampleValidation",
+        "case": "app",
+        "networkRequested": false,
+        "passed": true
+      },
+      {
+        "status": "WorkflowProgressDeviceFailed:InstallationAppMismatch; stage=SampleValidation",
+        "case": "platform",
+        "networkRequested": false,
+        "passed": true
+      },
+      {
+        "status": "WorkflowProgressDeviceFailed:TokenBinding; stage=SampleValidation",
+        "case": "hash",
+        "networkRequested": false,
+        "passed": true
+      },
+      {
+        "status": "WorkflowProgressDeviceFailed:ProductionPayloadRejected; stage=SampleValidation",
+        "case": "route",
+        "networkRequested": false,
+        "passed": true
+      },
+      {
+        "status": "WorkflowProgressDeviceFailed:StageCode; stage=SampleValidation",
+        "case": "stage",
+        "networkRequested": false,
+        "passed": true
+      },
+      {
+        "status": "WorkflowProgressDeviceFailed:ProductionPayloadRejected; stage=SampleValidation",
+        "case": "event",
+        "networkRequested": false,
+        "passed": true
+      },
+      {
+        "status": "WorkflowProgressDeviceFailed:RegistrationSnapshotStale; stage=SampleValidation",
+        "case": "registration-time",
+        "networkRequested": false,
+        "passed": true
+      },
+      {
+        "status": "WorkflowProgressDeviceFailed:SampleTime; stage=SampleValidation",
+        "case": "event-time",
+        "networkRequested": false,
+        "passed": true
+      },
+      {
+        "status": "WorkflowProgressDeviceFailed:SyntheticInputRequired; stage=SampleValidation",
+        "case": "source-kind",
+        "networkRequested": false,
+        "passed": true
+      },
+      {
+        "status": "WorkflowProgressDeviceFailed:OutputAlreadyExists; stage=InputBoundary",
+        "case": "existing-output-preserved",
+        "networkRequested": false,
+        "passed": true
+      }
+    ]
+  },
+  "screenshots": [
+    {
+      "file": "01-food-accepted.png",
+      "sha256": "edbd013ad5adff2b510ba3d1834d803ab4eda51922915cb709eab8b2ffcf1982",
+      "exactCropOnly": true,
+      "cropBox": [
+        30,
+        310,
+        1050,
+        513
+      ]
+    },
+    {
+      "file": "02-food-tap.png",
+      "sha256": "e2a6f5fb6009a13cd213b3ca4537ab601f3fbebfacadc94163babc3b20286256",
+      "exactCropOnly": false,
+      "cropBox": null
+    },
+    {
+      "file": "03-warehouse-background.png",
+      "sha256": "f16c03f08cdd00df550221541b4ccd0203605ce9eb75ae4500af10173076a19a",
+      "exactCropOnly": true,
+      "cropBox": [
+        30,
+        310,
+        1050,
+        513
+      ]
+    },
+    {
+      "file": "04-warehouse-cold-tap.png",
+      "sha256": "d4bc8cd66f442444515f92832a455b586482e66397e4677056e0cb979c381c5b",
+      "exactCropOnly": false,
+      "cropBox": null
+    },
+    {
+      "file": "05-cargo-picked.png",
+      "sha256": "9fa4612e16e6b4266adac248ef46a7120c9f1aada1ba650a111b59d5b9aa371d",
+      "exactCropOnly": true,
+      "cropBox": [
+        30,
+        310,
+        1050,
+        513
+      ]
+    },
+    {
+      "file": "06-cargo-tap.png",
+      "sha256": "3f0768c93c81b7721e009e8fdca9a71c393b02671f41ba459dd27b4b4857ed92",
+      "exactCropOnly": false,
+      "cropBox": null
+    },
+    {
+      "file": "07-cargo-cold-receive.png",
+      "sha256": "e69fd33ed85a8d49b256e941c33f4d9561d0a82696b4640d94cc3db66b0aba3f",
+      "exactCropOnly": true,
+      "cropBox": [
+        30,
+        310,
+        1050,
+        513
+      ]
+    },
+    {
+      "file": "08-warehouse-cold-receive.png",
+      "sha256": "76d14f4012c2224254cbb395ee411a32835259bd45f93d4fb810e13d42c21f20",
+      "exactCropOnly": true,
+      "cropBox": [
+        30,
+        310,
+        1050,
+        513
+      ]
+    },
+    {
+      "file": "10-warehouse-cold-receive-tap.png",
+      "sha256": "97ebe114d5e88b1ba0d90004b9a4cca8c410c78c15f73b70537165d9cca336fc",
+      "exactCropOnly": false,
+      "cropBox": null
+    },
+    {
+      "file": "11-logged-out.png",
+      "sha256": "3caab09dd4be5c81cf9663d995371646a863574f35f3be6fa2707b5d4d7454ee",
+      "exactCropOnly": false,
+      "cropBox": null
+    }
+  ],
+  "toolSources": [
+    {
+      "path": "eng/WorkflowProgressDeviceVerificationR7/Program.cs",
+      "sha256": "e8e038d4c251ae34694535a31f71dbcc7c2c1e5eeb60ef7c020f1c5962d363cf"
+    },
+    {
+      "path": "eng/WorkflowProgressDeviceVerificationR7/README.md",
+      "sha256": "762d0cab65cb32ec7cf26e47fb37365c031b627bcf9f1b6991032fa5b07b8c9d"
+    },
+    {
+      "path": "eng/WorkflowProgressDeviceVerificationR7/test-preflight.ps1",
+      "sha256": "e1d1993b003acbff9bb839ff308b078615bf35c760340d68b992131cb974579d"
+    },
+    {
+      "path": "eng/WorkflowProgressDeviceVerificationR7/WorkflowProgressDeviceVerificationR7.csproj",
+      "sha256": "798a39f31645a7f4cdaaee83b07f45ec1c4db246ea6b49302792b963351a7530"
+    }
+  ],
+  "commitPerformed": false,
+  "pushPerformed": false,
+  "humanSoundReply": "지금 확인하기 어려워요",
+  "productSourcesCompared": 42,
+  "productSourceDrift": [],
+  "newDocLinksChecked": 20
+}

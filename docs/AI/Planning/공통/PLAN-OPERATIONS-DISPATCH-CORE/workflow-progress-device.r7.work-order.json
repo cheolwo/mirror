@@ -1,0 +1,11 @@
+{
+  "schema": "workflow-progress-device-work-order.v7",
+  "date": "2026-10-22",
+  "status": "CompletedDeviceSampleValidation",
+  "implementationAuthorized": true,
+  "approvalSource": "사용자의 샘플 알림·실제 연결 휴대폰 검증 요청",
+  "plan": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/workflow-progress-device.r7.md",
+  "writePaths": ["eng/WorkflowProgressDeviceVerificationR7/", "artifacts/local/workflow-progress-device/20261022-r1/", "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/workflow-progress-device.r7*", "docs/Changes/2026-10-22-workflow-progress-device-r7.md", "docs/assets/changes/2026-10-22-workflow-progress-device-r7/", "docs/AI/CURRENT_WORK.md", "docs/AI/PLANNING.md", "docs/Changes/README.md", "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/README.md"],
+  "boundaries": ["single device sample only", "existing Firebase project and signature", "existing Simulation host and synthetic accounts", "no automatic resend", "no operational workers or payment", "preserve unrelated dirty work", "no uninstall commit push deployment"],
+  "validation": {"apkVersion":"0.1.203", "actualFcmProviderAccepted":7, "representativeStagesDisplayed":5, "duplicateSuppressed":true, "earlierStageSuppressed":true, "coldReceiveVerified":true, "coldTapVerified":true, "logoutCleanupVerified":true, "preflightPassed":14, "humanSoundHeard":null, "humanSoundReply":"지금 확인하기 어려워요", "fullBusinessLifecycleVerified":false, "productSourceChanged":false, "result":"docs/Changes/2026-10-22-workflow-progress-device-r7.md"}
+}

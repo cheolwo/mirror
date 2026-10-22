@@ -1,0 +1,46 @@
+{
+  "schema": "home-participation-work-order.r10",
+  "date": "2026-10-22",
+  "status": "CompletedLocalValidation_FinancialAggregateAndOtherBusinessCountsPending",
+  "implementationAuthorized": true,
+  "approvalSource": "User requested participation/profit-sharing first; cumulative period selected",
+  "plan": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/home-participation.r10.md",
+  "writePaths": [
+    "Ssalddel.Contracts/Common/Home/",
+    "Ssalddel/Application/Home/",
+    "Ssalddel/Controllers/Common/플랫폼참여현황Controller.cs",
+    "Ssalddel/Extensions/ServiceCollectionExtensions.ApplicationCore.cs",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/RoleSelectionHome.razor*",
+    "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/HomeParticipation*",
+    "eng/role-workspace/RoleWorkspaceRegistration.cs",
+    "SsalddelApp/Components/Pages/UnifiedHome.razor",
+    "Ssalddel.WebApp/Pages/Home.razor",
+    "Ssalddel.WebApp/Pages/LifeHome.razor",
+    "Ssalddel.Tests/**/*HomeParticipation*R10Tests.cs",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/home-participation.r10*",
+    "docs/ProjectOverview/page-docs/home-participation-r10.md",
+    "docs/Changes/2026-10-22-home-participation-r10.md",
+    "docs/assets/changes/2026-10-22-home-participation-r10/",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/AI/PLANNING.md",
+    "docs/AI/DECISIONS.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/README.md",
+    "docs/Changes/README.md",
+    "artifacts/local/home-participation/20261022-r1/"
+  ],
+  "boundaries": [
+    "read-only aggregates",
+    "unknown is not zero",
+    "preserve specialist ledgers",
+    "no new permissions",
+    "no operational enablement",
+    "no commit or push"
+  ],
+  "resultDocument": "docs/Changes/2026-10-22-home-participation-r10.md",
+  "verification": "artifacts/local/home-participation/20261022-r1/verification.json",
+  "remaining": [
+    "confirmed profit/shared actual payout publication source",
+    "other business participation aggregates",
+    "APK packaging/install and physical phone UI are separate"
+  ]
+}

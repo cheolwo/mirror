@@ -1,0 +1,99 @@
+{
+  "schema": "domain-workflow-recovery-gallery.v2",
+  "createdAtUtc": "2026-10-21T13:24:34.788016+00:00",
+  "kind": "CurrentProductComponentStaticRender",
+  "syntheticBusinessCases": true,
+  "screenCount": 6,
+  "physicalDeviceVerified": false,
+  "externalServerVerified": false,
+  "interactionVerified": false,
+  "screens": [
+    {
+      "file": "01-shipper-request-390.png",
+      "sha256": "e134a8866b9d518d58032118a96a44141adf8913df5553b00fcead287895235d",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "physicalDevice": false,
+      "interactionVerified": false,
+      "source": "artifacts/local/domain-workflow-recovery/20261021-r1/render-qa-r3/01-shipper-request-390.png",
+      "roleUiBody": "실제 공통 컴포넌트의 로컬 정적 렌더 · 가상 업무 사례\n휴대폰·실제 요청·버튼 동작 검증과 구분\n\n운송 의뢰 대상을 찾지 못했습니다\n\n업무 목록에서 대상을 다시 선택해 주세요.\n\n닫기\n업무로 돌아가기\n다시 시도"
+    },
+    {
+      "file": "02-pickup-photo-390.png",
+      "sha256": "dd078373570e0de8857553011a70bdc2f2cff2f321ca7fdd213f114cae0c2c1c",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "physicalDevice": false,
+      "interactionVerified": false,
+      "source": "artifacts/local/domain-workflow-recovery/20261021-r1/render-qa-r3/02-pickup-photo-390.png",
+      "roleUiBody": "실제 공통 컴포넌트의 로컬 정적 렌더 · 가상 업무 사례\n휴대폰·실제 요청·버튼 동작 검증과 구분\n\n상차 사진 필요\n\n상차 사진을 등록한 뒤 완료해 주세요.\n\n닫기\n업무로 돌아가기"
+    },
+    {
+      "file": "03-pickup-pending-390.png",
+      "sha256": "40d0d4403c5f55198051e05dcf4eae53d529a4cfba8961f3e3f5f45bab1a19cf",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "physicalDevice": false,
+      "interactionVerified": false,
+      "source": "artifacts/local/domain-workflow-recovery/20261021-r1/render-qa-r3/03-pickup-pending-390.png",
+      "roleUiBody": "실제 공통 컴포넌트의 로컬 정적 렌더 · 가상 업무 사례\n휴대폰·실제 요청·버튼 동작 검증과 구분\n\n상차 결과 확인 필요\n\n처리 결과를 아직 확인하지 못했습니다. 다시 제출하지 말고 같은 업무의 결과를 확인해 주세요.\n\n닫기\n결과 확인"
+    },
+    {
+      "file": "04-inbound-created-390.png",
+      "sha256": "22b5b400fc1db2e77c9d500b935504f649512f8dace9610b3c078a7b4c989476",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "physicalDevice": false,
+      "interactionVerified": false,
+      "source": "artifacts/local/domain-workflow-recovery/20261021-r1/render-qa-r3/04-inbound-created-390.png",
+      "roleUiBody": "실제 공통 컴포넌트의 로컬 정적 렌더 · 가상 업무 사례\n휴대폰·실제 요청·버튼 동작 검증과 구분\n\n입고 신청 완료 · 내역 확인 필요\n\n등록은 완료됐습니다. 다시 제출하지 말고 등록된 내역을 확인해 주세요.\n\n닫기\n업무로 돌아가기\n내역 확인"
+    },
+    {
+      "file": "05-inbound-completed-390.png",
+      "sha256": "48a385d832d2c65ea882ffcc3b0be39b9a3ca6754fbc255a01fe394cc73d055c",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "physicalDevice": false,
+      "interactionVerified": false,
+      "source": "artifacts/local/domain-workflow-recovery/20261021-r1/render-qa-r3/05-inbound-completed-390.png",
+      "roleUiBody": "실제 공통 컴포넌트의 로컬 정적 렌더 · 가상 업무 사례\n휴대폰·실제 요청·버튼 동작 검증과 구분\n\n입고 완료 · 내역 확인 필요\n\n입고 완료 처리는 끝났습니다. 다시 완료하지 말고 처리된 내역을 확인해 주세요.\n\n닫기\n업무로 돌아가기\n내역 확인"
+    },
+    {
+      "file": "06-warehouse-handoff-390.png",
+      "sha256": "9c3907a52c8dfda35823ae04f10e3e33f03edaad728c2cb7d21b73fd0121aa97",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "physicalDevice": false,
+      "interactionVerified": false,
+      "source": "artifacts/local/domain-workflow-recovery/20261021-r1/render-qa-r3/06-warehouse-handoff-390.png",
+      "roleUiBody": "실제 공통 컴포넌트의 로컬 정적 렌더 · 가상 업무 사례\n휴대폰·실제 요청·버튼 동작 검증과 구분\n\n창고 인계 확인 필요\n\n창고의 인계 처리가 끝나면 운송 상태를 다시 확인해 주세요.\n\n닫기\n업무로 돌아가기\n인계 상태 확인"
+    }
+  ],
+  "sourceQa": {
+    "path": "artifacts/local/domain-workflow-recovery/20261021-r1/render-qa-r3/result.json",
+    "sha256": "787db6049a1f70626fd60eb0477540febaa32c9fb8006cef01555b6611662867",
+    "viewports": [
+      390,
+      1280
+    ],
+    "renders": 12,
+    "horizontalOverflow": 0,
+    "errors": 0
+  },
+  "gallery": {
+    "path": "index.html",
+    "sha256": "5b51c6efd13496111762949a93cb3f9007c02795e446e0334ac0973425eeb348",
+    "externalNetworkReferences": false,
+    "renderVerified": true,
+    "qa": {
+      "file": "artifacts/local/domain-workflow-recovery/20261021-r1/gallery-qa/result.json",
+      "sha256": "a334126ee6a5a0bae1e1d4dd8aad3dcdae70a1279ae135fab73597e219f53c2e",
+      "viewports": [
+        390,
+        1280
+      ],
+      "imagesLoaded": 6,
+      "horizontalOverflow": 0
+    }
+  }
+}

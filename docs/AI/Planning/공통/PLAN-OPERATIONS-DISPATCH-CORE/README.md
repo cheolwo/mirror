@@ -1,5 +1,33 @@
 # 운영 배차 공통 코어
 
+- 최신 화물 보완: [선결제 접수·통신 복구 r16](cargo-prepayment-recovery.r16.md) · [구현·화면](../../../../Changes/2026-10-22-cargo-prepayment-recovery-r16.md), `CompletedLocalValidation / ActualPGCheckoutPending / NativeRecoveryPending / OperationalDisabled`. 결제 전 배차를 차단하고 시험 결제 확인 뒤 같은 의뢰를 인계한다. 시간초과 재POST·Web 대상/계정 응답 혼입을 방어하며 Fast362·Task14,893통과/환경16미실행을 확인했다. 실제 PG·제품 HTTP 종단간·단말 재실행·배포는 별도다.
+
+- 최신 전체 연결 조정안: [플랫폼 운영 요약→세부 내역 r12](platform-overview-drilldown.r12.md), `CompletedWave1LocalValidation / RemainingR12WorkPending`. [첫 구현·검증](../../../../Changes/2026-10-22-overview-drilldown-r12.md)은 화물 참여 세부와 관리자 운송/지원 복귀를 연결했다. Task14,807통과·실패0·환경16미실행, 신규104사례·37소스와 읽기 HTTP/화면7장을 대조했다. 기존 전문 원장·권한·업무 명령은 유지하며 나머지 r12 조정은 후속이다.
+
+- 최신 후속 기획: [운영후원·활동 기여자 공개 r11](operating-support-contributors.r11.md), `DesignRecorded / ImplementationNotStarted`. 후원 수납·운영비 충당 근거, 공개 동의와 품질 근거, 질문·도움·물류 교육의 책임을 분리한다. 제품 실행·공개 순위·새 권한은 활성화하지 않았다.
+- r11 후속 기준: [후원·직접 부담 비율](operating-support-contributors.r11.md#운영비-재원-비율--2026-10-22-후속-구체화). 실제 운영비를 분모로 확인된 재원별 충당 금액·비율을 표시하며, 미사용 후원금·예산과 구분한다. 홈/상세·APK 적용은 미구현이다.
+
+- 최신 누적 홈: [계획 r10](home-participation.r10.md) · [명세](home-participation.r10.work-order.json) · [구현·검증](../../../../Changes/2026-10-22-home-participation-r10.md). 현황을 앞에 두고 역할 진입은 보존한다. 확정 금액 미연결과 기록 기준 참여를 구분한다.
+
+- 최신 업무 묶음: [계획 r9](business-role-bundles.r9.md) · [작업 명세](business-role-bundles.r9.work-order.json) · [구현·실제 화면](../../../../Changes/2026-10-22-business-role-bundles-r9.md). 같은 앱·DB·operator 자격으로 화물3/음식4의 홈·관리자 조회/상태/복귀를 분리했다. Fast546·Task14,674통과/환경16미실행, HTTP 경계·APK205 실제384px를 확인했다. 네이버401·음식 배차 지도 분류404와 실제 운영은 별도다.
+
+- 최신 관계 기사 지도: [계획 r8](related-driver-naver-map.r8.md) · [작업 명세](related-driver-naver-map.r8.work-order.json) · [후속 탐색·인정 설계](preorder-discovery-recognition.r8.md) · [결과·실제 화면](../../../../Changes/2026-10-22-related-driver-naver-map-r8.md). APK204 네이버 host·현재 배정/최근 위치 보호, 집중90·호환81·Task14,631통과/환경16미실행. 실제401로 타일·핀·경로는 보류하며 목록 대안·서버 갱신·만료는 확인했다. 주문 전 공개 탐색·칭호는 설계만 준비했다.
+
+- 최신 실제 휴대폰 확인: [계획 r7](workflow-progress-device.r7.md) · [작업 명세](workflow-progress-device.r7.work-order.json) · [실제 알림·클릭 화면](../../../../Changes/2026-10-22-workflow-progress-device-r7.md). APK203·FCM7건/대표5단계·중복/과거단계 억제·cold 수신/클릭·로그아웃 정리를 확인했다. 실제 청취·전수 업무 E2E·전문앱/잠금/절전·운영은 별도다. 제품 코드 변경 없음.
+
+- 최신 단계 진행 알림: [승인 계획 r6](workflow-progress-notifications.r6.md) · [작업 명세](workflow-progress-notifications.r6.work-order.json) · [업무 트리·검증](../../../../Changes/2026-10-22-workflow-progress-notifications-r6.md). 기존 전문 원장과 Outbox를 재사용한다. Fast536·Task14,588통과/환경16미실행, 소비 빌드 통과. 실제 외부 알림·단말·운영은 별도다.
+
+- 최신 첫 신청 간소화: [사진 가 입고 r5](photo-inbound-request.r5.md) · [작업 명세](photo-inbound-request.r5.work-order.json) · [결과·화면](../../../../Changes/2026-10-22-photo-inbound-request-r5.md). 사진을 먼저 접수하고 이름·입고 정보는 나중에 입력한다. Fast203·Task14,468통과/환경16미실행, 공통 화면6상태12렌더와 최종 ARIA 표시 소비 검증. 기존 실제 입고·현장 반입 조건을 보존하며 실 DB·저장소·카메라·운영은 후속이다.
+
+- 최신 신청 결과 확인: [승인 계획 r4](inbound-submission-recovery.r4.md) · [작업 명세](inbound-submission-recovery.r4.work-order.json) · [결과·화면](../../../../Changes/2026-10-22-inbound-submission-recovery-r4.md). 일반 입고 응답 ID 전 유실을 원요청 조회와 기존 원장 유일키로 복구했다. Fast180·Task14,386통과/환경16미실행, SQLite 경합·실제 신청 화면3사례6렌더. 기존 DB 적용·단말 재실행·웹 프로세스 보존·운영 활성화는 후속이다.
+
+- 최신 재실행 복구: [승인 계획 r3](durable-workflow-recovery.r3.md) · [작업 명세](durable-workflow-recovery.r3.work-order.json) · [결과·화면](../../../../Changes/2026-10-21-durable-workflow-recovery-r3.md). 명령 전 보호 저장·같은 계정/서버 복원·정본 조회 우선을 적용했다. Fast212·Task14,328통과/환경16미실행, 정적10렌더·파일 IO 프로세스3회 왕복. 실제 단말 재실행·입고 접수번호 없는 결과조회 계약은 후속이며 새 APK를 설치하지 않았다.
+
+- 최신 단계별 복구: [승인 계획 r2](domain-workflow-recovery.r2.md) · [정상/예외 대응표](domain-workflow-recovery.matrix.r2.md) · [구현·검증·화면](../../../../Changes/2026-10-21-domain-workflow-recovery-r2.md). 공통 OS/단계/결과와 화물·화주 조회/상하차/입고 복구를 연결했다. 최종 Fast286·전체14,260개 통과/환경16개 미실행. VM 종료 후 미확정 복원·구판 멱등 결과 조회와 다른 OS는 후속이며 실제 단말/운영 완료와 구분한다.
+
+- 최신 오류·통신 보완: [역할 오류 복구 r1](role-error-recovery.r1.md) · [조사·구현·실제 화면](../../../../Changes/2026-10-21-role-error-recovery-r1.md). 역할10종 대표 소스 조사, 공통 안내/화주·기사 조회 첫 적용과 로컬 API8건·APK202 실제 연결복구/안내/복귀를 검증했다. 다른 역할의 개별 UI·모바일 endpoint·입고 미확정 결과는 후속이며 전체 앱/외부 운영 완료와 구분한다.
+
+
 - 기획 ID: `PLAN-OPERATIONS-DISPATCH-CORE`
 - 기획 분야: 공통 / 운영 배차
 - 기획 판본: `dispatch-core.r65`

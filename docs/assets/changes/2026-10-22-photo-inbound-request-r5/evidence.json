@@ -1,0 +1,272 @@
+{
+  "kind": "actual-product-photo-inbound-static-render",
+  "syntheticInput": true,
+  "deviceVerified": false,
+  "businessInteractionVerified": false,
+  "checks": [
+    {
+      "file": "01-empty.html",
+      "state": "01-empty",
+      "width": 390,
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "height": 900
+      },
+      "images": [],
+      "screenshot": "01-empty-390.png",
+      "sha256": "e3392628a87360d107aac3e8dda1b538fb1f3219329400ebb6ea940cb60c25c7",
+      "bodyText": "실제 공통 화면 · 가상 사례의 로컬 정적 렌더 · 촬영/클릭/실제 서버 시험과 구분\n\n입고 신청\n사진으로 입고 신청\n돌아가기\n입고할 물품을 찍어 주세요\nJPG·PNG · 최대 5MB\n사진 촬영\n사진 선택\n이름 붙이기 선택\n가 입고 신청\n\n사진만 먼저 등록하고, 입고 정보는 나중에 입력하세요.\n\n직접 입력\n내 신청\n\n등록한 사진 신청이 여기에 모입니다.",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "businessInteractionVerified": false,
+      "nativeHtmlDetailsToggleVerified": true
+    },
+    {
+      "file": "02-selected.html",
+      "state": "02-selected",
+      "width": 390,
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "height": 941
+      },
+      "images": [
+        {
+          "complete": true,
+          "width": 640,
+          "height": 420
+        }
+      ],
+      "screenshot": "02-selected-390.png",
+      "sha256": "bf48e10a7c872bf8ddde908f5909c86039711d20de39517b429a27fa7972acf2",
+      "bodyText": "실제 공통 화면 · 가상 사례의 로컬 정적 렌더 · 촬영/클릭/실제 서버 시험과 구분\n\n입고 신청\n사진으로 입고 신청\n돌아가기\n사진을 확인하고 신청해 주세요.\n사진 촬영\n사진 선택\n이름 붙이기 선택\n가 입고 신청\n\n사진만 먼저 등록하고, 입고 정보는 나중에 입력하세요.\n\n직접 입력\n내 신청\n\n등록한 사진 신청이 여기에 모입니다.",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "businessInteractionVerified": false,
+      "nativeHtmlDetailsToggleVerified": false
+    },
+    {
+      "file": "03-saved.html",
+      "state": "03-saved",
+      "width": 390,
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "height": 1009
+      },
+      "images": [
+        {
+          "complete": true,
+          "width": 640,
+          "height": 420
+        }
+      ],
+      "screenshot": "03-saved-390.png",
+      "sha256": "35a2780cc55d594aed3f99e02df1a07f47efd0cc8e4e51bcf15a9c1a78a4a603",
+      "bodyText": "실제 공통 화면 · 가상 사례의 로컬 정적 렌더 · 촬영/클릭/실제 서버 시험과 구분\n\n입고 신청\n사진으로 입고 신청\n돌아가기\n가 입고 신청을 저장했습니다. 이름과 입고 정보는 나중에 입력해도 됩니다.\n가 입고 접수\n2026.10.22\n이름 없는 입고 신청\n이름\n저장\n입고 정보 입력\n\n이름과 입고 정보는 나중에 입력해도 됩니다.\n\n내 신청\n이름 없는 입고 신청\n정보 입력 대기 · 10.22",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "businessInteractionVerified": false,
+      "nativeHtmlDetailsToggleVerified": false
+    },
+    {
+      "file": "04-pending.html",
+      "state": "04-pending",
+      "width": 390,
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "height": 992
+      },
+      "images": [
+        {
+          "complete": true,
+          "width": 640,
+          "height": 420
+        }
+      ],
+      "screenshot": "04-pending-390.png",
+      "sha256": "33102c472ca7f93bf708919c5e92b4a628fd352f3089819ee3b541c87fafdda1",
+      "bodyText": "실제 공통 화면 · 가상 사례의 로컬 정적 렌더 · 촬영/클릭/실제 서버 시험과 구분\n\n입고 신청\n사진으로 입고 신청\n돌아가기\n접수 결과를 확인해 주세요. 다시 신청하지 마세요.\n사진 촬영\n사진 선택\n이름 붙이기 선택\n가 입고 신청\n\n사진만 먼저 등록하고, 입고 정보는 나중에 입력하세요.\n\n접수 결과 확인\n내 신청\n\n등록한 사진 신청이 여기에 모입니다.",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "businessInteractionVerified": false,
+      "nativeHtmlDetailsToggleVerified": false
+    },
+    {
+      "file": "05-linked.html",
+      "state": "05-linked",
+      "width": 390,
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "height": 900
+      },
+      "images": [
+        {
+          "complete": true,
+          "width": 640,
+          "height": 420
+        }
+      ],
+      "screenshot": "05-linked-390.png",
+      "sha256": "9845f208f1a1872ec25e325f41485ecf213249c8ffa22ffa2006e4f12ad902da",
+      "bodyText": "실제 공통 화면 · 가상 사례의 로컬 정적 렌더 · 촬영/클릭/실제 서버 시험과 구분\n\n입고 신청\n사진으로 입고 신청\n돌아가기\n입고 신청 연결됨\n2026.10.22\n이번 주 물품\n입고 내역 보기\n내 신청\n이번 주 물품\n입고 신청 연결됨 · 10.22",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "businessInteractionVerified": false,
+      "nativeHtmlDetailsToggleVerified": false
+    },
+    {
+      "file": "06-store-failure.html",
+      "state": "06-store-failure",
+      "width": 390,
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "height": 942
+      },
+      "images": [],
+      "screenshot": "06-store-failure-390.png",
+      "sha256": "4b1623ed9d53355a1726cf6bcb966eeca780a08eef93dea31897854b7457d9a4",
+      "bodyText": "실제 공통 화면 · 가상 사례의 로컬 정적 렌더 · 촬영/클릭/실제 서버 시험과 구분\n\n입고 신청\n사진으로 입고 신청\n돌아가기\n처리를 마치지 못했습니다. 다시 확인해 주세요.\n입고할 물품을 찍어 주세요\nJPG·PNG · 최대 5MB\n사진 촬영\n사진 선택\n이름 붙이기 선택\n가 입고 신청\n\n사진만 먼저 등록하고, 입고 정보는 나중에 입력하세요.\n\n다시 확인\n내 신청\n\n등록한 사진 신청이 여기에 모입니다.",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "businessInteractionVerified": false,
+      "nativeHtmlDetailsToggleVerified": false
+    },
+    {
+      "file": "01-empty.html",
+      "state": "01-empty",
+      "width": 1280,
+      "metrics": {
+        "width": 1280,
+        "scrollWidth": 1280,
+        "height": 900
+      },
+      "images": [],
+      "screenshot": "01-empty-1280.png",
+      "sha256": "ab8526c42b02b99eceec1ab6754c5b47bc5b0b8ebd8a94a6bc49309fe451ca72",
+      "bodyText": "실제 공통 화면 · 가상 사례의 로컬 정적 렌더 · 촬영/클릭/실제 서버 시험과 구분\n\n입고 신청\n사진으로 입고 신청\n돌아가기\n입고할 물품을 찍어 주세요\nJPG·PNG · 최대 5MB\n사진 촬영\n사진 선택\n이름 붙이기 선택\n가 입고 신청\n\n사진만 먼저 등록하고, 입고 정보는 나중에 입력하세요.\n\n직접 입력\n내 신청\n\n등록한 사진 신청이 여기에 모입니다.",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "businessInteractionVerified": false,
+      "nativeHtmlDetailsToggleVerified": true
+    },
+    {
+      "file": "02-selected.html",
+      "state": "02-selected",
+      "width": 1280,
+      "metrics": {
+        "width": 1280,
+        "scrollWidth": 1280,
+        "height": 900
+      },
+      "images": [
+        {
+          "complete": true,
+          "width": 640,
+          "height": 420
+        }
+      ],
+      "screenshot": "02-selected-1280.png",
+      "sha256": "f0f340902b41f7a7ea54830a6133ae1e5ae271bc7c51da83126fdda4d1aea06a",
+      "bodyText": "실제 공통 화면 · 가상 사례의 로컬 정적 렌더 · 촬영/클릭/실제 서버 시험과 구분\n\n입고 신청\n사진으로 입고 신청\n돌아가기\n사진을 확인하고 신청해 주세요.\n사진 촬영\n사진 선택\n이름 붙이기 선택\n가 입고 신청\n\n사진만 먼저 등록하고, 입고 정보는 나중에 입력하세요.\n\n직접 입력\n내 신청\n\n등록한 사진 신청이 여기에 모입니다.",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "businessInteractionVerified": false,
+      "nativeHtmlDetailsToggleVerified": false
+    },
+    {
+      "file": "03-saved.html",
+      "state": "03-saved",
+      "width": 1280,
+      "metrics": {
+        "width": 1280,
+        "scrollWidth": 1280,
+        "height": 900
+      },
+      "images": [
+        {
+          "complete": true,
+          "width": 640,
+          "height": 420
+        }
+      ],
+      "screenshot": "03-saved-1280.png",
+      "sha256": "ce99139524e0b00a928f948085ff6c3a7c16bf0c32cc4c9104020465d82f5b27",
+      "bodyText": "실제 공통 화면 · 가상 사례의 로컬 정적 렌더 · 촬영/클릭/실제 서버 시험과 구분\n\n입고 신청\n사진으로 입고 신청\n돌아가기\n가 입고 신청을 저장했습니다. 이름과 입고 정보는 나중에 입력해도 됩니다.\n가 입고 접수\n2026.10.22\n이름 없는 입고 신청\n이름\n저장\n입고 정보 입력\n\n이름과 입고 정보는 나중에 입력해도 됩니다.\n\n내 신청\n이름 없는 입고 신청\n정보 입력 대기 · 10.22",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "businessInteractionVerified": false,
+      "nativeHtmlDetailsToggleVerified": false
+    },
+    {
+      "file": "04-pending.html",
+      "state": "04-pending",
+      "width": 1280,
+      "metrics": {
+        "width": 1280,
+        "scrollWidth": 1280,
+        "height": 900
+      },
+      "images": [
+        {
+          "complete": true,
+          "width": 640,
+          "height": 420
+        }
+      ],
+      "screenshot": "04-pending-1280.png",
+      "sha256": "f986906f8fd6932cc151c789962f3abb75fbdae886a8a02345b9deb6577bab39",
+      "bodyText": "실제 공통 화면 · 가상 사례의 로컬 정적 렌더 · 촬영/클릭/실제 서버 시험과 구분\n\n입고 신청\n사진으로 입고 신청\n돌아가기\n접수 결과를 확인해 주세요. 다시 신청하지 마세요.\n사진 촬영\n사진 선택\n이름 붙이기 선택\n가 입고 신청\n\n사진만 먼저 등록하고, 입고 정보는 나중에 입력하세요.\n\n접수 결과 확인\n내 신청\n\n등록한 사진 신청이 여기에 모입니다.",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "businessInteractionVerified": false,
+      "nativeHtmlDetailsToggleVerified": false
+    },
+    {
+      "file": "05-linked.html",
+      "state": "05-linked",
+      "width": 1280,
+      "metrics": {
+        "width": 1280,
+        "scrollWidth": 1280,
+        "height": 900
+      },
+      "images": [
+        {
+          "complete": true,
+          "width": 640,
+          "height": 420
+        }
+      ],
+      "screenshot": "05-linked-1280.png",
+      "sha256": "937c77f59a1b92de6d004d5ce46956315dc24f40381283d0e0b58ab19a104f9a",
+      "bodyText": "실제 공통 화면 · 가상 사례의 로컬 정적 렌더 · 촬영/클릭/실제 서버 시험과 구분\n\n입고 신청\n사진으로 입고 신청\n돌아가기\n입고 신청 연결됨\n2026.10.22\n이번 주 물품\n입고 내역 보기\n내 신청\n이번 주 물품\n입고 신청 연결됨 · 10.22",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "businessInteractionVerified": false,
+      "nativeHtmlDetailsToggleVerified": false
+    },
+    {
+      "file": "06-store-failure.html",
+      "state": "06-store-failure",
+      "width": 1280,
+      "metrics": {
+        "width": 1280,
+        "scrollWidth": 1280,
+        "height": 900
+      },
+      "images": [],
+      "screenshot": "06-store-failure-1280.png",
+      "sha256": "57406da096d3eeed4a2b78ab6fe8e605cd71d99b8bb6576b78b54bd8236be65c",
+      "bodyText": "실제 공통 화면 · 가상 사례의 로컬 정적 렌더 · 촬영/클릭/실제 서버 시험과 구분\n\n입고 신청\n사진으로 입고 신청\n돌아가기\n처리를 마치지 못했습니다. 다시 확인해 주세요.\n입고할 물품을 찍어 주세요\nJPG·PNG · 최대 5MB\n사진 촬영\n사진 선택\n이름 붙이기 선택\n가 입고 신청\n\n사진만 먼저 등록하고, 입고 정보는 나중에 입력하세요.\n\n다시 확인\n내 신청\n\n등록한 사진 신청이 여기에 모입니다.",
+      "actualProductComponentSsr": true,
+      "syntheticInput": true,
+      "businessInteractionVerified": false,
+      "nativeHtmlDetailsToggleVerified": false
+    }
+  ]
+}

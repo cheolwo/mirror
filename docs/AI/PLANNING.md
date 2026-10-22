@@ -1,5 +1,74 @@
 # Mirror 기획 목차
 
+## 화물 3역할 업무 마감 재검토 r15 (2026-10-22)
+
+- [조사·재현·우선순위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-three-role-readiness.review.r15.md): `ReviewedWithFindings / ProductUnchanged`. 현재436개 집중 시험과 별도9개 가상 분기를 대조했다. 기본 접수/선결제, 미확정 결과·PC 대상 전환, 고객 운임/기사 보수, 수납/지급 표시, 분쟁/보류/관리자 인계를 먼저 닫은 뒤 APK·배포로 간다. 새 기능 활성화·실행 승인·제품 수정 완료를 뜻하지 않는다.
+
+## 월50만원 네이버 클라우드 단일 서버 운영안 r14 (2026-10-22)
+
+- [조사·비용·범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/naver-cloud-budget.r14.md): `ResearchCompleted / EstimatePrepared / ResourcesNotCreated`. VAT포함50만원, 한국 VPC g3 한 VM의 앱·MySQL/Mongo·선택 Ollama를 검토했다. 8vCPU16GB 후보는 명시 사용량·배정액으로 월약46.3만원, 31일 전부 시간제 약47.4만원이다. 실제 콘솔 견적·처리량/AI 지연은 미검증이며 자원을 만들지 않았다.
+
+
+## 역할 앱 서버 네이버 클라우드 배포 방향 r13 (2026-10-22)
+
+- [배포 방향](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/naver-cloud-role-hosting.r13.md): `DirectionSelected / MigrationPlanPrepared / DeploymentNotStarted`. 역할 앱 API는 NCP 한국 VPC Linux를 다음 배포 후보로 잡는다. 기존 Docker·MySQL/Mongo·GCS·FCM을 재사용하고, NCP 전용 설정·비밀파일/백업·HTTPS·실제 APK 연결을 순서대로 검증한다. 자원 생성·이전·운영 활성화는 실행하지 않았다.
+
+
+## 플랫폼 운영 요약→세부 내역 조정안 r12 (2026-10-22)
+
+- [조정안](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/platform-overview-drilldown.r12.md): `CompletedWave1LocalValidation / RemainingR12WorkPending`, r10·r11 후속. [첫 구현·검증](../Changes/2026-10-22-overview-drilldown-r12.md)은 화물 참여 세부·관리자 운송/지원 복귀를 연결했다. Task14,807통과·신규104사례, 실제 읽기 HTTP/공유 화면을 확인했다. 공개/본인/관리자와 누적/현재/기간 집계를 구분하고 기존 요약·목록·상세·복귀 계약을 재사용한다. 8역할 조사와 공통 집계/왕복 우선순위, 미구현 교육·후원 공개 경계를 포함한다.
+
+## 운영후원·활동 기여자 공개 r11 (2026-10-22)
+
+- [설계](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/operating-support-contributors.r11.md): `DesignRecorded / ImplementationNotStarted`, r10 후속. 후원 입금·실운영비·충당/잔액 공개와, 본인 동의에 따른 화주/기사 활동 소개·경험 공유를 분리한다. 완료·약속·문제 해결의 종합 기준은 선택됐고 순위식/기간/최소 표본은 미정이다.
+- 2026-10-22 후속으로 [운영비 재원 비율](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/operating-support-contributors.r11.md#운영비-재원-비율--2026-10-22-후속-구체화)을 구체화했다. 같은 실제 지출 중 후원금·운영자 직접 부담의 금액과 비율을 요약하고 월별 내역으로 연결한다. 근거가 없으면 미집계이며 화면·APK 반영은 아직 아니다.
+
+## 전체 누적 참여·이익 공유 홈 r10 (2026-10-22)
+
+- [사용자 승인 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/home-participation.r10.md) · [명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/home-participation.r10.work-order.json) · [결과](../Changes/2026-10-22-home-participation-r10.md). 전체 누적을 기본으로 현황→기존 역할 진입 순서를 적용한다. 금액 정본 미연결은 미집계로 표시하고 기록 집계와 지급·수령 확인은 구분한다.
+
+## 화물3역할·음식4역할 독립 관리 r9 (2026-10-22)
+
+- [계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/business-role-bundles.r9.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/business-role-bundles.r9.work-order.json) · [구현·실제 화면](../Changes/2026-10-22-business-role-bundles-r9.md): `CompletedLocalAndDeviceGroupingValidation / MapFindingsRemain`. 같은 앱·DB·관리자 자격으로 홈 화물3·음식4·생활/창고 진입, 관리자 업무별 조회·카드·지도/선택·오류·미확정 요청 ID·복귀를 분리했다.
+- Fast546·Task14,674통과/환경16미실행, 실제HTTP의 업무 필터/400/401/403·업무11테이블 불변, APK205 갱신 설치/설치SHA·384px 홈/관리자/사건복귀/로그아웃을 확인했다. 네이버401과 기존 음식 배차 지도 API의 기능 분류404는 후속이다. 신규 실물 업무·외부 운영·원장/정산 변경·commit/push 없음.
+
+## 관계 기사 네이버 지도·위치 보호 r8 (2026-10-22)
+
+- [계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/related-driver-naver-map.r8.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/related-driver-naver-map.r8.work-order.json) · [결과·실제 화면](../Changes/2026-10-22-related-driver-naver-map-r8.md): `CompletedLocalAndDeviceFallbackValidation / NaverAuthenticationPending`. 현재 배정 기사의 최근 좌표만 제공하며 통합앱 APK204의 기존 지도 host를 네이버 SDK로 연결했다. 실제 단말401로 지도 표시 검증은 남았다.
+- 집중90·호환81·Task14,631통과/환경16미실행. 다음은 콘솔 등록/키/API 확인 후 타일·핀·선·선택·만료의 실제 지도 검증이다. [동의한 기사 활동 구역 탐색·완료 인정과 칭호](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/preorder-discovery-recognition.r8.md)는 별도 설계이며 구현·권한 부여로 표시하지 않는다.
+
+## 단계 진행 알림 실제 휴대폰 r7 (2026-10-22)
+
+- [계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/workflow-progress-device.r7.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/workflow-progress-device.r7.work-order.json) · [결과·실제 화면](../Changes/2026-10-22-workflow-progress-device-r7.md): `CompletedDeviceSampleValidation / FullWorkflowAndHumanSoundPending`. APK203·실제 FCM7건/대표5단계·중복/지연 억제·cold 수신/클릭·로그아웃 정리를 확인했다. 사전검사14개 통과, 소리 청취는 사용자 확인 어려움으로 미확인. 신규 업무 원장 E2E·27단계/전문앱 전수·운영과 구분한다.
+
+## 업무 단계별 진행 알림 r6 (2026-10-22)
+
+- [승인 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/workflow-progress-notifications.r6.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/workflow-progress-notifications.r6.work-order.json) · [업무 트리·변경·검증](../Changes/2026-10-22-workflow-progress-notifications-r6.md): `CompletedLocalValidation / ExternalPushAndDevicePending`. 입고/음식/화물 27단계의 기존 Outbox 예약·관계자·기존 화면 이동을 연결한다. Fast536·Task14,588통과/환경16미실행, Android·Windows·웹·서버 소비 빌드 통과. 사진 준비·수령·정산·실지급·실제 푸시는 구분하며 운영 설정·APK 설치·commit/push는 실행하지 않았다.
+
+
+## 사진 먼저 가 입고 신청 r5 (2026-10-22)
+
+- [승인 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/photo-inbound-request.r5.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/photo-inbound-request.r5.work-order.json) · [결과·화면](../Changes/2026-10-22-photo-inbound-request-r5.md): `CompletedLocalValidation / DatabaseDeploymentAndNativeCameraPending`. 사진만 먼저 접수·나중에 이름/상세 보완·기존 정식 입고 한 건 연결을 구현했다. Fast203·Task14,468통과/환경16미실행, 실제 공통 화면6상태12렌더. 마지막 ARIA 표시는 소비 빌드/렌더로 구분해 검증했다. 실 DB·외부 저장소·HTTP·카메라·운영은 후속이다.
+
+## 일반 입고 원요청 결과 확인 r4 (2026-10-22)
+
+- [승인 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/inbound-submission-recovery.r4.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/inbound-submission-recovery.r4.work-order.json) · [결과·화면](../Changes/2026-10-22-inbound-submission-recovery-r4.md): `CompletedLocalValidation / DatabaseDeploymentAndNativeRestartPending`. 기존 원장·권한·동의를 유지하며 일반 입고의 응답 유실을 원요청 ID로 확인한다. Fast180·Task14,386통과/환경16미실행과 관계형 DB 경합·3사례6렌더를 확인했다. 구판·404·현장 입고는 분리하며 실제 DB 적용·단말 재실행·웹 프로세스 보존은 후속이다.
+
+## 재실행 후 미확정 업무 복원 r3 (2026-10-21)
+
+- [승인 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/durable-workflow-recovery.r3.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/durable-workflow-recovery.r3.work-order.json) · [결과·화면](../Changes/2026-10-21-durable-workflow-recovery-r3.md): `CompletedLocalValidation / NativeRestartAndServerLookupPending`. 상하차·일반 입고의 단말 보호 기록을 재사용하고 정본 조회 전 중복 제출을 막는다. 최종 Fast212·Task14,328통과/환경16미실행과 공통 컴포넌트5사례10렌더. 접수번호 없는 입고 조회 계약·웹 영속 저장·실제 단말 재실행은 후속이다.
+
+## OS 업무 단계·예외·복구 r2 (2026-10-21)
+
+- [승인 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/domain-workflow-recovery.r2.md) · [정상/예외 대응표](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/domain-workflow-recovery.matrix.r2.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/domain-workflow-recovery.r2.work-order.json) · [결과·화면](../Changes/2026-10-21-domain-workflow-recovery-r2.md): `CompletedLocalValidation / OtherOsAndDurableRecoveryPending`. 공통 실패 맥락과 화물/화주 조회·상하차 guard/완료 UI·입고 결과 확인을 연결했다. 최종 Fast286·Task14,260개 통과/환경16개 미실행과 가상6사례의 공통 컴포넌트 렌더를 확인했다. 전문 원장·사진·요청 수명·운영 비활성은 유지한다. VM 종료 후 미확정 복원·명령 멱등 결과 조회, 나머지 OS 개별 적용과 실제 기기/운영은 후속이다.
+
+## 역할 앱 오류 안내·업무 복귀 r1 (2026-10-21)
+
+- [승인·범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/role-error-recovery.r1.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/role-error-recovery.r1.work-order.json) · [결과·화면](../Changes/2026-10-21-role-error-recovery-r1.md): `CompletedLocalDeviceValidation / RemainingRoleFindings`. 역할10종 대표 오류·서버 설정 조사와 공통 안내 창·화주/기사 조회 복구 첫 적용을 마쳤다. PC8건 기대 응답·APK202두앱 설치/바이트·실제 조회 오류/복귀/연결 복구9PNG를 확인했다. 명령 미확정·필수 경고·입력 수명·운영 비활성 경계를 보존하며 다른 앱 개별 화면/endpoint·외부 통신은 후속이다.
+
+
+
+
 ## 운영자 관점 업무 흐름 검증 r66 (2026-10-16)
 
 - [검토·실행 결과](../ProjectOverview/operator-workflow-review-r66.md): 운영 주요 흐름의 기존 시험 고유 대상 749개·훈련 자체 검사 14개 통과, 격리 실제 HTTP 퀵 2건 완료. 픽업 후 일반 취소와 관리자 반복 Start 불일치를 재현했고 수락 후속 복구·모바일 사건 경로·관제 조회 실패·음식 사건 마감 연결을 우선 보완하도록 제안했다. 이번 제품 구현·기능 활성화·물리폰/실제 송금·commit/push는 없으며 r65 기간 정책은 그대로 질문 중이다.

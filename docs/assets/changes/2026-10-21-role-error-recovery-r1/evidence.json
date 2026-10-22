@@ -1,0 +1,552 @@
+{
+  "schema": "role-error-recovery-device-gallery.r1.v1",
+  "generatedAtUtc": "2026-10-21T12:36:12.312219+00:00",
+  "report": "../../../Changes/2026-10-21-role-error-recovery-r1.md",
+  "imageCount": 10,
+  "newPhysicalDeviceScreens": 9,
+  "previousReferenceScreens": 1,
+  "physicalDeviceScreenshots": true,
+  "syntheticBusinessData": true,
+  "businessCommandsRepeated": false,
+  "pixelBytesModified": false,
+  "installedAppEvidence": {
+    "file": "artifacts/local/role-error-recovery/20261021-r1/installed-app.json",
+    "sha256": "0b21f1e659eefa79b4fccd4ba1fd23190d3f49694bb4067e486f0deedf2f14ea",
+    "bytes": 1381
+  },
+  "captureContext": {
+    "file": "artifacts/local/role-error-recovery/20261021-r1/context.json",
+    "sha256": "4efbace50a3551dc7a1015488a79a9420ffb6d3ec3899e282d70f0a735b59646",
+    "bytes": 255
+  },
+  "captureManifest": {
+    "file": "artifacts/local/role-error-recovery/20261021-r1/screens/manifest.jsonl",
+    "sha256": "0addabfea5fcd1380dcc484ce0096250d5d701b1cf69136bb1d6e7adf2ae9df2",
+    "bytes": 5071
+  },
+  "sourceFingerprint": "d5b056d89c1abcfa2219399d5c68605cf26963412d2c2541109fee52a8a54bb9",
+  "contextBoundary": "referenceRequestId/referenceTransportId는 기존 완료 건의 참조입니다. 404 대상은 각 실제 URL에서 별도로 판독했습니다.",
+  "evidenceBoundary": "현재202 화면9장과 이전201 참고1장의 실제 기기 화면 자료입니다. 원 업무를 새로 수행하거나 모든 역할·외부통신·푸시·실금전을 검증한 자료가 아닙니다.",
+  "reviewStatus": "CapturedScreensOnly_RuntimeAssertionsAndHumanReviewAreSeparate",
+  "notes": [
+    "03-shipper-returned는 화주 홈 복귀를 보여 주며 기존 주황 입고 요약 경고는 이번 개별 UI 적용 범위 밖입니다.",
+    "연결 실패와 재조회 뒤 화면 바이트가 같아도 별도 관측 시각을 유지합니다. 서로 다른 영상/업무 결과로 합산하지 않습니다."
+  ],
+  "generator": {
+    "file": "artifacts/local/role-error-recovery/20261021-r1/make-gallery.py",
+    "sha256": "cf16d9d6c0c76f1bd7ef88a3e2c99211cdadcce619b894bef011804713e20871",
+    "bytes": 20730
+  },
+  "images": [
+    {
+      "label": "before-201-shipper-notfound",
+      "title": "변경 전",
+      "caption": "이전 APK201 참고 화면",
+      "phase": "before-reference",
+      "file": "00-before-201-shipper-notfound.png",
+      "sourceFile": "docs/assets/changes/2026-10-21-cargo-ui-exception-audit-r1/06-shipper-404-confirmed.png",
+      "sha256": "4f852c8bb0da6849ec2466fbfc2c76a235e27dfcaa5ed900183dce491940daa6",
+      "bytes": 191006,
+      "width": 1080,
+      "height": 2340,
+      "physicalDevice": true,
+      "appVersionCode": 201,
+      "observedAtUtc": "2026-10-21T11:39:57.159Z",
+      "subjectFromActualUrl": {
+        "kind": "deliberately-absent-request",
+        "actualRequestIdFromUrl": "00000000-0000-0000-0000-000000000001",
+        "referenceIsSubject": false,
+        "path": "/shipper/request/00000000-0000-0000-0000-000000000001"
+      },
+      "originalCaptureRecord": {
+        "title": "없는 화주 의뢰",
+        "description": "긴 서버 오류 원문이 표시됨",
+        "file": "06-shipper-404-confirmed.png",
+        "sha256": "4f852c8bb0da6849ec2466fbfc2c76a235e27dfcaa5ed900183dce491940daa6",
+        "observedAtUtc": "2026-10-21T11:39:57.159Z",
+        "package": "com.companyname.ssalddelapp",
+        "url": "https://0.0.0.1/shipper/request/00000000-0000-0000-0000-000000000001",
+        "physicalDevice": true,
+        "syntheticBusinessData": true,
+        "appVersionCode": 201,
+        "referenceCompletedTransportId": 9,
+        "subject": "deliberately-absent-id",
+        "rawCaptureManifest": "artifacts/local/cargo-ui-exceptions/20261021-r1/screens/manifest.jsonl"
+      },
+      "captureEvidence": {
+        "file": "docs/assets/changes/2026-10-21-cargo-ui-exception-audit-r1/evidence.json",
+        "sha256": "e1589fc9a034fe332591b60bf4290cbd2134168573a851ef9d893e5f6da1c006",
+        "bytes": 4071
+      },
+      "newCaptureThisRun": false,
+      "pixelBytesModified": false,
+      "copySha256Verified": true
+    },
+    {
+      "label": "01-shipper-notfound-dialog",
+      "title": "의뢰 없음",
+      "caption": "짧은 안내 창",
+      "phase": "after",
+      "file": "01-shipper-notfound-dialog.png",
+      "sourceFile": "artifacts/local/role-error-recovery/20261021-r1/screens/01-shipper-notfound-dialog.png",
+      "sha256": "75524fcd24d590e73d02f058e5798c4371eedebb6f9f7d4af0454c7ceb15e4b3",
+      "bytes": 131040,
+      "width": 1080,
+      "height": 2340,
+      "physicalDevice": true,
+      "appVersionCode": 202,
+      "observedAtUtc": "2026-10-21T12:33:00.322Z",
+      "subjectFromActualUrl": {
+        "kind": "deliberately-absent-request",
+        "actualRequestIdFromUrl": "00000000-0000-0000-0000-000000000001",
+        "referenceIsSubject": false,
+        "path": "/shipper/request/00000000-0000-0000-0000-000000000001"
+      },
+      "referenceCompletedRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+      "referenceCompletedTransportId": 9,
+      "originalCaptureRecord": {
+        "label": "01-shipper-notfound-dialog",
+        "file": "screens/01-shipper-notfound-dialog.png",
+        "observedAtUtc": "2026-10-21T12:33:00.322Z",
+        "physicalDevice": true,
+        "package": "com.companyname.ssalddelapp",
+        "url": "https://0.0.0.1/shipper/request/00000000-0000-0000-0000-000000000001",
+        "sha256": "75524fcd24d590e73d02f058e5798c4371eedebb6f9f7d4af0454c7ceb15e4b3",
+        "scenario": "role-error-recovery-existing-completed-transport",
+        "referenceRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "referenceTransportId": 9,
+        "syntheticBusinessData": true,
+        "businessCommandsRepeated": false,
+        "expectedAppVersion": 202
+      },
+      "captureManifest": {
+        "file": "artifacts/local/role-error-recovery/20261021-r1/screens/manifest.jsonl",
+        "sha256": "0addabfea5fcd1380dcc484ce0096250d5d701b1cf69136bb1d6e7adf2ae9df2",
+        "bytes": 5071
+      },
+      "pixelBytesModified": false,
+      "copySha256Verified": true
+    },
+    {
+      "label": "02-shipper-notfound-closed",
+      "title": "안내 닫기",
+      "caption": "현재 화면 유지",
+      "phase": "after",
+      "file": "02-shipper-notfound-closed.png",
+      "sourceFile": "artifacts/local/role-error-recovery/20261021-r1/screens/02-shipper-notfound-closed.png",
+      "sha256": "28e8f43a797eb82a761691747c122825b982c5d019713916a9969cb7239ae6da",
+      "bytes": 106153,
+      "width": 1080,
+      "height": 2340,
+      "physicalDevice": true,
+      "appVersionCode": 202,
+      "observedAtUtc": "2026-10-21T12:33:03.351Z",
+      "subjectFromActualUrl": {
+        "kind": "deliberately-absent-request",
+        "actualRequestIdFromUrl": "00000000-0000-0000-0000-000000000001",
+        "referenceIsSubject": false,
+        "path": "/shipper/request/00000000-0000-0000-0000-000000000001"
+      },
+      "referenceCompletedRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+      "referenceCompletedTransportId": 9,
+      "originalCaptureRecord": {
+        "label": "02-shipper-notfound-closed",
+        "file": "screens/02-shipper-notfound-closed.png",
+        "observedAtUtc": "2026-10-21T12:33:03.351Z",
+        "physicalDevice": true,
+        "package": "com.companyname.ssalddelapp",
+        "url": "https://0.0.0.1/shipper/request/00000000-0000-0000-0000-000000000001",
+        "sha256": "28e8f43a797eb82a761691747c122825b982c5d019713916a9969cb7239ae6da",
+        "scenario": "role-error-recovery-existing-completed-transport",
+        "referenceRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "referenceTransportId": 9,
+        "syntheticBusinessData": true,
+        "businessCommandsRepeated": false,
+        "expectedAppVersion": 202
+      },
+      "captureManifest": {
+        "file": "artifacts/local/role-error-recovery/20261021-r1/screens/manifest.jsonl",
+        "sha256": "0addabfea5fcd1380dcc484ce0096250d5d701b1cf69136bb1d6e7adf2ae9df2",
+        "bytes": 5071
+      },
+      "pixelBytesModified": false,
+      "copySha256Verified": true
+    },
+    {
+      "label": "03-shipper-returned",
+      "title": "업무 복귀",
+      "caption": "화주 홈 · 기존 입고 요약 경고 유지",
+      "phase": "after",
+      "file": "03-shipper-returned.png",
+      "sourceFile": "artifacts/local/role-error-recovery/20261021-r1/screens/03-shipper-returned.png",
+      "sha256": "4b8306d85bd7b35f8373e35d82684f39db0ce6d7ca0c3228a988fd8109b37476",
+      "bytes": 196686,
+      "width": 1080,
+      "height": 2340,
+      "physicalDevice": true,
+      "appVersionCode": 202,
+      "observedAtUtc": "2026-10-21T12:34:01.739Z",
+      "subjectFromActualUrl": {
+        "kind": "shipper-workspace",
+        "referenceIsSubject": false,
+        "path": "/shipper"
+      },
+      "referenceCompletedRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+      "referenceCompletedTransportId": 9,
+      "originalCaptureRecord": {
+        "label": "03-shipper-returned",
+        "file": "screens/03-shipper-returned.png",
+        "observedAtUtc": "2026-10-21T12:34:01.739Z",
+        "physicalDevice": true,
+        "package": "com.companyname.ssalddelapp",
+        "url": "https://0.0.0.1/shipper",
+        "sha256": "4b8306d85bd7b35f8373e35d82684f39db0ce6d7ca0c3228a988fd8109b37476",
+        "scenario": "role-error-recovery-existing-completed-transport",
+        "referenceRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "referenceTransportId": 9,
+        "syntheticBusinessData": true,
+        "businessCommandsRepeated": false,
+        "expectedAppVersion": 202
+      },
+      "captureManifest": {
+        "file": "artifacts/local/role-error-recovery/20261021-r1/screens/manifest.jsonl",
+        "sha256": "0addabfea5fcd1380dcc484ce0096250d5d701b1cf69136bb1d6e7adf2ae9df2",
+        "bytes": 5071
+      },
+      "pixelBytesModified": false,
+      "copySha256Verified": true
+    },
+    {
+      "label": "04-shipper-current-order",
+      "title": "정상 의뢰",
+      "caption": "기존 완료 건 조회",
+      "phase": "after",
+      "file": "04-shipper-current-order.png",
+      "sourceFile": "artifacts/local/role-error-recovery/20261021-r1/screens/04-shipper-current-order.png",
+      "sha256": "ffbfaf4b27326d0f1b9e8fc0ce7814c27700cf73043390ec500df5fd6c45da12",
+      "bytes": 136354,
+      "width": 1080,
+      "height": 2340,
+      "physicalDevice": true,
+      "appVersionCode": 202,
+      "observedAtUtc": "2026-10-21T12:34:04.678Z",
+      "subjectFromActualUrl": {
+        "kind": "existing-completed-request",
+        "actualRequestIdFromUrl": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "referenceIsSubject": true,
+        "path": "/shipper/request/d828af66-2803-4c14-2415-a56ddbb25fcc"
+      },
+      "referenceCompletedRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+      "referenceCompletedTransportId": 9,
+      "originalCaptureRecord": {
+        "label": "04-shipper-current-order",
+        "file": "screens/04-shipper-current-order.png",
+        "observedAtUtc": "2026-10-21T12:34:04.678Z",
+        "physicalDevice": true,
+        "package": "com.companyname.ssalddelapp",
+        "url": "https://0.0.0.1/shipper/request/d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "sha256": "ffbfaf4b27326d0f1b9e8fc0ce7814c27700cf73043390ec500df5fd6c45da12",
+        "scenario": "role-error-recovery-existing-completed-transport",
+        "referenceRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "referenceTransportId": 9,
+        "syntheticBusinessData": true,
+        "businessCommandsRepeated": false,
+        "expectedAppVersion": 202
+      },
+      "captureManifest": {
+        "file": "artifacts/local/role-error-recovery/20261021-r1/screens/manifest.jsonl",
+        "sha256": "0addabfea5fcd1380dcc484ce0096250d5d701b1cf69136bb1d6e7adf2ae9df2",
+        "bytes": 5071
+      },
+      "pixelBytesModified": false,
+      "copySha256Verified": true
+    },
+    {
+      "label": "05-shipper-connection-dialog",
+      "title": "연결 끊김",
+      "caption": "연결 확인 안내",
+      "phase": "after",
+      "file": "05-shipper-connection-dialog.png",
+      "sourceFile": "artifacts/local/role-error-recovery/20261021-r1/screens/05-shipper-connection-dialog.png",
+      "sha256": "4cded2a782e08b1766e3ac86016fb6feb7a7a99be9a884de043cf6628bc03734",
+      "bytes": 131977,
+      "width": 1080,
+      "height": 2340,
+      "physicalDevice": true,
+      "appVersionCode": 202,
+      "observedAtUtc": "2026-10-21T12:34:18.886Z",
+      "subjectFromActualUrl": {
+        "kind": "existing-completed-request",
+        "actualRequestIdFromUrl": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "referenceIsSubject": true,
+        "path": "/shipper/request/d828af66-2803-4c14-2415-a56ddbb25fcc"
+      },
+      "referenceCompletedRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+      "referenceCompletedTransportId": 9,
+      "originalCaptureRecord": {
+        "label": "05-shipper-connection-dialog",
+        "file": "screens/05-shipper-connection-dialog.png",
+        "observedAtUtc": "2026-10-21T12:34:18.886Z",
+        "physicalDevice": true,
+        "package": "com.companyname.ssalddelapp",
+        "url": "https://0.0.0.1/shipper/request/d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "sha256": "4cded2a782e08b1766e3ac86016fb6feb7a7a99be9a884de043cf6628bc03734",
+        "scenario": "role-error-recovery-existing-completed-transport",
+        "referenceRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "referenceTransportId": 9,
+        "syntheticBusinessData": true,
+        "businessCommandsRepeated": false,
+        "expectedAppVersion": 202
+      },
+      "captureManifest": {
+        "file": "artifacts/local/role-error-recovery/20261021-r1/screens/manifest.jsonl",
+        "sha256": "0addabfea5fcd1380dcc484ce0096250d5d701b1cf69136bb1d6e7adf2ae9df2",
+        "bytes": 5071
+      },
+      "pixelBytesModified": false,
+      "copySha256Verified": true
+    },
+    {
+      "label": "06-shipper-retry-dialog",
+      "title": "다시 조회",
+      "caption": "연결 확인 안내",
+      "phase": "after",
+      "file": "06-shipper-retry-dialog.png",
+      "sourceFile": "artifacts/local/role-error-recovery/20261021-r1/screens/06-shipper-retry-dialog.png",
+      "sha256": "4cded2a782e08b1766e3ac86016fb6feb7a7a99be9a884de043cf6628bc03734",
+      "bytes": 131977,
+      "width": 1080,
+      "height": 2340,
+      "physicalDevice": true,
+      "appVersionCode": 202,
+      "observedAtUtc": "2026-10-21T12:34:21.087Z",
+      "subjectFromActualUrl": {
+        "kind": "existing-completed-request",
+        "actualRequestIdFromUrl": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "referenceIsSubject": true,
+        "path": "/shipper/request/d828af66-2803-4c14-2415-a56ddbb25fcc"
+      },
+      "referenceCompletedRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+      "referenceCompletedTransportId": 9,
+      "originalCaptureRecord": {
+        "label": "06-shipper-retry-dialog",
+        "file": "screens/06-shipper-retry-dialog.png",
+        "observedAtUtc": "2026-10-21T12:34:21.087Z",
+        "physicalDevice": true,
+        "package": "com.companyname.ssalddelapp",
+        "url": "https://0.0.0.1/shipper/request/d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "sha256": "4cded2a782e08b1766e3ac86016fb6feb7a7a99be9a884de043cf6628bc03734",
+        "scenario": "role-error-recovery-existing-completed-transport",
+        "referenceRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "referenceTransportId": 9,
+        "syntheticBusinessData": true,
+        "businessCommandsRepeated": false,
+        "expectedAppVersion": 202
+      },
+      "captureManifest": {
+        "file": "artifacts/local/role-error-recovery/20261021-r1/screens/manifest.jsonl",
+        "sha256": "0addabfea5fcd1380dcc484ce0096250d5d701b1cf69136bb1d6e7adf2ae9df2",
+        "bytes": 5071
+      },
+      "pixelBytesModified": false,
+      "copySha256Verified": true
+    },
+    {
+      "label": "07-shipper-auto-recovered",
+      "title": "연결 복구",
+      "caption": "기존 의뢰 재조회",
+      "phase": "after",
+      "file": "07-shipper-auto-recovered.png",
+      "sourceFile": "artifacts/local/role-error-recovery/20261021-r1/screens/07-shipper-auto-recovered.png",
+      "sha256": "9585713d81de41b37e9f37f0ef58cf45398cafa6b58908ff027895599b43f7e5",
+      "bytes": 136216,
+      "width": 1080,
+      "height": 2340,
+      "physicalDevice": true,
+      "appVersionCode": 202,
+      "observedAtUtc": "2026-10-21T12:34:49.387Z",
+      "subjectFromActualUrl": {
+        "kind": "existing-completed-request",
+        "actualRequestIdFromUrl": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "referenceIsSubject": true,
+        "path": "/shipper/request/d828af66-2803-4c14-2415-a56ddbb25fcc"
+      },
+      "referenceCompletedRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+      "referenceCompletedTransportId": 9,
+      "originalCaptureRecord": {
+        "label": "07-shipper-auto-recovered",
+        "file": "screens/07-shipper-auto-recovered.png",
+        "observedAtUtc": "2026-10-21T12:34:49.387Z",
+        "physicalDevice": true,
+        "package": "com.companyname.ssalddelapp",
+        "url": "https://0.0.0.1/shipper/request/d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "sha256": "9585713d81de41b37e9f37f0ef58cf45398cafa6b58908ff027895599b43f7e5",
+        "scenario": "role-error-recovery-existing-completed-transport",
+        "referenceRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "referenceTransportId": 9,
+        "syntheticBusinessData": true,
+        "businessCommandsRepeated": false,
+        "expectedAppVersion": 202
+      },
+      "captureManifest": {
+        "file": "artifacts/local/role-error-recovery/20261021-r1/screens/manifest.jsonl",
+        "sha256": "0addabfea5fcd1380dcc484ce0096250d5d701b1cf69136bb1d6e7adf2ae9df2",
+        "bytes": 5071
+      },
+      "pixelBytesModified": false,
+      "copySha256Verified": true
+    },
+    {
+      "label": "08-driver-notfound-dialog",
+      "title": "운송 없음",
+      "caption": "기사 안내 창",
+      "phase": "after",
+      "file": "08-driver-notfound-dialog.png",
+      "sourceFile": "artifacts/local/role-error-recovery/20261021-r1/screens/08-driver-notfound-dialog.png",
+      "sha256": "433b4996ff735c1944889ee34a664cd6833739eead97b40d1f2380d6f1924aac",
+      "bytes": 127952,
+      "width": 1080,
+      "height": 2340,
+      "physicalDevice": true,
+      "appVersionCode": 202,
+      "observedAtUtc": "2026-10-21T12:35:21.151Z",
+      "subjectFromActualUrl": {
+        "kind": "deliberately-absent-transport",
+        "actualTransportIdFromUrl": "9223372036854770000",
+        "referenceIsSubject": false,
+        "path": "/driver/transports/9223372036854770000/pickup"
+      },
+      "referenceCompletedRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+      "referenceCompletedTransportId": 9,
+      "originalCaptureRecord": {
+        "label": "08-driver-notfound-dialog",
+        "file": "screens/08-driver-notfound-dialog.png",
+        "observedAtUtc": "2026-10-21T12:35:21.151Z",
+        "physicalDevice": true,
+        "package": "kr.hongdal.driver",
+        "url": "https://0.0.0.1/driver/transports/9223372036854770000/pickup",
+        "sha256": "433b4996ff735c1944889ee34a664cd6833739eead97b40d1f2380d6f1924aac",
+        "scenario": "role-error-recovery-existing-completed-transport",
+        "referenceRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "referenceTransportId": 9,
+        "syntheticBusinessData": true,
+        "businessCommandsRepeated": false,
+        "expectedAppVersion": 202
+      },
+      "captureManifest": {
+        "file": "artifacts/local/role-error-recovery/20261021-r1/screens/manifest.jsonl",
+        "sha256": "0addabfea5fcd1380dcc484ce0096250d5d701b1cf69136bb1d6e7adf2ae9df2",
+        "bytes": 5071
+      },
+      "pixelBytesModified": false,
+      "copySha256Verified": true
+    },
+    {
+      "label": "09-driver-returned",
+      "title": "업무 복귀",
+      "caption": "기사 현재 운송",
+      "phase": "after",
+      "file": "09-driver-returned.png",
+      "sourceFile": "artifacts/local/role-error-recovery/20261021-r1/screens/09-driver-returned.png",
+      "sha256": "632d69d720a704208356edeac45effa5611bcd85bb14a3dfe4fe595a890597b0",
+      "bytes": 88376,
+      "width": 1080,
+      "height": 2340,
+      "physicalDevice": true,
+      "appVersionCode": 202,
+      "observedAtUtc": "2026-10-21T12:35:24.331Z",
+      "subjectFromActualUrl": {
+        "kind": "driver-workspace",
+        "referenceIsSubject": false,
+        "path": "/driver/transports/current"
+      },
+      "referenceCompletedRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+      "referenceCompletedTransportId": 9,
+      "originalCaptureRecord": {
+        "label": "09-driver-returned",
+        "file": "screens/09-driver-returned.png",
+        "observedAtUtc": "2026-10-21T12:35:24.331Z",
+        "physicalDevice": true,
+        "package": "kr.hongdal.driver",
+        "url": "https://0.0.0.1/driver/transports/current",
+        "sha256": "632d69d720a704208356edeac45effa5611bcd85bb14a3dfe4fe595a890597b0",
+        "scenario": "role-error-recovery-existing-completed-transport",
+        "referenceRequestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+        "referenceTransportId": 9,
+        "syntheticBusinessData": true,
+        "businessCommandsRepeated": false,
+        "expectedAppVersion": 202
+      },
+      "captureManifest": {
+        "file": "artifacts/local/role-error-recovery/20261021-r1/screens/manifest.jsonl",
+        "sha256": "0addabfea5fcd1380dcc484ce0096250d5d701b1cf69136bb1d6e7adf2ae9df2",
+        "bytes": 5071
+      },
+      "pixelBytesModified": false,
+      "copySha256Verified": true
+    }
+  ],
+  "gallery": {
+    "file": "index.html",
+    "sha256": "42b00277ef3832716377255be9b3b1e7fba139b29785c0f35cb77945f3ec804d",
+    "externalScripts": false,
+    "externalNetworkReferences": false,
+    "responsiveViewportsToVerify": [
+      390,
+      1280
+    ],
+    "renderVerified": true,
+    "renderVerifiedAtUtc": "2026-10-21T12:37:59.793739+00:00",
+    "verificationMethod": "Actual Chrome headless file:// at 1280 and 390px; separate visual inspection",
+    "qaResult": {
+      "file": "artifacts/local/role-error-recovery/20261021-r1/gallery-qa/result.json",
+      "sha256": "653d78b1f43f49ebbf0d711451f0b1435112ea0569091c8c9ea312bf9790b84e",
+      "bytes": 10635
+    },
+    "beforeQaEvidence": {
+      "file": "artifacts/local/role-error-recovery/20261021-r1/gallery-qa/evidence-before-qa.json",
+      "sha256": "09b251e9f42b2bb1e4045774d020803d0414c8f476fa3a0e8a770e0195a46fdd",
+      "bytes": 22110
+    },
+    "visualReview": {
+      "file": "artifacts/local/role-error-recovery/20261021-r1/gallery-qa/visual-review.json",
+      "sha256": "e4efe9f1ad004c7691dd1f71924b7647e4e057466052998fa6f2404f5f1b57c5",
+      "bytes": 2036
+    },
+    "viewports": [
+      {
+        "width": 1280,
+        "all10ImagesLoaded": true,
+        "horizontalOverflow": false,
+        "screenshot": {
+          "file": "artifacts/local/role-error-recovery/20261021-r1/gallery-qa/gallery-1280px.png",
+          "sha256": "3a7c65de7aca2c7726afe663edf5e19424b5e5f9970eff7f16f4d1eb26872a17",
+          "bytes": 581564
+        },
+        "comparisonScreenshot": {
+          "file": "artifacts/local/role-error-recovery/20261021-r1/gallery-qa/comparison-1280px.png",
+          "sha256": "37489b2aa0caba98661d6dfc2fcb1f4517c14b444a5de8474ff33f2215c57953",
+          "bytes": 142286
+        }
+      },
+      {
+        "width": 390,
+        "all10ImagesLoaded": true,
+        "horizontalOverflow": false,
+        "screenshot": {
+          "file": "artifacts/local/role-error-recovery/20261021-r1/gallery-qa/gallery-390px.png",
+          "sha256": "f6aa2bb66f1d48395def7d435da1ea68067f4b4da01850bea0898936f6ef7b51",
+          "bytes": 566404
+        },
+        "comparisonScreenshot": {
+          "file": "artifacts/local/role-error-recovery/20261021-r1/gallery-qa/comparison-390px.png",
+          "sha256": "3a2f31b015e5872518018db26aff8a17bbed362b7afe30a43148cfca1175536c",
+          "bytes": 129225
+        }
+      }
+    ],
+    "consoleOrPageErrors": 0,
+    "externalRequests": 0,
+    "sourceScreenshotHashesUnchanged": true
+  }
+}

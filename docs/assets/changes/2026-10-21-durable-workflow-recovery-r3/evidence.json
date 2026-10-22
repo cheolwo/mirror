@@ -1,0 +1,250 @@
+{
+  "kind": "actual-product-component-static-render",
+  "syntheticInput": true,
+  "deviceVerified": false,
+  "interactionVerified": false,
+  "screens": [
+    {
+      "file": "01-pickup-protected-record.html",
+      "width": 390,
+      "bodyText": "실제 공통 컴포넌트의 로컬 정적 렌더 · 가상 업무 사례\n휴대폰·실제 요청·버튼 동작 검증과 구분\n\n상차 요청 확인 필요\n\n이전 요청의 확인 기록을 읽거나 저장하지 못했습니다. 같은 업무를 다시 확인해 주세요.\n\n닫기\n다시 확인",
+      "buttons": [
+        "닫기",
+        "다시 확인"
+      ],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390
+      },
+      "bounds": {
+        "x": 32,
+        "y": 350.703125,
+        "width": 326,
+        "height": 198.59375
+      },
+      "screenshot": "01-pickup-protected-record-390.png",
+      "sha256": "be2c05fe9ac32a4a2b7a068e2ba67577cb34d79f6cb8ca29a4a3d7930a78aa35",
+      "actualProductSsr": true,
+      "syntheticInput": true,
+      "interactionVerified": false
+    },
+    {
+      "file": "02-dropoff-cleanup.html",
+      "width": 390,
+      "bodyText": "실제 공통 컴포넌트의 로컬 정적 렌더 · 가상 업무 사례\n휴대폰·실제 요청·버튼 동작 검증과 구분\n\n하차 완료 · 확인 기록 정리 필요\n\n완료는 확인됐습니다. 다시 완료하지 말고 확인 기록 정리를 다시 진행해 주세요.\n\n닫기\n다시 확인",
+      "buttons": [
+        "닫기",
+        "다시 확인"
+      ],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390
+      },
+      "bounds": {
+        "x": 32,
+        "y": 362.703125,
+        "width": 326,
+        "height": 174.59375
+      },
+      "screenshot": "02-dropoff-cleanup-390.png",
+      "sha256": "cf19056fd62c4407c7ea6c40b32e77f3588c1b32183e292e1d7652c4aee4b6f5",
+      "actualProductSsr": true,
+      "syntheticInput": true,
+      "interactionVerified": false
+    },
+    {
+      "file": "03-inbound-pending.html",
+      "width": 390,
+      "bodyText": "실제 공통 컴포넌트의 로컬 정적 렌더 · 가상 업무 사례\n휴대폰·실제 요청·버튼 동작 검증과 구분\n\n입고 결과 확인 필요\n\n처리 결과를 아직 확인하지 못했습니다. 다시 제출하지 말고 같은 업무의 결과를 확인해 주세요.\n\n닫기\n결과 확인",
+      "buttons": [
+        "닫기",
+        "결과 확인"
+      ],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390
+      },
+      "bounds": {
+        "x": 32,
+        "y": 350.703125,
+        "width": 326,
+        "height": 198.59375
+      },
+      "screenshot": "03-inbound-pending-390.png",
+      "sha256": "e2b24e82edc629199e013882acbf993024518ad8974dee9c4063c9f96229b6e1",
+      "actualProductSsr": true,
+      "syntheticInput": true,
+      "interactionVerified": false
+    },
+    {
+      "file": "04-inbound-completed.html",
+      "width": 390,
+      "bodyText": "실제 공통 컴포넌트의 로컬 정적 렌더 · 가상 업무 사례\n휴대폰·실제 요청·버튼 동작 검증과 구분\n\n입고 완료 · 내역 확인 필요\n\n입고 완료 처리는 끝났습니다. 다시 완료하지 말고 처리된 내역을 확인해 주세요.\n\n닫기\n업무로 돌아가기\n내역 확인",
+      "buttons": [
+        "닫기",
+        "업무로 돌아가기",
+        "내역 확인"
+      ],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390
+      },
+      "bounds": {
+        "x": 32,
+        "y": 362.703125,
+        "width": 326,
+        "height": 174.59375
+      },
+      "screenshot": "04-inbound-completed-390.png",
+      "sha256": "456e4cd53dfe116af781e9157a57ddc873dbbf6ab3e28e046dd818afd8a644b5",
+      "actualProductSsr": true,
+      "syntheticInput": true,
+      "interactionVerified": false
+    },
+    {
+      "file": "05-pickup-not-submitted.html",
+      "width": 390,
+      "bodyText": "실제 공통 컴포넌트의 로컬 정적 렌더 · 가상 업무 사례\n휴대폰·실제 요청·버튼 동작 검증과 구분\n\n상차 준비 확인 필요\n\n완료 요청을 보내지 않았습니다. 사진과 확인 항목을 점검한 뒤 다시 진행해 주세요.\n\n닫기\n업무로 돌아가기",
+      "buttons": [
+        "닫기",
+        "업무로 돌아가기"
+      ],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390
+      },
+      "bounds": {
+        "x": 32,
+        "y": 362.703125,
+        "width": 326,
+        "height": 174.59375
+      },
+      "screenshot": "05-pickup-not-submitted-390.png",
+      "sha256": "d0fbb7ab0fb04eb049f55d17d2412329b8ac408ed9bda9d6f2a34ae988a0bfc4",
+      "actualProductSsr": true,
+      "syntheticInput": true,
+      "interactionVerified": false
+    },
+    {
+      "file": "01-pickup-protected-record.html",
+      "width": 1280,
+      "bodyText": "실제 공통 컴포넌트의 로컬 정적 렌더 · 가상 업무 사례\n휴대폰·실제 요청·버튼 동작 검증과 구분\n\n상차 요청 확인 필요\n\n이전 요청의 확인 기록을 읽거나 저장하지 못했습니다. 같은 업무를 다시 확인해 주세요.\n\n닫기\n다시 확인",
+      "buttons": [
+        "닫기",
+        "다시 확인"
+      ],
+      "metrics": {
+        "width": 1280,
+        "scrollWidth": 1280
+      },
+      "bounds": {
+        "x": 418,
+        "y": 362.703125,
+        "width": 444,
+        "height": 174.59375
+      },
+      "screenshot": "01-pickup-protected-record-1280.png",
+      "sha256": "0dc65ba6f0cf509edd7f962202ed1983dfef232e82e989a9bad1e9278da631ab",
+      "actualProductSsr": true,
+      "syntheticInput": true,
+      "interactionVerified": false
+    },
+    {
+      "file": "02-dropoff-cleanup.html",
+      "width": 1280,
+      "bodyText": "실제 공통 컴포넌트의 로컬 정적 렌더 · 가상 업무 사례\n휴대폰·실제 요청·버튼 동작 검증과 구분\n\n하차 완료 · 확인 기록 정리 필요\n\n완료는 확인됐습니다. 다시 완료하지 말고 확인 기록 정리를 다시 진행해 주세요.\n\n닫기\n다시 확인",
+      "buttons": [
+        "닫기",
+        "다시 확인"
+      ],
+      "metrics": {
+        "width": 1280,
+        "scrollWidth": 1280
+      },
+      "bounds": {
+        "x": 499.94390869140625,
+        "y": 394.92584228515625,
+        "width": 280.11224365234375,
+        "height": 110.14828491210938
+      },
+      "screenshot": "02-dropoff-cleanup-1280.png",
+      "sha256": "0e57c639cd170d5524972b6d5e92cf139b985ab96961ce87e75e9617da8421e5",
+      "actualProductSsr": true,
+      "syntheticInput": true,
+      "interactionVerified": false
+    },
+    {
+      "file": "03-inbound-pending.html",
+      "width": 1280,
+      "bodyText": "실제 공통 컴포넌트의 로컬 정적 렌더 · 가상 업무 사례\n휴대폰·실제 요청·버튼 동작 검증과 구분\n\n입고 결과 확인 필요\n\n처리 결과를 아직 확인하지 못했습니다. 다시 제출하지 말고 같은 업무의 결과를 확인해 주세요.\n\n닫기\n결과 확인",
+      "buttons": [
+        "닫기",
+        "결과 확인"
+      ],
+      "metrics": {
+        "width": 1280,
+        "scrollWidth": 1280
+      },
+      "bounds": {
+        "x": 500.8564453125,
+        "y": 395.2846984863281,
+        "width": 278.287109375,
+        "height": 109.43060302734375
+      },
+      "screenshot": "03-inbound-pending-1280.png",
+      "sha256": "61f806ec80170c26adb3e62fbf22d06963c7b29f31e56b0e1e515e22a85eb70d",
+      "actualProductSsr": true,
+      "syntheticInput": true,
+      "interactionVerified": false
+    },
+    {
+      "file": "04-inbound-completed.html",
+      "width": 1280,
+      "bodyText": "실제 공통 컴포넌트의 로컬 정적 렌더 · 가상 업무 사례\n휴대폰·실제 요청·버튼 동작 검증과 구분\n\n입고 완료 · 내역 확인 필요\n\n입고 완료 처리는 끝났습니다. 다시 완료하지 말고 처리된 내역을 확인해 주세요.\n\n닫기\n업무로 돌아가기\n내역 확인",
+      "buttons": [
+        "닫기",
+        "업무로 돌아가기",
+        "내역 확인"
+      ],
+      "metrics": {
+        "width": 1280,
+        "scrollWidth": 1280
+      },
+      "bounds": {
+        "x": 418,
+        "y": 362.703125,
+        "width": 444,
+        "height": 174.59375
+      },
+      "screenshot": "04-inbound-completed-1280.png",
+      "sha256": "d979eccf608f2cc21f33dd3cf257856b8ebdb050d4a6019fa2e9ae9bd98561b2",
+      "actualProductSsr": true,
+      "syntheticInput": true,
+      "interactionVerified": false
+    },
+    {
+      "file": "05-pickup-not-submitted.html",
+      "width": 1280,
+      "bodyText": "실제 공통 컴포넌트의 로컬 정적 렌더 · 가상 업무 사례\n휴대폰·실제 요청·버튼 동작 검증과 구분\n\n상차 준비 확인 필요\n\n완료 요청을 보내지 않았습니다. 사진과 확인 항목을 점검한 뒤 다시 진행해 주세요.\n\n닫기\n업무로 돌아가기",
+      "buttons": [
+        "닫기",
+        "업무로 돌아가기"
+      ],
+      "metrics": {
+        "width": 1280,
+        "scrollWidth": 1280
+      },
+      "bounds": {
+        "x": 418,
+        "y": 362.703125,
+        "width": 444,
+        "height": 174.59375
+      },
+      "screenshot": "05-pickup-not-submitted-1280.png",
+      "sha256": "6fe32c1795587753a57f0cfefc312cf5fcd2cc6fb866de953af56e455ca142ef",
+      "actualProductSsr": true,
+      "syntheticInput": true,
+      "interactionVerified": false
+    }
+  ]
+}

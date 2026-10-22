@@ -1,5 +1,17 @@
 # Ssalddel AI Shared Decisions
 
+## 2026-10-22 역할 앱 서버의 다음 배포 후보는 네이버 클라우드로 잡는다
+
+상태: `AcceptedDirection / DeploymentNotStarted`. 사용자 선호에 따라 [역할 앱 서버 배포 방향 r13](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/naver-cloud-role-hosting.r13.md)은 NCP 한국 VPC Linux를 우선 검토한다. Maps·서버·사진·FCM·AI를 별도 책임으로 유지하고 기존 컨테이너/전문 원장·GCS를 재사용한다. 기존 Azure 리소스·Unity 전용 배포·영상 저장소를 자동 이전/삭제하는 결정이 아니며, 유료 자원 생성·비밀값 변경·데이터 이전·운영 활성화는 아직 실행하지 않았다. 기존 운영/시험 경계와 실제 비용 확인·백업 복구·기기 통신 검증을 거친다.
+
+
+## 2026-10-22 홈은 전체 누적 참여와 이익 공유를 먼저 보여준다
+
+상태: Accepted / CompletedLocalValidation / FinancialAggregateAndOtherBusinessCountsPending. [r10 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/home-participation.r10.md)에 따라 현황을 역할 진입보다 먼저 배치한다. 확정 금액과 실제 지급액의 공개 집계 근거가 없으면 미집계다. 화물 완료 참여는 하차 완료 기록·실재 계정 기준이며 가입자/온라인 수·상호 수령·정산과 다르다. 관리자 대리 접수자를 화주로 대체하지 않으며 역할 수를 전체 인원으로 합산하지 않는다.
+
+
+
+
 ## 2026-10-09 일반 회원의 선택 배송 참여와 수수료 없는 제안
 
 상태: `Implemented / LocalValidated / DeviceAndOperationalDeferred`. 사용자 선택에 따라 [로컬 검증·APK](../Changes/2026-10-09-neighborhood-member-delivery-r43.md)까지 완료했다. Firebase 실제 설정·푸시 수신·단말 설치·Azure·운영 검증은 보류한다.
@@ -72,6 +84,11 @@
 사용자 요청에 따라 [스토리 영감과 플레이 진행 분리](../Architecture/스토리영감과플레이진행분리.md) `story-inspiration.r1`을 공통 기준으로 채택했으나, 2026-09-07부터 신규 역경 스토리 공부·저작 순서는 `hexagram-line-study.r1`이 대체한다. 자유 이야기 씨앗 보존, 실제 플레이 순서와 저작 순서의 분리, 기존 PLAN·HEX·API·저장 식별자와 승인 사건의 호환 경계는 계속 유효하다.
 
 > GPT Chat과 Codex가 공통으로 따라야 하는 장기 결정을 기록한다. 현재 진행 상황은 [CURRENT_WORK.md](CURRENT_WORK.md)에 둔다. 기존 결정을 바꿀 때는 원문을 삭제하지 않고 상태를 `Superseded`로 바꾼 뒤 대체 결정 ID를 연결한다.
+## 2026-10-22 화물3역할·음식4역할은 같은 앱 안에서 독립 운영 문맥으로 묶는다
+
+상태: `Accepted / ImplementedLocally / OperationalDisabled`. 사용자는 화주·화물기사·관리자의 화물 묶음과 주문자·음식점·음식기사·관리자의 음식 묶음을 각각 독립 관리하고 추후 병합을 검토하도록 했다. [r9 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/business-role-bundles.r9.md)과 [구현·검증](../Changes/2026-10-22-business-role-bundles-r9.md)을 따른다. 기존 앱·서버·DB·전문 원장과 operator 권한을 재사용하며 홈 한 화면의 두 그룹과 별도 생활/창고 진입을 유지한다. 관리자 업무 query·조회·선택·지도·오류·미확정 요청·복귀를 분리하되 새 관리자 자격이나 혼합 배차·원장 병합을 만들지 않는다. 구판 operator URL은 음식 기본으로 호환한다. 실제 운영·지도 인증·음식 지도 API분류·신규 전체 여정 검증은 별도다.
+
+
 
 ## 상태 코드
 

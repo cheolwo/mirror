@@ -2,6 +2,12 @@
 
 2026-10-06 r25. [페이지 원칙](../../Architecture/WholeRoadmapPagePrinciple.md), [시각 기준](../../Architecture/RoleAppVisualDesignStandard.md)을 따르는 공통 화면이다. 법령·운영 준비·보존·신원 확인 요건은 [통신판매 중개와 개인정보 보호](../../Architecture/CommerceIntermediaryPrivacy.md)에서 관리한다.
 
+## 2026-10-22 화주 의뢰의 신고 진입·복귀 r20
+
+화주는 선택한 의뢰의 ‘문제 신고’에서 기존 정식 분쟁 접수 화면으로 이동한다. 원천 종류·의뢰 ID와 안전한 `from` 문맥만 전달하며, 조회나 로그인으로 신고를 자동 제출하지 않는다. 공통 신고 화면은 목록·선택 사건 상세·로그인을 거쳐도 원래 의뢰의 선택 화면으로 돌아가는 링크를 유지한다. 통합 모바일과 Web wrapper가 같은 경로 계약을 사용하고, 외부 주소·중복/미허용 쿼리는 기존 로컬 경로 정책과 보호 업무 인증 allowlist로 제한한다.
+
+신고 접수·사건 처리·지급 보류의 권위는 기존 ViewModel/API/전문 원장에 있으며 이 화면 변경이 새 권한이나 사건을 만들지 않는다. [r20 승인 범위](../../AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/local-operations-closeout.r20.md)를 따른다. 상태는 `ImplementationPrepared / IntegratedValidationPending`이며 소스·회귀 작성과 실제 HTTP·APK·기기·운영 검증을 구분한다.
+
 ## 네 가지 페이지의 책임
 
 2026-10-10 운영자 인계 보완: 종결된 생활 배송 지원 사건에서 주소/연락처/사진 없이 원 배송의 최신 복구 가능 상태를 조회한다. 재개와 픽업 전 취소는 별도 확인 후 기존 권한·통지·동의·판본 관문을 거친다. 응답 유실은 원 요청 영수증과 입력 근거로 확인하며 사건 종결과 배송 재개·지급 완료를 합치지 않는다. [승인 범위](../../AI/Planning/공통/PLAN-OPERATIONS-EXCEPTION-CONTINUITY/exception-continuity.implementation.r1.md).
