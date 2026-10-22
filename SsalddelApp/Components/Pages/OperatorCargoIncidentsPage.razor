@@ -2,8 +2,9 @@
 @page "/workspace/operator/cargo-incidents/{IncidentId}/review"
 @layout RoleWorkspaceLayout
 @using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
-<CargoIncidentWorkspace @key="IncidentId" IncidentId="@IncidentId" ReturnUrl="@ReturnUrl" />
+<CargoIncidentWorkspace @key="(IncidentId, TransportId)" IncidentId="@IncidentId" TransportId="@TransportId" ReturnUrl="@ReturnUrl" />
 @code {
     [Parameter] public string? IncidentId { get; set; }
+    [SupplyParameterFromQuery(Name = "transportId")] public long? TransportId { get; set; }
     [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
 }

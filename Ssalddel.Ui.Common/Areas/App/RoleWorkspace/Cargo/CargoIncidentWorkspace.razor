@@ -10,8 +10,8 @@
     {
         @if (Model.Loaded && IncidentId is null)
         {
-            <p class="rw-muted">화물 신고와 조치를 확인합니다. 음식 배달 중단 검토는 운영 업무에서 진행합니다.</p>
-            @if (Model.Items.Count == 0) { <section class="rw-card"><h2>검토할 화물 사건이 없습니다</h2></section> }
+            <p class="rw-muted">@(TransportId is null ? "화물 신고와 조치를 확인합니다." : "선택한 운송의 신고와 조치를 확인합니다.")</p>
+            @if (Model.Items.Count == 0) { <section class="rw-card"><h2>@(TransportId is null ? "조회된 화물 사건이 없습니다" : "선택 운송에 조회된 사건이 없습니다")</h2></section> }
             <ul class="rw-list">
                 @foreach (var item in Model.Items)
                 {
@@ -69,16 +69,21 @@
 </RoleSecondaryFrame>
 @code {
     [Parameter] public string? IncidentId { get; set; }
+    [Parameter] public long? TransportId { get; set; }
     [Parameter] public string? ReturnUrl { get; set; }
     private CargoIncidentReviewViewModel Model = default!;
-    private string WorkspaceReturn => RoleWorkspaceNavigation.LocalRoute(ReturnUrl) ?? "/workspace/operator";
-    private string ListHref => RoleWorkspaceNavigation.WithReturn("/workspace/operator/cargo-incidents", WorkspaceReturn)!;
+    private string WorkspaceReturn => RoleWorkspaceNavigation.LocalRoute(ReturnUrl)
+        ?? RoleWorkspaceNavigation.Href(RoleWorkspaceCatalog.Operator,
+            businessCode: Ssalddel.Contracts.Admin.BusinessPackages.BusinessPackageCatalog.FreightDelivery);
+    private string ListHref => RoleWorkspaceNavigation.WithReturn(ScopedRoute("/workspace/operator/cargo-incidents"), WorkspaceReturn)!;
     private string BackHref => IncidentId is null ? WorkspaceReturn : ListHref;
     private string LoginHref => RoleWorkspaceNavigation.WithReturn("/workspace-login/operator", IncidentId is null ? ListHref : ReviewHref(IncidentId))!;
-    private string ReviewHref(string id) => RoleWorkspaceNavigation.WithReturn("/workspace/operator/cargo-incidents/" + Uri.EscapeDataString(id) + "/review", WorkspaceReturn)!;
+    private string ReviewHref(string id) => RoleWorkspaceNavigation.WithReturn(ScopedRoute("/workspace/operator/cargo-incidents/" + Uri.EscapeDataString(id) + "/review"), WorkspaceReturn)!;
+    private string ScopedRoute(string route) => TransportId is { } id
+        ? route + "?transportId=" + id.ToString(System.Globalization.CultureInfo.InvariantCulture) : route;
     protected override void OnInitialized() { Model = new(Api, Access); Model.Lifetime.Changed += Changed; }
     protected override Task OnParametersSetAsync() => Reload();
-    private Task Reload() => Model.LoadAsync(IncidentId);
+    private Task Reload() => Model.LoadAsync(IncidentId, TransportId);
     private void Changed() => _ = InvokeAsync(StateHasChanged);
     public void Dispose() { Model.Lifetime.Changed -= Changed; Model.Dispose(); }
 }

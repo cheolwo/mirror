@@ -23,6 +23,7 @@ public sealed class CargoIncidentReviewViewModel : IDisposable
     public IReadOnlyList<비정상운송사건운영응답> Items { get; private set; } = [];
     public 비정상운송사건운영응답? Source { get; private set; }
     public string? SelectedId { get; private set; }
+    public long? TransportId { get; private set; }
     public bool Loaded { get; private set; }
     public bool Saved { get; private set; }
     public bool Confirmed { get; set; }
@@ -41,11 +42,13 @@ public sealed class CargoIncidentReviewViewModel : IDisposable
     public int? AffectedQuantity { get; set; }
     public bool ReviewInsurance { get; set; }
 
-    public Task LoadAsync(string? incidentId = null)
+    public Task LoadAsync(string? incidentId = null, long? transportId = null)
     {
         Lifetime.Reset(); SelectedId = incidentId;
         return Lifetime.RunAsync(async ct =>
         {
+            if (transportId is <= 0) throw new ArgumentException("운송 식별자를 확인해 주세요.");
+            TransportId = transportId;
             if (incidentId is not null && RoleWorkspaceNavigation.StableId(incidentId) != incidentId)
                 throw new ArgumentException("사건 식별자를 확인해 주세요.");
             var items = await ReadAsync(ct);
@@ -76,7 +79,7 @@ public sealed class CargoIncidentReviewViewModel : IDisposable
             || string.IsNullOrWhiteSpace(item.사건StableId) || item.운송Id <= 0 || string.IsNullOrWhiteSpace(item.운송의뢰Id) || item.Revision <= 0)
             || items.Select(item => item.사건StableId).Distinct(StringComparer.Ordinal).Count() != items.Count)
             throw new InvalidOperationException("사건 응답을 확인하지 못했습니다.");
-        return items;
+        return TransportId is { } transportId ? items.Where(item => item.운송Id == transportId).ToArray() : items;
     }
 
     public void Prepare()
@@ -156,7 +159,7 @@ public sealed class CargoIncidentReviewViewModel : IDisposable
 
     private void Clear()
     {
-        Items = []; Source = null; pending = null; acknowledgedRevision = null;
+        Items = []; Source = null; pending = null; acknowledgedRevision = null; TransportId = null;
         Loaded = Saved = Confirmed = ReviewInsurance = false; Decision = Reason = "";
         NormalQuantity = AffectedQuantity = null; Message = null;
     }

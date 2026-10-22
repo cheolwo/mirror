@@ -1,3 +1,5 @@
+using Ssalddel.Contracts.Common.Community;
+
 namespace Ssalddel.Contracts.Common.Commerce;
 
 /// <summary>인증에 전달하는 보호 업무의 경로만 보존합니다. 자격 입력·요청 내용·업무 실행은 보존하지 않습니다.</summary>
@@ -11,11 +13,14 @@ public static class CommerceAuthenticationRoutes
     public static string PrivacyRoute(string? caseId)
         => ReturnRoute(Privacy + CaseSuffix(caseId));
 
-    public static string DisputeRoute(string? caseId, string? sourceKind = null, string? sourceId = null)
-        => ReturnRoute(Disputes + (string.IsNullOrWhiteSpace(caseId)
+    public static string DisputeRoute(string? caseId, string? sourceKind = null, string? sourceId = null, string? returnPath = null)
+    {
+        var route = ReturnRoute(Disputes + (string.IsNullOrWhiteSpace(caseId)
             ? string.IsNullOrWhiteSpace(sourceKind) && string.IsNullOrWhiteSpace(sourceId) ? ""
                 : "?sourceKind=" + Uri.EscapeDataString(sourceKind ?? "") + "&sourceId=" + Uri.EscapeDataString(sourceId ?? "")
             : CaseSuffix(caseId)));
+        return route == Notices ? route : ReturnRoute(PageNavigationContext.WithReturnPath(route, returnPath));
+    }
 
     public static string LoginHref(string loginRoute, string? returnRoute)
     {
@@ -53,25 +58,50 @@ public static class CommerceAuthenticationRoutes
         {
             if (!path.StartsWith(prefix + "/", StringComparison.Ordinal)) continue;
             var caseId = path[(prefix.Length + 1)..];
-            if (!ValidIdentifier(caseId) || caseId.Contains('/') || parts.Length > 1 && parts[1].Length > 0) return false;
+            if (!ValidIdentifier(caseId) || caseId.Contains('/')) return false;
+            if (prefix == Privacy && parts.Length > 1 && parts[1].Length > 0) return false;
+            if (prefix == Disputes)
+            {
+                if (!TryDisputeQuery(parts.Length > 1 ? parts[1] : "", allowSource: false, out var caseQuery)) return false;
+                route = PageNavigationContext.WithReturnPath(prefix + "/" + Uri.EscapeDataString(caseId),
+                    caseQuery.GetValueOrDefault(PageNavigationQueryNames.ReturnPath));
+                return true;
+            }
             route = prefix + "/" + Uri.EscapeDataString(caseId);
             return true;
         }
 
         if (path != Disputes) return false;
         if (parts.Length == 1 || parts[1].Length == 0) { route = Disputes; return true; }
-        var query = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var pair in parts[1].Split('&'))
+        if (!TryDisputeQuery(parts[1], allowSource: true, out var query)) return false;
+        var from = query.GetValueOrDefault(PageNavigationQueryNames.ReturnPath);
+        if (!query.ContainsKey("sourceKind") && !query.ContainsKey("sourceId"))
+        { route = PageNavigationContext.WithReturnPath(Disputes, from); return true; }
+        if (!query.TryGetValue("sourceKind", out var kind) || !query.TryGetValue("sourceId", out var id)) return false;
+        if (kind.Length == 0 && id.Length == 0) { route = PageNavigationContext.WithReturnPath(Disputes, from); return true; }
+        if (kind is not ("food-order" or "neighborhood-delivery" or "neighborhood-collaboration" or "cargo-request") || !ValidIdentifier(id)) return false;
+        route = PageNavigationContext.WithReturnPath(Disputes + "?sourceKind=" + Uri.EscapeDataString(kind) + "&sourceId=" + Uri.EscapeDataString(id), from);
+        return true;
+    }
+
+    private static bool TryDisputeQuery(string raw, bool allowSource, out Dictionary<string, string> query)
+    {
+        query = new(StringComparer.Ordinal);
+        if (raw.Length == 0) return true;
+        foreach (var pair in raw.Split('&'))
         {
             var item = pair.Split('=', 2);
             var key = Uri.UnescapeDataString(item[0].Replace('+', ' '));
             var value = item.Length == 2 ? Uri.UnescapeDataString(item[1].Replace('+', ' ')) : "";
-            if (key is not ("sourceKind" or "sourceId") || !query.TryAdd(key, value) || value.Any(char.IsControl)) return false;
+            if (key != PageNavigationQueryNames.ReturnPath && (!allowSource || key is not ("sourceKind" or "sourceId"))
+                || !query.TryAdd(key, value) || value.Any(char.IsControl)) return false;
         }
-        if (!query.TryGetValue("sourceKind", out var kind) || !query.TryGetValue("sourceId", out var id)) return false;
-        if (kind.Length == 0 && id.Length == 0) { route = Disputes; return true; }
-        if (kind is not ("food-order" or "neighborhood-delivery" or "neighborhood-collaboration" or "cargo-request") || !ValidIdentifier(id)) return false;
-        route = Disputes + "?sourceKind=" + Uri.EscapeDataString(kind) + "&sourceId=" + Uri.EscapeDataString(id);
+        if (query.TryGetValue(PageNavigationQueryNames.ReturnPath, out var from))
+        {
+            var normalized = PageNavigationContext.NormalizeReturnPath(from);
+            if (normalized is null) return false;
+            query[PageNavigationQueryNames.ReturnPath] = normalized;
+        }
         return true;
     }
 
