@@ -1,5 +1,6 @@
 @page "/transports/{RequestId}"
 @using Ssalddel.Client.Infrastructure.Transport
+@using Ssalddel.Contracts.Common.Community
 @inject I백오피스Service DataService
 @inject ITransportRequestLedgerObserver LedgerObserver
 @inject NavigationManager NavigationManager
@@ -107,8 +108,8 @@ else
                     </MudButton>
                     <MudButton Href="@SettlementHref" Variant="Variant.Outlined" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ChevronRight" FullWidth="true">
                         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Style="width: 100%;">
-                            <MudText>결제/정산</MudText>
-                            <MudChip T="string" Size="Size.Small" Color="Color.Default">@detail.정산후보목록.Count</MudChip>
+                            <MudText>수납/기사 지급</MudText>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default">@(detail.기사운송료지급조회?.조회완료 == true ? $"{detail.기사운송료지급조회.지급요청목록.Count:N0}건" : "미확인")</MudChip>
                         </MudStack>
                     </MudButton>
                 </MudStack>
@@ -120,6 +121,7 @@ else
 @code {
     [Parameter]
     public string RequestId { get; set; } = string.Empty;
+    [SupplyParameterFromQuery(Name = PageNavigationQueryNames.ReturnPath)] public string? ReturnPath { get; set; }
 
     private bool isLoading = true;
     private string? errorMessage;
@@ -254,10 +256,10 @@ else
     }
 
     private string BuildSubPageHref(string segment)
-        => $"/transports/{Uri.EscapeDataString(RequestId)}/{segment}";
+        => 운송관제NavigationContext.WorkflowHref(RequestId, segment, ReturnPath);
 
     private void NavigateToTransportList()
-        => NavigationManager.NavigateTo("/transports");
+        => NavigationManager.NavigateTo(운송관제NavigationContext.ResolveListHref(ReturnPath));
 
     private static string StepLabel(운송워크플로우단계응답 step)
     {

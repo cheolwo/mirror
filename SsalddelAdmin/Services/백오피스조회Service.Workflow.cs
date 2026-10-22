@@ -1,3 +1,7 @@
+using Ssalddel.Contracts.Admin.Settlement;
+using System.Net.Http.Json;
+using System.Text.Json;
+
 namespace SsalddelAdmin.Services;
 
 public sealed partial class 백오피스조회Service
@@ -15,10 +19,7 @@ public sealed partial class 백오피스조회Service
             .ToArray();
         var events = await 운송이벤트조회Async(normalized, cancellationToken);
         var pods = await 파일POD목록조회Async(null, normalized, cancellationToken);
-        var driverId = transports.FirstOrDefault()?.기사_운송자;
-        IReadOnlyList<기사월정산관리응답> settlements = string.IsNullOrWhiteSpace(driverId)
-            ? Array.Empty<기사월정산관리응답>()
-            : await 기사월정산목록조회Async(driverId: driverId, cancellationToken: cancellationToken);
+        var payoutQuery = await 운송료지급요청조회Async(normalized, transports.FirstOrDefault(), cancellationToken);
 
         return 운송워크플로우관제상세Factory.Build(
             normalized,
@@ -28,6 +29,38 @@ public sealed partial class 백오피스조회Service
             transports,
             events,
             pods,
-            settlements);
+            [],
+            payoutQuery);
+    }
+
+    private async Task<기사운송료지급조회응답?> 운송료지급요청조회Async(
+        string requestId, 운송진행응답? transport, CancellationToken cancellationToken)
+    {
+        if (transport?.Id is not > 0) return null;
+        var nowUtc = DateTime.UtcNow;
+        var result = new 기사운송료지급조회응답 { 조회년 = nowUtc.Year, 조회월 = nowUtc.Month };
+        var query = BuildQuery("api/v1/admin/driver-payouts",
+            ("year", nowUtc.Year.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+            ("month", nowUtc.Month.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+        try
+        {
+            ApplyAuthorizationHeader();
+            var records = await _httpClient.GetFromJsonAsync<List<기사지급승인응답>>(query, cancellationToken)
+                ?? throw new InvalidDataException("기사 지급요청 조회 본문이 없습니다.");
+            if (records.Any(item => item is null)) throw new InvalidDataException("기사 지급요청 항목을 확인하지 못했습니다.");
+            result.지급요청목록 = records.Where(item => item.TransportId == transport.Id
+                    && string.Equals(item.RequestId, requestId, StringComparison.Ordinal))
+                .OrderByDescending(item => item.ApprovedAtUtc).ToArray();
+            result.조회완료 = true;
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            result.조회실패 = true;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or JsonException or InvalidDataException or InvalidOperationException)
+        {
+            result.조회실패 = true;
+        }
+        return result;
     }
 }

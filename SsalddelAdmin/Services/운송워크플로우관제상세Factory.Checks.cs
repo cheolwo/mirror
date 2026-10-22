@@ -1,4 +1,5 @@
 using Ssalddel.Contracts.Common.Workflow;
+using SsalddelAdmin.ViewModels;
 
 namespace SsalddelAdmin.Services;
 
@@ -11,7 +12,7 @@ public static partial class 운송워크플로우관제상세Factory
         운송진행응답? 운송,
         IReadOnlyList<운송이벤트로그응답> 이벤트목록,
         IReadOnlyList<파일POD응답> 증빙목록,
-        IReadOnlyList<기사월정산관리응답> 정산후보목록)
+        TransportWorkflowSettlementViewModel 지급표시)
     {
         var items = new List<운송워크플로우운영확인응답>();
 
@@ -44,9 +45,13 @@ public static partial class 운송워크플로우관제상세Factory
             items.Add(Check("증빙누락", "높음", "운송 완료 상태인데 POD/사진 증빙이 없습니다. 기사 앱 업로드 결과를 확인합니다."));
         }
 
-        if (ContainsAny(의뢰?.정산상태, "입금대기", "정산대기", "청구대기") && 정산후보목록.Any(x => !x.결제완료))
+        if (지급표시.QueryFailed)
         {
-            items.Add(Check("정산확인", "보통", "기사 정산 후보와 화주 입금 상태를 같이 확인합니다."));
+            items.Add(Check("지급조회", "보통", "기사 지급요청을 다시 조회하세요. 화주 수납만으로 실지급을 확정하지 않습니다."));
+        }
+        else if (운송 is not null && ContainsAny(운송.상태, "하차완료", "인수완료", "완료") && !지급표시.HasActualTransferConfirmation)
+        {
+            items.Add(Check("지급확인", "보통", "화주 수납과 별도로 기사 지급준비·요청·실지급 근거를 확인하세요."));
         }
 
         return items

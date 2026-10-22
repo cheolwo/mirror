@@ -1,11 +1,13 @@
 @page "/transports/{RequestId}/settlement"
+@using Ssalddel.Contracts.Common.Community
+@using SsalddelAdmin.ViewModels
 @inject I백오피스Service DataService
 @inject NavigationManager NavigationManager
 
 <PageTitle>1.0 운송 결제/정산</PageTitle>
 
 <AdminTransportWorkflowHeader Title="06-1. 운송 결제/정산"
-                              Subtitle="화주 결제, 운송 완료 기준, 기사 정산 후보를 확인합니다."
+                              Subtitle="화주 수납과 기사 지급요청·실지급을 나눠 확인합니다."
                               BackButtonText="관제 개요"
                               IsLoading="@isLoading"
                               OnBack="NavigateToOverview"
@@ -31,8 +33,9 @@ else
         <MudItem xs="12" lg="6">
             <MudPaper Elevation="1" Class="pa-4" Style="height: 100%;">
                 <MudStack Spacing="2">
-                    <MudText Typo="Typo.h6">화주 결제</MudText>
+                    <MudText Typo="Typo.h6">화주 수납</MudText>
                     <MudGrid Spacing="2">
+                        <MudItem xs="12"><AdminInfoField Label="수납 확인" Value="@Settlement.CollectionStatus" /></MudItem>
                         <MudItem xs="12" md="6"><AdminInfoField Label="결제 상태" Value="@(detail.결제?.결제상태 ?? detail.의뢰?.결제상태)" /></MudItem>
                         <MudItem xs="12" md="6"><AdminInfoField Label="결제 수단" Value="@(detail.결제?.결제수단 ?? detail.의뢰?.결제수단)" /></MudItem>
                         <MudItem xs="12" md="6"><AdminInfoField Label="결제 금액" Value="@(detail.결제 is null ? null : $"{detail.결제.결제금액:N0}원")" /></MudItem>
@@ -47,11 +50,11 @@ else
         <MudItem xs="12" lg="6">
             <MudPaper Elevation="1" Class="pa-4" Style="height: 100%;">
                 <MudStack Spacing="2">
-                    <MudText Typo="Typo.h6">정산 기준</MudText>
+                    <MudText Typo="Typo.h6">운송·수납 기준</MudText>
                     <MudGrid Spacing="2">
-                        <MudItem xs="12" md="6"><AdminInfoField Label="정산 상태" Value="@detail.의뢰?.정산상태" /></MudItem>
+                        <MudItem xs="12" md="6"><AdminInfoField Label="화주 정산 상태" Value="@detail.의뢰?.정산상태" /></MudItem>
                         <MudItem xs="12" md="6"><AdminInfoField Label="정산 시점" Value="@detail.의뢰?.정산시점" /></MudItem>
-                        <MudItem xs="12" md="6"><AdminInfoField Label="최종 운임" Value="@(detail.의뢰?.최종운임 is null ? null : $"{detail.의뢰.최종운임:N0}원")" /></MudItem>
+                        <MudItem xs="12" md="6"><AdminInfoField Label="화주 운임" Value="@(detail.의뢰?.최종운임 is null ? null : $"{detail.의뢰.최종운임:N0}원")" /></MudItem>
                         <MudItem xs="12" md="6"><AdminInfoField Label="수납 주체" Value="@detail.의뢰?.수납주체" /></MudItem>
                         <MudItem xs="12" md="6"><AdminInfoField Label="운송 상태" Value="@detail.운송?.상태" /></MudItem>
                         <MudItem xs="12" md="6"><AdminInfoField Label="하차 시각" Value="@(detail.운송?.도착 is null ? null : detail.운송.도착.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm"))" /></MudItem>
@@ -67,40 +70,48 @@ else
     <MudPaper Elevation="1" Class="pa-4">
         <MudStack Spacing="2">
             <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-                <MudText Typo="Typo.h6">기사 정산 후보</MudText>
-                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">@detail.정산후보목록.Count 건</MudChip>
+                <MudText Typo="Typo.h6">기사 운송료 지급</MudText>
+                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">@(Settlement.QueryCompleted ? $"{Settlement.PayoutRequests.Count:N0}건" : "미확인")</MudChip>
             </MudStack>
-            @if (detail.정산후보목록.Count == 0)
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="4"><AdminInfoField Label="지급준비" Value="@Settlement.PreparationStatus" /></MudItem>
+                <MudItem xs="12" md="4"><AdminInfoField Label="지급요청" Value="@Settlement.RequestStatus" /></MudItem>
+                <MudItem xs="12" md="4"><AdminInfoField Label="실지급" Value="@Settlement.ActualTransferStatus" /></MudItem>
+            </MudGrid>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@Settlement.QueryScope</MudText>
+            @if (Settlement.QueryFailed)
             {
-                <MudAlert Severity="Severity.Info" Dense="true">연결된 기사 정산 후보가 없습니다.</MudAlert>
+                <MudAlert Severity="Severity.Warning" Dense="true">지급요청 조회 실패. 새로고침 후 다시 확인하세요.</MudAlert>
+            }
+            else if (!Settlement.QueryCompleted)
+            {
+                <MudText Typo="Typo.body2">지급요청 미연결. 실지급 여부를 확인할 수 없습니다.</MudText>
+            }
+            else if (Settlement.PayoutRequests.Count == 0)
+            {
+                <MudText Typo="Typo.body2">이 승인월에 연결된 지급요청이 없습니다. 다른 월의 지급 여부는 미확인입니다.</MudText>
             }
             else
             {
-                <MudTable Items="@detail.정산후보목록" Dense="true" Hover="true" Elevation="0">
+                <MudTable Items="@Settlement.PayoutRequests" Dense="true" Hover="true" Elevation="0">
                     <HeaderContent>
-                        <MudTh>기사</MudTh>
-                        <MudTh>정산월</MudTh>
-                        <MudTh>배차</MudTh>
-                        <MudTh>이용료</MudTh>
-                        <MudTh>상한</MudTh>
-                        <MudTh>상태</MudTh>
-                        <MudTh>갱신</MudTh>
+                        <MudTh>지급 예정액</MudTh>
+                        <MudTh>요청</MudTh>
+                        <MudTh>실지급</MudTh>
+                        <MudTh>구분</MudTh>
+                        <MudTh>승인 시각</MudTh>
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd DataLabel="기사">@context.기사Id</MudTd>
-                        <MudTd DataLabel="정산월">@context.년도-@context.월.ToString("00")</MudTd>
-                        <MudTd DataLabel="배차">@context.배차건수.ToString("N0")건</MudTd>
-                        <MudTd DataLabel="이용료">@context.이용료.ToString("N0")원</MudTd>
-                        <MudTd DataLabel="상한">@(context.월상한적용여부 ? "적용" : "미적용")</MudTd>
-                        <MudTd DataLabel="상태">
-                            <MudChip T="string" Size="Size.Small" Color="@(context.결제완료 ? Color.Success : Color.Warning)" Variant="Variant.Filled">
-                                @(context.결제완료 ? "완료" : "미완료")
-                            </MudChip>
-                        </MudTd>
-                        <MudTd DataLabel="갱신">@context.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</MudTd>
+                        <MudTd DataLabel="지급 예정액">@TransportWorkflowSettlementViewModel.ExpectedAmountOf(context)</MudTd>
+                        <MudTd DataLabel="요청">@TransportWorkflowSettlementViewModel.RequestStatusOf(context)</MudTd>
+                        <MudTd DataLabel="실지급">@(TransportWorkflowSettlementViewModel.IsActualTransferConfirmed(context) ? "실지급 확인" : "실지급 미확인")</MudTd>
+                        <MudTd DataLabel="구분">@TransportWorkflowSettlementViewModel.ExecutionModeOf(context)</MudTd>
+                        <MudTd DataLabel="승인 시각">@context.ApprovedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</MudTd>
                     </RowTemplate>
                 </MudTable>
             }
+            <MudText Typo="Typo.body2">수납 확인·월 이용료·시험 지급 검증은 실지급 완료가 아닙니다.</MudText>
+            <MudButton Href="/settlements" Variant="Variant.Text" Color="Color.Primary">월 이용료 조회</MudButton>
         </MudStack>
     </MudPaper>
 
@@ -113,10 +124,12 @@ else
 @code {
     [Parameter]
     public string RequestId { get; set; } = string.Empty;
+    [SupplyParameterFromQuery(Name = PageNavigationQueryNames.ReturnPath)] public string? ReturnPath { get; set; }
 
     private bool isLoading = true;
     private string? errorMessage;
     private 운송워크플로우관제상세응답? detail;
+    private TransportWorkflowSettlementViewModel Settlement => detail is null ? new() : TransportWorkflowSettlementViewModel.Create(detail);
 
     private string OverviewHref => BuildHref(null);
     private string EventsHref => BuildHref("events");
@@ -156,10 +169,7 @@ else
     }
 
     private string BuildHref(string? segment)
-    {
-        var baseHref = $"/transports/{Uri.EscapeDataString(RequestId)}";
-        return string.IsNullOrWhiteSpace(segment) ? baseHref : $"{baseHref}/{segment}";
-    }
+        => 운송관제NavigationContext.WorkflowHref(RequestId, segment, ReturnPath);
 
     private void NavigateToOverview()
         => NavigationManager.NavigateTo(OverviewHref);

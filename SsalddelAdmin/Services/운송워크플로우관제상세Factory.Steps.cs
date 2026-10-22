@@ -1,4 +1,5 @@
 using Ssalddel.Contracts.Common.Workflow;
+using SsalddelAdmin.ViewModels;
 
 namespace SsalddelAdmin.Services;
 
@@ -10,7 +11,8 @@ public static partial class 운송워크플로우관제상세Factory
         배차대기응답? 배차대기,
         운송진행응답? 운송,
         IReadOnlyList<운송이벤트로그응답> 이벤트목록,
-        IReadOnlyList<파일POD응답> 증빙목록)
+        IReadOnlyList<파일POD응답> 증빙목록,
+        TransportWorkflowSettlementViewModel 지급표시)
     {
         return
         [
@@ -18,26 +20,26 @@ public static partial class 운송워크플로우관제상세Factory
                 의뢰?.의뢰상태 ?? "의뢰 정보 미확인",
                 의뢰 is null ? "서버 원장에서 의뢰 상세를 찾지 못했습니다." : $"{의뢰.생성일시.ToLocalTime():MM-dd HH:mm} 접수",
                 "화주 입력값과 경로를 확인합니다."),
-            Build결제단계(결제, 의뢰),
+            Build결제단계(결제, 의뢰, 지급표시),
             Build배차단계(배차대기, 운송, 의뢰),
             Build수락단계(운송, 의뢰),
             Build상차단계(운송, 이벤트목록, 의뢰),
             Build하차단계(운송, 이벤트목록, 의뢰),
             Build증빙단계(운송, 증빙목록, 이벤트목록),
-            Build정산단계(의뢰, 운송)
+            Build정산단계(의뢰, 운송, 지급표시)
         ];
     }
 
-    private static 운송워크플로우단계응답 Build결제단계(결제목록응답? 결제, 화주운송의뢰응답? 의뢰)
+    private static 운송워크플로우단계응답 Build결제단계(결제목록응답? 결제, 화주운송의뢰응답? 의뢰, TransportWorkflowSettlementViewModel 지급표시)
     {
         var state = 결제?.결제상태 ?? 의뢰?.결제상태;
         var attention = HasProblem(state);
-        var completed = ContainsAny(state, "결제완료", "승인", "입금확인", "완료");
+        var completed = 지급표시.CollectionConfirmed;
         var active = !completed && ContainsAny(state, "결제대기", "미결제", "입금대기", "청구", "대기");
-        return Step(2, "payment", "결제", completed, active, attention,
-            Display(state),
+        return Step(2, "payment", "화주 수납", completed, active, attention,
+            completed ? "수납 확인" : Display(state),
             결제 is null ? "결제 원장 연결 전입니다." : $"{결제.결제수단} {결제.결제금액:N0}원 · {결제.생성일시Utc.ToLocalTime():MM-dd HH:mm}",
-            "화주 결제 또는 후불/현장 지급 조건을 확인합니다.");
+            "화주 결제 또는 후불/현장 지급 조건을 확인합니다. 기사 실지급과 별개입니다.");
     }
 
     private static 운송워크플로우단계응답 Build배차단계(배차대기응답? 배차대기, 운송진행응답? 운송, 화주운송의뢰응답? 의뢰)
@@ -101,15 +103,15 @@ public static partial class 운송워크플로우관제상세Factory
             "사진, 인수증, POD 파일의 업로드와 검수 상태를 확인합니다.");
     }
 
-    private static 운송워크플로우단계응답 Build정산단계(화주운송의뢰응답? 의뢰, 운송진행응답? 운송)
+    private static 운송워크플로우단계응답 Build정산단계(화주운송의뢰응답? 의뢰, 운송진행응답? 운송, TransportWorkflowSettlementViewModel 지급표시)
     {
         var state = 의뢰?.정산상태;
-        var completed = ContainsAny(state, "정산완료", "입금확인완료", "완료");
-        var active = !completed && (ContainsAny(state, "정산대기", "입금대기", "청구대기", "대기") || ContainsAny(운송?.상태, "하차완료", "인수완료", "완료"));
-        return Step(8, "settlement", "정산", completed, active, HasProblem(state),
-            Display(state),
-            의뢰?.최종운임 is null ? "운임 미확인" : $"운임 {의뢰.최종운임:N0}원",
-            "운송 완료 후 화주 입금, 기사 지급, 플랫폼 정산 상태를 맞춥니다.");
+        var completed = 지급표시.HasActualTransferConfirmation;
+        var active = !completed && (지급표시.PayoutRequests.Count > 0 || ContainsAny(state, "정산대기", "입금대기", "청구대기", "대기", "입금확인", "정산완료") || ContainsAny(운송?.상태, "하차완료", "인수완료", "완료"));
+        return Step(8, "settlement", "기사 지급", completed, active, HasProblem(state) || 지급표시.RequiresAttention,
+            completed ? 지급표시.ActualTransferStatus : $"{지급표시.RequestStatus} · {지급표시.ActualTransferStatus}",
+            지급표시.QueryScope,
+            "화주 수납·월 이용료·시험 지급 검증은 기사 실지급 완료 근거가 아닙니다.");
     }
 
     private static 운송워크플로우단계응답 Step(

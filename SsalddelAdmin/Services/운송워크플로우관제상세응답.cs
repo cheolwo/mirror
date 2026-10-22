@@ -1,4 +1,5 @@
 using Ssalddel.Contracts.Common.Workflow;
+using Ssalddel.Contracts.Admin.Settlement;
 
 namespace SsalddelAdmin.Services;
 
@@ -20,5 +21,16 @@ public sealed class 운송워크플로우관제상세응답
     public IReadOnlyList<운송워크플로우운영확인응답> 운영확인목록 { get; set; } = [];
     public IReadOnlyList<운송이벤트로그응답> 이벤트목록 { get; set; } = [];
     public IReadOnlyList<파일POD응답> 증빙목록 { get; set; } = [];
+    /// <summary>기존 월 이용료 조회 자료입니다. 기사 운송료 지급 근거가 아닙니다.</summary>
     public IReadOnlyList<기사월정산관리응답> 정산후보목록 { get; set; } = [];
+    public 기사운송료지급조회응답? 기사운송료지급조회 { get; set; }
+}
+
+public sealed class 기사운송료지급조회응답
+{
+    public int? 조회년 { get; set; }
+    public int? 조회월 { get; set; }
+    public bool 조회완료 { get; set; }
+    public bool 조회실패 { get; set; }
+    public IReadOnlyList<기사지급승인응답> 지급요청목록 { get; set; } = [];
 }
