@@ -261,6 +261,8 @@
     width: 100%;
 }
 
+/* Keep the compact arrangement on phones; shared screens own their wider layouts. */
+@media (max-width: 767px) {
 .shipper-mobile-shell__content ::deep .shipper-request-screen__header,
 .shipper-mobile-shell__content ::deep .shipper-detail-screen__header,
 .shipper-mobile-shell__content ::deep .order-fulfillment-route-header,
@@ -286,10 +288,6 @@
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
-}
-
-.shipper-mobile-shell__content ::deep .shipper-detail-screen__actions .mud-button-root:last-child {
-    grid-column: 1 / -1;
 }
 
 .shipper-mobile-shell__content ::deep .shipper-request-steps {
@@ -438,6 +436,7 @@
 .shipper-mobile-shell__content ::deep .shipper-home--compact .shipper-home-workflow p {
     min-height: 0;
 }
+}
 
 .shipper-mobile-shell__content ::deep .shipper-mobile-start-grid {
     display: grid;
@@ -478,5 +477,23 @@
 @media (min-width: 760px) {
     :global(body) {
         background: #e9eef5;
+    }
+}
+
+@media (min-width: 768px) {
+    .shipper-mobile-shell {
+        width: min(100%, 1180px);
+    }
+
+    .shipper-mobile-shell__appbar {
+        padding-inline: 24px;
+    }
+
+    .shipper-mobile-shell__content {
+        padding: 24px 24px 32px;
+    }
+
+    .shipper-mobile-shell__content ::deep .shipper-mobile-start-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }

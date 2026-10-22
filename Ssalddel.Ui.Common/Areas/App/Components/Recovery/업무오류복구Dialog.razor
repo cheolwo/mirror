@@ -1,0 +1,43 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Recovery
+
+<MudDialog>
+    <TitleContent>
+        <div class="work-error-recovery__heading">
+            <span class="work-error-recovery__symbol" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Outlined.FactCheck" Size="Size.Large" />
+            </span>
+            <MudText Typo="Typo.h6">@Notice.제목</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="work-error-recovery__description">
+            <MudText Typo="Typo.body1">@Notice.설명</MudText>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <div class="work-error-recovery__actions">
+            <div class="work-error-recovery__secondary @(CanReturn ? "work-error-recovery__secondary--paired" : null)">
+                <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Close">닫기</MudButton>
+                @if (CanReturn)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Outlined.ArrowBack" OnClick="Return">@ReturnLabel</MudButton>
+                }
+            </div>
+            @if (CanRetry)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.ManageSearch" OnClick="Retry">@Notice.재조회문구</MudButton>
+            }
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter, EditorRequired] public 업무오류안내Presentation Notice { get; set; } = default!;
+    [Parameter] public bool CanRetry { get; set; }
+    [Parameter] public bool CanReturn { get; set; }
+    [Parameter] public string ReturnLabel { get; set; } = "업무로 돌아가기";
+    private void Close() => MudDialog.Cancel();
+    private void Return() => MudDialog.Close(DialogResult.Ok("return"));
+    private void Retry() => MudDialog.Close(DialogResult.Ok("retry"));
+}

@@ -1,0 +1,80 @@
+.work-error-recovery__heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.work-error-recovery__symbol {
+    display: inline-flex;
+    flex: 0 0 48px;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 16px;
+    color: var(--mud-palette-text-primary);
+    background: var(--mud-palette-background-gray);
+}
+
+.work-error-recovery__heading ::deep .mud-typography {
+    min-width: 0;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    line-height: 1.45;
+    text-wrap: balance;
+}
+
+.work-error-recovery__description ::deep .mud-typography {
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    line-height: 1.65;
+}
+
+.work-error-recovery__actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    width: 100%;
+    padding-top: 12px;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.work-error-recovery__secondary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+}
+
+.work-error-recovery__secondary--paired {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.work-error-recovery__actions ::deep .mud-button-root {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    height: 100%;
+    padding: 8px 12px;
+}
+
+.work-error-recovery__actions ::deep .mud-button-label {
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    line-height: 1.45;
+}
+
+@media (max-width: 480px) {
+    .work-error-recovery__symbol {
+        flex-basis: 40px;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+    }
+
+    .work-error-recovery__symbol ::deep .mud-icon-root {
+        font-size: 28px;
+    }
+}

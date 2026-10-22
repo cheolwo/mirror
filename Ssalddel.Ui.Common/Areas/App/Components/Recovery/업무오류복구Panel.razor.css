@@ -1,0 +1,23 @@
+.work-error-recovery {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    margin: 12px 0;
+    border: 1px solid var(--mud-palette-divider);
+    border-radius: 12px;
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font-size: 14px;
+}
+
+.work-error-recovery > span {
+    min-width: 0;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+}
+
+section.work-error-recovery ::deep .mud-button-root {
+    min-height: 48px;
+}

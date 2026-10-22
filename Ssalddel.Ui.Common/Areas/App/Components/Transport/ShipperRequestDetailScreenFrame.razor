@@ -1,20 +1,22 @@
 @namespace Ssalddel.Ui.Common.Areas.App.Components.Transport
+@using Ssalddel.Ui.Common.Areas.App.Components.Recovery
+@using Ssalddel.Contracts.Common.Workflow
+@using Ssalddel.Contracts.Common.Versioning
 
 <section class="shipper-detail-screen" data-detail-screen="@CurrentScreen.ToString().ToLowerInvariant()">
     <header class="shipper-detail-screen__header">
         <div class="shipper-detail-screen__title">
-            <span>@EffectiveEyebrow</span>
-            <h1>@Title</h1>
-            <p>@Description</p>
-        </div>
-
-        <div class="shipper-detail-screen__actions">
             <MudButton Href="@Context.ResolveReturnPath(HomeHref)"
+                       Class="shipper-detail-screen__back"
                        Variant="Variant.Text"
                        Color="Color.Default"
                        StartIcon="@Icons.Material.Filled.ArrowBack">
                 돌아가기
             </MudButton>
+            <h1>@Title</h1>
+        </div>
+
+        <div class="shipper-detail-screen__actions">
             <MudButton Href="@NewRequestHref"
                        Variant="Variant.Outlined"
                        Color="Color.Secondary"
@@ -34,11 +36,18 @@
     @if (State.Created && State.Request is not null)
     {
         <MudAlert Severity="Severity.Success" Variant="Variant.Filled">
-            @State.Request.RequestId 의뢰가 저장되었고 같은 ID로 다시 조회되었습니다.
+            의뢰 등록 완료
         </MudAlert>
     }
 
-    @if (!string.IsNullOrWhiteSpace(State.StatusMessage))
+    <업무오류복구Panel Message="@QueryErrorMessage" ContextKey="@State.LookupRequestId"
+                     Error="@State.QueryError"
+                     Context="@(State.QueryError is not null ? QueryContext : null)"
+                     Busy="@State.IsBusy" RetryRequested="RefreshRequested"
+                     ReturnHref="@(State.RequiresLogin ? LoginHref : Context.ResolveReturnPath(HomeHref))"
+                     ReturnLabel="@(State.RequiresLogin ? "로그인" : "업무로 돌아가기")" />
+
+    @if (!string.IsNullOrWhiteSpace(State.StatusMessage) && QueryErrorMessage is null)
     {
         <MudAlert Severity="@ResolveSeverity(State.StatusTone)" Variant="Variant.Outlined">
             @State.StatusMessage
@@ -57,17 +66,14 @@
                 <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Warning" Size="Size.Large" />
                 <MudText Typo="Typo.h6">로그인이 필요합니다</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    주소와 결제 조건이 포함된 원장이므로 의뢰를 등록한 계정 또는 관리자만 조회할 수 있습니다.
+                    의뢰를 등록한 계정으로 로그인해 주세요.
                 </MudText>
                 <MudButton Href="@LoginHref" Variant="Variant.Filled" Color="Color.Primary">로그인</MudButton>
             }
             else if (State.IsWorkflowEnabled == false)
             {
                 <MudIcon Icon="@Icons.Material.Filled.ToggleOff" Color="Color.Warning" Size="Size.Large" />
-                <MudText Typo="Typo.h6">운송 의뢰 조회가 비활성입니다</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    현재 배포 환경에서는 국내 운송 workflow가 꺼져 있습니다. 이 화면에서 배차·계약·결제를 시작하지 않습니다.
-                </MudText>
+                <MudText Typo="Typo.h6">현재 이용할 수 없습니다</MudText>
             }
             else if (EmptyContent is not null)
             {
@@ -76,16 +82,22 @@
             else
             {
                 <MudIcon Icon="@Icons.Material.Filled.SearchOff" Color="Color.Default" Size="Size.Large" />
-                <MudText Typo="Typo.h6">의뢰 정보를 찾지 못했습니다</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">의뢰 ID와 서버 연결 상태를 확인한 뒤 다시 조회해 주세요.</MudText>
+                <MudText Typo="Typo.h6">@(QueryErrorMessage is not null ? "조회 미완료" : "의뢰 정보를 찾지 못했습니다")</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@(QueryErrorMessage is not null ? "다시 조회하거나 업무 목록으로 돌아가세요." : "의뢰 번호를 확인하고 다시 조회해 주세요.")</MudText>
             }
         </MudPaper>
     }
     else
     {
-        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
-            @State.SourceBoundaryMessage 화면 조회만으로 자동 배차, 계약 확정, 실결제 또는 증빙 생성은 실행되지 않습니다.
-        </MudAlert>
+        @if (State.SourceBoundaryMessage.Contains("sample", StringComparison.OrdinalIgnoreCase))
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">테스트 환경 · 예시 데이터가 포함될 수 있습니다.</MudAlert>
+        }
+        else if (State.SourceBoundaryMessage.Contains("합성", StringComparison.Ordinal)
+                 || State.SourceBoundaryMessage.Contains("예시", StringComparison.Ordinal))
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">미리보기 · 실제 운송 아님</MudAlert>
+        }
 
         <ShipperRequestDetailNavigation RequestId="@State.Request.RequestId"
                                         Context="@Context"
@@ -112,10 +124,16 @@
     [Parameter] public RenderFragment? EmptyContent { get; set; }
     [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
 
-    private string EffectiveEyebrow
-        => !string.IsNullOrWhiteSpace(ScreenCode)
-            ? $"화주 업무 · {ScreenCode}"
-            : $"TRANSPORT REQUEST · {Eyebrow}";
+    private string? QueryErrorMessage => State.QueryError is not null || 업무오류안내Presentation.조회오류인가(State.StatusMessage)
+        ? State.StatusMessage : null;
+
+    private 업무실패맥락Dto QueryContext => new(OperatingSystemIds.ShipperTransportManagement,
+        CurrentScreen switch
+        {
+            ShipperRequestDetailScreenKind.Payment => OperatingSystemLifecycleStageIds.ShipperSettlementRecovery,
+            ShipperRequestDetailScreenKind.Proofs => OperatingSystemLifecycleStageIds.ShipperDeliveryAcceptance,
+            _ => OperatingSystemLifecycleStageIds.ShipperProgressChange
+        }, 업무처리결과Codes.조회);
 
     private static Severity ResolveSeverity(ShipperRequestDetailMessageTone tone)
         => tone switch
