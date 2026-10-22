@@ -37,7 +37,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     public RoleWorkspaceViewModel(IEnumerable<IRoleWorkspaceAdapter> adapters, IRoleWorkspaceAccess access, RoleWorkspaceState state,
         TimeProvider? clock = null)
     {
-        _adapters = adapters.ToDictionary(adapter => adapter.RoleKey, StringComparer.Ordinal);
+        _adapters = adapters.ToDictionary(adapter => RoleWorkspaceBusinessContext.Key(adapter.RoleKey, adapter.BusinessCode), StringComparer.Ordinal);
         _access = access;
         _state = state;
         _clock = clock ?? TimeProvider.System;
@@ -45,6 +45,9 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     }
 
     public RoleWorkspaceDefinition? Role { get; private set; }
+    public RoleWorkspaceBusinessContext? Context { get; private set; }
+    public string? BusinessCode => Context?.BusinessCode;
+    public string Title => Context?.Title ?? "업무";
     public IReadOnlyList<RoleWorkspaceItem> Items => _snapshot?.Items ?? [];
     public RoleWorkspaceItem? SelectedItem => Items.FirstOrDefault(item => item.Id == SelectedId);
     public string? SelectedId { get; private set; }
@@ -59,9 +62,9 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     public bool IsAuthenticated => _identity?.IsAuthenticated == true;
     public string? AccountError { get; private set; }
     public bool DetailsExpanded { get; private set; }
-    public bool ShowMarkers => Role is null || _state.Read(Role.Key).ShowMarkers;
-    public bool ShowRoutes => Role is null || _state.Read(Role.Key).ShowRoutes;
-    public bool ListOnly => Role is not null && _state.Read(Role.Key).ListOnly;
+    public bool ShowMarkers => Role is null || _state.Read(Role.Key, BusinessCode).ShowMarkers;
+    public bool ShowRoutes => Role is null || _state.Read(Role.Key, BusinessCode).ShowRoutes;
+    public bool ListOnly => Role is not null && _state.Read(Role.Key, BusinessCode).ListOnly;
     public bool IsSuspended => _suspended;
     public bool RequiresLogin { get; private set; }
     public bool AccessDenied { get; private set; }
@@ -69,7 +72,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     public string? CommandError { get; private set; }
     private string? _commandErrorActionKey;
     public long Generation => _generation;
-    public string WorkspaceHref => Role is null ? "/" : RoleWorkspaceNavigation.Href(Role.Key, SelectedId);
+    public string WorkspaceHref => Role is null ? "/" : RoleWorkspaceNavigation.Href(Role.Key, SelectedId, BusinessCode);
 
     public Task AcknowledgePresentedItemAsync(RoleWorkspaceItem displayedItem, CancellationToken cancellationToken = default)
     {
@@ -81,23 +84,26 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
         return observer.AcknowledgePresentedAsync(item, cancellationToken);
     }
 
-    public async Task InitializeAsync(string? roleKey, string? selectedId = null)
+    public async Task InitializeAsync(string? roleKey, string? selectedId = null, string? businessCode = null)
     {
         if (_disposed) return;
-        var role = RoleWorkspaceCatalog.Find(roleKey);
-        if (role?.Key != Role?.Key || Role is null)
+        var context = RoleWorkspaceBusinessContext.Resolve(roleKey, businessCode);
+        var role = context is null ? null : RoleWorkspaceCatalog.Find(context.RoleKey);
+        if (context != Context || Role is null)
         {
             _refreshAfterInitializationRole = null;
-            if (Role is { } previous) _state.ClearViewport(previous.Key);
-            Invalidate();
+            if (Role is { } previous) _state.ClearViewport(previous.Key, BusinessCode);
+            var sameAccountRole = Role?.Key == role?.Key && Role is not null;
+            Invalidate(preservePendingRequests: sameAccountRole);
+            Context = context;
             Role = role;
-            _adapter = role is null ? null : _adapters.GetValueOrDefault(role.Key);
+            _adapter = context is null ? null : _adapters.GetValueOrDefault(context.StateKey);
             _identity = role is null ? null : _access.GetIdentity(role.Key);
             _state.BindOwner(_identity?.IsAuthenticated == true ? _identity.OwnerId : null);
             if (role is not null)
             {
                 _state.SelectRole(role.Key);
-                var view = _state.Read(role.Key);
+                var view = _state.Read(role.Key, BusinessCode);
                 SelectedId = RoleWorkspaceNavigation.StableId(selectedId) ?? view.SelectedId;
                 DetailsExpanded = view.DetailsExpanded;
             }
@@ -133,7 +139,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     {
         if (_disposed || _suspended) return;
         SynchronizeIdentity();
-        if (Role is not { } role) { Error = "역할을 찾을 수 없습니다."; Publish(); return; }
+        if (Role is not { } role) { Error = "업무 구분을 확인해 주세요. 역할 선택에서 다시 선택해 주세요."; Publish(); return; }
         if (_adapter is not { } adapter) { Error = "이 역할의 업무 화면을 준비하지 못했습니다."; Publish(); return; }
         Cancel(ref _read);
         var read = _read = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
@@ -178,10 +184,10 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
             var current = Items.FirstOrDefault(item => item.IsCurrent);
             SelectedId = (role.Key is RoleWorkspaceCatalog.FoodDriver or RoleWorkspaceCatalog.CargoDriver or RoleWorkspaceCatalog.Warehouse)
                 && preferred?.IsCurrent != true && current is not null ? current.Id : preferred?.Id ?? current?.Id ?? Items.FirstOrDefault()?.Id;
-            if (SelectedId != selected) _state.ClearViewport(role.Key);
+            if (SelectedId != selected) _state.ClearViewport(role.Key, BusinessCode);
             LocationMessage = null;
             ExpireLocations();
-            SaveView(_state.Read(role.Key).Viewport);
+            SaveView(_state.Read(role.Key, BusinessCode).Viewport);
         }
         catch (OperationCanceledException) when (read.IsCancellationRequested)
         {
@@ -250,7 +256,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
             || action is not { Enabled: true, Route: null }) return;
         if (adapter is IRoleWorkspaceRecovery blockingRecovery && blockingRecovery.BlocksAction(actionKey)) return;
         var generation = _generation;
-        var requestId = _state.RequestId(role.Key, itemId, actionKey);
+        var requestId = _state.RequestId(role.Key, itemId, actionKey, BusinessCode);
         var command = _command = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
         CommandBusy = true;
         if (!FoodDispatchStateUnconfirmed && !FoodStartStateUnconfirmed) { CommandError = null; _commandErrorActionKey = null; }
@@ -259,7 +265,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
         {
             await adapter.PerformAsync(itemId, actionKey, requestId, command.Token);
             if (!Current(generation, role.Key)) return;
-            _state.CompleteRequest(role.Key, itemId, actionKey);
+            _state.CompleteRequest(role.Key, itemId, actionKey, BusinessCode);
             // 처리 결과 확인은 명령 내부에서 한 번만 수행합니다. 지도 무효화 등 외부 조회는 수행 중 차단합니다.
             await RefreshCoreAsync(false);
         }
@@ -299,7 +305,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     {
         if (adapter is not IRoleWorkspaceRecovery recovery) return;
         var resolved = recovery.ResolveCanonicalActions();
-        foreach (var actionKey in resolved.CompletedActions) _state.CompleteRequest(roleKey, string.Empty, actionKey);
+        foreach (var actionKey in resolved.CompletedActions) _state.CompleteRequest(roleKey, string.Empty, actionKey, BusinessCode);
         // 정본 조회는 이 요청의 오류만 정리합니다. 이후 별도 명령의 오류는 보존합니다.
         if (resolved.ActionKey is not null && resolved.ActionKey == _commandErrorActionKey)
         {
@@ -312,7 +318,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     public void SetDetailsExpanded(bool expanded)
     {
         DetailsExpanded = expanded;
-        SaveView(Role is { } role ? _state.Read(role.Key).Viewport : null);
+        SaveView(Role is { } role ? _state.Read(role.Key, BusinessCode).Viewport : null);
         Publish();
     }
 
@@ -348,14 +354,14 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     public void SetMapVisibility(bool markers, bool routes)
     {
         if (Role is not { } role || _disposed) return;
-        _state.Save(role.Key, _state.Read(role.Key) with { ShowMarkers = markers, ShowRoutes = routes });
+        _state.Save(role.Key, _state.Read(role.Key, BusinessCode) with { ShowMarkers = markers, ShowRoutes = routes }, BusinessCode);
         Publish(true);
     }
 
     public void SetListOnly(bool listOnly)
     {
         if (_disposed || Role is not { } role) return;
-        _state.Save(role.Key, _state.Read(role.Key) with { ListOnly = listOnly });
+        _state.Save(role.Key, _state.Read(role.Key, BusinessCode) with { ListOnly = listOnly }, BusinessCode);
         Publish(true);
     }
 
@@ -369,7 +375,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
                 ? route : route with { Color = "#6b7280" }))
             .Where(route => IsUnexpired(route.ExpiresAt) && route.Points.Count >= 2 && route.Points.All(point => ValidPoint(point.Latitude, point.Longitude)))
             .DistinctBy(route => route.Id).ToArray();
-        var viewport = _state.Read(Role.Key).Viewport;
+        var viewport = _state.Read(Role.Key, BusinessCode).Viewport;
         if (viewport is null)
         {
             var selected = SelectedItem?.Markers?.Where(marker => ValidPoint(marker.Latitude, marker.Longitude) && IsUnexpired(marker.ExpiresAt)).ToArray() ?? [];
@@ -382,7 +388,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
             }
         }
         return new(_sceneRevision, ShowMarkers ? markers : [], ShowRoutes ? routes : [],
-            ShowMarkers ? markers.FirstOrDefault(marker => SelectedItem?.Markers?.Any(value => value.Id == marker.Id) == true)?.Id : null, viewport, _state.Read(Role.Key).Viewport is not null);
+            ShowMarkers ? markers.FirstOrDefault(marker => SelectedItem?.Markers?.Any(value => value.Id == marker.Id) == true)?.Id : null, viewport, _state.Read(Role.Key, BusinessCode).Viewport is not null);
     }
 
     private bool IsUnexpired(DateTimeOffset? expiresAt) => expiresAt is null || expiresAt > _clock.GetUtcNow();
@@ -410,7 +416,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
         if (_disposed) return;
         Invalidate(preservePendingRequests: true);
         _suspended = true;
-        if (Role is { } role) _state.ClearViewport(role.Key);
+        if (Role is { } role) _state.ClearViewport(role.Key, BusinessCode);
         Publish(true);
     }
 
@@ -430,9 +436,9 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
         Invalidate();
         _identity = current;
         _state.BindOwner(current.IsAuthenticated ? current.OwnerId : null);
-        _state.ClearViewport(role.Key);
-        SelectedId = _state.Read(role.Key).SelectedId;
-        DetailsExpanded = _state.Read(role.Key).DetailsExpanded;
+        _state.ClearViewport(role.Key, BusinessCode);
+        SelectedId = _state.Read(role.Key, BusinessCode).SelectedId;
+        DetailsExpanded = _state.Read(role.Key, BusinessCode).DetailsExpanded;
         Publish(true);
     }
 
@@ -479,7 +485,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     private void SaveView(NeighborhoodMapViewport? viewport)
     {
         if (Role is { } role) _state.Save(role.Key,
-            _state.Read(role.Key) with { SelectedId = SelectedId, DetailsExpanded = DetailsExpanded, Viewport = viewport });
+            _state.Read(role.Key, BusinessCode) with { SelectedId = SelectedId, DetailsExpanded = DetailsExpanded, Viewport = viewport }, BusinessCode);
     }
 
     private void Publish(bool sceneChanged = false)
@@ -505,7 +511,7 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
         _disposed = true;
         _access.Changed -= AccessChanged;
         Invalidate();
-        if (Role is { } role) _state.ClearViewport(role.Key);
+        if (Role is { } role) _state.ClearViewport(role.Key, BusinessCode);
         _lifetime.Cancel();
         _lifetime.Dispose();
     }

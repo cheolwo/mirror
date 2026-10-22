@@ -29,11 +29,24 @@ public sealed class 운송진행관리Controller : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> 운송목록조회([FromQuery] string? 상태)
+    public async Task<IActionResult> 운송목록조회(
+        [FromQuery] string? 상태,
+        [FromQuery] string? business = null,
+        CancellationToken cancellationToken = default)
     {
-        var items = await _sender.Send(new 관리자운송목록조회Query(상태));
-
-        return Ok(items);
+        // MVC는 명시된 빈 query도 null로 바꾸므로, 미지정 전체 조회와 구분합니다.
+        if (HttpContext?.Request.Query is { } query && query.TryGetValue("business", out var supplied)
+            && (supplied.Count != 1 || business is null))
+            return this.ToProblemActionResult("운송 업무 구분을 확인해 주세요.", StatusCodes.Status400BadRequest);
+        try
+        {
+            var items = await _sender.Send(new 관리자운송목록조회Query(상태, business), cancellationToken);
+            return Ok(items);
+        }
+        catch (ArgumentException ex)
+        {
+            return this.ToProblemActionResult(ex.Message, StatusCodes.Status400BadRequest);
+        }
     }
 
     [HttpGet("events")]

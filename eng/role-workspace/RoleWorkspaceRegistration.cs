@@ -10,6 +10,9 @@ public static class RoleWorkspaceRegistration
 {
     public static IServiceCollection AddUnifiedRoleWorkspaces(this IServiceCollection services)
     {
+        services.AddScoped<IHomeParticipationSummaryClient, HomeParticipationSummaryClient>();
+        services.AddScoped<IHomeParticipationDetailsClient, HomeParticipationDetailsClient>();
+        services.AddTransient<HomeParticipationDetailsViewModel>();
         services.AddScoped<RoleWorkspaceAccess>();
         services.AddScoped<IRoleWorkspaceAccess>(sp => sp.GetRequiredService<RoleWorkspaceAccess>());
         services.AddScoped<IRoleWorkspaceApi>(sp => sp.GetRequiredService<RoleWorkspaceAccess>());
@@ -26,6 +29,7 @@ public static class RoleWorkspaceRegistration
         services.AddScoped<IRoleWorkspaceAdapter, RestaurantRoleWorkspaceAdapter>();
         services.AddScoped<IRoleWorkspaceAdapter, FoodDriverRoleWorkspaceAdapter>();
         services.AddScoped<IRoleWorkspaceAdapter, OperatorRoleWorkspaceAdapter>();
+        services.AddScoped<IRoleWorkspaceAdapter, CargoOperatorWorkspaceAdapter>();
         services.AddScoped<ShipperWorkspaceApiClient>();
         services.AddScoped<CargoDriverWorkspaceApiClient>();
         services.AddScoped<WarehouseWorkspaceApiClient>();

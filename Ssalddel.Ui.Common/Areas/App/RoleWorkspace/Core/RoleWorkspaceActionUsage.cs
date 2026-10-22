@@ -1,5 +1,6 @@
 using Ssalddel.Contracts.Food;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo;
 
 namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
 
@@ -41,10 +42,13 @@ public static class RoleWorkspaceActionPolicy
 
             (RoleWorkspaceCatalog.Shipper, "create" or "timeline" or "payment" or "proofs") => RoleWorkspaceActionUsage.OptionalTool,
             (RoleWorkspaceCatalog.CargoDriver, "arrive-pickup" or "pickup" or "arrive-dropoff" or "dropoff") => RoleWorkspaceActionUsage.Required,
-            (RoleWorkspaceCatalog.CargoDriver, "offer" or "issue") => RoleWorkspaceActionUsage.Conditional,
+            (RoleWorkspaceCatalog.CargoDriver, "offer" or "issue" or CargoDriverWorkSession.StartWork or CargoDriverWorkSession.StopWork
+                or CargoDriverWorkSession.EnableDispatch or CargoDriverWorkSession.DisableDispatch or CargoDriverWorkSession.CheckLocation) => RoleWorkspaceActionUsage.Conditional,
             (RoleWorkspaceCatalog.Warehouse, "inbound" or "inspection" or "put-away" or "picking"
                 or "packing" or "handoff" or "outbound") => RoleWorkspaceActionUsage.Conditional,
             (RoleWorkspaceCatalog.Operator, OperatorRoleWorkspaceAdapter.ReviewInterruption) => RoleWorkspaceActionUsage.Conditional,
+            (RoleWorkspaceCatalog.Operator, CargoOperatorWorkspaceAdapter.ReviewIncidents) => action.IsPrimary
+                ? RoleWorkspaceActionUsage.Conditional : RoleWorkspaceActionUsage.OptionalTool,
             _ => RoleWorkspaceActionUsage.Unclassified
         };
     }

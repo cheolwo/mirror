@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Ssalddel.Contracts.Admin.BusinessPackages;
 using Ssalddel.Contracts.Admin.Progress;
 
 namespace Ssalddel.Application.Admin.Progress;
@@ -15,6 +16,16 @@ public sealed class 관리자운송목록조회QueryHandler : IRequestHandler<�
     public async Task<IReadOnlyList<운송진행응답>> Handle(관리자운송목록조회Query request, CancellationToken cancellationToken)
     {
         var query = _db.운송원장.AsNoTracking().AsQueryable();
+
+        var businessType = request.BusinessCode?.Trim().ToLowerInvariant() switch
+        {
+            null => (int?)null,
+            BusinessPackageCatalog.FreightDelivery => 상태값.배차업무유형.용달운송,
+            BusinessPackageCatalog.FoodDelivery => 상태값.배차업무유형.음식배달,
+            _ => throw new ArgumentException("운송 업무 구분을 확인해 주세요.")
+        };
+        if (businessType.HasValue)
+            query = query.Where(x => x.배차업무유형 == businessType.Value);
 
         if (!string.IsNullOrWhiteSpace(request.상태))
         {

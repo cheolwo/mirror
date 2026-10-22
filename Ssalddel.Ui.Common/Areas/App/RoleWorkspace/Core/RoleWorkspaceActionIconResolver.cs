@@ -1,6 +1,7 @@
 using MudBlazor;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo;
 
 namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
 
@@ -24,7 +25,13 @@ public static class RoleWorkspaceActionIconResolver
         FoodDriverRoleWorkspaceAdapter.EnableDispatch => Icons.Material.Filled.Notifications,
         FoodDriverRoleWorkspaceAdapter.DisableDispatch => Icons.Material.Filled.NotificationsOff,
         FoodDriverRoleWorkspaceAdapter.UpdateLocation => Icons.Material.Filled.MyLocation,
+        CargoDriverWorkSession.StartWork => Icons.Material.Filled.PlayArrow,
+        CargoDriverWorkSession.StopWork => Icons.Material.Filled.Stop,
+        CargoDriverWorkSession.EnableDispatch => Icons.Material.Filled.Notifications,
+        CargoDriverWorkSession.DisableDispatch => Icons.Material.Filled.NotificationsOff,
+        CargoDriverWorkSession.CheckLocation => Icons.Material.Filled.MyLocation,
         OperatorRoleWorkspaceAdapter.ReviewInterruption => Icons.Material.Filled.RateReview,
+        CargoOperatorWorkspaceAdapter.ReviewIncidents => Icons.Material.Filled.ReportProblem,
         "food.new-order" => Icons.Material.Filled.Restaurant,
         "create" => Icons.Material.Filled.Add,
         "timeline" => Icons.Material.Filled.ListAlt,

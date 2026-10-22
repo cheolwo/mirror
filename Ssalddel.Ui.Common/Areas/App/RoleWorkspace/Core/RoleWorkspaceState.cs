@@ -24,34 +24,35 @@ public sealed class RoleWorkspaceState
         _owner = owner;
     }
 
-    public RoleWorkspaceViewState Read(string roleKey)
-        => _views.GetValueOrDefault(roleKey) ?? new(null, false, null);
+    public RoleWorkspaceViewState Read(string roleKey, string? businessCode = null)
+        => _views.GetValueOrDefault(RoleWorkspaceBusinessContext.Key(roleKey, businessCode)) ?? new(null, false, null);
 
     public void SelectRole(string roleKey)
     {
         if (RoleWorkspaceCatalog.Normalize(roleKey) is { } key) LastRoleKey = key;
     }
 
-    public void Save(string roleKey, RoleWorkspaceViewState view)
+    public void Save(string roleKey, RoleWorkspaceViewState view, string? businessCode = null)
     {
-        if (RoleWorkspaceCatalog.Normalize(roleKey) is { } key)
-            _views[key] = view with { SelectedId = RoleWorkspaceNavigation.StableId(view.SelectedId) };
+        if (RoleWorkspaceBusinessContext.Resolve(roleKey, businessCode) is { } context)
+            _views[context.StateKey] = view with { SelectedId = RoleWorkspaceNavigation.StableId(view.SelectedId) };
     }
 
-    public void ClearViewport(string roleKey)
+    public void ClearViewport(string roleKey, string? businessCode = null)
     {
-        if (_views.TryGetValue(roleKey, out var view)) _views[roleKey] = view with { Viewport = null };
+        var key = RoleWorkspaceBusinessContext.Key(roleKey, businessCode);
+        if (_views.TryGetValue(key, out var view)) _views[key] = view with { Viewport = null };
     }
 
-    public Guid RequestId(string roleKey, string itemId, string actionKey)
+    public Guid RequestId(string roleKey, string itemId, string actionKey, string? businessCode = null)
     {
-        var key = (roleKey, itemId, actionKey);
+        var key = (RoleWorkspaceBusinessContext.Key(roleKey, businessCode), itemId, actionKey);
         if (!_requests.TryGetValue(key, out var id)) _requests[key] = id = Guid.NewGuid();
         return id;
     }
 
-    public void CompleteRequest(string roleKey, string itemId, string actionKey)
-        => _requests.Remove((roleKey, itemId, actionKey));
+    public void CompleteRequest(string roleKey, string itemId, string actionKey, string? businessCode = null)
+        => _requests.Remove((RoleWorkspaceBusinessContext.Key(roleKey, businessCode), itemId, actionKey));
 }
 
 public sealed record RoleWorkspaceViewState(string? SelectedId, bool DetailsExpanded, NeighborhoodMapViewport? Viewport,

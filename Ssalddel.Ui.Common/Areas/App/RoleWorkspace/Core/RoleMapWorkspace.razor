@@ -2,6 +2,7 @@
 @using Ssalddel.Contracts.Common.Metadata
 @attribute [SsalddelCodeMetadata(SsalddelCodeFeatureKeys.FoodDriverWork, SsalddelCodeLayer.View, "전체 지도와 독립된 상태별 카드·행동을 표시하는 공통 역할 화면", StepKey = "ui.role-map-view", FlowOrder = 230, ExecutionStage = SsalddelCodeExecutionStage.Presentation, DependsOnStepKeys = new[] { "ui.workspace-view-model" }, ReadsFrom = SsalddelCodeDataScope.ClientPresentation, WritesTo = SsalddelCodeDataScope.ClientPresentation | SsalddelCodeDataScope.OperationalState, Effects = SsalddelCodeEffect.UiStateMutation | SsalddelCodeEffect.NetworkCall | SsalddelCodeEffect.StateMutation | SsalddelCodeEffect.PersistentRead | SsalddelCodeEffect.PersistentWrite | SsalddelCodeEffect.ThirdPartyApiCall | SsalddelCodeEffect.MayIncurExternalCost, Boundary = "Model에 조회·명령을 위임한다. 카드 높이로 지도를 변경하지 않으며 서버 권한·실제 GPS·지도 SDK 성공을 이 메타데이터가 증명하지 않는다.")]
 @using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
 @inject RoleWorkspaceViewModel Model
 @inject INeighborhoodMapHost MapHost
 @inject NavigationManager Navigation
@@ -11,7 +12,7 @@
 <main class="role-map-workspace">
     <header class="role-map-workspace__header">
         <a href="@Href(HomeHref)" class="role-map-workspace__back" aria-label="역할 선택으로"><MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" /></a>
-        <h1>@(Model.Role?.Label ?? "업무")</h1>
+        <h1>@Model.Title</h1>
         <a href="@Href(HomeHref)" class="role-map-workspace__switch">역할 바꾸기</a>
     </header>
     @if (CanShowWorkspace)
@@ -24,19 +25,24 @@
         <summary>표시 설정</summary>
         <div><label><input type="checkbox" checked="@Model.ShowMarkers" @onchange="MarkersChanged" />위치 핀</label><label><input type="checkbox" checked="@Model.ShowRoutes" @onchange="RoutesChanged" />이동 경로</label></div>
     </details>
-    @if (IsFoodDriver && Model.ListOnly)
+    @if (IsDriver && Model.ListOnly)
     {
-        <div class="role-map-workspace__driver-list-control"><FoodDriverDispatchToggle Action="DispatchControl" IsBusy="@(Model.CommandBusy || Model.AccountBusy)" IsStateKnown="DispatchStateKnown" AutomaticStopNotice="@Model.DispatchReceptionNotice" Toggled="ToggleDispatch" /></div>
+        <div class="role-map-workspace__driver-list-control"><FoodDriverDispatchToggle Action="DispatchControl" ReceivingActionKey="@ReceivingActionKey" IsBusy="@(Model.CommandBusy || Model.AccountBusy)" IsStateKnown="DispatchStateKnown" AutomaticStopNotice="@Model.DispatchReceptionNotice" Toggled="ToggleDispatch" /></div>
     }
     @if (!Model.ListOnly)
     {
     <section class="role-map-workspace__geography" aria-label="현재 업무 지도">
         <div id="role-workspace-map-canvas" class="role-map-workspace__canvas" aria-label="업무 위치와 이동 경로"></div>
-        @if (IsFoodDriver)
-        { <div class="role-map-workspace__driver-map-control"><FoodDriverDispatchToggle Action="DispatchControl" IsBusy="@(Model.CommandBusy || Model.AccountBusy)" IsStateKnown="DispatchStateKnown" AutomaticStopNotice="@Model.DispatchReceptionNotice" Toggled="ToggleDispatch" /></div> }
+        @if (IsDriver)
+        { <div class="role-map-workspace__driver-map-control"><FoodDriverDispatchToggle Action="DispatchControl" ReceivingActionKey="@ReceivingActionKey" IsBusy="@(Model.CommandBusy || Model.AccountBusy)" IsStateKnown="DispatchStateKnown" AutomaticStopNotice="@Model.DispatchReceptionNotice" Toggled="ToggleDispatch" /></div> }
         @if (_hostStatus.Code != "ready")
         {
-            <div class="role-map-workspace__map-notice" role="status"><span>@(_hostStatus.Message ?? "지도를 확인하지 못했습니다. 아래 업무 목록을 이용해 주세요.")</span><button type="button" @onclick="RetryMap">지도 다시 시도</button><button type="button" @onclick="() => SetListOnly(true)">목록으로 보기</button></div>
+            <div class="role-map-workspace__map-notice" role="status">
+                <span>@(_hostStatus.Message ?? "지도를 확인하지 못했습니다. 아래 업무 목록을 이용해 주세요.")</span>
+                @if (_hostStatus.Code != "loading")
+                { <button type="button" @onclick="RetryMap">지도 다시 시도</button> }
+                <button type="button" @onclick="() => SetListOnly(true)">목록으로 보기</button>
+            </div>
         }
         else if (!Model.ShowMarkers)
         { <p class="role-map-workspace__map-notice">위치 핀 표시가 꺼져 있어요.</p> }
@@ -187,7 +193,11 @@
             @if (Model.IsAuthenticated)
             {
                 <details class="role-map-workspace__list role-map-workspace__workspace-actions role-map-workspace__profile">
-                    <summary>@if (IsFoodDriver) { <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" /> }@(IsFoodDriver ? "내 정보" : "계정")</summary>
+                    <summary>@if (IsDriver) { <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" /> }@(IsDriver ? "내 정보" : "계정")</summary>
+                    @if (Model.Role?.Key == "cargo-driver")
+                    {
+                        <div class="role-map-workspace__actions"><a href="@Href("/workspace/cargo-driver/qualification")"><MudIcon Icon="@Icons.Material.Outlined.Badge" Size="Size.Small" />운송 자격 확인</a></div>
+                    }
                     <div class="role-map-workspace__actions"><button type="button" disabled="@(Model.CommandBusy || Model.AccountBusy)" @onclick="Model.SignOutAsync">@(Model.AccountBusy ? "로그아웃 중" : "로그아웃")</button></div>
                     @if (Model.AccountError is { } accountError) { <p class="role-map-workspace__error" role="alert">@accountError</p> }
                     @if (ProfileStopAction is { } stopAction)
@@ -210,8 +220,15 @@
     }
     else
     {
-        <section class="role-map-workspace__panel" aria-label="로그인 안내">
-            @if (Model.AccessDenied)
+        <section class="role-map-workspace__panel" aria-label="@(Model.Context is null ? "업무 선택 안내" : "로그인 안내")">
+            @if (Model.Context is null && !Model.IsLoading)
+            {
+                <div class="role-map-workspace__empty" role="alert">
+                    <h2>업무 구분 확인</h2><p>@Model.Error</p>
+                    <div class="role-map-workspace__actions"><a href="@Href(HomeHref)" class="is-primary">역할 선택으로</a></div>
+                </div>
+            }
+            else if (Model.AccessDenied)
             {
                 <div class="role-map-workspace__error" role="alert"><p>@Model.Error</p><a href="@Href(HomeHref)">역할 선택으로</a></div>
             }
@@ -234,13 +251,20 @@
 @code {
     private bool CanShowWorkspace => Model.IsAuthenticated && !Model.RequiresLogin && !Model.AccessDenied;
     private bool IsFoodDriver => Model.Role?.Key == "food-driver";
-    private RoleWorkspaceAction? DispatchControl => IsFoodDriver ? Model.EmptyActions.FirstOrDefault(action => action.Key is FoodDriverRoleWorkspaceAdapter.EnableDispatch or FoodDriverRoleWorkspaceAdapter.DisableDispatch) : null;
-    private RoleWorkspaceAction? ProfileStopAction => IsFoodDriver ? Model.EmptyActions.FirstOrDefault(action => action.Key == FoodDriverRoleWorkspaceAdapter.StopWork) : null;
+    private bool IsDriver => IsFoodDriver || Model.Role?.Key == "cargo-driver";
+    private string ReceivingActionKey => IsFoodDriver ? FoodDriverRoleWorkspaceAdapter.DisableDispatch : CargoDriverWorkSession.DisableDispatch;
+    private RoleWorkspaceAction? DispatchControl => !IsDriver ? null : Model.EmptyActions.FirstOrDefault(action => action.Key is
+        FoodDriverRoleWorkspaceAdapter.EnableDispatch or FoodDriverRoleWorkspaceAdapter.DisableDispatch
+        or CargoDriverWorkSession.EnableDispatch or CargoDriverWorkSession.DisableDispatch);
+    private RoleWorkspaceAction? ProfileStopAction => !IsDriver ? null : Model.EmptyActions.FirstOrDefault(action => action.Key is
+        FoodDriverRoleWorkspaceAdapter.StopWork or CargoDriverWorkSession.StopWork);
     private bool DispatchStateKnown => !Model.IsLoading && !Model.IsRefreshing && Model.Error is null && Model.RefreshError is null
-        && !Model.FoodDispatchStateUnconfirmed && !Model.FoodStartStateUnconfirmed && DispatchControl?.Enabled == true;
-    private bool IsProfileConfirmation => IsFoodDriver && _confirmation?.Key == FoodDriverRoleWorkspaceAdapter.StopWork;
-    private bool IsFoodDriverPositionedControl(RoleWorkspaceAction action) => IsFoodDriver && action.Key is FoodDriverRoleWorkspaceAdapter.StopWork
-        or FoodDriverRoleWorkspaceAdapter.EnableDispatch or FoodDriverRoleWorkspaceAdapter.DisableDispatch;
+        && !Model.FoodDispatchStateUnconfirmed && !Model.FoodStartStateUnconfirmed
+        && (IsFoodDriver ? DispatchControl?.Enabled == true : DispatchControl is not null);
+    private bool IsProfileConfirmation => IsDriver && _confirmation?.Key is FoodDriverRoleWorkspaceAdapter.StopWork or CargoDriverWorkSession.StopWork;
+    private bool IsFoodDriverPositionedControl(RoleWorkspaceAction action) => IsDriver && action.Key is FoodDriverRoleWorkspaceAdapter.StopWork
+        or FoodDriverRoleWorkspaceAdapter.EnableDispatch or FoodDriverRoleWorkspaceAdapter.DisableDispatch
+        or CargoDriverWorkSession.StopWork or CargoDriverWorkSession.EnableDispatch or CargoDriverWorkSession.DisableDispatch;
     // 표시 분류는 권한·실행 조건을 바꾸지 않습니다. 기존 adapter와 가능 행동이 실행을 소유합니다.
     private bool HasCurrentWork => Model.Items.Any(item => item.IsCurrent);
     private IReadOnlyList<RoleWorkspaceAction> DirectWorkspaceActions => Model.EmptyActions
@@ -276,14 +300,14 @@
                 {
                     "food-driver" => new RoleWorkspaceAction("history", "완료 배달 내역", "/workspace/food-driver/history", RequiresConfirmation: false),
                     "cargo-driver" => new RoleWorkspaceAction("history", "운송 내역", "/workspace/cargo-driver/history", RequiresConfirmation: false),
-                    "operator" => new RoleWorkspaceAction("cargo-incidents", "화물 예외 검토", "/workspace/operator/cargo-incidents", RequiresConfirmation: false),
                     _ => null
                 };
                 if (related is not null) actions.Add((string.Empty, related));
                 if (Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Pricing.AgreedRateTableClient.Supports(Model.Role?.Key))
                     actions.Add((string.Empty, new RoleWorkspaceAction("agreed-rates", "합의 요금표",
                         $"/workspace/{Model.Role!.Key}/agreed-rates", RequiresConfirmation: false)));
-                if (Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment.분산이행Navigation.Supports(Model.Role?.Key))
+                if (Model.Role?.Key != RoleWorkspaceCatalog.Operator
+                    && Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment.분산이행Navigation.Supports(Model.Role?.Key))
                     actions.Add((string.Empty, new RoleWorkspaceAction("distributed-fulfillment", "분산 보관·배송 업무",
                         RoleWorkspaceNavigation.WithReturn(Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment.분산이행Navigation.Href(Model.Role!.Key,
                             Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment.분산이행Navigation.DefaultScreen(Model.Role.Key)), Model.WorkspaceHref), RequiresConfirmation: false)));
@@ -297,6 +321,7 @@
     }
     [Parameter] public string? RoleKey { get; set; }
     [Parameter] public string? SelectedId { get; set; }
+    [Parameter] public string? BusinessCode { get; set; }
     [Parameter] public string HomeHref { get; set; } = "/";
     [Parameter] public string LoginHref { get; set; } = "/login";
     [Parameter] public RenderFragment<RoleWorkspaceItem>? DetailContent { get; set; }
@@ -324,11 +349,11 @@
     protected override async Task OnParametersSetAsync()
     {
         if (_disposed) return;
-        if (RoleWorkspaceCatalog.Normalize(RoleKey) == Model.Role?.Key)
-        { await Model.InitializeAsync(RoleKey, SelectedId); return; }
+        if (RoleWorkspaceBusinessContext.Resolve(RoleKey, BusinessCode) == Model.Context)
+        { await Model.InitializeAsync(RoleKey, SelectedId, BusinessCode); return; }
         CancelAction(); _renderRequest?.Cancel(); _renderedRevision = -1; _switchingRole = true; ++_lifecycle;
         // 지도 호스트를 기다리기 전에 이전 역할의 비공개 카드와 늦은 응답을 무효화합니다.
-        var initialization = Model.InitializeAsync(RoleKey, SelectedId);
+        var initialization = Model.InitializeAsync(RoleKey, SelectedId, BusinessCode);
         try
         {
             try { await MapHost.HideAsync(_lifetime.Token); }

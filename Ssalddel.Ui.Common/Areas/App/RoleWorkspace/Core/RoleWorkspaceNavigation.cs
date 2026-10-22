@@ -8,12 +8,19 @@ public static class RoleWorkspaceNavigation
             && value.All(character => char.IsAsciiLetterOrDigit(character) || character is '-' or '_' or '.' or ':')
                 ? value : null;
 
-    public static string Href(string roleKey, string? selectedId = null)
+    public static string Href(string roleKey, string? selectedId = null, string? businessCode = null)
     {
         var role = RoleWorkspaceCatalog.Find(roleKey);
         if (role is null) return "/";
+        var context = RoleWorkspaceBusinessContext.Resolve(role.Key, businessCode);
+        if (context is null) return "/";
         var id = StableId(selectedId);
-        return role.Href + (id is null ? "" : "?selected=" + Uri.EscapeDataString(id));
+        var query = new List<string>();
+        // 고유 역할의 기존 URL은 유지하고 두 관리 진입만 명시적으로 구분한다.
+        if (role.Key == RoleWorkspaceCatalog.Operator && businessCode is not null)
+            query.Add("business=" + Uri.EscapeDataString(context.BusinessCode!));
+        if (id is not null) query.Add("selected=" + Uri.EscapeDataString(id));
+        return role.Href + (query.Count == 0 ? "" : "?" + string.Join('&', query));
     }
 
     public static string? LocalRoute(string? route)

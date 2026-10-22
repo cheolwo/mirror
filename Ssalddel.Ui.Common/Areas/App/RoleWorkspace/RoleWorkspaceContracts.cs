@@ -27,6 +27,8 @@ public sealed record RoleWorkspaceLocation(double Latitude, double Longitude, do
 public interface IRoleWorkspaceAdapter
 {
     string RoleKey { get; }
+    /// <summary>같은 인증 역할 안의 업무 구분입니다. 생략하면 기존 역할의 기본 업무를 사용합니다.</summary>
+    string? BusinessCode => null;
     Task<RoleWorkspaceSnapshot> LoadAsync(string? selectedId, CancellationToken cancellationToken);
     Task PerformAsync(string itemId, string actionKey, Guid requestId, CancellationToken cancellationToken);
     void Clear();
@@ -73,9 +75,11 @@ public interface IRoleWorkspaceLocationProvider
     Task<RoleWorkspaceLocation?> GetCurrentWithoutPermissionPromptAsync(CancellationToken cancellationToken)
         => Task.FromResult<RoleWorkspaceLocation?>(null);
 }
-public sealed class RoleWorkspaceAccessException(int statusCode, string message, string? errorCode = null, string? responseBody = null) : Exception(message)
+public sealed class RoleWorkspaceAccessException(int statusCode, string message, string? errorCode = null, string? responseBody = null,
+    Guid? rejectedWorkStartRequestId = null) : Exception(message)
 {
     public int StatusCode { get; } = statusCode;
     public string? ErrorCode { get; } = errorCode;
     public string? ResponseBody { get; } = responseBody;
+    public Guid? RejectedWorkStartRequestId { get; } = rejectedWorkStartRequestId;
 }

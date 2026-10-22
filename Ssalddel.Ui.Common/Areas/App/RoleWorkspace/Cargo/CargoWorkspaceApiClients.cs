@@ -5,6 +5,8 @@ using Ssalddel.Contracts.Common.Warehouse;
 using Ssalddel.Contracts.Driver.Action;
 using Ssalddel.Contracts.Driver.Recommendation;
 using Ssalddel.Contracts.Driver.Transport;
+using Ssalddel.Contracts.Driver.Work;
+using Ssalddel.Contracts.Common.Dispatch;
 using Ssalddel.Contracts.Shipper.Request;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
 
@@ -25,6 +27,19 @@ public sealed class ShipperWorkspaceApiClient(IRoleWorkspaceApi api)
 /// <summary>음식 배달 endpoint와 구분된 기존 화물기사 endpoint를 소비합니다.</summary>
 public sealed class CargoDriverWorkspaceApiClient(IRoleWorkspaceApi api)
 {
+    public Task<기사운행상태응답> WorkStatusAsync(CancellationToken ct)
+        => api.GetAsync<기사운행상태응답>(RoleWorkspaceCatalog.CargoDriver, "api/v1/driver/work/status", ct);
+    public Task<운영배차수신상태Dto> ReceptionAsync(CancellationToken ct)
+        => api.GetAsync<운영배차수신상태Dto>(RoleWorkspaceCatalog.CargoDriver, "api/v1/driver/operational-dispatch/availability", ct);
+    public Task<기사운행시작응답?> StartWorkAsync(기사운행시작요청 body, CancellationToken ct)
+        => api.PostAsync<기사운행시작응답>(RoleWorkspaceCatalog.CargoDriver, "api/v1/driver/work/start", body, ct);
+    public Task<object?> StopWorkAsync(CancellationToken ct)
+        => api.PostAsync<object>(RoleWorkspaceCatalog.CargoDriver, "api/v1/driver/work/stop", new { }, ct);
+    public Task<기사위치갱신응답?> LocationAsync(기사위치갱신요청 body, CancellationToken ct)
+        => api.PostAsync<기사위치갱신응답>(RoleWorkspaceCatalog.CargoDriver, "api/v1/driver/work/location", body, ct);
+    public Task<운영배차수신상태Dto?> ChangeReceptionAsync(운영배차수신의사변경요청 body, CancellationToken ct)
+        => api.PutAsync<운영배차수신상태Dto>(RoleWorkspaceCatalog.CargoDriver, "api/v1/driver/operational-dispatch/availability/intent", body, ct);
+
     public Task<기사화물운송작업공간응답> WorkspaceAsync(CancellationToken ct)
         => api.GetAsync<기사화물운송작업공간응답>(RoleWorkspaceCatalog.CargoDriver,
             "api/v1/driver/transports/workspace", ct);

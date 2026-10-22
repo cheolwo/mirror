@@ -13,6 +13,7 @@ namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food;
 public sealed class OperatorRoleWorkspaceAdapter(IRoleWorkspaceApi api) : IRoleWorkspaceAdapter
 {
     public string RoleKey => "operator";
+    public string BusinessCode => Ssalddel.Contracts.Admin.BusinessPackages.BusinessPackageCatalog.FoodDelivery;
     public const string ReviewInterruption = "food-operator.interruption-review";
 
     public async Task<RoleWorkspaceSnapshot> LoadAsync(string? selectedId, CancellationToken cancellationToken)

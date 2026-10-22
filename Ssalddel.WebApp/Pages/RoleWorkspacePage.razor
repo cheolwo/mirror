@@ -1,7 +1,7 @@
 @page "/workspace/{RoleKey}"
 @layout MapOnlyLayout
 @using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
-<PageTitle>@(RoleWorkspaceCatalog.Find(RoleKey)?.Label ?? "활동 역할") · 살뜰</PageTitle>
+<PageTitle>@(RoleWorkspaceBusinessContext.Resolve(RoleKey, BusinessCode)?.Title ?? "활동 역할") · 살뜰</PageTitle>
 @if (RoleKey == "community")
 {
     <header style="padding:8px 16px"><a href="/">역할 선택</a></header>
@@ -9,11 +9,13 @@
 }
 else if (RoleWorkspaceCatalog.Find(RoleKey) is not null)
 {
-    <RoleMapWorkspace RoleKey="@RoleKey" SelectedId="@SelectedId" HomeHref="/" LoginHref="@LoginHref" />
+    <RoleMapWorkspace RoleKey="@RoleKey" SelectedId="@SelectedId" BusinessCode="@BusinessCode" HomeHref="/" LoginHref="@LoginHref" />
 }
 else { <p>활동 역할을 확인해 주세요. <a href="/">역할 선택</a></p> }
 @code {
     [Parameter] public string RoleKey { get; set; } = "";
     [SupplyParameterFromQuery(Name = "selected")] public string? SelectedId { get; set; }
-    private string LoginHref => $"/workspace-login/{RoleKey}";
+    [SupplyParameterFromQuery(Name = "business")] public string? BusinessCode { get; set; }
+    private string LoginHref => RoleWorkspaceNavigation.WithReturn($"/workspace-login/{RoleKey}",
+        RoleWorkspaceNavigation.Href(RoleKey, SelectedId, BusinessCode))!;
 }
