@@ -18,6 +18,12 @@ namespace 살뜰.도메인.화주
         public int? 화물팔레트개수 { get; set; }
         public decimal? 화물중량Kg { get; set; }
         public decimal? 화물부피Cbm { get; set; }
+        /// <summary>정규화에 사용한 원입력입니다. 유효 부피와 구분하며 구형 자료는 미확인으로 유지합니다.</summary>
+        public decimal? 화물입력부피Cbm { get; set; }
+        public string? 화물부피근거Code { get; set; }
+        public string? 화물적재계산판본 { get; set; }
+        public bool? 화물바닥회전가능여부 { get; set; }
+        public bool? 화물적층가능여부 { get; set; }
         public bool 화물파손주의여부 { get; set; }
         public string 화물온도조건 { get; set; } = "상온";
         public string 운송방식 { get; set; } = "혼적";
@@ -44,6 +50,7 @@ namespace 살뜰.도메인.화주
         public string 픽업_연락처_전화번호 { get; set; } = string.Empty;
         public DateTime 픽업_시간창_시작일시 { get; set; }
         public DateTime 픽업_시간창_종료일시 { get; set; }
+        public decimal? 픽업_작업시간분 { get; set; }
         public string 하차_도로명주소 { get; set; } = string.Empty;
         public string 하차_상세주소 { get; set; } = string.Empty;
         public decimal? 하차_위도 { get; set; }
@@ -52,6 +59,7 @@ namespace 살뜰.도메인.화주
         public string 하차_연락처_전화번호 { get; set; } = string.Empty;
         public DateTime? 하차_시간창_시작일시 { get; set; }
         public DateTime? 하차_시간창_종료일시 { get; set; }
+        public decimal? 하차_작업시간분 { get; set; }
         public string 서비스레벨 { get; set; } = string.Empty;
         public string 요청사항 { get; set; } = string.Empty;
         public decimal? 대기료 { get; set; }

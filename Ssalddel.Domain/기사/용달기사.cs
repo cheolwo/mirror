@@ -27,6 +27,15 @@ namespace 살뜰.도메인.기사
         [Column("차량")]
         public string 차량 { get; set; } = "1톤 카고";
 
+        /// <summary>선택한 실차의 비공개 내부 참조. 차량번호 원문을 저장하지 않는다.</summary>
+        public string? 현재실차참조 { get; set; }
+
+        /// <summary>선택 실차의 물리 적재 확인 자료. 법정 자격 원장과 분리하며 persistence에서 암호화한다.</summary>
+        public string? 실차적재제원Json { get; set; }
+
+        [ConcurrencyCheck]
+        public long? 실차적재판본 { get; set; }
+
         [Column("운행상태")]
         public string 운행상태 { get; set; } = 상태값.기사운행상태.대기;
 

@@ -80,8 +80,11 @@ internal static class 화주운송의뢰매퍼
                 부피Cbm = entity.화물부피Cbm,
                 팔레트개수 = entity.화물팔레트개수,
                 화물파손주의여부 = entity.화물파손주의여부,
-                온도조건 = entity.화물온도조건
+                온도조건 = entity.화물온도조건,
+                바닥회전가능여부 = entity.화물바닥회전가능여부,
+                적층가능여부 = entity.화물적층가능여부
             },
+            적재조건 = ReadLoadingEvidence(entity),
             화물길이Mm = entity.화물길이Mm,
             화물폭Mm = entity.화물폭Mm,
             화물높이Mm = entity.화물높이Mm,
@@ -91,7 +94,7 @@ internal static class 화주운송의뢰매퍼
             픽업 = To위치연락처(
                 entity.픽업_도로명주소, entity.픽업_상세주소, entity.픽업_위도, entity.픽업_경도,
                 entity.픽업_연락처_이름, entity.픽업_연락처_전화번호,
-                entity.픽업_시간창_시작일시, entity.픽업_시간창_종료일시),
+                entity.픽업_시간창_시작일시, entity.픽업_시간창_종료일시, entity.픽업_작업시간분),
             픽업위도 = entity.픽업_위도,
             픽업경도 = entity.픽업_경도,
             하차지 = entity.하차_도로명주소,
@@ -99,7 +102,7 @@ internal static class 화주운송의뢰매퍼
             하차 = To위치연락처(
                 entity.하차_도로명주소, entity.하차_상세주소, entity.하차_위도, entity.하차_경도,
                 entity.하차_연락처_이름, entity.하차_연락처_전화번호,
-                entity.하차_시간창_시작일시, entity.하차_시간창_종료일시),
+                entity.하차_시간창_시작일시, entity.하차_시간창_종료일시, entity.하차_작업시간분),
             하차위도 = entity.하차_위도,
             하차경도 = entity.하차_경도,
             대기료 = entity.대기료,
@@ -129,20 +132,21 @@ internal static class 화주운송의뢰매퍼
 
     private static ShipRequest.LocationContactDTO? To위치연락처(
         string roadAddress, string detailedAddress, decimal? latitude, decimal? longitude,
-        string contactName, string contactPhone, DateTime? windowStart, DateTime? windowEnd)
+        string contactName, string contactPhone, DateTime? windowStart, DateTime? windowEnd, decimal? handlingMinutes)
     {
         var hasWindow = windowStart.HasValue && windowStart.Value != default
                         && windowEnd.HasValue && windowEnd.Value != default;
         if (string.IsNullOrWhiteSpace(roadAddress) && string.IsNullOrWhiteSpace(detailedAddress)
             && !latitude.HasValue && !longitude.HasValue
             && string.IsNullOrWhiteSpace(contactName) && string.IsNullOrWhiteSpace(contactPhone)
-            && !hasWindow)
+            && !hasWindow && !handlingMinutes.HasValue)
         {
             return null;
         }
 
         return new ShipRequest.LocationContactDTO
         {
+            작업시간분 = handlingMinutes,
             주소 = new ShipRequest.AddressDTO
             {
                 도로명주소 = roadAddress,
@@ -156,6 +160,9 @@ internal static class 화주운송의뢰매퍼
                 : null
         };
     }
+
+    internal static 살뜰.Services.Dispatch.Recommendation.화물상하차작업시간 ReadHandlingTime(화주운송의뢰 entity)
+        => new(entity.픽업_작업시간분, entity.하차_작업시간분);
 
     internal static ShipRequest.공개화물요약응답 To공개화물요약응답(화주운송의뢰 entity)
     {
@@ -173,6 +180,83 @@ internal static class 화주운송의뢰매퍼
         };
     }
 
+    internal static ShipRequest.화물적재입력결과 CalculateLoadingEvidence(의뢰생성Command request)
+        => ShipRequest.화물적재입력Policy.계산(new ShipRequest.화물적재입력
+        {
+            화물종류 = request.화물종류, 설명 = request.화물설명, 수량 = request.화물수량,
+            길이Mm = request.화물길이Mm, 폭Mm = request.화물폭Mm, 높이Mm = request.화물높이Mm,
+            총중량Kg = request.화물중량Kg, 입력부피Cbm = request.화물부피Cbm, 팔레트개수 = request.팔레트개수,
+            온도조건 = request.화물온도조건, 파손주의여부 = request.화물파손주의여부,
+            바닥회전가능여부 = request.화물바닥회전가능여부, 적층가능여부 = request.화물적층가능여부,
+            운송방식 = request.운송방식, 서비스레벨 = request.서비스레벨, 요청사항 = request.요청사항
+        });
+
+    internal static ShipRequest.화물적재입력결과 ReadLoadingEvidence(화주운송의뢰 entity)
+    {
+        var result = ShipRequest.화물적재입력Policy.계산(LoadingInput(entity));
+        // 조회는 과거 원입력/판본을 소급 확인하거나 현재 계산으로 저장값을 바꾸는 명령이 아닙니다.
+        return ShipRequest.화물적재입력Policy.저장값적용(result, entity.화물부피Cbm, entity.화물부피근거Code, entity.화물적재계산판본);
+    }
+
+    internal static bool VolumeInputChanged(화물정보입력값 cargo, 화주운송의뢰 entity)
+        => cargo.부피입력초기화
+            ? entity.화물입력부피Cbm.HasValue || entity.화물적재계산판본 != ShipRequest.화물적재입력Policy.CurrentRevision && entity.화물부피Cbm.HasValue
+            : cargo.화물부피Cbm.HasValue && cargo.화물부피Cbm != entity.화물부피Cbm && cargo.화물부피Cbm != entity.화물입력부피Cbm;
+
+    internal static ShipRequest.화물적재입력결과 CalculateUpdatedLoadingEvidence(화주운송의뢰 entity, 의뢰수정Command request)
+    {
+        var cargo = request.화물정보;
+        var echoedVolume = cargo.화물부피Cbm.HasValue && cargo.화물부피Cbm == entity.화물부피Cbm;
+        var rawVolume = cargo.부피입력초기화 ? null
+            : cargo.화물부피Cbm.HasValue && !echoedVolume ? cargo.화물부피Cbm : entity.화물입력부피Cbm;
+        var input = LoadingInput(entity) with
+        {
+            화물종류 = cargo.화물종류 ?? entity.화물종류, 설명 = cargo.화물설명 ?? entity.화물설명,
+            수량 = cargo.화물수량 ?? entity.화물수량,
+            길이Mm = cargo.화물길이Mm ?? entity.화물길이Mm, 폭Mm = cargo.화물폭Mm ?? entity.화물폭Mm,
+            높이Mm = cargo.화물높이Mm ?? entity.화물높이Mm, 총중량Kg = cargo.화물중량Kg ?? entity.화물중량Kg,
+            입력부피Cbm = rawVolume, 팔레트개수 = cargo.팔레트개수 ?? entity.화물팔레트개수,
+            온도조건 = cargo.화물온도조건 ?? entity.화물온도조건, 파손주의여부 = cargo.화물파손주의여부 ?? entity.화물파손주의여부,
+            바닥회전가능여부 = cargo.화물바닥회전가능여부 ?? entity.화물바닥회전가능여부,
+            적층가능여부 = cargo.화물적층가능여부 ?? entity.화물적층가능여부,
+            운송방식 = request.운송조건.운송방식 ?? entity.운송방식,
+            서비스레벨 = request.운송조건.서비스레벨 ?? entity.서비스레벨,
+            요청사항 = request.요청조건.요청사항 ?? entity.요청사항
+        };
+        var result = ShipRequest.화물적재입력Policy.계산(input);
+        if (entity.화물적재계산판본 != ShipRequest.화물적재입력Policy.CurrentRevision && entity.화물부피Cbm.HasValue
+            && !cargo.부피입력초기화 && (!cargo.화물부피Cbm.HasValue || echoedVolume))
+        {
+            result = result with
+            {
+                유효부피Cbm = Math.Max(entity.화물부피Cbm.Value, result.유효부피Cbm ?? 0m),
+                부피근거Code = entity.화물부피근거Code ?? "LegacyUnverified", 계산판본 = entity.화물적재계산판본 ?? string.Empty,
+                경고 = result.경고.Concat(["구형 유효 부피를 원입력으로 승격하지 않고 보수적으로 보존했습니다."]).ToArray()
+            };
+        }
+        return result;
+    }
+
+    internal static void ApplyLoadingEvidence(화주운송의뢰 entity, ShipRequest.화물적재입력결과 result)
+    {
+        entity.화물부피Cbm = result.유효부피Cbm;
+        entity.화물입력부피Cbm = result.입력.입력부피Cbm;
+        entity.화물부피근거Code = result.부피근거Code;
+        entity.화물적재계산판본 = string.IsNullOrEmpty(result.계산판본) ? null : result.계산판본;
+        entity.화물바닥회전가능여부 = result.입력.바닥회전가능여부;
+        entity.화물적층가능여부 = result.입력.적층가능여부;
+    }
+
+    private static ShipRequest.화물적재입력 LoadingInput(화주운송의뢰 entity) => new()
+    {
+        화물종류 = entity.화물종류, 설명 = entity.화물설명, 수량 = entity.화물수량,
+        길이Mm = entity.화물길이Mm, 폭Mm = entity.화물폭Mm, 높이Mm = entity.화물높이Mm,
+        총중량Kg = entity.화물중량Kg, 입력부피Cbm = entity.화물입력부피Cbm, 팔레트개수 = entity.화물팔레트개수,
+        온도조건 = entity.화물온도조건, 파손주의여부 = entity.화물파손주의여부,
+        바닥회전가능여부 = entity.화물바닥회전가능여부, 적층가능여부 = entity.화물적층가능여부,
+        운송방식 = entity.운송방식, 서비스레벨 = entity.서비스레벨, 요청사항 = entity.요청사항
+    };
+
     internal static async Task UpsertCargoRequirementAsync(SsalddelContext db, 살뜰.도메인.화주.화주운송의뢰 entity, CancellationToken cancellationToken)
     {
         var cargo = await db.화물요구조건.FirstOrDefaultAsync(x => x.의뢰Id == entity.의뢰Id, cancellationToken);
@@ -185,7 +269,10 @@ internal static class 화주운송의뢰매퍼
         var mergedText = string.Join(' ', new[] { entity.운송방식, entity.서비스레벨, entity.요청사항, entity.화물종류, entity.화물설명 }
             .Where(x => !string.IsNullOrWhiteSpace(x))!);
 
-        cargo.화물무게Kg = entity.화물중량Kg.HasValue ? (int?)Math.Ceiling(entity.화물중량Kg.Value) : null;
+        var roundedWeight = entity.화물중량Kg.HasValue ? Math.Ceiling(entity.화물중량Kg.Value) : (decimal?)null;
+        // 정수 투영의 범위를 넘더라도 접수된 decimal 원중량을 손상하거나 쓰기 후 예외를 만들지 않습니다.
+        cargo.화물무게Kg = roundedWeight.HasValue && roundedWeight.Value >= int.MinValue && roundedWeight.Value <= int.MaxValue
+            ? decimal.ToInt32(roundedWeight.Value) : null;
         cargo.화물길이Mm = entity.화물길이Mm;
         cargo.화물폭Mm = entity.화물폭Mm;
         cargo.화물높이Mm = entity.화물높이Mm;

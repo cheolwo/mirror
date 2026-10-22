@@ -56,4 +56,8 @@ public sealed record 의뢰생성Command(
     public bool SimulationFulfillment { get; init; }
     public bool SimulationAutomaticFulfillment { get; init; }
     public DateTime? SimulationDesiredCompletionUtc { get; init; }
+    public bool? 화물바닥회전가능여부 { get; init; }
+    public bool? 화물적층가능여부 { get; init; }
+    public decimal? 픽업작업시간분 { get; init; }
+    public decimal? 하차작업시간분 { get; init; }
 }

@@ -94,6 +94,10 @@ public sealed class 화주운송의뢰생성요청
 public sealed class 차량추천요청
 {
     public string? 화물종류 { get; set; }
+    public string? 화물설명 { get; set; }
+    public string? 운송방식 { get; set; }
+    public string? 서비스레벨 { get; set; }
+    public string? 요청사항 { get; set; }
     public int? 화물수량 { get; set; }
     public int? 화물길이Mm { get; set; }
     public int? 화물폭Mm { get; set; }
@@ -103,12 +107,14 @@ public sealed class 차량추천요청
     public int? 팔레트개수 { get; set; }
     public string? 화물온도조건 { get; set; }
     public bool 화물파손주의여부 { get; set; }
-    public bool 화물바닥회전가능여부 { get; set; } = true;
-    public bool 화물적층가능여부 { get; set; } = true;
+    // 생략과 명시 true/false를 구분한다. 구형 생략의 유효 가정은 공유 정책이 경고와 함께 적용한다.
+    public bool? 화물바닥회전가능여부 { get; set; }
+    public bool? 화물적층가능여부 { get; set; }
 }
 
 public sealed class 차량추천응답
 {
+    public 화물적재입력결과? 적재조건 { get; set; }
     public string 추천차량종류 { get; set; } = string.Empty;
     public decimal? 추정화물부피Cbm { get; set; }
     public IReadOnlyList<string> 추천사유 { get; set; } = Array.Empty<string>();
@@ -172,8 +178,13 @@ public sealed class CargoDTO
     public int? 길이Mm { get; set; }
     public int? 폭Mm { get; set; }
     public int? 높이Mm { get; set; }
+    /// <summary>실제 운송하는 깔판·포장을 포함한 총중량입니다. 상품 순중량이나 수량으로 대체하지 않습니다.</summary>
     public decimal? 중량Kg { get; set; }
     public decimal? 부피Cbm { get; set; }
+    /// <summary>수정 시 직접 입력 부피를 지우려는 명시적 의도입니다. 양수 부피와 함께 지정할 수 없습니다.</summary>
+    public bool 부피입력초기화 { get; set; }
+    public bool? 바닥회전가능여부 { get; set; }
+    public bool? 적층가능여부 { get; set; }
     public int? 팔레트개수 { get; set; }
     public bool 화물파손주의여부 { get; set; }
     public string? 온도조건 { get; set; }
@@ -181,6 +192,12 @@ public sealed class CargoDTO
 
 public sealed class LocationContactDTO
 {
+    /// <summary>해당 지점의 예상 상차/하차 작업 분. 미확인 null과 명시한 0분을 구분합니다.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public decimal? 작업시간분 { get; set; }
+    /// <summary>수정 시 기존 작업시간을 미확인으로 되돌리는 명시적 의도. 시간 값과 함께 지정하지 않습니다.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool 작업시간입력초기화 { get; set; }
     public AddressDTO 주소 { get; set; } = new();
     public ContactDTO 연락처 { get; set; } = new();
     public TimeWindowDTO? 시간창 { get; set; }
@@ -365,6 +382,8 @@ public sealed class 화주운송의뢰응답
     public DateTime 생성일시 { get; set; }
     // 구판 응답의 누락은 미확인으로 유지한다. 수정 시 생성 기본값으로 대신하지 않는다.
     public CargoDTO? 화물 { get; set; }
+    /// <summary>원입력과 판정용 유효값을 구분합니다. 구형 응답의 누락은 확인된 조건이 아닙니다.</summary>
+    public 화물적재입력결과? 적재조건 { get; set; }
     public int? 화물길이Mm { get; set; }
     public int? 화물폭Mm { get; set; }
     public int? 화물높이Mm { get; set; }

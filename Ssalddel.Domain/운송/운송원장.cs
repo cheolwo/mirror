@@ -53,6 +53,8 @@ namespace 살뜰.도메인.운송
 
         public int 추천라운드 { get; set; }
 
+        public string? 추천판정근거Json { get; set; }
+
         public int 계획배차시도횟수 { get; set; }
 
         public string? 마지막거절기사Id { get; set; }

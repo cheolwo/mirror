@@ -35,6 +35,7 @@ public sealed class 운송원장Configuration : IEntityTypeConfiguration<운송�
         builder.Property(x => x.추천시작시각).HasColumnName("recommendation_started_at");
         builder.Property(x => x.추천만료시각).HasColumnName("recommendation_expires_at");
         builder.Property(x => x.추천라운드).HasColumnName("recommendation_round");
+        builder.Property(x => x.추천판정근거Json).HasColumnName("recommendation_decision_evidence_json").HasColumnType("longtext");
         builder.Property(x => x.계획배차시도횟수).HasColumnName("plan_attempts");
         builder.Property(x => x.마지막거절기사Id).HasColumnName("last_rejected_driver_id");
         builder.Property(x => x.공개전환시각).HasColumnName("public_transition_at");

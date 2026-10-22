@@ -7465,6 +7465,17 @@ namespace Ssalddel.Migrations
                         .HasColumnType("longtext")
                         .HasColumnName("차량");
 
+                    b.Property<string>("현재실차참조")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("실차적재제원Json")
+                        .HasColumnType("longtext");
+
+                    b.Property<long?>("실차적재판본")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
                     b.HasKey("Id");
 
                     b.ToTable("용달기사");
@@ -10862,6 +10873,10 @@ namespace Ssalddel.Migrations
                     b.Property<string>("확정기사Id")
                         .HasColumnType("longtext")
                         .HasColumnName("confirmed_driver_id");
+
+                    b.Property<string>("추천판정근거Json")
+                        .HasColumnType("longtext")
+                        .HasColumnName("recommendation_decision_evidence_json");
 
                     b.HasKey("Id");
 
@@ -17287,6 +17302,10 @@ namespace Ssalddel.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("pickup_window_start");
 
+                    b.Property<decimal?>("픽업_작업시간분")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("pickup_handling_minutes");
+
                     b.Property<DateTime>("픽업_시간창_종료일시")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("pickup_window_end");
@@ -17322,6 +17341,10 @@ namespace Ssalddel.Migrations
                     b.Property<DateTime?>("하차_시간창_시작일시")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("dropoff_window_start");
+
+                    b.Property<decimal?>("하차_작업시간분")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("dropoff_handling_minutes");
 
                     b.Property<DateTime?>("하차_시간창_종료일시")
                         .HasColumnType("datetime(6)")
@@ -17369,6 +17392,28 @@ namespace Ssalddel.Migrations
                     b.Property<decimal?>("화물부피Cbm")
                         .HasColumnType("decimal(65,30)")
                         .HasColumnName("cargo_volume_cbm");
+
+                    b.Property<decimal?>("화물입력부피Cbm")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("cargo_input_volume_cbm");
+
+                    b.Property<string>("화물부피근거Code")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)")
+                        .HasColumnName("cargo_volume_evidence_code");
+
+                    b.Property<string>("화물적재계산판본")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)")
+                        .HasColumnName("cargo_loading_calculation_revision");
+
+                    b.Property<bool?>("화물바닥회전가능여부")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("cargo_floor_rotation_allowed");
+
+                    b.Property<bool?>("화물적층가능여부")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("cargo_stacking_allowed");
 
                     b.Property<string>("화물설명")
                         .IsRequired()

@@ -28,6 +28,11 @@ public sealed class 화주운송의뢰Configuration : IEntityTypeConfiguration<�
         builder.Property(x => x.화물팔레트개수).HasColumnName("cargo_pallet_count");
         builder.Property(x => x.화물중량Kg).HasColumnName("cargo_weight_kg");
         builder.Property(x => x.화물부피Cbm).HasColumnName("cargo_volume_cbm");
+        builder.Property(x => x.화물입력부피Cbm).HasColumnName("cargo_input_volume_cbm");
+        builder.Property(x => x.화물부피근거Code).HasColumnName("cargo_volume_evidence_code").HasMaxLength(80);
+        builder.Property(x => x.화물적재계산판본).HasColumnName("cargo_loading_calculation_revision").HasMaxLength(80);
+        builder.Property(x => x.화물바닥회전가능여부).HasColumnName("cargo_floor_rotation_allowed");
+        builder.Property(x => x.화물적층가능여부).HasColumnName("cargo_stacking_allowed");
         builder.Property(x => x.화물파손주의여부).HasColumnName("cargo_fragile");
         builder.Property(x => x.화물온도조건).HasColumnName("cargo_temperature").IsRequired();
         builder.Property(x => x.운송방식).HasColumnName("transport_type").IsRequired();
@@ -54,6 +59,7 @@ public sealed class 화주운송의뢰Configuration : IEntityTypeConfiguration<�
         builder.Property(x => x.픽업_연락처_전화번호).HasColumnName("pickup_contact_phone").IsRequired();
         builder.Property(x => x.픽업_시간창_시작일시).HasColumnName("pickup_window_start");
         builder.Property(x => x.픽업_시간창_종료일시).HasColumnName("pickup_window_end");
+        builder.Property(x => x.픽업_작업시간분).HasColumnName("pickup_handling_minutes");
         builder.Property(x => x.하차_도로명주소).HasColumnName("dropoff_address").IsRequired();
         builder.Property(x => x.하차_상세주소).HasColumnName("dropoff_address_detail").IsRequired();
         builder.Property(x => x.하차_위도).HasColumnName("dropoff_latitude");
@@ -62,6 +68,7 @@ public sealed class 화주운송의뢰Configuration : IEntityTypeConfiguration<�
         builder.Property(x => x.하차_연락처_전화번호).HasColumnName("dropoff_contact_phone").IsRequired();
         builder.Property(x => x.하차_시간창_시작일시).HasColumnName("dropoff_window_start");
         builder.Property(x => x.하차_시간창_종료일시).HasColumnName("dropoff_window_end");
+        builder.Property(x => x.하차_작업시간분).HasColumnName("dropoff_handling_minutes");
         builder.Property(x => x.서비스레벨).HasColumnName("service_level").IsRequired();
         builder.Property(x => x.요청사항).HasColumnName("request_text").IsRequired();
         builder.Property(x => x.대기료).HasColumnName("waiting_fee");

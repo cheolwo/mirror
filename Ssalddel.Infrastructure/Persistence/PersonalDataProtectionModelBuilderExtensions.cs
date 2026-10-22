@@ -63,6 +63,12 @@ namespace 살뜰.Infrastructure.Persistence
             ArgumentNullException.ThrowIfNull(modelBuilder);
             ArgumentNullException.ThrowIfNull(protector);
 
+            modelBuilder.Entity<용달기사>().Property(x => x.현재실차참조)
+                .HasMaxLength(1000).HasConversion(v => protector.Protect(v), v => protector.Unprotect(v));
+            modelBuilder.Entity<용달기사>().Property(x => x.실차적재제원Json)
+                .HasColumnType("longtext").HasConversion(v => protector.Protect(v), v => protector.Unprotect(v));
+            modelBuilder.Entity<용달기사>().Property(x => x.실차적재판본).IsConcurrencyToken();
+
             ConfigurePersonalData(modelBuilder, protector);
         }
 
